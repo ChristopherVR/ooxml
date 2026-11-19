@@ -1,0 +1,125 @@
+{
+	"$comment": "Checks that fail today, each with the 2.0 work package that closes it. An entry turns its check into an expected failure, which fails as soon as the gap closes: delete the entry in that commit. Entries may be removed but never added (check-baseline.mjs).",
+	"gaps": {
+		"contrast/dark/control border on background": {
+			"owner": "N11 Canvas and forced-colours fixes",
+			"finding": "A11Y-14",
+			"why": "the border token controls use is 1.35:1 on the background"
+		},
+		"contrast/dark/link on the document page": {
+			"owner": "N11 Canvas and forced-colours fixes",
+			"finding": "A11Y-13",
+			"why": "Word links on the white page use the dark-mode accent, 2.13:1 to 2.86:1"
+		},
+		"contrast/dark/Teams brand button text": {
+			"owner": "N11 Canvas and forced-colours fixes",
+			"finding": "A11Y-13",
+			"why": "white text on the dark-mode accent, 2.13:1 to 2.86:1"
+		},
+		"contrast/light/control border on background": {
+			"owner": "N11 Canvas and forced-colours fixes",
+			"finding": "A11Y-14",
+			"why": "the border token controls use is 1.25:1 on the background"
+		},
+		"keyboard/teams/f6": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-10",
+			"why": "Teams has no region keys: F6 does nothing from the composer"
+		},
+		"keyboard/vsdx/f6": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-10",
+			"why": "Visio has no F6 regions: F6 does nothing from the canvas"
+		},
+		"reflow/320x256/docx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon and page margins leave the page under half the window wide"
+		},
+		"reflow/320x256/docx/simple/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the page is shown under half the window wide"
+		},
+		"reflow/320x256/teams/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the app bar and the composer are cut off with nothing to scroll them into view"
+		},
+		"reflow/320x256/vsdx/office/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "status bar and ribbon controls are cut off with nothing to scroll them into view"
+		},
+		"reflow/320x256/vsdx/simple/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Presentation Mode is cut off with nothing to scroll it into view"
+		},
+		"reflow/320x256/xlsx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon leaves the grid under a quarter of the window tall"
+		},
+		"reflow/360x225/chat/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Attach, the model picker and Send are cut off with nothing to scroll them into view"
+		},
+		"reflow/360x225/docx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon and page margins leave the page under half the window wide"
+		},
+		"reflow/360x225/docx/simple/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the page is shown under half the window wide"
+		},
+		"reflow/360x225/teams/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the app bar and the composer are cut off with nothing to scroll them into view"
+		},
+		"reflow/360x225/vsdx/office/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "status bar and ribbon controls are cut off with nothing to scroll them into view"
+		},
+		"reflow/360x225/vsdx/simple/controls": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "Presentation Mode is cut off with nothing to scroll it into view"
+		},
+		"reflow/360x225/xlsx/office/document": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-15",
+			"why": "the ribbon leaves the grid under a quarter of the window tall"
+		},
+		"tree/docx/editor-name": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "the editing area is an unnamed generic element, not a multi-line text box"
+		},
+		"tree/docx/headings": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "headings render as paragraphs with no heading role or level"
+		},
+		"tree/docx/table-headers": {
+			"owner": "P2 Word semantics and typing",
+			"finding": "A11Y-04",
+			"why": "a repeated header row renders as ordinary cells"
+		},
+		"tree/pptx/slide-name": {
+			"owner": "P8 Ribbon navigation and reflow",
+			"finding": "A11Y-12",
+			"why": "the slide is named Slide, with no number or title"
+		},
+		"tree/xlsx/gridcells": {
+			"owner": "P4 Excel semantics and calculation budget",
+			"finding": "A11Y-06",
+			"why": "the grid exposes no rows or cells, only the active cell's input"
+		}
+	}
+}

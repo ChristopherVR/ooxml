@@ -268,7 +268,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.
-- [ ] **P2** Grid accessibility has not been audited (`grid/grid-a11y.ts`).
+- [ ] **P2** The grid exposes no rows or cells to assistive technology, only the active cell's
+      input (`grid/grid-a11y.ts`). `e2e/a11y/tree.spec.ts` checks for grid cells as an expected
+      failure, and the axe baseline allows its missing row parents until they are fixed.
 
 ### Ribbon
 
