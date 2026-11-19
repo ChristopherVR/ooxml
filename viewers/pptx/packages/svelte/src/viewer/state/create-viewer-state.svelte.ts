@@ -36,6 +36,7 @@ import { buildExportNotesCluster } from './create-viewer-state-export-notes.svel
 import { usePresentationCluster } from './create-viewer-state-presentation.svelte';
 import { usePresenterCluster } from './create-viewer-state-presenter.svelte';
 import type { CreateViewerStateOptions, ViewerStateBag } from './create-viewer-state-types';
+import { ExternalContentState } from './external-content.svelte';
 import { provideFieldContext } from './field-context';
 import { createInspectorDeckActions, provideInspectorDeck } from './inspector-deck';
 import { createOpenFile } from './open-file';
@@ -224,16 +225,24 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getPresentation: () => presentationApi.current,
 	});
 
-	// Trust Center > "Allow external content": read live on every load, not
-	// snapshotted once, so a user who flips the option keeps it in effect for
-	// the very next file they open.
+	// Linked external content: the host switch, else Trust Center > "Allow
+	// external content" or Enable Content on the security bar for this
+	// presentation. Read live on every load, so a user who flips the option
+	// keeps it in effect for the very next file they open.
 	loader.getLoadOptions = () => ({
 		allowExternalImages: resolveAllowExternalContent(
 			options.getAllowExternalContent?.(),
 			editorUi.optionsState.options,
+			loader.externalContentEnabled,
 		),
 		// Host load limits, also read per load (unset keeps the core defaults).
 		limits: options.getLimits?.(),
+	});
+	const externalContent = new ExternalContentState({
+		loader,
+		editor,
+		viewer,
+		getHost: () => options.getAllowExternalContent?.(),
 	});
 	loader.translate = (key, params) => options.t(key, params);
 	loader.getGoogleFonts = () => editorUi.getGoogleFonts();
@@ -474,6 +483,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		controller: editorUi.controller,
 		parityUi: editorUi.parityUi,
 		readOnlyRec: editorUi.readOnlyRec,
+		externalContent,
 		compatToasts: editorUi.compatToasts,
 		chromeUi: editorUi.chromeUi,
 		optionsState: editorUi.optionsState,

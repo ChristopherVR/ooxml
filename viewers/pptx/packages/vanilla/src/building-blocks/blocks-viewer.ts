@@ -42,6 +42,7 @@ export class BuildingBlocksViewer extends PptxViewer {
 		},
 		setAllowExternalContent: (allow) => {
 			this.customization.controller.setAllowExternalContent(allow);
+			this.setHostAllowExternalContent(allow);
 		},
 	};
 

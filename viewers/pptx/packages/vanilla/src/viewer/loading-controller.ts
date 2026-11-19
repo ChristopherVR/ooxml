@@ -41,12 +41,13 @@ export interface LoadingControllerDeps {
 	/** Called synchronously right after a parsed deck was applied to the store. */
 	onContentApplied?: (origin: CollabLoadOrigin) => void;
 	/**
-	 * Trust Center > "Allow external content" for the deck about to load
-	 * (lazily read: the options controller is constructed after the loading
-	 * controller, see `PptxViewer`'s constructor order). Omitted defaults to
-	 * core's own safe-by-default `allowExternalImages: false`.
+	 * Whether the deck about to load may download its linked pictures and media
+	 * (`resolveAllowExternalContent`), given whether the user chose Enable
+	 * Content for it. Lazily read: the options controller is constructed after
+	 * the loading controller, see `PptxViewer`'s constructor order. Omitted
+	 * defaults to core's own safe-by-default `allowExternalImages: false`.
 	 */
-	getAllowExternalContent?: () => boolean;
+	getAllowExternalContent?: (enabledForDocument: boolean) => boolean;
 	/**
 	 * The CSS2 base the load waits on for its webfonts (host `googleFonts`,
 	 * else Trust Center > "Download fonts"), `null` when downloads are off.
@@ -73,6 +74,12 @@ export interface LoadOptions {
 	 * not for opening one, which is what Protected View gates.
 	 */
 	skipProtectedView?: boolean;
+	/**
+	 * Enable Content on the security bar: this load downloads the linked
+	 * pictures and media of the presentation being reloaded. Every other load
+	 * starts blocked again, as PowerPoint asks once per presentation.
+	 */
+	enableExternalContent?: boolean;
 }
 
 export interface LoadingController {
@@ -89,6 +96,8 @@ export interface LoadingController {
 	/** Dispose the current handler + Blob URLs (before replacing or on destroy). */
 	releaseLoaded(): void;
 	getHandler(): PptxHandler | null;
+	/** The bytes the current presentation was loaded from, or null before a load. */
+	getLoadedBytes(): ArrayBuffer | null;
 	/**
 	 * Adopt a handler produced by an IN-SESSION document mutation that returns
 	 * a fresh `PptxHandler` rather than patching the existing one (Slide
@@ -113,6 +122,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 	const { options, store } = deps;
 	let handler: PptxHandler | null = null;
 	let blobUrls: string[] = [];
+	let loadedBytes: ArrayBuffer | null = null;
 	let loadToken = 0;
 
 	function releaseLoaded(): void {
@@ -121,6 +131,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		blobUrls = [];
 		handler?.dispose();
 		handler = null;
+		loadedBytes = null;
 	}
 
 	async function load(
@@ -176,8 +187,10 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 						: resolveGoogleFontsCss2Base(options.googleFonts),
 				});
 			}
+			const allowExternalImages =
+				deps.getAllowExternalContent?.(loadOptions?.enableExternalContent === true) ?? false;
 			const loaded = await loadPresentation(buffer, {
-				allowExternalImages: deps.getAllowExternalContent?.(),
+				allowExternalImages,
 				limits: options.limits,
 				onSlidesParsed: ({ slides, embeddedFonts }) => startWebfonts(slides, embeddedFonts),
 			});
@@ -195,6 +208,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			releaseLoaded();
 			handler = loaded.handler;
 			blobUrls = loaded.blobUrls;
+			loadedBytes = buffer;
 			deps.onContentApplying?.(origin);
 			// Trust Center > "Open documents in Protected View": a freshly-opened
 			// deck (not the host's own bootstrap content, and not a same-document
@@ -231,6 +245,9 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				readOnlyRecommendation: recommendation.kind === null ? null : recommendation,
 				...readOnlySession,
 				modifyVerifier: loaded.modifyVerifier ?? undefined,
+				hasLinkedWebContent: loaded.hasLinkedWebContent === true,
+				externalContentAllowed: allowExternalImages,
+				externalContentBarClosed: false,
 				compatToasts,
 				...deckViewPreferences,
 				sections: loaded.sections,
@@ -313,6 +330,8 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		load,
 		releaseLoaded,
 		getHandler: () => handler,
+		// A buffer a worker took over reads as empty; treat it as gone.
+		getLoadedBytes: () => (loadedBytes && loadedBytes.byteLength > 0 ? loadedBytes : null),
 		setHandler: (next, keepPrevious = false) => {
 			if (!keepPrevious) {
 				handler?.dispose();

@@ -226,7 +226,7 @@ export const translations = {
 		'Dokumente werden schreibgeschützt geöffnet; verwenden Sie "Bearbeitung aktivieren", um Änderungen vorzunehmen.',
 	'pptx.options.trust.allowExternalContent': 'Externe Inhalte zulassen (Remotebilder und -medien)',
 	'pptx.options.trust.allowExternalContentInfo':
-		'Wenn deaktiviert, wird nur in der Datei eingebetteter Inhalt angezeigt.',
+		'Wenn deaktiviert (Standard, wie in PowerPoint), werden verknüpfte Bilder und Medien nicht heruntergeladen; eine Sicherheitsleiste bietet für jede Präsentation „Inhalt aktivieren“ an.',
 	'pptx.options.trust.allowFontDownloads':
 		'Nicht installierte oder eingebettete Schriftarten herunterladen (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':

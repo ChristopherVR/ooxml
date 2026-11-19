@@ -1,3 +1,4 @@
+import type { DeckSaveIntent } from 'ooxml-ui/pptx';
 import {
 	historyTheme,
 	loadedThemeName,
@@ -254,6 +255,7 @@ export async function saveEditorState(
 export async function serializeEditorState(
 	state: EditorState,
 	format: PptxSaveFormat = 'pptx',
+	saveIntent: DeckSaveIntent = state.saveIntent(),
 ): Promise<Uint8Array> {
 	const handler = state.getHandler();
 	if (!handler) {
@@ -283,7 +285,7 @@ export async function serializeEditorState(
 		{ ...document, ...masterWrite, slides },
 		format,
 		// File ▸ Info ▸ Protect Presentation: encrypts the output when set.
-		state.saveIntent(),
+		saveIntent,
 		// File ▸ Fonts: off strips the deck's embedded font data from the output.
 		state.embedFonts,
 		// Design ▸ Slide Size: the ONLY way an edited `p:sldSz` reaches the file.

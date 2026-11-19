@@ -44,6 +44,7 @@ export const PRESENTATION_FIELD_KEYS: Record<keyof Omit<PptxData, 'slides'>, tru
 	coreProperties: true,
 	appProperties: true,
 	hasMacros: true,
+	hasLinkedWebContent: true,
 	hasDigitalSignatures: true,
 	digitalSignatureCount: true,
 	presentationGuides: true,

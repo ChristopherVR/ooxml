@@ -54,6 +54,7 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	loadedThemeName,
+	externalContentBarVisible,
 	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveIntervalSeconds,
@@ -92,6 +93,7 @@ import type {
 import {
 	computed,
 	inject,
+	nextTick,
 	onBeforeUnmount,
 	onMounted,
 	provide,
@@ -110,6 +112,7 @@ import CollaborationStatusIndicator from './components/CollaborationStatusIndica
 import CompatibilityToasts from './components/CompatibilityToasts.vue';
 import EditorChromeStyle from './components/EditorChromeStyle';
 import ExportProgressModal from './components/ExportProgressModal.vue';
+import ExternalContentBar from './components/ExternalContentBar.vue';
 import FindReplaceBar from './components/FindReplaceBar.vue';
 import MasterViewOverlay from './components/MasterViewOverlay.vue';
 import MobileToolbar from './components/MobileToolbar.vue';
@@ -342,6 +345,25 @@ const loadVersion = ref(0);
 // Protect-Presentation secret so a protected deck serialises encrypted.
 const password = usePasswordProtection();
 
+// -- Linked external content (PowerPoint's security bar) ----------------
+// What the user chose on the security bar, for one presentation: the content
+// source it was chosen for. A different presentation (host `content`, File >
+// Open, Recent, a restored version) is a different `activeContent`, so it
+// starts blocked again without a reset racing the load; the reload Enable
+// Content starts keeps the same source, so the choice holds for it.
+interface ExternalContentConsent {
+	document: Uint8Array | ArrayBuffer;
+	enabled: boolean;
+	closed: boolean;
+}
+const externalContentConsent = shallowRef<ExternalContentConsent | null>(null);
+const currentExternalContentConsent = (): ExternalContentConsent | null =>
+	externalContentConsent.value?.document === activeContent.value
+		? externalContentConsent.value
+		: null;
+/** The slide to show after an Enable Content reload, instead of the host's `initialSlide`. */
+let slideAfterReload: number | undefined;
+
 // Full PowerPoint File > Options model (persisted). Declared ahead of
 // `useLoadContent` (rather than down with the rest of the settings wiring)
 // because the load path itself reads Trust Center > "Allow external content"
@@ -402,19 +424,29 @@ const deck = useLoadContent(() => activeContent.value, {
 	onContentApplied: () => {
 		loadVersion.value += 1;
 		// Host `initialSlide`, clamped into the freshly applied deck (every
-		// binding uses the shared `resolveInitialSlideIndex`).
-		activeSlideIndex.value = resolveInitialSlideIndex(props.initialSlide, slides.value.length);
+		// binding uses the shared `resolveInitialSlideIndex`); an Enable Content
+		// reload stays on the slide the user was on.
+		const keep = slideAfterReload;
+		slideAfterReload = undefined;
+		activeSlideIndex.value =
+			keep === undefined
+				? resolveInitialSlideIndex(props.initialSlide, slides.value.length)
+				: Math.max(0, Math.min(keep, slides.value.length - 1));
 	},
 	getSaveIntent: () => ({
 		password: password.presentationPassword.value,
 		passwordProtected: password.isPasswordProtected.value,
 	}),
-	// Trust Center > "Allow external content (remote images and media)".
-	// Off (the option's non-default) makes core drop any http(s) image URL
-	// instead of fetching it (SSRF/privacy gate); every binding used to skip
-	// this entirely, so the toggle changed nothing regardless of its value.
+	// Linked pictures and media: the host switch, else Trust Center > "Allow
+	// external content" (off by default, like PowerPoint) or Enable Content on
+	// the security bar for this presentation. Blocked, core leaves every
+	// http(s) URL out of the parsed deck.
 	getAllowExternalImages: () =>
-		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
+		resolveAllowExternalContent(
+			props.allowExternalContent,
+			viewerOptions.value,
+			currentExternalContentConsent()?.enabled === true,
+		),
 	// Host load limits: read per load, so changing the prop never reloads the deck.
 	getLimits: () => props.limits,
 	getGoogleFonts: () => effectiveGoogleFonts.value,
@@ -455,6 +487,8 @@ const {
 	handler,
 	getContent,
 	getRecoverySnapshot,
+	hasLinkedWebContent,
+	externalContentAllowed,
 } = deck;
 
 // -- Trust Center > Protected View --------------------------------------
@@ -1230,6 +1264,62 @@ const {
 	emitAutosave: (bytes) => emit('autosave', bytes),
 	captureVersion: (label, at) => versionHistoryWiring.versionHistory.capture(label, at),
 });
+
+// -- Linked external content: the security bar's two actions -------------
+const showExternalContentBar = computed(() => {
+	const consent = currentExternalContentConsent();
+	return externalContentBarVisible({
+		hasLinkedWebContent: hasLinkedWebContent.value,
+		// Enable Content hides the bar at once; the reload it starts then applies.
+		allowed: externalContentAllowed.value || consent?.enabled === true,
+		host: props.allowExternalContent,
+		closed: consent?.closed === true,
+	});
+});
+
+/**
+ * Enable Content: reload this presentation with its linked content. Unsaved
+ * edits come along through the recovery serialisation (blocked links survive a
+ * save) and stay unsaved; otherwise the source bytes are parsed again. The
+ * slide stays; Undo starts over, because its steps hold the deck without the
+ * linked content.
+ */
+async function enableExternalContent(): Promise<void> {
+	const document = activeContent.value;
+	externalContentConsent.value = { document, enabled: true, closed: false };
+	const dirty = autosave.isDirty.value;
+	try {
+		const bytes = dirty ? await getRecoverySnapshot() : document;
+		if (activeContent.value !== document) {
+			return;
+		}
+		slideAfterReload = activeSlideIndex.value;
+		await deck.reload(bytes);
+	} catch (reloadError) {
+		slideAfterReload = undefined;
+		emit('error', reloadError instanceof Error ? reloadError.message : String(reloadError));
+		return;
+	}
+	if (activeContent.value !== document) {
+		return;
+	}
+	selection.selectedElementIds.value = [];
+	history.clearHistory();
+	if (dirty) {
+		// The autosave wiring clears the flag once loading settles; restore it after.
+		await nextTick();
+		autosave.isDirty.value = true;
+	}
+}
+
+/** Close: hide the bar; the content stays blocked for this presentation. */
+function closeExternalContentBar(): void {
+	externalContentConsent.value = {
+		document: activeContent.value,
+		enabled: currentExternalContentConsent()?.enabled === true,
+		closed: true,
+	};
+}
 
 // -- Crash-recovery prompt --------------------------------------------
 // Vue wrote snapshots and never offered one back; the decision and the copy are
@@ -2348,6 +2438,14 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@dismiss="readOnlyRec.dismiss"
 					@submit-password="readOnlyRec.submitPassword"
 					@cancel-password="readOnlyRec.cancelPasswordPrompt"
+				/>
+
+				<!-- PowerPoint's security bar: the deck's linked pictures and media
+				     were not downloaded; Enable Content reloads it with them. -->
+				<ExternalContentBar
+					v-if="showExternalContentBar"
+					@enable="enableExternalContent"
+					@close="closeExternalContentBar"
 				/>
 
 				<!-- PowerPoint-style title bar sits ABOVE and OUTSIDE the

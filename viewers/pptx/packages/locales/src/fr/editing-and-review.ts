@@ -240,6 +240,11 @@ export const translations = {
 		"Cette présentation est protégée par mot de passe. Elle a été ouverte en lecture seule jusqu'à ce que le mot de passe soit fourni.",
 	'pptx.readOnly.markedFinal':
 		"L'auteur a marqué cette présentation comme finale. Elle a été ouverte en lecture seule pour éviter toute modification.",
+	'pptx.externalContent.title': 'AVERTISSEMENT DE SÉCURITÉ',
+	'pptx.externalContent.message':
+		'Les références à des images et à d’autres médias externes ont été bloquées.',
+	'pptx.externalContent.enable': 'Activer le contenu',
+	'pptx.externalContent.close': 'Fermer',
 	'pptx.readOnly.bannerTitle': 'Lecture seule',
 	'pptx.readOnly.editAnyway': 'Modifier quand même',
 	'pptx.readOnly.dismiss': 'Fermer',

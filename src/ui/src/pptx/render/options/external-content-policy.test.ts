@@ -4,10 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createCustomizationController } from '../customization/customization-controller';
 import { customizeOptionsTabs } from '../customization/customization-surfaces';
 import {
+	dispatchExternalContentBarIntent,
 	EXTERNAL_CONTENT_SETTING_ID,
+	externalContentBarVisible,
 	lockExternalContentSetting,
 	resolveAllowExternalContent,
 } from './external-content-policy';
+import { DEFAULT_VIEWER_OPTIONS } from './viewer-options';
 import { createViewerOptionsStore } from './viewer-options-store';
 import { VIEWER_OPTIONS_TABS } from './viewer-options-schema';
 
@@ -19,6 +22,47 @@ describe('resolveAllowExternalContent', () => {
 		expect(resolveAllowExternalContent(true, trust(false))).toBeTruthy();
 		expect(resolveAllowExternalContent(undefined, trust(true))).toBeTruthy();
 		expect(resolveAllowExternalContent(undefined, trust(false))).toBeFalsy();
+	});
+
+	it('blocks by default, like PowerPoint', () => {
+		expect(DEFAULT_VIEWER_OPTIONS.trust.allowExternalContent).toBe(false);
+		expect(resolveAllowExternalContent(undefined, DEFAULT_VIEWER_OPTIONS)).toBe(false);
+	});
+
+	it('allows the presentation the user enabled, unless the host blocks it', () => {
+		expect(resolveAllowExternalContent(undefined, trust(false), true)).toBe(true);
+		expect(resolveAllowExternalContent(false, trust(false), true)).toBe(false);
+	});
+});
+
+describe('externalContentBarVisible', () => {
+	const shown = {
+		hasLinkedWebContent: true,
+		allowed: false,
+		host: undefined,
+		closed: false,
+	} as const;
+
+	it('shows for a deck whose linked content the load left out', () => {
+		expect(externalContentBarVisible(shown)).toBe(true);
+	});
+
+	it('hides without linked content, once allowed, when the host blocks or the user closes it', () => {
+		expect(externalContentBarVisible({ ...shown, hasLinkedWebContent: undefined })).toBe(false);
+		expect(externalContentBarVisible({ ...shown, allowed: true })).toBe(false);
+		expect(externalContentBarVisible({ ...shown, host: false })).toBe(false);
+		expect(externalContentBarVisible({ ...shown, closed: true })).toBe(false);
+	});
+});
+
+describe('dispatchExternalContentBarIntent', () => {
+	it('routes Enable Content and Close', () => {
+		const calls: string[] = [];
+		const handlers = { enable: () => calls.push('enable'), close: () => calls.push('close') };
+		dispatchExternalContentBarIntent(new CustomEvent('x', { detail: { id: 'action' } }), handlers);
+		dispatchExternalContentBarIntent(new CustomEvent('x', { detail: { id: 'close' } }), handlers);
+		dispatchExternalContentBarIntent(new CustomEvent('x'), handlers);
+		expect(calls).toEqual(['enable', 'close']);
 	});
 });
 

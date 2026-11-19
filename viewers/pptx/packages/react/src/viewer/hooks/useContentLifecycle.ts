@@ -17,6 +17,7 @@ import { useAutosave } from './useAutosave';
 import type { AutosaveStatus } from './useAutosave';
 import type { EditorHistoryResult } from './useEditorHistory';
 import type { ElementOperations } from './useElementOperations';
+import type { ExternalContentReload, LinkedWebContentLoad } from './useExternalContentConsent';
 import { useFontInjection } from './useFontInjection';
 import { useLoadContent } from './useLoadContent';
 import { useSerialize } from './useSerialize';
@@ -63,6 +64,10 @@ export interface UseContentLifecycleInput {
 	onContentApplied?: () => void;
 	/** Forwarded to {@link useLoadContent}: File > Options > Trust Center > "Allow external content". */
 	allowExternalImages?: boolean;
+	/** Forwarded to {@link useLoadContent}: Enable Content's reload (see `useExternalContentConsent`). */
+	externalContentReload?: ExternalContentReload | null;
+	/** Forwarded to {@link useLoadContent}: reports each load's linked web content. */
+	onLinkedWebContent?: (load: LinkedWebContentLoad) => void;
 	/** Forwarded to {@link useLoadContent}: the host `initialSlide` prop. */
 	initialSlide?: number;
 	/** Forwarded to {@link useFontInjection}: the host `googleFonts` prop. */
@@ -120,6 +125,8 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		password,
 		onContentApplied,
 		allowExternalImages,
+		externalContentReload,
+		onLinkedWebContent,
 		initialSlide,
 		googleFonts,
 		limits,
@@ -177,6 +184,8 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 		setIsEncrypted: setIsEncryptedDialogOpen,
 		onContentApplied,
 		allowExternalImages,
+		externalContentReload,
+		onLinkedWebContent,
 		initialSlide,
 		limits,
 	});

@@ -172,12 +172,12 @@ export function settingsCategories({ profileName = '', assistant = false } = {})
 					id: 'linked',
 					title: 'Linked content',
 					description:
-						'Presentations can link pictures, video and audio from other websites instead of embedding them. Loading them tells those sites that the file was opened.',
+						'Presentations can link pictures, video and audio from other websites instead of embedding them. Loading them tells those sites that the file was opened. As in Microsoft PowerPoint, nothing is loaded until you choose Enable Content on the security bar of that presentation.',
 					controls: [
 						toggle(
 							'blockExternalContent',
 							'Block linked pictures and media in presentations',
-							"Off leaves the choice to PowerPoint's Trust Center (on by default there). On blocks it in every presentation you open next and locks that option.",
+							"Off asks in each presentation, or follows PowerPoint's Trust Center if you allowed external content there. On blocks it without asking in every presentation you open next and locks that option.",
 						),
 					],
 				},

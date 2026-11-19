@@ -14,6 +14,8 @@ import {
 	clearAutosaveSnapshots,
 	createSlidePackageClipboard,
 	DEFAULT_VIEWER_OPTIONS,
+	recoverySnapshotIntent,
+	saveDeckWithPassword,
 	deleteAutosaveSnapshot,
 	describeFontEmbedding,
 	endAudienceDisplay,
@@ -115,6 +117,7 @@ import { createEditorController } from './editor';
 import type { HostDialogRequest } from './editor/editor-controller';
 import type { ExportLifecycle } from './export-lifecycle';
 import { createExportLifecycle } from './export-lifecycle';
+import { enableExternalContent, externalContentBarShown } from './external-content';
 import { glyphOutlineFontCache } from './glyph-outline-cache';
 import type { Translator } from './i18n';
 import { createTranslator } from './i18n';
@@ -289,6 +292,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private rulers: RulerController | null = null;
 	/** File > Options store + option-driven behavior (undo depth, ribbon, etc.). */
 	private optionsController!: ViewerOptionsController;
+	/**
+	 * The host `allowExternalContent` switch: the option, or the building blocks' live value.
+	 * Unset leaves linked content to Trust Center and the security bar.
+	 */
+	private hostAllowExternalContent: boolean | undefined;
 	/** The host's ribbon tabs (`ribbonAddIns` option, `setRibbonAddIns`). */
 	private ribbonAddIns: readonly RibbonAddInTab[];
 	/** Ribbon Display Options; owned here so the state survives a chrome rebuild. */
@@ -317,6 +325,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
 		this.releaseSvgIdScope = installSvgIdScope(this.doc);
 		this.options = options;
+		this.hostAllowExternalContent = options.allowExternalContent;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
 		this.ribbonDisplay = createRibbonDisplayController({
@@ -374,13 +383,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				// our private DOM and clicks the Back button.
 				this.lifecycle?.chrome.ribbon?.showDefaultTab();
 			},
-			// Trust Center > "Allow external content"; the options controller is
+			// The host `allowExternalContent` option, else Trust Center > "Allow external
+			// content" or Enable Content for this presentation. The options controller is
 			// constructed after this one, hence the lazy read (see its own comment).
-			// The host `allowExternalContent` option wins when set.
-			getAllowExternalContent: () =>
+			getAllowExternalContent: (enabledForDocument) =>
 				resolveAllowExternalContent(
-					this.options.allowExternalContent,
+					this.hostAllowExternalContent,
 					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+					enabledForDocument,
 				),
 			getGoogleFontsBase: () => this.googleFontsBase(),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
@@ -743,6 +753,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				getChrome: () => this.lifecycle.chrome,
 				renderer: this.renderer,
 				callbacks: options,
+				externalContentBarVisible: (state) =>
+					externalContentBarShown(state, this.hostAllowExternalContent),
 			}),
 		);
 		this.store.subscribe((state, previous) => {
@@ -1979,6 +1991,48 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** The read-only recommendation banner's plain close button: hides the banner, keeps the lock. */
 	dismissReadOnlyBanner(): void {
 		this.readOnlyActions.dismiss();
+	}
+
+	/** Enable Content on the security bar: reopen this presentation with its linked content. */
+	enableExternalContent(): void {
+		void enableExternalContent({
+			store: this.store,
+			loading: this.loading,
+			serializeForRecovery: async () => {
+				const handler = this.loading.getHandler();
+				const state = this.store.get();
+				return handler
+					? saveDeckWithPassword(
+							handler,
+							[...state.slides],
+							undefined,
+							recoverySnapshotIntent({
+								password: state.presentationPassword,
+								passwordProtected: state.isPasswordProtected,
+							}),
+						)
+					: null;
+			},
+		});
+	}
+
+	/** The security bar's close button: the linked content stays blocked. */
+	closeExternalContentBar(): void {
+		this.store.set({ externalContentBarClosed: true });
+	}
+
+	/** Whether the security bar shows for the loaded deck. */
+	externalContentBarVisible(): boolean {
+		return externalContentBarShown(this.store.get(), this.hostAllowExternalContent);
+	}
+
+	/**
+	 * A live host `allowExternalContent` (the building blocks): applies to the next load, and
+	 * `false` removes the security bar at once.
+	 */
+	protected setHostAllowExternalContent(allow: boolean | undefined): void {
+		this.hostAllowExternalContent = allow;
+		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarVisible());
 	}
 
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */

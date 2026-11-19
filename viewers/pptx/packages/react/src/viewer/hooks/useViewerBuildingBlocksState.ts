@@ -21,7 +21,6 @@ import {
 	FONT_DOWNLOAD_SETTING_ID,
 	hostFontDownloadLock,
 	lockExternalContentSetting,
-	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler } from 'pptx-viewer-core';
@@ -34,6 +33,7 @@ import { useCompatibilityToastsState } from './useCompatibilityToastsState';
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useEditorOperations } from './useEditorOperations';
 import type { ExportHandlersResult } from './useExportHandlers';
+import { useExternalContentConsent } from './useExternalContentConsent';
 import type { PrintHandlersResult } from './usePrintHandlers';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { useReadOnlyRecommendationState } from './useReadOnlyRecommendationState';
@@ -80,6 +80,16 @@ export interface UseViewerBuildingBlocksStateInput {
 	onPdfExportReport?: (result: VectorPdfExportResult) => void;
 }
 
+/** The security bar a custom shell renders (`<ExternalContentBar>`) while `barVisible`. */
+export interface ViewerExternalContentBar {
+	/** The deck links pictures or media to the web, and they were not downloaded. */
+	barVisible: boolean;
+	/** Enable Content: reload this presentation with its linked content. */
+	enable: () => void;
+	/** Close the bar; the content stays blocked. */
+	close: () => void;
+}
+
 export interface ViewerBuildingBlocksState {
 	loadVersion: number;
 	/** False while read-only recommended or in Protected View, which blocks inserting. */
@@ -88,6 +98,8 @@ export interface ViewerBuildingBlocksState {
 	readOnlyRecommendation: ReadOnlyRecommendation;
 	/** The loaded deck carries a modify verifier. */
 	hasModifyVerifier: boolean;
+	/** PowerPoint's security bar for linked pictures and media (see `ViewerBuildingBlocksResult`). */
+	externalContent: ViewerExternalContentBar;
 	/** The loaded deck's handler (null before a deck loads). */
 	handlerRef: { readonly current: PptxHandler | null };
 	dialogs: ViewerDialogsResult;
@@ -241,6 +253,8 @@ export function useViewerBuildingBlocksState(
 	});
 
 	const canInsertElement = !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView;
+	// PowerPoint's default for linked web content, per presentation, as in `PowerPointViewer`.
+	const externalContent = useExternalContentConsent(content, allowExternalContent, viewerOptions);
 	const {
 		exportHandlers,
 		printHandlers,
@@ -251,6 +265,7 @@ export function useViewerBuildingBlocksState(
 		autosaveStatus,
 		loadVersion,
 		handlerRef: integrationHandlerRef,
+		serializeForRecovery,
 	} = useViewerIntegration({
 		state,
 		zoom,
@@ -268,10 +283,10 @@ export function useViewerBuildingBlocksState(
 		// Host `googleFonts` first, else Trust Center > "Download fonts", as in `PowerPointViewer`.
 		googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 		limits,
-		// Trust Center > "Allow external content": same gate `PowerPointViewer`
-		// applies, so the headless building-blocks API loads http(s) images
-		// under the same default-off, core-side SSRF/privacy guard.
-		allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
+		// Linked web content: the same per-presentation consent `PowerPointViewer` keeps.
+		allowExternalImages: externalContent.allowExternalImages,
+		externalContentReload: externalContent.reload,
+		onLinkedWebContent: externalContent.reportLoad,
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
 		canInsertElement,
@@ -321,6 +336,16 @@ export function useViewerBuildingBlocksState(
 		canInsertElement,
 		readOnlyRecommendation: readOnlyRec.recommendation,
 		hasModifyVerifier: readOnlyRec.modifyVerifier !== undefined,
+		externalContent: {
+			barVisible: externalContent.barVisible,
+			enable: () =>
+				externalContent.enable({
+					isDirty: state.isDirty,
+					activeSlideIndex,
+					serialize: serializeForRecovery,
+				}),
+			close: externalContent.close,
+		},
 		handlerRef: integrationHandlerRef,
 		dialogs,
 		editorOps,

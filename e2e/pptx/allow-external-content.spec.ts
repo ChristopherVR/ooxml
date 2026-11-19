@@ -1,10 +1,12 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec, `test`/`expect` come from @playwright/test */
 /**
- * The host `allowExternalContent` switch, driven through every binding by the
- * demos' `?allowExternalContent=0|1` query option (see
- * `demos/pptx/shared/demo-root-options.ts`). The deck links a picture and a
- * video to an external origin (answered here with `page.route`), so opening it
- * makes the browser contact that origin unless external content is blocked.
+ * Linked external content follows Microsoft PowerPoint's default: opening a deck
+ * downloads none of its linked pictures and media, and a security bar offers
+ * Enable Content for that presentation. The host `allowExternalContent` switch
+ * (the demos' `?allowExternalContent=0|1`, see `demos/pptx/shared/demo-root-options.ts`)
+ * blocks without the bar or downloads without asking. The deck links pictures
+ * and a video to an external origin, answered here with `page.route`, so every
+ * request it causes is recorded.
  */
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
@@ -39,9 +41,8 @@ async function recordExternalRequests(page: Page): Promise<string[]> {
 	return urls;
 }
 
-async function openExternalDeck(page: Page, query = ''): Promise<void> {
-	await resetTabSession(page);
-	await page.goto(`/${query}`);
+/** Choose the deck in the demo's file input and wait until every element of its slide is on the stage. */
+async function chooseExternalDeck(page: Page): Promise<void> {
 	await page.locator('#file-input').setInputFiles({
 		name: 'external-content.pptx',
 		mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -58,6 +59,12 @@ async function openExternalDeck(page: Page, query = ''): Promise<void> {
 				),
 		)
 		.toBeGreaterThanOrEqual(EXTERNAL_CONTENT_DECK_ELEMENTS);
+}
+
+async function openExternalDeck(page: Page, query = ''): Promise<void> {
+	await resetTabSession(page);
+	await page.goto(`/${query}`);
+	await chooseExternalDeck(page);
 }
 
 /** Every `src`, `poster`, `href`, `srcset` or inline style in the page, shadow roots included, that names the linked origin. */
@@ -82,34 +89,81 @@ function externalReferences(page: Page): Promise<string[]> {
 	}, EXTERNAL_ORIGIN);
 }
 
+/** No reference to the origin is on the page and the network settles with nothing sent. */
+async function expectNothingRequested(page: Page, requests: string[]): Promise<void> {
+	// A fetch can only start from a DOM reference to the origin; with every element rendered
+	// there is none.
+	expect(await externalReferences(page)).toEqual([]);
+	await page.waitForLoadState('networkidle');
+	expect(requests).toEqual([]);
+}
+
+function securityBar(page: Page): Locator {
+	return page.locator('pptx-ui-external-content-bar');
+}
+
 async function trustToggle(page: Page): Promise<Locator> {
 	const dialog = await openOptionsDialog(page, ['Options']);
 	await optionsCategory(dialog, 'Trust Center').click();
 	return page.locator('pptx-ui-options-dialog').getByRole('checkbox', { name: TOGGLE_NAME });
 }
 
-test.describe('allowExternalContent host switch', () => {
-	test('unset keeps the Trust Center option, which allows linked content by default', async ({
-		page,
-	}) => {
+const requestedPaths = (requests: string[]) => requests.map((url) => new URL(url).pathname);
+
+test.describe('linked external content', () => {
+	test('is blocked on open, with a security bar, until Enable Content', async ({ page }) => {
 		const requests = await recordExternalRequests(page);
 		await openExternalDeck(page);
-		await expect.poll(() => requests.length).toBeGreaterThan(0);
+		const bar = securityBar(page);
+		await expect(bar).toBeVisible();
+		await expect(bar).toContainText('SECURITY WARNING');
+		await expect(bar).toContainText(
+			'References to external pictures and other media have been blocked.',
+		);
+		await expectNothingRequested(page, requests);
+
+		await bar.getByRole('button', { name: 'Enable Content' }).click();
+		// Each kind of linked picture is fetched once enabled: the shape fill and the picture bullet.
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.pictureBullet);
+		await expect(bar).toBeHidden();
+	});
+
+	test('enabling is not kept for the next open', async ({ page }) => {
+		const requests = await recordExternalRequests(page);
+		await openExternalDeck(page);
+		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		requests.length = 0;
+		// Opening the presentation again asks again, as PowerPoint does. (The demos offer the file
+		// input only on their start page; each binding's unit tests cover a second deck opened in
+		// the same viewer.)
+		await openExternalDeck(page);
+		await expect(securityBar(page)).toBeVisible();
+		await expectNothingRequested(page, requests);
+	});
+
+	test('closing the bar keeps the content blocked', async ({ page }) => {
+		const requests = await recordExternalRequests(page);
+		await openExternalDeck(page);
+		await securityBar(page).getByRole('button', { name: 'Close' }).click();
+		await expect(securityBar(page)).toBeHidden();
+		await expectNothingRequested(page, requests);
+	});
+
+	test('the Trust Center option is off by default and left to the user', async ({ page }) => {
+		await recordExternalRequests(page);
+		await openExternalDeck(page);
 		const toggle = await trustToggle(page);
-		await expect(toggle).toBeChecked();
+		await expect(toggle).not.toBeChecked();
 		await expect(toggle).toBeEnabled();
 	});
 
-	test('false sends no request to the external origin and locks the toggle off', async ({
-		page,
-	}) => {
+	test('host false sends no request, shows no bar and locks the toggle off', async ({ page }) => {
 		const requests = await recordExternalRequests(page);
 		await openExternalDeck(page, '?allowExternalContent=0');
-		// A fetch can only start from a DOM reference to the origin, and with every element
-		// rendered there is none; the network then settles with nothing sent.
-		expect(await externalReferences(page)).toEqual([]);
-		await page.waitForLoadState('networkidle');
-		expect(requests).toEqual([]);
+		await expectNothingRequested(page, requests);
+		await expect(securityBar(page)).toHaveCount(0);
 		const toggle = await trustToggle(page);
 		await expect(toggle).not.toBeChecked();
 		await expect(toggle).toBeDisabled();
@@ -120,14 +174,14 @@ test.describe('allowExternalContent host switch', () => {
 		expect(requests).toEqual([]);
 	});
 
-	test('true fetches linked content and locks the toggle on', async ({ page }) => {
+	test('host true fetches linked content without a bar and locks the toggle on', async ({
+		page,
+	}) => {
 		const requests = await recordExternalRequests(page);
 		await openExternalDeck(page, '?allowExternalContent=1');
-		// Each kind of linked picture is fetched: the picture and the 3D poster (both from the
-		// relinked media part), the shape fill and the picture bullet.
-		const requested = () => requests.map((url) => new URL(url).pathname);
-		await expect.poll(requested).toContain(LINKED_PICTURES.shapeFill);
-		await expect.poll(requested).toContain(LINKED_PICTURES.pictureBullet);
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.pictureBullet);
+		await expect(securityBar(page)).toHaveCount(0);
 		const toggle = await trustToggle(page);
 		await expect(toggle).toBeChecked();
 		await expect(toggle).toBeDisabled();

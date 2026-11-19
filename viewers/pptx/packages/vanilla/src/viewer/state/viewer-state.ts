@@ -322,6 +322,19 @@ export interface ViewerState {
 	cropSession: CropSession | null;
 	spellCheckEnabled: boolean;
 	/**
+	 * The loaded deck links pictures or media to web addresses (core's
+	 * `hasLinkedWebContent`). Reset on every load.
+	 */
+	hasLinkedWebContent: boolean;
+	/**
+	 * Whether the current load downloaded that linked content: the host
+	 * `allowExternalContent`, else Trust Center > "Allow external content" or
+	 * Enable Content on the security bar for this presentation.
+	 */
+	externalContentAllowed: boolean;
+	/** The user closed the security bar for this presentation. Reset on every load. */
+	externalContentBarClosed: boolean;
+	/**
 	 * Whether the loaded deck recommends opening read-only (`p:modifyVerifier`
 	 * or `docProps/custom.xml`'s "Mark as Final"), and why; null when it does
 	 * not. See `readOnlyRecommendation` in `pptx-viewer-shared`. Reset on every
@@ -474,6 +487,9 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		eyedropperActive: false,
 		cropSession: null,
 		spellCheckEnabled: false,
+		hasLinkedWebContent: false,
+		externalContentAllowed: false,
+		externalContentBarClosed: false,
 		readOnlyRecommendation: null,
 		readOnlyBannerDismissed: false,
 		readOnlyEditAnyway: false,

@@ -2832,6 +2832,40 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "notices/message-bar.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiMessageBar",
+					"tagName": "office-ui-message-bar",
+					"customElement": true,
+					"description": "`<office-ui-message-bar>`: the Office Message Bar under the ribbon, as Word, Excel and PowerPoint show it for blocked content (\"SECURITY WARNING ... [Enable Content] x\"). Controlled: the host decides what the action does and when the bar goes away. Each activation emits `office-message-bar-request` with an {@link OfficeMessageBarIntent}. Text arrives translated; the event name and test id prefix are static fields a product subclass may override.",
+					"attributes": [],
+					"members": [
+						{
+							"kind": "field",
+							"name": "state"
+						}
+					],
+					"events": [
+						{
+							"name": "office-message-bar-request"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-message-bar",
+					"declaration": {
+						"name": "OfficeUiMessageBar"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "dialog/message-dialog.ts",
 			"declarations": [
 				{

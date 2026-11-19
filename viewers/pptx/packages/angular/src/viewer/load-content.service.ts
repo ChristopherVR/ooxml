@@ -108,17 +108,61 @@ export class LoadContentService {
 		this.hostAllowExternalContentReader = reader;
 	}
 
+	/** The host `allowExternalContent` input, read untracked. */
+	hostAllowExternalContent(): boolean | undefined {
+		return untracked(() => this.hostAllowExternalContentReader?.());
+	}
+
 	/**
 	 * Whether the next deck this viewer loads may reference linked http(s)
 	 * content: the host `allowExternalContent` input when set, otherwise the
-	 * Trust Center option. Read untracked, so calling it never subscribes.
+	 * Trust Center option or Enable Content for this presentation. Read
+	 * untracked, so calling it never subscribes.
 	 */
 	resolveAllowExternalImages(): boolean {
 		return untracked(() => {
 			const host = this.hostAllowExternalContentReader?.();
 			const options = this.optionsService?.options();
-			return options ? resolveAllowExternalContent(host, options) : host === true;
+			const enabled = this.externalContent().enabled;
+			return options ? resolveAllowExternalContent(host, options, enabled) : host === true;
 		});
+	}
+
+	/**
+	 * What the user chose on the security bar for the presentation now open
+	 * (PowerPoint's "Enable Content"). Every load starts it over except the
+	 * reload {@link enableExternalContent} makes; it is never stored.
+	 */
+	readonly externalContent = signal<{ enabled: boolean; closed: boolean }>({
+		enabled: false,
+		closed: false,
+	});
+	/** The loaded deck links pictures or media to web addresses (`PptxData.hasLinkedWebContent`). */
+	readonly hasLinkedWebContent = signal(false);
+	/** Whether the load now shown referenced its linked content (`allowExternalImages`). */
+	readonly externalContentAllowed = signal(false);
+	/**
+	 * Whether the load now shown is the reload {@link enableExternalContent}
+	 * made, so the viewer keeps its place instead of treating it as a newly
+	 * opened presentation. Plain field: read once by the seeding effect.
+	 */
+	lastLoadWasExternalContentReload = false;
+
+	/**
+	 * Enable Content: reload `source` (the presentation now open, or its
+	 * unsaved state serialised) with its linked content, keeping the choice
+	 * for this presentation.
+	 */
+	enableExternalContent(source: Uint8Array | ArrayBuffer): Promise<void> {
+		this.externalContent.set({ enabled: true, closed: false });
+		// A copy: the parser may consume the buffer it is given, and `source` is still the deck's.
+		const copy = source instanceof Uint8Array ? source.slice() : source.slice(0);
+		return this.load(copy, { keepExternalContentConsent: true });
+	}
+
+	/** The security bar's close button: hide it, keep the content blocked. */
+	closeExternalContentBar(): void {
+		this.externalContent.update((current) => ({ ...current, closed: true }));
 	}
 	/** Viewer-scoped current list session. Saving never commits or blurs it. */
 	bindPendingInlineEdit(reader: () => PendingInlineTextEdit | undefined): void {
@@ -415,9 +459,16 @@ export class LoadContentService {
 	}
 
 	/** Parse the supplied `.pptx` bytes into the reactive signals. */
-	async load(raw: Uint8Array | ArrayBuffer | null | undefined): Promise<void> {
+	async load(
+		raw: Uint8Array | ArrayBuffer | null | undefined,
+		{ keepExternalContentConsent = false }: { keepExternalContentConsent?: boolean } = {},
+	): Promise<void> {
 		if (!raw) {
 			return;
+		}
+		// A different presentation asks again (PowerPoint's Enable Content lasts for one file).
+		if (!keepExternalContentConsent) {
+			this.externalContent.set({ enabled: false, closed: false });
 		}
 		const token = ++this.renderToken;
 		const newHandler = new PptxHandler();
@@ -614,6 +665,9 @@ export class LoadContentService {
 			this.activeBlobUrls = loadBlobUrls;
 			resources.commit();
 			this.handler = newHandler;
+			this.lastLoadWasExternalContentReload = keepExternalContentConsent;
+			this.hasLinkedWebContent.set(parsed.hasLinkedWebContent === true);
+			this.externalContentAllowed.set(allowExternalImages);
 			this.slides.set(nextSlides);
 			this.parsedData.set({ ...parsed, slides: nextSlides, tableStyleMap: nextTableStyleMap });
 			this.mediaDataUrls.set(nextMediaUrls);

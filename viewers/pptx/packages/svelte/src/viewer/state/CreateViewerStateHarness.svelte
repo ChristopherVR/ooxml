@@ -46,6 +46,7 @@
 		getEditable,
 		getSource,
 		limits,
+		allowExternalContent,
 		t = (key: string) => key,
 	}: {
 		onready: (state: ViewerStateBag) => void;
@@ -74,6 +75,8 @@
 		getSource?: () => Uint8Array | undefined;
 		/** The host `limits` prop, passed through verbatim. */
 		limits?: PptxLoadLimits;
+		/** The host `allowExternalContent` prop, passed through verbatim. */
+		allowExternalContent?: boolean;
 		/** The locale-bound translator (defaults to echoing the key). */
 		t?: Translator;
 	} = $props();
@@ -87,6 +90,7 @@
 		getAuthorName: () => authorName,
 		getInitialSlide: () => 0,
 		getLimits: () => limits,
+		getAllowExternalContent: () => allowExternalContent,
 		get t() {
 			return t;
 		},

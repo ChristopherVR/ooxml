@@ -63,6 +63,8 @@ does the same by hand. The blocks are view-only until `canEdit: true`, as in eve
 `listConversionScope`, `googleFonts`, `allowExternalContent` (both also lock their Trust Center
 settings) and `collaboration` apply at once, without remounting the canvas; `limits` and
 `initialSlide` apply to the next load. Changing `content` to a different file reloads the deck.
+The blocks render no security bar, so a deck's linked pictures and media stay blocked unless
+`allowExternalContent: true` or the Trust Center option allows them.
 
 ## State and actions
 

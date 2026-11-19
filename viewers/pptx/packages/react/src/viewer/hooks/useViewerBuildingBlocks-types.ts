@@ -24,6 +24,7 @@ import type {
 	ViewerBuildingBlockActions,
 } from './useViewerBuildingBlocks-actions-types';
 import type { SlidesPaneLayoutGalleryRequest } from './useViewerBuildingBlocks-slides-pane-props';
+import type { ViewerExternalContentBar } from './useViewerBuildingBlocksState';
 
 export type { BuildingBlockRequest, ViewerBuildingBlockActions };
 
@@ -135,6 +136,12 @@ export interface ViewerBuildingBlocksResult {
 	error: string | null;
 	/** Current autosave-to-localStorage recovery status. */
 	autosaveStatus: AutosaveStatus;
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them, and a custom shell renders `<ExternalContentBar>` while
+	 * `barVisible`, wiring Enable Content and Close to `enable` and `close`.
+	 */
+	externalContent: ViewerExternalContentBar;
 	/**
 	 * Operations and state for finishing picker, dialog and layout workflows from host-rendered
 	 * controls: image / media insertion, hyperlink, SmartArt and equation editing, Find / Replace

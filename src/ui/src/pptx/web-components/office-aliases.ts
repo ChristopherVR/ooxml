@@ -12,6 +12,7 @@ import {
 	defineRadio,
 	defineRibbonGroup,
 	defineReadOnlyBanner,
+	defineMessageBar,
 	defineRibbonToggle,
 	defineSearchField,
 	defineSelect,
@@ -31,6 +32,7 @@ import type {
 	CompatToastsViewState,
 	DialogFooterViewState,
 	ExportProgressViewState,
+	ExternalContentBarViewState,
 	PasteOptionsViewState,
 	ReadOnlyBannerViewState,
 } from '../render';
@@ -349,6 +351,46 @@ export function definePptxReadOnlyBanner(registry: CustomElementRegistry): void 
 		}
 	}
 	defineElement(registry, 'pptx-ui-read-only-banner', PptxReadOnlyBanner as unknown as Ctor);
+}
+
+/**
+ * PowerPoint's security bar for linked pictures and media (`<office-ui-message-bar>`). Its only
+ * state is the translator; the strings are PowerPoint's. Enable Content emits
+ * `external-content-request` `{ id: 'action' }`, the close button `{ id: 'close' }`; route them
+ * with `dispatchExternalContentBarIntent`.
+ */
+export function definePptxExternalContentBar(registry: CustomElementRegistry): void {
+	if (registry.get('pptx-ui-external-content-bar')) {
+		return;
+	}
+	const Base = bridged(
+		base(registry, defineMessageBar, 'office-ui-message-bar'),
+		'pptx-ui-external-content-bar',
+	) as unknown as new () => Stateful;
+	class PptxExternalContentBar extends Base {
+		static requestEvent = 'external-content-request';
+		static testIdPrefix = 'pptx-external-content';
+		#model: ExternalContentBarViewState = {};
+		override get state(): ExternalContentBarViewState {
+			return this.#model;
+		}
+		override set state(value: ExternalContentBarViewState) {
+			this.#model = value;
+			const t = value.translate ?? identity;
+			super.state = {
+				kind: 'security',
+				title: t('pptx.externalContent.title'),
+				message: t('pptx.externalContent.message'),
+				actionLabel: t('pptx.externalContent.enable'),
+				closeLabel: t('pptx.externalContent.close'),
+			};
+		}
+	}
+	defineElement(
+		registry,
+		'pptx-ui-external-content-bar',
+		PptxExternalContentBar as unknown as Ctor,
+	);
 }
 
 export function definePptxPasteOptions(registry: CustomElementRegistry): void {

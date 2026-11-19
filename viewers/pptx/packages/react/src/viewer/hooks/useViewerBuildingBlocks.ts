@@ -169,6 +169,7 @@ export function useViewerBuildingBlocks(
 		canInsertElement,
 		readOnlyRecommendation,
 		hasModifyVerifier,
+		externalContent,
 		handlerRef,
 		editorOps,
 		exportHandlers,
@@ -359,6 +360,7 @@ export function useViewerBuildingBlocks(
 		collaboration,
 		shellState,
 		collaborationState,
+		externalContent,
 		// Read last, so action groups registered by the hooks above are included.
 		actions: blockActions.session.actions(),
 	};

@@ -43,6 +43,7 @@ import {
 	recoverySnapshotIntent,
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
+	externalContentBarVisible,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
@@ -158,6 +159,7 @@ import { ElementRenderErrors } from './element-boundary.directive';
 import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportProgressModalComponent } from './export-progress-modal.component';
 import { renderElementPngBlob, renderElementPngDataUrl } from './export-raster-tiles';
+import { ExternalContentBarComponent } from './external-content-bar.component';
 import { FindReplaceBarComponent } from './find-replace-bar.component';
 import { FollowModeBarComponent } from './follow-mode-bar.component';
 import { GoogleWebfontsService } from './google-webfonts.service';
@@ -311,6 +313,7 @@ const noopClose = (): void => undefined;
 		CommentsPanelComponent,
 		CompatToastsComponent,
 		ReadOnlyBannerComponent,
+		ExternalContentBarComponent,
 		SignaturesPanelComponent,
 		AccessibilityPanelComponent,
 		CollaborationCursorsComponent,
@@ -420,6 +423,12 @@ const noopClose = (): void => undefined;
 						(dismiss)="loadNotices.dismissBanner()"
 						(submitPassword)="loadNotices.submitPassword($event)"
 						(cancelPassword)="loadNotices.cancelPasswordPrompt()"
+					/>
+				}
+				@if (externalContentBarShown()) {
+					<pptx-external-content-bar
+						(enable)="enableExternalContent()"
+						(closeBar)="loader.closeExternalContentBar()"
 					/>
 				}
 				@if (!mobile.isMobile() && toolbarVisible()) {
@@ -1787,10 +1796,12 @@ export class PowerPointViewerComponent
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio
-	 * and poster frames. `false`: none of it is fetched. `true`: it is allowed.
-	 * Either value locks File > Options > Trust Center > "Allow external
-	 * content" to match; unset keeps the user's choice there. Google Fonts
-	 * requests are separate (see `googleFonts`).
+	 * and poster frames. Unset follows PowerPoint: nothing is fetched on open
+	 * and a security bar offers Enable Content for that presentation (unless the
+	 * user turned on File > Options > Trust Center > "Allow external content").
+	 * `false`: nothing is fetched and no bar shows. `true`: it is fetched
+	 * without asking. Either value locks the Trust Center option to match.
+	 * Google Fonts requests are separate (see `googleFonts`).
 	 * A change applies from the next load.
 	 */
 	readonly allowExternalContent = input<boolean | undefined>(undefined);
@@ -2144,6 +2155,41 @@ export class PowerPointViewerComponent
 	/** Lift Protected View's read-only lock for the current document (File > Options > Trust Center). */
 	protected enableEditing(): void {
 		this.protectedViewDismissed.set(true);
+	}
+
+	/**
+	 * PowerPoint's security bar: the deck links pictures or media from the web
+	 * that this load left out, and neither the host nor the user has settled it.
+	 */
+	protected readonly externalContentBarShown = computed(() =>
+		externalContentBarVisible({
+			hasLinkedWebContent: this.loader.hasLinkedWebContent(),
+			allowed: this.loader.externalContentAllowed(),
+			host: this.allowExternalContent(),
+			closed: this.loader.externalContent().closed,
+		}),
+	);
+
+	/**
+	 * Where the viewer stood when Enable Content reloaded the deck, so the
+	 * seeding effect keeps the slide and the unsaved state instead of treating
+	 * the reload as a newly opened presentation.
+	 */
+	private externalContentReturn: { slideIndex: number; dirty: boolean } | null = null;
+
+	/**
+	 * Enable Content: reload this presentation with its linked content. Unsaved
+	 * edits are kept by reloading the deck as it stands (the recovery
+	 * serialisation), which stays marked unsaved.
+	 */
+	protected async enableExternalContent(): Promise<void> {
+		const dirty = this.editor.dirty();
+		const source = dirty ? await this.serializeForAutosave(null) : this.fileIO.activeContent();
+		if (!source) {
+			return;
+		}
+		this.externalContentReturn = { slideIndex: this.activeSlideIndex(), dirty };
+		await this.loader.enableExternalContent(source);
 	}
 
 	/**
@@ -2794,14 +2840,25 @@ export class PowerPointViewerComponent
 			const slides = this.loader.slides();
 			untracked(() => {
 				this.editor.setSlides(slides, this.loader.sections());
-				// Host `initialSlide`, clamped by the shared helper every binding uses.
-				this.activeSlideIndex.set(resolveInitialSlideIndex(this.initialSlide(), slides.length));
-				// A newly opened document is protected again even if the previous
-				// one was unlocked via "Enable Editing" this session.
-				this.protectedViewDismissed.set(false);
-				// The read-only banner and compatibility toasts are per-document
-				// diagnostics; a newly opened deck starts with neither dismissed.
-				this.loadNotices.resetForLoad();
+				// Enable Content reloaded the same presentation: keep the slide, the unsaved
+				// state and what the user already settled on its notices.
+				const kept = this.loader.lastLoadWasExternalContentReload
+					? this.externalContentReturn
+					: null;
+				this.externalContentReturn = null;
+				if (kept) {
+					this.activeSlideIndex.set(resolveInitialSlideIndex(kept.slideIndex, slides.length));
+					this.editor.dirty.set(kept.dirty);
+				} else {
+					// Host `initialSlide`, clamped by the shared helper every binding uses.
+					this.activeSlideIndex.set(resolveInitialSlideIndex(this.initialSlide(), slides.length));
+					// A newly opened document is protected again even if the previous
+					// one was unlocked via "Enable Editing" this session.
+					this.protectedViewDismissed.set(false);
+					// The read-only banner and compatibility toasts are per-document
+					// diagnostics; a newly opened deck starts with neither dismissed.
+					this.loadNotices.resetForLoad();
+				}
 				// Seed the grid/snap/guides toggles from THIS deck's own
 				// `ppt/viewProps.xml`, falling back to whatever the toggles already
 				// read (a deck that says nothing about a field keeps the prior one).

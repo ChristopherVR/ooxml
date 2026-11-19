@@ -207,6 +207,10 @@ export const translations = {
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'未嵌入某个字体，因为其许可不允许将其嵌入到可编辑的演示文稿中。',
 	'pptx.compatibility.exportBackendUnavailable': '当前环境中无法导出为此格式。',
+	'pptx.externalContent.title': '安全警告',
+	'pptx.externalContent.message': '已阻止对外部图片和其他媒体的引用。',
+	'pptx.externalContent.enable': '启用内容',
+	'pptx.externalContent.close': '关闭',
 	'pptx.readOnly.bannerTitle': '只读',
 	'pptx.readOnly.editAnyway': '无论如何编辑',
 	'pptx.readOnly.dismiss': '关闭',

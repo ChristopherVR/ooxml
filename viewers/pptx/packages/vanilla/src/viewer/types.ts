@@ -244,11 +244,13 @@ export interface PptxViewerOptions extends PptxViewerCallbacks, ViewportFitOptio
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio
-	 * and poster frames. `false`: none of it is fetched. `true`: it is allowed.
-	 * Either value locks File > Options > Trust Center > "Allow external
-	 * content" to match; unset keeps the user's choice there. Google Fonts
-	 * requests are separate (see `googleFonts`).
-	 * Read once, when the viewer is created.
+	 * and poster frames. Unset follows PowerPoint: nothing is fetched when a
+	 * deck opens, and a security bar offers Enable Content for that
+	 * presentation (File > Options > Trust Center > "Allow external content",
+	 * off by default, fetches without asking). `false`: none of it is fetched
+	 * and no bar shows. `true`: it is fetched without asking. Either value
+	 * locks the Trust Center option to match. Google Fonts requests are
+	 * separate (see `googleFonts`). Read once, when the viewer is created.
 	 */
 	allowExternalContent?: boolean;
 	/**

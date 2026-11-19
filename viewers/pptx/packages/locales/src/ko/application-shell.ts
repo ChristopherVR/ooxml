@@ -221,6 +221,10 @@ export const translations = {
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'글꼴의 라이선스에서 편집 가능한 프레젠테이션에 포함하는 것을 허용하지 않아 글꼴을 포함하지 않았습니다.',
 	'pptx.compatibility.exportBackendUnavailable': '현재 환경에서는 이 형식으로 내보낼 수 없습니다.',
+	'pptx.externalContent.title': '보안 경고',
+	'pptx.externalContent.message': '외부 그림 및 기타 미디어에 대한 참조가 차단되었습니다.',
+	'pptx.externalContent.enable': '콘텐츠 사용',
+	'pptx.externalContent.close': '닫기',
 	'pptx.readOnly.bannerTitle': '읽기 전용',
 	'pptx.readOnly.editAnyway': '그래도 편집',
 	'pptx.readOnly.dismiss': '해제',

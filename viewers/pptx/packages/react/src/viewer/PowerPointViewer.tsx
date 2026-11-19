@@ -110,6 +110,7 @@ import { CompatibilityToasts } from './components/CompatibilityToasts';
 import { EditorChromeStyle } from './components/EditorChromeStyle';
 import { ElementRenderErrorScope } from './components/ElementErrorBoundary';
 import { Rendering3DFlagsContext } from './components/elements/rendering-3d-flags-context';
+import { ExternalContentBar } from './components/ExternalContentBar';
 import { HeaderFooterPanel } from './components/HeaderFooterPanel';
 import { FormatPaneContext } from './components/inspector/format-pane-context';
 import { RecentColorsProvider } from './components/inspector/RecentColorsContext';
@@ -150,6 +151,7 @@ import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
 import { useEditorOperations } from './hooks/useEditorOperations';
+import { useExternalContentConsent } from './hooks/useExternalContentConsent';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLayoutSwitching } from './hooks/useLayoutSwitching';
 import { useLoadNotifications } from './hooks/useLoadNotifications';
@@ -450,6 +452,8 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			googleFonts,
 		);
 		const { resolved: customizationResolved, hiddenActions } = custom;
+		// PowerPoint's security bar for linked pictures and media, per presentation.
+		const externalContent = useExternalContentConsent(content, allowExternalContent, viewerOptions);
 		const aiEnabled = Boolean(ai) && isFeatureEnabled(customizationResolved, 'ai');
 		const optionsAvailable = isDialogAvailable(customizationResolved, 'options');
 		const shareAvailable = isDialogAvailable(customizationResolved, 'share');
@@ -1065,6 +1069,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			handlerRef,
 			viewerApi,
 			loadVersion,
+			serializeForRecovery,
 		} = useViewerIntegration({
 			transformCommittedText: (text, previous) =>
 				applyAutoCorrectToEdit(text, previous, viewerOptions.proofing),
@@ -1103,10 +1108,11 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				hostIntervalMs: hostAutosaveIntervalMs,
 				optionsIntervalSeconds: resolveAutosaveIntervalSeconds(viewerOptions),
 			}),
-			// Trust Center > "Allow external content": core defaults this to false
-			// (SSRF/privacy-safe), so only an explicit `true` here lets remote
-			// http(s) image sources actually load.
-			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
+			// Linked web content: PowerPoint's default (blocked until Enable Content on the
+			// security bar), unless the host or the Trust Center option allows it.
+			allowExternalImages: externalContent.allowExternalImages,
+			externalContentReload: externalContent.reload,
+			onLinkedWebContent: externalContent.reportLoad,
 			initialSlide,
 			// Host `googleFonts` first, else Trust Center > "Download fonts"; read per render, so the
 			// managed webfont link follows the option and the next load never sees a stale value.
@@ -1564,6 +1570,19 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 											checkingPassword={readOnlyRec.checkingPassword}
 											onSubmitPassword={readOnlyRec.submitPassword}
 											onCancelPassword={readOnlyRec.cancelPasswordPrompt}
+										/>
+									)}
+
+									{mode !== 'present' && externalContent.barVisible && (
+										<ExternalContentBar
+											onEnable={() =>
+												externalContent.enable({
+													isDirty: state.isDirty,
+													activeSlideIndex,
+													serialize: serializeForRecovery,
+												})
+											}
+											onClose={externalContent.close}
 										/>
 									)}
 

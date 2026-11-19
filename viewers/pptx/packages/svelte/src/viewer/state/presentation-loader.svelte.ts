@@ -108,6 +108,17 @@ export class PresentationLoader {
 	isPasswordProtected = $state(false);
 	/** Whether the loaded package contains a VBA project. */
 	hasMacros = $state(false);
+	/** Whether the deck links pictures or media to web addresses (`PptxData.hasLinkedWebContent`). */
+	hasLinkedWebContent = $state(false);
+	/** Whether the current load referenced that linked content (its `allowExternalImages`). */
+	externalContentAllowed = $state(false);
+	/**
+	 * Enable Content on the security bar, for the presentation now open. Never
+	 * stored; a load of another presentation ({@link load}) clears it.
+	 */
+	externalContentEnabled = $state(false);
+	/** The user closed the security bar for the presentation now open. */
+	externalContentBarClosed = $state(false);
 	notesCanvasSize = $state.raw<CanvasSize | undefined>(undefined);
 	/** Packaged theme parts (`ppt/theme/*.xml`) selectable in the inspector. */
 	themeOptions = $state.raw<PptxThemeOption[]>([]);
@@ -159,6 +170,8 @@ export class PresentationLoader {
 	/** This viewer's deck in the module-wide glyph-outline cache, released with the deck. */
 	#outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	#activeBlobUrls: string[] = [];
+	/** The bytes the presentation now open was loaded from, for Enable Content's reload. */
+	#source: ArrayBuffer | null = null;
 
 	/**
 	 * Why the deck now loaded was loaded. A collaboration room may replace the
@@ -192,8 +205,28 @@ export class PresentationLoader {
 	 */
 	getGoogleFonts: () => GoogleFontsOption | undefined = () => undefined;
 
-	/** Parse a `.pptx` buffer into reactive viewer state. */
-	async load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
+	/**
+	 * Parse a `.pptx` buffer into reactive viewer state. A new presentation:
+	 * its linked content starts blocked again, as PowerPoint asks per file.
+	 */
+	load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin = 'user'): Promise<void> {
+		this.externalContentEnabled = false;
+		this.externalContentBarClosed = false;
+		return this.#load(raw, origin);
+	}
+
+	/**
+	 * Enable Content: load the presentation now open again with its linked
+	 * content, from `raw` (the deck with unsaved edits) or the bytes it was
+	 * loaded from.
+	 */
+	reloadWithExternalContent(raw?: Uint8Array | ArrayBuffer): Promise<void> {
+		this.externalContentEnabled = true;
+		const bytes = raw ?? this.#source;
+		return bytes ? this.#load(bytes, this.loadOrigin) : Promise.resolve();
+	}
+
+	async #load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin): Promise<void> {
 		this.loadOrigin = origin;
 		const token = ++this.#renderToken;
 		const newHandler = new PptxHandler();
@@ -252,8 +285,9 @@ export class PresentationLoader {
 					googleFontsBase: resolveGoogleFontsCss2Base(this.getGoogleFonts()),
 				});
 			}
+			const loadOptions = this.getLoadOptions();
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
-				...this.getLoadOptions(),
+				...loadOptions,
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 			});
 			if (token !== this.#renderToken) {
@@ -316,6 +350,9 @@ export class PresentationLoader {
 			this.digitalSignatureCount = parsed.digitalSignatureCount ?? 0;
 			this.isPasswordProtected = parsed.isPasswordProtected ?? false;
 			this.hasMacros = parsed.hasMacros ?? false;
+			this.hasLinkedWebContent = parsed.hasLinkedWebContent === true;
+			this.externalContentAllowed = loadOptions.allowExternalImages === true;
+			this.#source = buffer as ArrayBuffer;
 			// 9525 EMU per pixel (matches React/Vue's useLoadContent conversion).
 			this.notesCanvasSize =
 				parsed.notesWidthEmu && parsed.notesHeightEmu
@@ -394,6 +431,7 @@ export class PresentationLoader {
 		this.#renderToken++;
 		revokeBlobUrls(this.#activeBlobUrls);
 		this.#activeBlobUrls = [];
+		this.#source = null;
 		revokeBlobUrls(this.mediaDataUrls.values());
 		this.handler?.dispose();
 		this.handler = null;

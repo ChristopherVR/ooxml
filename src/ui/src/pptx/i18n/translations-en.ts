@@ -3618,7 +3618,7 @@ export const translationsEn: Record<string, string> = {
 		'Documents open read-only; use Enable Editing to make changes.',
 	'pptx.options.trust.allowExternalContent': 'Allow external content (remote images and media)',
 	'pptx.options.trust.allowExternalContentInfo':
-		'When off, only content embedded in the file is displayed.',
+		'When off (the default, as in PowerPoint), linked pictures and media are not downloaded; a security bar offers Enable Content for each presentation.',
 	'pptx.options.trust.allowFontDownloads':
 		'Download fonts that are not installed or embedded (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':
@@ -4212,6 +4212,11 @@ export const translationsEn: Record<string, string> = {
 	// Wave-4 parity UI: read-only banner, compat toasts, slide-size rescale,
 	// chart subtype pickers, master-view CRUD, comment mentions, recent colours,
 	// custom-show / extended hyperlink actions
+	'pptx.externalContent.title': 'SECURITY WARNING',
+	'pptx.externalContent.message':
+		'References to external pictures and other media have been blocked.',
+	'pptx.externalContent.enable': 'Enable Content',
+	'pptx.externalContent.close': 'Close',
 	'pptx.readOnly.bannerTitle': 'Read-only',
 	'pptx.readOnly.editAnyway': 'Edit anyway',
 	'pptx.readOnly.dismiss': 'Dismiss',
