@@ -59,18 +59,19 @@ editor.themeColors = {
 };
 ```
 
-| Token                                  | Función                                                    |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `background`, `foreground`             | Interfaz de la aplicación (barra de título, ventana)       |
-| `card`, `cardForeground`               | Superficie de la cinta, los paneles y la barra de estado   |
-| `popover`, `popoverForeground`         | Menús, diálogos y otras superficies flotantes              |
-| `primary`, `primaryForeground`         | Color de marca y de la acción principal                    |
-| `secondary`, `secondaryForeground`     | Superficies secundarias                                    |
-| `muted`, `mutedForeground`             | Superficie atenuada, también el área detrás de las páginas |
-| `accent`, `accentForeground`           | Resaltado al pasar el cursor y de selección                |
-| `destructive`, `destructiveForeground` | Acciones destructivas                                      |
-| `border`, `input`, `ring`              | Bordes, contornos de campos, anillo de foco                |
-| `radius`                               | Radio base de las esquinas, por ejemplo `4px`              |
+| Token                                  | Función                                                                                                    |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `background`, `foreground`             | Interfaz de la aplicación (barra de título, ventana)                                                       |
+| `card`, `cardForeground`               | Superficie de la cinta, los paneles y la barra de estado                                                   |
+| `popover`, `popoverForeground`         | Menús, diálogos y otras superficies flotantes                                                              |
+| `primary`, `primaryForeground`         | Color de marca y de la acción principal                                                                    |
+| `primaryInk`                           | El color principal como texto sobre la interfaz y las selecciones, al menos 4,5:1 (por defecto, `primary`) |
+| `secondary`, `secondaryForeground`     | Superficies secundarias                                                                                    |
+| `muted`, `mutedForeground`             | Superficie atenuada, también el área detrás de las páginas                                                 |
+| `accent`, `accentForeground`           | Resaltado al pasar el cursor y de selección                                                                |
+| `destructive`, `destructiveForeground` | Acciones destructivas                                                                                      |
+| `border`, `input`, `ring`              | Bordes, contornos de campos, anillo de foco                                                                |
+| `radius`                               | Radio base de las esquinas, por ejemplo `4px`                                                              |
 
 Pase `undefined` para borrar las sustituciones.
 

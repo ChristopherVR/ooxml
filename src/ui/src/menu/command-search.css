@@ -95,6 +95,7 @@ li.empty {
 		color: CanvasText;
 	}
 	li[data-active] {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

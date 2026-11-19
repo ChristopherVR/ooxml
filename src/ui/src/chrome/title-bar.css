@@ -282,6 +282,7 @@ button:focus-visible {
 	.qat button:hover:not(:disabled),
 	.results button:hover,
 	.results button[aria-selected='true'] {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

@@ -8,7 +8,7 @@ import { normalizeThemeMode } from 'ooxml-core/xlsx/ui';
 
 describe('theme tokens', () => {
 	it('defines the docx token set plus the grid tokens in both presets', () => {
-		expect(THEME_KEYS).toHaveLength(27);
+		expect(THEME_KEYS).toHaveLength(28);
 		for (const preset of [lightTheme, darkTheme])
 			for (const key of THEME_KEYS) expect(preset[key], key).toBeTruthy();
 	});

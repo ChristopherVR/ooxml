@@ -519,7 +519,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	padding: 7px 12px;
 	gap: 7px;
 	font-size: 13px;
-	color: var(--blue);
+	color: var(--accent-ink);
 }
 #assistant-toggle[aria-expanded='true'] {
 	background: var(--selected);
@@ -569,7 +569,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	place-items: center;
 	border: 1px solid var(--line);
 	background: var(--surface);
-	color: var(--blue);
+	color: var(--accent-ink);
 	border-radius: 8px;
 	font-family: var(--font-display);
 	font-weight: 700;
@@ -647,7 +647,7 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 }
 .app-rail button[aria-current='true'] {
 	background: var(--selected);
-	color: var(--blue);
+	color: var(--accent-ink);
 	font-weight: 600;
 }
 .app-rail button[aria-current='true']:before {
@@ -1047,4 +1047,18 @@ dialog h2 {
 .cloud-conflict-details ul {
 	margin: 4px 0 8px;
 	padding-left: 18px;
+}
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.app-rail button[aria-current='true'],
+	.tabs [aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.app-rail button[aria-current='true']:before {
+		background: Highlight;
+	}
 }

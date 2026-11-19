@@ -183,3 +183,13 @@
 	grid-column: 2;
 	color: var(--_vv-muted);
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.external-data tbody tr[aria-selected='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

@@ -380,3 +380,13 @@
 .ribbon-icon[data-accent='orange'] {
 	color: var(--ribbon-accent-orange);
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.ribbon-group button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

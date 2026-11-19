@@ -228,6 +228,7 @@ button:disabled {
 	.option[aria-selected='true'],
 	.option[data-active],
 	.option:not([aria-disabled='true']):hover {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

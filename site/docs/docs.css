@@ -987,3 +987,17 @@ code {
 		}
 	}
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.docs-nav a[aria-current],
+	.docs-outline a[aria-current] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.docs-nav a[aria-current]::before {
+		background: Highlight;
+	}
+}

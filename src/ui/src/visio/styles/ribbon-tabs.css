@@ -45,7 +45,7 @@ office-ui-ribbon[data-tabs-start][data-tabs-end]::part(tabs) {
 @media (max-width: 760px), (pointer: coarse) {
 	office-ui-ribbon::part(file) {
 		background: none;
-		color: var(--_vv-accent);
+		color: var(--_vv-accent-text);
 		font-weight: 600;
 	}
 	office-ui-ribbon::part(file):hover {

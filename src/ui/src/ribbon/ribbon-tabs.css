@@ -61,7 +61,7 @@
 	background: var(--office-surface);
 }
 [role='tab'][aria-selected='true'] {
-	color: var(--office-accent);
+	color: var(--office-accent-ink);
 }
 [role='tab'][aria-selected='true']::after {
 	content: '';

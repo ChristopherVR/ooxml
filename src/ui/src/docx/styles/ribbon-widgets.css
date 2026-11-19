@@ -189,3 +189,14 @@
 .ribbon-group .ribbon-launcher:hover:not(:disabled) {
 	color: var(--ink);
 }
+
+/* Forced colours: selected, current and pressed states keep a system highlight. */
+@media (forced-colors: active) {
+	.ribbon-list button[aria-selected='true'],
+	.ribbon-group .ribbon-gallery .style-tile[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+}

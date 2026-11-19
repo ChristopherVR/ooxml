@@ -117,7 +117,7 @@ tbody tr:hover {
 	overflow-wrap: anywhere;
 }
 .file-open:hover:not(:disabled) {
-	color: var(--office-teams-brand);
+	color: var(--office-teams-brand-ink);
 	text-decoration: underline;
 }
 .visually-hidden {

@@ -421,6 +421,15 @@ any token on `:root` or on any container to retheme or resize the suite:
 - semantic colours: `--office-foreground`, `-background`, `-surface`, `-selected`, `-border`,
   `-accent`, `-accent-foreground`, `-ring`, `-danger`, `-warning`, `-info`, `-popover`, `-overlay`,
   `-notice-*`, `-paper`;
+- contrast roles: `--office-accent-ink` (the accent as text, at least 4.5:1 on the background and
+  selected fills; lifted in dark mode), `--office-teams-brand-ink` (the same for the Teams brand)
+  and `--office-control-border` (form control boundaries, at least 3:1; decorative dividers keep
+  `--office-border`). `contrastRatio` and `readableTextColor` in `ooxml-core/color` check a pair;
+- document canvas: `--office-canvas-gridline` (Excel gridlines, `#e1e1e1`) and
+  `--office-canvas-link` (hyperlinks on paper, `#0563c1`). Themes never remap these, so a theme
+  cannot change how a document looks. In forced-colours mode Word's paper and Excel's sheet
+  follow the system colours (`Canvas`, `CanvasText`, gridlines `GrayText`) while Visio's drawing
+  keeps its own; this has not yet been compared with Office's own contrast-theme rendering;
 - scales: `--office-space-*`, `--office-radius-*`, `--office-font-size-*`, `--office-icon-size-*`,
   `--office-control-height-*`, `--office-shadow-*`, `--office-duration-*`, `--office-z-*`;
 - component tokens that default to the scales, for example `--office-checkbox-size`,

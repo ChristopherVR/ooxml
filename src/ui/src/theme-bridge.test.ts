@@ -55,6 +55,15 @@ describe('shadcnBridge', () => {
 		);
 	});
 
+	it('takes the accent ink from the product ink, else its primary', () => {
+		expect(css).toContain('--office-accent-ink: var(--dve-primary-ink, var(--dve-primary));');
+		// The compatibility layer prefers a host's own primary over the inherited ink, so a custom
+		// primary keeps colouring text, and otherwise inherits the page's ink.
+		expect(legacyThemeAliases(':host', '--xve-', '--_x-')).toContain(
+			'--_x-primary-ink: var(--xve-primary-ink, var(--xve-primary, var(--office-accent-ink, var(--office-accent, #2563eb))));',
+		);
+	});
+
 	it('takes literal fallbacks and extra tokens', () => {
 		const withOptions = shadcnBridge('.viewer', '--pptx-', {
 			fallbacks: { foreground: '#f3f4f6' },

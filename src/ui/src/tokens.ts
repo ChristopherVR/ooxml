@@ -16,8 +16,12 @@ export const OFFICE_TOKENS = {
 	'--office-surface': '#f3f4f6',
 	'--office-selected': '#e5e7eb',
 	'--office-border': '#d1d5db',
+	/** Boundary of a form control (field, checkbox, switch): at least 3:1 against the background. */
+	'--office-control-border': '#8a8886',
 	'--office-accent': '#2563eb',
 	'--office-accent-foreground': '#ffffff',
+	/** The accent as text on the background or a selected fill: at least 4.5:1. */
+	'--office-accent-ink': 'var(--office-accent, #2563eb)',
 	'--office-ring': '#2563eb',
 	'--office-danger': '#b91c1c',
 	'--office-danger-foreground': '#ffffff',
@@ -36,6 +40,12 @@ export const OFFICE_TOKENS = {
 	'--office-keytip-border': '#8a8886',
 	'--office-highlight': '#dc2626',
 	'--office-paper': '#ffffff',
+	// Document canvas: what a document paints. Themes never remap these, so a theme cannot change a
+	// document's appearance; only forced-colours mode replaces them.
+	/** Hyperlink text on paper (the default Office theme's hyperlink colour). */
+	'--office-canvas-link': '#0563c1',
+	/** Spreadsheet gridlines (Excel's default gridline colour). */
+	'--office-canvas-gridline': '#e1e1e1',
 	'--office-accent-hover': 'color-mix(in srgb, var(--office-accent, #2563eb) 85%, #000)',
 	// Typography
 	'--office-font': 'system-ui, -apple-system, "Segoe UI", sans-serif',
@@ -109,7 +119,7 @@ export const OFFICE_TOKENS = {
 	'--office-field-height': '28px',
 	'--office-field-height-lg': '40px',
 	'--office-field-radius': '5px',
-	'--office-field-border': 'var(--office-border, #d1d5db)',
+	'--office-field-border': 'var(--office-control-border, #8a8886)',
 	'--office-field-border-focus': 'var(--office-ring, #2563eb)',
 	'--office-field-background': 'var(--office-background, #ffffff)',
 	'--office-field-foreground': 'var(--office-foreground, #1f2937)',
@@ -118,7 +128,7 @@ export const OFFICE_TOKENS = {
 	'--office-checkbox-size': '16px',
 	'--office-checkbox-size-touch': '22px',
 	'--office-checkbox-radius': '3px',
-	'--office-checkbox-border': 'var(--office-border, #d1d5db)',
+	'--office-checkbox-border': 'var(--office-control-border, #8a8886)',
 	'--office-checkbox-background': 'var(--office-background, #ffffff)',
 	'--office-checkbox-accent': 'var(--office-accent, #2563eb)',
 	'--office-checkbox-accent-foreground': 'var(--office-accent-foreground, #ffffff)',
@@ -132,7 +142,7 @@ export const OFFICE_TOKENS = {
 	'--office-switch-knob-size': '12px',
 	'--office-switch-knob-size-touch': '18px',
 	'--office-switch-knob-offset': '2px',
-	'--office-switch-border': 'var(--office-border, #d1d5db)',
+	'--office-switch-border': 'var(--office-control-border, #8a8886)',
 	'--office-switch-track': 'var(--office-surface, #f3f4f6)',
 	'--office-switch-track-on': 'var(--office-accent, #2563eb)',
 	'--office-switch-thumb': 'var(--office-foreground, #1f2937)',
@@ -264,10 +274,12 @@ export const OFFICE_TOKENS = {
 	'--office-app-brand-foreground': '#ffffff',
 	// Component: team workspace (a Teams-like surface)
 	'--office-teams-brand': '#5b5fc7',
-	'--office-teams-brand-hover': '#4f52b2',
+	'--office-teams-brand-hover': 'color-mix(in srgb, var(--office-teams-brand, #5b5fc7) 85%, #000)',
 	'--office-teams-brand-pressed': '#3f4296',
 	'--office-teams-brand-subtle': '#e8ebfa',
 	'--office-teams-brand-foreground': '#ffffff',
+	/** The brand as text on the panel or a brand-subtle fill: at least 4.5:1. */
+	'--office-teams-brand-ink': 'var(--office-teams-brand, #5b5fc7)',
 	'--office-teams-rail': '#ebebeb',
 	'--office-teams-panel': '#f5f5f5',
 	'--office-teams-bubble': '#f5f5f5',

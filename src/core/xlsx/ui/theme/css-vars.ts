@@ -10,6 +10,7 @@ export const THEME_KEYS = [
 	'popoverForeground',
 	'primary',
 	'primaryForeground',
+	'primaryInk',
 	'secondary',
 	'secondaryForeground',
 	'muted',

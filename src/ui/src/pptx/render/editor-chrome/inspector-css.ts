@@ -1,4 +1,9 @@
 export const EDITOR_INSPECTOR_CSS = `
+@media (forced-colors: active) {
+  [data-pptx-editor-chrome] [data-pptx-chrome="inspector-tabs"] button[aria-selected="true"] {
+    forced-color-adjust: none; background: Highlight; color: HighlightText;
+  }
+}
 @media (min-width: 768px) {
   [data-pptx-editor-chrome] [data-pptx-chrome="inspector"] {
     background: var(--pptx-background); color: var(--pptx-foreground);

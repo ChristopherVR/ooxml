@@ -53,6 +53,7 @@ button:focus-visible {
 		color: ButtonText;
 	}
 	button:hover {
+		forced-color-adjust: none;
 		background: Highlight;
 		color: HighlightText;
 	}

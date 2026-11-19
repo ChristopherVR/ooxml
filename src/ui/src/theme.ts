@@ -48,6 +48,7 @@ const DARK = `
 	--office-surface: #1f2937;
 	--office-border: #374151;
 	--office-accent: #6366f1;
+	--office-accent-ink: color-mix(in srgb, var(--office-accent, #6366f1) 60%, #fff);
 	--office-ring: #818cf8;
 	--office-danger: #f87171;
 	--office-selected: #374151;
@@ -57,8 +58,9 @@ const DARK = `
 	--office-info: #60a5fa;
 	--office-warning: #f59e0b;
 	--office-teams-brand: #7f85f5;
-	--office-teams-brand-hover: #96a0ff;
+	--office-teams-brand-hover: color-mix(in srgb, var(--office-teams-brand, #7f85f5) 85%, #fff);
 	--office-teams-brand-subtle: #2f2f4a;
+	--office-teams-brand-ink: color-mix(in srgb, var(--office-teams-brand, #7f85f5) 60%, #fff);
 	--office-teams-rail: #141414;
 	--office-teams-panel: #1f1f1f;
 	--office-teams-bubble: #2d2d2d;
@@ -136,6 +138,7 @@ ${modeCss(':where([data-office-theme="dark"])', true)}
 		--office-background: Canvas;
 		--office-surface: Canvas;
 		--office-border: CanvasText;
+		--office-control-border: CanvasText;
 		--office-accent: Highlight;
 		--office-accent-foreground: HighlightText;
 		--office-ring: Highlight;
