@@ -7,13 +7,17 @@
 // and saves the result under the new key, so without pruning the cache keeps every version it has
 // ever held (842 MB against about 330 MB for one lockfile, in November 2026), and every job pays to
 // extract it. Only `<name>@<version>@@@<n>` folders and the links to them are touched; anything
-// else in the cache is left as it is.
+// else in the cache is left as it is. Bun names a prerelease or build version by a hash of its
+// tag (`1.0.0-4049f5e8f1219d89`), which cannot be matched to the lockfile, so such a folder goes
+// only when the lockfile holds no prerelease of that name and version at all.
 import { lstatSync, readFileSync, readdirSync, readlinkSync, rmSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseLock } from './ci-manifests.mjs';
 
 const VERSIONED = /^(.+)@([^@/]+)@@@\d+$/;
+const RELEASE = /^\d+\.\d+\.\d+$/;
+const HASHED_TAG = /^(\d+\.\d+\.\d+)-[0-9a-f]{16}$/;
 
 /** The `name@version` of every package the lockfile resolves. */
 export function lockedPackages(lockText) {
@@ -25,9 +29,19 @@ export function lockedPackages(lockText) {
 
 /** The cache paths (relative, `/`-separated) of versions `locked` does not name. */
 export function staleEntries(paths, locked) {
+	const tagged = new Set(
+		[...locked].flatMap((id) => {
+			const match = /^(.+@\d+\.\d+\.\d+)[-+]/.exec(id);
+			return match ? [match[1]] : [];
+		}),
+	);
 	return paths.filter((path) => {
 		const match = VERSIONED.exec(path);
-		return match !== null && !locked.has(`${match[1]}@${match[2]}`);
+		if (!match) return false;
+		const [, name, version] = match;
+		if (RELEASE.test(version)) return !locked.has(`${name}@${version}`);
+		const hashed = HASHED_TAG.exec(version);
+		return hashed !== null && !tagged.has(`${name}@${hashed[1]}`);
 	});
 }
 

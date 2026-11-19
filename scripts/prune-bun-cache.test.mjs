@@ -22,6 +22,7 @@ const lock = `{
   "packages": {
     "a": ["a@2.0.0", "", {}, "sha512-a"],
     "@s/b": ["@s/b@1.1.0", "", {}, "sha512-b"],
+    "c": ["c@3.0.0-beta.2", "", {}, "sha512-c"],
     "ooxml-core": ["ooxml-core@workspace:src/core"],
   }
 }`;
@@ -30,6 +31,7 @@ test('the lockfile names the package versions it resolves', () => {
 	assert.deepEqual([...lockedPackages(lock)].sort(), [
 		'@s/b@1.1.0',
 		'a@2.0.0',
+		'c@3.0.0-beta.2',
 		'ooxml-core@workspace:src/core',
 	]);
 	assert.deepEqual(
@@ -38,6 +40,15 @@ test('the lockfile names the package versions it resolves', () => {
 			lockedPackages(lock),
 		),
 		['a@1.0.0@@@1', '@s/b@1.0.0@@@1'],
+	);
+	// Bun names prerelease folders by a hash of the tag: one is kept while the lockfile holds any
+	// prerelease of that version, and dropped once it holds none.
+	assert.deepEqual(
+		staleEntries(
+			['c@3.0.0-4049f5e8f1219d89@@@1', 'c@2.0.0-0ea33bea221d7ae0@@@1', 'c@3.0.0@@@1'],
+			lockedPackages(lock),
+		),
+		['c@2.0.0-0ea33bea221d7ae0@@@1', 'c@3.0.0@@@1'],
 	);
 });
 
