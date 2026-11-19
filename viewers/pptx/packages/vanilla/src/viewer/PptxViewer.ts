@@ -99,7 +99,6 @@ import type {
 	PptxHandler,
 	PptxSaveFormat,
 	PptxSlide,
-	PptxTheme,
 } from 'pptx-viewer-core';
 
 import type { AiChatMount, AiFocusController } from './ai';
@@ -1046,7 +1045,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				}
 			},
 			getHandler: () => this.loading.getHandler(),
-			applyThemeUpdates: (updates) => this.applyAiThemeUpdates(updates),
+			applyThemeUpdates: (updates) => this.editor.getEditActions().applyThemeUpdates(updates),
 			getFocusedTargets: () => controller.getEffectiveTargets(),
 			onCorePropertiesChanged: (properties) => this.options.onPropertiesChange?.(properties),
 		});
@@ -1061,21 +1060,6 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			controller,
 			goToSlide: (index) => this.controls.goToSlide(index),
 		});
-	}
-
-	/**
-	 * Merge AI-proposed theme scheme updates into the live deck and re-render.
-	 * Theme scheme state sits outside the slides history snapshot, so this is a
-	 * best-effort apply (not a strictly undoable step, unlike slide edits).
-	 */
-	private applyAiThemeUpdates(updates: Partial<PptxTheme>): void {
-		if (!updates.colorScheme) {
-			return;
-		}
-		this.store.set({
-			colorScheme: { ...(this.store.get().colorScheme ?? {}), ...updates.colorScheme },
-		});
-		this.renderer.renderAll();
 	}
 
 	/**

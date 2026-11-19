@@ -18,6 +18,7 @@ export { deckDataFieldChanged } from './deck-data-diff';
 
 export { createPptxAiBridge, pptxAiDeckTitle } from './bridge-factory';
 export type { PptxAiBridgePort, PptxAiCanvasSize } from './bridge-factory';
+export { checkPptxAiBridgeReadsItsWrites } from './bridge-contract';
 
 export {
 	AI_TOOL_FLASH_MS,

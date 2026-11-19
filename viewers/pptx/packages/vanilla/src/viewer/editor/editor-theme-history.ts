@@ -13,7 +13,8 @@ import type { Store, ViewerState } from '../state';
  * with the snapshot).
  */
 
-function storeTheme(state: ViewerState) {
+/** The store's theme, as the assistant and an undo step see it. */
+export function storeTheme(state: ViewerState) {
 	return {
 		colorScheme: state.colorScheme,
 		fontScheme: state.fontScheme,

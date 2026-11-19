@@ -174,9 +174,10 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 By default (`writePolicy: 'stage'`) every edit the assistant makes is **staged**,
 not applied. The panel shows a proposal card with a short summary of the change
 and Apply / Discard buttons, plus Apply all when more than one change can be
-applied. Applying commits the change through the viewer's own editor history as
-a single entry, so one Ctrl+Z reverts it. Read tools (reading slides, finding
-text) and navigation run immediately and are never staged.
+applied. Applying a slide change records one undo step, so one Ctrl+Z reverts it,
+and Apply all records one step per change. Theme and presentation-level changes
+behave like the same edit made by hand in that viewer. Read tools (reading slides,
+finding text) and navigation run immediately and are never staged.
 
 `writePolicy` applies to every tool that changes the deck, theme and
 presentation-level tools included:
@@ -195,6 +196,12 @@ the change on the deck as it is at that moment, so several proposals and anythin
 the user edited in the meantime all survive. When the same content has changed
 since the proposal was made, it is not applied: the card reports the conflict and
 the user can discard it or try again.
+
+The viewers' bridges let each applied change read what the previous one wrote,
+even before the framework re-renders. If you implement `PptxAiBridge` yourself,
+`checkPptxAiBridgeReadsItsWrites(bridge)` from `ooxml-ui/pptx/ai/host` reports any
+read that misses a write. Run it on a throwaway deck, because it edits the deck.
+A proposal passes `applyTheme` only the theme parts it changed.
 
 The assistant's tool arguments are checked against each tool's schema before the
 tool runs. A call that does not match is returned to the model as an error and

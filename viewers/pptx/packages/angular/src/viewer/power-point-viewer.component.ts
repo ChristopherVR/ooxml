@@ -3776,10 +3776,10 @@ export class PowerPointViewerComponent
 		const current = this.loader.theme();
 		const colorScheme = updates.colorScheme ?? current?.colorScheme;
 		const fontScheme = updates.fontScheme ?? current?.fontScheme;
-		if (!colorScheme || !fontScheme) {
+		if (!colorScheme) {
 			return;
 		}
-		if (updates.name) {
+		if (updates.name && fontScheme) {
 			this.themeGallery.applyCustomTheme(colorScheme, fontScheme, updates.name);
 			return;
 		}

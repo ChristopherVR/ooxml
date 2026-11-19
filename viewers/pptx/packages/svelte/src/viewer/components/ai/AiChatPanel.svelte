@@ -54,6 +54,9 @@
 	// viewer state through getters, and `config` is stable), so capturing the
 	// initial prop values here is intentional.
 	const chat = untrack(() => new SvelteAiChat({ bridge, config, onToolTarget }));
+	$effect(() => {
+		chat.followToolCalls();
+	});
 
 	// Applied-edit animation: once the session is ready, subscribe to its change
 	// animator so that when the AI apply path publishes a batch of changed

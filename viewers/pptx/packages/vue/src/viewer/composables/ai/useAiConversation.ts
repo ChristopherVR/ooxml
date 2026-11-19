@@ -96,27 +96,32 @@ export function useAiConversation(
 	// stays referentially stable across calls even though the linter can't see
 	// that through a parameter.
 	// oxlint-disable-next-line react/hooks -- see comment above
+	const clientExecutes = session.clientExecutesTools;
 	const chat = useChat({
 		transport: session.transport,
-		sendAutomaticallyWhen: session.sendAutomaticallyWhen,
+		// In `model` mode the session's agent runs the tools; running them here as
+		// well would stage every proposal twice.
+		sendAutomaticallyWhen: clientExecutes ? session.sendAutomaticallyWhen : undefined,
 		onError: (err: Error) => config.onError?.(err),
-		onToolCall: async ({ toolCall }: { toolCall: unknown }) => {
-			const { toolName, toolCallId, input } = toolCall as IncomingToolCall;
-			const addToolOutput = chat.addToolOutput as unknown as AddToolOutput;
-			try {
-				const output = await session.executeToolCall(toolName, input);
-				addToolOutput({ tool: toolName, toolCallId, output });
-			} catch (err) {
-				addToolOutput({
-					tool: toolName,
-					toolCallId,
-					state: 'output-error',
-					errorText: err instanceof Error ? err.message : String(err),
-				});
-			}
-			// A staged proposal was likely just registered; surface it.
-			refreshProposals();
-		},
+		onToolCall: clientExecutes
+			? async ({ toolCall }: { toolCall: unknown }) => {
+					const { toolName, toolCallId, input } = toolCall as IncomingToolCall;
+					const addToolOutput = chat.addToolOutput as unknown as AddToolOutput;
+					try {
+						const output = await session.executeToolCall(toolName, input);
+						addToolOutput({ tool: toolName, toolCallId, output });
+					} catch (err) {
+						addToolOutput({
+							tool: toolName,
+							toolCallId,
+							state: 'output-error',
+							errorText: err instanceof Error ? err.message : String(err),
+						});
+					}
+					// A staged proposal was likely just registered; surface it.
+					refreshProposals();
+				}
+			: undefined,
 	});
 
 	const isStreaming = computed(
@@ -131,6 +136,8 @@ export function useAiConversation(
 	watch(
 		chat.messages,
 		(messages) => {
+			// The agent stages proposals while it streams, so nothing else refreshes them.
+			refreshProposals();
 			for (const call of extractReadyToolCalls(messages)) {
 				if (seenToolCalls.has(call.toolCallId)) {
 					continue;

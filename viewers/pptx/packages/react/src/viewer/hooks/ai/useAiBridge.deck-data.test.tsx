@@ -70,7 +70,7 @@ function baseInput(overrides: Partial<UseAiBridgeInput> = {}): UseAiBridgeInput 
 		setTableStylesDefaultId: () => {},
 		setTagCollections: () => {},
 		applySelection: () => {},
-		bumpHistory: () => {},
+		recordSlidesStep: () => {},
 		markDirty: () => {},
 		applyThemeUpdates: () => {},
 		...overrides,

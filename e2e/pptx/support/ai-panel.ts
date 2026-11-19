@@ -155,6 +155,60 @@ export async function installMockAiModel(
 	return log;
 }
 
+/**
+ * Answer the endpoint with tool calls chosen by the latest `zz<word>` in the user's message
+ * (`zzread 2` runs `scripts.zzread`). A turn that follows tool results, and a message with no
+ * script, replies `Finished <trigger>`, so a spec can wait for each exchange separately. Returns
+ * the request log; the tool results a turn produced are in its last request.
+ */
+export async function installScriptedAiTools(
+	page: Page,
+	scripts: Record<string, MockToolCall[]>,
+): Promise<CompletionsRequest[]> {
+	const log: CompletionsRequest[] = [];
+	let nextCallId = 0;
+	await page.route(MOCK_AI_COMPLETIONS_GLOB, async (route) => {
+		const body = route.request().postDataJSON() as CompletionsRequest;
+		log.push(body);
+		const messages = body.messages ?? [];
+		const lastUser = [...messages].reverse().find((message) => message.role === 'user');
+		const trigger =
+			/zz[a-z]+(?: \d+)?(?![\s\S]*zz[a-z]+)/u.exec(textOf(lastUser?.content))?.[0] ?? '';
+		const calls = scripts[trigger.split(' ')[0] ?? ''] ?? [];
+		const turn =
+			messages.at(-1)?.role === 'tool' || calls.length === 0
+				? sseTurn({ role: 'assistant', content: `Finished ${trigger}` }, 'stop')
+				: sseTurn(
+						{
+							role: 'assistant',
+							tool_calls: calls.map((call, index) => ({
+								index,
+								id: `call_scripted_${(nextCallId += 1)}`,
+								type: 'function',
+								function: { name: call.name, arguments: JSON.stringify(call.input) },
+							})),
+						},
+						'tool_calls',
+					);
+		await route.fulfill({
+			status: 200,
+			headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
+			body: turn,
+		});
+	});
+	return log;
+}
+
+/** The text of the tool results sent back in the latest turn of `log`. */
+export function latestToolResults(log: readonly CompletionsRequest[]): string {
+	const messages = log.at(-1)?.messages ?? [];
+	return messages
+		.slice(messages.map((message) => message.role).lastIndexOf('user'))
+		.filter((message) => message.role === 'tool')
+		.map((message) => textOf(message.content))
+		.join('\n');
+}
+
 /** The assistant pane, addressed by the shared neutral marker. */
 export function aiPanel(page: Page): Locator {
 	return page.locator(PANEL_SELECTOR).first();

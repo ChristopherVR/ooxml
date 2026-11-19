@@ -10,6 +10,11 @@
  * {@link PptxAiBridge.updateElement}, {@link PptxAiBridge.applyTheme}). Keeping
  * writes funnelled lets the {@link ProposalStore} commit a batch as a single
  * undoable history entry.
+ *
+ * A read made right after a write must return that write, even when the host's
+ * state only updates on its next render: the store applies several proposals in
+ * one tick, each on the deck the previous one left.
+ * `checkPptxAiBridgeReadsItsWrites` tests a bridge against this.
  */
 
 import type { PptxData, PptxElement, PptxHandler, PptxSlide, PptxTheme } from 'ooxml-core/pptx';

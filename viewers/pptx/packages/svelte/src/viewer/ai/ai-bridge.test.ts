@@ -1,3 +1,4 @@
+import { checkPptxAiBridgeReadsItsWrites } from 'ooxml-ui/pptx/ai/host';
 import type { PptxHandler, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -229,5 +230,30 @@ describe('createSvelteAiBridge focus', () => {
 		const focus = [{ kind: 'element' as const, slideIndex: 0, elementId: 'e1' }];
 		const bridge = createSvelteAiBridge(makeDeps({ getFocusedTargets: () => focus }));
 		expect(bridge.getFocusedTargets?.()).toEqual(focus);
+	});
+});
+
+describe('createSvelteAiBridge read after write', () => {
+	it('sees each write at once', () => {
+		let slides = [textSlide()];
+		let theme: PptxTheme | undefined;
+		let core = {};
+		const bridge = createSvelteAiBridge(
+			makeDeps({
+				getSlides: () => slides,
+				commitSlides: (next: PptxSlide[]) => {
+					slides = next;
+				},
+				getTheme: () => theme,
+				applyTheme: (updates: Partial<PptxTheme>) => {
+					theme = { ...theme, ...updates };
+				},
+				getCoreProperties: () => core,
+				setDocumentProperties: (next: object) => {
+					core = next;
+				},
+			} as Partial<SvelteAiBridgeDeps>),
+		);
+		expect(checkPptxAiBridgeReadsItsWrites(bridge)).toEqual([]);
 	});
 });

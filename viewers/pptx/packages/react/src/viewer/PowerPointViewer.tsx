@@ -1342,19 +1342,22 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// when the host passes the `ai` prop. Its three write choke points route
 		// through the editor-history layer so AI edits are a single Ctrl+Z.
 		const applyAiTheme = useCallback(
-			(updates: Partial<PptxTheme>) => {
+			(updates: Partial<PptxTheme>, previous: PptxTheme | undefined) => {
 				if (updates.colorScheme) {
-					void themeHandlers.handleUpdateThemeColorScheme(updates.colorScheme);
+					void themeHandlers.handleUpdateThemeColorScheme(
+						updates.colorScheme,
+						previous?.colorScheme,
+					);
 				}
 				if (updates.fontScheme) {
-					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme);
+					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme, previous?.fontScheme);
+				}
+				if (updates.name) {
+					void themeHandlers.handleUpdateThemeName(updates.name);
 				}
 			},
 			[themeHandlers],
 		);
-		const bumpAiHistory = useCallback(() => {
-			state.setPointerCommitNonce((n) => n + 1);
-		}, [state]);
 		const aiPanel = useAiPanelController({
 			activeSlideIndex,
 			selectedElementId,
@@ -1401,7 +1404,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setSlides: state.setSlides,
 			setActiveSlideIndex: state.setActiveSlideIndex,
 			applySelection: editorOps.ops.applySelection,
-			bumpHistory: bumpAiHistory,
+			recordSlidesStep: history.recordSlidesCommit,
 			markDirty: history.markDirty,
 			applyThemeUpdates: applyAiTheme,
 		});

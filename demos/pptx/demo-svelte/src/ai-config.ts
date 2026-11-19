@@ -23,7 +23,7 @@ import type { PptxAiConfig } from 'pptx-svelte-viewer';
 import { createAiAssistant } from 'pptx-svelte-viewer/ai';
 import type { PptxAiAssistant } from 'pptx-svelte-viewer/ai';
 
-import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
+import { demoAiUsesPlainConfig, demoAiWritePolicy } from '../../shared/demo-ai-path';
 
 const KEY_BASE_URL = 'demo.ai.baseURL';
 const KEY_API_KEY = 'demo.ai.apiKey';
@@ -60,7 +60,7 @@ export function buildViewerAiConfig(): PptxAiConfig | undefined {
 	});
 	return {
 		connection: { kind: 'model', model: provider(settings.model.trim()) },
-		writePolicy: 'stage',
+		writePolicy: demoAiWritePolicy(),
 	};
 }
 

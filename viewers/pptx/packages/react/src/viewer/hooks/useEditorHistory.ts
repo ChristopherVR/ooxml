@@ -93,6 +93,16 @@ export interface EditorHistoryResult {
 		beforeSlides?: PptxSlide[],
 		nextSlideMasters?: readonly PptxSlideMaster[],
 	) => void;
+	/**
+	 * Record the undo step of `commitSlides` for a caller that installs `slides` itself. Steps
+	 * recorded in one tick stay separate, where the tracking effect would see them as one change.
+	 */
+	recordSlidesCommit: (
+		slides: PptxSlide[],
+		label?: string,
+		beforeSlides?: PptxSlide[],
+		nextSlideMasters?: readonly PptxSlideMaster[],
+	) => void;
 	canUndo: boolean;
 	canRedo: boolean;
 	undoLabel: string | undefined;
@@ -498,7 +508,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	// -- Public API ---------------------------------------------------------
 
-	const commitSlides = (
+	const recordSlidesCommit = (
 		nextSlides: PptxSlide[],
 		label?: string,
 		beforeSlides = slides,
@@ -516,6 +526,15 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 		lastHistorySnapshotRef.current = cloneHistorySnapshot(after);
 		lastHistorySerializedRef.current = serializeDocument(after);
 		isApplyingHistoryRef.current = false;
+	};
+
+	const commitSlides = (
+		nextSlides: PptxSlide[],
+		label?: string,
+		beforeSlides = slides,
+		nextSlideMasters?: readonly PptxSlideMaster[],
+	): void => {
+		recordSlidesCommit(nextSlides, label, beforeSlides, nextSlideMasters);
 		setSlides(nextSlides);
 		onDirtyRef.current?.();
 	};
@@ -532,6 +551,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 
 	return {
 		commitSlides,
+		recordSlidesCommit,
 		holdTracking,
 		canUndo: historyState.canUndo,
 		canRedo: historyState.canRedo,

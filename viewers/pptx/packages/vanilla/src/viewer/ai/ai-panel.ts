@@ -125,7 +125,10 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 	sendBtn.appendChild(createIcon(doc, 'send'));
 	composer.append(textarea, sendBtn);
 
-	host.append(header, ...(focusBar ? [focusBar.el] : []), messages, proposals, errorLine, composer);
+	// The composer joins once the chat exists, as in the other bindings. A form
+	// submitted before its handler is attached would navigate the whole page.
+	host.append(header, ...(focusBar ? [focusBar.el] : []), messages, proposals, errorLine);
+	let lastPrefillNonce = focusController?.getPrefill().nonce ?? 0;
 
 	try {
 		chat = await (deps.createChat ?? createVanillaChat)({
@@ -136,10 +139,12 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		empty.textContent = t('pptx.ai.unavailableTitle');
 		textarea.disabled = true;
 		sendBtn.disabled = true;
+		host.append(composer);
 		focusBar?.destroy();
 		return { destroy: () => host.replaceChildren() };
 	}
 	const controller = chat;
+	host.append(composer);
 
 	// Chat history: the header "Chats" toggle + saved-chat dropdown, backed by
 	// the shared per-deck store. Transcript changes are forwarded below for the
@@ -243,7 +248,6 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 
 	// Apply a one-shot composer prefill from "Ask AI" / "Fix with AI" / pick mode:
 	// fill the composer and focus it (never auto-send) when the nonce advances.
-	let lastPrefillNonce = focusController?.getPrefill().nonce ?? 0;
 	const applyPrefill = (): void => {
 		if (!focusController) {
 			return;
@@ -257,6 +261,7 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		textarea.focus();
 	};
 	const unsubscribeFocus = focusController?.subscribe(applyPrefill);
+	applyPrefill();
 
 	const unsubscribe = controller.subscribe(render);
 	render(controller.getSnapshot());

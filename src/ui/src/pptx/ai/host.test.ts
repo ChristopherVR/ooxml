@@ -63,6 +63,7 @@ describe('ooxml-ui/pptx/ai/host', () => {
 				'buildChatLogExport',
 				'buildChatLogMarkdown',
 				'changeGhostStyle',
+				'checkPptxAiBridgeReadsItsWrites',
 				'collectStoredChats',
 				'computeFocusTargets',
 				'createAiAssistantRegistry',

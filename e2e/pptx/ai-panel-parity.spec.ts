@@ -88,6 +88,38 @@ function demoAiPath(page: Page): Promise<string | undefined> {
 
 test.describe('cross-binding AI assistant panel', () => {
 	test(
+		'a message sent while the assistant is still loading reaches the model',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await seedMockAiProvider(page);
+					const requests = await installMockAiModel(page, { reply: PLAIN_REPLY });
+					await loadDeckAt(page, origin, DECK);
+					// Slow every later request so the panel's lazy chunks are still loading.
+					await page.route('**/*', async (route) => {
+						await new Promise((resolve) => setTimeout(resolve, 800));
+						await route.fallback();
+					});
+					await openAiPanel(page);
+					await sendAiMessage(page, 'hello');
+					const replied = await appears(aiPanel(page).getByText(PLAIN_REPLY).first(), 20_000);
+					return { replied, requests: requests.length, url: page.url() };
+				},
+				{ viewport: VIEWPORT },
+			);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.replied && value.requests === 1 && !value.url.includes('?')
+					? []
+					: [`${name}: ${JSON.stringify(value)}`],
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
+	test(
 		'the toolbar toggle opens a panel with a composer and a send control',
 		{ tag: '@cross-binding' },
 		async ({ browser }, testInfo) => {

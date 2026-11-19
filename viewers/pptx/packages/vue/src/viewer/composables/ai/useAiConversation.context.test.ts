@@ -2,10 +2,15 @@ import { useChat } from '@ai-sdk/vue';
 import { mount } from '@vue/test-utils';
 import type { ChatTransport } from 'ai';
 import { createAiChatSession } from 'ooxml-ui/pptx/ai';
-import type { PptxAiBridge, PptxAiConfig, PptxAiUIMessage } from 'ooxml-ui/pptx/ai';
+import type {
+	PptxAiBridge,
+	PptxAiChatSession,
+	PptxAiConfig,
+	PptxAiUIMessage,
+} from 'ooxml-ui/pptx/ai';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
-import { defineComponent, h } from 'vue';
+import { defineComponent, h, nextTick, ref } from 'vue';
 
 import { useAiConversation } from './useAiConversation';
 
@@ -27,7 +32,59 @@ const bridge = {
 	applyTheme: () => undefined,
 } satisfies PptxAiBridge;
 
+function mountWithChatStub(session: PptxAiChatSession) {
+	let options: Record<string, unknown> = {};
+	const messages = ref<PptxAiUIMessage[]>([]);
+	const useChatStub = ((init: Record<string, unknown>) => {
+		options = init;
+		return { messages, status: ref('ready'), error: ref(undefined) };
+	}) as unknown as typeof useChat;
+	let conversation: ReturnType<typeof useAiConversation> | undefined;
+	mount(
+		defineComponent({
+			setup() {
+				conversation = useAiConversation(useChatStub, session, {} as PptxAiConfig);
+				return () => h('div');
+			},
+		}),
+	);
+	return { options, messages, proposals: () => conversation?.proposals.value };
+}
+
+function stubSession(clientExecutesTools: boolean): PptxAiChatSession {
+	return {
+		transport: {},
+		clientExecutesTools,
+		sendAutomaticallyWhen: () => true,
+		executeToolCall: vi.fn(),
+		proposals: { list: () => [] },
+	} as unknown as PptxAiChatSession;
+}
+
 describe('useAiConversation', () => {
+	it('leaves the tools to the agent in model mode, so each runs once', () => {
+		const { options } = mountWithChatStub(stubSession(false));
+		expect(options.onToolCall).toBeUndefined();
+		expect(options.sendAutomaticallyWhen).toBeUndefined();
+	});
+
+	it('runs the tools itself for an endpoint connection', () => {
+		expect(mountWithChatStub(stubSession(true)).options.onToolCall).toBeTypeOf('function');
+	});
+
+	it('lists a proposal the agent staged while the reply streams', async () => {
+		const session = stubSession(false);
+		const staged = [{ id: 'p1', label: 'Edit', summary: [], createdAt: 1 }];
+		const { messages, proposals } = mountWithChatStub(session);
+		expect(proposals()).toEqual([]);
+
+		session.proposals.list = () => staged as ReturnType<typeof session.proposals.list>;
+		messages.value = [{ id: 'm1', role: 'assistant', parts: [] }] as PptxAiUIMessage[];
+		await nextTick();
+
+		expect(proposals()).toEqual(staged);
+	});
+
 	it('sends the deck context the session adds to every request', async () => {
 		const requests: PptxAiUIMessage[][] = [];
 		const transport = {

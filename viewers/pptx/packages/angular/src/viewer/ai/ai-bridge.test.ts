@@ -1,4 +1,4 @@
-import { ProposalStore } from 'ooxml-ui/pptx/ai';
+import { checkPptxAiBridgeReadsItsWrites, ProposalStore } from 'ooxml-ui/pptx/ai';
 import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 import type {
 	ParsedTableStyleMap,
@@ -11,6 +11,7 @@ import type {
 	PptxSection,
 	PptxSlide,
 	PptxTagCollection,
+	PptxTheme,
 	PptxViewProperties,
 } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
@@ -29,6 +30,7 @@ function slide(id: string, elements: PptxElement[]): PptxSlide {
 /** Mutable presentation-level deck state the fake bridge deps read/write. */
 interface DeckState {
 	canvas: { width: number; height: number };
+	theme: PptxTheme | undefined;
 	sections: readonly PptxSection[];
 	customShows: readonly PptxCustomShow[];
 	presentationProperties: PptxPresentationProperties;
@@ -53,6 +55,7 @@ function setup(): {
 	const nav = { index: 0, selected: [] as readonly string[] };
 	const deck: DeckState = {
 		canvas: { width: 960, height: 540 },
+		theme: undefined,
 		sections: [],
 		customShows: [],
 		presentationProperties: {},
@@ -68,7 +71,7 @@ function setup(): {
 		getSlides: () => editor.slides(),
 		getActiveSlideIndex: () => nav.index,
 		getCanvasSize: () => deck.canvas,
-		getTheme: () => undefined,
+		getTheme: () => deck.theme,
 		getFileName: () => 'Deck.pptx',
 		getHandler: () => undefined,
 		goToSlide: (i) => {
@@ -80,8 +83,8 @@ function setup(): {
 			editor.select([...ids]);
 		},
 		applySlides: (next, label) => editor.applyReplacement(next, label),
-		applyTheme: () => {
-			/* not exercised here */
+		applyTheme: (updates) => {
+			deck.theme = { ...deck.theme, ...updates };
 		},
 		getSections: () => deck.sections,
 		getCustomShows: () => deck.customShows,
@@ -308,5 +311,11 @@ describe('createAngularAiBridge (shared bridge)', () => {
 	it('scopes the assistant to the whole active slide without a panel focus', () => {
 		const { bridge } = setup();
 		expect(bridge.getFocusedTargets?.()).toEqual([{ kind: 'slide', slideIndex: 0 }]);
+	});
+});
+
+describe('createAngularAiBridge read after write', () => {
+	it('sees each write at once', () => {
+		expect(checkPptxAiBridgeReadsItsWrites(setup().bridge)).toEqual([]);
 	});
 });

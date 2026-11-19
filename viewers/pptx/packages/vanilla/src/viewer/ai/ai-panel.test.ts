@@ -67,6 +67,40 @@ afterEach(() => {
 });
 
 describe('createAiPanel', () => {
+	it('adds the composer only once the chat can send', async () => {
+		host = document.createElement('div');
+		document.body.appendChild(host);
+		const bridge = fakeBridge();
+		const sent: string[] = [];
+		let chatReady: (controller: VanillaChatController) => void = () => undefined;
+		const panel = createAiPanel({
+			host,
+			doc: document,
+			t: createTranslator('en'),
+			bridge,
+			config,
+			createChat: () => new Promise((resolve) => (chatReady = resolve)),
+		});
+
+		// A form on the page before its submit handler would reload the whole page.
+		expect(host.querySelector('.pptxv-ai-composer')).toBeNull();
+
+		chatReady({
+			...fakeController(bridge),
+			sendMessage: async (text) => {
+				sent.push(text);
+			},
+		});
+		await panel;
+		const input = host.querySelector<HTMLTextAreaElement>('.pptxv-ai-input');
+		expect(input).toBeTruthy();
+		(input as HTMLTextAreaElement).value = 'hello';
+		host
+			.querySelector('.pptxv-ai-composer')
+			?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+		expect(sent).toEqual(['hello']);
+	});
+
 	it('renders the composer + a staged proposal card', async () => {
 		host = document.createElement('div');
 		document.body.appendChild(host);

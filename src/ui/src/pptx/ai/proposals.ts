@@ -8,7 +8,7 @@
  * discard or retry. Each applied proposal is one undoable history entry.
  */
 
-import type { PptxData, PptxSlide } from 'ooxml-core/pptx';
+import type { PptxData, PptxSlide, PptxTheme } from 'ooxml-core/pptx';
 
 import type { PptxAiBridge, PptxAiSlidesUpdater } from './bridge';
 import type { AiChangeAnimator } from './change-animator';
@@ -76,6 +76,15 @@ function scope(deck: PptxData, commit: ProposalCommit): object {
 		return { slides: deck.slides };
 	}
 	return commit === 'theme' ? { theme: deck.theme } : deck;
+}
+
+/** The top-level parts of `theme` a theme proposal touched, so the rest is not re-applied. */
+function changedThemeParts(theme: PptxTheme, changes: DeckChange[]): Partial<PptxTheme> {
+	if (changes.some((change) => change.path.length < 2)) {
+		return theme;
+	}
+	const parts = new Set(changes.map((change) => change.path[1]));
+	return Object.fromEntries(Object.entries(theme).filter(([key]) => parts.has(key)));
 }
 
 const MAX_SUMMARY_LINES = 6;
@@ -155,7 +164,7 @@ export class ProposalStore {
 		} else if (p.commit === 'theme') {
 			const root = { theme: structuredClone(this.bridge.getTheme() ?? {}) };
 			applyDeckChanges(p.changes, root);
-			this.bridge.applyTheme(root.theme);
+			this.bridge.applyTheme(changedThemeParts(root.theme, p.changes));
 		} else {
 			if (!this.bridge.applyDeckData) {
 				return 'This viewer cannot apply presentation-level changes.';

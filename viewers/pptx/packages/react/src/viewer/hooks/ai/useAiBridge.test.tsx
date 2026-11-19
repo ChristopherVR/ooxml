@@ -50,7 +50,7 @@ function baseInput(overrides: Partial<UseAiBridgeInput>): UseAiBridgeInput {
 		setSlides: () => {},
 		setActiveSlideIndex: () => {},
 		applySelection: () => {},
-		bumpHistory: () => {},
+		recordSlidesStep: () => {},
 		markDirty: () => {},
 		applyThemeUpdates: () => {},
 		...overrides,
