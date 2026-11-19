@@ -65,6 +65,25 @@ export function preloadEditor(kind) {
 export const SUITE_FILE_COMMANDS = new Set(['save', 'new', 'open', 'share']);
 
 /**
+ * What an editor showing the assistant's suggestions cannot do: every way its own commands take
+ * the document out of the suite (Save As, Export, Download, Print, Share and Copy, in each
+ * product's File tab, ribbon, menus and shortcuts). Save stays and goes to the suite, which
+ * refuses it while the suggestions show.
+ */
+const PREVIEW_CAPABILITIES = Object.freeze({
+	export: false,
+	print: false,
+	share: false,
+	copy: false,
+});
+
+/** Why a command refused while the assistant's suggestions show. */
+export const previewRefusal = (name) =>
+	new Error(
+		`${name} is showing the assistant's suggestions. Apply or discard them in the suggestions panel first.`,
+	);
+
+/**
  * Mounts the editor for `doc` in `host`. `changed` runs after an edit, `command` takes over the
  * file commands and `moved` runs when the slide or page in view, or the selection's formatting,
  * changes. The returned object carries `view`, what the Simple view command bar drives: `undo`,
@@ -75,6 +94,8 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	let accessReadOnly = cloudReadOnly(doc);
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
+		// True while the deck shows the assistant's suggestions (`hold`).
+		let held = false;
 		let loading = true;
 		let loadFailed = false;
 		const googleFonts = googleFontsOption();
@@ -104,8 +125,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			onOpenFile: () => command('open'),
 			storage: {
 				async save(bytes, meta) {
-					if (meta.reason === 'saveAs') download({ bytes, name: meta.fileName });
-					else await command('save');
+					if (meta.reason !== 'saveAs') await command('save');
+					else if (held) throw previewRefusal(doc.name);
+					else download({ bytes, name: meta.fileName });
 				},
 			},
 			onChange: changed,
@@ -173,6 +195,11 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			setCloudReadOnly: (on) => {
 				accessReadOnly = on;
 				viewer.setEditable(!on);
+			},
+			hold: (on) => {
+				held = on;
+				for (const id of Object.keys(PREVIEW_CAPABILITIES))
+					viewer.setCapability(id, on ? false : undefined);
 			},
 			/** Shows where a proposed change lands: its slide, with its shape selected. */
 			reveal(change) {
@@ -328,6 +355,9 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		setCloudReadOnly: (on) => {
 			accessReadOnly = on;
 			setEditorReadOnly(element, doc.kind, on);
+		},
+		hold: (on) => {
+			element.customization = on ? { capabilities: PREVIEW_CAPABILITIES } : null;
 		},
 		/** Shows where a proposed change lands, selected in the editor. Word shows its own redlines. */
 		reveal(change) {

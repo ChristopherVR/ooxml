@@ -1,7 +1,7 @@
 import type { AutomationFormat, AutomationTool } from './types';
 import { docxTools } from './docx-tools';
 import { visioTools } from './visio-tools';
-import { xlsxTools } from './xlsx-tools';
+import { createXlsxTools, xlsxTools } from './xlsx-tools';
 
 export type {
 	AutomationCreateTool,
@@ -12,7 +12,7 @@ export type {
 	AutomationTool,
 } from './types';
 export { UNTRUSTED_NOTE } from './types';
-export { docxTools, visioTools, xlsxTools };
+export { createXlsxTools, docxTools, visioTools, xlsxTools };
 
 /**
  * The Word, Excel and Visio tools, by format. PowerPoint's are `pptxTools` in
