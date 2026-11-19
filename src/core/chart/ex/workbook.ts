@@ -2,16 +2,23 @@
 import { chartExDataLayout } from './data-layout';
 import { chartExSpaceWorkbookWrites } from './workbook-writes';
 import type { ChartExSpace } from './model';
-import { appendChartWorkbookSheet } from '../workbook/append-sheet';
+import {
+	appendChartWorkbookSheet,
+	type AppendChartWorkbookSheetOptions,
+} from '../workbook/append-sheet';
 import { writeChartWorkbookUpdates } from '../workbook/writer';
 import { openEmbeddedPackage } from '../workbook/writer';
 import { NS, children, first, parseXml } from '../../xml';
 
-/** Validate the old literal sources, then append a dedicated sheet for expanded chart data. */
+/**
+ * Validate the old literal sources, then write the expanded chart data to a dedicated sheet: a new
+ * one, or `sheets.reuse`, removing `sheets.drop` (`appendChartWorkbookSheet`).
+ */
 export async function appendChartExWorkbookData(
 	bytes: Uint8Array,
 	before: ChartExSpace,
 	after: ChartExSpace,
+	sheets: Pick<AppendChartWorkbookSheetOptions, 'reuse' | 'drop'> = {},
 ) {
 	const zip = await openEmbeddedPackage(bytes);
 	const xml = await zip.file('xl/workbook.xml')?.async('string');
@@ -36,7 +43,7 @@ export async function appendChartExWorkbookData(
 			layout = chartExDataLayout(after, name);
 			return layout.rows;
 		},
-		{ nameBase: 'ChartExData' },
+		{ nameBase: 'ChartExData', ...sheets },
 	);
-	return { bytes: result.bytes, space: layout!.space };
+	return { bytes: result.bytes, space: layout!.space, sheetName: result.sheetName };
 }
