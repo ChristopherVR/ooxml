@@ -11,7 +11,7 @@ import type { ChartSpace } from '../model';
 import type { ChartDataCache, ChartDataSource, ChartSpaceSeries } from '../model-series';
 import { parseChartSpace } from '../parse-space';
 import { chartPointsLength, slottedPoints, type ChartPointCache } from '../point-limit';
-import { parseChartFormulaRange } from './cellref';
+import { parseChartFormulaRange, rangeCellAddress } from './cellref';
 import type { ChartWorkbookCell, ChartWorkbookWrite } from './writer';
 
 type TextCache = ChartPointCache<{ index?: number | undefined; value: string }>;
@@ -64,8 +64,10 @@ const allSeries = (space: ChartSpace) => space.plotArea.groups.flatMap((group) =
 
 /**
  * The writes that make the workbook cells hold what `space` caches: every cached point, or with
- * `before` (the chart as loaded) only the cells the edit changed. A range two series share is
- * written once, from the first; a series added as a copy of another has no cells of its own yet.
+ * `before` (the chart as loaded) only the cells the edit changed, and for a range `before` did not
+ * read, its cached points with every other point-like cell emptied (`only`). A range two series
+ * share is written once, from the first; a series added as a copy of another has no cells of its
+ * own yet.
  */
 export function chartSpaceWorkbookWrites(
 	space: ChartSpace,
@@ -84,16 +86,58 @@ export function chartSpaceWorkbookWrites(
 			const start = rangeStart(formula);
 			if (seen.has(start)) continue;
 			seen.add(start);
-			const cells = chartCacheCellChanges(cache, prior.get(start));
-			if (cells.length || !before)
+			const earlier = prior.get(start);
+			const cells = chartCacheCellChanges(cache, earlier);
+			// A range `before` did not read may hold anything (a series removed and brought back by
+			// undo, data put back on a sheet it had left): the cache is all it holds.
+			const only = before !== undefined && earlier === undefined;
+			if (cells.length || !before || only)
 				writes.push({
 					formula,
 					isNumeric: cache.type === 'number',
 					cells,
 					cellCount: chartCacheCellCount(cache),
+					...(only ? { only } : {}),
 				});
 		}
 	return writes;
+}
+
+/** `formula`'s conflicts in `space`, each under a key that stays put while the range moves its end. */
+function rangeConflicts(space: ChartSpace): Map<string, string> {
+	const cachedBy = new Map<string, string>();
+	const conflicts = new Map<string, string>();
+	for (const series of allSeries(space))
+		for (const { formula, cache } of writableSources(series)) {
+			const range = parseChartFormulaRange(formula);
+			if (!range) continue;
+			const { start, end } = range;
+			const count = chartCacheCellCount(cache);
+			const cells = start.col === end.col || start.row === end.row;
+			const size = cells ? Math.max(end.col - start.col, end.row - start.row) + 1 : NaN;
+			if (!rangeCellAddress(range, count))
+				conflicts.set(`${rangeStart(formula)}|${size - count}`, formula);
+			const whole = `${range.sheetName.toLowerCase()}!${start.col},${start.row}:${end.col},${end.row}`;
+			const points = JSON.stringify([cache.type, ...cellTexts(cache)]);
+			const first = cachedBy.get(whole) ?? points;
+			cachedBy.set(whole, first);
+			if (first !== points) conflicts.set(`${whole}|shared`, formula);
+		}
+	return conflicts;
+}
+
+/**
+ * The references of `space` whose range cannot hold what they cache: a range of another size than
+ * its cache, or a range that two references cache differently. Writing such a part's caches cell
+ * for cell would leave range, cache and workbook disagreeing; its data needs ranges of its own
+ * (`rebaseChartData`). With `before` (the part `space` replaces), only the conflicts `before` did
+ * not have: a chart over hidden rows that shows only the visible ones caches fewer points than its
+ * range names, and keeps doing so through its edits. A reference that names no plain range (a
+ * defined name, another workbook) is not judged.
+ */
+export function chartSpaceRangeConflicts(space: ChartSpace, before?: ChartSpace): string[] {
+	const had = before ? rangeConflicts(before) : new Map<string, string>();
+	return [...rangeConflicts(space)].filter(([key]) => !had.has(key)).map(([, formula]) => formula);
 }
 
 /** The writes for a chart part saved as `after` from `before`; none when either cannot be read. */

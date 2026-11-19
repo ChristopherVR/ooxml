@@ -23,11 +23,14 @@
 import type JSZip from 'jszip';
 import { openZip } from '../../opc/zip-limits';
 import { parseRelationships, resolvePartPath } from '../../opc/relationships';
-import { buildXml, parseXml } from '../../xml/index';
-import { parseChartFormulaRange, rangeCellAddress } from './cellref';
+import { buildXml, parseXml, type XmlDocument } from '../../xml/index';
+import { parseCellAddress, parseChartFormulaRange, rangeCellAddress } from './cellref';
+import type { ChartFormulaRange } from './cellref';
 import {
+	childNamed,
 	childrenNamed,
 	restoreWorksheetCells,
+	worksheetData,
 	writeWorksheetCells,
 	type ChartCellChange,
 	type ChartCellWrite,
@@ -51,6 +54,12 @@ export interface ChartWorkbookWrite {
 	cells: readonly ChartWorkbookCell[];
 	/** How many cells the formula names; a range of another size is not written. */
 	cellCount: number;
+	/**
+	 * The range holds nothing but `cells`: a cell of it that the chart would read as a point the
+	 * write does not list is emptied (a number in a value range, anything in a text range). For a
+	 * range the chart did not read before, whose cells may hold anything.
+	 */
+	only?: boolean;
 }
 
 /** Every value of a whole range as cells to write. */
@@ -115,6 +124,35 @@ interface ResolvedWrite {
 	address: (index: number) => string;
 	cells: readonly ChartWorkbookCell[];
 	isNumeric: boolean;
+	/** With `only`: the range and its size, to find the cells it does not list. */
+	only?: { range: ChartFormulaRange; count: number };
+}
+
+/** Empties the cells of an `only` write's range that would read as a point it does not list. */
+function unlistedPointCells(doc: XmlDocument, write: ResolvedWrite): ChartCellWrite[] {
+	if (!write.only) return [];
+	const { range, count } = write.only;
+	const listed = new Set(write.cells.map(({ index }) => write.address(index)));
+	const clears: ChartCellWrite[] = [];
+	for (const row of childrenNamed(worksheetData(doc), 'row'))
+		for (const cell of childrenNamed(row, 'c')) {
+			const ref = cell.getAttribute('r') ?? '';
+			const at = parseCellAddress(ref);
+			if (!at || listed.has(ref)) continue;
+			const index =
+				range.start.col === range.end.col && at.col === range.start.col
+					? at.row - range.start.row
+					: range.start.row === range.end.row && at.row === range.start.row
+						? at.col - range.start.col
+						: -1;
+			if (index < 0 || index >= count) continue;
+			const type = cell.getAttribute('t') ?? 'n';
+			const holds = childNamed(cell, 'v') !== undefined || childNamed(cell, 'is') !== undefined;
+			// A text cell in a value range is no point of it, and keeps its text.
+			if (holds && (!write.isNumeric || type === 'n'))
+				clears.push({ ref, isNumeric: write.isNumeric, value: '' });
+		}
+	return clears;
 }
 
 /**
@@ -155,7 +193,12 @@ export async function writeChartWorkbookUpdates(
 			continue;
 		}
 		const bucket = writesBySheet.get(sheetPath) ?? [];
-		bucket.push({ address, cells: write.cells, isNumeric: write.isNumeric });
+		bucket.push({
+			address,
+			cells: write.cells,
+			isNumeric: write.isNumeric,
+			...(write.only ? { only: { range, count: write.cellCount } } : {}),
+		});
 		writesBySheet.set(sheetPath, bucket);
 	}
 	const changes: ChartWorkbookCellChange[] = [];
@@ -168,9 +211,14 @@ export async function writeChartWorkbookUpdates(
 		}
 		try {
 			const doc = parseXml(await file.async('string'), { label: 'Worksheet' });
-			const cellWrites: ChartCellWrite[] = resolved.flatMap(({ address, cells, isNumeric }) =>
-				cells.map(({ index, value }) => ({ ref: address(index), isNumeric, value })),
-			);
+			const cellWrites: ChartCellWrite[] = resolved.flatMap((write) => [
+				...write.cells.map(({ index, value }) => ({
+					ref: write.address(index),
+					isNumeric: write.isNumeric,
+					value,
+				})),
+				...unlistedPointCells(doc, write),
+			]);
 			const written = writeWorksheetCells(doc, cellWrites, shared);
 			if (written.length > 0) {
 				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);
