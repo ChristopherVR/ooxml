@@ -24,7 +24,7 @@ export interface StateSyncDeps {
 	renderer: RenderController;
 	callbacks: PptxViewerCallbacks;
 	/** Whether the security bar for linked pictures and media shows in `state`. */
-	externalContentBarVisible(state: ViewerState): boolean;
+	externalContentBarInChrome(state: ViewerState): boolean;
 }
 
 /**
@@ -178,7 +178,7 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 			state.externalContentAllowed !== previous.externalContentAllowed ||
 			state.externalContentBarClosed !== previous.externalContentBarClosed
 		) {
-			chrome.setExternalContentBar(deps.externalContentBarVisible(state));
+			chrome.setExternalContentBar(deps.externalContentBarInChrome(state));
 		}
 		if (
 			state.readOnlyRecommendation !== previous.readOnlyRecommendation ||

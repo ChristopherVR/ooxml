@@ -57,7 +57,7 @@ export type {
 // thumbnail strip. Feed it from `slidesPaneProps`, so it follows unsaved edits.
 export { ExternalContentBar } from './viewer/components/ExternalContentBar';
 export type { ExternalContentBarProps } from './viewer/components/ExternalContentBar';
-export type { ViewerExternalContentBar } from './viewer/hooks/useViewerBuildingBlocksState';
+export type { ViewerExternalContentBar } from 'ooxml-ui/pptx';
 export { SlideThumbnail } from './viewer/components/SlideThumbnail';
 export type { SlideThumbnailProps } from './viewer/components/SlideThumbnail';
 export { useViewerBuildingBlocks } from './viewer/hooks/useViewerBuildingBlocks';

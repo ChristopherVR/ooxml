@@ -14,6 +14,7 @@ import {
 	BuildingBlocksSlidesPaneComponent,
 	BuildingBlocksToolbarComponent,
 	createViewerBuildingBlocks,
+	ExternalContentBarComponent,
 	translationsEn,
 	VIEWER_BUILDING_BLOCKS_PROVIDERS,
 } from 'pptx-angular-viewer';
@@ -35,9 +36,17 @@ import { mountBuildingBlocksPanel } from '../../shared/building-blocks-panel';
 		BuildingBlocksToolbarComponent,
 		BuildingBlocksSlidesPaneComponent,
 		BuildingBlocksCanvasComponent,
+		ExternalContentBarComponent,
 	],
 	template: `
 		<section #panel></section>
+		<!-- PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. -->
+		@if (blocks.externalContent().barVisible) {
+			<pptx-external-content-bar
+				(enable)="blocks.externalContent().enable()"
+				(closeBar)="blocks.externalContent().close()"
+			/>
+		}
 		<pptx-building-blocks-toolbar [blocks]="blocks" />
 		<div style="display: flex; height: calc(100vh - 160px)">
 			<pptx-slides-pane [blocks]="blocks" style="width: 200px; overflow: auto" />

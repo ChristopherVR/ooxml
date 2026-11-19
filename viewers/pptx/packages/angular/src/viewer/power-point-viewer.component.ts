@@ -44,6 +44,7 @@ import {
 	resolve3DRenderingFlags,
 	resolveAllowExternalContent,
 	externalContentBarVisible,
+	prepareExternalContentReload,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
@@ -2178,18 +2179,22 @@ export class PowerPointViewerComponent
 	private externalContentReturn: { slideIndex: number; dirty: boolean } | null = null;
 
 	/**
-	 * Enable Content: reload this presentation with its linked content. Unsaved
-	 * edits are kept by reloading the deck as it stands (the recovery
-	 * serialisation), which stays marked unsaved.
+	 * Enable Content: reload this presentation as it stands (the shared
+	 * `prepareExternalContentReload` over the recovery serialisation) with its
+	 * linked content. Saved and unsaved edits come along; unsaved ones stay
+	 * unsaved. Undo history starts over.
 	 */
 	protected async enableExternalContent(): Promise<void> {
-		const dirty = this.editor.dirty();
-		const source = dirty ? await this.serializeForAutosave(null) : this.fileIO.activeContent();
-		if (!source) {
+		const reload = await prepareExternalContentReload({
+			serializeCurrentDeck: () => this.serializeCurrentDeck(null),
+			isDirty: this.editor.dirty(),
+			slideIndex: this.activeSlideIndex(),
+		});
+		if (!reload) {
 			return;
 		}
-		this.externalContentReturn = { slideIndex: this.activeSlideIndex(), dirty };
-		await this.loader.enableExternalContent(source);
+		this.externalContentReturn = { slideIndex: reload.slideIndex, dirty: reload.keepDirty };
+		await this.loader.enableExternalContent(reload.bytes);
 	}
 
 	/**
@@ -4463,9 +4468,11 @@ export class PowerPointViewerComponent
 	 * an unrecoverable encrypted snapshot (the bug React and Vue shipped).
 	 */
 	private async serializeForAutosave(draft: InlineTextDraft | null): Promise<Uint8Array | null> {
-		if (!this.canEdit()) {
-			return null;
-		}
+		return this.canEdit() ? this.serializeCurrentDeck(draft) : null;
+	}
+
+	/** The deck as it stands, as {@link serializeForAutosave} writes it, whether or not editable. */
+	private serializeCurrentDeck(draft: InlineTextDraft | null): Promise<Uint8Array> {
 		// A Design gallery hover preview is never part of a recovery snapshot.
 		const saved = this.deckStyle.savedDeck();
 		return this.loader.saveSlides(

@@ -70,6 +70,22 @@ canvas stay. Remote cursors and selections draw on the canvas. `state` also carr
   `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
   event reports.
 
+## Linked pictures and media
+
+As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
+downloading them. The canvas does not draw PowerPoint's security bar: `blocks.externalContent` (a
+computed ref of `{ barVisible, enable, close }`) says when to show it. Render the exported
+`ExternalContentBar` (or your own) and wire its `enable` event to `enable()` (it reloads this presentation as it stands, with its saved and unsaved edits and the slide on screen, and with its linked content; unsaved edits stay unsaved and undo history starts over) and
+its `close` event to `close()`. A new presentation asks again. The `allowExternalContent` option (`true` or `false`) answers for the user, and then the bar never shows.
+
+```vue
+<ExternalContentBar
+	v-if="blocks.externalContent.value.barVisible"
+	@enable="blocks.externalContent.value.enable"
+	@close="blocks.externalContent.value.close"
+/>
+```
+
 ## Host-owned workflows
 
 The blocks mount no file inputs and no dialogs. A toolbar control or a canvas gesture that needs

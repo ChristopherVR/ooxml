@@ -170,8 +170,6 @@ export class PresentationLoader {
 	/** This viewer's deck in the module-wide glyph-outline cache, released with the deck. */
 	#outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	#activeBlobUrls: string[] = [];
-	/** The bytes the presentation now open was loaded from, for Enable Content's reload. */
-	#source: ArrayBuffer | null = null;
 
 	/**
 	 * Why the deck now loaded was loaded. A collaboration room may replace the
@@ -217,13 +215,14 @@ export class PresentationLoader {
 
 	/**
 	 * Enable Content: load the presentation now open again with its linked
-	 * content, from `raw` (the deck with unsaved edits) or the bytes it was
-	 * loaded from.
+	 * content, from `raw`: the deck as it stands (`prepareExternalContentReload`).
 	 */
-	reloadWithExternalContent(raw?: Uint8Array | ArrayBuffer): Promise<void> {
+	async reloadWithExternalContent(raw: Uint8Array): Promise<void> {
+		const wasProtected = this.isPasswordProtected;
 		this.externalContentEnabled = true;
-		const bytes = raw ?? this.#source;
-		return bytes ? this.#load(bytes, this.loadOrigin) : Promise.resolve();
+		await this.#load(raw, this.loadOrigin);
+		// `raw` is the plaintext recovery serialisation of the same presentation.
+		this.isPasswordProtected = wasProtected;
 	}
 
 	async #load(raw: Uint8Array | ArrayBuffer, origin: CollabLoadOrigin): Promise<void> {
@@ -352,7 +351,6 @@ export class PresentationLoader {
 			this.hasMacros = parsed.hasMacros ?? false;
 			this.hasLinkedWebContent = parsed.hasLinkedWebContent === true;
 			this.externalContentAllowed = loadOptions.allowExternalImages === true;
-			this.#source = buffer as ArrayBuffer;
 			// 9525 EMU per pixel (matches React/Vue's useLoadContent conversion).
 			this.notesCanvasSize =
 				parsed.notesWidthEmu && parsed.notesHeightEmu
@@ -431,7 +429,6 @@ export class PresentationLoader {
 		this.#renderToken++;
 		revokeBlobUrls(this.#activeBlobUrls);
 		this.#activeBlobUrls = [];
-		this.#source = null;
 		revokeBlobUrls(this.mediaDataUrls.values());
 		this.handler?.dispose();
 		this.handler = null;

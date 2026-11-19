@@ -236,8 +236,8 @@ Changing `initialSlide` later applies to the next load, not the open deck; use t
 As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
 downloading them. `blocks.externalContent.barVisible` says when to show PowerPoint's security bar;
 render the exported `<ExternalContentBar>` (or your own) and wire its buttons to
-`blocks.externalContent.enable()` (reloads this presentation with its linked content, keeping
-unsaved edits) and `close()`. A new presentation asks again. The `allowExternalContent` option
+`blocks.externalContent.enable()` (it reloads this presentation as it stands, with its saved and unsaved edits and the slide on screen, and with its linked content; unsaved edits stay unsaved and undo history starts over) and `close()`. The canvas does not
+draw the bar itself. A new presentation asks again. The `allowExternalContent` option
 (`true` or `false`) answers for the user, and then the bar never shows.
 
 ```tsx

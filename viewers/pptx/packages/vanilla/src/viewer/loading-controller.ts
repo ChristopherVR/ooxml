@@ -96,8 +96,6 @@ export interface LoadingController {
 	/** Dispose the current handler + Blob URLs (before replacing or on destroy). */
 	releaseLoaded(): void;
 	getHandler(): PptxHandler | null;
-	/** The bytes the current presentation was loaded from, or null before a load. */
-	getLoadedBytes(): ArrayBuffer | null;
 	/**
 	 * Adopt a handler produced by an IN-SESSION document mutation that returns
 	 * a fresh `PptxHandler` rather than patching the existing one (Slide
@@ -122,7 +120,6 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 	const { options, store } = deps;
 	let handler: PptxHandler | null = null;
 	let blobUrls: string[] = [];
-	let loadedBytes: ArrayBuffer | null = null;
 	let loadToken = 0;
 
 	function releaseLoaded(): void {
@@ -131,7 +128,6 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		blobUrls = [];
 		handler?.dispose();
 		handler = null;
-		loadedBytes = null;
 	}
 
 	async function load(
@@ -208,7 +204,6 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 			releaseLoaded();
 			handler = loaded.handler;
 			blobUrls = loaded.blobUrls;
-			loadedBytes = buffer;
 			deps.onContentApplying?.(origin);
 			// Trust Center > "Open documents in Protected View": a freshly-opened
 			// deck (not the host's own bootstrap content, and not a same-document
@@ -330,8 +325,6 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		load,
 		releaseLoaded,
 		getHandler: () => handler,
-		// A buffer a worker took over reads as empty; treat it as gone.
-		getLoadedBytes: () => (loadedBytes && loadedBytes.byteLength > 0 ? loadedBytes : null),
 		setHandler: (next, keepPrevious = false) => {
 			if (!keepPrevious) {
 				handler?.dispose();

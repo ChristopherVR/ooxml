@@ -8,6 +8,7 @@ import type {
 	ToolbarActionId,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
+import type { ViewerExternalContentBar } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { SlideCanvasProps } from '../components/canvas/canvas-types';
@@ -24,7 +25,6 @@ import type {
 	ViewerBuildingBlockActions,
 } from './useViewerBuildingBlocks-actions-types';
 import type { SlidesPaneLayoutGalleryRequest } from './useViewerBuildingBlocks-slides-pane-props';
-import type { ViewerExternalContentBar } from './useViewerBuildingBlocksState';
 
 export type { BuildingBlockRequest, ViewerBuildingBlockActions };
 

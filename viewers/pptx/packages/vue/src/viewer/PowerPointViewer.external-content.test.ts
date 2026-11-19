@@ -5,6 +5,7 @@ import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import PowerPointViewer from './PowerPointViewer.vue';
+import type { PowerPointViewerExpose } from './types';
 
 /**
  * PowerPoint's default for linked pictures and media: nothing is downloaded on
@@ -99,6 +100,45 @@ describe('powerPointViewer linked external content', () => {
 		expect(allowedPerLoad(load)).toStrictEqual([false, true]);
 		expect(bar().exists()).toBeFalsy();
 		expect(mounted!.html()).toContain(LINKED_ORIGIN);
+	});
+
+	it('keeps edits saved before Enable Content, and the next save writes them', async () => {
+		const load = await mountDeck({ canEdit: true });
+		const viewer = mounted!.vm as unknown as PowerPointViewerExpose;
+		const [first] = viewer.getElements(0);
+		viewer.updateElement(first!.id, { x: first!.x + 40 });
+		await flushPromises();
+		const saved = await viewer.getSaveSnapshot();
+		expect(viewer.acknowledgeSave(saved.revision).status).toBe('clean');
+		await flushPromises();
+		request('action');
+		await settle(load, 2);
+		expect(mounted!.html()).toContain(LINKED_ORIGIN);
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(viewer.isDirty()).toBe(false);
+		const next = await viewer.getSaveSnapshot();
+		const slideXml = async (bytes: Uint8Array) =>
+			(await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
+		const offset = (xml: string) => xml.match(/<a:off [^>]*>/u)?.[0];
+		expect(offset(await slideXml(next.content))).toBe(offset(await slideXml(saved.content)));
+		expect(await slideXml(next.content)).toContain('r:link="rIdLinkedFill"');
+	});
+
+	it('keeps unsaved edits unsaved through Enable Content', async () => {
+		const load = await mountDeck({ canEdit: true });
+		const viewer = mounted!.vm as unknown as PowerPointViewerExpose;
+		const [first] = viewer.getElements(0);
+		viewer.updateElement(first!.id, { x: first!.x + 40 });
+		await flushPromises();
+		request('action');
+		await settle(load, 2);
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
+		await vi.waitFor(() => expect(viewer.isDirty()).toBe(true));
+	});
+
+	it('shows the bar without the toolbar', async () => {
+		await mountDeck({ showToolbar: false });
+		expect(bar().exists()).toBeTruthy();
 	});
 
 	it('asks again for a new presentation', async () => {

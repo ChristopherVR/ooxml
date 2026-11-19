@@ -88,6 +88,50 @@ describe('vanilla linked external content', () => {
 		expect(state().dirty).toBeFalsy();
 	});
 
+	it('keeps edits saved before Enable Content, and the next save writes them', async () => {
+		const { viewer, bar, referencesOrigin, state } = mount({ editable: true });
+		await viewer.loadFile(await linkedDeck());
+		const [first] = viewer.getElements(0);
+		viewer.updateElement(first!.id, { x: first!.x + 40 } as never);
+		const saved = await viewer.getSaveSnapshot();
+		expect(viewer.acknowledgeSave(saved.revision).status).toBe('clean');
+		expect(state().dirty).toBeFalsy();
+		request(bar()!, 'action');
+		await vi.waitFor(() => expect(referencesOrigin()).toBeTruthy());
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(state().dirty).toBeFalsy();
+		const next = await viewer.getSaveSnapshot();
+		const slide = await (
+			await JSZip.loadAsync(next.content)
+		)
+			.file('ppt/slides/slide1.xml')!
+			.async('string');
+		const savedSlide = await (
+			await JSZip.loadAsync(saved.content)
+		)
+			.file('ppt/slides/slide1.xml')!
+			.async('string');
+		expect(slide).toContain('r:link="rIdLinkedFill"');
+		expect(slide.match(/<a:off [^>]*>/u)?.[0]).toBe(savedSlide.match(/<a:off [^>]*>/u)?.[0]);
+	});
+
+	it('keeps unsaved edits unsaved through Enable Content', async () => {
+		const { viewer, bar, referencesOrigin, state } = mount({ editable: true });
+		await viewer.loadFile(await linkedDeck());
+		const [first] = viewer.getElements(0);
+		viewer.updateElement(first!.id, { x: first!.x + 40 } as never);
+		request(bar()!, 'action');
+		await vi.waitFor(() => expect(referencesOrigin()).toBeTruthy());
+		expect(viewer.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(state().dirty).toBeTruthy();
+	});
+
+	it('shows the bar without the toolbar', async () => {
+		const { viewer, bar } = mount({ showToolbar: false });
+		await viewer.loadFile(await linkedDeck());
+		expect(bar()).not.toBeNull();
+	});
+
 	it('asks again for the next presentation', async () => {
 		const { viewer, bar, allowed } = mount();
 		await viewer.loadFile(await linkedDeck());

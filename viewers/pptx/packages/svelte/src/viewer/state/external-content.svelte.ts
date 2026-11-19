@@ -1,4 +1,8 @@
-import { externalContentBarVisible, recoverySnapshotIntent } from 'ooxml-ui/pptx';
+import {
+	externalContentBarVisible,
+	prepareExternalContentReload,
+	recoverySnapshotIntent,
+} from 'ooxml-ui/pptx';
 import { tick } from 'svelte';
 
 import { serializeEditorState } from '../editor/editor-document-lifecycle';
@@ -41,25 +45,31 @@ export class ExternalContentState {
 	}
 
 	/**
-	 * Enable Content: reload the presentation with its linked content. Unsaved
-	 * edits are kept (the deck is reloaded from its serialized state and stays
-	 * unsaved), and so is the slide on screen.
+	 * Enable Content: reload the presentation as it stands (the shared
+	 * `prepareExternalContentReload`) with its linked content. Saved and unsaved
+	 * edits come along; unsaved ones stay unsaved, and the slide on screen
+	 * stays. Undo history starts over.
 	 */
 	async enable(): Promise<void> {
 		const { loader, editor, viewer } = this.#deps;
-		const unsaved = editor.dirty;
-		const slide = viewer.current;
-		const edited =
-			unsaved && editor.getHandler()
-				? await serializeEditorState(editor, 'pptx', recoverySnapshotIntent(editor.saveIntent()))
-				: undefined;
-		await loader.reloadWithExternalContent(edited);
+		const reload = await prepareExternalContentReload({
+			serializeCurrentDeck: async () =>
+				editor.getHandler()
+					? serializeEditorState(editor, 'pptx', recoverySnapshotIntent(editor.saveIntent()))
+					: null,
+			isDirty: editor.dirty,
+			slideIndex: viewer.current,
+		});
+		if (!reload) {
+			return;
+		}
+		await loader.reloadWithExternalContent(reload.bytes);
 		// The load seeds the editor and resets the slide from an effect.
 		await tick();
 		if (loader.error === null && viewer.slideCount > 0) {
-			viewer.goTo(Math.min(slide, viewer.slideCount - 1));
+			viewer.goTo(Math.min(reload.slideIndex, viewer.slideCount - 1));
 		}
-		if (unsaved) {
+		if (reload.keepDirty) {
 			editor.dirty = true;
 		}
 	}

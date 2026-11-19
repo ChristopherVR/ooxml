@@ -2,7 +2,9 @@
 /**
  * Linked external content follows Microsoft PowerPoint's default: opening a deck
  * downloads none of its linked pictures and media, and a security bar offers
- * Enable Content for that presentation. The host `allowExternalContent` switch
+ * Enable Content for that presentation, with or without the toolbar and in the
+ * building blocks' host shell. Enabling reloads the deck as it stands, so an
+ * edit saved before it survives the next save. The host `allowExternalContent` switch
  * (the demos' `?allowExternalContent=0|1`, see `demos/pptx/shared/demo-root-options.ts`)
  * blocks without the bar or downloads without asking. The deck links pictures
  * and a video to an external origin, answered here with `page.route`, so every
@@ -10,7 +12,9 @@
  */
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import JSZip from 'jszip';
 
+import { requireBuildingBlocks } from './support/building-blocks';
 import { resetTabSession, slideStage } from './support/deck';
 import {
 	EXTERNAL_CONTENT_DECK_ELEMENTS,
@@ -110,6 +114,36 @@ async function trustToggle(page: Page): Promise<Locator> {
 
 const requestedPaths = (requests: string[]) => requests.map((url) => new URL(url).pathname);
 
+/** The x of the first element on the first slide, through the demo's viewer handle. */
+function firstElementX(page: Page): Promise<number> {
+	return page.evaluate(() => {
+		const viewer = (
+			window as unknown as {
+				__pptxViewer: { getSlides(): { elements: { x: number }[] }[] };
+			}
+		).__pptxViewer;
+		return viewer.getSlides()[0]!.elements[0]!.x;
+	});
+}
+
+/** Press the host save panel's Save and wait until the viewer reports it clean. */
+async function hostSave(page: Page): Promise<number[]> {
+	const log = page.getByTestId('host-save-log').locator('li');
+	const done = await log.count();
+	await page.getByTestId('host-save').click();
+	await expect(log).toHaveCount(done + 1);
+	await expect(log.last()).toHaveText(/^clean \d+$/u);
+	return page.evaluate(() => {
+		const snapshots = (window as unknown as { __hostSaveSnapshots: { content: Uint8Array }[] })
+			.__hostSaveSnapshots;
+		return [...snapshots.at(-1)!.content];
+	});
+}
+
+async function slideXml(bytes: number[]): Promise<string> {
+	return (await JSZip.loadAsync(Buffer.from(bytes))).file('ppt/slides/slide1.xml')!.async('string');
+}
+
 test.describe('linked external content', () => {
 	test('is blocked on open, with a security bar, until Enable Content', async ({ page }) => {
 		const requests = await recordExternalRequests(page);
@@ -129,11 +163,68 @@ test.describe('linked external content', () => {
 		await expect(bar).toBeHidden();
 	});
 
+	test('keeps an edit saved before Enable Content, and the next save writes it', async ({
+		page,
+	}) => {
+		const requests = await recordExternalRequests(page);
+		await openExternalDeck(page, '?hostSave=1');
+		const before = await firstElementX(page);
+		await page.getByTestId('host-save-edit').click();
+		await expect.poll(() => firstElementX(page)).toBe(before + 10);
+		const saved = await slideXml(await hostSave(page));
+		await expect(page.getByTestId('host-save-state')).toContainText('"dirty":false');
+
+		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		await expect(securityBar(page)).toBeHidden();
+		// The edit is still there and still saved: the reload used the deck as it stood.
+		expect(await firstElementX(page)).toBe(before + 10);
+		await expect(page.getByTestId('host-save-state')).toContainText('"dirty":false');
+
+		const next = await slideXml(await hostSave(page));
+		const offsets = (xml: string) => xml.match(/<a:off [^>]*>/gu);
+		expect(offsets(next)).toEqual(offsets(saved));
+		// The linked pictures stay linked, not embedded.
+		expect(next).toContain('r:link="rIdLinkedFill"');
+	});
+
+	test('shows the security bar with the toolbar off', async ({ page }) => {
+		const requests = await recordExternalRequests(page);
+		await openExternalDeck(page, '?showToolbar=0');
+		const bar = securityBar(page);
+		await expect(bar).toBeVisible();
+		await expectNothingRequested(page, requests);
+		await bar.getByRole('button', { name: 'Enable Content' }).click();
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		await expect(bar).toBeHidden();
+	});
+
+	test('the building blocks hand the security bar to the host shell', async ({ page }) => {
+		requireBuildingBlocks();
+		const requests = await recordExternalRequests(page);
+		const deck = await externalContentDeck();
+		// The blocks page opens the sample deck; answer it with the linked one.
+		await page.route('**/sample-deck.pptx', (route) =>
+			route.fulfill({ contentType: 'application/octet-stream', body: deck }),
+		);
+		await page.goto('/?blocks=1');
+		await expect(page.locator('[data-building-blocks-panel]')).toBeVisible({ timeout: 30_000 });
+		const bar = securityBar(page);
+		await expect(bar).toHaveCount(1, { timeout: 30_000 });
+		await expect(bar).toBeVisible();
+		expect(requests).toEqual([]);
+		await bar.getByRole('button', { name: 'Enable Content' }).click();
+		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		await expect(bar).toHaveCount(0);
+	});
+
 	test('enabling is not kept for the next open', async ({ page }) => {
 		const requests = await recordExternalRequests(page);
 		await openExternalDeck(page);
 		await securityBar(page).getByRole('button', { name: 'Enable Content' }).click();
 		await expect.poll(() => requestedPaths(requests)).toContain(LINKED_PICTURES.shapeFill);
+		// Let every request the enabled deck started land before counting the next open's.
+		await page.waitForLoadState('networkidle');
 		requests.length = 0;
 		// Opening the presentation again asks again, as PowerPoint does. (The demos offer the file
 		// input only on their start page; each binding's unit tests cover a second deck opened in

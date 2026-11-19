@@ -198,8 +198,10 @@ export {
 	BuildingBlocksCanvas,
 	BuildingBlocksSlidesPane,
 	BuildingBlocksToolbar,
+	ExternalContentBar,
 	useViewerBuildingBlocks,
 } from './building-blocks';
+export type { ViewerExternalContentBar } from 'ooxml-ui/pptx';
 export type {
 	ViewerBuildingBlocks,
 	ViewerBuildingBlocksOptions,

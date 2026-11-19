@@ -97,13 +97,24 @@ async function settle(done: () => boolean): Promise<void> {
 const bar = () => container.querySelector('pptx-ui-external-content-bar');
 const linkedReferenced = () => container.innerHTML.includes(ORIGIN);
 
-async function open(content: Uint8Array, allowExternalContent?: boolean): Promise<void> {
+type Handle = import('../types').PowerPointViewerHandle;
+let handle: Handle | null = null;
+
+async function open(
+	content: Uint8Array,
+	allowExternalContent?: boolean,
+	extra: { canEdit?: boolean; showToolbar?: boolean } = {},
+): Promise<void> {
 	const onLoad = vi.fn();
 	await act(async () => {
 		root.render(
 			<PowerPointViewer
+				ref={(value: Handle | null) => {
+					handle = value;
+				}}
 				content={content}
 				onLoad={onLoad}
+				{...extra}
 				{...(allowExternalContent === undefined ? {} : { allowExternalContent })}
 			/>,
 		);
@@ -131,6 +142,47 @@ describe('linked web content in PowerPointViewer', { timeout: 60_000 }, () => {
 		expect(loads).toStrictEqual([false, true]);
 		expect(bar()).toBeNull();
 		expect(linkedReferenced()).toBeTruthy();
+	});
+
+	it('keeps edits saved before Enable Content, and the next save writes them', async () => {
+		await open(await linkedDeck(), undefined, { canEdit: true });
+		const [first] = handle!.getElements(0);
+		await act(async () => {
+			handle!.updateElement(first!.id, { x: first!.x + 40 });
+		});
+		const saved = await handle!.getSaveSnapshot();
+		await act(async () => {
+			expect(handle!.acknowledgeSave(saved.revision).status).toBe('clean');
+		});
+		expect(handle!.isDirty()).toBe(false);
+		await request('action');
+		await settle(() => loads.length === 2 && linkedReferenced());
+		expect(linkedReferenced()).toBeTruthy();
+		expect(handle!.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(handle!.isDirty()).toBe(false);
+		const next = await handle!.getSaveSnapshot();
+		const slideXml = async (bytes: Uint8Array) =>
+			(await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
+		const offset = (xml: string) => xml.match(/<a:off [^>]*>/u)?.[0];
+		expect(offset(await slideXml(next.content))).toBe(offset(await slideXml(saved.content)));
+		expect(await slideXml(next.content)).toContain('r:link="rIdLinkedFill"');
+	});
+
+	it('keeps unsaved edits unsaved through Enable Content', async () => {
+		await open(await linkedDeck(), undefined, { canEdit: true });
+		const [first] = handle!.getElements(0);
+		await act(async () => {
+			handle!.updateElement(first!.id, { x: first!.x + 40 });
+		});
+		await request('action');
+		await settle(() => loads.length === 2 && linkedReferenced());
+		expect(handle!.getElements(0)[0]!.x).toBe(first!.x + 40);
+		expect(handle!.isDirty()).toBe(true);
+	});
+
+	it('shows the bar without the toolbar', async () => {
+		await open(await linkedDeck(), undefined, { showToolbar: false });
+		expect(bar()).not.toBeNull();
 	});
 
 	it('closing hides the bar and keeps the content blocked', async () => {

@@ -753,7 +753,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				getChrome: () => this.lifecycle.chrome,
 				renderer: this.renderer,
 				callbacks: options,
-				externalContentBarVisible: (state) =>
+				externalContentBarInChrome: (state) =>
+					this.showsExternalContentBar() &&
 					externalContentBarShown(state, this.hostAllowExternalContent),
 			}),
 		);
@@ -1993,7 +1994,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.readOnlyActions.dismiss();
 	}
 
-	/** Enable Content on the security bar: reopen this presentation with its linked content. */
+	/** Enable Content on the security bar: reopen this presentation, as it stands, with its linked content. */
 	enableExternalContent(): void {
 		void enableExternalContent({
 			store: this.store,
@@ -2027,12 +2028,25 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	}
 
 	/**
+	 * Whether this viewer's own chrome draws the security bar. The building blocks' canvas
+	 * leaves it to the host shell, which renders it from `externalContent`, as in React.
+	 */
+	protected showsExternalContentBar(): boolean {
+		return true;
+	}
+
+	/** Whether the chrome shows the security bar now (`ChromeHost`). */
+	externalContentBarInChrome(): boolean {
+		return this.showsExternalContentBar() && this.externalContentBarVisible();
+	}
+
+	/**
 	 * A live host `allowExternalContent` (the building blocks): applies to the next load, and
 	 * `false` removes the security bar at once.
 	 */
 	protected setHostAllowExternalContent(allow: boolean | undefined): void {
 		this.hostAllowExternalContent = allow;
-		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarVisible());
+		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarInChrome());
 	}
 
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */

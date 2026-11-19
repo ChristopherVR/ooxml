@@ -8,6 +8,7 @@ import type {
 	ToolbarActionId,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
+	ViewerExternalContentBar,
 	ViewerMode,
 } from 'ooxml-ui/pptx';
 
@@ -97,6 +98,12 @@ export interface ViewerBuildingBlocks {
 	/** Host-owned workflows (pickers, dialogs, Find / Replace, layouts), shared by every binding. */
 	readonly actions: ViewerBuildingBlockActions;
 	readonly state: ViewerBuildingBlocksState;
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them. The canvas does not draw the bar; render `ExternalContentBar`
+	 * while `barVisible`, passing `enable` and `close` as `onenable` and `onclose`.
+	 */
+	readonly externalContent: ViewerExternalContentBar;
 	/** The compact toolbar's groups and controls (existing dictionary keys, `describeBuildingBlockToolbar`). */
 	readonly toolbar: BuildingBlockToolbarGroup[];
 	/** Run a compact toolbar control (what the toolbar block's buttons call). */

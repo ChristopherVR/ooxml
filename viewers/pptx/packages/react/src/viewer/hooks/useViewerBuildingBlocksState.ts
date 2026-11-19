@@ -1,4 +1,5 @@
 import type {
+	ViewerExternalContentBar,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -78,16 +79,6 @@ export interface UseViewerBuildingBlocksStateInput {
 	onSlideCountChange?: (count: number) => void;
 	/** What a vector PDF export approximated (as the viewer's `onPdfExportReport`). */
 	onPdfExportReport?: (result: VectorPdfExportResult) => void;
-}
-
-/** The security bar a custom shell renders (`<ExternalContentBar>`) while `barVisible`. */
-export interface ViewerExternalContentBar {
-	/** The deck links pictures or media to the web, and they were not downloaded. */
-	barVisible: boolean;
-	/** Enable Content: reload this presentation with its linked content. */
-	enable: () => void;
-	/** Close the bar; the content stays blocked. */
-	close: () => void;
 }
 
 export interface ViewerBuildingBlocksState {

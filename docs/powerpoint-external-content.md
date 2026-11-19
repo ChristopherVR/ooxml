@@ -9,22 +9,28 @@ The maintainer's decision (2026-11-19) is that PowerPoint content follows Micros
 default. Word, Excel and Visio are compared with their own applications below.
 
 Everything here comes from public Microsoft documentation and from the observable behaviour of
-installed Office through its documented COM automation. No Office binary was inspected.
+installed Office through its documented COM automation. No Office binary was inspected. Each
+statement about Microsoft Office says where it comes from:
+
+- **Observed.** Seen in Microsoft 365 Apps 16.0.20527.20196 through COM automation without a
+  window, as described under [Observations](#observations-2026-11-19).
+- **Documented.** Stated by the numbered source under [Sources](#sources-retrieved-2026-11-19).
+- **Inferred.** Not stated by a source and not observed. The text names what it is inferred from.
 
 ## Summary
 
-| Content                                  | Microsoft PowerPoint (default)                                                                                                                                      | OOXML PowerPoint (2.0 default)                                                                |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Linked picture on an Internet host       | Not downloaded. A placeholder says "To help protect your privacy, PowerPoint has blocked automatic download of this picture"; the Message Bar offers Enable Content | Not downloaded. A translated security bar offers Enable Content for that presentation         |
-| Linked picture on an intranet host       | Downloaded when drawn                                                                                                                                               | Not downloaded until Enable Content (a browser cannot tell an intranet host apart; see below) |
-| Linked audio and video                   | Not downloaded on open                                                                                                                                              | Not downloaded until Enable Content                                                           |
-| Online video (YouTube, Vimeo)            | The provider's page loads when the video is played; needs the connected experience that downloads online content (on by default)                                    | Not loaded until Enable Content; after it, the provider's frame loads when the slide is shown |
-| Linked OLE object                        | Not updated on open; a security notice asks to update links                                                                                                         | Never fetched; the stored preview picture is drawn                                            |
-| Hyperlink to a media file or page        | Opened only when clicked                                                                                                                                            | Opened only when clicked                                                                      |
-| File from the Internet (Mark of the Web) | Opens in Protected View                                                                                                                                             | Same as any file: blocked until Enable Content                                                |
-| Enable Content                           | For that presentation, until it is closed; asked again on the next open                                                                                             | For that presentation, until another one is opened; never stored                              |
-| Administrator override                   | Policy "Unblock automatic download of linked images" (PowerPoint Options > Security)                                                                                | Host option `allowExternalContent: true` (download without asking) or `false` (block, no bar) |
-| Global user setting                      | None: "You cannot change external content settings globally for Microsoft PowerPoint in the Trust Center"                                                           | File > Options > Trust Center "Allow external content", off by default                        |
+| Content                                  | Microsoft PowerPoint (default)                                                                                                                                                                                                                                                                    | OOXML PowerPoint (2.0 default)                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Linked picture on an Internet host       | Not downloaded, and the picture's frame shows "To help protect your privacy, PowerPoint has blocked automatic download of this picture" (observed). For PowerPoint 2007, a warning in the Message Bar lets the user download the picture (documented, source 2). The current bar was not observed | Not downloaded. A translated security bar offers Enable Content for that presentation         |
+| Linked picture on an intranet host       | Downloaded when the slide is drawn (observed for `localhost`). "Links to images on internal Web sites are not blocked" (documented for PowerPoint 2007, source 2)                                                                                                                                 | Not downloaded until Enable Content (a browser cannot tell an intranet host apart; see below) |
+| Linked audio and video                   | No request on open, on slide export or on PDF export (observed). Playback was not observed. Source 1 lists linked media among the external content Office blocks by default (documented)                                                                                                          | Not downloaded until Enable Content                                                           |
+| Online video (YouTube, Vimeo)            | Plays directly from the provider's website and needs an Internet connection (documented, source 5). When PowerPoint first contacts the provider was not observed                                                                                                                                  | Not loaded until Enable Content; after it, the provider's frame loads when the slide is shown |
+| Linked OLE object                        | PowerPoint 2010 and 2013 show a security message with **Update Links** and **Cancel** when the presentation opens (documented, source 3). Current versions were not observed, and no source covers them                                                                                           | Never fetched; the stored preview picture is drawn                                            |
+| Hyperlink to a media file or page        | No request on open or export (observed). Clicking was not observed                                                                                                                                                                                                                                | Opened only when clicked                                                                      |
+| File from the Internet (Mark of the Web) | Opens in Protected View (documented, source 4). Not observed: automation opens do not use Protected View                                                                                                                                                                                          | Same as any file: blocked until Enable Content                                                |
+| Enable Content                           | No source says how long the choice lasts, and it was not observed. Inferred: asked again on each open, because source 1 says that to stop being notified about the same external content you move the file to a trusted location                                                                  | For that presentation, until another one is opened; never stored                              |
+| Administrator override                   | Policy "Unblock automatic download of linked images" (documented for PowerPoint 2007, source 2). Whether current administrative templates carry it was not checked                                                                                                                                | Host option `allowExternalContent: true` (download without asking) or `false` (block, no bar) |
+| Global user setting                      | None: "You cannot change external content settings globally for Microsoft PowerPoint in the Trust Center" (documented, source 1)                                                                                                                                                                  | File > Options > Trust Center "Allow external content", off by default                        |
 
 ## Sources (retrieved 2026-11-19)
 
@@ -32,40 +38,66 @@ installed Office through its documented COM automation. No Office binary was ins
    (applies to PowerPoint for Microsoft 365 and 2016 to 2024). It defines external content as
    "any content linked from the Internet or an intranet to a workbook or presentation", names
    images and linked media as Web beacons ("When you open the file, the image is downloaded and
-   information about the file is beaconed back to the external server"), says a business bar
-   notifies the user that external content has been disabled and that **Enable Content**
-   unblocks it, and states: "External content security settings are located in the Trust Center
-   for Microsoft Excel only. You cannot change external content settings globally for Microsoft
-   PowerPoint in the Trust Center." For Excel it gives the defaults "Prompt user about Data
-   Connections" and "Prompt user on automatic update for Workbook Links".
-2. Microsoft Learn (Office 2007 Resource Kit, last updated 2017-01-10),
-   [Plan external content settings in the 2007 Office system](<https://learn.microsoft.com/en-us/previous-versions/office/office-2007-resource-kit/cc179053(v=office.12)>):
+   information about the file is beaconed back to the external server"), and says Office is
+   configured by default to block external content, such as images, linked media, hyperlinks and
+   data connections, in workbooks and presentations. Its only description of the bar is
+   conditional: "If there are external data connections present in your workbook or
+   presentation, when you open the file a business bar notifies you that the external content has
+   been disabled", and **Enable Content** on the business bar unblocks it. It calls the prompt a
+   "security warning". It does not say how long Enable Content lasts. It says that if you "do not
+   want to be notified about this specific external content again", it is better to move the file
+   to a trusted location. It also states: "External content security settings are located in the
+   Trust Center for Microsoft Excel only. You cannot change external content settings globally
+   for Microsoft PowerPoint in the Trust Center." For Excel it gives the defaults "Prompt user
+   about Data Connections" and "Prompt user on automatic update for Workbook Links".
+2. Microsoft Learn, Office 2007 Resource Kit,
+   [Plan external content settings in the 2007 Office system](<https://learn.microsoft.com/en-us/previous-versions/office/office-2007-resource-kit/cc179053(v=office.12)>).
+   The page shows three dates: "Updated: February 12, 2009" in its header, "Topic Last
+   Modified: 2016-11-14", and "Last updated on 2017-01-10" in the Microsoft Learn footer. It
+   describes the 2007 Office system only:
    "By default, links to external content are disabled. This includes links to data sources,
    hyperlinks to Web sites and documents, and links to images and media. When a user opens a
    document that contains links to external content, the Message Bar notifies the user that the
    links are disabled." For PowerPoint: "By default, Office PowerPoint 2007 does not display
    images that are saved on an external Web site ... Instead, a placeholder image displays and a
    warning appears in the Message Bar ... Users can allow the image to download by clicking the
-   Message Bar", "Links to images on internal Web sites are not blocked", and the policy
-   "Unblock automatic download of linked images" allows them. The same policy ships in the
-   current PowerPoint administrative templates (PowerPoint Options > Security), where security
-   baselines keep it disabled.
-3. Microsoft Support, [PowerPoint 2013 or PowerPoint 2010 stops working after you repair a presentation](https://support.microsoft.com/en-us/topic/powerpoint-2013-or-powerpoint-2010-stops-working-after-you-repair-a-presentation-0e04c3d0-b3dc-c043-8c49-7dbe6b82bfd7):
-   a linked picture shows "To help protect your privacy, PowerPoint has blocked automatic download
-   of this picture", and a presentation with links to an OLE object raises a security message
-   whose choices are **Update Links** and **Cancel**.
-4. Microsoft Support, [What is Protected View?](https://support.microsoft.com/en-us/office/what-is-protected-view-d6f09ac7-e6b9-4495-8e43-2bbcdbcb6653):
-   files from the Internet open in Protected View, a read-only mode, and cloud fonts are not
-   downloaded until the user enables editing.
+   Message Bar", and "Links to images on internal Web sites are not blocked". It lists the policy
+   "Unblock automatic download of linked images" with the configuration "Disabled"; enabling it
+   "allows linked images on external Web sites to download and appear in slides". The page says
+   the policy is set "in the OCT and with the 2007 Office system Administrative Templates (.adm
+   files)". No source here covers current PowerPoint administrative templates or security
+   baselines, and they were not checked.
+3. Microsoft Support, [PowerPoint 2013 or PowerPoint 2010 stops working after you repair a presentation](https://support.microsoft.com/en-us/topic/powerpoint-2013-or-powerpoint-2010-stops-working-after-you-repair-a-presentation-0e04c3d0-b3dc-c043-8c49-7dbe6b82bfd7)
+   (applies to PowerPoint 2013, PowerPoint 2010 and PowerPoint Home and Student 2010). The article
+   is about a crash after a repair. It says that opening a presentation that contains links to an
+   OLE object shows a security message, that its workaround is to click **Cancel** instead of
+   **Update Links**, and that reopening a saved copy prompts "to update the presentation links".
+   It also says a linked picture shows "To help protect your privacy, PowerPoint has blocked
+   automatic download of this picture". The same text was observed in Microsoft 365 (see
+   Observations). The OLE prompt was not observed, and no current source describes it.
+4. Microsoft Support, [What is Protected View?](https://support.microsoft.com/en-us/office/what-is-protected-view-d6f09ac7-e6b9-4495-8e43-2bbcdbcb6653)
+   (applies to Word, Excel and PowerPoint for Microsoft 365 and 2016 to 2024): files from the
+   Internet and other potentially unsafe locations "are opened as read only or in Protected View",
+   "a read-only mode where most editing functions are disabled", and **Enable Editing** on the
+   Message Bar exits it. Its section on cloud fonts describes Word only: a cloud font that is not
+   installed "won't download while you're in Protected View", and enabling editing lets Word
+   download it.
 5. Microsoft Learn, [Connected experiences in Office](https://learn.microsoft.com/en-us/microsoft-365-apps/privacy/connected-experiences)
    (2026-06-12) and [Optional connected experiences](https://learn.microsoft.com/en-us/microsoft-365-apps/privacy/optional-connected-experiences)
-   (2026-07-21): Insert online video is a connected experience that downloads online content;
-   "when you connect to YouTube, the terms of service and privacy policy for YouTube apply".
-   Microsoft's video help says an online video is stored on the website, not in the
-   presentation, and needs an Internet connection to play.
+   (2026-07-21): Insert online video is listed among the "connected experiences that download
+   online content", and for work or school accounts it is an optional connected experience. "If
+   you don't use these policy settings, all connected experiences are available for your users."
+   "When you connect to YouTube, the terms of service and privacy policy for YouTube apply."
+   Microsoft Support, [Insert a video from YouTube or another site](https://support.microsoft.com/office/8340ec69-4cee-4fe1-ab96-4849154bc6db)
+   (linked from the connected experiences page, retrieved 2026-11-20): "Because the video is
+   stored on a web site, rather than in your presentation, you must be connected to the internet
+   in order for the video to play successfully", and "The video plays directly from the website".
+   Neither page says when PowerPoint first contacts the provider, or whether playing a video needs
+   the connected experience.
 6. Microsoft Support, [Refresh imported data](https://support.microsoft.com/en-us/visio/refresh-imported-data)
    and Microsoft Learn, [DataRecordset.RefreshInterval](https://learn.microsoft.com/en-us/office/vba/api/visio.datarecordset.refreshinterval):
-   Visio refreshes linked data when the user chooses Refresh Data or turns on Automatic Refresh;
+   Visio refreshes linked data when the user chooses **Refresh Data**, or at an interval the user
+   sets with the **Refresh every** check box in the **Configure Refresh** dialog box;
    "When you create a DataRecordset object, its RefreshInterval property is set to the default, 0. This setting indicates that data is not refreshed automatically."
 
 The wording of PowerPoint's Message Bar, "SECURITY WARNING References to external pictures and
@@ -100,7 +132,7 @@ The Mark of the Web made no difference to these automation opens, and
 `Application.ProtectedViewWindows.Count` stayed 0: opening through `Presentations.Open` does not
 use Protected View. Protected View itself, linked OLE objects (whose security notice is a modal
 dialog) and online video playback (which needs a window) were not observed, to keep to automation
-without windows or dialogs; their rows above come from the sources.
+without windows or dialogs; their rows above are marked as documented or inferred.
 
 Every PowerPoint request carried the user agent `Mozilla/4.0 (compatible; ms-office; MSOffice 16)`.
 
@@ -112,23 +144,25 @@ The default matches PowerPoint's: opening a deck sends no request for its linked
 and table fills, picture bullets, 3D model posters, audio, video or online video. When the deck
 has such links (`PptxData.hasLinkedWebContent`), the viewer shows a translated security bar under
 the ribbon: "SECURITY WARNING References to external pictures and other media have been blocked."
-with **Enable Content** and a close button. Enable Content reopens that presentation with its
-linked content (keeping unsaved changes) and lasts until another presentation is opened. Close
-hides the bar and keeps the content blocked. Nothing is stored.
+with **Enable Content** and a close button. Enable Content reloads the presentation as it
+currently stands, saved and unsaved edits included, this time with its linked content. The slide
+shown stays shown, the presentation keeps its unsaved state, and undo history starts over. The
+choice lasts until another presentation is opened. Close hides the bar and keeps the content
+blocked. Nothing is stored.
 
-Differences from PowerPoint, all on the stricter side:
+Differences from PowerPoint:
 
 - A browser has no Windows security zones, so an intranet host is blocked like any other until
   Enable Content.
 - A blocked linked picture is left empty instead of showing PowerPoint's privacy placeholder
   text.
-- After Enable Content, an online video's frame loads when its slide is shown, where PowerPoint
-  loads it on Play.
+- After Enable Content, an online video's frame loads when its slide is shown. No source says
+  when PowerPoint first contacts the provider, and it was not observed, so this may differ.
 
 Hosts and users change it with:
 
-- `allowExternalContent: true`: download without asking, as PowerPoint's "Unblock automatic
-  download of linked images" policy does. The Trust Center option is locked on.
+- `allowExternalContent: true`: download without asking, as the PowerPoint 2007 policy "Unblock
+  automatic download of linked images" does (source 2). The Trust Center option is locked on.
 - `allowExternalContent: false`: block without a bar (Teams presentation previews always do). The
   Trust Center option is locked off.
 - File > Options > Trust Center > "Allow external content (remote images and media)", off by

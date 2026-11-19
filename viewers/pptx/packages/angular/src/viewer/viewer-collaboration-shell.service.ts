@@ -1,5 +1,7 @@
 import { computed, effect, inject, Injectable, signal, untracked } from '@angular/core';
 import {
+	prepareExternalContentReload,
+	recoverySnapshotIntent,
 	resolveCollaborationConfig,
 	resolveCollaborationShellState,
 	resolveInitialSlideIndex,
@@ -42,6 +44,8 @@ export class ViewerCollaborationShellService {
 	private readonly session = inject(ViewerCollaborationSessionService);
 	private readonly options = signal<ViewerCollaborationShellOptions | null>(null);
 	private readonly loadedContent = signal<Uint8Array | ArrayBuffer | null>(null);
+	/** Where the shell stood when Enable Content reloaded the deck (see the seeding effect). */
+	private externalContentReturn: { slideIndex: number; dirty: boolean } | null = null;
 
 	readonly activeSlideIndex = signal(0);
 	readonly activeSlide = computed(() => this.editor.slides()[this.activeSlideIndex()]);
@@ -119,10 +123,21 @@ export class ViewerCollaborationShellService {
 		effect(() => {
 			const slides = this.loader.slides();
 			untracked(() => {
+				// Enable Content reloaded the same presentation: keep the slide and the unsaved state.
+				const kept = this.loader.lastLoadWasExternalContentReload
+					? this.externalContentReturn
+					: null;
+				this.externalContentReturn = null;
 				this.editor.setSlides(slides, this.loader.sections());
 				this.activeSlideIndex.set(
-					resolveInitialSlideIndex(this.options()?.initialSlide?.(), slides.length),
+					resolveInitialSlideIndex(
+						kept ? kept.slideIndex : this.options()?.initialSlide?.(),
+						slides.length,
+					),
 				);
+				if (kept) {
+					this.editor.dirty.set(kept.dirty);
+				}
 				this.collaboration.adoptDocSlidesAfterLoad('bootstrap');
 			});
 		});
@@ -162,6 +177,29 @@ export class ViewerCollaborationShellService {
 
 	bind(options: ViewerCollaborationShellOptions): void {
 		this.options.set(options);
+	}
+
+	/**
+	 * Enable Content on the security bar: reload this presentation as it stands (the shared
+	 * `prepareExternalContentReload`, over the plaintext recovery serialisation) with its linked
+	 * content. Saved and unsaved edits come along; unsaved ones stay unsaved. Undo starts over.
+	 */
+	async enableExternalContent(): Promise<void> {
+		const reload = await prepareExternalContentReload({
+			serializeCurrentDeck: () =>
+				this.loader.saveSlides(
+					buildSaveSlides(this.editor.slides(), this.editor.templateElementsBySlideId()),
+					'pptx',
+					this.editor.sections(),
+					recoverySnapshotIntent(),
+				),
+			isDirty: this.editor.dirty(),
+			slideIndex: this.activeSlideIndex(),
+		});
+		if (reload) {
+			this.externalContentReturn = { slideIndex: reload.slideIndex, dirty: reload.keepDirty };
+			await this.loader.enableExternalContent(reload.bytes);
+		}
 	}
 
 	/** Save the live model even while readiness or a viewer role blocks editing. */

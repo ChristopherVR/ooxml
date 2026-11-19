@@ -63,6 +63,18 @@ canvas stay. Remote cursors and selections draw on the canvas. `getState()` also
 `blocks.viewer.startCollaboration` and `stopCollaboration` still work; prefer the option, so `update` and the
 viewer never disagree about the room.
 
+## Linked pictures and media
+
+As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
+downloading them. The canvas does not draw PowerPoint's security bar. `blocks.mountExternalContentBar(host)`
+mounts it into `host` (it shows only while needed and returns its disposer), or draw your own from
+`blocks.externalContent` (`{ barVisible, enable, close }`, read again after `subscribe` fires):
+`enable()` reloads this presentation as it stands, with its saved and unsaved edits and the slide on screen, and with its linked content; unsaved edits stay unsaved and undo history starts over, and `close()` hides the bar. A new presentation asks again. The `allowExternalContent` option (`true` or `false`) answers for the user, and then the bar never shows.
+
+```ts
+blocks.mountExternalContentBar(document.querySelector('#security-bar')!);
+```
+
 ## Host-owned workflows
 
 The blocks mount no file inputs and no dialogs. A toolbar control or a canvas gesture that needs one

@@ -138,6 +138,7 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			previousSlide: c.goPrev,
 			nextSlide: c.goNext,
 		},
+		externalContent: c.externalContent,
 		closeShortcuts: () => {
 			c.showShortcuts.value = false;
 		},

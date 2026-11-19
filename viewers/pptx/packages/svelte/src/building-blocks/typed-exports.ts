@@ -1,6 +1,7 @@
 import type { BuildingBlockToolbarGroupId } from 'ooxml-ui/pptx';
 import type { Component } from 'svelte';
 
+import ExternalContentBarComponent from '../viewer/components/ExternalContentBar.svelte';
 import BuildingBlocksCanvasComponent from './BuildingBlocksCanvas.svelte';
 import BuildingBlocksSlidesPaneComponent from './BuildingBlocksSlidesPane.svelte';
 import BuildingBlocksToolbarComponent from './BuildingBlocksToolbar.svelte';
@@ -29,6 +30,17 @@ export interface BuildingBlocksSlidesPaneProps {
 	blocks: ViewerBuildingBlocks;
 	class?: string;
 }
+
+/** PowerPoint's security bar; render it while `blocks.externalContent.barVisible`. */
+export interface ExternalContentBarProps {
+	/** Enable Content: `blocks.externalContent.enable`. */
+	onenable: () => void;
+	/** Close: `blocks.externalContent.close`. */
+	onclose: () => void;
+}
+
+export const ExternalContentBar: Component<ExternalContentBarProps> =
+	ExternalContentBarComponent as unknown as Component<ExternalContentBarProps>;
 
 export const BuildingBlocksCanvas: Component<BuildingBlocksCanvasProps> =
 	BuildingBlocksCanvasComponent as unknown as Component<BuildingBlocksCanvasProps>;

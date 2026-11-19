@@ -14,8 +14,9 @@
  * `trust.allowExternalContent`, which is off by default; a user who turns it
  * on downloads without asking. Every binding feeds the result of
  * {@link resolveAllowExternalContent} to the loader's `allowExternalImages`
- * option, shows the bar when {@link externalContentBarVisible} says so and
- * folds {@link lockExternalContentSetting} into the options locks; no rule is
+ * option, shows the bar when {@link externalContentBarVisible} says so, reloads
+ * from {@link prepareExternalContentReload} on Enable Content and folds
+ * {@link lockExternalContentSetting} into the options locks; no rule is
  * re-derived per binding.
  *
  * @module render/options/external-content-policy
@@ -62,6 +63,60 @@ export function externalContentBarVisible(input: ExternalContentBarInput): boole
 	return (
 		input.hasLinkedWebContent === true && !input.allowed && input.host !== false && !input.closed
 	);
+}
+
+/** What Enable Content reads from the viewer at the moment the user chooses it. */
+export interface ExternalContentEnableSource {
+	/**
+	 * The presentation as it stands, saved and unsaved edits included, in bytes the
+	 * viewer can read back (the recovery serialisation: plaintext, never encrypted).
+	 * Null when no deck is loaded.
+	 */
+	serializeCurrentDeck(): Promise<Uint8Array | null>;
+	/** The deck has unsaved changes; they stay unsaved after the reload. */
+	isDirty: boolean;
+	/** The slide on screen, which the reload keeps. */
+	slideIndex: number;
+}
+
+/** The reload Enable Content asks a binding to make, with linked content allowed. */
+export interface ExternalContentReload {
+	/** The current deck, from {@link ExternalContentEnableSource.serializeCurrentDeck}. */
+	bytes: Uint8Array;
+	/** Mark the reloaded deck unsaved, as it was. */
+	keepDirty: boolean;
+	/** The slide to show after the reload, clamped by the binding. */
+	slideIndex: number;
+}
+
+/**
+ * Enable Content's reload. It is always the deck as it now stands: the bytes it
+ * was opened from would bring back what was edited since, saved or not, and the
+ * next save would write that old deck over the saved one. Null when there is
+ * no deck to serialise, in which case nothing reloads.
+ *
+ * The reload starts undo history over: the steps before it hold the deck
+ * without its linked content, so undoing into them would remove it again.
+ */
+export async function prepareExternalContentReload(
+	source: ExternalContentEnableSource,
+): Promise<ExternalContentReload | null> {
+	const bytes = await source.serializeCurrentDeck();
+	return bytes ? { bytes, keepDirty: source.isDirty, slideIndex: source.slideIndex } : null;
+}
+
+/**
+ * The security bar as every binding's building blocks hand it to a custom shell,
+ * which renders the binding's `ExternalContentBar` while `barVisible` and wires
+ * its Enable Content and Close to `enable` and `close`.
+ */
+export interface ViewerExternalContentBar {
+	/** The deck links pictures or media to the web, and they were not downloaded. */
+	barVisible: boolean;
+	/** Enable Content: reload this presentation as it stands, with its linked content. */
+	enable: () => void;
+	/** Close the bar; the content stays blocked. */
+	close: () => void;
 }
 
 /** The bar's two requests, as its `external-content-request` event carries them. */

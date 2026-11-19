@@ -4,11 +4,16 @@ import { TranslateService } from '@ngx-translate/core';
 import {
 	createFindBarController,
 	createPptxBuildingBlockSession,
+	externalContentBarVisible,
 	registerBuildingBlockGroups,
 	resolveBuildingBlockMode,
 	runBuildingBlockToolbarControl,
 } from 'ooxml-ui/pptx';
-import type { BuildingBlockToolbarControlId, ViewerBuildingBlockActions } from 'ooxml-ui/pptx';
+import type {
+	BuildingBlockToolbarControlId,
+	ViewerBuildingBlockActions,
+	ViewerExternalContentBar,
+} from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 
 import { controllerSignal } from '../viewer/controller-signal';
@@ -126,6 +131,25 @@ export class ViewerBuildingBlocks {
 	/** `state().collaborationState`, as its own signal. */
 	readonly collaborationState = computed(() => this.shell.collaboration.state());
 	readonly options: Signal<ViewerBuildingBlocksOptions> = this.optionsSignal.asReadonly();
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them. The canvas does not draw the bar; render
+	 * `pptx-external-content-bar` while `barVisible`, wiring `(enable)` and `(closeBar)` to
+	 * `enable` and `close`.
+	 */
+	readonly externalContent: Signal<ViewerExternalContentBar> = computed(() => {
+		const { loader } = this.shell;
+		return {
+			barVisible: externalContentBarVisible({
+				hasLinkedWebContent: loader.hasLinkedWebContent(),
+				allowed: loader.externalContentAllowed(),
+				host: this.optionsSignal().allowExternalContent,
+				closed: loader.externalContent().closed,
+			}),
+			enable: () => void this.shell.enableExternalContent(),
+			close: () => loader.closeExternalContentBar(),
+		};
+	});
 
 	constructor() {
 		const { shell, dialogs } = this;

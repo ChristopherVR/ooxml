@@ -8,6 +8,7 @@ import {
 	EXTERNAL_CONTENT_SETTING_ID,
 	externalContentBarVisible,
 	lockExternalContentSetting,
+	prepareExternalContentReload,
 	resolveAllowExternalContent,
 } from './external-content-policy';
 import { DEFAULT_VIEWER_OPTIONS } from './viewer-options';
@@ -52,6 +53,39 @@ describe('externalContentBarVisible', () => {
 		expect(externalContentBarVisible({ ...shown, allowed: true })).toBe(false);
 		expect(externalContentBarVisible({ ...shown, host: false })).toBe(false);
 		expect(externalContentBarVisible({ ...shown, closed: true })).toBe(false);
+	});
+});
+
+describe('prepareExternalContentReload', () => {
+	const current = new Uint8Array([1, 2, 3]);
+
+	it('reloads the deck as it stands even with nothing unsaved', async () => {
+		await expect(
+			prepareExternalContentReload({
+				serializeCurrentDeck: async () => current,
+				isDirty: false,
+				slideIndex: 2,
+			}),
+		).resolves.toStrictEqual({ bytes: current, keepDirty: false, slideIndex: 2 });
+	});
+
+	it('keeps unsaved changes unsaved', async () => {
+		const reload = await prepareExternalContentReload({
+			serializeCurrentDeck: async () => current,
+			isDirty: true,
+			slideIndex: 0,
+		});
+		expect(reload?.keepDirty).toBe(true);
+	});
+
+	it('reloads nothing without a deck', async () => {
+		await expect(
+			prepareExternalContentReload({
+				serializeCurrentDeck: async () => null,
+				isDirty: false,
+				slideIndex: 0,
+			}),
+		).resolves.toBeNull();
 	});
 });
 

@@ -154,8 +154,8 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	enableExternalContent(): void;
 	/** The security bar's close button. */
 	closeExternalContentBar(): void;
-	/** Whether the security bar shows for the loaded deck (`externalContentBarVisible`). */
-	externalContentBarVisible(): boolean;
+	/** Whether the chrome shows the security bar for the loaded deck (`externalContentBarVisible`). */
+	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;
 	/** The compatibility toast stack's "Dismiss all" button. */
@@ -300,7 +300,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	chrome.mobileActionSheets?.setNotesExpanded(store.get().notesExpanded);
 	chrome.titleBar?.setDirty(store.get().dirty);
 	chrome.setProtectedView(store.get().protectedView);
-	chrome.setExternalContentBar(deps.externalContentBarVisible());
+	chrome.setExternalContentBar(deps.externalContentBarInChrome());
 	chrome.setReadOnlyRecommendation(
 		store.get().readOnlyRecommendation,
 		store.get().readOnlyBannerDismissed,
@@ -782,8 +782,8 @@ export interface ChromeHost {
 	enableExternalContent(): void;
 	/** The security bar's close button. */
 	closeExternalContentBar(): void;
-	/** Whether the security bar shows for the loaded deck (`externalContentBarVisible`). */
-	externalContentBarVisible(): boolean;
+	/** Whether the chrome shows the security bar for the loaded deck (`externalContentBarVisible`). */
+	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;
 	/** The compatibility toast stack's "Dismiss all" button. */
@@ -1088,7 +1088,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		cancelReadOnlyPasswordPrompt: () => host.cancelReadOnlyPasswordPrompt(),
 		enableExternalContent: () => host.enableExternalContent(),
 		closeExternalContentBar: () => host.closeExternalContentBar(),
-		externalContentBarVisible: () => host.externalContentBarVisible(),
+		externalContentBarInChrome: () => host.externalContentBarInChrome(),
 		dismissCompatToast: (id) => host.dismissCompatToast(id),
 		dismissAllCompatToasts: () => host.dismissAllCompatToasts(),
 		addRunProgramNotice: (notice) => host.addRunProgramNotice(notice),

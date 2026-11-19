@@ -55,6 +55,7 @@ import {
 	isEditingAllowed,
 	loadedThemeName,
 	externalContentBarVisible,
+	prepareExternalContentReload,
 	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveIntervalSeconds,
@@ -1278,23 +1279,27 @@ const showExternalContentBar = computed(() => {
 });
 
 /**
- * Enable Content: reload this presentation with its linked content. Unsaved
+ * Enable Content: reload this presentation as it stands (the shared
+ * `prepareExternalContentReload`) with its linked content. Saved and unsaved
  * edits come along through the recovery serialisation (blocked links survive a
- * save) and stay unsaved; otherwise the source bytes are parsed again. The
- * slide stays; Undo starts over, because its steps hold the deck without the
- * linked content.
+ * save); unsaved ones stay unsaved. The slide stays; Undo starts over, because
+ * its steps hold the deck without the linked content.
  */
 async function enableExternalContent(): Promise<void> {
 	const document = activeContent.value;
-	externalContentConsent.value = { document, enabled: true, closed: false };
 	const dirty = autosave.isDirty.value;
 	try {
-		const bytes = dirty ? await getRecoverySnapshot() : document;
-		if (activeContent.value !== document) {
+		const reload = await prepareExternalContentReload({
+			serializeCurrentDeck: () => getRecoverySnapshot(),
+			isDirty: dirty,
+			slideIndex: activeSlideIndex.value,
+		});
+		if (!reload || activeContent.value !== document) {
 			return;
 		}
-		slideAfterReload = activeSlideIndex.value;
-		await deck.reload(bytes);
+		externalContentConsent.value = { document, enabled: true, closed: false };
+		slideAfterReload = reload.slideIndex;
+		await deck.reload(reload.bytes);
 	} catch (reloadError) {
 		slideAfterReload = undefined;
 		emit('error', reloadError instanceof Error ? reloadError.message : String(reloadError));
@@ -2298,6 +2303,11 @@ if (blocksBridge) {
 		headerFooter,
 		firstSlideNumber: deck.firstSlideNumber,
 		theme: pptxTheme,
+		externalContent: () => ({
+			barVisible: showExternalContentBar.value,
+			enable: () => void enableExternalContent(),
+			close: closeExternalContentBar,
+		}),
 		tableStyleMap,
 	});
 }
@@ -2440,14 +2450,6 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@cancel-password="readOnlyRec.cancelPasswordPrompt"
 				/>
 
-				<!-- PowerPoint's security bar: the deck's linked pictures and media
-				     were not downloaded; Enable Content reloads it with them. -->
-				<ExternalContentBar
-					v-if="showExternalContentBar"
-					@enable="enableExternalContent"
-					@close="closeExternalContentBar"
-				/>
-
 				<!-- PowerPoint-style title bar sits ABOVE and OUTSIDE the
 				     role="toolbar" ribbon element (which e2e measures for height
 				     parity), gated like React on desktop + non-present. -->
@@ -2529,6 +2531,16 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@close-insert="mobileChrome.mobileInsertOpen.value = false"
 				/>
 			</template>
+
+			<!-- PowerPoint's security bar under the ribbon: the deck's linked pictures and media
+			     were not downloaded; Enable Content reloads it, as it stands, with them. It shows
+			     without the toolbar too, since it is the only way to enable that content; inside
+			     a building-blocks canvas the host shell renders it from `externalContent`. -->
+			<ExternalContentBar
+				v-if="!presentation.presenting.value && !blocksBridge && showExternalContentBar"
+				@enable="enableExternalContent"
+				@close="closeExternalContentBar"
+			/>
 
 			<!-- Hidden pickers for Insert > Image / Media -->
 			<input

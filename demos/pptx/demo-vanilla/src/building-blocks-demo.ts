@@ -18,6 +18,7 @@ export async function mountBuildingBlocksDemo(root: HTMLElement): Promise<void> 
 	};
 	const blocks = createViewerBuildingBlocks(options);
 	const panel = document.createElement('section');
+	const securityBar = document.createElement('div');
 	const toolbar = document.createElement('div');
 	const body = document.createElement('div');
 	body.style.cssText = 'display:flex;height:calc(100vh - 160px)';
@@ -28,7 +29,7 @@ export async function mountBuildingBlocksDemo(root: HTMLElement): Promise<void> 
 	const canvas = document.createElement('div');
 	canvas.style.cssText = 'flex:1;position:relative';
 	body.append(rail, canvas);
-	root.replaceChildren(panel, toolbar, body);
+	root.replaceChildren(panel, securityBar, toolbar, body);
 	const host = mountBuildingBlocksPanel(panel, {
 		actions: () => blocks.actions,
 		state: () => blocks.getState(),
@@ -45,6 +46,8 @@ export async function mountBuildingBlocksDemo(root: HTMLElement): Promise<void> 
 		},
 	});
 	blocks.subscribe(() => host.refresh());
+	// PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell.
+	blocks.mountExternalContentBar(securityBar);
 	blocks.mountToolbar(toolbar);
 	blocks.mountSlidesPane(rail);
 	blocks.mountCanvas(canvas);

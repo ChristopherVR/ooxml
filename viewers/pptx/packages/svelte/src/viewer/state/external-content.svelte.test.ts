@@ -95,6 +95,26 @@ describe('linked external content (Svelte)', () => {
 		expect(state.editor.dirty).toBeFalsy();
 	});
 
+	it('enabling keeps edits saved before it, and the next save writes them', async () => {
+		const state = renderHarness();
+		await open(state, await linkedDeck());
+		const count = state.editor.slides.length;
+		state.editor.commitSlides(state.editor.slides.slice(0, -1));
+		const saved = await state.editingApi.getSaveSnapshot();
+		expect(state.editingApi.acknowledgeSave(saved.revision).status).toBe('clean');
+		expect(state.editor.dirty).toBeFalsy();
+		await state.externalContent.enable();
+		expect(references(state)).toBeTruthy();
+		expect(state.editor.slides).toHaveLength(count - 1);
+		expect(state.editor.dirty).toBeFalsy();
+		const next = await state.editingApi.getSaveSnapshot();
+		const slideFiles = async (bytes: Uint8Array) =>
+			Object.keys((await JSZip.loadAsync(bytes)).files).filter((name) =>
+				/^ppt\/slides\/slide\d+\.xml$/u.test(name),
+			);
+		expect(await slideFiles(next.content)).toHaveLength(count - 1);
+	});
+
 	it('enabling keeps unsaved edits, still unsaved', async () => {
 		const state = renderHarness();
 		await open(state, await linkedDeck());

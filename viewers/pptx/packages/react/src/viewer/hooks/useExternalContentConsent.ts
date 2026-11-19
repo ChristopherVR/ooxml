@@ -1,5 +1,9 @@
-import { externalContentBarVisible, resolveAllowExternalContent } from 'ooxml-ui/pptx';
-import type { ViewerOptions } from 'ooxml-ui/pptx';
+import {
+	externalContentBarVisible,
+	prepareExternalContentReload,
+	resolveAllowExternalContent,
+} from 'ooxml-ui/pptx';
+import type { ExternalContentReload as SharedReload, ViewerOptions } from 'ooxml-ui/pptx';
 /**
  * useExternalContentConsent: PowerPoint's security bar for linked pictures and
  * media (shared `external-content-policy`), kept per presentation.
@@ -20,15 +24,12 @@ export interface LinkedWebContentLoad {
 }
 
 /**
- * Enable Content's reload of the presentation `content`: from `bytes` (the
- * source, or the serialized deck when it had unsaved changes), keeping it
- * marked unsaved when it was, on the slide that was showing.
+ * Enable Content's reload of the presentation `content`: from `bytes` (the deck
+ * as it stood, the shared `prepareExternalContentReload`), keeping it marked
+ * unsaved when it was, on the slide that was showing.
  */
-export interface ExternalContentReload {
+export interface ExternalContentReload extends SharedReload {
 	content: Content;
-	bytes: Content;
-	keepDirty: boolean;
-	slideIndex: number;
 }
 
 /** What Enable Content reads from the viewer when it runs. */
@@ -72,15 +73,16 @@ export function useExternalContentConsent(
 			if (!content) {
 				return;
 			}
-			setConsent({ content, enabled: true, closed: false });
 			void (async () => {
-				const serialized = source.isDirty ? await source.serialize() : null;
-				setReload({
-					content,
-					bytes: serialized ?? content,
-					keepDirty: source.isDirty,
+				const reload = await prepareExternalContentReload({
+					serializeCurrentDeck: source.serialize,
+					isDirty: source.isDirty,
 					slideIndex: source.activeSlideIndex,
 				});
+				if (reload) {
+					setConsent({ content, enabled: true, closed: false });
+					setReload({ ...reload, content });
+				}
 			})();
 		},
 		[content],

@@ -193,6 +193,14 @@ export function createViewerBuildingBlocks(
 		get state() {
 			return getState();
 		},
+		get externalContent() {
+			const bar = viewerState.externalContent;
+			return {
+				barVisible: bar.barVisible,
+				enable: () => void bar.enable(),
+				close: () => bar.close(),
+			};
+		},
 		get toolbar() {
 			const state = getState();
 			return describeBuildingBlockToolbar({

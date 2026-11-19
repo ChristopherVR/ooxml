@@ -3,8 +3,11 @@ export {
 	BuildingBlocksCanvas,
 	BuildingBlocksSlidesPane,
 	BuildingBlocksToolbar,
+	ExternalContentBar,
 } from './typed-exports';
+export type { ViewerExternalContentBar } from 'ooxml-ui/pptx';
 export type {
+	ExternalContentBarProps,
 	BuildingBlocksCanvasProps,
 	BuildingBlocksSlidesPaneProps,
 	BuildingBlocksToolbarProps,

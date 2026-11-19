@@ -4,6 +4,7 @@ import type {
 	BuildingBlockRequest,
 	BuildingBlockSessionPort,
 	BuildingBlockToolbarView,
+	ViewerExternalContentBar,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -35,6 +36,8 @@ export interface BuildingBlocksEngine {
 		canEdit: boolean;
 	};
 	readonly view: BuildingBlockToolbarView;
+	/** The viewer's security bar, which the host shell renders (`ExternalContentBar`). */
+	externalContent(): ViewerExternalContentBar;
 	/** The shortcut help flag's mirror: close it (`actions.cancel()`). */
 	closeShortcuts(): void;
 	/** What the slides pane block draws and which operations it maps its events onto. */
