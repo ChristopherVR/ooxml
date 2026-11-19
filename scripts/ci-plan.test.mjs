@@ -9,6 +9,7 @@ import {
 	PPTX_E2E_SHARDS,
 	VIEWER_BROWSER_SHARDS,
 	VIEWERS,
+	baselineBase,
 	onBasePlan,
 	plan,
 	plannedFiles,
@@ -733,6 +734,8 @@ test('the accessibility gates run for the suite, the shared UI, the viewers and 
 test('the accessibility gates skip core-only, test-only and docs changes', () => {
 	for (const file of [
 		'src/core/docx/model.ts',
+		'src/core/docx/write.test.ts',
+		'src/core/xlsx/write/test-support/workbook.ts',
 		'src/ui/src/dialog/dialog.test.ts',
 		'viewers/docx/docs/index.md',
 		'docs/accessibility.md',
@@ -740,4 +743,31 @@ test('the accessibility gates skip core-only, test-only and docs changes', () =>
 	])
 		assert.equal(plan([file]).a11y.run, false, file);
 	assert.deepEqual(plan(['docs/accessibility.md']).a11y.matrix, []);
+});
+
+test('a core writer change runs the export round trip, and only that', () => {
+	for (const file of [
+		'src/core/docx/write-table.ts',
+		'src/core/xlsx/write/worksheet.ts',
+		'src/core/pptx/core/core/runtime/PptxHandlerRuntimeSaveElements.ts',
+		'src/core/drawingml/write-fill.ts',
+	]) {
+		const gates = plan([file]).a11y;
+		assert.equal(gates.run, true, file);
+		assert.deepEqual(gates.specs, ['export.spec.ts'], file);
+		assert.deepEqual(gates.projects, ['suite'], file);
+		assert.equal(gates.matrix.length, A11Y_SHARDS.suiteOnly, file);
+	}
+	// Anything else the gates read runs every spec.
+	assert.deepEqual(plan(['src/core/docx/write.ts', 'site/index.html']).a11y.specs, []);
+	assert.deepEqual(plan([], { full: true }).a11y.specs, []);
+});
+
+test('the baselines are compared with a real commit, even for a full plan', () => {
+	const commits = { HEAD: 'h', 'HEAD^': 'p', before: 'b', 'origin/main': 'h' };
+	const commitOf = (ref) => commits[ref] ?? '';
+	assert.equal(baselineBase(['', 'before', 'HEAD^'], commitOf), 'b');
+	// A base git cannot find, or HEAD itself, is passed over.
+	assert.equal(baselineBase(['gone', 'origin/main', 'HEAD^'], commitOf), 'p');
+	assert.equal(baselineBase(['gone'], commitOf), '');
 });

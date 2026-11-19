@@ -224,10 +224,11 @@ if (p.pptx.run) {
 
 // The accessibility gates (e2e/a11y): their typecheck, unit tests and baseline check always, the
 // browser run with --browser, on the built suite and, when PowerPoint is reached, all five demos.
+// The baselines are compared with the base branch, --full too; a base git cannot find fails.
 if (p.a11y?.run) {
 	add(
 		'a11y:checks',
-		`bun run typecheck && bun run test:unit && node check-baseline.mjs --base ${full ? 'HEAD' : base}`,
+		`bun run typecheck && bun run test:unit && node check-baseline.mjs --base ${base}`,
 		'e2e/a11y',
 	);
 	if (browser) {
@@ -248,7 +249,8 @@ if (p.a11y?.run) {
 			needs.push('pptx:demos');
 		}
 		const projects = p.a11y.projects.map((project) => `--project=${project}`).join(' ');
-		add('a11y:browser', `bun run test -- ${projects}`, 'e2e/a11y', needs, {
+		const specs = p.a11y.specs.join(' ');
+		add('a11y:browser', `bun run test -- ${projects} ${specs}`.trim(), 'e2e/a11y', needs, {
 			exclusive: true,
 			env: { A11Y_PORT: process.env.A11Y_PORT ?? '4610' },
 		});

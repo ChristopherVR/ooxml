@@ -378,10 +378,14 @@ export const A11Y_SHARDS = { withPowerPoint: 2, suiteOnly: 1 };
 const A11Y_REACH =
 	/^(src\/ui\/|apps\/office-suite\/|site\/|viewers\/|demos\/|e2e\/a11y\/|scripts\/(build-suite|bundle-suite|build-pwa|preview-site|browser-performance)\.mjs$)/;
 
+/** The core's writers: what a save writes, which the export round trip (`export.spec.ts`) reads. */
+const CORE_WRITER = /^src\/core\/.*(writ|serializ|save)/i;
+
 /**
- * Whether the gates run, with which Playwright projects and on how many shards. A change to the
- * suite, the shared UI, a viewer or the gates themselves runs the suite project; the five
- * PowerPoint demo projects join when the change also reaches PowerPoint.
+ * Whether the gates run, with which Playwright projects, spec files (none: all of them) and on
+ * how many shards. A change to the suite, the shared UI, a viewer or the gates themselves runs the
+ * suite project; the five PowerPoint demo projects join when the change also reaches PowerPoint.
+ * A change to a core writer alone runs the export round trip.
  */
 export function a11yPlan(files, { everything, pptxReached }) {
 	const reached = files.filter(
@@ -390,16 +394,36 @@ export function a11yPlan(files, { everything, pptxReached }) {
 			!(isTestFile(file) && /^(src\/ui|viewers)\//.test(file)) &&
 			!/^viewers\/[^/]+\/(docs|\.github)\//.test(file),
 	);
-	const run = everything || reached.length > 0;
+	const writers = files.filter(
+		(file) =>
+			CORE_WRITER.test(file) && !isTestFile(file) && !/\/(__fixtures__|test-support)\//.test(file),
+	);
+	const all = everything || reached.length > 0;
+	const run = all || writers.length > 0;
 	const pptx =
-		run && (everything || pptxReached || reached.some((file) => file.startsWith('e2e/a11y/')));
+		all && (everything || pptxReached || reached.some((file) => file.startsWith('e2e/a11y/')));
 	const total = !run ? 0 : pptx ? A11Y_SHARDS.withPowerPoint : A11Y_SHARDS.suiteOnly;
 	return {
 		run,
 		pptx,
 		projects: pptx ? ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)] : ['suite'],
+		specs: all ? [] : ['export.spec.ts'],
 		matrix: Array.from({ length: total }, (_, i) => ({ shard: i + 1, total })),
 	};
+}
+
+/**
+ * The commit the accessibility baselines are compared with (`e2e/a11y/check-baseline.mjs`): the
+ * first of `refs` that names a commit other than HEAD. A full plan has no base of its own, so the
+ * caller lists fallbacks after it; an empty answer fails the check rather than skipping it.
+ */
+export function baselineBase(refs, commitOf) {
+	const head = commitOf('HEAD');
+	for (const ref of refs) {
+		const commit = ref ? commitOf(ref) : '';
+		if (commit && commit !== head) return commit;
+	}
+	return '';
 }
 
 /** The product editors in `src/ui/src/<product>/`; each belongs to one viewer only. */
@@ -646,6 +670,17 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 }
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8' }).trim();
+/** `git` with its answer, or '' when git fails (an unknown or zero commit). */
+function tryGit(...args) {
+	try {
+		return execFileSync('git', args, {
+			encoding: 'utf8',
+			stdio: ['ignore', 'pipe', 'ignore'],
+		}).trim();
+	} catch {
+		return '';
+	}
+}
 
 /** The files changed since `base`, or undefined when the base is unusable (new branch, shallow). */
 export function changedSince(base) {
@@ -710,6 +745,7 @@ async function main() {
 	const value = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : undefined);
 	const event = value('--event') ?? 'push';
 	let base = value('--base');
+	const requested = base;
 	const scope = value('--scope');
 	const onBase = value('--on-base') === 'true';
 	if (onBase && (event !== 'workflow_dispatch' || scope !== 'changed' || !base))
@@ -736,6 +772,13 @@ async function main() {
 	if (onBase && !result.full) result = onBasePlan(result, changed);
 	result.base = full ? '' : base;
 	result.baseSource = baseSource;
+	// A full plan still compares the accessibility baselines: with the base the event named, else
+	// where the branch left main, else the previous commit.
+	if (result.a11y.run) {
+		const commitOf = (ref) => tryGit('rev-parse', '--verify', '--quiet', `${ref}^{commit}`);
+		const left = tryGit('merge-base', 'HEAD', 'origin/main');
+		result.a11y.base = baselineBase([result.base, requested, left, 'HEAD^'], commitOf);
+	}
 	// The commit every job checks out: the base for a baseline run, otherwise the event's own.
 	result.ref = onBase ? git('rev-parse', `${base}^{commit}`) : '';
 	console.log(JSON.stringify(result, null, 2));
