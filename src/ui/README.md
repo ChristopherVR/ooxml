@@ -180,10 +180,13 @@ with an incompatible build of this package. Hosts can set properties and define 
 property assigned to an element before its definition loads counts as written just after the
 element upgrades: it wins over the attributes the element had then, any later property or attribute
 write wins over it, and it is applied before the element first connects (so mount-time options
-such as `surfaceOnly` hold for the first build), or once the current script ends for an element
-upgraded while detached. Properties Lit declares on the shared elements follow Lit there: on an
-element upgraded while detached, the early value waits for its first render, which overrides a
-write made to the same property in the meantime.
+such as `surfaceOnly` hold for the first build). For an element upgraded while detached with
+`customElements.upgrade()`, the rule holds for the shared elements once the current script ends,
+but the editors (`docx-editor`, `xlsx-editor`, `visio-viewer`) and other elements not built on
+`OfficeElement` apply the early value only when they first connect, so connect them before
+writing the same property or attribute again. Properties Lit declares on the shared elements
+follow Lit there: on an element upgraded while detached, the early value waits for its first
+render, which overrides a write made to the same property in the meantime.
 
 ## Framework binding kit (`ooxml-ui/bindings`)
 
