@@ -49,26 +49,53 @@ export function forEachCell(
 	}
 }
 
-/** Visits stored cells inside a range, in row-major order. */
+/** The keys of `map` from `first` to `last` in order; undefined when probing each is cheaper. */
+function sortedKeysBetween<V>(
+	map: ReadonlyMap<number, V>,
+	first: number,
+	last: number,
+): number[] | undefined {
+	if (last - first < map.size * 2) return undefined;
+	const keys: number[] = [];
+	let ascending = true;
+	for (const key of map.keys()) {
+		if (key < first || key > last) continue;
+		if (keys.length && key < (keys[keys.length - 1] as number)) ascending = false;
+		keys.push(key);
+	}
+	// Rows are usually stored in order (a loaded sheet always is), so most lists need no sort.
+	return ascending ? keys : keys.sort((a, b) => a - b);
+}
+
+/**
+ * Visits stored cells inside a range, in row-major order. The cost follows the smaller of the
+ * range and the sheet: a small range never looks at the sheet's other rows or columns.
+ */
 export function forEachCellInRange(
 	sheet: Worksheet,
 	range: CellRange,
 	visit: (cell: Cell, row: number, col: number) => void,
 ): void {
-	const rows = [...sheet.rows.keys()]
-		.filter((row) => row >= range.start.row && row <= range.end.row)
-		.sort((a, b) => a - b);
-	for (const row of rows) {
+	const { start, end } = range;
+	const visitRow = (row: number): void => {
 		const cells = sheet.rows.get(row);
-		if (!cells) continue;
-		const cols = [...cells.keys()]
-			.filter((col) => col >= range.start.col && col <= range.end.col)
-			.sort((a, b) => a - b);
-		for (const col of cols) {
+		if (!cells) return;
+		const cols = sortedKeysBetween(cells, start.col, end.col);
+		if (cols) {
+			for (const col of cols) {
+				const cell = cells.get(col);
+				if (cell) visit(cell, row, col);
+			}
+			return;
+		}
+		for (let col = start.col; col <= end.col; col++) {
 			const cell = cells.get(col);
 			if (cell) visit(cell, row, col);
 		}
-	}
+	};
+	const rows = sortedKeysBetween(sheet.rows, start.row, end.row);
+	if (rows) for (const row of rows) visitRow(row);
+	else for (let row = start.row; row <= end.row; row++) visitRow(row);
 }
 
 /**

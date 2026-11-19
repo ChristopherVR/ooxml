@@ -37,6 +37,7 @@ import type { ReflectionWrapperStyle } from './reflection';
 import { getReflectionWrapperStyle } from './reflection';
 import { getSilhouetteEffects } from './silhouette-effects';
 import { escapeSvgAttr } from './svg-attr-escape';
+import { svgIdToken } from './svg-id';
 
 export { escapeSvgAttr };
 
@@ -755,7 +756,7 @@ export function getShapeFillOverlay(style: ShapeStyle | undefined): FillOverlayC
 
 /** Stable SVG filter id for a DAG duotone effect on a given element. */
 export function getDuotoneFilterId(elementId: string): string {
-	return `dag-duotone-${elementId}`;
+	return `dag-duotone-${svgIdToken(elementId)}`;
 }
 
 /**
@@ -819,7 +820,7 @@ export function getDuotoneSvgFilter(
 
 /** Stable SVG filter id for a soft-edge feather on a given element. */
 export function getSoftEdgeFilterId(elementId: string): string {
-	return `soft-edge-${elementId}`;
+	return `soft-edge-${svgIdToken(elementId)}`;
 }
 
 /**

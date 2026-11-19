@@ -1,27 +1,32 @@
 /**
  * XML reference transform processing for digital signature verification.
  *
- * Node-only — depends on `@xmldom/xmldom` for DOM parsing and
+ * Node-only - depends on `@xmldom/xmldom` for DOM parsing and
  * `xml-crypto` (via xml-canonicalization) for C14N transforms.
  */
 
-import { DOMParser, XMLSerializer } from '@xmldom/xmldom';
-
+import { parseRelationshipsPart } from '../../opc/relationships';
+import { asciiLowerCase } from '../../opc/part-names';
 import {
+	OPC_DIGITAL_SIGNATURE_NS,
+	OPC_RELATIONSHIPS_NS,
 	OPC_RELATIONSHIP_TRANSFORM,
 	SUPPORTED_XML_CANON_TRANSFORMS,
 	XMLDSIG_NS,
 } from '../core/utils/signature-constants';
 import type {
+	PackageRelationship,
 	ParsedReferenceTransform,
 	ReferenceTransformResult,
 } from '../core/utils/signature-types';
+import { escapeXmlAttr } from '../core/utils/signature-xml-utils';
 import {
 	canonicalizeNode,
-	getFirstDescendantElementByLocalName,
+	childElements,
 	getNodeLocalName,
+	parseStrictXml,
 } from './xml-canonicalization';
-import type { XmlDocument, XmlElement } from './xml-canonicalization';
+import type { XmlElement } from './xml-canonicalization';
 
 /**
  * Parse `<ds:Transform>` elements from a `<ds:Reference>` node.
@@ -31,114 +36,94 @@ export function extractReferenceTransforms(referenceNode: XmlElement): ParsedRef
 	const transformNodes = referenceNode.getElementsByTagNameNS(XMLDSIG_NS, 'Transform');
 	for (let index = 0; index < transformNodes.length; index += 1) {
 		const transformNode = transformNodes.item(index);
-		if (!transformNode) {
+		const algorithm = transformNode?.getAttribute('Algorithm')?.trim();
+		if (!transformNode || !algorithm) {
 			continue;
 		}
-		const algorithm = transformNode.getAttribute('Algorithm')?.trim();
-		if (!algorithm) {
-			continue;
-		}
-		const relationshipReferenceIds: string[] = [];
-		const childNodes = transformNode.getElementsByTagName('*');
-		for (let childIndex = 0; childIndex < childNodes.length; childIndex += 1) {
-			const childNode = childNodes.item(childIndex);
-			if (!childNode) {
-				continue;
-			}
-			if (getNodeLocalName(childNode) !== 'RelationshipReference') {
-				continue;
-			}
-			const sourceId = childNode.getAttribute('SourceId')?.trim();
-			if (sourceId && sourceId.length > 0) {
-				relationshipReferenceIds.push(sourceId);
-			}
-		}
-		transforms.push({ algorithm, relationshipReferenceIds });
+		const parameters = childElements(transformNode).filter(
+			(element) => element.namespaceURI === OPC_DIGITAL_SIGNATURE_NS,
+		);
+		const parameterValues = (localName: string, attribute: string): string[] =>
+			parameters
+				.filter((element) => getNodeLocalName(element) === localName)
+				.map((element) => element.getAttribute(attribute)?.trim() ?? '')
+				.filter((value) => value.length > 0);
+		transforms.push({
+			algorithm,
+			relationshipReferenceIds: parameterValues('RelationshipReference', 'SourceId'),
+			relationshipGroupTypes: parameterValues('RelationshipsGroupReference', 'SourceType'),
+		});
 	}
 	return transforms;
 }
 
+export { parseRelationshipsPart };
+
+const compareCodePoints = (left: string, right: string): number =>
+	left < right ? -1 : left > right ? 1 : 0;
+
 /**
- * Apply the OPC Relationship Transform: filter `<Relationship>` elements
- * to only those whose Id matches the given set.
+ * The relationships transform of ECMA-376 Part 2: keep the relationships the signer selected by
+ * `SourceId` or `SourceType` (matched ASCII case-insensitively), sort them by `Id`, state
+ * `TargetMode` explicitly and drop everything else. The result is rebuilt from the strictly parsed
+ * values, so whitespace cannot change it and a part the strict reader rejects has no output.
  */
 function applyRelationshipTransform(
 	xmlText: string,
-	relationshipIds: string[],
-): string | undefined {
-	try {
-		const parser = new DOMParser();
-		const serializer = new XMLSerializer();
-		const doc = parser.parseFromString(xmlText, 'text/xml') as unknown as XmlDocument;
-		const relationshipsRoot = getFirstDescendantElementByLocalName(doc, 'Relationships');
-		if (!relationshipsRoot) {
-			return undefined;
-		}
-		if (relationshipIds.length === 0) {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			return serializer.serializeToString(doc as any);
-		}
-		const idSet = new Set<string>(relationshipIds);
-		const relationshipNodes = Array.from(relationshipsRoot.getElementsByTagName('*')).filter(
-			(node) => getNodeLocalName(node) === 'Relationship',
-		);
-		for (const relationshipNode of relationshipNodes) {
-			const relId = relationshipNode.getAttribute('Id')?.trim();
-			if (!relId || !idSet.has(relId)) {
-				relationshipNode.parentNode?.removeChild(relationshipNode);
-			}
-		}
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return serializer.serializeToString(doc as any);
-	} catch {
-		return undefined;
-	}
+	transform: ParsedReferenceTransform,
+): { xml: string; selected: PackageRelationship[] } {
+	const ids = new Set(transform.relationshipReferenceIds.map(asciiLowerCase));
+	const types = new Set(transform.relationshipGroupTypes.map(asciiLowerCase));
+	const selected = parseRelationshipsPart(xmlText)
+		.filter(
+			(relationship) =>
+				ids.has(asciiLowerCase(relationship.id)) || types.has(asciiLowerCase(relationship.type)),
+		)
+		.sort((left, right) => compareCodePoints(left.id, right.id));
+	const body = selected
+		.map(
+			(relationship) =>
+				`<Relationship Id="${escapeXmlAttr(relationship.id)}"` +
+				` Target="${escapeXmlAttr(relationship.target)}"` +
+				` TargetMode="${relationship.mode}"` +
+				` Type="${escapeXmlAttr(relationship.type)}"></Relationship>`,
+		)
+		.join('');
+	return {
+		xml: `<Relationships xmlns="${OPC_RELATIONSHIPS_NS}">${body}</Relationships>`,
+		selected,
+	};
 }
 
 /**
  * Apply a chain of transforms to binary part data.
- * Supports OPC Relationship Transform and XML canonicalization algorithms.
+ * Supports the OPC relationships transform and XML canonicalization algorithms.
  */
 export function applyReferenceTransforms(
 	partBytes: Uint8Array,
 	transforms: ParsedReferenceTransform[],
 ): ReferenceTransformResult {
 	let transformedBytes = partBytes;
+	let selectedRelationships: PackageRelationship[] | undefined;
 	const unsupportedAlgorithms: string[] = [];
 	for (const transform of transforms) {
-		if (transform.algorithm === OPC_RELATIONSHIP_TRANSFORM) {
-			const nextXml = applyRelationshipTransform(
-				Buffer.from(transformedBytes).toString('utf8'),
-				transform.relationshipReferenceIds,
-			);
-			if (!nextXml) {
-				unsupportedAlgorithms.push(transform.algorithm);
-				continue;
-			}
-			transformedBytes = new Uint8Array(Buffer.from(nextXml, 'utf8'));
-			continue;
-		}
-
-		if (!SUPPORTED_XML_CANON_TRANSFORMS.has(transform.algorithm)) {
-			unsupportedAlgorithms.push(transform.algorithm);
-			continue;
-		}
-
+		const text = Buffer.from(transformedBytes).toString('utf8');
 		try {
-			const parser = new DOMParser();
-			const doc = parser.parseFromString(
-				Buffer.from(transformedBytes).toString('utf8'),
-				'text/xml',
-			) as unknown as XmlDocument;
-			if (!doc.documentElement) {
+			let output: string;
+			if (transform.algorithm === OPC_RELATIONSHIP_TRANSFORM) {
+				const result = applyRelationshipTransform(text, transform);
+				output = result.xml;
+				selectedRelationships = result.selected;
+			} else if (SUPPORTED_XML_CANON_TRANSFORMS.has(transform.algorithm)) {
+				output = canonicalizeNode(parseStrictXml(text), transform.algorithm);
+			} else {
 				unsupportedAlgorithms.push(transform.algorithm);
 				continue;
 			}
-			const canonical = canonicalizeNode(doc.documentElement, transform.algorithm);
-			transformedBytes = new Uint8Array(Buffer.from(canonical, 'utf8'));
+			transformedBytes = new Uint8Array(Buffer.from(output, 'utf8'));
 		} catch {
 			unsupportedAlgorithms.push(transform.algorithm);
 		}
 	}
-	return { data: transformedBytes, unsupportedAlgorithms };
+	return { data: transformedBytes, unsupportedAlgorithms, selectedRelationships };
 }

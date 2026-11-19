@@ -260,6 +260,55 @@ describe('<xlsx-editor> collaboration', () => {
 	});
 });
 
+describe('<xlsx-editor> collaboration while removed', () => {
+	const until = async (check: () => boolean) => {
+		for (let i = 0; i < 100 && !check(); i++) await wait(20);
+		expect(check()).toBe(true);
+	};
+
+	it('keeps a room it opened through a move, leaves it while removed and rejoins when back', async () => {
+		const roomId = `moved-${Math.random().toString(36).slice(2, 10)}`;
+		const a = editor();
+		const b = editor();
+		a.edit().setCellInput(0, 0, 0, 'room');
+		a.element.collaboration = { roomId, user: { name: 'Ada' } };
+		await until(() => a.element.collaborationState.active);
+		b.element.collaboration = { roomId, intent: 'join', user: { name: 'Bob' } };
+		const people = () => b.element.collaborationState.people.length;
+		await until(() => people() === 2 && value(b, 0, 0) === 'room');
+		const other = document.createElement('div');
+		document.body.append(other);
+		other.append(a.element);
+		await wait();
+		expect(a.element.collaborationState.active).toBe(true);
+		a.element.remove();
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
+		await until(() => people() === 1);
+		b.edit().setCellInput(0, 1, 0, 'while away');
+		document.body.append(a.element);
+		await until(() => people() === 2 && value(a, 1, 0) === 'while away');
+		a.element.collaboration = null;
+		b.element.collaboration = null;
+	});
+
+	it('rejoins a room started with startCollaboration once attached again', async () => {
+		const hub = createMemoryHub();
+		const a = editor();
+		await a.element.startCollaboration({ session: join(hub, 'Ada', '#2563eb') });
+		a.element.remove();
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
+		document.body.append(a.element);
+		await until(() => a.element.collaborationState.active);
+		a.element.stopCollaboration();
+		a.element.remove();
+		document.body.append(a.element);
+		await wait();
+		expect(a.element.collaborationState.active).toBe(false);
+	});
+});
+
 describe('two Y.Docs synced by hand', () => {
 	it('converge through Y.applyUpdate', async () => {
 		const a = editor();

@@ -230,7 +230,7 @@ describe('angular Rotate placement lifecycle', () => {
 			query = vi.spyOn(stage, 'querySelector').mockReturnValue(element);
 		directive.ngAfterViewInit();
 		expect(attach.mock.lastCall?.[1]?.getSelectionElement?.()).toBe(element);
-		expect(query).toHaveBeenCalledWith('[data-element-id="shape\\"\\\\one"]');
+		expect(query).toHaveBeenCalledWith('[data-element-id="shape\\22 \\5c one"]');
 		directive.ngOnDestroy();
 	});
 

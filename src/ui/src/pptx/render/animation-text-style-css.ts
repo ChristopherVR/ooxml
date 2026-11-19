@@ -23,11 +23,7 @@
  */
 
 import type { TextStyleAnimationDescriptor } from './animation-text-style-resolve';
-
-/** Escape a value for safe use inside a double-quoted CSS attribute selector. */
-function escapeCssAttributeValue(value: string): string {
-	return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"');
-}
+import { elementIdSelector } from './css-escape';
 
 /**
  * Build the CSS override rule for one element's active text-style animation,
@@ -98,7 +94,7 @@ export function buildTextStyleOverrideCss(
 	if (declarations.length === 0) {
 		return undefined;
 	}
-	const scope = `[data-element-id="${escapeCssAttributeValue(elementId)}"]`;
+	const scope = elementIdSelector(elementId);
 	const htmlRule = `${scope} [style] { ${declarations.join(' ')} }`;
 	const svgRule = `${scope} text, ${scope} tspan { ${svgDeclarations.join(' ')} }`;
 	return `${htmlRule}\n${svgRule}`;

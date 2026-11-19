@@ -1,3 +1,4 @@
+import { defineElement } from '../../registry';
 import { defineStatusBar } from '../../controls';
 import type { OfficeStatusBarState, OfficeStatusButton } from '../../controls';
 import { registerIcon } from '../../icons';
@@ -134,5 +135,5 @@ export function definePptxStatusBar(registry: CustomElementRegistry): void {
 			setShared.call(this, officeStatusBarState(this.#model));
 		}
 	}
-	registry.define('pptx-ui-status-bar', PptxStatusBar);
+	defineElement(registry, 'pptx-ui-status-bar', PptxStatusBar);
 }

@@ -11,6 +11,7 @@ import {
 	getImageFillOverlayFilterId,
 	hasImageFillOverlayEffect,
 } from './image-fill-overlay';
+import { svgIdToken } from './svg-id';
 
 /**
  * Image-effects composable  -  Vue port of the React `viewer/utils` image-effect
@@ -76,17 +77,17 @@ function getEffects(element: PptxElement): PptxImageEffects | undefined {
 
 /** Stable SVG filter ID for a duotone effect on an element. */
 export function getImageDuotoneFilterId(elementId: string): string {
-	return `duotone-${elementId}`;
+	return `duotone-${svgIdToken(elementId)}`;
 }
 
 /** Stable SVG filter ID for the advanced-alpha / colour primitives filter. */
 export function getImageAlphaFilterId(elementId: string): string {
-	return `imgalpha-${elementId}`;
+	return `imgalpha-${svgIdToken(elementId)}`;
 }
 
 /** Stable SVG filter ID for a complex artistic effect on an element. */
 export function getArtisticFilterId(elementId: string): string {
-	return `artistic-fx-${elementId}`;
+	return `artistic-fx-${svgIdToken(elementId)}`;
 }
 
 // ── Artistic effects requiring SVG filters ──────────────────────────────────

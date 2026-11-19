@@ -53,4 +53,5 @@ const overflow = createRibbonOverflow({
 
 export const fitPanel = overflow.fitPanel;
 export const attachRibbonOverflow = overflow.attach;
+export const closeRibbonOverflow = overflow.close;
 export const refitRibbon = overflow.refit;

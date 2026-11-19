@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Plus, Trash2 } from '@lucide/vue';
 import type { PptxCustomProperty } from 'pptx-viewer-core';
 import { useI18n } from 'vue-i18n';
 

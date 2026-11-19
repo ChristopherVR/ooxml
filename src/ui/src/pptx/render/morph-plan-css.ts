@@ -5,31 +5,9 @@
  *
  * @module render/morph-plan-css
  */
+import { escapeCssAttributeValue } from './css-escape';
 import { splitCssList } from './css-top-level-split';
 import type { MorphTransitionPlan } from './morph-plan-types';
-
-/**
- * Characters that must never appear raw in a CSS string: the quote and
- * backslash that end or escape it, the angle brackets that would let a value
- * close the enclosing `<style>` element when the stylesheet is injected as
- * markup, `&`, the apostrophe, and control characters (a newline is invalid
- * inside a CSS string).
- */
-const CSS_UNSAFE_CHAR = /["\\<>&'\u0000-\u001f\u007f]/u;
-
-/**
- * Escape a value for use inside a double-quoted CSS attribute selector.
- * Unsafe characters become CSS hex escapes (`\3c `), which the stylesheet
- * parser reads back as the same character while keeping the text free of
- * markup. Element ids come from slide part paths, so they are not trusted.
- */
-function cssAttributeValue(value: string): string {
-	let out = '';
-	for (const ch of value) {
-		out += CSS_UNSAFE_CHAR.test(ch) ? `\\${(ch.codePointAt(0) ?? 0).toString(16)} ` : ch;
-	}
-	return out;
-}
 
 /**
  * Render a plan as a self-contained stylesheet that drives the morph purely
@@ -87,7 +65,7 @@ export function buildMorphAnimationRules(
 	const emit = (animations: Map<string, string>, suffix: string): void => {
 		for (const [elementId, animation] of animations) {
 			rules.push(
-				`${prefix}[data-element-id="${cssAttributeValue(elementId)}"]${suffix} { animation: ${animation}; }`,
+				`${prefix}[data-element-id="${escapeCssAttributeValue(elementId)}"]${suffix} { animation: ${animation}; }`,
 			);
 			// A silhouette filter that is not inside the element's container (Angular
 			// paints its defs as a sibling) cannot inherit the progress property the
@@ -95,7 +73,7 @@ export function buildMorphAnimationRules(
 			const fx = splitCssList(animation).filter((part) => /-fx\s/u.test(part));
 			if (suffix === '' && fx.length > 0) {
 				rules.push(
-					`${prefix}[data-pptx-morph-fx="${cssAttributeValue(elementId)}"] { animation: ${fx.join(', ')}; }`,
+					`${prefix}[data-pptx-morph-fx="${escapeCssAttributeValue(elementId)}"] { animation: ${fx.join(', ')}; }`,
 				);
 			}
 		}
@@ -144,16 +122,16 @@ export function buildMorphOutlineRules(
 	const rules = [
 		...[...(plan.outlineAnimations ?? [])].map(
 			([elementId, animation]) =>
-				`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
+				`${prefix}[${keyAttribute}="${escapeCssAttributeValue(elementId)}"] [data-pptx-outline] path { animation: ${animation}; }`,
 		),
 		...[...(plan.outlineStrandAnimations ?? [])].flatMap(([elementId, animations]) =>
 			animations.map(
 				(animation, strand) =>
-					`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-outline] path:nth-of-type(${strand + 1}) { animation: ${animation}; }`,
+					`${prefix}[${keyAttribute}="${escapeCssAttributeValue(elementId)}"] [data-pptx-outline] path:nth-of-type(${strand + 1}) { animation: ${animation}; }`,
 			),
 		),
 		...[...(plan.customGeometryAnimations ?? [])].flatMap(([elementId, animation]) => {
-			const scope = `${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"]`;
+			const scope = `${prefix}[${keyAttribute}="${escapeCssAttributeValue(elementId)}"]`;
 			return [
 				`${scope} [data-pptx-custom-geometry] path { animation: ${animation}; }`,
 				// The fill path of a shape painted by the silhouette filter.
@@ -163,7 +141,7 @@ export function buildMorphOutlineRules(
 	];
 	const lines = [...(plan.lineAnimations ?? [])].map(
 		([elementId, animation]) =>
-			`${prefix}[${keyAttribute}="${cssAttributeValue(elementId)}"] [data-pptx-line] { animation: ${animation}; }`,
+			`${prefix}[${keyAttribute}="${escapeCssAttributeValue(elementId)}"] [data-pptx-line] { animation: ${animation}; }`,
 	);
 	const supported = rules.length > 0 ? `@supports (d: path('M0 0')) {\n${rules.join('\n')}\n}` : '';
 	return [supported, ...lines].filter(Boolean).join('\n');

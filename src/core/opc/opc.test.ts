@@ -78,6 +78,15 @@ describe('content types', () => {
 		expect(parseContentTypes(undefined).overrides.size).toBe(0);
 	});
 
+	it('matches Override part names ASCII case-insensitively', () => {
+		const types = parseContentTypes(XML);
+		expect(contentTypeForPart(types, 'WORD/Document.XML')).toBe('main+xml');
+	});
+
+	it('takes the extension from the last segment only', () => {
+		expect(contentTypeForPart(parseContentTypes(XML), 'word.xml/noextension')).toBeUndefined();
+	});
+
 	it('adds a default only when absent and rebuilds valid XML', () => {
 		expect(ensureContentTypeDefault(XML, 'png', 'image/png')).toBe(XML);
 		const added = ensureContentTypeDefault(XML, 'gif', 'image/gif');

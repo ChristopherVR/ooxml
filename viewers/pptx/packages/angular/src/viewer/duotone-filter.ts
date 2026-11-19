@@ -13,7 +13,7 @@
  * @module viewer/duotone-filter
  */
 
-import { hexToRgbUnit } from 'ooxml-ui/pptx';
+import { getDuotoneFilterId, hexToRgbUnit } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 // ── Filter primitive descriptors ──────────────────────────────────────────────
@@ -187,15 +187,13 @@ const GRAYSCALE_MATRIX_VALUES: string = [
 /**
  * Build a stable SVG filter `id` for a duotone effect on the given element.
  *
- * Matches the format used by `getDuotoneFilterId` in `visual-effects.ts` so
- * that the `url(#…)` reference emitted by `getEffectDagCssFilter` points to
- * the correct `<filter>` definition.
+ * This is `getDuotoneFilterId`, so the `url(#…)` reference emitted by
+ * `getEffectDagCssFilter` points to the correct `<filter>` definition.
  *
  * @param elementId - The element's `id` from `PptxElement.id`.
- * @returns A CSS-identifier-safe string (no spaces, starts with a letter).
  */
 export function buildDuotoneFilterId(elementId: string): string {
-	return `dag-duotone-${elementId}`;
+	return getDuotoneFilterId(elementId);
 }
 
 /**

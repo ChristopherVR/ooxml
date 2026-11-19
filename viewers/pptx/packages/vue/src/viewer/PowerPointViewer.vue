@@ -23,7 +23,7 @@
  *  - function-prop callbacks -> emits ({@link PowerPointViewerEmits}).
  *  - `theme` context      -> `provideViewerTheme` + `useThemeStyle`.
  */
-import { ShieldAlert } from 'lucide-vue-next';
+import { ShieldAlert } from '@lucide/vue';
 import {
 	autosaveStatusKind,
 	createCollaborationStateReporter,

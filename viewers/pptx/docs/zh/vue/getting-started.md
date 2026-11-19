@@ -19,7 +19,6 @@ description: 将 .pptx ArrayBuffer 加载到 PowerPointViewer，先以只读方�
 <script setup lang="ts">
 import { PowerPointViewer } from 'pptx-vue-viewer';
 import { ref, onMounted } from 'vue';
-
 // If your app does NOT use Tailwind CSS v4, import the bundled stylesheet once
 // at your entry point (see Theming for the three styling modes):
 import 'pptx-vue-viewer/styles';

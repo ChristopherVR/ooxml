@@ -30,11 +30,27 @@ export interface SignatureReferenceCheck {
 	digestStatus:
 		| 'verified'
 		| 'mismatch'
+		| 'content-type-mismatch'
 		| 'missing-part'
 		| 'unsupported-transform'
 		| 'unsupported-algorithm'
 		| 'insufficient-data';
 	transformAlgorithms: string[];
+}
+
+/**
+ * Why the verified references do not cover the signed content. The walk starts at the package
+ * relationships and follows signed relationships only.
+ */
+export interface SignatureCoverageGap {
+	kind:
+		| 'unsigned-relationships-part'
+		| 'unsigned-relationship'
+		| 'unsigned-part'
+		| 'no-signed-content';
+	/** The part concerned: the relationships part, or the unsigned relationship target. */
+	part: string;
+	relationshipId?: string | undefined;
 }
 
 // ── Certificate info ────────────────────────────────────────────────────
@@ -53,6 +69,7 @@ export type SignatureDetailStatus =
 	| 'verified'
 	| 'digest-mismatch'
 	| 'reference-missing'
+	| 'coverage-incomplete'
 	| 'signature-invalid'
 	| 'certificate-untrusted'
 	| 'certificate-revoked'
@@ -68,7 +85,14 @@ export interface SignatureDetail {
 	referenceCount: number;
 	missingPartReferences: string[];
 	unsupportedTransforms: string[];
+	/** Every reference from the verified `SignedInfo` and the Manifests it protects. */
 	referenceChecks: SignatureReferenceCheck[];
+	/** Package parts no verified reference covers, signature and content-types parts aside. */
+	uncoveredParts: string[];
+	/** Reasons the signed references do not cover the content; empty when they do. */
+	coverageGaps: SignatureCoverageGap[];
+	/** Why the signature XML was rejected before any cryptographic check. */
+	structureError?: string | undefined;
 	certificate?: SignatureCertificateInfo | undefined;
 	signatureValueStatus: 'verified' | 'invalid' | 'not-checked';
 	certificateTrustStatus: 'trusted' | 'untrusted' | 'not-checked';
@@ -90,6 +114,7 @@ export type DigitalSignatureVerificationStatus =
 	| 'certificate-revoked'
 	| 'digest-mismatch'
 	| 'reference-missing'
+	| 'coverage-incomplete'
 	| 'signature-invalid'
 	| 'timestamp-invalid'
 	| 'timestamp-untrusted'
@@ -132,11 +157,23 @@ export interface LoadedSigningMaterial {
 export interface ParsedReferenceTransform {
 	algorithm: string;
 	relationshipReferenceIds: string[];
+	/** `SourceType` values of `RelationshipsGroupReference` transform parameters. */
+	relationshipGroupTypes: string[];
+}
+
+/** A `Relationship` element of a relationships part. */
+export interface PackageRelationship {
+	id: string;
+	type: string;
+	target: string;
+	mode: 'Internal' | 'External';
 }
 
 export interface ReferenceTransformResult {
 	data: Uint8Array;
 	unsupportedAlgorithms: string[];
+	/** The relationships the relationship transform selected, when one ran. */
+	selectedRelationships?: PackageRelationship[] | undefined;
 }
 
 // ── Validation policy ───────────────────────────────────────────────────

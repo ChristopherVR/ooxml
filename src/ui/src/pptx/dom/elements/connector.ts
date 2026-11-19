@@ -15,6 +15,7 @@ import {
 	getLineShadowParams,
 	markerPath,
 	normalizeArrow,
+	svgIdToken,
 	svgLineCap,
 } from '../../index';
 
@@ -86,7 +87,7 @@ export const renderConnectorElement: ElementRenderer = (element, zIndex, context
 	svg.setAttribute('style', 'overflow:visible;display:block');
 
 	// Arrow markers (distinct, DOM-id-safe ids per element + side).
-	const seed = element.id.replace(/[^a-zA-Z0-9_-]/gu, '_');
+	const seed = svgIdToken(element.id);
 	const defs = createSvgEl(doc, 'defs');
 	const lineShadow = getLineShadowParams(ss);
 	const shadowId = lineShadow ? `${seed}-line-shadow` : undefined;

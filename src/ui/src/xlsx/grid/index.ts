@@ -217,6 +217,11 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		setZoom: (percent) => view.setZoom(percent),
 		splitAt: (active) => view.splitAt(active),
 		mode: () => editor.bridge.state().mode,
+		closePopups: () => {
+			list.close();
+			filters.close();
+			drawings.closeDropDown();
+		},
 	};
 	ctx.attachGrid(controller);
 	if (ctx.selection.get().sheet !== view.sheetIndex()) restoreSelection();

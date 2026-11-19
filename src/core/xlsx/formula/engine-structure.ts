@@ -55,6 +55,7 @@ export abstract class EngineStructure extends EngineCore {
 		node.deps = found.deps;
 		node.dynamicDeps = found.dynamicDeps;
 		node.volatile = found.volatile;
+		this.volatileNodes = undefined;
 		node.unsupported = found.unsupported;
 	}
 

@@ -28,11 +28,12 @@ interface Options {
 	name: string;
 	issuer?: Party;
 	ca: boolean;
+	pathLength?: number;
 	notBefore?: Date;
 	notAfter?: Date;
 }
 
-function party({ name, issuer, ca, notBefore, notAfter }: Options): Party {
+function party({ name, issuer, ca, pathLength, notBefore, notAfter }: Options): Party {
 	const { privateKey, publicKey } = keyPair();
 	const cert = forge.pki.createCertificate();
 	cert.publicKey = publicKey;
@@ -42,7 +43,13 @@ function party({ name, issuer, ca, notBefore, notAfter }: Options): Party {
 	const subject = [{ name: 'commonName', value: name }];
 	cert.setSubject(subject);
 	cert.setIssuer(issuer ? issuer.cert.subject.attributes : subject);
-	cert.setExtensions([{ name: 'basicConstraints', cA: ca }]);
+	cert.setExtensions([
+		{
+			name: 'basicConstraints',
+			cA: ca,
+			...(pathLength === undefined ? {} : { pathLenConstraint: pathLength }),
+		},
+	]);
 	cert.sign(issuer ? issuer.key : privateKey, forge.md.sha256.create());
 	const pem = forge.pki.certificateToPem(cert);
 	const der = forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes();
@@ -105,6 +112,38 @@ describe('validateCertificateChain', () => {
 		const child = party({ name: 'Child', issuer: notCa, ca: false });
 		const result = validateCertificateChain([child.base64, notCa.base64], [root.pem]);
 		expect(result.status).toBe('untrusted');
+	});
+
+	describe('path length constraints', () => {
+		const limited = party({ name: 'Limited', issuer: root, ca: true, pathLength: 0 });
+		const below = party({ name: 'Below Limited', issuer: limited, ca: true });
+
+		it('rejects an intermediate below a CA that allows none', () => {
+			const end = party({ name: 'End', issuer: below, ca: false });
+			const chain = [end.base64, below.base64, limited.base64];
+			expect(validateCertificateChain(chain, [root.pem]).status).toBe('untrusted');
+		});
+
+		it('accepts a leaf directly below that CA', () => {
+			const end = party({ name: 'End', issuer: limited, ca: false });
+			const chain = [end.base64, limited.base64];
+			expect(validateCertificateChain(chain, [root.pem])).toEqual({ status: 'trusted' });
+		});
+
+		it('applies the constraint of the trusted root', () => {
+			const strictRoot = party({ name: 'Strict Root', ca: true, pathLength: 0 });
+			const middle = party({ name: 'Middle', issuer: strictRoot, ca: true });
+			const end = party({ name: 'End', issuer: middle, ca: false });
+			const chain = [end.base64, middle.base64];
+			expect(validateCertificateChain(chain, [strictRoot.pem]).status).toBe('untrusted');
+		});
+
+		it('does not count a self-issued intermediate', () => {
+			const rollover = party({ name: 'Limited', issuer: limited, ca: true });
+			const end = party({ name: 'End', issuer: rollover, ca: false });
+			const chain = [end.base64, rollover.base64, limited.base64];
+			expect(validateCertificateChain(chain, [root.pem])).toEqual({ status: 'trusted' });
+		});
 	});
 
 	it('does not accept a certificate whose signature was altered', () => {

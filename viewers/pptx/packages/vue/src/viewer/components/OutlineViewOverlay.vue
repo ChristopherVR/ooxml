@@ -17,7 +17,7 @@
  * caret placement, IME commit and undo per browser, and a list of one-line
  * inputs is exactly what the outline is.
  */
-import { X } from 'lucide-vue-next';
+import { X } from '@lucide/vue';
 import {
 	listenForOutlineViewDismiss,
 	OUTLINE_LEVEL_ATTR,

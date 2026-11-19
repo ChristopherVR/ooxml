@@ -175,6 +175,7 @@ import { hasShapeProperties } from 'ooxml-core/pptx';
 import type { BevelFilterLayer } from './visual-3d-bevel-lighting-layer';
 import { resolveLayer } from './visual-3d-bevel-lighting-layer';
 import { isRoutedToLegacyBevelShadow } from './visual-3d-bevel-lighting-routing';
+import { svgIdToken } from './svg-id';
 import type { SvgFilterDefinition } from './visual-effects';
 import { escapeSvgAttr } from './visual-effects';
 
@@ -254,7 +255,7 @@ function renderLayerPrimitives(
 
 /** Stable SVG filter id for a bevel lighting filter on a given element. */
 export function getBevelLightingFilterId(elementId: string): string {
-	return `bevel-light-${elementId}`;
+	return `bevel-light-${svgIdToken(elementId)}`;
 }
 
 /**

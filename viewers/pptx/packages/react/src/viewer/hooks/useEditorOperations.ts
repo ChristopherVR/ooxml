@@ -6,6 +6,7 @@
 import {
 	canEditElementPoints,
 	downloadBlob,
+	elementIdSelector,
 	elementPictureFilename,
 	rasterResultToPngBlob,
 } from 'ooxml-ui/pptx';
@@ -303,7 +304,7 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 	const handleSaveElementAsPicture = useCallback(
 		(elementId: string) => {
 			const node = document.querySelector<HTMLElement>(
-				`[data-element-id="${elementId}"][data-pptx-element="true"]`,
+				`${elementIdSelector(elementId)}[data-pptx-element="true"]`,
 			);
 			if (!node) {
 				return;

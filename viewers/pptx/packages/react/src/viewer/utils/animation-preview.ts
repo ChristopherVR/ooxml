@@ -1,6 +1,7 @@
 import {
 	buildMotionPathPreview,
 	buildPreviewAnimation,
+	elementIdSelector,
 	measurePreviewGeometry,
 } from 'ooxml-ui/pptx';
 import type { AnimationPreviewDescriptor } from 'ooxml-ui/pptx';
@@ -58,7 +59,7 @@ export function startPreviewAnimation(
 
 	// Measured against the stage so an entrance/exit plays PowerPoint's own
 	// behaviour tree (Fly from the slide edge), as the slide show does.
-	const domEl = document.querySelector(`[data-element-id="${elementId}"]`) as HTMLElement | null;
+	const domEl = document.querySelector(elementIdSelector(elementId)) as HTMLElement | null;
 	const descriptor = buildPreviewAnimation(preset, {
 		...options,
 		geometry: domEl ? measurePreviewGeometry(domEl) : undefined,
@@ -87,7 +88,7 @@ export function startMotionPathPreview(
 ): void {
 	stopPreviewAnimation();
 
-	const domEl = document.querySelector(`[data-element-id="${elementId}"]`) as HTMLElement | null;
+	const domEl = document.querySelector(elementIdSelector(elementId)) as HTMLElement | null;
 	if (!domEl) {
 		return;
 	}
@@ -113,7 +114,7 @@ const DEFAULT_PREVIEW_SLIDE_HEIGHT = 720;
 /** Inject a descriptor's keyframes, play it, and restore the element after. */
 function playDescriptor(elementId: string, descriptor: AnimationPreviewDescriptor): void {
 	// Find the DOM element
-	const domEl = document.querySelector(`[data-element-id="${elementId}"]`) as HTMLElement | null;
+	const domEl = document.querySelector(elementIdSelector(elementId)) as HTMLElement | null;
 	if (!domEl) {
 		return;
 	}
@@ -162,7 +163,7 @@ export function stopPreviewAnimation(): void {
 	activePreview.styleEl.remove();
 
 	const domEl = document.querySelector(
-		`[data-element-id="${activePreview.elementId}"]`,
+		elementIdSelector(activePreview.elementId),
 	) as HTMLElement | null;
 	if (domEl) {
 		domEl.style.animation = activePreview.originalAnimation;

@@ -1,6 +1,7 @@
 /* oxlint-disable eslint/one-var -- each method declares its own independent
    locals; merging unrelated declarations across the many methods here would
    hurt readability, not help it. */
+import { partNameToken } from '../../../../opc/part-name';
 import { EMU_PER_PX } from '../../constants';
 import { XmlObject, PptxElement } from '../../types';
 import { cloneXmlObject } from '../../utils/clone-utils';
@@ -430,7 +431,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				lp.yEmu,
 				lp.cxEmu,
 				lp.cyEmu,
-				`${newLayoutPath}-${slotIndex++}-${Date.now()}`,
+				`${partNameToken(newLayoutPath)}-${slotIndex++}-${Date.now()}`,
 			);
 			if (emptyElement) {
 				generatedElements.push(emptyElement);

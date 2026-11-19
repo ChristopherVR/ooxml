@@ -173,9 +173,9 @@ export class ViewerTextFeatures {
 		if (!applied) return;
 		const page = this.controller.state.document?.pages[this.controller.state.pageIndex];
 		const shapes = page
-			? this.#targets!.shapes
-					.map((shape) => visioFormattingShape(page, shape.id))
-					.filter((s) => !!s)
+			? this.#targets!.shapes.map((shape) => visioFormattingShape(page, shape.id)).filter(
+					(s) => !!s,
+				)
 			: [];
 		if (page && shapes.length) {
 			this.#targets = { page, shapes, generation: this.controller.documentGeneration };

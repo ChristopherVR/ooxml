@@ -10,6 +10,7 @@ import {
 import { partRelsPath } from '../../utils/part-rels-path';
 import { stripParentDirSegments } from '../../utils/strip-parent-dir-segments';
 import { xmlPath } from '../../utils/xml-access';
+import { partFileToken } from './master-part-tags';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePlaceholderDefaults';
 import type { PlaceholderInfo } from './PptxHandlerRuntimeTypes';
 import { at } from '../../../../geometry/indexed';
@@ -200,11 +201,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Namespace generated element IDs with the owning master part so that
 		// e.g. slideMaster1's first picture doesn't collide with slideMaster2's
 		// (indexInType is only unique within a single master's own spTree).
-		const masterToken =
-			masterPath
-				.split('/')
-				.pop()
-				?.replace(/\.xml$/u, '') ?? masterPath;
+		const masterToken = partFileToken(masterPath);
 
 		try {
 			const masterXmlStr = await this.readPartText(masterPath);

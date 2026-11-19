@@ -1,3 +1,4 @@
+import { definer } from '../../registry';
 import { html, unsafeCSS, type PropertyValues } from 'lit';
 import { TeamsLitElement } from '../i18n/lit-element';
 import type { ChannelTab, TeamsClient } from 'ooxml-core/teams';
@@ -127,7 +128,4 @@ export class TeamsChannelTab extends TeamsLitElement {
 	}
 }
 
-export function defineTeamsChannelTab(): void {
-	if (globalThis.customElements && !customElements.get('teams-channel-tab'))
-		customElements.define('teams-channel-tab', TeamsChannelTab);
-}
+export const defineTeamsChannelTab = definer('teams-channel-tab', () => TeamsChannelTab);
