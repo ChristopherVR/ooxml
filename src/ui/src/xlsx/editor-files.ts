@@ -26,6 +26,7 @@ import { confirmDialog } from '../dialog/message-dialogs';
 import { printWorkbook } from './print';
 import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';
+import { createWorkbookOpener, OpenTimeoutError, type WorkbookOpener } from './workbook-opener';
 import { saveProgressLabel } from '../files/save-progress-label';
 
 /** Chrome callbacks the file actions report to (title bar save state, backstage). */
@@ -36,6 +37,11 @@ export interface FileChrome {
 
 const toError = (cause: unknown) => (cause instanceof Error ? cause : new Error(String(cause)));
 
+let sharedOpener: WorkbookOpener | undefined;
+/** One opener for every editor on the page: it holds no state between opens. */
+const openWorkbook: WorkbookOpener = (bytes, options) =>
+	(sharedOpener ??= createWorkbookOpener())(bytes, options);
+
 export function reportError(core: EditorCore, cause: unknown): Error {
 	const error = toError(cause);
 	emit(core.host, 'workbook-error', { error, message: error.message });
@@ -43,14 +49,18 @@ export function reportError(core: EditorCore, cause: unknown): Error {
 	return error;
 }
 
-/** Shows a new workbook model: fresh session, clean state, `workbook-change`. */
+/**
+ * Shows a new workbook model: fresh session, clean state, `workbook-change`. A workbook opened
+ * from a file has had its calculation on open already (`calculate` false).
+ */
 export function showWorkbook(
 	core: EditorCore,
 	workbook: Workbook,
 	fileName: string,
 	chrome?: FileChrome,
+	calculate = true,
 ): void {
-	core.setWorkbook(workbook);
+	core.setWorkbook(workbook, { calculate });
 	core.fileName = fileName;
 	chrome?.fileNameChanged();
 	chrome?.setSaveState('saved');
@@ -70,15 +80,16 @@ export async function loadInto(
 	try {
 		// The file's fonts start downloading while it parses.
 		core.webfonts.prefetch(bytes);
-		const { loadWorkbook, isOoxmlCryptoError } = await import('ooxml-core/xlsx/load');
+		const { isOoxmlCryptoError } = await import('ooxml-core/xlsx/load');
 		let password: string | undefined;
 		let workbook: Workbook;
+		let calculationStopped = false;
 		for (;;) {
 			try {
-				workbook = await loadWorkbook(bytes, {
+				({ workbook, calculationStopped } = await openWorkbook(bytes, {
 					...(fileName ? { fileName } : {}),
 					...(password === undefined ? {} : { password }),
-				});
+				}));
 				break;
 			} catch (error) {
 				if (generation !== core.loadGeneration) return;
@@ -95,7 +106,14 @@ export async function loadInto(
 		// is first shown with its faces; `loading` stays true meanwhile.
 		await core.webfonts.prepare(workbook);
 		if (generation !== core.loadGeneration) return;
-		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome);
+		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome, false);
+		if (calculationStopped)
+			core.shell?.toast(
+				core.ctx.t(
+					'Formulas were not recalculated on open because it took too long. The values shown are the saved ones; press F9 to recalculate.',
+				),
+				'warning',
+			);
 		if (cloud) {
 			// Set after showing: showing a workbook drops the previous file's storage and lock.
 			core.fileStorage = cloud.storage;
@@ -112,7 +130,11 @@ export async function loadInto(
 		const notes = formatNotes(workbook, core.ctx.t);
 		if (notes[0]) core.shell?.toast(notes[0], 'info');
 	} catch (cause) {
-		if (generation === core.loadGeneration) throw reportError(core, cause);
+		if (generation !== core.loadGeneration) return;
+		throw reportError(
+			core,
+			cause instanceof OpenTimeoutError ? new Error(core.ctx.t(cause.message)) : cause,
+		);
 	} finally {
 		if (generation === core.loadGeneration) {
 			core.loading = false;

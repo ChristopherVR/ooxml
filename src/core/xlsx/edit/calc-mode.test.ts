@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells';
+import { getCell, putCell } from '../cells';
 import { cellView } from '../layout/cell-view';
 import { loadXlsx } from '../read/load';
 import { createWorkbook } from '../workbook';
 import { saveXlsx } from '../write/save';
+import { calculateOnOpen } from './calc-mode';
 import { createEditSession } from './session';
 
 const setup = () => {
@@ -94,5 +95,23 @@ describe('show formulas', () => {
 		expect(back.sheets[0]?.view.showFormulas).toBe(true);
 		s.setSheetView(0, { showFormulas: false });
 		expect(cellView(wb, 0, 0, 1).text).toBe('20');
+	});
+});
+
+describe('calculateOnOpen', () => {
+	it('runs the full calculation a workbook asks for on open, unless it calculates manually', () => {
+		const wb = createWorkbook({ sheets: ['S'] });
+		const sheet = wb.sheets[0]!;
+		putCell(sheet, 0, 0, { value: 2 });
+		putCell(sheet, 0, 1, { value: 99, formula: 'A1*3' });
+		expect(calculateOnOpen(wb)).toBe(false);
+		expect(getCell(sheet, 0, 1)?.value).toBe(99);
+		wb.fullCalcOnLoad = true;
+		wb.calcMode = 'manual';
+		expect(calculateOnOpen(wb)).toBe(false);
+		expect(getCell(sheet, 0, 1)?.value).toBe(99);
+		delete wb.calcMode;
+		expect(calculateOnOpen(wb)).toBe(true);
+		expect(getCell(sheet, 0, 1)?.value).toBe(6);
 	});
 });

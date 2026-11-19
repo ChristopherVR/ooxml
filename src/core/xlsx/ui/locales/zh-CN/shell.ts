@@ -263,6 +263,9 @@ export const shell: Record<string, string> = {
 	'Tax rate': '税率',
 	Tax: '税额',
 	'Total due': '应付总额',
+	'Formulas were not recalculated on open because it took too long. The values shown are the saved ones; press F9 to recalculate.':
+		'打开时未重新计算公式，因为耗时过长。显示的是已保存的值；按 F9 重新计算。',
+	'The workbook took too long to open.': '打开工作簿耗时过长。',
 	// Base of new sheet names (Sheet2, Tabelle2, Feuil2), as Excel names them per language.
 	'sheet.default-name': 'Sheet',
 };
