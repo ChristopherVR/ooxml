@@ -194,7 +194,12 @@ The suite uses the editors above, so their sections apply. In addition:
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
   hourly. The service worker caches only the app's own files, and serves a saved copy only while
   it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched
-  again from the site. The shell's script and style tags carry subresource integrity.
+  again from the site. A new version installs only when every file it downloads matches, and
+  otherwise tries again at the next check. After an update, the previous version's files stay
+  cached for windows still running it and are deleted once none is. Each version's cache also
+  keeps its file list and an anonymous marker per window it served (a hash of the browser's
+  window id), so a later version can tell which saved files those windows may use. The shell's
+  script and style tags carry subresource integrity.
 - **Desktop:** the Tauri shell has no updater, telemetry or plugins. It reads and writes the
   files the user opens, and lists the file names inside a folder the user connects so they can be
   found; nothing is sent. Its window only shows the bundled app: a web or `mailto:` link the user

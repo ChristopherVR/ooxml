@@ -172,19 +172,18 @@ export async function buildPwa(out) {
 		if (next !== text) await writeFile(join(out, file), next);
 	}
 	// The worker serves a saved copy only when it still has the SHA-256 recorded here, because any
-	// page of the origin can rewrite Cache Storage (scripts/pwa/service-worker.js).
+	// page of the origin can rewrite Cache Storage (scripts/pwa/service-worker.js). The version is
+	// the hash of the table itself, so a later worker can check an older build's saved table.
 	const table = {};
-	const hash = createHash('sha256');
-	for (const file of files) {
-		const bytes = await readFile(join(out, file));
-		hash.update(file).update(bytes);
+	for (const file of files)
 		table[stamped.has(file) ? `${file}?v=${stamp}` : file] = createHash('sha256')
-			.update(bytes)
+			.update(await readFile(join(out, file)))
 			.digest('base64');
-	}
+	const json = JSON.stringify(table);
+	const version = createHash('sha256').update(json).digest('hex');
 	const worker = await readFile(new URL('./pwa/service-worker.js', import.meta.url), 'utf8');
 	await writeFile(
 		join(out, 'sw.js'),
-		`const VERSION=${JSON.stringify(hash.digest('hex').slice(0, 16))};\nconst FILES=${JSON.stringify(table)};\n${worker}`,
+		`const VERSION=${JSON.stringify(version)};\nconst FILES=${json};\n${worker}`,
 	);
 }
