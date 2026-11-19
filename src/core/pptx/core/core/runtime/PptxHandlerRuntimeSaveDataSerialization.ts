@@ -511,6 +511,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						slidePath,
 						chartData,
 						prepared.xml,
+						chartXmlStr,
 						prepared.workbookRebased,
 					);
 					continue;
@@ -1358,6 +1359,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					slidePath,
 					chartData,
 					this.builder.build(chartXmlData),
+					chartXmlStr,
 				);
 			} catch (e) {
 				if (
@@ -1384,13 +1386,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * land keeps the part and the workbook it started from: the next save puts that workbook back
 	 * and writes the whole difference again, so cells a partial write changed follow the chart
 	 * through later edits and undo.
-	 * `workbookRebased` means the workbook already holds the chart's data on a new sheet.
+	 * `from` is the part the save started from, and `workbookRebased` means the workbook already
+	 * holds the chart's data on a new sheet.
 	 */
 	private async commitChartPart(
 		chartPartPath: string,
 		slidePath: string,
 		chartData: PptxChartData,
 		xml: string,
+		from: string,
 		workbookRebased = false,
 	): Promise<void> {
 		// Degrades to a compatibility warning, never throws; see
@@ -1413,8 +1417,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const rebased =
 			workbookRebased || !dataChanged
 				? undefined
-				: await rebaseConflictingChartRanges(this.zip, chartData, xml, inStep, (base, target) =>
-						this.resolveImagePath(base, target),
+				: await rebaseConflictingChartRanges(
+						this.zip,
+						chartData,
+						xml,
+						[from, inStep],
+						(base, target) => this.resolveImagePath(base, target),
 					);
 		if (rebased !== undefined) {
 			xml = rebased;

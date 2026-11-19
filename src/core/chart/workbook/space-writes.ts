@@ -130,13 +130,13 @@ function rangeConflicts(space: ChartSpace): Map<string, string> {
  * The references of `space` whose range cannot hold what they cache: a range of another size than
  * its cache, or a range that two references cache differently. Writing such a part's caches cell
  * for cell would leave range, cache and workbook disagreeing; its data needs ranges of its own
- * (`rebaseChartData`). With `before` (the part `space` replaces), only the conflicts `before` did
- * not have: a chart over hidden rows that shows only the visible ones caches fewer points than its
+ * (`rebaseChartData`). With `before` (the parts `space` replaces), only the conflicts none of them
+ * had: a chart over hidden rows that shows only the visible ones caches fewer points than its
  * range names, and keeps doing so through its edits. A reference that names no plain range (a
  * defined name, another workbook) is not judged.
  */
-export function chartSpaceRangeConflicts(space: ChartSpace, before?: ChartSpace): string[] {
-	const had = before ? rangeConflicts(before) : new Map<string, string>();
+export function chartSpaceRangeConflicts(space: ChartSpace, ...before: ChartSpace[]): string[] {
+	const had = new Set(before.flatMap((part) => [...rangeConflicts(part).keys()]));
 	return [...rangeConflicts(space)].filter(([key]) => !had.has(key)).map(([, formula]) => formula);
 }
 

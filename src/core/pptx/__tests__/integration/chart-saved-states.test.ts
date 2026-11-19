@@ -129,3 +129,28 @@ describe('undoing a chart row edit after the chart was saved', () => {
 		handler.dispose();
 	});
 });
+
+describe('undoing a row edit of a chart over a hidden row', () => {
+	// PowerPoint saved this chart with a hidden row: each cache holds 3 points of a 4-row range.
+	const HIDDEN = requireFixture(
+		fileURLToPath(new URL('../fixtures/e2e/chart-filtered-series.pptx', import.meta.url)),
+	);
+
+	it('gives back the part as loaded, hidden row included', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(buffer(readFileSync(HIDDEN)));
+		const part = async (bytes: ArrayBuffer) =>
+			(await JSZip.loadAsync(bytes)).file('ppt/charts/chart1.xml')!.async('string');
+		const loaded = await part(await handler.save(data.slides.map(cloneSlide)));
+		const history = data.slides.map(cloneSlide);
+		const chart = data.slides
+			.flatMap((slide) => slide.elements)
+			.find((element): element is ChartPptxElement => element.type === 'chart')!;
+		chart.chartData = chartDataApplySheetEdits(chart.chartData!, [
+			{ kind: 'remove-category', category: 1 },
+		])!;
+		await handler.save(data.slides);
+		expect(await part(await handler.save(history.map(cloneSlide)))).toBe(loaded);
+		handler.dispose();
+	});
+});

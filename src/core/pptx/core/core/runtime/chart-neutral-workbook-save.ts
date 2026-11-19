@@ -63,26 +63,29 @@ export async function prepareNeutralChartWorkbook(
 }
 
 /**
- * `xml`, a chart part about to replace `previous`, with its data moved onto a fresh sheet of its
- * embedded workbook when its ranges cannot hold its caches where `previous`'s could
- * (`chartSpaceRangeConflicts`): a writer that changed the rows or series without new ranges, or
- * data saved over a part it was not edited from. `undefined` when the ranges hold the caches, or
- * when the part has no embedded workbook or cannot be written by the shared writer; the
- * cell-for-cell write-back then reports what it cannot write.
+ * `xml`, a chart part about to be saved, with its data moved onto a fresh sheet of its embedded
+ * workbook when its ranges cannot hold its caches where those of the `earlier` parts (the one the
+ * save started from, the one the workbook is in step with) could (`chartSpaceRangeConflicts`): a
+ * writer that changed the rows or series without new ranges, or data saved over a part it was not
+ * edited from. `undefined` when the ranges hold the caches, or when the part has no embedded
+ * workbook or cannot be written by the shared writer; the cell-for-cell write-back then reports
+ * what it cannot write.
  */
 export async function rebaseConflictingChartRanges(
 	zip: JSZip,
 	chart: PptxChartData,
 	xml: string,
-	previous: string | undefined,
+	earlier: readonly (string | undefined)[],
 	resolve: ResolvePath,
 ): Promise<string | undefined> {
 	if (!chart.externalData || chart.externalData.isExternal) return undefined;
 	try {
 		const { chartSpace, issues } = parseChartSpace(xml);
 		if (chartIssuesLostOnWrite(issues).length > 0) return undefined;
-		const before = previous === undefined ? undefined : parseChartSpace(previous).chartSpace;
-		if (chartSpaceRangeConflicts(chartSpace, before).length === 0) return undefined;
+		const before = earlier.flatMap((part) =>
+			part === undefined ? [] : [parseChartSpace(part).chartSpace],
+		);
+		if (chartSpaceRangeConflicts(chartSpace, ...before).length === 0) return undefined;
 		return (await prepareWorkbook(zip, chart, { xml, workbookModel: chartSpace }, resolve)).xml;
 	} catch {
 		return undefined;
