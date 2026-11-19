@@ -5,6 +5,13 @@ import {
 	type ChartDataSheetEdit,
 } from '../data-sheet';
 import type { ChartExData, ChartExDimension, ChartExLevel, ChartExSpace } from '../ex/model';
+import type { ChartCachePoint } from '../model-series';
+import {
+	chartCacheWithPoint,
+	chartCacheWithRow,
+	chartCacheWithoutRow,
+	chartDensePoints,
+} from '../point-limit';
 import { chartExSeriesAt, editChartExSpace, renameChartExSeries } from './chartex';
 import { chartExValueType } from './chartex-data';
 import { addChartExSeries, removeChartExSeries } from './chartex-structure';
@@ -34,18 +41,8 @@ export function chartExSeriesDimension(
 			(d.type === type || (!numeric && d.type === undefined)),
 	);
 }
-export function chartExLevelValues(level: ChartExLevel | undefined): string[] {
-	const count = Math.max(
-		level?.pointCount ?? 0,
-		...(level?.points ?? []).map((p) => (p.index ?? 0) + 1),
-		0,
-	);
-	const values = Array<string>(count).fill('');
-	for (const point of level?.points ?? [])
-		if (point.index !== undefined && point.index >= 0 && point.index < count)
-			values[point.index] = point.value;
-	return values;
-}
+export const chartExLevelValues = (level: ChartExLevel | undefined): string[] =>
+	chartDensePoints(level ?? { points: [] }, (point) => point.value, '');
 /**
  * The plot positions of the series that own data, in sheet order. A series drawn from another one
  * (a pareto line, `@ownerIdx`) has no data of its own and no row in the data sheet.
@@ -81,12 +78,8 @@ export function chartExSpaceDataSheet(space: ChartExSpace): ChartExDataSheet {
 		}),
 	};
 }
-function rewrite(level: ChartExLevel, values: readonly (string | number | null)[]): void {
-	level.pointCount = values.length;
-	level.points = values.flatMap((value, index) =>
-		value === null || value === '' ? [] : [{ index, value: String(value) }],
-	);
-}
+const levelPoint = (index: number, value: string | number): ChartCachePoint | undefined =>
+	value === '' ? undefined : { index, value: String(value) };
 /** Apply ordinary grid edits; row edits move all category levels and point overrides together. */
 export function applyChartExSpaceDataSheetEdits(
 	space: ChartExSpace,
@@ -117,30 +110,40 @@ export function applyChartExSpaceDataSheetEdits(
 		}
 		result = editChartExSpace(result, (draft) => {
 			const seen = new Set<ChartExDimension>();
-			for (const [row, i] of plot.entries()) {
+			const row = sheet.categories.length;
+			for (const [sheetIndex, i] of plot.entries()) {
 				if (edit.kind === 'value') {
-					if (row !== edit.series) continue;
-					const dimension = chartExSeriesDimension(draft, i, true);
-					if (!dimension?.levels[0]) throw new Error('Numeric chart dimension is missing.');
-					rewrite(dimension.levels[0], next.series[row]!.values);
+					if (sheetIndex !== edit.series) continue;
+					const levels = chartExSeriesDimension(draft, i, true)?.levels;
+					if (!levels?.[0]) throw new Error('Numeric chart dimension is missing.');
+					levels[0] = chartCacheWithPoint<ChartCachePoint, ChartExLevel>(
+						levels[0],
+						edit.category,
+						levelPoint(edit.category, edit.value),
+					);
 					continue;
 				}
 				for (const numeric of [false, true]) {
 					const dimension = chartExSeriesDimension(draft, i, numeric);
 					if (!dimension || seen.has(dimension)) continue;
 					seen.add(dimension);
-					dimension.levels.forEach((level, l) => {
-						const values = chartExLevelValues(level);
-						if (edit.kind === 'category-label') {
-							if (!numeric && l === 0) rewrite(level, next.categories);
-						} else if (edit.kind === 'add-category') {
-							values.push(numeric ? '0' : '');
-							if (!numeric && l === 0) values[values.length - 1] = next.categories.at(-1)!;
-							rewrite(level, values);
-						} else if (edit.kind === 'remove-category') {
-							values.splice(edit.category, 1);
-							rewrite(level, values);
-						}
+					dimension.levels = dimension.levels.map((level, l) => {
+						if (edit.kind === 'category-label')
+							return numeric || l > 0
+								? level
+								: chartCacheWithPoint<ChartCachePoint, ChartExLevel>(
+										level,
+										edit.category,
+										levelPoint(edit.category, edit.label),
+									);
+						if (edit.kind === 'remove-category')
+							return chartCacheWithoutRow<ChartCachePoint, ChartExLevel>(level, edit.category);
+						const added = numeric ? '0' : l === 0 ? next.categories.at(-1)! : '';
+						return chartCacheWithRow<ChartCachePoint, ChartExLevel>(
+							level,
+							row,
+							levelPoint(row, added),
+						);
 					});
 				}
 				if (edit.kind === 'remove-category') {

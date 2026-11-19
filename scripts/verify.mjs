@@ -124,6 +124,7 @@ function buildStep(id, cmd, cwd, dir, { extra = [], needs = [] } = {}) {
 }
 
 add('lint', 'bun run lint');
+add('zip-open', 'node scripts/check-zip-open.mjs');
 
 // Formatting of the changed files, with each viewer's own oxfmt configuration.
 const present = files.filter((file) => FORMATTED.test(file) && existsSync(join(ROOT, file)));

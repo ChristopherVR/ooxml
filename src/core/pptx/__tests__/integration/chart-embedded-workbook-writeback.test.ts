@@ -129,4 +129,19 @@ describe('embedded chart workbook write-back', () => {
 			),
 		).toBeTruthy();
 	});
+
+	it('sends the cells of a failed write again on the next save', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(toArrayBuffer(loadFixtureBytes()));
+		const chart = barChart(data);
+		const linked = chart.chartData!.externalData!;
+		chart.chartData!.externalData = { ...linked, targetPath: '../embeddings/DoesNotExist.xlsx' };
+		chart.chartData!.series[0].values = [1, 2, 3, 4, 5];
+		await handler.save(data.slides);
+
+		chart.chartData!.externalData = linked;
+		const sheetXml = await readEmbeddedSheetXml(await handler.save(data.slides), EMBEDDING_PATH);
+		expect(numericCellValue(sheetXml, 'B2')).toBe('1');
+		expect(numericCellValue(sheetXml, 'B6')).toBe('5');
+	});
 });

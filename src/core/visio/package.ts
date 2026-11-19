@@ -1,4 +1,5 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
+import { openZip } from '../opc/zip-limits';
 import { parseXml } from '../xml/index';
 import {
 	DEFAULTS,
@@ -7,6 +8,7 @@ import {
 	safePath,
 	decodePath,
 	crc32,
+	visioZipLimits,
 	type Entry,
 	type VisioPackageLimits,
 	type VisioPackageRelationship,
@@ -89,7 +91,7 @@ export class VisioPackage {
 		const bytes = new Uint8Array(source);
 		try {
 			const entries = inspectZip(bytes, limits, check);
-			const zip = await JSZip.loadAsync(bytes, { checkCRC32: false, createFolders: false });
+			const zip = await openZip(bytes, visioZipLimits(limits));
 			check();
 			if (
 				Object.keys(zip.files).length !== entries.size ||

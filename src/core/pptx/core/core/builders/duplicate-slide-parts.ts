@@ -1,5 +1,6 @@
 import type JSZip from 'jszip';
-import { clonePartGraph } from '../../../../opc/clone-part-graph';
+import { clonePartGraph, relativePartTarget } from '../../../../opc/clone-part-graph';
+import { resolvePartPath } from '../../../../opc/relationships';
 import { cloneSlide } from '../../utils/clone-utils';
 import type { PptxSlide } from '../../types';
 
@@ -15,9 +16,31 @@ const SHARED_RELATIONSHIPS = new Set([
 ]);
 const RAW_XML_KEYS = new Set(['rawXml', 'rawTiming', 'inkPartRawXml', 'rawMediaReferenceXml']);
 
+/**
+ * A chart's embedded workbook target (`externalData.targetPath`) is relative to the chart part, so
+ * a copied chart points at its own copy of the workbook rather than writing into the source's.
+ */
+function remapChartWorkbookTarget(
+	value: Record<string, unknown>,
+	copies: ReadonlyMap<string, string>,
+): void {
+	const chartPart = value.chartPartPath;
+	const external = value.externalData as { targetPath?: unknown; isExternal?: unknown } | undefined;
+	if (typeof chartPart !== 'string' || typeof external?.targetPath !== 'string') return;
+	if (external.isExternal) return;
+	const copiedChart = copies.get(chartPart);
+	const copiedWorkbook = copies.get(resolvePartPath(chartPart, external.targetPath));
+	if (copiedChart && copiedWorkbook)
+		value.externalData = {
+			...external,
+			targetPath: relativePartTarget(copiedChart, copiedWorkbook),
+		};
+}
+
 /** Remap typed package paths without changing text, URLs or XML relationship IDs. */
 export function remapPartPaths(value: unknown, copies: ReadonlyMap<string, string>): void {
 	if (!value || typeof value !== 'object') return;
+	remapChartWorkbookTarget(value as Record<string, unknown>, copies);
 	for (const [key, child] of Object.entries(value)) {
 		if (RAW_XML_KEYS.has(key)) continue;
 		if (typeof child === 'string' && /path$/iu.test(key)) {

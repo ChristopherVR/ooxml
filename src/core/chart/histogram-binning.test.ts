@@ -1,5 +1,59 @@
 import { describe, expect, it } from 'vitest';
-import { aggregateByCategory, computeHistogramBins, scottBinCount } from './histogram-binning';
+import {
+	MAX_HISTOGRAM_BINS,
+	aggregateByCategory,
+	computeHistogramBins,
+	histogramBinsLimited,
+	scottBinCount,
+} from './histogram-binning';
+
+describe('histogram bin limit', () => {
+	const values = [1, 2, 3];
+
+	it.each([
+		['a huge bin count', { binCount: 200_000_000 }],
+		['an infinite bin count', { binCount: Number.POSITIVE_INFINITY }],
+		['a tiny bin size', { binSize: 1e-9 }],
+		['a subnormal bin size', { binSize: 5e-324 }],
+	])('draws at most the limit for %s and keeps every value', (_, options) => {
+		const bins = computeHistogramBins(values, options);
+		expect(bins).toHaveLength(MAX_HISTOGRAM_BINS);
+		expect(bins.reduce((sum, bin) => sum + bin.value, 0)).toBe(values.length);
+		expect(histogramBinsLimited(values, options)).toBe(true);
+		for (const bin of [bins[0], bins.at(-1)]) expect(bin?.label).not.toMatch(/Infinity|NaN/);
+	});
+
+	it('spreads a limited bin size over the whole range', () => {
+		const bins = computeHistogramBins([0, 5000], { binSize: 0.001 });
+		expect(bins).toHaveLength(MAX_HISTOGRAM_BINS);
+		expect(bins[0]?.label).toBe('[0, 5)');
+		expect(bins.at(-1)?.label).toBe('[4995, 5000)');
+		expect(bins.at(-1)?.value).toBe(1);
+	});
+
+	it('leaves requests within the limit alone', () => {
+		expect(computeHistogramBins([0, 999], { binSize: 1 })).toHaveLength(MAX_HISTOGRAM_BINS);
+		expect(histogramBinsLimited([0, 999], { binSize: 1 })).toBe(false);
+		expect(computeHistogramBins(values, { binCount: MAX_HISTOGRAM_BINS })).toHaveLength(
+			MAX_HISTOGRAM_BINS,
+		);
+		expect(histogramBinsLimited(values, { binCount: MAX_HISTOGRAM_BINS })).toBe(false);
+		expect(histogramBinsLimited(values, {})).toBe(false);
+	});
+
+	it('ignores values that fall in the overflow and underflow bins', () => {
+		expect(histogramBinsLimited([1], { binCount: 1e9, underflow: 5 })).toBe(false);
+	});
+
+	it('splits many observations in linear time', () => {
+		const many = Array.from({ length: 200_000 }, (_, index) => index);
+		const started = performance.now();
+		const bins = computeHistogramBins(many, { binCount: 4, underflow: 100_000, overflow: 100_001 });
+		expect(performance.now() - started).toBeLessThan(2000);
+		expect(bins[0]?.value).toBe(100_000);
+		expect(bins.at(-1)?.value).toBe(99_999);
+	});
+});
 
 describe('scottBinCount', () => {
 	it('is one bin for degenerate samples', () => {

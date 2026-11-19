@@ -11,6 +11,7 @@ import { parseChartSpace } from './parse-space';
 import { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 import { withUnmodelledChartChildren } from './keep-unmodelled';
 import type { ChartDataSource, ChartParseIssue } from './model-series';
+import { CHART_POINTS_LIMITED } from './point-limit';
 
 /** The unmodelled elements `withUnmodelledChartChildren` carries into an edited part. */
 const CARRIED = new Set(['c:chartSpace/c:pivotSource', 'c:chartSpace/c:protection']);
@@ -19,9 +20,10 @@ const CARRIED = new Set(['c:chartSpace/c:pivotSource', 'c:chartSpace/c:protectio
 export function chartIssuesLostOnWrite(issues: readonly ChartParseIssue[]): ChartParseIssue[] {
 	return issues.filter(
 		(issue) =>
-			issue.code !== 'CHART_ELEMENT_NOT_MODELLED' ||
-			issue.element === undefined ||
-			!CARRIED.has(issue.element),
+			issue.code !== CHART_POINTS_LIMITED &&
+			(issue.code !== 'CHART_ELEMENT_NOT_MODELLED' ||
+				issue.element === undefined ||
+				!CARRIED.has(issue.element)),
 	);
 }
 
@@ -59,17 +61,21 @@ function withFormulas(
 	return copy;
 }
 
+/** A model as the file states it: how much of a cache a view shows depends on the loader. */
 const stable = (value: unknown): unknown =>
 	Array.isArray(value)
 		? value.map(stable)
 		: value && typeof value === 'object'
 			? Object.fromEntries(
 					Object.keys(value)
+						.filter((key) => key !== 'viewLength')
 						.sort()
 						.map((key) => [key, stable((value as Record<string, unknown>)[key])]),
 				)
 			: value;
-const same = (a: unknown, b: unknown) => JSON.stringify(stable(a)) === JSON.stringify(stable(b));
+/** Whether two chart models say the same about the file. */
+export const sameChartModel = (a: unknown, b: unknown) =>
+	JSON.stringify(stable(a)) === JSON.stringify(stable(b));
 
 /**
  * `source` with the series formulas of `current` written into its `c:f` elements, when `current`
@@ -89,7 +95,7 @@ export function patchChartFormulas(
 			return series ? sourceOf(series, key)?.formula : undefined;
 		};
 	// Only the formulas may differ: give `current` the loaded formulas and compare.
-	if (!same(withFormulas(current, formulaAt(loaded)), loaded)) return undefined;
+	if (!sameChartModel(withFormulas(current, formulaAt(loaded)), loaded)) return undefined;
 	const doc = parseXml(source, { label: 'Chart part' });
 	const plotArea = first(first(doc.documentElement, 'chart', NS.c), 'plotArea', NS.c);
 	const groupElements = plotArea
@@ -131,7 +137,7 @@ export function writeChartSpaceOverSource(
 	options?: WriteChartSpaceOptions,
 ): string {
 	const parsed = parseChartSpace(source);
-	if (same(parsed.chartSpace, space)) return source;
+	if (sameChartModel(parsed.chartSpace, space)) return source;
 	if (chartIssuesLostOnWrite(parsed.issues).length)
 		throw new Error('This chart has content that cannot be preserved through an edit.');
 	return withUnmodelledChartChildren(

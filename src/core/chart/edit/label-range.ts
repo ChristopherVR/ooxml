@@ -2,6 +2,7 @@
 import { NS, buildXml, children, elements, parseXml, type XmlElement } from '../../xml/index';
 import type { ChartSpace } from '../model';
 import type { ChartDataLabels } from '../model-series';
+import { chartPointLength } from '../point-limit';
 import { CHART_ROOT_BINDINGS, stripDeclarations } from '../xml-fragment';
 import { chartSeriesEntryAt, editChartSpace } from './draft';
 
@@ -34,11 +35,13 @@ export function chartDataLabelsRange(
 	const count = Number(cache && children(cache, 'ptCount', NS.c)[0]?.getAttribute('val'));
 	const points = cache ? children(cache, 'pt', NS.c) : [];
 	const indices = points.map((pt) => Number(pt.getAttribute('idx')));
-	const length = indices.reduce(
+	const end = indices.reduce(
 		(max, index) => (Number.isSafeInteger(index) && index >= 0 ? Math.max(max, index + 1) : max),
-		Number.isSafeInteger(count) && count >= 0 ? count : 0,
+		0,
 	);
-	if (length > 1_000_000)
+	const declared = Number.isSafeInteger(count) && count >= 0 ? count : 0;
+	const length = chartPointLength(points.length, end, declared);
+	if (length < Math.max(end, declared))
 		throw new RangeError('Chart label cache exceeds the supported point limit');
 	const values = Array.from({ length }, () => '');
 	points.forEach((pt, i) => {

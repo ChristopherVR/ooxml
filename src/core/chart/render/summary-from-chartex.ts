@@ -7,6 +7,8 @@ import type { DrawingColor } from '../../drawingml/types';
 import { parseXml, type XmlElement } from '../../xml/index';
 import type { ChartExData, ChartExDimension, ChartExSeries, ChartExSpace } from '../ex/model';
 import { isChartExRoot, parseChartExSpace } from '../ex/parse';
+import { histogramBinsLimited } from '../histogram-binning';
+import { CHART_POINTS_LIMITED, chartDensePoints, type ChartPointBudget } from '../point-limit';
 import type { ChartSummary, ChartSummarySeries, HistogramSummaryOptions } from './summary';
 
 /** The data of a series: its own `cx:data`, else the shared one named by `cx:dataId`. */
@@ -28,12 +30,8 @@ const findDimension = (
 ) => data?.dimensions.find((d) => d.kind === kind && (d.type ?? '') === type);
 
 /** The points of one level by index, trimmed, holes as `''`. */
-function levelPoints(level: ChartExDimension['levels'][number]): string[] {
-	const points: string[] = [];
-	for (const point of level.points) points[point.index ?? points.length] = point.value.trim();
-	for (let i = 0; i < Math.max(level.pointCount ?? 0, points.length); i++) points[i] ??= '';
-	return points;
-}
+const levelPoints = (level: ChartExDimension['levels'][number]): string[] =>
+	chartDensePoints(level, (point) => point.value.trim(), '');
 
 /** One dimension's formula and its first level of cached points, holes as `''`. */
 function dimension(data: ChartExData | undefined, kind: ChartExDimension['kind'], type: string) {
@@ -90,16 +88,27 @@ export interface ChartExSummary {
 	/** `cx:series/@layoutId` of the first series (`waterfall`, `clusteredColumn`, `funnel`...). */
 	layoutId: string;
 	summary?: ChartSummary;
+	/** The histogram asks for more bins than are drawn (see `MAX_HISTOGRAM_BINS`). */
+	histogramBinsLimited?: boolean;
+	/** A view of the part is shorter than its declared points (see `MAX_CHART_BLANK_POINTS`). */
+	pointsLimited?: boolean;
 }
 
 const LEGEND_POSITIONS = ['r', 'l', 't', 'b', 'tr'];
 
 /** The summary of a `cx:chartSpace`, or undefined when the part is not an extended chart. */
-export function chartExSummary(source: string | XmlElement): ChartExSummary | undefined {
+export function chartExSummary(
+	source: string | XmlElement,
+	options: { pointBudget?: ChartPointBudget } = {},
+): ChartExSummary | undefined {
 	const root =
 		typeof source === 'string' ? parseXml(source, { label: 'Chart part' }).documentElement : source;
 	if (!isChartExRoot(root)) return undefined;
-	return chartExSummaryFromModel(parseChartExSpace(root).chartExSpace);
+	const { chartExSpace, issues } = parseChartExSpace(root, options);
+	const summary = chartExSummaryFromModel(chartExSpace);
+	return issues.some((issue) => issue.code === CHART_POINTS_LIMITED)
+		? { ...summary, pointsLimited: true }
+		: summary;
 }
 
 function summarySeries(
@@ -257,5 +266,12 @@ export function chartExSummaryFromModel(space: ChartExSpace): ChartExSummary {
 			summary.histogram.pareto = stroke?.kind === 'solid' ? { lineColor: stroke.color } : {};
 		}
 	}
-	return { layoutId, summary };
+	const limited =
+		summary.histogram !== undefined &&
+		!summary.histogram.aggregateByCategory &&
+		histogramBinsLimited(
+			series.values.map((value) => value ?? Number.NaN),
+			summary.histogram,
+		);
+	return { layoutId, summary, ...(limited ? { histogramBinsLimited: true } : {}) };
 }

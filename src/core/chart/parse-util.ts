@@ -12,11 +12,18 @@ import type {
 	ChartShapeProperties,
 	ChartTextBody,
 } from './model-series';
+import type { ChartPointBudget } from './point-limit';
 import { innerXml } from './xml-fragment';
 
 /** Collects issues while a chart part is parsed. */
 export interface ChartParseContext {
 	issues: ChartParseIssue[];
+	/** Pays for the blank slots of this part's views; a loader shares one across a package. */
+	pointBudget?: ChartPointBudget;
+	/** The blank slots each view of this part may hold. */
+	viewAllowance?: number;
+	/** A view of this part was cut, and an issue says so. */
+	pointsLimited?: boolean;
 }
 
 /** The first chart-namespace child (lenient: un-namespaced test XML matches too). */

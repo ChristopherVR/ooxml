@@ -1,98 +1,152 @@
 /**
  * Guarded HTTP POST for OCSP responders. Responder URLs come from the
  * certificate's AIA extension, i.e. from the (untrusted) document, so the
- * request must not become an SSRF primitive.
+ * request must not become an SSRF primitive: it goes only to globally routable
+ * addresses, and the socket connects to the very addresses that were checked.
  */
 
 import dns from 'node:dns';
+import http, { type IncomingMessage } from 'node:http';
+import https from 'node:https';
 import net from 'node:net';
 
 export interface OcspNetworkOptions {
-	/** Allow responders on loopback, link-local, private and metadata addresses. Default false. */
+	/** Allow responders on addresses that are not globally routable. Default false. */
 	allowPrivateNetwork?: boolean;
 }
 
 export const OCSP_TIMEOUT_MS = 10_000;
 export const OCSP_MAX_RESPONSE_BYTES = 1024 * 1024;
 
-function isPrivateIpv4(ip: string): boolean {
-	const p = ip.split('.').map(Number);
-	const [a = 0, b = 0] = p;
-	return (
-		a === 0 ||
-		a === 10 ||
-		a === 127 ||
-		(a === 169 && b === 254) ||
-		(a === 172 && b >= 16 && b <= 31) ||
-		(a === 192 && b === 168) ||
-		(a === 100 && b >= 64 && b <= 127)
-	);
+type Subnet = readonly [address: string, prefix: number];
+
+function blockListOf(family: 'ipv4' | 'ipv6', subnets: readonly Subnet[]): net.BlockList {
+	const list = new net.BlockList();
+	for (const [address, prefix] of subnets) list.addSubnet(address, prefix, family);
+	return list;
 }
 
-/** True for loopback, link-local, RFC1918, CGNAT, unique-local, unspecified and metadata addresses. */
+/** IANA special-purpose IPv4 ranges that are not globally reachable, multicast and reserved. */
+const IPV4_NOT_GLOBAL = blockListOf('ipv4', [
+	['0.0.0.0', 8],
+	['10.0.0.0', 8],
+	['100.64.0.0', 10],
+	['127.0.0.0', 8],
+	['169.254.0.0', 16],
+	['172.16.0.0', 12],
+	['192.0.0.0', 24],
+	['192.0.2.0', 24],
+	['192.88.99.0', 24],
+	['192.168.0.0', 16],
+	['198.18.0.0', 15],
+	['198.51.100.0', 24],
+	['203.0.113.0', 24],
+	['224.0.0.0', 4],
+	['240.0.0.0', 4],
+]);
+
+/** Global unicast, the only IPv6 space a public responder is in. */
+const IPV6_GLOBAL = blockListOf('ipv6', [['2000::', 3]]);
+
+/** The parts of global unicast set aside: IETF protocols, documentation and 6to4 tunnels. */
+const IPV6_NOT_GLOBAL = blockListOf('ipv6', [
+	['2001::', 23],
+	['2001:db8::', 32],
+	['2002::', 16],
+	['3fff::', 20],
+]);
+
+/** An IPv4-mapped or NAT64 address in canonical form: its last 32 bits are the real target. */
+const EMBEDDED_IPV4 = /^(?:::ffff|64:ff9b:):([0-9a-f]{1,4}):([0-9a-f]{1,4})$/;
+
+/** True for every address that is not globally routable, and for anything not an address. */
 export function isPrivateAddress(address: string): boolean {
 	const ip = address.replace(/^\[|\]$/g, '').split('%')[0] ?? '';
 	if (net.isIPv4(ip)) {
-		return isPrivateIpv4(ip);
+		return IPV4_NOT_GLOBAL.check(ip, 'ipv4');
 	}
 	if (!net.isIPv6(ip)) {
 		return true;
 	}
-	const lower = ip.toLowerCase();
-	const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(lower);
-	if (mapped?.[1]) {
-		return isPrivateIpv4(mapped[1]);
+	const canonical = new URL(`http://[${ip}]/`).hostname.slice(1, -1);
+	const embedded = EMBEDDED_IPV4.exec(canonical);
+	if (embedded?.[1] && embedded[2]) {
+		const high = Number.parseInt(embedded[1], 16);
+		const low = Number.parseInt(embedded[2], 16);
+		return IPV4_NOT_GLOBAL.check(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`, 'ipv4');
 	}
-	const hex = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(lower);
-	if (hex?.[1] && hex[2]) {
-		const hi = Number.parseInt(hex[1], 16);
-		const lo = Number.parseInt(hex[2], 16);
-		return isPrivateIpv4(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
-	}
-	if (lower === '::' || lower === '::1') {
-		return true;
-	}
-	const first = Number.parseInt(lower.split(':')[0] || '0', 16);
-	return (first & 0xfe00) === 0xfc00 || (first & 0xffc0) === 0xfe80;
+	return !IPV6_GLOBAL.check(ip, 'ipv6') || IPV6_NOT_GLOBAL.check(ip, 'ipv6');
 }
 
-async function assertPublicHost(hostname: string): Promise<void> {
+/** The addresses of a responder host, all of them checked; fails when any is not public. */
+async function publicAddresses(hostname: string): Promise<dns.LookupAddress[]> {
 	const host = hostname.replace(/^\[|\]$/g, '');
-	const addresses = net.isIP(host)
-		? [host]
-		: (await dns.promises.lookup(host, { all: true })).map((entry) => entry.address);
+	const family = net.isIP(host);
+	const addresses = family
+		? [{ address: host, family }]
+		: await dns.promises.lookup(host, { all: true });
 	if (addresses.length === 0) {
 		throw new Error('Responder host did not resolve');
 	}
-	for (const address of addresses) {
+	for (const { address } of addresses) {
 		if (isPrivateAddress(address)) {
 			throw new Error('Responder host resolves to a private network address');
 		}
 	}
+	return addresses;
 }
 
-async function readCapped(response: Response, controller: AbortController): Promise<Buffer> {
-	const declared = Number(response.headers.get('content-length') ?? 0);
-	if (declared > OCSP_MAX_RESPONSE_BYTES) {
-		controller.abort();
+/**
+ * A socket `lookup` answering with `addresses` and never asking DNS again, so a name cannot
+ * resolve to one address for the check and to another for the connection.
+ */
+function pinnedLookup(addresses: dns.LookupAddress[]): net.LookupFunction {
+	return (_hostname, options, callback) => {
+		const [first] = addresses;
+		if (options.all || !first) callback(null, addresses);
+		else callback(null, first.address, first.family);
+	};
+}
+
+function postRequest(
+	url: URL,
+	body: Buffer,
+	contentType: string,
+	lookup: net.LookupFunction | undefined,
+	signal: AbortSignal,
+): Promise<IncomingMessage> {
+	return new Promise((resolve, reject) => {
+		const request = (url.protocol === 'https:' ? https : http).request(
+			url,
+			{
+				method: 'POST',
+				headers: { 'Content-Type': contentType, 'Content-Length': body.byteLength },
+				// A pooled socket could lead to an address this request never checked.
+				agent: false,
+				signal,
+				...(lookup ? { lookup } : {}),
+			},
+			resolve,
+		);
+		request.on('error', reject);
+		request.end(body);
+	});
+}
+
+async function readCapped(response: IncomingMessage): Promise<Buffer> {
+	if (Number(response.headers['content-length'] ?? 0) > OCSP_MAX_RESPONSE_BYTES) {
+		response.destroy();
 		throw new Error('Response too large');
 	}
-	if (!response.body) {
-		return Buffer.alloc(0);
-	}
-	const reader = response.body.getReader();
 	const chunks: Buffer[] = [];
 	let total = 0;
-	for (;;) {
-		const { done, value } = await reader.read();
-		if (done) break;
-		total += value.byteLength;
+	for await (const chunk of response as AsyncIterable<Buffer>) {
+		total += chunk.byteLength;
 		if (total > OCSP_MAX_RESPONSE_BYTES) {
-			controller.abort();
-			await reader.cancel().catch(() => undefined);
+			response.destroy();
 			throw new Error('Response too large');
 		}
-		chunks.push(Buffer.from(value));
+		chunks.push(chunk);
 	}
 	return Buffer.concat(chunks);
 }
@@ -112,24 +166,15 @@ export async function httpPost(
 	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
 		throw new Error('Unsupported protocol');
 	}
-	if (!options.allowPrivateNetwork) {
-		await assertPublicHost(parsed.hostname);
+	const lookup = options.allowPrivateNetwork
+		? undefined
+		: pinnedLookup(await publicAddresses(parsed.hostname));
+	const signal = AbortSignal.timeout(OCSP_TIMEOUT_MS);
+	const response = await postRequest(parsed, body, contentType, lookup, signal);
+	const status = response.statusCode ?? 0;
+	if (status >= 300 && status < 400) {
+		response.destroy();
+		throw new Error('Redirects are not followed');
 	}
-	const controller = new AbortController();
-	const timer = setTimeout(() => controller.abort(), OCSP_TIMEOUT_MS);
-	try {
-		const response = await fetch(parsed, {
-			method: 'POST',
-			headers: { 'Content-Type': contentType },
-			body: new Uint8Array(body),
-			redirect: 'manual',
-			signal: controller.signal,
-		});
-		if (response.status >= 300 && response.status < 400) {
-			throw new Error('Redirects are not followed');
-		}
-		return await readCapped(response, controller);
-	} finally {
-		clearTimeout(timer);
-	}
+	return readCapped(response);
 }

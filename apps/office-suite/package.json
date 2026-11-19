@@ -12,7 +12,7 @@
 		"test:regressions": "node ../../scripts/suite-regression-check.mjs",
 		"test:files": "node ../../scripts/suite-files-check.mjs",
 		"test:ai": "node --test src/ai-operations.test.js src/ai/shared.test.js src/ai/providers.test.js src/ai/offline.test.js",
-		"test:onedrive": "node --test src/font-downloads.test.js src/settings.test.js src/document-bar.test.js src/cloud-files.test.js src/cloud-options.test.js src/launch-link.test.js"
+		"test:onedrive": "node --test src/font-downloads.test.js src/settings.test.js src/document-bar.test.js src/cloud-files.test.js src/cloud-options.test.js src/launch-link.test.js src/onedrive-conflict.test.js"
 	},
 	"dependencies": {
 		"@tauri-apps/api": "^2.12.5",

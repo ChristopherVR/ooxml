@@ -3,11 +3,15 @@
 // blanks (`null`, written as a missing point, as Office writes an empty cell); categories are text,
 // or numbers when every category is a number.
 import type { ChartSeriesValue } from '../data-sheet';
-import type { ChartDataSource, ChartDataCache } from '../model-series';
+import type { ChartCachePoint, ChartDataSource, ChartDataCache } from '../model-series';
+import { chartCacheOverView } from '../point-limit';
 
 export type ChartCategoryValue = string | number | null;
 
-function points(values: readonly (string | number | null)[], previous?: ChartDataCache) {
+function points(
+	values: readonly (string | number | null)[],
+	previous?: ChartDataCache,
+): ChartCachePoint[] {
 	const formats = new Map(
 		previous?.points.flatMap((point) =>
 			point.index !== undefined && point.formatCode !== undefined
@@ -39,19 +43,20 @@ export function numberSource(
 		cache: {
 			type: 'number',
 			formatCode: previous?.cache?.formatCode ?? 'General',
-			pointCount: values.length,
-			points: points(values, previous?.cache),
+			...chartCacheOverView(points(values, previous?.cache), values.length, previous?.cache),
 		},
 	};
 }
 
-/** A category source holding `values` (numbers when every value is one), keeping the reference. */
+/** A category source holding `values` (numbers when every label is one), keeping the reference. */
 export function categorySource(
 	values: readonly ChartCategoryValue[],
 	previous: ChartDataSource | undefined,
 	formula?: string,
 ): ChartDataSource {
-	const numeric = values.length > 0 && values.every((value) => typeof value === 'number');
+	const numeric =
+		values.some((value) => typeof value === 'number') &&
+		values.every((value) => typeof value === 'number' || value === null);
 	const reference =
 		formula ??
 		(previous?.kind === 'numRef' ||
@@ -72,8 +77,11 @@ export function categorySource(
 		cache: {
 			type: numeric ? 'number' : 'string',
 			...(numeric ? { formatCode: previous?.cache?.formatCode ?? 'General' } : {}),
-			pointCount: values.length,
-			points: points(values, numeric ? previous?.cache : undefined),
+			...chartCacheOverView(
+				points(values, numeric ? previous?.cache : undefined),
+				values.length,
+				previous?.cache,
+			),
 		},
 	};
 }

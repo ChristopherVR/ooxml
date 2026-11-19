@@ -43,7 +43,7 @@ export async function applyChartExPartEdits(
 				zip.file(chart.workbookPartName, rebased.bytes);
 				written = writeChartExSpaceOverSource(source, rebased.space);
 			} else {
-				const writes = chartExSpaceWorkbookWrites(chart.chartExSpace);
+				const writes = chartExSpaceWorkbookWrites(chart.chartExSpace, undefined, before);
 				await saveChartWorkbookUpdates(
 					{
 						read: async (part) => zip.file(part)?.async('uint8array'),

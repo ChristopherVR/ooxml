@@ -447,4 +447,16 @@ describe('parseEmbeddedXlsx', () => {
 		// Out of bounds shared string index falls back to the raw value string
 		expect(at(result!.series, 0).name).toBe('99');
 	});
+
+	it('falls back to the cached data for a sheet addressed far past its cells', async () => {
+		const sheet1 = buildSheet1Xml([
+			[
+				{ ref: 'A1', value: 1 },
+				{ ref: 'XFD1048576', value: 2 },
+			],
+		]);
+		await expect(
+			parseEmbeddedXlsx(await buildMockXlsx(undefined, sheet1)),
+		).resolves.toBeUndefined();
+	});
 });

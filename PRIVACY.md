@@ -24,7 +24,7 @@ network request must update this file in the same commit.
 | PowerPoint: linked pictures, media, video embeds | Any URL the deck links to                   | Yes in the viewer, no in the core | `allowExternalContent` option; Trust Center; suite setting         |
 | PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it      | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it      | Do not start a session                                             |
-| PowerPoint (Node): signature inspection          | The OCSP responder named in the certificate | When a signature value verifies   | No switch today (see below)                                        |
+| PowerPoint (Node): signature inspection          | The OCSP responder named in the certificate | When a signature value verifies   | `checkRevocation: false` (see below)                               |
 | Teams: sync and signaling                        | The configured `syncUrl` and `signalingUrl` | Only when a server is configured  | Local mode                                                         |
 | Teams: calls                                     | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts           | `iceServers` (your own STUN/TURN, or `[]`)                         |
 | Teams: website tabs                              | The URL a member added                      | When the tab is opened            | Do not add or open website tabs                                    |
@@ -109,9 +109,9 @@ Sessions start only when the user (or host) starts one.
 `inspectPptxDigitalSignatures` from `ooxml-core/pptx/signature-node` checks the revocation status
 of each certificate that verified a signature value, by sending an OCSP request (the certificate's
 serial number and issuer hashes) to the responder URL written in that certificate. A signature
-that fails verification causes no request. Requests to private network addresses are refused.
-There is currently no option to skip the check; call the browser-safe signature detection in
-`ooxml-core/opc` instead when no network use is acceptable.
+that fails verification causes no request. The URL comes from the file, so the request goes only
+to globally routable addresses, and the connection is made to the address that was checked. Pass
+`{ checkRevocation: false }` to make no request; the revocation status is then `not-checked`.
 
 ## Word, Excel and Visio
 

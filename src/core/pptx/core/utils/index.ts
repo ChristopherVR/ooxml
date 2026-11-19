@@ -431,6 +431,7 @@ export {
 	chartDataChangeType,
 	chartDataAddCategory,
 	chartDataRemoveCategory,
+	recordChartStructureEdit,
 } from './chart-data-utils';
 
 export { isParetoChartData, resolveDisplayedChartTypeName } from './chart-pareto-detect';

@@ -41,8 +41,7 @@ function cacheCells(cache: ChartDataCache | undefined, count: number): (string |
 	return cells;
 }
 
-const pointCount = (source: ChartDataSource | undefined) =>
-	Math.max(source?.cache?.pointCount ?? 0, chartSourceValues(source).length);
+const pointCount = (source: ChartDataSource | undefined) => chartSourceValues(source).length;
 
 /** Whether every series reads the same flat categories (or none), so column A can hold them. */
 function sharesCategories(space: ChartSpace): boolean {

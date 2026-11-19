@@ -21,15 +21,8 @@ import {
 	standardChartLayoutSheet,
 } from '../workbook/layout';
 import { chartSeriesEntries, chartSeriesEntryAt, editChartSpace } from './draft';
-import {
-	addChartCategory,
-	addChartSeries,
-	isXYChartKind,
-	removeChartCategory,
-	removeChartSeries,
-	setChartCategories,
-	setChartSeriesValues,
-} from './series';
+import { addChartSeries, isXYChartKind, removeChartSeries, setChartCategories } from './series';
+import { addChartCategory, removeChartCategory, setChartSeriesPoint } from './series-rows';
 import { categorySource } from './series-data';
 
 /** The data sheet of `space`: the first series' categories, every series' name and values. */
@@ -77,17 +70,18 @@ function renameSeries(space: ChartSpace, index: number, name: string): ChartSpac
 }
 
 /** Category labels as the chart caches them: numbers while the cache was numeric and they parse. */
-function categoryValues(space: ChartSpace, labels: readonly string[]): (string | number)[] {
+function categoryValues(space: ChartSpace, labels: readonly string[]): (string | number | null)[] {
 	const entry = chartSeriesEntries(space)[0];
 	const source = entry
 		? isXYChartKind(entry.group.kind)
 			? entry.series.xValues
 			: entry.series.categories
 		: undefined;
+	const blank = (label: string) => label.trim() === '';
 	const numeric =
 		source?.cache?.type === 'number' &&
-		labels.every((label) => label.trim() !== '' && Number.isFinite(Number(label)));
-	return numeric ? labels.map(Number) : [...labels];
+		labels.every((label) => blank(label) || Number.isFinite(Number(label)));
+	return numeric ? labels.map((label) => (blank(label) ? null : Number(label))) : [...labels];
 }
 
 function applyOne(
@@ -99,7 +93,7 @@ function applyOne(
 ): ChartSpace {
 	switch (edit.kind) {
 		case 'value':
-			return setChartSeriesValues(space, edit.series, next.series[edit.series]!.values);
+			return setChartSeriesPoint(space, edit.series, edit.category, edit.value);
 		case 'series-name':
 			return renameSeries(space, edit.series, edit.name);
 		case 'category-label':
@@ -118,7 +112,12 @@ function applyOne(
 		case 'remove-series':
 			return removeChartSeries(space, edit.series);
 		case 'add-category':
-			return addChartCategory(space, nextChartCategoryName(sheet.categories.length), 0);
+			return addChartCategory(
+				space,
+				nextChartCategoryName(sheet.categories.length),
+				0,
+				sheet.categories.length,
+			);
 		case 'remove-category':
 			return removeChartCategory(space, edit.category);
 	}
@@ -139,7 +138,9 @@ export function applyChartSpaceDataSheetEdits(
 		const edited = applyChartDataSheetEdit(sheet, edit);
 		if (!edited) continue;
 		next = applyOne(next, sheet, edited, edit, layoutSheet);
-		sheet = edited;
+		// Rows only the removed series reached go with it, as a sheet read from the part afterwards
+		// shows, so the edits after it size new series and rows the same in one save as in several.
+		sheet = edit.kind === 'remove-series' ? chartSpaceDataSheet(next) : edited;
 	}
 	if (next === space || !layoutSheet) return next;
 	const count = sheet.categories.length;

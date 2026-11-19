@@ -8,6 +8,7 @@ import {
 	setChartNumericCategories,
 } from './series-vectors';
 import { rebaseChartData } from '../workbook/rebase-data';
+import { addChartCategory, removeChartCategory } from './series-rows';
 import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
 import { writeChartSpaceOverSource } from '../keep-source';
@@ -138,4 +139,24 @@ it('edits independent XY and bubble-size vectors with validation and new-sheet a
 	expect(() => setChartSeriesBubbleSizes(newChartSpace(data, { kind: 'bar' }), 0, [1])).toThrow(
 		'Only bubble',
 	);
+});
+it('moves bubble sizes with their row and leaves a new row x value blank', () => {
+	const space = setChartSeriesBubbleSizes(
+		setChartSeriesXValues(newChartSpace(data, { kind: 'bubble' }), 0, [10, 20]),
+		0,
+		[3, 4],
+	);
+	const series = (next: typeof space) => next.plotArea.groups[0]!.series[0]!;
+	const points = (source: ReturnType<typeof series>['xValues']) =>
+		source!.cache!.points.map(({ index, value }) => [index, value]);
+	const removed = series(removeChartCategory(space, 0));
+	expect(points(removed.xValues)).toEqual([[0, '20']]);
+	expect(points(removed.bubbleSizes)).toEqual([[0, '4']]);
+	const added = series(addChartCategory(space, 'Category 3'));
+	expect(added.xValues!.cache!.type).toBe('number');
+	expect(points(added.xValues)).toEqual([
+		[0, '10'],
+		[1, '20'],
+	]);
+	expect(added.bubbleSizes!.cache!.pointCount).toBe(3);
 });

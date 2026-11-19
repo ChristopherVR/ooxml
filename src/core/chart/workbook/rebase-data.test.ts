@@ -28,6 +28,18 @@ describe('fresh classic chart data ranges', () => {
 				.values,
 		).toEqual(first.values);
 	});
+	it('gives an empty cache the one cell its range names', () => {
+		const source = columnChart();
+		source.plotArea.groups[0]!.series[0]!.categories = {
+			kind: 'strRef',
+			formula: 'Sheet1!$A$2:$A$4',
+			cache: { type: 'string', points: [] },
+		};
+		const categories = rebaseChartData(source, 'Data').chartSpace.plotArea.groups[0]!.series[0]!
+			.categories!;
+		expect(categories.formula).toBe('Data!$A$2:$A$2');
+		expect(categories.cache!.pointCount).toBe(1);
+	});
 	it('writes hierarchy columns outermost first and keeps per-level cache order', () => {
 		const source = columnChart();
 		source.plotArea.groups[0]!.series[0]!.categories = {
@@ -52,6 +64,23 @@ describe('fresh classic chart data ranges', () => {
 		);
 		expect(result.chartSpace.plotArea.groups[0]!.series[0]!.categories!.levels).toEqual(
 			source.plotArea.groups[0]!.series[0]!.categories!.levels,
+		);
+	});
+	it('keeps a mostly empty range sparse', () => {
+		const source = columnChart();
+		source.plotArea.groups[0]!.series[0]!.values!.cache = {
+			type: 'number',
+			pointCount: 1048575,
+			points: [
+				{ index: 0, value: '1' },
+				{ index: 1048574, value: '9' },
+			],
+		};
+		const { chartSpace, rows } = rebaseChartData(source, 'NewData');
+		expect(Object.keys(rows).length).toBeLessThan(10);
+		expect(rows[1048575]![1]).toBe(9);
+		expect(chartSpace.plotArea.groups[0]!.series[0]!.values!.formula).toBe(
+			'NewData!$B$2:$B$1048576',
 		);
 	});
 	it('refuses an external source and missing caches', () => {

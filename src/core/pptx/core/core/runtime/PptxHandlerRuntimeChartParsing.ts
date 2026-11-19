@@ -45,11 +45,20 @@ import {
 	type ChartTreeReader,
 } from '../../utils/chart-from-neutral';
 import { readChartPartModel } from '../../utils/chart-part-repair';
+import {
+	CHART_POINTS_LIMITED,
+	chartPointBudget,
+	type ChartPointBudget,
+} from '../../../../chart/point-limit';
 import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { resolveChartElementPictures } from './chart-element-pictures';
-import { applyEmbeddedWorkbookFallback, needsEmbeddedWorkbook } from './chart-embedded-fallback';
+import {
+	applyEmbeddedWorkbookFallback,
+	hasUncachedCategoryReference,
+	needsEmbeddedWorkbook,
+} from './chart-embedded-fallback';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExParsing';
 
 /** The object-tree nodes of a chart part. */
@@ -106,8 +115,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (clrMapOvr) {
 			this.currentSlideClrMapOverride = clrMapOvr;
 		}
+		const cuts = this.chartPointBudget.cuts;
 		try {
-			const { chartSpace: neutral, repairIssue } = readChartPartModel(chartPart.text);
+			const { chartSpace: neutral, repairIssue } = readChartPartModel(
+				chartPart.text,
+				this.chartPointBudget,
+			);
 			if (repairIssue) {
 				this.compatibilityService.reportWarning({
 					code: repairIssue.code,
@@ -134,10 +147,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				{ chartSpace, chartRoot, plotArea },
 				chartPart.partPath,
 				chartRelationshipId,
+				this.chartPointBudget,
 			);
 			return chart && (clrMapOvr ? { ...chart, clrMapOvr } : chart);
 		} finally {
 			this.currentSlideClrMapOverride = previousClrMapOverride;
+			if (this.chartPointBudget.cuts > cuts) {
+				this.compatibilityService.reportWarning({
+					code: CHART_POINTS_LIMITED,
+					message:
+						'The chart declares more blank points than are shown. Its points and counts are kept when it is saved.',
+					severity: 'warning',
+					scope: 'element',
+					xmlPath: chartPart.partPath,
+				});
+			}
 		}
 	}
 
@@ -182,6 +206,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				{ chartSpace, chartRoot, plotArea },
 				previous.chartPartPath,
 				previous.chartRelationshipId,
+				chartPointBudget(),
 			);
 			return chart && (clrMapOvr ? { ...chart, clrMapOvr } : chart);
 		} finally {
@@ -228,7 +253,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			const axisId = [...group.axisIds]
 				.reverse()
 				.find((id) => axes.some((axis) => axis.axisType === 'valAx' && axis.axisId === id));
-			const hidden = parseFilteredSeries(node, reader.xml);
+			const hidden = parseFilteredSeries(node, reader.xml, reader.pointBudget);
 			if (hidden) {
 				for (const entry of hidden) {
 					if (seriesChartType) entry.seriesChartType = seriesChartType;
@@ -236,7 +261,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				}
 				filtered.filteredSeries = [...(filtered.filteredSeries ?? []), ...hidden];
 			}
-			const titles = parseFilteredTitles(node, reader.xml);
+			const titles = parseFilteredTitles(node, reader.xml, reader.pointBudget);
 			if (titles?.seriesTitle) filtered.filteredSeriesTitle ??= titles.seriesTitle;
 			if (titles?.categoryTitle) filtered.filteredCategoryTitle ??= titles.categoryTitle;
 			const nodes = rawChildren(node, 'ser', reader.localName);
@@ -335,9 +360,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		tree: ChartTree,
 		chartPartPath: string,
 		chartRelationshipId: string,
+		pointBudget: ChartPointBudget,
 	): Promise<PptxChartData | undefined> {
 		const { chartSpace, chartRoot, plotArea } = tree;
-		const reader = this.chartTreeReader();
+		const reader = { ...this.chartTreeReader(), pointBudget };
 		const colorAdapter = { parseColor: reader.parseColor };
 		const chartType = chartTypeFromNeutral(neutral);
 		const groups = pairGroupNodes(neutral.plotArea.groups, plotArea, reader.localName);
@@ -380,8 +406,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 		const facts = await this.readChartPartFacts(chartSpace, chartRoot, chartPartPath);
 		// The embedded workbook is opened only for what the part does not cache itself.
+		const categoriesUncached = hasUncachedCategoryReference(neutral.plotArea.groups);
 		const workbook =
-			needsEmbeddedWorkbook(chartType, categories, built.series) ||
+			needsEmbeddedWorkbook(chartType, categories, built.series, categoriesUncached) ||
 			(rawDateCategories && neutral.date1904 === undefined)
 				? await this.parseEmbeddedWorkbook(facts.externalData)
 				: undefined;
@@ -389,7 +416,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const dateCategories = rawDateCategories
 			? { ...rawDateCategories, date1904: neutral.date1904 ?? workbook?.date1904 ?? false }
 			: undefined;
-		const filled = applyEmbeddedWorkbookFallback(chartType, categories, built.series, workbook);
+		const filled = applyEmbeddedWorkbookFallback(
+			chartType,
+			categories,
+			built.series,
+			workbook,
+			categoriesUncached,
+		);
 		const dataLabelTextEditable =
 			!categoryLevels &&
 			!dateCategories &&

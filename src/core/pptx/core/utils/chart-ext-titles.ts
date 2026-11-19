@@ -28,6 +28,7 @@
  * @module utils/chart-ext-titles
  */
 import type { XmlObject } from '../types';
+import type { ChartPointBudget } from '../../../chart/point-limit';
 import { findFilterExt, readCachedValues } from './chart-filtered-series';
 
 interface XmlLookupLike {
@@ -45,13 +46,17 @@ export interface PptxChartFilteredTitles {
 }
 
 /** Resolve a `c15:tx` (CT_SerTx: a literal `c15:v` or a `c15:strRef`/`c15:numRef`). */
-function readSerTx(tx: XmlObject | undefined, xmlLookup: XmlLookupLike): string | undefined {
+function readSerTx(
+	tx: XmlObject | undefined,
+	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget | undefined,
+): string | undefined {
 	if (!tx) {
 		return undefined;
 	}
 	const ref =
 		xmlLookup.getChildByLocalName(tx, 'strRef') ?? xmlLookup.getChildByLocalName(tx, 'numRef');
-	const cached = readCachedValues(ref, xmlLookup)[0];
+	const cached = readCachedValues(ref, xmlLookup, budget)[0];
 	if (cached) {
 		return cached;
 	}
@@ -60,13 +65,17 @@ function readSerTx(tx: XmlObject | undefined, xmlLookup: XmlLookupLike): string 
 }
 
 /** Resolve a `c15:cat` (CT_AxDataSource: `strRef`/`numRef`/`multiLvlStrRef`). */
-function readAxDataSource(cat: XmlObject | undefined, xmlLookup: XmlLookupLike): string[] {
+function readAxDataSource(
+	cat: XmlObject | undefined,
+	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget | undefined,
+): string[] {
 	if (!cat) {
 		return [];
 	}
 	const ref =
 		xmlLookup.getChildByLocalName(cat, 'strRef') ?? xmlLookup.getChildByLocalName(cat, 'numRef');
-	return readCachedValues(ref, xmlLookup);
+	return readCachedValues(ref, xmlLookup, budget);
 }
 
 /**
@@ -77,6 +86,7 @@ function readAxDataSource(cat: XmlObject | undefined, xmlLookup: XmlLookupLike):
 export function parseFilteredTitles(
 	container: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
+	budget?: ChartPointBudget,
 ): PptxChartFilteredTitles | undefined {
 	const ext = findFilterExt(container, xmlLookup);
 	if (!ext) {
@@ -86,7 +96,11 @@ export function parseFilteredTitles(
 	const result: PptxChartFilteredTitles = {};
 
 	const seriesTitleWrapper = xmlLookup.getChildByLocalName(ext, 'filteredSeriesTitle');
-	const seriesTitle = readSerTx(xmlLookup.getChildByLocalName(seriesTitleWrapper, 'tx'), xmlLookup);
+	const seriesTitle = readSerTx(
+		xmlLookup.getChildByLocalName(seriesTitleWrapper, 'tx'),
+		xmlLookup,
+		budget,
+	);
 	if (seriesTitle) {
 		result.seriesTitle = seriesTitle;
 	}
@@ -95,6 +109,7 @@ export function parseFilteredTitles(
 	const categoryTitle = readAxDataSource(
 		xmlLookup.getChildByLocalName(categoryTitleWrapper, 'cat'),
 		xmlLookup,
+		budget,
 	);
 	if (categoryTitle.length > 0) {
 		result.categoryTitle = categoryTitle;

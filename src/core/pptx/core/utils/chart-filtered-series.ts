@@ -44,6 +44,11 @@
  *
  * @module utils/chart-filtered-series
  */
+import {
+	chartPointBudget,
+	limitChartPointLength,
+	type ChartPointBudget,
+} from '../../../chart/point-limit';
 import type { PptxChartFilteredSeries, XmlObject } from '../types';
 import { parseChartUniqueId } from './chart-series-identity';
 
@@ -83,6 +88,7 @@ function scalarChild(
 export function readCachedValues(
 	refContainer: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget = chartPointBudget(),
 ): string[] {
 	if (!refContainer) {
 		return [];
@@ -113,7 +119,7 @@ export function readCachedValues(
 		String(xmlLookup.getChildByLocalName(cacheNode, 'ptCount')?.['@_val'] ?? ''),
 		10,
 	);
-	const length = Number.isFinite(declared) && declared > maxIndex + 1 ? declared : maxIndex + 1;
+	const length = limitChartPointLength(budget, points.length, maxIndex + 1, declared);
 	const out: string[] = [];
 	for (let i = 0; i < length; i++) {
 		out.push(byIndex.get(i) ?? '');
@@ -129,22 +135,27 @@ export function readCachedValues(
  * from the chart editor's "Chart Filters" action, is written as; see
  * `chart-filtered-series-writer.ts`).
  */
-function readRefOrLiteral(container: XmlObject | undefined, xmlLookup: XmlLookupLike): string[] {
+function readRefOrLiteral(
+	container: XmlObject | undefined,
+	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget,
+): string[] {
 	const ref =
 		xmlLookup.getChildByLocalName(container, 'strRef') ??
 		xmlLookup.getChildByLocalName(container, 'numRef');
 	if (ref) {
-		return readCachedValues(ref, xmlLookup);
+		return readCachedValues(ref, xmlLookup, budget);
 	}
 	const literal =
 		xmlLookup.getChildByLocalName(container, 'strLit') ??
 		xmlLookup.getChildByLocalName(container, 'numLit');
-	return literal ? readCachedValues({ 'c:strCache': literal }, xmlLookup) : [];
+	return literal ? readCachedValues({ 'c:strCache': literal }, xmlLookup, budget) : [];
 }
 
 function parseOneFilteredSeries(
 	node: XmlObject,
 	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget,
 ): PptxChartFilteredSeries | undefined {
 	const idx = Number.parseInt(
 		String(xmlLookup.getChildByLocalName(node, 'idx')?.['@_val'] ?? ''),
@@ -160,19 +171,23 @@ function parseOneFilteredSeries(
 	const result: PptxChartFilteredSeries = { idx, order };
 
 	const txNode = xmlLookup.getChildByLocalName(node, 'tx');
-	const nameValues = readRefOrLiteral(txNode, xmlLookup);
+	const nameValues = readRefOrLiteral(txNode, xmlLookup, budget);
 	const literalName =
 		nameValues[0] ?? (xmlLookup.getScalarChildByLocalName?.(txNode, 'v') || undefined);
 	if (literalName) {
 		result.name = literalName;
 	}
 
-	const categories = readRefOrLiteral(xmlLookup.getChildByLocalName(node, 'cat'), xmlLookup);
+	const categories = readRefOrLiteral(
+		xmlLookup.getChildByLocalName(node, 'cat'),
+		xmlLookup,
+		budget,
+	);
 	if (categories.length > 0) {
 		result.categories = categories;
 	}
 
-	const values = readRefOrLiteral(xmlLookup.getChildByLocalName(node, 'val'), xmlLookup)
+	const values = readRefOrLiteral(xmlLookup.getChildByLocalName(node, 'val'), xmlLookup, budget)
 		.map((v) => Number.parseFloat(v))
 		.filter((n) => Number.isFinite(n));
 	if (values.length > 0) {
@@ -213,6 +228,7 @@ export function findFilterExt(
 export function parseFilteredSeries(
 	container: XmlObject | undefined,
 	xmlLookup: XmlLookupLike,
+	budget: ChartPointBudget = chartPointBudget(),
 ): PptxChartFilteredSeries[] | undefined {
 	const results: PptxChartFilteredSeries[] = [];
 	for (const ext of filterExtensions(container, xmlLookup)) {
@@ -223,7 +239,7 @@ export function parseFilteredSeries(
 		const wrapperNodes = xmlLookup.getChildrenArrayByLocalName(ext, localNameOf(wrapperKey));
 		for (const wrapperNode of wrapperNodes) {
 			for (const serNode of xmlLookup.getChildrenArrayByLocalName(wrapperNode, 'ser')) {
-				const parsed = parseOneFilteredSeries(serNode, xmlLookup);
+				const parsed = parseOneFilteredSeries(serNode, xmlLookup, budget);
 				if (parsed) results.push(parsed);
 			}
 		}
