@@ -125,7 +125,7 @@ export const VIEWERS = {
 			browser: ['bun run build:packages', 'node scripts/test-packages.mjs --workspace-runtime'],
 		},
 		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
-		// `browserShardCommands` shards the first and leaves the other two on shard 1.
+		// `browserShardCommands` shards the first and gives the other two a shard each.
 		browserChain: {
 			sharded: 'bun x playwright test',
 			rest: [
@@ -163,6 +163,8 @@ const EVERYTHING =
 	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
+/** Changelogs, which the release flow writes: only the changelog check in the `scripts` job reads them. */
+const CHANGELOG = /(^|\/)CHANGELOG\.md$/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
 const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.gitattributes)$/;
 /**
@@ -507,11 +509,13 @@ export function viewerGroups(name, files, { everything }) {
 }
 
 /**
- * Playwright shards per viewer for a whole-suite run, from the measured job times (visio 19.5
- * minutes, docx 15, xlsx 14, teams 6, browser group included). A run narrowed to changed specs
- * is one shard.
+ * Playwright shards per viewer for a whole-suite run. At two shards (CI, November 2026, about 55
+ * runs each) the jobs took 10 to 11 minutes for docx, 8 to 11 for xlsx and 10 to 14.5 for visio,
+ * the longest job of any run: on a run that reaches only these viewers they were the critical
+ * path, while a third shard costs about a minute of runner time. Teams takes 4.6 minutes in one.
+ * A run narrowed to changed specs is one shard.
  */
-export const VIEWER_BROWSER_SHARDS = { docx: 2, xlsx: 2, visio: 2, teams: 1 };
+export const VIEWER_BROWSER_SHARDS = { docx: 3, xlsx: 3, visio: 3, teams: 1 };
 
 /** The commands of a viewer's browser shard `shard` of `total`, and its unsharded form. */
 function browserShardCommands(viewer, specs, shard, total) {
@@ -519,11 +523,10 @@ function browserShardCommands(viewer, specs, shard, total) {
 	const narrowed = specs.size > 0 && viewer.specFilter ? ` ${[...specs].sort().join(' ')}` : '';
 	const flag = total > 1 ? ` --shard=${shard}/${total}` : '';
 	if (viewer.browserChain) {
+		// The chained runs go one to a shard from the first, each shard with what they need first.
 		const { sharded, rest } = viewer.browserChain;
-		return {
-			before: shard === 1 ? before : [],
-			test: [`${sharded}${flag}`, ...(shard === 1 ? rest : [])],
-		};
+		const mine = rest.filter((_, i) => (i % total) + 1 === shard);
+		return { before: mine.length > 0 ? before : [], test: [`${sharded}${flag}`, ...mine] };
 	}
 	return {
 		before,
@@ -572,7 +575,9 @@ function verifyCommands(name, { groups }) {
 export function plan(changed, { full = false, testFiles, reference = false } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
-	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
+	const live = files.filter(
+		(file) => !INERT.test(file) && !VIEWER_INERT.test(file) && !CHANGELOG.test(file),
+	);
 	// These shared runtime scripts are imported by viewer configs. Follow those edges just as
 	// if the importing config changed; script-only checks would never execute their browser path.
 	if (live.some((file) => /^scripts\/browser-performance\.(mjs|d\.mts)$/.test(file)))
@@ -589,7 +594,9 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
-	const scripts = live.some((file) => /^(scripts|\.github|site)\//.test(file));
+	const scripts =
+		files.some((file) => CHANGELOG.test(file)) ||
+		live.some((file) => /^(scripts|\.github|site)\//.test(file));
 	const mcp = live.some(
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);
