@@ -505,6 +505,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartData,
 						neutralSave,
 						(base, target) => this.resolveImagePath(base, target),
+						this.chartDataSheetsOfSession(),
 					);
 					await this.commitChartPart(
 						chartPartPath,
@@ -1421,8 +1422,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						this.zip,
 						chartData,
 						xml,
-						[from, inStep],
+						from,
+						inStep,
 						(base, target) => this.resolveImagePath(base, target),
+						this.chartDataSheetsOfSession(),
 					);
 		if (rebased !== undefined) {
 			xml = rebased;
@@ -1515,6 +1518,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartXmlStr,
 						JSON.parse(baseline) as PptxChartData,
 						chartData,
+						this.chartDataSheetsOfSession(),
 					)
 				: undefined;
 		if (neutralXml !== undefined) {

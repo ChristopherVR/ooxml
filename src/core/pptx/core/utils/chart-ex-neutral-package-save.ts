@@ -16,6 +16,7 @@ import {
 } from '../../../opc/relationships';
 import type { PptxChartData } from '../types';
 import { planChartExNeutralSave } from './chart-ex-neutral-save';
+import { placeChartData, type ChartDataSheets } from './chart-workbook-sheets';
 /** A refused ChartEx save must reach the host instead of silently exporting the old chart. */
 export class ChartExSaveRefusedError extends Error {}
 /** Undefined means the view edit is not claimed. Claimed data failures throw before either part changes. */
@@ -25,9 +26,10 @@ export async function saveChartExPackageThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
+	sheets: ChartDataSheets,
 ): Promise<string | undefined> {
 	try {
-		return await saveChartExPackage(zip, part, xml, before, after);
+		return await saveChartExPackage(zip, part, xml, before, after, sheets);
 	} catch (error) {
 		throw new ChartExSaveRefusedError(error instanceof Error ? error.message : String(error));
 	}
@@ -38,6 +40,7 @@ async function saveChartExPackage(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
+	sheets: ChartDataSheets,
 ): Promise<string | undefined> {
 	const edits = planChartExNeutralSave(before, after);
 	if (!edits) return undefined;
@@ -47,7 +50,7 @@ async function saveChartExPackage(
 	const original = parsed.chartExSpace;
 	let space = original;
 	for (const edit of edits) space = edit(space);
-	let workbook: { part: string; bytes: Uint8Array } | undefined;
+	let workbook: { part: string; bytes: Uint8Array; written?: () => void } | undefined;
 	if (chartExDataChanged(original, space)) {
 		const relId = original.chartData.externalData?.relId;
 		if (relId) {
@@ -83,9 +86,14 @@ async function saveChartExPackage(
 				);
 				workbook = { part: target, bytes: updated.bytes ?? bytes };
 			} else {
-				const rebased = await appendChartExWorkbookData(bytes, original, space);
+				const place = await placeChartData(zip, target, part, sheets);
+				const rebased = await appendChartExWorkbookData(bytes, original, space, place.options);
 				space = rebased.space;
-				workbook = { part: target, bytes: rebased.bytes };
+				workbook = {
+					part: target,
+					bytes: rebased.bytes,
+					written: () => place.written(rebased.sheetName),
+				};
 			}
 		} else {
 			// A literal chart has no workbook to synchronize. References without a relationship are unsafe.
@@ -94,6 +102,9 @@ async function saveChartExPackage(
 		}
 	}
 	const result = writeChartExSpaceOverSource(xml, space);
-	if (workbook) zip.file(workbook.part, workbook.bytes);
+	if (workbook) {
+		zip.file(workbook.part, workbook.bytes);
+		workbook.written?.();
+	}
 	return result;
 }

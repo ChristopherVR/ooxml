@@ -123,6 +123,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				};
 				for (const [source, destination] of copies) {
 					this.chartPartRevisions.copy(source, destination);
+					// A copied workbook holds copies of the chart data sheets this session allocated.
+					const allocated = this.chartDataSheets.get(source);
+					if (allocated) this.chartDataSheets.set(destination, new Set(allocated));
 					const baseline = this.chartDataBaselines.get(source);
 					if (baseline) this.chartDataBaselines.set(destination, remapped(baseline));
 				}

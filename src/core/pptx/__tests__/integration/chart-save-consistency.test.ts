@@ -57,10 +57,11 @@ async function decks() {
 type Variant = Pick<SweepCase, 'copy' | 'budget' | 'gc'>;
 
 // CI: kept states replayed exactly, the JSON history at the default budget that lost its states
-// to collection, and a budget that keeps none, on a PowerPoint chart and a whole-column chart.
-const CI: Record<string, { chart: string; variants: Variant[] }> = {
+// to collection, and a budget that keeps none, on PowerPoint column and bubble charts and a
+// whole-column chart.
+const CI: Record<string, { charts: string[]; variants: Variant[] }> = {
 	'chart-data-fidelity': {
-		chart: 'ppt/charts/chart3.xml',
+		charts: ['ppt/charts/chart3.xml', 'ppt/charts/chart1.xml'],
 		variants: [
 			{ copy: 'clone', budget: undefined, gc: true },
 			{ copy: 'json', budget: undefined, gc: true },
@@ -68,7 +69,7 @@ const CI: Record<string, { chart: string; variants: Variant[] }> = {
 		],
 	},
 	'whole-column': {
-		chart: 'ppt/charts/whole.xml',
+		charts: ['ppt/charts/whole.xml'],
 		variants: [
 			{ copy: 'json', budget: 0, gc: true },
 			{ copy: 'clone', budget: undefined, gc: false },
@@ -88,7 +89,7 @@ async function cases(): Promise<SweepCase[]> {
 	const all: SweepCase[] = [];
 	for (const { deck, bytes, charts } of await decks()) {
 		const ci = CI[deck];
-		const chosen = FULL ? charts : charts.filter((chart) => chart === ci?.chart);
+		const chosen = FULL ? charts : charts.filter((chart) => ci?.charts.includes(chart));
 		for (const chartPartPath of chosen)
 			for (const variant of FULL ? everyVariant() : (ci?.variants ?? []))
 				all.push({ deck, bytes, chartPartPath, ...variant });
@@ -125,7 +126,7 @@ describe('chart save consistency', () => {
 			expect(saves).toBeGreaterThan(0);
 			expect(problems).toEqual([]);
 		},
-		FULL ? 3_600_000 : 120_000,
+		FULL ? 3_600_000 : 300_000,
 	);
 });
 

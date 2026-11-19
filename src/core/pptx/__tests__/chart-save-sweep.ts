@@ -11,7 +11,10 @@
  * - `reload`: a fresh load shows the data that was saved;
  * - `reachable`: while the state undo or redo returns to is still kept (`cloneSlide` history, the
  *   default budget), the part is the part saved when that state was current, up to the number of
- *   the new sheet a save that moves data allocates.
+ *   the new sheet a save that moves data allocates;
+ * - `bounded`: undoing to the loaded state and redoing the structural edits over and over
+ *   (`REPLAYS`) keeps the workbook's sheet count and the saved deck's size within a small constant
+ *   of the first replay's.
  *
  * An issue the deck already has as loaded is reported as `base`, not as the package's.
  */
@@ -32,7 +35,7 @@ import { cloneSlide } from '../core/utils/clone-utils';
 import { PptxHandler } from '../index';
 import type { ChartPptxElement, PptxChartData, PptxElement, PptxSlide } from '../index';
 
-export type IssueKind = 'range' | 'cache' | 'workbook' | 'reload' | 'reachable';
+export type IssueKind = 'range' | 'cache' | 'workbook' | 'reload' | 'reachable' | 'bounded';
 export interface Issue {
 	kind: IssueKind;
 	/** Where, in a form that stays the same between saves for the same defect. */
@@ -104,6 +107,39 @@ function agrees(numeric: boolean, cached: string | undefined, cell: unknown): bo
 
 const SOURCES = ['tx', 'cat', 'val', 'xVal', 'yVal', 'bubbleSize'] as const;
 
+/**
+ * Undo-to-loaded and redo round trips a case with a budget of 0, which keeps no saved state, saves
+ * for the `bounded` check; other cases save 10.
+ */
+export const REPLAYS = Number(process.env['CHART_SAVE_REPLAYS'] ?? 100);
+
+/** The embedded workbook of the chart part `part` of a package, by its path. */
+async function embeddedWorkbookOf(zip: JSZip, part: string) {
+	const root = parseXml(await zip.file(part)!.async('string')).documentElement;
+	const id = relAttr(first(root, 'externalData', NS.c), 'id');
+	if (!id) return undefined;
+	const relsPath = `${path.posix.dirname(part)}/_rels/${path.posix.basename(part)}.rels`;
+	const rels = parseXml((await zip.file(relsPath)?.async('string')) ?? '<r/>').documentElement;
+	const rel = [...rels.getElementsByTagNameNS(PACKAGE_RELS, 'Relationship')].find(
+		(item) => item.getAttribute('Id') === id,
+	);
+	if (!rel || rel.getAttribute('TargetMode') === 'External') return undefined;
+	return path.posix.normalize(
+		path.posix.join(path.posix.dirname(part), rel.getAttribute('Target') ?? ''),
+	);
+}
+
+/** How many sheets the embedded workbook of the chart part `part` has. */
+async function workbookSheetCount(bytes: Uint8Array, part: string): Promise<number> {
+	const zip = await JSZip.loadAsync(bytes);
+	const target = await embeddedWorkbookOf(zip, part);
+	const file = target ? zip.file(target) : null;
+	if (!file) return 0;
+	const book = await JSZip.loadAsync(await file.async('uint8array'));
+	const xml = (await book.file('xl/workbook.xml')?.async('string')) ?? '';
+	return xml.match(/<(?:\w+:)?sheet\s/gu)?.length ?? 0;
+}
+
 /** Range, cache and workbook problems of every classic chart with an embedded workbook. */
 export async function chartPackageIssues(bytes: Uint8Array): Promise<Issue[]> {
 	const zip = await JSZip.loadAsync(bytes);
@@ -115,17 +151,8 @@ export async function chartPackageIssues(bytes: Uint8Array): Promise<Issue[]> {
 	for (const part of parts) {
 		const root = parseXml(await zip.file(part)!.async('string')).documentElement;
 		if (root.localName !== 'chartSpace' || root.namespaceURI !== NS.c) continue;
-		const id = relAttr(first(root, 'externalData', NS.c), 'id');
-		if (!id) continue;
-		const relsPath = `${path.posix.dirname(part)}/_rels/${path.posix.basename(part)}.rels`;
-		const rels = parseXml((await zip.file(relsPath)?.async('string')) ?? '<r/>').documentElement;
-		const rel = [...rels.getElementsByTagNameNS(PACKAGE_RELS, 'Relationship')].find(
-			(item) => item.getAttribute('Id') === id,
-		);
-		if (!rel || rel.getAttribute('TargetMode') === 'External') continue;
-		const target = path.posix.normalize(
-			path.posix.join(path.posix.dirname(part), rel.getAttribute('Target') ?? ''),
-		);
+		const target = await embeddedWorkbookOf(zip, part);
+		if (!target) continue;
 		const file = zip.file(target);
 		if (!file) {
 			issues.push({ kind: 'workbook', key: `${part}|missing`, detail: `${target} missing` });
@@ -363,6 +390,27 @@ export async function runSweepCase(c: SweepCase): Promise<SaveResult[]> {
 		edit(undone, [{ kind: 'remove-category', category: 0 }]);
 		await save(undone, 'undo-s0-then-rm0');
 		await save(undone, 'again');
+		// Undo to the loaded state and redo to X3, over and over: the package must not grow.
+		let first: { sheets: number; size: number } | undefined;
+		for (let i = 1; i <= (c.budget === 0 ? REPLAYS : Math.min(REPLAYS, 10)); i++) {
+			if (c.gc && i % 10 === 1) collectGarbage();
+			await handler.save(restore(s0));
+			const bytes = new Uint8Array(await handler.save(restore(s3)));
+			const now = { sheets: await workbookSheetCount(bytes, c.chartPartPath), size: bytes.length };
+			first ??= now;
+			if (now.sheets > first.sheets + 1 || now.size > first.size + 4096) {
+				const detail = `replay ${i}: ${now.sheets} sheets, ${now.size} bytes; first ${first.sheets} sheets, ${first.size} bytes`;
+				results.push({
+					label: `replay-${i}`,
+					issues: [{ kind: 'bounded', key: 'bounded', detail }],
+					base: [],
+					bytes,
+				});
+				break;
+			}
+		}
+		await save(restore(s0), 'replayed-s0', 'X0');
+		await save(restore(s3), 'replayed-s3', 'X3');
 	} finally {
 		handler.dispose();
 	}

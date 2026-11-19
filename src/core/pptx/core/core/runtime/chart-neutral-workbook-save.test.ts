@@ -35,6 +35,7 @@ describe('PowerPoint structural workbook save', () => {
 			chart,
 			{ xml: writeChartSpace(model), workbookModel: model },
 			() => 'ppt/embeddings/chart.xlsx',
+			{ allocated: new Map(), held: () => new Set() },
 		);
 		const saved = await zip.file('ppt/embeddings/chart.xlsx')!.async('uint8array');
 		const outputZip = await JSZip.loadAsync(saved);
@@ -63,6 +64,7 @@ describe('PowerPoint structural workbook save', () => {
 				chart,
 				{ xml: writeChartSpace(model), workbookModel: model },
 				() => 'remote.xlsx',
+				{ allocated: new Map(), held: () => new Set() },
 			),
 		).rejects.toThrow('embedded');
 		expect(Object.keys(zip.files)).toEqual(['keep']);

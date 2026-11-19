@@ -12,6 +12,7 @@
 // (`source` returns `null`).
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 import type { PptxChartData, PptxChartSavedRevision } from '../../types';
+import { chartPartSheets } from '../../utils/chart-workbook-sheets';
 
 /** Compressed bytes of earlier saved states a handler keeps for undo before releasing the oldest. */
 export const CHART_PART_REVISION_BUDGET = 32 * 1024 * 1024;
@@ -20,6 +21,8 @@ class ChartPartRevision implements PptxChartSavedRevision {
 	readonly id: number;
 	readonly #paths: Set<string>;
 	#part: Uint8Array | undefined;
+	/** The workbook sheets the kept part reads, lower case. */
+	#sheets: readonly string[] = [];
 
 	constructor(id: number, path: string) {
 		this.id = id;
@@ -45,7 +48,12 @@ class ChartPartRevision implements PptxChartSavedRevision {
 	keep(xml: string): boolean {
 		if (this.#part) return false;
 		this.#part = deflateSync(strToU8(xml), { level: 1 });
+		this.#sheets = [...chartPartSheets(xml)];
 		return true;
+	}
+
+	get sheets(): readonly string[] {
+		return this.#sheets;
 	}
 
 	xml(): string | undefined {
@@ -54,6 +62,7 @@ class ChartPartRevision implements PptxChartSavedRevision {
 
 	release(): void {
 		this.#part = undefined;
+		this.#sheets = [];
 	}
 }
 
@@ -121,6 +130,13 @@ export class ChartPartRevisions {
 		this.#latest.clear();
 		this.#saved.clear();
 		this.#states.clear();
+	}
+
+	/** The workbook sheets the kept states of the part at `path` read, lower case. */
+	sheetsHeld(path: string): Set<string> {
+		return new Set(
+			this.#held().flatMap((revision) => (revision.belongsTo(path) ? revision.sheets : [])),
+		);
 	}
 
 	/** Compressed bytes the kept states hold. */
