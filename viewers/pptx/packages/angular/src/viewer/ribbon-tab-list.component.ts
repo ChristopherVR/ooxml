@@ -66,30 +66,12 @@ import { ViewerOptionsService } from './viewer-options.service';
 						<span>{{ 'pptx.titleBar.record' | translate }}</span>
 					</button>
 				}
-				<!-- The live region announces a connected session, or why one failed to
-				     start (Angular has no separate status pill on this row). -->
-				<div
-					role="status"
-					data-testid="collaboration-status"
-					class="flex items-center"
-					[attr.aria-label]="
-						collabConnected()
-							? ('pptx.collaboration.statusAriaLabel'
-								| translate: { status: 'pptx.collaboration.status.connected' | translate })
-							: collabFailureKey()
-								? ('pptx.collaboration.statusAriaLabel'
-									| translate: { status: 'pptx.collaboration.status.error' | translate })
-								: null
-					"
-					[attr.title]="collabFailureKey() ? (collabFailureKey() | translate) : null"
-				>
-					<pptx-ui-ribbon-actions
-						data-pptx-chrome="tab-row-actions"
-						[state]="actionsState()"
-						(comments-toggle)="toggleComments.emit()"
-						(share-request)="share.emit()"
-					></pptx-ui-ribbon-actions>
-				</div>
+				<pptx-ui-ribbon-actions
+					data-pptx-chrome="tab-row-actions"
+					[state]="actionsState()"
+					(comments-toggle)="toggleComments.emit()"
+					(share-request)="share.emit()"
+				></pptx-ui-ribbon-actions>
 
 				<button
 					type="button"
@@ -118,8 +100,6 @@ export class RibbonTabListComponent {
 	readonly activeTab = input.required<RibbonTab>();
 	readonly canEdit = input<boolean>(false);
 	readonly collabConnected = input<boolean>(false);
-	/** Why the session failed to start (a translation key), announced and shown as a tooltip. */
-	readonly collabFailureKey = input<string | null>(null);
 	readonly connectedCount = input<number>(0);
 	/** Comments pane state and the current slide's comment count (Comments' badge). */
 	readonly commentsOpen = input<boolean>(false);

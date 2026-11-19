@@ -1,8 +1,8 @@
 /**
  * A peer-to-peer session that cannot start says why: the real
  * `CollaborationService` runs the shared session controller against a webrtc
- * config that lacks its invitation secret, and the Share dialog and the ribbon's
- * collaboration status region show the translated reason instead of nothing.
+ * config that lacks its invitation secret, and the Share dialog and the status bar's
+ * collaboration pill show the translated reason instead of nothing.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -21,8 +21,8 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
 import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
+import { CollaborationStatusIndicatorComponent } from './collaboration-status-indicator.component';
 import { CollaborationService } from './collaboration.service';
-import { RibbonTabListComponent } from './ribbon-tab-list.component';
 import { ShareDialogComponent } from './share-dialog.component';
 
 const MISSING_SECRET = translationsEn['pptx.collaboration.failure.missingSecret'];
@@ -106,12 +106,13 @@ describe('collaboration start failure (Angular)', () => {
 		const banner = dialog.querySelector('[data-testid="collaboration-failure"]');
 		expect(banner?.textContent?.trim()).toBe(MISSING_SECRET);
 
-		const ribbon = render(RibbonTabListComponent, {
-			activeTab: 'home',
-			collabFailureKey: collab.failureKey(),
+		const pill = render(CollaborationStatusIndicatorComponent, {
+			status: collab.status(),
+			failure: collab.failure(),
 		});
-		const status = ribbon.querySelector('[data-testid="collaboration-status"]');
+		const status = pill.querySelector('[data-testid="collaboration-status"]');
 		expect(status?.getAttribute('title')).toBe(MISSING_SECRET);
+		expect(status?.textContent).toContain(translationsEn['pptx.collaboration.status.error']);
 		expect(status?.getAttribute('aria-label')).toContain(
 			translationsEn['pptx.collaboration.status.error'],
 		);

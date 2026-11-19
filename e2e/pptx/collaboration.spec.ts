@@ -574,6 +574,18 @@ test.describe('collaboration sync', () => {
 		}
 	});
 
+	test('a peer-to-peer link without its key says why on the page', async ({ page }, testInfo) => {
+		await page.goto(`/?room=keyless-${testInfo.project.name}-${Date.now()}&transport=webrtc`);
+		const status = page.getByTestId('collaboration-status');
+		await expect(status).toBeVisible({ timeout: 20_000 });
+		await expect(status).toContainText('Connection error');
+		await expect(status).toHaveAttribute(
+			'title',
+			'This peer-to-peer invitation is missing its session key. Open the full share link you were sent.',
+		);
+		await expect(status.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+	});
+
 	test('a host drag is observed by the peer', async ({ page }, testInfo) => {
 		const peer = await page.context().newPage();
 		const roomId = `e2e-edit-${testInfo.project.name}-${Date.now()}`;

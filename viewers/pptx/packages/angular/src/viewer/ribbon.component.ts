@@ -123,7 +123,6 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 					(selectAddIn)="selectAddIn($event)"
 					[canEdit]="canEdit()"
 					[collabConnected]="collabConnected()"
-					[collabFailureKey]="collabFailureKey()"
 					[connectedCount]="connectedCount()"
 					[commentsOpen]="commentsOpen()"
 					[commentCount]="commentCount()"
@@ -301,8 +300,6 @@ export class RibbonComponent {
 	readonly findOpen = input<boolean>(false);
 	/** Whether a collaboration session is connected (Share button styling). */
 	readonly collabConnected = input<boolean>(false);
-	/** The translation key naming why the session failed to start; null when none. */
-	readonly collabFailureKey = input<string | null>(null);
 	/** Connected collaborator count (Share button label). */
 	readonly connectedCount = input<number>(0);
 	/** Current live proofing state shown by the Review ribbon command. */

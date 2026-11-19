@@ -143,6 +143,7 @@ import { AutosaveService } from './autosave.service';
 import { BroadcastDialogComponent } from './broadcast-dialog.component';
 import { ChartFormatPaneHostComponent } from './chart-format-pane-host.component';
 import { CollaborationCursorsComponent } from './collaboration-cursors.component';
+import { CollaborationStatusIndicatorComponent } from './collaboration-status-indicator.component';
 import { CollaborationService } from './collaboration.service';
 import { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
 import { CommentsPanelStateService } from './comments-panel-state.service';
@@ -303,6 +304,7 @@ const noopClose = (): void => undefined;
 		FindReplaceBarComponent,
 		SlidesPanelComponent,
 		StatusBarComponent,
+		CollaborationStatusIndicatorComponent,
 		EditorToolbarComponent,
 		EditorContextMenuComponent,
 		SlideCanvasContextMenuComponent,
@@ -469,7 +471,6 @@ const noopClose = (): void => undefined;
 						[commentCount]="activeComments().length"
 						[findOpen]="findReplace.isOpen()"
 						[collabConnected]="collab.connected()"
-						[collabFailureKey]="collab.failureKey()"
 						[connectedCount]="collab.connectedCount()"
 						[spellCheckEnabled]="spellCheck()"
 						[showSubtitles]="presentationMode.subtitlesVisible()"
@@ -951,7 +952,22 @@ const noopClose = (): void => undefined;
 						(zoomIn)="zoomSvc.zoomIn()"
 						(zoomOut)="zoomSvc.zoomOut()"
 						(zoomReset)="zoomSvc.zoomReset()"
-					/>
+					>
+						<!-- Collaboration status in the footer, as the other bindings show it. A
+						     session that could not start still says why. -->
+						@if (
+							(collab.active() || collab.failure()) && customizationService.dialogAvailable('share')
+						) {
+							<pptx-collaboration-status
+								pptxCollabStatus
+								slot="collaboration"
+								[status]="collab.status()"
+								[connectedCount]="collab.connectedCount()"
+								[failure]="collab.failure()"
+								(retry)="collab.retry()"
+							/>
+						}
+					</pptx-status-bar>
 				}
 			}
 
