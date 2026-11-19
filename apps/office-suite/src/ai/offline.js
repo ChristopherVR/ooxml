@@ -136,7 +136,14 @@ function summary(file) {
 const titleCase = (text) =>
 	text.replace(/\p{L}[\p{L}'’]*/gu, (word) => word[0].toUpperCase() + word.slice(1).toLowerCase());
 
-/** Title-cases the text runs of attached Word documents and decks: a real, reviewable edit. */
+/** The shapes of a Visio page with their grouped shapes, depth first. */
+const allShapes = (shapes) =>
+	(shapes ?? []).flatMap((shape) => [shape, ...allShapes(shape.children)]);
+
+/**
+ * Title-cases the text of attached files: the runs of Word documents and decks, the text cells of
+ * workbooks (formulas are left alone) and the shape text of drawings. A real, reviewable edit.
+ */
 function titleCaseEdits(files) {
 	const changes = [];
 	for (const file of files) {
@@ -166,6 +173,31 @@ function titleCaseEdits(files) {
 								text: titleCase(run.text),
 							});
 					});
+		if (file.kind === 'xlsx')
+			for (const sheet of file.content?.sheets ?? []) {
+				const cells = sheet.cells
+					.filter(
+						(c) =>
+							c.formula === undefined &&
+							typeof c.value === 'string' &&
+							c.value.trim() &&
+							titleCase(c.value) !== c.value,
+					)
+					.map((c) => ({ address: c.address, input: titleCase(c.value) }));
+				if (cells.length)
+					changes.push({ documentId: file.id, type: 'cells', sheetIndex: sheet.index, cells });
+			}
+		if (file.kind === 'vsdx')
+			for (const page of file.content?.pages ?? [])
+				for (const shape of allShapes(page.shapes))
+					if (shape.text.trim() && titleCase(shape.text) !== shape.text)
+						changes.push({
+							documentId: file.id,
+							type: 'shape_text',
+							pageId: page.id,
+							shapeId: shape.id,
+							text: titleCase(shape.text),
+						});
 	}
 	return changes.slice(0, 30);
 }
@@ -177,8 +209,8 @@ function reply(prompt, context, canCreate, canEdit) {
 		return [
 			note,
 			changes.length
-				? `I can title-case ${changes.length} text run${changes.length === 1 ? '' : 's'}. Review each change below and untick any you want to keep as they are.`
-				: 'Attach a Word document or a deck with text that is not already in title case, and I will propose the edits.',
+				? `I can title-case the text in ${changes.length} place${changes.length === 1 ? '' : 's'}. Review each change below and untick any you want to keep as they are.`
+				: 'Attach a document, workbook, deck or drawing with text that is not already in title case, and I will propose the edits.',
 			...(changes.length
 				? ['```' + ACTIONS_FENCE + '\n' + JSON.stringify({ changes, create: [] }) + '\n```']
 				: []),

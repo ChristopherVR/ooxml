@@ -1,0 +1,4 @@
+# actionlint configuration (run by .github/workflows/workflow-lint.yml).
+self-hosted-runner:
+  # The Office acceptance runner (docs/office-acceptance.md).
+  labels: [office]
