@@ -3,6 +3,7 @@ export * from './relationships';
 export * from './part-names';
 export * from './content-types';
 export * from './package';
+export * from './part-name';
 export * from './merge-snapshots';
 export * from './diff-packages';
 export * from './clone-part-graph';

@@ -19,9 +19,9 @@ function style(overrides: ShapeStyle = {}): ShapeStyle {
 
 describe('svgGradientId', () => {
 	it('sanitises an element id into a usable fragment', () => {
-		// Raw element ids carry `/` and `.`, which cannot appear in `url(#…)`.
+		// Raw element ids carry `/`, which is encoded for `url(#…)`.
 		expect(svgGradientId('ppt/slides/slide2.xml-shape-4')).toBe(
-			'pptx-grad-ppt_slides_slide2_xml-shape-4',
+			'pptx-grad-ppt_2f_slides_2f_slide2.xml-shape-4',
 		);
 	});
 });
@@ -133,7 +133,7 @@ describe('buildSvgGradientDef', () => {
 describe('svgGradientFillRef / svgGradientMarkup', () => {
 	it('references the definition by id', () => {
 		const def = buildSvgGradientDef(style(), 'ppt/slides/slide3.xml-shape-1');
-		expect(svgGradientFillRef(def!)).toBe('url(#pptx-grad-ppt_slides_slide3_xml-shape-1)');
+		expect(svgGradientFillRef(def!)).toBe('url(#pptx-grad-ppt_2f_slides_2f_slide3.xml-shape-1)');
 	});
 
 	it('serialises a linear definition to markup', () => {

@@ -6,6 +6,7 @@ import {
 	resolveFontItalic,
 	resolveWarpRunPaint,
 	resolveFontWeight,
+	svgIdToken,
 	warpParagraphLayouts,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxElementWithText, TextSegment, TextStyle } from 'pptx-viewer-core';
@@ -261,7 +262,7 @@ export function WarpedText({
 		return null;
 	}
 
-	const pathIdPrefix = `warp-${element.id}`;
+	const pathIdPrefix = `warp-${svgIdToken(element.id)}`;
 
 	// Warp adjustment values
 	const warpAdj = textEl.textStyle?.textWarpAdj;
@@ -319,7 +320,7 @@ export function WarpedText({
 							glyphs={glyphs}
 							element={textEl}
 							fallbackColor={fallbackColor}
-							lineIdPrefix={`warp-${element.id}-l${paraIdx}`}
+							lineIdPrefix={`${pathIdPrefix}-l${paraIdx}`}
 						/>
 					);
 				})}

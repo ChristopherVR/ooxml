@@ -64,7 +64,7 @@ describe('buildStrokeOutline', () => {
 		const outline = buildStrokeOutline(shape(gradientStroke));
 		expect(outline).toBeDefined();
 		expect(outline!.paint!.kind).toBe('linear');
-		expect(outline!.paint!.id).toBe('pptx-stroke-ppt_slides_slide4_xml-shape-3');
+		expect(outline!.paint!.id).toBe('pptx-stroke-ppt_2f_slides_2f_slide4.xml-shape-3');
 		expect(outline!.strokeWidth).toBe(3);
 		expect(outline!.d).toContain('M ');
 	});

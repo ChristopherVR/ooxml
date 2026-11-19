@@ -1,5 +1,6 @@
 import {
 	deviceStrokeStageStyle,
+	elementIdSelector,
 	isGroupMember,
 	motionPathFor,
 	parentSelection,
@@ -48,11 +49,6 @@ import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 const EMPTY_ADJUSTMENT_HANDLES: ShapeAdjustmentHandleDescriptor[] = [];
 
 export type { SlideCanvasProps } from './canvas/canvas-types';
-
-/** An id inside a quoted CSS attribute selector. */
-function cssAttr(id: string): string {
-	return id.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-}
 
 export function SlideCanvas(props: SlideCanvasProps) {
 	const latest = useRef(props);
@@ -526,7 +522,7 @@ function SlideCanvasContent({
 
 					{editingMember && (
 						<>
-							<style>{`[data-element-id="${cssAttr(editingMember.parentId)}"] [data-element-id="${cssAttr(editingMember.member.id)}"]{visibility:hidden}`}</style>
+							<style>{`${elementIdSelector(editingMember.parentId)} ${elementIdSelector(editingMember.member.id)}{visibility:hidden}`}</style>
 							<ElementRenderer
 								key={`group-member-edit-${editingMember.member.id}`}
 								element={editingMember.member}

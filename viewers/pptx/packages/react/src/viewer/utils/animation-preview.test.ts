@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import type { PptxAnimationPreset, PptxAnimationTimingCurve } from 'pptx-viewer-core';
 import { describe, it, expect } from 'vitest';
 
@@ -5,7 +6,27 @@ import {
 	timingCurveToCss,
 	buildPreviewAnimation,
 	parseOoxmlBezierCurve,
+	startPreviewAnimation,
+	stopPreviewAnimation,
 } from './animation-preview';
+
+describe('stopPreviewAnimation', () => {
+	it('restores an element whose id is special in a selector', () => {
+		const element = document.createElement('div');
+		element.dataset.elementId = 'a"]b\\c';
+		element.style.visibility = 'visible';
+		document.body.append(element);
+		try {
+			startPreviewAnimation(element.dataset.elementId, 'fadeIn');
+			expect(element.style.animation).not.toBe('');
+			expect(() => stopPreviewAnimation()).not.toThrow();
+			expect(element.style.animation).toBe('');
+			expect(element.style.visibility).toBe('visible');
+		} finally {
+			element.remove();
+		}
+	});
+});
 
 describe('timingCurveToCss', () => {
 	it('should return "linear" for undefined curve (the writer saves accel=0 decel=0)', () => {

@@ -1421,6 +1421,7 @@ export * from './element-aria-attributes';
 export * from './element-non-visual-description';
 // `[data-element-id="..."]` selector escaping with a safe non-`CSS.escape` fallback.
 export * from './css-escape';
+export * from './svg-id';
 export * from './svg-id-scope';
 export * from './silhouette-morph-refresh';
 // Pointer-to-element hit-test: a click on a grouped child selects the GROUP

@@ -7,6 +7,7 @@ import {
 	getLineGlowFilterCss,
 	getLineShadowParams,
 	markerPath,
+	svgIdToken,
 	svgLineCap,
 } from 'ooxml-ui/pptx';
 import type { ElementAnimationState } from 'ooxml-ui/pptx';
@@ -188,7 +189,7 @@ function normalizeArrow(a: ConnectorArrowType | undefined): ConnectorArrowType |
 }
 
 /** Distinct, DOM-id-safe marker ids per element + side. */
-const markerSeed = computed(() => props.element.id.replace(/[^a-zA-Z0-9_-]/gu, '_'));
+const markerSeed = computed(() => svgIdToken(props.element.id));
 const startMarkerId = computed(() => `${markerSeed.value}-start`);
 const endMarkerId = computed(() => `${markerSeed.value}-end`);
 

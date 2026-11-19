@@ -1,4 +1,8 @@
-import { hexToRgbUnit } from 'ooxml-ui/pptx';
+import {
+	getDuotoneFilterId as getDagDuotoneFilterId,
+	getImageDuotoneFilterId as getDuotoneFilterId,
+	hexToRgbUnit,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { hasShapeProperties, isImageLikeElement } from 'pptx-viewer-core';
 import React from 'react';
@@ -7,10 +11,7 @@ import { normalizeHexColor, colorWithOpacity } from './color';
 
 // ── Duotone SVG filter helpers ──────────────────────────────────────────
 
-/** Generate a stable filter ID for a duotone effect on an element. */
-export function getDuotoneFilterId(elementId: string): string {
-	return `duotone-${elementId}`;
-}
+export { getDagDuotoneFilterId, getDuotoneFilterId };
 
 /**
  * Render an inline SVG `<filter>` element implementing a duotone colour mapping.
@@ -149,11 +150,6 @@ export function mapDagBlendModeToCss(
 		default:
 			return undefined;
 	}
-}
-
-/** Generate a stable filter ID for a DAG duotone effect on an element. */
-export function getDagDuotoneFilterId(elementId: string): string {
-	return `dag-duotone-${elementId}`;
 }
 
 /** Check if an element has a DAG-based duotone effect that needs an SVG filter. */

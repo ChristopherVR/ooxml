@@ -1,4 +1,5 @@
 import type { CropElementUpdate, NaturalImageSize } from 'ooxml-ui/pptx';
+import { elementIdSelector } from 'ooxml-ui/pptx';
 /**
  * The Merge Shapes + picture Crop controller, handed to the ribbon's Arrange
  * group and to the canvas overlays through provide/inject.
@@ -55,11 +56,7 @@ export function readNaturalImageSize(elementId: string): NaturalImageSize | unde
 	if (typeof document === 'undefined') {
 		return undefined;
 	}
-	const safeId =
-		typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
-			? CSS.escape(elementId)
-			: elementId.replace(/["\\]/g, '\\$&');
-	const img = document.querySelector<HTMLImageElement>(`[data-element-id="${safeId}"] img`);
+	const img = document.querySelector<HTMLImageElement>(`${elementIdSelector(elementId)} img`);
 	if (!img || !img.naturalWidth || !img.naturalHeight) {
 		return undefined;
 	}

@@ -14,12 +14,8 @@
 
 	const { scope }: { scope: string } = $props();
 	const custom = useViewerCustomization();
-	// Split so neither the markup nor the script parser sees a literal closing
-	// style tag.
-	const CLOSE = ['<', '/style>'].join('');
-	const markup = $derived(
-		`<style data-pptx-ribbon-customization="">${ribbonCustomizationCss(custom.resolved, scope)}${CLOSE}`,
-	);
 </script>
 
-{@html markup}
+<svelte:element this={'style'} data-pptx-ribbon-customization=""
+	>{ribbonCustomizationCss(custom.resolved, scope)}</svelte:element
+>

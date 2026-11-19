@@ -110,4 +110,16 @@ describe('silhouette shape hit area', () => {
 		expect(hit?.textCss).toContain('pointer-events:auto');
 		expect(buildHollowHitOutline(triangle)?.textCss).toBeUndefined();
 	});
+
+	it('keeps a hostile element id from ending the style element or the selector', () => {
+		const hostile = {
+			...triangle,
+			id: 'x"]{}</style><i data-injected="1">\\',
+			text: 'hello',
+		} as unknown as PptxElement;
+		const css = buildHollowHitOutline(hostile)?.textCss ?? '';
+		expect(css).toContain('pointer-events:auto');
+		expect(css).not.toContain('<');
+		expect(css).not.toContain('x"]');
+	});
 });

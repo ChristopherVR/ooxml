@@ -144,4 +144,15 @@ describe('shape-following shadow (react)', () => {
 		const html = renderToStaticMarkup(<ShapeEffectOverlay element={triangle()} />);
 		expect(html).toContain('data-pptx-silhouette-fill');
 	});
+
+	it('keeps a hostile element id inside the text of its style element', () => {
+		const element = {
+			...triangle(),
+			id: 'x"]{}</style><i data-injected="1">',
+			text: 'hello',
+		} as unknown as PptxElement;
+		const html = renderToStaticMarkup(<ShapeEffectOverlay element={element} />);
+		expect(html).toContain('pointer-events:auto');
+		expect(html).not.toContain('<i data-injected');
+	});
 });
