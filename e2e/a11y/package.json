@@ -1,0 +1,20 @@
+{
+	"name": "a11y-e2e",
+	"version": "0.0.0",
+	"private": true,
+	"description": "The accessibility gates: keyboard contract, axe, accessibility tree, token contrast, reflow and export round trip, run in a real browser against the built suite and the PowerPoint demos (bun run test from this folder).",
+	"type": "module",
+	"scripts": {
+		"test": "playwright test",
+		"typecheck": "tsc -p tsconfig.json",
+		"test:unit": "node --test check-baseline.test.mjs",
+		"check:baseline": "node check-baseline.mjs"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.65.1",
+		"@types/node": "^26.6.6",
+		"axe-core": "^4.14.1",
+		"jszip": "^3.10.2",
+		"typescript": "^7.0.2"
+	}
+}
