@@ -2,6 +2,7 @@ import { replaceEmbeddedPackage } from 'ooxml-core/opc';
 import { mountEditor } from './editors.js';
 import { cloudReadOnly } from './cloud-files.js';
 import { lockInput } from './session-lock.js';
+import { focusPlace, returnFocus } from './focus-place.js';
 import { displayLanguage, onSettings } from './settings.js';
 
 /** One live editor per document id. Save operations are serialized per session. */
@@ -198,9 +199,14 @@ export class SuiteSessions {
 						doc.bytes.some((value, i) => value !== doc.cloud.baseline[i]),
 				},
 			};
+		// The user stays on the same cells, caret, slide or page, and keeps keyboard focus.
+		const place = focusPlace(s.node);
+		const back = s.editor.keep?.();
 		s.loading = true;
 		try {
 			await s.editor.load(doc.bytes);
+			back?.(Boolean(place));
+			if (place && !returnFocus(s.node, place)) s.editor.focus?.();
 			s.doc = doc;
 			s.version = 0;
 			s.saved = 0;
