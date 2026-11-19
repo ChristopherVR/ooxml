@@ -92,7 +92,9 @@ core only decides and emits; showing a toast, a browser `Notification` or a soun
 
 `createSharedChat({ roomId, user, config })` joins one assistant conversation that lives in its own
 room (`sharedChatRoomId()` makes an unguessable `aichat-<32 hex>` id), over the same sync transport
-the workspace uses (`createSyncTransport`). `store.put` adds or replaces a message by id (unchanged
+the workspace uses (`createSyncTransport`). An optional `token`, an async function, is called
+before every connection attempt in place of `config.token`, for hosts that issue short-lived
+credentials. `store.put` adds or replaces a message by id (unchanged
 rows are not written again), `store.truncateFrom` removes a message and everything after it, and
 `store.messages()` re-validates every row: role, length caps, author name and a JSON-only `data`
 field the host keeps its own fields in. Presence carries what each person is doing (`idle`,
