@@ -38,6 +38,7 @@
 	import SignatureStrippedDialog from './components/SignatureStrippedDialog.svelte';
 	import VersionHistoryPanel from './components/VersionHistoryPanel.svelte';
 	import ViewerChrome from './components/ViewerChrome.svelte';
+	import ExternalContentBar from './components/ExternalContentBar.svelte';
 	import ViewerMain from './components/ViewerMain.svelte';
 	import ViewerGlobalStyles from './components/ViewerGlobalStyles.svelte';
 	import ViewerParityOverlays from './components/ViewerParityOverlays.svelte';
@@ -471,6 +472,11 @@
 			{aiEnabled}
 			onpresenter={vm.enterPresenterView}
 		/>
+	{/if}
+	<!-- PowerPoint's security bar sits under the ribbon, and shows even without the toolbar so
+	     blocked linked content can still be enabled. -->
+	{#if vm.chromeVisible && vm.externalContent.barVisible}
+		<ExternalContentBar onenable={vm.externalContent.enable} onclose={vm.externalContent.close} />
 	{/if}
 	<ExportProgressModal
 		open={exportUi.open}

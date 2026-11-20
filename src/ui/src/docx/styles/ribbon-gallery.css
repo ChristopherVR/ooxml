@@ -25,6 +25,9 @@
 	border: 1px solid transparent;
 	scroll-snap-align: start;
 }
+.style-sample::before {
+	content: attr(data-sample);
+}
 .style-sample {
 	max-width: 100%;
 	overflow: hidden;

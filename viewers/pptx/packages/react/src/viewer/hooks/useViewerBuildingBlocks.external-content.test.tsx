@@ -70,7 +70,8 @@ describe('useViewerBuildingBlocks allowExternalContent', () => {
 		await render(true);
 		expect(trustState()).toStrictEqual({ locked: true, value: true });
 		await render(undefined);
-		expect(trustState()).toStrictEqual({ locked: false, value: true });
+		// Unlocked, the option returns to its default: off, as in PowerPoint.
+		expect(trustState()).toStrictEqual({ locked: false, value: false });
 	});
 
 	it('leaves the options store alone while unset', async () => {
@@ -78,6 +79,6 @@ describe('useViewerBuildingBlocks allowExternalContent', () => {
 		const setConstraints = vi.spyOn(captured.store!, 'setConstraints');
 		await render(undefined);
 		expect(setConstraints).not.toHaveBeenCalled();
-		expect(trustState()).toStrictEqual({ locked: false, value: true });
+		expect(trustState()).toStrictEqual({ locked: false, value: false });
 	});
 });

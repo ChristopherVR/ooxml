@@ -75,7 +75,7 @@ describe('statusBar adapter', () => {
 	it('renders the counter, zoom percent and save state', () => {
 		const { root, button } = open({ current: 2, zoomPercent: 125, isDirty: true });
 		expect(root.querySelector('[data-item="counter"]')!.textContent).toBe('Slide 3 of 7');
-		expect(button('Zoom to fit').textContent).toBe('125%');
+		expect(button('125%, Zoom to fit').textContent).toBe('125%');
 		expect(root.querySelector('[data-item="save"]')!.textContent).toBe('Unsaved changes');
 	});
 
@@ -96,7 +96,7 @@ describe('statusBar adapter', () => {
 			'Slide sorter',
 			'Slide show',
 			'Zoom out',
-			'Zoom to fit',
+			'100%, Zoom to fit',
 			'Zoom in',
 		]) {
 			button(name).click();

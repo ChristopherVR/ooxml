@@ -22,6 +22,11 @@ export class BuildingBlocksViewer extends PptxViewer {
 		this.onHostDialog = onHostDialog;
 	}
 
+	/** The host shell renders the security bar (`mountExternalContentBar`), not the canvas. */
+	protected override showsExternalContentBar(): boolean {
+		return false;
+	}
+
 	protected override requestHostDialog(request: HostDialogRequest): boolean {
 		return this.onHostDialog?.(request) ?? false;
 	}
@@ -42,6 +47,7 @@ export class BuildingBlocksViewer extends PptxViewer {
 		},
 		setAllowExternalContent: (allow) => {
 			this.customization.controller.setAllowExternalContent(allow);
+			this.setHostAllowExternalContent(allow);
 		},
 	};
 

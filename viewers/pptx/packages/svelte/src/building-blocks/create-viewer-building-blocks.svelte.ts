@@ -193,6 +193,9 @@ export function createViewerBuildingBlocks(
 		get state() {
 			return getState();
 		},
+		get externalContent() {
+			return viewerState.externalContent;
+		},
 		get toolbar() {
 			const state = getState();
 			return describeBuildingBlockToolbar({

@@ -10,6 +10,7 @@ import type { ComponentFixture } from '@angular/core/testing';
 import { TestBed } from '@angular/core/testing';
 import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-browser/testing';
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
+import JSZip from 'jszip';
 import { FIND_MATCH_ATTRIBUTE } from 'ooxml-ui/pptx';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -20,12 +21,12 @@ import {
 	buildingBlocksContractDeck,
 	runBuildingBlocksContract,
 } from '../../../shared/test-utils/building-blocks-contract.mjs';
-import type {
-	BuildingBlocksContractHarness,
-	BuildingBlocksContractOptions,
-} from '../../../shared/test-utils/building-blocks-contract.mjs';
+import type { BuildingBlocksContractOptions } from '../../../shared/test-utils/building-blocks-contract.mjs';
+import { runExternalContentContract } from '../../../shared/test-utils/external-content-contract.mjs';
+import type { ExternalContentContractHarness } from '../../../shared/test-utils/external-content-contract.mjs';
 import * as publicApi from '../public-api';
 import { resolveViewerComponentResources } from '../viewer/component-resources.test-support';
+import { ExternalContentBarComponent } from '../viewer/external-content-bar.component';
 import { declareSignalFields } from '../viewer/signal-inputs.test-support';
 import { ViewerOptionsService } from '../viewer/viewer-options.service';
 import { BuildingBlocksCanvasComponent } from './canvas.component';
@@ -45,8 +46,15 @@ import {
 		BuildingBlocksToolbarComponent,
 		BuildingBlocksSlidesPaneComponent,
 		BuildingBlocksCanvasComponent,
+		ExternalContentBarComponent,
 	],
 	template: `
+		@if (blocks.externalContent().barVisible) {
+			<pptx-external-content-bar
+				(enable)="blocks.externalContent().enable()"
+				(closeBar)="blocks.externalContent().close()"
+			/>
+		}
 		<pptx-building-blocks-toolbar [blocks]="blocks" />
 		<pptx-slides-pane [blocks]="blocks" style="display: block; width: 200px" />
 		<pptx-building-blocks-canvas
@@ -99,7 +107,7 @@ const settle = async () => {
 	fixture?.detectChanges();
 };
 
-function angularHarness(): BuildingBlocksContractHarness {
+function angularHarness(): ExternalContentContractHarness {
 	let host: HTMLElement | undefined;
 	return {
 		name: 'angular',
@@ -115,6 +123,8 @@ function angularHarness(): BuildingBlocksContractHarness {
 		},
 		actions: () => fixture!.componentInstance.blocks.actions(),
 		state: () => fixture!.componentInstance.blocks.state(),
+		externalContent: () => fixture!.componentInstance.blocks.externalContent(),
+		slides: () => fixture!.componentInstance.blocks.shell.editor.slides(),
 		async clickPictures() {
 			host!.querySelector<HTMLButtonElement>('[data-control="insertImage"]')!.click();
 			await settle();
@@ -145,7 +155,17 @@ describe('angular building blocks', () => {
 		});
 	}, 60000);
 
+	it('passes the shared security bar contract', async () => {
+		await runExternalContentContract({
+			harness: angularHarness(),
+			expect,
+			Handler: PptxHandler,
+			JSZip,
+		});
+	}, 60000);
+
 	it('is exported from the package root', () => {
+		expect(publicApi.ExternalContentBarComponent).toBe(ExternalContentBarComponent);
 		expect(publicApi.ViewerBuildingBlocks).toBeDefined();
 		expect(publicApi.createViewerBuildingBlocks).toBe(createViewerBuildingBlocks);
 		expect(publicApi.BuildingBlocksToolbarComponent).toBe(BuildingBlocksToolbarComponent);

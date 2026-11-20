@@ -46,7 +46,7 @@ describe('statusBarComponent adapter', () => {
 	it('maps viewer state onto the shared status bar', () => {
 		const { root, button } = open({ slideIndex: 2, zoomPercent: 125, notesOpen: true });
 		expect(root.querySelector('[data-item="counter"]')!.textContent).toBe('Slide 3 of 7');
-		expect(button('Zoom to fit').textContent).toBe('125%');
+		expect(button('125%, Zoom to fit').textContent).toBe('125%');
 		expect(button('Toggle notes').getAttribute('aria-pressed')).toBe('true');
 		expect(button('Normal view').getAttribute('aria-pressed')).toBe('true');
 	});
@@ -70,7 +70,7 @@ describe('statusBarComponent adapter', () => {
 			openSorter: 'Slide sorter',
 			slideShow: 'Slide show',
 			zoomOut: 'Zoom out',
-			zoomReset: 'Zoom to fit',
+			zoomReset: '100%, Zoom to fit',
 			zoomIn: 'Zoom in',
 		} as const;
 		for (const name of Object.keys(outputs) as (keyof typeof outputs)[]) {

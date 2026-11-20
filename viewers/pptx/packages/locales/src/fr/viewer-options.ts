@@ -244,7 +244,7 @@ export const translations = {
 	'pptx.options.trust.allowExternalContent':
 		'Autoriser le contenu externe (images et médias distants)',
 	'pptx.options.trust.allowExternalContentInfo':
-		'Lorsque cette option est désactivée, seul le contenu incorporé dans le fichier est affiché.',
+		'Désactivé (par défaut, comme dans PowerPoint), les images et médias liés ne sont pas téléchargés ; une barre de sécurité propose Activer le contenu pour chaque présentation.',
 	'pptx.options.trust.allowFontDownloads':
 		'Télécharger les polices non installées ni incorporées (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':

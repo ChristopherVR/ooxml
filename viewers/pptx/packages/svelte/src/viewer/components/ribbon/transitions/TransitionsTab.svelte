@@ -9,6 +9,8 @@
  import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
  import {
   applyRibbonTransitionDraft,
+  BUILT_IN_SOUNDS,
+  playDeckSound,
   playSlideTransitionPreview,
   readRibbonTransitionDraft,
   ribbonTransitionsDraftPatch,
@@ -18,7 +20,6 @@
 
  import { useTranslator } from '../../../../i18n/context';
  import type { EditorState } from '../../../editor/editor-state.svelte';
- import { playAnimationSound } from '../../../presentation/animation-sound';
  import type { ChromeUiState } from '../../../state/chrome-ui.svelte';
 
  const { editor, chromeUi }: { editor: EditorState; chromeUi?: ChromeUiState } = $props();
@@ -52,7 +53,7 @@
     break;
    case 'soundPreview': {
     const url = ribbonTransitionStockSoundUrl(slide?.transition);
-    if (url) {playAnimationSound(url);}
+    if (url) {playDeckSound(url, BUILT_IN_SOUNDS);}
     break;
    }
    default:

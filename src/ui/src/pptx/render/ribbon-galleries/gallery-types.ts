@@ -104,6 +104,13 @@ export interface RibbonGalleryItem {
 	/** English fallback for bindings whose dictionary lacks `labelKey`. */
 	label: string;
 	/**
+	 * i18n key of the tooltip, when it differs from the accessible name; it takes the same
+	 * parameters as `labelKey`. Omitted, the tooltip is the name.
+	 */
+	titleKey?: string;
+	/** English fallback for `titleKey`. */
+	title?: string;
+	/**
 	 * A complete, self-contained `<svg>` element (width/height/viewBox set).
 	 * Built only from catalogue data and theme colours, never from user text,
 	 * so it is safe to inject as markup.

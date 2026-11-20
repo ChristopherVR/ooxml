@@ -209,8 +209,10 @@ export function createMasterViewSidebar(doc: Document, t: Translator): MasterVie
 			const collapse = createEl(doc, 'button', 'pptxv-master-collapse');
 			collapse.type = 'button';
 			collapse.textContent = '‹';
-			collapse.title = t('pptx.masterView.collapse');
-			collapse.setAttribute('aria-label', t('pptx.masterView.collapse'));
+			// The button leaves master view, as the other bindings' "Close master view" does;
+			// named for that, so it is not confused with a banner's Close.
+			collapse.title = t('pptx.mode.closeMasterViewTooltip');
+			collapse.setAttribute('aria-label', t('pptx.mode.closeMasterViewTooltip'));
 			collapse.addEventListener('click', o.onCollapse);
 			header.append(title, collapse);
 

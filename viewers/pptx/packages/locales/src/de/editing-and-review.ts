@@ -238,6 +238,10 @@ export const translations = {
 		'Diese Präsentation ist passwortgeschützt. Sie wurde schreibgeschützt geöffnet, bis das Passwort eingegeben wird.',
 	'pptx.readOnly.markedFinal':
 		'Diese Präsentation wurde vom Autor als endgültig markiert. Sie wurde schreibgeschützt geöffnet, um Änderungen zu vermeiden.',
+	'pptx.externalContent.title': 'SICHERHEITSWARNUNG',
+	'pptx.externalContent.message': 'Verweise auf externe Bilder und andere Medien wurden blockiert.',
+	'pptx.externalContent.enable': 'Inhalt aktivieren',
+	'pptx.externalContent.close': 'Schließen',
 	'pptx.readOnly.bannerTitle': 'Schreibgeschützt',
 	'pptx.readOnly.editAnyway': 'Trotzdem bearbeiten',
 	'pptx.readOnly.dismiss': 'Schließen',

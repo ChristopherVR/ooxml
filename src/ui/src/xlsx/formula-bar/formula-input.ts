@@ -54,7 +54,8 @@ export function createFormulaInput(
 		'aria-label': t('Insert Function'),
 		title: t('Insert Function'),
 	});
-	fx.innerHTML = '<i>fx</i>';
+	// The fx glyph is an icon drawn by CSS, so the button is named Insert Function, not fx.
+	fx.innerHTML = '<i aria-hidden="true"></i>';
 	actions.append(cancel, enter, fx);
 	const field = createFormulaField(doc, 'xfb-input', t('Formula Bar'));
 	const expand = h(doc, 'button', 'xfb-btn xfb-expand', {

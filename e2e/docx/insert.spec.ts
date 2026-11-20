@@ -29,7 +29,7 @@ test('inserts a picture and a hyperlink from the ribbon and saves both to DOCX',
 
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const chooser = page.waitForEvent('filechooser');
-	await editor.getByRole('button', { name: 'Insert picture', exact: true }).click();
+	await editor.getByRole('button', { name: 'Insert pictures', exact: true }).click();
 	await (await chooser).setFiles({ name: 'dot.png', mimeType: 'image/png', buffer: PNG });
 	const picture = surface.locator('img[data-docx-image]');
 	await expect(picture).toHaveAttribute('src', /^blob:/);
@@ -77,7 +77,7 @@ test('inserts an SVG picture with a PNG fallback', async ({ page }) => {
 	await surface.click();
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const chooser = page.waitForEvent('filechooser');
-	await editor.getByRole('button', { name: 'Insert picture', exact: true }).click();
+	await editor.getByRole('button', { name: 'Insert pictures', exact: true }).click();
 	const svg =
 		'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="#185abd"/></svg>';
 	await (

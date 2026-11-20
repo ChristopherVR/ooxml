@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
+	BUILT_IN_SOUNDS,
+	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
 	ribbonTransitionsDraftPatch,
@@ -11,8 +13,6 @@ import {
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-import { playAnimationSound } from '../../composables/animation-sound';
 
 /**
  * TransitionsSection: a thin adapter over the shared `pptx-ui-ribbon-transitions`
@@ -63,7 +63,7 @@ function request(event: RibbonTransitionsRequestEvent): void {
 		case 'soundPreview': {
 			const url = ribbonTransitionStockSoundUrl(props.activeSlide?.transition);
 			if (url) {
-				playAnimationSound(url);
+				playDeckSound(url, BUILT_IN_SOUNDS);
 			}
 			break;
 		}

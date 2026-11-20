@@ -29,7 +29,10 @@ export interface OfficeGalleryAction {
 /** One tile. `preview` is SVG markup, parsed as an SVG document with executable parts removed. */
 export interface OfficeGalleryItem {
 	id: string;
+	/** The accessible name. */
 	label: string;
+	/** The tooltip, when it differs from the name. */
+	title?: string | undefined;
 	applied?: boolean | undefined;
 	preview?: string | undefined;
 	/** Context menu entries; a plain click still picks the tile itself. */
@@ -552,7 +555,7 @@ export class OfficeUiGallery extends OfficeElement {
 			?disabled=${disabled}
 			aria-pressed=${String(item.applied === true)}
 			aria-label=${item.label}
-			title=${item.label}
+			title=${item.title ?? item.label}
 			style="width:${width + 6}px;height:${height + 6}px;--office-gallery-preview-width:${width}px;--office-gallery-preview-height:${height}px"
 			@click=${() => this.pick(item.id)}
 			@pointerenter=${(event: PointerEvent) => {

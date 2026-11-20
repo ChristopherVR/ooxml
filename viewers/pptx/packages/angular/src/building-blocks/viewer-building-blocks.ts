@@ -8,10 +8,15 @@ import {
 	resolveBuildingBlockMode,
 	runBuildingBlockToolbarControl,
 } from 'ooxml-ui/pptx';
-import type { BuildingBlockToolbarControlId, ViewerBuildingBlockActions } from 'ooxml-ui/pptx';
+import type {
+	BuildingBlockToolbarControlId,
+	ViewerBuildingBlockActions,
+	ViewerExternalContentBar,
+} from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 
 import { controllerSignal } from '../viewer/controller-signal';
+import { ExternalContentService } from '../viewer/external-content.service';
 import { ListConversionScopeService } from '../viewer/list-conversion-scope.service';
 import { LoadNoticesService } from '../viewer/load-notices.service';
 import { POWER_POINT_VIEWER_PROVIDERS } from '../viewer/power-point-viewer.providers';
@@ -126,6 +131,24 @@ export class ViewerBuildingBlocks {
 	/** `state().collaborationState`, as its own signal. */
 	readonly collaborationState = computed(() => this.shell.collaboration.state());
 	readonly options: Signal<ViewerBuildingBlocksOptions> = this.optionsSignal.asReadonly();
+	private readonly externalContentService = inject(ExternalContentService);
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them. The canvas does not draw the bar; render
+	 * `pptx-external-content-bar` while `barVisible`, wiring `(enable)` and `(closeBar)` to
+	 * `enable` and `close`. Enable Content redraws the blocks' canvas and slides pane (`allowed`)
+	 * without reloading, so edits, undo history and a collaboration session carry on. A host
+	 * that draws slides itself passes `allowed` to `pptx-slide-thumbnail` as `[linkedContent]`.
+	 */
+	readonly externalContent: Signal<ViewerExternalContentBar> = computed(() => {
+		const service = this.externalContentService;
+		return {
+			barVisible: service.barVisible(),
+			allowed: service.allowed(),
+			enable: () => service.enable(),
+			close: () => service.close(),
+		};
+	});
 
 	constructor() {
 		const { shell, dialogs } = this;

@@ -5,12 +5,14 @@ import {
 	inspectorFieldPatch,
 	inspectorOptionLabel,
 	inspectorTogglePatch,
+	linkedContentUrl,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
 import type { InspectorFieldValue, InspectorSectionDescriptor } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useLinkedContentAllowed } from '../../composables/linked-content';
 import { injectRecentColors } from '../../composables/recent-colors-context';
 
 /**
@@ -50,6 +52,8 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const translate = (key: string): string => t(key);
 const recentColors = injectRecentColors();
+// A field preview draws the selected picture; a linked one only once this viewer allows it.
+const linkedContentAllowed = useLinkedContentAllowed();
 
 const views = computed(() => resolveInspectorSections(props.sections, props.target));
 
@@ -148,8 +152,8 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 							@click="onField(section.id, field.id, option.value)"
 						>
 							<img
-								v-if="field.previewImage"
-								:src="field.previewImage"
+								v-if="linkedContentUrl(field.previewImage, linkedContentAllowed)"
+								:src="linkedContentUrl(field.previewImage, linkedContentAllowed)"
 								alt=""
 								class="h-8 w-full rounded object-cover"
 								:style="{ filter: option.previewFilter || undefined }"

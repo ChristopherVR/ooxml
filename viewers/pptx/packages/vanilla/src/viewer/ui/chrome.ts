@@ -14,6 +14,7 @@ import { createEl } from '../render';
 import type { AccessibilityPanel } from './accessibility-panel';
 import { createAccessibilityPanel } from './accessibility-panel';
 import { createCompatToastStack } from './compat-toasts';
+import { createExternalContentBar } from './external-content-bar';
 import type { Inspector, InspectorHandlers } from './inspector';
 import { createInspector } from './inspector';
 import type { MasterViewSidebar } from './master-view-sidebar';
@@ -120,6 +121,10 @@ export interface ChromeOptions {
 	onSubmitReadOnlyPassword(password: string): void;
 	/** The read-only recommendation banner's password form "Cancel". */
 	onCancelReadOnlyPasswordPrompt(): void;
+	/** Enable Content on the security bar for linked pictures and media. */
+	onEnableExternalContent(): void;
+	/** The security bar's close button: the linked content stays blocked. */
+	onCloseExternalContentBar(): void;
 	/** One compatibility toast's own dismiss button. */
 	onDismissCompatToast(id: string): void;
 	/** The compatibility toast stack's "Dismiss all" button. */
@@ -188,6 +193,8 @@ export interface ViewerChrome {
 			checking: boolean;
 		},
 	): void;
+	/** Show (or remove) the security bar for linked pictures and media. */
+	setExternalContentBar(visible: boolean): void;
 	/**
 	 * Replace the compatibility-warning toast stack. `rightInset` (default 0)
 	 * is the open format/inspector panel's width, so the stack clears it
@@ -283,6 +290,15 @@ export function buildViewerChrome(
 	if (readOnlyBanner) {
 		root.appendChild(readOnlyBanner.el);
 	}
+	// Shown with or without the toolbar: it is the only way to download the content
+	// of a deck opened with it blocked (the suite's Simple view has no ribbon).
+	const externalContentBar = createExternalContentBar(
+		doc,
+		t,
+		() => options.onEnableExternalContent(),
+		() => options.onCloseExternalContentBar(),
+	);
+	root.appendChild(externalContentBar.anchor);
 	let mobileActionSheets: MobileActionSheets | null = null;
 	const mobileToolbar = options.showToolbar
 		? createMobileToolbar(
@@ -541,6 +557,9 @@ export function buildViewerChrome(
 		},
 		setReadOnlyRecommendation(recommendation, dismissed, passwordState) {
 			readOnlyBanner?.update(recommendation, dismissed, passwordState);
+		},
+		setExternalContentBar(visible) {
+			externalContentBar.update(visible);
 		},
 		setCompatToasts(toasts, rightInset) {
 			compatToasts?.update(toasts, rightInset);
