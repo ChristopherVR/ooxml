@@ -97,8 +97,53 @@ function workerError(message: string, code: string | undefined): Error {
 	return code === undefined ? error : Object.assign(error, { code });
 }
 
+/** How long a worker that finished an open stays for the next one. */
+const IDLE_MS = 30_000;
+
+/**
+ * The worker kept between opens: starting one loads the whole reader, which would otherwise be
+ * paid again by every file opened in a row. A failed, timed-out or abandoned open ends its worker.
+ */
+class WorkerPool {
+	private idle: WorkerLike | undefined;
+	private idleTimer: ReturnType<typeof setTimeout> | undefined;
+
+	constructor(private readonly create: WorkerFactory) {}
+
+	/** An idle worker (already started) or a new one. */
+	acquire(): { worker: WorkerLike; started: boolean } {
+		clearTimeout(this.idleTimer);
+		const idle = this.idle;
+		this.idle = undefined;
+		if (idle) return { worker: idle, started: true };
+		try {
+			return { worker: this.create(), started: false };
+		} catch (cause) {
+			throw new WorkerUnavailable(String(cause));
+		}
+	}
+
+	release(worker: WorkerLike): void {
+		worker.onmessage = null;
+		worker.onerror = null;
+		if (this.idle) return worker.terminate();
+		this.idle = worker;
+		this.idleTimer = setTimeout(() => {
+			if (this.idle !== worker) return;
+			this.idle = undefined;
+			worker.terminate();
+		}, IDLE_MS);
+	}
+
+	discard(worker: WorkerLike): void {
+		worker.onmessage = null;
+		worker.onerror = null;
+		worker.terminate();
+	}
+}
+
 function runWorker(
-	create: WorkerFactory,
+	pool: WorkerPool,
 	bytes: Uint8Array | ArrayBuffer,
 	options: OpenOptions,
 	calculate: boolean,
@@ -106,13 +151,13 @@ function runWorker(
 ): Promise<{ workbook: Workbook; calculated: boolean }> {
 	return new Promise((resolve, reject) => {
 		let worker: WorkerLike;
+		let started: boolean;
 		try {
-			worker = create();
-		} catch (cause) {
-			reject(new WorkerUnavailable(String(cause)));
+			({ worker, started } = pool.acquire());
+		} catch (error) {
+			reject(error);
 			return;
 		}
-		let started = false;
 		let timer: ReturnType<typeof setTimeout> | undefined;
 		const arm = (ms: number, error: () => Error) => {
 			clearTimeout(timer);
@@ -120,9 +165,8 @@ function runWorker(
 		};
 		const finish = (error?: Error, result?: { workbook: Workbook; calculated: boolean }) => {
 			clearTimeout(timer);
-			worker.onmessage = null;
-			worker.onerror = null;
-			worker.terminate();
+			if (error) pool.discard(worker);
+			else pool.release(worker);
 			if (error) reject(error);
 			else resolve(result!);
 		};
@@ -169,20 +213,21 @@ export function createWorkbookOpener(
 	limits: OpenLimits = DEFAULT_OPEN_LIMITS,
 ): WorkbookOpener {
 	if (!factory && typeof Worker === 'undefined') return openOnPage;
-	const create =
+	const pool = new WorkerPool(
 		factory ??
-		(() => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' }));
+			(() => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' })),
+	);
 	return async (bytes, options) => {
 		try {
 			return {
-				...(await runWorker(create, bytes, options, true, limits)),
+				...(await runWorker(pool, bytes, options, true, limits)),
 				calculationStopped: false,
 			};
 		} catch (error) {
 			if (error instanceof WorkerUnavailable) return openOnPage(bytes, options);
 			if (!(error instanceof CalculationTimeout)) throw error;
 		}
-		const opened = await runWorker(create, bytes, options, false, limits);
+		const opened = await runWorker(pool, bytes, options, false, limits);
 		return { ...opened, calculationStopped: true };
 	};
 }

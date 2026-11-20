@@ -40,7 +40,7 @@ const limits = { readMs: 1000, calculateMs: 50 };
 afterEach(() => vi.useRealTimers());
 
 describe('workbook opener', () => {
-	it('opens in a worker, sends a copy of the bytes and ends the worker', async () => {
+	it('opens in a worker and sends a copy of the bytes', async () => {
 		const worker = fake();
 		const open = createWorkbookOpener(() => worker, limits);
 		const bytes = new Uint8Array([1, 2, 3]);
@@ -58,6 +58,25 @@ describe('workbook opener', () => {
 			calculated: true,
 			calculationStopped: false,
 		});
+		expect(worker.terminate).not.toHaveBeenCalled();
+	});
+
+	it('keeps the worker for the next open and ends it once idle', async () => {
+		vi.useFakeTimers();
+		const worker = fake();
+		const factory = vi.fn(() => worker);
+		const open = createWorkbookOpener(factory, limits);
+		for (const name of ['a.xlsx', 'b.xlsx']) {
+			const opened = open(new Uint8Array([1]), { fileName: name });
+			if (name === 'a.xlsx') worker.say({ kind: 'ready' });
+			worker.say({ kind: 'read' });
+			worker.say({ kind: 'done', workbook: createWorkbook({ sheets: ['S'] }), calculated: false });
+			await opened;
+		}
+		expect(factory).toHaveBeenCalledOnce();
+		expect(worker.sent.map((request) => request.fileName)).toEqual(['a.xlsx', 'b.xlsx']);
+		expect(worker.terminate).not.toHaveBeenCalled();
+		await vi.advanceTimersByTimeAsync(30_000);
 		expect(worker.terminate).toHaveBeenCalledOnce();
 	});
 
