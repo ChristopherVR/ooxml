@@ -78,7 +78,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		if (action.soundRId && slideRelationshipMap) {
 			const soundTarget = slideRelationshipMap.get(action.soundRId);
-			if (soundTarget) {
+			// A linked sound's address is kept only when the load allows linked content,
+			// like every other linked relationship.
+			const linked = /^https?:\/\//iu.test(soundTarget ?? '');
+			if (soundTarget && (!linked || this.allowExternalImages === true)) {
 				action.soundPath = soundTarget;
 			}
 		}

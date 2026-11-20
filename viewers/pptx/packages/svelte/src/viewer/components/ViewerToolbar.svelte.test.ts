@@ -109,3 +109,19 @@ describe('viewerToolbar hiddenActions', () => {
 		expect(target.querySelector('.pptx-svelte-toolbar-share')).toBeNull();
 	});
 });
+
+describe('viewerToolbar names (WCAG 2.5.3)', () => {
+	it('names the zoom percentage by the percentage it shows, then what it does', () => {
+		const zoom = renderToolbar({ zoomPercent: 80 }).querySelector('.pptx-svelte-toolbar-zoom')!;
+		expect(zoom.textContent?.trim()).toBe('80%');
+		expect(zoom.getAttribute('aria-label')).toBe('80%, Zoom to fit');
+	});
+
+	it('names every labelled button with the text it shows', () => {
+		const target = renderToolbar({});
+		const mismatched = [...target.querySelectorAll('button[aria-label]')]
+			.map((button) => [button.textContent?.trim() ?? '', button.getAttribute('aria-label')!])
+			.filter(([shown, name]) => shown && !name.toLowerCase().includes(shown.toLowerCase()));
+		expect(mismatched).toEqual([]);
+	});
+});

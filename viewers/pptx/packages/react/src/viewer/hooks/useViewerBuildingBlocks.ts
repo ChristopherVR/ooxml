@@ -170,6 +170,7 @@ export function useViewerBuildingBlocks(
 		canInsertElement,
 		readOnlyRecommendation,
 		hasModifyVerifier,
+		externalContent,
 		handlerRef,
 		editorOps,
 		exportHandlers,
@@ -297,6 +298,7 @@ export function useViewerBuildingBlocks(
 
 	canvasProps.collaborationOverlay = overlay;
 	canvasProps.onElementRenderError = input.onElementRenderError;
+	canvasProps.linkedContent = externalContent.allowed;
 	const slidesPaneProps = useSlidesPaneProps({
 		state,
 		slides,
@@ -309,6 +311,7 @@ export function useViewerBuildingBlocks(
 		onOpenLayoutGallery,
 	});
 	slidesPaneProps.onElementRenderError = input.onElementRenderError;
+	slidesPaneProps.linkedContent = externalContent.allowed;
 	// The same shell (projection and shared state) every binding hands its custom chrome.
 	const { shellState, collaborationState } = useMemo(
 		() =>
@@ -363,6 +366,7 @@ export function useViewerBuildingBlocks(
 		collaboration,
 		shellState,
 		collaborationState,
+		externalContent,
 		// Read last, so action groups registered by the hooks above are included.
 		actions: blockActions.session.actions(),
 	};

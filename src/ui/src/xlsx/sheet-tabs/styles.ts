@@ -10,6 +10,7 @@ export const TABS_CSS = `
 	background: var(--xve-secondary, var(--office-surface, #f3f2f1));
 	color: var(--xve-foreground, var(--office-foreground, #242424));
 	font: var(--office-font-size, 13px)/var(--office-line-height, 1.4) var(--xve-font, var(--office-font, system-ui, sans-serif));
+	-webkit-user-select: none;
 	user-select: none;
 	overflow: hidden;
 }

@@ -63,6 +63,9 @@ does the same by hand. The blocks are view-only until `canEdit: true`, as in eve
 `listConversionScope`, `googleFonts`, `allowExternalContent` (both also lock their Trust Center
 settings) and `collaboration` apply at once, without remounting the canvas; `limits` and
 `initialSlide` apply to the next load. Changing `content` to a different file reloads the deck.
+A deck's linked pictures and media stay withheld until the user chooses Enable Content on the
+security bar you render (see [Linked pictures and media](#linked-pictures-and-media)), or
+`allowExternalContent: true` or the Trust Center option allows them.
 
 ## State and actions
 
@@ -90,6 +93,38 @@ canvas stay. Remote cursors and selections draw on the canvas. `blocks.state()` 
 - `collaborationState`: the shared `CollaborationState` (`active`, `roomId`, `status`, `synced`,
   `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
   event reports.
+
+## Linked pictures and media
+
+As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
+downloading them. The deck keeps the links: saving writes them back, and collaborators receive
+them. The canvas does not draw PowerPoint's security bar: `blocks.externalContent()` (a signal of
+`{ barVisible, allowed, enable, close }`) says when to show it. Render the exported
+`ExternalContentBarComponent` (`pptx-external-content-bar`, or your own) and wire its `(enable)`
+output to `enable()` and `(closeBar)` to `close()`.
+
+Enable Content redraws the canvas and the slides pane with the linked content, for this viewer
+only. Nothing reloads: the slide on screen, unsaved edits, the dirty state, undo history, autosave
+and a collaboration session carry on, and each collaborator decides for themselves. `allowed` says
+whether the blocks draw the linked content now; a host that draws slides itself passes it on, for
+example to `pptx-slide-thumbnail` as `[linkedContent]`. Close keeps the content withheld, and the
+next presentation asks again. The `allowExternalContent` option (`true` or `false`) answers for the
+user, and then the bar never shows.
+
+```html
+@if (blocks.externalContent().barVisible) {
+<pptx-external-content-bar
+	(enable)="blocks.externalContent().enable()"
+	(closeBar)="blocks.externalContent().close()"
+/>
+}
+<!-- A host's own thumbnails redraw on Enable Content too. -->
+<pptx-slide-thumbnail
+	[slide]="slide"
+	[canvasSize]="blocks.shell.loader.canvasSize()"
+	[linkedContent]="blocks.externalContent().allowed"
+/>
+```
 
 ## Host-owned workflows
 

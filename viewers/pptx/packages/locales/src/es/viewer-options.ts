@@ -239,7 +239,7 @@ export const translations = {
 	'pptx.options.trust.allowExternalContent':
 		'Permitir contenido externo (imágenes y medios remotos)',
 	'pptx.options.trust.allowExternalContentInfo':
-		'Cuando está desactivado, solo se muestra el contenido incrustado en el archivo.',
+		'Si está desactivado (el valor predeterminado, como en PowerPoint), las imágenes y los elementos multimedia vinculados no se descargan; una barra de seguridad ofrece Habilitar contenido para cada presentación.',
 	'pptx.options.trust.allowFontDownloads':
 		'Descargar fuentes que no están instaladas ni incrustadas (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':

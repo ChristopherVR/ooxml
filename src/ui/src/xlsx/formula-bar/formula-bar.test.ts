@@ -5,6 +5,7 @@ import { createTestContext, type TestContext } from '../grid/test-context';
 import { editBridge, type BeginOptions, type EditDriver } from 'ooxml-core/xlsx/ui';
 import { mountFormulaBar } from './index';
 import { absoluteReference, resolveNameBox } from 'ooxml-core/xlsx/ui';
+import { labelNameMismatches } from '../../test-support/label-in-name';
 
 const disposers: (() => void)[] = [];
 afterEach(() => {
@@ -73,6 +74,14 @@ function fakeDriver(ctx: TestContext) {
 	disposers.push(bridge.attach(driver));
 	return { calls, bridge };
 }
+
+describe('control names (WCAG 2.5.3)', () => {
+	it('names every button with the text it shows', () => {
+		const { ctx, q } = mount();
+		expect(q('.xfb-fx').getAttribute('aria-label')).toBe('Insert Function');
+		expect(labelNameMismatches(ctx.root)).toEqual([]);
+	});
+});
 
 describe('name box', () => {
 	it('shows the active cell and follows the selection', () => {

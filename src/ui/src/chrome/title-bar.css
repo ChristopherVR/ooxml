@@ -20,6 +20,7 @@
 	background: var(--office-title-bar-background);
 	color: var(--office-title-bar-foreground);
 	font: var(--office-font-size-xs)/var(--office-line-height-tight) var(--office-font);
+	-webkit-user-select: none;
 	user-select: none;
 }
 :host([placement='belowRibbon']) .bar {

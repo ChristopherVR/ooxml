@@ -81,7 +81,9 @@ async function confirmAndReadPrintDocument(page: Page): Promise<string> {
 
 test.describe('print job', () => {
 	test('prints every visible slide as one vector page under the Slides title', async ({ page }) => {
-		await page.addInitScript(() => {
+		// On the context, so the print popup gets it too: a real print there fires `afterprint`,
+		// which closes the window before its document is read.
+		await page.context().addInitScript(() => {
 			window.print = () => {};
 		});
 		const expected = await visibleSlideCount(SAMPLE_DECK);

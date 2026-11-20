@@ -40,6 +40,7 @@ declare module 'react' {
 			'pptx-ui-present-toolbar': WebControlProps;
 			'pptx-ui-presenter-console': WebControlProps;
 			'pptx-ui-read-only-banner': WebControlProps;
+			'pptx-ui-external-content-bar': WebControlProps;
 			'pptx-ui-export-progress': WebControlProps;
 			'pptx-ui-ribbon-command': WebControlProps;
 			'pptx-ui-ribbon-animations': WebControlProps;

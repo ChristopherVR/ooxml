@@ -75,7 +75,7 @@ type MountFn = typeof MountModel3D;
 					[src]="vm().posterSrc"
 					[alt]="'pptx.model3d.label' | translate"
 					draggable="false"
-					style="width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;display:block"
+					style="width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-select:none;user-select:none;display:block"
 				/>
 			} @else {
 				<div

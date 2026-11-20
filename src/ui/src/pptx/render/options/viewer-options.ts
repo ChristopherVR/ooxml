@@ -264,7 +264,8 @@ export const DEFAULT_VIEWER_OPTIONS: ViewerOptions = {
 	},
 	trust: {
 		openInProtectedView: false,
-		allowExternalContent: true,
+		// Off like Microsoft PowerPoint: linked pictures and media wait for Enable Content.
+		allowExternalContent: false,
 		allowFontDownloads: true,
 		confirmExternalHyperlinks: true,
 	},

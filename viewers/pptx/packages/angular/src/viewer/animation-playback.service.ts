@@ -30,18 +30,19 @@
 import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import {
 	advanceMainSequence,
+	BUILT_IN_SOUNDS,
 	clearPlaybackTimers,
 	createActiveAnimationGroup,
+	playDeckSound,
 	playGroup,
 	PresentationAnimationController,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
-
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
 
 @Injectable()
 export class AnimationPlaybackService {
@@ -99,15 +100,17 @@ export class AnimationPlaybackService {
 		timers: this.timers,
 		buildHandle: this.buildHandle,
 		// The host override is registered after construction, so resolve it per
-		// call; with none registered the local player takes over (the old local
-		// copy of the engine silently dropped the sound in that case).
+		// call; with none registered only sounds that need no media map or consent play.
 		onPlayActionSound: (soundPath: string) => {
-			(this.onPlayActionSound ?? playAnimationSound)(soundPath);
+			(this.onPlayActionSound ?? this.playBuiltInSound)(soundPath);
 		},
-		playSound: playAnimationSound,
-		stopSound: stopAnimationSound,
+		playSound: (soundPath: string) => this.playBuiltInSound(soundPath),
+		stopSound: stopDeckSound,
 		frameRoot: () => this.frameRoot?.() ?? null,
 	};
+
+	private readonly playBuiltInSound = (soundPath: string): void =>
+		playDeckSound(soundPath, BUILT_IN_SOUNDS);
 
 	constructor() {
 		this.destroyRef.onDestroy(() => this.clearTimers());

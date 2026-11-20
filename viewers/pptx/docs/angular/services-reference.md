@@ -33,6 +33,7 @@ each service's own `bind()` handoff of host accessors.
 | ----------------------------------- | ----------------------------------------------------------------------------------- |
 | `AutosaveService`                   | Periodic autosave scheduling and status.                                            |
 | `CanvasFitService`                  | Fit-to-width / canvas-size calculations for the editor viewport.                    |
+| `ExternalContentService`            | Linked web content: per-presentation Enable Content and Close; redraws, no reload.  |
 | `FieldContextService`               | Field/placeholder context (date, slide number, ...) for text rendering.             |
 | `InkDrawingService`                 | Freehand ink stroke state for the drawing tools.                                    |
 | `RulerGuidesService`                | Ruler tick and guide-line state for the editor canvas.                              |

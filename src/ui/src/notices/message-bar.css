@@ -1,0 +1,96 @@
+:host {
+	display: block;
+	flex: none;
+}
+:host([hidden]) {
+	display: none !important;
+}
+svg {
+	flex: none;
+	width: var(--office-icon-size-md);
+	height: var(--office-icon-size-md);
+	fill: none;
+	stroke: currentColor;
+	stroke-width: var(--office-icon-stroke);
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.icon {
+	color: var(--office-notice-accent);
+}
+.bar {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-3);
+	padding: var(--office-space-1-5) var(--office-space-4);
+	border-bottom: var(--office-border-width) solid var(--office-notice-border);
+	background: var(--office-notice-background);
+	color: var(--office-notice-foreground);
+	font: var(--office-font-size-sm)/1.4 var(--office-font);
+}
+.text {
+	flex: 1 1 auto;
+	min-width: 0;
+	margin: 0;
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: var(--office-space-3);
+}
+button {
+	box-sizing: border-box;
+	flex: none;
+	min-height: var(--office-control-height);
+	padding: var(--office-space-1) var(--office-space-3);
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius);
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-weight: 500;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+button.action {
+	border-color: color-mix(in srgb, var(--office-notice-accent) 50%, transparent);
+	background: var(--office-background);
+	color: var(--office-foreground);
+}
+button.close {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--office-space-1);
+	min-width: var(--office-control-height);
+}
+button:hover {
+	background: color-mix(in srgb, var(--office-notice-accent) 15%, transparent);
+}
+button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(var(--office-focus-offset) / 2);
+}
+@media (pointer: coarse) {
+	button {
+		min-height: var(--office-target-size-touch);
+		min-width: var(--office-target-size-touch);
+	}
+}
+@media (forced-colors: active) {
+	.bar {
+		border-bottom-color: CanvasText;
+		background: Canvas;
+		color: CanvasText;
+	}
+	.icon {
+		color: CanvasText;
+	}
+	button {
+		border-color: ButtonText;
+		color: ButtonText;
+		background: ButtonFace;
+	}
+	button:focus-visible {
+		outline-color: Highlight;
+	}
+}

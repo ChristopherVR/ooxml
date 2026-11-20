@@ -19,6 +19,8 @@
 // Browser download helpers (object-URL anchor click) + the rich download
 // filename sanitizer. The only DOM-touching helpers in this subtree.
 export * from './download-helpers';
+// PNG to clipboard within the click (Safari rejects a write after an await).
+export * from './clipboard-image';
 // Save / Save As target: the host's `storage` when the viewer has one, else a download.
 export * from './presentation-save';
 // Deck-as-JSON (pptx-viewer-json) export: filename derivation + download.
@@ -71,12 +73,16 @@ export * from './print-document';
 // DOM-touching print-window open/finish lifecycle (window.open-based paths
 // only; the popup-blocking fix every binding needs lives here once).
 export * from './print-window';
+// Print one HTML document: a hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+export * from './print-frame';
 // The print job plan every binding's Print dialog runs (slides, output path,
 // window timing, translated title) and the documents it assembles.
 export * from './print-job';
 // Pure WebM video planning: frame-segment timing, fps maths, MediaRecorder MIME
 // selection. The MediaRecorder/canvas capture driver stays in each binding.
 export * from './video-plan';
+// The recorded container (WebM, or MP4 on Safari) chosen with `isTypeSupported`, and its file name.
+export * from './video-format';
 // Pure PNG byte framing (CRC-32, chunk assembly, filter-type-0 scanlines) plus
 // the `CompressionStream('deflate')`-driven streaming encoder that turns
 // row-bands into a full PNG without ever holding the whole image in memory.
@@ -94,6 +100,8 @@ export * from './rasterize-foreign-object';
 // `probeMaxCanvasDimension` re-exports the cached probe from
 // `render/canvas-size-probe.ts` under this directory's own import convention.
 export * from './canvas-size-probe';
+// The canvas area cap (iOS WebKit's 4096 x 4096) and `releaseCanvas`, which frees a backing store early.
+export * from '../render/canvas-area-cap';
 export * from './rasterize-element-strategy';
 // The raw per-tile canvases (no PNG stitching), for a caller that can place
 // several images itself - PDF/notes-PDF pages, which have no canvas-size

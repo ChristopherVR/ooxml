@@ -25,21 +25,23 @@ function open(handlers = makeHandlers(), hidden?: Parameters<typeof createStatus
 	const root = bar.el.shadowRoot!;
 	const button = (key: string) =>
 		root.querySelector<HTMLButtonElement>(`button[aria-label="${t(key)}"]`)!;
-	return { bar, root, button, handlers };
+	// The fit button is named by the percentage it shows, then what it does.
+	const fit = () => root.querySelector<HTMLButtonElement>('button[data-id="zoomFit"]')!;
+	return { bar, root, button, fit, handlers };
 }
 
 describe('createStatusBar', () => {
 	it('omitting hiddenActions renders notes, slide show, and the zoom cluster (backward compatible default)', () => {
-		const { button } = open();
+		const { button, fit } = open();
 		expect(button('pptx.statusBar.toggleNotes').hidden).toBeFalsy();
 		expect(button('pptx.statusBar.slideShow').hidden).toBeFalsy();
-		expect(button('pptx.statusBar.zoomToFit').closest('.group')).toHaveProperty('hidden', false);
+		expect(fit().closest('.group')).toHaveProperty('hidden', false);
 	});
 
 	it("hides the notes toggle on 'notes' without affecting zoom/fullscreen", () => {
-		const { button } = open(makeHandlers(), ['notes']);
+		const { button, fit } = open(makeHandlers(), ['notes']);
 		expect(button('pptx.statusBar.toggleNotes').hidden).toBeTruthy();
-		expect(button('pptx.statusBar.zoomToFit').closest('.group')).toHaveProperty('hidden', false);
+		expect(fit().closest('.group')).toHaveProperty('hidden', false);
 		expect(button('pptx.statusBar.slideShow').hidden).toBeFalsy();
 	});
 
@@ -50,34 +52,35 @@ describe('createStatusBar', () => {
 	});
 
 	it("hides the whole zoom cluster on 'zoom' and update() still works", () => {
-		const { bar, button } = open(makeHandlers(), ['zoom']);
-		expect(button('pptx.statusBar.zoomToFit').closest('.group')).toHaveProperty('hidden', true);
+		const { bar, fit } = open(makeHandlers(), ['zoom']);
+		expect(fit().closest('.group')).toHaveProperty('hidden', true);
 		expect(() => bar.update({ current: 0, total: 3, zoomPercent: 150 })).not.toThrow();
-		expect(button('pptx.statusBar.zoomToFit').closest('.group')).toHaveProperty('hidden', true);
+		expect(fit().closest('.group')).toHaveProperty('hidden', true);
 	});
 
 	it('reflects the slide counter and zoom percent', () => {
-		const { bar, root, button } = open();
+		const { bar, root, fit } = open();
 		bar.update({ current: 1, total: 9, zoomPercent: 150 });
 		expect(root.querySelector('[data-item="counter"]')!.textContent).toBe('Slide 2 of 9');
-		expect(button('pptx.statusBar.zoomToFit').textContent).toBe('150%');
+		expect(fit().textContent).toBe('150%');
+		expect(fit().getAttribute('aria-label')).toBe(`150%, ${t('pptx.statusBar.zoomToFit')}`);
 		bar.update({ current: 0, total: 0, zoomPercent: 100 });
 		expect(root.querySelector('[data-item="counter"]')!.textContent).toBe('No slides');
 	});
 
 	it('routes every control to its handler', () => {
-		const { button, handlers } = open();
+		const { button, fit, handlers } = open();
 		for (const key of [
 			'toggleNotes',
 			'normalView',
 			'slideSorter',
 			'slideShow',
 			'zoomOut',
-			'zoomToFit',
 			'zoomIn',
 		]) {
 			button(`pptx.statusBar.${key}`).click();
 		}
+		fit().click();
 		for (const fn of Object.values(handlers)) {
 			expect(fn).toHaveBeenCalledOnce();
 		}

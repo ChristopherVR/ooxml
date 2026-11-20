@@ -65,6 +65,11 @@ export interface SlidesPaneProps {
 	 * context of the enclosing `createViewerState`, if any.
 	 */
 	tableStyleContext?: SlidesPaneTableStyleContext;
+	/**
+	 * Draw the deck's linked web content: `externalContent.allowed` from the building blocks.
+	 * Unset keeps the enclosing `createViewerState` choice, and withholds it outside one.
+	 */
+	linkedContent?: boolean;
 	/** A thumbnail was clicked: show that slide. Selecting never edits the deck. */
 	onselectslide: (index: number) => void;
 	/** A thumbnail was dragged from `fromIndex` and dropped on `toIndex`. */
@@ -154,6 +159,9 @@ export function createSlidesPaneProps(
 				state.loader.presentationTheme,
 				state.loader.tableStyleMap,
 			);
+		},
+		get linkedContent() {
+			return state.externalContent.allowed;
 		},
 		get onopenlayoutgallery() {
 			return options.onopenlayoutgallery;

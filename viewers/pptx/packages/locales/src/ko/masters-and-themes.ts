@@ -74,7 +74,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': '슬라이드 마스터',
 	'pptx.masterView.notesMasterTitle': '슬라이드 노트 마스터',
 	'pptx.masterView.handoutMasterTitle': '유인물 마스터',
-	'pptx.masterView.collapse': '마스터 창 축소',
 	'pptx.notesMaster.phSlideImage': '슬라이드 이미지',
 	'pptx.notesMaster.phNotesBody': '슬라이드 노트 본문',
 	'pptx.notesMaster.phDate': '날짜',

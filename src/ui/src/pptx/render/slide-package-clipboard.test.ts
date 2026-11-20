@@ -6,6 +6,7 @@ import {
 } from 'ooxml-core/pptx';
 import { createSlidePackageClipboard } from './slide-package-clipboard';
 import type { SlidePackageClipboardSnapshot } from './slide-package-clipboard';
+import { clearInPageSlidePackage, readInPageSlidePackage } from './slide-package-page-store';
 
 class FakeItem {
 	static supports = () => true;
@@ -37,6 +38,7 @@ async function deck(label: string): Promise<SlidePackageClipboardSnapshot> {
 	return { handler, slides: data.slides, templateElementsBySlideId: {}, editable: true };
 }
 afterEach(() => {
+	clearInPageSlidePackage();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
@@ -120,6 +122,52 @@ describe('slide package system clipboard controller', () => {
 		});
 		await expect(controller.paste(1)).rejects.toThrow('Presentation changed');
 		expect(commit).not.toHaveBeenCalled();
+		controller.dispose();
+		current.handler.dispose();
+	});
+	it('keeps the package in the page when the browser has no custom clipboard formats (Safari)', async () => {
+		const clipboard = transport();
+		vi.stubGlobal(
+			'ClipboardItem',
+			class extends FakeItem {
+				static override supports = (type: string) => !type.startsWith('web ');
+			},
+		);
+		const source = await deck('Source'),
+			destination = await deck('Destination');
+		let current = source;
+		const commit = vi.fn((result) => {
+			current = { ...current, handler: result.handler, slides: result.slides };
+		});
+		const controller = createSlidePackageClipboard({ getSnapshot: () => current, commit });
+		await controller.copy([0]);
+		const items = await clipboard.read();
+		expect(items[0]!.types).toEqual(['text/plain']);
+		expect(await (await items[0]!.getType('text/plain')).text()).toBe('Source');
+		expect(readInPageSlidePackage()?.preview).toBe('Source');
+		current = destination;
+		await controller.paste(1);
+		expect(commit).toHaveBeenCalledOnce();
+		expect(current.slides[1]!.elements.find((el) => el.type === 'text')?.text).toBe('Source');
+		controller.dispose();
+		current.handler.dispose();
+		source.handler.dispose();
+		destination.handler.dispose();
+	});
+	it('copies and pastes in the page without ClipboardItem and when the system read is refused', async () => {
+		const writeText = vi.fn(async () => undefined);
+		const readText = vi.fn(async () => Promise.reject(new Error('NotAllowedError')));
+		vi.stubGlobal('navigator', { clipboard: { writeText, readText } });
+		const current = await deck('Source'),
+			commit = vi.fn();
+		const controller = createSlidePackageClipboard({ getSnapshot: () => current, commit });
+		await controller.copy([0]);
+		expect(writeText).toHaveBeenCalledWith('Source');
+		await controller.paste(1);
+		expect(commit).toHaveBeenCalledOnce();
+		expect(commit.mock.calls[0]![0].slides).toHaveLength(2);
+		clearInPageSlidePackage();
+		await expect(controller.paste(1)).rejects.toThrow('NotAllowedError');
 		controller.dispose();
 		current.handler.dispose();
 	});

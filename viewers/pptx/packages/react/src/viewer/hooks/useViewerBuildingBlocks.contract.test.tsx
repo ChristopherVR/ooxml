@@ -1,3 +1,4 @@
+import JSZip from 'jszip';
 // @vitest-environment happy-dom
 /**
  * React's `useViewerBuildingBlocks` against the building-blocks parity contract every binding
@@ -11,22 +12,32 @@ import { expect, test, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { runBuildingBlocksContract } from '../../../../shared/test-utils/building-blocks-contract.mjs';
-import type {
-	BuildingBlocksContractHarness,
-	BuildingBlocksContractOptions,
-} from '../../../../shared/test-utils/building-blocks-contract.mjs';
+import type { BuildingBlocksContractOptions } from '../../../../shared/test-utils/building-blocks-contract.mjs';
+import { runExternalContentContract } from '../../../../shared/test-utils/external-content-contract.mjs';
+import type { ExternalContentContractHarness } from '../../../../shared/test-utils/external-content-contract.mjs';
+import { ExternalContentBar } from '../components/ExternalContentBar';
+import { SlideCanvas } from '../components/SlideCanvas';
 import { useViewerBuildingBlocks } from './useViewerBuildingBlocks';
 import type { ViewerBuildingBlocksResult } from './useViewerBuildingBlocks';
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT =
 	true;
 
-function reactHarness(): BuildingBlocksContractHarness {
+function reactHarness(): ExternalContentContractHarness {
 	let root: Root | undefined;
 	let latest: ViewerBuildingBlocksResult | undefined;
 	function Harness({ options }: { options: BuildingBlocksContractOptions }) {
-		latest = useViewerBuildingBlocks({ ...options, autosaveEnabled: false });
-		return <div />;
+		const blocks = useViewerBuildingBlocks({ ...options, autosaveEnabled: false });
+		latest = blocks;
+		const { externalContent } = blocks;
+		return (
+			<div>
+				{externalContent.barVisible && (
+					<ExternalContentBar onEnable={externalContent.enable} onClose={externalContent.close} />
+				)}
+				<SlideCanvas {...blocks.canvasProps} />
+			</div>
+		);
 	}
 	const render = async (options: BuildingBlocksContractOptions) => {
 		await act(async () => root!.render(<Harness options={options} />));
@@ -40,6 +51,8 @@ function reactHarness(): BuildingBlocksContractHarness {
 		},
 		update: render,
 		actions: () => latest!.actions,
+		externalContent: () => latest!.externalContent,
+		slides: () => latest!.slidesPaneProps.slides,
 		state: () => ({
 			mode: latest!.mode,
 			loading: latest!.loading,
@@ -61,6 +74,15 @@ function reactHarness(): BuildingBlocksContractHarness {
 		destroy: () => act(() => root?.unmount()),
 	};
 }
+
+test('passes the shared security bar contract', async () => {
+	await runExternalContentContract({
+		harness: reactHarness(),
+		expect,
+		Handler: PptxHandler,
+		JSZip,
+	});
+}, 60000);
 
 test('passes the shared building-blocks contract', async () => {
 	await runBuildingBlocksContract({ harness: reactHarness(), expect, vi, Handler: PptxHandler, Y });

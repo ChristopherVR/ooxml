@@ -4,10 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { createCustomizationController } from '../customization/customization-controller';
 import { customizeOptionsTabs } from '../customization/customization-surfaces';
 import {
+	dispatchExternalContentBarIntent,
 	EXTERNAL_CONTENT_SETTING_ID,
 	lockExternalContentSetting,
 	resolveAllowExternalContent,
+	resolveExternalContentView,
 } from './external-content-policy';
+import { DEFAULT_VIEWER_OPTIONS } from './viewer-options';
 import { createViewerOptionsStore } from './viewer-options-store';
 import { VIEWER_OPTIONS_TABS } from './viewer-options-schema';
 
@@ -19,6 +22,71 @@ describe('resolveAllowExternalContent', () => {
 		expect(resolveAllowExternalContent(true, trust(false))).toBeTruthy();
 		expect(resolveAllowExternalContent(undefined, trust(true))).toBeTruthy();
 		expect(resolveAllowExternalContent(undefined, trust(false))).toBeFalsy();
+	});
+
+	it('blocks by default, like PowerPoint', () => {
+		expect(DEFAULT_VIEWER_OPTIONS.trust.allowExternalContent).toBe(false);
+		expect(resolveAllowExternalContent(undefined, DEFAULT_VIEWER_OPTIONS)).toBe(false);
+	});
+
+	it('allows the presentation the user enabled, unless the host blocks it', () => {
+		expect(resolveAllowExternalContent(undefined, trust(false), true)).toBe(true);
+		expect(resolveAllowExternalContent(false, trust(false), true)).toBe(false);
+	});
+});
+
+describe('resolveExternalContentView', () => {
+	const linkedSlide = { id: 's1', elements: [{ id: 'p', imageData: 'https://cdn.test/a.png' }] };
+	const blocked = {
+		host: undefined,
+		options: trust(false),
+		enabled: false,
+		closed: false,
+		content: [linkedSlide],
+	} as const;
+
+	it('withholds linked content and shows the bar, as PowerPoint does on open', () => {
+		expect(resolveExternalContentView(blocked)).toStrictEqual({ allowed: false, barVisible: true });
+	});
+
+	it('draws the content once enabled, and the bar goes', () => {
+		expect(resolveExternalContentView({ ...blocked, enabled: true })).toStrictEqual({
+			allowed: true,
+			barVisible: false,
+		});
+	});
+
+	it('has no bar without linked content, when the host blocks or once closed', () => {
+		expect(resolveExternalContentView({ ...blocked, content: [] }).barVisible).toBe(false);
+		expect(resolveExternalContentView({ ...blocked, host: false })).toStrictEqual({
+			allowed: false,
+			barVisible: false,
+		});
+		expect(resolveExternalContentView({ ...blocked, closed: true })).toStrictEqual({
+			allowed: false,
+			barVisible: false,
+		});
+	});
+
+	it('lets the host block what the user enabled, and allow without asking', () => {
+		expect(resolveExternalContentView({ ...blocked, host: false, enabled: true }).allowed).toBe(
+			false,
+		);
+		expect(resolveExternalContentView({ ...blocked, host: true })).toStrictEqual({
+			allowed: true,
+			barVisible: false,
+		});
+	});
+});
+
+describe('dispatchExternalContentBarIntent', () => {
+	it('routes Enable Content and Close', () => {
+		const calls: string[] = [];
+		const handlers = { enable: () => calls.push('enable'), close: () => calls.push('close') };
+		dispatchExternalContentBarIntent(new CustomEvent('x', { detail: { id: 'action' } }), handlers);
+		dispatchExternalContentBarIntent(new CustomEvent('x', { detail: { id: 'close' } }), handlers);
+		dispatchExternalContentBarIntent(new CustomEvent('x'), handlers);
+		expect(calls).toEqual(['enable', 'close']);
 	});
 });
 

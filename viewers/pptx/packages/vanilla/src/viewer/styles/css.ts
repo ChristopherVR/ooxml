@@ -847,7 +847,7 @@ const CHROME_CSS = `
 /* A slide show is not a document: dragging across it must not select text the
    way it does on the editing canvas. */
 .pptxv.pptxv-presenting .pptxv-stage-wrap,
-.pptxv.pptxv-presenting .pptxv-stage-wrap * { user-select: none; }
+.pptxv.pptxv-presenting .pptxv-stage-wrap * { -webkit-user-select: none; user-select: none; }
 `;
 
 /** The full stylesheet text (theme-var defaults + chrome rules + editor + collab chrome). */

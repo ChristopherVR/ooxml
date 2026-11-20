@@ -5,19 +5,25 @@
 		mediaTrimResetPatch,
 		mediaTrimResetState,
 		MEDIA_PLAYBACK_SECTIONS,
+		linkedContentUrl,
 	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 
 	import type { EditorState } from '../../editor/editor-state.svelte';
 	import InspectorFields from './InspectorFields.svelte';
 	import MediaTrimTimeline from './MediaTrimTimeline.svelte';
+	import { getLinkedContentGetter } from '../../state/linked-content';
 	import { resolveMediaPreviewUrl } from './media-preview';
 
 	const { editor, mediaDataUrls = new Map() }: { editor: EditorState; mediaDataUrls?: Map<string, string> } = $props();
 	const t = useTranslator();
 	const resetTrimState = $derived(mediaTrimResetState(editor.selectedElement?.type === 'media' ? editor.selectedElement : undefined, editor.editable));
 	const media = $derived(editor.selectedElement?.type === 'media' ? editor.selectedElement : undefined);
-	const previewUrl = $derived(media ? resolveMediaPreviewUrl(media, mediaDataUrls) : undefined);
+	// The preview plays a linked file only once this viewer allows linked content.
+	const getLinkedContent = getLinkedContentGetter();
+	const previewUrl = $derived(
+		media ? linkedContentUrl(resolveMediaPreviewUrl(media, mediaDataUrls), getLinkedContent()) : undefined,
+	);
 	// eslint-disable-next-line prefer-const
 	let preview = $state<HTMLMediaElement>();
 	// eslint-disable-next-line prefer-const

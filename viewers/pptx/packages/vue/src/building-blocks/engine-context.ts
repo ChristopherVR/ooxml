@@ -1,5 +1,5 @@
 import type { PptxLayoutOption } from 'ooxml-core/pptx';
-import type { ReadOnlyRecommendation } from 'ooxml-ui/pptx';
+import type { ReadOnlyRecommendation, ViewerExternalContentBar } from 'ooxml-ui/pptx';
 import type {
 	ParsedSignature,
 	PptxAppProperties,
@@ -105,4 +105,6 @@ export interface BuildingBlocksEngineContext {
 	firstSlideNumber: Ref<number | undefined>;
 	theme: Ref<PptxTheme | undefined>;
 	tableStyleMap: Ref<ParsedTableStyleMap | undefined>;
+	/** The viewer's security bar state and actions (the canvas does not draw the bar). */
+	externalContent: () => ViewerExternalContentBar;
 }

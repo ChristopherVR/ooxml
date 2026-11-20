@@ -12,6 +12,7 @@
  * `packages/vanilla/src/viewer/export/export-video.test.ts`.
  */
 
+import { VideoExportUnsupportedError } from 'ooxml-ui/pptx';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -251,7 +252,7 @@ describe('webm mime candidates', () => {
 describe('recordWebm', () => {
 	class MockMediaRecorder {
 		static instances: MockMediaRecorder[] = [];
-		static isTypeSupported = vi.fn(() => true);
+		static isTypeSupported = vi.fn((_mime: string) => true);
 
 		ondataavailable: ((event: { data: Blob }) => void) | null = null;
 		onstop: (() => void) | null = null;
@@ -314,6 +315,29 @@ describe('recordWebm', () => {
 		expect(MockMediaRecorder.instances).toHaveLength(1);
 		expect(MockMediaRecorder.instances[0]!.stopCalls).toBe(1);
 		expect(drawImage).toHaveBeenCalledWith(expect.anything(), 0, 0);
+	});
+
+	it('records MP4 where only MP4 is supported (Safari)', async () => {
+		MockMediaRecorder.isTypeSupported.mockImplementation((mime: string) =>
+			mime.startsWith('video/mp4'),
+		);
+		try {
+			const blob = await recordWebm([fakeCanvas()], { slideDurationMs: 10, fps: 10 });
+			expect(blob.type).toBe('video/mp4');
+			expect(MockMediaRecorder.instances[0]!.options?.mimeType).toMatch(/^video[/]mp4/u);
+		} finally {
+			MockMediaRecorder.isTypeSupported.mockReturnValue(true);
+		}
+	});
+
+	it('reports unsupported instead of constructing a recorder that throws', async () => {
+		MockMediaRecorder.isTypeSupported.mockReturnValue(false);
+		try {
+			await expect(recordWebm([fakeCanvas()])).rejects.toThrow(VideoExportUnsupportedError);
+			expect(MockMediaRecorder.instances).toHaveLength(0);
+		} finally {
+			MockMediaRecorder.isTypeSupported.mockReturnValue(true);
+		}
 	});
 
 	it('stops every capture-stream track once recording finishes', async () => {

@@ -32,6 +32,7 @@ function harness(): {
 		getChrome: () => chrome,
 		renderer: { renderStage, renderThumbnails: vi.fn() } as unknown as RenderController,
 		callbacks: {},
+		externalContentBarInChrome: () => false,
 	});
 	return { sync, renderStage };
 }

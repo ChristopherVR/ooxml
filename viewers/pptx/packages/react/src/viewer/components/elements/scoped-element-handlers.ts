@@ -1,3 +1,4 @@
+import { restoreLinkedContent } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import type { ElementRendererProps } from './element-renderer-types';
@@ -32,7 +33,10 @@ export function getScopedElementHandlers(elementId: string, options: HandlerOpti
 				options.onResizeTableRow?.(elementId, rowIndex, newHeight)
 		: undefined;
 	const smartArtUpdateHandler = options.onUpdateSmartArtElement
-		? (updates: Partial<PptxElement>) => options.onUpdateSmartArtElement?.(elementId, updates)
+		? // The SmartArt and chart renderers build `updates` from the element as drawn, linked
+			// content withheld; what the edit kept goes back to the model's own data.
+			(updates: Partial<PptxElement>) =>
+				options.onUpdateSmartArtElement?.(elementId, restoreLinkedContent(updates))
 		: undefined;
 	return {
 		cellSelectHandler,

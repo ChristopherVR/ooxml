@@ -31,6 +31,7 @@
 				mediaDataUrls={pane.mediaDataUrls}
 				fieldContext={pane.fieldContext}
 				tableStyleContext={pane.tableStyleContext}
+				linkedContent={pane.linkedContent}
 			/>
 		</button>
 	{/each}

@@ -1,3 +1,4 @@
+import { playDeckSound, stopDeckSound } from 'ooxml-ui/pptx';
 import type { RunProgramNotice } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 /**
@@ -8,7 +9,6 @@ import type { PptxElement, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 import { useRef } from 'react';
 
 import type { ViewerMode } from '../types-core';
-import { playAnimationSound, stopAnimationSound } from '../utils/animation-sound';
 import { stopAllPersistentAudio } from '../utils/media';
 import { mayLeaveSlideShow } from './presentation-mode/audience-content-store';
 import type { EditorHistoryResult } from './useEditorHistory';
@@ -42,6 +42,11 @@ export interface UsePresentationSetupInput {
 	/** Raw PPTX bytes: forwarded to audience window for content sharing. */
 	content?: ArrayBuffer | Uint8Array | null;
 	mediaDataUrls: Map<string, string>;
+	/**
+	 * Whether this viewer allows the deck's linked content (`externalContent.allowed`). A
+	 * linked sound plays only when it does.
+	 */
+	linkedContent?: boolean;
 	presentationProperties: {
 		loopContinuously?: boolean;
 		showType?: string;
@@ -120,6 +125,7 @@ export function usePresentationSetup(input: UsePresentationSetupInput): Presenta
 		containerRef,
 		content,
 		mediaDataUrls,
+		linkedContent = false,
 		presentationProperties,
 		setMode,
 		setActiveSlideIndex,
@@ -137,6 +143,9 @@ export function usePresentationSetup(input: UsePresentationSetupInput): Presenta
 	} = input;
 
 	const actionSoundHandlerRef = useRef<PptxHandler | null>(null);
+	// Read when a sound plays, so Enable Content during a show applies to the next sound.
+	const linkedContentRef = useRef(linkedContent);
+	linkedContentRef.current = linkedContent;
 
 	// See `setExitModeHandler` on the return type: lets the caller route
 	// keyboard/end-of-show exits through the same annotation-prompt dialog as
@@ -169,7 +178,7 @@ export function usePresentationSetup(input: UsePresentationSetupInput): Presenta
 			}
 			if (mode === 'present' && nextMode !== 'present') {
 				stopAllPersistentAudio();
-				stopAnimationSound();
+				stopDeckSound();
 				const exitHandler = exitModeHandlerRef.current;
 				if (exitHandler) {
 					exitHandler(nextMode);
@@ -187,59 +196,19 @@ export function usePresentationSetup(input: UsePresentationSetupInput): Presenta
 		},
 		onSetActiveSlideIndex: setActiveSlideIndex,
 		// `p:sndAc/p:endSnd` ("Stop Previous Sound"): silences whatever transition
-		// sound is currently looping. A non-looping transition sound plays through
-		// its own ad hoc `Audio` below rather than this singleton (it finishes on
-		// its own in a few seconds either way), so only the loop case is stoppable
+		// sound is currently looping. A one-off sound plays alongside it (it finishes
+		// on its own in a few seconds either way), so only the loop case is stoppable
 		// here - matching the common "Loop Until Next Sound... then Stop" pairing.
-		onStopActionSound: () => stopAnimationSound(),
+		onStopActionSound: () => stopDeckSound(),
 		onPlayActionSound: (soundPath: string, options?: { loop?: boolean }) => {
-			void (async () => {
-				if (!soundPath) {
-					return;
-				}
-				// Looping sounds route through the animation-sound singleton so
-				// they stop when the next sound plays or the show exits
-				// (stopAnimationSound is called on mode change); a stray
-				// fire-and-forget Audio would otherwise loop forever.
-				const loop = options?.loop === true;
-				const cachedSound = mediaDataUrls.get(soundPath);
-				if (cachedSound) {
-					try {
-						if (loop) {
-							playAnimationSound(cachedSound, true);
-						} else {
-							const audio = new Audio(cachedSound);
-							void audio.play().catch(() => {
-								/* ignore */
-							});
-						}
-					} catch {
-						/* ignore */
-					}
-					return;
-				}
-				const sharedHandler = actionSoundHandlerRef.current;
-				if (!sharedHandler) {
-					return;
-				}
-				try {
-					const dataUrl = await sharedHandler.getImageData(soundPath);
-					if (!dataUrl) {
-						return;
-					}
-					mediaDataUrls.set(soundPath, dataUrl);
-					if (loop) {
-						playAnimationSound(dataUrl, true);
-					} else {
-						const audio = new Audio(dataUrl);
-						void audio.play().catch(() => {
-							/* ignore */
-						});
-					}
-				} catch {
-					/* ignore */
-				}
-			})();
+			// A looping sound replaces the one playing, so it stops when the next sound plays
+			// or the show exits; a one-off sound plays alongside it and finishes on its own.
+			const loop = options?.loop === true;
+			playDeckSound(
+				soundPath,
+				{ mediaUrls: mediaDataUrls, linkedContent: linkedContentRef.current },
+				{ loop, overlap: !loop },
+			);
 		},
 		// PowerPoint's Ctrl+A "arrow" is the plain pointer, i.e. no active tool.
 		onSetPointerTool: (tool) =>

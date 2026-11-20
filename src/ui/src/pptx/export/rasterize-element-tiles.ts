@@ -9,6 +9,7 @@
  * proportional position on a PDF page, so a PDF/notes-PDF export escapes the
  * browser canvas cap without ever stitching a PNG at all.
  */
+import { maxCanvasAreaFor } from '../render/canvas-area-cap';
 import { computeExportTilePlan, tileRectToSourceRect } from '../render/export-tile-plan';
 import type {
 	FontStyleDocumentLike,
@@ -81,7 +82,8 @@ export async function rasterizeElementTiles(
 ): Promise<RasterizeElementTilesResult> {
 	const scale = options.scale && options.scale > 0 ? options.scale : 1;
 	const maxDim = options.maxCanvasDim ?? probeMaxCanvasDimension();
-	const plan = computeExportTilePlan(naturalWidth * scale, naturalHeight * scale, maxDim);
+	const maxArea = options.maxCanvasArea ?? maxCanvasAreaFor(maxDim);
+	const plan = computeExportTilePlan(naturalWidth * scale, naturalHeight * scale, maxDim, maxArea);
 
 	const body =
 		options.mode === 'html2canvas'

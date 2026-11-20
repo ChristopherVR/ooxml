@@ -91,6 +91,14 @@ Slides marked as hidden stay in the file but are skipped during a slideshow.
 
 During a slideshow, notes are shown to you (not the audience) in **presenter view**; see [Presenting](/user/presenting#presenter-view).
 
+## Linked pictures and media
+
+Some presentations link pictures, audio or video to a web address instead of storing them in the file. As in Microsoft PowerPoint, they are not downloaded when the presentation opens, because downloading tells that server you opened it. A bar under the ribbon reads **SECURITY WARNING References to external pictures and other media have been blocked.** It shows even when the viewer has no toolbar.
+
+- Click **Enable Content** to download them for this presentation. Nothing reopens: your edits, saved or not, the slide you are on and your undo history stay as they are. In a shared session, each person chooses for themselves.
+- Click the close button to keep them blocked.
+- The choice lasts until you open another presentation. To download linked content without asking, turn on **File > Options > Trust Center > Allow external content**.
+
 ## Next
 
 - Make changes to slides: [Editing Slides](/user/editing)

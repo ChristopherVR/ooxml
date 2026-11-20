@@ -636,6 +636,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 			letter-spacing: 0.05em;
 			color: var(--pptx-inspector-muted, #888);
 			cursor: pointer;
+			-webkit-user-select: none;
 			user-select: none;
 		}
 

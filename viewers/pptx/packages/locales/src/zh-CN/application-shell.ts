@@ -211,6 +211,10 @@ export const translations = {
 	'pptx.compatibility.collaborationValueRejected':
 		'协作者发送的内容因不允许在此使用（例如不安全的链接或文件类型）而被省略。',
 	'pptx.compatibility.exportBackendUnavailable': '当前环境中无法导出为此格式。',
+	'pptx.externalContent.title': '安全警告',
+	'pptx.externalContent.message': '已阻止对外部图片和其他媒体的引用。',
+	'pptx.externalContent.enable': '启用内容',
+	'pptx.externalContent.close': '关闭',
 	'pptx.readOnly.bannerTitle': '只读',
 	'pptx.readOnly.editAnyway': '无论如何编辑',
 	'pptx.readOnly.dismiss': '关闭',

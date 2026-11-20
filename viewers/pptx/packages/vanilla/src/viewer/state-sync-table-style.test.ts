@@ -27,11 +27,14 @@ function harness(): {
 		setLoading: vi.fn(),
 		setError: vi.fn(),
 		setPresenting: vi.fn(),
+		// The security bar follows the table styles too: they can link a picture fill.
+		setExternalContentBar: vi.fn(),
 	} as unknown as ViewerChrome;
 	const sync = createStateSync({
 		getChrome: () => chrome,
 		renderer: { renderStage, renderThumbnails } as unknown as RenderController,
 		callbacks: {},
+		externalContentBarInChrome: () => false,
 	});
 	return { sync, renderStage, renderThumbnails };
 }

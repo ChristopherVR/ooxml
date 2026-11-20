@@ -495,25 +495,20 @@ describe('presentationTransitionOverlayComponent transition sound (p:sndAc)', ()
 	// No TestBed in this package (effects need a scheduler flush this project's
 	// vitest config does not provide), matching the morph-CSS assertions above:
 	// the wiring is asserted as source, and the primitives it delegates to
-	// (`resolveTransitionSoundAction`/`applySlideTransitionSound`,
-	// `playAnimationSound`/`stopAnimationSound`) are unit-tested in
-	// `slide-transition-sound-playback.test.ts` and `animation-sound.test.ts`.
+	// (`resolveTransitionSoundAction`/`applySlideTransitionSound`, `playDeckSound`/
+	// `stopDeckSound`) are unit-tested in ooxml-ui's `slide-transition-sound-playback.test.ts`
+	// and `deck-sound.test.ts`.
 
-	it('resolves the raw archive soundPath through mediaDataUrls() instead of handing it to Audio directly', () => {
-		// The regression this closes: the old code was
-		// `new Audio(this.transition().soundPath)`, which 404s because a
-		// `ppt/media/media3.wav` archive path is not a fetchable browser URL.
+	it("plays the sound from the viewer's media map and its linked-content consent", () => {
+		// A bare `new Audio(this.transition().soundPath)` 404'd on an archive path and fetched
+		// a linked sound before the viewer allowed linked content.
 		expect(OVERLAY_SOURCE).not.toContain('new Audio(');
-		expect(OVERLAY_SOURCE).toContain('this.mediaDataUrls().get(soundPath)');
-	});
-
-	it('plays/stops through the shared per-effect sound singleton, not a private Audio element', () => {
 		expect(OVERLAY_SOURCE).toContain('applySlideTransitionSound(');
-		expect(OVERLAY_SOURCE).toContain('play: playAnimationSound');
-		expect(OVERLAY_SOURCE).toContain('stop: stopAnimationSound');
+		expect(OVERLAY_SOURCE).toContain('mediaUrls: this.mediaDataUrls()');
+		expect(OVERLAY_SOURCE).toContain('linkedContent: untracked(this.linkedContentAllowed)');
 	});
 
 	it('stops the transition sound on teardown', () => {
-		expect(OVERLAY_SOURCE).toContain('stopAnimationSound();');
+		expect(OVERLAY_SOURCE).toContain('stopDeckSound();');
 	});
 });

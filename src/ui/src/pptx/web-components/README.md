@@ -110,7 +110,8 @@ for display), already-translated `saveText` with `saveKind` (`idle`, `saving`,
 `translate`. Use `resolveStatusBarSave` for the save text and `statusBarViewMode`
 for the pressed view. The Notes, Normal, Sorter and Slide Show buttons expose
 `aria-pressed`; every button has an `aria-label` and a title; the percent readout
-is named by "Zoom to fit". The shadow root exposes `part="bar"`.
+is named by the percentage it shows, then "Zoom to fit" ("100%, Zoom to fit"), so
+the name contains the visible label. The shadow root exposes `part="bar"`.
 
 User activation emits one bubbling, composed `status-request` event with
 `detail: { id }` where `id` is `notes`, `normal`, `sorter`, `slideShow`,

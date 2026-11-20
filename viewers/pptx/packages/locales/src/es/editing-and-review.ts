@@ -239,6 +239,11 @@ export const translations = {
 		'Esta presentación está protegida con contraseña. Se abrió como solo lectura hasta que se indique la contraseña.',
 	'pptx.readOnly.markedFinal':
 		'El autor marcó esta presentación como final. Se abrió como solo lectura para evitar cambios.',
+	'pptx.externalContent.title': 'ADVERTENCIA DE SEGURIDAD',
+	'pptx.externalContent.message':
+		'Se han bloqueado las referencias a imágenes y otros elementos multimedia externos.',
+	'pptx.externalContent.enable': 'Habilitar contenido',
+	'pptx.externalContent.close': 'Cerrar',
 	'pptx.readOnly.bannerTitle': 'Solo lectura',
 	'pptx.readOnly.editAnyway': 'Editar de todos modos',
 	'pptx.readOnly.dismiss': 'Descartar',

@@ -1,5 +1,6 @@
 /* oxlint-disable eslint/one-var -- many independent `it()` blocks, each with
    its own short arrange/act/assert consts. */
+import { VideoExportUnsupportedError } from 'ooxml-ui/pptx';
 import { describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
 
@@ -152,6 +153,51 @@ describe('useMediaExport - GIF', () => {
 });
 
 describe('useMediaExport - WebM', () => {
+	it('records MP4 and names the download .mp4 where only MP4 is supported (Safari)', async () => {
+		vi.useFakeTimers();
+		vi.stubGlobal('MediaRecorder', {
+			isTypeSupported: (mime: string) => mime.startsWith('video/mp4'),
+		});
+		try {
+			const recorder = makeRecorderFactory(),
+				downloadBlob = vi.fn(),
+				{ exportWebm } = useMediaExport({
+					slideCount: ref(1),
+					rasterizeSlide: vi.fn().mockResolvedValue(fakeCanvas()),
+					createRecorder: recorder.factory,
+					createCanvas: () => fakeCanvas(),
+					downloadBlob,
+				}),
+				promise = exportWebm({ slideDurationMs: 30, fps: 30 });
+			await vi.runAllTimersAsync();
+			const blob = await promise;
+			expect(blob?.type).toBe('video/mp4');
+			expect(downloadBlob.mock.calls[0][1]).toBe('presentation.mp4');
+		} finally {
+			vi.unstubAllGlobals();
+			vi.useRealTimers();
+		}
+	});
+
+	it('reports unsupported before capturing when no container can be recorded', async () => {
+		vi.stubGlobal('MediaRecorder', { isTypeSupported: () => false });
+		try {
+			const rasterizeSlide = vi.fn().mockResolvedValue(fakeCanvas()),
+				{ exportWebm, exporting } = useMediaExport({
+					slideCount: ref(1),
+					rasterizeSlide,
+					createRecorder: makeRecorderFactory().factory,
+					createCanvas: () => fakeCanvas(),
+					downloadBlob: vi.fn(),
+				});
+			await expect(exportWebm()).rejects.toThrow(VideoExportUnsupportedError);
+			expect(rasterizeSlide).not.toHaveBeenCalled();
+			expect(exporting.value).toBeFalsy();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it('records every slide and downloads a webm blob', async () => {
 		vi.useFakeTimers();
 		const recorder = makeRecorderFactory(),

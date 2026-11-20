@@ -1907,7 +1907,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.masterView.slideMastersTitle': 'Slide Masters',
 	'pptx.masterView.notesMasterTitle': 'Notes Master',
 	'pptx.masterView.handoutMasterTitle': 'Handout Master',
-	'pptx.masterView.collapse': 'Collapse master pane',
 
 	// Mobile presenter view (Vue)
 	'pptx.mpresenter.noSlides': 'No slides to present.',
@@ -2206,7 +2205,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.exportCurrentSlidePng': 'Export current slide as PNG',
 	'pptx.ribbon.exportDeckPdf': 'Export deck as PDF',
 	'pptx.ribbon.exportGifTitle': 'Export as GIF',
-	'pptx.ribbon.exportWebmVideo': 'Export as WebM video',
+	'pptx.ribbon.exportWebmVideo': 'Export as video',
 	'pptx.ribbon.exporting': 'Exporting…',
 	'pptx.ribbon.properties': 'Properties',
 	'pptx.ribbon.signatures': 'Signatures',
@@ -2615,7 +2614,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.export.gifAnimated': 'Animated GIF',
 	'pptx.export.pdfAllSlides': 'PDF (all slides)',
 	'pptx.export.pngCurrentSlide': 'PNG (current slide)',
-	'pptx.export.webmVideo': 'WebM video',
+	'pptx.export.webmVideo': 'Video',
 	'pptx.file.copyImage': 'Copy Image',
 	'pptx.file.copyImageTooltip': 'Copy Slide as Image',
 	'pptx.file.fonts': 'Fonts',
@@ -3100,6 +3099,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.export.errorNoSlidesNotesPdf': 'No slides were captured for notes PDF export',
 	'pptx.export.errorNoSlidesPdf': 'No slides were captured for PDF export',
 	'pptx.export.errorNoSlidesVideo': 'No slides were captured for video export',
+	'pptx.export.errorVideoUnsupported':
+		'This browser cannot record video. Export the slides as a GIF, or try another browser.',
 	'pptx.export.recording': 'Recording',
 	'pptx.export.recordingVideo': 'Recording video...',
 	'pptx.export.rendering': 'Rendering',
@@ -3645,7 +3646,7 @@ export const translationsEn: Record<string, string> = {
 		'Documents open read-only; use Enable Editing to make changes.',
 	'pptx.options.trust.allowExternalContent': 'Allow external content (remote images and media)',
 	'pptx.options.trust.allowExternalContentInfo':
-		'When off, only content embedded in the file is displayed.',
+		'When off (the default, as in PowerPoint), linked pictures and media are not downloaded; a security bar offers Enable Content for each presentation.',
 	'pptx.options.trust.allowFontDownloads':
 		'Download fonts that are not installed or embedded (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':
@@ -4028,7 +4029,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.backstage.card.png.title': 'Export current slide',
 	'pptx.backstage.card.png.body': 'Create a high-quality PNG image.',
 	'pptx.backstage.card.video.title': 'Create a Video',
-	'pptx.backstage.card.video.body': 'Export slide timings and animations as WebM.',
+	'pptx.backstage.card.video.body': 'Export slide timings and animations as a video.',
 	'pptx.backstage.card.gif.title': 'Create an Animated GIF',
 	'pptx.backstage.card.gif.body': 'Make a compact looping preview.',
 	'pptx.backstage.card.json.title': 'Export as JSON',
@@ -4243,6 +4244,11 @@ export const translationsEn: Record<string, string> = {
 	// Wave-4 parity UI: read-only banner, compat toasts, slide-size rescale,
 	// chart subtype pickers, master-view CRUD, comment mentions, recent colours,
 	// custom-show / extended hyperlink actions
+	'pptx.externalContent.title': 'SECURITY WARNING',
+	'pptx.externalContent.message':
+		'References to external pictures and other media have been blocked.',
+	'pptx.externalContent.enable': 'Enable Content',
+	'pptx.externalContent.close': 'Close',
 	'pptx.readOnly.bannerTitle': 'Read-only',
 	'pptx.readOnly.editAnyway': 'Edit anyway',
 	'pptx.readOnly.dismiss': 'Dismiss',

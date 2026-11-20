@@ -9,6 +9,7 @@ import type {
 import { provide } from 'vue';
 
 import { FieldContextKey } from './field-context';
+import { provideLinkedContentScope } from './linked-content';
 import { TableThemeKey, tableThemeContextFor } from './table-theme';
 import type { TableThemeContext } from './table-theme';
 
@@ -30,6 +31,11 @@ export interface SlidesPaneDeckSources {
 	theme?: PptxTheme | undefined;
 	/** Parsed `ppt/tableStyles.xml`, for table style lookups. */
 	tableStyleMap?: ParsedTableStyleMap | undefined;
+	/**
+	 * Draw the deck's linked web content (the viewer's `externalContent.allowed`). Unset keeps
+	 * the surrounding viewer's decision; outside a viewer, linked content is withheld.
+	 */
+	linkedContent?: boolean | undefined;
 }
 
 /** The deck-wide field context of the rail's thumbnails (no slide number or title). */
@@ -51,7 +57,7 @@ export function slidesPaneTableTheme(
 }
 
 /**
- * Provide the rail's field and table theme contexts to its subtree (call from
+ * Provide the rail's field, table theme and linked-content contexts to its subtree (call from
  * `setup`). The thumbnails' `SlideStage` re-points the field context at the
  * slide each one paints, so one deck-wide value serves every thumbnail. Both
  * are built from the host's props only, so the rail renders the same inside
@@ -60,4 +66,5 @@ export function slidesPaneTableTheme(
 export function provideSlidesPaneContexts(sources: () => SlidesPaneDeckSources): void {
 	provide(FieldContextKey, () => slidesPaneFieldContext(sources()));
 	provide(TableThemeKey, () => slidesPaneTableTheme(sources()));
+	provideLinkedContentScope(() => sources().linkedContent);
 }

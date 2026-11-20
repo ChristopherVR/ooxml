@@ -11,8 +11,13 @@ import {
 	onProfile,
 } from './profile-state.js';
 
+/**
+ * A profile's picture: the photo, or the initials drawn by CSS. It is decorative, so the initials
+ * are not text: the controls it sits in are named by the profile's name, never by its initials.
+ */
 export function avatar(p, large = false) {
-	return `<span class="avatar${large ? ' avatar-large' : ''}">${profilePhoto(p) ? `<img src="${profilePhoto(p)}" alt="" />` : escape(initials(p.name))}</span>`;
+	const photo = profilePhoto(p);
+	return `<span class="avatar${large ? ' avatar-large' : ''}" aria-hidden="true"${photo ? '' : ` data-initials="${escape(initials(p.name))}"`}>${photo ? `<img src="${photo}" alt="" />` : ''}</span>`;
 }
 
 export function mountProfile({ beforeSwitch, changed }) {

@@ -8,6 +8,7 @@ import type {
 	ToolbarActionId,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
+import type { ViewerExternalContentBar } from 'ooxml-ui/pptx';
 import type React from 'react';
 
 import type { SlideCanvasProps } from '../components/canvas/canvas-types';
@@ -135,6 +136,15 @@ export interface ViewerBuildingBlocksResult {
 	error: string | null;
 	/** Current autosave-to-localStorage recovery status. */
 	autosaveStatus: AutosaveStatus;
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them, and a custom shell renders `<ExternalContentBar>` while
+	 * `barVisible`, wiring Enable Content and Close to `enable` and `close`. Enable Content only
+	 * redraws: nothing reloads, undo history stays, and collaborators decide for themselves.
+	 * `canvasProps` and `slidesPaneProps` carry `allowed` as `linkedContent`; pass it to any
+	 * `SlideThumbnail` the shell draws itself.
+	 */
+	externalContent: ViewerExternalContentBar;
 	/**
 	 * Operations and state for finishing picker, dialog and layout workflows from host-rendered
 	 * controls: image / media insertion, hyperlink, SmartArt and equation editing, Find / Replace

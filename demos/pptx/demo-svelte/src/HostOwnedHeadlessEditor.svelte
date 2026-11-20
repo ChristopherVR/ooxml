@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { describeCollaborationShellState } from 'pptx-svelte-viewer';
+	import { describeCollaborationShellState, ExternalContentBar } from 'pptx-svelte-viewer';
 	import { CollaborationCursors, createSlidesPaneProps, createViewerState, EditorLayer, RemoteSelectionOverlay, SlideCanvas, SlidesPane } from 'pptx-svelte-viewer/viewer';
 	import type { CollaborationShellState, ViewerStateBag } from 'pptx-svelte-viewer/viewer';
 	import { onDestroy } from 'svelte';
@@ -58,6 +58,10 @@
 		{/each}
 		<output aria-label={t('pptx.collaboration.shellStatusLabel')}>{describeCollaborationShellState(shellState, t)}</output>
 	</nav>
+	<!-- PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. -->
+	{#if viewerState.externalContent.barVisible}
+		<ExternalContentBar onenable={viewerState.externalContent.enable} onclose={viewerState.externalContent.close} />
+	{/if}
 	<div class="body">
 	{#if hostStrip}<HostSlideStrip pane={slidesPaneProps} />{:else}<SlidesPane {...slidesPaneProps} />{/if}
 	<div data-pptx-viewport class="viewport">

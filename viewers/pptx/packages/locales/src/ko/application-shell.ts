@@ -225,6 +225,10 @@ export const translations = {
 	'pptx.compatibility.collaborationValueRejected':
 		'공동 작업자가 보낸 콘텐츠는 안전하지 않은 링크나 파일 형식처럼 여기에서 허용되지 않아 제외되었습니다.',
 	'pptx.compatibility.exportBackendUnavailable': '현재 환경에서는 이 형식으로 내보낼 수 없습니다.',
+	'pptx.externalContent.title': '보안 경고',
+	'pptx.externalContent.message': '외부 그림 및 기타 미디어에 대한 참조가 차단되었습니다.',
+	'pptx.externalContent.enable': '콘텐츠 사용',
+	'pptx.externalContent.close': '닫기',
 	'pptx.readOnly.bannerTitle': '읽기 전용',
 	'pptx.readOnly.editAnyway': '그래도 편집',
 	'pptx.readOnly.dismiss': '해제',
