@@ -98,8 +98,8 @@ As in Microsoft PowerPoint, a deck's linked pictures, fills, backgrounds, bullet
 To keep downloading linked content without asking, or to block it without the bar:
 
 ```tsx
-<PowerPointViewer source={file} allowExternalContent={true} />  // download, no bar
-<PowerPointViewer source={file} allowExternalContent={false} /> // block, no bar
+<PowerPointViewer content={file} allowExternalContent={true} />  // download, no bar
+<PowerPointViewer content={file} allowExternalContent={false} /> // block, no bar
 ```
 
 A custom shell built from building blocks renders the bar from `externalContent` (or the binding's `ExternalContentBar` component) and passes `externalContent.allowed` as `linkedContent` to slides it draws itself: `SlideThumbnail`, `renderSlideStage`, `renderSlideThumbnail` and `createSlidesPane`. A surface that is never told the consent withholds linked content.
