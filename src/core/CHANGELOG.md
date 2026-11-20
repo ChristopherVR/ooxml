@@ -1,11 +1,265 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+This release makes `ooxml-core` safe to point at files you did not write. Every package is opened through one guarded zip reader, and the work a chart, a formula, a collaboration update or a Visio drawing may cost is bounded, so a small crafted file is refused instead of exhausting memory or stalling a load. Digital signatures are now verified, in browsers as well as Node, and every format reports the same `SignatureState`. Large Word saves, Excel recalculation and PowerPoint chart and SmartArt loads are much faster, and the package requires Node.js 22.3 or newer. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) shows the before and after for every breaking change.
+
+### Breaking changes
+
+#### Every area
+
+- Node.js 22.3 or newer is required (`"engines": { "node": ">=22.3" }`). The Visio memory budget reads the heap limit through `process.getBuiltinModule`, which Node added in 22.3; on an older Node it assumes a 1 GiB heap.
+- `emf-converter` 5 loads its image decoders and colour data on demand from `dist/browser-chunks/` and `dist/node-chunks/`. Package managers and bundlers need no change. If you copy compiled files by hand, deploy those folders next to the entry files and keep their relative paths.
+
+#### Signatures (`ooxml-core/opc`, `/docx`, `/xlsx`, `/pptx`, `/pptx/signature-node`)
+
+- A signed document carries a verified `SignatureSummary` (`{ state, signatures }`). `inspectSignaturesFromBuffer` in `ooxml-core/pptx` now verifies and returns one, `parseSignaturesFromBuffer` and `PackageSignatureInfo` are removed, and `Workbook.signatures` is a `SignatureSummary` instead of `{ count, parts }`. Show a document as signed only when `signature.isVerifiedSignatureState(summary.state)` is true; `hasDigitalSignatures` still says only that signature parts exist.
+- Loading a signed Word or Excel document no longer adds an English "signature not verified" message to `warnings`. Read `signatures.state` and word it with `signatureStateText` from `ooxml-core/i18n`.
+- The Node verifier reports `verified-trusted` only when the signature value and every signed reference verify, the references cover the document content, and the signer certificate permits document signing and chains to a root you configured. No roots are built in and the platform's TLS roots are no longer used: set `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`. A certificate whose extended key usage excludes document signing (a TLS server certificate, or one listing only `clientAuth` or only `codeSigning`), whose key usage has neither `digitalSignature` nor `nonRepudiation`, or whose chain exceeds a `pathLenConstraint` is untrusted; reissue such certificates if their signatures must be trusted.
+- A new status, `coverage-incomplete`, on the report and on each signature detail. `SignatureDetail` gains the required fields `uncoveredParts` and `coverageGaps`, and `SignatureReferenceCheck.digestStatus` gains `content-type-mismatch`. A stored item that no signature covers makes the result `coverage-incomplete`, even when no relationship points at it; document properties, thumbnails, custom XML and presentation and view properties may stay unsigned in their usual locations. `referenceChecks` is empty unless the signature value verified, and `signingTime` is read only from signed content.
+- Integrity is decided first. `computeDetailStatus` and `computeVerificationStatus` rank a failed signature value, reference or coverage check above certificate, revocation, timestamp and policy statuses, for each signature and across the package, so some packages report a different status than before.
+- Timestamp tokens are not validated: `evaluateTimestampAuthority` reports `not-checked` for a token, so with `PPTX_VIEWER_REQUIRE_TIMESTAMP` set every signature reports `timestamp-untrusted`. Remove the variable unless you want that.
+- Removed from `ooxml-core/pptx/signature-node`: `verifySignatureValue` (use `parseXmlSignature` and then `verifySignedInfo`), `buildReferenceChecksFromSignatureXml` and `buildReferenceChecksFromPptxViewerManifest` (use `checkSignedReferences`), `PPTX_VIEWER_MANIFEST_NS` (the unsigned manifest extension is no longer read), `normalizePartPath`, and `canonicalizeNode`, `canonicalizeSignedInfoXml`, `getNodeLocalName` and `getFirstDescendantElementByLocalName` (use `signature.canonicalize` from `ooxml-core/opc`). `evaluateSignatureCoverage` no longer takes the signature paths, and `SignaturePackage` gains `namesByKey`.
+- `resolveReferenceUriToPart` and `parseReferenceUri` strip the `?ContentType=` query, keep the part name's percent-encoding and return `undefined` for a URI that does not name exactly one valid part. The enveloped signature transform is no longer supported.
+- `signPptxWithCertificate` returns `success: false` and no `signedData` for a stored item whose name is not a valid part name, for a relationships part the strict reader rejects, and for output whose signature does not verify and cover its content. Check `success` before using the result; trust and policy outcomes still do not fail signing.
+- OCSP revocation checks use `node:http` and `node:https` instead of the global `fetch`, so a replaced `fetch`, a fetch dispatcher or a fetch proxy no longer sees them. Allow direct outbound HTTP and HTTPS to public responders, intercept at the `node:http` level in tests, or pass `{ checkRevocation: false }` to `inspectPptxDigitalSignatures`.
+- `parseRelationshipsPart` moved to `ooxml-core/opc` and is strict: it throws on a part the schema does not allow, and accepts an empty `Target` and `Id`s that differ only in case, which the schema allows.
+
+#### `ooxml-core/pptx`
+
+- Element ids are built from an encoded form of the part name. Decks whose part names use only letters, digits, `-`, `.`, `_`, `~` and `/` keep exactly the same ids, such as `ppt/slides/slide1.xml-shape-0`; any other character, such as a space or a non-ASCII letter, now appears percent-encoded, including in placeholders a layout switch creates. If you stored ids for such decks, reload and read them again. `PptxSlide.id` is unchanged.
+- Slides read from a collaboration room (`readSlidesFromYDoc`, `readSlideFromYMap`) are checked. An element id that is not a safe token is encoded the way the loader encodes part names, a picture, media, model or embedded-file field keeps only a `data:` URL of its kind (plus `http(s)` URLs or package paths where the loader itself puts them), and a MIME type must be well formed. Anything else is left out of that participant's view with a `COLLABORATION_REMOTE_VALUE_REJECTED` slide warning, and the next local write removes it from the room.
+- A shared presentation carries its pictures and media. Writers put a media token (`ooxml-media:<id>`) in the room instead of a page-local `blob:` URL, and the bytes go once into the new `pptx:media` map. A raw `blob:` URL a peer wrote is refused, so every participant of a room must run this release. If you write slides into a room yourself and name audio or video only by `mediaPath`, call `configureCollaborationMedia(doc, { localMediaUrl })`.
+- `PptxChartData.embeddedWorkbookData`, the parsed rows of a chart's embedded workbook, is set only when the load needed them (no cached categories, values or scatter x values, or a date axis without `c:date1904`). To read any chart's rows, pass `chartData.externalData.embeddedWorkbookData` to `parseEmbeddedXlsx`.
+
+#### `ooxml-core/xlsx`
+
+- Each formula has its own work budget and text budget, and the array budget that used to cover a whole recalculation now covers one formula. A formula past it returns `#NUM!`, usually before any of its work runs, and every other formula still computes. Workbooks Excel calculates in ordinary time stay well inside it; `MMULT` of two 1,500 by 1,500 arrays, `MDETERM` or `MINVERSE` of a 1,000 by 1,000 array, more than about six million `LAMBDA` calls, or `COUNTIF` over 20,000 cells repeated for 20,000 criteria return `#NUM!`.
+- `CalcEngine` has a new `stopped` member, so code that implements the interface itself must add it.
+
+#### `ooxml-core/docx`
+
+- Word style catalogs (`paragraphStyles`, `characterStyles`, `tableStyles`) are values: inheritance is resolved once per `styles` record. Change a style by replacing the record and the style, not by changing a style object in place.
+
+#### `ooxml-core/chart`
+
+- `ChartWorkbookWrite` lists the cells to change: `cells` holds `{ index, value }` entries (an empty value clears the cell) and `cellCount` is the size of the range, replacing `values`. Build `cells` from a whole range with `chartWorkbookCells(values)`. `chartSpaceWorkbookWrites` and `chartExSpaceWorkbookWrites` no longer write blank points; pass the chart as loaded (`chartSpaceWorkbookWrites(space, before)`, `chartExSpaceWorkbookWrites(space, resolve, before)`) to get only the cells the edit changed.
+- `addChartCategory` no longer gives a category to a series that has none, and puts the new category in the row after all the chart's data rather than after each series' own data.
+
+#### `ooxml-core/collab`
+
+- An update that holds more than one struct per 4 bytes, or more than one deleted range per 2 bytes, is refused before it is decoded. The budget grows with the update, so the first sync of a real document stays well inside it. `DEFAULT_UPDATE_LIMITS` is replaced by `defaultUpdateLimits(bytes)`, `MIN_BYTES_PER_STRUCT` and `MIN_BYTES_PER_DELETE_RANGE`; pass `maxStructs` and `maxDeleteRanges` to `applyUpdateSafe` for an absolute limit.
+- A refused update stops the sync. The provider disconnects with status `error` and emits an `UpdateRefusedError` with a `code` (`too-large`, `malformed`, `server-rejected`, `server-full`), the session reports it as `refusal`, and `collaborationStateOf` includes it. A server close with code 1009 stops the WebSocket transport at once, `ApplyResult` failures carry a `code`, and `guardProviderUpdates`' `onRejected` receives the error instead of a string. Test `isUpdateRefusal(error)` and `error.code` instead of matching messages.
+- A serverless (peer-to-peer) session is keyed by a random secret that its invitation link carries after `#key=`. Earlier links and bare room codes without a server no longer join. A `CollaborationConfig` with `transport: 'webrtc'` (or a blank `serverUrl`) must carry `secret` (`createShareSecret`), and `authToken` is no longer the peer-to-peer password. `parseShareInvitation` is replaced by `readShareInvitation`, which returns `{ kind: 'session', target }`, `{ kind: 'missing-secret', roomId }` or `{ kind: 'none' }`.
+- The leave `postMessage` is obeyed only when the embedding window, or the frame itself, sends it from the frame's own origin. A page that embeds a viewer from another origin lists its origin in `teardown.leaveMessageOrigin` of `createCollabSession`.
+
+#### `ooxml-core/opc`
+
+- `diffOpcPackages` rejects a package over the default limits (100 MiB of input, 100 MiB inflated, 10,000 parts). Pass larger limits as the third argument or handle the rejection.
+- The hyperlink policy stores every well-formed scheme that is not script-capable, such as `tel:`, `sip:`, `msteams:` and `onenote:`, and still opens only http, https and mailto unless the host opts in. The `unsupported-scheme` rejection reason is gone.
+
+#### `ooxml-core/teams`
+
+- The packages move to Teams protocol version 2, so deploy the app and the server together; a server closes clients that announce another version. Local snapshots are kept per protocol version, so changes still unsent at the upgrade are discarded.
+- A private chat's call uses the signaling room `call-` followed by the chat's room name (`chatCallRoomId`). A new 1:1 chat id is `dm-` and 32 hex digits, and a new group chat id is `g-` with a random part bound to its creator. Meeting chats are group chats: `meetingChatId` is removed, `createGroup` no longer takes an `id`, and a meeting's chat is `meeting.chatId`.
+- `validateTeamsUpdate` checks the `teams:chats` directory and no longer lets the first writer fill an empty `teams:chat-members` map, so a server must seed new chat rooms itself. A group's directory row keeps the `members` it was created with, later changes are one `member:<user id>` field per person, and the check can answer `{ ok: true, reverts }`: apply the update and then `applyUpdateReverts(doc, reverts)` in one transaction whose origin is not the sender's connection. A third-party signaling server should check each signal's `from` and admit to a call room only the members of its chat (`chatRoomOfCall`). See [the Teams area](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-area.md).
+- `createChatRooms` passes `openRoom` a third argument, `onSynced`, and takes an optional `directorySync`. The handle `openRoom` returns must have `synced()`, and the result has `leavingChats()`.
+
+#### `ooxml-core/automation`
+
+- The Excel write paths (`setXlsxCells`, `applyXlsxEdits`, `proposeXlsxEdits`, `applyXlsxProposal`, `createXlsxFromSheets` and the tools `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal`, now schema version 2) refuse a formula, in a cell or a defined name, that can reach outside the workbook: web, image, RTD, cube, Python and add-in functions, the Excel 4.0 macro functions that evaluate text or run code, DDE or file access, functions that send cell data to an AI service, references to another workbook or a file path, and formulas the parser cannot read. The error names the cell. A host that writes trusted formulas passes `{ formulas: 'unrestricted' }`, or registers `createXlsxTools({ formulas: 'unrestricted' })` instead of `xlsxTools`.
+- `ooxml-core/automation/node`: on every platform, UNC and device paths and paths starting with a backslash are refused before any filesystem call. On Windows, so are path segments containing `:`, `<`, `>`, `"`, `|`, `?` or `*`, segments ending in a dot or a space, device names such as `NUL` or `COM1`, `/x` (rooted on the current drive) and `C:x` (relative to a drive's current folder). Use a path relative to the root, or a full absolute path inside it.
+
+### Security
+
+- Releases are built by a pipeline in which third-party code cannot push, tag or publish. Packages are published from CI with npm provenance, and the signed tarballs attached to each GitHub release are checked against the integrity the registry records.
+- Every security fix in this release has a case in a regression corpus that runs with the unit tests: a small generated input fed to a public entry point in a process with its own time and memory limits and no network. A change that lets such an input hang, exhaust memory, reach the network, run script or pass a check it should fail breaks the build.
+
+#### Hostile files
+
+- Every package is opened through the guarded zip reader, including signature listing, package comparison, Visio collaboration snapshots and embedded chart workbooks, so a small file can no longer inflate without limit. Signature listing ignores a signature part over 16 MiB.
+- `ooxml-core/chart`: chart point counts and point indices no longer decide how much memory is allocated, in classic charts, ChartEx parts, data sheets, edits and embedded workbooks, and a ChartEx histogram draws at most 1,000 bins. Before, a chart of a few hundred bytes could exhaust memory.
+- `ooxml-core/xml`: raw XML scans that ran in time quadratic in the number of empty or unclosed elements (PowerPoint custom geometry and SmartArt text order, Excel header and footer pictures, the declared-font scan every product runs) are now linear. The fast XML reader no longer treats names such as `constructor` as known entities or namespace prefixes.
+- `ooxml-core/xlsx`: a small crafted workbook can no longer hang or crash a host through slow matrix, `LAMBDA`, text, pattern or repeated-scan formulas. Each formula is bounded, `calculateOnOpen` runs under a time limit, what a recalculation stores is bounded, and the `REGEX` functions run on a matcher that cannot freeze.
+- `ooxml-core/xlsx/load`: a damaged or crafted legacy `.xls` workbook can no longer keep the reader busy for many seconds. The bundled legacy codecs (`@christophervr/ole2` 0.14.1) bound each skipped record by the bytes that remain.
+- `ooxml-core/visio`: no Visio file can exhaust the heap of the host that reads or edits it. A read or an edit has one memory budget for every package it opens and the model it builds, estimated before each XML part is parsed and sized from the host's heap; a drawing that does not fit is refused with `LIMIT_XML_MEMORY` and a message saying how much memory it would need.
+
+#### Signatures
+
+- Checking a document's signatures can no longer stall the page. An RSA key under 1024 or over 16384 bits, or with a public exponent over 2^32, is not checked and reports `unsupported`. Each signature tries at most four certificates, reads at most 10,000 references and 100 MB of part data, and a signature part over 16 MB is skipped.
+- References are taken only from the verified `SignedInfo` and the `Manifest` elements it protects, signatures with repeated, misplaced or ambiguous structure, duplicate `Id` values or document type declarations are rejected, and a relationship or relationships part added beside signed content is reported.
+- Part names compare as ECMA-376 Part 2 requires, so case and percent-encoded variants of a part are no longer overlooked, and unsigned relationships are exempted only by exact type and in their usual locations.
+- A revocation or timestamp policy can no longer outrank an integrity failure, revocation requests are sent only for certificates that verified a signature value, and OCSP requests go only to globally routable addresses, connecting to the address that was checked.
+- The verifier and `PptxHandler.load` read relationships through one strict reader, so a signed deck cannot show relationships its signature check did not see. A signed deck the strict reader rejects opens like an unsigned one and is reported as not verified. The Word and Excel loaders are not bound to this reader.
+- Signatures written by `signPptxWithCertificate` bind each part to its content type and no longer reference `[Content_Types].xml`.
+
+#### Collaboration and Teams
+
+- `ooxml-core/collab`: one small update could make a server or a browser allocate millions of objects. Such updates are now refused before they are decoded, by every transport provider.
+- `ooxml-core/collab`: peer-to-peer sessions no longer reveal the room to the public signaling server. It sees only a SHA-256 hash of the session secret and signaling messages encrypted with it, and the secret travels only in the link's fragment, which browsers never send to a server.
+- `ooxml-core/collab`: any page could post the leave message to a viewer frame and drop it from its room. The message must now come from the embedding page.
+- `ooxml-core/pptx`: a participant could put a script or markup payload in an embedded object that ran in another participant's origin when opened. Peer values are checked before they reach the deck, and SVG pictures are shown from `data:` URLs rather than object URLs of the application's origin.
+- `ooxml-core/visio`: a peer can no longer replace an arbitrary package part through shared media, or add markup to the content types part.
+- `ooxml-core/xlsx/collab`: a hyperlink a peer shares keeps every target the loader keeps and leaves out only a script or disguised one, and the left-out value is reported instead of dropped silently.
+- `ooxml-core/teams`: private chat membership is decided by the server. Editing the chat directory no longer gets anyone into a chat, only a chat's members can change its row, its kind and creator are fixed, nobody can take over a room by connecting first, an emptied room stays closed, and a member can no longer remove someone else.
+
+#### Automation
+
+- `ooxml-core/automation`: a prompt-injected model could write a formula that sends workbook data to a server when the file is opened in a spreadsheet application. Such formulas are refused on every write path.
+- `ooxml-core/automation/node`: dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, every refused path returns one error, and an alternate data stream name can no longer create a file past the extension check.
+
+### Added
+
+#### `ooxml-core/opc`
+
+- Signature verification in browsers and Node: the `signature` namespace adds `verifyPackageSignatures`, `verifyPackageSignatureSummary`, `signatureStateOf`, `summarizeSignatures` and the `SignatureState` type (`unsigned`, `verified`, `verified-untrusted`, `invalid`, `unsupported`) for Word, Excel, PowerPoint and Visio packages. They check the signature value, every signed part and coverage with pure TypeScript crypto; a browser has no trust store, so an intact signature is `verified-untrusted` there.
+- Part names and relationships: `partNameToken`, `safeIdToken`, `isSafeIdToken`, `partNameKey`, `isPartName`, `asciiLowerCase`, `parseRelationshipsPart`, `canonicalRelationshipsXml` and `isRelationshipsItem`.
+- Part ownership: `findSharedOwnedParts` lists parts that more than one owner claims, `ownsRelationshipTarget` tells whether a relationship makes its source the owner of its target, and `clonePart` copies a part under a fresh name with its content type and the parts it owns.
+- Resource URL rules for every format: `isAllowedResourceUrl`, `parseDataUrlHeader`, `isBrowserOpenableDataUrl`, `isBrowserOpenableType`, `normalizeMimeType`, `isWellFormedContentType`, `resourceKindAccepts`, `pictureUrl` and `mayUseOriginBlobUrl`.
+- `ZipLimits.createOpenError` chooses the error for input that is not a readable zip, and `diffOpcPackages` accepts limits.
+
+#### `ooxml-core/docx`
+
+- A signed document carries its verified state as `model.signatures`.
+- `loadDocx` and `loadDocument` take a `limits` option (`DocxLoadLimits`) for the compressed package size, the number of parts, the inflated size of one part and of all parts, and the size of `word/document.xml`, which was fixed at 25 MiB. The defaults are unchanged and exported as `DEFAULT_DOCX_LOAD_LIMITS`, and saving reopens the package under the limits it was loaded with.
+- `InlineImage.textBoxContent` holds a text box's `w:txbxContent` as real paragraphs and tables, with the anchor and insets of its `wps:bodyPr`, for every shape with a `wps:txbx`. `drawingShapeSvg` draws a shape without its own text when those paragraphs are drawn over it, `ShapeSpec.fontColor` is the colour of the shape's style font reference, and `simpleTextBoxDrawing` gives the frame and paragraphs an edited simple text box is saved with. `ooxml-core/docx/layout` adds `shapePaint`.
+- `ooxml-core/docx/ui`: themes take an optional `primaryInk`, the primary colour as text.
+
+#### `ooxml-core/xlsx`
+
+- `Workbook.signatures` holds the verified signature state.
+- `calculateOnOpen(workbook, { timeLimitMs })` runs the calculation a workbook asks for on open (`fullCalcOnLoad`) and says whether it ran and why it stopped. `needsCalculationOnOpen`, `calculateOnOpenCells` and `applyCalculatedCells` let a host run it in a worker and apply the result to another copy of the file.
+- `CalcEngineOptions.timeLimitMs` bounds how long one recalculation may run and `CalcEngineOptions.workCap` how much work one formula may need. Past either, the recalculation stops between formulas, `CalcEngine.stopped` says why, the formulas it did not reach keep their previous values, and the next recalculation computes everything.
+- `formulaPolicyIssue`, `cellInputPolicyIssue` and `RESTRICTED_FORMULA_FUNCTIONS` say why a formula reaches outside the workbook, reading it with the formula parser, so a function passed by name to `MAP`, `LET` or `LAMBDA` or written with a storage prefix is found too.
+- `describeCell` and `accessibleWindow` describe the grid for screen readers, and `ChartObject.description` holds a chart's alt text.
+- `ooxml-core/xlsx/ui`: themes take an optional `primaryInk`.
+
+#### `ooxml-core/pptx`
+
+- `PptxData.signatures` holds the verified signature state, and `inspectPptxDigitalSignatures(data, { checkRevocation: false })` makes no network request.
+- Signatures in the layout Office writes now verify in `ooxml-core/pptx/signature-node`: `SignedInfo` references to `Object` elements, `Manifest` references, `?ContentType` binding and the OPC relationships transform.
+- Elements carry `relationshipSourcePath`, the part their relationship ids belong to; loading sets it, copies keep it and collaboration shares it.
+- `PptxChartData.structureEdits` lists the rows and series added or removed since the chart was loaded or saved. The chart data operations record them and saving replays them through the same chart operations Word, Excel and Visio use.
+- Shared media in collaboration: `configureCollaborationMedia`, `collaborationMedia`, `YDOC_MEDIA_KEY`, `MAX_SHARED_MEDIA_BYTES` (16 MiB), `MAX_PEER_TO_PEER_MEDIA_BYTES` (128 KiB) and the `COLLABORATION_MEDIA_WITHHELD` slide warning for a picture or video too large to share.
+
+#### `ooxml-core/visio`
+
+- `VisioDocument.signatures` holds the verified signature state.
+- Drawings open with pages of up to about 10,000 shapes as Visio saves them: the default XML limits are 1,500,000 nodes per part and 2,000,000 per package, and the ten-second load deadline is unchanged.
+- Package limits gain `maxXmlHeapBytes` and `maxXmlHeapPerInputByte` (4,096). By default `maxXmlHeapBytes` follows the heap limit the host reports (Node, or a Chromium page) less 256 MiB, divided by 1.6, and is 480 MiB where the runtime reports none. Set it lower when the same heap holds other large data or runs several reads at once.
+- `parseVsdx` reports `edit-size-limit` first among its diagnostics when a drawing is too large to edit (more than 100,000 ShapeSheet cells, or an edit that would not fit `maxXmlHeapBytes`), so a viewer can open it read-only.
+
+#### `ooxml-core/chart`
+
+- `chartAccessibleName`, `chartDataDescription` and `ChartSvgOptions.altText`, so a painted chart carries the author's alt text as its title and a short readout of its data as its description.
+- Bounded charts: `chartPointBudget`, `MAX_CHART_BLANK_POINTS`, `MAX_HISTOGRAM_BINS` and the `CHART_POINTS_LIMITED` parse issue. `parseChartSpace`, `parseChartExSpace` and `chartExSummary` accept a `pointBudget` that every chart of a package shares, and `chartExSummary` sets `pointsLimited` and `histogramBinsLimited` when a view is shorter than the file declares.
+- Chart data editing: `setChartSeriesPoint`, `chartRowCount`, `chartPartWorkbookWrites`, `chartSpaceRangeConflicts` and `ChartWorkbookWrite.only`.
+- Embedded workbooks: `appendChartWorkbookSheet` and `appendChartExWorkbookData` take `reuse` (a sheet to write over) and `drop` (sheets to remove with their parts, names and tab order), `writeChartWorkbookUpdates` returns the cells it changed, and `restoreChartWorkbookCells` puts them back where they still hold what was written.
+
+#### `ooxml-core/collab`
+
+- `scanUpdate` and `defaultUpdateLimits` count, without decoding, what an update would allocate. `guardProviderUpdates` puts that check in front of a y-websocket provider, and `adaptYjsProvider` applies it automatically.
+- `UpdateRefusedError`, `isUpdateRefusal`, `LeftOutValue` and `LEFT_OUT_MESSAGE`. `bindWorkbookSession` takes `onLeftOut`, and `readSharedWorkbook` adds a warning when values were left out.
+- `createShareSecret`, `isValidShareSecret` and `webrtcRoomName` for peer-to-peer sessions, and a `param` argument on `shareInvitation` and `readShareInvitation` for broadcast links (`broadcast`) beside room links (`room`).
+
+#### `ooxml-core/teams`
+
+- `createUpdateChecker(doc)` keeps one copy of a room document for the server-side checks, so checking an update costs time in proportion to the update instead of the room.
+- `chatCallRoomId`, `chatRoomOfCall`, `isStrayChatCallRoom` and `DEFAULT_CHANNEL`, the channel a new workspace starts with.
+- `createSyncTransport` and `createSharedChat` accept an asynchronous `token` source that is asked for a fresh token before every connection attempt.
+
+#### Other areas
+
+- `ooxml-core/i18n`: `signatureStateText`, `signatureStringsFor`, `collabStrings` and `translateCollabText` word signature states and collaboration refusals in English, French, German, Spanish, Simplified Chinese, Japanese and Korean. Any tag of those languages finds its sentences (`zh-Hans`, `zh_CN`, `de-AT`).
+- `ooxml-core/color`: `contrastRatio`, `relativeLuminance`, `parseHexColor`, `readableTextColor`, `WCAG_TEXT_CONTRAST` and `WCAG_NON_TEXT_CONTRAST` for WCAG 2.x contrast checks.
+- `ooxml-core/ai`: a new subpath with the assistant policy a deployment sets: `normalizeAiPolicy`, `userConnectionRefusal`, `checkAiEndpoint` and `aiFeatureEnabled`. It is DOM-free and makes no request.
+- `ooxml-core/embedding`: `customization.ribbon.hiddenTabs` hides native ribbon tabs in the Word, Excel and Visio editors, with typed ids per product (`WordRibbonTabId`, `ExcelRibbonTabId`, `VisioRibbonTabId`). `'file'` removes the File tab and its backstage while Save, its shortcuts and host storage keep working.
+- `ooxml-core/automation`: `createXlsxTools(options)`, `refusedFormula` and `XlsxFormulaOptions`. `readXlsxFilledCells` takes `hidden: 'omit'` to leave hidden sheets, rows and columns out and count them.
+- `ooxml-core/xml`: `withoutByteOrderMark`.
+
+### Changed
+
+- The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)). The package is built and tested against current releases of its dependencies, including `emf-converter` 5 and `mtx-decompressor` 1.9.
+- `ooxml-core/chart` and `ooxml-core/pptx`: charts keep the point counts and points their file declares, however large, through viewing, editing and saving. Blank positions in the views hosts draw and edit come from a budget of 4,194,304 per package and at most 1,048,576 per view; a view past it shows fewer trailing blanks and the load reports `CHART_POINTS_LIMITED`. Such a chart stays fully editable, and removing a row moves the later points of every series up, as deleting the worksheet row does in Excel.
+- `ooxml-core/chart`: `removeChartSeries` moves the plot order of every later series up one, as Excel does; the series' `c:idx` stays.
+- `ooxml-core/pptx`: `chartDataAddCategory` puts the new row after all of a chart's data, padding shorter series with blank points, and `chartDataAddSeries` gives the new series a value for every row of a chart with categories.
+- `ooxml-core/docx`: the text inside a drawing shape is editable only when it is the plain centred text the editor writes, so resizing or refilling a shape no longer rewrites formatted text as plain lines. A text box written with `txBox="1"` (Word's Insert > Text Box) is read with its frame and drawn like any shape, and an unchanged box is saved byte for byte.
+- `ooxml-core/automation/node`: an absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On POSIX systems, names such as `a: b.docx`, `aux/`, `why?.docx` and `a\b.docx` are ordinary files.
+- `ooxml-core/pptx/signature-node`: `xml-crypto` is no longer needed for signature verification; `node-forge` remains the optional peer for signing and trust checks.
+
+### Fixed
+
+#### `ooxml-core/pptx`
+
+- A duplicated or pasted chart, SmartArt graphic, OLE object, video or audio clip saves with its own relationships and its own chart part, embedded workbook, diagram parts or embedded object. Before, two charts could share one chart part and workbook, which PowerPoint refused to open. This covers `duplicateElement`, copies kept by undo history and a move to another slide followed by deleting the source.
+- Duplicate Slide Master and Insert Slide Master give the new master its own theme and layouts, Duplicate Layout copies the parts the source layout owns, and every new master and layout gets an id no other uses, so pasting slides afterwards works.
+- Saving a chart no longer turns blank points into zeros, writes only the workbook cells the edit changed, records the row a category removal removed instead of inferring it, keeps ranges, caches and workbook cells in agreement through undo and redo, and no longer grows the embedded workbook with every save. A chart of 2,000 rows that went from 86 KB to 764 KB in 20 undo and save round trips now stays at 105 KB.
+- A chart that names no category labels no longer takes labels from the first column of its embedded workbook, a chart on a duplicated slide writes into its own copy of the workbook, two charts sharing one workbook keep each other's writes, and series edits on very long ranges no longer overflow the stack.
+- `removeChartCategory` and `addChartCategory` keep each series' blank points on their rows, move per-point formatting with its point, and edit the chart in place like the other SDK chart edits.
+- A linked transition or hyperlink sound keeps its address only when the load allows linked content (`allowExternalImages`), like every other linked relationship.
+- A signed deck whose relationships parts the strict reader rejects (markup-compatibility attributes, for example) opens instead of failing to load, and UTF-16 parts are read instead of loading an empty deck.
+
+#### `ooxml-core/xlsx`
+
+- Formulas compare text as Excel does: comparisons, criteria functions, `XMATCH`, `XLOOKUP`, `UNIQUE`, `SORT` and `SWITCH` treat "ß" as "ss" and ligatures as their letters and stay accent-, width- and kana-sensitive, while `MATCH`, `VLOOKUP`, `HLOOKUP`, wildcards and `SEARCH` compare character by character.
+- Exact lookups compare numbers exactly, so `MATCH(0.3,...)` no longer finds `0.1+0.2`, while `=` and `COUNTIF` still treat the two as equal.
+- In criteria, `~` is plain text unless the criterion holds `*` or `?`, a blank criterion cell matches zeros rather than blanks, and `DCOUNTA` counts empty text. In iterative calculation, `SUMIF`, `COUNTIF` and the other criteria functions read current values on every pass.
+- `&`, `CONCATENATE`, `CONCAT`, `TEXTJOIN`, `ARRAYTOTEXT`, `TEXT`, `BASE` and `LOWER` respect Excel's text length limits and rules.
+- `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE` accept nested repeats such as `(a+)+` and long texts, return `#NUM!` for a pattern that would take too long, and `REGEXREPLACE` with an occurrence uses that match's own groups.
+- Workbooks with `LET`, `LAMBDA` and the functions that take a `LAMBDA` are saved with the `_xlpm.` prefix Excel requires, so Excel opens them; reading removes the prefix.
+- A chart's alt text is kept when its drawing is saved again.
+- `ooxml-core/xlsx/collab`: a collaborator receives `tel:`, `sip:`, `msteams:`, `onenote:` and other hyperlink targets the workbook holds, and the update limit no longer refuses the first sync of a large workbook.
+
+#### `ooxml-core/docx`
+
+- Text boxes written with `txBox="1"` are drawn in Print Layout, floating and inline, in the body and in headers and footers.
+- Shape text whose runs set no colour takes the colour of the shape's `wps:style` font reference, resolved through the theme, as Word draws it, and saving such a shape writes no colour on its runs. A shape with neither a style nor its own fill or outline is drawn without them instead of in the default blue.
+- A font listed before an embedded font is no longer treated as embedded.
+
+#### `ooxml-core/opc` and signatures
+
+- Signatures Word, Excel and PowerPoint write are no longer reported as invalid in the browser, a signature with a UTF-16 relationships part verifies, and a signature that uses a method or key type the verifier does not implement is `unsupported` rather than invalid.
+- A Word 2007 signature over pretty-printed relationships parts verifies, references to percent-encoded part names resolve, parts with a UTF-8 byte order mark parse in `parseXml` and in verification, and a signed relationship to custom XML no longer makes a genuine signature `coverage-incomplete`.
+- `signPptxWithCertificate` removes earlier signature parts in any letter case and keeps one origin relationship when a package is signed again.
+- `contentTypeForPart` matches `Override` part names ASCII case-insensitively and reads the extension from the last path segment only.
+
+#### `ooxml-core/teams`
+
+- People added to or leaving a group at the same time are all kept, a change made offline by someone since removed is undone instead of stopping their sync, a group's members are let in if its creator closes the app right after creating it, and leaving a group while offline takes effect when the app next connects.
+- `validateTeamsUpdate` no longer throws on a value it cannot compare.
+
+#### Other areas
+
+- `ooxml-core/chart`: histogram binning runs in linear time, style presets add per-point formatting only for points that exist, removing a row of a bubble chart removes its bubble sizes, and adding a row to a scatter or bubble chart leaves the new x value blank.
+- `ooxml-core/automation`: `update_metadata`, `update_theme_colors`, `update_theme_fonts` and `apply_theme_preset` save their changes, and `createLiveToolHost` can edit PowerPoint decks.
+- `ooxml-core/xml`: an empty element no longer swallows the element after it in the raw XML scans that run before parsing, which could reorder SmartArt text.
+
+### Performance
+
+- `ooxml-core/docx`: saving no longer moves blocks that did not change. An edit to a 20,000-block document saves in about 2.5 s instead of about 17 s, and the saved bytes are the same. Loading walks `document.xml` once for every unsupported feature it reports, copies the model once instead of twice, and resolves style inheritance once per catalog instead of per paragraph.
+- `ooxml-core/xlsx`: exact lookups over the same range share an index within a recalculation, identical aggregates over the same large ranges are computed once, an edit that changes a row's automatic height recalculates only its dependents, volatile formulas are tracked as a list, and `forEachCellInRange` costs what the range covers. `MMULT` runs about three and a half times faster, and 1,000 nearest-match `XLOOKUP`s over 100,000 rows take about a second instead of six.
+- `ooxml-core/pptx`: a one-slide SmartArt deck that took about 6 s to load and 6 s to save now takes well under a second, a load reads the package's relationships once for every chart, embedded workbooks are parsed only when a chart needs their rows, and chart saved states stay under 32 MiB per presentation instead of growing with every save.
+
+### Accessibility
+
+- `ooxml-core/xlsx`: `describeCell` and `accessibleWindow` give screen readers the Excel grid as a table, with the sheet's own row and column indices.
+- `ooxml-core/chart`: a chart is named by its alt text, falling back to its title, and screen readers can read its series and values.
+- The release checks cover what a screen reader is told about Word, Excel and PowerPoint documents, and that a saved file keeps its alt text, headings, table header rows and language; that check runs whenever a Word, Excel or PowerPoint writer changes.
+
+### Released together
+
+- [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the browser elements and product editors built on this release's models, signatures and limits.
+- [`ooxml-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): the combined MCP server that runs `ooxml-core/automation`.
+- [Word packages 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/CHANGELOG.md): `docx-core` (a re-export of `ooxml-core/docx`), the six `docx-*-viewer` bindings and `docx-viewer-mcp`.
+- [Excel packages 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/CHANGELOG.md): `@christophervr/xlsx-core` (a re-export of `ooxml-core/xlsx`), the six Excel bindings and `xlsx-viewer-mcp`.
+- [PowerPoint packages](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CHANGELOG.md): `pptx-viewer-core` 5.0.0, the React, Vue, Angular and Svelte viewers 5.0.0, `pptx-vanilla-viewer` 4.0.0, `pptx-viewer-mcp` 3.0.0 and `@christophervr/pptx-viewer` 3.0.0, all built on `ooxml-core/pptx`.
+- [Visio packages 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/CHANGELOG.md): `visio-core`, the six `visio-*-viewer` bindings and `visio-viewer-mcp`, built on `ooxml-core/visio`.
+- [OpenTeams packages 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/CHANGELOG.md): the six `openteams-*-viewer` bindings and `openteams-server`, which must move to Teams protocol version 2 with `ooxml-core/teams`.
 
 ## [1.54.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.54.1) - 2026-11-18
 
