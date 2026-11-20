@@ -17,7 +17,6 @@ export const translations = {
 	'pptx.ribbon.broadcast': 'Transmisión',
 	'pptx.ribbon.customShows': 'Presentaciones personalizadas',
 	'pptx.ribbon.customShowsButton': 'Presentaciones personalizadas',
-	'pptx.ribbon.show': 'Mostrar',
 	'pptx.ribbon.shareForCollaboration': 'Compartir para colaborar',
 	'pptx.ribbon.moreActions': 'Más acciones',
 	'pptx.ribbon.exportPng': 'Exportar como PNG',

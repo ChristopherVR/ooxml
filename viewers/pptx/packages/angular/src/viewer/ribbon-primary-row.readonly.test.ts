@@ -55,8 +55,8 @@ describe('ribbon primary row read-only badge', () => {
 
 describe('ribbon primary row names (WCAG 2.5.3)', () => {
 	it.each([
-		['en', 'Show', 'Custom shows'],
-		['de', 'Zeigen', 'Benutzerdefinierte Bildschirmpräsentationen'],
+		['en', '+ Show', 'Create custom show'],
+		['de', '+ Präsentation', 'Benutzerdefinierte Bildschirmpräsentation erstellen'],
 	] as const)('names every labelled button with the text it shows in %s', (lang, caption, tip) => {
 		const { fixture } = open(true, lang);
 		const root = fixture.nativeElement as HTMLElement;

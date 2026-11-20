@@ -17,7 +17,6 @@ export const translations = {
 	'pptx.ribbon.broadcast': '브로드캐스트',
 	'pptx.ribbon.customShows': '슬라이드 쇼 재구성',
 	'pptx.ribbon.customShowsButton': '슬라이드 쇼 재구성',
-	'pptx.ribbon.show': '표시',
 	'pptx.ribbon.shareForCollaboration': '공동 작업을 위해 공유',
 	'pptx.ribbon.moreActions': '추가 작업',
 	'pptx.ribbon.exportPng': 'PNG로 내보내기',

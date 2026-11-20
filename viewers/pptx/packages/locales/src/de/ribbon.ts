@@ -17,7 +17,6 @@ export const translations = {
 	'pptx.ribbon.broadcast': 'Übertragen',
 	'pptx.ribbon.customShows': 'Benutzerdefinierte Bildschirmpräsentationen',
 	'pptx.ribbon.customShowsButton': 'Benutzerdefinierte Bildschirmpräsentationen',
-	'pptx.ribbon.show': 'Zeigen',
 	'pptx.ribbon.shareForCollaboration': 'Zur Zusammenarbeit teilen',
 	'pptx.ribbon.moreActions': 'Weitere Aktionen',
 	'pptx.ribbon.exportPng': 'Als PNG exportieren',

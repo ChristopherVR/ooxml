@@ -2124,7 +2124,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.broadcast': 'Broadcast',
 	'pptx.ribbon.customShows': 'Custom shows',
 	'pptx.ribbon.customShowsButton': 'Custom Shows',
-	'pptx.ribbon.show': 'Show',
 	'pptx.ribbon.shareForCollaboration': 'Share for collaboration',
 	'pptx.ribbon.moreActions': 'More actions',
 	'pptx.ribbon.exportPng': 'Export as PNG',

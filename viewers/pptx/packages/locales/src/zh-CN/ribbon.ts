@@ -17,7 +17,6 @@ export const translations = {
 	'pptx.ribbon.broadcast': '广播',
 	'pptx.ribbon.customShows': '自定义放映',
 	'pptx.ribbon.customShowsButton': '自定义放映',
-	'pptx.ribbon.show': '显示',
 	'pptx.ribbon.shareForCollaboration': '共享并协作',
 	'pptx.ribbon.moreActions': '更多操作',
 	'pptx.ribbon.exportPng': '导出为 PNG',
