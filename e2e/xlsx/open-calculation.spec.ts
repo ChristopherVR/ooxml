@@ -3,9 +3,9 @@ import { createWorkbook, putCell, saveXlsx, type Workbook } from 'ooxml-core/xls
 import { editor, grid, landingFileInput, openLanding, pageErrors } from './helpers';
 
 /**
- * Opening a workbook runs the calculation it asks for on open (`calcPr fullCalcOnLoad`) in a
- * worker, so the page keeps painting while it runs, and a calculation past its time limit leaves
- * the saved values with a notice.
+ * Opening a workbook runs the calculation it asks for on open (`calcPr fullCalcOnLoad`): briefly on
+ * the page, then in a worker when it is slow, so the page keeps painting while it runs, and a
+ * calculation past its time limit leaves saved values with a notice.
  */
 
 function workbookWith(fill: (workbook: Workbook) => void): Promise<Uint8Array> {
@@ -71,7 +71,7 @@ test('a formula that would take tens of seconds stops at the budget without free
 	expect(await longest()).toBeLessThan(2000);
 });
 
-test('a calculation past the time limit leaves the saved values and says so', async ({ page }) => {
+test('a calculation past the time limit leaves saved values and says so', async ({ page }) => {
 	test.setTimeout(120_000);
 	const rows = 20_000;
 	const bytes = await workbookWith((wb) => {
@@ -86,9 +86,14 @@ test('a calculation past the time limit leaves the saved values and says so', as
 	const longest = await watchMainThread(page);
 	await open(page, 'rank.xlsx', bytes);
 	await expect(editor(page).locator('.xve-toast')).toContainText(
-		'Formulas were not recalculated on open',
+		'Formulas were not all recalculated on open',
 		{ timeout: 60_000 },
 	);
-	await expect(grid(page)).toContainText('-1');
+	// The rows the page reached before it handed over are calculated; the rest keep the saved -1.
+	const saved = await editor(page).evaluate((element) => {
+		const rows = (element as unknown as { workbook: Workbook }).workbook.sheets[0]!.rows;
+		return [...rows.values()].filter((row) => row.get(1)?.value === -1).length;
+	});
+	expect(saved).toBeGreaterThan(0);
 	expect(await longest()).toBeLessThan(2000);
 });
