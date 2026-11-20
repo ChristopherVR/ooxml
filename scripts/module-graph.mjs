@@ -25,11 +25,25 @@ const ASSET = /\?|\.(?:css|less|scss|svg|png|jpe?g|gif|webp|woff2?|ttf|otf|html|
  *   followed: a lazy `Promise.resolve().then(() => require('./chunk'))` is not told apart.
  * @returns {Promise<{ files: string[], lazy: string[], bare: Array<{ specifier: string, kind: string, importer: string }> }>}
  */
-export async function walkModuleGraph(entry, { followDynamic = true } = {}) {
-	const entryPath = resolve(entry);
-	const workingDir = dirname(entryPath);
+export async function walkModuleGraph(entry, options) {
+	const [graph] = await walkModuleGraphs([entry], options);
+	return graph;
+}
+
+/**
+ * `walkModuleGraph` for several entries in one esbuild pass: a package's entries share most of
+ * their graph, and parsing it once per entry was the bulk of the boundary tests' time.
+ *
+ * @param {string[]} entries Paths of the first modules.
+ * @param {{ followDynamic?: boolean }} [options] As for `walkModuleGraph`.
+ * @returns {Promise<Array<{ files: string[], lazy: string[], bare: Array<{ specifier: string, kind: string, importer: string }> }>>}
+ *   One graph per entry, in order.
+ */
+export async function walkModuleGraphs(entries, { followDynamic = true } = {}) {
+	const entryPaths = entries.map((entry) => resolve(entry));
+	const workingDir = dirname(entryPaths[0]);
 	const bare = [];
-	const lazy = new Set();
+	const lazy = [];
 	const plugin = {
 		name: 'module-graph',
 		setup(build) {
@@ -54,7 +68,7 @@ export async function walkModuleGraph(entry, { followDynamic = true } = {}) {
 					if (resolved.errors.length > 0) {
 						return undefined;
 					}
-					lazy.add(resolved.path);
+					lazy.push({ path: resolved.path, importer: args.importer });
 					return { path: args.path, external: true };
 				}
 				return undefined;
@@ -62,9 +76,11 @@ export async function walkModuleGraph(entry, { followDynamic = true } = {}) {
 		},
 	};
 	const result = await esbuild.build({
-		entryPoints: [entryPath],
+		entryPoints: entryPaths,
 		absWorkingDir: workingDir,
 		outdir: resolve(workingDir, '.module-graph'),
+		// Entries may share a file name (`public-api.ts` in two folders): keep their outputs apart.
+		entryNames: '[dir]/[name]-[hash]',
 		bundle: true,
 		write: false,
 		metafile: true,
@@ -78,10 +94,17 @@ export async function walkModuleGraph(entry, { followDynamic = true } = {}) {
 		loader: { '.mjs': 'js', '.cjs': 'js' },
 		plugins: [plugin],
 	});
-	const files = Object.keys(result.metafile.inputs).map((input) => resolve(workingDir, input));
-	return {
-		files: [entryPath, ...files.filter((file) => file !== entryPath)],
-		lazy: [...lazy].filter((file) => !files.includes(file)),
-		bare,
-	};
+	const outputs = Object.values(result.metafile.outputs).filter((output) => output.entryPoint);
+	return entryPaths.map((entryPath) => {
+		const output = outputs.find((out) => resolve(workingDir, out.entryPoint) === entryPath);
+		const files = Object.keys(output?.inputs ?? {}).map((input) => resolve(workingDir, input));
+		const closure = new Set([entryPath, ...files]);
+		return {
+			files: [entryPath, ...files.filter((file) => file !== entryPath)],
+			lazy: [
+				...new Set(lazy.filter(({ importer }) => closure.has(importer)).map(({ path }) => path)),
+			].filter((file) => !closure.has(file)),
+			bare: bare.filter(({ importer }) => closure.has(importer)),
+		};
+	});
 }

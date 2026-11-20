@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { test } from 'node:test';
 
-import { walkModuleGraph } from './module-graph.mjs';
+import { walkModuleGraph, walkModuleGraphs } from './module-graph.mjs';
 
 /** Write `files` into a fresh directory, walk from `entry.*`, then clean up. */
 async function walk(files, options) {
@@ -110,4 +110,37 @@ test('minified ESM and CommonJS output are read', async () => {
 
 test('an unresolvable relative import fails loudly', async () => {
 	await assert.rejects(walk({ 'entry.ts': `import './missing';` }), /missing/);
+});
+
+test('one pass walks several entries, each to its own closure', async () => {
+	const directory = mkdtempSync(join(tmpdir(), 'ooxml-module-graph-'));
+	try {
+		const files = {
+			'a/index.ts': `import './shared'; import 'only-a';`,
+			'b/index.ts': `import '../a/shared'; export const lazy = () => import('./panel');`,
+			'a/shared.ts': `import 'shared-dep';`,
+			'b/panel.ts': `import 'panel-dep';`,
+		};
+		for (const [name, source] of Object.entries(files)) {
+			mkdirSync(join(directory, name, '..'), { recursive: true });
+			writeFileSync(join(directory, name), source);
+		}
+		const local = (file) =>
+			file
+				.slice(directory.length + 1)
+				.split(sep)
+				.join('/');
+		const [a, b] = await walkModuleGraphs(
+			[join(directory, 'a/index.ts'), join(directory, 'b/index.ts')],
+			{ followDynamic: false },
+		);
+		assert.deepEqual(a.files.map(local), ['a/index.ts', 'a/shared.ts']);
+		assert.deepEqual(a.bare.map(({ specifier }) => specifier).sort(), ['only-a', 'shared-dep']);
+		assert.deepEqual(a.lazy, []);
+		assert.deepEqual(b.files.map(local), ['b/index.ts', 'a/shared.ts']);
+		assert.deepEqual(b.bare.map(({ specifier }) => specifier).sort(), ['shared-dep']);
+		assert.deepEqual(b.lazy.map(local), ['b/panel.ts']);
+	} finally {
+		rmSync(directory, { recursive: true, force: true });
+	}
 });
