@@ -77,6 +77,10 @@ export class GridA11y {
 	 */
 	#hook = () => {
 		if (this.#settle) clearTimeout(this.#settle);
+		this.#settle = undefined;
+		// A removed grid still paints once (its resize observer reports the removal). Nothing reads
+		// its rows then, and a pending sync would keep the closed editor alive; reattaching paints.
+		if (!this.grid.isConnected) return;
 		if (this.#view.ctx.selection.get() !== this.#synced) this.sync();
 		else this.#settle = setTimeout(() => this.sync(), SETTLE_MS);
 	};

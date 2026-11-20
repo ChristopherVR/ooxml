@@ -73,13 +73,15 @@ test('a formula that would take tens of seconds stops at the budget without free
 
 test('a calculation past the time limit leaves saved values and says so', async ({ page }) => {
 	test.setTimeout(120_000);
-	const rows = 20_000;
+	const rows = 30_000;
 	const bytes = await workbookWith((wb) => {
 		const sheet = wb.sheets[0]!;
 		for (let r = 0; r < rows; r++) {
 			putCell(sheet, r, 0, { value: (r * 7919) % rows });
-			// One scan of the column per formula: 400 million tests, far past the ten-second limit.
-			putCell(sheet, r, 1, { value: -1, formula: `COUNTIF($A$1:$A$${rows},">"&A${r + 1})` });
+			// Each formula builds and sums a 30,000-entry array: 900 million entries. An idle desktop
+			// needs over a minute for them, so the ten-second limit stops it however fast the machine
+			// is. (A 400-million-test COUNTIF version finished in about five seconds when idle.)
+			putCell(sheet, r, 1, { value: -1, formula: `SUMPRODUCT(--($A$1:$A$${rows}>A${r + 1}))` });
 		}
 	});
 	await openLanding(page);

@@ -37,7 +37,6 @@ import {
 	LucidePanelLeft,
 	LucidePanelRight,
 	LucidePlay,
-	LucidePlus,
 	LucideSettings,
 	LucideSparkles,
 } from '@lucide/angular';
@@ -99,7 +98,6 @@ export function visibleOverflowItems(
 		LucidePanelRight,
 		LucidePlay,
 		LucideChevronDown,
-		LucidePlus,
 		LucideEllipsis,
 		LucideSettings,
 		LucideSparkles,
@@ -182,11 +180,10 @@ export function visibleOverflowItems(
 			<button
 				type="button"
 				class="pptx-rb-pill"
-				[title]="'pptx.ribbon.customShows' | translate"
+				[title]="'pptx.customShows.createTooltip' | translate"
 				(click)="openCustomShows.emit()"
 			>
-				<svg lucidePlus class="h-3.5 w-3.5" aria-hidden="true"></svg>
-				{{ 'pptx.ribbon.show' | translate }}
+				{{ 'pptx.customShows.addShow' | translate }}
 			</button>
 
 			<span class="mx-1 h-5 w-px self-center bg-border/50"></span>

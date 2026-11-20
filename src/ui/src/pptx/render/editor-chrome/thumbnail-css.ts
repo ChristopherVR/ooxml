@@ -11,6 +11,10 @@ export const EDITOR_THUMBNAIL_CSS = `
   [data-pptx-editor-chrome] [data-pptx-chrome="slide-window"] {
     display: flex; flex-direction: column; gap: ${EDITOR_THUMBNAIL_GAP}px;
   }
+  /* The gap alone spaces the rows, also when a binding wraps each row in a list item. */
+  [data-pptx-editor-chrome] [data-pptx-chrome="slide-window"] > * {
+    margin-block: 0;
+  }
   [data-pptx-editor-chrome] [data-pptx-chrome="slide-wrapper"] {
     border: 0; padding: 0; border-radius: 0; background: transparent;
   }

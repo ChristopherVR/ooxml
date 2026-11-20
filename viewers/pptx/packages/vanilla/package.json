@@ -131,7 +131,7 @@
 		"html2canvas-pro": "^2.6.4",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"lucide": "^1.75.0",
+		"lucide": "^1.74.0",
 		"ooxml-core": "^1.54.0",
 		"ooxml-ui": "^1.54.2",
 		"opentype.js": "^2.0.0"
@@ -144,7 +144,7 @@
 		"tsdown": "^0.23.7",
 		"tsup": "^9.0.0",
 		"typescript": "^7.0.2",
-		"vitest": "^5.1.1",
+		"vitest": "^5.1.0",
 		"y-webrtc": "^10.3.0",
 		"y-websocket": "^3.1.0",
 		"yjs": "^13.6.33"

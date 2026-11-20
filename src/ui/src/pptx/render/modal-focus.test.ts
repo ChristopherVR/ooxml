@@ -50,6 +50,28 @@ describe('activateModalFocus', () => {
 		expect(document.activeElement).toBe(opener);
 	});
 
+	it('leaves focus in a dialog the modal opened before it closed', async () => {
+		const { opener, panel } = setup();
+		const release = activateModalFocus(panel);
+		await Promise.resolve();
+		const dialogButton = document.createElement('button');
+		document.body.append(dialogButton);
+		dialogButton.focus();
+		panel.remove();
+		release();
+		expect(document.activeElement).toBe(dialogButton);
+		expect(document.activeElement).not.toBe(opener);
+	});
+
+	it('restores the opener when focus was lost with the removed modal', async () => {
+		const { opener, panel } = setup();
+		const release = activateModalFocus(panel);
+		await Promise.resolve();
+		panel.remove();
+		release();
+		expect(document.activeElement).toBe(opener);
+	});
+
 	it('consumes Escape and invokes the close callback', async () => {
 		const { panel } = setup();
 		const onEscape = vi.fn();
