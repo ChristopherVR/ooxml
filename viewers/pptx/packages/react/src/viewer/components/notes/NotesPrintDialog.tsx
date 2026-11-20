@@ -1,6 +1,6 @@
-import { buildNotesPrintHtml, resolveNotesSegments } from 'ooxml-ui/pptx';
+import { buildNotesPrintHtml, printHtmlDocument, resolveNotesSegments } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxTextStyleLevels } from 'pptx-viewer-core';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { DialogFooter } from '../DialogFooter';
@@ -27,22 +27,12 @@ export function NotesPrintDialog({
 	notesStyle?: PptxTextStyleLevels;
 }): React.ReactElement {
 	const { t } = useTranslation();
-	const printFrameRef = useRef<HTMLIFrameElement>(null);
-
+	// A hidden iframe, or a window on iOS (which prints the parent page for an iframe). Runs
+	// synchronously inside the click so the iOS window is not blocked as a popup.
 	const handlePrint = useCallback(() => {
-		const iframe = printFrameRef.current;
-		if (!iframe?.contentWindow) {
-			return;
-		}
-
-		const doc = iframe.contentWindow.document;
-		doc.open();
-		doc.write(buildNotesPrintHtml(slides, (n) => t('pptx.notes.slideN', { n }), notesStyle));
-		doc.close();
-
-		setTimeout(() => {
-			iframe.contentWindow?.print();
-		}, 200);
+		printHtmlDocument(
+			buildNotesPrintHtml(slides, (n) => t('pptx.notes.slideN', { n }), notesStyle),
+		);
 	}, [slides, t, notesStyle]);
 
 	return (
@@ -90,12 +80,6 @@ export function NotesPrintDialog({
 						onAction={handlePrint}
 					/>
 				</div>
-				<iframe
-					ref={printFrameRef}
-					title='print-notes'
-					className='hidden'
-					sandbox='allow-same-origin'
-				/>
 			</div>
 		</div>
 	);

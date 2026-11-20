@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getEffectKeyframes } from './animation-keyframes';
 import {
+	PIXELATE_FILTER_DEFS_MARKUP,
 	PIXELATE_FILTER_VALUES,
 	PIXELATE_IN_KEYFRAMES,
 	PIXELATE_LEVELS,
@@ -33,30 +34,29 @@ describe('pixelate levels', () => {
 });
 
 describe('pixelate filter values', () => {
-	it('emits one self-contained data-URI filter value per level', () => {
+	it('emits one same-document filter reference per level', () => {
 		expect(PIXELATE_FILTER_VALUES).toHaveLength(PIXELATE_LEVELS.length);
-	});
-
-	it('is a well-formed CSS filter: url("data:image/svg+xml,...#id") value', () => {
 		PIXELATE_FILTER_VALUES.forEach((value, index) => {
-			expect(value.startsWith('url("data:image/svg+xml,')).toBeTruthy();
-			expect(value.endsWith(`#pptx-pixelate-${index}")`)).toBeTruthy();
+			expect(value).toBe(`url(#pptx-pixelate-${index})`);
 		});
 	});
 
-	it('carries the mosaic SVG filter primitives, percent-encoded but still greppable', () => {
-		for (const value of PIXELATE_FILTER_VALUES) {
-			expect(value).toContain('primitiveUnits');
-			expect(value).toContain('objectBoundingBox');
-			expect(value).toContain('feFlood');
-			expect(value).toContain('feTile');
-			expect(value).toContain('feComposite');
-			expect(value).toContain('SourceGraphic');
+	it('defines every referenced filter with the mosaic primitives', () => {
+		for (const primitive of [
+			'primitiveUnits="objectBoundingBox"',
+			'feFlood',
+			'feTile',
+			'SourceGraphic',
+		]) {
+			expect(PIXELATE_FILTER_DEFS_MARKUP).toContain(primitive);
 		}
+		PIXELATE_FILTER_VALUES.forEach((_value, index) => {
+			expect(PIXELATE_FILTER_DEFS_MARKUP).toContain(`<filter id="pptx-pixelate-${index}"`);
+		});
 	});
 
-	it('has no two levels sharing the same filter id (no data-URI collisions)', () => {
-		const ids = PIXELATE_FILTER_VALUES.map((v) => /#(pptx-pixelate-\d+)"\)$/.exec(v)?.[1]);
+	it('has no two levels sharing the same filter id', () => {
+		const ids = PIXELATE_FILTER_VALUES.map((v) => /#(pptx-pixelate-\d+)\)$/.exec(v)?.[1]);
 		expect(new Set(ids).size).toBe(ids.length);
 	});
 });

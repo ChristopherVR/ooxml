@@ -64,9 +64,34 @@ export function finishPrintWindow(printWindow: Window, htmlDocument: string): vo
 	printWindow.document.write(htmlDocument);
 	printWindow.document.close();
 	printWindow.focus();
-	setTimeout(() => {
+	printWhenLoaded(printWindow);
+}
+
+/** How long to wait for the print window's `load` event before printing anyway. */
+export const PRINT_WINDOW_LOAD_FALLBACK_MS = 2000;
+
+/**
+ * Print `printWindow` once its document has loaded (its pictures and fonts are in, which a fixed
+ * delay did not guarantee, and iOS ignores a `print()` that runs before load), then close it after
+ * printing. Prints once: on `load`, at once when the document is already complete, or after
+ * {@link PRINT_WINDOW_LOAD_FALLBACK_MS} if `load` never fires.
+ */
+export function printWhenLoaded(printWindow: Window): void {
+	let printed = false;
+	const run = () => {
+		if (printed) return;
+		printed = true;
+		printWindow.removeEventListener('load', run);
+		printWindow.addEventListener('afterprint', () => printWindow.close(), { once: true });
+		printWindow.focus();
 		printWindow.print();
-	}, 300);
+	};
+	if (printWindow.document.readyState === 'complete') {
+		setTimeout(run, 0);
+		return;
+	}
+	printWindow.addEventListener('load', run, { once: true });
+	setTimeout(run, PRINT_WINDOW_LOAD_FALLBACK_MS);
 }
 
 /**

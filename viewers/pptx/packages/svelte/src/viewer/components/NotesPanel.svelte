@@ -26,6 +26,7 @@
 		applyInlineCommand,
 		applyParagraphCommand,
 		buildNotesPrintHtml,
+		printHtmlDocument,
 		defaultRichEnabled,
 		handleEditorAnchorClick,
 		handleNotesFieldKey,
@@ -139,24 +140,8 @@
 	function printNotes(): void {
 		if (!slide || typeof document === 'undefined') {return;}
 		const html = buildNotesPrintHtml([slide], (n) => t('pptx.notes.slideN', { n }), notesStyle);
-		const frame = document.createElement('iframe');
-		frame.setAttribute('aria-hidden', 'true');
-		frame.setAttribute('sandbox', 'allow-same-origin');
-		frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-		document.body.appendChild(frame);
-		const doc = frame.contentWindow?.document;
-		if (!doc) {
-			frame.remove();
-			return;
-		}
-		doc.open();
-		doc.write(html);
-		doc.close();
-		setTimeout(() => {
-			frame.contentWindow?.focus();
-			frame.contentWindow?.print();
-			setTimeout(() => frame.remove(), 1000);
-		}, 200);
+		// A hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+		printHtmlDocument(html);
 	}
 </script>
 

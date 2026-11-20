@@ -2,6 +2,7 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
 	attachViewportNavigation,
+	installTouchPress,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isEditingAllowed,
 	isFeatureEnabled,
@@ -571,7 +572,17 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	});
 	const detachLinkMode = store.subscribe((state) => {
 		chrome.root.toggleAttribute('data-pptx-read-only', !state.editable);
+		// The slide-show menu listens on the root: a long-press opens it there.
+		if (state.presenting) {
+			chrome.root.setAttribute('data-pptx-touch-press', 'menu');
+		} else {
+			chrome.root.removeAttribute('data-pptx-touch-press');
+		}
 	});
+	// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu
+	// on a long-press and no reliable dblclick, so the shared installer synthesises
+	// them on the controls that opt in with `data-pptx-touch-press`.
+	const detachTouchPress = installTouchPress(chrome.root);
 
 	// PowerPoint's "Advance slide: After <n>". Without it a deck whose slide also
 	// sets "on mouse click" OFF has no way forward at all: the gate above
@@ -618,6 +629,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	const detachPresentationClick = (): void => {
 		detachHyperlinks();
 		detachLinkMode();
+		detachTouchPress();
 		chrome.root.removeEventListener('click', onPresentationClick);
 		chrome.root.removeEventListener('click', onHyperlinkClick);
 		autoAdvance.detach();

@@ -223,6 +223,7 @@
 		class:pptx-svelte-thumb-drop-target={draggedIndex !== null && draggedIndex !== index}
 		onclick={(event) => onThumbClick(event, index)}
 		oncontextmenu={(event) => onThumbContextMenu(event, index)}
+		data-pptx-touch-press="menu"
 		ondragstart={(event) => onDragStart(index, event)}
 		ondragend={() => { draggedIndex = null; }}
 		ondragover={editable ? (event) => event.preventDefault() : undefined}
@@ -255,7 +256,7 @@
 	{#if hasSections}
 		{#each sectionGroups as group, groupIndex (group.section?.id ?? 'ungrouped')}
 			<section class="pptx-svelte-section" data-section-id={group.section?.id}>
-				<header class="pptx-svelte-section-header" data-pptx-chrome="section-header" oncontextmenu={(event) => group.section && onSectionContextMenu(event, group.section.id)}>
+				<header class="pptx-svelte-section-header" data-pptx-chrome="section-header" data-pptx-touch-press="menu dblclick" oncontextmenu={(event) => group.section && onSectionContextMenu(event, group.section.id)}>
 					<button type="button" class="pptx-svelte-section-toggle" onclick={() => group.section && onsectiontoggle?.(group.section.id)} ondblclick={() => group.section && startRename(group.section.id, group.section.name)} aria-expanded={!group.section?.collapsed}>
 						<span class="pptx-svelte-section-caret" class:is-collapsed={group.section?.collapsed}><ChevronDown size={12} aria-hidden="true" /></span>
 						<!-- `p15:sectionPr/@clr`: parsed and round-tripped by core, but

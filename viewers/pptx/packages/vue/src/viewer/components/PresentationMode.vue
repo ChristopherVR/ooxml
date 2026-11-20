@@ -65,6 +65,7 @@ import { useRunProgramNotices } from '../composables/useRunProgramNotices';
 import { useSlideAutoAdvance } from '../composables/useSlideAutoAdvance';
 import { useToolbarAutoHide } from '../composables/useToolbarAutoHide';
 import { useTouchGestures } from '../composables/useTouchGestures';
+import { useTouchPress } from '../composables/useTouchPress';
 import { ViewerOptionsKey } from '../composables/useViewerOptionsStore';
 import { provideZoomNavigation } from '../composables/zoom-navigation';
 import type { CanvasSize } from '../types';
@@ -138,6 +139,8 @@ const emit = defineEmits<{
 }>();
 
 const overlayRef = ref<HTMLDivElement | null>(null);
+// Long-press opens the slide-show menu on touch (issue #290).
+useTouchPress(overlayRef);
 const frameRef = ref<HTMLDivElement | null>(null);
 
 const { t } = useI18n();
@@ -707,6 +710,7 @@ useTouchGestures({
 			:class="{ 'pptx-vue-reduced-motion': reducedMotion }"
 			@click="onOverlayClick"
 			@contextmenu="onOverlayContextMenu"
+			data-pptx-touch-press="menu"
 		>
 			<!-- Inject the static preset @keyframes plus this slide's native-animation
 			     (`p:timing`) keyframes (staged builds + `p:animClr` colour stops),
@@ -922,6 +926,7 @@ useTouchGestures({
 	background-color: #000000;
 	overflow: hidden;
 	cursor: default;
+	-webkit-user-select: none;
 	user-select: none;
 	/* Allow vertical scroll/pinch but let us interpret horizontal swipes. */
 	touch-action: pan-y;

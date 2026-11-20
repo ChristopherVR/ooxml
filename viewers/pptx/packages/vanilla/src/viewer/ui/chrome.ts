@@ -328,6 +328,8 @@ export function buildViewerChrome(
 	}
 
 	const viewport = createEl(doc, 'div', 'pptxv-viewport');
+	// A touch long-press opens the canvas and element menus (issue #290).
+	viewport.setAttribute('data-pptx-touch-press', 'menu');
 	viewport.setAttribute('data-pptx-viewport', '');
 	body.appendChild(viewport);
 

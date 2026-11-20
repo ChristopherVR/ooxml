@@ -3186,11 +3186,10 @@ export class PowerPointViewerComponent
 		this.touchGestures.setup(() => this.mainEl()?.nativeElement, {
 			canEdit: () => this.canEdit(),
 			presenting: () => this.presentationMode.presenting(),
-			selectedElement: () => this.selectedElement(),
 			goPrev: () => this.goPrev(),
 			goNext: () => this.goNext(),
-			setContextMenuPos: (pos) => this.canvasEditing.contextMenuPos.set(pos),
 		});
+		this.touchGestures.setupTouchPress(() => this.viewerRoot()?.nativeElement);
 
 		// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
 		// other bindings. `<main>` is the element that scrolls the slide here. A

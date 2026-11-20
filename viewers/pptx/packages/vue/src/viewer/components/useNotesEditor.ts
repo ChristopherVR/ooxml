@@ -4,6 +4,7 @@ import {
 	applyInlineCommand,
 	applyParagraphCommand,
 	buildNotesPrintHtml,
+	printHtmlDocument,
 	createPlainNotesSegments,
 	defaultRichEnabled,
 	handleEditorAnchorClick,
@@ -219,28 +220,8 @@ export function useNotesEditor(
 			return;
 		}
 		const html = buildNotesPrintHtml([slide], (n) => `Slide ${n}`, getNotesStyle());
-		const frame = document.createElement('iframe');
-		frame.setAttribute('aria-hidden', 'true');
-		frame.style.position = 'fixed';
-		frame.style.right = '0';
-		frame.style.bottom = '0';
-		frame.style.width = '0';
-		frame.style.height = '0';
-		frame.style.border = '0';
-		document.body.appendChild(frame);
-		const doc = frame.contentWindow?.document;
-		if (!doc) {
-			frame.remove();
-			return;
-		}
-		doc.open();
-		doc.write(html);
-		doc.close();
-		setTimeout(() => {
-			frame.contentWindow?.focus();
-			frame.contentWindow?.print();
-			setTimeout(() => frame.remove(), 1000);
-		}, 200);
+		// A hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+		printHtmlDocument(html);
 	}
 
 	return {

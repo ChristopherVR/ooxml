@@ -15,7 +15,12 @@
  */
 
 import { Injectable } from '@angular/core';
-import { downloadBlob } from 'ooxml-ui/pptx';
+import {
+	canCopyImageToClipboard,
+	copyPngToClipboard,
+	downloadBlob,
+	videoFileName,
+} from 'ooxml-ui/pptx';
 import type { RasterizeElementTilesResult } from 'ooxml-ui/pptx';
 import type { PptxData, PptxSaveFormat, PptxSlide, SvgExportOptions } from 'pptx-viewer-core';
 
@@ -105,12 +110,11 @@ export class ExportService {
 
 	/** Rasterize an element and copy it to the system clipboard as a PNG image. */
 	async copyElementAsPng(el: HTMLElement, scale: number = 2): Promise<void> {
-		if (typeof ClipboardItem === 'undefined' || !navigator.clipboard?.write) {
+		if (!canCopyImageToClipboard()) {
 			throw new Error('[ExportService] Image clipboard is unavailable');
 		}
-
-		const blob = await this.rasterizeElementToPngBlob(el, scale);
-		await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+		// The clipboard write starts inside the click; Safari rejects it after an await.
+		await copyPngToClipboard(this.rasterizeElementToPngBlob(el, scale));
 	}
 
 	/**
@@ -236,7 +240,7 @@ export class ExportService {
 	}
 
 	/**
-	 * Record a WebM video from pre-rendered slide canvases (each held for
+	 * Record a video (WebM, or MP4 on Safari) from pre-rendered slide canvases (each held for
 	 * `slideDurationMs`) via the browser `MediaRecorder` and trigger a download.
 	 *
 	 * @param canvases        - One canvas per slide, in order.
@@ -257,6 +261,7 @@ export class ExportService {
 			throw new Error('[ExportService] No slide canvases provided for video export');
 		}
 		const blob = await recordWebm(canvases, { slideDurationMs, signal, onProgress });
-		downloadBlob(blob, fileName);
+		// The extension follows the recorded container (`.mp4` on Safari).
+		downloadBlob(blob, videoFileName(fileName.replace(/[.](webm|mp4)$/i, ''), blob));
 	}
 }

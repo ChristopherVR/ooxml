@@ -27,6 +27,7 @@
 							data-pptx-chrome="section-header"
 							[attr.data-section-id]="item.section?.id"
 							(contextmenu)="item.section && onSectionContextMenu($event, item.section.id)"
+							data-pptx-touch-press="menu dblclick"
 						>
 							<button
 								type="button"
@@ -80,6 +81,7 @@
 							[attr.aria-label]="'pptx.notes.slideN' | translate: { n: i + 1 }"
 							[attr.draggable]="canEdit()"
 							(contextmenu)="onThumbContextMenu($event, i)"
+							data-pptx-touch-press="menu"
 							(dragstart)="onDragStart($event, i)"
 							(dragover)="$event.preventDefault()"
 							(drop)="onDrop($event, i)"

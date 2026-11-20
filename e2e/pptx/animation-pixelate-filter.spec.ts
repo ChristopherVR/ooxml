@@ -16,7 +16,7 @@
  * `pptx-cutIn`/`pptx-cutOut` (`cut`'s own keyframes), not the mosaic this
  * repo used to default to.
  *
- * The blocky mosaic reveal (self-contained SVG `<filter>` data-URIs stepped
+ * The blocky mosaic reveal (same-document SVG `<filter>`s stepped
  * through discrete `@keyframes` stops, see `animation-pixelate-filter.ts`)
  * remains available as an explicit, off-by-default viewer option
  * (`ViewerAdvancedOptions.pixelateMosaicAnimation`, File > Options >
@@ -145,7 +145,7 @@ test.describe('p:animEffect filter="pixelate": pixelateMosaicAnimation opt-in', 
 		expect(animationName).toBe('pptx-pixelateIn');
 	});
 
-	test('carries a mosaic SVG `<filter>` data-URI mid-animation, not a bare colour/opacity transform', async ({
+	test('carries a same-document mosaic SVG `<filter>` mid-animation, not a bare colour/opacity transform', async ({
 		page,
 	}) => {
 		await seedPixelateMosaicOption(page, true);
@@ -155,13 +155,14 @@ test.describe('p:animEffect filter="pixelate": pixelateMosaicAnimation opt-in', 
 		await advanceUntilAnimationNamed(page);
 
 		// Halfway through the reveal the mosaic is still coarsening: the
-		// computed `filter` must reference one of the self-contained
-		// `pptx-pixelate-<n>` SVG filter data-URIs, not `none` (the resolved
-		// end state) or a plain CSS filter function.
+		// computed `filter` must reference one of the `pptx-pixelate-<n>` SVG
+		// filters in the document (WebKit ignores data-URI filter references),
+		// not `none` (the resolved end state) or a plain CSS filter function.
 		await scrubTo(page, 0.5);
 		const midFilter = await probePixelateComputedFilter(page);
 		expect(midFilter).toBeDefined();
 		expect(midFilter).toContain('pptx-pixelate');
-		expect(midFilter).toContain('data:image/svg+xml');
+		expect(midFilter).not.toContain('data:image/svg+xml');
+		expect(await page.locator('#pptx-pixelate-defs filter').count()).toBeGreaterThan(0);
 	});
 });

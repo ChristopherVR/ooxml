@@ -4,6 +4,7 @@
  * PDF and notes-PDF export live in `export-pdf.ts` (split out once this file
  * grew past the 300-LOC limit with every PDF variant included).
  */
+import { copyPngToClipboard } from 'ooxml-ui/pptx';
 import React from 'react';
 
 import type { PngExportOptions, SlideCaptureOptions } from './export-helpers';
@@ -67,8 +68,8 @@ export async function copySlideToClipboard(
 	slideElement: HTMLElement,
 	options: PngExportOptions = {},
 ): Promise<void> {
-	const blob = await exportSlideToPngBlob(slideElement, options);
-	await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+	// The clipboard write starts inside the click; Safari rejects it after an await.
+	await copyPngToClipboard(exportSlideToPngBlob(slideElement, options));
 }
 
 /** One slide captured by {@link captureSlidesAsPngDataUrls}. */
