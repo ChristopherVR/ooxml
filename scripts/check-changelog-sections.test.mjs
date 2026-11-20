@@ -69,6 +69,56 @@ test('per-package sections are version-headed, so the release-line rule does not
 	assert.equal(checkChangelog(HEADER + STUB).length, 1);
 });
 
+const PENDING = [
+	'## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.0.0) - Unreleased',
+	'',
+	'<!-- release-notes: 2.0 -->',
+	'',
+	'The lead paragraph.',
+	'',
+].join('\n');
+const DATED = [
+	'## [1.9.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@1.9.0) - 2026-11-01',
+	'',
+	'### Bug Fixes',
+	'',
+	'- a fix',
+	'',
+].join('\n');
+const VIEWER_PENDING = ['## Unreleased', '', '_Releases: docx-core@2.0.0_', ''].join('\n');
+
+test('a hand-written section waiting for its date is accepted at the top', () => {
+	assert.deepEqual(checkChangelog(HEADER + PENDING + DATED), []);
+	assert.deepEqual(checkChangelog(HEADER + VIEWER_PENDING + REAL, { requireReleases: true }), []);
+});
+
+test('a pending section below the top would be published undated, so it is rejected', () => {
+	const findings = checkChangelog(HEADER + DATED + PENDING);
+	assert.equal(findings.length, 1);
+	assert.match(findings[0].problem, /not the top section/u);
+	const viewer = checkChangelog(HEADER + REAL + VIEWER_PENDING, { requireReleases: true });
+	assert.equal(viewer.length, 1);
+	assert.match(viewer[0].problem, /not the top section/u);
+	assert.equal(checkChangelog(HEADER + PENDING + PENDING).length, 1);
+});
+
+test('a pending section must link the tag of its own version', () => {
+	const wrong = PENDING.replace('ooxml-core@2.0.0', 'ooxml-core@1.0.0');
+	const [finding] = checkChangelog(HEADER + wrong);
+	assert.match(finding.problem, /not the tag .*<npm>@2\.0\.0/u);
+	const elsewhere = PENDING.replace('ChristopherVR/ooxml/', 'example/other/');
+	assert.equal(checkChangelog(HEADER + elsewhere).length, 1);
+});
+
+test('the package changelogs outside the viewers are checked too', () => {
+	const files = changelogFiles().map((file) => relative(process.cwd(), file).replaceAll('\\', '/'));
+	for (const path of ['src/core/CHANGELOG.md', 'src/ui/CHANGELOG.md', 'mcp/CHANGELOG.md'])
+		assert.ok(
+			files.some((file) => file.endsWith(path)),
+			path,
+		);
+});
+
 test('every changelog in the repo is free of stub sections', () => {
 	const files = changelogFiles();
 	assert.ok(files.length >= 1, 'expected at least the root changelog');

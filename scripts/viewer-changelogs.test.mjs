@@ -183,3 +183,85 @@ test('release mode writes only the days of the packages the plan released', () =
 	const none = { packages: { x: { npm: 'x', dir: 'src/core', release: true, version: '1.0.0' } } };
 	assert.deepEqual(updateViewerChangelogs(root, planDates(none), table), []);
 });
+
+/** A viewer changelog whose top section is hand-written and waits for its date. */
+const CRAFTED_VIEWER = [
+	'# Changelog',
+	'',
+	'A hand-written preamble.',
+	'',
+	'## Unreleased',
+	'',
+	'<!-- release-notes: 2.0 -->',
+	'',
+	'_Releases: demo-react@2.0.0_',
+	'',
+	'The product summary.',
+	'',
+	'## 2026-10-05',
+	'',
+	'_Releases: demo-core@0.9.0_',
+	'',
+].join('\n');
+
+const releasePlan = (versions) => ({
+	packages: Object.fromEntries(
+		Object.entries(versions).map(([npm, version]) => [
+			npm,
+			{ npm, dir: `viewers/demo/packages/${npm.slice(5)}`, release: true, version },
+		]),
+	),
+});
+
+test('release mode dates a hand-written section instead of rebuilding it', () => {
+	const { root, table, read } = fixtureRepo();
+	writeFileSync(join(root, 'viewers/demo/CHANGELOG.md'), CRAFTED_VIEWER);
+	// The package section as crafted-changelogs.mjs --date left it, earlier in the run.
+	writeFileSync(
+		join(root, 'viewers/demo/packages/react/CHANGELOG.md'),
+		'# Changelog\n\n## [2.0.0](x) - 2026-11-30\n\n<!-- release-notes: 2.0 -->\n\n### Added\n\n- a\n',
+	);
+	const plan = releasePlan({ 'demo-react': '2.0.0' });
+	const options = { plan, date: '2026-11-30' };
+	assert.deepEqual(updateViewerChangelogs(root, planDates(plan), table, options), [
+		'viewers/demo/CHANGELOG.md',
+	]);
+	assert.equal(read(), CRAFTED_VIEWER.replace('## Unreleased', '## 2026-11-30'));
+	assert.deepEqual(checkChangelog(read(), { requireReleases: true }), []);
+	// A second run the same day changes nothing.
+	assert.deepEqual(updateViewerChangelogs(root, planDates(plan), table, options), []);
+});
+
+test('a release the hand-written section does not name gets its own section that day', () => {
+	const { root, table, read } = fixtureRepo();
+	writeFileSync(join(root, 'viewers/demo/CHANGELOG.md'), CRAFTED_VIEWER);
+	const plan = releasePlan({ 'demo-react': '2.0.0', 'demo-core': '1.1.0' });
+	updateViewerChangelogs(root, planDates(plan), table, { plan, date: '2026-11-13' });
+	const text = read();
+	assert.equal(text.match(/^## 2026-11-13$/gmu).length, 2);
+	assert.ok(text.includes('The product summary.'));
+	assert.match(text, /^_Releases: demo-core@1\.1\.0_$/mu);
+	assert.ok(text.indexOf('The product summary.') < text.indexOf('_Releases: demo-core@1.1.0_'));
+	assert.deepEqual(checkChangelog(text, { requireReleases: true }), []);
+});
+
+test('a hand-written section stays pending while the plan releases nothing it names', () => {
+	const { root, table, read } = fixtureRepo();
+	writeFileSync(join(root, 'viewers/demo/CHANGELOG.md'), CRAFTED_VIEWER);
+	const plan = releasePlan({ 'demo-core': '1.1.0' });
+	updateViewerChangelogs(root, planDates(plan), table, { plan, date: '2026-11-13' });
+	const text = read();
+	assert.ok(text.startsWith(`${HEADER}\n## Unreleased\n`), text);
+	assert.match(text, /^## 2026-11-13\n\n_Releases: demo-core@1\.1\.0_$/mu);
+	assert.deepEqual(checkChangelog(text, { requireReleases: true }), []);
+});
+
+test('backfill keeps a pending hand-written section at the top', () => {
+	const { root, table, read } = fixtureRepo();
+	writeFileSync(join(root, 'viewers/demo/CHANGELOG.md'), CRAFTED_VIEWER);
+	updateViewerChangelogs(root, missingDates, table);
+	const text = read();
+	assert.ok(text.startsWith(`${HEADER}\n## Unreleased\n`), text);
+	assert.ok(text.indexOf('## 2026-11-13') < text.indexOf('## 2026-10-20'));
+	assert.deepEqual(checkChangelog(text, { requireReleases: true }), []);
+});

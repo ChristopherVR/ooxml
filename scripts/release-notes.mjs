@@ -19,12 +19,18 @@
  * that happens we fall back to a raw commit list over the package's baseline so
  * the release notes are never empty (the historical bug: a bullet-free section
  * left the GitHub release showing only the pruned-history footer).
+ *
+ * A package whose changelog has a hand-written section for this version (see
+ * crafted-changelogs.mjs) gets that section's body instead, and git-cliff is not
+ * run. The workflow dates the section before this runs, so the committed file
+ * (`git show HEAD:<changelog>`), where it still reads `Unreleased`, is checked too.
  */
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { craftedNotes } from './crafted-changelogs.mjs';
 import { packageBlocks, releaseBody } from './major-notes.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -110,6 +116,19 @@ function commitFallback(pkg) {
 	return `### Changes\n\n${lines.join('\n')}`;
 }
 
+/** The package's changelog as committed at HEAD, or '' when it is not tracked there. */
+function committedChangelog(pkg) {
+	try {
+		return execFileSync('git', ['show', `HEAD:${pkg.changelog}`], {
+			cwd: ROOT,
+			encoding: 'utf8',
+			stdio: ['ignore', 'pipe', 'ignore'],
+		});
+	} catch {
+		return '';
+	}
+}
+
 function main() {
 	const key = process.argv[2];
 	if (!key) {
@@ -117,10 +136,15 @@ function main() {
 		process.exit(2);
 	}
 	const pkg = loadPackage(key);
-	const section = cliffSection(pkg);
-	const notes = hasBullets(section) ? section : commitFallback(pkg);
 	const changelog = join(ROOT, pkg.changelog);
 	const text = existsSync(changelog) ? readFileSync(changelog, 'utf8') : '';
+	const crafted = craftedNotes(pkg, [text, committedChangelog(pkg)]);
+	if (crafted) {
+		process.stdout.write(`${crafted}\n`);
+		return;
+	}
+	const section = cliffSection(pkg);
+	const notes = hasBullets(section) ? section : commitFallback(pkg);
 	const { blocks } = packageBlocks(ROOT, pkg, text);
 	process.stdout.write(`${releaseBody(notes, blocks).trimEnd()}\n`);
 }

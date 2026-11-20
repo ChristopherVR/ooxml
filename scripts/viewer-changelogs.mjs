@@ -9,6 +9,11 @@
  * instead of adding another. Sections for other days are never touched (changelogs here are
  * prepend-only, see check-changelog-sections.mjs).
  *
+ * A hand-written `## Unreleased` section at the top (crafted-changelogs.mjs) is dated instead,
+ * when the plan releases a package its `_Releases:` line names. A section carrying a release-notes
+ * marker is hand-written: it is never rebuilt, and the releases it names are left out of the
+ * generated section of its day, so a later run that day adds only what it does not cover.
+ *
  * Usage:
  *   node scripts/viewer-changelogs.mjs --plan release-plan.json   (release workflow, after git-cliff)
  *   node scripts/viewer-changelogs.mjs --backfill                 (every package day missing a section)
@@ -18,6 +23,14 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import {
+	datePending,
+	pendingViewerSection,
+	releaseList,
+	sections,
+	today,
+	viewerReleases,
+} from './crafted-changelogs.mjs';
 import { COMMITS_HEADING, KINDS } from './major-notes.mjs';
 import { VIEWER_PACKAGES } from './viewer-packages.mjs';
 
@@ -44,15 +57,17 @@ const NOTES_ORDER = KINDS.map(([, heading]) => heading);
 export const HEADER = [
 	'# Changelog',
 	'',
-	"All notable changes to this viewer's packages, newest first. Each dated section names the",
-	'packages released that day and merges their entries; the full history of each package is in its',
-	'own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these',
-	'sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.',
+	"All notable changes to this viewer's packages, newest first. Each section names the packages",
+	'released that day; the full history of each package is in its own `CHANGELOG.md`',
+	'(`packages/<name>/`, `mcp/`, `server/`).',
 	'',
 ].join('\n');
 
 const PACKAGE_HEADING_RE = /^## \[(?<version>[^\]]+)\]\([^)]*\) - (?<date>\d{4}-\d{2}-\d{2})\s*$/u;
 const DATED_HEADING_RE = /^## (?<date>\d{4}-\d{2}-\d{2})\s*$/u;
+
+/** True when a section's text is hand-written: it carries a release-notes marker. */
+const isCrafted = (text) => /^<!-- release-notes: /mu.test(text);
 
 /** The released sections of one package changelog: version, date and entries grouped by heading. */
 export function parsePackageChangelog(text) {
@@ -126,7 +141,7 @@ export function upsertDaySection(text, date, section) {
 	const body = first < 0 ? '' : normalised.slice(first);
 	const parts = body ? body.split(/^(?=## )/mu) : [];
 	const index = parts.findIndex(
-		(part) => DATED_HEADING_RE.exec(part.split('\n')[0])?.groups.date === date,
+		(part) => DATED_HEADING_RE.exec(part.split('\n')[0])?.groups.date === date && !isCrafted(part),
 	);
 	const block = `${section.trimEnd()}\n\n`;
 	if (index >= 0) {
@@ -155,7 +170,7 @@ export function viewerPackageTable(table = VIEWER_PACKAGES) {
 }
 
 /** Every package release of one viewer, read from the package changelogs under `root`. */
-function viewerReleases(root, packages) {
+function packageReleases(root, packages) {
 	return packages.flatMap(({ npm, changelog }) => {
 		const path = join(root, changelog);
 		if (!existsSync(path)) return [];
@@ -174,20 +189,41 @@ function coveredDates(text) {
 	);
 }
 
+/** The `npm@version` releases the hand-written sections of a viewer changelog already cover. */
+export function craftedReleases(text) {
+	return new Set(
+		sections(text)
+			.filter((section) => isCrafted(section.body.join('\n')))
+			.flatMap((section) => releaseList(section.body) ?? []),
+	);
+}
+
 /**
  * Write the sections for `datesFor(viewer, releases, existing)` into each viewer's root changelog.
- * Returns the paths it changed.
+ * With `plan`, a pending hand-written section naming a package the plan releases is dated `date`
+ * first. Returns the paths it changed.
  */
-export function updateViewerChangelogs(root, datesFor, table = VIEWER_PACKAGES) {
+export function updateViewerChangelogs(
+	root,
+	datesFor,
+	table = VIEWER_PACKAGES,
+	{ plan = null, date = today() } = {},
+) {
 	const changed = [];
 	for (const [viewer, packages] of viewerPackageTable(table)) {
-		const releases = viewerReleases(root, packages);
+		const releases = packageReleases(root, packages);
 		const path = join(root, 'viewers', viewer, 'CHANGELOG.md');
 		const before = existsSync(path) ? readFileSync(path, 'utf8') : `${HEADER}\n`;
 		let text = before;
-		for (const date of [...datesFor(viewer, releases, before)].sort()) {
-			const day = releases.filter((r) => r.date === date);
-			if (day.length) text = upsertDaySection(text, date, renderDaySection(date, day));
+		const pending = plan ? pendingViewerSection(text) : null;
+		const released = plan ? viewerReleases(plan, viewer) : new Map();
+		if (pending?.releases?.some((entry) => released.has(entry.replace(/@[^@]+$/u, '')))) {
+			text = datePending(text, date);
+		}
+		const covered = craftedReleases(text);
+		for (const day of [...datesFor(viewer, releases, before)].sort()) {
+			const own = releases.filter((r) => r.date === day && !covered.has(`${r.npm}@${r.version}`));
+			if (own.length) text = upsertDaySection(text, day, renderDaySection(day, own));
 		}
 		if (text !== before) {
 			writeFileSync(path, text);
@@ -219,8 +255,10 @@ function main() {
 	const args = process.argv.slice(2);
 	const planAt = args.indexOf('--plan');
 	let datesFor;
+	let plan = null;
 	if (planAt >= 0 && args[planAt + 1]) {
-		datesFor = planDates(JSON.parse(readFileSync(args[planAt + 1], 'utf8')));
+		plan = JSON.parse(readFileSync(args[planAt + 1], 'utf8'));
+		datesFor = planDates(plan);
 	} else if (args.includes('--backfill')) {
 		datesFor = missingDates;
 	} else {
@@ -229,7 +267,9 @@ function main() {
 		);
 		process.exit(2);
 	}
-	for (const path of updateViewerChangelogs(ROOT, datesFor)) console.log(path);
+	for (const path of updateViewerChangelogs(ROOT, datesFor, VIEWER_PACKAGES, { plan })) {
+		console.log(path);
+	}
 }
 
 if (process.argv[1]?.endsWith('viewer-changelogs.mjs')) main();

@@ -13,7 +13,8 @@
  * (`ooxml-core/opc`). A name without backticks is one of the groups in `groups()`. `Office suite`
  * names the hosted app, which is not on npm: its bullets reach no package changelog.
  *
- * When a package is released with a major bump and its changelog does not carry these notes yet,
+ * When a package is released with a major bump and its changelog does not carry these notes yet
+ * (a hand-written section at the top, see crafted-changelogs.mjs, carries them),
  * the release workflow (`--plan`) writes the package's share of them under the new version's
  * heading, above the git-cliff commit list, which moves under `### Commits`. `release-notes.mjs`
  * gives the GitHub release body the same shape. A bullet that names no package, an unknown name,
@@ -27,6 +28,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { pendingSection } from './crafted-changelogs.mjs';
 import { PACKAGES, presentPackages } from './release-plan.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -208,9 +210,12 @@ function splitSection(text, version) {
 	};
 }
 
-/** The notes names `pkg` (a release plan entry) must carry: a major release not carrying them yet. */
+/**
+ * The notes names `pkg` (a release plan entry) must carry: a major release not carrying them yet.
+ * A changelog with a hand-written section waiting for its date (crafted-changelogs.mjs) needs none.
+ */
 export function pendingNotes(root, pkg, changelog = '') {
-	if (!pkg.release || pkg.bump !== 'major') return [];
+	if (!pkg.release || pkg.bump !== 'major' || pendingSection(changelog)) return [];
 	const parts = splitSection(changelog, pkg.version);
 	const elsewhere = parts ? [...parts.before, ...parts.after].join('\n') : changelog;
 	return noteNames(root).filter((name) => !elsewhere.includes(marker(name)));
