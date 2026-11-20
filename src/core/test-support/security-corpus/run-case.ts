@@ -62,9 +62,45 @@ export async function bundleCases(modules: ReadonlyMap<string, string>): Promise
 	return { files, dispose: () => rm(outDir, { recursive: true, force: true }) };
 }
 
-/** Run case `index` of `bundle` in a child process held to the case's time and heap limits. */
-export function runCase(bundle: string, index: number, limits: SecurityCase['limits']) {
-	return new Promise<Outcome>((resolve) => {
+/** Attempts at starting a case's process: a start that fails never ran the case. */
+const STARTS = 3;
+
+/**
+ * Run case `index` of `bundle` in a child process held to the case's time and heap limits. A
+ * process that dies before its case begins (a loaded Windows machine refuses new processes with
+ * `STATUS_DLL_INIT_FAILED`) is started again; one that dies while the case runs is its outcome.
+ */
+export async function runCase(
+	bundle: string,
+	index: number,
+	limits: SecurityCase['limits'],
+): Promise<Outcome> {
+	const failedStarts: string[] = [];
+	for (let attempt = 1; ; attempt++) {
+		const outcome = await runOnce(bundle, index, limits);
+		if (outcome.kind !== 'not-started') return outcome;
+		failedStarts.push(outcome.error);
+		if (attempt === STARTS)
+			return {
+				kind: 'crashed',
+				error: `the process never started the case (${STARTS} tries): ${failedStarts.join('; ')}`,
+			};
+	}
+}
+
+/** A process exit code, with the Windows status it stands for when it is one. */
+function exitCause(code: number | null, signal: NodeJS.Signals | null): string {
+	if (signal) return `signal ${signal}`;
+	if (code === null) return 'no exit code';
+	return code > 0xffff ? `exit code 0x${code.toString(16).toUpperCase()}` : `exit code ${code}`;
+}
+
+function runOnce(
+	bundle: string,
+	index: number,
+	limits: SecurityCase['limits'],
+): Promise<Outcome | { kind: 'not-started'; error: string }> {
+	return new Promise((resolve) => {
 		const child = fork(HARNESS, [pathToFileURL(bundle).href, String(index)], {
 			execArgv: [`--max-old-space-size=${limits.heapMb}`],
 			serialization: 'advanced',
@@ -74,8 +110,9 @@ export function runCase(bundle: string, index: number, limits: SecurityCase['lim
 		child.stderr?.on('data', (chunk: Buffer) => {
 			stderr = (stderr + chunk.toString()).slice(-4_000);
 		});
+		let started = false;
 		let settled = false;
-		const settle = (outcome: Outcome) => {
+		const settle = (outcome: Outcome | { kind: 'not-started'; error: string }) => {
 			if (settled) return;
 			settled = true;
 			clearTimeout(timer);
@@ -88,6 +125,7 @@ export function runCase(bundle: string, index: number, limits: SecurityCase['lim
 		);
 		child.on('message', (message: { type: 'ready' } | ({ type: 'done' } & Done)) => {
 			if (message.type === 'ready') {
+				started = true;
 				clearTimeout(timer);
 				timer = setTimeout(() => settle({ kind: 'over-time', limitMs: limits.ms }), limits.ms);
 				return;
@@ -95,14 +133,23 @@ export function runCase(bundle: string, index: number, limits: SecurityCase['lim
 			const { type: _type, ...done } = message;
 			settle({ kind: 'done', ...done });
 		});
-		child.on('error', (error) => settle({ kind: 'crashed', error: error.stack ?? error.message }));
-		// V8 aborts the process when the heap limit is reached; its last words name the cause.
-		child.on('close', (code, signal) =>
+		child.on('error', (error) =>
 			settle(
-				/heap out of memory|Reached heap limit/u.test(stderr)
-					? { kind: 'over-heap', limitMb: limits.heapMb }
-					: { kind: 'crashed', error: `exited with ${signal ?? code}: ${stderr.trim()}` },
+				started
+					? { kind: 'crashed', error: error.stack ?? error.message }
+					: { kind: 'not-started', error: error.message },
 			),
 		);
+		// V8 aborts the process when the heap limit is reached; its last words name the cause.
+		child.on('close', (code, signal) => {
+			if (/heap out of memory|Reached heap limit/u.test(stderr))
+				return settle({ kind: 'over-heap', limitMb: limits.heapMb });
+			const cause = `${exitCause(code, signal)}${stderr.trim() ? `: ${stderr.trim()}` : ''}`;
+			settle(
+				started
+					? { kind: 'crashed', error: `exited while the case ran, with ${cause}` }
+					: { kind: 'not-started', error: `exited before the case began, with ${cause}` },
+			);
+		});
 	});
 }
