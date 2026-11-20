@@ -226,8 +226,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       budget and an array budget, past which that formula alone is `#NUM!`
       (`src/core/xlsx/formula/values.ts`); a recalculation stops between formulas, keeping the
       previous values, at an optional time limit or when its results would hold too much
-      (`recalc-limits.ts`). The Excel editor reads files on the page and runs the calculation on
-      open in a worker with a ten-second limit, receiving only the cells it wrote
+      (`recalc-limits.ts`). The Excel editor reads files on the page, calculates on the page as long as
+      reading took, and leaves a slower calculation on open to a worker with a ten-second limit,
+      receiving only the cells it wrote
       (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
       `calc-results.test.ts`, `workbook-opener.test.ts`.
 - [x] **P1** REGEXTEST, REGEXEXTRACT and REGEXREPLACE run on the engine's own matcher

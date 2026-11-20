@@ -4,7 +4,7 @@
 import { cellKey, keyToAddress } from '../address';
 import { deleteCell, getCell, putCell } from '../cells';
 import type { CellValue, Workbook } from '../model';
-import { calculateOnOpen, type OpenCalculation } from './calc-mode';
+import { calculateOnOpen, type OpenCalculation, type OpenCalculationLimits } from './calc-mode';
 import { isSpilledCell, type SpilledCell } from './deps';
 
 /** What a calculation wrote to one sheet, in flat arrays (cheap to post between threads). */
@@ -81,7 +81,7 @@ function writtenOn(workbook: Workbook, s: number, before: ReadonlySet<number>): 
  */
 export function calculateOnOpenCells(
 	workbook: Workbook,
-	options: { timeLimitMs?: number } = {},
+	options: OpenCalculationLimits = {},
 ): { calculation: OpenCalculation; cells?: CalculatedCells } {
 	const spilledBefore = workbook.sheets.map((sheet) => {
 		const keys = new Set<number>();

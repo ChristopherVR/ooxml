@@ -14,7 +14,7 @@ import { implicitIntersection } from './references';
 import { isSpilledCell, releaseSpilledCell } from './spill';
 import { CalculationStopped, RecalcLimits } from './recalc-limits';
 import { storeResult } from './store';
-import { ERR, ErrorSignal, Matrix, type Scalar, withFormulaBudget } from './values';
+import { ERR, ErrorSignal, Matrix, type Scalar, withFormulaBudget, WorkCapReached } from './values';
 
 const MAX_ROUNDS = 8;
 
@@ -127,7 +127,6 @@ export abstract class EngineCore extends EngineHost {
 					if (iterate) this.iterateGroup(component.nodes, iterate);
 					else for (const node of component.nodes) this.markCycle(node);
 				} else if (this.pending.has(first)) {
-					this.limits.tick();
 					this.computeFrom(first);
 				}
 			}
@@ -183,7 +182,6 @@ export abstract class EngineCore extends EngineHost {
 		this.iterating = true;
 		try {
 			for (let pass = 0; pass < limits.count; pass++) {
-				this.limits.tick();
 				let change = 0;
 				for (const node of nodes) {
 					const before = cellOf(node)?.value ?? null;
@@ -207,6 +205,8 @@ export abstract class EngineCore extends EngineHost {
 	}
 
 	protected compute(node: FormulaNode): void {
+		// Also between formulas computed while another reads them, so none can outlast the limit.
+		this.limits.tick();
 		this.pending?.delete(node);
 		const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
 		if (!cell || cell.formula !== node.formula || node.keepCached) return;
@@ -310,12 +310,13 @@ export abstract class EngineCore extends EngineHost {
 					return node.legacy ? clean(implicitIntersection(value, frame)) : finalize(value, this);
 				} catch (e) {
 					if (e instanceof Deferred || e instanceof CalculationStopped) throw e;
+					if (e instanceof WorkCapReached) throw new CalculationStopped('work');
 					if (e instanceof ErrorSignal) return e.value;
 					// A formula nested past the stack shows #NUM! instead of escaping the recalculation.
 					if (e instanceof RangeError) return ERR.NUM;
 					return ERR.VALUE;
 				}
-			}),
+			}, this.options.workCap),
 		);
 	}
 }

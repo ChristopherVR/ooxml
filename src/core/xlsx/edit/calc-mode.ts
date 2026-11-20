@@ -23,17 +23,28 @@ export interface OpenCalculation {
 	stopped?: CalculationStop;
 }
 
+/** How a calculation on open is bounded (see `CalcEngineOptions`). */
+export interface OpenCalculationLimits {
+	/** How long it may run. */
+	timeLimitMs?: number;
+	/** The most work one formula may need before the calculation stops. */
+	workCap?: number;
+}
+
 /**
  * Runs the full calculation a workbook asks for when it opens (`calcPr fullCalcOnLoad`), unless it
  * calculates manually. Editors call it once on a workbook they open, before showing it, in a
- * worker or on the page; `timeLimitMs` bounds how long it may run.
+ * worker or on the page, bounded by `limits`.
  */
 export function calculateOnOpen(
 	workbook: Workbook,
-	{ timeLimitMs }: { timeLimitMs?: number } = {},
+	limits: OpenCalculationLimits = {},
 ): OpenCalculation {
 	if (!needsCalculationOnOpen(workbook)) return { ran: false };
-	const engine = createCalcEngine(workbook, timeLimitMs === undefined ? {} : { timeLimitMs });
+	const engine = createCalcEngine(workbook, {
+		...(limits.timeLimitMs === undefined ? {} : { timeLimitMs: limits.timeLimitMs }),
+		...(limits.workCap === undefined ? {} : { workCap: limits.workCap }),
+	});
 	engine.recalculateAll();
 	return engine.stopped ? { ran: true, stopped: engine.stopped } : { ran: true };
 }

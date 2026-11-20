@@ -51,6 +51,7 @@ export {
 	needsCalculationOnOpen,
 	type CalcMode,
 	type OpenCalculation,
+	type OpenCalculationLimits,
 } from './calc-mode';
 export {
 	applyCalculatedCells,

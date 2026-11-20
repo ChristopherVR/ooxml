@@ -1,12 +1,14 @@
 /**
  * Opens workbook files. The page reads every file itself, as it always has. A file that asks for a
- * full calculation on open (`calcPr fullCalcOnLoad`) is also sent to a worker
- * (`xlsx-open-worker.ts`) as soon as its bytes arrive: the worker reads the same bytes while the
- * page does and runs that calculation off the page, then posts back only the cells it wrote, so
- * slow formulas never freeze the editor and nothing large is copied between threads. The
- * calculation has a time limit; past it the workbook shows the values it was saved with. Where
- * workers are unavailable (no `Worker`, or the worker script cannot start) the calculation runs on
- * the page, under the same time limit.
+ * full calculation on open (`calcPr fullCalcOnLoad`) is first calculated on the page, briefly: for
+ * at most as long as reading it took (and no less than a quarter of a second), with no formula
+ * allowed more than a quarter of a second of work. Most workbooks finish there, as fast as before.
+ * One that does not is sent to a worker (`xlsx-open-worker.ts`), which reads the file again,
+ * runs the whole calculation off the page under a time limit and posts back only the cells it
+ * wrote, so slow formulas never freeze the editor for long and nothing large is copied between
+ * threads. Past the limit the formulas it did not finish show the values the file was saved
+ * with. Where workers are unavailable (no `Worker`, or the worker script cannot start) the
+ * calculation runs on the page, under the same time limit.
  */
 import {
 	applyCalculatedCells,
@@ -14,6 +16,7 @@ import {
 	needsCalculationOnOpen,
 	type CalculatedCells,
 	type CalculationStop,
+	type OpenCalculationLimits,
 	type Workbook,
 } from 'ooxml-core/xlsx';
 
@@ -49,13 +52,10 @@ export interface OpenedWorkbook {
 	calculationStopped: boolean;
 }
 
-export type WorkbookOpener = ((
+export type WorkbookOpener = (
 	bytes: Uint8Array | ArrayBuffer,
 	options: OpenOptions,
-) => Promise<OpenedWorkbook>) & {
-	/** Starts a worker ahead of the first open, so a calculation on open does not wait for it. */
-	prewarm?(): void;
-};
+) => Promise<OpenedWorkbook>;
 
 export interface WorkerLike {
 	onmessage: ((event: MessageEvent) => void) | null;
@@ -66,6 +66,10 @@ export interface WorkerLike {
 export type WorkerFactory = () => WorkerLike;
 
 export interface OpenLimits {
+	/** The least time the page may calculate before it leaves the rest to a worker. */
+	pageMs: number;
+	/** The most work one formula may need on the page (units of `MAX_FORMULA_WORK`). */
+	pageWorkCap: number;
 	/** How long a new worker may take to start; past it the page calculates instead. */
 	startMs: number;
 	/** How long the worker may take to read the file before its calculation is abandoned. */
@@ -75,6 +79,8 @@ export interface OpenLimits {
 }
 
 export const DEFAULT_OPEN_LIMITS: OpenLimits = {
+	pageMs: 250,
+	pageWorkCap: 250_000_000,
 	startMs: 10_000,
 	readMs: 60_000,
 	calculateMs: 10_000,
@@ -100,8 +106,6 @@ const loadOptions = (options: OpenOptions) => ({
 
 /** How long a worker that finished a calculation stays for the next one. */
 const IDLE_MS = 30_000;
-/** How long a worker started ahead of the first open waits for it. */
-const PREWARM_IDLE_MS = 120_000;
 
 /**
  * The worker kept between opens: starting one loads the whole reader, which would otherwise be
@@ -137,7 +141,7 @@ class WorkerPool {
 		this.started.add(worker);
 	}
 
-	release(worker: WorkerLike, idleMs = IDLE_MS): void {
+	release(worker: WorkerLike): void {
 		worker.onmessage = (event) => {
 			if ((event.data as CalculateResponse).kind === 'ready') this.started.add(worker);
 		};
@@ -148,17 +152,7 @@ class WorkerPool {
 			if (this.idle !== worker) return;
 			this.idle = undefined;
 			worker.terminate();
-		}, idleMs);
-	}
-
-	/** Starts an idle worker unless one is waiting; a worker that cannot start is left to the open. */
-	prewarm(): void {
-		if (this.idle) return;
-		try {
-			this.release(this.create(), PREWARM_IDLE_MS);
-		} catch {
-			// The first calculation finds no worker and runs on the page.
-		}
+		}, IDLE_MS);
 	}
 
 	discard(worker: WorkerLike): void {
@@ -230,10 +224,10 @@ function calculateInWorker(
 	});
 }
 
-/** Runs the calculation on the page, under the same time limit as in the worker. */
-function calculateOnPage(workbook: Workbook, limits: OpenLimits): OpenedWorkbook {
+/** Runs the calculation on the page within `bounds`; an error leaves the saved values. */
+function calculateOnPage(workbook: Workbook, bounds: OpenCalculationLimits): OpenedWorkbook {
 	try {
-		const { ran, stopped } = calculateOnOpen(workbook, { timeLimitMs: limits.calculateMs });
+		const { ran, stopped } = calculateOnOpen(workbook, bounds);
 		return { workbook, calculated: ran && !stopped, calculationStopped: !!stopped };
 	} catch (error) {
 		console.error(error);
@@ -255,18 +249,21 @@ export function createWorkbookOpener(
 			? undefined
 			: () => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' }));
 	const pool = create && new WorkerPool(create);
-	const open: WorkbookOpener = async (bytes, options) => {
-		const { asksForCalculationOnOpen, loadWorkbook } = await import('ooxml-core/xlsx/load');
-		// Started before the page reads the file, so both read it at once.
-		let calculation =
-			pool && asksForCalculationOnOpen(bytes)
-				? calculateInWorker(pool, bytes, options, limits)
-				: undefined;
+	const whole = { timeLimitMs: limits.calculateMs };
+	return async (bytes, options) => {
+		const { loadWorkbook } = await import('ooxml-core/xlsx/load');
+		const started = performance.now();
 		const workbook = await loadWorkbook(bytes, loadOptions(options));
 		if (!needsCalculationOnOpen(workbook))
 			return { workbook, calculated: false, calculationStopped: false };
-		calculation ??= pool ? calculateInWorker(pool, bytes, options, limits) : undefined;
-		const outcome = calculation ? await calculation : { kind: 'unavailable' as const };
+		if (!pool) return calculateOnPage(workbook, whole);
+		const first = calculateOnPage(workbook, {
+			timeLimitMs: Math.max(limits.pageMs, performance.now() - started),
+			workCap: limits.pageWorkCap,
+		});
+		if (!first.calculationStopped) return first;
+		// What the page computed before it stopped is replaced by what the worker writes.
+		const outcome = await calculateInWorker(pool, bytes, options, limits);
 		switch (outcome.kind) {
 			case 'done':
 				applyCalculatedCells(workbook, outcome.cells);
@@ -274,9 +271,7 @@ export function createWorkbookOpener(
 			case 'stopped':
 				return { workbook, calculated: false, calculationStopped: true };
 			default:
-				return calculateOnPage(workbook, limits);
+				return calculateOnPage(workbook, whole);
 		}
 	};
-	if (pool) open.prewarm = () => pool.prewarm();
-	return open;
 }

@@ -57,10 +57,11 @@ export interface CalcEngine {
 }
 
 /**
- * Why a recalculation stopped early: it ran past `CalcEngineOptions.timeLimitMs`, or its results
- * would have stored more cells or text than one recalculation may hold in memory.
+ * Why a recalculation stopped early: it ran past `CalcEngineOptions.timeLimitMs`, a formula
+ * needed more work than `CalcEngineOptions.workCap`, or its results would have stored more
+ * cells or text than one recalculation may hold in memory.
  */
-export type CalculationStop = 'time' | 'resources';
+export type CalculationStop = 'time' | 'work' | 'resources';
 
 export interface CalcEngineOptions {
 	/** Clock for NOW and TODAY (tests). */
@@ -73,6 +74,12 @@ export interface CalcEngineOptions {
 	 * is bounded on its own regardless.
 	 */
 	timeLimitMs?: number;
+	/**
+	 * Stops the recalculation, as at its time limit, at a formula that needs more work than this
+	 * (in the units of `MAX_FORMULA_WORK`), rather than letting that formula spend its whole
+	 * budget: for a quick first attempt that leaves slow formulas to a second one elsewhere.
+	 */
+	workCap?: number;
 }
 
 export const CIRCULAR_REFERENCE_WARNING =

@@ -15,7 +15,6 @@ import {
 } from './editor-attributes';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { closeContextMenu } from './context-menu';
-import { prewarmWorkbookOpener } from './editor-files';
 import { buildShell, type Shell } from './editor-shell';
 import { XlsxEditorApi } from './element-api';
 import { buildSurface } from './surface-shell';
@@ -87,7 +86,6 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		this.core.collab.resume();
 		installOfficeUiThemeFor(this);
 		this.core.webfonts.connect();
-		prewarmWorkbookOpener(this.ownerDocument.defaultView);
 		if (this.surfaceOnly) {
 			this.disposeSurface ??= buildSurface(this.core);
 			this.core.requestRender();

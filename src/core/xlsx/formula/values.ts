@@ -69,21 +69,36 @@ export function resetCalcBudget(): void {
 }
 
 let budgetDepth = 0;
+/** Set while a formula's work is capped below its budget: running out stops, not `#NUM!`. */
+let capped = false;
+
+/**
+ * Thrown instead of `#NUM!` when a formula needs more work than a cap below its own budget
+ * allows (see `withFormulaBudget`): with its full budget it might still succeed.
+ */
+export class WorkCapReached {}
 
 /**
  * Evaluates one formula on a budget of its own, then gives back what the formula it interrupted
  * had left: a formula computed while another reads it neither spends nor inherits that budget.
- * Outside every formula the budget is full again.
+ * Outside every formula the budget is full again. A `workCap` below the budget throws
+ * `WorkCapReached` once the formula has spent it.
  */
-export function withFormulaBudget<T>(evaluate: () => T): T {
+export function withFormulaBudget<T>(evaluate: () => T, workCap?: number): T {
 	const arrays = arrayCellsLeft;
 	const work = workLeft;
 	const text = textLeft;
+	const wasCapped = capped;
 	resetCalcBudget();
+	if (workCap !== undefined && workCap < MAX_FORMULA_WORK) {
+		workLeft = workCap;
+		capped = true;
+	} else capped = false;
 	budgetDepth++;
 	try {
 		return evaluate();
 	} finally {
+		capped = wasCapped;
 		if (--budgetDepth) {
 			arrayCellsLeft = arrays;
 			workLeft = work;
@@ -101,7 +116,9 @@ export function chargeArrayCells(cells: number): void {
 /** Spends `units` of the formula's work budget; `#NUM!` when it is exhausted. */
 export function chargeWork(units: number): void {
 	workLeft -= units;
-	if (workLeft < 0) fail(ERR.NUM);
+	if (workLeft >= 0) return;
+	if (capped) throw new WorkCapReached();
+	fail(ERR.NUM);
 }
 
 /** Spends the length of `text` from the formula's text budget and returns it. */

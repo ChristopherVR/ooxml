@@ -154,6 +154,18 @@ describe('recalculation limits', () => {
 		expect(() => limits.store(text, 1)).toThrow(CalculationStopped);
 	});
 
+	it('stops, rather than failing the formula, at one that needs more work than a cap', () => {
+		const wb = book({ A1: '=1+1', A2: '=SUM(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))' });
+		const capped = createCalcEngine(wb, { workCap: 1_000_000 });
+		capped.recalculateAll();
+		expect(capped.stopped).toBe('work');
+		expect(get(wb, 'A2')).toBeNull();
+		const full = createCalcEngine(wb);
+		full.recalculateAll();
+		expect(full.stopped).toBeUndefined();
+		expect(typeof get(wb, 'A2')).toBe('number');
+	});
+
 	it('stops at the time limit between formulas and computes everything next time', () => {
 		const cells: Record<string, string> = {};
 		for (let row = 1; row <= 200; row++) cells[`A${row}`] = '=ROW()';

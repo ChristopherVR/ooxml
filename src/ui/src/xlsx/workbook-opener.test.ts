@@ -25,11 +25,14 @@ function fake(): FakeWorker {
 	return worker;
 }
 
-/** A saved workbook whose B1 (`=A1*3`) holds a stale 99, asking to be calculated on open or not. */
+/**
+ * A saved workbook whose B1 (6) holds a stale 99, asking to be calculated on open or not. Its
+ * matrix product needs a little work, more than the page is given in these tests.
+ */
 async function staleBytes(calculate = true): Promise<Uint8Array> {
 	const workbook = createWorkbook({ sheets: ['S'] });
 	putCell(workbook.sheets[0]!, 0, 0, { value: 2 });
-	putCell(workbook.sheets[0]!, 0, 1, { value: 99, formula: 'A1*3' });
+	putCell(workbook.sheets[0]!, 0, 1, { value: 99, formula: 'A1*3+SUM(MMULT({1},{0}))' });
 	workbook.fullCalcOnLoad = calculate;
 	return saveWorkbook(workbook, 'xlsx');
 }
@@ -40,7 +43,7 @@ async function calculated(bytes: Uint8Array): Promise<CalculateResponse> {
 	return { kind: 'done', cells: cells! };
 }
 
-const limits = { startMs: 500, readMs: 1000, calculateMs: 50 };
+const limits = { pageMs: 250, pageWorkCap: 0, startMs: 500, readMs: 1000, calculateMs: 50 };
 const b1 = (workbook: { sheets: { rows: Map<number, Map<number, unknown>> }[] }) =>
 	getCell(workbook.sheets[0] as never, 0, 1)?.value;
 
@@ -66,7 +69,17 @@ describe('workbook opener', () => {
 		expect([b1(workbook), calculated, calculationStopped]).toEqual([99, false, false]);
 	});
 
-	it('calculates in a worker sent a copy of the bytes and applies what it wrote', async () => {
+	it('calculates a quick workbook on the page, without a worker', async () => {
+		const factory = vi.fn(fake);
+		const { workbook, calculated, calculationStopped } = await createWorkbookOpener(factory, {
+			...limits,
+			pageWorkCap: 1_000,
+		})(await staleBytes(), {});
+		expect(factory).not.toHaveBeenCalled();
+		expect([b1(workbook), calculated, calculationStopped]).toEqual([6, true, false]);
+	});
+
+	it('leaves a slow calculation to a worker sent a copy of the bytes', async () => {
 		const worker = fake();
 		const bytes = await staleBytes();
 		const opened = createWorkbookOpener(() => worker, limits)(bytes, { fileName: 'a.xlsx' });
@@ -101,23 +114,6 @@ describe('workbook opener', () => {
 		expect(worker.terminate).not.toHaveBeenCalled();
 		await vi.advanceTimersByTimeAsync(30_000);
 		expect(worker.terminate).toHaveBeenCalledOnce();
-	});
-
-	it('starts a worker ahead of the first open and uses it', async () => {
-		const worker = fake();
-		const factory = vi.fn(() => worker);
-		const open = createWorkbookOpener(factory, limits);
-		open.prewarm?.();
-		open.prewarm?.();
-		expect(factory).toHaveBeenCalledOnce();
-		const bytes = await staleBytes();
-		const opened = open(bytes, {});
-		await requested(worker);
-		worker.say({ kind: 'ready' });
-		worker.say({ kind: 'read' });
-		worker.say(await calculated(bytes));
-		expect(b1((await opened).workbook)).toBe(6);
-		expect(factory).toHaveBeenCalledOnce();
 	});
 
 	it('shows the saved values when the calculation stops at its limit', async () => {
@@ -172,8 +168,7 @@ describe('workbook opener', () => {
 	it('calculates on the page without workers', async () => {
 		vi.stubGlobal('Worker', undefined);
 		try {
-			const open = createWorkbookOpener();
-			expect(open.prewarm).toBeUndefined();
+			const open = createWorkbookOpener(undefined, limits);
 			const { workbook, calculated } = await open(await staleBytes(), {});
 			expect([b1(workbook), calculated]).toEqual([6, true]);
 		} finally {

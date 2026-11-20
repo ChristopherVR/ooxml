@@ -38,16 +38,9 @@ export interface FileChrome {
 const toError = (cause: unknown) => (cause instanceof Error ? cause : new Error(String(cause)));
 
 let sharedOpener: WorkbookOpener | undefined;
-/** One opener for every editor on the page: it holds no state between opens. */
+/** One opener for every editor on the page, so they share its worker. */
 const sharedWorkbookOpener = (): WorkbookOpener => (sharedOpener ??= createWorkbookOpener());
 const openWorkbook: WorkbookOpener = (bytes, options) => sharedWorkbookOpener()(bytes, options);
-
-/** Starts the workbook worker while the page is idle, so a first calculation does not wait for it. */
-export function prewarmWorkbookOpener(view: (Window & typeof globalThis) | null): void {
-	const start = () => sharedWorkbookOpener().prewarm?.();
-	if (view && typeof view.requestIdleCallback === 'function') view.requestIdleCallback(start);
-	else setTimeout(start, 0);
-}
 
 export function reportError(core: EditorCore, cause: unknown): Error {
 	const error = toError(cause);
