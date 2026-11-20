@@ -135,8 +135,11 @@ const DEFAULT_INSETS_EMU = {
 
 /**
  * A text box's paragraphs laid over its shape: inset as its `wps:bodyPr` says, anchored to the top,
- * middle or bottom, and clipped to the shape's extent. `color` is the text colour where runs set
- * none (`shapePaint`'s `textColor`: white on the default and dark fills).
+ * middle or bottom, turned for vertical text, unwrapped for `wrap="none"`, and clipped to the
+ * shape's extent. `color` is the text colour where runs set none (`shapePaint`'s `textColor`: white
+ * on the default and dark fills). The editing surface and Draft view's previews flow these
+ * paragraphs by CSS; Print Layout draws the lines the page engine lays out (`TextBoxLayout`), with
+ * autofit and linked boxes.
  */
 export function textBoxContentElement(
 	content: TextBoxContent,
@@ -149,12 +152,26 @@ export function textBoxContentElement(
 	if (color && /^#[0-9a-f]{6}$/i.test(color)) element.style.color = color;
 	const inset = (side: keyof typeof DEFAULT_INSETS_EMU) =>
 		`${Math.round(((content[side] ?? DEFAULT_INSETS_EMU[side]) / EMU_PER_PIXEL) * 100) / 100}px`;
-	element.style.padding = [
-		inset('insetTopEmu'),
-		inset('insetRightEmu'),
-		inset('insetBottomEmu'),
-		inset('insetLeftEmu'),
-	].join(' ');
+	const upward = content.vertical === 'vert270';
+	// `vert270` is drawn as `vert` turned half a turn, so its insets are given turned too.
+	element.style.padding = (
+		upward
+			? [
+					inset('insetBottomEmu'),
+					inset('insetLeftEmu'),
+					inset('insetTopEmu'),
+					inset('insetRightEmu'),
+				]
+			: [
+					inset('insetTopEmu'),
+					inset('insetRightEmu'),
+					inset('insetBottomEmu'),
+					inset('insetLeftEmu'),
+				]
+	).join(' ');
+	if (content.vertical && content.vertical !== 'horz')
+		element.classList.add(upward ? 'dve-text-box-upward' : 'dve-text-box-vertical');
+	if (content.wrap === 'none') element.classList.add('dve-text-box-nowrap');
 	element.style.justifyContent =
 		content.anchor === 'ctr' ? 'center' : content.anchor === 'b' ? 'flex-end' : 'flex-start';
 	element.append(renderBlocks(content.blocks, model, 'all', pictureUrl ? { pictureUrl } : {}));

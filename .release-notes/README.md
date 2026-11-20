@@ -2,6 +2,8 @@
 
 A folder here holds the hand-written notes of one coordinated major release, such as `2.0/`. The release name is not a package version: every package moves to its own next major. When the release workflow releases a package with a major bump, `scripts/major-notes.mjs` writes that package's share of the notes into its `CHANGELOG.md`, under the new version's heading and above the git-cliff commit list. The GitHub release body gets the same block. See [docs/releasing.md](../docs/releasing.md#hand-written-notes-for-a-major-release).
 
+A package's section can instead be written by hand from these notes, at the top of its changelog with the heading `## [<version>](https://github.com/ChristopherVR/ooxml/releases/tag/<npm>@<version>) - Unreleased` and the `<!-- release-notes: <name> -->` comment below it (a viewer's root changelog takes `## Unreleased`). The release then publishes that section as written, dated, in place of the generated one, and fails before tagging when its version or tag differs from the plan. See [Hand-written changelog sections](../docs/releasing.md#hand-written-changelog-sections).
+
 ## The files
 
 - `overview.md` is a few paragraphs of plain prose that open the notes of every package.

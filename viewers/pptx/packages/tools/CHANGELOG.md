@@ -1,11 +1,38 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [3.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@3.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+For agents that edit decks through `pptx-viewer-mcp`, this release tightens what a tool may touch on disk and makes four theme and metadata tools actually save. File tools now refuse UNC, device and drive-relative paths and Windows names that Windows would reinterpret before any filesystem call, so a crafted path can no longer reach a remote host or write past the extension check. The tools are `pptxTools` from `ooxml-core/pptx/automation`, so every model fix in `ooxml-core` (chart saves, part ownership, collaboration checks) reaches them too. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#mcp-packages-and-ooxml-coreautomation) gives the before and after for each breaking change.
+
+### Breaking changes
+
+- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`.
+- On Windows, file tools refuse path segments that contain `:`, `<`, `>`, `"`, `|`, `?` or `*`, that end in a dot or a space, or that are device names such as `NUL` or `COM1`, and they refuse `/x` (rooted on the current drive) and `C:x` (relative to a drive's current folder). On every platform they refuse UNC and device paths and paths starting with a backslash. Rename files Windows would reinterpret, and pass a path relative to the root or a full absolute path inside it.
+
+### Security
+
+- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, refused paths all return one error, and an alternate data stream name can no longer create a file past the extension check.
+- Releases are published from a pipeline in which third-party code cannot push, tag or publish, and the signed tarballs attached to each GitHub release are checked against the integrity the npm registry records.
+
+### Changed
+
+- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On POSIX systems, names such as `a: b.pptx`, `aux/` and `why?.pptx` are ordinary files, and a backslash inside a name is not a separator.
+
+### Fixed
+
+- `update_metadata`, `update_theme_colors`, `update_theme_fonts` and `apply_theme_preset` save their changes to the file.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): the `pptxTools` catalogue, the deck model and the path guard of `ooxml-core/automation/node` this server registers.
+- [`pptx-viewer-core` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/core/CHANGELOG.md): the headless engine, for scripts that load and save decks alongside the tools.
+- [`ooxml-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): one server with the Word, Excel, PowerPoint and Visio tools together.
+- [PowerPoint viewers](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/CHANGELOG.md): the React, Vue, Angular, Svelte and vanilla viewers whose built-in assistant drives the same tools.
 
 ## [2.10.3](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@2.10.3) - 2026-11-13
 
@@ -152,15 +179,6 @@ conventional commits.
 ### Chores
 
 - **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
-
-# Changelog
-
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs re-releases a package whenever any of its files
-change, not only on conventional ones.
 
 ## [2.7.1](https://github.com/ChristopherVR/pptx-viewer/releases/tag/pptx-viewer-mcp@2.7.1) - 2026-10-04
 

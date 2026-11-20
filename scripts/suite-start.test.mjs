@@ -47,7 +47,7 @@ test('the chooser opens bundled preview apps while the full site opens product s
 	for (const mode of [true, false]) {
 		preview = mode;
 		showChooser();
-		assert.match(markup, mode ? /open one app separately/ : /guides and demos/);
+		assert.match(markup, mode ? /open one app separately/ : /guides and live demos/);
 		for (const [id, site, app] of [
 			['docx', 'docx', 'word'],
 			['xlsx', 'xlsx', 'excel'],

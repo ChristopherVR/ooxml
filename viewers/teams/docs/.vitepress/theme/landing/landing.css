@@ -230,6 +230,10 @@
 	animation-delay: 160ms;
 }
 
+.ot-enter--4 {
+	animation-delay: 240ms;
+}
+
 @keyframes ot-enter {
 	from {
 		opacity: 0;

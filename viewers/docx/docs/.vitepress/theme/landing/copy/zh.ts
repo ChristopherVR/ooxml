@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const zh: LandingCopy = {
 	hero: {
-		kicker: '早期实现 · Apache-2.0 · TypeScript',
+		kicker: '稳定版 · Apache-2.0 · TypeScript',
 		titleTop: '.docx 编辑，',
 		titleAccent: '随时嵌入。',
 		sub: '面向 React、Vue、Angular、Svelte、Solid 和原生 JavaScript 的浏览器 Word 编辑器。一个文档模型和一个基于 ProseMirror 的 <docx-editor> Web Component 承担全部工作；框架适配器只负责接入生命周期和事件。',
@@ -19,7 +19,7 @@ export const zh: LandingCopy = {
 	},
 	features: {
 		kicker: '功能',
-		title: '目前已有的能力。',
+		title: '它能做什么。',
 		items: [
 			{
 				title: '统一的共享编辑器',
@@ -66,7 +66,7 @@ export const zh: LandingCopy = {
 	status: {
 		kicker: '状态',
 		title: '坦率说明尚未完成的部分。',
-		copy: '这是一个早期实现，并不等同于 Microsoft Word：分页只是近似的，许多功能的呈现与 Word 并不一致，不支持受密码保护的文件，导出 DOCX 也无法恢复模型所省略的内容。支持路线图和待完成工作页面详细列出了这些差距。',
+		copy: '稳定版意味着承诺的 API 和书面的内容保留保证，但并不等同于 Microsoft Word：分页只是近似的，许多功能的呈现与 Word 并不一致，不支持受密码保护的文件，导出 DOCX 也无法恢复模型所省略的内容。支持路线图和待完成工作页面详细列出了这些差距。',
 		link: { text: '支持路线图', href: '/parity-roadmap' },
 		roadmapTitle: '路线图说明',
 		roadmapCopy:
@@ -196,6 +196,6 @@ export const zh: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'docx-viewer · 面向 Web 的早期 Word 编辑器',
+		bottomRight: 'docx-viewer · 面向 Web 的 Word 编辑器',
 	},
 };

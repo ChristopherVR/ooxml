@@ -9,13 +9,24 @@ import type { Block } from './model';
 
 /**
  * A text box's `w:txbxContent`, read by the same block parser as the document body, with the
- * anchor and insets of its `wps:bodyPr`. Display only: the box XML is preserved on save.
+ * layout settings of its `wps:bodyPr`: anchor, insets, `vert` (other than `horz`), `wrap="none"`
+ * and the autofit kind. Display only: the box XML is preserved on save.
  */
 export interface TextBoxContent extends Pick<
 	DrawingBodyProperties,
-	'anchor' | 'insetLeftEmu' | 'insetTopEmu' | 'insetRightEmu' | 'insetBottomEmu'
+	'anchor' | 'insetLeftEmu' | 'insetTopEmu' | 'insetRightEmu' | 'insetBottomEmu' | 'vertical'
 > {
 	blocks: Block[];
+	/** `wrap="none"`: lines do not wrap, and Word sizes the shape's width to the longest line. */
+	wrap?: 'none';
+	/** `a:spAutoFit` (`shape`): the shape's height follows its text. Word draws `normAutofit` as none. */
+	autofit?: 'shape' | 'normal' | 'none';
+	/**
+	 * A linked text box chain (`wps:txbx/@id` on the first box, `wps:linkedTxbx` on the others): the
+	 * chain id and this box's place in it (0 for the box holding the text). A later box has no
+	 * blocks of its own; text that overflows one box continues in the next.
+	 */
+	link?: { id: number; seq: number };
 }
 
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */

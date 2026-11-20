@@ -2,98 +2,28 @@
 
 # ooxml-core
 
+**Read, edit, validate and write Word, Excel, PowerPoint and Visio files in TypeScript, in the browser or on a server.**
+
 [![npm version](https://img.shields.io/npm/v/ooxml-core.svg)](https://www.npmjs.com/package/ooxml-core)
 [![license](https://img.shields.io/npm/l/ooxml-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE)
 [![types](https://img.shields.io/npm/types/ooxml-core.svg)](https://www.npmjs.com/package/ooxml-core)
-
-**Read, edit, validate and write Office Open XML documents in TypeScript.**
-One package, one XML model, every format: Word, PowerPoint, Excel and the shared building blocks beneath them. Visio VSDX parsing and bounded editing are available through `ooxml-core/visio`.
-
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](../../CODE_OF_CONDUCT.md)
 
-[**Try the apps**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
-[**Packages and areas**](#features-and-api-one-package-many-areas) &nbsp;&middot;&nbsp;
-[**Install**](#install) &nbsp;&middot;&nbsp;
-[**Examples**](#quick-start) &nbsp;&middot;&nbsp;
-[**Contributing**](../../CONTRIBUTING.md)
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; **[Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)**
+[**Live demo**](https://christophervr.github.io/ooxml/) &nbsp;&middot;&nbsp;
+[**Docs**](https://christophervr.github.io/ooxml/docs/) &nbsp;&middot;&nbsp;
+[**Changelog**](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md) &nbsp;&middot;&nbsp;
+[**Report a bug**](https://github.com/ChristopherVR/ooxml/issues/new/choose)
 
 </div>
 
-## Why ooxml-core?
+`ooxml-core` is the engine behind the [OOXML](https://github.com/ChristopherVR/ooxml#readme) Word, Excel, PowerPoint, Visio and OpenTeams apps. It has no UI and no framework: one package, one XML model and one packaging layer, with every format as an area you import on its own. It runs in browsers, Node.js, Bun, workers and serverless functions, and files never leave the process.
 
-Hosts can connect native DOCX, XLSX, PPTX and VSDX storage through the optional
-[`ooxml-core/embedding/onedrive`](../../docs/onedrive-integration.md) subpath. It exposes the
-shared Graph client, session storage adapter, cloud copies, sharing and retained conflict versions;
-the host supplies Microsoft authentication and item permissions. See the
-[package reference](../../docs/onedrive-integration.md#package-reference) and
-[test/acceptance guide](../../docs/onedrive-testing.md). No public mock service or simulation UI ships.
-
-- **No UI, no framework.** Everything runs in browsers, Node.js, Bun, workers and serverless functions. The viewer apps ([docx](https://christophervr.github.io/ooxml/docx/), [xlsx](https://christophervr.github.io/ooxml/xlsx/), [visio](https://christophervr.github.io/ooxml/visio/), [teams](https://christophervr.github.io/ooxml/teams/) and [pptx](https://christophervr.github.io/ooxml/pptx/)) are thin interfaces on top of it, and so can your application be.
-- **One package, one structure.** All formats share the same XML model, packaging layer, units, colours and geometry. Each format is an _area_ of this one package, not a separate dependency to keep in step.
-- **Round-trips without losing what it does not understand.** Documents are loaded into a model, edited, and written back. Untouched parts stay byte-for-byte, unknown markup is preserved, and edits that would damage unsupported content are rejected instead of silently dropped.
-- **Strict by default.** New code is strict TypeScript with branded measurement units, the shared `xml` area parses strictly (no DTD or entity expansion), and the `docx` area is checked against the ECMA-376 schemas in the test suite.
-- **Honest about its limits.** Unsupported features are reported, never hidden, and nothing here claims Office parity or lossless export without evidence.
-
-## Features and API: one package, many areas
-
-`ooxml-core` is a **single published package**. Every area is a subpath import, so you only load what you use, and the formats are symmetrical: `docx`, `pptx` and `xlsx` are each imported through their own subpaths, and the root entry groups only the shared building blocks by namespace.
-
-```ts
-import { parseXml } from 'ooxml-core/xml'; // one area
-import { xml, opc } from 'ooxml-core'; // or by namespace (shared building blocks)
-```
-
-| Area         | What it is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `xml`        | The shared XML model: strict DOM parsing and serialization, namespaces, namespace-aware helpers.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `opc`        | Open Packaging Conventions: relationships, content types, part paths, zip helpers, the hyperlink safety policy (`hyperlinkPolicy`) and document properties (core, app and custom, `opc/properties`) and digital signatures (`signature`: detection, the parts a writer strips, XML-DSig parsing and digest checks; the Node verifier is `/pptx/signature-node`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `units`      | Branded EMU, twip and point types, constants and conversions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `color`      | Hex, RGB, HSL and linear colour primitives, OOXML percent and angle parsing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `geometry`   | DrawingML preset shapes, connection sites, clip paths, callouts and boolean shape operations.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `diagram`    | SmartArt (DiagramML), format-neutral: data model, layout/colour/quick-style parts, the cached `dsp:drawing` shape tree, relationship resolution and a loader. Used by `docx`; `pptx` re-imports its parsers.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `drawingml`  | Format-neutral DrawingML: colour, fill, text-body and geometry readers, the colour and fill writers and the theme model that docx and xlsx read their themes through.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `chart`      | Format-neutral chart algorithms and formatting helpers: data calculations, axes, number formats, the Change Colors palettes and the SVG chart painter.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `text`       | Shared text rules: script-category segmentation, tab leaders and styled-run wrapping.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `i18n`       | Locale normalisation, dictionary merging and the translator every product UI uses.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `ribbon`     | DOM-free ribbon contracts every product shares, today the add-in tab descriptor a host uses to add its own tabs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `digest`     | Synchronous pure-TypeScript SHA-1, SHA-256, SHA-384 and SHA-512, ECMA-376 digest name normalisation (`SHA-512`, `SHA512`, `sha_512`, ...) and the agile password hash Office protection elements store (`hashPassword`, `verifyPasswordHash`). No Web Crypto, so it works on `http://`. Used by `xlsx` sheet and workbook protection.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `crypto`     | ECMA-376 package encryption ([MS-OFFCRYPTO]) for every format: `decryptOoxmlPackage`, `encryptOoxmlPackage` (agile AES-256/SHA-512 by default, or Standard), `isEncryptedOoxmlPackage`, and typed errors with a `code` (`password-required`, `incorrect-password`, `data-integrity`). The compound-file container comes from ole2 (inlined); not in the root entry.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `collab`     | Format-neutral real-time collaboration on Yjs: session and provider lifecycle, awareness/presence, transport-neutral sync (WebSocket, in-memory, any byte channel), update codecs, ordering helpers, asset sync and the product adapter seam. See `docs/collab-area.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `docx`       | WordprocessingML: model, parser, preserving serializer, editing, validation. Also `/docx/embedded`. `/docx/layout` is the DOM-free pagination engine (an approximation of Word, not parity) and `/docx/load` detects and loads DOCX (also password-protected, `{ password }`) and legacy .doc (ole2 inlined).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `pptx`       | PresentationML: model, parser, serializer, editing, charts, SmartArt, converters, CLI, signatures. Subpaths `/pptx/converter`, `/pptx/cli`, `/pptx/signature-node`, `/pptx/node`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `xlsx`       | SpreadsheetML: workbook model, `.xlsx`/`.xlsm` reader and preserving writer, formula engine (dependency graph, dynamic arrays, 490+ functions), Excel number formats, editing commands with undo, and the DOM-free grid layout (sizes, colours, conditional formats, charts as SVG, drawing anchors). SmartArt is shown from the cached drawing (not re-laid out) and kept verbatim on save. `/xlsx/load` detects and loads `.xlsx`, `.xlsm` (also password-protected: `loadWorkbook(bytes, { password })`, `saveWorkbook(workbook, 'xlsx', { password })`), legacy `.xls` (ole2 inlined) and CSV, and refuses `.xlsb` with a typed error. `/xlsx/collab` shares a workbook over Yjs (cells, formats, rows, columns, merges, sheets and defined names; see `docs/collab-area.md`). Digital signatures are detected and reported, never kept on save. An approximation of Excel, not parity. |
-| `visio`      | Visio: `.vsdx` parsing, loading and bounded editing, page layers and visibility, and a conservative preview of legacy `.vsd` (through ole2). See `docs/visio-legacy-vsd.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `math`       | Office Math: OMML to and from LaTeX and MathML, with colour and size helpers.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `teams`      | The logic of the OpenTeams workspace: channels and chat on Yjs, presence, WebRTC calls with pluggable signalling, server configuration and the `createTeamsClient` store every UI binds to. Built on `collab`. See `docs/teams-area.md`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `automation` | Headless document operations and filesystem execution shared by the MCP servers (`/automation`, `/automation/node`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `ai`         | The assistant policy a deployment sets (`/ai`): `normalizeAiPolicy` reads the raw configuration, and `aiFeatureEnabled`, `checkAiEndpoint` and `userConnectionRefusal` say which features, endpoints and user connections it allows. DOM-free and makes no request; rules that must survive a modified client belong in a gateway.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-
-Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container live in the sibling package [`ole2`](https://github.com/ChristopherVR/ole2); this package never contains binary codecs, and `ole2` never contains modern OOXML.
-
-The `chart` subpath provides shared chart data calculations (regression, quartiles,
-blank values and stacked series), plus Office's 17 Change Colors palettes through
-`CHART_COLOR_PALETTES` and `chartPaletteColors(palette, seriesCount, scheme)`.
-Palette interpolation reuses the shared DrawingML color resolver. Native Excel
-comparisons expose remaining one-channel-step rounding differences for some
-themes and large series counts; this is not a claim of exact color parity.
-The `text` subpath provides script-category
-segmentation primitives. These areas are DOM-free and do not import a product model.
-SVG curve flattening is available from `geometry`. See the
-[PowerPoint reuse audit](../../docs/pptx-shared-logic-audit.md) for extraction evidence
-and remaining candidates.
-
-CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })` from `ooxml-core/xlsx/load`)
-types fields the way typing them into a cell does, which approximates Excel opening a CSV: a
-number past 15 significant digits keeps the nearest double where Excel keeps the first 15
-digits, and General columns read numeric dates month first. It takes Excel's own controls to
-change that: the automatic data conversion switches (`conversions: { leadingZeros: false }`
-keeps `00123`), and the Text Import Wizard's column formats
-(`columns: { 0: 'text', 2: 'DMY', 5: 'skip' }`), decimal and thousands separators and trailing
-minus. Each column whose data a conversion changed gets one entry in `workbook.warnings`, with a
-count and the first cell.
+- **Every format, one structure.** WordprocessingML, SpreadsheetML, PresentationML and Visio share the same XML, OPC, units, colour, geometry, DrawingML, chart and SmartArt code.
+- **Preserving round trips.** Untouched parts stay byte for byte, unknown markup is kept, and an edit that would damage content the model does not cover is rejected instead of silently dropped.
+- **Built for files you did not write.** Every package goes through one guarded zip reader, the shared XML parser refuses DTDs and entity expansion, and the work a chart, a formula or a Visio drawing may cost is bounded, so a crafted file is refused instead of exhausting memory.
+- **Signatures that mean something.** Digital signatures of every format are verified with pure TypeScript crypto in the browser and in Node, and every loader reports the same verified `SignatureState`.
+- **A real Excel engine.** A dependency-graph formula engine with dynamic arrays, `LET` and `LAMBDA` and more than 480 functions, Excel number formats, editing commands with undo, and the DOM-free grid layout the Excel editor paints.
+- **Honest about its limits.** Unsupported features are reported, never hidden. Nothing here claims Office parity or lossless export; open gaps are listed in the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
 
 ## Install
 
@@ -101,19 +31,14 @@ count and the first cell.
 npm install ooxml-core
 ```
 
-Optional peer dependencies enable specific features: `node-forge` for signing and Node trust checks (`/pptx/signature-node`; `xml-crypto` is no longer used), and `@napi-rs/canvas` for server-side rasterisation. The `.ppt` writer's Node rasteriser for SVG pictures lives in the Node-only `/pptx/node` entry, so `ooxml-core/pptx` never references `@napi-rs/canvas` and browser builds of it never see that package. A `.ppt` save rasterises an SVG picture that has no raster fallback with the DOM. In Node.js, where there is no DOM, pass a rasteriser (`save(slides, { outputFormat: 'ppt', rasterizeSvg: rasterizeSvgInNode })`, with `rasterizeSvgInNode` from `ooxml-core/pptx/node`); without one the picture is written as a placeholder with a `ppt-image-format-unsupported` warning. Earlier releases loaded `@napi-rs/canvas` from `ooxml-core/pptx` itself for this.
+Optional peer dependencies turn on Node-only features:
 
-### Verifying digital signatures
+| Peer              | Needed for                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------- |
+| `node-forge`      | Signing PowerPoint packages and checking signer trust in Node (`ooxml-core/pptx/signature-node`)           |
+| `@napi-rs/canvas` | Rasterising SVG pictures when a `.ppt` is saved in Node (`rasterizeSvgInNode` from `ooxml-core/pptx/node`) |
 
-`signature.verifyPackageSignatures` and `signature.verifyPackageSignatureSummary` from `ooxml-core/opc` verify every signature of a Word, Excel, PowerPoint or Visio package in a browser or in Node, with no platform crypto: Canonical XML, RSA PKCS#1 v1.5 (SHA-1 to SHA-512) and the digests are pure TypeScript. They check the signature value, each signed reference and coverage, exactly as below, but trust no signer, so an intact signature is `verified-untrusted`. A signature method, key type or transform they do not implement reports `present-not-verified` (state `unsupported`), never invalid. So does a signature past the verifier's work limits, which keep a crafted file from stalling the page: an RSA key under 1024 or over 16384 bits or with an exponent over 2^32, more than four `KeyInfo` certificates without a match, more than 10,000 references or 100 MB of referenced part data, or a signature part over 16 MB. `signatureStateOf` and `summarizeSignatures` reduce a report to the `SignatureState` every product shows (`unsigned`, `verified`, `verified-untrusted`, `invalid`, `unsupported`), and the Word, Excel, PowerPoint and Visio loaders set it as `signatures` on a signed document. `signatureStateText` in `ooxml-core/i18n` words each state in every display locale.
-
-`inspectPptxDigitalSignatures` from `ooxml-core/pptx/signature-node` reads any OPC package. It reports `verified-trusted` only when every signature value and every signed reference verifies, the signed references cover the document content, and the signer's certificate permits document signing and chains to a root you configured with `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`. No roots are trusted by default, so an intact signature reports `verified-untrusted` until you configure them. `coverage-incomplete` means the signature is valid but leaves document content unsigned. Document properties, thumbnails, custom XML, and presentation and view properties may stay unsigned in their usual locations, and are listed in each detail's `uncoveredParts`; any other stored item that no signature covers makes the result `coverage-incomplete`, whether or not a relationship points at it. This holds when the relationship to such a part is itself signed: ECMA-376 Part 2, 10.3 leaves what to sign to the signer's policy and does not require the target of a signed relationship to be signed. Unsigned custom XML can still feed content bound to it, so check `uncoveredParts` if that matters to you. Part names compare as ECMA-376 Part 2 requires, ASCII case-insensitively and with their percent-encoding intact.
-
-Integrity is decided before anything else. A failed signature value, reference or coverage check is reported as such whatever the certificate, revocation, timestamp or policy outcome, including with `PPTX_VIEWER_REQUIRE_REVOCATION_CHECK` and `PPTX_VIEWER_REQUIRE_TIMESTAMP` set, and across every signature in the package. Timestamp tokens are not validated: they report `not-checked`, so `PPTX_VIEWER_REQUIRE_TIMESTAMP` currently makes every signature that passes the integrity checks `timestamp-untrusted`.
-
-Relationships parts are read strictly, following the schema: a leading byte order mark, an empty `Target` and `Id`s that differ only in case are valid, and an exactly repeated `Id` is not. `PptxHandler.load` reads a signed package's relationships through the same reader when it accepts all of them; a signed package it rejects opens like an unsigned one, and its signature is reported as not verified. **The Word and Excel loaders are not bound to the strict reader.** They read relationships with the tolerant `parseRelationships`, so a verified report for a `.docx` or `.xlsx` describes what the verifier read, which those loaders can interpret differently in a malformed package.
-
-`signPptxWithCertificate` fails, with `success: false` and no `signedData`, for a package it cannot represent: a stored item whose name is not a valid part name, a relationships part the strict reader rejects, or output whose signature does not verify and cover its content. A trust or policy outcome does not fail signing; read it from the returned report.
+Verifying signatures needs neither: `ooxml-core/opc` verifies them in any runtime.
 
 ## Quick start
 
@@ -124,10 +49,10 @@ import { loadDocx } from 'ooxml-core/docx';
 
 const loaded = await loadDocx(bytes); // Uint8Array | ArrayBuffer
 loaded.model.blocks; // paragraphs and tables
-const edited = await loaded.save(); // original package parts are preserved
+const saved = await loaded.save(); // parts the model does not cover are kept
 ```
 
-**Build or edit a PowerPoint deck**
+**Build a PowerPoint deck**
 
 ```ts
 import { PptxHandler } from 'ooxml-core/pptx';
@@ -139,87 +64,143 @@ data.slides.push(
 		.addPlaceholder('subTitle', 'Results and next steps')
 		.build(),
 );
-const bytes = await handler.save(data.slides); // a valid .pptx
+const pptx = await handler.save(data.slides);
 ```
 
-`addPlaceholder(type, text, { idx? })` binds text to the selected layout and inherits
-its position, size, and text styles. Use `{ idx: 1 }` or `{ idx: 2 }` for repeated
-content slots in Two Content. Optional `x`, `y`, `width`, and `height` override the
-inherited frame. If a template's master frame needs a compatible-role fallback,
-only the newly created placeholder receives an explicit frame. A missing slot
-requires a complete explicit frame; otherwise the builder throws. Standalone `new SlideBuilder(number, layoutPath, name, handler)`
-requires a loaded handler for this method. Use `addText` for a free text box.
+`addPlaceholder(type, text, { idx? })` binds text to the chosen layout and inherits its position, size and text styles; use `{ idx: 1 }` or `{ idx: 2 }` for the repeated content slots of Two Content, and `addText` for a free text box.
 
-**Open a very large workbook**
+**Read an Excel workbook, including very large ones**
 
 ```ts
-import { DEFAULT_XLSX_LOAD_LIMITS, isWorkbookTooLargeError, loadXlsx } from 'ooxml-core/xlsx';
+import {
+	DEFAULT_XLSX_LOAD_LIMITS,
+	isWorkbookTooLargeError,
+	loadXlsx,
+	readXlsxRows,
+} from 'ooxml-core/xlsx';
 
-// The default limits guard against zip bombs; raise only what the expected files need.
+// The default limits guard against zip bombs; raise only what your files need.
 const workbook = await loadXlsx(bytes, {
 	limits: { maxTotalBytes: 4 * DEFAULT_XLSX_LOAD_LIMITS.maxTotalBytes, maxXmlElements: 20_000_000 },
 });
-// Over a limit, loading throws an error that isWorkbookTooLargeError(error) recognises (code
-// 'workbook-too-large'): `limit` names the limit and `maximum` is its value. loadWorkbook
-// ('ooxml-core/xlsx/load') takes `limits` too.
-```
 
-To read one sheet's rows once (an import, an export to another system), `readXlsxRows` walks them
-without building the workbook. It holds the shared strings, the styles and the piece of the sheet
-being read, so its memory does not grow with the sheet; values, formulas and dates are what
-`loadXlsx` gives for the same cells.
-
-```ts
-import { readXlsxRows } from 'ooxml-core/xlsx';
-
-for await (const { row, cells } of readXlsxRows(bytes, { sheet: 'Orders', limits })) {
-	for (const { col, value, formula, numberFormat, iso } of cells) {
-		// row and col are zero-based; value is a number, string, boolean, { error } or null (a
-		// formula without a cached result); iso is set for a number shown as a date or time
+// Or stream one sheet's rows without building the workbook: memory does not grow with the sheet.
+for await (const { row, cells } of readXlsxRows(bytes, { sheet: 'Orders' })) {
+	for (const { col, value, formula, iso } of cells) {
+		// zero-based row and col; iso is set for a number shown as a date or time
 	}
 }
 ```
 
-**Compare two versions of a workbook**
+Over a limit, loading throws an error that `isWorkbookTooLargeError(error)` recognises, with the `limit` it hit and its `maximum`. `loadWorkbook` from `ooxml-core/xlsx/load` also opens password-protected workbooks (`{ password }`), legacy `.xls` and CSV.
+
+**Open a Visio drawing**
 
 ```ts
-import { compareWorkbooks, comparisonText, loadXlsx } from 'ooxml-core/xlsx';
+import { parseVsdx } from 'ooxml-core/visio';
 
-const result = compareWorkbooks(await loadXlsx(v1), await loadXlsx(v2));
-console.log(comparisonText(result)); // values, formulas, formats, sheets, names
+const drawing = await parseVsdx(bytes);
+for (const page of drawing.pages) console.log(page.name, page.shapes.length);
+console.log(drawing.diagnostics); // what was approximated or left out
 ```
 
-Cells are matched by address; see [workbook comparison](../../docs/xlsx-compare.md) for the categories and limits.
+**Check a document's signatures**
 
-**Compare two versions of a Word document**
+```ts
+import { signature } from 'ooxml-core/opc';
+import { signatureStateText } from 'ooxml-core/i18n';
+
+const summary = await signature.verifyPackageSignatureSummary(bytes); // any Office package
+if (signature.isVerifiedSignatureState(summary.state)) {
+	console.log(signatureStateText(summary.state, 'en')?.label);
+}
+```
+
+**Compare two versions**
 
 ```ts
 import { compareDocuments } from 'ooxml-core/docx';
+import { compareWorkbooks, comparisonText, loadXlsx } from 'ooxml-core/xlsx';
 
-const { bytes, summary } = await compareDocuments(v1, v2, { author: 'Reviewer' });
-// bytes: the revised document with every difference as a tracked change
+const { bytes: redline } = await compareDocuments(v1, v2, { author: 'Reviewer' }); // tracked changes
+console.log(comparisonText(compareWorkbooks(await loadXlsx(a), await loadXlsx(b))));
 ```
 
-See [document comparison](../../docs/docx-compare.md) for the rules and what is not compared.
+See [document comparison](https://github.com/ChristopherVR/ooxml/blob/main/docs/docx-compare.md) and [workbook comparison](https://github.com/ChristopherVR/ooxml/blob/main/docs/xlsx-compare.md) for what is compared.
 
-**Work at the package level**
+## Areas
+
+Every area is a subpath import, so you load only what you use. The document formats are imported through their own subpaths; the root entry groups the shared building blocks by namespace and never pulls in a format.
 
 ```ts
-import { parseXml } from 'ooxml-core/xml';
-import { parseRelationships, resolvePartPath } from 'ooxml-core/opc';
-
-const rels = parseRelationships(relsXml);
-const part = resolvePartPath('word/document.xml', rels.get('rId5')!.target);
+import { parseXml } from 'ooxml-core/xml'; // one area
+import { opc, units } from 'ooxml-core'; // or the shared building blocks by namespace
 ```
 
-## Contributing and roadmap
+| Area         | Subpaths                                                                                                                                                  | What it holds                                                                                                                                                                                                                                                             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docx`       | `/docx`, `/docx/embedded`, `/docx/layout`, `/docx/load`, `/docx/ui`                                                                                       | WordprocessingML: model, parser, preserving writer, editing, review and comparison, validation against the ECMA-376 schemas in tests. `/docx/layout` is the DOM-free pagination engine (an approximation of Word); `/docx/load` adds encrypted `.docx` and legacy `.doc`. |
+| `xlsx`       | `/xlsx`, `/xlsx/load`, `/xlsx/collab`, `/xlsx/ui`                                                                                                         | SpreadsheetML: workbook model, reader and preserving writer, formula engine, number formats, editing with undo, grid layout, pivots, slicers, auditing and comparison. `/xlsx/load` adds encrypted workbooks, `.xls` and CSV; `/xlsx/collab` shares a workbook over Yjs.  |
+| `pptx`       | `/pptx`, `/pptx/node`, `/pptx/signature-node`, `/pptx/converter`, `/pptx/cli`, `/pptx/automation`, `/pptx/smartart-layouts`, `/pptx/ui`, `/pptx/editor/*` | PresentationML: model, parser, writer, the slide SDK, charts, SmartArt, media, collaboration mapping, converters, a CLI, signing and Node trust checks, and the PowerPoint automation tools.                                                                              |
+| `visio`      | `/visio`, `/visio/collab`, `/visio/ui`                                                                                                                    | Visio: `.vsdx` parsing and bounded editing, layers, data graphics, stencils, a memory budget sized from the host heap, and a conservative preview of legacy `.vsd`.                                                                                                       |
+| `opc`        | `/opc`                                                                                                                                                    | Open Packaging Conventions: relationships, content types, part names, the guarded zip reader, package comparison, document properties, the hyperlink and resource URL policies, and signature verification (`signature`).                                                 |
+| `xml`        | `/xml`                                                                                                                                                    | The shared XML model: strict parsing without DTDs or entity expansion, serialization and namespace-aware helpers.                                                                                                                                                         |
+| `drawingml`  | `/drawingml`                                                                                                                                              | Format-neutral DrawingML: colour, fill, outline, effect, text-body and geometry readers and writers, and the theme model.                                                                                                                                                 |
+| `chart`      | `/chart`, `/chart/region-map`                                                                                                                             | Charts for every format: model, parser, writer, ChartEx, edits, embedded workbooks, the SVG painter, style presets and Office's Change Colors palettes.                                                                                                                   |
+| `diagram`    | `/diagram`, `/diagram/builtin`                                                                                                                            | SmartArt: the part model, layout engine, node edits, part writers and the built-in layout, colour and style definitions.                                                                                                                                                  |
+| `crypto`     | `/crypto`                                                                                                                                                 | ECMA-376 package encryption for every format (`decryptOoxmlPackage`, `encryptOoxmlPackage`, `isEncryptedOoxmlPackage`), agile AES-256 by default, with typed errors.                                                                                                      |
+| `collab`     | `/collab`                                                                                                                                                 | Real-time collaboration on Yjs: sessions, providers, awareness, transport-neutral sync, bounded update decoding and share links.                                                                                                                                          |
+| `teams`      | `/teams`                                                                                                                                                  | The OpenTeams workspace logic: channels and chat on Yjs, presence, WebRTC calls with pluggable signaling, and the `createTeamsClient` store every UI binds to.                                                                                                            |
+| `automation` | `/automation`, `/automation/node`                                                                                                                         | Headless document tools shared by the MCP servers and assistants, and `registerAutomationTools` for an MCP server confined to one folder.                                                                                                                                 |
+| `embedding`  | `/embedding`, `/embedding/onedrive`                                                                                                                       | Host contracts for embedding the editors (capabilities, customization, storage), and an optional OneDrive transport whose authentication the host supplies.                                                                                                               |
+| `ai`         | `/ai`                                                                                                                                                     | The assistant policy a deployment sets: `normalizeAiPolicy`, `aiFeatureEnabled`, `checkAiEndpoint`, `userConnectionRefusal`. It makes no request.                                                                                                                         |
+| Shared       | `/units`, `/color`, `/geometry`, `/text`, `/math`, `/i18n`, `/ribbon`, `/digest`                                                                          | Branded EMU, twip and point units; colour and WCAG contrast; preset shapes and boolean shape operations; text rules; Office Math to and from LaTeX and MathML; locales and translation; ribbon add-in contracts; synchronous digests and Office password hashes.          |
 
-`ooxml-core` is developed in the [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml) repository, which also holds [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui), the MCP servers and the Word, Excel, PowerPoint, Visio and OpenTeams viewers. Its README covers the repository layout, the development workflow and releases, and the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next; the working agreements are in [AGENTS.md](../../AGENTS.md) and [CONTRIBUTING.md](../../CONTRIBUTING.md), and [PROVENANCE.md](../../PROVENANCE.md) records where each module came from.
+Legacy binary formats (`.doc`, `.xls`, `.ppt`) and the compound-file container come from the sibling package [`ole2`](https://github.com/ChristopherVR/ole2), inlined at build time into the subpaths that read legacy files (`/docx/load`, `/xlsx/load`, `/pptx`, `/visio`); the main `xlsx` entry never imports it.
+
+## Format notes
+
+### Signatures
+
+`signature.verifyPackageSignatures` and `signature.verifyPackageSignatureSummary` from `ooxml-core/opc` verify every signature of a Word, Excel, PowerPoint or Visio package in a browser or in Node: Canonical XML, RSA PKCS#1 v1.5 (SHA-1 to SHA-512) and the digests are pure TypeScript. They check the signature value, each signed reference and that the signature covers the content, but trust no signer, so an intact signature is `verified-untrusted`. A method, key type or transform they do not implement reports `unsupported`, never invalid, and so does a signature past the verifier's work limits (an RSA key under 1024 or over 16384 bits, more than 10,000 references or 100 MB of referenced data, a signature part over 16 MB). The loaders set the result as `signatures` on every signed document, and `signatureStateText` in `ooxml-core/i18n` words each state in seven languages.
+
+`inspectPptxDigitalSignatures` from `ooxml-core/pptx/signature-node` adds trust in Node. It reports `verified-trusted` only when every check above passes and the signer's certificate permits document signing and chains to a root you configured with `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`; no roots are built in. `coverage-incomplete` means a valid signature that leaves document content unsigned, listed in each detail's `uncoveredParts`. Integrity is decided first, so no revocation, timestamp or policy outcome can hide a failed check. Timestamp tokens are not validated and report `not-checked`. Revocation checks contact the OCSP responder a certificate names; pass `{ checkRevocation: false }` to make no request.
+
+Relationships parts of a signed deck are read with one strict reader by both the verifier and `PptxHandler.load`; a signed deck the strict reader rejects opens like an unsigned one and is reported as not verified. The Word and Excel loaders read relationships with the tolerant `parseRelationships`, so a verified report for a `.docx` or `.xlsx` describes what the verifier read.
+
+### Limits
+
+Every loader has defaults that refuse a zip bomb or a pathological file before it costs much: `loadXlsx` and `loadWorkbook` take `limits`, `loadDocx` takes `limits` (`DEFAULT_DOCX_LOAD_LIMITS`), `parseVsdx` takes package limits including `maxXmlHeapBytes`, and `diffOpcPackages` takes a third argument. Each formula has a work and a text budget, and a formula past it returns `#NUM!` while the rest of the workbook still computes; `calculateOnOpen(workbook, { timeLimitMs })` runs a workbook's calculation on open under a time limit.
+
+### CSV
+
+CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })`) types fields the way typing them into a cell does, which approximates Excel opening a CSV. It takes Excel's own controls: the automatic data conversion switches (`conversions: { leadingZeros: false }` keeps `00123`) and the Text Import Wizard's column formats (`columns: { 0: 'text', 2: 'DMY', 5: 'skip' }`), separators and trailing minus. Each column a conversion changed gets one entry in `workbook.warnings`.
+
+### Charts
+
+`ooxml-core/chart` keeps the point counts a file declares through viewing, editing and saving, while the blanks a view materialises come from a bounded budget (`CHART_POINTS_LIMITED` reports a shortened view). A chart edit writes only the embedded workbook cells it changed. Office's 17 Change Colors palettes are available through `CHART_COLOR_PALETTES` and `chartPaletteColors(palette, seriesCount, scheme)`; some themes and large series counts still differ from Excel by one colour step.
+
+## Supported environments
+
+- Node.js 22.3 or newer (`"engines": { "node": ">=22.3" }`), and Bun.
+- The last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least; see [browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md).
+- Every subpath ships ESM and CommonJS, with TypeScript declarations.
 
 ## Privacy and network use
 
-`ooxml-core` parses, edits and writes documents locally and never uploads them. It contacts a server only when you ask it to: a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and, in Node signature inspection, the OCSP responder named in a signing certificate. Linked pictures are not fetched by default. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+`ooxml-core` parses, edits and writes documents locally and never uploads them. It contacts a server only when you ask it to: a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and, during Node signature inspection, the OCSP responder named in a signing certificate (turn it off with `{ checkRevocation: false }`). Linked pictures and media are not fetched unless the load allows linked content. Nothing collects analytics or telemetry. Every request is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
+## Related packages
+
+- [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui): the browser elements and the Word, Excel, PowerPoint, Visio and Teams editors built on this package.
+- The editors for your framework: [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme), [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme), [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) and [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme), for React, Vue, Angular, Svelte, Solid and plain JavaScript.
+- [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp): one MCP server that gives an AI agent the `ooxml-core/automation` tools.
+- [`docx-core`](https://www.npmjs.com/package/docx-core) and [`@christophervr/xlsx-core`](https://www.npmjs.com/package/@christophervr/xlsx-core): re-exports of `ooxml-core/docx` and `ooxml-core/xlsx` with their own stability snapshots.
+
+## Contributing
+
+`ooxml-core` is developed in [ChristopherVR/ooxml](https://github.com/ChristopherVR/ooxml), together with `ooxml-ui`, the MCP servers and the viewers. Start with [CONTRIBUTING.md](https://github.com/ChristopherVR/ooxml/blob/main/CONTRIBUTING.md); the [roadmap](https://github.com/ChristopherVR/ooxml/blob/main/docs/roadmap.md) says what comes next, and [PROVENANCE.md](https://github.com/ChristopherVR/ooxml/blob/main/PROVENANCE.md) records where each module came from. Report security problems privately as [SECURITY.md](https://github.com/ChristopherVR/ooxml/blob/main/SECURITY.md) describes.
 
 ## License
 
-[Apache-2.0](LICENSE). Third-party notices are in [NOTICE](NOTICE) and [THIRD-PARTY-LICENSES](THIRD-PARTY-LICENSES).
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/LICENSE). Third-party notices are in [NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/src/core/NOTICE) and [THIRD-PARTY-LICENSES](https://github.com/ChristopherVR/ooxml/blob/main/src/core/THIRD-PARTY-LICENSES).

@@ -527,6 +527,86 @@ code {
 :root[data-theme='dark'] .app-tag[data-tone='alpha'] {
 	--tone: #e0a94a;
 }
+.app-tag[data-tone='stable'] {
+	--tone: #12715a;
+}
+:root[data-theme='dark'] .app-tag[data-tone='stable'] {
+	--tone: #4fc08a;
+}
+
+/* The product strip under the opening: one joined row, each product on its solid tile. */
+.hub-products {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1px;
+	margin-top: 30px;
+	background: var(--line);
+	border: 1px solid var(--line);
+	border-radius: var(--radius-panel);
+	overflow: hidden;
+}
+.hub-products a {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex: 1 1 136px;
+	padding: 14px 14px 14px 12px;
+	background: var(--surface);
+	color: var(--text);
+	text-decoration: none;
+	min-width: 0;
+	transition:
+		background-color var(--fast) var(--ease),
+		transform var(--fast) var(--ease);
+}
+.hub-products a:hover {
+	background: var(--selected);
+	transform: translateY(-2px);
+	z-index: 1;
+}
+.hub-products .app-badge {
+	width: 30px;
+	height: 30px;
+	font-size: 16px;
+	flex: none;
+}
+.hub-products span:not(.app-badge) {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+.hub-products strong {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--ink-strong);
+	white-space: nowrap;
+}
+.hub-products small {
+	font-size: 12px;
+	color: var(--muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.hub-products .app-tag {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	margin: 0;
+}
+.hub-footer-links {
+	display: flex;
+	gap: 16px;
+}
+.hub-footer a {
+	color: var(--muted);
+	text-decoration: none;
+}
+.hub-footer a:hover {
+	color: var(--accent-ink);
+	text-decoration: underline;
+}
 
 /* "I want to / Use" */
 .docs-table {
@@ -946,6 +1026,9 @@ code {
 	.docs-article > p:not(.docs-crumb) {
 		animation-delay: 0.16s;
 	}
+	.docs-article > .hub-products {
+		animation: rise var(--enter) var(--ease) 0.24s both;
+	}
 	.reveal-ready .hub-section {
 		opacity: 0;
 		transform: translateY(24px);
@@ -964,7 +1047,8 @@ code {
 		animation: rise var(--enter) var(--ease) both;
 		animation-delay: calc(0.1s + var(--i, 0) * 0.06s);
 	}
-	html.theme-anim :is(body, .docs-side, .docs-search, .hub-card, .hub-grid, .hub-paths, .mock) {
+	html.theme-anim
+		:is(body, .docs-side, .docs-search, .hub-card, .hub-grid, .hub-paths, .hub-products a, .mock) {
 		transition:
 			background-color var(--open) var(--ease),
 			color var(--open) var(--ease),

@@ -26,13 +26,15 @@ function surface(model: DocumentModel, cache = new ImageMediaCache(() => undefin
 		},
 	});
 }
-const textBox = (root: ParentNode, text: string) =>
+/** A text box's paragraphs: flowed by CSS on the editing surface, laid out by the engine on pages. */
+const textBox = (root: ParentNode, text: string, selector = '.dve-text-box-content') =>
 	must(
-		[...root.querySelectorAll<HTMLElement>('.dve-text-box-content')].find((element) =>
+		[...root.querySelectorAll<HTMLElement>(selector)].find((element) =>
 			element.textContent?.includes(text),
 		),
 		`text box with ${text}`,
 	);
+const PRINTED = '.dve-print-text-box';
 const styledGrey = (model: DocumentModel) => {
 	const shape = model.blocks
 		.flatMap((block) => (block.type === 'paragraph' ? block.runs : []))
@@ -104,8 +106,9 @@ describe('text boxes written with txBox="1"', () => {
 		});
 		const page = must(handle.element.querySelector<HTMLElement>('.dve-print-page'), 'page');
 		expect(page.querySelector('.dve-print-picture-missing')).toBeNull();
-		expect(textBox(page, 'Floating note').closest('.dve-print-float')).not.toBeNull();
-		expect(textBox(page, 'Inline box').closest('.dve-print-float')).toBeNull();
+		expect(page.querySelector('.dve-text-box-content')).toBeNull();
+		expect(textBox(page, 'Floating note', PRINTED).closest('.dve-print-float')).not.toBeNull();
+		expect(textBox(page, 'Inline box', PRINTED).closest('.dve-print-float')).toBeNull();
 	});
 
 	it('still edit as text boxes, and show the edit as it will be saved', async () => {
@@ -138,7 +141,7 @@ describe('shape text colour from the style font reference', () => {
 		const handle = renderPrintLayout(layoutDocumentModel(model, createFakeMeasurer()), undefined, {
 			model,
 		});
-		expect(textBox(handle.element, 'Styled text').style.color).toBe(grey);
+		expect(textBox(handle.element, 'Styled text', PRINTED).style.color).toBe(grey);
 	});
 });
 

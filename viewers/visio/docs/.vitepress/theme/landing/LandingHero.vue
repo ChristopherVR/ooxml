@@ -28,12 +28,21 @@ const copy = useLandingCopy();
 				<div class="pv-enter pv-enter--4">
 					<InstallPicker />
 				</div>
+				<ul class="pv-hero__facts pv-enter pv-enter--4">
+					<li
+						v-for="(fact, index) in copy.hero.kicker.split(' · ')"
+						:key="fact"
+						:data-tone="index === 0 ? 'beta' : undefined"
+					>
+						{{ fact }}
+					</li>
+				</ul>
 			</div>
 			<div class="pv-hero__stage pv-enter pv-enter--3">
 				<LandingRings />
 				<a class="pv-hero__frame" href="#live-demo">
 					<span class="pv-hero__framebar">
-						<span class="pv-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+						<span class="pv-hero__badge" aria-hidden="true">V</span>
 						<span class="pv-hero__framefile">{{ copy.hero.frameCaption }}</span>
 						<span class="pv-hero__frametry">{{ copy.hero.frameTry }}</span>
 					</span>
@@ -148,16 +157,59 @@ const copy = useLandingCopy();
 	color: var(--pv-ink-soft);
 }
 
-.pv-hero__dots {
-	display: inline-flex;
-	gap: 0.3rem;
+.pv-hero__badge {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+	background: #3955a3;
+	box-shadow: inset -3px 0 #ffffff25;
+	color: #fff;
+	font-family: var(--pv-ui);
+	font-size: 0.66rem;
+	font-weight: 700;
+	line-height: 1;
 }
 
-.pv-hero__dots i {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--pv-line);
+/* The facts under the hero: status, licence and language, as tags. */
+.pv-hero__facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 1.2rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.pv-hero__facts li {
+	padding: 0.3rem 0.55rem;
+	border: 1px solid var(--pv-line);
+	border-radius: 4px;
+	background: var(--pv-surface);
+	color: var(--pv-ink-soft);
+	font-family: var(--pv-ui);
+	font-size: 0.75rem;
+	line-height: 1.2;
+}
+
+.pv-hero__facts [data-tone] {
+	border-color: color-mix(in srgb, var(--tone) 40%, transparent);
+	color: var(--tone);
+	font-weight: 600;
+}
+
+.pv-hero__facts [data-tone='stable'] {
+	--tone: #12715a;
+}
+
+.dark .pv-hero__facts [data-tone='stable'] {
+	--tone: #4fc08a;
+}
+
+.pv-hero__facts [data-tone='beta'] {
+	--tone: var(--pv-accent);
 }
 
 .pv-hero__frametry {

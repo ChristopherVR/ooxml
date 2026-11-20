@@ -56,8 +56,10 @@ in the client and require server authorization to become enforceable.
 - **No end-to-end encryption.** Chat travels as Yjs updates through your server, which can read
   and stores them. Uploaded files are stored as they are. Call media is DTLS-SRTP between peers (a
   TURN relay cannot decrypt it).
-- **Authorization is the server's job.** Author and role checks run in the client; a hostile
-  client can write anything the server accepts.
+- **Authorization is the server's job.** With accounts, the reference server checks authorship
+  and moderator roles on every update (see [authorship and moderators](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/server/README.md#authorship-and-moderators));
+  without accounts the user is a claim, the checks run only in the client, and a hostile client can
+  write anything the server accepts.
 - **Authentication is required by default.** The reference server refuses to start unless it has
   accounts, an `authenticate` hook or `authorizeSync`; `--insecure-dev` opts into an open development
   mode with a warning. With accounts it signs sessions for configured users (or your `authenticate`

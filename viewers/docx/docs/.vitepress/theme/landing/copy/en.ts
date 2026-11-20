@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const en: LandingCopy = {
 	hero: {
-		kicker: 'Early implementation · Apache-2.0 · TypeScript',
+		kicker: 'Stable · Apache-2.0 · TypeScript',
 		titleTop: '.docx editing,',
 		titleAccent: 'made embeddable.',
 		sub: 'A browser Word editor for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript. One document model and one ProseMirror-backed <docx-editor> web component do the work; the framework adapters only wire up lifecycle and events.',
@@ -20,7 +20,7 @@ export const en: LandingCopy = {
 	},
 	features: {
 		kicker: 'Features',
-		title: 'What exists today.',
+		title: 'What it does.',
 		items: [
 			{
 				title: 'One shared editor',
@@ -67,7 +67,7 @@ export const en: LandingCopy = {
 	status: {
 		kicker: 'Status',
 		title: 'Honest about what is not done.',
-		copy: 'This is an early implementation. It is not Microsoft Word parity: pagination is approximate, many features are not rendered with Word fidelity, password-protected files are unsupported, and Export DOCX cannot recover content the model omits. The support roadmap and outstanding-work pages list the gaps in detail.',
+		copy: 'Stable means a committed API and a written preservation guarantee, not Microsoft Word parity: pagination is approximate, many features are not rendered with Word fidelity, password-protected files are unsupported, and Export DOCX cannot recover content the model omits. The support roadmap and outstanding-work pages list the gaps in detail.',
 		link: { text: 'Support roadmap', href: '/parity-roadmap' },
 		roadmapTitle: 'Roadmap note',
 		roadmapCopy:
@@ -198,6 +198,6 @@ export const en: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'docx-viewer · an early Word editor for the web',
+		bottomRight: 'docx-viewer · the Word editor for the web',
 	},
 };

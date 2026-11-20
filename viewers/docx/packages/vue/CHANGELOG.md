@@ -1,11 +1,90 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+For Vue 3 apps, `WordEditor` keeps its props, kebab-case events, `v-model:readOnly` and template-ref handle: what changes is the editor it mounts. Documents load behind safety limits you can now tune, a signed document shows whether its signature actually verifies, saving an edit to a long document takes time in proportion to the edit, and keyboard, screen reader and forced-colours use are checked in a real browser before every release. Read the breaking changes for dark mode, which now follows the theme rather than CSS `color-scheme`, and for collaboration, where an editor removed from the page leaves its room. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each change.
+
+### Breaking changes
+
+- Node.js 22.3 or newer is required for builds, server rendering and tests; the package declares `"engines": { "node": ">=22.3" }`. See [Run Node.js 22.3 or newer](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer).
+- The editor no longer inherits the page's CSS `color-scheme`. It reads the new `--office-color-scheme` token, which is `light` unless the theme's dark mode applies (`data-office-theme="dark"`, or the system's dark preference where no `data-office-theme="light"` overrides it). A container that sets only `color-scheme: dark` now gets a light editor: also set `--office-color-scheme: dark` on it, or use `data-office-theme="dark"`, which sets both. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#the-editors-take-dark-mode-from-the-theme-not-from-color-scheme).
+- An editor that shares a room (`collaboration`) leaves it when it is removed from the page and not attached again before the current task ends, and joins the same room again when it is attached later. Moving it between parents in one task keeps it in the room. To hide an editor and keep it syncing, hide it with CSS instead of detaching it. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#an-editor-removed-from-the-page-leaves-its-room).
+- A collaboration update that holds more than one struct per 4 bytes, or more than one deleted range per 2 bytes, is refused before it is decoded, and the refusal stops sharing. The budget grows with the update, so the first sync of a real document stays under half of it. Code that passed `DEFAULT_UPDATE_LIMITS` from `ooxml-core/collab` uses `defaultUpdateLimits(bytes)`, `MIN_BYTES_PER_STRUCT` and `MIN_BYTES_PER_DELETE_RANGE`. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#collaboration-updates-are-bounded-and-a-refusal-stops-the-sync).
+- The `--dve-input` colour now defaults to `--office-control-border` (`#8a8886`) instead of `--office-border`, and it colours the shared form controls inside the editor. A host that wants lighter field boundaries sets `--office-control-border` or `--dve-input`, and keeps it at 3:1 against the background. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#form-controls-use---office-control-border).
+- Loading a signed document no longer adds an English signature message to `model.warnings`. Read `model.signatures.state` and word it with `signatureStateText` from `ooxml-core/i18n`. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#signatures-are-reported-as-a-verified-summary).
+- Word style catalogs (`paragraphStyles`, `characterStyles`, `tableStyles`) are values: inheritance is resolved once per `styles` record, so change a style by replacing the record and the style, not by changing a style object in place. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#word-style-catalogs-are-values).
+- If you copy compiled files by hand instead of installing with a package manager, deploy the `browser-chunks/` and `node-chunks/` folders next to the entry files and keep their relative paths: `emf-converter` 5 loads image decoders and colour data from them on demand. Package managers and bundlers need no change. See [the migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#deploy-the-new-decoder-folders-if-you-copy-files-by-hand).
+
+### Security
+
+- A document is shown as signed only when its signature verifies. The status bar, a notice under the ribbon and File > Info show Signed, Signed (signer not verified), Invalid signature or Signature not verified, in every editor language, and the notice says that saving changes removes the signatures. Before, any signature part was enough to show a document as signed. Checking a signature is bounded, so a crafted one cannot stall the page.
+- Every document is opened through the guarded zip reader, embedded chart workbooks included, so a small file can no longer inflate without limit.
+- Scans of raw XML that took time quadratic in the number of empty or unclosed elements, such as the declared-font scan that runs before every load, are now linear. A few kilobytes of such elements could block a load for a minute.
+- Chart point counts and point indices no longer decide how much memory is allocated, so a chart part of a few hundred bytes can no longer exhaust memory.
+- SVG pictures are shown from `data:` URLs instead of object URLs of your application's origin, so opening one in its own tab can no longer run document-controlled script in that origin. Raster pictures keep object URLs, which now always carry an image type, so a type a collaboration peer claims cannot make a picture open as markup. Placeholder sizes can no longer add style text.
+- Packages are published by a release pipeline in which third-party code cannot push, tag or publish, with npm provenance, and the signed tarballs on each GitHub release are checked against the integrity the npm registry records.
+
+### Added
+
+- `customization.ribbon.hiddenTabs` hides native ribbon tabs by id (`WordRibbonTabId`, such as `'insert'`, `'references'` or `'mailings'`). `'file'` removes the File tab and its backstage at every width, with its key tip and every other route into the backstage, while Save, its shortcuts, `storage` and the `file-command` event keep working. Tell me leaves out commands that live only on a hidden tab, and leaving the option out keeps the full ribbon.
+- `<docx-editor>` has `getTextSelection()` and `focusText(range)`, so a host that reloads a document can put the user's caret back. Reach it through the template ref's `element`.
+- `themeColors` takes `primaryInk`, the primary colour as text (`--dve-primary-ink`). It defaults to `primary`, and the dark presets lift it.
+- `loadDocument` takes a `limits` option (`DocxLoadLimits`) for the compressed package size, the number of parts, the inflated size of one part and of all parts, and the size of `word/document.xml`, which was fixed at 25 MiB. The defaults are unchanged and exported as `DEFAULT_DOCX_LOAD_LIMITS`.
+- When sharing stops because an update was refused, the editor raises `document-error` with the reason in the display language instead of a raw English message.
+
+### Changed
+
+- Text boxes written with `txBox="1"` (Word's Insert > Text Box) are read with their frame and drawn like any shape. Selecting one shows the Shape Format tab, Add Text and Insert > Text Box edit it in the Text Box dialog as before, and an unchanged box is saved byte for byte.
+- The text inside a drawing shape is editable only when it is the plain centred text the editor writes. Text with bold, sizes, borders or other alignment is read-only, so resizing or refilling the shape no longer rewrites it as plain centred lines.
+- Draft view's header, footer and note previews leave floating drawings out, as Word's Draft view does, so a tall letterhead text box no longer stretches the header preview. Inline drawings still show, and Print Layout is unchanged.
+- Charts keep the point counts and points their file declares, however large, through viewing, editing and saving, and stay fully editable. The views the editor draws and edits share a budget of blank positions (at most 1,048,576 per view and 4,194,304 per document); a view past it shows fewer trailing blanks, then only its first points, and the load reports `CHART_POINTS_LIMITED`.
+- The status bar's zoom button is named by the percentage it shows first, for example "100%, Zoom to fit". Tests that find it by name need the new name.
+- A removed editor adds one constructed stylesheet of its own to `document.adoptedStyleSheets` (on first use) and changes its rule, which matches nothing, so Chrome and Edge release the editor. A host that replaces `document.adoptedStyleSheets` may drop it; the next removal adds it again.
+- The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+### Fixed
+
+- A text box drawn as a shape (a `rect` holding a `wps:txbx`, as letterheads often have) shows its paragraphs with their runs, bold and italic, sizes, colours, alignment and paragraph borders, inset and clipped to the shape over its fill and outline. Such shapes used to show as an empty dashed box or the word "Shape". `txBox="1"` text boxes are drawn in Print Layout, floating and inline, in the body and in headers and footers, instead of being left out.
+- Lines and connectors such as `straightConnector1` in headers and footers are drawn in Print Layout with their outline colour, width and dash, instead of an empty placeholder box.
+- Shape text whose runs set no colour takes the colour of the shape's `wps:style` font reference, resolved through the theme, as Word draws it, and saving keeps it so Word shows the same colour after a resize or refill. A shape with neither a style nor its own fill or outline is drawn without them instead of in the default blue.
+- Pictures in Draft view's previews and inside text boxes are drawn from the same media cache as the body, so re-rendering a preview creates no new picture URLs, all of them are released with the document, and pictures that arrive late in a collaboration session repaint there too.
+- Saving a chart edit writes only the embedded workbook cells that edit changed. Before, a text cell in a value range was overwritten with 0 by any chart save, even a rename. Removing a row of a bubble chart removes its bubble sizes with it, adding a row to a scatter or bubble chart leaves the new x value blank, and Edit Data no longer refuses a value edit on a series shorter than the longest one in a chart with a whole-column range.
+- Dialogs keep focus: Tab and Shift+Tab can no longer leave them, Escape closes them wherever focus has ended up, and focus returns to the control that opened them, including inside shadow roots.
+- A removed editor no longer stays in memory. Print, font and ribbon listeners are released on removal and restored when the same element is attached again, open menus and popups close, and an editor that was typed in or shared a room is freed too. In Chrome and Edge, an editor whose document drew a clipped, masked or filtered picture or shape (a tiled or cropped picture, for example) is no longer kept alive by the browser's style cache. Removing one editor no longer closes a popover, overflow menu or word count panel open in another editor on the same page.
+- Hyperlinks on the page use the document link colour (`--office-canvas-link`, `#0563c1`) instead of the interface accent, which was hard to read in dark mode.
+- A font listed before an embedded font in the font table is no longer treated as embedded, so its web font is requested when font downloads are on.
+- The Share dialog shows the same caption as Excel and Visio for an invitation without its session key.
+### Performance
+
+- Saving no longer moves blocks that did not change. An edit to a 20,000-block document saves in about 2.5 s instead of about 17 s, inserting, deleting or moving a paragraph costs the same as editing one, and the saved document is the same as before, byte for byte.
+- Loading walks `document.xml` once for every unsupported feature it reports instead of once per feature, and copies the loaded model once instead of twice; saves no longer copy it again. Style inheritance is resolved once per catalog, so a long `basedOn` chain no longer makes loading quadratic or slows layout.
+- Opening and closing documents in a long session no longer grows memory by the size of the editor each time. In the Office suite, a Word open-and-close cycle went from about 3 MB and 12,000 DOM nodes to about 0.2 MB and none.
+- The SmartArt Design colour and style galleries load the built-in SmartArt definitions (about 390 KB compressed) when a SmartArt is selected, not when the editor opens.
+
+### Accessibility
+
+- Every change is checked in a real browser before it can be released: Tab goes round the page without getting stuck, F6 moves between regions, dialogs keep focus and give it back, and saving leaves focus where it was. axe-core runs on the editor in light mode, dark mode and on a phone and fails on any new critical or serious problem, and the checks also cover what a screen reader is told about a document, accent contrast, reflow at 320 by 256 pixels (400% zoom), and that a saved file keeps its alt text, headings, table header rows and language.
+- Form control boundaries reach 3:1, including the ribbon's combo boxes and drop-downs, the mode selector and the title bar's search and Tell me boxes. Tell me, the search fields and the File tab show a focus ring of at least 3:1 in light and dark themes.
+- The Font and Size boxes expose their expanded state and the list they control.
+- Ribbon commands whose caption is shorter than their command name have their own accessible name in every locale: Insert > Pictures is "Insert pictures" ("Bilder einfügen", "Insérer des images", "Insertar imágenes", "插入图片"). Dialogs, menus and tooltips keep their wording.
+- In forced-colours mode, the active content control, contextual ribbon tabs, tall ribbon buttons, building-block toggles and every selected, current, checked or pressed state keep a system highlight instead of disappearing.
+- A chart is named by its alt text, falling back to its title, and screen readers can read its series and values.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): the Word model, loading, layout and saving behind the editor, and the shared security fixes.
+- [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the `<docx-editor>` element, its ribbon and dialogs, and the shared Office controls it mounts.
+- [`docx-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/core/CHANGELOG.md): the Word model API this package re-exports.
+- [`docx-react-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/react/CHANGELOG.md): the same editor for React.
+- [`docx-angular-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/angular/CHANGELOG.md): the same editor for Angular.
+- [`docx-svelte-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/svelte/CHANGELOG.md): the same editor for Svelte.
+- [`docx-solid-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/solid/CHANGELOG.md): the same editor for Solid.
+- [`docx-vanilla-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/vanilla/CHANGELOG.md): the same editor without a framework.
+- [`docx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/mcp/CHANGELOG.md): Word tools for MCP clients over the same core.
 
 ## [1.4.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-vue-viewer@1.4.0) - 2026-11-13
 
@@ -152,15 +231,6 @@ conventional commits.
 ### Bug Fixes
 
 - **viewers:** Point every package's homepage, bugs and README links at ooxml (by @ChristopherVR) ([e40592e](https://github.com/ChristopherVR/ooxml/commit/e40592e1cc1331c8223e8fcc366041a933435dee))
-
-# Changelog
-
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
-dependency it ships against, changes, not only on conventional commits.
 
 ## [0.4.3](https://github.com/ChristopherVR/docx-viewer/releases/tag/docx-vue-viewer@0.4.3) - 2026-10-05
 
@@ -395,5 +465,4 @@ dependency it ships against, changes, not only on conventional commits.
 - **types:** Enable exactOptionalPropertyTypes (by @claude) ([6f46221](https://github.com/ChristopherVR/docx-viewer/commit/6f4622160f37ae94a3bb5fa50710456b798dcaab))
 - **types:** Enable noUncheckedIndexedAccess; keep test-support out of release builds (by @claude) ([203b289](https://github.com/ChristopherVR/docx-viewer/commit/203b289f0e8ca5d877cc6ff990ebc35755a853a3))
 - Renamed ooxml packages [ci-skip] (by @ChristopherVR) ([3e75728](https://github.com/ChristopherVR/docx-viewer/commit/3e757282589b0327b90657d0d4c4e9350ce5025a))
-
 

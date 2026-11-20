@@ -2,9 +2,10 @@ import type { LandingCopy } from './types';
 
 export const es: LandingCopy = {
 	hero: {
+		kicker: 'Beta · Apache-2.0 · TypeScript',
 		titleTop: 'Chat y llamadas de equipo,',
 		titleAccent: 'en un servidor que tú ejecutas.',
-		sub: 'OpenTeams es un espacio de trabajo de equipo para la web: canales y chat, presencia, reuniones WebRTC y archivos de Office compartidos en la conversación. Un componente web, bindings ligeros para seis frameworks y un pequeño servidor de referencia. Una implementación temprana: no es Microsoft Teams y no tiene cifrado de extremo a extremo.',
+		sub: 'OpenTeams es un espacio de trabajo de equipo para la web: canales y chat, presencia, reuniones WebRTC y archivos de Office compartidos en la conversación. Un componente web, bindings ligeros para seis frameworks y un pequeño servidor de referencia. En beta: no es Microsoft Teams y no tiene cifrado de extremo a extremo.',
 		start: { text: 'Empezar', href: '/es/getting-started' },
 		demo: { text: 'Probar la demo', href: '/demo/' },
 		frameLabel: '<teams-app> en modo local',

@@ -30,6 +30,19 @@
 	margin: 0;
 	flex: none;
 }
+/* `vert`: lines run down, the first at the right; `vert270` is that turned half a turn. */
+.dve-text-box-vertical,
+.dve-text-box-upward {
+	writing-mode: vertical-rl;
+}
+.dve-text-box-upward {
+	transform: rotate(180deg);
+}
+/* `wrap="none"`: lines break only where the paragraphs do. Paragraphs set their own white-space. */
+.dve-text-box-nowrap,
+.dve-text-box-nowrap * {
+	text-wrap-mode: nowrap;
+}
 .dve-text-box-content table {
 	border-collapse: collapse;
 	flex: none;

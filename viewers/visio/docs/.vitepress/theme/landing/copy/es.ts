@@ -21,7 +21,7 @@ export const es: LandingCopy = {
 	},
 	features: {
 		kicker: 'Funciones',
-		title: 'Lo que existe hoy.',
+		title: 'Lo que hace.',
 		items: [
 			{
 				title: 'Seis enlaces nativos',
@@ -109,7 +109,7 @@ export const es: LandingCopy = {
 		items: [
 			{
 				q: '¿Es un reemplazo completo de Visio?',
-				a: 'No. Es una implementación temprana. La geometría, el texto y las imágenes en caché que se admiten se renderizan por un único camino SVG. Los documentos complejos aún tienen carencias; el registro de capacidades separa la implementación, la evidencia y el trabajo pendiente.',
+				a: 'No. Visio está en beta. La geometría, el texto y las imágenes en caché que se admiten se renderizan por un único camino SVG. Los documentos complejos aún tienen carencias; el registro de capacidades separa la implementación, la evidencia y el trabajo pendiente.',
 				link: { text: 'Registro de capacidades', href: '/parity' },
 			},
 			{
@@ -197,6 +197,6 @@ export const es: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'visio-viewer · un visor de Visio temprano para la web',
+		bottomRight: 'visio-viewer · el visor de Visio para la web',
 	},
 };

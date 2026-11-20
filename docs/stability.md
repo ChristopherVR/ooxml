@@ -178,4 +178,4 @@ public API like any other name. The Word packages are unscoped (`docx-core`) and
 | Word       | Stable | Since 2026-10-29: API snapshot, [preservation guarantee](../viewers/docx/docs/preservation.md), Word corpus and native acceptance.                       |
 | Excel      | Stable | Since 2026-10-29: API snapshot, [preservation guarantee](../viewers/xlsx/docs/preservation.md), function list and native acceptance.                     |
 | Visio      | Beta   | Plain-text editing and the shape clipboard are still experimental ([API](../viewers/visio/docs/api.md)); there is no written preservation guarantee yet. |
-| OpenTeams  | Beta   | 1.0 packages on sync protocol 1 and schema 1; the Docker recipe has not been built and no production deployment has been reported.                       |
+| OpenTeams  | Beta   | 2.0 packages on sync protocol 2 and schema 1; the Docker recipe has not been built and no production deployment has been reported.                       |

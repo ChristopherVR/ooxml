@@ -1,4 +1,4 @@
-import type { DocumentModel } from '../index';
+import type { Block, DocumentModel } from '../index';
 import { adaptDocumentModel } from './adapter';
 import { withComputedFieldRuns } from './computed-field-runs';
 import { layoutSections } from './page-flow';
@@ -10,6 +10,7 @@ import type { LayoutResult } from './result';
 import type { TextMeasurer } from './measure';
 import type { LayoutReviewOptions } from './review-display';
 import { reviewDocumentFormatting, reviewFormattingWarnings } from '../review-document-formatting';
+import { createTextBoxLayouts, type TextBoxLayouts } from './text-box-layout';
 
 /** Paginates an engine-native `LayoutDocumentInput` (bypasses the DocumentModel adapter). */
 export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasurer): LayoutResult {
@@ -43,8 +44,16 @@ export function layoutDocumentModel(
 	const projected = reviewDocumentFormatting(model, options.reviewDisplayMode ?? 'all');
 	const approximations = reviewFormattingWarnings(projected.diagnostics);
 	// Computed fields (DOCPROPERTY, AUTONUM, LISTNUM, SYMBOL...) show what the document gives them.
+	const note = (message: string) => approximations.push(message);
+	const textBoxes = storyTextBoxLayouts(
+		projected.model,
+		projected.model.blocks,
+		measurer,
+		options,
+		note,
+	);
 	const input = withComputedFieldRuns(
-		adaptDocumentModel(projected.model, (message) => approximations.push(message), options),
+		adaptDocumentModel(projected.model, note, options, textBoxes),
 		projected.model,
 	);
 	const result = layout(input, measurer);
@@ -52,4 +61,32 @@ export function layoutDocumentModel(
 		pages: result.pages,
 		approximations: [...new Set([...approximations, ...result.approximations])],
 	};
+}
+
+/**
+ * The text boxes of one of `model`'s stories (its body, or a header or footer's blocks) laid out by
+ * the page engine with the document's styles, linked chains included.
+ */
+export function storyTextBoxLayouts(
+	model: DocumentModel,
+	story: readonly Block[],
+	measurer: TextMeasurer,
+	options: LayoutReviewOptions = {},
+	note: (message: string) => void = () => {},
+): TextBoxLayouts {
+	// The box's blocks adapt as a document of their own: the styles, theme and numbering are the
+	// document's; its sections, notes and separators are not the box's.
+	const {
+		sections: _sections,
+		footnoteSeparators: _separators,
+		footnotes: _footnotes,
+		endnotes: _endnotes,
+		...base
+	} = model;
+	return createTextBoxLayouts(
+		story,
+		(blocks) => adaptDocumentModel({ ...base, blocks }, note, options).sections[0]?.blocks ?? [],
+		measurer,
+		note,
+	);
 }

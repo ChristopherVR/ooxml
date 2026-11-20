@@ -1,3 +1,4 @@
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 const modules = {
@@ -8,6 +9,9 @@ const modules = {
 };
 
 /** Compose tools owned by the viewer repositories; contains no document logic. */
+/** The server reports this package's own version to MCP clients. */
+const { version } = createRequire(import.meta.url)('../package.json');
+
 export async function createServer(options = {}) {
 	const formats = options.formats ?? Object.keys(modules);
 	if (!formats.length || new Set(formats).size !== formats.length)
@@ -28,7 +32,7 @@ export async function createServer(options = {}) {
 			return implementation.registerTools;
 		}),
 	);
-	const server = new McpServer({ name: 'ooxml-tools', version: '0.1.0' });
+	const server = new McpServer({ name: 'ooxml-tools', version });
 	for (const register of registrations) register(server, { rootDir: options.rootDir });
 	return server;
 }

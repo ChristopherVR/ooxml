@@ -219,6 +219,7 @@ export function floatBox(
 		contentType: float.contentType,
 		...(float.chart ? { chart: float.chart } : {}),
 		...(float.textBox ? { textBox: float.textBox } : {}),
+		...(float.textBoxLayout ? { textBoxLayout: float.textBoxLayout } : {}),
 		behindText: Boolean(float.behindText),
 		...(float.wrap ? { wrap: float.wrap } : {}),
 		...(float.wrapText ? { wrapText: float.wrapText } : {}),

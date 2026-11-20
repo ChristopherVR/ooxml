@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const de: LandingCopy = {
 	hero: {
-		kicker: 'Frühe Implementierung · Apache-2.0 · TypeScript',
+		kicker: 'Stabil · Apache-2.0 · TypeScript',
 		titleTop: '.docx bearbeiten,',
 		titleAccent: 'einfach einbettbar.',
 		sub: 'Ein Word-Editor für den Browser, für React, Vue, Angular, Svelte, Solid und Vanilla JavaScript. Ein Dokumentmodell und eine auf ProseMirror basierende Web Component <docx-editor> erledigen die Arbeit; die Framework-Adapter verdrahten nur Lebenszyklus und Ereignisse.',
@@ -20,7 +20,7 @@ export const de: LandingCopy = {
 	},
 	features: {
 		kicker: 'Funktionen',
-		title: 'Was es heute gibt.',
+		title: 'Was er kann.',
 		items: [
 			{
 				title: 'Ein gemeinsamer Editor',
@@ -67,7 +67,7 @@ export const de: LandingCopy = {
 	status: {
 		kicker: 'Status',
 		title: 'Ehrlich über das, was noch fehlt.',
-		copy: 'Dies ist eine frühe Implementierung. Sie ist keine Parität mit Microsoft Word: Die Paginierung ist näherungsweise, viele Funktionen werden nicht originalgetreu zu Word dargestellt, passwortgeschützte Dateien werden nicht unterstützt, und „DOCX exportieren“ kann Inhalte nicht wiederherstellen, die das Modell auslässt. Die Seiten zur Roadmap und zu offenen Arbeiten listen die Lücken im Einzelnen auf.',
+		copy: 'Stabil bedeutet eine verbindliche API und eine schriftliche Erhaltungsgarantie, keine Parität mit Microsoft Word: Die Paginierung ist näherungsweise, viele Funktionen werden nicht originalgetreu zu Word dargestellt, passwortgeschützte Dateien werden nicht unterstützt, und „DOCX exportieren“ kann Inhalte nicht wiederherstellen, die das Modell auslässt. Die Seiten zur Roadmap und zu offenen Arbeiten listen die Lücken im Einzelnen auf.',
 		link: { text: 'Roadmap zur Unterstützung', href: '/parity-roadmap' },
 		roadmapTitle: 'Hinweis zur Roadmap',
 		roadmapCopy:
@@ -198,6 +198,6 @@ export const de: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'docx-viewer · ein früher Word-Editor für das Web',
+		bottomRight: 'docx-viewer · der Word-Editor für das Web',
 	},
 };

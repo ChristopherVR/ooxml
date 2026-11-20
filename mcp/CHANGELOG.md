@@ -1,11 +1,42 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+This release makes the combined server safer to hand to an agent you do not fully trust. Excel writes refuse formulas that could send workbook data out of the file, file tools refuse paths that could leave the document root before they touch the disk, and the PowerPoint theme and metadata tools now save what they change. The server needs Node.js 22.3 or newer. Install it with the format packages released alongside it, listed under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) covers each breaking change.
+
+### Breaking changes
+
+- Node.js 22.3 or newer is required (`"engines": { "node": ">=22.3" }`).
+- `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` move to schema version 2 and refuse a formula, in a cell or a defined name, that can reach outside the workbook: web, image, RTD, cube, Python and add-in functions, the Excel 4.0 macro functions that evaluate text or run code, DDE or file access, functions that send cell data to an AI service (`COPILOT`, `TRANSLATE`, `DETECTLANGUAGE`), references to another workbook or a file path, and formulas the parser cannot read. The error names the cell. No tool parameter turns the check off; a host that trusts every caller registers its own server with `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation`.
+- File tools refuse UNC and device paths, and paths starting with a backslash, on every platform. On Windows they also refuse segments containing `:`, `<`, `>`, `"`, `|`, `?` or `*`, segments ending in a dot or a space, device names such as `NUL` or `COM1`, `/x` and `C:x`. Pass a path relative to `--root`, or a full absolute path inside it, and rename files whose names Windows would reinterpret.
+
+### Security
+
+- A prompt-injected model could write a formula that sends workbook data to a server when the file is opened in a spreadsheet application. Such formulas are refused on every Excel write path.
+- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, every refused path returns the same error (`Path is outside the configured root`), and an alternate data stream name can no longer create a file past the extension check.
+- Releases are built by a pipeline in which third-party code cannot push, tag or publish, with npm provenance and signed tarballs checked against the registry.
+
+### Changed
+
+- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On Linux and macOS, names such as `a: b.docx`, `aux/`, `why?.docx` and `a\b.docx` are ordinary files.
+
+### Fixed
+
+- `update_metadata`, `update_theme_colors`, `update_theme_fonts` and `apply_theme_preset` save their changes to the deck.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): defines every tool, its schema and its bounds in `ooxml-core/automation`.
+- [`docx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/mcp/CHANGELOG.md): the Word tools.
+- [`xlsx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md): the Excel tools, with the formula check.
+- [`visio-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md): the Visio tools.
+- [`pptx-viewer-mcp` 3.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/tools/CHANGELOG.md): the PowerPoint tools, with the theme and metadata fixes.
+- [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the editors whose assistants run the same tool definitions on an open document.
 
 ## [1.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@1.1.2) - 2026-11-13
 
@@ -141,5 +172,4 @@ conventional commits.
 ### Documentation
 
 - **packages:** Align npm readmes with powerpoint structure (by @ChristopherVR) ([52d33d4](https://github.com/ChristopherVR/ooxml/commit/52d33d4c58f4cfac7e47df3c890168ca8542752b))
-
 

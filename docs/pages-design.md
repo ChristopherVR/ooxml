@@ -80,9 +80,22 @@ title and a 22 px hairline box with a plus or arrow glyph top-right that takes t
 **Section bar.** A section opens with a row: the section title left (display face), a short muted
 note right, a hairline below. No kicker above it.
 
-**Tag.** `Alpha`, `Beta`, `New`: 10 px semibold, 1 px border in the tone colour at 40%, text in
-the tone colour, 3 px radius, 1 px 6 px padding. Tones: alpha amber `#b07a17`, beta blue (the
-accent), new green (`ok`).
+**Tag.** `Alpha`, `Beta`, `Stable`: 10 px semibold, 1 px border in the tone colour at 40%, text
+in the tone colour, 3 px radius, 1 px 6 px padding. Tones: alpha amber `#b07a17`, beta blue (the
+accent), stable green (`#12715a` light, `ok` dark). A product's tag is the label in
+`docs/stability.md` and nothing else; a product without a label there carries no tag. Pages do
+not announce versions or label things as new: release history lives in the changelogs, reached
+through a plain "Releases" link.
+
+**Product strip.** A joined row of the five products under the hub's opening buttons: each cell
+is a link to the product's site with its solid 30 px tile, the name, one muted word for what it
+makes and its tag in the top-right corner. Cells grow to fill each row, so a narrow window wraps
+them without empty cells.
+
+**Hero facts.** Under a product landing's install line, the status, licence and language as a
+row of small hairline chips (12 px, 4 px radius, surface background); the status chip takes its
+tag tone. The copy keeps them in one `kicker` string separated by `·`. The hero frame's bar
+carries the product's solid 18 px tile where a window would have its controls.
 
 **Buttons.** Primary: accent background, white text (dark ink on dark-mode accents), 12 px
 semibold, 8 px 14 px padding, 4 px radius. Secondary: transparent with a `line-strong` border.
@@ -193,13 +206,13 @@ composable per site; the hub in `site/docs/docs.css`.
   colour holds the brand, a search field (`/` focuses it; it searches every guide the page links
   to), three shortcuts and every manual grouped under sentence-case captions; the active item has
   the selected tint and the 3 px accent bar. The article opens with a breadcrumb, the title, a
-  lead and two buttons, then section bars: the three ways in as a joined grid, Simple view with a
+  lead, two buttons and the product strip, then section bars: the three ways in as a joined grid, Simple view with a
   drawn (never screenshotted) app frame, an "I want to / Use" table in a framed panel, and the
   manuals as tool cards. The right column lists the sections and marks the one in view. The
   article and the outline grow with the window up to 1560 px together (1840 px from 2300 px) and
   stay centred in what the sidebar leaves. Under 1180 px the outline goes; under 820 px the
   sidebar becomes a header whose menu button opens the list.
-- **Product docs landing**: hero with the product frame, the live demo (with its language select
+- **Product docs landing**: hero with the product frame and the hero facts, the live demo (with its language select
   where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
   accent is the product colour. Every site keeps this order so the five landings read as one
   family.

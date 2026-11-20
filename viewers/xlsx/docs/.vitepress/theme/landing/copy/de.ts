@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const de: LandingCopy = {
 	hero: {
-		kicker: 'Frühe Implementierung · Apache-2.0 · TypeScript',
+		kicker: 'Stabil · Apache-2.0 · TypeScript',
 		titleTop: '.xlsx-Bearbeitung,',
 		titleAccent: 'einbettbar gemacht.',
 		sub: 'Ein Tabellen-Editor für den Browser, für React, Vue, Angular, Svelte, Solid und Vanilla-JavaScript. Ein Arbeitsmappenmodell mit Formel-Engine und eine Web Component <xlsx-editor> erledigen die Arbeit; die Framework-Adapter kümmern sich nur um Lebenszyklus und Ereignisse.',
@@ -68,7 +68,7 @@ export const de: LandingCopy = {
 	status: {
 		kicker: 'Status',
 		title: 'Ehrlich über das, was fehlt.',
-		copy: 'Dies ist eine frühe Implementierung und kein Microsoft-Excel-Ersatz mit voller Funktionsgleichheit. PivotTables, Datenschnitte, Makros und externe Verknüpfungen bleiben erhalten, werden aber weder angezeigt noch bearbeitet; Sparklines werden angezeigt, aber nicht bearbeitet; die Funktionsbibliothek ist groß, aber nicht vollständig; kennwortgeschützte Dateien werden nicht unterstützt. Die Seite zu den Funktionen listet die Lücken auf.',
+		copy: 'Stabil bedeutet eine verbindliche API und eine schriftliche Erhaltungsgarantie, keinen Microsoft-Excel-Ersatz mit voller Funktionsgleichheit. PivotTables, Datenschnitte, Makros und externe Verknüpfungen bleiben erhalten, werden aber weder angezeigt noch bearbeitet; Sparklines werden angezeigt, aber nicht bearbeitet; die Funktionsbibliothek ist groß, aber nicht vollständig; kennwortgeschützte Dateien werden nicht unterstützt. Die Seite zu den Funktionen listet die Lücken auf.',
 		link: { text: 'Funktionen und Einschränkungen', href: '/de/features' },
 		roadmapTitle: 'Wo die Logik liegt',
 		roadmapCopy:
@@ -191,6 +191,6 @@ export const de: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'xlsx-viewer · ein früher Tabellen-Editor für das Web',
+		bottomRight: 'xlsx-viewer · der Tabellen-Editor für das Web',
 	},
 };

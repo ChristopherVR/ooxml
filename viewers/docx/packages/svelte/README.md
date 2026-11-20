@@ -1,14 +1,14 @@
 # docx-svelte-viewer
 
+**A Word document editor for Svelte 5: open, edit and save `.docx` and legacy `.doc` files in the browser, with the Word ribbon, dialogs, Print Layout, tracked changes and comments built in.**
+
 [![npm version](https://img.shields.io/npm/v/docx-svelte-viewer.svg)](https://www.npmjs.com/package/docx-svelte-viewer)
 [![license](https://img.shields.io/npm/l/docx-svelte-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE)
 [![types](https://img.shields.io/npm/types/docx-svelte-viewer.svg)](https://www.npmjs.com/package/docx-svelte-viewer)
 
-> A browser Word document editor for Svelte 5, using one shared editor and the canonical OOXML document engine.
+[Live demo](https://christophervr.github.io/ooxml/docx/demo-svelte/) · [Documentation](https://christophervr.github.io/ooxml/docx/) · [Svelte guide](https://christophervr.github.io/ooxml/docx/frameworks/svelte) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/svelte/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-[Live demo](https://christophervr.github.io/ooxml/docx/demo/) | [npm](https://www.npmjs.com/package/docx-svelte-viewer) | [Full docs](https://christophervr.github.io/ooxml/docx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx)
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; **[Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme)** &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
+![The Word editor with its ribbon, showing a sample document in Print Layout](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/docx/docs/public/hero-editor.webp)
 
 ## Install
 
@@ -16,76 +16,133 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 npm install docx-svelte-viewer
 ```
 
-Use the framework peers declared by this package: `svelte` (`^5.0.0`). Existing framework apps normally already provide them.
-
-The package bundles its editor UI and adapter. The core model and shared controls
-are installed as regular registry dependencies and the model API is re-exported.
-One viewer package is enough; no separate core install is required.
+`svelte` 5 is a peer dependency. The package brings `docx-core`, `ooxml-core` and `ooxml-ui` with it and re-exports the Word model API (`createDocument`, `loadDocument`, `loadDocx`, `saveDocx` and the types), so one install is all an application needs. Use one Word editor package per application: each registers the same `<docx-editor>` element.
 
 ## Quick start
 
 ```svelte
-<script>
-  import { createDocument } from 'docx-svelte-viewer/runtime';
-  import WordEditor from 'docx-svelte-viewer';
-  let model = $state(createDocument());
+<script lang="ts">
+	import WordEditor from 'docx-svelte-viewer';
+	import { createDocument } from 'docx-svelte-viewer/runtime';
+
+	let model = $state.raw(createDocument());
 </script>
-<WordEditor documentModel={model} ondocumentchange={next => model = next} />
+
+<div class="editor">
+	<WordEditor documentModel={model} ondocumentchange={(next) => (model = next)} />
+</div>
+
+<style>
+	.editor {
+		height: 100vh;
+	}
+	.editor > :global(div) {
+		height: 100%;
+	}
+</style>
 ```
 
-Mount in the browser and give the host a height. Use one editor package per
-application: each registers the same editor custom element.
+The package root is the component; the JavaScript helpers (`createDocument`, `loadDocument`, `mountEditor`, the types and the building blocks) are under `docx-svelte-viewer/runtime`. The editor fills the element the component renders, so give that a height. Keep the model in `$state.raw`: `$state` wraps it in a deep proxy, and the editor would take every echoed change for a new document.
 
-## Features
+## Open and save files
 
-| Feature    | Description                                                                     |
-| ---------- | ------------------------------------------------------------------------------- |
-| Editing    | Shared ProseMirror editor, ribbon, dialogs and document change events.          |
-| Files      | Modern DOCX and limited legacy Word 97-2003 DOC loading through core.           |
-| Model      | `createDocument`, `loadDocx`, `saveDocx` and core types from the package entry. |
-| Frameworks | The same `<docx-editor>` UI behind six thin adapters.                           |
+```svelte
+<script lang="ts">
+	import WordEditor from 'docx-svelte-viewer';
 
-## API
+	let editor: ReturnType<typeof WordEditor>;
 
-The shared props, event handlers, `loadDocument` and `detectDocumentFormat` helpers
-are available from the package. For an imperative browser integration,
-`mountEditor(container, options)` returns a binding with `load`, `save` and
-`destroy`. `docx-core`, `ooxml-core` and `ooxml-ui` are regular
-dependencies (`ooxml-ui` brings the ProseMirror libraries); document and layout algorithms live in OOXML core.
+	async function open(event: Event) {
+		const file = (event.target as HTMLInputElement).files?.[0];
+		if (file) await editor.load(await file.arrayBuffer()); // .docx or legacy .doc
+	}
 
-The root exports the Svelte component; JavaScript helpers and model exports are
-under `docx-svelte-viewer/runtime`.
+	async function save() {
+		const blob = await editor.save(); // a .docx Blob
+		// ...store the blob, then:
+		editor.markClean();
+	}
+</script>
 
-## Custom editor UI
+<input type="file" accept=".docx,.doc" onchange={open} />
+<button onclick={save}>Save</button>
+<WordEditor bind:this={editor} />
+```
 
-To render only the controls you use, with your own design system, use the building blocks. `createViewerBuildingBlocks` returns canvas props for the `documentCanvas` action and flat toolbar, navigation and status props for the optional `Toolbar`, `PageNavigation` and `StatusBar` components. The surface is read-only until you pass `canEdit: true`; a read-only surface still allows selection, keyboard navigation and copy. Hosts that relied on the former editable default must now pass `canEdit: true`. See [Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
+`load` accepts `.docx` and legacy Word 97-2003 `.doc` bytes and detects the format from the content, never the file name. `save()` resolves to a `Blob` and leaves the document dirty until you call `markClean()`, because only your application knows when the bytes are stored; `download(fileName?)` saves, downloads and marks it clean. A password-protected `.docx` opens through `loadDocument(bytes, { password })`, which the package re-exports; pass the result to `setLoadedDocument` on the handle's `element`. To route File > Save and File > Open to your own storage instead of downloads and file pickers, set `storage`.
 
-## Limitations
+## What you get
 
-This is an early editor. It does not establish Microsoft Word layout parity or
-lossless saving for unsupported features. Legacy DOC support is limited to
-main-body text with constrained paragraph edits. SmartArt nodes, text and layout can be edited
-(drawn with an approximate layout until Word lays them out again) and charts can be inserted, edited and resized (admitted ChartEx charts
-are editable; other ChartEx families show a labelled frame).
+- **Word-style editing.** The ribbon (Home, Insert, Design, Layout, References, Mailings, Review, View and the contextual tabs), a title bar with Tell me, the File backstage, a status bar, context menus, undo and redo, find and replace, zoom, and Editing and Viewing modes, all in one element.
+- **Print Layout and Draft.** Pagination with line breaking, widow and orphan control, keep rules, columns and table row splitting, page thumbnails and printing. The pagination is this editor's own and approximates Word's.
+- **Document structure.** Styles, lists and multilevel numbering, tables, sections and columns, headers and footers, footnotes and endnotes, fields such as TOC, PAGE and REF, content controls and form fields, pictures, shapes, text boxes, watermarks and page borders.
+- **Review.** Tracked changes (accept, reject, navigate) and a comments pane with replies and resolve.
+- **Charts and SmartArt.** Insert and edit charts (type, legend, data, the Format pane) and SmartArt (nodes, text, layout, styles and colours) with the shared Office pickers and panes.
+- **Careful saving.** An unchanged document saves as its original bytes, supported edits keep the package parts the model does not cover, and an edit that cannot be saved safely is refused instead of silently dropped. See the [preservation guarantee](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/docs/preservation.md).
+- **Collaboration.** `collaboration` shares the document in a room, with presence, over a transport your application provides; your application owns networking, identity, permissions and storage.
+- **Interface languages.** English, French, German, Spanish and Simplified Chinese through `locale`. Document content is never translated.
 
-## Documentation
+## Using it with Svelte
 
-[Framework guide](https://christophervr.github.io/ooxml/docx/frameworks/svelte) |
-[Bindings](https://christophervr.github.io/ooxml/docx/bindings)
+- **Handle.** `bind:this` gives the component's exports: `load(bytes)`, `save()`, `download(fileName?)`, `markClean()`, `openCloudFile(file)`, and the live `element` (the `<docx-editor>`) and `dirty`.
+- **Props and callbacks.** Every prop in [Configuration](#configuration) is a prop of the component. Callbacks are lower-case: `ondocumentchange`, `ondocumenterror`, `ondocumentwarning`, `onpagechange`, `ondirtychange`, `onfilecommand`, `onreadonlychange`, `onribbonaction`, `onribboncustomize`, `onribbonaddin` and `oncollaborationchange`.
+- **Stable objects.** `collaboration`, `customization`, `storage` and `fileProviders` are forwarded when the object changes, so keep them in `$state.raw` or a constant.
+- **The model.** Passing back the model from `ondocumentchange` does not reset the editor; a different model object replaces the document. Never change a model in place.
+- **Read-only sync.** If you mirror `readOnly` from `onreadonlychange(readOnly, detail)`, store `detail.hostReadOnly`, so a viewer role in a shared room never becomes your setting.
+- **Client only.** The editor is created by an action when the component mounts in the browser.
+
+### Your own editor UI
+
+To draw only the controls you need, in your own design system, use the building blocks. `createViewerBuildingBlocks(options)` from `docx-svelte-viewer/runtime` returns canvas props for the `documentCanvas` action and flat toolbar, navigation and status props for the optional components `docx-svelte-viewer/DocumentCanvas`, `/Toolbar`, `/PageNavigation` and `/StatusBar`. The surface is read-only until you pass `canEdit: true`; a read-only surface still allows selection, keyboard navigation and copy. See [Building blocks](https://christophervr.github.io/ooxml/docx/building-blocks).
+
+## Configuration
+
+| Prop                                           | What it does                                                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `documentModel`                                | The document to show. A different model object replaces the document.                                          |
+| `readOnly`                                     | Viewing mode. Default `false`.                                                                                 |
+| `fileName`                                     | Name in the title bar, used by Save and Download. Default `Document1.docx`.                                    |
+| `reviewAuthor`                                 | Author recorded on tracked changes and comments. Default `Author`.                                             |
+| `locale`                                       | Interface language: `en`, `fr`, `de`, `es`, `zh-CN`, or a tag such as `de-DE` that maps to one.                |
+| `theme`, `themeColors`                         | `light`, `dark` or `auto` (default, follows the system), and colour overrides applied as `--dve-*` properties. |
+| `showToolbar`, `hiddenActions`, `ribbonAddIns` | Show the ribbon, hide controls by stable id (`RIBBON_ACTION_IDS`), and add your own tabs after Word's.         |
+| `customization`                                | `capabilities`, `ribbon.hiddenTabs` (the File tab included), extra backstage pages and context menu commands.  |
+| `showThumbnails`, `readAloud`                  | The page thumbnail rail (Print Layout), and Read Aloud options such as `stopOnEdit`.                           |
+| `storage`, `fileProviders`                     | Your storage for File > Save and Open, and cloud places such as OneDrive in File > Open.                       |
+| `collaboration`                                | Share the document in a room while set; `null` leaves.                                                         |
+
+The events are document change, document error, document warning (non-fatal notices), page change, dirty change, read-only change, file command (cancelable, to take a File command over), ribbon action, ribbon customize, ribbon add-in command and collaboration change. Listen to them as lower-case callback props: `ondocumentchange`, `onreadonlychange`, `onribbonaddin` and so on.
+
+The [bindings guide](https://christophervr.github.io/ooxml/docx/bindings) has every prop and event, [theming](https://christophervr.github.io/ooxml/docx/theming) the colour tokens, and [collaboration](https://christophervr.github.io/ooxml/docx/collaboration) the room protocol. For OneDrive, pass a provider from `ooxml-core/embedding/onedrive` with sign-in your application supplies, as the [OneDrive integration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#word-docx) describes; OneDrive storage does not provide Microsoft Office coauthoring or automatic merging of concurrent edits.
+
+## Known limits
+
+This is not Microsoft Word, and it does not claim Word's layout or a lossless round trip for features it does not support. Unsupported content is reported in File > Info and kept on save where the editor can keep it.
+
+- Pagination, line breaking and table AutoFit are the editor's own and can break pages differently from Word.
+- Legacy `.doc` files open their main body text, and only paragraph text edits are saved back to `.doc`.
+- An inserted or edited SmartArt is drawn with an approximate layout until Word lays it out again, and SmartArt in headers, footers and notes is not editable. Charts are drawn from their cached values, and floating charts are not placed on Print Layout pages.
+- Not available yet: Read Mode, Web Layout and Outline views, mail merge data sources, AutoCorrect and AutoFormat as you type, hyphenation, and right-to-left run reordering.
+
+The full list is in the [support roadmap](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/docs/parity-roadmap.md) and the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
+
+## Supported environments
+
+- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least. See [browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md).
+- Node.js 22.3 or newer for builds and tests. The editor itself runs in the browser.
+- API stability: Word is Stable under the [stability policy](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md).
 
 ## Privacy and network use
 
-By default the Word packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only. The `googleFonts` option, or turning on Google Fonts in File > Options > Trust Center (off by default), requests a document's missing fonts from Google Fonts or the endpoint the host sets. Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+By default the editor makes no network request when it opens, renders, edits or saves a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device and the file. Missing fonts are requested from Google Fonts, or a mirror you choose, only when you set The component (`bind:this`)'s `element` gives you the `<docx-editor>` and its `googleFonts` property (for example `{ baseUrl: 'https://fonts.googleapis.com/css2' }`), or when the reader turns on "Download fonts that are not installed or embedded" in File > Options > Trust Center, which is off by default; a value you set locks that toggle. Only the names of public catalogue fonts the document uses and the device lacks are sent, never the file, its text or other font names. Hyperlinks open only when the reader follows them. The editor keeps small preferences on the device in localStorage, including that Trust Center choice (`ooxml.docx.allowFontDownloads`). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
+## Related packages
+
+- The same editor for other frameworks: [`docx-react-viewer`](https://www.npmjs.com/package/docx-react-viewer) (React), [`docx-vue-viewer`](https://www.npmjs.com/package/docx-vue-viewer) (Vue), [`docx-angular-viewer`](https://www.npmjs.com/package/docx-angular-viewer) (Angular), [`docx-solid-viewer`](https://www.npmjs.com/package/docx-solid-viewer) (Solid), [`docx-vanilla-viewer`](https://www.npmjs.com/package/docx-vanilla-viewer) (plain JavaScript).
+- [`docx-core`](https://www.npmjs.com/package/docx-core): the Word model, parser and serializer on its own, for Node and headless use.
+- [`docx-viewer-mcp`](https://www.npmjs.com/package/docx-viewer-mcp): Word tools for AI assistants over MCP.
+- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) and [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui): the Office logic and shared elements this package is built on. The [ooxml repository](https://github.com/ChristopherVR/ooxml#readme) also has Excel, PowerPoint, Visio and OpenTeams editors.
 
 ## License
 
-Apache-2.0.
-
-## OneDrive integration
-
-Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
-sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#word-docx)
-for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
-The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
-separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
-OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/LICENSE). See [NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/NOTICE) for attributions.

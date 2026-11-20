@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const fr: LandingCopy = {
 	hero: {
-		kicker: 'Implémentation précoce · Apache-2.0 · TypeScript',
+		kicker: 'Stable · Apache-2.0 · TypeScript',
 		titleTop: 'Édition .xlsx,',
 		titleAccent: 'prête à intégrer.',
 		sub: 'Un éditeur de tableur dans le navigateur pour React, Vue, Angular, Svelte, Solid et JavaScript vanilla. Un seul modèle de classeur avec un moteur de formules et un seul composant web <xlsx-editor> font le travail ; les adaptateurs de frameworks ne gèrent que le cycle de vie et les événements.',
@@ -68,7 +68,7 @@ export const fr: LandingCopy = {
 	status: {
 		kicker: 'État',
 		title: 'Honnête sur ce qui n’est pas fait.',
-		copy: 'Il s’agit d’une implémentation précoce, pas de la parité avec Microsoft Excel. Les tableaux croisés dynamiques, segments, macros et liaisons externes sont conservés mais ni affichés ni modifiés ; les sparklines sont affichés mais non modifiés ; la bibliothèque de fonctions est vaste mais incomplète ; les fichiers protégés par mot de passe ne sont pas pris en charge. La page des fonctionnalités liste les écarts.',
+		copy: 'Stable signifie une API engagée et une garantie de préservation écrite, pas la parité avec Microsoft Excel. Les tableaux croisés dynamiques, segments, macros et liaisons externes sont conservés mais ni affichés ni modifiés ; les sparklines sont affichés mais non modifiés ; la bibliothèque de fonctions est vaste mais incomplète ; les fichiers protégés par mot de passe ne sont pas pris en charge. La page des fonctionnalités liste les écarts.',
 		link: { text: 'Fonctionnalités et limites', href: '/fr/features' },
 		roadmapTitle: 'Où vit la logique',
 		roadmapCopy:
@@ -191,6 +191,6 @@ export const fr: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'xlsx-viewer · un éditeur de tableur précoce pour le web',
+		bottomRight: 'xlsx-viewer · l’éditeur de tableur pour le web',
 	},
 };

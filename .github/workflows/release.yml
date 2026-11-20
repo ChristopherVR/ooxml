@@ -131,6 +131,14 @@ jobs:
         id: plan
         run: node scripts/release-plan.mjs --write
 
+      # A changelog may carry a hand-written section for the release, headed `- Unreleased` (see
+      # scripts/crafted-changelogs.mjs). Fail now, before installing, building or tagging, when one
+      # names another version or tag than the plan, or a viewer's `## Unreleased` section names a
+      # release the plan does not make.
+      - name: Check the hand-written changelog sections
+        if: steps.plan.outputs.any_changed == 'true'
+        run: node scripts/crafted-changelogs.mjs --check release-plan.json
+
       # A package published by hand (the manual first publish of ooxml-ui) has no tag yet; the
       # `release` job pushes its baseline tag, so it runs even when nothing else changed.
       - name: Look for baseline tags to adopt
@@ -174,7 +182,8 @@ jobs:
       # Prepend the new release section to CHANGELOG.md. Prepend (rather than regeneration) means
       # shipped sections are never rewritten, so old tags can be culled by prune-releases without
       # corrupting changelog history. git-cliff is the version bun.lock pins, run from
-      # node_modules; cliff.toml has no `[remote.github]` block, so it needs no token.
+      # node_modules; cliff.toml has no `[remote.github]` block, so it needs no token. A package
+      # whose changelog already has a hand-written section for this release is skipped.
       - name: Generate the changelog
         if: steps.plan.outputs.any_changed == 'true'
         run: |
@@ -184,10 +193,17 @@ jobs:
           set -f
           cliff=node_modules/.bin/git-cliff
           field() { node -p "require('./release-plan.json').packages['$1']$2"; }
+          crafted=" $(node scripts/crafted-changelogs.mjs --pending release-plan.json) "
           for key in $(node -p "const p=require('./release-plan.json');p.order.filter(k=>p.packages[k].release).join(' ')"); do
             npm=$(field "$key" .npm)
             tag=$(field "$key" .tag)
             changelog=$(field "$key" .changelog)
+            case "$crafted" in
+              *" $key "*)
+                echo "Changelog for $npm -> $tag ($changelog): hand-written, git-cliff skipped"
+                continue
+                ;;
+            esac
             inc=$(node -e "console.log(require('./release-plan.json').packages['$key'].includePaths.map(p => '--include-path ' + p).join(' '))")
             echo "Changelog for $npm -> $tag ($changelog)"
             if [ -f "$changelog" ]; then
@@ -199,19 +215,27 @@ jobs:
 
       # A major release with hand-written notes in .release-notes/<name>/ gets each package's share
       # of them above its git-cliff commit list. The step fails, before anything is tagged, when a
-      # note names an unknown package or a published package has none.
+      # note names an unknown package or a published package has none. A hand-written section
+      # already carries its notes and is left alone.
       - name: Add the release notes to the changelogs
         if: steps.plan.outputs.any_changed == 'true'
         run: node scripts/major-notes.mjs --plan release-plan.json
 
+      # Each hand-written section gets today's date (UTC) in place of `Unreleased`.
+      - name: Date the hand-written changelog sections
+        if: steps.plan.outputs.any_changed == 'true'
+        run: node scripts/crafted-changelogs.mjs --date release-plan.json
+
       # Each viewer's root changelog gets one dated section naming the viewer packages released
       # today, built from the package sections git-cliff just wrote (a second run on the same day
-      # extends that day's section).
+      # extends that day's section). A hand-written `## Unreleased` section naming this run's
+      # releases is dated instead, and the releases it names are left out of the built section.
       - name: Update the viewer changelogs
         if: steps.plan.outputs.any_changed == 'true'
         run: node scripts/viewer-changelogs.mjs --plan release-plan.json
 
-      # The GitHub release body of each package, rendered here because it runs git-cliff too.
+      # The GitHub release body of each package, rendered here because it runs git-cliff too. A
+      # hand-written section is used as it stands (without its marker comment).
       - name: Write the release notes
         if: steps.plan.outputs.any_changed == 'true'
         run: |

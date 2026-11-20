@@ -24,17 +24,25 @@
  * a dated section that documents nothing, once an hour, for as long as the build
  * stayed broken. Seven accumulated in CHANGELOG.md.
  *
- * Two invariants, both cheap:
+ * Three invariants, all cheap:
  *   1. No section anywhere declares an EMPTY release list (`_Releases: _`).
  *   2. Every dated section in the root changelog declares a release list at all.
+ *   3. A hand-written section waiting for its release date (`## [<version>](<tag url>) - Unreleased`
+ *      or, in a viewer root changelog, `## Unreleased`; see crafted-changelogs.mjs) is the top
+ *      section, and its link is the tag of its own version. The release workflow dates only the top
+ *      section, so a pending section anywhere else would be published undated.
  *
  * Usage: node scripts/check-changelog-sections.mjs [file...]
- *   With no arguments it checks CHANGELOG.md and packages/<pkg>/CHANGELOG.md.
+ *   With no arguments it checks every package changelog of the release planner's table, the root
+ *   CHANGELOG.md, packages/<pkg>/CHANGELOG.md and each viewer's root changelog.
  */
 
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { pendingKind, RELEASES_URL } from './crafted-changelogs.mjs';
+import { PACKAGES } from './release-plan.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -87,14 +95,39 @@ export function sectionProblems(section, { requireReleases }) {
 	return problems;
 }
 
+const PENDING_LINK_RE = /^## \[(?<version>[^\]]+)\]\((?<url>[^)\s]*)\)/u;
+
+/** Problems with a pending (`Unreleased`) section that is the `index`th section of its file. */
+export function pendingProblems(section, index) {
+	const kind = pendingKind(section.heading);
+	if (!kind) return [];
+	const problems = [];
+	if (index > 0) {
+		problems.push(
+			'is waiting for its release date but is not the top section; only the top section may be ' +
+				'pending, because the release workflow dates only that one.',
+		);
+	}
+	if (kind === 'package') {
+		const { version, url } = PENDING_LINK_RE.exec(section.heading).groups;
+		const tag = url.startsWith(RELEASES_URL) ? url.slice(RELEASES_URL.length) : '';
+		if (!tag.endsWith(`@${version}`) || tag.length <= version.length + 1) {
+			problems.push(`links ${url}, which is not the tag ${RELEASES_URL}<npm>@${version}.`);
+		}
+	}
+	return problems;
+}
+
 /** Every problem in one changelog file. `requireReleases` applies to the root. */
 export function checkChangelog(text, { requireReleases = false } = {}) {
-	return parseSections(text).flatMap((section) =>
-		sectionProblems(section, { requireReleases }).map((problem) => ({
-			line: section.line,
-			heading: section.heading,
-			problem,
-		})),
+	return parseSections(text).flatMap((section, index) =>
+		[...sectionProblems(section, { requireReleases }), ...pendingProblems(section, index)].map(
+			(problem) => ({
+				line: section.line,
+				heading: section.heading,
+				problem,
+			}),
+		),
 	);
 }
 
@@ -140,6 +173,13 @@ export function changelogFiles(root = ROOT) {
 					files.push(candidate);
 				}
 			}
+		}
+	}
+	// Every published package, wherever it lives (src/core, src/ui, mcp, viewers/pptx/packages/tools).
+	for (const meta of Object.values(PACKAGES)) {
+		const candidate = join(root, meta.dir, 'CHANGELOG.md');
+		if (existsSync(candidate) && !files.includes(candidate)) {
+			files.push(candidate);
 		}
 	}
 	return files;

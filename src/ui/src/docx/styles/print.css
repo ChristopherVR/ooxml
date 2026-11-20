@@ -102,6 +102,19 @@
 	width: 100%;
 	height: 100%;
 }
+/* A text box's lines as the page engine laid them out, clipped to its text rectangle as Word clips
+ * the text that overflows a box; clicks reach the shape. */
+.dve-print-text-box {
+	position: absolute;
+	overflow: hidden;
+	pointer-events: none;
+}
+.dve-print-text-box-text {
+	position: absolute;
+	left: 0;
+	top: 0;
+	transform-origin: 0 0;
+}
 /* A shape's SVG is drawn at the shape's size, at least 1px: a vertical or horizontal line has a
  * zero extent, and stretching the SVG to its box would leave no room to draw it. */
 .dve-print-chart.dve-print-shape > svg {
