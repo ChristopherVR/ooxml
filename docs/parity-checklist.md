@@ -221,24 +221,27 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       characters, BASE pads to at most 255 digits, LOWER keeps capital sharp s. Evidence: the same
       corpus.
 - [x] **P0** A small workbook can no longer hang or crash the editor when it opens: each
-      recalculation has a work budget (matrix products, LAMBDA calls, sorting, scans an array of
-      lookups or criteria repeats), a text budget and an array budget, past which formulas are
-      `#NUM!` (`src/core/xlsx/formula/values.ts`), and the Excel editor reads files and runs the
-      calculation on open in a worker with a ten-second limit
+      formula has a work budget priced from measured cost (matrix products, LAMBDA calls, sorting,
+      pattern matching, scans an array of lookups or criteria repeats; about three seconds), a text
+      budget and an array budget, past which that formula alone is `#NUM!`
+      (`src/core/xlsx/formula/values.ts`); a recalculation stops between formulas, keeping the
+      previous values, at an optional time limit or when its results would hold too much
+      (`recalc-limits.ts`). The Excel editor reads files on the page and runs the calculation on
+      open in a worker with a ten-second limit, receiving only the cells it wrote
       (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
-      `workbook-opener.test.ts`.
+      `calc-results.test.ts`, `workbook-opener.test.ts`.
 - [x] **P1** REGEXTEST, REGEXEXTRACT and REGEXREPLACE run on the engine's own matcher
       (`src/core/xlsx/formula/regex/`), so they accept nested quantifiers such as `(a+)+` as Excel
-      does, and a pattern that would run past the recalculation budget is `#NUM!` instead of
+      does, and a pattern that would run past the formula's work budget is `#NUM!` instead of
       hanging. Syntax is still JavaScript's, not PCRE2's, and scans of a whole 30,000-character text
       are 3 to 10 times slower than the browser's native matcher (under 1.5 ms a call). Evidence:
       `regex/differential.test.ts` (3,000 random patterns against the browser's matcher).
-- [ ] **P2** Engine limits Excel does not have: the work budget makes MMULT of two arrays larger
-      than about 790 by 790 `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700
-      levels) is `#NUM!` where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`); a single
-      formula filled down a large column that scans the whole column each time (a rank-style
-      COUNTIF over 50,000 rows) is not budgeted, so after an edit it can still take long on the
-      page.
+- [ ] **P2** Engine limits Excel does not have: a formula's work budget makes MMULT of two
+      arrays larger than about 1,400 by 1,400, and MDETERM or MINVERSE larger than about 840 by
+      840, `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700 levels) is `#NUM!`
+      where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`). Only the calculation on
+      open has a time limit: a recalculation after an edit of a workbook with many slow formulas
+      (each within its budget) still runs to the end on the page.
 - [ ] **P2** Data Sort, the AutoFilter value list and Find still compare text with the browser's
       accent-insensitive collation (`src/core/xlsx/edit/sort-keys.ts`, `filter-menu.ts`), not the
       linguistic rule formulas use; Excel's behaviour there has not been measured.
@@ -315,7 +318,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.
 - [x] **P2** The grid exposes the shown window to assistive technology as rows of column headers,
-      row headers and grid cells with sheet positions (`grid/grid-a11y.ts`, the window and the
+      row headers and grid cells whose row and column indices are the sheet's own, as Excel reports
+      them (B2 is row 2, column 2; the headers take no index) (`grid/grid-a11y.ts`, the window and the
       cell description in `src/core/xlsx/layout/accessibility.ts`); the active cell is the focus
       sink's active descendant, and its label names the table column, formula and comment and
       follows edits made without moving the selection. Pictures are named by their alt text.
