@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
-	import type { SessionLink } from '../../shared/collaboration-link';
+	import { invitationFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
+	import type { PageInvitation } from '../../shared/collaboration-link';
 	import { demoFileProviders } from '../../shared/demo-file-providers';
 	/**
 	 * Demo shell for `pptx-svelte-viewer`, mirroring demos/demo-vue/src/App.vue:
@@ -77,29 +77,31 @@
 
 	// ── Collaboration (serverless WebRTC P2P) ────────────────────────────
 	// A `?room=<id>&transport=webrtc#key=<secret>` link auto-joins that room on
-	// load (a peer with no local deck yet still needs the viewer mounted to
-	// receive one). Once a deck is open, the viewer's own toolbar
-	// Share/Broadcast buttons (built into `pptx-svelte-viewer`) start a fresh
-	// session directly; `onCollabStart` below shows the resulting invitation in
-	// the address bar so the session survives a refresh and can be copied from
-	// there, mirroring `joinRoom`.
+	// load, and a `?broadcast=` link joins that broadcast's audience (a peer with
+	// no local deck yet still needs the viewer mounted to receive one). Once a
+	// deck is open, the viewer's own toolbar Share/Broadcast buttons (built into
+	// `pptx-svelte-viewer`) start a fresh session directly; `onCollabStart` below
+	// shows the resulting invitation in the address bar so the session survives a
+	// refresh and can be copied from there, mirroring `joinInvitation`.
 	const autoName = resolveAutoName();
 	const autoColor = randomUserColor();
 	let collaborationConfig = $state<CollaborationConfig | null>(null);
 
-	function joinRoom(link: SessionLink): void {
-		collaborationConfig = {
+	function joinInvitation({ link, role, sessionIntent }: PageInvitation): void {
+		const config: CollaborationConfig = {
 			...link,
 			userName: autoName,
 			userColor: autoColor,
-			role: 'collaborator',
+			role: role ?? 'collaborator',
+			sessionIntent,
 		};
-		showSession(link);
+		collaborationConfig = config;
+		showSession(config);
 	}
 
-	function showSession(link: SessionLink): void {
-		showSessionInAddressBar(link);
-		document.title = `Collaborating: ${link.roomId} - PPTX Viewer`;
+	function showSession(config: CollaborationConfig): void {
+		showSessionInAddressBar(config);
+		document.title = `Collaborating: ${config.roomId} - PPTX Viewer`;
 	}
 
 	function onCollabStart(config: CollaborationConfig): void {
@@ -111,8 +113,9 @@
 		showSessionInAddressBar(null);
 	}
 
-	const roomLink = sessionFromPage('room', '');
-	const urlRoom = roomLink?.transport === 'webrtc' ? roomLink : null;
+	// This demo has no relay server: it joins peer-to-peer invitations only.
+	const invitation = invitationFromPage('');
+	const urlInvitation = invitation?.link.transport === 'webrtc' ? invitation : null;
 
 	// Prefilled values for the viewer's built-in Share dialog form.
 	const shareDefaults = { roomId: resolveAutoRoomId(), userName: autoName };
@@ -247,8 +250,8 @@
 		window.history.replaceState(null, '', url.toString());
 	}
 
-	if (urlRoom) {
-		joinRoom(urlRoom);
+	if (urlInvitation) {
+		joinInvitation(urlInvitation);
 		void (urlSample ? loadSampleDeck() : newPresentation());
 	} else if (!audienceSession) {
 		// The audience branch above owns its tab; everything else reopens this

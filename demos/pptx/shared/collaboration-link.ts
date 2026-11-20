@@ -49,6 +49,33 @@ export function sessionFromPage(
 	};
 }
 
+/** What the page address asks this tab to join, with the role and intent it joins under. */
+export interface PageInvitation {
+	link: SessionLink;
+	/** A `?broadcast=` link joins the audience, which follows the presenter's slides. */
+	role?: 'viewer';
+	/**
+	 * A page that brings its own deck (`?sample=1`) starts the session; any other link joins one,
+	 * so the placeholder deck it opens with never seeds the room ahead of the sharer's deck.
+	 */
+	sessionIntent: 'create' | 'join';
+}
+
+/**
+ * The session the page address invites this tab to, or null. A `?broadcast=` link wins over a
+ * `?room=` link (a crafted address naming both joins the one-way, read-only session).
+ */
+export function invitationFromPage(fallbackServerUrl: string): PageInvitation | null {
+	const sessionIntent =
+		new URLSearchParams(window.location.search).get('sample') === '1' ? 'create' : 'join';
+	const broadcast = sessionFromPage('broadcast', fallbackServerUrl);
+	if (broadcast) {
+		return { link: broadcast, role: 'viewer', sessionIntent };
+	}
+	const room = sessionFromPage('room', fallbackServerUrl);
+	return room ? { link: room, sessionIntent } : null;
+}
+
 /** A session without a server is peer-to-peer in PowerPoint; it has a link only with its secret. */
 function shareTarget(config: SessionLink): ShareTarget | null {
 	if (config.transport !== 'webrtc' && config.serverUrl.trim()) {
@@ -68,11 +95,15 @@ function shareTarget(config: SessionLink): ShareTarget | null {
 
 /**
  * Show `config`'s invitation under `param` in the address bar (or remove it, for `null`), keeping
- * the page's other parameters and any fragment that is not a session secret.
+ * the page's other parameters and any fragment that is not a session secret. A broadcast (the
+ * presenter's `owner` session, or the audience's `viewer` one) shows under `?broadcast=`, so the
+ * address a presenter copies invites an audience.
  */
 export function showSessionInAddressBar(
-	config: SessionLink | null,
-	param: ShareLinkParam = 'room',
+	config: (SessionLink & { role?: string }) | null,
+	param: ShareLinkParam = config?.role === 'owner' || config?.role === 'viewer'
+		? 'broadcast'
+		: 'room',
 ): void {
 	const url = new URL(window.location.href);
 	for (const key of LINK_PARAMS) {
