@@ -15,6 +15,7 @@ import { appendFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pushBase } from './ci-base.mjs';
+import { repositoryGraph } from './ci-graph.mjs';
 import { SHIPPING_AREA, gitReader, refineManifests } from './ci-manifests.mjs';
 
 export const MAX_SHARDS = 6;
@@ -125,7 +126,7 @@ export const VIEWERS = {
 			browser: ['bun run build:packages', 'node scripts/test-packages.mjs --workspace-runtime'],
 		},
 		// `test:browser` chains three commands, so `--shard` cannot be passed through it:
-		// `browserShardCommands` shards the first and leaves the other two on shard 1.
+		// `browserShardCommands` shards the first and gives the other two a shard each.
 		browserChain: {
 			sharded: 'bun x playwright test',
 			rest: [
@@ -160,9 +161,11 @@ const ALL_VIEWERS = Object.keys(VIEWERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
-	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
+	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests|graph|lockfile)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
+/** Changelogs, which the release flow writes: only the changelog check in the `scripts` job reads them. */
+const CHANGELOG = /(^|\/)CHANGELOG\.md$/;
 /** Top-level files of a viewer that change nothing CI checks (its docs are checked by its own tests). */
 const VIEWER_INERT = /^viewers\/[^/]+\/([^/]+\.md|LICENSE|NOTICE|\.gitignore|\.gitattributes)$/;
 /**
@@ -185,6 +188,18 @@ const AREA_VIEWERS = {
 /** Which in-repo viewers a change under `src/core/<area>/` can break. Shared areas can break all of them. */
 export function viewersOfArea(area) {
 	return AREA_VIEWERS[area] ?? ALL_VIEWERS;
+}
+
+/**
+ * What the import graph (ci-graph.mjs) says a shared source file reaches: the owner keys of viewers
+ * (`docx`, `docx:mcp`, `pptx`, `pptx:react`, ...), or undefined when there is no graph or it cannot
+ * say (not a module, or no viewer imports it), and the area rules decide instead.
+ */
+export function graphReach(reach, file) {
+	const keys = reach?.(file);
+	if (!keys) return undefined;
+	const viewers = [...keys].filter((key) => ALL_VIEWERS.includes(key.split(':')[0]));
+	return viewers.length > 0 ? new Set(viewers) : undefined;
 }
 
 /** Shard indexes for `count` test files: none for zero, one per `FILES_PER_SHARD`, at most six. */
@@ -220,12 +235,15 @@ export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
  */
 const PPTX_REFERENCE_PROJECT = 'react';
 /**
- * Shards per Playwright project for a full run of the suite. React also runs 34 cross-binding
- * parity specs that drive all five demos, so at ten shards each react shard took 20 to 25
- * minutes while the other four took about 12. Fourteen react shards bring it to roughly the
- * others' length; seven each is enough for the rest.
+ * Shards per Playwright project for a full run of the suite. With the timing-balanced shards a
+ * full run's suite work was, per project, react 50, vue 32, angular 37, vanilla 40 and svelte 31
+ * minutes (52 runs, November 2026), and each job spends about 1.4 minutes starting up. At 14 and
+ * 7 shards a job ran only 3.5 to 5.7 minutes of tests, so a sixth of the suite's runner time was
+ * start-up while the 20-runner cap bounded the run. These counts keep shards near six minutes,
+ * well inside the 35-minute job limit; the scheduler model (C1 evidence, compare2.mjs) puts a full
+ * run 0.8 minutes and 29 runner-minutes lower.
  */
-export const PPTX_E2E_SHARDS = { react: 14, vue: 7, angular: 7, vanilla: 7, svelte: 7 };
+export const PPTX_E2E_SHARDS = { react: 8, vue: 4, angular: 5, vanilla: 5, svelte: 4 };
 /** Shard ceiling when only changed specs run. */
 const PPTX_SPEC_SHARDS_MAX = 10;
 /** Changed spec files one shard takes when only specs changed. */
@@ -259,7 +277,7 @@ const isTestFile = (path) =>
  * to spec files alone runs just those specs. Configuration, fixtures and support code the whole
  * suite depends on run all of it.
  */
-export function pptxPlan(files, { everything, reaches, reference = false }) {
+export function pptxPlan(files, { everything, reaches, reference = false, reach }) {
 	const none = {
 		run: false,
 		tests: [],
@@ -283,8 +301,23 @@ export function pptxPlan(files, { everything, reaches, reference = false }) {
 			// run. Their own tests, the other formats' core areas and the other products' editors in
 			// ooxml-ui change nothing the viewer runs (as in `viewerGroups`), also when another file
 			// reaches the viewer.
+			if (isTestFile(file)) continue;
+			// The import graph names the packages whose tests import the file, and whether the demos
+			// and browser tests (`pptx`) do.
+			const keys = graphReach(reach, file);
+			if (keys) {
+				for (const key of keys) {
+					const leg = /^pptx:(.+)$/.exec(key)?.[1]?.replace(/^react-compat$/, 'react18');
+					if (leg && PPTX_DEPENDS_ON[leg])
+						for (const dependent of pptxDependents(leg)) legs.add(dependent);
+				}
+				if (keys.has('pptx')) {
+					projects.add(PPTX_REFERENCE_PROJECT);
+					packaged = true;
+				}
+				continue;
+			}
 			if (
-				isTestFile(file) ||
 				(file.startsWith('src/core/') && !viewersOfArea(file.split('/')[2]).includes('pptx')) ||
 				(UI_PRODUCT.test(file) && !file.startsWith('src/ui/src/pptx/'))
 			)
@@ -382,10 +415,11 @@ const A11Y_REACH =
 
 /**
  * What the byte budgets measure (scripts/perf-budgets.mjs): the built core and ooxml-ui, and the
- * suite site, its shell and the bundle with the PowerPoint viewer sources it compiles in.
+ * suite site, its shell and the bundle with the PowerPoint viewer sources it compiles in. The
+ * screens load in the Playwright the accessibility gates install (`e2e/a11y/package.json`).
  */
 const BUDGET_REACH =
-	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
+	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|e2e\/a11y\/package\.json$|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
 
 /** The core's writers: what a save writes, which the export round trip (`export.spec.ts`) reads. */
 const CORE_WRITER = /^src\/core\/.*(writ|serializ|save)/i;
@@ -434,6 +468,20 @@ export function baselineBase(refs, commitOf) {
 
 /** The product editors in `src/ui/src/<product>/`; each belongs to one viewer only. */
 const UI_PRODUCT = /^src\/ui\/src\/(docx|xlsx|visio|teams|pptx)\//;
+/**
+ * Adds the groups of viewer `name` that the graph's `keys` reach: its source groups when its
+ * packages, demos or browser tests import the file, its MCP check when its server does. Returns
+ * 'source' when the source groups were added, 'graph' when the graph answered without them, and
+ * false when it has no answer.
+ */
+function graphGroups(name, keys, add) {
+	if (!keys) return false;
+	if (keys.has(`${name}:mcp`)) add('mcp');
+	if (!keys.has(name)) return 'graph';
+	add(...SOURCE_GROUPS);
+	return 'source';
+}
+
 /** The groups a change to a viewer's (or its engine's) source reaches. */
 const SOURCE_GROUPS = ['types', 'unit', 'browser', 'packages'];
 
@@ -441,7 +489,7 @@ const SOURCE_GROUPS = ['types', 'unit', 'browser', 'packages'];
  * The check groups of viewer `name` (not pptx, which has its own jobs) that a change reaches, and
  * the spec files to narrow its browser tests to when only specs reached them.
  */
-export function viewerGroups(name, files, { everything }) {
+export function viewerGroups(name, files, { everything, reach }) {
 	const groups = new Set();
 	const specs = new Set();
 	let wholeBrowserSuite = false;
@@ -453,6 +501,11 @@ export function viewerGroups(name, files, { everything }) {
 		if (file.startsWith('src/core/')) {
 			// The core's own tests change nothing a viewer runs.
 			if (isTestFile(file)) continue;
+			const graphed = graphGroups(name, graphReach(reach, file), add);
+			if (graphed) {
+				wholeBrowserSuite ||= graphed === 'source';
+				continue;
+			}
 			const area = file.split('/')[2];
 			if (!viewersOfArea(area).includes(name)) continue;
 			add(...SOURCE_GROUPS);
@@ -462,6 +515,11 @@ export function viewerGroups(name, files, { everything }) {
 		}
 		if (file.startsWith('src/ui/')) {
 			if (isTestFile(file)) continue;
+			const graphed = graphGroups(name, graphReach(reach, file), add);
+			if (graphed) {
+				wholeBrowserSuite ||= graphed === 'source';
+				continue;
+			}
 			// A product editor belongs to its own viewer; everything else in ooxml-ui is shared.
 			const product = UI_PRODUCT.exec(file)?.[1];
 			if (product && product !== name) continue;
@@ -513,11 +571,13 @@ export function viewerGroups(name, files, { everything }) {
 }
 
 /**
- * Playwright shards per viewer for a whole-suite run, from the measured job times (visio 19.5
- * minutes, docx 15, xlsx 14, teams 6, browser group included). A run narrowed to changed specs
- * is one shard.
+ * Playwright shards per viewer for a whole-suite run. At two shards (CI, November 2026, about 55
+ * runs each) the jobs took 10 to 11 minutes for docx, 8 to 11 for xlsx and 10 to 14.5 for visio,
+ * the longest job of any run: on a run that reaches only these viewers they were the critical
+ * path, while a third shard costs about a minute of runner time. Teams takes 4.6 minutes in one.
+ * A run narrowed to changed specs is one shard.
  */
-export const VIEWER_BROWSER_SHARDS = { docx: 2, xlsx: 2, visio: 2, teams: 1 };
+export const VIEWER_BROWSER_SHARDS = { docx: 3, xlsx: 3, visio: 3, teams: 1 };
 
 /** The commands of a viewer's browser shard `shard` of `total`, and its unsharded form. */
 function browserShardCommands(viewer, specs, shard, total) {
@@ -525,11 +585,10 @@ function browserShardCommands(viewer, specs, shard, total) {
 	const narrowed = specs.size > 0 && viewer.specFilter ? ` ${[...specs].sort().join(' ')}` : '';
 	const flag = total > 1 ? ` --shard=${shard}/${total}` : '';
 	if (viewer.browserChain) {
+		// The chained runs go one to a shard from the first, each shard with what they need first.
 		const { sharded, rest } = viewer.browserChain;
-		return {
-			before: shard === 1 ? before : [],
-			test: [`${sharded}${flag}`, ...(shard === 1 ? rest : [])],
-		};
+		const mine = rest.filter((_, i) => (i % total) + 1 === shard);
+		return { before: mine.length > 0 ? before : [], test: [`${sharded}${flag}`, ...mine] };
 	}
 	return {
 		before,
@@ -575,10 +634,12 @@ function verifyCommands(name, { groups }) {
  * `testFiles` is the number of test files `vitest --changed` selected, or undefined when it has not
  * been counted (the planner then reports a placeholder and the workflow counts).
  */
-export function plan(changed, { full = false, testFiles, reference = false } = {}) {
+export function plan(changed, { full = false, testFiles, reference = false, reach } = {}) {
 	const files = changed.filter(Boolean);
 	const everything = full || files.some((file) => EVERYTHING.test(file));
-	const live = files.filter((file) => !INERT.test(file) && !VIEWER_INERT.test(file));
+	const live = files.filter(
+		(file) => !INERT.test(file) && !VIEWER_INERT.test(file) && !CHANGELOG.test(file),
+	);
 	// These shared runtime scripts are imported by viewer configs. Follow those edges just as
 	// if the importing config changed; script-only checks would never execute their browser path.
 	if (live.some((file) => /^scripts\/browser-performance\.(mjs|d\.mts)$/.test(file)))
@@ -595,7 +656,9 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
-	const scripts = live.some((file) => /^(scripts|\.github|site)\//.test(file));
+	const scripts =
+		files.some((file) => CHANGELOG.test(file)) ||
+		live.some((file) => /^(scripts|\.github|site)\//.test(file));
 	const mcp = live.some(
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);
@@ -608,7 +671,7 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	// UI, a core area it reads (not the core's tests), its product editor in ooxml-ui, or everything.
 	const viewerKeys = ALL_VIEWERS.filter((key) => !VIEWERS[key].ownJobs);
 	const reached = Object.fromEntries(
-		viewerKeys.map((key) => [key, viewerGroups(key, live, { everything })]),
+		viewerKeys.map((key) => [key, viewerGroups(key, live, { everything, reach })]),
 	);
 	const viewerList = viewerKeys
 		.map((key) => ({ ...VIEWERS[key], verify: verifyCommands(key, reached[key]) }))
@@ -618,14 +681,18 @@ export function plan(changed, { full = false, testFiles, reference = false } = {
 	// pptx is reached by its own files, the core areas it reads and the shared (non-product) UI.
 	const pptxReached =
 		everything ||
-		live.some(
-			(file) =>
+		live.some((file) => {
+			const shared = /^src\/(core|ui)\//.test(file);
+			const keys = shared && !isTestFile(file) ? graphReach(reach, file) : undefined;
+			if (keys) return [...keys].some((key) => key.split(':')[0] === 'pptx');
+			return (
 				viewerOfFile(file) === 'pptx' ||
 				file.startsWith('src/ui/src/pptx/') ||
 				(file.startsWith('src/ui/') && !UI_PRODUCT.test(file)) ||
-				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx')),
-		);
-	const pptx = pptxPlan(live, { everything, reaches: pptxReached, reference });
+				(file.startsWith('src/core/') && viewersOfArea(file.split('/')[2]).includes('pptx'))
+			);
+		});
+	const pptx = pptxPlan(live, { everything, reaches: pptxReached, reference, reach });
 	const a11y = a11yPlan(live, { everything, pptxReached });
 	// The pptx typecheck covers the pptx area and the shared areas it compiles against.
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
@@ -776,7 +843,9 @@ async function main() {
 	const full = changed === undefined;
 	// A configuration change on a push or pull request needs one Playwright project, not five.
 	const reference = !full && !deps && (event === 'push' || event === 'pull_request');
-	let result = plan(changed ?? [], { full, reference });
+	// Which viewers a shared source change reaches, from the import graph of this checkout.
+	const reach = full ? undefined : repositoryGraph();
+	let result = plan(changed ?? [], { full, reference, reach });
 	if (!result.full && result.test.run) {
 		const count = countTestFiles(base);
 		result = { ...result, test: { ...result.test, shards: shardsFor(count, false), files: count } };

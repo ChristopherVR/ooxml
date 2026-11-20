@@ -1,9 +1,11 @@
-// What a change to `bun.lock` or `src/core/package.json` really reaches. The planner used to run
-// everything for either file; most of those changes are inert (a version bump), only ship a new
-// `exports` entry, or only move one workspace's dependency ranges. Every pure function here takes
-// strings, so the decisions are testable without git. Anything that cannot be classified is left
-// as the original file, which the planner treats as "run everything".
+// What a change to `bun.lock` or a `package.json` really reaches. The planner used to run
+// everything for the lock and the root and core manifests; most of those changes are inert (a
+// release bump), only ship a new `exports` entry, or only move one workspace's dependency
+// ranges. Every pure function here takes strings, so the decisions are testable without git.
+// Anything that cannot be classified is left as the original file, which the planner treats as
+// "run everything".
 import { execFileSync } from 'node:child_process';
+import { workspacesReaching } from './ci-lockfile.mjs';
 
 /** Path the planner treats as a change to the core's shipped code only (build, package checks, tests). */
 export const CORE_SHIPPING = 'src/core/package.json#shipping';
@@ -24,8 +26,16 @@ const DEPENDENCY_FIELDS = new Set([
 	'workspaces',
 	'packageManager',
 ]);
+/** The fields that hold dependency ranges, by package name. */
+const RANGE_FIELDS = new Set([
+	'dependencies',
+	'devDependencies',
+	'peerDependencies',
+	'optionalDependencies',
+]);
 /** Workspace folders the planner knows how to place (a viewer, a demo, a browser test package, the UI). */
 const PLACEABLE_WORKSPACE = /^((viewers|demos|e2e)\/[^/]+(\/|$)|src\/ui$)/;
+const MANIFEST = /(^|\/)package\.json$/;
 
 /** Parses a JSONC-ish lockfile: trailing commas (outside strings) are removed. Throws on bad input. */
 export function parseLock(text) {
@@ -61,9 +71,39 @@ function canonical(value) {
 }
 const same = (a, b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 
+/** The names of a lock's workspace packages. */
+function workspaceNames(...locks) {
+	const names = new Set();
+	for (const lock of locks)
+		for (const entry of Object.values(lock?.workspaces ?? {}))
+			if (typeof entry?.name === 'string') names.add(entry.name);
+	return names;
+}
+
+const withoutSiblings = (ranges, siblings) =>
+	Object.fromEntries(Object.entries(ranges ?? {}).filter(([name]) => !siblings.has(name)));
+
 /**
- * Classifies a lockfile change. Returns `{ workspaces }` (the changed workspace paths, only when
- * every one can be placed) or `{ everything: true }`.
+ * The fields of a manifest (or a lock's workspace entry) that changed, leaving out what the release
+ * flow rewrites on every bump: the `version` and the ranges on other workspace packages. Neither
+ * changes what is installed (a range on a workspace package links the local copy; one the local
+ * version stops satisfying moves the lock's resolved packages, which `classifyLock` rejects, and a
+ * stale lock fails every job's frozen install), so a release bump plans as no change.
+ */
+export function manifestChanges(a, b, siblings = new Set()) {
+	return [...new Set([...Object.keys(a), ...Object.keys(b)])].filter((key) =>
+		key === 'version'
+			? false
+			: RANGE_FIELDS.has(key)
+				? !same(withoutSiblings(a[key], siblings), withoutSiblings(b[key], siblings))
+				: !same(a[key], b[key]),
+	);
+}
+
+/**
+ * Classifies a lockfile change. Returns `{ workspaces, resolved }` (the workspace paths whose
+ * manifest entry or dependency tree changed, only when every one can be placed; `resolved` when
+ * installed packages moved) or `{ everything: true }`.
  */
 export function classifyLock(before, after) {
 	const bail = { everything: true };
@@ -76,40 +116,45 @@ export function classifyLock(before, after) {
 	} catch {
 		return bail;
 	}
-	// The resolved versions (`packages`), the lockfile version, overrides and the rest.
+	// The lockfile version, overrides and the rest reach every install.
 	for (const key of new Set([...Object.keys(a), ...Object.keys(b)]))
-		if (key !== 'workspaces' && !same(a[key], b[key])) return bail;
+		if (key !== 'workspaces' && key !== 'packages' && !same(a[key], b[key])) return bail;
+	// A resolved package that moved reaches the workspaces that install it.
+	const resolved = !same(a.packages, b.packages);
+	const installing = resolved ? workspacesReaching(a, b) : [];
+	if (!installing) return bail;
 	const wa = a.workspaces ?? {};
 	const wb = b.workspaces ?? {};
+	const siblings = workspaceNames(a, b);
 	const changed = [...new Set([...Object.keys(wa), ...Object.keys(wb)])].filter(
-		(key) => !same(wa[key], wb[key]),
+		(key) => manifestChanges(wa[key] ?? {}, wb[key] ?? {}, siblings).length > 0,
 	);
-	if (changed.some((path) => !PLACEABLE_WORKSPACE.test(path))) return bail;
-	return { workspaces: changed.sort() };
+	const workspaces = [...new Set([...changed, ...installing])].sort();
+	if (workspaces.some((path) => !PLACEABLE_WORKSPACE.test(path))) return bail;
+	return { workspaces, resolved };
 }
 
-/** Classifies a change to `src/core/package.json`: `inert`, `shipping` or `everything` (and whether `deps`). */
-export function classifyCoreManifest(before, after) {
-	const bail = { kind: 'everything', deps: true };
-	if (before === undefined || after === undefined) return bail;
-	let a;
-	let b;
+const parseJson = (text) => {
 	try {
-		a = JSON.parse(before);
-		b = JSON.parse(after);
+		return text === undefined ? undefined : JSON.parse(text);
 	} catch {
-		return bail;
+		return undefined;
 	}
-	const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].filter(
-		(key) => key !== 'version' && !same(a[key], b[key]),
-	);
+};
+
+/** Classifies a change to `src/core/package.json`: `inert`, `shipping` or `everything` (and whether `deps`). */
+export function classifyCoreManifest(before, after, siblings = new Set()) {
+	const a = parseJson(before);
+	const b = parseJson(after);
+	if (!a || !b) return { kind: 'everything', deps: true };
+	const keys = manifestChanges(a, b, siblings);
 	if (keys.length === 0) return { kind: 'inert', deps: false };
 	if (keys.every((key) => SHIPPING_FIELDS.has(key))) return { kind: 'shipping', deps: false };
 	return { kind: 'everything', deps: keys.some((key) => DEPENDENCY_FIELDS.has(key)) };
 }
 
 /**
- * Replaces `bun.lock` and `src/core/package.json` in a changed-file list by what they reach.
+ * Replaces `bun.lock` and the manifests in a changed-file list by what they reach.
  * `read(path, side)` returns the file's text on the base side or the head side (undefined when
  * unreadable). Returns the new list and `deps`: true when a real dependency change is involved
  * (the resolved versions moved, or the root or core dependency fields did).
@@ -117,22 +162,45 @@ export function classifyCoreManifest(before, after) {
 export function refineManifests(files, read) {
 	const out = new Set(files);
 	let deps = false;
+	const lockOn = (side) => {
+		try {
+			return parseLock(read(LOCK, side) ?? '');
+		} catch {
+			return undefined;
+		}
+	};
+	const siblings = files.some((file) => MANIFEST.test(file))
+		? workspaceNames(lockOn('base'), lockOn('head'))
+		: new Set();
+	// Every other manifest: a release bump alone (version, workspace ranges) reaches nothing. The root
+	// one is a dependency change only when its dependency fields move; its scripts are configuration.
+	for (const file of files) {
+		if (!MANIFEST.test(file) || file === CORE_MANIFEST) continue;
+		const a = parseJson(read(file, 'base'));
+		const b = parseJson(read(file, 'head'));
+		const keys = a && b ? manifestChanges(a, b, siblings) : undefined;
+		if (keys?.length === 0) out.delete(file);
+		else if (file === 'package.json' && (!keys || keys.some((key) => DEPENDENCY_FIELDS.has(key))))
+			deps = true;
+	}
 	if (out.has(LOCK)) {
 		const result = classifyLock(read(LOCK, 'base'), read(LOCK, 'head'));
-		if (result.everything) deps = true;
-		else {
+		if (result.everything || result.resolved) deps = true;
+		if (!result.everything) {
 			out.delete(LOCK);
 			for (const workspace of result.workspaces) out.add(`${workspace}/package.json`);
 		}
 	}
 	if (out.has(CORE_MANIFEST)) {
-		const result = classifyCoreManifest(read(CORE_MANIFEST, 'base'), read(CORE_MANIFEST, 'head'));
+		const result = classifyCoreManifest(
+			read(CORE_MANIFEST, 'base'),
+			read(CORE_MANIFEST, 'head'),
+			siblings,
+		);
 		if (result.kind !== 'everything') out.delete(CORE_MANIFEST);
 		if (result.kind === 'shipping') out.add(CORE_SHIPPING);
 		if (result.deps) deps = true;
 	}
-	// The root manifest is not classified: treat a change to it as a dependency change.
-	if (out.has('package.json')) deps = true;
 	return { files: [...out], deps };
 }
 
