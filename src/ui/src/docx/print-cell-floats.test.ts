@@ -7,6 +7,7 @@ import { loadDocx } from 'ooxml-core/docx';
 import { createFakeMeasurer, layoutDocumentModel } from 'ooxml-core/docx/layout';
 import {
 	CHART_PARTS,
+	cellFloatCases,
 	cellFloatDemo,
 	cellFloatPackage,
 } from '../../../core/docx/__fixtures__/cell-floats/cases';
@@ -14,15 +15,14 @@ import { renderPrintLayout } from './print-layout';
 
 const px = (value: string) => Number.parseFloat(value) || 0;
 
-async function demo() {
+async function demo(entry = cellFloatDemo()) {
 	const chart = await JSZip.loadAsync(
 		readFileSync(join(process.cwd(), '../core/docx/__fixtures__/chart.docx')),
 	);
 	const parts: Record<string, string> = {};
 	for (const part of CHART_PARTS) parts[part] = await chart.file(part)!.async('string');
 	const zip = new JSZip();
-	for (const [path, xml] of Object.entries(cellFloatPackage(cellFloatDemo(), parts)))
-		zip.file(path, xml);
+	for (const [path, xml] of Object.entries(cellFloatPackage(entry, parts))) zip.file(path, xml);
 	const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
 	const result = layoutDocumentModel(model, createFakeMeasurer());
 	return { model, result, ...renderPrintLayout(result, undefined, {}) };
@@ -92,5 +92,17 @@ describe('Print Layout floating objects in table cells', () => {
 			expect(contentLeft + line.fragments[0]!.xPx).toBeGreaterThanOrEqual(
 				square.xPx + square.widthPx + 12 - 0.5,
 			);
+	});
+
+	it('draws a text box in a cell with the lines the page engine broke, clipped to its text rectangle', async () => {
+		const { element, renderAll, result } = await demo(cellFloatCases()['textbox-cell']!);
+		renderAll();
+		const float = element.querySelector<HTMLElement>('.dve-print-page > .dve-print-float')!;
+		expect(result.pages[0]!.floats![0]!.inCell).toBe(true);
+		const box = float.querySelector<HTMLElement>('.dve-print-text-box')!;
+		const layout = result.pages[0]!.floats![0]!.textBoxLayout!;
+		expect(px(box.style.height)).toBeCloseTo(layout.frame.heightPx, 3);
+		expect(box.querySelectorAll('.dve-print-line').length).toBeGreaterThan(1);
+		expect(box.textContent).toContain('alpha beta');
 	});
 });

@@ -220,3 +220,42 @@ describe('floating charts against Word 16', () => {
 		expect(Math.min(...lineTops.filter((y) => y >= bottom - 1)) - below).toBeLessThanOrEqual(1.5);
 	});
 });
+
+describe('text boxes in table cells against Word 16', () => {
+	it('lays a text box in a cell out in the cell, its lines broken by the page engine as Word breaks them', async () => {
+		const word = recorded.cases['textbox-cell']!;
+		const expected = word.objects[0]!;
+		const { float, rowBottom } = await layOut('textbox-cell');
+		expect(float?.inCell).toBe(true);
+		expect(Math.abs(float!.x - expected.x)).toBeLessThanOrEqual(1);
+		expect(Math.abs(float!.y - expected.y)).toBeLessThanOrEqual(1);
+		expect(Math.abs(rowBottom! - word.rules[1]!)).toBeLessThanOrEqual(1);
+		// Word's lines inside the box, by their tops; the line cut by the box's bottom is clipped.
+		const bottom = expected.y + expected.height;
+		const inside = new Map<number, string[]>();
+		for (const [text, x, y] of word.words)
+			if (x >= expected.x && x < expected.x + expected.width && y >= expected.y && y < bottom)
+				inside.set(y, [...(inside.get(y) ?? []), text]);
+		const wordLines = [...inside]
+			.sort((a, b) => a[0] - b[0])
+			.map(([, texts]) => texts.join(' '))
+			.slice(0, 4);
+		const layout = float!.textBoxLayout!;
+		const engineLines = layout.blocks.flatMap((block) =>
+			(block as LayoutParagraphBox).lines.map((line) =>
+				line.fragments
+					.map((fragment) => fragment.text)
+					.join('')
+					.trim(),
+			),
+		);
+		expect(engineLines.slice(0, 4)).toEqual(wordLines);
+		// More lines than the box shows: the rest is clipped at the text rectangle.
+		const lastBottom = Math.max(
+			...layout.blocks.flatMap((block) =>
+				(block as LayoutParagraphBox).lines.map((line) => block.yPx + line.yPx + line.heightPx),
+			),
+		);
+		expect(lastBottom).toBeGreaterThan(layout.frame.heightPx);
+	});
+});

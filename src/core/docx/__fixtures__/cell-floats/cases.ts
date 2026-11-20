@@ -54,6 +54,8 @@ interface AnchorOptions {
 	color?: string;
 	/** The second chart part (the demonstration has two charts). */
 	secondChart?: boolean;
+	/** A text box (`txBox="1"`) holding this text in one paragraph. */
+	text?: string;
 }
 
 function anchor(
@@ -68,7 +70,7 @@ function anchor(
 	const cy = emu(options.heightPt ?? 36);
 	const graphic = options.chart
 		? `<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"><c:chart r:id="${options.secondChart ? 'rIdChart2' : 'rIdChart'}"/></a:graphicData></a:graphic>`
-		: `<a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp><wps:cNvSpPr/><wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${options.color ?? 'FF0000'}"/></a:solidFill><a:ln><a:noFill/></a:ln></wps:spPr><wps:bodyPr/></wps:wsp></a:graphicData></a:graphic>`;
+		: `<a:graphic><a:graphicData uri="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"><wps:wsp><wps:cNvSpPr${options.text ? ' txBox="1"' : ''}/><wps:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${options.color ?? 'FF0000'}"/></a:solidFill><a:ln><a:noFill/></a:ln></wps:spPr>${options.text ? `<wps:txbx><w:txbxContent>${para(options.text)}</w:txbxContent></wps:txbx>` : ''}<wps:bodyPr/></wps:wsp></a:graphicData></a:graphic>`;
 	const name = options.chart ? `Chart ${id}` : `Rectangle ${id}`;
 	return `<w:r><w:drawing><wp:anchor distT="0" distB="0" distL="114300" distR="114300" simplePos="0" relativeHeight="${251659264 + id}" behindDoc="${options.behind ? 1 : 0}" locked="0" layoutInCell="${inCell}" allowOverlap="1"><wp:simplePos x="0" y="0"/>${position('H', h)}${position('V', v)}<wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/>${wrapXml(wrap)}<wp:docPr id="${id}" name="${name}"/><wp:cNvGraphicFramePr/>${graphic}</wp:anchor></w:drawing></w:r>`;
 }
@@ -185,6 +187,12 @@ export function cellFloatCases(): Record<string, CellFloatCase> {
 		cases[`wrap-right-${wrap}`] = cellCase('column@right', 'paragraph:0', wrap, 1, LONG_TEXT);
 		cases[`grow-${wrap}`] = cellCase('column:18', 'paragraph:30', wrap, 1, '', { heightPt: 54 });
 	}
+	// A text box in a cell: its lines come from the page engine and the rest is clipped.
+	cases['textbox-cell'] = cellCase('column:9', 'paragraph:0', 'square', 1, '', {
+		widthPt: 120,
+		heightPt: 60,
+		text: WORDS,
+	});
 	cases['grow-square-lic0'] = cellCase('column:18', 'paragraph:30', 'square', 0, '', {
 		heightPt: 54,
 	});

@@ -28,11 +28,11 @@ for pdf in sorted(source.glob('*.pdf')):
         # Table borders: thin horizontal strokes or fills at least a cell wide.
         if rect.width > 100 and rect.height < 2:
             rules.add(r2((rect.y0 + rect.y1) / 2))
-    # Words as [text, x, y, end x]: every word for the wrap and chart cases, else the anchor's line.
+    # Words as [text, x, y, end x]: every word for the wrap, chart and text box cases, else the anchor's line.
     words = [
         [w[4], r2(w[0]), r2(w[1]), r2(w[2])]
         for w in page.get_text('words')
-        if pdf.stem.startswith(('wrap-', 'chart-')) or w[4] in ('Anchor', 'after', 'tail', 'anchor', 'Body')
+        if pdf.stem.startswith(('wrap-', 'chart-', 'textbox-')) or w[4] in ('Anchor', 'after', 'tail', 'anchor', 'Body')
     ]
     cases[pdf.stem] = {
         'pages': len(document),
