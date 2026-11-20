@@ -1,340 +1,45 @@
 # pptx-vue-viewer
 
+A Vue 3 component that opens, edits, presents and saves PowerPoint (`.pptx`) files in the browser. No server, no conversion step, no PowerPoint install.
+
 [![npm version](https://img.shields.io/npm/v/pptx-vue-viewer.svg)](https://www.npmjs.com/package/pptx-vue-viewer)
 [![license](https://img.shields.io/npm/l/pptx-vue-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 
-Show, edit, and present Microsoft PowerPoint (`.pptx`) files directly in a
-Vue 3 app: no server, no conversion step, no PowerPoint install required. Drop
-in a `<PowerPointViewer>` component, hand it the file's bytes, and it renders
-slides as real HTML and CSS with full editing and export support.
+[Live demo](https://christophervr.github.io/ooxml/pptx/demo-vue/) · [Docs](https://christophervr.github.io/ooxml/pptx/vue/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vue/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ![Navigating between slides in the Vue 3 demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/vue-demo.webp)
 
-The rendering is done by the framework-agnostic [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine, which turns a `.pptx` file into a structured slide model. This package is the Vue layer that draws that model on screen, and the engine is **bundled in**, so you install just one package.
+Slides are drawn as HTML, CSS and SVG, not as a canvas bitmap, so text stays sharp at any zoom, can be selected and is read by screen readers. The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine that parses and writes the file is bundled in.
 
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo-vue/)** · **[📦 npm](https://www.npmjs.com/package/pptx-vue-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; **[PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme)** &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
-
-## Features
-
-- **A single component**: `<PowerPointViewer>`, written in `<script setup>` style.
-- **Real HTML rendering**: slides are drawn as ordinary HTML and SVG, not as a
-  picture, so text stays sharp at any zoom and is selectable and accessible.
-- **Editing**: select, drag, resize, rotate; inline text editing; format painter;
-  shape adjustment handles; align, distribute, group, flip, and z-order; undo/redo;
-  snap-to-grid, snap-to-shape, H/V guides, and rulers.
-- **Full Office-style ribbon**: all tabs wired (Home, Insert, Draw, Design,
-  Transitions, Animations, Slide Show, Review, View) plus a status bar and
-  context menu.
-- **Inspector**: element and slide property panels, including chart data editor.
-- **Presentation mode**: animation playback, presenter view, slide transitions,
-  rehearse timings, subtitles, and freehand ink.
-- **Export**: PNG, PDF, GIF, and WebM video; print; Save As (pptx/ppsx/pptm).
-- **Collaboration**: real-time Yjs-based co-editing with cursor/selection presence.
-- **Comments, find/replace, accessibility panel, version history**, and more.
-- **Mobile chrome**: touch toolbar, bottom bar with sheets, and touch editing.
-- **Slide navigation**: live thumbnail previews, previous/next, and a slide counter.
-- **Zoom**: in, out, and reset.
-- **Themeable**: change colours through CSS custom properties.
-- **Loads from anywhere**: an `ArrayBuffer` or `Uint8Array` from a file input,
-  a `fetch`, drag-and-drop, and so on.
-
-## Installation
+## Install
 
 ```bash
 npm install pptx-vue-viewer
-```
-
-**Peer requirements:** Vue 3.5+, `vue-i18n` (all UI labels go through it, see
-[Localization](#localization-i18n)), and the engine's `jszip` /
-`fast-xml-parser` peers:
-
-```bash
 npm install vue vue-i18n jszip fast-xml-parser
 ```
 
-**Optional:** `three` enables interactive GLB/GLTF 3D models and the
-`smartArt3D` and 3D chart renderers; without it those elements fall back to poster images /
-flat SVG.
+The second line is the peer dependencies: Vue 3.5 or newer and `vue-i18n` 11. Optional extras:
 
-The `pptx-viewer-core` engine is **bundled in**, so you don't install it
-separately unless you want to call the SDK directly.
+| For                                  | Add                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies)      |
+| 3D models, 3D SmartArt and 3D charts | nothing: `three` is an optional dependency npm installs when it can |
+| The AI assistant panel               | `ai` and `@ai-sdk/vue`                                              |
 
-## Usage
+Without them, those features stay off and everything else works.
 
-```vue
-<script setup lang="ts">
-import { PowerPointViewer, type PowerPointViewerExpose } from 'pptx-vue-viewer';
-import { ref, onMounted } from 'vue';
-// Base chrome styles (toolbar, thumbnails, layout). Import once.
+## Quick start
+
+Every label goes through `vue-i18n`, so install an instance with the viewer's English dictionary:
+
+```ts
+// main.ts
+import { keyToLabel, translationsEn } from 'pptx-vue-viewer/i18n';
 import 'pptx-vue-viewer/styles';
-
-const content = ref<Uint8Array>();
-const viewer = ref<PowerPointViewerExpose>();
-
-onMounted(async () => {
-	const res = await fetch('/example.pptx');
-	content.value = new Uint8Array(await res.arrayBuffer());
-});
-
-function onSlide(index: number) {
-	console.log('active slide', index);
-}
-</script>
-
-<template>
-	<PowerPointViewer
-		v-if="content"
-		ref="viewer"
-		:content="content"
-		:theme="{ colors: { primary: '#6366f1' } }"
-		@active-slide-change="onSlide"
-		style="height: 100vh"
-	/>
-</template>
-```
-
-### Loading from a file input
-
-```vue
-<script setup lang="ts">
-import { ref } from 'vue';
-const content = ref<ArrayBuffer>();
-
-async function onFile(event: Event) {
-	const file = (event.target as HTMLInputElement).files?.[0];
-	if (file) content.value = await file.arrayBuffer();
-}
-</script>
-
-<template>
-	<input type="file" accept=".pptx" @change="onFile" />
-</template>
-```
-
-### Theming
-
-Pass a partial `theme`; unset tokens fall back to the built-in dark palette.
-Values accept any CSS color (`hex`, `rgb()`, `hsl()`, `oklch()`, …) and map to
-`--pptx-*` CSS custom properties (shadcn/ui token names).
-
-```ts
-import type { ViewerTheme } from 'pptx-vue-viewer';
-
-const theme: ViewerTheme = {
-	colors: { primary: '#6366f1', background: '#0b1020' },
-	radius: '0.5rem',
-};
-```
-
-For app-wide theming you can also provide a theme to a subtree:
-
-```ts
-import { provideViewerTheme } from 'pptx-vue-viewer';
-// call inside a parent component's setup()
-provideViewerTheme({ colors: { primary: '#6366f1' } });
-```
-
-Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper
-canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion
-brand look as the [documentation site](https://christophervr.github.io/ooxml/pptx/):
-
-```ts
-import { vermilionLightTheme } from 'pptx-vue-viewer';
-// <PowerPointViewer :theme="vermilionLightTheme" … />
-```
-
-The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and
-radius (`vermilionRadius`) are exported too for deriving your own variant.
-
-### Reading the current presentation back
-
-`getContent()` turns the current presentation back into `.pptx` bytes. Reach it
-through a template `ref`:
-
-```ts
-const viewer = ref<PowerPointViewerExpose>();
-
-async function save() {
-	const bytes = await viewer.value!.getContent();
-	// write `bytes` (Uint8Array) to a Blob / download / upload
-}
-```
-
-### Viewport fit options
-
-```vue
-<PowerPointViewer :content="content" :fit-padding="0" :max-fit-scale="null" />
-```
-
-`fitPadding` is a per-side CSS-pixel number or `{ horizontal, vertical }`;
-`maxFitScale` is a positive fit-factor ceiling or `null` for unlimited enlargement.
-Omission preserves 8 px horizontal / 16 px vertical padding and a ceiling of 1.
-The same props are available on `SlideCanvas`. Rulers reserve their existing
-space separately. These options do not change document geometry or user zoom.
-See the [cross-binding defaults](../../docs/guide/viewport-fit.md).
-
-## API
-
-### Props
-
-| Prop                                                                       | Type                                 | Default                | Description                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------- | ------------------------------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `content`                                                                  | `Uint8Array \| ArrayBuffer`          | n/a                    | The `.pptx` bytes to render. **Required.**                                                                                                                                                                                                                                                                                                                     |
-| `theme`                                                                    | `ViewerTheme`                        | n/a                    | Color/radius overrides applied as CSS custom properties. Always wins over the File > Options theme picker.                                                                                                                                                                                                                                                     |
-| `class`                                                                    | `string`                             | n/a                    | Class applied to the root element.                                                                                                                                                                                                                                                                                                                             |
-| `canEdit`                                                                  | `boolean`                            | `false`                | Enables the editor toolbar, inspector, and drag-and-drop editing.                                                                                                                                                                                                                                                                                              |
-| `initialSlide`                                                             | `number`                             | `0`                    | Zero-based slide shown after each load, clamped into the deck.                                                                                                                                                                                                                                                                                                 |
-| `showToolbar`                                                              | `boolean`                            | `true`                 | Editor chrome: title bar, ribbon, toolbar, banners and status bar.                                                                                                                                                                                                                                                                                             |
-| `showThumbnails`                                                           | `boolean`                            | `true`                 | Slide thumbnail pane.                                                                                                                                                                                                                                                                                                                                          |
-| `showCompatibilityToasts`                                                  | `boolean`                            | `true`                 | Compatibility warning toast stack; `false` hides it, warnings are still collected.                                                                                                                                                                                                                                                                             |
-| `filePath`                                                                 | `string`                             | n/a                    | Original file path, used for autosave recovery and version history.                                                                                                                                                                                                                                                                                            |
-| `fileName`                                                                 | `string`                             | n/a                    | Display name of the open document, shown in the title bar.                                                                                                                                                                                                                                                                                                     |
-| `fonts`                                                                    | `ViewerFontSource[]`                 | n/a                    | Licensed font sources supplied by the host application.                                                                                                                                                                                                                                                                                                        |
-| `autosave`                                                                 | `boolean`                            | `true`                 | Enables recovery autosave, written while there are unsaved edits (emits `@autosave` with serialised bytes).                                                                                                                                                                                                                                                    |
-| `autosaveIntervalMs`                                                       | `number`                             | File > Options cadence | Interval in milliseconds between recovery snapshots while there are unsaved edits.                                                                                                                                                                                                                                                                             |
-| `authorName`                                                               | `string`                             | n/a                    | Author name for comments/annotations and collaboration presence.                                                                                                                                                                                                                                                                                               |
-| `collaboration`                                                            | `CollaborationConfig`                | n/a                    | Yjs real-time collaboration config (server URL, room, role).                                                                                                                                                                                                                                                                                                   |
-| `shareDefaults`                                                            | `{ roomId?, userName?, serverUrl? }` | n/a                    | Seed values for the Share dialog fields.                                                                                                                                                                                                                                                                                                                       |
-| `onOpenFile`                                                               | `() => void`                         | n/a                    | Host override for File > Open; bypasses the built-in file picker.                                                                                                                                                                                                                                                                                              |
-| `smartArt3D`                                                               | `boolean`                            | `false`                | Opt-in Three.js 3D SmartArt renderer (needs the optional `three` peer; falls back to SVG without it).                                                                                                                                                                                                                                                          |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                            | `false`                | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                      |
-| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig`    | n/a                    | Optional AI assistant: a handle from `createAiAssistant` (`pptx-vue-viewer/ai`), or a plain config. The SDK peers load only when its panel is opened. See the [AI assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant#ai-entry).                                                                                                    |
-| `hiddenActions`                                                            | `ToolbarActionId[]`                  | n/a                    | Individual toolbar buttons and/or ribbon tabs to hide (e.g. `['share', 'broadcast', 'insert']`). Omit to show everything.                                                                                                                                                                                                                                      |
-| `ribbonAddIns`                                                             | `RibbonAddInTab[]`                   | n/a                    | Ribbon tabs the host adds after Help; a command runs its `run` callback and raises `office-ribbon-add-in` (see the customization guide)                                                                                                                                                                                                                        |
-| `customization`                                                            | `ViewerCustomization`                | -                      | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the template ref. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
-| `defaultThemeKey`                                                          | `string`                             | n/a                    | Initial File > Options > Appearance selection when no persisted preference exists.                                                                                                                                                                                                                                                                             |
-| `availableThemes`                                                          | `ThemeCatalogEntry[]`                | n/a                    | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog).                                                                                                                                                                                                                                                                       |
-| `onThemeChange`                                                            | `(key: string) => void`              | n/a                    | Host hook for the appearance picker; when set, the host owns persisting the choice.                                                                                                                                                                                                                                                                            |
-| `defaultLocale`                                                            | `string`                             | n/a                    | Initial locale code when no persisted preference exists.                                                                                                                                                                                                                                                                                                       |
-| `availableLocales`                                                         | `LocaleCatalogEntry[]`               | n/a                    | Locale choices offered by File > Options > Language (defaults to the host `vue-i18n` locales).                                                                                                                                                                                                                                                                 |
-| `onLocaleChange`                                                           | `(code: string) => void`             | n/a                    | Host hook for the language picker; when set, the host owns applying/persisting the switch.                                                                                                                                                                                                                                                                     |
-| `accountAuth`                                                              | `AccountAuthConfig`                  | n/a                    | Optional sign-in hook point for File > Account (disabled unless `enabled: true`).                                                                                                                                                                                                                                                                              |
-
-### Events
-
-| Event                 | Payload               | Description                                                                          |
-| --------------------- | --------------------- | ------------------------------------------------------------------------------------ |
-| `active-slide-change` | `number`              | Emits the active slide index on navigation.                                          |
-| `content-change`      | `Uint8Array`          | Emits updated bytes after any editing change.                                        |
-| `dirty-change`        | `boolean`             | Emits `true`/`false` when the dirty state changes.                                   |
-| `mode-change`         | `string`              | Emits the new mode when it changes (`'preview'`, `'edit'`, `'present'`, `'master'`). |
-| `zoom-change`         | `number`              | Emits the new zoom level (1 = 100%).                                                 |
-| `selection-change`    | `string[]`            | Emits the selected element IDs when selection changes.                               |
-| `slide-count-change`  | `number`              | Emits the total slide count when slides are added/removed.                           |
-| `autosave`            | `Uint8Array`          | Emits serialised bytes when autosave persists the presentation (`autosave` prop).    |
-| `start-collaboration` | `CollaborationConfig` | Emits when the user starts a collaboration session from the Share dialog.            |
-| `stop-collaboration`  | -                     | Emits when the user stops a collaboration session.                                   |
-
-### Exposed methods (template `ref`)
-
-| Method                    | Returns               | Description                                    |
-| ------------------------- | --------------------- | ---------------------------------------------- |
-| `getContent()`            | `Promise<Uint8Array>` | Serialise the current presentation to `.pptx`. |
-| `goTo(index)`             | `void`                | Navigate to a slide by zero-based index.       |
-| `goPrev()`                | `void`                | Navigate to the previous slide.                |
-| `goNext()`                | `void`                | Navigate to the next slide.                    |
-| `undo()`                  | `void`                | Undo the last editing action.                  |
-| `redo()`                  | `void`                | Redo the last undone action.                   |
-| `canUndo()`               | `boolean`             | Whether an undo action is available.           |
-| `canRedo()`               | `boolean`             | Whether a redo action is available.            |
-| `getZoom()`               | `number`              | Get the current zoom level.                    |
-| `setZoom(level)`          | `void`                | Set the zoom level (clamped to 0.2 - 3.0).     |
-| `zoomIn()`                | `void`                | Zoom in by one step.                           |
-| `zoomOut()`               | `void`                | Zoom out by one step.                          |
-| `zoomReset()`             | `void`                | Reset zoom to 100%.                            |
-| `getMode()`               | `ViewerMode`          | Get the current viewer mode.                   |
-| `setMode(mode)`           | `void`                | Switch mode programmatically.                  |
-| `getActiveSlideIndex()`   | `number`              | Get the zero-based active slide index.         |
-| `getSlideCount()`         | `number`              | Get the total number of slides.                |
-| `isDirty()`               | `boolean`             | Whether the document has unsaved changes.      |
-| `getSelectedElementIds()` | `string[]`            | Get IDs of currently selected elements.        |
-| `selectElements(ids)`     | `void`                | Programmatically select elements by ID.        |
-| `clearSelection()`        | `void`                | Clear the current selection.                   |
-
-The exposed surface implements the full shared `PowerPointViewerAPI`, so the
-following slide/element manipulation methods are also available:
-`setActiveSlideIndex(index)`, `getSlides()`, `getSlide(index)`,
-`getActiveSlide()`, `addSlide(afterIndex?)`, `deleteSlides(indexes)`,
-`duplicateSlides(indexes)`, `moveSlide(from, to)`, `toggleHideSlides(indexes)`,
-`getElements(slideIndex?)`, `getElementById(id, slideIndex?)`,
-`addElement(element)`, `updateElement(id, patch)`, `deleteElements(ids)`, and
-`duplicateElement(id)`.
-
-See [element insertion](https://christophervr.github.io/ooxml/pptx/vue/handle#add-element)
-for the `addElement` contract and a core-factory example.
-
-### Exported components & helpers
-
-`PowerPointViewer`, `SlideCanvas`, `SlideStage`, `ElementRenderer`,
-`RibbonToolbar`, `provideViewerTheme`, `useViewerTheme`, and the `ViewerTheme` /
-`CanvasSize` / `CollaborationConfig` / `ToolbarActionId` / `RibbonProps` types.
-
-### Composing a custom viewer shell
-
-For host-owned collaboration, `useCollaboration` accepts a reactive `collaboration`
-getter or shallow ref and exposes `shellState`: effective `canEdit`, connection
-status, sanitized remote users and connected count. Use it for both custom controls
-and their edit handlers. The public `/viewer` entry also exports `InlineTextEditor`
-and `useInlineEditing` for reusing the native inline editing behavior.
-See the [custom-shell collaboration guide](https://christophervr.github.io/ooxml/pptx/vue/collaboration#custom-host-chrome)
-and `demos/pptx/demo-vue/src/HostOwnedHeadlessEditor.vue` for complete wiring.
-
-`<PowerPointViewer>` bundles the slide canvas, ribbon, inspector, and every
-dialog into one component. If you only want a subset, for example your own
-chrome around just the ribbon and the slide canvas, import the pieces
-independently instead: `RibbonToolbar` (from `pptx-vue-viewer`, same as
-`SlideCanvas`) and the `useRibbonProps` composable (from the internal
-building-blocks entry point `pptx-vue-viewer/internals`) that assembles its
-props. The `internals` subpath is not covered by semver; prefer the stable
-root exports, and pin your version when relying on `internals`.
-
-Most of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
-transitions, and more) actually lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is
-**never published to npm**. If you need one of those framework-neutral helpers directly, for
-example the slide-transition resolver/keyframes (`resolveSlideTransition`,
-`resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) or the `PresentationTransitionOverlay`
-component behind presentation mode, they are re-exported from `pptx-vue-viewer/internals` too, so
-you never need `pptx-viewer-shared` yourself.
-
-```vue
-<script setup lang="ts">
-import { SlideCanvas, RibbonToolbar } from 'pptx-vue-viewer';
-import {
-	useRibbonProps,
-	useEditorHistory,
-	// ...plus whichever other composables you need to build the
-	// `UseRibbonPropsInput` state/action fields (see ribbon-props-types.ts).
-} from 'pptx-vue-viewer/internals';
-
-// Wire up just the state/handlers your custom shell needs; anything from
-// `UseRibbonPropsInput` you don't use can be a no-op ref/callback.
-const ribbonProps = useRibbonProps({
-	/* ribbonMode, canEdit, isMobile, ..., see UseRibbonPropsInput */
-});
-</script>
-
-<template>
-	<div class="my-custom-shell">
-		<RibbonToolbar v-bind="ribbonProps" />
-		<SlideCanvas :slide="activeSlide" :scale="zoom" />
-	</div>
-</template>
-```
-
-`RibbonToolbar`'s full prop contract is the `RibbonProps` type; `useRibbonProps`
-returns a `ComputedRef<RibbonProps>` built from the same state/action
-composables `PowerPointViewer.vue` itself uses, so `v-bind`ing it straight onto
-`RibbonToolbar` mirrors the bundled component's wiring exactly.
-
-## Localization (i18n)
-
-UI labels go through [vue-i18n](https://vue-i18n.intlify.dev/) with dotted keys such as `pptx.statusBar.allSaved`. Create a `vue-i18n` instance with `createI18n()` and install it as a plugin (the demo's `src/i18n.ts` shows a minimal config, including a `missing` handler that derives Title Case labels for any key you don't explicitly translate):
-
-```ts
-import { translationsEn, keyToLabel } from 'pptx-vue-viewer/i18n';
+import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
+
+import App from './App.vue';
 
 const i18n = createI18n({
 	legacy: false,
@@ -343,64 +48,114 @@ const i18n = createI18n({
 	messages: { en: translationsEn },
 	missing: (_locale, key) => keyToLabel(key),
 });
+
+createApp(App).use(i18n).mount('#app');
 ```
 
-Switch languages with `i18n.global.locale.value = 'fr'`. `pptx-vue-viewer/i18n` also exports a `TranslationKey` type for type-checking a new locale dictionary (`Record<TranslationKey, string>`) at compile time. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for the full picture across all five viewer bindings and how to contribute a translation upstream; the live demo's language picker is a working reference.
+```vue
+<!-- App.vue -->
+<script setup lang="ts">
+import { PowerPointViewer, type PowerPointViewerExpose } from 'pptx-vue-viewer';
+import { ref } from 'vue';
 
-## Limitations
+const content = ref<Uint8Array | null>(null);
+const viewer = ref<PowerPointViewerExpose>();
 
-A handful of effects (`backdrop-filter`, path gradients) are approximated on
-screen, and a few effects flatten in raster export; see the root README's
-Limitations for details.
+async function onPick(event: Event) {
+	const file = (event.target as HTMLInputElement).files?.[0];
+	if (file) content.value = new Uint8Array(await file.arrayBuffer());
+}
 
-The `pptx-viewer-core` engine parses all slide data, so anything not surfaced in
-the UI is still readable from the model.
+async function save() {
+	const bytes = await viewer.value?.getContent(); // a valid .pptx
+}
+</script>
 
-## Build (contributing)
-
-```bash
-bun run build      # Vite library build → dist (ESM + CJS + d.ts)
-bun run typecheck  # vue-tsc
-bun run test       # vitest
+<template>
+	<div style="height: 100vh">
+		<PowerPointViewer v-if="content" ref="viewer" :content="content" can-edit />
+		<input v-else type="file" accept=".pptx,.ppt" @change="onPick" />
+	</div>
+</template>
 ```
 
-## Reference translations
+`content` takes a `Uint8Array` or an `ArrayBuffer`. The viewer fills its parent, so give the parent a height.
 
-Optional French, Spanish, German, and Simplified Chinese dictionaries ship with
-this package. Import only the language you need:
+## What you get
 
-```ts
-import { translationsZhCN } from 'pptx-vue-viewer/i18n/zh-CN';
-```
+- **Viewing**: text, all 187 preset shapes, pictures, tables, charts, SmartArt, connectors, audio, video, ink, OLE objects and 3D models, with themes, masters and layouts resolved.
+- **Editing**: a PowerPoint-style ribbon, inspector and on-canvas handles; inline text, tables, chart data, SmartArt, masters and layouts; full undo and redo.
+- **Presenting**: transitions (including Morph), animations and motion paths, presenter view with notes and timer, rehearse timings, pen, highlighter and laser.
+- **Exporting**: PDF, PNG, GIF, video and JSON, slides copied as images, printed handouts and notes pages, and Save As `.pptx`, `.ppsx`, `.pptm` or legacy `.ppt`.
+- **Working together**: real-time co-editing and Broadcast over Yjs, through your server or peer to peer, with presence, cursors and threaded comments.
+- **Assistant**: an optional AI panel whose edits follow a write policy you choose (apply, stage or approve).
+- **Keyboard and screen readers**: F6 between regions, Tab through slide objects, Enter to edit text, and names that match the visible captions.
+- **Seven UI languages**: English, French, Spanish, German, Simplified Chinese, Japanese and Korean.
 
-The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
-(`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
-for registration and runtime switching. Existing English imports are unchanged.
+Some effects are approximated or not yet supported; the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) lists them, and a deck that uses one reports it as a load warning.
 
-For Vue, convert the dictionary with `toVueI18nSyntax` from
-`pptx-vue-viewer/i18n` before passing it to vue-i18n.
+## Using it in Vue
+
+**Events and the template ref.** Changes arrive as events (`@content-change`, `@dirty-change`, `@active-slide-change`, `@selection-change` and more). The template ref (`PowerPointViewerExpose`) covers navigation, zoom, mode, selection, undo and redo, plus the shared slide and element API (`getSlides`, `addSlide`, `addElement`, `updateElement` and the rest). Host callbacks such as `onOpenFile` and `onLocaleChange` are props. See [props](https://christophervr.github.io/ooxml/pptx/vue/props) and [the handle](https://christophervr.github.io/ooxml/pptx/vue/handle).
+
+**Theming.** Pass a partial `theme` prop, or call `provideViewerTheme(theme)` in a parent's `setup()` for a whole subtree. `vermilionLightTheme` and `vermilionDarkTheme` are ready-made presets. See [theming](https://christophervr.github.io/ooxml/pptx/vue/theming).
+
+**Your own shell.** `useViewerBuildingBlocks` runs the full viewer engine behind `BuildingBlocksCanvas`, `BuildingBlocksToolbar` and `BuildingBlocksSlidesPane`, so you can place them in your own layout and answer picker and dialog requests with your own UI. `pptx-vue-viewer/viewer` adds composables such as `useCollaboration` and `useInlineEditing` for deeper custom chrome. See [building blocks](https://christophervr.github.io/ooxml/pptx/vue/building-blocks) and [composables](https://christophervr.github.io/ooxml/pptx/vue/composables).
+
+**Translations.** Dictionaries for the other languages are at `pptx-vue-viewer/i18n/fr`, `/es`, `/de`, `/zh-CN`, `/ja` and `/ko`. Convert one with `toVueI18nSyntax` from `pptx-vue-viewer/i18n` before passing it to `vue-i18n` (`translationsEn` is already converted), then switch with `i18n.global.locale.value = 'fr'`. See [localization](https://christophervr.github.io/ooxml/pptx/guide/localization).
+
+**AI assistant.** Create one assistant with `createAiAssistant` from `pptx-vue-viewer/ai` and pass it to the `ai` prop. Its panel and the AI SDK load only when the user opens it. See the [assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant).
+
+## Configuration
+
+The most used props; the [props reference](https://christophervr.github.io/ooxml/pptx/vue/props) has all of them, and every binding takes the same set.
+
+| Prop                                             | What it does                                                                                                     |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `canEdit`, `readOnly`                            | Turn editing on, or force the deck read-only.                                                                    |
+| `initialSlide`, `showToolbar`, `showThumbnails`  | Starting slide and which chrome to show.                                                                         |
+| `theme`, `defaultThemeKey`, `availableThemes`    | Colours and radius as `--pptx-*` tokens, and the File > Options appearance choices.                              |
+| `customization`, `hiddenActions`, `ribbonAddIns` | Hide, lock or remap ribbon tabs, commands, options, menus, shortcuts and panels; add your own tabs.              |
+| `fonts`, `googleFonts`                           | Supply licensed fonts, and control or redirect web font downloads.                                               |
+| `allowExternalContent`                           | Download a deck's linked pictures and media without asking (`true`) or block them silently (`false`).            |
+| `limits`                                         | Bound the work a load may do, for decks you do not trust.                                                        |
+| `collaboration`, `shareDefaults`                 | Join or seed a real-time session.                                                                                |
+| `storage`, `fileProviders`, `autosave`           | Save to your own storage or OneDrive, and control recovery autosave.                                             |
+| `ai`                                             | The optional assistant.                                                                                          |
+| `fitPadding`, `maxFitScale`                      | How the slide fits its viewport ([viewport fit](https://christophervr.github.io/ooxml/pptx/guide/viewport-fit)). |
+
+OneDrive needs a Microsoft sign-in your host provides; see the [OneDrive guide](https://christophervr.github.io/ooxml/pptx/guide/onedrive). It stores files and does not provide Office co-authoring.
+
+## Supported environments
+
+- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+- Vue 3.5 or newer with `vue-i18n` 11.
+- Node.js 22.3 or newer to install, build and test.
 
 ## Privacy and network use
 
 The viewer renders and saves decks in the browser and never uploads them. It contacts other servers only in these cases:
 
-- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as in PowerPoint, which downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to a self-hosted mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can also turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts and line breaks can differ from PowerPoint. If the download is slow, the deck waits up to 8 seconds, and it opens at once when the font server cannot be reached (offline use works). See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
-- **Linked pictures and media** in a deck are not fetched when it opens, as in Microsoft PowerPoint: a security bar offers Enable Content, which draws them for that presentation without reloading it. The Trust Center option "Allow external content" (off by default) fetches them without asking; `allowExternalContent: true` does the same and `false` blocks them without the bar.
-- **Hyperlinks** open only when the reader clicks them, always in a new tab with `noopener` and `noreferrer`, so the linked site receives no referrer and cannot script the viewer's page, whatever frame the deck names. `file:` and `ftp:` links stay in the deck but are never opened. Relative links (no scheme, such as `notes.html`) stay in the deck and open, against the host page's address, only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
-- **Share and Broadcast**, only when started: updates go to the server you configure; with no server, peers meet through y-webrtc's public signaling server and public STUN servers. The signaling server sees a hash of the secret in the invitation link's `#key=` fragment (never the room name), the participants' IP addresses and encrypted signaling messages.
+- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as PowerPoint downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to your own mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts, so line breaks can differ from PowerPoint. A slow download holds the deck for up to 8 seconds, and the deck opens at once when the font server cannot be reached, so offline use works. See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
+- **Linked pictures and media** are not fetched when a deck opens, as in PowerPoint. A security bar offers **Enable Content**, which draws them for that presentation without reloading it; in a shared session each participant chooses for themselves. The Trust Center option "Allow external content" (off by default) always allows them. `allowExternalContent: true` downloads them without asking, and `false` blocks them without the bar.
+- **Hyperlinks** open only when the reader clicks them, always in a new tab with `noopener` and `noreferrer`, so the linked site receives no referrer and cannot script the viewer's page, whatever frame the deck names. `file:` and `ftp:` links stay in the deck but never open. Relative links (no scheme, such as `notes.html`) open, against the host page's address, only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
+- **Share and Broadcast**, only when started. Updates go to the server you configure. With no server, peers meet through y-webrtc's public signaling server and public STUN servers; the signaling server sees a hash of the secret in the invitation link's `#key=` fragment (never the room name), the participants' IP addresses and encrypted signaling messages.
 
 Nothing collects analytics or telemetry. The full list, including what is kept in local storage, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
+## Related packages
+
+| Package                                                                    | Use it for                                                     |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| [`pptx-react-viewer`](https://www.npmjs.com/package/pptx-react-viewer)     | The same viewer for React.                                     |
+| [`pptx-angular-viewer`](https://www.npmjs.com/package/pptx-angular-viewer) | The same viewer for Angular.                                   |
+| [`pptx-svelte-viewer`](https://www.npmjs.com/package/pptx-svelte-viewer)   | The same viewer for Svelte 5.                                  |
+| [`pptx-vanilla-viewer`](https://www.npmjs.com/package/pptx-vanilla-viewer) | The same viewer with no framework.                             |
+| [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)       | Reading, building and saving decks in Node or a worker, no UI. |
+| [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp)         | PowerPoint editing tools for AI agents, as an MCP server.      |
+
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), which also has [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) viewers.
+
 ## License
 
-[Apache-2.0](LICENSE). Please keep the [`NOTICE`](NOTICE) file with redistributions.
-
-## OneDrive integration
-
-Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
-sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#powerpoint-pptx)
-for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
-The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
-separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
-OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE). Keep the [NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/NOTICE) file with redistributions.

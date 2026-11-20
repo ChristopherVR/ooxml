@@ -1,375 +1,153 @@
 # pptx-react-viewer
 
+A React component that opens, edits, presents and saves PowerPoint (`.pptx`) files in the browser. No server, no conversion step, no PowerPoint install.
+
 [![npm version](https://img.shields.io/npm/v/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
 [![license](https://img.shields.io/npm/l/pptx-react-viewer.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
 [![types](https://img.shields.io/npm/types/pptx-react-viewer.svg)](https://www.npmjs.com/package/pptx-react-viewer)
 
-> A drop-in **React** component that turns a `.pptx` file into a fully interactive PowerPoint: **view, edit, present, collaborate, and export**, entirely in the browser.
+[Live demo](https://christophervr.github.io/ooxml/pptx/demo/) · [Docs](https://christophervr.github.io/ooxml/pptx/react/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-![Selecting, dragging, and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.webp)
+![Selecting, dragging and resizing a slide element in the React demo](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/react-demo.webp)
 
-Slides render with real **HTML/CSS** (not `<canvas>`), so text stays crisp at any zoom, is selectable and screen-reader accessible, and every element is directly editable. The parsing/editing engine ([`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)) is **bundled in**, so you install just one package.
-
-<samp>**[▶️ Try the live demo](https://christophervr.github.io/ooxml/pptx/demo/)** · **[📦 npm](https://www.npmjs.com/package/pptx-react-viewer)** · **[📖 Full docs](https://christophervr.github.io/ooxml/pptx/)** · **[🧩 Core SDK](https://www.npmjs.com/package/pptx-viewer-core)**</samp>
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; **[PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme)** &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
-
----
+Slides are drawn as HTML, CSS and SVG, not as a canvas bitmap, so text stays sharp at any zoom, can be selected and is read by screen readers. The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine that parses and writes the file is bundled in.
 
 ## Install
 
 ```bash
 npm install pptx-react-viewer
-```
-
-Then add the React peer dependencies your app uses (`react` / `react-dom` may be ^18.2 or ^19; both majors run the full test suite in CI):
-
-```bash
 npm install react react-dom framer-motion lucide-react react-icons jspdf jszip fast-xml-parser i18next react-i18next
 ```
 
-> The package is named **`pptx-react-viewer`** on npm. `pptx-viewer-core` (the engine) is **bundled in**, so you don't install it separately unless you want to call the SDK directly.
-> **Optional:** `three` (3D models/charts, 3D SmartArt) and `yjs` / `y-websocket` / `y-webrtc` (real-time collaboration) are declared as `optionalDependencies`, so npm installs them automatically when possible; the features degrade gracefully if they're absent.
+The second line is the peer dependencies; `react` and `react-dom` may be 18.2 or 19. Optional extras:
+
+| For                                  | Add                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------- |
+| Real-time collaboration              | `yjs` (`y-websocket` and `y-webrtc` are optional dependencies)      |
+| 3D models, 3D SmartArt and 3D charts | nothing: `three` is an optional dependency npm installs when it can |
+| The AI assistant panel               | `ai` and `@ai-sdk/react`                                            |
+
+Without them, those features stay off and everything else works.
 
 ## Quick start
 
 ```tsx
 import { PowerPointViewer } from 'pptx-react-viewer';
+import 'pptx-react-viewer/styles'; // skip if your app builds Tailwind CSS v4 itself
 import { useState } from 'react';
-// Not using Tailwind? Import the bundled stylesheet once at your app entry:
-import 'pptx-react-viewer/styles';
 
 export default function App() {
 	const [content, setContent] = useState<Uint8Array | null>(null);
 
-	// Load any .pptx as bytes (fetch, <input type="file">, drag-drop, …)
-	const onPick = (e: React.ChangeEvent<HTMLInputElement>) =>
-		e.target.files?.[0]?.arrayBuffer().then((buf) => setContent(new Uint8Array(buf)));
+	const onPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0];
+		if (file) setContent(new Uint8Array(await file.arrayBuffer()));
+	};
 
 	return (
 		<div style={{ height: '100vh' }}>
 			{content ? (
 				<PowerPointViewer content={content} canEdit />
 			) : (
-				<input type='file' accept='.pptx' onChange={onPick} />
+				<input type='file' accept='.pptx,.ppt' onChange={onPick} />
 			)}
 		</div>
 	);
 }
 ```
 
-The component fills its parent, so give the parent a height. That's the whole setup: open a file and you have a working viewer/editor.
-
-To read the edited presentation back out as bytes, pass a `ref` and call `getContent()`:
+`content` is a `Uint8Array` (wrap an `ArrayBuffer` with `new Uint8Array(buffer)`). The viewer fills its parent, so give the parent a height. To read the edited deck back, pass a `ref` and call `getContent()`:
 
 ```tsx
-import { PowerPointViewer, type PowerPointViewerHandle } from 'pptx-react-viewer';
-import { useRef } from 'react';
-
-const viewerRef = useRef<PowerPointViewerHandle>(null);
-
-// <PowerPointViewer ref={viewerRef} content={content} canEdit />
-const bytes = await viewerRef.current?.getContent(); // Uint8Array of a valid .pptx
+const viewer = useRef<PowerPointViewerHandle>(null);
+// <PowerPointViewer ref={viewer} content={content} canEdit />
+const bytes = await viewer.current?.getContent(); // a valid .pptx
 ```
 
-## Features
+## What you get
 
-| Feature            | Description                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| **View**           | Render slides with 16 element types: shapes, text, images, tables, 23 chart types, SmartArt, connectors, media, ink, OLE, 3D models, zoom      |
-| **Edit**           | Insert/move/resize/delete elements, edit text inline, modify styles, manage slides                                                             |
-| **Present**        | Fullscreen slideshow with 39 animation presets and 26 motion paths, 57 transitions (including morph), speaker notes, presenter view with timer |
-| **Export**         | PNG/SVG/PDF/GIF/video/JSON slide export, save-as PPTX                                                                                          |
-| **Collaborate**    | Real-time multi-user editing (powered by Yjs) with live presence, remote cursors, and user avatars                                             |
-| **Print**          | Print dialog with handout layouts and notes page formatting with overflow pagination                                                           |
-| **Annotate**       | Pen/highlighter/laser pointer tools during presentations                                                                                       |
-| **Find & Replace** | Cross-slide text search with regex support                                                                                                     |
-| **Accessibility**  | Keyboard navigation, alt-text audit panel, screen reader support                                                                               |
-| **3D**             | GLB/GLTF model rendering via Three.js, 3D surface charts, CSS 3D shape/text extrusion                                                          |
+- **Viewing**: text, all 187 preset shapes, pictures, tables, charts, SmartArt, connectors, audio, video, ink, OLE objects and 3D models, with themes, masters and layouts resolved.
+- **Editing**: a PowerPoint-style ribbon, inspector and on-canvas handles; inline text, tables, chart data, SmartArt, masters and layouts; full undo and redo.
+- **Presenting**: transitions (including Morph), animations and motion paths, presenter view with notes and timer, rehearse timings, pen, highlighter and laser.
+- **Exporting**: PDF, PNG, GIF, video and JSON, slides copied as images, printed handouts and notes pages, and Save As `.pptx`, `.ppsx`, `.pptm` or legacy `.ppt`.
+- **Working together**: real-time co-editing and Broadcast over Yjs, through your server or peer to peer, with presence, cursors and threaded comments.
+- **Assistant**: an optional AI panel whose edits follow a write policy you choose (apply, stage or approve).
+- **Keyboard and screen readers**: F6 between regions, Tab through slide objects, Enter to edit text, and names that match the visible captions.
+- **Seven UI languages**: English, French, Spanish, German, Simplified Chinese, Japanese and Korean.
 
----
+Some effects are approximated or not yet supported; the [limitations page](https://christophervr.github.io/ooxml/pptx/guide/limitations) lists them, and a deck that uses one reports it as a load warning.
 
-## API reference
+## Using it in React
 
-### `PowerPointViewer` props
+**Styles.** `pptx-react-viewer/styles` is the full stylesheet. Its base reset applies only inside the viewer, so your page keeps its own headings and margins. A Tailwind CSS v4 app can build the viewer's utilities itself from `pptx-react-viewer/theme.css`, and a host that renders only `SlideCanvas` can import the smaller `pptx-react-viewer/canvas.css`. See [theming](https://christophervr.github.io/ooxml/pptx/react/theming).
 
-| Prop                                                                       | Type                                    | Default  | Description                                                                                                                                                                                                                                                                                                                                                    |
-| -------------------------------------------------------------------------- | --------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `content`                                                                  | `Uint8Array`                            | required | Raw .pptx file bytes                                                                                                                                                                                                                                                                                                                                           |
-| `filePath`                                                                 | `string`                                | n/a      | Optional file path (for display and autosave recovery)                                                                                                                                                                                                                                                                                                         |
-| `fileName`                                                                 | `string`                                | n/a      | Display name of the open document, shown in the title bar                                                                                                                                                                                                                                                                                                      |
-| `className`                                                                | `string`                                | n/a      | Class applied to the root element                                                                                                                                                                                                                                                                                                                              |
-| `canEdit`                                                                  | `boolean`                               | `false`  | Enable editing mode                                                                                                                                                                                                                                                                                                                                            |
-| `initialSlide`                                                             | `number`                                | `0`      | Zero-based slide shown after each load, clamped into the deck.                                                                                                                                                                                                                                                                                                 |
-| `showToolbar`                                                              | `boolean`                               | `true`   | Editor chrome: title bar, ribbon, toolbar, banners and status bar.                                                                                                                                                                                                                                                                                             |
-| `showThumbnails`                                                           | `boolean`                               | `true`   | Slide thumbnail pane.                                                                                                                                                                                                                                                                                                                                          |
-| `showCompatibilityToasts`                                                  | `boolean`                               | `true`   | Compatibility warning toast stack; `false` hides it, warnings are still collected.                                                                                                                                                                                                                                                                             |
-| `fonts`                                                                    | `ViewerFontSource[]`                    | n/a      | Licensed font sources supplied by the host application                                                                                                                                                                                                                                                                                                         |
-| `authorName`                                                               | `string`                                | n/a      | Author name for comments/annotations and collaboration presence                                                                                                                                                                                                                                                                                                |
-| `collaboration`                                                            | `CollaborationConfig`                   | n/a      | Yjs real-time collaboration config (server URL, room, role)                                                                                                                                                                                                                                                                                                    |
-| `shareDefaults`                                                            | `{ roomId?, userName?, serverUrl? }`    | n/a      | Seed values for the Share dialog fields                                                                                                                                                                                                                                                                                                                        |
-| `smartArt3D`                                                               | `boolean`                               | `false`  | Opt-in Three.js 3D SmartArt renderer (needs the optional `three` dependency; falls back to SVG without it)                                                                                                                                                                                                                                                     |
-| `surfaceChart3D`, `barChart3D`, `lineChart3D`, `areaChart3D`, `pieChart3D` | `boolean`                               | `false`  | Independently opt in to interactive Three.js renderers for the matching 3D chart kinds; each falls back to SVG when WebGL is unavailable.                                                                                                                                                                                                                      |
-| `ai`                                                                       | `PptxAiAssistant \| PptxAiConfig`       | n/a      | Optional AI assistant: a handle from `createAiAssistant` (`pptx-react-viewer/ai`), or a plain config. The SDK peers load only when its panel is opened. See [AI assistant](#ai-assistant).                                                                                                                                                                     |
-| `onOpenFile`                                                               | `() => void`                            | n/a      | Host override for File > Open; bypasses the built-in file picker                                                                                                                                                                                                                                                                                               |
-| `onContentChange`                                                          | `(content: Uint8Array) => void`         | n/a      | Called with freshly serialised `.pptx` bytes when the content changes                                                                                                                                                                                                                                                                                          |
-| `onDirtyChange`                                                            | `(isDirty: boolean) => void`            | n/a      | Called when dirty state changes                                                                                                                                                                                                                                                                                                                                |
-| `onActiveSlideChange`                                                      | `(index: number) => void`               | n/a      | Called when the active slide changes                                                                                                                                                                                                                                                                                                                           |
-| `onModeChange`                                                             | `(mode: ViewerMode) => void`            | n/a      | Called when the viewer mode changes                                                                                                                                                                                                                                                                                                                            |
-| `onZoomChange`                                                             | `(zoom: number) => void`                | n/a      | Called when the zoom level changes                                                                                                                                                                                                                                                                                                                             |
-| `onSelectionChange`                                                        | `(ids: string[]) => void`               | n/a      | Called when element selection changes                                                                                                                                                                                                                                                                                                                          |
-| `onSlideCountChange`                                                       | `(count: number) => void`               | n/a      | Called when the total slide count changes                                                                                                                                                                                                                                                                                                                      |
-| `onStartCollaboration`                                                     | `(config: CollaborationConfig) => void` | n/a      | Called when the user starts a collaboration session from the Share dialog                                                                                                                                                                                                                                                                                      |
-| `onStopCollaboration`                                                      | `() => void`                            | n/a      | Called when the collaboration session stops                                                                                                                                                                                                                                                                                                                    |
-| `theme`                                                                    | `ViewerTheme`                           | n/a      | Theme configuration for customising colours, radius, and CSS vars                                                                                                                                                                                                                                                                                              |
-| `hiddenActions`                                                            | `ToolbarActionId[]`                     | n/a      | Hide individual toolbar buttons and/or ribbon tabs (e.g. `['share', 'broadcast']`) instead of the whole toolbar; omitted hides nothing                                                                                                                                                                                                                         |
-| `ribbonAddIns`                                                             | `RibbonAddInTab[]`                      | n/a      | Ribbon tabs the host adds after Help; a command runs its `run` callback and raises `office-ribbon-add-in` (see the customization guide)                                                                                                                                                                                                                        |
-| `customization`                                                            | `ViewerCustomization`                   | -        | Hide, lock or remap any part of the UI (ribbon tabs/buttons, File > Options pages/sections/settings, File tab, context menus, shortcuts, panels, AI/collaboration, dialogs); the same helpers (`hideRibbonTab`, `lockSetting`, ...) are on the `ref` handle. See the [UI Customization guide](https://christophervr.github.io/ooxml/pptx/guide/customization). |
-| `defaultThemeKey`                                                          | `string`                                | n/a      | Initial File > Options > Appearance selection when no persisted preference exists                                                                                                                                                                                                                                                                              |
-| `availableThemes`                                                          | `ThemeCatalogEntry[]`                   | n/a      | Theme choices offered by File > Options > Appearance (defaults to the built-in catalog)                                                                                                                                                                                                                                                                        |
-| `onThemeChange`                                                            | `(key: string) => void`                 | n/a      | Host hook for the appearance picker; when set, the host owns persisting the choice                                                                                                                                                                                                                                                                             |
-| `defaultLocale`                                                            | `string`                                | n/a      | Initial locale code when no persisted preference exists. Ignored inside a `PptxI18nProvider`, whose `locale` is the language                                                                                                                                                                                                                                   |
-| `availableLocales`                                                         | `LocaleCatalogEntry[]`                  | n/a      | Locale choices offered by File > Options > Language (defaults to the registered i18next locales; inside a `PptxI18nProvider` no default: pass two or more with `onLocaleChange`)                                                                                                                                                                               |
-| `onLocaleChange`                                                           | `(code: string) => void`                | n/a      | Host hook for the language picker; when set, the host owns applying/persisting the switch. Inside a `PptxI18nProvider` the host always owns it, and without this callback the Language category is left out                                                                                                                                                    |
-| `accountAuth`                                                              | `AccountAuthConfig`                     | n/a      | Optional sign-in hook point for File > Account (disabled unless `enabled: true`)                                                                                                                                                                                                                                                                               |
+**The ref handle.** `PowerPointViewerHandle` covers navigation, zoom, mode, selection, undo and redo, plus the shared slide and element API (`getSlides`, `addSlide`, `addElement`, `updateElement`, `deleteElements` and the rest). See [the handle](https://christophervr.github.io/ooxml/pptx/react/handle).
 
-### `PowerPointViewerHandle` (via `ref`)
+**Your own shell.** `useViewerBuildingBlocks` runs the full viewer engine behind `SlideCanvas`, `Toolbar` and `SlidesPane`, so you can place them in your own layout and answer picker and dialog requests with your own UI. See [hooks](https://christophervr.github.io/ooxml/pptx/react/hooks#public-hooks).
 
-| Method                  | Signature                    | Description                              |
-| ----------------------- | ---------------------------- | ---------------------------------------- |
-| `getContent`            | `() => Promise<Uint8Array>`  | Serialise current state to .pptx bytes   |
-| `goTo`                  | `(index: number) => void`    | Navigate to a slide by zero-based index  |
-| `goPrev`                | `() => void`                 | Navigate to the previous slide           |
-| `goNext`                | `() => void`                 | Navigate to the next slide               |
-| `undo`                  | `() => void`                 | Undo the last editing action             |
-| `redo`                  | `() => void`                 | Redo the last undone action              |
-| `canUndo`               | `() => boolean`              | Whether an undo action is available      |
-| `canRedo`               | `() => boolean`              | Whether a redo action is available       |
-| `getZoom`               | `() => number`               | Get the current zoom level (1 = 100%)    |
-| `setZoom`               | `(level: number) => void`    | Set the zoom level                       |
-| `zoomIn`                | `() => void`                 | Zoom in by one step                      |
-| `zoomOut`               | `() => void`                 | Zoom out by one step                     |
-| `zoomReset`             | `() => void`                 | Reset zoom to 100%                       |
-| `getMode`               | `() => ViewerMode`           | Get the current viewer mode              |
-| `setMode`               | `(mode: ViewerMode) => void` | Switch mode programmatically             |
-| `getActiveSlideIndex`   | `() => number`               | Get the zero-based active slide index    |
-| `getSlideCount`         | `() => number`               | Get the total number of slides           |
-| `isDirty`               | `() => boolean`              | Whether the document has unsaved changes |
-| `getSelectedElementIds` | `() => string[]`             | Get IDs of selected elements             |
-| `selectElements`        | `(ids: string[]) => void`    | Programmatically select elements by ID   |
-| `clearSelection`        | `() => void`                 | Clear the current selection              |
+**Translations.** Labels go through your `react-i18next` instance (`pptx-react-viewer/i18n` has the English dictionary and `keyToLabel` for a fallback). To use Lingui, FormatJS or another library, wrap the viewer in `PptxI18nProvider` with a `translate(key, params)` function, and import from `pptx-react-viewer/no-i18next` to leave i18next out of the bundle. Dictionaries for the other languages are at `pptx-react-viewer/i18n/fr`, `/es`, `/de`, `/zh-CN`, `/ja` and `/ko`. See [localization](https://christophervr.github.io/ooxml/pptx/guide/localization).
 
-The handle implements the full shared `PowerPointViewerAPI`, so the following
-slide/element manipulation methods are also available:
-`setActiveSlideIndex(index)`, `getSlides()`, `getSlide(index)`,
-`getActiveSlide()`, `addSlide(afterIndex?)`, `deleteSlides(indexes)`,
-`duplicateSlides(indexes)`, `moveSlide(from, to)`, `toggleHideSlides(indexes)`,
-`getElements(slideIndex?)`, `getElementById(id, slideIndex?)`,
-`addElement(element)`, `updateElement(id, patch)`, `deleteElements(ids)`, and
-`duplicateElement(id)`.
-
-See [element insertion](https://christophervr.github.io/ooxml/pptx/react/handle#add-element)
-for the `addElement` contract, including the headless handle, and a core-factory example.
-
-### `renderToCanvas`
-
-Standalone utility for rendering a DOM element to a Canvas (with an oklch colour-space workaround):
-
-```typescript
-import { renderToCanvas } from 'pptx-react-viewer';
-
-const canvas = await renderToCanvas(element, options); // => HTMLCanvasElement
-```
-
-### Viewport fit options
+**AI assistant.** Create one assistant with `createAiAssistant` from `pptx-react-viewer/ai` and pass it to `ai`. Its panel and the AI SDK load only when the user opens it. See the [assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant).
 
 ```tsx
-<PowerPointViewer content={content} fitPadding={0} maxFitScale={null} />
-```
-
-`fitPadding` accepts a per-side CSS-pixel number or `{ horizontal, vertical }`.
-`maxFitScale` accepts a positive ceiling or `null` for unlimited enlargement.
-Omission preserves React's 4 px horizontal / 16 px vertical padding and fit
-ceiling of 1. These host options do not change the document or user zoom; ruler
-space and surrounding chrome remain separate. See the [cross-binding defaults](../../docs/guide/viewport-fit.md).
-
-### Composing a custom viewer shell
-
-`<PowerPointViewer>` bundles a full editor chrome (toolbar, canvas, side panels, dialogs, presentation mode). If you only need the toolbar and slide canvas, with your own layout around them, `Toolbar` and `SlideCanvas` are exported as standalone components, and `useViewerBuildingBlocks` wires up the same state and hooks `PowerPointViewer` uses internally, mapped into the flat props those two components expect:
-
-```tsx
-import { Toolbar, SlideCanvas, useViewerBuildingBlocks } from 'pptx-react-viewer';
-
-function MyCustomViewer({ content }: { content: Uint8Array }) {
-	// Also returned: `mode` (current ViewerMode) and `autosaveStatus`
-	const { toolbarProps, canvasProps, loading, error } = useViewerBuildingBlocks({
-		content,
-		canEdit: true,
-		fitPadding: 0,
-		maxFitScale: null,
-	});
-
-	if (loading) return <p>Loading…</p>;
-	if (error) return <p>Failed to load: {error}</p>;
-
-	return (
-		<div style={{ display: 'flex', flexDirection: 'column', height: 540, minHeight: 0 }}>
-			<Toolbar {...toolbarProps} />
-			<SlideCanvas {...canvasProps} showRulers={false} />
-		</div>
-	);
-}
-```
-
-The example disables rulers for edge-aligned fitting. Existing ruler offsets are
-unchanged when rulers are enabled; `fitPadding: 0` does not remove those offsets.
-The toolbar also uses part of the host height, so the canvas fits its remaining
-viewport rather than the whole 540 px host.
-
-`useViewerBuildingBlocks` accepts the same `content` / `canEdit` / `filePath` / `hiddenActions` / `onDirtyChange`-style inputs as `PowerPointViewer`, plus `onOpenSettings` / `onOpenHeaderFooter` / `onOpenShareDialog` callbacks (fired by the corresponding toolbar buttons) since this composition doesn't render those dialogs itself. It's an additive alternative, not a replacement: dialogs, presentation-mode overlays, mobile chrome, resizable side panels, and real-time collaboration are all part of `PowerPointViewer` and are out of scope for these building blocks. Reach for `PowerPointViewer` when you need the full editor; reach for `useViewerBuildingBlocks` when you're assembling your own chrome around just the toolbar and canvas.
-
-The bundled stylesheet's base reset (Tailwind's preflight) applies only inside the viewer root, a canvas viewport and elements with a `data-pptx-scope` attribute, so your page's own headings, lists and margins stay as they are. `SlideCanvas` and `Toolbar` carry the scope themselves; give any other element of a composed shell that uses the viewer's classes an ancestor with `data-pptx-scope`. A canvas-only shell can import `pptx-react-viewer/canvas.css` instead of `pptx-react-viewer/styles`.
-
----
-
-## Styling & theming
-
-The viewer's UI references **CSS custom properties** (`--pptx-*`, the shadcn/ui token convention) for every visual token, so it works three ways:
-
-- **Tailwind CSS v4 project**: the viewer classes resolve through your existing Tailwind tokens. No extra CSS import needed.
-- **No Tailwind**: import the bundled stylesheet once at your app entry: `import 'pptx-react-viewer/styles';`
-- **Canvas only**: a host that renders just `SlideCanvas` (see [Composing a custom viewer shell](#composing-a-custom-viewer-shell)) can import `pptx-react-viewer/canvas.css` instead: the same tokens and reset with only the utilities the canvas uses (about 46 KB, 8 KB gzipped, against 112 KB, 16 KB gzipped).
-- **CSS custom properties**: define the `--pptx-*` properties yourself for full control.
-
-Override specific values with the `theme` prop:
-
-```tsx
-<PowerPointViewer
-	content={bytes}
-	theme={{
-		colors: { primary: '#6366f1', background: '#0f172a' },
-		radius: '0.5rem',
-	}}
-/>
-```
-
-All `ViewerTheme.colors` keys are optional; override only what you need. Helpers `defaultThemeColors`, `defaultRadius`, `themeToCssVars`, `defaultCssVars`, `ViewerThemeProvider`, and `useViewerTheme` are exported for advanced use. See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete token list.
-
-Two ready-made presets ship with the package: `vermilionLightTheme` (warm paper canvas) and `vermilionDarkTheme` (dimmed presenter room), the same vermilion brand look as the [documentation site](https://christophervr.github.io/ooxml/pptx/):
-
-```tsx
-import { PowerPointViewer, vermilionLightTheme } from 'pptx-react-viewer';
-
-<PowerPointViewer content={bytes} theme={vermilionLightTheme} />;
-```
-
-The underlying palettes (`vermilionLightColors`, `vermilionDarkColors`) and radius (`vermilionRadius`) are exported too, so you can spread them into your own variant.
-
-## AI assistant
-
-Create the assistant with `createAiAssistant` from the `pptx-react-viewer/ai` entry. Install the `ai` and `@ai-sdk/react` peers, create an assistant once (at module scope or in `useMemo`) and pass it to the `ai` prop:
-
-```tsx
-import { PowerPointViewer } from 'pptx-react-viewer';
 import { createAiAssistant } from 'pptx-react-viewer/ai';
 
 const assistant = createAiAssistant({ connection: { kind: 'endpoint', api: '/api/ai/chat' } });
-
-<PowerPointViewer content={bytes} ai={assistant} />;
+// <PowerPointViewer content={content} ai={assistant} />
 ```
 
-The panel still loads lazily, the first time the user opens it, and the main entries still reach the same lazy panel loader. The handle is opaque: only `createAiAssistant` makes one, and any other value is read as a plain config. A plain `PptxAiConfig` (`ai={{ connection }}`) keeps working through the viewer's own lazy panel and is not deprecated in this release; the handle is a preparatory, opt-in path for a later major release (see [The `/ai` entry](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant#ai-entry)). The `PptxAi*` types are exported from both `pptx-react-viewer` and `pptx-react-viewer/ai`. See the [AI assistant guide](https://christophervr.github.io/ooxml/pptx/guide/ai-assistant) for connection modes, tools and the write policy.
+## Configuration
 
-## Localization (i18n)
+The most used props; the [props reference](https://christophervr.github.io/ooxml/pptx/react/props) has all of them, and every binding takes the same set.
 
-UI labels go through [i18next](https://www.i18next.com/) / [react-i18next](https://react.i18next.com/) with dotted keys such as `pptx.statusBar.allSaved`, or through your own i18n library with `PptxI18nProvider` (see below). Initialise an i18next instance and wrap your app in `I18nextProvider` (the demo's `demos/pptx/demo-react/i18n.ts` shows a minimal config, including a `parseMissingKeyHandler` that derives Title Case labels for any key you don't explicitly translate). `pptx-react-viewer/i18n` exports `translationsEn` (the English dictionary), `keyToLabel` (the fallback), and a `TranslationKey` type you can use to type-check a new locale dictionary (`Record<TranslationKey, string>`) at compile time. Add a new language by supplying a resource bundle under its language code. See the [Localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization) for full wiring examples and how to contribute a translation upstream; the live demo's language picker is a working reference.
+| Prop                                                      | What it does                                                                                                     |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `canEdit`, `readOnly`                                     | Turn editing on, or force the deck read-only.                                                                    |
+| `initialSlide`, `showToolbar`, `showThumbnails`           | Starting slide and which chrome to show.                                                                         |
+| `theme`, `defaultThemeKey`, `availableThemes`             | Colours and radius as `--pptx-*` tokens, and the File > Options appearance choices.                              |
+| `customization`, `hiddenActions`, `ribbonAddIns`          | Hide, lock or remap ribbon tabs, commands, options, menus, shortcuts and panels; add your own tabs.              |
+| `fonts`, `googleFonts`                                    | Supply licensed fonts, and control or redirect web font downloads.                                               |
+| `allowExternalContent`                                    | Download a deck's linked pictures and media without asking (`true`) or block them silently (`false`).            |
+| `limits`                                                  | Bound the work a load may do, for decks you do not trust.                                                        |
+| `collaboration`, `shareDefaults`                          | Join or seed a real-time session.                                                                                |
+| `storage`, `fileProviders`, `autosave`                    | Save to your own storage or OneDrive, and control recovery autosave.                                             |
+| `ai`                                                      | The optional assistant.                                                                                          |
+| `fitPadding`, `maxFitScale`                               | How the slide fits its viewport ([viewport fit](https://christophervr.github.io/ooxml/pptx/guide/viewport-fit)). |
+| `onContentChange`, `onDirtyChange`, `onActiveSlideChange` | Follow edits and navigation.                                                                                     |
 
-### Use your own i18n library
+OneDrive needs a Microsoft sign-in your host provides; see the [OneDrive guide](https://christophervr.github.io/ooxml/pptx/guide/onedrive). It stores files and does not provide Office co-authoring.
 
-To translate the viewer with Lingui, FormatJS or any other library, wrap it (or the standalone building blocks) in `PptxI18nProvider` and pass a `translate(key, params)` function plus the active `locale`:
+## Supported environments
 
-```tsx
-import { i18n } from '@lingui/core';
-import { useLingui } from '@lingui/react';
-import { LOCALE_CATALOG, PowerPointViewer, PptxI18nProvider } from 'pptx-react-viewer';
-import type { PptxTranslate } from 'pptx-react-viewer';
-
-import { dynamicActivate } from './i18n'; // loads a catalog, then calls i18n.activate(code)
-
-// Module level, so it never changes: the viewer re-translates when `locale` changes.
-const translate: PptxTranslate = (key, params) => i18n._(key, params);
-const LOCALES = LOCALE_CATALOG.filter((entry) => ['en', 'fr'].includes(entry.code));
-
-function TranslatedViewer({ content }: { content: Uint8Array }) {
-	const { i18n: active } = useLingui(); // re-renders when the language changes
-	return (
-		<PptxI18nProvider locale={active.locale} translate={translate}>
-			<PowerPointViewer
-				content={content}
-				availableLocales={LOCALES}
-				onLocaleChange={(code) => void dynamicActivate(code)}
-			/>
-		</PptxI18nProvider>
-	);
-}
-```
-
-`translate` receives the viewer's params unchanged: `defaultValue`, `count` and the values of the `{{name}}` placeholders. Use the same names in your catalog (`{name}` in ICU syntax); `count` is a plain value, so pluralise in your catalog. `{{name}}` placeholders left in the text you return are filled too, so the shipped dictionaries work as they are: `const translate: PptxTranslate = (key) => translationsFr[key];`. A miss (the key itself, an empty string, nothing, or a throw) shows the built-in English text, then the call's default text, then a label derived from the key, never a raw key. Keep `translate` stable (a module-level function or `useCallback`): the viewer re-translates whenever `translate` or `locale` changes.
-
-Inside a provider the host owns the language: the viewer never calls `changeLanguage`, ignores `defaultLocale` and never restores a stored language choice. File > Options > Language appears only with `onLocaleChange` and two or more `availableLocales`; a pick calls `onLocaleChange`, and the selection follows `locale` (`fr-CA` selects an offered `fr`). A `PowerPointViewer` reads the provider nearest above it; a provider rendered inside the viewer is ignored. `i18next` and `react-i18next` stay required peer dependencies in 4.x: install them, but inside a provider the viewer does not use them. To build without them, import from `pptx-react-viewer/no-i18next`: the same exports and types, with nothing that imports either library; outside a provider it shows the built-in English text and leaves File > Options > Language out (see [Without react-i18next](https://christophervr.github.io/ooxml/pptx/guide/localization#without-react-i18next)). `PptxI18nProvider` is React-only: the Vue and Angular bindings delegate to vue-i18n and ngx-translate, and Vanilla and Svelte take `messages` dictionaries.
-
-## How it's built
-
-You only need the `<PowerPointViewer>` component; everything else is internal. Behind it, the logic lives in many small, focused React hooks, and the components themselves just draw what those hooks produce. Slides are rendered as ordinary HTML and CSS (charts as inline SVG, tables as real `<table>` elements), which is why text stays sharp, selectable, and accessible. For the full component tree, the rendering pipeline, the animation and transition engine, connector routing, collaboration, and a file-by-file map, see the [full documentation](https://christophervr.github.io/ooxml/pptx/).
-
-A small curated set of those hooks is exported from `pptx-react-viewer/viewer` with a stable API; the complete set (80+) is also importable from `pptx-react-viewer/internals` for advanced integrations. The `internals` subpath is **not covered by semver**: prefer the stable root exports. See the [Hooks reference](https://christophervr.github.io/ooxml/pptx/react/hooks-reference) for the full list.
-
-The bulk of that cross-framework logic (colour/geometry/connector/animation/chart math, slide
-transitions, and more) actually lives in `pptx-viewer-shared`, a private facade over the shared renderer in `ooxml-ui/pptx`, that is
-**never published to npm**. If you need one of those framework-neutral helpers directly, for
-example the slide-transition resolver/keyframes (`resolveSlideTransition`,
-`resolveTransitionDurationMs`, `SLIDE_TRANSITION_KEYFRAMES`) or the `PresentationTransitionOverlay`
-component behind presentation mode, they are re-exported from `pptx-react-viewer/internals` too,
-so you never need `pptx-viewer-shared` yourself.
-
-## Limitations
-
-CSS-based rendering trades a few visual effects for crisp text, accessibility, and DOM interactivity: `backdrop-filter` becomes semi-transparent backgrounds and path gradients approximate as elliptical radials, while `mix-blend-mode` and CSS 3D transforms render natively on screen but flatten in raster export. Text uses fonts available in the browser (embedded fonts are injected when present). Media playback depends on browser codec support. SmartArt is decomposed into editable shapes with a live reflow engine for structural edits. Charts are editable directly on the canvas (hover a mark for its tooltip, click to select, drag it to a new value, double-click the title to rename), except for stacked/percent-stacked, pie, radar, surface and map kinds, which are click-to-select and edited in the inspector data grid. 3D models need the optional Three.js peer. See the [full docs](https://christophervr.github.io/ooxml/pptx/) for the complete list.
-
-## Reference translations
-
-Optional French, Spanish, German, and Simplified Chinese dictionaries ship with
-this package. Import only the language you need:
-
-```ts
-import { translationsZhCN } from 'pptx-react-viewer/i18n/zh-CN';
-```
-
-The other subpaths are `i18n/fr` (`translationsFr`), `i18n/es`
-(`translationsEs`), and `i18n/de` (`translationsDe`). See the
-[localization guide](https://christophervr.github.io/ooxml/pptx/guide/localization)
-for registration and runtime switching. Existing English imports are unchanged.
+- Browsers: the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+- React 18.2 or 19.
+- Node.js 22.3 or newer to install, build and test.
 
 ## Privacy and network use
 
 The viewer renders and saves decks in the browser and never uploads them. It contacts other servers only in these cases:
 
-- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as in PowerPoint, which downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to a self-hosted mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can also turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts and line breaks can differ from PowerPoint. If the download is slow, the deck waits up to 8 seconds, and it opens at once when the font server cannot be reached (offline use works). See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
-- **Linked pictures and media** in a deck are not fetched when it opens, as in Microsoft PowerPoint: a security bar ("SECURITY WARNING ... Enable Content") offers to download them for that presentation only. `allowExternalContent: true` downloads them without asking, `false` blocks them without the bar; the Trust Center option "Allow external content" (off by default) lets a user always allow them.
-- **Hyperlinks** open only when the reader clicks them, always in a new tab with `noopener` and `noreferrer`, so the linked site receives no referrer and cannot script the viewer's page, whatever frame the deck names. `file:` and `ftp:` links stay in the deck but are never opened. Relative links (no scheme, such as `notes.html`) stay in the deck and open, against the host page's address, only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
-- **Share and Broadcast**, only when started: updates go to the server you configure; with no server, peers meet through y-webrtc's public signaling server and public STUN servers. The signaling server sees a hash of the secret in the invitation link's `#key=` fragment (never the room name), the participants' IP addresses and encrypted signaling messages.
+- **Fonts that are neither installed nor embedded.** When a deck uses such a font and Google Fonts serves it (or a metric-compatible clone, such as Carlito for Calibri), the viewer downloads it from `fonts.googleapis.com` and `fonts.gstatic.com`, so the reader's IP address and the needed family names reach Google. This is on by default, as PowerPoint downloads its cloud fonts. Turn it off with `googleFonts: false`, or send the same requests to your own mirror with `googleFonts: { baseUrl: 'https://fonts.example.com/css2' }`. Readers can turn it off in File > Options > Trust Center ("Download fonts that are not installed or embedded (Google Fonts)"); a host value locks that toggle. With downloads off, text uses installed, embedded or substitute fonts, so line breaks can differ from PowerPoint. A slow download holds the deck for up to 8 seconds, and the deck opens at once when the font server cannot be reached, so offline use works. See [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md).
+- **Linked pictures and media** are not fetched when a deck opens, as in PowerPoint. A security bar offers **Enable Content**, which downloads them for that presentation only; in a shared session each participant chooses for themselves. The Trust Center option "Allow external content" (off by default) always allows them. `allowExternalContent: true` downloads them without asking, and `false` blocks them without the bar.
+- **Hyperlinks** open only when the reader clicks them, always in a new tab with `noopener` and `noreferrer`, so the linked site receives no referrer and cannot script the viewer's page, whatever frame the deck names. `file:` and `ftp:` links stay in the deck but never open. Relative links (no scheme, such as `notes.html`) open, against the host page's address, only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
+- **Share and Broadcast**, only when started. Updates go to the server you configure. With no server, peers meet through y-webrtc's public signaling server and public STUN servers; the signaling server sees a hash of the secret in the invitation link's `#key=` fragment (never the room name), the participants' IP addresses and encrypted signaling messages.
 
 Nothing collects analytics or telemetry. The full list, including what is kept in local storage, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
+## Related packages
+
+| Package                                                                                  | Use it for                                                        |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| [`pptx-vue-viewer`](https://www.npmjs.com/package/pptx-vue-viewer)                       | The same viewer for Vue 3.                                        |
+| [`pptx-angular-viewer`](https://www.npmjs.com/package/pptx-angular-viewer)               | The same viewer for Angular.                                      |
+| [`pptx-svelte-viewer`](https://www.npmjs.com/package/pptx-svelte-viewer)                 | The same viewer for Svelte 5.                                     |
+| [`pptx-vanilla-viewer`](https://www.npmjs.com/package/pptx-vanilla-viewer)               | The same viewer with no framework.                                |
+| [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)                     | Reading, building and saving decks in Node or a worker, no UI.    |
+| [`pptx-viewer-mcp`](https://www.npmjs.com/package/pptx-viewer-mcp)                       | PowerPoint editing tools for AI agents, as an MCP server.         |
+| [`@christophervr/pptx-viewer`](https://www.npmjs.com/package/@christophervr/pptx-viewer) | This viewer under a scoped name, plus an `npx` project installer. |
+
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), which also has [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme), [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) and [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) viewers.
+
 ## License
 
-[Apache-2.0](LICENSE). Please keep the [`NOTICE`](NOTICE) file with redistributions.
-
-## OneDrive integration
-
-Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
-sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#powerpoint-pptx)
-for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
-The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
-separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
-OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE). Keep the [NOTICE](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/NOTICE) file with redistributions.

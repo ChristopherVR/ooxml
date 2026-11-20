@@ -1,194 +1,109 @@
 # pptx-viewer-mcp
 
-[![npm](https://img.shields.io/npm/v/pptx-viewer-mcp.svg)](https://www.npmjs.com/package/pptx-viewer-mcp)
-[![license](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE)
+Let an AI agent read and edit PowerPoint files: an [MCP](https://modelcontextprotocol.io) server with 74 PowerPoint tools, and the same tools as plain functions for your own code.
 
-Edit PowerPoint files from an AI agent. It ships a ready-to-run [MCP](https://modelcontextprotocol.io) server with 74 PowerPoint editing tools, including adding slides, replacing text, editing charts, and updating embedded objects. The same operations are available as plain functions you can call yourself, alongside their Zod input schemas and a codec for real-time collaboration (Y.Doc). The [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core) engine is a dependency, so one install provides the complete editing stack.
+[![npm version](https://img.shields.io/npm/v/pptx-viewer-mcp.svg)](https://www.npmjs.com/package/pptx-viewer-mcp)
+[![license](https://img.shields.io/npm/l/pptx-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE)
+
+[Docs](https://christophervr.github.io/ooxml/pptx/packages/mcp) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/tools/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
 ![An AI agent calling validated MCP tools to edit and save a PowerPoint file](https://raw.githubusercontent.com/ChristopherVR/ooxml/main/viewers/pptx/.github/assets/packages/mcp-tools.svg)
 
-- **Live demo:** https://christophervr.github.io/ooxml/pptx/demo/
-- **Docs:** https://christophervr.github.io/ooxml/pptx/
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; **[PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme)** &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
+The tools add and reorder slides, edit text, tables, charts, SmartArt, themes, layouts and embedded objects, validate and repair a deck, and export it to Markdown, JSON or SVG. They are `pptxTools` from `ooxml-core/pptx/automation`, registered the same way as the Word, Excel and Visio servers, so the built-in assistant of the PowerPoint viewers runs the same code.
 
 ## Quick start
 
-This package is, first and foremost, an MCP server. The recommended way to use it is to point an MCP client at the published binary. Calling the tools as a library is a secondary, lower-level option (see [Use as a library](#use-as-a-library)).
-
-### 1. Run as an MCP server (recommended)
-
-No clone, no build, no separate core install. Point your MCP client at the published binary via `npx`:
+Point your MCP client (Claude Desktop, Claude Code, Cursor or any other) at the published server:
 
 ```json
 {
 	"mcpServers": {
 		"pptx": {
 			"command": "npx",
-			"args": ["pptx-viewer-mcp"]
+			"args": ["pptx-viewer-mcp", "--root", "/path/to/decks"]
 		}
 	}
 }
 ```
 
-That is the entire setup. `npx` downloads `pptx-viewer-mcp` and its bundled `pptx-viewer-core` engine on first run, so there is nothing else to install. Add the config above, restart your client, and the tools are available.
+Restart the client and the tools are there. Every tool takes a `filePath` and loads and saves the deck itself. Files are scoped to the root directory: `--root <dir>`, else the `PPTX_TOOLS_ROOT` environment variable, else the working directory (with a warning on stderr). Tools read `.pptx` and `.ppt` and write `.pptx`.
 
-This works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client. All 74 tools are exposed over stdio in snake_case (for example `add_slide`, `batch_update_elements`). Every tool takes a `filePath` argument and the server handles loading and saving internally. File access is scoped to a root directory (`PPTX_TOOLS_ROOT`, defaulting to the process working directory) and restricted to `.pptx` and `.ppt` files; edits write `.pptx` only. The tools themselves are `pptxTools` in `ooxml-core/pptx/automation`, registered with the same `registerAutomationTools` call as the Word, Excel and Visio servers.
-
-> If you prefer a global install (`npm i -g pptx-viewer-mcp`), the same server is available as the `pptx-tools` binary. Point `command` at `pptx-tools` with no args.
-
-### 2. Use as a library (advanced)
-
-If you are embedding PPTX editing in your own app instead of running the MCP server, install the package once:
-
-```sh
-npm install pptx-viewer-mcp
-# optional, only for the Y.Doc collaboration codec:
-npm install yjs
-```
-
-The `pptx-viewer-core` engine is a regular dependency, so it installs automatically. You import everything you need (tools and the engine) from `pptx-viewer-mcp`, with no separate `pptx-viewer-core` install or import:
-
-```ts
-import { readFile, writeFile } from 'node:fs/promises';
-
-import { PptxHandler, addSlide, getSlide } from 'pptx-viewer-mcp';
-
-const handler = new PptxHandler();
-const bytes = await readFile('deck.pptx');
-const pptxData = await handler.load(bytes.buffer);
-
-const ctx = { pptxData };
-const { pptxData: updated, dirty } = addSlide(ctx, { insertAfterIndex: 0 });
-
-if (dirty) {
-	const out = await handler.save(updated.slides);
-	await writeFile('deck.pptx', out);
-}
-
-const { result } = getSlide(ctx, { slideIndex: 0 });
-console.log(result.elements);
-```
-
-See [Use as a library](#use-as-a-library) below for the higher-level `executeToolWithContext` helper that handles the load and save cycle for you.
-
-## Exports
-
-| Entry point               | Contents                                                                                              |
-| ------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `pptx-viewer-mcp`         | Tool functions, the `PptxHandler` engine, provider types, and the execution pipeline                  |
-| `pptx-viewer-mcp/schemas` | Zod schemas for every tool input                                                                      |
-| `pptx-viewer-mcp/codec`   | `PptxCodec`, the Y.Doc to PPTX bytes codec                                                            |
-| `pptx-viewer-mcp/mcp`     | The runnable stdio server entry (what `npx pptx-viewer-mcp` executes); importing it starts the server |
+A global install (`npm install -g pptx-viewer-mcp`) provides the same server as the `pptx-tools` command.
 
 ## Tools
 
-| Group                | Tools                                                                                                                                                                                                                                                                                              |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Slide (8)            | `getSlide` `addSlide` `deleteSlides` `reorderSlides` `duplicateSlide` `updateSlideProperties` `setSlideTransition` `setCanvasSize`                                                                                                                                                                 |
-| Element (10)         | `addElement` `updateElement` `renameElement` `deleteElements` `arrangeElements` `cloneElement` `setElementAnimation` `groupElements` `ungroupElements` `batchUpdateElements`                                                                                                                       |
-| Table (2)            | `updateTableCells` `manageTableStructure`                                                                                                                                                                                                                                                          |
-| Table style (4)      | `setTableStyleSection` `createTableStyle` `deleteTableStyle` `assignTableStyle`                                                                                                                                                                                                                    |
-| Style (2)            | `updateElementStyle` `runAccessibilityCheck`                                                                                                                                                                                                                                                       |
-| Content (3)          | `findText` `replaceText` `manageComments`                                                                                                                                                                                                                                                          |
-| Chart (14)           | `createChart` `updateChart` `addChartSeries` `removeChartSeries` `updateChartSeriesData` `listChartUserShapes` `addChartUserShape` `updateChartUserShape` `removeChartUserShape` `formatChartDataPoint` `formatChartDataLabel` `formatChartSeries` `setChartHelperLine` `setChartColorMapOverride` |
-| Theme (4)            | `getThemeInfo` `applyThemePreset` `updateThemeColors` `updateThemeFonts`                                                                                                                                                                                                                           |
-| SmartArt (1)         | `manageSmartArt`                                                                                                                                                                                                                                                                                   |
-| Conversion (1)       | `convertToMarkdown`                                                                                                                                                                                                                                                                                |
-| Template (2)         | `findPlaceholders` `applyTemplate`                                                                                                                                                                                                                                                                 |
-| Metadata (2)         | `getMetadata` `updateMetadata`                                                                                                                                                                                                                                                                     |
-| Sections (1)         | `manageSections`                                                                                                                                                                                                                                                                                   |
-| Export (2)           | `exportToSvg` `exportSlideSvg`                                                                                                                                                                                                                                                                     |
-| JSON (2)             | `exportToJson` `importFromJson`                                                                                                                                                                                                                                                                    |
-| Hyperlinks (1)       | `manageHyperlinks`                                                                                                                                                                                                                                                                                 |
-| Geometry (1)         | `replaceGeometry`                                                                                                                                                                                                                                                                                  |
-| Locking (1)          | `setElementLock`                                                                                                                                                                                                                                                                                   |
-| Validation (2)       | `validatePresentation` `repairPresentation`                                                                                                                                                                                                                                                        |
-| Presentation (2)     | `getPresentationProperties` `updatePresentationProperties`                                                                                                                                                                                                                                         |
-| Layout (2)           | `getLayouts` `applyLayout`                                                                                                                                                                                                                                                                         |
-| Embedded objects (6) | `getOleContent` `setOleSheetCell` `setOleDocumentParagraph` `setOleDeckSlideTitle` `replaceOleFile` `setOleObjectName`                                                                                                                                                                             |
+The table gives the function names; over MCP the tools have snake_case names (`add_slide`, `batch_update_elements`, `ole_get_content`).
 
-## Use as a library
+| Group            | Tools                                                                                                                                                                                                                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slides           | `getSlide` `addSlide` `deleteSlides` `reorderSlides` `duplicateSlide` `updateSlideProperties` `setSlideTransition` `setCanvasSize`                                                                                                                                                                 |
+| Elements         | `addElement` `updateElement` `renameElement` `deleteElements` `arrangeElements` `cloneElement` `setElementAnimation` `groupElements` `ungroupElements` `batchUpdateElements` `setElementLock` `replaceGeometry`                                                                                    |
+| Tables           | `updateTableCells` `manageTableStructure` `setTableStyleSection` `createTableStyle` `deleteTableStyle` `assignTableStyle`                                                                                                                                                                          |
+| Text and review  | `findText` `replaceText` `manageComments` `manageHyperlinks` `updateElementStyle` `runAccessibilityCheck`                                                                                                                                                                                          |
+| Charts           | `createChart` `updateChart` `addChartSeries` `removeChartSeries` `updateChartSeriesData` `listChartUserShapes` `addChartUserShape` `updateChartUserShape` `removeChartUserShape` `formatChartDataPoint` `formatChartDataLabel` `formatChartSeries` `setChartHelperLine` `setChartColorMapOverride` |
+| Themes, layouts  | `getThemeInfo` `applyThemePreset` `updateThemeColors` `updateThemeFonts` `getLayouts` `applyLayout` `findPlaceholders` `applyTemplate`                                                                                                                                                             |
+| Deck             | `getMetadata` `updateMetadata` `getPresentationProperties` `updatePresentationProperties` `manageSections` `manageCustomShows` `manageSmartArt` `validatePresentation` `repairPresentation`                                                                                                        |
+| Embedded objects | `getOleContent` `setOleSheetCell` `setOleDocumentParagraph` `setOleDeckSlideTitle` `replaceOleFile` `setOleObjectName`                                                                                                                                                                             |
+| Export           | `convertToMarkdown` `exportToSvg` `exportSlideSvg` `exportToJson` `importFromJson`                                                                                                                                                                                                                 |
 
-These APIs back the MCP server. Reach for them when you embed PPTX editing directly rather than running the server.
+The [tools reference](https://christophervr.github.io/ooxml/pptx/packages/mcp) gives each one's parameters.
 
-### Call tools directly
+## As a library
 
-Each tool is a plain function: it takes the presentation data in and returns the changed data out, without reading or writing files itself and without depending on any framework. The basic load, edit, save loop is shown in [Use as a library (advanced)](#2-use-as-a-library-advanced) above.
+```bash
+npm install pptx-viewer-mcp
+npm install yjs # only for the collaboration codec
+```
 
-### Wrap load, tool, and save with `executeToolWithContext`
-
-`executeToolWithContext` handles the load and save cycle and, when a collaboration room is supplied, routes changes through a live Y.Doc instead of the disk.
+Each tool is a plain function: deck data in, changed data out, with no file access of its own. `PptxHandler` is re-exported, so one install loads and saves too.
 
 ```ts
 import { readFile, writeFile } from 'node:fs/promises';
 
-import {
-	executeToolWithContext,
-	type ExecutionContext,
-	type FileSystemProvider,
-	replaceText,
-} from 'pptx-viewer-mcp';
+import { PptxHandler, replaceText } from 'pptx-viewer-mcp';
 
-const filesystem: FileSystemProvider = {
-	readFile: (p) => readFile(p),
-	writeFile: (p, data) => writeFile(p, data),
-};
-
-const result = await executeToolWithContext('deck.pptx', { filesystem }, (ctx) =>
-	replaceText(ctx, { query: 'Draft', replacement: 'Final', caseSensitive: false }),
+const file = await readFile('deck.pptx');
+const handler = new PptxHandler();
+const pptxData = await handler.load(
+	file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength),
 );
 
-console.log(result.replacementCount, result.savedToDisk);
+const {
+	pptxData: updated,
+	dirty,
+	result,
+} = replaceText({ pptxData }, { query: 'Draft', replacement: 'Final' });
+if (dirty) await writeFile('deck.pptx', await handler.save(updated.slides));
+console.log(result.replacementCount);
 ```
 
-When you supply `collaboration` on the `ExecutionContext`, the tool reads the current shared (Y.Doc) state before running and writes the result back into it after saving, so other people in the session see the change without reloading the file.
+`executeToolWithContext(filePath, context, tool)` runs the load, tool and save cycle through a `FileSystemProvider` you supply, and, given a `collaboration` provider, writes the change into a live Y.Doc instead so everyone in the session sees it without reloading.
 
-## Architecture
+| Import                    | Contents                                                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `pptx-viewer-mcp`         | The tool functions, `PptxHandler`, the provider types and `executeToolWithContext`.                                          |
+| `pptx-viewer-mcp/schemas` | The Zod input schema of every tool.                                                                                          |
+| `pptx-viewer-mcp/codec`   | `PptxCodec`, between a Y.Doc and `.pptx` bytes.                                                                              |
+| `pptx-viewer-mcp/mcp`     | `createServer({ rootDir })` and `registerTools(server, { rootDir })`, to host the tools in your own MCP server or transport. |
 
-```
-ToolContext { pptxData }
-        |
-        v
-tool function  ->  ToolResult { pptxData, result, dirty }
-                        |
-                        v  (when dirty)
-              savePresentation()
-                |- collaboration room -> hydrate Y.Doc -> broadcast
-                '- no room -> writeFile to disk
-```
+## Supported environments
 
-`CollaborationProvider`, `FileSystemProvider`, and `ViewerProvider` are plain interfaces. Implement them for any runtime (Node, Electron, browser, or edge worker).
-
-## Development
-
-```sh
-bun run build      # tsup -> dist/
-bun run typecheck  # tsc --noEmit
-bun run test       # vitest run
-```
-
-## How it is built
-
-Document operations, load/save execution and the Y.Doc codec are owned by
-`ooxml-core/pptx/automation`. This repository owns MCP schemas, registration and
-the stdio CLI. Compatibility exports retain the existing library API.
-The `/mcp` import exports `createServer({ rootDir })` and `registerTools(server,
-{ rootDir })` without starting a transport; the CLI starts stdio separately.
+- Node.js 22.3 or newer.
+- Any MCP client that launches stdio servers.
+- On Windows, file tools refuse UNC and device paths, drive-relative paths and names Windows would reinterpret (such as `NUL` or a trailing dot) before touching the filesystem.
 
 ## Privacy and network use
 
 The MCP server talks to its client over stdio only and makes no network request of its own. It reads and writes files under its root directory, and linked pictures in a deck are not fetched. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
+## Related packages
+
+| Package                                                                | Use it for                                                                                                                                                                                                                                                                                                              |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)                 | One server with the Word, Excel, PowerPoint and Visio tools.                                                                                                                                                                                                                                                            |
+| [`pptx-viewer-core`](https://www.npmjs.com/package/pptx-viewer-core)   | The engine on its own, for scripts that build or convert decks.                                                                                                                                                                                                                                                         |
+| [`pptx-react-viewer`](https://www.npmjs.com/package/pptx-react-viewer) | A full viewer whose assistant panel drives these tools (also for [Vue](https://www.npmjs.com/package/pptx-vue-viewer), [Angular](https://www.npmjs.com/package/pptx-angular-viewer), [Svelte](https://www.npmjs.com/package/pptx-svelte-viewer) and [no framework](https://www.npmjs.com/package/pptx-vanilla-viewer)). |
+
 ## License
 
-Apache-2.0
-
-## OneDrive integration
-
-Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
-sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#powerpoint-pptx)
-for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
-The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
-separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
-OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/LICENSE).

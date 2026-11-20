@@ -1,9 +1,61 @@
 # Changelog
 
-All notable changes to this viewer's packages, newest first. Each dated section names the
-packages released that day and merges their entries; the full history of each package is in its
-own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
-sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
+All notable changes to this viewer's packages, newest first. Each section names the packages
+released that day; the full history of each package is in its own `CHANGELOG.md`
+(`packages/<name>/`, `mcp/`, `server/`).
+
+## Unreleased
+
+<!-- release-notes: 2.0 -->
+
+_Releases: pptx-viewer-core@5.0.0, pptx-react-viewer@5.0.0, @christophervr/pptx-viewer@3.0.0, pptx-vue-viewer@5.0.0, pptx-angular-viewer@5.0.0, pptx-svelte-viewer@5.0.0, pptx-vanilla-viewer@4.0.0, pptx-viewer-mcp@3.0.0_
+
+Every PowerPoint package moves to its next major version on the same day: `pptx-viewer-core` 5.0.0, the React, Vue, Angular and Svelte viewers 5.0.0, the vanilla viewer 4.0.0, `@christophervr/pptx-viewer` 3.0.0 and `pptx-viewer-mcp` 3.0.0. Most of the release makes the viewers safe to point at decks and rooms you do not control; the rest makes chart saves exact, carries pictures to people who join a shared deck, and brings the keyboard in line with PowerPoint in all five bindings. Upgrade them together with `ooxml-core` 2.0.0 and `ooxml-ui` 2.0.0, and read the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#powerpoint-viewers) for the before and after of each breaking change.
+
+### Breaking changes
+
+- Linked pictures, media and sounds wait for **Enable Content** on a security bar, as in PowerPoint; `allowExternalContent` restores automatic downloads or blocks them without the bar.
+- Links open in a new isolated tab only; `file:` and `ftp:` links never open, and relative links need `setOpenRelativeHyperlinks(true)`.
+- Peer-to-peer Share and Broadcast sessions are keyed by a secret in the link's `#key=` fragment; older links no longer join, and every participant of a room must run this release.
+- Signature state comes from one verified summary (`PptxData.signatures`, `signatureStatusView`); each binding's signature helpers changed. In Node, `pptx-viewer-core/signature-node` has no built-in trust roots and a stricter `verified-trusted`.
+- Tab reaches the slide before its objects, and assistant theme and presentation tools follow `writePolicy`.
+- Every package requires Node.js 22.3 or newer; MCP file tools refuse paths Windows would reinterpret.
+
+### Security
+
+- A deck reads as signed only when its signatures verify, in every binding.
+- Crafted files can no longer exhaust memory or stall a load, and collaboration peers can no longer run script in another participant's page or drop a frame from its room.
+- The Svelte viewer no longer lets a crafted presentation run script in a host page without a strict script policy.
+
+### Added
+
+- F6 regions and Enter-to-edit, a signature notice on open, translated reasons when a collaboration session cannot start or stops, and assistant run `limits`.
+- Every binding's building blocks expose the security bar the same way.
+
+### Fixed
+
+- Chart saves write exactly what changed and no longer grow the file through undo and redo; copied charts, SmartArt, masters and layouts get their own parts.
+- Joiners of a shared deck see its pictures and media; broadcast audiences follow the presenter in every binding.
+- Focus stays put through editing, dialogs and the File page; Safari and iPad export, copy, print and respond to touch.
+
+### Performance
+
+- SmartArt and chart decks load and save in a fraction of the time, chart save history stays within 32 MiB, and the thumbnail rail scrolls at full frame rate.
+
+### Accessibility
+
+- Every change is checked in a real browser in all five bindings (keyboard contract, axe in light, dark and phone, 400% zoom); names contain their visible text and forced-colours states stay visible.
+
+### Packages
+
+- [`pptx-viewer-core` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/core/CHANGELOG.md)
+- [`pptx-react-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/CHANGELOG.md)
+- [`@christophervr/pptx-viewer` 3.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/cli/CHANGELOG.md)
+- [`pptx-vue-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vue/CHANGELOG.md)
+- [`pptx-angular-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/angular/CHANGELOG.md)
+- [`pptx-svelte-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/svelte/CHANGELOG.md)
+- [`pptx-vanilla-viewer` 4.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vanilla/CHANGELOG.md)
+- [`pptx-viewer-mcp` 3.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/tools/CHANGELOG.md)
 
 ## 2026-11-17
 

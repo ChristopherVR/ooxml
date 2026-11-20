@@ -1,11 +1,78 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [5.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@5.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+This release hardens the headless PowerPoint engine for decks you do not control. Node signature verification (`pptx-viewer-core/signature-node`) is strict: `verified-trusted` now needs an intact signature that covers the document and a document-signing certificate that chains to a root you configure, since no trust roots are built in any more. Crafted packages can no longer exhaust memory or stall a load, chart edits save exactly the data that changed, and SmartArt and chart decks load and save in a fraction of the time. `pptx-viewer-core` is a thin re-export of `ooxml-core/pptx`, so the same changes reach both. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#pptx-viewer-core-and-ooxml-corepptx) gives the before and after for each breaking change.
+
+### Breaking changes
+
+- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`.
+- No trust roots are built in, and the platform's TLS roots are no longer used: an intact signature reports `verified-untrusted` until you set `PPTX_VIEWER_TRUST_ROOTS_PEM` or `PPTX_VIEWER_TRUST_ROOTS_FILE`.
+- `verified-trusted` requires a signature value that verifies, every signed reference verifying, references that cover the document content, and a signer certificate that permits document signing (key usage `digitalSignature` or `nonRepudiation`; an extended key usage of only `clientAuth` or only `codeSigning` is untrusted) and chains to a configured root within its `pathLenConstraint`. Reissue certificates that do not qualify if their signatures must report `verified-trusted`.
+- A new status, `coverage-incomplete`, on the report and on each signature detail: a stored item no signature covers is reported even when no relationship points at it (document properties, thumbnails, custom XML, presentation and view properties may stay unsigned in their usual locations). `SignatureDetail` gains the required `uncoveredParts` and `coverageGaps`, and `SignatureReferenceCheck.digestStatus` gains `content-type-mismatch`.
+- `computeDetailStatus` and `computeVerificationStatus` decide integrity first: a failed signature value, reference or coverage check outranks certificate, revocation, timestamp and policy statuses, so some packages report a different status than before. `referenceChecks` is empty unless the signature value verified, and `signingTime` is read only from signed content.
+- `PPTX_VIEWER_REQUIRE_TIMESTAMP` can no longer be satisfied: timestamp tokens are not validated, `evaluateTimestampAuthority` reports `not-checked`, and with the variable set every signature reports `timestamp-untrusted`. Remove it unless you want every signature rejected.
+- Removed `verifySignatureValue` (use `parseXmlSignature` then `verifySignedInfo`), `buildReferenceChecksFromSignatureXml` and `buildReferenceChecksFromPptxViewerManifest` (use `checkSignedReferences`), `PPTX_VIEWER_MANIFEST_NS` and `normalizePartPath`. The unsigned manifest extension and the enveloped signature transform are no longer read. `evaluateSignatureCoverage` no longer takes the signature paths, and `SignaturePackage` gains `namesByKey`.
+- `resolveReferenceUriToPart` and `parseReferenceUri` strip the `?ContentType=` query, keep the percent-encoding of the part name and return `undefined` for a URI that does not name exactly one valid part.
+- `signPptxWithCertificate` returns `success: false` and no `signedData` for a stored item whose name is not a valid part name, for a relationships part the strict reader rejects, and for output whose signature does not verify and cover its content. Check `success` before using the result.
+- `parseRelationshipsPart` moved to `ooxml-core/opc` and throws on a part the schema does not allow. `PptxHandler.load` rejects a signed package whose relationships part has an element outside the OPC namespace, a repeated `Id`, an invalid `TargetMode` or attributes the schema does not allow; unsigned packages load as before.
+- OCSP revocation checks use `node:http` and `node:https` instead of the global `fetch`, so a replaced `globalThis.fetch`, a fetch dispatcher or a fetch proxy no longer sees them. Allow direct outbound HTTP and HTTPS to public responders, intercept at the `node:http` level in tests, or pass `{ checkRevocation: false }` to `inspectPptxDigitalSignatures`.
+- Element ids are built from an encoded form of the part name. Decks whose part names use only letters, digits, `-`, `.`, `_`, `~` and `/` keep the same ids (such as `ppt/slides/slide1.xml-shape-0`); any other character now appears percent-encoded. Reload such decks and read the ids again; `PptxSlide.id` is unchanged.
+- Slides read from a collaboration room (`readSlidesFromYDoc`, `readSlideFromYMap`) are checked: unsafe element ids are encoded, picture, media, model and embedded-file fields keep only URLs of their kind, a malformed MIME type is refused, and anything else is left out with a `COLLABORATION_REMOTE_VALUE_REJECTED` slide warning. Pictures and media travel through the room as `ooxml-media:<id>` tokens with their bytes in the `pptx:media` map; a raw `blob:` URL written by a peer is refused.
+- `PptxChartData.embeddedWorkbookData` (the parsed rows of a chart's embedded workbook) is set only when the load needed them. To read any chart's rows, pass `chartData.externalData.embeddedWorkbookData` (the workbook bytes, still set) to `parseEmbeddedXlsx`.
+
+### Security
+
+- Signature references are taken only from the verified `SignedInfo` and the `Manifest` elements it protects; signatures with repeated, misplaced or ambiguous structure, duplicate `Id` values or document type declarations are rejected; a relationship added beside signed content is reported; and part names compare as ECMA-376 Part 2 requires, so case and percent-encoded variants of a part are not overlooked.
+- A revocation or timestamp policy can no longer hide an integrity failure. Revocation requests are sent only for certificates that verified a signature value, only to globally routable addresses, and the connection is made to the address that was checked.
+- Signatures written by `signPptxWithCertificate` bind each part to its content type and no longer reference `[Content_Types].xml`.
+- Every package is opened through the guarded zip reader, so a small file can no longer inflate without limit; signature listing ignores a signature part larger than 16 MiB.
+- Chart point counts and point indices no longer decide how much memory is allocated, whether a package holds one chart part or thousands. Before, a chart of a few hundred bytes could exhaust memory.
+- Raw XML scans that ran in time quadratic in the number of empty or unclosed elements (custom geometry, SmartArt text order, the declared-font scan) are linear, and the fast XML reader no longer treats names such as `constructor` as known entities or namespace prefixes.
+- A collaboration participant could put a script payload in an embedded object; peer values are checked before they reach the deck. SVG pictures are exposed as `data:` URLs instead of object URLs, so opening one in its own tab cannot run document-controlled script.
+- Releases are published from a pipeline in which third-party code cannot push, tag or publish, and the signed tarballs attached to each GitHub release are checked against the integrity the npm registry records.
+
+### Added
+
+- Signatures in the layout Office writes now verify: `SignedInfo` references to `Object` elements, `Manifest` references, `?ContentType` binding and the OPC relationship transform.
+- `inspectPptxDigitalSignatures(data, { checkRevocation: false })` makes no network request and reports revocation as `not-checked`.
+- `PptxChartData.structureEdits` lists the rows and series added or removed since the chart was loaded or saved, so a save writes exactly those changes.
+
+### Changed
+
+- Charts keep the point counts and points their file declares, however large, through loading, editing and saving. Views past the blank-point budget show fewer trailing blanks and the load reports `CHART_POINTS_LIMITED`.
+- `chartDataAddCategory` puts the new row after all of a chart's data, padding shorter series with blank points, and `chartDataAddSeries` gives the new series a value for every row of a chart with categories.
+- `pptx-viewer-core` accepts `@xmldom/xmldom` 0.9 as a peer; 0.8 still works.
+- Built and tested against `emf-converter` 5, which loads image decoders and colour data on demand from `dist/browser-chunks/` and `dist/node-chunks/`. Bundlers need no change; if you copy compiled files by hand, deploy those folders next to the entry files.
+
+### Fixed
+
+- Signature references to parts whose names contain percent-encoding resolve, XML parts that start with a UTF-8 byte order mark parse, a signed relationship to custom XML no longer makes a genuine signature `coverage-incomplete`, and signing again removes earlier signature parts in any letter case.
+- Saving a chart no longer turns blank points into zeros, writes only the workbook cells an edit changed, removes the row that was actually removed (with its bubble sizes), and gives back a chart part, ranges, caches and workbook that agree after undo and redo. Repeated undo, redo and save no longer grows the file, a chart on a duplicated slide writes into its own workbook, and very long ranges no longer overflow the stack.
+- A chart with no category labels no longer takes labels from the first column of its workbook, and the SDK's `removeChartCategory` and `addChartCategory` keep blank points on their rows and move per-point formatting with its point.
+- Duplicated or pasted charts, SmartArt, OLE objects and media get their own parts, and Insert Slide Master, Duplicate Master and Insert Layout give every master and layout an unused id, so pasting slides afterwards works.
+- An empty element no longer swallows the element after it in the raw XML scans that run before parsing, which could reorder SmartArt text.
+
+### Performance
+
+- A saved chart state is kept only while undo or redo can reach it, compressed and within 32 MiB per presentation, instead of one copy per save for the last 100 saves.
+- A one-slide SmartArt deck that took about 6 s to load and 6 s to save takes well under a second; a load reads the package's relationships once for all charts and parses embedded workbooks only when a chart needs their rows.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): the `ooxml-core/pptx` area this package re-exports, plus the shared `opc` and `collab` changes it relies on.
+- [`pptx-react-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/react/CHANGELOG.md): the React viewer, which bundles this engine.
+- [`@christophervr/pptx-viewer` 3.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/cli/CHANGELOG.md): the React viewer under its scoped name, and the `npx` installer.
+- [`pptx-vue-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vue/CHANGELOG.md): the Vue 3 viewer.
+- [`pptx-angular-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/angular/CHANGELOG.md): the Angular viewer.
+- [`pptx-svelte-viewer` 5.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/svelte/CHANGELOG.md): the Svelte 5 viewer.
+- [`pptx-vanilla-viewer` 4.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/vanilla/CHANGELOG.md): the viewer with no framework.
+- [`pptx-viewer-mcp` 3.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/pptx/packages/tools/CHANGELOG.md): the PowerPoint tools for AI agents, built on this engine.
 
 ## [4.14.1](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-core@4.14.1) - 2026-11-06
 
