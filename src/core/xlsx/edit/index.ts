@@ -45,7 +45,19 @@ export {
 export { MAX_OUTLINE_LEVEL } from './outline';
 export { selectedSparklineGroups, type SparklineGroupPatch } from './sparklines';
 export type { RemoveDuplicatesResult } from './duplicates';
-export { calcModeOf, calculateOnOpen, type CalcMode } from './calc-mode';
+export {
+	calcModeOf,
+	calculateOnOpen,
+	needsCalculationOnOpen,
+	type CalcMode,
+	type OpenCalculation,
+} from './calc-mode';
+export {
+	applyCalculatedCells,
+	calculateOnOpenCells,
+	type CalculatedCells,
+	type CalculatedSheet,
+} from './calc-results';
 export type { DocumentPropertiesPatch } from './doc-properties';
 export type { ExternalChange } from './external';
 export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math';

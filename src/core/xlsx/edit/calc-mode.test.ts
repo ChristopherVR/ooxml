@@ -104,14 +104,27 @@ describe('calculateOnOpen', () => {
 		const sheet = wb.sheets[0]!;
 		putCell(sheet, 0, 0, { value: 2 });
 		putCell(sheet, 0, 1, { value: 99, formula: 'A1*3' });
-		expect(calculateOnOpen(wb)).toBe(false);
+		expect(calculateOnOpen(wb)).toEqual({ ran: false });
 		expect(getCell(sheet, 0, 1)?.value).toBe(99);
 		wb.fullCalcOnLoad = true;
 		wb.calcMode = 'manual';
-		expect(calculateOnOpen(wb)).toBe(false);
+		expect(calculateOnOpen(wb)).toEqual({ ran: false });
 		expect(getCell(sheet, 0, 1)?.value).toBe(99);
 		delete wb.calcMode;
-		expect(calculateOnOpen(wb)).toBe(true);
+		expect(calculateOnOpen(wb)).toEqual({ ran: true });
 		expect(getCell(sheet, 0, 1)?.value).toBe(6);
+	});
+
+	it('stops at its time limit and leaves the formulas it did not reach as saved', () => {
+		const wb = createWorkbook({ sheets: ['S'] });
+		const sheet = wb.sheets[0]!;
+		for (let row = 0; row < 500; row++) putCell(sheet, row, 0, { value: -1, formula: 'ROW()' });
+		wb.fullCalcOnLoad = true;
+		expect(calculateOnOpen(wb, { timeLimitMs: 0 })).toEqual({ ran: true, stopped: 'time' });
+		const values = [...Array(500).keys()].map((row) => getCell(sheet, row, 0)?.value);
+		expect(values).toContain(-1);
+		expect(values.filter((v) => v === -1).length).toBeGreaterThan(400);
+		expect(calculateOnOpen(wb)).toEqual({ ran: true });
+		expect(getCell(sheet, 499, 0)?.value).toBe(500);
 	});
 });

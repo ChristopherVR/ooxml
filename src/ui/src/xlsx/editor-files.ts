@@ -26,7 +26,7 @@ import { confirmDialog } from '../dialog/message-dialogs';
 import { printWorkbook } from './print';
 import { packagePassword } from './dialogs/package-password';
 import type { SaveState } from './title-bar';
-import { createWorkbookOpener, OpenTimeoutError, type WorkbookOpener } from './workbook-opener';
+import { createWorkbookOpener, type WorkbookOpener } from './workbook-opener';
 import { saveProgressLabel } from '../files/save-progress-label';
 
 /** Chrome callbacks the file actions report to (title bar save state, backstage). */
@@ -42,7 +42,7 @@ let sharedOpener: WorkbookOpener | undefined;
 const sharedWorkbookOpener = (): WorkbookOpener => (sharedOpener ??= createWorkbookOpener());
 const openWorkbook: WorkbookOpener = (bytes, options) => sharedWorkbookOpener()(bytes, options);
 
-/** Starts the workbook worker while the page is idle, so the first open does not wait for it. */
+/** Starts the workbook worker while the page is idle, so a first calculation does not wait for it. */
 export function prewarmWorkbookOpener(view: (Window & typeof globalThis) | null): void {
 	const start = () => sharedWorkbookOpener().prewarm?.();
 	if (view && typeof view.requestIdleCallback === 'function') view.requestIdleCallback(start);
@@ -117,7 +117,7 @@ export async function loadInto(
 		if (calculationStopped)
 			core.shell?.toast(
 				core.ctx.t(
-					'Formulas were not recalculated on open because it took too long. The values shown are the saved ones; press F9 to recalculate.',
+					'Formulas were not all recalculated on open because it took too long or needed too much memory. Some values shown are the saved ones; press F9 to recalculate.',
 				),
 				'warning',
 			);
@@ -138,10 +138,7 @@ export async function loadInto(
 		if (notes[0]) core.shell?.toast(notes[0], 'info');
 	} catch (cause) {
 		if (generation !== core.loadGeneration) return;
-		throw reportError(
-			core,
-			cause instanceof OpenTimeoutError ? new Error(core.ctx.t(cause.message)) : cause,
-		);
+		throw reportError(core, cause);
 	} finally {
 		if (generation === core.loadGeneration) {
 			core.loading = false;

@@ -266,9 +266,8 @@ export const shell: Record<string, string> = {
 	'Tax rate': 'Tax rate',
 	Tax: 'Tax',
 	'Total due': 'Total due',
-	'Formulas were not recalculated on open because it took too long. The values shown are the saved ones; press F9 to recalculate.':
-		'Formulas were not recalculated on open because it took too long. The values shown are the saved ones; press F9 to recalculate.',
-	'The workbook took too long to open.': 'The workbook took too long to open.',
+	'Formulas were not all recalculated on open because it took too long or needed too much memory. Some values shown are the saved ones; press F9 to recalculate.':
+		'Formulas were not all recalculated on open because it took too long or needed too much memory. Some values shown are the saved ones; press F9 to recalculate.',
 	// Base of new sheet names (Sheet2, Tabelle2, Feuil2), as Excel names them per language.
 	'sheet.default-name': 'Sheet',
 };

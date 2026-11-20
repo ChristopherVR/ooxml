@@ -1,17 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createWorkbook, getCell, putCell } from 'ooxml-core/xlsx';
-import { saveWorkbook } from 'ooxml-core/xlsx/load';
+import { calculateOnOpenCells, createWorkbook, getCell, putCell } from 'ooxml-core/xlsx';
+import { loadWorkbook, saveWorkbook } from 'ooxml-core/xlsx/load';
 import {
 	createWorkbookOpener,
-	OpenTimeoutError,
-	type OpenRequest,
-	type OpenResponse,
+	type CalculateRequest,
+	type CalculateResponse,
 	type WorkerLike,
 } from './workbook-opener';
 
 interface FakeWorker extends WorkerLike {
-	sent: OpenRequest[];
-	say(message: OpenResponse): void;
+	sent: CalculateRequest[];
+	say(message: CalculateResponse): void;
 }
 
 function fake(): FakeWorker {
@@ -19,58 +18,82 @@ function fake(): FakeWorker {
 		onmessage: null,
 		onerror: null,
 		sent: [],
-		postMessage: vi.fn((message: OpenRequest) => void worker.sent.push(message)),
+		postMessage: vi.fn((message: CalculateRequest) => void worker.sent.push(message)),
 		terminate: vi.fn(),
 		say: (message) => worker.onmessage?.({ data: message } as MessageEvent),
 	};
 	return worker;
 }
 
-/** A saved workbook whose B1 (`=A1*3`) holds a stale 99 and asks to be calculated on open. */
-async function staleBytes(): Promise<Uint8Array> {
+/** A saved workbook whose B1 (`=A1*3`) holds a stale 99, asking to be calculated on open or not. */
+async function staleBytes(calculate = true): Promise<Uint8Array> {
 	const workbook = createWorkbook({ sheets: ['S'] });
 	putCell(workbook.sheets[0]!, 0, 0, { value: 2 });
 	putCell(workbook.sheets[0]!, 0, 1, { value: 99, formula: 'A1*3' });
-	workbook.fullCalcOnLoad = true;
+	workbook.fullCalcOnLoad = calculate;
 	return saveWorkbook(workbook, 'xlsx');
 }
 
+/** What the worker would post back for `bytes`. */
+async function calculated(bytes: Uint8Array): Promise<CalculateResponse> {
+	const { cells } = calculateOnOpenCells(await loadWorkbook(bytes.slice()));
+	return { kind: 'done', cells: cells! };
+}
+
 const limits = { readMs: 1000, calculateMs: 50 };
+const b1 = (workbook: { sheets: { rows: Map<number, Map<number, unknown>> }[] }) =>
+	getCell(workbook.sheets[0] as never, 0, 1)?.value;
+
+/** Waits until the opener has sent `worker` its `count`th request. */
+async function requested(worker: FakeWorker, count = 1): Promise<CalculateRequest> {
+	await vi.waitFor(() => expect(worker.sent.length).toBeGreaterThanOrEqual(count));
+	return worker.sent[count - 1]!;
+}
+
+/** Fakes only the opener's own timers, so the zip reader still yields as usual. */
+const fakeTimers = () => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
 
 afterEach(() => vi.useRealTimers());
 
 describe('workbook opener', () => {
-	it('opens in a worker and sends a copy of the bytes', async () => {
+	it('reads a file that asks for no calculation on the page, without a worker', async () => {
+		const factory = vi.fn(fake);
+		const { workbook, calculated, calculationStopped } = await createWorkbookOpener(
+			factory,
+			limits,
+		)(await staleBytes(false), {});
+		expect(factory).not.toHaveBeenCalled();
+		expect([b1(workbook), calculated, calculationStopped]).toEqual([99, false, false]);
+	});
+
+	it('calculates in a worker sent a copy of the bytes and applies what it wrote', async () => {
 		const worker = fake();
-		const open = createWorkbookOpener(() => worker, limits);
-		const bytes = new Uint8Array([1, 2, 3]);
-		const opened = open(bytes, { fileName: 'a.xlsx' });
-		worker.say({ kind: 'ready' });
-		const request = worker.sent[0]!;
-		expect(request).toMatchObject({ fileName: 'a.xlsx', calculate: true });
+		const bytes = await staleBytes();
+		const opened = createWorkbookOpener(() => worker, limits)(bytes, { fileName: 'a.xlsx' });
+		const request = await requested(worker);
+		expect(request).toMatchObject({ fileName: 'a.xlsx', timeLimitMs: limits.calculateMs });
 		expect(new Uint8Array(request.bytes)).toEqual(bytes);
 		expect(request.bytes).not.toBe(bytes.buffer);
-		const workbook = createWorkbook({ sheets: ['S'] });
+		worker.say({ kind: 'ready' });
 		worker.say({ kind: 'read' });
-		worker.say({ kind: 'done', workbook, calculated: true });
-		await expect(opened).resolves.toEqual({
-			workbook,
-			calculated: true,
-			calculationStopped: false,
-		});
+		worker.say(await calculated(bytes));
+		const { workbook, calculated: ran, calculationStopped } = await opened;
+		expect([b1(workbook), ran, calculationStopped]).toEqual([6, true, false]);
 		expect(worker.terminate).not.toHaveBeenCalled();
 	});
 
-	it('keeps the worker for the next open and ends it once idle', async () => {
-		vi.useFakeTimers();
+	it('keeps the worker for the next calculation and ends it once idle', async () => {
+		fakeTimers();
 		const worker = fake();
 		const factory = vi.fn(() => worker);
 		const open = createWorkbookOpener(factory, limits);
-		for (const name of ['a.xlsx', 'b.xlsx']) {
-			const opened = open(new Uint8Array([1]), { fileName: name });
-			if (name === 'a.xlsx') worker.say({ kind: 'ready' });
+		const bytes = await staleBytes();
+		const done = await calculated(bytes);
+		for (const [i, name] of ['a.xlsx', 'b.xlsx'].entries()) {
+			const opened = open(bytes, { fileName: name });
+			await requested(worker, i + 1);
 			worker.say({ kind: 'read' });
-			worker.say({ kind: 'done', workbook: createWorkbook({ sheets: ['S'] }), calculated: false });
+			worker.say(done);
 			await opened;
 		}
 		expect(factory).toHaveBeenCalledOnce();
@@ -87,83 +110,61 @@ describe('workbook opener', () => {
 		open.prewarm?.();
 		open.prewarm?.();
 		expect(factory).toHaveBeenCalledOnce();
-		const opened = open(new Uint8Array([1]), {});
+		const bytes = await staleBytes();
+		const opened = open(bytes, {});
+		await requested(worker);
 		worker.say({ kind: 'ready' });
 		worker.say({ kind: 'read' });
-		const workbook = createWorkbook({ sheets: ['S'] });
-		worker.say({ kind: 'done', workbook, calculated: false });
-		await expect(opened).resolves.toMatchObject({ workbook });
+		worker.say(await calculated(bytes));
+		expect(b1((await opened).workbook)).toBe(6);
 		expect(factory).toHaveBeenCalledOnce();
 	});
 
-	it('abandons a calculation past its limit and reopens without calculating', async () => {
-		vi.useFakeTimers();
-		const slow = fake();
-		const again = fake();
-		const factory = vi.fn().mockReturnValueOnce(slow).mockReturnValueOnce(again);
-		const opened = createWorkbookOpener(factory, limits)(new Uint8Array([1]), {});
-		slow.say({ kind: 'ready' });
-		slow.say({ kind: 'read' });
-		await vi.advanceTimersByTimeAsync(limits.calculateMs);
-		expect(slow.terminate).toHaveBeenCalledOnce();
-		expect(again.sent[0]).toMatchObject({ calculate: false });
-		const workbook = createWorkbook({ sheets: ['S'] });
-		again.say({ kind: 'ready' });
-		again.say({ kind: 'read' });
-		again.say({ kind: 'done', workbook, calculated: false });
-		await expect(opened).resolves.toEqual({
-			workbook,
-			calculated: false,
-			calculationStopped: true,
-		});
+	it('shows the saved values when the calculation stops at its limit', async () => {
+		const worker = fake();
+		const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
+		await requested(worker);
+		worker.say({ kind: 'read' });
+		worker.say({ kind: 'stopped', reason: 'time' });
+		const { workbook, calculated, calculationStopped } = await opened;
+		expect([b1(workbook), calculated, calculationStopped]).toEqual([99, false, true]);
+		expect(worker.terminate).not.toHaveBeenCalled();
 	});
 
-	it('fails an open whose reading runs past its limit', async () => {
-		vi.useFakeTimers();
+	it('ends a worker that does not stop in time and shows the saved values', async () => {
+		fakeTimers();
 		const worker = fake();
-		const opened = createWorkbookOpener(() => worker, limits)(new Uint8Array([1]), {});
-		const failed = expect(opened).rejects.toBeInstanceOf(OpenTimeoutError);
-		worker.say({ kind: 'ready' });
-		await vi.advanceTimersByTimeAsync(limits.readMs);
-		await failed;
+		const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
+		await requested(worker);
+		worker.say({ kind: 'read' });
+		await vi.advanceTimersByTimeAsync(limits.calculateMs + 5_000);
+		const { workbook, calculationStopped } = await opened;
+		expect([b1(workbook), calculationStopped]).toEqual([99, true]);
 		expect(worker.terminate).toHaveBeenCalledOnce();
 	});
 
-	it("reports the loader's error with its code", async () => {
-		const worker = fake();
-		const opened = createWorkbookOpener(() => worker, limits)(new Uint8Array([1]), {});
-		worker.say({ kind: 'ready' });
-		worker.say({ kind: 'error', message: 'A password is required.', code: 'password-required' });
-		await expect(opened).rejects.toMatchObject({
-			message: 'A password is required.',
-			code: 'password-required',
-		});
+	it('calculates on the page when the worker fails or cannot start', async () => {
+		for (const fail of [
+			(worker: FakeWorker) => worker.say({ kind: 'error', message: 'out of memory' }),
+			(worker: FakeWorker) => worker.onerror?.({ message: 'blocked' } as ErrorEvent),
+		]) {
+			const worker = fake();
+			const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
+			await requested(worker);
+			fail(worker);
+			const { workbook, calculated, calculationStopped } = await opened;
+			expect([b1(workbook), calculated, calculationStopped]).toEqual([6, true, false]);
+			expect(worker.terminate).toHaveBeenCalledOnce();
+		}
 	});
 
-	it('does not reopen on the page when the worker fails during an open', async () => {
-		const worker = fake();
-		const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
-		worker.say({ kind: 'ready' });
-		worker.onerror?.({ message: 'out of memory' } as ErrorEvent);
-		await expect(opened).rejects.toThrow('out of memory');
-	});
-
-	it('opens and calculates on the page when the worker cannot start', async () => {
-		const worker = fake();
-		const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
-		worker.onerror?.({ message: 'blocked' } as ErrorEvent);
-		const { workbook, calculated, calculationStopped } = await opened;
-		expect(calculated).toBe(true);
-		expect(calculationStopped).toBe(false);
-		expect(getCell(workbook.sheets[0]!, 0, 1)?.value).toBe(6);
-	});
-
-	it('opens on the page without workers', async () => {
+	it('calculates on the page without workers', async () => {
 		vi.stubGlobal('Worker', undefined);
 		try {
-			const { workbook, calculated } = await createWorkbookOpener()(await staleBytes(), {});
-			expect(calculated).toBe(true);
-			expect(getCell(workbook.sheets[0]!, 0, 1)?.value).toBe(6);
+			const open = createWorkbookOpener();
+			expect(open.prewarm).toBeUndefined();
+			const { workbook, calculated } = await open(await staleBytes(), {});
+			expect([b1(workbook), calculated]).toEqual([6, true]);
 		} finally {
 			vi.unstubAllGlobals();
 		}
@@ -171,12 +172,16 @@ describe('workbook opener', () => {
 });
 
 describe('the workbook worker', () => {
-	it('reads the file, runs the calculation on open and replies with the workbook', async () => {
-		const replies: OpenResponse[] = [];
+	it('reads the file, calculates it and replies with the cells it wrote', async () => {
+		const replies: CalculateResponse[] = [];
+		const transfers: Transferable[][] = [];
 		const scope = {
 			location: { origin: 'https://example.test' },
-			postMessage: (message: OpenResponse) => void replies.push(message),
-			onmessage: null as ((event: MessageEvent<OpenRequest>) => Promise<void>) | null,
+			postMessage: (message: CalculateResponse, transfer: Transferable[]) => {
+				replies.push(message);
+				transfers.push(transfer);
+			},
+			onmessage: null as ((event: MessageEvent<CalculateRequest>) => Promise<void>) | null,
 		};
 		vi.stubGlobal('self', scope);
 		try {
@@ -184,13 +189,13 @@ describe('the workbook worker', () => {
 			expect(replies).toEqual([{ kind: 'ready' }]);
 			const bytes = await staleBytes();
 			await scope.onmessage?.({
-				data: { bytes: bytes.slice().buffer, calculate: true },
+				data: { bytes: bytes.slice().buffer, timeLimitMs: 1000 },
 				origin: '',
-			} as MessageEvent<OpenRequest>);
+			} as MessageEvent<CalculateRequest>);
 			expect(replies.map((reply) => reply.kind)).toEqual(['ready', 'read', 'done']);
-			const done = replies[2] as Extract<OpenResponse, { kind: 'done' }>;
-			expect(done.calculated).toBe(true);
-			expect(getCell(structuredClone(done.workbook).sheets[0]!, 0, 1)?.value).toBe(6);
+			const done = replies[2] as Extract<CalculateResponse, { kind: 'done' }>;
+			expect(done).toEqual(await calculated(bytes));
+			expect(transfers[2]).toContain(done.cells.sheets[0]!.cells.buffer);
 		} finally {
 			vi.unstubAllGlobals();
 		}

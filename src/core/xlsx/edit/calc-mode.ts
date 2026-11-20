@@ -1,4 +1,4 @@
-import { createCalcEngine } from './deps';
+import { type CalculationStop, createCalcEngine } from './deps';
 import type { Workbook } from '../model';
 import type { EditContext } from './context';
 
@@ -8,15 +8,34 @@ export type CalcMode = 'auto' | 'manual';
 export const calcModeOf = (workbook: Workbook): CalcMode =>
 	workbook.calcMode === 'manual' ? 'manual' : 'auto';
 
+/** Whether a workbook asks for a full calculation when it opens (`calcPr fullCalcOnLoad`). */
+export const needsCalculationOnOpen = (workbook: Workbook): boolean =>
+	!!workbook.fullCalcOnLoad && calcModeOf(workbook) === 'auto';
+
+/** What `calculateOnOpen` did. */
+export interface OpenCalculation {
+	/** Whether the calculation ran: the workbook asks for it and calculates automatically. */
+	ran: boolean;
+	/**
+	 * Why it stopped before the end, if it did: the formulas it did not reach keep the values the
+	 * file was saved with, and the next recalculation computes everything.
+	 */
+	stopped?: CalculationStop;
+}
+
 /**
  * Runs the full calculation a workbook asks for when it opens (`calcPr fullCalcOnLoad`), unless it
- * calculates manually; true when it ran. Editors call it once on a workbook they open, before
- * showing it, in a worker or on the page.
+ * calculates manually. Editors call it once on a workbook they open, before showing it, in a
+ * worker or on the page; `timeLimitMs` bounds how long it may run.
  */
-export function calculateOnOpen(workbook: Workbook): boolean {
-	if (!workbook.fullCalcOnLoad || calcModeOf(workbook) !== 'auto') return false;
-	createCalcEngine(workbook).recalculateAll();
-	return true;
+export function calculateOnOpen(
+	workbook: Workbook,
+	{ timeLimitMs }: { timeLimitMs?: number } = {},
+): OpenCalculation {
+	if (!needsCalculationOnOpen(workbook)) return { ran: false };
+	const engine = createCalcEngine(workbook, timeLimitMs === undefined ? {} : { timeLimitMs });
+	engine.recalculateAll();
+	return engine.stopped ? { ran: true, stopped: engine.stopped } : { ran: true };
 }
 
 /**

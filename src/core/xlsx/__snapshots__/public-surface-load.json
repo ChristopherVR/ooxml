@@ -5,6 +5,7 @@
 	"PasswordRequiredError",
 	"UnsupportedWorkbookError",
 	"WorkbookTooLargeError",
+	"asksForCalculationOnOpen",
 	"csvToWorkbook",
 	"decodeSpreadsheetText",
 	"decodeText",

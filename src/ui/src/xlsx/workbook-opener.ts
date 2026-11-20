@@ -1,28 +1,40 @@
 /**
- * Opens workbook files off the page. A worker (`xlsx-open-worker.ts`) reads the file and runs the
- * calculation it asks for on open (`calcPr fullCalcOnLoad`), so a large file or slow formulas never
- * freeze the editor. The calculation has a hard time limit: past it the worker is ended and a fresh
- * one opens the file without calculating, so the workbook shows the values it was saved with.
- * Where workers are unavailable (no `Worker`, or the worker script cannot start) the file is
- * opened on the page instead, as before.
+ * Opens workbook files. The page reads every file itself, as it always has. A file that asks for a
+ * full calculation on open (`calcPr fullCalcOnLoad`) is also sent to a worker
+ * (`xlsx-open-worker.ts`) as soon as its bytes arrive: the worker reads the same bytes while the
+ * page does and runs that calculation off the page, then posts back only the cells it wrote, so
+ * slow formulas never freeze the editor and nothing large is copied between threads. The
+ * calculation has a time limit; past it the workbook shows the values it was saved with. Where
+ * workers are unavailable (no `Worker`, or the worker script cannot start) the calculation runs on
+ * the page, under the same time limit.
  */
-import { calculateOnOpen, type Workbook } from 'ooxml-core/xlsx';
+import {
+	applyCalculatedCells,
+	calculateOnOpen,
+	needsCalculationOnOpen,
+	type CalculatedCells,
+	type CalculationStop,
+	type Workbook,
+} from 'ooxml-core/xlsx';
 
-/** What the worker is asked to open. */
-export interface OpenRequest {
+/** What the worker is asked to calculate. */
+export interface CalculateRequest {
 	bytes: ArrayBuffer;
 	fileName?: string;
 	password?: string;
-	/** Whether to run the calculation the file asks for on open. */
-	calculate: boolean;
+	/** How long the calculation may run before it stops. */
+	timeLimitMs: number;
 }
 
-/** What the worker tells: it started, it read the file, its result, or why it failed. */
-export type OpenResponse =
+/** What the worker tells: it started, it read the file, or how the calculation ended. */
+export type CalculateResponse =
 	| { kind: 'ready' }
 	| { kind: 'read' }
-	| { kind: 'done'; workbook: Workbook; calculated: boolean }
-	| { kind: 'error'; message: string; code?: string };
+	| { kind: 'done'; cells: CalculatedCells }
+	/** The file does not ask for a calculation after all. */
+	| { kind: 'skipped' }
+	| { kind: 'stopped'; reason: CalculationStop }
+	| { kind: 'error'; message: string };
 
 export interface OpenOptions {
 	fileName?: string;
@@ -31,9 +43,9 @@ export interface OpenOptions {
 
 export interface OpenedWorkbook {
 	workbook: Workbook;
-	/** Whether the calculation the file asks for on open ran. */
+	/** Whether the calculation the file asks for on open ran to the end. */
 	calculated: boolean;
-	/** It ran past its time limit, so the workbook shows the values it was saved with. */
+	/** It stopped early, so some or all formulas show the values the file was saved with. */
 	calculationStopped: boolean;
 }
 
@@ -41,73 +53,53 @@ export type WorkbookOpener = ((
 	bytes: Uint8Array | ArrayBuffer,
 	options: OpenOptions,
 ) => Promise<OpenedWorkbook>) & {
-	/** Starts a worker ahead of the first open, so that open does not wait for it to load. */
+	/** Starts a worker ahead of the first open, so a calculation on open does not wait for it. */
 	prewarm?(): void;
 };
 
 export interface WorkerLike {
 	onmessage: ((event: MessageEvent) => void) | null;
 	onerror: ((event: ErrorEvent) => void) | null;
-	postMessage(message: OpenRequest, transfer: Transferable[]): void;
+	postMessage(message: CalculateRequest, transfer: Transferable[]): void;
 	terminate(): void;
 }
 export type WorkerFactory = () => WorkerLike;
 
 export interface OpenLimits {
-	/** How long reading the file may take before the open fails. */
+	/** How long the worker may take to read the file before its calculation is abandoned. */
 	readMs: number;
-	/** How long the calculation on open may take before it is abandoned. */
+	/** How long the calculation on open may run. */
 	calculateMs: number;
 }
 
 export const DEFAULT_OPEN_LIMITS: OpenLimits = { readMs: 60_000, calculateMs: 10_000 };
 
-/** The worker could not read the file within {@link OpenLimits.readMs}. */
-export class OpenTimeoutError extends Error {
-	constructor() {
-		super('The workbook took too long to open.');
-		this.name = 'OpenTimeoutError';
-	}
-}
+/**
+ * How long past its time limit a calculation may go before the worker is ended: the worker stops
+ * itself between formulas, and each formula is bounded by its own work budget.
+ */
+const STOP_GRACE_MS = 5_000;
 
-class CalculationTimeout extends Error {}
-class WorkerUnavailable extends Error {}
+type Outcome =
+	| { kind: 'done'; cells: CalculatedCells }
+	| { kind: 'skipped' }
+	| { kind: 'stopped' }
+	/** No worker could run it: the page calculates instead. */
+	| { kind: 'unavailable' };
 
 const loadOptions = (options: OpenOptions) => ({
 	...(options.fileName === undefined ? {} : { fileName: options.fileName }),
 	...(options.password === undefined ? {} : { password: options.password }),
 });
 
-/** Opens on the page: what the editor did before workers, and the fallback without them. */
-export async function openOnPage(
-	bytes: Uint8Array | ArrayBuffer,
-	options: OpenOptions,
-): Promise<OpenedWorkbook> {
-	const { loadWorkbook } = await import('ooxml-core/xlsx/load');
-	const workbook = await loadWorkbook(bytes, loadOptions(options));
-	let calculated = false;
-	try {
-		calculated = calculateOnOpen(workbook);
-	} catch (error) {
-		console.error(error);
-	}
-	return { workbook, calculated, calculationStopped: false };
-}
-
-/** A failure the worker reported, rebuilt so callers see the loader's error and its `code`. */
-function workerError(message: string, code: string | undefined): Error {
-	const error = new Error(message);
-	return code === undefined ? error : Object.assign(error, { code });
-}
-
-/** How long a worker that finished an open stays for the next one. */
+/** How long a worker that finished a calculation stays for the next one. */
 const IDLE_MS = 30_000;
 /** How long a worker started ahead of the first open waits for it. */
 const PREWARM_IDLE_MS = 120_000;
 
 /**
  * The worker kept between opens: starting one loads the whole reader, which would otherwise be
- * paid again by every file opened in a row. A failed, timed-out or abandoned open ends its worker.
+ * paid again by every file calculated in a row. A failed or abandoned run ends its worker.
  */
 class WorkerPool {
 	private idle: WorkerLike | undefined;
@@ -115,16 +107,16 @@ class WorkerPool {
 
 	constructor(private readonly create: WorkerFactory) {}
 
-	/** An idle worker (already started) or a new one. */
-	acquire(): { worker: WorkerLike; started: boolean } {
+	/** An idle worker or a new one; undefined when none can start. */
+	acquire(): WorkerLike | undefined {
 		clearTimeout(this.idleTimer);
 		const idle = this.idle;
 		this.idle = undefined;
-		if (idle) return { worker: idle, started: true };
+		if (idle) return idle;
 		try {
-			return { worker: this.create(), started: false };
-		} catch (cause) {
-			throw new WorkerUnavailable(String(cause));
+			return this.create();
+		} catch {
+			return undefined;
 		}
 	}
 
@@ -146,7 +138,7 @@ class WorkerPool {
 		try {
 			this.release(this.create(), PREWARM_IDLE_MS);
 		} catch {
-			// The first open finds no worker and reports or falls back as usual.
+			// The first calculation finds no worker and runs on the page.
 		}
 	}
 
@@ -157,95 +149,112 @@ class WorkerPool {
 	}
 }
 
-function runWorker(
+/** Sends a copy of the bytes to a worker that reads them and runs the calculation on open. */
+function calculateInWorker(
 	pool: WorkerPool,
 	bytes: Uint8Array | ArrayBuffer,
 	options: OpenOptions,
-	calculate: boolean,
 	limits: OpenLimits,
-): Promise<{ workbook: Workbook; calculated: boolean }> {
-	return new Promise((resolve, reject) => {
-		let worker: WorkerLike;
-		// A prewarmed worker may not have said `ready` yet; its first message is still `ready`.
-		let started: boolean;
-		try {
-			({ worker, started } = pool.acquire());
-		} catch (error) {
-			reject(error);
-			return;
-		}
+): Promise<Outcome> {
+	return new Promise((resolve) => {
+		const worker = pool.acquire();
+		if (!worker) return resolve({ kind: 'unavailable' });
 		let timer: ReturnType<typeof setTimeout> | undefined;
-		const arm = (ms: number, error: () => Error) => {
+		const finish = (outcome: Outcome, discard = false) => {
 			clearTimeout(timer);
-			timer = setTimeout(() => finish(error()), ms);
-		};
-		const finish = (error?: Error, result?: { workbook: Workbook; calculated: boolean }) => {
-			clearTimeout(timer);
-			if (error) pool.discard(worker);
+			if (discard) pool.discard(worker);
 			else pool.release(worker);
-			if (error) reject(error);
-			else resolve(result!);
+			resolve(outcome);
+		};
+		const arm = (ms: number) => {
+			clearTimeout(timer);
+			timer = setTimeout(() => finish({ kind: 'stopped' }, true), ms);
 		};
 		worker.onmessage = (event) => {
-			const message = event.data as OpenResponse;
+			const message = event.data as CalculateResponse;
 			switch (message.kind) {
 				case 'ready':
-					started = true;
 					return;
 				case 'read':
-					arm(limits.calculateMs, () => new CalculationTimeout());
-					return;
+					return arm(limits.calculateMs + STOP_GRACE_MS);
 				case 'done':
-					return finish(undefined, { workbook: message.workbook, calculated: message.calculated });
+				case 'skipped':
+					return finish(message);
+				case 'stopped':
+					return finish({ kind: 'stopped' });
 				case 'error':
-					return finish(workerError(message.message, message.code));
+					// The page read the file, so it calculates it itself.
+					return finish({ kind: 'unavailable' }, true);
 			}
 		};
 		worker.onerror = (event) => {
 			event.preventDefault?.();
-			const reason = event.message || 'The workbook worker failed.';
-			// Before `ready` the script never ran (a bundler without worker support, a blocked URL):
-			// the page can open the file itself. Afterwards the open itself failed.
-			finish(started ? new Error(reason) : new WorkerUnavailable(reason));
+			// The script never ran (a bundler without worker support, a blocked URL) or failed.
+			finish({ kind: 'unavailable' }, true);
 		};
-		arm(limits.readMs, () => new OpenTimeoutError());
+		arm(limits.readMs);
 		try {
 			const copy =
 				bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
-			const request: OpenRequest = { bytes: copy.buffer, calculate, ...loadOptions(options) };
+			const request: CalculateRequest = {
+				bytes: copy.buffer,
+				timeLimitMs: limits.calculateMs,
+				...loadOptions(options),
+			};
 			worker.postMessage(request, [copy.buffer]);
-		} catch (cause) {
-			finish(new WorkerUnavailable(String(cause)));
+		} catch {
+			finish({ kind: 'unavailable' }, true);
 		}
 	});
 }
 
+/** Runs the calculation on the page, under the same time limit as in the worker. */
+function calculateOnPage(workbook: Workbook, limits: OpenLimits): OpenedWorkbook {
+	try {
+		const { ran, stopped } = calculateOnOpen(workbook, { timeLimitMs: limits.calculateMs });
+		return { workbook, calculated: ran && !stopped, calculationStopped: !!stopped };
+	} catch (error) {
+		console.error(error);
+		return { workbook, calculated: false, calculationStopped: false };
+	}
+}
+
 /**
- * Opens workbooks in a worker from `factory` (by default the bundled `xlsx-open-worker.js`), or on
- * the page where workers are unavailable.
+ * Opens workbooks on the page, calculating those that ask for it in a worker from `factory` (by
+ * default the bundled `xlsx-open-worker.js`), or on the page where workers are unavailable.
  */
 export function createWorkbookOpener(
 	factory?: WorkerFactory,
 	limits: OpenLimits = DEFAULT_OPEN_LIMITS,
 ): WorkbookOpener {
-	if (!factory && typeof Worker === 'undefined') return openOnPage;
-	const pool = new WorkerPool(
+	const create =
 		factory ??
-			(() => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' })),
-	);
+		(typeof Worker === 'undefined'
+			? undefined
+			: () => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' }));
+	const pool = create && new WorkerPool(create);
 	const open: WorkbookOpener = async (bytes, options) => {
-		try {
-			return {
-				...(await runWorker(pool, bytes, options, true, limits)),
-				calculationStopped: false,
-			};
-		} catch (error) {
-			if (error instanceof WorkerUnavailable) return openOnPage(bytes, options);
-			if (!(error instanceof CalculationTimeout)) throw error;
+		const { asksForCalculationOnOpen, loadWorkbook } = await import('ooxml-core/xlsx/load');
+		// Started before the page reads the file, so both read it at once.
+		let calculation =
+			pool && asksForCalculationOnOpen(bytes)
+				? calculateInWorker(pool, bytes, options, limits)
+				: undefined;
+		const workbook = await loadWorkbook(bytes, loadOptions(options));
+		if (!needsCalculationOnOpen(workbook))
+			return { workbook, calculated: false, calculationStopped: false };
+		calculation ??= pool ? calculateInWorker(pool, bytes, options, limits) : undefined;
+		const outcome = calculation ? await calculation : { kind: 'unavailable' as const };
+		switch (outcome.kind) {
+			case 'done':
+				applyCalculatedCells(workbook, outcome.cells);
+				return { workbook, calculated: true, calculationStopped: false };
+			case 'stopped':
+				return { workbook, calculated: false, calculationStopped: true };
+			default:
+				return calculateOnPage(workbook, limits);
 		}
-		const opened = await runWorker(pool, bytes, options, false, limits);
-		return { ...opened, calculationStopped: true };
 	};
-	open.prewarm = () => pool.prewarm();
+	if (pool) open.prewarm = () => pool.prewarm();
 	return open;
 }
