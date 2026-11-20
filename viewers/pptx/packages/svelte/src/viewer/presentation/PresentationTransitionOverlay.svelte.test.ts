@@ -1,17 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { stopDeckSound } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
+import { LinkedContentKey } from '../state/linked-content';
 import PresentationTransitionOverlay from './PresentationTransitionOverlay.svelte';
-
-vi.mock(import('./animation-sound'), () => ({
-	playAnimationSound: vi.fn(),
-	stopAnimationSound: vi.fn(),
-}));
 
 /**
  * What a viewer actually SEES during a slide change.
@@ -430,14 +426,40 @@ describe('presentationTransitionOverlay', () => {
 });
 
 describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () => {
+	/** Every sound the overlay starts, as the address it plays and whether it loops. */
+	let played: { src: string; loop: boolean; paused: boolean }[] = [];
+
+	beforeEach(() => {
+		played = [];
+		vi.stubGlobal(
+			'Audio',
+			// oxlint-disable-next-line prefer-arrow-callback -- `new Audio()` needs a function
+			vi.fn(function (src: string) {
+				const sound = { src, loop: false, paused: false };
+				played.push(sound);
+				return {
+					set loop(value: boolean) {
+						sound.loop = value;
+					},
+					currentTime: 0,
+					play: () => Promise.resolve(),
+					pause: () => {
+						sound.paused = true;
+					},
+				};
+			}),
+		);
+	});
+
 	afterEach(() => {
-		vi.mocked(playAnimationSound).mockClear();
-		vi.mocked(stopAnimationSound).mockClear();
+		stopDeckSound();
+		vi.unstubAllGlobals();
 	});
 
 	function mountWithTransition(
 		transition: PptxSlideTransition,
 		mediaDataUrls: Map<string, string>,
+		linkedContent = false,
 	) {
 		const target = document.createElement('div');
 		document.body.appendChild(target);
@@ -451,6 +473,7 @@ describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () =
 				transition,
 				ondone: vi.fn(),
 			},
+			context: new Map([[LinkedContentKey, () => linkedContent]]),
 		});
 		flushSync();
 		cleanup = () => {
@@ -469,7 +492,7 @@ describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () =
 			} as PptxSlideTransition,
 			new Map([['ppt/media/media3.wav', 'blob:sound']]),
 		);
-		expect(playAnimationSound).toHaveBeenCalledWith('blob:sound', true);
+		expect(played).toStrictEqual([{ src: 'blob:sound', loop: true, paused: false }]);
 	});
 
 	it('does not play when the raw archive path has no resolved URL yet', () => {
@@ -477,16 +500,36 @@ describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () =
 			{ type: 'fade', durationMs: 300, soundPath: 'ppt/media/media3.wav' } as PptxSlideTransition,
 			new Map(),
 		);
-		expect(playAnimationSound).not.toHaveBeenCalled();
+		expect(played).toStrictEqual([]);
+	});
+
+	it('fetches a linked transition sound only once the viewer allows linked content', () => {
+		const transition = {
+			type: 'fade',
+			durationMs: 300,
+			soundPath: 'https://linked-content.test/whoosh.wav',
+		} as PptxSlideTransition;
+		mountWithTransition(transition, new Map(), false);
+		cleanup?.();
+		expect(played).toStrictEqual([]);
+		mountWithTransition(transition, new Map(), true);
+		expect(played.map((sound) => sound.src)).toStrictEqual([
+			'https://linked-content.test/whoosh.wav',
+		]);
 	});
 
 	it('stops the current sound for p:endSndAc (transition.stopSound)', () => {
 		mountWithTransition(
+			{ type: 'fade', durationMs: 300, soundPath: 'a.wav', soundLoop: true } as PptxSlideTransition,
+			new Map([['a.wav', 'blob:sound']]),
+		);
+		cleanup?.();
+		mountWithTransition(
 			{ type: 'fade', durationMs: 300, stopSound: true } as PptxSlideTransition,
 			new Map(),
 		);
-		expect(stopAnimationSound).toHaveBeenCalledOnce();
-		expect(playAnimationSound).not.toHaveBeenCalled();
+		expect(played).toHaveLength(1);
+		expect(played[0]!.paused).toBe(true);
 	});
 
 	it('does NOT stop the sound merely because the overlay unmounts (Loop Until Next Sound)', () => {
@@ -494,10 +537,9 @@ describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () =
 			{ type: 'fade', durationMs: 300, soundPath: 'a.wav', soundLoop: true } as PptxSlideTransition,
 			new Map([['a.wav', 'blob:sound']]),
 		);
-		vi.mocked(stopAnimationSound).mockClear();
 		cleanup?.();
 		cleanup = undefined;
-		expect(stopAnimationSound).not.toHaveBeenCalled();
+		expect(played[0]!.paused).toBe(false);
 	});
 });
 

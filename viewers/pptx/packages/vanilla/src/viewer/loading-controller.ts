@@ -41,13 +41,6 @@ export interface LoadingControllerDeps {
 	/** Called synchronously right after a parsed deck was applied to the store. */
 	onContentApplied?: (origin: CollabLoadOrigin) => void;
 	/**
-	 * Trust Center > "Allow external content" for the deck about to load
-	 * (lazily read: the options controller is constructed after the loading
-	 * controller, see `PptxViewer`'s constructor order). Omitted defaults to
-	 * core's own safe-by-default `allowExternalImages: false`.
-	 */
-	getAllowExternalContent?: () => boolean;
-	/**
 	 * The CSS2 base the load waits on for its webfonts (host `googleFonts`,
 	 * else Trust Center > "Download fonts"), `null` when downloads are off.
 	 * Read per load; omitted resolves the host `googleFonts` option alone.
@@ -176,8 +169,10 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 						: resolveGoogleFontsCss2Base(options.googleFonts),
 				});
 			}
+			// The model keeps the deck's linked addresses; the stage decides per viewer what is
+			// fetched (`linkedContent`), so Enable Content only redraws.
 			const loaded = await loadPresentation(buffer, {
-				allowExternalImages: deps.getAllowExternalContent?.(),
+				allowExternalImages: true,
 				limits: options.limits,
 				onSlidesParsed: ({ slides, embeddedFonts }) => startWebfonts(slides, embeddedFonts),
 			});
@@ -231,6 +226,9 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				readOnlyRecommendation: recommendation.kind === null ? null : recommendation,
 				...readOnlySession,
 				modifyVerifier: loaded.modifyVerifier ?? undefined,
+				// A new presentation asks again, as PowerPoint does.
+				externalContentEnabled: false,
+				externalContentBarClosed: false,
 				compatToasts,
 				...deckViewPreferences,
 				sections: loaded.sections,

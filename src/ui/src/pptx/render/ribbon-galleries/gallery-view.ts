@@ -39,17 +39,32 @@ export function galleryHasItems(descriptor: RibbonGalleryDescriptor): boolean {
  * has it, the English fallback otherwise. `translate` returns the key itself
  * for a miss in every binding, which is what this checks for.
  */
-export function galleryItemLabel(
+export function galleryItemLabel(item: RibbonGalleryItem, translate: ItemTranslate): string {
+	return itemText(item, item.labelKey, item.label, translate);
+}
+
+/** A tile's tooltip, resolved like its name; the name when the tile has no tooltip of its own. */
+export function galleryItemTitle(item: RibbonGalleryItem, translate: ItemTranslate): string {
+	return item.titleKey
+		? itemText(item, item.titleKey, item.title ?? item.label, translate)
+		: galleryItemLabel(item, translate);
+}
+
+type ItemTranslate = (key: string, params?: Readonly<Record<string, string | number>>) => string;
+
+function itemText(
 	item: RibbonGalleryItem,
-	translate: (key: string, params?: Readonly<Record<string, string | number>>) => string,
+	key: string,
+	fallback: string,
+	translate: ItemTranslate,
 ): string {
 	const params: Record<string, string | number> = { ...item.labelParams };
-	for (const [name, { key, fallback }] of Object.entries(item.labelParamKeys ?? {})) {
-		const value = translate(key);
-		params[name] = value && value !== key ? value : fallback;
+	for (const [name, param] of Object.entries(item.labelParamKeys ?? {})) {
+		const value = translate(param.key);
+		params[name] = value && value !== param.key ? value : param.fallback;
 	}
-	const translated = translate(item.labelKey, params);
-	return translated && translated !== item.labelKey ? translated : item.label;
+	const translated = translate(key, params);
+	return translated && translated !== key ? translated : fallback;
 }
 
 export function galleryTextLabel(

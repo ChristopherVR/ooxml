@@ -7,10 +7,11 @@
 	 * `unknown` still falls through to the typed placeholder.
 	 */
 	import { hasShapeProperties, hasTextProperties } from 'pptx-viewer-core';
-	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, highlightFindMatches, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget, probeElementRenderFault } from 'ooxml-ui/pptx';
+	import { getBackgroundAnimationLayers, getBackgroundAnimationState, build3DExtrusionData, buildParagraphs, highlightFindMatches, buildTextStyleOverrideCss, getGroupChildParentFill, getOverflowSegments, hasTextWarp, inlineElementPointerEvents, isElementHidden, isEquationOnlyText, isTemplateElement, placeholderPromptDescriptor, shouldRenderHitTarget, probeElementRenderFault, linkedContentView } from 'ooxml-ui/pptx';
 
 	import { getContainerStyle, getElementHitTargetStyle, getShapeBoxStyle, getShapeFillStrokeStyle, getTextBlockStyle, mergeStyles, styleToString } from '../style';
 	import { getFieldContextGetter } from '../state/field-context';
+	import { getLinkedContentGetter } from '../state/linked-content';
 	import { getElementFindHighlightsGetter } from '../state/find-highlights';
 	import { getSlideElementsGetter } from '../state/slide-elements';
 	import {
@@ -43,8 +44,11 @@
 	import WordArtText from './WordArtText.svelte';
 	import type { ElementRendererProps } from './props';
 
-	const { element, mediaDataUrls, zIndex, edgeBleed, presenting = false, interactive = false, marked = false, editTemplateMode = false, editingElementId = null, editable = false, selectedElementIds, parentGroupFill, ontablecellcommit, onsmartartnodecommit, onsmartartnodefill, onchartpointcommit, ontableresizecolumns, ontableresizerow }: ElementRendererProps =
+	const { element: modelElement, mediaDataUrls, zIndex, edgeBleed, presenting = false, interactive = false, marked = false, editTemplateMode = false, editingElementId = null, editable = false, selectedElementIds, parentGroupFill, ontablecellcommit, onsmartartnodecommit, onsmartartnodefill, onchartpointcommit, ontableresizecolumns, ontableresizerow }: ElementRendererProps =
 		$props();
+	// The element as this viewer may fetch its linked web content; the commit handlers edit by id.
+	const getLinkedContent = getLinkedContentGetter();
+	const element = $derived(linkedContentView(modelElement, getLinkedContent()));
 	// Test-only fault hook (inert unless a test page sets it), inside this element's `ElementBoundary`.
 	$effect.pre(() => probeElementRenderFault(element));
 	/** Whether THIS element is part of the current selection; see `ElementRendererProps.selectedElementIds`. */

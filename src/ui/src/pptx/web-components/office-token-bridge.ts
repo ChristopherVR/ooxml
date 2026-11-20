@@ -24,6 +24,7 @@ export const OFFICE_ALIAS_TAGS = [
 	'pptx-ui-dialog-footer',
 	'pptx-ui-compat-toasts',
 	'pptx-ui-read-only-banner',
+	'pptx-ui-external-content-bar',
 	'pptx-ui-export-progress',
 	'pptx-ui-paste-options',
 	'pptx-ui-ribbon-command',

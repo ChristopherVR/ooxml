@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Play } from '@lucide/vue';
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import {
+	BUILT_IN_SOUNDS,
+	EFFECT_SOUND_CATALOGUE,
+	getEffectSoundAsset,
+	playDeckSound,
+} from 'ooxml-ui/pptx';
 import type { EffectSoundState } from 'ooxml-ui/pptx';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-import { playAnimationSound } from '../../composables/animation-sound';
 
 const NONE_VALUE = 'none';
 const CURRENT_VALUE = 'current';
@@ -64,7 +67,7 @@ function onPreview(): void {
 	}
 	const asset = getEffectSoundAsset(props.soundState.catalogueId);
 	if (asset) {
-		playAnimationSound(asset.dataUrl);
+		playDeckSound(asset.dataUrl, BUILT_IN_SOUNDS);
 	}
 }
 </script>

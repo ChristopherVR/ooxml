@@ -1,14 +1,15 @@
 import type { RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
+	BUILT_IN_SOUNDS,
+	playDeckSound,
 	playSlideTransitionPreview,
+	registerPptxWebControls,
 	ribbonTransitionsDraftPatch,
 	ribbonTransitionsSoundChange,
-	registerPptxWebControls,
 	ribbonTransitionStockSoundUrl,
 } from 'ooxml-ui/pptx';
 
-import { playAnimationSound } from '../../../animation/animation-sound';
 import type { Translator } from '../../../i18n';
 import type { RibbonTransitionHandlers } from '../ribbon-types';
 
@@ -66,7 +67,7 @@ export function createTransitionsTab(
 			case 'soundPreview': {
 				const url = ribbonTransitionStockSoundUrl(handlers.readTransition());
 				if (url) {
-					playAnimationSound(url);
+					playDeckSound(url, BUILT_IN_SOUNDS);
 				}
 				break;
 			}

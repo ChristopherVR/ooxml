@@ -6,6 +6,7 @@ import { getIcon, paintIcon, registerIcon } from '../../icons';
 import {
 	createRibbonControlIcon,
 	galleryItemLabel,
+	galleryItemTitle,
 	inlineGalleryItems,
 	RIBBON_CONTROL_ICONS,
 } from '../render';
@@ -61,6 +62,7 @@ export function officeGalleryState(
 	const item = (entry: RibbonGalleryItem): OfficeGalleryItem => ({
 		id: entry.id,
 		label: galleryItemLabel(entry, t),
+		...(entry.titleKey && { title: galleryItemTitle(entry, t) }),
 		applied: entry.applied,
 		preview: entry.previewSvg,
 		...(entry.actions && {

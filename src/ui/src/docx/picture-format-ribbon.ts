@@ -25,7 +25,7 @@ export function buildPictureFormatPanel(panel: HTMLElement): void {
 				'Format picture',
 				'formatPicture',
 				{ type: 'formatPicture' },
-				{ large: true, caption: 'Format' },
+				{ large: true, caption: 'Format', name: 'ribbon.name.formatPicture' },
 			),
 		),
 	);

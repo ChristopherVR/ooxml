@@ -158,7 +158,7 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 					'Table properties',
 					'table',
 					{ type: 'formatDialog', kind: 'tableProperties' },
-					{ large: true, caption: 'Properties' },
+					{ large: true, caption: 'Properties', name: 'ribbon.name.tableProperties' },
 				),
 			),
 			group(
@@ -316,7 +316,12 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 				),
 				tool('Replace', 'replace', { type: 'search', focus: 'replace' }, { inline: true }),
 				splitInline(
-					tool('Select all', 'select', { type: 'selectAll' }, { inline: true, caption: 'Select' }),
+					tool(
+						'Select all',
+						'select',
+						{ type: 'selectAll' },
+						{ inline: true, caption: 'Select', name: 'ribbon.name.selectAll' },
+					),
 					'Select options',
 					[
 						['all', 'Select all'],

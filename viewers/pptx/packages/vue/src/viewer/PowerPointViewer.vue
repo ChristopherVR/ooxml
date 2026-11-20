@@ -54,6 +54,7 @@ import {
 	resolve3DRenderingFlags,
 	isEditingAllowed,
 	loadedThemeName,
+	linkedContentView,
 	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 	resolveAutosaveIntervalSeconds,
@@ -110,6 +111,7 @@ import CollaborationStatusIndicator from './components/CollaborationStatusIndica
 import CompatibilityToasts from './components/CompatibilityToasts.vue';
 import EditorChromeStyle from './components/EditorChromeStyle';
 import ExportProgressModal from './components/ExportProgressModal.vue';
+import ExternalContentBar from './components/ExternalContentBar.vue';
 import FindReplaceBar from './components/FindReplaceBar.vue';
 import MasterViewOverlay from './components/MasterViewOverlay.vue';
 import MobileToolbar from './components/MobileToolbar.vue';
@@ -140,6 +142,7 @@ import { provideElementRenderErrorReporter } from './composables/element-render-
 import { FieldContextKey } from './composables/field-context';
 import { FormatPaneKey } from './composables/format-pane-context';
 import { InspectorPreviewKey } from './composables/inspector-preview-context';
+import { provideLinkedContent } from './composables/linked-content';
 import { MergeCropKey } from './composables/merge-crop-context';
 import { RecentColorsKey } from './composables/recent-colors-context';
 import { Rendering3DFlagsKey } from './composables/rendering-3d-flags';
@@ -173,6 +176,7 @@ import { useElementDrag } from './composables/useElementDrag';
 import { useElementInsertion } from './composables/useElementInsertion';
 import { useEmbeddedFonts } from './composables/useEmbeddedFonts';
 import { useExportWiring } from './composables/useExportWiring';
+import { useExternalContentConsent } from './composables/useExternalContentConsent';
 import { useFindReplace } from './composables/useFindReplace';
 import { useFontEmbedding } from './composables/useFontEmbedding';
 import { useFormatPainter } from './composables/useFormatPainter';
@@ -414,12 +418,9 @@ const deck = useLoadContent(() => activeContent.value, {
 		password: password.presentationPassword.value,
 		passwordProtected: password.isPasswordProtected.value,
 	}),
-	// Trust Center > "Allow external content (remote images and media)".
-	// Off (the option's non-default) makes core drop any http(s) image URL
-	// instead of fetching it (SSRF/privacy gate); every binding used to skip
-	// this entirely, so the toggle changed nothing regardless of its value.
-	getAllowExternalImages: () =>
-		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
+	// The model keeps the deck's linked addresses; what is fetched is this viewer's choice,
+	// made where the deck is drawn (`provideLinkedContent`), so Enable Content only redraws.
+	getAllowExternalImages: () => true,
 	// Host load limits: read per load, so changing the prop never reloads the deck.
 	getLimits: () => props.limits,
 	getGoogleFonts: () => effectiveGoogleFonts.value,
@@ -461,6 +462,16 @@ const {
 	getContent,
 	getRecoverySnapshot,
 } = deck;
+
+// PowerPoint's security bar for linked pictures and media: per presentation, per viewer.
+// Every surface below draws through `allowed`; the bar and its two actions follow it.
+const externalContent = useExternalContentConsent({
+	content: () => activeContent.value,
+	host: () => props.allowExternalContent,
+	options: () => viewerOptions.value,
+	drawn: () => [slides.value, templateElementsBySlideId.value, tableStyleMap.value],
+});
+provideLinkedContent(() => externalContent.value.allowed);
 
 // -- Trust Center > Protected View --------------------------------------
 // A freshly loaded document opens read-only when the option is on; "Enable
@@ -1006,7 +1017,8 @@ const { exportStageRef, exportSlide, rasterizeSlide, exportProgressCtl, onExport
 
 // Print renders vector slides; notes and handouts are rasterised.
 const printer = usePrint({
-	slides: mergedSlides,
+	// Vector print draws the model in a print window: as this viewer may fetch it.
+	slides: computed(() => linkedContentView(mergedSlides.value, externalContent.value.allowed)),
 	activeSlideIndex,
 	rasterizeSlide,
 	slideSize: canvasSize,
@@ -2212,6 +2224,7 @@ if (blocksBridge) {
 		headerFooter,
 		firstSlideNumber: deck.firstSlideNumber,
 		theme: pptxTheme,
+		externalContent: () => externalContent.value,
 		tableStyleMap,
 	});
 }
@@ -2435,6 +2448,16 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@close-insert="mobileChrome.mobileInsertOpen.value = false"
 				/>
 			</template>
+
+			<!-- PowerPoint's security bar under the ribbon: the deck's linked pictures and media
+			     are not drawn; Enable Content draws them without reloading. It shows without the
+			     toolbar too, since it is the only way to enable that content; inside a
+			     building-blocks canvas the host shell renders it from `externalContent`. -->
+			<ExternalContentBar
+				v-if="!presentation.presenting.value && !blocksBridge && externalContent.barVisible"
+				@enable="externalContent.enable"
+				@close="externalContent.close"
+			/>
 
 			<!-- Hidden pickers for Insert > Image / Media -->
 			<input

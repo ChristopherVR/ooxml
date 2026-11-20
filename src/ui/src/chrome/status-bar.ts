@@ -57,6 +57,16 @@ export interface OfficeStatusBarState {
 		| undefined;
 }
 
+/** The zoom percentage a status bar shows, such as `100%`. */
+const zoomPercentText = (percent: number): string => `${Math.round(percent)}%`;
+
+/**
+ * The name of the zoom percentage button that fits the page: the percentage it shows, then what it
+ * does (`100%, Zoom to fit`), so the name contains the visible label (WCAG 2.5.3).
+ */
+export const zoomFitName = (percent: number, fitLabel: string): string =>
+	`${zoomPercentText(percent)}, ${fitLabel}`;
+
 /**
  * Status bar: `role="group"` named by its `label` attribute (default "Status"). Two ways to fill
  * it. Composed: children, with `slot="end"` pushed to the trailing edge (zoom, view switches).
@@ -149,6 +159,8 @@ export class OfficeUiStatusBar extends OfficeElement {
 		const viewsHidden = views.every((spec) => spec.hidden === true);
 		const togglesHidden = toggles.every((spec) => spec.hidden === true);
 		const zoomHidden = !zoom || zoom.hidden === true;
+		const percent = zoom ? zoomPercentText(zoom.percent) : '';
+		const fitName = zoom ? zoomFitName(zoom.percent, zoom.fitLabel) : '';
 		return html`
 			<div class="bar" part="bar">
 				<span class="items" ?hidden=${items.length === 0}>
@@ -200,10 +212,10 @@ export class OfficeUiStatusBar extends OfficeElement {
 						class="zoom-fit"
 						data-id="zoomFit"
 						title=${zoom?.fitLabel ?? ''}
-						aria-label=${zoom?.fitLabel ?? ''}
+						aria-label=${fitName}
 						@click=${() => this.activate('zoomFit')}
 						@keydown=${this.onKeydown}
-						>${zoom ? `${Math.round(zoom.percent)}%` : ''}</button
+						>${percent}</button
 					>${this.zoomStep('zoomIn', zoom?.inLabel ?? '', zoom?.inIcon ?? 'plus')}</div
 				>
 			</div>

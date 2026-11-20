@@ -80,6 +80,32 @@ canvas stay. Remote cursors and selections draw on the canvas. `blocks.state` al
   `people`), `status: 'off'` while not sharing; the value the full viewer's collaboration-change
   event reports.
 
+## Linked pictures and media
+
+As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
+downloading them. The deck keeps the links (saves write them back), and only what is drawn leaves
+them out. The canvas does not draw PowerPoint's security bar: `blocks.externalContent` (a live
+`{ barVisible, allowed, enable, close }`) says when to show it. Render the exported
+`ExternalContentBar` (or your own) with `onenable={blocks.externalContent.enable}` and
+`onclose={blocks.externalContent.close}`. Enable Content redraws the canvas and the slides pane
+with the linked content, for this viewer only: nothing reloads, and unsaved edits, undo history,
+the slide on screen, autosave and a collaboration session carry on. A new presentation asks again.
+The `allowExternalContent` option (`true` or `false`) answers for the user, and then the bar never
+shows; a change applies at once.
+
+`allowed` says whether this viewer draws the linked content. A host thumbnail strip passes it as
+`SlideThumbnail`'s `linkedContent` (`createSlidesPaneProps` already carries it as
+`linkedContent`), so its thumbnails redraw on Enable Content too.
+
+```svelte
+{#if blocks.externalContent.barVisible}
+	<ExternalContentBar
+		onenable={blocks.externalContent.enable}
+		onclose={blocks.externalContent.close}
+	/>
+{/if}
+```
+
 ## Host-owned workflows
 
 The blocks mount no file inputs and no dialogs. A toolbar control or a canvas gesture that needs one

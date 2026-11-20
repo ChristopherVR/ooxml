@@ -1,6 +1,7 @@
 import type { PptxSlideTransition } from 'ooxml-core/pptx';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { stopDeckSound } from './deck-sound';
 import {
 	applySlideTransitionSound,
 	resolveTransitionSoundAction,
@@ -55,52 +56,68 @@ describe('resolveTransitionSoundAction', () => {
 });
 
 describe('applySlideTransitionSound', () => {
-	it('resolves a synchronous URL (a pre-populated mediaDataUrls map) and plays it', () => {
+	let created: string[] = [];
+	let paused = 0;
+
+	beforeEach(() => {
+		created = [];
+		paused = 0;
+		vi.stubGlobal(
+			'Audio',
+			// oxlint-disable-next-line prefer-arrow-callback -- `new Audio()` needs a function
+			vi.fn(function (src: string) {
+				created.push(src);
+				return {
+					loop: false,
+					currentTime: 0,
+					play: () => Promise.resolve(),
+					pause: () => {
+						paused += 1;
+					},
+				};
+			}),
+		);
+	});
+
+	afterEach(() => {
+		stopDeckSound();
+		vi.unstubAllGlobals();
+	});
+
+	it('plays an embedded sound from the media map', () => {
 		const transition = { type: 'fade', soundPath: 'a.wav', soundLoop: true } as PptxSlideTransition;
-		const map = new Map([['a.wav', 'blob:xyz']]);
-		const play = vi.fn();
-		const stop = vi.fn();
-		applySlideTransitionSound(transition, (p) => map.get(p), { play, stop });
-		expect(play).toHaveBeenCalledWith('blob:xyz', true);
-		expect(stop).not.toHaveBeenCalled();
+		applySlideTransitionSound(transition, {
+			mediaUrls: new Map([['a.wav', 'blob:xyz']]),
+			linkedContent: false,
+		});
+		expect(created).toStrictEqual(['blob:xyz']);
 	});
 
-	it('does not play when the sync resolver finds no URL', () => {
-		const transition = { type: 'fade', soundPath: 'missing.wav' } as PptxSlideTransition;
-		const play = vi.fn();
-		const stop = vi.fn();
-		applySlideTransitionSound(transition, () => undefined, { play, stop });
-		expect(play).not.toHaveBeenCalled();
-		expect(stop).not.toHaveBeenCalled();
+	it('withholds a linked transition sound until the viewer allows linked content', () => {
+		const transition = {
+			type: 'fade',
+			soundPath: 'https://linked-content.test/whoosh.wav',
+		} as PptxSlideTransition;
+		applySlideTransitionSound(transition, { linkedContent: false });
+		expect(created).toStrictEqual([]);
+		applySlideTransitionSound(transition, { linkedContent: true });
+		expect(created).toStrictEqual(['https://linked-content.test/whoosh.wav']);
 	});
 
-	it('awaits an async resolver before playing', async () => {
-		const transition = { type: 'fade', soundPath: 'a.wav' } as PptxSlideTransition;
-		const play = vi.fn();
-		const stop = vi.fn();
-		applySlideTransitionSound(transition, async () => 'blob:async', { play, stop });
-		expect(play).not.toHaveBeenCalled();
-		await Promise.resolve();
-		await Promise.resolve();
-		expect(play).toHaveBeenCalledWith('blob:async', false);
+	it('plays nothing for a sound the media map does not hold', () => {
+		applySlideTransitionSound({ type: 'fade', soundPath: 'missing.wav' } as PptxSlideTransition, {
+			linkedContent: true,
+		});
+		expect(created).toStrictEqual([]);
 	});
 
-	it('calls stop() for p:endSndAc without touching the resolver', () => {
-		const transition = { type: 'fade', stopSound: true } as PptxSlideTransition;
-		const resolveUrl = vi.fn();
-		const play = vi.fn();
-		const stop = vi.fn();
-		applySlideTransitionSound(transition, resolveUrl, { play, stop });
-		expect(stop).toHaveBeenCalledOnce();
-		expect(resolveUrl).not.toHaveBeenCalled();
-		expect(play).not.toHaveBeenCalled();
-	});
-
-	it('does nothing for a transition with no sound action', () => {
-		const play = vi.fn();
-		const stop = vi.fn();
-		applySlideTransitionSound({ type: 'fade' } as PptxSlideTransition, vi.fn(), { play, stop });
-		expect(play).not.toHaveBeenCalled();
-		expect(stop).not.toHaveBeenCalled();
+	it('stops the playing sound for p:endSndAc', () => {
+		applySlideTransitionSound({ type: 'fade', soundPath: 'data:audio/wav;base64,AA' } as never, {
+			linkedContent: false,
+		});
+		applySlideTransitionSound({ type: 'fade', stopSound: true } as PptxSlideTransition, {
+			linkedContent: false,
+		});
+		expect(paused).toBe(1);
 	});
 });

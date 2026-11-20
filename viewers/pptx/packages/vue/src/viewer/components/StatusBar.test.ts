@@ -43,7 +43,7 @@ describe('statusBar adapter', () => {
 		expect(text()).toContain('125%');
 		button('Zoom in').click();
 		button('Zoom out').click();
-		button('Zoom to fit').click();
+		button('125%, Zoom to fit').click();
 		expect(wrapper.emitted('zoom-in')).toHaveLength(1);
 		expect(wrapper.emitted('zoom-out')).toHaveLength(1);
 		expect(wrapper.emitted('zoom-to-fit')).toHaveLength(1);

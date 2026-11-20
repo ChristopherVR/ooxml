@@ -3,6 +3,7 @@ import {
 	calculateViewportFit,
 	editorViewportFitFor,
 	getSlideBackgroundStyle,
+	linkedContentView,
 	measureViewportClientSize,
 	observeViewportClientSize,
 } from 'ooxml-ui/pptx';
@@ -13,6 +14,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { provideFindHighlights } from '../composables/find-highlights';
+import { provideLinkedContentScope } from '../composables/linked-content';
 import { RULER_THICKNESS } from '../composables/ruler-utils';
 import type { RulerUnit } from '../composables/ruler-utils';
 import type { CanvasSize } from '../types';
@@ -33,47 +35,57 @@ import SlideStage from './SlideStage.vue';
  * so the parent can fold it into the effective zoom, mirroring the
  * React viewer's `fitScale * scale` model where "100%" means "fit to viewport".
  */
-const props = defineProps<{
-	slide: PptxSlide | undefined;
-	canvasSize: CanvasSize;
-	mediaDataUrls: Map<string, string>;
-	/** Effective scale (fitScale × user zoom) supplied by the parent. */
-	zoom?: number;
-	/** Unscaled decorative padding per side; omission preserves existing fit. */
-	fitPadding?: ViewportFitPadding;
-	/** Fit-factor ceiling, separate from user zoom; null permits enlargement. */
-	maxFitScale?: number | null;
-	/** Show the horizontal/vertical rulers along the slide edges (View ▸ Rulers). */
-	showRulers?: boolean;
-	/** Unit system for the ruler labels; defaults to inches, as PowerPoint does. */
-	rulerUnit?: RulerUnit;
-	/** Selected element extent (unscaled slide px) highlighted on the rulers. */
-	rulerSelectedBounds?: { x: number; y: number; width: number; height: number } | null;
-	/** Allow dragging a guide off a ruler strip (editing only). */
-	canDragGuides?: boolean;
-	/**
-	 * Master/layout (template) elements for the active slide, rendered by
-	 * {@link SlideStage} in a dedicated layer behind the slide content.
-	 */
-	templateElements?: PptxElement[];
-	/**
-	 * When on, master/layout (template) elements become interactive on the canvas
-	 * and gain a visual affordance. Threaded down to {@link SlideStage}.
-	 */
-	editTemplateMode?: boolean;
-	/**
-	 * The element currently open in the element-level inline text editor;
-	 * threaded down to {@link SlideStage} so it can suppress that element's own
-	 * static text render while the editor overlay draws it instead.
-	 */
-	inlineEditingElementId?: string | null;
-	/** The selection, whose boxes {@link SlideStage} keeps exact while it is edited. */
-	selectedElementIds?: readonly string[];
-	/** The Find bar's matches on this slide, marked in the text (`findTextHighlightsByElement`). */
-	findHighlights?: SlideFindHighlights;
-}>();
+const props = withDefaults(
+	defineProps<{
+		slide: PptxSlide | undefined;
+		canvasSize: CanvasSize;
+		mediaDataUrls: Map<string, string>;
+		/** Effective scale (fitScale × user zoom) supplied by the parent. */
+		zoom?: number;
+		/** Unscaled decorative padding per side; omission preserves existing fit. */
+		fitPadding?: ViewportFitPadding;
+		/** Fit-factor ceiling, separate from user zoom; null permits enlargement. */
+		maxFitScale?: number | null;
+		/** Show the horizontal/vertical rulers along the slide edges (View ▸ Rulers). */
+		showRulers?: boolean;
+		/** Unit system for the ruler labels; defaults to inches, as PowerPoint does. */
+		rulerUnit?: RulerUnit;
+		/** Selected element extent (unscaled slide px) highlighted on the rulers. */
+		rulerSelectedBounds?: { x: number; y: number; width: number; height: number } | null;
+		/** Allow dragging a guide off a ruler strip (editing only). */
+		canDragGuides?: boolean;
+		/**
+		 * Master/layout (template) elements for the active slide, rendered by
+		 * {@link SlideStage} in a dedicated layer behind the slide content.
+		 */
+		templateElements?: PptxElement[];
+		/**
+		 * When on, master/layout (template) elements become interactive on the canvas
+		 * and gain a visual affordance. Threaded down to {@link SlideStage}.
+		 */
+		editTemplateMode?: boolean;
+		/**
+		 * The element currently open in the element-level inline text editor;
+		 * threaded down to {@link SlideStage} so it can suppress that element's own
+		 * static text render while the editor overlay draws it instead.
+		 */
+		inlineEditingElementId?: string | null;
+		/** The selection, whose boxes {@link SlideStage} keeps exact while it is edited. */
+		selectedElementIds?: readonly string[];
+		/** The Find bar's matches on this slide, marked in the text (`findTextHighlightsByElement`). */
+		findHighlights?: SlideFindHighlights;
+		/**
+		 * Draw the deck's linked web content (`externalContent.allowed`). Unset keeps the
+		 * surrounding viewer's decision; outside a viewer, linked content is withheld.
+		 */
+		linkedContent?: boolean;
+	}>(),
+	// Unset, not `false`: Vue casts an absent boolean prop to `false` otherwise.
+	{ linkedContent: undefined },
+);
 
 provideFindHighlights(() => props.findHighlights);
+const linkedContentAllowed = provideLinkedContentScope(() => props.linkedContent);
 
 const emit = defineEmits<{
 	'update:fitScale': [number];
@@ -99,7 +111,7 @@ const wrapperStyle = computed<CSSProperties>(() => ({
 	// Paint the resolved slide background on the labelled slide region so a
 	// master/layout-inherited background is exposed on the aria-roledescription
 	// ="slide" node, matching React/Angular (the inner SlideStage repaints it).
-	...(getSlideBackgroundStyle(props.slide, {
+	...(getSlideBackgroundStyle(linkedContentView(props.slide, linkedContentAllowed.value), {
 		widthPx: props.canvasSize.width,
 		heightPx: props.canvasSize.height,
 	}) as CSSProperties),

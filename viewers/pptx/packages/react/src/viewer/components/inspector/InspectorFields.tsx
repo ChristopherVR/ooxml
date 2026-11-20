@@ -2,6 +2,7 @@ import {
 	inspectorFieldPatch,
 	inspectorOptionLabel,
 	inspectorTogglePatch,
+	linkedContentUrl,
 	resolveInspectorSections,
 } from 'ooxml-ui/pptx';
 import type {
@@ -10,9 +11,10 @@ import type {
 	InspectorSectionDescriptor,
 } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
+import { LinkedContentContext } from '../linked-content-context';
 import { WebCheckbox, WebSelect } from '../WebControls';
 import { COL2, LBL, NUM, RNG, SEL } from './FillStrokeHelpers';
 import { LiveColorInput } from './LiveColorInput';
@@ -53,6 +55,8 @@ export function InspectorFields<T, P>({
 }: InspectorFieldsProps<T, P>): React.ReactElement {
 	const { t } = useTranslation();
 	const views = resolveInspectorSections(sections, target);
+	// A field preview draws the selected picture; a linked one only once this viewer allows it.
+	const linkedContent = useContext(LinkedContentContext);
 
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void => {
 		const patch = inspectorFieldPatch(sections, sectionId, fieldId, target, raw);
@@ -150,9 +154,9 @@ export function InspectorFields<T, P>({
 									className={`flex flex-col items-center gap-0.5 rounded border p-0.5 hover:bg-accent/50 ${active ? 'border-primary bg-primary/10' : 'border-border'}`}
 									onClick={() => change(sectionId, field.id, o.value)}
 								>
-									{field.previewImage ? (
+									{linkedContentUrl(field.previewImage, linkedContent) ? (
 										<img
-											src={field.previewImage}
+											src={linkedContentUrl(field.previewImage, linkedContent)}
 											alt=''
 											className='h-8 w-full rounded object-cover'
 											style={{ filter }}

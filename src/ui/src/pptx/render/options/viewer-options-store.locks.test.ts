@@ -28,53 +28,53 @@ describe('viewer options store host locks', () => {
 	});
 
 	it("keeps the user's saved value for a locked setting across another write", () => {
-		saveUserChoice(false);
+		saveUserChoice(true);
 		const locked = createViewerOptionsStore();
-		locked.setConstraints(LOCK_ON);
-		expect(locked.getOptions().trust.allowExternalContent).toBe(true);
+		locked.setConstraints(LOCK_OFF);
+		expect(locked.getOptions().trust.allowExternalContent).toBe(false);
 		// Any later persisted write must not drop the user's choice for the locked key.
 		locked.setValue('general', 'userName', 'Kiosk');
-		expect(storedTrust()).toStrictEqual({ allowExternalContent: false });
+		expect(storedTrust()).toStrictEqual({ allowExternalContent: true });
 
 		// The next viewer on this origin, without the lock, honours the user's choice.
-		expect(createViewerOptionsStore().getOptions().trust.allowExternalContent).toBe(false);
+		expect(createViewerOptionsStore().getOptions().trust.allowExternalContent).toBe(true);
 	});
 
 	it('persists no forced value as the user choice', () => {
 		const locked = createViewerOptionsStore();
-		locked.setConstraints(LOCK_OFF);
+		locked.setConstraints(LOCK_ON);
 		locked.setValue('general', 'userName', 'Kiosk');
 		expect(storedTrust()).toBeUndefined();
-		expect(createViewerOptionsStore().getOptions().trust.allowExternalContent).toBe(true);
+		expect(createViewerOptionsStore().getOptions().trust.allowExternalContent).toBe(false);
 	});
 
 	it("restores the user's own value when the lock is lifted at runtime", () => {
-		saveUserChoice(false);
+		saveUserChoice(true);
 		const store = createViewerOptionsStore();
-		store.setConstraints(LOCK_ON);
-		expect(store.getOptions().trust.allowExternalContent).toBe(true);
-		store.setConstraints({});
+		store.setConstraints(LOCK_OFF);
 		expect(store.getOptions().trust.allowExternalContent).toBe(false);
-		expect(storedTrust()).toStrictEqual({ allowExternalContent: false });
+		store.setConstraints({});
+		expect(store.getOptions().trust.allowExternalContent).toBe(true);
+		expect(storedTrust()).toStrictEqual({ allowExternalContent: true });
 	});
 
 	it('returns to the default when the lock is lifted and the user never chose', () => {
 		const store = createViewerOptionsStore();
-		store.setConstraints(LOCK_OFF);
-		expect(store.getOptions().trust.allowExternalContent).toBe(false);
-		store.setConstraints({});
+		store.setConstraints(LOCK_ON);
 		expect(store.getOptions().trust.allowExternalContent).toBe(true);
+		store.setConstraints({});
+		expect(store.getOptions().trust.allowExternalContent).toBe(false);
 	});
 
 	it('restores the pre-lock value without storage', () => {
 		const store = createViewerOptionsStore({ persist: false });
-		store.setValue('trust', 'allowExternalContent', false);
-		store.setConstraints(LOCK_ON);
-		// A lock that changes value is still the same lock: the pre-lock value is kept.
+		store.setValue('trust', 'allowExternalContent', true);
 		store.setConstraints(LOCK_OFF);
+		// A lock that changes value is still the same lock: the pre-lock value is kept.
 		store.setConstraints(LOCK_ON);
-		expect(store.getOptions().trust.allowExternalContent).toBe(true);
-		store.setConstraints({});
+		store.setConstraints(LOCK_OFF);
 		expect(store.getOptions().trust.allowExternalContent).toBe(false);
+		store.setConstraints({});
+		expect(store.getOptions().trust.allowExternalContent).toBe(true);
 	});
 });

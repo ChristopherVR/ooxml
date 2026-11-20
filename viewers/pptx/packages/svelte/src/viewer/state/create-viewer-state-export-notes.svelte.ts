@@ -1,4 +1,4 @@
-import { choosePdfExportSelection } from 'ooxml-ui/pptx';
+import { choosePdfExportSelection, linkedContentView } from 'ooxml-ui/pptx';
 import type {
 	CompatibilityWarningToast,
 	FieldSubstitutionContext,
@@ -49,6 +49,8 @@ export interface ExportNotesClusterDeps {
 	 * slide-number / date / footer runs exactly like the on-screen stage does.
 	 */
 	getFieldContext?(): FieldSubstitutionContext;
+	/** Whether this viewer draws the deck's linked web content; exports draw what the screen does. */
+	getLinkedContentAllowed(): boolean;
 	/** Host-supplied source file name, used to name the deck-JSON download. */
 	getFileName?(): string | undefined;
 	onnotesupdate?: (notes: string) => void;
@@ -79,7 +81,9 @@ export function buildExportNotesCluster(deps: ExportNotesClusterDeps): ExportNot
 
 	const exportWiring = createExportWiring({
 		getContainer: deps.getRootEl,
-		getSlides: () => editor.renderedSlides,
+		// PNG, PDF, SVG, print and video draw the slides as this viewer may fetch them.
+		getSlides: () => linkedContentView(editor.renderedSlides, deps.getLinkedContentAllowed()),
+		getLinkedContentAllowed: deps.getLinkedContentAllowed,
 		getCanvasSize: () => loader.canvasSize,
 		getMediaDataUrls: () => loader.mediaDataUrls,
 		getRenderContext: () => renderContextSourceFor(loader),

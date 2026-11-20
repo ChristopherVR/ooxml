@@ -21,10 +21,12 @@ import type { LocaleStrings } from './en';
 import { deApp } from './de-app';
 import { deTableProperties } from './table-properties';
 import { deRibbon } from './de-ribbon';
+import { deRibbonNames } from './ribbon-names';
 
 export const de: LocaleStrings = {
 	...deOptions,
 	...deRibbon,
+	...deRibbonNames,
 	...deApp,
 	...deTableProperties,
 	...deLineNumbers,

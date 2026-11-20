@@ -1,10 +1,14 @@
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import {
+	BUILT_IN_SOUNDS,
+	EFFECT_SOUND_CATALOGUE,
+	getEffectSoundAsset,
+	playDeckSound,
+} from 'ooxml-ui/pptx';
 import type { EffectSoundState } from 'ooxml-ui/pptx';
 import React from 'react';
 import { LuPlay } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { playAnimationSound } from '../../utils/animation-sound';
 import { WebSelect } from '../WebControls';
 import { SELECT_CLS } from './animation-panel-constants';
 
@@ -78,7 +82,7 @@ export function EffectSoundRow({
 		}
 		const asset = getEffectSoundAsset(soundState.catalogueId);
 		if (asset) {
-			playAnimationSound(asset.dataUrl);
+			playDeckSound(asset.dataUrl, BUILT_IN_SOUNDS);
 		}
 	};
 

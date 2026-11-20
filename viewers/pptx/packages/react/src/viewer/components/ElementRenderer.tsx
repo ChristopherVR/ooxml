@@ -48,6 +48,7 @@ import { Extrusion3DOverlay } from './elements/Extrusion3DOverlay';
 import { getScopedElementHandlers } from './elements/scoped-element-handlers';
 import { selectionOutlineStyle } from './elements/selection-control-artwork';
 import { ShapeEffectOverlay } from './elements/ShapeEffectOverlay';
+import { useLinkedContentView } from './linked-content-context';
 import { StaticElementRenderer } from './StaticElementRenderer';
 
 export type { ElementRendererProps } from './elements/element-renderer-types';
@@ -56,6 +57,12 @@ export { shapeParams } from './elements/element-shape-params';
 export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ React.memo(
 	// oxlint-disable-next-line prefer-arrow-callback -- named fn gives the memo component its displayName
 	function ElementRendererInner(props) {
+		// What this viewer may fetch of the deck's linked content (`LinkedContentContext`); the
+		// handlers below edit by element id, so the model keeps its links either way.
+		const element = useLinkedContentView(props.element);
+		const activeSlide = useLinkedContentView(props.activeSlide);
+		const allSlides = useLinkedContentView(props.allSlides);
+		const tableStyleContext = useLinkedContentView(props.tableStyleContext);
 		return (
 			<ElementErrorBoundary
 				key={props.element.id}
@@ -63,7 +70,13 @@ export const ElementRenderer: React.FC<ElementRendererProps> = /* @__PURE__ */ R
 				slideId={props.activeSlide?.id}
 				onElementRenderError={props.onElementRenderError}
 			>
-				<ElementRendererImpl {...props} />
+				<ElementRendererImpl
+					{...props}
+					element={element}
+					activeSlide={activeSlide}
+					allSlides={allSlides}
+					tableStyleContext={tableStyleContext}
+				/>
 			</ElementErrorBoundary>
 		);
 	},

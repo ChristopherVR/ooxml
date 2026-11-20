@@ -5,7 +5,7 @@ import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 
-import { playAnimationSound, stopAnimationSound } from '../composables/animation-sound';
+import { useLinkedContentAllowed } from '../composables/linked-content';
 import {
 	resolveSlideTransition,
 	resolveTransitionDurationMs,
@@ -135,20 +135,17 @@ const incomingLayerStyle = computed<CSSProperties>(() => ({
 /**
  * Play or stop this transition's sound action the instant it starts.
  *
- * `transition.soundPath` is a raw in-archive path; `mediaDataUrls` is the
- * same Blob-URL cache the load pipeline pre-populates for it (via
- * `collectAnimationSoundPaths`, extended to also collect a slide transition's
- * own sound alongside per-effect animation sounds). Reuses the per-effect
- * sound singleton (`animation-sound.ts`) so a transition sound and an
- * animation sound cannot talk over each other, matching PowerPoint's "one
- * sound plays at a time" behaviour.
+ * `transition.soundPath` is an archive path the load pipeline put in
+ * `mediaDataUrls` (`collectAnimationSoundPaths`), or a linked sound's web
+ * address, played only once this viewer allows linked content.
  */
+const linkedContentAllowed = useLinkedContentAllowed();
 watch(
 	() => props.transition,
 	(transition) => {
-		applySlideTransitionSound(transition, (soundPath) => props.mediaDataUrls.get(soundPath), {
-			play: playAnimationSound,
-			stop: stopAnimationSound,
+		applySlideTransitionSound(transition, {
+			mediaUrls: props.mediaDataUrls,
+			linkedContent: linkedContentAllowed.value,
 		});
 	},
 	{ immediate: true },

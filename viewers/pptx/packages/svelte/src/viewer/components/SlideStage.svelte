@@ -14,6 +14,7 @@
 		deriveSlideFieldContext,
 		deviceStrokeStageStyle,
 		getSlideBackgroundStyle,
+		linkedContentView,
 		resolveStageEdgeBleeds,
 		stageKeepsElementIds,
 		stripElementIdMarkers,
@@ -24,6 +25,7 @@
 	import { getFieldContextGetter, provideFieldContext } from '../state/field-context';
 	import { useRendering3DFlags } from '../state/rendering-3d-flags-context';
 	import { provideElementRenderSlide } from '../state/element-render-errors';
+	import { getLinkedContentGetter } from '../state/linked-content';
 	import { provideSlideElements } from '../state/slide-elements';
 	import { styleToString } from '../style';
 	import ActiveXOverlay from './ActiveXOverlay.svelte';
@@ -33,7 +35,7 @@
 	import type { SlideStageProps } from './props';
 
 	const {
-		slide,
+		slide: modelSlide,
 		canvasSize,
 		mediaDataUrls,
 		scale = 1,
@@ -57,6 +59,9 @@
 
 	const t = useTranslator();
 	const getRendering3DFlags = useRendering3DFlags();
+	// The slide as this viewer may fetch its linked web content (background and elements).
+	const getLinkedContent = getLinkedContentGetter();
+	const slide = $derived(linkedContentView(modelSlide, getLinkedContent()));
 
 	// Boxes that grow under an abutting opaque box to close the anti-aliasing
 	// seam (issue #141); the selection keeps its exact box while it is edited.

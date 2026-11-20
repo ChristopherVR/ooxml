@@ -5,9 +5,7 @@ import {
 	DEFAULT_CANVAS_WIDTH,
 	applyImagePathPatches,
 	buildDeckSaveOptions,
-	collectAnimationSoundPaths,
 	collectImagePaths,
-	collectMediaElements,
 	createPresentationLoadResources,
 	describeFontEmbedding,
 	overlayInlineTextSnapshot,
@@ -17,7 +15,7 @@ import {
 	prepareDeckWebfonts,
 	resolveAllowExternalContent,
 	resolveGoogleFontsCss2Base,
-	resolveMediaElementSource,
+	resolveMediaUrls,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -36,7 +34,6 @@ import type {
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
 import type {
-	MediaPptxElement,
 	ParsedSignature,
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -69,6 +66,16 @@ import {
 import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
 
+/** What the user chose on the security bar for one presentation. */
+export interface ExternalContentConsent {
+	/** Enable Content: draw the deck's linked web content. */
+	readonly enabled: boolean;
+	/** The bar's close button: hide it, keep the content withheld. */
+	readonly closed: boolean;
+}
+
+const NO_EXTERNAL_CONTENT_CONSENT: ExternalContentConsent = { enabled: false, closed: false };
+
 /**
  * `LoadContentService`: Angular port of the React `useLoadContent` hook and
  * the Vue `useLoadContent` composable.
@@ -89,7 +96,9 @@ import { ViewerOptionsService } from './viewer-options.service';
 @Injectable()
 export class LoadContentService {
 	private pendingInlineEditReader?: () => PendingInlineTextEdit | undefined;
-	private hostAllowExternalContentReader?: () => boolean | undefined;
+	private readonly hostAllowExternalContentReader = signal<(() => boolean | undefined) | undefined>(
+		undefined,
+	);
 	private hostLimitsReader?: () => PptxLoadLimits | undefined;
 	/** The host `limits` input, read (untracked) at the start of each load. */
 	bindHostLimits(reader: () => PptxLoadLimits | undefined): void {
@@ -103,19 +112,30 @@ export class LoadContentService {
 	bindHostGoogleFonts(reader: () => GoogleFontsOption | undefined): void {
 		this.hostGoogleFontsReader = reader;
 	}
-	/** The host `allowExternalContent` input; when set it overrides the Trust Center option per load. */
+	/** The host `allowExternalContent` input; when set it overrides the Trust Center option. */
 	bindHostAllowExternalContent(reader: () => boolean | undefined): void {
-		this.hostAllowExternalContentReader = reader;
+		this.hostAllowExternalContentReader.set(reader);
+	}
+
+	/** The host `allowExternalContent` input now (tracked, so a live change redraws). */
+	hostAllowExternalContent(): boolean | undefined {
+		return this.hostAllowExternalContentReader()?.();
 	}
 
 	/**
-	 * Whether the next deck this viewer loads may reference linked http(s)
-	 * content: the host `allowExternalContent` input when set, otherwise the
-	 * Trust Center option. Read untracked, so calling it never subscribes.
+	 * Security bar choices for the presentation now open (PowerPoint's Enable Content and the
+	 * bar's close button). Reset when another presentation loads; never stored.
+	 */
+	readonly externalContentConsent = signal<ExternalContentConsent>(NO_EXTERNAL_CONTENT_CONSENT);
+
+	/**
+	 * Whether an auxiliary load (Compare) may reference linked http(s) content: the host
+	 * `allowExternalContent` input when set, otherwise the Trust Center option. Read untracked,
+	 * so calling it never subscribes.
 	 */
 	resolveAllowExternalImages(): boolean {
 		return untracked(() => {
-			const host = this.hostAllowExternalContentReader?.();
+			const host = this.hostAllowExternalContent();
 			const options = this.optionsService?.options();
 			return options ? resolveAllowExternalContent(host, options) : host === true;
 		});
@@ -461,20 +481,9 @@ export class LoadContentService {
 			const sigBuffer = (buffer as ArrayBuffer).slice(0);
 
 			const previousHandler = this.handler;
-			// Trust Center > "Allow external content": gates linked (non-embedded)
-			// http(s) image URLs. Defaults to blocked when the options service is
-			// unreachable (e.g. constructed outside DI in a unit test).
-			//
-			// Read UNTRACKED: this runs synchronously inside the viewer's load
-			// effect, before the first await, so a tracked read here made that
-			// effect depend on the whole Options store. Every preference write
-			// (the AutoSave switch, a View toggle, an Options dialog field) then
-			// re-parsed the deck from its original bytes, which re-seeded the
-			// editor and threw away unsaved edits and the undo history. The option
-			// is a load-time input, exactly as in React (`[content]` deps only).
-			// The host `allowExternalContent` input wins over the option when set.
-			const allowExternalImages = this.resolveAllowExternalImages();
-			// The host `limits` input, read untracked for the same reason.
+			// The host `limits` input, read UNTRACKED: this runs synchronously inside
+			// the viewer's load effect, before the first await, so a tracked read here
+			// would re-parse the deck (and drop unsaved edits) whenever it changed.
 			const limits = untracked(() => this.hostLimitsReader?.());
 			// ── The deck's Google Fonts webfonts ─────
 			// Started as soon as core has parsed the slides (`onSlidesParsed`), so the
@@ -518,7 +527,9 @@ export class LoadContentService {
 				});
 			}
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
-				allowExternalImages,
+				// The model keeps linked web addresses as deck content; what is fetched is
+				// decided where it is drawn (`ExternalContentService`).
+				allowExternalImages: true,
 				limits,
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
 			});
@@ -530,51 +541,8 @@ export class LoadContentService {
 				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
-			// ── Resolve media Blob URLs (audio/video + poster frames) ──
-			const mediaElements: MediaPptxElement[] = [];
-			for (const slide of parsed.slides) {
-				collectMediaElements(slide.elements, mediaElements);
-			}
-			const nextMediaUrls = new Map<string, string>();
-			// Shared with the other four bindings (G17): a LINKED media
-			// element's `mediaPath` is already the verbatim external URL by the
-			// time it reaches here; `resolveMediaElementSource` hands it
-			// straight back instead of an archive lookup that can only find
-			// embedded parts.
-			await Promise.all(
-				mediaElements.map(async (mediaElement) => {
-					const resolved = await resolveMediaElementSource(mediaElement, newHandler);
-					if (resolved.missing || !resolved.mediaPath || !resolved.url) {
-						mediaElement.mediaMissing = true;
-						return;
-					}
-					nextMediaUrls.set(resolved.mediaPath, resolved.url);
-					if (resolved.isBlobUrl) {
-						loadBlobUrls.push(resolved.url);
-					}
-				}),
-			);
-
-			// Native-animation `p:stSnd` sounds that back no visible media element
-			// (PowerPoint's animation sound library) have no entry above; resolve
-			// them into the same map so `onPlayActionSound`'s lookup finds them.
-			const soundPaths = collectAnimationSoundPaths(parsed.slides).filter(
-				(path) => !nextMediaUrls.has(path),
-			);
-			await Promise.all(
-				soundPaths.map(async (soundPath) => {
-					try {
-						const arrayBuffer = await newHandler.getMediaArrayBuffer(soundPath);
-						if (arrayBuffer) {
-							const blobUrl = URL.createObjectURL(new Blob([arrayBuffer]));
-							loadBlobUrls.push(blobUrl);
-							nextMediaUrls.set(soundPath, blobUrl);
-						}
-					} catch {
-						/* Non-critical: the sound simply will not play. */
-					}
-				}),
-			);
+			// ── Media, transition and animation sound URLs ──
+			const nextMediaUrls = await resolveMediaUrls(newHandler, parsed.slides, loadBlobUrls);
 
 			// ── Resolve lazily-loaded picture Blob URLs ──
 			const { paths: imagePaths, refs: imageRefs } = collectImagePaths(parsed.slides);
@@ -625,6 +593,8 @@ export class LoadContentService {
 			this.revokeBlobUrls(Array.from(this.mediaDataUrls().values()));
 			this.revokeBlobUrls(this.activeBlobUrls);
 			this.activeBlobUrls = loadBlobUrls;
+			// Another presentation: the security bar asks again.
+			this.externalContentConsent.set(NO_EXTERNAL_CONTENT_CONSENT);
 			resources.commit();
 			this.handler = newHandler;
 			this.markDeckLoad();

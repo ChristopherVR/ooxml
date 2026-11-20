@@ -8,6 +8,8 @@ import { t } from './demo-i18n';
 export interface HostOwnedSlidesPaneOptions {
 	store: Store<ViewerState>;
 	getLoaded(): LoadedPresentation | undefined;
+	/** Whether the shell draws the deck's linked web content now. */
+	getLinkedContent(): boolean;
 	/** Commit an open inline text edit first; false keeps the editor open (invalid edit). */
 	commitInline(): boolean;
 }
@@ -88,6 +90,7 @@ export function mountHostOwnedSlidesPane(
 		activeSlideIndex: state.currentSlide,
 		canvasSize: state.canvasSize,
 		canEdit: state.editable,
+		linkedContent: options.getLinkedContent(),
 		t,
 		onSelectSlide: (index) => {
 			if (index !== store.get().currentSlide && options.commitInline()) {
@@ -123,6 +126,7 @@ export function mountHostOwnedSlidesPane(
 			activeSlideIndex: next.currentSlide,
 			canvasSize: next.canvasSize,
 			canEdit: next.editable,
+			linkedContent: options.getLinkedContent(),
 		});
 	});
 	return {

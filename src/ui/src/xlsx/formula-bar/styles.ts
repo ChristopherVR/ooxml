@@ -21,6 +21,7 @@ export const FORMULA_BAR_CSS = `
 .xfb-cancel,.xfb-enter{display:none}
 .xfb-editing .xfb-cancel,.xfb-editing .xfb-enter{display:flex}
 .xfb-fx i{font-family:Cambria,'Times New Roman',serif;font-size:13px}
+.xfb-fx i::before{content:'fx'}
 .xfb-input{flex:1;min-width:0;height:20px;border:1px solid var(--xve-input, var(--office-control-border, #8a8886));border-radius:var(--xve-radius, var(--office-radius, 2px))}
 .xfb-input:focus-within{border-color:var(--xve-ring, var(--office-ring, #217346))}
 .xfb-expanded .xfb-input{height:76px}

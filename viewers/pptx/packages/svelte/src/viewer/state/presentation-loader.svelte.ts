@@ -15,6 +15,7 @@ import {
 	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
 	resolveGoogleFontsCss2Base,
+	resolveMediaUrls,
 } from 'ooxml-ui/pptx';
 import type {
 	ParsedTableStyleMap,
@@ -51,7 +52,6 @@ import {
 	resolveLazyTableCellImages,
 	resolveLazyTableStyleImages,
 	resolveLazyTextFillBlips,
-	resolveMediaUrls,
 	revokeBlobUrls,
 } from './loader-helpers';
 
@@ -264,9 +264,8 @@ export class PresentationLoader {
 				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
-			// Audio/video Blob URLs + poster frames, then lazy picture URLs.
-			const media = await resolveMediaUrls(newHandler, parsed.slides);
-			loadBlobUrls.push(...media.blobUrls);
+			// Media, poster frames and embedded sounds, then lazy picture URLs.
+			const mediaUrls = await resolveMediaUrls(newHandler, parsed.slides, loadBlobUrls);
 			const imageResolvedSlides = await resolveLazyImages(newHandler, parsed.slides);
 			const tableCellResolvedSlides = await resolveLazyTableCellImages(
 				newHandler,
@@ -325,7 +324,7 @@ export class PresentationLoader {
 						}
 					: undefined;
 			this.themeOptions = parsed.themeOptions ?? [];
-			this.mediaDataUrls = media.urls;
+			this.mediaDataUrls = mediaUrls;
 			this.colorScheme = parsed.theme?.colorScheme;
 			this.presentationTheme = parsed.theme;
 			this.tableStyleMap = nextTableStyleMap;
