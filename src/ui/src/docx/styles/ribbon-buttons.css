@@ -67,9 +67,7 @@
 	border-radius: 0 4px 4px 0;
 	background-clip: padding-box;
 }
-.ribbon-group
-	.ribbon-split
-	.ribbon-caret:is(:hover, [aria-pressed='true'], [aria-expanded='true']) {
+.ribbon-group .ribbon-split .ribbon-caret:is(:hover, [aria-expanded='true']) {
 	border-right-color: transparent;
 	background-clip: padding-box;
 	box-shadow: inset -1px 0 var(--line);

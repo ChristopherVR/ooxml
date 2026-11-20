@@ -212,7 +212,7 @@
 }
 .ribbon-group
 	.ribbon-split:not(.ribbon-split-large)
-	> .ribbon-caret:is(:hover, :active, [aria-pressed='true'], [aria-expanded='true']) {
+	> .ribbon-caret:is(:hover, :active, [aria-expanded='true']) {
 	border-right-color: transparent;
 	background-clip: padding-box;
 	box-shadow: inset -1px 0 var(--line);
