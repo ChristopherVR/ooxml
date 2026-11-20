@@ -18,6 +18,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**What is here**](#what-is-in-this-repository) &nbsp;&middot;&nbsp;
 [**Development**](#development) &nbsp;&middot;&nbsp;
 [**Roadmap**](../docs/roadmap.md) &nbsp;&middot;&nbsp;
+[**Upgrading to 2.0**](../docs/migration-2.0.md) &nbsp;&middot;&nbsp;
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
 [**Discord**](https://discord.gg/haE8xpMET9) &nbsp;&middot;&nbsp;
 [**Contributing**](../CONTRIBUTING.md)
@@ -215,7 +216,7 @@ bun run demo           # docx, xlsx: the demo app (visio, teams: bun run dev)
 
 Each viewer has its own scripts and browser tests; the root `typecheck`, `test`, `fmt` and `lint` do not cover `viewers/`. CI (`.github/workflows/ci.yml`) decides from the files a change touches what to run, including which viewers to verify.
 
-Releases are automated. Every published package has its own version and tag (`<npm-name>@<version>`), planned from conventional commits, with changelogs and npm publishing through trusted publishing (OIDC, with provenance). See [docs/releasing.md](../docs/releasing.md). Commits must follow [Conventional Commits](../CONTRIBUTING.md), and nobody publishes or tags by hand.
+Releases are automated. Every published package has its own version and tag (`<npm-name>@<version>`), planned from conventional commits, with changelogs and npm publishing through trusted publishing (OIDC, with provenance). See [docs/releasing.md](../docs/releasing.md). OOXML 2.0 moves every package to a new major version at once: [the migration guide](../docs/migration-2.0.md) lists each breaking change with the code to write instead, and each package's changelog opens with its share of the 2.0 notes. Commits must follow [Conventional Commits](../CONTRIBUTING.md), and nobody publishes or tags by hand.
 
 The working agreements are in [AGENTS.md](../AGENTS.md), and [PROVENANCE.md](../PROVENANCE.md) records where each module came from.
 

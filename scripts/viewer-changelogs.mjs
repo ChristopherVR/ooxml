@@ -18,6 +18,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { COMMITS_HEADING, KINDS } from './major-notes.mjs';
 import { VIEWER_PACKAGES } from './viewer-packages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,6 +39,7 @@ const GROUP_ORDER = [
 	'Security',
 	'Other',
 ];
+const NOTES_ORDER = KINDS.map(([, heading]) => heading);
 
 export const HEADER = [
 	'# Changelog',
@@ -86,9 +88,14 @@ export function mergeGroups(sections) {
 			for (const entry of group.entries) if (!entries.includes(entry)) entries.push(entry);
 			byHeading.set(group.heading, entries);
 		}
+	// A day whose releases carry hand-written notes (major-notes.mjs) lists them in their own order,
+	// and the commits, which sit under `### Commits` there, last.
+	const notes = byHeading.has(COMMITS_HEADING);
+	const order = notes ? NOTES_ORDER : GROUP_ORDER;
 	const rank = (heading) => {
-		const index = GROUP_ORDER.indexOf(heading);
-		return index < 0 ? GROUP_ORDER.length : index;
+		if (notes && heading === COMMITS_HEADING) return Infinity;
+		const index = order.indexOf(heading);
+		return index < 0 ? order.length : index;
 	};
 	return [...byHeading]
 		.filter(([, entries]) => entries.length)

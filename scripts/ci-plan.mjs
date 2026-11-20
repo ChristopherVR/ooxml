@@ -656,9 +656,10 @@ export function plan(changed, { full = false, testFiles, reference = false, reac
 	// src/core is the library, one folder per area; src/ui is ooxml-ui, a package of its own.
 	const src = live.filter((file) => file.startsWith('src/core/'));
 	const ui = live.some((file) => file.startsWith('src/ui/'));
+	// `.release-notes/` is checked by major-notes.test.mjs, so a note runs the script tests.
 	const scripts =
 		files.some((file) => CHANGELOG.test(file)) ||
-		live.some((file) => /^(scripts|\.github|site)\//.test(file));
+		live.some((file) => /^(scripts|\.github|site|\.release-notes)\//.test(file));
 	const mcp = live.some(
 		(file) => file.startsWith('mcp/') || file.startsWith('src/core/automation/'),
 	);
