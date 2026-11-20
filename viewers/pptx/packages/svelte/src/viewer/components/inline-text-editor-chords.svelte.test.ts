@@ -77,4 +77,26 @@ describe('inline text editor chords', () => {
 		expect(onclose).not.toHaveBeenCalled();
 		done();
 	});
+
+	it('types a tab on Tab and keeps Shift+Tab in the edit', () => {
+		const { editor, oncommit, onclose, done } = open();
+		editor.focus();
+		const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+		editor.dispatchEvent(tab);
+		flushSync();
+		expect(tab.defaultPrevented).toBe(true);
+		expect(editor.textContent).toContain('\t');
+		const back = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			shiftKey: true,
+			bubbles: true,
+			cancelable: true,
+		});
+		editor.dispatchEvent(back);
+		flushSync();
+		expect(back.defaultPrevented).toBe(true);
+		expect(oncommit).not.toHaveBeenCalled();
+		expect(onclose).not.toHaveBeenCalled();
+		done();
+	});
 });
