@@ -813,22 +813,11 @@ export const translationsEn: Record<string, string> = {
 		'This presentation has {{count}} digital signature(s). Editing it will invalidate and remove them.',
 	'pptx.digitalSignatures.strippedIrreversible': 'Signatures cannot be restored once removed.',
 	'pptx.digitalSignatures.strippedConfirm': 'Edit anyway',
-	'pptx.digitalSignatures.badgeSigned': 'Signed',
-	'pptx.digitalSignatures.badgeTitle': '{{count}} digital signature(s)',
-	'pptx.digitalSignatures.invalidHeader': 'Invalid signature',
-	'pptx.digitalSignatures.headerSigned': 'Signed',
 	'pptx.digitalSignatures.notSigned': 'Not signed',
-	'pptx.digitalSignatures.statusValid': 'Valid',
-	'pptx.digitalSignatures.statusInvalid': 'Invalid',
-	'pptx.digitalSignatures.statusExpired': 'Expired',
-	'pptx.digitalSignatures.statusUnknownCA': 'Unknown certificate authority',
-	'pptx.digitalSignatures.statusUnverified': 'Unverified',
 	'pptx.digitalSignatures.ariaLabel': 'Digital signatures',
 	'pptx.digitalSignatures.signatureCount': '{{count}} signature(s)',
 	'pptx.digitalSignatures.noSignatures': 'This presentation has no digital signatures.',
 	'pptx.digitalSignatures.issuer': 'Issuer',
-	'pptx.digitalSignatures.serial': 'Serial',
-	'pptx.digitalSignatures.certificate': 'Certificate',
 	'pptx.digitalSignatures.notAvailable': 'Not available',
 
 	// Slide show (Set Up Slide Show dialog)
@@ -1290,10 +1279,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.pasteSpecial.useDestinationTheme': 'Use Destination Theme',
 
 	// Digital signatures (additions)
-	'pptx.digitalSignatures.badge': 'Signed',
 	'pptx.digitalSignatures.editWarning':
 		'Editing this presentation will invalidate its digital signatures.',
-	'pptx.digitalSignatures.signed': 'This presentation is digitally signed.',
 	'pptx.digitalSignatures.title': 'Digital Signatures',
 
 	// Document properties
