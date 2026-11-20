@@ -21,10 +21,12 @@ import type { LocaleStrings } from './en';
 import { frApp } from './fr-app';
 import { frTableProperties } from './table-properties';
 import { frRibbon } from './fr-ribbon';
+import { frRibbonNames } from './ribbon-names';
 
 export const fr: LocaleStrings = {
 	...frOptions,
 	...frRibbon,
+	...frRibbonNames,
 	...frApp,
 	...frTableProperties,
 	...frLineNumbers,

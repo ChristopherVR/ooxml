@@ -4,7 +4,7 @@
 	 * and the fullscreen/presentation toggle. All strings come from the shared
 	 * i18n dictionary via the context translator; theming via `--pptx-*` vars.
 	 */
-	import { isActionHidden } from 'ooxml-ui/pptx';
+	import { isActionHidden, zoomFitName } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../i18n/context';
 	import AutosaveIndicator from './AutosaveIndicator.svelte';
 	import ExportMenu from './ExportMenu.svelte';
@@ -134,7 +134,7 @@
 			<button
 				type="button"
 				class="pptx-svelte-toolbar-zoom"
-				aria-label={t('pptx.statusBar.zoomToFit')}
+				aria-label={zoomFitName(zoomPercent, t('pptx.statusBar.zoomToFit'))}
 				title={t('pptx.statusBar.zoomToFit')}
 				onclick={onzoomfit}
 			>

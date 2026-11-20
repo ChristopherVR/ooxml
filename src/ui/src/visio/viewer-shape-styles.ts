@@ -27,6 +27,7 @@ import {
 	rotationItemId,
 	softEdgesItemId,
 } from './ribbon-shape-styles';
+import { setGalleryState } from './ribbon-localize';
 
 /** Accent 1-6 of the page theme, or the Office colours a theme-less drawing uses. */
 export function pageAccentColor(page: VisioPage | undefined, accent: number): string {
@@ -52,7 +53,8 @@ export function renderShapeStyleControls(
 	);
 	if (gallery) {
 		const disabled = !!reason;
-		if (gallery.state?.disabled !== disabled) gallery.state = quickStyleGalleryState(disabled);
+		if (gallery.state?.disabled !== disabled)
+			setGalleryState(gallery, quickStyleGalleryState(disabled));
 		gallery.toggleAttribute('disabled', disabled);
 		gallery.title = disabled ? `Quick Styles: ${reason}` : QUICK_STYLES_HINT;
 	}

@@ -20,6 +20,7 @@ import { enLineNumbers } from './line-numbers';
 import { enApp } from './en-app';
 import { enTableProperties } from './table-properties';
 import { enRibbon } from './en-ribbon';
+import { enRibbonNames } from './ribbon-names';
 
 /**
  * English display strings, the source of truth for the key set. Keys are the English UI text the
@@ -28,6 +29,7 @@ import { enRibbon } from './en-ribbon';
 export const en = {
 	...enOptions,
 	...enRibbon,
+	...enRibbonNames,
 	...enApp,
 	...enTableProperties,
 	...enLineNumbers,

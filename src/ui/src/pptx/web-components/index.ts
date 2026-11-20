@@ -167,6 +167,7 @@ export type {
 } from './subtitle-settings';
 
 export type { PptxUiStatusBarElement, StatusBarRequestEvent } from './status-bar';
+export { zoomFitName } from '../../controls';
 export type { NotesToolbarRequestEvent, PptxUiNotesToolbarElement } from './notes-toolbar';
 export type { PptxUiTitleBarElement, TitleBarCommandSearchEvent, TitleBarEvent } from './title-bar';
 export type {

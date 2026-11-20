@@ -16,6 +16,7 @@ import type {
 import { emitRibbonAction } from './ribbon-action';
 import { command, group, menu, type CommandSpec } from './ribbon-parts';
 import type { VisioPageSetupCommand } from './page-setup-action';
+import { setGalleryState } from './ribbon-localize';
 
 const page = (setup: VisioPageSetupCommand) => ({ type: 'page-setup' as const, command: setup });
 const inches = (value: number) => `${+value.toFixed(2)} in`;
@@ -185,7 +186,7 @@ export function syncDecorationGallery(
 	state: OfficeGalleryState,
 	reason: string | undefined,
 ): void {
-	el.state = state;
+	setGalleryState(el, state);
 	el.toggleAttribute('disabled', reason !== undefined);
 	const title = reason === undefined ? state.label : `${state.label}: ${reason}`;
 	el.setAttribute('title', title);
