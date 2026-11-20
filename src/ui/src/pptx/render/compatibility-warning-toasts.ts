@@ -37,6 +37,11 @@ export interface CompatibilityWarningToast {
 	readonly code: string;
 	readonly severity: 'info' | 'warning';
 	readonly messageKey: string;
+	/**
+	 * The message already translated, shown instead of looking `messageKey` up (a notice worded
+	 * outside the PowerPoint dictionary, such as the signature load notice).
+	 */
+	readonly text?: string;
 	/** `{{code}}` for the generic fallback key; `undefined` for a mapped code. */
 	readonly params?: Readonly<Record<string, string>>;
 	/**

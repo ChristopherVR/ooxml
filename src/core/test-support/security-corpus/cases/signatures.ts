@@ -2,6 +2,12 @@ import crypto from 'node:crypto';
 
 import JSZip from 'jszip';
 
+import { verifyPackageSignatureSummary } from '../../../opc/signature/verify/inspect';
+import {
+	rsaKeyCertificate,
+	signForTest,
+	withKeyInfoCertificates,
+} from '../../../opc/signature/test-support/sign';
 import { ENTERPRISE_TRUST_ROOTS_PEM_ENV } from '../../../pptx/core/utils/signature-constants';
 import { inspectPptxDigitalSignatures } from '../../../pptx/signature-node/inspection';
 import { signPptxWithCertificate } from '../../../pptx/signature-node/signing';
@@ -98,5 +104,23 @@ export const cases: readonly SecurityCase[] = [
 		limits: LIMITS,
 		run: () => signThenInspect(SERVER_ONLY),
 		expected: { status: 'verified-untrusted' },
+	},
+	{
+		name: 'an oversized signer key is not checked, so verifying a signature stays fast',
+		limits: { ms: 4_000, heapMb: 64 },
+		async run() {
+			const bits = 32_768;
+			const ones = (1n << BigInt(bits)) - 1n;
+			const signed = await signForTest(
+				await createTestPackage().generateAsync({ type: 'uint8array' }),
+			);
+			const bytes = await withKeyInfoCertificates(
+				signed,
+				[rsaKeyCertificate(ones, ones)],
+				bits / 8,
+			);
+			return { state: (await verifyPackageSignatureSummary(bytes)).state };
+		},
+		expected: { state: 'unsupported' },
 	},
 ];

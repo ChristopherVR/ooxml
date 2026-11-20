@@ -140,6 +140,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			.withAppProperties(appProperties)
 			.withHasMacros(this.vbaProjectBin !== null ? true : undefined)
 			.withHasDigitalSignatures(this.signatureDetection?.hasSignatures || undefined)
+			.withSignatures(this.signatureSummary)
 			.withDigitalSignatureCount(
 				this.signatureDetection?.signatureCount && this.signatureDetection.signatureCount > 0
 					? this.signatureDetection.signatureCount
@@ -341,7 +342,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<PptxData> {
 		await this.detectAndPreserveVbaProject();
 		this.detectDigitalSignatureParts();
-		await this.enforceSignedPackageRelationships();
+		await this.verifySignedPackage();
 		await this.parseCustomXmlParts();
 		const presentationState = await this.loadPresentationState();
 		const slideMasters = await this.parseSlideMasters();

@@ -23,7 +23,7 @@ import {
 	output,
 	signal,
 } from '@angular/core';
-import { THEME_CATALOG } from 'ooxml-ui/pptx';
+import { signatureStatusView, THEME_CATALOG } from 'ooxml-ui/pptx';
 import type { ThemeCatalogEntry, ViewerAddinStatus } from 'ooxml-ui/pptx';
 import { LOCALE_CATALOG } from 'ooxml-ui/pptx/i18n';
 import type { LocaleCatalogEntry } from 'ooxml-ui/pptx/i18n';
@@ -181,7 +181,7 @@ import { ViewerOptionsService } from './viewer-options.service';
 
 		<pptx-signature-stripped-dialog
 			[open]="svc.showSignatureStripped()"
-			[signatureCount]="loader.digitalSignatureCount()"
+			[signatureCount]="signatureView().count"
 			(confirm)="svc.showSignatureStripped.set(false)"
 			(cancel)="svc.showSignatureStripped.set(false)"
 		/>
@@ -243,6 +243,11 @@ export class ViewerExtraDialogsComponent {
 		Object.fromEntries(this.loader.mediaDataUrls()),
 	);
 
+	/** The loaded deck's signature presentation (presence and count drive the first-edit warning). */
+	protected readonly signatureView = computed(() =>
+		signatureStatusView(this.loader.signatureSummary(), undefined),
+	);
+
 	/** Guards the one-shot signature-stripped warning on first edit. */
 	private signatureWarningShown = false;
 
@@ -254,12 +259,7 @@ export class ViewerExtraDialogsComponent {
 		// edited (mirrors React's first-edit-of-signed-document prompt).
 		effect(() => {
 			const dirty = this.editor.dirty();
-			if (
-				dirty &&
-				!this.signatureWarningShown &&
-				this.loader.hasDigitalSignatures() &&
-				this.loader.digitalSignatureCount() > 0
-			) {
+			if (dirty && !this.signatureWarningShown && this.signatureView().present) {
 				this.signatureWarningShown = true;
 				this.svc.showSignatureStripped.set(true);
 			}

@@ -106,8 +106,7 @@ export function useFileDialogPorts(input: UseFileDialogPortsInput): FileDialogPo
 				markDirty,
 			},
 			digitalSignatures: {
-				signed: () => now().state.hasDigitalSignatures,
-				count: () => now().state.digitalSignatureCount,
+				summary: () => now().state.signatures,
 				content: () => now().content,
 				markDirty,
 			},

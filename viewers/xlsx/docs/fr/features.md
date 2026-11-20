@@ -115,4 +115,4 @@ traitées comme vides.
 
 Les tests d’aller-retour du cœur et les vérifications d’acceptation avec Excel se trouvent dans le dépôt `ooxml`. Signalez un classeur qui s’affiche ou s’enregistre mal sous forme de ticket, avec le fichier en pièce jointe si vous pouvez le partager.
 
-Les signatures numériques sont signalées à l’ouverture d’un classeur et supprimées à l’enregistrement. L’éditeur ne signe pas les fichiers. Les liens hypertexte suivent la politique du cœur partagé ; seuls les liens web et e-mail s’ouvrent à l’extérieur.
+Les signatures numériques sont vérifiées à l’ouverture d’un classeur et affichées selon leur état (signé, signataire non vérifié, non valide ou non vérifiée) dans la barre d’état, un avis et Fichier > Informations ; seule une signature vérifiée est présentée comme signée. L’enregistrement les supprime. L’éditeur ne signe pas les fichiers. Les liens hypertexte suivent la politique du cœur partagé ; seuls les liens web et e-mail s’ouvrent à l’extérieur.

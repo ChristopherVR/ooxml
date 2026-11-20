@@ -69,6 +69,8 @@ export interface CompatToastViewItem {
 	readonly code: string;
 	readonly severity: 'info' | 'warning';
 	readonly messageKey: string;
+	/** The message already translated; replaces the `messageKey` lookup when set. */
+	readonly text?: string;
 	readonly params?: Readonly<Record<string, string>>;
 	/** Joined into the `{{parts}}` param of `messageKey` (see `CompatibilityWarningToast`). */
 	readonly parts?: readonly { key: string; params?: Readonly<Record<string, string>> }[];

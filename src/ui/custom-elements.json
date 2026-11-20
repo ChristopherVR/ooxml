@@ -4532,6 +4532,64 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "notices/signature-status.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiSignatureStatus",
+					"tagName": "office-ui-signature-status",
+					"customElement": true,
+					"description": "`<office-ui-signature-status>`: a document's digital signature state, as Word, Excel and Visio show it. `summary` is the `SignatureSummary` a load returned (`signature` of `ooxml-core/opc`); `locale` picks the shared wording of `ooxml-core/i18n` (`signatureStateText`), so the products never describe a state differently. Only `verified` reads \"Signed\": a signature that does not verify is shown as invalid or not verified. Hidden while `summary` is absent or `unsigned`. The state is mirrored to the host's `data-state`. `variant`: `badge` (default) is a status bar button that emits `office-signature-activate`; `notice` is a load message bar with View signatures (`office-signature-activate`) and Dismiss (`office-signature-dismiss`); `panel` lists every signature with its signer and signing time for an info page. Event names are static fields a product subclass may override.",
+					"attributes": [
+						{
+							"name": "locale"
+						},
+						{
+							"name": "variant"
+						}
+					],
+					"members": [
+						{
+							"kind": "field",
+							"name": "locale",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "summary"
+						},
+						{
+							"kind": "field",
+							"name": "variant",
+							"type": {
+								"text": "string"
+							}
+						}
+					],
+					"events": [
+						{
+							"name": "office-signature-activate"
+						},
+						{
+							"name": "office-signature-dismiss"
+						}
+					]
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-signature-status",
+					"declaration": {
+						"name": "OfficeUiSignatureStatus"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "smartart/smartart.ts",
 			"declarations": [
 				{

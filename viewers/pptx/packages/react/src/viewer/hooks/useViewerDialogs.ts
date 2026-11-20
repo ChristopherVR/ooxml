@@ -3,7 +3,7 @@
  * check, master view, custom shows, guide, slide-show settings, password,
  * accessibility check, font embedding, and misc UI flags.
  */
-import { describeFontEmbedding, isMobileViewport } from 'ooxml-ui/pptx';
+import { describeFontEmbedding, isMobileViewport, signatureStatusView } from 'ooxml-ui/pptx';
 import type { PptxPresentationProperties } from 'pptx-viewer-core';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
@@ -42,7 +42,7 @@ export function useViewerDialogs(input: UseViewerDialogsInput): ViewerDialogsRes
 		setSelectedElementId,
 		setSelectedElementIds,
 		preMasterMode,
-		hasDigitalSignatures,
+		signatures,
 		isDirty,
 		history,
 		embeddedFontFamilies,
@@ -115,11 +115,17 @@ export function useViewerDialogs(input: UseViewerDialogsInput): ViewerDialogsRes
 	}, []);
 
 	// ── Signature strip warning ───────────────────────────────────────
+	// Any signature part, verified or not, is removed by saving an edit. `present` does not
+	// depend on the language, so no locale is passed.
+	const signaturesPresent = useMemo(
+		() => signatureStatusView(signatures, undefined).present,
+		[signatures],
+	);
 	useEffect(() => {
-		if (isDirty && hasDigitalSignatures && !signatureStripAcknowledgedRef.current) {
+		if (isDirty && signaturesPresent && !signatureStripAcknowledgedRef.current) {
 			setIsSignatureStrippedDialogOpen(true);
 		}
-	}, [isDirty, hasDigitalSignatures]);
+	}, [isDirty, signaturesPresent]);
 
 	// ── Master view ───────────────────────────────────────────────────
 	const handleEnterMasterView = useCallback(() => {

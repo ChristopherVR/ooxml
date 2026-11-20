@@ -41,6 +41,7 @@ import type {
 	PptxThemeOption,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 import React, { act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -136,8 +137,7 @@ function Harness({ content }: { content: ArrayBuffer }): null {
 		setEmbeddedFonts: noopDispatch<PptxEmbeddedFont[]>(),
 		setActiveSlideIndex: noopDispatch<number>(),
 		setHasMacros: noopDispatch<boolean>(),
-		setHasDigitalSignatures: noopDispatch<boolean>(),
-		setDigitalSignatureCount: noopDispatch<number>(),
+		setSignatures: noopDispatch<SignatureSummary | undefined>(),
 		setGuides: noopDispatch<Array<{ id: string; axis: 'h' | 'v'; position: number }>>(),
 		setLoading: noopDispatch<boolean>(),
 		setError: noopDispatch<string | null>(),

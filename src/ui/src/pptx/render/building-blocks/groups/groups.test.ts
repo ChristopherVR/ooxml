@@ -76,8 +76,7 @@ function setup() {
 			markDirty: vi.fn(),
 		},
 		digitalSignatures: {
-			signed: () => false,
-			count: () => 0,
+			summary: () => undefined,
 			content: () => null,
 			markDirty: vi.fn(),
 		},

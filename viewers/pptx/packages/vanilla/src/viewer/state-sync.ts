@@ -176,6 +176,9 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 		if (state.protectedView !== previous.protectedView) {
 			chrome.setProtectedView(state.protectedView);
 		}
+		if (state.signatures !== previous.signatures) {
+			chrome.setSignatures(state.signatures);
+		}
 		// The bar follows the content this viewer draws (a collaborator's slides included) and
 		// this viewer's own choice.
 		if (

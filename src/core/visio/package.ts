@@ -1,6 +1,6 @@
 import type JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
-import { parseXml } from '../xml/index';
+import { parseXml, xmlEncodingOf } from '../xml/index';
 import {
 	DEFAULTS,
 	VisioPackageError,
@@ -264,12 +264,7 @@ export class VisioPackage {
 	private async loadXml(path: string): Promise<Element> {
 		const bytes = await this.readBytes(path);
 		try {
-			const encoding =
-				(bytes[0] === 0xff && bytes[1] === 0xfe) || (bytes[0] === 0x3c && bytes[1] === 0)
-					? 'utf-16le'
-					: (bytes[0] === 0xfe && bytes[1] === 0xff) || (bytes[0] === 0 && bytes[1] === 0x3c)
-						? 'utf-16be'
-						: 'utf-8';
+			const encoding = xmlEncodingOf(bytes);
 			const xml = new TextDecoder(encoding, { fatal: true }).decode(bytes);
 			const before = this.memory.used;
 			this.totalXmlNodes += inspectXml(

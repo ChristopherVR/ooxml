@@ -56,6 +56,7 @@ export const OFFICE_UI_TAGS = [
 	'office-ui-dialog-footer',
 	'office-ui-toasts',
 	'office-ui-read-only-banner',
+	'office-ui-signature-status',
 	'office-ui-message-bar',
 	'office-ui-paste-options',
 	'office-ui-title-bar',

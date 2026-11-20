@@ -9,6 +9,7 @@
 // Slide, presentation data, and export types
 // ==========================================================================
 
+import type { SignatureSummary } from '../../../opc/signature/state';
 import type {
 	PptxAnimationTimelineAnchor,
 	PptxElementAnimation,
@@ -759,6 +760,11 @@ export interface PptxData {
 	hasDigitalSignatures?: boolean | undefined;
 	/** Number of digital signatures found. */
 	digitalSignatureCount?: number | undefined;
+	/**
+	 * The verified state of the digital signatures, set when the package is signed. Show a
+	 * presentation as signed only when `state` is `verified` or `verified-untrusted`.
+	 */
+	signatures?: SignatureSummary | undefined;
 	/** Presentation-level drawing guides from `p:extLst`. */
 	presentationGuides?: PptxDrawingGuide[] | undefined;
 	/** View properties from `ppt/viewProps.xml`. */

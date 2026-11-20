@@ -15,6 +15,7 @@ import type {
 	PptxCoreProperties,
 	PptxAppProperties,
 	PptxCustomProperty,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 
 import {
@@ -63,8 +64,8 @@ export interface ViewerDialogGroupProps {
 	customProperties: PptxCustomProperty[];
 	appProperties: PptxAppProperties | undefined;
 	embeddedFonts: Array<{ name: string; fsType?: number }>;
-	hasDigitalSignatures: boolean;
-	digitalSignatureCount: number;
+	/** The loaded deck's signatures with their verified state, absent when it has none. */
+	signatures: SignatureSummary | undefined;
 	presentationProperties: PptxPresentationProperties;
 	customShows: Array<{ id: string; name: string; slideRIds: string[] }>;
 	/** The show playback is restricted to, or null for the whole deck. */
@@ -102,8 +103,7 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 		customProperties,
 		appProperties,
 		embeddedFonts,
-		hasDigitalSignatures,
-		digitalSignatureCount,
+		signatures,
 		presentationProperties,
 		customShows,
 		activeCustomShowId,
@@ -179,13 +179,12 @@ export function ViewerDialogGroup(props: ViewerDialogGroupProps) {
 			<DigitalSignaturesDialog
 				isOpen={dialogs.isDigitalSigDialogOpen && isDialogAvailable(customization, 'signatures')}
 				onClose={() => dialogs.setIsDigitalSigDialogOpen(false)}
-				hasSignatures={hasDigitalSignatures}
-				signatureCount={digitalSignatureCount}
+				signatures={signatures}
 			/>
 
 			<SignatureStrippedDialog
 				isOpen={dialogs.isSignatureStrippedDialogOpen}
-				signatureCount={digitalSignatureCount}
+				signatures={signatures}
 				onConfirm={() => dialogs.setIsSignatureStrippedDialogOpen(false)}
 				onCancel={() => dialogs.setIsSignatureStrippedDialogOpen(false)}
 			/>

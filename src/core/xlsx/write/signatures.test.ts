@@ -46,10 +46,11 @@ async function signedWorkbook(): Promise<Uint8Array> {
 }
 
 describe('digitally signed workbooks', () => {
-	it('records the signatures and warns that saving removes them', async () => {
+	it('records the verified signature state', async () => {
 		const workbook = await loadXlsx(await signedWorkbook());
-		expect(workbook.signatures).toStrictEqual({ count: 1, parts: ['_xmlsignatures/sig1.xml'] });
-		expect(workbook.warnings.some((warning) => /digitally signed/.test(warning))).toBe(true);
+		// A signature without signed content does not verify: the workbook is not shown as signed.
+		expect(workbook.signatures?.state).toBe('invalid');
+		expect(workbook.signatures?.signatures.map(({ path }) => path)).toEqual(['_xmlsignatures/sig1.xml']);
 		expect((await loadXlsx(await saveXlsx(createWorkbook()))).signatures).toBeUndefined();
 	});
 

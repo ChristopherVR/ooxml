@@ -11,6 +11,7 @@ import {
 	resolveAutosaveActivation,
 	resolveAutosaveIntervalMs,
 	resolveCollaborationShellState,
+	signatureStatusView,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
@@ -205,7 +206,12 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		signatureWarningOpen = false;
 	});
 	$effect(() => {
-		if (editor.dirty && loader.hasDigitalSignatures && !signatureWarningAcknowledged) {
+		// Saving drops the signature parts whatever their state, so any present signature warns.
+		if (
+			editor.dirty &&
+			signatureStatusView(loader.signatures, undefined).present &&
+			!signatureWarningAcknowledged
+		) {
 			signatureWarningOpen = true;
 		}
 	});

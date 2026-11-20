@@ -24,7 +24,7 @@
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
 	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
-	import { installSvgIdScope } from 'ooxml-ui/pptx';
+	import { installSvgIdScope, signatureLoadNotice, signatureStatusView } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { aiAssistants } from './ai-assistant-registry';
@@ -228,6 +228,9 @@
 	// Stable controller references (the bag is built once and never reassigned).
 	// svelte-ignore state_referenced_locally
 	const { loader, viewer, editor, parityUi, compatToasts, collab, dialogs, exportUi } = vm;
+	// The one signature presentation every chrome surface reads, in the current UI locale.
+	const signatureView = $derived(signatureStatusView(loader.signatures, themeLocale.effectiveLocale));
+	compatToasts.setSignatureNotice(() => signatureLoadNotice(signatureView));
 
 	// Emit CSS custom properties ONLY for an explicitly chosen theme, matching
 	// React's `useThemeStyle` (returns nothing when no theme is set). Emitting a
@@ -471,6 +474,7 @@
 			accountAuth={props.accountAuth}
 			{aiEnabled}
 			onpresenter={vm.enterPresenterView}
+			{signatureView}
 		/>
 	{/if}
 	<!-- PowerPoint's security bar sits under the ribbon, and shows even without the toolbar so
@@ -499,7 +503,7 @@
 		/>
 	{/if}
 	{#if vm.versionHistoryOpen}<VersionHistoryPanel filePath={documentView.filePath} storage={documentView.storage} onclose={() => (vm.versionHistoryOpen = false)} onrestore={(bytes) => loader.load(bytes)} />{/if}
-	{#if vm.signatureWarningOpen}<SignatureStrippedDialog signatureCount={loader.digitalSignatureCount} onclose={vm.closeSignatureWarning} />{/if}
+	{#if vm.signatureWarningOpen}<SignatureStrippedDialog signatureCount={signatureView.count} onclose={vm.closeSignatureWarning} />{/if}
 	<ViewerParityOverlays ui={parityUi} {editor} {exportUi} slides={vm.displaySlides} canvasSize={loader.canvasSize} mediaDataUrls={loader.mediaDataUrls} current={viewer.current} fullscreen={viewer.isFullscreen} locale={themeLocale.effectiveLocale} themeKey={themeLocale.themeKey} themeCatalog={themeLocale.catalog} onsetthemekey={(key) => themeLocale.setThemeKey(key)} availableLocales={props.availableLocales} onsetlocale={(code) => themeLocale.setLocale(code)} onselectslide={(index) => viewer.goTo(index)} onmoveslide={vm.deck.moveSlide} onrunshow={() => { vm.presentation.firstSlide(); vm.onFullscreenToggle(); }} optionsState={vm.optionsState} autosaveRecovery={vm.autosaveRecovery} {aiEnabled} collabActive={vm.collab.active} />
 	<ViewerMain
 		{vm}

@@ -83,7 +83,6 @@ export * from './viewer/composables/useRibbonUiState';
 export * from './viewer/composables/useSectionOperations';
 export * from './viewer/composables/useSelectionPaneWiring';
 export * from './viewer/composables/useSheetDismissDrag';
-export * from './viewer/composables/useSignatures';
 export * from './viewer/composables/useSignatureWorkflow';
 export * from './viewer/composables/useSlideMutations';
 export * from './viewer/composables/useSlideOperations';

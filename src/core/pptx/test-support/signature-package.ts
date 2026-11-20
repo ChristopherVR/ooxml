@@ -9,14 +9,14 @@ import crypto from 'node:crypto';
 import JSZip from 'jszip';
 import forge from 'node-forge';
 
-import { OPC_RELATIONSHIP_TRANSFORM, XMLDSIG_NS } from '../core/utils/signature-constants';
-import { applyReferenceTransforms } from '../signature-node/reference-transforms';
 import {
-	canonicalizeNode,
-	childElements,
 	INCLUSIVE_C14N,
-	parseStrictXml,
-} from '../signature-node/xml-canonicalization';
+	OPC_RELATIONSHIP_TRANSFORM,
+	XMLDSIG_NS,
+} from '../../opc/signature/constants';
+import { canonicalize as canonicalizeNode } from '../../opc/signature/verify/c14n';
+import { childElements, parseStrictXml } from '../../opc/signature/verify/dom';
+import { applyReferenceTransforms } from '../../opc/signature/verify/transforms';
 
 const SHA256 = 'http://www.w3.org/2001/04/xmlenc#sha256';
 const RSA_SHA256 = 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256';

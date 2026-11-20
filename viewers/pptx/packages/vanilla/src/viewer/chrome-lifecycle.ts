@@ -90,6 +90,8 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	 * tests) working without this field.
 	 */
 	initialTheme?: ViewerTheme;
+	/** The viewer's UI locale (`setLocale` rebuilds the chrome); omitted: `'en'`. */
+	locale?: string;
 	/**
 	 * The open document's name for the title bar: a file opened from a cloud place brings its own.
 	 * Omitted (direct construction in tests) falls back to the `fileName` option.
@@ -278,6 +280,9 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		onDismissCompatToast: (id) => deps.dismissCompatToast(id),
 		onDismissAllCompatToasts: () => deps.dismissAllCompatToasts(),
 		onDismissRunProgramNotice: (id) => deps.dismissRunProgramNotice(id),
+		locale: deps.locale,
+		// The dialog itself honours the host's `signatures` dialog gate.
+		onOpenSignatures: () => deps.openDigitalSignatures(),
 		thumbnailMenu: {
 			store,
 			getEditActions: () => deps.getEditActions(),
@@ -301,6 +306,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	chrome.mobileActionSheets?.setNotesExpanded(store.get().notesExpanded);
 	chrome.titleBar?.setDirty(store.get().dirty);
 	chrome.setProtectedView(store.get().protectedView);
+	chrome.setSignatures(store.get().signatures);
 	chrome.setExternalContentBar(deps.externalContentBarInChrome());
 	chrome.setReadOnlyRecommendation(
 		store.get().readOnlyRecommendation,
@@ -915,6 +921,8 @@ export interface ChromeHost {
 	getCloudFiles?(): BackstageCloudFiles;
 	/** The open document's name (a cloud file's, or the `fileName` option). */
 	getFileName?(): string | undefined;
+	/** The current UI locale. */
+	getLocale(): string;
 	setTheme(theme: ViewerTheme | undefined): void;
 	applyPresentationTheme(presetId: string): void;
 }
@@ -925,6 +933,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		doc: host.doc,
 		container: host.container,
 		t: host.t,
+		locale: host.getLocale(),
 		options: host.getChromeOptions(),
 		getCustomization: () => host.getResolvedCustomization(),
 		getRegionSupport: () => host.getRegionSupport(),

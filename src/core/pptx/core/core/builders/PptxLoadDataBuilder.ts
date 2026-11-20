@@ -1,3 +1,4 @@
+import type { SignatureSummary } from '../../../../opc/signature/state';
 import type {
 	ParsedTableStyleMap,
 	PptxAppProperties,
@@ -94,6 +95,8 @@ export class PptxLoadDataBuilder {
 	private hasDigitalSignatures: boolean | undefined;
 
 	private digitalSignatureCount: number | undefined;
+
+	private signatures: SignatureSummary | undefined;
 
 	private presentationGuides: PptxDrawingGuide[] | undefined;
 
@@ -269,6 +272,11 @@ export class PptxLoadDataBuilder {
 		return this;
 	}
 
+	public withSignatures(signatures: SignatureSummary | undefined): this {
+		this.signatures = signatures;
+		return this;
+	}
+
 	public withDigitalSignatureCount(digitalSignatureCount: number | undefined): this {
 		this.digitalSignatureCount = digitalSignatureCount;
 		return this;
@@ -385,6 +393,7 @@ export class PptxLoadDataBuilder {
 			hasMacros: this.hasMacros,
 			hasDigitalSignatures: this.hasDigitalSignatures,
 			digitalSignatureCount: this.digitalSignatureCount,
+			signatures: this.signatures,
 			presentationGuides: this.presentationGuides,
 			photoAlbum: this.photoAlbum,
 			kinsoku: this.kinsoku,

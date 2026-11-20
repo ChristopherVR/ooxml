@@ -105,8 +105,7 @@ describe('viewerCoreState defaults', () => {
 			editTemplateMode: false,
 			pointerCommitNonce: 0,
 			hasMacros: false,
-			hasDigitalSignatures: false,
-			digitalSignatureCount: 0,
+			signatures: undefined,
 		};
 		expect(mockState.mode).toBe('edit');
 		expect(mockState.loading).toBeTruthy();
@@ -114,7 +113,7 @@ describe('viewerCoreState defaults', () => {
 		expect(mockState.slides).toStrictEqual([]);
 		expect(mockState.selectedElementId).toBeNull();
 		expect(mockState.isDirty).toBeFalsy();
-		expect(mockState.digitalSignatureCount).toBe(0);
+		expect(mockState.signatures).toBeUndefined();
 	});
 
 	it('viewerCoreState shape has expected master view defaults', () => {

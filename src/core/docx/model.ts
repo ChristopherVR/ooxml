@@ -1,4 +1,5 @@
 import type { DocumentProperties } from './core-properties';
+import type { SignatureSummary } from '../opc/signature/state';
 import type { DocumentPropertySet } from '../opc/properties/types';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { defaultStyleCatalogs } from './default-styles';
@@ -127,6 +128,11 @@ export interface DocumentModel {
 		marginLeft: number;
 	};
 	warnings: string[];
+	/**
+	 * The verified state of the digital signatures, set when the package is signed. Saving edits
+	 * removes them (changes invalidate signatures); saving an unchanged document keeps the file.
+	 */
+	signatures?: SignatureSummary;
 	/** Source paragraph defaults/styles; editing the catalog itself is not supported. */
 	paragraphStyles?: ParagraphStyleCatalog;
 	/** Parsed `word/numbering.xml`. Existing entries are read-only; new list definitions may be added. */

@@ -1,3 +1,4 @@
+import { signatureStatusView } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -9,14 +10,27 @@ const cleanups: Array<() => void> = [];
 afterEach(() => cleanups.splice(0).forEach((cleanup) => cleanup()));
 
 describe('file info dialogs', () => {
-	it('reports signed presentation status', () => {
+	it('lists each signature with its own verification state', () => {
 		const target = document.createElement('div');
-		const instance = mount(DigitalSignaturesDialog, {
-			target,
-			props: { hasSignatures: true, signatureCount: 2, onclose: vi.fn() },
-		});
+		const view = signatureStatusView(
+			{
+				state: 'invalid',
+				signatures: [
+					{ path: '_xmlsignatures/sig1.xml', state: 'verified-untrusted' },
+					{ path: '_xmlsignatures/sig2.xml', state: 'invalid' },
+				],
+			},
+			'en',
+		);
+		const instance = mount(DigitalSignaturesDialog, { target, props: { view, onclose: vi.fn() } });
 		cleanups.push(() => unmount(instance));
-		expect(target.textContent).toContain('2');
+		const rows = [...target.querySelectorAll<HTMLElement>('[data-pptx-signature-row-state]')];
+		expect(rows.map((row) => row.dataset.pptxSignatureRowState)).toEqual([
+			'verified-untrusted',
+			'invalid',
+		]);
+		expect(rows[0]?.textContent).toContain('Signed, signer not verified');
+		expect(rows[1]?.textContent).toContain('Invalid signature');
 	});
 
 	it('validates and accepts a protection password', () => {

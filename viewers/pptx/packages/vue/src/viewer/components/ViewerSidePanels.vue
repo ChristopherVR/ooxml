@@ -150,14 +150,13 @@ const signaturesAvailable = computed(() => isDialogAvailable(customization.value
 		:modern-comment-authors="deck.modernCommentAuthors.value"
 	/>
 
-	<!-- Signed-document badge (opens the signatures panel). -->
+	<!-- Signature-state badge (opens the signatures panel). -->
 	<div
-		v-if="signatureWorkflow.hasDigitalSignatures.value && !isMobile"
+		v-if="signatureWorkflow.view.value.present && !isMobile"
 		class="pointer-events-auto absolute right-2 top-2 z-50"
 	>
 		<SignatureStatusBadge
-			:has-signatures="signatureWorkflow.hasDigitalSignatures.value"
-			:signature-count="deck.signatures.value.length"
+			:view="signatureWorkflow.view.value"
 			@click="signatureWorkflow.showSignatures.value = true"
 		/>
 	</div>
@@ -165,7 +164,7 @@ const signaturesAvailable = computed(() => isDialogAvailable(customization.value
 	<!-- Digital signatures -->
 	<SignaturesPanel
 		v-if="signatureWorkflow.showSignatures.value && signaturesAvailable"
-		:signatures="deck.signatures.value"
+		:view="signatureWorkflow.view.value"
 	/>
 
 	<!-- Selection pane (View > Selection Pane): object list + z-order +

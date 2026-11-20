@@ -198,6 +198,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Closed: `rPh` runs and `phoneticPr` are read onto the cell (`Cell.phonetic`) and written back
       with the shared string. The guide is not displayed, edited or carried by copy and paste or
       collaboration, and `phoneticPr` `fontId` is written as read.
+- [x] **P1** Digital signatures are verified on load and shown by state (signed, signer not
+      verified, invalid, not verified) in the status bar, a load notice and File > Info, translated;
+      a signature that does not verify is never shown as signed, and saving removes signatures as
+      Excel does (`src/ui/src/xlsx/signature-status.test.ts`). The editor does not sign workbooks.
 - [ ] **P2** Named sheet views and ActiveX controls are not modelled.
 - [ ] **P2** Collaboration does not share filters, pivots, panes and views, page setup,
       protection, images and drawings or document properties.
@@ -398,11 +402,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Word-written passwords (legacy key text, SHA-1/256/384/512 by sid) are checked against
       fixtures saved by Word 16 (SHA-512 only; the other sids are checked against an independent
       implementation).
-- [x] **P1** Digital signatures: Word warns on load that signatures are unverified and saving
-      edits removes them. Unchanged saves keep the original bytes; edited saves remove signature
-      origins, signatures, certificates, relationships and content types through `opc/signature`,
-      including nonstandard part locations (`src/core/docx/signatures.test.ts`). This is metadata
-      detection and cleanup, not certificate verification or signing.
+- [x] **P1** Digital signatures: Word verifies them on load and shows the verified state (signed,
+      signed with the signer not verified, invalid, not verified) in a status bar badge, a load
+      notice and File > Info with each signer (`office-ui-signature-status`,
+      `src/ui/src/docx/signature-status.test.ts`, `e2e/docx/signature-status.spec.ts`). Only a
+      signature that verifies is shown as signed, and the notice says saving edits removes them.
+      Unchanged saves keep the original bytes; edited saves remove signature origins, signatures,
+      certificates, relationships and content types through `opc/signature`, including
+      nonstandard part locations (`src/core/docx/signatures.test.ts`). A browser has no trust
+      store, so a valid signature reads "signer not verified" there. The editor does not sign.
 - [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
 - [x] **P2** Comment metadata edits retain source bodies; plain-text edits patch existing runs;
       paragraph and durable IDs, reply anchors, UTC dates and metadata parts stay aligned.
@@ -654,6 +662,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       displayed but their parts are saved unchanged; restricted, preview and print, and
       bitmap-only faces are never newly embedded; the Embed Fonts panel shows the restriction in
       every binding (`core/text/truetype/embedding.ts`).
+- [x] **P1** Digital signatures are verified in the browser (part digests, signature value and the
+      signer certificate's key) and every binding shows the verified state through
+      `signatureStatusView` (`src/ui/src/pptx/render/signature-status.ts`): a deck reads as signed
+      only when its signatures verify, and invalid or unsupported signatures say so in the badge,
+      the signatures panel and its rows (`e2e/pptx/signature-state.spec.ts`). There is no trust
+      store in a browser, so a valid signature is "Signed, signer not verified" at best; the viewer
+      cannot sign, and saving an edit removes the signatures.
 - [ ] **P2** 3-D models: `am3d:preTrans` is parsed, not applied; `rot` handedness and
       orthographic scale are unverified.
 - [ ] **P2** `p:smartTags` has no model; `p:revisionInfo` survival is unverified.
@@ -921,6 +936,10 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** `.vsdm`, `.vstx` and `.vstm` open as drawings and `.vssm` for its masters; an edit
       keeps the VBA project byte for byte (never run), saves a template as a drawing and removes a
       standard signature with a notice (`package-kind.ts`, `package-kinds.test.ts`).
+- [x] **P1** A signed drawing shows its verified signature state (signed, signer not verified,
+      invalid, not verified) in the status bar, a load notice and File > Info, translated, and is
+      never called signed unless the signature verifies
+      (`src/ui/src/visio/signature-status.test.ts`). The viewer does not sign drawings.
 - [ ] **P1** No Save as template; a signature relationship outside the standard layout, or a VBA
       project in a package that does not declare macros, still refuses an edit. No native check of
       an edited `.vsdm` yet.

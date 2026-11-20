@@ -6,8 +6,8 @@ import type {
 	RunProgramNotice,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
-import { observeElementHeight } from 'ooxml-ui/pptx';
-import type { TextSegment } from 'pptx-viewer-core';
+import { observeElementHeight, signatureStatusView } from 'ooxml-ui/pptx';
+import type { SignatureSummary, TextSegment } from 'pptx-viewer-core';
 
 import type { Translator } from '../i18n';
 import { createEl } from '../render';
@@ -43,6 +43,8 @@ import type { RunProgramNoticeStack } from './run-program-notices';
 import { createRunProgramNoticeStack } from './run-program-notices';
 import type { ShortcutPanel } from './shortcut-panel';
 import { createShortcutPanel } from './shortcut-panel';
+import type { SignatureBadge } from './signature-badge';
+import { createSignatureBadge } from './signature-badge';
 import type { StatusBar } from './status-bar';
 import { createStatusBar } from './status-bar';
 import type { ThumbnailRail, ThumbnailRailMenuDeps } from './thumbnails';
@@ -106,6 +108,13 @@ export interface ChromeOptions {
 	titleBar: TitleBarDeps;
 	/** Optional File > Account sign-in hook point; disabled/absent by default. */
 	accountAuth?: AccountAuthConfig;
+	/**
+	 * The UI locale this chrome's labels are built in (a locale switch rebuilds
+	 * the chrome); the signature badge words its state in it. Default `'en'`.
+	 */
+	locale?: string;
+	/** Signature badge click: opens File > Info > Digital Signatures. */
+	onOpenSignatures?(): void;
 	onSelectSlide(index: number): void;
 	/** Header click on the notes panel; shares the ribbon Notes button's handler. */
 	onToggleNotes(): void;
@@ -183,6 +192,11 @@ export interface ViewerChrome {
 	setQuickAccessPosition(position: 'above' | 'below'): void;
 	/** Show/hide the Protected View "Enable Editing" banner. */
 	setProtectedView(active: boolean): void;
+	/**
+	 * Show the loaded deck's verified signature state in the badge under the
+	 * Ribbon; no badge for an unsigned deck. A no-op when the toolbar is hidden.
+	 */
+	setSignatures(summary: SignatureSummary | undefined): void;
 	/** Show/hide + populate the read-only recommendation banner. */
 	setReadOnlyRecommendation(
 		recommendation: ReadOnlyRecommendation | null,
@@ -270,6 +284,12 @@ export function buildViewerChrome(
 		quickAccessRow = createEl(doc, 'div', 'pptxv-qat-row');
 		quickAccessRow.hidden = true;
 		root.appendChild(quickAccessRow);
+	}
+	const signatureBadge: SignatureBadge | null = options.showToolbar
+		? createSignatureBadge(doc, () => options.onOpenSignatures?.())
+		: null;
+	if (signatureBadge) {
+		root.appendChild(signatureBadge.el);
 	}
 	const protectedViewBanner: ProtectedViewBanner | null = options.showToolbar
 		? createProtectedViewBanner(doc, t, () => options.onEnableEditing())
@@ -554,6 +574,9 @@ export function buildViewerChrome(
 		},
 		setProtectedView(active) {
 			protectedViewBanner?.setActive(active);
+		},
+		setSignatures(summary) {
+			signatureBadge?.update(signatureStatusView(summary, options.locale));
 		},
 		setReadOnlyRecommendation(recommendation, dismissed, passwordState) {
 			readOnlyBanner?.update(recommendation, dismissed, passwordState);

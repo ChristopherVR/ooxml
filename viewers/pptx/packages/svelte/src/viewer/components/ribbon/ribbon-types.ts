@@ -3,6 +3,7 @@ import type {
 	CanvasSize,
 	FontEmbeddingRestriction,
 	RibbonDisplayController,
+	SignatureStatusView,
 	ToolbarActionId,
 	ViewerPreferences,
 } from 'ooxml-ui/pptx';
@@ -61,8 +62,8 @@ export interface RibbonProps {
 	embeddedFontNames: string[];
 	/** Licence restrictions of embedded typefaces (`describeEmbeddedFontRestrictions`). */
 	embeddedFontRestrictions?: Record<string, FontEmbeddingRestriction>;
-	hasDigitalSignatures: boolean;
-	digitalSignatureCount: number;
+	/** The deck's signature presentation (`signatureStatusView`): badge, dialog and its rows. */
+	signatureView: SignatureStatusView;
 	isPasswordProtected: boolean;
 	autosaveStatus?: AutosaveStatus;
 	autosaveDirty?: boolean;

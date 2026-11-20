@@ -22,13 +22,28 @@ export class CompatToastsState {
 	/** Notices outside the load diagnostics (a failed Save); see {@link notify}. */
 	#notices = $state<CompatibilityWarningToast[]>([]);
 	#getWarnings: () => readonly PptxCompatibilityWarning[];
+	#getSignatureNotice: () => CompatibilityWarningToast | undefined = () => undefined;
 
 	constructor(deps: { getWarnings(): readonly PptxCompatibilityWarning[] }) {
 		this.#getWarnings = deps.getWarnings;
 	}
 
+	/**
+	 * Show the loaded deck's signature load notice (the shared `signatureLoadNotice`) on top of
+	 * the stack. The getter is read reactively, so the notice follows the deck and the locale;
+	 * dismissing it lasts until {@link reset}.
+	 */
+	setSignatureNotice(getNotice: () => CompatibilityWarningToast | undefined): void {
+		this.#getSignatureNotice = getNotice;
+	}
+
 	#allToasts(): CompatibilityWarningToast[] {
-		return [...this.#notices, ...compatibilityWarningToasts(this.#getWarnings())];
+		const signature = this.#getSignatureNotice();
+		return [
+			...(signature ? [signature] : []),
+			...this.#notices,
+			...compatibilityWarningToasts(this.#getWarnings()),
+		];
 	}
 
 	#activeToasts(): CompatibilityWarningToast[] {

@@ -2,8 +2,8 @@
 	/**
 	 * RibbonTabBar: the ribbon tab row, the shared `pptx-ui-ribbon-tabs` (the tab row Word, Excel
 	 * and Visio draw) fed from `buildRibbonTabRow`, with the right-side quick actions React keeps
-	 * on the tab row (`TabRowActions`) in its actions slot: Record, then Comments and Share drawn
-	 * by the shared `pptx-ui-ribbon-actions`, then Ribbon Display Options.
+	 * on the tab row (`TabRowActions`) in its actions slot: the signature badge, Record, then
+	 * Comments and Share drawn by the shared `pptx-ui-ribbon-actions`, then Ribbon Display Options.
 	 */
 	import {
 		buildRibbonTabRow,
@@ -18,12 +18,14 @@
 		RibbonContextualTabId,
 		RibbonDisplayController,
 		RibbonTabSelectDetail,
+		SignatureStatusView,
 		ToolbarActionId,
 	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 	import type { ChromeUiState } from '../../state/chrome-ui.svelte';
 	import { controllerState } from '../../state/controller-state';
 	import { useViewerOptions } from '../../state/viewer-options-context';
+	import SignatureStatusBadge from '../SignatureStatusBadge.svelte';
 	import type { RibbonTabId } from './ribbon-tabs';
 
 	const {
@@ -38,6 +40,8 @@
 		chromeUi,
 		commentCount = 0,
 		ribbonDisplay,
+		signatureView,
+		onsignatures,
 	}: {
 		active: RibbonTabId | RibbonContextualTabId | string;
 		onselect: (id: RibbonTabId | RibbonContextualTabId | string) => void;
@@ -55,6 +59,10 @@
 		commentCount?: number;
 		/** Ribbon Display Options: the menu button, and a double click on a tab collapses the ribbon. */
 		ribbonDisplay?: RibbonDisplayController;
+		/** The deck's signature presentation: a badge shows while signature parts are present. */
+		signatureView?: SignatureStatusView;
+		/** Opens the Digital Signatures dialog from the badge. */
+		onsignatures?: () => void;
 	} = $props();
 
 	const t = useTranslator();
@@ -95,6 +103,7 @@
 	oncollapse-toggle={() => ribbonDisplay?.toggleCollapsed()}
 >
 	<div class="pptx-svelte-ribbon-tabrow-actions" slot="actions">
+		{#if signatureView}<SignatureStatusBadge view={signatureView} onclick={onsignatures} />{/if}
 		{#if onrecord && !isActionHidden('record', hiddenActions)}
 			<button
 				type="button"

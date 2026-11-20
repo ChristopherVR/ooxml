@@ -302,6 +302,12 @@ framework-free state helpers (`ViewerState`, `PresentationLoader`, `clampSlideIn
 custom chrome on the same primitives. These are lower-level than the component API and not
 needed for typical embedding.
 
+`PresentationLoader.signatures` is the loaded deck's `SignatureSummary` (`undefined` for an
+unsigned deck); it replaces `hasDigitalSignatures` and `digitalSignatureCount`. Present it with
+`signatureStatusView(loader.signatures, locale)` from `ooxml-ui/pptx`, which gives the translated
+badge label, description, tone, icon and one row per signature. A deck reads as signed only when
+its signatures verify; `Ribbon` takes that view as `signatureView`.
+
 ### Slide thumbnail rail
 
 `SlidesPane` is the rail of slide thumbnails that `PowerPointViewer` shows beside the canvas,

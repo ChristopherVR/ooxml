@@ -34,7 +34,9 @@ export interface SignatureReferenceCheck {
 		| 'missing-part'
 		| 'unsupported-transform'
 		| 'unsupported-algorithm'
-		| 'insufficient-data';
+		| 'insufficient-data'
+		/** Not read: the signature reached the verifier's work limit before this reference. */
+		| 'limit-exceeded';
 	transformAlgorithms: string[];
 }
 
@@ -159,6 +161,8 @@ export interface ParsedReferenceTransform {
 	relationshipReferenceIds: string[];
 	/** `SourceType` values of `RelationshipsGroupReference` transform parameters. */
 	relationshipGroupTypes: string[];
+	/** Set when the transform has parameters the verifier does not apply. */
+	unsupportedParameters?: boolean | undefined;
 }
 
 /** A `Relationship` element of a relationships part. */

@@ -55,10 +55,10 @@ describe('loading a package that carries a signature', () => {
 	it.each([
 		['a repeated relationship Id', repeatedId],
 		['a Relationship element in another namespace', foreignElement],
-	])('refuses %s', async (_label, relationship) => {
-		await expect(loadSlideTargets({ signed: true, relationship })).rejects.toThrow(
-			/invalid relationships part/,
-		);
+	])('loads one with %s and never shows it as signed', async (_label, relationship) => {
+		const data = await loadSlideTargets({ signed: true, relationship });
+		expect(data.slides.length).toBeGreaterThan(0);
+		expect(data.signatures?.state).toMatch(/^(invalid|unsupported)$/u);
 	});
 
 	it.each<[string, PackageChange]>([

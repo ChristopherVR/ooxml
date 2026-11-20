@@ -110,8 +110,16 @@ the viewer or driving it programmatically.
 
 Loads a `.pptx` and exposes everything parsed from it as signals: `slides`, `canvasSize`,
 `theme`, `slideMasters`, `mediaDataUrls`, `embeddedFonts`, `coreProperties`, `appProperties`,
-`sections`, `loading`, `error`, `isEncrypted`, `hasMacros`, and more, plus a computed
-`slideCount`.
+`sections`, `loading`, `error`, `isEncrypted`, `hasMacros`, `signatureSummary`, and more, plus a
+computed `slideCount`.
+
+`signatureSummary` is the deck's digital signatures with their verified state (`SignatureSummary`,
+absent for an unsigned deck). A deck reads as signed only when its signatures verify, so build any
+badge or status from `signatureStatusView(summary, locale)` (exported from the package root): it
+returns the translated `label`, `description`, `tone`, `icon`, `present`, `signed` and one row per
+signature. `<pptx-signatures-panel [summary]="loader.signatureSummary()" />` renders it as a list,
+and `<pptx-signature-status-badge [summary]="..." (open)="..." />` as the status bar entry the
+viewer shows whenever a deck carries signatures, verified or not.
 
 | Member                                   | Purpose                                                                                                       |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------- |

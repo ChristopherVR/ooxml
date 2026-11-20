@@ -17,6 +17,7 @@ import { commandRow } from './ribbon-parts';
 import { applyKeyTips } from './ribbon-keytips';
 import { attachKeyTips } from '../controls';
 import { createPageTabs, createStatusBar, statusLanguage } from './status-bar';
+import { createSignatureChrome, type SignatureChrome } from '../notices/signature-chrome';
 import { createTitleBar, renderTitleBar } from './title-bar';
 import { localizeRibbon } from './ribbon-localize';
 import { applyScreenTips, restoreScreenTips } from './viewer-screen-tips';
@@ -251,6 +252,8 @@ export class VisioViewerElement extends BaseElement {
 	#openedStorage: DocumentStorage | undefined;
 	#loadToken = 0;
 	#findBar: FindBar;
+	/** The signature badge (status bar) and load notice (under the ribbon); both open File > Info. */
+	#signatures: SignatureChrome;
 	#replace: ViewerReplace;
 	#status: HTMLSpanElement;
 	#titleBar: HTMLElement;
@@ -289,7 +292,8 @@ export class VisioViewerElement extends BaseElement {
 		const ribbon = createRibbon(document);
 		applyKeyTips(ribbon);
 		this.#titleBar = createTitleBar(document);
-		workspace.before(this.#titleBar, ribbon, this.#findBar);
+		this.#signatures = createSignatureChrome(document, () => this.#backstage.show('info'));
+		workspace.before(this.#titleBar, ribbon, this.#findBar, this.#signatures.notice);
 		workspace.prepend(createShapesStrip(document), createShapesWindow(document));
 		workspace.append(createPanZoom(document), createSizePosition(document));
 		this.#root.append(
@@ -298,6 +302,7 @@ export class VisioViewerElement extends BaseElement {
 			...createContextMenus(document),
 		);
 		workspace.after(createPageTabs(document), createStatusBar(document));
+		this.#root.querySelector('[data-language-status]')!.after(this.#signatures.badge);
 		this.#viewport = this.#root.querySelector('.viewport')!;
 		this.#rulers = createRulers(this.#viewport);
 		this.#zoomSlider = this.#root.querySelector('office-ui-zoom-slider')!;
@@ -974,6 +979,7 @@ export class VisioViewerElement extends BaseElement {
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
 		this.#backstage?.localize();
+		this.#signatures.update(this.controller.state.document?.signatures, this.#locale());
 		this.#syncTrust();
 		this.#shareUi.relocalize();
 		applyScreenTips(this.#toolbar, this.#behaviour.screenTips);
@@ -1152,6 +1158,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#zoomSlider.value = Math.round(state.zoom * 100);
 		this.#zoomSlider.disabled = !page;
 		this.#renderStatus(state);
+		this.#signatures.update(state.document?.signatures, this.#locale());
 		renderTitleBar(
 			this.#titleBar,
 			state,
