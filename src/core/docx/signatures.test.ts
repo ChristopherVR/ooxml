@@ -82,9 +82,7 @@ describe('DOCX package signatures', () => {
 			);
 			const reloaded = await loadDocx(bytes);
 			expect(expectParagraph(reloaded.model.blocks[0]).runs[0]?.text).toBe('Edited document');
-			expect(
-				reloaded.model.signatures !== undefined,
-			).toBe(false);
+			expect(reloaded.model.signatures !== undefined).toBe(false);
 			// Saving does not mutate the source context or remove signatures from the original model.
 			expect(await loaded.save()).toEqual(original);
 		},
@@ -95,15 +93,11 @@ describe('DOCX package signatures', () => {
 		loaded.model.properties = { title: 'Changed title' };
 		const reloaded = await loadDocx(await loaded.save());
 		expect(reloaded.model.properties?.title).toBe('Changed title');
-		expect(reloaded.model.signatures !== undefined).toBe(
-			false,
-		);
+		expect(reloaded.model.signatures !== undefined).toBe(false);
 	});
 
 	it('reports no signatures for an unsigned document', async () => {
 		const loaded = await loadDocx(await saveDocx(createDocument()));
-		expect(loaded.model.signatures !== undefined).toBe(
-			false,
-		);
+		expect(loaded.model.signatures !== undefined).toBe(false);
 	});
 });
