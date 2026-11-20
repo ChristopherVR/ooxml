@@ -13,8 +13,11 @@ function workflow(summary: SignatureSummary | undefined, locale = 'en') {
 	const signatures = ref(summary);
 	const localeRef = ref(locale);
 	const isDirty = ref(false);
-	const result = scope.run(() => useSignatureWorkflow({ signatures, locale: localeRef, isDirty }))!;
-	return { ...result, signatures, locale: localeRef, isDirty, stop: () => scope.stop() };
+	const loading = ref(false);
+	const result = scope.run(() =>
+		useSignatureWorkflow({ signatures, locale: localeRef, isDirty, loading }),
+	)!;
+	return { ...result, signatures, locale: localeRef, isDirty, loading, stop: () => scope.stop() };
 }
 
 describe('useSignatureWorkflow', () => {
@@ -55,6 +58,22 @@ describe('useSignatureWorkflow', () => {
 		await nextTick();
 		expect(w.showSignatureStripped.value).toBeFalsy();
 		expect(w.view.value.present).toBeFalsy();
+		w.stop();
+	});
+
+	it('does not warn when loading the deck marks it dirty until the load settles', async () => {
+		const w = workflow(undefined);
+		w.loading.value = true;
+		w.signatures.value = deck('invalid');
+		w.isDirty.value = true;
+		await nextTick();
+		w.isDirty.value = false;
+		w.loading.value = false;
+		await nextTick();
+		expect(w.showSignatureStripped.value).toBeFalsy();
+		w.isDirty.value = true;
+		await nextTick();
+		expect(w.showSignatureStripped.value).toBeTruthy();
 		w.stop();
 	});
 });

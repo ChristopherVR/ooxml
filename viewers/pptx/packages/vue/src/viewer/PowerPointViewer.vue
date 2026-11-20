@@ -1392,7 +1392,12 @@ watch(collaboration.collab.state, (state) => collaborationReporter.update(state)
 });
 
 // -- Panels and dialogs owned by their own composables ------------------
-const signatureWorkflow = useSignatureWorkflow({ signatures, locale, isDirty: autosave.isDirty });
+const signatureWorkflow = useSignatureWorkflow({
+	signatures,
+	locale,
+	isDirty: autosave.isDirty,
+	loading,
+});
 const slideShow = useSlideShowSettings({ presentationProperties });
 // `password` is created above `useLoadContent` so the save path can read it.
 const fontEmbedding = useFontEmbedding({ slides, embeddedFonts: deck.embeddedFonts });

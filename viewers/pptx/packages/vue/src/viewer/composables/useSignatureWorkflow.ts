@@ -11,6 +11,11 @@ export interface UseSignatureWorkflowInput {
 	locale: MaybeRefOrGetter<string | undefined>;
 	/** Autosave dirty flag; a deck carrying signatures warns once on its first dirtying edit. */
 	isDirty: ComputedRef<boolean> | Ref<boolean>;
+	/**
+	 * True while a deck loads. Loading reassigns the slides, which marks the deck dirty until the
+	 * load settles; that is not an edit, so it must not raise the warning.
+	 */
+	loading?: Ref<boolean>;
 }
 
 export interface UseSignatureWorkflowResult {
@@ -32,16 +37,19 @@ export function useSignatureWorkflow(input: UseSignatureWorkflowInput): UseSigna
 
 	const showSignatures = ref(false);
 	const view = computed(() => signatureStatusView(signatures.value, toValue(input.locale)));
-	// Warn once, on the first edit of a deck carrying signatures, that saving strips them.
+	// Warn once, on the first edit of a deck carrying signatures, that saving strips them. A load
+	// marks the deck dirty until it settles: the warning ignores the load itself and runs after the
+	// settling watchers (post flush), so only a real edit raises it.
 	const showSignatureStripped = ref(false);
 	const signatureStripAcknowledged = ref(false);
 	watch(
-		() => isDirty.value,
+		() => isDirty.value && !input.loading?.value,
 		(dirty) => {
 			if (dirty && view.value.present && !signatureStripAcknowledged.value) {
 				showSignatureStripped.value = true;
 			}
 		},
+		{ flush: 'post' },
 	);
 	function onAckSignatureStripped(): void {
 		signatureStripAcknowledged.value = true;
