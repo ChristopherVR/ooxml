@@ -52,6 +52,7 @@ export const VIEWERS = {
 		ownJobs: true,
 		verify: [
 			'bun run build:packages',
+			'node ../../scripts/check-shipped-css.mjs viewers/pptx src/ui',
 			'bun run typecheck',
 			'bun run e2e:contract',
 			'bun run check:viewer-props',
@@ -70,6 +71,7 @@ export const VIEWERS = {
 			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
+				'node ../../scripts/check-shipped-css.mjs viewers/docx',
 				'bun run check:published',
 				'bun run pack:smoke --workspace-runtime',
 				'bun run check:shared',
@@ -89,6 +91,7 @@ export const VIEWERS = {
 			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
+				'node ../../scripts/check-shipped-css.mjs viewers/xlsx',
 				'bun run check:published',
 				'bun run pack:smoke --workspace-runtime',
 				'bun run check:shared',
@@ -117,6 +120,7 @@ export const VIEWERS = {
 				'bun run test:worker',
 				'bun run test:package',
 				'bun run build:packages',
+				'node ../../scripts/check-shipped-css.mjs viewers/visio',
 				'node scripts/test-packages.mjs --workspace-runtime',
 			],
 		},
@@ -145,6 +149,7 @@ export const VIEWERS = {
 			browser: ['bun run test:browser'],
 			packages: [
 				'bun run build:packages',
+				'node ../../scripts/check-shipped-css.mjs viewers/teams',
 				'bun run check:published',
 				'bun run pack:smoke --workspace-runtime',
 			],
