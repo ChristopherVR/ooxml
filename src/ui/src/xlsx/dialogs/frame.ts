@@ -2,7 +2,7 @@ import { createDialogSession } from '../../dialog/dialog-session';
 // The modal frame every UI-COMMANDS dialog uses: an `office-ui-dialog` (focus trap, Escape,
 // return focus) with OK / Cancel in its footer, Enter to confirm from a field, and a promise that
 // resolves with the dialog's result or undefined when it is cancelled.
-import { defineDialog } from '../../index';
+import { defineDialog } from '../../dialog/dialog';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { dialogHost } from './host';
 import { DIALOG_CSS } from './styles';
