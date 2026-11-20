@@ -90,6 +90,16 @@ strip, task pane, format section, backstage, account, find bar, print preview, r
   children keyed by id (so focus and a product's tags survive), and keytips attaches a badge layer to
   a scope it does not own.
 
+`bun run check:elements` (part of this package's test suite, so CI runs it) holds every element to
+this contract. It defines every element through the public register functions and every `definer`
+in the source, then checks that each one is an `OfficeElement`, is defined by a public register
+function through the registry (carrying the contract stamp), declares its reactive properties
+rather than shadowing them with class fields, has a property for each attribute it reads, keeps a
+property a host set before its definition loaded, styles its shadow root from `?raw` CSS through
+`controlStyles` with token defaults, and lets go of `window`, `document`, observer and interval
+resources when removed. `src/conformance/known-gaps.ts` lists the elements that fail a check today;
+the suite fails when a new element fails or a listed one passes, so the list only shrinks.
+
 ## Team workspace elements (`ooxml-ui/teams`)
 
 The chat and meeting pieces of the open-source Teams-style workspace (logic in `ooxml-core/teams`,

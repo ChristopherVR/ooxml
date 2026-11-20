@@ -57,6 +57,7 @@
 		"test:scripts": "node --test 'scripts/*.test.mjs'",
 		"verify": "node scripts/verify.mjs",
 		"check:changelog": "node scripts/check-changelog-sections.mjs",
+		"check:elements": "bun run --cwd src/ui check:elements",
 		"release:plan": "node scripts/release-plan.mjs",
 		"release:publish": "node scripts/publish-released.mjs",
 		"changelog:unreleased": "git-cliff --config cliff.toml --tag-pattern \"^ooxml-core@\" --unreleased",

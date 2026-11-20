@@ -55,6 +55,9 @@ const AREAS = {
 	ui: {
 		resolve: {
 			alias: [
+				// PowerPoint modules import core files by deep path, which the element conformance suite
+				// loads from this area too.
+				{ find: /^ooxml-core\/pptx\/(.+)$/, replacement: `${coreSource}/pptx/$1` },
 				{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
 				// The package imports its own subpaths by name; resolve them to source, not to dist.
 				{ find: /^ooxml-ui\/pptx\/dom$/, replacement: `${uiSource}/pptx/dom/index.ts` },
