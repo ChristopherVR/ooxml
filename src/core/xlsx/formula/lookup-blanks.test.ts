@@ -38,8 +38,8 @@ describe('Excel lookup of trailing blank cells', () => {
 				return 1;
 			},
 		};
-		expect(findExact(vector, null, false)).toBe(1);
-		expect(findExact(vector, null, false, true)).toBe(1_048_575);
+		expect(findExact(vector, null, false, 'chars')).toBe(1);
+		expect(findExact(vector, null, false, 'chars', true)).toBe(1_048_575);
 		expect(reads).toBe(1);
 		expect(calc('XMATCH(A2,B:B,0,-1)', { A1: 1 })).toBe(1_048_576);
 	});

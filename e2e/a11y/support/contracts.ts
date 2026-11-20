@@ -84,7 +84,8 @@ export const SUITE: Record<SuiteProduct, ProductContract> = {
 	xlsx: {
 		title: 'Excel',
 		regions: [
-			['grid', '[role="grid"]'],
+			// The focus sink lives in the grid's root, beside the accessible grid of cells.
+			['grid', '[part="grid"]'],
 			['formula bar', '[part="formula-bar"]'],
 			['sheet tabs', '[part="sheet-tabs"]'],
 			['ribbon', 'office-ui-ribbon'],

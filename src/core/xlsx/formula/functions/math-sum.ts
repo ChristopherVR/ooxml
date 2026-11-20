@@ -10,8 +10,8 @@ import {
 	type Scalar,
 	type Value,
 } from '../values';
-import { criteriaPairs, liftCriteria, matchingValues } from './criteria';
-import { collectNumbers, int, spec } from './helpers';
+import { criteriaLiftWork, criteriaPairs, liftCriteria, matchingValues } from './criteria';
+import { collectNumbers, int, spec, withLiftWork } from './helpers';
 import * as S from './stats-core';
 import type { FunctionSpec } from './types';
 import { isFilteredRow } from '../../filter-rows';
@@ -212,18 +212,21 @@ export const SUM_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => pairwise(ctx, args, (x, y) => (x - y) * (x - y)),
 		['any'],
 	),
-	spec(
-		'SUMIF',
-		C,
-		'SUMIF(range, criteria, [sum_range])',
-		'Adds the cells that meet a criterion.',
-		2,
-		3,
-		(args, ctx) => {
-			const pairs = [{ range: args[0] ?? null, criteria: args[1] ?? null }];
-			return S.sum(numbersOf(matchingValues(ctx, pairs, args[2] ?? undefined, false)));
-		},
-		['any', 'value', 'any'],
+	withLiftWork(
+		criteriaLiftWork,
+		spec(
+			'SUMIF',
+			C,
+			'SUMIF(range, criteria, [sum_range])',
+			'Adds the cells that meet a criterion.',
+			2,
+			3,
+			(args, ctx) => {
+				const pairs = [{ range: args[0] ?? null, criteria: args[1] ?? null }];
+				return S.sum(numbersOf(matchingValues(ctx, pairs, args[2] ?? undefined, false)));
+			},
+			['any', 'value', 'any'],
+		),
 	),
 	spec(
 		'SUMIFS',

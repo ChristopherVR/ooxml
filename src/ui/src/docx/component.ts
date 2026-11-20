@@ -1,3 +1,4 @@
+import { releaseDetachedStyles } from '../detached-styles';
 import { definer } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 import { applyShellLabels } from './shell-labels';
@@ -252,6 +253,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		releaseStateCaches();
 		core.imageMedia.release();
 		core.shell.chrome?.backstage.destroy();
+		releaseDetachedStyles(this);
 	}
 
 	async load(input: Uint8Array | ArrayBuffer): Promise<void> {

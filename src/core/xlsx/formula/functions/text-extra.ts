@@ -1,6 +1,7 @@
 import { toText } from '../coerce';
 import type { CallContext } from '../context';
-import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
+import { MAX_CELL_TEXT } from '../operators';
+import { chargeText, ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
 import { optBool, optNum, scalar, spec, str } from './helpers';
 import { TEXT_REGEX_FUNCTIONS } from './text-regex';
 import type { FunctionSpec } from './types';
@@ -148,12 +149,14 @@ export const TEXT_EXTRA_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => {
 			const strict = args.length > 1 && optNum([ctx.toScalar(args[1] ?? null)], 0, 0) === 1;
 			const m = ctx.toMatrix(args[0] ?? null);
-			if (!strict)
-				return m
-					.flat()
-					.map((v) => valueToText(v, false))
-					.join(', ');
-			return `{${m.data.map((row) => row.map((v) => valueToText(v, true)).join(',')).join(';')}}`;
+			const text = strict
+				? `{${m.data.map((row) => row.map((v) => valueToText(v, true)).join(',')).join(';')}}`
+				: m
+						.flat()
+						.map((v) => valueToText(v, false))
+						.join(', ');
+			// Longer than a cell holds is #CALC!, as CONCAT and TEXTJOIN report it.
+			return text.length > MAX_CELL_TEXT ? fail(ERR.CALC) : chargeText(text);
 		},
 		['any'],
 	),

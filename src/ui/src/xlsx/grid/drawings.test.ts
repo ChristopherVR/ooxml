@@ -119,3 +119,39 @@ it('names a chart by its alt text and offers its data to assistive technology', 
 	layer.destroy();
 	view.destroy();
 });
+
+it('exposes each picture once, named by its alt text or else its name', () => {
+	const wb = createWorkbook();
+	const anchor = {
+		from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 },
+		ext: { cx: 952500, cy: 476250 },
+	};
+	const picture = {
+		kind: 'image',
+		partName: 'xl/media/image1.png',
+		contentType: 'image/png',
+		anchor,
+	} as const;
+	wb.sheets[0]!.drawings.push(
+		{ ...picture, name: 'Picture 1', description: 'Sales picture alt' },
+		// Inset fill rectangles are painted as SVG rather than as an <img>.
+		{ ...picture, name: 'Picture 2', layout: { fillRect: { l: 0.1, t: 0, r: 0, b: 0 } } },
+	);
+	(wb as { source?: unknown }).source = {
+		parts: new Map([['xl/media/image1.png', new Uint8Array([137, 80, 78, 71])]]),
+	};
+	const ctx = createTestContext(wb);
+	const container = document.createElement('div');
+	ctx.root.append(container);
+	const view = new GridView(ctx, container);
+	const layer = new DrawingLayer(view);
+	layer.render();
+	// What assistive technology sees: images not hidden and not inside another image.
+	const images = [...container.querySelectorAll<HTMLElement>('[role="img"], img')]
+		.filter((node) => !node.closest('[aria-hidden="true"]'))
+		.filter((node) => !node.parentElement?.closest('[role="img"]'))
+		.map((node) => node.getAttribute('aria-label') ?? node.getAttribute('alt'));
+	expect(images).toEqual(['Sales picture alt', 'Picture 2']);
+	layer.destroy();
+	view.destroy();
+});

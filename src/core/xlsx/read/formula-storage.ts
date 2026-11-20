@@ -88,3 +88,97 @@ export function fromStoredSyntax(formula: string): string {
 	}
 	return changed ? joinTokens(list) : formula;
 }
+
+const PARAMETER_PREFIX = /^_xlpm\./i;
+const plainName = (token: Token): string =>
+	String(token.value ?? token.text)
+		.replace(PARAMETER_PREFIX, '')
+		.toUpperCase();
+
+/** The token ranges of a call's arguments, from just inside its `(` to its `)`, split at commas. */
+function argumentsOf(list: readonly Token[], open: number, close: number): [number, number][] {
+	const args: [number, number][] = [];
+	let depth = 0;
+	let start = open + 1;
+	for (let i = open + 1; i < close; i++) {
+		const kind = list[i]?.kind;
+		if (kind === 'open' || kind === 'lbrace') depth++;
+		else if (kind === 'close' || kind === 'rbrace') depth--;
+		else if (kind === 'comma' && depth === 0) {
+			args.push([start, i - 1]);
+			start = i + 1;
+		}
+	}
+	args.push([start, close - 1]);
+	return args;
+}
+
+/** The one name an argument consists of (whitespace aside), or -1. */
+function soleName(list: readonly Token[], [from, to]: [number, number]): number {
+	let found = -1;
+	for (let i = from; i <= to; i++) {
+		const kind = list[i]?.kind;
+		if (kind === 'ws') continue;
+		if (kind !== 'name' || found >= 0) return -1;
+		found = i;
+	}
+	return found;
+}
+
+/**
+ * Writes the names LET and LAMBDA declare with the `_xlpm.` prefix Excel stores them with,
+ * where they are declared and wherever they are used in scope (`LET(x,2,x*3)` is stored as
+ * `LET(_xlpm.x,2,_xlpm.x*3)`); Excel refuses a file whose parameters lack it.
+ */
+export function toStoredParameters(formula: string): string {
+	if (!/\b(LET|LAMBDA)\s*\(/i.test(formula)) return formula;
+	const list = tokens(formula);
+	if (!list) return formula;
+	// Each declared name with the tokens it covers: its own and those of its scope.
+	const scopes: { name: string; from: number; to: number }[] = [];
+	const declared = new Set<number>();
+	for (let i = 0; i < list.length; i++) {
+		const token = list[i] as Token;
+		if (token.kind !== 'func') continue;
+		const fn = String(token.value ?? '').toUpperCase();
+		if (fn !== 'LET' && fn !== 'LAMBDA') continue;
+		const open = nextIndex(list, i + 1);
+		if (list[open]?.kind !== 'open') continue;
+		const close = matching(list, open);
+		if (close < 0) continue;
+		const args = argumentsOf(list, open, close);
+		const last = args.length - 1;
+		for (let a = 0; a < last; a += fn === 'LET' ? 2 : 1) {
+			const at = soleName(list, args[a] as [number, number]);
+			if (at < 0) continue;
+			declared.add(at);
+			const from =
+				fn === 'LET' ? (args[a + 1] as [number, number])[0] : (args[last] as [number, number])[0];
+			scopes.push({ name: plainName(list[at] as Token), from, to: close });
+		}
+	}
+	if (!declared.size) return formula;
+	let changed = false;
+	for (let i = 0; i < list.length; i++) {
+		const token = list[i] as Token;
+		if ((token.kind !== 'name' && token.kind !== 'func') || PARAMETER_PREFIX.test(token.text))
+			continue;
+		const name = plainName(token);
+		if (!declared.has(i) && !scopes.some((s) => s.name === name && i >= s.from && i <= s.to))
+			continue;
+		token.text = `_xlpm.${token.text}`;
+		changed = true;
+	}
+	return changed ? joinTokens(list) : formula;
+}
+
+/** Removes the `_xlpm.` prefix from LET and LAMBDA names, as Excel shows them. */
+export function fromStoredParameters(formula: string): string {
+	if (!/_xlpm\./i.test(formula)) return formula;
+	const list = tokens(formula);
+	if (!list) return formula;
+	for (const token of list)
+		if ((token.kind === 'name' || token.kind === 'func') && PARAMETER_PREFIX.test(token.text))
+			token.text = token.text.replace(PARAMETER_PREFIX, '');
+	return joinTokens(list);
+}

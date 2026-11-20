@@ -10,9 +10,10 @@ function upperChar(ch: string): string {
 
 /**
  * One code point lower-cased: an expanding mapping keeps its first code point ("İ" becomes "i"),
- * and capital sigma becomes final sigma at the end of a word, as Excel does.
+ * capital sigma becomes final sigma at the end of a word, and capital sharp s stays, as in Excel.
  */
 function lowerChar(ch: string, before: string | undefined, after: string | undefined): string {
+	if (ch === 'ẞ') return ch;
 	if (ch === 'Σ') {
 		const final =
 			before !== undefined && isLetter(before) && !(after !== undefined && isLetter(after));

@@ -1,0 +1,4 @@
+# A LAMBDA that calls itself too deeply is #NUM! in Excel. Kept apart from excel-p4-cases.txt:
+# in one workbook with other cases, Excel also returned #NUM! for unrelated formulas. Excel still
+# allows 1000 levels; this engine stops at the JavaScript stack, sooner (docs/parity-checklist.md).
+=LET(f,LAMBDA(f,n,IF(n=0,0,1+f(f,n-1))),f(f,10000))

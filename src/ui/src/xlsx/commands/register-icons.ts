@@ -1,4 +1,4 @@
-import { registerIcon } from '../../index';
+import { registerIcon } from '../../icons';
 import { SHEET_ICONS } from 'ooxml-core/xlsx/ui';
 
 let registered = false;

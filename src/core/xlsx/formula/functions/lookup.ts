@@ -1,6 +1,7 @@
 import type { CallContext } from '../context';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
-import { bool, int, num, optNum, scalar, spec } from './helpers';
+import { bool, hasWildcards, int, num, optNum, scalar, spec } from './helpers';
+import { binarySearchWork, LOOKUP_TEST_WORK, linearScanWork } from './scan-work';
 import {
 	findAscending,
 	findDescending,
@@ -79,7 +80,7 @@ function vhlookup(args: Value[], ctx: CallContext, vertical: boolean): Value {
 	if (index < 1) fail(ERR.VALUE);
 	if (index > (vertical ? cols : rows)) fail(ERR.REF);
 	const keys = line(ctx, table, vertical ? 'col' : 'row', 0);
-	const at = approximate ? findAscending(keys, lookup) : findExact(keys, lookup, true);
+	const at = approximate ? findAscending(keys, lookup) : findExact(keys, lookup, true, 'chars');
 	if (at < 0) fail(ERR.NA);
 	return vertical ? cellOf(table, at, index - 1) : cellOf(table, index - 1, at);
 }
@@ -90,7 +91,7 @@ function match(args: Value[], ctx: CallContext): number {
 	const { vector } = vectorOf(ctx, lookupArray(args[1] ?? null));
 	const at =
 		type === 0
-			? findExact(vector, lookup, true)
+			? findExact(vector, lookup, true, 'chars')
 			: type > 0
 				? findAscending(vector, lookup)
 				: findDescending(vector, lookup);
@@ -166,28 +167,79 @@ function xlookup(args: Value[], ctx: CallContext): Value {
 	return resultShape.rows === 1 ? cellOf(result, 0, at) : sliceOf(result, 'col', at);
 }
 
+/** How a lookup searches, for the work an array of lookup values multiplies. */
+type Search = 'exact' | 'binary' | 'linear';
+
+/**
+ * The work of one search: an exact search of a reference is answered from the recalculation's
+ * shared index (unless the lookup is a pattern), a binary search is logarithmic, and any other
+ * search (of an array, by pattern, for the nearest value) reads every cell.
+ */
+function searchWork(ctx: CallContext, vector: Value, lookup: Value, search: Search): number {
+	if (search === 'binary') return binarySearchWork(ctx, vector);
+	const pattern = typeof lookup === 'string' && hasWildcards(lookup);
+	if (search === 'exact' && vector instanceof RefValue && !pattern) return LOOKUP_TEST_WORK;
+	return linearScanWork(ctx, vector, LOOKUP_TEST_WORK);
+}
+
+const optionOf = (ctx: CallContext, args: readonly Value[], i: number, fallback: number) =>
+	i < args.length && args[i] !== null ? Math.trunc(num(ctx.toScalar(args[i] ?? null))) : fallback;
+
+function vhlookupWork(args: readonly Value[], ctx: CallContext): number {
+	const approximate =
+		args.length < 4 || args[3] === null ? true : bool(ctx.toScalar(args[3] ?? null));
+	return searchWork(ctx, args[1] ?? null, args[0] ?? null, approximate ? 'binary' : 'exact');
+}
+
+function matchWork(args: readonly Value[], ctx: CallContext): number {
+	const type = Math.sign(optionOf(ctx, args, 2, 1));
+	return searchWork(
+		ctx,
+		args[1] ?? null,
+		args[0] ?? null,
+		type === 0 ? 'exact' : type > 0 ? 'binary' : 'linear',
+	);
+}
+
+/** XMATCH (options from `at`) and XLOOKUP (from `at` + 2). */
+function xsearchWork(at: number) {
+	return (args: readonly Value[], ctx: CallContext): number => {
+		const matchMode = optionOf(ctx, args, at, 0);
+		const searchMode = optionOf(ctx, args, at + 1, 1);
+		const search: Search =
+			searchMode === 2 || searchMode === -2 ? 'binary' : matchMode === 0 ? 'exact' : 'linear';
+		return searchWork(ctx, args[1] ?? null, args[0] ?? null, search);
+	};
+}
+
 export const LOOKUP_FUNCTIONS: FunctionSpec[] = [
 	...REFERENCE_FUNCTIONS,
-	spec(
-		'VLOOKUP',
-		C,
-		'VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])',
-		'Looks up a value in the first column of a table.',
-		3,
-		4,
-		(args, ctx) => vhlookup(args, ctx, true),
-		['value', 'any', 'value', 'value'],
-	),
-	spec(
-		'HLOOKUP',
-		C,
-		'HLOOKUP(lookup_value, table_array, row_index_num, [range_lookup])',
-		'Looks up a value in the first row of a table.',
-		3,
-		4,
-		(args, ctx) => vhlookup(args, ctx, false),
-		['value', 'any', 'value', 'value'],
-	),
+	{
+		...spec(
+			'VLOOKUP',
+			C,
+			'VLOOKUP(lookup_value, table_array, col_index_num, [range_lookup])',
+			'Looks up a value in the first column of a table.',
+			3,
+			4,
+			(args, ctx) => vhlookup(args, ctx, true),
+			['value', 'any', 'value', 'value'],
+		),
+		liftWork: vhlookupWork,
+	},
+	{
+		...spec(
+			'HLOOKUP',
+			C,
+			'HLOOKUP(lookup_value, table_array, row_index_num, [range_lookup])',
+			'Looks up a value in the first row of a table.',
+			3,
+			4,
+			(args, ctx) => vhlookup(args, ctx, false),
+			['value', 'any', 'value', 'value'],
+		),
+		liftWork: vhlookupWork,
+	},
 	spec(
 		'LOOKUP',
 		C,
@@ -198,16 +250,19 @@ export const LOOKUP_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => lookup(args, ctx),
 		['value', 'any', 'any'],
 	),
-	spec(
-		'MATCH',
-		C,
-		'MATCH(lookup_value, lookup_array, [match_type])',
-		'The position of a value in a range.',
-		2,
-		3,
-		(args, ctx) => match(args, ctx),
-		['value', 'any', 'value'],
-	),
+	{
+		...spec(
+			'MATCH',
+			C,
+			'MATCH(lookup_value, lookup_array, [match_type])',
+			'The position of a value in a range.',
+			2,
+			3,
+			(args, ctx) => match(args, ctx),
+			['value', 'any', 'value'],
+		),
+		liftWork: matchWork,
+	},
 	{
 		...spec(
 			'XMATCH',
@@ -230,17 +285,21 @@ export const LOOKUP_FUNCTIONS: FunctionSpec[] = [
 			['value', 'any', 'value', 'value'],
 		),
 		missingDefaults: { 3: 1 },
+		liftWork: xsearchWork(2),
 	},
-	spec(
-		'XLOOKUP',
-		C,
-		'XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found], [match_mode], [search_mode])',
-		'Searches a range and returns the matching item from another.',
-		3,
-		6,
-		(args, ctx) => xlookup(args, ctx),
-		['value', 'any'],
-	),
+	{
+		...spec(
+			'XLOOKUP',
+			C,
+			'XLOOKUP(lookup_value, lookup_array, return_array, [if_not_found], [match_mode], [search_mode])',
+			'Searches a range and returns the matching item from another.',
+			3,
+			6,
+			(args, ctx) => xlookup(args, ctx),
+			['value', 'any'],
+		),
+		liftWork: xsearchWork(4),
+	},
 	spec(
 		'INDEX',
 		C,

@@ -114,6 +114,12 @@ export {
 	type OverflowExtent,
 	type SelectionStats,
 } from './sheet-queries';
+export {
+	accessibleWindow,
+	describeCell,
+	type AccessibleWindow,
+	type CellDescription,
+} from './accessibility';
 export { navigate, type NavigationKey } from './navigate';
 export { autoFitColumnWidth, type MeasureText } from './autofit';
 export {

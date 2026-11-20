@@ -34,4 +34,28 @@ describe('future function prefixes', () => {
 		expect(addFuturePrefixes(plain)).toBe(stored);
 		expect(addFuturePrefixes('SUM(A1)+IFS(A1>1,1)')).toBe('SUM(A1)+_xlfn.IFS(A1>1,1)');
 	});
+
+	it('stores LET and LAMBDA names with the _xlpm prefix Excel requires, in scope only', () => {
+		const cases: [string, string][] = [
+			['LET(x,2,x*3)', '_xlfn.LET(_xlpm.x,2,_xlpm.x*3)'],
+			[
+				'REDUCE(0,SEQUENCE(3),LAMBDA(a,b,a+b))',
+				'_xlfn.REDUCE(0,_xlfn.SEQUENCE(3),_xlfn.LAMBDA(_xlpm.a,_xlpm.b,_xlpm.a+_xlpm.b))',
+			],
+			[
+				'LET(f,LAMBDA(f,n,IF(n=0,0,1+f(f,n-1))),f(f,10))',
+				'_xlfn.LET(_xlpm.f,_xlfn.LAMBDA(_xlpm.f,_xlpm.n,IF(_xlpm.n=0,0,1+_xlpm.f(_xlpm.f,_xlpm.n-1))),_xlpm.f(_xlpm.f,10))',
+			],
+			// A name outside the LET that declares it, and text, are left alone.
+			['SUM(x,LET(x,1,x))&"x"', 'SUM(x,_xlfn.LET(_xlpm.x,1,_xlpm.x))&"x"'],
+			['LAMBDA(x,x+1)(5)', '_xlfn.LAMBDA(_xlpm.x,_xlpm.x+1)(5)'],
+		];
+		for (const [plain, stored] of cases) {
+			expect(addFuturePrefixes(plain)).toBe(stored);
+			expect(stripFuturePrefixes(stored)).toBe(plain);
+		}
+		expect(addFuturePrefixes('_xlfn.LET(_xlpm.x,5,_xlpm.x*2)')).toBe(
+			'_xlfn.LET(_xlpm.x,5,_xlpm.x*2)',
+		);
+	});
 });

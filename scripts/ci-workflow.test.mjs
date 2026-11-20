@@ -107,3 +107,79 @@ test('recorded browser failures run again alone; a crash runs the shard again', 
 	assert.match(browserJob, /- name: Preserve the report\s+if: always\(\)/u);
 	assert.match(browserJob, /viewers\/pptx\/ci-evidence\//u);
 });
+
+/** Runs the setup action's cache-key step on a lockfile and returns the outputs it writes. */
+function cacheKeys(lock) {
+	const action = readFileSync(
+		new URL('../.github/actions/setup/action.yml', import.meta.url),
+		'utf8',
+	);
+	const script = action
+		.match(/- id: keys\r?\n\s+shell: bash\r?\n\s+run: \|\r?\n([\s\S]*?)(?=^    -)/m)?.[1]
+		?.replace(/^        /gm, '');
+	assert.ok(script, 'the setup action has a cache-key step');
+	const dir = mkdtempSync(join(tmpdir(), 'ooxml-ci-keys-'));
+	try {
+		writeFileSync(join(dir, 'bun.lock'), lock);
+		writeFileSync(join(dir, 'keys.sh'), script);
+		const run = spawnSync(verificationShell(), ['-e', 'keys.sh'], {
+			cwd: dir,
+			encoding: 'utf8',
+			env: { ...process.env, GITHUB_OUTPUT: join(dir, 'out') },
+		});
+		if (run.status !== 0) return { error: run.stdout + run.stderr };
+		return Object.fromEntries(
+			readFileSync(join(dir, 'out'), 'utf8')
+				.trim()
+				.split('\n')
+				.map((line) => line.split('=')),
+		);
+	} finally {
+		rmSync(dir, { recursive: true, force: true });
+	}
+}
+
+const lockfile = ({
+	core = '1.0.0',
+	range = '^1.0.0',
+	leftPad = '1.0.0',
+	playwright = '1.65.0',
+}) => `{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "src/core": {
+      "name": "ooxml-core",
+      "version": "${core}",
+    },
+    "viewers/pptx/packages/react": {
+      "name": "pptx-react-viewer",
+      "dependencies": {
+        "ooxml-core": "${range}",
+      },
+    },
+  },
+  "packages": {
+    "left-pad": ["left-pad@${leftPad}", "", {}, "sha512-a"],
+
+    "playwright-core": ["playwright-core@${playwright}", "", {}, "sha512-b"],
+  }
+}
+`;
+
+test('the install and browser caches keep their keys through a release bump', () => {
+	const before = cacheKeys(lockfile({}));
+	assert.match(before.packages ?? '', /^[0-9a-f]{64}$/u);
+	assert.equal(before.playwright, '1.65.0');
+	// A release bump: workspace versions and the ranges on them.
+	assert.deepEqual(cacheKeys(lockfile({ core: '1.1.0', range: '^1.1.0' })), before);
+	// A resolved package moves the install cache and keeps the browsers.
+	const dependency = cacheKeys(lockfile({ leftPad: '1.0.1' }));
+	assert.notEqual(dependency.packages, before.packages);
+	assert.equal(dependency.playwright, before.playwright);
+	// A Playwright update moves both.
+	const browsers = cacheKeys(lockfile({ playwright: '1.66.0' }));
+	assert.notEqual(browsers.packages, before.packages);
+	assert.equal(browsers.playwright, '1.66.0');
+	// A lockfile without Playwright fails instead of sharing one empty key.
+	assert.ok(cacheKeys(lockfile({}).replace(/^.*playwright-core.*$/mu, '')).error);
+});

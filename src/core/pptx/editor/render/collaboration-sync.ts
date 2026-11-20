@@ -122,6 +122,7 @@ export const SCALAR_ELEMENT_KEYS: ReadonlySet<string> = new Set([
 	'heightEmu',
 	'rotation',
 	'shapeId',
+	'relationshipSourcePath',
 	'skewX',
 	'skewY',
 	'flipHorizontal',

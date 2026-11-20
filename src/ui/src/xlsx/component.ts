@@ -1,3 +1,4 @@
+import { releaseDetachedStyles } from '../detached-styles';
 import { definer } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 /**
@@ -122,6 +123,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			this.disposeSurface();
 			this.disposeSurface = undefined;
 		}
+		releaseDetachedStyles(this);
 		// Still away once this task ends, so not a move between parents: leave the room until it is back.
 		this.leaving ??= setTimeout(() => {
 			this.leaving = undefined;
