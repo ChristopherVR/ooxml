@@ -135,6 +135,19 @@ describe('the accessible grid', () => {
 		);
 	});
 
+	it('catches up on changes made while the editor was removed once it is back', async () => {
+		const { ctx, activeCell } = await setup();
+		ctx.host.remove();
+		ctx.session()!.setCellValue(0, 0, 0, 'Year');
+		await frame();
+		document.body.append(ctx.host);
+		ctx.grid()!.invalidate();
+		await vi.waitFor(() => expect(activeCell()?.textContent).toBe('Year'), {
+			timeout: 3000,
+			interval: 50,
+		});
+	});
+
 	it('spans a merged cell and gives its covered cells no cell of their own', async () => {
 		const wb = salesBook();
 		wb.sheets[0]!.merges.push({ start: { row: 4, col: 0 }, end: { row: 4, col: 2 } });
