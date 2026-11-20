@@ -21,7 +21,7 @@ export const de: LandingCopy = {
 	},
 	features: {
 		kicker: 'Funktionen',
-		title: 'Was es heute gibt.',
+		title: 'Was er kann.',
 		items: [
 			{
 				title: 'Sechs native Bindings',
@@ -109,7 +109,7 @@ export const de: LandingCopy = {
 		items: [
 			{
 				q: 'Ist das ein vollständiger Ersatz für Visio?',
-				a: 'Nein. Dies ist eine frühe Implementierung. Unterstützte zwischengespeicherte Geometrie, Text und Bilder werden über einen einzigen SVG-Pfad gerendert. Komplexe Dokumente weisen weiterhin Lücken auf; das Funktionsverzeichnis trennt Implementierung, Nachweis und fehlende Arbeit.',
+				a: 'Nein. Visio ist in der Beta. Unterstützte zwischengespeicherte Geometrie, Text und Bilder werden über einen einzigen SVG-Pfad gerendert. Komplexe Dokumente weisen weiterhin Lücken auf; das Funktionsverzeichnis trennt Implementierung, Nachweis und fehlende Arbeit.',
 				link: { text: 'Funktionsverzeichnis', href: '/parity' },
 			},
 			{
@@ -197,6 +197,6 @@ export const de: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'visio-viewer · ein früher Visio-Viewer für das Web',
+		bottomRight: 'visio-viewer · der Visio-Viewer für das Web',
 	},
 };

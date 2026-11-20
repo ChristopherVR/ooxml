@@ -26,12 +26,21 @@ const copy = useLandingCopy();
 				</div>
 				<pre class="ot-hero__install ot-enter ot-enter--3"><code>npm install openteams-react-viewer
 npx openteams-server</code></pre>
+				<ul class="ot-hero__facts ot-enter ot-enter--4">
+					<li
+						v-for="(fact, index) in copy.hero.kicker.split(' · ')"
+						:key="fact"
+						:data-tone="index === 0 ? 'beta' : undefined"
+					>
+						{{ fact }}
+					</li>
+				</ul>
 			</div>
 			<div class="ot-hero__stage ot-enter ot-enter--2">
 				<LandingRings />
 				<a class="ot-hero__frame" :href="withBase('/demo/')" target="_self">
 					<span class="ot-hero__framebar">
-						<span class="ot-hero__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+						<span class="ot-hero__badge" aria-hidden="true">T</span>
 						<span>{{ copy.hero.frameLabel }}</span>
 						<span class="ot-hero__try">{{ copy.hero.tryLabel }}</span>
 					</span>
@@ -134,16 +143,59 @@ npx openteams-server</code></pre>
 	color: var(--ot-ink-soft);
 }
 
-.ot-hero__dots {
-	display: inline-flex;
-	gap: 0.3rem;
+.ot-hero__badge {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 3px;
+	background: #6264a7;
+	box-shadow: inset -3px 0 #ffffff25;
+	color: #fff;
+	font-family: var(--vp-font-family-base);
+	font-size: 0.66rem;
+	font-weight: 700;
+	line-height: 1;
 }
 
-.ot-hero__dots i {
-	width: 8px;
-	height: 8px;
-	border-radius: 50%;
-	background: var(--ot-line);
+/* The facts under the hero: status, licence and language, as tags. */
+.ot-hero__facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 1.2rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.ot-hero__facts li {
+	padding: 0.3rem 0.55rem;
+	border: 1px solid var(--ot-line);
+	border-radius: 4px;
+	background: var(--ot-surface);
+	color: var(--ot-ink-soft);
+	font-family: var(--vp-font-family-base);
+	font-size: 0.75rem;
+	line-height: 1.2;
+}
+
+.ot-hero__facts [data-tone] {
+	border-color: color-mix(in srgb, var(--tone) 40%, transparent);
+	color: var(--tone);
+	font-weight: 600;
+}
+
+.ot-hero__facts [data-tone='stable'] {
+	--tone: #12715a;
+}
+
+.dark .ot-hero__facts [data-tone='stable'] {
+	--tone: #4fc08a;
+}
+
+.ot-hero__facts [data-tone='beta'] {
+	--tone: var(--ot-accent);
 }
 
 .ot-hero__try {

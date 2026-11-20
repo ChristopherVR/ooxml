@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const en: LandingCopy = {
 	hero: {
-		kicker: 'Early implementation · Apache-2.0 · TypeScript',
+		kicker: 'Stable · Apache-2.0 · TypeScript',
 		titleTop: '.xlsx editing,',
 		titleAccent: 'made embeddable.',
 		sub: 'A browser spreadsheet editor for React, Vue, Angular, Svelte, Solid, and vanilla JavaScript. One workbook model with a formula engine and one <xlsx-editor> web component do the work; the framework adapters only wire up lifecycle and events.',
@@ -67,7 +67,7 @@ export const en: LandingCopy = {
 	status: {
 		kicker: 'Status',
 		title: 'Honest about what is not done.',
-		copy: 'This is an early implementation and not Microsoft Excel parity. Pivot tables, slicers, macros and external links are preserved but not shown or edited; sparklines are shown but not edited; the function library is large but not complete; password-protected files are unsupported. The features page lists the gaps.',
+		copy: 'Stable means a committed API and a written preservation guarantee, not Microsoft Excel parity. Pivot tables, slicers, macros and external links are preserved but not shown or edited; sparklines are shown but not edited; the function library is large but not complete; password-protected files are unsupported. The features page lists the gaps.',
 		link: { text: 'Features and limitations', href: '/features' },
 		roadmapTitle: 'Where the logic lives',
 		roadmapCopy:
@@ -190,6 +190,6 @@ export const en: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'xlsx-viewer · an early spreadsheet editor for the web',
+		bottomRight: 'xlsx-viewer · the spreadsheet editor for the web',
 	},
 };

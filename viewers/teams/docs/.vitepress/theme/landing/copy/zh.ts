@@ -2,9 +2,10 @@ import type { LandingCopy } from './types';
 
 export const zh: LandingCopy = {
 	hero: {
+		kicker: '测试版 · Apache-2.0 · TypeScript',
 		titleTop: '团队聊天与通话，',
 		titleAccent: '运行在你自己的服务器上。',
-		sub: 'OpenTeams 是面向网页的团队协作空间：频道与聊天、在线状态、WebRTC 会议，以及在对话中共享的 Office 文件。一个 Web 组件，六种框架的轻量绑定，外加一个小型参考服务器。这是一个早期实现：不是 Microsoft Teams，也没有端到端加密。',
+		sub: 'OpenTeams 是面向网页的团队协作空间：频道与聊天、在线状态、WebRTC 会议，以及在对话中共享的 Office 文件。一个 Web 组件，六种框架的轻量绑定，外加一个小型参考服务器。目前处于测试阶段：不是 Microsoft Teams，也没有端到端加密。',
 		start: { text: '快速开始', href: '/zh/getting-started' },
 		demo: { text: '试用演示', href: '/demo/' },
 		frameLabel: '本地模式下的 <teams-app>',

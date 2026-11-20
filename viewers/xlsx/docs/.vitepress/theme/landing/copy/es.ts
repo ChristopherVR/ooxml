@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const es: LandingCopy = {
 	hero: {
-		kicker: 'Implementación temprana · Apache-2.0 · TypeScript',
+		kicker: 'Estable · Apache-2.0 · TypeScript',
 		titleTop: 'Edición de .xlsx,',
 		titleAccent: 'lista para incrustar.',
 		sub: 'Un editor de hojas de cálculo para el navegador con React, Vue, Angular, Svelte, Solid y JavaScript vanilla. Un único modelo de libro con motor de fórmulas y un único componente web <xlsx-editor> hacen el trabajo; los adaptadores de framework solo conectan el ciclo de vida y los eventos.',
@@ -68,7 +68,7 @@ export const es: LandingCopy = {
 	status: {
 		kicker: 'Estado',
 		title: 'Sincero sobre lo que falta.',
-		copy: 'Esta es una implementación temprana y no tiene paridad con Microsoft Excel. Las tablas dinámicas, las segmentaciones de datos, las macros y los vínculos externos se conservan pero no se muestran ni se editan; los minigráficos se muestran pero no se editan; la biblioteca de funciones es amplia pero no está completa; los archivos protegidos con contraseña no están admitidos. La página de funciones enumera las carencias.',
+		copy: 'Estable significa una API comprometida y una garantía de preservación por escrito, no paridad con Microsoft Excel. Las tablas dinámicas, las segmentaciones de datos, las macros y los vínculos externos se conservan pero no se muestran ni se editan; los minigráficos se muestran pero no se editan; la biblioteca de funciones es amplia pero no está completa; los archivos protegidos con contraseña no están admitidos. La página de funciones enumera las carencias.',
 		link: { text: 'Funciones y limitaciones', href: '/es/features' },
 		roadmapTitle: 'Dónde vive la lógica',
 		roadmapCopy:
@@ -191,6 +191,6 @@ export const es: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'xlsx-viewer · un editor de hojas de cálculo temprano para la web',
+		bottomRight: 'xlsx-viewer · el editor de hojas de cálculo para la web',
 	},
 };

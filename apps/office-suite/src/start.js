@@ -73,7 +73,7 @@ export function showChooser({ required = false, onSuite } = {}) {
 	const step = 360 / products.length;
 	screen.innerHTML =
 		`<div class="start-tools"><button class="start-theme" aria-label="Switch to light mode"></button>${required ? '' : '<button class="start-close" aria-label="Close">×</button>'}</div>` +
-		`<div class="start-heading"><h1 id="start-title">Where would you like to start?</h1><p>${preview ? 'Preview every app in one workspace, or open one app separately.' : 'Every app in one workspace, or one product on its own site with its guides and demos.'}</p></div>
+		`<div class="start-heading"><h1 id="start-title">Where would you like to start?</h1><p>${preview ? 'Preview every app in one workspace, or open one app separately.' : 'Open every app in one workspace, or visit one product on its own site, with its guides and live demos.'}</p></div>
 		<div class="start-stage">
 			<svg class="rings rings--start" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="47" /><circle cx="50" cy="50" r="33" /><circle cx="50" cy="50" r="19" /></svg>
 			<button class="start-card start-center" data-start="office">${badges.office}<span><strong>OOXML Office</strong><small>Word, Excel, PowerPoint, Visio and Teams in one workspace</small></span></button>

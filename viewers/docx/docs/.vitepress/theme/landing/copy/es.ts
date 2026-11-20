@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const es: LandingCopy = {
 	hero: {
-		kicker: 'Implementación temprana · Apache-2.0 · TypeScript',
+		kicker: 'Estable · Apache-2.0 · TypeScript',
 		titleTop: 'Edición de .docx,',
 		titleAccent: 'lista para integrar.',
 		sub: 'Un editor de Word para el navegador, para React, Vue, Angular, Svelte, Solid y JavaScript vanilla. Un único modelo de documento y un componente web <docx-editor> basado en ProseMirror hacen el trabajo; los adaptadores de framework solo conectan el ciclo de vida y los eventos.',
@@ -21,7 +21,7 @@ export const es: LandingCopy = {
 	},
 	features: {
 		kicker: 'Funciones',
-		title: 'Lo que existe hoy.',
+		title: 'Lo que hace.',
 		items: [
 			{
 				title: 'Un único editor compartido',
@@ -68,7 +68,7 @@ export const es: LandingCopy = {
 	status: {
 		kicker: 'Estado',
 		title: 'Sinceros sobre lo que falta.',
-		copy: 'Esta es una implementación temprana. No equivale a Microsoft Word: la paginación es aproximada, muchas funciones no se representan con la fidelidad de Word, los archivos protegidos con contraseña no son compatibles y Exportar DOCX no puede recuperar el contenido que el modelo omite. Las páginas de la hoja de ruta de compatibilidad y del trabajo pendiente detallan las carencias.',
+		copy: 'Estable significa una API comprometida y una garantía de preservación por escrito, no equivalencia con Microsoft Word: la paginación es aproximada, muchas funciones no se representan con la fidelidad de Word, los archivos protegidos con contraseña no son compatibles y Exportar DOCX no puede recuperar el contenido que el modelo omite. Las páginas de la hoja de ruta de compatibilidad y del trabajo pendiente detallan las carencias.',
 		link: { text: 'Hoja de ruta de compatibilidad', href: '/parity-roadmap' },
 		roadmapTitle: 'Nota de la hoja de ruta',
 		roadmapCopy:
@@ -199,6 +199,6 @@ export const es: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'docx-viewer · un editor de Word temprano para la web',
+		bottomRight: 'docx-viewer · el editor de Word para la web',
 	},
 };

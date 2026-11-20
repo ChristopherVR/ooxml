@@ -21,7 +21,7 @@ export const en: LandingCopy = {
 	},
 	features: {
 		kicker: 'Features',
-		title: 'What exists today.',
+		title: 'What it does.',
 		items: [
 			{
 				title: 'Six native bindings',
@@ -109,7 +109,7 @@ export const en: LandingCopy = {
 		items: [
 			{
 				q: 'Is this a complete replacement for Visio?',
-				a: 'No. This is an early implementation. Supported cached geometry, text and images are rendered through one SVG path. Complex documents still have gaps; the capability ledger separates implementation, evidence and missing work.',
+				a: 'No. Visio is in beta. Supported cached geometry, text and images are rendered through one SVG path. Complex documents still have gaps; the capability ledger separates implementation, evidence and missing work.',
 				link: { text: 'Capability ledger', href: '/parity' },
 			},
 			{
@@ -197,6 +197,6 @@ export const en: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'visio-viewer · an early Visio viewer for the web',
+		bottomRight: 'visio-viewer · the Visio viewer for the web',
 	},
 };

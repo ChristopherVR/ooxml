@@ -19,7 +19,7 @@ export const zh: LandingCopy = {
 	},
 	features: {
 		kicker: '特性',
-		title: '目前已有的功能。',
+		title: '它能做什么。',
 		items: [
 			{
 				title: '六种原生绑定',
@@ -105,7 +105,7 @@ export const zh: LandingCopy = {
 		items: [
 			{
 				q: '它能完全替代 Visio 吗？',
-				a: '不能。这是一个早期实现。受支持的缓存几何、文本和图像通过同一条 SVG 路径渲染。复杂文档仍有缺口；功能清单将实现、证据和缺失的工作区分开列出。',
+				a: '不能。Visio 处于测试阶段。受支持的缓存几何、文本和图像通过同一条 SVG 路径渲染。复杂文档仍有缺口；功能清单将实现、证据和缺失的工作区分开列出。',
 				link: { text: '功能清单', href: '/parity' },
 			},
 			{
@@ -193,6 +193,6 @@ export const zh: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'visio-viewer · 面向 Web 的早期 Visio 查看器',
+		bottomRight: 'visio-viewer · 面向 Web 的 Visio 查看器',
 	},
 };

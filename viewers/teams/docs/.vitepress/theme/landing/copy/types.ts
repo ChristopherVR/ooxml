@@ -29,6 +29,8 @@ export interface LandingFooterColumn {
 /** Every user-visible string of the Teams landing page, one dictionary per locale. */
 export interface LandingCopy {
 	hero: {
+		/** Status, licence and language, separated by " · "; the first is the status tag. */
+		kicker: string;
 		titleTop: string;
 		titleAccent: string;
 		sub: string;

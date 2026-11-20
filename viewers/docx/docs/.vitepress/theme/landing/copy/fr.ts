@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const fr: LandingCopy = {
 	hero: {
-		kicker: 'Implémentation précoce · Apache-2.0 · TypeScript',
+		kicker: 'Stable · Apache-2.0 · TypeScript',
 		titleTop: "L'édition .docx,",
 		titleAccent: 'prête à intégrer.',
 		sub: 'Un éditeur Word dans le navigateur pour React, Vue, Angular, Svelte, Solid et JavaScript vanilla. Un seul modèle de document et un composant web <docx-editor> reposant sur ProseMirror font le travail ; les adaptateurs de frameworks ne gèrent que le cycle de vie et les événements.',
@@ -20,7 +20,7 @@ export const fr: LandingCopy = {
 	},
 	features: {
 		kicker: 'Fonctionnalités',
-		title: 'Ce qui existe aujourd’hui.',
+		title: 'Ce qu’il fait.',
 		items: [
 			{
 				title: 'Un seul éditeur partagé',
@@ -67,7 +67,7 @@ export const fr: LandingCopy = {
 	status: {
 		kicker: 'État',
 		title: 'Honnête sur ce qui n’est pas terminé.',
-		copy: 'Il s’agit d’une implémentation précoce. Elle n’offre pas la parité avec Microsoft Word : la pagination est approximative, de nombreuses fonctionnalités ne sont pas rendues avec la fidélité de Word, les fichiers protégés par mot de passe ne sont pas pris en charge, et l’export DOCX ne peut pas récupérer le contenu que le modèle omet. Les pages de feuille de route et de travaux restants détaillent les lacunes.',
+		copy: 'Stable signifie une API engagée et une garantie de préservation écrite, pas la parité avec Microsoft Word : la pagination est approximative, de nombreuses fonctionnalités ne sont pas rendues avec la fidélité de Word, les fichiers protégés par mot de passe ne sont pas pris en charge, et l’export DOCX ne peut pas récupérer le contenu que le modèle omet. Les pages de feuille de route et de travaux restants détaillent les lacunes.',
 		link: { text: 'Feuille de route de la prise en charge', href: '/parity-roadmap' },
 		roadmapTitle: 'Note de feuille de route',
 		roadmapCopy:
@@ -198,6 +198,6 @@ export const fr: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'docx-viewer · un éditeur Word précoce pour le web',
+		bottomRight: 'docx-viewer · l’éditeur Word pour le web',
 	},
 };

@@ -21,7 +21,7 @@ export const fr: LandingCopy = {
 	},
 	features: {
 		kicker: 'Fonctionnalités',
-		title: "Ce qui existe aujourd'hui.",
+		title: "Ce qu'il fait.",
 		items: [
 			{
 				title: 'Six liaisons natives',
@@ -109,7 +109,7 @@ export const fr: LandingCopy = {
 		items: [
 			{
 				q: 'Est-ce un remplacement complet de Visio ?',
-				a: "Non. Il s'agit d'une implémentation précoce. La géométrie en cache, le texte et les images pris en charge sont rendus par un seul chemin SVG. Les documents complexes présentent encore des lacunes ; le registre des capacités distingue l'implémentation, les preuves et le travail restant.",
+				a: "Non. Visio est en bêta. La géométrie en cache, le texte et les images pris en charge sont rendus par un seul chemin SVG. Les documents complexes présentent encore des lacunes ; le registre des capacités distingue l'implémentation, les preuves et le travail restant.",
 				link: { text: 'Registre des capacités', href: '/parity' },
 			},
 			{
@@ -197,6 +197,6 @@ export const fr: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'visio-viewer · un visualiseur Visio précoce pour le web',
+		bottomRight: 'visio-viewer · le visualiseur Visio pour le web',
 	},
 };

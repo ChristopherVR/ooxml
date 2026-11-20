@@ -2,7 +2,7 @@ import type { LandingCopy } from './types';
 
 export const zh: LandingCopy = {
 	hero: {
-		kicker: '早期实现 · Apache-2.0 · TypeScript',
+		kicker: '稳定版 · Apache-2.0 · TypeScript',
 		titleTop: '.xlsx 编辑，',
 		titleAccent: '可嵌入任何应用。',
 		sub: '面向 React、Vue、Angular、Svelte、Solid 和原生 JavaScript 的浏览器电子表格编辑器。一个带公式引擎的工作簿模型和一个 <xlsx-editor> Web 组件完成全部工作；框架适配器只负责接入生命周期和事件。',
@@ -66,7 +66,7 @@ export const zh: LandingCopy = {
 	status: {
 		kicker: '状态',
 		title: '坦诚说明尚未完成的部分。',
-		copy: '这是一个早期实现，并不等同于 Microsoft Excel。数据透视表、切片器、宏和外部链接会被保留，但不显示也不编辑；迷你图可显示但不可编辑；函数库很大但并不完整；不支持受密码保护的文件。功能页列出了这些差距。',
+		copy: '稳定版意味着承诺的 API 和书面的内容保留保证，但并不等同于 Microsoft Excel。数据透视表、切片器、宏和外部链接会被保留，但不显示也不编辑；迷你图可显示但不可编辑；函数库很大但并不完整；不支持受密码保护的文件。功能页列出了这些差距。',
 		link: { text: '功能与限制', href: '/zh/features' },
 		roadmapTitle: '逻辑所在之处',
 		roadmapCopy:
@@ -188,6 +188,6 @@ export const zh: LandingCopy = {
 			},
 		],
 		bottomLeft: '© 2026 ChristopherVR · Apache-2.0',
-		bottomRight: 'xlsx-viewer · 面向 Web 的早期电子表格编辑器',
+		bottomRight: 'xlsx-viewer · 面向 Web 的电子表格编辑器',
 	},
 };
