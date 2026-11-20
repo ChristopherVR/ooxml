@@ -132,6 +132,22 @@ describe('createCollaborationController', () => {
 		collab.stop();
 	});
 
+	it('never seeds an empty room with the placeholder deck of a session that joins it', async () => {
+		store.set({ slides: [slide('placeholder')] });
+		const collab = build();
+		await collab.start({ ...webrtcConfig, sessionIntent: 'join' });
+		capturedSynced?.();
+		store.set({ slides: [slide('placeholder'), slide('still-placeholder')] });
+		expect(reconcileSlidesInYDoc).not.toHaveBeenCalled();
+
+		readSlidesFromYDoc.mockReturnValue([slide('sharer')]);
+		capturedObserve?.(null, { origin: 'peer' });
+		expect(store.get().slides).toStrictEqual([slide('sharer')]);
+		store.set({ slides: [slide('sharer'), slide('added')] });
+		expect(reconcileSlidesInYDoc).toHaveBeenCalledOnce();
+		collab.stop();
+	});
+
 	it('re-arms the sync gate on reconnect instead of leaving it permanently open', async () => {
 		const collab = build();
 		await collab.start({ ...webrtcConfig, role: 'collaborator' });

@@ -28,6 +28,7 @@ import type {
 import {
 	bindCollaborationHistory,
 	buildCollaborationState,
+	configureCollaborationMedia,
 	collaborationFailureMessageKey,
 	collaborationHistoryReady,
 	collaborationRefusalToast,
@@ -210,6 +211,11 @@ export class CollaborationService {
 
 	/** The session is live: bind the slide sync, presence and (borrowed) readiness. */
 	private attach(live: CollabYSession, config: CollaborationConfig): void {
+		const options = this.lastOptions;
+		// Before the room's slides are read or written.
+		configureCollaborationMedia(config.externalSession?.doc ?? live.doc, {
+			localMediaUrl: (path) => options.getMediaDataUrls?.().get(path),
+		});
 		const deps = {
 			slideSync: this.slideSync,
 			livePatcher: this.livePatcher,

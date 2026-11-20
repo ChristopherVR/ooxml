@@ -338,6 +338,8 @@ export const translations = {
 		'La licencia de una fuente incrustada no permite usarla, por lo que se muestra una fuente sustituta. Sus datos se conservan en el archivo.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Una fuente no se incrustó porque su licencia no permite incrustarla en una presentación editable.',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'Una imagen o un vídeo que compartió un colaborador es demasiado grande para enviarlo a todos los participantes de la sesión, por lo que no se muestra.',
 	'pptx.compatibility.collaborationValueRejected':
 		'Se omitió contenido enviado por un colaborador porque no está permitido aquí, como un vínculo o un tipo de archivo no seguro.',
 	'pptx.compatibility.exportBackendUnavailable':

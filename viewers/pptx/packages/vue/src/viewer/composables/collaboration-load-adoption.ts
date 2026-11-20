@@ -31,6 +31,8 @@ export interface LoadAdoptionContext {
 	getLoadOrigin?: () => CollabLoadOrigin;
 	/** Apply the doc's slides locally (sets the applying-remote guard + dedupe). */
 	adoptDocSlides: (docSlides: PptxSlide[]) => void;
+	/** A load finished, before the room is consulted (see `RoomJoinTracker.loaded`). */
+	onLoaded?: (origin: CollabLoadOrigin) => void;
 }
 
 /**
@@ -45,6 +47,7 @@ export function watchLoadAdoption(ctx: LoadAdoptionContext): WatchStopHandle {
 	return watch(
 		ctx.loadVersion,
 		() => {
+			ctx.onLoaded?.(ctx.getLoadOrigin?.() ?? 'user');
 			const doc = ctx.getYDoc();
 			if (!doc || !ctx.isConnected()) {
 				return;

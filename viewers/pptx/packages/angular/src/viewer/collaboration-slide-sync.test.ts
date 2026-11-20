@@ -3,7 +3,7 @@
  * deck, so the viewer reports them as a presentation load, and which are a peer's ordinary edit.
  */
 import type { YjsFactories } from 'ooxml-ui/pptx';
-import { observeYDocSlides, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
+import { observeYDocSlides, readSlidesFromYDoc, reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -56,5 +56,43 @@ describe('room slides that replace the open deck', () => {
 		const { sync, replaced } = room('room-1');
 		expect(sync.adoptDocAfterLoad('bootstrap')).toBeTruthy();
 		expect(replaced).toHaveBeenCalledOnce();
+	});
+});
+
+describe('a session that joins a room', () => {
+	function joiningRoom() {
+		const doc = new Y.Doc();
+		const sync = new SlideSyncEngine();
+		const shown: string[][] = [];
+		sync.bind({
+			ydoc: doc as never,
+			factories,
+			sessionIntent: 'join',
+			onRemoteSlides: (slides) => shown.push(slides.map((item) => item.id)),
+			scheduleWriteBack: () => undefined,
+		});
+		observeYDocSlides(doc as never, (_events, transaction) => sync.onRemoteChange(transaction));
+		const roomIds = () => readSlidesFromYDoc(doc as never).map((item) => item.id);
+		return { doc, sync, shown, roomIds };
+	}
+
+	it('never seeds the empty room with its placeholder deck, and adopts the sharer deck', () => {
+		const { doc, sync, shown, roomIds } = joiningRoom();
+		sync.gate.open();
+		sync.broadcast([slide('placeholder')]);
+		expect(roomIds()).toStrictEqual([]);
+
+		reconcileSlidesInYDoc([slide('sharer')], doc as never, factories, 'peer');
+		expect(shown.at(-1)).toStrictEqual(['sharer']);
+		sync.broadcast([slide('sharer'), slide('added')]);
+		expect(roomIds()).toStrictEqual(['sharer', 'added']);
+	});
+
+	it('publishes a deck the user opened into an empty room', () => {
+		const { sync, roomIds } = joiningRoom();
+		sync.gate.open();
+		expect(sync.adoptDocAfterLoad('user')).toBeFalsy();
+		sync.broadcast([slide('opened')]);
+		expect(roomIds()).toStrictEqual(['opened']);
 	});
 });

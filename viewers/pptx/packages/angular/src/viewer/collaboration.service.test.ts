@@ -52,7 +52,9 @@ interface FakeBundle {
 
 function makeBundle(): FakeBundle {
 	const slidesArray = { observeDeep: vi.fn(), unobserveDeep: vi.fn(), length: 0 };
-	const doc = { getArray: () => slidesArray, destroy: vi.fn() };
+	// The room's media map (`pptx:media`) is observed next to the slides.
+	const mediaMap = { get: () => undefined, observe: vi.fn(), unobserve: vi.fn() };
+	const doc = { getArray: () => slidesArray, getMap: () => mediaMap, destroy: vi.fn() };
 	const awareness: AwarenessLike = {
 		clientID: 1,
 		setLocalStateField: vi.fn(),

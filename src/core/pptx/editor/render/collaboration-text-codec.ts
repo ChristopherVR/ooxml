@@ -9,7 +9,12 @@
  *  - encodeSegmentsToDelta: pure simulation of the delta Y.Text would produce
  *  - decodeDelta / decodeTextBody: delta -> TextSegment[]
  *  - isYTextLike: runtime guard
+ *
+ * Formatting attributes are written with page-local URLs as media tokens (a run's picture
+ * fill, a picture bullet), like every other field of the shared document.
  */
+
+import { stringifyShared } from './collaboration-media-token';
 
 export interface DeltaOp {
 	insert?: unknown;
@@ -34,7 +39,7 @@ function buildSegmentAttrs(seg: Record<string, unknown>): Record<string, string>
 	const a: Record<string, string> = {};
 	const style = seg.style;
 	if (style && typeof style === 'object' && Object.keys(style).length > 0) {
-		a.s = JSON.stringify(style);
+		a.s = stringifyShared(style);
 	}
 	if (seg.isParagraphBreak) {
 		a.pb = '1';
@@ -43,19 +48,19 @@ function buildSegmentAttrs(seg: Record<string, unknown>): Record<string, string>
 		a.lb = '1';
 	}
 	if (seg.bulletInfo) {
-		a.bi = JSON.stringify(seg.bulletInfo);
+		a.bi = stringifyShared(seg.bulletInfo);
 	}
 	if (seg.paragraphLevel !== undefined) {
 		a.pl = String(seg.paragraphLevel);
 	}
 	if (seg.endParaRunProperties) {
-		a.pr = JSON.stringify(seg.endParaRunProperties);
+		a.pr = stringifyShared(seg.endParaRunProperties);
 	}
 	if (seg.paragraphInsertionStyle) {
-		a.pi = JSON.stringify(seg.paragraphInsertionStyle);
+		a.pi = stringifyShared(seg.paragraphInsertionStyle);
 	}
 	if (seg.paragraphProperties) {
-		a.pp = JSON.stringify(seg.paragraphProperties);
+		a.pp = stringifyShared(seg.paragraphProperties);
 	}
 	if (typeof seg.fieldType === 'string') {
 		a.ft = seg.fieldType;
@@ -67,19 +72,19 @@ function buildSegmentAttrs(seg: Record<string, unknown>): Record<string, string>
 		a.fga = seg.fieldGuidAttr;
 	}
 	if (seg.fieldParagraphPropertiesXml) {
-		a.fp = JSON.stringify(seg.fieldParagraphPropertiesXml);
+		a.fp = stringifyShared(seg.fieldParagraphPropertiesXml);
 	}
 	if (seg.equationXml) {
-		a.eq = JSON.stringify(seg.equationXml);
+		a.eq = stringifyShared(seg.equationXml);
 	}
 	if (seg.equationSourceXml) {
-		a.eqs = JSON.stringify(seg.equationSourceXml);
+		a.eqs = stringifyShared(seg.equationSourceXml);
 	}
 	if (typeof seg.equationNumber === 'string') {
 		a.en = seg.equationNumber;
 	}
 	if (seg.breakRunProperties) {
-		a.br = JSON.stringify(seg.breakRunProperties);
+		a.br = stringifyShared(seg.breakRunProperties);
 	}
 	if (typeof seg.rubyText === 'string') {
 		a.rt = seg.rubyText;
@@ -91,7 +96,7 @@ function buildSegmentAttrs(seg: Record<string, unknown>): Record<string, string>
 		a.rfs = String(seg.rubyFontSize);
 	}
 	if (seg.rubyStyle) {
-		a.rs = JSON.stringify(seg.rubyStyle);
+		a.rs = stringifyShared(seg.rubyStyle);
 	}
 	return a;
 }
