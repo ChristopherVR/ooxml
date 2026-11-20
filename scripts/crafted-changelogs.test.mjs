@@ -6,6 +6,8 @@ import { test } from 'node:test';
 
 import {
 	craftedNotes,
+	craftedSectionFor,
+	datedCraftedSection,
 	datePackages,
 	datePending,
 	notesBody,
@@ -190,7 +192,51 @@ test('the plan dates the hand-written sections of released packages only', () =>
 	assert.match(read('viewers/demo/packages/core/CHANGELOG.md'), /@2\.0\.0\) - 2026-11-30$/mu);
 	assert.equal(read('viewers/demo/packages/react/CHANGELOG.md'), plain);
 	assert.match(read('viewers/demo/packages/vue/CHANGELOG.md'), /- Unreleased$/mu);
-	assert.deepEqual(pendingKeys(root, PLAN), []);
+	// Dated, the section still publishes this release as written, so git-cliff still skips it.
+	assert.deepEqual(pendingKeys(root, PLAN), ['demo-core']);
+	assert.deepEqual(datePackages(root, PLAN, '2026-12-01'), []);
+});
+
+/** `crafted` with its date already written. */
+const dated = (npm, version, date = '2026-11-21') =>
+	crafted(npm, version).replace(/ - Unreleased$/mu, ` - ${date}`);
+
+test('a section that already carries its date is published as written', () => {
+	const text = dated('demo-core', '2.0.0');
+	const { root, read } = fixtureRepo({ 'viewers/demo/packages/core/CHANGELOG.md': text });
+	assert.deepEqual(
+		planProblems(root, PLAN, () => false),
+		[],
+	);
+	assert.deepEqual(pendingKeys(root, PLAN), ['demo-core']);
+	assert.deepEqual(
+		datePackages(root, PLAN, '2026-11-30', () => false),
+		[],
+	);
+	assert.equal(read('viewers/demo/packages/core/CHANGELOG.md'), text);
+	const core = PLAN.packages['demo-core'];
+	assert.match(craftedNotes(core, [text]), /^The lead paragraph\./u);
+	assert.equal(craftedSectionFor(text, '2.0.0').date, '2026-11-21');
+});
+
+test('a dated section without the marker is an ordinary generated section', () => {
+	const text = dated('demo-core', '2.0.0').replace('<!-- release-notes: 2.0 -->\n', '');
+	assert.equal(datedCraftedSection(text), null);
+	assert.equal(craftedSectionFor(text, '2.0.0'), null);
+});
+
+test('a released dated section is history; an unreleased one for another version fails', () => {
+	const text = dated('demo-core', '2.0.0');
+	const next = { ...PLAN.packages['demo-core'], version: '2.0.1' };
+	assert.equal(craftedSectionFor(text, '2.0.1'), null);
+	assert.deepEqual(
+		packageProblems(next, text, 'CHANGELOG.md', () => true),
+		[],
+	);
+	assert.match(
+		packageProblems(next, text, 'CHANGELOG.md', () => false).join('\n'),
+		/is for 2\.0\.0, which is not released, but this release plans demo-core@2\.0\.1/u,
+	);
 });
 
 test('a mismatched section fails the dating step before any file is written', () => {

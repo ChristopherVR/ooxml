@@ -15,6 +15,13 @@
  * insertion for it and replaces `Unreleased` with the release date (UTC). A section whose version
  * or tag does not match the plan fails the run before anything is built or tagged.
  *
+ * The section may instead carry its date already (`- 2026-11-21`, or `## 2026-11-21` in a viewer
+ * root changelog), with the same marker. It is then published as written and keeps that date. A
+ * dated package section counts as hand-written only for the version the plan releases; once that
+ * version is tagged it is history like any other section. A dated hand-written top section whose
+ * version is neither tagged nor the planned one fails the run, so git-cliff never stacks a second
+ * section above it.
+ *
  *   node scripts/crafted-changelogs.mjs --check <release-plan.json>    problems, exit 1 on any
  *   node scripts/crafted-changelogs.mjs --pending <release-plan.json>  keys skipping git-cliff
  *   node scripts/crafted-changelogs.mjs --date <release-plan.json>     date the package sections
@@ -22,6 +29,7 @@
  * The viewer sections are dated by `viewer-changelogs.mjs --plan`. Dependency-free: it runs only
  * `node:` builtins.
  */
+import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +43,8 @@ export const RELEASES_URL = 'https://github.com/ChristopherVR/ooxml/releases/tag
 export const releaseUrl = (npm, version) => `${RELEASES_URL}${npm}@${version}`;
 
 const PACKAGE_PENDING_RE = /^## \[(?<version>[^\]]+)\]\((?<url>[^)\s]*)\) - Unreleased\s*$/u;
+const PACKAGE_DATED_RE =
+	/^## \[(?<version>[^\]]+)\]\((?<url>[^)\s]*)\) - (?<date>\d{4}-\d{2}-\d{2})\s*$/u;
 const VIEWER_PENDING_RE = /^## Unreleased\s*$/u;
 const MARKER_RE = /^<!-- release-notes: [^>]*-->\s*$/u;
 const RELEASES_RE = /^_Releases:(?<list>.*)_\s*$/u;
@@ -62,6 +72,28 @@ export function pendingSection(text) {
 	const [top] = sections(text);
 	const match = top && PACKAGE_PENDING_RE.exec(top.heading);
 	return match ? { ...match.groups, body: top.body } : null;
+}
+
+/**
+ * The hand-written top section of `text` that already carries its date: `{ version, url, date,
+ * body }`, or null. It needs the release-notes marker, which generated sections never have.
+ */
+export function datedCraftedSection(text) {
+	const [top] = sections(text);
+	const match = top && PACKAGE_DATED_RE.exec(top.heading);
+	if (!match || !top.body.some((line) => MARKER_RE.test(line.trim()))) return null;
+	return { ...match.groups, body: top.body };
+}
+
+/**
+ * The hand-written section of `text` that publishes `version`, pending or dated, or null. A
+ * pending section counts whatever its version (a mismatch is a problem, not history).
+ */
+export function craftedSectionFor(text, version) {
+	const pending = pendingSection(text);
+	if (pending) return pending;
+	const dated = datedCraftedSection(text);
+	return dated && dated.version === version ? dated : null;
 }
 
 /** The pending viewer section at the top of `text`: `{ releases, body }`, or null. */
@@ -93,8 +125,14 @@ export function notesBody(body) {
 }
 
 /** Why the pending section of `text` cannot be published as `pkg`'s release; [] when it can. */
-export function packageProblems(pkg, text, path = pkg.changelog) {
-	const pending = pendingSection(text);
+export function packageProblems(pkg, text, path = pkg.changelog, tagExists = () => true) {
+	const dated = pendingSection(text) ? null : datedCraftedSection(text);
+	if (dated && dated.version !== pkg.version && !tagExists(`${pkg.npm}@${dated.version}`)) {
+		return [
+			`${path}: the hand-written section is for ${dated.version}, which is not released, but this release plans ${pkg.npm}@${pkg.version}; change its heading to ## [${pkg.version}](${releaseUrl(pkg.npm, pkg.version)}) - ${dated.date}`,
+		];
+	}
+	const pending = craftedSectionFor(text, pkg.version);
 	if (!pending) return [];
 	const problems = [];
 	if (pending.version !== pkg.version) {
@@ -158,7 +196,7 @@ export const today = () => new Date().toISOString().slice(0, 10);
  */
 export function craftedNotes(pkg, texts) {
 	for (const text of texts) {
-		const pending = text ? pendingSection(text) : null;
+		const pending = text ? craftedSectionFor(text, pkg.version) : null;
 		if (pending && pending.version === pkg.version) return notesBody(pending.body) || null;
 	}
 	return null;
@@ -168,6 +206,15 @@ const read = (root, path) => {
 	const file = join(root, path);
 	return existsSync(file) ? readFileSync(file, 'utf8') : '';
 };
+
+/** Whether the git tag `name` exists in the repository at `root`. */
+export function gitTagExists(root) {
+	return (name) =>
+		spawnSync('git', ['rev-parse', '--quiet', '--verify', `refs/tags/${name}`], {
+			cwd: root,
+			stdio: 'ignore',
+		}).status === 0;
+}
 
 const releasedKeys = (plan) => plan.order.filter((key) => plan.packages[key].release);
 
@@ -181,10 +228,10 @@ export function viewerReleases(plan, viewer) {
 }
 
 /** Every problem with the hand-written sections `plan` would publish under `root`. */
-export function planProblems(root, plan) {
+export function planProblems(root, plan, tagExists = gitTagExists(root)) {
 	const problems = releasedKeys(plan).flatMap((key) => {
 		const pkg = plan.packages[key];
-		return packageProblems(pkg, read(root, pkg.changelog));
+		return packageProblems(pkg, read(root, pkg.changelog), pkg.changelog, tagExists);
 	});
 	const viewers = new Set(
 		Object.values(plan.packages)
@@ -198,21 +245,24 @@ export function planProblems(root, plan) {
 	return problems;
 }
 
-/** The keys of the released packages whose changelog has a pending section. */
+/** The keys of the released packages whose changelog has a hand-written section for the release. */
 export function pendingKeys(root, plan) {
 	return releasedKeys(plan).filter((key) =>
-		pendingSection(read(root, plan.packages[key].changelog)),
+		craftedSectionFor(read(root, plan.packages[key].changelog), plan.packages[key].version),
 	);
 }
 
 /** Date the pending section of every released package; returns the changelogs it changed. */
-export function datePackages(root, plan, date = today()) {
-	const problems = planProblems(root, plan);
+export function datePackages(root, plan, date = today(), tagExists = gitTagExists(root)) {
+	const problems = planProblems(root, plan, tagExists);
 	if (problems.length) throw new Error(problems.join('\n'));
-	return pendingKeys(root, plan).map((key) => {
+	return pendingKeys(root, plan).flatMap((key) => {
 		const path = plan.packages[key].changelog;
-		writeFileSync(join(root, path), datePending(read(root, path), date));
-		return path;
+		const text = read(root, path);
+		const dated = datePending(text, date);
+		if (dated === text) return [];
+		writeFileSync(join(root, path), dated);
+		return [path];
 	});
 }
 

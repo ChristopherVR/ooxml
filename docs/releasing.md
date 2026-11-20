@@ -160,6 +160,8 @@ When the plan releases that package, the release run publishes the section as wr
 
 A viewer's root changelog takes a section of its own form, `## Unreleased`, the marker, a `_Releases: <npm>@<version>, ..._` line and the product summary. When the plan releases a package that line names, `viewer-changelogs.mjs --plan` dates the heading (`## <date>`) instead of building the day's section; every name on the line must then be released at that version, or `--check` fails the run. A package released the same day that the line does not name gets a generated section of its own; a section carrying a marker is never rebuilt.
 
+The section can also carry its date already (`- 2026-11-21` in the package heading, `## 2026-11-21` in a viewer root changelog), with the same marker, when the release day is known, as it was for 2.0. It is published exactly as written and keeps that date. A dated package section counts as hand-written only for the version the plan releases; once that version is tagged it is ordinary history. A dated hand-written top section whose version is neither tagged nor the planned one fails `--check`, so git-cliff never stacks a second section above it.
+
 A package or viewer with no pending section keeps the generated path above unchanged. A pending section the plan does not release yet stays pending. `check-changelog-sections.mjs` accepts a pending section only as the top section of its file, with a link to its own version's tag, so none is ever published undated.
 
 ## Package checks
