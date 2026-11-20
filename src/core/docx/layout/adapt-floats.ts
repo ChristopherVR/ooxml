@@ -1,4 +1,4 @@
-import type { Paragraph, ThemeCatalog } from '../index';
+import type { Paragraph, TextRun, ThemeCatalog } from '../index';
 import { docxChartPaint } from '../chart-paint';
 import { shapePaint } from './shape-paint';
 import type { LayoutFloat } from './input';
@@ -9,13 +9,16 @@ import type { TextBoxLayouts } from './text-box-layout';
  * Floating pictures, shapes and charts anchored in a paragraph, with their `wp:positionH`/
  * `wp:positionV` placement; with `textBoxes`, text boxes laid out by the page engine.
  * `pageInCells`: `layoutInCell="0"` puts an object anchored in a table cell on the page (before
- * compatibility mode 15; later modes lay every such object out in its cell).
+ * compatibility mode 15; later modes lay every such object out in its cell). `hidden` runs (those
+ * a review display mode hides) have no float but still count in the source offsets, as the laid-out
+ * lines count them.
  */
 export function paragraphFloats(
 	paragraph: Paragraph,
 	theme?: ThemeCatalog,
 	textBoxes?: TextBoxLayouts,
 	pageInCells = false,
+	hidden?: (run: TextRun) => boolean,
 ): LayoutFloat[] {
 	const floats: LayoutFloat[] = [];
 	let sourceOffset = 0;
@@ -23,7 +26,8 @@ export function paragraphFloats(
 		const image = run.image;
 		const offset = sourceOffset;
 		sourceOffset += reviewSourceLength(run);
-		if (!image?.anchored || (!image.partName && !image.shape && !image.chart)) continue;
+		if (hidden?.(run) || !image?.anchored || (!image.partName && !image.shape && !image.chart))
+			continue;
 		const placement = image.placement;
 		floats.push({
 			index: floats.length,
@@ -58,7 +62,8 @@ export function floatsOf(
 	theme?: ThemeCatalog,
 	textBoxes?: TextBoxLayouts,
 	pageInCells = false,
+	hidden?: (run: TextRun) => boolean,
 ): { floats?: LayoutFloat[] } {
-	const floats = paragraphFloats(paragraph, theme, textBoxes, pageInCells);
+	const floats = paragraphFloats(paragraph, theme, textBoxes, pageInCells, hidden);
 	return floats.length ? { floats } : {};
 }

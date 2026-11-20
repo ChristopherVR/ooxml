@@ -2,7 +2,12 @@ import { readFileSync } from 'node:fs';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { loadDocx } from '../index';
-import { CHART_PARTS, cellFloatCases, cellFloatPackage } from '../__fixtures__/cell-floats/cases';
+import {
+	anchor,
+	CHART_PARTS,
+	cellFloatCases,
+	cellFloatPackage,
+} from '../__fixtures__/cell-floats/cases';
 import { layoutDocumentModel } from './layout';
 import type { TextMeasurer } from './measure';
 import type { LayoutParagraphBox, LayoutTableBox } from './result';
@@ -257,5 +262,37 @@ describe('text boxes in table cells against Word 16', () => {
 			),
 		);
 		expect(lastBottom).toBeGreaterThan(layout.frame.heightPx);
+	});
+});
+
+describe('character frames under each review display mode', () => {
+	// "Keep " + a deletion "GONE " + an insertion "NEW " + "here", then a character-anchored shape:
+	// the frame starts at the last character shown before the anchor, whichever runs a mode hides.
+	const body =
+		'<w:p><w:r><w:t xml:space="preserve">Keep </w:t></w:r>' +
+		'<w:del w:id="1" w:author="A"><w:r><w:delText xml:space="preserve">GONE </w:delText></w:r></w:del>' +
+		'<w:ins w:id="2" w:author="A"><w:r><w:t xml:space="preserve">NEW </w:t></w:r></w:ins>' +
+		`<w:r><w:t>here</w:t></w:r>${anchor(1, 'character:18', 'line:0', 'none', 1)}</w:p>`;
+	const shown = {
+		all: 'Keep GONE NEW here',
+		simple: 'Keep NEW here',
+		final: 'Keep NEW here',
+		original: 'Keep GONE here',
+	};
+
+	it.each(Object.entries(shown))('measures from the shown text in %s', async (mode, text) => {
+		const parts = cellFloatPackage({ body, mode: 15 });
+		const bytes = zipSync(
+			Object.fromEntries(Object.entries(parts).map(([path, xml]) => [path, strToU8(xml)])),
+		);
+		const { model } = await loadDocx(bytes);
+		const result = layoutDocumentModel(model, courier, {
+			reviewDisplayMode: mode as 'all' | 'simple' | 'final' | 'original',
+		});
+		const page = result.pages[0]!;
+		const float = page.floats![0]!;
+		const advance = 11 * (96 / 72) * (1229 / 2048);
+		const expected = page.marginLeftPx + (text.length - 1) * advance + 24;
+		expect(Math.abs(float.xPx - expected), `${mode} x ${float.xPx}`).toBeLessThanOrEqual(0.5);
 	});
 });

@@ -58,7 +58,7 @@ interface AnchorOptions {
 	text?: string;
 }
 
-function anchor(
+export function anchor(
 	id: number,
 	h: string,
 	v: string,
