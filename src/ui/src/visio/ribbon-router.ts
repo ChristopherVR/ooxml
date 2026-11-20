@@ -44,6 +44,8 @@ export interface RibbonTargets {
 	toggleFullscreen(): void;
 	present(): void;
 	togglePane(pane: 'shapes' | 'inspector'): void;
+	/** F6 and Shift+F6: move the keyboard to the next or previous region of the window. */
+	moveRegion(direction: 1 | -1): void;
 	reveal(panel: 'edit' | 'notes' | 'selection' | 'format', focusText: boolean): void;
 	fit(mode: 'page' | 'width'): void;
 	focusSearch(): void;
@@ -161,6 +163,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.present();
 		case 'pane':
 			return targets.togglePane(action.pane);
+		case 'region':
+			return targets.moveRegion(action.direction);
 		case 'reveal':
 			return targets.reveal(action.panel, action.focusText ?? false);
 		case 'search':
