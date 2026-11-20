@@ -30,6 +30,7 @@ import {
 	addsParagraphSpacing,
 	attachesFootnotesToBodyColumns,
 	compatibilityProfile,
+	honoursLayoutInCell,
 	keepsSpaceBeforePageBreak,
 	usesModernFootnoteLayout,
 } from '../compatibility';
@@ -346,7 +347,10 @@ export function adaptDocumentModel(
 						].sort((a, b) => a.posPx - b.posPx),
 					}
 				: {}),
-			...floatsOf(visible, model.theme, textBoxes),
+			// Every run counts in the anchors' source offsets, as in the lines; hidden ones float nothing.
+			...floatsOf(paragraph, model.theme, textBoxes, honoursLayoutInCell(compatibility), (run) =>
+				isRunHiddenForReview(run, reviewMode),
+			),
 			...definedProps({
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,

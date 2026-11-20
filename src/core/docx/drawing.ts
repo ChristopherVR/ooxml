@@ -225,7 +225,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		...(diagram ? { diagram } : {}),
 		...(chart ? { chart } : {}),
 		...(shape ? { shape } : {}),
-		...((diagram || shape) && placement ? { placement } : {}),
+		...((diagram || shape || chart) && placement ? { placement } : {}),
 		...(textBox ? { textBoxText: textBox } : {}),
 		...(textBox && isSimpleTextBox(graphicData, Boolean(anchored))
 			? { textBoxEditable: true, textBoxBorder: textBoxHasBorder(graphicData) }
@@ -257,6 +257,8 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 	)
 		placement.wrapText = wrapText;
 	if (anchor.getAttribute('behindDoc') === '1') placement.behindText = true;
+	if (/^(0|false|off)$/.test(anchor.getAttribute('layoutInCell') ?? ''))
+		placement.layoutInCell = false;
 	const positionH = firstNS(anchor, WP_NS, 'positionH');
 	const relativeFrom = enumValue(
 		isStRelFromH,

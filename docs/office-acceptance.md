@@ -20,6 +20,7 @@ Not wired:
 - The other `scripts/record-visio-*.ps1` and `record-xlsx-*.ps1` scripts record what the real app does, to capture reference values by hand; they have no pass or fail result. The `xlsx-pivot-*-oracle.ps1` scripts likewise only emit oracle data.
 - `e2e/pptx/native/*.ps1` (chart title and label checks, animation renders, clipboard) need an artifact folder produced by the PowerPoint browser suite or a manual step, with no generator that fits this runner yet.
 - `scripts/check-word-*-exports.ps1` compare exports against a reference folder that must be supplied.
+- `src/core/scripts/docx-word-cell-float-probe.ps1` records where Word draws floating objects in table cells and floating charts (`src/core/docx/__fixtures__/cell-floats/word-positions.json`), like the other Word layout probes; it has no pass or fail result.
 
 A step is skipped, with a notice, when a program it needs (`pdfinfo`, `python`, another Office app) is missing. A whole product is skipped when its COM class is absent (typically Visio). Pass `--require` to make a missing app a failure.
 

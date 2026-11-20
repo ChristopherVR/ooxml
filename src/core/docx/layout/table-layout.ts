@@ -5,6 +5,7 @@ import { layoutParagraph } from './paragraph-layout';
 import type { LayoutParagraph, LayoutTableRow } from './input';
 import type { LayoutCellGeometry, LayoutParagraphBox, LayoutTableBox } from './result';
 import { stackCellBlocks } from './table-cell-layout';
+import { hasCellFloats, stackFloatingCell, type CellSides } from './cell-floats';
 
 export interface RowLayout {
 	heightPx: number;
@@ -20,7 +21,10 @@ export interface RowLayout {
 	trailingPx?: number[];
 }
 
-/** Lays out paragraphs stacked top to bottom (a table cell's or a footnote's content). */
+/**
+ * Lays out paragraphs stacked top to bottom (a table cell's or a footnote's content). In a cell
+ * (`cell` given), floating objects anchored in the paragraphs are laid out in it.
+ */
 export function stackParagraphs(
 	paragraphs: LayoutParagraph[],
 	widthPx: number,
@@ -28,7 +32,10 @@ export function stackParagraphs(
 	note: (message: string) => void,
 	topPx = 0,
 	startTokens?: ReadonlyMap<string, number>,
+	cell?: CellSides,
 ): { heightPx: number; boxes: LayoutParagraphBox[] } {
+	if (cell && hasCellFloats(paragraphs))
+		return stackFloatingCell(paragraphs, widthPx, measurer, note, topPx, startTokens, cell);
 	let y = topPx;
 	const boxes: LayoutParagraphBox[] = [];
 	for (const paragraph of paragraphs) {
@@ -105,6 +112,7 @@ export function layoutRow(
 			padding.top,
 			starts,
 			physicalFragments,
+			{ paddingLeftPx: padding.left, paddingRightPx: padding.right + externalRight },
 		);
 		const heightPx = content.heightPx + padding.bottom;
 		geometry.push({

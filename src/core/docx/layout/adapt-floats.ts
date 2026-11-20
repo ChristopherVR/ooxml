@@ -1,24 +1,42 @@
-import type { Paragraph, ThemeCatalog } from '../index';
+import type { Paragraph, TextRun, ThemeCatalog } from '../index';
+import { docxChartPaint } from '../chart-paint';
 import { shapePaint } from './shape-paint';
 import type { LayoutFloat } from './input';
+import { reviewSourceLength } from './review-display';
 import type { TextBoxLayouts } from './text-box-layout';
 
 /**
- * Floating pictures anchored in a paragraph, with their `wp:positionH`/`wp:positionV` placement;
- * with `textBoxes`, text boxes laid out by the page engine.
+ * Floating pictures, shapes and charts anchored in a paragraph, with their `wp:positionH`/
+ * `wp:positionV` placement; with `textBoxes`, text boxes laid out by the page engine.
+ * `pageInCells`: `layoutInCell="0"` puts an object anchored in a table cell on the page (before
+ * compatibility mode 15; later modes lay every such object out in its cell). `hidden` runs (those
+ * a review display mode hides) have no float but still count in the source offsets, as the laid-out
+ * lines count them.
  */
 export function paragraphFloats(
 	paragraph: Paragraph,
 	theme?: ThemeCatalog,
 	textBoxes?: TextBoxLayouts,
+	pageInCells = false,
+	hidden?: (run: TextRun) => boolean,
 ): LayoutFloat[] {
 	const floats: LayoutFloat[] = [];
+	let sourceOffset = 0;
 	for (const run of paragraph.runs) {
 		const image = run.image;
-		if (!image?.anchored || (!image.partName && !image.shape)) continue;
+		const offset = sourceOffset;
+		sourceOffset += reviewSourceLength(run);
+		if (hidden?.(run) || !image?.anchored || (!image.partName && !image.shape && !image.chart))
+			continue;
 		const placement = image.placement;
 		floats.push({
 			index: floats.length,
+			sourceOffset: offset,
+			...(image.chart
+				? {
+						chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme, image.altText),
+					}
+				: {}),
 			partName: image.partName,
 			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 			contentType: image.contentType,
@@ -34,6 +52,7 @@ export function paragraphFloats(
 			...(placement?.behindText ? { behindText: true } : {}),
 			...(placement?.wrap ? { wrap: placement.wrap } : {}),
 			...(placement?.wrapText ? { wrapText: placement.wrapText } : {}),
+			...(pageInCells && placement?.layoutInCell === false ? { layoutInCell: false } : {}),
 		});
 	}
 	return floats;
@@ -42,7 +61,9 @@ export function floatsOf(
 	paragraph: Paragraph,
 	theme?: ThemeCatalog,
 	textBoxes?: TextBoxLayouts,
+	pageInCells = false,
+	hidden?: (run: TextRun) => boolean,
 ): { floats?: LayoutFloat[] } {
-	const floats = paragraphFloats(paragraph, theme, textBoxes);
+	const floats = paragraphFloats(paragraph, theme, textBoxes, pageInCells, hidden);
 	return floats.length ? { floats } : {};
 }

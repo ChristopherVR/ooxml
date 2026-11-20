@@ -1,5 +1,5 @@
 import type { LineBoxFn } from './paragraph-layout';
-import type { LayoutPageBox } from './result';
+import type { LayoutFloatBox, LayoutPageBox } from './result';
 
 /** Word's default distance between wrapped text and a picture's sides (`distL`/`distR`, 1/8 in). */
 const SIDE_DISTANCE_PX = 12;
@@ -18,20 +18,35 @@ export interface Exclusion {
 	bothSides?: boolean;
 }
 
-/** Areas that wrapped floating pictures and floating tables take from the text, per page index. */
+/** Whether text wraps around a floating object (any wrapping but none, in front or behind). */
+export function wrapsText(float: Pick<LayoutFloatBox, 'wrap'>): boolean {
+	return Boolean(float.wrap && float.wrap !== 'none');
+}
+
+/** The area a wrapped floating object takes from the text, with Word's default side distance. */
+export function floatExclusion(
+	float: Pick<LayoutFloatBox, 'xPx' | 'yPx' | 'widthPx' | 'heightPx' | 'wrap' | 'wrapText'>,
+): Exclusion {
+	return {
+		xPx: float.xPx - SIDE_DISTANCE_PX,
+		yPx: float.yPx,
+		widthPx: float.widthPx + SIDE_DISTANCE_PX * 2,
+		heightPx: float.heightPx,
+		topAndBottom: float.wrap === 'topAndBottom',
+		...(float.wrapText === 'bothSides' ? { bothSides: true } : {}),
+	};
+}
+
+/**
+ * Areas that wrapped floating pictures and floating tables take from the text, per page index.
+ * An object laid out in a table cell wraps only that cell's text (`cell-floats.ts`).
+ */
 export function wrapExclusions(pages: LayoutPageBox[]): Map<number, Exclusion[]> {
 	const exclusions = new Map<number, Exclusion[]>();
 	for (const page of pages) {
 		const list = (page.floats ?? [])
-			.filter((float) => float.wrap && float.wrap !== 'none')
-			.map((float) => ({
-				xPx: float.xPx - SIDE_DISTANCE_PX,
-				yPx: float.yPx,
-				widthPx: float.widthPx + SIDE_DISTANCE_PX * 2,
-				heightPx: float.heightPx,
-				topAndBottom: float.wrap === 'topAndBottom',
-				...(float.wrapText === 'bothSides' ? { bothSides: true } : {}),
-			}));
+			.filter((float) => wrapsText(float) && !float.inCell)
+			.map(floatExclusion);
 		// Floating tables (`w:tblpPr`): text may run on both sides, kept at their distances.
 		for (const column of page.columns)
 			for (const block of column.blocks) {

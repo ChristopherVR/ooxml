@@ -6,6 +6,7 @@ import type { LayoutParagraphBox, LayoutTableBox } from './result';
 import type { TextMeasurer } from './measure';
 import { layoutRow, stackParagraphs } from './table-layout';
 import { resolveTableAutofit } from './table-autofit';
+import type { CellSides } from './cell-floats';
 /** All nested source paragraphs, in OOXML story order. */
 export function cellParagraphs(cell: LayoutTableCell): LayoutParagraph[] {
 	const walk = (blocks: LayoutBlock[]): LayoutParagraph[] =>
@@ -25,6 +26,7 @@ export function stackCellBlocks(
 	top: number,
 	starts?: ReadonlyMap<string, number>,
 	physicalFragments = false,
+	sides?: CellSides,
 ): { heightPx: number; boxes: LayoutParagraphBox[]; tables?: LayoutTableBox[] } {
 	if (!cell.blocks)
 		return stackParagraphs(
@@ -34,6 +36,7 @@ export function stackCellBlocks(
 			note,
 			top,
 			starts,
+			sides,
 		);
 	let y = top;
 	const boxes: LayoutParagraphBox[] = [];
@@ -41,7 +44,7 @@ export function stackCellBlocks(
 	for (const source of cell.blocks) {
 		if (source.kind === 'paragraph') {
 			if (starts && !starts.has(source.id)) continue;
-			const result = stackParagraphs([source], width, measurer, note, y, starts);
+			const result = stackParagraphs([source], width, measurer, note, y, starts, sides);
 			boxes.push(...result.boxes);
 			y = result.heightPx;
 			continue;

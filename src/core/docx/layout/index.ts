@@ -25,7 +25,8 @@ export {
 } from './text-box-layout';
 export { layoutDocument, layoutDocumentModel, storyTextBoxLayouts } from './layout';
 export { reviewSourceLength, type LayoutReviewOptions } from './review-display';
-export { floatPosition, floatOrigin, positionFloats, FLOAT_WRAP_NOTE } from './floats';
+export { floatPosition, floatOrigin, FLOAT_WRAP_NOTE } from './floats';
+export { positionFloats } from './position-floats';
 export { cssFontStack } from './fonts';
 export { collectDocxWebfontRuns } from './webfont-runs';
 export { placeTab, type TabPlacement } from './tab-stops';
