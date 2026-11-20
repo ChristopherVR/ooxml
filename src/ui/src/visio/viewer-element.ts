@@ -7,6 +7,7 @@ import { selectedShape } from './shape-inspector';
 import { wireViewerInputs } from './viewer-input';
 import { viewerStyles } from './styles';
 import { canvasAndRibbonStyles, visioThemeAliases } from './styles/index';
+import { releaseDetachedStyles } from '../detached-styles';
 import { defineOnce } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 import { createRibbon } from './ribbon';
@@ -1001,6 +1002,7 @@ export class VisioViewerElement extends BaseElement {
 			this.#canvas.dispose();
 			this.#canvas.invalidate();
 		}
+		releaseDetachedStyles(this);
 	}
 	#wireInputs(): () => void {
 		const disposeChrome = this.#chrome.wire();
