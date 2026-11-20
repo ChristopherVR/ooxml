@@ -2,6 +2,8 @@
 
 ## Digital signatures
 
+The verifier lives in the `signature` namespace of `ooxml-core/opc` (`import { signature } from 'ooxml-core/opc'`).
+
 A document is shown as signed only when its signature verifies. Every loader reports the verified
 state as a `SignatureSummary`, and the old structural helpers are gone.
 
@@ -17,16 +19,16 @@ const intact = (await inspectSignaturesFromBuffer(bytes)).every(
 );
 
 // 2.0
-import { isVerifiedSignatureState } from 'ooxml-core/opc';
+import { signature } from 'ooxml-core/opc';
 const summary = await inspectSignaturesFromBuffer(bytes); // { state, signatures }
-const signed = isVerifiedSignatureState(summary.state); // verified or verified-untrusted
+const signed = signature.isVerifiedSignatureState(summary.state); // verified or verified-untrusted
 ```
 
 Any Office format, from bytes, a JSZip archive or a map of parts:
 
 ```ts
-import { verifyPackageSignatureSummary } from 'ooxml-core/opc';
-const { state, signatures } = await verifyPackageSignatureSummary(bytes);
+import { signature } from 'ooxml-core/opc';
+const { state, signatures } = await signature.verifyPackageSignatureSummary(bytes);
 ```
 
 `ooxml-core/xlsx`: `Workbook.signatures` is a summary.
@@ -62,6 +64,6 @@ import { canonicalizeNode } from 'ooxml-core/pptx/signature-node';
 canonicalizeNode(element, algorithm);
 
 // 2.0
-import { canonicalize } from 'ooxml-core/opc';
-canonicalize(element, algorithm);
+import { signature } from 'ooxml-core/opc';
+signature.canonicalize(element, algorithm);
 ```
