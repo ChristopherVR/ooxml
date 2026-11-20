@@ -110,6 +110,9 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 		getSlides: () => editor.committedRenderedSlides,
 		applyRemoteSlides: (slides: PptxSlide[]) => {
 			editor.applyRemoteSlides(slides);
+			// Navigation is bounded by the viewer's slide count: a joiner's placeholder had one
+			// slide, so without this the room's later slides could not be reached (or followed).
+			viewer.setSlideCount(editor.slides.length);
 			const toast = remoteValueNotice(slides);
 			if (toast) {
 				deps.notify?.(toast);
@@ -182,6 +185,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 	useCollaborationPresenceEffects({
 		collab,
 		getCurrentSlide: () => viewer.current,
+		getSlideCount: () => editor.slides.length,
 		getSelectedElementId: () => editor.selectedElementId,
 		goTo: (index) => viewer.goTo(index),
 	});

@@ -140,6 +140,7 @@ import { ViewerToolbarSection } from './components/ViewerToolbarSection';
 import { useAiBridge } from './hooks/ai/useAiBridge';
 import { useAiPanelController } from './hooks/ai/useAiPanelController';
 import { useBroadcastFollower, useFollowMode } from './hooks/collaboration';
+import { useActiveSlidePresence } from './hooks/collaboration/useActiveSlidePresence';
 import { useCollaborationDocumentSync } from './hooks/collaboration/useCollaborationDocumentSync';
 import { useCollaborationStateReport } from './hooks/collaboration/useCollaborationStateReport';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
@@ -2133,6 +2134,8 @@ function CollaborationDocumentSync({
  * mirror their active slide) and keeps the one-way broadcast auto-follow alive.
  * Manual follow takes precedence: while the local user is following a peer, the
  * broadcaster auto-follow stands down so the two do not fight over navigation.
+ * It also publishes the local active slide, since it stays mounted in every
+ * view (a broadcast presenter runs the slide show, where no edit canvas is).
  * Must be rendered inside a `CollaborationProvider`.
  */
 function CollaborationFollowLayer({
@@ -2145,6 +2148,7 @@ function CollaborationFollowLayer({
 	slideCount: number;
 }) {
 	const collab = useCollaboration();
+	useActiveSlidePresence(collab, activeSlideIndex);
 	const { followedClientId, followUser } = useFollowMode({
 		collab,
 		activeSlideIndex,
