@@ -1,4 +1,3 @@
-import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import { imageContentType } from 'ooxml-core/drawingml';
 import { normalizeMimeType, pictureUrl } from 'ooxml-core/opc';
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
@@ -10,6 +9,7 @@ import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
+import { paintPicture } from './picture-paint';
 import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
 
@@ -181,6 +181,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 				getPos,
 				() => options.theme?.(),
 				() => options.model?.(),
+				(part, type) => cache.urlFor(part, type),
 			);
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram)
@@ -192,27 +193,9 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		// A placeholder (unsupported drawing or text box) shows static child text that ProseMirror must leave alone.
 		if (content.tagName !== 'IMG') return { dom: content, ignoreMutation: () => true };
 		let painted: SVGSVGElement | undefined;
-		const fill =
-			typeof node.attrs.pictureFill === 'string' ? JSON.parse(node.attrs.pictureFill) : undefined;
+		const urlFor = (part: string, type: string) => cache.urlFor(part, type);
 		const refresh = () => {
-			const src =
-				(node.attrs.svgPartName && cache.urlFor(String(node.attrs.svgPartName), 'image/svg+xml')) ||
-				cache.urlFor(String(node.attrs.partName), String(node.attrs.contentType));
-			if (src) content.setAttribute('src', src);
-			if (src && pictureNeedsSvg(fill)) {
-				const next = pictureSvg(
-					content.ownerDocument,
-					fill,
-					src,
-					Number(node.attrs.widthPx),
-					Number(node.attrs.heightPx),
-				);
-				if (painted) painted.replaceWith(next);
-				else content.after(next);
-				painted = next;
-				content.style.display = 'none';
-			}
-			content.classList.toggle('dve-image-missing', !src);
+			painted = paintPicture(content, node, urlFor, painted);
 		};
 		refresh();
 		const unsubscribe = cache.onChange(refresh);

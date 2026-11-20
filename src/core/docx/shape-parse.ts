@@ -1,7 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Reads a `wps:wsp` drawing shape: preset geometry, fill, outline and text. The geometry, fill and
 // outline readers are the shared DrawingML ones.
-import { parseDrawingFill, parseDrawingGeometry, parseDrawingLine } from '../drawingml/index';
+import {
+	parseDrawingColorIn,
+	parseDrawingFill,
+	parseDrawingGeometry,
+	parseDrawingLine,
+} from '../drawingml/index';
 import type { DrawingLine } from '../drawingml/index';
 import { buildXml } from '../xml/index';
 import { lookupPresetShape } from '../geometry/preset-shape-evaluator';
@@ -108,25 +113,40 @@ function transform(spPr: XmlElement): Pick<ShapeSpec, 'rotation' | 'flipH' | 'fl
 	return result;
 }
 
+/** Whether a `wps:wsp` is a text box (`wps:cNvSpPr/@txBox="1"`), which Word edits as a text box. */
+export function isTextBoxShape(graphicData: XmlElement | undefined): boolean {
+	return child(shapeElement(graphicData), WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1';
+}
+
 /**
- * The shape in a `wps:wsp` that is not a text box, or undefined when it has no preset geometry the
- * editor can draw. Editing a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces
- * the pair with the modern drawing alone.
+ * The shape in a `wps:wsp`, or undefined when it has no preset geometry the editor can draw. A text
+ * box (`txBox="1"`) is read as its frame only: it is drawn like any shape, but its text, size and
+ * outline are edited as a text box, so the shape model leaves it alone (`editable: false`). Editing
+ * a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces the pair with the modern
+ * drawing alone.
  */
 export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | undefined {
 	const wsp = shapeElement(graphicData);
 	if (!wsp) return undefined;
-	if (child(wsp, WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1') return undefined;
+	const textBox = isTextBoxShape(graphicData);
 	const spPr = child(wsp, WPS_NS, 'spPr');
 	if (!spPr) return undefined;
 	const custom = child(spPr, A_NS, 'custGeom');
 	const geometry = parseDrawingGeometry(spPr);
 	if (geometry.issue || (!custom && !lookupPresetShape(geometry.geometry))) return undefined;
-	const fill = parseDrawingFill(spPr);
+	const style = child(wsp, WPS_NS, 'style');
+	const parsedFill = parseDrawingFill(spPr);
 	const ln = child(spPr, A_NS, 'ln');
-	const line: DrawingLine | undefined = ln ? parseDrawingLine(ln) : undefined;
-	const text = shapeParagraphs(wsp);
-	const simple = spPrIsSimple(spPr);
+	// Without a `wps:style`, nothing gives the shape a fill or an outline it does not set itself.
+	const fill = parsedFill ?? (style ? undefined : { kind: 'none' as const });
+	const line: DrawingLine | undefined = ln
+		? parseDrawingLine(ln)
+		: style
+			? undefined
+			: { fill: { kind: 'none' } };
+	const fontColor = parseDrawingColorIn(child(style, A_NS, 'fontRef'));
+	const text = textBox ? undefined : shapeParagraphs(wsp);
+	const simple = !textBox && spPrIsSimple(spPr);
 	return {
 		preset: geometry.geometry,
 		...(custom ? { customGeometryXml: buildXml(custom) } : {}),
@@ -135,6 +155,7 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 			: {}),
 		...(fill && fill.kind !== 'unsupported' ? { fill } : {}),
 		...(line ? { line } : {}),
+		...(fontColor ? { fontColor } : {}),
 		...(text ? { text } : {}),
 		...transform(spPr),
 		editable: simple,

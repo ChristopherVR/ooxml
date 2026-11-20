@@ -441,6 +441,7 @@
 	"signedTwipsAttr",
 	"signedTwipsFromPixels",
 	"signedTwipsFromPoints",
+	"simpleTextBoxDrawing",
 	"styleIdForName",
 	"styleNameFromClass",
 	"styleRefSource",

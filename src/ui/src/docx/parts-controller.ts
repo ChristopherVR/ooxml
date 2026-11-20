@@ -58,6 +58,9 @@ export class PartsController {
 
 	constructor(private readonly host: PartsControllerHost) {}
 	private readonly reviewMode = (): ReviewDisplayMode => this.host.reviewDisplayMode?.() ?? 'all';
+	/** Story previews show pictures from the body's media cache, so they share its URLs. */
+	private readonly pictureUrl = (partName: string, contentType: string) =>
+		this.host.images().urlFor(partName, contentType);
 
 	/** Refresh appearance in place, retaining the active story's selection and history. */
 	refreshReviewDisplay(): void {
@@ -67,7 +70,7 @@ export class PartsController {
 			this.shownSection,
 			{ headers: this.headerEl, footers: this.footerEl, notes: this.notesEl },
 			this.reviewMode(),
-			this.decorate,
+			this.pictureUrl,
 		);
 	}
 
@@ -210,27 +213,17 @@ export class PartsController {
 			);
 	}
 
-	/** Sets picture sources in a read-only preview from the package media. */
-	private readonly decorate = (preview: HTMLElement) => {
-		for (const image of preview.querySelectorAll<HTMLImageElement>('img[data-docx-image]')) {
-			const src = this.host
-				.images()
-				.urlFor(image.dataset.partName ?? '', image.dataset.contentType ?? '');
-			if (src) image.src = src;
-		}
-	};
-
 	private editorOptions(header = false): InlineEditorOptions {
 		return {
 			contextModel: () => this.host.model(),
 			reviewDisplayMode: this.reviewMode,
+			pictureUrl: this.pictureUrl,
 			nodeViews: {
 				image: imageNodeView(this.host.images(), {
 					theme: () => this.host.model().theme,
 					model: () => this.host.model(),
 				}),
 			},
-			decorate: this.decorate,
 			plugins: [
 				...this.host.plugins(),
 				reviewDisplayPlugin(this.reviewMode),
@@ -297,9 +290,11 @@ export class PartsController {
 		this.notesEl?.remove();
 		const model = storyPreview(this.host.model(), this.renderingContext);
 		const locale = this.host.locale();
-		this.headerEl = buildHeaderElement(model, locale, this.shownSection) ?? undefined;
-		this.footerEl = buildFooterElement(model, locale, this.shownSection) ?? undefined;
-		this.notesEl = buildNotesElement(model, locale) ?? undefined;
+		this.headerEl =
+			buildHeaderElement(model, locale, this.shownSection, this.pictureUrl) ?? undefined;
+		this.footerEl =
+			buildFooterElement(model, locale, this.shownSection, this.pictureUrl) ?? undefined;
+		this.notesEl = buildNotesElement(model, locale, this.pictureUrl) ?? undefined;
 		const editable = () => this.host.canEditOutsideBody();
 		for (const [element, kind] of [
 			[this.headerEl, 'headers'],
@@ -344,8 +339,6 @@ export class PartsController {
 					},
 				},
 			});
-		for (const element of [this.headerEl, this.footerEl, this.notesEl])
-			if (element) this.decorate(element);
 		if (this.headerEl) canvas.insertBefore(this.headerEl, paper);
 		if (this.footerEl) canvas.insertBefore(this.footerEl, paper.nextSibling);
 		if (this.notesEl) canvas.insertBefore(this.notesEl, (this.footerEl ?? paper).nextSibling);

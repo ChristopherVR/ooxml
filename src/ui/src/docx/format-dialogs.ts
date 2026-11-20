@@ -7,6 +7,7 @@ import { createBookmarkDialog } from './bookmark-dialog';
 import { createWatermarkDialog, type WatermarkHost } from './watermark-dialog';
 import { createPageBordersDialog, type PageBordersHost } from './page-borders-dialog';
 import { createTextBoxDialog } from './text-box-dialog';
+import { selectedTextBox } from './text-box-commands';
 import { createContentControlDialog } from './content-control-dialog';
 import { createEquationDialog } from './equation-dialog';
 import { createShapeTextDialog } from './shape-text-dialog';
@@ -93,7 +94,7 @@ export interface FormatDialogsHost {
 export class FormatDialogs {
 	private readonly dialogs: Record<FormatDialogKind, FormatDialog>;
 
-	constructor(host: FormatDialogsHost) {
+	constructor(private readonly host: FormatDialogsHost) {
 		const charts = { view: () => host.view(), theme: () => host.theme?.() };
 		this.dialogs = {
 			font: createFontDialog(
@@ -204,7 +205,11 @@ export class FormatDialogs {
 	}
 
 	/** Opens `kind`, closing the other one first. */
-	open(kind: FormatDialogKind): void {
+	open(requested: FormatDialogKind): void {
+		// A simple text box is drawn as a shape, but its text is edited in the Text Box dialog.
+		const view = this.host.view();
+		const kind =
+			requested === 'shapeText' && view && selectedTextBox(view.state) ? 'textBox' : requested;
 		for (const [name, dialog] of Object.entries(this.dialogs))
 			if (name !== kind && dialog.isOpen) dialog.close();
 		this.dialogs[kind].open();

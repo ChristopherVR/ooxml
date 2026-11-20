@@ -8,6 +8,7 @@ import type { EditorView } from 'prosemirror-view';
 import type { Block, DocumentModel } from 'ooxml-core/docx';
 import { expectDefined, replacementParts, type FindStory } from 'ooxml-core/docx/ui';
 import { replaceTargets, type ReplacementTarget } from './search-document';
+import { textBoxDrawingAttrs } from './text-box-commands';
 import {
 	replacedStoryBlocks,
 	replacedTextBoxLines,
@@ -65,7 +66,7 @@ function replaceTextBoxes(view: EditorView, entries: readonly Entry[]): number {
 		transaction = transaction.setNodeMarkup(pos, undefined, {
 			...node.attrs,
 			textBoxText: JSON.stringify(lines),
-			textBoxContent: null,
+			...textBoxDrawingAttrs(lines, node.attrs.textBoxBorder !== false, node.attrs),
 		});
 		count += own.length;
 	}

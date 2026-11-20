@@ -2,11 +2,21 @@
 // wrapping puts it, with a resize handle while selected.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView, NodeView } from 'prosemirror-view';
-import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
+import type { DocumentModel, ShapeSpec, ThemeCatalog } from 'ooxml-core/docx';
 import { createResizeHandle } from './resize-handle';
 import { paintShape } from './story-render';
+import type { PictureSource } from './picture-paint';
 
 const MIN_SIZE = 4;
+
+function parseSpec(value: unknown): ShapeSpec | undefined {
+	if (typeof value !== 'string') return undefined;
+	try {
+		return JSON.parse(value) as ShapeSpec;
+	} catch {
+		return undefined;
+	}
+}
 
 export function shapeNodeView(
 	initial: ProseMirrorNode,
@@ -14,6 +24,7 @@ export function shapeNodeView(
 	getPos: () => number | undefined,
 	theme: () => ThemeCatalog | undefined,
 	model: () => DocumentModel | undefined = () => undefined,
+	pictureUrl?: PictureSource,
 ): NodeView {
 	let node = initial;
 	let selected = false;
@@ -21,7 +32,9 @@ export function shapeNodeView(
 	const holder = document.createElement('span');
 	holder.className = 'dve-shape-drawing';
 	const handle = createResizeHandle('dve-shape-handle', {
-		editable: () => view.editable,
+		// Only a size the file can take: a shape the model writes, or a simple text box.
+		editable: () =>
+			view.editable && Boolean(node.attrs.textBoxEditable || parseSpec(node.attrs.shape)?.editable),
 		size: () => ({ width: Number(node.attrs.widthPx), height: Number(node.attrs.heightPx) }),
 		min: MIN_SIZE,
 		keepRatio: () => false,
@@ -45,7 +58,7 @@ export function shapeNodeView(
 	dom.append(holder, handle);
 	dom.contentEditable = 'false';
 
-	const render = () => paintShape(dom, holder, node, theme(), model(), selected);
+	const render = () => paintShape(dom, holder, node, theme(), model(), selected, pictureUrl);
 	render();
 
 	return {

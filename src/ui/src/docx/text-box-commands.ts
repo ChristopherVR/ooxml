@@ -1,6 +1,7 @@
 import { closeHistory } from 'prosemirror-history';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { simpleTextBoxDrawing } from 'ooxml-core/docx';
 import { schema } from './schema';
 
 export interface TextBoxSettings {
@@ -40,11 +41,42 @@ export function selectedTextBox(
 	};
 }
 
-const attrsFor = (settings: TextBoxSettings) => ({
+const parsed = (value: unknown) => {
+	if (typeof value !== 'string') return undefined;
+	try {
+		return JSON.parse(value);
+	} catch {
+		return undefined;
+	}
+};
+
+/**
+ * A simple text box's frame and paragraphs after its lines or outline change, as node attributes:
+ * drawn like any shape, and what saving writes (`simpleTextBoxDrawing`).
+ */
+export function textBoxDrawingAttrs(
+	nextLines: readonly string[],
+	border: boolean,
+	attrs: Record<string, unknown> = {},
+): { shape: string; textBoxContent: string } {
+	const shape = parsed(attrs.shape);
+	const content = parsed(attrs.textBoxContent);
+	const drawing = simpleTextBoxDrawing(nextLines, border, {
+		...(shape ? { shape } : {}),
+		...(content ? { textBoxContent: content } : {}),
+		textBoxText: lines(attrs.textBoxText),
+		textBoxBorder: attrs.textBoxBorder !== false,
+	});
+	return {
+		shape: JSON.stringify(drawing.shape),
+		textBoxContent: JSON.stringify(drawing.textBoxContent),
+	};
+}
+
+const attrsFor = (settings: TextBoxSettings, attrs?: Record<string, unknown>) => ({
 	unsupported: 'Text box',
 	textBoxText: JSON.stringify(settings.lines),
-	// The edited lines replace the paragraphs read from the file.
-	textBoxContent: null,
+	...textBoxDrawingAttrs(settings.lines, settings.border, attrs),
 	textBoxEditable: true,
 	textBoxBorder: settings.border,
 	widthPx: settings.widthPx,
@@ -64,7 +96,10 @@ export function updateTextBox(view: EditorView, pos: number, settings: TextBoxSe
 	const node = view.state.doc.nodeAt(pos);
 	if (!view.editable || !node || node.type !== schema.nodes.image || !node.attrs.textBoxEditable)
 		return false;
-	const tr = view.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...attrsFor(settings) });
+	const tr = view.state.tr.setNodeMarkup(pos, undefined, {
+		...node.attrs,
+		...attrsFor(settings, node.attrs),
+	});
 	view.dispatch(closeHistory(tr.setSelection(NodeSelection.create(tr.doc, pos))));
 	return true;
 }

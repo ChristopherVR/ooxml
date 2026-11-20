@@ -60,7 +60,7 @@ const VERTICAL_MERGE_NOTE =
 const DROP_CAP_NOTE =
 	'Drop caps are laid out as an enlarged first letter (a raised cap), not as a dropped cap.';
 const TEXT_BOX_NOTE =
-	'Text boxes are shown on the editing surface but are not drawn in Print Layout.';
+	'Text boxes whose shape cannot be drawn are shown on the editing surface but not in Print Layout.';
 const EQUATION_NOTE =
 	'Equations that cannot be drawn show a marker in Print Layout instead of the typeset equation.';
 const NEXT_COLUMN_NOTE = 'A "next column" section break is laid out as a continuous section break.';
@@ -179,7 +179,8 @@ export function adaptDocumentModel(
 					? 'sub'
 					: undefined;
 		const image = run.image;
-		if (image?.unsupported === 'Text box') reportOnce(TEXT_BOX_NOTE);
+		// A text box is drawn through its frame; one whose geometry cannot be drawn is not.
+		if (image?.unsupported === 'Text box' && !image.shape) reportOnce(TEXT_BOX_NOTE);
 		const object =
 			equation ??
 			(run.noteSeparator

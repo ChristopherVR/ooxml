@@ -80,6 +80,15 @@ const luminance = (css: string): number => {
 export const shapeTextColor = (fill: string): string =>
 	fill === 'none' || luminance(fill) > 0.6 ? '#000000' : '#FFFFFF';
 
+/**
+ * The colour of a shape's text where its runs set none: the `wps:style` font reference colour as
+ * Word draws it, or, without one, white on the default and dark fills and black on light ones.
+ */
+export function shapeDefaultTextColor(spec: ShapeSpec, theme?: ThemeCatalog): string {
+	const font = spec.fontColor && shapeColorCss(spec.fontColor, theme);
+	return font && /^#[0-9a-f]{6}$/i.test(font) ? font : shapeTextColor(fillPaint(spec.fill, theme));
+}
+
 const FONT_PX = 14.67;
 
 /** Breaks `lines` to fit `widthPx` with an average-width estimate (no measuring in the core). */
@@ -141,7 +150,7 @@ export function shapeSvg(
 	const lines = spec.text?.some(Boolean)
 		? wrapShapeText(spec.text, textRect.r - textRect.l - 14)
 		: [];
-	const color = shapeTextColor(fillPaint(spec.fill, theme));
+	const color = shapeDefaultTextColor(spec, theme);
 	const lineHeight = FONT_PX * 1.2;
 	const first = (textRect.t + textRect.b) / 2 - ((lines.length - 1) * lineHeight) / 2;
 	const text = lines.length
