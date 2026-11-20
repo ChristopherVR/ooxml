@@ -18,3 +18,9 @@ export function walkModuleGraph(
 	entry: string,
 	options?: { followDynamic?: boolean },
 ): Promise<ModuleGraph>;
+
+/** `walkModuleGraph` for several entries in one pass: one graph per entry, in order. */
+export function walkModuleGraphs(
+	entries: readonly string[],
+	options?: { followDynamic?: boolean },
+): Promise<ModuleGraph[]>;
