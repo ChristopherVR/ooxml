@@ -2,6 +2,7 @@
 import type { Workbook, WorkbookProperties } from 'ooxml-core/xlsx';
 import { facts, heading, labelled, noteList, paragraph, primary, type PageContext } from './parts';
 import { customProperties } from './properties-custom';
+import { signaturePanel } from '../../notices/signature-chrome';
 
 type T = PageContext['t'];
 
@@ -81,6 +82,7 @@ export function renderInfo(page: PageContext): void {
 	left.append(
 		title,
 		paragraph(page, t(status), 'xve-backstage-muted'),
+		...signaturePanel(doc, workbook?.signatures, host.ctx.locale()),
 		heading(page, t('Inspect Workbook'), 'h3'),
 		paragraph(page, t('Compatibility notes'), 'xve-backstage-muted'),
 		noteList(

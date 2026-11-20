@@ -144,4 +144,4 @@ treated as empty.
 
 The core's round-trip tests and Excel acceptance checks live in the `ooxml` repository. Report a workbook that renders or saves wrongly as an issue with the file attached if you can share it.
 
-Digital signatures are reported when opening a workbook and removed on save. The editor does not sign files. Hyperlinks follow the shared core policy; only web and e-mail links open externally.
+Digital signatures are verified when a workbook opens and shown by state (signed, signer not verified, invalid or not verified) in the status bar, a notice and File > Info; only a signature that verifies is shown as signed. Saving removes them. The editor does not sign files. Hyperlinks follow the shared core policy; only web and e-mail links open externally.

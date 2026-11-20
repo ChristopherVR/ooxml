@@ -238,6 +238,7 @@ export function buildShell(core: EditorCore): Shell {
 	frame.append(
 		titleBar.element,
 		ribbon.element,
+		statusBar.signatureNotice,
 		canvasRow,
 		statusBar.element,
 		backstage.element,

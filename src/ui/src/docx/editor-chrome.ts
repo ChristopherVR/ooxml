@@ -30,6 +30,7 @@ import {
 	type ShareDialogHost,
 } from '../dialog/share-controller';
 import { saveProgressLabel } from '../files/save-progress-label';
+import { createSignatureChrome, type SignatureChrome } from '../notices/signature-chrome';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -88,6 +89,8 @@ export class EditorChrome {
 	readonly ribbonActions: RibbonActions;
 	readonly backstage: Backstage;
 	readonly statusBar: StatusBar;
+	/** The signature badge (status bar) and load notice (under the ribbon). */
+	readonly signatures: SignatureChrome;
 	readonly fileInput: HTMLInputElement;
 	private ribbon: RibbonElement | undefined;
 	private shareDialog: ShareDialogController | undefined;
@@ -145,6 +148,8 @@ export class EditorChrome {
 			setZoom: (percent) => host.setZoom(percent),
 			showCompatibilityNotes: () => this.backstage.open('info'),
 		});
+		this.signatures = createSignatureChrome(document, () => this.backstage.open('info'));
+		this.statusBar.element.append(this.signatures.badge);
 		this.fileInput = document.createElement('input');
 		this.fileInput.type = 'file';
 		this.fileInput.accept = '.docx,.doc';
@@ -169,6 +174,7 @@ export class EditorChrome {
 		this.ribbon = ribbon as RibbonElement;
 		// Editing mode, Comments and Share at the right end of the tab row, as in Word.
 		ribbon.append(this.ribbonActions.element);
+		ribbon.after(this.signatures.notice);
 		// The File button belongs to the shared ribbon; it asks for the File view with this event.
 		ribbon.addEventListener('office-ribbon-file', () => this.backstage.open('home'));
 		// Share opens the dialog every product uses, unless a host takes the `share` command.
@@ -208,6 +214,7 @@ export class EditorChrome {
 			localizeElement(element, locale);
 		}
 		this.statusBar.relocalize();
+		this.signatures.update(this.host.model().signatures, locale);
 		this.backstage.relocalize();
 		this.titleBar.relocalize();
 		this.ribbonActions.relocalize(locale);
@@ -222,6 +229,7 @@ export class EditorChrome {
 		const model = this.host.model();
 		this.statusBar.setPageAndWords(pageText, wordText);
 		this.statusBar.setNoteCount(model.warnings.length);
+		this.signatures.update(model.signatures, this.host.locale());
 		this.statusBar.setLanguage(this.host.element.lang || '');
 		this.titleBar.setReadOnly(this.host.readOnly());
 		this.ribbonActions.setReadOnly(this.host.readOnly());
