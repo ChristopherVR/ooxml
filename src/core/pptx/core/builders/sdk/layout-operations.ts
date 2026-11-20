@@ -17,6 +17,8 @@ import { PptxHandler } from '../../PptxHandler';
 import type { PptxData, PptxLayoutOption } from '../../types/presentation';
 import { at } from '../../../../geometry/indexed';
 
+import { nextMasterLayoutId } from './master-layout-ids';
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -247,13 +249,7 @@ export async function addLayoutToSlideMaster(
 		throw new Error(`Slide master not found at ${masterPath}`);
 	}
 
-	// Compute a unique layout id (2147483649 + offset to avoid collisions)
-	const idMatches = [...masterContent.matchAll(/sldLayoutId\s+id="(\d+)"/g)];
-	const maxLayoutId = idMatches.reduce(
-		(max, m) => Math.max(max, parseInt(m[1] ?? '', 10)),
-		2147483648,
-	);
-	const newLayoutId = maxLayoutId + 1;
+	const newLayoutId = await nextMasterLayoutId(zip);
 
 	// Insert new sldLayoutId entry before closing </p:sldLayoutIdLst>
 	const newLayoutIdEntry = `    <p:sldLayoutId id="${newLayoutId}" r:id="${newRId}"/>`;

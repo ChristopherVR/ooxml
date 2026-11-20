@@ -1,6 +1,8 @@
 import type { SlideSizeEmu, SlideSizeRescaleMode } from 'ooxml-ui/pptx';
 import {
+	loadedThemeName,
 	queueThemeWrite,
+	writeThemeParts,
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
 	resolveSlideSizeSelection,
@@ -15,6 +17,7 @@ import type {
 	PptxPresentationProperties,
 	PptxSlide,
 	PptxTagCollection,
+	PptxTheme,
 	PptxThemeColorScheme,
 	PptxThemeFontScheme,
 } from 'pptx-viewer-core';
@@ -23,6 +26,7 @@ import { applyThemeToData, reResolveElementColors, reResolveElementFonts } from 
 import type { Store, ViewerState } from '../state';
 import type { EditorOps } from './editor-operations';
 import { applyThemePartInPlace } from './editor-theme-by-path';
+import { storeHistoryTheme } from './editor-theme-history';
 
 /**
  * Deck-level mutations driven by the no-selection inspector Properties tab
@@ -45,6 +49,11 @@ export interface DeckActions {
 		fontScheme: PptxThemeFontScheme;
 		name: string;
 	}): void | Promise<void>;
+	/**
+	 * Apply a partial theme update at once (the assistant): parts it leaves out keep the
+	 * current theme's. One undo step; the handler's theme parts follow on its write queue.
+	 */
+	applyThemeUpdates(updates: Partial<PptxTheme>): void;
 	/** Replace the deck's `ppt/tags/*.xml` collections (inspector TAGS card). */
 	updateTagCollections(next: PptxTagCollection[]): void;
 	/** Patch the active slide (inspector THEME OVERRIDE card). */
@@ -87,6 +96,54 @@ export interface DeckActionsDeps {
 }
 
 export function createDeckActions(deps: DeckActionsDeps): DeckActions {
+	/** The slides, the template layer and the theme, as one undo step. */
+	const reTheme = (
+		colorScheme: PptxThemeColorScheme,
+		fontScheme: PptxThemeFontScheme | undefined,
+		name: string | undefined,
+	): void => {
+		const { store, ops } = deps;
+		const state = store.get();
+		ops.pushHistory();
+		// Core's pure `applyThemeToData` re-resolves every slide's scheme-based
+		// colours against the new palette, which is what makes an edited theme
+		// visible on the canvas rather than only on the next save.
+		const previousColorMap = state.colorScheme ? { ...state.colorScheme } : undefined;
+		const result = applyThemeToData(
+			{
+				slides: state.slides,
+				theme: { colorScheme: state.colorScheme, fontScheme: state.fontScheme },
+				themeColorMap: previousColorMap,
+			} as unknown as PptxData,
+			colorScheme,
+			fontScheme,
+			name,
+		);
+		// Master/layout elements render as a separate per-slide layer (not part
+		// of `slide.elements`), so the slides re-resolve above never touches
+		// them; left alone they'd keep painting the old scheme's colours.
+		const templateElementsBySlideId = Object.keys(state.templateElementsBySlideId).length
+			? Object.fromEntries(
+					Object.entries(state.templateElementsBySlideId).map(([slideId, elements]) => [
+						slideId,
+						reResolveElementFonts(
+							reResolveElementColors(elements, previousColorMap ?? {}, colorScheme),
+							state.fontScheme,
+							fontScheme ?? state.fontScheme ?? {},
+						),
+					]),
+				)
+			: state.templateElementsBySlideId;
+		store.set({
+			slides: result.slides,
+			templateElementsBySlideId,
+			colorScheme: result.theme?.colorScheme ?? colorScheme,
+			fontScheme: result.theme?.fontScheme ?? fontScheme,
+			themeName: name,
+		});
+		ops.commitChange();
+	};
+
 	const { store, ops } = deps;
 	return {
 		updatePresentationSettings(patch) {
@@ -112,45 +169,23 @@ export function createDeckActions(deps: DeckActionsDeps): DeckActions {
 			if (handler) {
 				await queueThemeWrite(handler, () => handler.applyTheme(colorScheme, fontScheme, name));
 			}
+			reTheme(colorScheme, fontScheme, name);
+		},
+
+		applyThemeUpdates(updates) {
 			const state = store.get();
-			ops.pushHistory();
-			// Core's pure `applyThemeToData` re-resolves every slide's scheme-based
-			// colours against the new palette, which is what makes an edited theme
-			// visible on the canvas rather than only on the next save.
-			const previousColorMap = state.colorScheme ? { ...state.colorScheme } : undefined;
-			const result = applyThemeToData(
-				{
-					slides: state.slides,
-					theme: { colorScheme: state.colorScheme, fontScheme: state.fontScheme },
-					themeColorMap: previousColorMap,
-				} as unknown as PptxData,
-				colorScheme,
-				fontScheme,
-				name,
+			const colorScheme = updates.colorScheme ?? state.colorScheme;
+			if (!state.editable || !colorScheme) {
+				return;
+			}
+			const from = storeHistoryTheme(state);
+			reTheme(colorScheme, updates.fontScheme ?? state.fontScheme, updates.name ?? state.themeName);
+			void writeThemeParts(
+				deps.getHandler(),
+				from,
+				storeHistoryTheme(store.get()),
+				loadedThemeName(state.themeOptions, state.slideMasters),
 			);
-			// Master/layout elements render as a separate per-slide layer (not part
-			// of `slide.elements`), so the slides re-resolve above never touches
-			// them; left alone they'd keep painting the old scheme's colours.
-			const templateElementsBySlideId = Object.keys(state.templateElementsBySlideId).length
-				? Object.fromEntries(
-						Object.entries(state.templateElementsBySlideId).map(([slideId, elements]) => [
-							slideId,
-							reResolveElementFonts(
-								reResolveElementColors(elements, previousColorMap ?? {}, colorScheme),
-								state.fontScheme,
-								fontScheme,
-							),
-						]),
-					)
-				: state.templateElementsBySlideId;
-			store.set({
-				slides: result.slides,
-				templateElementsBySlideId,
-				colorScheme: result.theme?.colorScheme ?? colorScheme,
-				fontScheme: result.theme?.fontScheme ?? fontScheme,
-				themeName: name,
-			});
-			ops.commitChange();
 		},
 
 		updateTagCollections(next) {

@@ -45,6 +45,20 @@ describe('diffOpcPackages', () => {
 		});
 	});
 
+	it('lets a caller accept two byte sequences of a part as the same content', async () => {
+		const base = await pack({ 'a.xml': '<a v="1"/>', 'b.xml': '<b/>' });
+		const other = await pack({ 'a.xml': '<a v="2"/>', 'b.xml': '<b x="1"/>' });
+		const equivalent = (part: string) => part === 'a.xml';
+		expect(await diffOpcPackages(base, other, { equivalent })).toEqual({
+			added: [],
+			removed: [],
+			changed: ['b.xml'],
+		});
+		await expect(
+			diffOpcPackages(base, other, { equivalent, maxInputBytes: 8 }),
+		).rejects.toBeInstanceOf(ZipLimitError);
+	});
+
 	it('stops at a part that inflates past its declared size', async () => {
 		const bomb = lyingZipOf([{ name: 'a.xml', data: await deflateZeros(8 << 20), declared: 8 }]);
 		await expect(diffOpcPackages(bomb, bomb)).rejects.toThrow(/inflates past/);

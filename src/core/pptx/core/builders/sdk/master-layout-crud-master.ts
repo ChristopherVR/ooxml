@@ -28,6 +28,7 @@ import {
 	saveToZip,
 	withCSldName,
 } from './master-layout-crud-xml';
+import { nextMasterLayoutId, renumberLayoutIds } from './master-layout-ids';
 import type { MasterLayoutCrudFailure, MasterLayoutCrudResult } from './master-layout-crud-xml';
 import { STANDARD_LAYOUTS } from './PresentationBuilder';
 import { at } from '../../../../geometry/indexed';
@@ -99,7 +100,8 @@ export async function duplicateSlideMaster(
 	zip.file(relsPathFor(newMasterPath), newRels);
 
 	const newName = uniquePrefixedName(collectMasterNames(data), source.name ?? 'Office Theme');
-	zip.file(newMasterPath, withCSldName(sourceXml, newName));
+	const copiedXml = renumberLayoutIds(sourceXml, await nextMasterLayoutId(zip));
+	zip.file(newMasterPath, withCSldName(copiedXml, newName));
 
 	await addMasterContentType(zip, masterIndex);
 	await addMasterToPresentation(zip, newMasterPath);

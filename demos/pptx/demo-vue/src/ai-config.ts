@@ -25,7 +25,7 @@ import type { PptxAiConfig } from 'pptx-vue-viewer';
 import { createAiAssistant } from 'pptx-vue-viewer/ai';
 import type { PptxAiAssistant } from 'pptx-vue-viewer/ai';
 
-import { demoAiUsesPlainConfig } from '../../shared/demo-ai-path';
+import { demoAiUsesPlainConfig, demoAiWritePolicy } from '../../shared/demo-ai-path';
 import { readDemoAiSetting } from '../../shared/demo-ai-storage';
 
 const STORAGE_KEY = 'pptx-demo-ai-config';
@@ -66,7 +66,10 @@ export function buildDemoAiConfig(fields: DemoAiFields): PptxAiConfig | undefine
 		baseURL,
 		apiKey: fields.apiKey.trim() || undefined,
 	});
-	return { connection: { kind: 'model', model: provider.chatModel(model) } };
+	return {
+		connection: { kind: 'model', model: provider.chatModel(model) },
+		writePolicy: demoAiWritePolicy(),
+	};
 }
 
 /**

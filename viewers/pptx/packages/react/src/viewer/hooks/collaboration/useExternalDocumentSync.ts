@@ -90,6 +90,7 @@ export function useExternalDocumentSync(
 				sessionIntent: intent,
 				onStatus: () => {},
 				adoptSlides: adopt,
+				onRoomReplacedDeck: () => latest.current.onRoomReplacedDeck?.(),
 				onSuspend: () => {
 					revision++;
 				},

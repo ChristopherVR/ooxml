@@ -27,6 +27,7 @@ function fakeBridge(): PptxAiBridge & { applied: string[] } {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide: () => undefined,
 		selectElements: () => undefined,
 		applySlidesUpdate: (_updater, label) => {
@@ -51,6 +52,7 @@ function fakeController(bridge: PptxAiBridge): VanillaChatController {
 		subscribe: () => () => undefined,
 		proposals,
 		changeAnimator: createAiChangeAnimator(),
+		getLastFinish: () => undefined,
 	};
 }
 
@@ -66,6 +68,40 @@ afterEach(() => {
 });
 
 describe('createAiPanel', () => {
+	it('adds the composer only once the chat can send', async () => {
+		host = document.createElement('div');
+		document.body.appendChild(host);
+		const bridge = fakeBridge();
+		const sent: string[] = [];
+		let chatReady: (controller: VanillaChatController) => void = () => undefined;
+		const panel = createAiPanel({
+			host,
+			doc: document,
+			t: createTranslator('en'),
+			bridge,
+			config,
+			createChat: () => new Promise((resolve) => (chatReady = resolve)),
+		});
+
+		// A form on the page before its submit handler would reload the whole page.
+		expect(host.querySelector('.pptxv-ai-composer')).toBeNull();
+
+		chatReady({
+			...fakeController(bridge),
+			sendMessage: async (text) => {
+				sent.push(text);
+			},
+		});
+		await panel;
+		const input = host.querySelector<HTMLTextAreaElement>('.pptxv-ai-input');
+		expect(input).toBeTruthy();
+		(input as HTMLTextAreaElement).value = 'hello';
+		host
+			.querySelector('.pptxv-ai-composer')
+			?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+		expect(sent).toEqual(['hello']);
+	});
+
 	it('renders the composer + a staged proposal card', async () => {
 		host = document.createElement('div');
 		document.body.appendChild(host);
@@ -92,6 +128,42 @@ describe('createAiPanel', () => {
 		const card = host.querySelector('.pptxv-ai-proposal');
 		expect(card).toBeTruthy();
 		expect(card?.querySelector('.pptxv-ai-proposal-label')?.textContent).toBe('Add a title');
+	});
+
+	it('drops the cards and says why once another presentation loads', async () => {
+		host = document.createElement('div');
+		document.body.appendChild(host);
+		let deckLoad = 1;
+		const bridge = { ...fakeBridge(), getDeckLoad: () => deckLoad };
+		const listeners = new Set<() => void>();
+
+		await createAiPanel({
+			host,
+			doc: document,
+			t: createTranslator('en'),
+			bridge,
+			config,
+			createChat: async () => fakeController(bridge),
+			subscribeDeckLoad: (listener) => {
+				listeners.add(listener);
+				return () => listeners.delete(listener);
+			},
+		});
+		expect(host.querySelector('.pptxv-ai-proposal')).toBeTruthy();
+		expect(host.querySelector('[data-testid="pptx-ai-proposals-discarded"]')).toBeNull();
+
+		deckLoad = 2;
+		for (const listener of listeners) {
+			listener();
+		}
+
+		expect(host.querySelector('.pptxv-ai-proposal')).toBeNull();
+		const notice = host.querySelector('[data-testid="pptx-ai-proposals-discarded"]');
+		expect(notice?.getAttribute('role')).toBe('status');
+		expect(notice?.textContent).toBe(
+			'Suggested changes were discarded because another presentation was loaded or the slides were replaced.',
+		);
+		expect(host.querySelector<HTMLElement>('.pptxv-ai-proposals')?.hidden).toBeFalsy();
 	});
 
 	it('renders a header "Chats" button that toggles the saved-chat menu', async () => {
@@ -210,6 +282,7 @@ describe('createAiPanel', () => {
 			subscribe: () => () => undefined,
 			proposals: new ProposalStore(bridge),
 			changeAnimator: createAiChangeAnimator(),
+			getLastFinish: () => undefined,
 		};
 		const store = createStore({ ...createInitialViewerState(), currentSlide: 4 });
 		const focus = createAiFocusController({ store, requestOpen: () => undefined });

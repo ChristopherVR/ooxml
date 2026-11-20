@@ -11,6 +11,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	computed,
 	DestroyRef,
 	effect,
 	inject,
@@ -20,7 +21,7 @@ import {
 import { LucideLoaderCircle, LucideSparkles, LucideTriangleAlert, LucideX } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
-import { deckIdFromBridge } from 'ooxml-ui/pptx/ai/host';
+import { canAcceptAllProposals, deckIdFromBridge } from 'ooxml-ui/pptx/ai/host';
 
 import { AiChatService } from './ai-chat.service';
 import { AiComposerComponent } from './ai-composer.component';
@@ -120,7 +121,7 @@ import { AiProposalCardComponent } from './ai-proposal-card.component';
 									>
 										{{ 'pptx.ai.pendingChanges' | translate: { count: chat.proposals().length } }}
 									</span>
-									@if (chat.proposals().length > 1) {
+									@if (showAcceptAll()) {
 										<button
 											type="button"
 											(click)="acceptAllProposals()"
@@ -138,6 +139,14 @@ import { AiProposalCardComponent } from './ai-proposal-card.component';
 									/>
 								}
 							</div>
+						} @else if (chat.discarded()) {
+							<p
+								role="status"
+								data-testid="pptx-ai-proposals-discarded"
+								class="border-t border-border bg-background px-3 py-2 text-[12px] text-muted-foreground"
+							>
+								{{ 'pptx.ai.proposalsDiscarded' | translate }}
+							</p>
 						}
 
 						<pptx-ai-composer
@@ -253,6 +262,8 @@ export class AiChatPanelComponent {
 		this.store.flashToolTarget(null);
 		this.chat.applyProposal(id);
 	}
+
+	protected readonly showAcceptAll = computed(() => canAcceptAllProposals(this.chat.proposals()));
 
 	protected acceptAllProposals(): void {
 		this.store.flashToolTarget(null);

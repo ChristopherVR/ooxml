@@ -54,8 +54,24 @@ export class AiChatService {
 	readonly error = signal<Error | undefined>(undefined);
 	/** The bootstrap error (SDK missing / session build failed). */
 	readonly initError = signal<Error | undefined>(undefined);
+
+	private bridge: PptxAiBridge | null = null;
+	/** Bumped after every change this service makes or sees to the staged proposals. */
+	private readonly proposalsRevision = signal(0);
+	/**
+	 * The staged proposals, read through the bridge's deck load: a presentation load drops them in
+	 * the store, and the Angular bridge's load is a signal, so the list re-reads at once.
+	 */
+	private readonly review = computed(() => {
+		this.proposalsRevision();
+		this.bridge?.getDeckLoad();
+		const store = this.controller?.proposals;
+		return { proposals: store?.list() ?? [], discarded: store?.discarded ?? false };
+	});
 	/** The staged, not-yet-applied write proposals. */
-	readonly proposals = signal<readonly ProposalView[]>([]);
+	readonly proposals = computed<readonly ProposalView[]>(() => this.review().proposals);
+	/** Another presentation load dropped the staged proposals, and none was staged since. */
+	readonly discarded = computed(() => this.review().discarded);
 
 	/** Whether a request is in flight (drives the composer send/stop toggle). */
 	readonly isStreaming = computed(
@@ -75,6 +91,7 @@ export class AiChatService {
 			return;
 		}
 		this.started = true;
+		this.bridge = bridge;
 		this.state.set('checking');
 		void (async () => {
 			try {
@@ -193,6 +210,6 @@ export class AiChatService {
 	}
 
 	private refreshProposals(): void {
-		this.proposals.set(this.controller?.proposals.list() ?? []);
+		this.proposalsRevision.update((revision) => revision + 1);
 	}
 }

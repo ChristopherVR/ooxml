@@ -60,9 +60,12 @@ function makeBridge(): {
 	bridge: PptxAiBridge;
 	applied: AppliedEdit[];
 	current: () => PptxSlide[];
+	/** Load another presentation: the deck load changes. */
+	load: () => void;
 } {
 	const applied: AppliedEdit[] = [];
 	let slides = makeDeck();
+	let deckLoad = 1;
 	const bridge = {
 		getDeckMeta: () => ({
 			slideCount: slides.length,
@@ -74,6 +77,7 @@ function makeBridge(): {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => deckLoad,
 		goToSlide: () => {},
 		selectElements: () => {},
 		applySlidesUpdate: (updater: PptxAiSlidesUpdater, label: string) => {
@@ -83,7 +87,15 @@ function makeBridge(): {
 		updateElement: () => {},
 		applyTheme: () => {},
 	} satisfies PptxAiBridge;
-	return { bridge, applied, current: () => slides };
+	return {
+		bridge,
+		applied,
+		current: () => slides,
+		load: () => {
+			deckLoad += 1;
+			slides = makeDeck();
+		},
+	};
 }
 
 type StreamChunk = Record<string, unknown>;
@@ -232,70 +244,75 @@ function findByAria(container: HTMLElement, label: string): HTMLButtonElement {
 	return btn as HTMLButtonElement;
 }
 
+function panel(bridge: PptxAiBridge, config: PptxAiConfig): React.ReactElement {
+	return React.createElement(AiChatPanel, {
+		useChat,
+		bridge,
+		config,
+		aiPanel: {
+			isOpen: true,
+			open: () => {},
+			close: () => {},
+			toggle: () => {},
+			liveFocusTargets: [{ kind: 'slide', slideIndex: 0 }],
+			pinnedFocus: null,
+			pinFocus: () => {},
+			clearPinnedFocus: () => {},
+			prefill: { text: '', nonce: 0 },
+			askAboutSelection: () => {},
+			fixSelection: () => {},
+			pickMode: false,
+			startPicking: () => {},
+			stopPicking: () => {},
+			pickTargets: [],
+			addPick: () => {},
+			clearPicks: () => {},
+			canvasHighlights: [],
+			canvasAnimating: false,
+			flashToolTarget: () => {},
+			changeBatch: null,
+			showChangeBatch: () => {},
+		},
+		onClose: () => {},
+	});
+}
+
+/** Mount the panel, ask for the scripted title edit and wait for its review card. */
+async function stageTitleEdit(bridge: PptxAiBridge, config: PptxAiConfig): Promise<HTMLElement> {
+	const container = document.createElement('div');
+	host = container;
+	document.body.appendChild(container);
+	root = createRoot(container);
+	await act(async () => {
+		root?.render(panel(bridge, config));
+	});
+	// Wait for the async session bootstrap to swap the spinner for the
+	// conversation; the composer only exists once `state === 'ready'`.
+	await waitFor(() => Boolean(container.querySelector('textarea')), 'the AI composer to mount');
+
+	const textarea = container.querySelector('textarea');
+	expect(textarea).toBeTruthy();
+	const nativeSetter = Object.getOwnPropertyDescriptor(
+		globalThis.HTMLTextAreaElement.prototype,
+		'value',
+	)?.set;
+	act(() => {
+		nativeSetter?.call(textarea, 'Rename the title');
+		textarea?.dispatchEvent(new Event('input', { bubbles: true }));
+	});
+	act(() => {
+		findByAria(container, 'Send').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+	});
+
+	// The scripted tool call stages a proposal; the review card renders.
+	await waitForDom(container, 'Suggested change');
+	return container;
+}
+
 describe('aiChatPanel integration', () => {
 	it('stages a tool-call proposal, then Accept mutates the deck as one undo', async () => {
 		const { bridge, applied, current } = makeBridge();
-
-		host = document.createElement('div');
-		document.body.appendChild(host);
-		root = createRoot(host);
-		await act(async () => {
-			root?.render(
-				React.createElement(AiChatPanel, {
-					useChat,
-					bridge,
-					config: stagingConfig(),
-					aiPanel: {
-						isOpen: true,
-						open: () => {},
-						close: () => {},
-						toggle: () => {},
-						liveFocusTargets: [{ kind: 'slide', slideIndex: 0 }],
-						pinnedFocus: null,
-						pinFocus: () => {},
-						clearPinnedFocus: () => {},
-						prefill: { text: '', nonce: 0 },
-						askAboutSelection: () => {},
-						fixSelection: () => {},
-						pickMode: false,
-						startPicking: () => {},
-						stopPicking: () => {},
-						pickTargets: [],
-						addPick: () => {},
-						clearPicks: () => {},
-						canvasHighlights: [],
-						canvasAnimating: false,
-						flashToolTarget: () => {},
-						changeBatch: null,
-						showChangeBatch: () => {},
-					},
-					onClose: () => {},
-				}),
-			);
-		});
-		// Wait for the async session bootstrap to swap the spinner for the
-		// conversation; the composer only exists once `state === 'ready'`.
-		await waitFor(() => Boolean(host?.querySelector('textarea')), 'the AI composer to mount');
-
-		// Panel is live: type a request and send it.
-		const textarea = host.querySelector('textarea');
-		expect(textarea).toBeTruthy();
-		const nativeSetter = Object.getOwnPropertyDescriptor(
-			globalThis.HTMLTextAreaElement.prototype,
-			'value',
-		)?.set;
-		act(() => {
-			nativeSetter?.call(textarea, 'Rename the title');
-			textarea?.dispatchEvent(new Event('input', { bubbles: true }));
-		});
-		act(() => {
-			findByAria(host as HTMLElement, 'Send').dispatchEvent(
-				new MouseEvent('click', { bubbles: true }),
-			);
-		});
-
-		// The scripted tool call stages a proposal; the review card renders.
-		await waitForDom(host, 'Suggested change');
+		const host = await stageTitleEdit(bridge, stagingConfig());
 		expect(host.textContent).toContain('AI Edited Title');
 		// Not applied yet: the deck is untouched.
 		expect(applied).toHaveLength(0);
@@ -316,5 +333,26 @@ describe('aiChatPanel integration', () => {
 		expect((current()[0].elements[0] as { text: string }).text).toBe('AI Edited Title');
 		// The review strip clears once the proposal is applied.
 		expect(host.textContent).not.toContain('Suggested change');
+		expect(host.querySelector('[data-testid="pptx-ai-proposals-discarded"]')).toBeNull();
+	});
+
+	it('drops the card when another presentation loads, and says why', async () => {
+		const { bridge, applied, load } = makeBridge();
+		const config = stagingConfig();
+		const host = await stageTitleEdit(bridge, config);
+
+		// An ordinary re-render keeps the card.
+		act(() => root?.render(panel(bridge, config)));
+		expect(host.textContent).toContain('Suggested changes (1)');
+
+		load();
+		act(() => root?.render(panel(bridge, config)));
+
+		expect(host.textContent).not.toContain('Suggested changes (1)');
+		expect([...host.querySelectorAll('button')].map((b) => b.textContent)).not.toContain('Apply');
+		const notice = host.querySelector('[data-testid="pptx-ai-proposals-discarded"]');
+		expect(notice?.getAttribute('role')).toBe('status');
+		expect(notice?.textContent).toBe(translationsEn['pptx.ai.proposalsDiscarded']);
+		expect(applied).toHaveLength(0);
 	});
 });

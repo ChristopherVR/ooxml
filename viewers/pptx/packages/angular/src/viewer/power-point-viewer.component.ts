@@ -2561,6 +2561,7 @@ export class PowerPointViewerComponent
 		getTheme: () => this.loader.theme(),
 		getFileName: () => this.fileName(),
 		getHandler: () => this.loader.getHandler(),
+		getDeckLoad: () => this.loader.deckLoad(),
 		goToSlide: (index) => this.goTo(index),
 		selectElements: (slideIndex, ids) => {
 			if (slideIndex !== this.activeSlideIndex()) {
@@ -3137,6 +3138,7 @@ export class PowerPointViewerComponent
 					this.loadNotices.notify(toast);
 				}
 			},
+			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
 			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
@@ -3789,6 +3791,7 @@ export class PowerPointViewerComponent
 	protected onCreatePresentation(templateId: string): void {
 		// A new presentation is not the cloud file: it saves to the host storage again.
 		this.fileIO.clearCloudFile();
+		this.loader.markDeckLoad();
 		this.editor.setSlides(createBackstagePresentation(templateId));
 		this.activeSlideIndex.set(0);
 	}
@@ -3803,10 +3806,10 @@ export class PowerPointViewerComponent
 		const current = this.loader.theme();
 		const colorScheme = updates.colorScheme ?? current?.colorScheme;
 		const fontScheme = updates.fontScheme ?? current?.fontScheme;
-		if (!colorScheme || !fontScheme) {
+		if (!colorScheme) {
 			return;
 		}
-		if (updates.name) {
+		if (updates.name && fontScheme) {
 			this.themeGallery.applyCustomTheme(colorScheme, fontScheme, updates.name);
 			return;
 		}

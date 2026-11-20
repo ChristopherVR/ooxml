@@ -21,7 +21,12 @@ export const translations = {
 	'pptx.ai.accept': '적용',
 	'pptx.ai.reject': '삭제',
 	'pptx.ai.acceptAll': '모두 적용',
+	'pptx.ai.proposalConflict':
+		'제안 후 이 부분이 변경되어 적용되지 않았습니다. 삭제하거나 다시 시도하세요.',
+	'pptx.ai.proposalNeedsApproval': '승인 필요',
 	'pptx.ai.pendingChanges': '제안된 변경 내용({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'다른 프레젠테이션을 불러왔거나 슬라이드가 바뀌어 제안된 변경 내용이 삭제되었습니다.',
 	'pptx.ai.moreChanges': '+{{count}}개 더',
 	'pptx.ai.askAboutElement': '이 항목에 대해 AI에게 질문',
 	'pptx.ai.fixElement': 'AI로 수정',

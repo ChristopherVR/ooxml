@@ -9,6 +9,8 @@
 
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
+import type { ProposalView } from './proposals';
+
 function elementLabel(el: PptxElement): string {
 	const text = 'text' in el && typeof el.text === 'string' ? el.text.trim() : '';
 	const snippet = text ? `: "${text.slice(0, 24)}${text.length > 24 ? '...' : ''}"` : '';
@@ -96,5 +98,12 @@ export function humanizeDiffLine(line: string): string {
 			// `update the text "Title"` rather than `update the text: "Title"`.
 			return `${friendlyVerb} ${article} ${type}${colon ? ' ' : ''}`;
 		},
+	);
+}
+
+/** Whether "accept all" would do more than accepting one card: it skips what needs its own approval. */
+export function canAcceptAllProposals(proposals: readonly ProposalView[]): boolean {
+	return (
+		proposals.filter((proposal) => !proposal.requiresApproval && !proposal.conflict).length > 1
 	);
 }

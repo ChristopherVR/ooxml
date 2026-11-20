@@ -31,6 +31,19 @@ const lines = computed(() => props.proposal.summary.map(humanizeDiffLine));
 		>
 			<li v-for="(line, i) in lines" :key="i" class="break-words">{{ line }}</li>
 		</ul>
+		<div
+			v-if="props.proposal.requiresApproval && !props.proposal.conflict"
+			class="mt-1.5 text-[11px] font-medium text-foreground"
+		>
+			{{ t('pptx.ai.proposalNeedsApproval') }}
+		</div>
+		<div
+			v-if="props.proposal.conflict"
+			role="alert"
+			class="mt-1.5 text-[11px] font-medium text-destructive"
+		>
+			{{ t('pptx.ai.proposalConflict') }}
+		</div>
 		<div class="mt-2 flex items-center gap-2">
 			<button
 				type="button"

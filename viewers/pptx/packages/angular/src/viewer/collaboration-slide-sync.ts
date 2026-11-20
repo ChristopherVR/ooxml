@@ -10,9 +10,16 @@
  */
 
 import { signal } from '@angular/core';
-import type { CollabLoadOrigin, YDocLike, YjsFactories, YTransactionLike } from 'ooxml-ui/pptx';
-import type { SyncGate } from 'ooxml-ui/pptx';
+import type {
+	CollabLoadOrigin,
+	RoomJoinTracker,
+	SyncGate,
+	YDocLike,
+	YjsFactories,
+	YTransactionLike,
+} from 'ooxml-ui/pptx';
 import {
+	createRoomJoinTracker,
 	createSyncGate,
 	LOCAL_SYNC_ORIGIN,
 	readSlidesFromYDoc,
@@ -30,6 +37,11 @@ export interface SlideSyncBinding {
 	external?: boolean;
 	/** Apply remotely-authored slides to viewer state. */
 	onRemoteSlides: ((slides: PptxSlide[]) => void) | null;
+	/**
+	 * The room's slides replaced the open deck (a join). Only an owned session reports it here;
+	 * a borrowed one's readiness observer reports its own.
+	 */
+	onRoomReplacedDeck?: (() => void) | null;
 	/** Schedule an owner-role write-back after a doc mutation. */
 	scheduleWriteBack: () => void;
 }
@@ -68,10 +80,15 @@ export class SlideSyncEngine {
 	#applyingRemote = false;
 	#pending: readonly PptxSlide[] | null = null;
 	#current: readonly PptxSlide[] = [];
+	#join: RoomJoinTracker = createRoomJoinTracker();
 
 	/** Attach the engine to a freshly connected session's doc. */
 	bind(binding: SlideSyncBinding): void {
 		this.#binding = binding;
+		this.#join = createRoomJoinTracker();
+		if (!binding.external) {
+			this.#join.attached();
+		}
 	}
 
 	/** Clear all per-session state (call on disconnect). */
@@ -118,6 +135,9 @@ export class SlideSyncEngine {
 		} finally {
 			this.#applyingRemote = false;
 		}
+		if (slides.length > 0 && this.#join.adopted()) {
+			this.#binding?.onRoomReplacedDeck?.();
+		}
 		this.#binding?.scheduleWriteBack();
 	}
 
@@ -145,6 +165,7 @@ export class SlideSyncEngine {
 		}
 		this.#lastSynced = s;
 		reconcileSlidesInYDoc([...slides], b.ydoc, b.factories, LOCAL_SYNC_ORIGIN);
+		this.#join.wrote();
 		b.scheduleWriteBack();
 	}
 

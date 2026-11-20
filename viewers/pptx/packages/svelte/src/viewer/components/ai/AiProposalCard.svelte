@@ -39,6 +39,14 @@
 			{/each}
 		</ul>
 	{/if}
+	{#if proposal.requiresApproval && !proposal.conflict}
+		<div class="pptx-svelte-ai-proposal-notice">{t('pptx.ai.proposalNeedsApproval')}</div>
+	{/if}
+	{#if proposal.conflict}
+		<div class="pptx-svelte-ai-proposal-notice is-conflict" role="alert">
+			{t('pptx.ai.proposalConflict')}
+		</div>
+	{/if}
 	<div class="pptx-svelte-ai-proposal-actions">
 		<button
 			type="button"
@@ -65,6 +73,16 @@
 		border-radius: var(--pptx-radius, var(--office-radius, 4px));
 		background: color-mix(in srgb, var(--pptx-primary, var(--office-accent, #2563eb)) 6%, transparent);
 		padding: 10px;
+	}
+
+	.pptx-svelte-ai-proposal-notice {
+		margin-top: 6px;
+		font-size: 11px;
+		font-weight: 500;
+	}
+
+	.pptx-svelte-ai-proposal-notice.is-conflict {
+		color: var(--pptx-destructive, var(--office-danger, #dc2626));
 	}
 
 	.pptx-svelte-ai-proposal-tag {
