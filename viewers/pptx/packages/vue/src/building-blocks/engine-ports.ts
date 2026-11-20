@@ -229,8 +229,7 @@ export function createEngineGroupPorts(c: Context): BuildingBlockGroupPorts {
 			markDirty,
 		},
 		digitalSignatures: {
-			signed: () => c.signatureWorkflow.hasDigitalSignatures.value,
-			count: () => c.signatures.value.length,
+			summary: () => c.signatures.value,
 			content: () => c.activeContent.value,
 			markDirty,
 		},

@@ -273,7 +273,7 @@ const props = withDefaults(defineProps<PowerPointViewerProps>(), {
 const rootOptions = computed(() => resolveViewerRootOptions(props));
 const emit = defineEmits<PowerPointViewerEmits>();
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 
 // -- Theme + locale preferences (File > Options) -----------------------
 const prefs = useViewerPreferences(props);
@@ -1387,7 +1387,7 @@ watch(collaboration.collab.state, (state) => collaborationReporter.update(state)
 });
 
 // -- Panels and dialogs owned by their own composables ------------------
-const signatureWorkflow = useSignatureWorkflow({ signatures, isDirty: autosave.isDirty });
+const signatureWorkflow = useSignatureWorkflow({ signatures, locale, isDirty: autosave.isDirty });
 const slideShow = useSlideShowSettings({ presentationProperties });
 // `password` is created above `useLoadContent` so the save path can read it.
 const fontEmbedding = useFontEmbedding({ slides, embeddedFonts: deck.embeddedFonts });
@@ -2801,7 +2801,6 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				:font-embedding="fontEmbedding"
 				:insert-dialogs="insertDialogs"
 				:signature-workflow="signatureWorkflow"
-				:signature-count="signatures.length"
 				:deck-actions="deckActions"
 			/>
 

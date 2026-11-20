@@ -1,43 +1,44 @@
-import type { ParsedSignature } from 'pptx-viewer-core';
-import { computed, ref, watch } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
-
-import { useSignatures } from './useSignatures';
-import type { UseSignaturesResult } from './useSignatures';
+import { signatureStatusView } from 'ooxml-ui/pptx';
+import type { SignatureStatusView } from 'ooxml-ui/pptx';
+import type { SignatureSummary } from 'pptx-viewer-core';
+import { computed, ref, toValue, watch } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 
 export interface UseSignatureWorkflowInput {
-	signatures: Ref<ParsedSignature[]>;
-	/** Autosave dirty flag; a signed deck warns once on its first dirtying edit. */
+	/** The loaded deck's signatures (`PptxData.signatures`), absent when it carries none. */
+	signatures: Ref<SignatureSummary | undefined>;
+	/** The viewer's UI locale (vue-i18n `locale`): the view's wording follows it. */
+	locale: MaybeRefOrGetter<string | undefined>;
+	/** Autosave dirty flag; a deck carrying signatures warns once on its first dirtying edit. */
 	isDirty: ComputedRef<boolean> | Ref<boolean>;
 }
 
 export interface UseSignatureWorkflowResult {
 	showSignatures: Ref<boolean>;
-	signaturesApi: UseSignaturesResult;
-	hasDigitalSignatures: ComputedRef<boolean>;
+	/** How every signature surface presents the deck: signed only when its signatures verify. */
+	view: ComputedRef<SignatureStatusView>;
 	showSignatureStripped: Ref<boolean>;
 	onAckSignatureStripped: () => void;
 }
 
 /**
- * useSignatureWorkflow: File ▸ Digital Signatures panel plus the "saving a
+ * useSignatureWorkflow: File > Digital Signatures panel plus the "saving a
  * signed deck strips signatures" first-edit warning (mirrors React's
- * `useViewerDialogs` signature-strip effect). Extracted verbatim from
- * `PowerPointViewer.vue`.
+ * `useViewerDialogs` signature-strip effect). The badge, panel and warning all
+ * read the one shared `signatureStatusView`.
  */
 export function useSignatureWorkflow(input: UseSignatureWorkflowInput): UseSignatureWorkflowResult {
 	const { signatures, isDirty } = input;
 
 	const showSignatures = ref(false);
-	const signaturesApi = useSignatures(signatures);
-	const hasDigitalSignatures = computed(() => signatures.value.length > 0);
-	// Warn once, on the first edit of a signed deck, that saving strips signatures.
+	const view = computed(() => signatureStatusView(signatures.value, toValue(input.locale)));
+	// Warn once, on the first edit of a deck carrying signatures, that saving strips them.
 	const showSignatureStripped = ref(false);
 	const signatureStripAcknowledged = ref(false);
 	watch(
 		() => isDirty.value,
 		(dirty) => {
-			if (dirty && hasDigitalSignatures.value && !signatureStripAcknowledged.value) {
+			if (dirty && view.value.present && !signatureStripAcknowledged.value) {
 				showSignatureStripped.value = true;
 			}
 		},
@@ -47,11 +48,5 @@ export function useSignatureWorkflow(input: UseSignatureWorkflowInput): UseSigna
 		showSignatureStripped.value = false;
 	}
 
-	return {
-		showSignatures,
-		signaturesApi,
-		hasDigitalSignatures,
-		showSignatureStripped,
-		onAckSignatureStripped,
-	};
+	return { showSignatures, view, showSignatureStripped, onAckSignatureStripped };
 }
