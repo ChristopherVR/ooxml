@@ -96,6 +96,13 @@ export interface LayoutFloat extends LayoutObject {
 	wrap?: string;
 	/** `wrapText` of a square, tight or through wrap (bothSides, left, right, largest). */
 	wrapText?: string;
+	/** Where the anchor sits in the paragraph's source text, for `line` and `character` frames. */
+	sourceOffset?: number;
+	/**
+	 * Anchored in a table cell but positioned on the page (`layoutInCell="0"`, honoured before
+	 * compatibility mode 15). Otherwise a float in a cell is laid out in it (`cell-floats.ts`).
+	 */
+	layoutInCell?: false;
 }
 
 /** A paragraph tab stop, positioned from the paragraph's text margin (not its indent). */

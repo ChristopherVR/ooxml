@@ -67,6 +67,21 @@ export interface LayoutParagraphBox {
 	tableFrameInsets?: { top: number; bottom: number };
 	/** Measured physical bottom edge width, distinct from an interior shared row edge. */
 	tableFragmentBottomPx?: number;
+	/** Floating objects laid out in this paragraph's table cell (`cell-floats.ts`). */
+	floats?: LayoutCellFloat[];
+}
+
+/**
+ * A floating object laid out in its table cell: its top-left and the origin of its offsets,
+ * relative to its anchor paragraph's box (the cell's content edge for a paragraph of the cell).
+ */
+export interface LayoutCellFloat {
+	/** Which of the paragraph's floating objects this is, in run order. */
+	index: number;
+	xPx: number;
+	yPx: number;
+	originXPx: number;
+	originYPx: number;
 }
 
 export interface LayoutParagraphFrame {
@@ -219,6 +234,8 @@ export interface LayoutFloatBox {
 	wrap?: string;
 	/** `wrapText`: which sides of the picture text may use (bothSides, left, right, largest). */
 	wrapText?: string;
+	/** Laid out in its table cell: the cell's text wraps around it, the page's other text does not. */
+	inCell?: true;
 }
 
 export interface LayoutResult {

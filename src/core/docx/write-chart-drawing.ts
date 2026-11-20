@@ -7,7 +7,8 @@ import { EMU_PER_PIXEL } from './drawing';
 import { CHART_GRAPHIC_URI, CHARTEX_GRAPHIC_URI } from './chart';
 import type { InlineImage } from './model';
 import type { RelationshipAllocator } from './relationship-allocator';
-import { clearNonProperties, updateExtent } from './write-drawing-patch';
+import { clearNonProperties, updateExtent, updatePlacement } from './write-drawing-patch';
+import { patchDrawingWrap, placementPositionChanged } from './write-drawing-wrap';
 import { makeNS, makeW, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -74,7 +75,8 @@ export function buildChartExDrawing(
 
 /**
  * The run of a chart, or undefined when `image` is not a chart this module writes. An edited chart
- * keeps its drawing (the part is saved by chart-save.ts) and only its size can change; a chart
+ * keeps its drawing (the part is saved by chart-save.ts) and only its size, wrapping and position
+ * can change; a chart
  * inserted in this session gets a new drawing and a chart relationship.
  */
 export function chartRun(
@@ -95,6 +97,14 @@ export function chartRun(
 	) {
 		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
 			updateExtent(oldDrawing, image.widthPx, image.heightPx);
+		// A floating chart moved or rewrapped on the page keeps the rest of its drawing.
+		patchDrawingWrap(oldDrawing, doc, image, base);
+		if (
+			image.anchored &&
+			image.placement &&
+			placementPositionChanged(image.placement, base.placement)
+		)
+			updatePlacement(oldDrawing, doc, image.placement);
 		clearNonProperties(node, oldContainer);
 		return node;
 	}

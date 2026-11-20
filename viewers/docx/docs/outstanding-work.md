@@ -418,7 +418,8 @@ Still not at parity:
   pane includes supported effects, shape 3D, text, pattern, analysis, markers and axis titles.
   Remaining chart work includes host picture media allocation, richer source selection, wider
   combo/family admission, native style-part authoring and exact native typography/layout. Surface
-  and unsupported families retain labelled frames; floating charts are not placed in Print Layout.
+  and unsupported families retain labelled frames; floating charts are placed, wrapped and selectable
+  in Print Layout, in the body and in table cells.
   Screenshot, floating/formatted Text Boxes, WordArt, equation styles and Equation Tools,
   Signature Line and Object remain incomplete. The shared capability update is dated 2026-10-26.
 - **Layout and References:** Manual Hyphenation and its options, Position
@@ -461,9 +462,10 @@ Still not at parity:
   or a press elsewhere returns to the body, and double-clicking a reference mark (or the number in
   the note) jumps between the reference and the note. Floating pictures are selectable there: a press selects the picture with a frame and handles,
   dragging moves it (its anchor offset is rewritten), corner handles resize with the aspect ratio
-  kept, arrow keys nudge it, Delete removes it, and each gesture is one undo step. Limits: floating
-  text boxes, shapes, charts and SmartArt are not drawn as floats on pages, so they are selected and
-  their text edited in Draft; the document re-lays out on a short debounce after an edit (plain single-section documents
+  kept, arrow keys nudge it, Delete removes it, and each gesture is one undo step. Floating shapes,
+  text boxes and charts are drawn and selected the same way, also when they are anchored in a table
+  cell (laid out in the cell as Word does). Limits: floating SmartArt is not drawn as a float on
+  pages, so it is selected in Draft; the document re-lays out on a short debounce after an edit (plain single-section documents
   paginate incrementally from the first changed page until the layout settles; anything with
   tables, floats, footnotes, columns or several sections re-lays out in full; held while
   a page header, footer or note is open). An open editor keeps its page mounted when a long

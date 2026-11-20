@@ -535,8 +535,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and the default table style. `gridBefore`/`gridAfter`, `noWrap`, cell spacing, negative
       indents and preferred widths on merged cells are not measured.
 - [ ] **P1** Merged cells are read-only on Print Layout pages.
-- [ ] **P1** Floating objects inside table cells and floating charts are not positioned on pages;
-      linked text boxes have no code.
+- [x] **P1** Floating objects anchored in table cells are laid out in their cells on Print Layout
+      pages as Word 16 does: from compatibility mode 15 always (`layoutInCell` is ignored), before
+      it only with `layoutInCell="1"` (`"0"` places the object on the page). The cell gives every
+      horizontal and vertical frame, the cell's text wraps around a wrapping object and its row
+      grows to hold it; floating charts are positioned, wrapped and painted like inline charts, in
+      the body and in cells; `character` and `line` frames are measured from the anchor
+      (`docx/__fixtures__/cell-floats`, `layout/cell-floats.ts`). Not modelled: before mode 15 an
+      object placed on the page does not push its table down, and such tables are not outdented
+      by their cell margin as Word 2010 draws them.
+- [ ] **P1** Linked text boxes have no code.
+- [ ] **P2** A floating object positioned from its paragraph that would cross the bottom margin
+      stays on its paragraph's page, where Word moves the paragraph to the next page so the object
+      fits (`e2e/docx/support/cell-floats-demo.docx`, the body chart).
 - [x] **P1** Text boxes are drawn on pages: a shape holding a `wps:txbx` (a `rect` text box, a line
       or connector) and a text box written with `txBox="1"` are drawn with their frame and their
       paragraphs, floating or inline, in the body and in headers and footers, and `txBox="1"`

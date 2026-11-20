@@ -1,5 +1,5 @@
-import type { LayoutDocumentInput, LayoutFloat } from './input';
-import type { LayoutColumnBox, LayoutFloatBox, LayoutPageBox } from './result';
+import type { LayoutFloat } from './input';
+import type { LayoutColumnBox, LayoutFloatBox, LayoutLine, LayoutPageBox } from './result';
 
 export const FLOAT_WRAP_NOTE =
 	'Text wraps around floating pictures on their largest side, or on both sides of a square, tight or through picture whose wrapText is bothSides (all use the picture’s rectangle, not its outline); lines continuing onto a later page keep their wrapped widths.';
@@ -17,58 +17,106 @@ export type FloatFrame = Pick<
 	| 'offsetYPx'
 >;
 
-interface Span {
+export interface Span {
 	start: number;
 	size: number;
 }
 
-function horizontalArea(
-	float: FloatFrame,
-	page: LayoutPageBox,
-	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
-): Span {
-	const contentLeft = page.marginLeftPx;
+/**
+ * The areas a float's `wp:positionH`/`wp:positionV` frames name, in one coordinate space: the page
+ * for a body paragraph, the cell for an object laid out in a table cell (`cell-floats.ts`).
+ */
+export interface FloatFrames {
+	page: Span;
+	margin: Span;
+	leftMargin: Span;
+	rightMargin: Span;
+	column: Span;
+	/** Where the character before the anchor starts (`character`); the column's start otherwise. */
+	characterPx?: number;
+	pageV: Span;
+	marginV: Span;
+	topMargin: Span;
+	bottomMargin: Span;
+	paragraph: Span;
+	/** The anchor's line (`line`); the paragraph otherwise. */
+	line?: Span;
+}
+
+function horizontalSpan(float: FloatFrame, frames: FloatFrames): Span {
 	switch (float.relativeFromH) {
 		case 'page':
-			return { start: 0, size: page.widthPx };
+			return frames.page;
 		case 'margin':
-			return { start: contentLeft, size: page.widthPx - contentLeft - page.marginRightPx };
+			return frames.margin;
 		case 'leftMargin':
 		case 'insideMargin':
-			return { start: 0, size: contentLeft };
+			return frames.leftMargin;
 		case 'rightMargin':
 		case 'outsideMargin':
-			return { start: page.widthPx - page.marginRightPx, size: page.marginRightPx };
+			return frames.rightMargin;
+		case 'character':
+			return frames.characterPx === undefined
+				? frames.column
+				: { start: frames.characterPx, size: 0 };
 		default:
-			// `column` (Word's default) and `character` (approximated by the column).
-			return { start: contentLeft + column.xPx, size: column.widthPx };
+			// `column`, Word's default.
+			return frames.column;
 	}
 }
 
-function verticalArea(
-	float: FloatFrame,
-	page: LayoutPageBox,
-	paragraphTopPx: number,
-	paragraphHeightPx: number,
-): Span {
+function verticalSpan(float: FloatFrame, frames: FloatFrames): Span {
 	switch (float.relativeFromV) {
 		case 'page':
-			return { start: 0, size: page.heightPx };
+			return frames.pageV;
 		case 'margin':
-			return {
-				start: page.marginTopPx,
-				size: page.heightPx - page.marginTopPx - page.marginBottomPx,
-			};
+			return frames.marginV;
 		case 'topMargin':
 		case 'insideMargin':
-			return { start: 0, size: page.marginTopPx };
+			return frames.topMargin;
 		case 'bottomMargin':
 		case 'outsideMargin':
-			return { start: page.heightPx - page.marginBottomPx, size: page.marginBottomPx };
+			return frames.bottomMargin;
+		case 'line':
+			return frames.line ?? frames.paragraph;
 		default:
-			// `paragraph` (Word's default) and `line` (approximated by the paragraph's first line).
-			return { start: paragraphTopPx, size: paragraphHeightPx };
+			// `paragraph`, Word's default.
+			return frames.paragraph;
 	}
+}
+
+/**
+ * The frames of a body paragraph's float: the page, its margins, the column and the paragraph;
+ * `anchor` (from {@link anchorPoint}) is relative to the paragraph's box.
+ */
+export function pageFrames(
+	page: LayoutPageBox,
+	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
+	paragraph: { topPx: number; heightPx: number },
+	anchor?: { line: Span; characterPx: number },
+): FloatFrames {
+	const left = page.marginLeftPx;
+	return {
+		page: { start: 0, size: page.widthPx },
+		margin: { start: left, size: page.widthPx - left - page.marginRightPx },
+		leftMargin: { start: 0, size: left },
+		rightMargin: { start: page.widthPx - page.marginRightPx, size: page.marginRightPx },
+		column: { start: left + column.xPx, size: column.widthPx },
+		pageV: { start: 0, size: page.heightPx },
+		marginV: {
+			start: page.marginTopPx,
+			size: page.heightPx - page.marginTopPx - page.marginBottomPx,
+		},
+		topMargin: { start: 0, size: page.marginTopPx },
+		bottomMargin: { start: page.heightPx - page.marginBottomPx, size: page.marginBottomPx },
+		paragraph: { start: paragraph.topPx, size: paragraph.heightPx },
+		...(anchor
+			? {
+					line: { start: paragraph.topPx + anchor.line.start, size: anchor.line.size },
+					characterPx: left + column.xPx + anchor.characterPx,
+				}
+			: {}),
+	};
 }
 
 function place(
@@ -84,6 +132,21 @@ function place(
 	return area.start + (offset ?? 0);
 }
 
+/** A float's top-left and the origin its offsets are measured from, in its frames' space. */
+export function placeInFrames(
+	float: FloatFrame,
+	frames: FloatFrames,
+): { xPx: number; yPx: number; originXPx: number; originYPx: number } {
+	const h = horizontalSpan(float, frames);
+	const v = verticalSpan(float, frames);
+	return {
+		xPx: place(h, float.widthPx, float.alignH, float.offsetXPx),
+		yPx: place(v, float.heightPx, float.alignV, float.offsetYPx),
+		originXPx: h.start,
+		originYPx: v.start,
+	};
+}
+
 /**
  * A floating picture's top-left on the page (CSS pixels), from its horizontal and vertical frame,
  * alignment and offset. `paragraph` is the anchor paragraph's page-relative top and height.
@@ -94,12 +157,8 @@ export function floatPosition(
 	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
 	paragraph: { topPx: number; heightPx: number },
 ): { xPx: number; yPx: number } {
-	const h = horizontalArea(float, page, column);
-	const v = verticalArea(float, page, paragraph.topPx, paragraph.heightPx);
-	return {
-		xPx: place(h, float.widthPx, float.alignH, float.offsetXPx),
-		yPx: place(v, float.heightPx, float.alignV, float.offsetYPx),
-	};
+	const { xPx, yPx } = placeInFrames(float, pageFrames(page, column, paragraph));
+	return { xPx, yPx };
 }
 
 /** Where a float's `posOffset` is measured from: the start of its horizontal and vertical frame. */
@@ -109,56 +168,60 @@ export function floatOrigin(
 	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
 	paragraph: { topPx: number; heightPx: number },
 ): { xPx: number; yPx: number } {
-	return {
-		xPx: horizontalArea(float, page, column).start,
-		yPx: verticalArea(float, page, paragraph.topPx, paragraph.heightPx).start,
-	};
+	const { originXPx, originYPx } = placeInFrames(float, pageFrames(page, column, paragraph));
+	return { xPx: originXPx, yPx: originYPx };
 }
 
 /**
- * Positions each paragraph's floating pictures on the page where the paragraph starts, from their
- * `wp:positionH`/`wp:positionV` reference frame, alignment and offset. Returns whether any were placed.
+ * The anchor's line (relative to its paragraph box's top) and where the character before it starts
+ * (relative to the box's left): Word measures a `character` frame from that character's left edge.
  */
-export function positionFloats(input: LayoutDocumentInput, pages: LayoutPageBox[]): boolean {
-	const floatsById = new Map<string, LayoutFloat[]>();
-	for (const section of input.sections)
-		for (const block of section.blocks)
-			if (block.kind === 'paragraph' && block.floats?.length)
-				floatsById.set(block.id, block.floats);
-	if (!floatsById.size) return false;
-	const placed = new Set<string>();
-	for (const page of pages) {
-		const boxes: LayoutFloatBox[] = [];
-		for (const column of page.columns)
-			for (const block of column.blocks) {
-				const floats = block.kind === 'paragraph' ? floatsById.get(block.blockId) : undefined;
-				if (!floats || placed.has(block.blockId)) continue;
-				placed.add(block.blockId);
-				const top = page.marginTopPx + block.yPx;
-				for (const float of floats) {
-					const frame = { topPx: top, heightPx: block.heightPx };
-					const position = floatPosition(float, page, column, frame);
-					const origin = floatOrigin(float, page, column, frame);
-					boxes.push({
-						blockId: block.blockId,
-						index: float.index ?? floats.indexOf(float),
-						originXPx: origin.xPx,
-						originYPx: origin.yPx,
-						...position,
-						widthPx: float.widthPx,
-						heightPx: float.heightPx,
-						partName: float.partName,
-						...(float.pictureFill ? { pictureFill: float.pictureFill } : {}),
-						contentType: float.contentType,
-						...(float.chart ? { chart: float.chart } : {}),
-						...(float.textBox ? { textBox: float.textBox } : {}),
-						behindText: Boolean(float.behindText),
-						...(float.wrap ? { wrap: float.wrap } : {}),
-						...(float.wrapText ? { wrapText: float.wrapText } : {}),
-					});
-				}
-			}
-		if (boxes.length) page.floats = boxes;
+export function anchorPoint(
+	lines: readonly LayoutLine[],
+	sourceOffset: number | undefined,
+): { line: Span; characterPx: number } | undefined {
+	if (sourceOffset === undefined || !lines.length) return undefined;
+	const line =
+		lines.find((item) => sourceOffset >= item.sourceStart && sourceOffset < item.sourceEnd) ??
+		[...lines].reverse().find((item) => item.sourceStart <= sourceOffset) ??
+		lines[0]!;
+	const before = sourceOffset - 1;
+	let characterPx = line.fragments[0]?.xPx ?? 0;
+	for (const fragment of line.fragments) {
+		const start = fragment.sourceStart ?? 0;
+		const end = fragment.sourceEnd ?? start + fragment.text.length;
+		if (start > before) break;
+		const length = Math.max(1, end - start);
+		characterPx = fragment.xPx + (fragment.widthPx * Math.min(length, before - start)) / length;
 	}
-	return true;
+	return { line: { start: line.yPx, size: line.heightPx }, characterPx };
+}
+
+/** The page box of a placed float: its position and what the print view draws. */
+export function floatBox(
+	blockId: string,
+	float: LayoutFloat,
+	index: number,
+	position: { xPx: number; yPx: number; originXPx: number; originYPx: number },
+	inCell = false,
+): LayoutFloatBox {
+	return {
+		blockId,
+		index,
+		originXPx: position.originXPx,
+		originYPx: position.originYPx,
+		xPx: position.xPx,
+		yPx: position.yPx,
+		widthPx: float.widthPx,
+		heightPx: float.heightPx,
+		partName: float.partName,
+		...(float.pictureFill ? { pictureFill: float.pictureFill } : {}),
+		contentType: float.contentType,
+		...(float.chart ? { chart: float.chart } : {}),
+		...(float.textBox ? { textBox: float.textBox } : {}),
+		behindText: Boolean(float.behindText),
+		...(float.wrap ? { wrap: float.wrap } : {}),
+		...(float.wrapText ? { wrapText: float.wrapText } : {}),
+		...(inCell ? { inCell: true } : {}),
+	};
 }

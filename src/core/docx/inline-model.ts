@@ -107,6 +107,11 @@ export interface PicturePlacement {
 	offsetYPx?: number;
 	/** `wp:positionV/@relativeFrom`, e.g. `paragraph`, `page` or `margin`. */
 	relativeFromV?: StRelFromV;
+	/**
+	 * `layoutInCell="0"`: an object anchored in a table cell is positioned on the page instead of in
+	 * the cell. Word honours it only before compatibility mode 15; absent means the default, `1`.
+	 */
+	layoutInCell?: false;
 }
 /** A `w:hyperlink` target, resolved from its relationship (external) or `w:anchor` (internal). */
 export interface HyperlinkInfo {

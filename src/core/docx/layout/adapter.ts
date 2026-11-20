@@ -29,6 +29,7 @@ import {
 	addsParagraphSpacing,
 	attachesFootnotesToBodyColumns,
 	compatibilityProfile,
+	honoursLayoutInCell,
 	keepsSpaceBeforePageBreak,
 	usesModernFootnoteLayout,
 } from '../compatibility';
@@ -341,7 +342,7 @@ export function adaptDocumentModel(
 						].sort((a, b) => a.posPx - b.posPx),
 					}
 				: {}),
-			...floatsOf(visible, model.theme),
+			...floatsOf(visible, model.theme, honoursLayoutInCell(compatibility)),
 			...definedProps({
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,

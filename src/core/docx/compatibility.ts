@@ -92,3 +92,11 @@ export function attachesFootnotesToBodyColumns(profile: CompatibilityProfile): b
 export function autofitOverhangsCellMargins(profile: CompatibilityProfile): boolean {
 	return profile.generation === 'legacy';
 }
+
+/**
+ * `layoutInCell="0"` puts a floating object anchored in a table cell on the page; from mode 15
+ * Word lays every such object out in its cell. Measured in modes 14 and 15 (cell-floats fixtures).
+ */
+export function honoursLayoutInCell(profile: CompatibilityProfile): boolean {
+	return profile.generation === 'legacy';
+}

@@ -10,12 +10,12 @@ export interface Located {
 	index: number;
 }
 
-/** A float as the layout counts them (`paragraphFloats`): anchored with media bytes or a shape. */
+/** A float as the layout counts them (`paragraphFloats`): anchored with media bytes, a shape or a chart. */
 const countsAsFloat = (node: ProseMirrorNode): boolean =>
 	node.type.name === 'image' &&
-	Boolean(node.attrs.anchored && (node.attrs.partName || node.attrs.shape));
+	Boolean(node.attrs.anchored && (node.attrs.partName || node.attrs.shape || node.attrs.chart));
 
-/** A float the page can select: an anchored picture with media bytes, or an anchored shape. */
+/** A float the page can select: an anchored picture with media bytes, a shape or a chart. */
 export const isFloat = (node: ProseMirrorNode): boolean => countsAsFloat(node);
 
 /** Whether a float is a drawing shape or text box rather than a picture. */
