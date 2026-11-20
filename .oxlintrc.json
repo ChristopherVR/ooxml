@@ -39,9 +39,12 @@
 		{
 			// Every sound a PowerPoint viewer plays from a deck goes through `playDeckSound`
 			// (render/deck-sound.ts), which withholds a linked sound until the viewer allows
-			// linked content. Anything else that builds an `Audio` skips that consent.
+			// linked content. Anything else that builds an `Audio` or an audio element skips
+			// that consent: the global, `Audio` read off any object, `createElement('audio')`.
 			"files": ["src/ui/src/pptx/**"],
+			"jsPlugins": ["./scripts/lint/deck-sound-plugin.mjs"],
 			"rules": {
+				"deck-sound/no-unsanctioned-audio": "error",
 				"no-restricted-globals": [
 					"error",
 					{
@@ -52,8 +55,14 @@
 			}
 		},
 		{
-			"files": ["src/ui/src/pptx/render/deck-sound.ts", "src/ui/src/pptx/**/*.test.ts"],
-			"rules": { "no-restricted-globals": "off" }
+			// The sound sink itself, cross-slide audio (it plays a media element's source,
+			// which the drawing gate already withholds before consent) and tests.
+			"files": [
+				"src/ui/src/pptx/render/deck-sound.ts",
+				"src/ui/src/pptx/render/media-persistent-audio.ts",
+				"src/ui/src/pptx/**/*.test.ts"
+			],
+			"rules": { "no-restricted-globals": "off", "deck-sound/no-unsanctioned-audio": "off" }
 		}
 	]
 }

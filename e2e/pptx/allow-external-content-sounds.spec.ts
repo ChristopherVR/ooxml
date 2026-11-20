@@ -5,13 +5,20 @@
  * chooses Enable Content (or with the host's `allowExternalContent: false`),
  * and plays them once the reader has. The deck links every sound to an
  * external origin, answered here with `page.route`, so every request the show
- * causes is recorded.
+ * causes is recorded. Embedded sounds are not linked content: they play at
+ * once, with no bar.
  */
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
-import { EXTERNAL_ORIGIN, LINKED_SOUNDS, linkedSoundDeck } from './support/external-content-deck';
+import {
+	EMBEDDED_SOUNDS_LABEL,
+	EXTERNAL_ORIGIN,
+	LINKED_SOUNDS,
+	embeddedSoundDeck,
+	linkedSoundDeck,
+} from './support/external-content-deck';
 
 /** Record every request to the linked origin, answered offline. */
 async function recordExternalRequests(page: Page): Promise<string[]> {
@@ -23,19 +30,22 @@ async function recordExternalRequests(page: Page): Promise<string[]> {
 	return paths;
 }
 
-async function openSoundDeck(page: Page, query = ''): Promise<void> {
+async function openSoundDeck(
+	page: Page,
+	query = '',
+	deck = { buffer: linkedSoundDeck, label: 'Linked sounds' },
+): Promise<void> {
 	await resetTabSession(page);
 	await page.goto(`/${query}`);
 	await page.locator('#file-input').setInputFiles({
-		name: 'linked-sounds.pptx',
+		name: 'sounds.pptx',
 		mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-		buffer: await linkedSoundDeck(),
+		buffer: await deck.buffer(),
 	});
-	await page.locator('[data-element-id]').filter({ hasText: 'Linked sounds' }).first().waitFor();
+	await page.locator('[data-element-id]').filter({ hasText: deck.label }).first().waitFor();
 }
 
-/** Start the show, move to slide 2 (its transition sound), play its effect, then click the action shape. */
-async function playEverySound(page: Page): Promise<void> {
+async function startSlideShow(page: Page): Promise<void> {
 	const slideShow = page.getByRole('button', { name: /^slide show$/iu });
 	await (
 		(await slideShow.count()) > 0
@@ -43,6 +53,11 @@ async function playEverySound(page: Page): Promise<void> {
 			: page.getByRole('button', { name: /present/iu }).first()
 	).click();
 	await page.waitForTimeout(700);
+}
+
+/** Start the show, move to slide 2 (its transition sound), play its effect, then click the action shape. */
+async function playEverySound(page: Page): Promise<void> {
+	await startSlideShow(page);
 	await page.keyboard.press('PageDown');
 	await page.waitForTimeout(900);
 	await page.keyboard.press('PageDown');
@@ -82,5 +97,40 @@ test.describe('linked sounds in the slide show', () => {
 		await playEverySound(page);
 		await expect.poll(() => requests).toContain(LINKED_SOUNDS.transition);
 		await expect.poll(() => requests).toContain(LINKED_SOUNDS.effect);
+	});
+});
+
+test.describe('embedded sounds in the slide show', () => {
+	test('play before any consent: the transition sound, then the click effect sound', async ({
+		page,
+	}) => {
+		// Every sound the viewer starts, by the address it plays.
+		await page.addInitScript(() => {
+			const plays: string[] = [];
+			(window as unknown as { soundPlays: string[] }).soundPlays = plays;
+			const play = HTMLMediaElement.prototype.play;
+			HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+				plays.push(this.src);
+				return play.call(this);
+			};
+		});
+		const plays = () =>
+			page.evaluate(() => (window as unknown as { soundPlays: string[] }).soundPlays.length);
+		const blobPlays = () =>
+			page.evaluate(() =>
+				(window as unknown as { soundPlays: string[] }).soundPlays.filter((src) =>
+					src.startsWith('blob:'),
+				),
+			);
+		const requests = await recordExternalRequests(page);
+		await openSoundDeck(page, '', { buffer: embeddedSoundDeck, label: EMBEDDED_SOUNDS_LABEL });
+		await expect(page.locator('pptx-ui-external-content-bar')).toBeHidden();
+		await startSlideShow(page);
+		const beforeTransition = await plays();
+		await page.keyboard.press('PageDown');
+		await expect.poll(blobPlays).toHaveLength(beforeTransition + 1);
+		await page.keyboard.press('PageDown');
+		await expect.poll(blobPlays).toHaveLength(beforeTransition + 2);
+		expect(requests).toStrictEqual([]);
 	});
 });

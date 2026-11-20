@@ -5,9 +5,7 @@ import {
 	DEFAULT_CANVAS_WIDTH,
 	applyImagePathPatches,
 	buildDeckSaveOptions,
-	collectAnimationSoundPaths,
 	collectImagePaths,
-	collectMediaElements,
 	createPresentationLoadResources,
 	describeFontEmbedding,
 	overlayInlineTextSnapshot,
@@ -17,7 +15,7 @@ import {
 	prepareDeckWebfonts,
 	resolveAllowExternalContent,
 	resolveGoogleFontsCss2Base,
-	resolveMediaElementSource,
+	resolveMediaUrls,
 	resolveSlideSizeSelection,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
@@ -36,7 +34,6 @@ import type {
 	SlideSizeEmu,
 } from 'ooxml-ui/pptx';
 import type {
-	MediaPptxElement,
 	ParsedSignature,
 	PptxAppProperties,
 	PptxCoreProperties,
@@ -544,51 +541,8 @@ export class LoadContentService {
 				startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 			}
 
-			// ── Resolve media Blob URLs (audio/video + poster frames) ──
-			const mediaElements: MediaPptxElement[] = [];
-			for (const slide of parsed.slides) {
-				collectMediaElements(slide.elements, mediaElements);
-			}
-			const nextMediaUrls = new Map<string, string>();
-			// Shared with the other four bindings (G17): a LINKED media
-			// element's `mediaPath` is already the verbatim external URL by the
-			// time it reaches here; `resolveMediaElementSource` hands it
-			// straight back instead of an archive lookup that can only find
-			// embedded parts.
-			await Promise.all(
-				mediaElements.map(async (mediaElement) => {
-					const resolved = await resolveMediaElementSource(mediaElement, newHandler);
-					if (resolved.missing || !resolved.mediaPath || !resolved.url) {
-						mediaElement.mediaMissing = true;
-						return;
-					}
-					nextMediaUrls.set(resolved.mediaPath, resolved.url);
-					if (resolved.isBlobUrl) {
-						loadBlobUrls.push(resolved.url);
-					}
-				}),
-			);
-
-			// Native-animation `p:stSnd` sounds that back no visible media element
-			// (PowerPoint's animation sound library) have no entry above; resolve
-			// them into the same map so `onPlayActionSound`'s lookup finds them.
-			const soundPaths = collectAnimationSoundPaths(parsed.slides).filter(
-				(path) => !nextMediaUrls.has(path),
-			);
-			await Promise.all(
-				soundPaths.map(async (soundPath) => {
-					try {
-						const arrayBuffer = await newHandler.getMediaArrayBuffer(soundPath);
-						if (arrayBuffer) {
-							const blobUrl = URL.createObjectURL(new Blob([arrayBuffer]));
-							loadBlobUrls.push(blobUrl);
-							nextMediaUrls.set(soundPath, blobUrl);
-						}
-					} catch {
-						/* Non-critical: the sound simply will not play. */
-					}
-				}),
-			);
+			// ── Media, transition and animation sound URLs ──
+			const nextMediaUrls = await resolveMediaUrls(newHandler, parsed.slides, loadBlobUrls);
 
 			// ── Resolve lazily-loaded picture Blob URLs ──
 			const { paths: imagePaths, refs: imageRefs } = collectImagePaths(parsed.slides);
