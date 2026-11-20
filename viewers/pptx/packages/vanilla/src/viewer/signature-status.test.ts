@@ -1,4 +1,7 @@
 // @vitest-own-worker: mounts full viewers; see region-customization.test-support.ts.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { SignatureSummary } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -77,5 +80,34 @@ describe('vanilla signature state', () => {
 		storeOf(viewer).set({ signatures: invalid });
 		storeOf(viewer).set({ dirty: true });
 		expect(document.body.textContent).toContain('Remove signatures?');
+	});
+
+	it('opens a signed deck with a dismissible notice of its state, worded in the UI locale', async () => {
+		const deck = (name: string) =>
+			readFileSync(
+				join(import.meta.dirname, '../../../../../../e2e/pptx/fixtures/signature-states', name),
+			);
+		const { viewer } = mount({ editable: true, showToolbar: false });
+		const notice = () =>
+			storeOf(viewer)
+				.get()
+				.compatToasts.find((toast) => toast.code === 'SIGNATURE_STATE');
+		await viewer.loadFile(deck('invalid.pptx'));
+		expect(notice()?.severity).toBe('warning');
+		expect(notice()?.text).toContain('is not valid');
+		expect(notice()?.text).toContain('Saving changes removes the signatures');
+		viewer.setLocale('de');
+		expect(notice()?.text).not.toContain('Saving changes');
+		document
+			.querySelector('pptx-ui-compat-toasts')
+			?.shadowRoot?.querySelector<HTMLButtonElement>(
+				'[data-code="SIGNATURE_STATE"] [data-testid="pptx-compat-toast-dismiss"]',
+			)
+			?.click();
+		expect(notice()).toBeUndefined();
+		await viewer.loadFile(deck('unsigned.pptx'));
+		expect(notice()).toBeUndefined();
+		await viewer.loadFile(deck('verified-untrusted.pptx'));
+		expect(notice()?.severity).toBe('info');
 	});
 });

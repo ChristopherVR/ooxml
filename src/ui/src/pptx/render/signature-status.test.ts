@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest';
 
 import type { SignatureState, SignatureSummary } from 'ooxml-core/pptx';
 
-import { signatureStatusView } from './signature-status';
+import { SIGNATURE_NOTICE_ID, signatureLoadNotice, signatureStatusView } from './signature-status';
 
 const deck = (state: SignatureState): SignatureSummary => ({
 	state,
@@ -77,5 +77,28 @@ describe('signatureStatusView', () => {
 		const view = signatureStatusView(deck('invalid'), 'fr-FR');
 		expect(view.label).toBe('Signature non valide');
 		expect(view.heading).not.toBe('Digital signatures');
+	});
+});
+
+describe('signatureLoadNotice', () => {
+	test('an unsigned deck has no notice', () => {
+		expect(signatureLoadNotice(signatureStatusView(undefined, 'en'))).toBeUndefined();
+	});
+
+	test.each([
+		['verified-untrusted', 'info', 'has not changed since it was signed'],
+		['invalid', 'warning', 'is not valid'],
+		['unsupported', 'warning', 'could not be verified here'],
+	] as const)('a %s deck gets a %s notice', (state, severity, phrase) => {
+		const notice = signatureLoadNotice(signatureStatusView(deck(state), 'en'));
+		expect(notice).toMatchObject({ id: SIGNATURE_NOTICE_ID, severity });
+		expect(notice?.text).toContain(phrase);
+		expect(notice?.text).toContain('Saving changes removes the signatures');
+	});
+
+	test('the notice is worded in the locale', () => {
+		const view = signatureStatusView(deck('invalid'), 'fr');
+		expect(signatureLoadNotice(view)?.text).toBe(`${view.description} ${view.removedOnSave}`);
+		expect(signatureLoadNotice(view)?.text).not.toContain('Saving changes');
 	});
 });

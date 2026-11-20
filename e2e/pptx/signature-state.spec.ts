@@ -32,6 +32,11 @@ function stateMarkers(page: Page, selector = '[data-pptx-signature-state]'): Loc
 	return page.locator(selector).filter({ visible: true });
 }
 
+/** The signature load notice in the viewer's notice stack (`signatureLoadNotice`). */
+function signatureNotice(page: Page): Locator {
+	return page.locator('[data-testid="pptx-compat-toast"][data-code="SIGNATURE_STATE"]');
+}
+
 /** The verified label shown for a deck whose signature did not get that far. */
 function bareSignedLabel(page: Page): Locator {
 	return page.getByText('Signed', { exact: true }).filter({ visible: true });
@@ -43,6 +48,7 @@ test.describe('signature state', () => {
 
 		await expect(stateMarkers(page)).toHaveCount(0);
 		await expect(bareSignedLabel(page)).toHaveCount(0);
+		await expect(signatureNotice(page)).toHaveCount(0);
 	});
 
 	for (const { state, label } of SIGNED_DECKS) {
@@ -62,4 +68,15 @@ test.describe('signature state', () => {
 			await expect(bareSignedLabel(page)).toHaveCount(0);
 		});
 	}
+
+	test('a signed deck opens with a dismissible notice of its state', async ({ page }) => {
+		await loadDeck(page, deck('invalid'));
+
+		const notice = signatureNotice(page);
+		await expect(notice).toBeVisible();
+		await expect(notice).toContainText('not valid');
+		await expect(notice).toContainText('Saving changes removes the signatures');
+		await notice.getByTestId('pptx-compat-toast-dismiss').click();
+		await expect(notice).toHaveCount(0);
+	});
 });

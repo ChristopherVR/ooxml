@@ -59,6 +59,8 @@ import {
 	installSvgIdScope,
 	createRibbonDisplayController,
 	signatureStatusView,
+	signatureLoadNotice,
+	SIGNATURE_NOTICE_ID,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxSaveAcknowledgement,
@@ -357,6 +359,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			doc: this.doc,
 			getTranslator: () => this.t,
+			getLocale: () => this.currentLocale,
 			getEditor: () => this.editor,
 			// Late-joiner bootstrap protection: bracket the load commit so an
 			// active collaboration session can suppress publishing the parsed
@@ -1893,6 +1896,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	setLocale(locale: string): void {
 		this.t = createTranslator(locale, this.options.messages);
 		this.currentLocale = locale;
+		this.rewordSignatureNotice();
 		// Chrome labels are baked at build time; rebuild it under the new locale.
 		this.rebuildChrome();
 		if (this.options.onLocaleChange) {
@@ -1995,6 +1999,19 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		await this.readOnlyActions.submitPassword(password);
 		if (!this.destroyed) {
 			this.applyEditable(this.effectiveEditable());
+		}
+	}
+
+	/** Word a signature load notice still on screen in the current locale. */
+	private rewordSignatureNotice(): void {
+		const { compatToasts, signatures } = this.store.get();
+		const notice = signatureLoadNotice(signatureStatusView(signatures, this.currentLocale));
+		if (notice && compatToasts.some((toast) => toast.id === SIGNATURE_NOTICE_ID)) {
+			this.store.set({
+				compatToasts: compatToasts.map((toast) =>
+					toast.id === SIGNATURE_NOTICE_ID ? notice : toast,
+				),
+			});
 		}
 	}
 

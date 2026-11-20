@@ -148,6 +148,7 @@ import {
 	type UseCompatibilityToastsStateResult,
 	useCollaborationRefusalToast,
 	useCompatibilityToastsState,
+	useSignatureNotice,
 	useRemoteValueToast,
 } from './hooks/useCompatibilityToastsState';
 import { useController } from './hooks/useController';
@@ -563,6 +564,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			selectedElement,
 		} = state;
 		useRemoteValueToast(slides, compatToastsState.setToasts);
+		const noticeStack = useSignatureNotice(state.signatures, compatToastsState);
 
 		// ── Ribbon Display Options (one controller per viewer) ─────────
 		const ribbonDisplayController = useRibbonDisplayController({
@@ -1703,9 +1705,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				    section) instead of floating clear of it over the canvas. */}
 				{mode !== 'present' && rootOptions.showCompatibilityToasts && (
 					<CompatibilityToasts
-						toasts={compatToastsState.toasts}
-						onDismiss={compatToastsState.dismiss}
-						onDismissAll={compatToastsState.dismissAll}
+						toasts={noticeStack.toasts}
+						onDismiss={noticeStack.dismiss}
+						onDismissAll={noticeStack.dismissAll}
 						rightInset={
 							!isMobile && (state.isInspectorPaneOpen || aiPanel.isOpen)
 								? resizablePanels.rightWidth

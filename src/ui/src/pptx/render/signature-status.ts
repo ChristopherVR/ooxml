@@ -7,6 +7,8 @@ import {
 	type SignatureSummary,
 } from 'ooxml-core/pptx';
 
+import type { CompatibilityWarningToast } from './compatibility-warning-toasts';
+
 /**
  * How every PowerPoint surface (badge, status bar entry, info panel, signatures panel, load
  * notice) presents a deck's digital signatures. A deck reads as signed only when its signatures
@@ -119,5 +121,26 @@ export function signatureStatusView(
 		signerCaption: strings.signer,
 		signedAtCaption: strings.signedAt,
 		removedOnSave: strings.removedOnSave,
+	};
+}
+
+/** The id (and code) of the signature load notice in a binding's notice stack. */
+export const SIGNATURE_NOTICE_ID = 'SIGNATURE_STATE';
+
+/**
+ * The notice a binding shows when a signed deck loads: the state's description and the note that
+ * saving an edit removes the signatures, already translated. Undefined for an unsigned deck. A
+ * binding adds it to its notice stack and hides it once dismissed, until the next deck loads.
+ */
+export function signatureLoadNotice(
+	view: SignatureStatusView,
+): CompatibilityWarningToast | undefined {
+	if (!view.present) return undefined;
+	return {
+		id: SIGNATURE_NOTICE_ID,
+		code: SIGNATURE_NOTICE_ID,
+		severity: view.signed ? 'info' : 'warning',
+		messageKey: '',
+		text: `${view.description} ${view.removedOnSave}`,
 	};
 }

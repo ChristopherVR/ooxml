@@ -5,7 +5,12 @@ import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	useCompatibilityToastsState,
+	useSignatureNotice,
+} from '../hooks/useCompatibilityToastsState';
 import { PptxI18nProvider } from '../i18n/provider';
+import { CompatibilityToasts } from './CompatibilityToasts';
 import { DigitalSignaturesDialog } from './DigitalSignaturesDialog';
 import { SignatureStatusBadge } from './SignatureStatusBadge';
 
@@ -116,3 +121,54 @@ describe('digitalSignaturesDialog', () => {
 	});
 });
 
+describe('signature load notice', () => {
+	function Stack({ signatures }: { signatures: SignatureSummary | undefined }) {
+		const stack = useSignatureNotice(signatures, useCompatibilityToastsState());
+		return (
+			<CompatibilityToasts
+				toasts={stack.toasts}
+				onDismiss={stack.dismiss}
+				onDismissAll={stack.dismissAll}
+			/>
+		);
+	}
+	const notice = () =>
+		container
+			.querySelector('pptx-ui-compat-toasts')
+			?.shadowRoot?.querySelector('[data-code="SIGNATURE_STATE"]') ?? null;
+
+	it('tells a signed deck its state and that saving removes the signatures', () => {
+		act(() => root.render(<Stack signatures={deck('invalid')} />));
+		expect(notice()?.getAttribute('data-severity')).toBe('warning');
+		expect(notice()?.textContent).toContain('is not valid');
+		expect(notice()?.textContent).toContain('Saving changes removes the signatures');
+		expect(notice()?.textContent).not.toContain('This presentation is digitally signed.');
+	});
+
+	it('shows nothing for an unsigned deck', () => {
+		act(() => root.render(<Stack signatures={undefined} />));
+		expect(notice()).toBeNull();
+	});
+
+	it('stays dismissed until another deck loads', () => {
+		act(() => root.render(<Stack signatures={deck('verified-untrusted')} />));
+		const dismiss = notice()?.querySelector<HTMLButtonElement>(
+			'[data-testid="pptx-compat-toast-dismiss"]',
+		);
+		act(() => dismiss?.click());
+		expect(notice()).toBeNull();
+		act(() => root.render(<Stack signatures={deck('verified-untrusted')} />));
+		expect(notice()?.getAttribute('data-severity')).toBe('info');
+	});
+
+	it('is worded in the UI language', () => {
+		act(() =>
+			root.render(
+				<PptxI18nProvider translate={() => undefined} locale='fr'>
+					<Stack signatures={deck('invalid')} />
+				</PptxI18nProvider>,
+			),
+		);
+		expect(notice()?.textContent).not.toContain('Saving changes');
+	});
+});

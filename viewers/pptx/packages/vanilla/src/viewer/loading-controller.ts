@@ -10,6 +10,8 @@ import {
 	resolveAuthoredCustomShowId,
 	resolveGoogleFontsCss2Base,
 	resolveInitialSlideIndex,
+	signatureLoadNotice,
+	signatureStatusView,
 } from 'ooxml-ui/pptx';
 import type { CollabLoadOrigin } from 'ooxml-ui/pptx';
 import type { PptxEmbeddedFont, PptxHandler, PptxSlide } from 'pptx-viewer-core';
@@ -64,6 +66,8 @@ export interface LoadingControllerDeps {
 	setEditableForLoad?: (editable: boolean) => void;
 	/** The document the viewer renders into, where the loader injects the webfont `<link>`. */
 	doc?: Document;
+	/** The UI locale, for the signature load notice's wording. */
+	getLocale?: () => string | undefined;
 }
 
 export interface LoadOptions {
@@ -221,10 +225,17 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				reduceReadOnlySession(readOnlySessionOf(store.get()), { type: 'reset' }),
 			);
 			const deckViewPreferences = seedDeckViewPreferences(store.get(), loaded.viewProperties);
-			const compatToasts = compatibilityWarningToasts([
-				...loaded.warnings,
-				...loaded.slides.flatMap((slide) => slide.warnings ?? []),
-			]);
+			// A signed deck opens with a notice of its signature state on top of the stack.
+			const signatureNotice = signatureLoadNotice(
+				signatureStatusView(loaded.signatures, deps.getLocale?.()),
+			);
+			const compatToasts = [
+				...(signatureNotice ? [signatureNotice] : []),
+				...compatibilityWarningToasts([
+					...loaded.warnings,
+					...loaded.slides.flatMap((slide) => slide.warnings ?? []),
+				]),
+			];
 			store.set({
 				slides: partition.slides,
 				protectedView,

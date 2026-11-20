@@ -23,7 +23,7 @@
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
 	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
-	import { installSvgIdScope, signatureStatusView } from 'ooxml-ui/pptx';
+	import { installSvgIdScope, signatureLoadNotice, signatureStatusView } from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { aiAssistants } from './ai-assistant-registry';
@@ -224,6 +224,7 @@
 	const { loader, viewer, editor, parityUi, compatToasts, collab, dialogs, exportUi } = vm;
 	// The one signature presentation every chrome surface reads, in the current UI locale.
 	const signatureView = $derived(signatureStatusView(loader.signatures, themeLocale.effectiveLocale));
+	compatToasts.setSignatureNotice(() => signatureLoadNotice(signatureView));
 
 	// Emit CSS custom properties ONLY for an explicitly chosen theme, matching
 	// React's `useThemeStyle` (returns nothing when no theme is set). Emitting a

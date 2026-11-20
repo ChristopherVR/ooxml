@@ -32,6 +32,8 @@ import {
 	resolveCloudDocumentView,
 	resolveCollaborationConfig,
 	confirmExternalHyperlinkDialog,
+	signatureLoadNotice,
+	signatureStatusView,
 } from 'ooxml-ui/pptx';
 import {
 	applyAutoCorrectToEdit,
@@ -494,7 +496,10 @@ function enableEditing(): void {
 }
 
 // -- Compatibility-warning toasts (load diagnostics) --------------------
-const compatToasts = useCompatibilityToasts({ warnings: compatibilityWarnings });
+const compatToasts = useCompatibilityToasts({
+	warnings: compatibilityWarnings,
+	signatureNotice: () => signatureLoadNotice(signatureStatusView(signatures.value, locale.value)),
+});
 
 function createPresentation(templateId: string): void {
 	slides.value = createBackstagePresentation(templateId);
