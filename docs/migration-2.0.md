@@ -71,6 +71,30 @@ public/vendor/ooxml-core/node-chunks/
 
 This section covers `pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer`, `pptx-svelte-viewer`, `pptx-vanilla-viewer` and `@christophervr/pptx-viewer`.
 
+### Linked pictures, media and sounds wait for Enable Content
+
+As in Microsoft PowerPoint, a deck's linked pictures, fills, backgrounds, bullets, audio, video, online video and linked animation, transition and hyperlink sounds are no longer downloaded when it opens. A security bar offers **Enable Content**, which redraws the deck in place: nothing reloads and undo history is kept. Each participant in a collaboration session decides for themselves.
+
+To keep downloading linked content without asking, or to block it without the bar:
+
+```tsx
+<PowerPointViewer source={file} allowExternalContent={true} />  // download, no bar
+<PowerPointViewer source={file} allowExternalContent={false} /> // block, no bar
+```
+
+A custom shell built from building blocks renders the bar from `externalContent` (or the binding's `ExternalContentBar` component) and passes `externalContent.allowed` as `linkedContent` to slides it draws itself: `SlideThumbnail`, `renderSlideStage`, `renderSlideThumbnail` and `createSlidesPane`. A surface that is never told the consent withholds linked content.
+
+A host that draws slides from the viewer's model must read linked addresses through `linkedContentView(value, allowed)` from `ooxml-ui/pptx`, because the model now keeps them.
+
+`applySlideTransitionSound` takes the viewer's media map and consent, and `TransitionSoundPlayer` is removed:
+
+```ts
+// Before
+applySlideTransitionSound(transition, resolveUrl, player);
+// After
+applySlideTransitionSound(transition, { mediaUrls, linkedContent: allowed });
+```
+
 ### Tab reaches the slide before its objects
 
 Tab no longer selects slide objects from anywhere in the viewer. The slide is one Tab stop. Press Enter on it, reach it with F6, or click it, and then Tab and Shift+Tab walk its objects as before. In the speaker notes of the React, Vue and Angular viewers, Tab and Shift+Tab now move focus instead of indenting, as in the vanilla and Svelte viewers.
