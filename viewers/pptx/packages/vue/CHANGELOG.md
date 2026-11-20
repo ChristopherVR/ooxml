@@ -3,92 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [5.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@5.0.0) - Unreleased
+## [5.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-vue-viewer@5.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 This major release makes the Vue viewer safe to point at files and rooms you do not control, and brings its keyboard and collaboration behaviour in line with the other bindings. A deck no longer fetches linked pictures, media or sounds until the reader chooses Enable Content, links always open in an isolated tab, a deck reads as signed only when its signatures verify, and peer-to-peer sessions are keyed by a secret in the invitation link. The stylesheet is valid CSS again, icons move to `@lucide/vue`, and the signature composables in `/internals` take a single summary. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#powerpoint-viewers) gives the before and after for each breaking change.
 
-### Breaking changes
-
-- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`.
-- Linked pictures, fills, backgrounds, bullets, audio, video, online videos and the sounds of animations, transitions and hyperlinks are no longer downloaded when a deck opens. As in PowerPoint, a security bar under the ribbon offers **Enable Content**, which shows them without a reload: edits, the slide on screen, undo history and AutoRecover carry on, and the choice lasts until another presentation opens. The Trust Center option "Allow external content" is now off by default. Pass `allowExternalContent: true` to keep downloading without asking, or `false` to block without the bar. A host that draws slides from the viewer's model itself reads linked addresses through `linkedContentView(value, allowed)` from `ooxml-ui/pptx`.
-- Links in a deck always open in a new tab with `noopener` and `noreferrer`; the deck's target frame is still saved but no longer decides where a link opens. `file:` and `ftp:` links are never opened, and relative links (`notes.html`, `#part`) open only after the host calls `setOpenRelativeHyperlinks(true)` from `ooxml-ui/pptx`.
-- A serverless (peer-to-peer) Share or Broadcast session is keyed by a random secret that its invitation link carries after `#key=`. Links made by earlier versions, and bare room codes without a server, no longer join: start a new session and send its link. A `CollaborationConfig` with `transport: 'webrtc'` (or a blank `serverUrl`) must carry `secret`, and `authToken` is no longer the peer-to-peer password. Build configs with `buildCreateCollaborationConfig` or `buildBroadcastConfig` and links with `buildCollaborationShareUrl` or `buildBroadcastViewerUrl(config, location)`; `buildShareUrl` and `buildQueryLinkUrl` are removed from `ooxml-ui/pptx`.
-- A shared presentation now carries its pictures and media: the room holds `ooxml-media:<id>` tokens and a `pptx:media` map instead of page-local `blob:` URLs. Viewers from earlier versions show those pictures as broken, so every participant of a room must run this release.
-- Slides read from a collaboration room are checked before they reach the deck. A value that fails the check is left out of that participant's view with a `COLLABORATION_REMOTE_VALUE_REJECTED` slide warning, and a room update far denser than a real document is refused before it is decoded, which stops sharing with a translated message.
-- The collaboration leave `postMessage` is obeyed only when it comes from the embedding page's origin. A host on another origin lists its origin in `CollaborationConfig.leaveMessageOrigin`.
-- `CollaborationSessionState` and `CollaborationShellState` gain a required `failure` field, which matters only to hosts that build these objects themselves.
-- Tab no longer selects slide objects from anywhere in the viewer. Press Enter on the slide, press F6 to reach it, or click it; from then on Tab and Shift+Tab walk the objects. End-to-end tests that pressed Tab straight after loading should press Enter on the slide first.
-- Tab and Shift+Tab in the speaker notes move focus on instead of indenting, as in the vanilla and Svelte viewers. Use the notes toolbar's Increase and Decrease Indent buttons.
-- Theme and presentation-level assistant tools follow `writePolicy`: under `stage` and `approve` they create proposals instead of applying at once. `writePolicy: 'approve'` now means each change is accepted on its own, and `acceptAll()` skips those changes; `delete_slides` and `import_from_json` behave this way under every policy. Set `writePolicy: 'auto'` to keep the old behaviour for theme and metadata tools.
-- `pptx-vue-viewer/internals` no longer exports `useSignatures`, `UseSignaturesResult` or `OverallSignatureStatus`. `useSignatureWorkflow` takes a `SignatureSummary` ref and a locale and returns `view`, and `useLoadContent` returns `signatures` as a `SignatureSummary` and no longer exports `parseSignaturesFromBuffer`. Present signatures with `signatureStatusView(summary, locale)` from `ooxml-ui/pptx`.
-- The unused dictionary keys `pptx.digitalSignatures.badge`, `badgeSigned`, `badgeTitle`, `headerSigned`, `invalidHeader`, `signed`, `statusValid`, `statusInvalid`, `statusExpired`, `statusUnknownCA`, `statusUnverified`, `serial` and `certificate` are removed; signature wording comes from `signatureStringsFor(locale)` in `ooxml-core/i18n`.
-- The ids of generated SVG filters, gradients, markers, patterns and clip paths are encoded, so most of them change even for ordinary decks; get them from the exported helper for the effect (such as `getSoftEdgeFilterId`) or encode the element id with `svgIdToken`. Element ids of decks whose part names hold a space, a non-ASCII letter or another unusual character are now percent-encoded; ordinary decks keep their ids.
-- The `--pptx-input` colour now defaults to `--office-control-border` instead of `--office-border` and colours the shared form controls inside the editor. Set `--office-control-border` or `--pptx-input` for lighter boundaries, keeping 3:1 against the background.
-
-### Security
-
-- A deck is shown as signed only when its signatures verify. The badge, the Digital Signatures panel and the load notice used to say "Signed" whenever the package held a signature part. A browser checks the signed parts' digests, the signature value and the signer certificate's key but trusts no signer, so a valid signature reads "Signed, signer not verified" at best.
-- Crafted files can no longer exhaust memory or stall a load: every package is opened through the guarded zip reader, chart point counts no longer decide how much memory is allocated, and raw XML scans that ran in quadratic time (custom geometry, SmartArt text order, the declared-font scan) are linear.
-- A collaboration participant could put a script payload in an embedded object or a picture that ran in another participant's page. Peer values are checked before they reach the deck, embedded objects open only as inert types read from the payload itself, and SVG pictures, shared or not, are shown from `data:` URLs instead of object URLs of the application's origin.
-- Element ids are escaped wherever they are placed in a style rule or a selector.
-- Any page could post the leave message to a viewer frame and drop it from its room; the message must now come from the embedding page.
-- Peer-to-peer sessions no longer show the room to the public signaling server: it sees only a SHA-256 hash of the session secret and signaling messages encrypted with it, and the secret travels only in the link's fragment, which browsers never send to a server.
-- Opening a presentation no longer tells the servers it links to that it was opened, or the reader's IP address, until the reader chooses Enable Content; a collaborator's choice never makes another reader's browser contact them.
-- Assistant tool calls are validated against their schemas before they run, and `import_from_json` and theme tools can no longer change the deck before the user accepts them.
-- Releases are published from a pipeline in which third-party code cannot push, tag or publish, and the signed tarballs attached to each GitHub release are checked against the integrity the npm registry records.
-
-### Added
-
-- A signed deck opens with a dismissible notice of its signature state and the note that saving changes removes the signatures, in every UI language.
-- F6 and Shift+F6 move between the ribbon, slide, format pane, notes, status bar and slide list, and Enter on a selected object starts editing its text, as in PowerPoint. The keyboard shortcut reference lists the new keys in every language.
-- A collaboration session that cannot start says why, in the viewer's language, in the Share dialog and as the status tooltip (a link without its session key, a page not served over https, a blocked `ws://` server, a server that cannot be reached). Custom shells get the reason as the `failure` field of `shellState`, and `collaborationFailureMessageKey` maps it to a translation key. A toast says when sharing stopped because an update was refused, and when content a collaborator sent was left out.
-- `limits` on the assistant config stops a run after a number of steps, tool calls or repeated calls, or a time limit (defaults 16, 48, 4 and 10 minutes).
-- Building blocks expose the security bar the same way in every binding: `externalContent` (`{ barVisible, allowed, enable, close }`, the `ViewerExternalContentBar` type from `ooxml-ui/pptx`) and the binding's `ExternalContentBar`. The building-blocks canvas does not draw the bar; your shell renders it and passes `externalContent.allowed` to slides it draws itself.
-
-### Changed
-
-- The badge, the Digital Signatures panel and its rows show the verified state of each signature: Signed, Signed (signer not verified), Invalid signature or Signature not verified.
-- Charts keep the point counts and points their file declares, however large, through viewing, editing and saving. Blank positions in the views the viewer draws come from a budget per package; a chart past it shows fewer trailing blanks and the load reports `CHART_POINTS_LIMITED`. Such a chart stays fully editable.
-- Add Category puts the new row after all of a chart's data, padding shorter series with blank points, and Add Series gives the new series a value for every row of a chart with categories.
-- The video export is labelled Video instead of WebM in the ribbon, the export dialog and the File page; the file is MP4 on Safari and WebM elsewhere.
-- The status bar's zoom button is named by its percentage first ("100%, Zoom to fit"). Tests that find it by the name "Zoom to fit" should match the new name or select `[data-id="zoomFit"]`.
-- Hosts that translate the Design > Fonts tiles add `pptx.gallery.themeFonts.schemeName` and `pptx.gallery.themeFonts.currentName`; `RibbonGalleryItem` and `OfficeGalleryItem` take an optional tooltip.
-- The French Notes title reads "Notes", as PowerPoint shows it.
-- Icons come from `@lucide/vue`, because `lucide-vue-next` is deprecated. The icons look the same.
-- Built and tested against current releases of its dependencies, including `emf-converter` 5, which loads image decoders and colour data on demand from `dist/browser-chunks/` and `dist/node-chunks/`. Bundlers need no change; if you copy compiled files by hand, deploy those folders next to the entry files. Every published stylesheet is minified, and a warning fails the build.
-- The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least.
-
-### Fixed
-
-- A duplicated or pasted chart, SmartArt graphic, OLE object, video or audio clip saves with its own parts. Before, two charts could share one chart part and workbook, which PowerPoint refused to open, and an edit to one changed the other. Duplicate Slide Master, Insert Slide Master and Duplicate Layout give the copy its own theme, layouts and parts, and every new master and layout gets an unused id.
-- Chart saves are consistent: blank points stay blank, only the workbook cells an edit changed are written, removing a category removes the right row (and its bubble sizes), and undoing a category or series edit then saving gives back a chart part, ranges, caches and workbook that agree. Repeated undo, redo and save no longer grows the file (a 2,000-row chart stayed at 105 KB instead of reaching 764 KB), and a chart on a duplicated slide writes into its own workbook.
-- People who join a shared presentation see its pictures, picture fills, poster frames and embedded video, not only its text. A room holds at most 16 MiB of such files (128 KiB in a peer-to-peer session); a larger file is left out and the joiners are told why. Opening a session link before the sharer's deck reaches the room no longer replaces that deck with a blank one.
-- Accepting several assistant proposals keeps all of them, accepting a proposal no longer erases later edits, and overlapping changes are reported as a conflict. Opening another presentation discards pending suggestions and says so; staged suggestions survive Slide Master view commands and slide paste. Every framework sends the deck outline and the user's focus to the model, and a cut-off or filtered reply is reported.
-- With a `model` connection each assistant tool runs once; tools ran twice, so every proposal was listed twice.
-- Focus is kept through editing: dialogs keep Tab inside, close on Escape and return focus to the control that opened them (including dialogs opened from the File page), keys pressed in a dialog no longer reach the editor beneath it, the File page stays inside the viewer and returns to the ribbon on Escape, ending text editing returns focus to the slide, and Escape closes the More actions and Presentation options menus.
-- The speaker notes no longer trap the keyboard: Tab, Shift+Tab, F6 and Shift+F6 leave the field, and Escape returns to the slide.
-- Tab in a text box types a tab character, as in PowerPoint, and Shift+Tab keeps the caret in the text box. Paging through slides with the thumbnail rail focused keeps focus on the current thumbnail. Tab at the start of a bulleted paragraph does not yet change its list level.
-- Safari and iPad: Copy Slide as Image, copying and pasting slides, downloads on iPadOS, large PNG and JPEG exports on iOS, pictures and embedded fonts in exports, MP4 video export, printing slides and notes on iOS and the Pixelate transition all work. Long-press opens context menus on touch screens, double-tap renames a section or opens a sorter slide, and controls that appeared only on hover are visible on touch and on keyboard focus.
-- Soft edge, bevel, duotone and other SVG effects appear on slides whose part name holds a space, a non-ASCII letter or a percent sign, and SmartArt text keeps its order when its list holds an empty element.
-- A linked slide-transition sound plays once the reader chooses Enable Content.
-- `capabilities.export: false` removes Save As from the File tab too.
-- `pptx-vue-viewer.css` is valid CSS again (a component comment lost its opening `/*` in the build), the building-block canvas and toolbar get their layout styles, and slide thumbnails are spaced 4 px apart as in the other bindings.
-
-### Performance
-
-- Saving a chart no longer keeps the chart's part and data for each of the last 100 saves, which grew the heap by gigabytes for very large charts. A saved state is kept only while undo or redo can reach it, compressed, within 32 MiB per presentation.
-- A one-slide SmartArt deck that took about 6 s to load and 6 s to save now takes well under a second, and a load reads the package's relationships once for every chart and parses embedded workbooks only when a chart needs their rows.
-- The thumbnail rail scrolls at full frame rate: in a deck of 50 or more slides, thumbnails that scroll into view are drawn once scrolling pauses, and moving to another slide no longer redraws the visible ones.
-
-### Accessibility
-
-- Every change is checked in a real browser before release, in all five PowerPoint bindings: Tab never gets stuck, F6 reaches every region, dialogs keep and return focus, axe-core finds no new critical or serious problem in light mode, dark mode or on a phone, the window works at 400% zoom, and saved files keep their alt text, headings and language.
-- The slide is a single named Tab stop with a focus ring that shows for the keyboard only; Escape clears the selection and then leaves the slide, and a screen reader hears the name of each object Tab reaches.
-- In forced-colours mode the current thumbnail, pressed toggles and selected tabs and options keep the system highlight, and form control boundaries reach 3:1.
-- Every control's accessible name contains the text it shows (WCAG 2.5.3), the Text Shadow and Character Spacing icons are named only by their commands, and Design > Fonts tiles are named by what they show. Charts are named by their alt text, falling back to their title, and screen readers can read their series and values.
-- When the thumbnail rail shows only the rows in view, each row gives its position and the slide count (`aria-posinset`, `aria-setsize`).
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to PowerPoint is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-powerpoint) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-powerpoint)).
 
 ### Released together
 

@@ -4,7 +4,7 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## Unreleased
+## 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
@@ -12,38 +12,7 @@ _Releases: openteams-react-viewer@2.0.0, openteams-vue-viewer@2.0.0, openteams-a
 
 OpenTeams moves every package to its next major version on the same day. Most of the release hardens the reference server and the protocol against hostile peers: private chat membership is decided by the server, calls are bound to the signed-in user, and crafted updates, presence and file names can no longer stall a server or grow its storage. The client and the server now speak Teams protocol version 2 and do not work with 1.x, so deploy them together, after backing up the server's data directory, which the new server migrates on first start. The six bindings keep their component and hook APIs. OpenTeams stays in beta. The [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#openteams) gives the before and after of each step.
 
-### Breaking changes
-
-- Teams protocol version 2: a 2.0 server closes clients that announce another version. Deploy the app and the server together.
-- New private chat ids (`dm-` and 32 hex digits, `g-` bound to its creator) and call rooms (`call-` and the chat's room name). Existing chats keep working for the people their rooms list; local changes still unsent at the upgrade are discarded.
-- `openteams-server` migrates its data directory to new stored names on first start, refuses session secrets shorter than 32 characters or with fewer than 8 distinct ones, offers sync alone when it has only `authorizeSync`, and enforces new default limits on files, stored rooms, presence, sync message size and repeated refusals.
-- Updates over a struct budget are refused before they are decoded, in the browser and on the server.
-- Every package requires Node.js 22.3 or newer.
-
-### Security
-
-- Private chat membership is decided by the server, and nobody can take over a chat room by connecting first.
-- Call signaling is bound to the signed-in user, and a private chat's call admits only its members.
-- Small crafted messages can no longer stall the server or a browser, and storage quotas can no longer be sidestepped with new names.
-- Weak session secrets are refused, and an open socket is closed when its session expires.
-
-### Added
-
-- Teams shows why sharing stopped when an update was refused, in the display language.
-- New server limits and their environment variables (`TEAMS_USER_QUOTA_MB`, `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS`, presence caps, `TEAMS_MAX_REFUSALS_PER_MIN`, `TEAMS_MAX_UPDATE_STRUCTS`).
-
-### Fixed
-
-- Concurrent and offline group membership changes are all kept, and no longer stop a person's sync.
-- A refusal is shown to the person instead of a bare close code, without a reconnect loop.
-- The Solid binding renders during server rendering and hydrates in the browser.
-- The starting channel is shown in the display language.
-
-### Accessibility
-
-- F6 and Shift+F6 move between the app bar, chat list, header, messages and message box.
-- Search and composer boundaries reach 3:1 contrast, and selected states survive forced-colours mode.
-- Keyboard and axe-core checks run in a real browser before every release.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to OpenTeams is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-openteams) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-openteams)).
 
 ### Packages
 

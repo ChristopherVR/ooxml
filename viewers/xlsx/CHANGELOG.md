@@ -4,7 +4,7 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## Unreleased
+## 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
@@ -12,44 +12,7 @@ _Releases: @christophervr/xlsx-core@2.0.0, @christophervr/xlsx-react-viewer@2.0.
 
 Every Excel package moves to 2.0.0 together, with `ooxml-core` and `ooxml-ui` 2.0.0. The editor is safer against crafted workbooks and formulas, faster on large sheets, frees itself when closed, and is checked for keyboard and screen reader use before every release. The framework bindings keep their props, events and handles. Upgrade every OOXML package you use in one change; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each breaking change.
 
-### Breaking changes
-
-- Node.js 22.3 or newer is required by every package.
-- The editor takes dark mode from `--office-color-scheme` or `data-office-theme="dark"`, not from the page's CSS `color-scheme`, and `--xve-input` defaults to `--office-control-border`.
-- `surfaceOnly` must be set before an `<xlsx-editor>` is attached, and an editor that shares a room leaves it when it is removed from the page.
-- `Workbook.signatures` is a `SignatureSummary`, and signed workbooks no longer add an English warning.
-- Each formula has its own work budget (`#NUM!` past it), and `CalcEngine` has a `stopped` member.
-- Hyperlinks keep every scheme that cannot run script; the `unsupported-scheme` reason is gone.
-- The MCP write tools (schema version 2) refuse formulas that reach outside the workbook, and the file tools refuse Windows paths that would be reinterpreted.
-
-### Security
-
-- Crafted workbooks, formulas, charts and legacy `.xls` files can no longer hang the editor or exhaust memory, and every package is read through the guarded zip reader.
-- Workbooks show a verified signature state, never a signature part alone, and SVG pictures are shown from `data:` URLs.
-- Collaborator values are checked, and releases come from a pipeline third-party code cannot publish from.
-
-### Added
-
-- `customization.ribbon.hiddenTabs`, including hiding the File tab and its backstage.
-- The verified signature state in the status bar, a notice and File > Info.
-- Bounded recalculation (`timeLimitMs`, `workCap`, `calculateOnOpen`) and the formula policy helpers in the model.
-
-### Changed
-
-- A workbook that calculates on open is calculated in a worker when it would block the page (`worker-src 'self'` in a Content Security Policy).
-- Charts keep every declared point, and the Solid binding renders during server rendering.
-
-### Fixed
-
-- Closed editors are freed; Ctrl+PageUp/PageDown and F6 work as in Excel; the sheet keeps Excel's gridlines in dark mode; `LET` and `LAMBDA` workbooks open in Excel; text and number comparisons follow Excel.
-
-### Performance
-
-- Lookups, aggregates and row height refits scale with the edit, `MMULT` is about 3.5 times faster, and a long session no longer grows memory per opened workbook.
-
-### Accessibility
-
-- The grid is a table for screen readers, charts are named by their alt text, focus rings and form controls reach 3:1, and forced-colours mode keeps every selected state visible.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to Excel is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-excel) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-excel)).
 
 ### Packages
 

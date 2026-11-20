@@ -3,29 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [3.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@3.0.0) - Unreleased
+## [3.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-viewer-mcp@3.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 For agents that edit decks through `pptx-viewer-mcp`, this release tightens what a tool may touch on disk and makes four theme and metadata tools actually save. File tools now refuse UNC, device and drive-relative paths and Windows names that Windows would reinterpret before any filesystem call, so a crafted path can no longer reach a remote host or write past the extension check. The tools are `pptxTools` from `ooxml-core/pptx/automation`, so every model fix in `ooxml-core` (chart saves, part ownership, collaboration checks) reaches them too. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#mcp-packages-and-ooxml-coreautomation) gives the before and after for each breaking change.
 
-### Breaking changes
-
-- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`.
-- On Windows, file tools refuse path segments that contain `:`, `<`, `>`, `"`, `|`, `?` or `*`, that end in a dot or a space, or that are device names such as `NUL` or `COM1`, and they refuse `/x` (rooted on the current drive) and `C:x` (relative to a drive's current folder). On every platform they refuse UNC and device paths and paths starting with a backslash. Rename files Windows would reinterpret, and pass a path relative to the root or a full absolute path inside it.
-
-### Security
-
-- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, refused paths all return one error, and an alternate data stream name can no longer create a file past the extension check.
-- Releases are published from a pipeline in which third-party code cannot push, tag or publish, and the signed tarballs attached to each GitHub release are checked against the integrity the npm registry records.
-
-### Changed
-
-- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On POSIX systems, names such as `a: b.pptx`, `aux/` and `why?.pptx` are ordinary files, and a backslash inside a name is not a separator.
-
-### Fixed
-
-- `update_metadata`, `update_theme_colors`, `update_theme_fonts` and `apply_theme_preset` save their changes to the file.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to PowerPoint is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-powerpoint) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-powerpoint)).
 
 ### Released together
 

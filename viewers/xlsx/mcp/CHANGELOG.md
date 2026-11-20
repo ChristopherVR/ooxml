@@ -3,30 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@2.0.0) - Unreleased
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-viewer-mcp@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 For agents that read and edit workbooks through `xlsx-tools`, this release closes two ways a prompt-injected model could misuse the server. The write tools refuse formulas that would make Excel fetch data, run code or reach another file when the workbook is opened, and file paths that Windows would reinterpret, or that point at a network share, are refused before any filesystem call. Tool names are unchanged; the edit tools move to schema version 2. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each breaking change.
 
-### Breaking changes
-
-- `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` (now schema version 2) refuse a formula that can reach outside the workbook: web and external data functions (`WEBSERVICE`, `IMAGE`, `HYPERLINK`, `RTD`, `STOCKHISTORY`, the `CUBE` functions, `PY`), XLL add-in calls (`_xll.`), the Excel 4.0 macro functions (`EVALUATE`, `EXEC`, `RUN`, `FOPEN` and similar), functions that send cell data to an AI service (`COPILOT`, `TRANSLATE`, `DETECTLANGUAGE`), references to another workbook or a file path, and formulas the parser cannot read. The error names the cell, and defined names are checked the same way. No tool parameter turns the check off: a server for trusted callers registers `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation` with `registerAutomationTools` instead of this package's `registerTools`.
-- On Windows, file tools refuse path segments that contain `:`, `<`, `>`, `"`, `|`, `?` or `*`, that end in a dot or a space, or that are device names such as `NUL` or `COM1`, as well as `/x` (rooted on the current drive) and `C:x` (relative to a drive's current folder). On every platform they refuse UNC and device paths and paths that start with a backslash. Use a path relative to the root, or a full absolute path inside it, and rename files whose names Windows would reinterpret.
-- Node.js 22.3 or newer is required (`"engines": { "node": ">=22.3" }`).
-
-### Security
-
-- A prompt-injected model can no longer write a formula that sends workbook data to a server when the file is opened in a spreadsheet application: such formulas are refused on every write path.
-- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, every refused path returns the same error, and an alternate data stream name can no longer create a file past the extension check.
-- Workbooks are read through the guarded zip reader and calculated under the per-formula budget of `ooxml-core`, so a small crafted file can no longer exhaust memory or stall a tool call.
-- Releases are published by a pipeline in which no third-party code can push, tag or publish, with npm provenance, and the signed tarballs on each GitHub release are checked against the integrity the registry records.
-
-### Changed
-
-- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On POSIX systems, names such as `a: b.xlsx`, `aux/` and `why?.xlsx` are ordinary files, and a backslash inside a name is not a separator.
-- Recalculation after an edit uses the per-formula work budget of `ooxml-core`: a formula past it returns `#NUM!` while the others still compute.
-- Built and tested against current releases of its dependencies.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to Excel is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-excel) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-excel)).
 
 ### Released together
 

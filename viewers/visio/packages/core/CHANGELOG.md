@@ -3,33 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@2.0.0) - Unreleased
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-core@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 `visio-core` is the DOM-free Visio document API, and every read and edit through it now runs inside one memory budget sized from the host's heap, so no file can take down the Node process or worker that opens it. Pages of up to about 10,000 shapes as Visio saves them open with the new default limits, `maxXmlHeapBytes` lets a server that holds other large data lower the budget, and `parseVsdx` says up front when a drawing is too large to edit. The one breaking change is the runtime: Node.js 22.3 or newer. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) gives the before and after.
 
-### Breaking changes
-
-- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`. The memory budget is sized from the heap limit Node reports, which `ooxml-core` reaches through `process.getBuiltinModule`, added in Node 22.3; on an older Node the budget assumes a 1 GiB heap, more than a host started with a smaller `--max-old-space-size` has ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer)).
-
-### Security
-
-- No Visio file can exhaust the heap of the host that reads or edits it. A read or an edit has one memory budget for every package it opens and the model it builds, estimated before each XML part is parsed. A drawing that does not fit is refused with the code `LIMIT_XML_MEMORY` and a message saying how much memory it would need. Past 64 MiB a read may take at most 4,096 bytes of memory for each byte of its file, so a small file of dense XML is refused in well under a second. Measured in Node 24 under 512, 768 and 1024 MiB heaps over 29 files, every file opened or was refused, with peaks at or below 424, 669 and 952 MB; before, a 411 KB file could end a 512 or 768 MiB process.
-- Every package is opened through the guarded zip reader, including signature listing, collaboration snapshots and embedded chart workbooks, so a small file can no longer inflate without limit. Signature listing ignores a signature part larger than 16 MiB.
-- A collaborator can no longer replace an arbitrary package part through shared media, or add markup to the content types part.
-- A drawing is reported as signed only when its signature verifies, never because it merely contains a signature part.
-- The package is published by a release pipeline in which third-party code cannot push, tag or publish, and the signed tarball on each GitHub release is checked against the integrity the npm registry records.
-
-### Added
-
-- Package limits gain `maxXmlHeapBytes` and `maxXmlHeapPerInputByte` (4,096 by default), which bound the memory one read or edit may take. By default `maxXmlHeapBytes` follows the host's heap: the limit Node (`v8.getHeapStatistics().heap_size_limit`) or a Chromium page (`performance.memory.jsHeapSizeLimit`) reports, less 256 MiB, divided by 1.6. That is 280 MiB under `--max-old-space-size=512`, 600 MiB under 1024 and about 2.5 GiB under Node's usual 4 GiB default; where the runtime reports no limit (Firefox, Safari, web workers, Bun) it is 480 MiB. Set it lower when the same heap holds other large data or runs several reads at once.
-- Drawings open with pages of up to about 10,000 shapes as Visio saves them. The default XML limits are now 1,500,000 nodes per part and 2,000,000 per package; the ten-second load deadline is unchanged. Such a page needs a heap limit of about 1,000 MiB in Node (`--max-old-space-size=820` or more).
-- `parseVsdx` reports `edit-size-limit` first among its diagnostics when the drawing is too large to edit: its pages hold more than 100,000 ShapeSheet cells, or an edit of it would not fit `maxXmlHeapBytes`.
-
-### Changed
-
-- The package is built and tested against current releases of its dependencies, including `emf-converter` 5. The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to Visio is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-visio) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-visio)).
 
 ### Released together
 

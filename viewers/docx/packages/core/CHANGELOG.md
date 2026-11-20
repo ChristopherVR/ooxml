@@ -3,48 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@2.0.0) - Unreleased
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-core@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 For code that reads, edits and writes Word documents without an editor, `docx-core` is now safer to point at untrusted files and faster on large ones. Every package is opened through the guarded zip reader under limits you can set with the new `limits` option, a signed document reports whether its signature verifies in `model.signatures`, and saving an edit to a long document costs time in proportion to the edit. Three changes can need code: Node.js 22.3, Word style catalogs as values, and the signature message leaving `warnings`. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each change.
 
-### Breaking changes
-
-- Node.js 22.3 or newer is required; the package declares `"engines": { "node": ">=22.3" }`. See [Run Node.js 22.3 or newer](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer).
-- Word style catalogs (`paragraphStyles`, `characterStyles`, `tableStyles`) are values. Inheritance is resolved once per `styles` record, so change a style by replacing the record and the style, as the editor's numbering edits do, not by changing a style object in place. See [Word style catalogs are values](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#word-style-catalogs-are-values).
-- Loading a signed document no longer adds an English "signature not verified" message to `warnings`. Read `model.signatures.state` and word it with `signatureStateText` from `ooxml-core/i18n`. See [Signatures are reported as a verified summary](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#signatures-are-reported-as-a-verified-summary).
-
-### Security
-
-- Every package is opened through the guarded zip reader, so a small file can no longer inflate without limit. Signature listing ignores a package whose signature part is larger than 16 MiB.
-- Scans of raw XML that took time quadratic in the number of empty or unclosed elements, such as the declared-font scan that runs before a document is parsed, are now linear. A few kilobytes of such elements could block a load for a minute.
-- A document counts as signed only when its signature verifies, never because it merely contains a signature part. Checking is bounded: an RSA key under 1024 or over 16384 bits is reported as `unsupported`, each signature tries at most four certificates and reads at most 10,000 references and 100 MB of part data, and a signature part over 16 MB is skipped.
-- The package is published by a release pipeline in which third-party code cannot push, tag or publish, with npm provenance, and the signed tarballs on each GitHub release are checked against the integrity the npm registry records.
-
-### Added
-
-- `loadDocx` takes a `limits` option (`DocxLoadLimits`). It sets the compressed package size, the number of parts, the inflated size of one part and of all parts, and the size of `word/document.xml`, which was fixed at 25 MiB. The defaults are unchanged and exported as `DEFAULT_DOCX_LOAD_LIMITS`, a value that is not a positive finite number throws a `RangeError`, and saving reopens the package under the limits it was loaded with.
-- A signed document carries its verified state as `model.signatures`, a `SignatureSummary` (`{ state, signatures }`) whose state is `verified`, `verified-untrusted`, `invalid` or `unsupported`. A browser has no trust store, so an intact signature from any signer is `verified-untrusted` there.
-- `InlineImage.textBoxContent` holds a text box's `w:txbxContent` as real paragraphs and tables, read by the same parser as the document body, with the anchor and insets of its `wps:bodyPr`, for every shape that has a `wps:txbx` whatever its preset. `drawingShapeSvg` draws a drawing's shape without its own text when those paragraphs are drawn over it.
-- `ShapeSpec.fontColor` is the colour of a shape's `wps:style` font reference, and `simpleTextBoxDrawing` gives the frame and paragraphs an edited simple text box is saved with.
-
-### Changed
-
-- A text box written with `txBox="1"` (Word's Insert > Text Box) is read with its frame like any shape, and an unchanged box is saved byte for byte.
-- The text inside a drawing shape counts as editable only when it is the plain centred text the editor writes, so changing the shape's size, fill or outline no longer rewrites richer text as plain centred lines.
-
-### Fixed
-
-- An empty element no longer swallows the element after it in the raw XML scans that run before a document is parsed. Because of it, a font listed before an embedded font in the font table was treated as embedded.
-- Saving a shape whose text takes its colour from the shape's style writes no colour on its runs, so Word shows the same colour after a resize or refill, and text whose runs share one colour keeps it when it is rewritten.
-- Saving a chart edit writes only the embedded workbook cells that edit changed, so a text cell in a value range is no longer overwritten with 0. Removing a row of a bubble chart removes its bubble sizes with it, and adding a row to a scatter or bubble chart leaves the new x value blank instead of writing a category label into the x values.
-
-### Performance
-
-- Saving no longer moves blocks that did not change. An edit to a 20,000-block document saves in about 2.5 s instead of about 17 s, inserting, deleting or moving a paragraph costs the same as editing one, and the saved document is the same as before, byte for byte.
-- Loading walks `document.xml` once for every unsupported feature it reports instead of once per feature, and copies the loaded model once instead of twice; saves no longer copy it again.
-- Style inheritance is resolved once per catalog, so a long `basedOn` chain no longer makes loading quadratic or slows each paragraph and run as it is laid out.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to Word is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-word) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-word)).
 
 ### Released together
 

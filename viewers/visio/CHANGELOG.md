@@ -4,7 +4,7 @@ All notable changes to this viewer's packages, newest first. Each section names 
 released that day; the full history of each package is in its own `CHANGELOG.md`
 (`packages/<name>/`, `mcp/`, `server/`).
 
-## Unreleased
+## 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
@@ -12,48 +12,7 @@ _Releases: visio-core@2.0.0, visio-react-viewer@2.0.0, visio-vue-viewer@2.0.0, v
 
 Every Visio package moves to 2.0.0 together, alongside `ooxml-core` 2.0.0 and `ooxml-ui` 2.0.0. Visio drawings now open and edit inside one memory budget sized from the host's heap, pages of up to about 10,000 shapes open as Visio saves them, and a drawing too large to edit opens read-only with the reason. The viewer gains a `locale` property, ribbon tabs a host can hide, F6 region navigation and smoother zooming. Visio stays in Beta. Upgrade every OOXML package at once; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) gives the before and after of each breaking change.
 
-### Breaking changes
-
-- Every package requires Node.js 22.3 or newer.
-- The viewer takes dark mode from `--office-color-scheme` or `data-office-theme="dark"`, no longer from the page's CSS `color-scheme`.
-- Collaboration updates are bounded, and a refused update stops the sync. Code that calls `ooxml-core/collab` directly replaces `DEFAULT_UPDATE_LIMITS` with `defaultUpdateLimits(bytes)`.
-- The MCP tools refuse, on Windows, path segments that Windows would reinterpret, and UNC and device paths everywhere.
-- The status bar's zoom button is named by its percentage; browser tests find it by `[data-id="zoomFit"]`.
-
-### Security
-
-- No Visio file can exhaust the heap of the page, worker or Node process that reads or edits it; a drawing that does not fit is refused with `LIMIT_XML_MEMORY`.
-- Every package is opened through the guarded zip reader, and chart point counts no longer decide memory allocation.
-- SVG pictures are shown from `data:` URLs, collaborators can no longer replace arbitrary package parts, and a drawing shows as signed only when its signature verifies.
-- MCP paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host.
-
-### Added
-
-- `locale` in the shared contract, so every binding sets the interface language as a prop.
-- `customization.ribbon.hiddenTabs`, including `'file'` for the File tab and backstage.
-- `maxXmlHeapBytes` and `maxXmlHeapPerInputByte` package limits, and the `edit-size-limit` diagnostic from `parseVsdx`.
-- The verified signature state in the status bar, a notice and File > Info, and F6 and Shift+F6 between the window's regions.
-
-### Changed
-
-- `zoom-change` fires once per zoom gesture, when the zoom is applied.
-- Charts keep every point their file declares and show a bounded view of very large ones.
-- The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari.
-
-### Fixed
-
-- `capabilities.export` and `capabilities.copy` now also govern Review > Shape Reports.
-- Dialog focus, shape focus across redraws, handle drags during a zoom preview, `--vv-accent` text and chart Edit Data saves.
-- A closed viewer is freed again in Chrome and Edge.
-
-### Performance
-
-- Zoom previews with a transform and renders the page once when you stop.
-
-### Accessibility
-
-- Every change is checked in a real browser (keyboard contract and axe-core in light, dark and on a phone).
-- The current page tab, focus rings and field boundaries meet contrast in every accent and in forced-colours mode; group shapes show focus and connectors describe what they join.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to Visio is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-visio) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-visio)).
 
 ### Packages
 

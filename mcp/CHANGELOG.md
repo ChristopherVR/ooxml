@@ -3,31 +3,13 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
-## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@2.0.0) - Unreleased
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-mcp@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
 
 This release makes the combined server safer to hand to an agent you do not fully trust. Excel writes refuse formulas that could send workbook data out of the file, file tools refuse paths that could leave the document root before they touch the disk, and the PowerPoint theme and metadata tools now save what they change. The server needs Node.js 22.3 or newer. Install it with the format packages released alongside it, listed under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) covers each breaking change.
 
-### Breaking changes
-
-- Node.js 22.3 or newer is required (`"engines": { "node": ">=22.3" }`).
-- `xlsx_set_cells`, `xlsx_propose_edits` and `xlsx_apply_proposal` move to schema version 2 and refuse a formula, in a cell or a defined name, that can reach outside the workbook: web, image, RTD, cube, Python and add-in functions, the Excel 4.0 macro functions that evaluate text or run code, DDE or file access, functions that send cell data to an AI service (`COPILOT`, `TRANSLATE`, `DETECTLANGUAGE`), references to another workbook or a file path, and formulas the parser cannot read. The error names the cell. No tool parameter turns the check off; a host that trusts every caller registers its own server with `createXlsxTools({ formulas: 'unrestricted' })` from `ooxml-core/automation`.
-- File tools refuse UNC and device paths, and paths starting with a backslash, on every platform. On Windows they also refuse segments containing `:`, `<`, `>`, `"`, `|`, `?` or `*`, segments ending in a dot or a space, device names such as `NUL` or `COM1`, `/x` and `C:x`. Pass a path relative to `--root`, or a full absolute path inside it, and rename files whose names Windows would reinterpret.
-
-### Security
-
-- A prompt-injected model could write a formula that sends workbook data to a server when the file is opened in a spreadsheet application. Such formulas are refused on every Excel write path.
-- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, every refused path returns the same error (`Path is outside the configured root`), and an alternate data stream name can no longer create a file past the extension check.
-- Releases are built by a pipeline in which third-party code cannot push, tag or publish, with npm provenance and signed tarballs checked against the registry.
-
-### Changed
-
-- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On Linux and macOS, names such as `a: b.docx`, `aux/`, `why?.docx` and `a\b.docx` are ordinary files.
-
-### Fixed
-
-- `update_metadata`, `update_theme_colors`, `update_theme_fonts` and `apply_theme_preset` save their changes to the deck.
+**[Introducing OOXML 2.0](https://christophervr.github.io/ooxml/releases/2.0/)** tells the story of this release. Every change to the shared UI and MCP packages is listed in [the release notes](https://christophervr.github.io/ooxml/releases/2.0/#changes-ui-mcp) ([Markdown on GitHub](https://github.com/ChristopherVR/ooxml/blob/main/docs/releases/2.0.md#changes-ui-mcp)).
 
 ### Released together
 
