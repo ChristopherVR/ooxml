@@ -28,6 +28,11 @@ export {
 	writeSlidesToYDoc,
 	readSlidesFromYDoc,
 	observeYDocSlides,
+	collaborationMedia,
+	configureCollaborationMedia,
+	MAX_SHARED_MEDIA_BYTES,
+	MAX_PEER_TO_PEER_MEDIA_BYTES,
+	YDOC_MEDIA_KEY,
 } from 'ooxml-core/pptx/editor/render/collaboration-sync';
 export type {
 	DeltaOp,
@@ -38,4 +43,7 @@ export type {
 	YArrayLike,
 	YDocLike,
 	YjsFactories,
+	CollaborationMedia,
+	CollaborationMediaOptions,
+	MediaResolution,
 } from 'ooxml-core/pptx/editor/render/collaboration-sync';

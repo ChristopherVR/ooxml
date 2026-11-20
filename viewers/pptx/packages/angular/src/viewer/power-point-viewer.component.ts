@@ -3148,6 +3148,8 @@ export class PowerPointViewerComponent
 			// owner's write-back file no longer drops every session-level edit
 			// outside `slides`.
 			getSaveOptions: () => this.loader.getSaveOptions(),
+			mediaDataUrls: () => this.loader.mediaDataUrls(),
+			allowExternalContent: () => this.loader.resolveAllowExternalImages(),
 			currentSlides: () => this.editor.slides(),
 			emitStart: (config) => this.startCollaboration.emit(config),
 			emitStop: () => this.stopCollaboration.emit(),

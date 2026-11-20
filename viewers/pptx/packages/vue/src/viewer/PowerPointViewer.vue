@@ -1309,6 +1309,9 @@ const collaboration = useCollaborationWiring({
 	history,
 	onNotice: (toast) => compatToasts.notify(toast),
 	slidesPaused: () => deckStyleHeld.value,
+	getMediaDataUrls: () => mediaDataUrls.value,
+	allowExternalContent: () =>
+		resolveAllowExternalContent(props.allowExternalContent, viewerOptions.value),
 	loadVersion,
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
 	// never one the user opened during the session.

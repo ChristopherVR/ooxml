@@ -222,6 +222,8 @@ export const translations = {
 		'埋め込みフォントのライセンスで使用が許可されていないため、代替フォントで表示しています。フォント データはファイル内に保持されます。',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'編集可能なプレゼンテーションへの埋め込みがライセンスで許可されていないため、フォントは埋め込まれませんでした。',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'共同編集者が共有した画像またはビデオは、セッションの全員に送信するには大きすぎるため表示されません。',
 	'pptx.compatibility.collaborationValueRejected':
 		'共同編集者が送信したコンテンツは、安全でないリンクやファイルの種類など、ここでは許可されていないため除外されました。',
 	'pptx.compatibility.exportBackendUnavailable':

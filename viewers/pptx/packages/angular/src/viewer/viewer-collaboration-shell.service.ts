@@ -86,6 +86,8 @@ export class ViewerCollaborationShellService {
 				return content instanceof Uint8Array ? content : content ? new Uint8Array(content) : null;
 			},
 			getSaveOptions: () => this.loader.getSaveOptions(),
+			mediaDataUrls: () => this.loader.mediaDataUrls(),
+			allowExternalContent: () => this.loader.resolveAllowExternalImages(),
 			currentSlides: () => this.editor.slides(),
 			emitStart: () => {},
 			emitStop: () => {},

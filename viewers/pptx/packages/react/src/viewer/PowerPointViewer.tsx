@@ -1968,6 +1968,11 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 														livePatcher={state.livePatcher}
 														onReadOnlyChange={setCollaborationReadOnly}
 														onRoomReplacedDeck={countDeckReplacement}
+														mediaDataUrls={state.mediaDataUrls}
+														allowExternalContent={resolveAllowExternalContent(
+															allowExternalContent,
+															viewerOptions,
+														)}
 														deckSaveState={{
 															headerFooter: state.headerFooter,
 															presentationProperties: state.presentationProperties,
@@ -2091,8 +2096,12 @@ function CollaborationDocumentSync({
 	onReadOnlyChange,
 	onRoomReplacedDeck,
 	history,
+	mediaDataUrls,
+	allowExternalContent,
 }: {
 	history: CollaborationHistoryTarget;
+	mediaDataUrls: ReadonlyMap<string, string>;
+	allowExternalContent: boolean;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -2124,6 +2133,8 @@ function CollaborationDocumentSync({
 		deckSaveState,
 		onReadOnlyChange,
 		onRoomReplacedDeck,
+		mediaDataUrls,
+		allowExternalContent,
 	});
 	return null;
 }

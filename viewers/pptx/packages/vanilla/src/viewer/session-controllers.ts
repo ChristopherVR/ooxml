@@ -37,6 +37,8 @@ export interface SessionControllersDeps {
 	getSaveOptions?: () => PptxHandlerSaveOptions;
 	/** The editor's history; collaboration routes Undo and Redo through the room's own. */
 	getHistory?: () => CollaborationHistoryTarget | undefined;
+	/** The viewer's remote content setting (host `allowExternalContent`, else Trust Center). */
+	getAllowExternalContent?: () => boolean;
 	getChrome: () => ViewerChrome;
 	getTranslator: () => Translator;
 	getScale: () => number;
@@ -205,6 +207,9 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		getHandler: deps.getHandler,
 		getSaveOptions: deps.getSaveOptions,
 		...(deps.getHistory ? { getHistory: deps.getHistory } : {}),
+		...(deps.getAllowExternalContent
+			? { getAllowExternalContent: deps.getAllowExternalContent }
+			: {}),
 		setEditable: deps.setEditable,
 		onReadOnlyChange: deps.onCollaborationReadOnlyChange,
 		onStatusChange: (status) => {

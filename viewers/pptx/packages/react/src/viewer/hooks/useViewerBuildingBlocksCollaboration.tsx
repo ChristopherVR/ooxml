@@ -16,6 +16,8 @@ export interface BuildingBlocksCollaborationInput {
 	loadOrigin: CollabLoadOrigin;
 	embedFonts: boolean;
 	onReadOnlyChange: (readOnly: boolean) => void;
+	/** This viewer's remote content setting (see `useYjsDocumentSync`). */
+	allowExternalContent: boolean;
 }
 
 /** No extra provider or transport is required around a custom editor shell. */
@@ -37,6 +39,8 @@ export function useViewerBuildingBlocksCollaboration(input: BuildingBlocksCollab
 		loadOrigin: input.loadOrigin,
 		livePatcher: state.livePatcher,
 		onReadOnlyChange: input.onReadOnlyChange,
+		mediaDataUrls: state.mediaDataUrls,
+		allowExternalContent: input.allowExternalContent,
 		deckSaveState: {
 			...state,
 			embedFonts: input.embedFonts,

@@ -6,6 +6,7 @@ import type {
 	YTransactionLike,
 } from 'ooxml-ui/pptx';
 import {
+	configureCollaborationMedia,
 	createRoomJoinTracker,
 	reconcileSlidesInYDoc,
 	LOCAL_SYNC_ORIGIN,
@@ -48,6 +49,10 @@ export interface UseYjsDocumentSyncInput {
 	onWriteBackStatus?: (state: CollaborationWriteBackState | undefined) => void;
 	/** The room's slides replaced the open deck (a join): the binding counts it as a presentation load. */
 	onRoomReplacedDeck?: () => void;
+	/** The URLs this viewer plays its audio and video from, so the room can carry their bytes. */
+	mediaDataUrls?: ReadonlyMap<string, string>;
+	/** This viewer's remote content setting: linked pictures and media from the room follow it. */
+	allowExternalContent?: boolean;
 }
 
 export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
@@ -62,6 +67,17 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 		loadOrigin = 'user',
 	} = input;
 	const external = Boolean(config?.externalSession);
+	const latestMedia = useRef(input);
+	latestMedia.current = input;
+	// Once per room, before any effect below reads or writes its slides.
+	useEffect(() => {
+		if (doc) {
+			configureCollaborationMedia(doc, {
+				localMediaUrl: (path) => latestMedia.current.mediaDataUrls?.get(path),
+				allowExternalContent: latestMedia.current.allowExternalContent === true,
+			});
+		}
+	}, [doc]);
 	const scheduleWriteBack = useCollaborationWriteBack(input);
 	useExternalDocumentSync(input, scheduleWriteBack);
 	const lastSynced = useRef('');

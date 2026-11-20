@@ -34,6 +34,10 @@ export interface UseCollaborationOptions {
 	serialize?: (isCurrent: () => boolean) => Promise<Uint8Array | null> | Uint8Array | null;
 	/** True while a gallery hover preview shows over the slides: nothing is sent to peers. */
 	slidesPaused?: () => boolean;
+	/** The URLs this viewer plays its audio and video from, so the room can carry their bytes. */
+	getMediaDataUrls?: () => ReadonlyMap<string, string>;
+	/** This viewer's remote content setting: linked pictures and media from the room follow it. */
+	allowExternalContent?: () => boolean;
 	/** The editor's reactive slides ref (broadcast on local change). */
 	slides: Ref<import('pptx-viewer-core').PptxSlide[]>;
 	/** Called when a remote peer broadcasts a newer slide set. */

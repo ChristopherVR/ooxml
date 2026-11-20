@@ -35,6 +35,10 @@ export interface UseCollaborationWiringInput {
 	getTemplateElements: () => Record<string, PptxElement[]>;
 	/** True while a gallery hover preview shows over the slides. */
 	slidesPaused?: () => boolean;
+	/** See `UseCollaborationOptions.getMediaDataUrls`. */
+	getMediaDataUrls?: () => ReadonlyMap<string, string>;
+	/** See `UseCollaborationOptions.allowExternalContent`. */
+	allowExternalContent?: () => boolean;
 	/** Show a toast, such as the notice that values a peer sent were left out. */
 	onNotice?: (toast: CompatibilityWarningToast) => void;
 	/** Retain the loaded source bytes for elected-writer (role 'owner') write-back. */
@@ -128,6 +132,8 @@ export function useCollaborationWiring(
 		...(input.onNotice ? { onNotice: input.onNotice } : {}),
 		getTemplateElements,
 		...(input.slidesPaused ? { slidesPaused: input.slidesPaused } : {}),
+		...(input.getMediaDataUrls ? { getMediaDataUrls: input.getMediaDataUrls } : {}),
+		...(input.allowExternalContent ? { allowExternalContent: input.allowExternalContent } : {}),
 		getSourceBytes,
 		getSaveOptions,
 		userColor: initialUserColor,

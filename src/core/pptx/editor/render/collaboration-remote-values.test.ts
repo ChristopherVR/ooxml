@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
 import { PptxHandler } from '../../core/PptxHandler';
+import { configureCollaborationMedia } from './collaboration-media';
 import { reconcileSlidesInYDoc } from './collaboration-reconcile';
 import { REMOTE_VALUE_REJECTED } from './collaboration-remote-values';
 import type { YDocLike, YjsFactories } from './collaboration-sync';
@@ -18,11 +19,15 @@ const factories: YjsFactories = {
 };
 const asDoc = (doc: Y.Doc): YDocLike => doc as unknown as YDocLike;
 
-/** What a second participant reads after `slides` was written by a first one. */
+/**
+ * What a second participant reads after `slides` was written by a first one. It allows
+ * linked content, as the viewer does by default (collaboration-media.test.ts covers both).
+ */
 function receive(slides: PptxSlide[]): { doc: Y.Doc; slides: PptxSlide[] } {
 	const sender = new Y.Doc();
 	writeSlidesToYDoc(slides, asDoc(sender), factories);
 	const doc = new Y.Doc();
+	configureCollaborationMedia(asDoc(doc), { allowExternalContent: true });
 	Y.applyUpdate(doc, Y.encodeStateAsUpdate(sender));
 	return { doc, slides: readSlidesFromYDoc(asDoc(doc)) };
 }

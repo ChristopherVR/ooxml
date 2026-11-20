@@ -9,6 +9,7 @@ import type {
 	YjsFactories,
 } from 'ooxml-ui/pptx';
 import {
+	configureCollaborationMedia,
 	createCollaborationLivePatcher,
 	createRoomJoinTracker,
 	createSyncGate,
@@ -75,6 +76,11 @@ export class CollaborationDocument {
 	attach(doc: YDocLike, factories: YjsFactories): void {
 		this.#doc = doc;
 		this.#factories = factories;
+		// Before the room's slides are read or written.
+		configureCollaborationMedia(doc, {
+			localMediaUrl: (path) => this.#deps.getMediaDataUrls?.().get(path),
+			allowExternalContent: this.#deps.getAllowExternalContent?.() === true,
+		});
 		const config = this.#config;
 		if (!config) {
 			return;

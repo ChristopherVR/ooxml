@@ -34,10 +34,17 @@ import {
 	getAssetsMap,
 	isAssetRefKey,
 	isAssetVersionKey,
-	isLocalOnlyUrl,
 	readAssetFields,
 	writeAssetFields,
 } from './collaboration-assets';
+import { type CollaborationMedia, collaborationMedia } from './collaboration-media';
+import { collectSharedMedia, sharedValue, stringifyShared } from './collaboration-media-token';
+import {
+	inboundString,
+	mapInbound,
+	type MediaValueIssue,
+	parseInbound,
+} from './collaboration-media-values';
 import {
 	type RemoteValueRejection,
 	sanitizeRemoteElements,
@@ -52,6 +59,7 @@ import type { TextSessionPositions } from './collaboration-text-session';
 import { inlineListBodyText } from './inline-list-body';
 
 export * from './collaboration-assets';
+export * from './collaboration-media';
 export * from './collaboration-remote-values';
 export * from './collaboration-text-codec';
 
@@ -337,21 +345,38 @@ const REV_COMPLEX_SLIDE: Record<string, string> = Object.fromEntries(
 // Element serialization
 // ---------------------------------------------------------------------------
 
+/**
+ * The element as it is written to the room. An embedded audio or video element names only
+ * its part; the URL this page plays it from is shared as its `mediaData`, so a participant
+ * without the deck's file can play it too. Page-local URLs are written as media tokens by
+ * the writers (see collaboration-media-token.ts).
+ */
+export function sharedElementRecord(
+	element: PptxElement,
+	media: CollaborationMedia | undefined,
+): Record<string, unknown> {
+	const rec = element as unknown as Record<string, unknown>;
+	if (rec.type !== 'media' || rec.mediaData !== undefined || typeof rec.mediaPath !== 'string') {
+		return rec;
+	}
+	const url = media?.localMediaUrl(rec.mediaPath);
+	return url === undefined ? rec : { ...rec, mediaData: url };
+}
+
 export function writeElementToYMap(
 	element: PptxElement,
 	ymap: YMapLike,
 	factories: YjsFactories,
 	assets: YMapLike,
+	media?: CollaborationMedia,
 ): void {
-	const rec = element as unknown as Record<string, unknown>;
+	const rec = sharedElementRecord(element, media);
 	for (const [key, value] of Object.entries(rec)) {
 		if (value === undefined || ASSET_ELEMENT_FIELDS.has(key)) {
 			continue;
 		}
 		if (SCALAR_ELEMENT_KEYS.has(key)) {
-			if (!isLocalOnlyUrl(value)) {
-				ymap.set(key, value);
-			}
+			ymap.set(key, sharedValue(value));
 		} else if (key === 'textSegments') {
 			if (Array.isArray(value)) {
 				const ytext = factories.createText();
@@ -359,25 +384,55 @@ export function writeElementToYMap(
 				ymap.set('textBody', ytext);
 			}
 		} else if (COMPLEX_ELEMENT_FIELDS[key]) {
-			ymap.set(COMPLEX_ELEMENT_FIELDS[key], JSON.stringify(value));
+			ymap.set(COMPLEX_ELEMENT_FIELDS[key], stringifyShared(value));
 		}
 	}
 	writeAssetFields(rec.id as string, rec, ymap, assets);
 }
 
-export function readElementFromYMap(ymap: YMapLike, assets: YMapLike): PptxElement {
+/** Pass the top-level string fields of `record` through {@link inboundString}. */
+function inboundFields(
+	record: Record<string, unknown>,
+	fields: Iterable<string>,
+	media: CollaborationMedia,
+	issues: MediaValueIssue[],
+): void {
+	for (const field of fields) {
+		const value = record[field];
+		if (typeof value === 'string') {
+			const next = inboundString(media, field, value, issues);
+			if (next === undefined) {
+				delete record[field];
+			} else {
+				record[field] = next;
+			}
+		}
+	}
+}
+
+/**
+ * Read one element. With `media`, the room's media tokens become this page's URLs and the
+ * values this viewer must not show are left out; `issues` collects the ones to report.
+ */
+export function readElementFromYMap(
+	ymap: YMapLike,
+	assets: YMapLike,
+	media?: CollaborationMedia,
+	issues: MediaValueIssue[] = [],
+): PptxElement {
 	const element: Record<string, unknown> = {};
 	ymap.forEach((value: unknown, key: string) => {
 		if (key === 'textBody') {
 			if (isYTextLike(value)) {
-				element.textSegments = decodeTextBody(value);
+				const segments = decodeTextBody(value);
+				element.textSegments = media ? mapInbound(media, segments, issues) : segments;
 			}
 		} else if (isAssetRefKey(key) || isAssetVersionKey(key)) {
 			// Ref pointers are resolved by readAssetFields below; version
 			// counters are an internal sync token, never a PptxElement field.
 		} else if (REV_COMPLEX_ELEMENT[key]) {
 			try {
-				element[REV_COMPLEX_ELEMENT[key]] = JSON.parse(value as string);
+				element[REV_COMPLEX_ELEMENT[key]] = parseInbound(media, value as string, issues);
 			} catch {
 				/* skip */
 			}
@@ -386,6 +441,9 @@ export function readElementFromYMap(ymap: YMapLike, assets: YMapLike): PptxEleme
 		}
 	});
 	readAssetFields(ymap, assets, element);
+	if (media) {
+		inboundFields(element, Object.keys(element), media, issues);
+	}
 	// The scalar mirror is last-writer-wins; rich text merges character-wise.
 	// Derive its body after a remote merge, but retain legacy scalar-only text
 	// when a document has an empty textSegments array and no encoded carriers.
@@ -404,22 +462,23 @@ export function writeSlideToYMap(
 	ymap: YMapLike,
 	factories: YjsFactories,
 	assets: YMapLike,
+	media?: CollaborationMedia,
 ): void {
 	const rec = sharedSlideRecord(slide);
 	for (const key of SCALAR_SLIDE_KEYS) {
-		if (rec[key] !== undefined && !isLocalOnlyUrl(rec[key])) {
-			ymap.set(key, rec[key]);
+		if (rec[key] !== undefined) {
+			ymap.set(key, sharedValue(rec[key]));
 		}
 	}
 	for (const [original, prefixed] of Object.entries(COMPLEX_SLIDE_FIELDS)) {
 		if (rec[original] !== undefined) {
-			ymap.set(prefixed, JSON.stringify(rec[original]));
+			ymap.set(prefixed, stringifyShared(rec[original]));
 		}
 	}
 	const elemArr = factories.createArray();
 	for (const el of slide.elements) {
 		const elemMap = factories.createMap();
-		writeElementToYMap(el, elemMap, factories, assets);
+		writeElementToYMap(el, elemMap, factories, assets, media);
 		elemArr.push([elemMap]);
 	}
 	ymap.set('elements', elemArr);
@@ -429,8 +488,13 @@ export function writeSlideToYMap(
  * Read one slide written by any peer. Its elements and resource fields are checked on the
  * way out (see collaboration-remote-values.ts), so what is returned is safe to render.
  */
-export function readSlideFromYMap(ymap: YMapLike, assets: YMapLike): PptxSlide {
+export function readSlideFromYMap(
+	ymap: YMapLike,
+	assets: YMapLike,
+	media?: CollaborationMedia,
+): PptxSlide {
 	const slide: Record<string, unknown> = {};
+	const slideIssues: MediaValueIssue[] = [];
 	for (const key of SCALAR_SLIDE_KEYS) {
 		const v = ymap.get(key);
 		if (v !== undefined) {
@@ -441,22 +505,36 @@ export function readSlideFromYMap(ymap: YMapLike, assets: YMapLike): PptxSlide {
 		const v = ymap.get(prefixed) as string | undefined;
 		if (v !== undefined) {
 			try {
-				slide[original] = JSON.parse(v);
+				slide[original] = parseInbound(media, v, slideIssues);
 			} catch {
 				/* skip */
 			}
 		}
 	}
+	if (media) {
+		inboundFields(slide, SCALAR_SLIDE_KEYS, media, slideIssues);
+	}
+	const rejected: RemoteValueRejection[] = slideIssues.map(({ field, reason }) => ({
+		field,
+		reason,
+	}));
 	const elemArr = ymap.get('elements') as YArrayLike | undefined;
 	const elements: PptxElement[] = [];
 	if (elemArr) {
 		for (let i = 0; i < elemArr.length; i++) {
-			elements.push(readElementFromYMap(elemArr.get(i) as YMapLike, assets));
+			const issues: MediaValueIssue[] = [];
+			const element = readElementFromYMap(elemArr.get(i) as YMapLike, assets, media, issues);
+			const id = (element as { id?: unknown }).id;
+			for (const { field, reason } of issues) {
+				rejected.push(
+					typeof id === 'string' ? { elementId: id, field, reason } : { field, reason },
+				);
+			}
+			elements.push(element);
 		}
 	}
-	const rejected: RemoteValueRejection[] = [];
-	slide.elements = sanitizeRemoteElements(elements, rejected);
-	sanitizeRemoteSlide(slide, rejected);
+	slide.elements = sanitizeRemoteElements(elements, rejected, media);
+	sanitizeRemoteSlide(slide, rejected, media);
 	return slide as unknown as PptxSlide;
 }
 
@@ -476,17 +554,21 @@ export function writeSlidesToYDoc(
 	origin?: unknown,
 ): void {
 	const assets = getAssetsMap(ydoc);
-	ydoc.transact(() => {
-		const arr = ydoc.getArray(YDOC_SLIDES_KEY);
-		if (arr.length > 0) {
-			arr.delete(0, arr.length);
-		}
-		for (const slide of slides) {
-			const ymap = factories.createMap();
-			writeSlideToYMap(slide, ymap, factories, assets);
-			arr.push([ymap]);
-		}
-	}, origin);
+	const media = collaborationMedia(ydoc);
+	const shared = collectSharedMedia(() =>
+		ydoc.transact(() => {
+			const arr = ydoc.getArray(YDOC_SLIDES_KEY);
+			if (arr.length > 0) {
+				arr.delete(0, arr.length);
+			}
+			for (const slide of slides) {
+				const ymap = factories.createMap();
+				writeSlideToYMap(slide, ymap, factories, assets, media);
+				arr.push([ymap]);
+			}
+		}, origin),
+	);
+	void media.upload(shared, origin);
 }
 
 /**
@@ -496,6 +578,7 @@ export function writeSlidesToYDoc(
  */
 export function readSlidesFromYDoc(ydoc: YDocLike): PptxSlide[] {
 	const assets = getAssetsMap(ydoc);
+	const media = collaborationMedia(ydoc);
 	const arr = ydoc.getArray(YDOC_SLIDES_KEY);
 	const slides: PptxSlide[] = [];
 	const seen = new Set<string>();
@@ -508,19 +591,23 @@ export function readSlidesFromYDoc(ydoc: YDocLike): PptxSlide[] {
 			}
 			seen.add(id);
 		}
-		slides.push(readSlideFromYMap(map, assets));
+		slides.push(readSlideFromYMap(map, assets, media));
 	}
 	return slides;
 }
 
 /**
- * Observe (deeply) the pptx:slides array. The handler receives the Yjs
- * events plus the transaction, so callers can skip their own writes by
- * checking `transaction.origin` (see LOCAL_SYNC_ORIGIN in
- * collaboration-reconcile.ts).
+ * Observe (deeply) the pptx:slides array, and the room's media (the bytes of a picture
+ * arrive after the slide that shows it) and this viewer's media settings. The handler
+ * receives the Yjs events plus the transaction, so callers can skip their own writes by
+ * checking `transaction.origin` (see LOCAL_SYNC_ORIGIN in collaboration-reconcile.ts).
  */
 export function observeYDocSlides(ydoc: YDocLike, onChange: YDeepObserver): () => void {
 	const arr = ydoc.getArray(YDOC_SLIDES_KEY);
 	arr.observeDeep(onChange);
-	return () => arr.unobserveDeep(onChange);
+	const unobserveMedia = collaborationMedia(ydoc).observe(onChange);
+	return () => {
+		arr.unobserveDeep(onChange);
+		unobserveMedia();
+	};
 }

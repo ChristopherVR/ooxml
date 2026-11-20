@@ -374,14 +374,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				// our private DOM and clicks the Back button.
 				this.lifecycle?.chrome.ribbon?.showDefaultTab();
 			},
-			// Trust Center > "Allow external content"; the options controller is
-			// constructed after this one, hence the lazy read (see its own comment).
-			// The host `allowExternalContent` option wins when set.
-			getAllowExternalContent: () =>
-				resolveAllowExternalContent(
-					this.options.allowExternalContent,
-					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
-				),
+			getAllowExternalContent: () => this.allowExternalContent(),
 			getGoogleFontsBase: () => this.googleFontsBase(),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
 			setEditableForLoad: (editable) => this.setEditable(editable),
@@ -817,6 +810,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			options,
 			getHandler: () => this.loading.getHandler(),
 			getHistory: () => this.editor?.history,
+			getAllowExternalContent: () => this.allowExternalContent(),
 			// Session-level save options (view properties, table styles, tags, deck
 			// properties, ...), built the same way as `editor.save`, so an owner's
 			// write-back file no longer drops every session-level edit outside
@@ -915,6 +909,18 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	 * a prior mount first, so it can re-attach after a locale-driven chrome
 	 * remount. No-op (and never touches the `ai` SDK) when `ai` is absent.
 	 */
+	/**
+	 * Trust Center > "Allow external content"; the options controller is constructed after the
+	 * loading and session controllers, hence the lazy read. The host `allowExternalContent`
+	 * option wins when set.
+	 */
+	private allowExternalContent(): boolean {
+		return resolveAllowExternalContent(
+			this.options.allowExternalContent,
+			this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+		);
+	}
+
 	/**
 	 * The CSS2 base the webfont fallback requests, or `null` when font
 	 * downloads are off: the host `googleFonts` option when set, otherwise

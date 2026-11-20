@@ -134,7 +134,14 @@ The document engine behind the contract still differs per product (Excel merges 
 - There is no authentication, authorisation or persistence here; `role: 'viewer'` is advisory on the client. A server must enforce permissions. `demos/pptx/demo-host-review` shows one way (signed room tickets, `openteams-server`'s `authorizeSync` hook dropping writes from read-only sockets, live access changes); its recipe is the PowerPoint guide "Review inside your application" (`viewers/pptx/docs/guide/review-workflow.md`).
 - Awareness has no integrity protection; presence is sanitised for display, not trusted.
 - Asset entries are not garbage-collected when their owner is deleted.
+- PowerPoint's media map (`pptx:media`, below) holds at most 16 MiB per room (128 KiB over y-webrtc), so the first sync stays inside the transport's limit; it is not a transport for large video.
 - No Word layout, document or PowerPoint model parity is claimed: this area only moves bytes and presence.
+
+## PowerPoint pictures and media in a room
+
+A loaded deck shows its pictures, fills and video from `blob:` URLs, which only the page that made them can resolve. The PowerPoint writers never put one in the room: each is written as a media token, `ooxml-media:<id>` (`collaboration-media-token.ts`), and after the write the participant whose page holds the URL puts its bytes in the `pptx:media` map as `{ t: <MIME type>, b: <bytes> }` under that id (`collaboration-media.ts`). An embedded audio or video element names only its part, so the binding passes the URLs it plays media from (`configureCollaborationMedia(doc, { localMediaUrl, allowExternalContent })`, called by every binding when it attaches to a room). Readers turn each token into a URL of their own page (a `blob:` URL for a raster picture, audio or video, a `data:` URL otherwise, so an SVG never runs in the application's origin), checked against the type of the field it lands in; a token whose bytes have not arrived is left out until they do (`observeYDocSlides` also observes the media map), and a raw `blob:` URL a peer wrote is refused.
+
+The room's media stay under `MAX_SHARED_MEDIA_BYTES` (16 MiB, half of `MAX_UPDATE_BYTES`; `MAX_PEER_TO_PEER_MEDIA_BYTES`, 128 KiB, in a y-webrtc room, which sends a joiner the whole room in one data channel message and Chromium refuses one over 256 KiB): a file that would go over it is written as `{ t, n }` without its bytes, and readers report `COLLABORATION_MEDIA_WITHHELD` on its slide. Entries no slide or asset refers to any more are removed before new bytes are added. Linked pictures and media (`http(s)` URLs) are never fetched and re-sent; each reader leaves them out when its own `allowExternalContent` is false (the default), whatever the sharer allows.
 
 ## Who uses what
 

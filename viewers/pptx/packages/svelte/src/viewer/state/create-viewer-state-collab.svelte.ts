@@ -145,6 +145,9 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 				embedFonts: editor.embedFonts,
 			});
 		},
+		getMediaDataUrls: () => loader.mediaDataUrls,
+		// The same setting the next load uses (`loader.getLoadOptions`, set once this cluster is built).
+		getAllowExternalContent: () => loader.getLoadOptions().allowExternalImages === true,
 		getCanvasWidth: () => loader.canvasSize.width,
 		getCanvasHeight: () => loader.canvasSize.height,
 		onStart: (config) => options.onstartcollaboration?.(config),

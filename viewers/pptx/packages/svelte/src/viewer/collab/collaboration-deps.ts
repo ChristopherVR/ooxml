@@ -30,6 +30,10 @@ export interface CollaborationDeps {
 	 * dropped every session-level edit outside `slides`.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions;
+	/** The URLs this viewer plays its audio and video from, so the room can carry their bytes. */
+	getMediaDataUrls?: () => ReadonlyMap<string, string>;
+	/** This viewer's remote content setting: linked pictures and media from the room follow it. */
+	getAllowExternalContent?: () => boolean;
 	/** Slide canvas width/height (unscaled px), used to clamp incoming cursor coordinates. */
 	getCanvasWidth?: () => number | undefined;
 	getCanvasHeight?: () => number | undefined;

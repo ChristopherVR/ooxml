@@ -10,6 +10,7 @@ import type {
 import {
 	bindCollaborationHistory,
 	collaborationHistoryReady,
+	configureCollaborationMedia,
 	collaborationRefusalToast,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
@@ -160,6 +161,11 @@ export function createCollaborationController(
 	): void {
 		currentYDoc = created.doc;
 		yFactories = created.factories;
+		// Before the room's slides are read or written.
+		configureCollaborationMedia(config.externalSession?.doc ?? created.doc, {
+			localMediaUrl: (path) => store.get().mediaDataUrls.get(path),
+			allowExternalContent: deps.getAllowExternalContent?.() === true,
+		});
 		presence = createPresenceController(
 			store,
 			created.awareness,
