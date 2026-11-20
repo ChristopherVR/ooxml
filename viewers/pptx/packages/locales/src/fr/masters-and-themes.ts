@@ -102,7 +102,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': 'Masques des diapositives',
 	'pptx.masterView.notesMasterTitle': 'Maître des notes',
 	'pptx.masterView.handoutMasterTitle': 'Masque du document',
-	'pptx.masterView.collapse': 'Réduire le volet principal',
 	'pptx.slideSize.rescaleTitle': 'Adapter le contenu à la nouvelle taille de diapositive ?',
 	'pptx.slideSize.rescaleDescription':
 		'Vous modifiez la taille de la diapositive. Choisissez comment ajuster le contenu existant.',

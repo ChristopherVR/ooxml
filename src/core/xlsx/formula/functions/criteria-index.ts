@@ -3,7 +3,8 @@
 // by value instead of being scanned by every formula.
 import { round15, parseNumberText } from '../text-number';
 import type { Matrix, Scalar } from '../values';
-import { hasWildcards } from './helpers';
+import { textKey } from '../text-compare';
+import { hasCriteriaWildcards } from './helpers';
 
 const uses = new WeakMap<Matrix, number>();
 const indexes = new WeakMap<Matrix, Map<string, number[]>>();
@@ -18,12 +19,12 @@ export function equalityKey(criteria: Scalar): string | undefined {
 	if (typeof criteria === 'number') return numberKey(criteria);
 	if (typeof criteria !== 'string') return undefined;
 	const text = criteria.startsWith('=') ? criteria.slice(1) : criteria;
-	if (/^(<|>)/.test(text) || text === '' || hasWildcards(text) || text.startsWith('#'))
+	if (/^(<|>)/.test(text) || text === '' || hasCriteriaWildcards(text) || text.startsWith('#'))
 		return undefined;
 	const upper = text.toUpperCase();
 	if (upper === 'TRUE' || upper === 'FALSE') return undefined;
 	const n = parseNumberText(text);
-	return n !== undefined ? numberKey(n) : `s${text.toLowerCase()}`;
+	return n !== undefined ? numberKey(n) : `s${textKey(text)}`;
 }
 
 /** The keys a cell value matches: numbers by value, text by lower case and as a number. */
@@ -31,7 +32,7 @@ function valueKeys(value: Scalar, out: string[]): void {
 	out.length = 0;
 	if (typeof value === 'number') out.push(numberKey(value));
 	else if (typeof value === 'string') {
-		out.push(`s${value.toLowerCase()}`);
+		out.push(`s${textKey(value)}`);
 		const n = parseNumberText(value);
 		if (n !== undefined) out.push(numberKey(n));
 	}

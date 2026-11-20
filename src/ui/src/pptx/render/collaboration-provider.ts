@@ -34,6 +34,11 @@ import {
 	requirePeerToPeerCrypto,
 } from './collaboration-failure';
 import type { AwarenessLike } from './collaboration-presence-publisher';
+import {
+	configureCollaborationMedia,
+	MAX_PEER_TO_PEER_MEDIA_BYTES,
+	type YDocLike,
+} from './collaboration-sync';
 import { clearLocalAwareness } from './collaboration-teardown';
 
 /** A transport-agnostic view of a live Yjs provider. */
@@ -132,6 +137,7 @@ export async function createCollabProvider(
 			...(config.signaling?.length ? { signaling: config.signaling } : {}),
 			password: secret,
 		});
+		configureCollaborationMedia(doc as YDocLike, { maxBytes: MAX_PEER_TO_PEER_MEDIA_BYTES });
 		const awareness = provider.awareness as AwarenessLike;
 		const departure = createDepartureChannel(room, awareness as never);
 		return {

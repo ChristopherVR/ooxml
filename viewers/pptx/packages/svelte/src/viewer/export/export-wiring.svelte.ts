@@ -40,6 +40,8 @@ export interface ExportWiringDeps {
 	 * authored placeholder text, as before.
 	 */
 	getFieldContext?(): FieldSubstitutionContext | undefined;
+	/** See `RasterizeSlideDeps.getLinkedContentAllowed`. */
+	getLinkedContentAllowed?(): boolean;
 	/** Live presentation data for the deck-JSON export; undefined before a load. */
 	getDeckData?(): PptxData | undefined;
 	/** Source file name for the deck-JSON download (`deck.pptx` -> `deck.json`). */
@@ -94,6 +96,7 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 				getImageResolutionScale: deps.getImageResolutionScale,
 				getFieldContext: () => deps.getFieldContext?.(),
 				getRenderContext: () => deps.getRenderContext?.(),
+				getLinkedContentAllowed: () => deps.getLinkedContentAllowed?.() ?? false,
 			});
 		}
 		return rasterizer;

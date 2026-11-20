@@ -186,6 +186,10 @@ export const GRID_CSS = `
 .xg-tl-cell.xg-tl-on{background:var(--sl-sel-bg,#deebf7);border-color:var(--sl-sel-line,#5b9bd5)}
 .xg-timeline button:focus-visible,.xg-timeline select:focus-visible{outline:2px solid var(--xve-selection-border, var(--office-accent, #217346));outline-offset:-2px}
 .xg-live{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* The accessible grid: transparent, every node a 1px box, the active cell over its painted cell. */
+.xg-a11y{position:absolute;inset:0;overflow:hidden;opacity:0;pointer-events:none}
+.xg-a11y>div{position:absolute;left:0;top:0;width:1px;height:1px}
+.xg-a11y>div>div{position:absolute;left:0;top:0;width:1px;height:1px;overflow:hidden;white-space:nowrap}
 /* Forced colours: the sheet follows the system canvas, so gridlines take the system's muted text colour. */
 @media (forced-colors:active){.xg-gl{background:GrayText}
 .xg-fb-active{border-color:Highlight}.xg-fb-active::before{background:Highlight}

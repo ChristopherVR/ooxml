@@ -13,6 +13,7 @@ import {
 	resolveShowForward,
 	resolveShowSlideIndexes,
 	stopAllPersistentAudio,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type {
 	AuthoredSlideRange,
@@ -26,7 +27,6 @@ import type { PptxCustomShow, PptxSlide, PptxSlideTransition } from 'pptx-viewer
 import type { CustomShowReturnState } from './action-runner-callbacks';
 import { buildWaveFourActionCallbacks } from './action-runner-callbacks';
 import { AnimationPlayback } from './animation-playback.svelte';
-import { stopAnimationSound } from './animation-sound';
 import { ensurePresentationKeyframes } from './keyframes';
 
 /**
@@ -553,7 +553,7 @@ export class PresentationController {
 		// Next Sound" (it otherwise keeps looping on the shared per-effect
 		// singleton behind the editor).
 		stopAllPersistentAudio();
-		stopAnimationSound();
+		stopDeckSound();
 	}
 
 	/**

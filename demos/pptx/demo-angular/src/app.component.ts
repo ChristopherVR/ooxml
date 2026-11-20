@@ -38,7 +38,7 @@ import {
 import 'pptx-angular-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
-import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
+import { invitationFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -374,14 +374,12 @@ export class AppComponent {
 
 	// ── Collaboration / broadcast / audience wiring ──────────────────────────
 	private autoConnectFromUrl(): void {
-		if (!this.urlRoom && !this.urlBroadcast) {
+		// The room, or the broadcast audience, the page address invites this tab to.
+		const invitation = invitationFromPage(this.urlServer);
+		if (!invitation) {
 			return;
 		}
-		const role = this.urlBroadcast ? ('viewer' as const) : undefined;
-		const link = sessionFromPage(this.urlRoom ? 'room' : 'broadcast', this.urlServer);
-		if (!link) {
-			return;
-		}
+		const { link, role, sessionIntent } = invitation;
 		// Serverless peer-to-peer has no server to trust; join over WebRTC directly.
 		if (link.transport !== 'webrtc' && !isTrustedServerUrl(link.serverUrl)) {
 			console.warn(
@@ -393,6 +391,7 @@ export class AppComponent {
 			...link,
 			userName: this.urlName ?? this.autoName,
 			userColor: randomCursorColor(),
+			sessionIntent,
 			...(role ? { role } : {}),
 		});
 	}

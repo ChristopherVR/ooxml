@@ -144,6 +144,10 @@ export function parseDrawing(
 				try {
 					const cuts = source.chartPoints.cuts;
 					const chart = parseChart(chartXml, anchor, target, name, source.chartPoints);
+					// The frame's alt text is what a reader is told the chart shows; a picture has
+					// always kept its own, and the chart's was both unread and dropped on save.
+					const frameDescr = att(cNvPr, 'descr');
+					if (frameDescr) chart.description = frameDescr;
 					if (source.chartPoints.cuts > cuts)
 						warn(`Chart ${target} shows fewer blank points than it declares; all are saved.`);
 					const id = readChartPaletteId(source, target);

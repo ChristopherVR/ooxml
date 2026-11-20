@@ -1,6 +1,10 @@
+import { translationsDe } from 'pptx-viewer-locales';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { I18N_CONTEXT_KEY } from '../../../i18n/context';
+import { interpolate, translate } from '../../../i18n/translator';
+import type { Translator } from '../../../i18n/translator';
 import type { ExportUiState } from '../../export/export-ui.svelte';
 import { ChromeUiState } from '../../state/chrome-ui.svelte';
 import RibbonPrimaryRow from './RibbonPrimaryRow.svelte';
@@ -11,11 +15,17 @@ afterEach(() => {
 	cleanup = undefined;
 });
 
-function mountRow(props: Record<string, unknown>): HTMLElement {
+const german: Translator = (key, params) => {
+	const message = (translationsDe as Record<string, string>)[key];
+	return message === undefined ? translate('en', key, params) : interpolate(message, params);
+};
+
+function mountRow(props: Record<string, unknown>, t?: Translator): HTMLElement {
 	const target = document.createElement('div');
 	const instance = mount(RibbonPrimaryRow, {
 		target,
 		props: { onpresent: vi.fn(), ...props },
+		...(t && { context: new Map([[I18N_CONTEXT_KEY, t]]) }),
 	});
 	cleanup = () => unmount(instance);
 	return target;
@@ -89,7 +99,7 @@ describe('ribbonPrimaryRow', () => {
 		const onsettings = vi.fn();
 		const target = mountRow({ oncustomshows, onsettings });
 
-		target.querySelector<HTMLButtonElement>('[aria-label="Create custom show"]')?.click();
+		target.querySelector<HTMLButtonElement>('[title="Create custom show"]')?.click();
 		expect(oncustomshows).toHaveBeenCalledOnce();
 		target.querySelector<HTMLButtonElement>('[aria-label="Settings"]')?.click();
 		expect(onsettings).toHaveBeenCalledOnce();
@@ -188,5 +198,44 @@ describe('ribbonPrimaryRow', () => {
 		);
 		expect(items).not.toContain('Digital Signatures');
 		expect(items).not.toContain('Protect Presentation');
+	});
+
+	it.each(['More actions', 'Presentation options'])(
+		'closes the %s menu on Escape and gives focus back to its button',
+		(label) => {
+			const target = mountRow({
+				onpresenter: vi.fn(),
+				exportUi: { exporting: false } as unknown as ExportUiState,
+			});
+			document.body.append(target);
+			const trigger = target.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
+			trigger.click();
+			flushSync();
+			const item = target.querySelector<HTMLButtonElement>('[role="menuitem"]')!;
+			item.focus();
+			const escape = new KeyboardEvent('keydown', {
+				key: 'Escape',
+				bubbles: true,
+				cancelable: true,
+			});
+			item.dispatchEvent(escape);
+			flushSync();
+			expect(escape.defaultPrevented).toBe(true);
+			expect(target.querySelector('[role="menu"]')).toBeNull();
+			expect(document.activeElement).toBe(trigger);
+			target.remove();
+		},
+	);
+
+	it.each([
+		['en', undefined, '+ Show', 'Create custom show'],
+		['de', german, '+ Präsentation', 'Benutzerdefinierte Bildschirmpräsentation erstellen'],
+	] as const)('names the custom show button by its caption in %s', (_, t, caption, tip) => {
+		const target = mountRow({ oncustomshows: vi.fn() }, t);
+		const button = target.querySelector<HTMLButtonElement>('.pptx-svelte-ribbon-primary-shows')!;
+		expect(button.textContent?.trim()).toBe(caption);
+		// No aria-label: the caption is the name, and the tooltip stays the description.
+		expect(button.hasAttribute('aria-label')).toBe(false);
+		expect(button.title).toBe(tip);
 	});
 });

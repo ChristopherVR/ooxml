@@ -4,7 +4,7 @@
  * focus and gives it back, and an edit keeps focus on the slide.
  */
 import { POWERPOINT_REGIONS, powerPoint } from './support/contracts';
-import { powerPointDeck } from './support/fixtures';
+import { powerPointDeck, powerPointTextDeck } from './support/fixtures';
 import { dialogRun, focusStop, regionCycle, tabCycle } from './support/keyboard';
 import { gate } from './support/known';
 import { expect, test } from './support/suite';
@@ -97,4 +97,48 @@ test.describe('PowerPoint keyboard contract', () => {
 			expect((await focusStop(page, contract)).region).toBe('slide');
 		});
 	});
+});
+
+test.describe('PowerPoint text and menus from the keyboard', () => {
+	const key = (check: string) => `keyboard/${test.info().project.name}/${check}`;
+
+	test('Tab in a text box types a tab and keeps the edit, as in PowerPoint', async ({ page }) => {
+		await gate(key('text-tab'), async () => {
+			await page.goto('/');
+			await page.locator('#file-input').setInputFiles(powerPointTextDeck());
+			await page.locator('[data-pptx-element="true"]').first().waitFor({ timeout: 60_000 });
+			// Enter goes into the slide and selects the first shape; Enter again edits its text.
+			await page.locator('[data-pptx-viewport]').first().focus();
+			await page.keyboard.press('Enter');
+			await page.keyboard.press('Enter');
+			const editor = page.locator('[data-inline-editor]');
+			await expect(editor).toBeFocused();
+			await page.keyboard.press('End');
+			await page.keyboard.press('Tab');
+			await expect(editor, 'Tab keeps the caret in the text box').toBeFocused();
+			await expect
+				.poll(() => editor.evaluate((node) => node.textContent?.includes('\t')))
+				.toBe(true);
+			await page.keyboard.press('Shift+Tab');
+			await expect(editor, 'Shift+Tab keeps the caret in the text box').toBeFocused();
+		});
+	});
+
+	for (const label of ['More actions', 'Presentation options']) {
+		test(`Escape closes ${label} and gives focus back to its button`, async ({ page }) => {
+			await gate(key(`menu-escape/${label}`), async () => {
+				await page.goto('/');
+				await page.locator('#file-input').setInputFiles(powerPointDeck());
+				await page.locator('[data-pptx-element="true"]').first().waitFor({ timeout: 60_000 });
+				const trigger = page.getByRole('button', { name: label, exact: true }).first();
+				const buttons = page.locator('button:visible');
+				const closed = await buttons.count();
+				await trigger.click();
+				await expect.poll(() => buttons.count(), 'the menu opens').toBeGreaterThan(closed);
+				await page.keyboard.press('Escape');
+				await expect.poll(() => buttons.count(), 'Escape closes the menu').toBe(closed);
+				await expect(trigger, 'focus returns to the button that opened it').toBeFocused();
+			});
+		});
+	}
 });

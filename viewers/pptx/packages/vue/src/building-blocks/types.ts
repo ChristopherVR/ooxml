@@ -4,6 +4,7 @@ import type {
 	CollaborationState,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
+	ViewerExternalContentBar,
 	PptxBuildingBlockSession,
 	SlidesPaneLayoutGalleryRequest,
 	ViewerMode,
@@ -76,6 +77,15 @@ export interface ViewerBuildingBlocks {
 	readonly shellState: ComputedRef<CollaborationShellState>;
 	/** `state.collaborationState`, as its own ref. */
 	readonly collaborationState: ComputedRef<CollaborationState>;
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them. The canvas does not draw the bar; render `ExternalContentBar`
+	 * while `barVisible`, wiring its `enable` and `close` events to `enable` and `close`. Enable
+	 * Content redraws the canvas and slides pane without reloading. `allowed` says whether this
+	 * viewer draws the linked content: pass it as `linkedContent` to a `SlideThumbnail` or
+	 * `SlidesPane` the shell renders itself.
+	 */
+	readonly externalContent: ComputedRef<ViewerExternalContentBar>;
 	/** The viewer's imperative handle (save, export, zoom, ...); null until the canvas mounts. */
 	readonly viewer: Readonly<ShallowRef<PowerPointViewerExpose | null>>;
 	/** The options the blocks currently run with. */

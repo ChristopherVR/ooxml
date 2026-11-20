@@ -181,7 +181,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'Animiertes GIF',
 	'pptx.export.pdfAllSlides': 'PDF (alle Folien)',
 	'pptx.export.pngCurrentSlide': 'PNG (aktuelle Folie)',
-	'pptx.export.webmVideo': 'WebM-Video',
+	'pptx.export.webmVideo': 'Video',
 	'pptx.fontEmbedding.embedInFile': 'Schriftarten in Datei einbetten',
 	'pptx.fontEmbedding.noCustomFonts': 'Keine benutzerdefinierten Schriftarten zum Einbetten.',
 	'pptx.headerFooter.fixedDate': 'Festes Datum',
@@ -237,6 +237,8 @@ export const translations = {
 	'pptx.export.errorNoSlidesNotesPdf': 'Für den Notizen-PDF-Export wurden keine Folien erfasst',
 	'pptx.export.errorNoSlidesPdf': 'Es wurden keine Folien für den PDF-Export erfasst',
 	'pptx.export.errorNoSlidesVideo': 'Für den Videoexport wurden keine Folien erfasst',
+	'pptx.export.errorVideoUnsupported':
+		'Dieser Browser kann kein Video aufnehmen. Exportieren Sie die Folien als GIF oder verwenden Sie einen anderen Browser.',
 	'pptx.export.recording': 'Aufnahme',
 	'pptx.export.recordingVideo': 'Video aufnehmen...',
 	'pptx.export.rendering': 'Rendern',

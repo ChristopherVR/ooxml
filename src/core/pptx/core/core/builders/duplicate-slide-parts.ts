@@ -1,10 +1,10 @@
 import type JSZip from 'jszip';
 import { clonePartGraph, relativePartTarget } from '../../../../opc/clone-part-graph';
-import { resolvePartPath } from '../../../../opc/relationships';
+import { resolvePartPath, type Relationship } from '../../../../opc/relationships';
 import { cloneSlide } from '../../utils/clone-utils';
 import type { PptxSlide } from '../../types';
 
-// These targets belong to the presentation, not to the duplicated slide.
+// These targets belong to the presentation, not to the duplicated slide or element.
 const SHARED_RELATIONSHIPS = new Set([
 	'slide',
 	'slideLayout',
@@ -14,6 +14,14 @@ const SHARED_RELATIONSHIPS = new Set([
 	'theme',
 	'hyperlink',
 ]);
+/**
+ * Whether a copy of a slide, or of a part an element owns, gets its own copy of this
+ * relationship's target. Presentation-level parts (layouts, masters, other slides) and hyperlinks
+ * stay shared; everything else the source part reaches is copied.
+ */
+export const copiesRelationshipTarget = (relationship: Relationship): boolean =>
+	!SHARED_RELATIONSHIPS.has(relationship.type.slice(relationship.type.lastIndexOf('/') + 1));
+
 const RAW_XML_KEYS = new Set(['rawXml', 'rawTiming', 'inkPartRawXml', 'rawMediaReferenceXml']);
 
 /**
@@ -62,8 +70,7 @@ export async function duplicateSlideParts(
 		zip,
 		sourcePart,
 		targetPart: slide.id,
-		shouldClone: (relationship) =>
-			!SHARED_RELATIONSHIPS.has(relationship.type.slice(relationship.type.lastIndexOf('/') + 1)),
+		shouldClone: copiesRelationshipTarget,
 	});
 	// Some editor callers used shallow copies. Detach the model before changing
 	// paths so a clone's save cannot redirect its source chart to the copied part.

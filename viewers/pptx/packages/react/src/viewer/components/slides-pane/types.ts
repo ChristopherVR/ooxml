@@ -13,6 +13,11 @@ import type { ElementRenderErrorHandler } from '../ElementErrorBoundary';
 export interface SlidesPaneSidebarProps {
 	/** Reports an element omitted from a thumbnail; defaults to console.error. */
 	onElementRenderError?: ElementRenderErrorHandler;
+	/**
+	 * Draw the deck's linked web content: `externalContent.allowed` from the building blocks.
+	 * Unset keeps the surrounding viewer's choice, and withholds it outside a viewer.
+	 */
+	linkedContent?: boolean;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	activeSlideIndex: number;

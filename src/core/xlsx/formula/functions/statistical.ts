@@ -2,8 +2,8 @@ import { FORECAST_ETS_FUNCTIONS } from './forecast-ets';
 import { REGRESSION_FUNCTIONS } from './regression';
 import { HYPOTHESIS_TESTS } from './hypothesis-tests';
 import { ERR, fail, type Scalar } from '../values';
-import { criteriaPairs, liftCriteria, matchingValues } from './criteria';
-import { all, collectNumbers, num, spec } from './helpers';
+import { criteriaLiftWork, criteriaPairs, liftCriteria, matchingValues } from './criteria';
+import { all, collectNumbers, num, spec, withLiftWork } from './helpers';
 import { STATISTICAL_MORE } from './statistical-more';
 import * as S from './stats-core';
 import type { FunctionSpec } from './types';
@@ -34,25 +34,28 @@ export const STATISTICAL_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => S.mean(all(ctx, args)),
 		['any'],
 	),
-	spec(
-		'AVERAGEIF',
-		C,
-		'AVERAGEIF(range, criteria, [average_range])',
-		'The mean of the cells that meet a criterion.',
-		2,
-		3,
-		(args, ctx) =>
-			S.mean(
-				numbersOf(
-					matchingValues(
-						ctx,
-						[{ range: args[0] ?? null, criteria: args[1] ?? null }],
-						args[2] ?? undefined,
-						false,
+	withLiftWork(
+		criteriaLiftWork,
+		spec(
+			'AVERAGEIF',
+			C,
+			'AVERAGEIF(range, criteria, [average_range])',
+			'The mean of the cells that meet a criterion.',
+			2,
+			3,
+			(args, ctx) =>
+				S.mean(
+					numbersOf(
+						matchingValues(
+							ctx,
+							[{ range: args[0] ?? null, criteria: args[1] ?? null }],
+							args[2] ?? undefined,
+							false,
+						),
 					),
 				),
-			),
-		['any', 'value', 'any'],
+			['any', 'value', 'any'],
+		),
 	),
 	spec(
 		'AVERAGEIFS',

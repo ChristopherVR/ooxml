@@ -42,6 +42,7 @@ import type { AutosaveController } from './autosave.svelte';
 import type { ChromeUiState } from './chrome-ui.svelte';
 import type { CompatToastsState } from './compat-toasts.svelte';
 import type { AiCluster } from './create-viewer-state-ai.svelte';
+import type { ExternalContentState } from './external-content.svelte';
 import type { PresentationLoader } from './presentation-loader.svelte';
 import type { ReadOnlyRecommendationState } from './read-only-recommendation.svelte';
 import type { ViewerOptionsState } from './viewer-options.svelte';
@@ -187,6 +188,8 @@ export interface ViewerStateBag {
 	 * mechanism rather than inventing a second one.
 	 */
 	readonly readOnlyRec: ReadOnlyRecommendationState;
+	/** PowerPoint's security bar for the deck's linked pictures and media. */
+	readonly externalContent: ExternalContentState;
 	/** Fidelity-loss toast stack (wave 4 #3), fed by `loader.compatibilityWarnings`. */
 	readonly compatToasts: CompatToastsState;
 	readonly chromeUi: ChromeUiState;

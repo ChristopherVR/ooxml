@@ -2,6 +2,7 @@ import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
 	attachViewportNavigation,
+	installTouchPress,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
 	isEditingAllowed,
 	isFeatureEnabled,
@@ -152,6 +153,12 @@ export interface MountChromeDeps extends ChromeCallbackDeps {
 	submitReadOnlyPassword(password: string): void;
 	/** The read-only recommendation banner's password form "Cancel". */
 	cancelReadOnlyPasswordPrompt(): void;
+	/** Enable Content on the security bar for linked pictures and media. */
+	enableExternalContent(): void;
+	/** The security bar's close button. */
+	closeExternalContentBar(): void;
+	/** Whether the chrome shows the security bar for the loaded deck (`resolveExternalContentView`). */
+	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;
 	/** The compatibility toast stack's "Dismiss all" button. */
@@ -268,6 +275,8 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		onDismissReadOnlyBanner: () => deps.dismissReadOnlyBanner(),
 		onSubmitReadOnlyPassword: (password) => deps.submitReadOnlyPassword(password),
 		onCancelReadOnlyPasswordPrompt: () => deps.cancelReadOnlyPasswordPrompt(),
+		onEnableExternalContent: () => deps.enableExternalContent(),
+		onCloseExternalContentBar: () => deps.closeExternalContentBar(),
 		onDismissCompatToast: (id) => deps.dismissCompatToast(id),
 		onDismissAllCompatToasts: () => deps.dismissAllCompatToasts(),
 		onDismissRunProgramNotice: (id) => deps.dismissRunProgramNotice(id),
@@ -298,6 +307,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	chrome.titleBar?.setDirty(store.get().dirty);
 	chrome.setProtectedView(store.get().protectedView);
 	chrome.setSignatures(store.get().signatures);
+	chrome.setExternalContentBar(deps.externalContentBarInChrome());
 	chrome.setReadOnlyRecommendation(
 		store.get().readOnlyRecommendation,
 		store.get().readOnlyBannerDismissed,
@@ -577,7 +587,17 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	});
 	const detachLinkMode = store.subscribe((state) => {
 		chrome.root.toggleAttribute('data-pptx-read-only', !state.editable);
+		// The slide-show menu listens on the root: a long-press opens it there.
+		if (state.presenting) {
+			chrome.root.setAttribute('data-pptx-touch-press', 'menu');
+		} else {
+			chrome.root.removeAttribute('data-pptx-touch-press');
+		}
 	});
+	// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu
+	// on a long-press and no reliable dblclick, so the shared installer synthesises
+	// them on the controls that opt in with `data-pptx-touch-press`.
+	const detachTouchPress = installTouchPress(chrome.root);
 
 	// PowerPoint's "Advance slide: After <n>". Without it a deck whose slide also
 	// sets "on mouse click" OFF has no way forward at all: the gate above
@@ -624,6 +644,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	const detachPresentationClick = (): void => {
 		detachHyperlinks();
 		detachLinkMode();
+		detachTouchPress();
 		chrome.root.removeEventListener('click', onPresentationClick);
 		chrome.root.removeEventListener('click', onHyperlinkClick);
 		autoAdvance.detach();
@@ -775,6 +796,12 @@ export interface ChromeHost {
 	submitReadOnlyPassword(password: string): void;
 	/** The read-only recommendation banner's password form "Cancel". */
 	cancelReadOnlyPasswordPrompt(): void;
+	/** Enable Content on the security bar for linked pictures and media. */
+	enableExternalContent(): void;
+	/** The security bar's close button. */
+	closeExternalContentBar(): void;
+	/** Whether the chrome shows the security bar for the loaded deck (`resolveExternalContentView`). */
+	externalContentBarInChrome(): boolean;
 	/** One compatibility toast's own dismiss button. */
 	dismissCompatToast(id: string): void;
 	/** The compatibility toast stack's "Dismiss all" button. */
@@ -1080,6 +1107,9 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		dismissReadOnlyBanner: () => host.dismissReadOnlyBanner(),
 		submitReadOnlyPassword: (password) => host.submitReadOnlyPassword(password),
 		cancelReadOnlyPasswordPrompt: () => host.cancelReadOnlyPasswordPrompt(),
+		enableExternalContent: () => host.enableExternalContent(),
+		closeExternalContentBar: () => host.closeExternalContentBar(),
+		externalContentBarInChrome: () => host.externalContentBarInChrome(),
 		dismissCompatToast: (id) => host.dismissCompatToast(id),
 		dismissAllCompatToasts: () => host.dismissAllCompatToasts(),
 		addRunProgramNotice: (notice) => host.addRunProgramNotice(notice),

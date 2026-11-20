@@ -222,10 +222,16 @@ export const translations = {
 		'埋め込みフォントのライセンスで使用が許可されていないため、代替フォントで表示しています。フォント データはファイル内に保持されます。',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'編集可能なプレゼンテーションへの埋め込みがライセンスで許可されていないため、フォントは埋め込まれませんでした。',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'共同編集者が共有した画像またはビデオは、セッションの全員に送信するには大きすぎるため表示されません。',
 	'pptx.compatibility.collaborationValueRejected':
 		'共同編集者が送信したコンテンツは、安全でないリンクやファイルの種類など、ここでは許可されていないため除外されました。',
 	'pptx.compatibility.exportBackendUnavailable':
 		'現在の環境では、この形式へのエクスポートは使用できません。',
+	'pptx.externalContent.title': 'セキュリティの警告',
+	'pptx.externalContent.message': '外部の画像やその他のメディアへの参照がブロックされました。',
+	'pptx.externalContent.enable': 'コンテンツの有効化',
+	'pptx.externalContent.close': '閉じる',
 	'pptx.readOnly.bannerTitle': '読み取り専用',
 	'pptx.readOnly.editAnyway': '編集する',
 	'pptx.readOnly.dismiss': '閉じる',

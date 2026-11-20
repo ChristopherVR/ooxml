@@ -23,6 +23,7 @@
 		beginCropDrag,
 		buildCropOverlay,
 		dragCropHandle,
+		linkedContentView,
 		panCropImage,
 		toElementAxes,
 	} from 'ooxml-ui/pptx';
@@ -30,6 +31,7 @@
 
 	import { useTranslator } from '../../i18n/context';
 	import type { EditorState } from '../editor/editor-state.svelte';
+	import { getLinkedContentGetter } from '../state/linked-content';
 	import { getImageSrc } from '../style';
 
 	const {
@@ -43,7 +45,11 @@
 	const element = $derived<PptxElement | undefined>(crop.active ? crop.element : undefined);
 	const zoom = $derived(scale > 0 ? scale : 1);
 	const overlay = $derived(element ? buildCropOverlay(element, zoom) : null);
-	const imageSrc = $derived(element ? getImageSrc(element, mediaDataUrls) : undefined);
+	// The picture under the crop frame, as this viewer may fetch it; the crop edits the model.
+	const getLinkedContent = getLinkedContentGetter();
+	const imageSrc = $derived(
+		element ? getImageSrc(linkedContentView(element, getLinkedContent()), mediaDataUrls) : undefined,
+	);
 
 	// Selecting something else or leaving the slide commits the crop.
 	$effect(() => {
@@ -186,6 +192,7 @@
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
+		-webkit-user-select: none;
 		user-select: none;
 	}
 

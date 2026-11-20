@@ -635,6 +635,11 @@ export interface ChartObject extends ChartSummary<ChartSeries> {
 	partName?: string;
 	name?: string;
 	/**
+	 * The author's alt text for the chart's frame (`xdr:cNvPr/@descr`), as an `ImageObject` keeps
+	 * its own. It is the chart's accessible name, ahead of the chart title, and it is written back.
+	 */
+	description?: string;
+	/**
 	 * The chart part as the format-neutral model (`chart/parseChartSpace`): what edits change (the
 	 * `chart/edit` operations, through `updateChart` or `editChart`) and what is saved, with
 	 * `chart/writeChartSpace`, when it differs from the kept part. The summary fields above are

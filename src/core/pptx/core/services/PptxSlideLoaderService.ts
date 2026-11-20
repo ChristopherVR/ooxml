@@ -10,6 +10,7 @@
 import { applyBackgroundFillToShapes } from '../core/builders/background-fill-shapes';
 import { readPartText, readPartXml } from '../core/runtime/load-part-reader';
 import { applyHiddenFlagFromRawXml } from '../core/builders/element-hidden-flag';
+import { recordRelationshipSource } from '../core/runtime/element-relationship-ids';
 import type { PptxSlide, XmlObject } from '../types';
 import { slideBackgroundStyleRefFromNode } from '../utils/background-style-ref';
 import { flattenElementsDeep } from '../utils/flatten-elements';
@@ -367,6 +368,8 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 			// all capture the whole shape node on `element.rawXml`, so one pass
 			// covers shapes, pictures, connectors, graphic frames and groups.
 			applyHiddenFlagFromRawXml(elements);
+			// Copies of these elements carry the slide their relationship ids belong to.
+			recordRelationshipSource(elements, path);
 
 			// `<p:sp useBgFill="1">` paints the slide background, which is only
 			// resolvable now: it may be inherited from the layout or master.

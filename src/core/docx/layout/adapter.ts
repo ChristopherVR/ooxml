@@ -211,7 +211,15 @@ export function adaptDocumentModel(
 							widthPx: image.widthPx,
 							heightPx: image.heightPx,
 							...(image.chart
-								? { chart: docxChartPaint(image.chart, image.widthPx, image.heightPx, theme) }
+								? {
+										chart: docxChartPaint(
+											image.chart,
+											image.widthPx,
+											image.heightPx,
+											theme,
+											image.altText,
+										),
+									}
 								: {}),
 							...(image.shape ? shapeChart(image.shape, image.widthPx, image.heightPx, theme) : {}),
 						}

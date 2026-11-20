@@ -73,6 +73,7 @@ import {
 	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
+	installTouchPress,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import { installSvgIdScope } from 'ooxml-ui/pptx';
@@ -110,10 +111,12 @@ import { CompatibilityToasts } from './components/CompatibilityToasts';
 import { EditorChromeStyle } from './components/EditorChromeStyle';
 import { ElementRenderErrorScope } from './components/ElementErrorBoundary';
 import { Rendering3DFlagsContext } from './components/elements/rendering-3d-flags-context';
+import { ExternalContentBar } from './components/ExternalContentBar';
 import { HeaderFooterPanel } from './components/HeaderFooterPanel';
 import { FormatPaneContext } from './components/inspector/format-pane-context';
 import { RecentColorsProvider } from './components/inspector/RecentColorsContext';
 import { ThemeColorMapProvider } from './components/inspector/ThemeColorMapContext';
+import { LinkedContentContext } from './components/linked-content-context';
 import { MobileChromeOverlay } from './components/mobile/MobileChromeOverlay';
 import { ReadOnlyBanner } from './components/ReadOnlyBanner';
 import { RibbonGalleryCommandsContext } from './components/ribbon-gallery-context';
@@ -140,6 +143,7 @@ import { ViewerToolbarSection } from './components/ViewerToolbarSection';
 import { useAiBridge } from './hooks/ai/useAiBridge';
 import { useAiPanelController } from './hooks/ai/useAiPanelController';
 import { useBroadcastFollower, useFollowMode } from './hooks/collaboration';
+import { useActiveSlidePresence } from './hooks/collaboration/useActiveSlidePresence';
 import { useCollaborationDocumentSync } from './hooks/collaboration/useCollaborationDocumentSync';
 import { useCollaborationStateReport } from './hooks/collaboration/useCollaborationStateReport';
 import { useAutosaveCacheMaintenance } from './hooks/useAutosaveCacheMaintenance';
@@ -156,6 +160,7 @@ import { useDeckStyleHost } from './hooks/useDeckStyleHost';
 import { useDerivedSlideState } from './hooks/useDerivedSlideState';
 import { useEditorHistory } from './hooks/useEditorHistory';
 import { useEditorOperations } from './hooks/useEditorOperations';
+import { useExternalContentConsent } from './hooks/useExternalContentConsent';
 import { useIsMobile } from './hooks/useIsMobile';
 import { useLayoutSwitching } from './hooks/useLayoutSwitching';
 import { useLoadNotifications } from './hooks/useLoadNotifications';
@@ -563,6 +568,13 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeSlide,
 			selectedElement,
 		} = state;
+		// PowerPoint's security bar for linked pictures and media: per presentation, per viewer.
+		const externalContent = useExternalContentConsent(
+			content,
+			allowExternalContent,
+			viewerOptions,
+			[slides, templateElementsBySlideId, state.tableStyleMap],
+		);
 		useRemoteValueToast(slides, compatToastsState.setToasts);
 		const noticeStack = useSignatureNotice(state.signatures, compatToastsState);
 
@@ -859,6 +871,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				containerRef,
 				content,
 				mediaDataUrls: state.mediaDataUrls,
+				linkedContent: externalContent.allowed,
 				presentationProperties: state.presentationProperties,
 				setMode: state.setMode,
 				setActiveSlideIndex: state.setActiveSlideIndex,
@@ -934,22 +947,19 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					mode === 'present'
 						? (direction) => presentation.movePresentationSlide(direction === 1 ? -1 : 1)
 						: undefined,
-				onLongPress: (clientX, clientY) => {
-					if (mode !== 'edit' || !canEdit) {
-						return;
-					}
-					if (!state.selectedElementId) {
-						return;
-					}
-					state.setContextMenuState({
-						x: clientX,
-						y: clientY,
-						elementId: state.selectedElementId,
-					});
-				},
 			},
 			enabled: isTouchDevice,
 		});
+
+		// ── Touch long-press / double-tap (issue #290) ────────────────
+		// iOS Safari fires no contextmenu on a long-press and no reliable dblclick:
+		// the shared installer turns both into synthetic events on the controls
+		// that opt in with `data-pptx-touch-press` (the canvas, slide pane, sorter,
+		// slide show and charts), so their own handlers run with the touch point.
+		useEffect(() => {
+			const root = containerRef.current;
+			return root ? installTouchPress(root) : undefined;
+		}, [containerRef, loading, error]);
 
 		// ── Dialogs ───────────────────────────────────────────────────
 		const dialogs = useViewerDialogs({
@@ -1111,10 +1121,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				hostIntervalMs: hostAutosaveIntervalMs,
 				optionsIntervalSeconds: resolveAutosaveIntervalSeconds(viewerOptions),
 			}),
-			// Trust Center > "Allow external content": core defaults this to false
-			// (SSRF/privacy-safe), so only an explicit `true` here lets remote
-			// http(s) image sources actually load.
-			allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
+			// The model keeps the deck's linked addresses; what is fetched is this viewer's choice,
+			// made where the deck is drawn (`LinkedContentContext`), so Enable Content only redraws.
+			allowExternalImages: true,
 			initialSlide,
 			// Host `googleFonts` first, else Trust Center > "Download fonts"; read per render, so the
 			// managed webfont link follows the option and the next load never sees a stale value.
@@ -1583,6 +1592,13 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 										/>
 									)}
 
+									{mode !== 'present' && externalContent.barVisible && (
+										<ExternalContentBar
+											onEnable={externalContent.enable}
+											onClose={externalContent.close}
+										/>
+									)}
+
 									<ViewerMainContent
 										mode={mode}
 										canEdit={canEdit}
@@ -1944,68 +1960,71 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 								<RibbonAddInsContext.Provider value={ribbonAddIns ?? NO_RIBBON_ADD_INS}>
 									<AccountAuthContext.Provider value={accountAuth}>
 										<Rendering3DFlagsContext.Provider value={effective3D}>
-											<ViewerThemeProvider theme={effectiveTheme}>
-												<CollaborationProvider
-													config={collaboration}
-													canvasWidth={canvasSize.width}
-													canvasHeight={canvasSize.height}
-												>
-													<CollaborationStateReporter
-														onChange={onCollaborationChange}
-														onStatus={onCollaborationStatus}
-														setToasts={compatToastsState.setToasts}
-													/>
-													<CollaborationDocumentSync
-														history={history}
-														slides={galleryDeckStyle.held()?.slides ?? slides}
-														templateElementsBySlideId={
-															galleryDeckStyle.held()?.templateElementsBySlideId ??
-															templateElementsBySlideId
-														}
-														setSlides={state.setSlides}
-														content={content}
-														loadVersion={loadVersion}
-														loadOrigin={loadOrigin}
-														livePatcher={state.livePatcher}
-														onReadOnlyChange={setCollaborationReadOnly}
-														onRoomReplacedDeck={countDeckReplacement}
-														deckSaveState={{
-															headerFooter: state.headerFooter,
-															presentationProperties: state.presentationProperties,
-															viewProperties: state.viewProperties,
-															customShows: state.customShows,
-															sections: state.sections,
-															coreProperties: state.coreProperties,
-															appProperties: state.appProperties,
-															customProperties: state.customProperties,
-															tagCollections: state.tagCollections,
-															slideMasters: state.slideMasters,
-															notesMaster: state.notesMaster,
-															handoutMaster: state.handoutMaster,
-															slideSize: resolveSlideSizeSelection({
-																current: state.slideSizeEmu,
-																canvas: canvasSize,
-															}).size,
-															tableStyleMap: state.tableStyleMap,
-															tableStylesDefaultId: state.tableStylesDefaultId,
-															tableStylesToDelete: state.tableStylesToDelete,
-															embedFonts: dialogs.embedFontsEnabled,
-														}}
-													/>
-													<CollaborationFollowLayer
-														activeSlideIndex={activeSlideIndex}
-														setActiveSlideIndex={state.setActiveSlideIndex}
-														slideCount={slides.length}
-													/>
-													<ShapeFormatContext.Provider value={shapeFormat}>
-														<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
-															<ChartFormatContext.Provider value={chartFormat}>
-																{viewerContent}
-															</ChartFormatContext.Provider>
-														</RibbonGalleryCommandsContext.Provider>
-													</ShapeFormatContext.Provider>
-												</CollaborationProvider>
-											</ViewerThemeProvider>
+											<LinkedContentContext.Provider value={externalContent.allowed}>
+												<ViewerThemeProvider theme={effectiveTheme}>
+													<CollaborationProvider
+														config={collaboration}
+														canvasWidth={canvasSize.width}
+														canvasHeight={canvasSize.height}
+													>
+														<CollaborationStateReporter
+															onChange={onCollaborationChange}
+															onStatus={onCollaborationStatus}
+															setToasts={compatToastsState.setToasts}
+														/>
+														<CollaborationDocumentSync
+															history={history}
+															slides={galleryDeckStyle.held()?.slides ?? slides}
+															templateElementsBySlideId={
+																galleryDeckStyle.held()?.templateElementsBySlideId ??
+																templateElementsBySlideId
+															}
+															setSlides={state.setSlides}
+															content={content}
+															loadVersion={loadVersion}
+															loadOrigin={loadOrigin}
+															livePatcher={state.livePatcher}
+															onReadOnlyChange={setCollaborationReadOnly}
+															onRoomReplacedDeck={countDeckReplacement}
+															mediaDataUrls={state.mediaDataUrls}
+															deckSaveState={{
+																headerFooter: state.headerFooter,
+																presentationProperties: state.presentationProperties,
+																viewProperties: state.viewProperties,
+																customShows: state.customShows,
+																sections: state.sections,
+																coreProperties: state.coreProperties,
+																appProperties: state.appProperties,
+																customProperties: state.customProperties,
+																tagCollections: state.tagCollections,
+																slideMasters: state.slideMasters,
+																notesMaster: state.notesMaster,
+																handoutMaster: state.handoutMaster,
+																slideSize: resolveSlideSizeSelection({
+																	current: state.slideSizeEmu,
+																	canvas: canvasSize,
+																}).size,
+																tableStyleMap: state.tableStyleMap,
+																tableStylesDefaultId: state.tableStylesDefaultId,
+																tableStylesToDelete: state.tableStylesToDelete,
+																embedFonts: dialogs.embedFontsEnabled,
+															}}
+														/>
+														<CollaborationFollowLayer
+															activeSlideIndex={activeSlideIndex}
+															setActiveSlideIndex={state.setActiveSlideIndex}
+															slideCount={slides.length}
+														/>
+														<ShapeFormatContext.Provider value={shapeFormat}>
+															<RibbonGalleryCommandsContext.Provider value={ribbonGalleries}>
+																<ChartFormatContext.Provider value={chartFormat}>
+																	{viewerContent}
+																</ChartFormatContext.Provider>
+															</RibbonGalleryCommandsContext.Provider>
+														</ShapeFormatContext.Provider>
+													</CollaborationProvider>
+												</ViewerThemeProvider>
+											</LinkedContentContext.Provider>
 										</Rendering3DFlagsContext.Provider>
 									</AccountAuthContext.Provider>
 								</RibbonAddInsContext.Provider>
@@ -2092,8 +2111,10 @@ function CollaborationDocumentSync({
 	onReadOnlyChange,
 	onRoomReplacedDeck,
 	history,
+	mediaDataUrls,
 }: {
 	history: CollaborationHistoryTarget;
+	mediaDataUrls: ReadonlyMap<string, string>;
 	slides: PptxSlide[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -2125,6 +2146,7 @@ function CollaborationDocumentSync({
 		deckSaveState,
 		onReadOnlyChange,
 		onRoomReplacedDeck,
+		mediaDataUrls,
 	});
 	return null;
 }
@@ -2134,6 +2156,8 @@ function CollaborationDocumentSync({
  * mirror their active slide) and keeps the one-way broadcast auto-follow alive.
  * Manual follow takes precedence: while the local user is following a peer, the
  * broadcaster auto-follow stands down so the two do not fight over navigation.
+ * It also publishes the local active slide, since it stays mounted in every
+ * view (a broadcast presenter runs the slide show, where no edit canvas is).
  * Must be rendered inside a `CollaborationProvider`.
  */
 function CollaborationFollowLayer({
@@ -2146,6 +2170,7 @@ function CollaborationFollowLayer({
 	slideCount: number;
 }) {
 	const collab = useCollaboration();
+	useActiveSlidePresence(collab, activeSlideIndex);
 	const { followedClientId, followUser } = useFollowMode({
 		collab,
 		activeSlideIndex,

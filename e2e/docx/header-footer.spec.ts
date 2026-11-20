@@ -222,7 +222,7 @@ test('formats text and inserts a picture inside a header from the ribbon', async
 	await waitForEditorFocus(headerEditor);
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const chooser = page.waitForEvent('filechooser');
-	await editor.getByRole('button', { name: 'Insert picture', exact: true }).click();
+	await editor.getByRole('button', { name: 'Insert pictures', exact: true }).click();
 	await (await chooser).setFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
 	await expect(headerEditor.locator('img[data-docx-image]')).toHaveAttribute('src', /^blob:/);
 	await headerEditor.press('Escape');

@@ -1,5 +1,5 @@
 import { rebuildDrawingShapesIfCleared, resolvePalette } from 'ooxml-ui/pptx';
-import { updateSmartArtNodeText } from 'pptx-viewer-core';
+import { setSmartArtNodeStyle, updateSmartArtNodeText } from 'pptx-viewer-core';
 import type { PptxElement, PptxSmartArtData } from 'pptx-viewer-core';
 import { provide } from 'vue';
 
@@ -61,17 +61,19 @@ export function useSmartArtNodeEditContext(input: UseSmartArtNodeEditContextInpu
 				smartArtData: reflow(el, updateSmartArtNodeText(data, nodeId, text)),
 			} as Partial<PptxElement>);
 		},
-		commitStyle: (elementId: string, patch: Partial<PptxElement>): void => {
+		commitNodeFill: (elementId: string, nodeId: string, fill: string): void => {
 			if (!canEdit()) {
 				return;
 			}
 			const el = findActiveElement(elementId);
-			const next = (patch as { smartArtData?: PptxSmartArtData }).smartArtData;
-			if (el && el.type === 'smartArt' && next) {
-				updateElement(elementId, { ...patch, smartArtData: reflow(el, next) });
+			const data = el?.type === 'smartArt' ? el.smartArtData : undefined;
+			if (!el || !data) {
 				return;
 			}
-			updateElement(elementId, patch);
+			const next = setSmartArtNodeStyle(data, nodeId, { fillColor: fill });
+			if (next !== data) {
+				updateElement(elementId, { smartArtData: reflow(el, next) } as Partial<PptxElement>);
+			}
 		},
 	});
 }

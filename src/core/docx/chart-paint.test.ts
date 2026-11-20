@@ -73,6 +73,16 @@ describe('Word charts are drawn', () => {
 		expect(svg.querySelectorAll('g[data-chart-series="1"]')).toHaveLength(4);
 	});
 
+	it('names the chart by the author’s alt text and reads its data out', async () => {
+		const { loaded, chart } = await loadChart();
+		const paint = docxChartPaint(chart, 576, 336, loaded.model.theme, 'Sales rose in every region');
+		expect(paint.name).toBe('Sales rose in every region');
+		expect(paint.svg).toContain('<title>Sales rose in every region</title>');
+		expect(paint.svg).toMatch(/<desc>[^<]*\d[^<]*<\/desc>/);
+		// With no alt text the chart's own title names it, as it always did.
+		expect(docxChartPaint(chart, 576, 336, loaded.model.theme).name).toBe('Sales by region');
+	});
+
 	it('carries the painted chart to the print layout input', async () => {
 		const { loaded } = await loadChart();
 		const input = adaptDocumentModel(loaded.model);

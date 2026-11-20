@@ -14,6 +14,7 @@ import { mount, unmount } from 'svelte';
 import { I18N_CONTEXT_KEY } from '../../i18n/context';
 import SlideStage from '../components/SlideStage.svelte';
 import { FieldContextKey } from '../state/field-context';
+import { LinkedContentKey } from '../state/linked-content';
 import { RENDER_CONTEXT_KEY } from '../state/render-context';
 import { Rendering3DFlagsContextKey } from '../state/rendering-3d-flags-context';
 import type { RasterizeSlideController, RasterizeSlideDeps } from './rasterize-slide-types';
@@ -122,6 +123,7 @@ export function createRasterizeSlide(deps: RasterizeSlideDeps): RasterizeSlideCo
 				],
 				[FieldContextKey, () => deps.getFieldContext?.()],
 				[RENDER_CONTEXT_KEY, deps.getRenderContext?.()],
+				[LinkedContentKey, () => deps.getLinkedContentAllowed?.() ?? false],
 			]),
 		});
 		await waitForFrame();

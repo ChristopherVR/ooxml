@@ -166,6 +166,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [ ] **P2** Linked pictures (`a:blip r:link` to a web address) are not drawn: Excel downloads
+      them on open, the Excel packages never do
+      ([powerpoint-external-content.md](powerpoint-external-content.md), observed 2026-11-19).
 - [x] **P1** Every save writes `fullCalcOnLoad="1"` and `calcId="191029"`
       (`src/core/xlsx/write/workbook-part.ts`), so Excel recalculates each saved file and asks to
       save on close. Write it only when cached values may be stale.
@@ -205,6 +208,51 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Calculation
 
+- [x] **P1** Text compares as Excel's does. The comparison operators, criteria (COUNTIF and the
+      other IF and IFS functions), XMATCH, XLOOKUP, UNIQUE, SORT and SWITCH compare
+      linguistically: case-insensitive, accent-, width- and kana-sensitive, "ß" equal to "ss",
+      "æ" and "œ" to their letters, ligatures expanded, final sigma equal to sigma, hyphens and
+      apostrophes only breaking ties, symbols before digits before letters. MATCH, VLOOKUP,
+      HLOOKUP, wildcards and SEARCH compare each character by its simple case folding
+      (`src/core/xlsx/formula/text-compare.ts`). Evidence: `excel-p4-cases.txt`, recorded from
+      Excel 16 through hidden COM (`excel-cases.ps1 -Corpus excel-p4`), run by
+      `excel-parity.test.ts`. Measured with an English locale only.
+- [x] **P1** Exact lookups (MATCH, XMATCH, VLOOKUP, HLOOKUP, XLOOKUP) compare numbers exactly, so
+      `MATCH(0.3,...)` skips `0.1+0.2` while `=`, COUNTIF and SWITCH still find them equal; the
+      General display of `0.1+0.2` is `0.3`. Evidence: the same corpus.
+- [x] **P2** In criteria, `~` is literal unless the criterion holds `*` or `?`; MATCH and SEARCH
+      always read it as an escape, and a trailing `~` escapes nothing. A blank criterion cell
+      matches zeros, not blanks, and DCOUNTA counts empty text. Evidence: the same corpus.
+- [x] **P2** Text limits: `&` and CONCATENATE cut text at 32,767 characters, CONCAT, TEXTJOIN
+      and ARRAYTOTEXT return `#CALC!` past it, TEXT refuses formats and results over 255
+      characters, BASE pads to at most 255 digits, LOWER keeps capital sharp s. Evidence: the same
+      corpus.
+- [x] **P0** A small workbook can no longer hang or crash the editor when it opens: each
+      formula has a work budget priced from measured cost (matrix products, LAMBDA calls, sorting,
+      pattern matching, scans an array of lookups or criteria repeats; about three seconds), a text
+      budget and an array budget, past which that formula alone is `#NUM!`
+      (`src/core/xlsx/formula/values.ts`); a recalculation stops between formulas, keeping the
+      previous values, at an optional time limit or when its results would hold too much
+      (`recalc-limits.ts`). The Excel editor reads files on the page, calculates on the page as long as
+      reading took, and leaves a slower calculation on open to a worker with a ten-second limit,
+      receiving only the cells it wrote
+      (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
+      `calc-results.test.ts`, `workbook-opener.test.ts`.
+- [x] **P1** REGEXTEST, REGEXEXTRACT and REGEXREPLACE run on the engine's own matcher
+      (`src/core/xlsx/formula/regex/`), so they accept nested quantifiers such as `(a+)+` as Excel
+      does, and a pattern that would run past the formula's work budget is `#NUM!` instead of
+      hanging. Syntax is still JavaScript's, not PCRE2's, and scans of a whole 30,000-character text
+      are 3 to 10 times slower than the browser's native matcher (under 1.5 ms a call). Evidence:
+      `regex/differential.test.ts` (3,000 random patterns against the browser's matcher).
+- [ ] **P2** Engine limits Excel does not have: a formula's work budget makes MMULT of two
+      arrays larger than about 1,400 by 1,400, and MDETERM or MINVERSE larger than about 840 by
+      840, `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700 levels) is `#NUM!`
+      where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`). Only the calculation on
+      open has a time limit: a recalculation after an edit of a workbook with many slow formulas
+      (each within its budget) still runs to the end on the page.
+- [ ] **P2** Data Sort, the AutoFilter value list and Find still compare text with the browser's
+      accent-insensitive collation (`src/core/xlsx/edit/sort-keys.ts`, `filter-menu.ts`), not the
+      linguistic rule formulas use; Excel's behaviour there has not been measured.
 - [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented
       (no external service needed).
 - [x] **P2** FILTERXML evaluates XPath locally and spills selected values, with Excel's namespace,
@@ -277,9 +325,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.
-- [ ] **P2** The grid exposes no rows or cells to assistive technology, only the active cell's
-      input (`grid/grid-a11y.ts`). `e2e/a11y/tree.spec.ts` checks for grid cells as an expected
-      failure, and the axe baseline allows its missing row parents until they are fixed.
+- [x] **P2** The grid exposes the shown window to assistive technology as rows of column headers,
+      row headers and grid cells whose row and column indices are the sheet's own, as Excel reports
+      them (B2 is row 2, column 2; the headers take no index) (`grid/grid-a11y.ts`, the window and the
+      cell description in `src/core/xlsx/layout/accessibility.ts`); the active cell is the focus
+      sink's active descendant, and its label names the table column, formula and comment and
+      follows edits made without moving the selection. Pictures are named by their alt text.
+      `grid/grid-a11y.test.ts`, `e2e/xlsx/grid-a11y.spec.ts` and `e2e/a11y/tree.spec.ts` cover it,
+      and the axe baseline no longer allows missing rows, row parents or unnamed images in Excel.
+      Excel's own screen-reader output was not compared.
 
 ### Ribbon
 
@@ -296,6 +350,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [ ] **P2** Linked pictures (`a:blip r:link` to a web address) are not drawn: Word downloads
+      them on open, the Word packages never do
+      ([powerpoint-external-content.md](powerpoint-external-content.md), observed 2026-11-19).
 - [x] **P0** Legacy `.doc` opens as main-body text only: tables, headers, footers, images, fields
       and formatting are dropped, and saving writes plain paragraphs. Closed: `readDocModel`
       (`@christophervr/ole2`) is converted to a WordprocessingML package that the normal reader
@@ -522,6 +579,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [x] **P1** Linked pictures and media follow PowerPoint's default: nothing linked is downloaded
+      when a deck opens, and a translated security bar offers Enable Content for that
+      presentation (all five bindings and the suite; host `allowExternalContent` changes it).
+      Enable Content redraws without reloading, keeps undo history, and is each collaborator's
+      own choice.
+      Evidence: [powerpoint-external-content.md](powerpoint-external-content.md),
+      `e2e/pptx/allow-external-content.spec.ts`.
+- [ ] **P2** Blocked linked content differs from PowerPoint in three ways
+      ([powerpoint-external-content.md](powerpoint-external-content.md)): a blocked picture has no
+      "PowerPoint has blocked automatic download of this picture" placeholder, intranet hosts are
+      blocked too (PowerPoint downloads them), and after Enable Content an online video's frame
+      loads with its slide (when PowerPoint first contacts the provider was not observed).
 - [ ] **P1** 40 coverage-manifest constructs are `preserve: unassessed` and 30 `edit: unassessed`
       (`src/core/pptx/core/openxml/openxml-coverage*.ts`): add a dirty-save round trip with unknown
       elements on every part type, and ratchet the counts in CI.
@@ -569,6 +638,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and
       round-trips (`linkedTxbxId` / `linkedTxbxSeq`).
+- [x] **P0** Copies never share an owned part: a duplicated or pasted chart, diagram, OLE object
+      or media element, a duplicated slide, master or layout and an inserted master each save with
+      their own chart, workbook, diagram, embedding, theme and layout parts and relationships, and
+      unique master and layout ids (`element-part-binding.ts`, `master-layout-crud-*.ts`; checked by
+      `findSharedOwnedParts` in `part-ownership-sweep.test.ts`; all 110 sweep outputs open in
+      PowerPoint 16, 2026-11-20). Before, PowerPoint refused such files (0x80070570).
+- [ ] **P2** Elements copied between a layout or master and a slide keep the relationship ids of
+      the part they came from: save binds only slide elements (`element-part-binding.ts`).
+- [ ] **P1** Collaboration shares package-local part names and relationship ids (`chartPartPath`,
+      `r:id` in `rawXml`, `collaboration-sync.ts`). A peer saving an element another client saved
+      first can cite a part or relationship only that client's package has.
 - [ ] **P1** `.ppt` export turns video and non-WAV audio into pictures.
 - [ ] **P1** Clipboard interop with desktop Office is partial. Done: HTML (`text/html`, CF_HTML)
       pastes into a text box being edited as formatted runs, bullets, numbering and links
@@ -595,6 +675,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Editing and slide show
 
+- [ ] **P2** Tab and Shift+Tab in a text box: Tab types a tab character and Shift+Tab keeps the
+      caret in the text box (all five bindings). Open: Tab at the start of a bulleted paragraph
+      types a tab instead of demoting it to the next list level, and Shift+Tab does not promote.
 - [x] **P1** Table cells are edited as rich text with each run's markup kept (hyperlinks, fields
       until their own text is edited, theme colours and transforms, untyped run properties):
       Enter adds a paragraph, Tab/Shift+Tab and edge arrows move between cells, Tab in the last

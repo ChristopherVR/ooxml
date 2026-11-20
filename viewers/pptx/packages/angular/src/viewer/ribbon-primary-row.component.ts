@@ -21,6 +21,7 @@ import {
 	ChangeDetectionStrategy,
 	Component,
 	computed,
+	effect,
 	ElementRef,
 	HostListener,
 	inject,
@@ -29,6 +30,7 @@ import {
 	signal,
 	viewChild,
 } from '@angular/core';
+import type { WritableSignal } from '@angular/core';
 import {
 	LucideChevronDown,
 	LucideEllipsis,
@@ -40,7 +42,7 @@ import {
 	LucideSparkles,
 } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
-import { isActionHidden, resolveReadOnlyBadge } from 'ooxml-ui/pptx';
+import { isActionHidden, listenForPopupMenuDismiss, resolveReadOnlyBadge } from 'ooxml-ui/pptx';
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 import { toolbarVisibility } from './toolbar-visibility';
@@ -134,9 +136,11 @@ export function visibleOverflowItems(
 				<button
 					type="button"
 					class="pptx-rb-pill rounded-l-none border-l border-border/40 px-1"
+					aria-haspopup="menu"
+					data-pptx-menu-trigger="present"
 					[attr.aria-expanded]="presentMenuOpen()"
-					[title]="'pptx.ribbon.slideShowOptions' | translate"
-					[attr.aria-label]="'pptx.ribbon.slideShowOptions' | translate"
+					[title]="'pptx.present.optionsTooltip' | translate"
+					[attr.aria-label]="'pptx.present.optionsTooltip' | translate"
 					(click)="presentMenuOpen.set(!presentMenuOpen())"
 				>
 					<svg lucideChevronDown class="h-3 w-3"></svg>
@@ -179,10 +183,10 @@ export function visibleOverflowItems(
 				type="button"
 				class="pptx-rb-pill"
 				[title]="'pptx.ribbon.customShows' | translate"
-				[attr.aria-label]="'pptx.ribbon.customShows' | translate"
 				(click)="openCustomShows.emit()"
 			>
-				<svg lucidePlus class="h-3.5 w-3.5"></svg> {{ 'pptx.ribbon.show' | translate }}
+				<svg lucidePlus class="h-3.5 w-3.5" aria-hidden="true"></svg>
+				{{ 'pptx.ribbon.show' | translate }}
 			</button>
 
 			<span class="mx-1 h-5 w-px self-center bg-border/50"></span>
@@ -241,6 +245,8 @@ export function visibleOverflowItems(
 				<button
 					type="button"
 					class="pptx-rb-icon text-muted-foreground"
+					aria-haspopup="menu"
+					data-pptx-menu-trigger="overflow"
 					[attr.aria-expanded]="overflowOpen()"
 					[title]="'pptx.ribbon.moreActions' | translate"
 					[attr.aria-label]="'pptx.ribbon.moreActions' | translate"
@@ -329,12 +335,27 @@ export class RibbonPrimaryRowComponent {
 
 	private readonly presentRoot = viewChild<ElementRef<HTMLElement>>('presentRoot');
 	private readonly overflowRoot = viewChild<ElementRef<HTMLElement>>('overflowRoot');
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-	/** Escape dismisses any open dropdown (Present options / overflow). */
-	@HostListener('document:keydown.escape')
-	protected onDocumentEscape(): void {
-		this.presentMenuOpen.set(false);
-		this.overflowOpen.set(false);
+	/** Escape closes an open drop-down and gives focus back to its button (shared with every binding). */
+	constructor() {
+		this.dismissOnEscape(this.presentMenuOpen, 'present');
+		this.dismissOnEscape(this.overflowOpen, 'overflow');
+	}
+
+	private dismissOnEscape(open: WritableSignal<boolean>, menu: 'present' | 'overflow'): void {
+		effect((onCleanup) => {
+			if (!open()) {
+				return;
+			}
+			const host = this.host.nativeElement;
+			onCleanup(
+				listenForPopupMenuDismiss(host.ownerDocument, {
+					onDismiss: () => open.set(false),
+					trigger: host.querySelector<HTMLElement>(`[data-pptx-menu-trigger="${menu}"]`),
+				}),
+			);
+		});
 	}
 
 	/** A pointerdown outside a dropdown's trigger + panel dismisses it. */

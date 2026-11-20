@@ -44,7 +44,7 @@ import {
 } from '../../../viewers/pptx/packages/react/src/viewer';
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
 import { installDevViewerHandle } from '../dev-viewer-handle';
-import { sessionFromPage, showSessionInAddressBar } from '../shared/collaboration-link';
+import { invitationFromPage, showSessionInAddressBar } from '../shared/collaboration-link';
 import { currentDemoCustomization } from '../shared/demo-customization';
 import { demoFileProviders } from '../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
@@ -451,34 +451,29 @@ function App() {
 	// setState's synchronously on every render where it applies: urlRoom /
 	// urlBroadcast only ever go from a URL-seeded value to `null` (see
 	// handleStopCollaboration below), never the other way, so this can never
-	// need to fire again after mount. Room is checked first and broadcast
-	// second so that, in the (URL-crafted, not UI-reachable) case where both are
-	// present, broadcast wins, preserving this file's previous two-effects
-	// ordering where the broadcast effect ran after the room effect.
+	// need to fire again after mount. `invitationFromPage` (shared by every pptx
+	// demo) decides the role and the session intent: a broadcast link joins the
+	// audience, and a link without `?sample=1` joins the room rather than seeding
+	// it with the blank placeholder deck.
 	const [collaborationConfig, setCollaborationConfig] = useState<CollaborationConfig | null>(() => {
-		let config: CollaborationConfig | null = null;
-		const user = { userName: urlName ?? autoName, userColor: randomCursorColor() };
-		const room = urlRoom ? sessionFromPage('room', urlServer) : null;
-		if (room) {
-			if (room.transport === 'webrtc' || isTrustedServerUrl(room.serverUrl)) {
-				config = { ...room, ...user };
-			} else {
-				console.warn(
-					`Ignoring ?room= auto-connect because ?server=${room.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
-				);
-			}
+		const invitation = invitationFromPage(urlServer);
+		if (!invitation) {
+			return null;
 		}
-		const broadcast = urlBroadcast ? sessionFromPage('broadcast', urlServer) : null;
-		if (broadcast) {
-			if (broadcast.transport === 'webrtc' || isTrustedServerUrl(broadcast.serverUrl)) {
-				config = { ...broadcast, ...user, role: 'viewer' };
-			} else {
-				console.warn(
-					`Ignoring ?broadcast= auto-connect because ?server=${broadcast.serverUrl} is not in the trusted-host allowlist.`,
-				);
-			}
+		const { link, role, sessionIntent } = invitation;
+		if (link.transport !== 'webrtc' && !isTrustedServerUrl(link.serverUrl)) {
+			console.warn(
+				`Ignoring the invitation auto-connect because ?server=${link.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
+			);
+			return null;
 		}
-		return config;
+		return {
+			...link,
+			userName: urlName ?? autoName,
+			userColor: randomCursorColor(),
+			sessionIntent,
+			...(role ? { role } : {}),
+		};
 	});
 
 	const handleStartCollaboration = useCallback(

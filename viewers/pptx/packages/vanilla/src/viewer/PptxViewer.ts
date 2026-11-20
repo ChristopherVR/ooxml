@@ -69,6 +69,7 @@ import type {
 	CloudOpenedFile,
 	DocumentStorage,
 	EmbeddedFontsSheet,
+	ExternalContentView,
 	ReadOnlySessionActions,
 	SlidePackageClipboard,
 	SlidePasteRequest,
@@ -118,6 +119,7 @@ import { createEditorController } from './editor';
 import type { HostDialogRequest } from './editor/editor-controller';
 import type { ExportLifecycle } from './export-lifecycle';
 import { createExportLifecycle } from './export-lifecycle';
+import { externalContentView } from './external-content';
 import { glyphOutlineFontCache } from './glyph-outline-cache';
 import type { Translator } from './i18n';
 import { createTranslator } from './i18n';
@@ -271,6 +273,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** Tags in-flight webfont resolutions; only the newest deck may apply its result. */
 	private webfontsToken = 0;
 	private detachFontDownloads: (() => void) | null = null;
+	private detachExternalContentOption: (() => void) | null = null;
 	/** The current deck's fonts in the module-wide glyph-outline cache; released on destroy. */
 	private readonly outlineFonts = createEmbeddedOutlineFontsSlot(glyphOutlineFontCache);
 	/** Host/user intent is retained while collaboration temporarily disables editing. */
@@ -292,6 +295,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	private rulers: RulerController | null = null;
 	/** File > Options store + option-driven behavior (undo depth, ribbon, etc.). */
 	private optionsController!: ViewerOptionsController;
+	/**
+	 * The host `allowExternalContent` switch: the option, or the building blocks' live value.
+	 * Unset leaves linked content to Trust Center and the security bar.
+	 */
+	private hostAllowExternalContent: boolean | undefined;
 	/** The host's ribbon tabs (`ribbonAddIns` option, `setRibbonAddIns`). */
 	private ribbonAddIns: readonly RibbonAddInTab[];
 	/** Ribbon Display Options; owned here so the state survives a chrome rebuild. */
@@ -320,6 +328,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
 		this.releaseSvgIdScope = installSvgIdScope(this.doc);
 		this.options = options;
+		this.hostAllowExternalContent = options.allowExternalContent;
 		this.customization = createViewerCustomizationLifecycle(options);
 		this.ribbonAddIns = options.ribbonAddIns ?? [];
 		this.ribbonDisplay = createRibbonDisplayController({
@@ -378,14 +387,6 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				// our private DOM and clicks the Back button.
 				this.lifecycle?.chrome.ribbon?.showDefaultTab();
 			},
-			// Trust Center > "Allow external content"; the options controller is
-			// constructed after this one, hence the lazy read (see its own comment).
-			// The host `allowExternalContent` option wins when set.
-			getAllowExternalContent: () =>
-				resolveAllowExternalContent(
-					this.options.allowExternalContent,
-					this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
-				),
 			getGoogleFontsBase: () => this.googleFontsBase(),
 			shouldOpenProtectedView: () => this.optionsController?.isProtectedView() ?? false,
 			setEditableForLoad: (editable) => this.setEditable(editable),
@@ -403,6 +404,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getLineChart3D: () => this.effective3DFlags().lineChart3D,
 			getAreaChart3D: () => this.effective3DFlags().areaChart3D,
 			getPieChart3D: () => this.effective3DFlags().pieChart3D,
+			getLinkedContentAllowed: () => this.linkedContentAllowed(),
 			// Read lazily: the options controller is constructed further down.
 			getElementRenderErrorHandler: () => this.options.onElementRenderError,
 			getPixelateMosaicAnimation: () =>
@@ -579,6 +581,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			getLineChart3D: () => this.effective3DFlags().lineChart3D,
 			getAreaChart3D: () => this.effective3DFlags().areaChart3D,
 			getPieChart3D: () => this.effective3DFlags().pieChart3D,
+			getLinkedContentAllowed: () => this.linkedContentAllowed(),
 			getImageResolutionScale: () =>
 				resolveImageResolutionScale(this.optionsController.getOptions()),
 			getIncludeHiddenSlides: () => this.optionsController.getOptions().advanced.printHiddenSlides,
@@ -747,6 +750,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				getChrome: () => this.lifecycle.chrome,
 				renderer: this.renderer,
 				callbacks: options,
+				externalContentBarInChrome: (state) =>
+					this.showsExternalContentBar() && this.externalContentViewOf(state).barVisible,
 			}),
 		);
 		// Values a collaboration peer sent that were left out: one toast per new
@@ -883,6 +888,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		// persisted File > Options values (undo depth, ribbon visibility, root
 		// classes, ScreenTips, etc.) for the first time.
 		this.optionsController.applyAll();
+		// Trust Center > "Allow external content" applies to the open deck at once.
+		this.detachExternalContentOption = this.optionsController.optionsStore.subscribeSelector(
+			(o) => o.trust.allowExternalContent,
+			() => this.redrawLinkedContent(),
+		);
 		// Trust Center > "Download fonts" applies to the open deck at once: off
 		// removes the managed webfont `<link>`, on adds it back.
 		this.detachFontDownloads = this.optionsController.optionsStore.subscribeSelector(
@@ -1980,6 +1990,64 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.readOnlyActions.dismiss();
 	}
 
+	/**
+	 * Enable Content on the security bar: draw this presentation's linked pictures and media,
+	 * in this viewer only. Nothing reloads: the deck, its unsaved state, the slide on screen,
+	 * undo history, autosave and a collaboration session carry on as they were.
+	 */
+	enableExternalContent(): void {
+		this.store.set({ externalContentEnabled: true });
+	}
+
+	/** The security bar's close button: the linked content stays blocked. */
+	closeExternalContentBar(): void {
+		this.store.set({ externalContentBarClosed: true });
+	}
+
+	/** Whether the security bar shows for the loaded deck. */
+	externalContentBarVisible(): boolean {
+		return this.externalContentViewOf(this.store.get()).barVisible;
+	}
+
+	/** Whether this viewer draws the deck's linked web content now. */
+	linkedContentAllowed(): boolean {
+		return this.externalContentViewOf(this.store.get()).allowed;
+	}
+
+	private externalContentViewOf(state: ViewerState): ExternalContentView {
+		return externalContentView(
+			state,
+			this.hostAllowExternalContent,
+			this.optionsController?.getOptions() ?? DEFAULT_VIEWER_OPTIONS,
+		);
+	}
+
+	/** Redraw after a change to what may be fetched that the store does not hold. */
+	private redrawLinkedContent(): void {
+		this.lifecycle.chrome.setExternalContentBar(this.externalContentBarInChrome());
+		this.renderer.renderThumbnails();
+		this.renderer.renderStage();
+	}
+
+	/**
+	 * Whether this viewer's own chrome draws the security bar. The building blocks' canvas
+	 * leaves it to the host shell, which renders it from `externalContent`, as in React.
+	 */
+	protected showsExternalContentBar(): boolean {
+		return true;
+	}
+
+	/** Whether the chrome shows the security bar now (`ChromeHost`). */
+	externalContentBarInChrome(): boolean {
+		return this.showsExternalContentBar() && this.externalContentBarVisible();
+	}
+
+	/** A live host `allowExternalContent` (the building blocks): applies to the open deck at once. */
+	protected setHostAllowExternalContent(allow: boolean | undefined): void {
+		this.hostAllowExternalContent = allow;
+		this.redrawLinkedContent();
+	}
+
 	/** The read-only recommendation banner's password form "Cancel": closes the prompt without unlocking. */
 	cancelReadOnlyPasswordPrompt(): void {
 		this.readOnlyActions.cancelPassword();
@@ -2378,6 +2446,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.detachSignatureWarning?.();
 		this.detachOutlineFonts?.();
 		this.detachFontDownloads?.();
+		this.detachExternalContentOption?.();
 		this.loading.invalidate();
 		this.editor.destroy();
 		this.annotations.dispose();

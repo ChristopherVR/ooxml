@@ -91,7 +91,7 @@ describe('createCollabUi host events', () => {
 		// The Share dialog mounts first, so the Broadcast dialog's footer is the last one.
 		const footer = [...document.body.querySelectorAll('pptx-ui-dialog-footer')].at(-1);
 		expect(footer).toBeDefined();
-		// The dialog opens with the (blank) remembered room; give it one to start.
+		// Name the room, so the started session is a known one.
 		let scope: HTMLElement | null = footer?.parentElement ?? null;
 		while (scope && !scope.querySelector('input')) {
 			scope = scope.parentElement;
@@ -128,6 +128,23 @@ describe('createCollabUi host events', () => {
 
 		expect(onStopped).toHaveBeenCalledTimes(1);
 		expect(deps.stopCollaboration).toHaveBeenCalledTimes(1);
+	});
+
+	it('opens a new broadcast with a fresh room, so Start works at once', () => {
+		const deps = makeDeps();
+		createCollabUi(deps).openBroadcast();
+		const footer = [...document.body.querySelectorAll('pptx-ui-dialog-footer')].at(-1);
+		const rooms = [...document.body.querySelectorAll<HTMLInputElement>('input')]
+			.map((input) => input.value)
+			.filter((value) => value.startsWith('broadcast-'));
+		expect(rooms).toHaveLength(1);
+
+		footer?.dispatchEvent(
+			new CustomEvent('dialog-footer-request', { detail: { id: 'start' }, bubbles: true }),
+		);
+		expect(deps.startCollaboration).toHaveBeenCalledWith(
+			expect.objectContaining({ roomId: rooms[0], role: 'owner', transport: 'webrtc' }),
+		);
 	});
 });
 

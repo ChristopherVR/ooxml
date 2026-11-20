@@ -1,5 +1,6 @@
 // Excel's scalar coercion rules.
 import type { CellError } from '../model';
+import { compareText } from './text-compare';
 import { numberToText, parseNumberText, round15 } from './text-number';
 import { ERR, ErrorSignal, isError, type Scalar } from './values';
 
@@ -56,13 +57,6 @@ export function compareNumbers(a: number, b: number): number {
 	const ra = round15(a);
 	const rb = round15(b);
 	return ra === rb ? 0 : ra < rb ? -1 : 1;
-}
-
-/** Case-insensitive text comparison. */
-export function compareText(a: string, b: string): number {
-	const la = a.toLowerCase();
-	const lb = b.toLowerCase();
-	return la === lb ? 0 : la < lb ? -1 : 1;
 }
 
 /**

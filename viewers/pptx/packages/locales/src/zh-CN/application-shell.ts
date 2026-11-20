@@ -206,9 +206,15 @@ export const translations = {
 		'嵌入字体的许可不允许使用该字体，因此显示替代字体。其字体数据保留在文件中。',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'未嵌入某个字体，因为其许可不允许将其嵌入到可编辑的演示文稿中。',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'协作者共享的图片或视频太大，无法发送给会话中的所有人，因此不会显示。',
 	'pptx.compatibility.collaborationValueRejected':
 		'协作者发送的内容因不允许在此使用（例如不安全的链接或文件类型）而被省略。',
 	'pptx.compatibility.exportBackendUnavailable': '当前环境中无法导出为此格式。',
+	'pptx.externalContent.title': '安全警告',
+	'pptx.externalContent.message': '已阻止对外部图片和其他媒体的引用。',
+	'pptx.externalContent.enable': '启用内容',
+	'pptx.externalContent.close': '关闭',
 	'pptx.readOnly.bannerTitle': '只读',
 	'pptx.readOnly.editAnyway': '无论如何编辑',
 	'pptx.readOnly.dismiss': '关闭',

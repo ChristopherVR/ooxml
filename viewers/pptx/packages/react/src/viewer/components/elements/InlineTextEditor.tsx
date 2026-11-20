@@ -1,5 +1,6 @@
 import {
 	getInlineEditorSelectionResult,
+	insertInlineEditorText,
 	isBulletMarkerSegment,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
@@ -259,7 +260,7 @@ export function InlineTextEditor({
 					}
 					return;
 				}
-				// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text. Ctrl/Cmd+D is
+				// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text; Tab types a tab. Ctrl/Cmd+D is
 				// only cancelled: the viewer keymap stands down mid-edit, so nothing
 				// else stops the browser opening its bookmark dialog. Shared with
 				// the other four bindings (`mapInlineEditorChord`).
@@ -267,6 +268,10 @@ export function InlineTextEditor({
 				if (chord) {
 					e.preventDefault();
 					e.stopPropagation();
+					if (chord === 'tab') {
+						insertInlineEditorText(e.currentTarget.ownerDocument, '\t');
+						return;
+					}
 					if (chord === 'suppress' || !list.canCommit()) {
 						return;
 					}

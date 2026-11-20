@@ -80,7 +80,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md#commit-conventions). The `PR hygiene / 
 1. `prepare` checks out `main` with full history and a read-only token and runs the planner with `--write`. If nothing changed and no baseline tag needs adopting, the run ends here, which is what a quiet hour looks like.
 2. It fails early if the `NPM_PUBLISH` repository variable is not `true`, so nothing is tagged that cannot be published.
 3. `bun install` (not frozen: the version bump changes the workspace versions in `bun.lock`; `scripts/check-lockfile-drift.mjs` then fails the run unless the lockfile differs from `HEAD` only in workspace package versions, so a new third-party resolution never ships unreviewed), `bun run build`, `bun run test:package` (pack, install into a clean project, import every entry point), then `scripts/build-released.mjs --smoke`, which runs `build` and `test:package` of each released workspace package that defines them, and `scripts/publish-released.mjs --entry-points`, which checks each built package's manifest and that the files `npm pack` would ship from it contain every entry point the manifest names. Typecheck and the unit tests are not repeated: `main` is protected by the `ci-success` check. A failure here stops the run before anything is committed or tagged and the next run retries.
-4. It prepends the new section to each released package's changelog with [git-cliff](https://git-cliff.org) (a root devDependency, `cliff.toml`, scoped by `--include-path` to that package's published paths and by `--tag-pattern` to its tags), updates the viewer changelogs and writes each package's release notes (`scripts/release-notes.mjs <key>`). Changelogs are prepend-only: old tags and releases are pruned, so history is never regenerated. The plan, the lockfile, the changelogs and the notes go to `release` as the `release-prepared-<run>` artifact.
+4. It prepends the new section to each released package's changelog with [git-cliff](https://git-cliff.org) (a root devDependency, `cliff.toml`, scoped by `--include-path` to that package's published paths and by `--tag-pattern` to its tags), adds the hand-written notes of a major release to it (`scripts/major-notes.mjs --plan`, see below), updates the viewer changelogs and writes each package's release notes (`scripts/release-notes.mjs <key>`). Changelogs are prepend-only: old tags and releases are pruned, so history is never regenerated. The plan, the lockfile, the changelogs and the notes go to `release` as the `release-prepared-<run>` artifact.
 5. `release` (`contents: write`, no Bun) runs the planner again and pushes the baseline tag of any package that was published by hand (see above). It then requires its plan to match the artifact's byte for byte, copies from the artifact only the lockfile and the changelogs its own plan names, and checks the lockfile drift again. The versions and manifests it commits are its own.
 6. It commits `chore(release): bump versions and update changelogs [skip ci]` straight to `main` (released manifests, changelogs, lockfile), retrying with a rebase if `main` moved. `[skip ci]` keeps it from starting CI.
 7. It creates each tag and GitHub release at that commit, core first, with the notes from `prepare`, uploads the plan, and prunes superseded releases (`scripts/prune-releases.mjs --keep 1`; tags are kept).
@@ -110,6 +110,34 @@ There is no npm token anywhere. The `publish` job requests an OIDC token (`id-to
 | Package                                                | Organization or user | Repository | Workflow filename | Environment |
 | ------------------------------------------------------ | -------------------- | ---------- | ----------------- | ----------- |
 | `ooxml-core`, `ooxml-ui`, `ooxml-mcp`, viewer packages | `ChristopherVR`      | `ooxml`    | `release.yml`     | `npm`       |
+
+## Hand-written notes for a major release
+
+A coordinated major release, such as OOXML 2.0, keeps its notes in `.release-notes/<name>/`: an `overview.md` and one fragment per piece of work, each bullet naming the packages it affects. [`.release-notes/README.md`](../.release-notes/README.md) describes the format.
+
+When the planner gives a package a `major` bump and the package's changelog carries no section with these notes yet, `scripts/major-notes.mjs --plan release-plan.json` writes the package's share into the section git-cliff just wrote:
+
+```md
+## [5.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/pptx-react-viewer@5.0.0) - 2026-12-01
+
+<!-- release-notes: 2.0 -->
+
+The overview.
+
+### Breaking changes
+
+- ...
+
+### Commits
+
+#### Features
+
+- ...
+```
+
+The sections follow in a fixed order (Breaking changes, Migration, Security, Added, Changed, Fixed, Performance, Accessibility), each holding only the bullets that name the package, a subpath of it or a group it belongs to. The git-cliff groups move under `### Commits`. `scripts/release-notes.mjs` gives the GitHub release body the same shape, and `scripts/viewer-changelogs.mjs` merges the notes into the viewer's dated section ahead of its commits. The comment marks the section, so a later major release of the same package leaves the notes out and running the step twice changes nothing.
+
+The step fails before anything is tagged when a bullet names no package or an unknown one, or a published package has no bullet. `node scripts/major-notes.mjs --check` and `bun run test:scripts` run the same check on every change to `.release-notes/`. `node scripts/major-notes.mjs --render <key>` prints one package's notes.
 
 ## Package checks
 

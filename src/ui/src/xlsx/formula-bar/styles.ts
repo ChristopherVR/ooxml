@@ -5,6 +5,10 @@ export const FORMULA_BAR_CSS = `
 .xfb-namebox{position:relative;display:flex;align-items:center;width:110px;flex:none;border:1px solid var(--xve-input, var(--office-control-border, #8a8886));border-radius:var(--xve-radius, var(--office-radius, 2px));background:var(--xve-background, var(--office-background, #fff))}
 .xfb-name{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;padding:0 4px;height:20px}
 .xfb-namebox:focus-within{border-color:var(--xve-ring, var(--office-ring, #217346))}
+/* Recolouring a hairline border is not a focus indicator: against the border it replaces it stays
+   under 3:1 (WCAG 1.4.11), and in a dark theme it all but disappears. The box takes the shared
+   ring, inset so the Name Box and the formula bar do not overlap each other. */
+.xfb-namebox:focus-within,.xfb-input:focus-within{outline:var(--office-focus-width, 2px) solid var(--xve-ring, var(--office-ring, #217346));outline-offset:calc(-1 * var(--office-focus-width, 2px))}
 .xfb-name-toggle{border:0;background:transparent;color:inherit;width:16px;height:20px;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .xfb-name-list{position:absolute;left:-1px;top:100%;z-index:50;min-width:100%;max-height:240px;overflow:auto;margin:2px 0 0;padding:2px 0;list-style:none;background:var(--xve-popover, var(--office-popover, #fff));border:1px solid var(--xve-border, var(--office-border, #c8c6c4));box-shadow:0 4px 12px rgba(0,0,0,.16)}
 .xfb-name-item{padding:3px 8px;cursor:default;white-space:nowrap}
@@ -17,6 +21,7 @@ export const FORMULA_BAR_CSS = `
 .xfb-cancel,.xfb-enter{display:none}
 .xfb-editing .xfb-cancel,.xfb-editing .xfb-enter{display:flex}
 .xfb-fx i{font-family:Cambria,'Times New Roman',serif;font-size:13px}
+.xfb-fx i::before{content:'fx'}
 .xfb-input{flex:1;min-width:0;height:20px;border:1px solid var(--xve-input, var(--office-control-border, #8a8886));border-radius:var(--xve-radius, var(--office-radius, 2px))}
 .xfb-input:focus-within{border-color:var(--xve-ring, var(--office-ring, #217346))}
 .xfb-expanded .xfb-input{height:76px}

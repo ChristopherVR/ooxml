@@ -54,6 +54,8 @@ const dd = useDropdown();
 						dd.open.value ? 'bg-primary text-white' : 'hover:bg-accent text-foreground',
 					)
 				"
+				aria-haspopup="menu"
+				:aria-expanded="dd.open.value"
 				:title="t('pptx.present.optionsTooltip')"
 				:aria-label="t('pptx.present.optionsTooltip')"
 				@click="dd.toggle()"

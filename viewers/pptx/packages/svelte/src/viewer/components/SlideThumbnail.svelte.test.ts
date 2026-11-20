@@ -110,6 +110,25 @@ describe('slideThumbnail', () => {
 		expect(box.textContent).not.toContain('1');
 	});
 
+	it('draws linked web content only with `linkedContent`, and redraws when it changes', () => {
+		const linked = 'https://linked-content.test/picture.png';
+		const picture = { ...shape('pic'), type: 'image', imageData: linked } as unknown as PptxElement;
+		const background = { backgroundImage: linked };
+		const { props, box } = mountThumbnail([picture]);
+		props.slide = { ...props.slide, ...background };
+		flushSync();
+		// Outside a viewer, and with the prop unset, linked content is withheld.
+		expect(box.innerHTML).not.toContain(linked);
+		props.linkedContent = true;
+		flushSync();
+		expect(box.innerHTML).toContain(linked);
+		props.linkedContent = false;
+		flushSync();
+		expect(box.innerHTML).not.toContain(linked);
+		// The model is never changed.
+		expect(props.slide.backgroundImage).toBe(linked);
+	});
+
 	it('follows edits to the slide model without a save', () => {
 		const { props, drawn } = mountThumbnail([shape('a')]);
 		expect(drawn()).toHaveLength(1);

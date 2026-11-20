@@ -56,6 +56,36 @@ describe('master view sidebar', () => {
 		expect(onTabChange).toHaveBeenCalledWith('handout');
 	});
 
+	it('names the button that leaves master view for what it does', () => {
+		const onCollapse = vi.fn();
+		const sidebar = createMasterViewSidebar(document, createTranslator());
+		sidebar.render({
+			tab: 'slides',
+			masters: [],
+			active: { masterIndex: 0, layoutIndex: null },
+			canvasSize: { width: 960, height: 540 },
+			notesMasterPresent: false,
+			handoutMasterPresent: false,
+			handoutSlidesPerPage: 4,
+			renderStage,
+			onSelect: vi.fn(),
+			onTabChange: vi.fn(),
+			onCollapse,
+			onHandoutSlidesPerPageChange: vi.fn(),
+			onMasterBackgroundColorChange: vi.fn(),
+			crudActions: [],
+			onCrudAction: vi.fn(),
+		});
+		// "Collapse master pane" read as a pane toggle, so a reader looking for a way out
+		// reached the security bar's Close instead.
+		const close = sidebar.el.querySelector<HTMLButtonElement>(
+			'button[aria-label="Close master view"]',
+		);
+		expect(close).not.toBeNull();
+		close?.click();
+		expect(onCollapse).toHaveBeenCalledOnce();
+	});
+
 	it('renders master thumbnails and history-aware handout layout controls', () => {
 		const onSelect = vi.fn();
 		const onCount = vi.fn();

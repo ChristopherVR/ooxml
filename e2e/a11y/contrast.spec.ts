@@ -18,6 +18,9 @@ const PAIRS = {
 	'link on the document page': ['--office-canvas-link', '--office-paper', 4.5],
 	'focus ring on background': ['--office-ring', '--office-background', 3],
 	'focus ring on surface': ['--office-ring', '--office-surface', 3],
+	// The ribbon's File tab is filled with the accent, and `--office-ring` is a shade of the accent:
+	// a control the accent fills takes `--office-ring-on-accent` for its ring (A11Y-18g).
+	'focus ring on the accent fill': ['--office-ring-on-accent', '--office-accent', 3],
 	'accent indicator on background': ['--office-accent', '--office-background', 3],
 	// Form control boundaries; `--office-border` is left to decorative dividers, which 1.4.11 exempts.
 	'control border on background': ['--office-control-border', '--office-background', 3],
@@ -29,6 +32,8 @@ const FALLBACK: Record<string, string> = {
 	'--office-paper': '#ffffff',
 	'--office-canvas-link': '#0563c1',
 	'--office-control-border': '#8a8886',
+	// Derived from the accent's own foreground, so the theme declares no literal for it.
+	'--office-ring-on-accent': 'var(--office-accent-foreground, #ffffff)',
 	'--office-teams-brand': 'var(--office-accent)',
 	'--office-teams-brand-foreground': '#ffffff',
 };

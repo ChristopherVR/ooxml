@@ -1314,6 +1314,8 @@ export * from './outline-view';
 export * from './outline-view-edit';
 // `outline-view-dismiss` is Escape back to Normal view, shared so no binding misses it.
 export * from './outline-view-dismiss';
+// `popup-menu-dismiss` is Escape out of a ribbon drop-down menu, shared for the same reason.
+export * from './popup-menu-dismiss';
 // `outline-view-session` is the edit-and-caret shell every binding's Outline view runs on.
 export * from './outline-view-session';
 // Editor keyboard map: the editing shortcut set (clipboard, history, nudge,
@@ -1506,6 +1508,11 @@ export * from './comment-markers';
 // lifecycle; the recogniser and its pure helpers (getTouchDistance/clampScale)
 // are shared here.
 export * from './touch-gestures';
+// Touch long-press and double-tap (issue #290): `installTouchPress(root)` turns
+// them into synthetic `contextmenu` / `dblclick` events on controls that opt in
+// with `data-pptx-touch-press`, so every binding's existing handlers run.
+export * from './touch-press';
+export * from './touch-press-dom';
 // Always-available presentation controls on coarse-pointer devices: shared
 // previous/next boundary state and counter text for every binding.
 export * from './presentation-touch-controls';
@@ -1750,6 +1757,8 @@ export * from './cross-slide-audio';
 // Slide-transition sound playback (`p:sndAc/p:stSnd`/`p:endSnd`), distinct
 // from `slide-transition-sound.ts`'s authoring picker.
 export * from './slide-transition-sound-playback';
+// Every sound a viewer plays from a deck, behind its linked-content consent.
+export * from './deck-sound';
 // Presentation ink-annotation overlay pure helpers (stroke path + cursor).
 export * from './annotation-overlay';
 

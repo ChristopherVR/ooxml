@@ -1,4 +1,5 @@
 import type {
+	ViewerExternalContentBar,
 	GoogleFontsOption,
 	ListConversionScope,
 	PptxLoadLimits,
@@ -21,7 +22,6 @@ import {
 	FONT_DOWNLOAD_SETTING_ID,
 	hostFontDownloadLock,
 	lockExternalContentSetting,
-	resolveAllowExternalContent,
 	resolveEffectiveGoogleFonts,
 } from 'ooxml-ui/pptx';
 import type { PptxHandler } from 'pptx-viewer-core';
@@ -34,6 +34,7 @@ import { useCompatibilityToastsState, useRemoteValueToast } from './useCompatibi
 import type { EditorOperationsResult } from './useEditorOperations';
 import { useEditorOperations } from './useEditorOperations';
 import type { ExportHandlersResult } from './useExportHandlers';
+import { useExternalContentConsent } from './useExternalContentConsent';
 import type { PrintHandlersResult } from './usePrintHandlers';
 import type { PropertyHandlersResult } from './usePropertyHandlers';
 import { useReadOnlyRecommendationState } from './useReadOnlyRecommendationState';
@@ -88,6 +89,8 @@ export interface ViewerBuildingBlocksState {
 	readOnlyRecommendation: ReadOnlyRecommendation;
 	/** The loaded deck carries a modify verifier. */
 	hasModifyVerifier: boolean;
+	/** PowerPoint's security bar for linked pictures and media (see `ViewerBuildingBlocksResult`). */
+	externalContent: ViewerExternalContentBar;
 	/** The loaded deck's handler (null before a deck loads). */
 	handlerRef: { readonly current: PptxHandler | null };
 	dialogs: ViewerDialogsResult;
@@ -242,6 +245,13 @@ export function useViewerBuildingBlocksState(
 	});
 
 	const canInsertElement = !readOnlyRec.locked && !viewerOptions.trust.openInProtectedView;
+	// PowerPoint's default for linked web content, per presentation and viewer, as in
+	// `PowerPointViewer`.
+	const externalContent = useExternalContentConsent(content, allowExternalContent, viewerOptions, [
+		slides,
+		state.templateElementsBySlideId,
+		state.tableStyleMap,
+	]);
 	const {
 		exportHandlers,
 		printHandlers,
@@ -269,10 +279,8 @@ export function useViewerBuildingBlocksState(
 		// Host `googleFonts` first, else Trust Center > "Download fonts", as in `PowerPointViewer`.
 		googleFonts: resolveEffectiveGoogleFonts(googleFonts, viewerOptions),
 		limits,
-		// Trust Center > "Allow external content": same gate `PowerPointViewer`
-		// applies, so the headless building-blocks API loads http(s) images
-		// under the same default-off, core-side SSRF/privacy guard.
-		allowExternalImages: resolveAllowExternalContent(allowExternalContent, viewerOptions),
+		// The model keeps the linked addresses; the blocks draw them per `externalContent.allowed`.
+		allowExternalImages: true,
 		setReadOnlyRecommendation: readOnlyRec.setRecommendation,
 		setModifyVerifier: readOnlyRec.setModifyVerifier,
 		canInsertElement,
@@ -322,6 +330,12 @@ export function useViewerBuildingBlocksState(
 		canInsertElement,
 		readOnlyRecommendation: readOnlyRec.recommendation,
 		hasModifyVerifier: readOnlyRec.modifyVerifier !== undefined,
+		externalContent: {
+			barVisible: externalContent.barVisible,
+			allowed: externalContent.allowed,
+			enable: externalContent.enable,
+			close: externalContent.close,
+		},
 		handlerRef: integrationHandlerRef,
 		dialogs,
 		editorOps,

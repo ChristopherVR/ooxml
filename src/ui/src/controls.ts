@@ -3,6 +3,7 @@ import { defineToasts } from './notices/toasts';
 import { definePasteOptions } from './notices/paste-options';
 import { defineReadOnlyBanner } from './notices/read-only-banner';
 import { defineSignatureStatus } from './notices/signature-status';
+import { defineMessageBar } from './notices/message-bar';
 import { defineRadio } from './form/radio';
 export {
 	OFFICE_COLOR_SWATCHES,
@@ -73,6 +74,7 @@ export {
 	defineRadio,
 	defineReadOnlyBanner,
 	defineSignatureStatus,
+	defineMessageBar,
 	defineRibbonToggle,
 	defineSearchField,
 	defineToasts,
@@ -159,6 +161,7 @@ export type {
 	OfficeStatusButton,
 	OfficeStatusText,
 } from './chrome/status-bar';
+export { zoomFitName } from './chrome/status-bar';
 export type { OfficeTab, OfficeTabReorderEvent, OfficeTabSelectEvent } from './chrome/tab-strip';
 export type { OfficeSearchCommand } from './menu/command-search';
 export {
@@ -264,6 +267,7 @@ export type {
 	OfficeReadOnlyBannerIntent,
 	OfficeReadOnlyBannerState,
 } from './notices/read-only-banner';
+export type { OfficeMessageBarIntent, OfficeMessageBarState } from './notices/message-bar';
 export {
 	OfficeUiSignatureStatus,
 	type OfficeSignatureStatusVariant,
@@ -352,6 +356,7 @@ export const CONTROL_DEFINERS = [
 	defineToasts,
 	defineReadOnlyBanner,
 	defineSignatureStatus,
+	defineMessageBar,
 	definePasteOptions,
 	defineTitleBar,
 	defineRibbonSection,

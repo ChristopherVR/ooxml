@@ -11,7 +11,9 @@ import {
 	visioRotationShape,
 	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
+import { regionKeyDirection } from '../region-focus';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
+import { moveVisioRegion } from './viewer-regions';
 import type { RibbonCommand } from './ribbon-parts';
 import { routeRibbonAction, type RibbonTargets } from './ribbon-router';
 import { ShapeDrawTool } from './viewer-draw-tool';
@@ -297,6 +299,7 @@ export class ViewerCommands {
 			toggleFullscreen: () => this.#toggleFullscreen(),
 			present: () => host.present?.(),
 			togglePane: host.togglePane,
+			moveRegion: (direction) => void moveVisioRegion(host.root, direction),
 			reveal: host.reveal,
 			fit: host.fit,
 			togglePanZoom: host.togglePanZoom,
@@ -599,6 +602,9 @@ export class ViewerCommands {
 			return { type: 'page', step: key === 'PageDown' ? 1 : -1 };
 		if (key === 'F5' && !control) return { type: 'presentation' };
 		if (key === 'F1' && !control) return { type: 'help', topic: 'help' };
+		// F6 moves between the regions of the window from anywhere, a text field included.
+		const region = regionKeyDirection(event);
+		if (region) return { type: 'region', direction: region };
 		const drawing = this.#draw.drawing || this.#connector.drawing;
 		if (key === 'Escape' && (drawing || this.#text.drafting)) return { type: 'cancel-drawing' };
 		if (event.composedPath().some(editable)) return undefined;

@@ -9,6 +9,7 @@ import type { OfficeGalleryState, OfficeUiGallery } from '../ribbon/gallery';
 import { emitRibbonAction, type VisioRibbonAction } from './ribbon-action';
 import { INLINE_GALLERY_STEPS, inlineGallery } from './ribbon-inline-galleries';
 import { menu, type CommandSpec } from './ribbon-parts';
+import { setGalleryState } from './ribbon-localize';
 
 export const THEMES_HINT =
 	'Apply a theme to the current page. Quick-styled shapes take its colours; text keeps its own font.';
@@ -135,7 +136,7 @@ function gallery(doc: Document, state: OfficeGalleryState, icon: string, hint: s
 	element.setAttribute('icon', icon);
 	element.setAttribute('label', state.label);
 	element.title = hint;
-	element.state = state;
+	setGalleryState(element, state);
 	element.toggleAttribute('disabled', true);
 	element.addEventListener('office-gallery-pick', (event) => {
 		event.stopPropagation();

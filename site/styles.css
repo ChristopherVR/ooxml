@@ -576,6 +576,10 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	font-weight: 700;
 	font-size: 14px;
 }
+/* The emblem is a logo, not text: the button is named by the workspace it shows. */
+.workspace-emblem::before {
+	content: 'O';
+}
 .workspace-switch > span:nth-child(2) {
 	flex: 1;
 	min-width: 0;
@@ -820,7 +824,9 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	display: flex;
 	flex: none;
 }
+/* The close button is at least a 24px target (WCAG 2.5.8) whatever width the font gives the glyph. */
 .file-tab > button:last-child {
+	min-width: 24px;
 	padding: 4px 7px;
 }
 

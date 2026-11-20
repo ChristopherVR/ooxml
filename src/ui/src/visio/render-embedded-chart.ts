@@ -18,10 +18,16 @@ export function renderEmbeddedChart(shape: VisioShape): SVGGElement | undefined 
 	const width = object.width ?? shape.width;
 	const height = object.height ?? shape.height;
 	if (!(width > 0) || !(height > 0)) return undefined;
-	const markup = renderChartSvg(object.chart, Math.round(width * DPI), Math.round(height * DPI));
+	// The shape's own alt text names the chart, and the painter's `<desc>` reads its data out; the
+	// copy below keeps them, so it must also keep `role="img"` for a reader to use either.
+	const altText = shape.alternativeText || shape.accessibilityTitle || '';
+	const markup = renderChartSvg(object.chart, Math.round(width * DPI), Math.round(height * DPI), {
+		...(altText ? { altText } : {}),
+	});
 	const chart = parseSvgPreview(document, markup);
 	if (!chart) return undefined;
 	const node = svgElement('svg');
+	node.setAttribute('role', 'img');
 	for (const child of Array.from(chart.childNodes)) node.append(document.importNode(child, true));
 	node.setAttribute(
 		'viewBox',

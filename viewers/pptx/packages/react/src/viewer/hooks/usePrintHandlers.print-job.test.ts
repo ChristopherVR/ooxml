@@ -77,7 +77,9 @@ beforeEach(() => {
 	vi.mocked(renderElementToTiledCanvas).mockClear();
 	write.mockClear();
 	vi.spyOn(window, 'open').mockReturnValue({
-		document: { open: vi.fn(), write, close: vi.fn() },
+		document: { open: vi.fn(), write, close: vi.fn(), readyState: 'complete' },
+		addEventListener: vi.fn(),
+		removeEventListener: vi.fn(),
 		focus: vi.fn(),
 		print: vi.fn(),
 		close: vi.fn(),

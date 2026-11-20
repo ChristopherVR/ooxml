@@ -189,6 +189,7 @@ const textStyle = computed(() => props.animationState?.textStyle);
 		@pointermove="onPointermove"
 		@pointerup="onPointerup"
 		@dblclick="onDblclick"
+		:data-pptx-touch-press="interactive ? 'dblclick' : undefined"
 	>
 		<!-- Interaction-only hit-target for a degenerate chart; see `hitTargetStyle`. -->
 		<div

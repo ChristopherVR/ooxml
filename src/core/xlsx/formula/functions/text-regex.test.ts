@@ -65,5 +65,38 @@ describe('regular expression functions', () => {
 
 	it('reports an invalid pattern as #VALUE!', () => {
 		expect(calc('REGEXTEST("x","(")')).toEqual(E.VALUE);
+		expect(calc('REGEXTEST("x","a{2,1}")')).toEqual(E.VALUE);
+		expect(calc('REGEXTEST("x","a++")')).toEqual(E.VALUE);
+		expect(calc('REGEXTEST("abc",REPT("a",1001))')).toEqual(E.VALUE);
+	});
+
+	it('replaces one occurrence with that match’s own captures and context', () => {
+		expect(calc('REGEXREPLACE("ab ab","(?<=a)b","[$&$`]",2)')).toBe('ab a[bab a]');
+		expect(calc('REGEXREPLACE("x1 y2","(?<l>[a-z])(\\d)","$2$<l>",-1)')).toBe('x1 2y');
+	});
+});
+
+describe('regular expressions cannot hang a recalculation', () => {
+	const quick = (formula: string) => {
+		const started = performance.now();
+		const value = calc(formula);
+		expect(performance.now() - started, formula).toBeLessThan(1000);
+		return value;
+	};
+
+	it('answers the patterns that backtrack exponentially in a backtracking matcher', () => {
+		expect(quick('REGEXTEST(REPT("a",30),"^(.*a){20}$b")')).toBe(false);
+		expect(quick('REGEXTEST(REPT("a",200),".*.*.*.*.*.*.*.*b")')).toBe(false);
+		expect(quick('REGEXTEST(REPT("a",30),"^(a*)\\1\\1\\1b")')).toBe(false);
+		expect(quick('REGEXTEST(REPT("a",40)&"!","(a+)+$")')).toBe(false);
+		expect(quick('REGEXTEST(REPT("a",5000)&"!","(a|aa)+$")')).toBe(false);
+		expect(quick('REGEXTEST(REPT("a",300)&"!","(?=(a|aa)+$)")')).toBe(false);
+	});
+
+	it('accepts nested quantifiers as Excel does', () => {
+		expect(quick('REGEXTEST(REPT("a",40),"^(a+)+$")')).toBe(true);
+		expect(quick('REGEXEXTRACT("aaab","(a|aa)+b")')).toBe('aaab');
+		expect(quick('REGEXEXTRACT("xaab","(a*)*b",2)')).toBe('aa');
+		expect(quick('REGEXREPLACE(REPT("ab",3000),"((a|b)+)+","#")')).toBe('#');
 	});
 });

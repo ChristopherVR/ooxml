@@ -77,9 +77,14 @@
 [role='tab'][data-contextual][aria-selected='true']::after {
 	background: var(--office-ribbon-contextual);
 }
-.file:focus-visible,
 [role='tab']:focus-visible {
 	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
+}
+/* The File tab is filled with the accent, and `--office-ring` is a shade of the accent: the ring
+   was drawn in the colour it sat on, so focus showed nothing at all. */
+.file:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring-on-accent);
 	outline-offset: calc(-1 * var(--office-focus-width));
 }
 ::slotted([slot='search']) {

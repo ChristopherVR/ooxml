@@ -352,7 +352,8 @@ and master elements merged, as the canvas draws them), `activeSlideIndex`, `canv
 callbacks, and the `fieldContext` and `tableStyleContext` built with
 `buildSlidesPaneFieldContext` and `buildSlidesPaneTableStyleContext` from `ooxml-ui/pptx`, so
 thumbnails substitute fields (including slide numbers on a deck that does not start at 1) and
-table colours as the canvas does. The "Layout" entry of a slide's context menu makes that slide
+table colours as the canvas does, and `linkedContent` (`state.externalContent.allowed`), so they
+draw the deck's linked web content once the viewer allows it. The "Layout" entry of a slide's context menu makes that slide
 active and calls the optional `onopenlayoutgallery({ slideIndex, x, y })`, since these building
 blocks do not render the Layout gallery. The rail has no collapse control of its own: render it
 conditionally to hide it. `SlidesPane` is also exported from the package root, and needs
@@ -369,7 +370,9 @@ the thumbnail does in every binding (Svelte's slides pane draws no badge). Its p
 `slide`, `templateElements` (layout and master elements drawn beneath the slide's own; default
 none), `canvasSize` and `previewWidth` (pixels; default the rail thumbnail width; the height
 follows the deck's aspect ratio), plus the `SlidesPane` props it shares: `mediaDataUrls`,
-`fieldContext` and `tableStyleContext`. Feed it from the same `createSlidesPaneProps` result.
+`fieldContext`, `tableStyleContext` and `linkedContent` (whether it draws the deck's linked web
+content: `state.externalContent.allowed`; unset keeps the enclosing `createViewerState` choice and
+withholds it outside one). Feed it from the same `createSlidesPaneProps` result.
 Those `slides` already carry their layout and master elements, so leave `templateElements` empty
 for them.
 
@@ -391,6 +394,7 @@ for them.
 				mediaDataUrls={paneProps.mediaDataUrls}
 				fieldContext={paneProps.fieldContext}
 				tableStyleContext={paneProps.tableStyleContext}
+				linkedContent={paneProps.linkedContent}
 			/>
 		</li>
 	{/each}

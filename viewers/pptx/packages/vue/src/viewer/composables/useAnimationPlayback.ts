@@ -16,7 +16,7 @@
  * the shared `pptx-viewer-shared` `animation-playback-engine` (formerly a local
  * `composables/animation-playback-helpers` copy, hand-ported from React and
  * near-identical across all five bindings); this composable supplies the
- * `playSound` / `stopSound` host hooks it needs (Vue's own `./animation-sound`)
+ * `playSound` / `stopSound` host hooks it needs (the shared `playDeckSound`)
  * and the reactive `Map` + `Ref`s the shared engine's callbacks write into.
  *
  * NOTE: the editor / inspector animation PREVIEW still uses the older shared
@@ -27,20 +27,26 @@
 
 import {
 	advanceMainSequence,
+	BUILT_IN_SOUNDS,
 	clearPlaybackTimers,
 	createActiveAnimationGroup,
+	playDeckSound,
 	playGroup,
 	PresentationAnimationController,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
-import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
+import type {
+	BuildRafHandle,
+	DeckSoundSources,
+	ElementAnimationState,
+	PlaybackContext,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref } from 'vue';
-
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
 
 // Re-export the older preset click-group model so existing importers (the editor
 // animation preview + the unstable composable surface) keep working unchanged.
@@ -54,6 +60,11 @@ export interface UseAnimationPlaybackOptions {
 	showWithAnimation?: MaybeRefOrGetter<boolean | undefined>;
 	/** Host-provided action-sound player (resolves + plays embedded sounds). */
 	onPlayActionSound?: (soundPath: string) => void;
+	/**
+	 * Where effect sounds come from: the viewer's media map and whether it allows linked
+	 * content, read when a sound plays. Without it only built-in sounds play.
+	 */
+	sounds?: () => DeckSoundSources;
 	/** Root element to scope media-command (`p:cmd`) target lookups to. */
 	frameRoot?: () => HTMLElement | null;
 	/**
@@ -138,8 +149,8 @@ export function useAnimationPlayback(
 		timers,
 		buildHandle,
 		onPlayActionSound: options.onPlayActionSound,
-		playSound: playAnimationSound,
-		stopSound: stopAnimationSound,
+		playSound: (soundPath) => playDeckSound(soundPath, options.sounds?.() ?? BUILT_IN_SOUNDS),
+		stopSound: stopDeckSound,
 		frameRoot: options.frameRoot,
 	};
 

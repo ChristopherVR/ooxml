@@ -7,8 +7,8 @@
  * `onSetOverflowMenuOpen`) exactly as React, and each OV key maps to its handler.
  */
 import { Ellipsis } from '@lucide/vue';
-import { isDialogAvailable } from 'ooxml-ui/pptx';
-import { computed } from 'vue';
+import { isDialogAvailable, listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
+import { computed, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { cn } from '../../../utils';
@@ -25,6 +25,19 @@ const customization = useResolvedCustomization();
 const entries = computed(() => {
 	const print = isDialogAvailable(customization.value, 'print');
 	return OV.filter((o) => (o.k !== 'pptm' || props.hasMacros) && (o.k !== 'print' || print));
+});
+
+// Escape closes the menu and gives focus back to the button (shared with every binding).
+const trigger = ref<HTMLButtonElement | null>(null);
+watchEffect((onCleanup) => {
+	if (props.isOverflowMenuOpen) {
+		onCleanup(
+			listenForPopupMenuDismiss(document, {
+				onDismiss: () => props.onSetOverflowMenuOpen(false),
+				trigger: trigger.value,
+			}),
+		);
+	}
 });
 
 function ovAct(k: string): void {
@@ -55,7 +68,10 @@ function ovAct(k: string): void {
 <template>
 	<div class="relative">
 		<button
+			ref="trigger"
 			type="button"
+			aria-haspopup="menu"
+			:aria-expanded="props.isOverflowMenuOpen"
 			:class="
 				cn(
 					'p-1.5 rounded transition-colors',

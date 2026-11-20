@@ -240,6 +240,11 @@ export const translations = {
 		"Cette présentation est protégée par mot de passe. Elle a été ouverte en lecture seule jusqu'à ce que le mot de passe soit fourni.",
 	'pptx.readOnly.markedFinal':
 		"L'auteur a marqué cette présentation comme finale. Elle a été ouverte en lecture seule pour éviter toute modification.",
+	'pptx.externalContent.title': 'AVERTISSEMENT DE SÉCURITÉ',
+	'pptx.externalContent.message':
+		'Les références à des images et à d’autres médias externes ont été bloquées.',
+	'pptx.externalContent.enable': 'Activer le contenu',
+	'pptx.externalContent.close': 'Fermer',
 	'pptx.readOnly.bannerTitle': 'Lecture seule',
 	'pptx.readOnly.editAnyway': 'Modifier quand même',
 	'pptx.readOnly.dismiss': 'Fermer',
@@ -334,6 +339,8 @@ export const translations = {
 		"La licence d'une police incorporée n'autorise pas son utilisation : une police de substitution est affichée. Ses données restent dans le fichier.",
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		"Une police n'a pas été incorporée, car sa licence n'autorise pas son incorporation dans une présentation modifiable.",
+	'pptx.compatibility.collaborationMediaWithheld':
+		"Une image ou une vidéo partagée par un collaborateur est trop volumineuse pour être envoyée à tous les participants de la session ; elle n'est donc pas affichée.",
 	'pptx.compatibility.collaborationValueRejected':
 		"Du contenu envoyé par un collaborateur a été ignoré, car il n'est pas autorisé ici, par exemple un lien ou un type de fichier non sécurisé.",
 	'pptx.compatibility.exportBackendUnavailable':

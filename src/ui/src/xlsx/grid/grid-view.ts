@@ -17,6 +17,7 @@ import {
 	type CellView,
 	type GridMetrics,
 	type Workbook,
+	type VisibleCells,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
@@ -70,6 +71,8 @@ export class GridView {
 	readonly hooks = new Set<PaintHook>();
 	metrics!: GridMetrics;
 	geometry!: GridGeometry;
+	/** The rows and columns the last paint showed, per pane. */
+	visible: VisibleCells = { rows: [], cols: [], frozenRows: [], frozenCols: [] };
 	extentRow = 0;
 	extentCol = 0;
 	#cache: CellViewCache = new CellViewCache({
@@ -94,7 +97,9 @@ export class GridView {
 		this.doc = container.ownerDocument;
 		const doc = this.doc;
 		this.measurer = createTextMeasurer(doc);
-		this.root = h(doc, 'div', 'xg-root', { role: 'grid', part: 'grid' });
+		// The painted cells, lines and headers are hidden from assistive technology: the grid's
+		// accessible rows and cells are a separate layer (grid-a11y.ts).
+		this.root = h(doc, 'div', 'xg-root', { part: 'grid' });
 		this.scroller = h(doc, 'div', 'xg-scroller');
 		this.space = h(doc, 'div', 'xg-space');
 		this.view = h(doc, 'div', 'xg-view');
@@ -108,13 +113,15 @@ export class GridView {
 			const lines = new GridlineLayer(doc);
 			const overlay = new SelectionLayer(doc);
 			const drawings = h(doc, 'div', 'xg-drawings');
+			for (const painted of [lines.element, cells.element, overlay.element])
+				painted.setAttribute('aria-hidden', 'true');
 			plane.append(lines.element, cells.element, overlay.element, drawings);
 			box.append(plane);
 			this.view.append(box);
 			this.quads[q] = { box, plane, cells, lines, overlay, drawings };
 		}
 		const pane = (axis: 'row' | 'col'): HeaderPane => {
-			const box = h(doc, 'div', `xg-hbox xg-hbox-${axis}`);
+			const box = h(doc, 'div', `xg-hbox xg-hbox-${axis}`, { 'aria-hidden': 'true' });
 			const layer = new HeaderLayer(doc, axis);
 			box.append(layer.element);
 			this.view.append(box);
@@ -402,6 +409,7 @@ export class GridView {
 					height: viewport.height,
 				})
 			: visibleCells(this.metrics, viewport, freeze);
+		this.visible = vis;
 		const zoom = this.metrics.zoom;
 		const selection = this.ctx.selection.get();
 		const editable = !this.ctx.readOnly();

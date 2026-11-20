@@ -1,5 +1,10 @@
 import { translateFormula } from '../formula/transform';
-import { fromStoredSyntax, toStoredSyntax } from './formula-storage';
+import {
+	fromStoredParameters,
+	fromStoredSyntax,
+	toStoredParameters,
+	toStoredSyntax,
+} from './formula-storage';
 
 /**
  * Functions added after Excel 2007. Files store them with an `_xlfn.` prefix (FILTER and SORT
@@ -77,7 +82,10 @@ function rewrite(formula: string, visit: TokenVisitor): string {
 	return out.join('');
 }
 
-/** Removes `_xlfn.` / `_xlws.` function prefixes (and turns `ANCHORARRAY(A1)` back into `A1#`). */
+/**
+ * Removes `_xlfn.` / `_xlws.` function prefixes and `_xlpm.` parameter prefixes (and turns
+ * `ANCHORARRAY(A1)` back into `A1#`).
+ */
 export function stripFuturePrefixes(formula: string): string {
 	if (!formula.includes('_xl')) return formula;
 	const plain = rewrite(formula, (token, next, out) => {
@@ -87,15 +95,16 @@ export function stripFuturePrefixes(formula: string): string {
 		out.push(stripped);
 		return true;
 	});
-	return fromStoredSyntax(plain);
+	return fromStoredParameters(fromStoredSyntax(plain));
 }
 
 /**
- * Adds `_xlfn.` prefixes to post-2007 functions, as Excel expects them in the file, writing the
- * spill operator `A1#` as `ANCHORARRAY(A1)` and `@x` as `SINGLE(x)`.
+ * Adds `_xlfn.` prefixes to post-2007 functions and `_xlpm.` to LET and LAMBDA names, as Excel
+ * expects them in the file, writing the spill operator `A1#` as `ANCHORARRAY(A1)` and `@x` as
+ * `SINGLE(x)`.
  */
 export function addFuturePrefixes(formula: string): string {
-	return rewrite(toStoredSyntax(formula), (token, next, out) => {
+	return rewrite(toStoredParameters(toStoredSyntax(formula)), (token, next, out) => {
 		if (!next.startsWith('(')) return false;
 		const upper = token.toUpperCase();
 		if (!FUTURE_FUNCTIONS.has(upper)) return false;

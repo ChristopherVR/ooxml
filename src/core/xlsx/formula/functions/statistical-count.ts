@@ -2,7 +2,7 @@
 import { parseNumberText } from '../text-number';
 import { RefValue, type Value } from '../values';
 import type { CallContext } from '../context';
-import { criteriaPairs, liftCriteria, matchingCells } from './criteria';
+import { criteriaLiftWork, criteriaPairs, liftCriteria, matchingCells } from './criteria';
 import { collectNumbers, makeCriteria, scalar, spec } from './helpers';
 import * as S from './stats-core';
 import type { FunctionSpec } from './types';
@@ -113,16 +113,19 @@ export const COUNT_FUNCTIONS: FunctionSpec[] = [
 		(args, ctx) => countBlank(ctx, args[0] ?? null),
 		['any'],
 	),
-	spec(
-		'COUNTIF',
-		C,
-		'COUNTIF(range, criteria)',
-		'Counts the cells that meet a criterion.',
-		2,
-		2,
-		(args, ctx) => countIf(ctx, args[0] ?? null, args[1] ?? null),
-		['any', 'value'],
-	),
+	{
+		...spec(
+			'COUNTIF',
+			C,
+			'COUNTIF(range, criteria)',
+			'Counts the cells that meet a criterion.',
+			2,
+			2,
+			(args, ctx) => countIf(ctx, args[0] ?? null, args[1] ?? null),
+			['any', 'value'],
+		),
+		liftWork: criteriaLiftWork,
+	},
 	spec(
 		'COUNTIFS',
 		C,

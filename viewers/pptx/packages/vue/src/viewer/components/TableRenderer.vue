@@ -34,6 +34,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 import { useElementHitTargetStyle } from '../composables/element-hit-target';
 import { getContainerStyle } from '../composables/element-style';
+import { useLinkedContentView } from '../composables/linked-content';
 import { injectTableCellEdit } from '../composables/table-edit';
 import { injectTableSelection, useTableCellSelection } from '../composables/table-selection';
 import { injectTableTheme, resolveTableTheme } from '../composables/table-theme';
@@ -105,7 +106,7 @@ const containerStyle = computed<CSSProperties>(() => {
 	return {
 		...(tableFrameCss(tableData.value, {
 			colorScheme: props.colorScheme ?? injected?.colorScheme,
-			tableStyleMap: props.tableStyleMap ?? injected?.tableStyleMap,
+			tableStyleMap: drawnTableStyleMap.value,
 			fontScheme: injected?.fontScheme,
 			formatScheme: injected?.formatScheme,
 		}) as CSSProperties),
@@ -140,6 +141,10 @@ const hitTargetStyle = useElementHitTargetStyle(
 // Viewer-root-provided theme context (colour scheme / table-style map), used as
 // a fallback for band/header colour resolution when the props are not supplied.
 const injectedTableTheme = injectTableTheme();
+/** The table style map as this viewer may fetch its picture fills (`provideLinkedContent`). */
+const drawnTableStyleMap = useLinkedContentView(
+	() => props.tableStyleMap ?? resolveTableTheme(injectedTableTheme)?.tableStyleMap,
+);
 
 /** The structured table data, when this element is a populated table. */
 const tableData = computed<PptxTableData | undefined>(() => {
@@ -233,7 +238,7 @@ const rows = computed<RenderableRow[]>(() => {
 	// so banded/header colours still resolve without prop-threading the theme.
 	const injected = resolveTableTheme(injectedTableTheme);
 	const colorScheme = props.colorScheme ?? injected?.colorScheme;
-	const tableStyleMap = props.tableStyleMap ?? injected?.tableStyleMap;
+	const tableStyleMap = drawnTableStyleMap.value;
 	const fontScheme = injected?.fontScheme;
 	const formatScheme = injected?.formatScheme;
 	const styleCtx: TableStyleContext | undefined =

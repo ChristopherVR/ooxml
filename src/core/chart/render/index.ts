@@ -22,6 +22,11 @@ export type {
 } from './chart-view-analysis';
 export { renderChartSvg, type ChartSvgOptions } from './chart-svg';
 export {
+	chartAccessibleName,
+	chartDataDescription,
+	type ChartDataReadout,
+} from './chart-accessibility';
+export {
 	chartPicturePaint,
 	chartPicturePattern,
 	chartPictureSize,

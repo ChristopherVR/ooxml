@@ -31,10 +31,12 @@ import {
 	findHighlightClickTarget,
 	HIGHLIGHT_CLEAR_STYLE,
 	mayLeaveSlideShow,
+	playDeckSound,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 import { AnimationPlaybackService } from './animation-playback.service';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { LoadContentService } from './load-content.service';
 import { PresentationAnnotationOverlayComponent } from './presentation-annotation-overlay.component';
 import { PresentationAnnotationsService } from './presentation-annotations.service';
@@ -144,6 +146,8 @@ export class PresentationOverlayComponent implements OnInit {
 	readonly slides = input.required<PptxSlide[]>();
 	readonly canvasSize = input.required<CanvasSize>();
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
+	/** Whether this viewer allows the deck's linked content: a linked sound plays only then. */
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
 	readonly startIndex = input<number>(0);
 	/**
 	 * The running custom show, or null for the whole deck. `slides` stays the
@@ -443,19 +447,14 @@ export class PresentationOverlayComponent implements OnInit {
 		// Scope media-command (`p:cmd`) target lookups to the slide stage.
 		this.playback.setFrameRoot(() => this.stageRef()?.nativeElement ?? null);
 
-		// Resolve a native-animation `p:stSnd` action sound's archive path to
-		// its pre-resolved Blob/data URL and play it. Without this the service's
-		// `onPlayActionSound` callback stayed unset and every animation sound
-		// (and effect-sound cleanup) was silently dropped.
+		// Play an effect or hyperlink sound: an archive path through its pre-resolved
+		// Blob/data URL, a linked sound only once this viewer allows linked content.
 		this.playback.setActionSoundHandler((soundPath) => {
-			const url = this.mediaDataUrls().get(soundPath);
-			if (!url || typeof Audio === 'undefined') {
-				return;
-			}
-			const audio = new Audio(url);
-			void audio.play().catch(() => {
-				/* ignore autoplay restrictions */
-			});
+			playDeckSound(
+				soundPath,
+				{ mediaUrls: this.mediaDataUrls(), linkedContent: this.linkedContentAllowed() },
+				{ overlap: true },
+			);
 		});
 
 		// Stamp a playback step onto the DOM in the SAME task as the input that

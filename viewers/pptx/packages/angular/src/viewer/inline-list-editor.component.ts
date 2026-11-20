@@ -6,6 +6,7 @@ import {
 	attachInlineListController,
 	initializeInlineListDom,
 	inlineListBodyText,
+	insertInlineEditorText,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
@@ -219,6 +220,10 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 			// stops the browser opening its bookmark dialog.
 			event.preventDefault();
 			event.stopPropagation();
+			if (chord === 'tab') {
+				insertInlineEditorText(this.editor().nativeElement.ownerDocument, '\t');
+				return;
+			}
 			// Back to the slide; the blur that causes is the commit.
 			if (chord === 'commit' && !restoreEditorKeyboardFocus(this.editor().nativeElement)) {
 				this.blur();

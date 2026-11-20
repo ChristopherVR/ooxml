@@ -16,6 +16,7 @@ import {
 	findChartPartTarget,
 	formatAxisValue,
 	resolveChartKind,
+	TOUCH_PRESS_ATTRIBUTE,
 	withChartTitle,
 } from '../../index';
 import type { ChartMarkDragState, ChartPartRef, ChartValueDragState } from '../../index';
@@ -216,6 +217,8 @@ export function attachChartEditing(
 		);
 	};
 
+	// A touch double-tap reaches this handler through `installTouchPress` (issue #290).
+	container.setAttribute(TOUCH_PRESS_ATTRIBUTE, 'dblclick');
 	container.addEventListener('dblclick', (event: MouseEvent) => {
 		const target = event.target;
 		if (!(target instanceof Element)) {

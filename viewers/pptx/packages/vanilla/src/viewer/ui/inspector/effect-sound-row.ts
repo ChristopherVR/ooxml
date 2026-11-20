@@ -1,7 +1,11 @@
-import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+import {
+	BUILT_IN_SOUNDS,
+	EFFECT_SOUND_CATALOGUE,
+	getEffectSoundAsset,
+	playDeckSound,
+} from 'ooxml-ui/pptx';
 import type { EffectSoundState } from 'ooxml-ui/pptx';
 
-import { playAnimationSound } from '../../animation/animation-sound';
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { createInspectorSelect } from './controls-extra';
@@ -109,7 +113,7 @@ export function createEffectSoundRow(
 		}
 		const asset = getEffectSoundAsset(currentCatalogueId);
 		if (asset) {
-			playAnimationSound(asset.dataUrl);
+			playDeckSound(asset.dataUrl, BUILT_IN_SOUNDS);
 		}
 	});
 

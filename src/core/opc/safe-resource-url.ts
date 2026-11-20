@@ -114,6 +114,12 @@ const KIND_ACCEPTS: Readonly<Record<ResourceKind, (mime: string) => boolean>> = 
 	file: () => true,
 };
 
+/** Whether a payload of type `mime` may be kept in a resource field of `kind`. */
+export function resourceKindAccepts(kind: ResourceKind, mime: string): boolean {
+	const normalized = normalizeMimeType(mime);
+	return normalized !== undefined && KIND_ACCEPTS[kind](normalized);
+}
+
 /**
  * Whether `value` may be kept in a resource field described by `rule`. A `data:` URL must be
  * well formed and of a type the field's kind holds; `http(s)` URLs and package paths only

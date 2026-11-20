@@ -1,6 +1,7 @@
 import type { CanvasSize, FieldSubstitutionContext } from 'ooxml-ui/pptx';
 
 import { getFieldContextGetter, provideFieldContext } from '../state/field-context';
+import { provideLinkedContentProp } from '../state/linked-content';
 import { getRenderContextSource, provideRenderContext } from '../state/render-context';
 import type { SlidesPaneTableStyleContext } from './slides-pane-props';
 
@@ -9,17 +10,19 @@ export interface SlidesPaneContextSources {
 	canvasSize: CanvasSize;
 	fieldContext?: FieldSubstitutionContext | undefined;
 	tableStyleContext?: SlidesPaneTableStyleContext | undefined;
+	linkedContent?: boolean | undefined;
 }
 
 /**
- * Provide the thumbnails' field and table style contexts from the host's props, falling back to
- * the enclosing `createViewerState` context for an omitted prop. Call during component init:
- * Svelte context is captured once, so `sources` is a getter and every provided value reads it live.
- * `SlidesPane` and `SlideThumbnail` share it, so both draw a slide the same way.
+ * Provide the thumbnails' field, table style and linked content contexts from the host's props,
+ * falling back to the enclosing `createViewerState` context for an omitted prop. Call during
+ * component init: Svelte context is captured once, so `sources` is a getter and every provided
+ * value reads it live. `SlidesPane` and `SlideThumbnail` share it, so both draw a slide the same way.
  */
 export function provideSlidesPaneContexts(sources: () => SlidesPaneContextSources): void {
 	const inheritedFieldContext = getFieldContextGetter();
 	provideFieldContext(() => sources().fieldContext ?? inheritedFieldContext?.());
+	provideLinkedContentProp(() => sources().linkedContent);
 	const inherited = getRenderContextSource();
 	const table = (): SlidesPaneTableStyleContext | undefined => sources().tableStyleContext;
 	provideRenderContext({

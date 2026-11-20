@@ -1,4 +1,4 @@
-import { getIcon } from '../../index';
+import { getIcon } from '../../icons';
 import { ICON_ACCENTS, ICON_PATHS } from 'ooxml-core/xlsx/ui';
 
 const NS = 'http://www.w3.org/2000/svg';

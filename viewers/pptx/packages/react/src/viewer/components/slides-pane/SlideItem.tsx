@@ -126,6 +126,7 @@ function SlideItemInner({
 			draggable={canEdit}
 			onClick={(e) => onSelectSlide(slideIndex, e)}
 			onContextMenu={handleContextMenu}
+			data-pptx-touch-press='menu'
 			onDragStart={(e) => onDragStart(e, slideIndex)}
 			onDragOver={onDragOver}
 			onDrop={(e) => onDrop(e, slideIndex)}

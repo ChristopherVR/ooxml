@@ -238,6 +238,10 @@ export const translations = {
 		'Diese Präsentation ist passwortgeschützt. Sie wurde schreibgeschützt geöffnet, bis das Passwort eingegeben wird.',
 	'pptx.readOnly.markedFinal':
 		'Diese Präsentation wurde vom Autor als endgültig markiert. Sie wurde schreibgeschützt geöffnet, um Änderungen zu vermeiden.',
+	'pptx.externalContent.title': 'SICHERHEITSWARNUNG',
+	'pptx.externalContent.message': 'Verweise auf externe Bilder und andere Medien wurden blockiert.',
+	'pptx.externalContent.enable': 'Inhalt aktivieren',
+	'pptx.externalContent.close': 'Schließen',
 	'pptx.readOnly.bannerTitle': 'Schreibgeschützt',
 	'pptx.readOnly.editAnyway': 'Trotzdem bearbeiten',
 	'pptx.readOnly.dismiss': 'Schließen',
@@ -332,6 +336,8 @@ export const translations = {
 		'Die Lizenz einer eingebetteten Schriftart erlaubt ihre Verwendung nicht, daher wird eine Ersatzschrift angezeigt. Ihre Schriftdaten bleiben in der Datei.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Eine Schriftart wurde nicht eingebettet, weil ihre Lizenz das Einbetten in eine bearbeitbare Präsentation nicht erlaubt.',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'Ein Bild oder Video, das ein Mitbearbeiter freigegeben hat, ist zu groß, um es an alle in der Sitzung zu senden, und wird daher nicht angezeigt.',
 	'pptx.compatibility.collaborationValueRejected':
 		'Inhalte, die ein Mitbearbeiter gesendet hat, wurden ausgelassen, weil sie hier nicht zulässig sind, etwa ein unsicherer Link oder Dateityp.',
 	'pptx.compatibility.exportBackendUnavailable':

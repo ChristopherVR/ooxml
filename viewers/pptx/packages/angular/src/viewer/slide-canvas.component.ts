@@ -48,6 +48,8 @@ import {
 	getResizeHandleHitAreaStyle,
 	inlineListBodyText,
 	isTemplateElement,
+	insertInlineEditorText,
+	linkedContentView,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	markInsertedParagraph,
@@ -95,6 +97,7 @@ import type { Box, ResizeHandle } from './drag-resize';
 import { ElementBoundaryDirective, ElementRenderErrors } from './element-boundary.directive';
 import { ElementRendererComponent } from './element-renderer.component';
 import type { StyleMap } from './element-style';
+import { LINKED_CONTENT_ALLOWED } from './external-content.service';
 import { FieldContextService } from './field-context.service';
 import { enteredGroupBox, withGroupMembers } from './group-drill-canvas';
 import { InkDrawingService } from './ink-drawing.service';
@@ -192,6 +195,11 @@ function plainText(el: PptxElement): string {
 		// SmartArt), so template (master/layout) element commits can resolve
 		// their owning slide; template elements are absent from slides[].elements.
 		{ provide: SLIDE_CONTEXT, useExisting: forwardRef(() => SlideCanvasComponent) },
+		// What this canvas draws of the deck's linked web content (see `linkedContent`).
+		{
+			provide: LINKED_CONTENT_ALLOWED,
+			useFactory: () => inject(SlideCanvasComponent).linkedContentAllowed,
+		},
 	],
 	imports: [
 		ElementBoundaryDirective,
@@ -212,6 +220,24 @@ function plainText(el: PptxElement): string {
 export class SlideCanvasComponent implements SlideContext {
 	readonly slide = input<PptxSlide | undefined>(undefined);
 	readonly canvasSize = input.required<CanvasSize>();
+	/**
+	 * Whether this canvas draws the deck's linked web content (the building blocks'
+	 * `externalContent().allowed`). Unset follows the enclosing viewer; outside one it is
+	 * withheld.
+	 */
+	readonly linkedContent = input<boolean | undefined>(undefined);
+	private readonly inheritedLinkedContent = inject(LINKED_CONTENT_ALLOWED, {
+		optional: true,
+		skipSelf: true,
+	});
+	/** {@link linkedContent}, resolved. */
+	readonly linkedContentAllowed = computed(
+		() => this.linkedContent() ?? this.inheritedLinkedContent?.() ?? false,
+	);
+	/** The slide as drawn (background, ActiveX fallbacks): linked web content withheld. */
+	protected readonly drawnSlide = computed(() =>
+		linkedContentView(this.slide(), this.linkedContentAllowed()),
+	);
 
 	/** {@link SlideContext}: the id of the slide this canvas renders. */
 	slideId(): string | null {
@@ -1086,7 +1112,9 @@ export class SlideCanvasComponent implements SlideContext {
 	/** The plain inline editor's style: painted like view mode (see `inlineEditorStyle`). */
 	readonly plainEditorStyle = computed<StyleMap>(() => {
 		const box = this.editingBox();
-		return box ? inlineEditorStyle(box.element) : {};
+		return box
+			? inlineEditorStyle(linkedContentView(box.element, this.linkedContentAllowed()))
+			: {};
 	});
 
 	readonly editingBox = computed(() => {
@@ -1181,6 +1209,10 @@ export class SlideCanvasComponent implements SlideContext {
 			// browser opening its bookmark dialog over the deck.
 			event.preventDefault();
 			event.stopPropagation();
+			if (chord === 'tab') {
+				insertInlineEditorText(editor.ownerDocument, '\t');
+				return;
+			}
 			// Back to the slide; the blur that causes is the commit.
 			if (chord === 'commit' && !restoreEditorKeyboardFocus(editor)) {
 				editor.blur();
@@ -1657,7 +1689,7 @@ export class SlideCanvasComponent implements SlideContext {
 	readonly stageStyle = computed<StyleMap>(() => {
 		const scale = this.effectiveScale();
 		const size = this.canvasSize();
-		const slide = this.slide();
+		const slide = this.drawnSlide();
 		const style: StyleMap = {
 			width: `${size.width}px`,
 			height: `${size.height}px`,

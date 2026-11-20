@@ -12,12 +12,14 @@ import {
 	buildZoomTransitionOverride,
 	clearPlaybackTimers,
 	createActiveAnimationGroup,
+	playDeckSound,
 	playGroup,
 	PresentationAnimationController,
 	resolveForwardSlideWithZoomReturn,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
@@ -26,7 +28,6 @@ import {
 	ensurePresentationKeyframes,
 	injectSlideKeyframes,
 } from './animation-dom';
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
 import { attachTriggerListeners } from './presentation-triggers';
 import { playTransitionOverlay } from './transition-overlay';
 
@@ -47,6 +48,11 @@ export interface SyncStageParams {
 	showWithAnimation?: boolean;
 	/** Archive-path to data-URL map, used to resolve action-sound sources. */
 	mediaDataUrls?: ReadonlyMap<string, string>;
+	/**
+	 * Whether this viewer allows the deck's linked content, read when a sound plays: a
+	 * linked sound plays only then. Unset withholds linked sounds.
+	 */
+	getLinkedContentAllowed?: () => boolean;
 	/**
 	 * Re-render the given tracked elements in place against the current element
 	 * states, so staged chart / SmartArt builds and `p:animClr` fill / stroke
@@ -154,6 +160,8 @@ export function createPresentationPlayback(): PresentationPlayback {
 	let wasPresenting = false;
 	let cancelTransition: (() => void) | null = null;
 	let mediaDataUrls: ReadonlyMap<string, string> = new Map();
+	let linkedContentAllowed: () => boolean = () => false;
+	const soundSources = () => ({ mediaUrls: mediaDataUrls, linkedContent: linkedContentAllowed() });
 	let reRenderElements: ((ids: readonly string[]) => void) | null = null;
 	/** Whether the active slide was seeded as fully built (backward entry). */
 	let seededCompleted = false;
@@ -230,10 +238,8 @@ export function createPresentationPlayback(): PresentationPlayback {
 		},
 		timers,
 		buildHandle,
-		playSound: (soundPath) => {
-			playAnimationSound(mediaDataUrls.get(soundPath) ?? soundPath);
-		},
-		stopSound: stopAnimationSound,
+		playSound: (soundPath) => playDeckSound(soundPath, soundSources()),
+		stopSound: stopDeckSound,
 		frameRoot: () => currentStage,
 	};
 
@@ -378,7 +384,7 @@ export function createPresentationPlayback(): PresentationPlayback {
 				// transition sound flagged "Loop Until Next Sound" must not keep
 				// looping on the shared singleton behind the editor.
 				if (wasPresenting && !params.presenting) {
-					stopAnimationSound();
+					stopDeckSound();
 					// Leaving the show for ANY reason drops a pending "return to zoom"
 					// excursion: re-entering the show later should not silently jump
 					// back to wherever a stale zoom click was clicked from.
@@ -391,6 +397,7 @@ export function createPresentationPlayback(): PresentationPlayback {
 
 			ensurePresentationKeyframes(params.doc);
 			mediaDataUrls = params.mediaDataUrls ?? new Map();
+			linkedContentAllowed = params.getLinkedContentAllowed ?? (() => false);
 			reRenderElements = params.reRenderElements ?? null;
 			currentStage = params.stage;
 			lastCanvasSize = params.canvasSize;
@@ -436,10 +443,7 @@ export function createPresentationPlayback(): PresentationPlayback {
 			// (an instant "None" transition can still carry a "Stop Previous Sound"),
 			// so this is not gated by `transition.type !== 'none'` below.
 			if (!entering && slideChanged && previousStage) {
-				applySlideTransitionSound(transition, (soundPath) => mediaDataUrls.get(soundPath), {
-					play: playAnimationSound,
-					stop: stopAnimationSound,
-				});
+				applySlideTransitionSound(transition, soundSources());
 			}
 
 			if (

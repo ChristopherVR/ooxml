@@ -1,0 +1,7 @@
+OOXML 2.0 is one coordinated major release of every package in this repository. Each package moves to its next major version on the same day, so upgrade all the OOXML packages you use together.
+
+Most of the release closes security defects found in a review of every package. Small crafted files could exhaust memory or stall a load. Collaboration and chat messages could run script in another user's page or reach rooms and data they should not. Digital signatures could report trust they had not earned, and file and formula tools could reach outside their workspace. Each fix has a regression case that runs on every change.
+
+Large documents load and save faster. Word saves and Excel recalculation scale with the edit instead of the document, PowerPoint SmartArt and chart decks load in a fraction of the time, and Visio opens pages of 10,000 shapes within a memory budget. Keyboard use follows Office: F6 moves between regions, dialogs keep focus, and forced-colours mode and contrast are fixed. Accessibility is now checked in a real browser before every release. The PowerPoint viewers export, copy, print and respond to touch in Safari and on iPad, and the supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari. Releases are built by a pipeline in which third-party code cannot push, tag or publish.
+
+Some changes break existing code, configuration or stored data. They are listed first below, and the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) gives the before and after for each one.

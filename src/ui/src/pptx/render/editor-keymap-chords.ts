@@ -140,9 +140,10 @@ export function mapInlineTextFormatKey(input: EditorKeyInput): InlineTextFormatP
 /**
  * What an inline text editor does with a chord it owns:
  *  - `commit`: leave the edit, keeping the text (as a click outside does);
+ *  - `tab`: type a tab character (`insertInlineEditorText`);
  *  - `suppress`: cancel the browser default and do nothing else.
  */
-export type InlineEditorChord = 'commit' | 'suppress';
+export type InlineEditorChord = 'commit' | 'tab' | 'suppress';
 
 /** Keyboard event shape read by {@link mapInlineEditorChord}. */
 export interface InlineEditorChordInput extends EditorKeyInput {
@@ -162,6 +163,11 @@ export interface InlineEditorChordInput extends EditorKeyInput {
  * meaning of the chord, which is "bookmark this page": the dialog opened over
  * the deck mid-sentence. Duplicating the shape from inside the text is not
  * offered here.
+ *
+ * Tab types a tab character, as in PowerPoint, instead of moving focus out of
+ * the text box (the browser default sent it to the format pane). Shift+Tab is
+ * claimed too, so it cannot leave the edit either. PowerPoint's list-level
+ * change from Tab at the start of a bulleted paragraph is not offered here.
  */
 export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEditorChord | null {
 	if (input.isComposing) {
@@ -169,6 +175,9 @@ export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEdito
 	}
 	if (input.key === 'Escape') {
 		return 'commit';
+	}
+	if (input.key === 'Tab' && !(input.ctrlKey || input.metaKey || input.altKey)) {
+		return input.shiftKey ? 'suppress' : 'tab';
 	}
 	if (!(input.ctrlKey || input.metaKey) || input.altKey) {
 		return null;

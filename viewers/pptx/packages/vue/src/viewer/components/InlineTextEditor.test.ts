@@ -178,6 +178,26 @@ describe('inlineTextEditor', () => {
 		expect(wrapper.get('[data-inline-editor]').attributes('spellcheck')).toBe('false');
 	});
 
+	it('types a tab on Tab and keeps Shift+Tab in the edit, as in PowerPoint', async () => {
+		const wrapper = mount(InlineTextEditor, { props: { element }, attachTo: document.body });
+		const editor = wrapper.get('[data-inline-editor]');
+		const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+		editor.element.dispatchEvent(tab);
+		const back = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			shiftKey: true,
+			bubbles: true,
+			cancelable: true,
+		});
+		editor.element.dispatchEvent(back);
+		await wrapper.vm.$nextTick();
+		expect(tab.defaultPrevented).toBe(true);
+		expect(back.defaultPrevented).toBe(true);
+		expect(editor.element.textContent).toContain('\t');
+		expect(wrapper.emitted('commit')).toBeUndefined();
+		wrapper.unmount();
+	});
+
 	it('emits a bold toggle on Ctrl+B', async () => {
 		const wrapper = mount(InlineTextEditor, { props: { element } });
 		await wrapper.get('[data-inline-editor]').trigger('keydown', { key: 'b', ctrlKey: true });

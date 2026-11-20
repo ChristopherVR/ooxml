@@ -436,6 +436,37 @@ describe('angular list editor', () => {
 		},
 	);
 
+	it('types a tab on Tab and keeps Shift+Tab in the list edit, as in PowerPoint', () => {
+		const editor = mountedEditor();
+		const blur = vi.spyOn(editor.component, 'blur');
+		try {
+			editor.root.addEventListener('keydown', (event) => editor.handlers.onKeyDown(event));
+			editor.root.focus();
+			const text = [...editor.root.querySelectorAll('*')]
+				.flatMap((node) => [...node.childNodes])
+				.find((node) => node.nodeType === 3 && node.textContent?.includes('Original'))!;
+			const range = document.createRange();
+			range.setStart(text, text.textContent!.length);
+			document.getSelection()?.removeAllRanges();
+			document.getSelection()?.addRange(range);
+			for (const shiftKey of [false, true]) {
+				const event = new KeyboardEvent('keydown', {
+					key: 'Tab',
+					shiftKey,
+					bubbles: true,
+					cancelable: true,
+				});
+				editor.root.dispatchEvent(event);
+				expect(event.defaultPrevented).toBeTruthy();
+			}
+			expect(editor.root.textContent).toContain('Original\t');
+			expect(blur).not.toHaveBeenCalled();
+			expect(editor.commits).not.toHaveBeenCalled();
+		} finally {
+			editor.cleanup();
+		}
+	});
+
 	it('cancels Ctrl/Cmd+D (the browser bookmark dialog) without leaving the edit', () => {
 		const editor = mountedEditor();
 		const blur = vi.spyOn(editor.component, 'blur');

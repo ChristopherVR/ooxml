@@ -12,6 +12,7 @@
 import { signal } from '@angular/core';
 import type {
 	CollabLoadOrigin,
+	CollaborationSessionIntent,
 	RoomJoinTracker,
 	SyncGate,
 	YDocLike,
@@ -35,6 +36,8 @@ export interface SlideSyncBinding {
 	factories: YjsFactories;
 	readOnly?: boolean;
 	external?: boolean;
+	/** A `join` session waits for the room's slides before writing its own (`RoomJoinTracker`). */
+	sessionIntent?: CollaborationSessionIntent;
 	/** Apply remotely-authored slides to viewer state. */
 	onRemoteSlides: ((slides: PptxSlide[]) => void) | null;
 	/**
@@ -87,7 +90,7 @@ export class SlideSyncEngine {
 		this.#binding = binding;
 		this.#join = createRoomJoinTracker();
 		if (!binding.external) {
-			this.#join.attached();
+			this.#join.attached(binding.sessionIntent);
 		}
 	}
 
@@ -152,7 +155,12 @@ export class SlideSyncEngine {
 			this.#current = slides;
 		}
 		const b = this.#binding;
-		if (!b || b.readOnly || this.#applyingRemote || (slides.length === 0 && !b.external)) {
+		if (
+			!b ||
+			b.readOnly ||
+			this.#applyingRemote ||
+			(!b.external && (slides.length === 0 || !this.#join.mayWrite()))
+		) {
 			return;
 		}
 		if (!this.gate.isOpen()) {
@@ -204,6 +212,7 @@ export class SlideSyncEngine {
 		if (!b) {
 			return false;
 		}
+		this.#join.loaded(origin);
 		const docSlides = readSlidesFromYDoc(b.ydoc);
 		if (!shouldRoomSlidesReplaceLoad(origin, docSlides.length)) {
 			return false;

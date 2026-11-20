@@ -12,9 +12,9 @@
 			the slide model rather than the DOM.
 		-->
 	}
-	@case (element().type === 'connector') {
+	@case (drawn().type === 'connector') {
 		<pptx-connector-renderer
-			[element]="element()"
+			[element]="drawn()"
 			[zIndex]="zIndex()"
 			[obstacles]="obstacles()"
 			[canvasWidth]="canvasWidth()"
@@ -35,7 +35,7 @@
 			`.ts`/`.html` under the file-size limit; see that component's doc.
 		-->
 		<pptx-element-renderer-graphics
-			[element]="element()"
+			[element]="drawn()"
 			[zIndex]="zIndex()"
 			[mediaDataUrls]="mediaDataUrls()"
 			[interactive]="interactive()"
@@ -55,7 +55,7 @@
 			(tableChange)="tableChange.emit($event)"
 		/>
 	}
-	@case (element().type === 'group') {
+	@case (drawn().type === 'group') {
 		<div
 			class="pptx-ng-element pptx-ng-group"
 			[ngStyle]="shapeContainerStyle()"
@@ -76,7 +76,7 @@
 			     that mirrors the whole group subtree, so this still needs mounting. -->
 			@if (reflection(); as refl) {
 				<div class="pptx-ng-reflection" aria-hidden="true" [ngStyle]="refl.wrapperStyle">
-					<pptx-reflection-mirror-content [element]="element()" [mediaDataUrls]="mediaDataUrls()" />
+					<pptx-reflection-mirror-content [element]="drawn()" [mediaDataUrls]="mediaDataUrls()" />
 				</div>
 			}
 			@for (child of children(); track child.id) {
@@ -99,7 +99,7 @@
 	}
 	@case (isImageLike()) {
 		<pptx-image-renderer
-			[element]="element()"
+			[element]="drawn()"
 			[mediaDataUrls]="mediaDataUrls()"
 			[zIndex]="zIndex()"
 			[interactive]="interactive()"
@@ -118,7 +118,7 @@
 			component's doc.
 		-->
 		<pptx-element-renderer-shape
-			[element]="element()"
+			[element]="drawn()"
 			[mediaDataUrls]="mediaDataUrls()"
 			[shapeContainerStyle]="shapeContainerStyle()"
 			[rootPointerEvents]="rootPointerEvents()"

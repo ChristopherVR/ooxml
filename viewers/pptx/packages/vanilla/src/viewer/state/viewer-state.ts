@@ -334,6 +334,14 @@ export interface ViewerState {
 	cropSession: CropSession | null;
 	spellCheckEnabled: boolean;
 	/**
+	 * The user chose Enable Content on the security bar for this presentation, in this viewer
+	 * only (`resolveExternalContentView`). Reset on every load; a collaborator's choice never
+	 * reaches it.
+	 */
+	externalContentEnabled: boolean;
+	/** The user closed the security bar for this presentation. Reset on every load. */
+	externalContentBarClosed: boolean;
+	/**
 	 * Whether the loaded deck recommends opening read-only (`p:modifyVerifier`
 	 * or `docProps/custom.xml`'s "Mark as Final"), and why; null when it does
 	 * not. See `readOnlyRecommendation` in `pptx-viewer-shared`. Reset on every
@@ -486,6 +494,8 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		eyedropperActive: false,
 		cropSession: null,
 		spellCheckEnabled: false,
+		externalContentEnabled: false,
+		externalContentBarClosed: false,
 		readOnlyRecommendation: null,
 		readOnlyBannerDismissed: false,
 		readOnlyEditAnyway: false,

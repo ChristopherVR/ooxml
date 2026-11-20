@@ -1,5 +1,4 @@
 import type {
-	MediaPptxElement,
 	ParsedTableStyleMap,
 	PptxAppProperties,
 	PptxCommentAuthor,
@@ -31,16 +30,16 @@ import { PptxHandler } from 'ooxml-core/pptx';
 import type { CanvasSize, SlideSizeEmu } from '../index';
 import {
 	applyImagePathPatches,
-	collectAnimationSoundPaths,
 	collectImagePaths,
-	collectMediaElements,
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
-	resolveMediaElementSource,
+	resolveMediaUrls,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
 } from '../index';
+
+export { resolveMediaUrls } from '../index';
 
 /**
  * The vanilla load pipeline: parse a `.pptx` buffer with `pptx-viewer-core`'s
@@ -251,59 +250,6 @@ export function revokeBlobUrls(urls: Iterable<string>): void {
 			URL.revokeObjectURL(url);
 		}
 	}
-}
-
-/**
- * Resolve audio/video Blob URLs + poster-frame data URLs for media elements.
- * Exported for direct testing of the G17 linked/external media path.
- */
-export async function resolveMediaUrls(
-	handler: PptxHandler,
-	slides: PptxSlide[],
-	blobUrls: string[],
-): Promise<Map<string, string>> {
-	const mediaElements: MediaPptxElement[] = [];
-	for (const slide of slides) {
-		collectMediaElements(slide.elements, mediaElements);
-	}
-	const urls = new Map<string, string>();
-	// Shared with the other four bindings (G17): a LINKED media element's
-	// `mediaPath` is already the verbatim external URL by the time it reaches
-	// here; `resolveMediaElementSource` hands it straight back instead of an
-	// archive lookup that can only find embedded parts.
-	await Promise.all(
-		mediaElements.map(async (mediaElement) => {
-			const resolved = await resolveMediaElementSource(mediaElement, handler);
-			if (resolved.missing || !resolved.mediaPath || !resolved.url) {
-				mediaElement.mediaMissing = true;
-				return;
-			}
-			urls.set(resolved.mediaPath, resolved.url);
-			if (resolved.isBlobUrl) {
-				blobUrls.push(resolved.url);
-			}
-		}),
-	);
-
-	// Native-animation `p:stSnd` sounds that back no visible media element
-	// (PowerPoint's animation sound library) have no entry above; resolve
-	// them into the same map so `onPlayActionSound`'s lookup finds them.
-	const soundPaths = collectAnimationSoundPaths(slides).filter((path) => !urls.has(path));
-	await Promise.all(
-		soundPaths.map(async (soundPath) => {
-			try {
-				const arrayBuffer = await handler.getMediaArrayBuffer(soundPath);
-				if (arrayBuffer) {
-					const blobUrl = URL.createObjectURL(new Blob([arrayBuffer]));
-					blobUrls.push(blobUrl);
-					urls.set(soundPath, blobUrl);
-				}
-			} catch {
-				/* Non-critical: the sound simply will not play. */
-			}
-		}),
-	);
-	return urls;
 }
 
 /** Resolve lazily-loaded picture URLs and patch them into the slide tree. */

@@ -2,6 +2,7 @@ import {
 	applyInlineCommand,
 	applyParagraphCommand,
 	buildNotesPrintHtml,
+	printHtmlDocument,
 	createPlainNotesSegments,
 	defaultRichEnabled,
 	handleNotesFieldKey,
@@ -157,29 +158,8 @@ export function createNotesPanel(
 			(n) => t('pptx.notes.slideN', { n }),
 			currentNotesStyle,
 		);
-		// Sandbox IS set two lines down (`sandbox="allow-same-origin"`); the rule
-		// only recognises the literal `document.createElement` receiver, not this
-		// file's injected `doc: Document` parameter (used throughout for
-		// testability - it is always the real `document` at runtime).
-		// oxlint-disable-next-line react/iframe-missing-sandbox
-		const frame = doc.createElement('iframe');
-		frame.setAttribute('aria-hidden', 'true');
-		frame.setAttribute('sandbox', 'allow-same-origin');
-		frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-		doc.body.appendChild(frame);
-		const frameDoc = frame.contentWindow?.document;
-		if (!frameDoc) {
-			frame.remove();
-			return;
-		}
-		frameDoc.open();
-		frameDoc.write(html);
-		frameDoc.close();
-		setTimeout(() => {
-			frame.contentWindow?.focus();
-			frame.contentWindow?.print();
-			setTimeout(() => frame.remove(), 1000);
-		}, 200);
+		// A hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+		printHtmlDocument(html, { doc });
 	};
 	toolbar.addEventListener('notes-request', (event) => {
 		const intent = (event as NotesToolbarRequestEvent).detail;

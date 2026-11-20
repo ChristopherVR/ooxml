@@ -43,6 +43,8 @@ export interface ExportLifecycleDeps {
 	getLineChart3D(): boolean;
 	getAreaChart3D(): boolean;
 	getPieChart3D(): boolean;
+	/** See `RasterizeSlideDeps.getLinkedContentAllowed`. */
+	getLinkedContentAllowed?(): boolean;
 	/**
 	 * Options > Advanced > "Default resolution" / "Do not compress images"
 	 * raster-scale multiplier (see `resolveImageResolutionScale`), read fresh

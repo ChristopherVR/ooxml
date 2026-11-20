@@ -1,19 +1,11 @@
 import {
 	applyImagePathPatches,
-	collectAnimationSoundPaths,
 	collectImagePaths,
-	collectMediaElements,
-	resolveMediaElementSource,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
 } from 'ooxml-ui/pptx';
-import type {
-	MediaPptxElement,
-	ParsedTableStyleMap,
-	PptxHandler,
-	PptxSlide,
-} from 'pptx-viewer-core';
+import type { ParsedTableStyleMap, PptxHandler, PptxSlide } from 'pptx-viewer-core';
 
 /**
  * Pure async helpers for the load pipeline, ported from the Vue binding's
@@ -22,14 +14,6 @@ import type {
  * resolution and immutable slide patching.
  */
 
-/** Result of resolving audio/video/poster media to displayable URLs. */
-export interface ResolvedMedia {
-	/** Archive-path -> displayable URL map for media + poster frames. */
-	urls: Map<string, string>;
-	/** Blob URLs created during resolution (caller owns revocation). */
-	blobUrls: string[];
-}
-
 /** Revoke any `blob:` URLs in the list (no-op for data URLs). */
 export function revokeBlobUrls(urls: Iterable<string>): void {
 	for (const url of urls) {
@@ -37,59 +21,6 @@ export function revokeBlobUrls(urls: Iterable<string>): void {
 			URL.revokeObjectURL(url);
 		}
 	}
-}
-
-/**
- * Resolve audio/video media to Blob URLs and image-like media (poster
- * frames) to data URLs. Marks elements whose media is missing.
- */
-export async function resolveMediaUrls(
-	handler: PptxHandler,
-	slides: PptxSlide[],
-): Promise<ResolvedMedia> {
-	const mediaElements: MediaPptxElement[] = [];
-	for (const slide of slides) {
-		collectMediaElements(slide.elements, mediaElements);
-	}
-	const urls = new Map<string, string>();
-	const blobUrls: string[] = [];
-	// Shared with the other four bindings (G17): a LINKED media element's
-	// `mediaPath` is already the verbatim external URL by the time it reaches
-	// here; `resolveMediaElementSource` hands it straight back instead of an
-	// archive lookup that can only find embedded parts.
-	await Promise.all(
-		mediaElements.map(async (mediaElement) => {
-			const resolved = await resolveMediaElementSource(mediaElement, handler);
-			if (resolved.missing || !resolved.mediaPath || !resolved.url) {
-				mediaElement.mediaMissing = true;
-				return;
-			}
-			urls.set(resolved.mediaPath, resolved.url);
-			if (resolved.isBlobUrl) {
-				blobUrls.push(resolved.url);
-			}
-		}),
-	);
-
-	// Native-animation `p:stSnd` sounds that back no visible media element
-	// (PowerPoint's animation sound library) have no entry above; resolve
-	// them into the same map so `onPlayActionSound`'s lookup finds them.
-	const soundPaths = collectAnimationSoundPaths(slides).filter((path) => !urls.has(path));
-	await Promise.all(
-		soundPaths.map(async (soundPath) => {
-			try {
-				const arrayBuffer = await handler.getMediaArrayBuffer(soundPath);
-				if (arrayBuffer) {
-					const blobUrl = URL.createObjectURL(new Blob([arrayBuffer]));
-					blobUrls.push(blobUrl);
-					urls.set(soundPath, blobUrl);
-				}
-			} catch {
-				/* Non-critical: the sound simply will not play. */
-			}
-		}),
-	);
-	return { urls, blobUrls };
 }
 
 /**

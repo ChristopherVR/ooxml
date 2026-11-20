@@ -33,6 +33,8 @@ export interface CollaborationDocumentSyncInput {
 	onReadOnlyChange?: (readOnly: boolean) => void;
 	/** The room's slides replaced the open deck: see `UseYjsDocumentSyncInput.onRoomReplacedDeck`. */
 	onRoomReplacedDeck?: () => void;
+	/** See `UseYjsDocumentSyncInput.mediaDataUrls`. */
+	mediaDataUrls?: ReadonlyMap<string, string>;
 }
 
 /** Shared wiring for the bundled editor and custom toolbar/canvas hosts. */

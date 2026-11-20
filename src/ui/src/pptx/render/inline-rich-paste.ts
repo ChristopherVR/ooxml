@@ -114,8 +114,11 @@ export interface InlineRichPasteOptions {
 	getFormat?(): TextPasteFormat;
 }
 
-function insertPlainText(doc: Document, text: string): void {
-	// `insertText` keeps native Undo and the editors' input pipeline; a Range is the fallback.
+/**
+ * Type `text` at the caret of the focused inline editor (a paste, a Tab). `insertText` keeps
+ * native Undo and the editors' input pipeline; a Range is the fallback.
+ */
+export function insertInlineEditorText(doc: Document, text: string): void {
 	if (typeof doc.execCommand === 'function' && doc.execCommand('insertText', false, text)) {
 		return;
 	}
@@ -204,7 +207,7 @@ export function attachInlineRichPaste(
 		}
 		const text = data?.getData('text/plain') ?? '';
 		if (text) {
-			insertPlainText(editor.ownerDocument, text.replace(/\r\n?/g, '\n'));
+			insertInlineEditorText(editor.ownerDocument, text.replace(/\r\n?/g, '\n'));
 		}
 	};
 	root.addEventListener('keydown', onKeyDown, true);

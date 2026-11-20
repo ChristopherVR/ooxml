@@ -300,7 +300,8 @@ test('suite-wide pptx files and CI configuration run the whole browser suite', (
 	]) {
 		const result = pptx(file);
 		assert.deepEqual(result.e2e.projects, PPTX_BINDINGS, file);
-		assert.equal(result.e2e.matrix.length, 14 + 4 * 7, file);
+		const total = Object.values(PPTX_E2E_SHARDS).reduce((sum, count) => sum + count, 0);
+		assert.equal(result.e2e.matrix.length, total, file);
 		assert.equal(result.e2e.specs, '', file);
 	}
 });
@@ -319,10 +320,11 @@ test('a demo change runs only its viewer typecheck and browser tests', () => {
 	const result = plan(['demos/docx/demo-vanilla/main.ts'], { testFiles: 1 });
 	assert.deepEqual(viewers(result), ['docx']);
 	assert.deepEqual(verifyOf('docx', 'demos/docx/demo-vanilla/main.ts'), ['bun run typecheck']);
-	assert.deepEqual(browserOf('docx', 'demos/docx/demo-vanilla/main.ts'), [
-		'bun run test:browser -- --shard=1/2',
-		'bun run test:browser -- --shard=2/2',
-	]);
+	const total = VIEWER_BROWSER_SHARDS.docx;
+	assert.deepEqual(
+		browserOf('docx', 'demos/docx/demo-vanilla/main.ts'),
+		Array.from({ length: total }, (_, i) => `bun run test:browser -- --shard=${i + 1}/${total}`),
+	);
 	assert.equal(result.checks.core, false);
 	assert.equal(result.pptx.run, false);
 });
@@ -331,7 +333,7 @@ test('changed spec files alone run only those specs; support code runs the whole
 	assert.deepEqual(browserOf('docx', 'e2e/docx/editor.spec.ts'), [
 		'bun run test:browser -- editor.spec.ts',
 	]);
-	assert.equal(browserOf('docx', 'e2e/docx/helpers.ts').length, 2);
+	assert.equal(browserOf('docx', 'e2e/docx/helpers.ts').length, VIEWER_BROWSER_SHARDS.docx);
 	// visio's test:browser also tests the packages, so it is never narrowed to specs
 	assert.ok(
 		browserOf('visio', 'e2e/visio/viewer.spec.ts').some((c) => c.includes('native-blocks')),
@@ -446,7 +448,10 @@ test('a lockfile with trailing commas parses, commas inside strings survive', ()
 test('a lock change confined to placeable workspaces plans as their manifests', () => {
 	const before = lock(ws('demos/pptx/demo-host-review', '"a": "^1.0.0"'));
 	const after = lock(ws('demos/pptx/demo-host-review', '"a": "^1.1.0"'));
-	assert.deepEqual(classifyLock(before, after), { workspaces: ['demos/pptx/demo-host-review'] });
+	assert.deepEqual(classifyLock(before, after), {
+		workspaces: ['demos/pptx/demo-host-review'],
+		resolved: false,
+	});
 	const refined = refineManifests(
 		['bun.lock', 'demos/pptx/demo-host-review/package.json'],
 		reader({ 'bun.lock': before }, { 'bun.lock': after }),
@@ -459,7 +464,7 @@ test('a lock change confined to placeable workspaces plans as their manifests', 
 	assert.equal(plan(['bun.lock']).full, true);
 });
 
-test('a lock change to resolved packages, the root workspace or an unplaceable one runs everything', () => {
+test('a lock change to a package no workspace installs, the root workspace or an unplaceable one runs everything', () => {
 	const base = lock(ws('viewers/docx/packages/react', '"a": "^1"'));
 	const resolved = lock(
 		ws('viewers/docx/packages/react', '"a": "^1"'),
@@ -477,6 +482,111 @@ test('a lock change to resolved packages, the root workspace or an unplaceable o
 		reader({ 'bun.lock': base }, { 'bun.lock': resolved }),
 	);
 	assert.deepEqual(refined, { files: ['bun.lock'], deps: true });
+});
+
+test('a release bump (versions and workspace ranges) plans as no change', () => {
+	const entry = (path, name, version, deps) =>
+		`"${path}": { "name": "${name}", "version": "${version}", "dependencies": { ${deps} }, },`;
+	const workspaces = (core, react, range) =>
+		[
+			entry('', 'root', '0.0.0', '"left-pad": "^1"'),
+			entry('src/core', 'ooxml-core', core, '"left-pad": "^1"'),
+			entry('viewers/pptx/packages/react', 'pptx-react-viewer', react, `"ooxml-core": "${range}"`),
+		].join('\n');
+	const before = lock(workspaces('1.53.1', '4.80.1', '^1.53.1'));
+	const after = lock(workspaces('1.54.0', '4.81.0', '^1.54.0'));
+	assert.deepEqual(classifyLock(before, after), { workspaces: [], resolved: false });
+	const manifest = (version, range) =>
+		JSON.stringify({ name: 'pptx-react-viewer', version, dependencies: { 'ooxml-core': range } });
+	const core = (version) =>
+		JSON.stringify({ name: 'ooxml-core', version, exports: { '.': './a.js' } });
+	const root = (version) => JSON.stringify({ name: 'root', version, devDependencies: { a: '1' } });
+	const files = [
+		'bun.lock',
+		'package.json',
+		'src/core/package.json',
+		'src/core/CHANGELOG.md',
+		'viewers/pptx/packages/react/package.json',
+		'viewers/pptx/packages/react/CHANGELOG.md',
+	];
+	const refined = refineManifests(
+		files,
+		reader(
+			{
+				'bun.lock': before,
+				'package.json': root('0.0.0'),
+				'src/core/package.json': core('1.53.1'),
+				'viewers/pptx/packages/react/package.json': manifest('4.80.1', '^1.53.1'),
+			},
+			{
+				'bun.lock': after,
+				'package.json': root('0.0.1'),
+				'src/core/package.json': core('1.54.0'),
+				'viewers/pptx/packages/react/package.json': manifest('4.81.0', '^1.54.0'),
+			},
+		),
+	);
+	assert.deepEqual(refined, {
+		files: ['src/core/CHANGELOG.md', 'viewers/pptx/packages/react/CHANGELOG.md'],
+		deps: false,
+	});
+	// The changelogs reach only the changelog check.
+	const result = plan(refined.files);
+	assert.equal(result.full, false);
+	assert.equal(result.scripts, true);
+	assert.equal(result.build, false);
+	assert.equal(result.test.run, false);
+	assert.deepEqual(result.viewers, []);
+	assert.equal(result.pptx.run, false);
+	// A range on a package that is not a workspace is a real dependency change.
+	const external = refineManifests(
+		['viewers/pptx/packages/react/package.json'],
+		reader(
+			{ 'viewers/pptx/packages/react/package.json': manifest('4.80.1', '^1.53.1') },
+			{
+				'viewers/pptx/packages/react/package.json': JSON.stringify({
+					name: 'pptx-react-viewer',
+					version: '4.80.1',
+					dependencies: { 'ooxml-core': '^1.53.1', clsx: '^2' },
+				}),
+			},
+		),
+	);
+	assert.deepEqual(external.files, ['viewers/pptx/packages/react/package.json']);
+	assert.ok(plan(external.files).pptx.e2e.projects.includes('react'));
+});
+
+test('a root manifest change is configuration, a dependency change only in its dependency fields', () => {
+	const root = (extra) =>
+		JSON.stringify({ name: 'root', scripts: { test: 'a' }, devDependencies: { a: '1' }, ...extra });
+	const refine = (after) =>
+		refineManifests(
+			['package.json'],
+			reader({ 'package.json': root({}) }, { 'package.json': after }),
+		);
+	const scripts = refine(root({ scripts: { test: 'b' } }));
+	assert.deepEqual(scripts, { files: ['package.json'], deps: false });
+	// The planner runs everything, on the reference project only.
+	assert.equal(plan(scripts.files, { reference: true }).full, true);
+	assert.deepEqual(plan(scripts.files, { reference: true }).pptx.e2e.projects, ['react']);
+	assert.deepEqual(refine(root({ devDependencies: { a: '2' } })), {
+		files: ['package.json'],
+		deps: true,
+	});
+	assert.deepEqual(refine('{'), { files: ['package.json'], deps: true });
+});
+
+test('every changelog runs the changelog check, the root one included', () => {
+	for (const file of [
+		'CHANGELOG.md',
+		'src/ui/CHANGELOG.md',
+		'viewers/docx/packages/react/CHANGELOG.md',
+	]) {
+		const result = plan([file]);
+		assert.equal(result.scripts, true, file);
+		assert.equal(result.ui, false, file);
+		assert.deepEqual(result.viewers, [], file);
+	}
 });
 
 test('a core manifest change is inert, a shipping change or everything', () => {
@@ -624,13 +734,25 @@ test('viewer browser suites run in their own sharded entries, not in the viewers
 	}
 });
 
-test('visio shards the main Playwright run and keeps the chained runs on shard one', () => {
+test('visio shards the main Playwright run and spreads the chained runs over the shards', () => {
 	const entries = plan([], { full: true }).viewerBrowser.filter((entry) => entry.name === 'visio');
-	assert.match(entries[0].verify, /build:packages/u);
-	assert.match(entries[0].verify, /native-blocks/u);
-	assert.match(entries[0].verify, /test-packages-browser/u);
-	assert.doesNotMatch(entries[1].verify, /native-blocks|build:packages|test-packages-browser/u);
-	assert.match(entries[1].verify, /playwright test --shard=2\/2/u);
+	const { sharded, rest } = VIEWERS.visio.browserChain;
+	const before = VIEWERS.visio.before.browser;
+	assert.equal(entries.length, VIEWER_BROWSER_SHARDS.visio);
+	// Every command of the unsharded run runs exactly once across the shards.
+	const commands = entries.flatMap((entry) => entry.verify.split('\n'));
+	for (const command of rest)
+		assert.equal(commands.filter((c) => c === command).length, 1, command);
+	entries.forEach((entry, i) => {
+		const lines = entry.verify.split('\n');
+		assert.ok(lines.includes(`${sharded} --shard=${i + 1}/${entries.length}`), entry.verify);
+		// A shard with a chained run builds the packages it reads first; one without does not.
+		const chained = rest.some((command) => lines.includes(command));
+		assert.equal(lines[0] === before[0], chained, entry.verify);
+	});
+	assert.ok(entries.some((entry) => !rest.some((command) => entry.verify.includes(command))));
+	// Unsharded, the local run is the whole chain in order.
+	assert.deepEqual(entries[0].local.split('\n'), [...before, sharded, ...rest]);
 });
 
 test("visio's browser chain matches its test:browser script", () => {
@@ -656,7 +778,13 @@ test('the browser jobs cache Playwright browsers and ci-success waits on the new
 		workflow.match(new RegExp(`^  ${name}:\\r?\\n([\\s\\S]*?)(?=^  \\S)`, 'm'))?.[1] ?? '';
 	for (const name of ['pptx-e2e', 'pptx-e2e-packaged', 'viewer-browser']) {
 		assert.match(job(name), /path: ~\/\.cache\/ms-playwright/u, name);
-		assert.match(job(name), /hashFiles\('bun\.lock'\)/u, name);
+		// Keyed on the Playwright version, which names the browsers, so a release bump keeps them.
+		assert.match(
+			job(name),
+			/key: playwright-\$\{\{ runner\.os \}\}-\$\{\{ steps\.setup\.outputs\.playwright-version \}\}/u,
+			name,
+		);
+		assert.match(job(name), /- id: setup\r?\n\s+uses: \.\/\.github\/actions\/setup/u, name);
 	}
 	assert.match(job('ui-test'), /--shard=\$\{\{ matrix\.shard \}\}\/3/u);
 	const needs = /^  ci-success:[\s\S]*?needs:\s*\[([^\]]*)\]/m.exec(workflow)?.[1] ?? '';
@@ -712,6 +840,14 @@ test('shared browser runtime changes reach the configs that import them', () => 
 		assert.equal(result.viewerBrowser.length, 0);
 	}
 	assert.equal(plan(['scripts/browser-shards.test.mjs']).pptx.run, false);
+});
+
+test('a release note runs the script tests that check it, and nothing else', () => {
+	const result = plan(['.release-notes/2.0/N1.md']);
+	assert.equal(result.scripts, true);
+	assert.equal(result.typecheck.strict, false);
+	assert.equal(result.pptx.run, false);
+	assert.equal(result.viewerBrowser.length, 0);
 });
 
 test('the accessibility gates run for the suite, the shared UI, the viewers and the gates', () => {

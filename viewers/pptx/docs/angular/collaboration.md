@@ -367,7 +367,10 @@ drawn beneath its own; default none), `[canvasSize]` and `[previewWidth]` (pixel
 rail thumbnail width; the height follows the deck's aspect ratio), plus these rail inputs with the
 same meaning and the same fallback to the enclosing `LoadContentService`: `[mediaDataUrls]`,
 `[headerFooter]`, `[customProperties]`, `[firstSlideNumber]`, `[locale]`, `[theme]` and
-`[tableStyleMap]`. Feed it from the values you bind on the rail:
+`[tableStyleMap]`. `[linkedContent]` says whether it draws the deck's linked web content: unset
+follows the enclosing viewer providers (`ExternalContentService.allowed()`, or the building blocks'
+`externalContent().allowed`), so it redraws when the user chooses Enable Content; outside them
+linked content is withheld. Feed it from the values you bind on the rail:
 
 ```ts
 import { SlideThumbnailComponent, ViewerCollaborationShellService } from 'pptx-angular-viewer';

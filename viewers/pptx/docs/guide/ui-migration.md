@@ -380,9 +380,9 @@ Behaviour changed so all five bindings now agree:
 - The Notes, Normal, Slide Sorter and Slide Show buttons expose `aria-pressed` in
   every binding. React, Vue and Angular previously had no pressed state, and
   Vanilla had it only on Notes.
-- The percent readout is named "Zoom to fit" for assistive technology in all
-  five. React, Vue and Angular exposed only a tooltip, so the visible `100%` was
-  the accessible name.
+- The percent readout is named by its percentage, then "Zoom to fit" ("100%,
+  Zoom to fit"), for assistive technology in all five. React, Vue and Angular
+  exposed only a tooltip, so the visible `100%` was the whole accessible name.
 - The save text uses one shared rule, including "Saved just now / n minutes ago".
   Svelte never showed the saved text, and Vanilla still shows its pushed label.
 - React reads the viewer mode for Normal and Slide Show; Svelte and Angular also

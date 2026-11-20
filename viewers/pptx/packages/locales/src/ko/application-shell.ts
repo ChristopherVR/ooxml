@@ -220,9 +220,15 @@ export const translations = {
 		'포함된 글꼴의 라이선스에서 사용을 허용하지 않아 대체 글꼴이 표시됩니다. 글꼴 데이터는 파일에 유지됩니다.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'글꼴의 라이선스에서 편집 가능한 프레젠테이션에 포함하는 것을 허용하지 않아 글꼴을 포함하지 않았습니다.',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'공동 작업자가 공유한 그림이나 동영상이 세션의 모든 사람에게 보내기에는 너무 커서 표시되지 않습니다.',
 	'pptx.compatibility.collaborationValueRejected':
 		'공동 작업자가 보낸 콘텐츠는 안전하지 않은 링크나 파일 형식처럼 여기에서 허용되지 않아 제외되었습니다.',
 	'pptx.compatibility.exportBackendUnavailable': '현재 환경에서는 이 형식으로 내보낼 수 없습니다.',
+	'pptx.externalContent.title': '보안 경고',
+	'pptx.externalContent.message': '외부 그림 및 기타 미디어에 대한 참조가 차단되었습니다.',
+	'pptx.externalContent.enable': '콘텐츠 사용',
+	'pptx.externalContent.close': '닫기',
 	'pptx.readOnly.bannerTitle': '읽기 전용',
 	'pptx.readOnly.editAnyway': '그래도 편집',
 	'pptx.readOnly.dismiss': '해제',

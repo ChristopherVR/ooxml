@@ -4,8 +4,10 @@
  *
  * Bind `root` to the dropdown's wrapper element (`ref="…"` /
  * `:ref="dd.root"`); while `open` is true a document `mousedown` outside `root`
- * closes it. Call once per independent dropdown in a section.
+ * closes it, and Escape closes it and gives focus back to the wrapper's
+ * `aria-haspopup="menu"` button. Call once per independent dropdown in a section.
  */
+import { listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
 import { onScopeDispose, ref, watch } from 'vue';
 
 export interface Dropdown {
@@ -27,15 +29,27 @@ export function useDropdown(): Dropdown {
 		}
 	}
 
+	let detachEscape: (() => void) | undefined;
 	watch(open, (isOpen) => {
+		detachEscape?.();
+		detachEscape = undefined;
 		if (isOpen) {
 			document.addEventListener('mousedown', onDocMouseDown);
+			detachEscape = listenForPopupMenuDismiss(document, {
+				onDismiss: () => {
+					open.value = false;
+				},
+				trigger: root.value?.querySelector<HTMLElement>('[aria-haspopup="menu"]'),
+			});
 		} else {
 			document.removeEventListener('mousedown', onDocMouseDown);
 		}
 	});
 
-	onScopeDispose(() => document.removeEventListener('mousedown', onDocMouseDown));
+	onScopeDispose(() => {
+		document.removeEventListener('mousedown', onDocMouseDown);
+		detachEscape?.();
+	});
 
 	return {
 		open,

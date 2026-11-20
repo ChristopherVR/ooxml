@@ -1,6 +1,7 @@
 import { compareScalars, toBool } from '../coerce';
+import { textKey } from '../text-compare';
 import type { CallContext } from '../context';
-import { ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
+import { chargeWork, ERR, fail, isError, Matrix, type Scalar, type Value } from '../values';
 import { ARRAY_SHAPE_FUNCTIONS } from './array-shape';
 import { num, spec } from './helpers';
 import type { FunctionSpec } from './types';
@@ -58,7 +59,11 @@ function filter(args: Value[], ctx: CallContext): Value {
 	return out;
 }
 
+/** What one comparison of a sort costs of the work budget (measured, in nanoseconds). */
+const COMPARE_WORK = 30;
+
 function sortRows(rows: Scalar[][], keys: { values: Scalar[]; descending: boolean }[]): Scalar[][] {
+	chargeWork(COMPARE_WORK * keys.length * rows.length * Math.ceil(Math.log2(rows.length + 1)));
 	const order = rows.map((_, i) => i);
 	order.sort((x, y) => {
 		for (const key of keys) {
@@ -126,9 +131,7 @@ function unique(args: Value[], ctx: CallContext): Value {
 	if (byCol) m = transpose(m);
 	const keyOf = (row: Scalar[]): string =>
 		JSON.stringify(
-			row.map((v) =>
-				isError(v) ? `#${v.error}` : typeof v === 'string' ? `s${v.toLowerCase()}` : v,
-			),
+			row.map((v) => (isError(v) ? `#${v.error}` : typeof v === 'string' ? `s${textKey(v)}` : v)),
 		);
 	const counts = new Map<string, { row: Scalar[]; count: number }>();
 	for (const row of m.data) {
