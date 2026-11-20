@@ -2,7 +2,7 @@
 // readable parts: reactive properties, a `render()` template and a sibling `.css` file. Properties
 // are declared with `declare` and set in the constructor so class fields never shadow Lit's
 // accessors. Events are plain bubbling, composed CustomEvents, like every other ooxml-ui control.
-import { unsafeCSS, type CSSResult, type PropertyDeclarations, type PropertyValues } from 'lit';
+import { type CSSResult, type PropertyDeclarations, type PropertyValues } from 'lit';
 import { hslToRgb, toHex } from 'ooxml-core/color';
 import type { MessageParams } from 'ooxml-core/i18n';
 import { OfficeElement, controlStyles } from '../base';
@@ -11,10 +11,7 @@ import { teamsI18n, type TeamsI18n, type TeamsKey, type TeamsPluralKey } from '.
 import resetCss from './reset.css?raw';
 
 /** An element's style list: the shared control base, the team reset and its own .css file. */
-export const withStyles = (css: string): CSSResult[] => {
-	const [common, own] = controlStyles(css);
-	return [common!, unsafeCSS(resetCss), own!];
-};
+export const withStyles = (css: string): CSSResult[] => controlStyles(resetCss, css);
 
 /**
  * Base of the team-workspace elements. They keep Lit's batched (asynchronous) updates: a host

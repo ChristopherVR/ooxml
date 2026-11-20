@@ -38,6 +38,23 @@ const names = (host: HTMLElement) =>
 		b.getAttribute('aria-label'),
 	);
 
+describe('pptx-ui-title-bar lifecycle', () => {
+	it('finishes its update, so a host awaiting updateComplete goes on', async () => {
+		const host = mount() as HTMLElement & { updateComplete: Promise<boolean> };
+		const settled = await Promise.race([
+			host.updateComplete.then(() => 'settled'),
+			new Promise((resolve) => setTimeout(() => resolve('pending'), 1000)),
+		]);
+		expect(settled).toBe('settled');
+	});
+
+	it('redraws for a placement written as an attribute', () => {
+		const host = mount();
+		host.setAttribute('placement', 'belowRibbon');
+		expect(host.getAttribute('data-pptx-quick-access')).toBe('below');
+	});
+});
+
 describe('resolveTitleBarStrip', () => {
 	it('puts Save, Undo, Redo first, then extras in configured order', () => {
 		const items = resolveTitleBarStrip(

@@ -5,6 +5,7 @@ import { html as staticHtml, unsafeStatic } from 'lit/static-html.js';
 import { OfficeElement, controlStyles } from '../base';
 import { createIconSvg, paintIcon } from '../icons';
 import { definer, present } from '../registry';
+import hostCss from './gallery-host.css?raw';
 import { attachGalleryStyles } from './gallery-styles';
 import { parseSvgPreview } from './safe-svg';
 
@@ -73,8 +74,6 @@ type Statics = {
 	compactAttribute: string | null;
 };
 
-const HOST_CSS = ':host { display: inline-flex; position: relative; flex: none; }';
-
 /**
  * `<office-ui-gallery>`: Office's ribbon gallery (Shape Styles, Themes, Table Styles). Set
  * `state` (`OfficeGalleryState`, translated). `mode="inline"` shows a strip of tiles beside a
@@ -106,7 +105,7 @@ export class OfficeUiGallery extends OfficeElement {
 	static popupAttribute = 'data-gallery-popup';
 	static itemAttribute = 'data-gallery-item';
 	static compactAttribute: string | null = null;
-	static override styles = controlStyles(HOST_CSS);
+	static override styles = controlStyles(hostCss);
 	/** `mode`, `chevron-only`, `icon` and `compact` are read from the attributes. */
 	static override get observedAttributes(): string[] {
 		return [...super.observedAttributes, 'mode', 'chevron-only', 'icon', 'compact'];
