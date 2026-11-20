@@ -1,11 +1,35 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+`visio-viewer-mcp` gives an agent `visio_inspect` and `visio_edit` over the `.vsdx` files under one root, and this release tightens both the root and the memory those tools may use. Paths are checked on their text before any filesystem call, so a UNC path no longer reaches a remote host and Windows names that the system would reinterpret are refused, and every read or edit runs inside a memory budget sized from the server's heap. The breaking changes are the Windows path rules and Node.js 22.3 as the minimum. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) gives the before and after.
+
+### Breaking changes
+
+- On Windows, the tools refuse path segments that contain `:`, `<`, `>`, `"`, `|`, `?` or `*`, that end in a dot or a space, or that are device names such as `NUL` or `COM1`. They also refuse `/x`, which is rooted on the current drive, and `C:x`, which is relative to a drive's current folder. On every platform they refuse UNC and device paths, and paths starting with a backslash. Use a path relative to the root, or a full absolute path inside it such as `C:\work\flow.vsdx`, and rename files whose names Windows would reinterpret ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#file-tools-refuse-paths-windows-would-reinterpret)).
+- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`. `ooxml-core` sizes the memory budget of a Visio read or edit from the heap limit Node reports, through an API added in 22.3 ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer)).
+
+### Security
+
+- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, every refused path returns the same error, and an alternate data stream name can no longer create a file past the extension check.
+- No Visio file can exhaust the heap of the server. Each `visio_inspect` or `visio_edit` call has one memory budget sized from the heap limit Node reports, and a drawing that does not fit is refused with the code `LIMIT_XML_MEMORY` and the memory it would need. A page of 10,000 rectangles saved by Visio needs a heap limit of about 1,000 MiB, so start the server with `--max-old-space-size=820` or more if your agents open drawings that large.
+- The package is published by a release pipeline in which third-party code cannot push, tag or publish, and the signed tarball on each GitHub release is checked against the integrity the npm registry records.
+
+### Changed
+
+- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root. On POSIX systems, names such as `a: b.vsdx` and `why?.vsdx` are ordinary files, and a backslash inside a name is not a separator there.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): `visioTools` and the file confinement in `ooxml-core/automation`, which this package registers.
+- [`ooxml-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): the combined Word, Excel, PowerPoint and Visio server, which registers these same tools.
+- [`visio-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/core/CHANGELOG.md): the Visio document API for your own Node code.
+- [Visio viewers 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/CHANGELOG.md): the browser viewers for React, Vue, Angular, Svelte, Solid and plain pages.
 
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-viewer-mcp@1.1.0) - 2026-11-04
 

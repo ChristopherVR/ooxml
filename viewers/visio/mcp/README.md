@@ -1,18 +1,15 @@
 # visio-viewer-mcp
 
+Give an AI agent safe, local access to Visio drawings: an MCP server that inspects `.vsdx` files and applies validated edits, confined to one folder.
+
 [![npm version](https://img.shields.io/npm/v/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
 [![license](https://img.shields.io/npm/l/visio-viewer-mcp.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE)
 [![types](https://img.shields.io/npm/types/visio-viewer-mcp.svg)](https://www.npmjs.com/package/visio-viewer-mcp)
+[![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)
 
-> Headless MCP access to document operations owned by OOXML core.
+[Docs](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-[Live demo](https://christophervr.github.io/ooxml/visio/demo/) | [npm](https://www.npmjs.com/package/visio-viewer-mcp) | [Full docs](https://christophervr.github.io/ooxml/visio/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio)
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; **[Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme)** &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
-
-A thin MCP wrapper: the tools themselves (names, schemas, bounds and operations) are
-`visioTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from
-`ooxml-core/automation/node`. Requires `ooxml-core` 1.22.0 or later, installed as a dependency.
+> **Beta.** The tool names and schemas change only with a changelog note. Edits are experimental: they are validated before anything is written, but a saved drawing is not yet guaranteed to keep everything the file contains.
 
 ## Install
 
@@ -20,62 +17,76 @@ A thin MCP wrapper: the tools themselves (names, schemas, bounds and operations)
 npm install visio-viewer-mcp
 ```
 
+`ooxml-core` is installed with it. The package ships plain JavaScript and needs no build step.
+
 ## Quick start
+
+Add the server to your MCP client, with the folder it may use:
 
 ```json
 {
 	"mcpServers": {
 		"visio": {
 			"command": "npx",
-			"args": ["-y", "--package=visio-viewer-mcp", "visio-tools", "/path/to/documents"]
+			"args": ["-y", "--package=visio-viewer-mcp", "visio-tools", "--root", "/path/to/drawings"]
 		}
 	}
 }
 ```
 
-Paths are scoped to the configured root (the current directory by default).
-Save-as never overwrites existing files. Edit tools update the source
-unless `outputPath` names a new file. Files are written atomically after core
-validation. Unsupported features and preservation limitations are returned by core.
+The `visio-tools` command serves over stdio. Without `--root` (or a bare folder argument) it uses the current directory and says so on stderr.
 
-## Features
+## Tools
 
-VSDX inspection and batches of supported text and geometry edits. All document
-algorithms live in OOXML core. Importing the package does not start stdio.
+| Tool            | What it does                                                                                                                                                                                                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `visio_inspect` | Reads a `.vsdx` file: pages, shape ids, text, geometry and the core's diagnostics. Never writes.                                                                                                                                      |
+| `visio_edit`    | Applies a batch of 1 to 1,000 edits atomically: `replace-plain-text`, `move-shape`, `resize-shape`, `delete-shape` and `create-rectangle`. Coordinates are in inches from the bottom-left of the page. Unsupported edits are refused. |
 
-## Limitations
+Each tool takes a `filePath` under the root. `visio_edit` replaces the source atomically unless `outputPath` names a new file with the same extension; it never overwrites an existing file there. Results and errors come back as JSON text, with diagnostics that describe any fidelity limits. There is no tool that creates a drawing from nothing.
 
-Unsupported operations report errors or core diagnostics. Office parity and lossless
-export are not established. Updates overwrite the source unless `outputPath` is supplied.
+## Safety
 
-## API
+- **Confined to the root.** Paths are checked on their text before any filesystem call, then again after links are resolved. UNC and device paths are refused everywhere, and on Windows so are names the system would reinterpret (`:`, `<`, `>`, `"`, `|`, `?`, `*`, a trailing dot or space, device names such as `NUL`).
+- **Bounded.** Files are limited to 64 MiB in and out, and every read or edit has one memory budget sized from the heap Node reports. A drawing that does not fit is refused with `LIMIT_XML_MEMORY`. A page of 10,000 shapes needs a heap limit of about 1,000 MiB, so start Node with `--max-old-space-size=820` or more if your agents open drawings that large.
+- **Atomic writes.** Output is written to a temporary file and moved into place only after the core has validated every edit in the batch.
 
-Programmatic integration: `createServer({ rootDir })` or
-`registerTools(existingMcpServer, { rootDir })`. Importing the package does not
-start a transport. The OOXML combined MCP calls this same registration function.
+## Use it from code
 
-This package ships JavaScript source and needs no separate build step.
+```js
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { createServer, registerTools } from 'visio-viewer-mcp';
 
-The package exposes `visio_inspect` and `visio_edit` for `.vsdx` files.
-`visio_edit` supports core-validated plain text replacement, move, resize, delete
-and rectangle creation. Coordinates use inches with a bottom-left origin.
-There is no standalone create-document tool. Unsupported edits reject; inspect
-and edit results include diagnostics about fidelity limits.
+// A new server with the Visio tools:
+const server = createServer({ rootDir: '/path/to/drawings' });
 
-## Documentation
+// Or add them to a server you already have:
+const mine = new McpServer({ name: 'my-tools', version: '1.0.0' });
+registerTools(mine, { rootDir: '/path/to/drawings' });
+```
 
-[Source and tools](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio/mcp) |
-[Core automation](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md)
+Importing the package starts no transport; connect the server to one yourself. Install `@modelcontextprotocol/sdk` in your own project when you import it. The tools themselves are `visioTools` in `ooxml-core/automation`, registered with `registerAutomationTools` from `ooxml-core/automation/node`; the combined [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp) server registers the same definitions. See the [MCP guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/mcp.md).
+
+## Supported environments
+
+- Node.js 22.3 or newer.
+- Any MCP client that starts stdio servers.
+
+## Privacy and network use
+
+The server makes no network request. It reads and writes only files under its root, sends nothing anywhere and collects no telemetry; what your MCP client does with tool results is up to that client. It does not sign in to Microsoft or sync OneDrive: an application that stores drawings in OneDrive can fetch them with `ooxml-core/embedding/onedrive` and hand the bytes to its own tool workflow ([OneDrive guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)). See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
+## Related packages
+
+| Package                                                                                                                                                                       | What it is                                                   |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| [`ooxml-mcp`](https://www.npmjs.com/package/ooxml-mcp)                                                                                                                        | One server with the Word, Excel, PowerPoint and Visio tools. |
+| [`visio-core`](https://www.npmjs.com/package/visio-core)                                                                                                                      | The Visio document API, for your own Node code.              |
+| [`visio-react-viewer`](https://www.npmjs.com/package/visio-react-viewer) and the other [Visio viewers](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) | Show and edit the same drawings in a browser.                |
+| [`ooxml-core`](https://www.npmjs.com/package/ooxml-core)                                                                                                                      | The Office logic behind the tools.                           |
+
+Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme).
 
 ## License
 
-Apache-2.0.
-
-## OneDrive host integration
-
-This package does not acquire Microsoft credentials or synchronize OneDrive automatically.
-An authorized application can use `ooxml-core/embedding/onedrive` to retrieve or persist Office
-bytes and provide them to its normal document/tool workflow. See the
-[package reference and conflict recovery guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
-and [live acceptance requirements](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md).
-OpenTeams server attachments remain independent copies; no simulation service is shipped.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/LICENSE).

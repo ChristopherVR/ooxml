@@ -1,11 +1,86 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+For Angular apps, `<visio-viewer-host>` now opens drawings with pages of up to about 10,000 shapes inside a memory budget sized from the browser, refuses crafted files that would exhaust it, and opens a drawing too large to edit read-only with the reason in the reader's language. A `locale` input (`[locale]="lang"`) sets the interface language, and `customization.ribbon.hiddenTabs` removes ribbon tabs, File included. Two changes can break an existing app: the viewer takes dark mode from `--office-color-scheme` or `data-office-theme` instead of the page's CSS `color-scheme`, and Node.js 22.3 is the minimum for builds and server rendering. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) gives the before and after of each breaking change.
+
+### Breaking changes
+
+- The viewer no longer inherits the page's CSS `color-scheme`. It reads the `--office-color-scheme` token, which is `light` unless `data-office-theme="dark"` applies, or the system prefers dark and no `data-office-theme="light"` overrides it. A container that sets only `color-scheme: dark` now gets a light viewer: add `--office-color-scheme: dark` to it, or use `data-office-theme="dark"`, which sets both ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#the-editors-take-dark-mode-from-the-theme-not-from-color-scheme)).
+- The package requires Node.js 22.3 or newer and declares `"engines": { "node": ">=22.3" }`. `ooxml-core` sizes the memory budget of a Visio read or edit from the heap limit Node reports, which it reaches through an API added in 22.3. Raise the Node version of your build machines, servers and CI ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer)).
+- A collaboration update that holds more than one struct per 4 bytes, or more than one deleted range per 2 bytes, is refused before it is decoded, and a refusal stops the sync. The budget grows with the update, so the first sync of a real drawing stays well inside it. Code that calls `ooxml-core/collab` directly replaces `DEFAULT_UPDATE_LIMITS` with `defaultUpdateLimits(bytes)` ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#collaboration-updates-are-bounded-and-a-refusal-stops-the-sync)).
+- The status bar's zoom button is named by the percentage it shows, for example "100%, Zoom to fit". Browser tests that find it by the name "Zoom to fit" use `[data-id="zoomFit"]` instead ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#tests-find-the-zoom-button-by-its-new-name)).
+- `emf-converter` 5 loads its image decoders and colour data on demand. Package managers and bundlers need no change; if you copy compiled files by hand, deploy `dist/browser-chunks/` and `dist/node-chunks/` next to the entry files ([guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#deploy-the-new-decoder-folders-if-you-copy-files-by-hand)).
+
+### Security
+
+- No Visio file can exhaust the memory of the page or worker that reads or edits it. Each read or edit has one memory budget, sized from the host's heap and estimated before each XML part is parsed. A drawing that does not fit is refused with the code `LIMIT_XML_MEMORY` and a message in the viewer's language saying how much memory it would need; a small file of dense XML is refused in well under a second.
+- Every package is opened through the guarded zip reader, including collaboration snapshots, signature listing and embedded chart workbooks, so a small file can no longer inflate without limit.
+- Chart point counts and point indices no longer decide how much memory is allocated, so a chart part of a few hundred bytes can no longer exhaust memory.
+- SVG pictures are shown from `data:` URLs instead of object URLs of your origin, so opening one in its own tab can no longer run document-controlled script there.
+- A collaborator can no longer replace an arbitrary package part through shared media or add markup to the content types part, and the values peers send are checked before they are applied.
+- A drawing is shown as signed only when its signature verifies, never because it merely contains a signature part.
+- The package is published by a release pipeline in which third-party code cannot push, tag or publish, and the signed tarball on each GitHub release is checked against the integrity the npm registry records.
+
+### Added
+
+- A `locale` input (`[locale]="lang"`) sets the interface language.
+- `customization.ribbon.hiddenTabs` hides native ribbon tabs by id, such as `'insert'` or `'file'`. Hiding `'file'` removes the File tab, its backstage and every route into it at every width, while Save, its shortcuts, host `storage` and the `file-command` event keep working. Tell me leaves out commands that live only on a hidden tab.
+- Drawings open with pages of up to about 10,000 shapes as Visio saves them: the default XML limits are 1,500,000 nodes per part and 2,000,000 per package, and the ten-second load deadline is unchanged. A page that is still too large says how many shapes it has.
+- A drawing too large to edit here (more than 100,000 ShapeSheet cells, or an edit that would not fit the memory budget) opens read-only and says why. `parseVsdx` reports `edit-size-limit` first among its diagnostics, and a refused edit is shown in the viewer's language.
+- A signed drawing shows its verified state in the status bar, in a notice under the ribbon and on File > Info: Signed, Signed (signer not verified), Invalid signature or Signature not verified. The notice says that saving changes removes the signatures.
+- When sharing stops because an update was refused, the `documentError` output reports why in the display language.
+- F6 and Shift+F6 move between the ribbon, the Shapes window, the drawing, the task pane, the page tabs and the status bar, as in Word, Excel and PowerPoint.
+
+### Changed
+
+- `zoom-change` fires once per zoom gesture instead of once per wheel step: 300 ms after the last input, when the gesture ends, or before a pointer press or scroll. Until then the `zoom` property still reads the zoom the gesture started from.
+- When the viewer is removed from the page and not attached again before the current task ends, it adds one constructed stylesheet of its own to `document.adoptedStyleSheets` (on first use) and changes its rule, which matches nothing. A host that replaces `document.adoptedStyleSheets` may drop it; the next removal adds it again.
+- Charts keep the point counts and points their file declares through viewing, editing and saving. Very large charts show a bounded view, the load reports `CHART_POINTS_LIMITED`, and they stay fully editable.
+- The component is built and tested against Angular 22.2 and still supports Angular 21 and 22.
+- The package is built and tested against current releases of its dependencies, including `emf-converter` 5. The supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+
+### Fixed
+
+- `capabilities.export: false` now removes Export CSV from Review > Shape Reports, and `capabilities.copy: false` removes its Copy.
+- Dialogs keep Tab and Shift+Tab inside, close on Escape wherever focus has ended up, and give focus back to the control that opened them.
+- A shape keeps keyboard focus when the drawing redraws, so arrow nudges can be repeated and Delete still works. Focus moves to the canvas when the shape is gone.
+- Pressing a selection or rotation handle while a zoom is still previewing starts the drag, and the rotation handle moves with the previewed drawing.
+- `--vv-accent` colours the accent text again, ahead of the shared ink. The new `--vv-accent-text` sets that text alone.
+- Chart Edit Data writes only the workbook cells an edit changed, so a text cell in a value range is no longer overwritten with 0. Removing a bubble chart row removes its bubble sizes, adding a scatter or bubble row leaves the new x value blank, and a value edit on a series shorter than the longest one is no longer refused.
+- In Chrome and Edge, a closed viewer is freed again when its drawing used a clip, mask, filter or fill reference, such as a glow. The browser's style cache had kept it, with its whole drawing, alive.
+- The Share dialog shows the same caption as Word and Excel for an invitation without its session key.
+
+### Performance
+
+- Zooming with Ctrl+wheel, a pinch, the zoom slider or the + and - keys scales the drawing smoothly and renders the page once when you stop. The end zoom and scroll position are unchanged.
+- The page chrome and canvas sizes are written only when they change.
+
+### Accessibility
+
+- Every change is checked in a real browser before release: Tab goes round the page without getting stuck, F6 reaches every region, dialogs keep and return focus, and axe-core runs in light mode, dark mode and on a phone.
+- The current page tab reads at 4.5:1 in every accent, and keeps a visible label in forced-colours mode. Pressed buttons and selected tabs keep a system highlight there too.
+- Group shapes show a focus ring, and connectors describe the shapes they join.
+- Gallery buttons such as Design > Backgrounds and Insert > Callout show their caption in the display language, and the More button of an inline gallery is named in that language.
+- A chart is named by its alt text, falling back to its title, and screen readers can read its series and values.
+- Field and shapes search boundaries reach 3:1, and the Tell me box, the search fields and the File tab show a focus ring of at least 3:1 in light and dark themes.
+
+### Released together
+
+- [`visio-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/core/CHANGELOG.md): the document API this package re-exports.
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): parsing, editing, the memory budget and collaboration behind the viewer.
+- [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the `<visio-viewer>` element, its ribbon and dialogs, and the theme tokens.
+- [`visio-react-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/react/CHANGELOG.md): the same viewer for React.
+- [`visio-vue-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/vue/CHANGELOG.md): the same viewer for Vue.
+- [`visio-svelte-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/svelte/CHANGELOG.md): the same viewer for Svelte.
+- [`visio-solid-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/solid/CHANGELOG.md): the same viewer for Solid.
+- [`visio-vanilla-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/packages/vanilla/CHANGELOG.md): the same viewer for pages without a framework.
+- [`visio-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/visio/mcp/CHANGELOG.md): the same document operations as MCP tools.
 
 ## [1.4.1](https://github.com/ChristopherVR/ooxml/releases/tag/visio-angular-viewer@1.4.1) - 2026-11-16
 
