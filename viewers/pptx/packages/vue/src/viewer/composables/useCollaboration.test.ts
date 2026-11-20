@@ -575,6 +575,70 @@ describe('useCollaboration', () => {
 		scope.stop();
 	});
 
+	it('reports a join whose room slides replace the open deck, not a peer edit after it', async () => {
+		state.slidesArray = null;
+		state.slidesObserverCb = null;
+		state.awarenessStates.clear();
+		const slides = ref<PptxSlide[]>([slide('local')]);
+		const onRoomReplacedDeck = vi.fn();
+		const scope = effectScope();
+		const collab = scope.run(() =>
+			useCollaboration({
+				slides,
+				onRemoteSlides: (remote) => {
+					slides.value = remote;
+				},
+				onRoomReplacedDeck,
+			}),
+		)!;
+		await collab.start(config);
+		state.statusCb?.({ status: 'connected' });
+
+		state.slidesArray?.push([remoteSlideMap('room')]);
+		state.slidesObserverCb?.(undefined, { origin: 'remote-peer' });
+		state.syncCb?.(true);
+		expect(slides.value[0]?.id).toBe('room');
+		expect(onRoomReplacedDeck).toHaveBeenCalledOnce();
+
+		state.slidesArray?.push([remoteSlideMap('peer')]);
+		state.slidesObserverCb?.(undefined, { origin: 'remote-peer' });
+		expect(slides.value).toHaveLength(2);
+		expect(onRoomReplacedDeck).toHaveBeenCalledOnce();
+
+		collab.stop();
+		scope.stop();
+	});
+
+	it('never reports a join for the editor that seeded the room', async () => {
+		state.slidesArray = null;
+		state.slidesObserverCb = null;
+		state.awarenessStates.clear();
+		const slides = ref<PptxSlide[]>([slide('local')]);
+		const onRoomReplacedDeck = vi.fn();
+		const scope = effectScope();
+		const collab = scope.run(() =>
+			useCollaboration({
+				slides,
+				onRemoteSlides: (remote) => {
+					slides.value = remote;
+				},
+				onRoomReplacedDeck,
+			}),
+		)!;
+		await collab.start(config);
+		state.statusCb?.({ status: 'connected' });
+		state.syncCb?.(true);
+		expect(state.slidesArray?.length).toBeGreaterThan(0);
+
+		state.slidesArray?.push([remoteSlideMap('peer')]);
+		state.slidesObserverCb?.(undefined, { origin: 'remote-peer' });
+		expect(slides.value.map((s) => s.id)).toContain('peer');
+		expect(onRoomReplacedDeck).not.toHaveBeenCalled();
+
+		collab.stop();
+		scope.stop();
+	});
+
 	it('uses the serverless webrtc transport when requested', async () => {
 		state.slidesArray = null;
 		state.awarenessStates.clear();

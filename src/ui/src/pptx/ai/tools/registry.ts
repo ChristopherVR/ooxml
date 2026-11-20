@@ -16,14 +16,16 @@ import type { ToolSet } from 'ai';
 import type { z } from 'zod';
 
 import type { PptxAiBridge } from '../bridge';
-import type { AiChangeAnimator } from '../change-animator';
 import type { PptxAiConfig, PptxAiToolName } from '../config';
 import type { AiSdkModule } from '../loader';
 import type { ProposalStore } from '../proposals';
+import type { RunLimiter } from '../run-limits';
 import { BESPOKE_TOOL_ENTRIES } from './bespoke-registry';
 import type { AiToolContext } from './executor-base';
 import { MCP_TOOL_ENTRIES } from './mcp-registry';
 import { runSharedTool } from './shared-tool-runner';
+
+const MAX_REPORTED_ISSUES = 5;
 
 /** An executor pre-bound to its execution context. */
 export type BoundExecutor = (input: unknown) => Promise<unknown>;
@@ -65,28 +67,43 @@ export function enabledToolNames(config: PptxAiConfig): PptxAiToolName[] {
 	return allToolNames().filter((name) => (allowed ? allowed.has(name) : true) && !denied.has(name));
 }
 
+/** Parse a tool call against its schema; the model's output is untrusted. */
+function parseToolInput(name: string, schema: z.ZodTypeAny, input: unknown): unknown {
+	const parsed = schema.safeParse(input);
+	if (parsed.success) {
+		return parsed.data;
+	}
+	const problems = parsed.error.issues
+		.slice(0, MAX_REPORTED_ISSUES)
+		.map((issue) => `${issue.path.join('.') || 'input'}: ${issue.message}`);
+	throw new Error(`Invalid input for ${name}. ${problems.join('; ')}`);
+}
+
 /**
  * Build the map of active tool executors, each bound to `{ bridge, proposals,
- * writePolicy }`. Used by `onToolCall` (endpoint mode) and by the with-execute
- * tool set (model mode).
+ * writePolicy }`. Every call is counted against the run limits and validated
+ * here, before any tool code runs. Used by `onToolCall` (endpoint mode) and by
+ * the with-execute tool set (model mode).
  */
 export function buildToolExecutors(
 	bridge: PptxAiBridge,
 	proposals: ProposalStore,
 	config: PptxAiConfig,
-	animator?: AiChangeAnimator,
+	limiter?: RunLimiter,
 ): Map<PptxAiToolName, BoundExecutor> {
 	const ctx: AiToolContext = {
 		bridge,
 		proposals,
 		writePolicy: config.writePolicy ?? 'stage',
-		animator,
 	};
 	const map = new Map<PptxAiToolName, BoundExecutor>();
 	for (const name of enabledToolNames(config)) {
 		const tool = ALL_TOOLS[name];
 		if (tool) {
-			map.set(name, async (input: unknown) => tool.run(ctx, input));
+			map.set(name, async (input: unknown) => {
+				limiter?.admitToolCall(name, input);
+				return tool.run(ctx, parseToolInput(name, tool.schema, input));
+			});
 		}
 	}
 	return map;

@@ -48,6 +48,8 @@ export interface UseAiBridgeInput {
 	canvasSize: Ref<CanvasSize>;
 	theme: Ref<PptxTheme | undefined>;
 	handler: Ref<PptxHandler | null>;
+	/** {@link PptxAiBridge.getDeckLoad}: changes when a presentation loads, never on an edit. */
+	deckLoad: () => number;
 	// Presentation-level state, exposed so the AI's `getDeckData`/`applyDeckData`
 	// seam can read and commit sections / canvas size / metadata / presentation
 	// properties (the pptx-viewer-mcp "deck" tools). Slide + theme tools do not
@@ -101,6 +103,7 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 		getCanvasSize: () => input.canvasSize.value,
 		getTheme: () => input.theme.value,
 		getHandler: () => input.handler.value,
+		getDeckLoad: () => input.deckLoad(),
 		getFileName: () => input.fileName(),
 		getSections: () => input.sections.value,
 		getCustomShows: () => input.customShows.value,

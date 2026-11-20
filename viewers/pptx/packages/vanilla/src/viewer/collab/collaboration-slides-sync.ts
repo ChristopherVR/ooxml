@@ -17,13 +17,16 @@ import { clampSlideIndex } from '../state';
 import type { Store, ViewerState } from '../state';
 
 export interface SlidesSync {
-	/** Publish the current local slides into the doc (granular, echo-deduped). No-op while a remote apply is in flight or `publishSuppressed`. */
+	/**
+	 * Publish the current local slides into the doc (granular, echo-deduped). No-op while a remote
+	 * apply is in flight or `publishSuppressed`. Returns whether the slides were written.
+	 */
 	flushLocalSlides(
 		ydoc: YDocLike | null,
 		factories: YjsFactories | null,
 		config: CollaborationConfig | null,
 		publishSuppressed: boolean,
-	): void;
+	): boolean;
 	/**
 	 * Apply the doc's current slides into the store (skips an empty/unsynced
 	 * doc). Applies unconditionally when the doc has slides: the JSON dedupe is
@@ -56,20 +59,21 @@ export function createSlidesSync(
 		factories: YjsFactories | null,
 		config: CollaborationConfig | null,
 		publishSuppressed: boolean,
-	): void {
+	): boolean {
 		if (!ydoc || !factories || applyingRemote || publishSuppressed) {
-			return;
+			return false;
 		}
 		const slides = store.get().slides;
 		const serialized = JSON.stringify(slides);
 		if (serialized === lastSynced) {
-			return;
+			return false;
 		}
 		lastSynced = serialized;
 		reconcileSlidesInYDoc(slides, ydoc, factories);
 		if (config) {
 			scheduleWriteBack(config);
 		}
+		return true;
 	}
 
 	function applyRemoteSlides(

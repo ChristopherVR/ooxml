@@ -89,6 +89,7 @@ export function makeMockBridge(initial?: {
 		getActiveSlideIndex: () => activeIndex,
 		getTheme: () => theme,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide(index: number) {
 			activeIndex = index;
 			navigations.push(index);

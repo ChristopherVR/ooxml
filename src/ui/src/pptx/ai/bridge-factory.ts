@@ -57,6 +57,8 @@ export interface PptxAiBridgePort {
 	getCanvasSize(): PptxAiCanvasSize;
 	getTheme(): PptxTheme | undefined;
 	getHandler(): PptxHandler | null | undefined;
+	/** See {@link PptxAiBridge.getDeckLoad}: changes on every presentation load, and only then. */
+	getDeckLoad(): number;
 	/** Display name of the document, used as the deck title when present. */
 	getFileName?(): string | undefined;
 	getSections(): readonly PptxSection[] | undefined;
@@ -254,6 +256,7 @@ export function createPptxAiBridge(port: PptxAiBridgePort): PptxAiBridge {
 		getActiveSlideIndex: () => port.getActiveSlideIndex(),
 		getTheme: () => port.getTheme(),
 		getHandler: () => port.getHandler() ?? undefined,
+		getDeckLoad: () => port.getDeckLoad(),
 		goToSlide: (index) => port.goToSlide(index),
 		selectElements: (slideIndex, elementIds) => port.selectElements(slideIndex, elementIds),
 		applySlidesUpdate,

@@ -31,7 +31,7 @@ import type {
 	PptxAiConfig,
 	PptxAiUIMessage,
 } from 'ooxml-ui/pptx/ai';
-import { deckIdFromBridge } from 'ooxml-ui/pptx/ai';
+import { canAcceptAllProposals, deckIdFromBridge } from 'ooxml-ui/pptx/ai';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -59,6 +59,7 @@ const {
 	error,
 	isStreaming,
 	proposals,
+	proposalsDiscarded,
 	send,
 	stop,
 	clearError,
@@ -66,6 +67,7 @@ const {
 	rejectProposal,
 	acceptAllProposals,
 } = useAiConversation(useChat, props.session, props.config, {
+	deckLoad: () => props.bridge.getDeckLoad(),
 	// Live "AI as a collaborator" focus: as each tool runs, navigate to and
 	// highlight the slide / element(s) it touches so the canvas mirrors the
 	// assistant in real time (and colour edits tween while it is active).
@@ -209,7 +211,7 @@ function onAcceptAll(): void {
 					{{ t('pptx.ai.pendingChanges', { count: proposals.length }) }}
 				</span>
 				<button
-					v-if="proposals.length > 1"
+					v-if="canAcceptAllProposals(proposals)"
 					type="button"
 					class="rounded-sm bg-primary/90 px-2 py-0.5 text-[11px] font-medium text-primary-foreground hover:bg-primary"
 					@click="onAcceptAll"
@@ -225,6 +227,14 @@ function onAcceptAll(): void {
 				@reject="rejectProposal"
 			/>
 		</div>
+		<p
+			v-else-if="proposalsDiscarded"
+			role="status"
+			data-testid="pptx-ai-proposals-discarded"
+			class="border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground"
+		>
+			{{ t('pptx.ai.proposalsDiscarded') }}
+		</p>
 
 		<AiComposer
 			:is-streaming="isStreaming"

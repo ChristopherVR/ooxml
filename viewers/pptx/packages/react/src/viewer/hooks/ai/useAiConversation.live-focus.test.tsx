@@ -50,6 +50,7 @@ function makeBridge(goToSlide: (index: number) => void): PptxAiBridge {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide,
 		selectElements: () => {},
 		applySlidesUpdate: () => {},
@@ -75,10 +76,13 @@ function toolInput(toolCallId: string, toolName: string, input: unknown): Stream
  * every resubmit and the loop would never terminate (unbounded transcript
  * growth OOM'd the vitest worker).
  */
+const requests: PptxAiUIMessage[][] = [];
+
 function scriptedTransport(steps: StreamChunk[]): ChatTransport<PptxAiUIMessage> {
 	let call = 0;
 	return {
-		async sendMessages() {
+		async sendMessages(options: { messages: PptxAiUIMessage[] }) {
+			requests.push(options.messages);
 			const chunks: StreamChunk[] =
 				call === 0
 					? [
@@ -128,7 +132,7 @@ function Harness(props: {
 	// Mirrors the real lazy-loading wiring (AiChatPanelLazy), which threads
 	// `useChat` through as a value on purpose; see the comment in useAiConversation.ts.
 	// oxlint-disable-next-line react/hooks -- see comment above
-	const chat = useAiConversation(useChat, props.session, props.config, props.bridge, {
+	const chat = useAiConversation(useChat, props.session, props.config, {
 		onToolTarget: (target) => {
 			if (target && target.slideIndex !== undefined) {
 				props.bridge.goToSlide(target.slideIndex);
@@ -235,5 +239,14 @@ describe('useAiConversation live focus', () => {
 		await waitFor(() => goToSlide.mock.calls.some((c) => c[0] === 2));
 		// The latest target (slide index 2) is the final navigation and sticks.
 		expect(goToSlide.mock.calls.at(-1)?.[0]).toBe(2);
+	});
+
+	it('sends the deck context with every request', async () => {
+		requests.length = 0;
+		const { goToSlide } = await run(toolInput('c1', 'get_slide', { slideIndex: 1 }));
+		await waitFor(() => goToSlide.mock.calls.length > 0 && requests.length >= 2);
+		for (const messages of requests) {
+			expect(JSON.stringify(messages[0])).toContain('Current deck context');
+		}
 	});
 });

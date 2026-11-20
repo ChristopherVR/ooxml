@@ -1,3 +1,4 @@
+import { historyTheme, loadedThemeName, withThemeUpdates, writeThemeParts } from 'ooxml-ui/pptx';
 import type { PptxAiBridge } from 'ooxml-ui/pptx/ai';
 
 import { createSvelteAiBridge } from '../ai';
@@ -55,6 +56,9 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 		getCanvasSize: () => loader.canvasSize,
 		getTheme: () => loader.presentationTheme,
 		getHandler: () => loader.handler,
+		// Every presentation load (and File > New) reseeds the editor, and a room join replaces
+		// its slides; master and layout changes and slide paste only swap the handler.
+		getDeckLoad: () => editor.seedNonce + collab.roomJoins,
 		getFileName: () => options.getFileName?.(),
 		goToSlide: (index) => viewer.goTo(index),
 		// Picks, then a pin, then the live selection: the same scope the focus
@@ -76,12 +80,39 @@ export function useAiCluster(deps: AiClusterDeps): AiCluster {
 			editor.editable = true;
 			editor.commitSlides(next);
 		},
+		// Re-resolve the slides and the template layer in place as one undo step, then write the
+		// theme parts so a save carries the change (as Design > Colors and Fonts do).
 		applyTheme: (updates) => {
-			const nextTheme = { ...(loader.presentationTheme ?? {}), ...updates };
-			loader.presentationTheme = nextTheme;
-			if (nextTheme.colorScheme) {
-				loader.colorScheme = nextTheme.colorScheme;
+			if (collab.readOnly) {
+				return;
 			}
+			deps.setEditable(true);
+			editor.editable = true;
+			const from = historyTheme(editor.theme, editor.slideMasters);
+			const next = withThemeUpdates(
+				{
+					slides: editor.slides,
+					templateElementsBySlideId: editor.templateElementsBySlideId,
+					theme: editor.theme,
+					themeColorMap: editor.themeColorMap,
+				},
+				updates,
+			);
+			editor.pushHistory();
+			editor.slides = next.slides;
+			editor.templateElementsBySlideId = next.templateElementsBySlideId;
+			editor.theme = next.theme;
+			loader.presentationTheme = next.theme;
+			if (next.theme?.colorScheme) {
+				loader.colorScheme = next.theme.colorScheme;
+			}
+			editor.commitChange();
+			void writeThemeParts(
+				loader.handler,
+				from,
+				historyTheme(next.theme ?? {}, editor.slideMasters),
+				loadedThemeName(loader.themeOptions, editor.slideMasters),
+			);
 		},
 		// Presentation-level (deck) state for the AI getDeckData / applyDeckData
 		// seam. Reads come off the editor + loader; writes route through the same

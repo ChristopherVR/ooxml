@@ -1,10 +1,11 @@
 <script lang="ts">
 	/**
 	 * AiPendingChanges: the staged-proposal tray under the transcript, with the
-	 * "accept all" shortcut that only appears once more than one change is
-	 * waiting. Split out of `AiChatPanel` to keep that file within the repo's
+	 * "accept all" shortcut that only appears once more than one change can
+	 * take it. Split out of `AiChatPanel` to keep that file within the repo's
 	 * file-size budget; every action routes back to the chat's proposal store.
 	 */
+	import { canAcceptAllProposals } from 'ooxml-ui/pptx/ai';
 	import type { ProposalView } from 'ooxml-ui/pptx/ai';
 
 	import { useTranslator } from '../../../i18n/context';
@@ -29,7 +30,7 @@
 		<span class="pptx-svelte-ai-proposals-title">
 			{t('pptx.ai.pendingChanges', { count: proposals.length })}
 		</span>
-		{#if proposals.length > 1}
+		{#if canAcceptAllProposals(proposals)}
 			<button type="button" class="pptx-svelte-ai-accept-all" onclick={onacceptall}>
 				{t('pptx.ai.acceptAll')}
 			</button>

@@ -18,3 +18,18 @@ export function demoAiUsesPlainConfig(search: string = globalThis.location?.sear
 	}
 	return plain;
 }
+
+/** The assistant write policies a demo can run under. */
+export type DemoAiWritePolicy = 'auto' | 'stage' | 'approve';
+
+/**
+ * The `writePolicy` every demo passes, from `?aiPolicy=auto` or `?aiPolicy=approve`. Anything else
+ * is `'stage'`, the library's default, so the browser suite can drive each policy through the
+ * real panel (`e2e/pptx/ai-write-policy.spec.ts`).
+ */
+export function demoAiWritePolicy(
+	search: string = globalThis.location?.search ?? '',
+): DemoAiWritePolicy {
+	const policy = new URLSearchParams(search).get('aiPolicy');
+	return policy === 'auto' || policy === 'approve' ? policy : 'stage';
+}

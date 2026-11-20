@@ -17,6 +17,7 @@ import {
 	currentConnection,
 	needsKey,
 	onConnection,
+	ReplyEndedError,
 	streamChat,
 } from './providers.js';
 import { currentPolicy, feature, loadPolicy } from './policy.js';
@@ -383,6 +384,8 @@ export function createChat({ root, prefix, deps, empty, placeholder, onChange })
 			}
 		} catch (error) {
 			if (abort.signal.aborted) message.content = `${visibleText(partial)}\n\n_Stopped._`.trim();
+			else if (error instanceof ReplyEndedError && visibleText(error.partial).trim())
+				message.content = `${visibleText(error.partial)}\n\n_${error.message}_`;
 			else message.error = error.message;
 		} finally {
 			cancelAnimationFrame(frame);

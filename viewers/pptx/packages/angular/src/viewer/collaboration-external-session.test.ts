@@ -280,6 +280,21 @@ describe('host-owned Angular collaboration', () => {
 		collab.disconnect();
 	});
 
+	it('reports the join whose room slides replace the deck, and not a peer edit after it', async () => {
+		const room = host(true);
+		const collab = service();
+		const replaced = vi.fn();
+		await collab.connect(
+			{ ...config(room.session), sessionIntent: 'join' },
+			{ onRemoteSlides: vi.fn(), onRoomReplacedDeck: replaced },
+		);
+		room.seed('remote');
+		expect(replaced).toHaveBeenCalledOnce();
+		room.seed('peer-edit');
+		expect(replaced).toHaveBeenCalledOnce();
+		collab.disconnect();
+	});
+
 	it('adopts an already-synced document before enabling writes and borrows ownership', async () => {
 		const room = host(true);
 		room.seed('remote');

@@ -373,6 +373,65 @@ describe('observeExternalCollaborationReadiness', () => {
 		doc.destroy();
 	});
 
+	it('reports a join whose room replaces the open deck once, and room edits after it never', () => {
+		const doc = new Y.Doc();
+		const host = createSession({ status: 'connected', synced: true }, doc);
+		const onRoomReplacedDeck = vi.fn();
+		const remote = (text: string): void =>
+			reconcileSlidesInYDoc(
+				[{ id: 'remote', rId: 'r', slideNumber: 1, elements: [], notes: text }],
+				doc,
+				factories,
+				'remote',
+			);
+		const dispose = observeExternalCollaborationReadiness(host.session, {
+			gate: createSyncGate(() => {}),
+			factories,
+			sessionIntent: 'join',
+			onStatus: () => {},
+			adoptSlides: vi.fn(),
+			onRoomReplacedDeck,
+		});
+		remote('room deck');
+		expect(onRoomReplacedDeck).toHaveBeenCalledOnce();
+		remote('a peer edit');
+		host.publish({ status: 'connecting', synced: false });
+		host.publish({ status: 'connected', synced: true });
+		expect(onRoomReplacedDeck).toHaveBeenCalledOnce();
+		dispose();
+		doc.destroy();
+	});
+
+	it('does not report a replaced deck to the client that seeded the room', () => {
+		const doc = new Y.Doc();
+		const host = createSession({ status: 'connected', synced: true }, doc);
+		const onRoomReplacedDeck = vi.fn();
+		const dispose = observeExternalCollaborationReadiness(host.session, {
+			gate: createSyncGate(() => {}),
+			factories,
+			sessionIntent: 'create',
+			onStatus: () => {},
+			adoptSlides: vi.fn(),
+			onReady: () =>
+				reconcileSlidesInYDoc(
+					[{ id: 'mine', rId: 'r', slideNumber: 1, elements: [] }],
+					doc,
+					factories,
+					LOCAL_SYNC_ORIGIN,
+				),
+			onRoomReplacedDeck,
+		});
+		reconcileSlidesInYDoc(
+			[{ id: 'mine', rId: 'r', slideNumber: 1, elements: [], notes: 'a peer edit' }],
+			doc,
+			factories,
+			'remote',
+		);
+		expect(onRoomReplacedDeck).not.toHaveBeenCalled();
+		dispose();
+		doc.destroy();
+	});
+
 	it('two create clients seeding one empty room at once converge on a single deck', async () => {
 		const deck = () =>
 			['s1', 's2', 's3'].map((id, index) => ({

@@ -59,6 +59,8 @@ import { useViewerCustomizationContext } from './viewer-customization-context';
 
 export interface ViewerToolbarSectionProps {
 	mode: ViewerMode;
+	/** File > New replaced the presentation. */
+	onNewPresentation?: () => void;
 	canEdit: boolean;
 	state: {
 		isDirty: boolean;
@@ -233,6 +235,7 @@ export interface ViewerToolbarSectionProps {
 export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 	const {
 		mode,
+		onNewPresentation,
 		canEdit,
 		state: s,
 		selectedElement,
@@ -707,6 +710,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					s.setSelectedElementIds([]);
 					s.setTemplateElementsBySlideId({});
 					s.setIsDirty(true);
+					onNewPresentation?.();
 				}}
 				onOpenShareDialog={onOpenShareDialog}
 				onSave={exportHandlers.handleSave}
