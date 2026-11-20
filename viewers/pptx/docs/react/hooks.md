@@ -309,13 +309,16 @@ const { actions } = blocks;
     unavailableReasonKey? }`; `setEmbedFonts(enabled)` keeps or strips the deck's embedded fonts on
     save. Turning it on for a deck that embeds nothing returns `'unsupported'`: a browser cannot read
     the bytes of an installed font, so the viewer cannot add one.
-  - `actions.digitalSignatures`: `state` is `{ signed, count, removedOnSave, supported }`. `list()`
-    reads the signatures from the loaded package (signer, issuer, validity dates, `expired`, and
-    `integrity`: `'digestsMatch' | 'invalid' | 'unverified'` for the parts each signature covers).
-    That is an integrity check only: the signature value, certificate chain and revocation are not
-    evaluated, so nothing is reported as trusted. `remove()` marks the deck changed so the saved file
-    carries no signatures (saving always drops them; `'no-signatures'` when there are none).
-    `sign()` always returns `'unsupported'`: the viewer cannot create a signature.
+  - `actions.digitalSignatures`: `state` is `{ state, signed, present, count, removedOnSave,
+    supported }`. `state` is the verified state of the package's signatures (`'unsigned' |
+    'verified' | 'verified-untrusted' | 'invalid' | 'unsupported'`); `signed` is true only when
+    they verify, `present` whenever signature parts exist. `list()` resolves the signatures of the
+    loaded package as `HostSignatureInfo` (`SignatureEntry`: `path`, `state`, `signer`, `issuer`,
+    `signingTime`, `validFrom`, `validTo`). The browser checks the signed parts' digests, the
+    signature value and the signer certificate's key, but has no trust store, so a valid signature
+    is at best `verified-untrusted`. `remove()` marks the deck changed so the saved file carries
+    no signatures (saving always drops them; `'no-signatures'` when there are none). `sign()`
+    always returns `'unsupported'`: the viewer cannot create a signature.
 - **Slide show dialogs.** Slide Show > Set Up Slide Show, Custom Slide Show, Broadcast and the
   shortcut help (`?` or Ctrl+/) are host-owned too. The first two raise `{ kind: 'setUpSlideShow' }`
   and `{ kind: 'customShows' }`; the shortcut help raises `{ kind: 'shortcuts', open }` every time it
