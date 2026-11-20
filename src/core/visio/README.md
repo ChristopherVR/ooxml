@@ -406,7 +406,7 @@ budget, generated pages of up to 13,800 shapes and Visio-saved pages of up to 10
 rectangles) read twice at each size, and nine of them moved, renamed and retyped once at each
 size. None of the 255 runs exhausted the heap: each opened or edited, or was refused with
 `LIMIT_XML_MEMORY` (or, for an edit, by one of its own limits). Peaks stayed at or below
-385 MB, 648 MB and 902 MB for reads and 503 MB, 621 MB and 873 MB for edits. The 10,000-rectangle
+385 MB, 648 MB and 902 MB for reads and 424 MB, 669 MB and 952 MB for edits. The 10,000-rectangle
 page opened in 3.4 to 4.0 s at 650 to 710 MB with a 1 GiB heap (five runs) and was refused
 with 768 MiB; the 10,000-shape generated page opened in 2.0 to 2.4 s at about 500 MB. Edits
 finished within 6 s; before, an edit kept a separate budget for each package it opened,

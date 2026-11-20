@@ -4,7 +4,9 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
+import { parseLock } from './check-lockfile-drift.mjs';
 import {
 	applyPlan,
 	bumpVersion,
@@ -385,4 +387,31 @@ test('helpers', () => {
 		'src/core/xlsx/__fixtures__/build.ts',
 	])
 		assert.equal(isPublishedFile(helper), false, helper);
+});
+
+test('a workspace the release does not stamp links its siblings through the workspace', () => {
+	// applyPlan moves the sibling ranges of released packages only. A private workspace with a
+	// caret range on a sibling would, after a major, resolve that sibling from npm instead of
+	// linking it, and the release's lockfile drift check would stop the run.
+	const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+	const lock = parseLock(readFileSync(join(root, 'bun.lock'), 'utf8'));
+	const stamped = new Set(Object.values(PACKAGES).map((meta) => meta.dir));
+	const names = new Set(Object.values(lock.workspaces).map((w) => w.name));
+	const pinned = [];
+	for (const [path, workspace] of Object.entries(lock.workspaces)) {
+		if (stamped.has(path)) continue;
+		for (const field of [
+			'dependencies',
+			'devDependencies',
+			'peerDependencies',
+			'optionalDependencies',
+		]) {
+			for (const [name, range] of Object.entries(workspace[field] ?? {})) {
+				if (names.has(name) && !/^(?:workspace:|file:|\*$)/u.test(range)) {
+					pinned.push(`${path} ${field}.${name} ${range}`);
+				}
+			}
+		}
+	}
+	assert.deepEqual(pinned, []);
 });

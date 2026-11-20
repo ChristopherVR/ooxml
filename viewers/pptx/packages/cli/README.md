@@ -202,7 +202,7 @@ npx @christophervr/pptx-viewer --pm pnpm                           # force a pac
 - Running with no `--target` and no TTY at all (piped stdin, most CI runners) exits with an error telling you to pass `--target` explicitly instead of hanging on a prompt it can't draw.
 - Any unrecognised flag, unknown target id, or invalid `--pm` value exits with a one-line error (`✘ Error: ...`) and a non-zero status instead of a stack trace.
 - Interrupting the interactive checklist with Ctrl-C exits with status `130`.
-- Requires Node.js 18+ to run at all; see the Angular note above for its own, stricter minimum.
+- Requires Node.js 22.3+ to run at all; see the Angular note above for its own, stricter minimum.
 
 ## OneDrive integration
 

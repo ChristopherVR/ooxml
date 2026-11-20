@@ -14,7 +14,7 @@ This repository publishes `ooxml-core`, `ooxml-ui`, `ooxml-mcp` and the viewer p
 
 ## Getting set up
 
-You need [Bun](https://bun.sh/) and Node.js 22 or newer.
+You need [Bun](https://bun.sh/) and Node.js 22.3 or newer.
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git

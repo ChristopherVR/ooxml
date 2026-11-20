@@ -46,15 +46,15 @@ npm install openteams-vanilla-viewer
 
 :::
 
-| Package                    | For                             | Peer dependency |
-| -------------------------- | ------------------------------- | --------------- |
-| `openteams-react-viewer`   | React 18+                       | `react`         |
-| `openteams-vue-viewer`     | Vue 3.4+                        | `vue`           |
-| `openteams-angular-viewer` | Angular 17+ (standalone)        | `@angular/core` |
-| `openteams-svelte-viewer`  | Svelte 5                        | `svelte`        |
-| `openteams-solid-viewer`   | SolidJS 1.9                     | `solid-js`      |
-| `openteams-vanilla-viewer` | no framework (`<teams-app>`)    | none            |
-| `openteams-server`         | the reference server (Node 22+) | none            |
+| Package                    | For                               | Peer dependency |
+| -------------------------- | --------------------------------- | --------------- |
+| `openteams-react-viewer`   | React 18+                         | `react`         |
+| `openteams-vue-viewer`     | Vue 3.4+                          | `vue`           |
+| `openteams-angular-viewer` | Angular 17+ (standalone)          | `@angular/core` |
+| `openteams-svelte-viewer`  | Svelte 5                          | `svelte`        |
+| `openteams-solid-viewer`   | SolidJS 1.9                       | `solid-js`      |
+| `openteams-vanilla-viewer` | no framework (`<teams-app>`)      | none            |
+| `openteams-server`         | the reference server (Node 22.3+) | none            |
 
 Use one binding per page: each registers the same custom elements. The names are `openteams-*`
 because the plain `openteams` name on npm belongs to an unrelated project.
@@ -156,7 +156,7 @@ include `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMes
 
 ## Run it from source
 
-Needs Node 22+ and Bun. This folder is `viewers/teams` of the
+Needs Node 22.3+ and Bun. This folder is `viewers/teams` of the
 [`ooxml`](https://github.com/ChristopherVR/ooxml) repository: run `bun install` at the repository
 root, then the commands below here. The demos (`demos/teams/*` at the root) and tests use the
 source of `ooxml-core` and `ooxml-ui` in the same tree.

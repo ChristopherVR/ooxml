@@ -25,7 +25,7 @@ Everything else has a default you can change or replace: see
 | Just see it working first, without writing code        | [Try it in the demos](#try-it-in-the-demos), with a [Graph Explorer token](#test-without-your-own-registration) |
 
 **Before you start** you need: a Microsoft account (personal, or work or school) that can sign in to
-the [Azure portal](https://portal.azure.com); Node.js 20 or later (or Bun); and the address your
+the [Azure portal](https://portal.azure.com); Node.js 22.3 or later (or Bun); and the address your
 application runs on during development, for example `http://localhost:5173`.
 
 ## 1. Register an application in Microsoft Entra

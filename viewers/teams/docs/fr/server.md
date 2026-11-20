@@ -15,7 +15,7 @@ passe par le serveur.
 
 ## Exécuter le serveur de référence
 
-Nécessite Node 22 ou ultérieur.
+Nécessite Node 22.3 ou ultérieur.
 
 ```bash
 TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server

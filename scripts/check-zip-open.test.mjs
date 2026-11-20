@@ -53,6 +53,17 @@ test('allows the guard itself, tests, fixtures and scripts', (t) => {
 	assert.deepEqual(findRawZipOpens(root), []);
 });
 
+test('in a git work tree, skips what git ignores and still reads untracked source', (t) => {
+	const root = fixture(t, {
+		'.gitignore': 'site-dist/\n.browser-test-dist/\n',
+		'viewers/visio/site-dist/assets/demo.js': RAW,
+		'viewers/visio/.browser-test-dist/demo-react/index.js': RAW,
+		'viewers/visio/src/new-reader.ts': RAW,
+	});
+	spawnSync('git', ['init', '-q'], { cwd: root });
+	assert.deepEqual(findRawZipOpens(root), ['viewers/visio/src/new-reader.ts:1']);
+});
+
 test('reports opens the file layout or spelling would otherwise hide', (t) => {
 	const computed = "import JSZip from 'jszip';\nconst open = name();\nJSZip[open](b);\n";
 	const root = fixture(t, {

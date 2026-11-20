@@ -64,7 +64,7 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ```bash
 npm install openteams-react-viewer      # or -vue-, -angular-, -svelte-, -solid-, -vanilla-viewer
-npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787 (Node 22+)
+npx openteams-server --insecure-dev     # local development only: 127.0.0.1:8787 (Node 22.3+)
 ```
 
 Each binding is self-contained (the `<teams-app>` element is bundled in) and installs [`ooxml-core`](https://www.npmjs.com/package/ooxml-core) and [`ooxml-ui`](https://www.npmjs.com/package/ooxml-ui) as regular dependencies. Use one binding per page: each registers the same custom elements.
@@ -145,15 +145,15 @@ The server refuses to start without accounts (`TEAMS_USERS_FILE`), an `authentic
 
 Seven packages are published on npm, each versioned independently. The names are `openteams-*` because the plain `openteams` name on npm belongs to an unrelated project.
 
-| Package                    | What it is                                                             | Peer dependency |
-| -------------------------- | ---------------------------------------------------------------------- | --------------- |
-| `openteams-react-viewer`   | React 18+ component and hooks (`packages/react`).                      | `react`         |
-| `openteams-vue-viewer`     | Vue 3.4+ component and composable (`packages/vue`).                    | `vue`           |
-| `openteams-angular-viewer` | Angular 17+ standalone component and service (`packages/angular`).     | `@angular/core` |
-| `openteams-svelte-viewer`  | Svelte 5 component and store (`packages/svelte`).                      | `svelte`        |
-| `openteams-solid-viewer`   | SolidJS 1.9 component and primitive (`packages/solid`).                | `solid-js`      |
-| `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none            |
-| `openteams-server`         | The reference server and its `openteams-server` command (`server`).    | none (Node 22+) |
+| Package                    | What it is                                                             | Peer dependency   |
+| -------------------------- | ---------------------------------------------------------------------- | ----------------- |
+| `openteams-react-viewer`   | React 18+ component and hooks (`packages/react`).                      | `react`           |
+| `openteams-vue-viewer`     | Vue 3.4+ component and composable (`packages/vue`).                    | `vue`             |
+| `openteams-angular-viewer` | Angular 17+ standalone component and service (`packages/angular`).     | `@angular/core`   |
+| `openteams-svelte-viewer`  | Svelte 5 component and store (`packages/svelte`).                      | `svelte`          |
+| `openteams-solid-viewer`   | SolidJS 1.9 component and primitive (`packages/solid`).                | `solid-js`        |
+| `openteams-vanilla-viewer` | `mountTeams` and the plain `<teams-app>` element (`packages/vanilla`). | none              |
+| `openteams-server`         | The reference server and its `openteams-server` command (`server`).    | none (Node 22.3+) |
 
 The workspace also holds **private** packages that are never published: `teams-viewer` (`packages/web-component`, a re-export of `ooxml-ui/teams`, inlined into every binding at build time) and the demos.
 
@@ -168,7 +168,7 @@ docs/                    the VitePress site and the GitHub Pages build (separate
 
 ## Development
 
-Needs Node 22+ and Bun. This folder is `viewers/teams` of the [`ooxml`](https://github.com/ChristopherVR/ooxml) repository; run `bun install` at the repository root, then the commands below here. The demos and tests use the source of `ooxml-core` and `ooxml-ui` in the same tree.
+Needs Node 22.3+ and Bun. This folder is `viewers/teams` of the [`ooxml`](https://github.com/ChristopherVR/ooxml) repository; run `bun install` at the repository root, then the commands below here. The demos and tests use the source of `ooxml-core` and `ooxml-ui` in the same tree.
 
 ```bash
 bun install

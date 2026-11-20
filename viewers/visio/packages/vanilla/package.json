@@ -34,5 +34,8 @@
 		"ooxml-core": "*",
 		"ooxml-ui": "*",
 		"visio-core": "^1.1.2"
+	},
+	"engines": {
+		"node": ">=22.3"
 	}
 }

@@ -7,7 +7,7 @@ const room = (): string => `locale-${Date.now()}`;
 
 test('the locale prop translates the app shell, the rail and the composer', async ({ page }) => {
 	await page.goto(`/?local=1&name=Ada&room=${room()}&locale=de`);
-	await expect(page.getByRole('heading', { name: '# General', exact: true })).toBeVisible({
+	await expect(page.getByRole('heading', { name: '# Allgemein', exact: true })).toBeVisible({
 		timeout: 15_000,
 	});
 	await expect(page.getByRole('navigation', { name: 'App-Leiste', exact: true })).toBeVisible();

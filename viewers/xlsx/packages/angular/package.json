@@ -52,5 +52,8 @@
 	},
 	"peerDependencies": {
 		"@angular/core": ">=19"
+	},
+	"engines": {
+		"node": ">=22.3"
 	}
 }

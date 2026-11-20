@@ -8,7 +8,7 @@ OpenTeams 没有托管服务。工作空间要么**不使用服务器**运行（
 
 ## 运行参考服务器
 
-需要 Node 22 或更高版本。
+需要 Node 22.3 或更高版本。
 
 ```bash
 TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server

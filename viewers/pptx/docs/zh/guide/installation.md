@@ -8,7 +8,7 @@ description: 从 npm 安装 pptx-viewer，为 React、Vue 3、Angular、Svelte �
 `pptx-viewer` 的各个包在 npm 上独立发布。按需安装不依赖框架的[核心引擎](/zh/core/)，或与你使用的框架对应的预览组件即可。
 
 ::: tip Node 版本
-编译 TypeScript 和在浏览器外运行这些包需要 **Node.js 22 或更高版本**。
+编译 TypeScript 和在浏览器外运行这些包需要 **Node.js 22.3 或更高版本**。
 :::
 
 ## 选择你的框架 {#choose-your-framework}
