@@ -115,6 +115,7 @@ export function renderThumbnailSections(options: SectionRendererOptions): HTMLEl
 							break;
 					}
 				};
+				header.dataset.pptxTouchPress = 'menu dblclick';
 				header.addEventListener('contextmenu', (event) => {
 					event.preventDefault();
 					openSectionContextMenu({

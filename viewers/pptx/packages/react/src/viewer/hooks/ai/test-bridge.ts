@@ -37,6 +37,7 @@ export function makeTestBridge(options: TestBridgeOptions = {}): PptxAiBridge {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => options.theme,
 		getHandler: () => undefined,
+		getDeckLoad: () => 0,
 		goToSlide: () => {},
 		selectElements: () => {},
 		applySlidesUpdate: (_updater: PptxAiSlidesUpdater, _label: string) => {},

@@ -178,10 +178,47 @@ async function failure(response) {
 	);
 }
 
+/** Every wire protocol's ending, in one vocabulary. Anything else is `unknown`. */
+const FINISH_REASONS = {
+	stop: 'stop',
+	end_turn: 'stop',
+	stop_sequence: 'stop',
+	length: 'length',
+	max_tokens: 'length',
+	content_filter: 'filtered',
+	refusal: 'filtered',
+	tool_calls: 'tool-calls',
+	function_call: 'tool-calls',
+	tool_use: 'tool-calls',
+};
+/** @returns {'stop'|'length'|'filtered'|'tool-calls'|'unknown'} */
+export const normalizeFinishReason = (raw) => FINISH_REASONS[raw] ?? 'unknown';
+
+const ENDINGS = {
+	length: 'The reply was cut off because it reached the length limit.',
+	filtered: 'The provider stopped this reply with its content filter.',
+};
+
+/** A reply that did not finish normally. `partial` is the text that arrived before it ended. */
+export class ReplyEndedError extends Error {
+	constructor(reason, partial) {
+		super(ENDINGS[reason] ?? 'The reply ended unexpectedly, so it may be incomplete.');
+		this.name = 'ReplyEndedError';
+		this.reason = reason;
+		this.partial = partial;
+	}
+}
+
+function finished(reason, text) {
+	if (reason !== 'stop') throw new ReplyEndedError(reason, text);
+	return text;
+}
+
 /**
  * Sends one chat turn and streams the reply through `onText` (the text so far). Providers that
  * answer with a single JSON body instead of a stream are read the same way.
  * @returns {Promise<string>} the complete reply
+ * @throws {ReplyEndedError} when the reply was cut off, filtered or ended without a finish signal
  */
 export async function streamChat({
 	connection,
@@ -237,12 +274,20 @@ export async function streamChat({
 			: body.choices?.[0]?.message?.content;
 		if (typeof text !== 'string') throw new Error('The provider did not return a text response.');
 		onText(text);
-		return text;
+		// A whole JSON body cannot be cut off in transit; only a stated reason can end it early.
+		const stated = anthropic ? body.stop_reason : body.choices?.[0]?.finish_reason;
+		return finished(stated ? normalizeFinishReason(stated) : 'stop', text);
 	}
+	let reason = 'unknown';
+	let stated = false;
 	for await (const line of lines(response)) {
 		if (!line.startsWith('data:')) continue;
 		const data = line.slice(5).trim();
-		if (!data || data === '[DONE]') continue;
+		if (!data) continue;
+		if (data === '[DONE]') {
+			if (!stated) reason = 'stop';
+			continue;
+		}
 		let event;
 		try {
 			event = JSON.parse(data);
@@ -260,6 +305,11 @@ export async function streamChat({
 			text += delta;
 			onText(text);
 		}
+		const ending = anthropic ? event.delta?.stop_reason : event.choices?.[0]?.finish_reason;
+		if (ending) {
+			reason = normalizeFinishReason(ending);
+			stated = true;
+		} else if (anthropic && event.type === 'message_stop' && !stated) reason = 'stop';
 	}
-	return text;
+	return finished(reason, text);
 }

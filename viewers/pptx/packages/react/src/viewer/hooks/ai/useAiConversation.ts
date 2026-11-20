@@ -20,7 +20,6 @@
  */
 import type { ChatStatus } from 'ai';
 import type {
-	PptxAiBridge,
 	PptxAiChatSession,
 	PptxAiConfig,
 	PptxAiUIMessage,
@@ -28,11 +27,10 @@ import type {
 	ToolCanvasTarget,
 } from 'ooxml-ui/pptx/ai';
 import { toolCanvasTarget } from 'ooxml-ui/pptx/ai';
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 
 import type { AiUiMessage } from '../../components/ai/ai-message-parts';
 import { extractReadyToolCalls } from '../../components/ai/ai-message-parts';
-import { withDeckContext } from './ai-context-transport';
 
 /** The tool call surfaced by `useChat`'s `onToolCall` (narrowed for our tools). */
 interface IncomingToolCall {
@@ -64,6 +62,8 @@ export interface UseAiConversationResult {
 	/** Replace the whole transcript (used to resume / start a stored chat). */
 	setMessages: (messages: PptxAiUIMessage[]) => void;
 	proposals: ProposalView[];
+	/** Loading another presentation dropped the staged proposals (`ProposalStore.discarded`). */
+	proposalsDiscarded: boolean;
 	applyProposal: (id: string) => void;
 	rejectProposal: (id: string) => void;
 	acceptAllProposals: () => void;
@@ -83,7 +83,6 @@ export function useAiConversation(
 	useChat: UseChatFn,
 	session: PptxAiChatSession,
 	config: PptxAiConfig,
-	bridge: PptxAiBridge,
 	options: UseAiConversationOptions = {},
 ): UseAiConversationResult {
 	const [, forceRefresh] = useReducer((n: number) => n + 1, 0);
@@ -101,21 +100,13 @@ export function useAiConversation(
 	// `session.clientExecutesTools`. See its doc in the shared session.
 	const clientExecutes = session.clientExecutesTools;
 
-	// Wrap the resolved transport so every turn carries a fresh deck + focus
-	// context block (see withDeckContext). Memoised on the session so useChat is
-	// not rebuilt on each render.
-	const transport = useMemo(
-		() => withDeckContext(session.transport, bridge, config.contextStrategy ?? 'outline'),
-		[session, bridge, config.contextStrategy],
-	);
-
 	// `useChat` is a parameter, not a statically-known import, so the linter can't
 	// see that it stays referentially stable: `AiChatPanelLazy` resolves it once
 	// per lazy-loaded chunk and closes over it, so every render of this hook
 	// receives the identical function.
 	// oxlint-disable-next-line react/hooks -- see comment above
 	const chat = useChat({
-		transport,
+		transport: session.transport,
 		sendAutomaticallyWhen: clientExecutes ? session.sendAutomaticallyWhen : undefined,
 		onError: (err: Error) => config.onError?.(err),
 		onToolCall: clientExecutes
@@ -223,6 +214,7 @@ export function useAiConversation(
 		setMessages,
 		clearError: () => chat.clearError(),
 		proposals: session.proposals.list(),
+		proposalsDiscarded: session.proposals.discarded,
 		applyProposal,
 		rejectProposal,
 		acceptAllProposals,

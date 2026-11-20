@@ -26,7 +26,7 @@ import { useMemo } from 'react';
 import { createAiAssistant } from '../../../viewers/pptx/packages/react/src/ai';
 import type { PptxAiAssistant } from '../../../viewers/pptx/packages/react/src/ai';
 import type { PptxAiConfig } from '../../../viewers/pptx/packages/react/src/viewer';
-import { demoAiUsesPlainConfig } from '../shared/demo-ai-path';
+import { demoAiUsesPlainConfig, demoAiWritePolicy } from '../shared/demo-ai-path';
 import { readDemoAiSetting } from '../shared/demo-ai-storage';
 
 const STORAGE_KEY = 'pptx-demo-ai-config';
@@ -69,7 +69,10 @@ export function buildDemoAiConfig(fields: DemoAiFields): PptxAiConfig | undefine
 		baseURL,
 		apiKey: fields.apiKey.trim() || undefined,
 	});
-	return { connection: { kind: 'model', model: provider.chatModel(model) } };
+	return {
+		connection: { kind: 'model', model: provider.chatModel(model) },
+		writePolicy: demoAiWritePolicy(),
+	};
 }
 
 /**

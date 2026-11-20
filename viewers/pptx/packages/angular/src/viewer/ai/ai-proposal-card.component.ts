@@ -30,6 +30,16 @@ import { humanizeDiffLine } from 'ooxml-ui/pptx/ai/host';
 					}
 				</ul>
 			}
+			@if (proposal().requiresApproval && !proposal().conflict) {
+				<div class="mt-1.5 text-[11px] font-medium text-foreground">
+					{{ 'pptx.ai.proposalNeedsApproval' | translate }}
+				</div>
+			}
+			@if (proposal().conflict) {
+				<div role="alert" class="mt-1.5 text-[11px] font-medium text-destructive">
+					{{ 'pptx.ai.proposalConflict' | translate }}
+				</div>
+			}
 			<div class="mt-2 flex items-center gap-2">
 				<button
 					type="button"

@@ -1,19 +1,18 @@
 import {
 	exportAbortError,
 	fpsToFrameIntervalMs,
-	pickSupportedMimeType,
 	planVideoSegments,
+	requireVideoRecordingFormat,
 	stopCaptureStream,
-	WEBM_MIME_CANDIDATES,
 } from 'ooxml-ui/pptx';
 
 import type { ExportProgress, RasterizeSlide } from './export-controller.svelte';
 
 /**
- * Video (WebM) export driven by the shared `video-plan` maths: segment timing
+ * Video export (WebM, or MP4 on Safari) driven by the shared `video-plan` maths: segment timing
  * comes from `planVideoSegments` (default duration + per-slide overrides +
  * fps -> frame count), the frame pacing from `fpsToFrameIntervalMs`, and the
- * recorder MIME type from `pickSupportedMimeType(WEBM_MIME_CANDIDATES)`. This
+ * recorder MIME type from `requireVideoRecordingFormat()` (`isTypeSupported`). This
  * module owns the browser glue only: rasterise every slide first (capture
  * phase), then replay each canvas onto a recording canvas whose
  * `captureStream()` feeds a `MediaRecorder` (recording phase). Mirrors
@@ -80,9 +79,10 @@ function sleep(ms: number): Promise<void> {
 }
 
 /**
- * Capture every slide and record the sequence as a WebM video Blob, holding
+ * Capture every slide and record the sequence as a video Blob (WebM, or MP4 on Safari), holding
  * each slide for its planned duration. Rejects with the shared `AbortError`
- * when `signal` aborts (the recorder is stopped first).
+ * when `signal` aborts (the recorder is stopped first), and with `VideoExportUnsupportedError`
+ * before capturing anything when the browser can record no container.
  */
 export async function exportSlidesToWebmBlob(
 	deps: VideoCaptureDeps,
@@ -103,6 +103,7 @@ export async function exportSlidesToWebmBlob(
 	}
 	const createCanvas = deps.createCanvas ?? defaultCreateCanvas;
 	const createRecorder = deps.createRecorder ?? defaultCreateRecorder;
+	const format = requireVideoRecordingFormat();
 
 	// Phase 1: capture every slide up front so recording is not paced by
 	// html2canvas latency.
@@ -124,7 +125,7 @@ export async function exportSlidesToWebmBlob(
 	}
 	const stream = recordingCanvas.captureStream(fps);
 	const recorder = createRecorder(stream, {
-		mimeType: pickSupportedMimeType([...WEBM_MIME_CANDIDATES]),
+		mimeType: format.mimeType,
 		videoBitsPerSecond,
 	});
 
@@ -167,7 +168,7 @@ export async function exportSlidesToWebmBlob(
 		recorder.stop();
 		await recorderDone;
 		onProgress?.(total, total);
-		return new Blob(chunks, { type: 'video/webm' });
+		return new Blob(chunks, { type: format.blobType });
 	} finally {
 		// `recorder.stop()` only stops the recorder; the capture stream itself
 		// keeps compositing frames from `recordingCanvas` indefinitely otherwise

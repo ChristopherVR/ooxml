@@ -4,8 +4,8 @@
  * that turns them into an AI SDK `ToolSet`.
  */
 
-export type { AiToolContext, AiToolExecutor, WriteRouteResult } from './executor-base';
-export { routeWrite, requireSlide, requireElement } from './executor-base';
+export type { AiToolContext, AiToolExecutor, DeckWrite, WriteRouteResult } from './executor-base';
+export { routeDeckWrite, routeWrite, requireSlide, requireElement } from './executor-base';
 
 export { allToolNames, buildToolExecutors, buildToolSet, enabledToolNames } from './registry';
 export type { BoundExecutor } from './registry';

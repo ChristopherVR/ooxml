@@ -9,6 +9,7 @@ import type {
 import type { SyncGate } from 'ooxml-ui/pptx';
 import {
 	createCollaborationLivePatcher,
+	createRoomJoinTracker,
 	createSyncGate,
 	createWriteBackScheduler,
 	LOCAL_SYNC_ORIGIN,
@@ -35,6 +36,7 @@ export function useCollaborationDocumentSync(
 	/** The owner's write-back status, as the scheduler reports it. */
 	const writeBackState = ref<CollaborationWriteBackState | undefined>(undefined);
 	const livePatcher = createCollaborationLivePatcher();
+	const join = createRoomJoinTracker();
 	let doc: YDocLike | null = null;
 	let factories: YjsFactories | null = null;
 	let config: CollaborationConfig | null = null;
@@ -83,6 +85,7 @@ export function useCollaborationDocumentSync(
 			return;
 		}
 		lastSynced = serialized;
+		join.wrote();
 		reconcileSlidesInYDoc(options.slides.value, doc, factories);
 		writeBack.schedule(config);
 	}
@@ -93,6 +96,12 @@ export function useCollaborationDocumentSync(
 			options.onRemoteSlides(slides);
 		} finally {
 			applyingRemote = false;
+		}
+	}
+	function adoptRoom(slides: PptxSlide[]): void {
+		adopt(slides);
+		if (join.adopted()) {
+			options.onRoomReplacedDeck?.();
 		}
 	}
 	function begin(next: CollaborationConfig): void {
@@ -120,6 +129,7 @@ export function useCollaborationDocumentSync(
 					adopt(slides);
 					writeBack.schedule(activeConfig);
 				},
+				onRoomReplacedDeck: options.onRoomReplacedDeck,
 				onReady: ({ seedEmptyRoom }) => {
 					if (seedEmptyRoom) {
 						lastSynced = '';
@@ -134,6 +144,7 @@ export function useCollaborationDocumentSync(
 			return;
 		}
 		livePatcher.configure(activeConfig.role === 'viewer' ? null : doc, factories);
+		join.attached();
 		unobserve = observeYDocSlides(doc, (_events, transaction) => {
 			if (transaction?.origin === LOCAL_SYNC_ORIGIN || applyingRemote || !doc) {
 				return;
@@ -142,13 +153,13 @@ export function useCollaborationDocumentSync(
 			if (!remote.length) {
 				return;
 			}
-			adopt(remote);
+			adoptRoom(remote);
 			writeBack.schedule(activeConfig);
 		});
 		// A provider may have synchronized before its observer was attached.
 		const initial = readSlidesFromYDoc(doc);
 		if (initial.length) {
-			adopt(initial);
+			adoptRoom(initial);
 		}
 	}
 
@@ -159,7 +170,7 @@ export function useCollaborationDocumentSync(
 				getYDoc: () => doc,
 				isConnected: () => !config?.externalSession && status.value === 'connected',
 				getLoadOrigin: options.getLoadOrigin,
-				adoptDocSlides: adopt,
+				adoptDocSlides: adoptRoom,
 			})
 		: null;
 	const stopExternalLoad = options.loadVersion

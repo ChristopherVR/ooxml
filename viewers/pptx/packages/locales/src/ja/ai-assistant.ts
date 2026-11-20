@@ -21,7 +21,12 @@ export const translations = {
 	'pptx.ai.accept': '適用',
 	'pptx.ai.reject': '破棄',
 	'pptx.ai.acceptAll': 'すべて適用',
+	'pptx.ai.proposalConflict':
+		'提案の後でこの部分が変更されたため、適用されませんでした。破棄するか、もう一度お試しください。',
+	'pptx.ai.proposalNeedsApproval': '承認が必要です',
 	'pptx.ai.pendingChanges': '提案された変更 ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'別のプレゼンテーションが読み込まれたか、スライドが置き換えられたため、提案された変更は破棄されました。',
 	'pptx.ai.moreChanges': 'ほか {{count}} 件',
 	'pptx.ai.askAboutElement': 'これについて AI に質問',
 	'pptx.ai.fixElement': 'AI で修正',

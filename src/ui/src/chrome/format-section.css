@@ -20,6 +20,7 @@ summary {
 	font-size: var(--_office-look-heading-size, inherit);
 	cursor: pointer;
 	list-style: none;
+	-webkit-user-select: none;
 	user-select: none;
 	font-weight: var(--office-font-weight-bold);
 }

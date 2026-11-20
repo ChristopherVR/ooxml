@@ -10,6 +10,11 @@
  * {@link PptxAiBridge.updateElement}, {@link PptxAiBridge.applyTheme}). Keeping
  * writes funnelled lets the {@link ProposalStore} commit a batch as a single
  * undoable history entry.
+ *
+ * A read made right after a write must return that write, even when the host's
+ * state only updates on its next render: the store applies several proposals in
+ * one tick, each on the deck the previous one left.
+ * `checkPptxAiBridgeReadsItsWrites` tests a bridge against this.
  */
 
 import type { PptxData, PptxElement, PptxHandler, PptxSlide, PptxTheme } from 'ooxml-core/pptx';
@@ -100,6 +105,14 @@ export interface PptxAiBridge {
 	getTheme(): PptxTheme | undefined;
 	/** Return the underlying core handler, when the binding exposes one. */
 	getHandler(): PptxHandler | undefined;
+	/**
+	 * Name the presentation load the deck comes from. Return a new value each time the binding
+	 * loads a presentation (open, reopen, File > New, recovery restore, or a collaboration join
+	 * whose room replaces the slides) and the same value through everything else: edits, slide
+	 * master and layout changes and slide paste keep it, even when they replace the handler.
+	 * Staged proposals are dropped when it changes.
+	 */
+	getDeckLoad(): number;
 
 	// ── navigation ───────────────────────────────────────────────────────────
 	/** Navigate the viewer to a slide by zero-based index. */

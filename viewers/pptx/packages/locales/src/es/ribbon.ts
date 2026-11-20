@@ -85,7 +85,7 @@ export const translations = {
 	'pptx.ribbon.exportCurrentSlidePng': 'Exportar diapositiva actual como PNG',
 	'pptx.ribbon.exportDeckPdf': 'Exportar presentación como PDF',
 	'pptx.ribbon.exportGifTitle': 'Exportar como GIF',
-	'pptx.ribbon.exportWebmVideo': 'Exportar como vídeo WebM',
+	'pptx.ribbon.exportWebmVideo': 'Exportar como vídeo',
 	'pptx.ribbon.exporting': 'Exportando…',
 	'pptx.ribbon.properties': 'Propiedades',
 	'pptx.ribbon.signatures': 'Firmas',

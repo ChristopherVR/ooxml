@@ -85,7 +85,7 @@ export const translations = {
 	'pptx.ribbon.exportCurrentSlidePng': '将当前幻灯片导出为 PNG',
 	'pptx.ribbon.exportDeckPdf': '将演示文稿导出为 PDF',
 	'pptx.ribbon.exportGifTitle': '导出为 GIF',
-	'pptx.ribbon.exportWebmVideo': '导出为 WebM 视频',
+	'pptx.ribbon.exportWebmVideo': '导出为视频',
 	'pptx.ribbon.exporting': '正在导出…',
 	'pptx.ribbon.properties': '属性',
 	'pptx.ribbon.signatures': '签名',

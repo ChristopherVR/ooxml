@@ -22,7 +22,12 @@ export const translations = {
 	'pptx.ai.accept': 'Übernehmen',
 	'pptx.ai.reject': 'Ablehnen',
 	'pptx.ai.acceptAll': 'Alle übernehmen',
+	'pptx.ai.proposalConflict':
+		'Dieser Teil der Präsentation wurde nach dem Vorschlag geändert und daher nicht übernommen. Lehnen Sie ihn ab oder versuchen Sie es erneut.',
+	'pptx.ai.proposalNeedsApproval': 'Erfordert Ihre Zustimmung',
 	'pptx.ai.pendingChanges': 'Ausstehende Änderungen ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Vorgeschlagene Änderungen wurden verworfen, weil eine andere Präsentation geladen oder die Folien ersetzt wurden.',
 	'pptx.ai.moreChanges': '+{{count}} weitere',
 	'pptx.ai.applied': 'Angewendet',
 	'pptx.ai.askAboutElement': 'KI dazu fragen',

@@ -1,3 +1,4 @@
+import { VideoExportUnsupportedError } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,7 +17,7 @@ import { runVideoExport } from './export-video';
 
 class MockMediaRecorder {
 	static instances: MockMediaRecorder[] = [];
-	static isTypeSupported = vi.fn(() => true);
+	static isTypeSupported = vi.fn((_mime: string) => true);
 
 	readonly stream: MediaStream;
 	readonly options: MediaRecorderOptions | undefined;
@@ -169,6 +170,28 @@ describe('runVideoExport', () => {
 		expect(names).toStrictEqual(['deck.webm']);
 		expect(blobs).toHaveLength(1);
 		expect(blobs[0].type).toBe('video/webm');
+	});
+
+	it('records MP4 and names the download .mp4 where only MP4 is supported (Safari)', async () => {
+		MockMediaRecorder.isTypeSupported.mockImplementation((mime: string) =>
+			mime.startsWith('video/mp4'),
+		);
+		const harness = makeHarness(1);
+		await runVideoExport(harness.deps, { slideDurationMs: 100, fps: 10 });
+		expect(MockMediaRecorder.instances[0].options?.mimeType).toMatch(/^video\/mp4/u);
+		const { names, blobs } = harness.downloads();
+		expect(names).toStrictEqual(['deck.mp4']);
+		expect(blobs[0].type).toBe('video/mp4');
+		MockMediaRecorder.isTypeSupported.mockReturnValue(true);
+	});
+
+	it('reports unsupported before capturing when no container can be recorded', async () => {
+		MockMediaRecorder.isTypeSupported.mockReturnValue(false);
+		const harness = makeHarness(1);
+		await expect(runVideoExport(harness.deps)).rejects.toThrow(VideoExportUnsupportedError);
+		expect(harness.deps.rasterizeSlide).not.toHaveBeenCalled();
+		expect(MockMediaRecorder.instances).toHaveLength(0);
+		MockMediaRecorder.isTypeSupported.mockReturnValue(true);
 	});
 
 	it('derives per-slide frame counts from the shared segment plan', async () => {

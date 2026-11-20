@@ -73,12 +73,13 @@ import {
 	resolveCollaborationConfig,
 	viewerOptionsToPreferences,
 	writeStoredViewerPrefs,
+	installTouchPress,
 } from 'ooxml-ui/pptx';
 import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import { installSvgIdScope } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import {
 	THEME_CATALOG,
@@ -932,22 +933,19 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					mode === 'present'
 						? (direction) => presentation.movePresentationSlide(direction === 1 ? -1 : 1)
 						: undefined,
-				onLongPress: (clientX, clientY) => {
-					if (mode !== 'edit' || !canEdit) {
-						return;
-					}
-					if (!state.selectedElementId) {
-						return;
-					}
-					state.setContextMenuState({
-						x: clientX,
-						y: clientY,
-						elementId: state.selectedElementId,
-					});
-				},
 			},
 			enabled: isTouchDevice,
 		});
+
+		// ── Touch long-press / double-tap (issue #290) ────────────────
+		// iOS Safari fires no contextmenu on a long-press and no reliable dblclick:
+		// the shared installer turns both into synthetic events on the controls
+		// that opt in with `data-pptx-touch-press` (the canvas, slide pane, sorter,
+		// slide show and charts), so their own handlers run with the touch point.
+		useEffect(() => {
+			const root = containerRef.current;
+			return root ? installTouchPress(root) : undefined;
+		}, [containerRef, loading, error]);
 
 		// ── Dialogs ───────────────────────────────────────────────────
 		const dialogs = useViewerDialogs({
@@ -1348,25 +1346,31 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// when the host passes the `ai` prop. Its three write choke points route
 		// through the editor-history layer so AI edits are a single Ctrl+Z.
 		const applyAiTheme = useCallback(
-			(updates: Partial<PptxTheme>) => {
+			(updates: Partial<PptxTheme>, previous: PptxTheme | undefined) => {
 				if (updates.colorScheme) {
-					void themeHandlers.handleUpdateThemeColorScheme(updates.colorScheme);
+					void themeHandlers.handleUpdateThemeColorScheme(
+						updates.colorScheme,
+						previous?.colorScheme,
+					);
 				}
 				if (updates.fontScheme) {
-					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme);
+					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme, previous?.fontScheme);
+				}
+				if (updates.name) {
+					void themeHandlers.handleUpdateThemeName(updates.name);
 				}
 			},
 			[themeHandlers],
 		);
-		const bumpAiHistory = useCallback(() => {
-			state.setPointerCommitNonce((n) => n + 1);
-		}, [state]);
 		const aiPanel = useAiPanelController({
 			activeSlideIndex,
 			selectedElementId,
 			selectedElementIds,
 			selectedElement,
 		});
+		// The bridge's deck load: each completed load, File > New and each room join that replaced
+		// the slides.
+		const [deckReplacements, countDeckReplacement] = useReducer((count: number) => count + 1, 0);
 		const aiBridge = useAiBridge({
 			slides,
 			activeSlideIndex,
@@ -1378,6 +1382,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			pinnedFocus: aiPanel.pinnedFocus,
 			pickedFocus: aiPanel.pickTargets.length > 0 ? aiPanel.pickTargets : null,
 			handlerRef,
+			deckLoad: loadVersion + deckReplacements,
 			sections: state.sections,
 			customShows: state.customShows,
 			setCustomShows: state.setCustomShows,
@@ -1407,7 +1412,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setSlides: state.setSlides,
 			setActiveSlideIndex: state.setActiveSlideIndex,
 			applySelection: editorOps.ops.applySelection,
-			bumpHistory: bumpAiHistory,
+			recordSlidesStep: history.recordSlidesCommit,
 			markDirty: history.markDirty,
 			applyThemeUpdates: applyAiTheme,
 		});
@@ -1501,6 +1506,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 									{mode !== 'present' && rootOptions.showToolbar && (
 										<ViewerToolbarSection
 											mode={mode}
+											onNewPresentation={countDeckReplacement}
 											canEdit={canEdit}
 											state={state}
 											selectedElement={selectedElement}
@@ -1959,6 +1965,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 														loadOrigin={loadOrigin}
 														livePatcher={state.livePatcher}
 														onReadOnlyChange={setCollaborationReadOnly}
+														onRoomReplacedDeck={countDeckReplacement}
 														deckSaveState={{
 															headerFooter: state.headerFooter,
 															presentationProperties: state.presentationProperties,
@@ -2080,6 +2087,7 @@ function CollaborationDocumentSync({
 	livePatcher,
 	deckSaveState,
 	onReadOnlyChange,
+	onRoomReplacedDeck,
 	history,
 }: {
 	history: CollaborationHistoryTarget;
@@ -2091,6 +2099,7 @@ function CollaborationDocumentSync({
 	loadOrigin: CollabLoadOrigin;
 	livePatcher: CollaborationLivePatcher;
 	onReadOnlyChange: (readOnly: boolean) => void;
+	onRoomReplacedDeck: () => void;
 	/**
 	 * Session-level save-option state (view properties, table styles, tags,
 	 * deck properties, ...), snapshotted fresh every render. Read through a
@@ -2112,6 +2121,7 @@ function CollaborationDocumentSync({
 		livePatcher,
 		deckSaveState,
 		onReadOnlyChange,
+		onRoomReplacedDeck,
 	});
 	return null;
 }

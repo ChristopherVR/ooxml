@@ -137,7 +137,12 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ai.accept': 'Apply',
 	'pptx.ai.reject': 'Discard',
 	'pptx.ai.acceptAll': 'Apply all',
+	'pptx.ai.proposalConflict':
+		'This part of the deck changed after the proposal, so it was not applied. Discard it or try again.',
+	'pptx.ai.proposalNeedsApproval': 'Needs your approval',
 	'pptx.ai.pendingChanges': 'Suggested changes ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Suggested changes were discarded because another presentation was loaded or the slides were replaced.',
 	'pptx.ai.moreChanges': '+{{count}} more',
 	// Canvas -> Ask AI affordances
 	'pptx.ai.askAboutElement': 'Ask AI about this',
@@ -2201,7 +2206,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.exportCurrentSlidePng': 'Export current slide as PNG',
 	'pptx.ribbon.exportDeckPdf': 'Export deck as PDF',
 	'pptx.ribbon.exportGifTitle': 'Export as GIF',
-	'pptx.ribbon.exportWebmVideo': 'Export as WebM video',
+	'pptx.ribbon.exportWebmVideo': 'Export as video',
 	'pptx.ribbon.exporting': 'Exporting…',
 	'pptx.ribbon.properties': 'Properties',
 	'pptx.ribbon.signatures': 'Signatures',
@@ -2610,7 +2615,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.export.gifAnimated': 'Animated GIF',
 	'pptx.export.pdfAllSlides': 'PDF (all slides)',
 	'pptx.export.pngCurrentSlide': 'PNG (current slide)',
-	'pptx.export.webmVideo': 'WebM video',
+	'pptx.export.webmVideo': 'Video',
 	'pptx.file.copyImage': 'Copy Image',
 	'pptx.file.copyImageTooltip': 'Copy Slide as Image',
 	'pptx.file.fonts': 'Fonts',
@@ -3095,6 +3100,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.export.errorNoSlidesNotesPdf': 'No slides were captured for notes PDF export',
 	'pptx.export.errorNoSlidesPdf': 'No slides were captured for PDF export',
 	'pptx.export.errorNoSlidesVideo': 'No slides were captured for video export',
+	'pptx.export.errorVideoUnsupported':
+		'This browser cannot record video. Export the slides as a GIF, or try another browser.',
 	'pptx.export.recording': 'Recording',
 	'pptx.export.recordingVideo': 'Recording video...',
 	'pptx.export.rendering': 'Rendering',
@@ -4023,7 +4030,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.backstage.card.png.title': 'Export current slide',
 	'pptx.backstage.card.png.body': 'Create a high-quality PNG image.',
 	'pptx.backstage.card.video.title': 'Create a Video',
-	'pptx.backstage.card.video.body': 'Export slide timings and animations as WebM.',
+	'pptx.backstage.card.video.body': 'Export slide timings and animations as a video.',
 	'pptx.backstage.card.gif.title': 'Create an Animated GIF',
 	'pptx.backstage.card.gif.body': 'Make a compact looping preview.',
 	'pptx.backstage.card.json.title': 'Export as JSON',

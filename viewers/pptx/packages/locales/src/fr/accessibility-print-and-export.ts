@@ -194,7 +194,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'GIF animé',
 	'pptx.export.pdfAllSlides': 'PDF (toutes les diapositives)',
 	'pptx.export.pngCurrentSlide': 'PNG (diapositive actuelle)',
-	'pptx.export.webmVideo': 'Vidéo WebM',
+	'pptx.export.webmVideo': 'Vidéo',
 	'pptx.fontEmbedding.embedInFile': 'Incorporer les polices dans le fichier',
 	'pptx.fontEmbedding.noCustomFonts': 'Aucune police personnalisée à intégrer.',
 	'pptx.headerFooter.fixedDate': 'Date fixe',
@@ -250,6 +250,8 @@ export const translations = {
 		"Aucune diapositive n'a été capturée pour l'exportation PDF des notes",
 	'pptx.export.errorNoSlidesPdf': "Aucune diapositive n'a été capturée pour l'exportation PDF",
 	'pptx.export.errorNoSlidesVideo': "Aucune diapositive n'a été capturée pour l'exportation vidéo",
+	'pptx.export.errorVideoUnsupported':
+		'Ce navigateur ne peut pas enregistrer de vidéo. Exportez les diapositives au format GIF ou essayez un autre navigateur.',
 	'pptx.export.recording': 'Enregistrement',
 	'pptx.export.recordingVideo': 'Enregistrement vidéo...',
 	'pptx.export.rendering': 'Rendu',

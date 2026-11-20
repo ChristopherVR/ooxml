@@ -227,6 +227,7 @@ import { useTableCellEditingContext } from './composables/useTableCellEditingCon
 import { useTableStyleMapHandlers } from './composables/useTableStyleMapHandlers';
 import { useThemeEditing } from './composables/useThemeEditing';
 import { useTouchGestures } from './composables/useTouchGestures';
+import { useTouchPress } from './composables/useTouchPress';
 import { useVersionHistoryWiring } from './composables/useVersionHistoryWiring';
 import { useViewerApi } from './composables/useViewerApi';
 import { useViewerCustomization } from './composables/useViewerCustomization';
@@ -337,6 +338,10 @@ const activeContent = source.activeContent;
 // collaboration layer watches it to re-adopt the shared doc's slides when a
 // slow local load lands mid-session (late-joiner bootstrap-deck clobber).
 const loadVersion = ref(0);
+// Decks that replace the open one without the load pipeline (File > New, a room join). With
+// `loadVersion` they name the presentation load the AI's staged proposals belong to; they stay
+// out of `loadVersion` so a join does not re-run its per-deck seeding.
+const deckReplacements = ref(0);
 
 // Declared ahead of `useLoadContent` on purpose: the save path reads the
 // Protect-Presentation secret so a protected deck serialises encrypted.
@@ -494,6 +499,7 @@ const compatToasts = useCompatibilityToasts({ warnings: compatibilityWarnings })
 
 function createPresentation(templateId: string): void {
 	slides.value = createBackstagePresentation(templateId);
+	deckReplacements.value += 1;
 	templateElementsBySlideId.value = {};
 	activeSlideIndex.value = 0;
 	selection.selectedElementIds.value = [];
@@ -1308,6 +1314,9 @@ const collaboration = useCollaborationWiring({
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
 	// never one the user opened during the session.
 	getLoadOrigin: () => source.loadOrigin.value,
+	onRoomReplacedDeck: () => {
+		deckReplacements.value += 1;
+	},
 	getTemplateElements: () => templateElementsBySlideId.value,
 	// Retain the loaded source bytes for elected-writer (role 'owner') write-back:
 	// the write-back reloads the original file, overlays the live Y.Doc slides,
@@ -1570,20 +1579,13 @@ useTouchGestures({
 		onPinchZoom: (newScale) => {
 			zoom.value = Number(newScale.toFixed(2));
 		},
-		onLongPress: (clientX, clientY) => {
-			// Mirror React: long-press opens the element context menu, but only in
-			// edit mode with an element already selected.
-			if (!canEditEffective.value || presentation.presenting.value) {
-				return;
-			}
-			const id = selectedElementIds.value[0];
-			if (!id) {
-				return;
-			}
-			contextMenu.value = { open: true, x: clientX, y: clientY, elementId: id };
-		},
 	},
 });
+// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu on
+// a long-press and no reliable dblclick, so the shared installer synthesises
+// them on the controls that opt in with `data-pptx-touch-press` (the canvas,
+// slide rail, sections, sorter and charts) and their own handlers run.
+useTouchPress(viewerRootRef);
 const mobileChrome = useMobileChrome({
 	presenting: presentation.presenting,
 });
@@ -1910,6 +1912,7 @@ const aiBridge = useAiBridge({
 	canvasSize,
 	theme: pptxTheme,
 	handler,
+	deckLoad: () => loadVersion.value + deckReplacements.value,
 	sections,
 	customShows,
 	presentationProperties,
@@ -2521,6 +2524,7 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 					@pointerdown="onCanvasPointerDown"
 					@dblclick.capture="onCanvasDoubleClick"
 					@contextmenu="onCanvasContextMenu"
+					data-pptx-touch-press="menu"
 					@pointermove="collaboration.onCollabPointerMove"
 					@touchstart="swipe.onTouchStart"
 					@touchend="swipe.onTouchEnd"

@@ -379,4 +379,10 @@ test('helpers', () => {
 	assert.equal(commitLevel('docs: x'), 'patch');
 	assert.equal(isPublishedFile('src/ui/src/a.test.ts'), false);
 	assert.equal(isPublishedFile('src/ui/src/a.ts'), true);
+	for (const helper of [
+		'src/core/test-support/security-corpus/cases/teams.ts',
+		'src/core/pptx/test-support/signature-package.ts',
+		'src/core/xlsx/__fixtures__/build.ts',
+	])
+		assert.equal(isPublishedFile(helper), false, helper);
 });

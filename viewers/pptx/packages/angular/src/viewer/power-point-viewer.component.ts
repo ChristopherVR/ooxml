@@ -2561,6 +2561,7 @@ export class PowerPointViewerComponent
 		getTheme: () => this.loader.theme(),
 		getFileName: () => this.fileName(),
 		getHandler: () => this.loader.getHandler(),
+		getDeckLoad: () => this.loader.deckLoad(),
 		goToSlide: (index) => this.goTo(index),
 		selectElements: (slideIndex, ids) => {
 			if (slideIndex !== this.activeSlideIndex()) {
@@ -3137,6 +3138,7 @@ export class PowerPointViewerComponent
 					this.loadNotices.notify(toast);
 				}
 			},
+			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
 			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
@@ -3184,11 +3186,10 @@ export class PowerPointViewerComponent
 		this.touchGestures.setup(() => this.mainEl()?.nativeElement, {
 			canEdit: () => this.canEdit(),
 			presenting: () => this.presentationMode.presenting(),
-			selectedElement: () => this.selectedElement(),
 			goPrev: () => this.goPrev(),
 			goNext: () => this.goNext(),
-			setContextMenuPos: (pos) => this.canvasEditing.contextMenuPos.set(pos),
 		});
+		this.touchGestures.setupTouchPress(() => this.viewerRoot()?.nativeElement);
 
 		// Ctrl+wheel and pinch zoom at the pointer, and drag to pan, shared with the
 		// other bindings. `<main>` is the element that scrolls the slide here. A
@@ -3789,6 +3790,7 @@ export class PowerPointViewerComponent
 	protected onCreatePresentation(templateId: string): void {
 		// A new presentation is not the cloud file: it saves to the host storage again.
 		this.fileIO.clearCloudFile();
+		this.loader.markDeckLoad();
 		this.editor.setSlides(createBackstagePresentation(templateId));
 		this.activeSlideIndex.set(0);
 	}
@@ -3803,10 +3805,10 @@ export class PowerPointViewerComponent
 		const current = this.loader.theme();
 		const colorScheme = updates.colorScheme ?? current?.colorScheme;
 		const fontScheme = updates.fontScheme ?? current?.fontScheme;
-		if (!colorScheme || !fontScheme) {
+		if (!colorScheme) {
 			return;
 		}
-		if (updates.name) {
+		if (updates.name && fontScheme) {
 			this.themeGallery.applyCustomTheme(colorScheme, fontScheme, updates.name);
 			return;
 		}

@@ -1,5 +1,6 @@
-import { DestroyRef, Injector, runInInjectionContext } from '@angular/core';
-import type { PptxAiBridge, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import { DestroyRef, Injector, runInInjectionContext, signal } from '@angular/core';
+import type { PptxAiBridge, PptxAiConfig, VanillaChatSnapshot } from 'ooxml-ui/pptx/ai';
+import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AiChatService } from './ai-chat.service';
@@ -80,6 +81,43 @@ describe('aiChatService lazy runtime', () => {
 		service.init(bridge, config);
 		await vi.waitFor(() => expect(service.state()).toBe('error'));
 		expect(service.initError()?.message).toBe('Failed to load chat');
+	});
+
+	it('drops the listed proposals as soon as another presentation loads', async () => {
+		const { ProposalStore } =
+			await vi.importActual<typeof import('ooxml-ui/pptx/ai')>('ooxml-ui/pptx/ai');
+		const deckLoad = signal(0);
+		const slides = [{ id: 's1', elements: [] }] as unknown as PptxSlide[];
+		const deckBridge = {
+			getSlides: () => slides,
+			getDeckLoad: () => deckLoad(),
+		} as unknown as PptxAiBridge;
+		const store = new ProposalStore(deckBridge);
+		const snapshot = { messages: [], status: 'ready', error: undefined } as VanillaChatSnapshot;
+		let publish: (next: VanillaChatSnapshot) => void = () => undefined;
+		runtime.createVanillaChat.mockResolvedValue({
+			subscribe: (listener: (next: VanillaChatSnapshot) => void) => {
+				publish = listener;
+				return () => undefined;
+			},
+			getSnapshot: () => snapshot,
+			proposals: store,
+		});
+		const { service } = setup();
+		service.init(deckBridge, config);
+		await vi.waitFor(() => expect(service.state()).toBe('ready'));
+		store.stage('Add a slide', (current) => [
+			...current,
+			{ id: 's2', elements: [] } as unknown as PptxSlide,
+		]);
+		publish(snapshot);
+		expect(service.proposals()).toHaveLength(1);
+		expect(service.discarded()).toBeFalsy();
+
+		deckLoad.set(1);
+
+		expect(service.proposals()).toStrictEqual([]);
+		expect(service.discarded()).toBeTruthy();
 	});
 
 	it('does not start a session after the panel closes during loading', async () => {

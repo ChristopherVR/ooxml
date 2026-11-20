@@ -28,6 +28,7 @@ import {
 	recordProgressPercent,
 	resolveExportCaptureDecision,
 	slideStatusLabel,
+	requireVideoRecordingFormat,
 } from 'ooxml-ui/pptx';
 
 import { slideFileName } from './export-helpers';
@@ -244,7 +245,7 @@ export class ViewerExportService {
 		}
 	}
 
-	/** Export every slide as a WebM video (3s per slide) via MediaRecorder. */
+	/** Export every slide as a video (WebM, or MP4 on Safari; 3s per slide) via MediaRecorder. */
 	async exportVideo(): Promise<void> {
 		const host = this.requireHost();
 		if (host.slideCount() === 0 || this.exporting()) {
@@ -252,6 +253,8 @@ export class ViewerExportService {
 		}
 		const controller = this.beginExport(this.translate.instant('pptx.mobileMenu.exportVideo'));
 		try {
+			// Fail before the slow capture when the browser cannot record any container.
+			requireVideoRecordingFormat();
 			const { scale } = resolveExportCaptureDecision(host.imageResolutionScale?.() ?? 1, 'video');
 			const canvases = await captureSlideCanvases(
 				this.exportSvc,
