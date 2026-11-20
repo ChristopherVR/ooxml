@@ -44,6 +44,7 @@ import type {
 	PptxTagCollection,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 import { PptxHandler, EncryptedFileError } from 'pptx-viewer-core';
 /**
@@ -114,8 +115,8 @@ export interface UseLoadContentInput {
 	setEmbeddedFonts: React.Dispatch<React.SetStateAction<PptxEmbeddedFont[]>>;
 	setActiveSlideIndex: React.Dispatch<React.SetStateAction<number>>;
 	setHasMacros: React.Dispatch<React.SetStateAction<boolean>>;
-	setHasDigitalSignatures: React.Dispatch<React.SetStateAction<boolean>>;
-	setDigitalSignatureCount: React.Dispatch<React.SetStateAction<number>>;
+	/** The deck's digital signatures with their verified state; reset on every load. */
+	setSignatures: React.Dispatch<React.SetStateAction<SignatureSummary | undefined>>;
 	setGuides: React.Dispatch<
 		React.SetStateAction<Array<{ id: string; axis: 'h' | 'v'; position: number }>>
 	>;
@@ -207,8 +208,7 @@ export function useLoadContent({
 	setEmbeddedFonts,
 	setActiveSlideIndex,
 	setHasMacros,
-	setHasDigitalSignatures,
-	setDigitalSignatureCount,
+	setSignatures,
 	setGuides,
 	setReadOnlyRecommendation,
 	setModifyVerifier,
@@ -503,8 +503,7 @@ export function useLoadContent({
 					parsed.embeddedFonts ?? [],
 				);
 				setHasMacros(parsed.hasMacros === true);
-				setHasDigitalSignatures(parsed.hasDigitalSignatures === true);
-				setDigitalSignatureCount(parsed.digitalSignatureCount ?? 0);
+				setSignatures(parsed.signatures);
 
 				// Initialize drawing guides from parsed presentation + slide data
 				setGuides(buildInitialGuides(parsed.presentationGuides, parsed.slides[0]?.guides));

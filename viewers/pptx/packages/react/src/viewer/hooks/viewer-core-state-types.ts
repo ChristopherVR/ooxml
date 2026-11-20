@@ -22,6 +22,7 @@ import type {
 	PptxTagCollection,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 /** Document refs, state, setters, and derived values for useViewerCoreState. */
 import type React from 'react';
@@ -269,12 +270,13 @@ export interface ViewerCoreState
 	/** Whether the loaded presentation contains VBA macros. */
 	hasMacros: boolean;
 	setHasMacros: React.Dispatch<React.SetStateAction<boolean>>;
-	/** Whether the loaded presentation contains digital signatures. */
-	hasDigitalSignatures: boolean;
-	setHasDigitalSignatures: React.Dispatch<React.SetStateAction<boolean>>;
-	/** Number of digital signatures detected. */
-	digitalSignatureCount: number;
-	setDigitalSignatureCount: React.Dispatch<React.SetStateAction<number>>;
+	/**
+	 * The loaded deck's digital signatures with their verified state (`PptxData.signatures`),
+	 * absent when it has none. Every signature surface derives from it through
+	 * `signatureStatusView`, so a deck reads as signed only when its signatures verify.
+	 */
+	signatures: SignatureSummary | undefined;
+	setSignatures: React.Dispatch<React.SetStateAction<SignatureSummary | undefined>>;
 
 	// ── Master View State ──────────────────────────────────────────────
 

@@ -33,6 +33,7 @@ import type {
 	PptxTagCollection,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -176,8 +177,7 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 	const [appProperties, setAppProperties] = useState<PptxAppProperties | undefined>();
 	const [embeddedFonts, setEmbeddedFonts] = useState<PptxEmbeddedFont[]>([]);
 	const [hasMacros, setHasMacros] = useState(false);
-	const [hasDigitalSignatures, setHasDigitalSignatures] = useState(false);
-	const [digitalSignatureCount, setDigitalSignatureCount] = useState(0);
+	const [signatures, setSignatures] = useState<SignatureSummary | undefined>();
 
 	// ── Master View State ──────────────────────────────────────────────
 	const [activeMasterIndex, setActiveMasterIndex] = useState(0);
@@ -302,10 +302,8 @@ export function useViewerCoreState(_input: UseViewerCoreStateInput): ViewerCoreS
 		setEmbeddedFonts,
 		hasMacros,
 		setHasMacros,
-		hasDigitalSignatures,
-		setHasDigitalSignatures,
-		digitalSignatureCount,
-		setDigitalSignatureCount,
+		signatures,
+		setSignatures,
 		activeMasterIndex,
 		setActiveMasterIndex,
 		activeLayoutIndex,

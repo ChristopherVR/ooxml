@@ -80,7 +80,10 @@ describe('dialogs on the shared footer', () => {
 			root.render(
 				<SignatureStrippedDialog
 					isOpen
-					signatureCount={1}
+					signatures={{
+						state: 'invalid',
+						signatures: [{ path: '_xmlsignatures/sig1.xml', state: 'invalid' }],
+					}}
 					onConfirm={onConfirm}
 					onCancel={onCancel}
 				/>,

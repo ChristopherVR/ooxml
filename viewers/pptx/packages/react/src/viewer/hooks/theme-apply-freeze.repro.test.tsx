@@ -26,6 +26,7 @@ import type {
 	PptxThemeOption,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 // @vitest-environment happy-dom
 /**
@@ -125,8 +126,7 @@ function Harness({ initial }: { initial: Uint8Array }): React.ReactElement {
 		setEmbeddedFonts: noopDispatch<PptxEmbeddedFont[]>(),
 		setActiveSlideIndex: noopDispatch<number>(),
 		setHasMacros: noopDispatch<boolean>(),
-		setHasDigitalSignatures: noopDispatch<boolean>(),
-		setDigitalSignatureCount: noopDispatch<number>(),
+		setSignatures: noopDispatch<SignatureSummary | undefined>(),
 		setGuides: noopDispatch<Array<{ id: string; axis: 'h' | 'v'; position: number }>>(),
 		setReadOnlyRecommendation: noopDispatch<ReadOnlyRecommendation>(),
 		setModifyVerifier: noopDispatch<PptxModifyVerifier | undefined>(),

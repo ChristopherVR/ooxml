@@ -982,7 +982,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setSelectedElementId: state.setSelectedElementId,
 			setSelectedElementIds: state.setSelectedElementIds,
 			preMasterMode: state.preMasterMode,
-			hasDigitalSignatures: state.hasDigitalSignatures,
+			signatures: state.signatures,
 			isDirty: state.isDirty,
 			history,
 			embeddedFontFamilies: state.embeddedFonts.map((font) => font.name),
@@ -1733,8 +1733,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					customProperties={state.customProperties}
 					appProperties={state.appProperties}
 					embeddedFonts={state.embeddedFonts}
-					hasDigitalSignatures={state.hasDigitalSignatures}
-					digitalSignatureCount={state.digitalSignatureCount}
+					signatures={state.signatures}
 					presentationProperties={state.presentationProperties}
 					customShows={state.customShows}
 					activeCustomShowId={state.activeCustomShowId}

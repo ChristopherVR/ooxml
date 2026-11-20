@@ -36,8 +36,8 @@ const INERT_LOAD_SETTERS = Object.fromEntries(
 	setRecentColors setTableStyleMap setTableStylesDefaultId setTableStylesToDelete setCustomShows
 	setActiveCustomShowId setSections setPresentationProperties setViewProperties setNotesMaster
 	setHandoutMaster setNotesCanvasSize setCustomProperties setTagCollections setCoreProperties
-	setAppProperties setEmbeddedFonts setHasMacros setHasDigitalSignatures
-	setDigitalSignatureCount setGuides setReadOnlyRecommendation setModifyVerifier
+	setAppProperties setEmbeddedFonts setHasMacros setSignatures
+	setGuides setReadOnlyRecommendation setModifyVerifier
 	setCompatToasts setError setIsEncrypted`
 		.split(/\s+/u)
 		.map((name) => [name, () => {}]),

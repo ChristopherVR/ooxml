@@ -113,8 +113,7 @@ describe('viewerCoreState expected defaults', () => {
 		appProperties: undefined,
 		embeddedFonts: [],
 		hasMacros: false,
-		hasDigitalSignatures: false,
-		digitalSignatureCount: 0,
+		signatures: undefined,
 		activeMasterIndex: 0,
 		activeLayoutIndex: null,
 		preMasterMode: 'edit',
@@ -174,12 +173,8 @@ describe('viewerCoreState expected defaults', () => {
 		expect(defaults.hasMacros).toBeFalsy();
 	});
 
-	it('hasDigitalSignatures defaults to false', () => {
-		expect(defaults.hasDigitalSignatures).toBeFalsy();
-	});
-
-	it('digitalSignatureCount defaults to 0', () => {
-		expect(defaults.digitalSignatureCount).toBe(0);
+	it('signatures defaults to undefined', () => {
+		expect(defaults.signatures).toBeUndefined();
 	});
 
 	it('activeMasterIndex defaults to 0', () => {
