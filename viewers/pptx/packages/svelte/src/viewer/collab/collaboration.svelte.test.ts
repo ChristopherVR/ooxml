@@ -178,6 +178,33 @@ describe('collaborationController', () => {
 		});
 	});
 
+	it('never seeds an empty room with the placeholder deck of a session that joins it', async () => {
+		const doc = new Y.Doc();
+		const joining: CollaborationConfig = { ...CONFIG, sessionIntent: 'join' };
+		await inRoot(async () => {
+			const editor = makeEditor([slide('placeholder', [shape('p1')])]);
+			const collab = new CollaborationController({
+				getSlides: () => editor.slides,
+				applyRemoteSlides: (s) => editor.applyRemoteSlides(s),
+				getConfig: () => joining,
+				createSession: fakeSessionFactory(doc, true),
+			});
+			await collab.start(joining);
+			flushSync();
+			expect(readSlidesFromYDoc(doc as unknown as YDocLike)).toStrictEqual([]);
+
+			reconcileSlidesInYDoc(
+				[slide('sharer', [shape('s1')])],
+				doc as never,
+				realFactories(),
+				'peer',
+			);
+			flushSync();
+			expect(editor.slides.map((s) => s.id)).toStrictEqual(['sharer']);
+			collab.stop();
+		});
+	});
+
 	it('re-arms the sync gate on reconnect instead of leaving it permanently open', async () => {
 		const doc = new Y.Doc();
 		const { factory, emitStatus, emitSynced } = statusDrivenSessionFactory(doc, true);

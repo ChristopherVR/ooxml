@@ -76,7 +76,8 @@ export function useCollaborationDocumentSync(
 		}
 		if (
 			config.role === 'viewer' ||
-			(config.externalSession && !config.externalSession.getSnapshot().synced)
+			(config.externalSession && !config.externalSession.getSnapshot().synced) ||
+			(!config.externalSession && !join.mayWrite())
 		) {
 			return;
 		}
@@ -144,7 +145,7 @@ export function useCollaborationDocumentSync(
 			return;
 		}
 		livePatcher.configure(activeConfig.role === 'viewer' ? null : doc, factories);
-		join.attached();
+		join.attached(activeConfig.sessionIntent);
 		unobserve = observeYDocSlides(doc, (_events, transaction) => {
 			if (transaction?.origin === LOCAL_SYNC_ORIGIN || applyingRemote || !doc) {
 				return;
@@ -171,6 +172,7 @@ export function useCollaborationDocumentSync(
 				isConnected: () => !config?.externalSession && status.value === 'connected',
 				getLoadOrigin: options.getLoadOrigin,
 				adoptDocSlides: adoptRoom,
+				onLoaded: (origin) => join.loaded(origin),
 			})
 		: null;
 	const stopExternalLoad = options.loadVersion

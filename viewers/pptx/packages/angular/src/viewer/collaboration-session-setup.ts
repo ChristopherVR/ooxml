@@ -99,6 +99,7 @@ export function activateSession(
 		ydoc: live.doc,
 		factories: live.factories,
 		readOnly: viewer,
+		...(config.sessionIntent ? { sessionIntent: config.sessionIntent } : {}),
 		onRemoteSlides: deps.onRemoteSlides,
 		onRoomReplacedDeck: deps.onRoomReplacedDeck,
 		scheduleWriteBack: deps.scheduleWriteBack,

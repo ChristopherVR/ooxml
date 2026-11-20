@@ -82,7 +82,7 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 		lastSynced.current = '';
 		superseded.current = null;
 		revision.current++;
-		join.attached();
+		join.attached(latestInput.current.config?.sessionIntent);
 	}, [doc, external, join]);
 
 	useEffect(() => {
@@ -128,6 +128,7 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			return;
 		}
 		lastLoad.current = loadVersion;
+		join.loaded(loadOrigin);
 		if (!doc || !isConnected) {
 			return;
 		}
@@ -137,9 +138,10 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			superseded.current = latestSlides.current;
 			revision.current++;
 			setSlides(room);
+			join.adopted();
 			replacedDeck();
 		}
-	}, [external, loadVersion, loadOrigin, doc, isConnected, setSlides]);
+	}, [external, loadVersion, loadOrigin, doc, isConnected, setSlides, join]);
 
 	useEffect(() => {
 		if (
@@ -149,7 +151,8 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 			!isSynced ||
 			config?.role === 'viewer' ||
 			!slides.length ||
-			slides === superseded.current
+			slides === superseded.current ||
+			!join.mayWrite()
 		) {
 			return;
 		}
