@@ -1,5 +1,5 @@
-import { SAVE_FAILED_TOAST } from 'ooxml-ui/pptx';
-import type { PptxCompatibilityWarning } from 'pptx-viewer-core';
+import { SAVE_FAILED_TOAST, signatureLoadNotice, signatureStatusView } from 'ooxml-ui/pptx';
+import type { PptxCompatibilityWarning, SignatureSummary } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
 import { CompatToastsState } from './compat-toasts.svelte';
@@ -62,5 +62,35 @@ describe('compatToastsState', () => {
 		expect(state.visibleToasts.map((toast) => toast.id)).toEqual(['save-failed']);
 		state.reset();
 		expect(state.visibleToasts.map((toast) => toast.id)).not.toContain('save-failed');
+	});
+
+	describe('signature load notice', () => {
+		const invalid: SignatureSummary = {
+			state: 'invalid',
+			signatures: [{ path: '_xmlsignatures/sig1.xml', state: 'invalid' }],
+		};
+
+		it('shows a signed deck its state on top until dismissed, then again after a load', () => {
+			let locale = 'en';
+			const state = new CompatToastsState({ getWarnings: () => [warning('A')] });
+			state.setSignatureNotice(() => signatureLoadNotice(signatureStatusView(invalid, locale)));
+			const first = state.visibleToasts[0];
+			expect(first?.code).toBe('SIGNATURE_STATE');
+			expect(first?.severity).toBe('warning');
+			expect(first?.text).toContain('is not valid');
+			expect(first?.text).toContain('Saving changes removes the signatures');
+			locale = 'fr';
+			expect(state.visibleToasts[0]?.text).not.toContain('Saving changes');
+			state.dismiss('SIGNATURE_STATE');
+			expect(state.visibleToasts.map((toast) => toast.code)).toStrictEqual(['A']);
+			state.reset();
+			expect(state.visibleToasts[0]?.code).toBe('SIGNATURE_STATE');
+		});
+
+		it('shows nothing for an unsigned deck', () => {
+			const state = new CompatToastsState({ getWarnings: () => [] });
+			state.setSignatureNotice(() => signatureLoadNotice(signatureStatusView(undefined, 'en')));
+			expect(state.visibleToasts).toHaveLength(0);
+		});
 	});
 });

@@ -582,6 +582,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       displayed but their parts are saved unchanged; restricted, preview and print, and
       bitmap-only faces are never newly embedded; the Embed Fonts panel shows the restriction in
       every binding (`core/text/truetype/embedding.ts`).
+- [x] **P1** Digital signatures are verified in the browser (part digests, signature value and the
+      signer certificate's key) and every binding shows the verified state through
+      `signatureStatusView` (`src/ui/src/pptx/render/signature-status.ts`): a deck reads as signed
+      only when its signatures verify, and invalid or unsupported signatures say so in the badge,
+      the signatures panel and its rows (`e2e/pptx/signature-state.spec.ts`). There is no trust
+      store in a browser, so a valid signature is "Signed, signer not verified" at best; the viewer
+      cannot sign, and saving an edit removes the signatures.
 - [ ] **P2** 3-D models: `am3d:preTrans` is parsed, not applied; `rot` handedness and
       orthographic scale are unverified.
 - [ ] **P2** `p:smartTags` has no model; `p:revisionInfo` survival is unverified.

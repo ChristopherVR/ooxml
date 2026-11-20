@@ -1,37 +1,35 @@
 <script setup lang="ts">
-import { ShieldCheck } from '@lucide/vue';
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import type { SignatureStatusView } from 'ooxml-ui/pptx';
+
+import { SIGNATURE_BADGE_TONE, SIGNATURE_ICONS } from './signature-look';
 
 /**
- * SignatureStatusBadge: a small chrome badge indicating the document is
- * digitally signed. Vue port of the React `SignatureStatusBadge.tsx`. Renders
- * nothing when there are no signatures; emits `click` to open the signatures
- * panel/dialog.
+ * SignatureStatusBadge: a small chrome badge showing the deck's signature state
+ * ("Signed" only when the signatures verify). Vue port of the React
+ * `SignatureStatusBadge.tsx`. Renders nothing when the deck carries no
+ * signatures; emits `click` to open the signatures panel/dialog.
  */
 const props = defineProps<{
-	hasSignatures: boolean;
-	signatureCount: number;
+	view: SignatureStatusView;
 }>();
 
 const emit = defineEmits<{
 	click: [];
 }>();
-
-const { t } = useI18n();
-
-const visible = computed(() => props.hasSignatures && props.signatureCount > 0);
 </script>
 
 <template>
 	<button
-		v-if="visible"
+		v-if="props.view.present"
 		type="button"
-		class="inline-flex items-center gap-1 rounded-md border border-green-700/40 bg-green-900/30 px-2 py-0.5 text-[11px] font-medium text-green-300 transition-colors hover:bg-green-900/50"
-		:title="t('pptx.digitalSignatures.badgeTitle', { count: props.signatureCount })"
+		class="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-medium transition-colors"
+		:class="SIGNATURE_BADGE_TONE[props.view.tone]"
+		:data-pptx-signature-state="props.view.state"
+		:title="props.view.description"
+		:aria-label="props.view.description"
 		@click="emit('click')"
 	>
-		<ShieldCheck class="h-3.5 w-3.5" />
-		<span>{{ t('pptx.digitalSignatures.badgeSigned') }}</span>
+		<component :is="SIGNATURE_ICONS[props.view.icon]" class="h-3.5 w-3.5" aria-hidden="true" />
+		<span>{{ props.view.label }}</span>
 	</button>
 </template>

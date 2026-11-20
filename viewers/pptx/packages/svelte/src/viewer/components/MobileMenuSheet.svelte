@@ -210,8 +210,7 @@
 {/if}
 {#if signaturesOpen && customization.isDialogAvailable('signatures')}
 	<DigitalSignaturesDialog
-		hasSignatures={props.hasDigitalSignatures}
-		signatureCount={props.digitalSignatureCount}
+		view={props.signatureView}
 		onclose={() => (signaturesOpen = false)}
 	/>
 {/if}

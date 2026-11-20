@@ -23,6 +23,7 @@ import type {
 	PptxElementAnimation,
 	PptxAnimationPreset,
 	PptxTheme,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 /**
  * ViewerToolbarSection: Renders the top toolbar, signature badge,
@@ -137,8 +138,7 @@ export interface ViewerToolbarSectionProps {
 		setShowOutlineView: React.Dispatch<React.SetStateAction<boolean>>;
 		presentationProperties: PptxPresentationProperties;
 		setPresentationProperties: React.Dispatch<React.SetStateAction<PptxPresentationProperties>>;
-		hasDigitalSignatures: boolean;
-		digitalSignatureCount: number;
+		signatures: SignatureSummary | undefined;
 		imageInputRef: React.RefObject<HTMLInputElement | null>;
 		mediaInputRef: React.RefObject<HTMLInputElement | null>;
 		sidebarPanelMode: string;
@@ -819,16 +819,11 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				onToggleAiPanel={onToggleAiPanel}
 			/>
 
-			{/* Signature status badge */}
-			{s.hasDigitalSignatures && (
-				<div className='flex items-center px-3 py-1 z-10'>
-					<SignatureStatusBadge
-						hasSignatures={s.hasDigitalSignatures}
-						signatureCount={s.digitalSignatureCount}
-						onClick={() => dialogs.setIsDigitalSigDialogOpen(true)}
-					/>
-				</div>
-			)}
+			{/* Signature status badge (renders nothing for an unsigned deck) */}
+			<SignatureStatusBadge
+				signatures={s.signatures}
+				onClick={() => dialogs.setIsDigitalSigDialogOpen(true)}
+			/>
 
 			{/* Hidden file inputs */}
 			<input

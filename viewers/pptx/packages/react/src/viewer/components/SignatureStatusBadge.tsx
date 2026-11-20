@@ -1,15 +1,15 @@
+import type { SignatureSummary } from 'pptx-viewer-core';
 import React from 'react';
-import { LuShieldCheck } from 'react-icons/lu';
 
-import { useTranslation } from '../i18n/use-translation';
+import { SIGNATURE_BADGE_TONE, SIGNATURE_ICONS, useSignatureStatusView } from './signature-look';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export interface SignatureStatusBadgeProps {
-	hasSignatures: boolean;
-	signatureCount: number;
+	/** The loaded deck's signatures (`PptxData.signatures`), absent when it has none. */
+	signatures: SignatureSummary | undefined;
 	onClick: () => void;
 }
 
@@ -18,31 +18,33 @@ export interface SignatureStatusBadgeProps {
 // ---------------------------------------------------------------------------
 
 /**
- * A small toolbar badge indicating the document is digitally signed.
- * Renders nothing when no signatures are present.
+ * A small toolbar badge showing the deck's signature state: "Signed" only when its signatures
+ * verify. Renders nothing when the deck carries no signatures.
  */
 export function SignatureStatusBadge({
-	hasSignatures,
-	signatureCount,
+	signatures,
 	onClick,
 }: SignatureStatusBadgeProps): React.ReactElement | null {
-	const { t } = useTranslation();
+	const view = useSignatureStatusView(signatures);
 
-	if (!hasSignatures || signatureCount === 0) {
+	if (!view.present) {
 		return null;
 	}
 
+	const Icon = SIGNATURE_ICONS[view.icon];
 	return (
-		<button
-			type='button'
-			onClick={onClick}
-			className='inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md bg-green-900/30 border border-green-700/40 text-green-300 hover:bg-green-900/50 transition-colors'
-			title={t('pptx.digitalSignatures.signatureCount', {
-				count: signatureCount,
-			})}
-		>
-			<LuShieldCheck className='w-3.5 h-3.5' />
-			<span>{t('pptx.digitalSignatures.badge')}</span>
-		</button>
+		<div className='flex items-center px-3 py-1 z-10'>
+			<button
+				type='button'
+				onClick={onClick}
+				className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded-md border transition-colors ${SIGNATURE_BADGE_TONE[view.tone]}`}
+				data-pptx-signature-state={view.state}
+				title={view.description}
+				aria-label={view.description}
+			>
+				<Icon className='w-3.5 h-3.5' aria-hidden='true' />
+				<span>{view.label}</span>
+			</button>
+		</div>
 	);
 }

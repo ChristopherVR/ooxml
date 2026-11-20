@@ -1,7 +1,6 @@
 import type { PptxLayoutOption } from 'ooxml-core/pptx';
 import type { ReadOnlyRecommendation } from 'ooxml-ui/pptx';
 import type {
-	ParsedSignature,
 	PptxAppProperties,
 	ParsedTableStyleMap,
 	PptxCoreProperties,
@@ -13,6 +12,7 @@ import type {
 	PptxPresentationProperties,
 	PptxSlide,
 	PptxTheme,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 import type { ComputedRef, Ref, ShallowRef } from 'vue';
 
@@ -87,7 +87,7 @@ export interface BuildingBlocksEngineContext {
 	deckActions: UseInspectorDeckActionsResult;
 	fontEmbedding: UseFontEmbeddingResult;
 	signatureWorkflow: UseSignatureWorkflowResult;
-	signatures: Ref<ParsedSignature[]>;
+	signatures: Ref<SignatureSummary | undefined>;
 	activeContent: Ref<ArrayBuffer | Uint8Array | null | undefined>;
 	slideShow: UseSlideShowSettingsResult;
 	presentationProperties: Ref<PptxPresentationProperties>;

@@ -41,7 +41,6 @@ const props = defineProps<{
 	fontEmbedding: UseFontEmbeddingResult;
 	insertDialogs: UseInsertElementDialogsResult;
 	signatureWorkflow: UseSignatureWorkflowResult;
-	signatureCount: number;
 	deckActions: UseInspectorDeckActionsResult;
 }>();
 
@@ -124,7 +123,7 @@ function insertSmartArt(event: Event): void {
 	<!-- First-edit warning: saving a signed deck strips its signatures. -->
 	<SignatureStrippedDialog
 		:open="signatureWorkflow.showSignatureStripped.value"
-		:signature-count="signatureCount"
+		:signature-count="signatureWorkflow.view.value.count"
 		@confirm="signatureWorkflow.onAckSignatureStripped"
 		@cancel="signatureWorkflow.onAckSignatureStripped"
 	/>

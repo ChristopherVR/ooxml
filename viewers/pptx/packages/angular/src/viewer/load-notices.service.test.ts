@@ -1,13 +1,14 @@
 /**
  * load-notices.service.test.ts: the read-only recommendation half of
- * `LoadNoticesService`, in particular the modify-password unlock prompt.
+ * `LoadNoticesService` (in particular the modify-password unlock prompt) and
+ * the signature load notice.
  *
- * Bare injector (no TestBed): the service's only dependency,
- * `LoadContentService`, is provided as a minimal stub exposing just
- * `parsedData` (the one signal `LoadNoticesService` reads).
+ * Bare injector (no TestBed): `LoadContentService` is provided as a minimal
+ * stub exposing just the `parsedData`, `slides` and `signatureSummary` signals
+ * `LoadNoticesService` reads; without `TranslateService` the notice is English.
  */
 import { Injector, runInInjectionContext, signal } from '@angular/core';
-import type { PptxData } from 'pptx-viewer-core';
+import type { PptxData, SignatureSummary } from 'pptx-viewer-core';
 import { createModifyVerifier, createSaltlessModifyVerifierForTesting } from 'pptx-viewer-core';
 import { describe, expect, it } from 'vitest';
 
@@ -19,7 +20,11 @@ function createService(parsedData: PptxData | undefined): LoadNoticesService {
 		providers: [
 			{
 				provide: LoadContentService,
-				useValue: { parsedData: signal(parsedData), slides: signal([]) },
+				useValue: {
+					parsedData: signal(parsedData),
+					slides: signal([]),
+					signatureSummary: signal(undefined),
+				},
 			},
 		],
 	});
@@ -194,5 +199,44 @@ describe('loadNoticesService notify (failed Save)', () => {
 		expect(service.visibleToasts().map((toast) => toast.id)).toStrictEqual(['save-failed']);
 		service.resetForLoad();
 		expect(service.visibleToasts()).toStrictEqual([]);
+	});
+
+	describe('signature load notice', () => {
+		const invalid: SignatureSummary = {
+			state: 'invalid',
+			signatures: [{ path: '_xmlsignatures/sig1.xml', state: 'invalid' }],
+		};
+		function withSignatures(summary: SignatureSummary | undefined): LoadNoticesService {
+			const injector = Injector.create({
+				providers: [
+					{
+						provide: LoadContentService,
+						useValue: {
+							parsedData: signal(undefined),
+							slides: signal([]),
+							signatureSummary: signal(summary),
+						},
+					},
+				],
+			});
+			return runInInjectionContext(injector, () => new LoadNoticesService());
+		}
+
+		it('tells a signed deck its state until dismissed, and again after the next load', () => {
+			const service = withSignatures(invalid);
+			const first = service.visibleToasts()[0];
+			expect(first?.code).toBe('SIGNATURE_STATE');
+			expect(first?.severity).toBe('warning');
+			expect(first?.text).toContain('is not valid');
+			expect(first?.text).toContain('Saving changes removes the signatures');
+			service.dismissToast('SIGNATURE_STATE');
+			expect(service.visibleToasts()).toHaveLength(0);
+			service.resetForLoad();
+			expect(service.visibleToasts()[0]?.code).toBe('SIGNATURE_STATE');
+		});
+
+		it('shows nothing for an unsigned deck', () => {
+			expect(withSignatures(undefined).visibleToasts()).toHaveLength(0);
+		});
 	});
 });

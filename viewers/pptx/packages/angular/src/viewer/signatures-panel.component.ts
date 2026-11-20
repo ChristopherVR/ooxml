@@ -3,98 +3,92 @@
  *
  * Selector: `pptx-signatures-panel`
  *
- * Lists each signature in the package (signer/certificate info, validity
- * status, signing timestamp) under an overall "Signed / Invalid / Not signed"
- * header. Purely presentational: it inspects, it never signs or strips.
- *
- * The host obtains the `signatures` array by parsing each `_xmlsignatures/`
- * part with the core `parseSignatureXml(...)` helper after a file loads.
- *
- * Angular port of the Vue `SignaturesPanel.vue`. All status derivation and
- * formatting is delegated to signatures-helpers.ts.
+ * Shows the deck's verified signature state and lists each signature (signer,
+ * its own state, issuer, signing time). A deck reads as signed only when its
+ * signatures verify: the wording, tone and icon all come from the shared
+ * `signatureStatusView` (ooxml-ui/pptx) in the viewer's current language, so
+ * this panel keeps no status logic of its own. Purely presentational: it
+ * inspects, it never signs or strips.
  *
  * Usage:
  * ```html
- * <pptx-signatures-panel [signatures]="parsedSignatures()" />
+ * <pptx-signatures-panel [summary]="loader.signatureSummary()" />
  * ```
  */
 
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { TranslatePipe } from '@ngx-translate/core';
-import type { ParsedSignature } from 'pptx-viewer-core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { LucideDynamicIcon } from '@lucide/angular';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { signatureStatusView } from 'ooxml-ui/pptx';
+import type { SignatureStatusView } from 'ooxml-ui/pptx';
+import type { SignatureSummary } from 'pptx-viewer-core';
 
-import {
-	headerLabel,
-	isSigned,
-	overallStatus,
-	signatureCountLabel,
-	signatureKey,
-	signatureTimestamp,
-	signerName,
-	statusKind,
-	statusLabel,
-} from './signatures-helpers';
+import { SIGNATURE_ICONS } from './signature-icons';
 
 @Component({
 	selector: 'pptx-signatures-panel',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe],
+	imports: [TranslatePipe, LucideDynamicIcon],
 	template: `
 		<section
 			class="pptx-ng-signatures"
 			[attr.aria-label]="'pptx.digitalSignatures.ariaLabel' | translate"
+			[attr.data-pptx-signature-state]="view().state"
 		>
 			<header
 				class="pptx-ng-signatures__header"
-				[class]="'pptx-ng-signatures__header--' + overall()"
+				[class]="'pptx-ng-signatures__header--' + view().tone"
 			>
-				<span class="pptx-ng-signatures__dot" aria-hidden="true"></span>
-				<span class="pptx-ng-signatures__title">{{ headerLabel() }}</span>
-				@if (signed()) {
-					<span class="pptx-ng-signatures__count">{{ countLabel() }}</span>
-				}
+				<svg
+					class="pptx-ng-signatures__icon"
+					aria-hidden="true"
+					[lucideIcon]="icons[view().icon]"
+				></svg>
+				<span class="pptx-ng-signatures__title">{{
+					view().present ? view().label : view().heading
+				}}</span>
 			</header>
 
-			@if (!signed()) {
+			@if (!view().present) {
 				<p class="pptx-ng-signatures__empty">
 					{{ 'pptx.digitalSignatures.noSignatures' | translate }}
 				</p>
 			} @else {
+				<p class="pptx-ng-signatures__description">{{ view().description }}</p>
 				<ul class="pptx-ng-signatures__list">
-					@for (sig of signatures(); track key(sig, $index)) {
-						<li class="pptx-ng-signatures__item" [class]="'pptx-ng-signatures__item--' + kind(sig)">
+					@for (row of view().rows; track row.path) {
+						<li
+							class="pptx-ng-signatures__item"
+							[class]="'pptx-ng-signatures__item--' + row.tone"
+							[attr.data-pptx-signature-row-state]="row.state"
+						>
 							<div class="pptx-ng-signatures__item-main">
-								<span class="pptx-ng-signatures__signer">{{ signer(sig) }}</span>
+								<span class="pptx-ng-signatures__signer" [attr.title]="row.subject ?? null">{{
+									row.signer
+								}}</span>
 								<span
 									class="pptx-ng-signatures__badge"
-									[class]="'pptx-ng-signatures__badge--' + kind(sig)"
+									[class]="'pptx-ng-signatures__badge--' + row.tone"
 								>
-									{{ label(sig) }}
+									{{ row.label }}
 								</span>
 							</div>
 
 							<dl class="pptx-ng-signatures__meta">
-								@if (sig.certificate?.issuer; as issuer) {
+								@if (row.issuer; as issuer) {
 									<dt>{{ 'pptx.digitalSignatures.issuer' | translate }}</dt>
 									<dd>{{ issuer }}</dd>
 								}
-								@if (sig.certificate?.serialNumber; as serial) {
-									<dt>{{ 'pptx.digitalSignatures.serial' | translate }}</dt>
-									<dd>{{ serial }}</dd>
-								}
-								@if (timestamp(sig); as ts) {
-									<dt>{{ 'pptx.digitalSignatures.signed' | translate }}</dt>
-									<dd>{{ ts }}</dd>
-								}
-								@if (!sig.certificate) {
-									<dt>{{ 'pptx.digitalSignatures.certificate' | translate }}</dt>
-									<dd>{{ 'pptx.digitalSignatures.notAvailable' | translate }}</dd>
+								@if (row.signedAt; as signedAt) {
+									<dt>{{ view().signedAtCaption }}</dt>
+									<dd>{{ signedAt }}</dd>
 								}
 							</dl>
 						</li>
 					}
 				</ul>
+				<p class="pptx-ng-signatures__note">{{ view().removedOnSave }}</p>
 			}
 		</section>
 	`,
@@ -119,26 +113,29 @@ import {
 				border-bottom: 1px solid #e5e7eb;
 			}
 
-			.pptx-ng-signatures__header--signed {
+			.pptx-ng-signatures__header--success {
 				background: #ecfdf5;
 				color: #065f46;
 			}
 
-			.pptx-ng-signatures__header--invalid {
+			.pptx-ng-signatures__header--caution {
+				background: #fffbeb;
+				color: #92400e;
+			}
+
+			.pptx-ng-signatures__header--danger {
 				background: #fef2f2;
 				color: #991b1b;
 			}
 
-			.pptx-ng-signatures__header--unsigned {
+			.pptx-ng-signatures__header--neutral {
 				background: #f9fafb;
 				color: #374151;
 			}
 
-			.pptx-ng-signatures__dot {
-				width: 9px;
-				height: 9px;
-				border-radius: 50%;
-				background: currentColor;
+			.pptx-ng-signatures__icon {
+				width: 16px;
+				height: 16px;
 				flex: none;
 			}
 
@@ -146,22 +143,30 @@ import {
 				flex: 1;
 			}
 
-			.pptx-ng-signatures__count {
-				font-weight: 400;
-				font-size: 12px;
-				opacity: 0.8;
+			.pptx-ng-signatures__empty,
+			.pptx-ng-signatures__description,
+			.pptx-ng-signatures__note {
+				margin: 0;
+				padding: 10px 12px;
+				color: #4b5563;
 			}
 
 			.pptx-ng-signatures__empty {
-				margin: 0;
 				padding: 14px 12px;
 				color: #6b7280;
+			}
+
+			.pptx-ng-signatures__note {
+				font-size: 12px;
+				color: #6b7280;
+				border-top: 1px solid #f3f4f6;
 			}
 
 			.pptx-ng-signatures__list {
 				list-style: none;
 				margin: 0;
 				padding: 0;
+				border-top: 1px solid #f3f4f6;
 			}
 
 			.pptx-ng-signatures__item {
@@ -174,16 +179,20 @@ import {
 				border-bottom: none;
 			}
 
-			.pptx-ng-signatures__item--valid {
+			.pptx-ng-signatures__item--success {
 				border-left-color: #10b981;
 			}
 
-			.pptx-ng-signatures__item--invalid {
+			.pptx-ng-signatures__item--caution {
+				border-left-color: #f59e0b;
+			}
+
+			.pptx-ng-signatures__item--danger {
 				border-left-color: #ef4444;
 			}
 
-			.pptx-ng-signatures__item--unknown {
-				border-left-color: #f59e0b;
+			.pptx-ng-signatures__item--neutral {
+				border-left-color: #9ca3af;
 			}
 
 			.pptx-ng-signatures__item-main {
@@ -207,19 +216,24 @@ import {
 				white-space: nowrap;
 			}
 
-			.pptx-ng-signatures__badge--valid {
+			.pptx-ng-signatures__badge--success {
 				background: #d1fae5;
 				color: #065f46;
 			}
 
-			.pptx-ng-signatures__badge--invalid {
+			.pptx-ng-signatures__badge--caution {
+				background: #fef3c7;
+				color: #92400e;
+			}
+
+			.pptx-ng-signatures__badge--danger {
 				background: #fee2e2;
 				color: #991b1b;
 			}
 
-			.pptx-ng-signatures__badge--unknown {
-				background: #fef3c7;
-				color: #92400e;
+			.pptx-ng-signatures__badge--neutral {
+				background: #f3f4f6;
+				color: #374151;
 			}
 
 			.pptx-ng-signatures__meta {
@@ -244,50 +258,15 @@ import {
 	],
 })
 export class SignaturesPanelComponent {
-	// -------------------------------------------------------------------------
-	// Inputs
-	// -------------------------------------------------------------------------
+	private readonly translate = inject(TranslateService);
 
-	/** Parsed signatures to inspect (host parses and supplies them). */
-	readonly signatures = input<ParsedSignature[]>([]);
+	/** The loaded deck's signatures (`PptxData.signatures`); absent for an unsigned deck. */
+	readonly summary = input<SignatureSummary | undefined>(undefined);
 
-	// -------------------------------------------------------------------------
-	// Derived
-	// -------------------------------------------------------------------------
+	protected readonly icons = SIGNATURE_ICONS;
 
-	/** True when the package carries at least one signature part. */
-	readonly signed = computed<boolean>(() => isSigned(this.signatures()));
-
-	/** Coarse-grained "Signed / Invalid / Not signed" classification. */
-	readonly overall = computed(() => overallStatus(this.signatures()));
-
-	/** Header label for the panel. */
-	readonly headerLabel = computed<string>(() => headerLabel(this.overall()));
-
-	/** "N signature(s)" count label. */
-	readonly countLabel = computed<string>(() => signatureCountLabel(this.signatures().length));
-
-	// -------------------------------------------------------------------------
-	// Template helpers (delegate to pure functions)
-	// -------------------------------------------------------------------------
-
-	key(sig: ParsedSignature, index: number): string {
-		return signatureKey(sig, index);
-	}
-
-	kind(sig: ParsedSignature): string {
-		return statusKind(sig.status);
-	}
-
-	label(sig: ParsedSignature): string {
-		return statusLabel(sig.status);
-	}
-
-	signer(sig: ParsedSignature): string {
-		return signerName(sig);
-	}
-
-	timestamp(sig: ParsedSignature): string | undefined {
-		return signatureTimestamp(sig);
-	}
+	/** What the panel shows, in the viewer's current language. */
+	protected readonly view = computed<SignatureStatusView>(() =>
+		signatureStatusView(this.summary(), this.translate.currentLang() ?? undefined),
+	);
 }

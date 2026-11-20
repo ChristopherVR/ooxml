@@ -214,7 +214,14 @@ test('signatures can be listed and removed on save but never created', async () 
 	const markDirty = vi.fn();
 	const make = (signed: boolean) =>
 		buildSignatureActions({
-			state: describeSignaturesState({ signed, count: signed ? 1 : 0 }),
+			state: describeSignaturesState(
+				signed
+					? {
+							state: 'verified-untrusted',
+							signatures: [{ path: '_xmlsignatures/sig1.xml', state: 'verified-untrusted' }],
+						}
+					: undefined,
+			),
 			content: () => null,
 			refuse: () => undefined,
 			markDirty,
@@ -227,4 +234,20 @@ test('signatures can be listed and removed on save but never created', async () 
 	expect(signed.sign()).toEqual({ ok: false, code: 'unsupported' });
 	expect(signed.state.supported).toMatchObject({ create: false, trust: false });
 	expect(make(false).remove()).toEqual({ ok: false, code: 'no-signatures' });
+});
+
+test('an unverified signature is present and removable but not signed', () => {
+	for (const state of ['invalid', 'unsupported'] as const) {
+		const described = describeSignaturesState({
+			state,
+			signatures: [{ path: '_xmlsignatures/sig1.xml', state }],
+		});
+		expect(described).toMatchObject({ state, signed: false, present: true, count: 1 });
+	}
+	expect(describeSignaturesState(undefined)).toMatchObject({
+		state: 'unsigned',
+		signed: false,
+		present: false,
+		count: 0,
+	});
 });

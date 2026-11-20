@@ -46,8 +46,7 @@ function mountDialogs() {
 				fontEmbedding: ref({ interactive: false }),
 			},
 			insertDialogs,
-			signatureWorkflow: { showSignatureStripped: closed() },
-			signatureCount: 0,
+			signatureWorkflow: { showSignatureStripped: closed(), view: ref({ count: 0 }) },
 			deckActions: { pendingSlideSizeRescale: ref(null) },
 		} as never,
 		global: {

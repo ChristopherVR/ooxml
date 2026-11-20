@@ -39,7 +39,8 @@ code-split host application's initial chunks. Existing public imports remain sup
   custom-show playback, rehearse timings, and freehand ink.
 - **Export**: PNG, PDF, GIF, and WebM video; print; Save As (pptx/ppsx/pptm).
 - **Collaboration**: real-time Yjs-based co-editing with cursor/selection presence.
-- **Comments, find/replace, accessibility panel, digital signatures**, and more.
+- **Comments, find/replace, accessibility panel, digital signatures** (a deck reads as signed
+  only when its signatures verify), and more.
 - **Mobile chrome**: touch toolbar, bottom bar with sheets, and touch editing.
 - **Slide navigation**: a thumbnail rail, previous/next, and a slide counter.
 - **Zoom**: in, out, and reset.

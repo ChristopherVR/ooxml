@@ -1,5 +1,5 @@
 import { inspectSignaturesFromBuffer } from 'ooxml-core/pptx';
-import type { PackageSignatureInfo } from 'ooxml-core/pptx';
+import type { SignatureEntry, SignatureState, SignatureSummary } from 'ooxml-core/pptx';
 
 import {
 	BUILDING_BLOCK_OK,
@@ -8,34 +8,26 @@ import {
 } from './building-block-actions';
 
 /**
- * Framework-free digital-signature workflow of a host-owned shell. It reports what the package
- * carries and whether the signed parts still match; it does not decide trust.
+ * Framework-free digital-signature workflow of a host-owned shell. It reports the verified state
+ * of the package's signatures (`SignatureSummary`): a deck is signed only when they verify.
  *
- * Honest limits: the browser checks the digests of the parts a signature covers, not the signature
- * value, the certificate chain or revocation, so no signature is ever reported as trusted. The
- * viewer cannot create a signature (there is no signing key or certificate store here). Saving
- * always writes the package without its signatures, so "remove" means "the saved file will not
- * carry them".
+ * Honest limits: the browser verifies each signature (the signed parts' digests, the signature
+ * value and the signer certificate's key) but has no trust store, so a valid signature is at best
+ * `verified-untrusted`. The viewer cannot create a signature (there is no signing key or
+ * certificate store here). Saving always writes the package without its signatures, so "remove"
+ * means "the saved file will not carry them".
  */
 
-export interface HostSignatureInfo {
-	/** The signature part in the package, for example `_xmlsignatures/sig1.xml`. */
-	path: string;
-	/** The signer certificate's subject, when the signature carries one. */
-	signer?: string;
-	issuer?: string;
-	/** ISO dates from the certificate. */
-	validFrom?: string;
-	validTo?: string;
-	/** The certificate's validity period has ended. */
-	expired: boolean;
-	/** The covered parts' digests against their current bytes (an integrity check only). */
-	integrity: PackageSignatureInfo['integrity'];
-}
+/** One signature of the package, with its verified state. */
+export type HostSignatureInfo = SignatureEntry;
 
 export interface SignaturesState {
-	/** The package carries at least one signature. */
+	/** The verified state of the package's signatures. */
+	state: SignatureState;
+	/** The deck is shown as signed: its signatures verified (`verified` or `verified-untrusted`). */
 	signed: boolean;
+	/** The package carries signature parts, whatever their state. */
+	present: boolean;
 	count: number;
 	/** Saving drops the signatures (always true: edits invalidate them and the viewer cannot re-sign). */
 	removedOnSave: true;
@@ -43,28 +35,15 @@ export interface SignaturesState {
 	supported: { list: true; remove: true; create: false; trust: false };
 }
 
-export function describeSignaturesState(input: {
-	signed: boolean;
-	count: number;
-}): SignaturesState {
+export function describeSignaturesState(summary: SignatureSummary | undefined): SignaturesState {
+	const state = summary?.state ?? 'unsigned';
 	return {
-		signed: input.signed,
-		count: input.count,
+		state,
+		signed: state === 'verified' || state === 'verified-untrusted',
+		present: state !== 'unsigned',
+		count: summary?.signatures.length ?? 0,
 		removedOnSave: true,
 		supported: { list: true, remove: true, create: false, trust: false },
-	};
-}
-
-export function toHostSignatureInfo(signature: PackageSignatureInfo): HostSignatureInfo {
-	const { certificate } = signature;
-	return {
-		path: signature.signaturePath,
-		...(certificate?.subject ? { signer: certificate.subject } : {}),
-		...(certificate?.issuer ? { issuer: certificate.issuer } : {}),
-		...(certificate?.validFrom ? { validFrom: certificate.validFrom } : {}),
-		...(certificate?.validTo ? { validTo: certificate.validTo } : {}),
-		expired: signature.status === 'expired',
-		integrity: signature.integrity,
 	};
 }
 
@@ -75,7 +54,7 @@ export async function listPackageSignatures(
 	if (!content) {
 		return [];
 	}
-	return (await inspectSignaturesFromBuffer(content)).map(toHostSignatureInfo);
+	return (await inspectSignaturesFromBuffer(content)).signatures;
 }
 
 export interface SignatureActions {
@@ -108,7 +87,7 @@ export function buildSignatureActions(input: SignatureActionsInput): SignatureAc
 			if (denied) {
 				return denied;
 			}
-			if (!input.state.signed) {
+			if (!input.state.present) {
 				return buildingBlockFailure('no-signatures');
 			}
 			input.markDirty();

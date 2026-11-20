@@ -130,4 +130,29 @@ Prefer `handler.load(buffer, { password })` and `handler.saveEncrypted(...)` for
 
 ## Related security features
 
-Beyond encryption, the engine also parses the modify-password (write-protection) verifier into `data.modifyVerifier` (pass it back - or `null` to remove write protection - via the [save options](/core/saving)), detects XML digital signatures (`data.hasDigitalSignatures`), and strips signatures on save since an edited file's signatures would no longer validate. Node-only signing and PKI validation helpers live under the `pptx-viewer-core/signature-node` subpath. See [/guide/limitations](/guide/limitations) for what is and is not editable.
+Beyond encryption, the engine also parses the modify-password (write-protection) verifier into `data.modifyVerifier` (pass it back - or `null` to remove write protection - via the [save options](/core/saving)), verifies XML digital signatures on load (`data.signatures`, see [Digital signatures](#digital-signatures) below), and strips signatures on save since an edited file's signatures would no longer validate. Node-only signing and PKI validation helpers live under the `pptx-viewer-core/signature-node` subpath. See [/guide/limitations](/guide/limitations) for what is and is not editable.
+
+## Digital signatures
+
+A signed deck loads with `data.signatures`, a `SignatureSummary` (`{ state, signatures }`). The
+browser verifies every signature itself: the digests of the parts it covers, the signature value
+and the signer certificate's key. It has no trust store, so the best a valid signature reaches in a
+browser is `verified-untrusted`; Node's `pptx-viewer-core/signature-node` adds trust roots,
+revocation and time-stamps and can report `verified`. `data.hasDigitalSignatures` only says that
+signature parts are present.
+
+The viewers present a deck as signed only when its signatures verify. Every binding draws the same
+badge, panel rows and wording from `signatureStatusView` (`ooxml-ui/pptx`), translated in every
+display locale:
+
+| `state`              | Badge                       | Meaning                                                                                   |
+| -------------------- | --------------------------- | ----------------------------------------------------------------------------------------- |
+| `unsigned`           | none                        | The deck carries no signature.                                                            |
+| `verified`           | Signed                      | Every signature verifies and its signer is trusted (Node with trust roots).               |
+| `verified-untrusted` | Signed, signer not verified | The deck has not changed since it was signed; the signer is not confirmed.                |
+| `invalid`            | Invalid signature           | A signature does not verify or does not cover the content: it may have changed.           |
+| `unsupported`        | Signature not verified      | A signature uses something the verifier does not implement, so it is not shown as signed. |
+
+When a signed deck opens, every viewer shows a dismissible notice with the state's description and
+the note that saving removes the signatures (`signatureLoadNotice`, in the notice stack). Saving an
+edited deck removes its signatures, whatever their state; the viewers also warn on the first edit.

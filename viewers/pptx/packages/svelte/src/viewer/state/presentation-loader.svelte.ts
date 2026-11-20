@@ -41,6 +41,7 @@ import type {
 	PptxTheme,
 	PptxThemeOption,
 	PptxViewProperties,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 import { EncryptedFileError, PptxHandler } from 'pptx-viewer-core';
 
@@ -103,8 +104,12 @@ export class PresentationLoader {
 	/** Parsed `ppt/tags/*.xml` collections, editable in the inspector's Tags section. */
 	tagCollections = $state.raw<PptxTagCollection[]>([]);
 	embeddedFonts = $state.raw<PptxEmbeddedFont[]>([]);
-	hasDigitalSignatures = $state(false);
-	digitalSignatureCount = $state(0);
+	/**
+	 * The deck's verified signature state (`PptxData.signatures`), present when the package
+	 * carries signature parts. Every signature surface derives from it through
+	 * `signatureStatusView`; a deck reads as signed only when its signatures verify.
+	 */
+	signatures = $state.raw<SignatureSummary | undefined>(undefined);
 	isPasswordProtected = $state(false);
 	/** Whether the loaded package contains a VBA project. */
 	hasMacros = $state(false);
@@ -312,8 +317,7 @@ export class PresentationLoader {
 			// glyph that needs it; the cache subscription repaints then. Releases
 			// the previous deck's fonts.
 			this.#outlineFonts.set(parsed.embeddedFonts ?? []);
-			this.hasDigitalSignatures = parsed.hasDigitalSignatures ?? false;
-			this.digitalSignatureCount = parsed.digitalSignatureCount ?? 0;
+			this.signatures = parsed.signatures;
 			this.isPasswordProtected = parsed.isPasswordProtected ?? false;
 			this.hasMacros = parsed.hasMacros ?? false;
 			// 9525 EMU per pixel (matches React/Vue's useLoadContent conversion).
