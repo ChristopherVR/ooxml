@@ -24,6 +24,7 @@ export type {
 	InlineImage,
 	PicturePlacement,
 	PictureWatermarkSpec,
+	TextBoxContent,
 	WatermarkSpec,
 } from './inline-model';
 import type { Note, SectionProperties } from './section-model';

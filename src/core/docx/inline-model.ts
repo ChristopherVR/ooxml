@@ -4,6 +4,19 @@ import type { DocxChart } from './chart';
 import type { DocxDiagram } from './diagram';
 import type { StRelFromH, StRelFromV } from './generated/wml-simple-types';
 import type { ShapeSpec } from './shape-model';
+import type { DrawingBodyProperties } from '../drawingml/text-model';
+import type { Block } from './model';
+
+/**
+ * A text box's `w:txbxContent`, read by the same block parser as the document body, with the
+ * anchor and insets of its `wps:bodyPr`. Display only: the box XML is preserved on save.
+ */
+export interface TextBoxContent extends Pick<
+	DrawingBodyProperties,
+	'anchor' | 'insetLeftEmu' | 'insetTopEmu' | 'insetRightEmu' | 'insetBottomEmu'
+> {
+	blocks: Block[];
+}
 
 /** An inline drawing (`w:drawing` or legacy `w:pict`) modeled at run granularity. */
 export interface InlineImage {
@@ -40,6 +53,8 @@ export interface InlineImage {
 	textBoxBorder?: boolean;
 	/** For a drawing shape (`unsupported: "Shape"`): its preset geometry, fill, outline and text. */
 	shape?: ShapeSpec;
+	/** For a shape or text box with a `wps:txbx`: its content as paragraphs and tables. */
+	textBoxContent?: TextBoxContent;
 	/** For SmartArt (`unsupported: "SmartArt"`): its parts, extent and cached drawing; the markup and parts are preserved on save. */
 	diagram?: DocxDiagram;
 	/** For a chart (`unsupported: "Chart"`): its part and the parsed `c:chartSpace`; the markup and parts are preserved on save. */

@@ -15,8 +15,7 @@ import {
 } from '../index';
 import { floatsOf } from './adapt-floats';
 import { equationObject } from './equation-object';
-import { shapeSvg } from '../shape-svg';
-import type { ShapeSpec } from '../shape-model';
+import { shapePaint } from './shape-paint';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { pictureBulletSizePt } from '../numbering-picture';
@@ -76,17 +75,6 @@ function isDisplayEquationParagraph(paragraph: Paragraph): boolean {
 		paragraph.runs.some((run) => run.equation?.display) &&
 		paragraph.runs.every((run) => run.equation?.display || (!run.text && !run.image))
 	);
-}
-
-/** A drawing shape painted as SVG (the engine draws it like a chart); none when it cannot be drawn. */
-function shapeChart(
-	shape: ShapeSpec,
-	widthPx: number,
-	heightPx: number,
-	theme: DocumentModel['theme'],
-): { chart?: { svg: string; label: string; shape: true } } {
-	const svg = shapeSvg(shape, widthPx, heightPx, theme);
-	return svg ? { chart: { svg, label: 'Shape', shape: true } } : {};
 }
 
 function sectionBreak(
@@ -221,7 +209,7 @@ export function adaptDocumentModel(
 										),
 									}
 								: {}),
-							...(image.shape ? shapeChart(image.shape, image.widthPx, image.heightPx, theme) : {}),
+							...(image.shape ? shapePaint(image, theme) : {}),
 						}
 					: undefined);
 		return {

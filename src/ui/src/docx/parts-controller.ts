@@ -225,7 +225,10 @@ export class PartsController {
 			contextModel: () => this.host.model(),
 			reviewDisplayMode: this.reviewMode,
 			nodeViews: {
-				image: imageNodeView(this.host.images(), { theme: () => this.host.model().theme }),
+				image: imageNodeView(this.host.images(), {
+					theme: () => this.host.model().theme,
+					model: () => this.host.model(),
+				}),
 			},
 			decorate: this.decorate,
 			plugins: [

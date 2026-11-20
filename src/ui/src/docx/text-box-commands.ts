@@ -43,6 +43,8 @@ export function selectedTextBox(
 const attrsFor = (settings: TextBoxSettings) => ({
 	unsupported: 'Text box',
 	textBoxText: JSON.stringify(settings.lines),
+	// The edited lines replace the paragraphs read from the file.
+	textBoxContent: null,
 	textBoxEditable: true,
 	textBoxBorder: settings.border,
 	widthPx: settings.widthPx,

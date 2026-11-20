@@ -65,6 +65,7 @@ function replaceTextBoxes(view: EditorView, entries: readonly Entry[]): number {
 		transaction = transaction.setNodeMarkup(pos, undefined, {
 			...node.attrs,
 			textBoxText: JSON.stringify(lines),
+			textBoxContent: null,
 		});
 		count += own.length;
 	}

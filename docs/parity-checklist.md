@@ -535,8 +535,20 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and the default table style. `gridBefore`/`gridAfter`, `noWrap`, cell spacing, negative
       indents and preferred widths on merged cells are not measured.
 - [ ] **P1** Merged cells are read-only on Print Layout pages.
-- [ ] **P1** Floating objects inside table cells, floating charts and floating text boxes are not
-      positioned on pages; linked text boxes have no code.
+- [ ] **P1** Floating objects inside table cells, floating charts and text boxes written with
+      `txBox="1"` are not positioned on pages; linked text boxes have no code. A shape holding a
+      `wps:txbx` (a `rect` text box, a line or connector) is drawn with its outline and its
+      paragraphs in the body and in headers and footers (#304, `docx/text-box-content.test.ts`,
+      `src/ui/src/docx/text-box-content.test.ts`).
+- [ ] **P2** Text box paragraphs are drawn by the story preview renderer (`story-render.ts`), not
+      the page layout engine: their lines break by CSS, overflowing text is clipped, and vertical
+      text, autofit and columns in `wps:bodyPr` are ignored. Formatted text inside a shape (bold,
+      sizes, borders, alignment other than centred) is read-only, so editing the shape keeps it.
+      The text colour where runs set none is the shape's own (white on dark fills), not resolved
+      from the `wps:style` `fontRef`.
+- [ ] **P2** Draft view (and the continuous editing surface) lays a page-anchored shape out in the
+      line at its full size, so a tall letterhead text box makes a header or footer preview as tall
+      as the box; Word's Draft view leaves such shapes out of the header.
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping; over-long Latin
       words overflow instead of breaking by character.

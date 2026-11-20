@@ -89,8 +89,11 @@ export function collectDocxWebfontRuns(model: DocumentModel): WebfontRun[] {
 			for (const run of symbolSegments(source)) {
 				const formatting = resolveRunFormatting(run, context);
 				if (formatting.vanish) continue;
+				const content = run.image?.textBoxContent;
+				// A text box's own paragraphs bring their fonts; a box without them shows its lines.
+				if (content) blockRuns(content.blocks);
 				const textBox = run.image?.textBoxText;
-				if (textBox) emit(textBox.join('\n'), {}, DEFAULT_FONT_FAMILY);
+				if (textBox && !content) emit(textBox.join('\n'), {}, DEFAULT_FONT_FAMILY);
 				if (!run.text || run.image) continue;
 				// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
 				const family = (symbolOnly(run) && run.symbol?.font) || familyOf(formatting);

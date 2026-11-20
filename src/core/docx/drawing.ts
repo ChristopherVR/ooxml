@@ -4,7 +4,8 @@ import { imageContentType as guessContentType } from '../drawingml/image-content
 // Parses w:drawing (wp:inline / wp:anchor pictures) and legacy w:pict (VML) into InlineImage.
 // Adapted layout/EMU-conversion approach from pptx-viewer-new packages/core/src/core (DrawingML
 // picture parsing); reimplemented here against @xmldom/xmldom instead of that package's DOM layer.
-import type { InlineImage, PicturePlacement } from './model';
+import type { Block, InlineImage, PicturePlacement, TextBoxContent } from './model';
+import { parseDrawingBodyProperties } from '../drawingml/read-text-body';
 import {
 	contentTypeForPart,
 	resolveInternalTarget,
@@ -15,7 +16,7 @@ import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
-import { parseShape } from './shape-parse';
+import { parseShape, shapeElement } from './shape-parse';
 import { getR, isElement, type XmlElement } from './xml';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
@@ -36,6 +37,8 @@ export interface DrawingContext {
 	rels: ReadonlyMap<string, Relationship>;
 	contentTypes: ContentTypes;
 	mediaParts: ReadonlySet<string>;
+	/** Parses a story container (a text box's `w:txbxContent`) with the body's block parser. */
+	parseBlocks?: (container: XmlElement, idPrefix: string) => Block[];
 }
 
 function firstNS(
@@ -110,6 +113,31 @@ function textBoxParagraphs(graphicData: XmlElement | undefined): string[] | unde
 	visit(content);
 	return paragraphs;
 }
+/**
+ * A shape's `wps:txbx` content as real paragraphs and tables, whatever its preset or `txBox` flag,
+ * with the anchor and insets of its `wps:bodyPr`.
+ */
+function textBoxContent(
+	graphicData: XmlElement | undefined,
+	context: DrawingContext,
+	idPrefix: string,
+): TextBoxContent | undefined {
+	const wsp = shapeElement(graphicData);
+	const content = firstNS(firstNS(wsp, WPS_NS, 'txbx'), W_NS, 'txbxContent');
+	const blocks = content && context.parseBlocks?.(content, idPrefix);
+	if (!blocks?.length) return undefined;
+	const body = parseDrawingBodyProperties(firstNS(wsp, WPS_NS, 'bodyPr'));
+	return {
+		blocks,
+		...definedProps({
+			anchor: body?.anchor,
+			insetLeftEmu: body?.insetLeftEmu,
+			insetTopEmu: body?.insetTopEmu,
+			insetRightEmu: body?.insetRightEmu,
+			insetBottomEmu: body?.insetBottomEmu,
+		}),
+	};
+}
 function unsupportedKindLabel(uri: string): string {
 	if (uri.includes('wordprocessingShape')) return 'Shape';
 	if (uri.includes('/chart')) return 'Chart';
@@ -160,6 +188,9 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	const isShapeGraphic = uri.includes('wordprocessingShape');
 	const shape = isShapeGraphic ? parseShape(graphicData) : undefined;
 	const textBox = isShapeGraphic && !shape ? textBoxParagraphs(graphicData) : undefined;
+	const richText = isShapeGraphic
+		? textBoxContent(graphicData, context, `txbx${docPr?.getAttribute('id') ?? ''}-`)
+		: undefined;
 	return {
 		relId: relId ?? '',
 		partName: '',
@@ -176,6 +207,8 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		...(textBox && isSimpleTextBox(graphicData, Boolean(anchored))
 			? { textBoxEditable: true, textBoxBorder: textBoxHasBorder(graphicData) }
 			: {}),
+		// Last, as the editor's run adapter writes it: an unchanged drawing is compared by JSON.
+		...(richText ? { textBoxContent: richText } : {}),
 	};
 }
 

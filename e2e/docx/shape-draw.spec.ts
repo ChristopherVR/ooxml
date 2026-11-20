@@ -81,8 +81,13 @@ test('a shape authored in Word is drawn and keeps its markup when text is typed'
 	const shapes = editor.locator('.ProseMirror .dve-shape');
 	await expect(shapes).toHaveCount(4);
 	await expect(editor.locator('.ProseMirror [data-shape-preset="rightArrow"]')).toHaveCount(1);
-	await expect(editor.locator('.ProseMirror [data-shape-preset="rect"] svg text')).toHaveText(
-		'Red box',
+	// The text box's own paragraph is drawn over the red rectangle, white as Word draws it.
+	const redBox = editor.locator('.ProseMirror [data-shape-preset="rect"] .dve-text-box-content');
+	await expect(redBox).toHaveText('Red box');
+	await expect(redBox).toHaveCSS('color', 'rgb(255, 255, 255)');
+	await expect(editor.locator('.ProseMirror [data-shape-preset="rect"] svg path')).toHaveAttribute(
+		'fill',
+		/^#FF0000$/i,
 	);
 	const first = editor.locator('.dve-paper > .ProseMirror > p').first();
 	await clickInEditor(first);
@@ -91,4 +96,6 @@ test('a shape authored in Word is drawn and keeps its markup when text is typed'
 	const { xml } = await savedDocument(page, 'ui-shape-word-edited.docx');
 	expect(xml.match(/prst="/g)?.length).toBeGreaterThanOrEqual(4);
 	expect(xml).toContain('typed');
+	// The text box keeps its paragraph markup.
+	expect(xml).toMatch(/<w:txbxContent>(?:(?!<\/w:txbxContent>).)*<w:t>Red box<\/w:t>/s);
 });

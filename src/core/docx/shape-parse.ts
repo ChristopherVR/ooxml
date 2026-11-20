@@ -37,21 +37,36 @@ export function shapeParagraphs(wsp: XmlElement | undefined): string[] | undefin
 	);
 }
 
-/** Paragraphs of plain runs only (what the editor can write back without losing anything). */
+/**
+ * Paragraphs of plain runs only, as this editor writes them: centred paragraphs of runs that set at
+ * most a colour. Anything else (bold, sizes, borders, alignment) would be lost when the text is
+ * rewritten, so such text stays read-only and its XML is kept.
+ */
 function textIsPlain(wsp: XmlElement): boolean {
 	const content = child(child(wsp, WPS_NS, 'txbx'), W_NS, 'txbxContent');
 	if (!content) return true;
-	const only = (node: XmlElement, allowed: string[]) =>
+	const only = (node: XmlElement | undefined, allowed: string[]) =>
+		!node ||
 		elementsOf(node).every(
 			(item) => item.namespaceURI === W_NS && allowed.includes(item.localName),
 		);
+	const centred = (props: XmlElement | undefined) => {
+		const items = props ? elementsOf(props) : [];
+		return (
+			items.length === 1 &&
+			items[0]!.namespaceURI === W_NS &&
+			items[0]!.localName === 'jc' &&
+			items[0]!.getAttributeNS(W_NS, 'val') === 'center'
+		);
+	};
 	return (
 		only(content, ['p']) &&
 		Array.from(content.getElementsByTagNameNS(W_NS, 'p')).every(
 			(paragraph) =>
 				only(paragraph, ['pPr', 'r']) &&
-				Array.from(paragraph.getElementsByTagNameNS(W_NS, 'r')).every((run) =>
-					only(run, ['rPr', 't']),
+				centred(child(paragraph, W_NS, 'pPr')) &&
+				Array.from(paragraph.getElementsByTagNameNS(W_NS, 'r')).every(
+					(run) => only(run, ['rPr', 't']) && only(child(run, W_NS, 'rPr'), ['color']),
 				),
 		)
 	);

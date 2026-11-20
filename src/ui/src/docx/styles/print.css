@@ -102,6 +102,12 @@
 	width: 100%;
 	height: 100%;
 }
+/* A shape's SVG is drawn at the shape's size, at least 1px: a vertical or horizontal line has a
+ * zero extent, and stretching the SVG to its box would leave no room to draw it. */
+.dve-print-chart.dve-print-shape > svg {
+	width: auto;
+	height: auto;
+}
 .dve-print-chart-frame {
 	display: grid;
 	place-items: center;

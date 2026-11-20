@@ -6,7 +6,7 @@ import { type EditorView } from 'prosemirror-view';
 import { DocxEditorElement } from './index';
 import './index';
 import { withBlankHeaderFooter } from './header-footer-commands';
-import { renderBlocks } from './header-footer-view';
+import { renderBlocks } from './story-render';
 
 const ns = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const paragraph = (id: string): Paragraph => ({

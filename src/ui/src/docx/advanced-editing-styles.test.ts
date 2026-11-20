@@ -5,7 +5,7 @@ import { EditorView } from 'prosemirror-view';
 import { describe, expect, it } from 'vitest';
 import { modelToDoc } from './model-adapter';
 import { runFormattingCss, runStylesPlugin } from './run-styles';
-import { renderBlocks } from './header-footer-view';
+import { renderBlocks } from './story-render';
 
 describe('advanced editing styles', () => {
 	it('keeps superscript/subscript smaller when resolving a font size and renders inherited script', () => {

@@ -182,6 +182,7 @@
 	"docxChartDataSheet",
 	"docxChartExDataSheet",
 	"docxChartPaint",
+	"drawingShapeSvg",
 	"drawingWrapOf",
 	"editDocxChart",
 	"editDocxChartEx",

@@ -1,7 +1,10 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import type { DrawingFill } from 'ooxml-core/drawingml';
-// Print Layout pictures: package media through `PictureUrl`, charts painted by the core
-// (`LayoutObject.chart`), and a placeholder box for anything that cannot be shown.
+import type { DocumentModel, TextBoxContent } from 'ooxml-core/docx';
+import { textBoxContentElement } from './story-render';
+// Print Layout pictures: package media through `PictureUrl`, charts and shapes painted by the core
+// (`LayoutObject.chart`) with a shape's text box paragraphs over it, and a placeholder box for
+// anything that cannot be shown.
 
 /** Resolves a package picture part to a displayable URL; undefined draws a placeholder box. */
 export type PictureUrl = (partName: string, contentType: string) => string | undefined;
@@ -68,10 +71,13 @@ export function pictureElement(
 		contentType: string;
 		widthPx: number;
 		heightPx: number;
-		chart?: { svg?: string; label: string; shape?: true };
+		chart?: { svg?: string; label: string; shape?: true; textColor?: string };
+		textBox?: TextBoxContent;
 		noteSeparator?: 'separator' | 'continuationSeparator';
 	},
 	pictureUrl: PictureUrl | undefined,
+	/** The document, whose styles a text box's paragraphs are drawn with. */
+	model?: DocumentModel,
 ): HTMLElement {
 	if (object.noteSeparator) {
 		const rule = document.createElement('span');
@@ -90,6 +96,8 @@ export function pictureElement(
 		element.style.position = 'absolute';
 		element.style.width = `${object.widthPx}px`;
 		element.style.height = `${object.heightPx}px`;
+		if (object.chart.svg && object.chart.shape && object.textBox)
+			element.append(textBoxContentElement(object.textBox, model, object.chart.textColor));
 		return element;
 	}
 	const url = object.partName ? pictureUrl?.(object.partName, object.contentType) : undefined;

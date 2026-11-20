@@ -1,6 +1,6 @@
 import type { DocumentModel, Note } from 'ooxml-core/docx';
 import { formatNoteNumber, numberNotesInOrder } from 'ooxml-core/docx';
-import { renderBlocks } from './header-footer-view';
+import { renderBlocks } from './story-render';
 import { translateUiText } from './localization';
 
 function noteList(

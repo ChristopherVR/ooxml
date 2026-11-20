@@ -63,6 +63,8 @@ interface Change {
 	heightPx?: number;
 	anchored?: boolean;
 	placement?: PicturePlacement | null;
+	/** New text replaces the paragraphs read from the file, which are drawn over the shape. */
+	text?: true;
 }
 
 function apply(view: EditorView, selected: SelectedShape, change: Change): boolean {
@@ -81,6 +83,7 @@ function apply(view: EditorView, selected: SelectedShape, change: Change): boole
 		...(change.placement !== undefined
 			? { placement: change.placement ? JSON.stringify(change.placement) : null }
 			: {}),
+		...(change.text ? { textBoxContent: null } : {}),
 	};
 	const tr = view.state.tr.setNodeMarkup(selected.pos, undefined, attrs);
 	view.dispatch(closeHistory(tr.setSelection(NodeSelection.create(tr.doc, selected.pos))));
@@ -127,6 +130,7 @@ export function setShapeText(view: EditorView, lines: string[]): boolean {
 	const { text: _old, ...rest } = selected.spec;
 	return apply(view, selected, {
 		spec: lines.some(Boolean) ? { ...rest, text: lines } : rest,
+		text: true,
 	});
 }
 

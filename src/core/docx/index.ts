@@ -218,7 +218,13 @@ export {
 export { parseContentControl } from './content-control';
 export * from './shape-model';
 export * from './shape-palette';
-export { shapeSvg, shapeAppearance, shapeColorCss, shapeTextColor } from './shape-svg';
+export {
+	drawingShapeSvg,
+	shapeSvg,
+	shapeAppearance,
+	shapeColorCss,
+	shapeTextColor,
+} from './shape-svg';
 
 export * from './chart-ex-edit';
 export * from './clipboard/index';
