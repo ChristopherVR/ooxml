@@ -5,6 +5,9 @@
 **Open, edit, validate and save Word, Excel, PowerPoint and Visio files in TypeScript, in the browser or on a server.**
 One XML model, one library, ready-made editors for every major framework, and no server in the middle.
 
+**OOXML 2.0 is out.** Every package, one coordinated major release: hardened against hostile files, faster on large documents, keyboard and screen-reader ready, and at home in Safari and on iPad.
+[What's new](#whats-new-in-20) &nbsp;&middot;&nbsp; [Release notes](https://github.com/ChristopherVR/ooxml/releases) &nbsp;&middot;&nbsp; [Upgrade guide](../docs/migration-2.0.md)
+
 [![CI](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml/badge.svg)](https://github.com/ChristopherVR/ooxml/actions/workflows/ci.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/ChristopherVR/ooxml/badge)](https://scorecard.dev/viewer/?uri=github.com/ChristopherVR/ooxml)
 [![OpenSSF Baseline](https://www.bestpractices.dev/projects/15347/baseline)](https://www.bestpractices.dev/projects/15347)
@@ -18,6 +21,7 @@ One XML model, one library, ready-made editors for every major framework, and no
 [**What is here**](#what-is-in-this-repository) &nbsp;&middot;&nbsp;
 [**Development**](#development) &nbsp;&middot;&nbsp;
 [**Roadmap**](../docs/roadmap.md) &nbsp;&middot;&nbsp;
+[**Release notes**](https://github.com/ChristopherVR/ooxml/releases) &nbsp;&middot;&nbsp;
 [**Upgrading to 2.0**](../docs/migration-2.0.md) &nbsp;&middot;&nbsp;
 [**Discussions**](https://github.com/ChristopherVR/ooxml/discussions) &nbsp;&middot;&nbsp;
 [**Discord**](https://discord.gg/haE8xpMET9) &nbsp;&middot;&nbsp;
@@ -63,6 +67,40 @@ One XML model, one library, ready-made editors for every major framework, and no
 <sub>Select a product to open its README.</sub>
 
 </div>
+
+## What's new in 2.0
+
+2.0 is the release where every package was reviewed, end to end, for security, speed and accessibility, and shipped together. The highlights:
+
+**Built to open files you did not write.**
+
+- **Hostile files fail fast.** Archive sizes, XML depth and node counts, formula work and memory are bounded in every format, so a small crafted file is refused in milliseconds instead of freezing a tab or exhausting a server. Visio sizes its memory budget from the host's own heap.
+- **Linked content waits for you, as in PowerPoint.** Decks no longer fetch linked pictures, media or sounds when they open. A security bar offers **Enable Content**, each person in a shared session decides for themselves, and nothing reloads.
+- **Signatures mean something.** Word, Excel, PowerPoint and Visio show whether a signature actually verifies (verified, untrusted, invalid or unsupported), checked the same way in the browser and in Node. Any change to signed content reads as invalid.
+- **Collaboration you can trust.** Every update a peer sends is validated before it is applied, chat rooms and calls admit only their members, and the Teams reference server refuses misbehaving clients.
+- **Every fix stays fixed.** A security regression corpus runs each fixed defect in its own sandbox, with time, memory and network limits, on every change.
+
+**Faster where it hurts.**
+
+- Word saves and Excel recalculation scale with the edit, not the document.
+- Excel gives each formula its own budget, so one slow formula can no longer turn the rest of a sheet into errors, and a runaway one stops before it freezes the page.
+- PowerPoint SmartArt and chart decks load in a fraction of the time, and Visio opens pages of 10,000 shapes.
+- Byte budgets for every published entry point and suite screen fail CI when a download grows unexpectedly.
+
+**Works the way Office does, for everyone.**
+
+- F6 moves between regions, Tab and Escape behave in editors and menus, and dialogs keep focus.
+- Every control's accessible name contains the text it shows, targets meet the 24 px minimum, and contrast and forced colours are fixed across all four products.
+- Accessibility gates run in a real browser in CI, and a gap that closes or reopens fails the build.
+- PowerPoint exports, copies, prints, records video and answers touch in Safari and on iPad.
+
+**Better together.**
+
+- People who join a shared PowerPoint session now see the sharer's pictures and video.
+- Duplicated or pasted charts, masters and layouts get their own parts, so saved decks open in PowerPoint.
+- Closing an editor frees its memory, and Excel calculates the way Excel does, down to `0.1+0.2`, wildcards and blank criteria.
+
+**Upgrading.** Move every OOXML package you use to its new major on the same day (Node.js 22.3 or newer). Breaking changes are listed first in each package's [release notes](https://github.com/ChristopherVR/ooxml/releases), and the [migration guide](../docs/migration-2.0.md) shows the before and after for every one.
 
 ## Why ooxml?
 
