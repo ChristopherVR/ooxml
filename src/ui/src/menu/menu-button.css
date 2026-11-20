@@ -44,9 +44,18 @@ button {
 	flex-direction: column;
 	padding: var(--office-space-1) var(--office-space-1-5) 0;
 }
+/* WCAG 2.5.8: the stacked caret is a 24px target. Its face keeps the icon height, as in Office;
+   the rest is a clear border that hangs below the control, so nothing moves. */
 :host([variant='stacked']) .caret {
-	min-height: var(--office-icon-size-md);
+	--_hang: max(0px, calc(24px - var(--office-icon-size-md)));
+	min-height: calc(var(--office-icon-size-md) + var(--_hang));
+	margin-bottom: calc(-1 * var(--_hang));
 	padding: 0 var(--office-space-1-5) var(--office-space-0);
+	border-bottom: var(--_hang) solid transparent;
+	background-clip: padding-box;
+}
+:host([variant='stacked']) .caret:is(:hover, [aria-expanded='true']) {
+	background-clip: padding-box;
 }
 :host([variant='stacked']:not([command])) .main {
 	padding-bottom: 0;

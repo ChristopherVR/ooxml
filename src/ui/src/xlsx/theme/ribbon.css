@@ -197,11 +197,25 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 14px;
-	min-width: 14px;
 	padding: 0;
 	border-top-left-radius: 0;
 	border-bottom-left-radius: 0;
+}
+/* WCAG 2.5.8: the caret is a 24px target. Its face stays 14px wide, as in Excel; the 10px after
+   it is a clear right border no state paints, so the hit area grows without the button looking
+   any different. */
+.ribbon-group .ribbon-split:not(.ribbon-split-large) > .ribbon-caret {
+	width: 24px;
+	min-width: 24px;
+	border-right: 10px solid transparent;
+	background-clip: padding-box;
+}
+.ribbon-group
+	.ribbon-split:not(.ribbon-split-large)
+	> .ribbon-caret:is(:hover, :active, [aria-pressed='true'], [aria-expanded='true']) {
+	border-right-color: transparent;
+	background-clip: padding-box;
+	box-shadow: inset -1px 0 var(--line);
 }
 .ribbon-group .ribbon-split-large > button:first-child {
 	height: 46px;

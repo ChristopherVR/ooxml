@@ -198,9 +198,9 @@
 	min-width: 28px;
 	padding-inline: 0;
 }
-/* Split-button carets stay narrow so the pair reads as one control. */
+/* Split-button carets keep their 24px target (ribbon-buttons.css), not the row minimum. */
 .ribbon-group[data-label='Font'] .ribbon-row .ribbon-split .ribbon-caret {
-	min-width: 14px;
+	min-width: 24px;
 }
 .ribbon-group select.spacing-select {
 	width: 150px;
