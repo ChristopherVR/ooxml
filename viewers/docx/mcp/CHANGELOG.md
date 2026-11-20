@@ -1,11 +1,36 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+For MCP clients and hosts, `docx-viewer-mcp` (the `docx-tools` command, `createServer` and `registerTools`) keeps its six Word tools and their schemas. What changes is how file paths are checked: every path is judged on its text before any filesystem call, which refuses UNC and device paths everywhere and the names Windows would reinterpret. The documents the tools open also go through the core's hardened and faster Word loader and writer. Node.js 22.3 is now required. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each change.
+
+### Breaking changes
+
+- On Windows, the file tools refuse path segments that contain `:`, `<`, `>`, `"`, `|`, `?` or `*`, that end in a dot or a space, or that are device names such as `NUL` or `COM1`. They also refuse `/x`, which is rooted on the current drive, and `C:x`, which is relative to a drive's current folder. On every platform they refuse UNC and device paths, and paths starting with a backslash. Use a path relative to the root, or a full absolute path inside it with its drive and a separator after the colon, and rename files whose names Windows would reinterpret. See [File tools refuse paths Windows would reinterpret](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#file-tools-refuse-paths-windows-would-reinterpret).
+- Node.js 22.3 or newer is required; the package declares `"engines": { "node": ">=22.3" }` (it was `>=22`). See [Run Node.js 22.3 or newer](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md#run-nodejs-223-or-newer).
+
+### Security
+
+- Dangerous paths are refused on their text before any filesystem call, so a UNC path no longer reaches a remote host, refused paths all return one error, and an alternate data stream name can no longer create a file past the extension check.
+- Word documents the tools read are opened through the guarded zip reader, so a small file can no longer inflate without limit, and raw XML scans that took quadratic time on empty or unclosed elements are now linear.
+- The package is published by a release pipeline in which third-party code cannot push, tag or publish, with npm provenance, and the signed tarballs on each GitHub release are checked against the integrity the npm registry records.
+
+### Changed
+
+- An absolute path may reach the root through a link, a Windows short name or the real path of a linked root.
+- On POSIX systems, names such as `a: b.docx`, `aux/`, `why?.docx` and `a\b.docx` are ordinary files, and a backslash inside a name is not a separator there.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): `docxTools` and `registerAutomationTools`, which this package registers, and the Word loading and saving behind them.
+- [`ooxml-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/mcp/CHANGELOG.md): the combined Office server, which registers these tools with the other products' tools.
+- [`docx-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/core/CHANGELOG.md): the Word model, for code that edits the same documents directly.
+- [Word viewers 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/CHANGELOG.md): the Word editors for React, Vue, Angular, Svelte, Solid and plain JavaScript, which open the documents these tools write.
 
 ## [1.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-viewer-mcp@1.1.0) - 2026-11-04
 

@@ -1,9 +1,75 @@
 # Changelog
 
-All notable changes to this viewer's packages, newest first. Each dated section names the
-packages released that day and merges their entries; the full history of each package is in its
-own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
-sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
+All notable changes to this viewer's packages, newest first. Each section names the packages
+released that day; the full history of each package is in its own `CHANGELOG.md`
+(`packages/<name>/`, `mcp/`, `server/`).
+
+## Unreleased
+
+<!-- release-notes: 2.0 -->
+
+_Releases: docx-core@2.0.0, docx-react-viewer@2.0.0, docx-vue-viewer@2.0.0, docx-angular-viewer@2.0.0, docx-svelte-viewer@2.0.0, docx-solid-viewer@2.0.0, docx-vanilla-viewer@2.0.0, docx-viewer-mcp@2.0.0_
+
+Every Word package moves to 2.0.0 on the same day, with `ooxml-core` and `ooxml-ui` 2.0.0. Word documents are safer to open from untrusted sources and faster to save, a signed document shows whether its signature actually verifies, text boxes and header drawings are drawn as Word draws them, and keyboard, screen reader and forced-colours use are checked in a real browser before every release. The framework bindings keep their props, events and handles. Upgrade every OOXML package together; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each breaking change.
+
+### Breaking changes
+
+- Every package requires Node.js 22.3 or newer.
+- The editors take dark mode from `--office-color-scheme` or `data-office-theme="dark"`, not from the page's CSS `color-scheme`.
+- An editor removed from the page leaves its collaboration room, and an update over the collaboration budget is refused and stops sharing.
+- `--dve-input` defaults to the new `--office-control-border` token.
+- Word style catalogs are values, and the signature message is no longer in `model.warnings` (read `model.signatures`).
+- `docx-viewer-mcp`: file tools refuse paths Windows would reinterpret, and UNC and device paths everywhere.
+
+### Security
+
+- Documents open through the guarded zip reader under limits a host can set, raw XML scans run in linear time, and chart point counts no longer decide memory use.
+- A document shows as signed only when its signature verifies, and the check is bounded.
+- SVG pictures are shown from `data:` URLs, so opening one in its own tab cannot run script in the application's origin.
+- Packages are released by a pipeline in which third-party code cannot push, tag or publish, with npm provenance.
+
+### Added
+
+- `customization.ribbon.hiddenTabs` hides native ribbon tabs, the File tab and its backstage included.
+- `<docx-editor>` `getTextSelection()` and `focusText(range)` restore the caret after a reload.
+- `loadDocument` and `loadDocx` take `limits` (`DocxLoadLimits`, `DEFAULT_DOCX_LOAD_LIMITS`), and `model.signatures` carries the verified signature state.
+- `themeColors.primaryInk` (`--dve-primary-ink`) sets the primary colour used as text.
+
+### Changed
+
+- Signed documents show their verified state in the status bar, a notice under the ribbon and File > Info.
+- `txBox="1"` text boxes are shapes with a Shape Format tab, and Draft view previews leave floating drawings out, as Word does.
+- Charts keep the points their file declares, however large, and stay editable.
+- `docx-solid-viewer` renders during server rendering and hydrates onto the server's element.
+
+### Fixed
+
+- Text boxes, lines and connectors in headers, footers and the body draw with their paragraphs, outlines and the theme's text colours in every view.
+- Chart saves write only the workbook cells an edit changed.
+- Removed editors are freed from memory, dialogs keep and return focus, and hyperlinks use the document link colour.
+
+### Performance
+
+- Saving a 20,000-block document after one edit takes about 2.5 s instead of about 17 s, with the same bytes as before.
+- Loading scans `document.xml` once, copies the model once and resolves style inheritance once per catalog.
+- SmartArt definitions load when a SmartArt is selected, not when the editor opens.
+
+### Accessibility
+
+- Keyboard access, axe-core, screen reader output, contrast, reflow and the accessibility of saved files are release gates.
+- Form controls reach 3:1, focus rings are visible, the Font and Size boxes expose their state, and ribbon commands have full accessible names in every locale.
+
+### Package changelogs
+
+- [`docx-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/core/CHANGELOG.md)
+- [`docx-react-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/react/CHANGELOG.md)
+- [`docx-vue-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/vue/CHANGELOG.md)
+- [`docx-angular-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/angular/CHANGELOG.md)
+- [`docx-svelte-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/svelte/CHANGELOG.md)
+- [`docx-solid-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/solid/CHANGELOG.md)
+- [`docx-vanilla-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/packages/vanilla/CHANGELOG.md)
+- [`docx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/mcp/CHANGELOG.md)
+- Released with them: [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md) and [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md)
 
 ## 2026-11-13
 
