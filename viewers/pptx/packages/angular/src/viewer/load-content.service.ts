@@ -37,7 +37,6 @@ import type {
 } from 'ooxml-ui/pptx';
 import type {
 	MediaPptxElement,
-	ParsedSignature,
 	PptxAppProperties,
 	PptxCoreProperties,
 	PptxCustomProperty,
@@ -59,12 +58,9 @@ import type {
 	PptxThemeOption,
 	PptxViewProperties,
 	ParsedTableStyleMap,
+	SignatureSummary,
 } from 'pptx-viewer-core';
-import {
-	EncryptedFileError,
-	parseSignaturesFromBuffer as parseCoreSignatures,
-	PptxHandler,
-} from 'pptx-viewer-core';
+import { EncryptedFileError, PptxHandler } from 'pptx-viewer-core';
 
 import { GOOGLE_WEBFONTS_LINK_ID } from './google-webfonts.service';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -246,13 +242,11 @@ export class LoadContentService {
 	/** Header/footer settings (footer/header/date-time text + format) for field substitution. */
 	readonly headerFooter = signal<PptxHeaderFooter | undefined>(undefined);
 	readonly firstSlideNumber = signal<number | undefined>(undefined);
-	/** Whether the presentation contains digital signatures. */
-	/** Parsed digital signatures (empty when unsigned or parsing fails). */
-	readonly signatures = signal<ParsedSignature[]>([]);
-
-	readonly hasDigitalSignatures = signal(false);
-	/** Number of digital signatures found. */
-	readonly digitalSignatureCount = signal(0);
+	/**
+	 * The loaded deck's digital signatures with their verified state; absent for an unsigned
+	 * deck. Every signature surface derives its wording from it through `signatureStatusView`.
+	 */
+	readonly signatureSummary = signal<SignatureSummary | undefined>(undefined);
 	/** True while a load is in flight. */
 	readonly loading = signal(false);
 	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
@@ -455,10 +449,6 @@ export class LoadContentService {
 						`Loading may use significant memory.`,
 				);
 			}
-
-			// Keep an independent copy for signature parsing; the handler may
-			// detach/consume the ArrayBuffer during load.
-			const sigBuffer = (buffer as ArrayBuffer).slice(0);
 
 			const previousHandler = this.handler;
 			// Trust Center > "Allow external content": gates linked (non-embedded)
@@ -694,19 +684,7 @@ export class LoadContentService {
 			this.modernCommentAuthors.set(parsed.modernCommentAuthors ?? []);
 			this.headerFooter.set(parsed.headerFooter);
 			this.firstSlideNumber.set(parsed.firstSlideNumber);
-			this.hasDigitalSignatures.set(parsed.hasDigitalSignatures ?? false);
-			this.digitalSignatureCount.set(parsed.digitalSignatureCount ?? 0);
-
-			// Parse the `_xmlsignatures/*.xml` parts into ParsedSignature[] for the
-			// signatures panel (best-effort; lazy ZIP/XML import keeps it off the
-			// main chunk). Only commit if this load is still current.
-			this.signatures.set([]);
-			if (parsed.hasDigitalSignatures) {
-				const sigs = await parseCoreSignatures(sigBuffer);
-				if (token === this.renderToken) {
-					this.signatures.set(sigs);
-				}
-			}
+			this.signatureSummary.set(parsed.signatures);
 		} catch (err) {
 			if (token === this.renderToken) {
 				if (err instanceof EncryptedFileError) {
@@ -772,12 +750,4 @@ export class LoadContentService {
 			}
 		}
 	}
-}
-
-// Signature parsing is shared in the core (`ooxml-core/pptx`); kept exported here for callers and tests.
-// A local function, not a re-export: re-exporting an external binding breaks the CommonJS bundle.
-export function parseSignaturesFromBuffer(
-	buffer: Parameters<typeof parseCoreSignatures>[0],
-): ReturnType<typeof parseCoreSignatures> {
-	return parseCoreSignatures(buffer);
 }

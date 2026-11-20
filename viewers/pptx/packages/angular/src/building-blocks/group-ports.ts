@@ -70,8 +70,7 @@ export function createAngularGroupPorts(source: AngularGroupSource): BuildingBlo
 			markDirty,
 		},
 		digitalSignatures: {
-			signed: () => loader.hasDigitalSignatures(),
-			count: () => loader.digitalSignatureCount(),
+			summary: () => loader.signatureSummary(),
 			content: () => source.content(),
 			markDirty,
 		},
