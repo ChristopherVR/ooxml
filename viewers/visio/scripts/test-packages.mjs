@@ -148,10 +148,24 @@ for (const name of ${JSON.stringify(names)}) {
 const angularCore = JSON.parse(
 	readFileSync(resolve(consumer, 'node_modules/@angular/core/package.json')),
 );
-runNpm(['install', '--ignore-scripts', '--no-save', `@angular/compiler@${angularCore.version}`], {
-	cwd: consumer,
-	stdio: 'inherit',
-});
+// The same holds for Svelte: the consumer's own build compiles the Svelte viewer with the Svelte
+// it installed, so its Vite plugin goes there too and resolves that compiler, not the workspace's
+// (compiled output only runs on the runtime it was compiled for). One install, since a later
+// `--no-save` install drops the packages an earlier one added.
+const sveltePluginEntry = createRequire(resolve(root, 'packages/bindings/package.json')).resolve(
+	'@sveltejs/vite-plugin-svelte',
+);
+const sveltePlugin = JSON.parse(readFileSync(resolve(sveltePluginEntry, '../../package.json')));
+runNpm(
+	[
+		'install',
+		'--ignore-scripts',
+		'--no-save',
+		`@angular/compiler@${angularCore.version}`,
+		`@sveltejs/vite-plugin-svelte@${sveltePlugin.version}`,
+	],
+	{ cwd: consumer, stdio: 'inherit' },
+);
 execFileSync(process.execPath, [resolve(consumer, 'smoke.mjs')], {
 	cwd: consumer,
 	stdio: 'inherit',
@@ -282,9 +296,9 @@ if (workspaceRuntime)
 		readFileSync(resolve(consumer, 'main.js'), 'utf8') +
 			'\nimport { verifyWorkspaceBindings } from "./workspace-bindings.js"; window.verifyWorkspaceBindings = verifyWorkspaceBindings;',
 	);
-const bindingsRequire = createRequire(resolve(root, 'packages/bindings/package.json'));
+const consumerPackages = createRequire(resolve(consumer, 'package.json'));
 const { svelte } = await import(
-	pathToFileURL(bindingsRequire.resolve('@sveltejs/vite-plugin-svelte')).href
+	pathToFileURL(consumerPackages.resolve('@sveltejs/vite-plugin-svelte')).href
 );
 await build({ configFile: false, root: consumer, plugins: [svelte()], build: { outDir: 'dist' } });
 writeFileSync(
