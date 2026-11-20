@@ -1,38 +1,93 @@
 # openteams-server
 
-The reference bring-your-own server for **OpenTeams**, an open-source team workspace. One small
-Node process does three jobs:
+**The reference server for OpenTeams: authenticated Yjs sync, call signaling and file storage in one small Node process that you run.**
 
-- `ws /sync/<room>`: a y-websocket compatible Yjs document and awareness server, persisted to disk;
-- `ws /signal/<room>`: a JSON relay for WebRTC call signaling;
-- `POST|GET|DELETE /files/<scope>/<name>`, `GET /files/<scope>`: file storage for attachments (25 MB cap), scoped
-  by workspace and by private chat, with short-lived signed download links;
-- `GET /metrics`: Prometheus metrics, only when `TEAMS_METRICS_TOKEN` is set.
+[![npm](https://img.shields.io/npm/v/openteams-server.svg)](https://www.npmjs.com/package/openteams-server)
+[![license](https://img.shields.io/npm/l/openteams-server.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE)
+[![status: beta](https://img.shields.io/badge/status-beta-orange.svg)](https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md)
 
-It understands neither chat nor Office formats: it moves bytes, so any server that speaks the same
-three contracts works with the OpenTeams bindings just as well.
+[Server guide](https://christophervr.github.io/ooxml/teams/server) · [Deploying](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md) · [Live demo](https://christophervr.github.io/ooxml/teams/demo/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/server/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; [Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme) &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; **[OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme)** &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
+OpenTeams is an open-source, bring-your-own-server team workspace, in **beta**. This package is the
+server its six framework bindings talk to. It understands neither chat nor Office formats: it
+moves bytes, checks who sent them and stores them, so any server that speaks the same three
+contracts works with the bindings just as well. It is not Microsoft Teams, and there is no
+end-to-end encryption: the server stores and can read every message and file.
 
-## Run
+## What it serves
 
-Needs Node 22.3 or later.
+| Route                                                                | Purpose                                                                                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `ws /sync/<room>`                                                    | A y-websocket compatible Yjs document and presence server, persisted to disk, that checks every update it applies. |
+| `ws /signal/<room>`                                                  | A JSON relay for WebRTC call signaling, bound to the signed-in user.                                               |
+| `POST\|GET\|DELETE /files/<scope>/<name>`, `GET /files/<scope>`      | Attachment storage (25 MB per file) scoped by workspace and by private chat, with quotas.                          |
+| `POST /files/link/<scope>/<name>`                                    | A signed download link that opens one file for five minutes.                                                       |
+| `POST /auth/session`, `/auth/check`, `/auth/signout`, `/auth/revoke` | Signed sessions for accounts: sign in, check, sign out everywhere, and operator revocation.                        |
+| `GET /health`                                                        | Liveness, and whether the server requires accounts.                                                                |
+| `GET /metrics`                                                       | Prometheus metrics, only when `TEAMS_METRICS_TOKEN` is set.                                                        |
+
+## Quick start
+
+Needs Node.js 22.3 or newer.
+
+On your own machine, with no accounts (user ids are claims, and the server says so loudly):
 
 ```bash
-openssl rand -hex 32 > session-secret    # once; keep it outside the repository
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(cat session-secret)" npx openteams-server   # PORT=8787 HOST=127.0.0.1 by default
-npx openteams-server --insecure-dev     # local development only: no accounts, ids are claims
+npx openteams-server --insecure-dev   # 127.0.0.1:8787
 ```
 
-**The server is secure by default.** With no `TEAMS_USERS_FILE` (or `users`), no `authenticate`
-hook and no `authorizeSync` hook it refuses to start, because every client could otherwise claim any
+Point the app at `ws://127.0.0.1:8787/sync` and `ws://127.0.0.1:8787/signal`.
+
+For a real team, create accounts, a long session secret and an origin allowlist, and put the
+server behind TLS:
+
+```bash
+npx openteams-hash-password               # prompts for a password, prints an scrypt hash
+openssl rand -hex 32 > session-secret     # once; keep it outside the repository
+# users.json: { "ada": "scrypt$...", "root": { "credential": "scrypt$...", "role": "moderator" } }
+TEAMS_USERS_FILE=users.json \
+TEAMS_SESSION_SECRET="$(cat session-secret)" \
+TEAMS_ORIGINS=https://app.example.com \
+TEAMS_DATA=/var/lib/openteams \
+npx openteams-server
+```
+
+Or embed it in your own Node process:
+
+```js
+import { createTeamsServer } from 'openteams-server';
+
+const server = createTeamsServer({
+	users: { ada: 'scrypt$...' },
+	sessionSecret: process.env.TEAMS_SESSION_SECRET,
+});
+await server.listen(8787, '127.0.0.1');
+```
+
+Browsers refuse `ws://` from an `https://` page, so serve it over TLS, and add a TURN server for
+calls across strict networks. The
+[deployment guide](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md)
+covers TLS, tokens, TURN and a Docker recipe (which has not been built and tested yet). Use the server and the OpenTeams bindings of the same
+major version: they speak the same Teams protocol, and the server closes clients that speak
+another.
+
+**Secure by default.** With no `TEAMS_USERS_FILE` (or `users`), no `authenticate` hook and no
+`authorizeSync` hook the server refuses to start, because every client could otherwise claim any
 user id. `--insecure-dev` (option `insecureDev: true`) opts out, logs a loud warning and is meant
 for your own machine. A shared `TEAMS_TOKEN` alone does not count as authentication. A server with
-only `authorizeSync` starts, but offers sync alone: without a way to check who someone is, it
-answers `/auth/session`, `/files` and `/signal` with 404 (see Per-room permissions).
+only `authorizeSync` starts but offers sync alone: without a way to check who someone is, it
+answers `/auth/session`, `/files` and `/signal` with 404 (see [Per-room permissions](#per-room-permissions)).
 
-Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[=N]`. `SIGTERM` and
-`SIGINT` save every room before the process exits.
+**Upgrading a data directory.** Rooms, file scopes and uploader records are stored under names
+that an older major version did not use. The first start on an older data directory renames them
+(and continues on the next start if it is interrupted), and an older server cannot read the
+result, so copy the directory first. See [Files, compaction and metrics](#files-compaction-and-metrics)
+and the [changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/server/CHANGELOG.md).
+
+## Configuration
+
+Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`), `--trust-proxy[=N]` and
+`--log-format=json`. `SIGTERM` and `SIGINT` save every room before the process exits.
 
 | Variable                                                     | Meaning                                                                                                                                                                                                                                               |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -67,6 +122,10 @@ The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnec
 the heap when smaller, so a 512 MiB heap takes 8 MiB messages), `messageRate`, `messageBurst`, `workspaceQuotaBytes`,
 `userQuotaBytes`, `filesQuotaBytes`, `roomsQuotaBytes`, `maxStoredRooms`, `maxAwarenessBytes`, `maxRoomAwarenessBytes`,
 `awarenessByteRate`, `maxRefusals`, `metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
+The other options are `token`, `origins`, `dataDir`, `users`, `sessionSecret`, `sessionTtlMs`,
+`sessionRate`, `adminToken`, `authenticate`, `authorizeSync`, `enforceAuthorship`,
+`maxMessageChars`, `maxReactionsPerMessage`, `maxFileBytes` (default 25 MiB), `maxSignalBytes`
+(default 256 KiB) and `log`; each is described in the sections below.
 
 ### Limits
 
@@ -84,19 +143,6 @@ the heap when smaller, so a 512 MiB heap takes 8 MiB messages), `messageRate`, `
   counted, so a person who is refused while waiting to be added to a group is not turned away.
 - **Checking costs the update, not the room.** Each loaded room keeps one copy of its document
   that updates are tried on, so the server holds up to two copies of each loaded room in memory.
-
-Or embed it:
-
-```js
-import { createTeamsServer } from 'openteams-server';
-
-const server = createTeamsServer({ users: { alice: 'long-random-secret' } });
-await server.listen(8787, '127.0.0.1');
-```
-
-Put it behind TLS (browsers refuse `ws://` from an `https://` page), and add a TURN server for calls
-across NATs. The full deployment guide is
-[docs/deploy.md](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/docs/deploy.md).
 
 ## Authorship and moderators
 
@@ -259,8 +305,11 @@ uses all of this for collaborative PowerPoint review.
 
 - **One shared token opens every room and every channel file.** Per-room permissions exist only
   when you pass `authorizeSync` (above). Treat the token like a team password.
-- **All members of a room trust each other** (the workspace room, and each private chat's room). The server only moves Yjs bytes, so any member can edit
-  or delete other people's messages and forge author ids and roles.
+- **Without accounts, all members of a room trust each other** (the workspace room, and each
+  private chat's room): user ids are claims, so any member can edit or delete other people's
+  messages and forge author ids and roles. With accounts the authorship checks (see
+  [Authorship and moderators](#authorship-and-moderators)) stop that, but the checks listed there
+  are the whole of it.
 - **Private chats have their own rooms.** A room named `chat-<16 hex>-<chat id>` admits a socket
   only when its user is `true` in the room's `teams:chat-members` map, and sockets of people removed
   from the map are closed. Nobody chooses the members of a new room: a 1:1 room (`dm-<32 hex>`) is
@@ -276,7 +325,7 @@ uses all of this for collaborative PowerPoint review.
   way, and falls back to the query string (`?token=`, `?session=`) only for a credential that
   contains characters a subprotocol cannot carry; the server accepts both. Run the server behind
   TLS. Files never take the token in a URL: they use the `Authorization` header or a signed link.
-- **Authorship is enforced for signed-in users** (see Authorship below).
+- **Authorship is enforced for signed-in users** (see [Authorship and moderators](#authorship-and-moderators)).
 - **Protocol version.** Clients announce `proto=<n>`. A client whose major version the server does
   not speak is accepted at the handshake and closed with 1008 and a reason such as `unsupported
   protocol version 1: this server speaks 2`. A missing `proto` is accepted (older clients) and
@@ -318,9 +367,10 @@ uses all of this for collaborative PowerPoint review.
   for a room that is not loaded without reading the room. A missing list, or one whose size does not
   match the snapshot, is rebuilt from the snapshot once.
 - **Stored names.** Rooms, file scopes and uploader records are stored under `=` and the lower-case
-  base32 of their exact name, so names that differ only by case stay apart on every disk. The first
-  start of this version renames what an older one stored; an older server cannot read the result.
-  An entry named after a chat id only this version issues (`dm-` and 32 hex digits, or a new `g-`
+  base32 of their exact name, so names that differ only by case stay apart on every disk. The
+  first start on a data directory from an older major version renames what it stored; an older
+  server cannot read the result, so back it up first. An entry named after a chat id that only the
+  current chat id scheme issues (`dm-` and 32 hex digits, or a new `g-`
   id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it, is logged, and
   is never read.
 - **Cleanup and quotas.** Uploads stream to a hidden `.part` file that failed uploads remove; start-up removes
@@ -342,8 +392,6 @@ encryption**: this server stores and can read every chat message and file. The t
 secret that keeps strangers out of a small team's server. Per-user authentication exists only when
 you enable accounts; it is a small session layer, not a full identity system.
 
-Licence: Apache-2.0.
-
 ## OneDrive host integration
 
 This package does not acquire Microsoft credentials or synchronize OneDrive automatically.
@@ -352,3 +400,38 @@ bytes and provide them to its normal document/tool workflow. See the
 [package reference and conflict recovery guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md)
 and [live acceptance requirements](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md).
 OpenTeams server attachments remain independent copies; no simulation service is shipped.
+
+## Supported environments
+
+- Node.js 22.3 or newer (`"engines": { "node": ">=22.3" }`). The largest sync message defaults to
+  32 MiB or a 64th of the heap, whichever is smaller, so size the heap
+  (`NODE_OPTIONS=--max-old-space-size=...`) or set `maxSyncBytes` for the documents you host.
+- Clients: the OpenTeams bindings of the same major version, in the last two major versions of
+  Chrome, Edge, Firefox and Safari.
+
+## Privacy and network use
+
+The server makes no outbound requests: it only answers the clients that connect to it. It stores
+room snapshots, uploaded files, uploader records, chat member lists and session revocations in the
+data directory (`TEAMS_DATA`), and keeps presence and rate-limit state in memory. It never logs
+credentials, sessions or the session secret. Call audio and video do not pass through it; call
+signaling, which carries each participant's network addresses, does. See
+[PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
+## Related packages
+
+- Clients: [`openteams-react-viewer`](https://www.npmjs.com/package/openteams-react-viewer),
+  [`openteams-vue-viewer`](https://www.npmjs.com/package/openteams-vue-viewer),
+  [`openteams-angular-viewer`](https://www.npmjs.com/package/openteams-angular-viewer),
+  [`openteams-svelte-viewer`](https://www.npmjs.com/package/openteams-svelte-viewer),
+  [`openteams-solid-viewer`](https://www.npmjs.com/package/openteams-solid-viewer) and
+  [`openteams-vanilla-viewer`](https://www.npmjs.com/package/openteams-vanilla-viewer).
+- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the update checks this server bundles
+  come from `ooxml-core/teams`, which also has what you need to build a server of your own
+  ([teams-area.md](https://github.com/ChristopherVR/ooxml/blob/main/docs/teams-area.md)).
+- OpenTeams is part of [ooxml](https://github.com/ChristopherVR/ooxml#readme), next to the Word,
+  Excel, PowerPoint and Visio viewers.
+
+## License
+
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/teams/LICENSE).

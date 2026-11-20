@@ -1,7 +1,7 @@
 {
 	"name": "openteams-react-viewer",
 	"version": "1.1.2",
-	"description": "React component and hooks for OpenTeams, the open-source bring-your-own-server team workspace (sync protocol 1). Self-contained: includes the <teams-app> UI.",
+	"description": "React component and hooks for OpenTeams, the open-source bring-your-own-server team workspace (Teams protocol 2). The <teams-app> UI comes with it through ooxml-ui.",
 	"keywords": [
 		"chat",
 		"collaboration",
