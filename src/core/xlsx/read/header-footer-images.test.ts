@@ -5,6 +5,7 @@ import { expect, it } from 'vitest';
 import { headerFooterPicture } from '../layout/index';
 import { saveXlsx } from '../write/index';
 import { loadXlsx } from './index';
+import { growthAsync } from '../../test-support/growth';
 
 const fixture = () =>
 	new Uint8Array(
@@ -45,16 +46,6 @@ it('keeps the header picture parts on save', async () => {
 });
 
 /** Best of three runs, in milliseconds. */
-async function timed(run: () => Promise<unknown>): Promise<number> {
-	let best = Number.POSITIVE_INFINITY;
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const start = performance.now();
-		await run();
-		best = Math.min(best, performance.now() - start);
-	}
-	return best;
-}
-
 const S = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 const R = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
@@ -98,5 +89,5 @@ it('reads a header drawing in time linear in its shapes, empty ones included', a
 	};
 	const small = await run(20_000);
 	const large = await run(80_000);
-	expect((await timed(large)) / (await timed(small))).toBeLessThan(8);
+	expect(await growthAsync(small, large)).toBeLessThan(8);
 }, 60_000);

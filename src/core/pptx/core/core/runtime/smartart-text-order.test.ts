@@ -6,6 +6,7 @@ import {
 	orderedSmartArtTextEntries,
 	smartArtChildOrder,
 } from './smartart-text-order';
+import { growth } from '../../../../test-support/growth';
 
 describe('smartArt text order annotation', () => {
 	it.each(['p:shape', 'p-extension', 'p.extra'])(
@@ -87,15 +88,6 @@ describe('smartArt text order annotation', () => {
 });
 
 /** Best of three runs, in milliseconds. */
-function timed(run: () => unknown): number {
-	let best = Number.POSITIVE_INFINITY;
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const start = performance.now();
-		run();
-		best = Math.min(best, performance.now() - start);
-	}
-	return best;
-}
 
 describe('smartArt text order scan', () => {
 	it('is linear in empty breaks and paragraphs that never close', () => {
@@ -104,7 +96,7 @@ describe('smartArt text order scan', () => {
 				`<dgm:dataModel><dgm:t><a:p>${'<a:br/>'.repeat(count)}${'<a:r>'.repeat(count)}</a:p></dgm:t></dgm:dataModel>`,
 				{},
 			);
-		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
+		expect(growth(run(20_000), run(80_000))).toBeLessThan(8);
 	});
 
 	it('gives an empty element an entry only when it parses to an object', () => {
