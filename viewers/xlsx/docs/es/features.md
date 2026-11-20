@@ -115,4 +115,4 @@ tratan como vacías.
 
 Las pruebas de ida y vuelta del núcleo y las comprobaciones de aceptación con Excel están en el repositorio `ooxml`. Notifique un libro que se represente o guarde mal como una incidencia, adjuntando el archivo si puede compartirlo.
 
-Las firmas digitales se notifican al abrir un libro y se eliminan al guardar. El editor no firma archivos. Los hipervínculos siguen la política del núcleo compartido; solo los enlaces web y de correo electrónico se abren externamente.
+Las firmas digitales se comprueban al abrir un libro y se muestran según su estado (firmado, firmante no comprobado, no válida o no comprobada) en la barra de estado, un aviso y Archivo > Información; solo una firma comprobada se muestra como firmada. Al guardar se eliminan. El editor no firma archivos. Los hipervínculos siguen la política del núcleo compartido; solo los enlaces web y de correo electrónico se abren externamente.

@@ -15,7 +15,10 @@ describe('signatureStrings', () => {
 					expect(text.label).not.toBe(english.states[state as keyof typeof english.states].label);
 				}
 			}
-			if (locale !== 'en') expect(table.removedOnSave).not.toBe(english.removedOnSave);
+			if (locale === 'en') continue;
+			for (const key of ['removedOnSave', 'heading', 'signer', 'signedAt', 'view'] as const)
+				expect(table[key], `${locale} ${key}`).not.toBe(english[key]);
+			expect(table.dismiss.length).toBeGreaterThan(0);
 		}
 	});
 

@@ -53,7 +53,7 @@ Der Schreiber kopiert einen Teil des Quellpakets Byte für Byte (mit seinen Bezi
 | Verworfen                                                                     | Grund                                                                                                                                                                     |
 | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `xl/calcChain.xml`                                                            | Wird von Excel neu aufgebaut; die Arbeitsmappe wird mit `fullCalcOnLoad` gespeichert, damit beim Öffnen jeder Wert neu berechnet wird.                                    |
-| Digitale Signaturen (der Ursprung, Signaturteile und ihre Beziehungen)        | Jede Änderung macht sie ungültig. Beim Laden gemeldet: „Die Arbeitsmappe ist digital signiert ... beim Speichern wird sie entfernt“. Excel entfernt sie ebenfalls.        |
+| Digitale Signaturen (der Ursprung, Signaturteile und ihre Beziehungen)        | Jede Änderung macht sie ungültig. Beim Laden überprüft und mit ihrem Status angezeigt, mit dem Hinweis, dass Speichern sie entfernt. Excel entfernt sie ebenfalls.        |
 | Das VBA-Projekt beim Speichern als `.xlsx`                                    | Das Format kann es nicht aufnehmen. Das Format `.xlsm` bleibt wie geladen erhalten.                                                                                       |
 | `x15ac:absPath` (wo die Datei zuletzt gespeichert wurde) und `xr:revisionPtr` | Hinweise für die Erstellung in Excel, die Excel selbst neu erzeugt. Der absolute Pfad würde außerdem die Ordnerstruktur des Autors preisgeben.                            |
 | Attribute `xr:uid`, Zeilen-`spans`, `x14ac:dyDescent`                         | Versionskennungen und Layouthinweise, die Excel neu erzeugt.                                                                                                              |
@@ -70,7 +70,7 @@ Nichts wird stillschweigend abgelehnt. Der Editor meldet über `workbook.warning
 - Ein verschlüsseltes Paket ohne Kennwort verlangt ein Kennwort (`load/detect.ts`); ein falsches Kennwort ist ein Fehler;
 - Ein nicht unterstützter oder beschädigter Teil wird namentlich gemeldet („... is kept but not shown“, „... could not be read“);
 - Eine Arbeitsmappe mit VBA-Makros oder externen Verknüpfungen teilt mit, dass sie erhalten, aber weder ausgeführt noch aktualisiert wird;
-- Eine digital signierte Arbeitsmappe teilt mit, dass die Signatur beim Speichern entfernt wird;
+- Eine digital signierte Arbeitsmappe zeigt den überprüften Status ihrer Signatur und teilt mit, dass Speichern die Signaturen entfernt;
 - Ein Diagramm, das sich nicht ohne Verlust von Details bearbeiten lässt, wird als `editBlocked` markiert und unverändert angezeigt und gespeichert;
 - `.xlsb` und `.ods` werden nicht geöffnet; das alte `.xls` wird beim Speichern in `.xlsx` umgewandelt, mit einer Warnung für jede Funktion, die der Leser des Binärformats nicht dekodieren kann;
 - Die Bearbeitung eines Teils einer Datentabelle wird abgelehnt („Cannot change part of a data table.“).

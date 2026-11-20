@@ -14,6 +14,7 @@ import { saveProgressLabel, saveProgressStepChanged } from '../files/save-progre
 import { drawingExtension, openFromStorage, saveDrawingToStorage } from './viewer-file-commands';
 import { fillTemplateThumbnails } from './template-thumbnails';
 import { localizeWording } from './ribbon-localize';
+import type { OfficeUiSignatureStatus } from '../notices/signature-status';
 import { normalizeVisioLocale, translateRibbonText, type VisioLocale } from './ribbon-locale';
 import { wireNewDrawing } from './viewer-new-drawing';
 import { createHostBackstagePages, type HostBackstagePages } from '../embedding/host-backstage';
@@ -488,6 +489,13 @@ export class ViewerBackstage {
 						? 'Edited copy (not saved)'
 						: 'Original',
 		);
+		const signatures = this.#root.querySelector<OfficeUiSignatureStatus>(
+			'[data-testid="signature-panel"]',
+		);
+		if (signatures) {
+			signatures.locale = this.#locale();
+			signatures.summary = state.document?.signatures;
+		}
 		const notes = this.host.noteCount();
 		this.#root.querySelector('.backstage-note-count')!.textContent = notes
 			? `${notes === 1 ? 'One part' : `${notes} parts`} of this drawing ${notes === 1 ? 'is' : 'are'} shown approximately or not at all:`

@@ -2,6 +2,7 @@ import { defineDialogFooter } from './dialog/dialog-footer';
 import { defineToasts } from './notices/toasts';
 import { definePasteOptions } from './notices/paste-options';
 import { defineReadOnlyBanner } from './notices/read-only-banner';
+import { defineSignatureStatus } from './notices/signature-status';
 import { defineRadio } from './form/radio';
 export {
 	OFFICE_COLOR_SWATCHES,
@@ -71,6 +72,7 @@ export {
 	definePasteOptions,
 	defineRadio,
 	defineReadOnlyBanner,
+	defineSignatureStatus,
 	defineRibbonToggle,
 	defineSearchField,
 	defineToasts,
@@ -263,6 +265,10 @@ export type {
 	OfficeReadOnlyBannerState,
 } from './notices/read-only-banner';
 export {
+	OfficeUiSignatureStatus,
+	type OfficeSignatureStatusVariant,
+} from './notices/signature-status';
+export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
 	OFFICE_AVATAR_SWATCHES,
@@ -345,6 +351,7 @@ export const CONTROL_DEFINERS = [
 	defineDialogFooter,
 	defineToasts,
 	defineReadOnlyBanner,
+	defineSignatureStatus,
 	definePasteOptions,
 	defineTitleBar,
 	defineRibbonSection,
