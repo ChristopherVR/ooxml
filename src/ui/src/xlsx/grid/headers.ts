@@ -53,8 +53,6 @@ export class HeaderLayer {
 				: `left:${pos}px;width:${size}px;font-size:max(6px,calc(var(--office-font-size-xs,11px) * ${fontPx / 11}))`;
 			node.textContent = row ? String(index + 1) : columnLabel(index);
 			node.dataset.index = String(index);
-			if (row) node.setAttribute('role', 'rowheader');
-			else node.setAttribute('role', 'columnheader');
 		}
 		for (const [index, node] of this.#nodes) {
 			if (keep.has(index)) continue;

@@ -7,6 +7,7 @@ import { PptxSaveStateBuilder } from '../builders';
 import { createPptxSaveConstants } from '../factories';
 import type { PptxHandlerSaveOptions } from '../types';
 import { withValidCustomShowIds } from './custom-show-save-ids';
+import { readElementSourceRelationships } from './element-part-binding';
 import { shouldKeepSourceCommentAuthors } from './comment-authors-retention';
 import { applyHeaderFooterToMaster } from './header-footer-parts';
 import { slidesPerPageToPrintOutput } from './pptx-print-properties';
@@ -101,6 +102,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			.withCommentAuthorsRootXml(this.commentAuthorsRootXml)
 			.withEmuPerPx(PptxHandlerRuntime.EMU_PER_PX)
 			.build();
+		const elementSources = await readElementSourceRelationships(this.zip, slides);
 		const slideReferenceRemap = await this.reconcilePresentationSlidesForSave({
 			slides,
 			saveSession,
@@ -108,8 +110,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			slideLayoutRelationshipType,
 			relationshipsNamespace,
 		});
-		// Reconciliation can copy media, ink and comment parts. Reserve their
-		// names before new elements allocate parts during this same save.
+		await this.bindSlideElementParts(slides, elementSources);
+		// Reconciliation and binding can copy media, ink, chart and comment parts.
+		// Reserve their names before new elements allocate parts during this save.
 		saveSession.refreshPackageState(this.zip);
 		await this.ensureNotesMasterForAuthoredNotes(slides, saveConstants);
 		await this.ensureHandoutMasterInfrastructure(options?.handoutMaster, saveConstants);

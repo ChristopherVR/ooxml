@@ -12,10 +12,18 @@ import { evaluateNode } from './evaluator';
 import type { FormulaNode } from './graph';
 import { implicitIntersection } from './references';
 import { isSpilledCell, releaseSpilledCell } from './spill';
+import { CalculationStopped, RecalcLimits } from './recalc-limits';
 import { storeResult } from './store';
-import { ERR, ErrorSignal, type Matrix, type Scalar } from './values';
+import { ERR, ErrorSignal, Matrix, type Scalar, withFormulaBudget, WorkCapReached } from './values';
 
 const MAX_ROUNDS = 8;
+
+/** The cells a result fills: an array formula its range, a spill its footprint, else one. */
+const storedCells = (node: FormulaNode, result: Scalar | Matrix): number => {
+	const range = node.arrayRange;
+	if (range) return (range.end.row - range.start.row + 1) * (range.end.col - range.start.col + 1);
+	return result instanceof Matrix ? result.rows * result.cols : 1;
+};
 
 /** How far a cell moved between two iteration passes; a change of kind or text is unbounded. */
 function valueChange(before: unknown, after: unknown): number {
@@ -24,6 +32,8 @@ function valueChange(before: unknown, after: unknown): number {
 }
 
 export abstract class EngineCore extends EngineHost {
+	protected readonly limits = new RecalcLimits(this.options.timeLimitMs);
+
 	protected releaseAllSpills(): void {
 		for (const sheet of this.workbook.sheets) {
 			for (const [row, cells] of [...sheet.rows]) {
@@ -195,6 +205,8 @@ export abstract class EngineCore extends EngineHost {
 	}
 
 	protected compute(node: FormulaNode): void {
+		// Also between formulas computed while another reads them, so none can outlast the limit.
+		this.limits.tick();
 		this.pending?.delete(node);
 		const cell = this.workbook.sheets[node.sheet]?.rows.get(node.row)?.get(node.col);
 		if (!cell || cell.formula !== node.formula || node.keepCached) return;
@@ -220,6 +232,7 @@ export abstract class EngineCore extends EngineHost {
 	protected store(node: FormulaNode, cell: Cell, result: Scalar | Matrix): void {
 		const sheet = this.workbook.sheets[node.sheet];
 		if (!sheet) return;
+		this.limits.store(result, storedCells(node, result));
 		const before = node.spill;
 		const blockedBefore = node.blockedSpill;
 		storeResult(sheet, node, cell, result, (anchor, r, c) => {
@@ -290,17 +303,20 @@ export abstract class EngineCore extends EngineHost {
 		if (!node.ast) return node.parseError ?? ERR.NAME;
 		const ast = node.ast;
 		const frame = this.frameFor(node.sheet, node.row, node.col, ast, node.legacy);
-		return withDateSystem(this.workbook.date1904, () => {
-			try {
-				const value = evaluateNode(ast, frame);
-				return node.legacy ? clean(implicitIntersection(value, frame)) : finalize(value, this);
-			} catch (e) {
-				if (e instanceof Deferred) throw e;
-				if (e instanceof ErrorSignal) return e.value;
-				// A formula nested past the stack shows #NUM! instead of escaping the recalculation.
-				if (e instanceof RangeError) return ERR.NUM;
-				return ERR.VALUE;
-			}
-		});
+		return withDateSystem(this.workbook.date1904, () =>
+			withFormulaBudget(() => {
+				try {
+					const value = evaluateNode(ast, frame);
+					return node.legacy ? clean(implicitIntersection(value, frame)) : finalize(value, this);
+				} catch (e) {
+					if (e instanceof Deferred || e instanceof CalculationStopped) throw e;
+					if (e instanceof WorkCapReached) throw new CalculationStopped('work');
+					if (e instanceof ErrorSignal) return e.value;
+					// A formula nested past the stack shows #NUM! instead of escaping the recalculation.
+					if (e instanceof RangeError) return ERR.NUM;
+					return ERR.VALUE;
+				}
+			}, this.options.workCap),
+		);
 	}
 }

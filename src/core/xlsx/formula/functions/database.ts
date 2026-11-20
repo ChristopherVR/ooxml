@@ -91,7 +91,8 @@ export const DATABASE_FUNCTIONS: FunctionSpec[] = [
 	dbFn(
 		'DCOUNTA',
 		'The count of non-blank cells in the matching records.',
-		(v) => v.filter((x) => x !== null && x !== '').length,
+		// Empty text (a formula's "" or a lone apostrophe) is a value, as COUNTA counts it.
+		(v) => v.filter((x) => x !== null).length,
 	),
 	dbFn('DAVERAGE', 'The mean of the matching records in a column.', (v) => S.mean(numbers(v))),
 	dbFn('DMAX', 'The largest number among the matching records.', (v) => {

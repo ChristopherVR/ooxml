@@ -8,8 +8,10 @@
  * release-plan.json (core, ui).
  * Prints the release-body markdown to stdout.
  *
- * Both the GitHub release body and (in future) the friendly CHANGELOG.md draw
- * from here, so the two can never diverge. The primary source is git-cliff,
+ * A major release with hand-written notes in `.release-notes/<name>/` gets the
+ * package's share of them above the commit list (see major-notes.mjs), the
+ * same block the release workflow writes into its CHANGELOG.md. The commit
+ * list comes from git-cliff,
  * scoped to the package's include paths and tag pattern, rendering the
  * unreleased section for the pending tag. Because release-plan.mjs releases a
  * package whenever any of its files changed (not only on conventional commits),
@@ -19,9 +21,11 @@
  * left the GitHub release showing only the pruned-history footer).
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { packageBlocks, releaseBody } from './major-notes.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -115,7 +119,10 @@ function main() {
 	const pkg = loadPackage(key);
 	const section = cliffSection(pkg);
 	const notes = hasBullets(section) ? section : commitFallback(pkg);
-	process.stdout.write(`${notes}\n`);
+	const changelog = join(ROOT, pkg.changelog);
+	const text = existsSync(changelog) ? readFileSync(changelog, 'utf8') : '';
+	const { blocks } = packageBlocks(ROOT, pkg, text);
+	process.stdout.write(`${releaseBody(notes, blocks).trimEnd()}\n`);
 }
 
 main();

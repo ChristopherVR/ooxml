@@ -13,7 +13,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SHIPPED_ROOTS = ['src/core', 'src/ui/src', 'apps', 'mcp', 'viewers', 'demos', 'site'];
 const GUARD = 'src/core/opc/zip-limits.ts';
 const GENERATED_OR_TEST_DIR =
-	/^(?:node_modules|dist|coverage|__tests__|__fixtures__|test-support)$/;
+	/^(?:node_modules|dist|coverage|__tests__|__fixtures__|test-support|test-utils)$/;
 const NOT_SHIPPED_PATH = new RegExp(
 	'^(?:' +
 		[

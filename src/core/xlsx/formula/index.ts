@@ -15,6 +15,7 @@ export {
 	createCalcEngine,
 	type CalcEngine,
 	type CalcEngineOptions,
+	type CalculationStop,
 	type CellPosition,
 } from './engine';
 export {

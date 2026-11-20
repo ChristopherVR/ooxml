@@ -181,11 +181,11 @@ export const ENGINEERING_FUNCTIONS: FunctionSpec[] = [
 		(args) => {
 			const n = Math.trunc(num(args[0]));
 			const radix = Math.trunc(num(args[1]));
+			const minLength = Math.trunc(optNum(args, 2, 0));
 			if (n < 0 || n >= 2 ** 53 || radix < 2 || radix > 36) fail(ERR.NUM);
-			return n
-				.toString(radix)
-				.toUpperCase()
-				.padStart(Math.trunc(optNum(args, 2, 0)), '0');
+			// Excel pads to at most 255 digits.
+			if (minLength < 0 || minLength > 255) fail(ERR.NUM);
+			return n.toString(radix).toUpperCase().padStart(minLength, '0');
 		},
 	),
 	spec(

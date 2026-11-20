@@ -7,6 +7,10 @@ inputs:
   node-version:
     description: Node version
     default: '24'
+outputs:
+  playwright-version:
+    description: The Playwright version the lockfile installs. It names the browsers Playwright downloads, so it keys their cache.
+    value: ${{ steps.keys.outputs.playwright }}
 runs:
   using: composite
   steps:
@@ -16,10 +20,29 @@ runs:
     - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
       with:
         bun-version: ${{ inputs.bun-version }}
-    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+    # The caches are keyed on what fills them, not on the whole lockfile: Bun's on the resolved
+    # packages (the lockfile's `packages` section), the browsers on the Playwright version. A
+    # release bump rewrites only workspace versions and ranges, so it keeps both caches instead of
+    # saving another copy of each.
+    - id: keys
+      shell: bash
+      run: |
+        packages=$(sed -n '/^  "packages": {/,$p' bun.lock | sha256sum | cut -d' ' -f1)
+        playwright=$(sed -n 's/^ *"playwright-core": \["playwright-core@\([^"]*\)".*/\1/p' bun.lock | head -n 1)
+        if [ -z "$playwright" ]; then echo "::error::bun.lock names no playwright-core version"; exit 1; fi
+        echo "packages=$packages" >> "$GITHUB_OUTPUT"
+        echo "playwright=$playwright" >> "$GITHUB_OUTPUT"
+    - id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: ~/.bun/install/cache
-        key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+        key: bun-${{ runner.os }}-${{ steps.keys.outputs.packages }}
         restore-keys: bun-${{ runner.os }}-
     - run: bun install --frozen-lockfile
+      shell: bash
+    # A cache restored from an older key still holds the versions that lockfile resolved, and the
+    # job saves it under the new key when it ends: drop them first, so the cache stays the size of
+    # one lockfile instead of every one since it was created.
+    - if: steps.cache.outputs.cache-hit != 'true'
+      run: node scripts/prune-bun-cache.mjs ~/.bun/install/cache bun.lock
       shell: bash

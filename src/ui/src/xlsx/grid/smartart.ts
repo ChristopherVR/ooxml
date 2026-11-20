@@ -6,7 +6,7 @@
 // SmartArt Design tab and the text pane (../smartart-controller.ts).
 import { previewDiagramLayout, resolveDiagramDrawingStyles } from 'ooxml-core/diagram';
 import { drawingSchemeColors, type SmartArtObject, type ThemePalette } from 'ooxml-core/xlsx';
-import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../index';
+import { defineSmartArt, type SchemeColors, type SchemeFonts } from '../../smartart/smartart';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { h } from './dom';
 

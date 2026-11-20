@@ -7,6 +7,7 @@ export * from './part-name';
 export * from './merge-snapshots';
 export * from './diff-packages';
 export * from './clone-part-graph';
+export * from './part-ownership';
 export * from './safe-href';
 export * from './safe-resource-url';
 export * from './picture-url';

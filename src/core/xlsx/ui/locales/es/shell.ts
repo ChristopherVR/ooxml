@@ -270,6 +270,8 @@ export const shell: Record<string, string> = {
 	'Tax rate': 'Tasa de impuesto',
 	Tax: 'Impuesto',
 	'Total due': 'Total a pagar',
+	'Formulas were not all recalculated on open because it took too long or needed too much memory. Some values shown are the saved ones; press F9 to recalculate.':
+		'No se volvieron a calcular todas las fórmulas al abrir porque tardaba demasiado o necesitaba demasiada memoria. Algunos valores mostrados son los guardados; presione F9 para volver a calcular.',
 	// Base of new sheet names (Sheet2, Tabelle2, Feuil2), as Excel names them per language.
 	'sheet.default-name': 'Hoja',
 };

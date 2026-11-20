@@ -114,12 +114,6 @@
 			"finding": "A11Y-12",
 			"why": "the slide is named Slide, with no number or title",
 			"fails": "slide names: [\"Slide\"]"
-		},
-		"tree/xlsx/gridcells": {
-			"owner": "P4 Excel semantics and calculation budget",
-			"finding": "A11Y-06",
-			"why": "the grid exposes no rows or cells, only the active cell's input",
-			"fails": "rows in the grid: 0"
 		}
 	}
 }

@@ -1,5 +1,7 @@
 // A backtracking-free matcher for Excel wildcards (`*`, `?`, `~` escape). It replaces a generated
-// regular expression, whose repeated `*` groups backtrack exponentially on long text.
+// regular expression, whose repeated `*` groups backtrack exponentially on long text. Characters
+// match by their simple case folding (see text-compare.ts).
+import { foldChar, foldText } from '../text-compare';
 
 /** A run of text between `*`s: a character, or `null` for `?` (any one character). */
 type Segment = (string | null)[];
@@ -11,9 +13,8 @@ export interface Wildcard {
 	search(text: string, from?: number): number;
 }
 
-const lower = (ch: string | undefined): string => (ch ?? '').toLowerCase();
-const fold = (text: string): string[] =>
-	Array.from({ length: text.length }, (_, i) => lower(text[i]));
+const lower = (ch: string | undefined): string => foldChar(ch ?? '');
+const fold = foldText;
 
 interface Parsed {
 	segments: Segment[];
@@ -32,8 +33,9 @@ function parse(pattern: string): Parsed {
 	};
 	for (let i = 0; i < pattern.length; i++) {
 		const ch = pattern[i] ?? '';
-		if (ch === '~' && i + 1 < pattern.length) {
-			current.push(lower(pattern[++i]));
+		if (ch === '~') {
+			// A trailing `~` escapes nothing and is dropped: SEARCH("a~","ba~") is 2.
+			if (i + 1 < pattern.length) current.push(lower(pattern[++i]));
 			trailingStar = false;
 		} else if (ch === '*') {
 			if (i === 0) leadingStar = true;
@@ -48,7 +50,7 @@ function parse(pattern: string): Parsed {
 	return { segments, leadingStar, trailingStar };
 }
 
-function matchesAt(seg: Segment, text: string[], at: number): boolean {
+function matchesAt(seg: Segment, text: string, at: number): boolean {
 	if (at < 0 || at + seg.length > text.length) return false;
 	for (let i = 0; i < seg.length; i++) {
 		const want = seg[i];
@@ -57,7 +59,7 @@ function matchesAt(seg: Segment, text: string[], at: number): boolean {
 	return true;
 }
 
-function find(seg: Segment, text: string[], from: number, limit: number): number {
+function find(seg: Segment, text: string, from: number, limit: number): number {
 	for (let at = from; at + seg.length <= limit; at++) if (matchesAt(seg, text, at)) return at;
 	return -1;
 }
@@ -67,7 +69,7 @@ function place(
 	segments: Segment[],
 	from: number,
 	to: number,
-	text: string[],
+	text: string,
 	pos: number,
 	limit: number,
 ): number {
