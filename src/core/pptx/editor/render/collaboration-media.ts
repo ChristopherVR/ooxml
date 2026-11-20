@@ -15,8 +15,8 @@
  * are added.
  *
  * Linked content (a picture or video at an `http(s)` URL) is never fetched and re-sent: it
- * stays a link, and each participant shows it only when its own remote content setting
- * allows it (`allowExternalContent`), as the loader does for a deck opened from a file.
+ * stays a link in the room, and each viewer decides where it draws the deck whether its
+ * browser may request it (Enable Content, `allowExternalContent`).
  */
 
 import { encodeBase64 } from '../../../digest/base64';
@@ -30,6 +30,7 @@ import {
 	forgetMediaUrl,
 	isLocalOnlyUrl,
 	mediaIdOf,
+	mediaTokenId,
 	mediaUrlOf,
 	rememberMediaUrl,
 } from './collaboration-media-token';
@@ -53,11 +54,6 @@ export interface CollaborationMediaOptions {
 	 * `mediaDataUrls`), so a media element that names only its part can share its bytes.
 	 */
 	localMediaUrl?: ((path: string) => string | undefined) | undefined;
-	/**
-	 * This viewer's remote content setting; linked pictures and media are left out when false
-	 * (the default, as in the core loader). Like the loader's, it applies to what is read next.
-	 */
-	allowExternalContent?: boolean | undefined;
 	/** The room's media budget; {@link MAX_SHARED_MEDIA_BYTES} unless the transport needs less. */
 	maxBytes?: number | undefined;
 }
@@ -70,11 +66,13 @@ export type MediaResolution =
 export interface CollaborationMedia {
 	/** Set the given options; options left out keep their value. */
 	configure: (options: CollaborationMediaOptions) => void;
-	readonly allowExternalContent: boolean;
 	/** The page-local URL that plays the media part `path`, when this page has one. */
 	localMediaUrl: (path: string) => string | undefined;
 	resolve: (id: string) => MediaResolution;
-	/** Whether `url` is one this page made for a picture or media file a field of `kind` holds. */
+	/**
+	 * Whether `url` may stay in a field of `kind`: a URL this page made for the room's bytes of
+	 * a fitting type, or a media token whose bytes have not arrived (or were too large to send).
+	 */
 	accepts: (url: unknown, kind: ResourceKind) => boolean;
 	/** Whether `url` is a page-local URL this page made or minted from the room. */
 	ownsUrl: (url: string) => boolean;
@@ -218,9 +216,6 @@ function createCollaborationMedia(doc: YDocLike): CollaborationMedia {
 		configure(next) {
 			options = { ...options, ...next };
 		},
-		get allowExternalContent() {
-			return options.allowExternalContent === true;
-		},
 		localMediaUrl(path) {
 			const url = options.localMediaUrl?.(path);
 			return isLocalOnlyUrl(url) ? url : undefined;
@@ -249,6 +244,9 @@ function createCollaborationMedia(doc: YDocLike): CollaborationMedia {
 		accepts(url, kind) {
 			if (typeof url !== 'string') {
 				return false;
+			}
+			if (mediaTokenId(url) !== undefined) {
+				return true;
 			}
 			const type = mintedTypes.get(url);
 			if (type !== undefined) {

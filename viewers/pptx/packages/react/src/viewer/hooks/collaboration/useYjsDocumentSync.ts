@@ -51,8 +51,6 @@ export interface UseYjsDocumentSyncInput {
 	onRoomReplacedDeck?: () => void;
 	/** The URLs this viewer plays its audio and video from, so the room can carry their bytes. */
 	mediaDataUrls?: ReadonlyMap<string, string>;
-	/** This viewer's remote content setting: linked pictures and media from the room follow it. */
-	allowExternalContent?: boolean;
 }
 
 export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
@@ -74,7 +72,6 @@ export function useYjsDocumentSync(input: UseYjsDocumentSyncInput): void {
 		if (doc) {
 			configureCollaborationMedia(doc, {
 				localMediaUrl: (path) => latestMedia.current.mediaDataUrls?.get(path),
-				allowExternalContent: latestMedia.current.allowExternalContent === true,
 			});
 		}
 	}, [doc]);

@@ -1,7 +1,6 @@
 import {
 	openPptxFile,
 	readBackstageRecentFile,
-	resolveAllowExternalContent,
 	resolveCollaborationConfig,
 	resolveCollaborationShellEditability,
 	resolveBuildingBlockMode,
@@ -213,7 +212,6 @@ export function useViewerBuildingBlocks(
 		loadVersion,
 		embedFonts: dialogs.embedFontsEnabled,
 		onReadOnlyChange: setCollaborationReadOnly,
-		allowExternalContent: resolveAllowExternalContent(allowExternalContent, viewerOptions),
 	});
 	const blockActions = useViewerBuildingBlocksActions({
 		state,

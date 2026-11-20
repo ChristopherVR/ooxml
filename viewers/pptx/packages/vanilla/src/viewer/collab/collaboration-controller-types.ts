@@ -31,8 +31,6 @@ export interface CollaborationControllerDeps {
 	getSaveOptions?: () => PptxHandlerSaveOptions;
 	/** The editor history; Undo and Redo go through the room's own history while it is writable. */
 	getHistory?: () => CollaborationHistoryTarget | undefined;
-	/** This viewer's remote content setting: linked pictures and media from the room follow it. */
-	getAllowExternalContent?: () => boolean;
 	/** Enforce the read-only `viewer` role by disabling editing. */
 	setEditable: (editable: boolean) => void;
 	/** When supplied, apply a session restriction without replacing host edit permission. */

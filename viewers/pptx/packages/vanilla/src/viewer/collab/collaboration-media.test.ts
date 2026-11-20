@@ -4,7 +4,6 @@
  * `mediaDataUrls`), and reads the room's slides with the viewer's remote content setting.
  */
 import type { CollaborationConfig, ExternalCollaborationSession } from 'ooxml-ui/pptx';
-import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -12,14 +11,8 @@ import * as Y from 'yjs';
 import { createInitialViewerState, createStore } from '../state';
 import { createCollaborationController } from './collaboration-controller';
 
-const factories = {
-	createMap: () => new Y.Map(),
-	createArray: () => new Y.Array(),
-	createText: () => new Y.Text(),
-};
 const VIDEO_PATH = 'ppt/media/media1.mp4';
 const PLAYED_FROM = 'blob:http://localhost/played-video';
-const LINKED = 'https://linked.test/picture.png';
 
 const deck = (...elements: unknown[]): PptxSlide[] =>
 	[{ id: 's1', rId: 'rId2', slideNumber: 1, elements }] as unknown as PptxSlide[];
@@ -56,7 +49,7 @@ function room(): { doc: Y.Doc; session: ExternalCollaborationSession } {
 	return { doc, session };
 }
 
-function build(slides: PptxSlide[], allowExternalContent: boolean) {
+function build(slides: PptxSlide[]) {
 	const store = createStore(createInitialViewerState());
 	store.set({
 		editable: true,
@@ -67,7 +60,6 @@ function build(slides: PptxSlide[], allowExternalContent: boolean) {
 		store,
 		getHandler: () => null,
 		setEditable: (editable) => store.set({ editable }),
-		getAllowExternalContent: () => allowExternalContent,
 	});
 	return { store, collab };
 }
@@ -83,7 +75,7 @@ describe('collaboration media in the vanilla binding', () => {
 	it('shares an embedded video as a media token, never the URL it plays from', async () => {
 		const { doc, session } = room();
 		const video = { id: 'vid', type: 'media', mediaType: 'video', mediaPath: VIDEO_PATH };
-		const { collab } = build(deck(video), false);
+		const { collab } = build(deck(video));
 		await collab.start({ ...config(session), sessionIntent: 'create' });
 		await vi.waitFor(() => expect(doc.getArray('pptx:slides')).toHaveLength(1));
 		const assets = doc.getMap('pptx:assets').toJSON() as Record<string, string>;
@@ -91,26 +83,4 @@ describe('collaboration media in the vanilla binding', () => {
 		expect(JSON.stringify(doc.toJSON())).not.toContain('blob:');
 		collab.stop();
 	});
-
-	it.each([
-		[false, undefined],
-		[true, LINKED],
-	])(
-		'with external content allowed: %s, shows a linked picture from the room as %s',
-		async (allow, expected) => {
-			const { doc, session } = room();
-			reconcileSlidesInYDoc(
-				deck({ id: 'pic', type: 'picture', imagePath: LINKED, imageData: LINKED }),
-				doc,
-				factories,
-				'remote',
-			);
-			const { store, collab } = build(deck(), allow);
-			await collab.start(config(session));
-			await vi.waitFor(() => expect(store.get().slides[0]?.elements).toHaveLength(1));
-			const picture = store.get().slides[0]?.elements[0] as { imageData?: string };
-			expect(picture.imageData).toBe(expected);
-			collab.stop();
-		},
-	);
 });

@@ -5,7 +5,6 @@
  * runtime compiles the controller's `$effect`s.
  */
 import type { AwarenessLike, CollaborationConfig, YDocLike, YjsFactories } from 'ooxml-ui/pptx';
-import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -21,7 +20,6 @@ const CONFIG: CollaborationConfig = {
 };
 const VIDEO_PATH = 'ppt/media/media1.mp4';
 const PLAYED_FROM = 'blob:http://localhost/played-video';
-const LINKED = 'https://linked.test/picture.png';
 
 const factories = (): YjsFactories => ({
 	createMap: () => new Y.Map(),
@@ -98,39 +96,4 @@ describe('collaboration media in the Svelte binding', () => {
 		});
 		doc.destroy();
 	});
-
-	it.each([
-		[false, undefined],
-		[true, LINKED],
-	])(
-		'with external content allowed: %s, shows a linked picture from the room as %s',
-		async (allow, expected) => {
-			const doc = new Y.Doc();
-			reconcileSlidesInYDoc(
-				deck({ id: 'pic', type: 'picture', imagePath: LINKED, imageData: LINKED }),
-				doc as unknown as YDocLike,
-				factories(),
-				'remote',
-			);
-			await inRoot(async () => {
-				let received: PptxSlide[] = [];
-				const collab = new CollaborationController({
-					getSlides: () => deck(),
-					applyRemoteSlides: (slides) => {
-						received = slides;
-					},
-					getConfig: () => CONFIG,
-					getAllowExternalContent: () => allow,
-					createSession: sessionOn(doc),
-				});
-				await collab.start(CONFIG);
-				await vi.waitFor(() => expect(received[0]?.elements).toHaveLength(1));
-				expect((received[0]?.elements[0] as { imageData?: string } | undefined)?.imageData).toBe(
-					expected,
-				);
-				collab.stop();
-			});
-			doc.destroy();
-		},
-	);
 });

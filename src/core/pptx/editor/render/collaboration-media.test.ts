@@ -163,14 +163,14 @@ describe('collaboration media: the room carries the bytes, never page-local URLs
 			asDoc(sharer),
 			factories,
 		);
-		// The slide arrives first, without its picture yet.
-		expect(firstElement(joiner).imageData).toBeUndefined();
+		// The slide arrives first, with only the token of its picture.
+		expect(firstElement(joiner).imageData).toMatch(/^ooxml-media:/u);
 		await vi.waitFor(() => expect(changes.length).toBeGreaterThanOrEqual(2));
-		expect(firstElement(joiner).imageData).toBeTypeOf('string');
+		expect(await bytesOf(firstElement(joiner).imageData as string)).toEqual(PNG);
 		stop();
 	});
 
-	it('keeps a picture over the room budget out and tells the joiner why', async () => {
+	it('keeps the bytes of a picture over the room budget out and tells the joiner why', async () => {
 		const { sharer, joiner } = room();
 		const large = new Uint8Array(MAX_SHARED_MEDIA_BYTES + 1);
 		reconcileSlidesInYDoc(
@@ -184,14 +184,16 @@ describe('collaboration media: the room carries the bytes, never page-local URLs
 		expect(entry.b).toBeUndefined();
 		expect(entry.n).toBe(large.length);
 		const [slide] = readSlidesFromYDoc(asDoc(joiner));
-		expect((slide!.elements[0] as { imageData?: string }).imageData).toBeUndefined();
+		// The token stays (it draws nothing), so the joiner's next write does not delete it.
+		expect((slide!.elements[0] as { imageData?: string }).imageData).toMatch(/^ooxml-media:/u);
 		expect(slide!.warnings?.map((warning) => warning.code)).toEqual([REMOTE_MEDIA_WITHHELD]);
 	});
 
 	it('keeps to the smaller budget a peer-to-peer transport sets', async () => {
 		const { sharer, joiner } = room();
 		configureCollaborationMedia(asDoc(sharer), { maxBytes: PNG.length - 1 });
-		configureCollaborationMedia(asDoc(sharer), { allowExternalContent: true });
+		// A later call that does not name the budget keeps it.
+		configureCollaborationMedia(asDoc(sharer), { localMediaUrl: () => undefined });
 		reconcileSlidesInYDoc(
 			[slideOf(picture(objectUrl(PNG, 'image/png')))],
 			asDoc(sharer),
@@ -261,39 +263,29 @@ describe('collaboration media: the room carries the bytes, never page-local URLs
 	});
 });
 
-describe('collaboration media: linked content follows each viewer’s own setting', () => {
-	const linked = (): PptxElement =>
-		picture('https://linked.test/picture.png', {
-			imagePath: 'https://linked.test/picture.png',
+describe('collaboration media: what a joiner keeps while bytes are missing', () => {
+	it('keeps a linked picture as its link, for the viewer to gate where it draws', () => {
+		const { sharer, joiner } = room();
+		const linked = picture('https://linked.test/picture.png', {
 			shapeStyle: { fillImageUrl: 'https://linked.test/fill.png' },
-			actionClick: { action: 'hyperlink', url: 'https://linked.test/page' },
 		});
-
-	it('withholds linked pictures from a viewer that blocks external content', () => {
-		const { sharer, joiner } = room();
-		configureCollaborationMedia(asDoc(sharer), { allowExternalContent: true });
-		configureCollaborationMedia(asDoc(joiner), { allowExternalContent: false });
-		reconcileSlidesInYDoc([slideOf(linked())], asDoc(sharer), factories);
-
-		const seen = firstElement(joiner) as Record<string, Record<string, unknown> | string>;
-		expect(seen.imageData).toBeUndefined();
-		expect((seen.shapeStyle as Record<string, unknown>).fillImageUrl).toBeUndefined();
-		// The link itself and the hyperlink stay: only what would be fetched is left out.
-		expect(seen.imagePath).toBe('https://linked.test/picture.png');
-		expect((seen.actionClick as Record<string, unknown>).url).toBe('https://linked.test/page');
-		expect(mediaEntries(sharer).size).toBe(0);
-		// The sharer, which allows it, still sees its linked content.
-		expect(firstElement(sharer).imageData).toBe('https://linked.test/picture.png');
-	});
-
-	it('shows them to a viewer that allows external content', () => {
-		const { sharer, joiner } = room();
-		configureCollaborationMedia(asDoc(joiner), { allowExternalContent: true });
-		reconcileSlidesInYDoc([slideOf(linked())], asDoc(sharer), factories);
+		reconcileSlidesInYDoc([slideOf(linked)], asDoc(sharer), factories);
 		const seen = firstElement(joiner) as Record<string, Record<string, unknown> | string>;
 		expect(seen.imageData).toBe('https://linked.test/picture.png');
 		expect((seen.shapeStyle as Record<string, unknown>).fillImageUrl).toBe(
 			'https://linked.test/fill.png',
 		);
+		expect(mediaEntries(sharer).size).toBe(0);
+	});
+
+	it('keeps a token whose bytes have not arrived, so writing the slides back keeps it', () => {
+		const { joiner } = room();
+		const token = `ooxml-media:${'c'.repeat(32)}`;
+		reconcileSlidesInYDoc([slideOf(picture(token))], asDoc(joiner), factories);
+		const [slide] = readSlidesFromYDoc(asDoc(joiner));
+		expect((slide!.elements[0] as { imageData?: string }).imageData).toBe(token);
+		expect(slide!.warnings).toBeUndefined();
+		reconcileSlidesInYDoc(readSlidesFromYDoc(asDoc(joiner)), asDoc(joiner), factories);
+		expect(firstElement(joiner).imageData).toBe(token);
 	});
 });

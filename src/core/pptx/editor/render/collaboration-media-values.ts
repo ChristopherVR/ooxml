@@ -2,10 +2,11 @@
  * collaboration-media-values.ts: the values of a slide read from the room, as this viewer
  * shows them.
  *
- * Every media token becomes this page's own URL for the bytes the room holds (or is left
- * out while they have not arrived), a `blob:` URL another page wrote is left out, and a
- * linked picture or media file is left out when this viewer's remote content setting does
- * not allow it, whatever the participant who shared it allows.
+ * Every media token becomes this page's own URL for the bytes the room holds. A token whose
+ * bytes have not arrived, or were too large to send, stays as it is: it draws nothing, and a
+ * write of this viewer's slides keeps it in the room instead of deleting it. A `blob:` URL
+ * another page wrote is left out. Linked addresses pass through: each viewer gates them where
+ * it draws.
  */
 
 import type { CollaborationMedia } from './collaboration-media';
@@ -16,31 +17,6 @@ export interface MediaValueIssue {
 	readonly field: string;
 	readonly reason: 'invalid' | 'withheld';
 }
-
-/**
- * Keys that hold a picture, media file or embedded file a viewer fetches or shows, wherever
- * they appear in a slide (element fields, fills, text runs, bullets, table cells).
- */
-const RESOURCE_KEYS: ReadonlySet<string> = new Set([
-	'imageData',
-	'svgData',
-	'posterImage',
-	'posterFrameData',
-	'previewImage',
-	'previewImageData',
-	'mediaData',
-	'modelData',
-	'oleEmbeddedData',
-	'backgroundImage',
-	'fillImageUrl',
-	'textFillBlipUrl',
-	'backgroundImageFillData',
-	'imageDataUrl',
-	'imageUrl',
-	'soundData',
-]);
-
-const WEB_URL = /^https?:/iu;
 
 /** One string from the room as this viewer uses it, or `undefined` to leave it out. */
 export function inboundString(
@@ -55,28 +31,25 @@ export function inboundString(
 		if ('url' in resolved) {
 			return resolved.url;
 		}
-		if (resolved.missing !== 'pending') {
-			issues.push({ field: key, reason: resolved.missing });
+		if (resolved.missing === 'invalid') {
+			issues.push({ field: key, reason: 'invalid' });
+			return undefined;
 		}
-		return undefined;
+		if (resolved.missing === 'withheld') {
+			issues.push({ field: key, reason: 'withheld' });
+		}
+		return value;
 	}
 	if (isLocalOnlyUrl(value) && !media.ownsUrl(value)) {
 		issues.push({ field: key, reason: 'invalid' });
-		return undefined;
-	}
-	if (!media.allowExternalContent && RESOURCE_KEYS.has(key) && WEB_URL.test(value)) {
 		return undefined;
 	}
 	return value;
 }
 
 /** Whether a JSON text from the room holds anything {@link inboundString} would change. */
-function needsInbound(media: CollaborationMedia, json: string): boolean {
-	return (
-		json.includes('"ooxml-media:') ||
-		json.includes('"blob:') ||
-		(!media.allowExternalContent && /"https?:/iu.test(json))
-	);
+function needsInbound(json: string): boolean {
+	return json.includes('"ooxml-media:') || json.includes('"blob:');
 }
 
 /** `JSON.parse(json)` with every string passed through {@link inboundString}. */
@@ -85,7 +58,7 @@ export function parseInbound(
 	json: string,
 	issues: MediaValueIssue[],
 ): unknown {
-	if (!media || !needsInbound(media, json)) {
+	if (!media || !needsInbound(json)) {
 		return JSON.parse(json);
 	}
 	return JSON.parse(json, (key, value: unknown) =>

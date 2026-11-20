@@ -79,7 +79,6 @@ export class CollaborationDocument {
 		// Before the room's slides are read or written.
 		configureCollaborationMedia(doc, {
 			localMediaUrl: (path) => this.#deps.getMediaDataUrls?.().get(path),
-			allowExternalContent: this.#deps.getAllowExternalContent?.() === true,
 		});
 		const config = this.#config;
 		if (!config) {

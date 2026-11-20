@@ -5,21 +5,14 @@
  */
 import { DestroyRef, Injector } from '@angular/core';
 import type { CollaborationConfig, ExternalCollaborationSession } from 'ooxml-ui/pptx';
-import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import { CollaborationService } from './collaboration.service';
 
-const factories = {
-	createMap: () => new Y.Map(),
-	createArray: () => new Y.Array(),
-	createText: () => new Y.Text(),
-};
 const VIDEO_PATH = 'ppt/media/media1.mp4';
 const PLAYED_FROM = 'blob:http://localhost/played-video';
-const LINKED = 'https://linked.test/picture.png';
 
 const deck = (...elements: unknown[]): PptxSlide[] =>
 	[{ id: 's1', rId: 'rId2', slideNumber: 1, elements }] as unknown as PptxSlide[];
@@ -88,33 +81,4 @@ describe('collaboration media in the Angular binding', () => {
 		expect(JSON.stringify(doc.toJSON())).not.toContain('blob:');
 		collab.disconnect();
 	});
-
-	it.each([
-		[false, undefined],
-		[true, LINKED],
-	])(
-		'with external content allowed: %s, shows a linked picture from the room as %s',
-		async (allow, expected) => {
-			const { doc, session } = room();
-			reconcileSlidesInYDoc(
-				deck({ id: 'pic', type: 'picture', imagePath: LINKED, imageData: LINKED }),
-				doc,
-				factories,
-				'remote',
-			);
-			const collab = service();
-			let received: PptxSlide[] = [];
-			await collab.connect(config(session), {
-				onRemoteSlides: (slides) => {
-					received = slides;
-				},
-				allowExternalContent: () => allow,
-			});
-			await vi.waitFor(() => expect(received[0]?.elements).toHaveLength(1));
-			expect((received[0]?.elements[0] as { imageData?: string } | undefined)?.imageData).toBe(
-				expected,
-			);
-			collab.disconnect();
-		},
-	);
 });

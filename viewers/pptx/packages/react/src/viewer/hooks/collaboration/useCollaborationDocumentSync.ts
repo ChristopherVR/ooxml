@@ -35,8 +35,6 @@ export interface CollaborationDocumentSyncInput {
 	onRoomReplacedDeck?: () => void;
 	/** See `UseYjsDocumentSyncInput.mediaDataUrls`. */
 	mediaDataUrls?: ReadonlyMap<string, string>;
-	/** See `UseYjsDocumentSyncInput.allowExternalContent`. */
-	allowExternalContent?: boolean;
 }
 
 /** Shared wiring for the bundled editor and custom toolbar/canvas hosts. */

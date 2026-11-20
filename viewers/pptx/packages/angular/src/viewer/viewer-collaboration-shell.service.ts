@@ -87,7 +87,6 @@ export class ViewerCollaborationShellService {
 			},
 			getSaveOptions: () => this.loader.getSaveOptions(),
 			mediaDataUrls: () => this.loader.mediaDataUrls(),
-			allowExternalContent: () => this.loader.resolveAllowExternalImages(),
 			currentSlides: () => this.editor.slides(),
 			emitStart: () => {},
 			emitStop: () => {},

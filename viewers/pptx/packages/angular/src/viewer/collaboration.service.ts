@@ -215,7 +215,6 @@ export class CollaborationService {
 		// Before the room's slides are read or written.
 		configureCollaborationMedia(config.externalSession?.doc ?? live.doc, {
 			localMediaUrl: (path) => options.getMediaDataUrls?.().get(path),
-			allowExternalContent: options.allowExternalContent?.() === true,
 		});
 		const deps = {
 			slideSync: this.slideSync,

@@ -63,8 +63,6 @@ interface CollaborationSessionHost {
 	readonly getSaveOptions: () => PptxHandlerSaveOptions;
 	/** The URLs the viewer plays its audio and video from. */
 	readonly mediaDataUrls: () => ReadonlyMap<string, string>;
-	/** The viewer's remote content setting (host `allowExternalContent`, else Trust Center). */
-	readonly allowExternalContent: () => boolean;
 	/** The current editable deck (seeds the sync baseline after connecting). */
 	readonly currentSlides: () => readonly PptxSlide[];
 	readonly emitStart: (config: CollaborationConfig) => void;
@@ -167,7 +165,6 @@ export class ViewerCollaborationSessionService {
 			getTemplateElements: () => host.getTemplateElements(),
 			getSaveOptions: () => host.getSaveOptions(),
 			getMediaDataUrls: () => host.mediaDataUrls(),
-			allowExternalContent: () => host.allowExternalContent(),
 		};
 	}
 
