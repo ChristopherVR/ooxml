@@ -227,6 +227,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       calculation on open in a worker with a ten-second limit
       (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
       `workbook-opener.test.ts`.
+- [x] **P1** REGEXTEST, REGEXEXTRACT and REGEXREPLACE run on the engine's own matcher
+      (`src/core/xlsx/formula/regex/`), so they accept nested quantifiers such as `(a+)+` as Excel
+      does, and a pattern that would run past the recalculation budget is `#NUM!` instead of
+      hanging. Syntax is still JavaScript's, not PCRE2's, and scans of a whole 30,000-character text
+      are 3 to 10 times slower than the browser's native matcher (under 1.5 ms a call). Evidence:
+      `regex/differential.test.ts` (3,000 random patterns against the browser's matcher).
 - [ ] **P2** Engine limits Excel does not have: the work budget makes MMULT of two arrays larger
       than about 790 by 790 `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700
       levels) is `#NUM!` where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`); a single
