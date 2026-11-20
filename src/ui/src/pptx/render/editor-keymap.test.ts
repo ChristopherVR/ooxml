@@ -495,6 +495,15 @@ describe('mapInlineEditorChord', () => {
 		expect(mapInlineEditorChord(press('D', { metaKey: true, shiftKey: true }))).toBe('suppress');
 	});
 
+	it('types a tab on Tab and keeps Shift+Tab in the edit instead of moving focus away', () => {
+		expect(mapInlineEditorChord(press('Tab'))).toBe('tab');
+		expect(mapInlineEditorChord(press('Tab', { shiftKey: true }))).toBe('suppress');
+		expect(mapInlineEditorChord({ key: 'Tab', isComposing: true })).toBeNull();
+		// Ctrl+Tab and Alt+Tab belong to the browser and the system.
+		expect(mapInlineEditorChord(press('Tab', { ctrlKey: true }))).toBeNull();
+		expect(mapInlineEditorChord(press('Tab', { altKey: true }))).toBeNull();
+	});
+
 	it('leaves plain typing, Enter, Alt chords and IME keys to the editor', () => {
 		expect(mapInlineEditorChord(press('Enter'))).toBeNull();
 		expect(mapInlineEditorChord(press('d'))).toBeNull();

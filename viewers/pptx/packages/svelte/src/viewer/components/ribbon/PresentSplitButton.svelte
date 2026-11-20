@@ -5,6 +5,8 @@
 	 * chevron half opens a dropdown with Presenter View, Rehearse Timings,
 	 * Set Up Slide Show, Present Online (broadcast), and a Subtitles toggle.
 	 */
+	import { listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
+
 	import { useTranslator } from '../../../i18n/context';
 
 	const {
@@ -27,6 +29,15 @@
 
 	const t = useTranslator();
 	let open = $state(false);
+	let chevron: HTMLButtonElement | undefined = $state();
+
+	// Escape closes the menu and gives focus back to the chevron (shared with every binding).
+	$effect(() => {
+		if (!open) {
+			return;
+		}
+		return listenForPopupMenuDismiss(document, { onDismiss: () => (open = false), trigger: chevron });
+	});
 
 	function choose(action?: () => void): void {
 		open = false;
@@ -52,6 +63,7 @@
 			{t('pptx.toolbar.present')}
 		</button>
 		<button
+			bind:this={chevron}
 			type="button"
 			class="pptx-svelte-present-chev"
 			class:pptx-svelte-present-chev-open={open}

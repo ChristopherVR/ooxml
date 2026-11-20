@@ -824,7 +824,9 @@ p:where(:not(.pptxv *, [class*='pptxv-'], [class*='pptxv-'] *)) {
 	display: flex;
 	flex: none;
 }
+/* The close button is at least a 24px target (WCAG 2.5.8) whatever width the font gives the glyph. */
 .file-tab > button:last-child {
+	min-width: 24px;
 	padding: 4px 7px;
 }
 

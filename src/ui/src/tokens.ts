@@ -29,6 +29,12 @@ export const OFFICE_TOKENS = {
 	'--office-accent-ink':
 		'light-dark(var(--office-accent, #2563eb), color-mix(in srgb, var(--office-accent, #2563eb) 60%, #fff))',
 	'--office-ring': '#2563eb',
+	/**
+	 * The focus ring on a control the accent fills (the ribbon's File tab, an accent button).
+	 * `--office-ring` is a shade of the accent, so over such a fill it is all but invisible; the
+	 * accent's own foreground is the colour that fill is already proven to contrast with.
+	 */
+	'--office-ring-on-accent': 'var(--office-accent-foreground, #ffffff)',
 	'--office-danger': '#b91c1c',
 	'--office-danger-foreground': '#ffffff',
 	'--office-warning': '#d97706',

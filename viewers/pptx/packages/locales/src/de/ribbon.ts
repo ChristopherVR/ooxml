@@ -12,7 +12,6 @@ export const translations = {
 	'pptx.ribbon.review': 'Überprüfen',
 	'pptx.ribbon.view': 'Ansicht',
 	'pptx.ribbon.file': 'Datei',
-	'pptx.ribbon.slideShowOptions': 'Diashow-Optionen',
 	'pptx.ribbon.fromBeginning': 'Von Anfang an',
 	'pptx.ribbon.presenterView': 'Referentenansicht',
 	'pptx.ribbon.broadcast': 'Übertragen',

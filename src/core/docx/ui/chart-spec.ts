@@ -47,7 +47,8 @@ export function nodeChart(node: ProseMirrorNode): DocxChart | undefined {
 export function chartNodeSpec(node: ProseMirrorNode, theme?: ThemeCatalog): DOMOutputSpec {
 	const width = Number(node.attrs.widthPx) || 96;
 	const height = Number(node.attrs.heightPx) || 96;
-	const paint = docxChartPaint(nodeChart(node), width, height, theme);
+	const altText = typeof node.attrs.altText === 'string' ? node.attrs.altText : undefined;
+	const paint = docxChartPaint(nodeChart(node), width, height, theme, altText);
 	const style = `width:${width}px;height:${height}px`;
 	if (!paint.svg)
 		return [
@@ -68,7 +69,9 @@ export function chartNodeSpec(node: ProseMirrorNode, theme?: ThemeCatalog): DOMO
 			...inlineRunPropertiesDomAttrs(node),
 			class: 'dve-chart',
 			style,
-			title: paint.label,
+			// The author's alt text when there is one; the painted SVG carries the same name and the
+			// data readout (`chartAccessibleName`, `chartDataDescription`).
+			title: paint.name ?? paint.label,
 		},
 		svgMarkupSpec(paint.svg),
 	];

@@ -87,6 +87,15 @@ describe('slide canvas inline editor chords', () => {
 		expect(editor.textContent).toBe('Hello ');
 	});
 
+	it('types a tab on Tab and keeps Shift+Tab in the edit, as in PowerPoint', () => {
+		const { editor, blur, press } = harness();
+		expect(press({ key: 'Tab' }).defaultPrevented).toBeTruthy();
+		expect(editor.textContent).toBe('Hello \t');
+		expect(press({ key: 'Tab', shiftKey: true }).defaultPrevented).toBeTruthy();
+		expect(editor.textContent).toBe('Hello \t');
+		expect(blur).not.toHaveBeenCalled();
+	});
+
 	it('only cancels Ctrl/Cmd+D, keeping the edit open', () => {
 		const { blur, press } = harness();
 		const event = press({ key: 'd', ctrlKey: true });

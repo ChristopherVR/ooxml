@@ -51,6 +51,21 @@ describe('embedded chart drawing', () => {
 		expect(renderEmbeddedChart(await chartShape({ width: 0, height: 0 }))).toBeUndefined();
 	});
 
+	it('is an image a reader can name and whose data it can read', async () => {
+		const plain = renderEmbeddedChart(await chartShape())!;
+		const svg = plain.querySelector('svg')!;
+		expect(svg.getAttribute('role')).toBe('img');
+		// The chart's own title names it, and its series and values are its description.
+		expect(svg.querySelector('title')?.textContent).toBe('Quarter one');
+		expect(svg.querySelector('desc')?.textContent).toContain('Jan 10; Feb 20');
+		// The shape's alt text is what the author wrote for a reader, so it names the chart.
+		const described = await chartShape();
+		described.alternativeText = 'Sales doubled from January to February';
+		expect(renderEmbeddedChart(described)!.querySelector('svg > title')?.textContent).toBe(
+			'Sales doubled from January to February',
+		);
+	});
+
 	it('keeps script out of anything the chart carries', async () => {
 		const shape = await chartShape();
 		shape.embeddedObject!.chart.title = '<script>alert(1)</script>';

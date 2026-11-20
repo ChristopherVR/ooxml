@@ -334,6 +334,9 @@ const ElementRendererImpl: React.FC<ElementRendererProps> = /* @__PURE__ */ Reac
 				role={aria.role}
 				aria-label={aria.label}
 				aria-roledescription={aria.roleDescription}
+				// A chart's data read out (`getAriaDescription`); the four other bindings stamp the
+				// same attribute in their shared DOM pass.
+				aria-description={aria.description}
 				aria-hidden={aria.hidden ? true : undefined}
 				aria-selected={isSelected ? true : undefined}
 				tabIndex={isFocusable ? 0 : -1}

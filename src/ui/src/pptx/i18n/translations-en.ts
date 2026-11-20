@@ -2132,7 +2132,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.security.hide': 'Hide',
 	'pptx.security.protectedViewTitle': 'PROTECTED VIEW',
 	'pptx.security.enableEditing': 'Enable Editing',
-	'pptx.ribbon.slideShowOptions': 'Slide show options',
 	'pptx.ribbon.fromBeginning': 'From Beginning',
 	'pptx.ribbon.presenterView': 'Presenter View',
 	'pptx.ribbon.broadcast': 'Broadcast',

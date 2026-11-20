@@ -12,7 +12,6 @@ export const translations = {
 	'pptx.ribbon.review': '검토',
 	'pptx.ribbon.view': '보기',
 	'pptx.ribbon.file': '파일',
-	'pptx.ribbon.slideShowOptions': '슬라이드 쇼 옵션',
 	'pptx.ribbon.fromBeginning': '처음부터',
 	'pptx.ribbon.presenterView': '발표자 보기',
 	'pptx.ribbon.broadcast': '브로드캐스트',

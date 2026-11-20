@@ -6,6 +6,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	getInlineEditorSelection,
+	insertInlineEditorText,
 	mapInlineEditorChord,
 	markInsertedParagraph,
 	placeCaretAt,
@@ -222,13 +223,15 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 		// Keep every keystroke local so viewer navigation/editor shortcuts
 		// (arrows, space, Delete, Ctrl+Z...) never fire while typing.
 		event.stopPropagation();
-		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text.
+		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text; Tab types a tab.
 		// Ctrl/Cmd+D is only cancelled: the viewer keymap stands down mid-edit,
 		// so nothing else stops the browser opening its bookmark dialog.
 		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			if (chord !== 'suppress') {
+			if (chord === 'tab') {
+				insertInlineEditorText(doc, '\t');
+			} else if (chord !== 'suppress') {
 				close(readEditableText(surface));
 			}
 		}

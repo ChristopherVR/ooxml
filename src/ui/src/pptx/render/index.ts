@@ -1314,6 +1314,8 @@ export * from './outline-view';
 export * from './outline-view-edit';
 // `outline-view-dismiss` is Escape back to Normal view, shared so no binding misses it.
 export * from './outline-view-dismiss';
+// `popup-menu-dismiss` is Escape out of a ribbon drop-down menu, shared for the same reason.
+export * from './popup-menu-dismiss';
 // `outline-view-session` is the edit-and-caret shell every binding's Outline view runs on.
 export * from './outline-view-session';
 // Editor keyboard map: the editing shortcut set (clipboard, history, nudge,

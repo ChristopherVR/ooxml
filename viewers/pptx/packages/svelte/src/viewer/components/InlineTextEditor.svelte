@@ -17,6 +17,7 @@
 		createInlineListModelObserver,
 		initializeInlineListDom,
 		inlineListBodyText,
+		insertInlineEditorText,
 		mapInlineEditorChord,
 		markInsertedParagraph,
 		readListActivationSelection,
@@ -183,13 +184,15 @@
 		// etc. props (this component has no direct access to `EditorState`,
 		// only to `EditorController`, via those callbacks).
 		event.stopPropagation();
-		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text.
+		// Escape and Ctrl/Cmd+Enter both leave the edit, keeping the text; Tab types a tab.
 		// Ctrl/Cmd+D is only cancelled: the viewer keymap stands down mid-edit,
 		// so nothing else stops the browser opening its bookmark dialog.
 		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			if (chord !== 'suppress') {
+			if (chord === 'tab') {
+				insertInlineEditorText(document, '\t');
+			} else if (chord !== 'suppress') {
 				close(el ? readEditableText(el) : null);
 			}
 			return;

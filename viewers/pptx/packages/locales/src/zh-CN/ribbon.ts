@@ -12,7 +12,6 @@ export const translations = {
 	'pptx.ribbon.review': '审阅',
 	'pptx.ribbon.view': '视图',
 	'pptx.ribbon.file': '文件',
-	'pptx.ribbon.slideShowOptions': '幻灯片放映选项',
 	'pptx.ribbon.fromBeginning': '从头开始',
 	'pptx.ribbon.presenterView': '演示者视图',
 	'pptx.ribbon.broadcast': '广播',

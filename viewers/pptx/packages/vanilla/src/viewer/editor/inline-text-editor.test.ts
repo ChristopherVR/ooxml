@@ -814,6 +814,25 @@ describe('openInlineEditor chords it owns', () => {
 		done();
 	});
 
+	it('types a tab on Tab and keeps Shift+Tab in the edit, as in PowerPoint', () => {
+		const { session, onClose, done } = open();
+		session.el.focus();
+		const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+		session.el.dispatchEvent(tab);
+		const back = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			shiftKey: true,
+			bubbles: true,
+			cancelable: true,
+		});
+		session.el.dispatchEvent(back);
+		expect(tab.defaultPrevented).toBeTruthy();
+		expect(back.defaultPrevented).toBeTruthy();
+		expect(session.el.textContent).toContain('\t');
+		expect(onClose).not.toHaveBeenCalled();
+		done();
+	});
+
 	it('cancels Ctrl+D (the browser bookmark dialog) and stays in the edit', () => {
 		const { session, onClose, done } = open();
 		const event = chord('d');

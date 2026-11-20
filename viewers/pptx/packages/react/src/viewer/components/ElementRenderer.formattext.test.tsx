@@ -300,6 +300,31 @@ describe('inline editor chords (shared mapInlineEditorChord)', () => {
 		expect(commit).toHaveBeenCalledOnce();
 	});
 
+	it('types a tab on Tab instead of moving focus out of the text box', () => {
+		const commit = vi.fn();
+		const change = vi.fn();
+		mount(makeProps({ onInlineEditCommit: commit, onInlineEditChange: change }));
+		const editor = getInlineEditor();
+		const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+		act(() => {
+			editor.dispatchEvent(tab);
+		});
+		expect(tab.defaultPrevented).toBe(true);
+		expect(editor.textContent).toContain('\t');
+		expect(change).toHaveBeenLastCalledWith(expect.stringContaining('\t'));
+		const back = new KeyboardEvent('keydown', {
+			key: 'Tab',
+			shiftKey: true,
+			bubbles: true,
+			cancelable: true,
+		});
+		act(() => {
+			editor.dispatchEvent(back);
+		});
+		expect(back.defaultPrevented).toBe(true);
+		expect(commit).not.toHaveBeenCalled();
+	});
+
 	it('cancels Ctrl+D (the browser bookmark dialog) without leaving the edit', () => {
 		const commit = vi.fn();
 		const cancel = vi.fn();

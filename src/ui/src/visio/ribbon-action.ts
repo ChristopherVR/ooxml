@@ -206,6 +206,8 @@ export type VisioRibbonAction =
 	| VisioContainerOptionAction
 	| VisioPictureAction
 	| { type: 'pane'; pane: 'shapes' | 'inspector' }
+	/** F6 and Shift+F6: the keyboard moves to the next or previous region of the window. */
+	| { type: 'region'; direction: 1 | -1 }
 	| { type: 'reveal'; panel: 'edit' | 'notes' | 'selection'; focusText?: boolean }
 	| { type: 'grid' }
 	| { type: 'connection-points' }

@@ -50,7 +50,8 @@ button.b[data-size=large] svg.chev { width:9px; height:9px; margin-top:-1px; }
 /* The split halves (New Slide): glyph and caption press the main action, the strip below opens the menu. */
 .slot[data-pptx-chrome=split-button]:has([data-size=large]) { flex-direction:column; align-items:stretch; }
 .slot > button.b[data-pptx-chrome=split-main][data-size=large] { height:52px; min-width:56px; border-radius:4px 4px 0 0; }
-.slot > button.b[data-pptx-chrome=split-caret][data-size=caret] { min-width:0; height:14px; padding:0; border-radius:0 0 4px 4px; border-left:0; align-self:stretch; }
+/* WCAG 2.5.8: a 24px target whose face stays 14px tall; the clear 10px below hangs into the group label. */
+.slot > button.b[data-pptx-chrome=split-caret][data-size=caret] { min-width:0; height:24px; padding:0; border-radius:0 0 4px 4px; border-left:0; align-self:stretch; border-bottom:10px solid transparent; margin-bottom:-10px; background-clip:padding-box !important; }
 .slot > button.b[data-pptx-chrome=split-caret][data-size=caret] svg { width:10px; height:10px; stroke-width:2.2; }
 .slot > button.b[data-pptx-chrome=split-caret]:not([data-size]) { min-width:16px; padding:0 2px; border-radius:0 4px 4px 0; align-self:stretch; height:auto; }
 .slot > button.b[data-pptx-chrome=split-caret]:not([data-size]) svg { width:10px; height:10px; }

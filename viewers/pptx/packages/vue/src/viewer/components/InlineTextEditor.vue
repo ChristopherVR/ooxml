@@ -5,6 +5,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	inlineListBodyText,
+	insertInlineEditorText,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	markInsertedParagraph,
@@ -265,13 +266,17 @@ function onKeydown(event: KeyboardEvent): void {
 		return;
 	}
 	// Escape and Ctrl/Cmd+Enter leave the edit, keeping the text (blur is the commit
-	// path, as for a click outside). Ctrl/Cmd+D is only cancelled: the viewer
+	// path, as for a click outside); Tab types a tab. Ctrl/Cmd+D is only cancelled: the viewer
 	// keymap stands down mid-edit, so nothing else stops the browser opening
 	// its bookmark dialog.
 	const chord = mapInlineEditorChord(event);
 	if (chord) {
 		event.preventDefault();
 		event.stopPropagation();
+		if (chord === 'tab') {
+			insertInlineEditorText(document, '\t');
+			return;
+		}
 		// Back to the slide; the blur that causes is the commit.
 		if (chord === 'commit' && !restoreEditorKeyboardFocus(editorRef.value)) {
 			editorRef.value?.blur();

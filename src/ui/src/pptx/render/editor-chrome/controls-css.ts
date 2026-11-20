@@ -50,8 +50,11 @@ export const EDITOR_CONTROLS_CSS = `
   }
   ${R} [data-pptx-chrome="split-button"]:has([data-size="large"]) { flex-direction: column; }
   ${R} button[data-pptx-chrome="split-main"][data-size="large"] { height: 52px; min-height: 52px; border-radius: 4px 4px 0 0; }
+  /* WCAG 2.5.8: the strip is a 24px target. Its face stays 14px tall, as in PowerPoint; the 10px
+     under it is a clear border that hangs into the group label, so nothing moves. */
   ${R} button[data-pptx-chrome="split-caret"][data-size="caret"] {
-    min-width: 0; height: 14px; min-height: 14px; padding: 0; border-radius: 0 0 4px 4px; align-self: stretch;
+    min-width: 0; height: 24px; min-height: 24px; padding: 0; border-radius: 0 0 4px 4px; align-self: stretch;
+    border-bottom: 10px solid transparent; margin-bottom: -10px; background-clip: padding-box !important;
   }
   ${R} button[data-pptx-chrome="split-caret"][data-size="caret"] svg { width: 10px; height: 10px; stroke-width: 2.2; }
   ${R} [data-pptx-chrome="split-caret"]:not([data-size]) {

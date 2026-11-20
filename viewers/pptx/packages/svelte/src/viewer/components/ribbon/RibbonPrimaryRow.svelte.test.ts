@@ -200,6 +200,33 @@ describe('ribbonPrimaryRow', () => {
 		expect(items).not.toContain('Protect Presentation');
 	});
 
+	it.each(['More actions', 'Presentation options'])(
+		'closes the %s menu on Escape and gives focus back to its button',
+		(label) => {
+			const target = mountRow({
+				onpresenter: vi.fn(),
+				exportUi: { exporting: false } as unknown as ExportUiState,
+			});
+			document.body.append(target);
+			const trigger = target.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
+			trigger.click();
+			flushSync();
+			const item = target.querySelector<HTMLButtonElement>('[role="menuitem"]')!;
+			item.focus();
+			const escape = new KeyboardEvent('keydown', {
+				key: 'Escape',
+				bubbles: true,
+				cancelable: true,
+			});
+			item.dispatchEvent(escape);
+			flushSync();
+			expect(escape.defaultPrevented).toBe(true);
+			expect(target.querySelector('[role="menu"]')).toBeNull();
+			expect(document.activeElement).toBe(trigger);
+			target.remove();
+		},
+	);
+
 	it.each([
 		['en', undefined, '+ Show', 'Create custom show'],
 		['de', german, '+ Präsentation', 'Benutzerdefinierte Bildschirmpräsentation erstellen'],

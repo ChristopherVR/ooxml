@@ -11,6 +11,8 @@ import { imageRectFromCrop } from 'ooxml-core/geometry';
 // shared selection model (`selection.drawing`), so the Chart Design tab and Delete follow it.
 import {
 	anchorToPixelBox,
+	chartAccessibleName,
+	chartDataDescription,
 	chartView,
 	createRefEvaluator,
 	pixelBoxToAnchor,
@@ -169,6 +171,8 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.replaceChildren();
 		node.className = 'xg-obj';
+		// Its description target went with the children; a kind that has none must not keep it.
+		node.removeAttribute('aria-describedby');
 		node.removeAttribute('role');
 		node.removeAttribute('aria-label');
 		// A picture is one image, named by its alt text, else its name.
@@ -264,16 +268,19 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.classList.add('xg-chart');
 		const workbook = view.workbook();
+		let readout = '';
 		if (workbook) {
 			try {
 				const evaluate = createRefEvaluator(workbook, view.ctx.session()?.calc, {
 					sheet: view.sheetIndex(),
 				});
 				const model = chartView(workbook, view.sheetIndex(), drawing, evaluate);
+				readout = chartDataDescription(model);
 				node.append(
 					svgNode(
 						doc,
 						renderChartSvg(model, Math.max(10, box.w), Math.max(10, box.h), {
+							...(drawing.description ? { altText: drawing.description } : {}),
 							measureText: (content, font) => view.measurer.measure(content, font),
 							measureFont: (font) => view.measurer.fontMetrics(font),
 						}),
@@ -284,7 +291,19 @@ export class DrawingLayer {
 			}
 		}
 		node.setAttribute('role', 'img');
-		node.setAttribute('aria-label', drawing.title ?? view.ctx.t('Chart'));
+		node.setAttribute(
+			'aria-label',
+			chartAccessibleName(drawing, drawing.description) ?? view.ctx.t('Chart'),
+		);
+		// `role="img"` prunes the SVG, so its own `<desc>` never reaches a reader: the frame carries
+		// the data readout itself. A description target may be hidden and is still announced.
+		if (readout) {
+			const id = `xs${view.sheetIndex()}_${node.dataset.index}_desc`;
+			const description = h(doc, 'span', 'xg-obj-desc', { id, hidden: '' });
+			description.textContent = readout;
+			node.append(description);
+			node.setAttribute('aria-describedby', id);
+		}
 	}
 
 	#selection(node: HTMLElement, index: number): void {

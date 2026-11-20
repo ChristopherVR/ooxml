@@ -47,6 +47,7 @@ import {
 	type Identity,
 } from './storage';
 import css from './teams-app.css?raw';
+import { moveTeamsRegion } from './regions';
 import { threadPane } from './thread-pane';
 import { followedThreads } from './followed-threads';
 import { draftList } from './draft-list';
@@ -662,6 +663,9 @@ export class TeamsApp extends TeamsLitElement {
 			<div
 				class="shell"
 				data-mobile-view=${this.mobileScreen(s)}
+				@keydown=${(event: KeyboardEvent) => {
+					if (moveTeamsRegion(this.renderRoot, event)) event.preventDefault();
+				}}
 				@office-chat-open-tab=${(event: CustomEvent<{ tabId: string }>) => {
 					if (this.teams.state?.tabs.some((entry) => entry.id === event.detail.tabId))
 						this.selectTab(event.detail.tabId);

@@ -4,6 +4,7 @@ import { funnelSvg } from './chart-svg-funnel';
 import { cartesianSvg } from './chart-svg-plots';
 import { pieSvg, radarSvg } from './chart-svg-radial';
 import { sunburstSvg, treemapSvg } from './chart-svg-hierarchy';
+import { chartAccessibleName, chartDataDescription } from './chart-accessibility';
 import { esc, n, text, type Rect } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
 import { chartAreaRect, chartTextAttributes, chartGradientPaint } from './chart-svg-appearance';
@@ -37,7 +38,12 @@ export function renderChartSvg(
 	out.push(
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${n(w)}" height="${n(h)}" viewBox="0 0 ${n(w)} ${n(h)}" font-family="${esc(CHART_FONT_FAMILY)}" role="img">`,
 	);
-	if (model.title) out.push(`<title>${esc(model.title)}</title>`);
+	// A chart is a picture: without a name and a readout of its data (`chart-accessibility.ts`) a
+	// screen reader announces the title alone, or nothing when the chart shows no title.
+	const accessibleName = chartAccessibleName(model, options.altText);
+	if (accessibleName) out.push(`<title>${esc(accessibleName)}</title>`);
+	const readout = chartDataDescription(model);
+	if (readout) out.push(`<desc>${esc(readout)}</desc>`);
 	if (paint.defs) out.push(paint.defs);
 	out.push(chartAreaRect(model, 'chartArea', { x: 0, y: 0, w, h }));
 	let area: Rect = { x: 8, y: 8, w: w - 16, h: h - 16 };

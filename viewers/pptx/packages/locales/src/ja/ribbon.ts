@@ -12,7 +12,6 @@ export const translations = {
 	'pptx.ribbon.review': '校閲',
 	'pptx.ribbon.view': '表示',
 	'pptx.ribbon.file': 'ファイル',
-	'pptx.ribbon.slideShowOptions': 'スライド ショーのオプション',
 	'pptx.ribbon.fromBeginning': '最初から',
 	'pptx.ribbon.presenterView': '発表者ツール',
 	'pptx.ribbon.broadcast': 'ブロードキャスト',
