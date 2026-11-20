@@ -4,6 +4,9 @@ import { int, spec } from './helpers';
 import type { FunctionSpec } from './types';
 
 const C = 'Math & Trig';
+/** Work units of one multiply-add of MMULT, and of one step of elimination (measured, in ns). */
+const MULTIPLY_ADD_WORK = 1;
+const ELIMINATION_WORK = 5;
 
 /** A numeric matrix; text, blanks and logicals are #VALUE!. */
 function numbers(ctx: CallContext, value: Value | undefined): number[][] {
@@ -19,7 +22,7 @@ function numbers(ctx: CallContext, value: Value | undefined): number[][] {
 function square(m: number[][]): number {
 	const n = m.length;
 	// Elimination is cubic: charged up front, before any of it runs.
-	chargeWork(n * n * n);
+	chargeWork(n * n * n * ELIMINATION_WORK);
 	if (n === 0 || m.some((row) => row.length !== n)) fail(ERR.VALUE);
 	return n;
 }
@@ -83,10 +86,20 @@ export const MATRIX_FUNCTIONS: FunctionSpec[] = [
 			const inner = a[0]?.length ?? 0;
 			if (inner !== b.length) fail(ERR.VALUE);
 			const cols = b[0]?.length ?? 0;
-			chargeWork(a.length * cols * inner);
+			chargeWork(a.length * cols * inner * MULTIPLY_ADD_WORK);
+			// Rows of `a` and columns of `b` laid out flat, so the inner loop reads both in order.
+			const left = Float64Array.from(a.flat());
+			const right = new Float64Array(cols * inner);
+			for (let k = 0; k < inner; k++) {
+				const line = b[k] as number[];
+				for (let c = 0; c < cols; c++) right[c * inner + k] = line[c] as number;
+			}
 			return Matrix.build(a.length, cols, (r, c) => {
 				let total = 0;
-				for (let k = 0; k < inner; k++) total += (a[r]?.[k] ?? 0) * (b[k]?.[c] ?? 0);
+				const ra = r * inner;
+				const cb = c * inner;
+				for (let k = 0; k < inner; k++)
+					total += (left[ra + k] as number) * (right[cb + k] as number);
 				return total;
 			});
 		},

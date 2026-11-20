@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { chargeWork, ErrorSignal, MAX_RECALC_WORK, resetCalcBudget } from '../values';
+import { chargeWork, ErrorSignal, MAX_FORMULA_WORK, resetCalcBudget } from '../values';
 import { compileRegex, groupText, search } from '.';
 
 const find = (pattern: string, text: string, ignoreCase = false) => {
@@ -41,7 +41,7 @@ describe('regex matcher', () => {
 		// A backreference keeps the memo off, so this pattern backtracks exponentially.
 		const program = compileRegex('^(a|a)*\\1$', false);
 		resetCalcBudget();
-		chargeWork(MAX_RECALC_WORK - 20_000_000);
+		chargeWork(MAX_FORMULA_WORK - 20_000_000);
 		const started = performance.now();
 		let thrown: unknown;
 		try {

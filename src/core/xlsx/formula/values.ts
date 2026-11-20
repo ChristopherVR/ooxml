@@ -41,47 +41,70 @@ export const MAX_ARRAY_SIDE = 1_048_576;
 export const MAX_ARRAY_CELLS = 16_777_216;
 
 /**
- * The most array cells one recalculation may build in total, so many formulas that each stay under
+ * The most array cells one formula may build in total, so a formula whose arrays each stay under
  * `MAX_ARRAY_CELLS` still cannot exhaust memory or time (`#NUM!` past it).
  */
-export const MAX_TOTAL_ARRAY_CELLS = 50_000_000;
+export const MAX_FORMULA_ARRAY_CELLS = 50_000_000;
 /**
- * The work one recalculation may spend where cost grows faster than the cells involved: matrix
+ * The work one formula may spend where cost grows faster than the cells involved: matrix
  * products, LAMBDA calls, criteria and lookup scans repeated over arrays, sorting and pattern
- * matching. A unit is about one multiply-add of MMULT; the budget is about two seconds of work.
+ * matching. A unit is about a nanosecond of this engine's measured time for that operation, so
+ * the bound is about three seconds; past it the formula is `#NUM!`. Every formula has
+ * a budget of its own, so ordinary formulas never add up to a refusal; how long a whole
+ * recalculation may take is its caller's choice (`CalcEngineOptions.timeLimitMs`).
  */
-export const MAX_RECALC_WORK = 500_000_000;
-/** The text characters one recalculation may build with `&` and the text functions. */
-export const MAX_RECALC_TEXT = 268_435_456;
+export const MAX_FORMULA_WORK = 3_000_000_000;
+/** The text characters one formula may build with `&` and the text functions. */
+export const MAX_FORMULA_TEXT = 268_435_456;
 
-let arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
-let workLeft = MAX_RECALC_WORK;
-let textLeft = MAX_RECALC_TEXT;
+let arrayCellsLeft = MAX_FORMULA_ARRAY_CELLS;
+let workLeft = MAX_FORMULA_WORK;
+let textLeft = MAX_FORMULA_TEXT;
 
-/**
- * Starts a fresh calculation budget (array cells, work and text); the engine calls it at the start
- * of a recalculation. A formula that exhausts it is `#NUM!`, and so is every formula evaluated
- * after it in the same recalculation, so a hostile workbook stops quickly instead of hanging.
- */
+/** Starts a fresh formula budget (array cells, work and text). */
 export function resetCalcBudget(): void {
-	arrayCellsLeft = MAX_TOTAL_ARRAY_CELLS;
-	workLeft = MAX_RECALC_WORK;
-	textLeft = MAX_RECALC_TEXT;
+	arrayCellsLeft = MAX_FORMULA_ARRAY_CELLS;
+	workLeft = MAX_FORMULA_WORK;
+	textLeft = MAX_FORMULA_TEXT;
 }
 
-/** Spends `cells` of the recalculation budget; `#NUM!` when it is exhausted. */
+let budgetDepth = 0;
+
+/**
+ * Evaluates one formula on a budget of its own, then gives back what the formula it interrupted
+ * had left: a formula computed while another reads it neither spends nor inherits that budget.
+ * Outside every formula the budget is full again.
+ */
+export function withFormulaBudget<T>(evaluate: () => T): T {
+	const arrays = arrayCellsLeft;
+	const work = workLeft;
+	const text = textLeft;
+	resetCalcBudget();
+	budgetDepth++;
+	try {
+		return evaluate();
+	} finally {
+		if (--budgetDepth) {
+			arrayCellsLeft = arrays;
+			workLeft = work;
+			textLeft = text;
+		} else resetCalcBudget();
+	}
+}
+
+/** Spends `cells` of the formula's array budget; `#NUM!` when it is exhausted. */
 export function chargeArrayCells(cells: number): void {
 	arrayCellsLeft -= cells;
 	if (arrayCellsLeft < 0) fail(ERR.NUM);
 }
 
-/** Spends `units` of the recalculation's work budget; `#NUM!` when it is exhausted. */
+/** Spends `units` of the formula's work budget; `#NUM!` when it is exhausted. */
 export function chargeWork(units: number): void {
 	workLeft -= units;
 	if (workLeft < 0) fail(ERR.NUM);
 }
 
-/** Spends the length of `text` from the recalculation's text budget and returns it. */
+/** Spends the length of `text` from the formula's text budget and returns it. */
 export function chargeText(text: string): string {
 	textLeft -= text.length;
 	if (textLeft < 0) fail(ERR.NUM);

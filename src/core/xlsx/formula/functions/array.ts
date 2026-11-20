@@ -59,8 +59,8 @@ function filter(args: Value[], ctx: CallContext): Value {
 	return out;
 }
 
-/** What one comparison of a sort costs of the work budget. */
-const COMPARE_WORK = 8;
+/** What one comparison of a sort costs of the work budget (measured, in nanoseconds). */
+const COMPARE_WORK = 30;
 
 function sortRows(rows: Scalar[][], keys: { values: Scalar[]; descending: boolean }[]): Scalar[][] {
 	chargeWork(COMPARE_WORK * keys.length * rows.length * Math.ceil(Math.log2(rows.length + 1)));

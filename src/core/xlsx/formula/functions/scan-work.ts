@@ -1,10 +1,13 @@
-// What a scan of a range costs of the recalculation's work budget, for functions an array lifts
-// over its elements: each element repeats the scan, which is how one formula multiplies its work.
+// What a scan of a range costs of a formula's work budget, for functions an array lifts over its
+// elements: each element repeats the scan, which is how one formula multiplies its work. A unit is
+// about a nanosecond (see `MAX_FORMULA_WORK`); the prices are this engine's measured costs.
 import type { CallContext } from '../context';
 import { Matrix, RefValue, type Value } from '../values';
 
-/** Work units for testing one cell (about 130 ns, a unit being about 4 ns). */
-export const CELL_TEST_WORK = 32;
+/** Testing one cell against a criterion (COUNTIF, SUMIFS and the other criteria functions). */
+export const CELL_TEST_WORK = 27;
+/** Comparing one cell with a lookup value (XLOOKUP, XMATCH, MATCH and the other lookups). */
+export const LOOKUP_TEST_WORK = 20;
 
 /** Cells a range argument is scanned over: a reference only as far as its sheet's used part. */
 export function scannedCells(ctx: CallContext, range: Value): number {
@@ -20,10 +23,10 @@ export function scannedCells(ctx: CallContext, range: Value): number {
 	return cells;
 }
 
-/** The work of a linear scan of `range`. */
-export const linearScanWork = (ctx: CallContext, range: Value): number =>
-	scannedCells(ctx, range) * CELL_TEST_WORK;
+/** The work of a linear scan of `range`, `price` per cell. */
+export const linearScanWork = (ctx: CallContext, range: Value, price = CELL_TEST_WORK): number =>
+	scannedCells(ctx, range) * price;
 
 /** The work of a binary search of `range`. */
 export const binarySearchWork = (ctx: CallContext, range: Value): number =>
-	Math.ceil(Math.log2(scannedCells(ctx, range) + 1)) * CELL_TEST_WORK;
+	Math.ceil(Math.log2(scannedCells(ctx, range) + 1)) * LOOKUP_TEST_WORK;

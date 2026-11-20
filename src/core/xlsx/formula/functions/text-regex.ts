@@ -10,7 +10,7 @@ const MAX_PATTERN_LENGTH = 1000;
  * A pattern in JavaScript RegExp syntax with the `u` flag (`i` for case_sensitivity 1). Excel uses
  * PCRE2, so PCRE-only syntax (possessive quantifiers, recursion, inline comments) is `#VALUE!`.
  * The patterns run on this engine's own matcher, which tries each (instruction, position) state
- * at most once and charges every step to the recalculation's work budget, so no pattern can hang a
+ * at most once and charges every step to the formula's work budget, so no pattern can hang a
  * recalculation: one that would run too long is `#NUM!`.
  */
 function compile(pattern: string, caseMode: number): Program {

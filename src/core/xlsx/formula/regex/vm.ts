@@ -23,11 +23,10 @@ import { assertion, backref } from './checks';
 import { clearMemo, seen as memoSeen, startMemo, stopMemo } from './memo';
 
 /**
- * Work units charged per matcher step (an instruction, a character read, or a backtrack). A unit
- * is about 4 ns of the recalculation budget and a step measured 6 to 16 ns, so a pattern that
- * spends the whole budget stops within one to two seconds, as other heavy formulas do.
+ * Work units charged per matcher step (an instruction, a character read, or a backtrack): a unit
+ * is about a nanosecond of a formula's budget and a heavy pattern measured about 7.5 ns a step.
  */
-const STEP_WORK = 4;
+const STEP_WORK = 8;
 const CHUNK = 4096;
 let chunk = CHUNK;
 /** The backtrack stack's limit in 32-bit words (16 MiB); past it the match is `#NUM!`. */
@@ -381,7 +380,7 @@ export type Match = readonly number[];
 /**
  * The leftmost match of `program` in `text` starting at or after `from` (a code point boundary):
  * its {@link Match}, or null.
- * Every step is charged to the recalculation's work budget, so it is `#NUM!` rather than a hang.
+ * Every step is charged to the formula's work budget, so it is `#NUM!` rather than a hang.
  */
 export function search(program: Program, text: string, from: number): Match | null {
 	if (p !== program || regs.length !== program.registers) regs = new Int32Array(program.registers);

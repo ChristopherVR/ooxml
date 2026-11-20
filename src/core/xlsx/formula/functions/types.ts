@@ -27,7 +27,7 @@ export interface FunctionSpec {
 	volatile?: boolean;
 	fn?: (args: Value[], ctx: CallContext) => Value;
 	/**
-	 * The work one call costs of the recalculation's budget when an array lifts the call over its
+	 * The work one call costs of the formula's work budget when an array lifts the call over its
 	 * elements (each element repeats a scan of the `any` arguments); charged per element.
 	 */
 	liftWork?: (args: readonly Value[], ctx: CallContext) => number;

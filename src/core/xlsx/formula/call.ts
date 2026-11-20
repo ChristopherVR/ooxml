@@ -142,18 +142,26 @@ export function applyFunction(spec: FunctionSpec, args: Value[], ctx: CallContex
 		args[i] = arg;
 	}
 	if (lifted.length === 0) return guard(() => fn(args, ctx));
-	return broadcastShape(lifted, (r, c) => {
-		const element = args.map((arg, i) =>
+	const elementAt = (r: number, c: number): Value[] =>
+		args.map((arg, i) =>
 			arg instanceof Matrix && paramKind(spec, i) === 'value' ? pick(arg, r, c) : arg,
 		);
-		return toElement(
-			guard(() => {
-				if (spec.liftWork) chargeWork(spec.liftWork(element, ctx));
-				return fn(element, ctx);
-			}),
+	// Every element repeats the call's scan: the whole lift is charged before any of it runs.
+	const liftWork = spec.liftWork;
+	if (liftWork) {
+		let work = 0;
+		const rows = Math.max(...lifted.map((m) => m.rows));
+		const cols = Math.max(...lifted.map((m) => m.cols));
+		for (let r = 0; r < rows; r++)
+			for (let c = 0; c < cols; c++) work += liftWork(elementAt(r, c), ctx);
+		chargeWork(work);
+	}
+	return broadcastShape(lifted, (r, c) =>
+		toElement(
+			guard(() => fn(elementAt(r, c), ctx)),
 			ctx,
-		);
-	});
+		),
+	);
 }
 
 function toElement(value: Value, ctx: CallContext): Scalar {

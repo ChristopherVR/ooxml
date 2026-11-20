@@ -8,17 +8,19 @@ import { FormulaError } from './ast';
 import { withDateSystem } from './date-serial';
 import { GraphPreparation, type PreparedFormulas } from './engine-prepare';
 import { EngineStructure } from './engine-structure';
-import type { CalcEngine, CalcEngineOptions, CellPosition } from './engine-types';
+import type { CalcEngine, CalcEngineOptions, CalculationStop, CellPosition } from './engine-types';
 import { rangeHas, sameRange } from './engine-util';
 import { evaluateNode } from './evaluator';
 import { analyze, type FormulaNode } from './graph';
 import { implicitIntersection, toMatrix } from './references';
+import { CalculationStopped } from './recalc-limits';
 import { clearFootprint, isSpilledCell } from './spill';
-import { type Area, ERR, ErrorSignal, LambdaValue, resetCalcBudget, type Value } from './values';
+import { type Area, ERR, ErrorSignal, LambdaValue, type Value, withFormulaBudget } from './values';
 
 export {
 	type CalcEngine,
 	type CalcEngineOptions,
+	type CalculationStop,
 	CIRCULAR_REFERENCE_WARNING,
 	type CellPosition,
 } from './engine-types';
@@ -29,6 +31,7 @@ class Engine extends EngineStructure implements CalcEngine {
 	private prepared: PreparedFormulas | undefined;
 	/** Stored spills released when the graph was built: their readers must recalculate. */
 	private released: Area[] = [];
+	stopped: CalculationStop | undefined;
 
 	// ---- the graph ----
 
@@ -103,7 +106,7 @@ class Engine extends EngineStructure implements CalcEngine {
 	// ---- recalculation ----
 
 	recalculateAll(): void {
-		resetCalcBudget();
+		this.begin();
 		this.fresh = false;
 		this.prepared = undefined;
 		if (this.needsFull) this.releaseAllSpills();
@@ -112,11 +115,11 @@ class Engine extends EngineStructure implements CalcEngine {
 		this.released = [];
 		this.structuralSeeds.clear();
 		this.cycles = new Set();
-		this.run(new Set(this.allNodes()), true);
+		this.runWithin(new Set(this.allNodes()), true);
 	}
 
 	recalculateFrom(changes: CellPosition[]): void {
-		resetCalcBudget();
+		this.begin();
 		const seeds = new Set<FormulaNode>();
 		if (this.fresh && !this.needsFull) {
 			// The first recalculation after opening: like Excel, trust the values the file stored and
@@ -182,7 +185,26 @@ class Engine extends EngineStructure implements CalcEngine {
 		for (const area of [...changed, ...changeAreas(written)])
 			reverse.dependents(area.sheet, area.range, seeds);
 		for (const node of this.volatiles()) seeds.add(node);
-		this.run(seeds, false);
+		this.runWithin(seeds, false);
+	}
+
+	private begin(): void {
+		this.stopped = undefined;
+		this.limits.begin();
+	}
+
+	/**
+	 * Runs a recalculation within its limits. One that stops leaves the formulas it did not reach
+	 * as they were, so the next recalculation starts over and computes all of them.
+	 */
+	private runWithin(seeds: Set<FormulaNode>, everything: boolean): void {
+		try {
+			this.run(seeds, everything);
+		} catch (e) {
+			if (!(e instanceof CalculationStopped)) throw e;
+			this.stopped = e.reason;
+			this.needsFull = true;
+		}
 	}
 
 	/**
@@ -246,18 +268,19 @@ class Engine extends EngineStructure implements CalcEngine {
 	// ---- ad hoc evaluation ----
 
 	protected evaluateAdHoc(formula: string, at: CellPosition): Value {
-		resetCalcBudget();
 		const ast = this.parse(formula);
 		if (ast instanceof FormulaError) return ERR.NAME;
 		const frame = this.frameFor(at.sheet, at.row, at.col, ast);
-		return withDateSystem(this.workbook.date1904, () => {
-			try {
-				return evaluateNode(ast, frame);
-			} catch (e) {
-				if (e instanceof ErrorSignal) return e.value;
-				return ERR.VALUE;
-			}
-		});
+		return withDateSystem(this.workbook.date1904, () =>
+			withFormulaBudget(() => {
+				try {
+					return evaluateNode(ast, frame);
+				} catch (e) {
+					if (e instanceof ErrorSignal) return e.value;
+					return ERR.VALUE;
+				}
+			}),
+		);
 	}
 
 	evaluate(formula: string, at: CellPosition): CellValue {

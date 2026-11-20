@@ -1,7 +1,7 @@
 import type { CallContext } from '../context';
 import { ERR, fail, isError, Matrix, RefValue, type Scalar, type Value } from '../values';
 import { bool, hasWildcards, int, num, optNum, scalar, spec } from './helpers';
-import { binarySearchWork, CELL_TEST_WORK, linearScanWork } from './scan-work';
+import { binarySearchWork, LOOKUP_TEST_WORK, linearScanWork } from './scan-work';
 import {
 	findAscending,
 	findDescending,
@@ -178,8 +178,8 @@ type Search = 'exact' | 'binary' | 'linear';
 function searchWork(ctx: CallContext, vector: Value, lookup: Value, search: Search): number {
 	if (search === 'binary') return binarySearchWork(ctx, vector);
 	const pattern = typeof lookup === 'string' && hasWildcards(lookup);
-	if (search === 'exact' && vector instanceof RefValue && !pattern) return CELL_TEST_WORK;
-	return linearScanWork(ctx, vector);
+	if (search === 'exact' && vector instanceof RefValue && !pattern) return LOOKUP_TEST_WORK;
+	return linearScanWork(ctx, vector, LOOKUP_TEST_WORK);
 }
 
 const optionOf = (ctx: CallContext, args: readonly Value[], i: number, fallback: number) =>

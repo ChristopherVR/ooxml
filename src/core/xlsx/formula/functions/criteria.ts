@@ -19,15 +19,15 @@ import { makeCriteria, scalar } from './helpers';
 import { CELL_TEST_WORK, linearScanWork } from './scan-work';
 
 const CLIP = 100_000;
+/** The lift work of SUMIF, COUNTIF and AVERAGEIF (range first, criterion second). */
+export const criteriaLiftWork = (args: readonly Value[], ctx: CallContext): number =>
+	liftedCallWork(ctx, [{ range: args[0] ?? null, criteria: args[1] ?? null }]);
+
 /**
  * What one call of a lifted IFS function costs: an equality criterion on a reference is answered
  * from an index, any other criterion tests every scanned cell. Charged only when an array of
  * criteria repeats the call, the one way a single formula multiplies the scan.
  */
-/** The lift work of SUMIF, COUNTIF and AVERAGEIF (range first, criterion second). */
-export const criteriaLiftWork = (args: readonly Value[], ctx: CallContext): number =>
-	liftedCallWork(ctx, [{ range: args[0] ?? null, criteria: args[1] ?? null }]);
-
 export function liftedCallWork(ctx: CallContext, pairs: readonly CriteriaPair[]): number {
 	let work = 0;
 	for (const pair of pairs) {
@@ -224,13 +224,19 @@ export function liftCriteria(
 		rows = Math.max(rows, m.rows);
 		cols = Math.max(cols, m.cols);
 	}
-	return Matrix.build(rows, cols, (r, c) => {
-		const one = resolved.map((p) => ({
+	const at = (r: number, c: number): CriteriaPair[] =>
+		resolved.map((p) => ({
 			range: p.range,
 			criteria: p.criteria instanceof Matrix ? pick(p.criteria, r, c) : p.criteria,
 		}));
+	// Every criterion repeats the call's scan: the whole lift is charged before any of it runs.
+	let work = 0;
+	for (let r = 0; r < rows; r++)
+		for (let c = 0; c < cols; c++) work += liftedCallWork(ctx, at(r, c));
+	chargeWork(work);
+	return Matrix.build(rows, cols, (r, c) => {
+		const one = at(r, c);
 		try {
-			chargeWork(liftedCallWork(ctx, one));
 			const value = fn(one);
 			return value instanceof Matrix ? value.get(0, 0) : scalar(value);
 		} catch (e) {
