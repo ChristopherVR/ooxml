@@ -5,8 +5,7 @@
 		"aria-required-parent": "P4 Excel semantics (A11Y-06): grid headers have no row parent",
 		"color-contrast": "N11 Canvas and forced-colours fixes (A11Y-13): accents and tags under 4.5:1",
 		"label-content-name-mismatch": "N19 Accessible names contain the visible label (WCAG 2.5.3; STATUS.tsv row added by G2, since the audit predates the axe 4.14 rule): the suite's profile and workspace buttons, PowerPoint's Shadow command and Fit zoom, Excel's formula bar fx",
-		"role-img-alt": "P4 Excel semantics (A11Y-06): the drawing layer is an unnamed image",
-		"target-size": "P8 Ribbon navigation and reflow (A11Y-18d): ribbon split-button carets under 24 px in Word, Excel, PowerPoint and Visio. A11Y-18 was N9's; N9 merged without 18d and moved it to P8, which owns the ribbon"
+		"role-img-alt": "P4 Excel semantics (A11Y-06): the drawing layer is an unnamed image"
 	},
 	"allowed": {
 		"chat/dark": {
@@ -19,12 +18,10 @@
 			"label-content-name-mismatch": 1
 		},
 		"docx/dark": {
-			"label-content-name-mismatch": 2,
-			"target-size": 4
+			"label-content-name-mismatch": 2
 		},
 		"docx/light": {
-			"label-content-name-mismatch": 2,
-			"target-size": 4
+			"label-content-name-mismatch": 2
 		},
 		"docx/mobile": {
 			"label-content-name-mismatch": 1
@@ -39,12 +36,10 @@
 			"label-content-name-mismatch": 1
 		},
 		"pptx/dark": {
-			"label-content-name-mismatch": 4,
-			"target-size": 2
+			"label-content-name-mismatch": 4
 		},
 		"pptx/light": {
-			"label-content-name-mismatch": 4,
-			"target-size": 2
+			"label-content-name-mismatch": 4
 		},
 		"pptx/mobile": {
 			"label-content-name-mismatch": 1
@@ -70,12 +65,10 @@
 			"label-content-name-mismatch": 1
 		},
 		"vsdx/dark": {
-			"label-content-name-mismatch": 2,
-			"target-size": 2
+			"label-content-name-mismatch": 2
 		},
 		"vsdx/light": {
-			"label-content-name-mismatch": 2,
-			"target-size": 2
+			"label-content-name-mismatch": 2
 		},
 		"vsdx/mobile": {
 			"label-content-name-mismatch": 1
@@ -85,15 +78,13 @@
 			"aria-required-parent": 47,
 			"color-contrast": 1,
 			"label-content-name-mismatch": 3,
-			"role-img-alt": 1,
-			"target-size": 7
+			"role-img-alt": 1
 		},
 		"xlsx/light": {
 			"aria-required-children": 1,
 			"aria-required-parent": 47,
 			"label-content-name-mismatch": 3,
-			"role-img-alt": 1,
-			"target-size": 7
+			"role-img-alt": 1
 		},
 		"xlsx/mobile": {
 			"aria-required-children": 1,
