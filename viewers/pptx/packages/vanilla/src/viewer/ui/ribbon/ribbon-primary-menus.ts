@@ -1,5 +1,10 @@
 import type { ToolbarActionId } from 'ooxml-ui/pptx';
-import { EMPTY_RESOLVED_CUSTOMIZATION, isActionHidden, isDialogAvailable } from 'ooxml-ui/pptx';
+import {
+	EMPTY_RESOLVED_CUSTOMIZATION,
+	isActionHidden,
+	isDialogAvailable,
+	listenForPopupMenuDismiss,
+} from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
@@ -24,7 +29,8 @@ export interface PrimaryMenuHandle {
 
 /**
  * A right-aligned popover menu for the ribbon's quick-access row, closing on
- * selection or an outside pointerdown (same pattern as `makeDropdown`).
+ * selection, an outside pointerdown (same pattern as `makeDropdown`) or Escape,
+ * which gives focus back to the button that opened it.
  */
 export function makePrimaryMenu(
 	doc: Document,
@@ -38,9 +44,17 @@ export function makePrimaryMenu(
 	el.hidden = true;
 
 	let open = false;
+	let detachEscape: (() => void) | undefined;
 	const setOpen = (next: boolean): void => {
 		open = next;
 		el.hidden = !next;
+		detachEscape?.();
+		detachEscape = next
+			? listenForPopupMenuDismiss(doc, {
+					onDismiss: () => setOpen(false),
+					trigger: el.parentElement?.querySelector<HTMLElement>('[aria-haspopup="menu"]'),
+				})
+			: undefined;
 		onOpenChange?.(next);
 	};
 

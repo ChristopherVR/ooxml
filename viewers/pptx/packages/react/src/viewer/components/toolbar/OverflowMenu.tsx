@@ -1,6 +1,6 @@
-import { isDialogAvailable } from 'ooxml-ui/pptx';
+import { isDialogAvailable, listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
 import type { BackstageCardId } from 'ooxml-ui/pptx';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { LuEllipsis } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -52,6 +52,19 @@ export function OverflowMenu(p: OverflowMenuProps): React.ReactElement {
 		}
 		return k !== 'print' || isDialogAvailable(customization, 'print');
 	};
+	// Escape closes the menu and gives focus back to the button (shared with every binding).
+	const trigger = useRef<HTMLButtonElement>(null);
+	const { isOverflowMenuOpen, onSetOverflowMenuOpen } = p;
+	useEffect(
+		() =>
+			isOverflowMenuOpen
+				? listenForPopupMenuDismiss(document, {
+						onDismiss: () => onSetOverflowMenuOpen(false),
+						trigger: trigger.current,
+					})
+				: undefined,
+		[isOverflowMenuOpen, onSetOverflowMenuOpen],
+	);
 	const ovAct = (k: string) => {
 		p.onSetOverflowMenuOpen(false);
 		(
@@ -80,7 +93,10 @@ export function OverflowMenu(p: OverflowMenuProps): React.ReactElement {
 	return (
 		<div className='relative'>
 			<button
+				ref={trigger}
 				type='button'
+				aria-haspopup='menu'
+				aria-expanded={p.isOverflowMenuOpen}
 				onClick={() => p.onSetOverflowMenuOpen(!p.isOverflowMenuOpen)}
 				className={cn(
 					'p-1.5 rounded transition-colors',

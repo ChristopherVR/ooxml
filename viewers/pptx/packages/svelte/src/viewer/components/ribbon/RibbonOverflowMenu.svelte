@@ -12,6 +12,8 @@
 	 * signatures) - each routed to the same handler its File-tab card already
 	 * uses, so nothing here is a second implementation.
 	 */
+	import { listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
+
 	import { useTranslator } from '../../../i18n/context';
 	import type { ExportUiState } from '../../export/export-ui.svelte';
 	import { useViewerCustomization } from '../../state/viewer-customization.svelte';
@@ -55,6 +57,14 @@
 		const rect = triggerEl.getBoundingClientRect();
 		pos = { left: rect.right, top: rect.bottom };
 	}
+
+	// Escape closes the menu and gives focus back to the trigger (shared with every binding).
+	$effect(() => {
+		if (!open) {
+			return;
+		}
+		return listenForPopupMenuDismiss(document, { onDismiss: () => (open = false), trigger: triggerEl });
+	});
 
 	function toggle(): void {
 		open = !open;

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { listenForPopupMenuDismiss } from 'ooxml-ui/pptx';
+import React, { useEffect, useRef, useState } from 'react';
 import {
 	LuCaptions,
 	LuCheck,
@@ -36,6 +37,18 @@ export function PresentDropdown({
 }: PresentDropdownProps): React.ReactElement {
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(false);
+	// Escape closes the menu and gives focus back to the chevron (shared with every binding).
+	const chevron = useRef<HTMLButtonElement>(null);
+	useEffect(
+		() =>
+			open
+				? listenForPopupMenuDismiss(document, {
+						onDismiss: () => setOpen(false),
+						trigger: chevron.current,
+					})
+				: undefined,
+		[open],
+	);
 	return (
 		<div className='relative'>
 			<div className='inline-flex items-stretch rounded border border-border bg-muted text-xs overflow-hidden'>
@@ -51,7 +64,10 @@ export function PresentDropdown({
 					{t('pptx.toolbar.present')}
 				</button>
 				<button
+					ref={chevron}
 					type='button'
+					aria-haspopup='menu'
+					aria-expanded={open}
 					onClick={() => setOpen((prev) => !prev)}
 					className={cn(
 						'inline-flex items-center px-1 transition-colors border-l border-border',
