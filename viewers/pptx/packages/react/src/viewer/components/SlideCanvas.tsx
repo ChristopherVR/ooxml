@@ -38,6 +38,7 @@ import { ElementRenderErrorReportingContext } from './ElementErrorBoundary';
 import { ElementRenderer } from './ElementRenderer';
 import { ActiveXControlOverlay } from './elements/ActiveXControlOverlay';
 import { InlineCollaborationContext } from './elements/InlineCollaborationContext';
+import { LinkedContentScope, useLinkedContentView } from './linked-content-context';
 import { useShapeFormatContext } from './shape-format-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 
@@ -86,7 +87,9 @@ export function SlideCanvas(props: SlideCanvasProps) {
 	return (
 		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
 			<InlineCollaborationContext.Provider value={value}>
-				<SlideCanvasContent {...props} />
+				<LinkedContentScope allowed={props.linkedContent}>
+					<SlideCanvasContent {...props} />
+				</LinkedContentScope>
 			</InlineCollaborationContext.Provider>
 		</ElementRenderErrorReportingContext.Provider>
 	);
@@ -165,6 +168,7 @@ function SlideCanvasContent({
 	aiActive = false,
 	outlineAuthoring,
 }: SlideCanvasProps) {
+	const backgroundSlide = useLinkedContentView(activeSlide);
 	// True when the stage is an interactive editing surface (drag/resize/marquee
 	// are live). Drives touch-action: none and the touch pointer-down wiring so
 	// finger gestures manipulate elements instead of scrolling the page.
@@ -375,7 +379,7 @@ function SlideCanvasContent({
 						// pinch-zoom. View/present mode keeps the default so the slide can
 						// still be scrolled and swipe-navigated.
 						touchAction: isEditableCanvas ? 'none' : undefined,
-						...getReactSlideBackgroundStyle(activeSlide, {
+						...getReactSlideBackgroundStyle(backgroundSlide, {
 							widthPx: canvasSize.width,
 							heightPx: canvasSize.height,
 						}),
@@ -385,6 +389,7 @@ function SlideCanvasContent({
 					onMouseDown={handleStageMouseDown}
 					onPointerDown={isEditableCanvas ? handleStagePointerDown : undefined}
 					onContextMenu={handleStageContextMenu}
+					data-pptx-touch-press='menu'
 					onPointerMove={handleStagePointerMove}
 					onPointerUp={handleStagePointerUp}
 				>

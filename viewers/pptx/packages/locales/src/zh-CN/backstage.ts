@@ -68,7 +68,7 @@ export const translations = {
 	'pptx.backstage.card.png.title': '导出当前幻灯片',
 	'pptx.backstage.card.png.body': '创建高质量的 PNG 图像。',
 	'pptx.backstage.card.video.title': '创建视频',
-	'pptx.backstage.card.video.body': '将幻灯片计时和动画导出为 WebM。',
+	'pptx.backstage.card.video.body': '将幻灯片计时和动画导出为视频。',
 	'pptx.backstage.card.gif.title': '创建 GIF 动画',
 	'pptx.backstage.card.gif.body': '制作紧凑的循环预览。',
 	'pptx.backstage.card.json.title': '导出为 JSON',

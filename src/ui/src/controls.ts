@@ -2,6 +2,7 @@ import { defineDialogFooter } from './dialog/dialog-footer';
 import { defineToasts } from './notices/toasts';
 import { definePasteOptions } from './notices/paste-options';
 import { defineReadOnlyBanner } from './notices/read-only-banner';
+import { defineMessageBar } from './notices/message-bar';
 import { defineRadio } from './form/radio';
 export {
 	OFFICE_COLOR_SWATCHES,
@@ -71,6 +72,7 @@ export {
 	definePasteOptions,
 	defineRadio,
 	defineReadOnlyBanner,
+	defineMessageBar,
 	defineRibbonToggle,
 	defineSearchField,
 	defineToasts,
@@ -157,6 +159,7 @@ export type {
 	OfficeStatusButton,
 	OfficeStatusText,
 } from './chrome/status-bar';
+export { zoomFitName } from './chrome/status-bar';
 export type { OfficeTab, OfficeTabReorderEvent, OfficeTabSelectEvent } from './chrome/tab-strip';
 export type { OfficeSearchCommand } from './menu/command-search';
 export {
@@ -262,6 +265,7 @@ export type {
 	OfficeReadOnlyBannerIntent,
 	OfficeReadOnlyBannerState,
 } from './notices/read-only-banner';
+export type { OfficeMessageBarIntent, OfficeMessageBarState } from './notices/message-bar';
 export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
@@ -345,6 +349,7 @@ export const CONTROL_DEFINERS = [
 	defineDialogFooter,
 	defineToasts,
 	defineReadOnlyBanner,
+	defineMessageBar,
 	definePasteOptions,
 	defineTitleBar,
 	defineRibbonSection,

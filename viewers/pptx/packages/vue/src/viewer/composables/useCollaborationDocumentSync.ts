@@ -8,6 +8,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import type { SyncGate } from 'ooxml-ui/pptx';
 import {
+	configureCollaborationMedia,
 	createCollaborationLivePatcher,
 	createRoomJoinTracker,
 	createSyncGate,
@@ -112,6 +113,10 @@ export function useCollaborationDocumentSync(
 	function attach(nextDoc: YDocLike, nextFactories: YjsFactories): void {
 		doc = nextDoc;
 		factories = nextFactories;
+		// Before the room's slides are read or written.
+		configureCollaborationMedia(nextDoc, {
+			localMediaUrl: (path) => options.getMediaDataUrls?.().get(path),
+		});
 		if (!config) {
 			return;
 		}

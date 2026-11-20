@@ -21,10 +21,12 @@ import type { LocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
 import { zhTableProperties } from './table-properties';
 import { zhCNRibbon } from './zh-CN-ribbon';
+import { zhCNRibbonNames } from './ribbon-names';
 
 export const zhCN: LocaleStrings = {
 	...zhOptions,
 	...zhCNRibbon,
+	...zhCNRibbonNames,
 	...zhCNApp,
 	...zhTableProperties,
 	...zhLineNumbers,

@@ -1,8 +1,8 @@
 import { hasPersistentAudio, registerPersistentAudio } from 'ooxml-ui/pptx';
+import { BUILT_IN_SOUNDS, playDeckSound } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxNativeAnimation, PptxSlide } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 
-import * as animationSound from './animation-sound';
 import { PresentationController } from './presentation-controller.svelte';
 
 /**
@@ -241,7 +241,14 @@ describe('presentationController (native-timing)', () => {
 	it('stop() also silences a "Loop Until Next Sound" transition sound', () => {
 		// Otherwise a looping p:sndAc/p:stSnd keeps playing on the shared
 		// per-effect singleton behind the editor after the show ends.
-		const stopAnimationSoundSpy = vi.spyOn(animationSound, 'stopAnimationSound');
+		const pause = vi.fn<() => void>();
+		vi.stubGlobal(
+			'Audio',
+			// oxlint-disable-next-line prefer-arrow-callback -- `new Audio()` needs a function
+			vi.fn(function () {
+				return { loop: false, currentTime: 0, play: () => Promise.resolve(), pause };
+			}),
+		);
 		const deck = new Deck();
 		deck.slides = [slide('s1')];
 		const controller = new PresentationController({
@@ -250,8 +257,10 @@ describe('presentationController (native-timing)', () => {
 			navigate: () => {},
 		});
 		controller.start();
+		playDeckSound('data:audio/wav;base64,AA', BUILT_IN_SOUNDS, { loop: true });
 		controller.stop();
-		expect(stopAnimationSoundSpy).toHaveBeenCalledWith();
+		expect(pause).toHaveBeenCalledOnce();
+		vi.unstubAllGlobals();
 	});
 });
 

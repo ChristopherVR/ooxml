@@ -8,6 +8,11 @@ import {
 } from './collaboration-failure';
 import { externalSessionFromCollabSession, isSameBrowserRoom } from './collaboration-options';
 import { validateRoomId } from './collaboration-presence';
+import {
+	configureCollaborationMedia,
+	MAX_PEER_TO_PEER_MEDIA_BYTES,
+	type YDocLike,
+} from './collaboration-sync';
 
 /** The default author name when the host sets none. */
 export const DEFAULT_OWNED_USER_NAME = 'PowerPoint user';
@@ -124,6 +129,11 @@ export function openOwnedCollaboration(config: CollaborationConfig): OwnedCollab
 			);
 		}
 		session = opened.session;
+		if (config.webrtc) {
+			configureCollaborationMedia(opened.session.doc as unknown as YDocLike, {
+				maxBytes: MAX_PEER_TO_PEER_MEDIA_BYTES,
+			});
+		}
 		keepPowerPointPresence(opened.session.awareness);
 		opened.session.on('error', (error) => {
 			if (isUpdateRefusal(error)) for (const listener of refusals) listener(error.code);

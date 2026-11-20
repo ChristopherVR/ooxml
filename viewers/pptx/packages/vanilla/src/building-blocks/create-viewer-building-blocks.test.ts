@@ -1,4 +1,5 @@
 // @vitest-own-worker: mounts a full viewer.
+import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -7,7 +8,8 @@ import {
 	buildingBlocksContractDeck,
 	runBuildingBlocksContract,
 } from '../../../shared/test-utils/building-blocks-contract.mjs';
-import type { BuildingBlocksContractHarness } from '../../../shared/test-utils/building-blocks-contract.mjs';
+import { runExternalContentContract } from '../../../shared/test-utils/external-content-contract.mjs';
+import type { ExternalContentContractHarness } from '../../../shared/test-utils/external-content-contract.mjs';
 import { createViewerBuildingBlocks } from './create-viewer-building-blocks';
 import type { ViewerBuildingBlocks, ViewerBuildingBlocksOptions } from './types';
 
@@ -16,7 +18,7 @@ const tick = () =>
 		setTimeout(resolve, 0);
 	});
 
-function vanillaHarness(): BuildingBlocksContractHarness {
+function vanillaHarness(): ExternalContentContractHarness {
 	let blocks: ViewerBuildingBlocks | undefined;
 	let host: HTMLElement | undefined;
 	return {
@@ -26,10 +28,12 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 			host = target;
 			// The contract's room is structural; it is a `CollaborationInput`.
 			blocks = createViewerBuildingBlocks(options as ViewerBuildingBlocksOptions);
+			const bar = document.createElement('div');
 			const toolbar = document.createElement('div');
 			const pane = document.createElement('div');
 			const canvas = document.createElement('div');
-			target.append(toolbar, pane, canvas);
+			target.append(bar, toolbar, pane, canvas);
+			blocks.mountExternalContentBar(bar);
 			blocks.mountToolbar(toolbar);
 			blocks.mountSlidesPane(pane);
 			blocks.mountCanvas(canvas);
@@ -41,6 +45,8 @@ function vanillaHarness(): BuildingBlocksContractHarness {
 		},
 		actions: () => blocks!.actions,
 		state: () => blocks!.getState(),
+		externalContent: () => blocks!.externalContent,
+		slides: () => blocks!.viewer?.store.get().slides ?? [],
 		async clickPictures() {
 			host!.querySelector<HTMLButtonElement>('[data-control="insertImage"]')!.click();
 			await tick();
@@ -62,6 +68,15 @@ describe('vanilla building blocks', () => {
 			vi,
 			Handler: PptxHandler,
 			Y,
+		});
+	}, 60000);
+
+	it('passes the shared security bar contract', async () => {
+		await runExternalContentContract({
+			harness: vanillaHarness(),
+			expect,
+			Handler: PptxHandler,
+			JSZip,
 		});
 	}, 60000);
 

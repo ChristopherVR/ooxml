@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { ImageBuilder, MediaBuilder, PptxHandler } from 'pptx-viewer-core';
+import { ImageBuilder, MediaBuilder, PptxHandler, ShapeBuilder } from 'pptx-viewer-core';
 import type { Model3DPptxElement } from 'pptx-viewer-core';
 
 /** The origin the deck links to; specs answer it with `page.route`. */
@@ -81,6 +81,107 @@ export async function externalContentDeck(): Promise<Buffer> {
 	);
 	for (const name of Object.keys(zip.files)) {
 		if (/^ppt\/media\/.+\.(?:png|mp4)$/u.test(name)) {
+			zip.remove(name);
+		}
+	}
+	return zip.generateAsync({ type: 'nodebuffer' });
+}
+
+/** The linked sounds {@link linkedSoundDeck} plays, relative to {@link EXTERNAL_ORIGIN}. */
+export const LINKED_SOUNDS = {
+	/** Slide 2's transition sound. */
+	transition: '/transition.wav',
+	/** The sound of slide 2's on-click effect. */
+	effect: '/effect.wav',
+	/** The click sound of slide 2's "Action sound" shape. */
+	click: '/click.wav',
+} as const;
+
+const WAV_BYTES =
+	'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+const AUDIO_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/audio';
+const ACTION_SOUND_SHAPE = `<p:sp><p:nvSpPr><p:cNvPr id="903" name="Action sound"><a:hlinkClick r:id="" action="ppaction://noaction" highlightClick="1"><a:snd r:embed="rIdLinkedClick" name="click.wav"/></a:hlinkClick></p:cNvPr><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="6400800" y="3429000"/><a:ext cx="1828800" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="FF8800"/></a:solidFill></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" sz="1800"/><a:t>Action sound</a:t></a:r></a:p></p:txBody></p:sp>`;
+
+/**
+ * Two slides, the first showing `label`, the second with an embedded
+ * transition sound and an on-click effect whose sound is embedded too.
+ */
+async function embeddedSoundArchive(label: string): Promise<JSZip> {
+	const { handler, data } = await PptxHandler.create({ initialSlideCount: 2 });
+	const shape = ShapeBuilder.create('rect')
+		.position(80, 80)
+		.size(200, 100)
+		.text('Animated')
+		.build();
+	data.slides[0].elements = [
+		ShapeBuilder.create('rect').position(80, 80).size(300, 100).text(label).build(),
+	];
+	data.slides[1].elements = [shape];
+	data.slides[1].transition = { type: 'fade', durationMs: 300, soundData: WAV_BYTES } as never;
+	data.slides[1].animations = [
+		{
+			id: 'effect',
+			elementId: shape.id,
+			entrance: 'appear',
+			trigger: 'onClick',
+			soundData: WAV_BYTES,
+		},
+	] as never;
+	for (const slide of data.slides) {
+		slide.isDirty = true;
+	}
+	const zip = await JSZip.loadAsync(await handler.save(data.slides));
+	handler.dispose();
+	return zip;
+}
+
+/** The text on the first slide of {@link embeddedSoundDeck}. */
+export const EMBEDDED_SOUNDS_LABEL = 'Embedded sounds';
+
+/**
+ * Two slides whose sounds are embedded in the package: slide 2's transition
+ * sound and the sound of its on-click effect. Nothing is linked, so the
+ * security bar never shows and the sounds play at once.
+ */
+export async function embeddedSoundDeck(): Promise<Buffer> {
+	return (await embeddedSoundArchive(EMBEDDED_SOUNDS_LABEL)).generateAsync({ type: 'nodebuffer' });
+}
+
+/**
+ * Two slides whose sounds are all linked to {@link EXTERNAL_ORIGIN}: slide 2's
+ * transition sound, the sound of its on-click effect, and the click sound of a
+ * shape's hyperlink action ({@link LINKED_SOUNDS}). Nothing else is linked, so
+ * the security bar shows for the sounds alone.
+ */
+export async function linkedSoundDeck(): Promise<Buffer> {
+	const zip = await embeddedSoundArchive('Linked sounds');
+	const slidePath = 'ppt/slides/slide2.xml';
+	const slideXml = await zip.file(slidePath)!.async('string');
+	zip.file(slidePath, slideXml.replace('</p:spTree>', `${ACTION_SOUND_SHAPE}</p:spTree>`));
+	const relsPath = 'ppt/slides/_rels/slide2.xml.rels';
+	const rels = await zip.file(relsPath)!.async('string');
+	// The writer embeds the transition sound and the effect sound, in that order of id.
+	const sounds = [
+		...rels.matchAll(/<Relationship\b[^>]*?Id="([^"]+)"[^>]*?Target="\.\.\/media\/[^"]+\.wav"/gu),
+	];
+	const transitionId = /<p:stSnd>\s*<p:snd r:embed="([^"]+)"/u.exec(slideXml)?.[1];
+	if (sounds.length !== 2 || !transitionId) {
+		throw new Error('linkedSoundDeck: expected an embedded transition sound and effect sound');
+	}
+	const linked = rels.replace(
+		/(<Relationship\b[^>]*?Id="([^"]+)"[^>]*?)Target="\.\.\/media\/[^"]+\.wav"/gu,
+		(_match, before: string, id: string) =>
+			`${before}Target="${EXTERNAL_ORIGIN}${id === transitionId ? LINKED_SOUNDS.transition : LINKED_SOUNDS.effect}" TargetMode="External"`,
+	);
+	zip.file(
+		relsPath,
+		linked.replace(
+			'</Relationships>',
+			`<Relationship Id="rIdLinkedClick" Type="${AUDIO_REL}" Target="${EXTERNAL_ORIGIN}${LINKED_SOUNDS.click}" TargetMode="External"/></Relationships>`,
+		),
+	);
+	for (const name of Object.keys(zip.files)) {
+		if (/^ppt\/media\/.+\.wav$/u.test(name)) {
 			zip.remove(name);
 		}
 	}

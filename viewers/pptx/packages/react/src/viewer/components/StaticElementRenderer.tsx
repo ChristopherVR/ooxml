@@ -22,6 +22,7 @@ import { withDisplayName } from '../utils/display-name';
 import { ElementErrorBoundary } from './ElementErrorBoundary';
 import { renderBody } from './elements/ElementBody';
 import { ShapeEffectOverlay } from './elements/ShapeEffectOverlay';
+import { useLinkedContentView } from './linked-content-context';
 import type { StaticElementRendererProps } from './static-element-renderer-types';
 import {
 	getStaticElementInteractionState,
@@ -249,6 +250,11 @@ export const StaticElementRenderer = /* @__PURE__ */ withDisplayName(
 	/* @__PURE__ */ React.memo(
 		// oxlint-disable-next-line prefer-arrow-callback -- keep the wrapper named in React stacks
 		function StaticElementRendererBoundary(props: StaticElementRendererProps) {
+			// Linked content as this viewer may fetch it (`LinkedContentContext`).
+			const element = useLinkedContentView(props.element);
+			const activeSlide = useLinkedContentView(props.activeSlide);
+			const allSlides = useLinkedContentView(props.allSlides);
+			const tableStyleContext = useLinkedContentView(props.tableStyleContext);
 			return (
 				<ElementErrorBoundary
 					key={props.element.id}
@@ -256,7 +262,13 @@ export const StaticElementRenderer = /* @__PURE__ */ withDisplayName(
 					slideId={props.activeSlide?.id}
 					onElementRenderError={props.onElementRenderError}
 				>
-					<StaticElementRendererImpl {...props} />
+					<StaticElementRendererImpl
+						{...props}
+						element={element}
+						activeSlide={activeSlide}
+						allSlides={allSlides}
+						tableStyleContext={tableStyleContext}
+					/>
 				</ElementErrorBoundary>
 			);
 		},

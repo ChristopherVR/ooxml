@@ -190,6 +190,45 @@ describe('office-ui-read-only-banner', () => {
 	});
 });
 
+describe('office-ui-message-bar', () => {
+	type Bar = Stateful<{
+		kind: 'security' | 'info';
+		title: string;
+		message: string;
+		actionLabel?: string;
+		closeLabel?: string;
+	}>;
+
+	it('renders the warning and emits one intent per button', () => {
+		const host = document.createElement('office-ui-message-bar') as Bar;
+		host.state = {
+			kind: 'security',
+			title: 'SECURITY WARNING',
+			message: 'Content blocked.',
+			actionLabel: 'Enable Content',
+			closeLabel: 'Close',
+		};
+		document.body.append(host);
+		expect(host.dataset.testid).toBe('office-message-bar-bar');
+		expect(host.dataset.kind).toBe('security');
+		expect(q(host, '.text')!.textContent).toBe('SECURITY WARNINGContent blocked.');
+		expect(q(host, '[role="status"]')).not.toBeNull();
+		const close = q<HTMLButtonElement>(host, '[data-testid="office-message-bar-close"]')!;
+		expect(close.getAttribute('aria-label')).toBe('Close');
+		const spy = listen(host, 'office-message-bar-request');
+		q<HTMLButtonElement>(host, '[data-testid="office-message-bar-action"]')!.click();
+		close.click();
+		expect(spy.mock.calls).toStrictEqual([[{ id: 'action' }], [{ id: 'close' }]]);
+	});
+
+	it('has no action button without an action label', () => {
+		const host = document.createElement('office-ui-message-bar') as Bar;
+		host.state = { kind: 'info', title: '', message: 'Note' };
+		document.body.append(host);
+		expect(q(host, '[data-testid="office-message-bar-action"]')).toBeNull();
+	});
+});
+
 describe('office-ui-paste-options', () => {
 	const OPTIONS = [
 		{ id: 'keep-source', label: 'Keep Source Formatting' },

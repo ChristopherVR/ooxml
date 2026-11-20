@@ -3,6 +3,8 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { resolveStatusBarSave, statusBarViewMode } from '../render';
 import type { StatusBarViewState } from '../render';
+import { labelNameMismatches } from '../../test-support/label-in-name';
+import { translationsEn } from '../i18n';
 import { registerPptxWebControls } from './index';
 
 beforeAll(registerPptxWebControls);
@@ -29,6 +31,13 @@ const button = (host: HTMLElement, name: string) =>
 	host.shadowRoot!.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`);
 
 describe('pptx-ui-status-bar', () => {
+	it('names every button with the text it shows, in English (WCAG 2.5.3)', () => {
+		const english = (key: string) => (translationsEn as Record<string, string>)[key] ?? key;
+		const host = mount({ translate: english, zoomPercent: 80 });
+		expect(button(host, '80%, Zoom to fit')!.textContent).toBe('80%');
+		expect(labelNameMismatches(host.shadowRoot!)).toEqual([]);
+	});
+
 	it('renders the counter, save text, names and pressed state', () => {
 		const host = mount({ notesExpanded: true });
 		const root = host.shadowRoot!;
@@ -37,8 +46,8 @@ describe('pptx-ui-status-bar', () => {
 		expect(button(host, 'pptx.statusBar.toggleNotes')!.getAttribute('aria-pressed')).toBe('true');
 		expect(button(host, 'pptx.statusBar.normalView')!.getAttribute('aria-pressed')).toBe('true');
 		expect(button(host, 'pptx.statusBar.slideShow')!.getAttribute('aria-pressed')).toBe('false');
-		expect(button(host, 'pptx.statusBar.zoomToFit')!.textContent).toBe('100%');
-		expect(button(host, 'pptx.statusBar.zoomToFit')!.title).toBe('pptx.statusBar.zoomToFit');
+		expect(button(host, '100%, pptx.statusBar.zoomToFit')!.textContent).toBe('100%');
+		expect(button(host, '100%, pptx.statusBar.zoomToFit')!.title).toBe('pptx.statusBar.zoomToFit');
 	});
 
 	it('gates notes, sorter, slide show, view modes and zoom', () => {
@@ -68,7 +77,7 @@ describe('pptx-ui-status-bar', () => {
 			['pptx.statusBar.slideSorter', 'sorter'],
 			['pptx.statusBar.slideShow', 'slideShow'],
 			['pptx.statusBar.zoomOut', 'zoomOut'],
-			['pptx.statusBar.zoomToFit', 'zoomFit'],
+			['150%, pptx.statusBar.zoomToFit', 'zoomFit'],
 			['pptx.statusBar.zoomIn', 'zoomIn'],
 		] as const) {
 			button(host, name)!.click();

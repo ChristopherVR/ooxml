@@ -1,5 +1,6 @@
 import {
 	describeCollaborationShellState,
+	ExternalContentBar,
 	SlideCanvas,
 	SlidesPane,
 	Toolbar,
@@ -55,6 +56,13 @@ export const HostOwnedHeadlessEditor = forwardRef<
 				<output aria-label={t('pptx.collaboration.shellStatusLabel')}>
 					{describeCollaborationShellState(blocks.shellState, t)}
 				</output>
+				{/* PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. */}
+				{blocks.externalContent.barVisible && (
+					<ExternalContentBar
+						onEnable={blocks.externalContent.enable}
+						onClose={blocks.externalContent.close}
+					/>
+				)}
 				<Toolbar {...blocks.toolbarProps} />
 				<HostOwnedWorkflows blocks={blocks} />
 				<HostOwnedFileDialogs blocks={blocks} />

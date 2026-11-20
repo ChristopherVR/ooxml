@@ -386,6 +386,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 			onTouchStart={swipe.onTouchStart}
 			onTouchEnd={swipe.onTouchEnd}
 			onContextMenu={mode === 'present' ? handlePresentationContextMenu : undefined}
+			data-pptx-touch-press={mode === 'present' ? 'menu' : undefined}
 		>
 			{findReplace.findReplaceOpen && isPanelVisible(customization, 'findReplace') && (
 				<FindReplacePanel

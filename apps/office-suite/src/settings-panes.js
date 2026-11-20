@@ -114,7 +114,7 @@ export function privacyPane(slot, { assistant, cloud }) {
 				'Linked pictures and media',
 				blocked
 					? 'Blocked in presentations you open.'
-					: "PowerPoint's Trust Center decides (allowed by default).",
+					: 'Asked in each presentation (blocked until you choose Enable Content).',
 			),
 			assistant
 				? connection(

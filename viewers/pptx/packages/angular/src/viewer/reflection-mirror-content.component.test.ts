@@ -94,7 +94,7 @@ describe('group-level a:reflection mounting (element-renderer.component.html)', 
 	const html = read('element-renderer.component.html');
 
 	it('mounts the reflection mirror inside the group branch, not only the shape branch', () => {
-		const groupCaseStart = html.indexOf("@case (element().type === 'group')");
+		const groupCaseStart = html.indexOf("@case (drawn().type === 'group')");
 		const groupCaseEnd = html.indexOf('@case (isImageLike())', groupCaseStart);
 		expect(groupCaseStart).toBeGreaterThan(-1);
 		const groupCase = html.slice(groupCaseStart, groupCaseEnd);

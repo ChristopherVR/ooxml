@@ -10,7 +10,9 @@ import type {
 	ViewerOptions,
 } from 'ooxml-ui/pptx';
 import {
+	canCopyImageToClipboard,
 	choosePdfExportSelection,
+	copyPngToClipboard,
 	deleteAutosaveSnapshot,
 	deliverSavedPresentation,
 	exportDeckJson,
@@ -252,10 +254,13 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 	/** Copy the active slide to the clipboard as a PNG image (File menu). */
 	async function onCopySlideAsImage(): Promise<void> {
 		try {
-			const result = await rasterizeSlideToRaster(activeSlideIndex.value);
-			const blob = await rasterResultToPngBlob(result);
-			if (typeof ClipboardItem !== 'undefined' && navigator.clipboard?.write) {
-				await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+			if (canCopyImageToClipboard()) {
+				// The clipboard write starts inside the click; Safari rejects it after an await.
+				await copyPngToClipboard(
+					rasterizeSlideToRaster(activeSlideIndex.value).then((result) =>
+						rasterResultToPngBlob(result),
+					),
+				);
 			}
 		} catch (err) {
 			console.error('[PowerPointViewer] Copy slide as image failed:', err);

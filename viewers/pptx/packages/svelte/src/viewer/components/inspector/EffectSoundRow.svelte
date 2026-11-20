@@ -8,11 +8,15 @@
 	 * `data:` URL that the core save pipeline embeds and mints a relationship
 	 * for.
 	 */
-	import { EFFECT_SOUND_CATALOGUE, getEffectSoundAsset } from 'ooxml-ui/pptx';
+	import {
+		BUILT_IN_SOUNDS,
+		EFFECT_SOUND_CATALOGUE,
+		getEffectSoundAsset,
+		playDeckSound,
+	} from 'ooxml-ui/pptx';
 	import type { EffectSoundState } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../i18n/context';
-	import { playAnimationSound } from '../../presentation/animation-sound';
 
 	const NONE_VALUE = 'none';
 	const CURRENT_VALUE = 'current';
@@ -75,7 +79,7 @@
 		}
 		const asset = getEffectSoundAsset(soundState.catalogueId);
 		if (asset) {
-			playAnimationSound(asset.dataUrl);
+			playDeckSound(asset.dataUrl, BUILT_IN_SOUNDS);
 		}
 	}
 </script>

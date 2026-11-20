@@ -14,6 +14,7 @@
 	import type { ShapeFillAction, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
 	import {
 		fillColorOf,
+		linkedContentUrl,
 		resolveShapeFillView,
 		SHAPE_FILL_MODE_SECTIONS,
 		SHAPE_FILL_OPTIONS_SECTIONS,
@@ -26,6 +27,7 @@
 	import { setSolidFillPatch } from '../../editor';
 	import GradientPanel from './GradientPanel.svelte';
 	import InspectorFields from './InspectorFields.svelte';
+	import { getLinkedContentGetter } from '../../state/linked-content';
 	import { liveColorEvents, liveElementColor } from './live-color';
 	import PatternFillPanel from './PatternFillPanel.svelte';
 	import RecentColorsRow from './RecentColorsRow.svelte';
@@ -36,6 +38,9 @@
 
 	const style = $derived(hasShapeProperties(el) ? el.shapeStyle : undefined);
 	const view = $derived(resolveShapeFillView(style));
+	// The fill picture preview; the address field keeps showing the model's value.
+	const getLinkedContent = getLinkedContentGetter();
+	const imagePreview = $derived(linkedContentUrl(view.image?.url, getLinkedContent()));
 
 	function patchStyle(patch: Partial<ShapeStyle>): void {
 		editor.patchSelected(shapeQuickStylePatch(el, patch));
@@ -125,8 +130,8 @@
 			<span>{t('pptx.fillAdvanced.orChooseFile')}</span>
 			<input type="file" accept="image/*" onchange={(e) => onImageFile(e.currentTarget)} />
 		</label>
-		{#if view.image.url}
-			<img src={view.image.url} alt={t('pptx.fillAdvanced.fillPreviewAlt')} />
+		{#if imagePreview}
+			<img src={imagePreview} alt={t('pptx.fillAdvanced.fillPreviewAlt')} />
 		{/if}
 	</div>
 {/if}

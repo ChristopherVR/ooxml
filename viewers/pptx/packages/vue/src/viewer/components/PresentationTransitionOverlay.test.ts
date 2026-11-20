@@ -2,17 +2,13 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { mount } from '@vue/test-utils';
+import { stopDeckSound } from 'ooxml-ui/pptx';
 import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { playAnimationSound, stopAnimationSound } from '../composables/animation-sound';
+import { LinkedContentKey } from '../composables/linked-content';
 import type { CanvasSize } from '../types';
 import PresentationTransitionOverlay from './PresentationTransitionOverlay.vue';
-
-vi.mock(import('../composables/animation-sound'), () => ({
-	playAnimationSound: vi.fn(),
-	stopAnimationSound: vi.fn(),
-}));
 
 /**
  * The SFC's own text. `import.meta.url` is not a file URL under the happy-dom
@@ -816,85 +812,111 @@ describe('presentationTransitionOverlay', () => {
 });
 
 describe('presentationTransitionOverlay sound (p:sndAc/p:stSnd, p:endSnd)', () => {
+	/** Every sound the overlay starts, as the address it plays and whether it loops. */
+	let played: { src: string; loop: boolean; paused: boolean }[] = [];
+
 	beforeEach(() => {
 		vi.useFakeTimers();
-		vi.mocked(playAnimationSound).mockClear();
-		vi.mocked(stopAnimationSound).mockClear();
+		played = [];
+		vi.stubGlobal(
+			'Audio',
+			// oxlint-disable-next-line prefer-arrow-callback -- `new Audio()` needs a function
+			vi.fn(function (src: string) {
+				const sound = { src, loop: false, paused: false };
+				played.push(sound);
+				return {
+					set loop(value: boolean) {
+						sound.loop = value;
+					},
+					currentTime: 0,
+					play: () => Promise.resolve(),
+					pause: () => {
+						sound.paused = true;
+					},
+				};
+			}),
+		);
 	});
 
 	afterEach(() => {
+		stopDeckSound();
+		vi.unstubAllGlobals();
 		vi.useRealTimers();
 	});
 
-	it('resolves the transition sound path through mediaDataUrls and plays it', () => {
-		const wrapper = mount(PresentationTransitionOverlay, {
+	const mountWith = (
+		transition: PptxSlideTransition,
+		mediaDataUrls: Map<string, string>,
+		linkedContent = false,
+	) =>
+		mount(PresentationTransitionOverlay, {
 			props: {
 				outgoingSlide: makeSlide('out'),
 				incomingSlide: makeSlide('in'),
 				canvasSize,
-				mediaDataUrls: new Map([['ppt/media/media3.wav', 'blob:sound']]),
-				transition: {
-					type: 'fade',
-					durationMs: 300,
-					soundPath: 'ppt/media/media3.wav',
-					soundLoop: true,
-				} as PptxSlideTransition,
+				mediaDataUrls,
+				transition,
 			},
+			global: { provide: { [LinkedContentKey as symbol]: linkedContent } },
 		});
-		expect(playAnimationSound).toHaveBeenCalledWith('blob:sound', true);
+
+	it('resolves the transition sound path through mediaDataUrls and plays it', () => {
+		const wrapper = mountWith(
+			{
+				type: 'fade',
+				durationMs: 300,
+				soundPath: 'ppt/media/media3.wav',
+				soundLoop: true,
+			} as PptxSlideTransition,
+			new Map([['ppt/media/media3.wav', 'blob:sound']]),
+		);
+		expect(played).toStrictEqual([{ src: 'blob:sound', loop: true, paused: false }]);
 		wrapper.unmount();
 	});
 
 	it('does not play when the raw archive path has no resolved URL yet', () => {
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: makeSlide('out'),
-				incomingSlide: makeSlide('in'),
-				canvasSize,
-				mediaDataUrls: new Map<string, string>(),
-				transition: {
-					type: 'fade',
-					durationMs: 300,
-					soundPath: 'ppt/media/media3.wav',
-				} as PptxSlideTransition,
-			},
-		});
-		expect(playAnimationSound).not.toHaveBeenCalled();
+		const wrapper = mountWith(
+			{ type: 'fade', durationMs: 300, soundPath: 'ppt/media/media3.wav' } as PptxSlideTransition,
+			new Map<string, string>(),
+		);
+		expect(played).toStrictEqual([]);
 		wrapper.unmount();
 	});
 
+	it('fetches a linked transition sound only once the viewer allows linked content', () => {
+		const transition = {
+			type: 'fade',
+			durationMs: 300,
+			soundPath: 'https://linked-content.test/whoosh.wav',
+		} as PptxSlideTransition;
+		mountWith(transition, new Map(), false).unmount();
+		expect(played).toStrictEqual([]);
+		mountWith(transition, new Map(), true).unmount();
+		expect(played.map((sound) => sound.src)).toStrictEqual([
+			'https://linked-content.test/whoosh.wav',
+		]);
+	});
+
 	it('stops the current sound for p:endSndAc (transition.stopSound)', () => {
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: makeSlide('out'),
-				incomingSlide: makeSlide('in'),
-				canvasSize,
-				mediaDataUrls: new Map<string, string>(),
-				transition: { type: 'fade', durationMs: 300, stopSound: true } as PptxSlideTransition,
-			},
-		});
-		expect(stopAnimationSound).toHaveBeenCalledOnce();
-		expect(playAnimationSound).not.toHaveBeenCalled();
+		mountWith(
+			{ type: 'fade', durationMs: 300, soundPath: 'a.wav', soundLoop: true } as PptxSlideTransition,
+			new Map([['a.wav', 'blob:sound']]),
+		).unmount();
+		const wrapper = mountWith(
+			{ type: 'fade', durationMs: 300, stopSound: true } as PptxSlideTransition,
+			new Map<string, string>(),
+		);
+		expect(played).toHaveLength(1);
+		expect(played[0]!.paused).toBe(true);
 		wrapper.unmount();
 	});
 
 	it('does NOT stop the sound merely because the overlay unmounts (Loop Until Next Sound)', () => {
-		const wrapper = mount(PresentationTransitionOverlay, {
-			props: {
-				outgoingSlide: makeSlide('out'),
-				incomingSlide: makeSlide('in'),
-				canvasSize,
-				mediaDataUrls: new Map([['a.wav', 'blob:sound']]),
-				transition: {
-					type: 'fade',
-					durationMs: 300,
-					soundPath: 'a.wav',
-					soundLoop: true,
-				} as PptxSlideTransition,
-			},
-		});
-		vi.mocked(stopAnimationSound).mockClear();
+		const wrapper = mountWith(
+			{ type: 'fade', durationMs: 300, soundPath: 'a.wav', soundLoop: true } as PptxSlideTransition,
+			new Map([['a.wav', 'blob:sound']]),
+		);
 		wrapper.unmount();
-		expect(stopAnimationSound).not.toHaveBeenCalled();
+		expect(played[0]!.paused).toBe(false);
 	});
 });

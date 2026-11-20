@@ -30,6 +30,8 @@ defineProps<{
 	firstSlideNumber?: number | undefined;
 	theme?: PptxTheme | undefined;
 	tableStyleMap?: ParsedTableStyleMap | undefined;
+	/** The shell draws the deck's linked web content (`externalContent.allowed`). */
+	linkedContent: boolean;
 }>();
 const emit = defineEmits<{ select: [index: number] }>();
 </script>
@@ -56,6 +58,7 @@ const emit = defineEmits<{ select: [index: number] }>();
 				:first-slide-number="firstSlideNumber"
 				:theme="theme"
 				:table-style-map="tableStyleMap"
+				:linked-content="linkedContent"
 			/>
 		</button>
 	</nav>

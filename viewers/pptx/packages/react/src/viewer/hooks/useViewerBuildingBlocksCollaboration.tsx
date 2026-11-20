@@ -37,6 +37,7 @@ export function useViewerBuildingBlocksCollaboration(input: BuildingBlocksCollab
 		loadOrigin: input.loadOrigin,
 		livePatcher: state.livePatcher,
 		onReadOnlyChange: input.onReadOnlyChange,
+		mediaDataUrls: state.mediaDataUrls,
 		deckSaveState: {
 			...state,
 			embedFonts: input.embedFonts,

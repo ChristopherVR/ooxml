@@ -8,8 +8,8 @@ import type { SlidesPaneTableStyleContext } from './slides-pane-props';
  * it. It renders from the slide model, so it follows unsaved edits.
  *
  * Feed it from the same values as `SlidesPane` (for example `createSlidesPaneProps(state)`):
- * a slide from `slides`, plus `canvasSize`, `mediaDataUrls`, `fieldContext` and
- * `tableStyleContext`. Those `slides` already carry their layout and master elements, so leave
+ * a slide from `slides`, plus `canvasSize`, `mediaDataUrls`, `fieldContext`, `tableStyleContext`
+ * and `linkedContent`. Those `slides` already carry their layout and master elements, so leave
  * `templateElements` empty for them; pass it only for a slide whose template layer is separate.
  */
 export interface SlideThumbnailProps {
@@ -29,4 +29,9 @@ export interface SlideThumbnailProps {
 	fieldContext?: FieldSubstitutionContext;
 	/** Theme and table style map for tables; see `SlidesPaneProps.tableStyleContext`. */
 	tableStyleContext?: SlidesPaneTableStyleContext;
+	/**
+	 * Draw the deck's linked web content: `externalContent.allowed` from the building blocks.
+	 * Unset keeps the enclosing `createViewerState` choice, and withholds it outside one.
+	 */
+	linkedContent?: boolean;
 }

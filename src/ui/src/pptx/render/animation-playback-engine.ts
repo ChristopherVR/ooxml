@@ -23,10 +23,10 @@
  * `performance.now` (all present in jsdom) and DOM lookups scoped through the
  * caller-supplied {@link PlaybackContext.frameRoot} are touched, so this stays
  * unit-testable outside a browser. Actual `Audio` playback is NOT touched here:
- * a binding wires its local sound helper in as {@link PlaybackContext.playSound}
- * / {@link PlaybackContext.stopSound} (an optional {@link PlaybackContext.onPlayActionSound}
- * host override takes priority over `playSound` when set, matching the
- * pre-extraction behaviour of `ctx.onPlayActionSound ?? playAnimationSound`).
+ * a binding wires `playDeckSound` (`deck-sound`, which applies its linked-content
+ * consent) in as {@link PlaybackContext.playSound} / {@link PlaybackContext.stopSound}
+ * (an optional {@link PlaybackContext.onPlayActionSound} host override takes
+ * priority over `playSound` when set).
  *
  * The `p:seq/@nextAc="seek"` nuance (a second advance while a group is still
  * mid-flight fast-forwards it to its authored end state instead of playing the
@@ -76,7 +76,7 @@ export interface PlaybackContext {
 	buildHandle: BuildRafHandle;
 	/** Host-provided action-sound player; takes priority over `playSound`. */
 	onPlayActionSound?: (soundPath: string) => void;
-	/** The binding's local action-sound player, used when no host override is set. */
+	/** The binding's `playDeckSound` player, used when no host override is set. */
 	playSound: (soundPath: string) => void;
 	/** Stops any in-progress action/animation sound. */
 	stopSound: () => void;

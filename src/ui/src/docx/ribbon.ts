@@ -3,6 +3,7 @@ import { shortcutHint } from './binding-labels';
 import { emit } from './events';
 import { setComboValue, type ComboInput } from './ribbon-combo';
 import {
+	localeOf,
 	localizeElement,
 	normalizeEditorLocale,
 	translate,
@@ -124,9 +125,14 @@ export function syncSelectTitles(root: ParentNode): void {
 function syncButtonTitles(root: ParentNode): void {
 	for (const button of root.querySelectorAll('button')) {
 		if (button.hasAttribute('data-unavailable')) continue;
-		const label = button.getAttribute('aria-label');
+		const id = button.dataset.localearialabel;
+		// A command named apart from its label keeps the label as its tooltip.
+		const label =
+			button.dataset.localename && id
+				? translate(localeOf(button), id as LocalizationKey)
+				: button.getAttribute('aria-label');
 		if (!label) continue;
-		const hint = shortcutHint(button.dataset.localearialabel ?? label);
+		const hint = shortcutHint(id ?? label);
 		const title = hint ? `${label} (${hint})` : label;
 		if ((button.textContent?.trim() || hint) && button.title !== title) button.title = title;
 	}

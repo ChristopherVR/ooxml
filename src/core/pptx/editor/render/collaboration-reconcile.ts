@@ -22,7 +22,9 @@
 
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
-import { getAssetsMap, isLocalOnlyUrl, reconcileAssetFields } from './collaboration-assets';
+import { getAssetsMap, reconcileAssetFields } from './collaboration-assets';
+import { type CollaborationMedia, collaborationMedia } from './collaboration-media';
+import { collectSharedMedia, sharedValue, stringifyShared } from './collaboration-media-token';
 import { sharedSlideRecord } from './collaboration-remote-values';
 import type { YArrayLike, YDocLike, YjsFactories, YMapLike } from './collaboration-sync';
 import {
@@ -30,6 +32,7 @@ import {
 	COMPLEX_SLIDE_FIELDS,
 	SCALAR_ELEMENT_KEYS,
 	SCALAR_SLIDE_KEYS,
+	sharedElementRecord,
 	writeElementToYMap,
 	writeSlideToYMap,
 	YDOC_SLIDES_KEY,
@@ -61,11 +64,8 @@ function reconcileScalars(
 		if (key === skipKey) {
 			continue;
 		}
-		const next = rec[key];
-		if (isLocalOnlyUrl(next)) {
-			// Not shareable (see isLocalOnlyUrl): leave the room's value as it is.
-			continue;
-		}
+		// A page-local URL is written as its media token (collaboration-media-token.ts).
+		const next = sharedValue(rec[key]);
 		const current = ymap.get(key);
 		if (next === undefined) {
 			if (current !== undefined) {
@@ -83,7 +83,7 @@ function reconcileComplexFields(
 	fields: Readonly<Record<string, string>>,
 ): void {
 	for (const [original, prefixed] of Object.entries(fields)) {
-		const next = rec[original] === undefined ? undefined : JSON.stringify(rec[original]);
+		const next = rec[original] === undefined ? undefined : stringifyShared(rec[original]);
 		const current = ymap.get(prefixed);
 		if (next === undefined) {
 			if (current !== undefined) {
@@ -138,8 +138,9 @@ export function reconcileElementYMap(
 	element: PptxElement,
 	factories: YjsFactories,
 	assets: YMapLike,
+	media?: CollaborationMedia,
 ): void {
-	const rec = element as unknown as Record<string, unknown>;
+	const rec = sharedElementRecord(element, media);
 	const ownsText = hasCollaborationTextLease(ymap, element);
 	reconcileScalars(ymap, rec, SCALAR_ELEMENT_KEYS, ownsText ? 'text' : undefined);
 	reconcileComplexFields(ymap, rec, COMPLEX_ELEMENT_FIELDS);
@@ -274,6 +275,7 @@ export function reconcileSlideYMap(
 	slide: PptxSlide,
 	factories: YjsFactories,
 	assets: YMapLike,
+	media?: CollaborationMedia,
 ): void {
 	const rec = sharedSlideRecord(slide);
 	reconcileScalars(ymap, rec, SCALAR_SLIDE_KEYS);
@@ -288,10 +290,10 @@ export function reconcileSlideYMap(
 		idOf: (el) => (typeof el.id === 'string' ? el.id : undefined),
 		create: (el) => {
 			const map = factories.createMap();
-			writeElementToYMap(el, map, factories, assets);
+			writeElementToYMap(el, map, factories, assets, media);
 			return map;
 		},
-		update: (map, el) => reconcileElementYMap(map, el, factories, assets),
+		update: (map, el) => reconcileElementYMap(map, el, factories, assets, media),
 	});
 }
 
@@ -326,7 +328,9 @@ export function removeDuplicateSlidesInYDoc(
 /**
  * Granular local -> Y.Doc sync: mutate only what changed, inside one
  * transaction tagged with `origin` (default LOCAL_SYNC_ORIGIN) so the
- * caller's own observer can skip the resulting events.
+ * caller's own observer can skip the resulting events. The bytes of the
+ * pictures and media the slides use follow in their own transactions, with
+ * the same origin (see collaboration-media.ts).
  */
 export function reconcileSlidesInYDoc(
 	slides: readonly PptxSlide[],
@@ -335,16 +339,20 @@ export function reconcileSlidesInYDoc(
 	origin: unknown = LOCAL_SYNC_ORIGIN,
 ): void {
 	const assets = getAssetsMap(ydoc);
-	ydoc.transact(() => {
-		const arr = ydoc.getArray(YDOC_SLIDES_KEY);
-		reconcileYArrayById<PptxSlide>(arr, slides, {
-			idOf: (slide) => (typeof slide.id === 'string' ? slide.id : undefined),
-			create: (slide) => {
-				const map = factories.createMap();
-				writeSlideToYMap(slide, map, factories, assets);
-				return map;
-			},
-			update: (map, slide) => reconcileSlideYMap(map, slide, factories, assets),
-		});
-	}, origin);
+	const media = collaborationMedia(ydoc);
+	const shared = collectSharedMedia(() =>
+		ydoc.transact(() => {
+			const arr = ydoc.getArray(YDOC_SLIDES_KEY);
+			reconcileYArrayById<PptxSlide>(arr, slides, {
+				idOf: (slide) => (typeof slide.id === 'string' ? slide.id : undefined),
+				create: (slide) => {
+					const map = factories.createMap();
+					writeSlideToYMap(slide, map, factories, assets, media);
+					return map;
+				},
+				update: (map, slide) => reconcileSlideYMap(map, slide, factories, assets, media),
+			});
+		}, origin),
+	);
+	void media.upload(shared, origin);
 }

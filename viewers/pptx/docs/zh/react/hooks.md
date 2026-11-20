@@ -166,6 +166,21 @@ const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
 
 之后修改 `initialSlide` 只对下一次加载生效，不会移动已打开的演示文稿；要切换当前幻灯片，请使用句柄的 `goTo(index)`。
 
+### 链接的图片和媒体
+
+与 Microsoft PowerPoint 相同，链接到网络图片或媒体的演示文稿在打开时不会下载这些内容。`blocks.externalContent.barVisible` 表示何时显示 PowerPoint 的安全栏；渲染导出的 `<ExternalContentBar>`（或自己的控件），并将按钮连接到 `blocks.externalContent.enable()` 和 `close()`。启用内容只会重新绘制：不会重新加载，编辑、未保存状态、当前幻灯片和撤消历史记录都会保留；在协作会话中，每位参与者各自启用。`canvasProps` 和 `slidesPaneProps` 以 `linkedContent` 传递 `blocks.externalContent.allowed`；宿主自行绘制的 `<SlideThumbnail>` 也应传入它。打开新的演示文稿时会再次询问。`allowExternalContent` 选项（`true` 或 `false`）会代替用户作答，此时不显示安全栏。
+
+```tsx
+{
+	blocks.externalContent.barVisible && (
+		<ExternalContentBar
+			onEnable={blocks.externalContent.enable}
+			onClose={blocks.externalContent.close}
+		/>
+	);
+}
+```
+
 ### 通过自有控件完成选择器、对话框和版式工作流 {#picker-dialog-and-layout-workflows}
 
 构建块不会挂载文件输入框、对话框或窗格。`blocks.actions` 让自定义界面可以通过宿主渲染的控件完成这些工作流。每个操作都运行查看器自身的插入、查找替换和版式代码，因此选择、历史记录（撤销）和 `onDirtyChange` 的行为与 `PowerPointViewer` 一致。每个操作都返回 `{ ok: true }` 或 `{ ok: false, code }`，并在以下情况下被拒绝：`'read-only'`（只读、不在编辑模式或无编辑权限）、`'protected'`（建议只读或受保护视图）、`'not-ready'`（正在加载或加载失败）。错误码不是英文文本，请在宿主界面中以自己的语言呈现反馈。

@@ -20,7 +20,9 @@ import { TranslateService } from '@ngx-translate/core';
 import type { RibbonTransitionDraft, RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
 	applyRibbonTransitionDraft,
+	BUILT_IN_SOUNDS,
 	mergeSlideTransition,
+	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
 	ribbonTransitionsDraftPatch,
@@ -30,7 +32,6 @@ import {
 } from 'ooxml-ui/pptx';
 import type { PptxSlideTransition } from 'pptx-viewer-core';
 
-import { playAnimationSound } from './animation-sound';
 import { EditorStateService } from './editor-state.service';
 
 @Component({
@@ -88,7 +89,7 @@ export class RibbonTransitionsSectionComponent {
 			case 'soundPreview': {
 				const url = ribbonTransitionStockSoundUrl(this.slide()?.transition);
 				if (url) {
-					playAnimationSound(url);
+					playDeckSound(url, BUILT_IN_SOUNDS);
 				}
 				break;
 			}

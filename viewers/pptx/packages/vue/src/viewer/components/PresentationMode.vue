@@ -20,6 +20,7 @@ import {
 	PRESENTATION_HIT_TEST_CSS,
 	shouldConfirmExternalHyperlink,
 	shouldLoopContinuously,
+	stopDeckSound,
 	toggleBlackboard,
 } from 'ooxml-ui/pptx';
 /**
@@ -45,7 +46,7 @@ import type { PptxCustomShow, PptxPresentationProperties, PptxSlide } from 'pptx
 import { computed, inject, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { stopAnimationSound } from '../composables/animation-sound';
+import { useLinkedContentAllowed } from '../composables/linked-content';
 import { providePresentationElementStates } from '../composables/presentation-element-states';
 import { injectThemeColorMap } from '../composables/theme-color-map-context';
 import { useAnimationPlayback } from '../composables/useAnimationPlayback';
@@ -65,6 +66,7 @@ import { useRunProgramNotices } from '../composables/useRunProgramNotices';
 import { useSlideAutoAdvance } from '../composables/useSlideAutoAdvance';
 import { useToolbarAutoHide } from '../composables/useToolbarAutoHide';
 import { useTouchGestures } from '../composables/useTouchGestures';
+import { useTouchPress } from '../composables/useTouchPress';
 import { ViewerOptionsKey } from '../composables/useViewerOptionsStore';
 import { provideZoomNavigation } from '../composables/zoom-navigation';
 import type { CanvasSize } from '../types';
@@ -138,6 +140,8 @@ const emit = defineEmits<{
 }>();
 
 const overlayRef = ref<HTMLDivElement | null>(null);
+// Long-press opens the slide-show menu on touch (issue #290).
+useTouchPress(overlayRef);
 const frameRef = ref<HTMLDivElement | null>(null);
 
 const { t } = useI18n();
@@ -214,6 +218,8 @@ actionExtras = usePresentationActionExtras({
 // (`p:timing`) click-group; only when the slide's builds are exhausted do we
 // advance the slide. The controller also drives staged chart / SmartArt builds
 // and `p:animClr` colour animations.
+// A linked sound plays only once this viewer allows linked content.
+const linkedContentAllowed = useLinkedContentAllowed();
 const playback = useAnimationPlayback({
 	slide: nav.activeSlide,
 	showWithAnimation: () => props.presentationProperties?.showWithAnimation,
@@ -224,6 +230,7 @@ const playback = useAnimationPlayback({
 	canvasSize: () => props.canvasSize,
 	themeColorMap: injectThemeColorMap(),
 	pixelateMosaicAnimation: () => props.pixelateMosaicAnimation,
+	sounds: () => ({ mediaUrls: props.mediaDataUrls, linkedContent: linkedContentAllowed.value }),
 });
 // Publish the per-element state map so the chart / SmartArt / connector / shape
 // renderers can reveal staged builds and relinquish animated fill / stroke.
@@ -349,7 +356,7 @@ onMounted(() => {
 // one transition overlay's mount/unmount; it must still stop the instant the
 // show itself ends, or it keeps looping in the editor behind it.
 onBeforeUnmount(() => {
-	stopAnimationSound();
+	stopDeckSound();
 });
 /**
  * Where the auto-hiding show toolbar sits, read from the shared chrome spec
@@ -707,6 +714,7 @@ useTouchGestures({
 			:class="{ 'pptx-vue-reduced-motion': reducedMotion }"
 			@click="onOverlayClick"
 			@contextmenu="onOverlayContextMenu"
+			data-pptx-touch-press="menu"
 		>
 			<!-- Inject the static preset @keyframes plus this slide's native-animation
 			     (`p:timing`) keyframes (staged builds + `p:animClr` colour stops),
@@ -922,6 +930,7 @@ useTouchGestures({
 	background-color: #000000;
 	overflow: hidden;
 	cursor: default;
+	-webkit-user-select: none;
 	user-select: none;
 	/* Allow vertical scroll/pinch but let us interpret horizontal swipes. */
 	touch-action: pan-y;

@@ -239,6 +239,11 @@ export const translations = {
 		'Esta presentación está protegida con contraseña. Se abrió como solo lectura hasta que se indique la contraseña.',
 	'pptx.readOnly.markedFinal':
 		'El autor marcó esta presentación como final. Se abrió como solo lectura para evitar cambios.',
+	'pptx.externalContent.title': 'ADVERTENCIA DE SEGURIDAD',
+	'pptx.externalContent.message':
+		'Se han bloqueado las referencias a imágenes y otros elementos multimedia externos.',
+	'pptx.externalContent.enable': 'Habilitar contenido',
+	'pptx.externalContent.close': 'Cerrar',
 	'pptx.readOnly.bannerTitle': 'Solo lectura',
 	'pptx.readOnly.editAnyway': 'Editar de todos modos',
 	'pptx.readOnly.dismiss': 'Descartar',
@@ -333,6 +338,8 @@ export const translations = {
 		'La licencia de una fuente incrustada no permite usarla, por lo que se muestra una fuente sustituta. Sus datos se conservan en el archivo.',
 	'pptx.compatibility.embeddedFontNotEmbeddable':
 		'Una fuente no se incrustó porque su licencia no permite incrustarla en una presentación editable.',
+	'pptx.compatibility.collaborationMediaWithheld':
+		'Una imagen o un vídeo que compartió un colaborador es demasiado grande para enviarlo a todos los participantes de la sesión, por lo que no se muestra.',
 	'pptx.compatibility.collaborationValueRejected':
 		'Se omitió contenido enviado por un colaborador porque no está permitido aquí, como un vínculo o un tipo de archivo no seguro.',
 	'pptx.compatibility.exportBackendUnavailable':

@@ -9,6 +9,7 @@ import type {
 	OfficeUiGallery,
 } from '../ribbon/gallery';
 import { emitRibbonAction } from './ribbon-action';
+import { setGalleryState } from './ribbon-localize';
 
 const LABEL = 'Re-Layout Page';
 const INITIAL_REASON = 'Open a .vsdx file to lay out its shapes.';
@@ -100,7 +101,7 @@ export function syncReLayout(gallery: OfficeUiGallery, reason: string | undefine
 		reason === undefined
 			? `${LABEL}: lay out the selection, or the whole page, from its connectors.`
 			: `${LABEL}: ${reason}`;
-	gallery.state = reLayoutState(reason);
+	setGalleryState(gallery, reLayoutState(reason));
 	gallery.toggleAttribute('disabled', reason !== undefined);
 	gallery.setAttribute('title', title);
 	gallery.querySelector<HTMLButtonElement>('.trigger')?.setAttribute('title', title);

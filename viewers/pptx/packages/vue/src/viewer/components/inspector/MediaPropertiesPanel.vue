@@ -19,6 +19,7 @@ import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
+import { useLinkedContentUrl } from '../../composables/linked-content';
 import {
 	formatTime,
 	trimmedDurationLabel,
@@ -51,8 +52,11 @@ const currentTime = ref(0);
 const liveDuration = ref(0);
 const isPlaying = ref(false);
 
-/** Playable source: embedded data first, then the package relationship map. */
-const previewSrc = computed(() => {
+/**
+ * Playable source: embedded data first, then the package relationship map; a linked
+ * address only once this viewer allows linked content.
+ */
+const previewSrc = useLinkedContentUrl(() => {
 	const value = media.value;
 	return (
 		value?.mediaData ?? (value?.mediaPath ? props.mediaDataUrls?.get(value.mediaPath) : undefined)

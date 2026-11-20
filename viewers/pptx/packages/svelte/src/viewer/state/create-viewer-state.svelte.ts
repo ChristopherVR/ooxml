@@ -7,7 +7,6 @@ import {
 	deleteAutosaveSnapshot,
 	isFeatureEnabled,
 	resolve3DRenderingFlags,
-	resolveAllowExternalContent,
 	resolveImageResolutionScale,
 	resolvePdfExportSettings,
 	resolveSlideSizeSelection,
@@ -36,8 +35,10 @@ import { buildExportNotesCluster } from './create-viewer-state-export-notes.svel
 import { usePresentationCluster } from './create-viewer-state-presentation.svelte';
 import { usePresenterCluster } from './create-viewer-state-presenter.svelte';
 import type { CreateViewerStateOptions, ViewerStateBag } from './create-viewer-state-types';
+import { ExternalContentState } from './external-content.svelte';
 import { provideFieldContext } from './field-context';
 import { createInspectorDeckActions, provideInspectorDeck } from './inspector-deck';
+import { provideLinkedContent } from './linked-content';
 import { createOpenFile } from './open-file';
 import { PresentationLoader } from './presentation-loader.svelte';
 import { runQuickAccessCommand } from './quick-access-commands';
@@ -225,17 +226,20 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getPresentation: () => presentationApi.current,
 	});
 
-	// Trust Center > "Allow external content": read live on every load, not
-	// snapshotted once, so a user who flips the option keeps it in effect for
-	// the very next file they open.
 	loader.getLoadOptions = () => ({
-		allowExternalImages: resolveAllowExternalContent(
-			options.getAllowExternalContent?.(),
-			editorUi.optionsState.options,
-		),
-		// Host load limits, also read per load (unset keeps the core defaults).
+		// The model keeps linked web content as deck content (saves, undo, collaboration); what is
+		// fetched is decided where it is drawn (`externalContent.allowed`).
+		allowExternalImages: true,
+		// Host load limits, read per load (unset keeps the core defaults).
 		limits: options.getLimits?.(),
 	});
+	const externalContent = new ExternalContentState({
+		getLoadCount: () => loader.loadCount,
+		getHost: () => options.getAllowExternalContent?.(),
+		getOptions: () => editorUi.optionsState.options,
+		getContent: () => [editor.slides, editor.templateElementsBySlideId, loader.tableStyleMap],
+	});
+	provideLinkedContent(() => externalContent.allowed);
 	loader.translate = (key, params) => options.t(key, params);
 	loader.getGoogleFonts = () => editorUi.getGoogleFonts();
 
@@ -311,6 +315,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getStageHolderEl: options.getStageHolderEl,
 		getRootEl: options.getRootEl,
 		isPresentModeEnabled: () => isFeatureEnabled(getCustomization(), 'presentMode'),
+		getLinkedContentAllowed: () => externalContent.allowed,
 	});
 	presentationApi.current = presentationCluster.presentation;
 
@@ -332,6 +337,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getRootEl: options.getRootEl,
 		getEditable,
 		getFieldContext: fieldContext,
+		getLinkedContentAllowed: () => externalContent.allowed,
 		getFileName: () => options.getFileName?.(),
 		onnotesupdate: options.onnotesupdate,
 		notify: (toast) => editorUi.compatToasts.notify(toast),
@@ -475,6 +481,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		controller: editorUi.controller,
 		parityUi: editorUi.parityUi,
 		readOnlyRec: editorUi.readOnlyRec,
+		externalContent,
 		compatToasts: editorUi.compatToasts,
 		chromeUi: editorUi.chromeUi,
 		optionsState: editorUi.optionsState,

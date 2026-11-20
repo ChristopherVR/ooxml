@@ -5,6 +5,7 @@ import {
 	applyRenderedElementAccessibility,
 	deviceStrokeStageStyle,
 	getSlideBackgroundStyle,
+	linkedContentView,
 	resolveStageEdgeBleeds,
 	stageKeepsElementIds,
 	stripElementIdMarkers,
@@ -17,6 +18,7 @@ import { useI18n } from 'vue-i18n';
 
 import { provideElementRenderSlide } from '../composables/element-render-errors';
 import { provideSlideFieldContext } from '../composables/field-context';
+import { useLinkedContentAllowed } from '../composables/linked-content';
 import { useRendering3DFlags } from '../composables/rendering-3d-flags';
 import { provideSlideElements } from '../composables/slide-elements';
 import type { CanvasSize } from '../types';
@@ -110,6 +112,15 @@ const props = withDefaults(
 const { t } = useI18n();
 const stageRef = ref<HTMLElement | null>(null);
 
+// The slide and template layer as this viewer may fetch their linked web content
+// (`provideLinkedContent`): the stage draws only these. It emits nothing, so no
+// withheld copy reaches code that edits the model; edits go by element id.
+const linkedContentAllowed = useLinkedContentAllowed();
+const drawnSlide = computed(() => linkedContentView(props.slide, linkedContentAllowed.value));
+const drawnTemplateElements = computed(() =>
+	linkedContentView(props.templateElements ?? [], linkedContentAllowed.value),
+);
+
 // Re-point the deck-wide field context at THIS stage's slide before the element
 // renderers read it: date / header / footer / document-property fields are
 // presentation-wide, but the slide number and title are not, so a thumbnail,
@@ -123,13 +134,13 @@ provideSlideFieldContext(() => props.slide);
  * (`showMasterShapes === false`) set.
  */
 const templateElements = computed<PptxElement[]>(() => [
-	...visibleTemplateElements(props.slide, props.templateElements ?? []),
+	...visibleTemplateElements(drawnSlide.value, drawnTemplateElements.value),
 ]);
 
 // Publish THIS stage's sibling list so a text box in an `a:linkedTxbx` chain can
 // find the rest of its chain and render only its own slice of the overflow.
 // Template elements are included because a chain may be authored on a layout.
-provideSlideElements(() => [...templateElements.value, ...(props.slide?.elements ?? [])]);
+provideSlideElements(() => [...templateElements.value, ...(drawnSlide.value?.elements ?? [])]);
 // Element render errors on this stage report the slide it paints.
 provideElementRenderSlide(() => props.slide?.id);
 
@@ -142,7 +153,7 @@ const edgeBleeds = computed(() =>
 		? new Map()
 		: resolveStageEdgeBleeds(
 				templateElements.value,
-				props.slide,
+				drawnSlide.value,
 				props.selectedElementIds?.length ? new Set(props.selectedElementIds) : undefined,
 			),
 );
@@ -151,7 +162,7 @@ const edgeBleeds = computed(() =>
 const templateCount = computed(() => templateElements.value.length);
 const accessibleElements = computed(() => [
 	...templateElements.value,
-	...(props.slide?.elements ?? []),
+	...(drawnSlide.value?.elements ?? []),
 ]);
 
 /**
@@ -199,7 +210,7 @@ watchPostEffect(() => {
 			stage,
 			[
 				...(templateLayerInteractive.value ? templateElements.value : []),
-				...(props.slide?.elements ?? []),
+				...(drawnSlide.value?.elements ?? []),
 			],
 			{
 				canInteract: props.interactive === true,
@@ -232,7 +243,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 	// A stacked overlay layer opts out entirely and stays see-through.
 	...(props.transparentBackground
 		? { background: 'none', backgroundColor: 'transparent' }
-		: (getSlideBackgroundStyle(props.slide, {
+		: (getSlideBackgroundStyle(drawnSlide.value, {
 				widthPx: props.canvasSize.width,
 				heightPx: props.canvasSize.height,
 			}) as CSSProperties)),
@@ -272,7 +283,7 @@ const stageStyle = computed<CSSProperties>(() => ({
 		</ElementBoundary>
 		<!-- Slide content (template-free after the load-time partition). -->
 		<ElementBoundary
-			v-for="(element, index) in slide?.elements ?? []"
+			v-for="(element, index) in drawnSlide?.elements ?? []"
 			:key="element.id"
 			:element="element"
 		>

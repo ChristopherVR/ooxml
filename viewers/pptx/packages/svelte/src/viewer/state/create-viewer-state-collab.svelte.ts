@@ -148,6 +148,7 @@ export function useCollabCluster(deps: CollabClusterDeps): CollabCluster {
 				embedFonts: editor.embedFonts,
 			});
 		},
+		getMediaDataUrls: () => loader.mediaDataUrls,
 		getCanvasWidth: () => loader.canvasSize.width,
 		getCanvasHeight: () => loader.canvasSize.height,
 		onStart: (config) => options.onstartcollaboration?.(config),

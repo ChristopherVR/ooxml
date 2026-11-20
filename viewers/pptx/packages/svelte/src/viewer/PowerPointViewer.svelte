@@ -15,6 +15,7 @@
 	import {
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
+		installTouchPress,
 	createCloudDocumentController,
 	createSaveProgressController,
 		INSPECTOR_PANEL_DEFAULT_WIDTH,
@@ -37,6 +38,7 @@
 	import SignatureStrippedDialog from './components/SignatureStrippedDialog.svelte';
 	import VersionHistoryPanel from './components/VersionHistoryPanel.svelte';
 	import ViewerChrome from './components/ViewerChrome.svelte';
+	import ExternalContentBar from './components/ExternalContentBar.svelte';
 	import ViewerMain from './components/ViewerMain.svelte';
 	import ViewerGlobalStyles from './components/ViewerGlobalStyles.svelte';
 	import ViewerParityOverlays from './components/ViewerParityOverlays.svelte';
@@ -155,6 +157,10 @@
 				vm.optionsState.confirmHyperlink(url, t, rootEl),
 		});
 	});
+	// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu
+	// on a long-press and no reliable dblclick, so the shared installer synthesises
+	// them on the controls that opt in with `data-pptx-touch-press`.
+	$effect(() => (rootEl ? installTouchPress(rootEl) : undefined));
 	useCustomizationConstraints(customization, vm.optionsState);
 
 	// Ribbon Display Options: one controller per viewer, created here and never per render.
@@ -466,6 +472,11 @@
 			{aiEnabled}
 			onpresenter={vm.enterPresenterView}
 		/>
+	{/if}
+	<!-- PowerPoint's security bar sits under the ribbon, and shows even without the toolbar so
+	     blocked linked content can still be enabled. -->
+	{#if vm.chromeVisible && vm.externalContent.barVisible}
+		<ExternalContentBar onenable={vm.externalContent.enable} onclose={vm.externalContent.close} />
 	{/if}
 	<ExportProgressModal
 		open={exportUi.open}

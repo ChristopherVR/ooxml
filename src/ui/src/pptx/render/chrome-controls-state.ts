@@ -33,6 +33,15 @@ export type ReadOnlyBannerIntent =
 	| { id: 'submitPassword'; password: string };
 
 // ---------------------------------------------------------------------------
+// Security bar for linked external content
+// ---------------------------------------------------------------------------
+
+/** `pptx-ui-external-content-bar` state: its strings are fixed, only their language changes. */
+export interface ExternalContentBarViewState {
+	translate?: ChromeTranslate;
+}
+
+// ---------------------------------------------------------------------------
 // Paste Options toolbar
 // ---------------------------------------------------------------------------
 

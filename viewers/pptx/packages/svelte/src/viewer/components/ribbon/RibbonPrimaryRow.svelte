@@ -103,7 +103,6 @@
 		<button
 			type="button"
 			class="pptx-svelte-ribbon-primary-shows"
-			aria-label={t('pptx.customShows.createTooltip')}
 			title={t('pptx.customShows.createTooltip')}
 			onclick={oncustomshows}
 		>

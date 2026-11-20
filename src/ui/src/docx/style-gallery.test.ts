@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { createDocument } from 'ooxml-core/docx';
 import { describe, expect, it, vi } from 'vitest';
+import { labelNameMismatches } from '../test-support/label-in-name';
 import { syncStyleGallery } from './style-gallery';
 
 const model = createDocument();
@@ -16,6 +17,7 @@ describe('style gallery', () => {
 		const tiles = [...gallery.querySelectorAll<HTMLButtonElement>('.style-tile')];
 		expect(tiles.map((tile) => tile.getAttribute('aria-label'))).toEqual(['Normal', 'Heading 1']);
 		expect(tiles.map((tile) => tile.getAttribute('aria-pressed'))).toEqual(['false', 'true']);
+		expect(labelNameMismatches(gallery)).toEqual([]);
 		const heading = tiles[1]!.querySelector<HTMLElement>('.style-sample')!;
 		expect(parseFloat(heading.style.fontSize)).toBeGreaterThan(
 			parseFloat(tiles[0]!.querySelector<HTMLElement>('.style-sample')!.style.fontSize || '11'),

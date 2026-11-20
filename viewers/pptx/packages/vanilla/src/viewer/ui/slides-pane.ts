@@ -71,6 +71,12 @@ export interface SlidesPaneOptions {
 	canvasSize: CanvasSize;
 	/** Resolved media URLs (`LoadedPresentation.mediaDataUrls`) for images and video posters. */
 	mediaDataUrls?: ReadonlyMap<string, string>;
+	/**
+	 * Draw the deck's linked web content (pictures, fills, media posters at other servers).
+	 * Leave it unset until the viewer allows it (`resolveExternalContentView`); unset draws
+	 * the slides without contacting those servers.
+	 */
+	linkedContent?: boolean;
 	/** The deck's sections; with any, the rail groups thumbnails under collapsible headers. */
 	sections?: readonly PptxSection[];
 	/**
@@ -219,6 +225,7 @@ export function createSlidesPane(container: HTMLElement, initial: SlidesPaneOpti
 		return renderSlideStage({
 			document: doc,
 			slide: template.length ? { ...slide, elements: [...template, ...slide.elements] } : slide,
+			linkedContent: options.linkedContent,
 			canvasSize: options.canvasSize,
 			mediaDataUrls: options.mediaDataUrls ?? new Map(),
 			colorScheme: options.colorScheme,

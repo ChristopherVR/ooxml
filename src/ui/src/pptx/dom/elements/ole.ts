@@ -134,6 +134,7 @@ function buildPreview(
 		objectFit: 'contain',
 		pointerEvents: 'none',
 		userSelect: 'none',
+		WebkitUserSelect: 'none',
 		display: 'block',
 	});
 	img.src = el.previewImageData ?? '';

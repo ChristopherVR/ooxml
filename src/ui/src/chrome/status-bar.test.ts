@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { OfficeStatusBarState, OfficeStatusButton } from '../controls';
 import { registerOfficeUi } from '../index';
+import { labelNameMismatches } from '../test-support/label-in-name';
 import css from './status-bar.css?raw';
 
 // Adapted from pptx-viewer's status-bar tests (`packages/shared/src/web-components/status-bar.test.ts`).
@@ -33,6 +34,13 @@ const button = (bar: Bar, name: string) =>
 	bar.shadowRoot!.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`)!;
 
 describe('office-ui-status-bar (controlled)', () => {
+	it('names the zoom percentage by the percentage it shows, then what it does (WCAG 2.5.3)', () => {
+		const bar = make();
+		const fit = bar.shadowRoot!.querySelector<HTMLButtonElement>('[data-id="zoomFit"]')!;
+		expect([fit.textContent, fit.getAttribute('aria-label')]).toEqual(['100%', '100%, Fit']);
+		expect(labelNameMismatches(bar.shadowRoot!)).toEqual([]);
+	});
+
 	it('renders texts, named buttons, pressed state and the zoom percentage', () => {
 		const bar = make();
 		expect(bar.hasAttribute('data-controlled')).toBe(true);
@@ -44,7 +52,8 @@ describe('office-ui-status-bar (controlled)', () => {
 		expect(button(bar, 'Toggle notes').textContent).toBe('Notes');
 		expect(button(bar, 'Normal').title).toBe('Normal');
 		expect(button(bar, 'Reading').getAttribute('aria-pressed')).toBe('false');
-		expect(button(bar, 'Fit').textContent).toBe('100%');
+		expect(button(bar, '100%, Fit').textContent).toBe('100%');
+		expect(button(bar, '100%, Fit').title).toBe('Fit');
 		expect(button(bar, 'Zoom in').querySelector('path')).not.toBeNull();
 	});
 
@@ -84,7 +93,7 @@ describe('office-ui-status-bar (controlled)', () => {
 			['Toggle notes', 'notes'],
 			['Reading', 'read'],
 			['Zoom out', 'zoomOut'],
-			['Fit', 'zoomFit'],
+			['150%, Fit', 'zoomFit'],
 			['Zoom in', 'zoomIn'],
 		] as const) {
 			button(bar, name).click();

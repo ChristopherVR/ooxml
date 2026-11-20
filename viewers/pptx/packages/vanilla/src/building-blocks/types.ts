@@ -4,6 +4,7 @@ import type {
 	CollaborationState,
 	UseViewerBuildingBlocksActionsOptions,
 	ViewerBuildingBlockActions,
+	ViewerExternalContentBar,
 	ViewerMode,
 } from 'ooxml-ui/pptx';
 
@@ -63,6 +64,15 @@ export interface ViewerBuildingBlocks {
 	/** The current state; same value `getState()` returns. */
 	readonly state: ViewerBuildingBlocksState;
 	getState(): ViewerBuildingBlocksState;
+	/**
+	 * PowerPoint's security bar for linked pictures and media: a deck that links them to the web
+	 * opens without downloading them. The canvas does not draw the bar; mount it with
+	 * {@link mountExternalContentBar}, or draw your own while `barVisible`, wiring Enable Content
+	 * and Close to `enable` and `close`. Enable Content only redraws: nothing reloads, and a
+	 * collaborator decides for themselves. Slides your shell draws itself (its own thumbnails)
+	 * go through `linkedContentView(slide, allowed)`. Read it again after `subscribe` fires.
+	 */
+	readonly externalContent: ViewerExternalContentBar;
 	/** The full viewer instance behind the canvas, for its imperative API; null until mounted. */
 	readonly viewer: PptxViewer | null;
 	/** Call `listener` after every change of state, actions or options; returns the unsubscribe. */
@@ -77,6 +87,11 @@ export interface ViewerBuildingBlocks {
 	mountCanvas(host: HTMLElement): () => void;
 	/** Mount the compact toolbar; `include` picks groups. Returns its disposer. */
 	mountToolbar(host: HTMLElement, include?: readonly BuildingBlockToolbarGroupId[]): () => void;
+	/**
+	 * Mount the security bar (`pptx-ui-external-content-bar`); it shows only while
+	 * `externalContent.barVisible`. Returns its disposer.
+	 */
+	mountExternalContentBar(host: HTMLElement): () => void;
 	/** Mount the slide thumbnail rail. Returns its disposer. */
 	mountSlidesPane(host: HTMLElement): () => void;
 	/** Dispose every mounted block and the viewer. */

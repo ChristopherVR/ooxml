@@ -53,6 +53,8 @@ export interface ConnectOptions {
 	 * dropped every session-level edit outside `slides`.
 	 */
 	getSaveOptions?: () => PptxHandlerSaveOptions;
+	/** The URLs this viewer plays its audio and video from, so the room can carry their bytes. */
+	getMediaDataUrls?: () => ReadonlyMap<string, string>;
 }
 
 /** The transport objects + wiring handles of one live session, owned together. */

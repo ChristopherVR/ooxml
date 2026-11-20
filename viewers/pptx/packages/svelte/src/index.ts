@@ -188,8 +188,11 @@ export {
 	BuildingBlocksSlidesPane,
 	BuildingBlocksToolbar,
 	createViewerBuildingBlocks,
+	ExternalContentBar,
 } from './building-blocks';
 export type {
+	ExternalContentBarProps,
+	ViewerExternalContentBar,
 	BuildingBlocksCanvasProps,
 	BuildingBlocksSlidesPaneProps,
 	BuildingBlocksToolbarProps,

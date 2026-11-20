@@ -37,6 +37,7 @@ export function pictureWatermarkElement(
 		height: `${heightPx}px`,
 		pointerEvents: 'none',
 		userSelect: 'none',
+		WebkitUserSelect: 'none',
 		zIndex: '0',
 		...(spec.washout ? { filter: WASHOUT_FILTER } : {}),
 	});
