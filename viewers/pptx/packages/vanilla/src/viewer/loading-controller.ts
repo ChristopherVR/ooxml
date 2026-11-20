@@ -260,8 +260,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				// fonts (save keeps them), off when there is nothing to keep.
 				embedFonts: describeFontEmbedding(loaded.embeddedFonts.map((font) => font.name))
 					.initialEnabled,
-				hasDigitalSignatures: loaded.hasDigitalSignatures,
-				digitalSignatureCount: loaded.digitalSignatureCount,
+				signatures: loaded.signatures,
 				isPasswordProtected: loaded.isPasswordProtected,
 				templateElementsBySlideId: partition.templateElementsBySlideId,
 				slideMasters: loaded.slideMasters,

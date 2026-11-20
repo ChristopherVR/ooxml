@@ -58,6 +58,7 @@ import {
 	createPresenterSessionController,
 	installSvgIdScope,
 	createRibbonDisplayController,
+	signatureStatusView,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxSaveAcknowledgement,
@@ -771,19 +772,13 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			}
 		});
 		this.detachSignatureWarning = this.store.subscribe((state, previous) => {
-			if (
-				state.dirty &&
-				!previous.dirty &&
-				state.hasDigitalSignatures &&
-				!this.signatureWarningAcknowledged
-			) {
+			if (!state.dirty || previous.dirty || this.signatureWarningAcknowledged) {
+				return;
+			}
+			const view = signatureStatusView(state.signatures, this.currentLocale);
+			if (view.present) {
 				this.signatureWarningAcknowledged = true;
-				openSignatureStrippedDialog(
-					this.doc,
-					this.t,
-					state.digitalSignatureCount,
-					this.getDialogRegions(),
-				);
+				openSignatureStrippedDialog(this.doc, this.t, view.count, this.getDialogRegions());
 			}
 		});
 		this.detachOutlineFonts = glyphOutlineFontCache.subscribe(() => {
@@ -1561,12 +1556,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (!this.customization.isDialogAvailable('signatures')) {
 			return;
 		}
-		const state = this.store.get();
 		openDigitalSignaturesDialog(
 			this.doc,
 			this.t,
-			state.hasDigitalSignatures,
-			state.digitalSignatureCount,
+			signatureStatusView(this.store.get().signatures, this.currentLocale),
 			this.getDialogRegions(),
 		);
 	}

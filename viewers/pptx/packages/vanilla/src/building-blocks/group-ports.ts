@@ -86,8 +86,7 @@ export function createVanillaGroupPorts(source: VanillaGroupSource): BuildingBlo
 			markDirty,
 		},
 		digitalSignatures: {
-			signed: () => state()?.hasDigitalSignatures ?? false,
-			count: () => state()?.digitalSignatureCount ?? 0,
+			summary: () => state()?.signatures,
 			content: () => source.content(),
 			markDirty,
 		},
