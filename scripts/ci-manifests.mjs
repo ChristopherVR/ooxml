@@ -5,6 +5,7 @@
 // Anything that cannot be classified is left as the original file, which the planner treats as
 // "run everything".
 import { execFileSync } from 'node:child_process';
+import { workspacesReaching } from './ci-lockfile.mjs';
 
 /** Path the planner treats as a change to the core's shipped code only (build, package checks, tests). */
 export const CORE_SHIPPING = 'src/core/package.json#shipping';
@@ -100,8 +101,9 @@ export function manifestChanges(a, b, siblings = new Set()) {
 }
 
 /**
- * Classifies a lockfile change. Returns `{ workspaces }` (the changed workspace paths, only when
- * every one can be placed) or `{ everything: true }`.
+ * Classifies a lockfile change. Returns `{ workspaces, resolved }` (the workspace paths whose
+ * manifest entry or dependency tree changed, only when every one can be placed; `resolved` when
+ * installed packages moved) or `{ everything: true }`.
  */
 export function classifyLock(before, after) {
 	const bail = { everything: true };
@@ -114,17 +116,22 @@ export function classifyLock(before, after) {
 	} catch {
 		return bail;
 	}
-	// The resolved versions (`packages`), the lockfile version, overrides and the rest.
+	// The lockfile version, overrides and the rest reach every install.
 	for (const key of new Set([...Object.keys(a), ...Object.keys(b)]))
-		if (key !== 'workspaces' && !same(a[key], b[key])) return bail;
+		if (key !== 'workspaces' && key !== 'packages' && !same(a[key], b[key])) return bail;
+	// A resolved package that moved reaches the workspaces that install it.
+	const resolved = !same(a.packages, b.packages);
+	const installing = resolved ? workspacesReaching(a, b) : [];
+	if (!installing) return bail;
 	const wa = a.workspaces ?? {};
 	const wb = b.workspaces ?? {};
 	const siblings = workspaceNames(a, b);
 	const changed = [...new Set([...Object.keys(wa), ...Object.keys(wb)])].filter(
 		(key) => manifestChanges(wa[key] ?? {}, wb[key] ?? {}, siblings).length > 0,
 	);
-	if (changed.some((path) => !PLACEABLE_WORKSPACE.test(path))) return bail;
-	return { workspaces: changed.sort() };
+	const workspaces = [...new Set([...changed, ...installing])].sort();
+	if (workspaces.some((path) => !PLACEABLE_WORKSPACE.test(path))) return bail;
+	return { workspaces, resolved };
 }
 
 const parseJson = (text) => {
@@ -178,8 +185,8 @@ export function refineManifests(files, read) {
 	}
 	if (out.has(LOCK)) {
 		const result = classifyLock(read(LOCK, 'base'), read(LOCK, 'head'));
-		if (result.everything) deps = true;
-		else {
+		if (result.everything || result.resolved) deps = true;
+		if (!result.everything) {
 			out.delete(LOCK);
 			for (const workspace of result.workspaces) out.add(`${workspace}/package.json`);
 		}

@@ -447,7 +447,10 @@ test('a lockfile with trailing commas parses, commas inside strings survive', ()
 test('a lock change confined to placeable workspaces plans as their manifests', () => {
 	const before = lock(ws('demos/pptx/demo-host-review', '"a": "^1.0.0"'));
 	const after = lock(ws('demos/pptx/demo-host-review', '"a": "^1.1.0"'));
-	assert.deepEqual(classifyLock(before, after), { workspaces: ['demos/pptx/demo-host-review'] });
+	assert.deepEqual(classifyLock(before, after), {
+		workspaces: ['demos/pptx/demo-host-review'],
+		resolved: false,
+	});
 	const refined = refineManifests(
 		['bun.lock', 'demos/pptx/demo-host-review/package.json'],
 		reader({ 'bun.lock': before }, { 'bun.lock': after }),
@@ -460,7 +463,7 @@ test('a lock change confined to placeable workspaces plans as their manifests', 
 	assert.equal(plan(['bun.lock']).full, true);
 });
 
-test('a lock change to resolved packages, the root workspace or an unplaceable one runs everything', () => {
+test('a lock change to a package no workspace installs, the root workspace or an unplaceable one runs everything', () => {
 	const base = lock(ws('viewers/docx/packages/react', '"a": "^1"'));
 	const resolved = lock(
 		ws('viewers/docx/packages/react', '"a": "^1"'),
@@ -491,7 +494,7 @@ test('a release bump (versions and workspace ranges) plans as no change', () => 
 		].join('\n');
 	const before = lock(workspaces('1.53.1', '4.80.1', '^1.53.1'));
 	const after = lock(workspaces('1.54.0', '4.81.0', '^1.54.0'));
-	assert.deepEqual(classifyLock(before, after), { workspaces: [] });
+	assert.deepEqual(classifyLock(before, after), { workspaces: [], resolved: false });
 	const manifest = (version, range) =>
 		JSON.stringify({ name: 'pptx-react-viewer', version, dependencies: { 'ooxml-core': range } });
 	const core = (version) =>
