@@ -12,7 +12,7 @@ kann sie nicht entschlüsseln, die Signalisierung läuft jedoch über den Server
 
 ## Den Referenzserver starten
 
-Erfordert Node 22 oder neuer.
+Erfordert Node 22.3 oder neuer.
 
 ```bash
 TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server

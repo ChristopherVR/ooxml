@@ -12,7 +12,7 @@ relay cannot decrypt it, but signaling passes through the server.
 
 ## Run the reference server
 
-Needs Node 22 or later.
+Needs Node 22.3 or later.
 
 ```bash
 openssl rand -hex 32 > session-secret   # once; keep it outside the repository

@@ -43,7 +43,7 @@ The engine builds XML and SVG by string/object manipulation, so it has no DOM de
 | Runtime                         | Parse / Edit / Save | SVG export | Markdown convert     | Encryption            | CLI |
 | ------------------------------- | ------------------- | ---------- | -------------------- | --------------------- | --- |
 | **Browser**                     | Yes                 | Yes        | Yes (in-memory)      | Yes (`crypto.subtle`) | No  |
-| **Node 22+**                    | Yes                 | Yes        | Yes (+ disk adapter) | Yes                   | Yes |
+| **Node 22.3+**                  | Yes                 | Yes        | Yes (+ disk adapter) | Yes                   | Yes |
 | **Bun**                         | Yes                 | Yes        | Yes (+ disk adapter) | Yes                   | Yes |
 | **Deno / Workers / serverless** | Yes                 | Yes        | Yes (custom adapter) | Yes                   | No  |
 

@@ -34,5 +34,8 @@
 	},
 	"dependencies": {
 		"ooxml-core": "*"
+	},
+	"engines": {
+		"node": ">=22.3"
 	}
 }

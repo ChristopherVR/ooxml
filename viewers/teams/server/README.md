@@ -16,7 +16,7 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 
 ## Run
 
-Needs Node 22 or later.
+Needs Node 22.3 or later.
 
 ```bash
 openssl rand -hex 32 > session-secret    # once; keep it outside the repository

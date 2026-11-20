@@ -45,6 +45,26 @@ After:
 
 Run `npm install <package>@latest` for each OOXML package you list, then check that your lockfile holds one version of `ooxml-core` and one of `ooxml-ui`.
 
+### Run Node.js 22.3 or newer
+
+Every package now declares `"engines": { "node": ">=22.3" }`. `ooxml-core` sizes the memory budget of a Visio read or edit from the heap limit Node reports, and it reaches that limit through `process.getBuiltinModule`, which Node added in 22.3. On an older Node the budget assumes a 1 GiB heap, more than a host started with a smaller `--max-old-space-size` has. npm and pnpm warn about the mismatch, and refuse the install where `engine-strict` is set. Raise the Node version of your servers, build machines and CI.
+
+Before:
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: 20
+```
+
+After:
+
+```yaml
+- uses: actions/setup-node@v4
+  with:
+    node-version: 24
+```
+
 ### Check the browsers you support
 
 The packages support the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least. [browser-support.md](browser-support.md) lists the Safari behaviours they handle. If you support an older browser, test it before you upgrade.

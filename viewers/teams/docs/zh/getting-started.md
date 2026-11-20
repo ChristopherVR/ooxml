@@ -38,15 +38,15 @@ npm install openteams-vanilla-viewer
 
 :::
 
-| 包                         | 适用于                  | 对等依赖        |
-| -------------------------- | ----------------------- | --------------- |
-| `openteams-react-viewer`   | React 18+               | `react`         |
-| `openteams-vue-viewer`     | Vue 3.4+                | `vue`           |
-| `openteams-angular-viewer` | Angular 17+（独立组件） | `@angular/core` |
-| `openteams-svelte-viewer`  | Svelte 5                | `svelte`        |
-| `openteams-solid-viewer`   | SolidJS 1.9             | `solid-js`      |
-| `openteams-vanilla-viewer` | 无框架（`<teams-app>`） | 无              |
-| `openteams-server`         | 参考服务器（Node 22+）  | 无              |
+| 包                         | 适用于                   | 对等依赖        |
+| -------------------------- | ------------------------ | --------------- |
+| `openteams-react-viewer`   | React 18+                | `react`         |
+| `openteams-vue-viewer`     | Vue 3.4+                 | `vue`           |
+| `openteams-angular-viewer` | Angular 17+（独立组件）  | `@angular/core` |
+| `openteams-svelte-viewer`  | Svelte 5                 | `svelte`        |
+| `openteams-solid-viewer`   | SolidJS 1.9              | `solid-js`      |
+| `openteams-vanilla-viewer` | 无框架（`<teams-app>`）  | 无              |
+| `openteams-server`         | 参考服务器（Node 22.3+） | 无              |
 
 每个页面只使用一个绑定：它们都会注册相同的自定义元素。这些包以 `openteams-*` 命名，是因为 npm 上的 `openteams` 这个名称属于一个无关的项目。
 
@@ -133,7 +133,7 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 ## 从源码运行 {#run-it-from-source}
 
-需要 Node 22+ 和 Bun。本文件夹是 [`ooxml`](https://github.com/ChristopherVR/ooxml) 仓库的 `viewers/teams`：先在仓库根目录运行 `bun install`，再在此处运行下面的命令。演示（根目录下的 `demos/teams/*`）和测试使用同一棵树中 `ooxml-core` 和 `ooxml-ui` 的源码。
+需要 Node 22.3+ 和 Bun。本文件夹是 [`ooxml`](https://github.com/ChristopherVR/ooxml) 仓库的 `viewers/teams`：先在仓库根目录运行 `bun install`，再在此处运行下面的命令。演示（根目录下的 `demos/teams/*`）和测试使用同一棵树中 `ooxml-core` 和 `ooxml-ui` 的源码。
 
 ```bash
 bun install        # 在仓库根目录

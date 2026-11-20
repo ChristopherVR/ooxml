@@ -195,7 +195,7 @@ These are early implementations. They are approximations of the Office applicati
 
 ## Development
 
-You need [Bun](https://bun.sh/) and Node.js 22 or newer. One install at the root sets up the library, the UI and every viewer.
+You need [Bun](https://bun.sh/) and Node.js 22.3 or newer. One install at the root sets up the library, the UI and every viewer.
 
 ```bash
 bun install

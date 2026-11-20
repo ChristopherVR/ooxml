@@ -44,5 +44,8 @@
 		"docx-core": "^1.1.2",
 		"ooxml-core": "*",
 		"ooxml-ui": "*"
+	},
+	"engines": {
+		"node": ">=22.3"
 	}
 }

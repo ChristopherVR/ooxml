@@ -46,15 +46,15 @@ npm install openteams-vanilla-viewer
 
 :::
 
-| Paket                      | Für                            | Peer-Abhängigkeit |
-| -------------------------- | ------------------------------ | ----------------- |
-| `openteams-react-viewer`   | React 18+                      | `react`           |
-| `openteams-vue-viewer`     | Vue 3.4+                       | `vue`             |
-| `openteams-angular-viewer` | Angular 17+ (Standalone)       | `@angular/core`   |
-| `openteams-svelte-viewer`  | Svelte 5                       | `svelte`          |
-| `openteams-solid-viewer`   | SolidJS 1.9                    | `solid-js`        |
-| `openteams-vanilla-viewer` | kein Framework (`<teams-app>`) | keine             |
-| `openteams-server`         | der Referenzserver (Node 22+)  | keine             |
+| Paket                      | Für                             | Peer-Abhängigkeit |
+| -------------------------- | ------------------------------- | ----------------- |
+| `openteams-react-viewer`   | React 18+                       | `react`           |
+| `openteams-vue-viewer`     | Vue 3.4+                        | `vue`             |
+| `openteams-angular-viewer` | Angular 17+ (Standalone)        | `@angular/core`   |
+| `openteams-svelte-viewer`  | Svelte 5                        | `svelte`          |
+| `openteams-solid-viewer`   | SolidJS 1.9                     | `solid-js`        |
+| `openteams-vanilla-viewer` | kein Framework (`<teams-app>`)  | keine             |
+| `openteams-server`         | der Referenzserver (Node 22.3+) | keine             |
 
 Verwenden Sie pro Seite ein Binding: Jedes registriert dieselben Custom Elements. Die Namen lauten `openteams-*`,
 weil der schlichte Name `openteams` auf npm zu einem unabhängigen Projekt gehört.
@@ -156,7 +156,7 @@ gehören `select`, `createChannel`, `send`, `startReply`, `startEdit`, `deleteMe
 
 ## Aus dem Quellcode starten {#run-it-from-source}
 
-Erfordert Node 22+ und Bun. Dieser Ordner ist `viewers/teams` des Repositorys
+Erfordert Node 22.3+ und Bun. Dieser Ordner ist `viewers/teams` des Repositorys
 [`ooxml`](https://github.com/ChristopherVR/ooxml): Führen Sie `bun install` im Repository-Root aus, dann
 die folgenden Befehle hier. Die Demos (`demos/teams/*` im Root) und Tests verwenden den Quellcode von
 `ooxml-core` und `ooxml-ui` im selben Baum.

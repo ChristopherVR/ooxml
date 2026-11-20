@@ -41,15 +41,15 @@ npm install openteams-vanilla-viewer
 
 :::
 
-| Paquete                    | Para                                 | Dependencia peer |
-| -------------------------- | ------------------------------------ | ---------------- |
-| `openteams-react-viewer`   | React 18+                            | `react`          |
-| `openteams-vue-viewer`     | Vue 3.4+                             | `vue`            |
-| `openteams-angular-viewer` | Angular 17+ (standalone)             | `@angular/core`  |
-| `openteams-svelte-viewer`  | Svelte 5                             | `svelte`         |
-| `openteams-solid-viewer`   | SolidJS 1.9                          | `solid-js`       |
-| `openteams-vanilla-viewer` | sin framework (`<teams-app>`)        | ninguna          |
-| `openteams-server`         | el servidor de referencia (Node 22+) | ninguna          |
+| Paquete                    | Para                                   | Dependencia peer |
+| -------------------------- | -------------------------------------- | ---------------- |
+| `openteams-react-viewer`   | React 18+                              | `react`          |
+| `openteams-vue-viewer`     | Vue 3.4+                               | `vue`            |
+| `openteams-angular-viewer` | Angular 17+ (standalone)               | `@angular/core`  |
+| `openteams-svelte-viewer`  | Svelte 5                               | `svelte`         |
+| `openteams-solid-viewer`   | SolidJS 1.9                            | `solid-js`       |
+| `openteams-vanilla-viewer` | sin framework (`<teams-app>`)          | ninguna          |
+| `openteams-server`         | el servidor de referencia (Node 22.3+) | ninguna          |
 
 Usa un solo binding por página: cada uno registra los mismos elementos personalizados. Los nombres son `openteams-*` porque el nombre simple `openteams` en npm pertenece a un proyecto ajeno.
 
@@ -137,7 +137,7 @@ state?.channels.map((c) => <button onClick={() => client!.select(c.id)}>{c.name}
 
 ## Ejecútalo desde el código fuente {#run-it-from-source}
 
-Requiere Node 22+ y Bun. Esta carpeta es `viewers/teams` del repositorio [`ooxml`](https://github.com/ChristopherVR/ooxml): ejecuta `bun install` en la raíz del repositorio y luego los comandos siguientes aquí. Las demos (`demos/teams/*` en la raíz) y las pruebas usan el código fuente de `ooxml-core` y `ooxml-ui` del mismo árbol.
+Requiere Node 22.3+ y Bun. Esta carpeta es `viewers/teams` del repositorio [`ooxml`](https://github.com/ChristopherVR/ooxml): ejecuta `bun install` en la raíz del repositorio y luego los comandos siguientes aquí. Las demos (`demos/teams/*` en la raíz) y las pruebas usan el código fuente de `ooxml-core` y `ooxml-ui` del mismo árbol.
 
 ```bash
 bun install        # en la raíz del repositorio

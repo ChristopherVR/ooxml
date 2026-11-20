@@ -26,7 +26,7 @@ vulnerability rather than a bug? Do **not** open a public issue: see
 ## Getting set up
 
 **Prerequisites:** [Bun](https://bun.sh/) (package manager and runtime) and
-Node.js 22+. On Windows, the root test runner also needs Bash (for example, Git Bash), including its standard Unix utilities.
+Node.js 22.3+. On Windows, the root test runner also needs Bash (for example, Git Bash), including its standard Unix utilities.
 
 ```bash
 git clone https://github.com/ChristopherVR/ooxml.git
