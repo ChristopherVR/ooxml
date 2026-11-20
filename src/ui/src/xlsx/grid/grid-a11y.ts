@@ -86,15 +86,16 @@ export class GridA11y {
 		this.#editing = editing;
 		this.input = input;
 		const doc = view.doc;
-		// Row and column indices count the header row and the row-header column, as ARIA requires.
+		// Row and column indices are the sheet's own numbers, as Excel reports a cell (B2 is row 2,
+		// column 2); the header row and the row headers label them and take no index.
 		this.grid = h(doc, 'div', 'xg-a11y', {
 			role: 'grid',
 			'aria-label': view.ctx.t('Spreadsheet grid'),
-			'aria-rowcount': String(MAX_ROW + 2),
-			'aria-colcount': String(MAX_COL + 2),
+			'aria-rowcount': String(MAX_ROW + 1),
+			'aria-colcount': String(MAX_COL + 1),
 			'aria-multiselectable': 'true',
 		});
-		this.#header = h(doc, 'div', '', { role: 'row', 'aria-rowindex': '1' });
+		this.#header = h(doc, 'div', '', { role: 'row' });
 		this.grid.append(this.#header);
 		this.live = h(doc, 'div', 'xg-live', { 'aria-live': 'polite', role: 'status' });
 		view.root.append(this.grid, this.live);
@@ -128,7 +129,7 @@ export class GridA11y {
 				...area.cols.map((col) => {
 					const node = h(view.doc, 'div', '', {
 						role: 'columnheader',
-						'aria-colindex': String(col + 2),
+						'aria-colindex': String(col + 1),
 					});
 					node.textContent = columnLabel(col);
 					return node;
@@ -146,7 +147,7 @@ export class GridA11y {
 		for (const row of area.rows) {
 			let node = this.#rows.get(row);
 			if (!node) {
-				node = h(view.doc, 'div', '', { role: 'row', 'aria-rowindex': String(row + 2) });
+				node = h(view.doc, 'div', '', { role: 'row', 'aria-rowindex': String(row + 1) });
 				this.#rows.set(row, node);
 			}
 			const cells: RowCell[] = [];
@@ -170,14 +171,14 @@ export class GridA11y {
 
 	#fillRow(node: RowNode, row: number, area: AccessibleWindow, cells: RowCell[]): void {
 		const doc = this.#view.doc;
-		const head = h(doc, 'div', '', { role: 'rowheader', 'aria-colindex': '1' });
+		const head = h(doc, 'div', '', { role: 'rowheader' });
 		head.textContent = String(row + 1);
 		node.xgCells = new Map();
 		for (const { col, selected, text } of cells) {
 			const cell = h(doc, 'div', '', {
 				role: 'gridcell',
 				id: `${this.#prefix}${row}-${col}`,
-				'aria-colindex': String(col + 2),
+				'aria-colindex': String(col + 1),
 				'aria-selected': String(selected),
 			});
 			const span = area.spans.get(cellKey(row, col));

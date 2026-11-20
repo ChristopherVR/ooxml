@@ -50,17 +50,21 @@ describe('the accessible grid', () => {
 	it('exposes the shown cells as grid cells in rows, with sheet positions', async () => {
 		const { ctx, grid, cell } = await setup();
 		expect(grid.getAttribute('aria-label')).toBe('Spreadsheet grid');
-		// The header row and the row-header column take index 1, as ARIA counts them.
-		expect(grid.getAttribute('aria-rowcount')).toBe('1048577');
-		expect(grid.getAttribute('aria-colcount')).toBe('16385');
+		// Indices are the sheet's row and column numbers, as Excel reports them: B2 is row 2, column 2.
+		expect(grid.getAttribute('aria-rowcount')).toBe('1048576');
+		expect(grid.getAttribute('aria-colcount')).toBe('16384');
 		const hundred = cell('100')!;
-		expect(hundred.getAttribute('aria-colindex')).toBe('3');
-		expect(hundred.parentElement!.getAttribute('aria-rowindex')).toBe('3');
+		expect(hundred.getAttribute('aria-colindex')).toBe('2');
+		expect(hundred.parentElement!.getAttribute('aria-rowindex')).toBe('2');
+		expect(
+			hundred.parentElement!.querySelector('[role="rowheader"]')?.hasAttribute('aria-colindex'),
+		).toBe(false);
 		expect(hundred.parentElement!.querySelector('[role="rowheader"]')?.textContent).toBe('2');
 		const columnB = [...grid.querySelectorAll('[role="columnheader"]')].find(
 			(node) => node.textContent === 'B',
 		);
-		expect(columnB?.getAttribute('aria-colindex')).toBe('3');
+		expect(columnB?.getAttribute('aria-colindex')).toBe('2');
+		expect(columnB?.parentElement?.hasAttribute('aria-rowindex')).toBe(false);
 		// Every cell and header sits in a row, and nothing painted is exposed outside the grid.
 		const owned = ctx.root.querySelectorAll(
 			'[role="gridcell"],[role="columnheader"],[role="rowheader"]',
@@ -137,10 +141,10 @@ describe('the accessible grid', () => {
 		putCell(wb.sheets[0]!, 4, 0, { value: 'Total' });
 		const { grid, cell } = await setup(wb);
 		expect(cell('Total')?.getAttribute('aria-colspan')).toBe('3');
-		const row5 = grid.querySelector('[aria-rowindex="6"]')!;
+		const row5 = grid.querySelector('[aria-rowindex="5"]')!;
 		const indices = [...row5.querySelectorAll('[role="gridcell"]')].map((node) =>
 			node.getAttribute('aria-colindex'),
 		);
-		expect(indices.slice(0, 2)).toEqual(['2', '5']);
+		expect(indices.slice(0, 2)).toEqual(['1', '4']);
 	});
 });
