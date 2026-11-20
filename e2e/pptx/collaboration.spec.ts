@@ -584,6 +584,11 @@ test.describe('collaboration sync', () => {
 			'This peer-to-peer invitation is missing its session key. Open the full share link you were sent.',
 		);
 		await expect(status.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
+		// A retry that fails again keeps saying why, rather than hiding the status.
+		await status.getByRole('button', { name: 'Retry', exact: true }).click();
+		await expect(status).toBeVisible();
+		await expect(status).toContainText('Connection error');
+		await expect(status.getByRole('button', { name: 'Retry', exact: true })).toBeVisible();
 	});
 
 	test('a host drag is observed by the peer', async ({ page }, testInfo) => {
