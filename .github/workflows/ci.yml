@@ -121,6 +121,8 @@ jobs:
         env:
           BASE: ${{ fromJSON(needs.plan.outputs.plan).base }}
         run: node scripts/check-em-dashes.mjs "$BASE"
+      - name: Packages open only through the zip guard
+        run: node scripts/check-zip-open.mjs
 
   typecheck-strict:
     needs: plan
@@ -302,6 +304,43 @@ jobs:
           name: bundle-size
           path: bundle-size.json
           retention-days: ${{ github.event_name == 'push' && 90 || 7 }}
+
+  # The byte budgets (docs/performance-budgets.md): every published entry point, gzipped, and what
+  # each suite screen downloads in Chromium, against scripts/perf-budgets.json. Unlike bundle-size
+  # it fails the run.
+  perf-budgets:
+    needs: [plan, build]
+    if: fromJSON(needs.plan.outputs.plan).budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: core-dist
+          path: src/core/dist
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: ui-dist
+          path: src/ui/dist
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        working-directory: e2e/a11y
+        run: bun x playwright install --with-deps chromium
+      - name: Install Chromium system libraries
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        working-directory: e2e/a11y
+        run: bun x playwright install-deps chromium
+      - run: node scripts/perf-budgets.mjs check
 
   # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
   scripts:
@@ -919,6 +958,7 @@ jobs:
         ui,
         ui-test,
         scripts,
+        perf-budgets,
         mcp,
         viewers,
         viewer-browser,

@@ -43,6 +43,8 @@ export interface SvelteAiBridgeDeps {
 	getTheme(): PptxTheme | undefined;
 	/** The loaded core handler, or null before a deck is open. */
 	getHandler(): PptxHandler | null;
+	/** Names the presentation load the deck comes from (see `PptxAiBridge.getDeckLoad`). */
+	getDeckLoad(): number;
 	/** Optional display file name, used as a friendly deck title. */
 	getFileName(): string | undefined;
 	/** Navigate the viewer to a slide by zero-based index. */
@@ -135,6 +137,7 @@ export function createSvelteAiBridge(deps: SvelteAiBridgeDeps): PptxAiBridge {
 		getCanvasSize: () => deps.getCanvasSize(),
 		getTheme: () => deps.getTheme(),
 		getHandler: () => deps.getHandler(),
+		getDeckLoad: () => deps.getDeckLoad(),
 		getFileName: () => deps.getFileName(),
 		getSections: () => deps.getSections(),
 		getCustomShows: () => deps.getCustomShows(),

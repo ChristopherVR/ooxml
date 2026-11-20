@@ -10,6 +10,7 @@ export * from './legend-labels';
 export * from './label-range';
 export * from './axes';
 export * from './series';
+export * from './series-rows';
 export * from './series-data';
 export * from './series-vectors';
 export * from './type';

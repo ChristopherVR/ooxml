@@ -30,6 +30,13 @@ export function createSlidingLimiter({ limit, windowMs, now = Date.now, maxKeys 
 			times.push(t);
 			return { ok: true, retryAfterSec: 0 };
 		},
+		/** Whether `key` is at its limit now, without recording a hit (for counting only failures). */
+		full(key) {
+			const t = now();
+			const times = hits.get(key);
+			if (times) while (times.length > 0 && times[0] <= t - windowMs) times.shift();
+			return (times?.length ?? 0) >= limit;
+		},
 		size: () => hits.size,
 	};
 }

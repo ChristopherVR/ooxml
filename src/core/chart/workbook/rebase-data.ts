@@ -1,5 +1,6 @@
 // Allocate all classic chart vectors on a fresh worksheet for structural edits. Existing workbook
 // ranges remain untouched; the returned model references only the new worksheet's literal cells.
+// `rows` is sparse: a range of a million mostly empty cells costs only the points it holds.
 import type { ChartSpace } from '../model';
 import type { ChartDataCache, ChartDataSource } from '../model-series';
 import { chartSeriesEntries } from '../edit/draft';
@@ -37,7 +38,8 @@ export function rebaseChartData(
 		}
 		if (count > 1048575 || column > 16384)
 			throw new RangeError('Chart data exceeds worksheet bounds');
-		for (let i = 1; i <= Math.max(1, count); i++) (rows[i] ??= [])[col] ??= null;
+		// A range names one cell at least, and the cache declares the cells its range names.
+		if (count === 0) cache.pointCount = count = 1;
 		return { col, count };
 	};
 	const source = (data: ChartDataSource | undefined, heading: string) => {
@@ -80,6 +82,8 @@ export function rebaseChartData(
 		};
 		source(series.bubbleSizes, `${name} Size`);
 	}
-	for (const row of rows) for (let col = 0; col < column; col++) row[col] ??= null;
+	rows.forEach((row) => {
+		for (let col = 0; col < column; col++) row[col] ??= null;
+	});
 	return { chartSpace: next, rows };
 }

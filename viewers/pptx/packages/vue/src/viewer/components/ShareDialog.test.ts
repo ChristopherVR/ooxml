@@ -18,6 +18,7 @@ function makeCollab(
 	const remotePresences = overrides.remotePresences ?? ref([]);
 	return {
 		status,
+		failure: ref(null),
 		connected: computed(() => status.value === 'connected'),
 		cursors: ref([]),
 		remotePresences,
@@ -97,6 +98,7 @@ describe('shareDialog', () => {
 			userName: 'Grace',
 			serverUrl: '',
 			transport: 'webrtc',
+			secret: expect.stringMatching(/^[A-Za-z0-9_-]{22}$/u),
 			role: 'collaborator',
 			sessionIntent: 'create',
 		});

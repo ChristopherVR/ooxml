@@ -166,12 +166,7 @@ export class SlideTextRunComponent {
 
 	protected onHyperlinkClick(event: MouseEvent, href: string | undefined): void {
 		const confirm = this.viewerOpts?.confirmExternalHyperlink.bind(this.viewerOpts);
-		if (
-			href &&
-			shouldPreventHyperlinkNavigation(confirm, href, (url) =>
-				safeOpenUrl(url, this.run().hyperlink?.target ?? '_blank'),
-			)
-		) {
+		if (href && shouldPreventHyperlinkNavigation(confirm, href, (url) => safeOpenUrl(url))) {
 			event.preventDefault();
 		}
 	}

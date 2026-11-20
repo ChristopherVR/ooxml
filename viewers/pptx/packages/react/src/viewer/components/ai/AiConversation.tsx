@@ -1,3 +1,4 @@
+import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
 /**
  * AiConversation: the "ready" body of the AI panel. Wires the live session to
  * `useChat` (via {@link useAiConversation}), persists the transcript through
@@ -5,7 +6,7 @@
  * focused-target bar, the transcript, the staged-proposal review strip, an error
  * banner, and the composer.
  */
-import type { PptxAiBridge, PptxAiChatSession, PptxAiConfig } from 'ooxml-ui/pptx/ai';
+import { canAcceptAllProposals } from 'ooxml-ui/pptx/ai/host';
 import { useEffect, useState } from 'react';
 import { LuHistory, LuMessageSquarePlus, LuTrash2, LuTriangleAlert } from 'react-icons/lu';
 
@@ -39,7 +40,7 @@ export function AiConversation({
 	deckId,
 }: AiConversationProps) {
 	const { t } = useTranslation();
-	const chat = useAiConversation(useChat, session, config, bridge, {
+	const chat = useAiConversation(useChat, session, config, {
 		// Live "AI as a collaborator" focus: as each tool runs, navigate to and
 		// highlight the slide / element(s) it touches so the canvas mirrors the
 		// assistant in real time (and colour edits tween while it is active).
@@ -174,7 +175,7 @@ export function AiConversation({
 						<span className='text-[11px] font-semibold uppercase tracking-wide text-muted-foreground'>
 							{t('pptx.ai.pendingChanges', { count: chat.proposals.length })}
 						</span>
-						{chat.proposals.length > 1 && (
+						{canAcceptAllProposals(chat.proposals) && (
 							<button
 								type='button'
 								onClick={acceptAllProposals}
@@ -193,6 +194,15 @@ export function AiConversation({
 						/>
 					))}
 				</div>
+			)}
+			{chat.proposals.length === 0 && chat.proposalsDiscarded && (
+				<p
+					role='status'
+					data-testid='pptx-ai-proposals-discarded'
+					className='border-t border-border bg-background px-3 py-2 text-[11px] text-muted-foreground'
+				>
+					{t('pptx.ai.proposalsDiscarded')}
+				</p>
 			)}
 
 			<AiComposer

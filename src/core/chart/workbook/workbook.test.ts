@@ -6,7 +6,7 @@ import { DEFAULT_CHART_DATA_SHEET, newChartSpace } from '../edit/new-chart';
 import { createChartWorkbook } from './create';
 import { standardChartLayoutSheet } from './layout';
 import { chartSpaceWorkbookWrites } from './space-writes';
-import { writeChartWorkbookUpdates } from './writer';
+import { chartWorkbookCells, writeChartWorkbookUpdates } from './writer';
 
 /** `ref -> value` of every cell of the first worksheet. */
 async function cells(bytes: Uint8Array): Promise<Record<string, string>> {
@@ -85,7 +85,14 @@ describe('the embedded workbook of a new chart', () => {
 		);
 		const result = await writeChartWorkbookUpdates(
 			await zip.generateAsync({ type: 'uint8array' }),
-			[{ formula: 'Sheet1!$B$2:$B$3', isNumeric: true, values: ['7', ''] }],
+			[
+				{
+					formula: 'Sheet1!$B$2:$B$3',
+					isNumeric: true,
+					cells: chartWorkbookCells(['7', '']),
+					cellCount: 2,
+				},
+			],
 		);
 		const xml = await (await JSZip.loadAsync(result.bytes!)).file(path)!.async('string');
 		expect(xml).toContain('<c r="B2" s="3"><v>7</v></c>');
@@ -148,5 +155,25 @@ describe('the data table Word and PowerPoint put behind a chart', () => {
 		expect(sheet).toContain('<c r="B1" t="s"><v>0</v></c>');
 		expect(sheet).toContain('<dimension ref="A1:E6"/>');
 		expect(sheet).not.toContain('spans=');
+	});
+	it('writes an error a numeric cache holds as an error cell', async () => {
+		const bytes = await createChartWorkbook({
+			categories: ['A'],
+			series: [{ name: 'S', values: [1] }],
+		});
+		const { bytes: out } = await writeChartWorkbookUpdates(bytes, [
+			{
+				formula: 'Sheet1!$B$2',
+				isNumeric: true,
+				cells: chartWorkbookCells(['#N/A']),
+				cellCount: 1,
+			},
+		]);
+		const xml = await (
+			await JSZip.loadAsync(out!)
+		)
+			.file('xl/worksheets/sheet1.xml')!
+			.async('string');
+		expect(xml).toContain('<c r="B2" t="e"><v>#N/A</v></c>');
 	});
 });

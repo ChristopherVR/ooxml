@@ -10,8 +10,14 @@
  */
 
 import { assertChartModelLabelPosition } from '../../utils/chart-label-positions';
+import {
+	chartDataAddCategory,
+	chartDataRemoveCategory,
+	recordChartStructureEdit,
+} from '../../utils/chart-data-utils';
 import type {
 	PptxChartAxisFormatting,
+	PptxChartData,
 	PptxChartDataLabel,
 	PptxChartDataLabelOptions,
 	PptxChartDataPoint,
@@ -48,6 +54,29 @@ export function ensureChartData(
 			'Chart element has no chartData. Cannot perform chart operations on an uninitialised chart.',
 		);
 	}
+}
+
+/** Gives `target` the fields of `next`, keeping the object. */
+function assignInPlace<T extends object>(target: T, next: T): void {
+	for (const key of Object.keys(target))
+		if (!Object.hasOwn(next, key)) delete target[key as keyof T];
+	Object.assign(target, next);
+}
+
+/**
+ * Makes `next`, an edited copy of `element`'s chart data with the same series, the data of
+ * `element` in place, so a caller holding the chart data or one of its series sees the edit.
+ */
+function editChartDataInPlace(element: ChartPptxElement, next: PptxChartData): void {
+	ensureChartData(element);
+	const held = element.chartData;
+	next.series.forEach((series, index) => {
+		const kept = held.series[index];
+		if (!kept) return;
+		assignInPlace(kept, series);
+		next.series[index] = kept;
+	});
+	assignInPlace(held, next);
 }
 
 /**
@@ -114,6 +143,7 @@ export function addChartSeries(
 		values: series.values,
 		color: series.color,
 	});
+	recordChartStructureEdit(element.chartData, { kind: 'add-series' });
 }
 
 /**
@@ -131,6 +161,7 @@ export function addChartSeries(
 export function removeChartSeries(element: ChartPptxElement, seriesIndex: number): void {
 	validateSeriesIndex(element, seriesIndex);
 	element.chartData!.series.splice(seriesIndex, 1);
+	recordChartStructureEdit(element.chartData!, { kind: 'remove-series', series: seriesIndex });
 }
 
 /**
@@ -584,10 +615,7 @@ export function updateChartDataPoint(
  */
 export function addChartCategory(element: ChartPptxElement, categoryName: string): void {
 	ensureChartData(element);
-	element.chartData.categories.push(categoryName);
-	for (const series of element.chartData.series) {
-		series.values.push(0);
-	}
+	editChartDataInPlace(element, chartDataAddCategory(element.chartData, categoryName));
 }
 
 /**
@@ -605,15 +633,7 @@ export function addChartCategory(element: ChartPptxElement, categoryName: string
  */
 export function removeChartCategory(element: ChartPptxElement, categoryIndex: number): void {
 	ensureChartData(element);
-	if (categoryIndex < 0 || categoryIndex >= element.chartData.categories.length) {
-		throw new RangeError(
-			`Category index ${categoryIndex} is out of range. Chart has ${element.chartData.categories.length} categories (indices 0\u2013${element.chartData.categories.length - 1}).`,
-		);
-	}
-	element.chartData.categories.splice(categoryIndex, 1);
-	for (const series of element.chartData.series) {
-		series.values.splice(categoryIndex, 1);
-	}
+	editChartDataInPlace(element, chartDataRemoveCategory(element.chartData, categoryIndex));
 }
 
 /**

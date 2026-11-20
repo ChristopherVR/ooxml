@@ -44,10 +44,9 @@
 		// The in-app question is asynchronous, so the browser must not follow the link now.
 		event.preventDefault();
 		if (answer !== false) {
-			const target = run.hyperlink?.target ?? '_blank';
 			void answer.then((confirmed) => {
 				if (confirmed) {
-					safeOpenUrl(href, target);
+					safeOpenUrl(href);
 				}
 			});
 		}

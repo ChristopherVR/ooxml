@@ -9,7 +9,6 @@ import {
 	chosenModel,
 	connections,
 	currentConnection,
-	hasRememberedKey,
 	needsKey,
 	provider,
 	providers,
@@ -50,18 +49,20 @@ export function openModelMenu(event) {
 	);
 }
 
+const KEY_KEPT = 'The key is kept only for this tab and is cleared when you close it.';
+
 /** Asks for the key of a connection that needs one before it can be used. */
 export function askForKey(connection) {
 	const spec = provider(connection.provider);
 	const form = document.createElement('form');
 	form.innerHTML = `<p><strong>${escape(connection.label)}</strong> needs your key. It is sent only to ${escape(new URL(connection.endpoint).host)}.</p>
 <label>${escape(spec.keyLabel ?? 'API key')}<input name="key" type="password" autocomplete="off" required /></label>
-<label class="context-option"><input name="remember" type="checkbox" />Remember the key on this device</label>
+<p>${KEY_KEPT}</p>
 <button class="primary">Use this key</button>`;
 	form.onsubmit = (e) => {
 		e.preventDefault();
 		const data = new FormData(form);
-		setKey(connection.id, String(data.get('key')), data.has('remember'));
+		setKey(connection.id, String(data.get('key')));
 		$('dialog').close();
 	};
 	choose('Connect', form);
@@ -82,8 +83,8 @@ export function openConnectionForm(existing) {
 <label>Name<input name="label" maxlength="80" placeholder="Shown in the model menu" /></label>
 <label>Endpoint URL<input name="endpoint" type="url" required /></label>
 <label>Model<input name="model" required placeholder="Model name" /></label>
-<label data-key>API key<input name="key" type="password" autocomplete="off" placeholder="${existing ? 'Leave empty to keep the current key' : 'Kept for this tab unless you choose to remember it'}" /></label>
-<label data-key class="context-option"><input name="remember" type="checkbox" ${existing && hasRememberedKey(existing.id) ? 'checked' : ''} />Remember the key on this device</label>
+<label data-key>API key<input name="key" type="password" autocomplete="off" placeholder="${existing ? 'Leave empty to keep the current key' : ''}" /></label>
+<p data-key>${KEY_KEPT}</p>
 <button class="primary">Connect</button>`;
 	const field = (name) => form.elements.namedItem(name);
 	const sync = (fresh) => {
@@ -114,7 +115,6 @@ export function openConnectionForm(existing) {
 					model: String(values.get('model')).trim(),
 				},
 				existing && !key ? undefined : key,
-				values.has('remember'),
 			);
 			$('dialog').close();
 		});

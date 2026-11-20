@@ -374,6 +374,24 @@ describe('chartDataAddCategory', () => {
 		expect(result.categories).toHaveLength(4);
 	});
 
+	it('adds the row after all of the data, padding a shorter series with blanks', () => {
+		const data = makeChartData({
+			categories: ['A', 'B'],
+			series: [
+				{ name: 'Long', values: [1, 2, 3] },
+				{ name: 'Short', values: [4] },
+			],
+		});
+		const result = chartDataAddCategory(data, 'Cat 4');
+		expect(result.categories).toStrictEqual(['A', 'B', '', 'Cat 4']);
+		expect(at(result.series, 0)).toMatchObject({ values: [1, 2, 3, 0] });
+		expect(at(result.series, 1)).toMatchObject({
+			values: [4, 0, 0, 0],
+			blanks: [false, true, true, false],
+		});
+		expect(result.structureEdits).toStrictEqual([{ kind: 'add-category' }]);
+	});
+
 	it('works with no existing categories', () => {
 		const data = makeChartData({
 			categories: [],
@@ -405,6 +423,20 @@ describe('chartDataAddCategory', () => {
 // ===========================================================================
 
 describe('chartDataRemoveCategory', () => {
+	it("removes an X/Y series' X value and bubble size with its row, and records the edit", () => {
+		const data = makeChartData({
+			chartType: 'bubble',
+			series: [{ name: 'B', values: [1, 2, 3], xValues: [4, 5, 6], bubbleSizes: [7, 8, 9] }],
+		});
+		const result = chartDataRemoveCategory(data, 1);
+		expect(at(result.series, 0)).toMatchObject({
+			values: [1, 3],
+			xValues: [4, 6],
+			bubbleSizes: [7, 9],
+		});
+		expect(result.structureEdits).toStrictEqual([{ kind: 'remove-category', category: 1 }]);
+	});
+
 	it('removes the first category', () => {
 		const data = makeChartData();
 		const result = chartDataRemoveCategory(data, 0);

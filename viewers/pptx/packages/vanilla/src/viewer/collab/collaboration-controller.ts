@@ -13,6 +13,7 @@ import {
 	collaborationRefusalToast,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
+	createRoomJoinTracker,
 	createSyncGate,
 	DEFAULT_CURSOR_COLOR,
 	LOCAL_SYNC_ORIGIN,
@@ -66,6 +67,23 @@ export function createCollaborationController(
 	let releaseHistory: (() => void) | null = null;
 	const livePatcher = createCollaborationLivePatcher();
 	const stateTracker = createCollaborationStateTracker(store, deps.onStateChange);
+	const join = createRoomJoinTracker();
+
+	/** The room's slides replaced the open deck: report it as a presentation load. */
+	function bumpDeckLoad(): void {
+		store.set({ deckLoad: store.get().deckLoad + 1 });
+	}
+
+	/** Adopt the room's slides (when it has any); the first adoption of a join is a load. */
+	function adoptRoomSlides(ydoc: YDocLike | null, config: CollaborationConfig): boolean {
+		if (!slidesSync.applyRemoteSlides(ydoc, config)) {
+			return false;
+		}
+		if (join.adopted()) {
+			bumpDeckLoad();
+		}
+		return true;
+	}
 
 	/** Bind (or release) the room history as the connection, sync and role change. */
 	function updateHistoryBinding(): void {
@@ -111,7 +129,13 @@ export function createCollaborationController(
 	});
 
 	function flushLocal(): void {
-		slidesSync.flushLocalSlides(currentYDoc, yFactories, lastConfig, editState.isReadOnly());
+		// Writing an empty deck does not make the room this editor's: a later room deck still joins.
+		if (
+			slidesSync.flushLocalSlides(currentYDoc, yFactories, lastConfig, editState.isReadOnly()) &&
+			store.get().slides.length > 0
+		) {
+			join.wrote();
+		}
 	}
 	// Prevent a bootstrap deck from preceding initial sync. Built-in transports
 	// retain their grace timer; external sessions only use host readiness.
@@ -150,11 +174,12 @@ export function createCollaborationController(
 
 		// Observe remote slide changes, skipping our own reconcile transactions.
 		if (!config.externalSession) {
+			join.attached();
 			unobserveSlides = observeYDocSlides(currentYDoc, (_events, transaction) => {
 				if (transaction?.origin === LOCAL_SYNC_ORIGIN || slidesSync.isApplyingRemote()) {
 					return;
 				}
-				slidesSync.applyRemoteSlides(currentYDoc, config);
+				adoptRoomSlides(currentYDoc, config);
 			});
 		}
 
@@ -188,6 +213,7 @@ export function createCollaborationController(
 				resetBaseline: slidesSync.reset,
 				cancelWriteBack: writeBack.cancel,
 				adoptSlides: (slides) => slidesSync.adoptSlides(slides, config),
+				onRoomReplacedDeck: bumpDeckLoad,
 			});
 		} else {
 			livePatcher.configure(
@@ -257,7 +283,7 @@ export function createCollaborationController(
 		}
 		if (
 			shouldRoomSlidesReplaceLoad(origin, readSlidesFromYDoc(currentYDoc).length) &&
-			slidesSync.applyRemoteSlides(currentYDoc, lastConfig)
+			adoptRoomSlides(currentYDoc, lastConfig)
 		) {
 			return;
 		}
@@ -272,6 +298,7 @@ export function createCollaborationController(
 		isActive: () => active,
 		isReadOnly: editState.isReadOnly,
 		getStatus: () => status,
+		getFailure: () => session.getSnapshot().failure,
 		getState: stateTracker.get,
 		setCursor: (x, y, activeSlideIndex) => presence?.setCursor(x, y, activeSlideIndex),
 		setSelection: (selectedElementId, activeSlideIndex) =>

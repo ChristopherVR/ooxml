@@ -12,12 +12,17 @@
  *
  * @module chart/workbook/package-save
  */
-import { writeChartWorkbookUpdates, type ChartWorkbookWrite } from './writer';
+import {
+	writeChartWorkbookUpdates,
+	type ChartWorkbookCellChange,
+	type ChartWorkbookWrite,
+} from './writer';
 
 /** The package being saved, as far as the workbook write-back needs it. */
 export interface ChartWorkbookPackage {
 	read(partName: string): Promise<Uint8Array | undefined>;
-	write(partName: string, bytes: Uint8Array): void;
+	/** Stores the workbook; `changes` are the cells the write-back changed in it. */
+	write(partName: string, bytes: Uint8Array, changes: readonly ChartWorkbookCellChange[]): void;
 }
 
 /** Where the chart's data lives: the resolved `c:externalData` target. */
@@ -107,7 +112,7 @@ export async function saveChartWorkbookUpdates(
 		return false;
 	}
 	const result = await writeChartWorkbookUpdates(bytes, writes, { atomic });
-	if (result.bytes) pkg.write(partName, result.bytes);
+	if (result.bytes) pkg.write(partName, result.bytes, result.changes ?? []);
 	if (result.unresolved > 0)
 		report({
 			code: 'CHART_EMBEDDED_WORKBOOK_PARTIAL_WRITEBACK',

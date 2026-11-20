@@ -56,6 +56,7 @@ import {
 	allFilesOf,
 	channelViews,
 	callRoomId,
+	chatCallRoomId,
 	filesOf,
 	peopleViews,
 	searchMessages,
@@ -479,7 +480,7 @@ export function createTeamsClient(options: TeamsClientOptions): TeamsClient {
 			}));
 		const chatCall =
 			call?.session && call.phase === 'connected'
-				? { inCallRoom: callRoomId(workspaceId, call.channelId) }
+				? { inCallRoom: chatCallRoomId(workspaceId, call.channelId) }
 				: {};
 		return {
 			status: ws.session.status,

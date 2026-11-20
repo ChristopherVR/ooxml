@@ -14,6 +14,7 @@ import {
 	textProperties,
 	type ChartParseContext,
 } from './parse-util';
+import { chartViewAllowance, type ChartPointBudget } from '../point-limit';
 import { parseAxis } from './parse-axis';
 import { parseSeries } from './parse-series';
 import { parseChartData, parseLegend, parseTitle } from './parse-text';
@@ -70,10 +71,14 @@ export const isChartExRoot = (root: XmlElement): boolean =>
 
 /**
  * Parses an extended chart part (`cx:chartSpace`) from its XML text or root element. Anything the
- * model does not cover is listed in `issues`; the caller keeps the part itself for round-trip.
+ * model does not cover is listed in `issues`; the caller keeps the part itself for round-trip. A
+ * loader passes one `pointBudget` for all the charts of a package.
  */
-export function parseChartExSpace(source: string | XmlElement): ChartExSpaceParseResult {
-	const context: ChartParseContext = { issues: [] };
+export function parseChartExSpace(
+	source: string | XmlElement,
+	options: { pointBudget?: ChartPointBudget } = {},
+): ChartExSpaceParseResult {
+	const context: ChartParseContext = { issues: [], ...options };
 	const root =
 		typeof source === 'string' ? parseXml(source, { label: 'Chart part' }).documentElement : source;
 	if (!isChartExRoot(root)) {
@@ -86,6 +91,7 @@ export function parseChartExSpace(source: string | XmlElement): ChartExSpacePars
 			issues: context.issues,
 		};
 	}
+	context.viewAllowance = chartViewAllowance(root);
 	reportUnmodelled(context, root, SPACE);
 	const chart = cxChild(root, 'chart');
 	if (!chart)

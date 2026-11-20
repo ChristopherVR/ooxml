@@ -8,6 +8,8 @@ import { chartMarkerRadius, chartSeriesMarkerSvg } from './chart-svg-markers';
 import type { ChartMarkerSeriesView } from './chart-view-markers';
 import { hasOutsideLabels, pointLabels, type PointMark } from './chart-svg-labels';
 
+const MAX_RADAR_SPOKES = 360;
+
 const polar = (cx: number, cy: number, r: number, angle: number): [number, number] => [
 	cx + r * Math.sin(angle),
 	cy - r * Math.cos(angle),
@@ -100,8 +102,12 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 		1,
 		Math.ceil(12 / Math.max(1, radius / Math.max(1, scale.ticks.length - 1))),
 	);
+	// Rings and spokes past what a radar can show would only multiply with the gridlines.
+	const spokeEvery = Math.max(1, Math.ceil(count / MAX_RADAR_SPOKES));
 	for (const [k, t] of scale.ticks.entries()) {
-		const ring = Array.from({ length: count }, (_, i) => polar(cx, cy, r(t), angle(i)))
+		const ring = Array.from({ length: Math.ceil(count / spokeEvery) }, (_, i) =>
+			polar(cx, cy, r(t), angle(i * spokeEvery)),
+		)
 			.map(([x, y]) => `${n(x)},${n(y)}`)
 			.join(' ');
 		if (!model.axes?.value || model.axes.value.source.majorGridlines)
@@ -123,6 +129,7 @@ export function radarSvg(model: ChartViewModel, area: Rect): string {
 			);
 	}
 	model.categories.forEach((c, i) => {
+		if (i % spokeEvery) return;
 		const [x, y] = polar(cx, cy, radius, angle(i));
 		out.push(axisLine(model, model.axes?.category, 'categoryAxis', cx, cy, x, y));
 		const [lx, ly] = polar(cx, cy, radius + 10, angle(i));

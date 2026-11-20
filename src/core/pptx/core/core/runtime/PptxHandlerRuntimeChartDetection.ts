@@ -3,9 +3,13 @@ import type { PptxChartData } from '../../types';
 import { extractMultiLevelCategoryValues } from '../../utils/chart-multi-level-category-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSmartArt';
 import { isFiniteNumber } from '../../../../units/finite';
+import { chartPointBudget, chartPointLength } from '../../../../chart/point-limit';
 import { at } from '../../../../geometry/indexed';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
+	/** Pays for the blank slots of every chart view of the presentation being loaded. */
+	protected chartPointBudget = chartPointBudget();
+
 	protected detectChartType(plotArea: XmlObject | undefined): PptxChartData['chartType'] {
 		if (!plotArea) {
 			return 'unknown';
@@ -196,8 +200,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			String(this.xmlLookupService.getChildByLocalName(cacheNode, 'ptCount')?.['@_val'] ?? ''),
 			10,
 		);
-		const length =
-			isFiniteNumber(declaredCount) && declaredCount > maxIndex + 1 ? declaredCount : maxIndex + 1;
+		const length = chartPointLength(points.length, maxIndex + 1, declaredCount);
 
 		const result: string[] = [];
 		for (let index = 0; index < length; index++) {

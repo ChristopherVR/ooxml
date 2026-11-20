@@ -25,6 +25,7 @@ import { isPendingChartPicture } from '../../chart/edit/picture';
 import {
 	chartIssuesLostOnWrite,
 	patchChartFormulas,
+	sameChartModel,
 	writeChartSpaceOverSource,
 } from '../../chart/keep-source';
 import { sameModel } from './snapshot';
@@ -155,7 +156,7 @@ export function editedChartPart(source: string, chart: ChartObject): string | un
 	const loaded = parsed.chartSpace;
 	// The pictures the painter reads are not part of the XML.
 	const { pictureSources: _pictures, ...model } = chart.chartSpace;
-	if (sameModel(loaded, model)) return undefined;
+	if (sameChartModel(loaded, model)) return undefined;
 	// A part with unmodelled content below the top level keeps its bytes (reference moves only).
 	if (chartIssuesLostOnWrite(parsed.issues).length)
 		return patchChartFormulas(source, loaded, chart.chartSpace);

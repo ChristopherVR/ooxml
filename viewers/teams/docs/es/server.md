@@ -11,7 +11,7 @@ El chat viaja como actualizaciones de Yjs a través de tu servidor, que almacena
 Requiere Node 22 o posterior.
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" TEAMS_ORIGINS=https://app.example.com TEAMS_DATA=/var/lib/openteams npx openteams-server
 npx openteams-server --insecure-dev     # solo para desarrollo local: escucha en 127.0.0.1:8787, sin cuentas
 ```
 

@@ -2,8 +2,8 @@ import type {
 	CollabLoadOrigin,
 	CollaborationConfig,
 	CollaborationHistoryTarget,
+	BroadcastConfig,
 	CollaborationInput,
-	CollaborationTransport,
 	CompatibilityWarningToast,
 } from 'ooxml-ui/pptx';
 import {
@@ -30,6 +30,8 @@ export interface UseCollaborationWiringInput {
 	loadVersion?: Ref<number>;
 	/** Why the last content load ran; see `shouldRoomSlidesReplaceLoad`. */
 	getLoadOrigin?: () => CollabLoadOrigin;
+	/** The room's slides replaced the open deck (a join); a peer's edit never calls it. */
+	onRoomReplacedDeck?: () => void;
 	getTemplateElements: () => Record<string, PptxElement[]>;
 	/** True while a gallery hover preview shows over the slides. */
 	slidesPaused?: () => boolean;
@@ -72,11 +74,7 @@ export interface UseCollaborationWiringResult {
 	onCollabPointerMove: (event: PointerEvent) => void;
 	broadcastOpen: Ref<boolean>;
 	broadcastViewerUrl: ComputedRef<string>;
-	onBroadcastStart: (config: {
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	}) => void;
+	onBroadcastStart: (config: BroadcastConfig) => void;
 	onBroadcastStop: () => void;
 }
 
@@ -118,6 +116,7 @@ export function useCollaborationWiring(
 		...(input.history ? { history: input.history } : {}),
 		loadVersion,
 		getLoadOrigin,
+		onRoomReplacedDeck: input.onRoomReplacedDeck,
 		onRemoteSlides: (remote) => {
 			// oxlint-disable-next-line react/immutability -- Vue ref write, not a React prop mutation
 			slides.value = remote;
@@ -213,24 +212,15 @@ export function useCollaborationWiring(
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
 	const broadcastOpen = ref(false);
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
-	const broadcastConfig = ref<{
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	} | null>(null);
+	const broadcastConfig = ref<BroadcastConfig | null>(null);
 	// oxlint-disable-next-line eslint/one-var -- distinct concerns, forcing one statement hurts readability
 	const broadcastViewerUrl = computed(() => {
 		if (!broadcastConfig.value || typeof window === 'undefined') {
 			return '';
 		}
-		const { roomId, serverUrl } = broadcastConfig.value;
-		return buildBroadcastViewerUrl(roomId, serverUrl, window.location);
+		return buildBroadcastViewerUrl(broadcastConfig.value, window.location);
 	});
-	function onBroadcastStart(config: {
-		roomId: string;
-		serverUrl: string;
-		transport?: CollaborationTransport;
-	}): void {
+	function onBroadcastStart(config: BroadcastConfig): void {
 		broadcastConfig.value = config;
 		// One-way broadcast: the presenter owns navigation; viewers auto-follow via
 		// `broadcasterSlideIndex`. The presenter joins with the `owner` role.

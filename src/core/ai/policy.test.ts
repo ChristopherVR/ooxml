@@ -41,7 +41,7 @@ describe('normalizeAiPolicy', () => {
 				features: { editFiles: 'no', createFiles: false },
 				limits: { maxContextChars: 5, historyMessages: 'many' },
 				behaviour: { style: 'shouty', temperature: 9 },
-				collaboration: { syncUrl: 'http://not-a-socket', token: 'secret' },
+				collaboration: { syncUrl: 'http://not-a-socket', credentialsUrl: 'https://host.example/t' },
 				defaultConnection: 'missing',
 			},
 			providers,
@@ -58,8 +58,35 @@ describe('normalizeAiPolicy', () => {
 			maxOutputTokens: 8192,
 		});
 		expect(policy.behaviour).toMatchObject({ style: 'balanced', temperature: 2 });
-		expect(policy.collaboration).toEqual({ syncUrl: '', token: '' });
+		expect(policy.collaboration).toEqual({ syncUrl: '', credentialsUrl: '' });
 		expect(policy.defaultConnection).toBe('team');
+	});
+
+	test('a token in the public configuration is ignored', () => {
+		const policy = normalizeAiPolicy(
+			{ collaboration: { syncUrl: 'wss://sync.example', token: 'shared-room-secret' } },
+			providers,
+		);
+		expect(policy.collaboration).toEqual({ syncUrl: 'wss://sync.example', credentialsUrl: '' });
+		expect(JSON.stringify(policy)).not.toMatch(/shared-room-secret/u);
+	});
+
+	test('the credentials endpoint must be https or the page origin, and needs a sync server', () => {
+		const page = 'http://localhost:8123/ooxml/';
+		const credentials = (credentialsUrl: string, syncUrl = 'wss://sync.example') =>
+			normalizeAiPolicy({ collaboration: { syncUrl, credentialsUrl } }, providers, page)
+				.collaboration.credentialsUrl;
+		expect(credentials('https://host.example/sync-token')).toBe('https://host.example/sync-token');
+		expect(credentials('sync-token')).toBe('http://localhost:8123/ooxml/sync-token');
+		for (const refused of [
+			'http://host.example/sync-token',
+			'javascript:alert(1)',
+			'https://user:pass@host.example/t',
+			'https://',
+		])
+			expect(credentials(refused), refused).toBe('');
+		expect(credentials('https://host.example/t', '')).toBe('');
+		expect(normalizeAiPolicy({}, providers).collaboration.credentialsUrl).toBe('');
 	});
 
 	test('hidden workbook content stays out of requests unless the policy opts in', () => {

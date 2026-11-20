@@ -1,11 +1,12 @@
 /**
  * The models a user can pick: the offline preview (if the policy allows it), the connections the
  * deployment provides and, when allowed, connections the user added. Requests go straight from
- * this page to the chosen endpoint. Keys a user enters stay in this tab's session storage unless
- * they ask to remember them on this device; managed gateways need no key in the browser at all.
+ * this page to the chosen endpoint. Keys a user enters stay in this tab's session storage only
+ * (keys.js); managed gateways need no key in the browser at all.
  */
 import { checkAiEndpoint, userConnectionRefusal } from 'ooxml-core/ai';
 import { currentProfile } from '../profile-state.js';
+import { keyFor, storeKey } from './keys.js';
 import { offlineReply } from './offline.js';
 import { currentPolicy } from './policy.js';
 import { authHeaders, provider, providers } from './provider-catalog.js';
@@ -13,7 +14,6 @@ import { authHeaders, provider, providers } from './provider-catalog.js';
 export { providers, provider } from './provider-catalog.js';
 
 const stateKey = () => `ooxml-suite-ai-v2-${currentProfile().id}`;
-const keysKey = () => `ooxml-suite-ai-keys-v2-${currentProfile().id}`;
 const listeners = new Set();
 const offline = {
 	id: 'offline',
@@ -55,7 +55,7 @@ function state() {
 				model: v1.model,
 			},
 		];
-		if (v1.key) storeKey(id, v1.key, Boolean(v1.remember));
+		if (v1.key) storeKey(id, v1.key);
 		writeJson(localStorage, stateKey(), { active: id, user });
 		return { active: id, user };
 	}
@@ -65,17 +65,6 @@ const saveState = (next) => {
 	writeJson(localStorage, stateKey(), next);
 	for (const listener of listeners) listener();
 };
-function keyFor(id) {
-	return readJson(sessionStorage, keysKey())?.[id] ?? readJson(localStorage, keysKey())?.[id] ?? '';
-}
-function storeKey(id, key, remember) {
-	for (const storage of [sessionStorage, localStorage]) {
-		const keys = readJson(storage, keysKey()) ?? {};
-		delete keys[id];
-		if (key && (storage === localStorage) === remember) keys[id] = key;
-		writeJson(storage, keysKey(), keys);
-	}
-}
 
 /**
  * Every model the user may pick, in menu order. A connection the user saved earlier is offered
@@ -129,16 +118,11 @@ export function chosenModel(c) {
 	const picked = readJson(localStorage, `${stateKey()}-model-${c.id}`);
 	return c.models?.includes(picked) ? picked : c.model;
 }
-export function setKey(id, key, remember) {
-	storeKey(id, key, remember);
+export function setKey(id, key) {
+	storeKey(id, key);
 	for (const listener of listeners) listener();
 }
-export const hasRememberedKey = (id) => Boolean(readJson(localStorage, keysKey())?.[id]);
-export function saveUserConnection(
-	{ id, label, provider: providerId, endpoint, model },
-	key,
-	remember,
-) {
+export function saveUserConnection({ id, label, provider: providerId, endpoint, model }, key) {
 	const refused = userConnectionRefusal(
 		currentPolicy(),
 		{ provider: providerId, endpoint },
@@ -155,7 +139,7 @@ export function saveUserConnection(
 	};
 	next.user = [...next.user.filter((c) => c.id !== connection.id), connection];
 	next.active = connection.id;
-	if (key !== undefined) storeKey(connection.id, key, remember);
+	if (key !== undefined) storeKey(connection.id, key);
 	saveState(next);
 	return connection;
 }
@@ -163,7 +147,7 @@ export function removeUserConnection(id) {
 	const next = state();
 	next.user = next.user.filter((c) => c.id !== id);
 	if (next.active === id) next.active = null;
-	storeKey(id, '', false);
+	storeKey(id, '');
 	saveState(next);
 }
 export function onConnection(listener) {
@@ -194,10 +178,47 @@ async function failure(response) {
 	);
 }
 
+/** Every wire protocol's ending, in one vocabulary. Anything else is `unknown`. */
+const FINISH_REASONS = {
+	stop: 'stop',
+	end_turn: 'stop',
+	stop_sequence: 'stop',
+	length: 'length',
+	max_tokens: 'length',
+	content_filter: 'filtered',
+	refusal: 'filtered',
+	tool_calls: 'tool-calls',
+	function_call: 'tool-calls',
+	tool_use: 'tool-calls',
+};
+/** @returns {'stop'|'length'|'filtered'|'tool-calls'|'unknown'} */
+export const normalizeFinishReason = (raw) => FINISH_REASONS[raw] ?? 'unknown';
+
+const ENDINGS = {
+	length: 'The reply was cut off because it reached the length limit.',
+	filtered: 'The provider stopped this reply with its content filter.',
+};
+
+/** A reply that did not finish normally. `partial` is the text that arrived before it ended. */
+export class ReplyEndedError extends Error {
+	constructor(reason, partial) {
+		super(ENDINGS[reason] ?? 'The reply ended unexpectedly, so it may be incomplete.');
+		this.name = 'ReplyEndedError';
+		this.reason = reason;
+		this.partial = partial;
+	}
+}
+
+function finished(reason, text) {
+	if (reason !== 'stop') throw new ReplyEndedError(reason, text);
+	return text;
+}
+
 /**
  * Sends one chat turn and streams the reply through `onText` (the text so far). Providers that
  * answer with a single JSON body instead of a stream are read the same way.
  * @returns {Promise<string>} the complete reply
+ * @throws {ReplyEndedError} when the reply was cut off, filtered or ended without a finish signal
  */
 export async function streamChat({
 	connection,
@@ -253,12 +274,20 @@ export async function streamChat({
 			: body.choices?.[0]?.message?.content;
 		if (typeof text !== 'string') throw new Error('The provider did not return a text response.');
 		onText(text);
-		return text;
+		// A whole JSON body cannot be cut off in transit; only a stated reason can end it early.
+		const stated = anthropic ? body.stop_reason : body.choices?.[0]?.finish_reason;
+		return finished(stated ? normalizeFinishReason(stated) : 'stop', text);
 	}
+	let reason = 'unknown';
+	let stated = false;
 	for await (const line of lines(response)) {
 		if (!line.startsWith('data:')) continue;
 		const data = line.slice(5).trim();
-		if (!data || data === '[DONE]') continue;
+		if (!data) continue;
+		if (data === '[DONE]') {
+			if (!stated) reason = 'stop';
+			continue;
+		}
 		let event;
 		try {
 			event = JSON.parse(data);
@@ -276,6 +305,11 @@ export async function streamChat({
 			text += delta;
 			onText(text);
 		}
+		const ending = anthropic ? event.delta?.stop_reason : event.choices?.[0]?.finish_reason;
+		if (ending) {
+			reason = normalizeFinishReason(ending);
+			stated = true;
+		} else if (anthropic && event.type === 'message_stop' && !stated) reason = 'stop';
 	}
-	return text;
+	return finished(reason, text);
 }

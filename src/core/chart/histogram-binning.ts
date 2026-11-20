@@ -63,32 +63,111 @@ export function scottBinCount(values: ReadonlyArray<number>, min: number, max: n
 	return Math.max(1, Math.ceil((max - min) / width));
 }
 
-/** Bin raw observations according to ChartEx binning properties. */
+/**
+ * Most bins one histogram draws. `cx:binCount` and `cx:binSize` come from the file and the bins
+ * are built one by one, so an unbounded request exhausts memory; a chart cannot show more bars
+ * than this anyway.
+ */
+export const MAX_HISTOGRAM_BINS = 1000;
+
+interface Observation {
+	value: number;
+	sourceIndex: number;
+}
+
+/** Finite observations, split into the underflow, overflow and regular bins (linear time). */
+function partitionObservations(
+	values: ReadonlyArray<number>,
+	closed: 'l' | 'r',
+	underflow: number | undefined,
+	overflow: number | undefined,
+) {
+	const under: Observation[] = [];
+	const over: Observation[] = [];
+	const regular: Observation[] = [];
+	values.forEach((value, sourceIndex) => {
+		if (!Number.isFinite(value)) return;
+		const item = { value, sourceIndex };
+		const isUnder =
+			underflow !== undefined && (closed === 'r' ? value <= underflow : value < underflow);
+		const isOver =
+			overflow !== undefined && (closed === 'l' ? value >= overflow : value > overflow);
+		if (isUnder) under.push(item);
+		if (isOver) over.push(item);
+		if (!isUnder && !isOver) regular.push(item);
+	});
+	return { under, over, regular };
+}
+
+/** Where the regular bins fall, with `limited` set when the request passed the bin limit. */
+function binGrid(values: ReadonlyArray<number>, options: HistogramOptions, closed: 'l' | 'r') {
+	const { min, max } = extentOf(values);
+	const size =
+		options.binSize && options.binSize > 0 && Number.isFinite(options.binSize)
+			? options.binSize
+			: undefined;
+	if (size !== undefined) {
+		const start = Math.floor(min / size) * size;
+		const wanted =
+			closed === 'l' ? Math.floor((max - start) / size) + 1 : Math.ceil((max - start) / size);
+		if (Number.isFinite(start) && wanted <= MAX_HISTOGRAM_BINS)
+			return { start, width: size, count: Math.max(wanted, 1), limited: false };
+	}
+	// A bin size too fine for the limit spreads the most bins allowed over the data instead.
+	const wanted =
+		size !== undefined
+			? Number.POSITIVE_INFINITY
+			: options.binCount && options.binCount > 0
+				? options.binCount
+				: scottBinCount(values, min, max);
+	const count = Math.max(Math.min(Math.floor(wanted) || 1, MAX_HISTOGRAM_BINS), 1);
+	return {
+		start: min,
+		width: Math.max((max - min) / count, 1),
+		count,
+		limited: wanted > MAX_HISTOGRAM_BINS,
+	};
+}
+
+const numericLimit = (limit: number | 'auto' | undefined) =>
+	typeof limit === 'number' ? limit : undefined;
+
+/** True when {@link computeHistogramBins} draws fewer bins than `options` ask for. */
+export function histogramBinsLimited(
+	values: ReadonlyArray<number>,
+	options: HistogramOptions,
+): boolean {
+	const closed = options.intervalClosed ?? 'l';
+	const { regular } = partitionObservations(
+		values,
+		closed,
+		numericLimit(options.underflow),
+		numericLimit(options.overflow),
+	);
+	if (regular.length === 0) return false;
+	return binGrid(
+		regular.map((item) => item.value),
+		options,
+		closed,
+	).limited;
+}
+
+/**
+ * Bin raw observations according to ChartEx binning properties, drawing at most
+ * {@link MAX_HISTOGRAM_BINS} regular bins.
+ */
 export function computeHistogramBins(
 	values: ReadonlyArray<number>,
 	options: HistogramOptions,
 	format: HistogramValueFormatter = String,
 ): HistogramBin[] {
 	const closed = options.intervalClosed ?? 'l';
-	const finite = values
-		.map((value, sourceIndex) => ({ value, sourceIndex }))
-		.filter((item) => Number.isFinite(item.value));
-	if (finite.length === 0) {
+	const underflow = numericLimit(options.underflow);
+	const overflow = numericLimit(options.overflow);
+	const { under, over, regular } = partitionObservations(values, closed, underflow, overflow);
+	if (under.length + over.length + regular.length === 0) {
 		return [];
 	}
-	const underflow = typeof options.underflow === 'number' ? options.underflow : undefined;
-	const overflow = typeof options.overflow === 'number' ? options.overflow : undefined;
-	const under =
-		underflow === undefined
-			? []
-			: finite.filter((item) =>
-					closed === 'r' ? item.value <= underflow : item.value < underflow,
-				);
-	const over =
-		overflow === undefined
-			? []
-			: finite.filter((item) => (closed === 'l' ? item.value >= overflow : item.value > overflow));
-	const regular = finite.filter((item) => !under.includes(item) && !over.includes(item));
 	const result: HistogramBin[] = [];
 	if (underflow !== undefined) {
 		result.push({
@@ -98,27 +177,11 @@ export function computeHistogramBins(
 		});
 	}
 	if (regular.length > 0) {
-		const { min, max } = extentOf(regular.map((item) => item.value));
-		const requestedSize = options.binSize && options.binSize > 0 ? options.binSize : undefined;
-		const requestedCount = options.binCount && options.binCount > 0 ? options.binCount : undefined;
-		const start = requestedSize ? Math.floor(min / requestedSize) * requestedSize : min;
-		const count = requestedSize
-			? Math.max(
-					closed === 'l'
-						? Math.floor((max - start) / requestedSize) + 1
-						: Math.ceil((max - start) / requestedSize),
-					1,
-				)
-			: Math.max(
-					requestedCount ??
-						scottBinCount(
-							regular.map((item) => item.value),
-							min,
-							max,
-						),
-					1,
-				);
-		const width = requestedSize ?? Math.max((max - start) / count, 1);
+		const { start, width, count } = binGrid(
+			regular.map((item) => item.value),
+			options,
+			closed,
+		);
 		const bins = Array.from({ length: count }, (_, index) => ({
 			value: 0,
 			label: binLabel(start + index * width, start + (index + 1) * width, closed, format),

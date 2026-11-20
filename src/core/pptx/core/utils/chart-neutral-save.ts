@@ -12,7 +12,6 @@
  */
 
 import {
-	chartSpaceWorkbookWrites,
 	chartIssuesLostOnWrite,
 	parseChartSpace,
 	setChartPivotFormatsXml,
@@ -23,7 +22,6 @@ import {
 } from '../../../chart/index';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
-import type { PptxChartWorkbookWrite } from './chart-xlsx-writer';
 
 /**
  * Chart part elements the package adapter encoded for a save: the print settings and pivot formats
@@ -40,8 +38,8 @@ export interface NeutralChartSave {
 	xml: string;
 	/** Rebase these caches atomically with a new embedded worksheet before committing the part. */
 	workbookModel?: ChartSpace;
-	/** The embedded-workbook writes of every series, as the object-tree save collects them. */
-	workbookWrites: PptxChartWorkbookWrite[];
+	/** The workbook already holds the chart's data, on a sheet made for this save. */
+	workbookRebased?: boolean;
 }
 
 /**
@@ -52,10 +50,7 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
-	options: {
-		retryWorkbook?: boolean | undefined;
-		elements?: NeutralChartPackageElements | undefined;
-	} = {},
+	options: { elements?: NeutralChartPackageElements | undefined } = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
@@ -85,7 +80,6 @@ export function saveChartPartThroughNeutral(
 	}
 	return {
 		xml: written,
-		workbookWrites: plan.seriesData || options.retryWorkbook ? chartSpaceWorkbookWrites(space) : [],
 		...(plan.rebuildWorkbook ? { workbookModel: space } : {}),
 	};
 }

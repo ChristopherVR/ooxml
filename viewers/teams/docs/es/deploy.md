@@ -22,7 +22,7 @@ El servidor se niega a arrancar sin cuentas: define `TEAMS_USERS_FILE` (ver abaj
 | `TEAMS_MAX_ROOMS`                                       | Salas de sincronización y de llamada (por defecto 1000 cada una).                                                                                                                                                                                                                                |
 | `TEAMS_MAX_DOC_MB`                                      | Mayor documento de sala persistido en MB (por defecto 64); las actualizaciones que lo superen se rechazan.                                                                                                                                                                                       |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Mensajes por segundo (por defecto 100) y ráfaga (200) por socket; un socket que los supere se cierra.                                                                                                                                                                                            |
-| `TEAMS_FILES_QUOTA_MB`                                  | Límite opcional para todo el directorio de archivos en MB (desactivado por defecto); las subidas que lo superen reciben 507.                                                                                                                                                                     |
+| `TEAMS_FILES_QUOTA_MB`                                  | Límite para todo el directorio de archivos en MB (20480 por defecto); las subidas que lo superen reciben 507. Además, `TEAMS_USER_QUOTA_MB` por persona (1024) y `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS` para las salas guardadas (consulta el README del servidor).                    |
 | `TEAMS_WORKSPACE_QUOTA_MB`                              | Archivos por espacio de trabajo en MB (por defecto 1024; un chat privado cuenta para su espacio de trabajo); las subidas que lo superen reciben 507.                                                                                                                                             |
 | `TEAMS_COMPACT_INTERVAL_MIN`                            | Minutos entre compactaciones de las instantáneas de las salas (por defecto 360, `0` desactiva el temporizador). Una sala también se compacta al cargarse.                                                                                                                                        |
 | `TEAMS_METRICS_TOKEN`                                   | Activa `GET /metrics` (texto de Prometheus), servido solo con `Authorization: Bearer <este token>`. Desactivado sin él.                                                                                                                                                                          |
@@ -119,7 +119,7 @@ Ejecútalo con un archivo de cuentas montado, `TEAMS_SESSION_SECRET` y `TEAMS_OR
 ```bash
 docker run -d --name openteams -p 127.0.0.1:8787:8787 \
   -v openteams-data:/data -v "$PWD/users.json:/config/users.json:ro" \
-  -e TEAMS_SESSION_SECRET=change-me -e TEAMS_ORIGINS=https://app.example.com \
+  -e TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" -e TEAMS_ORIGINS=https://app.example.com \
   openteams-server
 ```
 
@@ -173,7 +173,7 @@ combinan: Yjs conserva lo que tengan y falte en la copia, así que una restaurac
   el servidor borra todos los `.part` sobrantes (y los temporales de salas obsoletos), y cada 15 minutos los de más de una
   hora. Los archivos subidos pero nunca adjuntados a un mensaje permanecen hasta que alguien los borre.
 - **Cuotas.** El límite es por espacio de trabajo (`TEAMS_WORKSPACE_QUOTA_MB`, por defecto 1024) y cuenta sus archivos de
-  canal y los de sus chats privados; borrar libera espacio. `TEAMS_FILES_QUOTA_MB` es un límite opcional para todo el directorio.
+  canal y los de sus chats privados; borrar libera espacio. Además hay un límite por persona que sube archivos, sumando todos los espacios y chats (`TEAMS_USER_QUOTA_MB`, 1024 por defecto), y otro para todo el directorio (`TEAMS_FILES_QUOTA_MB`, 20480 por defecto). Con cuentas, solo se sube a un espacio de trabajo que existe o a un chat privado.
 - **Compactación.** Al cargar una sala, y cada `TEAMS_COMPACT_INTERVAL_MIN` minutos para todas, el servidor recodifica la
   sala como una única actualización de Yjs sobre un documento nuevo y la escribe solo si es menor y describe exactamente el
   mismo estado. Se escribe en un archivo temporal, se vuelca a disco y se renombra sobre la instantánea, de modo que un

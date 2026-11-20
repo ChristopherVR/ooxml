@@ -158,7 +158,8 @@ export type {
 	SanitizedPresence,
 	DeckSaveState,
 } from 'ooxml-ui/pptx';
-export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export { collaborationFailureMessageKey, describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationFailure } from 'ooxml-ui/pptx';
 
 // Comments
 export { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
@@ -273,12 +274,7 @@ export {
 	buildPropertiesPatch,
 } from './properties-dialog-helpers';
 export type { DocumentProperties, PropertiesDraft } from './properties-dialog-helpers';
-export {
-	seedShareFields,
-	canStartShare,
-	buildCollaborationConfig,
-	buildShareUrl,
-} from './share-helpers';
+export { seedShareFields, canStartShare, buildCollaborationConfig } from './share-helpers';
 export type { ShareDefaults, ShareFormFields } from './share-helpers';
 export {
 	hasExistingLink,

@@ -33,8 +33,9 @@ describe('PowerPoint structural workbook save', () => {
 		const result = await prepareNeutralChartWorkbook(
 			zip,
 			chart,
-			{ xml: writeChartSpace(model), workbookModel: model, workbookWrites: [] },
+			{ xml: writeChartSpace(model), workbookModel: model },
 			() => 'ppt/embeddings/chart.xlsx',
+			{ allocated: new Map(), held: () => new Set() },
 		);
 		const saved = await zip.file('ppt/embeddings/chart.xlsx')!.async('uint8array');
 		const outputZip = await JSZip.loadAsync(saved);
@@ -46,7 +47,7 @@ describe('PowerPoint structural workbook save', () => {
 		expect(series[2]!.values!.formula).toBe('ChartData1!$F$2:$F$3');
 		expect(series[2]!.tx!.reference!.formula).toBe('ChartData1!$F$1');
 		expect(chart.series[2]!.idx).toBe(series[2]!.index);
-		expect(result.workbookWrites).toEqual([]);
+		expect(result.workbookRebased).toBe(true);
 	});
 	it('refuses external workbooks without changing any package bytes', async () => {
 		const zip = new JSZip();
@@ -61,8 +62,9 @@ describe('PowerPoint structural workbook save', () => {
 			prepareNeutralChartWorkbook(
 				zip,
 				chart,
-				{ xml: writeChartSpace(model), workbookModel: model, workbookWrites: [] },
+				{ xml: writeChartSpace(model), workbookModel: model },
 				() => 'remote.xlsx',
+				{ allocated: new Map(), held: () => new Set() },
 			),
 		).rejects.toThrow('embedded');
 		expect(Object.keys(zip.files)).toEqual(['keep']);

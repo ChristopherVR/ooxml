@@ -569,7 +569,12 @@ describe('collaborationService', () => {
 	it('falls back to webrtc when transport is unset and serverUrl is blank', async () => {
 		reset();
 		const { svc, destroy } = makeService();
-		await svc.connect({ roomId: 'room-1', serverUrl: '', userName: 'Ada' });
+		await svc.connect({
+			roomId: 'room-1',
+			serverUrl: '',
+			userName: 'Ada',
+			secret: 'AAECAwQFBgcICQoLDA0ODw',
+		});
 		expect(hoisted.createdProviders).toStrictEqual(['webrtc']);
 		destroy();
 	});
@@ -712,7 +717,12 @@ describe('collaborationService', () => {
 		reset();
 		const { svc, destroy } = makeService();
 		// Blank server + webrtc: no mixed-content check, no timeout; connected now.
-		await svc.connect({ ...config, serverUrl: '', transport: 'webrtc' });
+		await svc.connect({
+			...config,
+			serverUrl: '',
+			transport: 'webrtc',
+			secret: 'AAECAwQFBgcICQoLDA0ODw',
+		});
 		expect(svc.active()).toBeTruthy();
 		expect(svc.status()).toBe('connected');
 		expect(svc.connected()).toBeTruthy();

@@ -422,6 +422,20 @@ describe('host-owned Vanilla collaboration', () => {
 		collab.destroy();
 	});
 
+	it('reports joining a host room as a deck load, and a peer edit as an edit', async () => {
+		const room = host(true);
+		const { collab, store } = build();
+		await collab.start({ ...config(room.session), sessionIntent: 'join' });
+		expect(store.get().deckLoad).toBe(0);
+		room.seed('remote');
+		expect(store.get().slides[0].id).toBe('remote');
+		expect(store.get().deckLoad).toBe(1);
+		room.seed('peer-edit');
+		expect(store.get().slides[0].id).toBe('peer-edit');
+		expect(store.get().deckLoad).toBe(1);
+		collab.destroy();
+	});
+
 	it('adopts an already-synced document before enabling writes and borrows ownership', async () => {
 		const room = host(true);
 		room.seed('remote');

@@ -39,6 +39,7 @@
 	<CollaborationStatusIndicator
 		status={collab.status}
 		connectedCount={dialogs.connectedCount}
+		failure={collab.failure}
 		onretry={() => dialogs.retry(collaboration)}
 	/>
 {/snippet}
@@ -74,7 +75,7 @@
 		parityUi.outlineViewOpen = false;
 	}}
 	onslidesorter={() => (parityUi.slideSorterOpen = true)}
-	collaborationSlot={collab.active && customization.isDialogAvailable('share') ? collabStatus : undefined}
+	collaborationSlot={(collab.active || collab.failure) && customization.isDialogAvailable('share') ? collabStatus : undefined}
 />
 {/if}
 

@@ -288,6 +288,19 @@ export class LoadContentService {
 	/** Number of loaded slides. */
 	readonly slideCount = computed(() => this.slides().length);
 
+	private readonly deckLoadCount = signal(0);
+	/**
+	 * Names the presentation load the deck comes from (`PptxAiBridge.getDeckLoad`). Only
+	 * {@link markDeckLoad} changes it: Slide Master view commands and slide paste swap the
+	 * handler through {@link adoptMasterViewData} and keep it.
+	 */
+	readonly deckLoad = this.deckLoadCount.asReadonly();
+
+	/** Another presentation replaced the deck: a load, File > New, or a room that replaced it. */
+	markDeckLoad(): void {
+		this.deckLoadCount.update((load) => load + 1);
+	}
+
 	private handler: PptxHandler | null = null;
 	private renderToken = 0;
 	private activeBlobUrls: string[] = [];
@@ -630,6 +643,7 @@ export class LoadContentService {
 			this.externalContentConsent.set(NO_EXTERNAL_CONTENT_CONSENT);
 			resources.commit();
 			this.handler = newHandler;
+			this.markDeckLoad();
 			this.slides.set(nextSlides);
 			this.parsedData.set({ ...parsed, slides: nextSlides, tableStyleMap: nextTableStyleMap });
 			this.mediaDataUrls.set(nextMediaUrls);

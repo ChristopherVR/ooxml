@@ -78,7 +78,7 @@ import type { DocumentSaveReason, HistoryTheme } from 'ooxml-ui/pptx';
 import { installSvgIdScope } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSaveFormat, PptxSlide, PptxTheme } from 'pptx-viewer-core';
 import { buildThemeColorMap } from 'pptx-viewer-core';
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
 import {
 	THEME_CATALOG,
@@ -1358,25 +1358,31 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		// when the host passes the `ai` prop. Its three write choke points route
 		// through the editor-history layer so AI edits are a single Ctrl+Z.
 		const applyAiTheme = useCallback(
-			(updates: Partial<PptxTheme>) => {
+			(updates: Partial<PptxTheme>, previous: PptxTheme | undefined) => {
 				if (updates.colorScheme) {
-					void themeHandlers.handleUpdateThemeColorScheme(updates.colorScheme);
+					void themeHandlers.handleUpdateThemeColorScheme(
+						updates.colorScheme,
+						previous?.colorScheme,
+					);
 				}
 				if (updates.fontScheme) {
-					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme);
+					void themeHandlers.handleUpdateThemeFontScheme(updates.fontScheme, previous?.fontScheme);
+				}
+				if (updates.name) {
+					void themeHandlers.handleUpdateThemeName(updates.name);
 				}
 			},
 			[themeHandlers],
 		);
-		const bumpAiHistory = useCallback(() => {
-			state.setPointerCommitNonce((n) => n + 1);
-		}, [state]);
 		const aiPanel = useAiPanelController({
 			activeSlideIndex,
 			selectedElementId,
 			selectedElementIds,
 			selectedElement,
 		});
+		// The bridge's deck load: each completed load, File > New and each room join that replaced
+		// the slides.
+		const [deckReplacements, countDeckReplacement] = useReducer((count: number) => count + 1, 0);
 		const aiBridge = useAiBridge({
 			slides,
 			activeSlideIndex,
@@ -1388,6 +1394,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			pinnedFocus: aiPanel.pinnedFocus,
 			pickedFocus: aiPanel.pickTargets.length > 0 ? aiPanel.pickTargets : null,
 			handlerRef,
+			deckLoad: loadVersion + deckReplacements,
 			sections: state.sections,
 			customShows: state.customShows,
 			setCustomShows: state.setCustomShows,
@@ -1417,7 +1424,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setSlides: state.setSlides,
 			setActiveSlideIndex: state.setActiveSlideIndex,
 			applySelection: editorOps.ops.applySelection,
-			bumpHistory: bumpAiHistory,
+			recordSlidesStep: history.recordSlidesCommit,
 			markDirty: history.markDirty,
 			applyThemeUpdates: applyAiTheme,
 		});
@@ -1511,6 +1518,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 									{mode !== 'present' && rootOptions.showToolbar && (
 										<ViewerToolbarSection
 											mode={mode}
+											onNewPresentation={countDeckReplacement}
 											canEdit={canEdit}
 											state={state}
 											selectedElement={selectedElement}
@@ -1977,6 +1985,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 															loadOrigin={loadOrigin}
 															livePatcher={state.livePatcher}
 															onReadOnlyChange={setCollaborationReadOnly}
+															onRoomReplacedDeck={countDeckReplacement}
 															deckSaveState={{
 																headerFooter: state.headerFooter,
 																presentationProperties: state.presentationProperties,
@@ -2058,6 +2067,7 @@ function CollaborationStatusStrip() {
 		<CollaborationStatusIndicator
 			status={collab.status}
 			connectedCount={collab.connectedCount}
+			failure={collab.failure}
 			onRetry={collab.retry}
 		/>
 	);
@@ -2098,6 +2108,7 @@ function CollaborationDocumentSync({
 	livePatcher,
 	deckSaveState,
 	onReadOnlyChange,
+	onRoomReplacedDeck,
 	history,
 }: {
 	history: CollaborationHistoryTarget;
@@ -2109,6 +2120,7 @@ function CollaborationDocumentSync({
 	loadOrigin: CollabLoadOrigin;
 	livePatcher: CollaborationLivePatcher;
 	onReadOnlyChange: (readOnly: boolean) => void;
+	onRoomReplacedDeck: () => void;
 	/**
 	 * Session-level save-option state (view properties, table styles, tags,
 	 * deck properties, ...), snapshotted fresh every render. Read through a
@@ -2130,6 +2142,7 @@ function CollaborationDocumentSync({
 		livePatcher,
 		deckSaveState,
 		onReadOnlyChange,
+		onRoomReplacedDeck,
 	});
 	return null;
 }

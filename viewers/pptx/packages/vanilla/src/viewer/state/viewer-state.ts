@@ -203,6 +203,12 @@ export interface ViewerState {
 	zoom: ZoomLevel;
 	/** True while a load is in flight. */
 	loading: boolean;
+	/**
+	 * Names the presentation load the deck comes from: each load and each collaboration join whose
+	 * room replaced the slides bumps it, and nothing else does (edits, master and layout changes and
+	 * slide paste keep it). The AI bridge's `getDeckLoad`.
+	 */
+	deckLoad: number;
 	/** Webfont download progress while a load waits for the deck's fonts (after a short delay). */
 	fontProgress?: DeckWebfontProgress | null;
 	/** Error message from the last failed load, or null. */
@@ -441,6 +447,7 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		currentSlide: 0,
 		zoom: 'fit',
 		loading: false,
+		deckLoad: 0,
 		error: null,
 		presenting: false,
 		endOfShow: false,

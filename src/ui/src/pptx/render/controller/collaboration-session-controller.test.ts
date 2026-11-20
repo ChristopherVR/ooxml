@@ -1,8 +1,9 @@
+import { createShareSecret } from 'ooxml-core/collab';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CollaborationConfig } from '../../types';
 import type { CollabProviderHandle } from '../collaboration-provider';
-import type { CollabYSession } from '../collaboration-yjs-session';
+import type { CollabYjsModules, CollabYSession } from '../collaboration-yjs-session';
 import { createCollaborationSessionController } from './collaboration-session-controller';
 import { createMemoryHub, transportProvider, UpdateRefusedError } from 'ooxml-core/collab';
 
@@ -141,7 +142,11 @@ describe('createCollaborationSessionController', () => {
 		});
 		await controller.start(ws);
 		await vi.advanceTimersByTimeAsync(1000);
-		expect(controller.getSnapshot()).toMatchObject({ status: 'error', active: false });
+		expect(controller.getSnapshot()).toMatchObject({
+			status: 'error',
+			active: false,
+			failure: 'server-unreachable',
+		});
 		expect(provider.destroy).not.toHaveBeenCalled();
 	});
 
@@ -166,11 +171,14 @@ describe('createCollaborationSessionController', () => {
 			registerTeardown: false,
 		});
 		await controller.start({ ...ws, roomId: '' });
-		expect(controller.getSnapshot().status).toBe('error');
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', failure: 'invalid-room' });
 		vi.stubGlobal('window', { location: { protocol: 'https:' } });
 		try {
 			await controller.start({ ...ws, serverUrl: 'ws://insecure.example.test' });
-			expect(controller.getSnapshot().status).toBe('error');
+			expect(controller.getSnapshot()).toMatchObject({
+				status: 'error',
+				failure: 'insecure-server',
+			});
 		} finally {
 			vi.unstubAllGlobals();
 		}
@@ -196,6 +204,7 @@ describe('createCollaborationSessionController', () => {
 			status: 'disconnected',
 			active: false,
 			config: null,
+			failure: null,
 		});
 	});
 
@@ -235,5 +244,89 @@ describe('createCollaborationSessionController', () => {
 		expect(controller.getSnapshot()).toMatchObject({ status: 'connecting', active: true });
 		controller.setStatus('connected');
 		expect(controller.getSnapshot().status).toBe('connected');
+	});
+});
+
+/** `yjs` as the shared session opener uses it, without the real package. */
+const fakeYjs = {
+	Doc: class {
+		on(): void {}
+		off(): void {}
+		destroy(): void {}
+	},
+	Map: class {},
+	Array: class {},
+	Text: class {},
+	snapshot: () => ({}),
+	equalSnapshots: () => true,
+};
+
+function peerToPeerModules(loadWebrtc: CollabYjsModules['loadWebrtc']): CollabYjsModules {
+	return {
+		loadYjs: async () => fakeYjs,
+		loadWebsocket: async () => ({}),
+		loadWebrtc,
+	};
+}
+
+const webrtc: CollaborationConfig = {
+	serverUrl: '',
+	roomId: 'room-1',
+	userName: 'Ada',
+	transport: 'webrtc',
+};
+
+describe('createCollaborationSessionController peer-to-peer failures', () => {
+	afterEach(() => {
+		vi.unstubAllGlobals();
+	});
+
+	it('names a missing invitation secret, and a new start clears the reason', async () => {
+		const controller = createCollaborationSessionController({
+			modules: peerToPeerModules(async () => {
+				throw new Error('Failed to fetch dynamically imported module');
+			}),
+			registerTeardown: false,
+		});
+		await controller.start(webrtc);
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', failure: 'missing-secret' });
+		const restarted = controller.start({ ...webrtc, secret: createShareSecret() });
+		expect(controller.getSnapshot()).toMatchObject({ status: 'connecting', failure: null });
+		await restarted;
+		expect(controller.getSnapshot()).toMatchObject({
+			status: 'error',
+			failure: 'module-unavailable',
+		});
+		controller.stop();
+		expect(controller.getSnapshot()).toMatchObject({ status: 'disconnected', failure: null });
+	});
+
+	it('names an insecure page, where y-webrtc would have no Web Crypto', async () => {
+		const loadWebrtc = vi.fn(async () => ({}));
+		const controller = createCollaborationSessionController({
+			modules: peerToPeerModules(loadWebrtc),
+			registerTeardown: false,
+		});
+		const secret = createShareSecret();
+		// An http page on a LAN address: random values, but no `crypto.subtle`.
+		vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+		await controller.start({ ...webrtc, secret });
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', failure: 'insecure-page' });
+		expect(loadWebrtc).not.toHaveBeenCalled();
+	});
+
+	it('classifies a provider that throws for no known reason as unknown', async () => {
+		const controller = createCollaborationSessionController({
+			modules: peerToPeerModules(async () => ({
+				WebrtcProvider: class {
+					constructor() {
+						throw new Error('boom');
+					}
+				},
+			})),
+			registerTeardown: false,
+		});
+		await controller.start({ ...webrtc, secret: createShareSecret() });
+		expect(controller.getSnapshot()).toMatchObject({ status: 'error', failure: 'unknown' });
 	});
 });

@@ -1,7 +1,8 @@
 import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { CollaborationConfig } from '../types';
+import { collaborationFailureOf } from './collaboration-failure';
 import { resolveCollaborationConfig } from './collaboration-options';
 import { needsOwnedSession, openOwnedCollaboration } from './collaboration-owned-session';
 
@@ -156,6 +157,40 @@ describe('openOwnedCollaboration', () => {
 	it('rejects an invalid room', async () => {
 		const owned = openOwnedCollaboration({ roomId: '', serverUrl: '', userName: 'A' });
 		await expect(owned.ready).rejects.toThrow(/room/);
+		expect(collaborationFailureOf(await owned.ready.catch((error: unknown) => error))).toBe(
+			'invalid-room',
+		);
+	});
+
+	it('names why an owned room cannot open: no BroadcastChannel, no Web Crypto, a throwing provider', async () => {
+		const reason = (config: CollaborationConfig) =>
+			openOwnedCollaboration(config).ready.then(
+				() => 'opened',
+				(error: unknown) => collaborationFailureOf(error),
+			);
+		vi.stubGlobal('BroadcastChannel', undefined);
+		try {
+			expect(await reason({ roomId: 'room-1', serverUrl: '', userName: 'A' })).toBe('no-broadcast');
+		} finally {
+			vi.unstubAllGlobals();
+		}
+		class ThrowingWebrtc {
+			constructor() {
+				throw new Error('boom');
+			}
+		}
+		const webrtc = resolveCollaborationConfig({
+			roomId: 'room-1',
+			authToken: 'secret',
+			webrtc: { WebrtcProvider: ThrowingWebrtc as never },
+		})!;
+		expect(await reason(webrtc)).toBe('unknown');
+		vi.stubGlobal('crypto', {});
+		try {
+			expect(await reason(webrtc)).toBe('insecure-page');
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 
 	it('keeps the PowerPoint presence payload when the session heartbeats identity', async () => {

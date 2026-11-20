@@ -19,7 +19,11 @@
 		"noUnusedParameters": false,
 		"noEmit": true
 	},
-	"include": ["pptx/**/*.ts", "pptx/**/*.tsx"],
+	"include": [
+		"pptx/**/*.ts",
+		"pptx/**/*.tsx",
+		"test-support/security-corpus/cases/pptx-collaboration.ts"
+	],
 	"exclude": [
 		"**/dist/**",
 		"**/node_modules/**",

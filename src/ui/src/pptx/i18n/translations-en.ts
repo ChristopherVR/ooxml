@@ -137,7 +137,12 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ai.accept': 'Apply',
 	'pptx.ai.reject': 'Discard',
 	'pptx.ai.acceptAll': 'Apply all',
+	'pptx.ai.proposalConflict':
+		'This part of the deck changed after the proposal, so it was not applied. Discard it or try again.',
+	'pptx.ai.proposalNeedsApproval': 'Needs your approval',
 	'pptx.ai.pendingChanges': 'Suggested changes ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Suggested changes were discarded because another presentation was loaded or the slides were replaced.',
 	'pptx.ai.moreChanges': '+{{count}} more',
 	// Canvas -> Ask AI affordances
 	'pptx.ai.askAboutElement': 'Ask AI about this',
@@ -330,6 +335,22 @@ export const translationsEn: Record<string, string> = {
 	'pptx.collaboration.peopleHere': '{{count}} people here',
 	'pptx.collaboration.retry': 'Retry',
 	'pptx.collaboration.retryConnection': 'Retry connection',
+	'pptx.collaboration.failure.invalidRoom':
+		'The room name is not valid. Use 1 to 128 letters, digits, hyphens or underscores.',
+	'pptx.collaboration.failure.missingSecret':
+		'This peer-to-peer invitation is missing its session key. Open the full share link you were sent.',
+	'pptx.collaboration.failure.insecurePage':
+		'Peer-to-peer sessions need a secure page. Open this page over https:// (or on localhost) and try again.',
+	'pptx.collaboration.failure.moduleUnavailable':
+		'The collaboration components could not be loaded. Check your network connection, then retry.',
+	'pptx.collaboration.failure.insecureServer':
+		'An https:// page cannot connect to an insecure ws:// server. Use a secure wss:// server URL.',
+	'pptx.collaboration.failure.serverUnreachable':
+		"Couldn't reach the collaboration server. Check that the server URL is a running y-websocket server.",
+	'pptx.collaboration.failure.noBroadcast':
+		'This browser cannot share between its windows. Use a collaboration server or a peer-to-peer link.',
+	'pptx.collaboration.failure.unknown':
+		'The collaboration connection failed. Check the invitation link and your network connection, then retry.',
 
 	// Follow mode
 	'pptx.followMode.following': 'Following',
@@ -371,7 +392,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.share.serverHint':
 		'Enter the WebSocket URL of a y-websocket server (secure wss:// when sharing from an https:// page), or leave empty for serverless peer-to-peer mode.',
 	'pptx.share.p2pHint':
-		'Peer-to-peer mode: tabs in the same browser always connect; other devices connect through public WebRTC signaling servers.',
+		'Peer-to-peer mode: tabs in the same browser always connect; other devices connect through public WebRTC signaling servers. Invite others with the share link: it carries the session key, and the room name alone cannot join.',
 	'pptx.share.p2pServerValue': 'Peer-to-peer (no server)',
 	'pptx.share.shareLink': 'Share Link',
 	'pptx.share.copyLink': 'Copy share link',
@@ -382,8 +403,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.share.server': 'Server:',
 	'pptx.share.connectedUsers': 'Connected Users',
 	'pptx.share.you': '(you)',
-	'pptx.share.connectionError':
-		"Couldn't reach the collaboration server. Check the server URL — it must be a reachable y-websocket server, and a secure wss:// URL when sharing from an https:// page.",
 
 	// Settings dialog
 	'pptx.settings.title': 'Settings',

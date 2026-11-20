@@ -88,8 +88,8 @@ export interface LoadingController {
 	 * Master view CRUD's `applyMasterViewCrudAction`, which reloads a new ZIP
 	 * built from the current archive). Disposes the previous handler unless
 	 * `keepPrevious` (a master command and a slide paste keep it, since the
-	 * slides on screen still show its pictures); leaves Blob URLs and the load
-	 * token alone, since this is not a new document.
+	 * slides on screen still show its pictures); leaves Blob URLs, the load
+	 * token and the deck load alone, since this is not a new document.
 	 */
 	setHandler(next: PptxHandler, keepPrevious?: boolean): void;
 	/** Invalidate any in-flight load so it discards its result on resolution. */
@@ -285,6 +285,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				tableStylesToDelete: [],
 				currentSlide: resolveInitialSlideIndex(options.initialSlide, partition.slides.length),
 				loading: false,
+				deckLoad: store.get().deckLoad + 1,
 				fontProgress: null,
 			});
 			// Goes through the central editable gate (store flag + the editor

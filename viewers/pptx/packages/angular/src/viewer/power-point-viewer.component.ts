@@ -143,6 +143,7 @@ import { AutosaveService } from './autosave.service';
 import { BroadcastDialogComponent } from './broadcast-dialog.component';
 import { ChartFormatPaneHostComponent } from './chart-format-pane-host.component';
 import { CollaborationCursorsComponent } from './collaboration-cursors.component';
+import { CollaborationStatusIndicatorComponent } from './collaboration-status-indicator.component';
 import { CollaborationService } from './collaboration.service';
 import { CommentMarkersOverlayComponent } from './comment-markers-overlay.component';
 import { CommentsPanelStateService } from './comments-panel-state.service';
@@ -305,6 +306,7 @@ const noopClose = (): void => undefined;
 		FindReplaceBarComponent,
 		SlidesPanelComponent,
 		StatusBarComponent,
+		CollaborationStatusIndicatorComponent,
 		EditorToolbarComponent,
 		EditorContextMenuComponent,
 		SlideCanvasContextMenuComponent,
@@ -959,7 +961,22 @@ const noopClose = (): void => undefined;
 						(zoomIn)="zoomSvc.zoomIn()"
 						(zoomOut)="zoomSvc.zoomOut()"
 						(zoomReset)="zoomSvc.zoomReset()"
-					/>
+					>
+						<!-- Collaboration status in the footer, as the other bindings show it. A
+						     session that could not start still says why. -->
+						@if (
+							(collab.active() || collab.failure()) && customizationService.dialogAvailable('share')
+						) {
+							<pptx-collaboration-status
+								pptxCollabStatus
+								slot="collaboration"
+								[status]="collab.status()"
+								[connectedCount]="collab.connectedCount()"
+								[failure]="collab.failure()"
+								(retry)="collab.retry()"
+							/>
+						}
+					</pptx-status-bar>
 				}
 			}
 
@@ -1315,6 +1332,7 @@ const noopClose = (): void => undefined;
 				[open]="session.showShare() && customizationService.dialogAvailable('share')"
 				[active]="collab.active()"
 				[connected]="collab.connected()"
+				[failureKey]="collab.failureKey()"
 				[userCount]="collab.connectedCount()"
 				[shareUrl]="session.shareUrl()"
 				[p2p]="session.activeSessionP2p()"
@@ -2556,6 +2574,7 @@ export class PowerPointViewerComponent
 		getTheme: () => this.loader.theme(),
 		getFileName: () => this.fileName(),
 		getHandler: () => this.loader.getHandler(),
+		getDeckLoad: () => this.loader.deckLoad(),
 		goToSlide: (index) => this.goTo(index),
 		selectElements: (slideIndex, ids) => {
 			if (slideIndex !== this.activeSlideIndex()) {
@@ -3132,6 +3151,7 @@ export class PowerPointViewerComponent
 					this.loadNotices.notify(toast);
 				}
 			},
+			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
 			notify: (toast) => this.loadNotices.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),
@@ -3784,6 +3804,7 @@ export class PowerPointViewerComponent
 	protected onCreatePresentation(templateId: string): void {
 		// A new presentation is not the cloud file: it saves to the host storage again.
 		this.fileIO.clearCloudFile();
+		this.loader.markDeckLoad();
 		this.editor.setSlides(createBackstagePresentation(templateId));
 		this.activeSlideIndex.set(0);
 	}
@@ -3798,10 +3819,10 @@ export class PowerPointViewerComponent
 		const current = this.loader.theme();
 		const colorScheme = updates.colorScheme ?? current?.colorScheme;
 		const fontScheme = updates.fontScheme ?? current?.fontScheme;
-		if (!colorScheme || !fontScheme) {
+		if (!colorScheme) {
 			return;
 		}
-		if (updates.name) {
+		if (updates.name && fontScheme) {
 			this.themeGallery.applyCustomTheme(colorScheme, fontScheme, updates.name);
 			return;
 		}

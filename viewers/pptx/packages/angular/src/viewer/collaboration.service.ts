@@ -21,12 +21,14 @@ import type {
 	CollaborationState,
 	CollaborationConfig,
 	CollaborationLivePatcher,
+	CollaborationFailure,
 	CollaborationRole,
 	ConnectionStatus,
 } from 'ooxml-ui/pptx';
 import {
 	bindCollaborationHistory,
 	buildCollaborationState,
+	collaborationFailureMessageKey,
 	collaborationHistoryReady,
 	collaborationRefusalToast,
 	createCollaborationLivePatcher,
@@ -56,6 +58,12 @@ const DEFAULT_CANVAS_BOUND = 100_000;
 export class CollaborationService {
 	// Reactive state
 	readonly status = computed<ConnectionStatus>(() => this.sessionState().status);
+	/** Why the session failed to start while `status` is `error`; `null` otherwise. */
+	readonly failure = computed<CollaborationFailure | null>(() => this.sessionState().failure);
+	/** The translation key explaining an errored session, or `null`. */
+	readonly failureKey = computed(() =>
+		collaborationFailureMessageKey(this.status(), this.failure()),
+	);
 	readonly connected = computed<boolean>(() => this.status() === 'connected');
 	readonly active = computed<boolean>(() => this.sessionState().active);
 	/** Role of the local user in the active session, or undefined when idle. */
@@ -123,6 +131,7 @@ export class CollaborationService {
 	});
 
 	private onRemoteSlides: ((slides: PptxSlide[]) => void) | null = null;
+	private onRoomReplacedDeck: (() => void) | null = null;
 	private canvasWidth = DEFAULT_CANVAS_BOUND;
 	private canvasHeight = DEFAULT_CANVAS_BOUND;
 	private getSourceBytes: (() => Uint8Array | null) | null = null;
@@ -185,6 +194,7 @@ export class CollaborationService {
 	private begin(config: CollaborationConfig): void {
 		const options = this.lastOptions;
 		this.onRemoteSlides = options.onRemoteSlides ?? null;
+		this.onRoomReplacedDeck = options.onRoomReplacedDeck ?? null;
 		this.canvasWidth = options.canvasWidth ?? DEFAULT_CANVAS_BOUND;
 		this.canvasHeight = options.canvasHeight ?? DEFAULT_CANVAS_BOUND;
 		this.getSourceBytes = options.getSourceBytes ?? null;
@@ -204,6 +214,7 @@ export class CollaborationService {
 			slideSync: this.slideSync,
 			livePatcher: this.livePatcher,
 			onRemoteSlides: this.onRemoteSlides,
+			onRoomReplacedDeck: this.onRoomReplacedDeck,
 			refreshPresence: this.refreshPresence,
 			scheduleWriteBack: () => this.scheduleWriteBack(),
 			cancelWriteBack: () => this.writeBack.cancel(),
@@ -236,6 +247,7 @@ export class CollaborationService {
 		this.session = null;
 		this.livePatcher.configure(null, null);
 		this.onRemoteSlides = null;
+		this.onRoomReplacedDeck = null;
 		this.currentConfig = null;
 		this.activeConfig.set(null);
 		this.clientId.set(null);

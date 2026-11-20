@@ -165,7 +165,7 @@ describe('buildAngularParagraphs - run hyperlinks', () => {
 		expect(para.runs.every((run) => run.href === undefined)).toBeTruthy();
 	});
 
-	it('maps a:hlinkClick/@tgtFrame onto target, dropping rel for _self', () => {
+	it('opens a link that names a:hlinkClick/@tgtFrame _self in a new isolated tab', () => {
 		const element = textElement([
 			{
 				text: 'Same tab',
@@ -177,8 +177,8 @@ describe('buildAngularParagraphs - run hyperlinks', () => {
 			},
 		]);
 		const [para] = buildAngularParagraphs(element);
-		expect(para.runs.every((run) => run.target === '_self')).toBeTruthy();
-		expect(para.runs.every((run) => run.rel === '')).toBeTruthy();
+		expect(para.runs.every((run) => run.target === '_blank')).toBeTruthy();
+		expect(para.runs.every((run) => run.rel === 'noopener noreferrer')).toBeTruthy();
 	});
 
 	it('defaults to _blank + noopener noreferrer when no @tgtFrame is authored', () => {

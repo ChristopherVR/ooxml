@@ -44,6 +44,12 @@ export * from './write-layout-formatting';
 export * from './model';
 export * from './model-analysis';
 export * from './data-cache';
+export {
+	CHART_POINTS_LIMITED,
+	MAX_CHART_BLANK_POINTS,
+	chartPointBudget,
+	type ChartPointBudget,
+} from './point-limit';
 export { parseChartSpace } from './parse-space';
 export { readDisplayNaAsBlank } from './parse-chrome';
 export { writeChartSpace, type WriteChartSpaceOptions } from './write-space';

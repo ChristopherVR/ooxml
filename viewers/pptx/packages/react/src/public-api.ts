@@ -79,7 +79,8 @@ export type {
 	ExternalCollaborationSnapshot,
 	ExternalCollaborationAwareness,
 } from 'ooxml-ui/pptx';
-export { describeCollaborationShellState } from 'ooxml-ui/pptx';
+export { collaborationFailureMessageKey, describeCollaborationShellState } from 'ooxml-ui/pptx';
+export type { CollaborationFailure } from 'ooxml-ui/pptx';
 export type { ViewportFitOptions, ViewportFitPadding } from 'ooxml-ui/pptx';
 export type { ListConversionScope } from 'ooxml-ui/pptx';
 export { createImageElementFromFile } from 'ooxml-ui/pptx';

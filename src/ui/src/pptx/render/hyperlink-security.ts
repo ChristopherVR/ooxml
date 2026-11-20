@@ -1,14 +1,30 @@
 import { isStorableHyperlinkHref, isOpenableHyperlinkHref } from 'ooxml-core/opc';
 
-// Keep PowerPoint's deliberately broader navigation support than the default OPC host policy.
-const PPTX_HYPERLINK_POLICY = { additionalOpenSchemes: ['ftp', 'tel', 'file'], openRelative: true };
+// PowerPoint also opens `tel:` links. `file:` and `ftp:` links stay in the deck (the OPC policy
+// stores them) but never open: a browser or desktop shell would hand them to the local file system
+// or a legacy client. Relative links stay in the deck as well and open only once a host opts in,
+// since they resolve against the host page's address rather than the deck's.
+const PPTX_HYPERLINK_POLICY = { additionalOpenSchemes: ['tel'], openRelative: false };
+
+/**
+ * Lets deck links without a scheme (`notes.html`, `/docs/`, `#part`) open, resolved against the
+ * host page's address. Off by default; it applies to every viewer on the page.
+ */
+export function setOpenRelativeHyperlinks(enabled: boolean): void {
+	PPTX_HYPERLINK_POLICY.openRelative = enabled;
+}
 
 /** Authoring policy: stored references may include relative and file paths; browser navigation is narrower. */
 export function isUrlSafe(url: string | undefined): boolean {
 	return isPpactionUrl(url) || isStorableHyperlinkHref(url, PPTX_HYPERLINK_POLICY);
 }
 
-export function safeOpenUrl(url: string, target = '_blank'): boolean {
+/**
+ * Open an external link in a new tab, isolated from this page (`noopener`, `noreferrer`). A deck's
+ * own frame target (`@tgtFrame`) is kept for round trip only: it never decides where a link opens,
+ * so a deck cannot navigate the app or its host away.
+ */
+export function safeOpenUrl(url: string): boolean {
 	if (isPpactionUrl(url) || !isOpenableHyperlinkHref(url, PPTX_HYPERLINK_POLICY)) {
 		if (typeof console !== 'undefined') {
 			console.warn(`[pptx-viewer] Blocked attempt to open unsafe URL: ${url.slice(0, 100)}`);
@@ -18,7 +34,7 @@ export function safeOpenUrl(url: string, target = '_blank'): boolean {
 	if (typeof window === 'undefined') {
 		return false;
 	}
-	window.open(url, target, target === '_self' ? '' : 'noopener,noreferrer');
+	window.open(url, '_blank', 'noopener,noreferrer');
 	return true;
 }
 

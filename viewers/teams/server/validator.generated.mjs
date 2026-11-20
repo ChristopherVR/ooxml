@@ -766,65 +766,86 @@ function checkReaction(key, beforeHas, afterHas, actor) {
   return { code: "foreign-reaction", map: REACTIONS, key };
 }
 function validateTeamsUpdate(doc, update, actor, options = {}) {
+  let scratch = null;
+  try {
+    return checkUpdateOnCopy(
+      doc,
+      () => {
+        scratch = new Y7.Doc();
+        Y7.applyUpdate(scratch, Y7.encodeStateAsUpdate(doc));
+        return scratch;
+      },
+      update,
+      actor,
+      options
+    );
+  } finally {
+    scratch?.destroy();
+  }
+}
+function checkUpdateOnCopy(doc, copy, update, actor, options = {}) {
   if (!(update instanceof Uint8Array) || update.byteLength > (options.maxBytes ?? MAX_UPDATE_BYTES))
     return fail({ code: "invalid-update" });
   if (!scanUpdate(update, options).ok) return fail({ code: "invalid-update" });
-  const scratch = new Y7.Doc();
-  const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
-  const reverts = [];
   try {
-    Y7.applyUpdate(scratch, Y7.encodeStateAsUpdate(doc));
-    scratch.on("afterTransaction", (txn) => collectTouched(scratch, txn, touched));
-    Y7.applyUpdate(scratch, update);
-    if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
-      return fail({ code: "incomplete-update" });
-    const violations = [];
-    for (const [name, rows] of touched.rows) {
-      const beforeMap = mapOf(doc, name);
-      const afterMap = mapOf(scratch, name);
-      for (const rowId of rows) {
-        const was = beforeMap?.get(rowId);
-        const now = afterMap?.get(rowId);
-        let found;
-        if (writesUnsupportedValue(was, now))
-          found = { code: "malformed-row", map: name, key: rowId };
-        else if (name.startsWith(MESSAGES_PREFIX))
-          found = checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
-        else if (name.startsWith(PINS_PREFIX))
-          found = checkPinRow(name, rowId, was, now, actor, doc);
-        else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
-        else if (name === CHAT_MEMBERS2) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
-        else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
-        else found = checkOwnedRow(name, rowId, was, now, actor);
-        if (found) violations.push(found);
-      }
-    }
-    const beforeReactions = mapOf(doc, REACTIONS);
-    const afterReactions = mapOf(scratch, REACTIONS);
-    for (const key of touched.reactions) {
-      const found = checkReaction(
-        key,
-        beforeReactions?.has(key) === true,
-        afterReactions?.has(key) === true,
-        actor
-      );
-      if (found) violations.push(found);
-    }
-    const counted = /* @__PURE__ */ new Set();
-    for (const key of touched.reactions) {
-      const messageId = key.split(REACTION_SEP)[0] ?? "";
-      if (counted.has(messageId)) continue;
-      counted.add(messageId);
-      const found = checkReactionCount(messageId, afterReactions, options);
-      if (found) violations.push(found);
-    }
-    if (violations.length) return { ok: false, violations };
-    return reverts.length ? { ok: true, reverts } : OK;
+    return compareOnCopy(doc, copy(), update, actor, options);
   } catch {
     return fail({ code: "invalid-update" });
-  } finally {
-    scratch.destroy();
   }
+}
+function compareOnCopy(doc, scratch, update, actor, options) {
+  const touched = { rows: /* @__PURE__ */ new Map(), reactions: /* @__PURE__ */ new Set() };
+  const reverts = [];
+  const collect = (txn) => collectTouched(scratch, txn, touched);
+  scratch.on("afterTransaction", collect);
+  try {
+    Y7.applyUpdate(scratch, update);
+  } finally {
+    scratch.off("afterTransaction", collect);
+  }
+  if (scratch.store.pendingStructs !== null || scratch.store.pendingDs !== null)
+    return fail({ code: "incomplete-update" });
+  const violations = [];
+  for (const [name, rows] of touched.rows) {
+    const beforeMap = mapOf(doc, name);
+    const afterMap = mapOf(scratch, name);
+    for (const rowId of rows) {
+      const was = beforeMap?.get(rowId);
+      const now = afterMap?.get(rowId);
+      let found;
+      if (writesUnsupportedValue(was, now))
+        found = { code: "malformed-row", map: name, key: rowId };
+      else if (name.startsWith(MESSAGES_PREFIX))
+        found = checkRow(name, rowId, was, now, actor) ?? checkMessageSize(name, rowId, now, options);
+      else if (name.startsWith(PINS_PREFIX)) found = checkPinRow(name, rowId, was, now, actor, doc);
+      else if (name === ROSTER) found = checkRosterRow(rowId, was, now, actor);
+      else if (name === CHAT_MEMBERS2) found = checkMemberKey(rowId, beforeMap, afterMap, actor);
+      else if (name === CHATS_MAP) found = checkChatRow(rowId, was, now, actor, reverts);
+      else found = checkOwnedRow(name, rowId, was, now, actor);
+      if (found) violations.push(found);
+    }
+  }
+  const beforeReactions = mapOf(doc, REACTIONS);
+  const afterReactions = mapOf(scratch, REACTIONS);
+  for (const key of touched.reactions) {
+    const found = checkReaction(
+      key,
+      beforeReactions?.has(key) === true,
+      afterReactions?.has(key) === true,
+      actor
+    );
+    if (found) violations.push(found);
+  }
+  const counted = /* @__PURE__ */ new Set();
+  for (const key of touched.reactions) {
+    const messageId = key.split(REACTION_SEP)[0] ?? "";
+    if (counted.has(messageId)) continue;
+    counted.add(messageId);
+    const found = checkReactionCount(messageId, afterReactions, options);
+    if (found) violations.push(found);
+  }
+  if (violations.length) return { ok: false, violations };
+  return reverts.length ? { ok: true, reverts } : OK;
 }
 function validateTeamsSyncMessage(doc, message, actor, options = {}) {
   let payload;
@@ -840,6 +861,52 @@ function validateTeamsSyncMessage(doc, message, actor, options = {}) {
   return validateTeamsUpdate(doc, payload, actor, options);
 }
 
+// ../../src/core/teams/update-checker.ts
+import * as Y8 from "yjs";
+function createUpdateChecker(doc) {
+  let copy = null;
+  const reset = () => {
+    copy?.destroy();
+    copy = null;
+  };
+  const follow = (update) => {
+    if (!copy) return;
+    try {
+      Y8.applyUpdate(copy, update);
+    } catch {
+      reset();
+    }
+  };
+  doc.on("update", follow);
+  const current = () => {
+    if (!copy) {
+      copy = new Y8.Doc({ gc: doc.gc });
+      Y8.applyUpdate(copy, Y8.encodeStateAsUpdate(doc));
+    }
+    return copy;
+  };
+  return {
+    validate(update, actor, options = {}) {
+      const verdict = checkUpdateOnCopy(doc, current, update, actor, options);
+      if (!verdict.ok) reset();
+      return verdict;
+    },
+    rehearse(update) {
+      try {
+        Y8.applyUpdate(current(), update);
+      } catch (error) {
+        reset();
+        throw error;
+      }
+    },
+    reset,
+    destroy() {
+      doc.off("update", follow);
+      reset();
+    }
+  };
+}
+
 // ../../src/core/teams/protocol.ts
 var PROTOCOL_VERSION = 2;
 var PROTOCOL_PARAM = "proto";
@@ -847,9 +914,12 @@ var CHAT_ROOM_PATTERN = /^chat-[0-9a-f]{16}-[\w-]+$/u;
 var DIRECT_CHAT_ID_PATTERN = /^dm-[0-9a-f]{32}$/u;
 var GROUP_CHAT_ID_PATTERN = /^g-[0-9a-f]{32}-[0-9a-f]{24}$/u;
 var isCurrentChatId = (id) => DIRECT_CHAT_ID_PATTERN.test(id) || GROUP_CHAT_ID_PATTERN.test(id);
+var CHAT_ID_SUFFIX = /-(?:dm-[0-9a-f]{32}|g-[0-9a-f]{32}-[0-9a-f]{24})$/u;
 var isChatRoom = (room) => CHAT_ROOM_PATTERN.test(room);
 var chatIdOfRoom = (room) => isChatRoom(room) ? room.slice("chat-".length + 16 + 1) : null;
 var isChatRoomAlias = (room) => /^chat-[0-9a-f]{16}-/iu.test(room) && !isChatRoom(room);
+var chatRoomOfCall = (room) => room.startsWith("call-") && isChatRoom(room.slice("call-".length)) ? room.slice("call-".length) : null;
+var isStrayChatCallRoom = (room) => room.startsWith("call-") && chatRoomOfCall(room) === null && (isChatRoomAlias(room.slice("call-".length)) || CHAT_ID_SUFFIX.test(room));
 function protocolOfUrl(url) {
   const raw = new URL(url, "http://placeholder.invalid").searchParams.get(PROTOCOL_PARAM);
   return raw !== null && /^[1-9]\d{0,5}$/u.test(raw) ? Number(raw) : null;
@@ -859,11 +929,14 @@ export {
   PROTOCOL_VERSION,
   applyUpdateReverts,
   chatIdOfRoom,
+  chatRoomOfCall,
+  createUpdateChecker,
   directChatId,
   isChatRoom,
   isChatRoomAlias,
   isCurrentChatId,
   isGroupChatIdOf,
+  isStrayChatCallRoom,
   protocolOfUrl,
   scanUpdate,
   shortHash,

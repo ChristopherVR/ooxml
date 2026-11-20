@@ -10,6 +10,7 @@ import { loadXlsx } from '../../../xlsx';
 import { saveChartExPackageThroughNeutral } from './chart-ex-neutral-package-save';
 import type { PptxChartData } from '../types';
 import { planChartExNeutralSave, saveChartExPartThroughNeutral } from './chart-ex-neutral-save';
+import type { ChartDataSheets } from './chart-workbook-sheets';
 
 const PART =
 	'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cx:chartSpace xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:cx="http://schemas.microsoft.com/office/drawing/2014/chartex"><cx:chartData><cx:data id="0"><cx:strDim type="cat"><cx:f>Sheet1!$A$2:$A$3</cx:f><cx:lvl ptCount="2"><cx:pt idx="0">A</cx:pt><cx:pt idx="1">B</cx:pt></cx:lvl></cx:strDim><cx:numDim type="val"><cx:f>Sheet1!$B$2:$B$3</cx:f><cx:lvl ptCount="2"><cx:pt idx="0">1</cx:pt><cx:pt idx="1">2</cx:pt></cx:lvl></cx:numDim></cx:data></cx:chartData><cx:chart><cx:title pos="t" align="ctr" overlay="0"><cx:tx><cx:txData><cx:f>Sheet1!$B$1</cx:f><cx:v>Old</cx:v></cx:txData></cx:tx></cx:title><cx:plotArea><cx:plotAreaRegion><cx:series layoutId="funnel" uniqueId="{U}"><cx:tx><cx:txData><cx:f>Sheet1!$B$1</cx:f><cx:v>Sales</cx:v></cx:txData></cx:tx><cx:dataId val="0" /></cx:series></cx:plotAreaRegion></cx:plotArea><cx:legend pos="t" align="ctr" overlay="0" /></cx:chart></cx:chartSpace>';
@@ -28,6 +29,8 @@ const edited = (recipe: (chart: PptxChartData) => void): PptxChartData => {
 	recipe(chart);
 	return chart;
 };
+
+const session = (): ChartDataSheets => ({ allocated: new Map(), held: () => new Set() });
 
 async function packageFixture() {
 	const zip = new JSZip();
@@ -51,7 +54,7 @@ it('synchronizes cache values and structural growth with the embedded workbook',
 	const { zip, book, xml, before, part } = await packageFixture();
 	const after = structuredClone(before);
 	after.series.push({ name: 'Second', values: [7, 8] });
-	const expanded = await saveChartExPackageThroughNeutral(zip, part, xml, before, after);
+	const expanded = await saveChartExPackageThroughNeutral(zip, part, xml, before, after, session());
 	const bytes = await zip.file('ppt/embeddings/data.xlsx')!.async('uint8array');
 	const original = await JSZip.loadAsync(book),
 		result = await JSZip.loadAsync(bytes);
@@ -63,6 +66,24 @@ it('synchronizes cache values and structural growth with the embedded workbook',
 		chartExSpaceDataSheet(parseChartExSpace(expanded!).chartExSpace).series[1]!.values,
 	).toEqual([7, 8]);
 	expect(expanded).toContain('ChartExData');
+});
+
+it('keeps one data sheet when the same structural edit is undone and redone', async () => {
+	const { zip, xml: loaded, before, part } = await packageFixture();
+	const after = structuredClone(before);
+	after.series.push({ name: 'Second', values: [7, 8] });
+	const sheets = session();
+	let xml = loaded;
+	const names: string[] = [];
+	for (let i = 0; i < 6; i++) {
+		const [from, to] = i % 2 ? [after, before] : [before, after];
+		xml = (await saveChartExPackageThroughNeutral(zip, part, xml, from, to, sheets))!;
+		zip.file(part, xml);
+		const book = await loadXlsx(await zip.file('ppt/embeddings/data.xlsx')!.async('uint8array'));
+		names.push(book.sheets.map((sheet) => sheet.name).join());
+	}
+	expect(new Set(names)).toEqual(new Set(['Sheet1,ChartExData1']));
+	expect(chartExSpaceDataSheet(parseChartExSpace(xml).chartExSpace).series).toHaveLength(1);
 });
 
 it('refuses external data edits atomically while allowing a layout-only change', async () => {
@@ -77,14 +98,14 @@ it('refuses external data edits atomically while allowing a layout-only change',
 	);
 	const after = structuredClone(before);
 	after.series[0]!.values[0] = 4;
-	await expect(saveChartExPackageThroughNeutral(zip, part, xml, before, after)).rejects.toThrow(
-		'local embedded',
-	);
+	await expect(
+		saveChartExPackageThroughNeutral(zip, part, xml, before, after, session()),
+	).rejects.toThrow('local embedded');
 	expect(await zip.file('ppt/embeddings/data.xlsx')!.async('uint8array')).toEqual(book);
 	const layout = { ...structuredClone(before), chartType: 'treemap' as const };
-	expect(await saveChartExPackageThroughNeutral(zip, part, xml, before, layout)).toContain(
-		'layoutId="treemap"',
-	);
+	expect(
+		await saveChartExPackageThroughNeutral(zip, part, xml, before, layout, session()),
+	).toContain('layoutId="treemap"');
 });
 
 it('reports original gallery orphan sources to the PowerPoint caller', async () => {

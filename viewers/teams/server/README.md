@@ -19,45 +19,71 @@ Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https:/
 Needs Node 22 or later.
 
 ```bash
-TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET=change-me npx openteams-server   # PORT=8787 HOST=127.0.0.1 by default
+openssl rand -hex 32 > session-secret    # once; keep it outside the repository
+TEAMS_USERS_FILE=users.json TEAMS_SESSION_SECRET="$(cat session-secret)" npx openteams-server   # PORT=8787 HOST=127.0.0.1 by default
 npx openteams-server --insecure-dev     # local development only: no accounts, ids are claims
 ```
 
 **The server is secure by default.** With no `TEAMS_USERS_FILE` (or `users`), no `authenticate`
 hook and no `authorizeSync` hook it refuses to start, because every client could otherwise claim any
 user id. `--insecure-dev` (option `insecureDev: true`) opts out, logs a loud warning and is meant
-for your own machine. A shared `TEAMS_TOKEN` alone does not count as authentication.
+for your own machine. A shared `TEAMS_TOKEN` alone does not count as authentication. A server with
+only `authorizeSync` starts, but offers sync alone: without a way to check who someone is, it
+answers `/auth/session`, `/files` and `/signal` with 404 (see Per-room permissions).
 
 Flags: `--insecure-dev`, `--insecure` (see `TEAMS_INSECURE`) and `--trust-proxy[=N]`. `SIGTERM` and
 `SIGINT` save every room before the process exits.
 
-| Variable                                                     | Meaning                                                                                                                                                                  |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PORT`, `HOST`                                               | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                          |
-| `TEAMS_TOKEN`                                                | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`.                              |
-| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`                   | Path to a JSON object of user id to credential, or to `{ credential, role }` (enables accounts); the secret that signs sessions.                                         |
-| `TEAMS_ENFORCE_AUTHORSHIP`                                   | `0` turns off the authorship checks for signed-in users (default on).                                                                                                    |
-| `TEAMS_MAX_MESSAGE_CHARS`, `TEAMS_MAX_REACTIONS_PER_MESSAGE` | Longest message text (default 32768) and most reactions on one message (default 200) the authorship check accepts.                                                       |
-| `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                     | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                             |
-| `TEAMS_ORIGINS`                                              | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`. |
-| `TEAMS_TRUST_PROXY`                                          | `1` (or a hop count, or `--trust-proxy`): take the client address for rate limits from `X-Forwarded-For`. Off by default.                                                |
-| `TEAMS_INSECURE`                                             | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                 |
-| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`      | Open sockets overall (default 500) and per remote address (20).                                                                                                          |
-| `TEAMS_MAX_ROOMS`                                            | Sync rooms and call rooms (default 1000 each).                                                                                                                           |
-| `TEAMS_MAX_DOC_MB`                                           | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                        |
-| `TEAMS_MAX_UPDATE_STRUCTS`                                   | Most structs one update may hold (default one per 4 bytes of the update), counted before the update is decoded; a socket sending more is closed.                         |
-| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`                  | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                           |
-| `TEAMS_WORKSPACE_QUOTA_MB`                                   | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                              |
-| `TEAMS_FILES_QUOTA_MB`                                       | Optional ceiling on the whole files directory in MB (off by default); uploads past it get 507.                                                                           |
-| `TEAMS_COMPACT_INTERVAL_MIN`                                 | Minutes between room snapshot compactions (default 360, `0` turns the timer off). A room is also compacted when it loads.                                                |
-| `TEAMS_METRICS_TOKEN`                                        | Turns on `GET /metrics`, served only to `Authorization: Bearer <this token>`. Off without it.                                                                            |
-| `TEAMS_LOG_FORMAT`, `--log-format=json`                      | `text` (default) or `json`: one JSON object per line with `time`, `level` and `msg`.                                                                                     |
-| `TEAMS_DATA`                                                 | Data directory (default `./data`): room snapshots and files.                                                                                                             |
+| Variable                                                     | Meaning                                                                                                                                                                                                                                               |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`, `HOST`                                               | Listen address. Bind `0.0.0.0` only behind TLS.                                                                                                                                                                                                       |
+| `TEAMS_TOKEN`                                                | If set, sockets take it in the `Sec-WebSocket-Protocol` header (`?token=` only as a fallback) and file requests as `Authorization: Bearer`.                                                                                                           |
+| `TEAMS_USERS_FILE`, `TEAMS_SESSION_SECRET`                   | Path to a JSON object of user id to credential, or to `{ credential, role }` (enables accounts); the secret that signs sessions (at least 32 characters with 8 distinct ones, or unset for a random one per process; a shorter one stops the server). |
+| `TEAMS_ENFORCE_AUTHORSHIP`                                   | `0` turns off the authorship checks for signed-in users (default on).                                                                                                                                                                                 |
+| `TEAMS_MAX_MESSAGE_CHARS`, `TEAMS_MAX_REACTIONS_PER_MESSAGE` | Longest message text (default 32768) and most reactions on one message (default 200) the authorship check accepts.                                                                                                                                    |
+| `TEAMS_ADMIN_TOKEN`, `TEAMS_AUTH_RATE_*`                     | Enables `POST /auth/revoke`; the `/auth/session` rate limit (see Hardening).                                                                                                                                                                          |
+| `TEAMS_ORIGINS`                                              | Comma-separated allowed `Origin`s for sockets and files. Empty: any origin when a token is set; without a token only loopback origins and clients that send no `Origin`.                                                                              |
+| `TEAMS_TRUST_PROXY`                                          | `1` (or a hop count, or `--trust-proxy`): take the client address for rate limits from `X-Forwarded-For`. Off by default.                                                                                                                             |
+| `TEAMS_INSECURE`                                             | `1` (or `--insecure`) allows a non-loopback `HOST` with no token. Otherwise the server refuses to start.                                                                                                                                              |
+| `TEAMS_MAX_CONNECTIONS`, `TEAMS_MAX_CONNECTIONS_PER_IP`      | Open sockets overall (default 500) and per remote address (20).                                                                                                                                                                                       |
+| `TEAMS_MAX_ROOMS`                                            | Sync rooms and call rooms (default 1000 each).                                                                                                                                                                                                        |
+| `TEAMS_MAX_DOC_MB`                                           | Largest persisted room document in MB (default 64); updates past it are rejected.                                                                                                                                                                     |
+| `TEAMS_MAX_UPDATE_STRUCTS`                                   | Most structs one update may hold (default one per 4 bytes of the update), counted before the update is decoded; a socket sending more is closed.                                                                                                      |
+| `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`                  | Messages per second (default 100) and burst (200) for each socket; a socket over it is closed.                                                                                                                                                        |
+| `TEAMS_WORKSPACE_QUOTA_MB`                                   | Files per workspace in MB (default 1024; a private chat counts for its workspace); uploads past it get 507.                                                                                                                                           |
+| `TEAMS_USER_QUOTA_MB`                                        | Files one person uploads, in MB, across every workspace and chat (default 1024); uploads past it get 507.                                                                                                                                             |
+| `TEAMS_FILES_QUOTA_MB`                                       | Ceiling on the whole files directory in MB (default 20480); uploads past it get 507.                                                                                                                                                                  |
+| `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS`             | Ceiling on every stored room together in MB (default 10240) and on how many rooms are stored (10000); an update past them closes its socket with `1009 server storage full`.                                                                          |
+| `TEAMS_MAX_AWARENESS_KB`, `TEAMS_MAX_ROOM_AWARENESS_KB`      | Largest presence state of one client (default 64) and all presence of one room (4096), in KB; a socket going past either is closed with `1009 presence too large`.                                                                                    |
+| `TEAMS_AWARENESS_RATE_KB`                                    | Presence bytes per second each socket may send, in KB (default 256, burst four times that); a socket over it is closed.                                                                                                                               |
+| `TEAMS_MAX_REFUSALS_PER_MIN`                                 | Costly refusals per client per minute (default 30), see Limits below; past it the client's sync and file requests get 429 for the rest of the minute.                                                                                                 |
+| `TEAMS_COMPACT_INTERVAL_MIN`                                 | Minutes between room snapshot compactions (default 360, `0` turns the timer off). A room is also compacted when it loads.                                                                                                                             |
+| `TEAMS_METRICS_TOKEN`                                        | Turns on `GET /metrics`, served only to `Authorization: Bearer <this token>`. Off without it.                                                                                                                                                         |
+| `TEAMS_LOG_FORMAT`, `--log-format=json`                      | `text` (default) or `json`: one JSON object per line with `time`, `level` and `msg`.                                                                                                                                                                  |
+| `TEAMS_DATA`                                                 | Data directory (default `./data`): room snapshots and files.                                                                                                                                                                                          |
 
 The same limits are options of `createTeamsServer` (`maxConnections`, `maxConnectionsPerIp`,
 `maxRooms`, `maxDocBytes`, `maxUpdateStructs`, `maxSyncBytes` (largest sync message: 32 MiB, or a 64th of
-the heap when smaller, so a 512 MiB heap takes 8 MiB messages), `messageRate`, `messageBurst`, `workspaceQuotaBytes`, `filesQuotaBytes`,
-`metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
+the heap when smaller, so a 512 MiB heap takes 8 MiB messages), `messageRate`, `messageBurst`, `workspaceQuotaBytes`,
+`userQuotaBytes`, `filesQuotaBytes`, `roomsQuotaBytes`, `maxStoredRooms`, `maxAwarenessBytes`, `maxRoomAwarenessBytes`,
+`awarenessByteRate`, `maxRefusals`, `metricsToken`, `compactIntervalMs`, `sweepIntervalMs`, `insecure`, `insecureDev`, `trustProxy`).
+
+### Limits
+
+- **Presence** (Yjs awareness) is capped per client state and per room, and by bytes per second per
+  socket, because the server keeps it in memory and sends all of it to every joiner.
+- **Storage** cannot be grown by choosing new names. Files count against the workspace, against the
+  person who uploaded them (in every scope together) and against the whole directory. With
+  accounts an upload goes only to a workspace that exists (a sync room that holds something) or to a
+  private chat, else 404. Stored rooms have a ceiling in bytes and in number, and a room nobody wrote
+  to is never written to disk.
+- **Refusals that cost work** are counted per client (the signed-in user, or the address without
+  accounts): a chat join or chat file request refused after the server had to read that room from
+  disk, and an update refused by the checks. A client with too many in a minute gets 429 for sync
+  sockets and chat file requests until the minute is over. Refusals answered from memory are not
+  counted, so a person who is refused while waiting to be added to a group is not turned away.
+- **Checking costs the update, not the room.** Each loaded room keeps one copy of its document
+  that updates are tried on, so the server holds up to two copies of each loaded room in memory.
 
 Or embed it:
 
@@ -104,8 +130,9 @@ backs off (5 s, 10 s, ...) and stops after three in a row instead of reconnectin
 
 On every socket, with or without accounts, an update is applied whole or not at all. It is tried on
 a copy of the room first, so one that cannot be checked or applied changes nothing, reaches nobody
-else, and closes its sender's socket with `1008 update rejected: invalid-update`. The copy costs time
-proportional to the size of the room for each update.
+else, and closes its sender's socket with `1008 update rejected: invalid-update`. The copy is kept
+with the room and follows it, so trying an update costs time in proportion to the update; a refused
+update makes the server build the copy again, which is why refused updates are counted (see Limits).
 
 ## Accounts and sessions
 
@@ -132,9 +159,12 @@ createTeamsServer({
 Clients call `POST /auth/session` with `{ user, credential }` (core: `requestTeamsSession`) and get
 a signed session (HMAC-SHA-256, 12 hours by default, `sessionTtlMs`). Sockets then pass
 it as the subprotocol `openteams.session.<session>`; the server takes the user id from it and ignores the claimed `?user=`. With accounts
-configured, sockets without a valid session get 401. Set `TEAMS_SESSION_SECRET` (or
+configured, sockets without a valid session get 401, and an open socket is closed with
+`1008 session expired` when its session expires. Set `TEAMS_SESSION_SECRET` (or
 `sessionSecret`) to keep sessions across restarts and across processes; without it a random secret
-is used per process. The server never logs credentials, sessions or the secret.
+is used per process. Anyone who knows the secret can sign a session for any user and role, so the
+server refuses to start with one shorter than 32 characters or with fewer than 8 distinct
+characters; generate it (`openssl rand -hex 32`). The server never logs credentials, sessions or the secret.
 
 ### Hardening
 
@@ -217,9 +247,12 @@ teams.closeSync('deck-42', 'ben'); // close code 4403 by default
 ```
 
 `syncPrincipals(room)` lists who is connected and `isSyncRoomEmpty(room)` tells whether a room
-has content yet (to decide which participant seeds it). The hook covers sync rooms only; signaling
-rooms still use the token. A verdict applies for the socket's lifetime: changing access does not
-affect open sockets until you close them. `demos/pptx/demo-host-review` in the ooxml repository
+has content yet (to decide which participant seeds it). The hook covers sync rooms only. A server
+with `authorizeSync` and no `users` or `authenticate` cannot tell who a request is from, so it
+offers no sessions, file storage or call signaling: `/auth/session`, `/files/...` and `/signal/...`
+answer 404 (`insecureDev: true` opens them, for development). Add `authenticate` to offer them. A
+verdict applies for the socket's lifetime: changing access does not affect open sockets until you
+close them. `demos/pptx/demo-host-review` in the ooxml repository
 uses all of this for collaborative PowerPoint review.
 
 ## Security model
@@ -254,9 +287,19 @@ uses all of this for collaborative PowerPoint review.
 - **Use short-lived TURN credentials**; static ones are visible to everyone who opens the app.
 - **Limits** on connections, rooms, document size, message rate and file storage bound abuse, but do
   not replace a reverse proxy's own rate limiting.
-- A socket can only speak for the awareness ids and the call peer id it announced itself, and an
-  addressed call signal is delivered to that peer only. An upload never overwrites a file: a name
-  already taken is stored under a new one, returned in the response `url`.
+- A socket can only speak for the awareness ids it announced itself. A call signaling socket speaks
+  for one peer id: with accounts, the signed-in user's id (a signal under any other id closes the
+  socket with `1008 peer id is not the signed-in user`, and a second socket of the same user in one
+  call is closed with `1008 peer id in use`); without accounts, the first id it uses. An addressed
+  call signal is delivered to that peer only.
+- **A private chat's call is for its members.** Its signaling room is `call-` and the chat's room
+  name (`call-chat-<16 hex>-<chat id>`). With accounts the server admits only the chat's members
+  (403 otherwise); without them it closes a socket whose first peer id is not a member. Someone who
+  leaves the chat is dropped from its call (`1008 not a member`). The form older clients used for a
+  current chat id (`call-<workspace>-<chat id>`) and letter-case variants of a chat's call room are
+  refused (403).
+- An upload never overwrites a file: a name already taken is stored under a new one, returned in
+  the response `url`.
 
 ## Files, compaction and metrics
 
@@ -270,6 +313,10 @@ uses all of this for collaborative PowerPoint review.
 - **Listing and deleting.** `GET /files/<scope>` answers `{ files: [{ name, size, modified, uploader }] }`;
   `DELETE /files/<scope>/<name>` is allowed to the uploader or a moderator. Uploader records live in
   `file-meta/=<name>.json` (files from older versions have none: only a moderator may delete them).
+- **Member lists.** Beside a private chat room's snapshot the server keeps its member list
+  (`rooms/=<name>.members.json`, with the snapshot's size), so it can refuse a join or a file request
+  for a room that is not loaded without reading the room. A missing list, or one whose size does not
+  match the snapshot, is rebuilt from the snapshot once.
 - **Stored names.** Rooms, file scopes and uploader records are stored under `=` and the lower-case
   base32 of their exact name, so names that differ only by case stay apart on every disk. The first
   start of this version renames what an older one stored; an older server cannot read the result.
@@ -277,8 +324,9 @@ uses all of this for collaborative PowerPoint review.
   id, in any spelling) is not migrated: it moves to a `.quarantine` folder beside it, is logged, and
   is never read.
 - **Cleanup and quotas.** Uploads stream to a hidden `.part` file that failed uploads remove; start-up removes
-  every leftover and a timer (`sweepIntervalMs`) those older than an hour. The quota is per workspace
-  (`TEAMS_WORKSPACE_QUOTA_MB`).
+  every leftover and a timer (`sweepIntervalMs`) those older than an hour. Quotas apply per workspace
+  (`TEAMS_WORKSPACE_QUOTA_MB`), per uploader across every scope (`TEAMS_USER_QUOTA_MB`) and to the whole
+  directory (`TEAMS_FILES_QUOTA_MB`); see Limits.
 - **Compaction.** A room's snapshot is re-encoded as one Yjs update on a fresh document when the room loads and every
   `TEAMS_COMPACT_INTERVAL_MIN` minutes, only if it is smaller and describes the same state. Snapshots are
   written to a temporary file, flushed and renamed, so a crash keeps the old or the new one.

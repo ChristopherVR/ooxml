@@ -65,6 +65,7 @@ export class ViewerCollaborationShellService {
 			sourcePending: this.sourcePending(),
 			sourceError: Boolean(this.loader.error()),
 			status: this.collaboration.status(),
+			failure: this.collaboration.failure(),
 			remoteUsers: this.collaboration.presence(),
 		});
 	});
@@ -76,6 +77,7 @@ export class ViewerCollaborationShellService {
 			shareDefaults: () => undefined,
 			getTemplateElements: () => this.editor.templateElementsBySlideId(),
 			applyRemoteSlides: (slides) => this.editor.applyRemoteSlides(slides),
+			onRoomReplacedDeck: () => this.loader.markDeckLoad(),
 			notify: (toast) => this.notices?.notify(toast),
 			history: this.editor,
 			canvasSize: () => this.loader.canvasSize(),

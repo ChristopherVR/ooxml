@@ -26,7 +26,12 @@
 
 import type { Chat as ChatType } from '@ai-sdk/svelte';
 import type { ChatStatus } from 'ai';
-import { createAiChatSession, isAiAvailable, toolCanvasTarget } from 'ooxml-ui/pptx/ai';
+import {
+	createAiChatSession,
+	extractReadyToolCalls,
+	isAiAvailable,
+	toolCanvasTarget,
+} from 'ooxml-ui/pptx/ai';
 import type {
 	PptxAiBridge,
 	PptxAiChatSession,
@@ -76,12 +81,15 @@ export class SvelteAiChat {
 	initError = $state<Error | undefined>(undefined);
 	/** Mirror of the session's staged proposals (refreshed imperatively). */
 	proposals = $state<ProposalView[]>([]);
+	/** Loading another presentation dropped the staged proposals (see `ProposalStore.discarded`). */
+	proposalsDiscarded = $state(false);
 
 	#chat = $state.raw<ChatType<PptxAiUIMessage> | undefined>(undefined);
 	// Reactive so a consumer `$effect` (the panel's change-animator subscription)
 	// re-runs once the session is bootstrapped by `init()`.
 	#session = $state.raw<PptxAiChatSession | undefined>(undefined);
 	readonly #deps: SvelteAiChatDeps;
+	#seenToolCalls = new Set<string>();
 
 	constructor(deps: SvelteAiChatDeps) {
 		this.#deps = deps;
@@ -126,32 +134,35 @@ export class SvelteAiChat {
 			const { Chat } = await import('@ai-sdk/svelte');
 			this.#chat = new Chat<PptxAiUIMessage>({
 				transport: session.transport,
-				sendAutomaticallyWhen: session.sendAutomaticallyWhen,
 				onError: (err: Error) => this.#deps.config.onError?.(err),
-				onToolCall: async ({ toolCall }) => {
-					const { toolName, toolCallId, input } = toolCall as unknown as ToolCallInfo;
-					const chat = this.#chat;
-					if (!chat) {
-						return;
-					}
-					// Drive the live on-canvas focus: navigate + highlight the element(s)
-					// this tool touches, so the viewer mirrors the assistant in real time.
-					this.#deps.onToolTarget?.(toolCanvasTarget(toolName, input));
-					const addToolOutput = chat.addToolOutput as unknown as AddToolOutput;
-					try {
-						const output = await session.executeToolCall(toolName, input);
-						addToolOutput({ tool: toolName, toolCallId, output });
-					} catch (err) {
-						addToolOutput({
-							tool: toolName,
-							toolCallId,
-							state: 'output-error',
-							errorText: err instanceof Error ? err.message : String(err),
-						});
-					}
-					// A staged proposal was likely just registered; surface it.
-					this.refreshProposals();
-				},
+				// In `model` mode the session's agent runs the tools; running them here
+				// as well would stage every proposal twice.
+				...(session.clientExecutesTools
+					? {
+							sendAutomaticallyWhen: session.sendAutomaticallyWhen,
+							onToolCall: async ({ toolCall }: { toolCall: unknown }) => {
+								const { toolName, toolCallId, input } = toolCall as ToolCallInfo;
+								const chat = this.#chat;
+								if (!chat) {
+									return;
+								}
+								const addToolOutput = chat.addToolOutput as unknown as AddToolOutput;
+								try {
+									const output = await session.executeToolCall(toolName, input);
+									addToolOutput({ tool: toolName, toolCallId, output });
+								} catch (err) {
+									addToolOutput({
+										tool: toolName,
+										toolCallId,
+										state: 'output-error',
+										errorText: err instanceof Error ? err.message : String(err),
+									});
+								}
+								// A staged proposal was likely just registered; surface it.
+								this.refreshProposals();
+							},
+						}
+					: {}),
 			});
 			this.initState = 'ready';
 		} catch (err) {
@@ -172,8 +183,29 @@ export class SvelteAiChat {
 		void this.#chat?.stop();
 	}
 
+	/**
+	 * Follow the message stream, which works in every connection mode: report each
+	 * new tool call to `onToolTarget` once, as soon as its input is known, and show
+	 * the proposals the agent has staged. The panel runs this from an effect, which
+	 * also re-runs on every presentation load: listing reads the bridge's deck load,
+	 * so proposals a load dropped leave the panel at once.
+	 */
+	followToolCalls(): void {
+		this.refreshProposals();
+		for (const call of extractReadyToolCalls(this.messages)) {
+			if (!this.#seenToolCalls.has(call.toolCallId)) {
+				this.#seenToolCalls.add(call.toolCallId);
+				this.#deps.onToolTarget?.(toolCanvasTarget(call.toolName, call.input));
+			}
+		}
+	}
+
 	/** Replace the whole transcript (chat-history resume / new chat). */
 	setMessages(messages: PptxAiUIMessage[]): void {
+		// A resumed chat's finished tool calls must not move the canvas.
+		for (const call of extractReadyToolCalls(messages)) {
+			this.#seenToolCalls.add(call.toolCallId);
+		}
 		if (this.#chat) {
 			this.#chat.messages = messages;
 		}
@@ -185,6 +217,7 @@ export class SvelteAiChat {
 
 	refreshProposals(): void {
 		this.proposals = this.#session?.proposals.list() ?? [];
+		this.proposalsDiscarded = this.#session?.proposals.discarded ?? false;
 	}
 
 	applyProposal(id: string): void {

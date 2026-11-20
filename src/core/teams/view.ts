@@ -2,6 +2,7 @@
 // people, typing names, a channel's files and cross-channel message search. No side effects, so
 // every binding (and every test) gets the same answers. New code.
 import type { CallParticipant } from './call';
+import { chatRoomId } from './chat-records';
 import {
 	type PresenceActivity,
 	type PresenceStatus,
@@ -82,6 +83,14 @@ export interface SearchHit {
 
 export const callRoomId = (workspaceId: string, channelId: string): string =>
 	`call-${workspaceId}-${channelId}`.slice(0, 128);
+
+/**
+ * The signaling room of a private chat's call: `call-` and the chat's own sync room, so a server can
+ * admit only that chat's members. For a current chat id it has at most 86 characters, so it is never
+ * cut short the way {@link callRoomId} can be.
+ */
+export const chatCallRoomId = (workspaceId: string, chatId: string): string =>
+	`call-${chatRoomId(workspaceId, chatId)}`;
 
 /** Unread = messages by other people newer than the channel's read marker (0 when selected). */
 export function channelViews(input: {

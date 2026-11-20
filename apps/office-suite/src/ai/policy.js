@@ -33,7 +33,7 @@ export function loadPolicy() {
 					source = raw?.managed === false ? 'default' : 'file';
 				}
 			} catch {}
-		policy = normalizeAiPolicy(raw, providers);
+		policy = normalizeAiPolicy(raw, providers, globalThis.location?.href);
 		return policy;
 	})();
 	return loading;

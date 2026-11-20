@@ -2,11 +2,12 @@
 // document embeds) read and written as a neutral `ChartSpace`, so a host edits it through
 // `chart/edit` and the chart data sheet (`chart/edit/data-sheet`) and embeds the result again.
 //
-// Writing keeps everything else in the workbook. When the chart's data changed, the data block is
-// written at A1 of the chart's sheet (series names across row 1, categories down column A), as
-// Insert > Chart lays it out, and every series' references are pointed at it; a chart whose data
-// lived elsewhere has that data replaced by the block. Formatting-only edits leave the cells alone.
-import JSZip from 'jszip';
+// Writing keeps everything else in the workbook. When the chart's data changed, the cells the edit
+// changed are written where the chart's references point. Only when those references cannot take
+// the edit is the data block written at A1 of the chart's sheet (series names across row 1,
+// categories down column A), as Insert > Chart lays it out, with every series pointed at it; a chart
+// showing only part of a large range refuses that instead, since the block would lose the rest.
+// Formatting-only edits leave the cells alone.
 import { chartSpaceDataSheet } from '../chart/edit/data-sheet';
 import { editChartSpace } from '../chart/edit/draft';
 import { categorySource } from '../chart/edit/series-data';
@@ -17,6 +18,9 @@ import { chartColorScheme } from '../chart/render/chart-colors';
 import type { ChartSpace } from '../chart/model';
 import { parseChartSpace } from '../chart/parse-space';
 import { chartIssuesLostOnWrite, writeChartSpaceOverSource } from '../chart/keep-source';
+import { CHART_POINTS_LIMITED } from '../chart/point-limit';
+import { chartSpaceWorkbookWrites } from '../chart/workbook/space-writes';
+import { writeChartWorkbookUpdates } from '../chart/workbook/writer';
 import {
 	CHART_MEDIA_FOLDERS,
 	chartSpacePictureSources,
@@ -28,6 +32,8 @@ import { columnLabel, quoteSheetName } from './address';
 import { createEditSession } from './edit/session';
 import type { CellValue, Workbook } from './model';
 import { loadXlsx } from './read/index';
+import { resolveLoadLimits } from './read/limits';
+import { openPackage } from './read/package';
 import { saveXlsx } from './write/index';
 
 export interface EmbeddedChartSpace {
@@ -156,8 +162,20 @@ export async function writeEmbeddedChartSpace(
 	if (written === found.sourceXml) return bytes;
 	const previous = chartSpaceDataSheet(found.space);
 	const dataChanged = !sameSheet(previous, chartSpaceDataSheet(space));
-	const next = dataChanged ? writeDataBlock(workbook, found.sheet, space, previous) : space;
-	const zip = await JSZip.loadAsync(dataChanged ? await saveXlsx(workbook) : bytes);
+	let base = bytes;
+	let blockNeeded = false;
+	if (dataChanged) {
+		const updated = await writeChartWorkbookUpdates(
+			bytes,
+			chartSpaceWorkbookWrites(space, found.space),
+		);
+		blockNeeded = updated.unresolved > 0;
+		if (blockNeeded && found.issues.some((issue) => issue.code === CHART_POINTS_LIMITED))
+			throw new Error('The cells this chart reads its data from could not be updated.');
+		if (!blockNeeded) base = updated.bytes ?? bytes;
+	}
+	const next = blockNeeded ? writeDataBlock(workbook, found.sheet, space, previous) : space;
+	const zip = await openPackage(blockNeeded ? await saveXlsx(workbook) : base, resolveLoadLimits());
 	// No folder entries: an Open XML package lists parts only.
 	zip.file(
 		found.partName,

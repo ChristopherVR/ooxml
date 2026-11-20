@@ -52,6 +52,7 @@ describe('building-block shell', () => {
 		expect(shell.current().shellState).toEqual({
 			canEdit: false,
 			status: 'disconnected',
+			failure: null,
 			remoteUsers: [],
 			connectedCount: 0,
 		});

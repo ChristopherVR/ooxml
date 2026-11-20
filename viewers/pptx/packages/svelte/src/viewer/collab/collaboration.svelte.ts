@@ -8,6 +8,7 @@
  */
 import type {
 	CollaborationConfig,
+	CollaborationFailure,
 	CollaborationSessionController,
 	CollaborationSessionState,
 	CollaborationState,
@@ -104,6 +105,10 @@ export class CollaborationController {
 	set status(next: ConnectionStatus) {
 		this.#session.setStatus(next);
 	}
+	/** Why the session failed to start while `status` is `error` (reactive). */
+	get failure(): CollaborationFailure | null {
+		return this.#state.current.failure;
+	}
 	/** Whether a session is live (reactive). */
 	get active(): boolean {
 		return this.#state.current.active;
@@ -111,6 +116,10 @@ export class CollaborationController {
 	/** The requested viewer role forbids editing, including while attachment is pending. */
 	get readOnly(): boolean {
 		return this.#document.readOnly;
+	}
+	/** How many times a room's slides replaced the open deck, across sessions (reactive). */
+	get roomJoins(): number {
+		return this.#document.roomJoins;
 	}
 	/** Remote cursors on the current slide (reactive). */
 	get cursors(): RemoteCursor[] {

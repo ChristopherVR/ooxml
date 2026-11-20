@@ -38,6 +38,7 @@ import {
 import 'pptx-angular-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
+import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -172,11 +173,6 @@ export class AppComponent {
 	private readonly urlName = this.params.get('name');
 	/** Serverless peer-to-peer join requested via `?transport=webrtc`. */
 	private readonly webrtcRequested = this.params.get('transport') === 'webrtc';
-	/** Optional `?signaling=a,b` WebRTC signaling server override. */
-	private readonly signaling = (this.params.get('signaling') ?? '')
-		.split(',')
-		.map((s) => s.trim())
-		.filter((s) => s.length > 0);
 
 	readonly autoName = generateAutoName();
 	/** Stable per-session room id, seeded into the Share dialog defaults. */
@@ -187,9 +183,9 @@ export class AppComponent {
 	readonly collaborationConfig = signal<CollaborationConfig | null>(null);
 
 	/**
-	 * Viewer `ai` config built from localStorage-supplied fields, or undefined
-	 * when nothing is stored. The demo ships no key and no config UI, so this is
-	 * normally undefined and the assistant simply stays off.
+	 * Viewer `ai` config built from fields set by hand in this tab's sessionStorage,
+	 * or undefined when nothing is stored. The demo ships no key and no config UI,
+	 * so this is normally undefined and the assistant simply stays off.
 	 */
 	readonly aiConfig = signal<PptxAiAssistant | PptxAiConfig | undefined>(
 		buildDemoAi(readStoredAiFields()),
@@ -284,25 +280,9 @@ export class AppComponent {
 	 */
 	handleStartCollaboration(config: CollaborationConfig): void {
 		this.collaborationConfig.set(config);
-		const url = new URL(window.location.href);
-		if (config.role === 'owner') {
-			url.searchParams.set('broadcast', config.roomId);
-		} else {
-			url.searchParams.set('room', config.roomId);
-		}
-		if (config.transport === 'webrtc') {
-			// Serverless P2P: carry the transport, not a (blank) server URL.
-			url.searchParams.set('transport', 'webrtc');
-			url.searchParams.delete('server');
-			if (config.signaling?.length) {
-				url.searchParams.set('signaling', config.signaling.join(','));
-			}
-		} else {
-			url.searchParams.set('server', config.serverUrl);
-			url.searchParams.delete('transport');
-			url.searchParams.delete('signaling');
-		}
-		window.history.replaceState({}, '', url.toString());
+		// A serverless P2P link carries its transport and `#key=` secret, not a
+		// (blank) server URL.
+		showSessionInAddressBar(config, config.role === 'owner' ? 'broadcast' : 'room');
 		const bytes = this.content();
 		// P2P has no file server; joiners receive the deck via Y.Doc sync instead.
 		if (
@@ -324,12 +304,8 @@ export class AppComponent {
 	/** Stopped collaborating: clear the config and strip the URL params. */
 	handleStopCollaboration(): void {
 		this.collaborationConfig.set(null);
+		showSessionInAddressBar(null);
 		const url = new URL(window.location.href);
-		url.searchParams.delete('room');
-		url.searchParams.delete('broadcast');
-		url.searchParams.delete('server');
-		url.searchParams.delete('transport');
-		url.searchParams.delete('signaling');
 		url.searchParams.delete('name');
 		window.history.replaceState({}, '', url.toString());
 	}
@@ -398,35 +374,23 @@ export class AppComponent {
 
 	// ── Collaboration / broadcast / audience wiring ──────────────────────────
 	private autoConnectFromUrl(): void {
-		const joinRoomId = this.urlRoom ?? this.urlBroadcast;
-		if (!joinRoomId) {
+		if (!this.urlRoom && !this.urlBroadcast) {
 			return;
 		}
 		const role = this.urlBroadcast ? ('viewer' as const) : undefined;
-
-		// Serverless peer-to-peer: no server to trust; join over WebRTC directly.
-		if (this.webrtcRequested) {
-			this.collaborationConfig.set({
-				roomId: joinRoomId,
-				serverUrl: '',
-				transport: 'webrtc',
-				...(this.signaling.length > 0 ? { signaling: this.signaling } : {}),
-				userName: this.urlName ?? this.autoName,
-				userColor: randomCursorColor(),
-				...(role ? { role } : {}),
-			});
+		const link = sessionFromPage(this.urlRoom ? 'room' : 'broadcast', this.urlServer);
+		if (!link) {
 			return;
 		}
-
-		if (!isTrustedServerUrl(this.urlServer)) {
+		// Serverless peer-to-peer has no server to trust; join over WebRTC directly.
+		if (link.transport !== 'webrtc' && !isTrustedServerUrl(link.serverUrl)) {
 			console.warn(
-				`Ignoring auto-connect because ?server=${this.urlServer} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
+				`Ignoring auto-connect because ?server=${link.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
 			);
 			return;
 		}
 		this.collaborationConfig.set({
-			roomId: joinRoomId,
-			serverUrl: this.urlServer,
+			...link,
 			userName: this.urlName ?? this.autoName,
 			userColor: randomCursorColor(),
 			...(role ? { role } : {}),

@@ -2,14 +2,14 @@
  * Driving the AI assistant panel without a real language model.
  *
  * Every demo wires the assistant the same way: an OpenAI-compatible base URL /
- * API key / model id read from localStorage becomes a `{ kind: 'model' }`
+ * API key / model id read from sessionStorage becomes a `{ kind: 'model' }`
  * connection (`@ai-sdk/openai-compatible`), so the whole agent loop runs in the
  * browser and its only network traffic is `POST <baseURL>/chat/completions` in
  * the OpenAI chat-completions wire format. {@link seedMockAiProvider} points
  * that base URL at a path on the demo's own origin and
  * {@link installMockAiModel} answers it with scripted SSE chunks, so a spec can
  * exercise the full round trip - composer, streaming reply, tool call, staged
- * proposal, Apply - deterministically and offline. Both demo localStorage
+ * proposal, Apply - deterministically and offline. Both demo sessionStorage
  * schemes (React/Vue/Angular one JSON key; Svelte/Vanilla three string keys)
  * are seeded so the specs stay framework-neutral.
  *
@@ -45,20 +45,20 @@ export const PANEL_SELECTOR = '[data-pptx-ai-panel]';
 export const PANEL_MARKER_SELECTOR = '[data-pptx-ai-panel]';
 
 /**
- * Seed both demo localStorage schemes before any app script runs, pointing the
+ * Seed both demo sessionStorage schemes before any app script runs, pointing the
  * OpenAI-compatible base URL at {@link MOCK_AI_BASE_PATH} on the page's own
  * origin (so no port ever appears in a spec). Call before the first navigation.
  */
 export async function seedMockAiProvider(page: Page): Promise<void> {
 	await page.addInitScript((basePath: string) => {
 		const base = `${location.origin}${basePath}`;
-		localStorage.setItem(
+		sessionStorage.setItem(
 			'pptx-demo-ai-config',
 			JSON.stringify({ baseURL: base, apiKey: 'mock-key', model: 'mock-model' }),
 		);
-		localStorage.setItem('demo.ai.baseURL', base);
-		localStorage.setItem('demo.ai.apiKey', 'mock-key');
-		localStorage.setItem('demo.ai.model', 'mock-model');
+		sessionStorage.setItem('demo.ai.baseURL', base);
+		sessionStorage.setItem('demo.ai.apiKey', 'mock-key');
+		sessionStorage.setItem('demo.ai.model', 'mock-model');
 	}, MOCK_AI_BASE_PATH);
 }
 
@@ -153,6 +153,60 @@ export async function installMockAiModel(
 		});
 	});
 	return log;
+}
+
+/**
+ * Answer the endpoint with tool calls chosen by the latest `zz<word>` in the user's message
+ * (`zzread 2` runs `scripts.zzread`). A turn that follows tool results, and a message with no
+ * script, replies `Finished <trigger>`, so a spec can wait for each exchange separately. Returns
+ * the request log; the tool results a turn produced are in its last request.
+ */
+export async function installScriptedAiTools(
+	page: Page,
+	scripts: Record<string, MockToolCall[]>,
+): Promise<CompletionsRequest[]> {
+	const log: CompletionsRequest[] = [];
+	let nextCallId = 0;
+	await page.route(MOCK_AI_COMPLETIONS_GLOB, async (route) => {
+		const body = route.request().postDataJSON() as CompletionsRequest;
+		log.push(body);
+		const messages = body.messages ?? [];
+		const lastUser = [...messages].reverse().find((message) => message.role === 'user');
+		const trigger =
+			/zz[a-z]+(?: \d+)?(?![\s\S]*zz[a-z]+)/u.exec(textOf(lastUser?.content))?.[0] ?? '';
+		const calls = scripts[trigger.split(' ')[0] ?? ''] ?? [];
+		const turn =
+			messages.at(-1)?.role === 'tool' || calls.length === 0
+				? sseTurn({ role: 'assistant', content: `Finished ${trigger}` }, 'stop')
+				: sseTurn(
+						{
+							role: 'assistant',
+							tool_calls: calls.map((call, index) => ({
+								index,
+								id: `call_scripted_${(nextCallId += 1)}`,
+								type: 'function',
+								function: { name: call.name, arguments: JSON.stringify(call.input) },
+							})),
+						},
+						'tool_calls',
+					);
+		await route.fulfill({
+			status: 200,
+			headers: { 'content-type': 'text/event-stream', 'cache-control': 'no-cache' },
+			body: turn,
+		});
+	});
+	return log;
+}
+
+/** The text of the tool results sent back in the latest turn of `log`. */
+export function latestToolResults(log: readonly CompletionsRequest[]): string {
+	const messages = log.at(-1)?.messages ?? [];
+	return messages
+		.slice(messages.map((message) => message.role).lastIndexOf('user'))
+		.filter((message) => message.role === 'tool')
+		.map((message) => textOf(message.content))
+		.join('\n');
 }
 
 /** The assistant pane, addressed by the shared neutral marker. */

@@ -8,7 +8,12 @@
  *
  * @module chart-part-repair
  */
-import { parseChartSpace, type ChartParseIssue, type ChartSpace } from '../../../chart/index';
+import {
+	parseChartSpace,
+	type ChartParseIssue,
+	type ChartPointBudget,
+	type ChartSpace,
+} from '../../../chart/index';
 
 /** The standard namespaces of the Office chart prefixes the repair may declare. */
 export const OFFICE_CHART_PREFIXES: Readonly<Record<string, string>> = {
@@ -79,9 +84,9 @@ export interface ChartPartModel {
 	repairIssue?: ChartParseIssue;
 }
 
-function parseClassic(text: string): ChartSpace | undefined {
-	const { chartSpace, issues } = parseChartSpace(text);
-	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? undefined : chartSpace;
+function parseClassic(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
+	const { chartSpace, issues } = parseChartSpace(text, pointBudget ? { pointBudget } : {});
+	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? {} : { chartSpace };
 }
 
 /**
@@ -89,20 +94,20 @@ function parseClassic(text: string): ChartSpace | undefined {
  * fails, repaired once ({@link repairChartPartPrefixes}) and parsed again. A part still malformed
  * after the repair is unreadable.
  */
-export function readChartPartModel(text: string): ChartPartModel {
+export function readChartPartModel(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
 	try {
-		return { chartSpace: parseClassic(text) };
+		return parseClassic(text, pointBudget);
 	} catch {
 		const repair = repairChartPartPrefixes(text);
 		if (!repair) return {};
 		try {
-			const chartSpace = parseClassic(repair.text);
+			const parsed = parseClassic(repair.text, pointBudget);
 			const what = [
 				...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
 				...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),
 			].join('; ');
 			return {
-				...(chartSpace ? { chartSpace } : {}),
+				...parsed,
 				repairIssue: {
 					code: 'CHART_PREFIX_REPAIRED',
 					message: `The chart part was not namespace well-formed and was repaired to load (${what}).`,

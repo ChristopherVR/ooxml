@@ -18,7 +18,7 @@
 /* oxlint-disable eslint/one-var -- pre-existing throughout this file; independent concerns, not one statement */
 import { computed, inject, Injectable, signal } from '@angular/core';
 import type { ActiveSessionUserDescriptor } from 'ooxml-ui/pptx';
-import { buildActiveSessionUsers } from 'ooxml-ui/pptx';
+import { buildActiveSessionUsers, buildCollaborationShareUrl } from 'ooxml-ui/pptx';
 import type { CollaborationHistoryTarget, CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import type { PptxHandlerSaveOptions, PptxSlide } from 'pptx-viewer-core';
 
@@ -26,7 +26,6 @@ import type { BroadcastConfig } from './broadcast-helpers';
 import { buildBroadcastViewerUrl } from './broadcast-helpers';
 import { CollaborationService } from './collaboration.service';
 import type { ConnectOptions } from './collaboration.service';
-import { buildShareUrl } from './share-helpers';
 import type { TemplateElementsBySlideId } from './template-mode';
 import type { CollaborationConfig } from './types';
 import { ViewerOptionsService } from './viewer-options.service';
@@ -45,6 +44,8 @@ interface CollaborationSessionHost {
 	readonly getTemplateElements: () => TemplateElementsBySlideId;
 	/** Apply a remote peer's slide set to the editable deck (echo-guarded in the service). */
 	readonly applyRemoteSlides: (slides: PptxSlide[]) => void;
+	/** A joined room's slides replaced the open deck: count it as a presentation load. */
+	readonly onRoomReplacedDeck: () => void;
 	/** Show a notice in the viewer's stack (why sharing stopped, when an update was refused). */
 	readonly notify: (toast: CompatibilityWarningToast) => void;
 	/** The editor history, so Undo and Redo reach only this user's edits in a room. */
@@ -115,15 +116,13 @@ export class ViewerCollaborationSessionService {
 	/** Shareable join link for the active collaboration session. */
 	readonly shareUrl = computed<string>(() => {
 		const session = this.activeCollaboration();
-		return session ? buildShareUrl(session.roomId, session.serverUrl, this.browserLocation()) : '';
+		return session ? buildCollaborationShareUrl(session, this.browserLocation()) : '';
 	});
 
 	/** Shareable follow link for the active broadcast. */
 	readonly broadcastViewerUrl = computed<string>(() => {
 		const session = this.activeCollaboration();
-		return session
-			? buildBroadcastViewerUrl(session.roomId, session.serverUrl, this.browserLocation())
-			: '';
+		return session ? buildBroadcastViewerUrl(session, this.browserLocation()) : '';
 	});
 
 	/** Whether the active session is serverless (peer-to-peer / webrtc). */
@@ -156,6 +155,7 @@ export class ViewerCollaborationSessionService {
 		return {
 			history: host.history,
 			onRemoteSlides: (slides) => host.applyRemoteSlides(slides),
+			onRoomReplacedDeck: () => host.onRoomReplacedDeck(),
 			onNotice: (toast) => host.notify(toast),
 			canvasWidth: size.width,
 			canvasHeight: size.height,
@@ -235,6 +235,7 @@ export class ViewerCollaborationSessionService {
 			roomId: config.roomId,
 			serverUrl: config.serverUrl,
 			transport: config.transport,
+			...(config.secret ? { secret: config.secret } : {}),
 			userName: host.authorName() ?? 'Presenter',
 			role: 'owner',
 		};

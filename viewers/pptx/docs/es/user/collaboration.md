@@ -15,7 +15,7 @@ La colaboración es una función opcional. Si no ve un botón **Compartir**, la 
 
 1. Haga clic en el botón **Compartir** en el extremo derecho de la fila de pestañas de la cinta (o en **Archivo > Compartir > Compartir con personas**). El cuadro de diálogo **Compartir presentación** se abre en su pestaña **Crear sesión**.
 2. Rellene:
-   - **Nombre de la sesión** - el identificador de la sala (letras, números, guiones y guiones bajos). Los colaboradores necesitan este nombre.
+   - **Nombre de la sesión** - el identificador de la sala (letras, números, guiones y guiones bajos). Los colaboradores necesitan este nombre, o el enlace para compartir en una sesión entre pares.
    - **Su nombre para mostrar** - cómo aparece ante los demás.
    - **Servidor de colaboración** - opcional. Déjelo vacío para una sesión entre pares, o introduzca la dirección del servidor de colaboración de su organización (una URL `wss://...`).
 3. Haga clic en **Iniciar uso compartido**.
@@ -34,6 +34,8 @@ Abra un enlace para compartir que alguien le haya enviado, o únase manualmente:
 2. Pegue el enlace de invitación, o introduzca el ID de la sala, en **Enlace de invitación o ID de sala**.
 3. Introduzca su nombre para mostrar y, si la sesión usa uno, la dirección del servidor de colaboración.
 4. Haga clic en **Unirse a una sesión**.
+
+A una sesión entre pares (sin servidor de colaboración) solo puede unirse con su enlace para compartir: el enlace lleva la clave de la sesión después de su `#`, y el ID de la sala por sí solo no basta.
 
 ## Indicadores de presencia
 
@@ -61,7 +63,7 @@ Combinar le protege de perder ediciones, no de las sorpresas. Eliminar una diapo
 
 El campo **Servidor de colaboración** decide cómo se conectan los participantes:
 
-- **Vacío (entre pares)** - las pestañas del navegador del mismo dispositivo siempre se encuentran entre sí, y las personas de otros dispositivos se conectan directamente con usted a través de servidores públicos de señalización WebRTC. Es la forma más rápida de probar la colaboración; la demo alojada funciona así.
+- **Vacío (entre pares)** - las pestañas del navegador del mismo dispositivo siempre se encuentran entre sí, y las personas de otros dispositivos se conectan directamente con usted a través de servidores públicos de señalización WebRTC. Esos servidores solo ven un hash de la clave de la sesión del enlace para compartir y datos de conexión cifrados, nunca el nombre de la sesión. Es la forma más rápida de probar la colaboración; la demo alojada funciona así.
 - **Dirección de servidor definida** - todos retransmiten a través de un servidor de colaboración dedicado. Úselo cuando su organización tenga uno: funciona a través de cortafuegos estrictos y NAT donde fallan las conexiones directas entre pares, mantiene la sala disponible mientras haya algún participante conectado y la aplicación anfitriona puede combinarlo con autenticación y persistencia en el servidor.
 
 ::: warning Use wss:// en páginas seguras

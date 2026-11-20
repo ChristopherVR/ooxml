@@ -22,7 +22,7 @@ passez `--insecure-dev` pour le développement local uniquement.
 | `TEAMS_MAX_ROOMS`                                       | Salles de synchronisation et d’appel (1000 chacune par défaut).                                                                                                                                                                                                                               |
 | `TEAMS_MAX_DOC_MB`                                      | Plus grand document de salle persisté, en Mo (64 par défaut) ; les mises à jour au-delà sont rejetées.                                                                                                                                                                                        |
 | `TEAMS_MESSAGE_RATE`, `TEAMS_MESSAGE_BURST`             | Messages par seconde (100 par défaut) et rafale (200) par socket ; un socket qui dépasse est fermé.                                                                                                                                                                                           |
-| `TEAMS_FILES_QUOTA_MB`                                  | Plafond facultatif pour tout le répertoire des fichiers, en Mo (désactivé par défaut) ; les envois au-delà reçoivent 507.                                                                                                                                                                     |
+| `TEAMS_FILES_QUOTA_MB`                                  | Plafond pour tout le répertoire des fichiers, en Mo (20480 par défaut) ; les envois au-delà reçoivent 507. S’y ajoutent `TEAMS_USER_QUOTA_MB` par personne (1024) et `TEAMS_ROOMS_QUOTA_MB`, `TEAMS_MAX_STORED_ROOMS` pour les salles enregistrées (voir le README du serveur).               |
 | `TEAMS_WORKSPACE_QUOTA_MB`                              | Fichiers par espace de travail, en Mo (1024 par défaut ; un chat privé compte pour son espace de travail) ; les envois au-delà reçoivent 507.                                                                                                                                                 |
 | `TEAMS_COMPACT_INTERVAL_MIN`                            | Minutes entre deux compactages des instantanés de salle (360 par défaut, `0` coupe le minuteur). Une salle est aussi compactée à son chargement.                                                                                                                                              |
 | `TEAMS_METRICS_TOKEN`                                   | Active `GET /metrics` (texte Prometheus), servi seulement avec `Authorization: Bearer <ce jeton>`. Désactivé sans lui.                                                                                                                                                                        |
@@ -135,7 +135,7 @@ Lancez-le avec un fichier de comptes monté, `TEAMS_SESSION_SECRET` et `TEAMS_OR
 ```bash
 docker run -d --name openteams -p 127.0.0.1:8787:8787 \
   -v openteams-data:/data -v "$PWD/users.json:/config/users.json:ro" \
-  -e TEAMS_SESSION_SECRET=change-me -e TEAMS_ORIGINS=https://app.example.com \
+  -e TEAMS_SESSION_SECRET="$(openssl rand -hex 32)" -e TEAMS_ORIGINS=https://app.example.com \
   openteams-server
 ```
 
@@ -189,8 +189,9 @@ détiennent et que la sauvegarde ne contient pas, de sorte qu’une restauration
   le serveur supprime tous les `.part` restants (et les temporaires de salle périmés), puis toutes les 15 minutes ceux de
   plus d'une heure. Les fichiers envoyés mais jamais joints à un message restent jusqu'à leur suppression.
 - **Quotas.** La limite est par espace de travail (`TEAMS_WORKSPACE_QUOTA_MB`, 1024 par défaut) et compte ses fichiers de
-  canal et ceux de ses chats privés ; supprimer libère de la place. `TEAMS_FILES_QUOTA_MB` est un plafond facultatif pour
-  tout le répertoire.
+  canal et ceux de ses chats privés ; supprimer libère de la place. S’y ajoutent une limite par personne qui envoie des
+  fichiers, tous espaces et chats confondus (`TEAMS_USER_QUOTA_MB`, 1024 par défaut), et une pour tout le répertoire
+  (`TEAMS_FILES_QUOTA_MB`, 20480 par défaut). Avec des comptes, un envoi ne va que dans un espace existant ou un chat privé.
 - **Compactage.** Au chargement d'une salle, et toutes les `TEAMS_COMPACT_INTERVAL_MIN` minutes pour chaque salle, le serveur
   ré-encode la salle en une seule mise à jour Yjs sur un document neuf et ne l'écrit que si elle est plus petite et décrit
   exactement le même état. L'écriture va dans un fichier temporaire, est forcée sur disque puis renommée par-dessus

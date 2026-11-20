@@ -12,6 +12,7 @@
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
 import { parseChartExSpace } from '../../../../chart';
+import { CHART_POINTS_LIMITED } from '../../../../chart/point-limit';
 import { chartExFromNeutral, chartExTypeFromNeutral } from '../../utils/chart-ex-from-neutral';
 import { readChartExStyleBridge } from '../../utils/chart-ex-style-bridge';
 import { parseCxChartSeries } from '../../utils/chart-cx-parser';
@@ -127,8 +128,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): Promise<PptxChartData | undefined> {
 		let model;
 		try {
-			const parsed = sourceXml ? parseChartExSpace(sourceXml) : undefined;
-			if (parsed && !parsed.issues.length && parsed.chartExSpace.plotArea.series.length)
+			const parsed = sourceXml
+				? parseChartExSpace(sourceXml, { pointBudget: this.chartPointBudget })
+				: undefined;
+			if (
+				parsed &&
+				parsed.issues.every((issue) => issue.code === CHART_POINTS_LIMITED) &&
+				parsed.chartExSpace.plotArea.series.length
+			)
 				model = parsed.chartExSpace;
 		} catch {
 			/* Keep the tolerant compatibility path for malformed legacy parts. */

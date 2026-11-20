@@ -15,7 +15,7 @@ Collaboration is an optional feature. If you do not see a **Share** button, the 
 
 1. Click the **Share** button at the right end of the ribbon tab row (or **File > Share > Share with People**). The **Share Presentation** dialog opens on its **Create session** tab.
 2. Fill in:
-   - **Session Name** - the room identifier (letters, numbers, hyphens, underscores). Collaborators need this name.
+   - **Session Name** - the room identifier (letters, numbers, hyphens, underscores). Collaborators need this name, or for a peer-to-peer session the share link.
    - **Your Display Name** - how you appear to others.
    - **Collaboration Server** - optional. Leave it empty for a peer-to-peer session, or enter your organisation's collaboration server address (a `wss://...` URL).
 3. Click **Start Sharing**.
@@ -35,6 +35,8 @@ Either open a share link someone sent you, or join manually:
 3. Enter your display name and, if the session uses one, the collaboration server address.
 4. Click **Join session**.
 
+A peer-to-peer session (no collaboration server) can be joined only from its share link: the link carries the session key after its `#`, and the room ID alone is not enough.
+
 ## Presence indicators
 
 While a session is active you will see:
@@ -43,7 +45,7 @@ While a session is active you will see:
 - **Remote cursors** - each collaborator's pointer moves on the canvas with a coloured name label. Cursors appear only for people viewing the same slide as you.
 - **Remote selections** - when someone selects an element, it gets a coloured outline with their name, so you know what they are working on.
 - **Follow bar** - a strip at the top labelled **Follow a collaborator**. Click a person to follow them: your view then switches slides whenever they do. Click **Stop** to go back to browsing on your own.
-- **Connection status** - a dot in the status bar: green **Connected** (with the user count), yellow **Connecting...**, gray **Disconnected**, or red **Connection error** with a **Retry** button.
+- **Connection status** - a dot in the status bar: green **Connected** (with the user count), yellow **Connecting...**, gray **Disconnected**, or red **Connection error** with a **Retry** button. Hover the error to see why the session could not start (for example a peer-to-peer link without its session key, a page that is not served over https, or a server that cannot be reached); the **Share** dialog shows the same reason above its form.
 
 ## How simultaneous editing behaves
 
@@ -61,7 +63,7 @@ Merging protects you from lost edits, not from surprises. Deleting a slide someo
 
 The **Collaboration Server** field decides how participants connect:
 
-- **Empty (peer-to-peer)** - browser tabs on the same device always find each other, and people on other devices connect directly to you through public WebRTC signaling servers. This is the quickest way to try collaboration; the hosted demo works this way.
+- **Empty (peer-to-peer)** - browser tabs on the same device always find each other, and people on other devices connect directly to you through public WebRTC signaling servers. Those servers see only a hash of the session key from the share link and encrypted connection data, never the session name. This is the quickest way to try collaboration; the hosted demo works this way.
 - **Server address set** - everyone relays through a dedicated collaboration server. Use this when your organisation runs one: it works through strict firewalls and NAT where direct peer connections fail, keeps the room available while any participant is connected, and can be paired with authentication and server-side persistence by the host application.
 
 ::: warning Use wss:// on secure pages

@@ -24,14 +24,16 @@ network request must update this file in the same commit.
 | PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content    | `allowExternalContent` option; Trust Center; suite setting         |
 | PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it     | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it     | Do not start a session                                             |
-| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies  | No switch today (see below)                                        |
+| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies  | `checkRevocation: false` (see below)                               |
+| PowerPoint: AI assistant                           | The connection the host configures          | No (host must enable it)         | Do not pass `ai`                                                   |
 | Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured | Local mode                                                         |
 | Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts          | `iceServers` (your own STUN/TURN, or `[]`)                         |
 | Teams: website tabs                                | The URL a member added                      | When the tab is opened           | Do not add or open website tabs                                    |
 | Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)          | `ai-config.json`                                                   |
+| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl` | No (host must configure it)      | Leave `collaboration.credentialsUrl` empty                         |
 | Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)         | Do not configure it                                                |
 | Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                              | Not applicable (same origin)                                       |
-| Any product: hyperlinks, help links                | The link target                             | Only when clicked                | Not applicable                                                     |
+| Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                | Not applicable                                                     |
 | Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one    | Pass bytes instead                                                 |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
@@ -95,6 +97,9 @@ embed frame.
   parser's own `allowExternalImages` option is off too, so `ooxml-core/pptx` used directly
   fetches nothing. [docs/powerpoint-external-content.md](docs/powerpoint-external-content.md)
   records PowerPoint's own default and how it was established.
+- **Hyperlinks:** a link opens only when clicked, always in a new tab with `noopener` and
+  `noreferrer`, whatever frame the deck names. `file:` and `ftp:` links are kept in the deck but
+  never opened.
 - **On without asking:** the host option `allowExternalContent: true` (PowerPoint's "Unblock
   automatic download of linked images" policy), or File > Options > Trust Center > "Allow
   external content", which is off by default.
@@ -110,20 +115,30 @@ Sessions start only when the user (or host) starts one.
 - With the server field left blank, the viewer uses serverless WebRTC (`y-webrtc`). Peers find
   each other through the library's default public signaling server, `wss://y-webrtc-eu.fly.dev`,
   operated by a third party, and through public STUN servers (`stun.l.google.com`,
-  `global.stun.twilio.com`) to learn their network addresses. The signaling server sees the
-  room id (hashed), the participants' IP addresses and the connection offers; document content
-  then flows directly between peers, encrypted by WebRTC. Pass a `signaling` list (or
-  `?signaling=` in a share link) to use your own server.
+  `global.stun.twilio.com`) to learn their network addresses. Each session has a random 128-bit
+  secret that its invitation link carries in the `#key=` fragment, which browsers never send to
+  a server. The signaling server sees a SHA-256 hash of that secret (never the room name), the
+  participants' IP addresses and signaling messages encrypted with the secret; document content
+  then flows directly between peers, encrypted by WebRTC and by the same secret. Pass a
+  `signaling` list (or `?signaling=` in a share link) to use your own server.
 - Sessions within one browser use `BroadcastChannel`, which never leaves the device.
+
+### AI assistant
+
+The assistant is off unless the host passes an `ai` configuration. When it is on, each request goes
+to the connection the host chose (its endpoint, its transport, or a model running in the page) and
+carries the conversation, a deck outline or the active slide (`contextStrategy`, `'none'` turns it
+off), whatever the user focused, and the results of the tools the model called. This applies in every
+framework binding. `tools.enabled` limits what the model can read. Stored chats stay on the device.
 
 ### Digital signature inspection (Node only)
 
 `inspectPptxDigitalSignatures` from `ooxml-core/pptx/signature-node` checks the revocation status
 of each certificate that verified a signature value, by sending an OCSP request (the certificate's
 serial number and issuer hashes) to the responder URL written in that certificate. A signature
-that fails verification causes no request. Requests to private network addresses are refused.
-There is currently no option to skip the check; call the browser-safe signature detection in
-`ooxml-core/opc` instead when no network use is acceptable.
+that fails verification causes no request. The URL comes from the file, so the request goes only
+to globally routable addresses, and the connection is made to the address that was checked. Pass
+`{ checkRevocation: false }` to make no request; the revocation status is then `not-checked`.
 
 ## Word, Excel and Visio
 
@@ -160,23 +175,35 @@ Hyperlinks and in-product help links open only when the reader follows them.
   `stun:stun.l.google.com:19302`, which learns each participant's IP address. Set `iceServers`
   to your own STUN/TURN servers, or to `[]` to use none. Audio and video flow between peers or
   through the TURN server you configure.
+- **Call signaling:** offers, answers and network candidates (which carry each participant's IP
+  addresses) go through the `signalingUrl` server to the other people in the call. With accounts the
+  reference server relays them only between signed-in users speaking as themselves, and a private
+  chat's call only between that chat's members; a server with only `authorizeSync` relays none.
 - **Website tabs:** a website tab loads the URL a member added, in a frame, for everyone who
-  opens it.
+  opens it. A host's Content Security Policy decides which sites may be framed: the OOXML Office
+  suite frames none, so there the tab offers "Open externally", which opens the site in a new
+  browser tab.
 
 ## OOXML Office suite (`apps/office-suite`, the GitHub Pages site and the desktop app)
 
 The suite uses the editors above, so their sections apply. In addition:
 
+- **One script policy for the whole site:** the GitHub Pages origin is shared with other project
+  sites, so every published page (the suite, its 404 page, every viewer's documentation and demos)
+  and the desktop app carry the same Content Security Policy from `scripts/csp.mjs`: script only
+  from the site itself, never inline, and frames only from the site and the online-video players
+  (`www.youtube.com`, `player.vimeo.com`). The Pages build fails on a page without it.
 - **Fonts:** Settings > Fonts chooses Google Fonts (the default), your own font server, or no
-  downloads, for PowerPoint, Word, Excel and Visio alike. The site's Content Security Policy allows only Google's two font
-  hosts; a deployment that uses its own font server adds that server to the policy.
+  downloads, for PowerPoint, Word, Excel and Visio alike. The policy allows only Google's two
+  font hosts; a deployment that uses its own font server adds that server to it.
 - **AI assistant:** off the network by default (the shipped `ai-config.json` selects the offline
   assistant). When the user or the deployment's policy selects a provider, the prompt, the
   conversation and the document context it needs are sent to that provider, under the
   provider's own terms. The context is the files the user attached; hidden and very hidden
   sheets and the cells of hidden rows and columns are left out unless the deployment's policy sets
-  `context.includeHidden`. Keys stay in session storage unless the user chooses to remember them.
-  A saved model is used only while the policy still allows its provider. See
+  `context.includeHidden`. Keys stay in this tab's session storage only and are cleared when it
+  closes; keys an earlier version remembered in localStorage are deleted when the app loads. A
+  saved model is used only while the policy still allows its provider. See
   [docs/suite-ai-config.md](docs/suite-ai-config.md).
 - **OneDrive:** off unless the host configures it. Files and the access token then go to
   Microsoft Graph. See [docs/onedrive-integration.md](docs/onedrive-integration.md).
@@ -185,13 +212,28 @@ The suite uses the editors above, so their sections apply. In addition:
   text as shown (which can quote attached files), the model's label, the names and kinds of
   attached files and the number of edits and new files a reply proposed. The files themselves,
   the reply's raw text, the proposed edits with their before-and-after text, and file ids stay on
-  the asker's device.
+  the asker's device. When the deployment's `ai-config.json` sets `collaboration.credentialsUrl`
+  (off by default), the suite sends a `GET` with the user's cookies to that URL right before a
+  shared chat connects, and again before each reconnect or once the token expires, to get a
+  short-lived token for the sync server. No document or chat content is sent, and the token is
+  kept in memory only. Leave the field empty to turn the request off; a sync server that needs a
+  token then cannot be used.
 - **Updates:** the installed app checks its own origin for a new `sw.js` at start, on focus and
-  hourly. The service worker caches only the app's own files.
+  hourly. The service worker caches only the app's own files, and serves a saved copy only while
+  it matches the SHA-256 the build recorded for it; a copy that does not is deleted and fetched
+  again from the site. A new version installs only when every file it downloads matches, and
+  otherwise tries again at the next check. After an update, the previous version's files stay
+  cached for windows still running it and are deleted once none is. Each version's cache also
+  keeps its file list and an anonymous marker per window it served (a hash of the browser's
+  window id), so a later version can tell which saved files those windows may use. The shell's
+  script and style tags carry subresource integrity.
 - **Desktop:** the Tauri shell has no updater, telemetry or plugins. It reads and writes the
   files the user opens, and lists the file names inside a folder the user connects so they can be
-  found; nothing is sent. The operating system's WebView (WebView2, WKWebView) may send its
-  vendor's own diagnostics under the operating system's settings.
+  found; nothing is sent. Its window only shows the bundled app: a web or `mailto:` link the user
+  follows opens in the system's default browser or mail client, and other destinations (another
+  site in the window, `file:` addresses, new in-app windows) are refused. The operating system's
+  WebView (WebView2, WKWebView) may send its vendor's own diagnostics under the operating
+  system's settings.
 
 ## MCP servers (`mcp/` and the viewers' MCP packages)
 
@@ -218,7 +260,7 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per
   profile; profiles, favourites, theme (`ooxml-suite-theme`), fonts (`ooxml-suite-fonts`), the
   other Settings (`ooxml-suite-settings`) and AI preferences in localStorage; AI keys in session
-  storage, or localStorage when the user chooses to remember them. Settings > Privacy shows how
+  storage only. Settings > Privacy shows how
   much space the app uses and can ask the browser to keep it when space runs low
   (`navigator.storage.persist`); nothing is sent.
 
@@ -248,6 +290,6 @@ Symbols 2 subset (U+2000-2BFF). The subset is inline WOFF2 data, enabled without
 font downloads. It makes no outbound request, sends no document or font names,
 and creates no persistent storage. Image/print exports collect the same font
 rule. Host CSP must permit `font-src data:` and the viewer's inline styles; the
-site and desktop policies already do. The font-download setting does not disable
+published pages' and desktop policy (`scripts/csp.mjs`) already does. The font-download setting does not disable
 this local fallback. This is approximate symbol substitution, not exact Wingdings
 outlines; unmapped symbol bullets use a plain bullet.

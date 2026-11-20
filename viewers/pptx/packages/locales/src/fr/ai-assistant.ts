@@ -21,7 +21,12 @@ export const translations = {
 	'pptx.ai.accept': 'Accepter',
 	'pptx.ai.reject': 'Refuser',
 	'pptx.ai.acceptAll': 'Tout accepter',
+	'pptx.ai.proposalConflict':
+		'Cette partie de la présentation a changé après la proposition, qui n’a donc pas été appliquée. Refusez-la ou réessayez.',
+	'pptx.ai.proposalNeedsApproval': 'Nécessite votre approbation',
 	'pptx.ai.pendingChanges': 'Modifications en attente ({{count}})',
+	'pptx.ai.proposalsDiscarded':
+		'Les modifications suggérées ont été abandonnées, car une autre présentation a été chargée ou les diapositives ont été remplacées.',
 	'pptx.ai.moreChanges': '+{{count}} de plus',
 	'pptx.ai.applied': 'Appliqué',
 	'pptx.ai.askAboutElement': "Interroger l'IA à ce sujet",

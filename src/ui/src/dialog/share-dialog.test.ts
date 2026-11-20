@@ -87,6 +87,19 @@ describe('office-ui-share-dialog', () => {
 		expect(submit(dialog).textContent).toBe('Join');
 	});
 
+	it('says why a peer-to-peer invitation without its key cannot be joined', () => {
+		const dialog = create({
+			open: true,
+			invitation: 'https://x.example/?room=team&transport=webrtc',
+			labels: shareDialogLabels('fr'),
+			defaults: { userName: 'Bo' },
+		});
+		expect(root(dialog).querySelector('.error')?.textContent).toBe(
+			SHARE_DIALOG_LABELS.fr.missingKey,
+		);
+		expect(submit(dialog).disabled).toBe(true);
+	});
+
 	it('shows the live session: link, details, people and Stop', () => {
 		const dialog = create({
 			open: true,

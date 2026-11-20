@@ -1,5 +1,8 @@
 import type { CollaborationConfig } from 'pptx-vanilla-viewer';
 
+import { sessionFromPage } from '../../shared/collaboration-link';
+import type { SessionLink } from '../../shared/collaboration-link';
+
 /**
  * Collaboration helpers for the vanilla demo, mirroring the Vue demo's
  * `collab.ts` at smaller scale. The vanilla demo ships without a relay server,
@@ -51,20 +54,17 @@ export function randomUserColor(): string {
 	return `#${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
-/** Build a serverless WebRTC collaboration config for `roomId`. */
-export function buildRoomConfig(roomId: string, userName: string): CollaborationConfig {
-	return { roomId, serverUrl: '', transport: 'webrtc', userName, userColor: randomUserColor() };
+/** A serverless WebRTC collaboration config for the session `link` names. */
+export function buildRoomConfig(link: SessionLink, userName: string): CollaborationConfig {
+	return { ...link, userName, userColor: randomUserColor() };
 }
 
-/** The shareable `?room=<id>&transport=webrtc` link for the current page. */
-export function buildShareUrl(roomId: string): string {
-	const url = new URL(window.location.href);
-	url.searchParams.set('room', roomId);
-	url.searchParams.set('transport', 'webrtc');
-	return url.toString();
-}
-
-/** The room id from the current URL's `?room=` param, or null. */
-export function readRoomFromUrl(): string | null {
-	return new URLSearchParams(window.location.search).get('room');
+/**
+ * The peer-to-peer session the current URL names (`?room=<id>&transport=webrtc#key=<secret>`),
+ * or null. A link without its secret names the room without one, so the viewer says why it
+ * cannot join.
+ */
+export function readRoomFromUrl(): SessionLink | null {
+	const link = sessionFromPage('room', '');
+	return link?.transport === 'webrtc' ? link : null;
 }

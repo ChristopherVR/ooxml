@@ -846,16 +846,13 @@ export * from './shape-adjustment-model';
 export * from './shape-adjustment-probe';
 export * from './shape-adjustment-solver';
 export * from './hyperlink-security';
-// `a:hlinkClick/@tgtFrame`: the `target`/`rel` a hyperlink `<a>` should carry,
-// decided once so a deck's authored frame name (not just the hardcoded
-// `_blank`) reaches every binding's anchor.
-export * from './hyperlink-target';
 // Real-time collaboration presence: pure validators + sanitisers for inbound
 // Yjs awareness data (room id, username/colour/avatar, cursor clamping, stale
 // drop), deterministic per-user colour, mixed-content (ws:// from https)
 // detection, and the `RemoteCursor` projection. The stateful Yjs provider /
 // awareness lifecycle stays in each binding.
 export * from './collaboration-presence';
+export * from './collaboration-failure';
 export * from './collaboration-shell-state';
 export * from './collaboration-external-session';
 export * from './collaboration-options';
@@ -899,6 +896,7 @@ export * from './collaboration-sync-gate';
 // Whether a freshly loaded deck yields to the room: only a bootstrap load does,
 // or opening a file mid-session silently loses it (issue: vanilla + room).
 export * from './collaboration-load-origin';
+export * from './collaboration-room-join';
 // Document-teardown listeners (pagehide / beforeunload / host postMessage) so a
 // peer whose document is destroyed (tab close, navigation, or an embedding page
 // removing the viewer iframe) leaves the room instead of lingering as a ghost
@@ -1726,6 +1724,8 @@ export * from './options';
 export * from './customization';
 export * from './ribbon-galleries';
 export * from './deck-style';
+// A theme change re-resolved over the deck state, ready for one undo step.
+export { withThemeUpdates } from './theme-updates';
 // A theme change as an undo step: what each snapshot records, what an undo writes back into the
 // handler's theme parts, and the write queue every save waits for.
 export * from './theme-history';
@@ -1737,9 +1737,8 @@ export * from './ribbon-add-ins';
 // small helper extractions (wave 2)
 // OLE placeholder icon SVG-fragment primitives (rect/line/text builders +
 // the per-type shape table), shared by every binding's OLE renderer.
-// (`buildSmartArtPreviewElement` + its constants, and `buildQueryLinkUrl` /
-// `buildShareUrl`, are new exports of the already-star-exported
-// `preview-elements` / `broadcast-helpers` above; `modelDataToBlobUrl` /
+// (`buildSmartArtPreviewElement` + its constants are new exports of the
+// already-star-exported `preview-elements` above; `modelDataToBlobUrl` /
 // `DEFAULT_MODEL_MIME` likewise ride the existing `model3d-scene` export.)
 export * from './ole-icon-primitives';
 // The one `hexToRgbUnit` for render/'s SVG duotone `<filter>` builders.

@@ -1,3 +1,4 @@
+import '../../shared/zod-jitless';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
 // Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
@@ -41,8 +42,9 @@ import '../../shared/dropzone.css';
 /**
  * Demo app for `pptx-vanilla-viewer`, mirroring demos/demo-vue/src/App.vue: the
  * viewer fills the screen and a landing dropzone handles file open / sample deck
- * loading. A `?room=<id>` URL
- * param auto-joins a serverless (WebRTC) collaboration session. Starting a new
+ * loading. A peer-to-peer invitation link
+ * (`?room=<id>&transport=webrtc#key=<secret>`) auto-joins a serverless
+ * (WebRTC) collaboration session. Starting a new
  * session is dialog-driven: the viewer's own toolbar Share/Broadcast buttons
  * open the built-in modal dialogs (see `pptx-vanilla-viewer`'s
  * `viewer/collab/ui`), prefilled with a demo-generated display name via
@@ -248,7 +250,7 @@ async function fetchSampleDeck(): Promise<Uint8Array | null> {
 	}
 }
 
-// A `?room=<id>` link auto-joins a collaboration session: open a blank deck
+// A `?room=<id>&transport=webrtc#key=<secret>` link auto-joins a collaboration session: open a blank deck
 // wired to the room so the host's slides arrive through late-joiner sync. With
 // `?sample=1` too, the sample deck seeds the session instead of a blank one.
 const audienceSession = parsePresentationSessionId(window.location.hash);

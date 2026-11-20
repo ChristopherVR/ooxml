@@ -67,6 +67,35 @@ function stubModel(): LanguageModel {
 	}) as unknown as LanguageModel;
 }
 
+/** A model that never stops calling `toolName`, with input from `inputFor`. */
+function runawayModel(toolName: string, inputFor: (call: number) => unknown) {
+	let calls = 0;
+	const model = new MockLanguageModelV4({
+		doStream: async () => {
+			calls += 1;
+			return {
+				stream: simulateReadableStream({
+					chunks: [
+						{ type: 'stream-start', warnings: [] },
+						{
+							type: 'tool-call',
+							toolCallId: `call-${calls}`,
+							toolName,
+							input: JSON.stringify(inputFor(calls)),
+						},
+						{
+							type: 'finish',
+							finishReason: { unified: 'tool-calls', raw: undefined },
+							usage: { inputTokens: 1, outputTokens: 1, totalTokens: 2 },
+						},
+					],
+				}),
+			};
+		},
+	}) as unknown as LanguageModel;
+	return { model, calls: () => calls };
+}
+
 async function waitFor(predicate: () => boolean, timeoutMs = 4000): Promise<void> {
 	const deadline = Date.now() + timeoutMs;
 	while (!predicate()) {
@@ -108,5 +137,36 @@ describe('model-mode tool execution (double-staging regression)', () => {
 		});
 
 		expect(controller.proposals.size).toBe(1);
+	});
+
+	it('ends a runaway model at the step limit', async () => {
+		const { model, calls } = runawayModel('get_slide', (call) => ({ slideIndex: call % 2 }));
+		const controller = await createVanillaChat({
+			bridge: makeMockBridge(),
+			config: {
+				connection: { kind: 'model', model },
+				limits: { maxSteps: 3, maxRepeatedToolCalls: 100 },
+			},
+		});
+
+		await controller.sendMessage('go');
+		await waitFor(() => controller.getSnapshot().status === 'error');
+
+		expect(calls()).toBe(3);
+		expect(controller.getLastFinish()).toEqual({ reason: 'limit', limit: 'steps' });
+	});
+
+	it('ends a model that repeats one call', async () => {
+		const { model, calls } = runawayModel('get_deck_overview', () => ({}));
+		const controller = await createVanillaChat({
+			bridge: makeMockBridge(),
+			config: { connection: { kind: 'model', model }, limits: { maxRepeatedToolCalls: 2 } },
+		});
+
+		await controller.sendMessage('go');
+		await waitFor(() => controller.getSnapshot().status === 'error');
+
+		expect(calls()).toBe(3);
+		expect(controller.getLastFinish()).toEqual({ reason: 'limit', limit: 'repeats' });
 	});
 });

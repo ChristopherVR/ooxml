@@ -31,6 +31,8 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
+import { webrtcRoomPath } from './support/webrtc-room';
+
 /** How far a drawn overlay may sit from where it belongs (device px). */
 const TOLERANCE_PX = 2;
 
@@ -54,9 +56,7 @@ async function boxOf(locator: Locator): Promise<Box> {
 
 async function openDeck(page: Page, roomId: string, name: string, sample: boolean): Promise<void> {
 	const sampleParam = sample ? 'sample=1&' : '';
-	await page.goto(
-		`/?${sampleParam}room=${encodeURIComponent(roomId)}&transport=webrtc&name=${name}`,
-	);
+	await page.goto(webrtcRoomPath(roomId, `${sampleParam}name=${name}&`));
 	await page.locator('[aria-roledescription="slide"]').first().waitFor({ timeout: 30_000 });
 }
 

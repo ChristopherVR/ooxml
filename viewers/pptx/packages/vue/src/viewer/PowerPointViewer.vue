@@ -341,6 +341,10 @@ const activeContent = source.activeContent;
 // collaboration layer watches it to re-adopt the shared doc's slides when a
 // slow local load lands mid-session (late-joiner bootstrap-deck clobber).
 const loadVersion = ref(0);
+// Decks that replace the open one without the load pipeline (File > New, a room join). With
+// `loadVersion` they name the presentation load the AI's staged proposals belong to; they stay
+// out of `loadVersion` so a join does not re-run its per-deck seeding.
+const deckReplacements = ref(0);
 
 // Declared ahead of `useLoadContent` on purpose: the save path reads the
 // Protect-Presentation secret so a protected deck serialises encrypted.
@@ -505,6 +509,7 @@ const compatToasts = useCompatibilityToasts({ warnings: compatibilityWarnings })
 
 function createPresentation(templateId: string): void {
 	slides.value = createBackstagePresentation(templateId);
+	deckReplacements.value += 1;
 	templateElementsBySlideId.value = {};
 	activeSlideIndex.value = 0;
 	selection.selectedElementIds.value = [];
@@ -1320,6 +1325,9 @@ const collaboration = useCollaborationWiring({
 	// A room may replace the host's own deck (a late joiner's bootstrap load),
 	// never one the user opened during the session.
 	getLoadOrigin: () => source.loadOrigin.value,
+	onRoomReplacedDeck: () => {
+		deckReplacements.value += 1;
+	},
 	getTemplateElements: () => templateElementsBySlideId.value,
 	// Retain the loaded source bytes for elected-writer (role 'owner') write-back:
 	// the write-back reloads the original file, overlays the live Y.Doc slides,
@@ -1922,6 +1930,7 @@ const aiBridge = useAiBridge({
 	canvasSize,
 	theme: pptxTheme,
 	handler,
+	deckLoad: () => loadVersion.value + deckReplacements.value,
 	sections,
 	customShows,
 	presentationProperties,
@@ -2698,14 +2707,18 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 				"
 			>
 				<!-- Collaboration status in the footer (React parity), replacing the
-				     former floating pill. -->
+				     former floating pill. A session that could not start still says why. -->
 				<template
-					v-if="collaboration.collabActive.value && dialogAvailable('share')"
+					v-if="
+						(collaboration.collabActive.value || collaboration.collab.failure.value) &&
+						dialogAvailable('share')
+					"
 					#collaboration
 				>
 					<CollaborationStatusIndicator
 						:status="collaboration.collab.status.value"
 						:connected-count="collaboration.collab.connectedCount.value"
+						:failure="collaboration.collab.failure.value"
 						@retry="collaboration.collab.retry"
 					/>
 				</template>

@@ -7,7 +7,12 @@
  */
 
 import type { CollaborationWriteBackState, UpdateRefusalCode } from 'ooxml-core/collab';
-import type { CollaborationConfig, CollaborationRole, CollaborationTransport } from 'ooxml-ui/pptx';
+import type {
+	CollaborationConfig,
+	CollaborationFailure,
+	CollaborationRole,
+	CollaborationTransport,
+} from 'ooxml-ui/pptx';
 import type { Doc as YDoc } from 'yjs';
 
 // ---------------------------------------------------------------------------
@@ -35,7 +40,12 @@ import type { Doc as YDoc } from 'yjs';
  * the room/user identity. The React binding accepts it verbatim via the
  * `collaboration` prop.
  */
-export type { CollaborationConfig, CollaborationRole, CollaborationTransport };
+export type {
+	CollaborationConfig,
+	CollaborationFailure,
+	CollaborationRole,
+	CollaborationTransport,
+};
 export type {
 	ExternalCollaborationSession,
 	ExternalCollaborationSnapshot,
@@ -88,6 +98,8 @@ export interface UserPresence {
 export interface CollaborationContextValue {
 	/** Current WebSocket connection status. */
 	status: ConnectionStatus;
+	/** Why the session failed to start while `status` is `error`; `null` otherwise. */
+	failure: CollaborationFailure | null;
 	/** Presence data for all remote users (excludes the local user). */
 	remoteUsers: UserPresence[];
 	/** Broadcast the local user's presence state. */
