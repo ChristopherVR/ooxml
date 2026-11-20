@@ -103,9 +103,7 @@ describe('vanilla presentation action runner (B7)', () => {
 	it("oleVerb opens the clicked OLE object's recovered embedding", () => {
 		// The tab opens. A blocked popup (null) would fall back to a download link, and happy-dom
 		// follows that link: the shared worker's page would be left on the data: URL.
-		const openSpy = vi
-			.spyOn(window, 'open')
-			.mockReturnValue({ opener: null } as unknown as Window);
+		const openSpy = vi.spyOn(window, 'open').mockReturnValue({ opener: null } as unknown as Window);
 		const objectUrls = URL as unknown as Record<string, unknown>;
 		const saved = { create: objectUrls.createObjectURL, revoke: objectUrls.revokeObjectURL };
 		objectUrls.createObjectURL = () => 'blob:http://localhost/ole-payload';

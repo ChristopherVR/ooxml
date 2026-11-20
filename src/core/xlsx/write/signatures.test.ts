@@ -50,7 +50,9 @@ describe('digitally signed workbooks', () => {
 		const workbook = await loadXlsx(await signedWorkbook());
 		// A signature without signed content does not verify: the workbook is not shown as signed.
 		expect(workbook.signatures?.state).toBe('invalid');
-		expect(workbook.signatures?.signatures.map(({ path }) => path)).toEqual(['_xmlsignatures/sig1.xml']);
+		expect(workbook.signatures?.signatures.map(({ path }) => path)).toEqual([
+			'_xmlsignatures/sig1.xml',
+		]);
 		expect((await loadXlsx(await saveXlsx(createWorkbook()))).signatures).toBeUndefined();
 	});
 
