@@ -72,6 +72,13 @@ export function applyRenderedElementAccessibility(
 		} else {
 			node.removeAttribute('aria-roledescription');
 		}
+		// A chart's data (`getAriaDescription`): `role="img"` prunes the subtree, so the painted
+		// SVG's own `<desc>` never reaches a reader and the wrapper carries the readout itself.
+		if (aria.description) {
+			node.setAttribute('aria-description', aria.description);
+		} else {
+			node.removeAttribute('aria-description');
+		}
 		if (aria.hidden) {
 			node.setAttribute('aria-hidden', 'true');
 		} else {

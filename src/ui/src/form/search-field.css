@@ -15,6 +15,10 @@
 }
 :host(:focus-within) {
 	border-color: var(--office-field-border-focus);
+	/* A recoloured hairline border is not an indicator: against the border it replaces it stays
+	   under 3:1 (WCAG 1.4.11). The box takes the shared ring, inset so it keeps its footprint. */
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
 }
 :host([variant='titlebar']) {
 	height: var(--office-field-height);

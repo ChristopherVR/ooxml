@@ -1,7 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // What a Word chart shows: the shared chart painter's SVG, drawn from the values cached in the
 // chart part with the document theme, or a labelled frame naming a family it does not draw.
-import { chartSpaceKind, renderChartSpaceSvg, renderChartSummarySvg } from '../chart/index';
+import {
+	chartAccessibleName,
+	chartSpaceKind,
+	renderChartSpaceSvg,
+	renderChartSummarySvg,
+} from '../chart/index';
 import type { ThemeColorScheme } from '../drawingml/theme-model';
 import type { DocxChart } from './chart';
 import type { ThemeCatalog } from './theme-model';
@@ -11,6 +16,11 @@ export interface DocxChartPaint {
 	svg?: string;
 	/** `Chart`, or `Chart (bubble)` for a family the painter does not draw. */
 	label: string;
+	/**
+	 * What a reader should be told the chart is: the author's alt text (`wp:docPr/@descr`), else the
+	 * chart's title (`chartAccessibleName`). Absent when the chart has neither.
+	 */
+	name?: string;
 }
 
 /** The document theme's colour slots as a DrawingML colour scheme. */
@@ -24,16 +34,21 @@ export function themeCatalogColorScheme(theme: ThemeCatalog | undefined): ThemeC
 	return { colors };
 }
 
-/** Paints a chart at the drawing extent (CSS pixels). Never throws: failures give the frame. */
+/**
+ * Paints a chart at the drawing extent (CSS pixels). Never throws: failures give the frame.
+ * `altText` is the drawing's own alt text (`InlineImage.altText`), which names the chart for a
+ * reader ahead of its title, in the painted SVG and in {@link DocxChartPaint.name}.
+ */
 export function docxChartPaint(
 	chart: DocxChart | undefined,
 	widthPx: number,
 	heightPx: number,
 	theme?: ThemeCatalog,
+	altText?: string,
 ): DocxChartPaint {
 	const space = chart?.chartSpace;
 	const extended = chart?.chartEx;
-	if (chart && extended) return paintExtended(chart, extended, widthPx, heightPx, theme);
+	if (chart && extended) return paintExtended(chart, extended, widthPx, heightPx, theme, altText);
 	if (chart && chart.layoutId) return { label: `Chart (${chart.layoutId})` };
 	if (!space) return { label: 'Chart' };
 	const kind = chartSpaceKind(space);
@@ -48,13 +63,24 @@ export function docxChartPaint(
 			height: Math.max(1, Math.round(heightPx)),
 			theme: themeCatalogColorScheme(theme),
 			fonts,
+			...(altText ? { altText } : {}),
 			...(chart.formatting ? { formatting: chart.formatting } : {}),
 			...(chart.colorPalette !== undefined ? { colorPalette: chart.colorPalette } : {}),
 		});
-		return { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' };
+		return named(chart, altText, { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' });
 	} catch {
 		return { label: kind.type ? `Chart (${kind.type})` : 'Chart' };
 	}
+}
+
+/** The paint with the accessible name the author's alt text, or the chart's title, gives it. */
+function named(
+	chart: DocxChart,
+	altText: string | undefined,
+	paint: DocxChartPaint,
+): DocxChartPaint {
+	const name = chartAccessibleName(chart, altText);
+	return name ? { ...paint, name } : paint;
 }
 
 /** An extended chart (waterfall, histogram): its summary through the shared painter. */
@@ -64,6 +90,7 @@ function paintExtended(
 	widthPx: number,
 	heightPx: number,
 	theme?: ThemeCatalog,
+	altText?: string,
 ): DocxChartPaint {
 	try {
 		const fonts = {
@@ -75,8 +102,9 @@ function paintExtended(
 			height: Math.max(1, Math.round(heightPx)),
 			theme: themeCatalogColorScheme(theme),
 			fonts,
+			...(altText ? { altText } : {}),
 		});
-		return { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' };
+		return named(chart, altText, { svg, label: chart.title ? `Chart: ${chart.title}` : 'Chart' });
 	} catch {
 		return { label: `Chart (${chart.layoutId ?? 'extended'})` };
 	}

@@ -133,8 +133,9 @@ function pictureXml(image: ImageObject, id: number, relId: string): string {
 }
 
 function frameXml(chart: ChartObject, id: number, relId: string): string {
+	const descr = chart.description ? ` descr="${escapeAttr(chart.description)}"` : '';
 	return (
-		`<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${id}" name="${escapeAttr(chart.name ?? `Chart ${id}`)}"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>` +
+		`<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="${id}" name="${escapeAttr(chart.name ?? `Chart ${id}`)}"${descr}/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>` +
 		'<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>' +
 		`<a:graphic><a:graphicData uri="${NS.c}"><c:chart xmlns:c="${NS.c}" r:id="${relId}"/></a:graphicData></a:graphic></xdr:graphicFrame>`
 	);

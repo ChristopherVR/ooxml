@@ -90,3 +90,32 @@ it('shows an SVG picture from an opaque-origin data URL, never a blob of this or
 	layer.destroy();
 	view.destroy();
 });
+
+it('names a chart by its alt text and offers its data to assistive technology', () => {
+	const wb = createWorkbook();
+	wb.sheets[0]!.drawings.push({
+		kind: 'chart',
+		chartType: 'column',
+		title: 'Sales',
+		description: 'Sales doubled in the second week',
+		showLegend: false,
+		series: [{ name: 'Week', categories: ['One', 'Two'], values: [10, 20] }],
+		anchor: {
+			from: { row: 0, col: 2, rowOffset: 0, colOffset: 0 },
+			ext: { cx: 2857500, cy: 1428750 },
+		},
+	});
+	const ctx = createTestContext(wb);
+	const container = document.createElement('div');
+	ctx.root.append(container);
+	const view = new GridView(ctx, container);
+	const layer = new DrawingLayer(view);
+	layer.render();
+	const node = container.querySelector<HTMLElement>('.xg-chart')!;
+	expect(node.getAttribute('role')).toBe('img');
+	expect(node.getAttribute('aria-label')).toBe('Sales doubled in the second week');
+	const describedBy = node.getAttribute('aria-describedby')!;
+	expect(node.querySelector(`#${describedBy}`)?.textContent).toBe('Week: One 10; Two 20.');
+	layer.destroy();
+	view.destroy();
+});
