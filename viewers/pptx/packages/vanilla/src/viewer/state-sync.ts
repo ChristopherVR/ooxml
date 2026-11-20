@@ -171,6 +171,9 @@ export function createStateSync(deps: StateSyncDeps): StoreListener<ViewerState>
 		if (state.protectedView !== previous.protectedView) {
 			chrome.setProtectedView(state.protectedView);
 		}
+		if (state.signatures !== previous.signatures) {
+			chrome.setSignatures(state.signatures);
+		}
 		if (
 			state.readOnlyRecommendation !== previous.readOnlyRecommendation ||
 			state.readOnlyBannerDismissed !== previous.readOnlyBannerDismissed ||

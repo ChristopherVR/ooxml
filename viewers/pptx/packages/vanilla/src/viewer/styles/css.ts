@@ -35,6 +35,7 @@ import { READING_VIEW_CSS } from './reading-view-css';
 import { REGION_CSS } from './region-css';
 import { RIBBON_CSS } from './ribbon-css';
 import { RIBBON_QUICK_CSS } from './ribbon-quick-css';
+import { SIGNATURE_BADGE_CSS } from './signature-badge-css';
 import { SLIDE_TEMPLATE_DIALOG_CSS } from './slide-template-dialog-css';
 
 /**
@@ -881,6 +882,7 @@ ${AI_FOCUS_CSS}
 ${READING_VIEW_CSS}
 ${OUTLINE_VIEW_CSS}
 ${PARITY_BANNERS_CSS}
+${SIGNATURE_BADGE_CSS}
 ${REGION_CSS}
 ${EDITOR_CHROME_CSS}`;
 	const themeCss: unknown = Reflect.get(pptxUi, 'withOfficeThemeCss');

@@ -1131,6 +1131,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		return this.documentView().fileName;
 	}
 
+	/** The current UI locale, for the chrome (a `setLocale` rebuilds it). */
+	getLocale(): string {
+		return this.currentLocale;
+	}
+
 	/** The host's `fileProviders` as File > Open places (empty: the Open page has none). */
 	getCloudFiles(): BackstageCloudFiles {
 		return {
