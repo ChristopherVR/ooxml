@@ -55,7 +55,7 @@ const git = (...args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8'
 /** Commands of a viewer's verify list that only `--browser` or `--full` runs. */
 const BROWSER = /playwright|test:browser|e2e/;
 const SLOW =
-	/mktemp|pack:smoke|build:packages|test:packages|test-packages\.mjs|check:published|test:package\b|test:worker/;
+	/mktemp|pack:smoke|build:packages|test:packages|test-packages\.mjs|check:published|test:package\b|test:worker|check-shipped-css/;
 const FORMATTED = /\.(m?[jt]sx?|css|json|md|vue|svelte|html|ya?ml)$/;
 
 function fail(message) {
@@ -200,6 +200,7 @@ if (p.pptx.run) {
 		last = [add('pptx:build', 'bun run build:packages', cwd, BUILT)];
 		if (dist)
 			for (const [name, cmd] of [
+				['css', 'node ../../scripts/check-shipped-css.mjs viewers/pptx src/ui'],
 				['typecheck', 'bun run typecheck'],
 				['viewer-props', 'bun run check:viewer-props'],
 				['tree-shaking', 'bun run check:tree-shaking'],

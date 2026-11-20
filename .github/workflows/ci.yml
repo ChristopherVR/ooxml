@@ -504,6 +504,8 @@ jobs:
       - name: Build the packages
         working-directory: viewers/pptx
         run: bun run build:packages
+      - name: Check the published stylesheets minify
+        run: node scripts/check-shipped-css.mjs viewers/pptx src/ui
       # The accessibility gates drive all five demos, so they build every one.
       - name: Build browser demos once for every shard
         if: fromJSON(needs.plan.outputs.plan).pptx.e2e.projects[0] != null || fromJSON(needs.plan.outputs.plan).a11y.pptx
