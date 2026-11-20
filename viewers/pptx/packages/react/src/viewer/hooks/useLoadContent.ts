@@ -17,6 +17,7 @@ import {
 	resolveAuthoredCustomShowId,
 	resolveGoogleFontsCss2Base,
 	resolveInitialSlideIndex,
+	resolveMediaUrls,
 	resolveTableCellImageUrls,
 	resolveTableStyleImageUrls,
 	resolveTextFillBlipUrls,
@@ -24,7 +25,6 @@ import {
 } from 'ooxml-ui/pptx';
 import type {
 	PptxAppProperties,
-	MediaPptxElement,
 	PptxElement,
 	PptxCoreProperties,
 	PptxCustomProperty,
@@ -59,12 +59,7 @@ import { useTranslation } from '../i18n/use-translation';
 import type { CanvasSize } from '../types';
 import { glyphOutlineFontCache } from '../utils/glyph-outline-cache';
 import { partitionTemplateElements } from '../utils/template-editing';
-import {
-	collectMediaElements,
-	collectImagePaths,
-	buildInitialGuides,
-	resolveMediaElementSource,
-} from './load-content-helpers';
+import { collectImagePaths, buildInitialGuides } from './load-content-helpers';
 import type { EditorHistoryResult } from './useEditorHistory';
 import { GOOGLE_FONTS_LINK_ID } from './useFontInjection';
 
@@ -332,30 +327,8 @@ export function useLoadContent({
 					startWebfonts(parsed.slides, parsed.embeddedFonts ?? []);
 				}
 
-				// ── Resolve media Blob URLs (audio/video) ───────────────────
-				const mediaElements: MediaPptxElement[] = [];
-				for (const slide of parsed.slides) {
-					collectMediaElements(slide.elements, mediaElements);
-				}
-				const nextMediaUrls = new Map<string, string>();
-				// Shared with the other four bindings (G17): a LINKED media
-				// element's `mediaPath` is already the verbatim external URL by
-				// the time it reaches here, and `resolveMediaElementSource` hands
-				// it straight back instead of attempting an archive lookup that
-				// can only ever find embedded parts.
-				await Promise.all(
-					mediaElements.map(async (mediaElement) => {
-						const resolved = await resolveMediaElementSource(mediaElement, handler);
-						if (resolved.missing || !resolved.mediaPath || !resolved.url) {
-							mediaElement.mediaMissing = true;
-							return;
-						}
-						nextMediaUrls.set(resolved.mediaPath, resolved.url);
-						if (resolved.isBlobUrl) {
-							loadBlobUrls.push(resolved.url);
-						}
-					}),
-				);
+				// ── Media, transition and animation sound URLs ──────────────
+				const nextMediaUrls = await resolveMediaUrls(handler, parsed.slides, loadBlobUrls);
 
 				// ── Resolve image Blob URLs (lazy-loaded pictures) ──────────
 				// With eagerDecodeImages=false (default), picture elements have

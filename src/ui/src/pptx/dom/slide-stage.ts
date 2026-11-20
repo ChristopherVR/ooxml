@@ -26,7 +26,9 @@ import {
 	deviceStrokeStageStyle,
 	elementHitTargetStyle,
 	getSlideBackgroundStyle,
+	hasLinkedContent,
 	isElementRendered,
+	linkedContentView,
 	isTemplateElementId,
 	resolveStageEdgeBleeds,
 	shouldRenderHitTarget,
@@ -45,6 +47,13 @@ export interface SlideStageOptions {
 	reading?: boolean;
 	document: Document;
 	slide: PptxSlide;
+	/**
+	 * This viewer draws the deck's linked web content (`resolveExternalContentView`). Unless it
+	 * is `true` the stage draws the slide through `withholdLinkedContent`, so nothing it renders
+	 * makes the browser contact the linked servers. Callbacks still receive the model's own
+	 * elements.
+	 */
+	linkedContent?: boolean | undefined;
 	canvasSize: CanvasSize;
 	mediaDataUrls: ReadonlyMap<string, string>;
 	/** Optional presentation theme colour scheme for element renderers. */
@@ -164,7 +173,10 @@ export interface SlideStageOptions {
  * `canvasSize * scale` (the viewer's stage host and thumbnails both do).
  */
 export function renderSlideStage(options: SlideStageOptions): HTMLElement {
-	const { document: doc, slide, canvasSize, mediaDataUrls, registry, t } = options;
+	const { document: doc, canvasSize, mediaDataUrls, registry, t } = options;
+	const allowed = options.linkedContent === true;
+	const slide = linkedContentView(options.slide, allowed);
+	const model = modelElementLookup(options.slide, allowed);
 	const scale = options.scale ?? 1;
 	const interactive = options.interactive ?? false;
 
@@ -197,7 +209,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		reading: options.reading,
 		document: doc,
 		slide,
-		slides: options.slides,
+		slides: options.slides && linkedContentView(options.slides, allowed),
 		currentSlideIndex: options.currentSlideIndex,
 		onZoomClick: options.onZoomClick,
 		canvasSize,
@@ -206,7 +218,7 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		colorScheme: options.colorScheme,
 		fontScheme: options.fontScheme,
 		formatScheme: options.formatScheme,
-		tableStyleMap: options.tableStyleMap,
+		tableStyleMap: options.tableStyleMap && linkedContentView(options.tableStyleMap, allowed),
 		fieldContext: options.fieldContext,
 		findHighlights: options.findHighlights,
 		presentationStates: options.presentationStates,
@@ -219,13 +231,13 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		pieChart3D: options.pieChart3D ?? false,
 		presenting: options.presenting ?? false,
 		interactive,
-		onSmartArtNodeTextChange: options.onSmartArtNodeTextChange,
-		onSmartArtNodeFillChange: options.onSmartArtNodeFillChange,
-		onChartPointChange: options.onChartPointChange,
-		onTableResizeColumns: options.onTableResizeColumns,
-		onTableResizeRow: options.onTableResizeRow,
+		onSmartArtNodeTextChange: modelCallback(options.onSmartArtNodeTextChange, model),
+		onSmartArtNodeFillChange: modelCallback(options.onSmartArtNodeFillChange, model),
+		onChartPointChange: modelCallback(options.onChartPointChange, model),
+		onTableResizeColumns: modelCallback(options.onTableResizeColumns, model),
+		onTableResizeRow: modelCallback(options.onTableResizeRow, model),
 		chartPartSelection: options.chartPartSelection,
-		onChartPartSelect: options.onChartPartSelect,
+		onChartPartSelect: modelCallback(options.onChartPartSelect, model),
 		selectedElementIds: options.selectedElementIds,
 		edgeBleeds: resolveStageEdgeBleeds(undefined, slide, options.selectedElementIds),
 		registry,
@@ -366,6 +378,43 @@ export function renderSlideStage(options: SlideStageOptions): HTMLElement {
 		// only during construction, otherwise every replaced frame stays alive.
 		renderedNodes = undefined;
 	}
+}
+
+type ElementCallback<A extends unknown[]> = (element: PptxElement, ...args: A) => void;
+
+/**
+ * The model's own element for an element the stage drew through the linked-content gate, by
+ * id, group children included. Identity when nothing was withheld.
+ */
+function modelElementLookup(
+	slide: PptxSlide,
+	allowed: boolean,
+): (element: PptxElement) => PptxElement {
+	if (allowed || !hasLinkedContent(slide)) {
+		return (element) => element;
+	}
+	const byId = new Map<string, PptxElement>();
+	const index = (elements: readonly PptxElement[]): void => {
+		for (const element of elements) {
+			byId.set(element.id, element);
+			if (element.type === 'group') {
+				index(element.children);
+			}
+		}
+	};
+	index(slide.elements);
+	return (element) => byId.get(element.id) ?? element;
+}
+
+/**
+ * A host callback that edits from the element it receives: hand it the model's element, so an
+ * edit made while linked content is withheld keeps the deck's links.
+ */
+function modelCallback<A extends unknown[]>(
+	callback: ElementCallback<A> | undefined,
+	model: (element: PptxElement) => PptxElement,
+): ElementCallback<A> | undefined {
+	return callback && ((element, ...args) => callback(model(element), ...args));
 }
 
 /**

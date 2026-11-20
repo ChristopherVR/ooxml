@@ -1379,7 +1379,7 @@ unit test fails if an id is missing here.
 | `quickAccess.position`                       | string  | `'above'`        | Toolbar Position                                                 |
 | `quickAccess.showCommandLabels`              | boolean | `false`          | Always show command labels                                       |
 | `trust.openInProtectedView`                  | boolean | `false`          | Open presentations in Protected View                             |
-| `trust.allowExternalContent`                 | boolean | `true`           | Allow external content (remote images and media)                 |
+| `trust.allowExternalContent`                 | boolean | `false`          | Allow external content (remote images and media)                 |
 | `trust.allowFontDownloads`                   | boolean | `true`           | Download fonts that are not installed or embedded (Google Fonts) |
 | `trust.confirmExternalHyperlinks`            | boolean | `true`           | Confirm before opening external hyperlinks                       |
 

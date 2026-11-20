@@ -91,6 +91,14 @@ Les diapositives marquées comme masquées restent dans le fichier mais sont ign
 
 Pendant un diaporama, les notes vous sont montrées (et non au public) dans la **vue du présentateur** ; voir [Présentation](/fr/user/presenting#vue-du-presentateur).
 
+## Images et médias liés {#linked-pictures-and-media}
+
+Certaines présentations lient des images, de l'audio ou de la vidéo à une adresse web au lieu de les enregistrer dans le fichier. Comme dans Microsoft PowerPoint, ils ne sont pas téléchargés à l'ouverture, car le téléchargement indique à ce serveur que vous avez ouvert la présentation. Une barre sous le ruban signale que les références à des images et à d'autres médias externes ont été bloquées. Elle s'affiche même quand le visualiseur n'a pas de barre d'outils.
+
+- Cliquez sur **Activer le contenu** pour les télécharger pour cette présentation. Rien n'est rouvert : vos modifications, enregistrées ou non, la diapositive affichée et l'historique d'annulation restent tels quels. Dans une session partagée, chaque personne choisit pour elle-même.
+- Cliquez sur le bouton de fermeture pour les laisser bloqués.
+- Ce choix dure jusqu'à l'ouverture d'une autre présentation. Pour télécharger le contenu lié sans demander, activez **Fichier > Options > Centre de gestion de la confidentialité > Autoriser le contenu externe**.
+
 ## Suite
 
 - Modifier les diapositives : [Édition des diapositives](/fr/user/editing)

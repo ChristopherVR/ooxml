@@ -76,7 +76,7 @@ describe('the shared rule the renderer delegates to', () => {
 describe('the component wiring', () => {
 	it('computes the child fill from the shared helper, chaining its own inherited fill', () => {
 		expect(componentSource).toContain(
-			'getGroupChildParentFill(this.element(), this.parentGroupFill())',
+			'getGroupChildParentFill(this.drawn(), this.parentGroupFill())',
 		);
 	});
 

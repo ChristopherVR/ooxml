@@ -1,5 +1,6 @@
 import {
 	mayLeaveSlideShow,
+	playDeckSound,
 	resolveAuthoredSlideRange,
 	shouldLoopContinuously,
 } from 'ooxml-ui/pptx';
@@ -34,6 +35,8 @@ export interface PresentationClusterDeps {
 	getRootEl(): HTMLDivElement | undefined;
 	/** False when the host switched the `presentMode` feature off. */
 	isPresentModeEnabled?(): boolean;
+	/** Whether this viewer allows the deck's linked content now (`externalContent.allowed`). */
+	getLinkedContentAllowed(): boolean;
 }
 
 export interface PresentationCluster extends ViewportHandlers {
@@ -107,19 +110,15 @@ export function usePresentationCluster(deps: PresentationClusterDeps): Presentat
 		// on-slide Action Setting's `openUrl` intent the same way a text-run
 		// hyperlink click already is (`TextRunBase.svelte`).
 		confirmUrl: (url: string) => optionsState.confirmHyperlink(url, t),
-		// Resolve a native-animation `p:stSnd` action sound's archive path to
-		// its pre-resolved Blob/data URL and play it. Without this,
-		// `onPlayActionSound` was never passed at all and every animation
-		// sound was silently dropped.
+		// Play an effect or hyperlink sound: an archive path through the loader's
+		// pre-resolved Blob/data URLs, a linked sound only once this viewer allows
+		// linked content.
 		onPlayActionSound: (soundPath: string) => {
-			const url = loader.mediaDataUrls.get(soundPath);
-			if (!url || typeof Audio === 'undefined') {
-				return;
-			}
-			const audio = new Audio(url);
-			void audio.play().catch(() => {
-				/* ignore autoplay restrictions */
-			});
+			playDeckSound(
+				soundPath,
+				{ mediaUrls: loader.mediaDataUrls, linkedContent: deps.getLinkedContentAllowed() },
+				{ overlap: true },
+			);
 		},
 	});
 	// Publish the per-element native-animation state map so the chart / SmartArt /

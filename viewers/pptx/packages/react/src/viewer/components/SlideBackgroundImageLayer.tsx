@@ -3,6 +3,7 @@ import React from 'react';
 
 import { getImageEffectsFilter, getImageEffectsOpacity, getImageRenderStyle } from '../utils';
 import { renderImg } from './elements/ImageRenderer';
+import { useLinkedContentView } from './linked-content-context';
 
 /**
  * Paint a slide background image as an image layer instead of a CSS
@@ -14,10 +15,11 @@ import { renderImg } from './elements/ImageRenderer';
  * `imgalpha-<id>` SVG filter), so this no longer needs to strip it out itself.
  */
 export function SlideBackgroundImageLayer({
-	slide,
+	slide: modelSlide,
 }: {
 	slide: PptxSlide | undefined;
 }): React.ReactElement | null {
+	const slide = useLinkedContentView(modelSlide);
 	if (!slide?.backgroundImage) {
 		return null;
 	}

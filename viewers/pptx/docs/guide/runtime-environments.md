@@ -47,15 +47,15 @@ How the viewer picks a face for each run, and how it waits for downloads, is des
 
 ### External content and privacy {#external-content-and-privacy}
 
-A deck can link pictures (including picture fills and picture bullets), videos, audio and poster frames to other servers (`TargetMode="External"` relationships) instead of embedding them. Opening such a deck makes the reader's browser fetch them, which tells whoever runs that server the reader's IP address and that the deck was opened. By default the Trust Center option "Allow external content" decides, and it is on. A host can decide instead with the `allowExternalContent` option, available on every binding:
+A deck can link pictures (including picture fills and picture bullets), videos, audio, poster frames and the sounds that play with animations, transitions and hyperlinks to other servers (`TargetMode="External"` relationships) instead of embedding them. Fetching them tells whoever runs that server the reader's IP address and that the deck was opened. As in Microsoft PowerPoint, the viewer fetches none of them when a deck opens: a security bar under the ribbon says "References to external pictures and other media have been blocked" and offers **Enable Content**, which then draws them. Nothing reopens: edits, saved or not, the slide on screen and undo history are kept. The choice lasts until another presentation is opened and is not stored. [PowerPoint's own default](https://github.com/ChristopherVR/ooxml/blob/main/docs/powerpoint-external-content.md) records the sources. The Trust Center option "Allow external content" (off by default) fetches without asking. A host can decide instead with the `allowExternalContent` option, available on every binding:
 
-- unset (the default): the Trust Center option decides;
-- `allowExternalContent: false`: no linked content is fetched, so slides show embedded content only, and the Trust Center option is shown off and read-only;
-- `allowExternalContent: true`: linked content is fetched, and the option is shown on and read-only.
+- unset (the default): blocked, with the security bar, unless the reader turned the Trust Center option on;
+- `allowExternalContent: false`: no linked content is fetched and no bar is shown, so slides show embedded content only, and the Trust Center option is shown off and read-only;
+- `allowExternalContent: true`: linked content is fetched without asking (like PowerPoint's "Unblock automatic download of linked images" policy), and the option is shown on and read-only.
 
-The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies from the next load. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the Trust Center option "Download fonts that are not installed or embedded" or the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
+The value applies to every deck the viewer opens, including decks opened for Compare and slides reused from another file; a change applies at once, without reloading the deck. Hyperlinks are not affected: they open only when the reader follows them. Fonts are separate: deck fonts that are neither installed nor embedded load from Google Fonts unless the Trust Center option "Download fonts that are not installed or embedded" or the `googleFonts` option turns that off (see [Fonts and privacy](#fonts-and-privacy)).
 
-In a collaboration session, slides arrive from peers already parsed, and the switch is not applied to them again: a peer whose viewer allows external content can share a slide that references a linked URL. Use the same `allowExternalContent` value for every participant when this matters.
+In a collaboration session the linked addresses are part of the shared deck, but each participant's viewer decides for itself what to fetch: every participant sees the security bar and chooses Enable Content on their own, and one participant's choice never makes another's browser contact the linked server. `allowExternalContent` applies to each viewer in the same way.
 
 ### Load limits {#load-limits}
 

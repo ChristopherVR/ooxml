@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'アニメーション GIF',
 	'pptx.export.pdfAllSlides': 'PDF (すべてのスライド)',
 	'pptx.export.pngCurrentSlide': 'PNG (現在のスライド)',
-	'pptx.export.webmVideo': 'WebM ビデオ',
+	'pptx.export.webmVideo': 'ビデオ',
 	'pptx.fontEmbedding.embedInFile': 'ファイルにフォントを埋め込む',
 	'pptx.fontEmbedding.noCustomFonts': '埋め込むカスタム フォントはありません。',
 	'pptx.headerFooter.fixedDate': '固定',
@@ -62,6 +62,8 @@ export const translations = {
 		'ノートの PDF エクスポート用にキャプチャされたスライドがありません',
 	'pptx.export.errorNoSlidesPdf': 'PDF のエクスポート用にキャプチャされたスライドがありません',
 	'pptx.export.errorNoSlidesVideo': 'ビデオのエクスポート用にキャプチャされたスライドがありません',
+	'pptx.export.errorVideoUnsupported':
+		'このブラウザーではビデオを録画できません。スライドを GIF としてエクスポートするか、別のブラウザーをお試しください。',
 	'pptx.export.recording': '録画中',
 	'pptx.export.recordingVideo': 'ビデオを録画しています...',
 	'pptx.export.rendering': 'レンダリング中',

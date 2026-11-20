@@ -1,12 +1,11 @@
 /**
- * Video (WebM) export via MediaRecorder + captureStream().
+ * Video export (WebM, or MP4 on Safari) via MediaRecorder + captureStream().
  */
 import {
 	fpsToFrameIntervalMs,
-	pickSupportedMimeType,
+	requireVideoRecordingFormat,
 	segmentFrameCount,
 	stopCaptureStream,
-	WEBM_MIME_CANDIDATES,
 } from 'ooxml-ui/pptx';
 import { translationsEn } from 'ooxml-ui/pptx/i18n';
 import React from 'react';
@@ -45,7 +44,8 @@ export interface VideoExportOptions {
 /* ------------------------------------------------------------------ */
 
 /**
- * Export all slides as a WebM video blob.
+ * Export all slides as a video blob: WebM, or MP4 where the browser records only that (Safari).
+ * Throws `VideoExportUnsupportedError` before capturing anything when it records neither.
  *
  * Strategy: render each slide to a canvas via the shared `foreignObject`
  * fidelity pipeline, tiling and stitching transparently past the browser
@@ -70,6 +70,9 @@ export async function exportAllSlidesAsVideo(
 		onRecordProgress,
 		signal,
 	} = options;
+
+	// Fail before the slow capture when the browser cannot record any container.
+	const format = requireVideoRecordingFormat();
 
 	// Step 1: Capture all slides as canvases
 	const slideCanvases: HTMLCanvasElement[] = [];
@@ -113,7 +116,7 @@ export async function exportAllSlidesAsVideo(
 	const fps = 30;
 	const stream = recordingCanvas.captureStream(fps);
 	const recorder = new MediaRecorder(stream, {
-		mimeType: pickSupportedMimeType([...WEBM_MIME_CANDIDATES]),
+		mimeType: format.mimeType,
 		videoBitsPerSecond: 5_000_000,
 	});
 
@@ -167,7 +170,7 @@ export async function exportAllSlidesAsVideo(
 
 		onProgress?.(totalSlides, totalSlides);
 
-		return new Blob(chunks, { type: 'video/webm' });
+		return new Blob(chunks, { type: format.blobType });
 	} finally {
 		// `recorder.stop()` only stops the recorder; the capture stream itself
 		// keeps compositing frames from `recordingCanvas` indefinitely otherwise

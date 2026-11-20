@@ -118,7 +118,9 @@ export function localizeElement(root: HTMLElement, locale: EditorLocale): void {
 			const value = element.dataset[property] ?? element.getAttribute(attribute);
 			if (value && value in strings.en) {
 				element.dataset[property] = value;
-				element.setAttribute(attribute, translate(locale, value as LocalizationKey));
+				// A ribbon command named apart from its label (see `tool`) keeps the label as its id.
+				const key = attribute === 'aria-label' ? (element.dataset.localename ?? value) : value;
+				element.setAttribute(attribute, translate(locale, key as LocalizationKey));
 			}
 		}
 		for (const node of element.childNodes) {

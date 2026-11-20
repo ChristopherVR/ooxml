@@ -10,6 +10,7 @@ import type {
 	OfficeUiGallery,
 } from '../ribbon/gallery';
 import { emitRibbonAction } from './ribbon-action';
+import { setGalleryState } from './ribbon-localize';
 
 export type DiagramPart = 'container' | 'callout';
 const LABELS: Record<DiagramPart, string> = { container: 'Container', callout: 'Callout' };
@@ -106,7 +107,7 @@ export function syncDiagramPart(
 	part: DiagramPart,
 	reason: string | undefined,
 ): void {
-	gallery.state = diagramPartState(part, reason);
+	setGalleryState(gallery, diagramPartState(part, reason));
 	gallery.toggleAttribute('disabled', reason !== undefined);
 	const label = LABELS[part];
 	const title = reason === undefined ? label : `${label}: ${reason}`;

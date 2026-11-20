@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': '애니메이션 GIF',
 	'pptx.export.pdfAllSlides': 'PDF(모든 슬라이드)',
 	'pptx.export.pngCurrentSlide': 'PNG(현재 슬라이드)',
-	'pptx.export.webmVideo': 'WebM 비디오',
+	'pptx.export.webmVideo': '비디오',
 	'pptx.fontEmbedding.embedInFile': '파일의 글꼴 포함',
 	'pptx.fontEmbedding.noCustomFonts': '포함할 사용자 지정 글꼴이 없습니다.',
 	'pptx.headerFooter.fixedDate': '고정',
@@ -62,6 +62,8 @@ export const translations = {
 		'슬라이드 노트 PDF 내보내기를 위해 캡처된 슬라이드가 없습니다',
 	'pptx.export.errorNoSlidesPdf': 'PDF 내보내기를 위해 캡처된 슬라이드가 없습니다',
 	'pptx.export.errorNoSlidesVideo': '비디오 내보내기를 위해 캡처된 슬라이드가 없습니다',
+	'pptx.export.errorVideoUnsupported':
+		'이 브라우저에서는 비디오를 녹화할 수 없습니다. 슬라이드를 GIF로 내보내거나 다른 브라우저를 사용해 보세요.',
 	'pptx.export.recording': '녹화 중',
 	'pptx.export.recordingVideo': '비디오 녹화 중...',
 	'pptx.export.rendering': '렌더링 중',

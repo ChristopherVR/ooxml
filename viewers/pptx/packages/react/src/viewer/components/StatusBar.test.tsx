@@ -119,7 +119,7 @@ describe('react StatusBar adapter', () => {
 			'Slide sorter',
 			'Slide show',
 			'Zoom out',
-			'Zoom to fit',
+			'100%, Zoom to fit',
 			'Zoom in',
 		]) {
 			click(name);
@@ -141,7 +141,7 @@ describe('react StatusBar adapter', () => {
 	});
 
 	it('shows the zoom percentage and drops the cluster when hidden', () => {
-		expect(mount({ scale: 0.75 }).button('Zoom to fit').textContent).toBe('75%');
+		expect(mount({ scale: 0.75 }).button('75%, Zoom to fit').textContent).toBe('75%');
 		expect(mount({ scale: undefined }).button('Zoom in').closest('.group')).toHaveProperty(
 			'hidden',
 			true,

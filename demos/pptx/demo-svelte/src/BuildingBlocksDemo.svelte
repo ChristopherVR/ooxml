@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BuildingBlocksCanvas, BuildingBlocksSlidesPane, BuildingBlocksToolbar, createViewerBuildingBlocks } from 'pptx-svelte-viewer';
+	import { BuildingBlocksCanvas, BuildingBlocksSlidesPane, BuildingBlocksToolbar, createViewerBuildingBlocks, ExternalContentBar } from 'pptx-svelte-viewer';
 	import type { ViewerBuildingBlocksOptions } from 'pptx-svelte-viewer';
 	import { onMount } from 'svelte';
 
@@ -46,6 +46,10 @@
 </script>
 
 <section bind:this={panelHost}></section>
+<!-- PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. -->
+{#if blocks.externalContent.barVisible}
+	<ExternalContentBar onenable={blocks.externalContent.enable} onclose={blocks.externalContent.close} />
+{/if}
 <BuildingBlocksToolbar {blocks} />
 <div class="body">
 	<div class="rail"><BuildingBlocksSlidesPane {blocks} /></div>

@@ -135,6 +135,15 @@ export { createSlidesPane } from './viewer';
 // One slide drawn the way the rail draws it, for a host that keeps its own thumbnail strip.
 export type { SlideThumbnailOptions } from './viewer';
 export { renderSlideThumbnail } from './viewer';
+
+// ── Linked web content for a host that draws its own stage (PowerPoint's security bar) ─
+// `resolveExternalContentView` says what to draw and whether the bar shows: pass `allowed` as
+// the `linkedContent` of `renderSlideStage`, `renderSlideThumbnail` and `createSlidesPane`, and
+// show `createExternalContentBar` while `barVisible`. Enable Content only redraws.
+export { linkedContentView, resolveExternalContentView } from 'ooxml-ui/pptx';
+export type { ExternalContentView, ExternalContentViewInput } from 'ooxml-ui/pptx';
+export { createExternalContentBar } from './viewer/ui/external-content-bar';
+export type { ExternalContentBar } from './viewer/ui/external-content-bar';
 // Lifts single-slide operations to the rail's multi-selection commands
 // (`onDuplicateSlides` / `onDeleteSlides` / `onHideSlides`).
 export { createSlidesPaneBulkSlideOps } from 'ooxml-ui/pptx';

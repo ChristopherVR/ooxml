@@ -17,7 +17,7 @@ export const translations = {
 		'ドキュメントは読み取り専用で開かれます。変更するには [編集を有効にする] を使用します。',
 	'pptx.options.trust.allowExternalContent': '外部コンテンツ (リモートの画像とメディア) を許可する',
 	'pptx.options.trust.allowExternalContentInfo':
-		'オフの場合、ファイルに埋め込まれたコンテンツのみが表示されます。',
+		'オフ (既定、PowerPoint と同じ) の場合、リンクされた画像やメディアはダウンロードされず、プレゼンテーションごとにセキュリティ バーで [コンテンツの有効化] を選べます。',
 	'pptx.options.trust.allowFontDownloads':
 		'インストールも埋め込みもされていないフォントをダウンロードする (Google Fonts)',
 	'pptx.options.trust.allowFontDownloadsInfo':

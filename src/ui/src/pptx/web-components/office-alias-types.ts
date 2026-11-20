@@ -4,6 +4,8 @@ import type {
 	DialogFooterIntent,
 	DialogFooterViewState,
 	ExportProgressViewState,
+	ExternalContentBarIntent,
+	ExternalContentBarViewState,
 	PasteOptionsIntent,
 	PasteOptionsViewState,
 	ReadOnlyBannerIntent,
@@ -37,6 +39,11 @@ export interface PptxUiPasteOptionsElement extends HTMLElement {
 	state: PasteOptionsViewState;
 }
 
+export type ExternalContentBarRequestEvent = CustomEvent<ExternalContentBarIntent>;
+export interface PptxUiExternalContentBarElement extends HTMLElement {
+	state: ExternalContentBarViewState;
+}
+
 export type ReadOnlyBannerRequestEvent = CustomEvent<ReadOnlyBannerIntent>;
 export interface PptxUiReadOnlyBannerElement extends HTMLElement {
 	state: ReadOnlyBannerViewState;
@@ -64,6 +71,7 @@ declare global {
 		'pptx-ui-dialog-footer': PptxUiDialogFooterElement;
 		'pptx-ui-paste-options': PptxUiPasteOptionsElement;
 		'pptx-ui-read-only-banner': PptxUiReadOnlyBannerElement;
+		'pptx-ui-external-content-bar': PptxUiExternalContentBarElement;
 		'pptx-ui-export-progress': PptxUiExportProgressElement;
 	}
 }

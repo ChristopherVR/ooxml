@@ -5,6 +5,7 @@
 	z-index: 10000;
 	background: #000;
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 	/*
 	 * Matches Vue's `.pptx-vue-presentation` (and React's fixed show wrapper):

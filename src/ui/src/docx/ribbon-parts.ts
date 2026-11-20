@@ -4,6 +4,7 @@ import { ribbonIcon, type RibbonIcon } from './ribbon-icons';
 import { openColorGridPopover } from './ribbon-color-grid';
 import { openSwatchPopover } from './ribbon-popover';
 import { swatchColor } from 'ooxml-core/docx/ui';
+import { strings, type LocalizationKey } from './localization-strings';
 
 /** Building blocks for ribbon tabs: buttons, selects, labelled groups and rows. */
 export const button = (
@@ -160,14 +161,28 @@ export const row = (...children: HTMLElement[]) => {
 	return el;
 };
 
-/** An icon button. `large` stacks a caption under a 28px icon, as Word's big commands do. */
+/**
+ * An icon button. `large` stacks a caption under a 28px icon, as Word's big commands do. `label`
+ * identifies the command and is its tooltip; `name`, a key whose text contains the caption, is its
+ * accessible name when the label does not contain the caption in every locale.
+ */
 export const tool = (
 	label: string,
 	icon: RibbonIcon,
 	action: RibbonAction | null,
-	options: { large?: boolean; inline?: boolean; caption?: string; className?: string } = {},
+	options: {
+		large?: boolean;
+		inline?: boolean;
+		caption?: string;
+		name?: LocalizationKey;
+		className?: string;
+	} = {},
 ) => {
-	const el = button(label, '', action, options.className);
+	const el = button(options.name ? strings.en[options.name] : label, '', action, options.className);
+	if (options.name) {
+		el.dataset.localearialabel = label;
+		el.dataset.localename = options.name;
+	}
 	el.title = action ? label : 'Not available in this editor';
 	el.classList.add(
 		options.large ? 'ribbon-large' : options.inline ? 'ribbon-inline' : 'ribbon-small',

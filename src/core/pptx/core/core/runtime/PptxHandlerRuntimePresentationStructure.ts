@@ -39,10 +39,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return parsedTransition;
 		}
 
-		const slideRelationships = this.slideRelsMap.get(slidePath);
-		const soundTarget = slideRelationships?.get(parsedTransition.soundRId);
-		if (soundTarget) {
-			const soundPath = this.resolveImagePath(slidePath, soundTarget);
+		// The same resolution effect sounds use: an embedded sound's archive path, or a
+		// linked (`TargetMode="External"`) sound's own web address when the load allows
+		// linked content. Joining a linked address onto the slide folder made a path
+		// that was neither, so a linked transition sound could never play.
+		const soundPath = this.resolveRelationshipTarget(slidePath, parsedTransition.soundRId);
+		if (soundPath) {
 			parsedTransition.soundPath = soundPath;
 			parsedTransition.soundFileName = soundPath.split('/').pop() || soundPath;
 		}

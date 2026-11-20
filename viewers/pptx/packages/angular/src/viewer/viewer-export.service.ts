@@ -23,16 +23,19 @@ import {
 	downloadBlob,
 	EXPORT_DONE_PERCENT,
 	isExportAbortError,
+	linkedContentView,
 	runPdfExport,
 	slideProgressPercent,
 	recordProgressPercent,
 	resolveExportCaptureDecision,
 	slideStatusLabel,
+	requireVideoRecordingFormat,
 } from 'ooxml-ui/pptx';
 
 import { slideFileName } from './export-helpers';
 import { html2canvasFallbackFor } from './export-raster-tiles';
 import { ExportService } from './export.service';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { LoadContentService } from './load-content.service';
 import type { PrintSettings } from './print-helpers';
 import { PrintService } from './print.service';
@@ -52,6 +55,7 @@ export class ViewerExportService {
 	private readonly loader = inject(LoadContentService);
 	private readonly print = inject(PrintService);
 	private readonly translate = inject(TranslateService);
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
 
 	/** True while a PNG/PDF export is in progress (disables the buttons). */
 	readonly exporting = signal(false);
@@ -244,7 +248,7 @@ export class ViewerExportService {
 		}
 	}
 
-	/** Export every slide as a WebM video (3s per slide) via MediaRecorder. */
+	/** Export every slide as a video (WebM, or MP4 on Safari; 3s per slide) via MediaRecorder. */
 	async exportVideo(): Promise<void> {
 		const host = this.requireHost();
 		if (host.slideCount() === 0 || this.exporting()) {
@@ -252,6 +256,8 @@ export class ViewerExportService {
 		}
 		const controller = this.beginExport(this.translate.instant('pptx.mobileMenu.exportVideo'));
 		try {
+			// Fail before the slow capture when the browser cannot record any container.
+			requireVideoRecordingFormat();
 			const { scale } = resolveExportCaptureDecision(host.imageResolutionScale?.() ?? 1, 'video');
 			const canvases = await captureSlideCanvases(
 				this.exportSvc,
@@ -303,7 +309,8 @@ export class ViewerExportService {
 		try {
 			await this.print.print(
 				settings,
-				[...host.mergedSlides()],
+				// The vector pages draw from the model: linked content only once this viewer allows it.
+				linkedContentView([...host.mergedSlides()], this.linkedContentAllowed()),
 				original,
 				(index) => captureSlideDataUrl(this.exportSvc, host, index, printScale),
 				this.loader.canvasSize(),

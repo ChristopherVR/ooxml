@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { describeCollaborationShellState } from 'pptx-vue-viewer';
+import { describeCollaborationShellState, ExternalContentBar } from 'pptx-vue-viewer';
 import {
 	CollaborationCursors,
 	InlineTextEditor,
@@ -12,6 +12,7 @@ import {
 	useEditorHistory,
 	useEditorOperations,
 	useElementDrag,
+	useExternalContentConsent,
 	useInlineEditing,
 	useLoadContent,
 	useSectionOperations,
@@ -51,8 +52,18 @@ const content = useLoadContent(() => props.host.source, {
 	onContentApplied: () => {
 		loadVersion.value++;
 	},
+	// The model keeps the deck's linked addresses; `externalContent.allowed` decides what is drawn.
+	getAllowExternalImages: () => true,
 });
 const { slides, canvasSize, mediaDataUrls, templateElementsBySlideId } = content;
+// PowerPoint's security bar for linked pictures and media. The choice is this shell's own: it
+// is never sent to the room, so each participant enables content for themselves.
+const externalContent = useExternalContentConsent({
+	content: () => props.host.source,
+	host: () => undefined,
+	options: () => ({ trust: { allowExternalContent: false } }),
+	drawn: () => [slides.value, templateElementsBySlideId.value, content.tableStyleMap.value],
+});
 const history = useEditorHistory(slides);
 const ops = useEditorOperations({
 	slides,
@@ -251,6 +262,11 @@ defineExpose({
 			<output :aria-label="t('pptx.collaboration.shellStatusLabel')">{{ statusText }}</output>
 		</nav>
 		<p v-if="content.error.value" role="alert">{{ content.error.value }}</p>
+		<ExternalContentBar
+			v-if="externalContent.barVisible"
+			@enable="externalContent.enable"
+			@close="externalContent.close"
+		/>
 		<div class="workspace">
 			<HostSlideStrip
 				v-if="hostStrip"
@@ -264,6 +280,7 @@ defineExpose({
 				:first-slide-number="content.firstSlideNumber.value"
 				:theme="content.theme.value"
 				:table-style-map="content.tableStyleMap.value"
+				:linked-content="externalContent.allowed"
 				@select="navigate"
 			/>
 			<SlidesPane
@@ -280,6 +297,7 @@ defineExpose({
 				:first-slide-number="content.firstSlideNumber.value"
 				:theme="content.theme.value"
 				:table-style-map="content.tableStyleMap.value"
+				:linked-content="externalContent.allowed"
 				@select="navigate"
 				@move-slide="rail.moveSlide"
 				@add-slide="rail.addSlide"
@@ -303,6 +321,7 @@ defineExpose({
 					:zoom="scale"
 					:template-elements="activeSlide ? templateElementsBySlideId[activeSlide.id] : []"
 					:inline-editing-element-id="inlineEditingElementId"
+					:linked-content="externalContent.allowed"
 					@pointerdown="select"
 					@pointermove="moveCursor"
 					@dblclick="openText"

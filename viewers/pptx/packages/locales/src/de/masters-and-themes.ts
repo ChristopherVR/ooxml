@@ -102,7 +102,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': 'Folienmaster',
 	'pptx.masterView.notesMasterTitle': 'Notizenmaster',
 	'pptx.masterView.handoutMasterTitle': 'Handzettelmaster',
-	'pptx.masterView.collapse': 'Masterbereich reduzieren',
 	'pptx.slideSize.rescaleTitle': 'Inhalt an die neue Foliengröße anpassen?',
 	'pptx.slideSize.rescaleDescription':
 		'Sie ändern die Foliengröße. Wählen Sie, wie der vorhandene Inhalt eingepasst werden soll.',

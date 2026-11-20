@@ -14,6 +14,7 @@ import {
 	themesGalleryState,
 	variantsGalleryState,
 } from './ribbon-themes';
+import { setGalleryState } from './ribbon-localize';
 
 type ThemeAction = Extract<VisioRibbonAction, { type: 'page-theme' }>;
 
@@ -103,7 +104,7 @@ export class ViewerThemes {
 			'office-ui-gallery[data-menu="themes"]',
 		);
 		if (themes) {
-			themes.state = themesGalleryState(!!reason, page?.theme);
+			setGalleryState(themes, themesGalleryState(!!reason, page?.theme));
 			themes.toggleAttribute('disabled', !!reason);
 			themes.title = reason ? `Themes: ${reason}` : THEMES_HINT;
 		}
@@ -115,7 +116,7 @@ export class ViewerThemes {
 		);
 		if (variants) {
 			const why = reason || (page?.theme ? '' : NO_THEME_VARIANTS);
-			variants.state = variantsGalleryState(!!why, page?.theme);
+			setGalleryState(variants, variantsGalleryState(!!why, page?.theme));
 			variants.toggleAttribute('disabled', !!why);
 			variants.title = why ? `Variants: ${why}` : VARIANTS_HINT;
 		}

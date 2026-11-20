@@ -67,6 +67,11 @@ export interface RasterizeSlideDeps {
 	 */
 	getFieldContext?: () => FieldSubstitutionContext | undefined;
 	/**
+	 * Whether this viewer draws the deck's linked web content now, read on every capture so an
+	 * export made before Enable Content contacts no linked server. Omitted withholds it.
+	 */
+	getLinkedContentAllowed?: () => boolean;
+	/**
 	 * Overridable frame-wait before capture (test seam: the real
 	 * `requestAnimationFrame` double-wait is not worth driving through fake
 	 * timers). Defaults to `nextFrame` in `rasterize-slide.ts`.

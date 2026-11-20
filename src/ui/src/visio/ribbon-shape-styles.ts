@@ -14,6 +14,7 @@ import type { OfficeGalleryItem, OfficeGalleryState, OfficeUiGallery } from '../
 import { emitRibbonAction } from './ribbon-action';
 import { inlineGallery } from './ribbon-inline-galleries';
 import type { CommandSpec } from './ribbon-parts';
+import { setGalleryState } from './ribbon-localize';
 
 const COLOR_NAMES: Readonly<Partial<Record<VisioQuickStyleColor, string>>> = {
 	0: 'Dark',
@@ -93,7 +94,7 @@ export function quickStyleGallery(doc: Document): HTMLElement {
 	gallery.setAttribute('icon', 'quickStyles');
 	gallery.setAttribute('label', 'Quick Styles');
 	gallery.title = QUICK_STYLES_HINT;
-	gallery.state = quickStyleGalleryState(true);
+	setGalleryState(gallery, quickStyleGalleryState(true));
 	gallery.toggleAttribute('disabled', true);
 	gallery.addEventListener('office-gallery-pick', (event) => {
 		event.stopPropagation();

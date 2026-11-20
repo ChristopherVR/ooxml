@@ -7,16 +7,18 @@ import {
 	inject,
 	input,
 	output,
+	untracked,
 } from '@angular/core';
 import type { CanvasSize } from 'ooxml-ui/pptx';
 import {
 	applySlideTransitionSound,
 	buildMorphScopedCss,
 	refreshSilhouetteMorphFilters,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
+import { injectLinkedContentAllowed } from './external-content.service';
 import { FragmentedTransitionLayerComponent } from './fragmented-transition-layer.component';
 import { MorphExtraLayersComponent } from './morph-extra-layers.component';
 import { createTransitionOverlayState } from './presentation-transition-overlay-state';
@@ -90,6 +92,8 @@ export class PresentationTransitionOverlayComponent {
 	readonly transition = input.required<PptxSlideTransition>();
 	readonly templateElements = input<readonly PptxElement[]>([]);
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
+	/** Whether this viewer allows the deck's linked content: a linked sound plays only then. */
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
 	/** Explicit duration override (ms). When omitted, derived from `transition`. */
 	readonly durationMs = input<number | undefined>(undefined);
 	/**
@@ -158,7 +162,7 @@ export class PresentationTransitionOverlayComponent {
 
 		this.destroyRef.onDestroy(() => {
 			this.clearTimer();
-			stopAnimationSound();
+			stopDeckSound();
 			this.applyMorphStyle(null);
 		});
 	}
@@ -244,21 +248,16 @@ export class PresentationTransitionOverlayComponent {
 	/**
 	 * Play or stop this transition's sound action (`p:sndAc/p:stSnd`/`p:endSnd`).
 	 *
-	 * `transition.soundPath` is a raw in-archive path (e.g. `ppt/media/media3.wav`)
-	 * that a bare `Audio` element constructed straight from it cannot fetch; it
-	 * must be resolved through `mediaDataUrls()`, the same Blob-URL cache
-	 * `load-content.service.ts`
-	 * pre-populates via `collectAnimationSoundPaths` (extended to also collect
-	 * `slide.transition?.soundPath` alongside per-effect animation sounds).
-	 * Reuses the shared per-effect sound singleton (`animation-sound.ts`) rather
-	 * than a private `Audio` element, so a transition sound and an animation
-	 * sound cannot talk over each other, matching PowerPoint's "one sound plays
-	 * at a time" behaviour.
+	 * `transition.soundPath` is an archive path (e.g. `ppt/media/media3.wav`) that
+	 * `load-content.service.ts` put in `mediaDataUrls()` (`collectAnimationSoundPaths`),
+	 * or a linked sound's web address, played only once this viewer allows linked
+	 * content. It shares the effect sounds' one-sound-at-a-time channel.
 	 */
 	private applyTransitionSound(transition: PptxSlideTransition): void {
-		applySlideTransitionSound(transition, (soundPath) => this.mediaDataUrls().get(soundPath), {
-			play: playAnimationSound,
-			stop: stopAnimationSound,
+		applySlideTransitionSound(transition, {
+			mediaUrls: this.mediaDataUrls(),
+			// Untracked: Enable Content during a transition does not replay its sound.
+			linkedContent: untracked(this.linkedContentAllowed),
 		});
 	}
 }

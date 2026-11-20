@@ -15,6 +15,7 @@ import { getReactSlideBackgroundStyle } from '../utils/slide-background-style';
 import type { TableStyleContext } from '../utils/table-band-style';
 import type { FieldSubstitutionContext } from '../utils/text-field-substitution';
 import type { ElementRenderErrorHandler } from './ElementErrorBoundary';
+import { LinkedContentScope, useLinkedContentView } from './linked-content-context';
 import { deriveSlideFieldContext } from './slide-field-context';
 import { SlideBackgroundImageLayer } from './SlideBackgroundImageLayer';
 import { StaticElementRenderer } from './StaticElementRenderer';
@@ -41,6 +42,11 @@ export interface SlideThumbnailProps {
 	fieldContext?: FieldSubstitutionContext;
 	/** Theme + table style map for resolving table band/header colours. */
 	tableStyleContext?: TableStyleContext;
+	/**
+	 * Draw the deck's linked web content: `externalContent.allowed` from the building blocks.
+	 * Unset keeps the surrounding viewer's choice, and withholds it outside a viewer.
+	 */
+	linkedContent?: boolean;
 }
 
 function SlideThumbnailImpl({
@@ -51,7 +57,7 @@ function SlideThumbnailImpl({
 	fieldContext,
 	tableStyleContext,
 	onElementRenderError,
-}: SlideThumbnailProps): React.ReactElement {
+}: Omit<SlideThumbnailProps, 'linkedContent'>): React.ReactElement {
 	const safeCanvasWidth = Math.max(canvasSize.width, 1);
 	const safeCanvasHeight = Math.max(canvasSize.height, 1);
 	const layout = slideThumbnailLayout(
@@ -61,6 +67,7 @@ function SlideThumbnailImpl({
 	);
 	const { height: previewHeight, scale } = layout;
 	const previewElements = buildPreviewElements(slide, templateElements);
+	const backgroundSlide = useLinkedContentView(slide);
 	const slideFieldContext = deriveSlideFieldContext(fieldContext, slide);
 	const { t } = useTranslation();
 	const transitionBadge = slideThumbnailTransitionBadge(slide, t);
@@ -74,7 +81,7 @@ function SlideThumbnailImpl({
 			}
 			style={{
 				height: previewHeight,
-				...getReactSlideBackgroundStyle(slide, {
+				...getReactSlideBackgroundStyle(backgroundSlide, {
 					widthPx: safeCanvasWidth,
 					heightPx: safeCanvasHeight,
 				}),
@@ -147,6 +154,9 @@ export function slideThumbnailPropsEqual(
 	if (prev.tableStyleContext !== next.tableStyleContext) {
 		return false;
 	}
+	if (prev.linkedContent !== next.linkedContent) {
+		return false;
+	}
 	if (
 		prev.canvasSize.width !== next.canvasSize.width ||
 		prev.canvasSize.height !== next.canvasSize.height
@@ -156,7 +166,15 @@ export function slideThumbnailPropsEqual(
 	return true;
 }
 
+function SlideThumbnailScoped({ linkedContent, ...props }: SlideThumbnailProps) {
+	return (
+		<LinkedContentScope allowed={linkedContent}>
+			<SlideThumbnailImpl {...props} />
+		</LinkedContentScope>
+	);
+}
+
 export const SlideThumbnail = /* @__PURE__ */ React.memo(
-	SlideThumbnailImpl,
+	SlideThumbnailScoped,
 	slideThumbnailPropsEqual,
 );

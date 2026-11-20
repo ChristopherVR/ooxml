@@ -166,6 +166,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [ ] **P2** Linked pictures (`a:blip r:link` to a web address) are not drawn: Excel downloads
+      them on open, the Excel packages never do
+      ([powerpoint-external-content.md](powerpoint-external-content.md), observed 2026-11-19).
 - [x] **P1** Every save writes `fullCalcOnLoad="1"` and `calcId="191029"`
       (`src/core/xlsx/write/workbook-part.ts`), so Excel recalculates each saved file and asks to
       save on close. Write it only when cached values may be stale.
@@ -343,6 +346,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [ ] **P2** Linked pictures (`a:blip r:link` to a web address) are not drawn: Word downloads
+      them on open, the Word packages never do
+      ([powerpoint-external-content.md](powerpoint-external-content.md), observed 2026-11-19).
 - [x] **P0** Legacy `.doc` opens as main-body text only: tables, headers, footers, images, fields
       and formatting are dropped, and saving writes plain paragraphs. Closed: `readDocModel`
       (`@christophervr/ole2`) is converted to a WordprocessingML package that the normal reader
@@ -565,6 +571,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### File format and preservation
 
+- [x] **P1** Linked pictures and media follow PowerPoint's default: nothing linked is downloaded
+      when a deck opens, and a translated security bar offers Enable Content for that
+      presentation (all five bindings and the suite; host `allowExternalContent` changes it).
+      Enable Content redraws without reloading, keeps undo history, and is each collaborator's
+      own choice.
+      Evidence: [powerpoint-external-content.md](powerpoint-external-content.md),
+      `e2e/pptx/allow-external-content.spec.ts`.
+- [ ] **P2** Blocked linked content differs from PowerPoint in three ways
+      ([powerpoint-external-content.md](powerpoint-external-content.md)): a blocked picture has no
+      "PowerPoint has blocked automatic download of this picture" placeholder, intranet hosts are
+      blocked too (PowerPoint downloads them), and after Enable Content an online video's frame
+      loads with its slide (when PowerPoint first contacts the provider was not observed).
 - [ ] **P1** 40 coverage-manifest constructs are `preserve: unassessed` and 30 `edit: unassessed`
       (`src/core/pptx/core/openxml/openxml-coverage*.ts`): add a dirty-save round trip with unknown
       elements on every part type, and ratchet the counts in CI.

@@ -138,6 +138,7 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			previousSlide: c.goPrev,
 			nextSlide: c.goNext,
 		},
+		externalContent: c.externalContent,
 		closeShortcuts: () => {
 			c.showShortcuts.value = false;
 		},
@@ -153,6 +154,7 @@ function createEngine(c: Context): BuildingBlocksEngine {
 			firstSlideNumber: c.firstSlideNumber.value,
 			theme: c.theme.value,
 			tableStyleMap: c.tableStyleMap.value,
+			linkedContent: c.externalContent().allowed,
 			goTo: (index) => {
 				c.activeSlideIndex.value = index;
 			},

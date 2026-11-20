@@ -2,92 +2,39 @@
 	"$comment": "Critical and serious axe violations each surface may still have, as node counts per rule, keyed <surface>/<mode>. A count above its entry fails the gate. Counts are the larger of CI (Linux) and Windows, whose fonts lay some controls out differently. Counts may only fall: check-baseline.mjs compares this file with the base branch, and `node check-baseline.mjs --update` lowers them from a run. owners names the 2.0 work package that removes each rule's violations.",
 	"owners": {
 		"color-contrast": "N11 Canvas and forced-colours fixes (A11Y-13): accents and tags under 4.5:1",
-		"label-content-name-mismatch": "N19 Accessible names contain the visible label (WCAG 2.5.3; STATUS.tsv row added by G2, since the audit predates the axe 4.14 rule): the suite's profile and workspace buttons, PowerPoint's Shadow command and Fit zoom, Excel's formula bar fx",
 		"target-size": "P8 Ribbon navigation and reflow (A11Y-18d): ribbon split-button carets under 24 px in Word, Excel, PowerPoint and Visio. A11Y-18 was N9's; N9 merged without 18d and moved it to P8, which owns the ribbon"
 	},
 	"allowed": {
-		"chat/dark": {
-			"label-content-name-mismatch": 2
-		},
-		"chat/light": {
-			"label-content-name-mismatch": 2
-		},
-		"chat/mobile": {
-			"label-content-name-mismatch": 1
-		},
 		"docx/dark": {
-			"label-content-name-mismatch": 2,
 			"target-size": 4
 		},
 		"docx/light": {
-			"label-content-name-mismatch": 2,
 			"target-size": 4
 		},
-		"docx/mobile": {
-			"label-content-name-mismatch": 1
-		},
-		"files/dark": {
-			"label-content-name-mismatch": 2
-		},
-		"files/light": {
-			"label-content-name-mismatch": 2
-		},
-		"files/mobile": {
-			"label-content-name-mismatch": 1
-		},
 		"pptx/dark": {
-			"label-content-name-mismatch": 4,
 			"target-size": 2
 		},
 		"pptx/light": {
-			"label-content-name-mismatch": 4,
 			"target-size": 2
 		},
-		"pptx/mobile": {
-			"label-content-name-mismatch": 1
-		},
-		"settings/dark": {
-			"label-content-name-mismatch": 2
-		},
 		"settings/light": {
-			"color-contrast": 1,
-			"label-content-name-mismatch": 2
+			"color-contrast": 1
 		},
 		"settings/mobile": {
-			"color-contrast": 1,
-			"label-content-name-mismatch": 1
-		},
-		"teams/dark": {
-			"label-content-name-mismatch": 2
-		},
-		"teams/light": {
-			"label-content-name-mismatch": 2
-		},
-		"teams/mobile": {
-			"label-content-name-mismatch": 1
+			"color-contrast": 1
 		},
 		"vsdx/dark": {
-			"label-content-name-mismatch": 2,
 			"target-size": 2
 		},
 		"vsdx/light": {
-			"label-content-name-mismatch": 2,
 			"target-size": 2
-		},
-		"vsdx/mobile": {
-			"label-content-name-mismatch": 1
 		},
 		"xlsx/dark": {
 			"color-contrast": 1,
-			"label-content-name-mismatch": 3,
 			"target-size": 7
 		},
 		"xlsx/light": {
-			"label-content-name-mismatch": 3,
 			"target-size": 7
-		},
-		"xlsx/mobile": {
-			"label-content-name-mismatch": 2
 		}
 	}
 }

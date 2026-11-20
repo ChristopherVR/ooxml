@@ -219,6 +219,7 @@ export function ChartElementView({
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
 			onDoubleClick={handleDoubleClick}
+			data-pptx-touch-press={canEdit ? 'dblclick' : undefined}
 			onContextMenu={(e) => {
 				// Name the context menu's "Format <element>..." entry after the clicked part.
 				if (onUpdateElement && chartFormat) {

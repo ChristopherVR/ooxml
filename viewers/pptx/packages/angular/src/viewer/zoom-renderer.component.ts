@@ -120,7 +120,7 @@ import { ZoomTargetService } from './zoom-target.service';
 						[src]="vm().previewSrc"
 						[alt]="'pptx.zoom.slidePreviewAlt' | translate: { number: vm().targetSlideIndex + 1 }"
 						draggable="false"
-						style="width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;display:block"
+						style="width:100%;height:100%;object-fit:contain;pointer-events:none;-webkit-user-select:none;user-select:none;display:block"
 					/>
 				} @else {
 					<div
