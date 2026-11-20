@@ -211,8 +211,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 			setSchema(ensureSchema(session.doc, { stampEmpty: true }));
 			if (isReadOnly()) return;
 			roster.register();
-			if (channels.channels().length === 0)
-				channels.createChannel({ ...DEFAULT_CHANNEL });
+			if (channels.channels().length === 0) channels.createChannel({ ...DEFAULT_CHANNEL });
 		},
 	});
 	channels = createChatStore(session.doc, user);
