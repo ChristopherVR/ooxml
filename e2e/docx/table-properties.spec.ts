@@ -80,7 +80,7 @@ test('Table Properties stays usable on a narrow ribbon and localizes the dialog'
 	await editor.evaluate((element) => {
 		element.setAttribute('locale', 'de');
 	});
-	await editor.getByRole('button', { name: 'Tabelleneigenschaften', exact: true }).click();
+	await editor.getByRole('button', { name: 'Eigenschaften der Tabelle', exact: true }).click();
 	await expect(dialogByHeading(editor, 'Tabelleneigenschaften')).toBeVisible();
 	await expect(editor.getByRole('checkbox', { name: 'Höhe angeben' })).toBeVisible();
 });
