@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import {
 	computeReadingOrder,
+	getAriaDescription,
 	getAriaRole,
 	getAriaLabel,
 	getAriaRoleDescription,
@@ -278,6 +279,44 @@ describe('getAriaLabel', () => {
 
 	it('returns "Chart" for chart without title', () => {
 		expect(getAriaLabel(makeElement({ id: '1', type: 'chart', chartData: {} }))).toBe('Chart');
+	});
+
+	// A chart, table or SmartArt frame has modelled `altText` all along; only a picture's was read,
+	// so an authored chart description was unreachable and the title named the chart instead.
+	it('returns the author’s alt text for a chart, ahead of its title', () => {
+		expect(
+			getAriaLabel(
+				makeElement({
+					id: '1',
+					type: 'chart',
+					altText: 'Sales doubled in the second week',
+					chartData: { title: 'Sales Data' },
+				}),
+			),
+		).toBe('Sales doubled in the second week');
+		expect(getAriaLabel(makeElement({ id: '1', type: 'table', altText: 'Prices by size' }))).toBe(
+			'Prices by size',
+		);
+	});
+
+	it('reads a chart’s series and values out as its description', () => {
+		expect(
+			getAriaDescription(
+				makeElement({
+					id: '1',
+					type: 'chart',
+					chartData: {
+						title: 'Sales Data',
+						categories: ['One', 'Two'],
+						series: [{ name: 'Week', values: [10, 20] }],
+					},
+				}),
+			),
+		).toBe('Week: One 10; Two 20.');
+		expect(
+			getAriaDescription(makeElement({ id: '1', type: 'chart', chartData: {} })),
+		).toBeUndefined();
+		expect(getAriaDescription(makeElement({ id: '1', type: 'shape' }))).toBeUndefined();
 	});
 
 	it('returns "Table" for table elements', () => {

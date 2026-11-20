@@ -9,10 +9,12 @@
  * @module render/accessibility
  */
 
+import { chartDataDescription } from 'ooxml-core/chart';
 import type { PptxElement } from 'ooxml-core/pptx';
 import { hasTextProperties } from 'ooxml-core/pptx';
 
 import { isElementMarkedDecorative } from './element-decorative';
+import { supportsAltTextField } from './element-non-visual-description';
 import { isElementRendered } from './element-visibility';
 
 export { isElementMarkedDecorative } from './element-decorative';
@@ -137,6 +139,33 @@ export function getAriaRole(element: PptxElement, options?: AriaRoleOptions): st
 // ARIA labels
 // ---------------------------------------------------------------------------
 
+/** The author's alt text, trimmed, for a kind whose core type models it; otherwise undefined. */
+function elementAltText(element: PptxElement): string | undefined {
+	if (!supportsAltTextField(element.type)) {
+		return undefined;
+	}
+	const value = (element as Partial<Record<'altText', unknown>>).altText;
+	return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+/**
+ * What a reader is told about the element beyond its name, for an element whose content a name
+ * cannot hold: a chart's data, read out series by series (`chartDataDescription` in core, which
+ * every product's chart host uses). Undefined when there is nothing to add.
+ *
+ * A chart is announced as an image, so without this the numbers it plots reach nobody: its name is
+ * the alt text or the title, and the SVG's own `<desc>` is pruned with the rest of the subtree.
+ */
+export function getAriaDescription(element: PptxElement): string | undefined {
+	if (isElementMarkedDecorative(element)) {
+		return undefined;
+	}
+	if (element.type === 'chart' && element.chartData) {
+		return chartDataDescription(element.chartData) || undefined;
+	}
+	return undefined;
+}
+
 /**
  * Generates a human-readable ARIA label for an element.
  *
@@ -158,14 +187,13 @@ export function getAriaLabel(element: PptxElement, options?: AriaRoleOptions): s
 		return '';
 	}
 
-	// Image alt text
-	if (
-		(element.type === 'image' || element.type === 'picture') &&
-		'altText' in element &&
-		typeof element.altText === 'string' &&
-		element.altText.trim()
-	) {
-		return element.altText.trim();
+	// The author's alt text (`p:cNvPr/@descr`), for every kind that models it: it is the text
+	// written for exactly this purpose, so it outranks the element's own content. A chart, table or
+	// SmartArt frame modelled it all along (`supportsAltTextField`) while only a picture's was read,
+	// which left an authored chart description unreachable and the chart announced by its title.
+	const altText = elementAltText(element);
+	if (altText) {
+		return altText;
 	}
 
 	// Text content

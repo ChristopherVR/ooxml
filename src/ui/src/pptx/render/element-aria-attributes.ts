@@ -1,6 +1,7 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 
 import {
+	getAriaDescription,
 	getAriaLabel,
 	getAriaRole,
 	getAriaRoleDescription,
@@ -28,6 +29,11 @@ export interface ElementAriaAttributes {
 	/** `aria-roledescription`, or undefined when there is nothing to add. */
 	readonly roleDescription: string | undefined;
 	/**
+	 * The element's data read out for assistive technology (today a chart's series and values), to
+	 * stamp as `aria-description`. Undefined when the element has none.
+	 */
+	readonly description: string | undefined;
+	/**
 	 * "Mark as decorative" (issue G16): skip the element entirely for
 	 * assistive tech, matching PowerPoint's own behaviour. Actionable wins
 	 * (PowerPoint disables the decorative flag once an action is attached), so
@@ -52,6 +58,7 @@ export function resolveElementAriaAttributes(
 		role: getAriaRole(element, { actionable }) || undefined,
 		label: getAriaLabel(element, { actionable }),
 		roleDescription: getAriaRoleDescription(element) || undefined,
+		description: getAriaDescription(element),
 		hidden: !actionable && isElementMarkedDecorative(element),
 	};
 }

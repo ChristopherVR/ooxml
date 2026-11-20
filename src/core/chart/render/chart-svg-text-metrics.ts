@@ -4,6 +4,11 @@ export const CHART_FONT_FAMILY = 'Calibri, Carlito, Arial, sans-serif';
 type TextAttributes = NonNullable<Parameters<typeof text>[3]>;
 
 export interface ChartSvgOptions {
+	/**
+	 * The author's alt text for the chart's frame (`cNvPr/@descr`, `wp:docPr/@descr`). It becomes the
+	 * SVG's accessible name, ahead of the chart's visible title (`chartAccessibleName`).
+	 */
+	altText?: string;
 	/** Localized host caption for the approximate-map report code; omitted, metadata alone reports it. */
 	mapApproximationLabel?: string;
 	/** Host width in CSS pixels for the painter's exact CSS font. Core never accesses a DOM. */

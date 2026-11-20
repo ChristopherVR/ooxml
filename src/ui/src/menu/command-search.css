@@ -23,6 +23,10 @@
 }
 .field:focus-within {
 	border-color: var(--office-field-border-focus);
+	/* A hairline border's new colour never reaches 3:1 against the colour it replaces
+	   (WCAG 1.4.11), so the box carries the shared ring. Inset: the field fills its own box. */
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
 }
 input {
 	flex: 1;

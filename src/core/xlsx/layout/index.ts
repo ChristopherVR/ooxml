@@ -137,6 +137,11 @@ export {
 	type ValueAxisView,
 } from './chart-view';
 export { renderChartSvg, type ChartSvgOptions } from '../../chart/render/chart-svg';
+export {
+	chartAccessibleName,
+	chartDataDescription,
+	type ChartDataReadout,
+} from '../../chart/render/chart-accessibility';
 export { chartBarSpacing } from '../../chart/render/chart-spacing';
 export { createRefEvaluator, type RefEvaluatorOptions } from './ref-evaluator';
 export {
