@@ -47,6 +47,7 @@ import {
 	applyInlineCommand,
 	applyParagraphCommand,
 	buildNotesPrintHtml,
+	printHtmlDocument,
 	createPlainNotesSegments,
 	defaultRichEnabled,
 	handleEditorAnchorClick,
@@ -286,22 +287,7 @@ export class NotesPanelComponent {
 			(n) => this.translate.instant('pptx.notes.slideN', { n }),
 			this.notesStyle(),
 		);
-		const frame = document.createElement('iframe');
-		frame.setAttribute('aria-hidden', 'true');
-		frame.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-		document.body.appendChild(frame);
-		const doc = frame.contentWindow?.document;
-		if (!doc) {
-			frame.remove();
-			return;
-		}
-		doc.open();
-		doc.write(html);
-		doc.close();
-		setTimeout(() => {
-			frame.contentWindow?.focus();
-			frame.contentWindow?.print();
-			setTimeout(() => frame.remove(), 1000);
-		}, 200);
+		// A hidden iframe, or a window on iOS (which prints the parent page for an iframe).
+		printHtmlDocument(html);
 	}
 }

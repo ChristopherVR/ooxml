@@ -2,19 +2,20 @@ import {
 	downloadBlob,
 	exportAbortError,
 	fpsToFrameIntervalMs,
-	pickSupportedMimeType,
 	planVideoSegments,
+	requireVideoRecordingFormat,
 	stopCaptureStream,
-	WEBM_MIME_CANDIDATES,
+	videoFileName,
 } from 'ooxml-ui/pptx';
+import type { VideoRecordingFormat } from 'ooxml-ui/pptx';
 
 import type { ExportCaptureDeps, ExportProgress } from './export-types';
 
 /**
- * WebM video export for the vanilla binding, driven by the shared `video-plan`
+ * Video export (WebM, or MP4 on Safari) for the vanilla binding, driven by the shared `video-plan`
  * module: `planVideoSegments` (per-slide segment timing + frame counts),
- * `fpsToFrameIntervalMs` (draw-loop pacing), and `pickSupportedMimeType` over
- * `WEBM_MIME_CANDIDATES` (MediaRecorder codec selection). Only the browser
+ * `fpsToFrameIntervalMs` (draw-loop pacing), and `requireVideoRecordingFormat`
+ * (MediaRecorder container and codec, by `isTypeSupported`). Only the browser
  * driver lives here: capture each slide to a canvas, replay the canvases onto
  * a recording canvas fed to `captureStream()` + `MediaRecorder`, and download
  * the resulting Blob. Vanilla port of React's `exportAllSlidesAsVideo`.
@@ -63,9 +64,13 @@ interface RecordOptions {
 /**
  * Replay pre-captured slide canvases onto a recording canvas streamed into a
  * `MediaRecorder`, holding each slide for its planned segment. Returns the
- * assembled WebM Blob.
+ * assembled Blob in `format`'s container.
  */
-async function recordWebm(canvases: HTMLCanvasElement[], opts: RecordOptions): Promise<Blob> {
+async function recordWebm(
+	canvases: HTMLCanvasElement[],
+	format: VideoRecordingFormat,
+	opts: RecordOptions,
+): Promise<Blob> {
 	const recordingCanvas = document.createElement('canvas');
 	recordingCanvas.width = canvases[0].width;
 	recordingCanvas.height = canvases[0].height;
@@ -76,7 +81,7 @@ async function recordWebm(canvases: HTMLCanvasElement[], opts: RecordOptions): P
 
 	const stream = recordingCanvas.captureStream(opts.fps);
 	const recorder = new MediaRecorder(stream, {
-		mimeType: pickSupportedMimeType([...WEBM_MIME_CANDIDATES]),
+		mimeType: format.mimeType,
 		videoBitsPerSecond: opts.videoBitsPerSecond,
 	});
 
@@ -121,7 +126,7 @@ async function recordWebm(canvases: HTMLCanvasElement[], opts: RecordOptions): P
 
 		recorder.stop();
 		await recorderDone;
-		return new Blob(chunks, { type: 'video/webm' });
+		return new Blob(chunks, { type: format.blobType });
 	} finally {
 		// `recorder.stop()` only stops the recorder; the capture stream itself
 		// keeps compositing frames from `recordingCanvas` indefinitely otherwise
@@ -131,9 +136,10 @@ async function recordWebm(canvases: HTMLCanvasElement[], opts: RecordOptions): P
 }
 
 /**
- * Capture every slide, record them into a WebM video, and trigger a
- * `<baseName>.webm` download. No-op when the deck is empty. Throws the shared
- * `AbortError` when `signal` aborts during capture or recording.
+ * Capture every slide, record them into a video, and trigger a `<baseName>.webm`
+ * (or `.mp4` on Safari) download. No-op when the deck is empty. Throws the shared
+ * `AbortError` when `signal` aborts during capture or recording, and
+ * `VideoExportUnsupportedError` before capturing when no container can be recorded.
  */
 export async function runVideoExport(
 	deps: ExportVideoDeps,
@@ -152,6 +158,7 @@ export async function runVideoExport(
 	if (total === 0) {
 		return;
 	}
+	const format = requireVideoRecordingFormat();
 
 	const canvases: HTMLCanvasElement[] = [];
 	for (let i = 0; i < total; i++) {
@@ -162,7 +169,7 @@ export async function runVideoExport(
 		canvases.push(await deps.rasterizeSlide(i));
 	}
 
-	const blob = await recordWebm(canvases, {
+	const blob = await recordWebm(canvases, format, {
 		slideDurationMs,
 		slideTimingsMs,
 		fps,
@@ -173,5 +180,5 @@ export async function runVideoExport(
 	});
 
 	onProgress?.(total, total);
-	downloadBlob(blob, `${deps.baseName}.webm`);
+	downloadBlob(blob, videoFileName(deps.baseName, blob));
 }

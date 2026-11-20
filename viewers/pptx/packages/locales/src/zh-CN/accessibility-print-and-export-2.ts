@@ -6,7 +6,7 @@ export const translations = {
 	'pptx.export.gifAnimated': 'GIF 动画',
 	'pptx.export.pdfAllSlides': 'PDF（所有幻灯片）',
 	'pptx.export.pngCurrentSlide': 'PNG（当前幻灯片）',
-	'pptx.export.webmVideo': 'WebM 视频',
+	'pptx.export.webmVideo': '视频',
 	'pptx.fontEmbedding.embedInFile': '在文件中嵌入字体',
 	'pptx.fontEmbedding.noCustomFonts': '无需嵌入自定义字体。',
 	'pptx.headerFooter.fixedDate': '固定日期',
@@ -61,6 +61,8 @@ export const translations = {
 	'pptx.export.errorNoSlidesNotesPdf': '没有捕获用于备注 PDF 导出的幻灯片',
 	'pptx.export.errorNoSlidesPdf': '没有捕获用于 PDF 导出的幻灯片',
 	'pptx.export.errorNoSlidesVideo': '没有捕获用于视频导出的幻灯片',
+	'pptx.export.errorVideoUnsupported':
+		'此浏览器无法录制视频。请将幻灯片导出为 GIF，或尝试其他浏览器。',
 	'pptx.export.recording': '录制',
 	'pptx.export.recordingVideo': '正在录制视频...',
 	'pptx.export.rendering': '渲染',

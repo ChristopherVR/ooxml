@@ -130,6 +130,7 @@ export function openSlideSorterOverlay(
 	options.slides.forEach((slide, index) => {
 		const card = createEl(doc, 'article', 'pptxv-sorter-card');
 		card.dataset.pptxChrome = 'sorter-tile';
+		card.dataset.pptxTouchPress = 'menu dblclick';
 		card.addEventListener('contextmenu', (event) => {
 			closeMenu?.();
 			closeMenu = null;

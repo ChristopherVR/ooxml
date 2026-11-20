@@ -104,6 +104,7 @@
 	onpointermove={editingActive && !pickActive ? onstagepointermove : undefined}
 	ondblclick={editingActive && !pickActive ? onstagedblclick : undefined}
 	oncontextmenu={(editingActive && !pickActive) || presenting ? onstagecontextmenu : undefined}
+	data-pptx-touch-press={(editingActive && !pickActive) || presenting ? 'menu' : undefined}
 	onclick={pickActive ? pickFromEvent : onstageclick}
 >
 	<SlideStage

@@ -118,6 +118,7 @@ export const INSPECTOR_FORMAT_CSS = `
 	border-radius: var(--pptx-radius);
 	background: var(--pptx-muted);
 	cursor: pointer;
+	-webkit-user-select: none;
 	user-select: none;
 	touch-action: none;
 }

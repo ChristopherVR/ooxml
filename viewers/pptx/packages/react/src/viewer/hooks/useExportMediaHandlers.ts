@@ -6,6 +6,7 @@ import {
 	resolveExportCaptureDecision,
 	slideProgressPercent,
 	slideStatusLabel,
+	videoFileName,
 } from 'ooxml-ui/pptx';
 /**
  * useExportMediaHandlers: the GIF and WebM video export handlers, split out
@@ -97,7 +98,7 @@ export function useExportMediaHandlers(
 			);
 			setExportProgress(EXPORT_ASSEMBLING_PERCENT);
 			setExportStatusMessage('Saving file...');
-			downloadBlob(blob, 'presentation.webm');
+			downloadBlob(blob, videoFileName('presentation', blob));
 			setExportProgress(EXPORT_DONE_PERCENT);
 		} catch (err) {
 			if (!isExportAbortError(err)) {

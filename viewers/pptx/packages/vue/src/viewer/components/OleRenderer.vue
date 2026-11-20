@@ -277,6 +277,7 @@ const placeholderStyle = computed<CSSProperties>(() => ({
 	height: 100%;
 	object-fit: contain;
 	pointer-events: none;
+	-webkit-user-select: none;
 	user-select: none;
 	display: block;
 }
@@ -347,6 +348,13 @@ const placeholderStyle = computed<CSSProperties>(() => ({
 .pptx-vue-ole:hover .pptx-vue-ole-actions,
 .pptx-vue-ole-actions:focus-within {
 	opacity: 1;
+}
+
+/* Touch screens have no hover (iOS Safari, issue #290): keep the bar visible there. */
+@media (hover: none), (pointer: coarse) {
+	.pptx-vue-ole-actions {
+		opacity: 1;
+	}
 }
 
 .pptx-vue-ole-meta {

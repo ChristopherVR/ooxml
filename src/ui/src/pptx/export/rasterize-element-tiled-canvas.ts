@@ -15,6 +15,7 @@
  * exports) returns the single tile's own canvas unchanged, with no stitching
  * cost at all.
  */
+import { releaseCanvas } from '../render/canvas-area-cap';
 import type { RasterizeElementCanvasResult, RasterizeElementOptions } from './rasterize-element';
 import type { RasterizedTile } from './rasterize-element-tiles';
 import { groupTilesByRow, rasterizeElementTiles } from './rasterize-element-tiles';
@@ -53,6 +54,7 @@ function stitchTilesToCanvas(
 	let yOffset = 0;
 	for (const rowTiles of rows) {
 		const pixelTiles = rowTiles.map(tileToRowPixels);
+		for (const tile of rowTiles) releaseCanvas(tile.canvas);
 		const band = combineTileRowPixels(pixelTiles, fullWidth);
 		buffer.set(band, yOffset * fullWidth * 4);
 		yOffset += pixelTiles[0].height;

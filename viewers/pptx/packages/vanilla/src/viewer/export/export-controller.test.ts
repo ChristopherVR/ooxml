@@ -111,7 +111,11 @@ describe('createExportController', () => {
 		await copySlideAsImage();
 
 		expect(rasterizeSlide).toHaveBeenCalledWith(2);
-		expect(clipboardItem).toHaveBeenCalledWith({ 'image/png': png });
+		// The item carries the render as a promise so the write starts inside the
+		// click: Safari rejects a clipboard write made after an await (#290).
+		const data = clipboardItem.mock.calls[0]?.[0] as Record<string, Promise<Blob>>;
+		expect(data['image/png']).toBeInstanceOf(Promise);
+		await expect(data['image/png']).resolves.toBe(png);
 		expect(write).toHaveBeenCalledOnce();
 	});
 

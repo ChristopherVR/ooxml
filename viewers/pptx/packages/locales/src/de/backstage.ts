@@ -79,7 +79,7 @@ export const translations = {
 	'pptx.backstage.card.png.title': 'Aktuelle Folie exportieren',
 	'pptx.backstage.card.png.body': 'Ein hochwertiges PNG-Bild erstellen.',
 	'pptx.backstage.card.video.title': 'Video erstellen',
-	'pptx.backstage.card.video.body': 'Folienanzeigedauer und Animationen als WebM exportieren.',
+	'pptx.backstage.card.video.body': 'Folienzeitpunkte und Animationen als Video exportieren.',
 	'pptx.backstage.card.gif.title': 'Animiertes GIF erstellen',
 	'pptx.backstage.card.gif.body': 'Eine kompakte Endlosvorschau erstellen.',
 	'pptx.backstage.card.json.title': 'Als JSON exportieren',

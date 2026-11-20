@@ -129,6 +129,7 @@ function onMouseUp(event: MouseEvent): void {
 	drag.handleEl.style.transform = '';
 	document.body.style.cursor = '';
 	document.body.style.userSelect = '';
+	document.body.style.setProperty('-webkit-user-select', '');
 	window.removeEventListener('mousemove', onMouseMove);
 	window.removeEventListener('mouseup', onMouseUp);
 	drag = null;
@@ -160,6 +161,7 @@ function onContainerMouseDown(event: MouseEvent): void {
 			event.stopPropagation();
 			document.body.style.cursor = 'col-resize';
 			document.body.style.userSelect = 'none';
+			document.body.style.setProperty('-webkit-user-select', 'none');
 			drag = {
 				type: 'col',
 				index: i,
@@ -185,6 +187,7 @@ function onContainerMouseDown(event: MouseEvent): void {
 			const tr = table?.querySelectorAll('tbody > tr')[i] as HTMLElement | undefined;
 			document.body.style.cursor = 'row-resize';
 			document.body.style.userSelect = 'none';
+			document.body.style.setProperty('-webkit-user-select', 'none');
 			drag = {
 				type: 'row',
 				index: i,

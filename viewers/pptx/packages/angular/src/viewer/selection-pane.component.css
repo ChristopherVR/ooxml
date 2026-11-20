@@ -55,6 +55,7 @@
 	cursor: pointer;
 	margin-bottom: 2px;
 	transition: background 0.1s;
+	-webkit-user-select: none;
 	user-select: none;
 }
 
