@@ -121,4 +121,32 @@ describe('<docx-editor> ribbon.hiddenTabs', () => {
 		editor.customization = {};
 		expect(await tabIds(editor)).toContain('home');
 	});
+
+	it('leaves commands that live only on a hidden tab out of Tell me', async () => {
+		const editor = mount();
+		const toolbar = ribbon(editor);
+		const labels = (tab: string) =>
+			[
+				...toolbar.querySelectorAll<HTMLElement>(
+					`[data-ribbon-tab="${tab}"] button[aria-label]:not([disabled])`,
+				),
+			].map((control) => control.getAttribute('aria-label')!);
+		const elsewhere = new Set(
+			[...toolbar.querySelectorAll<HTMLElement>('[data-ribbon-tab] button[aria-label]')]
+				.filter((control) => !control.closest('[data-ribbon-tab="references"]'))
+				.map((control) => control.getAttribute('aria-label')),
+		);
+		const only = labels('references').find((label) => !elsewhere.has(label))!;
+		const shared = labels('references').find((label) => elsewhere.has(label));
+		const bar = editor.shadowRoot!.querySelector('office-ui-title-bar') as HTMLElement & {
+			state: { search: { match(query: string): { id: string }[] } };
+		};
+		const found = (query: string) => bar.state.search.match(query).map((entry) => entry.id);
+		expect(found(only)).toContain(only);
+		editor.customization = { ribbon: { hiddenTabs: ['references'] } };
+		expect(found(only)).not.toContain(only);
+		if (shared) expect(found(shared)).toContain(shared);
+		editor.customization = null;
+		expect(found(only)).toContain(only);
+	});
 });

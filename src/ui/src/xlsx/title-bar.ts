@@ -17,6 +17,8 @@ export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 
 export interface TitleBarHandlers extends TellMeHandlers {
 	save(): void;
+	/** Commands Tell me leaves out because their only ribbon tab is one the host removed. */
+	searchHidden?(): ReadonlySet<string>;
 	/** Sharing state for the presence stack; absent hides it. */
 	collaboration?(): XlsxCollaborationState;
 }
@@ -95,12 +97,15 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 				label: ctx.t('Tell me what you want to do'),
 				heading: ctx.t('Best matches'),
 				empty: ctx.t('No matching commands'),
-				match: (query) =>
-					searchCommands(ctx, query, handlers.isHidden).map((command) => ({
+				match: (query) => {
+					const tabOnly = handlers.searchHidden?.();
+					const hidden = (id: string) => handlers.isHidden(id) || !!tabOnly?.has(id);
+					return searchCommands(ctx, query, hidden).map((command) => ({
 						id: command.id,
 						label: ctx.t(command.label),
 						...(command.shortcut ? { category: command.shortcut } : {}),
-					})),
+					}));
+				},
 			},
 		};
 	};

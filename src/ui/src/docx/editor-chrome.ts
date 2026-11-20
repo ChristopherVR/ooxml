@@ -243,6 +243,7 @@ export class EditorChrome {
 		if (resolved.fileHidden && this.backstage.isOpen) this.closeBackstage();
 		this.backstage.refresh();
 		this.statusBar.setNotesAvailable(!resolved.fileHidden);
+		this.signatures.setActivatable(!resolved.fileHidden);
 		this.titleBar.setHiddenCommands(resolved.fileCommands);
 		this.ribbonActions.element.noShare = resolved.fileCommands.has('share');
 	}

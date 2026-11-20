@@ -78,24 +78,36 @@ editor.customization = {
 
 ## Hiding ribbon tabs and the File tab
 
-`customization.ribbon.hiddenTabs` removes native ribbon tabs, contextual tabs included, in every
-product with the same field. Each product types its own ids (`WordRibbonTabId`,
-`ExcelRibbonTabId`, `VisioRibbonTabId`, listed in `WORD_RIBBON_TAB_IDS` and its siblings;
-PowerPoint's are `ToolbarTabId` and `RibbonContextualTabId`), so a misspelt id is a compile error.
+`customization.ribbon.hiddenTabs` removes native ribbon tabs, contextual tabs included. The field
+is the same in every product, but each product's tab ids are its own and typed per product, so a
+misspelt or foreign id is a compile error. `'file'` (the File tab) is the one id they all share.
 
-In Word, Excel and Visio, `file` removes the File tab and the backstage behind it, for hosts that
+| Product    | Id type                                    | Ids                                                                      |
+| ---------- | ------------------------------------------ | ------------------------------------------------------------------------ |
+| Word       | `WordRibbonTabId`                          | `WORD_RIBBON_TAB_IDS` (`ooxml-core/docx/ui`), kebab-case: `chart-design` |
+| Excel      | `ExcelRibbonTabId`                         | `EXCEL_RIBBON_TAB_IDS` (`ooxml-core/xlsx/ui`), kebab-case: `page-layout` |
+| Visio      | `VisioRibbonTabId`                         | `VISIO_RIBBON_TAB_IDS` (`ooxml-core/visio/ui`), kebab-case: `org-chart`  |
+| PowerPoint | `ToolbarTabId` and `RibbonContextualTabId` | camelCase contextual ids: `chartDesign` (see the PowerPoint guide)       |
+
+In Word, Excel and Visio, `'file'` removes the File tab and the backstage behind it, for hosts that
 own document management themselves (PowerPoint's File tab is described in its customisation guide):
 
 - The File button goes at every width, with its key tip; Alt, F and the other routes that open the
   backstage (the status bar's compatibility notes, Excel's Info, Save As and Options commands,
-  Visio's `openBackstage()`) do nothing.
-- Save, Ctrl+S, Quick Access Save, `storage` and the `file-command` event keep working, as do
-  the other file shortcuts that do not need the backstage (Ctrl+O, Ctrl+P), unless a capability
-  removes them. Options and Customize Ribbon live in the backstage, so they go too.
+  Visio's `openBackstage()`) do nothing. Options and Customize Ribbon live in the backstage, so
+  they go too.
+- The signature badge and the signature message bar stay, because the verification state is
+  security information, but they become plain text: no View signatures action, nothing to click.
+  They become interactive again when File comes back.
+- Saving keeps working: Quick Access Save, `storage` and the `file-command` event in all three,
+  Ctrl+S and Ctrl+P in Word and Excel, Ctrl+O in Excel, unless a capability removes them. Visio has
+  no Ctrl+S, Ctrl+O or Ctrl+P shortcut.
 - Hiding File while the backstage is open closes it and returns focus to the ribbon. Each editor
   instance applies its own object at runtime; omitting the field keeps the default chrome.
-- When the selected tab is hidden, the first remaining tab is selected. Host tabs
-  (`ribbonAddIns`) are not affected.
+
+Any other id hides that tab. When the selected tab is hidden, the first remaining tab is selected,
+and Tell me leaves out commands whose only ribbon home is a hidden tab (a command that is also on a
+visible tab stays). Host tabs (`ribbonAddIns`) are not affected.
 
 ```ts
 editor.customization = { ribbon: { hiddenTabs: ['file'] } } satisfies WordCustomization;

@@ -1,5 +1,14 @@
+import { readFileSync } from 'node:fs';
 import { expect, test, type Locator } from '@playwright/test';
-import { editor, grid, openSample, part } from './helpers';
+import { editor, grid, landingFileInput, openLanding, openSample, part } from './helpers';
+
+// An Excel-signed sample (Apache POI test data): its signature verifies, its signer is not trusted.
+const SIGNED = readFileSync(
+	new URL(
+		'../../src/core/opc/signature/__fixtures__/office/hello-world-signed.xlsx',
+		import.meta.url,
+	),
+);
 
 /** Sets the element's `customization`, the object every binding forwards as one prop. */
 const hideFile = (element: Locator, hidden: boolean) =>
@@ -71,5 +80,28 @@ test.describe('customization.ribbon.hiddenTabs: file', () => {
 		await expect(xlsx.getByRole('tab', { name: 'Home' })).toBeFocused();
 		await hideFile(xlsx, false);
 		await expect(fileButton(xlsx)).toBeVisible();
+	});
+
+	test('keeps the signature state on screen, without actions', async ({ page }) => {
+		await openLanding(page);
+		await (
+			await landingFileInput(page)
+		).setInputFiles({
+			name: 'signed.xlsx',
+			mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+			buffer: SIGNED,
+		});
+		await expect(grid(page)).toBeVisible();
+		const xlsx = editor(page);
+		const badge = xlsx.locator('[data-testid="signature-badge"]');
+		const notice = xlsx.locator('[data-testid="signature-notice"]');
+		await expect(badge.getByRole('button')).toBeVisible();
+		await hideFile(xlsx, true);
+		await expect(badge).toContainText('Signed, signer not verified');
+		await expect(badge.getByRole('button')).toHaveCount(0);
+		await expect(notice).toBeVisible();
+		await expect(notice.getByRole('button', { name: 'View signatures' })).toHaveCount(0);
+		await hideFile(xlsx, false);
+		await expect(notice.getByRole('button', { name: 'View signatures' })).toBeVisible();
 	});
 });

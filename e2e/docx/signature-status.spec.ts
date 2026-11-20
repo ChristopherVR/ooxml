@@ -78,3 +78,19 @@ test('Word shows each signature state from a real file, and nothing unsigned', a
 	await expect(panel).toContainText('Signed, signer not verified');
 	await expect(panel).toContainText('Test');
 });
+
+test('a hidden File tab keeps the signature state on screen, without actions', async ({ page }) => {
+	await openSample(page);
+	await page.locator('docx-editor').evaluate((element) => {
+		(element as HTMLElement & { customization: unknown }).customization = {
+			ribbon: { hiddenTabs: ['file'] },
+		};
+	});
+	await open(page, SIGNED);
+	await expect(badge(page)).toBeVisible();
+	await expect(badge(page)).toContainText('Signed, signer not verified');
+	await expect(badge(page).getByRole('button')).toHaveCount(0);
+	await expect(notice(page)).toBeVisible();
+	await expect(notice(page).getByRole('button', { name: 'View signatures' })).toHaveCount(0);
+	await expect(page.locator('docx-editor .dve-backstage')).toBeHidden();
+});

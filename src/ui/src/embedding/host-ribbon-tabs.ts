@@ -27,3 +27,12 @@ export function applyHostRibbonTabs(ribbon: HTMLElement, hidden: ReadonlySet<str
 		element.setTabHidden?.(tab, HOST_TAB_HIDDEN_REASON, hidden.has(tab));
 	}
 }
+
+/**
+ * True when `node` sits in a native tab the host removed, so ribbon search (Tell me) can skip a
+ * command whose only home is there. A copy of the command in a visible tab still counts.
+ */
+export function inHostHiddenTab(node: Element): boolean {
+	const panel = node.closest<HTMLElement>('[data-ribbon-tab]');
+	return (panel?.dataset.tabHiddenBy ?? '').split(' ').includes(HOST_TAB_HIDDEN_REASON);
+}

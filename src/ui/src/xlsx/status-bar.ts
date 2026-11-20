@@ -59,8 +59,11 @@ export function cellMode(ctx: EditorContext): CellMode {
 
 export interface StatusBarHandlers {
 	showNotes(): void;
-	/** False while the File tab is hidden: the notes button opens File > Info, so it goes too. */
-	notesAvailable?(): boolean;
+	/**
+	 * False while the File tab is hidden: the notes button opens File > Info, so it goes too, and the
+	 * signature badge and notice show their state without opening anything.
+	 */
+	infoAvailable?(): boolean;
 	setZoom(percent: number): void;
 }
 
@@ -164,7 +167,9 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 		const mode = sheet?.view?.mode;
 		const hasSheet = !!sheet;
 		const count = ctx.workbook()?.warnings.length ?? 0;
+		const infoAvailable = handlers.infoAvailable?.() !== false;
 		signatures.update(ctx.workbook()?.signatures, ctx.locale());
+		signatures.setActivatable(infoAvailable);
 		const notesText = ctx.t(
 			count === 1 ? '{count} compatibility note' : '{count} compatibility notes',
 			{ count },
@@ -180,7 +185,7 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 					icon: 'warning',
 					label: notesText,
 					text: notesText,
-					hidden: count === 0 || handlers.notesAvailable?.() === false,
+					hidden: count === 0 || !infoAvailable,
 				},
 			],
 			views: !layout.views

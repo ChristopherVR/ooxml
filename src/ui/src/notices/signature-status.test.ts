@@ -3,6 +3,7 @@ import { signatureStrings } from 'ooxml-core/i18n';
 import type { signature } from 'ooxml-core/opc';
 import { registerOfficeUi } from '../index';
 import type { OfficeUiSignatureStatus } from './signature-status';
+import { createSignatureChrome } from './signature-chrome';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());
@@ -88,5 +89,24 @@ describe('office-ui-signature-status', () => {
 		const host = mount(summaryOf('invalid'));
 		host.locale = 'de-AT';
 		expect(text(host, '.label')).toBe(signatureStrings.de.states.invalid.label);
+	});
+
+	it('shows the state without opening anything while the chrome is not activatable', () => {
+		const open = vi.fn();
+		const chrome = createSignatureChrome(document, open);
+		document.body.append(chrome.badge, chrome.notice);
+		chrome.update(summaryOf('invalid'), 'en');
+		chrome.setActivatable(false);
+		expect(chrome.badge.hasAttribute('no-activate')).toBe(true);
+		expect(chrome.badge.hidden).toBe(false);
+		expect(text(chrome.badge, '.label')).toBe(signatureStrings.en.states.invalid.label);
+		expect(chrome.badge.shadowRoot!.querySelector('button')).toBeNull();
+		expect(chrome.notice.shadowRoot!.querySelector('.view')).toBeNull();
+		chrome.badge.dispatchEvent(new CustomEvent('office-signature-activate'));
+		expect(open).not.toHaveBeenCalled();
+		chrome.setActivatable(true);
+		chrome.badge.shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
+		chrome.notice.shadowRoot!.querySelector<HTMLButtonElement>('.view')!.click();
+		expect(open).toHaveBeenCalledTimes(2);
 	});
 });

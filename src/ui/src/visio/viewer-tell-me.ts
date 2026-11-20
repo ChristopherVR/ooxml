@@ -1,4 +1,5 @@
 import type { OfficeSearchCommand } from '../controls';
+import { inHostHiddenTab } from '../embedding/host-ribbon-tabs';
 
 type Search = HTMLElement & { commands: OfficeSearchCommand[] };
 
@@ -25,8 +26,9 @@ function ribbonCommands(root: ShadowRoot): OfficeSearchCommand[] {
 		const label = node.getAttribute('label');
 		// Add-in tabs belong to the host: their ids are not this viewer's commands.
 		if (!label || seen.has(id) || node.closest('[data-add-in]')) continue;
-		// A command a host capability removed is not offered here either.
-		if (node.closest('[data-capability-hidden]')) continue;
+		// A command a host capability removed is not offered here either, nor one in a tab the host
+		// removed (`ribbon.hiddenTabs`) unless another tab has it too.
+		if (node.closest('[data-capability-hidden]') || inHostHiddenTab(node)) continue;
 		seen.add(id);
 		const disabled = node.hasAttribute('disabled') || node.hasAttribute('main-disabled');
 		commands.push({
@@ -39,6 +41,7 @@ function ribbonCommands(root: ShadowRoot): OfficeSearchCommand[] {
 		});
 	}
 	for (const box of root.querySelectorAll<HTMLElement>('.toolbar [data-check]')) {
+		if (inHostHiddenTab(box)) continue;
 		const disabled = box.hasAttribute('disabled');
 		const caption = box.closest('.ribbon-check');
 		commands.push({
@@ -59,7 +62,10 @@ function runCommand(root: ShadowRoot, id: string): void {
 		root.querySelector<HTMLElement>(`.toolbar [data-check="${id.slice(6)}"]`)?.click();
 		return;
 	}
-	const control = root.querySelector(`.toolbar [command="${id}"]`);
+	const control =
+		[...root.querySelectorAll(`.toolbar [command="${id}"]`)].find(
+			(node) => !inHostHiddenTab(node),
+		) ?? null;
 	// Shared galleries render their dropdown trigger in the light DOM.
 	(
 		control?.shadowRoot?.querySelector<HTMLButtonElement>('.main, button') ??

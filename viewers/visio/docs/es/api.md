@@ -233,7 +233,7 @@ const customization = {
 ```
 
 - `capabilities`: `false` elimina todas las vías a la capacidad (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`): cinta, páginas de la pestaña Archivo, menús y atajos. `hiddenActions` no cambia; ambos se combinan.
-- `ribbon.hiddenTabs`: pestañas nativas de la cinta que se quitan (también las contextuales). `file` quita la pestaña Archivo y su vista Backstage en cualquier ancho: ninguna KeyTip (Alt, F) ni otra ruta la abre, y una vista Backstage abierta se cierra. Guardar, Ctrl+S, `storage` y `file-command` siguen funcionando salvo que una capacidad los quite. Las pestañas del host (`ribbonAddIns`) no se ven afectadas.
+- `ribbon.hiddenTabs`: pestañas nativas de la cinta que se quitan (también las contextuales). `file` quita la pestaña Archivo y su vista Backstage en cualquier ancho: ninguna KeyTip (Alt, F) ni otra ruta la abre, y una vista Backstage abierta se cierra. Guardar desde la barra de herramientas de acceso rápido, `storage` y `file-command` siguen funcionando salvo que una capacidad los quite. Las pestañas del host (`ribbonAddIns`) no se ven afectadas.
 - `backstage.extraPages`: páginas del host `{ id, label, group?, order?, render }` en la pestaña Archivo, tras las páginas integradas de su grupo. `render` es una función de montaje, una etiqueta de elemento personalizado o `{ element, properties }` y recibe un `VisioRegionContext`.
 - `contextMenu.extraCommands`: comandos del host `{ id, label, icon?, group?, when?, disabled?, onSelect }` encima (`top`, predeterminado) o debajo (`bottom`) de las entradas integradas. `onSelect` se ejecuta tras cerrarse el menú con un `VisioMenuContext`. Las etiquetas se muestran tal cual (localícelas usted mismo).
 

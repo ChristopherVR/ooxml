@@ -4539,10 +4539,13 @@
 					"name": "OfficeUiSignatureStatus",
 					"tagName": "office-ui-signature-status",
 					"customElement": true,
-					"description": "`<office-ui-signature-status>`: a document's digital signature state, as Word, Excel and Visio show it. `summary` is the `SignatureSummary` a load returned (`signature` of `ooxml-core/opc`); `locale` picks the shared wording of `ooxml-core/i18n` (`signatureStateText`), so the products never describe a state differently. Only `verified` reads \"Signed\": a signature that does not verify is shown as invalid or not verified. Hidden while `summary` is absent or `unsigned`. The state is mirrored to the host's `data-state`. `variant`: `badge` (default) is a status bar button that emits `office-signature-activate`; `notice` is a load message bar with View signatures (`office-signature-activate`) and Dismiss (`office-signature-dismiss`); `panel` lists every signature with its signer and signing time for an info page. Event names are static fields a product subclass may override.",
+					"description": "`<office-ui-signature-status>`: a document's digital signature state, as Word, Excel and Visio show it. `summary` is the `SignatureSummary` a load returned (`signature` of `ooxml-core/opc`); `locale` picks the shared wording of `ooxml-core/i18n` (`signatureStateText`), so the products never describe a state differently. Only `verified` reads \"Signed\": a signature that does not verify is shown as invalid or not verified. Hidden while `summary` is absent or `unsigned`. The state is mirrored to the host's `data-state`. `variant`: `badge` (default) is a status bar button that emits `office-signature-activate`; `notice` is a load message bar with View signatures (`office-signature-activate`) and Dismiss (`office-signature-dismiss`); `panel` lists every signature with its signer and signing time for an info page. Event names are static fields a product subclass may override. `no-activate` keeps the state on screen but drops what it would open: the badge is plain text and the notice has no View signatures (Dismiss stays). A product sets it while the page the badge opens is unavailable, for example when a host hid the File tab.",
 					"attributes": [
 						{
 							"name": "locale"
+						},
+						{
+							"name": "no-activate"
 						},
 						{
 							"name": "variant"
@@ -4555,6 +4558,14 @@
 							"type": {
 								"text": "string"
 							}
+						},
+						{
+							"kind": "field",
+							"name": "noActivate",
+							"type": {
+								"text": "boolean"
+							},
+							"attribute": "no-activate"
 						},
 						{
 							"kind": "field",

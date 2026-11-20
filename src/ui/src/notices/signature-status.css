@@ -58,8 +58,17 @@ button:focus-visible {
 	background: transparent;
 	white-space: nowrap;
 }
-.badge:hover {
+button.badge:hover {
 	background: var(--office-background);
+}
+/* Read by assistive technology only: the heading the interactive badge carries as its name. */
+.hidden-text {
+	position: absolute;
+	width: var(--office-space-px);
+	height: var(--office-space-px);
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
 }
 .notice {
 	box-sizing: border-box;

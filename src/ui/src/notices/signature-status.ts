@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit';
 import { signatureStateText, signatureStringsFor } from 'ooxml-core/i18n';
 import { signature as opcSignature } from 'ooxml-core/opc';
-import { OfficeElement, controlStyles } from '../base';
+import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { getIcon, registerIcon } from '../icons';
 import { definer } from '../registry';
@@ -40,6 +40,10 @@ const formatTime = (value: string | undefined, locale: string): string | undefin
  * `notice` is a load message bar with View signatures (`office-signature-activate`) and Dismiss
  * (`office-signature-dismiss`); `panel` lists every signature with its signer and signing time for
  * an info page. Event names are static fields a product subclass may override.
+ *
+ * `no-activate` keeps the state on screen but drops what it would open: the badge is plain text
+ * and the notice has no View signatures (Dismiss stays). A product sets it while the page the
+ * badge opens is unavailable, for example when a host hid the File tab.
  */
 export class OfficeUiSignatureStatus extends OfficeElement {
 	static activateEvent = 'office-signature-activate';
@@ -49,10 +53,12 @@ export class OfficeUiSignatureStatus extends OfficeElement {
 		summary: { attribute: false },
 		locale: { type: String },
 		variant: { type: String, reflect: true },
+		noActivate: { attribute: 'no-activate', ...flag },
 	};
 	declare summary: SignatureSummary | undefined;
 	declare locale: string;
 	declare variant: OfficeSignatureStatusVariant;
+	declare noActivate: boolean;
 
 	constructor() {
 		super();
@@ -60,6 +66,7 @@ export class OfficeUiSignatureStatus extends OfficeElement {
 		this.summary = undefined;
 		this.locale = 'en';
 		this.variant = 'badge';
+		this.noActivate = false;
 	}
 
 	protected override willUpdate(): void {
@@ -107,9 +114,13 @@ export class OfficeUiSignatureStatus extends OfficeElement {
 				>${glyph('signature', 'icon')}<p class="text"
 					><strong class="label">${text.label}</strong>
 					<span class="description">${text.description} ${words.removedOnSave}</span></p
-				><button type="button" class="view" @click=${() => this.send('activateEvent')}
-					>${words.view}</button
-				><button
+				>${
+					this.noActivate
+						? nothing
+						: html`<button type="button" class="view" @click=${() => this.send('activateEvent')}
+								>${words.view}</button
+							>`
+				}<button
 					type="button"
 					class="dismiss"
 					title=${words.dismiss}
@@ -130,6 +141,11 @@ export class OfficeUiSignatureStatus extends OfficeElement {
 							>`
 						: nothing
 				}<p class="removed">${words.removedOnSave}</p></section
+			>`;
+		if (this.noActivate)
+			return html`<span class="badge" part="badge" title=${text.description}
+				>${glyph('signature', 'icon')}<span class="hidden-text">${words.heading}: </span
+				><span class="label">${text.label}</span></span
 			>`;
 		return html`<button
 			type="button"

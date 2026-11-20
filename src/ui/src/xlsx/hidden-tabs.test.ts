@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { EXCEL_RIBBON_TAB_IDS, ribbonTabs } from 'ooxml-core/xlsx/ui';
+import { EXCEL_RIBBON_TAB_IDS, commandsOnlyInTabs, ribbonTabs } from 'ooxml-core/xlsx/ui';
 import type { EditorCore } from './editor-core';
 import { defineXlsxEditor, type ExcelCustomization, type XlsxEditorElement } from './index';
 import { resolveExcelCustomization } from './customization';
@@ -140,5 +140,24 @@ describe('<xlsx-editor> ribbon.hiddenTabs', () => {
 		expect(ribbon(element).selected).toBe('insert');
 		element.customization = {};
 		expect(await tabIds(element)).toContain('home');
+	});
+
+	it('leaves commands that live only on a hidden tab out of Tell me', async () => {
+		expect([...commandsOnlyInTabs(ribbonTabs(), new Set(['formulas']))]).toContain(
+			'formulas.recent',
+		);
+		expect(commandsOnlyInTabs(ribbonTabs(), new Set(['formulas']))).not.toContain('home.autosum');
+		expect(commandsOnlyInTabs(ribbonTabs(), new Set()).size).toBe(0);
+		const element = mount({ ribbon: { hiddenTabs: ['formulas'] } });
+		await settle();
+		const bar = element.shadowRoot!.querySelector('office-ui-title-bar') as HTMLElement & {
+			state: { search: { match(query: string): { id: string }[] } };
+		};
+		const found = (query: string) => bar.state.search.match(query).map((entry) => entry.id);
+		expect(found('recently used')).not.toContain('formulas.recent');
+		expect(found('autosum')).toContain('home.autosum');
+		element.customization = null;
+		await settle();
+		expect(found('recently used')).toContain('formulas.recent');
 	});
 });

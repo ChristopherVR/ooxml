@@ -122,6 +122,7 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.setCapabilityReadOnly(!this.#custom.resolved.canEdit);
 		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
 		applyHostRibbonTabs(this.#toolbar, this.#custom.resolved.hiddenTabs);
+		this.#signatures.setActivatable(!this.#custom.resolved.fileHidden);
 		this.#backstage.refreshCustomization();
 		renderTitleBar(
 			this.#titleBar,

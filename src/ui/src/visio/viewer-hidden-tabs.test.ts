@@ -114,4 +114,30 @@ describe('<visio-viewer> ribbon.hiddenTabs', () => {
 		expect(await tabIds(root)).toContain('home');
 		viewer.destroy();
 	});
+
+	it('leaves commands that live only on a hidden tab out of Tell me', () => {
+		const { viewer, root } = mount();
+		const search = root.querySelector('.tell-me') as HTMLElement & { commands: { id: string }[] };
+		const ids = () => {
+			search.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+			return search.commands.map((command) => command.id);
+		};
+		const inProcess = [...root.querySelectorAll('[data-ribbon-tab="process"] [command]')].map(
+			(node) => node.getAttribute('command')!,
+		);
+		const elsewhere = new Set(
+			[...root.querySelectorAll('.toolbar [command]')]
+				.filter((node) => !node.closest('[data-ribbon-tab="process"]'))
+				.map((node) => node.getAttribute('command')),
+		);
+		const only = inProcess.filter((id) => !elsewhere.has(id) && ids().includes(id));
+		expect(only.length).toBeGreaterThan(0);
+		viewer.update({ customization: { ribbon: { hiddenTabs: ['process'] } } });
+		const hidden = ids();
+		for (const id of only) expect(hidden).not.toContain(id);
+		expect(hidden).toContain('copy');
+		viewer.update({ customization: null });
+		for (const id of only) expect(ids()).toContain(id);
+		viewer.destroy();
+	});
 });

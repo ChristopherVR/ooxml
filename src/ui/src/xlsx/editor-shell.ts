@@ -32,6 +32,7 @@ import { el } from './ribbon/controls';
 import { hideKeyTips } from './ribbon/keytips';
 import { shellCommands } from './shell-commands';
 import { createShortcutHelp } from './shortcut-help';
+import { commandsOnlyInTabs, ribbonTabs } from 'ooxml-core/xlsx/ui';
 import { createStatusBar } from './status-bar';
 import { editorStyleText } from './theme';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
@@ -203,6 +204,7 @@ export function buildShell(core: EditorCore): Shell {
 	ribbon.element.append(ribbonActions.element);
 	const titleBar = createTitleBar(ctx, {
 		isHidden,
+		searchHidden: () => commandsOnlyInTabs(ribbonTabs(), core.customization.hiddenTabs),
 		save: () => void fileCommand('save'),
 		collaboration: () => core.collab.state(),
 		revealControl(id) {
@@ -218,7 +220,7 @@ export function buildShell(core: EditorCore): Shell {
 	});
 	const statusBar = createStatusBar(ctx, {
 		showNotes: () => backstage.open('info'),
-		notesAvailable: () => !core.customization.fileHidden,
+		infoAvailable: () => !core.customization.fileHidden,
 		setZoom: (percent) => {
 			if (ctx.commands.get('view.set-zoom')) void ctx.commands.run('view.set-zoom', percent);
 			else ctx.grid()?.setZoom(percent);

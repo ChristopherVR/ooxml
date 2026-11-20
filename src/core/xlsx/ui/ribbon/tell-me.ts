@@ -6,6 +6,7 @@
  */
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
+import type { RibbonControl, RibbonTab } from './parts';
 
 export interface TellMeHandlers {
 	isHidden(id: string): boolean;
@@ -14,6 +15,37 @@ export interface TellMeHandlers {
 }
 
 const MAX_RESULTS = 8;
+
+/** Every command a ribbon control (or its menu, gallery or dialog launcher) runs. */
+function controlCommands(control: RibbonControl, into: Set<string>): void {
+	if ('command' in control) into.add(control.command);
+	if (control.kind === 'split' || control.kind === 'menu')
+		for (const item of control.kind === 'split' ? control.menu : control.items)
+			if ('command' in item) into.add(item.command);
+	if (control.kind === 'stack') for (const inner of control.controls) controlCommands(inner, into);
+}
+
+/**
+ * Commands whose only ribbon home is in `hiddenTabs` (`customization.ribbon.hiddenTabs`): Tell me
+ * leaves them out. A command that is also in a visible tab, or on no tab, is not included.
+ */
+export function commandsOnlyInTabs(
+	tabs: readonly RibbonTab[],
+	hiddenTabs: ReadonlySet<string>,
+): ReadonlySet<string> {
+	if (!hiddenTabs.size) return new Set();
+	const hidden = new Set<string>();
+	const shown = new Set<string>();
+	for (const tab of tabs) {
+		const into = hiddenTabs.has(tab.id) ? hidden : shown;
+		for (const group of tab.groups) {
+			if (group.launcher) into.add(group.launcher);
+			for (const control of group.controls) controlCommands(control, into);
+		}
+	}
+	for (const id of shown) hidden.delete(id);
+	return hidden;
+}
 
 /** Commands matching `query` (case-insensitive, any word order), best first. */
 export function searchCommands(
