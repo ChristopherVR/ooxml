@@ -284,7 +284,9 @@ props, no live state-class instances - the editing/annotation/collaboration
 overlays that stack on top of the stage are passed in as `SlideCanvas`
 children instead, since only the host knows which of them it needs).
 `createViewerState`'s options and return value are `CreateViewerStateOptions`
-and `ViewerStateBag`.
+and `ViewerStateBag`. `Ribbon`'s `signatureView` is
+`signatureStatusView(state.loader.signatures, locale)` from `ooxml-ui/pptx`: its badge and
+Digital Signatures dialog read "Signed" only when the deck's signatures verify.
 
 Two caveats if you go this route:
 
