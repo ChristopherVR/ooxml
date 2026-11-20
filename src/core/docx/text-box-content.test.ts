@@ -2,6 +2,8 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { loadDocx, type DocumentModel, type InlineImage, type Paragraph } from './index';
 import { drawingShapeSvg } from './shape-svg';
+import { shapePaint } from './layout/shape-paint';
+import { readFile } from 'node:fs/promises';
 import { expectParagraph, must } from './test-support/access';
 import { letterheadFixture } from './test-support/letterhead-fixture';
 
@@ -38,6 +40,21 @@ describe('text box content', () => {
 		const svg = must(drawingShapeSvg(box!), 'shape SVG');
 		expect(svg).not.toContain('<text');
 		expect(svg).not.toContain('First Partner');
+	});
+
+	it('gives the paragraphs the colour the shape draws its own text in where runs set none', async () => {
+		const shapes = await loadDocx(
+			new Uint8Array(await readFile(new URL('./__fixtures__/shapes/shapes.docx', import.meta.url))),
+		);
+		const red = expectParagraph(shapes.model.blocks[0])
+			.runs.flatMap((run) => (run.image?.shape?.preset === 'rect' ? [run.image] : []))
+			.at(0);
+		expect(red?.textBoxContent).toBeDefined();
+		expect(shapePaint(red!).chart?.textColor).toBe('#FFFFFF');
+		const { model } = await loadDocx(await letterheadFixture());
+		const [box, line] = drawings(headerParagraph(model));
+		expect(shapePaint(box!, model.theme).chart?.textColor).toBe('#000000');
+		expect(shapePaint(line!, model.theme).chart).not.toHaveProperty('textColor');
 	});
 
 	it('reads the connector line with its outline colour, width and dash', async () => {

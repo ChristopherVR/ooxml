@@ -1,6 +1,5 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import {
-	drawingShapeSvg,
 	fieldName,
 	isRunHiddenForReview,
 	refreshComputedFields,
@@ -15,6 +14,7 @@ import {
 	cssFontStack,
 	floatPosition,
 	paragraphFloats,
+	shapePaint,
 	pageNumbers,
 	pageNumberValues,
 	sectionPageCounts,
@@ -42,14 +42,10 @@ export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/d
 
 /** An inline header/footer shape, drawn as Print Layout draws one in the body. */
 function inlineShape(image: NonNullable<TextRun['image']>, values: PageFieldValues) {
-	const svg = drawingShapeSvg(image, values.model?.theme);
-	if (!svg) return undefined;
+	const { chart, textBox } = shapePaint(image, values.model?.theme);
+	if (!chart) return undefined;
 	const element = pictureElement(
-		{
-			...image,
-			chart: { svg, label: 'Shape', shape: true },
-			...(image.textBoxContent ? { textBox: image.textBoxContent } : {}),
-		},
+		{ ...image, chart, ...(textBox ? { textBox } : {}) },
 		undefined,
 		values.model,
 	);

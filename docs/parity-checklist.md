@@ -544,6 +544,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       the page layout engine: their lines break by CSS, overflowing text is clipped, and vertical
       text, autofit and columns in `wps:bodyPr` are ignored. Formatted text inside a shape (bold,
       sizes, borders, alignment other than centred) is read-only, so editing the shape keeps it.
+      The text colour where runs set none is the shape's own (white on dark fills), not resolved
+      from the `wps:style` `fontRef`.
+- [ ] **P2** Draft view (and the continuous editing surface) lays a page-anchored shape out in the
+      line at its full size, so a tall letterhead text box makes a header or footer preview as tall
+      as the box; Word's Draft view leaves such shapes out of the header.
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping; over-long Latin
       words overflow instead of breaking by character.

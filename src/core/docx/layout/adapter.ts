@@ -15,8 +15,7 @@ import {
 } from '../index';
 import { floatsOf } from './adapt-floats';
 import { equationObject } from './equation-object';
-import { drawingShapeSvg } from '../shape-svg';
-import type { InlineImage } from '../inline-model';
+import { shapePaint } from './shape-paint';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { pictureBulletSizePt } from '../numbering-picture';
@@ -46,7 +45,6 @@ import {
 import type {
 	LayoutBlock,
 	LayoutDocumentInput,
-	LayoutObject,
 	LayoutParagraph,
 	LayoutParagraphBorders,
 	LayoutRun,
@@ -77,19 +75,6 @@ function isDisplayEquationParagraph(paragraph: Paragraph): boolean {
 		paragraph.runs.some((run) => run.equation?.display) &&
 		paragraph.runs.every((run) => run.equation?.display || (!run.text && !run.image))
 	);
-}
-
-/** A drawing shape painted as SVG (the engine draws it like a chart); none when it cannot be drawn. */
-function shapeChart(
-	image: InlineImage,
-	theme: DocumentModel['theme'],
-): Pick<LayoutObject, 'chart' | 'textBox'> {
-	const svg = drawingShapeSvg(image, theme);
-	if (!svg) return {};
-	return {
-		chart: { svg, label: 'Shape', shape: true },
-		...(image.textBoxContent ? { textBox: image.textBoxContent } : {}),
-	};
 }
 
 function sectionBreak(
@@ -224,7 +209,7 @@ export function adaptDocumentModel(
 										),
 									}
 								: {}),
-							...(image.shape ? shapeChart(image, theme) : {}),
+							...(image.shape ? shapePaint(image, theme) : {}),
 						}
 					: undefined);
 		return {

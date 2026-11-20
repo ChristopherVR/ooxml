@@ -2,8 +2,8 @@
 // text boxes) through the editor schema, and the drawing of shapes, which both the editing surface's
 // node view and these previews use: a story preview runs no node views.
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
+import { shapePaint } from 'ooxml-core/docx/layout';
 import {
-	drawingShapeSvg,
 	EMU_PER_PIXEL,
 	type Block,
 	type DocumentModel,
@@ -88,11 +88,17 @@ const DEFAULT_INSETS_EMU = {
 
 /**
  * A text box's paragraphs laid over its shape: inset as its `wps:bodyPr` says, anchored to the top,
- * middle or bottom, and clipped to the shape's extent.
+ * middle or bottom, and clipped to the shape's extent. `color` is the text colour where runs set
+ * none (`shapePaint`'s `textColor`: white on the default and dark fills).
  */
-export function textBoxContentElement(content: TextBoxContent, model?: DocumentModel): HTMLElement {
+export function textBoxContentElement(
+	content: TextBoxContent,
+	model?: DocumentModel,
+	color?: string,
+): HTMLElement {
 	const element = document.createElement('div');
 	element.className = 'dve-text-box-content';
+	if (color && /^#[0-9a-f]{6}$/i.test(color)) element.style.color = color;
 	const inset = (side: keyof typeof DEFAULT_INSETS_EMU) =>
 		`${Math.round(((content[side] ?? DEFAULT_INSETS_EMU[side]) / EMU_PER_PIXEL) * 100) / 100}px`;
 	element.style.padding = [
@@ -154,23 +160,25 @@ export function paintShape(
 	dom.dataset.shapePreset = spec?.preset ?? '';
 	dom.style.width = `${width}px`;
 	dom.style.height = `${height}px`;
-	const svg =
-		spec &&
-		drawingShapeSvg(
-			{
-				shape: spec,
-				widthPx: width,
-				heightPx: height,
-				...(content ? { textBoxContent: content } : {}),
-			},
-			theme,
-		);
+	const paint = spec
+		? shapePaint(
+				{
+					shape: spec,
+					widthPx: width,
+					heightPx: height,
+					...(content ? { textBoxContent: content } : {}),
+				},
+				theme,
+			)
+		: {};
+	const svg = paint.chart?.svg;
 	holder.replaceChildren();
 	if (svg) {
 		const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
 		if (parsed.localName === 'svg') holder.append(document.importNode(parsed, true));
 	} else holder.textContent = String(node.attrs.unsupported ?? 'Shape');
-	if (svg && content) holder.append(textBoxContentElement(content, model));
+	if (svg && paint.textBox)
+		holder.append(textBoxContentElement(paint.textBox, model, paint.chart?.textColor));
 }
 
 /** A read-only shape for a story preview, drawn as the editing surface draws it. */

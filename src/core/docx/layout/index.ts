@@ -16,6 +16,7 @@ export { placeTable } from './flow-table';
 export { layoutSections } from './page-flow';
 export { adaptDocumentModel } from './adapter';
 export { paragraphFloats } from './adapt-floats';
+export { shapePaint } from './shape-paint';
 export { layoutDocument, layoutDocumentModel } from './layout';
 export { reviewSourceLength, type LayoutReviewOptions } from './review-display';
 export { floatPosition, floatOrigin, positionFloats, FLOAT_WRAP_NOTE } from './floats';

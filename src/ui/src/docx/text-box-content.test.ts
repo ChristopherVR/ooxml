@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { loadDocx, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
@@ -11,6 +13,7 @@ import {
 } from 'ooxml-core/docx/layout';
 import { letterheadFixture } from '../../../core/docx/test-support/letterhead-fixture';
 import { buildHeaderElement } from './header-footer-view';
+import { renderBlocks } from './story-render';
 import { docToModel, modelToDoc } from './model-adapter';
 import { decoratePages } from './print-header-footer';
 import { renderPrintLayout } from './print-layout';
@@ -35,6 +38,25 @@ const firstPage: LayoutPageBox = {
 	marginLeftPx: 227,
 	columns: [],
 };
+
+/** An editing surface over `blocks` with the editor's shape node view. */
+function editingSurface(model: DocumentModel, blocks: DocumentModel['blocks']): EditorView {
+	return new EditorView(document.createElement('div'), {
+		state: EditorState.create({ doc: modelToDoc({ ...model, blocks }) }),
+		nodeViews: {
+			image: (node, nodeView, getPos) =>
+				node.attrs.shape
+					? shapeNodeView(
+							node,
+							nodeView,
+							getPos as () => number,
+							() => model.theme,
+							() => model,
+						)
+					: (undefined as never),
+		},
+	});
+}
 
 /** What a text box and a line in a story must show: the box's paragraphs and two drawn shapes. */
 function expectDrawnLetterhead(root: HTMLElement) {
@@ -95,22 +117,7 @@ describe('text boxes and lines in headers', () => {
 
 	it('draws the paragraphs over the shape on the editing surface', async () => {
 		const { model } = await loadDocx(await letterheadFixture());
-		const doc = modelToDoc({ ...model, blocks: firstHeader(model).blocks });
-		const view = new EditorView(document.createElement('div'), {
-			state: EditorState.create({ doc }),
-			nodeViews: {
-				image: (node, nodeView, getPos) =>
-					node.attrs.shape
-						? shapeNodeView(
-								node,
-								nodeView,
-								getPos as () => number,
-								() => model.theme,
-								() => model,
-							)
-						: (undefined as never),
-			},
-		});
+		const view = editingSurface(model, firstHeader(model).blocks);
 		expectDrawnLetterhead(view.dom);
 		view.destroy();
 	});
@@ -123,5 +130,69 @@ describe('text boxes and lines in headers', () => {
 		const story = { ...model, blocks: header.blocks };
 		header.blocks = docToModel(modelToDoc(story), story).blocks;
 		expect(await headerXml(await loaded.save(model))).toBe(await headerXml(bytes));
+	});
+});
+
+/** Word's own file: a red rectangle whose text, "Red box", sets no colour. */
+const wordShapes = async () =>
+	loadDocx(new Uint8Array(await readFile(resolve('../core/docx/__fixtures__/shapes/shapes.docx'))));
+
+/** The colour the box's text is drawn in: its own, or the first ancestor's up to the box. */
+function textColour(root: HTMLElement, text: string): string {
+	const box = must(
+		[...root.querySelectorAll<HTMLElement>('.dve-text-box-content')].find((element) =>
+			element.textContent?.includes(text),
+		),
+		`text box with ${text}`,
+	);
+	const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+	let node: Node | null;
+	while ((node = walker.nextNode()) && !node.textContent?.includes(text));
+	for (let element = node?.parentElement; element; element = element.parentElement) {
+		if (element.style.color) return element.style.color;
+		if (element === box) break;
+	}
+	return '';
+}
+
+describe('text box text colour', () => {
+	const white = 'rgb(255, 255, 255)';
+	const black = 'rgb(0, 0, 0)';
+	const navy = 'rgb(31, 56, 100)';
+
+	it('is white on a dark fill and keeps a run colour on the editing surface', async () => {
+		const { model } = await wordShapes();
+		const view = editingSurface(model, model.blocks);
+		expect(textColour(view.dom, 'Red box')).toBe(white);
+		view.destroy();
+		const letterhead = (await loadDocx(await letterheadFixture())).model;
+		const header = editingSurface(letterhead, firstHeader(letterhead).blocks);
+		expect(textColour(header.dom, 'First Partner')).toBe(navy);
+		expect(textColour(header.dom, '12 Example Street')).toBe(black);
+		header.destroy();
+	});
+
+	it('is white on a dark fill and keeps a run colour in story previews', async () => {
+		const { model } = await wordShapes();
+		const preview = document.createElement('div');
+		preview.append(renderBlocks(model.blocks, model));
+		expect(textColour(preview, 'Red box')).toBe(white);
+		const letterhead = (await loadDocx(await letterheadFixture())).model;
+		const header = must(buildHeaderElement(letterhead, 'en'), 'header story');
+		expect(textColour(header, 'First Partner')).toBe(navy);
+		expect(textColour(header, '12 Example Street')).toBe(black);
+	});
+
+	it('is white on a dark fill and keeps a run colour in Print Layout', async () => {
+		const { model } = await wordShapes();
+		const handle = renderPrintLayout(layoutDocumentModel(model, createFakeMeasurer()), undefined, {
+			model,
+		});
+		expect(textColour(handle.element, 'Red box')).toBe(white);
+		const letterhead = (await loadDocx(await letterheadFixture())).model;
+		const sheet = document.createElement('div');
+		decoratePages(letterhead, [firstPage], [sheet]);
+		expect(textColour(sheet, 'First Partner')).toBe(navy);
+		expect(textColour(sheet, '12 Example Street')).toBe(black);
 	});
 });
