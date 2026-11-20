@@ -24,6 +24,9 @@ export interface SignatureStrings {
 	heading: string;
 	signer: string;
 	signedAt: string;
+	/** The load notice's buttons: open the list of signatures, and close the notice. */
+	view: string;
+	dismiss: string;
 }
 
 const en: SignatureStrings = {
@@ -53,6 +56,8 @@ const en: SignatureStrings = {
 	heading: 'Digital signatures',
 	signer: 'Signer',
 	signedAt: 'Signed on',
+	view: 'View signatures',
+	dismiss: 'Dismiss',
 };
 
 const fr: SignatureStrings = {
@@ -83,6 +88,8 @@ const fr: SignatureStrings = {
 	heading: 'Signatures numériques',
 	signer: 'Signataire',
 	signedAt: 'Signé le',
+	view: 'Afficher les signatures',
+	dismiss: 'Ignorer',
 };
 
 const de: SignatureStrings = {
@@ -113,6 +120,8 @@ const de: SignatureStrings = {
 	heading: 'Digitale Signaturen',
 	signer: 'Signierer',
 	signedAt: 'Signiert am',
+	view: 'Signaturen anzeigen',
+	dismiss: 'Schließen',
 };
 
 const es: SignatureStrings = {
@@ -142,6 +151,8 @@ const es: SignatureStrings = {
 	heading: 'Firmas digitales',
 	signer: 'Firmante',
 	signedAt: 'Firmado el',
+	view: 'Ver firmas',
+	dismiss: 'Descartar',
 };
 
 const zh: SignatureStrings = {
@@ -168,6 +179,8 @@ const zh: SignatureStrings = {
 	heading: '数字签名',
 	signer: '签名者',
 	signedAt: '签名时间',
+	view: '查看签名',
+	dismiss: '关闭',
 };
 
 const ja: SignatureStrings = {
@@ -197,6 +210,8 @@ const ja: SignatureStrings = {
 	heading: 'デジタル署名',
 	signer: '署名者',
 	signedAt: '署名日時',
+	view: '署名の表示',
+	dismiss: '閉じる',
 };
 
 const ko: SignatureStrings = {
@@ -225,6 +240,8 @@ const ko: SignatureStrings = {
 	heading: '디지털 서명',
 	signer: '서명자',
 	signedAt: '서명 날짜',
+	view: '서명 보기',
+	dismiss: '닫기',
 };
 
 /** The signature words of each display locale. */

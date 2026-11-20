@@ -114,4 +114,4 @@ als leer behandelt.
 
 Die Round-Trip-Tests des Cores und die Excel-Abnahmeprüfungen liegen im Repository `ooxml`. Melden Sie eine Arbeitsmappe, die falsch dargestellt oder gespeichert wird, als Issue und hängen Sie die Datei an, wenn Sie sie teilen können.
 
-Digitale Signaturen werden beim Öffnen einer Arbeitsmappe gemeldet und beim Speichern entfernt. Der Editor signiert keine Dateien. Hyperlinks folgen der gemeinsamen Richtlinie des Cores; nur Web- und E-Mail-Links werden extern geöffnet.
+Digitale Signaturen werden beim Öffnen einer Arbeitsmappe überprüft und mit ihrem Status (signiert, Signierer nicht überprüft, ungültig oder nicht überprüft) in der Statusleiste, einem Hinweis und unter Datei > Informationen angezeigt; nur eine gültige Signatur gilt als signiert. Beim Speichern werden sie entfernt. Der Editor signiert keine Dateien. Hyperlinks folgen der gemeinsamen Richtlinie des Cores; nur Web- und E-Mail-Links werden extern geöffnet.

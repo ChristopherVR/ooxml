@@ -9,6 +9,7 @@ import type { ResolvedWordCustomization, WordRegionContext } from './customizati
 import type { CloudFileProvider, CloudOpenedFile } from 'ooxml-core/embedding';
 import type { EditorLocale } from './localization';
 import { renderOpenPlaces } from './backstage-open';
+import { signaturePanel } from '../notices/signature-chrome';
 
 /** What the File view needs from the editor; every value is read when a page opens. */
 export interface BackstageHandlers {
@@ -155,6 +156,7 @@ export function renderInfo({ handlers, t, content }: PageContext): void {
 	left.append(
 		title,
 		paragraph(t(status), 'dve-backstage-muted'),
+		...signaturePanel(document, model.signatures, handlers.locale()),
 		card(
 			t('Inspect document'),
 			t('Before publishing this file, check it for hidden properties and personal information.'),

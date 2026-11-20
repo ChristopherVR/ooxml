@@ -1,6 +1,7 @@
 import { VISIO_TEMPLATES } from 'ooxml-core/visio/ui';
 import type { OfficeBackstageItem } from '../controls';
 import { pdfOptionsPanel } from './viewer-pdf-options';
+import { defineSignatureStatus } from '../notices/signature-status';
 
 /** Visio's File (backstage) pages, in Visio's order. Save and Close act without a page. */
 export const BACKSTAGE_ITEMS = [
@@ -167,6 +168,11 @@ export function createBackstage(doc: Document): HTMLElement {
 		if (key === 'page') value.dataset.userText = '';
 		facts.append(el(doc, 'dt', '', label), value);
 	}
+	// The drawing's signatures (ViewerBackstage sets the summary); hidden while unsigned.
+	defineSignatureStatus();
+	const signatures = doc.createElement('office-ui-signature-status');
+	signatures.variant = 'panel';
+	signatures.dataset.testid = 'signature-panel';
 	const notes = el(doc, 'div', 'backstage-notes');
 	notes.hidden = true;
 	notes.append(
@@ -221,6 +227,7 @@ export function createBackstage(doc: Document): HTMLElement {
 			file,
 			facts,
 			action(doc, 'add-comment', 'Add Comment', 'Comment on the current page or selected shape.'),
+			signatures,
 			notes,
 		),
 		page(doc, 'new', 'New', templates),
