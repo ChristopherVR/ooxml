@@ -579,6 +579,17 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and
       round-trips (`linkedTxbxId` / `linkedTxbxSeq`).
+- [x] **P0** Copies never share an owned part: a duplicated or pasted chart, diagram, OLE object
+      or media element, a duplicated slide, master or layout and an inserted master each save with
+      their own chart, workbook, diagram, embedding, theme and layout parts and relationships, and
+      unique master and layout ids (`element-part-binding.ts`, `master-layout-crud-*.ts`; checked by
+      `findSharedOwnedParts` in `part-ownership-sweep.test.ts`; all 110 sweep outputs open in
+      PowerPoint 16, 2026-11-20). Before, PowerPoint refused such files (0x80070570).
+- [ ] **P2** Elements copied between a layout or master and a slide keep the relationship ids of
+      the part they came from: save binds only slide elements (`element-part-binding.ts`).
+- [ ] **P1** Collaboration shares package-local part names and relationship ids (`chartPartPath`,
+      `r:id` in `rawXml`, `collaboration-sync.ts`). A peer saving an element another client saved
+      first can cite a part or relationship only that client's package has.
 - [ ] **P1** `.ppt` export turns video and non-WAV audio into pictures.
 - [ ] **P1** Clipboard interop with desktop Office is partial. Done: HTML (`text/html`, CF_HTML)
       pastes into a text box being edited as formatted runs, bullets, numbering and links

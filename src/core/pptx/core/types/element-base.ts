@@ -134,6 +134,13 @@ export interface PptxElementBase {
 	/** Element-level opacity (0-1). */
 	opacity?: number | undefined;
 	rawXml?: XmlObject | undefined;
+	/**
+	 * Package part that declares the relationship ids this element's markup names (`r:id`,
+	 * `r:embed`...), normally the slide it was read from. A copy keeps it, so when the copy is
+	 * saved on another slide its charts, diagrams, objects and media are found and given
+	 * relationships (and owned parts) of their own there.
+	 */
+	relationshipSourcePath?: string | undefined;
 	/** Shape-level click action (from `a:hlinkClick` on `p:cNvPr`). */
 	actionClick?: PptxAction | undefined;
 	/** Shape-level hover action (from `a:hlinkHover` on `p:cNvPr`). */

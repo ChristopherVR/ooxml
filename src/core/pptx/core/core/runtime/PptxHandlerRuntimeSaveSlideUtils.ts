@@ -1,11 +1,12 @@
 import { PptxSlide, XmlObject, TextStyle } from '../../types';
-import type { PptxElementAnimation, PptxSlideTransition } from '../../types';
+import type { PptxChartData, PptxElementAnimation, PptxSlideTransition } from '../../types';
 import { parseDataUrlToBytes, fetchUrlToBytes } from '../../utils/data-url-utils';
 import { clampLineSpacingMultiplier } from '../../utils/paragraph-properties-parser';
 import { objectTextSpacing } from '../../utils/paragraph-properties-neutral';
 import type { PptxSlideReferenceRemap } from '../../utils/presentation-collections';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
-import { remapPartPaths } from '../builders/duplicate-slide-parts';
+import { copiesRelationshipTarget, remapPartPaths } from '../builders/duplicate-slide-parts';
+import { bindElementParts, type PartRelationships } from './element-part-binding';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePresentationProps';
 
 /** Context {@link PptxHandlerRuntime.embedTransitionSound} needs from the slide save writer. */
@@ -113,23 +114,55 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			findSourceSlidePath: (sourceSlideId) => this.findSourceSlidePath(sourceSlideId),
 			loadSlideRelationships: (slidePath, slideRelsPath) =>
 				this.loadSlideRelationships(slidePath, slideRelsPath),
-			onSlidePartsDuplicated: (copies) => {
-				// An unchanged copy must retain the source chart's byte-preserving
-				// save gate. Edited data still differs from this remapped baseline.
-				const remapped = (json: string) => {
-					const data: unknown = JSON.parse(json);
-					remapPartPaths(data, copies);
-					return JSON.stringify(data);
-				};
-				for (const [source, destination] of copies) {
-					this.chartPartRevisions.copy(source, destination);
-					// A copied workbook holds copies of the chart data sheets this session allocated.
-					const allocated = this.chartDataSheets.get(source);
-					if (allocated) this.chartDataSheets.set(destination, new Set(allocated));
-					const baseline = this.chartDataBaselines.get(source);
-					if (baseline) this.chartDataBaselines.set(destination, remapped(baseline));
-				}
-			},
+			onSlidePartsDuplicated: (copies) => this.adoptCopiedParts(copies),
+		});
+	}
+
+	/**
+	 * Session state kept per part path follows a copy of the part. An unchanged copy keeps the
+	 * source chart's byte-preserving save gate; edited data still differs from this remapped
+	 * baseline.
+	 */
+	protected adoptCopiedParts(
+		copies: ReadonlyMap<string, string>,
+		renames: ReadonlyMap<string, string> = new Map(),
+	): void {
+		const remapped = (json: string) => {
+			const data = JSON.parse(json) as PptxChartData;
+			remapPartPaths(data, copies);
+			// A copy saved on another relationship id still has the source's data.
+			const renamed = data.chartRelationshipId && renames.get(data.chartRelationshipId);
+			if (renamed) data.chartRelationshipId = renamed;
+			return JSON.stringify(data);
+		};
+		for (const [source, destination] of copies) {
+			this.chartPartRevisions.copy(source, destination);
+			// A copied workbook holds copies of the chart data sheets this session allocated.
+			const allocated = this.chartDataSheets.get(source);
+			if (allocated) this.chartDataSheets.set(destination, new Set(allocated));
+			const baseline = this.chartDataBaselines.get(source);
+			if (baseline) this.chartDataBaselines.set(destination, remapped(baseline));
+		}
+	}
+
+	/** Give every slide element its own owned parts and relationships; see `element-part-binding`. */
+	protected async bindSlideElementParts(
+		slides: readonly PptxSlide[],
+		sourceRelationships: ReadonlyMap<string, PartRelationships>,
+	): Promise<void> {
+		await bindElementParts({
+			zip: this.zip,
+			slides,
+			sourceRelationships,
+			shouldClone: copiesRelationshipTarget,
+			onPartsCopied: (copies, renames) => this.adoptCopiedParts(copies, renames),
+			onCopyFailed: (element, part, error) =>
+				this.compatibilityService.reportWarning({
+					code: 'SAVE_OWNED_PART_COPY_FAILED',
+					message: `Element '${element.id}' shares '${part}' with another element: it could not be copied (${String(error)}).`,
+					scope: 'save',
+					elementId: element.id,
+				}),
 		});
 	}
 

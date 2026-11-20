@@ -5,14 +5,11 @@
  *
  * @module sdk/master-layout-crud-layout
  */
+import { clonePartGraph } from '../../../../opc/clone-part-graph';
+import { copiesRelationshipTarget } from '../../core/builders/duplicate-slide-parts';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData } from '../../types/presentation';
-import {
-	addLayoutContentType,
-	addLayoutToSlideMaster,
-	countExistingLayouts,
-	createLayout,
-} from './layout-operations';
+import { addLayoutToSlideMaster, createLayout } from './layout-operations';
 import type { LayoutDefinition, PlaceholderDefinition } from './layout-operations';
 import { findLayoutOwner, findMaster, NOT_FOUND } from './master-layout-crud-lookup';
 import { collectLayoutNames, uniqueDisplayName } from './master-layout-crud-names';
@@ -65,20 +62,20 @@ export async function duplicateLayout(
 	if (!sourceXml) {
 		return NOT_FOUND;
 	}
-	const sourceRels = await zip.file(relsPathFor(layoutId))?.async('string');
-
-	const newIndex = countExistingLayouts(zip) + 1;
+	let newIndex = 1;
+	while (zip.file(`ppt/slideLayouts/slideLayout${newIndex}.xml`)) newIndex += 1;
 	const newPath = `ppt/slideLayouts/slideLayout${newIndex}.xml`;
 	const newName = uniqueDisplayName(collectLayoutNames(data), owner.layout.name ?? 'Layout');
 	zip.file(newPath, withCSldName(sourceXml, newName));
-	if (sourceRels) {
-		// The source layout's own rels already point at the correct (unchanged)
-		// master and any media/hyperlinks it uses, so they carry over verbatim.
-		zip.file(relsPathFor(newPath), sourceRels);
-	}
-
+	// The copy points at the same master and owns copies of the parts the source owns (its
+	// pictures, charts, diagrams), so an edit to one layout never reaches the other.
+	await clonePartGraph({
+		zip,
+		sourcePart: layoutId,
+		targetPart: newPath,
+		shouldClone: copiesRelationshipTarget,
+	});
 	await addLayoutToSlideMaster(zip, newIndex, masterIndex);
-	await addLayoutContentType(zip, newIndex);
 
 	const result = await reload(zip);
 	return { ...result, layoutId: newPath };
