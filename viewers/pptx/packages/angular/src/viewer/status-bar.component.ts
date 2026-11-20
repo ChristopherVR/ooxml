@@ -9,6 +9,8 @@
  *
  * A host may project a connection indicator with `[pptxCollabStatus]`; the
  * projected element must also carry `slot="collaboration"`.
+ * A signature state entry projected with `[pptxSignatureStatus]` sits after
+ * the slide counter (the bar's default slot).
  */
 import {
 	ChangeDetectionStrategy,
@@ -40,6 +42,7 @@ import type { AutosaveStatus } from './autosave.service';
 	host: { class: 'contents' },
 	template: `
 		<pptx-ui-status-bar [state]="view()" (status-request)="request($event)">
+			<ng-content select="[pptxSignatureStatus]"></ng-content>
 			<ng-content select="[pptxCollabStatus]"></ng-content>
 		</pptx-ui-status-bar>
 	`,

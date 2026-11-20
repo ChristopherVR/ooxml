@@ -221,6 +221,7 @@ import { patchTextStyle } from './ribbon-text-helpers';
 import { RibbonComponent } from './ribbon.component';
 import { SelectionPaneComponent } from './selection-pane.component';
 import { ShareDialogComponent } from './share-dialog.component';
+import { SignatureStatusBadgeComponent } from './signature-status-badge.component';
 import { SignaturesPanelComponent } from './signatures-panel.component';
 import { SlideCanvasContextMenuComponent } from './slide-canvas-context-menu.component';
 import { SlideCanvasComponent } from './slide-canvas.component';
@@ -316,6 +317,7 @@ const noopClose = (): void => undefined;
 		CommentsPanelComponent,
 		CompatToastsComponent,
 		ReadOnlyBannerComponent,
+		SignatureStatusBadgeComponent,
 		ExternalContentBarComponent,
 		SignaturesPanelComponent,
 		AccessibilityPanelComponent,
@@ -830,7 +832,7 @@ const noopClose = (): void => undefined;
 										/>
 									}
 									@case ('signatures') {
-										<pptx-signatures-panel [signatures]="loader.signatures()" />
+										<pptx-signatures-panel [summary]="loader.signatureSummary()" />
 									}
 									@case ('comments') {
 										<pptx-comments-panel
@@ -962,6 +964,12 @@ const noopClose = (): void => undefined;
 						(zoomOut)="zoomSvc.zoomOut()"
 						(zoomReset)="zoomSvc.zoomReset()"
 					>
+						<!-- The deck's signature state; shown only when it carries signatures. -->
+						<pptx-signature-status-badge
+							pptxSignatureStatus
+							[summary]="loader.signatureSummary()"
+							(open)="inspectorPanel.togglePanel('signatures')"
+						/>
 						<!-- Collaboration status in the footer, as the other bindings show it. A
 						     session that could not start still says why. -->
 						@if (

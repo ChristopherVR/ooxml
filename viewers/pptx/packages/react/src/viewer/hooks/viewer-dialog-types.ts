@@ -8,7 +8,7 @@ import type { FontEmbeddingDescriptor } from 'ooxml-ui/pptx';
  *
  * @module viewer-dialog-types
  */
-import type { PptxSlide, PptxPresentationProperties } from 'pptx-viewer-core';
+import type { PptxSlide, PptxPresentationProperties, SignatureSummary } from 'pptx-viewer-core';
 
 import type { CanvasSize } from '../types';
 import type { ViewerMode } from '../types-core';
@@ -79,8 +79,8 @@ export interface UseViewerDialogsInput {
 	setSelectedElementIds: React.Dispatch<React.SetStateAction<string[]>>;
 	/** The mode the viewer was in before entering master view. */
 	preMasterMode: ViewerMode;
-	/** Whether the presentation contains digital signatures (triggers strip warning on edit). */
-	hasDigitalSignatures: boolean;
+	/** The deck's digital signatures; any present signature triggers the strip warning on edit. */
+	signatures: SignatureSummary | undefined;
 	/** Whether there are unsaved modifications. */
 	isDirty: boolean;
 	/** Editor history instance (used for markDirty on settings changes). */

@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
 import { allButtons } from './dialog-footer.test-support';
-import { openDigitalSignaturesDialog } from './digital-signatures-dialog';
 import { openFontEmbeddingDialog } from './font-embedding-dialog';
 import { openPasswordProtectionDialog } from './password-protection-dialog';
 
@@ -101,9 +100,7 @@ describe('file info dialogs', () => {
 		expect(overlay.textContent).not.toContain(t('pptx.fonts.embedKeepsExisting'));
 	});
 
-	it('reports signature count and accepts a protection password', () => {
-		const signatures = openDigitalSignaturesDialog(document, createTranslator(), true, 2);
-		expect(signatures.textContent).toContain('2');
+	it('accepts a protection password', () => {
 		const onSet = vi.fn();
 		const protection = openPasswordProtectionDialog(document, createTranslator(), {
 			protected: false,

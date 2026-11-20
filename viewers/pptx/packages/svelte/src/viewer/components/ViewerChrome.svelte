@@ -18,7 +18,7 @@
 	import { nextGuideId } from '../state/guide-id';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
 	import { useViewerStorage } from '../state/viewer-storage-context';
-	import type { RibbonDisplayController } from 'ooxml-ui/pptx';
+	import type { RibbonDisplayController, SignatureStatusView } from 'ooxml-ui/pptx';
 	import { controllerState } from '../state/controller-state';
 	import Ribbon from './ribbon/Ribbon.svelte';
 	import ProtectedViewBanner from './ProtectedViewBanner.svelte';
@@ -42,6 +42,8 @@
 		onpresenter: () => void;
 		/** The viewer's Ribbon Display Options controller (one per viewer, owned by the root). */
 		ribbonDisplay: RibbonDisplayController;
+		/** The deck's signature presentation in the current locale (`signatureStatusView`). */
+		signatureView: SignatureStatusView;
 	}
 
 	const {
@@ -53,6 +55,7 @@
 		aiEnabled,
 		onpresenter,
 		ribbonDisplay,
+		signatureView,
 	}: ViewerChromeProps = $props();
 	// svelte-ignore state_referenced_locally
 	const ribbonDisplayState = controllerState(ribbonDisplay);
@@ -162,8 +165,7 @@
 		hasMacros={loader.hasMacros}
 		embeddedFontNames={loader.embeddedFonts.map((font) => font.name)}
 		embeddedFontRestrictions={describeEmbeddedFontRestrictions(loader.embeddedFonts)}
-		hasDigitalSignatures={loader.hasDigitalSignatures}
-		digitalSignatureCount={loader.digitalSignatureCount}
+		{signatureView}
 		isPasswordProtected={loader.isPasswordProtected}
 		{autosaveStatus}
 		autosaveDirty={autosaveCtl.isDirty}
@@ -289,8 +291,7 @@
 			hasMacros={loader.hasMacros}
 			embeddedFontNames={loader.embeddedFonts.map((font) => font.name)}
 			embeddedFontRestrictions={describeEmbeddedFontRestrictions(loader.embeddedFonts)}
-			hasDigitalSignatures={loader.hasDigitalSignatures}
-			digitalSignatureCount={loader.digitalSignatureCount}
+			{signatureView}
 			isPasswordProtected={loader.isPasswordProtected}
 			{autosaveStatus}
 			autosaveDirty={autosaveCtl.isDirty}

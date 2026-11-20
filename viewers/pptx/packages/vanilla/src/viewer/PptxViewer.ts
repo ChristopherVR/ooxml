@@ -58,6 +58,9 @@ import {
 	createPresenterSessionController,
 	installSvgIdScope,
 	createRibbonDisplayController,
+	signatureStatusView,
+	signatureLoadNotice,
+	SIGNATURE_NOTICE_ID,
 } from 'ooxml-ui/pptx';
 import type {
 	PptxSaveAcknowledgement,
@@ -365,6 +368,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			store: this.store,
 			doc: this.doc,
 			getTranslator: () => this.t,
+			getLocale: () => this.currentLocale,
 			getEditor: () => this.editor,
 			// Late-joiner bootstrap protection: bracket the load commit so an
 			// active collaboration session can suppress publishing the parsed
@@ -776,19 +780,13 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 			}
 		});
 		this.detachSignatureWarning = this.store.subscribe((state, previous) => {
-			if (
-				state.dirty &&
-				!previous.dirty &&
-				state.hasDigitalSignatures &&
-				!this.signatureWarningAcknowledged
-			) {
+			if (!state.dirty || previous.dirty || this.signatureWarningAcknowledged) {
+				return;
+			}
+			const view = signatureStatusView(state.signatures, this.currentLocale);
+			if (view.present) {
 				this.signatureWarningAcknowledged = true;
-				openSignatureStrippedDialog(
-					this.doc,
-					this.t,
-					state.digitalSignatureCount,
-					this.getDialogRegions(),
-				);
+				openSignatureStrippedDialog(this.doc, this.t, view.count, this.getDialogRegions());
 			}
 		});
 		this.detachOutlineFonts = glyphOutlineFontCache.subscribe(() => {
@@ -1144,6 +1142,11 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	/** The open document's name, for the title bar (chrome rebuilds read it again). */
 	getFileName(): string | undefined {
 		return this.documentView().fileName;
+	}
+
+	/** The current UI locale, for the chrome (a `setLocale` rebuilds it). */
+	getLocale(): string {
+		return this.currentLocale;
 	}
 
 	/** The host's `fileProviders` as File > Open places (empty: the Open page has none). */
@@ -1571,12 +1574,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (!this.customization.isDialogAvailable('signatures')) {
 			return;
 		}
-		const state = this.store.get();
 		openDigitalSignaturesDialog(
 			this.doc,
 			this.t,
-			state.hasDigitalSignatures,
-			state.digitalSignatureCount,
+			signatureStatusView(this.store.get().signatures, this.currentLocale),
 			this.getDialogRegions(),
 		);
 	}
@@ -1905,6 +1906,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	setLocale(locale: string): void {
 		this.t = createTranslator(locale, this.options.messages);
 		this.currentLocale = locale;
+		this.rewordSignatureNotice();
 		// Chrome labels are baked at build time; rebuild it under the new locale.
 		this.rebuildChrome();
 		if (this.options.onLocaleChange) {
@@ -2065,6 +2067,19 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		await this.readOnlyActions.submitPassword(password);
 		if (!this.destroyed) {
 			this.applyEditable(this.effectiveEditable());
+		}
+	}
+
+	/** Word a signature load notice still on screen in the current locale. */
+	private rewordSignatureNotice(): void {
+		const { compatToasts, signatures } = this.store.get();
+		const notice = signatureLoadNotice(signatureStatusView(signatures, this.currentLocale));
+		if (notice && compatToasts.some((toast) => toast.id === SIGNATURE_NOTICE_ID)) {
+			this.store.set({
+				compatToasts: compatToasts.map((toast) =>
+					toast.id === SIGNATURE_NOTICE_ID ? notice : toast,
+				),
+			});
 		}
 	}
 

@@ -1,26 +1,13 @@
 /**
- * Full PPTX digital signature inspection (Node-only).
- *
- * A signature is verified in dependency order. Its structure is checked, its `SignatureValue` is
- * verified over `SignedInfo`, references are read from that verified text only, and coverage is
- * computed from the references that verified. Each step trusts only what the previous one proved.
+ * Full digital signature inspection (Node-only): the platform-neutral verifier of
+ * `ooxml-core/opc` decides integrity, and this module adds what only Node can: the configured trust
+ * roots, the certificate's revocation status and the time-stamp authority.
  */
-
-import type JSZip from 'jszip';
 
 import { openPptxZip } from '../core/utils/zip-open';
 
-import { detectDigitalSignatures } from '../../opc/signature/detection';
-import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE } from '../core/utils/signature-constants';
-import {
-	computeDetailStatus,
-	computeVerificationStatus,
-} from '../core/utils/signature-inspection-status';
-import type {
-	DigitalSignatureReport,
-	SignatureDetail,
-	SignatureValidationPolicy,
-} from '../core/utils/signature-types';
+import type { DigitalSignatureReport } from '../../opc/signature/types';
+import { verifyPackageSignatures, type SignerTrust } from '../../opc/signature/verify/inspect';
 import {
 	certificateInfoFromBase64,
 	orderCertificateChain,
@@ -33,75 +20,14 @@ import {
 	certPemFromBase64,
 	evaluateTimestampAuthority,
 } from './pki-validation';
-import { checkSignedReferences, openSignaturePackage } from './reference-checks';
-import type { SignaturePackage } from './reference-checks';
-import { evaluateSignatureCoverage } from './signature-coverage';
-import { parseXmlSignature } from './signature-document';
-import { verifySignedInfo } from './signature-value';
 
-type DetailBase = Omit<SignatureDetail, 'status'>;
-
-const NOT_CHECKED_REVOCATION: Awaited<ReturnType<typeof evaluateCertificateRevocation>> = {
-	status: 'not-checked',
-	checkedOcspUrls: [],
-	checkedCrlUrls: [],
-};
-
-/** The report fields of a signature no reference could be read from. */
-const unverifiedDetail = (path: string): DetailBase => ({
-	path,
-	referenceCount: 0,
-	missingPartReferences: [],
-	unsupportedTransforms: [],
-	referenceChecks: [],
-	uncoveredParts: [],
-	coverageGaps: [],
-	signatureValueStatus: 'invalid',
-	certificateTrustStatus: 'not-checked',
-	certificateRevocationStatus: 'not-checked',
-	timestampAuthorityStatus: 'not-checked',
-});
-
-async function inspectSignature(
-	path: string,
-	signatureXml: string,
-	pkg: SignaturePackage,
+async function evaluateSigner(
+	signerCertificate: string,
+	certificates: string[],
 	trustRootsPem: string[],
 	checkRevocation: boolean,
-): Promise<DetailBase> {
-	const parsed = parseXmlSignature(signatureXml);
-	if (!parsed.ok) {
-		return { ...unverifiedDetail(path), structureError: parsed.error };
-	}
-	const { signature } = parsed;
-	const timestamp = await evaluateTimestampAuthority(signatureXml);
-	const base: DetailBase = {
-		...unverifiedDetail(path),
-		signatureMethod: signature.signatureMethod,
-		canonicalizationMethod: signature.canonicalizationMethod,
-		timestampAuthorityStatus: timestamp.status,
-		timestampAuthorityError: timestamp.error,
-	};
-
-	const verification = verifySignedInfo(signature);
-	if (verification.status !== 'verified') {
-		const [firstCertificate] = signature.certificates;
-		return {
-			...base,
-			signatureValueStatus: verification.status,
-			certificate:
-				firstCertificate !== undefined ? certificateInfoFromBase64(firstCertificate) : undefined,
-		};
-	}
-
-	const { checks, coveredParts, signingTime } = await checkSignedReferences(
-		signature,
-		verification.canonicalSignedInfo,
-		pkg,
-	);
-	const coverage = await evaluateSignatureCoverage(pkg, coveredParts);
-
-	const chain = orderCertificateChain(verification.signerCertificate, signature.certificates);
+): Promise<SignerTrust> {
+	const chain = orderCertificateChain(signerCertificate, certificates);
 	const trust = validateCertificateChain(chain, trustRootsPem);
 	const [leafCert, issuerCert] = chain;
 	const leafCertPem = leafCert !== undefined ? certPemFromBase64(leafCert) : undefined;
@@ -109,50 +35,15 @@ async function inspectSignature(
 	const revocation =
 		leafCertPem && checkRevocation
 			? await evaluateCertificateRevocation(leafCertPem, issuerCertPem)
-			: NOT_CHECKED_REVOCATION;
-
+			: { status: 'not-checked' as const, error: undefined };
 	return {
-		...base,
-		signingTime,
-		referenceCount: checks.length,
-		missingPartReferences: checks
-			.filter((check) => check.digestStatus === 'missing-part')
-			.map((check) => check.uri),
-		unsupportedTransforms: [
-			...new Set(
-				checks.flatMap((check) =>
-					check.digestStatus === 'unsupported-transform' ? check.transformAlgorithms : [],
-				),
-			),
-		],
-		referenceChecks: checks,
-		uncoveredParts: coverage.uncoveredParts,
-		coverageGaps: coverage.coverageGaps,
 		certificate: leafCert !== undefined ? certificateInfoFromBase64(leafCert) : undefined,
-		signatureValueStatus: 'verified',
 		certificateTrustStatus: trust.status,
 		certificateTrustError: trust.error,
 		certificateRevocationStatus: revocation.status,
 		certificateRevocationError: revocation.error,
 		certificateFingerprintSha256: leafCertPem ? certFingerprintSha256(leafCertPem) : undefined,
 	};
-}
-
-async function inspectSignatures(
-	zip: JSZip,
-	signaturePaths: string[],
-	policy: SignatureValidationPolicy,
-	checkRevocation: boolean,
-): Promise<SignatureDetail[]> {
-	const pkg = await openSignaturePackage(zip);
-	const trustRootsPem = await loadEnterpriseTrustRoots();
-	const details: SignatureDetail[] = [];
-	for (const path of signaturePaths) {
-		const signatureXml = (await zip.file(path)?.async('string')) ?? '';
-		const detail = await inspectSignature(path, signatureXml, pkg, trustRootsPem, checkRevocation);
-		details.push({ ...detail, status: computeDetailStatus(detail, policy) });
-	}
-	return details;
 }
 
 /** Options of {@link inspectPptxDigitalSignatures}. */
@@ -165,7 +56,7 @@ export interface InspectPptxSignatureOptions {
 }
 
 /**
- * Inspect all digital signatures in a PPTX package.
+ * Inspect all digital signatures in an OPC package (any Office format, despite the name).
  *
  * `verified-trusted` means every signature value verified, every signed reference verified, the
  * signed references cover the document content, and the signer chains to a configured trust root
@@ -174,7 +65,7 @@ export interface InspectPptxSignatureOptions {
  * signature reports `verified-untrusted`. Parts outside the signature are listed in each detail's
  * `uncoveredParts`.
  *
- * @param data - The raw PPTX file bytes.
+ * @param data - The raw package bytes.
  * @param options - Set `checkRevocation: false` to make no network request.
  * @returns A comprehensive digital signature report.
  */
@@ -182,39 +73,9 @@ export async function inspectPptxDigitalSignatures(
 	data: Uint8Array,
 	options: InspectPptxSignatureOptions = {},
 ): Promise<DigitalSignatureReport> {
+	let zip;
 	try {
-		const zip = await openPptxZip(Buffer.from(data));
-		const { signaturePaths } = detectDigitalSignatures(
-			Object.keys(zip.files).filter((name) => !zip.files[name]?.dir),
-		);
-		const rootRelsXml = await zip.file('_rels/.rels')?.async('string');
-		const hasOriginRelationship = Boolean(rootRelsXml?.includes(DIGITAL_SIGNATURE_ORIGIN_REL_TYPE));
-		if (signaturePaths.length === 0) {
-			return {
-				supported: true,
-				hasSignature: false,
-				signatureCount: 0,
-				signaturePaths: [],
-				verificationStatus: 'unsigned',
-				hasOriginRelationship,
-			};
-		}
-
-		const details = await inspectSignatures(
-			zip,
-			signaturePaths,
-			getSignatureValidationPolicy(),
-			options.checkRevocation !== false,
-		);
-		return {
-			supported: true,
-			hasSignature: true,
-			signatureCount: signaturePaths.length,
-			signaturePaths,
-			verificationStatus: computeVerificationStatus(details),
-			details,
-			hasOriginRelationship,
-		};
+		zip = await openPptxZip(data);
 	} catch (error) {
 		return {
 			supported: true,
@@ -225,4 +86,12 @@ export async function inspectPptxDigitalSignatures(
 			error: `Unable to inspect digital signature parts: ${String(error)}`,
 		};
 	}
+	const trustRootsPem = await loadEnterpriseTrustRoots();
+	const checkRevocation = options.checkRevocation !== false;
+	return verifyPackageSignatures(zip, {
+		policy: getSignatureValidationPolicy(),
+		evaluateTimestamp: evaluateTimestampAuthority,
+		evaluateSigner: (signer, certificates) =>
+			evaluateSigner(signer, certificates, trustRootsPem, checkRevocation),
+	});
 }

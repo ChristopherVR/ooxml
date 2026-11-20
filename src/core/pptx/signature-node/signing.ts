@@ -19,14 +19,16 @@ import {
 } from '../../opc/relationships';
 import { isSignaturePart } from '../../opc/signature/detection';
 import { hasVerifiedIntegrity } from '../../opc/signature/inspection-status';
-import { buildXml, parseXml } from '../../xml/index';
+import { buildXml, decodeXmlBytes, parseXml } from '../../xml/index';
 import { openPptxZip } from '../core/utils/zip-open';
 
 import {
 	DIGITAL_SIGNATURE_ORIGIN_REL_TYPE,
 	DIGITAL_SIGNATURE_REL_TYPE,
+	EXCLUSIVE_C14N,
+	INCLUSIVE_C14N,
 	XMLDSIG_NS,
-} from '../core/utils/signature-constants';
+} from '../../opc/signature/constants';
 import type {
 	DigitalSignatureReport,
 	OfficeSignatureReference,
@@ -36,14 +38,9 @@ import type {
 import { escapeXmlAttr, escapeXmlText, isValidBase64 } from '../core/utils/signature-xml-utils';
 import { loadSigningMaterialFromBuffer, pemCertificateToBase64 } from './certificate-utils';
 import { inspectPptxDigitalSignatures } from './inspection';
-import { isOutsideCoverage } from './signature-coverage';
-import {
-	canonicalizeNode,
-	canonicalizeSignedInfoXml,
-	childElements,
-	INCLUSIVE_C14N,
-	parseStrictXml,
-} from './xml-canonicalization';
+import { isOutsideCoverage } from '../../opc/signature/verify/coverage';
+import { canonicalize } from '../../opc/signature/verify/c14n';
+import { childElements, parseStrictXml } from '../../opc/signature/verify/dom';
 
 const PACKAGE_RELATIONSHIPS_PART = '_rels/.rels';
 
@@ -63,7 +60,7 @@ async function assertSignable(zip: JSZip): Promise<void> {
 		}
 		if (!isRelationshipsItem(name)) continue;
 		try {
-			parseRelationshipsPart(await zip.file(name)!.async('string'));
+			parseRelationshipsPart(decodeXmlBytes(await zip.file(name)!.async('uint8array')));
 		} catch (error) {
 			throw new Error(`"${name}" is not a valid relationships part.`, { cause: error });
 		}
@@ -72,7 +69,8 @@ async function assertSignable(zip: JSZip): Promise<void> {
 
 /** Points the package's one origin relationship at the origin part this signer writes. */
 async function upsertRootOriginRelationship(zip: JSZip): Promise<void> {
-	const xml = await zip.file(PACKAGE_RELATIONSHIPS_PART)?.async('string');
+	const bytes = await zip.file(PACKAGE_RELATIONSHIPS_PART)?.async('uint8array');
+	const xml = bytes && decodeXmlBytes(bytes);
 	const relationships = xml === undefined ? [] : parseRelationshipsPart(xml);
 	const id =
 		relationships.find(({ type }) => type === DIGITAL_SIGNATURE_ORIGIN_REL_TYPE)?.id ??
@@ -159,7 +157,7 @@ function buildSigningTimeObject(digestMethod: string): {
 		`<SigningTime>${escapeXmlText(new Date().toISOString())}</SigningTime>` +
 		'</SignatureProperty></SignatureProperties></Object>';
 	const context = parseStrictXml(`<Signature xmlns="${XMLDSIG_NS}">${objectXml}</Signature>`);
-	const canonical = canonicalizeNode(childElements(context.documentElement!)[0]!, INCLUSIVE_C14N);
+	const canonical = canonicalize(childElements(context.documentElement)[0]!, INCLUSIVE_C14N);
 	return {
 		objectXml,
 		reference: {
@@ -194,7 +192,10 @@ function buildOfficeSignatureXml(
 		'<SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>' +
 		`${signedInfoReferencesXml}` +
 		'</SignedInfo>';
-	const canonicalSignedInfo = canonicalizeSignedInfoXml(signedInfoXml);
+	const canonicalSignedInfo = canonicalize(
+		parseStrictXml(signedInfoXml).documentElement,
+		EXCLUSIVE_C14N,
+	);
 	const signer = crypto.createSign('RSA-SHA256');
 	signer.update(Buffer.from(canonicalSignedInfo, 'utf8'));
 	signer.end();

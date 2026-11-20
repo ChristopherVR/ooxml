@@ -2,6 +2,7 @@ import { defineDialogFooter } from './dialog/dialog-footer';
 import { defineToasts } from './notices/toasts';
 import { definePasteOptions } from './notices/paste-options';
 import { defineReadOnlyBanner } from './notices/read-only-banner';
+import { defineSignatureStatus } from './notices/signature-status';
 import { defineMessageBar } from './notices/message-bar';
 import { defineRadio } from './form/radio';
 export {
@@ -72,6 +73,7 @@ export {
 	definePasteOptions,
 	defineRadio,
 	defineReadOnlyBanner,
+	defineSignatureStatus,
 	defineMessageBar,
 	defineRibbonToggle,
 	defineSearchField,
@@ -267,6 +269,10 @@ export type {
 } from './notices/read-only-banner';
 export type { OfficeMessageBarIntent, OfficeMessageBarState } from './notices/message-bar';
 export {
+	OfficeUiSignatureStatus,
+	type OfficeSignatureStatusVariant,
+} from './notices/signature-status';
+export {
 	clearOfficeProfile,
 	DEFAULT_OFFICE_PROFILE,
 	OFFICE_AVATAR_SWATCHES,
@@ -349,6 +355,7 @@ export const CONTROL_DEFINERS = [
 	defineDialogFooter,
 	defineToasts,
 	defineReadOnlyBanner,
+	defineSignatureStatus,
 	defineMessageBar,
 	definePasteOptions,
 	defineTitleBar,

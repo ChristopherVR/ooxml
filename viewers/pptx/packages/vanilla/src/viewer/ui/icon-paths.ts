@@ -1,3 +1,6 @@
+const SHIELD =
+	'M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z';
+
 export const ICON_PATHS = {
 	'chevron-left': ['M15 18l-6-6 6-6'],
 	'chevron-right': ['M9 18l6-6-6-6'],
@@ -269,6 +272,12 @@ export const ICON_PATHS = {
 	'arrow-left-right': ['M8 3L4 7l4 4', 'M4 7h16', 'M16 13l4 4-4 4', 'M20 17H4'],
 	lock: ['M3 11h18v11H3z', 'M7 11V7a5 5 0 0 1 10 0v4'],
 	'lock-open': ['M3 11h18v11H3z', 'M7 11V7a5 5 0 0 1 9.9-1'],
+	// The signature states (`SignatureIcon` from `signatureStatusView`): one
+	// shield outline with a check, alert, cross or question mark inside.
+	'shield-check': [SHIELD, 'M9 12l2 2 4-4'],
+	'shield-alert': [SHIELD, 'M12 8v4', 'M12 16h.01'],
+	'shield-x': [SHIELD, 'M14.5 9.5l-5 5', 'M9.5 9.5l5 5'],
+	'shield-question': [SHIELD, 'M9.1 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3', 'M12 17h.01'],
 	paintbrush: [
 		'm14.622 17.897-10.68-2.913',
 		'M18.376 2.622a1 1 0 1 1 3.002 3.002L17.36 9.643a.5.5 0 0 0 0 .707l.944.944a2.41 2.41 0 0 1 0 3.408l-.944.944a.5.5 0 0 1-.707 0L8.354 7.348a.5.5 0 0 1 0-.707l.944-.944a2.41 2.41 0 0 1 3.408 0l.944.944a.5.5 0 0 0 .707 0z',

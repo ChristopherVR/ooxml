@@ -207,7 +207,7 @@ export function useViewerBuildingBlocksState(
 		setSelectedElementId: state.setSelectedElementId,
 		setSelectedElementIds: state.setSelectedElementIds,
 		preMasterMode: state.preMasterMode,
-		hasDigitalSignatures: state.hasDigitalSignatures,
+		signatures: state.signatures,
 		isDirty: state.isDirty,
 		history,
 		embeddedFontFamilies: state.embeddedFonts.map((font) => font.name),

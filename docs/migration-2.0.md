@@ -366,6 +366,109 @@ await page.locator('[data-id="zoomFit"]').click();
 
 Hosts that translate the **Design** > **Fonts** tiles add the keys `pptx.gallery.themeFonts.schemeName` and `pptx.gallery.themeFonts.currentName`, which now give the tile names. `pptx.gallery.themeFonts.scheme` and `pptx.gallery.themeFonts.current` give only the tooltips.
 
+### Signature state comes from one summary
+
+Every PowerPoint surface presents a deck's signatures through one descriptor, `signatureStatusView(summary, locale)` from `ooxml-ui/pptx`. It gives the label, description, tone, icon and one row per signature in the locale. `view.signed` is true only when the signatures verify; `view.present` says that signature parts exist (saving removes them).
+
+Before:
+
+```ts
+const signed = data.hasDigitalSignatures === true;
+badge.textContent = signed ? t('pptx.digitalSignatures.badge') : '';
+```
+
+After:
+
+```ts
+import { signatureStatusView } from 'ooxml-ui/pptx';
+const view = signatureStatusView(data.signatures, locale);
+badge.hidden = !view.present;
+badge.textContent = view.label; // "Signed, signer not verified", "Invalid signature", ...
+```
+
+In `ooxml-ui/pptx`, the building-block `DigitalSignaturesPort` supplies the summary, and `SignaturesState` reports the verified state.
+
+Before:
+
+```ts
+const port = { signed: () => hasSignatures, count: () => signatureCount, content, markDirty };
+const { signed, count } = actions.digitalSignatures.state;
+```
+
+After:
+
+```ts
+const port = { summary: () => data.signatures, content, markDirty };
+const { state, signed, present, count } = actions.digitalSignatures.state;
+```
+
+`HostSignatureInfo` is the core's `SignatureEntry`.
+
+Before:
+
+```ts
+for (const info of await actions.digitalSignatures.list())
+	show(info.signer, info.integrity, info.expired);
+```
+
+After:
+
+```ts
+for (const entry of await actions.digitalSignatures.list())
+	show(entry.signer, entry.state, entry.validTo);
+```
+
+`loadPresentation` returns the summary.
+
+Before:
+
+```ts
+const { hasDigitalSignatures, digitalSignatureCount } = await loadPresentation(bytes);
+```
+
+After:
+
+```ts
+const { signatures } = await loadPresentation(bytes); // SignatureSummary | undefined
+const count = signatures?.signatures.length ?? 0;
+```
+
+The bindings' signature state moved to the summary in the same way.
+
+Before:
+
+```ts
+// pptx-react-viewer/internals
+useLoadContent({ ...input, setHasDigitalSignatures, setDigitalSignatureCount });
+// pptx-vue-viewer/internals
+const { signaturesApi, hasDigitalSignatures } = useSignatureWorkflow({ signatures, isDirty });
+// pptx-svelte-viewer
+loader.hasDigitalSignatures;
+loader.digitalSignatureCount;
+// pptx-angular-viewer
+inject(SignaturesService);
+loadContent.hasDigitalSignatures();
+// pptx-vanilla-viewer
+store.get().hasDigitalSignatures;
+```
+
+After:
+
+```ts
+// pptx-react-viewer/internals
+useLoadContent({ ...input, setSignatures });
+// pptx-vue-viewer/internals
+const { view } = useSignatureWorkflow({ signatures, locale, isDirty });
+// pptx-svelte-viewer
+loader.signatures; // SignatureSummary | undefined
+// pptx-angular-viewer
+signatureStatusView(loadContent.signatureSummary(), locale);
+// pptx-vanilla-viewer
+store.get().signatures;
+```
+
+`pptx-angular-viewer` also removes the signature helper exports (`isSigned`, `overallStatus`, `statusLabel` and the rest); read the same answers from `signatureStatusView`. `pptx-vue-viewer/internals` removes `useSignatures`. `ooxml-ui/pptx` and the PowerPoint viewers drop the unused `pptx.digitalSignatures.*` keys listed in the release notes; signature wording comes from `signatureStringsFor` in `ooxml-core/i18n`.
+
 ## Word, Excel and Visio viewers
 
 This section covers the `docx-*-viewer`, `xlsx-*-viewer` and `visio-*-viewer` packages, `@christophervr/xlsx-react-viewer`, and the editors in `ooxml-ui/docx`, `ooxml-ui/xlsx` and `ooxml-ui/visio`.
@@ -902,6 +1005,85 @@ const rows = chartData.embeddedWorkbookData ?? (bytes ? await parseEmbeddedXlsx(
 ```
 
 ## Shared areas of `ooxml-core`
+
+### Signatures are reported as a verified summary
+
+The signature verifier lives in the `signature` namespace of `ooxml-core/opc`. A document is shown as signed only when its signature verifies. Every loader reports the result as a `SignatureSummary` (`{ state, signatures }`), and the structural helpers that only counted signature parts are removed.
+
+Any Office format can be checked from its bytes, a JSZip archive or a map of parts:
+
+```ts
+import { signature } from 'ooxml-core/opc';
+const { state, signatures } = await signature.verifyPackageSignatureSummary(bytes);
+```
+
+In `ooxml-core/pptx`, `parseSignaturesFromBuffer` is removed and `inspectSignaturesFromBuffer` returns a summary.
+
+Before:
+
+```ts
+const signatures = await parseSignaturesFromBuffer(bytes);
+const signed = signatures.length > 0;
+```
+
+After:
+
+```ts
+import { signature } from 'ooxml-core/opc';
+const summary = await inspectSignaturesFromBuffer(bytes);
+const signed = signature.isVerifiedSignatureState(summary.state); // verified or verified-untrusted
+```
+
+In `ooxml-core/xlsx`, `Workbook.signatures` is a summary.
+
+Before:
+
+```ts
+if (workbook.signatures) show(`${workbook.signatures.count} signatures`, workbook.signatures.parts);
+```
+
+After:
+
+```ts
+if (workbook.signatures)
+	show(
+		workbook.signatures.state,
+		workbook.signatures.signatures.map((s) => s.path),
+	);
+```
+
+In `ooxml-core/docx` and `ooxml-core/xlsx`, the English signature warning is no longer in `warnings`.
+
+Before:
+
+```ts
+const notice = model.warnings.find((warning) => warning.includes('digital signatures'));
+```
+
+After:
+
+```ts
+import { signatureStateText } from 'ooxml-core/i18n';
+const notice = model.signatures && signatureStateText(model.signatures.state, locale)?.description;
+```
+
+The canonicalization helpers of `ooxml-core/pptx/signature-node` moved to `ooxml-core/opc`.
+
+Before:
+
+```ts
+import { canonicalizeNode } from 'ooxml-core/pptx/signature-node';
+canonicalizeNode(element, algorithm);
+```
+
+After:
+
+```ts
+import { signature } from 'ooxml-core/opc';
+signature.canonicalize(element, algorithm);
+```
+
+The verifier does not check an RSA key whose modulus is under 1024 or over 16384 bits, or whose public exponent is over 2^32, and a signature made with one reports `unsupported`. Per signature it tries at most four `KeyInfo` certificates, reads at most 10,000 references and 100 MB of part data, and skips a signature part over 16 MB; a signature past one of these limits also reports `unsupported`, and a reference it did not read has the new `digestStatus` `limit-exceeded`. Office never writes such a signature. If you sign with a key outside that range, re-sign with a 2048 to 4096-bit key.
 
 ### Collaboration updates are bounded, and a refusal stops the sync
 

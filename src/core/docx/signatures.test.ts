@@ -44,15 +44,12 @@ async function signedDocument(folder = '_xmlsignatures'): Promise<Uint8Array> {
 
 describe('DOCX package signatures', () => {
 	it.each(['_xmlsignatures', 'custom/signing'])(
-		'warns and preserves an untouched %s package',
+		'reports and preserves an untouched %s package',
 		async (folder) => {
 			const bytes = await signedDocument(folder);
 			const loaded = await loadDocx(bytes);
-			expect(loaded.model.warnings).toEqual(
-				expect.arrayContaining([
-					expect.stringMatching(/digital signatures.*not been verified.*Saving edits removes/),
-				]),
-			);
+			// The test signature does not verify, so the document is never shown as signed.
+			expect(loaded.model.signatures?.state).toMatch(/^(invalid|unsupported)$/u);
 			expect(await loaded.save()).toEqual(bytes);
 			expect(await loaded.save(structuredClone(loaded.model))).toEqual(bytes);
 		},
@@ -86,7 +83,7 @@ describe('DOCX package signatures', () => {
 			const reloaded = await loadDocx(bytes);
 			expect(expectParagraph(reloaded.model.blocks[0]).runs[0]?.text).toBe('Edited document');
 			expect(
-				reloaded.model.warnings.some((warning) => warning.includes('digital signatures')),
+				reloaded.model.signatures !== undefined,
 			).toBe(false);
 			// Saving does not mutate the source context or remove signatures from the original model.
 			expect(await loaded.save()).toEqual(original);
@@ -98,14 +95,14 @@ describe('DOCX package signatures', () => {
 		loaded.model.properties = { title: 'Changed title' };
 		const reloaded = await loadDocx(await loaded.save());
 		expect(reloaded.model.properties?.title).toBe('Changed title');
-		expect(reloaded.model.warnings.some((warning) => warning.includes('digital signatures'))).toBe(
+		expect(reloaded.model.signatures !== undefined).toBe(
 			false,
 		);
 	});
 
-	it('does not warn for an unsigned document', async () => {
+	it('reports no signatures for an unsigned document', async () => {
 		const loaded = await loadDocx(await saveDocx(createDocument()));
-		expect(loaded.model.warnings.some((warning) => warning.includes('digital signatures'))).toBe(
+		expect(loaded.model.signatures !== undefined).toBe(
 			false,
 		);
 	});

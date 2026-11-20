@@ -1,5 +1,6 @@
 import { chartPointBudget } from '../../../../chart/point-limit';
 import { isRelationshipsItem, parseRelationshipsPart } from '../../../../opc/relationships';
+import { verifyPackageSignatureSummary } from '../../../../opc/signature/verify/inspect';
 import { openZip } from '../../../../opc/zip-limits';
 
 import { XmlObject } from '../../types';
@@ -214,14 +215,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Refuses a signed package with a relationships part the strict reader rejects, and has the
-	 * load read the others through that reader. Signature verification uses the same reader, so a
-	 * signed package never loads relationships its verifier did not see.
+	 * Verifies a signed package's signatures, and has the load read its relationships through the
+	 * strict reader the verifier uses when every relationships part passes it, so a verified
+	 * package loads exactly the relationships its verifier read. A part the strict reader rejects
+	 * cannot be part of a verified signature (the verifier reports the signature as not verified),
+	 * so such a package loads like an unsigned one and is never shown as signed.
 	 */
-	protected async enforceSignedPackageRelationships(): Promise<void> {
+	protected async verifySignedPackage(): Promise<void> {
+		this.signatureSummary = undefined;
 		if (!this.signatureDetection?.hasSignatures) {
 			return;
 		}
+		this.signatureSummary = await verifyPackageSignatureSummary(this.zip);
 		const relationshipParts: string[] = [];
 		this.zip.forEach((relativePath, file) => {
 			if (!file.dir && isRelationshipsItem(relativePath)) {
@@ -231,10 +236,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		for (const path of relationshipParts) {
 			try {
 				parseRelationshipsPart((await this.readPartText(path)) ?? '');
-			} catch (error) {
-				throw new Error(`Signed package has an invalid relationships part: ${path}`, {
-					cause: error,
-				});
+			} catch {
+				return;
 			}
 		}
 		this.loadPartReader?.useStrictRelationships();

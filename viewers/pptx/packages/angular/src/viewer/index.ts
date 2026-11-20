@@ -171,22 +171,17 @@ export {
 	toggleCommentResolvedInList,
 } from './comments-helpers';
 
-// Digital signatures
+// Digital signatures: a deck reads as signed only when its signatures verify. The panel and any
+// host badge derive their wording from the shared view of `LoadContentService.signatureSummary()`.
+export { SignatureStatusBadgeComponent } from './signature-status-badge.component';
 export { SignaturesPanelComponent } from './signatures-panel.component';
-export { SignaturesService } from './signatures.service';
-export {
-	isSigned,
-	worstStatus,
-	overallStatus,
-	headerLabel,
-	statusLabel,
-	statusKind,
-	signerName,
-	signatureTimestamp,
-	signatureKey,
-	signatureCountLabel,
-} from './signatures-helpers';
-export type { OverallSignatureStatus, SignatureStatusKind } from './signatures-helpers';
+export { signatureStatusView } from 'ooxml-ui/pptx';
+export type {
+	SignatureIcon,
+	SignatureStatusRow,
+	SignatureStatusView,
+	SignatureTone,
+} from 'ooxml-ui/pptx';
 
 // Accessibility
 export { AccessibilityPanelComponent } from './accessibility-panel.component';

@@ -28,7 +28,6 @@ import {
 	saveDeckWithPassword,
 } from 'ooxml-ui/pptx';
 import type {
-	ParsedSignature,
 	ParsedTableStyleMap,
 	PptxAppProperties,
 	PptxCommentAuthor,
@@ -53,12 +52,9 @@ import type {
 	PptxTheme,
 	PptxThemeOption,
 	PptxViewProperties,
+	SignatureSummary,
 } from 'pptx-viewer-core';
-import {
-	PptxHandler,
-	EncryptedFileError,
-	parseSignaturesFromBuffer as parseCoreSignatures,
-} from 'pptx-viewer-core';
+import { PptxHandler, EncryptedFileError } from 'pptx-viewer-core';
 import { onScopeDispose, ref, shallowRef, toValue, watch } from 'vue';
 import type { MaybeRefOrGetter, Ref, ShallowRef } from 'vue';
 
@@ -68,14 +64,6 @@ import { collectImagePaths } from './load-content-helpers';
 import type { TemplateElementMap } from './template-editing';
 import { buildSaveSlides, partitionTemplateElements } from './template-editing';
 import { VUE_GOOGLE_FONTS_LINK_ID } from './useGoogleWebfonts';
-
-// Signature parsing is shared in the core (`ooxml-core/pptx`); kept exported here for callers and tests.
-// A local function, not a re-export: re-exporting an external binding breaks the CommonJS bundle.
-export function parseSignaturesFromBuffer(
-	buffer: Parameters<typeof parseCoreSignatures>[0],
-): ReturnType<typeof parseCoreSignatures> {
-	return parseCoreSignatures(buffer);
-}
 
 /**
  * `useLoadContent`: Vue port of the React hook of the same name.
@@ -147,8 +135,11 @@ export interface UseLoadContentResult {
 	tagCollections: ShallowRef<PptxTagCollection[]>;
 	/** Embedded fonts (for `@font-face` injection). */
 	embeddedFonts: ShallowRef<PptxEmbeddedFont[]>;
-	/** Parsed digital signatures (empty when unsigned). */
-	signatures: ShallowRef<ParsedSignature[]>;
+	/**
+	 * The deck's verified signatures (`PptxData.signatures`), `undefined` when it carries
+	 * none. Present it through `signatureStatusView` (`ooxml-ui/pptx`), never from the parts alone.
+	 */
+	signatures: ShallowRef<SignatureSummary | undefined>;
 	/**
 	 * Parsed `ppt/tableStyles.xml` map (GUID → style entry), or `undefined`
 	 * when the presentation has no table styles part. Feeds table banding /
@@ -307,7 +298,7 @@ export function useLoadContent(
 	const appProperties = shallowRef<PptxAppProperties | undefined>(undefined);
 	const tagCollections = shallowRef<PptxTagCollection[]>([]);
 	const embeddedFonts = shallowRef<PptxEmbeddedFont[]>([]);
-	const signatures = shallowRef<ParsedSignature[]>([]);
+	const signatures = shallowRef<SignatureSummary | undefined>(undefined);
 	const tableStyleMap = shallowRef<ParsedTableStyleMap | undefined>(undefined);
 	const tableStylesDefaultId = shallowRef<string | undefined>(undefined);
 	const tableStylesToDelete = shallowRef<string[]>([]);
@@ -358,9 +349,6 @@ export function useLoadContent(
 				raw instanceof Uint8Array
 					? raw.buffer.slice(raw.byteOffset, raw.byteOffset + raw.byteLength)
 					: raw;
-			// Keep an independent copy for signature parsing; the handler may
-			// consume/transfer `buffer` during load.
-			const signatureBuffer = buffer.slice(0);
 
 			const fileSizeMB = buffer instanceof ArrayBuffer ? buffer.byteLength / (1024 * 1024) : 0;
 			if (fileSizeMB > 50) {
@@ -466,10 +454,6 @@ export function useLoadContent(
 				newHandler.getImageData(path),
 			);
 
-			const nextSignatures =
-				parsed.hasDigitalSignatures && signatureBuffer instanceof ArrayBuffer
-					? await parseCoreSignatures(signatureBuffer)
-					: [];
 			if (token !== renderToken) {
 				return;
 			}
@@ -548,7 +532,7 @@ export function useLoadContent(
 							height: Math.round(parsed.notesHeightEmu / 9525),
 						}
 					: undefined;
-			signatures.value = nextSignatures;
+			signatures.value = parsed.signatures;
 			options?.onContentApplied?.();
 		} catch (err) {
 			if (token === renderToken) {

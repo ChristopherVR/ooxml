@@ -177,6 +177,8 @@
 			chromeUi={props.chromeUi}
 			commentCount={slideCommentCount}
 			ribbonDisplay={props.ribbonDisplay}
+			signatureView={props.signatureView}
+			onsignatures={custom.isDialogAvailable('signatures') ? () => (signaturesOpen = true) : undefined}
 		/>
 		<!-- Zero-height anchor right under the tab row: the menu and the overlaid commands hang from
 		     it, so the scrolling tab row never clips them. -->
@@ -229,7 +231,7 @@
 	<FontEmbeddingPanel usedFontFamilies={usedFontFamilies} embeddedFonts={props.embeddedFontNames} embeddedFontRestrictions={props.embeddedFontRestrictions} enabled={props.editor.embedFonts} canEmbed={fontEmbedding.interactive} unavailableKey={fontEmbedding.disabledReasonKey} ontoggle={(enabled) => (props.editor.embedFonts = enabled)} onclose={() => (fontsOpen = false)} />
 {/if}
 {#if signaturesOpen && custom.isDialogAvailable('signatures')}
-	<DigitalSignaturesDialog hasSignatures={props.hasDigitalSignatures} signatureCount={props.digitalSignatureCount} onclose={() => (signaturesOpen = false)} />
+	<DigitalSignaturesDialog view={props.signatureView} onclose={() => (signaturesOpen = false)} />
 {/if}
 {#if protectionOpen && custom.isDialogAvailable('passwordProtection')}
 	<!-- The secret lives on `EditorState`, not this component: the save path

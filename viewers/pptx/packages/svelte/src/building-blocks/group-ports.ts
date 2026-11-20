@@ -80,8 +80,7 @@ export function createSvelteGroupPorts(source: SvelteGroupSource): BuildingBlock
 			markDirty,
 		},
 		digitalSignatures: {
-			signed: () => loader.hasDigitalSignatures,
-			count: () => loader.digitalSignatureCount,
+			summary: () => loader.signatures,
 			content: () => source.content(),
 			markDirty,
 		},

@@ -45,6 +45,7 @@ import type {
 	PptxViewProperties,
 } from '../../types';
 import { SignatureDetectionResult, normalizeStrictXml, detectStrictConformance } from '../../utils';
+import type { SignatureSummary } from '../../../../opc/signature/state';
 import type { AlternateContentBlock } from '../../utils';
 import { partRelsPath } from '../../utils/part-rels-path';
 import type {
@@ -443,6 +444,9 @@ export class PptxHandlerRuntime {
 
 	/** Detected digital signature information (populated during load). */
 	protected signatureDetection: SignatureDetectionResult | null = null;
+
+	/** The verified state of the package's signatures (populated during load when it is signed). */
+	protected signatureSummary: SignatureSummary | undefined = undefined;
 
 	/** Custom XML data parts parsed from `customXml/` in the OPC package. */
 	protected customXmlParts: PptxCustomXmlPart[] = [];

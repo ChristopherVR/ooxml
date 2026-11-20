@@ -42,6 +42,7 @@ import type {
 	PptxThemeFormatScheme,
 	PptxThemeOption,
 	PptxViewProperties,
+	SignatureSummary,
 } from 'pptx-viewer-core';
 
 import type { ChartPartSelection } from '../render';
@@ -118,8 +119,13 @@ export interface ViewerState {
 	 * byte-identical file.
 	 */
 	embedFonts: boolean;
-	hasDigitalSignatures: boolean;
-	digitalSignatureCount: number;
+	/**
+	 * The loaded deck's verified signature state, absent when it carries no
+	 * signature parts. Every signature surface derives from
+	 * `signatureStatusView(signatures, locale)`; a deck reads as signed only when
+	 * its signatures verify.
+	 */
+	signatures: SignatureSummary | undefined;
 	isPasswordProtected: boolean;
 	/**
 	 * The File > Info > Protect Presentation secret, or null when the deck saves
@@ -418,8 +424,7 @@ export function createInitialViewerState(inspectorInitiallyOpen?: boolean): View
 		outlineFontsTick: 0,
 		embedFonts: true,
 		customFontFamilies: [],
-		hasDigitalSignatures: false,
-		digitalSignatureCount: 0,
+		signatures: undefined,
 		isPasswordProtected: false,
 		presentationPassword: null,
 		templateElementsBySlideId: {},

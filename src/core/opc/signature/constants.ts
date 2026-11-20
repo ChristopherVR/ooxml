@@ -33,12 +33,19 @@ export const OPC_RELATIONSHIP_TRANSFORM =
 export const XML_TRANSFORM_ENVELOPED_SIGNATURE =
 	'http://www.w3.org/2000/09/xmldsig#enveloped-signature';
 
+/** Canonical XML 1.0, the default for same-document references (XML-DSig section 4.3.3.2). */
+export const INCLUSIVE_C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315';
+export const INCLUSIVE_C14N_WITH_COMMENTS = `${INCLUSIVE_C14N}#WithComments`;
+/** Exclusive XML Canonicalization 1.0. */
+export const EXCLUSIVE_C14N = 'http://www.w3.org/2001/10/xml-exc-c14n#';
+export const EXCLUSIVE_C14N_WITH_COMMENTS = `${EXCLUSIVE_C14N}WithComments`;
+
 /** Set of supported XML canonicalization transform algorithm URIs. */
 export const SUPPORTED_XML_CANON_TRANSFORMS = new Set<string>([
-	'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
-	'http://www.w3.org/TR/2001/REC-xml-c14n-20010315#WithComments',
-	'http://www.w3.org/2001/10/xml-exc-c14n#',
-	'http://www.w3.org/2001/10/xml-exc-c14n#WithComments',
+	INCLUSIVE_C14N,
+	INCLUSIVE_C14N_WITH_COMMENTS,
+	EXCLUSIVE_C14N,
+	EXCLUSIVE_C14N_WITH_COMMENTS,
 ]);
 
 /** Environment variable: path to file containing enterprise trust root PEM certificates. */

@@ -1,8 +1,8 @@
 import type { CompatibilityWarningToast } from 'ooxml-ui/pptx';
 import { compatibilityWarningToasts } from 'ooxml-ui/pptx';
 import type { PptxCompatibilityWarning } from 'pptx-viewer-core';
-import { computed, ref } from 'vue';
-import type { ComputedRef, Ref } from 'vue';
+import { computed, ref, toValue } from 'vue';
+import type { ComputedRef, MaybeRefOrGetter, Ref } from 'vue';
 
 /** Cap the visible toast stack; the rest collapse into a "+N" count. */
 const VISIBLE_TOAST_LIMIT = 5;
@@ -23,6 +23,11 @@ const VISIBLE_TOAST_LIMIT = 5;
  */
 export interface UseCompatibilityToastsInput {
 	warnings: Ref<PptxCompatibilityWarning[]>;
+	/**
+	 * The signature load notice of the loaded deck (the shared `signatureLoadNotice`), shown on
+	 * top of the stack; dismissing it lasts until {@link UseCompatibilityToastsResult.reset}.
+	 */
+	signatureNotice?: MaybeRefOrGetter<CompatibilityWarningToast | undefined>;
 }
 
 export interface UseCompatibilityToastsResult {
@@ -47,10 +52,14 @@ export function useCompatibilityToasts(
 	const allDismissed = ref(false);
 
 	const notices = ref<CompatibilityWarningToast[]>([]);
-	const allToasts = computed(() => [
-		...notices.value,
-		...compatibilityWarningToasts(input.warnings.value),
-	]);
+	const allToasts = computed(() => {
+		const signature = toValue(input.signatureNotice);
+		return [
+			...(signature ? [signature] : []),
+			...notices.value,
+			...compatibilityWarningToasts(input.warnings.value),
+		];
+	});
 
 	const activeToasts = computed(() =>
 		allDismissed.value ? [] : allToasts.value.filter((toast) => !dismissedIds.value.has(toast.id)),

@@ -1,8 +1,10 @@
+import type { SignatureSummary } from 'pptx-viewer-core';
 import React from 'react';
 import { LuTriangleAlert, LuX } from 'react-icons/lu';
 
 import { useTranslation } from '../i18n/use-translation';
 import { DialogFooter } from './DialogFooter';
+import { useSignatureStatusView } from './signature-look';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -10,7 +12,8 @@ import { DialogFooter } from './DialogFooter';
 
 export interface SignatureStrippedDialogProps {
 	isOpen: boolean;
-	signatureCount: number;
+	/** The loaded deck's signatures (`PptxData.signatures`). */
+	signatures: SignatureSummary | undefined;
 	onConfirm: () => void;
 	onCancel: () => void;
 }
@@ -21,15 +24,16 @@ export interface SignatureStrippedDialogProps {
 
 /**
  * Warning dialog shown when the user first edits a signed document.
- * Informs that digital signatures will be invalidated and stripped on save.
+ * Informs that digital signatures will be invalidated and removed on save.
  */
 export function SignatureStrippedDialog({
 	isOpen,
-	signatureCount,
+	signatures,
 	onConfirm,
 	onCancel,
 }: SignatureStrippedDialogProps): React.ReactElement | null {
 	const { t } = useTranslation();
+	const view = useSignatureStatusView(signatures);
 
 	if (!isOpen) {
 		return null;
@@ -76,12 +80,10 @@ export function SignatureStrippedDialog({
 							<div className='space-y-2'>
 								<p className='text-xs text-amber-200'>
 									{t('pptx.digitalSignatures.strippedMessage', {
-										count: signatureCount,
+										count: view.count,
 									})}
 								</p>
-								<p className='text-[11px] text-amber-300/70'>
-									{t('pptx.digitalSignatures.editWarning')}
-								</p>
+								<p className='text-[11px] text-amber-300/70'>{view.removedOnSave}</p>
 							</div>
 						</div>
 					</div>

@@ -14,6 +14,7 @@ import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { formatNumber, normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
 import { el } from './ribbon/controls';
 import { openMenu } from './ribbon/popover';
+import { createSignatureChrome } from '../notices/signature-chrome';
 
 /** Excel's three workbook views on the shared 20px icon grid. */
 const VIEW_ICONS = {
@@ -63,6 +64,8 @@ export interface StatusBarHandlers {
 
 export interface StatusBar {
 	readonly element: HTMLElement;
+	/** The signature load notice, which the shell places under the ribbon. */
+	readonly signatureNotice: HTMLElement;
 	refresh(): void;
 	relocalize(): void;
 }
@@ -140,7 +143,9 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 	slider.slot = 'end';
 	slider.setAttribute('min', String(ZOOM_MIN));
 	slider.setAttribute('max', String(ZOOM_MAX));
-	element.append(stats, slider);
+	// The signature badge follows the mode, as Excel shows it; it and the notice open Info.
+	const signatures = createSignatureChrome(doc, () => handlers.showNotes());
+	element.append(signatures.badge, stats, slider);
 
 	let layout: StatusLayout = statusLayout(0);
 	const zoom = () => ctx.grid()?.zoom() ?? 100;
@@ -157,6 +162,7 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 		const mode = sheet?.view?.mode;
 		const hasSheet = !!sheet;
 		const count = ctx.workbook()?.warnings.length ?? 0;
+		signatures.update(ctx.workbook()?.signatures, ctx.locale());
 		const notesText = ctx.t(
 			count === 1 ? '{count} compatibility note' : '{count} compatibility notes',
 			{ count },
@@ -226,5 +232,5 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 		layout = statusLayout(width);
 		refresh();
 	});
-	return { element, refresh, relocalize };
+	return { element, signatureNotice: signatures.notice, refresh, relocalize };
 }

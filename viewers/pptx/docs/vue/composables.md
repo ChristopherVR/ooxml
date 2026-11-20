@@ -79,6 +79,11 @@ function useLoadContent(
 metadata (`coreProperties`, `appProperties`, `customProperties`, `sections`, `customShows`,
 `embeddedFonts`, `signatures`, and more).
 
+`signatures` is the deck's `SignatureSummary` (`undefined` when it carries no signature parts). A
+part alone never makes a deck signed: present it through `signatureStatusView(summary, locale)`
+from `ooxml-ui/pptx`, which reads "Signed" only when every signature verifies and gives the
+translated label, description, tone and per-signature rows.
+
 ```vue
 <script setup lang="ts">
 import { useLoadContent } from 'pptx-vue-viewer/viewer';

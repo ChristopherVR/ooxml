@@ -16,6 +16,7 @@
  * @module viewer/load-notices
  */
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import {
 	compatibilityWarningToasts,
 	INITIAL_READ_ONLY_SESSION,
@@ -23,6 +24,8 @@ import {
 	readOnlyLocked,
 	readOnlyRecommendation,
 	readOnlySessionActions,
+	signatureLoadNotice,
+	signatureStatusView,
 } from 'ooxml-ui/pptx';
 import type {
 	CompatibilityWarningToast,
@@ -36,6 +39,7 @@ import { LoadContentService } from './load-content.service';
 export class LoadNoticesService {
 	/** Optional so isolated service tests and stubbed injectors keep working. */
 	private readonly loader = inject(LoadContentService, { optional: true });
+	private readonly translate = inject(TranslateService, { optional: true });
 
 	// ── Read-only recommendation ────────────────────────────────────────────
 
@@ -98,11 +102,24 @@ export class LoadNoticesService {
 
 	// ── Compatibility-warning toasts ────────────────────────────────────────
 
-	/** Deck-level plus every slide's compatibility warnings, deduped by code. */
+	/**
+	 * The signature load notice of a signed deck (the shared `signatureLoadNotice`) in the current
+	 * UI language, then the deck-level plus every slide's compatibility warnings, deduped by code.
+	 */
 	readonly toasts = computed<CompatibilityWarningToast[]>(() => {
 		const deckWarnings = this.loader?.parsedData()?.warnings ?? [];
 		const slideWarnings = (this.loader?.slides() ?? []).flatMap((slide) => slide.warnings ?? []);
-		return [...this.notices(), ...compatibilityWarningToasts([...deckWarnings, ...slideWarnings])];
+		const signature = signatureLoadNotice(
+			signatureStatusView(
+				this.loader?.signatureSummary(),
+				this.translate?.currentLang() ?? undefined,
+			),
+		);
+		return [
+			...(signature ? [signature] : []),
+			...this.notices(),
+			...compatibilityWarningToasts([...deckWarnings, ...slideWarnings]),
+		];
 	});
 	/** Notices outside the load diagnostics (a failed Save); see {@link notify}. */
 	private readonly notices = signal<CompatibilityWarningToast[]>([]);

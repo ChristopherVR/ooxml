@@ -116,8 +116,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | `useCustomShows`          | Custom show create/rename/delete CRUD.                             |
 | `useCustomShowsWiring`    | Wires custom shows into the component.                             |
 | `useSlideShowSettings`    | Set Up Slide Show dialog and the subtitles toggle.                 |
-| `useSignatures`           | Digital-signature verification and overall status.                 |
-| `useSignatureWorkflow`    | Signatures panel and signature-stripped warning wiring.            |
+| `useSignatureWorkflow`    | Signature status view, signatures panel and strip warning.         |
 | `useFontEmbedding`        | Font-embedding dialog and used-font-family detection.              |
 | `useSelectionPaneWiring`  | View > Selection Pane wiring (select, toggle visibility, reorder). |
 

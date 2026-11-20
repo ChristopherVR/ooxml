@@ -6,7 +6,7 @@
  *
  * @module render/building-blocks/groups/file-dialog-groups
  */
-import type { PptxCustomProperty } from 'ooxml-core/pptx';
+import type { PptxCustomProperty, SignatureSummary } from 'ooxml-core/pptx';
 
 import {
 	buildDocumentPropertiesActions,
@@ -91,8 +91,8 @@ export const fontEmbeddingGroup = defineBuildingBlockActionGroup({
 });
 
 export interface DigitalSignaturesPort {
-	signed(): boolean;
-	count(): number;
+	/** The loaded deck's verified signatures (`PptxData.signatures`), absent when unsigned. */
+	summary(): SignatureSummary | undefined;
 	/** The loaded package's bytes, which the signatures are read from. */
 	content(): ArrayBuffer | Uint8Array | null | undefined;
 	markDirty(): void;
@@ -102,7 +102,7 @@ export const digitalSignaturesGroup = defineBuildingBlockActionGroup({
 	id: 'digitalSignatures',
 	create: (context, port: DigitalSignaturesPort) =>
 		buildSignatureActions({
-			state: describeSignaturesState({ signed: port.signed(), count: port.count() }),
+			state: describeSignaturesState(port.summary()),
 			content: () => port.content(),
 			refuse: () => context.refuse('digitalSignatures'),
 			markDirty: () => port.markDirty(),

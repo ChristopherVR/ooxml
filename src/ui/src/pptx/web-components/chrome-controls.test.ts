@@ -194,6 +194,18 @@ describe('pptx-ui-compat-toasts', () => {
 		expect(second!.querySelector('details')).toBeNull();
 	});
 
+	it('shows an already-translated message as is', () => {
+		const host = document.createElement('pptx-ui-compat-toasts');
+		host.state = {
+			toasts: [{ ...toast(1, 'info'), messageKey: '', text: 'Signature non valide.' }],
+			translate: (key) => `t(${key})`,
+		};
+		document.body.append(host);
+		expect(q(host, '[data-testid="pptx-compat-toast"] .message')!.textContent).toBe(
+			'Signature non valide.',
+		);
+	});
+
 	it('emits dismiss and dismiss-all intents and keeps focus across inset updates', () => {
 		const host = document.createElement('pptx-ui-compat-toasts');
 		host.state = { toasts: [toast(1), toast(2, 'info')] };

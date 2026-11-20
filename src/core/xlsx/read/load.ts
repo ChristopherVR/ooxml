@@ -1,5 +1,5 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index';
-import { detectDigitalSignatures } from '../../opc/signature/index';
+import { detectDigitalSignatures, verifySignedPackage } from '../../opc/signature/index';
 import { parseRange } from '../address';
 import { readFilteredRows } from '../filter-rows';
 import type { Workbook, WorkbookProperties, Worksheet } from '../model';
@@ -105,11 +105,7 @@ export async function loadXlsx(
 		warn('The workbook contains VBA macros; they are kept on save but never run.');
 	if (partOf(RELATIONSHIP_TYPES.externalLink))
 		warn('External workbook links are kept but not updated.');
-	const signatures = detectDigitalSignatures([...parts.keys()]);
-	if (signatures.hasSignatures)
-		warn(
-			'The workbook is digitally signed. The signature is not verified, and saving removes it because any change invalidates it.',
-		);
+	const signed = detectDigitalSignatures([...parts.keys()]).hasSignatures;
 	const contentType = source.contentType(workbookPart) ?? CONTENT_TYPES.workbook;
 	const corePart = source.targetOfType('', RELATIONSHIP_TYPES.coreProperties);
 	const appPart = source.targetOfType('', RELATIONSHIP_TYPES.extendedProperties);
@@ -141,8 +137,7 @@ export async function loadXlsx(
 	if (book.customViews) workbook.customViews = book.customViews;
 	if (book.calcMode) workbook.calcMode = book.calcMode;
 	if (book.iterate) workbook.iterate = book.iterate;
-	if (signatures.hasSignatures)
-		workbook.signatures = { count: signatures.signatureCount, parts: signatures.signaturePaths };
+	if (signed) workbook.signatures = await verifySignedPackage(parts);
 	if (!sheets.length) throw new Error('XLSX workbook has no sheets');
 	await resolveSmartArt(sheets, source, warn);
 	liftPrintAreas(workbook);
