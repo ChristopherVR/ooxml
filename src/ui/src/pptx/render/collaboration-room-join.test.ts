@@ -17,6 +17,31 @@ describe('room join tracker', () => {
 		expect(join.adopted()).toBe(false);
 	});
 
+	it('keeps a joining session from writing until it adopted the room slides', () => {
+		const join = createRoomJoinTracker();
+		join.attached('join');
+		expect(join.mayWrite()).toBe(false);
+		join.loaded('bootstrap');
+		expect(join.mayWrite()).toBe(false);
+		expect(join.adopted()).toBe(true);
+		expect(join.mayWrite()).toBe(true);
+	});
+
+	it('lets a joining session publish a deck the user opened', () => {
+		const join = createRoomJoinTracker();
+		join.attached('join');
+		join.loaded('user');
+		expect(join.mayWrite()).toBe(true);
+	});
+
+	it('lets a session that started the room write at once', () => {
+		const join = createRoomJoinTracker();
+		join.attached();
+		expect(join.mayWrite()).toBe(true);
+		join.attached('create');
+		expect(join.mayWrite()).toBe(true);
+	});
+
 	it('reports nothing before a session attaches, and again after the next attach', () => {
 		const join = createRoomJoinTracker();
 		expect(join.adopted()).toBe(false);

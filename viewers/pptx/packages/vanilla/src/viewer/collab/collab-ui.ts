@@ -170,8 +170,10 @@ export function createCollabUi(deps: CollabUiDeps): CollabUiController {
 		shareDialog.open(deps.shareDefaults, status !== 'disconnected' && status !== 'error');
 	};
 	const openBroadcast = (): void => {
+		// A new broadcast gets a fresh room id (an empty one left Start disabled);
+		// the server stays blank, so it is serverless unless the presenter names one.
 		broadcastDialog.open(
-			{ roomId: broadcast?.roomId ?? '', serverUrl: broadcast?.serverUrl ?? '' },
+			{ ...(broadcast ? { roomId: broadcast.roomId } : {}), serverUrl: broadcast?.serverUrl ?? '' },
 			deps.getStatus() !== 'disconnected',
 			viewerUrl(),
 		);

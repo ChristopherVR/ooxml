@@ -122,6 +122,14 @@ Sessions start only when the user (or host) starts one.
   then flows directly between peers, encrypted by WebRTC and by the same secret. Pass a
   `signaling` list (or `?signaling=` in a share link) to use your own server.
 - Sessions within one browser use `BroadcastChannel`, which never leaves the device.
+- **What the room carries:** the slides, and the bytes of the pictures, poster frames, audio
+  and video embedded in them, so a participant who has no copy of the file sees the same deck.
+  Each participant turns those bytes into its own `blob:` or `data:` URLs; no URL of one page is
+  sent to another. A room holds at most 16 MiB of such files (128 KiB in a peer-to-peer room,
+  whose first message to a joiner must fit a WebRTC data channel); a larger one is left out and the
+  other participants are told it was too large to share. Linked (external) pictures and media
+  are never fetched and re-sent: the room carries only their link, and each participant's own
+  Enable Content choice (or `allowExternalContent`) decides whether its browser requests it.
 
 ### AI assistant
 

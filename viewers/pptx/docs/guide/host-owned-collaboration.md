@@ -144,8 +144,10 @@ must enforce access control independently.
 ## Integration boundaries
 
 This option changes session ownership, not the existing collaboration data model.
-The viewer owns `pptx:slides` and its nested Yjs types. Give all participants the same
-source PPTX for package resources, themes and media. Other application data can occupy
+The viewer owns `pptx:slides`, `pptx:assets` and `pptx:media` and their nested Yjs types.
+The room carries the bytes of the pictures and media the slides embed (`pptx:media`, at most
+16 MiB per room, 128 KiB in a peer-to-peer room), so a participant without the file still sees them; give all participants the
+same source PPTX for the masters, layouts and theme. Other application data can occupy
 separate Yjs keys. Do not independently reconcile complete slide snapshots from the host.
 
 Check the host's message and persistence limits against representative decks, including

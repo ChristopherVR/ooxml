@@ -17,6 +17,7 @@ import type { CollabUiController } from './collab/collab-ui';
 import { createCollabUi } from './collab/collab-ui';
 import { createCollaborationController } from './collab/collaboration-controller';
 import type { CollaborationController } from './collab/collaboration-controller-types';
+import { syncPresenceNavigation } from './collab/collaboration-presence-navigation';
 import type { Translator } from './i18n';
 import type { Store, ViewerState } from './state';
 import type { PptxViewerOptions } from './types';
@@ -219,26 +220,7 @@ export function createSessionControllers(deps: SessionControllersDeps): SessionC
 		void collaboration.start(options.collaboration);
 	}
 
-	// Publish local active-slide/selection changes and drive follow-mode
-	// navigation off the store, so no other module needs to know about
-	// collaboration to stay presence-aware.
-	const unsubscribePresence = deps.store.subscribe((state, previous) => {
-		if (!collaboration.isActive()) {
-			return;
-		}
-		if (state.currentSlide !== previous.currentSlide) {
-			collaboration.setActiveSlide(state.currentSlide);
-		}
-		if (state.selectedElementId !== previous.selectedElementId) {
-			collaboration.setSelection(state.selectedElementId ?? undefined, state.currentSlide);
-		}
-		if (state.followedClientId !== null && state.remotePresences !== previous.remotePresences) {
-			const followed = state.remotePresences.find((p) => p.clientId === state.followedClientId);
-			if (followed && followed.activeSlideIndex !== state.currentSlide) {
-				deps.goToSlide(followed.activeSlideIndex);
-			}
-		}
-	});
+	const unsubscribePresence = syncPresenceNavigation(deps.store, collaboration, deps.goToSlide);
 
 	// Owns the Share/Broadcast dialogs, the cursor overlay, the toolbar status
 	// pill, and the follow-mode bar; delegates start/stop back into `collaboration`.

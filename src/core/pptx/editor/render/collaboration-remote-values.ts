@@ -22,16 +22,27 @@ import {
 	parseDataUrlHeader,
 	type ResourceRule,
 } from '../../../opc/safe-resource-url';
+import type { CollaborationMedia } from './collaboration-media';
 
 /** Warning code for a value from a peer that was left out. */
 export const REMOTE_VALUE_REJECTED = 'COLLABORATION_REMOTE_VALUE_REJECTED';
 
+/** Warning code for a picture or media file a peer could not share because it is too large. */
+export const REMOTE_MEDIA_WITHHELD = 'COLLABORATION_MEDIA_WITHHELD';
+
 /** One value a peer sent that was left out of this client's deck. */
 export interface RemoteValueRejection {
 	/** The element it belonged to; absent when the element itself was left out. */
-	readonly elementId?: string;
+	readonly elementId?: string | undefined;
 	readonly field: string;
+	/** `withheld`: the file was too large to share; otherwise the value was not allowed. */
+	readonly reason?: 'invalid' | 'withheld' | undefined;
 }
+
+const VIEW_ONLY_CODES: ReadonlySet<string> = new Set([
+	REMOTE_VALUE_REJECTED,
+	REMOTE_MEDIA_WITHHELD,
+]);
 
 /**
  * Element fields that hold a resource URL, with where each may point. Web URLs are the
@@ -68,10 +79,17 @@ function dropInvalidResources(
 	record: Record<string, unknown>,
 	rules: Readonly<Record<string, ResourceRule>>,
 	rejected: RemoteValueRejection[],
-	elementId?: string,
+	elementId: string | undefined,
+	media: CollaborationMedia | undefined,
 ): void {
 	for (const [field, rule] of Object.entries(rules)) {
-		if (record[field] !== undefined && !isAllowedResourceUrl(record[field], rule)) {
+		const value = record[field];
+		// A URL this page made for the room's bytes is checked against the type they were sent as.
+		if (
+			value !== undefined &&
+			!isAllowedResourceUrl(value, rule) &&
+			media?.accepts(value, rule.kind) !== true
+		) {
 			delete record[field];
 			rejected.push(elementId === undefined ? { field } : { elementId, field });
 		}
@@ -85,6 +103,7 @@ function dropInvalidResources(
 export function sanitizeRemoteElement(
 	element: Record<string, unknown>,
 	rejected: RemoteValueRejection[],
+	media?: CollaborationMedia,
 ): boolean {
 	if (typeof element.id !== 'string' || element.id.length === 0) {
 		rejected.push({ field: 'id' });
@@ -92,7 +111,7 @@ export function sanitizeRemoteElement(
 	}
 	const elementId = safeIdToken(element.id);
 	element.id = elementId;
-	dropInvalidResources(element, ELEMENT_RESOURCES, rejected, elementId);
+	dropInvalidResources(element, ELEMENT_RESOURCES, rejected, elementId, media);
 	for (const field of CONTENT_TYPE_FIELDS) {
 		if (element[field] !== undefined && !isWellFormedContentType(element[field])) {
 			delete element[field];
@@ -111,7 +130,7 @@ export function sanitizeRemoteElement(
 	}
 	if (element.children !== undefined) {
 		element.children = Array.isArray(element.children)
-			? sanitizeRemoteElements(element.children, rejected)
+			? sanitizeRemoteElements(element.children, rejected, media)
 			: [];
 	}
 	return true;
@@ -121,9 +140,10 @@ export function sanitizeRemoteElement(
 export function sanitizeRemoteElements(
 	elements: readonly unknown[],
 	rejected: RemoteValueRejection[],
+	media?: CollaborationMedia,
 ): PptxElement[] {
 	return elements.filter(
-		(element) => isRecord(element) && sanitizeRemoteElement(element, rejected),
+		(element) => isRecord(element) && sanitizeRemoteElement(element, rejected, media),
 	) as PptxElement[];
 }
 
@@ -134,10 +154,11 @@ export function sanitizeRemoteElements(
 export function sanitizeRemoteSlide(
 	slide: Record<string, unknown>,
 	rejected: RemoteValueRejection[],
+	media?: CollaborationMedia,
 ): void {
-	dropInvalidResources(slide, SLIDE_RESOURCES, rejected);
+	dropInvalidResources(slide, SLIDE_RESOURCES, rejected, undefined, media);
 	if (Array.isArray(slide.notesShapes)) {
-		slide.notesShapes = sanitizeRemoteElements(slide.notesShapes, rejected);
+		slide.notesShapes = sanitizeRemoteElements(slide.notesShapes, rejected, media);
 	}
 	if (rejected.length === 0) {
 		return;
@@ -149,8 +170,11 @@ export function sanitizeRemoteSlide(
 	slide.warnings = [
 		...existing,
 		...rejected.map((rejection): PptxCompatibilityWarning => ({
-			code: REMOTE_VALUE_REJECTED,
-			message: `A collaborator sent a value for ${rejection.field} that is not allowed, so it was left out.`,
+			code: rejection.reason === 'withheld' ? REMOTE_MEDIA_WITHHELD : REMOTE_VALUE_REJECTED,
+			message:
+				rejection.reason === 'withheld'
+					? `A collaborator's file for ${rejection.field} is too large to share, so it is not shown.`
+					: `A collaborator sent a value for ${rejection.field} that is not allowed, so it was left out.`,
 			severity: 'warning',
 			scope: rejection.elementId === undefined ? 'slide' : 'element',
 			...(slideId === undefined ? {} : { slideId }),
@@ -165,9 +189,9 @@ export function sanitizeRemoteSlide(
  */
 export function sharedSlideRecord(slide: PptxSlide): Record<string, unknown> {
 	const record = slide as unknown as Record<string, unknown>;
-	if (!slide.warnings?.some((warning) => warning.code === REMOTE_VALUE_REJECTED)) {
+	if (!slide.warnings?.some((warning) => VIEW_ONLY_CODES.has(warning.code))) {
 		return record;
 	}
-	const warnings = slide.warnings.filter((warning) => warning.code !== REMOTE_VALUE_REJECTED);
+	const warnings = slide.warnings.filter((warning) => !VIEW_ONLY_CODES.has(warning.code));
 	return { ...record, warnings: warnings.length > 0 ? warnings : undefined };
 }

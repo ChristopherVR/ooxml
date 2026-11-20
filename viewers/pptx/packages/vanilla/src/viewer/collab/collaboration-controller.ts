@@ -10,6 +10,7 @@ import type {
 import {
 	bindCollaborationHistory,
 	collaborationHistoryReady,
+	configureCollaborationMedia,
 	collaborationRefusalToast,
 	createCollaborationLivePatcher,
 	createCollaborationSessionController,
@@ -129,6 +130,9 @@ export function createCollaborationController(
 	});
 
 	function flushLocal(): void {
+		if (!lastConfig?.externalSession && !join.mayWrite()) {
+			return;
+		}
 		// Writing an empty deck does not make the room this editor's: a later room deck still joins.
 		if (
 			slidesSync.flushLocalSlides(currentYDoc, yFactories, lastConfig, editState.isReadOnly()) &&
@@ -160,6 +164,10 @@ export function createCollaborationController(
 	): void {
 		currentYDoc = created.doc;
 		yFactories = created.factories;
+		// Before the room's slides are read or written.
+		configureCollaborationMedia(config.externalSession?.doc ?? created.doc, {
+			localMediaUrl: (path) => store.get().mediaDataUrls.get(path),
+		});
 		presence = createPresenceController(
 			store,
 			created.awareness,
@@ -174,7 +182,7 @@ export function createCollaborationController(
 
 		// Observe remote slide changes, skipping our own reconcile transactions.
 		if (!config.externalSession) {
-			join.attached();
+			join.attached(config.sessionIntent);
 			unobserveSlides = observeYDocSlides(currentYDoc, (_events, transaction) => {
 				if (transaction?.origin === LOCAL_SYNC_ORIGIN || slidesSync.isApplyingRemote()) {
 					return;
@@ -281,6 +289,7 @@ export function createCollaborationController(
 			externalSync.contentLoaded(origin);
 			return;
 		}
+		join.loaded(origin);
 		if (
 			shouldRoomSlidesReplaceLoad(origin, readSlidesFromYDoc(currentYDoc).length) &&
 			adoptRoomSlides(currentYDoc, lastConfig)

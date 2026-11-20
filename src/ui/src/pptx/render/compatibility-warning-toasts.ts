@@ -18,7 +18,10 @@
  */
 
 import type { UpdateRefusalCode } from 'ooxml-core/collab';
-import { REMOTE_VALUE_REJECTED } from 'ooxml-core/pptx/editor/render/collaboration-sync';
+import {
+	REMOTE_MEDIA_WITHHELD,
+	REMOTE_VALUE_REJECTED,
+} from 'ooxml-core/pptx/editor/render/collaboration-sync';
 
 /** The `PptxCompatibilityWarning` fields this module reads. Declared structurally. */
 export interface CompatibilityWarningSource {
@@ -105,6 +108,7 @@ const CODE_MESSAGE_KEYS: Readonly<Record<string, string>> = {
 	// Recorded as slides are read from a collaboration room, not at load (core's
 	// `collaboration-remote-values.ts`); see {@link createRemoteValueNotifier}.
 	[REMOTE_VALUE_REJECTED]: 'pptx.compatibility.collaborationValueRejected',
+	[REMOTE_MEDIA_WITHHELD]: 'pptx.compatibility.collaborationMediaWithheld',
 };
 
 /** Fallback key for a warning code with no entry in {@link CODE_MESSAGE_KEYS}. */
@@ -149,7 +153,9 @@ interface SlideWarningsSource {
 
 /**
  * Watch the slides a binding adopts from a collaboration room for values a
- * peer sent that were left out (`COLLABORATION_REMOTE_VALUE_REJECTED`).
+ * peer sent that were left out (`COLLABORATION_REMOTE_VALUE_REJECTED`), or for a
+ * picture or media file a peer could not share because it is too large
+ * (`COLLABORATION_MEDIA_WITHHELD`).
  * Returns a function to call with each newly adopted slide list: it gives the
  * toast to show when the list carries a rejection not reported before, and
  * `undefined` otherwise, so a dismissed toast only returns for new content.
@@ -177,7 +183,9 @@ export function remoteValueWarnings(
 	slides: readonly SlideWarningsSource[],
 ): (CompatibilityWarningSource & { readonly message?: string })[] {
 	return slides.flatMap((slide) =>
-		(slide.warnings ?? []).filter((warning) => warning.code === REMOTE_VALUE_REJECTED),
+		(slide.warnings ?? []).filter(
+			(warning) => warning.code === REMOTE_VALUE_REJECTED || warning.code === REMOTE_MEDIA_WITHHELD,
+		),
 	);
 }
 

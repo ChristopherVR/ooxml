@@ -639,6 +639,37 @@ describe('useCollaboration', () => {
 		scope.stop();
 	});
 
+	it('never seeds an empty room with the placeholder deck of a session that joins it', async () => {
+		state.slidesArray = null;
+		state.slidesObserverCb = null;
+		state.awarenessStates.clear();
+		const slides = ref<PptxSlide[]>([slide('placeholder')]);
+		const onRoomReplacedDeck = vi.fn();
+		const scope = effectScope();
+		const collab = scope.run(() =>
+			useCollaboration({
+				slides,
+				onRemoteSlides: (remote) => {
+					slides.value = remote;
+				},
+				onRoomReplacedDeck,
+			}),
+		)!;
+		await collab.start({ ...config, sessionIntent: 'join' });
+		state.statusCb?.({ status: 'connected' });
+		state.syncCb?.(true);
+		expect(state.slidesArray).not.toBeNull();
+		expect(state.slidesArray?.length).toBe(0);
+
+		state.slidesArray?.push([remoteSlideMap('sharer')]);
+		state.slidesObserverCb?.(undefined, { origin: 'remote-peer' });
+		expect(slides.value.map((s) => s.id)).toStrictEqual(['sharer']);
+		expect(onRoomReplacedDeck).toHaveBeenCalledOnce();
+
+		collab.stop();
+		scope.stop();
+	});
+
 	it('uses the serverless webrtc transport when requested', async () => {
 		state.slidesArray = null;
 		state.awarenessStates.clear();

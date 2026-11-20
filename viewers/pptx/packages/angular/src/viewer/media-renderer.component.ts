@@ -16,8 +16,6 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { TranslateService } from '@ngx-translate/core';
 import {
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
-	ONLINE_VIDEO_IFRAME_ALLOW,
-	ONLINE_VIDEO_IFRAME_SANDBOX,
 	applyMediaPlaybackAttributes,
 	elementHitTargetStyle,
 	getOnlineVideoEmbed,
@@ -98,13 +96,19 @@ import type { ResolvedCaptionTrack } from './media-renderer-helpers';
 				<div aria-hidden="true" data-pptx-hit-target="true" [ngStyle]="hit"></div>
 			}
 			@if (onlineVideoEmbedUrl(); as embedUrl) {
+				<!--
+					Angular refuses a bound allow or sandbox on an iframe (NG0910), which
+					threw and painted nothing, so they are static: the values of the shared
+					ONLINE_VIDEO_IFRAME_ALLOW and ONLINE_VIDEO_IFRAME_SANDBOX, pinned by
+					media-renderer.online-video.test.ts.
+				-->
 				<iframe
 					class="pptx-ng-media-el pptx-ng-media-video"
 					[class.pptx-ng-media-inert]="interactive()"
 					[src]="embedUrl"
 					[title]="onlineVideoTitle()"
-					[attr.allow]="onlineVideoAllow"
-					[attr.sandbox]="onlineVideoSandbox"
+					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+					sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
 					allowfullscreen
 					style="border: 0"
 				></iframe>
@@ -564,10 +568,6 @@ export class MediaRendererComponent {
 	readonly onlineVideoTitle = computed<string>(() =>
 		this.translate.instant('pptx.media.onlineVideoTitle'),
 	);
-
-	/** Shared Permissions Policy / sandbox values; see `online-video.ts`'s doc comments. */
-	readonly onlineVideoAllow = ONLINE_VIDEO_IFRAME_ALLOW;
-	readonly onlineVideoSandbox = ONLINE_VIDEO_IFRAME_SANDBOX;
 
 	readonly mediaKind = computed<PptxMediaType | undefined>(
 		() => asMediaElement(this.element())?.mediaType,

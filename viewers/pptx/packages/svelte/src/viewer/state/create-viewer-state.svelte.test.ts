@@ -4,6 +4,7 @@ import type {
 	ExternalCollaborationSnapshot,
 	ViewportFitOptions,
 } from 'ooxml-ui/pptx';
+import { reconcileSlidesInYDoc } from 'ooxml-ui/pptx';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
@@ -381,5 +382,59 @@ describe('createViewerState save failures (host-owned storage)', () => {
 		expect(onerror).toHaveBeenCalledWith(expect.stringMatching(/^Save failed/));
 		expect(state.compatToasts.visibleToasts.map((toast) => toast.id)).toContain('save-failed');
 		vi.restoreAllMocks();
+	});
+});
+
+describe('createViewerState room slides', () => {
+	it('lets a joiner reach every slide of the room it adopted', async () => {
+		const doc = new Y.Doc();
+		const roomSlides = ['a', 'b', 'c'].map((id, index) => ({
+			id,
+			rId: `rId-${id}`,
+			slideNumber: index + 1,
+			elements: [],
+		}));
+		reconcileSlidesInYDoc(
+			roomSlides,
+			doc as never,
+			{
+				createMap: () => new Y.Map(),
+				createArray: () => new Y.Array(),
+				createText: () => new Y.Text(),
+			},
+			'peer',
+		);
+		let local: Record<string, unknown> | null = {};
+		const state = renderHarness({
+			getCollaboration: () => ({
+				roomId: 'joined-room',
+				serverUrl: '',
+				userName: 'Ada',
+				externalSession: {
+					doc,
+					awareness: {
+						clientID: doc.clientID,
+						getStates: () => new Map(),
+						getLocalState: () => local,
+						setLocalState: (value) => {
+							local = value;
+						},
+						setLocalStateField: (key, value) => {
+							local = { ...local, [key]: value };
+						},
+						on: () => {},
+						off: () => {},
+					},
+					getSnapshot: () => ({ status: 'connected', synced: true }),
+					subscribe: () => () => {},
+				},
+			}),
+		});
+		await vi.waitFor(() => {
+			flushSync();
+			expect(state.editor.slides).toHaveLength(3);
+		});
+		state.viewer.goTo(2);
+		expect(state.viewer.current).toBe(2);
 	});
 });
