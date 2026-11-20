@@ -99,7 +99,15 @@ export function activateModalFocus(
 
 	return () => {
 		doc.removeEventListener('keydown', onKeydown, true);
-		if (restoreFocus && opener?.isConnected) {
+		// Focus that already moved on to another surface (a dialog the modal's command opened)
+		// stays there; only focus still in the modal, or lost with it, goes back to the opener.
+		const active = deepActiveElement(doc);
+		const movedOn =
+			active instanceof HTMLElement &&
+			active !== doc.body &&
+			active.isConnected &&
+			!containsDeep(panel, active);
+		if (restoreFocus && !movedOn && opener?.isConnected) {
 			opener.focus();
 		}
 	};
