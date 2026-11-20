@@ -12,17 +12,15 @@
  * ECMA-376 Part 2, 10.3 leaves what to sign to a signature policy and nothing requires the target
  * of a signed relationship to be signed, so a signed relationship to unsigned custom XML is not a
  * gap. Such parts are always listed in `uncoveredParts`.
- *
- * Node-only - reads parts through `jszip`.
  */
 
-import { MEDIA_TYPES_ITEM, partNameKey } from '../../opc/part-names';
-import { relationshipsPartFor, resolvePartPath } from '../../opc/relationships';
-import { isSignaturePart } from '../../opc/signature/detection';
-import type { PackageRelationship, SignatureCoverageGap } from '../core/utils/signature-types';
-import { resolvePartName } from './reference-checks';
-import type { CoveredPart, SignaturePackage } from './reference-checks';
-import { parseRelationshipsPart } from './reference-transforms';
+import { decodeXmlBytes } from '../../../xml/index';
+import { MEDIA_TYPES_ITEM, partNameKey } from '../../part-names';
+import { parseRelationshipsPart, relationshipsPartFor, resolvePartPath } from '../../relationships';
+import { isSignaturePart } from '../detection';
+import type { PackageRelationship, SignatureCoverageGap } from '../types';
+import { resolvePartName } from './references';
+import type { CoveredPart, SignaturePackage } from './references';
 
 const PACKAGE_RELATIONSHIPS_PART = '_rels/.rels';
 const PACKAGE_TYPES = 'http://schemas.openxmlformats.org/package/2006/relationships';
@@ -97,8 +95,8 @@ async function readRelationships(
 	relationshipsPart: string,
 ): Promise<PackageRelationship[] | undefined> {
 	try {
-		const xml = await pkg.zip.file(relationshipsPart)?.async('string');
-		return xml === undefined ? undefined : parseRelationshipsPart(xml);
+		const bytes = await pkg.read(relationshipsPart);
+		return bytes === undefined ? undefined : parseRelationshipsPart(decodeXmlBytes(bytes));
 	} catch {
 		return undefined;
 	}

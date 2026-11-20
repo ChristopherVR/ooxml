@@ -1,3 +1,4 @@
+import type { SignatureSummary } from '../opc/signature/state';
 import type { AppProperties, CoreProperties, CustomProperty } from '../opc/properties/types';
 import type { DiagramDrawing, DiagramIssue, DiagramLayoutType } from '../diagram/types';
 import type { DiagramLayoutSource } from '../diagram/layout-preview';
@@ -1040,20 +1041,12 @@ export interface Workbook {
 	/** Things the loader read but could not model, surfaced to the user. */
 	warnings: string[];
 	/**
-	 * The digital signatures of the loaded package (`_xmlsignatures/`), when it was signed. They
-	 * are not verified, and `saveXlsx` never writes them: a regenerated package invalidates them.
+	 * The verified state of the digital signatures, set when the package is signed. `saveXlsx`
+	 * never writes them: a regenerated package invalidates them.
 	 */
-	signatures?: WorkbookSignatures;
+	signatures?: SignatureSummary;
 	/** Slicers and timelines (caches, widgets); their frames are drawing objects of the sheets. */
 	slicers?: SlicerBook;
-}
-
-/** The digital signatures found in a loaded package. */
-export interface WorkbookSignatures {
-	/** How many signature parts the package holds. */
-	count: number;
-	/** The signature part names (`_xmlsignatures/sig1.xml`, ...). */
-	parts: string[];
 }
 
 /** Raw parts of the loaded package, keyed by part name (no leading slash). */

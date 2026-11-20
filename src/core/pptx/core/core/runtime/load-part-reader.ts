@@ -22,11 +22,16 @@
  * @module load-part-reader
  */
 import { canonicalRelationshipsXml } from '../../../../opc/relationships';
+import { decodeXmlBytes } from '../../../../xml/index';
 import type { XmlObject } from '../../types';
 
 interface TextPartFile {
-	async(kind: 'string'): Promise<string>;
+	async(kind: 'uint8array'): Promise<Uint8Array>;
 }
+
+/** A part's text, decoded as UTF-8 or UTF-16 as its bytes declare (ECMA-376 Part 2 allows both). */
+const textOf = (file: TextPartFile): Promise<string> =>
+	file.async('uint8array').then((bytes) => decodeXmlBytes(bytes, { fatal: false }));
 
 interface TextPartStore {
 	file(path: string): TextPartFile | null;
@@ -67,7 +72,7 @@ export class LoadPartReader {
 		if (previous?.file === file) {
 			return previous;
 		}
-		const entry: PartEntry = { file, text: file.async('string'), relationships: new Map() };
+		const entry: PartEntry = { file, text: textOf(file), relationships: new Map() };
 		this.parts.set(path, entry);
 		// A failed read must not poison a retry or delete a newer entry.
 		entry.text.catch(() => {
@@ -163,7 +168,8 @@ export function readPartText(zip: TextPartStore, path: string): Promise<string |
 	if (reader) {
 		return reader.readText(path);
 	}
-	return zip.file(path)?.async('string') ?? Promise.resolve(undefined);
+	const file = zip.file(path);
+	return file ? textOf(file) : Promise.resolve(undefined);
 }
 
 /**
@@ -192,6 +198,7 @@ export async function readPartXml(
 	if (reader) {
 		return reader.readXml(parser, path);
 	}
-	const text = await zip.file(path)?.async('string');
+	const file = zip.file(path);
+	const text = file ? await textOf(file) : undefined;
 	return text ? parseText(parser, text) : undefined;
 }

@@ -3,49 +3,45 @@
  *
  * References are read only from text whose integrity is already established: the canonical
  * `SignedInfo` a verified `SignatureValue` covers, then the canonical `Object` a verified reference
- * covers. Anything else in the signature part is ignored.
- *
- * Node-only - uses `node:crypto` for hashing and `jszip` for package access.
+ * covers. Anything else in the signature part is ignored. Platform-neutral.
  */
-
-import crypto from 'node:crypto';
 
 import type JSZip from 'jszip';
 
-import { contentTypeForPart, parseContentTypes } from '../../opc/content-types';
-import { MEDIA_TYPES_ITEM, partNameKey } from '../../opc/part-names';
-import type { ContentTypes } from '../../opc/content-types';
+import { decodeBase64, digestSync, encodeBase64 } from '../../../digest/index';
+import { decodeXmlBytes } from '../../../xml/index';
+import { contentTypeForPart, parseContentTypes } from '../../content-types';
+import type { ContentTypes } from '../../content-types';
+import { MEDIA_TYPES_ITEM, partNameKey } from '../../part-names';
 import {
-	DIGEST_ALGORITHM_TO_HASH,
+	DIGEST_ALGORITHM_TO_WEB_CRYPTO,
+	INCLUSIVE_C14N,
 	OPC_DIGITAL_SIGNATURE_NS,
 	SUPPORTED_XML_CANON_TRANSFORMS,
 	XMLDSIG_NS,
-} from '../core/utils/signature-constants';
-import { parseReferenceUri } from '../core/utils/signature-reference-utils';
+} from '../constants';
+import { parseReferenceUri } from '../reference-utils';
 import type {
 	PackageRelationship,
 	ParsedReferenceTransform,
 	SignatureReferenceCheck,
-} from '../core/utils/signature-types';
-import { applyReferenceTransforms, extractReferenceTransforms } from './reference-transforms';
-import type { XmlSignature } from './signature-document';
-import {
-	canonicalizeNode,
-	childElements,
-	getFirstDescendantElementByLocalName,
-	getNodeLocalName,
-	INCLUSIVE_C14N,
-	parseStrictXml,
-} from './xml-canonicalization';
-import type { XmlElement } from './xml-canonicalization';
+} from '../types';
+import { canonicalize } from './c14n';
+import type { XmlSignature } from './document';
+import { childElements, firstDescendantNamed, localNameOf, parseStrictXml } from './dom';
+import { applyReferenceTransforms, extractReferenceTransforms } from './transforms';
+
+/** Where the verifier reads a package's parts: a JSZip archive or a map of part bytes. */
+export type SignaturePackageSource = JSZip | ReadonlyMap<string, Uint8Array>;
 
 /** The package as the verifier reads it. */
 export interface SignaturePackage {
-	zip: JSZip;
 	partNames: ReadonlySet<string>;
 	/** Stored names by {@link partNameKey}, for names that differ from the stored spelling. */
 	namesByKey: ReadonlyMap<string, string>;
 	contentTypes: ContentTypes;
+	/** The bytes of a stored part, by its stored name. */
+	read(name: string): Promise<Uint8Array | undefined>;
 }
 
 /** The stored name of the part `name` denotes: that exact item, else an equivalent one. */
@@ -73,45 +69,56 @@ interface SignedReference {
 	transforms: ParsedReferenceTransform[];
 }
 
-/** Compute a Base64-encoded digest using Node.js `crypto` (synchronous). */
+/** The Base64 digest of `content` under an XML-DSig digest algorithm URI, when it is one known. */
 export function computeDigestBase64(
 	content: Uint8Array,
 	digestAlgorithmUri: string,
 ): string | undefined {
-	const hashName = DIGEST_ALGORITHM_TO_HASH[digestAlgorithmUri];
-	if (!hashName) {
-		return undefined;
-	}
-	return crypto.createHash(hashName).update(Buffer.from(content)).digest('base64');
+	const hash = DIGEST_ALGORITHM_TO_WEB_CRYPTO[digestAlgorithmUri];
+	const digest = hash === undefined ? undefined : digestSync(hash, content);
+	return digest && encodeBase64(digest);
 }
 
+const isZip = (source: SignaturePackageSource): source is JSZip =>
+	typeof (source as JSZip).file === 'function';
+
 /** Read what reference checks need from the package once per inspection. */
-export async function openSignaturePackage(zip: JSZip): Promise<SignaturePackage> {
-	const partNames = new Set(Object.keys(zip.files).filter((name) => !zip.files[name]?.dir));
+export async function openSignaturePackage(
+	source: SignaturePackageSource,
+): Promise<SignaturePackage> {
+	const zip = isZip(source) ? source : undefined;
+	const partNames = new Set(
+		zip
+			? Object.keys(zip.files).filter((name) => !zip.files[name]?.dir)
+			: [...(source as ReadonlyMap<string, Uint8Array>).keys()],
+	);
+	const read = async (name: string): Promise<Uint8Array | undefined> =>
+		zip
+			? await zip.file(name)?.async('uint8array')
+			: (source as ReadonlyMap<string, Uint8Array>).get(name);
 	const namesByKey = new Map([...partNames].map((name) => [partNameKey(name), name]));
 	const pkg: SignaturePackage = {
-		zip,
 		partNames,
 		namesByKey,
 		contentTypes: parseContentTypes(undefined),
+		read: (name) => (partNames.has(name) ? read(name) : Promise.resolve(undefined)),
 	};
 	const mediaTypes = resolvePartName(pkg, MEDIA_TYPES_ITEM);
 	try {
-		pkg.contentTypes = parseContentTypes(
-			mediaTypes === undefined ? undefined : await zip.file(mediaTypes)?.async('string'),
-		);
+		const bytes = mediaTypes === undefined ? undefined : await pkg.read(mediaTypes);
+		pkg.contentTypes = parseContentTypes(bytes && decodeXmlBytes(bytes));
 	} catch {
 		// An unreadable content types part declares nothing, so `?ContentType` references fail.
 	}
 	return pkg;
 }
 
-const isDsigElement = (element: XmlElement, localName: string): boolean =>
-	element.namespaceURI === XMLDSIG_NS && getNodeLocalName(element) === localName;
+const isDsigElement = (element: Element, localName: string): boolean =>
+	element.namespaceURI === XMLDSIG_NS && localNameOf(element) === localName;
 
-function readReference(element: XmlElement): SignedReference {
+function readReference(element: Element): SignedReference {
 	const children = childElements(element);
-	const onlyChild = (localName: string): XmlElement | undefined => {
+	const onlyChild = (localName: string): Element | undefined => {
 		const matches = children.filter((child) => isDsigElement(child, localName));
 		return matches.length === 1 ? matches[0] : undefined;
 	};
@@ -123,13 +130,15 @@ function readReference(element: XmlElement): SignedReference {
 	};
 }
 
-const readReferences = (parent: XmlElement): SignedReference[] =>
+const readReferences = (parent: Element): SignedReference[] =>
 	childElements(parent)
 		.filter((child) => isDsigElement(child, 'Reference'))
 		.map(readReference);
 
-const digestsEqual = (left: string, right: string): boolean =>
-	Buffer.from(left, 'base64').equals(Buffer.from(right, 'base64'));
+function digestsEqual(left: string, right: string): boolean {
+	const [a, b] = [decodeBase64(left), decodeBase64(right)];
+	return !!a && !!b && a.length === b.length && a.every((byte, index) => byte === b[index]);
+}
 
 /** The reference's fields every check reports, with the given outcome. */
 function referenceCheck(
@@ -179,8 +188,8 @@ async function checkPartReference(
 	}
 	const { partPath, contentType } = parsed;
 	const resolvedPartPath = resolvePartName(pkg, partPath);
-	const part = resolvedPartPath === undefined ? null : pkg.zip.file(resolvedPartPath);
-	if (!part || resolvedPartPath === undefined) {
+	const bytes = resolvedPartPath === undefined ? undefined : await pkg.read(resolvedPartPath);
+	if (!bytes || resolvedPartPath === undefined) {
 		return referenceCheck(reference, 'missing-part', {
 			resolvedPartPath: partPath,
 			existsInPackage: false,
@@ -192,10 +201,7 @@ async function checkPartReference(
 			return referenceCheck(reference, 'content-type-mismatch', { resolvedPartPath });
 		}
 	}
-	const transformed = applyReferenceTransforms(
-		await part.async('uint8array'),
-		reference.transforms,
-	);
+	const transformed = applyReferenceTransforms(bytes, reference.transforms);
 	if (transformed.unsupportedAlgorithms.length > 0) {
 		return referenceCheck(reference, 'unsupported-transform', { resolvedPartPath });
 	}
@@ -210,29 +216,32 @@ async function checkPartReference(
 
 /** The canonical octets of a same-document reference, or `undefined` for an unsupported chain. */
 function canonicalObjectOctets(
-	element: XmlElement,
+	element: Element,
 	transforms: ParsedReferenceTransform[],
 ): string | undefined {
 	const algorithms = transforms.map((transform) => transform.algorithm);
-	if (!algorithms.every((algorithm) => SUPPORTED_XML_CANON_TRANSFORMS.has(algorithm))) {
+	if (
+		transforms.some((transform) => transform.unsupportedParameters) ||
+		!algorithms.every((algorithm) => SUPPORTED_XML_CANON_TRANSFORMS.has(algorithm))
+	) {
 		return undefined;
 	}
-	let octets = canonicalizeNode(element, algorithms[0] ?? INCLUSIVE_C14N);
+	let octets = canonicalize(element, algorithms[0] ?? INCLUSIVE_C14N);
 	for (const algorithm of algorithms.slice(1)) {
-		octets = canonicalizeNode(parseStrictXml(octets), algorithm);
+		octets = canonicalize(parseStrictXml(octets), algorithm);
 	}
 	return octets;
 }
 
-function readSigningTime(signedElement: XmlElement): string | undefined {
+function readSigningTime(signedElement: Element): string | undefined {
 	const packageTime = Array.from(
 		signedElement.getElementsByTagNameNS(OPC_DIGITAL_SIGNATURE_NS, 'SignatureTime'),
 	)[0];
 	const value = packageTime
-		? getFirstDescendantElementByLocalName(packageTime, 'Value')
-		: getNodeLocalName(signedElement) === 'SigningTime'
+		? firstDescendantNamed(packageTime, 'Value')
+		: localNameOf(signedElement) === 'SigningTime'
 			? signedElement
-			: getFirstDescendantElementByLocalName(signedElement, 'SigningTime');
+			: firstDescendantNamed(signedElement, 'SigningTime');
 	return value?.textContent?.trim() || undefined;
 }
 
@@ -264,7 +273,7 @@ export async function checkSignedReferences(
 			checks.push(referenceCheck(reference, 'unsupported-transform'));
 			continue;
 		}
-		const check = compareDigest(reference, new Uint8Array(Buffer.from(octets, 'utf8')));
+		const check = compareDigest(reference, new TextEncoder().encode(octets));
 		checks.push(check);
 		if (check.digestStatus !== 'verified') {
 			continue;

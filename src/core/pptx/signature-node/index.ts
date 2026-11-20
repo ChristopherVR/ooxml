@@ -68,14 +68,33 @@ export {
 	computeVerificationStatus,
 } from '../core/utils/signature-inspection-status';
 
-// ── Node-only exports ───────────────────────────────────────────────────
+// ── Platform-neutral verifier (also exported by `ooxml-core/opc`) ─────
 
 export {
-	getNodeLocalName,
-	getFirstDescendantElementByLocalName,
-	canonicalizeNode,
-	canonicalizeSignedInfoXml,
-} from './xml-canonicalization';
+	canonicalize,
+	checkSignedReferences,
+	evaluateSignatureCoverage,
+	extractReferenceTransforms,
+	applyReferenceTransforms,
+	openSignaturePackage,
+	parseXmlSignature,
+	verifyPackageSignatures,
+	verifySignedInfo,
+	type CoveredPart,
+	type ParsedXmlSignature,
+	type SignatureCoverage,
+	type SignaturePackage,
+	type SignaturePackageSource,
+	type SignedInfoVerification,
+	type SignedReferenceResult,
+	type SignerTrust,
+	type VerifySignatureOptions,
+	type XmlSignature,
+} from '../../opc/signature/index';
+export { parseRelationshipsPart } from '../../opc/relationships';
+export { computeDigestBase64 } from '../../opc/signature/verify/references';
+
+// ── Node-only exports ───────────────────────────────────────────────────
 
 export {
 	certificateInfoFromBase64,
@@ -86,16 +105,6 @@ export {
 } from './certificate-utils';
 
 export { isDocumentSigningCertificate } from './certificate-usage';
-
-export {
-	parseXmlSignature,
-	type ParsedXmlSignature,
-	type XmlSignature,
-} from './signature-document';
-
-export { verifySignedInfo, type SignedInfoVerification } from './signature-value';
-
-export { evaluateSignatureCoverage, type SignatureCoverage } from './signature-coverage';
 
 export {
 	certPemFromBase64,
@@ -115,21 +124,6 @@ export {
 	loadEnterpriseTrustRoots,
 	getSignatureValidationPolicy,
 } from './environment';
-
-export {
-	extractReferenceTransforms,
-	applyReferenceTransforms,
-	parseRelationshipsPart,
-} from './reference-transforms';
-
-export {
-	checkSignedReferences,
-	computeDigestBase64,
-	openSignaturePackage,
-	type CoveredPart,
-	type SignaturePackage,
-	type SignedReferenceResult,
-} from './reference-checks';
 
 export { signPptxWithCertificate } from './signing';
 

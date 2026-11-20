@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 
-import { computeDigestBase64 } from './reference-checks';
+import { computeDigestBase64 } from './references';
 
 // ---------------------------------------------------------------------------
 // computeDigestBase64

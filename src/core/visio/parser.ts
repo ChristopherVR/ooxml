@@ -1,3 +1,5 @@
+import { detectDigitalSignatures, verifySignedPackage } from '../opc/signature/index';
+import type { SignatureSummary } from '../opc/signature/state';
 import type { VisioMetafileTreeConverter } from './convert-metafile';
 import { connections, indexedPart, related, validateBackgrounds, visioXml } from './parts';
 import { prepareImages } from './prepare-images';
@@ -448,6 +450,7 @@ export async function parseVsdx(
 		{ severity: 'info' },
 	);
 	const snapGlue = readVisioSnapGlue(documentRoot);
+	const signatures = await verifyVisioSignatures(pkg);
 	// The caller keeps the model, not the XML, unless a document cache holds on to its parts.
 	if (!cache) pkg.releaseXml();
 	return {
@@ -465,7 +468,17 @@ export async function parseVsdx(
 		...(dataRecordsets.length ? { dataRecordsets } : {}),
 		fontFamilies: [...new Set(resources.fonts.values())],
 		...(comments.length ? { comments } : {}),
+		...(signatures ? { signatures } : {}),
 	};
+}
+
+/** The verified state of a signed drawing's signatures, read through the package limits. */
+async function verifyVisioSignatures(pkg: VisioPackage): Promise<SignatureSummary | undefined> {
+	const paths = pkg.paths();
+	if (!detectDigitalSignatures(paths).hasSignatures) return undefined;
+	const parts = new Map<string, Uint8Array>();
+	for (const path of paths) parts.set(path, await pkg.readBytes(path));
+	return verifySignedPackage(parts);
 }
 
 /** Backgrounds first, selected page last. Missing pages and cycles are safe. */

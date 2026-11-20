@@ -5,7 +5,10 @@ export const SLIDE_SYNC_CONTENT_TYPE =
 	'application/vnd.openxmlformats-officedocument.presentationml.slideSyncData+xml';
 
 interface XmlPartStore {
-	file(path: string): { async(kind: 'string'): Promise<string> } | null;
+	file(path: string): {
+		async(kind: 'string'): Promise<string>;
+		async(kind: 'uint8array'): Promise<Uint8Array>;
+	} | null;
 	file(path: string, data: string): unknown;
 	files?: Record<string, unknown>;
 }

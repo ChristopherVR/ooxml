@@ -1,12 +1,11 @@
 import { DOMParser } from '@xmldom/xmldom';
 import { describe, it, expect } from 'vitest';
 
-import { applyReferenceTransforms, extractReferenceTransforms } from './reference-transforms';
-import type { XmlDocument } from './xml-canonicalization';
+import { applyReferenceTransforms, extractReferenceTransforms } from './transforms';
 
 /** Parses with xmldom, typed as the structural document the modules accept (as their callers do). */
-const parseXml = (xml: string): XmlDocument =>
-	new DOMParser().parseFromString(xml, 'text/xml') as unknown as XmlDocument;
+const parseXml = (xml: string): Document =>
+	new DOMParser().parseFromString(xml, 'text/xml') as unknown as Document;
 
 // ---------------------------------------------------------------------------
 // extractReferenceTransforms

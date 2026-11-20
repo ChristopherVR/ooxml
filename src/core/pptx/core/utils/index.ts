@@ -390,11 +390,7 @@ export { computeDigestBase64 as computeDigestBase64WebCrypto } from './signature
 
 export { decodeXmlEntities, encodeXmlAttributeValue, encodeXmlTextValue } from './xml-entities';
 
-export {
-	inspectSignaturesFromBuffer,
-	parseSignaturesFromBuffer,
-	type PackageSignatureInfo,
-} from './signature-package-list';
+export { inspectSignaturesFromBuffer } from './signature-package-list';
 
 export {
 	preservesSpreadsheetXmlWhitespace,
@@ -763,3 +759,13 @@ export * from './chart-data-sheet';
 /** Moves a comment's @-mention records onto its edited text (the save uses it too). */
 export { rebaseCommentMentions } from './modern-comment-mentions';
 export { chartModelLabelPositions } from './chart-label-positions';
+
+export {
+	SIGNATURE_STATES,
+	isVerifiedSignatureState,
+	signerDisplayName,
+	summarizeSignatures,
+	type SignatureEntry,
+	type SignatureState,
+	type SignatureSummary,
+} from '../../../opc/signature/state';

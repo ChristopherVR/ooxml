@@ -1,37 +1,31 @@
 /**
- * XML reference transform processing for digital signature verification.
- *
- * Node-only - depends on `@xmldom/xmldom` for DOM parsing and
- * `xml-crypto` (via xml-canonicalization) for C14N transforms.
+ * The reference transforms of an OPC signature: the ECMA-376 Part 2 relationships transform and
+ * XML canonicalization. Platform-neutral.
  */
 
-import { parseRelationshipsPart } from '../../opc/relationships';
-import { asciiLowerCase } from '../../opc/part-names';
+import { decodeXmlBytes } from '../../../xml/index';
+import { asciiLowerCase } from '../../part-names';
+import { parseRelationshipsPart } from '../../relationships';
 import {
 	OPC_DIGITAL_SIGNATURE_NS,
 	OPC_RELATIONSHIPS_NS,
 	OPC_RELATIONSHIP_TRANSFORM,
 	SUPPORTED_XML_CANON_TRANSFORMS,
 	XMLDSIG_NS,
-} from '../core/utils/signature-constants';
+} from '../constants';
 import type {
 	PackageRelationship,
 	ParsedReferenceTransform,
 	ReferenceTransformResult,
-} from '../core/utils/signature-types';
-import { escapeXmlAttr } from '../core/utils/signature-xml-utils';
-import {
-	canonicalizeNode,
-	childElements,
-	getNodeLocalName,
-	parseStrictXml,
-} from './xml-canonicalization';
-import type { XmlElement } from './xml-canonicalization';
+} from '../types';
+import { escapeXmlAttr } from '../xml-utils';
+import { canonicalize } from './c14n';
+import { childElements, localNameOf, parseStrictXml } from './dom';
 
 /**
  * Parse `<ds:Transform>` elements from a `<ds:Reference>` node.
  */
-export function extractReferenceTransforms(referenceNode: XmlElement): ParsedReferenceTransform[] {
+export function extractReferenceTransforms(referenceNode: Element): ParsedReferenceTransform[] {
 	const transforms: ParsedReferenceTransform[] = [];
 	const transformNodes = referenceNode.getElementsByTagNameNS(XMLDSIG_NS, 'Transform');
 	for (let index = 0; index < transformNodes.length; index += 1) {
@@ -40,24 +34,26 @@ export function extractReferenceTransforms(referenceNode: XmlElement): ParsedRef
 		if (!transformNode || !algorithm) {
 			continue;
 		}
-		const parameters = childElements(transformNode).filter(
+		const children = childElements(transformNode);
+		const parameters = children.filter(
 			(element) => element.namespaceURI === OPC_DIGITAL_SIGNATURE_NS,
 		);
 		const parameterValues = (localName: string, attribute: string): string[] =>
 			parameters
-				.filter((element) => getNodeLocalName(element) === localName)
+				.filter((element) => localNameOf(element) === localName)
 				.map((element) => element.getAttribute(attribute)?.trim() ?? '')
 				.filter((value) => value.length > 0);
 		transforms.push({
 			algorithm,
 			relationshipReferenceIds: parameterValues('RelationshipReference', 'SourceId'),
 			relationshipGroupTypes: parameterValues('RelationshipsGroupReference', 'SourceType'),
+			// Other parameters (an exclusive canonicalization prefix list, say) change the output,
+			// and this verifier does not apply them.
+			unsupportedParameters: parameters.length < children.length,
 		});
 	}
 	return transforms;
 }
-
-export { parseRelationshipsPart };
 
 const compareCodePoints = (left: string, right: string): number =>
 	left < right ? -1 : left > right ? 1 : 0;
@@ -107,20 +103,25 @@ export function applyReferenceTransforms(
 	let selectedRelationships: PackageRelationship[] | undefined;
 	const unsupportedAlgorithms: string[] = [];
 	for (const transform of transforms) {
-		const text = Buffer.from(transformedBytes).toString('utf8');
 		try {
 			let output: string;
-			if (transform.algorithm === OPC_RELATIONSHIP_TRANSFORM) {
-				const result = applyRelationshipTransform(text, transform);
+			if (transform.unsupportedParameters) {
+				unsupportedAlgorithms.push(transform.algorithm);
+				continue;
+			} else if (transform.algorithm === OPC_RELATIONSHIP_TRANSFORM) {
+				const result = applyRelationshipTransform(decodeXmlBytes(transformedBytes), transform);
 				output = result.xml;
 				selectedRelationships = result.selected;
 			} else if (SUPPORTED_XML_CANON_TRANSFORMS.has(transform.algorithm)) {
-				output = canonicalizeNode(parseStrictXml(text), transform.algorithm);
+				output = canonicalize(
+					parseStrictXml(decodeXmlBytes(transformedBytes)),
+					transform.algorithm,
+				);
 			} else {
 				unsupportedAlgorithms.push(transform.algorithm);
 				continue;
 			}
-			transformedBytes = new Uint8Array(Buffer.from(output, 'utf8'));
+			transformedBytes = new TextEncoder().encode(output);
 		} catch {
 			unsupportedAlgorithms.push(transform.algorithm);
 		}

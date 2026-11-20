@@ -1,3 +1,4 @@
+import type { SignatureSummary } from '../opc/signature/state';
 import type { VisioPageLayout } from './page-layout';
 import type {
 	VisioAction,
@@ -560,4 +561,9 @@ export interface VisioDocument {
 	diagnostics: VisioDiagnostic[];
 	/** Review comments (visio/comments.xml) and read-only Visio 2010 annotations. */
 	comments?: VisioComment[];
+	/**
+	 * The verified state of the digital signatures, set when the drawing is signed. An edit removes
+	 * them, as Visio does, because a change invalidates them.
+	 */
+	signatures?: SignatureSummary;
 }

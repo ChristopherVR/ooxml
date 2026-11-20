@@ -5,23 +5,22 @@
  * with repeated, misplaced or ambiguous structure is rejected here, so a checked element can never
  * differ from the element that was signed.
  *
- * Node-only - depends on `@xmldom/xmldom` through `xml-canonicalization`.
+ * Platform-neutral: a parsed DOM and nothing else.
  */
 
-import { SUPPORTED_XML_CANON_TRANSFORMS, XMLDSIG_NS } from '../core/utils/signature-constants';
-import { childElements, getNodeLocalName, parseStrictXml } from './xml-canonicalization';
-import type { XmlElement } from './xml-canonicalization';
+import { SUPPORTED_XML_CANON_TRANSFORMS, XMLDSIG_NS } from '../constants';
+import { childElements, localNameOf, parseStrictXml } from './dom';
 
 /** The parts of a structurally valid signature. Nothing here is authenticated yet. */
 export interface XmlSignature {
-	signedInfo: XmlElement;
+	signedInfo: Element;
 	canonicalizationMethod: string;
 	signatureMethod: string;
 	signatureValueBase64: string;
 	/** Base64 DER certificates from `KeyInfo/X509Data`, in document order. */
 	certificates: string[];
 	/** Elements a `#id` reference may name: each `Object` and everything inside it. */
-	referenceTargets: ReadonlyMap<string, XmlElement>;
+	referenceTargets: ReadonlyMap<string, Element>;
 }
 
 export type ParsedXmlSignature =
@@ -32,27 +31,27 @@ class SignatureStructureError extends Error {}
 
 const ID_ATTRIBUTES = ['Id', 'ID', 'id'];
 
-const isDsigElement = (element: XmlElement, localName: string): boolean =>
-	element.namespaceURI === XMLDSIG_NS && getNodeLocalName(element) === localName;
+const isDsigElement = (element: Element, localName: string): boolean =>
+	element.namespaceURI === XMLDSIG_NS && localNameOf(element) === localName;
 
 const stripWhitespace = (value: string | null): string => (value ?? '').replace(/\s+/g, '');
 
-function requireAlgorithm(element: XmlElement): string {
+function requireAlgorithm(element: Element): string {
 	const algorithm = element.getAttribute('Algorithm')?.trim();
 	if (!algorithm) {
-		throw new SignatureStructureError(`${getNodeLocalName(element)} has no Algorithm.`);
+		throw new SignatureStructureError(`${localNameOf(element)} has no Algorithm.`);
 	}
 	if (childElements(element).length > 0) {
-		throw new SignatureStructureError(`${getNodeLocalName(element)} parameters are unsupported.`);
+		throw new SignatureStructureError(`${localNameOf(element)} parameters are unsupported.`);
 	}
 	return algorithm;
 }
 
-function descendantsAndSelf(element: XmlElement): XmlElement[] {
+function descendantsAndSelf(element: Element): Element[] {
 	return [element, ...Array.from(element.getElementsByTagName('*'))];
 }
 
-function elementId(element: XmlElement): string | undefined {
+function elementId(element: Element): string | undefined {
 	for (const name of ID_ATTRIBUTES) {
 		const value = element.getAttribute(name);
 		if (value) return value;
@@ -61,7 +60,7 @@ function elementId(element: XmlElement): string | undefined {
 }
 
 /** Rejects a repeated `Id` anywhere in the signature: a `#id` must name exactly one element. */
-function assertUniqueIds(root: XmlElement): void {
+function assertUniqueIds(root: Element): void {
 	const seen = new Set<string>();
 	for (const element of descendantsAndSelf(root)) {
 		const id = elementId(element);
@@ -73,7 +72,7 @@ function assertUniqueIds(root: XmlElement): void {
 	}
 }
 
-function readSignedInfo(signedInfo: XmlElement) {
+function readSignedInfo(signedInfo: Element) {
 	const [canonicalization, method, ...references] = childElements(signedInfo);
 	if (
 		!canonicalization ||
@@ -93,7 +92,7 @@ function readSignedInfo(signedInfo: XmlElement) {
 	return { canonicalizationMethod, signatureMethod: requireAlgorithm(method) };
 }
 
-function readCertificates(keyInfo: XmlElement | undefined): string[] {
+function readCertificates(keyInfo: Element | undefined): string[] {
 	if (!keyInfo) return [];
 	return childElements(keyInfo)
 		.filter((element) => isDsigElement(element, 'X509Data'))
@@ -127,7 +126,7 @@ function readSignature(xml: string): XmlSignature {
 		throw new SignatureStructureError('Signature holds an unexpected or repeated element.');
 	}
 
-	const referenceTargets = new Map<string, XmlElement>();
+	const referenceTargets = new Map<string, Element>();
 	for (const element of rest.flatMap(descendantsAndSelf)) {
 		const id = elementId(element);
 		if (id !== undefined) referenceTargets.set(id, element);

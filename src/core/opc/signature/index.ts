@@ -74,3 +74,41 @@ export {
 	stripPackageSignatures,
 	type PackageSignatures,
 } from './package';
+export {
+	INCLUSIVE_C14N,
+	INCLUSIVE_C14N_WITH_COMMENTS,
+	EXCLUSIVE_C14N,
+	EXCLUSIVE_C14N_WITH_COMMENTS,
+} from './constants';
+export {
+	SIGNATURE_STATES,
+	isVerifiedSignatureState,
+	signatureStateOf,
+	signerDisplayName,
+	summarizeSignatures,
+	type SignatureEntry,
+	type SignatureState,
+	type SignatureSummary,
+} from './state';
+export { canonicalize } from './verify/c14n';
+export { evaluateSignatureCoverage, type SignatureCoverage } from './verify/coverage';
+export { parseXmlSignature, type ParsedXmlSignature, type XmlSignature } from './verify/document';
+export {
+	verifyPackageSignatures,
+	verifyPackageSignatureSummary,
+	verifySignedPackage,
+	type SignerTrust,
+	type VerifySignatureOptions,
+} from './verify/inspect';
+export {
+	checkSignedReferences,
+	computeDigestBase64 as computeDigestBase64Sync,
+	openSignaturePackage,
+	type CoveredPart,
+	type SignaturePackage,
+	type SignaturePackageSource,
+	type SignedReferenceResult,
+} from './verify/references';
+export { verifySignedInfo, type SignedInfoVerification } from './verify/signed-info';
+export { applyReferenceTransforms, extractReferenceTransforms } from './verify/transforms';
+export { readCertificate, readCertificateBase64, type CertificateFields } from './verify/x509';

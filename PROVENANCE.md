@@ -3078,3 +3078,20 @@ Moved within this repository, from the PowerPoint renderer in `ooxml-ui` to the 
 - Changes: subset to U+2000-2BFF with fontTools 4.65.0, WOFF2 encoding, inline data URL.
 - Licence: SIL OFL 1.1, included in `src/ui/NOTICE` and beside the source asset.
 - Rebuild: `python src/ui/scripts/build-symbol-fallback.py <downloaded-ttf>`.
+
+## Platform-neutral signature verification (2026-11-20)
+
+Moved within this repository from `src/core/pptx/signature-node/` (base `release/2.0` at
+`0591cf7e9`) to `src/core/opc/signature/verify/`, so browsers and Node run the same verifier:
+`signature-document.ts` to `document.ts`, `reference-checks.ts` to `references.ts`,
+`reference-transforms.ts` to `transforms.ts`, `signature-coverage.ts` to `coverage.ts`,
+`signature-value.ts` to `signed-info.ts` and the DOM helpers of `xml-canonicalization.ts` to
+`dom.ts`, with their tests. What changed: `node:crypto` hashing became the `digest` area, RSA
+verification became the pure `rsa.ts` with the key read by `x509.ts`, canonicalization became the
+new `c14n.ts` (checked against xml-crypto in `c14n.test.ts`), parts are read through a
+`SignaturePackage` (JSZip or a part map) and decoded as UTF-8 or UTF-16, and an unknown signature
+method or key type is `not-checked` instead of `invalid`. `inspect.ts` holds the verification
+order `signature-node/inspection.ts` kept; the Node module now adds only trust, revocation and
+time-stamp checks. New: `state.ts`, `i18n/signature-strings.ts`, `xml/decode.ts`. The fixtures in
+`src/core/opc/signature/__fixtures__/office/` are Apache POI test data (Apache-2.0), listed with
+their upstream blobs in that folder's README.

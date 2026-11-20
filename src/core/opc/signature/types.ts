@@ -159,6 +159,8 @@ export interface ParsedReferenceTransform {
 	relationshipReferenceIds: string[];
 	/** `SourceType` values of `RelationshipsGroupReference` transform parameters. */
 	relationshipGroupTypes: string[];
+	/** Set when the transform has parameters the verifier does not apply. */
+	unsupportedParameters?: boolean | undefined;
 }
 
 /** A `Relationship` element of a relationships part. */
