@@ -214,6 +214,7 @@ export interface LayoutFloatBox {
 	chart?: { svg?: string; label: string; shape?: true; textColor?: string };
 	/** The shape's text box content, drawn over its shape. */
 	textBox?: import('../inline-model').TextBoxContent;
+	textBoxLayout?: import('./text-box-layout').TextBoxLayout;
 	behindText: boolean;
 	/** `wp:wrapSquare`, `wrapTopAndBottom`… (`none` floats over or behind the text). */
 	wrap?: string;

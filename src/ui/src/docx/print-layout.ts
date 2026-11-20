@@ -14,6 +14,7 @@ import { lineNumberLabels, type PrintLineNumbering } from './print-line-numbers'
 import { pageBorderBox } from './print-page-borders';
 import { resolveFragmentClick, type PrintFragmentHit } from './print-fragment-hit';
 import { pictureElement, type PictureUrl } from './print-picture';
+import { textBoxLayer } from './print-text-box';
 export type { PictureUrl } from './print-picture';
 export type { PrintLineNumbering } from './print-line-numbers';
 
@@ -122,7 +123,7 @@ function renderLine(
 	const fragments: PrintFragmentHit[] = [];
 	for (const fragment of line.fragments) {
 		if (fragment.object) {
-			const picture = pictureElement(fragment.object, media.pictureUrl, media.model);
+			const picture = printPicture(fragment.object, media);
 			if (fragment.color) picture.style.color = fragment.color;
 			picture.style.left = `${fragment.xPx}px`;
 			picture.style.top = `${fragment.topPx ?? 0}px`;
@@ -296,9 +297,19 @@ export interface PrintLayoutOptions {
 }
 
 /** What pictures on a page are drawn with. */
-interface PrintMedia {
+export interface PrintMedia {
 	pictureUrl: PictureUrl | undefined;
 	model: DocumentModel | undefined;
+}
+
+/** A picture, chart or shape on a page, a text box's lines drawn as the engine laid them out. */
+export function printPicture(
+	object: Parameters<typeof pictureElement>[0],
+	media: PrintMedia,
+): HTMLElement {
+	return pictureElement(object, media.pictureUrl, media.model, (layout, color) =>
+		textBoxLayer(layout, color, (block, widthPx) => renderBlock(block, [], media, widthPx)),
+	);
 }
 
 /** Pure, framework-neutral renderer: turns a `LayoutResult` into a DOM tree of page sheets. */
@@ -375,7 +386,7 @@ export function renderPrintLayout(
 			}
 			if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, media));
 			for (const float of page.floats ?? []) {
-				const picture = pictureElement(float, media.pictureUrl, media.model);
+				const picture = printPicture(float, media);
 				picture.classList.add('dve-print-float');
 				picture.dataset.blockId = float.blockId;
 				picture.dataset.floatIndex = String(float.index);

@@ -60,9 +60,7 @@ function editingSurface(model: DocumentModel, blocks: DocumentModel['blocks']): 
 
 /** What a text box and a line in a story must show: the box's paragraphs and two drawn shapes. */
 function expectDrawnLetterhead(root: HTMLElement) {
-	expect(root.querySelector('.dve-print-picture-missing')).toBeNull();
-	expect(root.querySelector('.dve-image-placeholder')).toBeNull();
-	expect(root.textContent).not.toContain('Shape');
+	expectDrawnShapes(root);
 	const content = must(root.querySelector<HTMLElement>('.dve-text-box-content'), 'text box');
 	const paragraphs = [...content.querySelectorAll<HTMLElement>(':scope > p')];
 	expect(paragraphs.map((paragraph) => paragraph.textContent)).toEqual([
@@ -76,8 +74,36 @@ function expectDrawnLetterhead(root: HTMLElement) {
 	expect(paragraphs[1]?.innerHTML).toMatch(/font-size:\s*9pt/);
 	expect(paragraphs[2]?.style.borderBottom).toMatch(/solid/);
 	expect(content.style.padding).toBe('4.8px 9.6px');
+}
+
+/** Both shapes drawn, with nothing left as a placeholder. */
+function expectDrawnShapes(root: HTMLElement) {
+	expect(root.querySelector('.dve-print-picture-missing')).toBeNull();
+	expect(root.querySelector('.dve-image-placeholder')).toBeNull();
+	expect(root.textContent).not.toContain('Shape');
 	const strokes = [...root.querySelectorAll('svg path')].map((path) => path.getAttribute('stroke'));
 	expect(strokes).toContain('#2E75B6');
+}
+
+/** The letterhead text box on a Print Layout page: the lines the page engine laid out. */
+function expectPrintedLetterhead(root: HTMLElement) {
+	expectDrawnShapes(root);
+	expect(root.querySelector('.dve-text-box-content')).toBeNull();
+	const layer = must(root.querySelector<HTMLElement>('.dve-print-text-box'), 'text box');
+	const lines = [...layer.querySelectorAll<HTMLElement>('.dve-print-line')];
+	expect(lines.map((line) => line.textContent)).toEqual([
+		'First Partner',
+		'Specialist in contract law',
+		'',
+		'12 Example Street',
+	]);
+	expect(lines[0]?.querySelector<HTMLElement>('span')?.style.fontWeight).toBe('700');
+	expect(lines[1]?.querySelector<HTMLElement>('span')?.style.fontSize).toBe('9pt');
+	expect(
+		layer.querySelector<HTMLElement>('.dve-print-paragraph-frame')?.style.borderBottom,
+	).toMatch(/solid/);
+	// The insets; the box has no outline to keep clear of.
+	expect(layer.style).toMatchObject({ left: '9.6px', top: '4.8px' });
 }
 
 describe('text boxes and lines in headers', () => {
@@ -103,7 +129,7 @@ describe('text boxes and lines in headers', () => {
 		const { model } = await loadDocx(await letterheadFixture());
 		const sheet = document.createElement('div');
 		decoratePages(model, [firstPage], [sheet]);
-		expectDrawnLetterhead(sheet);
+		expectPrintedLetterhead(sheet);
 		const floats = [...sheet.querySelectorAll<HTMLElement>('.dve-print-float')];
 		expect(floats).toHaveLength(2);
 		// The text box sits where its page offsets put it, at its extent.
@@ -121,7 +147,7 @@ describe('text boxes and lines in headers', () => {
 		const floats = page.querySelectorAll('.dve-print-float');
 		expect(floats).toHaveLength(2);
 		expect(page.querySelector('.dve-print-picture-missing')).toBeNull();
-		expect(must(floats[0]?.querySelector('.dve-text-box-content'), 'box').textContent).toContain(
+		expect(must(floats[0]?.querySelector('.dve-print-text-box'), 'box').textContent).toContain(
 			'First Partner',
 		);
 	});
@@ -151,14 +177,17 @@ const wordShapes = async () =>
 /** The colour the box's text is drawn in: its own, or the first ancestor's up to the box. */
 function textColour(root: HTMLElement, text: string): string {
 	const box = must(
-		[...root.querySelectorAll<HTMLElement>('.dve-text-box-content')].find((element) =>
-			element.textContent?.includes(text),
+		[...root.querySelectorAll<HTMLElement>('.dve-text-box-content, .dve-print-text-box')].find(
+			(element) => element.textContent?.includes(text),
 		),
 		`text box with ${text}`,
 	);
 	const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
-	let node: Node | null;
-	while ((node = walker.nextNode()) && !node.textContent?.includes(text));
+	// Print Layout draws a line's words as separate fragments: find the first word's.
+	const word = text.split(' ')[0]!;
+	const texts: Node[] = [];
+	for (let next = walker.nextNode(); next; next = walker.nextNode()) texts.push(next);
+	const node = texts.find((item) => item.textContent?.includes(word));
 	for (let element = node?.parentElement; element; element = element.parentElement) {
 		if (element.style.color) return element.style.color;
 		if (element === box) break;

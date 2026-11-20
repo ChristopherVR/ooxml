@@ -17,7 +17,13 @@ export { layoutSections } from './page-flow';
 export { adaptDocumentModel } from './adapter';
 export { paragraphFloats } from './adapt-floats';
 export { shapePaint } from './shape-paint';
-export { layoutDocument, layoutDocumentModel } from './layout';
+export {
+	createTextBoxLayouts,
+	layoutTextBoxChain,
+	type TextBoxLayout,
+	type TextBoxLayouts,
+} from './text-box-layout';
+export { layoutDocument, layoutDocumentModel, storyTextBoxLayouts } from './layout';
 export { reviewSourceLength, type LayoutReviewOptions } from './review-display';
 export { floatPosition, floatOrigin, positionFloats, FLOAT_WRAP_NOTE } from './floats';
 export { cssFontStack } from './fonts';

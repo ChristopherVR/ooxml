@@ -16,6 +16,7 @@ import {
 import { floatsOf } from './adapt-floats';
 import { equationObject } from './equation-object';
 import { shapePaint } from './shape-paint';
+import type { TextBoxLayouts } from './text-box-layout';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
 import { pictureBulletSizePt } from '../numbering-picture';
@@ -88,11 +89,15 @@ function sectionBreak(
 	return type;
 }
 
-/** Converts a `docx-core` `DocumentModel` into this engine's own input contract. */
+/**
+ * Converts a `docx-core` `DocumentModel` into this engine's own input contract. With `textBoxes`,
+ * the body's text boxes are laid out by the engine too (`text-box-layout.ts`).
+ */
 export function adaptDocumentModel(
 	model: DocumentModel,
 	note: (message: string) => void = () => {},
 	options: LayoutReviewOptions = {},
+	textBoxes?: TextBoxLayouts,
 ): LayoutDocumentInput {
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
@@ -210,7 +215,7 @@ export function adaptDocumentModel(
 										),
 									}
 								: {}),
-							...(image.shape ? shapePaint(image, theme) : {}),
+							...(image.shape ? shapePaint(image, theme, textBoxes) : {}),
 						}
 					: undefined);
 		return {
@@ -341,7 +346,7 @@ export function adaptDocumentModel(
 						].sort((a, b) => a.posPx - b.posPx),
 					}
 				: {}),
-			...floatsOf(visible, model.theme),
+			...floatsOf(visible, model.theme, textBoxes),
 			...definedProps({
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,

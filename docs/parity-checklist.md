@@ -535,8 +535,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and the default table style. `gridBefore`/`gridAfter`, `noWrap`, cell spacing, negative
       indents and preferred widths on merged cells are not measured.
 - [ ] **P1** Merged cells are read-only on Print Layout pages.
-- [ ] **P1** Floating objects inside table cells and floating charts are not positioned on pages;
-      linked text boxes have no code.
+- [ ] **P1** Floating objects inside table cells and floating charts are not positioned on pages.
+- [x] **P1** Linked text boxes (`wps:txbx/@id` and `wps:linkedTxbx`) flow on Print Layout pages:
+      text one box cannot fit continues in the next box of the chain, in `seq` order, reflowed at
+      that box's width; the last box keeps the rest clipped, as Word 16 draws it. Saved byte for byte
+      (`docx/layout/text-box-layout.test.ts`).
 - [x] **P1** Text boxes are drawn on pages: a shape holding a `wps:txbx` (a `rect` text box, a line
       or connector) and a text box written with `txBox="1"` are drawn with their frame and their
       paragraphs, floating or inline, in the body and in headers and footers, and `txBox="1"`
@@ -545,16 +548,27 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Shape text takes the colour of its `wps:style` font reference (`a:fontRef`, resolved
       through the theme) where its runs set none, in SVG text and over text box paragraphs alike;
       without one, white on dark fills and black on light ones (`docx/text-box-frame.test.ts`).
-- [ ] **P2** Text box paragraphs are drawn by the story preview renderer (`story-render.ts`), not
-      the page layout engine: their lines break by CSS, overflowing text is clipped, and vertical
-      text, autofit and columns in `wps:bodyPr` are ignored. Formatted text inside a shape (bold,
-      sizes, borders, alignment other than centred) is read-only, so editing the shape keeps it.
+- [x] **P2** Text box paragraphs on Print Layout pages are laid out by the page engine
+      (`layout/text-box-layout.ts`), in the body and in headers and footers: lines break by the
+      body's paragraph flow inside the preset's text rectangle less the `wps:bodyPr` insets and half
+      the outline (measured against Word 16's PDF), overflow is clipped at that rectangle,
+      `vert`/`vert270` turn the text, `spAutoFit` sizes the shape to its text and `wrap="none"` to its
+      longest line for display (the saved extent is unchanged), `normAutofit` is drawn as no autofit
+      and `numCol` in one column, both as Word draws them (`docx/layout/text-box-layout.test.ts`,
+      `src/ui/src/docx/print-text-box.test.ts`).
+- [ ] **P2** Text boxes on the editing surface and in Draft view's previews still flow by CSS: their
+      line breaks can differ from Print Layout's, and autofit and linked boxes apply in Print Layout
+      only. `eaVert`, `mongolianVert` and the WordArt vertical kinds are drawn as `vert`, without
+      upright East Asian characters or stacked letters. Formatted text inside a shape (bold, sizes, borders, alignment other than
+      centred) is read-only, so editing the shape keeps it.
 - [x] **P2** Draft view's header, footer and note previews leave floating (`wp:anchor`) drawings
       out, as Word's Draft view does, and show inline pictures from the body's media cache
       (SVG originals and cropped or recoloured fills included) (`src/ui/src/docx/story-drawings.test.ts`).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping; over-long Latin
-      words overflow instead of breaking by character.
+      words overflow instead of breaking by character. Single line heights come from the browser's
+      font box without the font's line gap: Arial 11 pt lines are 16 px apart in Chromium against
+      Word 16's 16.87 px (measured in text boxes), so a box or page can take one more line than Word.
 
 ### Ribbon
 

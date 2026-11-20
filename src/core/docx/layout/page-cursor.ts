@@ -164,10 +164,9 @@ export class PageCursor {
 			: height;
 	}
 	get physicalColumnHeightPx(): number {
-		return Math.max(
-			1,
-			this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx - this.columnTopPx,
-		);
+		const pageHeight = this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx;
+		const own = this.columns.widths?.[this.columnIndex]?.heightPx;
+		return Math.max(1, Math.min(pageHeight, own ?? pageHeight) - this.columnTopPx);
 	}
 	/** Number of independently balanced note columns, distinct from legacy body-column notes. */
 	get footnoteColumnCount(): number {
