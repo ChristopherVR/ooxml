@@ -63,4 +63,30 @@ describe('Excel signature state', () => {
 			);
 		},
 	);
+
+	it('keeps the signature state visible but inert while File is hidden', async () => {
+		const { find, label, editor } = await open(SIGNED);
+		const badge = find('signature-badge')!;
+		const notice = find('signature-notice')!;
+		const backstage = () =>
+			(editor.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & { open: boolean })
+				.open;
+		editor.customization = { ribbon: { hiddenTabs: ['file'] } };
+		await new Promise((resolve) => setTimeout(resolve));
+		expect(badge.hidden).toBe(false);
+		expect(label('signature-badge')).toBe('Signed, signer not verified');
+		expect(badge.shadowRoot!.querySelector('button')).toBeNull();
+		expect(badge.shadowRoot!.querySelector('.hidden-text')?.textContent).toContain(
+			signatureStrings.en.heading,
+		);
+		expect(notice.hidden).toBe(false);
+		expect(notice.shadowRoot!.querySelector('.view')).toBeNull();
+		expect(notice.shadowRoot!.querySelector('.dismiss')).not.toBeNull();
+		badge.dispatchEvent(new CustomEvent('office-signature-activate', { bubbles: true }));
+		expect(backstage()).toBe(false);
+		editor.customization = null;
+		await new Promise((resolve) => setTimeout(resolve));
+		badge.shadowRoot!.querySelector<HTMLButtonElement>('button')!.click();
+		expect(backstage()).toBe(true);
+	});
 });

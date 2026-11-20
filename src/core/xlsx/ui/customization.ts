@@ -61,6 +61,40 @@ export const EXCEL_CAPABILITY_BACKSTAGE_PAGES: CapabilityActionMap<ExcelCapabili
 	settings: ['options'],
 };
 
+/**
+ * Excel's native ribbon tabs, as `customization.ribbon.hiddenTabs` names them: File (the tab and
+ * its backstage), the main tabs in order, then the contextual tabs.
+ */
+export const EXCEL_RIBBON_TAB_IDS = [
+	'file',
+	'home',
+	'insert',
+	'page-layout',
+	'formulas',
+	'data',
+	'review',
+	'view',
+	'help',
+	'table-design',
+	'chart-design',
+	'smartart-design',
+	'slicer',
+	'timeline',
+] as const;
+
+/** One native Excel ribbon tab. */
+export type ExcelRibbonTabId = (typeof EXCEL_RIBBON_TAB_IDS)[number];
+
+/**
+ * Commands that only open a File tab page (Info, Save As without a name, Options): a hidden File
+ * tab hides and refuses them, so nothing reaches the backstage it removed.
+ */
+export const EXCEL_BACKSTAGE_COMMANDS: readonly string[] = [
+	'file.info',
+	'file.save-as',
+	'file.options',
+];
+
 /** What a host region (a File tab page) of `<xlsx-editor>` receives. */
 export interface ExcelRegionContext extends HostRegionContextBase {
 	/** The `<xlsx-editor>` element: its whole public API. */
@@ -98,5 +132,6 @@ export type ExcelMenuCommand = HostMenuCommand<ExcelMenuContext>;
 export type ExcelCustomization = EditorCustomization<
 	ExcelCapabilityId,
 	ExcelRegionRenderer,
-	ExcelMenuContext
+	ExcelMenuContext,
+	ExcelRibbonTabId
 >;

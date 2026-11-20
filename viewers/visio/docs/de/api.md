@@ -259,6 +259,7 @@ const customization = {
 ```
 
 - `capabilities`: `false` entfernt jeden Weg zur Funktion (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`): Menüband, Seiten im Datei-Register, Menüs und Tastenkürzel. `hiddenActions` bleibt unverändert; beide werden vereinigt.
+- `ribbon.hiddenTabs`: native Registerkarten, die entfernt werden (auch kontextbezogene). `file` entfernt die Registerkarte Datei samt Backstage in jeder Breite: keine Zugriffstaste (Alt, F) und kein anderer Weg öffnet sie, und eine offene Backstage wird geschlossen. Speichern über die Schnellzugriffsleiste, `storage` und `file-command` funktionieren weiter, sofern keine Capability sie entfernt. Host-Registerkarten (`ribbonAddIns`) sind nicht betroffen.
 - `backstage.extraPages`: Host-Seiten `{ id, label, group?, order?, render }` im Datei-Register, nach den eingebauten Seiten ihrer Gruppe. `render` ist eine Mount-Funktion, ein Custom-Element-Tag oder `{ element, properties }` und erhält einen `VisioRegionContext`.
 - `contextMenu.extraCommands`: Host-Befehle `{ id, label, icon?, group?, when?, disabled?, onSelect }` oberhalb (`top`, Standard) oder unterhalb (`bottom`) der eingebauten Einträge. `onSelect` läuft nach dem Schließen des Menüs mit einem `VisioMenuContext`. Beschriftungen werden unverändert angezeigt (lokalisieren Sie sie selbst).
 

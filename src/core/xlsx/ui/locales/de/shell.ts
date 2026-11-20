@@ -14,6 +14,7 @@ export const shell: Record<string, string> = {
 	'Spreadsheet editor': 'Tabellenkalkulations-Editor',
 	'Open a workbook or create a new one from the File tab.':
 		'Öffnen Sie eine Arbeitsmappe oder erstellen Sie eine neue über die Registerkarte Datei.',
+	'No workbook is open.': 'Es ist keine Arbeitsmappe geöffnet.',
 	'Quick access': 'Schnellzugriff',
 	Save: 'Speichern',
 	Undo: 'Rückgängig',

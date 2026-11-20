@@ -13,6 +13,7 @@ export const shell: Record<string, string> = {
 	'Spreadsheet editor': '电子表格编辑器',
 	'Open a workbook or create a new one from the File tab.':
 		'从“文件”选项卡打开工作簿或新建工作簿。',
+	'No workbook is open.': '没有打开的工作簿。',
 	'Quick access': '快速访问',
 	Save: '保存',
 	Undo: '撤消',

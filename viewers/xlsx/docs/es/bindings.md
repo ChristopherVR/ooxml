@@ -23,7 +23,7 @@ Todos los bindings montan `<xlsx-editor>` mediante la misma función `mountEdito
 | `collaboration`   | `XlsxCollaborationOptions`    | ninguno      | Comparte el libro abierto en una sala mientras está definido; un objeto nuevo vuelve a unirse, `null` sale. Vea [colaboración](/es/collaboration).                               |
 | `storage`         | `DocumentStorage`             | ninguno      | Almacenamiento gestionado por el host: Guardar y Guardar como van a `storage.save()`, y Archivo > Abrir a `storage.open()` cuando lo tiene.                                      |
 | `fileProviders`   | `CloudFileProvider[]`         | ninguno      | Ubicaciones en la nube que Archivo > Abrir ofrece junto a "Este dispositivo"; un libro abierto desde una de ellas se guarda de vuelta en ese archivo. Mantenga estable el array. |
-| `customization`   | `ExcelCustomization`          | ninguno      | `capabilities`, `backstage.extraPages` y `contextMenu.extraCommands`; mantenga estable el objeto (`null` restaura los valores por defecto).                                      |
+| `customization`   | `ExcelCustomization`          | ninguno      | `capabilities`, `ribbon.hiddenTabs`, `backstage.extraPages` y `contextMenu.extraCommands`; mantenga estable el objeto (`null` restaura los valores por defecto).                 |
 
 ## Callbacks y eventos {#callbacks-and-events}
 

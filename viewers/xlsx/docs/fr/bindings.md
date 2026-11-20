@@ -23,7 +23,7 @@ Toutes les liaisons montent `<xlsx-editor>` par la même fonction `mountEditor` 
 | `collaboration`   | `XlsxCollaborationOptions`    | aucun        | Partage le classeur ouvert dans une salle tant qu’il est défini ; un nouvel objet rejoint la salle, `null` la quitte. Voir [collaboration](/fr/collaboration).                        |
 | `storage`         | `DocumentStorage`             | aucun        | Stockage géré par l’hôte : Enregistrer et Enregistrer sous passent par `storage.save()`, et Fichier > Ouvrir par `storage.open()` lorsqu’il existe.                                   |
 | `fileProviders`   | `CloudFileProvider[]`         | aucun        | Emplacements cloud proposés par Fichier > Ouvrir à côté de « Cet appareil » ; un classeur ouvert depuis l’un d’eux s’enregistre dans ce fichier. Gardez le tableau stable.            |
-| `customization`   | `ExcelCustomization`          | aucun        | `capabilities`, `backstage.extraPages` et `contextMenu.extraCommands` ; gardez l’objet stable (`null` restaure les valeurs par défaut).                                               |
+| `customization`   | `ExcelCustomization`          | aucun        | `capabilities`, `ribbon.hiddenTabs`, `backstage.extraPages` et `contextMenu.extraCommands` ; gardez l’objet stable (`null` restaure les valeurs par défaut).                          |
 
 ## Rappels et événements {#callbacks-and-events}
 

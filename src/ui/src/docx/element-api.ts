@@ -248,7 +248,8 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 
 	/**
 	 * The host customisation (`WordCustomization`): `capabilities` (removing every UI path to
-	 * what is switched off), `backstage.extraPages` (host File tab pages) and
+	 * what is switched off), `ribbon.hiddenTabs` (native tabs to remove, `file` taking the
+	 * backstage with it), `backstage.extraPages` (host File tab pages) and
 	 * `contextMenu.extraCommands` (host context-menu commands). The object is applied when its
 	 * identity changes, so keep it stable; `null` restores the defaults.
 	 */

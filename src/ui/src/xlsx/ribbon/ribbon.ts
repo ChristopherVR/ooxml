@@ -4,6 +4,7 @@
  * row, File button, collapse and peek belong to the shared `office-ui-ribbon`. Structure and look follow docx-viewer's ribbon.ts.
  */
 import { syncRibbonAddIns, type RibbonAddInTab } from '../../ribbon/add-in-tabs';
+import { applyHostRibbonTabs } from '../../embedding/host-ribbon-tabs';
 import { normalizeEditorLocale, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { defineRibbon } from '../../controls';
 import { commandButton, el, renderControl, type RenderScope } from './controls';
@@ -25,12 +26,16 @@ import { wireCellStyleGalleries } from './cell-style-gallery';
 export interface RibbonHandlers {
 	openBackstage(): void;
 	isHidden(id: string): boolean;
+	/** The native tabs the host removed (`customization.ribbon.hiddenTabs`), `file` included. */
+	hiddenTabs?(): ReadonlySet<string>;
 }
 
 export interface Ribbon {
 	readonly element: HTMLElement;
 	/** Re-reads every control state (enabled, pressed, values) and the contextual tabs. */
 	refresh(): void;
+	/** Re-applies the tabs the host removed (`customization.ribbon.hiddenTabs`). */
+	applyHiddenTabs(): void;
 	/** Rebuilds all tabs (after a locale change or newly registered tabs). */
 	rebuild(): void;
 	selectTab(id: string): void;
@@ -209,6 +214,8 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 		stopOverflow = stopGalleries = () => {};
 	};
 
+	const applyHiddenTabs = () => applyHostRibbonTabs(root, handlers.hiddenTabs?.() ?? new Set());
+
 	const refresh = () => {
 		for (const update of scope.updates) update();
 		for (const tab of tabs) {
@@ -220,6 +227,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 			}
 			setTabHidden(root, tab.id, 'contextual', !show);
 		}
+		applyHiddenTabs();
 		applyRibbonVisibility(root, handlers.isHidden);
 	};
 
@@ -227,6 +235,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	return {
 		element: root,
 		refresh,
+		applyHiddenTabs,
 		rebuild: build,
 		selectTab: select,
 		setAddIns: (next) => {

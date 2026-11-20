@@ -159,11 +159,15 @@ export class ViewerBackstage {
 	}
 	/** Re-applies the host customisation: hidden pages, host pages and their contexts. */
 	refreshCustomization(): void {
+		// Hiding File while its backstage is open closes it; focus returns to the ribbon.
+		if (this.#custom().fileHidden && this.open) this.hide();
 		this.#hostPages.setPages(this.#custom().extraPages);
 		this.#hostPages.refresh();
 		if (this.#state) this.render(this.#state);
 	}
 	show(page: BackstagePage = 'info'): void {
+		// A host that hid the File tab (`ribbon.hiddenTabs`) removed the backstage with it.
+		if (this.#custom().fileHidden) return;
 		if (page === 'account' && !this.#providers.length) page = 'info';
 		this.#ribbon.setAttribute('file-expanded', 'true');
 		this.#root.show(page);

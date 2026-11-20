@@ -90,6 +90,7 @@ import { exportPagePng } from './viewer-export';
 import { exportDocumentPdfDetailed } from './viewer-pdf';
 import { pdfOptionsFor } from './viewer-pdf-options';
 import type { PdfFontFile } from '../export/pdf-embedded-font';
+import { applyHostRibbonTabs } from '../embedding/host-ribbon-tabs';
 import {
 	createPrintSnapshot,
 	type CurrentPagePrintSnapshotOptions,
@@ -108,8 +109,8 @@ export class VisioViewerElement extends BaseElement {
 		this.controller.canEdit = value;
 	}
 	/**
-	 * The host customisation (`VisioCustomization`): `capabilities`, `backstage.extraPages` and
-	 * `contextMenu.extraCommands`. Applied when the object identity changes; null restores the
+	 * The host customisation (`VisioCustomization`): `capabilities`, `ribbon.hiddenTabs`,
+	 * `backstage.extraPages` and `contextMenu.extraCommands`. Applied when the object identity changes; null restores the
 	 * defaults.
 	 */
 	get customization(): VisioCustomization | null {
@@ -120,6 +121,8 @@ export class VisioViewerElement extends BaseElement {
 		if (!this.#custom.set(value ?? null)) return;
 		this.controller.setCapabilityReadOnly(!this.#custom.resolved.canEdit);
 		applyVisioCommandVisibility(this.#root, this.#custom.resolved);
+		applyHostRibbonTabs(this.#toolbar, this.#custom.resolved.hiddenTabs);
+		this.#signatures.setActivatable(!this.#custom.resolved.fileHidden);
 		this.#backstage.refreshCustomization();
 		renderTitleBar(
 			this.#titleBar,
@@ -745,7 +748,7 @@ export class VisioViewerElement extends BaseElement {
 		this.#assertAlive();
 		this.#backstage.hide();
 	}
-	/** Open Visio's File backstage at a page (Info by default). */
+	/** Open Visio's File backstage at a page (Info by default); nothing while File is hidden. */
 	openBackstage(page?: BackstagePage): void {
 		this.#assertAlive();
 		this.#backstage.show(page);

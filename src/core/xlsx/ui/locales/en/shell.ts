@@ -13,6 +13,7 @@ export const shell: Record<string, string> = {
 	'Spreadsheet editor': 'Spreadsheet editor',
 	'Open a workbook or create a new one from the File tab.':
 		'Open a workbook or create a new one from the File tab.',
+	'No workbook is open.': 'No workbook is open.',
 	'Quick access': 'Quick access',
 	Save: 'Save',
 	Undo: 'Undo',

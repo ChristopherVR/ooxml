@@ -65,6 +65,31 @@ export const VISIO_CAPABILITY_COMMANDS: CapabilityActionMap<VisioCapabilityId, s
 	share: ['email'],
 };
 
+/**
+ * Visio's native ribbon tabs, as `customization.ribbon.hiddenTabs` names them: File (the tab and
+ * its backstage), the main tabs in order, then the contextual tabs.
+ */
+export const VISIO_RIBBON_TAB_IDS = [
+	'file',
+	'home',
+	'insert',
+	'design',
+	'data',
+	'process',
+	'review',
+	'view',
+	'help',
+	'shape-format',
+	'picture-format',
+	'container-format',
+	'chart-design',
+	'cross-functional',
+	'org-chart',
+] as const;
+
+/** One native Visio ribbon tab. */
+export type VisioRibbonTabId = (typeof VISIO_RIBBON_TAB_IDS)[number];
+
 /** What a host region (a File tab page) of `<visio-viewer>` receives. */
 export interface VisioRegionContext extends HostRegionContextBase {
 	/** The `<visio-viewer>` element: its whole public API. */
@@ -93,5 +118,6 @@ export type VisioMenuCommand = HostMenuCommand<VisioMenuContext>;
 export type VisioCustomization = EditorCustomization<
 	VisioCapabilityId,
 	VisioRegionRenderer,
-	VisioMenuContext
+	VisioMenuContext,
+	VisioRibbonTabId
 >;

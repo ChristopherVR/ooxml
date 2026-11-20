@@ -14,6 +14,7 @@ export const shell: Record<string, string> = {
 	'Spreadsheet editor': 'Éditeur de classeur',
 	'Open a workbook or create a new one from the File tab.':
 		"Ouvrez un classeur ou créez-en un depuis l'onglet Fichier.",
+	'No workbook is open.': "Aucun classeur n'est ouvert.",
 	'Quick access': 'Accès rapide',
 	Save: 'Enregistrer',
 	Undo: 'Annuler',

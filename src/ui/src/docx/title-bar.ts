@@ -1,6 +1,7 @@
 import { defineSearchField, defineSwitch, defineTitleBar } from '../controls';
 import type { OfficeTitleBarCommand, OfficeTitleBarState } from '../controls';
 import { translateUiText } from './localization';
+import { inHostHiddenTab } from '../embedding/host-ribbon-tabs';
 import type { FileCommand } from './file-commands';
 
 export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
@@ -33,7 +34,10 @@ const SAVE_STATE_TEXT: Record<SaveState, string> = {
 	'saved-local': 'Saved to this PC',
 };
 
-/** Ribbon commands the "Tell me" box can run: every labelled, enabled button or select. */
+/**
+ * Ribbon commands the "Tell me" box can run: every labelled, enabled button or select, except in a
+ * tab the host removed (`customization.ribbon.hiddenTabs`).
+ */
 function ribbonCommands(ribbon: HTMLElement): { label: string; control: HTMLElement }[] {
 	const seen = new Set<string>();
 	const commands: { label: string; control: HTMLElement }[] = [];
@@ -41,7 +45,7 @@ function ribbonCommands(ribbon: HTMLElement): { label: string; control: HTMLElem
 		'.ribbon-panel button[aria-label]:not([data-dve-hidden]), .ribbon-panel select[aria-label]:not([data-dve-hidden])',
 	)) {
 		const label = control.getAttribute('aria-label')!;
-		if (seen.has(label)) continue;
+		if (seen.has(label) || inHostHiddenTab(control)) continue;
 		seen.add(label);
 		commands.push({ label, control });
 	}

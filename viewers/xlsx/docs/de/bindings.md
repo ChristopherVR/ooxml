@@ -23,7 +23,7 @@ Alle Bindings binden `<xlsx-editor>` über dieselbe Funktion `mountEditor` in `p
 | `collaboration`   | `XlsxCollaborationOptions`    | keiner       | Teilt die geöffnete Arbeitsmappe in einem Raum, solange der Wert gesetzt ist; ein neues Objekt tritt erneut bei, `null` verlässt den Raum. Siehe [Zusammenarbeit](/de/collaboration).     |
 | `storage`         | `DocumentStorage`             | keiner       | Vom Host verwalteter Speicher: Speichern und Speichern unter gehen an `storage.save()`, Datei > Öffnen an `storage.open()`, sofern vorhanden.                                             |
 | `fileProviders`   | `CloudFileProvider[]`         | keiner       | Cloud-Speicherorte, die Datei > Öffnen neben „Dieses Gerät“ anbietet; eine Arbeitsmappe, die von dort geöffnet wurde, wird in diese Datei zurückgespeichert. Halten Sie das Array stabil. |
-| `customization`   | `ExcelCustomization`          | keiner       | `capabilities`, `backstage.extraPages` und `contextMenu.extraCommands`; halten Sie das Objekt stabil (`null` stellt die Standardwerte wieder her).                                        |
+| `customization`   | `ExcelCustomization`          | keiner       | `capabilities`, `ribbon.hiddenTabs`, `backstage.extraPages` und `contextMenu.extraCommands`; halten Sie das Objekt stabil (`null` stellt die Standardwerte wieder her).                   |
 
 ## Callbacks und Ereignisse {#callbacks-and-events}
 

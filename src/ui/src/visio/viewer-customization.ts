@@ -1,11 +1,14 @@
 /**
  * `<visio-viewer>`'s `customization` property: the shared contract of `ooxml-core/embedding`
  * bound to Visio. Capabilities hide their ribbon, menu and File tab commands and refuse the
- * matching actions however they are raised; `backstage.extraPages` and
- * `contextMenu.extraCommands` reach the File tab and the shape and page menus.
+ * matching actions however they are raised; `ribbon.hiddenTabs` removes native tabs (`file` takes
+ * the backstage with it); `backstage.extraPages` and `contextMenu.extraCommands` reach the File
+ * tab and the shape and page menus.
  */
 import {
+	FILE_RIBBON_TAB,
 	capabilityHiddenActions,
+	hiddenRibbonTabs,
 	isCapabilityEnabled,
 	type CapabilityActionMap,
 } from 'ooxml-core/embedding';
@@ -32,6 +35,10 @@ export interface ResolvedVisioCustomization {
 	readonly disabled: ReadonlySet<VisioCapabilityId>;
 	readonly extraPages: readonly VisioBackstagePage[];
 	readonly menuCommands: readonly VisioMenuCommand[];
+	/** The native tabs the host removed (`ribbon.hiddenTabs`), `file` included. */
+	readonly hiddenTabs: ReadonlySet<string>;
+	/** True when `file` is hidden: the File tab and its backstage are gone. */
+	readonly fileHidden: boolean;
 }
 
 /** Resolves a host customisation (none: everything on, nothing added). */
@@ -42,6 +49,7 @@ export function resolveVisioCustomization(
 	const set = (map: CapabilityActionMap<VisioCapabilityId, string>) =>
 		new Set(capabilityHiddenActions(capabilities, map));
 	const ids = Object.keys(capabilities ?? {}) as VisioCapabilityId[];
+	const hiddenTabs: ReadonlySet<string> = hiddenRibbonTabs(customization?.ribbon);
 	return {
 		canEdit: isCapabilityEnabled(capabilities, 'edit'),
 		backstagePages: set(VISIO_CAPABILITY_BACKSTAGE_PAGES),
@@ -49,6 +57,8 @@ export function resolveVisioCustomization(
 		disabled: new Set(ids.filter((id) => !isCapabilityEnabled(capabilities, id))),
 		extraPages: customization?.backstage?.extraPages ?? [],
 		menuCommands: customization?.contextMenu?.extraCommands ?? [],
+		hiddenTabs,
+		fileHidden: hiddenTabs.has(FILE_RIBBON_TAB),
 	};
 }
 
