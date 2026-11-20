@@ -5,6 +5,10 @@
  *
  * @module sdk/master-layout-crud-master
  */
+import type JSZip from 'jszip';
+import { clonePart, clonePartGraph, relativePartTarget } from '../../../../opc/clone-part-graph';
+import type { Relationship } from '../../../../opc/relationships';
+import { copiesRelationshipTarget } from '../../core/builders/duplicate-slide-parts';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData } from '../../types/presentation';
 import {
@@ -25,6 +29,7 @@ import {
 	reload,
 	removeContentTypeOverride,
 	removeMasterFromPresentation,
+	renumberMasterLayoutIds,
 	saveToZip,
 	withCSldName,
 } from './master-layout-crud-xml';
@@ -41,10 +46,22 @@ export interface DuplicateMasterSuccess {
 }
 export type DuplicateMasterResult = DuplicateMasterSuccess | MasterLayoutCrudFailure;
 
+/** A master owns its layouts and its theme, so a copy of it gets its own of each. */
+const copiesWithMaster = (relationship: Relationship): boolean =>
+	copiesRelationshipTarget(relationship) || /\/(?:slideLayout|theme)$/u.test(relationship.type);
+
+/** The first `ppt/slideMasters/slideMaster<n>.xml` the package does not hold. */
+function freeMasterPath(zip: JSZip): string {
+	let index = 1;
+	while (zip.file(`ppt/slideMasters/slideMaster${index}.xml`)) index += 1;
+	return `ppt/slideMasters/slideMaster${index}.xml`;
+}
+
 /**
- * Deep-copy a slide master together with every layout it owns, naming it
- * with PowerPoint's "duplicate master" convention ({@link uniquePrefixedName}).
- * The new master shares its source's theme part rather than forking a copy.
+ * Deep-copy a slide master together with every layout it owns and its theme, naming it with
+ * PowerPoint's "duplicate master" convention ({@link uniquePrefixedName}). The copy owns new
+ * layout, theme and element parts with fresh names; PowerPoint refuses a package where two
+ * masters share one theme part.
  */
 export async function duplicateSlideMaster(
 	handler: PptxHandler,
@@ -58,50 +75,20 @@ export async function duplicateSlideMaster(
 
 	const zip = await saveToZip(handler, data);
 	const sourceXml = await zip.file(masterId)?.async('string');
-	const sourceRels = await zip.file(relsPathFor(masterId))?.async('string');
-	if (!sourceXml || !sourceRels) {
+	if (!sourceXml) {
 		return NOT_FOUND;
 	}
 
-	const masterIndex = countExistingMasters(zip) + 1;
-	const newMasterPath = `ppt/slideMasters/slideMaster${masterIndex}.xml`;
-	const layoutBase = countExistingLayouts(zip);
-
-	let newRels = sourceRels;
-	const sourceLayoutPaths = (source.layouts ?? []).map((l) => l.path);
-	for (let i = 0; i < sourceLayoutPaths.length; i++) {
-		const oldPath = at(sourceLayoutPaths, i);
-		const newPath = `ppt/slideLayouts/slideLayout${layoutBase + i + 1}.xml`;
-
-		const layoutXml = await zip.file(oldPath)?.async('string');
-		if (!layoutXml) {
-			continue;
-		}
-		// Layout content (elements, background, placeholders) is byte-identical
-		// to the source; only the backlink to the new master needs retargeting.
-		zip.file(newPath, layoutXml);
-		const layoutRels = await zip.file(relsPathFor(oldPath))?.async('string');
-		if (layoutRels) {
-			zip.file(
-				relsPathFor(newPath),
-				layoutRels.replace(
-					/Target="\.\.\/slideMasters\/slideMaster\d+\.xml"/,
-					`Target="../slideMasters/slideMaster${masterIndex}.xml"`,
-				),
-			);
-		}
-		await addLayoutContentType(zip, layoutBase + i + 1);
-
-		const oldTarget = `Target="../${oldPath.replace(/^ppt\//, '')}"`;
-		const newTarget = `Target="../${newPath.replace(/^ppt\//, '')}"`;
-		newRels = newRels.split(oldTarget).join(newTarget);
-	}
-	zip.file(relsPathFor(newMasterPath), newRels);
-
+	const newMasterPath = freeMasterPath(zip);
 	const newName = uniquePrefixedName(collectMasterNames(data), source.name ?? 'Office Theme');
 	zip.file(newMasterPath, withCSldName(sourceXml, newName));
-
-	await addMasterContentType(zip, masterIndex);
+	await clonePartGraph({
+		zip,
+		sourcePart: masterId,
+		targetPart: newMasterPath,
+		shouldClone: copiesWithMaster,
+	});
+	await renumberMasterLayoutIds(zip, newMasterPath);
 	await addMasterToPresentation(zip, newMasterPath);
 
 	const result = await reload(zip);
@@ -172,7 +159,7 @@ export async function renameSlideMaster(
  * Insert a brand-new slide master: PowerPoint's own eleven standard layouts
  * ({@link STANDARD_LAYOUTS}, the same set `PresentationBuilder` seeds a
  * from-scratch deck with), the first master's colour map and text styles
- * byte-copied across, sharing its theme part.
+ * byte-copied across, with its own copy of that master's theme part.
  */
 export async function insertSlideMaster(
 	handler: PptxHandler,
@@ -191,7 +178,16 @@ export async function insertSlideMaster(
 
 	const masterIndex = countExistingMasters(zip) + 1;
 	const newMasterPath = `ppt/slideMasters/slideMaster${masterIndex}.xml`;
-	const themeTarget = `../${(firstMaster.themePath ?? 'ppt/theme/theme1.xml').replace(/^ppt\//, '')}`;
+	// The new master owns a copy of the first master's theme: two masters naming one theme part
+	// make PowerPoint refuse the package.
+	const sourceTheme = firstMaster.themePath ?? 'ppt/theme/theme1.xml';
+	if (!zip.file(sourceTheme)) {
+		return NOT_FOUND;
+	}
+	const themeCopy = (
+		await clonePart({ zip, part: sourceTheme, shouldClone: copiesRelationshipTarget })
+	).get(sourceTheme)!;
+	const themeTarget = relativePartTarget(newMasterPath, themeCopy);
 
 	zip.file(newMasterPath, newMasterXmlFromSource(sourceMasterXml, ''));
 	zip.file(

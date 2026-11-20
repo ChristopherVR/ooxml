@@ -1,4 +1,6 @@
 import { XMLValidator } from 'fast-xml-parser';
+import type JSZip from 'jszip';
+import { findSharedOwnedParts } from '../../../../opc/part-ownership';
 import { describe, expect, it } from 'vitest';
 
 import type { PptxHandler } from '../../PptxHandler';
@@ -15,6 +17,20 @@ import {
 } from './master-layout-crud';
 import { PresentationBuilder } from './PresentationBuilder';
 import { at } from '../../../test-support/access';
+
+/** Every `p:sldMasterId` and `p:sldLayoutId` id in the package, which must be unique together. */
+async function masterAndLayoutIds(zip: JSZip): Promise<string[]> {
+	const ids: string[] = [];
+	const parts = Object.keys(zip.files).filter(
+		(name) => name === 'ppt/presentation.xml' || /^ppt\/slideMasters\/[^/]+\.xml$/.test(name),
+	);
+	for (const path of parts) {
+		const xml = await zip.file(path)!.async('string');
+		for (const match of xml.matchAll(/<p:(?:sldMasterId|sldLayoutId)\s(?:[^>]*?\s)?id="(\d+)"/g))
+			ids.push(match[1]!);
+	}
+	return ids;
+}
 
 async function freshPresentation(): Promise<{ handler: PptxHandler; data: PptxData }> {
 	const { handler, data } = await PresentationBuilder.create();
@@ -163,14 +179,22 @@ describe('master-layout-crud: slide masters', () => {
 			expect(result.data.slideMasters!).toHaveLength(2);
 			const newMaster = result.data.slideMasters!.find((m) => m.path === result.masterId)!;
 			expect(newMaster.layouts!).toHaveLength(11);
-			// Shares the first master's theme rather than forking a new one.
-			expect(newMaster.themePath).toBe(at(data.slideMasters!, 0).themePath);
+			// Its own copy of the first master's theme: PowerPoint refuses two masters on one theme.
+			const firstTheme = at(data.slideMasters!, 0).themePath!;
+			expect(newMaster.themePath).toBeDefined();
+			expect(newMaster.themePath).not.toBe(firstTheme);
 
 			const zip = await (
 				await import('jszip')
 			).default.loadAsync(await result.handler.save(result.data.slides));
 			const masterXml = await zip.file(result.masterId)?.async('string');
 			expect(XMLValidator.validate(masterXml!)).toBeTruthy();
+			expect(await zip.file(newMaster.themePath!)!.async('string')).toBe(
+				await zip.file(firstTheme)!.async('string'),
+			);
+			expect(await findSharedOwnedParts(zip)).toStrictEqual([]);
+			const ids = await masterAndLayoutIds(zip);
+			expect(new Set(ids).size).toBe(ids.length);
 		});
 	});
 
@@ -189,6 +213,15 @@ describe('master-layout-crud: slide masters', () => {
 			const duplicated = result.data.slideMasters!.find((m) => m.path === result.masterId)!;
 			expect(duplicated.layouts!).toHaveLength(sourceLayoutCount);
 			expect(duplicated.name).toBe('1_Office Theme');
+			// The copy owns its theme and layouts, under ids no other master or layout uses.
+			expect(duplicated.themePath).not.toBe(at(data.slideMasters!, 0).themePath);
+			const zip = await (
+				await import('jszip')
+			).default.loadAsync(await result.handler.save(result.data.slides));
+			expect(await findSharedOwnedParts(zip)).toStrictEqual([]);
+			const ids = await masterAndLayoutIds(zip);
+			expect(ids).toHaveLength(2 + 2 * sourceLayoutCount);
+			expect(new Set(ids).size).toBe(ids.length);
 		});
 
 		it('returns notFound for an unknown master id', async () => {

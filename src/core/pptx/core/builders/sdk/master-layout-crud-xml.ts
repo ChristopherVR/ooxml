@@ -148,6 +148,52 @@ export async function removeLayoutFromMaster(
 }
 
 // ---------------------------------------------------------------------------
+// Master and layout ids
+// ---------------------------------------------------------------------------
+
+const FIRST_MASTER_OR_LAYOUT_ID = 2147483648;
+
+/**
+ * The next free id in the one space slide master and layout ids share: `p:sldMasterId/@id` and
+ * every master's `p:sldLayoutId/@id` are unique together and at least 2^31 (ECMA-376
+ * 19.2.1.34 and 19.3.1.41).
+ */
+export async function nextMasterOrLayoutId(zip: JSZip): Promise<number> {
+	let max = FIRST_MASTER_OR_LAYOUT_ID - 1;
+	const parts = Object.keys(zip.files).filter(
+		(path) => path === 'ppt/presentation.xml' || /^ppt\/slideMasters\/[^/]+\.xml$/.test(path),
+	);
+	for (const path of parts) {
+		const xml = (await zip.file(path)?.async('string')) ?? '';
+		for (const match of xml.matchAll(/<p:(?:sldMasterId|sldLayoutId)\s(?:[^>]*?\s)?id="(\d+)"/g))
+			max = Math.max(max, Number(match[1]));
+	}
+	return max + 1;
+}
+
+/** Give every `p:sldLayoutId` of a master part a fresh id from {@link nextMasterOrLayoutId}. */
+export async function renumberMasterLayoutIds(zip: JSZip, masterPath: string): Promise<void> {
+	const xml = await zip.file(masterPath)?.async('string');
+	if (!xml) {
+		return;
+	}
+	// Drop the master's own ids first so they cannot raise the next free id.
+	zip.file(masterPath, '');
+	let next = await nextMasterOrLayoutId(zip);
+	zip.file(
+		masterPath,
+		xml.replace(
+			/(<p:sldLayoutId\s(?:[^>]*?\s)?id=")\d+(")/g,
+			(_match, open: string, close: string) => {
+				const id = next;
+				next += 1;
+				return `${open}${id}${close}`;
+			},
+		),
+	);
+}
+
+// ---------------------------------------------------------------------------
 // presentation.xml <-> master wiring
 // ---------------------------------------------------------------------------
 
@@ -170,9 +216,7 @@ export async function addMasterToPresentation(zip: JSZip, masterPath: string): P
 	if (!presContent) {
 		throw new Error('presentation.xml not found');
 	}
-	const idMatches = [...presContent.matchAll(/sldMasterId\s+id="(\d+)"/g)];
-	const maxId = idMatches.reduce((max, m) => Math.max(max, parseInt(m[1] ?? '', 10)), 2147483647);
-	const newEntry = `    <p:sldMasterId id="${maxId + 1}" r:id="${newRId}"/>`;
+	const newEntry = `    <p:sldMasterId id="${await nextMasterOrLayoutId(zip)}" r:id="${newRId}"/>`;
 	zip.file(
 		presPath,
 		presContent.replace('</p:sldMasterIdLst>', `${newEntry}\n  </p:sldMasterIdLst>`),

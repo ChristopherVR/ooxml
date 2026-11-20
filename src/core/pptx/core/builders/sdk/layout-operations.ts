@@ -16,6 +16,7 @@ import { escAttr } from '../../ppt/pptx/xml-utils';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxData, PptxLayoutOption } from '../../types/presentation';
 import { at } from '../../../../geometry/indexed';
+import { nextMasterOrLayoutId } from './master-layout-crud-xml';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -247,13 +248,8 @@ export async function addLayoutToSlideMaster(
 		throw new Error(`Slide master not found at ${masterPath}`);
 	}
 
-	// Compute a unique layout id (2147483649 + offset to avoid collisions)
-	const idMatches = [...masterContent.matchAll(/sldLayoutId\s+id="(\d+)"/g)];
-	const maxLayoutId = idMatches.reduce(
-		(max, m) => Math.max(max, parseInt(m[1] ?? '', 10)),
-		2147483648,
-	);
-	const newLayoutId = maxLayoutId + 1;
+	// Master and layout ids share one space across every master of the deck.
+	const newLayoutId = await nextMasterOrLayoutId(zip);
 
 	// Insert new sldLayoutId entry before closing </p:sldLayoutIdLst>
 	const newLayoutIdEntry = `    <p:sldLayoutId id="${newLayoutId}" r:id="${newRId}"/>`;

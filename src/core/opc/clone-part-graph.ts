@@ -20,6 +20,18 @@ export function relativePartTarget(basePart: string, targetPart: string): string
 	return [...base.map(() => '..'), ...target].join('/');
 }
 
+/** The first free `<stem><n><extension>` name for a copy of `source`, which `reserved` then holds. */
+function allocatePartName(reserved: Set<string>, source: string): string {
+	const match = /^(?<stem>.*?)(?:\d+)?(?<extension>\.[^/.]+)$/u.exec(source);
+	const stem = match?.groups?.['stem'] ?? source;
+	const extension = match?.groups?.['extension'] ?? '';
+	let index = 1;
+	while (reserved.has(`${stem}${index}${extension}`)) index += 1;
+	const path = `${stem}${index}${extension}`;
+	reserved.add(path);
+	return path;
+}
+
 export interface ClonePartGraphOptions {
 	zip: JSZip;
 	/** Separate source archive for cross-package imports. Defaults to zip. */
@@ -48,16 +60,7 @@ export async function clonePartGraph(options: ClonePartGraphOptions): Promise<Ma
 	reserved.add(targetPart);
 	for (const target of copies.values()) reserved.add(target);
 
-	const allocate = (source: string): string => {
-		const match = /^(?<stem>.*?)(?:\d+)?(?<extension>\.[^/.]+)$/u.exec(source);
-		const stem = match?.groups?.stem ?? source;
-		const extension = match?.groups?.extension ?? '';
-		let index = 1;
-		while (reserved.has(`${stem}${index}${extension}`)) index += 1;
-		const path = `${stem}${index}${extension}`;
-		reserved.add(path);
-		return path;
-	};
+	const allocate = (source: string): string => allocatePartName(reserved, source);
 
 	const copyRelationships = async (source: string, destination: string): Promise<void> => {
 		const contentType = contentTypeForPart(types, source);
@@ -84,4 +87,23 @@ export async function clonePartGraph(options: ClonePartGraphOptions): Promise<Ma
 
 	await copyRelationships(sourcePart, targetPart);
 	return copies;
+}
+
+/**
+ * Copy one part under a fresh name, with its bytes, content type and the owned part graph below it
+ * (see {@link clonePartGraph}). Returns every source-to-copy path, the part itself included.
+ */
+export async function clonePart(
+	options: Omit<ClonePartGraphOptions, 'sourcePart' | 'targetPart' | 'sourceZip'> & {
+		part: string;
+	},
+): Promise<Map<string, string>> {
+	const { zip, part } = options;
+	const file = zip.file(part);
+	if (!file) throw new Error(`Cannot clone missing package part: ${part}`);
+	const reserved = new Set(Object.keys(zip.files));
+	for (const target of options.copies?.values() ?? []) reserved.add(target);
+	const targetPart = allocatePartName(reserved, part);
+	zip.file(targetPart, await file.async('uint8array'));
+	return clonePartGraph({ ...options, sourcePart: part, targetPart });
 }
