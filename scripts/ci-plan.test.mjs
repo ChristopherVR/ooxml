@@ -714,6 +714,14 @@ test('shared browser runtime changes reach the configs that import them', () => 
 	assert.equal(plan(['scripts/browser-shards.test.mjs']).pptx.run, false);
 });
 
+test('a release note runs the script tests that check it, and nothing else', () => {
+	const result = plan(['.release-notes/2.0/N1.md']);
+	assert.equal(result.scripts, true);
+	assert.equal(result.typecheck.strict, false);
+	assert.equal(result.pptx.run, false);
+	assert.equal(result.viewerBrowser.length, 0);
+});
+
 test('the accessibility gates run for the suite, the shared UI, the viewers and the gates', () => {
 	const suiteOnly = ['suite'];
 	const all = ['suite', ...PPTX_BINDINGS.map((binding) => `pptx-${binding}`)];

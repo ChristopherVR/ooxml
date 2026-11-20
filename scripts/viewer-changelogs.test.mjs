@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import { checkChangelog } from './check-changelog-sections.mjs';
+import { insertIntoChangelog, marker } from './major-notes.mjs';
 import {
 	HEADER,
 	mergeGroups,
@@ -64,6 +65,29 @@ test('merges groups in cliff order and lists each entry once', () => {
 		{ heading: 'Features', entries: ['- f', '- g'] },
 		{ heading: 'Documentation', entries: ['- d'] },
 	]);
+});
+
+test('a day with release notes lists them in their own order and the commits last', () => {
+	const notes = insertIntoChangelog(
+		pkg('a', [
+			['2.0.0', '2026-11-30', { Features: ['- **x:** One'], Performance: ['- **x:** Two'] }],
+		]),
+		'2.0.0',
+		['2.0'],
+		[
+			`${marker('2.0')}\n\nOverview.\n\n### Breaking changes\n\n- \`a\`: gone.\n\n### Performance\n\n- \`a\`: faster.`,
+		],
+	);
+	const sections = parsePackageChangelog(notes);
+	assert.deepEqual(
+		mergeGroups([...sections, { groups: [{ heading: 'Fixed', entries: ['- `b`: fixed.'] }] }]),
+		[
+			{ heading: 'Breaking changes', entries: ['- `a`: gone.'] },
+			{ heading: 'Fixed', entries: ['- `b`: fixed.'] },
+			{ heading: 'Performance', entries: ['- `a`: faster.'] },
+			{ heading: 'Commits', entries: ['- **x:** One', '- **x:** Two'] },
+		],
+	);
 });
 
 test('a day section names its releases and passes the stub check', () => {
