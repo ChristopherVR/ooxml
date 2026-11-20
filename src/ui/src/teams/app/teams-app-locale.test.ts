@@ -113,14 +113,14 @@ async function sweep(el: TeamsApp): Promise<string[]> {
 describe('<teams-app locale>', () => {
 	it('renders German with no English wording left', async () => {
 		const el = await mount('de');
-		// The workspace seeds its default channel when the first sync settles (in local mode after a
+		// The workspace seeds its starting channel when the first sync settles (in local mode after a
 		// grace period), so wait for it: every run then sweeps the same screens, however long the
-		// sweep takes. Channel names and topics are the workspace's content, not UI wording.
+		// sweep takes, and the channel the workspace starts with is shown in German too.
 		await vi.waitFor(() => expect(el.client?.getState().channels.length).toBeGreaterThan(0));
-		const content = new Set(el.client!.getState().channels.flatMap((c) => [c.name, c.topic]));
 		const german = TEAMS_MESSAGES.de;
 		const english = TEAMS_MESSAGES.en;
-		const strings = (await sweep(el)).filter((text) => !content.has(text));
+		const strings = await sweep(el);
+		expect(strings).toContain(german['channel.defaultName']);
 		expect(strings.length).toBeGreaterThan(150);
 
 		// Positive: German is really on screen.
