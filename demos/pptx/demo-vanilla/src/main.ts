@@ -21,6 +21,7 @@ import {
 import { PptxHandler } from 'pptx-viewer-core';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
+import { showSessionInAddressBar } from '../../shared/collaboration-link';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -29,7 +30,7 @@ import { currentDemo3DFlags } from '../../shared/rendering-3d-flags';
 import { sameBrowserRoom } from '../../shared/same-browser-collaboration';
 import { buildViewerAi } from './ai-config';
 import { mountBuildingBlocksDemo } from './building-blocks-demo';
-import { buildRoomConfig, readRoomFromUrl, resolveAutoName } from './collab';
+import { buildInvitationConfig, readInvitationFromUrl, resolveAutoName } from './collab';
 import { getLanguage, onLanguageChange, t, viewerMessages } from './demo-i18n';
 import { createDropzone } from './dropzone';
 import { mountHostOwnedDemo } from './host-owned-demo';
@@ -184,6 +185,10 @@ function openViewer(
 		pieChart3D,
 		ai: buildViewerAi(),
 		shareDefaults: { userName },
+		// The page address is the session's invitation (demos/pptx/shared/collaboration-link.ts):
+		// a broadcast shows under `?broadcast=`, so the presenter's address invites an audience.
+		onStartCollaboration: (config) => showSessionInAddressBar(config),
+		onStopCollaboration: () => showSessionInAddressBar(null),
 		// `?customization=<json>` (demos/shared/demo-customization.ts), for e2e.
 		customization: currentDemoCustomization() as ViewerCustomization | undefined,
 		// `?showToolbar=0`, `?showThumbnails=0`, `?initialSlide=<n>`, `?fitPadding=<px>`
@@ -250,11 +255,12 @@ async function fetchSampleDeck(): Promise<Uint8Array | null> {
 	}
 }
 
-// A `?room=<id>&transport=webrtc#key=<secret>` link auto-joins a collaboration session: open a blank deck
+// A `?room=<id>&transport=webrtc#key=<secret>` link auto-joins a collaboration session (and a
+// `?broadcast=` link joins that broadcast's audience): open a blank deck
 // wired to the room so the host's slides arrive through late-joiner sync. With
 // `?sample=1` too, the sample deck seeds the session instead of a blank one.
 const audienceSession = parsePresentationSessionId(window.location.hash);
-const joinRoom = readRoomFromUrl();
+const joinInvitation = readInvitationFromUrl();
 const wantSample = new URLSearchParams(window.location.search).get('sample') === '1';
 if (completeDemoSignInPopup()) {
 	// The MSAL sign-in popup: the response is handed back, the app does not boot here.
@@ -277,11 +283,11 @@ if (completeDemoSignInPopup()) {
 		}
 		return undefined;
 	});
-} else if (joinRoom) {
+} else if (joinInvitation) {
 	void (async () => {
 		const sample = wantSample ? await fetchSampleDeck() : null;
 		if (sample) {
-			openViewer(sample, 'sample-deck.pptx', buildRoomConfig(joinRoom, userName));
+			openViewer(sample, 'sample-deck.pptx', buildInvitationConfig(joinInvitation, userName));
 			return;
 		}
 		const { handler, data } = await PptxHandler.createBlank({
@@ -290,7 +296,7 @@ if (completeDemoSignInPopup()) {
 		});
 		const bytes = await handler.save(data.slides);
 		handler.dispose();
-		openViewer(bytes, 'Shared Session', buildRoomConfig(joinRoom, userName));
+		openViewer(bytes, 'Shared Session', buildInvitationConfig(joinInvitation, userName));
 	})();
 } else {
 	// Nothing in the URL to join: reopen whatever this tab had before a refresh

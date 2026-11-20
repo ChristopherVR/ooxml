@@ -113,7 +113,7 @@ export class CollaborationDocument {
 			return;
 		}
 		this.livePatcher.configure(config.role === 'viewer' ? null : doc, factories);
-		this.#join.attached();
+		this.#join.attached(config.sessionIntent);
 		this.#unobserve = observeRemoteSlides(doc, config, this.#remoteDeps());
 		const initial = readSlidesFromYDoc(doc);
 		if (initial.length) {
@@ -152,11 +152,15 @@ export class CollaborationDocument {
 		if (this.#external) {
 			this.#external.handleLoad(origin);
 		} else if (this.#doc) {
+			this.#join.loaded(origin);
 			adoptDocSlidesAfterLoad(this.#doc, this.#remoteDeps(), origin);
+			if (origin === 'user') {
+				this.flush();
+			}
 		}
 	}
 	flush(slides: PptxSlide[] = this.#deps.getSlides()): void {
-		if (!this.gate.isOpen()) {
+		if (!this.gate.isOpen() || (!this.#config?.externalSession && !this.#join.mayWrite())) {
 			return;
 		}
 		if (this.#config?.externalSession && !this.#config.externalSession.getSnapshot().synced) {

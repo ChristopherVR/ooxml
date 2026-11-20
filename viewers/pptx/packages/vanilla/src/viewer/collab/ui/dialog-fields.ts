@@ -7,6 +7,16 @@ import { createEl } from '../../render';
  * reimplement the same label + input markup.
  */
 
+/** Ids that tie each row's label to its input, unique across every viewer on the page. */
+let fieldCount = 0;
+
+/** Name `input` by `labelEl`, so the row is announced and found by its label. */
+function labelInput(labelEl: HTMLElement, input: HTMLInputElement): void {
+	fieldCount += 1;
+	input.id = `pptxv-modal-field-${fieldCount}`;
+	labelEl.setAttribute('for', input.id);
+}
+
 export interface FieldControl {
 	el: HTMLElement;
 	input: HTMLInputElement;
@@ -28,6 +38,7 @@ export function createTextField(
 	input.className = 'pptxv-modal-input';
 	input.placeholder = placeholder;
 	input.addEventListener('input', () => onInput(input.value));
+	labelInput(labelEl, input);
 	el.appendChild(input);
 	return { el, input };
 }
@@ -57,6 +68,7 @@ export function createCopyField(
 	input.className = 'pptxv-modal-input';
 	input.readOnly = true;
 	input.addEventListener('focus', () => input.select());
+	labelInput(labelEl, input);
 	row.appendChild(input);
 	const copyBtn = createEl(doc, 'button', 'pptxv-modal-btn');
 	copyBtn.type = 'button';

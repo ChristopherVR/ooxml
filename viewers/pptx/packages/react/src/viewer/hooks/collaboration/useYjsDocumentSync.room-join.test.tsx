@@ -34,26 +34,30 @@ function peerWrites(id: string): void {
 
 function Probe({
 	hostSession,
+	intent,
 	onRoomReplacedDeck,
 }: {
 	hostSession: boolean;
+	intent?: 'join';
 	onRoomReplacedDeck: () => void;
 }): null {
 	const [slides, setSlides] = useState([slide('local')]);
 	current = slides;
 	const config = useMemo<CollaborationConfig | undefined>(
 		() =>
-			hostSession
-				? ({
-						sessionIntent: 'join',
-						externalSession: {
-							doc,
-							getSnapshot: () => ({ status: 'connected', synced: true }),
-							subscribe: () => () => {},
-						},
-					} as CollaborationConfig)
-				: undefined,
-		[hostSession],
+			intent
+				? ({ sessionIntent: intent } as CollaborationConfig)
+				: hostSession
+					? ({
+							sessionIntent: 'join',
+							externalSession: {
+								doc,
+								getSnapshot: () => ({ status: 'connected', synced: true }),
+								subscribe: () => () => {},
+							},
+						} as CollaborationConfig)
+					: undefined,
+		[hostSession, intent],
 	);
 	useYjsDocumentSync({
 		doc,
@@ -100,6 +104,26 @@ describe.each([
 		await act(async () => peerWrites('peer-edit'));
 
 		expect(current.map((item) => item.id)).toStrictEqual(['peer-edit']);
+		expect(replaced).toHaveBeenCalledOnce();
+	});
+});
+
+describe('a session that joins a room', () => {
+	it('never seeds the empty room with its placeholder deck, and adopts the sharer deck', async () => {
+		const replaced = vi.fn();
+		await act(async () =>
+			root.render(<Probe hostSession={false} intent='join' onRoomReplacedDeck={replaced} />),
+		);
+		await act(async () => {
+			await new Promise<void>((resolve) => {
+				setTimeout(resolve, 20);
+			});
+		});
+		expect(doc.getArray('pptx:slides')).toHaveLength(0);
+
+		await act(async () => peerWrites('sharer'));
+
+		expect(current.map((item) => item.id)).toStrictEqual(['sharer']);
 		expect(replaced).toHaveBeenCalledOnce();
 	});
 });

@@ -25,8 +25,7 @@ import { useI18n } from 'vue-i18n';
 import 'pptx-vue-viewer/styles';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
-import { sessionFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
-import type { SessionLink } from '../../shared/collaboration-link';
+import { invitationFromPage, showSessionInAddressBar } from '../../shared/collaboration-link';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -162,49 +161,27 @@ const defaultServerUrl = resolveDefaultServerUrl();
 // ── Collaboration state ────────────────────────────────────────────────────
 const collaborationConfig = shallowRef<CollaborationConfig | null>(null);
 
-// The sessions the page address names. A webrtc join is serverless, so it
-// bypasses the trusted-host allowlist (there is no server to trust); a
-// websocket join still requires a trusted server.
-const roomLink = urlRoom.value ? sessionFromPage('room', urlServer) : null;
-const broadcastLink = urlBroadcast.value ? sessionFromPage('broadcast', urlServer) : null;
-const joinAllowed = (link: SessionLink): boolean =>
-	link.transport === 'webrtc' || isTrustedServerUrl(link.serverUrl);
-
-// Auto-connect if room is in URL (collaboration mode).
-watchEffect(() => {
-	if (urlRoom.value && roomLink && !collaborationConfig.value && joinAllowed(roomLink)) {
-		collaborationConfig.value = {
-			...roomLink,
-			userName: urlName ?? autoName,
-			userColor: randomUserColor(),
-		};
-	} else if (urlRoom.value && roomLink && !joinAllowed(roomLink)) {
-		console.warn(
-			`Ignoring ?room= auto-connect because ?server=${roomLink.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
-		);
-	}
-});
-
-// Auto-connect if broadcast is in URL (viewer mode).
-watchEffect(() => {
-	if (
-		urlBroadcast.value &&
-		broadcastLink &&
-		!collaborationConfig.value &&
-		joinAllowed(broadcastLink)
-	) {
-		collaborationConfig.value = {
-			...broadcastLink,
-			userName: urlName ?? autoName,
-			userColor: randomUserColor(),
-			role: 'viewer',
-		};
-	} else if (urlBroadcast.value && broadcastLink && !joinAllowed(broadcastLink)) {
-		console.warn(
-			`Ignoring ?broadcast= auto-connect because ?server=${broadcastLink.serverUrl} is not in the trusted-host allowlist.`,
-		);
-	}
-});
+// Auto-connect to the session the page address invites this tab to (a room, or a
+// broadcast's audience, through the `invitationFromPage` every pptx demo shares).
+// A webrtc join is serverless, so it bypasses the trusted-host allowlist (there
+// is no server to trust); a websocket join still requires a trusted server.
+const invitation = invitationFromPage(urlServer);
+if (
+	invitation &&
+	(invitation.link.transport === 'webrtc' || isTrustedServerUrl(invitation.link.serverUrl))
+) {
+	collaborationConfig.value = {
+		...invitation.link,
+		userName: urlName ?? autoName,
+		userColor: randomUserColor(),
+		sessionIntent: invitation.sessionIntent,
+		...(invitation.role ? { role: invitation.role } : {}),
+	};
+} else if (invitation) {
+	console.warn(
+		`Ignoring the invitation auto-connect because ?server=${invitation.link.serverUrl} is not in the trusted-host allowlist. Use the Share dialog to connect explicitly.`,
+	);
+}
 
 function handleStartCollaboration(config: CollaborationConfig): void {
 	collaborationConfig.value = config;

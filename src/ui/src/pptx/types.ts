@@ -302,10 +302,12 @@ export interface CollaborationConfig {
 	/** Role in the session; defaults to `'collaborator'`. */
 	role?: CollaborationRole;
 	/**
-	 * Whether this client created the room or joined an existing room. Providers
-	 * do not use this value, but hosts can use it to avoid publishing local file
-	 * bytes when handling a join request. Omitted values retain the legacy
-	 * create-session behaviour.
+	 * Whether this client created the room or joined an existing room. A `join`
+	 * session never writes the deck it opened with (a placeholder until the
+	 * room's slides arrive) into the room: it writes only after it adopted the
+	 * room's slides, or after the user opened a deck of their own. Hosts can also
+	 * use it to avoid publishing local file bytes when handling a join request.
+	 * Omitted values retain the create-session behaviour.
 	 */
 	sessionIntent?: CollaborationSessionIntent;
 	/**
