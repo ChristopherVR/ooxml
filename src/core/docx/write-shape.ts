@@ -46,9 +46,14 @@ function importFragment(doc: XmlDocument, xml: string): XmlElement[] {
 const srgb = (fill: DrawingFill | undefined): string | undefined =>
 	fill?.kind === 'solid' && fill.color.kind === 'srgb' ? fill.color.value : undefined;
 
-/** Text colour that stays readable on an explicit fill; the default style's white needs none. */
+/**
+ * The colour written on the shape's text runs: the one its runs had, none where the shape's style
+ * gives the text its colour (`fontRef`, as Word draws it), or one that stays readable on an
+ * explicit fill (the default style's white needs none).
+ */
 function explicitTextColor(spec: ShapeSpec): string | undefined {
-	if (!spec.fill) return undefined;
+	if (spec.textColor) return spec.textColor;
+	if (spec.fontColor || !spec.fill) return undefined;
 	if (spec.fill.kind === 'none') return '000000';
 	const hex = srgb(spec.fill);
 	if (!hex || !/^[0-9a-f]{6}$/i.test(hex)) return undefined;

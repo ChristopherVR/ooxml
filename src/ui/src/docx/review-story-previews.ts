@@ -1,7 +1,8 @@
 import type { Block, DocumentModel, ReviewDisplayMode } from 'ooxml-core/docx';
 import { effectiveHeaderFooter } from './header-footer-link';
 import type { HeaderFooterSlotName } from './header-footer-editor';
-import { renderBlocks } from './story-render';
+import { renderStoryPreview } from './story-render';
+import type { PictureSource } from './picture-paint';
 
 /** Update inactive previews without rebuilding or closing an active story editor. */
 export function refreshStoryPreviews(
@@ -13,12 +14,11 @@ export function refreshStoryPreviews(
 		notes: HTMLElement | undefined;
 	},
 	mode: ReviewDisplayMode,
-	decorate: (body: HTMLElement) => void,
+	pictureUrl?: PictureSource,
 ): void {
 	const refresh = (body: HTMLElement | null, blocks: Block[] | undefined) => {
 		if (!body || !blocks || body.querySelector('.ProseMirror')) return;
-		body.replaceChildren(renderBlocks(blocks, model, mode));
-		decorate(body);
+		body.replaceChildren(renderStoryPreview(blocks, model, mode, pictureUrl));
 	};
 	for (const kind of ['headers', 'footers'] as const)
 		for (const slot of elements[kind]?.querySelectorAll<HTMLElement>('[data-slot]') ?? [])

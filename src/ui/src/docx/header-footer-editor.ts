@@ -13,7 +13,8 @@ import { positionalTabInputPlugin } from 'ooxml-core/docx/ui';
 import { assignMissingParagraphIds, docToModel, modelToDoc } from './model-adapter';
 import { editorKeymap } from './editor-commands';
 import { focusView } from './focus-view';
-import { renderBlocks } from './story-render';
+import { renderStoryPreview } from './story-render';
+import type { PictureSource } from './picture-paint';
 import { translateUiText } from './localization';
 
 export type HeaderFooterSlotName = 'default' | 'first' | 'even';
@@ -23,8 +24,9 @@ export interface InlineEditorOptions {
 	/** Owner document formatting for the preview after this editor closes. */
 	contextModel?(): DocumentModel;
 	reviewDisplayMode?(): ReviewDisplayMode;
+	/** Pictures of the preview shown after this editor closes, through the editor's media cache. */
+	pictureUrl?: PictureSource;
 	nodeViews?: EditorProps['nodeViews'];
-	decorate?(preview: HTMLElement): void;
 	/** Extra plugins, e.g. the editor's Ctrl+K link shortcut. */
 	plugins?: Plugin[];
 	/** Reports the editor becoming the ribbon's target, and closing. */
@@ -119,9 +121,13 @@ export function openBlocksEditor(
 		options.deactivate?.(view);
 		view.destroy();
 		body.replaceChildren(
-			renderBlocks(model.blocks, options.contextModel?.(), options.reviewDisplayMode?.()),
+			renderStoryPreview(
+				model.blocks,
+				options.contextModel?.(),
+				options.reviewDisplayMode?.(),
+				options.pictureUrl,
+			),
 		);
-		options.decorate?.(body);
 	};
 	host.addEventListener('keydown', (event) => {
 		if (event.key === 'Escape') close();

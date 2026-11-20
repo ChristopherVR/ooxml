@@ -16,7 +16,7 @@ import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
-import { parseShape, shapeElement } from './shape-parse';
+import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
 import { getR, isElement, type XmlElement } from './xml';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
@@ -187,7 +187,11 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			: undefined;
 	const isShapeGraphic = uri.includes('wordprocessingShape');
 	const shape = isShapeGraphic ? parseShape(graphicData) : undefined;
-	const textBox = isShapeGraphic && !shape ? textBoxParagraphs(graphicData) : undefined;
+	// A text box (`txBox="1"`) is drawn through its frame like any shape and edited as a text box.
+	const textBox =
+		isShapeGraphic && (!shape || isTextBoxShape(graphicData))
+			? textBoxParagraphs(graphicData)
+			: undefined;
 	const richText = isShapeGraphic
 		? textBoxContent(graphicData, context, `txbx${docPr?.getAttribute('id') ?? ''}-`)
 		: undefined;

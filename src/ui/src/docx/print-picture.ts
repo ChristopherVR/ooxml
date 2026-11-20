@@ -97,7 +97,9 @@ export function pictureElement(
 		element.style.width = `${object.widthPx}px`;
 		element.style.height = `${object.heightPx}px`;
 		if (object.chart.svg && object.chart.shape && object.textBox)
-			element.append(textBoxContentElement(object.textBox, model, object.chart.textColor));
+			element.append(
+				textBoxContentElement(object.textBox, model, object.chart.textColor, pictureUrl),
+			);
 		return element;
 	}
 	const url = object.partName ? pictureUrl?.(object.partName, object.contentType) : undefined;

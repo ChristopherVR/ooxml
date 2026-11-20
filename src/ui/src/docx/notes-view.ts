@@ -1,6 +1,7 @@
 import type { DocumentModel, Note } from 'ooxml-core/docx';
 import { formatNoteNumber, numberNotesInOrder } from 'ooxml-core/docx';
-import { renderBlocks } from './story-render';
+import { renderStoryPreview } from './story-render';
+import type { PictureSource } from './picture-paint';
 import { translateUiText } from './localization';
 
 function noteList(
@@ -9,6 +10,7 @@ function noteList(
 	numFmt: string | undefined,
 	blocks: DocumentModel['blocks'],
 	model: DocumentModel,
+	pictureUrl: PictureSource | undefined,
 ): HTMLElement {
 	const order = numberNotesInOrder(blocks, kind);
 	const numbered = notes
@@ -26,7 +28,7 @@ function noteList(
 		marker.textContent = `${formatNoteNumber(number, numFmt)}. `;
 		const body = document.createElement('div');
 		body.className = 'dve-note-body';
-		body.append(renderBlocks(note.blocks, model));
+		body.append(renderStoryPreview(note.blocks, model, 'all', pictureUrl));
 		item.append(marker, body);
 		list.append(item);
 	}
@@ -41,6 +43,7 @@ function section(
 	blocks: DocumentModel['blocks'],
 	locale: string,
 	model: DocumentModel,
+	pictureUrl: PictureSource | undefined,
 ): HTMLElement | null {
 	if (!notes?.length) return null;
 	const root = document.createElement('section');
@@ -53,12 +56,16 @@ function section(
 	heading.className = 'dve-notes-heading';
 	heading.textContent = translateUiText(root, label);
 	heading.dataset.localeAriaLabel = label;
-	root.append(heading, noteList(notes, kind, numFmt, blocks, model));
+	root.append(heading, noteList(notes, kind, numFmt, blocks, model, pictureUrl));
 	return root;
 }
 
 /** Footnotes then endnotes, read-only, rendered at the end of the continuous surface. */
-export function buildNotesElement(model: DocumentModel, locale: string): HTMLElement | null {
+export function buildNotesElement(
+	model: DocumentModel,
+	locale: string,
+	pictureUrl?: PictureSource,
+): HTMLElement | null {
 	const footnotes = section(
 		'Footnotes',
 		model.footnotes,
@@ -67,6 +74,7 @@ export function buildNotesElement(model: DocumentModel, locale: string): HTMLEle
 		model.blocks,
 		locale,
 		model,
+		pictureUrl,
 	);
 	const endnotes = section(
 		'Endnotes',
@@ -76,6 +84,7 @@ export function buildNotesElement(model: DocumentModel, locale: string): HTMLEle
 		model.blocks,
 		locale,
 		model,
+		pictureUrl,
 	);
 	if (!footnotes && !endnotes) return null;
 	const root = document.createElement('div');

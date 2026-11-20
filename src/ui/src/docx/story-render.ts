@@ -17,6 +17,18 @@ import { paragraphAttrs, placementClass } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 import { runToInlineNodes } from './run-adapter';
 import { stylePreviewRuns } from './preview-run-styles';
+import { paintPicture, type PictureSource } from './picture-paint';
+
+/** How story blocks are rendered. */
+export interface StoryRenderOptions {
+	/** Package pictures to URLs, through the editor's media cache; without it pictures show empty. */
+	pictureUrl?: PictureSource;
+	/**
+	 * Draft view's header, footer and note previews: floating (`wp:anchor`) drawings are left out, as
+	 * Word's Draft view leaves them out; inline drawings are shown.
+	 */
+	omitFloating?: boolean;
+}
 
 function parse<T>(value: unknown): T | undefined {
 	if (typeof value !== 'string') return undefined;
@@ -48,17 +60,51 @@ function blockNode(block: Block): ReturnType<typeof schema.node> {
 	return schema.node('table', { id: block.id, structureEditable: false }, rows);
 }
 
-/** The schema's serializer, with drawing shapes drawn as they are on the editing surface. */
-function storySerializer(model: DocumentModel | undefined): DOMSerializer {
+/**
+ * The schema's serializer, with drawing shapes and pictures drawn as they are on the editing
+ * surface (pictures from `options.pictureUrl`).
+ */
+function storySerializer(
+	model: DocumentModel | undefined,
+	options: StoryRenderOptions,
+): DOMSerializer {
 	const base = DOMSerializer.fromSchema(schema);
 	const image = base.nodes.image!;
-	return new DOMSerializer(
-		{
-			...base.nodes,
-			image: (node) => (node.attrs.shape ? shapeElement(node, model) : image(node)),
-		},
-		base.marks,
-	);
+	const drawing = (node: ProseMirrorNode): HTMLElement => {
+		if (options.omitFloating && node.attrs.anchored) {
+			const omitted = document.createElement('span');
+			omitted.className = 'dve-floating-omitted';
+			omitted.hidden = true;
+			return omitted;
+		}
+		if (node.attrs.shape) return shapeElement(node, model, options.pictureUrl);
+		const content = DOMSerializer.renderSpec(document, image(node)).dom as HTMLElement;
+		if (content.tagName !== 'IMG' || !options.pictureUrl) return content;
+		const frame = document.createElement('span');
+		frame.className = ['dve-picture', placementClass(node.attrs.placement)]
+			.filter(Boolean)
+			.join(' ');
+		frame.append(content);
+		paintPicture(content, node, options.pictureUrl);
+		return frame;
+	};
+	return new DOMSerializer({ ...base.nodes, image: drawing }, base.marks);
+}
+
+/**
+ * A Draft view preview of a header, footer or note: its blocks read-only, pictures through the
+ * editor's media cache, and floating drawings left out as Word's Draft view leaves them out.
+ */
+export function renderStoryPreview(
+	blocks: Block[],
+	model: DocumentModel | undefined,
+	mode: ReviewDisplayMode = 'all',
+	pictureUrl?: PictureSource,
+): DocumentFragment {
+	return renderBlocks(blocks, model, mode, {
+		omitFloating: true,
+		...(pictureUrl ? { pictureUrl } : {}),
+	});
 }
 
 /** Story blocks as read-only DOM, with styles resolved through `model` when it is given. */
@@ -66,8 +112,9 @@ export function renderBlocks(
 	blocks: Block[],
 	model?: DocumentModel,
 	mode: ReviewDisplayMode = 'all',
+	options: StoryRenderOptions = {},
 ): DocumentFragment {
-	const serializer = storySerializer(model);
+	const serializer = storySerializer(model, options);
 	const fragment = document.createDocumentFragment();
 	for (const block of blocks) {
 		const element = serializer.serializeNode(blockNode(block)) as HTMLElement;
@@ -95,6 +142,7 @@ export function textBoxContentElement(
 	content: TextBoxContent,
 	model?: DocumentModel,
 	color?: string,
+	pictureUrl?: PictureSource,
 ): HTMLElement {
 	const element = document.createElement('div');
 	element.className = 'dve-text-box-content';
@@ -109,7 +157,7 @@ export function textBoxContentElement(
 	].join(' ');
 	element.style.justifyContent =
 		content.anchor === 'ctr' ? 'center' : content.anchor === 'b' ? 'flex-end' : 'flex-start';
-	element.append(renderBlocks(content.blocks, model));
+	element.append(renderBlocks(content.blocks, model, 'all', pictureUrl ? { pictureUrl } : {}));
 	// The box's paragraphs are not the story's: nothing may resolve them as editable blocks.
 	for (const block of element.querySelectorAll('[data-id]')) block.removeAttribute('data-id');
 	return element;
@@ -138,6 +186,7 @@ export function paintShape(
 	theme: ThemeCatalog | undefined,
 	model: DocumentModel | undefined,
 	selected = false,
+	pictureUrl?: PictureSource,
 ): void {
 	const spec = parse<ShapeSpec>(node.attrs.shape);
 	const placement = parse<PicturePlacement>(node.attrs.placement);
@@ -178,16 +227,20 @@ export function paintShape(
 		if (parsed.localName === 'svg') holder.append(document.importNode(parsed, true));
 	} else holder.textContent = String(node.attrs.unsupported ?? 'Shape');
 	if (svg && paint.textBox)
-		holder.append(textBoxContentElement(paint.textBox, model, paint.chart?.textColor));
+		holder.append(textBoxContentElement(paint.textBox, model, paint.chart?.textColor, pictureUrl));
 }
 
 /** A read-only shape for a story preview, drawn as the editing surface draws it. */
-function shapeElement(node: ProseMirrorNode, model: DocumentModel | undefined): HTMLElement {
+function shapeElement(
+	node: ProseMirrorNode,
+	model: DocumentModel | undefined,
+	pictureUrl: PictureSource | undefined,
+): HTMLElement {
 	const dom = document.createElement('span');
 	const holder = document.createElement('span');
 	holder.className = 'dve-shape-drawing';
 	dom.append(holder);
 	dom.contentEditable = 'false';
-	paintShape(dom, holder, node, model?.theme, model);
+	paintShape(dom, holder, node, model?.theme, model, false, pictureUrl);
 	return dom;
 }

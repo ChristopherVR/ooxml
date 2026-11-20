@@ -1,7 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Reads a `wps:wsp` drawing shape: preset geometry, fill, outline and text. The geometry, fill and
 // outline readers are the shared DrawingML ones.
-import { parseDrawingFill, parseDrawingGeometry, parseDrawingLine } from '../drawingml/index';
+import {
+	parseDrawingColorIn,
+	parseDrawingFill,
+	parseDrawingGeometry,
+	parseDrawingLine,
+} from '../drawingml/index';
 import type { DrawingLine } from '../drawingml/index';
 import { buildXml } from '../xml/index';
 import { lookupPresetShape } from '../geometry/preset-shape-evaluator';
@@ -38,13 +43,14 @@ export function shapeParagraphs(wsp: XmlElement | undefined): string[] | undefin
 }
 
 /**
- * Paragraphs of plain runs only, as this editor writes them: centred paragraphs of runs that set at
- * most a colour. Anything else (bold, sizes, borders, alignment) would be lost when the text is
- * rewritten, so such text stays read-only and its XML is kept.
+ * Whether the text is plain, as this editor writes it: centred paragraphs of runs that set at most
+ * one colour, the same on every run (or none on any). That colour is `color`. Anything else (bold,
+ * sizes, borders, alignment, mixed colours) would be lost when the text is rewritten, so such text
+ * stays read-only and its XML is kept.
  */
-function textIsPlain(wsp: XmlElement): boolean {
+function plainText(wsp: XmlElement): { plain: boolean; color?: string } {
 	const content = child(child(wsp, WPS_NS, 'txbx'), W_NS, 'txbxContent');
-	if (!content) return true;
+	if (!content) return { plain: true };
 	const only = (node: XmlElement | undefined, allowed: string[]) =>
 		!node ||
 		elementsOf(node).every(
@@ -59,17 +65,36 @@ function textIsPlain(wsp: XmlElement): boolean {
 			items[0]!.getAttributeNS(W_NS, 'val') === 'center'
 		);
 	};
-	return (
+	const colors = new Set<string>();
+	const plain =
 		only(content, ['p']) &&
 		Array.from(content.getElementsByTagNameNS(W_NS, 'p')).every(
 			(paragraph) =>
 				only(paragraph, ['pPr', 'r']) &&
 				centred(child(paragraph, W_NS, 'pPr')) &&
-				Array.from(paragraph.getElementsByTagNameNS(W_NS, 'r')).every(
-					(run) => only(run, ['rPr', 't']) && only(child(run, W_NS, 'rPr'), ['color']),
-				),
-		)
-	);
+				Array.from(paragraph.getElementsByTagNameNS(W_NS, 'r')).every((run) => {
+					const props = child(run, W_NS, 'rPr');
+					const color = child(props, W_NS, 'color');
+					const value = color?.getAttributeNS(W_NS, 'val') ?? '';
+					if (color && (color.attributes.length !== 1 || !/^[0-9a-f]{6}$/i.test(value)))
+						return false;
+					colors.add(value.toUpperCase());
+					return only(run, ['rPr', 't']) && only(props, ['color']);
+				}),
+		);
+	const [color, ...others] = [...colors];
+	if (!plain || others.length) return { plain: false };
+	return color ? { plain, color } : { plain };
+}
+
+/**
+ * The fill or outline a `wps:style` reference gives a shape that does not set its own: none without
+ * a style or with the reference's `idx="0"` (Word draws none), else the style's (undefined here,
+ * drawn in the default style's colours).
+ */
+function styleGives(style: XmlElement | undefined, reference: 'fillRef' | 'lnRef'): boolean {
+	const ref = child(style, A_NS, reference);
+	return Boolean(ref) && ref!.getAttribute('idx') !== '0';
 }
 
 const LINE_CHILDREN = new Set([
@@ -108,25 +133,41 @@ function transform(spPr: XmlElement): Pick<ShapeSpec, 'rotation' | 'flipH' | 'fl
 	return result;
 }
 
+/** Whether a `wps:wsp` is a text box (`wps:cNvSpPr/@txBox="1"`), which Word edits as a text box. */
+export function isTextBoxShape(graphicData: XmlElement | undefined): boolean {
+	return child(shapeElement(graphicData), WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1';
+}
+
 /**
- * The shape in a `wps:wsp` that is not a text box, or undefined when it has no preset geometry the
- * editor can draw. Editing a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces
- * the pair with the modern drawing alone.
+ * The shape in a `wps:wsp`, or undefined when it has no preset geometry the editor can draw. A text
+ * box (`txBox="1"`) is read as its frame only: it is drawn like any shape, but its text, size and
+ * outline are edited as a text box, so the shape model leaves it alone (`editable: false`). Editing
+ * a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces the pair with the modern
+ * drawing alone.
  */
 export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | undefined {
 	const wsp = shapeElement(graphicData);
 	if (!wsp) return undefined;
-	if (child(wsp, WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1') return undefined;
+	const textBox = isTextBoxShape(graphicData);
 	const spPr = child(wsp, WPS_NS, 'spPr');
 	if (!spPr) return undefined;
 	const custom = child(spPr, A_NS, 'custGeom');
 	const geometry = parseDrawingGeometry(spPr);
 	if (geometry.issue || (!custom && !lookupPresetShape(geometry.geometry))) return undefined;
-	const fill = parseDrawingFill(spPr);
+	const style = child(wsp, WPS_NS, 'style');
+	const parsedFill = parseDrawingFill(spPr);
 	const ln = child(spPr, A_NS, 'ln');
-	const line: DrawingLine | undefined = ln ? parseDrawingLine(ln) : undefined;
-	const text = shapeParagraphs(wsp);
-	const simple = spPrIsSimple(spPr);
+	// What the shape does not set itself comes from its style; without one there is none.
+	const fill = parsedFill ?? (styleGives(style, 'fillRef') ? undefined : { kind: 'none' as const });
+	const parsedLine: DrawingLine | undefined = ln ? parseDrawingLine(ln) : undefined;
+	const line: DrawingLine | undefined =
+		parsedLine?.fill || styleGives(style, 'lnRef')
+			? parsedLine
+			: { ...parsedLine, fill: { kind: 'none' } };
+	const fontColor = parseDrawingColorIn(child(style, A_NS, 'fontRef'));
+	const text = textBox ? undefined : shapeParagraphs(wsp);
+	const simple = !textBox && spPrIsSimple(spPr);
+	const plain = simple ? plainText(wsp) : { plain: false };
 	return {
 		preset: geometry.geometry,
 		...(custom ? { customGeometryXml: buildXml(custom) } : {}),
@@ -135,9 +176,11 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 			: {}),
 		...(fill && fill.kind !== 'unsupported' ? { fill } : {}),
 		...(line ? { line } : {}),
+		...(fontColor ? { fontColor } : {}),
 		...(text ? { text } : {}),
+		...(plain.plain && plain.color ? { textColor: plain.color } : {}),
 		...transform(spPr),
 		editable: simple,
-		textEditable: simple && textIsPlain(wsp),
+		textEditable: plain.plain,
 	};
 }

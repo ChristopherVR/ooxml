@@ -225,6 +225,7 @@ export {
 	shapeColorCss,
 	shapeTextColor,
 } from './shape-svg';
+export { simpleTextBoxDrawing } from './text-box-drawing';
 
 export * from './chart-ex-edit';
 export * from './clipboard/index';

@@ -1,7 +1,8 @@
 import type { DocumentModel, HeaderFooterContent, HeaderFooterSlots } from 'ooxml-core/docx';
 import { translateUiText } from './localization';
 import { effectiveSlots } from './header-footer-link';
-import { renderBlocks } from './story-render';
+import { renderStoryPreview } from './story-render';
+import type { PictureSource } from './picture-paint';
 
 function slot(
 	root: HTMLElement,
@@ -9,6 +10,7 @@ function slot(
 	content: HeaderFooterContent | undefined,
 	name: 'default' | 'first' | 'even',
 	model: DocumentModel,
+	pictureUrl: PictureSource | undefined,
 ): void {
 	if (!content || !content.blocks.length) return;
 	const wrap = document.createElement('div');
@@ -20,7 +22,7 @@ function slot(
 	label.dataset.localeAriaLabel = labelText;
 	const body = document.createElement('div');
 	body.className = 'dve-header-footer-body';
-	body.append(renderBlocks(content.blocks, model));
+	body.append(renderStoryPreview(content.blocks, model, 'all', pictureUrl));
 	wrap.append(label, body);
 	root.append(wrap);
 }
@@ -30,6 +32,7 @@ function buildSlotsElement(
 	kind: 'header' | 'footer',
 	locale: string,
 	model: DocumentModel,
+	pictureUrl: PictureSource | undefined,
 ): HTMLElement | null {
 	if (!slots || (!slots.default && !slots.first && !slots.even)) return null;
 	const root = document.createElement('section');
@@ -43,6 +46,7 @@ function buildSlotsElement(
 		slots.first,
 		'first',
 		model,
+		pictureUrl,
 	);
 	slot(
 		root,
@@ -50,6 +54,7 @@ function buildSlotsElement(
 		slots.even,
 		'even',
 		model,
+		pictureUrl,
 	);
 	slot(
 		root,
@@ -57,6 +62,7 @@ function buildSlotsElement(
 		slots.default,
 		'default',
 		model,
+		pictureUrl,
 	);
 	root.dataset.editorLocale = locale;
 	return root;
@@ -67,13 +73,27 @@ export function buildHeaderElement(
 	model: DocumentModel,
 	locale: string,
 	sectionIndex = 0,
+	pictureUrl?: PictureSource,
 ): HTMLElement | null {
-	return buildSlotsElement(effectiveSlots(model, sectionIndex, 'headers'), 'header', locale, model);
+	return buildSlotsElement(
+		effectiveSlots(model, sectionIndex, 'headers'),
+		'header',
+		locale,
+		model,
+		pictureUrl,
+	);
 }
 export function buildFooterElement(
 	model: DocumentModel,
 	locale: string,
 	sectionIndex = 0,
+	pictureUrl?: PictureSource,
 ): HTMLElement | null {
-	return buildSlotsElement(effectiveSlots(model, sectionIndex, 'footers'), 'footer', locale, model);
+	return buildSlotsElement(
+		effectiveSlots(model, sectionIndex, 'footers'),
+		'footer',
+		locale,
+		model,
+		pictureUrl,
+	);
 }

@@ -81,11 +81,22 @@ function expectDrawnLetterhead(root: HTMLElement) {
 }
 
 describe('text boxes and lines in headers', () => {
-	it('draws them with their paragraphs in the draft header story', async () => {
+	it('draws them with their paragraphs in story content', async () => {
+		const { model } = await loadDocx(await letterheadFixture());
+		const story = document.createElement('div');
+		story.append(renderBlocks(firstHeader(model).blocks, model));
+		expectDrawnLetterhead(story);
+		expect(story.querySelectorAll('.dve-shape svg')).toHaveLength(2);
+	});
+
+	it('leaves them out of the Draft view header, as Word does, without the word "Shape"', async () => {
 		const { model } = await loadDocx(await letterheadFixture());
 		const header = must(buildHeaderElement(model, 'en'), 'header story');
-		expectDrawnLetterhead(header);
-		expect(header.querySelectorAll('.dve-shape svg')).toHaveLength(2);
+		expect(header.querySelector('.dve-shape')).toBeNull();
+		expect(header.querySelector('.dve-image-placeholder')).toBeNull();
+		expect(header.textContent).not.toContain('Shape');
+		expect(header.textContent).toContain('Letterhead');
+		expect(header.querySelectorAll('.dve-floating-omitted')).toHaveLength(2);
 	});
 
 	it('draws them on the Print Layout page instead of empty placeholder boxes', async () => {
@@ -178,7 +189,8 @@ describe('text box text colour', () => {
 		preview.append(renderBlocks(model.blocks, model));
 		expect(textColour(preview, 'Red box')).toBe(white);
 		const letterhead = (await loadDocx(await letterheadFixture())).model;
-		const header = must(buildHeaderElement(letterhead, 'en'), 'header story');
+		const header = document.createElement('div');
+		header.append(renderBlocks(firstHeader(letterhead).blocks, letterhead));
 		expect(textColour(header, 'First Partner')).toBe(navy);
 		expect(textColour(header, '12 Example Street')).toBe(black);
 	});
