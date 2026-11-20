@@ -1,7 +1,9 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright spec */
 /**
- * Framework-neutral online video: a linked YouTube video (PowerPoint's Insert > Online Video)
- * paints the provider's embedded player, not an empty frame, in every binding.
+ * Framework-neutral online video: a linked YouTube video (PowerPoint's Insert > Online Video) is
+ * linked external content, so nothing reaches the provider until the user chooses Enable Content
+ * (docs/powerpoint-external-content.md). After it, the provider's embedded player paints, not an
+ * empty frame, in every binding.
  */
 import { expect, test } from '@playwright/test';
 import type { PowerPointViewerAPI } from 'pptx-viewer-shared';
@@ -13,15 +15,17 @@ declare global {
 	}
 }
 
-test('a linked YouTube video paints the embedded player', async ({ page }) => {
-	// Never reach the provider from a test: answer its player page locally.
-	await page.route('https://www.youtube.com/**', (route) =>
-		route.fulfill({
+test('a linked YouTube video paints the embedded player after Enable Content', async ({ page }) => {
+	// Never reach the provider from a test: answer its player page locally, and count the requests.
+	const requests: string[] = [];
+	await page.route('https://www.youtube.com/**', (route) => {
+		requests.push(route.request().url());
+		return route.fulfill({
 			status: 200,
 			contentType: 'text/html',
 			body: '<!doctype html><title>player</title>',
-		}),
-	);
+		});
+	});
 	await page.goto('/?sample=1');
 	await expect(page.locator('[data-pptx-viewport] [data-pptx-element="true"]').first()).toBeVisible(
 		{ timeout: 30_000 },
@@ -42,6 +46,12 @@ test('a linked YouTube video paints the embedded player', async ({ page }) => {
 	const player = page.locator(
 		'[data-pptx-viewport] iframe[src="https://www.youtube.com/embed/dQw4w9WgXcQ"]',
 	);
+	const bar = page.locator('pptx-ui-external-content-bar');
+	await expect(bar).toBeVisible();
+	await expect(player).toHaveCount(0);
+	expect(requests).toStrictEqual([]);
+
+	await bar.getByRole('button', { name: 'Enable Content' }).click();
 	await expect(player).toHaveCount(1);
 	await expect(player).toBeVisible();
 	await expect(player).toHaveAttribute('sandbox', /allow-scripts/u);
