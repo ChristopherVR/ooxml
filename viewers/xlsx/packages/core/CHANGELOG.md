@@ -140,15 +140,6 @@ entries are generated from [Conventional Commits](https://www.conventionalcommit
 
 - **viewers:** Point every package's homepage, bugs and README links at ooxml (by @ChristopherVR) ([e40592e](https://github.com/ChristopherVR/ooxml/commit/e40592e1cc1331c8223e8fcc366041a933435dee))
 
-# Changelog
-
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs re-releases a package whenever any of its files, or an internal
-dependency it ships against, changes, not only on conventional commits.
-
 ## [0.2.3](https://github.com/ChristopherVR/xlsx-viewer/releases/tag/@christophervr/xlsx-core@0.2.3) - 2026-10-05
 
 ### Build & CI
@@ -187,5 +178,4 @@ dependency it ships against, changes, not only on conventional commits.
 ### Features
 
 - Add the Excel viewer and editor (by @ChristopherVR) ([408fe71](https://github.com/ChristopherVR/xlsx-viewer/commit/408fe71adc283e887cca4e873673daa6934957d5))
-
 

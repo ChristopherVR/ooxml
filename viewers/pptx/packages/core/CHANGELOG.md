@@ -164,15 +164,6 @@ This release hardens the headless PowerPoint engine for decks you do not control
 
 - **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
 
-# Changelog
-
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs re-releases a package whenever any of its files
-change, not only on conventional ones.
-
 ## [4.11.2](https://github.com/ChristopherVR/pptx-viewer/releases/tag/pptx-viewer-core@4.11.2) - 2026-10-05
 
 ### Build & CI

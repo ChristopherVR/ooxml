@@ -170,4 +170,3 @@ For React apps, the `<Teams>` component and the `useTeams`, `useTeamsClient` and
 
 - **viewers:** Import the teams-viewer repository with its history (by @ChristopherVR) ([7d29cec](https://github.com/ChristopherVR/ooxml/commit/7d29cecf88ac551cc5a80d2e9e35c65e130ab0de))
 
-

@@ -173,4 +173,3 @@ This release makes the combined server safer to hand to an agent you do not full
 
 - **packages:** Align npm readmes with powerpoint structure (by @ChristopherVR) ([52d33d4](https://github.com/ChristopherVR/ooxml/commit/52d33d4c58f4cfac7e47df3c890168ca8542752b))
 
-

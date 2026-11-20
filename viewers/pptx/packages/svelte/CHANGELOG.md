@@ -1798,15 +1798,6 @@ Update promptly if you host the Svelte viewer: opening a crafted presentation co
 
 - **viewers:** Import the pptx-viewer repository with its history ([dde62be](https://github.com/ChristopherVR/ooxml/commit/dde62beb12d38f53fcddf016a4de243fe7151712))
 
-# Changelog
-
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs re-releases a package whenever any of its files
-change, not only on conventional ones.
-
 ## [4.24.3](https://github.com/ChristopherVR/pptx-viewer/releases/tag/pptx-svelte-viewer@4.24.3) - 2026-10-06
 
 ### Bug Fixes
@@ -4850,6 +4841,3 @@ change, not only on conventional ones.
 - Relicense from MIT to Apache-2.0 (by @ChristopherVR) ([e12f926](https://github.com/ChristopherVR/pptx-viewer/commit/e12f9266f02bebbfc218986b617c418fee43a56b))
 - Bump vanilla + svelte to 0.1.1; clarify view-only in READMEs (by @ChristopherVR) ([0bc44ab](https://github.com/ChristopherVR/pptx-viewer/commit/0bc44ab3b083c7d8aeed51197584f8eee04fc9ee))
 
-# Changelog
-
-All notable changes to `pptx-svelte-viewer` are documented in this file.
