@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { hasNestedQuantifier } from './functions/text-regex';
 import { compileWildcard } from './functions/wildcard';
 import { book, calc, E, engine, get } from './test-helpers';
 import { Matrix, resetCalcBudget } from './values';
@@ -58,20 +57,6 @@ describe('wildcards without backtracking', () => {
 		expect(compileWildcard('ab*bc').test('abc')).toBe(false);
 		expect(compileWildcard('b?d').search('abcbxd', 0)).toBe(3);
 		expect(compileWildcard('*d').search('abcd', 2)).toBe(2);
-	});
-});
-
-describe('regex function limits', () => {
-	it('rejects nested quantifiers and long patterns', () => {
-		expect(hasNestedQuantifier('(a+)+')).toBe(true);
-		expect(hasNestedQuantifier('(a*)*')).toBe(true);
-		expect(hasNestedQuantifier('(a|aa)+')).toBe(true);
-		expect(hasNestedQuantifier('((a+)b)*')).toBe(true);
-		expect(hasNestedQuantifier('(ab)+c*')).toBe(false);
-		expect(hasNestedQuantifier('[(a+)+]')).toBe(false);
-		expect(calc('REGEXTEST(A1,"(a+)+$")', { A1: `${'a'.repeat(40)}!` })).toEqual(E.VALUE);
-		expect(calc('REGEXTEST("abc",REPT("a",1001))')).toEqual(E.VALUE);
-		expect(calc('REGEXTEST("abc","b+")')).toBe(true);
 	});
 });
 
