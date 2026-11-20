@@ -18,6 +18,7 @@ export { deckDataFieldChanged } from './deck-data-diff';
 
 export { createPptxAiBridge, pptxAiDeckTitle } from './bridge-factory';
 export type { PptxAiBridgePort, PptxAiCanvasSize } from './bridge-factory';
+export { checkPptxAiBridgeReadsItsWrites } from './bridge-contract';
 
 export {
 	AI_TOOL_FLASH_MS,
@@ -59,8 +60,15 @@ export { buildDeckContext, buildFocusedTargetsContext } from './focused-context'
 export type { FocusedContextOptions } from './focused-context';
 
 export { ProposalStore } from './proposals';
-export type { ProposalView, StagedProposal } from './proposals';
-export { diffSlides, humanizeDiffLine } from './proposals-diff';
+export type { ProposalCommit, ProposalView, ProposedWrite, StagedProposal } from './proposals';
+export { DEFAULT_RUN_LIMITS, RunLimitError } from './run-limits';
+export type {
+	PptxAiFinishReason,
+	PptxAiRunFinish,
+	PptxAiRunLimit,
+	PptxAiRunLimits,
+} from './run-limits';
+export { canAcceptAllProposals, diffSlides, humanizeDiffLine } from './proposals-diff';
 
 export {
 	buildDeckOutline,

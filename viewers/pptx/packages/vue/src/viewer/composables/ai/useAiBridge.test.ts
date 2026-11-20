@@ -1,4 +1,5 @@
 import type { CanvasSize } from 'ooxml-ui/pptx';
+import { checkPptxAiBridgeReadsItsWrites } from 'ooxml-ui/pptx/ai/host';
 // oxlint-disable react-hooks/rules-of-hooks
 import type {
 	ParsedTableStyleMap,
@@ -15,7 +16,9 @@ import type {
 } from 'pptx-viewer-core';
 import { describe, expect, it, vi } from 'vitest';
 import { ref, shallowRef } from 'vue';
+import type { Ref } from 'vue';
 
+import { useThemeEditing } from '../useThemeEditing';
 import { useAiBridge } from './useAiBridge';
 
 /**
@@ -50,6 +53,7 @@ function makeBridge(extra: { onCorePropertiesChanged?: (p: PptxCoreProperties) =
 		canvasSize,
 		theme,
 		handler: ref(null),
+		deckLoad: () => 0,
 		sections,
 		customShows,
 		presentationProperties,
@@ -222,5 +226,51 @@ describe('useAiBridge (shared bridge)', () => {
 		);
 		expect(h.pushHistory).toHaveBeenCalledOnce();
 		expect(h.slides.value.map((s) => s.id)).toEqual(['s1', 's2']);
+	});
+});
+
+describe('useAiBridge read after write', () => {
+	it('sees each write at once, through the real theme path', () => {
+		const slides = shallowRef([
+			{ id: 's1', slideNumber: 1, elements: [{ id: 'a', type: 'text', x: 0, y: 0 }] },
+		]) as unknown as Ref<PptxSlide[]>;
+		const theme = shallowRef<PptxTheme | undefined>({
+			colorScheme: { accent1: '#000001', accent2: '#000002' },
+			fontScheme: { majorFont: { latin: 'Serif' } },
+		} as unknown as PptxTheme);
+		const { applyThemeUpdates } = useThemeEditing({
+			slides,
+			pptxTheme: theme,
+			themeColorMap: ref({}),
+			pushHistory: () => undefined,
+			themeGalleryOpen: ref(false),
+			themeEditorOpen: ref(false),
+			templateElementsBySlideId: shallowRef({}),
+		});
+		const bridge = useAiBridge({
+			slides,
+			activeSlideIndex: ref(0),
+			canvasSize: ref({ width: 960, height: 540 }),
+			theme,
+			handler: ref(null),
+			deckLoad: () => 0,
+			sections: shallowRef([]),
+			customShows: shallowRef([]),
+			presentationProperties: shallowRef({}),
+			customProperties: shallowRef([]),
+			coreProperties: shallowRef({}),
+			appProperties: shallowRef(undefined),
+			viewProperties: shallowRef(undefined),
+			tableStyleMap: shallowRef(undefined),
+			tableStylesDefaultId: shallowRef(undefined),
+			tagCollections: shallowRef([]),
+			fileName: () => undefined,
+			pushHistory: () => undefined,
+			markDirty: () => undefined,
+			goTo: () => undefined,
+			setSelection: () => undefined,
+			applyThemeUpdates: (updates) => void applyThemeUpdates(updates),
+		});
+		expect(checkPptxAiBridgeReadsItsWrites(bridge)).toEqual([]);
 	});
 });

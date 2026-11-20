@@ -52,6 +52,12 @@ export interface AiPanelDeps {
 	createChat?: ChatFactory;
 	/** Chat-history store override for tests; defaults to the shared store. */
 	historyStore?: PptxAiChatStore;
+	/**
+	 * Called back when the bridge's deck load changes. A load drops the staged
+	 * proposals (they belong to the load they were made on), so the panel
+	 * re-renders to remove their cards and say why.
+	 */
+	subscribeDeckLoad?(listener: () => void): () => void;
 }
 
 export interface AiPanel {
@@ -125,7 +131,10 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 	sendBtn.appendChild(createIcon(doc, 'send'));
 	composer.append(textarea, sendBtn);
 
-	host.append(header, ...(focusBar ? [focusBar.el] : []), messages, proposals, errorLine, composer);
+	// The composer joins once the chat exists, as in the other bindings. A form
+	// submitted before its handler is attached would navigate the whole page.
+	host.append(header, ...(focusBar ? [focusBar.el] : []), messages, proposals, errorLine);
+	let lastPrefillNonce = focusController?.getPrefill().nonce ?? 0;
 
 	try {
 		chat = await (deps.createChat ?? createVanillaChat)({
@@ -136,10 +145,12 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		empty.textContent = t('pptx.ai.unavailableTitle');
 		textarea.disabled = true;
 		sendBtn.disabled = true;
+		host.append(composer);
 		focusBar?.destroy();
 		return { destroy: () => host.replaceChildren() };
 	}
 	const controller = chat;
+	host.append(composer);
 
 	// Chat history: the header "Chats" toggle + saved-chat dropdown, backed by
 	// the shared per-deck store. Transcript changes are forwarded below for the
@@ -188,29 +199,38 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		if (snapshot.messages.length === 0) {
 			messages.appendChild(empty);
 		}
-		renderProposals(doc, proposals, controller.proposals.list(), t, {
-			accept: (id) => {
-				// Applying a suggestion enables the canvas colour tween briefly so the
-				// edit fades in rather than snapping (proposals apply outside the loop).
-				focusController?.flashToolTarget(null);
-				controller.proposals.apply(id);
-				render(controller.getSnapshot());
+		renderProposals(
+			doc,
+			proposals,
+			controller.proposals.list(),
+			t,
+			{
+				accept: (id) => {
+					// Applying a suggestion enables the canvas colour tween briefly so the
+					// edit fades in rather than snapping (proposals apply outside the loop).
+					focusController?.flashToolTarget(null);
+					controller.proposals.apply(id);
+					render(controller.getSnapshot());
+				},
+				reject: (id) => {
+					controller.proposals.revert(id);
+					render(controller.getSnapshot());
+				},
+				acceptAll: () => {
+					focusController?.flashToolTarget(null);
+					controller.proposals.acceptAll();
+					render(controller.getSnapshot());
+				},
 			},
-			reject: (id) => {
-				controller.proposals.revert(id);
-				render(controller.getSnapshot());
-			},
-			acceptAll: () => {
-				focusController?.flashToolTarget(null);
-				controller.proposals.acceptAll();
-				render(controller.getSnapshot());
-			},
-		});
+			controller.proposals.discarded,
+		);
 		const busy = snapshot.status === 'submitted' || snapshot.status === 'streaming';
 		host.classList.toggle('is-busy', busy);
 		sendBtn.setAttribute('aria-label', t(busy ? 'pptx.ai.stop' : 'pptx.ai.send'));
 		errorLine.hidden = !snapshot.error;
-		errorLine.textContent = snapshot.error ? t('pptx.ai.errorPrefix') : '';
+		errorLine.textContent = snapshot.error
+			? `${t('pptx.ai.errorPrefix')}: ${snapshot.error.message}`
+			: '';
 		messages.scrollTop = messages.scrollHeight;
 		driveLiveFocus(snapshot);
 	};
@@ -241,7 +261,6 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 
 	// Apply a one-shot composer prefill from "Ask AI" / "Fix with AI" / pick mode:
 	// fill the composer and focus it (never auto-send) when the nonce advances.
-	let lastPrefillNonce = focusController?.getPrefill().nonce ?? 0;
 	const applyPrefill = (): void => {
 		if (!focusController) {
 			return;
@@ -255,14 +274,17 @@ export async function createAiPanel(deps: AiPanelDeps): Promise<AiPanel> {
 		textarea.focus();
 	};
 	const unsubscribeFocus = focusController?.subscribe(applyPrefill);
+	applyPrefill();
 
 	const unsubscribe = controller.subscribe(render);
 	render(controller.getSnapshot());
+	const unsubscribeDeckLoad = deps.subscribeDeckLoad?.(() => render(controller.getSnapshot()));
 
 	return {
 		changeAnimator: controller.changeAnimator,
 		destroy() {
 			unsubscribe();
+			unsubscribeDeckLoad?.();
 			unsubscribeHistory();
 			history.destroy();
 			unsubscribeFocus?.();

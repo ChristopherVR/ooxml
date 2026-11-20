@@ -185,6 +185,11 @@ export const AI_CSS = `
 	margin-bottom: 6px;
 }
 .pptxv-ai-proposals-title { font-size: 0.75rem; font-weight: 700; }
+.pptxv-ai-proposals-discarded {
+	margin: 0;
+	color: var(--pptx-muted-foreground);
+	font-size: 0.75rem;
+}
 .pptxv-ai-proposal {
 	margin-bottom: 8px;
 	padding: 8px;
@@ -210,6 +215,8 @@ export const AI_CSS = `
 	font-size: 0.75rem;
 	line-height: 1.4;
 }
+.pptxv-ai-proposal-notice { margin: 0 0 8px; font-size: 0.75rem; font-weight: 500; }
+.pptxv-ai-proposal-notice.is-conflict { color: var(--pptx-destructive, #dc2626); }
 .pptxv-ai-proposal-actions { display: flex; gap: 6px; }
 .pptxv-ai-proposal-btn {
 	padding: 4px 12px;

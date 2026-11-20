@@ -13,6 +13,8 @@ import {
 	renameLayout,
 	renameSlideMaster,
 } from './master-layout-crud';
+import { createSlideClipboardDeck } from '../../../__tests__/helpers/slide-clipboard-deck';
+import { importSlidePackage } from './import-slide-package';
 import { PresentationBuilder } from './PresentationBuilder';
 import { at } from '../../../test-support/access';
 
@@ -260,5 +262,45 @@ describe('master-layout-crud: slide masters', () => {
 				'Corporate Theme',
 			);
 		});
+	});
+});
+
+describe('master-layout-crud: master and layout ids', () => {
+	/** Every `sldMasterId` and `sldLayoutId` in the saved package, in one list. */
+	async function masterAndLayoutIds(bytes: Uint8Array): Promise<string[]> {
+		const zip = await (await import('jszip')).default.loadAsync(bytes);
+		const parts = Object.keys(zip.files).filter(
+			(path) =>
+				path === 'ppt/presentation.xml' || /^ppt\/slideMasters\/slideMaster\d+\.xml$/u.test(path),
+		);
+		const xml = (await Promise.all(parts.map((path) => zip.file(path)!.async('string')))).join('');
+		return [...xml.matchAll(/<p:sld(?:Master|Layout)Id[^>]*?\sid="(\d+)"/gu)].map(
+			(match) => match[1]!,
+		);
+	}
+
+	it('keeps every master and layout id unique through inserts and duplicates, so slides still paste', async () => {
+		let { handler, data } = await freshPresentation();
+		const commands = [
+			() => insertLayout(handler, data, at(data.slideMasters!, 0).path),
+			() => insertSlideMaster(handler, data),
+			() => duplicateSlideMaster(handler, data, at(data.slideMasters!, 0).path),
+		];
+		for (const command of commands) {
+			const result = await command();
+			expect(result.ok).toBeTruthy();
+			if (!result.ok) {
+				return;
+			}
+			({ handler, data } = result);
+		}
+		const bytes = await handler.save(data.slides);
+		const ids = await masterAndLayoutIds(bytes);
+
+		expect(ids.length).toBeGreaterThan(3);
+		expect(new Set(ids).size).toBe(ids.length);
+		expect(ids.every((id) => Number(id) >= 2147483648)).toBeTruthy();
+		const pasted = await importSlidePackage(bytes, await createSlideClipboardDeck(true));
+		expect(pasted.slidePaths.length).toBeGreaterThan(0);
 	});
 });

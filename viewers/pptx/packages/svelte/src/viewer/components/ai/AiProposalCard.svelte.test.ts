@@ -26,6 +26,7 @@ function fakeBridge(): PptxAiBridge & { applied: string[] } {
 		getActiveSlideIndex: () => 0,
 		getTheme: () => undefined,
 		getHandler: () => undefined,
+		getDeckLoad: () => 1,
 		goToSlide: () => undefined,
 		selectElements: () => undefined,
 		applySlidesUpdate: (_updater, label) => {
@@ -116,5 +117,34 @@ describe('aiProposalCard', () => {
 
 		expect(store.size).toBe(0);
 		expect(bridge.applied).toStrictEqual([]);
+	});
+
+	it('says when a change conflicted or needs its own approval', () => {
+		const base = { id: 'p1', label: 'Edit', summary: [], createdAt: 0 };
+		const target = document.createElement('div');
+		const conflicted = mount(AiProposalCard, {
+			target,
+			props: {
+				proposal: { ...base, requiresApproval: false, conflict: 'el-1 changed' },
+				onaccept: vi.fn(),
+				onreject: vi.fn(),
+			},
+		});
+		expect(target.querySelector('[role="alert"]')?.textContent).toContain(
+			'changed after the proposal',
+		);
+		unmount(conflicted);
+
+		const approval = mount(AiProposalCard, {
+			target,
+			props: {
+				proposal: { ...base, requiresApproval: true },
+				onaccept: vi.fn(),
+				onreject: vi.fn(),
+			},
+		});
+		cleanup = () => unmount(approval);
+		expect(target.textContent).toContain('Needs your approval');
+		expect(target.querySelector('[role="alert"]')).toBeNull();
 	});
 });

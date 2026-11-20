@@ -31,6 +31,8 @@ export interface CollaborationDocumentSyncInput {
 	livePatcher: CollaborationLivePatcher;
 	deckSaveState: DeckSaveState;
 	onReadOnlyChange?: (readOnly: boolean) => void;
+	/** The room's slides replaced the open deck: see `UseYjsDocumentSyncInput.onRoomReplacedDeck`. */
+	onRoomReplacedDeck?: () => void;
 }
 
 /** Shared wiring for the bundled editor and custom toolbar/canvas hosts. */

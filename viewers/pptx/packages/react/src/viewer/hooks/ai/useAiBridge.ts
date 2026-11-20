@@ -13,7 +13,9 @@ import {
  * The bridge is the shared `createPptxAiBridge`; this hook is only its port over
  * React state. The bridge identity is kept stable across renders (the port
  * reads live values from a ref) so the chat session built from it in {@link useAiChat} is
- * not torn down and rebuilt on every keystroke.
+ * not torn down and rebuilt on every keystroke. Reads also see the port's own
+ * writes before they render ({@link createPendingDeckWrites}), which is what lets
+ * several proposals apply in one tick.
  */
 import type {
 	ParsedTableStyleMap,
@@ -31,6 +33,8 @@ import type {
 } from 'pptx-viewer-core';
 import type { RefObject } from 'react';
 import { useMemo, useRef } from 'react';
+
+import { createPendingDeckWrites } from './pending-deck-writes';
 
 /** Live inputs the bridge closes over. Updated on every render via a ref. */
 export interface UseAiBridgeInput {
@@ -54,6 +58,8 @@ export interface UseAiBridgeInput {
 	 */
 	pickedFocus?: PptxAiFocusedTarget[] | null;
 	handlerRef: RefObject<PptxHandler | null>;
+	/** Changes on every presentation load (and room join) and only then: the bridge's `getDeckLoad`. */
+	deckLoad: number;
 	// Presentation-level state, exposed so the AI's `getDeckData`/`applyDeckData`
 	// seam can read and commit metadata / sections / canvas size / presentation
 	// properties (the pptx-viewer-mcp "deck" tools). Slide + theme tools do not
@@ -90,11 +96,11 @@ export interface UseAiBridgeInput {
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 	setActiveSlideIndex: (index: number) => void;
 	applySelection: (primaryId: string | null, ids?: string[]) => void;
-	/** Force the history stack to capture the next slides change (content-only edits). */
-	bumpHistory: () => void;
+	/** Record `next` as one undo step taken from `before`, ahead of its render. */
+	recordSlidesStep: (next: PptxSlide[], label: string, before: PptxSlide[]) => void;
 	markDirty: () => void;
-	/** Route partial theme updates through the editor's theme handlers. */
-	applyThemeUpdates: (updates: Partial<PptxTheme>) => void;
+	/** Route partial theme updates, made over `previous`, through the theme handlers. */
+	applyThemeUpdates: (updates: Partial<PptxTheme>, previous: PptxTheme | undefined) => void;
 	notify?: (message: string, level?: PptxAiNotifyLevel) => void;
 }
 
@@ -104,24 +110,30 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 
 	return useMemo<PptxAiBridge>(() => {
 		const live = (): UseAiBridgeInput => ref.current;
+		const deckLoad = (): number => live().deckLoad;
+		const deck = createPendingDeckWrites(live, deckLoad);
 		return createPptxAiBridge({
-			getSlides: () => live().slides,
+			getSlides: () => deck.read('slides'),
 			getActiveSlideIndex: () => live().activeSlideIndex,
-			getCanvasSize: () => live().canvasSize,
-			getTheme: () => live().theme,
+			getCanvasSize: () => deck.read('canvasSize'),
+			getTheme: () => deck.read('theme'),
 			getHandler: () => live().handlerRef.current,
+			getDeckLoad: deckLoad,
 			getFileName: () => live().fileName,
-			getSections: () => live().sections,
-			getCustomShows: () => live().customShows,
-			setCustomShows: (shows) => live().setCustomShows(shows),
-			getPresentationProperties: () => live().presentationProperties,
-			getCustomProperties: () => live().customProperties,
-			getCoreProperties: () => live().coreProperties,
-			getAppProperties: () => live().appProperties,
-			getViewProperties: () => live().viewProperties,
-			getTableStyleMap: () => live().tableStyleMap,
-			getTableStylesDefaultId: () => live().tableStylesDefaultId,
-			getTagCollections: () => live().tagCollections,
+			getSections: () => deck.read('sections'),
+			getCustomShows: () => deck.read('customShows'),
+			setCustomShows(shows) {
+				deck.write('customShows', shows);
+				live().setCustomShows(shows);
+			},
+			getPresentationProperties: () => deck.read('presentationProperties'),
+			getCustomProperties: () => deck.read('customProperties'),
+			getCoreProperties: () => deck.read('coreProperties'),
+			getAppProperties: () => deck.read('appProperties'),
+			getViewProperties: () => deck.read('viewProperties'),
+			getTableStyleMap: () => deck.read('tableStyleMap'),
+			getTableStylesDefaultId: () => deck.read('tableStylesDefaultId'),
+			getTagCollections: () => deck.read('tagCollections'),
 			goToSlide: (index) => live().setActiveSlideIndex(index),
 			selectElements(slideIndex, elementIds) {
 				const current = live();
@@ -130,30 +142,59 @@ export function useAiBridge(input: UseAiBridgeInput): PptxAiBridge {
 				}
 				current.applySelection(elementIds[0] ?? null, elementIds);
 			},
-			updateSlides(update) {
+			updateSlides(update, label) {
 				const current = live();
-				// A functional update, so two AI edits in one tick compose.
-				current.setSlides((prev) => update(prev));
-				// Content-only edits (text/style) do not change slide/element counts,
-				// so nudge the history nonce to force the snapshot capture that makes
-				// the AI edit a single undoable entry.
-				current.bumpHistory();
+				const before = deck.read('slides');
+				const next = update(before);
+				deck.write('slides', next);
+				current.recordSlidesStep(next, label, before);
+				// Another update queued in this tick (a theme recolour) is kept by
+				// replaying this edit on top of it.
+				current.setSlides((queued) => (queued === before ? next : update(queued)));
 				current.markDirty();
 			},
-			applyTheme: (updates) => live().applyThemeUpdates(updates),
-			setCanvasSize: (size) => live().setCanvasSize(size),
-			setSections: (sections) => live().setSections(sections),
-			setPresentationProperties: (props) => live().setPresentationProperties(props),
+			applyTheme(updates) {
+				const previous = deck.read('theme');
+				deck.write('theme', { ...previous, ...updates });
+				live().applyThemeUpdates(updates, previous);
+			},
+			setCanvasSize(size) {
+				deck.write('canvasSize', size);
+				live().setCanvasSize(size);
+			},
+			setSections(sections) {
+				deck.write('sections', sections);
+				live().setSections(sections);
+			},
+			setPresentationProperties(props) {
+				deck.write('presentationProperties', props);
+				live().setPresentationProperties(props);
+			},
 			setDocumentProperties(core, app, custom) {
+				deck.write('coreProperties', core);
+				deck.write('appProperties', app);
+				deck.write('customProperties', custom);
 				const current = live();
 				current.setCoreProperties(core);
 				current.setAppProperties(app);
 				current.setCustomProperties(custom);
 			},
-			setViewProperties: (props) => live().setViewProperties(props),
-			setTableStyleMap: (map) => live().setTableStyleMap(map),
-			setTableStylesDefaultId: (id) => live().setTableStylesDefaultId(id),
-			setTagCollections: (tags) => live().setTagCollections(tags),
+			setViewProperties(props) {
+				deck.write('viewProperties', props);
+				live().setViewProperties(props);
+			},
+			setTableStyleMap(map) {
+				deck.write('tableStyleMap', map);
+				live().setTableStyleMap(map);
+			},
+			setTableStylesDefaultId(id) {
+				deck.write('tableStylesDefaultId', id);
+				live().setTableStylesDefaultId(id);
+			},
+			setTagCollections(tags) {
+				deck.write('tagCollections', tags);
+				live().setTagCollections(tags);
+			},
 			afterDeckUpdate: () => live().markDirty(),
 			getFocusedTargets() {
 				const current = live();

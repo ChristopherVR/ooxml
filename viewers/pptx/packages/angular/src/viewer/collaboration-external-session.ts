@@ -57,6 +57,7 @@ export function activateExternalSession(
 			onStatus: deps.setStatus,
 			onReadOnlyChange: deps.setReadOnly,
 			adoptSlides: (slides) => deps.slideSync.adoptSlides(slides),
+			onRoomReplacedDeck: () => deps.onRoomReplacedDeck?.(),
 			onReady: ({ seedEmptyRoom }) => deps.slideSync.publishCurrent(seedEmptyRoom),
 			onSuspend: () => {
 				deps.slideSync.cancelPending();

@@ -6,7 +6,7 @@
  * that the panel opens, or that a model turn renders at all, so a binding could
  * ship a dead Sparkles button and stay green. This suite drives the panel
  * against a MOCKED language model: the demos build an in-browser
- * OpenAI-compatible connection from localStorage, so `support/ai-panel` points
+ * OpenAI-compatible connection from sessionStorage, so `support/ai-panel` points
  * that base URL at the page's own origin and answers the chat-completions
  * endpoint with scripted SSE. That makes the full production code path real -
  * AI SDK agent loop, streaming parser, tool registry, proposal staging, change
@@ -87,6 +87,38 @@ function demoAiPath(page: Page): Promise<string | undefined> {
 }
 
 test.describe('cross-binding AI assistant panel', () => {
+	test(
+		'a message sent while the assistant is still loading reaches the model',
+		{ tag: '@cross-binding' },
+		async ({ browser }, testInfo) => {
+			const results = await acrossFrameworks(
+				browser,
+				testInfo,
+				async (page, origin) => {
+					await seedMockAiProvider(page);
+					const requests = await installMockAiModel(page, { reply: PLAIN_REPLY });
+					await loadDeckAt(page, origin, DECK);
+					// Slow every later request so the panel's lazy chunks are still loading.
+					await page.route('**/*', async (route) => {
+						await new Promise((resolve) => setTimeout(resolve, 800));
+						await route.fallback();
+					});
+					await openAiPanel(page);
+					await sendAiMessage(page, 'hello');
+					const replied = await appears(aiPanel(page).getByText(PLAIN_REPLY).first(), 20_000);
+					return { replied, requests: requests.length, url: page.url() };
+				},
+				{ viewport: VIEWPORT },
+			);
+			const problems = byBinding(results).flatMap(({ name, value }) =>
+				value.replied && value.requests === 1 && !value.url.includes('?')
+					? []
+					: [`${name}: ${JSON.stringify(value)}`],
+			);
+			expect(problems.join('\n')).toBe('');
+		},
+	);
+
 	test(
 		'the toolbar toggle opens a panel with a composer and a send control',
 		{ tag: '@cross-binding' },

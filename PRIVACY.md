@@ -25,6 +25,7 @@ network request must update this file in the same commit.
 | PowerPoint: Share / Broadcast without a server   | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it      | Configure a signaling server or `serverUrl`                        |
 | PowerPoint: Share / Broadcast with a server      | The host's or user's server                 | Only when the user starts it      | Do not start a session                                             |
 | PowerPoint (Node): signature inspection          | The OCSP responder named in the certificate | When a signature value verifies   | `checkRevocation: false` (see below)                               |
+| PowerPoint: AI assistant                         | The connection the host configures          | No (host must enable it)          | Do not pass `ai`                                                   |
 | Teams: sync and signaling                        | The configured `syncUrl` and `signalingUrl` | Only when a server is configured  | Local mode                                                         |
 | Teams: calls                                     | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts           | `iceServers` (your own STUN/TURN, or `[]`)                         |
 | Teams: website tabs                              | The URL a member added                      | When the tab is opened            | Do not add or open website tabs                                    |
@@ -109,6 +110,14 @@ Sessions start only when the user (or host) starts one.
   then flows directly between peers, encrypted by WebRTC and by the same secret. Pass a
   `signaling` list (or `?signaling=` in a share link) to use your own server.
 - Sessions within one browser use `BroadcastChannel`, which never leaves the device.
+
+### AI assistant
+
+The assistant is off unless the host passes an `ai` configuration. When it is on, each request goes
+to the connection the host chose (its endpoint, its transport, or a model running in the page) and
+carries the conversation, a deck outline or the active slide (`contextStrategy`, `'none'` turns it
+off), whatever the user focused, and the results of the tools the model called. This applies in every
+framework binding. `tools.enabled` limits what the model can read. Stored chats stay on the device.
 
 ### Digital signature inspection (Node only)
 
