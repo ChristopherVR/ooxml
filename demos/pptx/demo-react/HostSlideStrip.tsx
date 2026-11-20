@@ -16,7 +16,14 @@ const NO_TEMPLATE_ELEMENTS: PptxElement[] = [];
 
 /** A host-owned thumbnail strip, fed from the props the built-in slides pane takes. */
 export function HostSlideStrip(props: React.ComponentProps<typeof SlidesPane>) {
-	const { slides, templateElementsBySlideId, canvasSize, fieldContext, tableStyleContext } = props;
+	const {
+		slides,
+		templateElementsBySlideId,
+		canvasSize,
+		fieldContext,
+		tableStyleContext,
+		linkedContent,
+	} = props;
 	return (
 		<nav
 			aria-label={HOST_STRIP_LABEL}
@@ -39,6 +46,7 @@ export function HostSlideStrip(props: React.ComponentProps<typeof SlidesPane>) {
 						previewWidth={HOST_STRIP_THUMBNAIL_WIDTH}
 						fieldContext={fieldContext}
 						tableStyleContext={tableStyleContext}
+						linkedContent={linkedContent}
 					/>
 				</button>
 			))}

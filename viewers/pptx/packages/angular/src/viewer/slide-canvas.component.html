@@ -73,7 +73,7 @@
 				/>
 			}
 			<pptx-activex-controls-overlay
-				[controls]="slide()?.activeXControls ?? []"
+				[controls]="drawnSlide()?.activeXControls ?? []"
 				[canvasSize]="canvasSize()"
 			/>
 			@if (aiHighlights().length > 0 || aiActive()) {

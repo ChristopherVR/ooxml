@@ -23,6 +23,7 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
+	linkedContentUrl,
 	resolveShapeFillView,
 	SHAPE_FILL_MODE_SECTIONS,
 	SHAPE_FILL_OPTIONS_SECTIONS,
@@ -32,6 +33,7 @@ import {
 import type { PptxElement, ShapeStyle } from 'pptx-viewer-core';
 import { hasShapeProperties } from 'pptx-viewer-core';
 
+import { injectLinkedContentAllowed } from './external-content.service';
 import { GradientPickerComponent } from './gradient-picker.component';
 import { InspectorFieldsComponent } from './inspector-fields.component';
 import { PatternFillPanelComponent } from './pattern-fill-panel.component';
@@ -87,10 +89,10 @@ import { PatternFillPanelComponent } from './pattern-fill-panel.component';
 					}}</span>
 					<input type="file" accept="image/*" (change)="onImageFile($event)" />
 				</label>
-				@if (image.url) {
+				@if (previewUrl(image.url); as preview) {
 					<img
 						class="pptx-ng-fill-image__preview"
-						[src]="image.url"
+						[src]="preview"
 						[alt]="'pptx.fillAdvanced.fillPreviewAlt' | translate"
 					/>
 				}
@@ -145,6 +147,11 @@ export class ShapeFillSectionComponent {
 	});
 
 	protected readonly view = computed(() => resolveShapeFillView(this.style()));
+	private readonly linkedContentAllowed = injectLinkedContentAllowed();
+	/** The fill picture preview; a linked one only once this viewer allows linked content. */
+	protected previewUrl(url: string | undefined): string | undefined {
+		return linkedContentUrl(url, this.linkedContentAllowed());
+	}
 
 	/** Merge a fill field's shape-style patch into the element. */
 	protected onStylePatch(patch: Partial<ShapeStyle>): void {

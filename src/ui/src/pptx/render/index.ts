@@ -1754,6 +1754,8 @@ export * from './cross-slide-audio';
 // Slide-transition sound playback (`p:sndAc/p:stSnd`/`p:endSnd`), distinct
 // from `slide-transition-sound.ts`'s authoring picker.
 export * from './slide-transition-sound-playback';
+// Every sound a viewer plays from a deck, behind its linked-content consent.
+export * from './deck-sound';
 // Presentation ink-annotation overlay pure helpers (stroke path + cursor).
 export * from './annotation-overlay';
 

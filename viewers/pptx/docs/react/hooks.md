@@ -231,6 +231,29 @@ const blocks = useViewerBuildingBlocks({ content, initialSlide: 4 });
 Changing `initialSlide` later applies to the next load, not the open deck; use the handle's
 `goTo(index)` to move the current slide.
 
+### Linked pictures and media
+
+As in Microsoft PowerPoint, a deck that links pictures or media to the web opens without
+downloading them. `blocks.externalContent.barVisible` says when to show PowerPoint's security bar;
+render the exported `<ExternalContentBar>` (or your own) and wire its buttons to
+`blocks.externalContent.enable()` and `close()`. The canvas does not draw the bar itself.
+Enable Content only redraws: nothing reloads, so edits, the unsaved state, the slide on screen
+and undo history stay, and in a collaboration session each participant enables content for
+themselves. `canvasProps` and `slidesPaneProps` carry `blocks.externalContent.allowed` as
+`linkedContent`; pass it to any `<SlideThumbnail>` your shell draws itself. A new presentation asks again. The `allowExternalContent` option
+(`true` or `false`) answers for the user, and then the bar never shows.
+
+```tsx
+{
+	blocks.externalContent.barVisible && (
+		<ExternalContentBar
+			onEnable={blocks.externalContent.enable}
+			onClose={blocks.externalContent.close}
+		/>
+	);
+}
+```
+
 ### Picker, dialog and layout workflows from your own controls
 
 The building blocks mount no file inputs, dialogs or panes. `blocks.actions` is how a custom shell

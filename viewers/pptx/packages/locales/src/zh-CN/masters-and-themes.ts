@@ -73,7 +73,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': '幻灯片母版',
 	'pptx.masterView.notesMasterTitle': '备注母版',
 	'pptx.masterView.handoutMasterTitle': '讲义母版',
-	'pptx.masterView.collapse': '折叠母版窗格',
 	'pptx.notesMaster.phSlideImage': '幻灯片图像',
 	'pptx.notesMaster.phNotesBody': '备注正文',
 	'pptx.notesMaster.phDate': '日期',

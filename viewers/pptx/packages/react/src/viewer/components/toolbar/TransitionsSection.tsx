@@ -1,5 +1,7 @@
 import type { PptxUiRibbonTransitionsElement, RibbonTransitionsRequestEvent } from 'ooxml-ui/pptx';
 import {
+	BUILT_IN_SOUNDS,
+	playDeckSound,
 	playSlideTransitionPreview,
 	readRibbonTransitionDraft,
 	ribbonTransitionsDraftPatch,
@@ -11,7 +13,6 @@ import type { PptxSlide, PptxSlideTransition } from 'pptx-viewer-core';
 import React, { useEffect, useMemo, useRef } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { playAnimationSound } from '../../utils/animation-sound';
 
 /**
  * The Transitions ribbon tab: a thin adapter over `pptx-ui-ribbon-transitions`.
@@ -76,7 +77,7 @@ export function TransitionsSection(p: TransitionsSectionProps): React.ReactEleme
 				case 'soundPreview': {
 					const url = ribbonTransitionStockSoundUrl(transition);
 					if (url) {
-						playAnimationSound(url);
+						playDeckSound(url, BUILT_IN_SOUNDS);
 					}
 					break;
 				}

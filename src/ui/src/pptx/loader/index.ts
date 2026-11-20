@@ -10,6 +10,7 @@ export {
 } from './load-content-helpers';
 export type { MediaArrayBufferSource, MediaSourceResolution } from './media-element-source';
 export { resolveMediaElementSource } from './media-element-source';
+export { resolveMediaUrls } from './resolve-media-urls';
 export type { TableStyleImageRef } from './table-style-image-paths';
 export {
 	collectTableStyleImagePaths,

@@ -42,7 +42,7 @@ describe('the shared rule the renderer delegates to', () => {
 
 describe('elementRenderer template dispatch order', () => {
 	it('derives isHidden from the shared rule rather than reading the flag directly', () => {
-		expect(componentSource).toContain('isElementHidden(this.element())');
+		expect(componentSource).toContain('isElementHidden(this.drawn())');
 	});
 
 	it('puts the empty hidden branch first, so it wins over every element type', () => {
@@ -60,7 +60,7 @@ describe('elementRenderer template dispatch order', () => {
 	it('renders no element markup inside the hidden branch', () => {
 		const branch = componentSource.slice(
 			componentSource.indexOf('@case (isHidden()) {'),
-			componentSource.indexOf("@case (element().type === 'connector')"),
+			componentSource.indexOf("@case (drawn().type === 'connector')"),
 		);
 		expect(branch).not.toContain('data-element-id');
 		expect(branch).not.toMatch(/<(div|pptx-)/u);

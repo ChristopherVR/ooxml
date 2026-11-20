@@ -29,6 +29,7 @@ export interface SlideThumbnailOptions extends Pick<
 	SlidesPaneOptions,
 	| 'canvasSize'
 	| 'mediaDataUrls'
+	| 'linkedContent'
 	| 'headerFooter'
 	| 'customProperties'
 	| 'firstSlideNumber'
@@ -123,6 +124,7 @@ export function renderSlideThumbnail(options: SlideThumbnailOptions): HTMLElemen
 	const stage = renderSlideStage({
 		document: doc,
 		slide: { ...slide, elements: buildPreviewElements(slide, options.templateElements) },
+		linkedContent: options.linkedContent,
 		canvasSize,
 		mediaDataUrls: options.mediaDataUrls ?? new Map(),
 		colorScheme: options.colorScheme,

@@ -226,6 +226,10 @@ export const translations = {
 		'共同編集者が送信したコンテンツは、安全でないリンクやファイルの種類など、ここでは許可されていないため除外されました。',
 	'pptx.compatibility.exportBackendUnavailable':
 		'現在の環境では、この形式へのエクスポートは使用できません。',
+	'pptx.externalContent.title': 'セキュリティの警告',
+	'pptx.externalContent.message': '外部の画像やその他のメディアへの参照がブロックされました。',
+	'pptx.externalContent.enable': 'コンテンツの有効化',
+	'pptx.externalContent.close': '閉じる',
 	'pptx.readOnly.bannerTitle': '読み取り専用',
 	'pptx.readOnly.editAnyway': '編集する',
 	'pptx.readOnly.dismiss': '閉じる',

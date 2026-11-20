@@ -1,4 +1,5 @@
 // @vitest-own-worker: mounts the real editor state.
+import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,10 +9,9 @@ import {
 	buildingBlocksContractDeck,
 	runBuildingBlocksContract,
 } from '../../../shared/test-utils/building-blocks-contract.mjs';
-import type {
-	BuildingBlocksContractHarness,
-	BuildingBlocksContractOptions,
-} from '../../../shared/test-utils/building-blocks-contract.mjs';
+import type { BuildingBlocksContractOptions } from '../../../shared/test-utils/building-blocks-contract.mjs';
+import { runExternalContentContract } from '../../../shared/test-utils/external-content-contract.mjs';
+import type { ExternalContentContractHarness } from '../../../shared/test-utils/external-content-contract.mjs';
 import BuildingBlocksHarness from './BuildingBlocksHarness.svelte';
 import type { ViewerBuildingBlocks, ViewerBuildingBlocksOptions } from './types';
 
@@ -57,7 +57,7 @@ function mountBlocks(target: HTMLElement, initial: ViewerBuildingBlocksOptions) 
 	};
 }
 
-function svelteHarness(): BuildingBlocksContractHarness {
+function svelteHarness(): ExternalContentContractHarness {
 	let mounted: ReturnType<typeof mountBlocks> | undefined;
 	let host: HTMLElement | undefined;
 	return {
@@ -74,6 +74,8 @@ function svelteHarness(): BuildingBlocksContractHarness {
 		},
 		actions: () => mounted!.blocks().actions,
 		state: () => mounted!.blocks().state,
+		externalContent: () => mounted!.blocks().externalContent,
+		slides: () => mounted!.blocks().viewerState.editor.slides,
 		async clickPictures() {
 			host!.querySelector<HTMLButtonElement>('[data-control="insertImage"]')!.click();
 			await settle();
@@ -98,6 +100,15 @@ describe('svelte building blocks', () => {
 			vi,
 			Handler: PptxHandler,
 			Y,
+		});
+	}, 60000);
+
+	it('passes the shared security bar contract', async () => {
+		await runExternalContentContract({
+			harness: svelteHarness(),
+			expect,
+			Handler: PptxHandler,
+			JSZip,
 		});
 	}, 60000);
 

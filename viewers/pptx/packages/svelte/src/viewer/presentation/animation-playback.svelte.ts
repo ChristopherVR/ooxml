@@ -1,17 +1,18 @@
 import type { BuildRafHandle, ElementAnimationState, PlaybackContext } from 'ooxml-ui/pptx';
 import {
 	advanceMainSequence,
+	BUILT_IN_SOUNDS,
 	clearPlaybackTimers,
 	createActiveAnimationGroup,
+	playDeckSound,
 	playGroup,
 	PresentationAnimationController,
 	resolveMediaBookmarkTimesMs,
 	resolveMediaTimeNodeElementIds,
 	scheduleAutoAdvanceChain,
+	stopDeckSound,
 } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
-
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
 
 /**
  * `AnimationPlayback`: native-timing (`p:timing`) animation playback for the
@@ -29,8 +30,8 @@ import { playAnimationSound, stopAnimationSound } from './animation-sound';
  * The class owns the reactive per-element state map, the keyframes CSS, and the
  * interactive / hover trigger-shape id sets; the controller stays pure. The
  * clock (timers, requestAnimationFrame) + DOM effects live in the shared
- * {@link module:render/animation-playback-engine}, wired here with the local
- * `./animation-sound` player.
+ * {@link module:render/animation-playback-engine}, wired here with the
+ * shared `playDeckSound`.
  *
  * NOTE: the editor / inspector animation PREVIEW still uses the older shared
  * `buildClickGroups` model (see `AnimationsTab` / `editor-animation-controller`);
@@ -97,8 +98,9 @@ export class AnimationPlayback {
 			timers: this.#timers,
 			buildHandle: this.#buildHandle,
 			onPlayActionSound: deps.onPlayActionSound,
-			playSound: playAnimationSound,
-			stopSound: stopAnimationSound,
+			// Without the viewer's sound handler only sounds that need no media map or consent play.
+			playSound: (soundPath) => playDeckSound(soundPath, BUILT_IN_SOUNDS),
+			stopSound: stopDeckSound,
 			frameRoot: deps.frameRoot,
 		};
 	}

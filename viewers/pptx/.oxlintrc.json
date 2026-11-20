@@ -325,6 +325,28 @@
 			"rules": {
 				"import/namespace": "off"
 			}
+		},
+		{
+			// Every sound a viewer plays from a deck goes through `playDeckSound` (ooxml-ui/pptx),
+			// which withholds a linked sound until the viewer allows linked content. A binding
+			// that builds its own `Audio` or audio element skips that consent: the global,
+			// `Audio` read off any object, `createElement('audio')`.
+			"files": ["packages/*/src/**"],
+			"jsPlugins": ["../../scripts/lint/deck-sound-plugin.mjs"],
+			"rules": {
+				"deck-sound/no-unsanctioned-audio": "error",
+				"no-restricted-globals": [
+					"error",
+					{
+						"name": "Audio",
+						"message": "Play deck sounds with playDeckSound (ooxml-ui/pptx): it applies the viewer's linked-content consent."
+					}
+				]
+			}
+		},
+		{
+			"files": ["packages/*/src/**/*.test.ts", "packages/*/src/**/*.test.tsx"],
+			"rules": { "no-restricted-globals": "off", "deck-sound/no-unsanctioned-audio": "off" }
 		}
 	]
 }

@@ -20,6 +20,7 @@ import {
 	definePptxPasteOptions,
 	definePptxRadio,
 	definePptxReadOnlyBanner,
+	definePptxExternalContentBar,
 	definePptxRibbonCommand,
 	definePptxRibbonGroup,
 	definePptxRibbonToggle,
@@ -126,6 +127,10 @@ export type {
 	PresenterConsoleRequestEvent,
 } from './presenter-console';
 export type { PptxUiReadOnlyBannerElement, ReadOnlyBannerRequestEvent } from './office-alias-types';
+export type {
+	ExternalContentBarRequestEvent,
+	PptxUiExternalContentBarElement,
+} from './office-alias-types';
 export type { PptxUiExportProgressElement } from './office-alias-types';
 
 export { attachRibbonOverflow, reflowRibbon } from './ribbon-overflow';
@@ -215,6 +220,7 @@ const controls = [
 	['pptx-ui-present-toolbar', definePptxPresentToolbar],
 	['pptx-ui-presenter-console', definePptxPresenterConsole],
 	['pptx-ui-read-only-banner', definePptxReadOnlyBanner],
+	['pptx-ui-external-content-bar', definePptxExternalContentBar],
 	['pptx-ui-export-progress', definePptxExportProgress],
 	['pptx-ui-ribbon-command', definePptxRibbonCommand],
 	['pptx-ui-ribbon-animations', definePptxRibbonAnimations],

@@ -6,12 +6,13 @@ import {
 	registerBuildingBlockGroups,
 	runBuildingBlockToolbarControl,
 } from 'ooxml-ui/pptx';
-import type { FindResult } from 'ooxml-ui/pptx';
+import type { FindResult, ViewerExternalContentBar } from 'ooxml-ui/pptx';
 
 import { createTranslator } from '../viewer/i18n';
 import type { PptxViewerSource } from '../viewer/load';
 import { clampSlideIndex as clampIndex } from '../viewer/state';
 import { viewerModeOf } from '../viewer/state-sync';
+import { createExternalContentBar } from '../viewer/ui/external-content-bar';
 import { BuildingBlocksViewer } from './blocks-viewer';
 import { createVanillaGroupPorts } from './group-ports';
 import { createVanillaPort } from './session-port';
@@ -154,6 +155,13 @@ export function createViewerBuildingBlocks(
 		};
 	};
 
+	const externalContent = (): ViewerExternalContentBar => ({
+		barVisible: viewer?.externalContentBarVisible() ?? false,
+		allowed: viewer?.linkedContentAllowed() ?? false,
+		enable: () => viewer?.enableExternalContent(),
+		close: () => viewer?.closeExternalContentBar(),
+	});
+
 	const syncContent = () => {
 		if (!viewer || options.content === loaded) {
 			return;
@@ -222,6 +230,9 @@ export function createViewerBuildingBlocks(
 			return getState();
 		},
 		getState,
+		get externalContent() {
+			return externalContent();
+		},
 		get viewer() {
 			return viewer;
 		},
@@ -265,6 +276,24 @@ export function createViewerBuildingBlocks(
 				});
 				view(host, groups, translate, include);
 			};
+			const stop = subscribe(draw);
+			draw();
+			return track(() => {
+				stop();
+				host.replaceChildren();
+			});
+		},
+		mountExternalContentBar(host) {
+			host.dataset.pptxBlock = 'external-content-bar';
+			const bar = createExternalContentBar(
+				host.ownerDocument,
+				(key, params) =>
+					(viewer?.t ?? createTranslator(options.locale ?? 'en', options.messages))(key, params),
+				() => viewer?.enableExternalContent(),
+				() => viewer?.closeExternalContentBar(),
+			);
+			host.append(bar.anchor);
+			const draw = () => bar.update(viewer?.externalContentBarVisible() ?? false);
 			const stop = subscribe(draw);
 			draw();
 			return track(() => {

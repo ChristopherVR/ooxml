@@ -160,6 +160,8 @@ import { ElementRenderErrors } from './element-boundary.directive';
 import { EmbeddedFontsService } from './embedded-fonts.service';
 import { ExportProgressModalComponent } from './export-progress-modal.component';
 import { renderElementPngBlob, renderElementPngDataUrl } from './export-raster-tiles';
+import { ExternalContentBarComponent } from './external-content-bar.component';
+import { ExternalContentService } from './external-content.service';
 import { FindReplaceBarComponent } from './find-replace-bar.component';
 import { FollowModeBarComponent } from './follow-mode-bar.component';
 import { GoogleWebfontsService } from './google-webfonts.service';
@@ -314,6 +316,7 @@ const noopClose = (): void => undefined;
 		CommentsPanelComponent,
 		CompatToastsComponent,
 		ReadOnlyBannerComponent,
+		ExternalContentBarComponent,
 		SignaturesPanelComponent,
 		AccessibilityPanelComponent,
 		CollaborationCursorsComponent,
@@ -423,6 +426,12 @@ const noopClose = (): void => undefined;
 						(dismiss)="loadNotices.dismissBanner()"
 						(submitPassword)="loadNotices.submitPassword($event)"
 						(cancelPassword)="loadNotices.cancelPasswordPrompt()"
+					/>
+				}
+				@if (externalContent.barVisible()) {
+					<pptx-external-content-bar
+						(enable)="externalContent.enable()"
+						(closeBar)="externalContent.close()"
 					/>
 				}
 				@if (!mobile.isMobile() && toolbarVisible()) {
@@ -1806,11 +1815,13 @@ export class PowerPointViewerComponent
 	/**
 	 * Host switch for content a deck links from another server (http(s)
 	 * relationship targets): pictures, picture fills and bullets, video, audio
-	 * and poster frames. `false`: none of it is fetched. `true`: it is allowed.
-	 * Either value locks File > Options > Trust Center > "Allow external
-	 * content" to match; unset keeps the user's choice there. Google Fonts
-	 * requests are separate (see `googleFonts`).
-	 * A change applies from the next load.
+	 * and poster frames. Unset follows PowerPoint: nothing is fetched on open
+	 * and a security bar offers Enable Content for that presentation (unless the
+	 * user turned on File > Options > Trust Center > "Allow external content").
+	 * `false`: nothing is fetched and no bar shows. `true`: it is fetched
+	 * without asking. Either value locks the Trust Center option to match.
+	 * Google Fonts requests are separate (see `googleFonts`).
+	 * A change applies at once: the slides redraw, nothing reloads.
 	 */
 	readonly allowExternalContent = input<boolean | undefined>(undefined);
 	/**
@@ -1971,6 +1982,8 @@ export class PowerPointViewerComponent
 	readonly pdfExportReport = output<VectorPdfExportResult>();
 
 	protected readonly loader = inject(LoadContentService);
+	/** PowerPoint's security bar for linked web content (see `allowExternalContent`). */
+	protected readonly externalContent = inject(ExternalContentService);
 	protected readonly loadNotices = inject(LoadNoticesService);
 	/** Toast for values a collaboration peer sent that were left out. */
 	private readonly remoteValueNotice = createRemoteValueNotifier();

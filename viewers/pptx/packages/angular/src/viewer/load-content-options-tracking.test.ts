@@ -92,8 +92,7 @@ describe('load() inside the viewer load effect', () => {
 		await vi.waitFor(() => expect(loader.slides()).toHaveLength(1));
 
 		// The AutoSave switch, a View toggle, an Options field: all of these end
-		// in a store write. None of them may re-arm the load effect, not even the
-		// very option `load()` reads.
+		// in a store write. None of them may re-arm the load effect.
 		options.setValue('trust', 'allowExternalContent', true);
 		options.setValue('save', 'autoSave', false);
 		flushEffects();
@@ -106,18 +105,11 @@ describe('load() inside the viewer load effect', () => {
 	});
 });
 
-describe('load() and the host allowExternalContent input', () => {
-	it('passes the host value to the parser over the Trust Center option, and the option when unset', async () => {
-		const { loader, options } = harness();
+describe('load() and linked web content', () => {
+	it('keeps the linked targets in the model whatever the host and Trust Center say', async () => {
+		const { loader } = harness();
 		const parse = vi.spyOn(PptxHandler.prototype, 'load');
-		options.setValue('trust', 'allowExternalContent', true);
-		let host: boolean | undefined = false;
-		loader.bindHostAllowExternalContent(() => host);
-
-		await loader.load(await blankDeck());
-		expect(parse.mock.calls.at(-1)?.[1]).toMatchObject({ allowExternalImages: false });
-
-		host = undefined;
+		loader.bindHostAllowExternalContent(() => false);
 		await loader.load(await blankDeck());
 		expect(parse.mock.calls.at(-1)?.[1]).toMatchObject({ allowExternalImages: true });
 		parse.mockRestore();

@@ -102,7 +102,6 @@ export const translations = {
 	'pptx.masterView.slideMastersTitle': 'Patrones de diapositivas',
 	'pptx.masterView.notesMasterTitle': 'Maestro de notas',
 	'pptx.masterView.handoutMasterTitle': 'Patrón de documentos',
-	'pptx.masterView.collapse': 'Contraer panel maestro',
 	'pptx.slideSize.rescaleTitle': '¿Escalar el contenido al nuevo tamaño de diapositiva?',
 	'pptx.slideSize.rescaleDescription':
 		'Está cambiando el tamaño de la diapositiva. Elija cómo ajustar el contenido existente.',

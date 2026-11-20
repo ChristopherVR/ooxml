@@ -53,6 +53,7 @@ async function setup() {
 	const pane = mountHostOwnedSlidesPane(root, {
 		store,
 		getLoaded: () => undefined,
+		getLinkedContent: () => false,
 		commitInline: () => !inlineOpen,
 	});
 	return {

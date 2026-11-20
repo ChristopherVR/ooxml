@@ -23,6 +23,7 @@ function paneOptions(
 		activeSlideIndex: state.currentSlide,
 		canvasSize: state.canvasSize,
 		mediaDataUrls: state.mediaDataUrls,
+		linkedContent: viewer.linkedContentAllowed(),
 		sections: state.sections,
 		canEdit: state.editable,
 		headerFooter: state.headerFooter,

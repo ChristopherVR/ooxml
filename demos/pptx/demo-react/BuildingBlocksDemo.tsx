@@ -1,4 +1,10 @@
-import { SlideCanvas, SlidesPane, Toolbar, useViewerBuildingBlocks } from 'pptx-react-viewer';
+import {
+	ExternalContentBar,
+	SlideCanvas,
+	SlidesPane,
+	Toolbar,
+	useViewerBuildingBlocks,
+} from 'pptx-react-viewer';
 import type { UseViewerBuildingBlocksInput } from 'pptx-react-viewer';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -41,6 +47,13 @@ function Blocks({ content }: { content: Uint8Array }) {
 	return (
 		<main style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
 			<section ref={panelHost} />
+			{/* PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. */}
+			{blocks.externalContent.barVisible && (
+				<ExternalContentBar
+					onEnable={blocks.externalContent.enable}
+					onClose={blocks.externalContent.close}
+				/>
+			)}
 			<Toolbar {...blocks.toolbarProps} />
 			<div style={{ flex: 1, minHeight: 0, display: 'flex' }}>
 				<SlidesPane {...blocks.slidesPaneProps} />

@@ -3,6 +3,7 @@ import {
 	BuildingBlocksCanvas,
 	BuildingBlocksSlidesPane,
 	BuildingBlocksToolbar,
+	ExternalContentBar,
 	useViewerBuildingBlocks,
 } from 'pptx-vue-viewer';
 import type { ViewerBuildingBlocksOptions } from 'pptx-vue-viewer';
@@ -58,6 +59,12 @@ onMounted(async () => {
 <template>
 	<p v-if="failure" role="alert">{{ failure }}</p>
 	<section ref="panel" />
+	<!-- PowerPoint's security bar for linked pictures and media; the canvas leaves it to the shell. -->
+	<ExternalContentBar
+		v-if="blocks.externalContent.value.barVisible"
+		@enable="blocks.externalContent.value.enable"
+		@close="blocks.externalContent.value.close"
+	/>
 	<BuildingBlocksToolbar :blocks="blocks" />
 	<div style="display: flex; height: calc(100vh - 160px)">
 		<div style="width: 200px; overflow: auto">

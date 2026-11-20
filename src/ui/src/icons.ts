@@ -20,6 +20,7 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	copy: 'M7 7h10v10H7ZM3 13V3h10',
 	trash: 'M4 6h12M8 6V4h4v2M6 6l.8 10h6.4L14 6',
 	lock: 'M4 9h12v8H4ZM7 9V6.5a3 3 0 0 1 6 0V9',
+	shield: 'M10 2.5 4 5v4.5c0 3.8 2.6 6.7 6 8 3.4-1.3 6-4.2 6-8V5Z',
 	eyeOff: 'M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5zM4 4l12 12',
 	message: 'M3 4h14v9H8l-5 4z',
 	pencil: 'M12 3l5 5M3 17l1-5L13 3l4 4-9 9Z',

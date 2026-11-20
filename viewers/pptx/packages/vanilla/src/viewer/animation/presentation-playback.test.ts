@@ -1,13 +1,8 @@
+import { BUILT_IN_SOUNDS, playDeckSound, stopDeckSound } from 'ooxml-ui/pptx';
 import type { PptxElement, PptxNativeAnimation, PptxSlide } from 'pptx-viewer-core';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { playAnimationSound, stopAnimationSound } from './animation-sound';
 import { createPresentationPlayback } from './presentation-playback';
-
-vi.mock(import('./animation-sound'), () => ({
-	playAnimationSound: vi.fn(),
-	stopAnimationSound: vi.fn(),
-}));
 
 /** Build a stage node carrying `data-element-id` boxes for the given ids. */
 function buildStage(doc: Document, ids: string[]): HTMLElement {
@@ -446,17 +441,70 @@ describe('createPresentationPlayback zoom navigation', () => {
 describe('createPresentationPlayback transition sound (p:sndAc/p:stSnd, p:endSnd)', () => {
 	let doc: Document;
 	let stageWrap: HTMLElement;
+	/** Every sound playback starts, as the address it plays and whether it loops. */
+	let played: { src: string; loop: boolean; paused: boolean }[] = [];
+	const LOOPING = 'data:audio/wav;base64,AA';
+
+	/** Present slide 0, then move to a slide 1 carrying `transition`. */
+	function advanceWith(
+		transition: Parameters<typeof slideWith>[2],
+		extra: { mediaDataUrls?: Map<string, string>; getLinkedContentAllowed?: () => boolean } = {},
+	): HTMLElement {
+		const playback = createPresentationPlayback();
+		const stage0 = buildStage(doc, ['a']);
+		stageWrap.appendChild(stage0);
+		playback.syncStage({
+			doc,
+			stageWrap,
+			stage: stage0,
+			slide: slideWith([]),
+			slideIndex: 0,
+			presenting: true,
+		});
+		stageWrap.replaceChildren();
+		const stage1 = buildStage(doc, ['b']);
+		stageWrap.appendChild(stage1);
+		playback.syncStage({
+			doc,
+			stageWrap,
+			stage: stage1,
+			slide: slideWith([], undefined, transition),
+			slideIndex: 1,
+			presenting: true,
+			...extra,
+		});
+		return stage1;
+	}
 
 	beforeEach(() => {
 		doc = document;
 		stageWrap = doc.createElement('div');
 		doc.body.appendChild(stageWrap);
 		vi.useFakeTimers();
-		vi.mocked(playAnimationSound).mockClear();
-		vi.mocked(stopAnimationSound).mockClear();
+		played = [];
+		vi.stubGlobal(
+			'Audio',
+			// oxlint-disable-next-line prefer-arrow-callback -- `new Audio()` needs a function
+			vi.fn(function (src: string) {
+				const sound = { src, loop: false, paused: false };
+				played.push(sound);
+				return {
+					set loop(value: boolean) {
+						sound.loop = value;
+					},
+					currentTime: 0,
+					play: () => Promise.resolve(),
+					pause: () => {
+						sound.paused = true;
+					},
+				};
+			}),
+		);
 	});
 
 	afterEach(() => {
+		stopDeckSound();
+		vi.unstubAllGlobals();
 		vi.useRealTimers();
 		stageWrap.remove();
 		doc.getElementById('pptx-vanilla-presentation-keyframes')?.remove();
@@ -464,66 +512,35 @@ describe('createPresentationPlayback transition sound (p:sndAc/p:stSnd, p:endSnd
 	});
 
 	it('resolves the transition sound path through mediaDataUrls and plays it', () => {
-		const playback = createPresentationPlayback();
-		const stage0 = buildStage(doc, ['a']);
-		stageWrap.appendChild(stage0);
-		playback.syncStage({
-			doc,
-			stageWrap,
-			stage: stage0,
-			slide: slideWith([]),
-			slideIndex: 0,
-			presenting: true,
-		});
+		advanceWith(
+			{ type: 'fade', durationMs: 300, soundPath: 'ppt/media/media3.wav', soundLoop: true },
+			{ mediaDataUrls: new Map([['ppt/media/media3.wav', 'blob:sound']]) },
+		);
+		expect(played).toStrictEqual([{ src: 'blob:sound', loop: true, paused: false }]);
+	});
 
-		stageWrap.replaceChildren();
-		const stage1 = buildStage(doc, ['b']);
-		stageWrap.appendChild(stage1);
-		playback.syncStage({
-			doc,
-			stageWrap,
-			stage: stage1,
-			slide: slideWith([], undefined, {
-				type: 'fade',
-				durationMs: 300,
-				soundPath: 'ppt/media/media3.wav',
-				soundLoop: true,
-			}),
-			slideIndex: 1,
-			presenting: true,
-			mediaDataUrls: new Map([['ppt/media/media3.wav', 'blob:sound']]),
-		});
-		expect(playAnimationSound).toHaveBeenCalledWith('blob:sound', true);
+	it('fetches a linked transition sound only once the viewer allows linked content', () => {
+		const linked: PptxSlide['transition'] = {
+			type: 'fade',
+			durationMs: 300,
+			soundPath: 'https://linked-content.test/whoosh.wav',
+		};
+		advanceWith(linked);
+		advanceWith(linked, { getLinkedContentAllowed: () => false });
+		expect(played).toStrictEqual([]);
+		advanceWith(linked, { getLinkedContentAllowed: () => true });
+		expect(played.map((sound) => sound.src)).toStrictEqual([
+			'https://linked-content.test/whoosh.wav',
+		]);
 	});
 
 	it('stops the current sound for p:endSndAc (transition.stopSound), with no visible overlay', () => {
-		const playback = createPresentationPlayback();
-		const stage0 = buildStage(doc, ['a']);
-		stageWrap.appendChild(stage0);
-		playback.syncStage({
-			doc,
-			stageWrap,
-			stage: stage0,
-			slide: slideWith([]),
-			slideIndex: 0,
-			presenting: true,
-		});
-
-		stageWrap.replaceChildren();
-		const stage1 = buildStage(doc, ['b']);
-		stageWrap.appendChild(stage1);
-		playback.syncStage({
-			doc,
-			stageWrap,
-			stage: stage1,
-			// `type: 'none'` mounts no overlay, but the stop action must still fire.
-			slide: slideWith([], undefined, { type: 'none', stopSound: true }),
-			slideIndex: 1,
-			presenting: true,
-		});
+		playDeckSound(LOOPING, BUILT_IN_SOUNDS, { loop: true });
+		// `type: 'none'` mounts no overlay, but the stop action must still fire.
+		advanceWith({ type: 'none', stopSound: true });
 		expect(stageWrap.querySelector('.pptxv-transition-overlay')).toBeNull();
-		expect(stopAnimationSound).toHaveBeenCalledWith();
-		expect(playAnimationSound).not.toHaveBeenCalled();
+		expect(played).toHaveLength(1);
+		expect(played[0]!.paused).toBe(true);
 	});
 
 	it('stops a looping sound when the show ends (leaving presenting mode)', () => {
@@ -538,7 +555,7 @@ describe('createPresentationPlayback transition sound (p:sndAc/p:stSnd, p:endSnd
 			slideIndex: 0,
 			presenting: true,
 		});
-		vi.mocked(stopAnimationSound).mockClear();
+		playDeckSound(LOOPING, BUILT_IN_SOUNDS, { loop: true });
 
 		playback.syncStage({
 			doc,
@@ -548,7 +565,7 @@ describe('createPresentationPlayback transition sound (p:sndAc/p:stSnd, p:endSnd
 			slideIndex: 0,
 			presenting: false,
 		});
-		expect(stopAnimationSound).toHaveBeenCalledWith();
+		expect(played[0]!.paused).toBe(true);
 	});
 
 	// G13: an `onStopAudio`-gated effect should start from the REAL `<audio>`

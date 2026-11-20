@@ -12,6 +12,7 @@ import { useVirtualizedSlides } from '../hooks/useVirtualizedSlides';
 import { useTranslation } from '../i18n/use-translation';
 import { useCollaboration } from './collaboration';
 import { ElementRenderErrorReportingContext } from './ElementErrorBoundary';
+import { LinkedContentScope } from './linked-content-context';
 import { SectionContextMenu } from './slides-pane/SectionContextMenu';
 import { SectionHeader } from './slides-pane/SectionHeader';
 import { SlideContextMenu } from './slides-pane/SlideContextMenu';
@@ -46,7 +47,9 @@ export function SlidesPaneSidebar(props: SlidesPaneSidebarProps): React.ReactEle
 	const errorReporting = useMemo(() => ({ onElementRenderError: reporter }), [reporter]);
 	return (
 		<ElementRenderErrorReportingContext.Provider value={errorReporting}>
-			<SlidesPaneSidebarContent {...props} />
+			<LinkedContentScope allowed={props.linkedContent}>
+				<SlidesPaneSidebarContent {...props} />
+			</LinkedContentScope>
 		</ElementRenderErrorReportingContext.Provider>
 	);
 }
