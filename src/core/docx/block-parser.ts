@@ -70,6 +70,14 @@ function findDrawing(content: XmlElement[]): XmlElement | undefined {
 	return undefined;
 }
 
+/** The drawing context with this parser for a text box's content, in the same package context. */
+function textBoxContext(context: DrawingContext): DrawingContext {
+	return {
+		...context,
+		parseBlocks: (container, idPrefix) => parseBlocksFromContainer(container, idPrefix, context),
+	};
+}
+
 function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	const props = first(node, 'rPr');
 	const content = runContent(node);
@@ -77,7 +85,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	if (drawing && activeContext) {
 		const run: TextRun = {
 			text: '',
-			image: parseDrawing(drawing, activeContext),
+			image: parseDrawing(drawing, textBoxContext(activeContext)),
 			...parseDirectRunProperties(props),
 		};
 		if (props && runPropertiesHaveUnknownContent(props))

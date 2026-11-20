@@ -1,5 +1,5 @@
 import type { Paragraph, ThemeCatalog } from '../index';
-import { shapeSvg } from '../shape-svg';
+import { drawingShapeSvg } from '../shape-svg';
 import type { LayoutFloat } from './input';
 
 /** Floating pictures anchored in a paragraph, with their `wp:positionH`/`wp:positionV` placement. */
@@ -9,10 +9,11 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 		const image = run.image;
 		if (!image?.anchored || (!image.partName && !image.shape)) continue;
 		const placement = image.placement;
-		const svg = image.shape && shapeSvg(image.shape, image.widthPx, image.heightPx, theme);
+		const svg = drawingShapeSvg(image, theme);
 		floats.push({
 			index: floats.length,
 			...(svg ? { chart: { svg, label: 'Shape', shape: true as const } } : {}),
+			...(svg && image.textBoxContent ? { textBox: image.textBoxContent } : {}),
 			partName: image.partName,
 			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 			contentType: image.contentType,

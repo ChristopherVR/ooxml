@@ -1,4 +1,4 @@
-import type { PageBorders } from 'ooxml-core/docx';
+import type { DocumentModel, PageBorders } from 'ooxml-core/docx';
 import {
 	cssFontStack,
 	ligatureCss,
@@ -110,7 +110,7 @@ function renderLine(
 	line: LayoutLine,
 	blockId: string,
 	hitboxes: LineHitBox[],
-	pictureUrl: PictureUrl | undefined,
+	media: PrintMedia,
 ): HTMLElement {
 	const lineEl = document.createElement('div');
 	lineEl.className = 'dve-print-line';
@@ -122,7 +122,7 @@ function renderLine(
 	const fragments: PrintFragmentHit[] = [];
 	for (const fragment of line.fragments) {
 		if (fragment.object) {
-			const picture = pictureElement(fragment.object, pictureUrl);
+			const picture = pictureElement(fragment.object, media.pictureUrl, media.model);
 			if (fragment.color) picture.style.color = fragment.color;
 			picture.style.left = `${fragment.xPx}px`;
 			picture.style.top = `${fragment.topPx ?? 0}px`;
@@ -179,7 +179,7 @@ function paragraphFrame(frame: LayoutParagraphFrame, heightPx: number): HTMLElem
 function renderBlock(
 	box: LayoutBlockBox,
 	hitboxes: LineHitBox[],
-	pictureUrl: PictureUrl | undefined,
+	media: PrintMedia,
 	columnWidthPx: number,
 ): HTMLElement {
 	if (box.kind === 'paragraph') {
@@ -195,11 +195,11 @@ function renderBlock(
 			el.title = 'Read-only content';
 		}
 		if (box.frame) el.append(paragraphFrame(box.frame, box.heightPx));
-		for (const line of box.lines) el.append(renderLine(line, box.blockId, hitboxes, pictureUrl));
+		for (const line of box.lines) el.append(renderLine(line, box.blockId, hitboxes, media));
 		return el;
 	}
 	return renderTable(box, columnWidthPx, (paragraph) =>
-		renderBlock(paragraph, hitboxes, pictureUrl, columnWidthPx),
+		renderBlock(paragraph, hitboxes, media, columnWidthPx),
 	);
 }
 
@@ -207,7 +207,7 @@ function renderBlock(
 function footnoteArea(
 	page: LayoutResult['pages'][number],
 	hitboxes: LineHitBox[],
-	pictureUrl: PictureUrl | undefined,
+	media: PrintMedia,
 ): HTMLElement {
 	const notes = page.footnotes ?? [];
 	const heightPx = page.footnoteHeightPx ?? notes.reduce((sum, note) => sum + note.heightPx, 0);
@@ -240,7 +240,7 @@ function footnoteArea(
 				height: `${story.heightPx}px`,
 			});
 			for (const paragraph of story.paragraphs)
-				separator.append(renderBlock(paragraph, [], pictureUrl, width));
+				separator.append(renderBlock(paragraph, [], media, width));
 		} else {
 			separator.className = 'dve-print-footnote-separator';
 			if (continued) separator.classList.add('dve-print-footnote-continuation-separator');
@@ -276,7 +276,7 @@ function footnoteArea(
 			height: `${note.heightPx}px`,
 		});
 		for (const paragraph of note.paragraphs)
-			noteEl.append(renderBlock(paragraph, hitboxes, pictureUrl, note.widthPx ?? widthPx));
+			noteEl.append(renderBlock(paragraph, hitboxes, media, note.widthPx ?? widthPx));
 		area.append(noteEl);
 	}
 	return area;
@@ -291,6 +291,14 @@ export interface PrintLayoutOptions {
 	pageBorders?: ReadonlyArray<PageBorders | undefined>;
 	/** Paragraphs with effective `w:suppressLineNumbers`; omitted from the counter. */
 	suppressedLineNumberParagraphs?: ReadonlySet<string>;
+	/** The laid-out document, whose styles the paragraphs of shapes' text boxes are drawn with. */
+	model?: DocumentModel;
+}
+
+/** What pictures on a page are drawn with. */
+interface PrintMedia {
+	pictureUrl: PictureUrl | undefined;
+	model: DocumentModel | undefined;
 }
 
 /** Pure, framework-neutral renderer: turns a `LayoutResult` into a DOM tree of page sheets. */
@@ -299,6 +307,7 @@ export function renderPrintLayout(
 	pictureUrl?: PictureUrl,
 	options: PrintLayoutOptions = {},
 ): PrintLayoutHandle {
+	const media: PrintMedia = { pictureUrl, model: options.model };
 	const container = document.createElement('div');
 	container.className = 'dve-print-pages';
 	const hits = new Map<Element, LineHitBox>();
@@ -361,12 +370,12 @@ export function renderPrintLayout(
 				columnEl.style.width = `${column.widthPx}px`;
 				columnEl.style.height = `${page.heightPx - page.marginTopPx - page.marginBottomPx}px`;
 				for (const block of column.blocks)
-					columnEl.append(renderBlock(block, hitboxes, pictureUrl, column.widthPx));
+					columnEl.append(renderBlock(block, hitboxes, media, column.widthPx));
 				sheet.append(columnEl);
 			}
-			if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, pictureUrl));
+			if (page.footnotes?.length) sheet.append(footnoteArea(page, hitboxes, media));
 			for (const float of page.floats ?? []) {
-				const picture = pictureElement(float, pictureUrl);
+				const picture = pictureElement(float, media.pictureUrl, media.model);
 				picture.classList.add('dve-print-float');
 				picture.dataset.blockId = float.blockId;
 				picture.dataset.floatIndex = String(float.index);

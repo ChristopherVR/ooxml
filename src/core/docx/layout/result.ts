@@ -212,6 +212,8 @@ export interface LayoutFloatBox {
 	contentType: string;
 	/** A drawing shape painted as SVG (it has no media part); the print view draws it like a chart. */
 	chart?: { svg?: string; label: string; shape?: true };
+	/** The shape's text box content, drawn over its shape. */
+	textBox?: import('../inline-model').TextBoxContent;
 	behindText: boolean;
 	/** `wp:wrapSquare`, `wrapTopAndBottom`… (`none` floats over or behind the text). */
 	wrap?: string;

@@ -10,7 +10,7 @@ import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
-import type { ThemeCatalog } from 'ooxml-core/docx';
+import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
 
 /**
@@ -69,6 +69,8 @@ export interface ImageNodeViewOptions {
 	maxWidth?(): number;
 	/** The document theme, for resolving SmartArt and chart colours. */
 	theme?(): ThemeCatalog | undefined;
+	/** The document, whose styles a text box's paragraphs are drawn with. */
+	model?(): DocumentModel | undefined;
 	/** The editor's locale, for the notes beside a SmartArt. */
 	locale?(): EditorLocale;
 }
@@ -172,7 +174,14 @@ function renderSpec(node: ProseMirrorNode): HTMLElement {
  */
 export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOptions = {}) {
 	return (node: ProseMirrorNode, view: EditorView, getPos: () => number | undefined): NodeView => {
-		if (node.attrs.shape) return shapeNodeView(node, view, getPos, () => options.theme?.());
+		if (node.attrs.shape)
+			return shapeNodeView(
+				node,
+				view,
+				getPos,
+				() => options.theme?.(),
+				() => options.model?.(),
+			);
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram)
 			return smartArtNodeView(node, diagram, options.theme?.(), options.locale?.(), (part) =>

@@ -73,6 +73,8 @@ export interface LayoutObject {
 	 * past its box and which has no chart background.
 	 */
 	chart?: { svg?: string; label: string; shape?: true };
+	/** A shape's text box content, drawn over its shape by the print view; the engine never lays it out. */
+	textBox?: import('../inline-model').TextBoxContent;
 	/** Native note separator rule, drawn without loading a media part. */
 	noteSeparator?: 'separator' | 'continuationSeparator';
 }

@@ -13,7 +13,7 @@ import { positionalTabInputPlugin } from 'ooxml-core/docx/ui';
 import { assignMissingParagraphIds, docToModel, modelToDoc } from './model-adapter';
 import { editorKeymap } from './editor-commands';
 import { focusView } from './focus-view';
-import { renderBlocks } from './header-footer-view';
+import { renderBlocks } from './story-render';
 import { translateUiText } from './localization';
 
 export type HeaderFooterSlotName = 'default' | 'first' | 'even';

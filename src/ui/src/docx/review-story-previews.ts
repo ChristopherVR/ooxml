@@ -1,7 +1,7 @@
 import type { Block, DocumentModel, ReviewDisplayMode } from 'ooxml-core/docx';
 import { effectiveHeaderFooter } from './header-footer-link';
 import type { HeaderFooterSlotName } from './header-footer-editor';
-import { renderBlocks } from './header-footer-view';
+import { renderBlocks } from './story-render';
 
 /** Update inactive previews without rebuilding or closing an active story editor. */
 export function refreshStoryPreviews(

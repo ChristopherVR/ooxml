@@ -1,5 +1,6 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import {
+	drawingShapeSvg,
 	fieldName,
 	isRunHiddenForReview,
 	refreshComputedFields,
@@ -25,6 +26,7 @@ import {
 	type LayoutPageBox,
 } from 'ooxml-core/docx/layout';
 import type { PictureUrl } from './print-layout';
+import { pictureElement } from './print-picture';
 import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
 
 /** Page facts a header or footer field can show. */
@@ -32,12 +34,34 @@ export interface PageFieldValues extends PageFieldContext {
 	reviewDisplayMode?: ReviewDisplayMode;
 	/** Resolves header/footer pictures to displayable URLs. */
 	pictureUrl?: PictureUrl;
+	/** The document: its theme colours shapes, its styles a text box's paragraphs. */
+	model?: DocumentModel;
 }
 
 export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/docx/layout';
 
+/** An inline header/footer shape, drawn as Print Layout draws one in the body. */
+function inlineShape(image: NonNullable<TextRun['image']>, values: PageFieldValues) {
+	const svg = drawingShapeSvg(image, values.model?.theme);
+	if (!svg) return undefined;
+	const element = pictureElement(
+		{
+			...image,
+			chart: { svg, label: 'Shape', shape: true },
+			...(image.textBoxContent ? { textBox: image.textBoxContent } : {}),
+		},
+		undefined,
+		values.model,
+	);
+	Object.assign(element.style, { position: 'relative', display: 'inline-block' });
+	element.style.verticalAlign = 'bottom';
+	return element;
+}
+
 /** An inline header/footer picture, or a placeholder box when its bytes are unavailable. */
 function inlinePicture(image: NonNullable<TextRun['image']>, values: PageFieldValues): HTMLElement {
+	const shape = inlineShape(image, values);
+	if (shape) return shape;
 	const url = image.partName ? values.pictureUrl?.(image.partName, image.contentType) : undefined;
 	const element = document.createElement(
 		url && !pictureNeedsSvg(image.pictureFill) ? 'img' : 'span',
@@ -131,30 +155,22 @@ function floatingPictures(
 	);
 	const column = { xPx: 0, widthPx: page.widthPx - page.marginLeftPx - page.marginRightPx };
 	return paragraphs.flatMap((paragraph) =>
-		paragraphFloats({
-			...paragraph,
-			runs: paragraph.runs.filter(
-				(run) => !isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all'),
-			),
-		}).map((float) => {
+		paragraphFloats(
+			{
+				...paragraph,
+				runs: paragraph.runs.filter(
+					(run) => !isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all'),
+				),
+			},
+			values.model?.theme,
+		).map((float) => {
 			const { xPx, yPx } = floatPosition(float, page, column, { topPx: anchorTopPx, heightPx: 0 });
-			const url = values.pictureUrl?.(float.partName, float.contentType);
-			const element = document.createElement(
-				url && !pictureNeedsSvg(float.pictureFill) ? 'img' : 'div',
-			);
-			if (url && float.pictureFill && pictureNeedsSvg(float.pictureFill))
-				element.append(pictureSvg(document, float.pictureFill, url, float.widthPx, float.heightPx));
-			else if (url) (element as HTMLImageElement).src = url;
-			else element.classList.add('dve-print-picture-missing');
-			element.classList.add('dve-print-picture', 'dve-print-float');
+			// The body's floating pictures and shapes are drawn by the same function.
+			const element = pictureElement(float, values.pictureUrl, values.model);
+			element.classList.add('dve-print-float');
 			if (float.behindText) element.classList.add('dve-print-float-behind');
-			Object.assign(element.style, {
-				position: 'absolute',
-				left: `${xPx}px`,
-				top: `${yPx}px`,
-				width: `${float.widthPx}px`,
-				height: `${float.heightPx}px`,
-			});
+			element.style.left = `${xPx}px`;
+			element.style.top = `${yPx}px`;
 			return element;
 		}),
 	);
@@ -238,6 +254,7 @@ export function decoratePages(
 		const label = numbers[index] ?? String(index + 1);
 		const values: PageFieldValues = {
 			reviewDisplayMode,
+			model,
 			page: label,
 			numPages: String(pages.length),
 			sectionPages: String(counts.get(page.sectionIndex) ?? 1),

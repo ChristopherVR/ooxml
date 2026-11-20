@@ -18,6 +18,7 @@ import {
 	type ShapeSpec,
 } from './shape-model';
 import type { ThemeCatalog } from './theme-model';
+import type { InlineImage } from './inline-model';
 import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
 import { parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
@@ -163,5 +164,23 @@ export function shapeSvg(
 	return (
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${round(w)}" height="${round(h)}" viewBox="0 0 ${round(w)} ${round(h)}" style="overflow:visible" role="img" aria-label="${label}">` +
 		`<g${transform ? ` transform="${escapeXml(transform)}"` : ''}>${paths}${text}</g></svg>`
+	);
+}
+
+/**
+ * A drawing's shape as SVG at the drawing's size. When the drawing carries its text box content as
+ * paragraphs, the shape is drawn without its own centred text: the paragraphs are laid over it.
+ */
+export function drawingShapeSvg(
+	image: Pick<InlineImage, 'shape' | 'textBoxContent' | 'widthPx' | 'heightPx'>,
+	theme?: ThemeCatalog,
+): string | undefined {
+	if (!image.shape) return undefined;
+	const { text: _text, ...geometry } = image.shape;
+	return shapeSvg(
+		image.textBoxContent ? geometry : image.shape,
+		image.widthPx,
+		image.heightPx,
+		theme,
 	);
 }

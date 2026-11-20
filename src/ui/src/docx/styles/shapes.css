@@ -11,6 +11,30 @@
 .dve-shape svg {
 	display: block;
 }
+/* A text box's own paragraphs over its shape (editing surface, story previews and Print Layout),
+ * inset by its body properties and clipped to the shape. */
+.dve-text-box-content {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	line-height: normal;
+	color: #000;
+	font-size: 11pt;
+	text-align: left;
+	white-space: normal;
+	pointer-events: none;
+}
+.dve-text-box-content p {
+	margin: 0;
+	flex: none;
+}
+.dve-text-box-content table {
+	border-collapse: collapse;
+	flex: none;
+}
 .dve-shape-floating {
 	position: absolute;
 	z-index: 2;

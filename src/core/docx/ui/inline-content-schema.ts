@@ -76,6 +76,8 @@ export const imageNodeSpec: NodeSpec = {
 		/** The text box is the simple editable form; `textBoxBorder` is its outline. */
 		textBoxEditable: { default: null },
 		textBoxBorder: { default: null },
+		/** A shape's or text box's content (`TextBoxContent`) as JSON; drawn read-only over its shape. */
+		textBoxContent: { default: null },
 		/** A SmartArt graphic (`DocxDiagram`) as JSON; shown read-only by the SmartArt node view. */
 		diagram: { default: null },
 		/** A chart (`DocxChart`) as JSON; painted read-only from its cached values (`chart-spec.ts`). */

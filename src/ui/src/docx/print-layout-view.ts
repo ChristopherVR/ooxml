@@ -126,6 +126,7 @@ export function createPrintLayoutController(
 		pinnedPage = undefined;
 		handle = renderPrintLayout(result, pictureUrl, {
 			virtual: pages.length > 10,
+			model,
 			onPageRender(sheet, index) {
 				const sheets: HTMLElement[] = [];
 				sheets[index] = sheet;
