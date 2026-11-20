@@ -45,14 +45,20 @@ describe('releaseDetachedStyles', () => {
 	it('makes one change for every element removed in the same task', async () => {
 		// Two removals: two changes would toggle the rule back out.
 		const elements = [1, 2].map(() => document.body.appendChild(document.createElement('div')));
+		// The sheet lives as long as the document, and an earlier file of a shared worker may have
+		// changed it already: find it and read its state first.
+		releaseDetachedStyles(document.createElement('div'));
 		await nextTask();
+		const sheet = document.adoptedStyleSheets.at(-1)!;
+		const rules = sheet.cssRules.length;
 		document.adoptedStyleSheets = [];
 		for (const element of elements) {
 			element.remove();
 			releaseDetachedStyles(element);
 		}
 		await nextTask();
-		expect(document.adoptedStyleSheets.map((sheet) => sheet.cssRules.length)).toEqual([1]);
+		expect(document.adoptedStyleSheets).toEqual([sheet]);
+		expect(sheet.cssRules.length).toBe(1 - rules);
 	});
 
 	it('adopts its stylesheet again after the host replaced the list', async () => {

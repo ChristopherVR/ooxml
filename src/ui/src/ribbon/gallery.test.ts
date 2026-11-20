@@ -197,7 +197,11 @@ describe('office-ui-gallery', () => {
 		expect(second.open).toBe(true);
 		expect(first.querySelectorAll('.gallery-view')).toHaveLength(1);
 		const styles = document.querySelectorAll('style[data-office-gallery-styles]').length;
-		const adopted = document.adoptedStyleSheets?.length ?? 0;
+		// Only the gallery's own sheets: another element may adopt one on the document (a removed
+		// editor does), and a shared worker keeps the document of earlier files.
+		const galleryRules = (sheet: CSSStyleSheet) =>
+			[...sheet.cssRules].some((rule) => rule.cssText.includes('.gallery-view'));
+		const adopted = (document.adoptedStyleSheets ?? []).filter(galleryRules).length;
 		expect(styles + adopted).toBe(1);
 	});
 

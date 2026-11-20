@@ -1,21 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { xmlTags } from './tags';
+import { growth } from '../test-support/growth';
 
 const tags = (xml: string) =>
 	[...xmlTags(xml)].map(
 		(tag) => `${tag.closing ? '/' : ''}${tag.name}${tag.selfClosing ? '/' : ''}`,
 	);
-
-/** Best of three runs, in milliseconds. */
-const timed = (run: () => void): number => {
-	let best = Number.POSITIVE_INFINITY;
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const start = performance.now();
-		run();
-		best = Math.min(best, performance.now() - start);
-	}
-	return best;
-};
 
 describe('xmlTags', () => {
 	it('reads start, end and empty tags in order, with their attributes', () => {
@@ -53,6 +43,6 @@ describe('xmlTags', () => {
 			for (const tag of xmlTags('<a:custGeom/>'.repeat(count) + '<v:shape '.repeat(count)))
 				void tag;
 		};
-		expect(timed(run(160_000)) / timed(run(40_000))).toBeLessThan(8);
+		expect(growth(run(40_000), run(160_000))).toBeLessThan(8);
 	});
 });

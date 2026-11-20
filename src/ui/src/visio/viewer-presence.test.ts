@@ -216,20 +216,22 @@ describe('owner write-back', () => {
 		});
 		await other.join({ session: hostSession(hub, 'Grace', 'collaborator') });
 		await adopted(other);
-		// Joining and adopting schedule saves of their own; let them settle before counting.
-		await new Promise((resolve) => setTimeout(resolve, 800));
+		// Joining and adopting schedule saves of their own; wait until the owner has none left.
+		const saved = () =>
+			vi.waitFor(() => expect(['idle', 'saved']).toContain(owner.share.state.writeBack?.status));
+		await saved();
 		onWriteBack.mockClear();
 		await change(owner);
 		await change(owner);
 		expect(onWriteBack).not.toHaveBeenCalled();
-		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(1), { timeout: 5_000 });
+		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(1));
 		expect(onWriteBack.mock.calls[0]![0]).toBeInstanceOf(Uint8Array);
-		await new Promise((resolve) => setTimeout(resolve, 800));
+		await saved();
 		expect(onWriteBack).toHaveBeenCalledTimes(1);
 
 		// A collaborator's change reaches the owner as a remote step, which is saved too.
 		await change(other, '2');
-		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(2), { timeout: 5_000 });
+		await vi.waitFor(() => expect(onWriteBack).toHaveBeenCalledTimes(2));
 	});
 
 	it('never fires for a collaborator', async () => {

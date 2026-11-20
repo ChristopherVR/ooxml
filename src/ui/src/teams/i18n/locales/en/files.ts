@@ -133,6 +133,8 @@ export const enFiles = {
 	'channel.enterName': 'Enter a channel name.',
 	'channel.maxChars': '{count} characters maximum.',
 	'channel.name': 'Channel name',
+	'channel.defaultName': 'General',
+	'channel.defaultTopic': 'Company-wide announcements',
 	'channel.namePlaceholder': 'Give your channel a name',
 	'channel.notCreated': 'The channel was not created. Your details are kept here.',
 	'channel.standard': 'Standard channel',

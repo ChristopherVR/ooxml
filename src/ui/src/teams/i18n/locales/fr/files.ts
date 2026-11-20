@@ -144,6 +144,8 @@ export const frFiles: Record<keyof typeof enFiles, string> = {
 	'channel.enterName': 'Saisissez un nom de canal.',
 	'channel.maxChars': '{count} caractères maximum.',
 	'channel.name': 'Nom du canal',
+	'channel.defaultName': 'Général',
+	'channel.defaultTopic': "Annonces pour toute l'entreprise",
 	'channel.namePlaceholder': 'Donnez un nom à votre canal',
 	'channel.notCreated': "Le canal n'a pas été créé. Vos informations sont conservées ici.",
 	'channel.standard': 'Canal standard',

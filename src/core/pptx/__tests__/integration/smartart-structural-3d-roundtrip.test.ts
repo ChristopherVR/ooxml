@@ -14,7 +14,6 @@
  * quick style n). The expected 3D is what PowerPoint itself cached on the
  * ORIGINAL shapes, so a regenerated shape must match it exactly.
  */
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import JSZip from 'jszip';
@@ -23,21 +22,18 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../core/PptxHandler';
 import type { PptxSlide, SmartArtPptxElement } from '../../core/types';
 import { addSmartArtNode, removeSmartArtNode } from '../../core/utils';
+import { deckWithSlides } from '../../test-support/deck-slides';
 
 const fixture = fileURLToPath(
 	new URL('../fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
 );
 
-function readFixture(): ArrayBuffer {
-	const bytes = readFileSync(fixture);
-	return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
-}
-
+/** The SmartArt of a deck cut down to the one slide a test edits (see `deckWithSlides`). */
 function smartArtOn(slides: PptxSlide[], slideIndex: number): SmartArtPptxElement {
-	const element = slides[slideIndex].elements.find(
+	const element = slides[0]?.elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
-	if (!element?.smartArtData) {
+	if (slides.length !== 1 || !element?.smartArtData) {
 		throw new Error(`slide ${slideIndex + 1} has no smartArt element`);
 	}
 	return element;
@@ -58,7 +54,7 @@ async function structuralRoundTrip(
 	edit: StructuralEdit,
 ): Promise<StructuralRoundTrip> {
 	const handler = new PptxHandler();
-	const loaded = await handler.load(readFixture());
+	const loaded = await handler.load(await deckWithSlides(fixture, [slideIndex + 1]));
 	const element = smartArtOn(loaded.slides, slideIndex);
 	const before = structuredClone(element);
 	const data = element.smartArtData!;

@@ -36,6 +36,12 @@ function viewerSources(dir: string, out: string[] = []): string[] {
 	return out;
 }
 
+/** Every authored viewer source and its text, read once for all the scans below. */
+const SOURCES = viewerSources(VIEWER_DIR).map((file) => ({
+	file,
+	text: readFileSync(file, 'utf8'),
+}));
+
 /** Transition layers drawn inside the show stage, which addresses them by id. */
 const TRANSITION_LAYERS = [
 	'presentation-transition-overlay.component.ts',
@@ -45,8 +51,8 @@ const TRANSITION_LAYERS = [
 
 describe('slide canvases take their element ids from the shared rule', () => {
 	it('no call site sets the override', () => {
-		const offenders = viewerSources(VIEWER_DIR).filter((file) =>
-			readFileSync(file, 'utf8').includes('[exposeElementIds]'),
+		const offenders = SOURCES.filter(({ text }) => text.includes('[exposeElementIds]')).map(
+			({ file }) => file,
 		);
 		expect(offenders.map((file) => path.relative(VIEWER_DIR, file))).toStrictEqual([]);
 	});
@@ -76,7 +82,7 @@ describe('slide canvases take their element ids from the shared rule', () => {
 
 	it('every element renderer mounted outside a slide canvas turns the gate off', () => {
 		const offenders: string[] = [];
-		for (const file of viewerSources(VIEWER_DIR)) {
+		for (const { file, text } of SOURCES) {
 			const relative = path.relative(VIEWER_DIR, file);
 			if (
 				relative.startsWith('slide-canvas.component') ||
@@ -84,9 +90,7 @@ describe('slide canvases take their element ids from the shared rule', () => {
 			) {
 				continue;
 			}
-			for (const [mount] of readFileSync(file, 'utf8').matchAll(
-				/<pptx-element-renderer\b[^>]*>/gu,
-			)) {
+			for (const [mount] of text.matchAll(/<pptx-element-renderer\b[^>]*>/gu)) {
 				if (!mount.includes('[exposeElementId]="false"')) {
 					offenders.push(relative);
 				}
@@ -108,14 +112,12 @@ describe('every element renderer honours the per-element gate', () => {
 
 	it('binds data-element-id only through elementIdAttr()', () => {
 		const offenders: string[] = [];
-		for (const file of viewerSources(VIEWER_DIR)) {
+		for (const { file, text } of SOURCES) {
 			const relative = path.relative(VIEWER_DIR, file);
 			if (NOT_ELEMENTS.has(relative)) {
 				continue;
 			}
-			for (const [binding] of readFileSync(file, 'utf8').matchAll(
-				/\[attr\.data-element-id\]="[^"]*"/gu,
-			)) {
+			for (const [binding] of text.matchAll(/\[attr\.data-element-id\]="[^"]*"/gu)) {
 				if (binding !== '[attr.data-element-id]="elementIdAttr()"') {
 					offenders.push(`${relative}: ${binding}`);
 				}

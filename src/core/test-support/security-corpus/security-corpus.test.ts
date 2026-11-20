@@ -55,7 +55,9 @@ beforeAll(async () => {
 		),
 	);
 	if (REPORT) console.log(`bundled in ${(performance.now() - start).toFixed(0)} ms`);
-}, 60_000);
+	// One build of everything the cases reach (most of the core): past 60 s while the other suites
+	// run beside it, as each case's own process may take up to its 120 s test budget.
+}, 180_000);
 
 afterAll(() => bundles?.dispose());
 

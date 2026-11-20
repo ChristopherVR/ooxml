@@ -8,7 +8,6 @@
  * Ground truth: `e2e/fixtures/three-d-parity/three-d-smartart.pptx`, slide 34
  * (Basic Cycle, Polished) and slide 62 (Basic Pyramid, Polished).
  */
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
@@ -16,26 +15,24 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../core/PptxHandler';
 import type { PptxData, SmartArtPptxElement } from '../../core/types';
 import { addSmartArtNode, relayoutSmartArt } from '../../core/utils';
+import { deckWithSlides } from '../../test-support/deck-slides';
 
 const fixture = fileURLToPath(
 	new URL('../fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
 );
 
+/** The deck's slides these tests read, in this order. */
+const SLIDES = [34, 62];
 let deck: Promise<PptxData> | undefined;
 
 function loadDeck(): Promise<PptxData> {
-	deck ??= (async () => {
-		const bytes = readFileSync(fixture);
-		return new PptxHandler().load(
-			bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
-		);
-	})();
+	deck ??= deckWithSlides(fixture, SLIDES).then((bytes) => new PptxHandler().load(bytes));
 	return deck;
 }
 
 async function smartArtOn(slideNumber: number): Promise<SmartArtPptxElement> {
 	const data = await loadDeck();
-	const element = data.slides[slideNumber - 1].elements.find(
+	const element = data.slides[SLIDES.indexOf(slideNumber)].elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	if (!element?.smartArtData) {

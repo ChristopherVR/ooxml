@@ -120,7 +120,7 @@ interface SharedTitleBar extends HTMLElement {
 	placement: TitleBarPlacement;
 	readonly searchField: HTMLElement;
 	connectedCallback(): void;
-	attributeChangedCallback(): void;
+	attributeChangedCallback(name: string, old: string | null, value: string | null): void;
 }
 type SharedTitleBarCtor = new () => SharedTitleBar;
 
@@ -161,10 +161,18 @@ export function definePptxTitleBar(registry: CustomElementRegistry): void {
 			this.#model = value ?? EMPTY_STATE;
 			this.#sync();
 		}
+		// Both reach the shared element's own callbacks, so the alias keeps its update lifecycle (a
+		// skipped `connectedCallback` left `updateComplete` pending for good).
 		override connectedCallback(): void {
 			this.#sync();
+			super.connectedCallback();
 		}
-		override attributeChangedCallback(): void {
+		override attributeChangedCallback(
+			name: string,
+			old: string | null,
+			value: string | null,
+		): void {
+			super.attributeChangedCallback(name, old, value);
 			this.#sync();
 		}
 		activate(id: string): void {

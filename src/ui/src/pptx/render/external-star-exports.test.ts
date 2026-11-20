@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -76,11 +76,21 @@ function externalStarExports(files: string[], virtual: Record<string, string> = 
 	}
 }
 
-// Compiles the whole tree in a separate process, which a busy machine can slow well past the default.
+/**
+ * Whether `text` may hold an `export *`: the keyword followed by `*` with only whitespace or
+ * comments between, as every such declaration has. Only these files go to the compiler: handing
+ * it all of src/pptx took past two minutes on a loaded machine.
+ */
+const mayStarExport = (text: string): boolean =>
+	/\bexport\b(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*\*/u.test(text);
+
+// Compiles the candidates in a separate process, which a busy machine can slow past the default.
 it('re-exports external modules by name, never with export *', { timeout: 120_000 }, () => {
 	const files = sources(pptxRoot);
 	expect(files.length).toBeGreaterThan(1000);
-	expect(externalStarExports(files)).toEqual([]);
+	const candidates = files.filter((file) => mayStarExport(readFileSync(file, 'utf8')));
+	expect(candidates.length).toBeGreaterThan(0);
+	expect(externalStarExports(candidates)).toEqual([]);
 });
 
 it('reports every spelling of an external value star re-export, and only those', () => {
@@ -97,6 +107,7 @@ it('reports every spelling of an external value star re-export, and only those',
 		'indented.ts': "\t  export * from 'indented';\n",
 		'component.tsx': "export * from 'from-tsx';\nexport const View = () => <div />;\n",
 		'namespace.ts': "export * as helpers from 'namespace-star';\n",
+		'commented.ts': "export /* why */ * from 'commented';\n",
 		'allowed.ts': [
 			"export type * from 'type-only';",
 			"export type * as Types from 'type-only-namespace';",
@@ -110,6 +121,8 @@ it('reports every spelling of an external value star re-export, and only those',
 	const virtual = Object.fromEntries(
 		Object.entries(files).map(([name, text]) => [fixture(name), text]),
 	);
+	// The text filter keeps every file that holds one.
+	expect(Object.values(files).every(mayStarExport)).toBe(true);
 	expect(externalStarExports(Object.keys(virtual), virtual)).toEqual([
 		'__external-star-exports__/text-style-scope.ts: ooxml-core/pptx/editor/render/text-style-scope',
 		'__external-star-exports__/paragraph-geometry-overrides.ts: ooxml-core/pptx/editor/render/paragraph-geometry-overrides',
@@ -119,5 +132,6 @@ it('reports every spelling of an external value star re-export, and only those',
 		'__external-star-exports__/indented.ts: indented',
 		'__external-star-exports__/component.tsx: from-tsx',
 		'__external-star-exports__/namespace.ts: namespace-star',
+		'__external-star-exports__/commented.ts: commented',
 	]);
 });

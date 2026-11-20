@@ -14,6 +14,7 @@
 		"src/manifest.ts",
 		"src/**/*.test.ts",
 		"src/**/__fixtures__/**",
+		"src/conformance/**",
 		"dist",
 		"node_modules",
 		"src/pptx"

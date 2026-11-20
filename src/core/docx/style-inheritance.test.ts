@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { loadDocx } from './parse';
 import { chainResolver, inheritanceCycleEntries } from './style-inheritance';
 import { docx, p } from './test-support/compare-docs';
+import { growthAsync } from '../test-support/growth';
 
 interface Style {
 	basedOn?: string;
@@ -90,17 +91,11 @@ describe('style inheritance', () => {
 				`<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">${styles}</w:styles>`,
 			);
 			const bytes = await zip.generateAsync({ type: 'uint8array' });
-			let best = Number.POSITIVE_INFINITY;
-			for (let run = 0; run < 3; run++) {
-				const start = performance.now();
-				await loadDocx(bytes);
-				best = Math.min(best, performance.now() - start);
-			}
-			return best;
+			return () => loadDocx(bytes);
 		};
 		const small = await load(3000);
 		const large = await load(12000);
 		// Four times the styles: about four times the time when linear, sixteen when quadratic.
-		expect(large / small).toBeLessThan(8);
+		expect(await growthAsync(small, large)).toBeLessThan(8);
 	}, 60_000);
 });

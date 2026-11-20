@@ -13,7 +13,7 @@ import {
 	seedPeer,
 } from './test-support/doc-peers';
 import { addMaster, masterShape } from './test-support/masters';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 
 const rect = (id: string, x: number, pageId = '0') =>
 	({
@@ -190,7 +190,7 @@ describe('the fix-up in live sessions', () => {
 		const room = createRoom();
 		rooms.push(room);
 		const a = room.join('Ada', (await editVsdx(await createVsdx(), [rect('1', 1)])).bytes);
-		await wait();
+		await published(a);
 		const b = room.join('Bob', await createVsdx(), { seed: false });
 		await until(async () => (await b.side.model()).pages[0]!.shapes.length === 1, 'join');
 		await settle(a, b);

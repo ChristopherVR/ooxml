@@ -2,6 +2,7 @@ import { strToU8, zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 
 import { readDeclaredFonts } from './declared-fonts';
+import { growth } from '../test-support/growth';
 
 const zip = (parts: Record<string, string>) =>
 	zipSync(Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, strToU8(v)])));
@@ -66,15 +67,6 @@ describe('readDeclaredFonts', () => {
 });
 
 /** Best of three runs, in milliseconds. */
-function timed(run: () => unknown): number {
-	let best = Number.POSITIVE_INFINITY;
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const start = performance.now();
-		run();
-		best = Math.min(best, performance.now() - start);
-	}
-	return best;
-}
 
 describe('readDeclaredFonts on hostile parts', () => {
 	it('is linear in fonts and face names that never close', () => {
@@ -85,7 +77,7 @@ describe('readDeclaredFonts on hostile parts', () => {
 			});
 			return () => readDeclaredFonts(bytes);
 		};
-		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
+		expect(growth(run(20_000), run(80_000))).toBeLessThan(8);
 	});
 
 	it('lists a Word font as embedded only for its own embed elements', () => {

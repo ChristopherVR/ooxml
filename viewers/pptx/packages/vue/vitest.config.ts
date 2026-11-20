@@ -81,8 +81,6 @@ export default defineConfig({
 		globals: true,
 		environment: 'happy-dom',
 		maxWorkers: 4,
-		// Most of this suite mounts a whole viewer, as in the Vanilla and Svelte packages.
-		testTimeout: 30_000,
 		projects: isolationProjects('vue', __dirname, 'happy-dom'),
 		setupFiles: ['./src/test-setup.ts'],
 	},

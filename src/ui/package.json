@@ -168,6 +168,7 @@
 		"prepack": "node scripts/ensure-built.mjs",
 		"typecheck": "tsc -p tsconfig.pptx.json --outDir .types-pptx && tsc -p tsconfig.json --noEmit && tsc -p tsconfig.pptx.json --noEmit",
 		"test": "vitest run",
+		"check:elements": "vitest run src/conformance",
 		"test:package": "node scripts/package-smoke.mjs",
 		"gen:manifest": "node scripts/gen-manifest.mjs",
 		"test:pptx": "vitest run --project 'pptx*'"

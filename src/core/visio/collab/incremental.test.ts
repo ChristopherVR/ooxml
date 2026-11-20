@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createVsdx, editVsdx } from '../index';
 import { addMaster, masterShape } from './test-support/masters';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 
 const rect = (id: string, x: number, pageId = '0') =>
 	({ type: 'create-rectangle', pageId, shapeId: id, x, y: 2, width: 1, height: 1 }) as const;
@@ -24,7 +24,7 @@ async function pair() {
 	).bytes;
 	start = (await editVsdx(start, [rect('1', 2, '5')])).bytes;
 	const a = room.join('Ada', start);
-	await wait();
+	await published(a);
 	// A joiner never seeds: a blank drawing racing the first peer's seed would also change page 0.
 	const b = room.join('Bob', await createVsdx(), { seed: false });
 	await until(async () => (await b.side.model()).pages.length === 2, 'join');

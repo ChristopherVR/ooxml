@@ -6,6 +6,10 @@ import {
 	transportProvider,
 	type CollaborationState,
 } from 'ooxml-core/collab';
+// The viewer loads the drawing collaboration code on first share. Loading it here, with the test
+// file, keeps the waits below about the viewer joining: a cold worker under load spent the whole
+// `vi.waitFor` budget importing it.
+import 'ooxml-core/visio/collab';
 import { mountViewer } from './binding';
 
 afterEach(() => document.body.replaceChildren());
