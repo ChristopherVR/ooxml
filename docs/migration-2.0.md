@@ -1063,7 +1063,7 @@ import { signature } from 'ooxml-core/opc';
 signature.canonicalize(element, algorithm);
 ```
 
-The verifier does not check RSA keys whose modulus is under 1024 or over 16384 bits, or whose public exponent is over 2^32: such a signature reports `unsupported`. It tries at most four certificates and 512 references per signature, and skips a signature part over 16 MB. A document signed with such a key or certificate list shows as not verified; re-sign it with a key in that range.
+The verifier does not check an RSA key whose modulus is under 1024 or over 16384 bits, or whose public exponent is over 2^32, and a signature made with one reports `unsupported`. Per signature it tries at most four `KeyInfo` certificates, reads at most 10,000 references and 100 MB of part data, and skips a signature part over 16 MB; a signature past one of these limits also reports `unsupported`, and a reference it did not read has the new `digestStatus` `limit-exceeded`. Office never writes such a signature. If you sign with a key outside that range, re-sign with a 2048 to 4096-bit key.
 
 ### Collaboration updates are bounded, and a refusal stops the sync
 

@@ -5,6 +5,7 @@
  */
 
 import { decodeBase64 } from '../../../digest/index';
+import { SIGNATURE_LIMITS } from './limits';
 
 interface Tlv {
 	tag: number;
@@ -137,10 +138,18 @@ function time(bytes: Uint8Array, value: Tlv | undefined): string | undefined {
 const hex = (bytes: Uint8Array): string =>
 	Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 
-const unsignedInteger = (bytes: Uint8Array, value: Tlv): bigint => {
-	const content = bytes.subarray(value.start, value.end);
-	return content.length === 0 ? 0n : BigInt(`0x${hex(content)}`);
-};
+/** The content of an INTEGER without its leading zero bytes. */
+function magnitude(bytes: Uint8Array, value: Tlv): Uint8Array {
+	let start = value.start;
+	while (start < value.end && bytes[start] === 0) start += 1;
+	return bytes.subarray(start, value.end);
+}
+
+const bitLength = (magnitude: Uint8Array): number =>
+	magnitude.length === 0 ? 0 : (magnitude.length - 1) * 8 + (32 - Math.clz32(magnitude[0]!));
+
+const toBigInt = (magnitude: Uint8Array): bigint =>
+	magnitude.length === 0 ? 0n : BigInt(`0x${hex(magnitude)}`);
 
 /** An RSA public key. */
 export interface RsaPublicKey {
@@ -157,7 +166,10 @@ export interface CertificateFields {
 	serialNumber: string;
 	validFrom?: string | undefined;
 	validTo?: string | undefined;
-	/** Set when the subject key is an RSA key. */
+	/**
+	 * Set when the subject key is an RSA key within {@link SIGNATURE_LIMITS}: a modulus of 1024 to
+	 * 16384 bits and an exponent of at most 2^32.
+	 */
 	rsaPublicKey?: RsaPublicKey | undefined;
 }
 
@@ -169,11 +181,21 @@ function rsaKey(bytes: Uint8Array, subjectPublicKeyInfo: Tlv): RsaPublicKey | un
 	const bitString = expectTag(key, BIT_STRING);
 	if (bytes[bitString.start] !== 0) return undefined;
 	const sequence = readTlv(bytes, bitString.start + 1, bitString.end);
-	const [modulusValue, exponentValue] = children(bytes, expectTag(sequence, SEQUENCE));
-	const modulus = unsignedInteger(bytes, expectTag(modulusValue, INTEGER));
-	const exponent = unsignedInteger(bytes, expectTag(exponentValue, INTEGER));
-	if (modulus === 0n || exponent === 0n) return undefined;
-	return { modulus, exponent, size: Math.ceil(modulus.toString(16).length / 2) };
+	const [modulusInteger, exponentInteger] = children(bytes, expectTag(sequence, SEQUENCE));
+	const modulus = magnitude(bytes, expectTag(modulusInteger, INTEGER));
+	const exponentBytes = magnitude(bytes, expectTag(exponentInteger, INTEGER));
+	// Sizes are checked on the bytes, so an oversized key never becomes a number.
+	const modulusBits = bitLength(modulus);
+	if (
+		modulusBits < SIGNATURE_LIMITS.minRsaModulusBits ||
+		modulusBits > SIGNATURE_LIMITS.maxRsaModulusBits ||
+		exponentBytes.length === 0 ||
+		exponentBytes.length > 5
+	)
+		return undefined;
+	const exponent = toBigInt(exponentBytes);
+	if (exponent > SIGNATURE_LIMITS.maxRsaExponent) return undefined;
+	return { modulus: toBigInt(modulus), exponent, size: modulus.length };
 }
 
 /** Read the fields of a DER certificate, or `undefined` when it is not one this reader parses. */

@@ -3,6 +3,7 @@
 import { decodeBase64 } from '../../../digest/index';
 import { canonicalize } from './c14n';
 import type { XmlSignature } from './document';
+import { SIGNATURE_LIMITS } from './limits';
 import { verifyRsaPkcs1 } from './rsa';
 import { readCertificateBase64 } from './x509';
 
@@ -25,7 +26,9 @@ const SIGNATURE_METHOD_TO_HASH: Readonly<Record<string, string>> = {
 
 /**
  * Verify `SignatureValue` over the canonical `SignedInfo`. The signer is whichever `KeyInfo`
- * certificate verifies it; `KeyInfo` is unsigned, so its order proves nothing.
+ * certificate verifies it; `KeyInfo` is unsigned, so its order proves nothing. At most
+ * `SIGNATURE_LIMITS.maxCertificatesTried` keys are tried; a signature none of them verifies while
+ * more remain untried is `not-checked`, not `invalid`.
  */
 export function verifySignedInfo(signature: XmlSignature): SignedInfoVerification {
 	const hash = SIGNATURE_METHOD_TO_HASH[signature.signatureMethod];
@@ -34,6 +37,7 @@ export function verifySignedInfo(signature: XmlSignature): SignedInfoVerificatio
 		return key ? [{ certificate, key }] : [];
 	});
 	if (!hash || keys.length === 0) return { status: 'not-checked' };
+	const tried = keys.slice(0, SIGNATURE_LIMITS.maxCertificatesTried);
 	const signatureValue = decodeBase64(signature.signatureValueBase64);
 	if (!signatureValue || signatureValue.length === 0) return { status: 'invalid' };
 	let canonicalSignedInfo: string;
@@ -43,8 +47,8 @@ export function verifySignedInfo(signature: XmlSignature): SignedInfoVerificatio
 		return { status: 'invalid' };
 	}
 	const message = new TextEncoder().encode(canonicalSignedInfo);
-	const signer = keys.find(({ key }) => verifyRsaPkcs1(key, hash, message, signatureValue));
-	return signer
-		? { status: 'verified', canonicalSignedInfo, signerCertificate: signer.certificate }
-		: { status: 'invalid' };
+	const signer = tried.find(({ key }) => verifyRsaPkcs1(key, hash, message, signatureValue));
+	if (signer)
+		return { status: 'verified', canonicalSignedInfo, signerCertificate: signer.certificate };
+	return { status: tried.length < keys.length ? 'not-checked' : 'invalid' };
 }

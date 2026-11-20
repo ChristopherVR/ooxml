@@ -29,6 +29,7 @@ import type {
 import { canonicalize } from './c14n';
 import type { XmlSignature } from './document';
 import { childElements, firstDescendantNamed, localNameOf, parseStrictXml } from './dom';
+import { SIGNATURE_LIMITS } from './limits';
 import { applyReferenceTransforms, extractReferenceTransforms } from './transforms';
 
 /** Where the verifier reads a package's parts: a JSZip archive or a map of part bytes. */
@@ -177,10 +178,17 @@ function compareDigest(
 	});
 }
 
+/** What one signature may still read; see {@link SIGNATURE_LIMITS}. */
+interface WorkBudget {
+	references: number;
+	bytes: number;
+}
+
 async function checkPartReference(
 	reference: SignedReference,
 	pkg: SignaturePackage,
 	coveredParts: Map<string, CoveredPart>,
+	budget: WorkBudget,
 ): Promise<SignatureReferenceCheck> {
 	const parsed = parseReferenceUri(reference.uri);
 	if (!parsed) {
@@ -189,6 +197,7 @@ async function checkPartReference(
 	const { partPath, contentType } = parsed;
 	const resolvedPartPath = resolvePartName(pkg, partPath);
 	const bytes = resolvedPartPath === undefined ? undefined : await pkg.read(resolvedPartPath);
+	budget.bytes -= bytes?.length ?? 0;
 	if (!bytes || resolvedPartPath === undefined) {
 		return referenceCheck(reference, 'missing-part', {
 			resolvedPartPath: partPath,
@@ -247,7 +256,9 @@ function readSigningTime(signedElement: Element): string | undefined {
 
 /**
  * Verify every reference of a `SignedInfo` whose signature value has verified, following each
- * Manifest inside an `Object` that a verified reference protects.
+ * Manifest inside an `Object` that a verified reference protects. Once the signature has read
+ * `SIGNATURE_LIMITS.maxReferences` references or `maxDigestedBytes` bytes, the next reference is
+ * reported as `limit-exceeded` and no more are read, so the signature is not verified.
  */
 export async function checkSignedReferences(
 	signature: XmlSignature,
@@ -257,10 +268,22 @@ export async function checkSignedReferences(
 	const checks: SignatureReferenceCheck[] = [];
 	const coveredParts = new Map<string, CoveredPart>();
 	let signingTime: string | undefined;
+	const budget: WorkBudget = {
+		references: SIGNATURE_LIMITS.maxReferences,
+		bytes: SIGNATURE_LIMITS.maxDigestedBytes,
+	};
+	/** Whether `reference` may be read; records it as `limit-exceeded` when not. */
+	const admit = (reference: SignedReference): boolean => {
+		budget.references -= 1;
+		if (budget.references >= 0 && budget.bytes >= 0) return true;
+		checks.push(referenceCheck(reference, 'limit-exceeded'));
+		return false;
+	};
 
 	for (const reference of readReferences(parseStrictXml(canonicalSignedInfo).documentElement!)) {
+		if (!admit(reference)) break;
 		if (!reference.uri.startsWith('#')) {
-			checks.push(await checkPartReference(reference, pkg, coveredParts));
+			checks.push(await checkPartReference(reference, pkg, coveredParts, budget));
 			continue;
 		}
 		const target = signature.referenceTargets.get(reference.uri.slice(1));
@@ -273,7 +296,9 @@ export async function checkSignedReferences(
 			checks.push(referenceCheck(reference, 'unsupported-transform'));
 			continue;
 		}
-		const check = compareDigest(reference, new TextEncoder().encode(octets));
+		const encoded = new TextEncoder().encode(octets);
+		budget.bytes -= encoded.length;
+		const check = compareDigest(reference, encoded);
 		checks.push(check);
 		if (check.digestStatus !== 'verified') {
 			continue;
@@ -283,9 +308,13 @@ export async function checkSignedReferences(
 		const manifests = isDsigElement(signedElement, 'Manifest')
 			? [signedElement]
 			: childElements(signedElement).filter((child) => isDsigElement(child, 'Manifest'));
+		let withinBudget = true;
 		for (const manifestReference of manifests.flatMap(readReferences)) {
-			checks.push(await checkPartReference(manifestReference, pkg, coveredParts));
+			withinBudget = admit(manifestReference);
+			if (!withinBudget) break;
+			checks.push(await checkPartReference(manifestReference, pkg, coveredParts, budget));
 		}
+		if (!withinBudget) break;
 	}
 	return { checks, coveredParts, signingTime };
 }

@@ -34,7 +34,9 @@ export interface SignatureReferenceCheck {
 		| 'missing-part'
 		| 'unsupported-transform'
 		| 'unsupported-algorithm'
-		| 'insufficient-data';
+		| 'insufficient-data'
+		/** Not read: the signature reached the verifier's work limit before this reference. */
+		| 'limit-exceeded';
 	transformAlgorithms: string[];
 }
 

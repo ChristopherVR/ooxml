@@ -34,6 +34,7 @@ import {
 	type SignaturePackage,
 	type SignaturePackageSource,
 } from './references';
+import { SIGNATURE_LIMITS } from './limits';
 import { verifySignedInfo } from './signed-info';
 import { readCertificateBase64 } from './x509';
 
@@ -207,6 +208,15 @@ export async function verifyPackageSignatures(
 		const details: SignatureDetail[] = [];
 		for (const path of signaturePaths) {
 			const bytes = await pkg.read(path);
+			if (bytes && bytes.length > SIGNATURE_LIMITS.maxSignaturePartBytes) {
+				const detail: DetailBase = {
+					...unverifiedDetail(path),
+					signatureValueStatus: 'not-checked',
+					structureError: 'The signature part is too large to check.',
+				};
+				details.push({ ...detail, status: computeDetailStatus(detail, policy) });
+				continue;
+			}
 			let xml = '';
 			try {
 				xml = bytes ? decodeXmlBytes(bytes) : '';
