@@ -205,8 +205,53 @@ const payloads: ViewerEvents = {
 	},
 	'file-command': { command: 'save' },
 };
+/** The region the keyboard is in now, across shadow roots and slots. */
+const focusInRegion = (root: ShadowRoot, selector: string): boolean => {
+	const region = root.querySelector(selector);
+	let active: Element | null = root.activeElement;
+	while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+	for (let node: Node | null = active; node;)
+		if (node === region) return true;
+		else
+			node = (node as Element).assignedSlot ?? node.parentNode ?? (node as ShadowRoot).host ?? null;
+	return false;
+};
+
 describe('native adapters against the real shared custom element', () => {
 	for (const [framework, mountNative] of Object.entries(mounts)) {
+		// Every binding mounts the same element, so F6 comes from the shared region service.
+		it(`${framework}: F6 and Shift+F6 move the keyboard between the window's regions`, async () => {
+			const host = document.createElement('div');
+			document.body.append(host);
+			const mounted = await mountNative(host, { document: demoDocument });
+			try {
+				const root = mounted.handle.element.shadowRoot!;
+				const canvas = root.querySelector<HTMLElement>('.viewport')!;
+				const press = (shiftKey: boolean) => {
+					let active: Element | null = root.activeElement;
+					while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+					(active ?? canvas).dispatchEvent(
+						new KeyboardEvent('keydown', { key: 'F6', shiftKey, bubbles: true, composed: true }),
+					);
+				};
+				canvas.focus();
+				press(false);
+				expect(focusInRegion(root, '.page-bar')).toBe(true);
+				press(false);
+				expect(focusInRegion(root, 'office-ui-status-bar')).toBe(true);
+				press(false);
+				expect(focusInRegion(root, 'office-ui-ribbon')).toBe(true);
+				press(false);
+				expect(focusInRegion(root, '#shapes-pane')).toBe(true);
+				press(false);
+				expect(focusInRegion(root, '.viewport')).toBe(true);
+				press(true);
+				expect(focusInRegion(root, '#shapes-pane')).toBe(true);
+			} finally {
+				await mounted.destroy();
+				host.remove();
+			}
+		});
 		it(`${framework}: keeps host edit permission authoritative while allowing navigation`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);

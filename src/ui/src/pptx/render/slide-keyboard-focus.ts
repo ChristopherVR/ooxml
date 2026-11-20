@@ -17,7 +17,8 @@
  *
  * @module render/slide-keyboard-focus
  */
-import { containsComposed, modalActiveElement, modalFocusableElements } from '../../dialog/focus';
+import { containsComposed, modalActiveElement } from '../../dialog/focus';
+import { moveRegionFocus, regionKeyDirection, type WindowRegion } from '../../region-focus';
 import { findCanvasElementNode } from './canvas-element-node';
 import { isEditorTextInputTarget } from './editor-key-target';
 
@@ -31,15 +32,25 @@ const OBJECT_SELECTOR = '[data-element-id]';
 const OBJECTS_ATTRIBUTE = 'data-pptx-slide-objects';
 const STATUS_ATTRIBUTE = 'data-pptx-slide-status';
 
-/** The panes F6 visits, clockwise around the window as PowerPoint moves. */
-const PANE_SELECTORS = [
-	'[data-pptx-chrome="ribbon"]',
-	VIEWPORT_SELECTOR,
-	'[data-pptx-chrome="inspector"]',
-	'[data-pptx-chrome="notes"]',
-	'pptx-ui-status-bar, [data-pptx-chrome="status-bar"]',
-	'[data-pptx-chrome="slides"]',
-] as const;
+/**
+ * The panes F6 visits, clockwise around the window as PowerPoint moves. The shared region service
+ * does the moving; landing on the slide goes into its objects, as pressing on it does.
+ */
+const PANES: readonly WindowRegion[] = [
+	{ selector: '[data-pptx-chrome="ribbon"]' },
+	{
+		selector: VIEWPORT_SELECTOR,
+		focus: (slide) => {
+			slide.focus({ preventScroll: true });
+			enterSlideObjects(slide);
+			return true;
+		},
+	},
+	{ selector: '[data-pptx-chrome="inspector"]' },
+	{ selector: '[data-pptx-chrome="notes"]' },
+	{ selector: 'pptx-ui-status-bar, [data-pptx-chrome="status-bar"]' },
+	{ selector: '[data-pptx-chrome="slides"]' },
+];
 
 const VISUALLY_HIDDEN =
 	'position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap';
@@ -132,55 +143,13 @@ export function announceSlideObject(root: ParentNode, elementId: string): void {
 	status.textContent = label;
 }
 
-function isShown(element: HTMLElement): boolean {
-	return element.getClientRects().length > 0;
-}
-
-/** The panes present and showing, in F6 order. */
-function visiblePanes(scope: ParentNode): HTMLElement[] {
-	return PANE_SELECTORS.flatMap((selector) => {
-		const pane = scope.querySelector<HTMLElement>(selector);
-		return pane && isShown(pane) ? [pane] : [];
-	});
-}
-
-/** Where focus lands in a pane: its current item (selected tab, active slide), else its first stop. */
-function paneEntry(pane: HTMLElement): HTMLElement {
-	const stops = modalFocusableElements(pane);
-	const current = stops.find(
-		(stop) =>
-			stop.getAttribute('aria-selected') === 'true' ||
-			(stop.getAttribute('aria-current') ?? 'false') !== 'false',
-	);
-	const entry = current ?? stops[0];
-	if (entry) {
-		return entry;
-	}
-	pane.tabIndex = -1;
-	return pane;
-}
-
 /**
  * Move focus to the next or previous pane of the viewer. Returns false when the
  * viewer shows no pane to move to.
  */
 export function moveEditorPaneFocus(viewport: HTMLElement, direction: 1 | -1): boolean {
-	const doc = viewport.ownerDocument;
-	const panes = visiblePanes(viewport.closest(VIEWER_SELECTOR) ?? doc);
-	if (panes.length === 0) {
-		return false;
-	}
-	const active = modalActiveElement(doc);
-	const index = panes.findIndex((pane) => containsComposed(pane, active));
-	const from = index < 0 && direction < 0 ? 0 : index;
-	const pane = panes[(from + direction + panes.length) % panes.length]!;
-	if (pane === viewport) {
-		viewport.focus({ preventScroll: true });
-		enterSlideObjects(viewport);
-	} else {
-		paneEntry(pane).focus({ preventScroll: true });
-	}
-	return true;
+	const scope = viewport.closest(VIEWER_SELECTOR) ?? viewport.ownerDocument;
+	return moveRegionFocus(scope, PANES, direction);
 }
 
 /**
@@ -237,11 +206,9 @@ export function attachSlideKeyboardFocus(host: HTMLElement, isActive: () => bool
 		return doc.querySelector(VIEWPORT_SELECTOR) === slide;
 	};
 	const onKeyDown = (event: KeyboardEvent): void => {
+		const direction = regionKeyDirection(event);
 		if (
-			event.key !== 'F6' ||
-			event.ctrlKey ||
-			event.metaKey ||
-			event.altKey ||
+			!direction ||
 			event.defaultPrevented ||
 			!viewport ||
 			!isActive() ||
@@ -250,7 +217,7 @@ export function attachSlideKeyboardFocus(host: HTMLElement, isActive: () => bool
 		) {
 			return;
 		}
-		if (moveEditorPaneFocus(viewport, event.shiftKey ? -1 : 1)) {
+		if (moveEditorPaneFocus(viewport, direction)) {
 			event.preventDefault();
 		}
 	};
