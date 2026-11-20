@@ -181,7 +181,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 				getPos,
 				() => options.theme?.(),
 				() => options.model?.(),
-				(part, type) => cache.urlFor(part, type),
+				cache,
 			);
 		const diagram = parseDiagram(node.attrs.diagram);
 		if (diagram)

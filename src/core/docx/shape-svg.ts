@@ -150,7 +150,8 @@ export function shapeSvg(
 	const lines = spec.text?.some(Boolean)
 		? wrapShapeText(spec.text, textRect.r - textRect.l - 14)
 		: [];
-	const color = shapeDefaultTextColor(spec, theme);
+	// The runs' own colour, else the one the shape gives text that sets none.
+	const color = spec.textColor ? `#${spec.textColor}` : shapeDefaultTextColor(spec, theme);
 	const lineHeight = FONT_PX * 1.2;
 	const first = (textRect.t + textRect.b) / 2 - ((lines.length - 1) * lineHeight) / 2;
 	const text = lines.length

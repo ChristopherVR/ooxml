@@ -19,6 +19,11 @@ export interface ShapeSpec {
 	fontColor?: DrawingColor;
 	/** Paragraphs of text inside the shape (`wps:txbx`). */
 	text?: string[];
+	/**
+	 * `RRGGBB`: the one `w:color` every run of the shape's plain text sets, written back on its
+	 * runs when the text is rewritten. Absent when the runs set none.
+	 */
+	textColor?: string;
 	/** The shape's spPr holds only what this model writes, so fill, outline, size, geometry and wrap can change. */
 	editable?: boolean;
 	/** The shape's text is plain paragraphs of plain runs, so it can be edited. */

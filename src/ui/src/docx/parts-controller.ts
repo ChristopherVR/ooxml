@@ -62,9 +62,17 @@ export class PartsController {
 	private readonly pictureUrl = (partName: string, contentType: string) =>
 		this.host.images().urlFor(partName, contentType);
 
+	/** Whether the previews repaint when the media cache refreshes (pictures arriving late). */
+	private watchingMedia = false;
+
 	/** Refresh appearance in place, retaining the active story's selection and history. */
 	refreshReviewDisplay(): void {
 		this.active?.dispatch(this.active.state.tr.setMeta('addToHistory', false));
+		this.repaintPreviews();
+	}
+
+	/** Re-renders the read-only previews (not an open story editor) from the current document. */
+	private repaintPreviews(): void {
 		refreshStoryPreviews(
 			this.host.model(),
 			this.shownSection,
@@ -280,6 +288,12 @@ export class PartsController {
 		keepEditor = false,
 	): void {
 		if (!canvas || !paper) return;
+		// Collaborative pictures can arrive after the previews: the cache then revokes its URLs and
+		// every picture repaints, these previews too (one subscription for the editor's cache).
+		if (!this.watchingMedia) {
+			this.watchingMedia = true;
+			this.host.images().onChange(() => this.repaintPreviews());
+		}
 		const context = keepEditor ? this.headerContext : undefined;
 		const selection = context ? this.active?.state.selection : undefined;
 		if (!context) this.shownSection = this.host.sectionIndex?.() ?? 0;

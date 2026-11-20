@@ -10,7 +10,10 @@ import { ImageMediaCache, imageNodeView } from './image-media';
 import { modelToDoc } from './model-adapter';
 import { renderPrintLayout } from './print-layout';
 import { selectedTextBox, updateTextBox } from './text-box-commands';
+import { DocxEditorElement, registerDocxEditor } from './index';
 import { must } from './test-support';
+
+registerDocxEditor();
 
 const load = async () => loadDocx(await drawingsFixture());
 
@@ -136,5 +139,63 @@ describe('shape text colour from the style font reference', () => {
 			model,
 		});
 		expect(textBox(handle.element, 'Styled text').style.color).toBe(grey);
+	});
+});
+
+describe('pictures that arrive after they are drawn', () => {
+	afterEach(() => {
+		document.body.replaceChildren();
+		vi.restoreAllMocks();
+	});
+
+	it('repaint in Draft view header previews when the media cache refreshes', async () => {
+		const { model, media } = await load();
+		let next = 0;
+		URL.createObjectURL = vi.fn(() => `blob:late-${next++}`);
+		URL.revokeObjectURL = vi.fn();
+		const late = new Map<string, Uint8Array>();
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		editor.setLoadedDocument({ model, media: late, save: async () => new Uint8Array() });
+		document.body.append(editor);
+		const logo = () =>
+			editor.shadowRoot!.querySelector<HTMLImageElement>('.dve-header img[data-docx-image]');
+		expect(logo()?.getAttribute('src')).toBeNull();
+		late.set('word/media/logo.png', must(media?.get('word/media/logo.png'), 'logo bytes'));
+		(editor as unknown as { core: { imageMedia: ImageMediaCache } }).core.imageMedia.refresh();
+		expect(logo()?.getAttribute('src')).toMatch(/^blob:late-/);
+	});
+
+	it('repaint inside a text box on the editing surface when the media cache refreshes', async () => {
+		const { model, media } = await load();
+		let next = 0;
+		URL.createObjectURL = vi.fn(() => `blob:box-${next++}`);
+		URL.revokeObjectURL = vi.fn();
+		const box = must(
+			model.blocks
+				.flatMap((block) => (block.type === 'paragraph' ? block.runs : []))
+				.find((run) => run.image?.shape?.fontColor)?.image?.textBoxContent,
+			'styled shape content',
+		);
+		const paragraph = box.blocks[0]!;
+		if (paragraph.type === 'paragraph')
+			paragraph.runs.push({
+				text: '',
+				image: {
+					relId: 'rId9',
+					partName: 'word/media/logo.png',
+					contentType: 'image/png',
+					widthPx: 16,
+					heightPx: 8,
+				},
+			});
+		const late = new Map<string, Uint8Array>();
+		const cache = new ImageMediaCache((part) => late.get(part));
+		const view = surface(model, cache);
+		const picture = () => textBox(view.dom, 'Styled text').querySelector('img[data-docx-image]');
+		expect(picture()?.getAttribute('src')).toBeNull();
+		late.set('word/media/logo.png', must(media?.get('word/media/logo.png'), 'logo bytes'));
+		cache.refresh();
+		expect(picture()?.getAttribute('src')).toMatch(/^blob:box-/);
+		view.destroy();
 	});
 });

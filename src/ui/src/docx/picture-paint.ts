@@ -7,6 +7,13 @@ import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 /** Resolves a package part to a displayable URL (the editor's `ImageMediaCache.urlFor`). */
 export type PictureSource = (partName: string, contentType: string) => string | undefined;
 
+/** The editor's media cache as a picture view uses it: URLs, and a call when they are replaced. */
+export interface PictureMedia {
+	urlFor(partName: string, contentType: string): string | undefined;
+	/** Called after the cache revokes its URLs because bytes arrived; returns the unsubscribe. */
+	onChange(listener: () => void): () => void;
+}
+
 /**
  * Sets `content`'s source from the node's parts and, when its fill needs SVG, draws that SVG after
  * it (replacing `painted`, the one drawn before) and hides the `<img>`. Returns the SVG drawn.

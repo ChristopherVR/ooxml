@@ -5,7 +5,7 @@ import type { EditorView, NodeView } from 'prosemirror-view';
 import type { DocumentModel, ShapeSpec, ThemeCatalog } from 'ooxml-core/docx';
 import { createResizeHandle } from './resize-handle';
 import { paintShape } from './story-render';
-import type { PictureSource } from './picture-paint';
+import type { PictureMedia } from './picture-paint';
 
 const MIN_SIZE = 4;
 
@@ -24,7 +24,7 @@ export function shapeNodeView(
 	getPos: () => number | undefined,
 	theme: () => ThemeCatalog | undefined,
 	model: () => DocumentModel | undefined = () => undefined,
-	pictureUrl?: PictureSource,
+	media?: PictureMedia,
 ): NodeView {
 	let node = initial;
 	let selected = false;
@@ -58,8 +58,11 @@ export function shapeNodeView(
 	dom.append(holder, handle);
 	dom.contentEditable = 'false';
 
+	const pictureUrl = media && ((part: string, type: string) => media.urlFor(part, type));
 	const render = () => paintShape(dom, holder, node, theme(), model(), selected, pictureUrl);
 	render();
+	// Pictures inside a text box repaint when late bytes replace the cache's URLs.
+	const unsubscribe = media?.onChange(render);
 
 	return {
 		dom,
@@ -79,5 +82,6 @@ export function shapeNodeView(
 		},
 		stopEvent: (event) => event.target === handle,
 		ignoreMutation: () => true,
+		...(unsubscribe ? { destroy: unsubscribe } : {}),
 	};
 }
