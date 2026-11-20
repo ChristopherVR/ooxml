@@ -1,10 +1,15 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import type { DrawingFill } from 'ooxml-core/drawingml';
 import type { DocumentModel, TextBoxContent } from 'ooxml-core/docx';
+import type { TextBoxLayout } from 'ooxml-core/docx/layout';
 import { textBoxContentElement } from './story-render';
 // Print Layout pictures: package media through `PictureUrl`, charts and shapes painted by the core
-// (`LayoutObject.chart`) with a shape's text box paragraphs over it, and a placeholder box for
-// anything that cannot be shown.
+// (`LayoutObject.chart`) with a shape's text box paragraphs over it (the lines the page engine laid
+// out, or the paragraphs flowed by CSS where it laid out none), and a placeholder box for anything
+// that cannot be shown.
+
+/** Draws a text box's laid-out lines over its shape, in the colour its runs take where they set none. */
+export type TextBoxLayer = (layout: TextBoxLayout, color: string | undefined) => HTMLElement;
 
 /** Resolves a package picture part to a displayable URL; undefined draws a placeholder box. */
 export type PictureUrl = (partName: string, contentType: string) => string | undefined;
@@ -73,11 +78,14 @@ export function pictureElement(
 		heightPx: number;
 		chart?: { svg?: string; label: string; shape?: true; textColor?: string };
 		textBox?: TextBoxContent;
+		textBoxLayout?: TextBoxLayout;
 		noteSeparator?: 'separator' | 'continuationSeparator';
 	},
 	pictureUrl: PictureUrl | undefined,
 	/** The document, whose styles a text box's paragraphs are drawn with. */
 	model?: DocumentModel,
+	/** Draws `textBoxLayout`; without it, or without a layout, the paragraphs are flowed by CSS. */
+	textBoxLayer?: TextBoxLayer,
 ): HTMLElement {
 	if (object.noteSeparator) {
 		const rule = document.createElement('span');
@@ -98,7 +106,9 @@ export function pictureElement(
 		element.style.height = `${object.heightPx}px`;
 		if (object.chart.svg && object.chart.shape && object.textBox)
 			element.append(
-				textBoxContentElement(object.textBox, model, object.chart.textColor, pictureUrl),
+				object.textBoxLayout && textBoxLayer
+					? textBoxLayer(object.textBoxLayout, object.chart.textColor)
+					: textBoxContentElement(object.textBox, model, object.chart.textColor, pictureUrl),
 			);
 		return element;
 	}

@@ -1,9 +1,17 @@
 import type { Paragraph, ThemeCatalog } from '../index';
 import { shapePaint } from './shape-paint';
 import type { LayoutFloat } from './input';
+import type { TextBoxLayouts } from './text-box-layout';
 
-/** Floating pictures anchored in a paragraph, with their `wp:positionH`/`wp:positionV` placement. */
-export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): LayoutFloat[] {
+/**
+ * Floating pictures anchored in a paragraph, with their `wp:positionH`/`wp:positionV` placement;
+ * with `textBoxes`, text boxes laid out by the page engine.
+ */
+export function paragraphFloats(
+	paragraph: Paragraph,
+	theme?: ThemeCatalog,
+	textBoxes?: TextBoxLayouts,
+): LayoutFloat[] {
 	const floats: LayoutFloat[] = [];
 	for (const run of paragraph.runs) {
 		const image = run.image;
@@ -11,12 +19,12 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 		const placement = image.placement;
 		floats.push({
 			index: floats.length,
-			...shapePaint(image, theme),
 			partName: image.partName,
 			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
 			contentType: image.contentType,
 			widthPx: image.widthPx,
 			heightPx: image.heightPx,
+			...shapePaint(image, theme, textBoxes),
 			...(placement?.relativeFrom ? { relativeFromH: placement.relativeFrom } : {}),
 			...(placement?.align ? { alignH: placement.align } : {}),
 			...(placement?.offsetXPx !== undefined ? { offsetXPx: placement.offsetXPx } : {}),
@@ -30,7 +38,11 @@ export function paragraphFloats(paragraph: Paragraph, theme?: ThemeCatalog): Lay
 	}
 	return floats;
 }
-export function floatsOf(paragraph: Paragraph, theme?: ThemeCatalog): { floats?: LayoutFloat[] } {
-	const floats = paragraphFloats(paragraph, theme);
+export function floatsOf(
+	paragraph: Paragraph,
+	theme?: ThemeCatalog,
+	textBoxes?: TextBoxLayouts,
+): { floats?: LayoutFloat[] } {
+	const floats = paragraphFloats(paragraph, theme, textBoxes);
 	return floats.length ? { floats } : {};
 }

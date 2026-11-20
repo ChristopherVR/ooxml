@@ -123,9 +123,16 @@ function textBoxContent(
 	idPrefix: string,
 ): TextBoxContent | undefined {
 	const wsp = shapeElement(graphicData);
-	const content = firstNS(firstNS(wsp, WPS_NS, 'txbx'), W_NS, 'txbxContent');
-	const blocks = content && context.parseBlocks?.(content, idPrefix);
-	if (!blocks?.length) return undefined;
+	const box = firstNS(wsp, WPS_NS, 'txbx');
+	const linked = firstNS(wsp, WPS_NS, 'linkedTxbx');
+	const content = firstNS(box, W_NS, 'txbxContent');
+	const blocks = (content && context.parseBlocks?.(content, idPrefix)) ?? [];
+	const link = linked
+		? chainLink(linked.getAttribute('id'), linked.getAttribute('seq'))
+		: box?.hasAttribute('id')
+			? chainLink(box.getAttribute('id'), '0')
+			: undefined;
+	if (!blocks.length && !link) return undefined;
 	const body = parseDrawingBodyProperties(firstNS(wsp, WPS_NS, 'bodyPr'));
 	return {
 		blocks,
@@ -135,8 +142,20 @@ function textBoxContent(
 			insetTopEmu: body?.insetTopEmu,
 			insetRightEmu: body?.insetRightEmu,
 			insetBottomEmu: body?.insetBottomEmu,
+			vertical: body?.vertical === 'horz' ? undefined : body?.vertical,
+			wrap: body?.wrap === 'none' ? ('none' as const) : undefined,
+			autofit: body?.autofit?.kind,
 		}),
+		...(link ? { link } : {}),
 	};
+}
+/** A linked text box chain's id and a box's place in it, when both are whole numbers. */
+function chainLink(id: string | null, seq: string | null): TextBoxContent['link'] {
+	const chain = Number(id);
+	const place = Number(seq);
+	return id && Number.isInteger(chain) && Number.isInteger(place) && place >= 0
+		? { id: chain, seq: place }
+		: undefined;
 }
 function unsupportedKindLabel(uri: string): string {
 	if (uri.includes('wordprocessingShape')) return 'Shape';

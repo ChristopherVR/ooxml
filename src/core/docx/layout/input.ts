@@ -74,8 +74,10 @@ export interface LayoutObject {
 	 * paragraphs where their runs set none.
 	 */
 	chart?: { svg?: string; label: string; shape?: true; textColor?: string };
-	/** A shape's text box content, drawn over its shape by the print view; the engine never lays it out. */
+	/** A shape's text box content, drawn over its shape by the views that have no `textBoxLayout`. */
 	textBox?: import('../inline-model').TextBoxContent;
+	/** That content laid out by this engine inside the shape (`text-box-layout.ts`), for Print Layout. */
+	textBoxLayout?: import('./text-box-layout').TextBoxLayout;
 	/** Native note separator rule, drawn without loading a media part. */
 	noteSeparator?: 'separator' | 'continuationSeparator';
 }
@@ -290,8 +292,11 @@ export interface LayoutColumns {
 	count: number;
 	gapPx: number;
 	separator?: boolean;
-	/** Explicit column widths and the gap after each column (`w:col`). */
-	widths?: { widthPx: number; gapPx: number }[];
+	/**
+	 * Explicit column widths and the gap after each column (`w:col`). A column may be shorter than
+	 * the page (`heightPx`): a linked text box's box in its chain.
+	 */
+	widths?: { widthPx: number; gapPx: number; heightPx?: number }[];
 }
 
 export interface LayoutSection {

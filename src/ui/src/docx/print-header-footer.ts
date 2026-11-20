@@ -22,11 +22,13 @@ import {
 	headerFooterSlotForPage,
 	fieldDisplayText,
 	pageStyleRefs,
+	storyTextBoxLayouts,
 	type PageFieldContext,
 	type LayoutPageBox,
+	type TextBoxLayouts,
 } from 'ooxml-core/docx/layout';
-import type { PictureUrl } from './print-layout';
-import { pictureElement } from './print-picture';
+import { printPicture, type PictureUrl } from './print-layout';
+import { createCanvasMeasurer } from './canvas-measurer';
 import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
 
 /** Page facts a header or footer field can show. */
@@ -36,18 +38,19 @@ export interface PageFieldValues extends PageFieldContext {
 	pictureUrl?: PictureUrl;
 	/** The document: its theme colours shapes, its styles a text box's paragraphs. */
 	model?: DocumentModel;
+	/** The header or footer's text boxes laid out by the page engine, as the body's are. */
+	textBoxes?: TextBoxLayouts;
 }
 
 export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/docx/layout';
 
 /** An inline header/footer shape, drawn as Print Layout draws one in the body. */
 function inlineShape(image: NonNullable<TextRun['image']>, values: PageFieldValues) {
-	const { chart, textBox } = shapePaint(image, values.model?.theme);
+	const { chart, ...paint } = shapePaint(image, values.model?.theme, values.textBoxes);
 	if (!chart) return undefined;
-	const element = pictureElement(
-		{ ...image, chart, ...(textBox ? { textBox } : {}) },
-		undefined,
-		values.model,
+	const element = printPicture(
+		{ ...image, ...paint, chart },
+		{ pictureUrl: undefined, model: values.model },
 	);
 	Object.assign(element.style, { position: 'relative', display: 'inline-block' });
 	element.style.verticalAlign = 'bottom';
@@ -159,10 +162,11 @@ function floatingPictures(
 				),
 			},
 			values.model?.theme,
+			values.textBoxes,
 		).map((float) => {
 			const { xPx, yPx } = floatPosition(float, page, column, { topPx: anchorTopPx, heightPx: 0 });
 			// The body's floating pictures and shapes are drawn by the same function.
-			const element = pictureElement(float, values.pictureUrl, values.model);
+			const element = printPicture(float, { pictureUrl: values.pictureUrl, model: values.model });
 			element.classList.add('dve-print-float');
 			if (float.behindText) element.classList.add('dve-print-float-behind');
 			element.style.left = `${xPx}px`;
@@ -244,6 +248,18 @@ export function decoratePages(
 	const counts = sectionPageCounts(pages);
 	// STYLEREF fields show the text of the page they are drawn on, as in Word.
 	const styleRefs = pageStyleRefs(model, pages);
+	// Each header and footer's text boxes are laid out once, with one measurer for the pass.
+	let measurer: ReturnType<typeof createCanvasMeasurer> | undefined;
+	const textBoxes = new Map<HeaderFooterContent, TextBoxLayouts>();
+	const textBoxesOf = (content: HeaderFooterContent) => {
+		let layouts = textBoxes.get(content);
+		if (!layouts) {
+			measurer ??= createCanvasMeasurer();
+			layouts = storyTextBoxLayouts(model, content.blocks, measurer, { reviewDisplayMode });
+			textBoxes.set(content, layouts);
+		}
+		return layouts;
+	};
 	pages.forEach((page, index) => {
 		const sheet = sheets[index];
 		if (!sheet) return;
@@ -273,7 +289,8 @@ export function decoratePages(
 		for (const kind of ['header', 'footer'] as const) {
 			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;
-			const element = renderHeaderFooter(styleRefs.content(content, index), values, kind);
+			const storyValues = { ...values, textBoxes: textBoxesOf(content) };
+			const element = renderHeaderFooter(styleRefs.content(content, index), storyValues, kind);
 			const distanceTwips =
 				kind === 'header' ? section?.headerDistanceTwips : section?.footerDistanceTwips;
 			const distancePx = (distanceTwips ?? 720) / 15;
@@ -283,7 +300,7 @@ export function decoratePages(
 			sheet.append(element);
 			// Anchors in a footer sit roughly one line above its bottom distance.
 			const anchorTop = kind === 'header' ? distancePx : page.heightPx - distancePx - 20;
-			sheet.append(...floatingPictures(content, page, anchorTop, values));
+			sheet.append(...floatingPictures(content, page, anchorTop, storyValues));
 			if (kind === 'header') {
 				const mark = watermarkElement(content, page, reviewDisplayMode, values.pictureUrl);
 				// First in the sheet so the page text paints over it, as a Word watermark sits behind text.
