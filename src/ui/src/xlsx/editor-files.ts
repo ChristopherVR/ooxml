@@ -39,8 +39,15 @@ const toError = (cause: unknown) => (cause instanceof Error ? cause : new Error(
 
 let sharedOpener: WorkbookOpener | undefined;
 /** One opener for every editor on the page: it holds no state between opens. */
-const openWorkbook: WorkbookOpener = (bytes, options) =>
-	(sharedOpener ??= createWorkbookOpener())(bytes, options);
+const sharedWorkbookOpener = (): WorkbookOpener => (sharedOpener ??= createWorkbookOpener());
+const openWorkbook: WorkbookOpener = (bytes, options) => sharedWorkbookOpener()(bytes, options);
+
+/** Starts the workbook worker while the page is idle, so the first open does not wait for it. */
+export function prewarmWorkbookOpener(view: (Window & typeof globalThis) | null): void {
+	const start = () => sharedWorkbookOpener().prewarm?.();
+	if (view && typeof view.requestIdleCallback === 'function') view.requestIdleCallback(start);
+	else setTimeout(start, 0);
+}
 
 export function reportError(core: EditorCore, cause: unknown): Error {
 	const error = toError(cause);

@@ -80,6 +80,22 @@ describe('workbook opener', () => {
 		expect(worker.terminate).toHaveBeenCalledOnce();
 	});
 
+	it('starts a worker ahead of the first open and uses it', async () => {
+		const worker = fake();
+		const factory = vi.fn(() => worker);
+		const open = createWorkbookOpener(factory, limits);
+		open.prewarm?.();
+		open.prewarm?.();
+		expect(factory).toHaveBeenCalledOnce();
+		const opened = open(new Uint8Array([1]), {});
+		worker.say({ kind: 'ready' });
+		worker.say({ kind: 'read' });
+		const workbook = createWorkbook({ sheets: ['S'] });
+		worker.say({ kind: 'done', workbook, calculated: false });
+		await expect(opened).resolves.toMatchObject({ workbook });
+		expect(factory).toHaveBeenCalledOnce();
+	});
+
 	it('abandons a calculation past its limit and reopens without calculating', async () => {
 		vi.useFakeTimers();
 		const slow = fake();

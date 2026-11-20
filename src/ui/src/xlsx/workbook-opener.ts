@@ -37,10 +37,13 @@ export interface OpenedWorkbook {
 	calculationStopped: boolean;
 }
 
-export type WorkbookOpener = (
+export type WorkbookOpener = ((
 	bytes: Uint8Array | ArrayBuffer,
 	options: OpenOptions,
-) => Promise<OpenedWorkbook>;
+) => Promise<OpenedWorkbook>) & {
+	/** Starts a worker ahead of the first open, so that open does not wait for it to load. */
+	prewarm?(): void;
+};
 
 export interface WorkerLike {
 	onmessage: ((event: MessageEvent) => void) | null;
@@ -99,6 +102,8 @@ function workerError(message: string, code: string | undefined): Error {
 
 /** How long a worker that finished an open stays for the next one. */
 const IDLE_MS = 30_000;
+/** How long a worker started ahead of the first open waits for it. */
+const PREWARM_IDLE_MS = 120_000;
 
 /**
  * The worker kept between opens: starting one loads the whole reader, which would otherwise be
@@ -123,7 +128,7 @@ class WorkerPool {
 		}
 	}
 
-	release(worker: WorkerLike): void {
+	release(worker: WorkerLike, idleMs = IDLE_MS): void {
 		worker.onmessage = null;
 		worker.onerror = null;
 		if (this.idle) return worker.terminate();
@@ -132,7 +137,17 @@ class WorkerPool {
 			if (this.idle !== worker) return;
 			this.idle = undefined;
 			worker.terminate();
-		}, IDLE_MS);
+		}, idleMs);
+	}
+
+	/** Starts an idle worker unless one is waiting; a worker that cannot start is left to the open. */
+	prewarm(): void {
+		if (this.idle) return;
+		try {
+			this.release(this.create(), PREWARM_IDLE_MS);
+		} catch {
+			// The first open finds no worker and reports or falls back as usual.
+		}
 	}
 
 	discard(worker: WorkerLike): void {
@@ -151,6 +166,7 @@ function runWorker(
 ): Promise<{ workbook: Workbook; calculated: boolean }> {
 	return new Promise((resolve, reject) => {
 		let worker: WorkerLike;
+		// A prewarmed worker may not have said `ready` yet; its first message is still `ready`.
 		let started: boolean;
 		try {
 			({ worker, started } = pool.acquire());
@@ -217,7 +233,7 @@ export function createWorkbookOpener(
 		factory ??
 			(() => new Worker(new URL('./xlsx-open-worker.js', import.meta.url), { type: 'module' })),
 	);
-	return async (bytes, options) => {
+	const open: WorkbookOpener = async (bytes, options) => {
 		try {
 			return {
 				...(await runWorker(pool, bytes, options, true, limits)),
@@ -230,4 +246,6 @@ export function createWorkbookOpener(
 		const opened = await runWorker(pool, bytes, options, false, limits);
 		return { ...opened, calculationStopped: true };
 	};
+	open.prewarm = () => pool.prewarm();
+	return open;
 }

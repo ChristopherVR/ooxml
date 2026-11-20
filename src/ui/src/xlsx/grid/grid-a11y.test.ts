@@ -2,7 +2,7 @@
 // What a screen reader gets from the grid: rows of cells it can explore as a table, the active
 // cell as the sink's active descendant, and a label that names the cell's context and content.
 import { createWorkbook, putCell, type Workbook } from 'ooxml-core/xlsx';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountGrid } from './index';
 import { createTestContext } from './test-context';
 
@@ -122,9 +122,13 @@ describe('the accessible grid', () => {
 		const { ctx, sink, activeCell } = await setup();
 		ctx.session()!.setCellValue(0, 0, 0, 'Year');
 		// Repaints without a selection change rebuild the layer once they settle.
-		await new Promise((resolve) => setTimeout(resolve, 200));
-		expect(sink.getAttribute('aria-label')).toBe('A1, Year');
-		expect(activeCell()?.textContent).toBe('Year');
+		await vi.waitFor(
+			() => {
+				expect(sink.getAttribute('aria-label')).toBe('A1, Year');
+				expect(activeCell()?.textContent).toBe('Year');
+			},
+			{ timeout: 3000, interval: 50 },
+		);
 	});
 
 	it('spans a merged cell and gives its covered cells no cell of their own', async () => {
