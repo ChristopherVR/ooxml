@@ -1,9 +1,66 @@
 # Changelog
 
-All notable changes to this viewer's packages, newest first. Each dated section names the
-packages released that day and merges their entries; the full history of each package is in its
-own `CHANGELOG.md` (`packages/<name>/`, `mcp/`, `server/`). The release workflow writes these
-sections (`scripts/viewer-changelogs.mjs`); do not edit them by hand.
+All notable changes to this viewer's packages, newest first. Each section names the packages
+released that day; the full history of each package is in its own `CHANGELOG.md`
+(`packages/<name>/`, `mcp/`, `server/`).
+
+## Unreleased
+
+<!-- release-notes: 2.0 -->
+
+_Releases: @christophervr/xlsx-core@2.0.0, @christophervr/xlsx-react-viewer@2.0.0, xlsx-vue-viewer@2.0.0, xlsx-angular-viewer@2.0.0, xlsx-svelte-viewer@2.0.0, xlsx-solid-viewer@2.0.0, xlsx-vanilla-viewer@2.0.0, xlsx-viewer-mcp@2.0.0_
+
+Every Excel package moves to 2.0.0 together, with `ooxml-core` and `ooxml-ui` 2.0.0. The editor is safer against crafted workbooks and formulas, faster on large sheets, frees itself when closed, and is checked for keyboard and screen reader use before every release. The framework bindings keep their props, events and handles. Upgrade every OOXML package you use in one change; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each breaking change.
+
+### Breaking changes
+
+- Node.js 22.3 or newer is required by every package.
+- The editor takes dark mode from `--office-color-scheme` or `data-office-theme="dark"`, not from the page's CSS `color-scheme`, and `--xve-input` defaults to `--office-control-border`.
+- `surfaceOnly` must be set before an `<xlsx-editor>` is attached, and an editor that shares a room leaves it when it is removed from the page.
+- `Workbook.signatures` is a `SignatureSummary`, and signed workbooks no longer add an English warning.
+- Each formula has its own work budget (`#NUM!` past it), and `CalcEngine` has a `stopped` member.
+- Hyperlinks keep every scheme that cannot run script; the `unsupported-scheme` reason is gone.
+- The MCP write tools (schema version 2) refuse formulas that reach outside the workbook, and the file tools refuse Windows paths that would be reinterpreted.
+
+### Security
+
+- Crafted workbooks, formulas, charts and legacy `.xls` files can no longer hang the editor or exhaust memory, and every package is read through the guarded zip reader.
+- Workbooks show a verified signature state, never a signature part alone, and SVG pictures are shown from `data:` URLs.
+- Collaborator values are checked, and releases come from a pipeline third-party code cannot publish from.
+
+### Added
+
+- `customization.ribbon.hiddenTabs`, including hiding the File tab and its backstage.
+- The verified signature state in the status bar, a notice and File > Info.
+- Bounded recalculation (`timeLimitMs`, `workCap`, `calculateOnOpen`) and the formula policy helpers in the model.
+
+### Changed
+
+- A workbook that calculates on open is calculated in a worker when it would block the page (`worker-src 'self'` in a Content Security Policy).
+- Charts keep every declared point, and the Solid binding renders during server rendering.
+
+### Fixed
+
+- Closed editors are freed; Ctrl+PageUp/PageDown and F6 work as in Excel; the sheet keeps Excel's gridlines in dark mode; `LET` and `LAMBDA` workbooks open in Excel; text and number comparisons follow Excel.
+
+### Performance
+
+- Lookups, aggregates and row height refits scale with the edit, `MMULT` is about 3.5 times faster, and a long session no longer grows memory per opened workbook.
+
+### Accessibility
+
+- The grid is a table for screen readers, charts are named by their alt text, focus rings and form controls reach 3:1, and forced-colours mode keeps every selected state visible.
+
+### Packages
+
+- [`@christophervr/xlsx-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/core/CHANGELOG.md)
+- [`@christophervr/xlsx-react-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/react/CHANGELOG.md)
+- [`xlsx-vue-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/vue/CHANGELOG.md)
+- [`xlsx-angular-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/angular/CHANGELOG.md)
+- [`xlsx-svelte-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/svelte/CHANGELOG.md)
+- [`xlsx-solid-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/solid/CHANGELOG.md)
+- [`xlsx-vanilla-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/vanilla/CHANGELOG.md)
+- [`xlsx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md)
 
 ## 2026-11-13
 

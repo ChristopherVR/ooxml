@@ -1,16 +1,14 @@
 # @christophervr/xlsx-core
 
+**The Excel workbook model without a browser: read, calculate, edit and write `.xlsx` workbooks in Node.js, workers and scripts.**
+
 [![npm version](https://img.shields.io/npm/v/%40christophervr%2Fxlsx-core.svg)](https://www.npmjs.com/package/@christophervr/xlsx-core)
 [![license](https://img.shields.io/npm/l/%40christophervr%2Fxlsx-core.svg)](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)
-[![types](https://img.shields.io/npm/types/%40christophervr%2Fxlsx-core.svg)](https://www.npmjs.com/package/@christophervr/xlsx-core)
+[![docs](https://img.shields.io/badge/docs-christophervr.github.io-1f9d63.svg)](https://christophervr.github.io/ooxml/xlsx/)
 
-> The DOM-free document model and file API, re-exported from the canonical OOXML core.
+[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) · [Documentation](https://christophervr.github.io/ooxml/xlsx/) · [Changelog](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/core/CHANGELOG.md) · [Report a bug](https://github.com/ChristopherVR/ooxml/issues)
 
-[Live demo](https://christophervr.github.io/ooxml/xlsx/demo/) | [npm](https://www.npmjs.com/package/@christophervr/xlsx-core) | [Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Source](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx)
-
-Part of [ooxml](https://github.com/ChristopherVR/ooxml#readme): [Office](https://github.com/ChristopherVR/ooxml#ooxml-office-the-whole-suite-in-one-app) &middot; [Word](https://github.com/ChristopherVR/ooxml/tree/main/viewers/docx#readme) &middot; **[Excel](https://github.com/ChristopherVR/ooxml/tree/main/viewers/xlsx#readme)** &middot; [PowerPoint](https://github.com/ChristopherVR/ooxml/tree/main/viewers/pptx#readme) &middot; [Visio](https://github.com/ChristopherVR/ooxml/tree/main/viewers/visio#readme) &middot; [OpenTeams](https://github.com/ChristopherVR/ooxml/tree/main/viewers/teams#readme) &middot; [Core](https://github.com/ChristopherVR/ooxml/tree/main/src/core#readme)
-
-The framework-neutral Excel workbook model, parser, formula engine and serializer. A thin entry point: `@christophervr/xlsx-core` re-exports `ooxml-core/xlsx` and `@christophervr/xlsx-core/load` re-exports `ooxml-core/xlsx/load`; the logic lives in [ooxml-core](https://github.com/ChristopherVR/ooxml).
+This is the model behind the Excel editors, as a DOM-free API. It is a thin entry point: `@christophervr/xlsx-core` re-exports `ooxml-core/xlsx`, and `@christophervr/xlsx-core/load` re-exports `ooxml-core/xlsx/load`. The code lives in [`ooxml-core`](https://www.npmjs.com/package/ooxml-core), which installs with this package.
 
 ## Install
 
@@ -18,38 +16,62 @@ The framework-neutral Excel workbook model, parser, formula engine and serialize
 npm install @christophervr/xlsx-core
 ```
 
+You need this package only for headless work. Every Excel editor package (`@christophervr/xlsx-react-viewer`, `xlsx-vue-viewer` and the others) already depends on it and re-exports the same API.
+
 ## Quick start
 
 ```ts
-import { createWorkbook, saveXlsx } from '@christophervr/xlsx-core';
-import { loadWorkbook } from '@christophervr/xlsx-core/load';
+import { readFile, writeFile } from 'node:fs/promises';
+import { createEditSession } from '@christophervr/xlsx-core';
+import { loadWorkbook, saveWorkbook } from '@christophervr/xlsx-core/load';
 
-const workbook = createWorkbook();
-const bytes = await saveXlsx(workbook);
-const reopened = await loadWorkbook(bytes, { fileName: 'Book1.xlsx' });
+const workbook = await loadWorkbook(await readFile('budget.xlsx'), { fileName: 'budget.xlsx' });
+
+// Sheet, row and column are zero-based: this writes D1 on the first sheet and recalculates.
+const session = createEditSession(workbook);
+session.setCellInput(0, 0, 3, '=SUM(B1:C1)');
+
+await writeFile('budget-edited.xlsx', await saveWorkbook(workbook, 'xlsx'));
 ```
 
-## API and limitations
+`createWorkbook()` starts an empty workbook, and `saveXlsx(workbook)` writes one from the main entry without the loaders. To calculate an untrusted workbook under a time limit, use `createCalcEngine(workbook, { timeLimitMs: 10_000 })`, call `recalculateAll()` and read `engine.stopped`.
 
-The main entry handles `.xlsx`, `.xlsm` and `.xltx`. The `/load` entry also opens legacy Excel 97-2003 `.xls` files (read only; they save as `.xlsx`) and `.csv` text, sniffing the format from the bytes. Saving is not lossless for features the model does not cover; unmodelled parts (VBA, pivot tables, and any chart content the chart model cannot carry) are carried through unchanged where the sheet still exists. Charts are edited over their parsed `ChartSpace` and written from it, except a chart part the model cannot carry, which keeps its source bytes and is reported.
+## Entry points
 
-## Documentation
+| Import                          | What it holds                                                                                                                                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@christophervr/xlsx-core`      | The workbook model, addresses, number formats, the formula parser and calculation engine, editing commands with undo, the `.xlsx` reader and writer (`saveXlsx`), pivots, slicers, workbook comparison and the DOM-free layout. |
+| `@christophervr/xlsx-core/load` | `loadWorkbook` and `saveWorkbook` for every supported format, `detectWorkbookFormat`, the legacy `.xls` reader and CSV. Kept apart so code that never opens legacy files does not pull in the binary reader.                    |
 
-[Full docs](https://christophervr.github.io/ooxml/xlsx/) | [Core source](https://github.com/ChristopherVR/ooxml)
+## What you get
+
+- **Every common format.** `.xlsx`, `.xlsm` (the VBA project is kept, never run), `.xltx`, password-protected workbooks (read, and written with `saveWorkbook(workbook, 'xlsx', { password })`), legacy `.xls` (read; saved as `.xlsx`) and `.csv` in both directions.
+- **A calculation engine.** More than 500 functions, dynamic arrays, `LET` and `LAMBDA`, iterative calculation, and the workbook's automatic or manual mode.
+- **Bounded work.** Each formula has its own work and text budget, and `CalcEngineOptions.timeLimitMs` and `workCap` bound a whole recalculation, which then stops between formulas and reports why in `engine.stopped`. `calculateOnOpen` runs the calculation a workbook asks for on open.
+- **A formula policy.** `formulaPolicyIssue`, `cellInputPolicyIssue` and `RESTRICTED_FORMULA_FUNCTIONS` tell you whether a formula would reach outside the workbook (web and external data, macro functions, add-ins, AI functions, other files) before you write it.
+- **Editing with undo.** `createEditSession` is the editing API the Excel editor itself drives: cell input, styles and borders, rows and columns, merges, sorting and more, each one undo step, with recalculation after every edit.
+- **Careful saving.** Parts the model does not cover, such as VBA, pivot caches and chart detail it cannot carry, are written back unchanged where the sheet still exists, and a chart the model cannot carry keeps its source bytes and is reported.
+- **Signatures and warnings.** `Workbook.signatures` reports the verified signature state, and `warnings` lists what the loader could not read.
+
+## Supported environments
+
+- **Node.js** 22.3 or newer.
+- **Browsers and workers:** the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+
+## Limitations
+
+This is not Microsoft Excel. `.xlsb` and `.ods` are not read. External links, Power Query, OLAP and external-source PivotTables are kept but never refreshed, `WEBSERVICE` is not evaluated, and a few functions (`ASC`, `DBCS`, `JIS`, `PHONETIC`, `INFO`) are not implemented. Saving is not lossless for features the model does not cover; the [preservation guarantee](https://christophervr.github.io/ooxml/xlsx/preservation) and the [features page](https://christophervr.github.io/ooxml/xlsx/features) say what is kept, reported or dropped.
 
 ## Privacy and network use
 
-The Excel packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device only, unless a reader turns on the Trust Center font download (off by default) or the host sets `googleFonts`. Hyperlinks open only when the reader follows them. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+The model makes no network request when it opens, calculates, edits or saves a workbook: linked pictures are not fetched, external workbook links and linked data are not refreshed, and `WEBSERVICE` is not evaluated. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+
+## Related packages
+
+- The Excel editor for [React](https://www.npmjs.com/package/@christophervr/xlsx-react-viewer), [Vue](https://www.npmjs.com/package/xlsx-vue-viewer), [Angular](https://www.npmjs.com/package/xlsx-angular-viewer), [Svelte](https://www.npmjs.com/package/xlsx-svelte-viewer), [Solid](https://www.npmjs.com/package/xlsx-solid-viewer) and [plain JavaScript](https://www.npmjs.com/package/xlsx-vanilla-viewer).
+- [`xlsx-viewer-mcp`](https://www.npmjs.com/package/xlsx-viewer-mcp): Excel tools for AI agents over MCP.
+- [`ooxml-core`](https://www.npmjs.com/package/ooxml-core): the engine this package re-exports, with Word, PowerPoint and Visio next to Excel.
 
 ## License
 
-Apache-2.0.
-
-## OneDrive integration
-
-Use the optional shared `ooxml-core/embedding/onedrive` connection with host-supplied Microsoft
-sign-in. See the [Office package and integration reference](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-integration.md#excel-xlsx)
-for this product's load/save API, native storage wiring, sharing permissions and conflict recovery.
-The [testing guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/onedrive-testing.md)
-separates test-local transports from live Microsoft acceptance. No simulation service is shipped;
-OneDrive storage does not provide Microsoft Office coauthoring or automatic document merging.
+[Apache-2.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/LICENSE)

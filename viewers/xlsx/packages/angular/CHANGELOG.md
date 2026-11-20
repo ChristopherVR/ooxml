@@ -1,11 +1,94 @@
 # Changelog
 
-All notable changes to this project are documented here.
-This file is generated from [Conventional Commits](https://www.conventionalcommits.org)
-by [git-cliff](https://git-cliff.org); do not edit it by hand.
-A release listed with no entries carried no Conventional Commit in this package's
-scope: scripts/release-plan.mjs releases whenever any published file changes, not only on
-conventional commits.
+All notable changes to this package, newest first. Major releases are written by hand; the other
+entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
+
+## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@2.0.0) - Unreleased
+
+<!-- release-notes: 2.0 -->
+
+`SpreadsheetEditorComponent` keeps the same inputs, outputs and handle methods, and is now built and tested against Angular 22.2. Underneath, workbooks that calculate on open no longer freeze the page, crafted files and formulas can no longer hang or exhaust the tab, a closed editor is freed at once, and the grid reads as a real table to screen readers with Excel's F6 regions. A few defaults change: dark mode comes from the theme instead of CSS `color-scheme`, signatures are reported as a verified state, and Node.js 22.3 is the minimum for builds and server rendering. Upgrade together with the packages under "Released together"; the [migration guide](https://github.com/ChristopherVR/ooxml/blob/main/docs/migration-2.0.md) has the before and after for each breaking change.
+
+### Breaking changes
+
+- Node.js 22.3 or newer is required (`"engines": { "node": ">=22.3" }`), which matters for server rendering, tests and build scripts that import the package.
+- The editor no longer inherits the page's CSS `color-scheme`. It reads the new `--office-color-scheme` token, which is `light` unless the theme's dark mode applies (`data-office-theme="dark"`, or the system's dark preference where no `data-office-theme="light"` overrides it). A container that sets only `color-scheme: dark` now gets a light editor: also set `--office-color-scheme: dark` on it, or use `data-office-theme="dark"`, which sets both.
+- `--xve-input` now defaults to `--office-control-border` (`#8a8886`) instead of `--office-border`, and it colours the shared form controls inside the editor. To restyle field boundaries, set `--office-control-border` or `--xve-input`, and keep it at 3:1 against the background.
+- Changing `surfaceOnly` on an `<xlsx-editor>` that is already attached to the page now throws, as it does on `docx-editor`. This only affects code that creates or reaches the element itself (for example through `onReady`); set it before the element is appended.
+- An editor that shares a room now leaves it when it is removed from the page and not attached again before the current task ends, and joins the same room again when it is attached later. Moving it between parents in one task keeps it in the room. To hide an editor and keep it syncing, hide it with CSS instead of detaching it.
+- Collaboration updates denser than one struct per 4 bytes, or one deleted range per 2 bytes, are refused before they are decoded. The budget grows with the update, so the first sync of a real workbook stays well under it. A host that passes its own limits replaces `DEFAULT_UPDATE_LIMITS` from `ooxml-core/collab` with `defaultUpdateLimits(bytes)`.
+- Hyperlinks: every well-formed scheme that cannot run script, such as `tel:`, `sip:`, `msteams:` and `onenote:`, is now stored, and Insert Link accepts these addresses as Excel does. Only http, https and mailto still open unless the host opts in. The `unsupported-scheme` rejection reason is gone, so drop any code that checks for it.
+- `Workbook.signatures` is now a `SignatureSummary` (`state` and `signatures`) instead of `{ count, parts }`, and loading a signed workbook no longer adds an English signature message to the warnings `onWorkbookWarning` reports. Read `signatures.state` and word it with `signatureStateText` from `ooxml-core/i18n`.
+- Each formula now has its own work and text budget. A formula past it, such as `MMULT` of two 1,500 by 1,500 arrays, returns `#NUM!` while every other formula still computes; workbooks Excel calculates in ordinary time stay well inside it. Code that implements the `CalcEngine` interface itself must add the new `stopped` member.
+
+### Security
+
+- A workbook is never shown as signed just because it contains a signature part. The status bar, the notice under the ribbon and File > Info show the verified state.
+- A small crafted workbook can no longer hang or crash the editor while it opens. Each formula is bounded, `REGEXTEST`, `REGEXEXTRACT` and `REGEXREPLACE` run on a matcher that cannot freeze a recalculation, the calculation on open runs off the page under a time limit, and what a recalculation stores is bounded.
+- Every package part is read through the guarded zip reader, including signature listing and embedded chart workbooks, so a small file can no longer inflate without limit.
+- A chart of a few hundred bytes can no longer exhaust memory: point counts and indices no longer decide how much is allocated, and a ChartEx histogram draws at most 1,000 bins.
+- A damaged or crafted legacy `.xls` workbook can no longer keep the reader busy for seconds. A 9.7 KB workbook that took over 20 seconds now reads in about 5 ms.
+- XML scans that took quadratic time on runs of empty or unclosed elements, such as header and footer pictures and the declared-font scan, are now linear.
+- SVG pictures are shown from `data:` URLs instead of object URLs of your origin, so opening one in its own tab can no longer run document-controlled script there.
+- Values a collaborator sends are checked. A shared hyperlink keeps every target the loader keeps and leaves out only a script or disguised one, and the left-out value is reported rather than dropped silently.
+- Releases are published by a pipeline in which no third-party code can push, tag or publish, with npm provenance, and the signed tarballs on each GitHub release are checked against the integrity the registry records.
+
+### Added
+
+- `customization.ribbon.hiddenTabs` hides native ribbon tabs by id (`ExcelRibbonTabId` in `ooxml-core/xlsx/ui`). `'file'` removes the File tab and its backstage at every width, with its key tip and every other route in, while Save, its shortcuts, host `storage` and `file-command` keep working; Tell me leaves out commands that live only on a hidden tab. The binding forwards it with the rest of `customization`.
+- A signed workbook shows its verified state in the status bar, in a notice under the ribbon and on File > Info: Signed, Signed (signer not verified), Invalid signature or Signature not verified, in every editor language. The notice says that saving changes removes the signatures. Nothing is shown for an unsigned workbook.
+- When sharing stops because an update was refused, a toast says why in the display language, and the editor says once per session when content a collaborator sent was left out.
+- Themes take an optional `primaryInk` (`--xve-primary-ink`), the primary colour used as text. It defaults to `primary`, and the dark presets lift it.
+- The re-exported model adds `calculateOnOpen`, `needsCalculationOnOpen`, `CalcEngineOptions.timeLimitMs` and `workCap` for bounded recalculation, `formulaPolicyIssue` and `cellInputPolicyIssue` to tell why a formula reaches outside the workbook, and `describeCell` and `accessibleWindow` for screen reader output.
+
+### Changed
+
+- Opening a workbook that asks for a full calculation on open (`fullCalcOnLoad`) no longer freezes the page. The editor calculates on the page for at most as long as reading took; past that, a worker (`xlsx-open-worker.js`, shipped in `ooxml-ui`) runs the calculation and sends back only the cells it wrote. It stops after ten seconds, unfinished formulas show their saved values, and a notice says that F9 recalculates. Files that need no calculation open as fast as before. Bundlers that understand `new Worker(new URL(..., import.meta.url))` pick the worker up automatically; a Content Security Policy must allow `worker-src 'self'`, and without workers the calculation runs on the page under the same limit.
+- Charts keep the point counts and points their file declares, however large, through viewing, editing and saving. A view past the point budget shows fewer trailing blanks or only its first points, the load reports `CHART_POINTS_LIMITED`, and the chart stays fully editable.
+- When an editor is removed from the page, it adds one constructed stylesheet of its own to `document.adoptedStyleSheets` (on first use) and changes its rule, which matches nothing; this empties a browser style cache that kept closed editors alive. A host that replaces `document.adoptedStyleSheets` may drop it; the next removal adds it again.
+- Built and tested against current releases of its dependencies, including `emf-converter` 5 and Angular 22.2. `emf-converter` now loads image decoders on demand from `dist/browser-chunks/` and `dist/node-chunks/`; package managers and bundlers need no change, but if you copy compiled files by hand, deploy those folders next to the entry files.
+- Supported browsers are the last two major versions of Chrome, Edge, Firefox and Safari, and Safari 16.4 at least ([browser support](https://github.com/ChristopherVR/ooxml/blob/main/docs/browser-support.md)).
+
+### Fixed
+
+- A closed editor no longer stays in memory. Print, font and ribbon listeners are released on removal and restored when the same element is attached again; menus, popups, the AutoFilter menu and form control lists still open are closed; and an editor removed while sharing a room, or right after a paint, is freed at once. In Chrome and Edge, an editor whose sheet drew a clipped, masked or filtered shape, picture or form control is freed too.
+- Removing one Excel editor no longer closes a ribbon popover or overflow menu open in another editor on the same page.
+- Ctrl+PageUp and Ctrl+PageDown switch sheets instead of moving the active cell. F6 and Shift+F6 move through every part of the window, including the status bar. Dialogs keep Tab inside, close on Escape wherever focus is, and return focus to the control that opened them.
+- The sheet no longer changes with the interface theme: gridlines use `--office-canvas-gridline` (Excel's `#e1e1e1`), so dark mode no longer draws dark gridlines on white paper. The active sheet tab uses chrome colours and reads at 4.5:1 in dark mode, and `--xve-selection-border` colours the selected headers and the active sheet name again.
+- Form control boundaries reach 3:1 against the background, including the formula bar, the Name Box, dialog fields and the ribbon's combo boxes and drop-downs.
+- Workbooks with `LET`, `LAMBDA` or the functions that take a `LAMBDA` save their names with the `_xlpm.` prefix, so Excel opens them.
+- Formulas compare text as Excel does (for example "ß" matches "ss" in comparisons and criteria), exact lookups compare numbers exactly (`MATCH(0.3, ...)` no longer finds `0.1+0.2`), and criteria, text length limits and `REGEXREPLACE` occurrences follow Excel. `REGEX` patterns with nested repeats, such as `(a+)+`, now work.
+- In iterative calculation, `SUMIF`, `COUNTIF` and the other criteria functions read current values on every pass.
+- A collaborator now receives `tel:`, `sip:`, `msteams:`, `onenote:` and other hyperlink targets, the first sync of a large workbook (about 500,000 mixed cells) is no longer refused, and a refused update is explained in the display language.
+- A chart keeps its alt text when the drawing is saved again after the chart was moved.
+
+### Performance
+
+- Opening and closing workbooks in a long session no longer grows memory by the size of the editor each time: in the Office suite, each cycle went from about 13 MB and 4,000 DOM nodes to about 0.2 MB and none.
+- Recalculation scales with the edit: exact `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `XMATCH`, `MATCH` and `INDEX`/`MATCH` searches over the same range share an index, identical `SUM`, `AVERAGE`, `MIN`, `MAX` and similar calls over the same large ranges are computed once, and an edit that changes a row's automatic height recalculates only what depends on the edited cells.
+- `MMULT` runs about three and a half times faster, and 1,000 nearest-match `XLOOKUP` or `XMATCH` lookups in 100,000 rows take about a second instead of six.
+- Undo and redo of Replace All on large sheets, finding volatile formulas and selecting whole columns no longer visit the whole sheet or workbook. On sheets with more than 20,000 stored rows the status bar fills in sum, average and count just after the selection is drawn.
+- The editor no longer loads the whole `ooxml-ui` root entry (and with it the Teams app and the other products' editors) to define its dialogs and icons.
+
+### Accessibility
+
+- Screen readers can explore the grid as a table: visible cells are grid cells in rows with column and row headers, indexed as the sheet is (B2 is row 2, column 2). The active cell is announced with its column, formula and comment, and stays correct after an undo, a reload or a recalculation; pictures are announced once, by their alt text.
+- A chart is named by its alt text, falling back to its title, and screen readers can read its series and values.
+- The Tell me box, the Name Box, the formula bar, search fields and the File tab show a visible focus ring with at least 3:1 contrast in light and dark themes. The formula bar's Insert Function button keeps its name, and its fx glyph is an icon.
+- In forced-colours mode, applied filter buttons, slicer selections, dialog tabs and options, function suggestions, contextual ribbon tabs and sheet tabs keep a system highlight, and gridlines use the system's muted text colour.
+- Every change is checked in a real browser before release: keyboard regions and focus, axe in light mode, dark mode and on a phone, reflow at 320 by 256 pixels, and that a saved workbook keeps its alt text and language.
+
+### Released together
+
+- [`ooxml-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/core/CHANGELOG.md): the workbook model, formula engine, reader and writer behind the editor.
+- [`ooxml-ui` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/src/ui/CHANGELOG.md): the `<xlsx-editor>` element, its open worker and the shared controls.
+- [`@christophervr/xlsx-core` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/core/CHANGELOG.md): the model API this package re-exports.
+- [`@christophervr/xlsx-react-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/react/CHANGELOG.md): the same editor for React.
+- [`xlsx-vue-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/vue/CHANGELOG.md): the same editor for Vue.
+- [`xlsx-svelte-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/svelte/CHANGELOG.md): the same editor for Svelte.
+- [`xlsx-solid-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/solid/CHANGELOG.md): the same editor for Solid.
+- [`xlsx-vanilla-viewer` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/packages/vanilla/CHANGELOG.md): `mountEditor` and the `<xlsx-editor>` element without a framework.
+- [`xlsx-viewer-mcp` 2.0.0](https://github.com/ChristopherVR/ooxml/blob/main/viewers/xlsx/mcp/CHANGELOG.md): the Excel tools for AI agents, which now refuse formulas that reach outside the workbook.
 
 ## [1.5.0](https://github.com/ChristopherVR/ooxml/releases/tag/xlsx-angular-viewer@1.5.0) - 2026-11-13
 
