@@ -1582,6 +1582,7 @@ export * from './building-block-document-properties';
 export * from './building-block-font-embedding';
 export * from './building-block-password';
 export * from './building-block-signatures';
+export * from './signature-status';
 export * from './building-block-show-settings';
 export * from './building-block-custom-shows';
 export * from './building-block-show-dialogs';

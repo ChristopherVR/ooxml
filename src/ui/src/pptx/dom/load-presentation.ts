@@ -25,6 +25,7 @@ import type {
 	PptxThemeFormatScheme,
 	PptxThemeOption,
 	PptxViewProperties,
+	SignatureSummary,
 } from 'ooxml-core/pptx';
 import { PptxHandler } from 'ooxml-core/pptx';
 import type { CanvasSize, SlideSizeEmu } from '../index';
@@ -76,8 +77,11 @@ export interface LoadedPresentation {
 	/** Legacy `ppt/commentAuthors.xml` authors, mapped into the typeahead too. */
 	commentAuthors: PptxCommentAuthor[];
 	embeddedFonts: PptxEmbeddedFont[];
-	hasDigitalSignatures: boolean;
-	digitalSignatureCount: number;
+	/**
+	 * The verified state of the deck's digital signatures, absent when it carries none. Show the
+	 * deck as signed only through `signatureStatusView` (render), never from the parts alone.
+	 */
+	signatures: SignatureSummary | undefined;
 	isPasswordProtected: boolean;
 	/** Slide canvas size in CSS px. */
 	canvasSize: CanvasSize;
@@ -189,8 +193,7 @@ export async function loadPresentation(
 			modernCommentAuthors: parsed.modernCommentAuthors ?? [],
 			commentAuthors: parsed.commentAuthors ?? [],
 			embeddedFonts: parsed.embeddedFonts ?? [],
-			hasDigitalSignatures: parsed.hasDigitalSignatures ?? false,
-			digitalSignatureCount: parsed.digitalSignatureCount ?? 0,
+			signatures: parsed.signatures,
 			isPasswordProtected: parsed.isPasswordProtected ?? false,
 			canvasSize: {
 				width: parsed.width ?? DEFAULT_CANVAS_WIDTH,
