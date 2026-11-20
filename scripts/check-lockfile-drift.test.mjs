@@ -61,3 +61,36 @@ test('a raised third-party range next to a workspace one is still drift', () => 
 		'bun.lock.workspaces.viewer.dependencies.yjs',
 	]);
 });
+
+/** A reader that returns `manifests[path]`, or null for a workspace with no manifest. */
+const manifestsOf = (manifests) => (path) => manifests[path] ?? null;
+
+test('workspace versions that match the manifests are not drift', () => {
+	const read = manifestsOf({ 'src/core': { name: 'ooxml-core', version: '2.0.0' } });
+	assert.deepEqual(lockDrift(lock('1.0.0'), lock('2.0.0'), read), []);
+});
+
+test('a lockfile that kept the old workspace version is drift', () => {
+	const read = manifestsOf({ 'src/core': { name: 'ooxml-core', version: '2.0.0' } });
+	assert.deepEqual(lockDrift(lock('1.0.0'), lock('1.0.0'), read), [
+		'bun.lock.workspaces.src/core.version',
+	]);
+});
+
+test('a sibling range the manifest does not declare is drift', () => {
+	const viewer = (range) => withViewer({ 'ooxml-core': range });
+	const read = manifestsOf({
+		'src/core': { name: 'ooxml-core', version: '1.0.1' },
+		viewer: { name: 'pptx-react-viewer', dependencies: { 'ooxml-core': '^2.0.0' } },
+	});
+	assert.deepEqual(lockDrift(viewer('^1.0.0'), viewer('^1.0.1'), read), [
+		'bun.lock.workspaces.viewer.dependencies.ooxml-core',
+	]);
+	assert.deepEqual(lockDrift(viewer('^1.0.0'), viewer('^2.0.0'), read), []);
+});
+
+test('a workspace with no manifest is drift', () => {
+	assert.deepEqual(lockDrift(lock('1.0.0'), lock('1.0.0'), manifestsOf({})), [
+		'bun.lock.workspaces.src/core (no package.json)',
+	]);
+});
