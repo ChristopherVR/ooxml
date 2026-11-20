@@ -49,6 +49,8 @@ test('allows the guard itself, tests, fixtures and scripts', (t) => {
 		'src/core/scripts/build.ts': RAW,
 		'viewers/pptx/scripts/make.mjs': RAW,
 		'src/core/node_modules/jszip/index.js': RAW,
+		'viewers/visio/site-dist/assets/demo.js': RAW,
+		'viewers/visio/.package-build/react/index.js': RAW,
 	});
 	assert.deepEqual(findRawZipOpens(root), []);
 });
