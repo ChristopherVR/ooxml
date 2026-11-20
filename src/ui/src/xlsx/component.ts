@@ -150,15 +150,17 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	}
 
 	/**
-	 * The host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
-	 * `contextMenu.extraCommands`. Applied when the object identity changes, so keep it stable;
+	 * The host customisation (`ExcelCustomization`): `capabilities`, `ribbon.hiddenTabs`,
+	 * `backstage.extraPages` and `contextMenu.extraCommands`. Applied when the object identity changes, so keep it stable;
 	 * `null` restores the defaults.
 	 */
 	get customization(): ExcelCustomization | null {
 		return this.core.customizationInput;
 	}
 	set customization(value: ExcelCustomization | null | undefined) {
-		if (this.core.setCustomization(value ?? null)) this.shell?.backstage.applyCustomization();
+		if (!this.core.setCustomization(value ?? null)) return;
+		this.shell?.ribbon.applyHiddenTabs();
+		this.shell?.backstage.applyCustomization();
 	}
 
 	/**

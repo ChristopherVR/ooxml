@@ -21,6 +21,8 @@ export interface StatusBar {
 	setPageAndWords(page: string, words: string): void;
 	setLanguage(language: string): void;
 	setNoteCount(count: number): void;
+	/** False while the File tab is hidden: the notes button opens File > Info, so it goes too. */
+	setNotesAvailable(available: boolean): void;
 	setViewMode(mode: 'draft' | 'print'): void;
 	setZoom(percent: number): void;
 	/** Redraws every label after the editor locale changed. */
@@ -58,7 +60,15 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	slider.className = 'dve-zoom';
 	element.append(slider);
 
-	const model = { page: '', words: '', language: '', notes: 0, mode: 'draft', zoom: 100 };
+	const model = {
+		page: '',
+		words: '',
+		language: '',
+		notes: 0,
+		notesAvailable: true,
+		mode: 'draft',
+		zoom: 100,
+	};
 	let layout: StatusLayout = statusLayout(0);
 	const locale = () => normalizeEditorLocale(element.dataset.editorLocale);
 
@@ -92,7 +102,7 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 					icon: 'warning',
 					label: translate(t, noteKey).replace('{count}', String(model.notes)),
 					text: translate(t, noteKey).replace('{count}', String(model.notes)),
-					hidden: model.notes === 0,
+					hidden: model.notes === 0 || !model.notesAvailable,
 				},
 			],
 			views: layout.views ? [view('draft', 'Web Layout'), view('print', 'Print Layout')] : false,
@@ -128,6 +138,11 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 		},
 		setNoteCount(count) {
 			model.notes = count;
+			render();
+		},
+		setNotesAvailable(available) {
+			if (model.notesAvailable === available) return;
+			model.notesAvailable = available;
 			render();
 		},
 		setViewMode(mode) {

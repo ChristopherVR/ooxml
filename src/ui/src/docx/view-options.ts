@@ -4,6 +4,7 @@ import { findLocalizedControl } from './localization';
 import type { RibbonActionId } from 'ooxml-core/docx/ui';
 import { applyRibbonVisibility } from './ribbon-visibility';
 import { mergeHiddenActions } from 'ooxml-core/embedding';
+import { applyHostRibbonTabs } from '../embedding/host-ribbon-tabs';
 import {
 	EMPTY_WORD_CUSTOMIZATION,
 	type ResolvedWordCustomization,
@@ -34,6 +35,7 @@ export function applyViewOptions(core: EditorCore): void {
 		showToolbar,
 		mergeHiddenActions(hiddenActions, customization.hiddenActions),
 	);
+	applyHostRibbonTabs(toolbar, customization.hiddenTabs);
 	findLocalizedControl(toolbar, 'Page thumbnails')?.setAttribute(
 		'aria-pressed',
 		String(showThumbnails),

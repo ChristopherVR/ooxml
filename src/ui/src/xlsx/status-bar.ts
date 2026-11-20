@@ -59,6 +59,8 @@ export function cellMode(ctx: EditorContext): CellMode {
 
 export interface StatusBarHandlers {
 	showNotes(): void;
+	/** False while the File tab is hidden: the notes button opens File > Info, so it goes too. */
+	notesAvailable?(): boolean;
 	setZoom(percent: number): void;
 }
 
@@ -173,7 +175,13 @@ export function createStatusBar(ctx: EditorContext, handlers: StatusBarHandlers)
 				...(ctx.readOnly() ? [{ id: 'readonly', text: ctx.t('Read-only') }] : []),
 			],
 			toggles: [
-				{ id: 'notes', icon: 'warning', label: notesText, text: notesText, hidden: count === 0 },
+				{
+					id: 'notes',
+					icon: 'warning',
+					label: notesText,
+					text: notesText,
+					hidden: count === 0 || handlers.notesAvailable?.() === false,
+				},
 			],
 			views: !layout.views
 				? false

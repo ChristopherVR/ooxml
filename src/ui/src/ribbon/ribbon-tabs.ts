@@ -114,9 +114,14 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.requestUpdate('selected');
 	}
 
-	/** Focus the File button (for example when the backstage it opened closes). */
+	/**
+	 * Focus the File button (for example when the backstage it opened closes); the selected tab
+	 * when `no-file` removed File.
+	 */
 	focusFile(): void {
-		this.renderRoot.querySelector<HTMLElement>('.file')?.focus();
+		const file = this.fileButton();
+		if (file) file.focus();
+		else this.focusTab();
 	}
 
 	/** Focus the selected tab. */
@@ -129,8 +134,9 @@ export class OfficeUiRibbon extends OfficeElement {
 		return this.renderRoot.querySelector<HTMLButtonElement>(`[role="tab"][data-tab="${tab}"]`);
 	}
 
-	/** The rendered File button, or null before the first render. */
+	/** The rendered File button, or null before the first render and while `no-file` hides it. */
 	fileButton(): HTMLButtonElement | null {
+		if (this.noFile) return null;
 		return this.renderRoot.querySelector<HTMLButtonElement>('.file');
 	}
 
@@ -339,7 +345,7 @@ export class OfficeUiRibbon extends OfficeElement {
 					type="button"
 					aria-haspopup="dialog"
 					aria-expanded=${String(this.fileExpanded === 'true')}
-					data-keytip=${ifDefined(this.fileKeytip ?? undefined)}
+					data-keytip=${ifDefined(this.noFile ? undefined : (this.fileKeytip ?? undefined))}
 					?hidden=${present(this.noFile)}
 					@click=${() => this.fire('office-ribbon-file', {})}
 					>${this.fileLabel ?? 'File'}</button

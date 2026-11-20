@@ -121,3 +121,29 @@ export const WORD_CAPABILITY_MENU_ITEMS: CapabilityActionMap<WordCapabilityId, s
 	copy: ['cut', 'copy'],
 	comment: ['comment-add'],
 };
+
+/**
+ * Word's native ribbon tabs, as `customization.ribbon.hiddenTabs` names them: File (the tab and
+ * its backstage), the main tabs in order, then the contextual tabs.
+ */
+export const WORD_RIBBON_TAB_IDS = [
+	'file',
+	'home',
+	'insert',
+	'design',
+	'layout',
+	'references',
+	'mailings',
+	'review',
+	'view',
+	'help',
+	'table',
+	'header-footer',
+	'shape-format',
+	'picture-format',
+	'smartart-design',
+	'chart-design',
+] as const;
+
+/** One native Word ribbon tab. */
+export type WordRibbonTabId = (typeof WORD_RIBBON_TAB_IDS)[number];

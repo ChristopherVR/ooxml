@@ -233,6 +233,7 @@ const customization = {
 ```
 
 - `capabilities` : `false` supprime tous les chemins vers la capacité (`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`) : ruban, pages de l’onglet Fichier, menus et raccourcis. `hiddenActions` est inchangé ; les deux sont réunis.
+- `ribbon.hiddenTabs` : onglets natifs du ruban à retirer (contextuels compris). `file` retire l’onglet Fichier et son mode Backstage à toutes les largeurs : aucune info-bulle de touche (Alt, F) ni autre chemin ne l’ouvre, et un Backstage ouvert se ferme. Enregistrer, Ctrl+S, `storage` et `file-command` continuent de fonctionner sauf si une capacité les retire. Les onglets de l’hôte (`ribbonAddIns`) ne sont pas concernés.
 - `backstage.extraPages` : pages de l’hôte `{ id, label, group?, order?, render }` dans l’onglet Fichier, après les pages intégrées de leur groupe. `render` est une fonction de montage, une balise d’élément personnalisé ou `{ element, properties }` et reçoit un `VisioRegionContext`.
 - `contextMenu.extraCommands` : commandes de l’hôte `{ id, label, icon?, group?, when?, disabled?, onSelect }` au-dessus (`top`, par défaut) ou au-dessous (`bottom`) des entrées intégrées. `onSelect` s’exécute après la fermeture du menu avec un `VisioMenuContext`. Les libellés sont affichés tels quels (localisez-les vous-même).
 

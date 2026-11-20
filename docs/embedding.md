@@ -15,6 +15,7 @@ page is the map across products.
 | Add a File tab page                                    | `backstage.extraPages`       | `backstage.extraPages`       | `backstage.extraPages`                                     | `backstage.extraPages`           |
 | Add right-click commands                               | `contextMenu.extraCommands`  | `contextMenu.extraCommands`  | `contextMenu.extraElementCommands`, `extraCanvasCommands`  | `contextMenu.extraCommands`      |
 | Replace a pane, dialog body or File page               | not offered                  | not offered                  | `customization.regions`                                    | not offered                      |
+| Hide ribbon tabs, the File tab and backstage included  | `ribbon.hiddenTabs`          | `ribbon.hiddenTabs`          | `ribbon.hiddenTabs`                                        | `ribbon.hiddenTabs`              |
 | Hide individual ribbon controls                        | `hiddenActions`              | `hiddenActions`              | `customization.ribbon.*`, `hiddenActions`                  | `hiddenActions`                  |
 | Add your own ribbon tab                                | `ribbonAddIns`               | `ribbonAddIns`               | `ribbonAddIns`                                             | `ribbonAddIns`                   |
 | Own where files are saved and opened                   | `storage`, `file-command`    | `storage`, `file-command`    | `storage`, `onOpenFile`                                    | `storage`, `file-command`        |
@@ -74,6 +75,34 @@ editor.customization = {
 	capabilities: { print: false, export: false, copy: false },
 } satisfies WordCustomization;
 ```
+
+## Hiding ribbon tabs and the File tab
+
+`customization.ribbon.hiddenTabs` removes native ribbon tabs, contextual tabs included, in every
+product with the same field. Each product types its own ids (`WordRibbonTabId`,
+`ExcelRibbonTabId`, `VisioRibbonTabId`, listed in `WORD_RIBBON_TAB_IDS` and its siblings;
+PowerPoint's are `ToolbarTabId` and `RibbonContextualTabId`), so a misspelt id is a compile error.
+
+In Word, Excel and Visio, `file` removes the File tab and the backstage behind it, for hosts that
+own document management themselves (PowerPoint's File tab is described in its customisation guide):
+
+- The File button goes at every width, with its key tip; Alt, F and the other routes that open the
+  backstage (the status bar's compatibility notes, Excel's Info, Save As and Options commands,
+  Visio's `openBackstage()`) do nothing.
+- Save, Ctrl+S, Quick Access Save, `storage` and the `file-command` event keep working, as do
+  the other file shortcuts that do not need the backstage (Ctrl+O, Ctrl+P), unless a capability
+  removes them. Options and Customize Ribbon live in the backstage, so they go too.
+- Hiding File while the backstage is open closes it and returns focus to the ribbon. Each editor
+  instance applies its own object at runtime; omitting the field keeps the default chrome.
+- When the selected tab is hidden, the first remaining tab is selected. Host tabs
+  (`ribbonAddIns`) are not affected.
+
+```ts
+editor.customization = { ribbon: { hiddenTabs: ['file'] } } satisfies WordCustomization;
+```
+
+PowerPoint's `ribbon` section also takes `hiddenGroups` and `hiddenButtons`; Word, Excel and
+Visio hide individual controls through `hiddenActions`.
 
 ## Host File tab pages
 

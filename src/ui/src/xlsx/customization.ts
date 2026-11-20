@@ -2,15 +2,19 @@
  * `<xlsx-editor>`'s `customization` property: the shared contract of `ooxml-core/embedding`
  * bound to Excel. Capabilities hide their commands through the command registry (so the ribbon,
  * Tell me, the context menus, the shortcuts and the title bar all refuse them) and remove their
- * File tab pages; `backstage.extraPages` and `contextMenu.extraCommands` reach the File tab and
- * the cell menu.
+ * File tab pages; `ribbon.hiddenTabs` removes native tabs (`file` takes the backstage and the
+ * commands that only open it); `backstage.extraPages` and `contextMenu.extraCommands` reach the
+ * File tab and the cell menu.
  */
 import {
+	FILE_RIBBON_TAB,
 	capabilityHiddenActions,
+	hiddenRibbonTabs,
 	isCapabilityEnabled,
 	type CapabilityActionMap,
 } from 'ooxml-core/embedding';
 import {
+	EXCEL_BACKSTAGE_COMMANDS,
 	EXCEL_CAPABILITY_BACKSTAGE_PAGES,
 	EXCEL_CAPABILITY_COMMANDS,
 	type EditorContext,
@@ -27,11 +31,18 @@ import {
 /** A customisation resolved into what each render site asks. */
 export interface ResolvedExcelCustomization {
 	readonly canEdit: boolean;
-	/** Command ids the capabilities hide, unioned with `hiddenActions` by the registry. */
+	/**
+	 * Command ids the capabilities (and a hidden File tab) hide, unioned with `hiddenActions` by
+	 * the registry.
+	 */
 	readonly commands: ReadonlySet<string>;
 	readonly backstagePages: ReadonlySet<string>;
 	readonly extraPages: readonly ExcelBackstagePage[];
 	readonly menuCommands: readonly ExcelMenuCommand[];
+	/** The native tabs the host removed (`ribbon.hiddenTabs`), `file` included. */
+	readonly hiddenTabs: ReadonlySet<string>;
+	/** True when `file` is hidden: the File tab and its backstage are gone. */
+	readonly fileHidden: boolean;
 }
 
 /** Resolves a host customisation (none: everything on, nothing added). */
@@ -41,12 +52,18 @@ export function resolveExcelCustomization(
 	const capabilities = customization?.capabilities;
 	const set = (map: CapabilityActionMap<ExcelCapabilityId, string>) =>
 		new Set(capabilityHiddenActions(capabilities, map));
+	const hiddenTabs: ReadonlySet<string> = hiddenRibbonTabs(customization?.ribbon);
+	const fileHidden = hiddenTabs.has(FILE_RIBBON_TAB);
+	const commands = set(EXCEL_CAPABILITY_COMMANDS);
+	if (fileHidden) for (const id of EXCEL_BACKSTAGE_COMMANDS) commands.add(id);
 	return {
 		canEdit: isCapabilityEnabled(capabilities, 'edit'),
-		commands: set(EXCEL_CAPABILITY_COMMANDS),
+		commands,
 		backstagePages: set(EXCEL_CAPABILITY_BACKSTAGE_PAGES),
 		extraPages: customization?.backstage?.extraPages ?? [],
 		menuCommands: customization?.contextMenu?.extraCommands ?? [],
+		hiddenTabs,
+		fileHidden,
 	};
 }
 

@@ -189,7 +189,11 @@ export function buildShell(core: EditorCore): Shell {
 		}),
 	);
 	safeMount('commands', () => installCommands(ctx));
-	const ribbon = createRibbon(ctx, { openBackstage: () => backstage.open('info'), isHidden });
+	const ribbon = createRibbon(ctx, {
+		openBackstage: () => backstage.open('info'),
+		isHidden,
+		hiddenTabs: () => core.customization.hiddenTabs,
+	});
 	// Editing mode, Comments and Share at the right end of the tab row, as in Excel.
 	const ribbonActions = createRibbonActions(ctx, {
 		isHidden,
@@ -214,6 +218,7 @@ export function buildShell(core: EditorCore): Shell {
 	});
 	const statusBar = createStatusBar(ctx, {
 		showNotes: () => backstage.open('info'),
+		notesAvailable: () => !core.customization.fileHidden,
 		setZoom: (percent) => {
 			if (ctx.commands.get('view.set-zoom')) void ctx.commands.run('view.set-zoom', percent);
 			else ctx.grid()?.setZoom(percent);
@@ -348,11 +353,17 @@ export function buildShell(core: EditorCore): Shell {
 				chrome.setSaveState('dirty');
 			if (!core.dirty.dirty && saveState === 'dirty') chrome.setSaveState('saved');
 			empty.hidden = Boolean(core.workbook);
+			// Without a File tab (`ribbon.hiddenTabs`) the host opens workbooks: do not point at File.
+			const message = ctx.t(
+				core.customization.fileHidden
+					? 'No workbook is open.'
+					: 'Open a workbook or create a new one from the File tab.',
+			);
+			if (emptyText.textContent !== message) emptyText.textContent = message;
 		},
 		toast: (message, kind) => toaster.show(message, kind),
 		relocalize() {
 			element.setAttribute('aria-label', ctx.t('Spreadsheet editor'));
-			emptyText.textContent = ctx.t('Open a workbook or create a new one from the File tab.');
 			ribbon.rebuild();
 			titleBar.relocalize();
 			ribbonActions.relocalize();

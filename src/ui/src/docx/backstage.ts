@@ -168,6 +168,8 @@ export function createBackstage(handlers: BackstageHandlers): Backstage {
 		element,
 		optionsDialog: options.element,
 		open(requested = 'home') {
+			// A host that hid the File tab (`ribbon.hiddenTabs`) removed the backstage with it.
+			if (handlers.customization().fileHidden) return;
 			const page = hidden(requested === 'customize' ? 'options' : requested) ? 'home' : requested;
 			if (page === 'options' || page === 'customize') {
 				showOptions(page === 'customize' ? 'ribbon' : undefined);

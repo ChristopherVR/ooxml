@@ -1,11 +1,14 @@
 /**
  * `<docx-editor>`'s `customization` property: the shared contract of `ooxml-core/embedding`
- * (capabilities, host File tab pages, host context-menu commands) bound to Word. The host passes
+ * (capabilities, hidden ribbon tabs, host File tab pages, host context-menu commands) bound to
+ * Word. The host passes
  * one plain object; `resolveWordCustomization` turns it into the sets every render site asks,
  * so the ribbon, the File tab, the context menu, the shortcuts and the file commands agree.
  */
 import {
+	FILE_RIBBON_TAB,
 	capabilityHiddenActions,
+	hiddenRibbonTabs,
 	isCapabilityEnabled,
 	type CapabilityActionMap,
 	type EditorCustomization,
@@ -24,6 +27,7 @@ import {
 	type WordBackstagePageId,
 	type WordCapabilityId,
 	type WordFileCommandId,
+	type WordRibbonTabId,
 	type WordShortcutId,
 } from 'ooxml-core/docx/ui';
 
@@ -56,7 +60,8 @@ export type WordMenuCommand = HostMenuCommand<WordMenuContext>;
 export type WordCustomization = EditorCustomization<
 	WordCapabilityId,
 	WordRegionRenderer,
-	WordMenuContext
+	WordMenuContext,
+	WordRibbonTabId
 >;
 
 /** A customisation resolved into what each render site asks. */
@@ -74,6 +79,10 @@ export interface ResolvedWordCustomization {
 	readonly blockCopy: boolean;
 	readonly extraPages: readonly WordBackstagePage[];
 	readonly menuCommands: readonly WordMenuCommand[];
+	/** The native tabs the host removed (`ribbon.hiddenTabs`), `file` included. */
+	readonly hiddenTabs: ReadonlySet<string>;
+	/** True when `file` is hidden: the File tab and its backstage are gone. */
+	readonly fileHidden: boolean;
 }
 
 /** Resolves a host customisation (none: everything on, nothing added). */
@@ -83,6 +92,7 @@ export function resolveWordCustomization(
 	const capabilities = customization?.capabilities;
 	const set = <T extends string>(map: CapabilityActionMap<WordCapabilityId, T>) =>
 		new Set(capabilityHiddenActions(capabilities, map));
+	const hiddenTabs: ReadonlySet<string> = hiddenRibbonTabs(customization?.ribbon);
 	return {
 		canEdit: isCapabilityEnabled(capabilities, 'edit'),
 		hiddenActions: capabilityHiddenActions(capabilities, WORD_CAPABILITY_ACTIONS),
@@ -93,6 +103,8 @@ export function resolveWordCustomization(
 		blockCopy: !isCapabilityEnabled(capabilities, 'copy'),
 		extraPages: customization?.backstage?.extraPages ?? [],
 		menuCommands: customization?.contextMenu?.extraCommands ?? [],
+		hiddenTabs,
+		fileHidden: hiddenTabs.has(FILE_RIBBON_TAB),
 	};
 }
 

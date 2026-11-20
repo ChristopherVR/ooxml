@@ -13,7 +13,7 @@ import { VisioViewer as VueViewer } from '../src/vue';
 import { VisioViewerComponent } from '../src/angular';
 import { VisioViewer as SolidViewer } from '../src/solid';
 import SvelteHarness from './IntegrationHarness.svelte';
-import { demoDocument } from 'ooxml-core/visio/ui';
+import { demoDocument, type VisioCustomization } from 'ooxml-core/visio/ui';
 import { createCollabSession, createMemoryHub, transportProvider } from 'ooxml-core/collab';
 import { mountViewer } from '../src/vanilla';
 import {
@@ -539,8 +539,9 @@ describe('native adapters against the real shared custom element', () => {
 		it(`${framework}: forwards customization and restores the defaults without it`, async () => {
 			const host = document.createElement('div');
 			document.body.append(host);
-			const customization = {
+			const customization: VisioCustomization = {
 				capabilities: { edit: false, print: false },
+				ribbon: { hiddenTabs: ['file'] },
 				backstage: { extraPages: [{ id: 'about', label: 'About', render: 'acme-about' }] },
 			};
 			const mounted = await mountNative(host, { document: demoDocument, customization });
@@ -551,14 +552,20 @@ describe('native adapters against the real shared custom element', () => {
 						items: { id: string }[];
 					}
 				).items.map((item) => item.id);
+			const fileTab = () =>
+				!(
+					element.shadowRoot!.querySelector('office-ui-ribbon') as HTMLElement & { noFile: boolean }
+				).noFile;
 			try {
 				expect(element.customization).toBe(customization);
 				expect(element.canEdit).toBe(false);
+				expect(fileTab()).toBe(false);
 				expect(nav()).toContain('host.about');
 				expect(nav()).not.toContain('print');
 				await mounted.update({ document: demoDocument, customization: null });
 				expect(element.customization).toBeNull();
 				expect(element.canEdit).toBe(true);
+				expect(fileTab()).toBe(true);
 				expect(nav()).toContain('print');
 				expect(nav()).not.toContain('host.about');
 			} finally {

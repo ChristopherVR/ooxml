@@ -3,6 +3,7 @@ import {
 	acceptedHostBackstagePages,
 	capabilityHiddenActions,
 	disabledCapabilities,
+	hiddenRibbonTabs,
 	hostBackstageItemId,
 	hostBackstagePageId,
 	hostBackstageRegionId,
@@ -39,6 +40,17 @@ describe('capabilities', () => {
 
 	it('merges hidden-action lists without repeats', () => {
 		expect(mergeHiddenActions(['a', 'b'], undefined, ['b', 'c'], null)).toEqual(['a', 'b', 'c']);
+	});
+});
+
+describe('ribbon customisation', () => {
+	it('collects the hidden tabs once each, and none without a ribbon section', () => {
+		expect([...hiddenRibbonTabs({ hiddenTabs: ['file', 'home', 'file'] })]).toEqual([
+			'file',
+			'home',
+		]);
+		expect(hiddenRibbonTabs(undefined).size).toBe(0);
+		expect(hiddenRibbonTabs({}).size).toBe(0);
 	});
 });
 

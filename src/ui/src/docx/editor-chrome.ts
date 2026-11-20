@@ -239,7 +239,10 @@ export class EditorChrome {
 	/** Re-applies the host customisation to the File tab, title bar and ribbon actions. */
 	applyCustomization(): void {
 		const resolved = this.host.customization();
+		// Hiding File while its backstage is open closes it; focus goes back to the ribbon.
+		if (resolved.fileHidden && this.backstage.isOpen) this.closeBackstage();
 		this.backstage.refresh();
+		this.statusBar.setNotesAvailable(!resolved.fileHidden);
 		this.titleBar.setHiddenCommands(resolved.fileCommands);
 		this.ribbonActions.element.noShare = resolved.fileCommands.has('share');
 	}

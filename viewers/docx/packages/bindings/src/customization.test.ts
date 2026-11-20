@@ -23,6 +23,7 @@ afterEach(() => document.body.replaceChildren());
 /** One stable object per test, as a host would memoise it. */
 const kiosk: WordCustomization = {
 	capabilities: { edit: false, print: false },
+	ribbon: { hiddenTabs: ['file'] },
 	backstage: { extraPages: [{ id: 'about', label: 'About', render: 'acme-about' }] },
 };
 
@@ -32,23 +33,39 @@ function host(): HTMLElement {
 	return element;
 }
 const editorIn = (root: ParentNode) => root.querySelector('docx-editor') as DocxEditorElement;
-/** What the element shows: its customisation, read-only state and File tab entries. */
+/** What the element shows: its customisation, read-only state, File tab and its entries. */
 function shown(editor: DocxEditorElement) {
 	const nav = (
 		editor.shadowRoot!.querySelector('office-ui-backstage') as HTMLElement & {
 			items: { id: string }[];
 		}
 	).items.map((item) => item.id);
+	const ribbon = editor.shadowRoot!.querySelector('office-ui-ribbon') as HTMLElement & {
+		noFile: boolean;
+	};
 	return {
 		customization: editor.customization,
 		readOnly: editor.readOnly,
+		fileTab: !ribbon.noFile,
 		print: nav.includes('print'),
 		hostPage: nav.includes('host.about'),
 	};
 }
-/** `kiosk` applied: read-only, no Print page, the host page in the nav. */
-const KIOSK = { customization: kiosk, readOnly: true, print: false, hostPage: true };
-const DEFAULT = { customization: null, readOnly: false, print: true, hostPage: false };
+/** `kiosk` applied: read-only, no File tab, no Print page, the host page in the nav. */
+const KIOSK = {
+	customization: kiosk,
+	readOnly: true,
+	fileTab: false,
+	print: false,
+	hostPage: true,
+};
+const DEFAULT = {
+	customization: null,
+	readOnly: false,
+	fileTab: true,
+	print: true,
+	hostPage: false,
+};
 
 describe('customization through every binding', () => {
 	it('is part of the shared contract', () => {

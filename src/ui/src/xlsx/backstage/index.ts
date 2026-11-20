@@ -164,6 +164,8 @@ export function createBackstage(host: BackstageHost): Backstage {
 		element,
 		optionsDialog: options.element,
 		open(requested = 'info') {
+			// A host that hid the File tab (`ribbon.hiddenTabs`) removed the backstage with it.
+			if (custom().fileHidden) return;
 			const hidden = custom().backstagePages;
 			const page =
 				hidden.has(requested === 'customize' ? 'options' : requested) ||
@@ -188,6 +190,11 @@ export function createBackstage(host: BackstageHost): Backstage {
 			if (element.open && current === page) show(page);
 		},
 		applyCustomization() {
+			// Hiding File while its backstage is open closes it; the host returns focus to the ribbon.
+			if (custom().fileHidden && element.open) {
+				element.close();
+				host.close();
+			}
 			relocalize();
 			hostPages.refresh();
 		},
