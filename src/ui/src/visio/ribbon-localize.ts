@@ -61,7 +61,8 @@ export function setGalleryState(
 	const written: OfficeGalleryState = {
 		...english,
 		label: t(english.label),
-		...(english.moreLabel && { moreLabel: t(english.moreLabel) }),
+		// The gallery's own default would join English "More" to the translated caption.
+		moreLabel: t(english.moreLabel ?? `More ${english.label}`),
 		...(english.command?.hint && {
 			command: { ...english.command, hint: t(english.command.hint) },
 		}),

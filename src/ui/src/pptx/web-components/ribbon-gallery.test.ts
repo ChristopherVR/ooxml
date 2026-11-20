@@ -229,6 +229,8 @@ describe('Design > Fonts tiles (WCAG 2.5.3)', () => {
 		gallery.trigger.click();
 		const office = gallery.popup.querySelector('[data-gallery-item="office"]')!;
 		expect(office.getAttribute('aria-label')).toBe('Aa Aptos Display / Aptos: Office');
+		// The tooltip keeps PowerPoint's wording, the scheme first.
+		expect(office.getAttribute('title')).toBe('Office: Aptos Display / Aptos');
 		expect(labelNameMismatches(gallery.popup)).toEqual([]);
 	});
 });

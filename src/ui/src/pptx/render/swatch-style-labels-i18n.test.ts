@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { translationsEn } from '../i18n/translations-en';
 import { ACTION_BUTTON_PRESETS, actionButtonLabelKey } from './action-buttons';
 import { OFFICE_COLOR_SWATCHES, officeColorSwatchLabel } from './color-swatches';
-import { galleryItemLabel } from './ribbon-galleries/gallery-view';
+import { galleryItemLabel, galleryItemTitle } from './ribbon-galleries/gallery-view';
 import { buildRibbonGallery } from './ribbon-galleries/gallery-registry';
 import type { RibbonGalleryItem } from './ribbon-galleries/gallery-types';
 import { SHAPE_QUICK_STYLES, shapeQuickStyleLabel } from './shape-quick-styles';
@@ -31,7 +31,8 @@ const KO: Record<string, string> = {
 	'pptx.gallery.shapeStyles.coloredFill': '색 채우기 - {{color}}',
 	'pptx.gallery.themeColors.name.blue-warm': '따뜻한 파랑',
 	'pptx.gallery.themeFonts.name.office-2013-2022': '오피스 2013 - 2022',
-	'pptx.gallery.themeFonts.scheme': 'Aa {{major}} / {{minor}}: {{name}}',
+	'pptx.gallery.themeFonts.scheme': '{{name}}: {{major}} / {{minor}}',
+	'pptx.gallery.themeFonts.schemeName': 'Aa {{major}} / {{minor}}: {{name}}',
 	'pptx.insert.actionButton.backPrevious': '뒤로 또는 이전',
 };
 
@@ -169,6 +170,7 @@ describe('gallery tile names built from a translatable name', () => {
 		const fonts = galleryItems('themeFonts');
 		const office = fonts.find((item) => item.labelParams?.name === 'Office 2013 - 2022')!;
 		expect(galleryItemLabel(office, ko)).toBe('Aa Calibri Light / Calibri: 오피스 2013 - 2022');
+		expect(galleryItemTitle(office, ko)).toBe('오피스 2013 - 2022: Calibri Light / Calibri');
 		const calibri = fonts.find((item) => item.labelParams?.name === 'Calibri')!;
 		expect(calibri.labelParamKeys).toBeUndefined();
 		for (const item of [...colors, ...fonts]) {

@@ -182,7 +182,7 @@ export function visibleOverflowItems(
 				(click)="openCustomShows.emit()"
 			>
 				<svg lucidePlus class="h-3.5 w-3.5" aria-hidden="true"></svg>
-				{{ 'pptx.ribbon.customShows' | translate }}
+				{{ 'pptx.ribbon.show' | translate }}
 			</button>
 
 			<span class="mx-1 h-5 w-px self-center bg-border/50"></span>

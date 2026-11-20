@@ -10,6 +10,7 @@ import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n';
 import { labelNameMismatches } from '../../../../../../src/ui/src/test-support/label-in-name';
+import { translationsDe } from '../../../locales/src/de';
 import { RibbonPrimaryRowComponent } from './ribbon-primary-row.component';
 
 beforeAll(() => {
@@ -17,7 +18,7 @@ beforeAll(() => {
 });
 afterEach(() => TestBed.resetTestingModule());
 
-function open(canEdit: boolean) {
+function open(canEdit: boolean, lang: 'en' | 'de' = 'en') {
 	TestBed.resetTestingModule();
 	TestBed.configureTestingModule({
 		imports: [RibbonPrimaryRowComponent],
@@ -30,7 +31,8 @@ function open(canEdit: boolean) {
 	fixture.componentRef.setInput('canEdit', editable);
 	const translate = TestBed.inject(TranslateService);
 	translate.setTranslation('en', translationsEn);
-	translate.use('en');
+	translate.setTranslation('de', { ...translationsEn, ...translationsDe });
+	translate.use(lang);
 	fixture.detectChanges();
 	const badge = () =>
 		(fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
@@ -52,10 +54,16 @@ describe('ribbon primary row read-only badge', () => {
 });
 
 describe('ribbon primary row names (WCAG 2.5.3)', () => {
-	it('names every labelled button with the text it shows', () => {
-		const { fixture } = open(true);
+	it.each([
+		['en', 'Show', 'Custom shows'],
+		['de', 'Zeigen', 'Benutzerdefinierte Bildschirmpräsentationen'],
+	] as const)('names every labelled button with the text it shows in %s', (lang, caption, tip) => {
+		const { fixture } = open(true, lang);
 		const root = fixture.nativeElement as HTMLElement;
-		expect(root.textContent).toContain('Custom shows');
+		const pill = [...root.querySelectorAll<HTMLButtonElement>('.pptx-rb-pill')].find(
+			(button) => button.title === tip,
+		);
+		expect(pill?.textContent?.trim()).toBe(caption);
 		expect(labelNameMismatches(root)).toEqual([]);
 	});
 });

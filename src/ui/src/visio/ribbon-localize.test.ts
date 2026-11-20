@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { registerOfficeUi } from '../index';
+import type { OfficeUiGallery } from '../ribbon/gallery';
+import { VISIO_LOCALES, VISIO_RIBBON_STRINGS } from './ribbon-locale';
 import { localizeRibbon } from './ribbon-localize';
 
 afterEach(() => document.body.replaceChildren());
@@ -71,5 +73,24 @@ describe('gallery captions (WCAG 2.5.3)', () => {
 		localizeRibbon(ribbon, 'en');
 		expect(trigger.textContent).toContain('Backgrounds');
 		expect(trigger.getAttribute('aria-label')).toBe('Backgrounds');
+	});
+
+	it.each(VISIO_LOCALES)('names the More button of an inline gallery in %s', async (locale) => {
+		registerOfficeUi();
+		const ribbon = document.createElement('div');
+		const gallery = document.createElement('office-ui-gallery') as OfficeUiGallery;
+		gallery.setAttribute('mode', 'inline');
+		gallery.state = {
+			id: 'variants',
+			label: 'Variants',
+			sections: [{ columns: 1, tileWidth: 40, tileHeight: 20, items: [{ id: 'v1', label: 'V' }] }],
+		};
+		ribbon.append(gallery);
+		document.body.append(ribbon);
+		localizeRibbon(ribbon, locale);
+		await gallery.updateComplete;
+		const more = VISIO_RIBBON_STRINGS[locale]['More Variants'];
+		expect(gallery.trigger.getAttribute('aria-label')).toBe(more);
+		expect(gallery.trigger.title).toBe(more);
 	});
 });
