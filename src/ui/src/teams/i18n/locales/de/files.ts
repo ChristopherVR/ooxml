@@ -146,6 +146,8 @@ export const deFiles: Record<keyof typeof enFiles, string> = {
 	'channel.enterName': 'Geben Sie einen Kanalnamen ein.',
 	'channel.maxChars': 'Maximal {count} Zeichen.',
 	'channel.name': 'Kanalname',
+	'channel.defaultName': 'Allgemein',
+	'channel.defaultTopic': 'Unternehmensweite Ankündigungen',
 	'channel.namePlaceholder': 'Geben Sie Ihrem Kanal einen Namen',
 	'channel.notCreated': 'Der Kanal wurde nicht erstellt. Ihre Angaben bleiben hier erhalten.',
 	'channel.standard': 'Standardkanal',

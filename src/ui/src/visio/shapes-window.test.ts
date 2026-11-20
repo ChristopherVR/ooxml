@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
 import { ViewerController } from './controller';
 import { demoDocument } from 'ooxml-core/visio/ui';
@@ -99,7 +99,8 @@ describe("Visio's Shapes window", () => {
 		const { master, edits, messages } = await setup(true, 30);
 		master('square').click();
 		master('triangle').click();
-		await new Promise((resolve) => setTimeout(resolve, 200));
+		// The second drop is announced once its save, queued behind the first, has finished.
+		await vi.waitFor(() => expect(messages.at(-1)).toMatch(/^Triangle /));
 		expect(edits.map(([created]) => (created as { master?: string }).master)).toEqual([
 			'square',
 			'triangle',

@@ -132,6 +132,8 @@ export const zhCNFiles: Record<keyof typeof enFiles, string> = {
 	'channel.enterName': '请输入频道名称。',
 	'channel.maxChars': '最多 {count} 个字符。',
 	'channel.name': '频道名称',
+	'channel.defaultName': '常规',
+	'channel.defaultTopic': '全公司公告',
 	'channel.namePlaceholder': '为频道命名',
 	'channel.notCreated': '频道未创建。你填写的内容会保留在此处。',
 	'channel.standard': '标准频道',

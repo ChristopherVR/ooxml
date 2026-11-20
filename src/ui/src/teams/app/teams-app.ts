@@ -218,6 +218,7 @@ export class TeamsApp extends TeamsLitElement {
 		this,
 		(text) => this.notify(localizeCoreText(text, this.i18n)),
 		(item) => this.announce(item),
+		() => this.i18n,
 	);
 	private toastTimer: ReturnType<typeof setTimeout> | undefined;
 	private readonly activityToastTimers = new Map<string, ReturnType<typeof setTimeout>>();

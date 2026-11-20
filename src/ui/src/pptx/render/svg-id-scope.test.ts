@@ -35,10 +35,11 @@ describe('scopeSvgIds', () => {
 	});
 
 	it('gives each copy its own def ids and points references at their own copy', () => {
-		const first = copy(document.body, true);
-		const second = copy(document.body, false);
-		scopeSvgIds(document.body);
-		const ids = [...document.body.querySelectorAll('[id]')].map((n) => n.id);
+		const host = document.body.appendChild(document.createElement('div'));
+		const first = copy(host, true);
+		const second = copy(host, false);
+		scopeSvgIds(host);
+		const ids = [...host.querySelectorAll('[id]')].map((n) => n.id);
 		expect(new Set(ids).size).toBe(ids.length);
 		expect(ids).toHaveLength(6);
 		expect(resolves(first)).toBe(true);

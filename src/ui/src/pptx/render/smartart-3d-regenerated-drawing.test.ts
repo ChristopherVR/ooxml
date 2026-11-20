@@ -5,7 +5,6 @@
  * Ground truth: `e2e/fixtures/three-d-parity/three-d-smartart.pptx` (slide 1
  * Simple Fill, slide 6 Polished bevel, slide 10 Brick Scene).
  */
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import type { PptxSlide, SmartArtPptxElement } from 'ooxml-core/pptx';
@@ -17,6 +16,8 @@ import {
 } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
+import { deckWithSlides } from '../../../../core/pptx/test-support/deck-slides';
+
 import { applySmartArtDataPatch } from './ribbon-galleries/smartart-gallery-patch';
 import { buildSmartArt3DSpecForElement } from './smartart-3d-element';
 import { withRegeneratedSmartArt3DDrawing } from './smartart-3d-regenerated-drawing';
@@ -25,17 +26,18 @@ const fixture = fileURLToPath(
 	new URL('../../../../../e2e/pptx/fixtures/three-d-parity/three-d-smartart.pptx', import.meta.url),
 );
 
+/** The deck's slides these tests edit; loading all 112 timed tests out on a loaded machine. */
+const SLIDES = [1, 6, 10];
+
 async function loadDeck(): Promise<{ handler: PptxHandler; slides: PptxSlide[] }> {
-	const bytes = readFileSync(fixture);
 	const handler = new PptxHandler();
-	const data = await handler.load(
-		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
-	);
+	const data = await handler.load(await deckWithSlides(fixture, SLIDES));
 	return { handler, slides: data.slides };
 }
 
+/** The SmartArt of the deck's slide `slideIndex + 1`, in a deck cut to `SLIDES`. */
 function smartArtOn(slides: PptxSlide[], slideIndex: number): SmartArtPptxElement {
-	const element = slides[slideIndex].elements.find(
+	const element = slides[SLIDES.indexOf(slideIndex + 1)]?.elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	if (!element?.smartArtData) {

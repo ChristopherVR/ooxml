@@ -29,6 +29,10 @@ const SSR = /ssr\.test\.tsx?$/;
 const TEST_FILE = /\.test\.tsx?$/;
 // A shared worker keeps every file's heap until it exits, so give it room (the default can run out).
 const EXEC_ARGV = ['--max-old-space-size=4096'];
+// Every binding suite mounts whole viewers, bundles its module graph (the runtime-boundary tests)
+// or scans its sources, and runs four workers beside the other suites: Vitest's 5 s default failed
+// such tests on loaded runners in each package that kept it, so all of them get one budget here.
+const TEST_TIMEOUT_MS = 30_000;
 const HERE = dirname(fileURLToPath(import.meta.url));
 const RESET_MODULES = join(HERE, 'vitest-reset-modules.setup.ts');
 const DOM_HYGIENE = join(HERE, 'vitest-dom-hygiene.setup.ts');
@@ -90,6 +94,7 @@ export function isolationProjects(name, root, defaultEnvironment, extraFiles = [
 				environment,
 				isolate: false,
 				include,
+				testTimeout: TEST_TIMEOUT_MS,
 				setupFiles: [DOM_HYGIENE],
 				execArgv: EXEC_ARGV,
 			},
@@ -102,6 +107,7 @@ export function isolationProjects(name, root, defaultEnvironment, extraFiles = [
 							name: `${name}-mocked`,
 							isolate: false,
 							include: mocked,
+							testTimeout: TEST_TIMEOUT_MS,
 							setupFiles: [RESET_MODULES, DOM_HYGIENE],
 							execArgv: EXEC_ARGV,
 						},
@@ -109,7 +115,17 @@ export function isolationProjects(name, root, defaultEnvironment, extraFiles = [
 				]
 			: []),
 		...(alone.length > 0
-			? [{ extends: true, test: { name: `${name}-alone`, isolate: true, include: alone } }]
+			? [
+					{
+						extends: true,
+						test: {
+							name: `${name}-alone`,
+							isolate: true,
+							include: alone,
+							testTimeout: TEST_TIMEOUT_MS,
+						},
+					},
+				]
 			: []),
 	];
 }

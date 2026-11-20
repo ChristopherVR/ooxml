@@ -1,7 +1,7 @@
 // Property-level merging over live in-memory sessions (memory hub, transport provider).
 import { afterEach, expect, it } from 'vitest';
 import { createVsdx, editVsdx } from '../index';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 
 const room = createRoom();
 afterEach(() => room.destroy());
@@ -11,7 +11,7 @@ it('keeps a move and a text and fill change to one shape on both live peers', as
 		{ type: 'create-rectangle', pageId: '0', shapeId: '1', x: 1, y: 2, width: 1, height: 1 },
 	]);
 	const a = room.join('Ada', seed.bytes);
-	await wait();
+	await published(a);
 	const b = room.join('Bob', await createVsdx());
 	await until(async () => (await b.side.model()).pages[0]!.shapes.length === 1, 'join');
 	await settle(a, b);
@@ -22,17 +22,13 @@ it('keeps a move and a text and fill change to one shape on both live peers', as
 			{ type: 'format-shape', pageId: '0', shapeId: '1', fillColor: '#00FF00' },
 		),
 	]);
-	await until(async () => {
-		const shapes = await Promise.all(
-			[a, b].map(async (p) => (await p.side.model()).pages[0]!.shapes[0]!),
-		);
-		return shapes.every(
-			(s) =>
-				s.transform[4] === 4.5 &&
-				s.text.plainText.trim() === 'Hello' &&
-				s.style.fill.toLowerCase() === '#00ff00',
-		);
-	}, 'both changes on both peers');
+	await settle(a, b);
+	for (const peer of [a, b]) {
+		const shape = (await peer.side.model()).pages[0]!.shapes[0]!;
+		expect(shape.transform[4]).toBe(4.5);
+		expect(shape.text.plainText.trim()).toBe('Hello');
+		expect(shape.style.fill.toLowerCase()).toBe('#00ff00');
+	}
 	expect(a.errors).toEqual([]);
 	expect(b.errors).toEqual([]);
 });

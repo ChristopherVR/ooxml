@@ -71,6 +71,16 @@ export interface TeamsPresence {
 	activity?: PresenceActivity | '';
 }
 
+/**
+ * The channel a new workspace starts with. Its name and topic are stored in English; an app shows
+ * them in its display language while they are still these values (a renamed channel keeps its name).
+ */
+export const DEFAULT_CHANNEL = {
+	id: 'general',
+	name: 'General',
+	topic: 'Company-wide announcements',
+} as const;
+
 export interface WorkspaceOptions {
 	/** Room id for the shared state: 1-128 alphanumeric, `-` or `_`. */
 	workspaceId: string;
@@ -201,12 +211,7 @@ export function createTeamsWorkspace(options: WorkspaceOptions): TeamsWorkspace 
 			setSchema(ensureSchema(session.doc, { stampEmpty: true }));
 			if (isReadOnly()) return;
 			roster.register();
-			if (channels.channels().length === 0)
-				channels.createChannel({
-					id: 'general',
-					name: 'General',
-					topic: 'Company-wide announcements',
-				});
+			if (channels.channels().length === 0) channels.createChannel({ ...DEFAULT_CHANNEL });
 		},
 	});
 	channels = createChatStore(session.doc, user);

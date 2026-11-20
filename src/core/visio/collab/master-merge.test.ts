@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createVsdx, editVsdx } from '../index';
 import { type DocPeer, converge, joinFrom, seedPeer } from './test-support/doc-peers';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 import {
 	addMaster,
 	masterCell,
@@ -133,7 +133,8 @@ describe('edits inside one master in live sessions', () => {
 		await a.side.patch((zip) =>
 			addMaster(zip, { id: '2', unique: '{M}', shapes: masterShape('1', 1) + masterShape('2', 3) }),
 		);
-		await wait();
+		// Bob must find Ada's drawing in the room: joining an empty one, he would seed his own.
+		await published(a);
 		const b = room.join('Bob', await createVsdx());
 		const text = async (p: typeof a) => {
 			const zip = await JSZip.loadAsync(p.side.bytes);

@@ -11,6 +11,7 @@ import {
 } from './custom-geometry-command-order';
 import { parseStructuredCustomGeometry } from './custom-geometry-parser';
 import { at } from '../../test-support/access';
+import { growth } from '../../../test-support/growth';
 
 const ensureArray = (value: unknown): unknown[] =>
 	value === undefined ? [] : Array.isArray(value) ? value : [value];
@@ -132,15 +133,6 @@ describe('custom geometry command order', () => {
 });
 
 /** Best of three runs, in milliseconds. */
-function timed(run: () => unknown): number {
-	let best = Number.POSITIVE_INFINITY;
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const start = performance.now();
-		run();
-		best = Math.min(best, performance.now() - start);
-	}
-	return best;
-}
 
 describe('custom geometry source order scan', () => {
 	it('is linear in empty custom geometries that never close', () => {
@@ -150,6 +142,6 @@ describe('custom geometry source order scan', () => {
 				{},
 			);
 		// Four times the input: about four times the time when linear, sixteen when quadratic.
-		expect(timed(run(80_000)) / timed(run(20_000))).toBeLessThan(8);
+		expect(growth(run(20_000), run(80_000))).toBeLessThan(8);
 	});
 });

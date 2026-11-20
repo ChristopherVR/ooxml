@@ -16,7 +16,6 @@
  *   `shape3d` (extrusionH=152250, matte, bevelT coolSlant), and a text-body
  *   `text3d` (extrusionH=28000, matte) extruding the label text itself.
  */
-import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
@@ -24,18 +23,16 @@ import { describe, expect, it } from 'vitest';
 import { PptxHandler } from '../../PptxHandler';
 import type { PptxSmartArtData, SmartArtPptxElement } from '../../types';
 import { at } from '../../../test-support/access';
+import { deckWithSlides } from '../../../test-support/deck-slides';
 
 const fixture = fileURLToPath(
 	new URL('../../../__tests__/fixtures/e2e/three-d-parity/three-d-smartart.pptx', import.meta.url),
 );
 
 async function loadSmartArt(slideIndex: number): Promise<PptxSmartArtData> {
-	const bytes = readFileSync(fixture);
 	const handler = new PptxHandler();
-	const data = await handler.load(
-		bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer,
-	);
-	const element = at(data.slides, slideIndex).elements.find(
+	const data = await handler.load(await deckWithSlides(fixture, [slideIndex + 1]));
+	const element = at(data.slides, 0).elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	if (!element) {

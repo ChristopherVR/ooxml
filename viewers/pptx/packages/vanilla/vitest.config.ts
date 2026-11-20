@@ -70,11 +70,6 @@ export default defineConfig({
 		globals: true,
 		environment: 'happy-dom',
 		maxWorkers: 4,
-		// Most of this suite mounts a whole viewer (ribbon with its style
-		// galleries, dialogs, canvas) in happy-dom: about a second locally but
-		// 3.5-5.5s on the hosted CI runner, where vitest's 5s default failed five
-		// tests in CI run 36183962014. Matches core and svelte, which set 30s.
-		testTimeout: 30_000,
 		projects: isolationProjects('vanilla', __dirname, 'happy-dom', [
 			'../../../../demos/pptx/demo-vanilla/src/collab.test.ts',
 			'../../../../demos/pptx/demo-vanilla/src/host-owned-inline-editor.test.ts',

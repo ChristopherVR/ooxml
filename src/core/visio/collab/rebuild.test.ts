@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createVsdx, editVsdx } from '../index';
 import { composeDrawing } from './compose';
 import { SchemaVersionError, readSharedDrawing } from './index';
-import { createRoom, settle, until, wait } from './test-support/peers';
+import { createRoom, published, settle, until } from './test-support/peers';
 import { seedPeer } from './test-support/doc-peers';
 
 const rect = (id: string, x: number) =>
@@ -33,7 +33,7 @@ async function pair() {
 	const room = newRoom();
 	const queue: (() => void)[] = [];
 	const a = room.join('Ada', (await editVsdx(await createVsdx(), [rect('1', 1)])).bytes);
-	await until(() => a.session.doc.getMap('visio:meta').size > 0, 'publish');
+	await published(a);
 	const b = room.join('Bob', await createVsdx(), { schedule: (run) => void queue.push(run) });
 	await until(async () => (await b.side.model()).pages[0]!.shapes.length === 1, 'join');
 	await settle(a, b);
@@ -45,7 +45,8 @@ describe('coalesced rebuilds', () => {
 		const { a, b, queue } = await pair();
 		const before = b.side.applied;
 		for (let i = 0; i < 8; i++) await a.side.edit(rect(String(10 + i), 2 + i));
-		await wait(150);
+		// Every edit is in the room: delivery is synchronous, so Bob has queued its rebuild.
+		await a.binding.idle();
 		expect(queue).toHaveLength(1);
 		expect(b.side.applied).toBe(before);
 		queue.shift()!();
@@ -59,7 +60,6 @@ describe('coalesced rebuilds', () => {
 		const { a, b, queue } = await pair();
 		const before = b.side.applied;
 		a.session.doc.getMap('visio:meta').set('noise', 1);
-		await wait(100);
 		expect(queue).toHaveLength(1);
 		queue.shift()!();
 		await b.binding.idle();
@@ -70,7 +70,7 @@ describe('coalesced rebuilds', () => {
 		const { a, b, queue } = await pair();
 		const before = b.side.applied;
 		await a.side.edit(rect('20', 5));
-		await wait(100);
+		await a.binding.idle();
 		queue.shift()!();
 		await b.binding.idle();
 		expect(b.side.applied).toBe(before + 1);
@@ -105,14 +105,14 @@ describe('schema version in a session', () => {
 	it('leaves a room of another version alone and reports it once', async () => {
 		const room = newRoom();
 		const a = room.join('Ada', await createVsdx());
-		await wait();
+		await published(a);
 		a.session.doc.getMap('visio:meta').set('v', 1);
 		const b = room.join('Bob', (await editVsdx(await createVsdx(), [rect('1', 1)])).bytes);
 		await until(() => b.errors.length > 0, 'version error');
 		expect(b.errors[0]).toBeInstanceOf(SchemaVersionError);
 		const cells = b.session.doc.getMap('visio:cells').size;
 		await b.side.edit(rect('2', 2));
-		await wait(100);
+		await b.binding.idle();
 		expect(b.errors).toHaveLength(1);
 		expect(b.session.doc.getMap('visio:cells').size).toBe(cells);
 		expect(b.session.doc.getMap('visio:meta').get('v')).toBe(1);

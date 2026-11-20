@@ -5,6 +5,7 @@ import { type CollabSession, createCollabSession } from '../../collab/session';
 import { transportProvider } from '../../collab/transport-provider';
 import { type VisioEdit, createVsdx, editVsdx, parseVsdx } from '../index';
 import { type DrawingBinding, type DrawingEditor, bindDrawingSession } from './bind';
+import { published, settle, until } from './test-support/peers';
 
 const open: CollabSession<object>[] = [];
 const bindings: DrawingBinding[] = [];
@@ -12,12 +13,6 @@ afterEach(() => {
 	for (const binding of bindings.splice(0)) binding.dispose();
 	for (const session of open.splice(0)) session.destroy();
 });
-
-const wait = (ms = 30) => new Promise((resolve) => setTimeout(resolve, ms));
-const until = async (check: () => boolean | Promise<boolean>) => {
-	for (let i = 0; i < 200 && !(await check()); i++) await wait(10);
-	expect(await check()).toBe(true);
-};
 
 /** An editor over package bytes: edits go through the real VSDX writer. */
 function makeEditor(initial: Uint8Array | undefined) {
@@ -102,7 +97,7 @@ async function pair() {
 	const hub = createMemoryHub();
 	const a = join(hub, 'Ada', await createVsdx());
 	await a.side.edit(rect('1', 1), rect('2', 3));
-	await wait();
+	await published(a);
 	const b = join(hub, 'Bob', await createVsdx({ width: 4 }));
 	await until(async () => (await b.side.model()).pages[0]!.shapes.length === 2);
 	return { hub, a, b };
@@ -129,9 +124,7 @@ describe('bindDrawingSession', () => {
 	it('resolves two edits of one shape to the same value on both peers', async () => {
 		const { a, b } = await pair();
 		await Promise.all([a.side.edit(move('1', 5)), b.side.edit(move('1', 8))]);
-		await wait(150);
-		await a.binding.idle();
-		await b.binding.idle();
+		await settle(a, b);
 		const [pa, pb] = [await pins(a), await pins(b)];
 		expect(pa).toEqual(pb);
 		expect([5, 8]).toContain(pa[0]);
@@ -145,7 +138,7 @@ describe('bindDrawingSession', () => {
 			b.side.edit(move('1', 6)),
 		]);
 		await until(async () => (await ids(a)).join() === '2' && (await ids(b)).join() === '2');
-		await wait(100);
+		await settle(a, b);
 		expect(await ids(a)).toEqual(['2']);
 		expect(await ids(b)).toEqual(['2']);
 	});
@@ -200,8 +193,11 @@ describe('bindDrawingSession', () => {
 		});
 		open.push(session);
 		const side = makeEditor(await createVsdx());
-		bindings.push(bindDrawingSession(session, side.editor, { seed: false }));
-		await wait(60);
+		const binding = bindDrawingSession(session, side.editor, { seed: false });
+		bindings.push(binding);
+		// Once the room is writable the binding has settled; a seed would be running by then.
+		await until(() => session.canWrite(), 'ready');
+		await binding.idle();
 		expect(session.doc.getMap('visio:pages').size).toBe(0);
 	});
 });

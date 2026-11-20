@@ -1,5 +1,9 @@
+// @vitest-fresh-modules: the lazy layout library must not have loaded when the first test runs,
+// so this file gets a module registry of its own instead of resetting a shared one.
 import type { PptxElement } from 'ooxml-core/pptx';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+
+import { buildRibbonGallery } from './gallery-registry';
 
 const smartArt = {
 	id: 'sa1',
@@ -16,19 +20,8 @@ const smartArt = {
 	},
 } as unknown as PptxElement;
 
-/** A fresh copy of the gallery registry, so the lazy layout library has not loaded yet. */
-async function freshRegistry() {
-	vi.resetModules();
-	return import('./gallery-registry');
-}
-
 describe('Layouts gallery before the lazy layout library has loaded', () => {
-	beforeEach(() => {
-		vi.resetModules();
-	});
-
 	it('lists only the families and hands out a promise for the named layouts', async () => {
-		const { buildRibbonGallery } = await freshRegistry();
 		const first = buildRibbonGallery('smartArtLayouts', { element: smartArt });
 		expect(first.sections.map((section) => section.id)).toEqual(['layouts']);
 		expect(first.ready).toBeInstanceOf(Promise);
@@ -42,7 +35,6 @@ describe('Layouts gallery before the lazy layout library has loaded', () => {
 	});
 
 	it('offers no promise once the library is available', async () => {
-		const { buildRibbonGallery } = await freshRegistry();
 		await buildRibbonGallery('smartArtLayouts', { element: smartArt }).ready;
 		expect(buildRibbonGallery('smartArtLayouts', { element: smartArt }).ready).toBeUndefined();
 	});
