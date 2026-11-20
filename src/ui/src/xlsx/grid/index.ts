@@ -48,7 +48,14 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	const drawings = new DrawingLayer(view);
 	const list = new ValidationList(view, () => editor.focus());
 	const filters = new FilterButtons(view, () => editor.focus());
-	const a11y = new GridA11y(view, sink);
+	const a11y = new GridA11y(view, sink, () => editor.editing);
+	// Entering or leaving edit mode moves assistive technology between the editor and the cell.
+	let wasEditing = false;
+	const offEditing = editor.bridge.onChange((state) => {
+		if (state.editing === wasEditing) return;
+		wasEditing = state.editing;
+		a11y.sync();
+	});
 	const removeRemote = installRemoteSelections(view);
 	const removePageBreaks = installPageBreakPreview(view);
 	const removeSplitBars = installSplitBars(view);
@@ -155,7 +162,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		else ctx.selection.set(selectCell(index, sheet, { row: 0, col: 0 }));
 	};
 	const onSelection = (next: Selection) => {
-		a11y.update(next, editor.editing);
+		a11y.update(next);
 		view.schedule();
 		ctx.requestRender();
 	};
@@ -174,7 +181,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			view.rebuild();
 			if (ctx.selection.get().sheet !== view.sheetIndex() || !workbook) restoreSelection();
 			// The selection may have moved before the view did; describe the cell on this sheet.
-			else a11y.update(ctx.selection.get(), false);
+			else a11y.update(ctx.selection.get());
 			const top = sheet?.view.topLeft;
 			if (top) view.showTopLeft(top);
 			return;
@@ -225,10 +232,12 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 	};
 	ctx.attachGrid(controller);
 	if (ctx.selection.get().sheet !== view.sheetIndex()) restoreSelection();
-	a11y.update(ctx.selection.get(), false);
+	a11y.update(ctx.selection.get());
+	a11y.sync();
 
 	return () => {
 		offSelection();
+		offEditing();
 		offModel();
 		resize?.disconnect();
 		sink.removeEventListener('keydown', onKey);

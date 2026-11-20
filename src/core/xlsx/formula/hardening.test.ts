@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { hasNestedQuantifier } from './functions/text-regex';
+import { createCalcEngine } from './engine';
 import { compileWildcard } from './functions/wildcard';
 import { book, calc, E, engine, get } from './test-helpers';
-import { Matrix, resetArrayBudget } from './values';
+import { CalculationStopped, MAX_STORED_CELLS, RecalcLimits } from './recalc-limits';
+import { chargeWork, Matrix, MAX_FORMULA_WORK, resetCalcBudget, withFormulaBudget } from './values';
 
 describe('defined name work limits', () => {
 	it('evaluates a 31-level doubling chain quickly', () => {
@@ -61,28 +62,123 @@ describe('wildcards without backtracking', () => {
 	});
 });
 
-describe('regex function limits', () => {
-	it('rejects nested quantifiers and long patterns', () => {
-		expect(hasNestedQuantifier('(a+)+')).toBe(true);
-		expect(hasNestedQuantifier('(a*)*')).toBe(true);
-		expect(hasNestedQuantifier('(a|aa)+')).toBe(true);
-		expect(hasNestedQuantifier('((a+)b)*')).toBe(true);
-		expect(hasNestedQuantifier('(ab)+c*')).toBe(false);
-		expect(hasNestedQuantifier('[(a+)+]')).toBe(false);
-		expect(calc('REGEXTEST(A1,"(a+)+$")', { A1: `${'a'.repeat(40)}!` })).toEqual(E.VALUE);
-		expect(calc('REGEXTEST("abc",REPT("a",1001))')).toEqual(E.VALUE);
-		expect(calc('REGEXTEST("abc","b+")')).toBe(true);
-	});
-});
-
-describe('total array budget', () => {
-	it('fails once a recalculation has built too many cells', () => {
-		resetArrayBudget();
+describe('formula array budget', () => {
+	it('fails once a formula has built too many cells', () => {
+		resetCalcBudget();
 		try {
 			for (let i = 0; i < 4; i++) Matrix.build(4000, 3000, () => 0);
 			expect(() => Matrix.build(4000, 3000, () => 0)).toThrow();
 		} finally {
-			resetArrayBudget();
+			resetCalcBudget();
 		}
+	});
+});
+
+describe('formula work and text budget', () => {
+	it('stops a cubic matrix product, elimination and text growth with #NUM!', () => {
+		expect(calc('SUM(MMULT(SEQUENCE(1500,1500),SEQUENCE(1500,1500)))')).toEqual(E.NUM);
+		expect(calc('MDETERM(SEQUENCE(1000,1000))')).toEqual(E.NUM);
+		expect(calc('SUM(LEN(MAKEARRAY(2000,2000,LAMBDA(r,c,REPT("a",32767)&r&c))))')).toEqual(E.NUM);
+	});
+
+	it('still computes work of an ordinary size', () => {
+		expect(calc('SUM(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))')).toBe(
+			calc('SUMPRODUCT(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))'),
+		);
+		expect(calc('REDUCE(0,SEQUENCE(300,300),LAMBDA(a,b,a+b))')).toBe(4050045000);
+		expect(calc('LEN(CONCAT(MAKEARRAY(100,100,LAMBDA(r,c,REPT("a",3)))))')).toBe(30000);
+	});
+
+	it('gives every formula its own budget, so a refused formula never refuses the next', () => {
+		const wb = book({
+			A1: '=SUM(MMULT(SEQUENCE(1500,1500),SEQUENCE(1500,1500)))',
+			A2: '=SUM(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))',
+			A4: '=REDUCE(0,SEQUENCE(300,300),LAMBDA(a,b,a+b))',
+		});
+		engine(wb).recalculateAll();
+		expect(get(wb, 'A1')).toEqual(E.NUM);
+		expect(get(wb, 'A2')).toBe(calc('SUMPRODUCT(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))'));
+		expect(get(wb, 'A4')).toBe(4050045000);
+	});
+
+	it('keeps what a formula has left while a formula it reads is computed', () => {
+		withFormulaBudget(() => {
+			chargeWork(MAX_FORMULA_WORK - 10);
+			withFormulaBudget(() => chargeWork(MAX_FORMULA_WORK - 10));
+			expect(() => chargeWork(20)).toThrow();
+		});
+		expect(() => chargeWork(MAX_FORMULA_WORK - 10)).not.toThrow();
+		resetCalcBudget();
+	});
+
+	it('gives every recalculation a fresh budget', () => {
+		const wb = book({ A1: '=SUM(MMULT(SEQUENCE(500,500),SEQUENCE(500,500)))' });
+		const calcEngine = engine(wb);
+		for (let i = 0; i < 6; i++) {
+			calcEngine.recalculateAll();
+			expect(typeof get(wb, 'A1')).toBe('number');
+		}
+	});
+});
+
+describe('scans an array of lookups or criteria repeats', () => {
+	const spill = (formula: string, n: number) => {
+		const wb = book({ A1: `=SEQUENCE(${n})`, C1: `=${formula}` });
+		engine(wb).recalculateAll();
+		return get(wb, 'C1');
+	};
+
+	it('stops a criteria or nearest-match scan repeated over a long array', () => {
+		expect(spill('SUM(COUNTIF(A1#,">"&SEQUENCE(20000)))', 20000)).toEqual(E.NUM);
+		expect(spill('SUM(XLOOKUP(SEQUENCE(20000)-0.5,A1#,A1#,,1))', 20000)).toEqual(E.NUM);
+	});
+
+	it('still answers short repeated scans and indexed exact lookups', () => {
+		expect(spill('SUM(COUNTIF(A1#,">"&SEQUENCE(200)))', 200)).toBe(19900);
+		expect(spill('SUM(XMATCH(SEQUENCE(20000),A1#))', 20000)).toBe(200010000);
+		expect(spill('SUM(MATCH(SEQUENCE(20000)+0.5,A1#,1))', 20000)).toBe(200010000);
+	});
+});
+
+describe('recalculation limits', () => {
+	it('stops a recalculation whose results would hold too many cells or too much text', () => {
+		const limits = new RecalcLimits(undefined);
+		limits.begin();
+		const cells = Matrix.padded(new Matrix([[0]]), 10_000, 4_000, 0);
+		limits.store(cells, 40_000_000);
+		expect(() => limits.store(cells, 40_000_000)).toThrow(CalculationStopped);
+		limits.begin();
+		limits.store(cells, MAX_STORED_CELLS);
+		limits.begin();
+		const text = Matrix.padded(new Matrix([['x']]), 1_000_000, 300, 'xx');
+		expect(() => limits.store(text, 1)).toThrow(CalculationStopped);
+	});
+
+	it('stops, rather than failing the formula, at one that needs more work than a cap', () => {
+		const wb = book({ A1: '=1+1', A2: '=SUM(MMULT(SEQUENCE(300,300),SEQUENCE(300,300)))' });
+		const capped = createCalcEngine(wb, { workCap: 1_000_000 });
+		capped.recalculateAll();
+		expect(capped.stopped).toBe('work');
+		expect(get(wb, 'A2')).toBeNull();
+		const full = createCalcEngine(wb);
+		full.recalculateAll();
+		expect(full.stopped).toBeUndefined();
+		expect(typeof get(wb, 'A2')).toBe('number');
+	});
+
+	it('stops at the time limit between formulas and computes everything next time', () => {
+		const cells: Record<string, string> = {};
+		for (let row = 1; row <= 200; row++) cells[`A${row}`] = '=ROW()';
+		const wb = book(cells);
+		const limited = createCalcEngine(wb, { timeLimitMs: 0 });
+		limited.recalculateAll();
+		expect(limited.stopped).toBe('time');
+		expect(get(wb, 'A200')).toBeNull();
+		limited.recalculateAll();
+		expect(limited.stopped).toBe('time');
+		const unlimited = createCalcEngine(wb);
+		unlimited.recalculateAll();
+		expect(unlimited.stopped).toBeUndefined();
+		expect(get(wb, 'A200')).toBe(200);
 	});
 });

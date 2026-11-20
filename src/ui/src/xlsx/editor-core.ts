@@ -7,6 +7,7 @@ import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
  */
 import {
 	approximateMeasure,
+	calculateOnOpen,
 	createEditSession,
 	type EditSession,
 	type FontView,
@@ -266,8 +267,15 @@ export class EditorCore {
 		this.requestRender();
 	}
 
-	/** Replaces the workbook (load, new, template, property), with a fresh edit session. */
-	setWorkbook(workbook: Workbook | undefined): void {
+	/**
+	 * Replaces the workbook (load, new, template, property), with a fresh edit session. The
+	 * calculation the workbook asks for on open runs first, unless the caller already ran it
+	 * (`calculate` false: a file opened through the workbook worker).
+	 */
+	setWorkbook(
+		workbook: Workbook | undefined,
+		{ calculate = true }: { calculate?: boolean } = {},
+	): void {
 		this.loading = false;
 		// The room is bound to the old edit session: leave it, and rejoin below only when the host
 		// asked for sharing declaratively (the `collaboration` property).
@@ -279,14 +287,14 @@ export class EditorCore {
 		this.stopSession?.();
 		this.stopSession = undefined;
 		this.workbook = workbook;
-		this.session = workbook ? this.createSession(workbook) : undefined;
-		if (this.session && workbook?.fullCalcOnLoad && this.session.autoRecalc()) {
+		if (workbook && calculate) {
 			try {
-				this.session.calc.recalculateAll();
+				calculateOnOpen(workbook);
 			} catch (error) {
 				console.error(error);
 			}
 		}
+		this.session = workbook ? this.createSession(workbook) : undefined;
 		this.stopSession = this.session?.onChange((change) => this.onSessionChange(change));
 		this.calcPreparation.start(this.session);
 		const sheets = workbook?.sheets.length ?? 0;

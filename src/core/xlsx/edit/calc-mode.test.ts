@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getCell } from '../cells';
+import { getCell, putCell } from '../cells';
 import { cellView } from '../layout/cell-view';
 import { loadXlsx } from '../read/load';
 import { createWorkbook } from '../workbook';
 import { saveXlsx } from '../write/save';
+import { calculateOnOpen } from './calc-mode';
 import { createEditSession } from './session';
 
 const setup = () => {
@@ -94,5 +95,36 @@ describe('show formulas', () => {
 		expect(back.sheets[0]?.view.showFormulas).toBe(true);
 		s.setSheetView(0, { showFormulas: false });
 		expect(cellView(wb, 0, 0, 1).text).toBe('20');
+	});
+});
+
+describe('calculateOnOpen', () => {
+	it('runs the full calculation a workbook asks for on open, unless it calculates manually', () => {
+		const wb = createWorkbook({ sheets: ['S'] });
+		const sheet = wb.sheets[0]!;
+		putCell(sheet, 0, 0, { value: 2 });
+		putCell(sheet, 0, 1, { value: 99, formula: 'A1*3' });
+		expect(calculateOnOpen(wb)).toEqual({ ran: false });
+		expect(getCell(sheet, 0, 1)?.value).toBe(99);
+		wb.fullCalcOnLoad = true;
+		wb.calcMode = 'manual';
+		expect(calculateOnOpen(wb)).toEqual({ ran: false });
+		expect(getCell(sheet, 0, 1)?.value).toBe(99);
+		delete wb.calcMode;
+		expect(calculateOnOpen(wb)).toEqual({ ran: true });
+		expect(getCell(sheet, 0, 1)?.value).toBe(6);
+	});
+
+	it('stops at its time limit and leaves the formulas it did not reach as saved', () => {
+		const wb = createWorkbook({ sheets: ['S'] });
+		const sheet = wb.sheets[0]!;
+		for (let row = 0; row < 500; row++) putCell(sheet, row, 0, { value: -1, formula: 'ROW()' });
+		wb.fullCalcOnLoad = true;
+		expect(calculateOnOpen(wb, { timeLimitMs: 0 })).toEqual({ ran: true, stopped: 'time' });
+		const values = [...Array(500).keys()].map((row) => getCell(sheet, row, 0)?.value);
+		expect(values).toContain(-1);
+		expect(values.filter((v) => v === -1).length).toBeGreaterThan(400);
+		expect(calculateOnOpen(wb)).toEqual({ ran: true });
+		expect(getCell(sheet, 499, 0)?.value).toBe(500);
 	});
 });

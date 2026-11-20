@@ -57,13 +57,18 @@ const POOL: Scalar[] = [...NUMBERS, ...TEXTS, ...PATTERNS, true, false, null, E.
 const RAW_POOL: Scalar[] = [...POOL, Number.NaN];
 
 describe('ExactSearch', () => {
-	it.each([false, true])('agrees with a scan and reads nothing more (reverse %s)', (reverse) => {
+	it.each([
+		[false, 'chars'],
+		[true, 'chars'],
+		[false, 'linguistic'],
+		[true, 'linguistic'],
+	] as const)('agrees with a scan and reads nothing more (reverse %s, %s)', (reverse, rule) => {
 		for (let trial = 0; trial < 300; trial++) {
 			const rng = random(trial);
 			const values = Array.from({ length: 1 + rng.int(120) }, () => rng.pick(RAW_POOL));
 			const scanned = new Set<number>();
 			const read = new Set<number>();
-			const search = new ExactSearch(values.length, reverse);
+			const search = new ExactSearch(values.length, reverse, rule);
 			for (let i = 0; i < 40; i++) {
 				const lookup = rng.pick(RAW_POOL);
 				const expected = findExact(
@@ -76,6 +81,7 @@ describe('ExactSearch', () => {
 					},
 					lookup,
 					false,
+					rule,
 					reverse,
 				);
 				const found = search.find(lookup, (at) => {
@@ -89,7 +95,7 @@ describe('ExactSearch', () => {
 	});
 
 	it('repeats a read that unwound, so no position is skipped', () => {
-		const search = new ExactSearch(3, false);
+		const search = new ExactSearch(3, false, 'chars');
 		let unwind = true;
 		const read = (at: number): Scalar => {
 			if (at === 1 && unwind) {

@@ -204,6 +204,51 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Calculation
 
+- [x] **P1** Text compares as Excel's does. The comparison operators, criteria (COUNTIF and the
+      other IF and IFS functions), XMATCH, XLOOKUP, UNIQUE, SORT and SWITCH compare
+      linguistically: case-insensitive, accent-, width- and kana-sensitive, "ß" equal to "ss",
+      "æ" and "œ" to their letters, ligatures expanded, final sigma equal to sigma, hyphens and
+      apostrophes only breaking ties, symbols before digits before letters. MATCH, VLOOKUP,
+      HLOOKUP, wildcards and SEARCH compare each character by its simple case folding
+      (`src/core/xlsx/formula/text-compare.ts`). Evidence: `excel-p4-cases.txt`, recorded from
+      Excel 16 through hidden COM (`excel-cases.ps1 -Corpus excel-p4`), run by
+      `excel-parity.test.ts`. Measured with an English locale only.
+- [x] **P1** Exact lookups (MATCH, XMATCH, VLOOKUP, HLOOKUP, XLOOKUP) compare numbers exactly, so
+      `MATCH(0.3,...)` skips `0.1+0.2` while `=`, COUNTIF and SWITCH still find them equal; the
+      General display of `0.1+0.2` is `0.3`. Evidence: the same corpus.
+- [x] **P2** In criteria, `~` is literal unless the criterion holds `*` or `?`; MATCH and SEARCH
+      always read it as an escape, and a trailing `~` escapes nothing. A blank criterion cell
+      matches zeros, not blanks, and DCOUNTA counts empty text. Evidence: the same corpus.
+- [x] **P2** Text limits: `&` and CONCATENATE cut text at 32,767 characters, CONCAT, TEXTJOIN
+      and ARRAYTOTEXT return `#CALC!` past it, TEXT refuses formats and results over 255
+      characters, BASE pads to at most 255 digits, LOWER keeps capital sharp s. Evidence: the same
+      corpus.
+- [x] **P0** A small workbook can no longer hang or crash the editor when it opens: each
+      formula has a work budget priced from measured cost (matrix products, LAMBDA calls, sorting,
+      pattern matching, scans an array of lookups or criteria repeats; about three seconds), a text
+      budget and an array budget, past which that formula alone is `#NUM!`
+      (`src/core/xlsx/formula/values.ts`); a recalculation stops between formulas, keeping the
+      previous values, at an optional time limit or when its results would hold too much
+      (`recalc-limits.ts`). The Excel editor reads files on the page, calculates on the page as long as
+      reading took, and leaves a slower calculation on open to a worker with a ten-second limit,
+      receiving only the cells it wrote
+      (`src/ui/src/xlsx/workbook-opener.ts`). Evidence: `hardening.test.ts`,
+      `calc-results.test.ts`, `workbook-opener.test.ts`.
+- [x] **P1** REGEXTEST, REGEXEXTRACT and REGEXREPLACE run on the engine's own matcher
+      (`src/core/xlsx/formula/regex/`), so they accept nested quantifiers such as `(a+)+` as Excel
+      does, and a pattern that would run past the formula's work budget is `#NUM!` instead of
+      hanging. Syntax is still JavaScript's, not PCRE2's, and scans of a whole 30,000-character text
+      are 3 to 10 times slower than the browser's native matcher (under 1.5 ms a call). Evidence:
+      `regex/differential.test.ts` (3,000 random patterns against the browser's matcher).
+- [ ] **P2** Engine limits Excel does not have: a formula's work budget makes MMULT of two
+      arrays larger than about 1,400 by 1,400, and MDETERM or MINVERSE larger than about 840 by
+      840, `#NUM!`; a LAMBDA recursing past the JavaScript stack (about 700 levels) is `#NUM!`
+      where Excel still allows 1,000 (`excel-p4-recursion-cases.txt`). Only the calculation on
+      open has a time limit: a recalculation after an edit of a workbook with many slow formulas
+      (each within its budget) still runs to the end on the page.
+- [ ] **P2** Data Sort, the AutoFilter value list and Find still compare text with the browser's
+      accent-insensitive collation (`src/core/xlsx/edit/sort-keys.ts`, `filter-menu.ts`), not the
+      linguistic rule formulas use; Excel's behaviour there has not been measured.
 - [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented
       (no external service needed).
 - [x] **P2** FILTERXML evaluates XPath locally and spills selected values, with Excel's namespace,
@@ -276,9 +321,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Fill-handle drag autofill exists in `grid/grid-pointer.ts`. The browser regression
       `e2e/xlsx/fill-handle.spec.ts` drags a two-cell numeric series to five cells and checks one-step
       undo and redo in all six bindings.
-- [ ] **P2** The grid exposes no rows or cells to assistive technology, only the active cell's
-      input (`grid/grid-a11y.ts`). `e2e/a11y/tree.spec.ts` checks for grid cells as an expected
-      failure, and the axe baseline allows its missing row parents until they are fixed.
+- [x] **P2** The grid exposes the shown window to assistive technology as rows of column headers,
+      row headers and grid cells whose row and column indices are the sheet's own, as Excel reports
+      them (B2 is row 2, column 2; the headers take no index) (`grid/grid-a11y.ts`, the window and the
+      cell description in `src/core/xlsx/layout/accessibility.ts`); the active cell is the focus
+      sink's active descendant, and its label names the table column, formula and comment and
+      follows edits made without moving the selection. Pictures are named by their alt text.
+      `grid/grid-a11y.test.ts`, `e2e/xlsx/grid-a11y.spec.ts` and `e2e/a11y/tree.spec.ts` cover it,
+      and the axe baseline no longer allows missing rows, row parents or unnamed images in Excel.
+      Excel's own screen-reader output was not compared.
 
 ### Ribbon
 

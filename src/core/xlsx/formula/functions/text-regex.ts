@@ -1,75 +1,94 @@
-import { checkArraySize, ERR, fail, Matrix, type Value } from '../values';
+import { compileRegex, groupText, type Match, matches, type Program, search } from '../regex';
+import { chargeText, checkArraySize, ERR, fail, Matrix, type Value } from '../values';
 import { int, optNum, spec, str } from './helpers';
 import type { FunctionSpec } from './types';
 
 const C = 'Text';
+const MAX_PATTERN_LENGTH = 1000;
 
 /**
- * A JavaScript regular expression for an Excel pattern. Excel uses PCRE2, so patterns that rely on
- * PCRE-only syntax (possessive quantifiers, recursion, inline comments) are `#VALUE!` here.
+ * A pattern in JavaScript RegExp syntax with the `u` flag (`i` for case_sensitivity 1). Excel uses
+ * PCRE2, so PCRE-only syntax (possessive quantifiers, recursion, inline comments) is `#VALUE!`.
+ * The patterns run on this engine's own matcher, which tries each (instruction, position) state
+ * at most once and charges every step to the formula's work budget, so no pattern can hang a
+ * recalculation: one that would run too long is `#NUM!`.
  */
-function compile(pattern: string, caseMode: number, global: boolean): RegExp {
+function compile(pattern: string, caseMode: number): Program {
 	if (caseMode !== 0 && caseMode !== 1) fail(ERR.VALUE);
-	if (pattern.length > MAX_PATTERN_LENGTH || hasNestedQuantifier(pattern)) fail(ERR.VALUE);
+	if (pattern.length > MAX_PATTERN_LENGTH) fail(ERR.VALUE);
 	try {
-		return new RegExp(pattern, `${global ? 'g' : ''}${caseMode === 1 ? 'i' : ''}u`);
+		return compileRegex(pattern, caseMode === 1);
 	} catch {
 		return fail(ERR.VALUE);
 	}
 }
 
-const MAX_PATTERN_LENGTH = 1000;
-const MAX_INPUT_LENGTH = 100_000;
-
-/** The input is bounded too, so even a quadratic pattern stays fast. */
-function limited(text: string): string {
-	return text.length > MAX_INPUT_LENGTH ? fail(ERR.VALUE) : text;
-}
-
-const REPEAT = /^\{\d+,\d*\}/;
-
-/**
- * Limitation: patterns run on the JavaScript backtracking matcher, so patterns that can backtrack
- * exponentially are refused with `#VALUE!` instead of hanging a recalculation. A pattern is
- * refused when it is longer than 1,000 characters, or when a group is repeated (`*`, `+`,
- * `{n,}`, `{n,m}`) and holds another quantifier or an alternation, such as `(a+)+`, `(a*)*` or
- * `(a|aa)+`. Excel (PCRE2) accepts these; rewrite them without the nesting.
- */
-export function hasNestedQuantifier(pattern: string): boolean {
-	// One entry per open group: whether it holds a quantifier, and whether it holds a `|`.
-	const stack: { quantified: boolean; alternation: boolean }[] = [];
-	let inClass = false;
-	for (let i = 0; i < pattern.length; i++) {
-		const ch = pattern[i];
-		if (ch === '\\') {
-			i++;
-			continue;
-		}
-		if (inClass) {
-			if (ch === ']') inClass = false;
-			continue;
-		}
-		const top = stack[stack.length - 1];
-		if (ch === '[') inClass = true;
-		else if (ch === '(') stack.push({ quantified: false, alternation: false });
-		else if (ch === '|') {
-			if (top) top.alternation = true;
-		} else if (ch === ')') {
-			const group = stack.pop();
-			const next = pattern[i + 1];
-			const repeats =
-				next === '*' || next === '+' || (next === '{' && REPEAT.test(pattern.slice(i + 1)));
-			if (repeats && group && (group.quantified || group.alternation)) return true;
-			const parent = stack[stack.length - 1];
-			if (parent && (repeats || next === '?' || group?.quantified)) parent.quantified = true;
-		} else if (top && (ch === '*' || ch === '+' || (ch === '{' && REPEAT.test(pattern.slice(i))))) {
-			top.quantified = true;
-		}
-	}
-	return false;
-}
-
 const caseMode = (args: Value[], index: number): number => optNum(args, index, 0);
+
+/** The replacement for one match, with `$$`, `$&`, `` $` ``, `$'`, `$n`, `$nn` and `$<name>`. */
+function substitute(template: string, text: string, match: Match, program: Program): string {
+	if (!template.includes('$')) return template;
+	const groups = program.groupCount;
+	let out = '';
+	for (let i = 0; i < template.length; i++) {
+		const ch = template[i] as string;
+		const next = template[i + 1];
+		if (ch !== '$' || next === undefined) {
+			out += ch;
+			continue;
+		}
+		if (next === '$' || next === '&' || next === '`' || next === "'") {
+			i++;
+			if (next === '$') out += '$';
+			else if (next === '&') out += text.slice(match[0], match[1]);
+			else if (next === '`') out += text.slice(0, match[0]);
+			else out += text.slice(match[1]);
+			continue;
+		}
+		if (next >= '0' && next <= '9') {
+			let index = Number(next);
+			let digits = 1;
+			const second = template[i + 2] ?? '';
+			const two = index * 10 + Number(second);
+			if (second >= '0' && second <= '9' && two >= 1 && two <= groups) {
+				index = two;
+				digits = 2;
+			}
+			if (index >= 1 && index <= groups) {
+				out += groupText(text, match, index) ?? '';
+				i += digits;
+			} else out += '$';
+			continue;
+		}
+		const close = next === '<' && program.names.size ? template.indexOf('>', i + 2) : -1;
+		if (close < 0) {
+			out += '$';
+			continue;
+		}
+		const indexes = program.names.get(template.slice(i + 2, close)) ?? [];
+		const index = indexes.find((g) => groupText(text, match, g) !== undefined);
+		out += index === undefined ? '' : (groupText(text, match, index) ?? '');
+		i = close;
+	}
+	return out;
+}
+
+/** `text` with `picked` matches replaced, charging the text it builds. */
+function replaceMatches(
+	text: string,
+	picked: Iterable<Match>,
+	replacement: string,
+	program: Program,
+): string {
+	let out = '';
+	let last = 0;
+	for (const match of picked) {
+		out += chargeText(text.slice(last, match[0]));
+		out += chargeText(substitute(replacement, text, match, program));
+		last = match[1] as number;
+	}
+	return out + chargeText(text.slice(last));
+}
 
 /** RFC 3986 unreserved characters stay; everything else is percent-encoded as UTF-8. */
 export function encodeUrl(text: string): string {
@@ -90,7 +109,7 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		'Whether any part of the text matches the pattern.',
 		2,
 		3,
-		(args) => compile(str(args[1]), caseMode(args, 2), false).test(limited(str(args[0]))),
+		(args) => search(compile(str(args[1]), caseMode(args, 2)), str(args[0]), 0) !== null,
 	),
 	spec(
 		'REGEXEXTRACT',
@@ -102,22 +121,23 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		(args) => {
 			const mode = optNum(args, 2, 0);
 			if (mode !== 0 && mode !== 1 && mode !== 2) fail(ERR.VALUE);
-			const regex = compile(str(args[1]), caseMode(args, 3), mode === 1);
-			const text = limited(str(args[0]));
+			const program = compile(str(args[1]), caseMode(args, 3));
+			const text = str(args[0]);
 			if (mode === 1) {
-				const matches: string[] = [];
-				// matchAll advances after zero-length matches, including Unicode code points.
-				for (const match of text.matchAll(regex)) {
-					checkArraySize(matches.length + 1, 1);
-					matches.push(match[0]);
+				const found: string[] = [];
+				for (const match of matches(program, text)) {
+					checkArraySize(found.length + 1, 1);
+					found.push(text.slice(match[0], match[1]));
 				}
-				return matches.length ? new Matrix(matches.map((match) => [match])) : fail(ERR.NA);
+				return found.length ? new Matrix(found.map((match) => [match])) : fail(ERR.NA);
 			}
-			const match = regex.exec(text);
-			if (!match) fail(ERR.NA);
-			if (mode === 0) return match[0];
-			if (match.length === 1) fail(ERR.VALUE);
-			return new Matrix([match.slice(1).map((group) => group ?? '')]);
+			const match = search(program, text, 0) ?? fail(ERR.NA);
+			if (mode === 0) return text.slice(match[0], match[1]);
+			if (program.groupCount === 0) fail(ERR.VALUE);
+			const row = Array.from({ length: program.groupCount }, (_, g) =>
+				groupText(text, match, g + 1),
+			);
+			return new Matrix([row.map((group) => group ?? '')]);
 		},
 	),
 	spec(
@@ -128,19 +148,19 @@ export const TEXT_REGEX_FUNCTIONS: FunctionSpec[] = [
 		3,
 		5,
 		(args) => {
-			const text = limited(str(args[0]));
-			const regex = compile(str(args[1]), caseMode(args, 4), true);
+			const text = str(args[0]);
+			const program = compile(str(args[1]), caseMode(args, 4));
 			const replacement = str(args[2]);
 			const occurrence = args.length > 3 && args[3] !== null ? int(args[3]) : 0;
-			if (occurrence === 0) return text.replace(regex, replacement);
-			const matches = [...text.matchAll(regex)];
-			const picked = occurrence > 0 ? matches[occurrence - 1] : matches.at(occurrence);
-			if (!picked || picked.index === undefined) return text;
-			return (
-				text.slice(0, picked.index) +
-				picked[0].replace(new RegExp(regex.source, regex.flags.replace('g', '')), replacement) +
-				text.slice(picked.index + picked[0].length)
-			);
+			if (occurrence === 0)
+				return replaceMatches(text, matches(program, text), replacement, program);
+			let picked: Match | undefined;
+			if (occurrence > 0) {
+				let seen = 0;
+				for (const match of matches(program, text))
+					if (++seen === occurrence && (picked = match)) break;
+			} else picked = [...matches(program, text)].at(occurrence);
+			return picked ? replaceMatches(text, [picked], replacement, program) : text;
 		},
 	),
 ];
