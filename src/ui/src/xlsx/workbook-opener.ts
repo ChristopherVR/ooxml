@@ -66,13 +66,19 @@ export interface WorkerLike {
 export type WorkerFactory = () => WorkerLike;
 
 export interface OpenLimits {
+	/** How long a new worker may take to start; past it the page calculates instead. */
+	startMs: number;
 	/** How long the worker may take to read the file before its calculation is abandoned. */
 	readMs: number;
 	/** How long the calculation on open may run. */
 	calculateMs: number;
 }
 
-export const DEFAULT_OPEN_LIMITS: OpenLimits = { readMs: 60_000, calculateMs: 10_000 };
+export const DEFAULT_OPEN_LIMITS: OpenLimits = {
+	startMs: 10_000,
+	readMs: 60_000,
+	calculateMs: 10_000,
+};
 
 /**
  * How long past its time limit a calculation may go before the worker is ended: the worker stops
@@ -104,6 +110,8 @@ const PREWARM_IDLE_MS = 120_000;
 class WorkerPool {
 	private idle: WorkerLike | undefined;
 	private idleTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Workers whose script has run (they said `ready`). */
+	private readonly started = new WeakSet<WorkerLike>();
 
 	constructor(private readonly create: WorkerFactory) {}
 
@@ -120,8 +128,19 @@ class WorkerPool {
 		}
 	}
 
+	/** Whether `worker` has started; one still starting says so while it waits. */
+	hasStarted(worker: WorkerLike): boolean {
+		return this.started.has(worker);
+	}
+
+	markStarted(worker: WorkerLike): void {
+		this.started.add(worker);
+	}
+
 	release(worker: WorkerLike, idleMs = IDLE_MS): void {
-		worker.onmessage = null;
+		worker.onmessage = (event) => {
+			if ((event.data as CalculateResponse).kind === 'ready') this.started.add(worker);
+		};
 		worker.onerror = null;
 		if (this.idle) return worker.terminate();
 		this.idle = worker;
@@ -174,7 +193,8 @@ function calculateInWorker(
 			const message = event.data as CalculateResponse;
 			switch (message.kind) {
 				case 'ready':
-					return;
+					pool.markStarted(worker);
+					return arm(limits.readMs);
 				case 'read':
 					return arm(limits.calculateMs + STOP_GRACE_MS);
 				case 'done':
@@ -192,10 +212,12 @@ function calculateInWorker(
 			// The script never ran (a bundler without worker support, a blocked URL) or failed.
 			finish({ kind: 'unavailable' }, true);
 		};
-		arm(limits.readMs);
+		// A script that never starts (blocked without an error event) leaves the page to calculate.
+		if (pool.hasStarted(worker)) arm(limits.readMs);
+		else timer = setTimeout(() => finish({ kind: 'unavailable' }, true), limits.startMs);
 		try {
-			const copy =
-				bytes instanceof Uint8Array ? Uint8Array.from(bytes) : new Uint8Array(bytes.slice(0));
+			// `slice` copies the memory at once; `Uint8Array.from` would visit every byte.
+			const copy = (bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes)).slice();
 			const request: CalculateRequest = {
 				bytes: copy.buffer,
 				timeLimitMs: limits.calculateMs,

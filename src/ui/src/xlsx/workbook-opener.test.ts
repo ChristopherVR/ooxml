@@ -40,7 +40,7 @@ async function calculated(bytes: Uint8Array): Promise<CalculateResponse> {
 	return { kind: 'done', cells: cells! };
 }
 
-const limits = { readMs: 1000, calculateMs: 50 };
+const limits = { startMs: 500, readMs: 1000, calculateMs: 50 };
 const b1 = (workbook: { sheets: { rows: Map<number, Map<number, unknown>> }[] }) =>
 	getCell(workbook.sheets[0] as never, 0, 1)?.value;
 
@@ -156,6 +156,17 @@ describe('workbook opener', () => {
 			expect([b1(workbook), calculated, calculationStopped]).toEqual([6, true, false]);
 			expect(worker.terminate).toHaveBeenCalledOnce();
 		}
+	});
+
+	it('calculates on the page when a new worker never starts', async () => {
+		fakeTimers();
+		const worker = fake();
+		const opened = createWorkbookOpener(() => worker, limits)(await staleBytes(), {});
+		await requested(worker);
+		await vi.advanceTimersByTimeAsync(limits.startMs);
+		const { workbook, calculated } = await opened;
+		expect([b1(workbook), calculated]).toEqual([6, true]);
+		expect(worker.terminate).toHaveBeenCalledOnce();
 	});
 
 	it('calculates on the page without workers', async () => {
