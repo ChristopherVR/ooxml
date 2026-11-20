@@ -20,6 +20,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { bundleSuite } from './bundle-suite.mjs';
 import { buildPwa } from './build-pwa.mjs';
+import { writeReleasePages } from './build-release-notes.mjs';
 import { applyContentSecurityPolicy, assertContentSecurityPolicy } from './csp.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -57,6 +58,8 @@ mkdirSync(out, { recursive: true });
 
 // The launcher goes first: it owns the site root, and no viewer directory name collides with it.
 cpSync(join(ROOT, 'site'), out, { recursive: true });
+// The release posts (docs/releases/*.md) at releases/<name>/; this also drops the page template.
+writeReleasePages(out);
 await bundleSuite(join(out, 'suite.js'));
 // The policy goes in before the PWA build, which copies the shell and hashes every file.
 applyContentSecurityPolicy(out, { base: SITE_BASE });

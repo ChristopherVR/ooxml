@@ -1,0 +1,344 @@
+#!/usr/bin/env node
+/**
+ * build-release-notes.mjs: render each release post in `docs/releases/<name>.md` into the Pages
+ * page `releases/<name>/index.html`, on the template and styles in `site/releases/`.
+ *
+ *   node scripts/build-release-notes.mjs [out]      (out defaults to suite-dist)
+ *
+ * `build-suite.mjs` and `build-pages.mjs` call `writeReleasePages(out)` after copying `site/`.
+ * The post is a GitHub-readable Markdown file; the page reads these parts of it (see the
+ * "Release post" section of docs/pages-design.md for the whole contract):
+ *
+ * - `# Title`, then a paragraph with `**Published:**` (the metadata line, ` | ` between items),
+ *   then optionally an image alone in a paragraph: the hero.
+ * - Everything before the first `##` is the lede. Its first bullet list whose items all open
+ *   with bold text is drawn as the pillar cards.
+ * - Each `##` is a section in the table of contents, with its `###` headings under it.
+ * - `**file.ts**` alone on the line before a fence names the code block; `_Caption._` alone on
+ *   the line after a fence or an image is its caption. A paragraph that starts with
+ *   `Learn more` is the feature's closing link.
+ * - `> [!NOTE]` (TIP, IMPORTANT, WARNING, CAUTION) is a callout.
+ * - `<a id="changes-<area>"></a>` before a `<details>` block marks it as an area's complete list;
+ *   its `<summary>` takes the area's tile and a count of the bullets inside.
+ *
+ * Relative links resolve against the post's folder: pictures are copied next to the page,
+ * anything else in the repository links to it on GitHub.
+ */
+import {
+	copyFileSync,
+	existsSync,
+	mkdirSync,
+	readFileSync,
+	readdirSync,
+	rmSync,
+	writeFileSync,
+} from 'node:fs';
+import { basename, dirname, extname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { LANGUAGE_NAMES, highlight } from './release-highlight.mjs';
+import { mediaResolver } from './release-media.mjs';
+import {
+	escapeHtml,
+	parseBlocks,
+	plainText,
+	renderBlocks,
+	renderInline,
+	slug,
+	slugger,
+} from './release-markdown.mjs';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+export const POSTS_DIR = 'docs/releases';
+export const TEMPLATE = 'site/releases/template.html';
+
+/** The areas of the complete change lists, by the id after `changes-`, with their tiles. */
+export const AREAS = {
+	core: { tile: '', product: 'office' },
+	'ui-mcp': { tile: 'U', product: 'office' },
+	word: { tile: 'W', product: 'word' },
+	excel: { tile: 'X', product: 'excel' },
+	powerpoint: { tile: 'P', product: 'powerpoint' },
+	visio: { tile: 'V', product: 'visio' },
+	openteams: { tile: 'T', product: 'teams' },
+};
+
+export const tile = (area) => {
+	const meta = AREAS[area] ?? AREAS.core;
+	const inner = meta.tile ? escapeHtml(meta.tile) : '<i></i><i></i><i></i><i></i>';
+	return `<span class="tile tile-${meta.product}${meta.tile ? '' : ' tile-symbol'}" aria-hidden="true">${inner}</span>`;
+};
+
+const isOnly = (block, pattern) => block?.type === 'paragraph' && pattern.test(block.text.trim());
+const BOLD_LINE = /^\*\*([^*\n]+)\*\*$/;
+const ITALIC_LINE = /^_([^\n]+)_$|^\*([^*\n]+)\*$/;
+const IMAGE_LINE = /^!\[[^\]]*\]\([^)]*\)$/;
+const IMAGE_PARTS = /^!\[([^\]]*)\]\(\s*([^\s)]+)(?:\s+"[^"]*")?\s*\)$/;
+const STAT = /^\*\*([^*\n]+?):\*\*\s*(\S[^\n]*)$/;
+const isStats = (block) =>
+	block.type === 'paragraph' &&
+	block.text
+		.trim()
+		.split(/\s+·\s+/)
+		.every((part) => STAT.test(part));
+const italicText = (block) => {
+	const m = ITALIC_LINE.exec(block.text.trim());
+	return m[1] ?? m[2];
+};
+
+/** Join the label, code and caption lines (and image and caption) into single blocks. */
+function combine(blocks) {
+	const out = [];
+	for (let i = 0; i < blocks.length; i++) {
+		const block = blocks[i];
+		if (isOnly(block, BOLD_LINE) && blocks[i + 1]?.type === 'code') {
+			const code = { ...blocks[i + 1], file: BOLD_LINE.exec(block.text.trim())[1] };
+			i += 1;
+			if (isOnly(blocks[i + 1], ITALIC_LINE)) code.caption = italicText(blocks[++i]);
+			out.push(code);
+		} else if (block.type === 'code' && isOnly(blocks[i + 1], ITALIC_LINE))
+			out.push({ ...block, caption: italicText(blocks[++i]) });
+		else if (isOnly(block, IMAGE_LINE)) {
+			const figure = { type: 'figure', image: block.text.trim() };
+			if (isOnly(blocks[i + 1], ITALIC_LINE)) figure.caption = italicText(blocks[++i]);
+			if (blocks[i + 1] && isStats(blocks[i + 1])) figure.stats = blocks[++i].text.trim();
+			out.push(figure);
+		} else if (block.type === 'quote') out.push({ ...block, blocks: combine(block.blocks) });
+		else out.push(block);
+	}
+	return out;
+}
+
+/** The page for one post. `link(url, kind)` resolves its URLs; returns the page's HTML. */
+export function renderReleasePage(
+	source,
+	template,
+	{ link = (url) => url, media = (url) => ({ src: link(url, 'img') }) } = {},
+) {
+	const blocks = combine(parseBlocks(source));
+	const take = (index) => blocks.splice(index, 1)[0];
+	const titleAt = blocks.findIndex((b) => b.type === 'heading' && b.level === 1);
+	const title = titleAt >= 0 ? plainText(take(titleAt).text) : 'Release notes';
+	const start = Math.max(titleAt, 0);
+	const meta = isOnly(blocks[start], /\*\*Published:\*\*/) ? take(start) : null;
+	const hero = blocks[start]?.type === 'figure' ? take(start) : null;
+
+	const nextSlug = slugger();
+	const ctx = { link, slug: nextSlug };
+	const toc = [];
+	let openDetails = 0;
+	let area = null;
+	let pillarsDone = false;
+	let inLede = true;
+	const parts = ['<div class="post-lede">'];
+
+	const renderCode = (block) => {
+		const lang = LANGUAGE_NAMES[block.lang] ?? (block.lang ? block.lang.toUpperCase() : '');
+		const name = block.file ?? lang ?? '';
+		return [
+			'<figure class="code reveal">',
+			'<div class="code-bar">',
+			`<span class="code-file">${escapeHtml(name || 'Code')}</span>`,
+			block.file && lang ? `<span class="code-lang">${escapeHtml(lang)}</span>` : '',
+			'<button class="code-copy" type="button" hidden>Copy</button>',
+			'</div>',
+			`<pre tabindex="0"><code${block.lang ? ` class="language-${escapeHtml(block.lang)}"` : ''}>${highlight(block.text, block.lang)}</code></pre>`,
+			block.caption ? `<figcaption>${renderInline(block.caption, ctx)}</figcaption>` : '',
+			'</figure>',
+		].join('');
+	};
+	const renderFigure = (block, hero = false) => {
+		const [, alt = '', url = ''] = IMAGE_PARTS.exec(block.image) ?? [];
+		const info = media(url);
+		const size = info.width && info.height ? ` width="${info.width}" height="${info.height}"` : '';
+		const load = hero ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"';
+		const img = (extra = '') =>
+			`<img${extra} src="${escapeHtml(info.src)}" alt="${escapeHtml(alt)}"${size}${load} />`;
+		// A recording: the GIF plays; with reduced motion the MP4 waits behind its play control.
+		const picture = info.video
+			? `<div class="media-frame">${img(' class="media-motion"')}<video class="media-still" controls muted playsinline preload="none"${size}${info.poster ? ` poster="${escapeHtml(info.poster)}"` : ''} aria-label="${escapeHtml(alt)}"><source src="${escapeHtml(info.video)}" type="video/mp4" /></video></div>`
+			: img();
+		const stats = block.stats
+			? `<dl class="post-stats">${block.stats
+					.split(/\s+·\s+/)
+					.map((part) => {
+						const [, label, value] = STAT.exec(part);
+						return `<div data-stat="${escapeHtml(slug(label))}"><dt>${renderInline(label, ctx)}</dt><dd>${renderInline(value, ctx)}</dd></div>`;
+					})
+					.join('')}</dl>`
+			: '';
+		const caption = block.caption
+			? `<figcaption>${renderInline(block.caption, ctx)}</figcaption>`
+			: '';
+		const className = hero
+			? 'post-hero-figure'
+			: `post-figure reveal${info.video ? ' post-media' : ''}`;
+		return `<figure class="${className}">${picture}${caption}${stats}</figure>`;
+	};
+	const renderHtml = (html) => {
+		let out = html.replace(/<a\s+id="changes-([\w-]+)"\s*><\/a>/g, (match, id) => {
+			area = id;
+			return `<a id="changes-${escapeHtml(id)}" class="changes-anchor"></a>`;
+		});
+		out = out.replace(/<details(\s[^>]*)?>/g, (match, attrs = '') => {
+			openDetails += 1;
+			if (!area) return match;
+			return `<details class="changes reveal" data-area="${escapeHtml(area)}"${attrs}>`;
+		});
+		out = out.replace(/<summary>([\s\S]*?)<\/summary>/g, (match, label) =>
+			area
+				? `<summary>${tile(area)}<span class="changes-name">${label}</span><span class="changes-count" data-count></span><span class="changes-chevron" aria-hidden="true"></span></summary><div class="changes-body">`
+				: match,
+		);
+		out = out.replace(/<\/details>/g, () => {
+			openDetails = Math.max(0, openDetails - 1);
+			const close = area ? '</div></details>' : '</details>';
+			area = null;
+			return close;
+		});
+		return out;
+	};
+
+	for (const block of blocks) {
+		if (block.type === 'heading' && block.level === 2 && openDetails === 0) {
+			if (inLede) parts.push('</div>');
+			else parts.push('</section>');
+			inLede = false;
+			const id = nextSlug(plainText(block.text));
+			toc.push({ id, text: renderInline(block.text, ctx), children: [] });
+			parts.push(
+				`<section class="post-section reveal" aria-labelledby="${escapeHtml(id)}">`,
+				heading(2, id, renderInline(block.text, ctx)),
+			);
+			continue;
+		}
+		if (block.type === 'heading') {
+			const id = nextSlug(plainText(block.text));
+			if (block.level === 3 && openDetails === 0 && toc.length)
+				toc[toc.length - 1].children.push({ id, text: renderInline(block.text, ctx) });
+			parts.push(heading(block.level, id, renderInline(block.text, ctx)));
+		} else if (block.type === 'code') parts.push(renderCode(block));
+		else if (block.type === 'figure') parts.push(renderFigure(block));
+		else if (block.type === 'html') parts.push(renderHtml(block.html));
+		else if (
+			inLede &&
+			!pillarsDone &&
+			block.type === 'list' &&
+			block.items.every((item) => item.indent === 0 && item.text.startsWith('**'))
+		) {
+			pillarsDone = true;
+			parts.push(
+				`<ul class="pillars reveal">${block.items.map((item) => `<li>${renderInline(item.text.replace(/\n/g, ' '), ctx)}</li>`).join('')}</ul>`,
+			);
+		} else if (isOnly(block, /^Learn more\b/))
+			parts.push(`<p class="learn-more">${renderInline(block.text, ctx)}</p>`);
+		else
+			parts.push(
+				renderBlocks([block], {
+					...ctx,
+					code: renderCode,
+					html: renderHtml,
+				}),
+			);
+	}
+	parts.push(inLede ? '</div>' : '</section>');
+	const body = countChanges(parts.join('\n'));
+
+	const metaHtml = meta
+		? renderInline(meta.text, ctx)
+				.split(/\s+\|\s+/)
+				.map((item) => `<span>${datetime(item)}</span>`)
+				.join('')
+		: '';
+	const lede = blocks.find((b) => b.type === 'paragraph' && !b.text.startsWith('**'));
+	const description = lede ? plainText(lede.text).replace(/\s+/g, ' ') : title;
+	const tocHtml = toc
+		.map(
+			(entry) =>
+				`<li><a href="#${escapeHtml(entry.id)}">${stripLinks(entry.text)}</a>${
+					entry.children.length
+						? `<ul>${entry.children.map((child) => `<li><a href="#${escapeHtml(child.id)}">${stripLinks(child.text)}</a></li>`).join('')}</ul>`
+						: ''
+				}</li>`,
+		)
+		.join('');
+	const fill = {
+		title: escapeHtml(title),
+		titleHtml: escapeHtml(title).replace(
+			/(\s)(\d+(?:\.\d+)*)$/,
+			'$1<span class="post-version">$2</span>',
+		),
+		description: escapeHtml(
+			description.length > 200 ? `${description.slice(0, 197)}...` : description,
+		),
+		meta: metaHtml,
+		hero: hero ? renderFigure(hero, true) : '',
+		toc: tocHtml,
+		body,
+	};
+	return template.replace(/\{\{(\w+)\}\}/g, (match, key) => (key in fill ? fill[key] : match));
+}
+
+const heading = (level, id, inner) => `<h${level} id="${escapeHtml(id)}">${inner}</h${level}>`;
+const stripLinks = (html) => html.replace(/<\/?a\b[^>]*>/g, '');
+
+/** `<strong>Published:</strong> November 21, 2026` with the date in a `<time>` element. */
+function datetime(item) {
+	return item.replace(/^(<strong>Published:<\/strong>\s*)(.+)$/, (match, label, date) => {
+		const parsed = new Date(`${date} 12:00 UTC`);
+		return Number.isNaN(parsed.getTime())
+			? match
+			: `${label}<time datetime="${parsed.toISOString().slice(0, 10)}">${date}</time>`;
+	});
+}
+
+/** Fill each change list's count with the bullets it holds. */
+function countChanges(html) {
+	return html.replace(
+		/(<details class="changes[\s\S]*?<span class="changes-count" data-count>)(<\/span>)([\s\S]*?<\/details>)/g,
+		(match, head, close, rest) => {
+			const count = (rest.match(/<li>/g) ?? []).length;
+			return count
+				? `${head}${count === 1 ? '1 change' : `${count} changes`}${close}${rest}`
+				: match;
+		},
+	);
+}
+
+/** Every post in `docs/releases/` as `<out>/releases/<name>/index.html`. Returns the names. */
+export function writeReleasePages(out, { root = ROOT } = {}) {
+	const dir = join(root, POSTS_DIR);
+	const template = readFileSync(join(root, TEMPLATE), 'utf8');
+	const shared = join(root, dirname(TEMPLATE));
+	mkdirSync(join(out, 'releases'), { recursive: true });
+	for (const file of readdirSync(shared))
+		if (file !== basename(TEMPLATE)) copyFileSync(join(shared, file), join(out, 'releases', file));
+	// The template is source, not a page (build-pages.mjs copies the whole of site/).
+	rmSync(join(out, 'releases', basename(TEMPLATE)), { force: true });
+	const names = [];
+	for (const file of existsSync(dir) ? readdirSync(dir) : []) {
+		if (extname(file) !== '.md') continue;
+		const name = basename(file, '.md');
+		const assets = new Map();
+		const html = renderReleasePage(
+			readFileSync(join(dir, file), 'utf8'),
+			template,
+			mediaResolver({ root, postsDir: dir, name, assets }),
+		);
+		const target = join(out, 'releases', name);
+		mkdirSync(join(target, 'assets'), { recursive: true });
+		writeFileSync(join(target, 'index.html'), html);
+		for (const [to, from] of assets) {
+			if (!existsSync(from)) throw new Error(`${file}: the picture ${from} does not exist`);
+			copyFileSync(from, join(target, to));
+		}
+		names.push(name);
+	}
+	return names;
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
+	const out = resolve(ROOT, process.argv[2] ?? 'suite-dist');
+	const names = writeReleasePages(out);
+	console.log(`Release pages: ${names.map((name) => `releases/${name}/`).join(', ') || 'none'}`);
+}

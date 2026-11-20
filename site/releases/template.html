@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#0f6cbd" />
+		<title>{{title}} - OOXML Office</title>
+		<meta name="description" content="{{description}}" />
+		<script src="../../appearance-init.js"></script>
+		<link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+		<link rel="stylesheet" href="../../themes.css" />
+		<link rel="stylesheet" href="../releases.css" />
+		<script type="module" src="../releases.js"></script>
+	</head>
+	<body>
+		<a class="post-skip" href="#post">Skip to content</a>
+		<header class="post-bar">
+			<a class="post-brand" href="../../?suite" aria-label="OOXML Office home">
+				<span class="tile tile-office tile-symbol" aria-hidden="true"
+					><i></i><i></i><i></i><i></i></span
+				>OOXML <strong>Office</strong>
+			</a>
+			<nav class="post-bar-links" aria-label="Site">
+				<a href="../../docs/">Docs</a>
+				<a href="https://github.com/ChristopherVR/ooxml/releases">Releases</a>
+				<a href="https://github.com/ChristopherVR/ooxml">GitHub</a>
+			</nav>
+			<button
+				id="appearance"
+				class="post-icon"
+				type="button"
+				aria-label="Dark mode"
+				title="Appearance"
+			>
+				<svg
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="1.6"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					aria-hidden="true"
+				>
+					<path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9z" />
+				</svg>
+			</button>
+		</header>
+		<main id="post" class="post">
+			<header class="post-hero">
+				<p class="post-tiles" aria-hidden="true">
+					<span class="tile tile-word">W</span><span class="tile tile-excel">X</span
+					><span class="tile tile-powerpoint">P</span><span class="tile tile-visio">V</span
+					><span class="tile tile-teams">T</span>
+				</p>
+				<h1>{{titleHtml}}</h1>
+				<p class="post-meta">{{meta}}</p>
+				{{hero}}
+			</header>
+			<div class="post-layout">
+				<nav class="post-toc" aria-label="On this page">
+					<details id="post-toc" open>
+						<summary>On this page</summary>
+						<ul>
+							{{toc}}
+						</ul>
+					</details>
+				</nav>
+				<article class="post-article">{{body}}</article>
+			</div>
+		</main>
+		<footer class="post-footer">
+			<span>OOXML Office · Apache-2.0</span>
+			<span class="post-footer-links"
+				><a href="../../docs/">Documentation</a
+				><a href="https://github.com/ChristopherVR/ooxml/releases">All releases</a
+				><a href="https://github.com/ChristopherVR/ooxml/blob/main/docs/stability.md"
+					>Stability</a
+				></span
+			>
+		</footer>
+		<p id="post-status" class="post-sr" role="status" aria-live="polite"></p>
+	</body>
+</html>

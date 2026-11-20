@@ -85,7 +85,8 @@ in the tone colour, 3 px radius, 1 px 6 px padding. Tones: alpha amber `#b07a17`
 accent), stable green (`#12715a` light, `ok` dark). A product's tag is the label in
 `docs/stability.md` and nothing else; a product without a label there carries no tag. Pages do
 not announce versions or label things as new: release history lives in the changelogs, reached
-through a plain "Releases" link.
+through a plain "Releases" link. The one exception is the release post of a coordinated major
+(below), which is reached through a "Release notes" link.
 
 **Product strip.** A joined row of the five products under the hub's opening buttons: each cell
 is a link to the product's site with its solid 30 px tile, the name, one muted word for what it
@@ -177,7 +178,8 @@ One easing and four durations everywhere; nothing else.
   bounce, blur-in, or anything that moves on scroll position.
 
 The suite implements this in `site/styles.css`; the docs in `landing.css` plus a `useReveals`
-composable per site; the hub in `site/docs/docs.css`.
+composable per site; the hub in `site/docs/docs.css`; the release post in
+`site/releases/releases.css` and `releases.js`.
 
 ## The pages
 
@@ -216,6 +218,79 @@ composable per site; the hub in `site/docs/docs.css`.
   where the demo supports one), features as tool cards, status, quick start, FAQ, finale. The
   accent is the product colour. Every site keeps this order so the five landings read as one
   family.
+- **Release post** (`/ooxml/releases/<name>/`, from `docs/releases/<name>.md`): the launch
+  article of a coordinated major release, linked as "Release notes" from the hub (sidebar, the
+  Contributing card and the footer) and from the suite's Resources group. See Release post below.
+
+## Release post
+
+One Markdown file per coordinated major, `docs/releases/<name>.md`, is both the post GitHub
+shows and the source of the Pages article. `scripts/build-release-notes.mjs` renders it (no
+dependencies; `release-markdown.mjs` is the Markdown subset, `release-highlight.mjs` the code
+colouring, `release-media.mjs` the pictures) on `site/releases/template.html`, and
+`build-suite.mjs` and `build-pages.mjs` call it after copying `site/`, so the page is
+`releases/<name>/index.html` with its pictures in `releases/<name>/assets/` and the shared
+`releases/releases.css` and `releases.js` beside it. The page is not precached by the PWA (only
+the shell and `apps/` are) and needs no `ooxml-root`.
+
+**The Markdown contract.** The renderer handles ATX headings with GitHub's slugs, paragraphs,
+nested bullet and numbered lists, bold, italics, inline code, links, images, tables, fenced code,
+blockquotes, GitHub alerts (`> [!NOTE]`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`), HTML
+comments (dropped) and raw HTML blocks (a line that starts with a tag, passed through to the next
+blank line). Inline HTML inside a paragraph is escaped, as is every other character. The page
+reads these shapes:
+
+- `# Title`, then `**Published:** <date> | **Author:** [name](url)` (the metadata line; the date
+  becomes a `<time>`), then an optional image alone in a paragraph (the hero).
+- The lede is everything before the first `##`: a paragraph, a list of 4 to 6 pillars whose
+  items all start with `**Lead-in:**` (drawn as a joined grid of cards), a fenced install block
+  and a `> [!NOTE]` for upgraders.
+- Each `##` is a section (sentence case) in the table of contents, with its `###` features under
+  it. A feature is short paragraphs, an optional code block and picture, and a closing
+  paragraph that starts with `Learn more`.
+- Code: `**file.ts**` alone on the line before a fence names it (otherwise the bar shows the
+  language), `_Caption._` alone on the line after the fence captions it. TypeScript and
+  JavaScript, JSON, HTML and shell get a light token colouring at build time.
+- Pictures: `![alt](path)` alone in a paragraph, then an optional `_Caption._` line, then an
+  optional stat line `**Before:** 4.8 s · **After:** 0.6 s` (any `**Label:** value` pairs joined
+  by `·`; `After` takes the accent). Paths resolve against `docs/releases/`; a path not found
+  there is looked for in `docs/releases/<name>/`, so write `<name>/assets/clip.gif` (which GitHub
+  resolves too). Pictures are copied beside the page with their width and height set. A GIF
+  with an MP4 of the same name beside it is a recording: the GIF plays, and under reduced motion
+  the MP4 shows instead as a paused `<video controls>` (with `<stem>.poster.webp|png|jpg` as its
+  poster when one exists).
+- Other repository links (`../migration-2.0.md`) point to the file on GitHub.
+- `## Every change, by product` holds one `<a id="changes-<area>"></a>` line followed by a
+  `<details>` and `<summary>Name</summary>` and a blank line, then the area's chapter in Markdown
+  (`###`/`####` and bullets) and `</details>`. The areas are `changes-core`, `changes-ui-mcp`,
+  `changes-word`, `changes-excel`, `changes-powerpoint`, `changes-visio` and
+  `changes-openteams`: changelogs link to these anchors, and on Pages a link to one opens the
+  list and scrolls to it. Headings inside a list stay out of the table of contents.
+
+**Article.** A 52 px header bar (brand, Docs, Releases, GitHub, the appearance switch, which
+shares `ooxml-suite-theme` with the suite and the hub, dark first). The hero is centred on a
+wash of the accent fading into the canvas: the five solid product tiles, the title at up to
+96 px with the version in the accent, the metadata line and the hero picture in a hairline
+frame. Below, the contents column (220 px, sticky, the current section marked with the
+selected tint and the accent bar) sits left of the article; prose is 720 px wide and code,
+pictures, the pillars and the change lists 880 px. Under 1180 px the contents fold into a box
+above the article.
+
+**Code card.** Dark in both modes: the file name as a tab with an accent underline, the
+language and a Copy button (shown by the script; it announces the copy in a live region and
+falls back to selecting the code).
+
+**Callout.** The alert tone (note accent, tip `ok`, important Teams violet, warning alpha amber,
+caution `danger`) as a 3 px left bar, a 32% border and an 8% tint, with a dot and the label.
+
+**Change list.** One card per area: the area's solid tile (the suite's four-square symbol for the
+core, `U` for shared UI and MCP), the name, a muted count of its bullets and a 22 px hairline
+box with a chevron that turns. Open all and Close all sit above the first card.
+
+**Motion.** The hero tiles, title, metadata and picture rise on load, staggered; every section,
+figure, code card and change list reveals once (its top 15% into the view); the pillar cards
+stagger 60 ms apart; an opened list's body rises over 320 ms. All of it is off under reduced
+motion, which also swaps recordings for their paused videos.
 
 ## Do not
 
