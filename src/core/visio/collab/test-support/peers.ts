@@ -132,17 +132,24 @@ export function createRoom() {
 }
 export type Peer = ReturnType<ReturnType<typeof createRoom>['join']>;
 
+/** What `settle` and `published` read of a peer: its room, its binding and its editor. */
+export interface SessionPeer {
+	session: Pick<CollabSession<object>, 'doc'>;
+	binding: Pick<DrawingBinding, 'idle'>;
+	side: { editor: Pick<DrawingEditor, 'version'> };
+}
+
 /** The updates a peer's room holds. */
-const room = (peer: Peer): string => Y.encodeStateVector(peer.session.doc).join();
+const room = (peer: SessionPeer): string => Y.encodeStateVector(peer.session.doc).join();
 /** What a peer has done so far: its room and the drawings it applied or edited. */
-const progress = (peer: Peer): string => `${room(peer)}|${peer.side.editor.version()}`;
+const progress = (peer: SessionPeer): string => `${room(peer)}|${peer.side.editor.version()}`;
 
 /**
  * Waits until the peers have nothing left to do: a whole round of `idle()` (and of the timers
  * it schedules) changes no room or drawing, and every room holds the same updates. Delivery over
  * the memory hub is synchronous, so this follows the bindings' own signals instead of sleeping.
  */
-export async function settle(...peers: Peer[]) {
+export async function settle(...peers: SessionPeer[]) {
 	const deadline = Date.now() + PATIENCE_MS;
 	for (;;) {
 		const before = peers.map(progress);
@@ -154,8 +161,12 @@ export async function settle(...peers: Peer[]) {
 	}
 }
 
-/** Waits until the peer's drawing is in the room, so a peer that joins next adopts it. */
-export async function published(peer: Peer) {
+/**
+ * Waits until the peer's drawing, with every edit made so far, is in the room, so a peer that
+ * joins next adopts it. `settle` alone is not enough: before its session is ready a peer has
+ * nothing running, so it reads as idle with an empty room.
+ */
+export async function published(peer: SessionPeer) {
 	await until(() => peer.session.doc.getMap('visio:meta').size > 0, 'publish');
 	await settle(peer);
 }
