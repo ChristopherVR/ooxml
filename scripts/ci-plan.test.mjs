@@ -300,7 +300,8 @@ test('suite-wide pptx files and CI configuration run the whole browser suite', (
 	]) {
 		const result = pptx(file);
 		assert.deepEqual(result.e2e.projects, PPTX_BINDINGS, file);
-		assert.equal(result.e2e.matrix.length, 14 + 4 * 7, file);
+		const total = Object.values(PPTX_E2E_SHARDS).reduce((sum, count) => sum + count, 0);
+		assert.equal(result.e2e.matrix.length, total, file);
 		assert.equal(result.e2e.specs, '', file);
 	}
 });

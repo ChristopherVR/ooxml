@@ -235,12 +235,15 @@ export const PPTX_BINDINGS = ['react', 'vue', 'angular', 'vanilla', 'svelte'];
  */
 const PPTX_REFERENCE_PROJECT = 'react';
 /**
- * Shards per Playwright project for a full run of the suite. React also runs 34 cross-binding
- * parity specs that drive all five demos, so at ten shards each react shard took 20 to 25
- * minutes while the other four took about 12. Fourteen react shards bring it to roughly the
- * others' length; seven each is enough for the rest.
+ * Shards per Playwright project for a full run of the suite. With the timing-balanced shards a
+ * full run's suite work was, per project, react 50, vue 32, angular 37, vanilla 40 and svelte 31
+ * minutes (52 runs, November 2026), and each job spends about 1.4 minutes starting up. At 14 and
+ * 7 shards a job ran only 3.5 to 5.7 minutes of tests, so a sixth of the suite's runner time was
+ * start-up while the 20-runner cap bounded the run. These counts keep shards near six minutes,
+ * well inside the 35-minute job limit; the scheduler model (C1 evidence, compare2.mjs) puts a full
+ * run 0.8 minutes and 29 runner-minutes lower.
  */
-export const PPTX_E2E_SHARDS = { react: 14, vue: 7, angular: 7, vanilla: 7, svelte: 7 };
+export const PPTX_E2E_SHARDS = { react: 8, vue: 4, angular: 5, vanilla: 5, svelte: 4 };
 /** Shard ceiling when only changed specs run. */
 const PPTX_SPEC_SHARDS_MAX = 10;
 /** Changed spec files one shard takes when only specs changed. */
