@@ -65,6 +65,25 @@ const offline = () => {
 	throw new TypeError('Failed to fetch');
 };
 
+test('the suite and standalone apps declare URL-encoded share targets', () => {
+	for (const dir of [
+		'',
+		'apps/word',
+		'apps/excel',
+		'apps/powerpoint',
+		'apps/visio',
+		'apps/teams',
+	]) {
+		const manifest = JSON.parse(read(builds.A, join(dir, 'manifest.webmanifest')));
+		assert.deepEqual(manifest.share_target, {
+			action: './',
+			method: 'GET',
+			enctype: 'application/x-www-form-urlencoded',
+			params: { title: 'title', text: 'text', url: 'open' },
+		});
+	}
+});
+
 test('every shell script and style tag carries the integrity of the file it loads', () => {
 	const shell = readdirSync(builds.A).find((name) => /^shell-[0-9a-f]+\.css$/u.test(name));
 	for (const page of ['index.html', 'apps/word/index.html']) {

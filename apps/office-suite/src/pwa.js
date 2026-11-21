@@ -54,7 +54,6 @@ export function mountPwa({ idle }) {
 	version.textContent = buildStamp ? `Version ${buildStamp}` : 'Development build';
 	onProfile(() => document.querySelector('#account-menu').append(install, check, version));
 	window.addEventListener('beforeinstallprompt', (event) => {
-		event.preventDefault();
 		prompt = event;
 	});
 	install.onclick = async () => {

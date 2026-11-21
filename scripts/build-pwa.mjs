@@ -76,6 +76,7 @@ export async function buildPwa(out) {
 			share_target: {
 				action: './',
 				method: 'GET',
+				enctype: 'application/x-www-form-urlencoded',
 				params: { title: 'title', text: 'text', url: 'open' },
 			},
 			...(product ? {} : { protocol_handlers: [{ protocol: 'web+ooxml', url: './?open=%s' }] }),

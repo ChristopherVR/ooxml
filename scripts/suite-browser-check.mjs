@@ -47,7 +47,8 @@ try {
 	await page.waitForFunction(() =>
 		document.querySelector('docx-editor')?.shadowRoot?.querySelector('[contenteditable=true]'),
 	);
-	const editor = page.locator('docx-editor').locator('[contenteditable=true]').first();
+	const editor = page.locator('docx-editor .dve-paper .ProseMirror[contenteditable=true]');
+	await expect(editor).toHaveCSS('white-space', 'pre-wrap');
 	await editor.click();
 	await page.keyboard.press('Control+End');
 	await page.keyboard.type(' Reviewed by the team.');

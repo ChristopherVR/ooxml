@@ -51,6 +51,9 @@
 		sans-serif;
 	zoom: var(--dve-zoom, 1);
 }
+.dve-paper .ProseMirror {
+	white-space: pre-wrap;
+}
 .dve-paper p {
 	min-height: 1.2em;
 	margin: 0;
