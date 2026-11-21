@@ -73,6 +73,7 @@ describe('lexical path refusal', () => {
 	const windowsOnly = [
 		'C:x.docx',
 		'C:../x.docx',
+		`..${B}outside${B}a.docx`,
 		'C:/elsewhere/x.docx',
 		`C:${B}elsewhere${B}x.docx`,
 		'plain.bat:s.docx',
@@ -106,7 +107,6 @@ describe('lexical path refusal', () => {
 		`${B}rooted${B}x.docx`,
 		'../outside-exists/a.docx',
 		'../outside-missing/a.docx',
-		`..${B}outside${B}a.docx`,
 		'sub/../../a.docx',
 		'a\u0000.docx',
 	];
@@ -229,7 +229,7 @@ describe('lexical path refusal', () => {
 			const files = createFileOperations(root);
 			for (const path of [
 				'sub/a.docx',
-				`sub${B}a.docx`,
+				join('sub', 'a.docx'),
 				'./sub/./a.docx',
 				'sub/../sub/a.docx',
 				join(root, 'sub', 'a.docx'),

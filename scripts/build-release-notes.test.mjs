@@ -287,7 +287,7 @@ test('the release post in the repository renders with its stable change anchors'
 			),
 		);
 	assert.doesNotMatch(html, /\{\{\w+\}\}/);
-	assert.doesNotMatch(html, /—/);
+	assert.doesNotMatch(html, /\u2014/u);
 });
 
 test('still images offer controlled playback and the release guide links back to the post', () => {
