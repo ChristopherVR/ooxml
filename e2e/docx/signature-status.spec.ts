@@ -71,8 +71,9 @@ test('Word shows each signature state from a real file, and nothing unsigned', a
 		await expect(notice(page)).toContainText('Saving changes removes the signatures');
 	}
 
-	// View signatures opens File > Info with the signer.
+	// Wait for the reopened file before using its notice. Every fixture has the same title.
 	await open(page, SIGNED);
+	await expect(badge(page)).toHaveAttribute('data-state', 'verified-untrusted');
 	await notice(page).getByRole('button', { name: 'View signatures' }).click();
 	const panel = page.locator('docx-editor [data-testid="signature-panel"]');
 	await expect(panel).toContainText('Signed, signer not verified');

@@ -1,7 +1,7 @@
 /* oxlint-disable eslint/one-var -- independent per-test locals, not intended as one statement */
 import { flushPromises, mount } from '@vue/test-utils';
 import type { CollaborationConfig } from 'ooxml-ui/pptx';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import { computed, ref } from 'vue';
 
 import type { UseCollaborationResult } from '../composables/useCollaboration';
@@ -190,9 +190,13 @@ describe('shareDialog', () => {
 
 	it('copies the share link to the clipboard and shows the copied confirmation', async () => {
 		const writeText = vi.fn().mockResolvedValue(undefined);
-		Object.defineProperty(navigator, 'clipboard', {
-			value: { writeText },
-			configurable: true,
+		vi.stubGlobal('navigator', { clipboard: { writeText } });
+		const origin = vi.spyOn(window.location, 'origin', 'get').mockReturnValue('https://app.test');
+		const pathname = vi.spyOn(window.location, 'pathname', 'get').mockReturnValue('/viewer/');
+		onTestFinished(() => {
+			origin.mockRestore();
+			pathname.mockRestore();
+			vi.unstubAllGlobals();
 		});
 
 		const activeCollaboration: CollaborationConfig = {
@@ -213,7 +217,9 @@ describe('shareDialog', () => {
 		expect(copyBtn?.text()).toBe('Copy URL');
 		await copyBtn?.trigger('click');
 		await flushPromises();
-		expect(writeText).toHaveBeenCalledWith(expect.stringContaining('room=team-room'));
+		expect(writeText).toHaveBeenCalledExactlyOnceWith(
+			'https://app.test/viewer/?room=team-room&server=wss%3A%2F%2Fcollab.example.com',
+		);
 		await flushPromises();
 		await wrapper.vm.$nextTick();
 		expect(wrapper.get('.pptx-vue-share-active').text()).toContain('Copied');
