@@ -63,6 +63,7 @@ export default defineConfig({
 		'pptx/editor/render/schema-label-keys': 'pptx/editor/render/schema-label-keys.ts',
 		'pptx/editor/render/custom-show-operations': 'pptx/editor/render/custom-show-operations.ts',
 		'pptx/editor/render/section-operations': 'pptx/editor/render/section-operations.ts',
+		'pptx/editor/render/summary-zoom-operations': 'pptx/editor/render/summary-zoom-operations.ts',
 		'pptx/editor/render/slide-background-patch': 'pptx/editor/render/slide-background-patch.ts',
 		'pptx/editor/render/slide-operations': 'pptx/editor/render/slide-operations.ts',
 		'pptx/editor/render/slide-search': 'pptx/editor/render/slide-search.ts',

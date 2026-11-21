@@ -165,6 +165,7 @@ function MobileSectionBody({
 						newShapeType={p.newShapeType}
 						onSetNewShapeType={p.onSetNewShapeType}
 						onAddTextBox={p.onAddTextBox}
+						getGraphicTarget={p.getGraphicTarget}
 						onAddShape={p.onAddShape}
 						onAddTable={p.onAddTable}
 						onAddChart={p.onAddChart}

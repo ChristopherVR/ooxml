@@ -24,6 +24,8 @@ export interface PptxSlideReferenceRemap {
 	removedSldIds: Set<string>;
 	/** True when any reference changed or any slide was removed. */
 	changed: boolean;
+	/** Current numeric members of sections that refer to slides by temporary editor id. */
+	sldIdsBySection?: ReadonlyMap<string, string[]>;
 }
 
 function remapReferenceList(
@@ -257,17 +259,17 @@ export function applySections(
 		location = { parent: ext, key: 'p14:sectionLst', list: ext['p14:sectionLst'] as XmlObject };
 	}
 	const list = cloneXmlObject(location.list) ?? {};
-	const effectiveSections =
-		remap && remap.changed
-			? sections.map((section) => ({
-					...section,
-					slideIds: remapReferenceList(
-						section.slideIds,
-						remap.sldIdByOldSldId,
-						remap.removedSldIds,
-					),
-				}))
-			: sections;
+	const effectiveSections = sections.map((section) => {
+		if (!remap) return section;
+		const pending = section.slideIds.some((id) => !/^\d+$/.test(id));
+		const current = pending ? remap.sldIdsBySection?.get(section.id) : undefined;
+		if (current) return { ...section, slideIds: current };
+		if (!remap.changed) return section;
+		return {
+			...section,
+			slideIds: remapReferenceList(section.slideIds, remap.sldIdByOldSldId, remap.removedSldIds),
+		};
+	});
 	replaceChildren(list, 'section', effectiveSections.map(updateSection), 'p14:section');
 	location.parent[location.key] = list;
 }

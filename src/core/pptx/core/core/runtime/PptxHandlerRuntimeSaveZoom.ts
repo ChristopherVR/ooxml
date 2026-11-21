@@ -3,15 +3,14 @@ import { generateFontGuid } from '../../utils/font-deobfuscation';
 import { ensureXmlChildOrCreate } from '../../utils/xml-access';
 import type { SaveSlideContext } from './PptxHandlerRuntimeSaveElementEmbedding';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveOleEmbedding';
+import { buildZoomFrame, ZOOM_FRAME_TAGS } from './zoom-graphic-frame';
 
-const SLIDE_ZOOM_NAMESPACE = 'http://schemas.microsoft.com/office/powerpoint/2016/slidezoom';
-const SECTION_ZOOM_NAMESPACE = 'http://schemas.microsoft.com/office/powerpoint/2016/sectionzoom';
-const SUMMARY_ZOOM_NAMESPACE = 'http://schemas.microsoft.com/office/powerpoint/2016/summaryzoom';
 const POWERPOINT_2016_NAMESPACE = 'http://schemas.microsoft.com/office/powerpoint/2016/6/main';
 const MC_NAMESPACE = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
-	protected readonly newZoomFallbackByXml = new Map<XmlObject, XmlObject>();
+	protected readonly newZoomFallbackByXml = new WeakMap<XmlObject, XmlObject>();
+	private readonly generatedZoomEnvelopes = new WeakSet<XmlObject>();
 
 	/** Update an existing slide Zoom or build a new Office 2016 Zoom node. */
 	protected createOrUpdateSlideZoomXml(
@@ -41,6 +40,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 		zoomObject['@_sldId'] = targetSlideId;
+		this.applyZoomPlayback(zoomProperties, el);
 		this.applyZoomTransform(shapeProperties, el);
 		this.applyZoomBlipRelationship(zoomProperties, relationshipId);
 		this.updateZoomFallback(shape, el, relationshipId);
@@ -49,7 +49,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/** Wrap SDK-created Zoom nodes in their required Choice/Fallback envelope. */
 	protected wrapNewZoomEnvelopes(spTree: XmlObject, zooms: readonly XmlObject[]): void {
-		const newEnvelopes: XmlObject[] = [];
+		const existing = this.ensureArray(spTree['mc:AlternateContent']) as XmlObject[];
+		const envelopes = existing.filter((envelope) => !this.generatedZoomEnvelopes.has(envelope));
+		const wrappedZooms = new Set<XmlObject>();
 		for (const zoom of zooms) {
 			const fallback = this.newZoomFallbackByXml.get(zoom);
 			if (!fallback || this.alternateContentBlockByRawXml.has(zoom)) {
@@ -63,28 +65,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				'@_Requires': prefix,
 				'@_xmlns:p166': POWERPOINT_2016_NAMESPACE,
 			};
-			choice[`@_xmlns:${prefix}`] = summaryZoom
-				? SUMMARY_ZOOM_NAMESPACE
-				: sectionZoom
-					? SECTION_ZOOM_NAMESPACE
-					: SLIDE_ZOOM_NAMESPACE;
-			choice[tag] = zoom;
+			choice[`@_xmlns:${prefix}`] = ZOOM_FRAME_TAGS[tag];
+			choice['p:graphicFrame'] = buildZoomFrame(tag, zoom, fallback);
 			const fallbackBranch: XmlObject = {};
 			fallbackBranch[summaryZoom ? 'p:grpSp' : 'p:pic'] = fallback;
-			newEnvelopes.push({
+			const envelope: XmlObject = {
 				'@_xmlns:mc': MC_NAMESPACE,
 				'mc:Choice': choice,
 				'mc:Fallback': fallbackBranch,
-			});
+			};
+			this.generatedZoomEnvelopes.add(envelope);
+			envelopes.push(envelope);
+			wrappedZooms.add(zoom);
 		}
-		if (newEnvelopes.length === 0) {
-			return;
+		for (const tag of Object.keys(ZOOM_FRAME_TAGS)) {
+			const nodes = this.ensureArray(spTree[tag]) as XmlObject[];
+			const remaining = nodes.filter((node) => !wrappedZooms.has(node));
+			if (remaining.length > 0) spTree[tag] = remaining;
+			else delete spTree[tag];
 		}
-		delete spTree['pslz:sldZm'];
-		delete spTree['psezm:sectionZm'];
-		delete spTree['psuz:summaryZm'];
-		const existing = this.ensureArray(spTree['mc:AlternateContent']) as XmlObject[];
-		spTree['mc:AlternateContent'] = [...existing, ...newEnvelopes];
+		if (envelopes.length > 0) spTree['mc:AlternateContent'] = envelopes;
+		else delete spTree['mc:AlternateContent'];
 	}
 
 	private numericSlideIdAt(index: number): string | undefined {
@@ -157,12 +158,25 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			'p166:blipFill': this.buildZoomBlipFill(relationshipId),
 			'p166:spPr': this.buildZoomShapeProperties(el),
 		};
+		this.applyZoomPlayback(zoomProperties, el);
 		return {
 			'pslz:sldZmObj': {
 				'@_sldId': targetSlideId,
 				'pslz:zmPr': zoomProperties,
 			},
 		};
+	}
+
+	protected applyZoomPlayback(
+		properties: XmlObject,
+		playback: Pick<ZoomPptxElement, 'returnToParent' | 'transitionDurationMs'>,
+	): void {
+		if (playback.returnToParent !== undefined) {
+			properties['@_returnToParent'] = playback.returnToParent ? '1' : '0';
+		}
+		if (playback.transitionDurationMs !== undefined) {
+			properties['@_transitionDur'] = String(playback.transitionDurationMs);
+		}
 	}
 
 	protected buildZoomBlipFill(relationshipId: string | undefined): XmlObject {

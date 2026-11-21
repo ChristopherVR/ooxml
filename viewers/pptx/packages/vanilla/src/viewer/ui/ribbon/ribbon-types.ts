@@ -244,6 +244,7 @@ export interface RibbonDrawState {
 /** Insert tab handler: build + insert an element of the given kind/shape preset. */
 export interface RibbonInsertHandlers {
 	insert: EditActions['insert'];
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	insertImage: EditActions['insertImage'];
 	insertMedia: EditActions['insertMedia'];
 	insertChart: EditActions['insertChart'];

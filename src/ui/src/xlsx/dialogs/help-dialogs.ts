@@ -40,6 +40,7 @@ export const SUPPORTED_FEATURES = [
 	'Conditional formatting display',
 	'Tables',
 	'Charts (display and basic editing)',
+	'WordArt styles and text transforms',
 	'Sparklines (create, format and clear)',
 	'Worksheet-range PivotTables (up to two row fields and sixteen values, one optional column field and one cached report filter)',
 	'Comments and notes',

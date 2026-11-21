@@ -80,6 +80,7 @@ export interface ChromeCallbackDeps {
 	/** The deck's slides and active slide, read straight from the store (the editor is built after the chrome). */
 	getSlides?(): readonly PptxSlide[];
 	getCurrentSlide?(): number;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	openHyperlink(): void;
 	openCustomShows(): void;
 	openDocumentProperties(): void;
@@ -287,6 +288,7 @@ export function buildChromeCallbacks(
 		insert: {
 			insert: (kind, shapeType, tableSize) =>
 				deps.getEditActions().insert(kind, shapeType, tableSize),
+			getGraphicTarget: deps.getGraphicTarget,
 			insertImage: () => deps.getEditActions().insertImage(),
 			insertMedia: () => deps.getEditActions().insertMedia(),
 			insertChart: (chartType, options) => deps.getEditActions().insertChart(chartType, options),

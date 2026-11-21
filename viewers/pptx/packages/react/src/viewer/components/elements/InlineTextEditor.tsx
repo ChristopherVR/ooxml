@@ -10,6 +10,7 @@ import {
 	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
+import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 import type { InlineTextEditSnapshot } from 'ooxml-ui/pptx';
 import type { PptxElement, TextStyle } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
@@ -240,7 +241,7 @@ export function InlineTextEditor({
 			onClick={(e) => e.stopPropagation()}
 			onInput={list.seed ? undefined : handleInput}
 			onBlur={() => {
-				if (!list.canCommit()) {
+				if (isChoosingInlineSymbol(editorRef.current) || !list.canCommit()) {
 					return;
 				}
 				handleInput();

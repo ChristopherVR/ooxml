@@ -4,11 +4,88 @@ import { describe, expect, it } from 'vitest';
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
 import type { PptxSection, ZoomPptxElement } from '../../core/types';
+import { prepareSummaryZoom } from '../../editor/render/summary-zoom-operations';
 
 const INTRO_SECTION = '{11111111-1111-1111-1111-111111111111}';
 const DETAILS_SECTION = '{22222222-2222-2222-2222-222222222222}';
 const PNG_DATA =
 	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
+it('saves the new Summary Zoom slide and its sections even after a second save', async () => {
+	const { handler, slides } = await createThreeSlideDeck();
+	const preview = PNG_DATA;
+	const planned = prepareSummaryZoom(
+		slides,
+		[],
+		[
+			{ slideId: slides[1].id, title: 'Sales', preview },
+			{ slideId: slides[2].id, title: 'Results', preview },
+		],
+		{ name: 'Summary Zoom', defaultSectionName: 'Default Section', keepUnused: true },
+	);
+	if (!planned) throw new Error('Missing Summary Zoom plan');
+	const { result, entries } = planned;
+	expect(result.slideIndex).toBe(1);
+	expect(result.sections.map(({ name }) => name)).toEqual([
+		'Default Section',
+		'Summary Zoom',
+		'Sales',
+		'Results',
+	]);
+	result.slides[1].elements.push({
+		type: 'zoom',
+		id: 'summary-zoom',
+		zoomType: 'summary',
+		targetSlideIndex: 2,
+		x: 20,
+		y: 20,
+		width: 600,
+		height: 300,
+		summaryLayout: 'fixed',
+		summaryTargets: entries.map((entry, index) => ({
+			sectionId: entry.sectionId,
+			targetSlideIndex: entry.index,
+			imageData: entry.preview,
+			x: 20 + index * 300,
+			y: 20,
+			width: 250,
+			height: 150,
+		})),
+	});
+	await handler.save(result.slides, { sections: result.sections });
+	result.slides[1].name = 'Overview';
+	const saved = await handler.save(result.slides, { sections: result.sections });
+	const reopened = await new PptxHandler().load(saved.buffer as ArrayBuffer);
+	expect(reopened.slides.map(({ sectionName }) => sectionName)).toEqual([
+		'Default Section',
+		'Summary Zoom',
+		'Sales',
+		'Results',
+	]);
+	expect(reopened.slides[1].elements.find((element) => element.type === 'zoom')).toMatchObject({
+		summaryTargets: [{ targetSlideIndex: 2 }, { targetSlideIndex: 3 }],
+	});
+});
+
+it('can exclude an unused section without deleting its slides', async () => {
+	const { slides, sections } = await createThreeSlideDeck();
+	const sectioned = slides.map((slide, index) => ({
+		...slide,
+		sectionId: index < 2 ? INTRO_SECTION : DETAILS_SECTION,
+	}));
+	const planned = prepareSummaryZoom(
+		sectioned,
+		sections,
+		[{ slideId: slides[0].id, title: 'Introduction', preview: PNG_DATA }],
+		{ name: 'Summary Zoom', defaultSectionName: 'Default Section', keepUnused: false },
+	);
+	expect(planned?.result.sections.map(({ id }) => id)).not.toContain(DETAILS_SECTION);
+	expect(planned?.result.sections.map(({ name }) => name)).toEqual([
+		'Summary Zoom',
+		'Introduction',
+	]);
+	expect(planned?.result.slides.slice(1).map(({ id }) => id)).toEqual(slides.map(({ id }) => id));
+});
 
 function numericSlideIds(xml: string): string[] {
 	return [...xml.matchAll(/<p:sldId id="(?<id>\d+)"/gu)].map((match) => match.groups!.id);

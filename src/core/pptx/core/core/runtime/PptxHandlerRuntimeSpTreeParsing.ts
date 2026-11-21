@@ -3,6 +3,7 @@ import {
 	unwrapAlternateContent as unwrapAC,
 	isAlternateContentChoiceXmlSupported,
 } from '../../utils/alternate-content';
+import { readZoomFrame, readZoomFrameGeometry } from './zoom-graphic-frame';
 import { VML_SHAPE_TAGS, parseVmlElement } from '../../utils/vml-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePictureParsing';
 
@@ -373,8 +374,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 			case 'p:pic':
 				return this.parsePicture(node, `${idPrefix}pic-${indexInType}`, slidePath);
-			case 'p:graphicFrame':
-				return this.parseGraphicFrame(node, `${idPrefix}frame-${indexInType}`, slidePath);
+			case 'p:graphicFrame': {
+				const zoom = readZoomFrame(node);
+				if (!zoom)
+					return this.parseGraphicFrame(node, `${idPrefix}frame-${indexInType}`, slidePath);
+				const id = `${idPrefix}zoom-frame-${indexInType}`;
+				const parsed = await (zoom.tag === 'pslz:sldZm'
+					? this.parseSlideZoomElement(zoom.node, id, slidePath)
+					: zoom.tag === 'psezm:sectionZm'
+						? this.parseSectionZoomElement(zoom.node, id, slidePath)
+						: this.parseSummaryZoomElement(zoom.node, id, slidePath));
+				return parsed?.type === 'zoom'
+					? readZoomFrameGeometry(node, parsed, PptxHandlerRuntime.EMU_PER_PX)
+					: null;
+			}
 			case 'p:grpSp':
 				return this.parseGroupShapeAsGroup(
 					node,

@@ -49,6 +49,13 @@ function isLosslessWarp(element: XmlElement): boolean {
 	);
 }
 
+/** Reads a preset warp without interpreting the rest of the text box. */
+export function parseDrawingTextWarp(element: XmlElement | undefined) {
+	return element && isLosslessWarp(element)
+		? readDrawingTextWarp(domTextElementView(element))
+		: undefined;
+}
+
 /** Reads `a:bodyPr`; `undefined` for a missing element. */
 export function parseDrawingBodyProperties(
 	element: XmlElement | undefined,
@@ -61,9 +68,11 @@ export function parseDrawingBodyProperties(
 		const name = isDrawingElement(child) ? child.localName : '';
 		const autofit = readDrawingAutofit(name, domTextElementView(child));
 		if (autofit) out.autofit = autofit;
-		else if (name === 'prstTxWarp' && !out.textWarp && isLosslessWarp(child))
-			out.textWarp = readDrawingTextWarp(domTextElementView(child))!;
-		else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
+		else if (name === 'prstTxWarp' && !out.textWarp) {
+			const warp = parseDrawingTextWarp(child);
+			if (warp) out.textWarp = warp;
+			else extra.push(outerXml(child));
+		} else if (name === 'scene3d' && children(element, 'scene3d', NS.a).length === 1)
 			out.scene3d = parseDrawingTextScene3D(child);
 		else if (
 			name === 'sp3d' &&

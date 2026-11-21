@@ -301,6 +301,8 @@ export function createEditSession(
 		insertTimeline: (s, source) => timelines.insertTimeline(ctx, s, source),
 		deleteTimeline: (name) => timelines.deleteTimeline(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
+		addWordArt: (s, anchor, value) => drawings.addWordArt(ctx, s, anchor, value),
+		editWordArt: (s, index, value) => drawings.editWordArt(ctx, s, index, value),
 		editSmartArt: (s, index, edit) => smartArt.editSmartArt(ctx, s, index, edit),
 		formatSmartArt: (s, index, change) => smartArt.formatSmartArt(ctx, s, index, change),
 		changeSmartArtLayout: (s, index, change) =>

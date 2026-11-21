@@ -141,8 +141,8 @@
 		"html2canvas-pro": "^2.6.4",
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
-		"ooxml-core": "^2.0.0",
-		"ooxml-ui": "^2.0.0",
+		"ooxml-core": "workspace:*",
+		"ooxml-ui": "workspace:*",
 		"opentype.js": "^2.0.0"
 	},
 	"devDependencies": {

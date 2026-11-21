@@ -111,6 +111,7 @@ export function createInsertTab(
 		commentAvailable: Boolean(onOpenComments),
 		slideTemplatesAvailable: templates ? (templates.available?.() ?? true) : false,
 		chartDialogAvailable: true,
+		getGraphicTarget: handlers.getGraphicTarget,
 		layouts: [],
 		translate: t,
 	};

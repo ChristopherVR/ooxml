@@ -659,6 +659,7 @@ const {
 const deckThemeName = (): string | undefined =>
 	loadedThemeName(deck.themeOptions.value, slideMasters.value);
 const history = useEditorHistory(slides, templateElementsBySlideId, {
+	sections,
 	maxDepth: resolveHistoryDepth(viewerOptions.value),
 	activeSlideIndex,
 	onChange: () => emit('change'),
@@ -2024,6 +2025,21 @@ const baseRibbonProps = useViewerRibbonProps({
 	chromeMode,
 	drag,
 	insertion,
+	getGraphicTarget: () => ({
+		slides: slides.value,
+		slideIndex: activeSlideIndex.value,
+		canvasSize: canvasSize.value,
+		themeColors: themeColorMap.value,
+		insert: ops.addElement,
+		sections: sections.value,
+		insertSummary: (mutation) => {
+			history.pushHistory();
+			sections.value = mutation.sections;
+			slides.value = mutation.slides;
+			clearSelection();
+			activeSlideIndex.value = mutation.slideIndex;
+		},
+	}),
 	templateInsertion,
 	insertDialogs,
 	exporter,

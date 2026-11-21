@@ -2,7 +2,7 @@ import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import type { DrawingFill } from 'ooxml-core/drawingml';
 import type { DocumentModel, TextBoxContent } from 'ooxml-core/docx';
 import type { TextBoxLayout } from 'ooxml-core/docx/layout';
-import { textBoxContentElement } from './story-render';
+import { paintWordArtEffects, textBoxContentElement, wordArtWarpElement } from './story-render';
 // Print Layout pictures: package media through `PictureUrl`, charts and shapes painted by the core
 // (`LayoutObject.chart`) with a shape's text box paragraphs over it (the lines the page engine laid
 // out, or the paragraphs flowed by CSS where it laid out none), and a placeholder box for anything
@@ -104,12 +104,20 @@ export function pictureElement(
 		element.style.position = 'absolute';
 		element.style.width = `${object.widthPx}px`;
 		element.style.height = `${object.heightPx}px`;
-		if (object.chart.svg && object.chart.shape && object.textBox)
-			element.append(
-				object.textBoxLayout && textBoxLayer
-					? textBoxLayer(object.textBoxLayout, object.chart.textColor)
-					: textBoxContentElement(object.textBox, model, object.chart.textColor, pictureUrl),
-			);
+		if (object.chart.svg && object.chart.shape && object.textBox) {
+			const warp = wordArtWarpElement(object.textBox, object.widthPx, object.heightPx);
+			if (warp) {
+				element.append(warp);
+			} else if (object.textBoxLayout && textBoxLayer) {
+				const layer = textBoxLayer(object.textBoxLayout, object.chart.textColor);
+				paintWordArtEffects(layer, object.textBox);
+				element.append(layer);
+			} else {
+				element.append(
+					textBoxContentElement(object.textBox, model, object.chart.textColor, pictureUrl),
+				);
+			}
+		}
 		return element;
 	}
 	const url = object.partName ? pictureUrl?.(object.partName, object.contentType) : undefined;

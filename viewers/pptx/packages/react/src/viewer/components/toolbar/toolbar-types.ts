@@ -100,6 +100,7 @@ export interface ToolbarProps {
 	/** Arm (or, with null, disarm) a Freeform: Shape / Curve tool. */
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;

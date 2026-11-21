@@ -363,10 +363,15 @@ line/marker swatches and position-authoring controls remain incomplete.
     connections and query tables are only carried verbatim, and named sheet views and
     ActiveX controls are not modelled.
 12. Ribbon. There are no Draw, Picture Format, Shape Format, Chart Format (a pane instead),
-    PivotTable Analyze or PivotTable Design tabs; Insert has no Shapes, Icons, Screenshot or
-    Text group (Text Box, Header & Footer, WordArt, Object), Page Layout has no Scale to
+    PivotTable Analyze or PivotTable Design tabs; Insert has no Shapes, Screenshot or
+    Text group (Text Box, Header & Footer, Object), Page Layout has no Scale to
     Fit, Print Titles, Background or Arrange group, and Review has no Spelling,
     Accessibility checker or Notes commands.
+
+Insert > WordArt creates an editable worksheet drawing. The picker offers 30
+fill, outline and shadow styles and 40 text transforms. Excel retains the
+editable text, shadow and transform on re-save. The browser uses a path preview
+for the transformed text.
 
 ## Completion criteria
 

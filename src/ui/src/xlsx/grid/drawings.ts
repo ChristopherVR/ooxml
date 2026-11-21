@@ -122,6 +122,12 @@ export class DrawingLayer {
 						// Pointer capture retargets dblclick to the drawing container. Keep the
 						// actual hit from pointerdown so a background click stays distinct.
 						const frame = view.sheet()?.drawings[index];
+						if (frame?.kind === 'unsupported' && frame.shape?.wordArt) {
+							event.stopPropagation();
+							view.ctx.selection.set({ drawing: index });
+							void view.ctx.commands.run('drawing.edit-word-art');
+							return;
+						}
 						if (frame?.kind === 'unsupported' && frame.chartExSpace) {
 							event.stopPropagation();
 							view.ctx.selection.set({ drawing: index });

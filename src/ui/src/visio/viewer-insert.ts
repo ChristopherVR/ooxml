@@ -1,3 +1,5 @@
+import { pickOfficeIcon } from '../form/icon-picker';
+import { iconPngFile } from '../form/local-svg';
 import { canEditDiagram } from './controller';
 import {
 	inspectVisioRasterImage,
@@ -95,6 +97,10 @@ export class ViewerInsert {
 		if (!this.#editable(state)) return;
 		if (item === 'picture') {
 			if (state.document?.pages[state.pageIndex]) this.input.click();
+			return;
+		}
+		if (item === 'icons') {
+			void this.#icon();
 			return;
 		}
 		if (item === 'chart') {
@@ -210,6 +216,25 @@ export class ViewerInsert {
 			}, message),
 		);
 	}
+	async #icon(): Promise<void> {
+		const { document, pageIndex } = this.controller.state;
+		const generation = this.controller.documentGeneration;
+		if (!document?.pages[pageIndex]) return;
+		try {
+			const icon = await pickOfficeIcon(this.root);
+			if (!icon) return;
+			const file = await iconPngFile(this.root.ownerDocument, icon);
+			if (
+				this.controller.documentGeneration === generation &&
+				this.controller.state.pageIndex === pageIndex
+			) {
+				await this.#picture(file);
+			}
+		} catch {
+			this.announce('Could not insert the icon.');
+		}
+	}
+
 	async #picture(file: File): Promise<void> {
 		const state = this.controller.state;
 		const page = state.document?.pages[state.pageIndex];

@@ -1,0 +1,36 @@
+.pptx-wordart-insert input[type='text'] {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 6px 8px;
+}
+.pptx-wordart-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+	gap: 4px;
+	margin-top: 12px;
+}
+.pptx-wordart-grid button {
+	display: grid;
+	place-items: center;
+	min-height: 52px;
+	cursor: pointer;
+	border: 1px solid var(--office-border, #aaa);
+	border-radius: 4px;
+	background: #fff;
+}
+.pptx-wordart-grid button[aria-pressed='true'] {
+	outline: 2px solid var(--office-accent, #2266bb);
+	outline-offset: -3px;
+}
+.pptx-graphic-error {
+	position: fixed;
+	bottom: 16px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1202;
+	padding: 10px 16px;
+	border-radius: 4px;
+	background: var(--office-surface, #fff);
+	color: var(--office-fg, #252525);
+	border: 1px solid var(--office-border, #888);
+}

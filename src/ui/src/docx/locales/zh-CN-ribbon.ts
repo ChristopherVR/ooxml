@@ -7,6 +7,15 @@
 import type { RibbonStrings } from './en';
 
 export const zhCNRibbon: RibbonStrings = {
+	Transform: '转换',
+	WordArt: '艺术字',
+	'WordArt text': '艺术字文本',
+	'Your text here': '在此输入文本',
+	'WordArt style': '艺术字样式',
+	Icons: '图标',
+	'Search icons': '搜索图标',
+	'Icon color': '图标颜色',
+	'No matching icons.': '没有匹配的图标。',
 	Font: '字体',
 	Paragraph: '段落',
 	'Alignment and history': '对齐与历史记录',

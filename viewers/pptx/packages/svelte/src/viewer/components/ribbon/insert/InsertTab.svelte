@@ -120,6 +120,22 @@
 		newSlideAvailable: true,
 		slideTemplatesAvailable: customization.isDialogAvailable('slideTemplates'),
 		chartDialogAvailable: true,
+		getGraphicTarget: () => ({
+			slides: editor.slides,
+			slideIndex: editor.currentSlideIndex,
+			canvasSize,
+			themeColors: editor.themeColorMap,
+			insert: editor.insertElement,
+			sections: editor.sections,
+			insertSummary: (mutation: import('ooxml-ui/pptx').SummaryZoomMutation) => {
+				editor.pushHistory();
+				editor.sections = mutation.sections;
+				editor.slides = mutation.slides;
+				editor.selection.clear();
+				onnavigateslide?.(mutation.slideIndex);
+				editor.commitChange();
+			},
+		}),
 		commentAvailable: Boolean(chromeUi),
 		layouts: scopedLayouts.map(({ path, name }) => ({ path, name })),
 		...(currentLayoutPath ? { currentLayoutPath } : {}),

@@ -35,6 +35,7 @@ export interface ShapeNode {
 		font?: { color?: DrawingColor };
 	};
 	text?: DrawingTextBody;
+	wordArt?: import('../drawingml/word-art').WordArtStyle;
 	/** A group's children and the child coordinate space they are drawn in. */
 	children?: ShapeNode[];
 	childFrame?: DrawingFrame;

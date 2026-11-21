@@ -36,6 +36,8 @@ import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
+import { pickOfficeIcon } from '../form/icon-picker';
+import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
 import { updateFields } from './field-update';
 import {
@@ -73,6 +75,7 @@ export class InsertController {
 	readonly shapeTool = new ShapeTool();
 	/** Insert > SmartArt, SmartArt Design and the SmartArt text pane. */
 	readonly smartArt: SmartArtController;
+	private locale: EditorLocale = 'en';
 	private showHidden = false;
 	private showMarks = false;
 	private showGridlines = false;
@@ -115,6 +118,10 @@ export class InsertController {
 		if (this.smartArt.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
+		} else if (action.type === 'insertIcon') {
+			if (view?.editable) void this.insertIcon(view);
+		} else if (action.type === 'insertWordArt') {
+			if (view?.editable) void this.insertWordArt(view);
 		} else if (action.type === 'pictureBullet') {
 			if (editable) this.bulletInput.click();
 		} else if (action.type === 'insertContentControl') {
@@ -244,6 +251,7 @@ export class InsertController {
 	}
 
 	setLocale(locale: EditorLocale): void {
+		this.locale = locale;
 		this.linkDialog.setLocale(locale);
 		this.pictureDialog.setLocale(locale);
 		this.smartArt.setLocale(locale);
@@ -307,6 +315,73 @@ export class InsertController {
 	private setShowHidden(show: boolean): void {
 		this.showHidden = show;
 		this.syncPaper();
+	}
+
+	private async insertIcon(view: EditorView): Promise<void> {
+		const host = this.host.toolbar();
+		if (!host) return;
+		const t = (label: import('./localization').LocalizationKey) => translate(this.locale, label);
+		const icon = await pickOfficeIcon(host, {
+			heading: t('Icons'),
+			search: t('Search icons'),
+			color: t('Icon color'),
+			empty: t('No matching icons.'),
+			cancel: t('Cancel'),
+			insert: t('Insert'),
+			close: t('Close'),
+		});
+		if (icon && this.host.view() === view && view.editable) {
+			await this.insertPictureFile(
+				new File([icon.svg], `${icon.name}.svg`, { type: 'image/svg+xml' }),
+			);
+		}
+	}
+
+	private async insertWordArt(view: EditorView): Promise<void> {
+		const host = this.host.toolbar();
+		if (!host) return;
+		const t = (label: import('./localization').LocalizationKey) => translate(this.locale, label);
+		const box = selectedTextBox(view.state);
+		const current = box?.settings.wordArt ? box : undefined;
+		const currentNode = current ? view.state.doc.nodeAt(current.pos) : undefined;
+		const { pickWordArt } = await import('../form/word-art-picker');
+		if (this.host.view() !== view || !view.editable) return;
+		const selected = await pickWordArt(
+			host,
+			{
+				heading: t('WordArt'),
+				text: t('WordArt text'),
+				placeholder: t('Your text here'),
+				style: (index) => `${t('WordArt style')} ${index}`,
+				transform: t('Transform'),
+				preview: t('Preview'),
+				locale: this.locale,
+				confirm: current ? t('OK') : t('Insert'),
+				cancel: t('Cancel'),
+				close: t('Close'),
+			},
+			current?.settings.wordArt
+				? { text: current.settings.lines.join(' '), style: current.settings.wordArt }
+				: undefined,
+		);
+		if (!selected || this.host.view() !== view || !view.editable) return;
+		if (current) {
+			if (view.state.doc.nodeAt(current.pos) === currentNode) {
+				updateTextBox(view, current.pos, {
+					...current.settings,
+					lines: [selected.text],
+					wordArt: selected.style,
+				});
+			}
+			return;
+		}
+		insertTextBox(view, {
+			lines: [selected.text],
+			widthPx: Math.min(550, Math.max(180, selected.text.length * 22 + 26)),
+			heightPx: selected.style.warp ? 115 : 70,
+			border: false,
+			wordArt: selected.style,
+		});
 	}
 
 	private async insertSelectedPicture(): Promise<void> {

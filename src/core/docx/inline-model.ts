@@ -17,6 +17,7 @@ export interface TextBoxContent extends Pick<
 	'anchor' | 'insetLeftEmu' | 'insetTopEmu' | 'insetRightEmu' | 'insetBottomEmu' | 'vertical'
 > {
 	blocks: Block[];
+	wordArt?: import('../drawingml/word-art').WordArtStyle;
 	/** `wrap="none"`: lines do not wrap, and Word sizes the shape's width to the longest line. */
 	wrap?: 'none';
 	/** `a:spAutoFit` (`shape`): the shape's height follows its text. Word draws `normAutofit` as none. */

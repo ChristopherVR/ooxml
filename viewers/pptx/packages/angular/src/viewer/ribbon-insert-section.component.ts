@@ -127,9 +127,19 @@ export class RibbonInsertSectionComponent {
 			commentAvailable: true,
 			slideTemplatesAvailable: isDialogAvailable(this.customization(), 'slideTemplates'),
 			chartDialogAvailable: true,
+			getGraphicTarget: () => ({
+				slides: this.editor.slides(),
+				slideIndex: this.slideIndex(),
+				canvasSize: this.loader.canvasSize(),
+				themeColors: this.loader.themeColorMap(),
+				insert: (element: PptxElement) => this.editor.addElement(this.slideIndex(), element),
+				sections: this.editor.sections(),
+				insertSummary: this.editor.commitSummaryZoom.bind(this.editor),
+			}),
 			layouts: this.layouts(),
 			...this.currentLayout(),
-			translate: (key: string) => this.translate.instant(key),
+			translate: (key: string, params?: Record<string, string | number>) =>
+				this.translate.instant(key, params),
 		};
 	}
 

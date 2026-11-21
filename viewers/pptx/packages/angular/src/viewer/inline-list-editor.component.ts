@@ -14,6 +14,7 @@ import {
 	restoreInlineListBodySelection,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
+import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 import type {
 	CollaborationInlineEditor,
 	CollaborationLivePatcher,
@@ -172,7 +173,7 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 	}
 
 	protected commit(): void {
-		if (this.disposed) {
+		if (this.disposed || isChoosingInlineSymbol(this.editor().nativeElement)) {
 			return;
 		}
 		if (this.cancelled) {

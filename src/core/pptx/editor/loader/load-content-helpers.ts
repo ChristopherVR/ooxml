@@ -26,11 +26,10 @@ export interface GuideEntry {
 }
 
 /** An element that may carry an image path needing Blob URL resolution. */
-export interface ImagePathElement {
-	element: PptxElement;
-	field: 'imageData' | 'svgData' | 'posterFrameData' | 'modelData' | 'posterImage';
-	path: string;
-}
+export type ImagePathElement = { element: PptxElement; path: string } & (
+	| { field: 'imageData' | 'svgData' | 'posterFrameData' | 'modelData' | 'posterImage' }
+	| { field: 'summaryTarget'; index: number }
+);
 
 /**
  * Recursively walks an element tree and pushes every media element
@@ -93,6 +92,7 @@ export function collectAnimationSoundPaths(slides: readonly PptxSlide[]): string
  *
  * This covers:
  * - Picture elements (`imageData`, `svgData`)
+ * - Zoom and Summary Zoom preview images
  * - Media poster frames (`posterFrameData`)
  *
  * Returns the set of unique archive paths, plus a list of element/field
@@ -116,6 +116,18 @@ export function collectImagePaths(slides: PptxSlide[]): {
 				if (pic.svgPath && !pic.svgData && !isExternalUrl(pic.svgPath)) {
 					paths.add(pic.svgPath);
 					refs.push({ element: el, field: 'svgData', path: pic.svgPath });
+				}
+			}
+			if (el.type === 'zoom') {
+				if (el.imagePath && !el.imageData && !isExternalUrl(el.imagePath)) {
+					paths.add(el.imagePath);
+					refs.push({ element: el, field: 'imageData', path: el.imagePath });
+				}
+				for (const [index, target] of (el.summaryTargets ?? []).entries()) {
+					if (target.imagePath && !target.imageData && !isExternalUrl(target.imagePath)) {
+						paths.add(target.imagePath);
+						refs.push({ element: el, field: 'summaryTarget', index, path: target.imagePath });
+					}
 				}
 			}
 			if (el.type === 'media') {

@@ -256,6 +256,16 @@ export interface EditSession {
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
+	addWordArt(
+		sheet: number,
+		anchor: DrawingAnchor,
+		value: import('../../drawingml/word-art').WordArtText,
+	): number;
+	editWordArt(
+		sheet: number,
+		index: number,
+		value: import('../../drawingml/word-art').WordArtText,
+	): void;
 	/** Applies a SmartArt Design or text pane command to the SmartArt at `index` (one undo step). */
 	editSmartArt(sheet: number, index: number, edit: DiagramNodeEdit): SmartArtEditResult;
 	formatSmartArt(sheet: number, index: number, change: DiagramFormatChange): boolean;

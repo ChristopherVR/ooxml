@@ -18,6 +18,7 @@ import {
 	spaceBeforeCaretRange,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
+import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 import type {
 	CollaborationInlineEditor,
 	CollaborationLivePatcher,
@@ -191,7 +192,7 @@ function onInput(event: Event): void {
 }
 
 function onBlur(): void {
-	if (activatingList) {
+	if (activatingList || isChoosingInlineSymbol(editorRef.value)) {
 		return;
 	}
 	if (disposed) {

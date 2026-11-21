@@ -19,13 +19,14 @@ import {
 import type {
 	InsertControlSpec,
 	InsertLabel,
-	RibbonInsertIntent,
+	RibbonInsertAction,
 	RibbonInsertState,
 } from '../render';
 import { createInsertMenu } from './ribbon-insert-dom';
 import { createTablePicker } from './ribbon-insert-table-picker';
 import type { InsertMenu, InsertMenuItem } from './ribbon-insert-dom';
 import { RIBBON_INSERT_ICON_PATHS } from './ribbon-insert-icons';
+import { preserveInlineSymbolCaret } from '../render/inline-symbol';
 
 /** Id prefix of the Recently Used Shapes row, so no id repeats inside the menu. */
 const RECENT_PREFIX = 'recent:';
@@ -50,7 +51,7 @@ interface BuiltControl {
 /** All Insert markup lives here. The host only reflects state and routes native intents. */
 export function createRibbonInsertView(
 	doc: Document,
-	request: (intent: RibbonInsertIntent) => void,
+	request: (intent: RibbonInsertAction) => void,
 ) {
 	const groups = new Map<string, HTMLElement>();
 	const group = (id: string, ...children: HTMLElement[]) => {
@@ -71,6 +72,9 @@ export function createRibbonInsertView(
 		if (control) {
 			el.dataset.ribbonControl = control;
 		}
+		if (control === 'insert.symbols.symbol') {
+			el.addEventListener('pointerdown', (event) => preserveInlineSymbolCaret(event, doc));
+		}
 		el.setAttribute('icon', icon);
 		el.toggleAttribute('compact', compact);
 		// Controls without a catalogue id cannot emit command-request, so use the click.
@@ -86,7 +90,7 @@ export function createRibbonInsertView(
 	 * A gallery pick stages the type and then inserts it, as Office does. The host applies the
 	 * staged type on its next render, so the insert follows after it has settled.
 	 */
-	const stageThenInsert = (stage: RibbonInsertIntent, insert: RibbonInsertIntent) => {
+	const stageThenInsert = (stage: RibbonInsertAction, insert: RibbonInsertAction) => {
 		request(stage);
 		setTimeout(() => request(insert), 50);
 	};

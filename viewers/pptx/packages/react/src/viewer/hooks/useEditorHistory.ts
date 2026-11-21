@@ -3,6 +3,7 @@ import type { EditorHistoryController, HistoryTheme } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxHeaderFooter,
+	PptxSection,
 	PptxSlide,
 	PptxSlideMaster,
 	PptxTheme,
@@ -25,6 +26,8 @@ import { usePointerReleaseWakeup } from './usePointerReleaseWakeup';
 
 export interface EditorHistoryInput {
 	slides: PptxSlide[];
+	sections?: PptxSection[];
+	setSections?: (sections: PptxSection[]) => void;
 	canvasSize: CanvasSize;
 	activeSlideIndex: number;
 	templateElementsBySlideId: Record<string, PptxElement[]>;
@@ -149,6 +152,8 @@ export interface EditorHistoryResult {
 export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult {
 	const {
 		slides,
+		sections,
+		setSections,
 		canvasSize,
 		activeSlideIndex,
 		templateElementsBySlideId,
@@ -246,12 +251,21 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 				height: canvasSize.height,
 				activeSlideIndex,
 				slides: slides.map(cloneSlide),
+				...(sections ? { sections: structuredClone(sections) } : {}),
 				templateElementsBySlideId: cloneTemplateElementsBySlideId(templateElementsBySlideId),
 				...(recordedTheme ? { theme: recordedTheme } : {}),
 				...(actionLabel ? { actionLabel } : {}),
 			};
 		},
-		[activeSlideIndex, canvasSize, slideMasters, slides, templateElementsBySlideId, theme],
+		[
+			activeSlideIndex,
+			canvasSize,
+			sections,
+			slideMasters,
+			slides,
+			templateElementsBySlideId,
+			theme,
+		],
 	);
 
 	const applyHistorySnapshot = useCallback(
@@ -262,6 +276,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 				height: snapshot.height,
 			});
 			setSlides(snapshot.slides.map(cloneSlide));
+			if (snapshot.sections) setSections?.(structuredClone(snapshot.sections));
 			setTemplateElementsBySlideId(
 				cloneTemplateElementsBySlideId(snapshot.templateElementsBySlideId),
 			);
@@ -274,6 +289,7 @@ export function useEditorHistory(input: EditorHistoryInput): EditorHistoryResult
 			setCanvasSize,
 			setSelectedElementId,
 			setSelectedElementIds,
+			setSections,
 			setSlides,
 			setTemplateElementsBySlideId,
 		],

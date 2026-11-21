@@ -32,5 +32,9 @@ export function cloneHistorySnapshot(snapshot: EditorHistorySnapshot): EditorHis
 	const clone = cloneHistorySnapshotShared(
 		snapshot as HistorySnapshotLike,
 	) as EditorHistorySnapshot;
-	return snapshot.theme ? { ...clone, theme: structuredClone(snapshot.theme) } : clone;
+	return {
+		...clone,
+		...(snapshot.theme ? { theme: structuredClone(snapshot.theme) } : {}),
+		...(snapshot.sections ? { sections: structuredClone(snapshot.sections) } : {}),
+	};
 }

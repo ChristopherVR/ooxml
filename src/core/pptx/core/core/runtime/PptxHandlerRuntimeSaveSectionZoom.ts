@@ -28,16 +28,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const relationshipId = this.ensureZoomPreviewRelationship(el, shape, ctx);
 		if (!shape) {
 			this.ensureZoomShapeId(el, ctx);
+			const zoomProperties: XmlObject = {
+				'@_id': `{${generateFontGuid()}}`,
+				'@_imageType': 'preview',
+				'p166:blipFill': this.buildZoomBlipFill(relationshipId),
+				'p166:spPr': this.buildZoomShapeProperties(el),
+			};
+			this.applyZoomPlayback(zoomProperties, el);
 			shape = {
-				'psezm:sectionZmObj': {
-					'@_sectionId': sectionId,
-					'psezm:zmPr': {
-						'@_id': `{${generateFontGuid()}}`,
-						'@_imageType': 'preview',
-						'p166:blipFill': this.buildZoomBlipFill(relationshipId),
-						'p166:spPr': this.buildZoomShapeProperties(el),
-					},
-				},
+				'psezm:sectionZmObj': { '@_sectionId': sectionId, 'psezm:zmPr': zoomProperties },
 			};
 			this.newZoomFallbackByXml.set(shape, this.buildZoomFallbackPicture(el, relationshipId));
 			return shape;
@@ -50,6 +49,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 		zoomObject['@_sectionId'] = sectionId;
+		this.applyZoomPlayback(zoomProperties, el);
 		this.applyZoomTransform(shapeProperties, el);
 		this.applyZoomBlipRelationship(zoomProperties, relationshipId);
 		this.updateZoomFallback(shape, el, relationshipId);

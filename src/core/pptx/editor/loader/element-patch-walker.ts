@@ -53,7 +53,7 @@ export function walkAndPatchElements(
 }
 
 /**
- * Apply resolved flat-field image URLs (from {@link collectImagePaths} in
+ * Apply resolved image URLs (from {@link collectImagePaths} in
  * `load-content-helpers.ts` plus a path -> URL map) back onto the element
  * tree, immutably, via {@link walkAndPatchElements}. Mirrors
  * {@link applyTableCellImagePatches}'s "return the same reference when
@@ -65,21 +65,39 @@ export function applyImagePathPatches(
 	refs: readonly ImagePathElement[],
 ): PptxElement[] {
 	const elementPatches = new Map<string, Record<string, string>>();
+	const summaryPatches = new Map<string, Map<number, string>>();
 	for (const ref of refs) {
 		const url = resolvedMap.get(ref.path);
 		if (!url) {
+			continue;
+		}
+		if (ref.field === 'summaryTarget') {
+			const targets = summaryPatches.get(ref.element.id) ?? new Map<number, string>();
+			targets.set(ref.index, url);
+			summaryPatches.set(ref.element.id, targets);
 			continue;
 		}
 		const existing = elementPatches.get(ref.element.id) ?? {};
 		existing[ref.field] = url;
 		elementPatches.set(ref.element.id, existing);
 	}
-	if (elementPatches.size === 0) {
+	if (elementPatches.size === 0 && summaryPatches.size === 0) {
 		return elements;
 	}
 
 	return walkAndPatchElements(elements, (el) => {
 		const patch = elementPatches.get(el.id);
+		const targets = summaryPatches.get(el.id);
+		if (el.type === 'zoom' && el.summaryTargets && targets) {
+			return {
+				...el,
+				...patch,
+				summaryTargets: el.summaryTargets.map((target, index) => {
+					const imageData = targets.get(index);
+					return imageData ? { ...target, imageData } : target;
+				}),
+			};
+		}
 		return patch ? ({ ...el, ...patch } as PptxElement) : el;
 	});
 }

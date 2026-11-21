@@ -1,3 +1,4 @@
+import { templateSchemeFromTheme } from 'ooxml-ui/pptx';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
@@ -294,6 +295,21 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		...buildChromeCallbacks({
 			...deps,
 			getRegionSet: () => regions,
+			getGraphicTarget: () => {
+				const { slides, sections, currentSlide, canvasSize, colorScheme } = store.get();
+				return {
+					slides,
+					sections,
+					slideIndex: currentSlide,
+					canvasSize,
+					themeColors: templateSchemeFromTheme(colorScheme),
+					insert: (element) => deps.getEditActions().insertElement(element),
+					insertSummary: (mutation) => {
+						deps.getEditActions().sections.commitSummaryZoom(mutation);
+						deps.goToSlide(mutation.slideIndex);
+					},
+				};
+			},
 			formatPane: formatPaneFor(store),
 		}),
 	});

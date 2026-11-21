@@ -39,6 +39,7 @@ interface Props {
 	newShapeType: SupportedShapeType;
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddTextBox: () => void;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
@@ -104,6 +105,7 @@ const state = computed(() => ({
 		: [],
 	chartAvailable: Boolean(props.onAddChart),
 	chartDialogAvailable: Boolean(props.onAddChart),
+	getGraphicTarget: props.getGraphicTarget,
 	fieldAvailable: Boolean(props.onInsertField),
 	headerFooterAvailable: Boolean(props.onOpenHeaderFooter),
 	newSlideAvailable: Boolean(props.onInsertSlideFromLayout && props.layoutOptions?.length),

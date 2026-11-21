@@ -1,5 +1,14 @@
 /** Ribbon, formatting and search strings. Keys are the English UI text the localizer looks up. */
 export const enRibbon = {
+	Transform: 'Transform',
+	WordArt: 'WordArt',
+	'WordArt text': 'WordArt text',
+	'Your text here': 'Your text here',
+	'WordArt style': 'WordArt style',
+	Icons: 'Icons',
+	'Search icons': 'Search icons',
+	'Icon color': 'Icon color',
+	'No matching icons.': 'No matching icons.',
 	Font: 'Font',
 	Paragraph: 'Paragraph',
 	'Alignment and history': 'Alignment and history',

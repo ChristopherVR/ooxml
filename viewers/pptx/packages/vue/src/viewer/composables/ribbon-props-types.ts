@@ -135,6 +135,7 @@ export interface UseRibbonPropsActionsInput {
 	undo: () => void;
 	redo: () => void;
 	addText: () => void;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	addShape: (preset: ShapePreset) => void;
 	addTable: (rows?: number, columns?: number) => void;
 	addChart: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;

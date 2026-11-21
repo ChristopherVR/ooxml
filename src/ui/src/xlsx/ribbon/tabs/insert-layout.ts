@@ -37,6 +37,7 @@ export function insertTab(): RibbonTab {
 				label: 'Illustrations',
 				controls: [
 					{ kind: 'button', command: 'insert.pictures', size: 'large' },
+					{ kind: 'button', command: 'insert.icons', size: 'large' },
 					{ kind: 'button', command: 'insert.smartart', size: 'large' },
 				],
 			},
@@ -109,7 +110,10 @@ export function insertTab(): RibbonTab {
 			{
 				id: 'symbols',
 				label: 'Symbols',
-				controls: [{ kind: 'button', command: 'insert.symbol', size: 'large' }],
+				controls: [
+					{ kind: 'button', command: 'insert.word-art', size: 'large' },
+					{ kind: 'button', command: 'insert.symbol', size: 'large' },
+				],
 			},
 		],
 	};

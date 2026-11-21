@@ -2,6 +2,7 @@
 // (`geometry/preset-shape-evaluator`), the shared custom-geometry path data and the DrawingML
 // fill, outline and text body. The Excel UI only paints this string (docs/xlsx-parity-status.md).
 import { drawingPathData } from '../../drawingml/path-data';
+import { renderWordArtSvg } from '../../drawingml/word-art-svg';
 import type { DrawingTextBody, DrawingTextParagraph } from '../../drawingml/types';
 import { evaluatePresetShape, lookupPresetShape } from '../../geometry/preset-shape-evaluator';
 import type { ThemePalette } from '../model';
@@ -69,6 +70,19 @@ function paragraphText(body: DrawingTextBody, paragraph: DrawingTextParagraph) {
 function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 	const body = node.text;
 	if (!body) return '';
+	if (node.wordArt) {
+		return renderWordArtSvg({
+			id: `${ctx.prefix}word-art-${ctx.counter.n++}`,
+			style: node.wordArt,
+			lines: body.paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join('')),
+			width: rect.w,
+			height: rect.h,
+			x: rect.x,
+			y: rect.y,
+			fontPx: (body.paragraphs[0]?.runs[0]?.sizePt ?? 30) * POINT_PX * ctx.scale,
+			scale: ctx.scale,
+		});
+	}
 	const left = ((body.insetsEmu?.left ?? 91440) / EMU_PER_PX) * ctx.scale;
 	const right = ((body.insetsEmu?.right ?? 91440) / EMU_PER_PX) * ctx.scale;
 	const top = ((body.insetsEmu?.top ?? 45720) / EMU_PER_PX) * ctx.scale;

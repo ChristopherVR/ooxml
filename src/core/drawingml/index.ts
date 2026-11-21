@@ -83,3 +83,8 @@ export {
 } from './dash-pattern';
 export type { DashSegmentInput } from './dash-pattern';
 export * from './html-text-paste';
+export * from './word-art';
+export * from './word-art-styles';
+export * from './word-art-svg';
+export * from './text-warp-arch';
+export * from './text-warp-path';

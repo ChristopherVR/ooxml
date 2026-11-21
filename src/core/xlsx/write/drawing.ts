@@ -31,6 +31,7 @@ import {
 import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
 import { XML_HEADER, escapeAttr } from './xml-out';
+import { patchWordArtShape, wordArtShapeXml } from '../word-art';
 import {
 	droppedSmartArtDrawings,
 	isRewrittenSmartArt,
@@ -297,6 +298,16 @@ export function writeDrawing(
 			// The control shape sits inside `mc:AlternateContent`; its anchor is not re-written.
 			body += object.sourceXml;
 			continue;
+		}
+		if (object.kind === 'unsupported' && object.shape?.wordArt) {
+			if (!object.sourceXml) {
+				body += anchorXml(object.anchor, wordArtShapeXml(object.shape, nextId++), 'oneCell');
+				continue;
+			}
+			if (object.wordArtEdited) {
+				body += reanchor(patchWordArtShape(object.sourceXml, object.shape), object.anchor);
+				continue;
+			}
 		}
 		if (
 			object.kind === 'unsupported' &&

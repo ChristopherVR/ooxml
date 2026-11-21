@@ -12,6 +12,7 @@ import type { EditorOps } from './editor-operations';
 
 /** History-aware slide section actions exposed to the rail and Home ribbon. */
 export interface SectionActions {
+	commitSummaryZoom(mutation: import('ooxml-ui/pptx').SummaryZoomMutation): void;
 	addSection(name: string, afterSlideIndex?: number): string | null;
 	renameSection(sectionId: string, name: string): void;
 	deleteSection(sectionId: string): void;
@@ -31,6 +32,9 @@ export function createSectionActions(
 	};
 
 	return {
+		commitSummaryZoom({ sections, slides }) {
+			if (store.get().editable) commit(sections, slides);
+		},
 		addSection(name, afterSlideIndex = store.get().currentSlide) {
 			const state = store.get();
 			const trimmed = name.trim();

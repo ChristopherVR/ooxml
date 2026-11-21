@@ -1,0 +1,33 @@
+.office-icon-picker .icon-filters {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+.office-icon-picker input[type='search'] {
+	flex: 1;
+	min-width: 0;
+	padding: 6px 8px;
+	color: var(--office-fg, #252525);
+	background: var(--office-surface, #fff);
+	border: 1px solid var(--office-border, #888);
+	border-radius: 4px;
+}
+.office-icon-picker .icon-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(46px, 1fr));
+	gap: 4px;
+}
+.office-icon-picker .icon-grid button {
+	display: grid;
+	place-items: center;
+	min-height: 44px;
+	background: #fff;
+	border: 1px solid var(--office-border, #aaa);
+	border-radius: 4px;
+	cursor: pointer;
+}
+.office-icon-picker .icon-grid button[aria-pressed='true'] {
+	outline: 2px solid var(--office-accent, #2266bb);
+	outline-offset: -3px;
+}

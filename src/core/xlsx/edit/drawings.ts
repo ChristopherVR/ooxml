@@ -3,6 +3,8 @@ import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
 import { deleteTimeline } from './timelines';
 import { type EditContext, sheetAt, sheetDrawingAt } from './context';
+import { wordArtPaintEquals, wordArtRgb, type WordArtText } from '../../drawingml/word-art';
+import { wordArtShape } from '../word-art';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
 	const drawing = sheetDrawingAt(ctx.workbook, s, index);
@@ -23,6 +25,82 @@ function checkAnchor(anchor: DrawingAnchor): void {
 			throw new RangeError('A drawing anchor needs non-negative cell positions and offsets.');
 	if (anchor.ext && !(anchor.ext.cx >= 0 && anchor.ext.cy >= 0))
 		throw new RangeError('A drawing extent cannot be negative.');
+}
+
+function normalizeWordArt(value: WordArtText): WordArtText {
+	const text = value.text.trim();
+	const fill = wordArtRgb(value.style.fill);
+	const outline = wordArtRgb(value.style.outline);
+	const shadow = wordArtRgb(value.style.shadow);
+	if (
+		!text ||
+		!fill ||
+		(value.style.outline !== undefined && !outline) ||
+		(value.style.shadow !== undefined && !shadow)
+	) {
+		throw new RangeError('WordArt requires text and valid colors.');
+	}
+	return {
+		text,
+		style: {
+			fill,
+			...(outline ? { outline } : {}),
+			...(shadow ? { shadow } : {}),
+			...(value.style.warp ? { warp: structuredClone(value.style.warp) } : {}),
+		},
+	};
+}
+
+/** Inserts native worksheet WordArt as one drawing edit. */
+export function addWordArt(
+	ctx: EditContext,
+	s: number,
+	anchor: DrawingAnchor,
+	value: WordArtText,
+): number {
+	checkAnchor(anchor);
+	const sheet = sheetAt(ctx.workbook, s);
+	const shape = wordArtShape(normalizeWordArt(value), anchor);
+	return ctx.run(
+		'Insert WordArt',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			sheet.drawings.push({
+				kind: 'unsupported',
+				description: 'text box',
+				anchor: structuredClone(anchor),
+				shape,
+			});
+			return sheet.drawings.length - 1;
+		},
+		{ sheet: s },
+	);
+}
+
+export function editWordArt(ctx: EditContext, s: number, index: number, value: WordArtText): void {
+	const drawing = drawingAt(ctx, s, index);
+	if (drawing.kind !== 'unsupported' || !drawing.shape?.wordArt) return;
+	const next = normalizeWordArt(value);
+	const shape = drawing.shape;
+	if (
+		shape.text?.text === next.text &&
+		shape.wordArt &&
+		wordArtPaintEquals(shape.wordArt, next.style) &&
+		JSON.stringify(shape.wordArt.warp) === JSON.stringify(next.style.warp)
+	)
+		return;
+	ctx.run(
+		'Edit WordArt',
+		'annotations',
+		[{ kind: 'sheet', sheet: s }],
+		() => {
+			const wordArt = wordArtShape(next, drawing.anchor);
+			drawing.shape = { ...shape, wordArt: next.style, text: wordArt.text! };
+			if (drawing.sourceXml) drawing.wordArtEdited = true;
+		},
+		{ sheet: s },
+	);
 }
 
 /**

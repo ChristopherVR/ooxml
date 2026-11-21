@@ -162,6 +162,8 @@ describe('slide zoom package integration', () => {
 			height: 180,
 			imageData: PNG_DATA,
 			altText: 'Preview of slide 2',
+			returnToParent: false,
+			transitionDurationMs: 750,
 		} satisfies ZoomPptxElement);
 
 		const saved = await handler.save(data.slides);
@@ -171,6 +173,21 @@ describe('slide zoom package integration', () => {
 		const contentTypes = await zip.file('[Content_Types].xml')!.async('string');
 
 		expect(slideXml).toContain('Requires="pslz"');
+		const parsedSlide = parseXml(slideXml);
+		const zoomData = Array.from(parsedSlide.getElementsByTagNameNS(NS.a, 'graphicData')).find(
+			(graphicData) =>
+				graphicData.getAttribute('uri') ===
+				'http://schemas.microsoft.com/office/powerpoint/2016/slidezoom',
+		);
+		const frame = zoomData?.parentNode?.parentNode;
+		expect(frame?.nodeName).toBe('p:graphicFrame');
+		expect(Array.from(frame?.childNodes ?? [], (node) => node.nodeName)).toEqual([
+			'p:nvGraphicFramePr',
+			'p:xfrm',
+			'a:graphic',
+		]);
+		expect(slideXml).toContain('returnToParent="0"');
+		expect(slideXml).toContain('transitionDur="750"');
 		expect(slideXml).toContain('<pslz:sldZm>');
 		expect(slideXml).toContain(
 			'<p:cNvPr id="2" name="authored-slide-zoom" descr="Preview of slide 2"',

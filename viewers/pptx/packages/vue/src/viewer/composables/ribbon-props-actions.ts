@@ -49,6 +49,7 @@ export function buildRibbonPropsActions(input: UseRibbonPropsInput) {
 			input.newShapeType.value = t;
 		},
 		onAddTextBox: input.addText,
+		getGraphicTarget: input.getGraphicTarget,
 		onAddShape: () => input.addShape(toShapePreset(input.newShapeType.value)),
 		onAddTable: input.addTable,
 		onAddChart: input.addChart,

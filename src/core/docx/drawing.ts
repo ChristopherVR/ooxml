@@ -16,6 +16,7 @@ import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
+import { readWordArtStyle } from './word-art';
 import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
 import { getR, isElement, type XmlElement } from './xml';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
@@ -214,6 +215,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	const richText = isShapeGraphic
 		? textBoxContent(graphicData, context, `txbx${docPr?.getAttribute('id') ?? ''}-`)
 		: undefined;
+	const wordArt = richText && readWordArtStyle(graphicData);
 	return {
 		relId: relId ?? '',
 		partName: '',
@@ -231,7 +233,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			? { textBoxEditable: true, textBoxBorder: textBoxHasBorder(graphicData) }
 			: {}),
 		// Last, as the editor's run adapter writes it: an unchanged drawing is compared by JSON.
-		...(richText ? { textBoxContent: richText } : {}),
+		...(richText ? { textBoxContent: wordArt ? { ...richText, wordArt } : richText } : {}),
 	};
 }
 

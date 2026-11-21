@@ -1,0 +1,53 @@
+.office-word-art {
+	display: grid;
+	gap: 12px;
+}
+
+.office-word-art input,
+.office-word-art select {
+	padding: 6px 8px;
+	font: inherit;
+	color: inherit;
+	background: var(--office-surface);
+	border: 1px solid var(--office-border);
+	border-radius: 4px;
+}
+
+.office-word-art-choices {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(49px, 1fr));
+	gap: 6px;
+	max-height: 181px;
+	overflow: auto;
+}
+
+.office-word-art-choices button {
+	padding: 6px 8px;
+	font:
+		bold 26px Arial,
+		sans-serif;
+	border: 1px solid var(--office-border);
+	border-radius: 4px;
+	background: var(--office-surface);
+	cursor: pointer;
+}
+
+.office-word-art label {
+	display: grid;
+	gap: 4px;
+}
+
+.office-word-art-preview {
+	display: grid;
+	place-items: center;
+	min-height: 80px;
+}
+
+.office-word-art-preview svg {
+	max-width: 100%;
+}
+
+.office-word-art-choices button[aria-pressed='true'] {
+	border-color: var(--office-accent);
+	background: var(--office-accent-soft);
+}

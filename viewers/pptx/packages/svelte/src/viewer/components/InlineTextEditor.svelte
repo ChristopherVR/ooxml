@@ -27,6 +27,7 @@
 		seedPlainInlineText,
 		takePendingCaretPoint,
 	} from 'ooxml-ui/pptx';
+	import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 	// oxlint-disable-next-line import/no-duplicates -- type-only imports stay top-level (consistent-type-specifier-style).
 	import type { CollaborationInlineEditor, InlineListController } from 'ooxml-ui/pptx';
 		import { onDestroy, onMount, untrack } from 'svelte';
@@ -170,7 +171,7 @@
 	}
 
 	function onBlur(): void {
-		close(el ? readEditableText(el) : null);
+		if (!isChoosingInlineSymbol(el)) close(el ? readEditableText(el) : null);
 	}
 
 	function onKeydown(event: KeyboardEvent): void {

@@ -1,5 +1,7 @@
 // Insert tab: Table, Pictures, Charts, Link, Comment and Symbol.
 import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
+import { pickOfficeIcon } from '../../form/icon-picker';
+import { iconPngFile } from '../../form/local-svg';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { icon } from 'ooxml-core/xlsx/ui';
@@ -79,6 +81,52 @@ export async function insertPicture(ctx: EditorContext, file: File): Promise<voi
 	ctx.selection.set({ drawing: t.ws.drawings.length - 1 });
 }
 
+async function wordArtDialog(ctx: EditorContext, edit: boolean): Promise<void> {
+	const current = target(ctx);
+	if (!current) return;
+	const index = ctx.selection.get().drawing;
+	const drawing = edit && index !== undefined ? current.ws.drawings[index] : undefined;
+	const shape = drawing?.kind === 'unsupported' ? drawing.shape : undefined;
+	const initial =
+		shape?.wordArt && shape.text ? { text: shape.text.text, style: shape.wordArt } : undefined;
+	if (edit && !initial) return;
+	const t = (label: string) => ctx.t(label);
+	const { pickWordArt } = await import('../../form/word-art-picker');
+	if (ctx.session() !== current.session || ctx.activeSheet() !== current.sheet || ctx.readOnly())
+		return;
+	const value = await pickWordArt(
+		ctx.root,
+		{
+			heading: edit ? t('Edit WordArt') : t('WordArt'),
+			text: t('WordArt text'),
+			placeholder: t('Your text here'),
+			style: (n) => t('WordArt style {n}').replace('{n}', String(n)),
+			transform: t('Transform'),
+			preview: t('Preview'),
+			locale: ctx.locale(),
+			confirm: edit ? t('Apply') : t('Insert'),
+			cancel: t('Cancel'),
+			close: t('Close'),
+		},
+		initial,
+	);
+	const live = target(ctx);
+	if (!value || ctx.readOnly() || current.session !== live?.session || current.ws !== live.ws)
+		return;
+	if (edit) {
+		if (index !== undefined && drawing === live.ws.drawings[index])
+			live.session.editWordArt(live.sheet, index, value);
+		return;
+	}
+	const anchor = pictureAnchorAt(
+		current.active,
+		Math.min(650, Math.max(190, value.text.length * 23 + 24)),
+		value.style.warp ? 115 : 75,
+	);
+	const added = live.session.addWordArt(live.sheet, anchor, value);
+	ctx.selection.set({ drawing: added });
+}
+
 export function insertCommands(): Command[] {
 	return [
 		editing({
@@ -100,12 +148,56 @@ export function insertCommands(): Command[] {
 			},
 		}),
 		editing({
+			id: 'insert.icons',
+			label: 'Icons',
+			icon: 'insertIcons',
+			lock: 'objects',
+			run: async (ctx) => {
+				const session = ctx.session();
+				const sheet = ctx.activeSheet();
+				const t = (key: string) => ctx.t(key);
+				try {
+					const selected = await pickOfficeIcon(ctx.root, {
+						heading: t('Icons'),
+						search: t('Search icons'),
+						color: t('Icon color'),
+						empty: t('No matching icons.'),
+						cancel: t('Cancel'),
+						insert: t('Insert'),
+						close: t('Close'),
+						iconName: t,
+					});
+					if (!selected) return;
+					const file = await iconPngFile(ctx.host.ownerDocument, selected);
+					if (ctx.session() === session && ctx.activeSheet() === sheet && !ctx.readOnly()) {
+						await insertPicture(ctx, file);
+					}
+				} catch {
+					ctx.toast(t('Could not insert the icon.'), 'error');
+				}
+			},
+		}),
+		editing({
 			id: 'insert.chart',
 			label: 'Recommended Charts',
 			icon: icon('chartRecommended'),
 			lock: 'objects',
 			run: (ctx, arg) =>
 				void ctx.dialogs.open('insert-chart', { type: typeof arg === 'string' ? arg : 'column' }),
+		}),
+		editing({
+			id: 'insert.word-art',
+			label: 'WordArt',
+			icon: 'insertWordArt',
+			lock: 'objects',
+			run: (ctx) => wordArtDialog(ctx, false),
+		}),
+		editing({
+			id: 'drawing.edit-word-art',
+			label: 'Edit WordArt',
+			icon: 'insertWordArt',
+			lock: 'objects',
+			run: (ctx) => wordArtDialog(ctx, true),
 		}),
 		...CHART_TYPES.slice(0, 6).map(([type, label, glyph]) =>
 			editing({

@@ -697,7 +697,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (el.type === 'zoom') {
 			shape = this.createOrUpdateZoomXml(el as ZoomPptxElement, shape, ctx);
 			if (shape) {
-				collectors.zooms.push(shape);
+				if (shape['p:nvGraphicFramePr']) collectors.graphicFrames.push(shape);
+				else collectors.zooms.push(shape);
 			} else {
 				this.compatibilityService.reportWarning({
 					code: 'SAVE_ELEMENT_SKIPPED',

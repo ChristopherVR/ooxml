@@ -28,6 +28,45 @@ const newBox = (lines: string[], border = true): InlineImage => ({
 });
 
 describe('inserted text boxes', () => {
+	it('saves editable WordArt with native text fill and outline and retains them after editing', async () => {
+		const loaded = await loadDocx(await blank());
+		const wordArt = {
+			fill: '1769A5',
+			outline: '103D63',
+			shadow: '45460D',
+			warp: { preset: 'textArchUp', guides: [{ name: 'adj', formula: 'val 10800000' }] },
+		};
+		const image = { ...newBox(['Sales'], false), textBoxContent: { blocks: [], wordArt } };
+		(loaded.model.blocks[0] as Paragraph).runs.push({ text: '', image });
+		const saved = await loaded.save();
+		const xml = await xmlOf(saved);
+		expect(xml).toContain('fromWordArt="1"');
+		expect(xml).toContain('w14:textOutline');
+		expect(xml).toContain('w14:shadow');
+		expect(xml).toContain('prst="textArchUp"');
+		const normalized = await JSZip.loadAsync(saved);
+		normalized.file(
+			'word/document.xml',
+			xml.replace(/<w14:textFill\b[^>]*>[\s\S]*?<\/w14:textFill>/g, ''),
+		);
+		const back = await loadDocx(await normalized.generateAsync({ type: 'uint8array' }));
+		const shape = (back.model.blocks[0] as Paragraph).runs.find((run) => run.image)?.image;
+		expect(shape).toMatchObject({ textBoxEditable: true, textBoxContent: { wordArt } });
+		if (!shape) throw new Error('WordArt was lost');
+		shape.textBoxText = ['Revenue'];
+		if (!shape.textBoxContent) throw new Error('Missing WordArt content');
+		shape.textBoxContent.wordArt = {
+			fill: 'FFFFFF',
+			outline: '222222',
+			warp: { preset: 'textWave1', guides: [] },
+		};
+		const edited = await xmlOf(await back.save());
+		expect(edited).toContain('<w:t>Revenue</w:t>');
+		expect(edited).toContain('w14:val="222222"');
+		expect(edited).toContain('prst="textWave1"');
+		expect(edited).not.toContain('prst="textArchUp"');
+	});
+
 	it('writes an inline wps text box that reads back as an editable box', async () => {
 		const loaded = await loadDocx(await blank());
 		(loaded.model.blocks[0] as Paragraph).runs.push({

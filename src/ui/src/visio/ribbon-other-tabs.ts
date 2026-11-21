@@ -82,6 +82,12 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 					action: { type: 'insert', item: 'picture' },
 				}),
 				command(doc, {
+					id: 'icons',
+					label: 'Icons',
+					icon: 'insertIcons',
+					action: { type: 'insert', item: 'icons' },
+				}),
+				command(doc, {
 					id: 'chart',
 					label: 'Chart',
 					icon: 'visioChart',

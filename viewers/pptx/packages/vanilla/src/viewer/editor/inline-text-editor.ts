@@ -15,6 +15,7 @@ import {
 	seedPlainInlineText,
 	takePendingCaretPoint,
 } from 'ooxml-ui/pptx';
+import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 import type {
 	InlineListController,
 	InlineTextEditSnapshot,
@@ -213,7 +214,9 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 		}
 		options.onInput?.(readEditableText(surface));
 	});
-	surface.addEventListener('blur', () => close(readEditableText(surface)));
+	surface.addEventListener('blur', () => {
+		if (!isChoosingInlineSymbol(surface)) close(readEditableText(surface));
+	});
 	surface.addEventListener('keydown', (event) => {
 		if (options.onLiveFormatKey?.(event)) {
 			event.preventDefault();

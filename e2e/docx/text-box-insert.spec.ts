@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { newDocument, saveButton, dialogByHeading } from './helpers';
+import { newDocument, reopenDocument, reveal, saveButton, dialogByHeading } from './helpers';
 
 test('Insert > Text Box inserts, edits and exports an inline text box', async ({ page }) => {
 	await page.setViewportSize({ width: 1700, height: 720 });
@@ -11,7 +11,9 @@ test('Insert > Text Box inserts, edits and exports an inline text box', async ({
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Before ');
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor.getByRole('button', { name: 'Text box', exact: true }).click();
+	const insertTextBox = editor.getByRole('button', { name: 'Text box', exact: true });
+	await reveal(editor, insertTextBox);
+	await insertTextBox.click();
 	const dialog = dialogByHeading(editor, 'Text box');
 	await expect(dialog).toBeVisible();
 	await dialog.getByRole('textbox', { name: 'Text', exact: true }).fill('Hello box\nSecond line');
@@ -35,7 +37,8 @@ test('Insert > Text Box inserts, edits and exports an inline text box', async ({
 	await box.click();
 	await expect(editor.getByRole('tab', { name: 'Shape Format', exact: true })).toBeVisible();
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor.getByRole('button', { name: 'Text box', exact: true }).click();
+	await reveal(editor, insertTextBox);
+	await insertTextBox.click();
 	await expect(dialog.getByRole('textbox', { name: 'Text', exact: true })).toHaveValue(
 		'Hello box\nSecond line',
 	);
@@ -55,4 +58,58 @@ test('Insert > Text Box inserts, edits and exports an inline text box', async ({
 	expect(xml).toContain('txBox="1"');
 	expect(xml).toContain('<w:t>Edited</w:t>');
 	expect(xml.match(/<wp:inline/g)).toHaveLength(1);
+});
+
+test('WordArt stays styled and editable after reopening a DOCX', async ({ page }, testInfo) => {
+	await page.setViewportSize({ width: 1700, height: 800 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const insertWordArt = editor.getByRole('button', { name: 'WordArt', exact: true });
+	await reveal(editor, insertWordArt);
+	await insertWordArt.click();
+	const picker = editor.locator('office-ui-dialog[open]');
+	await picker.getByRole('textbox', { name: 'WordArt text' }).fill('Annual review');
+	await picker.getByRole('button', { name: 'WordArt style 1', exact: true }).press('End');
+	await expect(
+		picker.getByRole('button', { name: 'WordArt style 30', pressed: true }),
+	).toBeFocused();
+	await picker.getByRole('combobox', { name: 'Transform' }).selectOption('textArchUp');
+	await expect(picker.locator('[data-word-art-transform="textArchUp"] textPath')).toHaveText(
+		'Annual review',
+	);
+	await picker.getByRole('button', { name: 'Insert', exact: true }).click();
+	const box = editor.locator('.ProseMirror .dve-shape');
+	await expect(box).toContainText('Annual review');
+	await expect(box.locator('[data-word-art-transform="textArchUp"] textPath')).toHaveText(
+		'Annual review',
+	);
+	const pending = page.waitForEvent('download');
+	await saveButton(page).click();
+	const path = testInfo.outputPath('word-art.docx');
+	await (await pending).saveAs(path);
+	const artifact = await readFile(path);
+	const zip = await JSZip.loadAsync(artifact);
+	const xml = await zip.file('word/document.xml')?.async('string');
+	expect(xml).toContain('w14:textOutline');
+	expect(xml).toContain('w14:shadow');
+	expect(xml).toContain('prst="textArchUp"');
+	await reopenDocument(page, 'word-art.docx', artifact);
+	await box.click();
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await reveal(editor, insertWordArt);
+	await insertWordArt.click();
+	await expect(picker.getByRole('combobox', { name: 'Transform' })).toHaveValue('textArchUp');
+	await picker.getByRole('combobox', { name: 'Transform' }).selectOption('textWave1');
+	await picker.getByRole('button', { name: 'OK', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Shape Format', exact: true }).click();
+	await editor.getByRole('button', { name: 'Add text', exact: true }).click();
+	const textBox = dialogByHeading(editor, 'Text box');
+	await textBox.getByRole('textbox', { name: 'Text', exact: true }).fill('Annual results');
+	await textBox.getByRole('button', { name: 'OK', exact: true }).click();
+	await expect(box).toContainText('Annual results');
+	await expect(box.locator('[data-word-art-transform="textWave1"] textPath')).toHaveText(
+		'Annual results',
+	);
 });

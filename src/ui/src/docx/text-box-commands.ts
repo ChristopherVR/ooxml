@@ -3,12 +3,15 @@ import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { simpleTextBoxDrawing } from 'ooxml-core/docx';
 import { schema } from './schema';
+import type { WordArtStyle } from 'ooxml-core/drawingml';
+import { wordArtRgb } from 'ooxml-core/drawingml';
 
 export interface TextBoxSettings {
 	lines: string[];
 	widthPx: number;
 	heightPx: number;
 	border: boolean;
+	wordArt?: WordArtStyle;
 }
 
 const lines = (value: unknown): string[] => {
@@ -30,6 +33,10 @@ export function selectedTextBox(
 		return null;
 	const attrs = selection.node.attrs;
 	if (!attrs.textBoxEditable) return null;
+	const style = parsed(attrs.textBoxContent)?.wordArt;
+	const fill = wordArtRgb(style?.fill);
+	const outline = wordArtRgb(style?.outline);
+	const shadow = wordArtRgb(style?.shadow);
 	return {
 		pos: selection.from,
 		settings: {
@@ -37,6 +44,16 @@ export function selectedTextBox(
 			widthPx: Number(attrs.widthPx),
 			heightPx: Number(attrs.heightPx),
 			border: attrs.textBoxBorder !== false,
+			...(fill
+				? {
+						wordArt: {
+							fill,
+							...(outline ? { outline } : {}),
+							...(shadow ? { shadow } : {}),
+							...(style?.warp ? { warp: style.warp } : {}),
+						},
+					}
+				: {}),
 		},
 	};
 }
@@ -58,13 +75,16 @@ export function textBoxDrawingAttrs(
 	nextLines: readonly string[],
 	border: boolean,
 	attrs: Record<string, unknown> = {},
+	wordArt?: WordArtStyle,
 ): { shape: string; textBoxContent: string } {
 	const shape = parsed(attrs.shape);
 	const content = parsed(attrs.textBoxContent);
 	const drawing = simpleTextBoxDrawing(nextLines, border, {
 		...(shape ? { shape } : {}),
-		...(content ? { textBoxContent: content } : {}),
-		textBoxText: lines(attrs.textBoxText),
+		...(content || wordArt
+			? { textBoxContent: { blocks: [], ...content, ...(wordArt ? { wordArt } : {}) } }
+			: {}),
+		...(wordArt ? {} : { textBoxText: lines(attrs.textBoxText) }),
 		textBoxBorder: attrs.textBoxBorder !== false,
 	});
 	return {
@@ -76,7 +96,7 @@ export function textBoxDrawingAttrs(
 const attrsFor = (settings: TextBoxSettings, attrs?: Record<string, unknown>) => ({
 	unsupported: 'Text box',
 	textBoxText: JSON.stringify(settings.lines),
-	...textBoxDrawingAttrs(settings.lines, settings.border, attrs),
+	...textBoxDrawingAttrs(settings.lines, settings.border, attrs, settings.wordArt),
 	textBoxEditable: true,
 	textBoxBorder: settings.border,
 	widthPx: settings.widthPx,

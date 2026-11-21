@@ -10,11 +10,13 @@ import {
 import type {
 	InsertControlSpec,
 	InsertLabel,
+	RibbonInsertAction,
 	RibbonInsertIntent,
 	RibbonInsertState,
 } from '../render';
 import { attachControlStyles } from './control-styles';
 import { MOBILE_INSERT_STYLES } from './mobile-insert-styles';
+import { createGraphicInsert } from './ribbon-graphic-insert';
 import { insertIcon, insertSvg } from './ribbon-insert-dom';
 import { INSERT_SHAPE_GLYPH_PATHS, insertGlyphTransform } from './ribbon-insert-icons';
 import { createTablePicker } from './ribbon-insert-table-picker';
@@ -40,6 +42,9 @@ const TILES = [
 	'insert.illustrations.chart',
 	'insert.illustrations.smartArt',
 	'insert.symbols.equation',
+	'insert.symbols.symbol',
+	'insert.text.wordArt',
+	'insert.illustrations.icons',
 	'insert.media.media',
 	'insert.slides.newSlide',
 	'insert.links.link',
@@ -76,6 +81,7 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 			shapeType: 'rect',
 			chartKind: 'column',
 		};
+		private readonly insertGraphic = createGraphicInsert(this, () => this.model);
 		private view: View = 'home';
 		private readonly body = this.ownerDocument.createElement('div');
 		constructor() {
@@ -101,8 +107,12 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		private text(label: InsertLabel): string {
 			return insertLabel(this.model, label);
 		}
-		private request(intent: RibbonInsertIntent): void {
+		private request(intent: RibbonInsertAction): void {
 			if (canRequestInsert(this.model, intent)) {
+				if (intent.kind === 'graphic' || intent.kind === 'zoom') {
+					this.insertGraphic(intent);
+					return;
+				}
 				this.dispatchEvent(
 					new CustomEvent('insert-request', { detail: intent, bubbles: true, composed: true }),
 				);

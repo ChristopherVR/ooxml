@@ -1,5 +1,11 @@
+import { interpolate } from 'ooxml-core/i18n';
+import type { Translator } from '../i18n/translator';
+import type { PptxElement, PptxSection, PptxSlide } from 'ooxml-core/pptx';
+import type { SummaryZoomMutation } from 'ooxml-core/pptx/editor/render/summary-zoom-operations';
+import type { CanvasSize } from '../types';
 import { ACTION_BUTTON_PRESETS } from './action-buttons';
 import { INSERT_CHART_TYPES } from './insert-chart';
+import { zoomChoices } from './ribbon-zoom-insert';
 import { shapeGalleryItemForValue } from './shape-gallery';
 import { SHAPE_PRESET_DEFS } from './shape-preset-catalog';
 
@@ -37,6 +43,19 @@ export function resolveInsertSlideLayout(
 /** The Table grid's size (PowerPoint's picker is 10 columns by 8 rows). */
 export const INSERT_TABLE_MAX = { rows: 8, columns: 10 } as const;
 
+export interface RibbonGraphicTarget {
+	slides: readonly PptxSlide[];
+	slideIndex: number;
+	canvasSize: CanvasSize;
+	themeColors?: Record<string, string> | undefined;
+	insert: (element: PptxElement) => void;
+	sections: readonly PptxSection[];
+	insertSummary?: ((mutation: SummaryZoomMutation) => void) | undefined;
+}
+
+export type RibbonGraphic = 'icons' | 'symbol' | 'wordArt';
+export type RibbonZoom = 'slide' | 'section' | 'summary';
+
 export type RibbonInsertField = 'slidenum' | 'datetime' | 'header' | 'footer';
 
 /**
@@ -73,7 +92,9 @@ export interface RibbonInsertState {
 	layouts?: readonly InsertSlideLayout[];
 	/** The active slide's layout, marked in the New Slide gallery. */
 	currentLayoutPath?: string;
-	translate?: (key: string) => string;
+	/** Hosts supply a fresh target so async pickers cannot apply to a slide opened later. */
+	getGraphicTarget?: (() => RibbonGraphicTarget | undefined) | undefined;
+	translate?: Translator;
 }
 
 export type RibbonInsertIntent =
@@ -93,6 +114,12 @@ export type RibbonInsertIntent =
 	| { kind: 'chartDialog' }
 	/** Insert Table from the grid picker: rows by columns. */
 	| { kind: 'table'; rows: number; columns: number };
+
+export type GraphicInsertIntent =
+	| { kind: 'graphic'; value: RibbonGraphic }
+	| { kind: 'zoom'; value: RibbonZoom };
+
+export type RibbonInsertAction = RibbonInsertIntent | GraphicInsertIntent;
 
 export type InsertLabel = [key: string, fallback: string];
 
@@ -223,9 +250,13 @@ export const INSERT_GROUP_CAPTIONS: Readonly<Record<string, InsertLabel>> = {
 	'insert.media': ['pptx.insert.groupMedia', 'Media'],
 };
 
-export function insertLabel(state: RibbonInsertState, label: InsertLabel): string {
-	const value = state.translate?.(label[0]);
-	return value && value !== label[0] ? value : label[1];
+export function insertLabel(
+	state: RibbonInsertState,
+	label: InsertLabel,
+	params?: Record<string, string | number>,
+): string {
+	const value = params ? state.translate?.(label[0], params) : state.translate?.(label[0]);
+	return interpolate(value && value !== label[0] ? value : label[1], params, 'double');
 }
 
 /** Whether a command has a backing feature in this host right now. */
@@ -241,8 +272,17 @@ function commandAvailable(state: RibbonInsertState, command: RibbonInsertCommand
 }
 
 /** Reject malformed programmatic intents as well as disabled pointer/keyboard picks. */
-export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertIntent): boolean {
+export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertAction): boolean {
 	switch (intent.kind) {
+		case 'graphic': {
+			const target = state.editable ? state.getGraphicTarget?.() : undefined;
+			return Boolean(target?.slides[target.slideIndex]);
+		}
+		case 'zoom': {
+			const target = state.editable ? state.getGraphicTarget?.() : undefined;
+			if (!target || (intent.value === 'summary' && !target.insertSummary)) return false;
+			return zoomChoices(target.slides, target.slideIndex, intent.value).length > 0;
+		}
 		case 'command':
 			if (!INSERT_COMMANDS.some((item) => item.command === intent.value)) {
 				return false;

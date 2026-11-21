@@ -44,6 +44,7 @@ export function MobileInsertSheet(p: ToolbarProps): React.ReactElement {
 						newShapeType={p.newShapeType}
 						onSetNewShapeType={p.onSetNewShapeType}
 						onAddTextBox={p.onAddTextBox}
+						getGraphicTarget={p.getGraphicTarget}
 						onAddShape={p.onAddShape}
 						onAddTable={p.onAddTable}
 						onAddChart={p.onAddChart}

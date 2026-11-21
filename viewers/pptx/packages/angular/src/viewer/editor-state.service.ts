@@ -1089,6 +1089,11 @@ export class EditorStateService {
 		this.sectionOps.add(afterSlideIndex, this.t('pptx.sections.defaultName'));
 	}
 
+	commitSummaryZoom(mutation: import('ooxml-ui/pptx').SummaryZoomMutation): void {
+		this.commitSections(mutation.sections, mutation.slides);
+		this.showSlide(mutation.slideIndex);
+	}
+
 	private commitSections(sections: readonly PptxSection[], slides: readonly PptxSlide[]): void {
 		this.history.record(this.captureSnapshot(), this.t('pptx.sections.sectionButtonLabel'));
 		this.sections.set(sections);

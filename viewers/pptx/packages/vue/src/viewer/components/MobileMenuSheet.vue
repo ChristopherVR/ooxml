@@ -122,6 +122,7 @@ const WRAP = 'flex flex-wrap items-center gap-2';
 						:new-shape-type="props.newShapeType"
 						:on-set-new-shape-type="props.onSetNewShapeType"
 						:on-add-text-box="props.onAddTextBox"
+						:get-graphic-target="props.getGraphicTarget"
 						:on-add-shape="props.onAddShape"
 						:on-add-table="props.onAddTable"
 						:on-add-chart="props.onAddChart"

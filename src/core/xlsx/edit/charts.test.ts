@@ -24,6 +24,54 @@ const partText = async (bytes: Uint8Array, name: string) =>
 	(await JSZip.loadAsync(bytes)).file(name)?.async('text');
 
 describe('charts and pictures', () => {
+	it('saves editable WordArt, then patches the text and outline after reopening', async () => {
+		const workbook = createWorkbook();
+		const value = {
+			text: 'Sales',
+			style: {
+				fill: '1769A5',
+				outline: '103D63',
+				warp: { preset: 'textArchUp', guides: [{ name: 'adj', formula: 'val 10800000' }] },
+			},
+		};
+		const position: DrawingAnchor = { from: anchor.from, ext: { cx: 2100000, cy: 600000 } };
+		createEditSession(workbook).addWordArt(0, position, value);
+		const original = await saveXlsx(workbook);
+		const loaded = await loadXlsx(original);
+		expect(loaded.sheets[0]?.drawings[0]).toMatchObject({
+			shape: { text: { text: 'Sales' }, wordArt: value.style },
+		});
+		const edit = createEditSession(loaded);
+		edit.editWordArt(0, 0, {
+			text: 'Revenue & costs',
+			style: {
+				fill: 'FFFFFF',
+				outline: '222222',
+				shadow: '45460D',
+				warp: { preset: 'textWave1', guides: [] },
+			},
+		});
+		const saved = await saveXlsx(loaded);
+		expect(await partText(saved, 'xl/drawings/drawing1.xml')).toContain('Revenue &amp; costs');
+		expect((await loadXlsx(saved)).sheets[0]?.drawings[0]).toMatchObject({
+			shape: {
+				text: { text: 'Revenue & costs' },
+				wordArt: {
+					fill: 'FFFFFF',
+					outline: '222222',
+					shadow: '45460D',
+					warp: { preset: 'textWave1', guides: [] },
+				},
+			},
+		});
+		edit.undo();
+		expect(loaded.sheets[0]?.drawings[0]).toMatchObject({ shape: { text: { text: 'Sales' } } });
+		edit.editWordArt(0, 0, { text: 'Sales', style: { fill: '1769A5' } });
+		expect(await partText(await saveXlsx(loaded), 'xl/drawings/drawing1.xml')).not.toContain(
+			'prstTxWarp',
+		);
+	});
+
 	it('adds a chart and a picture to a new workbook that survive a round trip', async () => {
 		const wb = createWorkbook();
 		const s = createEditSession(wb, { recalc: false });

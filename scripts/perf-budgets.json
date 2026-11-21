@@ -18,7 +18,7 @@
 		"package/ooxml-core/docx/layout": 247808,
 		"package/ooxml-core/docx/load": 471040,
 		"package/ooxml-core/docx/ui": 342016,
-		"package/ooxml-core/drawingml": 62464,
+		"package/ooxml-core/drawingml": 67584,
 		"package/ooxml-core/embedding": 6144,
 		"package/ooxml-core/embedding/onedrive": 10240,
 		"package/ooxml-core/geometry": 112640,

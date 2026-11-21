@@ -26,6 +26,8 @@ const BUILT_IN: Readonly<Record<string, string>> = {
 	pencil: 'M12 3l5 5M3 17l1-5L13 3l4 4-9 9Z',
 	help: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M8 7a2 2 0 1 1 3 1.8c-.7.3-1 .8-1 1.7M10 14v.1',
 	settings: 'M3 5h14M6 10h8M8 15h4M6 3v4M12 8v4M10 13v4',
+	insertIcons: 'm10 2 2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8z',
+	insertWordArt: 'M3 17 10 3l6 14M6 12h8M13 18l4-4',
 	clock: 'M3 10a7 7 0 1 0 14 0 7 7 0 1 0-14 0M10 6v4l3 2',
 	reset: 'M4 10a6 6 0 1 1 1.8 4.2M4 6v4h4',
 	plus: 'M10 4v12M4 10h12',

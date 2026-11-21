@@ -2,6 +2,7 @@ import { defineElement } from '../../registry';
 import { canRequestInsert } from '../render';
 import type { RibbonInsertIntent, RibbonInsertState } from '../render';
 import { attachRibbonInsertStyles } from './ribbon-insert-styles';
+import { createGraphicInsert } from './ribbon-graphic-insert';
 import { createRibbonInsertView } from './ribbon-insert-view';
 
 export type RibbonInsertRequestEvent = CustomEvent<RibbonInsertIntent>;
@@ -28,8 +29,13 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 			shapeType: 'rect',
 			chartKind: 'column',
 		};
+		private readonly insertGraphic = createGraphicInsert(this, () => this.model);
 		private readonly view = createRibbonInsertView(this.ownerDocument, (intent) => {
 			if (canRequestInsert(this.model, intent)) {
+				if (intent.kind === 'graphic' || intent.kind === 'zoom') {
+					this.insertGraphic(intent);
+					return;
+				}
 				this.dispatchEvent(
 					new CustomEvent('insert-request', { detail: intent, bubbles: true, composed: true }),
 				);

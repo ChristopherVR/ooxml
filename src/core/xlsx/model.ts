@@ -672,6 +672,8 @@ export interface UnsupportedDrawingObject {
 	sourceXml?: string;
 	/** A DrawingML shape, connector or group the painter draws (saved from `sourceXml`). */
 	shape?: ShapeNode;
+	/** The source-backed WordArt text and effects were edited. */
+	wordArtEdited?: true;
 	/**
 	 * An extended chart (waterfall, histogram) the chart painter draws: its summary, read for
 	 * display only. The frame is still saved from `sourceXml`.

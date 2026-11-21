@@ -392,6 +392,12 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Gráficos (visualización y edición básica)',
 		'图表(显示和基本编辑)',
 	],
+	'WordArt styles and text transforms': [
+		'Styles et transformations de texte WordArt',
+		'WordArt-Stile und Texttransformationen',
+		'Estilos y transformaciones de texto de WordArt',
+		'艺术字样式和文本转换',
+	],
 	'Comments and notes': [
 		'Commentaires et notes',
 		'Kommentare und Notizen',

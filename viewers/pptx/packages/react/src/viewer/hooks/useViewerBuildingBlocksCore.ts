@@ -156,6 +156,8 @@ export function useViewerBuildingBlocksCore(
 
 	const history = useEditorHistory({
 		slides,
+		sections: state.sections,
+		setSections: state.setSections,
 		canvasSize,
 		activeSlideIndex,
 		templateElementsBySlideId,

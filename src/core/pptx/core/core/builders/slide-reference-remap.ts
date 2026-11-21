@@ -66,5 +66,13 @@ export function buildSlideReferenceRemap(init: SlideReferenceRemapInput): PptxSl
 		}
 	}
 
-	return { rIdByOldRId, sldIdByOldSldId, removedRIds, removedSldIds, changed };
+	const sldIdsBySection = new Map<string, string[]>();
+	for (const slide of init.slides) {
+		const numericId = newRIdToNumeric.get(slide.rId);
+		if (!slide.sectionId || !numericId) continue;
+		const ids = sldIdsBySection.get(slide.sectionId) ?? [];
+		ids.push(numericId);
+		sldIdsBySection.set(slide.sectionId, ids);
+	}
+	return { rIdByOldRId, sldIdByOldSldId, removedRIds, removedSldIds, changed, sldIdsBySection };
 }

@@ -3095,3 +3095,10 @@ order `signature-node/inspection.ts` kept; the Node module now adds only trust, 
 time-stamp checks. New: `state.ts`, `i18n/signature-strings.ts`, `xml/decode.ts`. The fixtures in
 `src/core/opc/signature/__fixtures__/office/` are Apache POI test data (Apache-2.0), listed with
 their upstream blobs in that folder's README.
+
+## Shared WordArt geometry (2026-11-22)
+
+Moved within this repository from `src/ui/src/pptx/render/text-warp.ts` and
+`text-warp-arch.ts` at `9d239b523` into `src/core/drawingml/text-warp-path.ts`,
+`text-warp-paths.ts` and `text-warp-arch.ts`. The path generators retain their
+formulas. Word and Excel now use the same paths as the PowerPoint renderer.

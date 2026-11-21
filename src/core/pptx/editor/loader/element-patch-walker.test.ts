@@ -1,7 +1,8 @@
-import type { GroupPptxElement, PptxElement } from '../../index';
+import type { GroupPptxElement, PptxElement, ZoomPptxElement } from '../../index';
 import { describe, expect, it } from 'vitest';
 
 import { applyImagePathPatches, walkAndPatchElements } from './element-patch-walker';
+import { collectImagePaths } from './load-content-helpers';
 import type { ImagePathElement } from './load-content-helpers';
 
 function makePicture(id: string): PptxElement {
@@ -120,4 +121,46 @@ describe('applyImagePathPatches', () => {
 			'blob:resolved-child',
 		);
 	});
+});
+
+it('resolves saved Zoom previews and their Summary Zoom tiles through the shared loader', () => {
+	const frame = { x: 0, y: 0, width: 200, height: 100 };
+	const slideZoom: ZoomPptxElement = {
+		...frame,
+		type: 'zoom',
+		id: 'slide-zoom',
+		zoomType: 'slide',
+		targetSlideIndex: 1,
+		imagePath: 'ppt/media/slide.png',
+	};
+	const summaryZoom: ZoomPptxElement = {
+		...frame,
+		type: 'zoom',
+		id: 'summary-zoom',
+		zoomType: 'summary',
+		targetSlideIndex: 1,
+		summaryTargets: [
+			{ ...frame, sectionId: 'agenda', targetSlideIndex: 1, imagePath: 'ppt/media/slide.png' },
+			{ ...frame, sectionId: 'appendix', targetSlideIndex: 3, imagePath: 'ppt/media/appendix.png' },
+		],
+	};
+	const elements: PptxElement[] = [slideZoom, summaryZoom];
+	const { paths, refs } = collectImagePaths([
+		{ id: 'first', rId: 'rId1', slideNumber: 1, elements },
+	]);
+	expect([...paths]).toEqual(['ppt/media/slide.png', 'ppt/media/appendix.png']);
+	expect(
+		applyImagePathPatches(elements, new Map([['ppt/media/slide.png', 'blob:resolved']]), refs),
+	).toMatchObject([
+		{ id: 'slide-zoom', imageData: 'blob:resolved' },
+		{
+			id: 'summary-zoom',
+			summaryTargets: [
+				{ sectionId: 'agenda', imageData: 'blob:resolved' },
+				{ sectionId: 'appendix', imagePath: 'ppt/media/appendix.png' },
+			],
+		},
+	]);
+	expect(slideZoom.imageData).toBeUndefined();
+	expect(summaryZoom.summaryTargets?.[0]?.imageData).toBeUndefined();
 });

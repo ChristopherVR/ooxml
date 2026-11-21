@@ -60,6 +60,7 @@ export type VisioTextFeature =
  */
 export type VisioInsertItem =
 	| 'picture'
+	| 'icons'
 	| 'chart'
 	| 'chart-data'
 	| 'chart-format'

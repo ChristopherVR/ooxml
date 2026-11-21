@@ -171,5 +171,20 @@ describe('section zoom package integration', () => {
 			width: 300,
 			height: 170,
 		});
+
+		const zoom = data.slides[0].elements.find((element) => element.type === 'zoom')!;
+		zoom.x = 120;
+		const updated = await handler.save(data.slides, { sections });
+		const afterUpdate = await new PptxHandler().load(updated.buffer as ArrayBuffer);
+		expect(
+			afterUpdate.slides[0].elements.filter((element) => element.type === 'zoom'),
+		).toMatchObject([{ zoomType: 'section', x: 120 }]);
+
+		data.slides[0].elements = [];
+		const removed = await handler.save(data.slides, { sections });
+		const afterRemoval = await new PptxHandler().load(removed.buffer as ArrayBuffer);
+		expect(afterRemoval.slides[0].elements.filter((element) => element.type === 'zoom')).toEqual(
+			[],
+		);
 	});
 });

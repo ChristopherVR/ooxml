@@ -5,6 +5,8 @@
 import type { InlineImage } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { isElement, makeNS, makeW, type XmlDocument, type XmlElement } from './xml';
+import { readWordArtStyle, wordArtRunProperties } from './word-art';
+import { applyWordArtWarp, wordArtPaintEquals, type WordArtStyle } from '../drawingml/word-art';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
@@ -22,8 +24,13 @@ const descendants = (root: XmlElement, ns: string, local: string) =>
 	Array.from(root.getElementsByTagNameNS(ns, local));
 
 /** `w:p` elements holding one plain run each, one per line (an empty line is an empty paragraph). */
-function paragraphsFor(doc: XmlDocument, lines: readonly string[]): XmlElement[] {
-	return (lines.length ? lines : ['']).map((line) => {
+function paragraphsFor(
+	doc: XmlDocument,
+	lines: readonly string[],
+	wordArt?: WordArtStyle,
+	sourceStyles: readonly (XmlElement | undefined)[] = [],
+): XmlElement[] {
+	return (lines.length ? lines : ['']).map((line, index) => {
 		const paragraph = makeW(doc, 'p');
 		if (line) {
 			const run = makeW(doc, 'r');
@@ -31,6 +38,9 @@ function paragraphsFor(doc: XmlDocument, lines: readonly string[]): XmlElement[]
 			if (/^\s|\s$/.test(line))
 				text.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
 			text.textContent = line;
+			const source = sourceStyles[index] ?? sourceStyles[0];
+			if (source) run.appendChild(source.cloneNode(true));
+			else if (wordArt) add(run, wordArtRunProperties(doc, wordArt));
 			add(run, text);
 			add(paragraph, run);
 		}
@@ -54,6 +64,7 @@ export function buildTextBoxDrawing(
 	docPrId: string,
 ): XmlElement {
 	const drawing = makeW(doc, 'drawing');
+	const wordArt = image.textBoxContent?.wordArt;
 	const inline = el(doc, WP_NS, 'wp:inline');
 	for (const side of ['distT', 'distB', 'distL', 'distR']) inline.setAttribute(side, '0');
 	const extent = el(doc, WP_NS, 'wp:extent');
@@ -63,7 +74,7 @@ export function buildTextBoxDrawing(
 	for (const side of ['l', 't', 'r', 'b']) effect.setAttribute(side, '0');
 	const docPr = el(doc, WP_NS, 'wp:docPr');
 	docPr.setAttribute('id', docPrId);
-	docPr.setAttribute('name', `Text Box ${docPrId}`);
+	docPr.setAttribute('name', `${wordArt ? 'WordArt' : 'Text Box'} ${docPrId}`);
 	if (image.altText) docPr.setAttribute('descr', image.altText);
 	const wsp = el(doc, WPS_NS, 'wps:wsp');
 	const cNvSpPr = el(doc, WPS_NS, 'wps:cNvSpPr');
@@ -84,12 +95,12 @@ export function buildTextBoxDrawing(
 		el(doc, WPS_NS, 'wps:spPr'),
 		add(xfrm, off, ext),
 		geometry,
-		add(el(doc, A_NS, 'a:solidFill'), fillColor),
+		wordArt ? el(doc, A_NS, 'a:noFill') : add(el(doc, A_NS, 'a:solidFill'), fillColor),
 		outline(doc, image.textBoxBorder !== false),
 	);
 	const content = add(
 		el(doc, W_NS, 'w:txbxContent'),
-		...paragraphsFor(doc, image.textBoxText ?? []),
+		...paragraphsFor(doc, image.textBoxText ?? [], wordArt),
 	);
 	const body = el(doc, WPS_NS, 'wps:bodyPr');
 	for (const [name, value] of [
@@ -104,6 +115,10 @@ export function buildTextBoxDrawing(
 		['anchorCtr', '0'],
 	] as const)
 		body.setAttribute(name, value);
+	if (wordArt) {
+		body.setAttribute('fromWordArt', '1');
+		applyWordArtWarp(body, wordArt.warp);
+	}
 	add(body, el(doc, A_NS, 'a:noAutofit'));
 	add(wsp, cNvSpPr, spPr, add(el(doc, WPS_NS, 'wps:txbx'), content), body);
 	const graphicData = el(doc, A_NS, 'a:graphicData');
@@ -127,6 +142,7 @@ export function isSimpleTextBox(graphicData: XmlElement | undefined, anchored: b
 	if (!graphicData || anchored) return false;
 	const content = descendants(graphicData, W_NS, 'txbxContent')[0];
 	if (!content) return false;
+	const wordArt = readWordArtStyle(graphicData);
 	const plain = (node: XmlElement, allowed: string[]) =>
 		Array.from(node.childNodes)
 			.filter(isElement)
@@ -136,7 +152,10 @@ export function isSimpleTextBox(graphicData: XmlElement | undefined, anchored: b
 		descendants(content, W_NS, 'p').every(
 			(paragraph) =>
 				plain(paragraph, ['r']) &&
-				descendants(paragraph, W_NS, 'r').every((run) => plain(run, ['t'])),
+				(!wordArt || descendants(paragraph, W_NS, 'r').length <= 1) &&
+				descendants(paragraph, W_NS, 'r').every((run) =>
+					plain(run, wordArt ? ['t', 'rPr'] : ['t']),
+				),
 		)
 	);
 }
@@ -165,11 +184,22 @@ export function patchTextBox(
 			node.setAttribute('cx', emu(image.widthPx));
 			node.setAttribute('cy', emu(image.heightPx));
 		}
-	if (JSON.stringify(image.textBoxText) !== JSON.stringify(base.textBoxText)) {
+	const style = image.textBoxContent?.wordArt;
+	const priorStyle = base.textBoxContent?.wordArt;
+	const repaint = style && (!priorStyle || !wordArtPaintEquals(style, priorStyle));
+	const body = descendants(drawing, WPS_NS, 'bodyPr')[0];
+	if (style && body) applyWordArtWarp(body, style.warp);
+	if (JSON.stringify(image.textBoxText) !== JSON.stringify(base.textBoxText) || repaint) {
 		const content = descendants(drawing, W_NS, 'txbxContent')[0];
 		if (content) {
+			const sourceStyles =
+				style && !repaint
+					? descendants(content, W_NS, 'p').map(
+							(paragraph) => descendants(paragraph, W_NS, 'rPr')[0],
+						)
+					: [];
 			for (const child of Array.from(content.childNodes)) content.removeChild(child);
-			add(content, ...paragraphsFor(doc, image.textBoxText ?? []));
+			add(content, ...paragraphsFor(doc, image.textBoxText ?? [], style, sourceStyles));
 		}
 	}
 	if ((image.textBoxBorder !== false) !== (base.textBoxBorder !== false)) {

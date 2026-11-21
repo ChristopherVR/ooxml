@@ -142,6 +142,7 @@ export interface UseViewerRibbonPropsOptions {
 	chromeMode: ComputedRef<ViewerMode>;
 	drag: UseElementDragResult;
 	insertion: UseElementInsertionResult;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	templateInsertion: UseSlideTemplateInsertionResult;
 	insertDialogs: UseInsertElementDialogsResult;
 	exporter: UseExportWiringResult;
@@ -254,6 +255,7 @@ export function useViewerRibbonProps(o: UseViewerRibbonPropsOptions): ComputedRe
 		undo: o.history.undo,
 		redo: o.history.redo,
 		addText: o.insertion.addText,
+		getGraphicTarget: o.getGraphicTarget,
 		addShape: o.insertion.addShape,
 		addTable: o.insertion.addTable,
 		addChart: o.insertion.addChart,

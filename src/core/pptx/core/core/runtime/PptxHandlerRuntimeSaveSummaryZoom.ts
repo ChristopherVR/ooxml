@@ -1,4 +1,5 @@
 import type { SummaryZoomTarget, XmlObject, ZoomPptxElement } from '../../types';
+import { readZoomFrame, writeZoomFrameGeometry } from './zoom-graphic-frame';
 import { generateFontGuid } from '../../utils/font-deobfuscation';
 import { extractSectionMap } from '../../utils/presentation-section-parser';
 import { ensureXmlChildOrCreate, xmlHasChild } from '../../utils/xml-access';
@@ -12,10 +13,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		shape: XmlObject | undefined,
 		ctx: SaveSlideContext,
 	): XmlObject | undefined {
-		if (el.zoomType !== 'summary') {
-			return super.createOrUpdateZoomXml(el, shape, ctx);
-		}
-		return this.createOrUpdateSummaryZoomXml(el, shape, ctx);
+		const framed = readZoomFrame(shape);
+		const body = framed?.node ?? shape;
+		const block = shape && this.alternateContentBlockByRawXml.get(shape);
+		if (framed && block) this.alternateContentBlockByRawXml.set(framed.node, block);
+		const zoom =
+			el.zoomType === 'summary'
+				? this.createOrUpdateSummaryZoomXml(el, body, ctx)
+				: super.createOrUpdateZoomXml(el, body, ctx);
+		if (!zoom || !shape || !framed) return zoom;
+		const transform = ensureXmlChildOrCreate(this.buildZoomShapeProperties(el), 'a:xfrm');
+		writeZoomFrameGeometry(shape, zoom, framed.tag, transform);
+		return shape;
 	}
 
 	private createOrUpdateSummaryZoomXml(
@@ -53,6 +62,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.applyOptionalAttribute(object, '@_scaleFactorY', target.scaleFactorY);
 			properties['@_id'] ??= `{${generateFontGuid()}}`;
 			properties['@_imageType'] ??= 'preview';
+			this.applyZoomPlayback(properties, target);
 			// `??=` cannot heal a bare `<p166:blipFill/>` / `<p166:spPr/>`: `''` is
 			// not nullish, so the string survived and the transform written onto
 			// it threw. `xmlHasChild` asks the only question that matters here -

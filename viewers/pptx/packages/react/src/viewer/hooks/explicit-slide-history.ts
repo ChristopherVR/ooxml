@@ -38,6 +38,7 @@ export function serializeHistoryDocument(snapshot: EditorHistorySnapshot): strin
 	return JSON.stringify({
 		width: snapshot.width,
 		height: snapshot.height,
+		sections: snapshot.sections?.map(({ collapsed: _collapsed, ...section }) => section),
 		slides: snapshot.slides.map((slide) => ({
 			...slide,
 			rawXml: undefined,

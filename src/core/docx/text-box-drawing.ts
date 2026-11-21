@@ -4,6 +4,7 @@
 import type { DrawingFill } from '../drawingml/index';
 import type { InlineImage, Paragraph } from './model';
 import type { ShapeSpec } from './shape-model';
+import { WORD_ART_FONT, WORD_ART_SIZE_PT } from '../drawingml/word-art';
 
 const solid = (value: string): DrawingFill => ({
 	kind: 'solid',
@@ -24,9 +25,10 @@ export function simpleTextBoxDrawing(
 	border: boolean,
 	previous: Pick<InlineImage, 'shape' | 'textBoxContent' | 'textBoxText' | 'textBoxBorder'> = {},
 ): Required<Pick<InlineImage, 'shape' | 'textBoxContent'>> {
+	const wordArt = previous.textBoxContent?.wordArt;
 	const frame: ShapeSpec = previous.shape ?? {
 		preset: 'rect',
-		fill: solid('FFFFFF'),
+		fill: wordArt ? { kind: 'none' } : solid('FFFFFF'),
 		line: outline(border),
 		editable: false,
 		textEditable: false,
@@ -40,7 +42,17 @@ export function simpleTextBoxDrawing(
 	const blocks: Paragraph[] = (lines.length ? lines : ['']).map((line, index) => ({
 		type: 'paragraph',
 		id: `txbx-p${index}`,
-		runs: [{ text: line }],
+		runs: [
+			wordArt
+				? {
+						text: line,
+						color: `#${wordArt.fill}`,
+						fontFamily: WORD_ART_FONT,
+						fontSize: WORD_ART_SIZE_PT,
+						bold: true,
+					}
+				: { text: line },
+		],
 	}));
 	return {
 		shape,

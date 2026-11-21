@@ -231,6 +231,7 @@ export interface RibbonProps {
 	onSelectAll?: () => void;
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddTextBox: () => void;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;

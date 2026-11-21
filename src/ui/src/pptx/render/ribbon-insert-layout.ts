@@ -12,7 +12,7 @@ import type {
 	InsertCommandSpec,
 	InsertLabel,
 	RibbonInsertCommand,
-	RibbonInsertIntent,
+	RibbonInsertAction,
 	RibbonInsertState,
 } from './ribbon-insert-state';
 
@@ -20,7 +20,7 @@ export interface InsertMenuEntry {
 	id: string;
 	label: InsertLabel;
 	/** Absent when the editor has no such feature: the entry is listed, disabled. */
-	intent?: RibbonInsertIntent;
+	intent?: RibbonInsertAction;
 }
 
 /** Controls whose dropdown is built from a catalogue or the host's layouts. */
@@ -36,7 +36,7 @@ export interface InsertControlSpec {
 	/** Large (icon over label) or small (icon beside label, stacked three high). */
 	large: boolean;
 	/** The click action, or the split button's main action. */
-	intent?: RibbonInsertIntent;
+	intent?: RibbonInsertAction;
 	menu?: readonly InsertMenuEntry[];
 	/** Main action on top, dropdown chevron below. */
 	split?: boolean;
@@ -76,12 +76,12 @@ const entry = (
 	id: string,
 	key: string,
 	fallback: string,
-	intent?: RibbonInsertIntent,
+	intent?: RibbonInsertAction,
 ): InsertMenuEntry => ({ id, label: label(key, fallback), ...(intent ? { intent } : {}) });
-const command = (value: RibbonInsertCommand): RibbonInsertIntent => ({ kind: 'command', value });
+const command = (value: RibbonInsertCommand): RibbonInsertAction => ({ kind: 'command', value });
 
-/** A large dropdown button that has no backing feature. */
-const unsupported = (
+/** A control with its own label and ScreenTip. */
+const control = (
 	control: string,
 	icon: string,
 	key: string,
@@ -111,7 +111,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				intent: { kind: 'newSlide', value: null },
 				special: 'layouts',
 			},
-			unsupported(
+			control(
 				'insert.slides.reuseSlides',
 				'reuseSlides',
 				'reuseSlides',
@@ -150,7 +150,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 					entry('onlinePictures', 'pptx.insert.onlinePictures', 'Online Pictures...'),
 				],
 			}),
-			unsupported(
+			control(
 				'insert.images.screenshot',
 				'screenshot',
 				'screenshot',
@@ -158,7 +158,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'Add a screenshot of a window or part of your screen.',
 				{ menu: [entry('screenClipping', 'pptx.insert.screenClipping', 'Screen Clipping')] },
 			),
-			unsupported(
+			control(
 				'insert.images.photoAlbum',
 				'photoAlbum',
 				'photoAlbum',
@@ -171,7 +171,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 	{
 		id: 'insert.camera',
 		items: [
-			unsupported(
+			control(
 				'insert.camera.cameo',
 				'camera',
 				'cameo',
@@ -191,14 +191,15 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				large: true,
 				special: 'shapes',
 			},
-			unsupported(
+			control(
 				'insert.illustrations.icons',
 				'icons',
 				'icons',
 				'Icons',
 				'Insert icons to communicate visually with symbols.',
+				{ intent: { kind: 'graphic', value: 'icons' } },
 			),
-			unsupported(
+			control(
 				'insert.illustrations.threeDModels',
 				'model3d',
 				'models3d',
@@ -221,7 +222,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 	{
 		id: 'insert.forms',
 		items: [
-			unsupported(
+			control(
 				'insert.forms.forms',
 				'forms',
 				'forms',
@@ -233,14 +234,14 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 	{
 		id: 'insert.addIns',
 		items: [
-			unsupported(
+			control(
 				'insert.addIns.getAddIns',
 				'addIns',
 				'getAddIns',
 				'Get Add-ins',
 				'Get Office add-ins from the store.',
 			),
-			unsupported(
+			control(
 				'insert.addIns.myAddIns',
 				'addIns',
 				'myAddIns',
@@ -252,12 +253,28 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 	{
 		id: 'insert.links',
 		items: [
-			unsupported(
+			control(
 				'insert.links.zoom',
 				'zoomIn',
 				'zoom',
 				'Zoom',
 				'Insert a zoom to a slide or section to navigate the presentation.',
+				{
+					menu: [
+						entry('summaryZoom', 'pptx.zoom.summaryZoom', 'Summary Zoom', {
+							kind: 'zoom',
+							value: 'summary',
+						}),
+						entry('sectionZoom', 'pptx.zoom.sectionZoom', 'Section Zoom', {
+							kind: 'zoom',
+							value: 'section',
+						}),
+						entry('slideZoom', 'pptx.zoom.slideZoom', 'Slide Zoom', {
+							kind: 'zoom',
+							value: 'slide',
+						}),
+					],
+				},
 			),
 			fromCommand('link'),
 			{
@@ -276,12 +293,13 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 		items: [
 			fromCommand('textBox'),
 			fromCommand('headerFooter', { capability: 'headerFooter' }),
-			unsupported(
+			control(
 				'insert.text.wordArt',
 				'wordArt',
 				'wordArt',
 				'WordArt',
 				'Insert decorative text into the slide.',
+				{ intent: { kind: 'graphic', value: 'wordArt' } },
 			),
 			[
 				{
@@ -302,7 +320,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 					intent: { kind: 'field', value: 'slidenum' },
 					capability: 'field',
 				},
-				unsupported(
+				control(
 					'insert.text.object',
 					'object',
 					'object',
@@ -327,13 +345,13 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 					),
 				],
 			}),
-			unsupported(
+			control(
 				'insert.symbols.symbol',
 				'symbol',
 				'symbol',
 				'Symbol',
 				'Insert symbols that are not on your keyboard, such as copyright marks.',
-				{ large: true },
+				{ intent: { kind: 'graphic', value: 'symbol' } },
 			),
 		],
 	},
@@ -359,7 +377,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 					entry('recordAudio', 'pptx.insert.recordAudio', 'Record Audio...'),
 				],
 			},
-			unsupported(
+			control(
 				'insert.media.screenRecording',
 				'record',
 				'screenRecording',

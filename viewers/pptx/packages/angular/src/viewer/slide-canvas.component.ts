@@ -71,6 +71,7 @@ import {
 	visibleTemplateElements as filterVisibleTemplateElements,
 	withConnectorEndpointUpdate,
 } from 'ooxml-ui/pptx';
+import { isChoosingInlineSymbol } from 'ooxml-ui/pptx';
 import type { AiCanvasHighlight, AiChangeBatch } from 'ooxml-ui/pptx/ai';
 import { resolveContextMenuElementId } from 'ooxml-ui/pptx/render/context-menu-target';
 import type {
@@ -1247,7 +1248,8 @@ export class SlideCanvasComponent implements SlideContext {
 	}
 
 	commitText(event: Event, id: string): void {
-		if (this.inlineListSeed()) {
+		const editor = event.target as HTMLElement;
+		if (this.inlineListSeed() || isChoosingInlineSymbol(editor)) {
 			return;
 		} // The explicit list activation replaces this editor.
 		if (this.editCancelled) {
@@ -1255,7 +1257,6 @@ export class SlideCanvasComponent implements SlideContext {
 			this.textCancel.emit();
 			return;
 		}
-		const editor = event.target as HTMLElement;
 		const previous = (
 			this.lookupElements().find((e) => e.id === id) as { text?: string } | undefined
 		)?.text;

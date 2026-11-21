@@ -158,22 +158,37 @@ const recent: string[] = [
 export const codeOf = (ch: string): string =>
 	`U+${(ch.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`;
 
-/** Inserts `symbol` into the active cell. */
-export function insertSymbol(ctx: EditorContext, symbol: string): void {
+function cellEditSelection(ctx: EditorContext) {
+	const field = ctx.root.activeElement;
+	if (!ctx.grid()?.isEditing() || !(field instanceof HTMLTextAreaElement)) return undefined;
+	return { field, start: field.selectionStart, end: field.selectionEnd, text: field.value };
+}
+
+/** Inserts `symbol` at the editing selection or begins an edit in the active cell. */
+export function insertSymbol(
+	ctx: EditorContext,
+	symbol: string,
+	caret = cellEditSelection(ctx),
+): void {
 	const t = target(ctx);
 	if (!t) return;
-	const cell = getCell(t.ws, t.active.row, t.active.col);
-	const current =
-		cell?.formula !== undefined
-			? `=${cell.formula}`
-			: cell?.value === null || cell?.value === undefined
-				? ''
-				: typeof cell.value === 'object'
-					? cell.value.error
-					: String(cell.value);
 	const grid = ctx.grid();
-	if (grid && !grid.isEditing()) grid.beginEdit(current + symbol);
-	else t.session.setCellInput(t.sheet, t.active.row, t.active.col, current + symbol);
+	if (caret && grid?.isEditing() && caret.field.isConnected && caret.field.value === caret.text) {
+		caret.field.setRangeText(symbol, caret.start, caret.end, 'end');
+		caret.field.dispatchEvent(new Event('input', { bubbles: true }));
+	} else if (!grid?.isEditing()) {
+		const cell = getCell(t.ws, t.active.row, t.active.col);
+		const current =
+			cell?.formula !== undefined
+				? `=${cell.formula}`
+				: cell?.value === null || cell?.value === undefined
+					? ''
+					: typeof cell.value === 'object'
+						? cell.value.error
+						: String(cell.value);
+		if (grid) grid.beginEdit(current + symbol);
+		else t.session.setCellInput(t.sheet, t.active.row, t.active.col, current + symbol);
+	} else return;
 	const i = recent.indexOf(symbol);
 	if (i >= 0) recent.splice(i, 1);
 	recent.unshift(symbol);
@@ -181,6 +196,8 @@ export function insertSymbol(ctx: EditorContext, symbol: string): void {
 }
 
 export function openSymbol(ctx: EditorContext): Promise<string | undefined> {
+	const caret = cellEditSelection(ctx);
+	const before = target(ctx);
 	const subset = select(
 		ctx,
 		SYMBOL_SUBSETS.map(([id, label]) => [id, label] as const),
@@ -255,7 +272,17 @@ export function openSymbol(ctx: EditorContext): Promise<string | undefined> {
 			opened: () => (grid.firstElementChild as HTMLElement | null)?.focus(),
 			submit: () => {
 				if (!chosen) return undefined;
-				insertSymbol(ctx, chosen);
+				const live = target(ctx);
+				if (
+					live &&
+					before &&
+					live.session === before.session &&
+					live.sheet === before.sheet &&
+					live.active.row === before.active.row &&
+					live.active.col === before.active.col
+				) {
+					insertSymbol(ctx, chosen, caret);
+				}
 				return chosen;
 			},
 		},

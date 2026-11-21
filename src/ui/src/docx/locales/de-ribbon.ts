@@ -7,6 +7,15 @@
 import type { RibbonStrings } from './en';
 
 export const deRibbon: RibbonStrings = {
+	Transform: 'Transformieren',
+	WordArt: 'WordArt',
+	'WordArt text': 'WordArt-Text',
+	'Your text here': 'Ihr Text hier',
+	'WordArt style': 'WordArt-Stil',
+	Icons: 'Piktogramme',
+	'Search icons': 'Piktogramme suchen',
+	'Icon color': 'Piktogrammfarbe',
+	'No matching icons.': 'Keine passenden Piktogramme.',
 	Font: 'Schriftart',
 	Paragraph: 'Absatz',
 	'Alignment and history': 'Ausrichtung und Verlauf',

@@ -71,6 +71,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ type: 'insertPicture' },
 				{ large: true, caption: 'Pictures', name: 'ribbon.name.insertPictures' },
 			),
+			tool('Icons', 'insertIcon', { type: 'insertIcon' }, { large: true }),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(
 				'Insert chart',
@@ -168,6 +169,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 		),
 		group(
 			'Text',
+			tool(
+				'WordArt',
+				'insertWordArt',
+				{ type: 'insertWordArt' },
+				{ inline: true, caption: 'WordArt' },
+			),
 			tool(
 				'Text box',
 				'textBox',

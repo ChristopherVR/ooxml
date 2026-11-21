@@ -4,6 +4,12 @@
 import { DOMSerializer, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { shapePaint } from 'ooxml-core/docx/layout';
 import {
+	renderWordArtSvg,
+	wordArtCssShadow,
+	WARP_PATH_GENERATORS,
+	WORD_ART_SIZE_PT,
+} from 'ooxml-core/drawingml';
+import {
 	EMU_PER_PIXEL,
 	type Block,
 	type DocumentModel,
@@ -141,6 +147,42 @@ const DEFAULT_INSETS_EMU = {
  * paragraphs by CSS; Print Layout draws the lines the page engine lays out (`TextBoxLayout`), with
  * autofit and linked boxes.
  */
+export function paintWordArtEffects(element: HTMLElement, content: TextBoxContent): void {
+	const style = content.wordArt;
+	if (!style) return;
+	if (style.outline && /^[0-9a-f]{6}$/i.test(style.outline)) {
+		element.style.webkitTextStroke = `1px #${style.outline}`;
+		element.style.paintOrder = 'stroke fill';
+	}
+	element.style.textShadow = wordArtCssShadow(style) ?? '';
+}
+
+let warpSequence = 0;
+
+export function wordArtWarpElement(
+	content: TextBoxContent,
+	width: number,
+	height: number,
+): HTMLElement | undefined {
+	const style = content.wordArt;
+	if (!style?.warp || !Object.hasOwn(WARP_PATH_GENERATORS, style.warp.preset)) return undefined;
+	const paragraphs = content.blocks.flatMap((block) => (block.type === 'paragraph' ? [block] : []));
+	const lines = paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join(''));
+	if (!lines.some(Boolean)) return undefined;
+	const element = document.createElement('div');
+	element.className = 'dve-text-box-content';
+	element.style.padding = '0';
+	element.innerHTML = renderWordArtSvg({
+		id: `dve-word-art-${++warpSequence}`,
+		style,
+		lines,
+		width,
+		height,
+		fontPx: (paragraphs[0]?.runs[0]?.fontSize ?? WORD_ART_SIZE_PT) * (96 / 72),
+	});
+	return element;
+}
+
 export function textBoxContentElement(
 	content: TextBoxContent,
 	model?: DocumentModel,
@@ -149,6 +191,7 @@ export function textBoxContentElement(
 ): HTMLElement {
 	const element = document.createElement('div');
 	element.className = 'dve-text-box-content';
+	paintWordArtEffects(element, content);
 	if (color && /^#[0-9a-f]{6}$/i.test(color)) element.style.color = color;
 	const inset = (side: keyof typeof DEFAULT_INSETS_EMU) =>
 		`${Math.round(((content[side] ?? DEFAULT_INSETS_EMU[side]) / EMU_PER_PIXEL) * 100) / 100}px`;
@@ -244,7 +287,10 @@ export function paintShape(
 		if (parsed.localName === 'svg') holder.append(document.importNode(parsed, true));
 	} else holder.textContent = String(node.attrs.unsupported ?? 'Shape');
 	if (svg && paint.textBox)
-		holder.append(textBoxContentElement(paint.textBox, model, paint.chart?.textColor, pictureUrl));
+		holder.append(
+			wordArtWarpElement(paint.textBox, width, height) ??
+				textBoxContentElement(paint.textBox, model, paint.chart?.textColor, pictureUrl),
+		);
 }
 
 /** A read-only shape for a story preview, drawn as the editing surface draws it. */

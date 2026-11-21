@@ -6,7 +6,13 @@ import {
 } from 'ooxml-ui/pptx';
 import type { CollaborationHistory, HistoryTheme } from 'ooxml-ui/pptx';
 import { cloneElement, cloneSlide } from 'pptx-viewer-core';
-import type { PptxHandler, PptxSlide, PptxSlideMaster, PptxTheme } from 'pptx-viewer-core';
+import type {
+	PptxHandler,
+	PptxSection,
+	PptxSlide,
+	PptxSlideMaster,
+	PptxTheme,
+} from 'pptx-viewer-core';
 import { computed, nextTick } from 'vue';
 import type { ComputedRef, Ref } from 'vue';
 
@@ -92,6 +98,7 @@ export interface EditorHistoryResult {
  */
 export interface HistorySnapshot {
 	slides: PptxSlide[];
+	sections?: PptxSection[];
 	template: TemplateElementMap;
 	/** The theme's colour scheme, font scheme and name, and the colour map built from them. */
 	theme?: HistoryTheme;
@@ -118,6 +125,7 @@ export interface EditorHistoryThemeSource {
 
 /** Optional tuning knobs for the history stack. */
 export interface UseEditorHistoryOptions {
+	sections?: Ref<PptxSection[]>;
 	/**
 	 * Maximum undo depth. Defaults to the shared `DEFAULT_EDITOR_HISTORY_DEPTH`;
 	 * File > Options > Advanced > "Maximum number of undos" threads
@@ -175,6 +183,14 @@ export function useEditorHistory(
 		const themeColorMap = themeSource?.themeColorMap.value;
 		return {
 			slides: slides.value.map(cloneSlide),
+			...(options?.sections
+				? {
+						sections: options.sections.value.map((section) => ({
+							...section,
+							slideIds: [...section.slideIds],
+						})),
+					}
+				: {}),
 			template: cloneTemplateMap(templateElementsBySlideId?.value ?? {}),
 			...(theme ? { theme } : {}),
 			...(themeColorMap ? { themeColorMap: { ...themeColorMap } } : {}),
@@ -206,6 +222,7 @@ export function useEditorHistory(
 
 	const restore = (snap: HistorySnapshot): void => {
 		slides.value = snap.slides.map(cloneSlide);
+		if (options?.sections && snap.sections) options.sections.value = snap.sections;
 		if (templateElementsBySlideId) {
 			templateElementsBySlideId.value = cloneTemplateMap(snap.template);
 		}

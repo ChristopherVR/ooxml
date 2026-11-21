@@ -7,6 +7,7 @@ import { parseDrawingGeometry, parseTransform } from '../../drawingml/drawing-ge
 import { parseDrawingTextBody } from '../../drawingml/drawing-text';
 import { NS, elements, first, type XmlElement } from '../../xml/index';
 import type { ShapeNode } from '../model-shapes';
+import { readWordArtShape } from '../word-art';
 import { att } from './xml-util';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
@@ -62,8 +63,11 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 		if (line) node.line = line;
 		const style = readStyle(xdr(element, 'style'));
 		if (style) node.style = style;
-		const text = parseDrawingTextBody(xdr(element, 'txBody'));
+		const body = xdr(element, 'txBody');
+		const text = parseDrawingTextBody(body);
 		if (text?.text) node.text = text;
+		const wordArt = node.textBox && readWordArtShape(body);
+		if (wordArt) node.wordArt = wordArt;
 		return node;
 	}
 	const childFrame = parseFrameOf(first(xfrm, 'chOff', NS.a), first(xfrm, 'chExt', NS.a));

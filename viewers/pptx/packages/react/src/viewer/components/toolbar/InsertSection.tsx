@@ -31,6 +31,7 @@ export interface InsertSectionProps {
 	/** Arm (or, with null, disarm) a Freeform: Shape / Curve tool. */
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
+	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
 	onAddShape: () => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
@@ -110,6 +111,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			slideTemplatesAvailable: templatesAvailable,
 			layouts: p.layoutOptions ?? [],
 			...(p.currentLayoutPath ? { currentLayoutPath: p.currentLayoutPath } : {}),
+			getGraphicTarget: p.getGraphicTarget,
 			translate: t,
 		};
 	}, [p, chartKind, customization, t, templatesAvailable]);

@@ -139,6 +139,15 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	defineRibbon();
 	const doc = ctx.host.ownerDocument;
 	const root = doc.createElement('office-ui-ribbon') as RibbonElement;
+	root.addEventListener('pointerdown', (event) => {
+		if (
+			ctx.grid()?.isEditing() &&
+			event
+				.composedPath()
+				.some((node) => node instanceof Element && node.matches('[role="tab"][data-tab="insert"]'))
+		)
+			event.preventDefault();
+	});
 	root.className = 'xve-ribbon';
 	root.setAttribute('part', 'ribbon');
 	root.setAttribute('role', 'toolbar');

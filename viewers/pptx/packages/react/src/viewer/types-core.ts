@@ -187,6 +187,7 @@ export interface EditorHistorySnapshot {
 	height: number;
 	activeSlideIndex: number;
 	slides: PptxSlide[];
+	sections?: import('pptx-viewer-core').PptxSection[];
 	templateElementsBySlideId: Record<string, PptxElement[]>;
 	/** The theme at that point, so undoing a theme pick puts the theme back with the slides. */
 	theme?: HistoryTheme;

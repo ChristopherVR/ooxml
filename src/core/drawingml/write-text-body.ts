@@ -19,6 +19,7 @@ import type {
 	DrawingParagraph,
 	DrawingParagraphItem,
 	DrawingRichTextBody,
+	DrawingTextWarp,
 } from './text-model';
 import {
 	appendInSchemaOrder,
@@ -41,6 +42,23 @@ export const BODY_PROPERTIES_ORDER = [
 	'extLst',
 ] as const;
 
+/** Writes the known preset and guide values of `a:prstTxWarp`. */
+export function writeDrawingTextWarp(doc: XmlDocument, value: DrawingTextWarp): XmlElement {
+	const warp = drawingTextWarpEntries(value);
+	const node = drawingElement(doc, 'prstTxWarp');
+	for (const [name, text] of warp.attributes) node.setAttribute(name, text);
+	if (warp.guides) {
+		const list = drawingElement(doc, 'avLst');
+		for (const guide of warp.guides) {
+			const gd = drawingElement(doc, 'gd');
+			for (const [name, text] of guide) gd.setAttribute(name, text);
+			list.appendChild(gd);
+		}
+		node.appendChild(list);
+	}
+	return node;
+}
+
 /** Writes `a:bodyPr`. */
 export function writeDrawingBodyProperties(
 	doc: XmlDocument,
@@ -50,19 +68,7 @@ export function writeDrawingBodyProperties(
 	for (const [name, text] of drawingBodyAttributeEntries(value)) element.setAttribute(name, text);
 	const children: OrderedChild[] = [];
 	if (value.textWarp) {
-		const warp = drawingTextWarpEntries(value.textWarp);
-		const node = drawingElement(doc, 'prstTxWarp');
-		for (const [name, text] of warp.attributes) node.setAttribute(name, text);
-		if (warp.guides) {
-			const list = drawingElement(doc, 'avLst');
-			for (const guide of warp.guides) {
-				const gd = drawingElement(doc, 'gd');
-				for (const [name, text] of guide) gd.setAttribute(name, text);
-				list.appendChild(gd);
-			}
-			node.appendChild(list);
-		}
-		children.push({ name: 'prstTxWarp', node });
+		children.push({ name: 'prstTxWarp', node: writeDrawingTextWarp(doc, value.textWarp) });
 	}
 	if (value.autofit) {
 		const autofit = drawingAutofitChild(value.autofit);

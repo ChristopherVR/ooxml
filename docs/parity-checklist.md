@@ -339,8 +339,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 - [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format, Chart Format (a pane instead),
       PivotTable Analyze and PivotTable Design (pivot commands sit in Insert > PivotTable).
-- [ ] **P1** Insert: Shapes, Icons, 3D Models, Screenshot, PivotChart, Recommended PivotTables,
-      Equation, New Note, and the Text group (Text Box, Header & Footer, WordArt, Object).
+- [ ] **P1** Insert: Shapes, 3D Models, Screenshot, PivotChart, Recommended PivotTables,
+      Equation, New Note, Text Box, Header & Footer, and Object.
+- [x] **P1** WordArt inserts and edits native worksheet shapes with fill, outline and shadow
+      presets and DrawingML text transforms.
+- [x] **P1** Insert Symbol replaces the editing selection or inserts at the cell's text caret.
 - [ ] **P1** Page Layout: Scale to Fit, Print Titles, Background and the Arrange group.
 - [ ] **P1** Data: Get Data and its sources, Queries & Connections, Refresh All, Edit Links.
 - [ ] **P2** Review: Spelling, Thesaurus, Translate, Check Accessibility, Notes; View: Window group
@@ -383,8 +386,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`docx/computed-fields.ts`). IF, `=`, MERGEFIELD, INCLUDETEXT, INCLUDEPICTURE, AUTHOR,
       INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached result (`layout/page-fields.ts`);
       Update Fields skips the `\n \r \w \p` switches.
-- [ ] **P1** Grouped drawings (`wpg`) and canvases (`wpc`), legacy VML text boxes (`v:textbox`),
-      WordArt, ink and gradient or picture fills are kept but not drawn.
+- [ ] **P1** Grouped drawings (`wpg`) and canvases (`wpc`), legacy VML text boxes (`v:textbox`)
+      and legacy VML WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
 - [x] **P1** Picture bullets (`numPicBullet`): resolved (VML `imagedata` and `w:drawing`), drawn as
@@ -592,7 +595,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
 - [ ] **P1** Layout: the Arrange group (Position, Wrap Text, order, Selection Pane, Align, Group,
       Rotate) and Text Direction.
-- [ ] **P1** Insert: WordArt, Quick Parts, Signature Line, Object, Icons, 3D Models, Screenshot,
+- [x] **P1** Insert WordArt creates editable OOXML text boxes with fill, outline and shadow
+      presets and DrawingML text transforms.
+- [x] **P2** Word and Excel share 30 WordArt styles and a text transform picker. Preset names
+      and adjustment guides are saved in the native drawing. The editor previews the text
+      along a path.
+- [ ] **P2** Word and Excel WordArt still need gradient and 3-D styles, direct adjustment
+      handles, and glyph-envelope rendering for deformation presets.
+- [ ] **P1** Insert: Quick Parts, Signature Line, Object, 3D Models, Screenshot,
       Video; Header and Footer offer blank designs only.
 - [ ] **P2** View: Window group, Macros; Review: Thesaurus, Translate, Block Authors, Hide Ink;
       Home: Text Effects, Phonetic Guide, Character Border, Enclosed Characters; Backstage:
@@ -782,7 +792,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and dialogs have no headless draft/validate/apply hooks.
 - [ ] **P1** Remove Background: an existing `a14:backgroundRemoval` is drawn but cannot be
       authored (`src/ui/src/pptx/render/image-background-removal.ts`).
-- [ ] **P1** Zoom: slide, section and summary zooms render and save but cannot be inserted.
+- [x] **P1** Summary Zoom creates a new overview slide before the first chosen slide, reuses
+      existing sections, and starts new sections at the chosen slides.
+- [ ] **P1** Zoom still needs live preview refresh, custom thumbnails, Zoom formatting, and
+      retaining targets through subsequent slide reordering.
 - [ ] **P1** Recording: no narration or Cameo; Clear and Reset of recorded timings are disabled
       (`ribbon-record-commands.ts`); Record Audio has no command.
 - [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;
@@ -929,9 +942,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Insert: Symbol, WordArt, Object, Icons, 3D Models, Screenshot, Photo Album, Reuse
-      Slides, Forms and add-ins are disabled, plus ten menu entries without a command
-      (`ribbon-insert-layout.ts`).
+- [x] **P1** Insert WordArt creates editable text with a preset from the WordArt Styles gallery.
+- [x] **P1** Insert Symbol uses the common Unicode gallery or a character code at an active
+      text caret, or creates a text box when no text edit is active.
+      Browsing font-specific glyphs remains open.
+- [ ] **P1** Insert: Object, 3D Models, Screenshot, Photo Album, Reuse Slides, Forms, add-ins
+      and unimplemented menu entries (`ribbon-insert-layout.ts`).
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
       Picture Border, Picture Layout, Alt Text and Arrange.
@@ -1226,6 +1242,14 @@ installed Visio 16 build is used to check that saved files open without repair.
   comment whitespace, solid theme backgrounds and Visio infinite-line stencil previews. Kept
   remaining work explicit, including new mention authoring, untranslated function descriptions,
   exact Word tint rounding, rich comments, non-solid backgrounds and periodic NURBS.
+
+### Insert Icons
+
+- [x] PowerPoint, Word, Excel and Visio offer a bundled, searchable gallery with color selection.
+      PowerPoint and Word save the icon as SVG with a PNG fallback. Excel and Visio save PNG
+      pictures.
+- [ ] **P1** The Microsoft 365 stock catalog, batch insertion, vector icons in Excel and Visio,
+      and graphics recoloring after insertion remain open.
 
 ### Symbol-font fallback (#290)
 

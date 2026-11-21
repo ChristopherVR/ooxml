@@ -5,6 +5,7 @@ import { RIBBON_ADD_IN_TAB_ATTR, RIBBON_CONTEXTUAL_TAB_ATTR } from '../render';
 import { attachControlStyles } from './control-styles';
 import { bridgeCss } from './office-token-bridge';
 import { RIBBON_TABS_CSS } from './ribbon-tabs-styles';
+import { preserveInlineSymbolCaret } from '../render/inline-symbol';
 
 /** The `pptx-ui-ribbon-tabs` element as a binding sees it. */
 export interface PptxUiRibbonTabsElement extends HTMLElement {
@@ -51,6 +52,11 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			super();
 			this.addEventListener('office-ribbon-select', this.#onSelect);
 			if (this.shadowRoot) {
+				this.shadowRoot.addEventListener('pointerdown', (event) => {
+					if (event.target instanceof HTMLElement && event.target.closest('[data-tab="insert"]')) {
+						preserveInlineSymbolCaret(event, this.ownerDocument);
+					}
+				});
 				// On the shadow root, so a double click that is not composed still counts.
 				this.shadowRoot.addEventListener('dblclick', this.#onDoubleClick);
 				attachControlStyles(this.shadowRoot, bridgeCss('pptx-ui-ribbon-tabs') + RIBBON_TABS_CSS);

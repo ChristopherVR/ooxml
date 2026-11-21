@@ -656,6 +656,8 @@ export * from './controller';
 // id + OOXML slide-id resolution. Each binding wires its reactive state through
 // these.
 export * from './section-operations';
+export type { SummaryZoomMutation } from 'ooxml-core/pptx/editor/render/summary-zoom-operations';
+export { isChoosingInlineSymbol } from './inline-symbol';
 // Slide CRUD factories: blank-slide builder + `slide-<ts>-<rand>` id helper
 // (with optional id override). Each binding's slide-management layer calls these.
 export * from './slide-operations';

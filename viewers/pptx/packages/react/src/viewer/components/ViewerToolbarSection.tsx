@@ -18,6 +18,7 @@ import type {
 	PptxLayoutOption,
 	PptxLayoutPreview,
 	PptxSlide,
+	PptxSection,
 	PptxSlideTransition,
 	PptxPresentationProperties,
 	PptxElementAnimation,
@@ -76,6 +77,9 @@ export interface ViewerToolbarSectionProps {
 		toolbarSection: ToolbarSection;
 		setToolbarSection: React.Dispatch<React.SetStateAction<ToolbarSection>>;
 		slides: PptxSlide[];
+		sections?: PptxSection[];
+		setSections?: React.Dispatch<React.SetStateAction<PptxSection[]>>;
+		canvasSize?: import('ooxml-ui/pptx').CanvasSize;
 		setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
 		setActiveSlideIndex: React.Dispatch<React.SetStateAction<number>>;
 		setSelectedElementId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -646,6 +650,26 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				onSetNewShapeType={s.setNewShapeType}
 				onArmFreeformTool={s.setActiveFreeformTool}
 				onAddTextBox={insertHandlers.handleAddTextBox}
+				getGraphicTarget={() =>
+					s.canvasSize && {
+						slides: s.slides,
+						slideIndex: activeSlideIndex,
+						canvasSize: s.canvasSize,
+						themeColors: templateSchemeFromTheme(s.theme?.colorScheme),
+						insert: insertHandlers.addElement,
+						sections: s.sections ?? [],
+						insertSummary: s.setSections
+							? ({ slides, sections, slideIndex }) => {
+									history.markDirty();
+									s.setSlides(slides);
+									s.setSections?.(sections);
+									s.setActiveSlideIndex(slideIndex);
+									s.setSelectedElementId(null);
+									s.setSelectedElementIds([]);
+								}
+							: undefined,
+					}
+				}
 				onAddShape={insertHandlers.handleAddShape}
 				onAddTable={insertHandlers.handleAddTable}
 				onAddChart={insertHandlers.handleAddChart}

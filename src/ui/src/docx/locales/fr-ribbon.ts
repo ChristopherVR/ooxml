@@ -1,6 +1,15 @@
 import type { RibbonStrings } from './en';
 
 export const frRibbon: RibbonStrings = {
+	Transform: 'Transformation',
+	WordArt: 'WordArt',
+	'WordArt text': 'Texte WordArt',
+	'Your text here': 'Votre texte ici',
+	'WordArt style': 'Style WordArt',
+	Icons: 'Icônes',
+	'Search icons': 'Rechercher des icônes',
+	'Icon color': 'Couleur de l’icône',
+	'No matching icons.': 'Aucune icône correspondante.',
 	Font: 'Police',
 	Paragraph: 'Paragraphe',
 	'Alignment and history': 'Alignement et historique',

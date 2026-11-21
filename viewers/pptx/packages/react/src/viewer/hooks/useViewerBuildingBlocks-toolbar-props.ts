@@ -187,6 +187,22 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		onToggleFindReplace: () => findReplace.setFindReplaceOpen(!findReplace.findReplaceOpen),
 		onSetNewShapeType: s.setNewShapeType,
 		onAddTextBox: insertHandlers.handleAddTextBox,
+		getGraphicTarget: () => ({
+			slides: s.slides,
+			slideIndex: activeSlideIndex,
+			canvasSize: s.canvasSize,
+			themeColors: templateSchemeFromTheme(s.theme?.colorScheme),
+			insert: insertHandlers.addElement,
+			sections: s.sections,
+			insertSummary: ({ slides, sections, slideIndex }) => {
+				history.markDirty();
+				s.setSlides(slides);
+				s.setSections(sections);
+				s.setActiveSlideIndex(slideIndex);
+				s.setSelectedElementId(null);
+				s.setSelectedElementIds([]);
+			},
+		}),
 		onAddShape: insertHandlers.handleAddShape,
 		onAddTable: insertHandlers.handleAddTable,
 		onAddChart: insertHandlers.handleAddChart,

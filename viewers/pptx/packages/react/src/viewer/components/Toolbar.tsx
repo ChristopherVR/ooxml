@@ -311,6 +311,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 								activeFreeformTool={p.activeFreeformTool}
 								onArmFreeformTool={p.onArmFreeformTool}
 								onAddTextBox={p.onAddTextBox}
+								getGraphicTarget={p.getGraphicTarget}
 								onAddShape={p.onAddShape}
 								onAddTable={p.onAddTable}
 								onAddChart={p.onAddChart}
