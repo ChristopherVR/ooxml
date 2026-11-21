@@ -189,14 +189,14 @@ test('find and replace walk the body, headers, notes and text boxes in story ord
 	await editor.getByRole('button', { name: 'Replace all', exact: true }).click();
 	await expect(status).toHaveText('0 matches');
 	await expect(surface).toContainText('ok body');
-	await expect(surface.locator('.dve-textbox-line')).toHaveText('ok box');
+	await expect(surface.getByText('ok box', { exact: true })).toBeVisible();
 	// One undo step per story: the text boxes, replaced last, come back first.
 	await editor.getByRole('button', { name: 'Undo', exact: true }).click();
-	await expect(surface.locator('.dve-textbox-line')).toHaveText('zq box');
+	await expect(surface.getByText('zq box', { exact: true })).toBeVisible();
 	await expect(surface).toContainText('ok body');
 	await expect(status).toHaveText('1 match');
 	await editor.getByRole('button', { name: 'Redo', exact: true }).click();
-	await expect(surface.locator('.dve-textbox-line')).toHaveText('ok box');
+	await expect(surface.getByText('ok box', { exact: true })).toBeVisible();
 
 	// From Print Layout, a header match opens the header on the continuous (Draft) surface.
 	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
