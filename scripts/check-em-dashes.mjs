@@ -55,7 +55,6 @@ function main([base]) {
 			'--unified=0',
 			'--no-color',
 			'--no-ext-diff',
-			'--text',
 			`${base}...HEAD`,
 		],
 		{ encoding: 'utf8', maxBuffer: 1024 * 1024 * 1024 },

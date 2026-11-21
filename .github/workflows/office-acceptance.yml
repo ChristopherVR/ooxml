@@ -46,7 +46,9 @@ jobs:
       # A product whose Office app is not installed is skipped with a notice, not failed.
       - name: Run ${{ matrix.product }} acceptance
         shell: pwsh
-        run: node scripts/office-acceptance.mjs '${{ matrix.product }}' --out office-acceptance-results
+        env:
+          OFFICE_ACCEPTANCE_PRODUCT: ${{ matrix.product }}
+        run: node scripts/office-acceptance.mjs $env:OFFICE_ACCEPTANCE_PRODUCT --out office-acceptance-results
 
       - name: Upload results
         if: always()
