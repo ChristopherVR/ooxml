@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import vm from 'node:vm';
+import { parse } from 'parse5';
 import { buildPwa } from './build-pwa.mjs';
 
 const SHELL = `<!doctype html><html><head><meta charset="utf-8" />
@@ -86,13 +87,25 @@ test('the suite and standalone apps declare URL-encoded share targets', () => {
 
 test('every shell script and style tag carries the integrity of the file it loads', () => {
 	const shell = readdirSync(builds.A).find((name) => /^shell-[0-9a-f]+\.css$/u.test(name));
+	const attribute = (node, name) => node.attrs?.find((attr) => attr.name === name)?.value;
+	const assets = (node) => {
+		if (
+			node.tagName === 'script' ||
+			(node.tagName === 'link' && attribute(node, 'rel') === 'stylesheet')
+		)
+			return [node];
+		return (node.childNodes ?? []).flatMap(assets);
+	};
 	for (const page of ['index.html', 'apps/word/index.html']) {
 		const html = read(builds.A, page).toString();
-		const tags = [...html.matchAll(/<(?:script\b|link rel="stylesheet")[^>]*>/gu)].map((m) => m[0]);
-		const loads = tags.map((tag) => tag.match(/(?:src|href)="(?:\.\.\/\.\.\/)?([^"?]+)/u)[1]);
+		const tags = assets(parse(html));
+		const loads = tags.map(
+			(tag) =>
+				(attribute(tag, 'src') ?? attribute(tag, 'href')).match(/^(?:\.\.\/\.\.\/)?([^?]+)/u)[1],
+		);
 		assert.deepEqual(loads, ['appearance-init.js', shell, 'suite.js'], page);
 		for (const [i, tag] of tags.entries())
-			assert.ok(tag.includes(`integrity="${sri(builds.A, loads[i])}"`), `${page}: ${tag}`);
+			assert.equal(attribute(tag, 'integrity'), sri(builds.A, loads[i]), `${page}: ${loads[i]}`);
 	}
 });
 

@@ -3,10 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
 
 import {
+	collaborationMedia,
 	configureCollaborationMedia,
 	MAX_SHARED_MEDIA_BYTES,
 	YDOC_MEDIA_KEY,
 } from './collaboration-media';
+import { forgetMediaUrl, rememberMediaUrl } from './collaboration-media-token';
 import { reconcileSlidesInYDoc } from './collaboration-reconcile';
 import { REMOTE_MEDIA_WITHHELD, REMOTE_VALUE_REJECTED } from './collaboration-remote-values';
 import type { YDocLike, YjsFactories } from './collaboration-sync';
@@ -73,6 +75,23 @@ function firstElement(doc: Y.Doc): Record<string, unknown> {
 }
 
 describe('collaboration media: the room carries the bytes, never page-local URLs', () => {
+	it('only reads blob URLs when uploading media to a room', async () => {
+		const doc = new Y.Doc();
+		const url = 'https://linked.test/image.png';
+		const id = 'a'.repeat(32);
+		const fetch = vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(PNG.slice()));
+		rememberMediaUrl(url, id);
+		try {
+			await collaborationMedia(asDoc(doc)).upload([id], 'local');
+			expect(fetch).not.toHaveBeenCalled();
+			expect(mediaEntries(doc).size).toBe(0);
+		} finally {
+			forgetMediaUrl(url);
+			fetch.mockRestore();
+			doc.destroy();
+		}
+	});
+
 	it('gives a joiner its own URL for a loaded picture', async () => {
 		const { sharer, joiner } = room();
 		const source = objectUrl(PNG, 'image/png');

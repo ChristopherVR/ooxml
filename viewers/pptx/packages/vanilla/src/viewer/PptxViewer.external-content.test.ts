@@ -2,6 +2,11 @@ import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	drawsLinkedContent,
+	LINKED_FILL_URL,
+	modelHasLinkedFill,
+} from '../../../shared/test-utils/external-content-contract.mjs';
 import { createPptxViewer } from './PptxViewer';
 import type { PptxViewerInstance, PptxViewerOptions } from './types';
 
@@ -9,11 +14,10 @@ import type { PptxViewerInstance, PptxViewerOptions } from './types';
  * Linked pictures follow PowerPoint's default: opening a deck downloads none of them and a
  * security bar offers Enable Content for that presentation only.
  */
-const LINKED_ORIGIN = 'https://linked-content.test';
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const LINKED_FILL = `<p:sp><p:nvSpPr><p:cNvPr id="901" name="Linked fill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:link="rIdLinkedFill"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:spPr></p:sp>`;
 
-/** A one-slide deck whose shape fill is a picture linked to {@link LINKED_ORIGIN}. */
+/** A one-slide deck whose shape fill is a picture linked to {@link LINKED_FILL_URL}. */
 async function linkedDeck(): Promise<Uint8Array> {
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
 	data.slides[0].isDirty = true;
@@ -28,7 +32,7 @@ async function linkedDeck(): Promise<Uint8Array> {
 		relsPath,
 		rels.replace(
 			'</Relationships>',
-			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"/></Relationships>`,
+			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_FILL_URL}" TargetMode="External"/></Relationships>`,
 		),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
@@ -59,14 +63,9 @@ function mount(options: PptxViewerOptions = {}) {
 	const state = () =>
 		(viewer as unknown as { store: { get(): { slides: unknown; dirty: boolean } } }).store.get();
 	/** Whether anything drawn (stage, thumbnails) would make the browser contact the linked origin. */
-	const drawsOrigin = () =>
-		[...container.querySelectorAll('*')].some((node) =>
-			['src', 'poster', 'href', 'style'].some((name) =>
-				node.getAttribute(name)?.includes(LINKED_ORIGIN),
-			),
-		);
+	const drawsOrigin = () => drawsLinkedContent(container);
 	/** Whether the open deck's model keeps its links. */
-	const modelLinks = () => JSON.stringify(state().slides).includes(LINKED_ORIGIN);
+	const modelLinks = () => modelHasLinkedFill(state().slides);
 	return { container, viewer, bar, load, drawsOrigin, modelLinks, state };
 }
 
@@ -123,7 +122,7 @@ describe('vanilla linked external content', () => {
 			'r:link="rIdLinkedFill"',
 		);
 		expect(await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).toContain(
-			`Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"`,
+			`Target="${LINKED_FILL_URL}" TargetMode="External"`,
 		);
 	});
 

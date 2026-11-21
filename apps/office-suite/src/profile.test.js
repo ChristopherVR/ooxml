@@ -3,13 +3,9 @@ import { test } from 'node:test';
 
 import { avatar } from './profile.js';
 
-const shownText = (html) => html.replace(/<[^>]*>/gu, '');
-
 test('an avatar shows initials without text, so its button is named by the profile name', () => {
 	const html = avatar({ name: 'Alex Morgan', photo: '' });
-	assert.equal(shownText(html), '');
-	assert.match(html, /data-initials="AM"/u);
-	assert.match(html, /aria-hidden="true"/u);
+	assert.equal(html, '<span class="avatar" aria-hidden="true" data-initials="AM"></span>');
 });
 
 test('an avatar with a photo shows the photo and no initials', () => {

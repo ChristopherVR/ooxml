@@ -10,6 +10,30 @@
 import { buildingBlocksContractDeck } from './building-blocks-contract.mjs';
 
 export const LINKED_CONTENT_ORIGIN = 'https://linked-content.test';
+export const LINKED_FILL_URL = `${LINKED_CONTENT_ORIGIN}/fill.png`;
+
+/** Whether the fixture's linked image is still present as a value in the model. */
+export function modelHasLinkedFill(model) {
+	const values = new Set();
+	JSON.stringify(model, (_key, value) => {
+		if (typeof value === 'string') values.add(value);
+		return value;
+	});
+	return values.has(LINKED_FILL_URL);
+}
+
+/** Whether a resource attribute or CSS URL would contact the fixture's linked origin. */
+export function drawsLinkedContent(root) {
+	const isLinked = (value) => URL.parse(value)?.origin === LINKED_CONTENT_ORIGIN;
+	return [root, ...root.querySelectorAll('*')].some((node) =>
+		Array.from(node.attributes).some(({ value }) => {
+			if (isLinked(value)) return true;
+			return [...value.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)]+))\s*\)/giu)].some(
+				([, quoted, singleQuoted, bare]) => isLinked(quoted ?? singleQuoted ?? bare),
+			);
+		}),
+	);
+}
 
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const LINKED_FILL = `<p:sp><p:nvSpPr><p:cNvPr id="901" name="Linked fill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:link="rIdLinkedFill"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:spPr></p:sp>`;
@@ -26,7 +50,7 @@ export async function linkedContentDeck(Handler, JSZip) {
 		relsPath,
 		rels.replace(
 			'</Relationships>',
-			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_CONTENT_ORIGIN}/fill.png" TargetMode="External"/></Relationships>`,
+			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_FILL_URL}" TargetMode="External"/></Relationships>`,
 		),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
@@ -62,9 +86,9 @@ export async function runExternalContentContract({ harness, expect, Handler, JSZ
 		...(allowExternalContent === undefined ? {} : { allowExternalContent }),
 	});
 	const bars = () => host.querySelectorAll('pptx-ui-external-content-bar');
-	const modelLinks = () => JSON.stringify(harness.slides()).includes(LINKED_CONTENT_ORIGIN);
+	const modelLinks = () => modelHasLinkedFill(harness.slides());
 	/** Whether the mounted blocks draw anything that would contact the linked server. */
-	const drawn = () => host.innerHTML.includes(LINKED_CONTENT_ORIGIN);
+	const drawn = () => drawsLinkedContent(host);
 	try {
 		await harness.mount(host, options(undefined));
 		await until(harness, () => expect(harness.state().slideCount).toBe(2), 'the deck');

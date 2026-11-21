@@ -14,6 +14,11 @@ import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	drawsLinkedContent,
+	LINKED_FILL_URL,
+} from '../../../shared/test-utils/external-content-contract.mjs';
+
 // oxlint-disable-next-line prefer-ending-with-an-expect
 vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
 	useTranslation: () => ({
@@ -30,11 +35,10 @@ vi.mock<typeof import('react-i18next')>(import('react-i18next'), () => ({
 const { PptxHandler } = await import('pptx-viewer-core');
 const { PowerPointViewer } = await import('../index');
 
-const ORIGIN = 'https://linked-content.test';
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const LINKED_FILL = `<p:sp><p:nvSpPr><p:cNvPr id="901" name="Linked fill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:link="rIdLinkedFill"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:spPr></p:sp>`;
 
-/** One slide whose shape is filled with a picture linked to {@link ORIGIN}. */
+/** One slide whose shape is filled with a picture linked to {@link LINKED_FILL_URL}. */
 async function linkedDeck(): Promise<Uint8Array> {
 	const { handler, data } = await PptxHandler.create({ initialSlideCount: 1 });
 	const zip = await JSZip.loadAsync(await handler.save(data.slides));
@@ -48,7 +52,7 @@ async function linkedDeck(): Promise<Uint8Array> {
 		relsPath,
 		rels.replace(
 			'</Relationships>',
-			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${ORIGIN}/fill.png" TargetMode="External"/></Relationships>`,
+			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_FILL_URL}" TargetMode="External"/></Relationships>`,
 		),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
@@ -97,7 +101,7 @@ async function settle(done: () => boolean): Promise<void> {
 
 const bar = () => container.querySelector('pptx-ui-external-content-bar');
 /** Whether anything the viewer draws would make the browser contact the linked server. */
-const linkedDrawn = () => container.innerHTML.includes(ORIGIN);
+const linkedDrawn = () => drawsLinkedContent(container);
 
 type Handle = import('../types').PowerPointViewerHandle;
 let handle: Handle | null = null;
@@ -178,7 +182,7 @@ describe('linked web content in PowerPointViewer', { timeout: 60_000 }, () => {
 			'r:link="rIdLinkedFill"',
 		);
 		expect(await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).toContain(
-			`Target="${ORIGIN}/fill.png" TargetMode="External"`,
+			`Target="${LINKED_FILL_URL}" TargetMode="External"`,
 		);
 	});
 

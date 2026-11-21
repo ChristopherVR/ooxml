@@ -45,21 +45,18 @@ const rejections = (slide: PptxSlide | undefined) =>
 
 describe('remote values at the collaboration boundary', () => {
 	it('drops script and markup payloads a peer puts in an embedded object and warns', () => {
-		for (const payload of [
-			'data:text/html,<script>localStorage.x=1</script>',
-			'javascript:localStorage.x=1',
-		]) {
+		for (const [payload, kept] of [
+			['data:text/html,<script>localStorage.x=1</script>', true],
+			['javascript:localStorage.x=1', false],
+			['vbscript:example', false],
+		] as const) {
 			const { slides } = receive([
 				slideWith(ole({ oleEmbeddedData: payload, oleEmbeddedMimeType: 'text/plain' })),
 			]);
 			const element = slides[0]?.elements[0] as Record<string, unknown> | undefined;
-			if (payload.startsWith('javascript:')) {
-				expect(element?.oleEmbeddedData).toBeUndefined();
-			} else {
-				// A markup file stays downloadable, but its claimed type cannot disagree with it.
-				expect(element?.oleEmbeddedData).toBe(payload);
-				expect(element?.oleEmbeddedMimeType).toBeUndefined();
-			}
+			// A markup file stays downloadable, but its claimed type cannot disagree with it.
+			expect(element?.oleEmbeddedData).toBe(kept ? payload : undefined);
+			if (kept) expect(element?.oleEmbeddedMimeType).toBeUndefined();
 			expect(rejections(slides[0]).length).toBeGreaterThan(0);
 			expect(rejections(slides[0])[0]?.elementId).toBe('ppt/slides/slide1.xml-ole-0');
 		}

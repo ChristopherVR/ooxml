@@ -8,6 +8,7 @@ import { newShape } from './shape-model';
 import { SHAPE_PALETTE } from './shape-palette';
 import { shapeSvg } from './shape-svg';
 import { createDocument } from './model';
+import { parseXml } from '../xml';
 
 const fixture = new URL('./__fixtures__/shapes/shapes.docx', import.meta.url);
 const load = async () => loadDocx(new Uint8Array(await readFile(fixture)));
@@ -200,6 +201,25 @@ describe('shape drawing', () => {
 		expect(custom).toContain('>Hello world<');
 		expect(custom).toContain('fill="#000000"');
 		expect(shapeSvg(newShape('notAShape'), 10, 10)).toBeUndefined();
+	});
+
+	it('serializes shape text as text and uses the default color for malformed run paint', () => {
+		const text = 'A < B & C > D';
+		const svg = parseXml(
+			shapeSvg(
+				{
+					...newShape('rect'),
+					text: [text],
+					textColor: '123456" data-extra="unexpected',
+				},
+				200,
+				50,
+			)!,
+		).documentElement;
+		const label = svg.getElementsByTagName('text')[0]!;
+		expect(label.textContent).toBe(text);
+		expect(label.getAttribute('fill')).toBe('#FFFFFF');
+		expect(label.hasAttribute('data-extra')).toBe(false);
 	});
 
 	it('draws lines unfilled and every gallery family', () => {

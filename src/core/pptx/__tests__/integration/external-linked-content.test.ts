@@ -115,7 +115,7 @@ describe('linked content beyond p:pic', () => {
 		const model = slide.elements.find(
 			(element): element is Model3DPptxElement => element.type === 'model3d',
 		);
-		expect(model?.posterImage).toMatch(new RegExp(`^${LINKED_ORIGIN}/poster-`, 'u'));
+		expect(model?.posterImage).toMatch(/^https:\/\/linked-content\.test\/poster-/u);
 	});
 });
 
@@ -210,10 +210,9 @@ async function linkedSoundDeck(): Promise<ArrayBuffer> {
 describe('linked sounds', () => {
 	it('keeps the linked address of a transition, effect and hyperlink sound', async () => {
 		const [slide] = await loadSlides(true, await linkedSoundDeck());
-		expect(slide!.transition?.soundPath).toMatch(new RegExp(`^${LINKED_ORIGIN}/[^/]+\.wav$`, 'u'));
-		expect(slide!.nativeAnimations?.find((anim) => anim.soundPath)?.soundPath).toMatch(
-			new RegExp(`^${LINKED_ORIGIN}/[^/]+\.wav$`, 'u'),
-		);
+		const linkedSound = /^https:\/\/linked-content\.test\/[^/]+\.wav$/u;
+		expect(slide!.transition?.soundPath).toMatch(linkedSound);
+		expect(slide!.nativeAnimations?.find((anim) => anim.soundPath)?.soundPath).toMatch(linkedSound);
 		expect(byName(slide!, 'Action sound').actionClick?.soundPath).toBe(
 			`${LINKED_ORIGIN}/click.wav`,
 		);

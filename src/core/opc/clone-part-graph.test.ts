@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
-import { clonePartGraph, relativePartTarget } from './clone-part-graph';
+import { clonePart, clonePartGraph, relativePartTarget } from './clone-part-graph';
 import { buildContentTypesXml, contentTypeForPart, parseContentTypes } from './content-types';
 import {
 	buildRelationshipsXml,
@@ -12,6 +12,21 @@ import {
 const rel = (target: string, type = 'owned') => ({ type, target, mode: 'Internal' as const });
 
 describe('clonePartGraph', () => {
+	it('replaces a long numeric suffix before the final extension', async () => {
+		const zip = new JSZip();
+		const numbered = `parts.v2/data${'0'.repeat(4096)}.xml`;
+		const extensionless = 'parts.v2/data7';
+		zip.file(numbered, '<data/>');
+		zip.file(extensionless, '<data/>');
+		zip.file('parts.v2/data1.xml', '<existing/>');
+		expect((await clonePart({ zip, part: numbered, shouldClone: () => true })).get(numbered)).toBe(
+			'parts.v2/data2.xml',
+		);
+		expect(
+			(await clonePart({ zip, part: extensionless, shouldClone: () => true })).get(extensionless),
+		).toBe('parts.v2/data71');
+	});
+
 	it('copies owned dependencies once, remaps cycles and keeps shared and external targets', async () => {
 		const zip = new JSZip();
 		zip.file('doc/source.xml', '<source/>');

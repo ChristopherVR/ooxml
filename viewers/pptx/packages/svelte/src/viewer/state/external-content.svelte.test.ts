@@ -6,6 +6,11 @@ import { PptxHandler } from 'pptx-viewer-core';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	drawsLinkedContent,
+	LINKED_FILL_URL,
+	modelHasLinkedFill,
+} from '../../../../shared/test-utils/external-content-contract.mjs';
 import ExternalContentBar from '../components/ExternalContentBar.svelte';
 import PowerPointViewer from '../PowerPointViewer.svelte';
 import type { ViewerStateBag } from './create-viewer-state-types';
@@ -17,12 +22,11 @@ import CreateViewerStateHarness from './CreateViewerStateHarness.svelte';
  * Content draws them for this viewer without reloading or touching the deck.
  */
 
-const ORIGIN = 'https://linked-content.test';
 const FIXTURE = resolve(process.cwd(), '../../../../e2e/pptx/fixtures/sample-deck.pptx');
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const LINKED_FILL = `<p:sp><p:nvSpPr><p:cNvPr id="901" name="Linked fill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:link="rIdLinkedFill"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:spPr></p:sp>`;
 
-/** The sample deck with a shape on its first slide filled from a picture at {@link ORIGIN}. */
+/** The sample deck with a shape on its first slide filled from a picture at {@link LINKED_FILL_URL}. */
 async function linkedDeck(): Promise<Uint8Array> {
 	const zip = await JSZip.loadAsync(readFileSync(FIXTURE));
 	const slide = await zip.file('ppt/slides/slide1.xml')!.async('string');
@@ -33,7 +37,7 @@ async function linkedDeck(): Promise<Uint8Array> {
 		relsPath,
 		rels.replace(
 			'</Relationships>',
-			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${ORIGIN}/fill.png" TargetMode="External"/></Relationships>`,
+			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_FILL_URL}" TargetMode="External"/></Relationships>`,
 		),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
@@ -70,7 +74,7 @@ async function open(state: ViewerStateBag, bytes: Uint8Array): Promise<void> {
 	await tick();
 }
 
-const modelLinks = (state: ViewerStateBag) => JSON.stringify(state.editor.slides).includes(ORIGIN);
+const modelLinks = (state: ViewerStateBag) => modelHasLinkedFill(state.editor.slides);
 
 describe('linked external content (Svelte)', () => {
 	it('keeps the link in the model, draws nothing from it and shows the bar', async () => {
@@ -139,7 +143,9 @@ describe('linked external content (Svelte)', () => {
 		const zip = await JSZip.loadAsync(saved.content);
 		const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string');
 		const slide = await zip.file('ppt/slides/slide1.xml')!.async('string');
-		expect(rels).toMatch(new RegExp(`Target="${ORIGIN}/fill.png"[^>]*TargetMode="External"`, 'u'));
+		const relationship = rels.match(/<Relationship [^>]*Id="rIdLinkedFill"[^>]*>/u)?.[0];
+		expect(relationship).toContain(`Target="${LINKED_FILL_URL}"`);
+		expect(relationship).toContain('TargetMode="External"');
 		expect(slide).toContain('r:link=');
 	});
 
@@ -209,14 +215,14 @@ describe('powerPointViewer linked content', () => {
 		flushSync();
 		const bar = () => target.querySelector('pptx-ui-external-content-bar');
 		await vi.waitFor(() => expect(bar()).not.toBeNull());
-		expect(target.innerHTML).not.toContain(ORIGIN);
+		expect(drawsLinkedContent(target)).toBe(false);
 
 		const load = vi.spyOn(PptxHandler.prototype, 'load');
 		bar()!.dispatchEvent(
 			new CustomEvent('external-content-request', { detail: { id: 'action' }, bubbles: true }),
 		);
 		flushSync();
-		await vi.waitFor(() => expect(target.innerHTML).toContain(ORIGIN));
+		await vi.waitFor(() => expect(drawsLinkedContent(target)).toBe(true));
 		expect(bar()).toBeNull();
 		expect(load).not.toHaveBeenCalled();
 	}, 30000);

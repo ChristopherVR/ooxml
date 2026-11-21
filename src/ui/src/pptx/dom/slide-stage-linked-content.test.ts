@@ -56,7 +56,13 @@ function stage(options: Partial<SlideStageOptions> = {}): HTMLElement {
 /** Whether any attribute of the stage would make the browser contact {@link ORIGIN}. */
 const contacts = (node: HTMLElement): boolean =>
 	[node, ...node.querySelectorAll('*')].some((el) =>
-		[...el.attributes].some((attribute) => attribute.value.includes(ORIGIN)),
+		[...el.attributes].some(({ value }) => {
+			const urls = [...value.matchAll(/url\(\s*(?:"([^"]*)"|'([^']*)'|([^\s)]+))\s*\)/giu)];
+			return [
+				value,
+				...urls.map(([, quoted, singleQuoted, bare]) => quoted ?? singleQuoted ?? bare),
+			].some((url) => url !== undefined && URL.parse(url)?.origin === ORIGIN);
+		}),
 	);
 
 describe('renderSlideStage linked content', () => {
@@ -67,6 +73,7 @@ describe('renderSlideStage linked content', () => {
 
 	it('draws the linked background, picture and fill once allowed', () => {
 		const node = stage({ linkedContent: true });
+		expect(contacts(node)).toBe(true);
 		expect(node.outerHTML).toContain(`${ORIGIN}/background.png`);
 		expect(node.outerHTML).toContain(`${ORIGIN}/picture.png`);
 		expect(node.outerHTML).toContain(`${ORIGIN}/fill.png`);

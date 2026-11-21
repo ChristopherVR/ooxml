@@ -136,7 +136,9 @@ function localUrlFor(bytes: Uint8Array, type: string): string {
 }
 
 async function readLocalUrl(url: string): Promise<{ bytes: Uint8Array; type: string }> {
-	const blob = await (await fetch(url)).blob();
+	const address = new URL(url);
+	if (address.protocol !== 'blob:') throw new Error('Expected a local media blob URL');
+	const blob = await (await fetch(address, { redirect: 'error' })).blob();
 	return {
 		bytes: new Uint8Array(await blob.arrayBuffer()),
 		type: normalizeMimeType(blob.type.split(';', 1)[0]) ?? 'application/octet-stream',

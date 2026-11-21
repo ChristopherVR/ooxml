@@ -30,9 +30,12 @@ test('the policy keeps script to this origin and allows what the editors load', 
 	assert.deepEqual(directives['object-src'], ["'none'"]);
 	assert.ok(directives['font-src'].includes('blob:'), 'fonts embedded in a document');
 	assert.ok(directives['connect-src'].includes('blob:'), 'reading back blob URLs');
-	assert.ok(directives['frame-src'].includes('https://www.youtube.com'));
-	assert.ok(directives['frame-src'].includes('https://player.vimeo.com'));
-	assert.ok(!directives['frame-src'].includes('https:'), 'arbitrary websites are not framed');
+	assert.deepEqual(directives['frame-src'], [
+		"'self'",
+		'https://christophervr.github.io',
+		'https://www.youtube.com',
+		'https://player.vimeo.com',
+	]);
 });
 
 test('the site sources leave the policy to the build', () => {
@@ -68,14 +71,33 @@ test('inline scripts move to files, in order, keeping their attributes', () => {
 		},
 	);
 	assert.deepEqual(moved, ['document.documentElement.className = "dark"', 'import "./x.js"']);
-	assert.match(html, /<script id="theme" src="\/s\/1\.js"><\/script>/u);
-	assert.match(html, /<script type="module" src="\/s\/2\.js"><\/script>/u);
+	assert.match(html, /<script src="\/s\/1\.js" id="theme"><\/script>/u);
+	assert.match(html, /<script src="\/s\/2\.js" type="module"><\/script>/u);
 	assert.match(html, /<script type="application\/json" id="data">\{"a":1\}<\/script>/u);
 	assert.deepEqual(contentSecurityPolicyProblems(html), []);
 	assert.equal(
 		withContentSecurityPolicy(html, () => assert.fail('already applied')),
 		html,
 	);
+});
+
+test('recognizes actual script and policy elements and preserves other markup', () => {
+	const inert = '<!-- <script>example()</script> -->';
+	const source = page(
+		`${inert}<META content="default-src *" HTTP-EQUIV=Content-Security-Policy>` +
+			'<SCRIPT data-label="a > b" data-src="example">example()</SCRIPT >',
+	);
+	const next = withContentSecurityPolicy(source, (body) => {
+		assert.equal(body, 'example()');
+		return '/inline.js?x=1&y=2';
+	});
+	assert.ok(next.includes(inert));
+	assert.ok(
+		next.includes(
+			'<SCRIPT src="/inline.js?x=1&amp;y=2" data-label="a > b" data-src="example"></SCRIPT >',
+		),
+	);
+	assert.deepEqual(contentSecurityPolicyProblems(next), []);
 });
 
 test('the check names pages the policy would break', () => {
@@ -91,6 +113,17 @@ test('the check names pages the policy would break', () => {
 	assert.deepEqual(contentSecurityPolicyProblems(page('<script src="a.js"></script>' + META)), [
 		'loads something before the policy',
 	]);
+});
+
+test('the check allows data images and reports executable URL schemes', () => {
+	const html = page(
+		META,
+		'<img src="data:image/png;base64,AAAA"><script src="data:text/javascript,0"></script><a href="vbscript:example">Example</a>',
+	);
+	assert.deepEqual(
+		contentSecurityPolicyProblems(html).map((problem) => problem.split(' URL:')[0]),
+		['has a data:', 'has a vbscript:'],
+	);
 });
 
 test('applying the policy to a built site covers every page and passes the check', () => {

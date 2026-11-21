@@ -3,6 +3,9 @@ import type { PptxHandler } from 'pptx-viewer-core';
 import type { BuildingBlocksContractHarness } from './building-blocks-contract.mjs';
 
 export const LINKED_CONTENT_ORIGIN: string;
+export const LINKED_FILL_URL: string;
+export function modelHasLinkedFill(model: unknown): boolean;
+export function drawsLinkedContent(root: Element): boolean;
 
 /** `JSZip` from `jszip`, structurally (each binding passes its own copy). */
 export interface ExternalContentContractZip {

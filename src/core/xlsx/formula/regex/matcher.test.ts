@@ -38,14 +38,14 @@ describe('regex matcher', () => {
 	});
 
 	it('stops with #NUM! once the recalculation budget is spent', () => {
-		// A backreference keeps the memo off, so this pattern backtracks exponentially.
-		const program = compileRegex('^(a|a)*\\1$', false);
+		// A backreference keeps the memo off while the matcher spends the remaining work.
+		const program = compileRegex('^(a)+\\1$', false);
 		resetCalcBudget();
-		chargeWork(MAX_FORMULA_WORK - 20_000_000);
+		chargeWork(MAX_FORMULA_WORK - 1000);
 		const started = performance.now();
 		let thrown: unknown;
 		try {
-			search(program, `${'a'.repeat(40)}!`, 0);
+			search(program, `${'a'.repeat(256)}!`, 0);
 		} catch (error) {
 			thrown = error;
 		}

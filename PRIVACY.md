@@ -127,7 +127,8 @@ Sessions start only when the user (or host) starts one.
   Each participant turns those bytes into its own `blob:` or `data:` URLs; no URL of one page is
   sent to another. A room holds at most 16 MiB of such files (128 KiB in a peer-to-peer room,
   whose first message to a joiner must fit a WebRTC data channel); a larger one is left out and the
-  other participants are told it was too large to share. Linked (external) pictures and media
+  other participants are told it was too large to share. The media reader accepts only browser-local
+  `blob:` URLs. Linked (external) pictures and media
   are never fetched and re-sent: the room carries only their link, and each participant's own
   Enable Content choice (or `allowExternalContent`) decides whether its browser requests it.
 

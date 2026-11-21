@@ -60,7 +60,12 @@ export function renderInline(md, ctx = {}) {
 			out += `<code>${escapeHtml(m[2].replace(/^ (.*) $/, '$1'))}</code>`;
 		else if ((m = /^!\[([^\]]*)\]\(\s*([^\s)]+)(?:\s+"([^"]*)")?\s*\)/.exec(rest)))
 			out += `<img src="${link(m[2], 'img')}" alt="${escapeHtml(m[1])}"${m[3] ? ` title="${escapeHtml(m[3])}"` : ''} loading="lazy" />`;
-		else if ((m = /^\[((?:\\.|`[^`]*`|[^\]])+)\]\(\s*([^\s)]+)(?:\s+"([^"]*)")?\s*\)/.exec(rest))) {
+		else if (
+			(m =
+				/^\[((?:\\[^\r\n\u2028\u2029]|`[^`]*`|[^\\`\]])+)\]\(\s*([^\s)]+)(?:\s+"([^"]*)")?\s*\)/.exec(
+					rest,
+				))
+		) {
 			const href = link(m[2], 'a');
 			const external = /^https?:/i.test(href) ? ' rel="noopener"' : '';
 			out += `<a href="${href}"${external}>${renderInline(m[1], ctx)}</a>`;

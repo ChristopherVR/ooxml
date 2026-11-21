@@ -9,6 +9,7 @@ import {
 } from '../drawingml/index';
 import type { DrawingColor, DrawingFill } from '../drawingml/index';
 import { evaluatePresetShape, lookupPresetShape } from '../geometry/preset-shape-evaluator';
+import { normalizeHexColor } from '../color/color-primitives';
 import { diagramColorTheme } from './diagram-theme';
 import {
 	DEFAULT_SHAPE_FILL,
@@ -20,12 +21,21 @@ import {
 import type { ThemeCatalog } from './theme-model';
 import type { InlineImage } from './inline-model';
 import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
-import { parseXml } from '../xml/index';
+import { buildXml, makeNS, parseXml, type XmlElement } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
-const escapeXml = (text: string) =>
-	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const SVG_NS = 'http://www.w3.org/2000/svg';
 const round = (value: number) => Math.round(value * 100) / 100;
+
+function setAttributes(element: XmlElement, attributes: Record<string, string | number>): void {
+	for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, String(value));
+}
+
+function appendSvg(parent: XmlElement, name: string, attributes: Record<string, string | number>) {
+	const node = makeNS(parent.ownerDocument, SVG_NS, name);
+	setAttributes(node, attributes);
+	return parent.appendChild(node);
+}
 
 /** A colour as CSS, resolved through the document theme. */
 export function shapeColorCss(color: DrawingColor, theme?: ThemeCatalog): string | undefined {
@@ -138,43 +148,57 @@ export function shapeSvg(
 			? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
 			: undefined;
 	if (!geometry) return undefined;
-	const look = shapeAppearance(spec, theme);
-	const paths = geometry.paths
-		.map((path) => {
-			const fill = geometry.fillNone || path.fill === 'none' ? 'none' : look.fill;
-			const stroke = path.stroke === false || look.stroke === 'none' ? 'none' : look.stroke;
-			return `<path d="${escapeXml(path.d)}" fill="${fill}" stroke="${stroke}" stroke-width="${look.strokeWidthPx}" stroke-linejoin="miter"${look.dash ? ` stroke-dasharray="${look.dash}"` : ''}/>`;
-		})
-		.join('');
-	const textRect = geometry.textRect ?? { l: 0, t: 0, r: w, b: h };
-	const lines = spec.text?.some(Boolean)
-		? wrapShapeText(spec.text, textRect.r - textRect.l - 14)
-		: [];
-	// The runs' own colour, else the one the shape gives text that sets none.
-	const color = spec.textColor ? `#${spec.textColor}` : shapeDefaultTextColor(spec, theme);
-	const lineHeight = FONT_PX * 1.2;
-	const first = (textRect.t + textRect.b) / 2 - ((lines.length - 1) * lineHeight) / 2;
-	const text = lines.length
-		? `<text font-family="Calibri,Arial,sans-serif" font-size="${FONT_PX}" fill="${color}" text-anchor="middle" dominant-baseline="central">${lines
-				.map(
-					(line, index) =>
-						`<tspan x="${round((textRect.l + textRect.r) / 2)}" y="${round(first + index * lineHeight)}">${escapeXml(line)}</tspan>`,
-				)
-				.join('')}</text>`
-		: '';
+	const svg = parseXml(`<svg xmlns="${SVG_NS}"/>`).documentElement;
+	setAttributes(svg, {
+		width: round(w),
+		height: round(h),
+		viewBox: `0 0 ${round(w)} ${round(h)}`,
+		style: 'overflow:visible',
+		role: 'img',
+		'aria-label': lookupPresetShape(spec.preset) ? spec.preset : 'Shape',
+	});
 	const transform = [
-		spec.rotation ? `rotate(${spec.rotation} ${round(w / 2)} ${round(h / 2)})` : '',
+		spec.rotation ? `rotate(${Number(spec.rotation)} ${round(w / 2)} ${round(h / 2)})` : '',
 		spec.flipH || spec.flipV
 			? `translate(${spec.flipH ? w : 0} ${spec.flipV ? h : 0}) scale(${spec.flipH ? -1 : 1} ${spec.flipV ? -1 : 1})`
 			: '',
 	]
 		.filter(Boolean)
 		.join(' ');
-	const label = escapeXml(lookupPresetShape(spec.preset) ? spec.preset : 'Shape');
-	return (
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${round(w)}" height="${round(h)}" viewBox="0 0 ${round(w)} ${round(h)}" style="overflow:visible" role="img" aria-label="${label}">` +
-		`<g${transform ? ` transform="${escapeXml(transform)}"` : ''}>${paths}${text}</g></svg>`
-	);
+	const group = appendSvg(svg, 'g', transform ? { transform } : {});
+	const look = shapeAppearance(spec, theme);
+	for (const path of geometry.paths) {
+		appendSvg(group, 'path', {
+			d: path.d,
+			fill: geometry.fillNone || path.fill === 'none' ? 'none' : look.fill,
+			stroke: path.stroke === false ? 'none' : look.stroke,
+			'stroke-width': look.strokeWidthPx,
+			'stroke-linejoin': 'miter',
+			...(look.dash ? { 'stroke-dasharray': look.dash } : {}),
+		});
+	}
+	const textRect = geometry.textRect ?? { l: 0, t: 0, r: w, b: h };
+	const lines = spec.text?.some(Boolean)
+		? wrapShapeText(spec.text, textRect.r - textRect.l - 14)
+		: [];
+	if (lines.length) {
+		const text = appendSvg(group, 'text', {
+			'font-family': 'Calibri,Arial,sans-serif',
+			'font-size': FONT_PX,
+			fill: normalizeHexColor(spec.textColor, shapeDefaultTextColor(spec, theme)),
+			'text-anchor': 'middle',
+			'dominant-baseline': 'central',
+		});
+		const lineHeight = FONT_PX * 1.2;
+		const first = (textRect.t + textRect.b) / 2 - ((lines.length - 1) * lineHeight) / 2;
+		lines.forEach((line, index) => {
+			appendSvg(text, 'tspan', {
+				x: round((textRect.l + textRect.r) / 2),
+				y: round(first + index * lineHeight),
+			}).textContent = line;
+		});
+	}
+	return buildXml(svg);
 }
 
 /**

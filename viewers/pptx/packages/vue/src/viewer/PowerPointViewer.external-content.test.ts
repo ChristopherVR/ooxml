@@ -4,6 +4,11 @@ import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import {
+	drawsLinkedContent,
+	LINKED_FILL_URL,
+	modelHasLinkedFill,
+} from '../../../shared/test-utils/external-content-contract.mjs';
 import PowerPointViewer from './PowerPointViewer.vue';
 import type { PowerPointViewerExpose } from './types';
 
@@ -13,11 +18,10 @@ import type { PowerPointViewerExpose } from './types';
  * enabling draws the links without reloading. The deck keeps its links
  * throughout. A new presentation asks again.
  */
-const LINKED_ORIGIN = 'https://linked-content.test';
 const IMAGE_REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image';
 const LINKED_FILL_SHAPE = `<p:sp><p:nvSpPr><p:cNvPr id="901" name="Linked fill"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="914400" cy="914400"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:blipFill><a:blip r:link="rIdLinkedFill"/><a:stretch><a:fillRect/></a:stretch></a:blipFill></p:spPr></p:sp>`;
 
-/** One slide whose shape fill is a picture linked to {@link LINKED_ORIGIN}. */
+/** One slide whose shape fill is a picture linked to {@link LINKED_FILL_URL}. */
 async function linkedDeck(): Promise<Uint8Array> {
 	const { handler, createSlide } = await PptxHandler.create({ initialSlideCount: 0 });
 	let bytes: Uint8Array;
@@ -36,7 +40,7 @@ async function linkedDeck(): Promise<Uint8Array> {
 		relsPath,
 		rels.replace(
 			'</Relationships>',
-			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"/></Relationships>`,
+			`<Relationship Id="rIdLinkedFill" Type="${IMAGE_REL}" Target="${LINKED_FILL_URL}" TargetMode="External"/></Relationships>`,
 		),
 	);
 	return zip.generateAsync({ type: 'uint8array' });
@@ -76,9 +80,9 @@ async function mountDeck(props: Record<string, unknown> = {}): Promise<LoadSpy> 
 const viewer = () => mounted!.vm as unknown as PowerPointViewerExpose;
 const bar = () => mounted!.find('pptx-ui-external-content-bar');
 /** Whether anything drawn (canvas, thumbnails) would make the browser contact the linked origin. */
-const drawsOrigin = () => mounted!.html().includes(LINKED_ORIGIN);
+const drawsOrigin = () => drawsLinkedContent(mounted!.element);
 /** Whether the open deck's model keeps its links. */
-const modelLinks = () => JSON.stringify(viewer().getSlides()).includes(LINKED_ORIGIN);
+const modelLinks = () => modelHasLinkedFill(viewer().getSlides());
 
 async function request(id: 'action' | 'close'): Promise<void> {
 	bar().element.dispatchEvent(new CustomEvent('external-content-request', { detail: { id } }));
@@ -138,7 +142,7 @@ describe('powerPointViewer linked external content', () => {
 			'r:link="rIdLinkedFill"',
 		);
 		await expect(zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string')).resolves.toContain(
-			`Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"`,
+			`Target="${LINKED_FILL_URL}" TargetMode="External"`,
 		);
 	});
 

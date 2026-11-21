@@ -82,7 +82,7 @@ function externalStarExports(files: string[], virtual: Record<string, string> = 
  * it all of src/pptx took past two minutes on a loaded machine.
  */
 const mayStarExport = (text: string): boolean =>
-	/\bexport\b(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n]*\n)*\*/u.test(text);
+	/\bexport\b(?:\s|\/\*(?:[^*]|\*(?!\/))*\*\/|\/\/[^\r\n]*[\r\n])*\*/u.test(text);
 
 // Compiles the candidates in a separate process, which a busy machine can slow past the default.
 it('re-exports external modules by name, never with export *', { timeout: 120_000 }, () => {

@@ -24,7 +24,7 @@
  *   node scripts/major-notes.mjs --plan release-plan.json
  *   node scripts/major-notes.mjs --render <package key> [name]
  */
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -132,13 +132,22 @@ export function parseFragment(text, file, table = PACKAGES) {
 
 const natural = (a, b) => a.localeCompare(b, 'en', { numeric: true });
 
+function readOptionalText(path) {
+	try {
+		return readFileSync(path, 'utf8');
+	} catch (error) {
+		if (error.code === 'ENOENT') return '';
+		throw error;
+	}
+}
+
 /** The notes of release `name`: overview, entries and every problem, coverage included. */
 export function loadNotes(root, name, table = PACKAGES) {
 	const dir = join(root, NOTES_DIR, name);
 	const rel = `${NOTES_DIR}/${name}`;
 	const problems = [];
 	const overviewPath = join(dir, OVERVIEW);
-	const overview = existsSync(overviewPath) ? readFileSync(overviewPath, 'utf8').trim() : '';
+	const overview = readOptionalText(overviewPath).trim();
 	if (!overview) problems.push(`${rel}/${OVERVIEW}: missing or empty`);
 	const entries = [];
 	for (const file of readdirSync(dir)
@@ -168,8 +177,14 @@ export function requireNotes(root, name, table = PACKAGES) {
 /** The release notes names under `root`, oldest first. */
 export function noteNames(root) {
 	const dir = join(root, NOTES_DIR);
-	if (!existsSync(dir)) return [];
-	return readdirSync(dir, { withFileTypes: true })
+	let entries;
+	try {
+		entries = readdirSync(dir, { withFileTypes: true });
+	} catch (error) {
+		if (error.code === 'ENOENT') return [];
+		throw error;
+	}
+	return entries
 		.filter((d) => d.isDirectory())
 		.map((d) => d.name)
 		.sort(natural);
@@ -265,7 +280,7 @@ function main() {
 		for (const key of plan.order) {
 			const pkg = plan.packages[key];
 			const path = join(ROOT, pkg.changelog);
-			const text = existsSync(path) ? readFileSync(path, 'utf8') : '';
+			const text = readOptionalText(path);
 			const { names, blocks } = packageBlocks(ROOT, pkg, text);
 			if (!names.length) continue;
 			const next = insertIntoChangelog(text, pkg.version, names, blocks);

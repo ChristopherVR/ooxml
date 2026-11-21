@@ -137,13 +137,13 @@ async function loadLinkedDeck(): Promise<PptxData> {
 	}
 }
 
-/** Every web address in `value`, as `field: address`, outside XML kept verbatim. */
-function webAddresses(value: unknown): string[] {
-	const found: string[] = [];
+/** Every web address in `value`, with its model field, outside XML kept verbatim. */
+function webAddresses(value: unknown): { field: string; url: string }[] {
+	const found: { field: string; url: string }[] = [];
 	const seen = new Set<object>();
 	const walk = (item: unknown, key: string) => {
 		if (isWebAddress(item)) {
-			found.push(`${key}: ${item}`);
+			found.push({ field: key, url: item });
 		} else if (typeof item === 'object' && item !== null && !seen.has(item)) {
 			seen.add(item);
 			for (const [childKey, child] of Object.entries(item)) {
@@ -157,10 +157,12 @@ function webAddresses(value: unknown): string[] {
 	return found;
 }
 
+const isLinked = ({ url }: { url: string }) => URL.parse(url)?.origin === ORIGIN;
+
 describe('linked content in a loaded deck', () => {
 	it('links every kind of content the deck holds', async () => {
-		const linked = webAddresses(await loadLinkedDeck()).filter((entry) => entry.includes(ORIGIN));
-		const fields = new Set(linked.map((entry) => entry.slice(0, entry.indexOf(':'))));
+		const linked = webAddresses(await loadLinkedDeck()).filter(isLinked);
+		const fields = new Set(linked.map(({ field }) => field));
 		// Pictures, video, posters, fill, bullet, background, table cell, and every sound kind.
 		expect([...fields].sort()).toStrictEqual(
 			[
@@ -175,11 +177,11 @@ describe('linked content in a loaded deck', () => {
 			].sort(),
 		);
 		for (const sound of ['click.wav', 'hover.wav']) {
-			expect(linked).toContain(`soundPath: ${ORIGIN}/${sound}`);
+			expect(linked).toContainEqual({ field: 'soundPath', url: `${ORIGIN}/${sound}` });
 		}
 		// The transition and the effect sound, each linked from its own relationship.
 		expect(
-			linked.filter((entry) => /soundPath: .*audio\d\.wav$/u.test(entry)).length,
+			linked.filter(({ field, url }) => field === 'soundPath' && /audio\d\.wav$/u.test(url)).length,
 		).toBeGreaterThanOrEqual(2);
 	});
 
@@ -187,17 +189,15 @@ describe('linked content in a loaded deck', () => {
 		const model = await loadLinkedDeck();
 		expect(hasLinkedContent(model)).toBe(true);
 		const view = withholdLinkedContent(model);
-		expect(webAddresses(view).filter((entry) => entry.includes(ORIGIN))).toStrictEqual([]);
+		expect(webAddresses(view).filter(isLinked)).toStrictEqual([]);
 		expect(hasLinkedContent(view)).toBe(false);
 	});
 
 	it('keeps hyperlinks and text that only show or open an address', async () => {
 		const model = await loadLinkedDeck();
-		const kept = webAddresses(withholdLinkedContent(model)).filter(
-			(entry) => !entry.includes(ORIGIN),
-		);
-		expect(kept).toContain(`url: ${CLICKED}`);
-		expect(kept).toContain(`hyperlink: ${CLICKED}`);
-		expect(kept).toContain('text: https://written.test/in-text');
+		const kept = webAddresses(withholdLinkedContent(model)).filter((entry) => !isLinked(entry));
+		expect(kept).toContainEqual({ field: 'url', url: CLICKED });
+		expect(kept).toContainEqual({ field: 'hyperlink', url: CLICKED });
+		expect(kept).toContainEqual({ field: 'text', url: 'https://written.test/in-text' });
 	});
 });

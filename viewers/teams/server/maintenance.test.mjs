@@ -155,7 +155,7 @@ describe('storage names', () => {
 		const dir = tmp();
 		try {
 			const real = 'chat-0123456789abcdef-g1';
-			const alias = real.toUpperCase().replace('0123456789ABCDEF', '0123456789ABCDEF');
+			const alias = real.toUpperCase();
 			writeFileSync(join(dir, `${alias}.bin`), 'content');
 			const caseInsensitive = existsSync(join(dir, `${real}.bin`));
 			assert.equal(migrateStorageNames(dir, '.bin'), 1);

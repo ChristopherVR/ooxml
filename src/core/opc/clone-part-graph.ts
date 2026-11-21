@@ -22,9 +22,18 @@ export function relativePartTarget(basePart: string, targetPart: string): string
 
 /** The first free `<stem><n><extension>` name for a copy of `source`, which `reserved` then holds. */
 function allocatePartName(reserved: Set<string>, source: string): string {
-	const match = /^(?<stem>.*?)(?:\d+)?(?<extension>\.[^/.]+)$/u.exec(source);
-	const stem = match?.groups?.['stem'] ?? source;
-	const extension = match?.groups?.['extension'] ?? '';
+	const dot = source.lastIndexOf('.');
+	const extension =
+		dot > source.lastIndexOf('/') && dot < source.length - 1 ? source.slice(dot) : '';
+	let stemEnd = source.length - extension.length;
+	if (extension) {
+		while (stemEnd > 0) {
+			const char = source.charCodeAt(stemEnd - 1);
+			if (char < 48 || char > 57) break;
+			stemEnd--;
+		}
+	}
+	const stem = source.slice(0, stemEnd);
 	let index = 1;
 	while (reserved.has(`${stem}${index}${extension}`)) index += 1;
 	const path = `${stem}${index}${extension}`;

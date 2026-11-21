@@ -95,7 +95,7 @@ function jszipNames(source) {
 /** Reaching a member of JSZip by a name the text does not spell out. */
 function indirectAccess(names) {
 	if (names.size === 0) return undefined;
-	const any = [...names].map((name) => name.replace(/\$/g, '\\$')).join('|');
+	const any = [...names].map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
 	return new RegExp(
 		[
 			`(?<![\\w$.])(?:${any})(?:\\.default)?\\s*(?:\\?\\.)?\\[`,

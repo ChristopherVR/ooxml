@@ -273,8 +273,7 @@ describe('embedded workbook writes of a sparse chart', () => {
 	});
 
 	it('names every cell of the range when a cut view reaches only the first', () => {
-		const xml = part.replace('<c:ptCount val="8"/>', '<c:ptCount val="8"/>');
-		const { chartSpace } = parseChartSpace(xml, { pointBudget: chartPointBudget(0) });
+		const { chartSpace } = parseChartSpace(part, { pointBudget: chartPointBudget(0) });
 		const [write] = chartSpaceWorkbookWrites(chartSpace);
 		expect(write!.cellCount).toBe(8);
 		expect(write!.cells.map((cell) => cell.index)).toEqual([0, 2]);

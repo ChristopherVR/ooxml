@@ -42,6 +42,10 @@ test('inline markup renders and every other character is escaped', () => {
 	assert.equal(renderInline('<script>alert(1)</script>'), '&lt;script&gt;alert(1)&lt;/script&gt;');
 	assert.equal(renderInline('snake_case_name stays'), 'snake_case_name stays');
 	assert.equal(renderInline('\\*not em\\*'), '*not em*');
+	assert.equal(
+		renderInline('[\\] and `code]`](guide.md)'),
+		'<a href="guide.md">] and <code>code]</code></a>',
+	);
 	assert.equal(renderInline('[bad](javascript:alert(1))'), '<a href="#">bad</a>)');
 	assert.match(renderInline('![a "b"](pic.png)'), /<img src="pic.png" alt="a &quot;b&quot;"/);
 	assert.equal(escapeHtml(`'"&`), '&#39;&quot;&amp;');

@@ -125,7 +125,8 @@ export function createFileOperations(rootDir = process.cwd()) {
 		return actual;
 	}
 	async function read(path: string) {
-		const handle = await open(path, 'r');
+		// Read-only opens never create a file. Keep the owner-only creation mode explicit.
+		const handle = await open(path, 'r', 0o600);
 		try {
 			if ((await handle.stat()).size > maxBytes) throw new Error('File exceeds 64 MiB');
 			const bytes = await handle.readFile();

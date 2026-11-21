@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
+import { parseRelationships } from '../../../../opc/relationships';
 import { PptxHandler } from '../../PptxHandler';
 
 const FIXTURE = fileURLToPath(
@@ -28,8 +29,9 @@ interface PackageChange {
 async function loadSlideTargets({ signed, relationship, prefix = '' }: PackageChange) {
 	const zip = await JSZip.loadAsync(readFileSync(FIXTURE));
 	const rels = await zip.file(PRESENTATION_RELS)!.async('string');
-	const slide = new RegExp(`<Relationship\\b[^>]*Type="${SLIDE_TYPE}"[^>]*>`).exec(rels)![0];
-	const id = /\bId="([^"]+)"/.exec(slide)![1]!;
+	const slide = [...parseRelationships(rels)].find(([, rel]) => rel.type === SLIDE_TYPE);
+	if (!slide) throw new Error('Fixture is missing a slide relationship');
+	const [id] = slide;
 	const extra = relationship?.(id) ?? '';
 	zip.file(
 		PRESENTATION_RELS,

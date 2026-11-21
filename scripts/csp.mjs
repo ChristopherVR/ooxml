@@ -23,6 +23,8 @@
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { html as htmlSyntax, parse } from 'parse5';
+import { escapeHtml } from './release-markdown.mjs';
 
 export const POLICY = {
 	'default-src': ["'self'"],
@@ -62,16 +64,57 @@ export const CONTENT_SECURITY_POLICY = Object.entries(POLICY)
 	.join('; ');
 
 const META = `<meta http-equiv="Content-Security-Policy" content="${CONTENT_SECURITY_POLICY}" />`;
-const ANY_META = /<meta\s+http-equiv=["']Content-Security-Policy["'][^>]*>\s*/giu;
-const CHARSET = /<meta\s+charset=["']?[\w-]+["']?\s*\/?>/iu;
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/giu;
-// Script elements that hold data, not code: the policy does not apply to them.
-const DATA_TYPE = /\btype\s*=\s*["']?(application\/(ld\+)?json|text\/template)\b/iu;
-const HAS_SRC = /\bsrc\s*=/iu;
-const TAG = /<[a-z][\w-]*\b[^>]*>/giu;
-const HANDLER = /\son[a-z]+\s*=/iu;
-const SCRIPT_URL = /\s(?:href|src|action|formaction)\s*=\s*["']?\s*javascript:/iu;
 const FOLDER = 'csp-inline';
+const DATA_TYPES = new Set(['application/json', 'application/ld+json', 'text/template']);
+const EARLY_LOADS = new Set(['script', 'link', 'style', 'base']);
+const URL_ATTRIBUTES = new Set(['href', 'src', 'action', 'formaction']);
+
+function* elements(node) {
+	if (node.tagName) yield node;
+	for (const child of node.childNodes ?? []) yield* elements(child);
+}
+
+const attribute = (node, name) => node.attrs.find((attr) => attr.name === name)?.value;
+const isHtml = (node) => node.namespaceURI === htmlSyntax.NS.HTML;
+const isPolicy = (node) =>
+	isHtml(node) &&
+	node.tagName === 'meta' &&
+	attribute(node, 'http-equiv')?.toLowerCase() === 'content-security-policy';
+
+function inlineScript(node) {
+	if (node.tagName !== 'script') return '';
+	if (isHtml(node)) {
+		const type = attribute(node, 'type')?.split(';', 1)[0].trim().toLowerCase();
+		if (attribute(node, 'src') !== undefined || DATA_TYPES.has(type)) return '';
+	} else if (attribute(node, 'href') !== undefined) return '';
+	return node.childNodes.map((child) => child.value ?? '').join('');
+}
+
+function forbiddenUrlScheme(node, value) {
+	const scheme = URL.parse(value)?.protocol;
+	switch (scheme) {
+		case 'javascript:':
+		case 'vbscript:':
+			return scheme;
+		case 'data:':
+			// The policy allows data URLs for images, media and fonts, but forbids them for scripts.
+			return node.tagName === 'script' ? scheme : undefined;
+	}
+}
+
+function inspect(html) {
+	const nodes = [...elements(parse(html, { sourceCodeLocationInfo: true }))];
+	const head = nodes.find((node) => node.tagName === 'head' && isHtml(node));
+	const policies = nodes.filter(isPolicy);
+	const firstLoadAt = nodes.reduce(
+		(first, node) =>
+			EARLY_LOADS.has(node.tagName)
+				? Math.min(first, node.sourceCodeLocation?.startOffset ?? Infinity)
+				: first,
+		Infinity,
+	);
+	return { nodes, head, policies, firstLoadAt };
+}
 
 function htmlFiles(dir, out = []) {
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -89,18 +132,39 @@ function htmlFiles(dir, out = []) {
  * returned unchanged, so applying the policy twice changes nothing.
  */
 export function withContentSecurityPolicy(html, externalize) {
-	if (!contentSecurityPolicyProblems(html).length) return html;
-	const scripted = html.replace(SCRIPT, (match, attributes, body) => {
-		if (HAS_SRC.test(attributes) || DATA_TYPE.test(attributes) || !body.trim()) return match;
-		return `<script${attributes} src="${externalize(body)}"></script>`;
-	});
-	const bare = scripted.replace(ANY_META, '');
-	const charset = CHARSET.exec(bare);
-	if (charset) {
-		const end = charset.index + charset[0].length;
-		return `${bare.slice(0, end)}\n${META}${bare.slice(end)}`;
+	const document = inspect(html);
+	if (!policyProblems(html, document).length) return html;
+	const { nodes, head, policies, firstLoadAt } = document;
+	const charset = head?.childNodes.find(
+		(node) =>
+			node.tagName === 'meta' &&
+			!isPolicy(node) &&
+			attribute(node, 'charset') !== undefined &&
+			node.sourceCodeLocation.endOffset <= firstLoadAt,
+	);
+	const insertAt =
+		charset?.sourceCodeLocation.endOffset ?? head?.sourceCodeLocation?.startTag?.endOffset;
+	if (insertAt === undefined) return html;
+	const edits = [{ start: insertAt, end: insertAt, text: `\n${META}` }];
+	for (const { sourceCodeLocation: loc } of policies) {
+		edits.push({ start: loc.startOffset, end: loc.endOffset, text: '' });
 	}
-	return bare.replace(/<head\b[^>]*>/iu, (head) => `${head}\n${META}`);
+	for (const node of nodes) {
+		if (!isHtml(node) || !inlineScript(node).trim()) continue;
+		const { startTag, endTag, endOffset } = node.sourceCodeLocation;
+		const body = html.slice(startTag.endOffset, endTag?.startOffset ?? endOffset);
+		const start = startTag.startOffset + '<script'.length;
+		edits.push({ start, end: start, text: ` src="${escapeHtml(externalize(body))}"` });
+		edits.push({ start: startTag.endOffset, end: endTag?.startOffset ?? endOffset, text: '' });
+	}
+	edits.sort((a, b) => a.start - b.start || a.end - b.end);
+	let result = '';
+	let offset = 0;
+	for (const { start, end, text } of edits) {
+		result += html.slice(offset, start) + text;
+		offset = end;
+	}
+	return result + html.slice(offset);
 }
 
 /**
@@ -124,21 +188,28 @@ export function applyContentSecurityPolicy(dir, { base = '/' } = {}) {
 
 /** What is wrong with one page, against the policy. */
 export function contentSecurityPolicyProblems(html) {
+	return policyProblems(html, inspect(html));
+}
+
+function policyProblems(html, { nodes, head, policies, firstLoadAt }) {
 	const problems = [];
-	const metas = html.match(ANY_META) ?? [];
-	if (metas.length !== 1) problems.push(`has ${metas.length} policies, expected 1`);
-	else if (metas[0].trim() !== META) problems.push('has a different policy');
-	const head = html.slice(0, html.search(/<\/head>/iu) + 1 || undefined);
-	const first = head.search(/<(script|link|style|base)\b/iu);
-	if (metas.length && first !== -1 && first < head.indexOf(metas[0].trim()))
+	if (policies.length !== 1) problems.push(`has ${policies.length} policies, expected 1`);
+	else if (attribute(policies[0], 'content') !== CONTENT_SECURITY_POLICY)
+		problems.push('has a different policy');
+	else if (policies[0].parentNode !== head) problems.push('has a policy outside the head');
+	if (policies.length && firstLoadAt < policies[0].sourceCodeLocation.startOffset)
 		problems.push('loads something before the policy');
-	for (const [, attributes, body] of html.matchAll(SCRIPT))
-		if (!HAS_SRC.test(attributes) && !DATA_TYPE.test(attributes) && body.trim())
-			problems.push(`has an inline script: ${body.trim().slice(0, 60)}`);
-	const withoutScripts = html.replace(SCRIPT, '');
-	for (const [tag] of withoutScripts.matchAll(TAG)) {
-		if (HANDLER.test(tag)) problems.push(`has an inline event handler: ${tag.slice(0, 80)}`);
-		if (SCRIPT_URL.test(tag)) problems.push(`has a javascript: URL: ${tag.slice(0, 80)}`);
+	for (const node of nodes) {
+		const body = inlineScript(node).trim();
+		if (body) problems.push(`has an inline script: ${body.slice(0, 60)}`);
+		const start = node.sourceCodeLocation?.startOffset;
+		const tag = start === undefined ? node.tagName : html.slice(start, start + 80);
+		if (node.attrs.some(({ name }) => /^on[a-z]+$/u.test(name)))
+			problems.push(`has an inline event handler: ${tag}`);
+		for (const { name, value } of node.attrs) {
+			const scheme = URL_ATTRIBUTES.has(name) ? forbiddenUrlScheme(node, value) : undefined;
+			if (scheme) problems.push(`has a ${scheme} URL: ${tag}`);
+		}
 	}
 	return problems;
 }

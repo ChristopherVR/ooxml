@@ -13,12 +13,15 @@ import JSZip from 'jszip';
 import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { linkedContentDeck } from '../../../shared/test-utils/external-content-contract.mjs';
+import {
+	drawsLinkedContent,
+	linkedContentDeck,
+	LINKED_FILL_URL,
+	modelHasLinkedFill,
+} from '../../../shared/test-utils/external-content-contract.mjs';
 import { resolveViewerComponentResources } from './component-resources.test-support';
 import { PowerPointViewerComponent } from './power-point-viewer.component';
 import { declareSignalFields } from './signal-inputs.test-support';
-
-const ORIGIN = 'https://linked-content.test';
 
 beforeAll(async () => {
 	declareSignalFields(PowerPointViewerComponent, import.meta.dirname);
@@ -52,9 +55,8 @@ async function settle(fixture: Viewer, done: () => boolean = () => true): Promis
 const root = (fixture: Viewer) => fixture.nativeElement as HTMLElement;
 const bar = (fixture: Viewer) => root(fixture).querySelector('pptx-ui-external-content-bar');
 /** Whether anything the viewer draws would contact the linked server. */
-const drawn = (fixture: Viewer) => root(fixture).innerHTML.includes(ORIGIN);
-const modelLinks = (fixture: Viewer) =>
-	JSON.stringify(fixture.componentInstance.getSlides()).includes(ORIGIN);
+const drawn = (fixture: Viewer) => drawsLinkedContent(root(fixture));
+const modelLinks = (fixture: Viewer) => modelHasLinkedFill(fixture.componentInstance.getSlides());
 const shown = (fixture: Viewer) => root(fixture).querySelector('[data-pptx-element]') !== null;
 
 async function open(inputs: Record<string, unknown> = {}): Promise<Viewer> {
@@ -122,7 +124,7 @@ describe('angular viewer linked web content', { timeout: 60_000 }, () => {
 		const relationship = (await part(content, 'ppt/slides/_rels/slide1.xml.rels')).match(
 			/<Relationship [^>]*Id="rIdLinkedFill"[^>]*>/u,
 		)?.[0];
-		expect(relationship).toContain(`Target="${ORIGIN}/fill.png"`);
+		expect(relationship).toContain(`Target="${LINKED_FILL_URL}"`);
 		expect(relationship).toContain('TargetMode="External"');
 	});
 

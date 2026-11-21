@@ -20,13 +20,14 @@ import { PptxHandler } from 'pptx-viewer-core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { buildingBlocksContractDeck } from '../../../shared/test-utils/building-blocks-contract.mjs';
-import { linkedContentDeck } from '../../../shared/test-utils/external-content-contract.mjs';
+import {
+	linkedContentDeck,
+	modelHasLinkedFill as links,
+} from '../../../shared/test-utils/external-content-contract.mjs';
 import { EditorStateService } from './editor-state.service';
 import { ExternalContentService } from './external-content.service';
 import { LoadContentService } from './load-content.service';
 import { ViewerOptionsService } from './viewer-options.service';
-
-const ORIGIN = 'https://linked-content.test';
 
 function harness() {
 	const injector = Injector.create({
@@ -61,7 +62,6 @@ function harness() {
 
 const linkedDeck = () => linkedContentDeck(PptxHandler, JSZip);
 const plainDeck = () => buildingBlocksContractDeck(PptxHandler);
-const links = (value: unknown) => JSON.stringify(value).includes(ORIGIN);
 
 afterEach(() => {
 	localStorage.clear();
