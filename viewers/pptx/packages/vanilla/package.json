@@ -1,6 +1,6 @@
 {
 	"name": "pptx-vanilla-viewer",
-	"version": "3.80.0",
+	"version": "4.0.0",
 	"description": "pptx-viewer for vanilla JS: a zero-framework PowerPoint viewer and editor to render, edit, present, and export PPTX slides with plain DOM, no React/Vue/Angular required.",
 	"keywords": [
 		"javascript",
@@ -132,8 +132,8 @@
 		"jspdf": "^4.2.1",
 		"jszip": "^3.10.2",
 		"lucide": "^1.74.0",
-		"ooxml-core": "^1.54.0",
-		"ooxml-ui": "^1.54.2",
+		"ooxml-core": "^2.0.0",
+		"ooxml-ui": "^2.0.0",
 		"opentype.js": "^2.0.0"
 	},
 	"devDependencies": {
