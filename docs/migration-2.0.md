@@ -1,12 +1,13 @@
 # Migrating to OOXML 2.0
 
-OOXML 2.0 is one coordinated major release of every package in this repository. This guide lists every change in it that can break your code, your configuration, your tests or your stored data, with what to write instead.
+OOXML 2.0 is one coordinated major release of every package in this repository. This guide covers changes that can affect your code, configuration, tests or stored data, with examples of what to write in 2.0. See the [OOXML 2.0 release post](releases/2.0.md) for the new features and release notes.
 
-The sections go from the packages most people use to the ones few people run. Within a section, the change that reaches the most users comes first. Read the sections for the packages you install, then [Before you start](#before-you-start), which applies to everyone. The full notes of each package, breaking changes included, are at the top of its `CHANGELOG.md` and in its GitHub release.
+The sections go from the packages most people use to the ones few people run. Within a section, the change that reaches the most users comes first. Start with [Before you start](#before-you-start), then read the sections for the packages you use. The full notes of each package, breaking changes included, are at the top of its `CHANGELOG.md` and in its GitHub release.
 
 - [Before you start](#before-you-start)
 - [PowerPoint viewers](#powerpoint-viewers)
 - [Word, Excel and Visio viewers](#word-excel-and-visio-viewers)
+- [Excel calculation](#excel-calculation-ooxml-corexlsx)
 - [Themes and shared elements in `ooxml-ui`](#themes-and-shared-elements-in-ooxml-ui)
 - [PowerPoint building blocks in `ooxml-ui/pptx`](#powerpoint-building-blocks-in-ooxml-uipptx)
 - [`pptx-viewer-core` and `ooxml-core/pptx`](#pptx-viewer-core-and-ooxml-corepptx)
@@ -43,7 +44,14 @@ After:
 }
 ```
 
-Run `npm install <package>@latest` for each OOXML package you list, then check that your lockfile holds one version of `ooxml-core` and one of `ooxml-ui`.
+Install the new majors of the OOXML packages your app uses in one operation. This example updates the core and PowerPoint React packages together.
+
+```sh
+npm install ooxml-core@2 pptx-react-viewer@5
+npm ls ooxml-core ooxml-ui
+```
+
+Check that the dependency tree resolves one version of `ooxml-core` and one of `ooxml-ui`. The [package notes in the release post](releases/2.0.md#every-change-by-product) list the target versions for the other packages.
 
 ### Run Node.js 22.3 or newer
 
@@ -71,20 +79,22 @@ The packages support the last two major versions of Chrome, Edge, Firefox and Sa
 
 ### Deploy the new decoder folders if you copy files by hand
 
-`emf-converter` 5 loads its image decoders and colour data on demand. Package managers and bundlers need no change. If you copy compiled files of `ooxml-core`, `ooxml-ui`, `pptx-viewer-core` or a viewer by hand, copy the chunk folders too and keep their relative paths.
+`emf-converter` 5 loads its image decoders and colour data on demand. Package managers install the chunk files automatically, and bundlers resolve them from the dependency. If you deploy the files by hand, keep the full `emf-converter` distribution and preserve its relative paths. The browser and Node chunk folders belong inside the dependency’s own `dist/`.
 
 Before:
 
 ```text
-public/vendor/ooxml-core/index.mjs
+vendor/emf-converter/dist/browser.mjs
+vendor/emf-converter/dist/index.mjs
 ```
 
 After:
 
 ```text
-public/vendor/ooxml-core/index.mjs
-public/vendor/ooxml-core/browser-chunks/
-public/vendor/ooxml-core/node-chunks/
+vendor/emf-converter/dist/browser.mjs
+vendor/emf-converter/dist/browser-chunks/
+vendor/emf-converter/dist/index.mjs
+vendor/emf-converter/dist/node-chunks/
 ```
 
 ## PowerPoint viewers
@@ -95,11 +105,11 @@ This section covers `pptx-react-viewer`, `pptx-vue-viewer`, `pptx-angular-viewer
 
 As in Microsoft PowerPoint, a deck's linked pictures, fills, backgrounds, bullets, audio, video, online video and linked animation, transition and hyperlink sounds are no longer downloaded when it opens. A security bar offers **Enable Content**, which redraws the deck in place: nothing reloads and undo history is kept. Each participant in a collaboration session decides for themselves.
 
-To keep downloading linked content without asking, or to block it without the bar:
+Pass the deck’s bytes as `content`. Use `allowExternalContent` to choose whether linked content loads automatically or stays blocked.
 
 ```tsx
-<PowerPointViewer content={file} allowExternalContent={true} />  // download, no bar
-<PowerPointViewer content={file} allowExternalContent={false} /> // block, no bar
+<PowerPointViewer content={bytes} allowExternalContent={true} />  // download, no bar
+<PowerPointViewer content={bytes} allowExternalContent={false} /> // block, no bar
 ```
 
 A custom shell built from building blocks renders the bar from `externalContent` (or the binding's `ExternalContentBar` component) and passes `externalContent.allowed` as `linkedContent` to slides it draws itself: `SlideThumbnail`, `renderSlideStage`, `renderSlideThumbnail` and `createSlidesPane`. A surface that is never told the consent withholds linked content.
@@ -1344,7 +1354,7 @@ This section covers `openteams-server`, the `openteams-*-viewer` packages and `o
 
 ### Migrate the data directory
 
-Rooms, file scopes and uploader records are stored under new names. The new server renames them itself when it first starts, and an older server cannot read the result.
+Rooms, file scopes and uploader records are stored under new names. The new server renames them on first start. Stop the old server before backing up its `TEAMS_DATA` directory, then start the 2.0 server with the same configuration. If you roll back, restore the backup with the 1.x server and client.
 
 Before:
 
@@ -1355,7 +1365,7 @@ npx openteams-server@1
 After:
 
 ```sh
-cp -r data data-backup-1.x
+cp -a data data-backup-1.x
 npx openteams-server@2
 ```
 

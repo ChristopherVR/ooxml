@@ -22,7 +22,7 @@
  *   its `<summary>` takes the area's tile and a count of the bullets inside.
  *
  * Relative links resolve against the post's folder: pictures are copied next to the page,
- * anything else in the repository links to it on GitHub.
+ * related release pages link locally and other repository paths link to GitHub.
  */
 import {
 	copyFileSync,
@@ -38,6 +38,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { LANGUAGE_NAMES, highlight } from './release-highlight.mjs';
 import { mediaResolver } from './release-media.mjs';
+import { renderReleaseIndex, renderShowcase } from './release-showcase.mjs';
 import {
 	escapeHtml,
 	parseBlocks,
@@ -91,7 +92,9 @@ function combine(blocks) {
 	const out = [];
 	for (let i = 0; i < blocks.length; i++) {
 		const block = blocks[i];
-		if (isOnly(block, BOLD_LINE) && blocks[i + 1]?.type === 'code') {
+		if (isOnly(block, /^(Before|After):$/) && blocks[i + 1]?.type === 'code') {
+			out.push({ ...blocks[++i], change: block.text.trim().slice(0, -1) });
+		} else if (isOnly(block, BOLD_LINE) && blocks[i + 1]?.type === 'code') {
 			const code = { ...blocks[i + 1], file: BOLD_LINE.exec(block.text.trim())[1] };
 			i += 1;
 			if (isOnly(blocks[i + 1], ITALIC_LINE)) code.caption = italicText(blocks[++i]);
@@ -113,7 +116,7 @@ function combine(blocks) {
 export function renderReleasePage(
 	source,
 	template,
-	{ link = (url) => url, media = (url) => ({ src: link(url, 'img') }) } = {},
+	{ link = (url) => url, media = (url) => ({ src: link(url, 'img') }), showcase } = {},
 ) {
 	const blocks = combine(parseBlocks(source));
 	const take = (index) => blocks.splice(index, 1)[0];
@@ -122,9 +125,11 @@ export function renderReleasePage(
 	const start = Math.max(titleAt, 0);
 	const meta = isOnly(blocks[start], /\*\*Published:\*\*/) ? take(start) : null;
 	const hero = blocks[start]?.type === 'figure' ? take(start) : null;
+	const heroIntro = showcase?.sections && blocks[start]?.type === 'paragraph' ? take(start) : null;
 
 	const nextSlug = slugger();
 	const ctx = { link, slug: nextSlug };
+	const show = (type, notes = []) => renderShowcase(showcase, type, { media, tile, notes });
 	const toc = [];
 	let openDetails = 0;
 	let area = null;
@@ -134,12 +139,15 @@ export function renderReleasePage(
 
 	const renderCode = (block) => {
 		const lang = LANGUAGE_NAMES[block.lang] ?? (block.lang ? block.lang.toUpperCase() : '');
-		const name = block.file ?? lang ?? '';
+		const name = block.change ?? block.file ?? lang ?? '';
+		const change = block.change ? ` data-migration="${block.change.toLowerCase()}"` : '';
 		return [
-			'<figure class="code reveal">',
+			`<figure class="code${block.change ? '' : ' reveal'}"${change}>`,
 			'<div class="code-bar">',
 			`<span class="code-file">${escapeHtml(name || 'Code')}</span>`,
-			block.file && lang ? `<span class="code-lang">${escapeHtml(lang)}</span>` : '',
+			(block.file || block.change) && lang
+				? `<span class="code-lang">${escapeHtml(lang)}</span>`
+				: '',
 			'<button class="code-copy" type="button" hidden>Copy</button>',
 			'</div>',
 			`<pre tabindex="0"><code${block.lang ? ` class="language-${escapeHtml(block.lang)}"` : ''}>${highlight(block.text, block.lang)}</code></pre>`,
@@ -152,12 +160,18 @@ export function renderReleasePage(
 		const info = media(url);
 		const size = info.width && info.height ? ` width="${info.width}" height="${info.height}"` : '';
 		const load = hero ? ' fetchpriority="high"' : ' loading="lazy" decoding="async"';
+		const animated = info.animation ? ` data-animation="${escapeHtml(info.animation)}"` : '';
 		const img = (extra = '') =>
-			`<img${extra} src="${escapeHtml(info.src)}" alt="${escapeHtml(alt)}"${size}${load} />`;
-		// A recording: the GIF plays; with reduced motion the MP4 waits behind its play control.
-		const picture = info.video
-			? `<div class="media-frame">${img(' class="media-motion"')}<video class="media-still" controls muted playsinline preload="none"${size}${info.poster ? ` poster="${escapeHtml(info.poster)}"` : ''} aria-label="${escapeHtml(alt)}"><source src="${escapeHtml(info.video)}" type="video/mp4" /></video></div>`
-			: img();
+			`<img${extra} src="${escapeHtml(info.src)}" alt="${escapeHtml(alt)}"${animated}${size}${load} />`;
+		let picture = img();
+		if (info.video) {
+			const poster = info.poster ? ` poster="${escapeHtml(info.poster)}"` : '';
+			const videoClass = info.animated ? ' class="media-still"' : '';
+			const video = `<video${videoClass} controls muted playsinline preload="none"${size}${poster} aria-label="${escapeHtml(alt)}"><source src="${escapeHtml(info.video)}" type="video/mp4" /></video>`;
+			picture = info.animated
+				? `<div class="media-frame">${img(' class="media-motion"')}${video}</div>`
+				: video;
+		}
 		const stats = block.stats
 			? `<dl class="post-stats">${block.stats
 					.split(/\s+·\s+/)
@@ -199,7 +213,37 @@ export function renderReleasePage(
 		return out;
 	};
 
-	for (const block of blocks) {
+	const renderChapterBlocks = (items) =>
+		items
+			.map((block) => {
+				if (block.type === 'code') return renderCode(block);
+				if (block.type === 'figure') return renderFigure(block);
+				return renderBlocks([block], { ...ctx, code: renderCode, html: renderHtml });
+			})
+			.join('\n');
+
+	for (let i = 0; i < blocks.length; i++) {
+		const block = blocks[i];
+		if (block.type === 'html') {
+			const slot = /^<div data-showcase="([a-z-]+)"><\/div>$/.exec(block.html);
+			if (slot) {
+				const type = slot[1];
+				if (showcase?.[type]) {
+					let end = i + 1;
+					while (
+						end < blocks.length &&
+						!(blocks[end].type === 'heading' && blocks[end].level === 2)
+					)
+						end++;
+					const { notes, common } = chapterNotes(blocks.slice(i + 1, end), showcase[type]);
+					parts.push(show(type, notes.map(renderChapterBlocks)));
+					if (common.length)
+						parts.push(`<div class="chapter-common">${renderChapterBlocks(common)}</div>`);
+					i = end - 1;
+				}
+				continue;
+			}
+		}
 		if (block.type === 'heading' && block.level === 2 && openDetails === 0) {
 			if (inLede) parts.push('</div>');
 			else parts.push('</section>');
@@ -217,8 +261,13 @@ export function renderReleasePage(
 			if (block.level === 3 && openDetails === 0 && toc.length)
 				toc[toc.length - 1].children.push({ id, text: renderInline(block.text, ctx) });
 			parts.push(heading(block.level, id, renderInline(block.text, ctx)));
-		} else if (block.type === 'code') parts.push(renderCode(block));
-		else if (block.type === 'figure') parts.push(renderFigure(block));
+		} else if (block.type === 'code') {
+			const after = blocks[i + 1];
+			if (block.change === 'Before' && after?.type === 'code' && after.change === 'After') {
+				parts.push(`<div class="migration-pair">${renderCode(block)}${renderCode(after)}</div>`);
+				i++;
+			} else parts.push(renderCode(block));
+		} else if (block.type === 'figure') parts.push(renderFigure(block));
 		else if (block.type === 'html') parts.push(renderHtml(block.html));
 		else if (
 			inLede &&
@@ -250,7 +299,7 @@ export function renderReleasePage(
 				.map((item) => `<span>${datetime(item)}</span>`)
 				.join('')
 		: '';
-	const lede = blocks.find((b) => b.type === 'paragraph' && !b.text.startsWith('**'));
+	const lede = heroIntro ?? blocks.find((b) => b.type === 'paragraph' && !b.text.startsWith('**'));
 	const description = lede ? plainText(lede.text).replace(/\s+/g, ' ') : title;
 	const tocHtml = toc
 		.map(
@@ -272,11 +321,36 @@ export function renderReleasePage(
 			description.length > 200 ? `${description.slice(0, 197)}...` : description,
 		),
 		meta: metaHtml,
-		hero: hero ? renderFigure(hero, true) : '',
+		eventClass: showcase?.sections ? ' release-event' : '',
+		heroIntro: heroIntro ? `<p class="release-intro">${renderInline(heroIntro.text, ctx)}</p>` : '',
+		releaseIndex: renderReleaseIndex(showcase?.sections),
+		hero: show('shell') || (hero ? renderFigure(hero, true) : ''),
 		toc: tocHtml,
 		body,
 	};
 	return template.replace(/\{\{(\w+)\}\}/g, (match, key) => (key in fill ? fill[key] : match));
+}
+
+function chapterNotes(blocks, items) {
+	const groups = new Map();
+	let current = [];
+	groups.set('', current);
+	for (const block of blocks) {
+		if (block.type === 'heading' && block.level === 3) {
+			current = [];
+			groups.set(plainText(block.text), current);
+		}
+		current.push(block);
+	}
+	const notes = items.map(({ notes = [] }) =>
+		notes.flatMap((name) => {
+			const group = groups.get(name);
+			if (!group) throw Error(`No chapter heading named ${name}`);
+			groups.delete(name);
+			return group;
+		}),
+	);
+	return { notes, common: [...groups.values()].flat() };
 }
 
 const heading = (level, id, inner) => `<h${level} id="${escapeHtml(id)}">${inner}</h${level}>`;
@@ -305,7 +379,7 @@ function countChanges(html) {
 	);
 }
 
-/** Every post in `docs/releases/` as `<out>/releases/<name>/index.html`. Returns the names. */
+/** Every release post and its optional migration guide, with shared assets. Returns post names. */
 export function writeReleasePages(out, { root = ROOT } = {}) {
 	const dir = join(root, POSTS_DIR);
 	const template = readFileSync(join(root, TEMPLATE), 'utf8');
@@ -320,14 +394,26 @@ export function writeReleasePages(out, { root = ROOT } = {}) {
 		if (extname(file) !== '.md') continue;
 		const name = basename(file, '.md');
 		const assets = new Map();
-		const html = renderReleasePage(
-			readFileSync(join(dir, file), 'utf8'),
-			template,
-			mediaResolver({ root, postsDir: dir, name, assets }),
-		);
 		const target = join(out, 'releases', name);
 		mkdirSync(join(target, 'assets'), { recursive: true });
-		writeFileSync(join(target, 'index.html'), html);
+		const guide = `docs/migration-${name}.md`;
+		const hasGuide = existsSync(join(root, guide));
+		const config = join(dir, name, 'showcase.json');
+		const showcase = existsSync(config) ? JSON.parse(readFileSync(config, 'utf8')) : undefined;
+		const render = (source, relatedPage, show) => {
+			const path = join(root, source);
+			return renderReleasePage(readFileSync(path, 'utf8'), template, {
+				...mediaResolver({ root, postsDir: dirname(path), name, assets, relatedPage }),
+				showcase: show,
+			});
+		};
+		const post = `${POSTS_DIR}/${file}`;
+		writeFileSync(
+			join(target, 'index.html'),
+			render(post, hasGuide ? { source: guide, href: 'migration.html' } : undefined, showcase),
+		);
+		if (hasGuide)
+			writeFileSync(join(target, 'migration.html'), render(guide, { source: post, href: './' }));
 		for (const [to, from] of assets) {
 			if (!existsSync(from)) throw new Error(`${file}: the picture ${from} does not exist`);
 			copyFileSync(from, join(target, to));

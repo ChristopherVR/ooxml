@@ -10,6 +10,8 @@
 		<link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
 		<link rel="stylesheet" href="../../themes.css" />
 		<link rel="stylesheet" href="../releases.css" />
+		<link rel="stylesheet" href="../showcase.css" />
+		<link rel="stylesheet" href="../detail-scenes.css" />
 		<script type="module" src="../releases.js"></script>
 	</head>
 	<body>
@@ -45,7 +47,7 @@
 				</svg>
 			</button>
 		</header>
-		<main id="post" class="post">
+		<main id="post" class="post{{eventClass}}">
 			<header class="post-hero">
 				<p class="post-tiles" aria-hidden="true">
 					<span class="tile tile-word">W</span><span class="tile tile-excel">X</span
@@ -54,8 +56,9 @@
 				</p>
 				<h1>{{titleHtml}}</h1>
 				<p class="post-meta">{{meta}}</p>
-				{{hero}}
+				{{heroIntro}} {{hero}}
 			</header>
+			{{releaseIndex}}
 			<div class="post-layout">
 				<nav class="post-toc" aria-label="On this page">
 					<details id="post-toc" open>

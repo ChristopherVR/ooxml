@@ -1,0 +1,223 @@
+.release-intro a {
+	display: table;
+	margin: 14px auto 0;
+	padding: 4px 12px;
+	border: 1px solid var(--line);
+	border-radius: 5px;
+	color: var(--accent-ink);
+	font-size: 0.91rem;
+	font-weight: 650;
+	text-decoration: none;
+}
+.release-intro a:hover {
+	border-color: var(--blue);
+}
+
+.showcase-capture {
+	position: relative;
+	display: block;
+	width: 100%;
+	padding: 0;
+	border: 0;
+	background: #131820;
+	color: #fff;
+	text-align: left;
+	cursor: zoom-in;
+}
+.showcase-capture:focus-visible {
+	z-index: 1;
+	outline-offset: -3px;
+}
+.showcase-capture > span {
+	position: absolute;
+	right: 9px;
+	bottom: 9px;
+	padding: 4px 9px;
+	border: 1px solid #596879;
+	border-radius: 5px;
+	background: #10161fee;
+	color: #f3f7fb;
+	font: 600 0.8rem / 1.45 var(--font-ui);
+}
+.showcase-capture:is(:hover, :focus-visible) > span {
+	border-color: #9dc9ff;
+}
+.preview-dialog {
+	max-width: min(94vw, 1480px);
+	max-height: 94vh;
+	padding: 6px;
+	border: 1px solid #596879;
+	border-radius: 9px;
+	background: #111821;
+	color: #f3f7fb;
+}
+.preview-dialog::backdrop {
+	background: rgb(0 0 0 / 78%);
+}
+.preview-dialog img {
+	display: block;
+	max-width: 100%;
+	max-height: 83vh;
+	object-fit: contain;
+}
+.preview-close {
+	display: block;
+	margin: 0 0 6px auto;
+	padding: 6px 12px;
+	border: 1px solid #596879;
+	border-radius: 5px;
+	background: #192738;
+	color: #f3f7fb;
+	font: 600 0.86rem var(--font-ui);
+	cursor: pointer;
+}
+
+.security-copy[data-gated] {
+	grid-template-columns: minmax(0, 1fr);
+}
+.consent-state {
+	grid-column: 1;
+	justify-self: start;
+	margin-top: 15px;
+	padding: 5px 9px;
+	border: 1px solid #7a613a;
+	border-radius: 4px;
+	background: #2d231a;
+	color: #ffd790;
+	font-size: 0.86rem;
+	font-weight: 650;
+}
+[data-consent-allowed],
+[data-unlocked] [data-consent-blocked] {
+	display: none;
+}
+[data-unlocked] [data-consent-allowed] {
+	display: inline;
+}
+[data-unlocked] .consent-state {
+	border-color: #548575;
+	background: #183029;
+	color: #a8e6c9;
+}
+@media (max-width: 620px) {
+	.preview-dialog {
+		width: 100vw;
+		max-width: 100vw;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+	}
+	.preview-dialog img {
+		width: 100%;
+	}
+	.preview-close {
+		margin: 7px 7px 7px auto;
+	}
+}
+
+.security-choices {
+	grid-column: 1;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 18px;
+}
+.security-choices button {
+	padding: 5px 8px;
+	border: 1px solid #506478;
+	border-radius: 5px;
+	background: #182331;
+	color: #d9e4ed;
+	font: 600 0.82rem / 1.3 var(--font-ui);
+	cursor: pointer;
+}
+.security-choices button:hover,
+.security-choices button[aria-pressed='true'] {
+	border-color: #8bc6bd;
+	background: #213e3a;
+	color: #e5f2f0;
+}
+.security-cases {
+	align-self: stretch;
+	display: grid;
+	align-items: center;
+	min-width: 0;
+	padding: clamp(12px, 2vw, 23px);
+	border-left: 1px solid var(--story-line);
+	background: #111921;
+}
+.security-case {
+	overflow: hidden;
+	min-width: 0;
+	border: 1px solid var(--story-line);
+	border-radius: 7px;
+}
+.security-result {
+	display: grid;
+	gap: 3px;
+	padding: 9px 12px;
+	border-bottom: 1px solid #414d5a;
+	background: #1c2936;
+	color: #e7ebf0;
+}
+.security-result > span {
+	color: #c3d0dc;
+	font-size: 0.82rem;
+	line-height: 1.35;
+}
+.security-result[data-tone='success'] strong {
+	color: #a8e6c9;
+}
+.security-result[data-tone='notice'] strong {
+	color: #a8d5ff;
+}
+.security-result[data-tone='warning'] strong {
+	color: #ffd398;
+}
+.security-case > [data-preview] {
+	background: #151a22;
+}
+.security-case > [data-preview] img {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+[data-security-scene='signature'] .security-case > [data-preview] img {
+	max-height: 220px;
+	object-fit: contain;
+}
+.security-tool {
+	background: #10171f;
+	color: #dce5ee;
+}
+.security-tool > div {
+	display: flex;
+	justify-content: space-between;
+	padding: 5px 12px;
+	border-bottom: 1px solid #303d4a;
+	color: #b4c2d1;
+	font: 600 0.81rem / 1.4 var(--font-mono);
+}
+.security-tool pre {
+	margin: 0;
+	padding: 8px 12px;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+	font-size: 0.84rem;
+	line-height: 1.45;
+}
+.security-tool pre.security-request {
+	border-bottom: 1px solid #303d4a;
+	color: #a9ccec;
+}
+@media (max-width: 760px) {
+	.security-cases {
+		border-left: 0;
+		border-top: 1px solid var(--story-line);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.showcase-panel[data-active] .security-case:not([hidden]) {
+		animation: story-in 320ms var(--ease) both;
+	}
+}

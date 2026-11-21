@@ -58,9 +58,9 @@ export function imageSize(bytes) {
  * URL resolution for the post `<postsDir>/<name>.md`, served from `releases/<name>/`. A picture
  * in the repository is copied to `assets/` beside the page (`assets` maps the page path to the
  * source file); `assets/x.gif` is looked for in `<postsDir>/<name>/assets/` when it is not beside
- * the post. Any other repository path links to GitHub; absolute URLs and anchors stay.
+ * the post. The related release page stays local. Other repository paths link to GitHub.
  */
-export function mediaResolver({ root, postsDir, name, assets }) {
+export function mediaResolver({ root, postsDir, name, assets, relatedPage }) {
 	const find = (path) => {
 		const direct = resolve(postsDir, path);
 		if (existsSync(direct)) return direct;
@@ -80,24 +80,32 @@ export function mediaResolver({ root, postsDir, name, assets }) {
 		const file = find(decodeURIComponent(path));
 		const repoPath = relative(root, file).split('\\').join('/');
 		if (repoPath.startsWith('..')) return url;
-		if (kind === 'img' || IMAGE.test(path)) return copy(file);
+		if (kind === 'a' && repoPath === relatedPage?.source)
+			return `${relatedPage.href}${hash ? `#${hash}` : ''}`;
+		if (kind === 'img' || IMAGE.test(path) || (/\.mp4$/i.test(path) && existsSync(file)))
+			return copy(file);
 		const isDir = existsSync(file) && statSync(file).isDirectory();
 		const base = isDir ? REPO_BLOB.replace('/blob/', '/tree/') : REPO_BLOB;
 		return `${base}${posix.normalize(repoPath)}${hash ? `#${hash}` : ''}`;
 	};
-	/** A figure's picture: its page URL, size, and the recording and poster beside a GIF. */
+	/** A figure's picture, with an optional same-name recording and poster. */
 	const media = (url) => {
 		if (/^(?:[a-z][\w+.-]*:|\/\/)/i.test(url)) return { src: url };
 		const file = find(decodeURIComponent(url));
 		if (!existsSync(file)) throw new Error(`The picture ${url} does not exist`);
 		const info = { src: copy(file), ...imageSize(readFileSync(file)) };
 		const stem = join(dirname(file), basename(file, extname(file)));
-		if (extname(file).toLowerCase() === '.gif' && existsSync(`${stem}.mp4`)) {
+		const gif = extname(file).toLowerCase() === '.gif';
+		const poster = ['.poster.webp', '.poster.png', '.poster.jpg']
+			.map((ext) => stem + ext)
+			.find((path) => existsSync(path));
+		if (existsSync(`${stem}.mp4`)) {
 			info.video = copy(`${stem}.mp4`);
-			const poster = ['.poster.webp', '.poster.png', '.poster.jpg']
-				.map((ext) => stem + ext)
-				.find((path) => existsSync(path));
+			if (!gif) return { ...info, poster: info.src };
+			info.animated = true;
 			if (poster) info.poster = copy(poster);
+		} else if (gif && poster) {
+			return { ...info, src: copy(poster), animation: info.src };
 		}
 		return info;
 	};

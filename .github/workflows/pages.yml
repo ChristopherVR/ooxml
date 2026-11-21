@@ -6,6 +6,9 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'docs/releases/**'
+      - 'docs/migration-*.md'
+      - '.github/assets/**'
       - 'viewers/**'
       - 'demos/**'
       - 'apps/**'
@@ -15,6 +18,12 @@ on:
       - 'src/ui/**'
       - 'src/core/**'
       - 'scripts/build-pages.mjs'
+      - 'scripts/build-release-notes.mjs'
+      - 'scripts/release-highlight.mjs'
+      - 'scripts/release-markdown.mjs'
+      - 'scripts/release-media.mjs'
+      - 'scripts/release-showcase.mjs'
+      - 'scripts/release-security-scenes.mjs'
       - 'scripts/bundle-suite.mjs'
       - 'bun.lock'
       - '.github/workflows/pages.yml'

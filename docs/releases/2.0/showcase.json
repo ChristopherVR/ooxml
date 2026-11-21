@@ -1,0 +1,358 @@
+{
+	"shell": [
+		{
+			"product": "word",
+			"label": "Word",
+			"alt": "The Word editor open in the OOXML Office workspace",
+			"command": "npm install docx-react-viewer@2 react"
+		},
+		{
+			"product": "excel",
+			"label": "Excel",
+			"alt": "The Excel editor open in the OOXML Office workspace",
+			"command": "npm install @christophervr/xlsx-react-viewer@2 react"
+		},
+		{
+			"product": "powerpoint",
+			"label": "PowerPoint",
+			"alt": "The PowerPoint editor open in the OOXML Office workspace",
+			"command": "npm install pptx-react-viewer@5 react"
+		},
+		{
+			"product": "visio",
+			"label": "Visio",
+			"alt": "The Visio editor open in the OOXML Office workspace",
+			"command": "npm install visio-react-viewer@2 react"
+		},
+		{
+			"product": "teams",
+			"label": "OpenTeams",
+			"alt": "OpenTeams open in the OOXML Office workspace",
+			"command": "npm install openteams-react-viewer@2 react"
+		}
+	],
+	"performance": [
+		{
+			"product": "word",
+			"action": "Save a one-paragraph edit",
+			"context": "Save confirmation for a 20,000-paragraph document in the Office suite.",
+			"before": {
+				"value": 13.53,
+				"label": "13.53 s"
+			},
+			"after": {
+				"value": 1.97,
+				"label": "1.97 s"
+			},
+			"start": "Click Save",
+			"notes": ["Word saves in proportion to the edit"]
+		},
+		{
+			"product": "excel",
+			"action": "Open and recalculate",
+			"context": "Time until the editor is ready for a workbook that requests full recalculation.",
+			"before": {
+				"value": 10.08,
+				"label": "10.08 s"
+			},
+			"after": {
+				"value": 4.88,
+				"label": "4.88 s"
+			},
+			"start": "Open workbook",
+			"notes": [
+				"Excel moves long opening calculations to a worker",
+				"Excel recalculation does less work"
+			]
+		},
+		{
+			"product": "powerpoint",
+			"action": "Open a SmartArt slide",
+			"context": "Time from opening a one-slide SmartArt deck until PowerPoint is ready.",
+			"before": {
+				"value": 3.37,
+				"label": "3.37 s"
+			},
+			"after": {
+				"value": 0.58,
+				"label": "0.58 s"
+			},
+			"start": "Open deck",
+			"notes": ["PowerPoint decks open and save in a fraction of the time"]
+		},
+		{
+			"product": "visio",
+			"action": "Open 10,000 shapes",
+			"context": "The drawing exceeded the old XML node limit. The same file opens in 2.0.",
+			"before": {
+				"label": "Drawing refused"
+			},
+			"after": {
+				"label": "Ready in 2.73 s"
+			},
+			"start": "Open drawing",
+			"notes": ["Visio opens pages of 10,000 shapes"]
+		}
+	],
+	"sections": [
+		{
+			"id": "compatibility",
+			"label": "Compatibility"
+		},
+		{
+			"id": "performance",
+			"label": "Performance"
+		},
+		{
+			"id": "security",
+			"label": "Security"
+		},
+		{
+			"id": "accessibility",
+			"label": "Accessibility"
+		},
+		{
+			"id": "new-features",
+			"label": "New features"
+		}
+	],
+	"compatibility": [
+		{
+			"label": "Clipboard",
+			"title": "Copy a slide in Safari",
+			"text": "Start the clipboard write while Safari is still handling the click.",
+			"steps": ["Click Copy", "Open clipboard", "Render the slide", "Image copied"],
+			"notes": ["Clipboard on Safari"],
+			"capture": "safari-clipboard.gif",
+			"captureAlt": "PowerPoint uses Copy as Image from the Export menu in WebKit"
+		},
+		{
+			"label": "Export",
+			"title": "Export large slides",
+			"text": "Tile large renders, wait for images and fonts, and keep the download alive through confirmation.",
+			"steps": ["Render in tiles", "Resolve images and fonts", "Confirm download"],
+			"notes": ["Export and downloads on Safari"],
+			"capture": "safari-export.gif",
+			"captureAlt": "PowerPoint opens the video export options in WebKit"
+		},
+		{
+			"label": "Print",
+			"title": "Print the document on iPad",
+			"text": "Print the content from its own window so iPadOS prints the document.",
+			"steps": ["Open print window", "Load document", "Print document"],
+			"notes": ["Print on iPad"],
+			"capture": "safari-print.gif",
+			"captureAlt": "PowerPoint opens the Print Presentation pane in WebKit"
+		},
+		{
+			"label": "Touch",
+			"title": "Use the editor by touch",
+			"text": "Long-press for a context menu and double-tap to rename a section.",
+			"steps": ["Long-press or double-tap", "Recognise gesture", "Open menu or rename"],
+			"notes": ["Touch and symbol fonts on iPad"],
+			"capture": "safari-touch.gif",
+			"captureAlt": "The slide thumbnail context menu opened by a simulated touch long-press in WebKit"
+		},
+		{
+			"label": "Browser support",
+			"title": "Support across browsers",
+			"text": "The supported browser versions and the minimums the editors need.",
+			"steps": ["Safari", "Chrome and Edge", "Firefox"],
+			"notes": [
+				"Fixes in Firefox and Safari across the editors",
+				"Node.js 22.3 and on-demand decoders"
+			]
+		}
+	],
+	"security": [
+		{
+			"label": "Linked media",
+			"title": "Ask before fetching",
+			"text": "External pictures, sounds and video stay blocked until the reader enables them.",
+			"notes": ["PowerPoint asks before it fetches"],
+			"capture": "linked-blocked.webp",
+			"captureAfter": "linked-enabled.webp",
+			"captureAlt": "PowerPoint’s security bar shows Enable Content and the linked picture is withheld",
+			"afterAlt": "The linked picture appears on the slide after the reader chooses Enable Content",
+			"scene": "consent"
+		},
+		{
+			"label": "Signatures",
+			"title": "Verify what was signed",
+			"text": "The reader checks signed parts, signature integrity and coverage, then reports its trust status.",
+			"notes": ["Signatures are verified, not detected"],
+			"scene": "signature",
+			"examples": [
+				{
+					"label": "Intact signature",
+					"status": "Signed, signer not verified",
+					"description": "The signed parts are intact. The browser does not trust this signer’s certificate.",
+					"tone": "notice",
+					"capture": "signature-intact.webp",
+					"captureAlt": "PowerPoint notice describing an intact signature and an untrusted certificate"
+				},
+				{
+					"label": "Changed deck",
+					"status": "Invalid signature",
+					"description": "The signed slide was changed. PowerPoint warns that the signature is invalid.",
+					"tone": "warning",
+					"capture": "signature-invalid.webp",
+					"captureAlt": "PowerPoint warning that a signature is invalid and the document may have changed"
+				},
+				{
+					"label": "Unsupported signature",
+					"status": "Signature not verified",
+					"description": "PowerPoint reports that it cannot verify this signature.",
+					"tone": "warning",
+					"capture": "signature-unsupported.webp",
+					"captureAlt": "PowerPoint warning that the signature could not be verified"
+				}
+			]
+		},
+		{
+			"label": "Large files",
+			"title": "Open within the limits",
+			"text": "File readers apply inflation limits and work budgets before costly parsing or calculation.",
+			"notes": ["Bounded work for every file"],
+			"scene": "limits",
+			"examples": [
+				{
+					"label": "10,000 shapes",
+					"status": "Drawing opened",
+					"description": "The Visio editor loaded and drew all 10,000 shapes.",
+					"tone": "success",
+					"capture": "limits-open.webp",
+					"captureAlt": "Visio showing the complete 10,000-shape drawing with Ready in the status bar"
+				},
+				{
+					"label": "70,000 shapes",
+					"status": "Opening refused",
+					"description": "The app stops opening the drawing and reports which page exceeds its ZIP entry size limit.",
+					"tone": "warning",
+					"capture": "limits-refused.webp",
+					"captureAlt": "The OOXML Office status bar reports: ZIP entry is too large: visio/pages/page1.xml"
+				}
+			]
+		},
+		{
+			"label": "Sharing",
+			"title": "Protect private chats",
+			"text": "OpenTeams 2.0 checks private chat membership and the signed-in user on the server.",
+			"notes": ["Collaboration peers and servers"],
+			"scene": "sharing",
+			"examples": [
+				{
+					"label": "In the chat",
+					"status": "Jordan’s view",
+					"description": "Jordan receives Alice’s private message in Chat.",
+					"tone": "success",
+					"capture": "private-chat-member.webp",
+					"captureAlt": "OpenTeams chat with the message The draft is ready for your review"
+				},
+				{
+					"label": "Outside the chat",
+					"status": "Casey’s view",
+					"description": "Casey can use the same workspace. Alice and Jordan’s conversation is absent from Casey’s Chat list.",
+					"tone": "neutral",
+					"capture": "private-chat-other.webp",
+					"captureAlt": "OpenTeams Chat list as a signed-in user outside Alice and Jordan’s conversation"
+				}
+			]
+		},
+		{
+			"label": "Automation",
+			"title": "Keep Excel automation in the workbook",
+			"text": "The packaged tools reject formulas that reach external data or services.",
+			"notes": ["Agents stay inside the workbook"],
+			"scene": "automation",
+			"examples": [
+				{
+					"label": "Workbook formula",
+					"status": "Saved",
+					"request": "=SUM(B2:B8)",
+					"output": "{\n  \"address\": \"A2\",\n  \"value\": 74,\n  \"formula\": \"SUM(B2:B8)\",\n  \"text\": \"74\"\n}",
+					"description": "The tool saves the formula in A2 and recalculates its value.",
+					"tone": "success"
+				},
+				{
+					"label": "External formula",
+					"status": "Refused",
+					"request": "=WEBSERVICE(\"https://example.invalid\")",
+					"output": "A2: the formula was refused because it uses WEBSERVICE, which can reach outside the workbook",
+					"description": "The tool rejects the formula before saving.",
+					"tone": "warning"
+				}
+			]
+		}
+	],
+	"accessibility": [
+		{
+			"label": "Keyboard",
+			"title": "Find your way with F6",
+			"text": "F6 advances a region. Shift+F6 moves backwards. On the slide, Tab moves between objects.",
+			"keys": ["F6", "Shift+F6"],
+			"steps": ["Slide", "Ribbon", "Speaker notes", "Thumbnails"],
+			"notes": ["Regions and focus that follow Office"],
+			"capture": "powerpoint-keyboard.gif",
+			"captureAlt": "PowerPoint cycles focus through regions with F6, then selects another object with Tab"
+		},
+		{
+			"label": "Screen readers",
+			"title": "Hear where you are in Excel",
+			"text": "The grid exposes row and column headers, the active cell and its formula.",
+			"steps": ["Column B", "Row 2", "B2", "Formula or value"],
+			"notes": ["A grid screen readers can explore"],
+			"capture": "accessibility-grid.gif",
+			"captureAlt": "Excel moves focus to B2 and then to adjacent cells while the row and column headers update"
+		},
+		{
+			"label": "Contrast and focus",
+			"title": "Keep focus and selection visible",
+			"text": "Focus rings, control contrast and system highlights help users follow where they are.",
+			"steps": ["Focus ring", "Readable contrast", "System highlight"],
+			"notes": ["Contrast and forced colours"]
+		}
+	],
+	"new-features": [
+		{
+			"label": "Word layout",
+			"product": "word",
+			"title": "Wrap text around a floating table",
+			"image": "word-floating-table.gif",
+			"text": "Print Layout wraps body text around the table.",
+			"notes": ["Word lays out text boxes and floating objects"]
+		},
+		{
+			"label": "Word search",
+			"product": "word",
+			"title": "Find across the document",
+			"image": "word-find.gif",
+			"text": "Find moves between the body, headers and footnotes.",
+			"notes": ["Paste, find and compare in Word"]
+		},
+		{
+			"label": "Excel charts",
+			"product": "excel",
+			"title": "Insert a Treemap",
+			"image": "excel-treemap.gif",
+			"text": "Turn a selected data range into a Treemap directly on the worksheet.",
+			"notes": ["Charts and SmartArt"]
+		},
+		{
+			"label": "PowerPoint SmartArt",
+			"product": "powerpoint",
+			"title": "Change SmartArt colours",
+			"image": "powerpoint-smartart.gif",
+			"text": "Apply a new colour scheme from the SmartArt Design gallery.",
+			"notes": ["SmartArt colours and styles"]
+		},
+		{
+			"label": "Visio zoom",
+			"product": "visio",
+			"title": "Zoom around the pointer",
+			"image": "visio-zoom.gif",
+			"text": "The drawing scales during the gesture and redraws when it settles.",
+			"notes": ["Visio zoom around the pointer"]
+		}
+	]
+}

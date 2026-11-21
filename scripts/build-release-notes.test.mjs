@@ -167,7 +167,13 @@ Learn more about [saving](../performance-budgets.md).
 test('the page takes the title, metadata, hero, lede pillars, sections and change lists', () => {
 	const media = (url) =>
 		url.endsWith('.gif')
-			? { src: 'assets/clip.gif', width: 960, height: 540, video: 'assets/clip.mp4' }
+			? {
+					src: 'assets/clip.gif',
+					width: 960,
+					height: 540,
+					video: 'assets/clip.mp4',
+					animated: true,
+				}
 			: { src: `assets/${url}`, width: 1200, height: 800 };
 	const html = renderReleasePage(POST, TEMPLATE_HTML, { media });
 	assert.match(html, /<title>OOXML 2.0<\/title>/);
@@ -282,4 +288,104 @@ test('the release post in the repository renders with its stable change anchors'
 		);
 	assert.doesNotMatch(html, /\{\{\w+\}\}/);
 	assert.doesNotMatch(html, /—/);
+});
+
+test('still images offer controlled playback and the release guide links back to the post', () => {
+	const root = mkdtempSync(join(tmpdir(), 'release-guide-'));
+	const out = join(root, 'out');
+	try {
+		mkdirSync(join(root, 'docs/releases/2.0/assets'), { recursive: true });
+		mkdirSync(join(root, dirname(TEMPLATE)), { recursive: true });
+		writeFileSync(join(root, TEMPLATE), TEMPLATE_HTML);
+		writeFileSync(join(root, 'docs/releases/2.0/assets/demo.svg'), '<svg viewBox="0 0 960 540">');
+		writeFileSync(join(root, 'docs/releases/2.0/assets/demo.mp4'), 'mp4');
+		writeFileSync(
+			join(root, 'docs/releases/2.0.md'),
+			'# OOXML 2.0\n\nRead the [guide](../migration-2.0.md#upgrade).\n\n## Demo\n\n![Exporting a slide](2.0/assets/demo.svg)\n\n_[Video](2.0/assets/demo.mp4)._\n',
+		);
+		writeFileSync(
+			join(root, 'docs/migration-2.0.md'),
+			'# Migration\n\nRead the [post](releases/2.0.md#demo).\n\n## Upgrade\n',
+		);
+		assert.deepEqual(writeReleasePages(out, { root }), ['2.0']);
+		const blog = readFileSync(join(out, 'releases/2.0/index.html'), 'utf8');
+		const guide = readFileSync(join(out, 'releases/2.0/migration.html'), 'utf8');
+		assert.match(blog, /href="migration.html#upgrade"/);
+		assert.match(
+			blog,
+			/<video controls muted playsinline preload="none" width="960" height="540" poster="assets\/demo.svg" aria-label="Exporting a slide">/,
+		);
+		assert.match(blog, /<figcaption><a href="assets\/demo.mp4">Video<\/a>\.<\/figcaption>/);
+		assert.doesNotMatch(blog, /autoplay|media-motion|media-still/);
+		assert.match(guide, /href="\.\/#demo"/);
+		assert.match(guide, /<h2 id="upgrade">/);
+		assert.equal(readFileSync(join(out, 'releases/2.0/assets/demo.mp4'), 'utf8'), 'mp4');
+	} finally {
+		rmSync(root, { recursive: true, force: true });
+	}
+});
+
+test('the 2.0 post leads with its release and renders the five interactive chapters', () => {
+	const source = readFileSync(join(ROOT, 'docs/releases/2.0.md'), 'utf8');
+	const showcase = JSON.parse(readFileSync(join(ROOT, 'docs/releases/2.0/showcase.json'), 'utf8'));
+	const html = renderReleasePage(source, readFileSync(join(ROOT, TEMPLATE), 'utf8'), { showcase });
+	assert.match(html, /aria-label="Install OOXML 2.0"/);
+	assert.match(html, /data-copy-command="npm install pptx-react-viewer@5 react"/);
+	assert.match(html, /class="release-intro"/);
+	assert.doesNotMatch(html, /OOXML is an open-source Office stack/);
+	for (const { id } of showcase.sections) {
+		assert.ok(html.includes(`href="#${id}"`));
+		assert.ok(html.includes(`data-showcase="${id}"`));
+	}
+	assert.doesNotMatch(html, /class="showcase-details"/);
+	assert.match(html, /data-note="1" hidden>[^]*id="export-and-downloads-on-safari"/);
+	assert.match(html, /aria-label="Performance comparisons"/);
+	const forPerformance = html.slice(
+		html.indexOf('data-showcase="performance"'),
+		html.indexOf('<div class="showcase-notes"', html.indexOf('data-showcase="performance"')),
+	);
+	assert.doesNotMatch(forPerformance, /<img/);
+	assert.match(forPerformance, /Click Save/);
+	assert.match(html, /<h3>Save a one-paragraph edit<\/h3>/);
+	assert.match(html, /<dt>Before 2\.0<\/dt><dd style="[^"]+">13\.53 s<\/dd>/);
+	assert.match(html, /<dt>OOXML 2\.0<\/dt><dd style="[^"]+">1\.97 s<\/dd>/);
+	assert.match(html, /<dt>Before 2\.0<\/dt><dd style="[^"]+">Drawing refused<\/dd>/);
+	assert.match(html, /signature-invalid\.webp/);
+	assert.match(html, /private-chat-other\.webp/);
+	assert.match(html, /limits-refused\.webp/);
+	assert.match(html, /A2: the formula was refused because it uses WEBSERVICE/);
+	assert.doesNotMatch(html, /powerpoint-webkit|word-save\.mp4/);
+	assert.doesNotMatch(html, /<video\b/);
+});
+
+test('a GIF with a poster starts as a still without playback buttons', () => {
+	const { media } = {
+		media: () => ({
+			src: 'assets/demo.poster.webp',
+			animation: 'assets/demo.gif',
+			width: 960,
+			height: 540,
+		}),
+	};
+	const html = renderReleasePage(
+		'# Demo\n\n## Motion\n\n![Format a chart](demo.gif)',
+		TEMPLATE_HTML,
+		{ media },
+	);
+	assert.match(
+		html,
+		/<img src="assets\/demo\.poster\.webp" alt="Format a chart" data-animation="assets\/demo\.gif"/,
+	);
+	assert.doesNotMatch(html, /<button/);
+	assert.doesNotMatch(html, /<video\b/);
+});
+
+test('the migration guide labels and groups before-and-after code examples', () => {
+	const source =
+		'# Migrate\n\n## Upgrade\n\nBefore:\n\n' +
+		'```sh\nnpm install ooxml-core@1\n```\n\nAfter:\n\n```sh\nnpm install ooxml-core@2\n```';
+	const html = renderReleasePage(source, TEMPLATE_HTML);
+	assert.match(html, /class="migration-pair">/);
+	assert.match(html, /data-migration="before"><div[^>]*><span[^>]*>Before<\/span>/);
+	assert.match(html, /data-migration="after"><div[^>]*><span[^>]*>After<\/span>/);
 });

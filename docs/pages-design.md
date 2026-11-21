@@ -244,22 +244,32 @@ reads these shapes:
   becomes a `<time>`), then an optional image alone in a paragraph (the hero).
 - The lede is everything before the first `##`: a paragraph, a list of 4 to 6 pillars whose
   items all start with `**Lead-in:**` (drawn as a joined grid of cards), a fenced install block
-  and a `> [!NOTE]` for upgraders.
+  and a `> [!NOTE]` for upgraders. A release folder's optional `showcase.json` can supply a workspace
+  tour with install commands and an index of named sections. When a section uses a
+  `<div data-showcase="section-id"></div>` marker, the site renders the matching interactive scene.
+  Each tab's `notes` names the Markdown headings it displays underneath. Keep benchmark facts in
+  the Markdown for GitHub.
 - Each `##` is a section (sentence case) in the table of contents, with its `###` features under
   it. A feature is short paragraphs, an optional code block and picture, and a closing
   paragraph that starts with `Learn more`.
 - Code: `**file.ts**` alone on the line before a fence names it (otherwise the bar shows the
   language), `_Caption._` alone on the line after the fence captions it. TypeScript and
-  JavaScript, JSON, HTML and shell get a light token colouring at build time.
+  JavaScript, JSON, HTML and shell get a light token colouring at build time. A `Before:` or
+  `After:` line gives a code sample its labelled red or green header. Adjacent pairs sit side by
+  side on wide screens.
 - Pictures: `![alt](path)` alone in a paragraph, then an optional `_Caption._` line, then an
   optional stat line `**Before:** 4.8 s · **After:** 0.6 s` (any `**Label:** value` pairs joined
-  by `·`; `After` takes the accent). Paths resolve against `docs/releases/`; a path not found
+  by `·`; `After` takes the accent). Paths resolve relative to the Markdown file. In a release post, a path not found
   there is looked for in `docs/releases/<name>/`, so write `<name>/assets/clip.gif` (which GitHub
   resolves too). Pictures are copied beside the page with their width and height set. A GIF
   with an MP4 of the same name beside it is a recording: the GIF plays, and under reduced motion
   the MP4 shows instead as a paused `<video controls>` (with `<stem>.poster.webp|png|jpg` as its
-  poster when one exists).
-- Other repository links (`../migration-2.0.md`) point to the file on GitHub.
+  poster when one exists). A still image with an MP4 of the same name shows the paused video with
+  controls and uses the image as its poster. A one-pass GIF with a same-name poster and no MP4 starts
+  when in view for readers who allow motion. Interactive product previews can loop while visible. Their Enlarge control opens the full-size capture.
+- A companion `docs/migration-<name>.md` is published as `/ooxml/releases/<name>/migration.html`.
+  Relative links between the release post and its migration guide stay on Pages. Other repository
+  links point to the file on GitHub.
 - `## Every change, by product` holds one `<a id="changes-<area>"></a>` line followed by a
   `<details>` and `<summary>Name</summary>` and a blank line, then the area's chapter in Markdown
   (`###`/`####` and bullets) and `</details>`. The areas are `changes-core`, `changes-ui-mcp`,

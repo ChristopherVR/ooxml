@@ -3,6 +3,8 @@
  * the suite and the hub, reveals, the table of contents that marks the section in view, the
  * change lists a link opens, and the copy buttons on code samples.
  */
+import './showcase.js';
+
 const key = 'ooxml-suite-theme';
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -87,7 +89,10 @@ toc?.querySelector('summary')?.addEventListener('click', (event) => {
 toc?.addEventListener('click', (event) => {
 	if (event.target.closest('a') && !wide.matches) toc.open = false;
 });
-const tocLinks = [...document.querySelectorAll('.post-toc a')];
+const chapterLinks = document.querySelectorAll('.release-index a');
+const tocLinks = [
+	...(chapterLinks.length ? chapterLinks : document.querySelectorAll('.post-toc a')),
+];
 if (tocLinks.length) {
 	// The current section is the last heading above the top third of the window.
 	const headings = tocLinks
@@ -121,6 +126,12 @@ function openTarget() {
 	const id = decodeURIComponent(location.hash.slice(1));
 	const target = id && document.getElementById(id);
 	if (!target) return;
+	const note = target.closest('[data-note][hidden]');
+	if (note)
+		note
+			.closest('[data-showcase]')
+			.querySelectorAll('[data-slide]')
+			[Number(note.dataset.note)]?.click();
 	const details = target.matches('.changes-anchor')
 		? target.nextElementSibling?.matches('details')
 			? target.nextElementSibling
@@ -159,7 +170,7 @@ if (lists.length > 1) {
 	first.before(toggle);
 }
 
-// Copy buttons on code samples.
+// Copy buttons on code samples and the install console.
 const status = document.querySelector('#post-status');
 async function copyText(text) {
 	try {
@@ -169,16 +180,18 @@ async function copyText(text) {
 		return false;
 	}
 }
-for (const figure of document.querySelectorAll('figure.code')) {
-	const button = figure.querySelector('.code-copy');
+for (const figure of document.querySelectorAll('figure.code, .install-command')) {
+	const button = figure.querySelector('.code-copy, [data-copy-command]');
 	const code = figure.querySelector('pre code');
 	if (!button || !code) continue;
-	const name = figure.querySelector('.code-file')?.textContent ?? 'code';
+	const name =
+		figure.querySelector('.code-file')?.textContent ??
+		(button.dataset.copyCommand ? 'install command' : 'code');
 	button.hidden = false;
 	button.setAttribute('aria-label', `Copy ${name}`);
 	let timer;
 	button.addEventListener('click', async () => {
-		const copied = await copyText(code.textContent ?? '');
+		const copied = await copyText(button.dataset.copyCommand ?? code.textContent ?? '');
 		if (!copied) {
 			// No clipboard access: select the code so the reader can copy it with the keyboard.
 			const range = document.createRange();
