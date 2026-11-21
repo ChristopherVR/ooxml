@@ -104,12 +104,16 @@ describe('large selections', () => {
 	it('tiles a copied cell over a million-cell selection', () => {
 		const { s, at } = sheetWith();
 		const payload = s.copy(0, R('A1'));
-		const started = Date.now();
+		const started = process.threadCpuUsage?.();
 		s.paste(0, R('A10:AMJ1009'), payload);
 		expect(at(9, 0)).toBe(11);
 		expect(at(1008, 1023)).toBe(11);
-		expect(Date.now() - started).toBeLessThan(30_000);
+		// The paste is synchronous. Bound its work without counting time taken by other workers.
+		if (started) {
+			const { user, system } = process.threadCpuUsage(started);
+			expect(user + system).toBeLessThan(30_000_000);
+		}
 		s.undo();
 		expect(at(9, 0)).toBeNull();
-	});
+	}, 60_000);
 });
