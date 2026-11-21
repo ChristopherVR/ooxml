@@ -232,7 +232,7 @@ const SECTION_DEFINITIONS = [
 	{ name: 'viewer-options', prefixes: ['options'] },
 	{ name: 'slide-templates', prefixes: ['slideTemplates'] },
 	{ name: 'ribbon', prefixes: ['ribbon', 'home', 'insert', 'insertChart'] },
-	{ name: 'ribbon-galleries', prefixes: ['gallery'] },
+	{ name: 'ribbon-galleries', prefixes: ['gallery', 'graphic'] },
 	{ name: 'shape-gallery', prefixes: ['shapes'] },
 ] as const;
 

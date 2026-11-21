@@ -22,7 +22,7 @@ describe('presentation automation save', () => {
 		expect(data.sections).toHaveLength(1);
 		expect(data.sections?.[0]).toMatchObject({
 			name: 'Opening',
-			slideIds: data.slides.slice(0, 2).map((s) => s.id),
+			slideIds: data.slides.slice(0, 2).map((slide) => slide.slideId),
 		});
 		const opening = data.sections![0].id;
 		bytes = await edit(bytes, 'manage_sections', {
@@ -38,7 +38,14 @@ describe('presentation automation save', () => {
 			slideIndices: [1],
 		});
 		data = await loadTestPptxData(bytes);
-		expect(data.sections?.find((s) => s.id === closing)?.slideIds).toHaveLength(2);
+		expect(data.sections?.find((section) => section.id === opening)?.slideIds).toEqual([
+			data.slides[0]?.slideId,
+		]);
+		expect(data.sections?.find((section) => section.id === closing)?.slideIds).toEqual([
+			data.slides[2]?.slideId,
+			data.slides[1]?.slideId,
+		]);
+		expect(data.slides.map((slide) => slide.sectionId)).toEqual([opening, closing, closing]);
 		bytes = await edit(bytes, 'manage_sections', {
 			action: 'reorder',
 			sectionIds: [closing, opening],

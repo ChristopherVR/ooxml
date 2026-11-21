@@ -51,3 +51,11 @@
 	border-color: var(--office-accent);
 	background: var(--office-accent-soft);
 }
+
+@media (forced-colors: active) {
+	.office-word-art-choices button[aria-pressed='true'] {
+		border-color: Highlight;
+		outline: 2px solid Highlight;
+		outline-offset: -2px;
+	}
+}

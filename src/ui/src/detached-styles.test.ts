@@ -45,8 +45,9 @@ describe('releaseDetachedStyles', () => {
 	it('makes one change for every element removed in the same task', async () => {
 		// Two removals: two changes would toggle the rule back out.
 		const elements = [1, 2].map(() => document.body.appendChild(document.createElement('div')));
-		// The sheet lives as long as the document, and an earlier file of a shared worker may have
-		// changed it already: find it and read its state first.
+		// The shared worker may already have adopted the sheet alongside unrelated styles.
+		// Clear the list so the next release exposes the exact sheet this test measures.
+		document.adoptedStyleSheets = [];
 		releaseDetachedStyles(document.createElement('div'));
 		await nextTask();
 		const sheet = document.adoptedStyleSheets.at(-1)!;

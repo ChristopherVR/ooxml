@@ -1,11 +1,14 @@
 import { SvgExporter } from 'ooxml-core/pptx/converter';
 import { prepareSummaryZoom } from 'ooxml-core/pptx/editor/render/summary-zoom-operations';
+import type { OfficeUiCheckbox } from '../../form/checkbox';
+import type { OfficeUiRadio } from '../../form/radio';
 import { renderLocalSvg } from '../../form/local-svg';
 import { createRibbonZoom, zoomChoices } from '../render/ribbon-zoom-insert';
 import { generateElementId } from '../render/element-clipboard';
 import type { RibbonGraphicTarget, RibbonZoom } from '../render/ribbon-insert-state';
 import type { InsertText } from './ribbon-graphic-insert';
 import { createInsertDialogFrame } from './insert-dialog-frame';
+import { definePptxCheckbox, definePptxRadio } from './office-aliases';
 
 export function pickRibbonZoom(
 	host: HTMLElement,
@@ -15,6 +18,11 @@ export function pickRibbonZoom(
 	current: () => RibbonGraphicTarget | undefined,
 ) {
 	const doc = host.ownerDocument;
+	const registry = doc.defaultView?.customElements;
+	if (registry) {
+		definePptxCheckbox(registry);
+		definePptxRadio(registry);
+	}
 	const heading = {
 		slide: text('pptx.zoom.slideZoom', 'Slide Zoom'),
 		section: text('pptx.zoom.sectionZoom', 'Section Zoom'),
@@ -32,24 +40,24 @@ export function pickRibbonZoom(
 			: text('pptx.graphic.zoomSectionTargets', 'Choose sections');
 	list.append(title);
 	body.append(list);
-	const keepUnused = doc.createElement('input');
-	keepUnused.type = 'checkbox';
+	const keepUnused = doc.createElement('pptx-ui-checkbox') as OfficeUiCheckbox;
 	keepUnused.checked = true;
 	if (multiple && target.sections.length) {
 		const keepLabel = doc.createElement('label');
-		keepLabel.append(
-			keepUnused,
-			doc.createTextNode(' ' + text('pptx.graphic.zoomKeepUnusedSections', 'Keep unused sections')),
-		);
+		const name = text('pptx.graphic.zoomKeepUnusedSections', 'Keep unused sections');
+		keepUnused.setAttribute('aria-label', name);
+		keepLabel.append(keepUnused, ` ${name}`);
 		body.append(keepLabel);
 	}
 	const sectionStarts = new Set<string>();
+	const radioGroup = generateElementId();
 	const entries = options.map((choice) => {
 		const label = doc.createElement('label');
 		label.style.display = 'block';
-		const input = doc.createElement('input');
-		input.type = multiple ? 'checkbox' : 'radio';
-		input.name = 'zoom-target';
+		const input = multiple
+			? (doc.createElement('pptx-ui-checkbox') as OfficeUiCheckbox)
+			: (doc.createElement('pptx-ui-radio') as OfficeUiRadio);
+		if ('name' in input) input.name = radioGroup;
 		const startsSection = Boolean(
 			choice.slide.sectionId && !sectionStarts.has(choice.slide.sectionId),
 		);
@@ -64,7 +72,8 @@ export function pickRibbonZoom(
 						.filter(Boolean)
 						.join(' · ')
 				: choice.slide.sectionName || slideLabel;
-		label.append(input, doc.createTextNode(` ${name}`));
+		input.setAttribute('aria-label', name);
+		label.append(input, ` ${name}`);
 		list.append(label);
 		return { input, choice, name };
 	});
@@ -77,7 +86,8 @@ export function pickRibbonZoom(
 				const selected = entries.filter(({ input }) => input.checked);
 				if (committing || !selected.length) return;
 				committing = true;
-				list.disabled = true;
+				for (const { input } of entries) input.disabled = true;
+				keepUnused.disabled = true;
 				sync();
 				void Promise.all(
 					selected.map(async ({ choice, name }) => {

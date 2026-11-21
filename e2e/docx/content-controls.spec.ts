@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { savedDocument } from './saved-document';
-import { fileInput, newDocument } from './helpers';
+import { fileInput, newDocument, reveal } from './helpers';
 
 const fixture = new URL('./support/content-controls.docx', import.meta.url);
 
@@ -71,7 +71,9 @@ test('Insert > Content control adds a placeholder control that typing replaces',
 	await editor.locator('.ProseMirror').click();
 	await page.keyboard.type('Name: ');
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor.getByRole('combobox', { name: 'Content control', exact: true }).selectOption('text');
+	const contentControl = editor.getByRole('combobox', { name: 'Content control', exact: true });
+	await reveal(editor, contentControl);
+	await contentControl.selectOption('text');
 	const control = editor.locator('.ProseMirror .dve-sdt[data-sdt-kind="text"]');
 	await expect(control).toHaveAttribute('data-sdt-placeholder', '1');
 	await page.keyboard.type('Ada');

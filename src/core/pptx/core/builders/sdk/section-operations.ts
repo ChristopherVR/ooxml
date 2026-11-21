@@ -60,7 +60,10 @@ export function addSection(data: PptxData, name: string, slideIndices: number[])
 	// Map slide indices to slide IDs
 	const slideIds = slideIndices
 		.filter((idx) => idx >= 0 && idx < data.slides.length)
-		.map((idx) => at(data.slides, idx).id);
+		.map((idx) => {
+			const slide = at(data.slides, idx);
+			return slide.slideId ?? slide.id;
+		});
 
 	const section: PptxSection = {
 		id: sectionId,
@@ -208,18 +211,21 @@ export function moveSlidesToSection(
 		}
 
 		const slide = at(data.slides, idx);
+		const slideId = slide.slideId ?? slide.id;
 
 		// Remove from current section's slideIds
 		if (slide.sectionId) {
 			const currentSection = data.sections.find((s) => s.id === slide.sectionId);
 			if (currentSection) {
-				currentSection.slideIds = currentSection.slideIds.filter((id) => id !== slide.id);
+				currentSection.slideIds = currentSection.slideIds.filter(
+					(id) => id !== slideId && id !== slide.id,
+				);
 			}
 		}
 
 		// Add to target section
-		if (!targetSection.slideIds.includes(slide.id)) {
-			targetSection.slideIds.push(slide.id);
+		if (!targetSection.slideIds.includes(slideId)) {
+			targetSection.slideIds.push(slideId);
 		}
 
 		// Update slide references

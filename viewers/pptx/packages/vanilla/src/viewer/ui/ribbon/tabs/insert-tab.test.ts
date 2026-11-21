@@ -167,7 +167,10 @@ describe('createInsertTab', () => {
 		expect(items('insert.illustrations.chart')).toHaveLength(INSERT_CHART_TYPES.length + 1);
 		// Shapes, Chart, Action, Table, Pictures and Video are large dropdowns, not selects beside a button.
 		expect(tab.el.querySelectorAll('select')).toHaveLength(0);
-		expect(tab.el.querySelectorAll('.trigger.large')).toHaveLength(10);
+		expect(tab.el.querySelectorAll('.trigger.large')).toHaveLength(11);
+		expect(
+			Array.from(items('insert.links.zoom'), (item) => item.getAttribute('data-insert-item')),
+		).toEqual(['summaryZoom', 'sectionZoom', 'slideZoom']);
 	});
 
 	it('opens the hyperlink editor and needs a selection to be usable', () => {

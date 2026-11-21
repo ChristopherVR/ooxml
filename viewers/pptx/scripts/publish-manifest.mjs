@@ -78,13 +78,15 @@ export function resolveWorkspaceRange(range, version) {
  */
 export function readWorkspacePackages(packagesDir = join(REPO_ROOT, 'packages')) {
 	const packages = new Map();
-	for (const entry of readdirSync(packagesDir, { withFileTypes: true })) {
-		if (!entry.isDirectory()) {
-			continue;
-		}
+	const directories = [packagesDir, resolve(REPO_ROOT, '../../src')].flatMap((dir) =>
+		readdirSync(dir, { withFileTypes: true })
+			.filter((entry) => entry.isDirectory())
+			.map((entry) => join(dir, entry.name)),
+	);
+	for (const directory of directories) {
 		let pkg;
 		try {
-			pkg = JSON.parse(readFileSync(join(packagesDir, entry.name, 'package.json'), 'utf8'));
+			pkg = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'));
 		} catch {
 			// Not a package directory (or unreadable); nothing to record.
 			continue;
