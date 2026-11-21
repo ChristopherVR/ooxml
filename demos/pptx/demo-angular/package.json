@@ -10,12 +10,12 @@
 		"typecheck": "tsc --noEmit -p tsconfig.json"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.92",
+		"@ai-sdk/openai-compatible": "^3.0.93",
 		"@angular/common": "^22.2.6",
 		"@angular/core": "^22.2.6",
 		"@angular/platform-browser": "^22.2.6",
 		"@ngx-translate/core": "^18.1.0",
-		"ai": "^7.0.173",
+		"ai": "^7.0.176",
 		"emf-converter": "5.0.0",
 		"fast-xml-parser": "^5.12.1",
 		"html2canvas-pro": "^2.6.4",

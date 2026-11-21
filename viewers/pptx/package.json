@@ -74,10 +74,10 @@
 		"check:tree-shaking": "node --test scripts/check-tree-shaking.test.mjs && node scripts/check-tree-shaking.mjs"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.92",
-		"@ai-sdk/react": "^4.0.177",
-		"@ai-sdk/svelte": "^5.0.173",
-		"@ai-sdk/vue": "^4.0.173",
+		"@ai-sdk/openai-compatible": "^3.0.93",
+		"@ai-sdk/react": "^4.0.180",
+		"@ai-sdk/svelte": "^5.0.176",
+		"@ai-sdk/vue": "^4.0.176",
 		"@angular/common": "^22.2.6",
 		"@angular/compiler": "^22.2.6",
 		"@angular/compiler-cli": "^22.2.6",
@@ -92,7 +92,7 @@
 		"react-dom": "^19.3.1",
 		"react-i18next": "^18.0.2",
 		"svelte": "^5.57.3",
-		"vue-i18n": "^11.4.21",
+		"vue-i18n": "^11.4.22",
 		"vue-tsc": "^3.3.14",
 		"zod": "^4.6.7"
 	},
@@ -101,7 +101,7 @@
 		"@types/three": "^0.187.0",
 		"@typescript/typescript6": "^6.0.2",
 		"@vitest/coverage-v8": "^5.1.0",
-		"ai": "^7.0.173",
+		"ai": "^7.0.176",
 		"husky": "^9.1.7",
 		"jszip": "^3.10.2",
 		"lib0": "^0.2.120",
