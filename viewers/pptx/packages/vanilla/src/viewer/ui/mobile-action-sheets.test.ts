@@ -95,6 +95,8 @@ describe('mobile action sheets bottom bar adapter', () => {
 			'insert.symbols.symbol',
 			'insert.text.wordArt',
 			'insert.illustrations.icons',
+			'insert.illustrations.threeDModels',
+			'insert.text.object',
 			'insert.media.media',
 			'insert.media.screenRecording',
 			'insert.slides.newSlide',
