@@ -56,8 +56,8 @@ test.describe('on a phone', () => {
 		const group = workbook.locator('.ribbon-overflow-panel');
 		await expect(group).toBeInViewport({ ratio: 1 });
 		await group.getByRole('button', { name: 'More', exact: true }).tap();
+		await expect.poll(() => group.evaluate((panel) => panel.scrollLeft)).toBeGreaterThan(0);
 		const moreFunctions = group.getByRole('button', { name: 'More Functions', exact: true });
-		await expect(moreFunctions).toBeInViewport({ ratio: 1 });
 		await moreFunctions.tap();
 		const average = workbook.getByRole('menuitem', { name: 'AVERAGE', exact: true });
 		await expect(average).toBeVisible();

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { savedDocument } from './saved-document';
-import { dialogByHeading, newDocument } from './helpers';
+import { dialogByHeading, newDocument, reveal } from './helpers';
 
 test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draws it on the page', async ({
 	page,
@@ -11,9 +11,9 @@ test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draw
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror').click();
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor
-		.getByRole('combobox', { name: 'Equation', exact: true })
-		.selectOption({ label: 'Quadratic Formula' });
+	const picker = editor.getByRole('combobox', { name: 'Equation', exact: true });
+	await reveal(editor, picker);
+	await picker.selectOption({ label: 'Quadratic Formula' });
 	const equation = editor.locator('.ProseMirror [data-docx-equation]');
 	await expect(equation).toHaveCount(1);
 	await expect(equation.locator('msqrt')).toHaveCount(1);

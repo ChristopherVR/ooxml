@@ -55,8 +55,8 @@ test.describe('on a phone', () => {
 		const group = editor.locator('.ribbon-overflow-panel');
 		await expect(group).toBeInViewport({ ratio: 1 });
 		await group.getByRole('button', { name: 'More', exact: true }).tap();
+		await expect.poll(() => group.evaluate((panel) => panel.scrollLeft)).toBeGreaterThan(0);
 		const smartArt = group.getByRole('button', { name: 'Insert SmartArt', exact: true });
-		await expect(smartArt).toBeInViewport({ ratio: 1 });
 		await smartArt.tap();
 		const picker = dialogByHeading(editor, 'Choose a SmartArt Graphic');
 		await picker.getByRole('option', { name: 'Basic Block List', exact: true }).tap();

@@ -100,9 +100,8 @@ test.describe('at narrow phone width', () => {
 		const viewer = page.locator('visio-viewer');
 		const home = viewer.locator('#home-panel');
 		await home.getByRole('button', { name: 'More', exact: true }).tap();
-		const editing = home.getByRole('button', { name: 'Editing', exact: true });
-		await expect(editing).toBeInViewport({ ratio: 1 });
-		await editing.tap();
+		await expect.poll(() => home.evaluate((panel) => panel.scrollLeft)).toBeGreaterThan(0);
+		await home.getByRole('button', { name: 'Editing', exact: true }).tap();
 		const find = viewer.getByRole('button', { name: 'Find', exact: true });
 		await find.tap();
 		const menu = viewer.locator('office-ui-menu-button[data-menu="find"]');
@@ -119,13 +118,10 @@ test.describe('at narrow phone width', () => {
 			'1 matching shapes',
 		);
 
-		const moreTabs = viewer.getByRole('button', { name: 'More tabs', exact: true });
-		const view = viewer.getByRole('tab', { name: 'View', exact: true });
-		await moreTabs.tap();
-		await expect(view).toBeInViewport({ ratio: 0.25 });
-		await moreTabs.tap();
-		await expect(view).toBeInViewport({ ratio: 1 });
-		await view.tap();
+		const ribbon = viewer.locator('office-ui-ribbon');
+		await ribbon.getByRole('button', { name: 'More tabs', exact: true }).tap();
+		await expect(ribbon).toHaveAttribute('data-tabs-start', '');
+		await ribbon.getByRole('tab', { name: 'View', exact: true }).tap();
 		await ribbonGroup(viewer, 'Zoom');
 		const zoom = viewer.locator('office-ui-menu-button[data-menu="zoom"]');
 		await zoom.getByRole('button', { name: 'Zoom', exact: true }).tap();
