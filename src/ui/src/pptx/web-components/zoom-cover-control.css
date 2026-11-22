@@ -29,7 +29,6 @@ button:disabled {
 	width: 100%;
 }
 
-:host([hidden]),
-pptx-ui-select[hidden] {
+:host([hidden]) {
 	display: none;
 }

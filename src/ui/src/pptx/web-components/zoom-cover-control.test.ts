@@ -42,11 +42,11 @@ it('resets the chosen Summary Zoom cover without editing another tile', () => {
 	);
 	document.body.append(cover);
 
-	const reset = Array.from(cover.querySelectorAll('button')).find(
+	const reset = Array.from(cover.shadowRoot!.querySelectorAll('button')).find(
 		(button) => button.textContent === 'pptx.graphic.zoomResetCover',
 	);
 	expect(reset?.disabled).toBe(true);
-	const tiles = cover.querySelector('pptx-ui-select');
+	const tiles = cover.shadowRoot!.querySelector('pptx-ui-select');
 	expect(tiles?.options.map((option) => option.textContent)).toEqual(['Introduction', 'Details']);
 	tiles!.value = second.sectionId;
 	tiles!.dispatchEvent(new Event('change'));

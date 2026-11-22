@@ -95,8 +95,11 @@ test('the Format pane edits each Summary Zoom tile independently', async ({ page
 	const size = formatSection(page, 'sizePosition');
 	await expect(size).toBeVisible();
 	if ((await size.getAttribute('open')) === null) await size.locator('summary').click();
-	await expect(size.getByText('Introduction', { exact: true })).toBeVisible();
-	await expect(size.getByText('Details', { exact: true })).toBeVisible();
+	const tiles = size.getByRole('combobox', { name: 'Summary Zoom', exact: true });
+	await tiles.click();
+	await expect(size.getByRole('option', { name: 'Introduction', exact: true })).toBeVisible();
+	await expect(size.getByRole('option', { name: 'Details', exact: true })).toBeVisible();
+	await tiles.press('Escape');
 	const duration = size.getByRole('spinbutton', { name: 'Duration (ms)', exact: true }).nth(1);
 	await duration.fill('750');
 	await duration.press('Tab');
