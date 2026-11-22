@@ -289,6 +289,7 @@ export const frCommands: Readonly<Record<string, string>> = {
 	'Shape Format': 'Format de la forme',
 	'WordArt Styles': 'Styles WordArt',
 	'Text Fill': 'Remplissage du texte',
+	'No Outline': 'Sans contour',
 	'Text Outline': 'Contour du texte',
 	'Text Effects': 'Effets de texte',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':

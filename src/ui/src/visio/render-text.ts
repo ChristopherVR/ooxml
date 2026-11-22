@@ -52,6 +52,17 @@ export function renderText(
 	node.setAttribute('font-family', visioFontStack(text.fontFamily));
 	node.setAttribute('font-size', String(text.fontSize));
 	node.setAttribute('fill', safeColor(text.color));
+	if (text.outline) {
+		node.setAttribute('stroke', safeColor(text.outline));
+		node.setAttribute('stroke-width', String(1 / 72));
+		node.setAttribute('stroke-linejoin', 'round');
+		node.setAttribute('paint-order', 'stroke fill');
+	}
+	const effects = [
+		text.shadow ? 'drop-shadow(1px 1px 1px #0008)' : '',
+		text.glow ? 'drop-shadow(0 0 2px #ffc000)' : '',
+	].filter(Boolean);
+	if (effects.length) node.style.filter = effects.join(' ');
 	let layout: ReturnType<typeof layoutParagraphs>;
 	try {
 		layout = layoutParagraphs(text, undefined, budget);

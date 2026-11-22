@@ -183,6 +183,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': 'Schalten Sie die Bearbeitung von Vorlage/Master-Element um',
 	'pptx.view.toggleSpellCheck': 'Rechtschreibprüfung umschalten',
 	'pptx.view.vGuide': 'Vertikale Hilfslinie',
+	'pptx.view.zoomPercent': 'Zoomstufe in Prozent',
 	'pptx.view.zoomToFit': 'Auf Größe zoomen',
 	'pptx.view.zoomToFitTooltip': 'Zoomen Sie, um die Folie in das Fenster einzupassen',
 	'pptx.canvas.dragGuideTooltip': 'Hilfslinie ziehen. Zum Entfernen doppelklicken.',

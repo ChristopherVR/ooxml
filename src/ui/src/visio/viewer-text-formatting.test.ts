@@ -310,3 +310,33 @@ it('rotates the text block a quarter turn at a time, as Rotate Text in Visio', a
 	ui.dispose();
 	ui.controller.destroy();
 });
+
+it('writes Visio label outlines, shadows and glow without modifying text runs', async () => {
+	const ui = await setup(true, true);
+	ui.selection();
+	ui.pickColor('text-outline', '#ff0000');
+	await ui.done();
+	ui.commands.run({ type: 'text-effect', effect: 'textShadow', enabled: true });
+	await ui.done();
+	ui.commands.run({ type: 'text-effect', effect: 'textGlow', enabled: true });
+	await ui.done();
+	const reopened = await parseVsdx(ui.controller.exportVsdx().bytes);
+	const text = reopened.pages[0]!.shapes[0]!.text;
+	expect(text).toMatchObject({
+		plainText: 'Plain bold',
+		outline: '#ff0000',
+		shadow: true,
+		glow: true,
+	});
+	expect(text.runs.map((run) => run.bold)).toEqual([false, true]);
+	const svg = renderText(text, new Set()).querySelector('text')!;
+	expect(svg.getAttribute('stroke')).toBe('#ff0000');
+	expect(svg.style.filter).toContain('drop-shadow');
+	ui.pickColor('text-outline', 'none');
+	await ui.done();
+	expect(ui.shape().text.outline).toBeUndefined();
+	await ui.controller.undo();
+	expect(ui.shape().text.outline).toBe('#ff0000');
+	ui.dispose();
+	ui.controller.destroy();
+});

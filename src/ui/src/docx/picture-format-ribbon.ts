@@ -7,7 +7,15 @@ import { pictureWrapOf, selectedPicturePos } from './picture-format-commands';
 import { WRAPS } from './shape-format-ribbon';
 
 export function buildPictureFormatPanel(panel: HTMLElement): void {
+	const graphicsFill = tool(
+		'Graphics Fill',
+		'formatPicture',
+		{ type: 'picture', key: 'graphicsFill' },
+		{ large: true },
+	);
+	graphicsFill.dataset.graphicsFill = '';
 	panel.append(
+		group('Graphics Styles', graphicsFill),
 		group(
 			'Arrange',
 			menuSelect(
@@ -52,4 +60,9 @@ export function syncPictureFormat(
 		'[data-localearialabel="Wrap text"], [aria-label="Wrap text"]',
 	);
 	if (node && wrap) wrap.value = pictureWrapOf(node);
+	const graphics = panel.querySelector<HTMLButtonElement>('[data-graphics-fill]');
+	if (graphics) {
+		graphics.hidden = !node?.attrs.svgPartName;
+		graphics.disabled = !editable || !node?.attrs.svgPartName;
+	}
 }

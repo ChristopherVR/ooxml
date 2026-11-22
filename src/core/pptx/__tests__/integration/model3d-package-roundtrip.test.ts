@@ -37,11 +37,11 @@ describe('3D model package integration', () => {
 		const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string');
 		const types = await zip.file('[Content_Types].xml')!.async('string');
 
-		expect(slideXml).toContain('Requires="p16"');
-		expect(slideXml).toContain('<p16:model3D>');
-		expect(slideXml).toContain('<p16:model3Drel r:id="');
-		expect(slideXml).toContain('<p16:spPr>');
-		expect(slideXml).toContain('<p16:posterImage r:embed="');
+		expect(slideXml).toContain('Requires="am3d"');
+		expect(slideXml).toContain('<p:graphicFrame>');
+		expect(slideXml).toContain('<am3d:model3d r:embed="');
+		expect(slideXml).toContain('<am3d:spPr>');
+		expect(slideXml).toContain('<am3d:blip r:embed="');
 		expect(slideXml).toContain('<mc:Fallback><p:pic>');
 		expect(rels).toContain(
 			'Type="http://schemas.microsoft.com/office/2017/06/relationships/model3d"',
@@ -84,8 +84,8 @@ describe('3D model package integration', () => {
 		authoredZip.file(
 			slidePath,
 			xml.replace(
-				'</p16:model3D>',
-				'<p:extLst><p:ext uri="urn:model3d:preserve"><p:vendorData val="keep"/></p:ext></p:extLst></p16:model3D>',
+				'</am3d:model3d>',
+				'<p:extLst><p:ext uri="urn:model3d:preserve"><p:vendorData val="keep"/></p:ext></p:extLst></am3d:model3d>',
 			),
 		);
 		const types = await authoredZip.file('[Content_Types].xml')!.async('string');

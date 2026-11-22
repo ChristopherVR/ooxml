@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type { PptxUiRibbonViewElement, RibbonViewRequestEvent } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 
@@ -35,6 +36,7 @@ export interface ViewSectionProps {
 	onOpenReadingView?: () => void;
 	/** Enter PowerPoint's Outline view: the deck as editable indented text. */
 	onOpenOutlineView?: () => void;
+	viewZoom?: RibbonViewZoom | undefined;
 	onZoomToFit?: () => void;
 }
 
@@ -48,6 +50,7 @@ export function ViewSection(p: ViewSectionProps): React.ReactElement {
 		}
 		host.state = {
 			editable: p.canEdit,
+			zoom: p.viewZoom,
 			showRulers: p.showRulers,
 			showGrid: p.showGrid,
 			showGuides: p.showGuides,

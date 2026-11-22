@@ -62,7 +62,9 @@ export type RibbonInsertWorkflow =
 	| 'screenClipping'
 	| 'screenRecording'
 	| 'photoAlbum'
-	| 'reuseSlides';
+	| 'reuseSlides'
+	| 'model3d'
+	| 'object';
 
 export type RibbonInsertField = 'slidenum' | 'datetime' | 'header' | 'footer';
 
@@ -294,6 +296,8 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertA
 				case 'reuseSlides':
 					return typeof target.importSlides === 'function';
 				case 'photoAlbum':
+				case 'model3d':
+				case 'object':
 					return true;
 				case 'screenshot':
 				case 'screenClipping':

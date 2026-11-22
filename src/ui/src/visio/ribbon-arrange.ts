@@ -6,7 +6,7 @@ import { group, menu, stack, type RibbonCommand } from './ribbon-parts';
 const ARRANGE = 'Select shapes to align, distribute, rotate or flip them.';
 
 /** Home > Fill or Line: Office's colour picker over the menu's own commands. */
-function paintMenu(doc: Document, target: Exclude<ColorTarget, 'font'>, label: string) {
+function paintMenu(doc: Document, target: Extract<ColorTarget, 'fill' | 'line'>, label: string) {
 	const el = menu(doc, {
 		id: target,
 		label,

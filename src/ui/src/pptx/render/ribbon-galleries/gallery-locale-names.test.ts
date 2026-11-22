@@ -59,6 +59,8 @@ const table = {
 };
 
 function elementFor(id: RibbonGalleryId): PptxElement | null {
+	if (id === 'graphicsFill')
+		return { ...picture, type: 'picture', svgData: 'data:image/svg+xml;base64,' };
 	if (id.startsWith('picture')) return picture as unknown as PptxElement;
 	if (id.startsWith('chart')) return chart as unknown as PptxElement;
 	if (id.startsWith('smartArt')) return smartArt as unknown as PptxElement;

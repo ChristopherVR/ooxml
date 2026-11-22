@@ -54,6 +54,15 @@ export function formattingRows(sheet: Element, sectionName: string): Map<string,
 	if (section.hasAttribute('Del') || (attribute(section, 'IX') ?? '0') !== '0')
 		fail('UNSUPPORTED_FORMAT_EDIT', 'Formatting requires one live section with index zero.');
 	for (const row of children(section, 'Row')) {
+		if (sectionName === 'User') {
+			const name = attribute(row, 'N');
+			const key = name?.toLowerCase();
+			if (!key || !/^ooxmltext(outline|shadow|glow)$/.test(key)) continue;
+			if (row.hasAttribute('Del') || result.has(key))
+				fail('UNSUPPORTED_FORMAT_EDIT', 'Text decoration requires unique live User rows.');
+			result.set(key, row);
+			continue;
+		}
 		const index = formattingIndex(attribute(row, 'IX') ?? '0');
 		if (
 			row.hasAttribute('Del') ||

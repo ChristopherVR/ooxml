@@ -5,6 +5,13 @@ import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRunti
 
 const OLE_OBJECT_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/oleObject';
+const PACKAGE_RELATIONSHIP_TYPE =
+	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/package';
+const PACKAGE_CONTENT_TYPES = new Set([
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+]);
 const DEFAULT_OLE_CONTENT_TYPE = 'application/vnd.openxmlformats-officedocument.oleObject';
 
 function safeExtension(el: OlePptxElement, parsedExtension: string): string {
@@ -55,16 +62,25 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const partPath = this.nextOleEmbeddingPath(extension);
 		this.zip.file(partPath, parsed.bytes);
 
+		const contentType =
+			el.oleEmbeddedMimeType ?? dataUrlMimeType(el.oleEmbeddedData) ?? DEFAULT_OLE_CONTENT_TYPE;
 		const relationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
 		ctx.slideRelationships.push({
 			'@_Id': relationshipId,
-			'@_Type': OLE_OBJECT_RELATIONSHIP_TYPE,
+			'@_Type': PACKAGE_CONTENT_TYPES.has(contentType)
+				? PACKAGE_RELATIONSHIP_TYPE
+				: OLE_OBJECT_RELATIONSHIP_TYPE,
 			'@_Target': `../embeddings/${partPath.slice(partPath.lastIndexOf('/') + 1)}`,
 		});
-		const contentType =
-			el.oleEmbeddedMimeType ?? dataUrlMimeType(el.oleEmbeddedData) ?? DEFAULT_OLE_CONTENT_TYPE;
 		(this.pendingOleContentTypes ??= new Map()).set(partPath, contentType);
-		return this.createOleGraphicFrameXml(el, relationshipId);
+		const frame = this.createOleGraphicFrameXml(el, relationshipId);
+		const graphic = frame['a:graphic'] as XmlObject;
+		const graphicData = graphic['a:graphicData'] as XmlObject;
+		const preview = el.previewImageData ? parseDataUrlToBytes(el.previewImageData) : undefined;
+		if (preview?.extension === 'png') {
+			this.writeOlePreviewImageSync(graphicData['p:oleObj'] as XmlObject, ctx, preview.bytes);
+		}
+		return frame;
 	}
 
 	/** Register every authored OLE payload in the OPC content-type manifest. */

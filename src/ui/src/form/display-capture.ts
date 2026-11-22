@@ -6,11 +6,16 @@ export function canCaptureDisplay(): boolean {
 export async function openDisplayCapture(
 	audio: boolean,
 	signal?: AbortSignal,
+	pointer?: boolean,
 ): Promise<MediaStream | undefined> {
 	if (signal?.aborted) return undefined;
 	try {
 		const stream = await navigator.mediaDevices.getDisplayMedia({
-			video: { width: { ideal: 1920 }, frameRate: { ideal: 30 } },
+			video: {
+				width: { ideal: 1920 },
+				frameRate: { ideal: 30 },
+				...(pointer === undefined ? {} : { cursor: pointer ? 'always' : 'never' }),
+			} as MediaTrackConstraints,
 			audio,
 		});
 		if (!signal?.aborted) return stream;
@@ -31,6 +36,16 @@ export function stopDisplayCapture(stream: MediaStream): void {
 export async function captureDisplayFrame(doc: Document): Promise<HTMLCanvasElement | undefined> {
 	const stream = await openDisplayCapture(false);
 	if (!stream) return undefined;
+	try {
+		const preview = await previewDisplay(doc, stream);
+		preview.release();
+		return preview.image;
+	} finally {
+		stopDisplayCapture(stream);
+	}
+}
+
+export async function previewDisplay(doc: Document, stream: MediaStream) {
 	const video = doc.createElement('video');
 	video.muted = true;
 	video.playsInline = true;
@@ -46,10 +61,16 @@ export async function captureDisplayFrame(doc: Document): Promise<HTMLCanvasElem
 		const context = canvas.getContext('2d');
 		if (!context) throw new Error('Could not render screen frame');
 		context.drawImage(video, 0, 0, canvas.width, canvas.height);
-		return canvas;
-	} finally {
-		stopDisplayCapture(stream);
+		return {
+			image: canvas,
+			video,
+			release: () => {
+				video.srcObject = null;
+			},
+		};
+	} catch (error) {
 		video.srcObject = null;
+		throw error;
 	}
 }
 
@@ -75,7 +96,16 @@ export interface CapturedDisplayRecording {
 	cancel(): void;
 }
 
-export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecording {
+export function startDisplayRecording(
+	stream: MediaStream,
+	source: MediaStream = stream,
+	release?: () => void,
+): CapturedDisplayRecording {
+	const cleanup = () => {
+		release?.();
+		stopDisplayCapture(stream);
+		if (source !== stream) stopDisplayCapture(source);
+	};
 	const mimeType = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'].find((type) =>
 		MediaRecorder.isTypeSupported(type),
 	);
@@ -87,7 +117,7 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 		});
 		recorder.start(250);
 	} catch (error) {
-		stopDisplayCapture(stream);
+		cleanup();
 		throw error;
 	}
 	let discard = false;
@@ -96,11 +126,11 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 	const stop = () => {
 		if (recorder.state !== 'inactive') recorder.stop();
 	};
-	const tracks = stream.getVideoTracks();
+	const tracks = source.getVideoTracks();
 	const result = new Promise<Blob | undefined>((resolve, reject) => {
-		const cleanup = () => {
+		const finish = () => {
 			for (const track of tracks) track.removeEventListener('ended', stop);
-			stopDisplayCapture(stream);
+			cleanup();
 		};
 		for (const track of tracks) track.addEventListener('ended', stop, { once: true });
 		recorder.addEventListener('dataavailable', ({ data }) => {
@@ -108,7 +138,7 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 			bytes += data.size;
 			if (bytes > 64 * 1024 * 1024) {
 				discard = true;
-				cleanup();
+				finish();
 				stop();
 				reject(new Error('The screen recording is too large'));
 				return;
@@ -118,7 +148,7 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 		recorder.addEventListener(
 			'stop',
 			() => {
-				cleanup();
+				finish();
 				resolve(
 					discard || !bytes
 						? undefined
@@ -130,7 +160,7 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 		recorder.addEventListener(
 			'error',
 			() => {
-				cleanup();
+				finish();
 				reject(new Error('Could not record this screen'));
 			},
 			{ once: true },
@@ -142,7 +172,7 @@ export function startDisplayRecording(stream: MediaStream): CapturedDisplayRecor
 		cancel() {
 			discard = true;
 			stop();
-			stopDisplayCapture(stream);
+			cleanup();
 		},
 	};
 }

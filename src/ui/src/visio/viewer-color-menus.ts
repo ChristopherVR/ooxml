@@ -24,6 +24,7 @@ export interface SelectionColors {
 	fill: string | undefined;
 	line: string | undefined;
 	font: string | undefined;
+	'text-outline': string | undefined;
 }
 
 /** The selected shapes Fill and Line can format, or none when any of them cannot be. */
@@ -51,6 +52,9 @@ export function selectionColors(state: ViewerState): SelectionColors {
 			shapes.length && visioShapeFormattingState(shapes).linePattern === 0
 				? 'none'
 				: commonColor(shapes.map((shape) => shape.style.lineColor)),
+		'text-outline': text.every((shape) => !!shape)
+			? commonColor(text.map((shape) => shape?.text.outline ?? 'none'))
+			: undefined,
 		font: text.every((shape) => !!shape)
 			? visioTextFormattingState(text as VisioShape[]).fontColor?.toLowerCase()
 			: undefined,
@@ -66,7 +70,12 @@ export class ViewerColorMenus {
 	readonly moreColors: ViewerMoreColors;
 	#recent: string[] = [];
 	#theme = '';
-	#colors: SelectionColors = { fill: undefined, line: undefined, font: undefined };
+	#colors: SelectionColors = {
+		fill: undefined,
+		line: undefined,
+		font: undefined,
+		'text-outline': undefined,
+	};
 	constructor(
 		private readonly root: ShadowRoot,
 		private readonly controller: ViewerController,

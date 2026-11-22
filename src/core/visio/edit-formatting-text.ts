@@ -3,7 +3,7 @@ import { attribute } from './sheet';
 import { fail } from './package-common';
 import { visioFormulaCachedValue } from './formula';
 import { formattingFont } from './edit-formatting-font';
-import { assertFormattingText } from './edit-formatting-rows';
+import { assertFormattingText, formattingRows } from './edit-formatting-rows';
 import {
 	effectiveShapeCell,
 	formattingRowContext,
@@ -129,6 +129,23 @@ export function textFormattingWrites(
 	if (edit.tabStops !== undefined) tabStopWrites(edit.tabStops, rows.get('Tabs')!, add);
 	if (edit.verticalAlign !== undefined)
 		add('VerticalAlign', ['top', 'middle', 'bottom'].indexOf(edit.verticalAlign));
+	const outline = edit.textOutline;
+	if (outline !== undefined || edit.textShadow !== undefined || edit.textGlow !== undefined) {
+		assertFormattingText(shape, characters, paragraphs);
+		rows.set('User', { source: new Map(), local: formattingRows(shape, 'User') });
+		if (outline !== undefined) {
+			add(
+				'User.ooxmltextoutline.Value',
+				outline === 'none' ? 0 : outline,
+				undefined,
+				outline === 'none'
+					? undefined
+					: `RGB(${[1, 3, 5].map((i) => parseInt(outline.slice(i, i + 2), 16)).join(',')})`,
+			);
+		}
+		if (edit.textShadow !== undefined) add('User.ooxmltextshadow.Value', Number(edit.textShadow));
+		if (edit.textGlow !== undefined) add('User.ooxmltextglow.Value', Number(edit.textGlow));
+	}
 	textBlockWrites(shape, edit, add);
 	return { writes, rows };
 }

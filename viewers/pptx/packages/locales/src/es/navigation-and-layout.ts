@@ -181,6 +181,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': 'Alternar edición de plantilla/elemento maestro',
 	'pptx.view.toggleSpellCheck': 'Alternar revisión ortográfica',
 	'pptx.view.vGuide': 'Guía V',
+	'pptx.view.zoomPercent': 'Porcentaje de zoom',
 	'pptx.view.zoomToFit': 'Ampliar para ajustar',
 	'pptx.view.zoomToFitTooltip': 'Zoom para ajustar la diapositiva en la ventana',
 	'pptx.canvas.dragGuideTooltip': 'Guía de arrastre. Haga doble clic para eliminar.',

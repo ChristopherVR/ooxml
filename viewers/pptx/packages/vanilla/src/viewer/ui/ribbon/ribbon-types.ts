@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	CloudFileProvider,
 	CloudOpenedFile,
@@ -40,6 +41,7 @@ export type RibbonTabId =
 
 /** Nav-row handlers: always-visible (both edit and read-only chrome). */
 export interface RibbonNavHandlers {
+	viewZoom?: RibbonViewZoom | undefined;
 	prev(): void;
 	next(): void;
 	zoomIn(): void;

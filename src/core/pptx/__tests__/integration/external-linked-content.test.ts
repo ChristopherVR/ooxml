@@ -41,7 +41,7 @@ async function linkedContentDeck(): Promise<ArrayBuffer> {
 	const slidePath = 'ppt/slides/slide1.xml';
 	const relsPath = 'ppt/slides/_rels/slide1.xml.rels';
 	const slideXml = await zip.file(slidePath)!.async('string');
-	expect(slideXml).toContain('<p16:posterImage r:embed="');
+	expect(slideXml).toContain('<am3d:blip r:embed="');
 	zip.file(
 		slidePath,
 		slideXml.replace('</p:spTree>', `${LINKED_FILL_SHAPE}${LINKED_BULLET_SHAPE}</p:spTree>`),
@@ -145,6 +145,9 @@ describe('a viewer model with its links', () => {
 		expect(slideXml).toContain('r:link="rIdLinkedFill"');
 		expect(rels).toContain(`Target="${LINKED_ORIGIN}/fill.png" TargetMode="External"`);
 		expect(rels).toContain(`Target="${LINKED_ORIGIN}/bullet.png" TargetMode="External"`);
+		expect(rels).toMatch(
+			/Target="https:\/\/linked-content\.test\/poster-[^"]+" TargetMode="External"/u,
+		);
 		expect(Object.keys(zip.files).some((name) => name.includes('fill.png'))).toBe(false);
 
 		const buffer = saved.buffer.slice(saved.byteOffset, saved.byteOffset + saved.byteLength);

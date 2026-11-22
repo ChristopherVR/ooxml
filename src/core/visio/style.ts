@@ -398,8 +398,18 @@ export function shapeText(
 	const lastRun = runs.at(-1);
 	if (terminalDirectText && lastRun) lastRun.text = decodeVisioPlainText(lastRun.text);
 	const plainText = runs.map((run) => run.text).join('');
+	const decoration = new Map(
+		sectionRows(sheet, 'User').map((row) => [
+			row.name?.toLowerCase(),
+			row.cells.get('Value')?.value,
+		]),
+	);
+	const outline = decoration.get('ooxmltextoutline');
 	const result: VisioText = {
 		plainText,
+		...(outline && /^#[0-9a-f]{6}$/i.test(outline) ? { outline } : {}),
+		...(decoration.get('ooxmltextshadow') === '1' ? { shadow: true } : {}),
+		...(decoration.get('ooxmltextglow') === '1' ? { glow: true } : {}),
 		...textBackground(cells, resources, report),
 		paragraphs,
 		runs,

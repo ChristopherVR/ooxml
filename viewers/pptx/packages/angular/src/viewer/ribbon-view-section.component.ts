@@ -6,7 +6,7 @@
  *
  * Guides stays bound to `showGuides` (guide-overlay visibility) and Snap to
  * Shape to its own `snapToShape` signal, the semantics all five bindings share.
- * Handout Master, Notes Master, Zoom and Macros render disabled in the shared view.
+ * Handout Master, Notes Master and Macros render disabled in the shared view.
  */
 import {
 	ChangeDetectionStrategy,
@@ -20,6 +20,7 @@ import { TranslateService } from '@ngx-translate/core';
 import type { RibbonViewRequestEvent } from 'ooxml-ui/pptx';
 
 import { EditorStateService } from './editor-state.service';
+import { ViewerZoomService } from './viewer-zoom.service';
 
 @Component({
 	selector: 'pptx-ribbon-view-section',
@@ -31,6 +32,7 @@ import { EditorStateService } from './editor-state.service';
 })
 export class RibbonViewSectionComponent {
 	protected readonly editor = inject(EditorStateService);
+	private readonly zoom = inject(ViewerZoomService, { optional: true });
 	private readonly translation = inject(TranslateService, { optional: true });
 
 	readonly canEdit = input<boolean>(false);
@@ -64,7 +66,15 @@ export class RibbonViewSectionComponent {
 	readonly toggleEyedropper = output<void>();
 
 	protected view() {
+		const zoom = this.zoom;
 		return {
+			zoom: zoom
+				? {
+						getPercent: () => zoom.zoomPercent(),
+						setPercent: (percent: number) => zoom.setZoom(percent / 100),
+						fit: () => zoom.zoomReset(),
+					}
+				: undefined,
 			editable: this.canEdit(),
 			showRulers: this.showRulers(),
 			showGrid: this.showGrid(),

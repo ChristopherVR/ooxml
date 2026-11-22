@@ -46,7 +46,7 @@ describe('Shape Format contextual tab', () => {
 		ribbon.remove();
 	});
 
-	it('offers Text Fill and explains the unavailable text effects', () => {
+	it('offers Text Fill, Text Outline and Text Effects', () => {
 		const ribbon = createRibbon(document);
 		const fill = ribbon.querySelector<HTMLElement>(
 			'[data-ribbon-tab="shape-format"] [data-menu="font-color"]',
@@ -57,8 +57,8 @@ describe('Shape Format contextual tab', () => {
 			const el = ribbon.querySelector<HTMLElement>(
 				`[data-ribbon-tab="shape-format"] [data-menu="${id}"]`,
 			)!;
-			expect(el.hasAttribute('disabled')).toBe(true);
-			expect(el.title).toContain('not available yet');
+			expect(el.hasAttribute('disabled')).toBe(false);
+			expect(el.title).not.toContain('not available yet');
 		}
 	});
 });

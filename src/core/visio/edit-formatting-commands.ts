@@ -34,6 +34,10 @@ export interface VisioTextFormatEdit extends Target, VisioTextFormatExtras {
 	fontColor?: string;
 	/** The Theme Colors swatch `fontColor` came from: saved as its theme formula. */
 	fontColorTheme?: VisioThemeColorRef;
+	/** Shape-wide glyph stroke. "none" removes it. */
+	textOutline?: string;
+	textShadow?: boolean;
+	textGlow?: boolean;
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;
@@ -127,6 +131,12 @@ export function snapshotFormatting(edit: VisioFormatEdit): VisioFormatEdit {
 	if (edit.type === 'format-text' && result.type === 'format-text') {
 		if (edit.fontSize !== undefined) result.fontSize = points(edit.fontSize, 1, 1000);
 		if (edit.fontColor !== undefined) result.fontColor = color(edit.fontColor);
+		if (edit.textOutline !== undefined) result.textOutline = color(edit.textOutline, true);
+		for (const name of ['textShadow', 'textGlow'] as const) {
+			if (edit[name] === undefined) continue;
+			if (typeof edit[name] !== 'boolean') fail('INVALID_EDIT', 'Text effects require booleans.');
+			result[name] = edit[name];
+		}
 		if (edit.fontColorTheme !== undefined)
 			result.fontColorTheme = themed(edit.fontColorTheme, result.fontColor);
 		if (edit.indentLeft !== undefined) result.indentLeft = points(edit.indentLeft, 0, 7200);

@@ -225,7 +225,7 @@ async function formatTarget(
 					shape.insertBefore(section, children(shape, 'Text')[0] ?? null);
 				}
 				row = shape.ownerDocument!.createElementNS(shape.namespaceURI, 'Row');
-				row.setAttribute('IX', index!);
+				row.setAttribute(sectionName === 'User' ? 'N' : 'IX', index!);
 				section.appendChild(row);
 				localRows.set(index!, row);
 			}

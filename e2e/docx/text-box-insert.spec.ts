@@ -166,7 +166,17 @@ test.describe('phone Insert ribbon', () => {
 		await iconPicker.getByRole('button', { name: 'Check mark', exact: true }).tap();
 		await iconPicker.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(editor.locator('.ProseMirror img[alt="Light bulb"]')).toBeVisible();
-		await expect(editor.locator('.ProseMirror img[alt="Check mark"]')).toBeVisible();
+		const icon = editor.locator('.ProseMirror img[alt="Check mark"]');
+		await expect(icon).toBeVisible();
+		await icon.tap();
+		await editor.getByRole('tab', { name: 'Picture Format', exact: true }).tap();
+		const graphicsFill = editor.getByRole('button', { name: 'Graphics Fill', exact: true });
+		await reveal(editor, graphicsFill);
+		await graphicsFill.tap();
+		const fill = dialogByHeading(editor, 'Graphics Fill');
+		await fill.locator('input[type="color"]').fill('#2255aa');
+		await fill.getByRole('button', { name: 'OK', exact: true }).tap();
+		await expect(editor.locator('.ProseMirror feColorMatrix')).toHaveCount(1);
 	});
 });
 

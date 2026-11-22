@@ -86,6 +86,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return action.mode === 'all' ? controller.selectAll() : controller.clearSelection();
 		case 'text-toggle':
 		case 'font-color':
+		case 'text-outline':
+		case 'text-effect':
 		case 'text-bullets':
 		case 'text-rotate':
 		case 'text-indent':

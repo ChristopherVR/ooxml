@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	FREEFORM_TOOL_IDS,
@@ -35,6 +36,7 @@ const NO_CLOUD_FILES: BackstageCloudFiles = { providers: [], locale: undefined, 
  * class) so this module has no circular dependency on `PptxViewer`.
  */
 export interface ChromeCallbackDeps {
+	viewZoom?: RibbonViewZoom | undefined;
 	subtitleOptionsStore?(): ViewerOptionsStore | undefined;
 	prev(): void;
 	next(): void;
@@ -188,6 +190,7 @@ export function buildChromeCallbacks(
 			zoomIn: () => deps.zoomIn(),
 			zoomOut: () => deps.zoomOut(),
 			zoomToFit: () => deps.zoomToFit(),
+			viewZoom: deps.viewZoom,
 			togglePresentation: () => deps.togglePresentation(),
 			normalView: () => deps.returnToNormalView(),
 			toggleNotes: () => deps.toggleNotes(),

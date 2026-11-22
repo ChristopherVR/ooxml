@@ -713,7 +713,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (el.type === 'model3d') {
 			shape = this.createOrUpdateModel3DXml(el as Model3DPptxElement, shape, ctx);
 			if (shape) {
-				collectors.model3ds.push(shape);
+				if (shape['p:nvGraphicFramePr']) collectors.graphicFrames.push(shape);
+				else collectors.model3ds.push(shape);
 			} else {
 				this.compatibilityService.reportWarning({
 					code: 'SAVE_ELEMENT_SKIPPED',

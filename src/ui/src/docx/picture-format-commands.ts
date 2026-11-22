@@ -17,6 +17,7 @@ import {
 import type { CropInsets } from 'ooxml-core/geometry';
 import { wordYjsPluginKey } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
+import { patchPictureEffects, type PictureEffectPatch } from 'ooxml-core/drawingml';
 
 const parse = <T>(value: unknown): T | undefined => {
 	if (typeof value !== 'string') return undefined;
@@ -133,6 +134,19 @@ export function setPictureCropAt(
 	if (!isPictureNode(node)) return false;
 	const cropped = setPictureCrop(pictureOf(node), crop);
 	return applyPicture(view, pos, size ? { ...cropped, ...size } : cropped);
+}
+
+export function setGraphicsFillAt(
+	view: EditorView,
+	pos: number,
+	patch: PictureEffectPatch,
+): boolean {
+	const node = view.state.doc.nodeAt(pos);
+	if (!isPictureNode(node) || !node.attrs.svgPartName) return false;
+	const picture = pictureOf(node);
+	const fill = picture.pictureFill ?? { kind: 'picture' };
+	const effects = patchPictureEffects(fill.effects ?? [], patch);
+	return applyPicture(view, pos, { ...picture, pictureFill: { ...fill, effects } });
 }
 
 /** Selects the picture a pointer event landed on, as Word does before showing its menu. */

@@ -117,6 +117,7 @@ export function ToolbarLateTabs({
 					onOpenReadingView={p.onOpenReadingView}
 					onOpenOutlineView={p.onOpenOutlineView}
 					onZoomToFit={p.onZoomToFit}
+					viewZoom={p.viewZoom}
 				/>
 			)}
 

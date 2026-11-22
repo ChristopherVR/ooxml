@@ -205,7 +205,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Parse a `p16:model3D` element — a 3D model object embedded via
+	 * Parse a DrawingML 3D model or a legacy `p16:model3D` element — a 3D model object embedded via
 	 * mc:AlternateContent in PowerPoint 365+. Extracts transform, model
 	 * relationship, and poster/fallback image for display.
 	 */
@@ -213,10 +213,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		model3d: XmlObject,
 		id: string,
 		slidePath?: string,
+		frame?: XmlObject,
 	): Promise<PptxElement | null> {
 		try {
-			const spPr = (model3d['p16:spPr'] ?? model3d['p:spPr']) as XmlObject | undefined;
-			const xfrm = spPr?.['a:xfrm'] as XmlObject | undefined;
+			const spPr = (model3d['am3d:spPr'] ?? model3d['p16:spPr'] ?? model3d['p:spPr']) as
+				| XmlObject
+				| undefined;
+			const xfrm = (frame?.['p:xfrm'] ?? spPr?.['a:xfrm']) as XmlObject | undefined;
 			const off = xfrm?.['a:off'] as XmlObject | undefined;
 			const ext = xfrm?.['a:ext'] as XmlObject | undefined;
 
@@ -269,8 +272,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 				// Extract poster/preview image from p16:posterImage or blipFill
 				const posterNode = model3d['p16:posterImage'] as XmlObject | undefined;
+				const raster = model3d['am3d:raster'] as XmlObject | undefined;
+				const blip = raster?.['am3d:blip'] as XmlObject | undefined;
 				const posterRId = String(
-					posterNode?.['@_r:embed'] ?? posterNode?.['@_r:link'] ?? '',
+					blip?.['@_r:embed'] ?? posterNode?.['@_r:embed'] ?? posterNode?.['@_r:link'] ?? '',
 				).trim();
 				if (posterRId && relsMap) {
 					const posterTarget = relsMap.get(posterRId);
@@ -301,9 +306,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				}
 			}
 
+			const shapeProperties = frame?.['p:nvGraphicFramePr'] as XmlObject | undefined;
+			const props = shapeProperties?.['p:cNvPr'] as XmlObject | undefined;
 			return {
 				id,
 				type: 'model3d',
+				...(props?.['@_id'] !== undefined ? { shapeId: String(props['@_id']) } : {}),
+				...(props?.['@_name'] !== undefined ? { name: String(props['@_name']) } : {}),
+				...(props?.['@_descr'] !== undefined ? { altText: String(props['@_descr']) } : {}),
 				x,
 				y,
 				width,
@@ -325,7 +335,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				imagePath,
 				imageData,
 				scene: parseModel3DScene(model3d),
-				rawXml: model3d,
+				rawXml: frame ?? model3d,
 			} as Model3DPptxElement;
 		} catch (e) {
 			console.warn('Skipping malformed model3D element:', e);

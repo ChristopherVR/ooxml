@@ -31,6 +31,8 @@ export type CanvasTool =
 export type VisioFormattingAction =
 	| { type: 'text-toggle'; property: 'bold' | 'italic' | 'underline' | 'strikethrough' }
 	| { type: 'font-color'; value?: string; theme?: VisioThemeColorRef }
+	| { type: 'text-outline'; value?: string }
+	| { type: 'text-effect'; effect: 'textShadow' | 'textGlow'; enabled: boolean }
 	| { type: 'text-bullets' }
 	/** Home > Paragraph > Rotate Text: the text block turns 90 degrees counter-clockwise. */
 	| { type: 'text-rotate' }

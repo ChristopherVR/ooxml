@@ -325,6 +325,8 @@ function MobileSectionBody({
 			return (
 				<div className={wrap}>
 					<ViewSection
+						viewZoom={p.viewZoom}
+						onZoomToFit={p.onZoomToFit}
 						canEdit={p.canEdit}
 						editTemplateMode={p.editTemplateMode}
 						onSetEditTemplateMode={p.onSetEditTemplateMode}

@@ -3,6 +3,7 @@ import {
 	unwrapAlternateContent as unwrapAC,
 	isAlternateContentChoiceXmlSupported,
 } from '../../utils/alternate-content';
+import { readModel3DGraphic } from '../../utils/model3d-writing';
 import { readZoomFrame, readZoomFrameGeometry } from './zoom-graphic-frame';
 import { VML_SHAPE_TAGS, parseVmlElement } from '../../utils/vml-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePictureParsing';
@@ -375,6 +376,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			case 'p:pic':
 				return this.parsePicture(node, `${idPrefix}pic-${indexInType}`, slidePath);
 			case 'p:graphicFrame': {
+				const model = readModel3DGraphic(node);
+				if (model)
+					return this.parseModel3DElement(
+						model,
+						`${idPrefix}model3d-${indexInType}`,
+						slidePath,
+						node,
+					);
 				const zoom = readZoomFrame(node);
 				if (!zoom)
 					return this.parseGraphicFrame(node, `${idPrefix}frame-${indexInType}`, slidePath);

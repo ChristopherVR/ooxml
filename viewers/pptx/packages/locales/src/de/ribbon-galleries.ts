@@ -81,6 +81,9 @@ export const translations: Record<string, string> = {
 	'pptx.insert.pictures': 'Bilder',
 	'pptx.insert.screenshot': 'Screenshot',
 	'pptx.insert.photoAlbum': 'Fotoalbum',
+	'pptx.insert.selectArea': 'Bereich auswählen',
+	'pptx.gallery.graphicsFill': 'Grafikfüllung',
+	'pptx.insert.recordPointer': 'Zeiger aufzeichnen',
 	'pptx.insert.captureAudio': 'Freigegebenen Ton aufnehmen',
 	'pptx.insert.albumTitle': 'Albumtitel',
 	'pptx.insert.picturesPerSlide': 'Bilder pro Folie',
@@ -147,7 +150,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.cameo': 'Fügt der Folie einen Live-Kamerafeed hinzu.',
 	'pptx.insert.tip.shapes': 'Fügt vorgefertigte Formen wie Rechtecke, Pfeile und Sterne ein.',
 	'pptx.insert.tip.icons': 'Fügt Icons ein, um visuell mit Symbolen zu kommunizieren.',
-	'pptx.insert.tip.models3d': 'Fügt ein 3D-Modell aus einer Datei oder einer Onlinequelle ein.',
+	'pptx.insert.tip.models3d': 'Fügt ein 3D-Modell aus einer GLB-Datei ein.',
 	'pptx.insert.tip.smartArt':
 		'Fügt eine SmartArt-Grafik ein, um Informationen visuell darzustellen.',
 	'pptx.insert.tip.chart':

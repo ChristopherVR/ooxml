@@ -2,6 +2,7 @@
 import type { RibbonTab } from 'ooxml-core/xlsx/ui';
 import {
 	chartDesignTab,
+	graphicsFormatTab,
 	slicerTab,
 	smartArtDesignTab,
 	tableDesignTab,
@@ -24,6 +25,7 @@ export function commandTabs(): RibbonTab[] {
 		helpTab(),
 		tableDesignTab(),
 		chartDesignTab(),
+		graphicsFormatTab(),
 		smartArtDesignTab(),
 		slicerTab(),
 		timelineTab(),

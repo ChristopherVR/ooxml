@@ -3,6 +3,7 @@ import { canRequestView } from '../render';
 import type { RibbonViewIntent, RibbonViewState } from '../render';
 import { attachRibbonViewStyles } from './ribbon-view-styles';
 import { createRibbonViewView } from './ribbon-view-view';
+import { openViewZoom } from './ribbon-view-zoom';
 
 export type RibbonViewRequestEvent = CustomEvent<RibbonViewIntent>;
 export interface PptxUiRibbonViewElement extends HTMLElement {
@@ -29,15 +30,22 @@ export function definePptxRibbonView(registry: CustomElementRegistry): void {
 			snapToShape: false,
 			templateEditing: false,
 		};
-		private readonly view = createRibbonViewView(this.ownerDocument, (intent) => {
-			if (canRequestView(this.model, intent)) {
-				this.dispatchEvent(
-					new CustomEvent('view-request', { detail: intent, bubbles: true, composed: true }),
-				);
-			}
-			// The host stays the source of truth: restore controlled checkbox state.
-			queueMicrotask(() => this.view.sync(this.model));
-		});
+		private readonly view = createRibbonViewView(
+			this.ownerDocument,
+			(intent) => {
+				if (canRequestView(this.model, intent)) {
+					this.dispatchEvent(
+						new CustomEvent('view-request', { detail: intent, bubbles: true, composed: true }),
+					);
+				}
+				// The host stays the source of truth: restore controlled checkbox state.
+				queueMicrotask(() => this.view.sync(this.model));
+			},
+			() => {
+				const host = this.parentElement;
+				if (host && this.model.zoom) openViewZoom(host, this.model, this.model.zoom);
+			},
+		);
 		get state() {
 			return this.model;
 		}

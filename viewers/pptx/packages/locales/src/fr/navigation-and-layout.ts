@@ -183,6 +183,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': "Activer/désactiver l'édition de modèle/élément principal",
 	'pptx.view.toggleSpellCheck': 'Activer la vérification orthographique',
 	'pptx.view.vGuide': 'Guide V',
+	'pptx.view.zoomPercent': 'Pourcentage de zoom',
 	'pptx.view.zoomToFit': "Zoomer pour s'adapter",
 	'pptx.view.zoomToFitTooltip': 'Zoom pour insérer la diapositive dans la fenêtre',
 	'pptx.canvas.dragGuideTooltip': 'Faites glisser le guide. Double-cliquez pour supprimer.',

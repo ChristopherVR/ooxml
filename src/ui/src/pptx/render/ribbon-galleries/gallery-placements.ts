@@ -98,6 +98,11 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 					control: 'pictureFormat.pictureStyles.pictureEffects',
 					mode: 'dropdown',
 				},
+				{
+					gallery: 'graphicsFill',
+					control: 'pictureFormat.pictureStyles.graphicsFill',
+					mode: 'dropdown',
+				},
 			],
 		},
 		{

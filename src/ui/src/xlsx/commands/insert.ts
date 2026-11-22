@@ -134,6 +134,39 @@ async function wordArtDialog(ctx: EditorContext, edit: boolean): Promise<void> {
 	ctx.selection.set({ drawing: added });
 }
 
+export function selectedSvg(ctx: EditorContext) {
+	const current = target(ctx);
+	const index = ctx.selection.get().drawing;
+	if (!current || index === undefined) return undefined;
+	const drawing = current.ws.drawings[index];
+	return drawing?.kind === 'image' && drawing.svgPartName ? { current, drawing, index } : undefined;
+}
+
+async function graphicsFill(ctx: EditorContext): Promise<void> {
+	const selected = selectedSvg(ctx);
+	if (!selected) return;
+	const { pickGraphicsFill } = await import('../../form/graphics-fill');
+	const t = (label: string) => ctx.t(label);
+	const patch = await pickGraphicsFill(ctx.root, selected.drawing.effects, {
+		heading: t('Graphics Fill'),
+		color: t('Color'),
+		reset: t('No Recolor'),
+		cancel: t('Cancel'),
+		close: t('Close'),
+		apply: t('Apply'),
+	});
+	const live = selectedSvg(ctx);
+	if (
+		!patch ||
+		ctx.readOnly() ||
+		live?.current.session !== selected.current.session ||
+		live.drawing !== selected.drawing ||
+		live.index !== selected.index
+	)
+		return;
+	live.current.session.editPictureEffects(live.current.sheet, live.index, patch);
+}
+
 export function insertCommands(): Command[] {
 	return [
 		editing({
@@ -251,6 +284,13 @@ export function insertCommands(): Command[] {
 			icon: 'insertWordArt',
 			lock: 'objects',
 			run: (ctx) => wordArtDialog(ctx, false),
+		}),
+		editing({
+			id: 'drawing.graphics-fill',
+			label: 'Graphics Fill',
+			icon: icon('fillColor'),
+			lock: 'objects',
+			run: (ctx) => graphicsFill(ctx).catch((error: unknown) => ctx.toast(String(error), 'error')),
 		}),
 		editing({
 			id: 'drawing.edit-word-art',

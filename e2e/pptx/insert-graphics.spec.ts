@@ -39,6 +39,11 @@ test('inserts icons, symbols, editable WordArt and a Slide Zoom, then reopens th
 	await submit('Icons');
 	await expect(slideElements(page)).toHaveCount(originals + 1);
 
+	await selectElement(page, slideElements(page).last());
+	await page.locator('[data-ribbon-contextual-tab="pictureFormat"]').first().click();
+	await page.getByRole('button', { name: 'Graphics Fill', exact: true }).click();
+	await page.locator('[data-gallery-item="red"]').click();
+	await ribbonTab(page, 'Insert').click();
 	await open('Symbol');
 	await page.getByRole('textbox', { name: 'Character code' }).fill('U+2603');
 	await page.getByRole('textbox', { name: 'Character code' }).press('Enter');
@@ -75,6 +80,7 @@ test('inserts icons, symbols, editable WordArt and a Slide Zoom, then reopens th
 	const saved = await JSZip.loadAsync(await readFile(path));
 	const slide = await saved.file('ppt/slides/slide1.xml')?.async('string');
 	expect(slide).toContain('asvg:svgBlip');
+	expect(slide).toContain('<a:clrRepl>');
 	expect(slide).toContain('pslz:sldZm');
 	await loadDeck(page, path);
 	await expect(slideElements(page)).toHaveCount(originals + 4);

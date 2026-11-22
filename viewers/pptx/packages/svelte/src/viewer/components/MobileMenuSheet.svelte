@@ -155,6 +155,7 @@
 					onsnapToShapechange={props.onsnapToShapechange}
 					onaddguide={props.onaddguide}
 					onzoomfit={props.onzoomfit}
+			viewZoom={props.viewZoom}
 					onnormal={props.onnormal}
 					editTemplateMode={props.editor.editTemplateMode}
 					onsettemplateediting={(enabled) => props.editor.setTemplateEditing(enabled)}

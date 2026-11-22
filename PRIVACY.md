@@ -44,7 +44,8 @@ destination above, even when no document content is sent.
 
 - **Trigger:** selecting Screenshot or Screen Clipping in PowerPoint, Word or Excel, or
   starting a Screen Recording in PowerPoint. The browser asks the user which surface to share
-  each time. For a recording, the user can also share supported surface audio.
+  each time. For a recording, the user can also share supported surface audio, request pointer
+  inclusion or exclusion, and crop to an area of the already-shared surface in memory.
 - **Data:** the selected screen, window or tab is processed in memory. A screenshot or recording
   is embedded in the open document only when inserted. The capture stops when the user finishes
   or cancels and its permission is never stored by the app.

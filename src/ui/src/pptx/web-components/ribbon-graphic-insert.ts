@@ -18,6 +18,7 @@ import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { pickScreenshot, pickScreenRecording } from './ribbon-capture';
 import { downloadPhotoAlbum, pickPhotoAlbum, pickReuseSlides } from './ribbon-deck-insert';
 import { pickRibbonZoom } from './ribbon-zoom-picker';
+import { pickLocalObject } from './ribbon-local-object';
 import css from './ribbon-graphic-insert.css?raw';
 
 export type InsertText = (
@@ -102,6 +103,9 @@ async function runInsertWorkflow(
 	onInserted?: () => void,
 ): Promise<PptxElement | undefined> {
 	switch (workflow) {
+		case 'model3d':
+		case 'object':
+			return pickLocalObject(host, target.canvasSize, workflow, text);
 		case 'screenshot':
 		case 'screenClipping':
 			return pickScreenshot(host, target.canvasSize, workflow === 'screenClipping', text);

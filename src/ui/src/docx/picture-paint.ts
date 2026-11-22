@@ -31,7 +31,13 @@ export function paintPicture(
 	content.classList.toggle('dve-image-missing', !src);
 	const fill =
 		typeof node.attrs.pictureFill === 'string' ? JSON.parse(node.attrs.pictureFill) : undefined;
-	if (!src || !pictureNeedsSvg(fill)) return painted;
+	if (!src || !pictureNeedsSvg(fill)) {
+		if (painted) {
+			painted.remove();
+			content.style.removeProperty('display');
+		}
+		return undefined;
+	}
 	const next = pictureSvg(
 		content.ownerDocument,
 		fill,

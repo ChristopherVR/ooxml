@@ -204,9 +204,9 @@ export function commitInstanceFormatting(
 		const section = cellName
 			? children(target.view, 'Section').find((item) => attribute(item, 'N') === sectionName)
 			: undefined;
-		const row = section
-			? children(section, 'Row').find((item) => rowKey(item) === index)
-			: undefined;
+		const matches = (row: Element) =>
+			(sectionName === 'User' ? rowKey(row).toLowerCase() : rowKey(row)) === index;
+		const row = section ? children(section, 'Row').find(matches) : undefined;
 		const source = children(row ?? target.view, 'Cell').find(
 			(cell) => attribute(cell, 'N') === name,
 		);
@@ -216,7 +216,7 @@ export function commitInstanceFormatting(
 			(cell) =>
 				cell.name === name &&
 				(cellName
-					? cell.section?.name === sectionName && !!cell.row && rowKey(cell.row) === index
+					? cell.section?.name === sectionName && !!cell.row && matches(cell.row)
 					: !cell.section),
 		);
 		const cell: InstanceCell = known ?? {

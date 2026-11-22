@@ -16,6 +16,12 @@ export type RibbonViewCommand =
 	| 'eyedropper'
 	| 'zoomToFit';
 
+export interface RibbonViewZoom {
+	getPercent(): number;
+	setPercent(percent: number): void;
+	fit(): void;
+}
+
 /** Controlled View tab state. Native viewers own the values and every side effect. */
 export interface RibbonViewState {
 	editable: boolean;
@@ -31,6 +37,7 @@ export interface RibbonViewState {
 	selectionPaneAvailable?: boolean;
 	eyedropperAvailable?: boolean;
 	zoomAvailable?: boolean;
+	zoom?: RibbonViewZoom | undefined;
 	translate?: (key: string) => string;
 }
 

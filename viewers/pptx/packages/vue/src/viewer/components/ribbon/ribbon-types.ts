@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
 	ChangeCaseMode,
@@ -224,6 +225,7 @@ export interface RibbonProps {
 	onSetToolbarSection: (section: ToolbarSection) => void;
 	onZoomIn: () => void;
 	onZoomOut: () => void;
+	viewZoom?: RibbonViewZoom;
 	onZoomToFit: () => void;
 	onUndo: () => void;
 	onRedo: () => void;

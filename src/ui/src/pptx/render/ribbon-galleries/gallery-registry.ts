@@ -17,6 +17,7 @@ import type {
 } from './gallery-types';
 import { NUMBERING_GALLERY } from './numbering-gallery';
 import { PICTURE_ARTISTIC_EFFECTS_GALLERY } from './picture-artistic-gallery';
+import { GRAPHICS_FILL_GALLERY } from './graphics-fill-gallery';
 import { PICTURE_COLOR_GALLERY } from './picture-color-gallery';
 import { PICTURE_CORRECTIONS_GALLERY } from './picture-corrections-gallery';
 import { PICTURE_STYLES_GALLERY } from './picture-styles-gallery';
@@ -48,6 +49,7 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	pictureStyles: PICTURE_STYLES_GALLERY,
 	pictureCorrections: PICTURE_CORRECTIONS_GALLERY,
 	pictureColor: PICTURE_COLOR_GALLERY,
+	graphicsFill: GRAPHICS_FILL_GALLERY,
 	pictureArtisticEffects: PICTURE_ARTISTIC_EFFECTS_GALLERY,
 	bullets: BULLETS_GALLERY,
 	numbering: NUMBERING_GALLERY,

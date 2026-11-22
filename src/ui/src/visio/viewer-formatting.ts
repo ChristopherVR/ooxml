@@ -32,6 +32,7 @@ const vertical = ['top', 'middle', 'bottom'] as const;
 
 /** Selection-aware ribbon presentation; all writes go through the controller's edit worker. */
 export class ViewerFormatting {
+	#outline = '#000000';
 	#fontColor = '#000000';
 	/** The Theme Colors swatch the split button's colour came from, if any. */
 	#fontColorTheme: VisioThemeColorRef | undefined;
@@ -103,6 +104,7 @@ export class ViewerFormatting {
 			this.#fontColor = action.value;
 			this.#fontColorTheme = action.theme;
 		}
+		if (action.type === 'text-outline' && action.value) this.#outline = action.value;
 		const commands: VisioEdit[] = shapes.map((shape) => {
 			const target = { pageId: page.id, shapeId: shape.id };
 			if (action.type === 'shape-order')
@@ -119,6 +121,12 @@ export class ViewerFormatting {
 				)!;
 			const patch: Omit<VisioTextFormatEdit, 'type' | 'pageId' | 'shapeId'> = {};
 			switch (action.type) {
+				case 'text-outline':
+					patch.textOutline = this.#outline;
+					break;
+				case 'text-effect':
+					patch[action.effect] = action.enabled;
+					break;
 				case 'text-toggle':
 					patch[action.property] = !aggregate[action.property];
 					break;
@@ -226,6 +234,9 @@ export class ViewerFormatting {
 			indentReason || (!aggregate.canIndentDecrease ? 'The selected text has no left indent.' : ''),
 		);
 		set(button('font-color'), reason);
+		for (const id of ['text-outline', 'text-effects']) {
+			set(this.root.querySelector<RibbonCommand>(`[data-menu="${id}"]`), reason);
+		}
 		const caseReason =
 			baseReason ||
 			(!page || !currentPage || selections.some((item) => !visioChangeCaseShape(page, item.id))

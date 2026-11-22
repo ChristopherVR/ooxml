@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
 	CanvasSize,
@@ -128,6 +129,7 @@ export interface RibbonProps {
 	zoomPercent: number;
 	onzoomin: () => void;
 	onzoomout: () => void;
+	viewZoom?: RibbonViewZoom;
 	onzoomfit: () => void;
 	isFullscreen: boolean;
 	onfullscreen: () => void;

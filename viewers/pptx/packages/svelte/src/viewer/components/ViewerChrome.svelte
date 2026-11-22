@@ -170,6 +170,7 @@
 		{autosaveStatus}
 		autosaveDirty={autosaveCtl.isDirty}
 		zoomPercent={vm.effectivePercent}
+		viewZoom={{ getPercent: () => vm.effectivePercent, setPercent: (percent) => vm.deck.setZoom(percent / 100), fit: () => viewer.zoomToFit() }}
 		onzoomin={() => viewer.zoomIn(vm.effectivePercent)}
 		onzoomout={() => viewer.zoomOut(vm.effectivePercent)}
 		onzoomfit={() => viewer.zoomToFit()}
@@ -296,6 +297,7 @@
 			{autosaveStatus}
 			autosaveDirty={autosaveCtl.isDirty}
 			zoomPercent={vm.effectivePercent}
+		viewZoom={{ getPercent: () => vm.effectivePercent, setPercent: (percent) => vm.deck.setZoom(percent / 100), fit: () => viewer.zoomToFit() }}
 			onzoomin={() => viewer.zoomIn(vm.effectivePercent)}
 			onzoomout={() => viewer.zoomOut(vm.effectivePercent)}
 			onzoomfit={() => viewer.zoomToFit()}

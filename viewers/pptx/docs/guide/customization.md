@@ -1198,6 +1198,7 @@ unit test fails if an id is missing here.
 | `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
 | `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery                                                        |
 | `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery                                                       |
+| `pictureFormat.pictureStyles.graphicsFill`        | Graphics Fill gallery                                                         |
 | `pictureFormat.size.crop`                         | Crop                                                                          |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
 | `tableLayout.table.select`                        | Select                                                                        |

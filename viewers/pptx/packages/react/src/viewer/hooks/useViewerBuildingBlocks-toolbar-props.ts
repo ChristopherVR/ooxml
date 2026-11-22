@@ -42,6 +42,7 @@ export interface BuildToolbarPropsInput {
 	activeSlideIndex: number;
 	zoom: {
 		scale: number;
+		setScale?: (scale: number) => void;
 		handleZoomIn: () => void;
 		handleZoomOut: () => void;
 		handleZoomToFit: () => void;
@@ -182,6 +183,13 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		onZoomIn: zoom.handleZoomIn,
 		onZoomOut: zoom.handleZoomOut,
 		onZoomToFit: zoom.handleZoomToFit,
+		viewZoom: zoom.setScale
+			? {
+					getPercent: () => zoom.scale * 100,
+					setPercent: (p: number) => zoom.setScale?.(p / 100),
+					fit: zoom.handleZoomToFit,
+				}
+			: undefined,
 		onUndo: history.handleUndo,
 		onRedo: history.handleRedo,
 		onToggleFindReplace: () => findReplace.setFindReplaceOpen(!findReplace.findReplaceOpen),

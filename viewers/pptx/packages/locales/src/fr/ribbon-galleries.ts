@@ -82,6 +82,9 @@ export const translations: Record<string, string> = {
 	'pptx.insert.pictures': 'Images',
 	'pptx.insert.screenshot': 'Capture d’écran',
 	'pptx.insert.photoAlbum': 'Album photo',
+	'pptx.insert.selectArea': 'Sélectionner une zone',
+	'pptx.gallery.graphicsFill': 'Remplissage du graphique',
+	'pptx.insert.recordPointer': 'Enregistrer le pointeur',
 	'pptx.insert.captureAudio': 'Inclure l’audio partagé',
 	'pptx.insert.albumTitle': 'Titre de l’album',
 	'pptx.insert.picturesPerSlide': 'Images par diapositive',
@@ -148,7 +151,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.shapes':
 		'Insère des formes prédéfinies, comme des rectangles, des flèches et des étoiles.',
 	'pptx.insert.tip.icons': 'Insère des icônes pour communiquer visuellement avec des symboles.',
-	'pptx.insert.tip.models3d': 'Insère un modèle 3D à partir d’un fichier ou d’une source en ligne.',
+	'pptx.insert.tip.models3d': 'Insère un modèle 3D à partir d’un fichier GLB.',
 	'pptx.insert.tip.smartArt':
 		'Insère un graphique SmartArt pour communiquer visuellement des informations.',
 	'pptx.insert.tip.chart': 'Insère un graphique pour illustrer et comparer des données.',

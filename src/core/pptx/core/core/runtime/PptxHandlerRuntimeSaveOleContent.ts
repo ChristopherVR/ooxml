@@ -96,7 +96,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/** Overwrite the existing preview image part, or create + link a new one when none exists yet. */
-	private writeOlePreviewImageSync(
+	protected writeOlePreviewImageSync(
 		oleObj: XmlObject,
 		ctx: SaveSlideContext,
 		pngBytes: Uint8Array,

@@ -151,6 +151,7 @@ export function pictureLuminanceTransfer(
 
 export interface PictureEffectPatch {
 	standard?: Omit<DrawingStandardPictureEffect, 'kind' | 'sourceXml'>;
+	removeStandard?: DrawingStandardPictureEffect['name'];
 	grayscale?: boolean;
 	brightness?: number;
 	contrast?: number;
@@ -204,6 +205,12 @@ export function patchPictureEffects(
 			...(effect?.kind === 'alphaModFix' ? effect : { kind: 'alphaModFix' as const }),
 			amount: patch.alpha!,
 		}));
+	if (patch.removeStandard) {
+		const index = result.findIndex(
+			(effect) => effect.kind === 'standard' && effect.name === patch.removeStandard,
+		);
+		if (index !== -1) result.splice(index, 1);
+	}
 	if (patch.standard) {
 		const target = patch.standard;
 		const matches = result.flatMap((effect, index) =>

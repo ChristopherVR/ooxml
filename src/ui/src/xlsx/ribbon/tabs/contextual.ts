@@ -18,7 +18,7 @@ import { smartArtColorsGalleryState, smartArtStylesGalleryState } from '../../..
 import { smartArtSchemeColors } from '../../grid/smartart';
 import { gallerySections } from '../shared-gallery';
 import { SLICER_SIZE_OPTIONS, slicerStyleGalleryItems } from '../../commands/slicers';
-import { CHART_TYPES } from '../../commands/insert';
+import { CHART_TYPES, selectedSvg } from '../../commands/insert';
 import { tableStyleGalleryItems } from '../../commands/styles';
 import {
 	chartColorGalleryItems,
@@ -28,6 +28,21 @@ import {
 	chartStyleGalleryItems,
 	chartStyleGallerySections,
 } from '../../commands/chart-design';
+
+export function graphicsFormatTab(): RibbonTab {
+	return {
+		id: 'graphics-format',
+		label: 'Graphics Format',
+		contextual: (ctx) => !!selectedSvg(ctx),
+		groups: [
+			{
+				id: 'graphics-fill',
+				label: 'Graphics Styles',
+				controls: [{ kind: 'button', command: 'drawing.graphics-fill', size: 'large' }],
+			},
+		],
+	};
+}
 
 export function tableDesignTab(): RibbonTab {
 	return {

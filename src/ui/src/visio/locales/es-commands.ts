@@ -289,6 +289,7 @@ export const esCommands: Readonly<Record<string, string>> = {
 	'Shape Format': 'Formato de forma',
 	'WordArt Styles': 'Estilos de WordArt',
 	'Text Fill': 'Relleno de texto',
+	'No Outline': 'Sin contorno',
 	'Text Outline': 'Contorno de texto',
 	'Text Effects': 'Efectos de texto',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':

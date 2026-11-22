@@ -42,6 +42,10 @@ export const RIBBON_TAB_STRINGS: Translations = {
 	Transform: ['Transformation', 'Transformieren', 'Transformar', '转换'],
 	WordArt: ['WordArt', 'WordArt', 'WordArt', '艺术字'],
 	'Edit WordArt': ['Modifier le WordArt', 'WordArt bearbeiten', 'Editar WordArt', '编辑艺术字'],
+	'Graphics Format': ['Format graphique', 'Grafikformat', 'Formato de gráfico', '图形格式'],
+	'Graphics Styles': ['Styles graphiques', 'Grafikstile', 'Estilos de gráficos', '图形样式'],
+	'Graphics Fill': ['Remplissage du graphique', 'Grafikfüllung', 'Relleno de gráficos', '图形填充'],
+	'No Recolor': ['Aucune recoloration', 'Keine Umfärbung', 'Sin recolorear', '不重新着色'],
 	'WordArt text': ['Texte WordArt', 'WordArt-Text', 'Texto de WordArt', '艺术字文本'],
 	'Your text here': ['Votre texte ici', 'Ihr Text hier', 'Tu texto aquí', '在此输入文本'],
 	'WordArt style {n}': [

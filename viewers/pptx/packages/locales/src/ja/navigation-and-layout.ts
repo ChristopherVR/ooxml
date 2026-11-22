@@ -185,6 +185,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': 'テンプレート/マスター要素の編集の切り替え',
 	'pptx.view.toggleSpellCheck': 'スペル チェックのオン/オフ',
 	'pptx.view.vGuide': '垂直ガイド',
+	'pptx.view.zoomPercent': 'ズーム倍率',
 	'pptx.view.zoomToFit': 'ウィンドウに合わせる',
 	'pptx.view.zoomToFitTooltip': 'スライドをウィンドウに合わせてズームします',
 	'pptx.canvas.dragGuideTooltip': 'ガイドをドラッグします。ダブルクリックで削除します。',

@@ -54,7 +54,6 @@ test('shared View ribbon exposes every canonical group and control id once', asy
 	for (const id of [
 		'view.masterViews.handoutMaster',
 		'view.masterViews.notesMaster',
-		'view.zoom.zoom',
 		'view.window.macros',
 	]) {
 		await expect(view.locator(`[data-ribbon-control="${id}"] button`)).toBeDisabled();
@@ -153,4 +152,31 @@ test.describe('touch View controls', () => {
 		await page.emulateMedia({ forcedColors: 'active' });
 		await expect(reading).toBeVisible();
 	});
+});
+
+test('View Zoom applies presets and custom percentages and cancels pending changes', async ({
+	page,
+}) => {
+	const view = await openView(page);
+	const command = view.getByRole('button', { name: 'Zoom', exact: true });
+	const dialog = page.locator('office-ui-dialog[data-view-zoom][open]');
+	const percentage = dialog.getByRole('spinbutton', { name: 'Zoom percentage' });
+	await command.click();
+	await dialog.getByRole('button', { name: '75%', exact: true }).click();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await command.click();
+	await expect(percentage).toHaveValue('75');
+	await percentage.fill('137');
+	await percentage.press('Enter');
+	await command.click();
+	await expect(percentage).toHaveValue('137');
+	await percentage.fill('501');
+	await expect(dialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled();
+	await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+	await command.click();
+	await expect(percentage).toHaveValue('137');
+	await dialog.getByRole('button', { name: 'Zoom to Fit', exact: true }).click();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await command.click();
+	await expect(percentage).toHaveValue('100');
 });

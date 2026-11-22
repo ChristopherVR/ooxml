@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type { CanvasSize, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxSection, PptxSlide, PptxTextStyleLevels, TextSegment } from 'pptx-viewer-core';
 
@@ -22,6 +23,7 @@ export interface ViewerToolbarProps {
 	onnext: () => void;
 	onzoomin: () => void;
 	onzoomout: () => void;
+	viewZoom?: RibbonViewZoom;
 	onzoomfit: () => void;
 	onfullscreen: () => void;
 	/** Whether the Notes toggle button is shown (host has a notes panel). */

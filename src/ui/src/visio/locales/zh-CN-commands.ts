@@ -289,6 +289,7 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	'Shape Format': '形状格式',
 	'WordArt Styles': '艺术字样式',
 	'Text Fill': '文本填充',
+	'No Outline': '无轮廓',
 	'Text Outline': '文本轮廓',
 	'Text Effects': '文本效果',
 	'Text fill, outline and effects are not stored per run yet; use Home > Font for the text colour and style.':

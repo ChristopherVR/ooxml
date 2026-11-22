@@ -183,6 +183,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': '切换模板或母版元素编辑',
 	'pptx.view.toggleSpellCheck': '切换拼写检查',
 	'pptx.view.vGuide': '垂直参考线',
+	'pptx.view.zoomPercent': '缩放百分比',
 	'pptx.view.zoomToFit': '适应窗口',
 	'pptx.view.zoomToFitTooltip': '缩放以适应窗口中的幻灯片',
 	'pptx.canvas.dragGuideTooltip': '拖动参考线，双击可删除。',

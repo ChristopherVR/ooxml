@@ -8,12 +8,13 @@ import type { OfficeColorPick, OfficeUiColorGrid } from '../controls';
 import type { VisioFormattingAction } from './ribbon-action';
 
 /** What a colour menu paints: a shape's fill, its line, or its text. */
-export type ColorTarget = 'fill' | 'line' | 'font';
+export type ColorTarget = 'fill' | 'line' | 'font' | 'text-outline';
 
 const GRIDS: Readonly<Record<ColorTarget, { label: string; none?: string }>> = {
 	fill: { label: 'Fill colors', none: 'No Fill' },
 	line: { label: 'Line colors', none: 'No Line' },
 	font: { label: 'Font colors' },
+	'text-outline': { label: 'Text Outline', none: 'No Outline' },
 };
 export const MORE_COLORS = 'More Colors...';
 
@@ -41,6 +42,7 @@ export function colorAction(
 	color: string,
 	theme?: VisioThemeColorRef,
 ): VisioFormattingAction {
+	if (target === 'text-outline') return { type: 'text-outline', value: color };
 	if (target === 'font') return { type: 'font-color', value: color, ...(theme ? { theme } : {}) };
 	if (target === 'fill')
 		return {

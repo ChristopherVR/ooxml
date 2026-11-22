@@ -37,6 +37,7 @@ export type RibbonGalleryId =
 	| 'pictureStyles'
 	| 'pictureCorrections'
 	| 'pictureColor'
+	| 'graphicsFill'
 	| 'pictureArtisticEffects'
 	| 'bullets'
 	| 'numbering'

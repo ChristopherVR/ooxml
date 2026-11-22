@@ -30,7 +30,12 @@ import {
 	stagePicture,
 } from './picture-commands';
 import { applyPictureBulletList } from './list-commands';
-import { selectedPicturePos, setPictureWrap } from './picture-format-commands';
+import {
+	pictureOf,
+	selectedPicturePos,
+	setGraphicsFillAt,
+	setPictureWrap,
+} from './picture-format-commands';
 import { pictureClipboardPlugin } from './picture-drop';
 import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
@@ -157,6 +162,7 @@ export class InsertController {
 			const pos = view && selectedPicturePos(view.state);
 			if (!view || !editable || pos === undefined) return true;
 			if (action.key === 'crop') this.pictureDialog.open(pos, 'crop');
+			else if (action.key === 'graphicsFill') void this.graphicsFill(view, pos);
 			else {
 				setPictureWrap(view, action.value as DrawingWrap);
 				focusView(view);
@@ -356,6 +362,26 @@ export class InsertController {
 				icons.map((icon) => new File([icon.svg], `${icon.name}.svg`, { type: 'image/svg+xml' })),
 			);
 		}
+	}
+
+	private async graphicsFill(view: EditorView, pos: number): Promise<void> {
+		const host = this.host.toolbar();
+		const node = view.state.doc.nodeAt(pos);
+		if (!host || !node?.attrs.svgPartName) return;
+		const t = (label: import('./localization').LocalizationKey) => translate(this.locale, label);
+		const { pickGraphicsFill } = await import('../form/graphics-fill');
+		if (this.host.view() !== view || !view.editable) return;
+		const patch = await pickGraphicsFill(host, pictureOf(node).pictureFill?.effects, {
+			heading: t('Graphics Fill'),
+			color: t('Color'),
+			reset: t('No Recolor'),
+			cancel: t('Cancel'),
+			close: t('Close'),
+			apply: t('OK'),
+		});
+		if (!patch || this.host.view() !== view || !view.editable) return;
+		if (selectedPicturePos(view.state) === pos && view.state.doc.nodeAt(pos) === node)
+			setGraphicsFillAt(view, pos, patch);
 	}
 
 	private async insertWordArt(view: EditorView): Promise<void> {

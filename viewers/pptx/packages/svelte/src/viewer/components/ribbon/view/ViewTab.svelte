@@ -8,7 +8,7 @@
 	 * Guides toggles guide visibility only; Snap to shape is its own flag.
 	 * Zoom in/out, Slide Show and the notes toggle live in the status bar.
 	 */
-	import type { RibbonViewIntent, RibbonViewRequestEvent, ViewerPreferences } from 'ooxml-ui/pptx';
+	import type { RibbonViewIntent, RibbonViewRequestEvent, RibbonViewZoom, ViewerPreferences } from 'ooxml-ui/pptx';
 	import { updateViewerPreference } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
@@ -17,6 +17,7 @@
 
 	const {
 		onzoomfit,
+		viewZoom,
 		editTemplateMode = false,
 		onsettemplateediting,
 		onentermasterview,
@@ -34,7 +35,8 @@
 		onsnapToShapechange,
 		onaddguide,
 	}: {
-		onzoomfit: () => void;
+		viewZoom?: RibbonViewZoom;
+	onzoomfit: () => void;
 		editTemplateMode?: boolean;
 		onsettemplateediting?: (enabled: boolean) => void;
 		onentermasterview?: () => void;
@@ -59,6 +61,7 @@
 	const t = useTranslator();
 	const state = $derived({
 		editable: editor.editable,
+		zoom: viewZoom,
 		showRulers: preferences.showRulers,
 		showGrid: preferences.showGrid,
 		showGuides,

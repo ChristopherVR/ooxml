@@ -5,7 +5,7 @@
  * component supplies viewer options and routes typed intents to the native
  * handlers. Guides toggles guide visibility only; Snap to shape is its own flag.
  */
-import type { RibbonViewRequestEvent } from 'ooxml-ui/pptx';
+import type { RibbonViewRequestEvent, RibbonViewZoom } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -37,12 +37,14 @@ interface Props {
 	onOpenReadingView?: () => void;
 	/** Enter PowerPoint's Outline view: the deck as editable indented text. */
 	onOpenOutlineView?: () => void;
+	viewZoom?: RibbonViewZoom;
 	onZoomToFit?: () => void;
 }
 
 const props = defineProps<Props>();
 const { t } = useI18n();
 const state = computed(() => ({
+	zoom: props.viewZoom,
 	editable: props.canEdit,
 	showRulers: props.showRulers,
 	showGrid: props.showGrid,

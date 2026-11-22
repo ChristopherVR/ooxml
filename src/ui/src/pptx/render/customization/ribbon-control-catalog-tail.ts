@@ -172,7 +172,11 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 		},
 		pictureStyles: {
 			label: 'Picture Styles',
-			controls: { gallery: 'Picture Styles gallery', pictureEffects: 'Picture Effects gallery' },
+			controls: {
+				gallery: 'Picture Styles gallery',
+				pictureEffects: 'Picture Effects gallery',
+				graphicsFill: 'Graphics Fill gallery',
+			},
 		},
 		size: { label: 'Size', controls: { crop: 'Crop' } },
 	},

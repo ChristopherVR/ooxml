@@ -85,6 +85,7 @@ const s = computed(() => props.toolbarSection);
 		:on-set-snap-to-shape="props.onSetSnapToShape"
 		:on-add-guide="props.onAddGuide"
 		:on-zoom-to-fit="props.onZoomToFit"
+		:view-zoom="props.viewZoom"
 		:on-toggle-slide-sorter="props.onToggleSlideSorter"
 		:on-go-to-normal-view="props.onGoToNormalView"
 		:on-enter-master-view="props.onEnterMasterView"

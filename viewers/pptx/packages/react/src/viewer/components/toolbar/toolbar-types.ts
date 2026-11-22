@@ -1,3 +1,4 @@
+import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
 	FreeformToolKind,
@@ -92,6 +93,7 @@ export interface ToolbarProps {
 	onSetToolbarSection: (section: ToolbarSection) => void;
 	onZoomIn: () => void;
 	onZoomOut: () => void;
+	viewZoom?: RibbonViewZoom | undefined;
 	onZoomToFit: () => void;
 	onUndo: () => void;
 	onRedo: () => void;

@@ -471,6 +471,7 @@ export {
 	resolveModel3DMimeType,
 	type Model3DTransform,
 } from './model3d-parser';
+export { isSelfContainedGlb } from './glb-import';
 
 export {
 	normalizeNamespaceUri,

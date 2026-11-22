@@ -106,6 +106,14 @@ test.describe('phone Insert ribbon', () => {
 		await picker.getByRole('button', { name: 'Check mark', exact: true }).tap();
 		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(host.locator('.xg-obj img')).toHaveCount(2);
+		await host.getByRole('tab', { name: 'Graphics Format', exact: true }).tap();
+		await clickRibbonControl(
+			page,
+			host.getByRole('button', { name: 'Graphics Fill', exact: true }),
+		);
+		await picker.locator('input[type="color"]').fill('#2255aa');
+		await picker.getByRole('button', { name: 'Apply', exact: true }).tap();
+		await expect(host.locator('.xg-obj feColorMatrix')).toHaveCount(1);
 	});
 });
 

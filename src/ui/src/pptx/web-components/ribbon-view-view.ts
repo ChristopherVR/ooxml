@@ -120,7 +120,6 @@ const ZOOM = [
 	spec({
 		id: 'view.zoom.zoom',
 		icon: 'zoomIn',
-		placeholder: true,
 		label: ['pptx.slideSorter.zoom', 'Zoom'],
 	}),
 	spec({
@@ -139,7 +138,11 @@ const MACROS = spec({
 });
 
 /** All View markup lives here. The host only reflects state and routes native intents. */
-export function createRibbonViewView(doc: Document, request: (intent: RibbonViewIntent) => void) {
+export function createRibbonViewView(
+	doc: Document,
+	request: (intent: RibbonViewIntent) => void,
+	openZoom: () => void,
+) {
 	const groups = new Map<string, HTMLElement>();
 	const group = (id: string, ...children: HTMLElement[]) => {
 		const el = doc.createElement('pptx-ui-ribbon-group');
@@ -162,7 +165,12 @@ export function createRibbonViewView(doc: Document, request: (intent: RibbonView
 		}
 		el.setAttribute('icon', item.icon);
 		el.toggleAttribute('compact', Boolean(item.compact));
-		if (item.command !== undefined || item.option !== undefined) {
+		if (item.id === 'view.zoom.zoom') {
+			el.addEventListener('command-request', (event) => {
+				event.stopPropagation();
+				openZoom();
+			});
+		} else if (item.command !== undefined || item.option !== undefined) {
 			el.addEventListener('command-request', (event) => {
 				event.stopPropagation();
 				if (item.command) {
@@ -254,7 +262,12 @@ export function createRibbonViewView(doc: Document, request: (intent: RibbonView
 				el.toggleAttribute('active', Boolean(active[key]));
 			}
 			const editOnly = ['slideMaster', 'eyedropper', 'templateEditing'].includes(key);
-			el.toggleAttribute('disabled', Boolean(item.placeholder) || (editOnly && !state.editable));
+			el.toggleAttribute(
+				'disabled',
+				Boolean(item.placeholder) ||
+					(item.id === 'view.zoom.zoom' && !state.zoom) ||
+					(editOnly && !state.editable),
+			);
 			el.toggleAttribute(
 				'hidden',
 				(key === 'selectionPane' && state.selectionPaneAvailable === false) ||

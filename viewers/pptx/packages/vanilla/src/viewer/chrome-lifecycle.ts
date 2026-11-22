@@ -295,6 +295,11 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 		},
 		...buildChromeCallbacks({
 			...deps,
+			viewZoom: {
+				getPercent: () => renderer.zoomPercent(),
+				setPercent: (percent) => deps.setZoom((percent / 100) * renderer.fitScale()),
+				fit: () => deps.zoomToFit(),
+			},
 			getRegionSet: () => regions,
 			getGraphicTarget: () => {
 				const { slides, sections, currentSlide, canvasSize, colorScheme } = store.get();

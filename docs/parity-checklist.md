@@ -966,8 +966,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text caret, or creates a text box when no text edit is active.
       The gallery also browses Unicode equivalents for the five bundled legacy font mappings.
       Browsing arbitrary installed fonts remains open.
-- [ ] **P1** Insert: Object, 3D Models, Forms, add-ins
-      and unimplemented menu entries (`ribbon-insert-layout.ts`).
+- [x] **P1** PowerPoint View > Zoom sets a preset or a custom percentage and restores Fit.
+      The dialog uses the editor's existing fit-relative zoom scale.
+- [x] **P1** PowerPoint Insert > 3D Models accepts a local self-contained GLB 2.0 with a poster
+      fallback. Insert > Object embeds an existing DOCX, XLSX or PPTX as a file icon.
+- [ ] **P1** PowerPoint Insert still lacks stock 3D assets, other 3D formats, desktop OLE activation,
+      Create New, link-to-file, live previews of newly inserted objects, Forms and add-ins.
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
       Picture Border, Picture Layout, Alt Text and Arrange.
@@ -1235,8 +1239,10 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** The compact phone Quick Access Toolbar keeps Save, Undo and Redo reachable.
 - [x] **P1** The contextual Shape Format tab exposes solid WordArt Text Fill using the same
       native text color edit as Home. Shape Styles, Arrange and Size are shared with Home.
-- [ ] **P1** Visio WordArt Text Outline and Text Effects remain disabled. Gradient text fill and
-      shape-text deformation are open.
+- [x] **P1** Visio Shape Format offers a solid Text Outline and Text Effects for glyph shadow
+      and glow. VSDX saves these controls in ShapeSheet User cells and the viewer draws them.
+- [ ] **P1** Visio glyph outline, shadow and glow have no matching native Microsoft Visio
+      character style. Gradient text fill, text deformation and additional effects are open.
 - [x] **P1** Picture Format, Container Format and Chart Design contextual tabs replace Shape Format
       for a lone picture, container or chart; Chart Design opens the chart editor
       (`ribbon-contextual-formats.ts`).
@@ -1272,15 +1278,17 @@ installed Visio 16 build is used to check that saved files open without repair.
       Screen Clipping accepts a dragged rectangle or pixel coordinates and saves the result as
       an embedded picture.
 - [x] PowerPoint Screen Recording can pause, resume and stop, optionally capture audio shared by
-      the browser, and embed the resulting video. The browser prompts for access.
+      the browser, and embed the resulting video. Select Area records a dragged rectangle or
+      one entered as coordinates on the shared surface. Record Pointer passes a preference to
+      the browser's capture picker.
 - [x] PowerPoint Photo Album downloads a standalone presentation with a title slide, 1, 2 or 4
       pictures per slide, configurable picture order, and optional filename captions.
 - [x] PowerPoint Reuse Slides inserts selected slides from a local OOXML presentation and keeps
       their source formats and related parts.
-- [ ] The browser controls which surfaces it can capture. PowerPoint's native window thumbnails,
-      recording arbitrary screen regions, pointer toggling, and in-place Photo Album editing are
-      open. Reuse Slides still needs destination-theme formatting and import between different
-      slide sizes or OOXML conformance classes.
+- [ ] Desktop window thumbnails, selecting an area directly on the desktop, reliable pointer
+      control on every browser surface, the floating system recording dock, and in-place Photo
+      Album editing are open. Reuse Slides still needs destination-theme formatting and import
+      between different slide sizes or OOXML conformance classes.
 
 ### Insert Icons
 
@@ -1288,8 +1296,10 @@ installed Visio 16 build is used to check that saved files open without repair.
       and batch insertion. Selection persists while searching.
 - [x] PowerPoint, Word and Excel save icons as SVG with a PNG fallback. Visio saves native
       vector paths that resize and can be recolored with the existing Line control.
-- [ ] **P1** The Microsoft 365 stock catalog and dedicated Graphics Fill controls for inserted
-      SVG icons in PowerPoint, Word and Excel remain open.
+- [x] **P1** Graphics Fill recolors selected SVGs in PowerPoint, Word and Excel using a DrawingML
+      color replacement effect. Visio uses its native Line control on inserted vector icons.
+- [ ] **P1** The Microsoft 365 stock catalog, PowerPoint custom Graphics Fill colors, and themed
+      gradients or additional graphics-specific formatting are open.
 
 ### Symbol-font fallback (#290)
 

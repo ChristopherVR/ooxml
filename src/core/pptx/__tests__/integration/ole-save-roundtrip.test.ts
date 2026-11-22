@@ -70,7 +70,7 @@ describe('oLE element save round-trip (CH-H1)', () => {
 		await expect(zip.file(embeddingPath!)!.async('uint8array')).resolves.toStrictEqual(payload);
 
 		const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')!.async('string');
-		expect(rels).toContain('relationships/oleObject');
+		expect(rels).toContain('relationships/package');
 		expect(rels).toContain(`../embeddings/${embeddingPath!.split('/').pop()}`);
 		const contentTypes = await zip.file('[Content_Types].xml')!.async('string');
 		expect(contentTypes).toContain(`PartName="/${embeddingPath}"`);

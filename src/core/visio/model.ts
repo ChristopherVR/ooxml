@@ -214,6 +214,10 @@ export interface VisioText {
 	position?: 'superscript' | 'subscript';
 	textCase?: 'all-caps' | 'initial-caps' | 'small-caps';
 	language?: number;
+	/** Text painting stored in application-defined User cells on the shape. */
+	outline?: string;
+	shadow?: boolean;
+	glow?: boolean;
 	/** Optional backdrop behind laid-out text, not the complete shape rectangle. */
 	backgroundColor?: string;
 	backgroundOpacity?: number;

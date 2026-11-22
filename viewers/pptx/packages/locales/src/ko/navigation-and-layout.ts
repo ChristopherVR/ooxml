@@ -184,6 +184,7 @@ export const translations = {
 	'pptx.view.templateEditingTooltip': '서식 파일/마스터 요소 편집 전환',
 	'pptx.view.toggleSpellCheck': '맞춤법 검사 켜기/끄기',
 	'pptx.view.vGuide': '세로 안내선',
+	'pptx.view.zoomPercent': '확대/축소 비율',
 	'pptx.view.zoomToFit': '창에 맞춤',
 	'pptx.view.zoomToFitTooltip': '슬라이드를 창에 맞게 확대/축소',
 	'pptx.canvas.dragGuideTooltip': '안내선을 끌어 이동합니다. 두 번 클릭하면 제거됩니다.',

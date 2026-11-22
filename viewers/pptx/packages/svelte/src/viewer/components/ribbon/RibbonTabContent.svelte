@@ -107,6 +107,7 @@
 			onsnapToShapechange={ribbon.onsnapToShapechange}
 			onaddguide={ribbon.onaddguide}
 			onzoomfit={ribbon.onzoomfit}
+			viewZoom={ribbon.viewZoom}
 			onnormal={ribbon.onnormal}
 			editTemplateMode={ribbon.editor.editTemplateMode}
 			onsettemplateediting={(enabled) => ribbon.editor.setTemplateEditing(enabled)}

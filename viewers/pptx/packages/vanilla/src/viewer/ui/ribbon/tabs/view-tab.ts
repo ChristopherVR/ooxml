@@ -47,6 +47,7 @@ export function createViewTab(
 		snapToShape: false,
 		templateEditing: false,
 		zoomAvailable: !isActionHidden('zoom', hiddenActions),
+		zoom: handlers.viewZoom,
 		translate: t,
 	};
 	const sync = () => {
@@ -97,8 +98,8 @@ export function createViewTab(
 			state = { ...state, editable };
 			sync();
 		},
-		setViewOptions(options) {
-			state = { ...state, ...options };
+		setViewOptions({ showGrid, showRulers, showGuides, snapToGrid, snapToShape }) {
+			state = { ...state, showGrid, showRulers, showGuides, snapToGrid, snapToShape };
 			sync();
 		},
 		setTemplateEditing(active) {

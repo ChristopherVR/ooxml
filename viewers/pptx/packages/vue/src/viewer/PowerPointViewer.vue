@@ -2097,7 +2097,15 @@ const { handleCommandSearch, handleQuickAccessCommand } = useCommandDispatch({
 	exportPdf: onExportPdf,
 	addSlide: slideOps.addSlide,
 });
-const ribbonProps = useCustomizedRibbonProps(baseRibbonProps, customization.resolved);
+const customizedRibbonProps = useCustomizedRibbonProps(baseRibbonProps, customization.resolved);
+const viewZoom = {
+	getPercent: () => zoom.value * 100,
+	setPercent: (percent: number) => {
+		zoom.value = percent / 100;
+	},
+	fit: zoomReset,
+};
+const ribbonProps = computed(() => ({ ...customizedRibbonProps.value, viewZoom }));
 
 // -- Imperative surface (implements the shared PowerPointViewerAPI) ----
 useCanvasImagePaste(viewerRootRef, {
