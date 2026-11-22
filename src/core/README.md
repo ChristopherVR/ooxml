@@ -188,7 +188,7 @@ CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })`) types fields the
 
 ## Privacy and network use
 
-`ooxml-core` parses, edits and writes documents locally and never uploads them. It contacts a server only when you ask it to: a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and, during Node signature inspection, the OCSP responder named in a signing certificate (turn it off with `{ checkRevocation: false }`). Linked pictures and media are not fetched unless the load allows linked content. Nothing collects analytics or telemetry. Every request is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
+`ooxml-core` parses, edits and writes documents locally. It contacts a server only when you ask it to: a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and, during Node signature inspection, the OCSP responder named in a signing certificate (turn it off with `{ checkRevocation: false }`). An active Word collaboration session shares added pictures, 3D models and Office file objects with the session's peers. Linked pictures and media are not fetched unless the load allows linked content. Nothing collects analytics or telemetry. Every request is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## Related packages
 

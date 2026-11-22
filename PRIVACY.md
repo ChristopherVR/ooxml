@@ -53,6 +53,17 @@ destination above, even when no document content is sent.
   document, the existing collaboration settings govern transfer to peers. Photo Album and Reuse
   Slides read the chosen files locally. Existing linked-content rules apply to links in reused slides.
 
+## Local 3D models and Office objects
+
+Insert > 3D Models and Insert > Object in PowerPoint, Word and Excel read only the selected local
+files. The editor stores the chosen file and a generated image preview in the document when
+Insert completes. Local insertion makes no network request.
+
+PowerPoint shares the inserted file and preview through Share or Broadcast when a session is
+active, subject to the room's asset limits below. Word's opt-in collaboration also sends the
+inserted bytes and preview to the host-configured room transport as document assets. Leave the
+room or omit the collaboration configuration to keep insertions local.
+
 ## PowerPoint (`ooxml-ui/pptx` and the `pptx-*-viewer` packages)
 
 ### Fonts that are neither installed nor embedded
@@ -135,8 +146,9 @@ Sessions start only when the user (or host) starts one.
   then flows directly between peers, encrypted by WebRTC and by the same secret. Pass a
   `signaling` list (or `?signaling=` in a share link) to use your own server.
 - Sessions within one browser use `BroadcastChannel`, which never leaves the device.
-- **What the room carries:** the slides, and the bytes of the pictures, poster frames, audio
-  and video embedded in them, so a participant who has no copy of the file sees the same deck.
+- **What the room carries:** the slides, and the bytes of the pictures, poster frames, audio,
+  video, 3D models and Office objects embedded in them, so a participant who has no copy of the
+  file sees the same deck.
   Each participant turns those bytes into its own `blob:` or `data:` URLs; no URL of one page is
   sent to another. A room holds at most 16 MiB of such files (128 KiB in a peer-to-peer room,
   whose first message to a joiner must fit a WebRTC data channel); a larger one is left out and the

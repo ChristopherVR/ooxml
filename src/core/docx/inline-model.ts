@@ -7,6 +7,11 @@ import type { ShapeSpec } from './shape-model';
 import type { DrawingBodyProperties } from '../drawingml/text-model';
 import type { Block } from './model';
 
+/** Native payload kept alongside the preview without exposing model or application bytes as a picture. */
+export type InlineDrawingPayload =
+	| { kind: 'model3d'; partName: string }
+	| { kind: 'officePackage'; partName: string; progId: string };
+
 /**
  * A text box's `w:txbxContent`, read by the same block parser as the document body, with the
  * layout settings of its `wps:bodyPr`: anchor, insets, `vert` (other than `horz`), `wrap="none"`
@@ -71,6 +76,8 @@ export interface InlineImage {
 	diagram?: DocxDiagram;
 	/** For a chart (`unsupported: "Chart"`): its part and the parsed `c:chartSpace`; the markup and parts are preserved on save. */
 	chart?: DocxChart;
+	/** A native 3D model or OLE package. The picture fields name its poster or icon. */
+	payload?: InlineDrawingPayload;
 }
 /** A Word text watermark (`PowerPlusWaterMarkObject`), carried by an inline object run in a header. */
 export interface WatermarkSpec {

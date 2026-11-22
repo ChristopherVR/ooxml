@@ -594,6 +594,8 @@ decisions that still apply (layout, style rules, the tag aliases and the token m
 
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
+Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.
+
 The elements render and edit locally. The PowerPoint elements (`ooxml-ui/pptx`) download fonts that are neither installed nor embedded from Google Fonts by default, fetch a deck's linked pictures and media only after the reader chooses Enable Content on its security bar (as Microsoft PowerPoint does), and use public signaling and STUN servers for serverless Share; each has a host option (`googleFonts`, `allowExternalContent`, `signaling`), described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). The Word, Excel and Visio elements make no network request unless the host sets their `googleFonts` property or the reader turns on File > Options > Trust Center > "Download fonts that are not installed or embedded" (off by default; the same font requests as PowerPoint), and Teams talks only to the servers you configure (plus Google's public STUN server for calls unless `iceServers` is set). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## Development

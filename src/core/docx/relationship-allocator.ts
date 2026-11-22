@@ -62,7 +62,7 @@ export function scanUsedRelationshipIds(doc: XmlDocument): Set<string> {
 export class RelationshipAllocator {
 	private readonly used: Set<string>;
 	private readonly created: NewRelationship[] = [];
-	private readonly imagePartToRelId = new Map<string, string>();
+	private readonly binaryPartIds = new Map<string, string>();
 
 	/** Shared drawing-id allocator, so `wp:docPr` ids stay unique across every part of a save. */
 	readonly docPrIds: DocPrIdAllocator;
@@ -91,17 +91,22 @@ export class RelationshipAllocator {
 
 	/** Registers (once per part) a newly inserted image part and returns its relationship id. */
 	addImage(partName: string): string {
-		const existing = this.imagePartToRelId.get(partName);
+		return this.addBinaryPart(IMAGE_RELATIONSHIP_TYPE, partName);
+	}
+
+	addBinaryPart(type: string, partName: string): string {
+		const key = `${type}:${partName}`;
+		const existing = this.binaryPartIds.get(key);
 		if (existing) return existing;
 		const id = this.nextId();
 		this.created.push({
 			id,
-			type: IMAGE_RELATIONSHIP_TYPE,
+			type,
 			target: partName.replace(/^word\//, ''),
 			mode: 'Internal',
 			partName,
 		});
-		this.imagePartToRelId.set(partName, id);
+		this.binaryPartIds.set(key, id);
 		return id;
 	}
 

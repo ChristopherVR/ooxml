@@ -1,5 +1,7 @@
 import type { CollabSession } from '../../collab/index';
 import { createIdGenerator, createAssetSync } from '../../collab/index';
+import { GLB_PART_CONTENT_TYPE } from '../../drawingml/model3d';
+import { embeddableOfficePackageFormat } from '../../opc/embeddable-office-package';
 import type { PendingMediaPart } from '../model';
 import * as Y from 'yjs';
 
@@ -10,6 +12,14 @@ const extensions: Record<string, string> = {
 	'image/bmp': 'bmp',
 	'image/svg+xml': 'svg',
 };
+
+function supportedMediaPart(name: string, contentType: string): boolean {
+	if (Object.hasOwn(extensions, contentType))
+		return /^word\/media\/[^/\\]+\.(png|jpeg|jpg|gif|bmp|svg)$/.test(name);
+	if (contentType === GLB_PART_CONTENT_TYPE) return /^word\/media\/[^/\\]+\.glb$/.test(name);
+	const extension = /^word\/embeddings\/[^/\\]+\.(docx|xlsx|pptx)$/.exec(name)?.[1];
+	return !!extension && embeddableOfficePackageFormat(extension)?.mime === contentType;
+}
 
 /** Immutable, newly inserted image parts. Loaded package assets stay in the matching source package. */
 export class WordYjsMedia {
@@ -37,11 +47,8 @@ export class WordYjsMedia {
 		if (!this.session.canWrite()) throw new Error('Shared picture writes are currently disabled.');
 		if (!(part.bytes instanceof Uint8Array) || !part.bytes.length)
 			throw new Error('Shared picture bytes are required.');
-		if (
-			!/^word\/media\/[^/\\]+\.(png|jpeg|jpg|gif|bmp|svg)$/.test(partName) ||
-			!extensions[part.contentType]
-		)
-			throw new Error('Unsupported shared picture part.');
+		if (!supportedMediaPart(partName, part.contentType))
+			throw new Error('Unsupported shared media part.');
 		const previous = this.get(partName);
 		if (!previous && this.parts.has(partName))
 			throw new Error('Invalid existing shared picture part.');
@@ -68,7 +75,7 @@ export class WordYjsMedia {
 		this.assetSync.read(owner, this.assets, part);
 		return part.bytes instanceof Uint8Array &&
 			typeof part.contentType === 'string' &&
-			extensions[part.contentType]
+			supportedMediaPart(partName, part.contentType)
 			? { contentType: part.contentType, bytes: part.bytes }
 			: undefined;
 	}

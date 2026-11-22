@@ -410,7 +410,7 @@ Still not at parity:
   its apply-to/list-style options. (Add tab stop at: a level's `w:tab w:val="num"` is read, written and
   honoured by the marker's tab suffix in the editor and Print Layout.) Text Highlight keeps the 17-colour list (Word's is a short
   list too). Line Spacing offers presets; the Paragraph dialog has the rest.
-- **Insert:** Cover Page galleries (one plain design exists), Icons, 3D Models, SmartArt pictures,
+- **Insert:** Cover Page galleries (one plain design exists), SmartArt pictures,
   dedicated per-shape formatting and SmartArt in headers/footers/notes. Body SmartArt already has
   node/text/layout editing, shared Styles/Change Colors, interpreted previews and admitted generated
   2D caches. Wider native styles, complex text/3D and pixel fidelity remain limited. Classic charts
@@ -420,8 +420,12 @@ Still not at parity:
   combo/family admission, native style-part authoring and exact native typography/layout. Surface
   and unsupported families retain labelled frames; floating charts are placed, wrapped and selectable
   in Print Layout, in the body and in table cells.
-  Screenshot, floating/formatted Text Boxes, WordArt, equation styles and Equation Tools,
-  Signature Line and Object remain incomplete. The shared capability update is dated 2026-10-26.
+  3D Models inserts a self-contained local GLB with a static preview. Rotate and edit the model
+  in desktop Word. Stock models and other 3D input formats remain open. Object embeds a local
+  .docx, .xlsx or .pptx as an inline icon. Linked objects, creating new objects by application type,
+  editing within the document, and legacy OLE activation remain open. The Office suite can open
+  native Office packages separately via Embedded documents. Floating/formatted Text Boxes,
+  additional WordArt formatting, equation styles, Equation Tools and Signature Line remain incomplete.
 - **Layout and References:** Manual Hyphenation and its options, Position
   and Wrap Text, Citations, Bibliography, Index and Table of Authorities, and
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption

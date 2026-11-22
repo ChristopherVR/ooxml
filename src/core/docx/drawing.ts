@@ -24,6 +24,8 @@ import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
 import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram';
 import { CHART_GRAPHIC_URI, CHARTEX_GRAPHIC_URI, parseChartGraphic } from './chart';
+import { MODEL3D_URI } from '../drawingml/model3d';
+import { isOleDrawing, model3dDrawing, parseOleDrawing } from './drawing-payload';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -192,6 +194,17 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...(placement ? { placement } : {}),
 			...(svg ? { svgPartName: svg.partName } : {}),
 		};
+	if (graphicData && uri === MODEL3D_URI) {
+		const { payload, unsupported, ...preview } = model3dDrawing(graphicData, context);
+		return {
+			...preview,
+			widthPx,
+			heightPx,
+			...definedProps({ altText, title, anchored }),
+			...definedProps({ unsupported, payload }),
+			...(placement ? { placement } : {}),
+		};
+	}
 	const diagram =
 		uri === DIAGRAM_GRAPHIC_URI && graphicData
 			? parseDiagramGraphic(graphicData, extent, docPr, context.rels, Boolean(anchored))
@@ -323,8 +336,9 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 	};
 }
 
-/** Parses a `w:drawing` or `w:pict` run child into an inline image model. */
+/** Parses a run's modern drawing, VML picture or embedded object's icon. */
 export function parseDrawing(node: XmlElement, context: DrawingContext): InlineImage {
+	if (isOleDrawing(node)) return parseOleDrawing(node, context);
 	return node.localName === 'pict'
 		? parseVmlPicture(node, context)
 		: parseModernDrawing(node, context);

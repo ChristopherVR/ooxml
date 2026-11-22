@@ -6,6 +6,9 @@ import {
 	type CollabSession,
 } from '../../collab/index';
 import { WordYjsMedia } from './yjs-media';
+import { GLB_PART_CONTENT_TYPE } from '../../drawingml/model3d';
+import { embeddableOfficePackageFormat } from '../../opc/embeddable-office-package';
+import { must } from '../test-support/access';
 
 const sessions: CollabSession[] = [];
 afterEach(() => {
@@ -49,4 +52,24 @@ it('allocates fresh names after reattachment and validates package part names', 
 		first.publish('../image.png', { bytes: new Uint8Array([1]), contentType: 'image/png' }),
 	).toThrow(/Unsupported/);
 	expect(() => first.partName('image/tiff')).toThrow(/Unsupported/);
+});
+
+it('shares the original bytes of local models and embedded Office packages with peers', () => {
+	const [a, b] = pair();
+	const source = new WordYjsMedia(must(a));
+	const reader = new WordYjsMedia(must(b));
+	const bytes = Uint8Array.of(1, 2, 3);
+	for (const [partName, contentType] of [
+		['word/media/local-model.glb', GLB_PART_CONTENT_TYPE],
+		['word/embeddings/object.docx', must(embeddableOfficePackageFormat('docx')).mime],
+	] as const) {
+		source.publish(partName, { bytes, contentType });
+		expect(reader.get(partName)).toEqual({ bytes, contentType });
+	}
+	expect(() =>
+		source.publish('word/embeddings/mismatch.docx', {
+			bytes,
+			contentType: must(embeddableOfficePackageFormat('xlsx')).mime,
+		}),
+	).toThrow('Unsupported shared media part.');
 });

@@ -89,6 +89,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			),
 			screenshot,
 			tool('Icons', 'insertIcon', { type: 'insertIcon' }, { large: true }),
+			tool(
+				'3D Models',
+				'insertModel3d',
+				{ type: 'insertLocalDrawing', kind: 'model3d' },
+				{ large: true },
+			),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(
 				'Insert chart',
@@ -186,6 +192,12 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 		),
 		group(
 			'Text',
+			tool(
+				'Object',
+				'insertObject',
+				{ type: 'insertLocalDrawing', kind: 'object' },
+				{ inline: true },
+			),
 			tool(
 				'WordArt',
 				'insertWordArt',

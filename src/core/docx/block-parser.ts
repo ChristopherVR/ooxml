@@ -59,7 +59,7 @@ function runContent(node: XmlElement): XmlElement[] {
 /** The run's drawing, looking inside `mc:AlternateContent` at the `mc:Choice` Word 2010+ reads. */
 function findDrawing(content: XmlElement[]): XmlElement | undefined {
 	for (const child of content) {
-		if (named(child, 'drawing') || named(child, 'pict')) return child;
+		if (named(child, 'drawing') || named(child, 'pict') || named(child, 'object')) return child;
 		if (child.localName !== 'AlternateContent') continue;
 		const choice = Array.from(child.childNodes)
 			.filter(isElement)

@@ -2,6 +2,8 @@ import { setSvgPictureRelationship } from '../drawingml/svg-picture';
 import { applyPictureCrop } from '../drawingml/picture-crop';
 import { applyPictureEffects } from '../drawingml/picture-effects';
 import { applyPictureLayout } from '../drawingml/picture-layout';
+import { MODEL3D_REL } from '../drawingml/model3d';
+import { RELATIONSHIP_TYPES } from '../opc/index';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Writes inline picture runs: reuses original wp:inline/pic:pic XML verbatim (only patching
 // extent/alt text) for unchanged pictures, and synthesizes a minimal valid drawing for insertions.
@@ -22,6 +24,12 @@ import type { RelationshipAllocator } from './relationship-allocator';
 import { patchFallbackSize } from './write-fallback';
 import { patchDrawingWrap, placementPositionChanged } from './write-drawing-wrap';
 import { diagramRun } from './write-diagram-drawing';
+import { isOleDrawing } from './drawing-payload';
+import {
+	model3dAlternateContent,
+	officePackageDrawing,
+	updateOleIconSize,
+} from './write-drawing-payload';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -41,7 +49,11 @@ export function alternateContentDrawing(content: XmlElement): XmlElement | undef
 function drawingContainer(run: XmlElement | undefined): XmlElement | undefined {
 	if (!run) return undefined;
 	for (const child of Array.from(run.childNodes))
-		if (isElement(child) && (named(child, 'drawing') || named(child, 'pict'))) return child;
+		if (
+			isElement(child) &&
+			(named(child, 'drawing') || named(child, 'pict') || isOleDrawing(child))
+		)
+			return child;
 	for (const child of Array.from(run.childNodes))
 		if (
 			isElement(child) &&
@@ -56,7 +68,7 @@ export function findDrawingChild(run: XmlElement | undefined): XmlElement | unde
 	if (!run) return undefined;
 	for (const child of Array.from(run.childNodes)) {
 		if (!isElement(child)) continue;
-		if (named(child, 'drawing') || named(child, 'pict')) return child;
+		if (named(child, 'drawing') || named(child, 'pict') || isOleDrawing(child)) return child;
 		if (child.localName === 'AlternateContent') {
 			const inner = alternateContentDrawing(child);
 			if (inner) return inner;
@@ -66,7 +78,15 @@ export function findDrawingChild(run: XmlElement | undefined): XmlElement | unde
 }
 
 function sameUnderlyingImage(a: InlineImage, b: InlineImage): boolean {
-	return Boolean(a.partName) && a.relId === b.relId && a.partName === b.partName;
+	return (
+		Boolean(a.partName) &&
+		a.relId === b.relId &&
+		a.partName === b.partName &&
+		a.payload?.kind === b.payload?.kind &&
+		a.payload?.partName === b.payload?.partName &&
+		(a.payload?.kind !== 'officePackage' ||
+			(b.payload?.kind === 'officePackage' && a.payload.progId === b.payload.progId))
+	);
 }
 
 function el(doc: XmlDocument, ns: string, qualified: string): XmlElement {
@@ -172,6 +192,28 @@ export function createImageRun(
 	if (diagram) return diagram;
 	const chart = chartRun(doc, node, image, base, oldDrawing, oldContainer, allocator);
 	if (chart) return chart;
+	if (image.payload && !base) {
+		if (!allocator)
+			throw new Error('Cannot insert a native object without a relationship allocator.');
+		const previewId = allocator.addImage(image.partName);
+		const id = allocator.docPrIds.next();
+		const payload = image.payload;
+		const relType = payload.kind === 'model3d' ? MODEL3D_REL : RELATIONSHIP_TYPES.package;
+		const payloadId = allocator.addBinaryPart(relType, payload.partName);
+		clearNonProperties(node);
+		node.appendChild(
+			payload.kind === 'model3d'
+				? model3dAlternateContent(
+						doc,
+						buildInlineDrawing(doc, image, previewId, id),
+						payloadId,
+						previewId,
+						image,
+					)
+				: officePackageDrawing(doc, image, payload.progId, payloadId, previewId, id),
+		);
+		return node;
+	}
 	// A drawing this model only shows as a placeholder keeps its XML while the rest of the paragraph changes.
 	if (base && oldDrawing && image.unsupported && JSON.stringify(image) === JSON.stringify(base)) {
 		clearNonProperties(node, oldContainer);
@@ -247,8 +289,15 @@ export function createImageRun(
 			if (fill && image.pictureFill.layout !== undefined)
 				applyPictureLayout(fill, image.pictureFill.layout);
 		}
-		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx)
-			updateExtent(oldDrawing, image.widthPx, image.heightPx);
+		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx) {
+			if (isOleDrawing(oldDrawing)) updateOleIconSize(oldDrawing, image.widthPx, image.heightPx);
+			else
+				updateExtent(
+					image.payload && oldContainer ? oldContainer : oldDrawing,
+					image.widthPx,
+					image.heightPx,
+				);
+		}
 		if (image.altText !== base.altText || image.title !== base.title)
 			updateDocPr(oldDrawing, image.altText, image.title);
 		patchDrawingWrap(oldDrawing, doc, image, base);

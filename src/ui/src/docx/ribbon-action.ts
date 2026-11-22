@@ -133,6 +133,7 @@ export type RibbonAction =
 	| { type: 'insertPicture' }
 	| { type: 'insertScreenshot'; clip: boolean }
 	| { type: 'insertIcon' }
+	| { type: 'insertLocalDrawing'; kind: 'model3d' | 'object' }
 	| { type: 'insertWordArt' }
 	/** Bullets > Picture bullet...: choose an image file and start a list that draws it. */
 	| { type: 'pictureBullet' }

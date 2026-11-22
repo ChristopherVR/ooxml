@@ -83,12 +83,13 @@ function runIsSafe(run: XmlElement): boolean {
 			'delText',
 			'drawing',
 			'pict',
+			'object',
 		];
 		if (!allowed.includes(element.localName)) return false;
 		kinds.add(element.localName);
 	}
 	// A run is modeled as text or as a picture, never both.
-	return !((kinds.has('drawing') || kinds.has('pict')) && kinds.size > 1);
+	return !((kinds.has('drawing') || kinds.has('pict') || kinds.has('object')) && kinds.size > 1);
 }
 
 /**

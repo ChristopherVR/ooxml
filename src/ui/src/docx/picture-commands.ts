@@ -158,6 +158,7 @@ export function insertPictures(view: EditorView, images: readonly InlineImage[])
 			anchored: false,
 			unsupported: null,
 			svgPartName: image.svgPartName ?? null,
+			payload: image.payload ? JSON.stringify(image.payload) : null,
 		}),
 	);
 	const slice = new Slice(Fragment.fromArray(nodes), 0, 0);

@@ -82,6 +82,8 @@ export const imageNodeSpec: NodeSpec = {
 		diagram: { default: null },
 		/** A chart (`DocxChart`) as JSON; painted read-only from its cached values (`chart-spec.ts`). */
 		chart: { default: null },
+		/** The native GLB or embedded Office package paired with this preview. */
+		payload: { default: null },
 		/** A drawing shape (`ShapeSpec`) as JSON; drawn as SVG by the shape node view. */
 		shape: { default: null },
 		/** A header watermark (`WatermarkSpec` or `PictureWatermarkSpec`) as JSON, kept through edits. */

@@ -9,7 +9,6 @@ import { textContent, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 const SCANNED = new Set([
 	'body',
 	'numPr',
-	'object',
 	'altChunk',
 	'fldSimple',
 	'instrText',
@@ -71,7 +70,6 @@ function insideParagraph(element: XmlElement): boolean {
 export function warningsFor(index: WordElementIndex): string[] {
 	const warnings: string[] = [];
 	const features: [string[], string][] = [
-		[['object'], 'Embedded OLE objects (w:object) are preserved but rendered as a placeholder.'],
 		[['altChunk'], 'Embedded alternate-format content is not represented in the document model.'],
 		[
 			['fldSimple', 'instrText', 'fldChar'],
@@ -130,17 +128,21 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 	const warnings: string[] = [];
 	let hasPicture = false;
 	let hasAnchored = false;
+	let hasModel3d = false;
+	let hasOfficeObject = false;
 	const unsupportedKinds = new Set<string>();
 	let hasBookmarks = false;
 	forEachParagraph(blocks, (paragraph) => {
 		if (paragraph.bookmarks?.length) hasBookmarks = true;
 		for (const run of paragraph.runs) {
 			if (!run.image) continue;
+			hasModel3d ||= run.image.payload?.kind === 'model3d';
+			hasOfficeObject ||= run.image.payload?.kind === 'officePackage';
 			if (run.image.unsupported) {
 				// A SmartArt shown from its cached drawing gets its own, more precise warning.
 				if (run.image.diagram?.rendering !== 'cached-drawing')
 					unsupportedKinds.add(run.image.unsupported);
-			} else hasPicture = true;
+			} else if (!run.image.payload) hasPicture = true;
 			if (run.image.anchored) hasAnchored = true;
 		}
 	});
@@ -152,6 +154,12 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 		warnings.push(
 			'Floating pictures follow their text wrapping approximately (floated left or right, or on their own line); exact positions, vertical offsets and in-front/behind layering are not reproduced.',
 		);
+	if (hasModel3d)
+		warnings.push(
+			'3D models use their saved image in the browser. Open in Word to rotate or edit the model.',
+		);
+	if (hasOfficeObject)
+		warnings.push('Embedded Office objects keep their files. Open in Word to activate the object.');
 	if (unsupportedKinds.size)
 		warnings.push(
 			`${Array.from(unsupportedKinds).join(', ')} content is rendered as a labeled placeholder and is not editable.`,

@@ -45,6 +45,8 @@ const paths = {
 	find: 'M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12z M14.5 14.5 20 20',
 	table: 'M4 5h16v14H4z M4 10h16 M4 15h16 M10 5v14 M15 5v14',
 	insertIcon: 'm12 3 2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6-4.3-4.2 6-.9z',
+	insertModel3d: 'm12 3 8 4.5v9L12 21l-8-4.5v-9L12 3zm0 9 8-4.5M12 12 4 7.5M12 12v9',
+	insertObject: 'M4 4h12v12H4zM8 8h12v12H8z',
 	insertWordArt: 'M4 20 12 4l7 16M7 14h9M16 21l4-4',
 	picture: 'M4 5h16v14H4z M4 16l5-5 4 4 3-3 4 4 M15.5 9.5h.01',
 	formatPicture: 'M4 6h12v12H4z M4 15l3-3 3 3 M16 4l4 4-7 7h-4v-4z',

@@ -43,6 +43,7 @@ import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
 import { pickOfficeSymbol } from '../form/symbol-picker';
 import { insertPlainText } from './insert-text-commands';
+import { insertLocalDrawing } from './insert-local-drawing';
 import { captureScreenshotFile } from '../form/display-clipping';
 import { pickOfficeIcon } from '../form/icon-picker';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
@@ -132,6 +133,9 @@ export class InsertController {
 			if (view?.editable) void this.insertSymbol(view);
 		} else if (action.type === 'insertIcon') {
 			if (view?.editable) void this.insertIcon(view);
+		} else if (action.type === 'insertLocalDrawing') {
+			if (view?.editable)
+				void insertLocalDrawing(view, action.kind, this.locale, this.host, this.pendingMedia);
 		} else if (action.type === 'insertWordArt') {
 			if (view?.editable) void this.insertWordArt(view);
 		} else if (action.type === 'pictureBullet') {
@@ -156,7 +160,12 @@ export class InsertController {
 			if (editable) this.linkDialog.open();
 		} else if (action.type === 'formatPicture') {
 			const selection = view?.state.selection;
-			if (editable && selection instanceof NodeSelection && selection.node.type.name === 'image')
+			if (
+				editable &&
+				selection instanceof NodeSelection &&
+				selection.node.type.name === 'image' &&
+				!selection.node.attrs.payload
+			)
 				this.pictureDialog.open(selection.from);
 		} else if (action.type === 'picture') {
 			const pos = view && selectedPicturePos(view.state);

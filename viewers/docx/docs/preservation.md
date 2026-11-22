@@ -129,9 +129,15 @@ package over a limit is rejected before any part is read.
 ## Reported at load, not changed by a save
 
 `model.warnings` lists features that load but do not render or edit like Word, for example
-embedded OLE objects (kept, drawn as a placeholder), complex `HYPERLINK` fields (kept as field codes),
+3D models (kept with their saved image), embedded Office objects (kept with their icon when
+available), and complex `HYPERLINK` fields (kept as field codes),
 table-structure tracked changes (kept in the XML, not in the model), picture bullets and some
 style-linked numbering, and editing restrictions that are kept but not enforced.
+
+Insert > 3D Models adds a local, self-contained GLB and a static preview. Insert > Object
+embeds a local .docx, .xlsx or .pptx as an icon. The native payloads stay in the DOCX on save.
+Desktop Word can rotate the model and activate the object. The browser displays the available
+preview or a placeholder, including for legacy OLE objects with unsupported previews.
 
 ## Known limits of the guarantee
 

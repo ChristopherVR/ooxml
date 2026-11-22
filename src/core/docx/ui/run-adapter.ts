@@ -97,6 +97,7 @@ export function runToInlineNodes(
 						: null,
 					diagram: run.image.diagram ? JSON.stringify(run.image.diagram) : null,
 					chart: run.image.chart ? JSON.stringify(run.image.chart) : null,
+					payload: run.image.payload ? JSON.stringify(run.image.payload) : null,
 					shape: run.image.shape ? JSON.stringify(run.image.shape) : null,
 					watermark: run.image.watermark ? JSON.stringify(run.image.watermark) : null,
 					pictureWatermark: run.image.pictureWatermark
@@ -205,6 +206,9 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 					? { diagram: JSON.parse(child.attrs.diagram) }
 					: {}),
 				...(typeof child.attrs.chart === 'string' ? { chart: JSON.parse(child.attrs.chart) } : {}),
+				...(typeof child.attrs.payload === 'string'
+					? { payload: JSON.parse(child.attrs.payload) }
+					: {}),
 				...(typeof child.attrs.shape === 'string' ? { shape: JSON.parse(child.attrs.shape) } : {}),
 				...(typeof child.attrs.watermark === 'string'
 					? { watermark: JSON.parse(child.attrs.watermark) }

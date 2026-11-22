@@ -205,7 +205,7 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		if (painted) dom.append(painted);
 		dom.addEventListener('dblclick', () => {
 			const pos = getPos();
-			if (pos !== undefined && view.editable) options.editPicture?.(pos);
+			if (pos !== undefined && view.editable && !node.attrs.payload) options.editPicture?.(pos);
 		});
 		const handle = createResizeHandle('dve-picture-handle', {
 			...sizeOf(node, view, getPos, options),
