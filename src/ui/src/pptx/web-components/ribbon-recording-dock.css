@@ -77,3 +77,25 @@
 		min-block-size: 44px;
 	}
 }
+@media (forced-colors: active) {
+	.pptx-recording-dock button:focus-visible {
+		outline-color: Highlight;
+	}
+	.pptx-recording-dock button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	.pptx-recording-dock button[aria-pressed='true']:focus-visible {
+		outline-color: HighlightText;
+	}
+	.pptx-recording-indicator {
+		forced-color-adjust: none;
+		background: CanvasText;
+	}
+	.pptx-recording-dock[data-paused] .pptx-recording-indicator {
+		border-color: CanvasText;
+		background: Canvas;
+	}
+}
