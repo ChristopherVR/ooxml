@@ -622,6 +622,27 @@ export interface ImageObject {
 	sourceXml?: string;
 }
 
+interface LocalAssetDrawing {
+	anchor: DrawingAnchor;
+	name: string;
+	/** The local binary asset and the image shown when it cannot be activated. */
+	partName: string;
+	previewPartName: string;
+	previewContentType: string;
+	/** Keeps the drawing's native formatting when it is moved or saved. */
+	sourceXml?: string;
+}
+
+export interface Model3DObject extends LocalAssetDrawing {
+	kind: 'model3d';
+}
+
+export interface EmbeddedDocumentObject extends LocalAssetDrawing {
+	kind: 'embeddedObject';
+	progId: string;
+	contentType: string;
+}
+
 export type ChartType = ChartSummaryType;
 
 /** A spreadsheet chart series: the neutral summary series plus its SpreadsheetML colour. */
@@ -762,6 +783,8 @@ export interface SmartArtObject {
 
 export type DrawingObject =
 	| ImageObject
+	| Model3DObject
+	| EmbeddedDocumentObject
 	| ChartObject
 	| SmartArtObject
 	| SlicerFrameObject

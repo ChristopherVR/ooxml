@@ -15,6 +15,7 @@ import { fontCommands } from 'ooxml-core/xlsx/ui';
 import { formulaCommands } from 'ooxml-core/xlsx/ui';
 import { registerSheetIcons } from './register-icons';
 import { insertCommands } from './insert';
+import { localObjectCommands } from './local-object';
 import { sparklineCommands } from './sparklines';
 import { pivotCommands } from './pivots';
 import { slicerCommands } from './slicers';
@@ -39,6 +40,7 @@ export function allCommands(): Command[] {
 		...editingCommands(),
 		...insertNowCommands(),
 		...insertCommands(),
+		...localObjectCommands(),
 		...sparklineCommands(),
 		...pivotCommands(),
 		...slicerCommands(),

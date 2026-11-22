@@ -32,6 +32,7 @@ import * as customViews from './custom-views';
 import * as sparklineGrouping from './sparkline-grouping';
 import * as docProps from './doc-properties';
 import * as drawings from './drawings';
+import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
 import * as slicers from './slicers';
@@ -302,6 +303,7 @@ export function createEditSession(
 		deleteTimeline: (name) => timelines.deleteTimeline(ctx, name),
 		deleteDrawing: (s, index) => drawings.deleteDrawing(ctx, s, index),
 		addWordArt: (s, anchor, value) => drawings.addWordArt(ctx, s, anchor, value),
+		insertLocalObject: (s, input) => insertLocalObject(ctx, s, input),
 		editWordArt: (s, index, value) => drawings.editWordArt(ctx, s, index, value),
 		editSmartArt: (s, index, edit) => smartArt.editSmartArt(ctx, s, index, edit),
 		formatSmartArt: (s, index, change) => smartArt.formatSmartArt(ctx, s, index, change),

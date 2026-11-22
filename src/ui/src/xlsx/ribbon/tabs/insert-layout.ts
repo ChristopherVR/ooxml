@@ -43,6 +43,7 @@ export function insertTab(): RibbonTab {
 						items: [{ command: 'insert.screenshot' }, { command: 'insert.screen-clipping' }],
 					},
 					{ kind: 'button', command: 'insert.icons', size: 'large' },
+					{ kind: 'button', command: 'insert.3d-models', size: 'large' },
 					{ kind: 'button', command: 'insert.smartart', size: 'large' },
 				],
 			},
@@ -117,6 +118,7 @@ export function insertTab(): RibbonTab {
 				label: 'Symbols',
 				controls: [
 					{ kind: 'button', command: 'insert.word-art', size: 'large' },
+					{ kind: 'button', command: 'insert.object', size: 'large' },
 					{ kind: 'button', command: 'insert.symbol', size: 'large' },
 				],
 			},

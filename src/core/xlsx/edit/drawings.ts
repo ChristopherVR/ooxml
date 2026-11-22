@@ -17,7 +17,7 @@ function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
 	return drawing;
 }
 
-function checkAnchor(anchor: DrawingAnchor): void {
+export function checkAnchor(anchor: DrawingAnchor): void {
 	const points = [anchor.from, ...(anchor.to ? [anchor.to] : [])];
 	for (const p of points)
 		if (

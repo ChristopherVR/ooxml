@@ -11,6 +11,7 @@ import type { SourceIndex } from './package';
 import { readSlicerFrame } from '../slicer/frame';
 import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
 import { readFormControlFrame } from './form-control';
+import { embeddedPicture, readModel3D, type EmbeddedObjectDeclarations } from './local-object';
 import { readShapeNode } from './shape';
 import { att, selfContainedXml } from './xml-util';
 
@@ -85,6 +86,7 @@ export function parseDrawing(
 	source: SourceIndex,
 	partName: string,
 	warn: (message: string) => void,
+	embedded?: EmbeddedObjectDeclarations,
 ): DrawingObject[] {
 	const xml = source.text(partName);
 	if (!xml) return [];
@@ -137,7 +139,7 @@ export function parseDrawing(
 			if (name) image.name = name;
 			const descr = att(cNvPr, 'descr');
 			if (descr) image.description = descr;
-			out.push(image);
+			out.push(embeddedPicture(image, att(cNvPr, 'id'), embedded) ?? image);
 			continue;
 		}
 		if (content.localName === 'graphicFrame') {
@@ -185,6 +187,11 @@ export function parseDrawing(
 			continue;
 		}
 		if (content.localName === 'AlternateContent') {
+			const model = readModel3D(source, partName, content, anchorEl, anchor);
+			if (model) {
+				out.push(model);
+				continue;
+			}
 			const frame = readSlicerFrame(content, anchor, selfContainedXml(anchorEl));
 			if (frame) {
 				out.push(frame);

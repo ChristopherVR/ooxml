@@ -62,6 +62,14 @@ export function writeWorksheet(
 	let sourceDrawing: string | undefined;
 	if (source && sheet.partName && source.has(sheet.partName)) {
 		const ids = sourceRelIds(source, sheet.partName);
+		const localObjectRels = new Set(sheet.preserved.get('source:localObjectRels'));
+		if (localObjectRels.size)
+			for (const [key, fragments] of sheet.preserved) {
+				if (key.startsWith('source:')) continue;
+				for (const xml of fragments)
+					for (const match of xml.matchAll(/\br:(?:id|embed|link|pict)="([^"]*)"/g))
+						localObjectRels.delete(match[1] ?? '');
+			}
 		for (const [id, rel] of source.rels(sheet.partName)) {
 			const target = source.target(sheet.partName, rel);
 			if (
@@ -74,6 +82,7 @@ export function writeWorksheet(
 			if (target && ctx.workbook.slicers?.removedParts?.includes(target)) continue;
 			if (
 				REGENERATED.has(rel.type) ||
+				localObjectRels.has(id) ||
 				(rel.type === RELATIONSHIP_TYPES.vmlDrawing && id === ids.legacy)
 			)
 				continue;
@@ -129,7 +138,9 @@ export function writeWorksheet(
 		),
 	);
 	blocks.set('headerFooter', page.headerFooter);
-	blocks.set('drawing', writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing));
+	const drawing = writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing);
+	blocks.set('drawing', drawing.drawing);
+	blocks.set('oleObjects', drawing.oleObjects);
 	refreshFormControlParts(writer, ctx.workbook, sheet);
 	blocks.set('legacyDrawing', writeComments(ctx, sheet, index, partName, rels));
 	blocks.set('tableParts', tableParts);

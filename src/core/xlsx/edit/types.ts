@@ -256,6 +256,8 @@ export interface EditSession {
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
+	/** Insert a local 3D model or Office document; returns its drawing index. */
+	insertLocalObject(sheet: number, input: import('./local-object').LocalObjectInsertion): number;
 	addWordArt(
 		sheet: number,
 		anchor: DrawingAnchor,

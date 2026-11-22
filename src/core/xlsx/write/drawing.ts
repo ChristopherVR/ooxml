@@ -1,4 +1,5 @@
 import { setSvgPictureRelationship } from '../../drawingml/svg-picture';
+import { MODEL3D_REL } from '../../drawingml/index';
 import { applyPictureLayout } from '../../drawingml/picture-layout';
 import { applyPictureEffects, parsePictureEffects } from '../../drawingml/picture-effects';
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
@@ -10,6 +11,7 @@ import type {
 	ChartObject,
 	DrawingAnchor,
 	DrawingObject,
+	EmbeddedDocumentObject,
 	ImageObject,
 	ThemePalette,
 	Worksheet,
@@ -31,6 +33,12 @@ import {
 } from '../../chart/keep-source';
 import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
+import {
+	localPartRelationship,
+	model3DFrame,
+	modelPartRelationship,
+	previewPartRelationship,
+} from './local-object';
 import { XML_HEADER, escapeAttr } from './xml-out';
 import { patchWordArtShape, wordArtShapeXml } from '../word-art';
 import {
@@ -124,7 +132,11 @@ function reanchor(xml: string, anchor: DrawingAnchor): string {
 	return buildXml(doc);
 }
 
-function pictureXml(image: ImageObject, id: number, relId: string): string {
+function pictureXml(
+	image: Pick<ImageObject, 'anchor' | 'name' | 'description'>,
+	id: number,
+	relId: string,
+): string {
 	const ext = image.anchor.ext ?? { cx: 0, cy: 0 };
 	const descr = image.description ? ` descr="${escapeAttr(image.description)}"` : '';
 	return (
@@ -237,7 +249,11 @@ export function writeDrawing(
 	partName: string,
 	objects: readonly DrawingObject[],
 	sourceDrawing: string | undefined,
-	context?: { theme: ThemePalette; sheet: Worksheet },
+	context?: {
+		theme: ThemePalette;
+		sheet: Worksheet;
+		writeEmbedded: (object: EmbeddedDocumentObject, id: number) => string | undefined;
+	},
 ): boolean {
 	const rels = new RelationshipSet();
 	const source = writer.source;
@@ -248,7 +264,12 @@ export function writeDrawing(
 			const target = source.target(sourceDrawing, rel);
 			if (target && dropped.has(target)) continue;
 			rels.keep(id, rel);
-			if (target && rel.type !== RELATIONSHIP_TYPES.chart && rel.type !== RELATIONSHIP_TYPES.image)
+			if (
+				target &&
+				rel.type !== RELATIONSHIP_TYPES.chart &&
+				rel.type !== RELATIONSHIP_TYPES.image &&
+				rel.type !== MODEL3D_REL
+			)
 				writer.carry(target);
 		}
 	}
@@ -298,6 +319,33 @@ export function writeDrawing(
 		if (object.kind === 'formControl') {
 			// The control shape sits inside `mc:AlternateContent`; its anchor is not re-written.
 			body += object.sourceXml;
+			continue;
+		}
+		if (object.kind === 'model3d' || object.kind === 'embeddedObject') {
+			const relative = (part: string) => relativeTarget(partName, part);
+			const previewId = localPartRelationship(
+				writer,
+				rels,
+				relative,
+				previewPartRelationship(object),
+			);
+			if (!previewId) continue;
+			const id = nextId++;
+			const picture = pictureXml(object, id, previewId);
+			if (object.kind === 'embeddedObject') {
+				if (context?.writeEmbedded(object, id))
+					body += anchorXml(object.anchor, picture, 'oneCell');
+				continue;
+			}
+			const modelId = localPartRelationship(writer, rels, relative, modelPartRelationship(object));
+			if (!modelId) continue;
+			body +=
+				object.sourceXml && sourceDrawing
+					? reanchor(object.sourceXml, object.anchor)
+					: anchorXml(
+							object.anchor,
+							model3DFrame(object, id, modelId, previewId, picture, context?.sheet),
+						);
 			continue;
 		}
 		if (object.kind === 'unsupported' && object.shape?.wordArt) {
@@ -413,7 +461,9 @@ export function writeDrawing(
 	// Drop relationships to charts and images no longer drawn.
 	for (const [id, rel] of [...rels.entries]) {
 		if (
-			(rel.type === RELATIONSHIP_TYPES.chart || rel.type === RELATIONSHIP_TYPES.image) &&
+			(rel.type === RELATIONSHIP_TYPES.chart ||
+				rel.type === RELATIONSHIP_TYPES.image ||
+				rel.type === MODEL3D_REL) &&
 			!body.includes(`"${id}"`)
 		)
 			rels.entries.delete(id);

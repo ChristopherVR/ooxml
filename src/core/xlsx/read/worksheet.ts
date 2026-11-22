@@ -15,6 +15,7 @@ import { readDataValidations } from './data-validations';
 import { readValidationExtensions } from '../validation-extensions';
 import { readConditionalExtensions } from '../conditional-extensions';
 import { parseDrawing } from './drawing';
+import { readEmbeddedDeclarations } from './local-object';
 import { attachFormControls } from './form-control';
 import { readCustomSheetViews } from './custom-views';
 import { readHeaderFooterImages } from './header-footer-images';
@@ -269,7 +270,23 @@ function readWorksheet(
 	if (drawing) {
 		const rel = ctx.source.rels(partName).get(relAttr(drawing, 'id') ?? '');
 		const target = rel ? ctx.source.target(partName, rel) : undefined;
-		if (target) sheet.drawings = parseDrawing(ctx.source, target, (m) => ctx.warn(m));
+		if (target) {
+			const oleObjects = byName.get('oleObjects');
+			const embedded = oleObjects
+				? readEmbeddedDeclarations(ctx.source, partName, oleObjects)
+				: undefined;
+			sheet.drawings = parseDrawing(ctx.source, target, (m) => ctx.warn(m), embedded);
+			if (oleObjects && embedded?.read.size) {
+				for (const item of embedded.read) oleObjects.removeChild(item.node);
+				if (elements(oleObjects).length)
+					sheet.preserved.set('oleObjects', [selfContainedXml(oleObjects)]);
+				else sheet.preserved.delete('oleObjects');
+				sheet.preserved.set(
+					'source:localObjectRels',
+					[...embedded.read].flatMap((item) => item.relationIds),
+				);
+			}
+		}
 		attachFormControls(ctx.source, partName, root, sheet, byName.get('legacyDrawing'));
 	}
 	readTables(ctx, partName, byName.get('tableParts'), sheet);

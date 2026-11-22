@@ -398,6 +398,18 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Estilos y transformaciones de texto de WordArt',
 		'艺术字样式和文本转换',
 	],
+	'Local GLB models and embedded Office files with static previews': [
+		'Modèles GLB locaux et fichiers Office incorporés avec aperçus statiques',
+		'Lokale GLB-Modelle und eingebettete Office-Dateien mit statischen Vorschauen',
+		'Modelos GLB locales y archivos de Office incrustados con vistas previas estáticas',
+		'支持静态预览的本地 GLB 模型和嵌入的 Office 文件',
+	],
+	'Interactive 3D editing and opening OLE objects in place': [
+		'Modification 3D interactive et ouverture sur place des objets OLE',
+		'Interaktive 3D-Bearbeitung und Öffnen von OLE-Objekten an Ort und Stelle',
+		'Edición 3D interactiva y apertura de objetos OLE en el lugar',
+		'交互式 3D 编辑和就地打开 OLE 对象',
+	],
 	'Comments and notes': [
 		'Commentaires et notes',
 		'Kommentare und Notizen',

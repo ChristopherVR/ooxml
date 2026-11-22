@@ -14,6 +14,7 @@ import { chartWithCurrentCaches } from './chart-cache';
 import { commentParts, type PersonRegistry } from './comments';
 import { CommentIds } from './comment-ids';
 import { relativeTarget, savedDrawingShape, writeDrawing } from './drawing';
+import { embeddedObjectXml, mergeOleObjects } from './local-object';
 import type { MetadataPlan } from './metadata';
 import type { PackageWriter, RelationshipSet } from './package-writer';
 import type { SharedStringTable } from './shared-strings';
@@ -231,10 +232,12 @@ export function writeSheetDrawing(
 	partName: string,
 	rels: RelationshipSet,
 	sourceDrawing: string | undefined,
-): string {
-	if (!sheet.drawings.length) return '';
+): { drawing: string; oleObjects: string } {
+	const empty = { drawing: '', oleObjects: '' };
+	if (!sheet.drawings.length) return empty;
 	const { writer, source } = ctx;
-	if (source && sourceDrawing && source.has(sourceDrawing)) {
+	const hasEmbedded = sheet.drawings.some((object) => object.kind === 'embeddedObject');
+	if (source && sourceDrawing && source.has(sourceDrawing) && !hasEmbedded) {
 		const unchanged = sameModel(
 			savedDrawingShape(parseDrawing(source, sourceDrawing, () => undefined)),
 			savedDrawingShape(sheet.drawings),
@@ -244,7 +247,10 @@ export function writeSheetDrawing(
 				? writer.uniqueName((n) => `xl/drawings/drawing${n}.xml`, ctx.reserved)
 				: sourceDrawing;
 			writer.carry(sourceDrawing, target);
-			return `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`;
+			return {
+				drawing: `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`,
+				oleObjects: '',
+			};
 		}
 	}
 	const target =
@@ -260,7 +266,29 @@ export function writeSheetDrawing(
 				? chartWithCurrentCaches(ctx.workbook, sheet, object)
 				: object,
 		);
-	if (!writeDrawing(writer, target, drawings, sourceDrawing, { theme: ctx.workbook.theme, sheet }))
-		return '';
-	return `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`;
+	const entries: string[] = [];
+	const wrote = writeDrawing(writer, target, drawings, sourceDrawing, {
+		theme: ctx.workbook.theme,
+		sheet,
+		writeEmbedded: (object, id) => {
+			const entry = embeddedObjectXml(
+				writer,
+				rels,
+				(part) => relativeTarget(partName, part),
+				sheet,
+				object,
+				id,
+			);
+			if (entry) entries.push(entry);
+			return entry;
+		},
+	});
+	if (!wrote) return empty;
+	return {
+		drawing: `<drawing r:id="${rels.add(RELATIONSHIP_TYPES.drawing, relativeTarget(partName, target))}"/>`,
+		oleObjects: mergeOleObjects(
+			entries,
+			sheet.partName ? (sheet.preserved.get('oleObjects') ?? []) : [],
+		),
+	};
 }

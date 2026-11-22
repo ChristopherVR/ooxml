@@ -244,6 +244,16 @@ export class DrawingLayer {
 				node.append(svg);
 			}
 			node.append(img);
+		} else if (drawing.kind === 'model3d' || drawing.kind === 'embeddedObject') {
+			const img = h(doc, 'img', '', {
+				alt:
+					drawing.name || view.ctx.t(drawing.kind === 'model3d' ? '3D Models' : 'Embedded Object'),
+				draggable: 'false',
+			});
+			const url = this.#url(drawing.previewPartName, drawing.previewContentType);
+			if (url) img.src = url;
+			img.style.objectFit = 'contain';
+			node.append(img);
 		} else if (drawing.kind === 'chart') {
 			this.#paintChart(node, drawing, box);
 		} else if (drawing.kind === 'slicer') {
