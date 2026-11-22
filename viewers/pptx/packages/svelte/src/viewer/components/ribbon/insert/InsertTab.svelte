@@ -127,6 +127,7 @@
 			themeColors: editor.themeColorMap,
 			insert: editor.insertElement,
 			sections: editor.sections,
+			importSlides: editor.importSlides,
 			insertSummary: (mutation: import('ooxml-ui/pptx').SummaryZoomMutation) => {
 				editor.pushHistory();
 				editor.sections = mutation.sections;

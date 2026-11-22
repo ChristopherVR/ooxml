@@ -13,6 +13,8 @@ export const deRibbon: RibbonStrings = {
 	'Your text here': 'Ihr Text hier',
 	'WordArt style': 'WordArt-Stil',
 	Icons: 'Piktogramme',
+	Screenshot: 'Screenshot',
+	'Screen Clipping': 'Bildschirmausschnitt',
 	'Search icons': 'Piktogramme suchen',
 	'Icon color': 'Piktogrammfarbe',
 	'No matching icons.': 'Keine passenden Piktogramme.',

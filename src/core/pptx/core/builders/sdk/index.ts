@@ -291,6 +291,8 @@ export type {
 	CustomPathInput,
 } from './types';
 
+export { createPhotoAlbum } from './photo-album';
+export type { PhotoAlbumOptions, PhotoAlbumPicture } from './photo-album';
 export { importSlidePackage } from './import-slide-package';
 export type { ImportSlidePackageOptions, ImportSlidePackageResult } from './import-slide-package';
 export { createSlideClipboardPackage } from './import-slide-package';

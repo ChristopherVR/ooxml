@@ -38,6 +38,7 @@ import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
 import { pickOfficeSymbol } from '../form/symbol-picker';
 import { insertPlainText } from './insert-text-commands';
+import { captureScreenshotFile } from '../form/display-clipping';
 import { pickOfficeIcon } from '../form/icon-picker';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
@@ -120,6 +121,8 @@ export class InsertController {
 		if (this.smartArt.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
+		} else if (action.type === 'insertScreenshot') {
+			if (view?.editable) void this.insertScreenshot(view, action.clip);
 		} else if (action.type === 'openSymbolGallery') {
 			if (view?.editable) void this.insertSymbol(view);
 		} else if (action.type === 'insertIcon') {
@@ -400,6 +403,35 @@ export class InsertController {
 			border: false,
 			wordArt: selected.style,
 		});
+	}
+
+	private async insertScreenshot(view: EditorView, clip: boolean): Promise<void> {
+		const parent = this.host.toolbar() ?? this.host.paper();
+		if (!parent) return;
+		const selection = view.state.selection;
+		const t = (key: Parameters<typeof translate>[1]) => translate(this.locale, key);
+		try {
+			const file = await captureScreenshotFile(
+				parent,
+				t('Screenshot'),
+				clip
+					? {
+							heading: t('Screen Clipping'),
+							close: t('Close'),
+							cancel: t('Cancel'),
+							insert: t('Insert'),
+							x: 'X',
+							y: 'Y',
+							width: t('Width'),
+							height: t('Height'),
+						}
+					: undefined,
+			);
+			if (file && this.host.view() === view && view.editable && selection.eq(view.state.selection))
+				await this.insertPictureFile(file);
+		} catch (cause) {
+			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
+		}
 	}
 
 	private async insertSelectedPicture(): Promise<void> {

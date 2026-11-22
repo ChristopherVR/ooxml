@@ -108,3 +108,45 @@ test.describe('phone Insert ribbon', () => {
 		await expect(host.locator('.xg-obj img')).toHaveCount(2);
 	});
 });
+
+test('inserts a cropped screenshot as a native workbook picture', async ({ page }) => {
+	await page.addInitScript(() => {
+		Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
+			configurable: true,
+			value: () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = 320;
+				canvas.height = 180;
+				const paint = canvas.getContext('2d')!;
+				const stream = canvas.captureStream(20);
+				let frame = 0;
+				const timer = setInterval(() => {
+					if (stream.getVideoTracks()[0]?.readyState === 'ended') clearInterval(timer);
+					else {
+						paint.fillStyle = frame++ % 2 ? '#0451a5' : '#00aa77';
+						paint.fillRect(0, 0, 320, 180);
+					}
+				}, 50);
+				return Promise.resolve(stream);
+			},
+		});
+	});
+	await page.setViewportSize({ width: 1600, height: 850 });
+	await openLanding(page);
+	await newWorkbook(page);
+	const host = editor(page);
+	await host.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await clickRibbonControl(page, host.getByRole('button', { name: 'Screenshot', exact: true }));
+	await host.getByText('Screen Clipping', { exact: true }).click();
+	const dialog = page.locator('office-ui-dialog[open]').filter({
+		has: page.getByRole('heading', { name: 'Screen Clipping', exact: true }),
+	});
+	await dialog.getByRole('spinbutton', { name: 'Width', exact: true }).fill('120');
+	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+	await expect(host.locator('.xg-obj img')).toHaveCount(1);
+	const bytes = await host.evaluate(async (node) =>
+		Array.from(await (node as unknown as { saveBytes(): Promise<Uint8Array> }).saveBytes()),
+	);
+	const saved = await loadXlsx(Uint8Array.from(bytes));
+	expect(saved.sheets[0]?.drawings[0]).toMatchObject({ kind: 'image' });
+});

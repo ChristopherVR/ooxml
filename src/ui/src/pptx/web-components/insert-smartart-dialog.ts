@@ -9,8 +9,8 @@ import {
 	smartArtCategoryLabelKey,
 	smartArtPresetLabelKey,
 } from '../render/smart-art-presets';
-import { createInsertDialogFrame, insertDialogText } from './insert-dialog-frame';
-import type { InsertDialogFrame, InsertDialogTranslate } from './insert-dialog-frame';
+import { createInsertDialogFrame, insertDialogText } from '../../dialog/insert-dialog-frame';
+import type { InsertDialogFrame, InsertDialogTranslate } from '../../dialog/insert-dialog-frame';
 
 /** What Insert hands the host: the layout and the node texts to seed it with. */
 export interface InsertSmartArtDialogDetail {

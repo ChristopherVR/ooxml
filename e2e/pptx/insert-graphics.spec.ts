@@ -128,7 +128,9 @@ test('creates sections from selected slides in a deck without any sections', asy
 	await ribbon.getByRole('button', { name: 'Zoom', exact: true }).click();
 	await ribbon.locator('[data-insert-item="summaryZoom"]').click();
 	const dialog = ribbon.locator('office-ui-dialog[open]');
-	await expect(dialog.getByRole('checkbox', { checked: true })).toHaveCount(0);
+	await expect(dialog.getByRole('checkbox', { name: /^Slide \d+\b/, checked: true })).toHaveCount(
+		0,
+	);
 	await dialog.getByRole('checkbox', { name: /^Slide 1\b/ }).check();
 	await dialog.getByRole('checkbox', { name: /^Slide 4\b/ }).check();
 	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();

@@ -2669,6 +2669,9 @@ export class PowerPointViewerComponent
 
 	constructor() {
 		super();
+		this.editor.importSlides.set((source, indexes) =>
+			this.slidePackageClipboard.importSlides(this.activeSlideIndex() + 1, source, indexes),
+		);
 		this.commentsPanel.attach({
 			activeSlideIndex: () => this.activeSlideIndex(),
 			canEdit: () => this.canEdit(),

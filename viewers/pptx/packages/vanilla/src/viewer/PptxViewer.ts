@@ -219,6 +219,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 	protected readonly exporter: ExportLifecycle;
 	private readonly loading: LoadingController;
 	private readonly slidePackageClipboard: SlidePackageClipboard;
+	importSlides = (source: ArrayBuffer, indexes: readonly number[]): Promise<void> =>
+		this.slidePackageClipboard.importSlides(this.store.get().currentSlide + 1, source, indexes);
 	private readonly registry: ElementRendererRegistry;
 	private readonly sessions: SessionControllers;
 	private readonly controls: ViewerControls;

@@ -7,6 +7,8 @@ export const frRibbon: RibbonStrings = {
 	'Your text here': 'Votre texte ici',
 	'WordArt style': 'Style WordArt',
 	Icons: 'Icônes',
+	Screenshot: 'Capture d’écran',
+	'Screen Clipping': 'Capture de zone',
 	'Search icons': 'Rechercher des icônes',
 	'Icon color': 'Couleur de l’icône',
 	'No matching icons.': 'Aucune icône correspondante.',

@@ -63,6 +63,7 @@ export interface ViewerToolbarSectionProps {
 	mode: ViewerMode;
 	/** File > New replaced the presentation. */
 	onNewPresentation?: () => void;
+	onImportSlides?: (source: ArrayBuffer, indexes: readonly number[]) => Promise<void>;
 	canEdit: boolean;
 	state: {
 		isDirty: boolean;
@@ -658,6 +659,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 						themeColors: templateSchemeFromTheme(s.theme?.colorScheme),
 						insert: insertHandlers.addElement,
 						sections: s.sections ?? [],
+						importSlides: props.onImportSlides,
 						insertSummary: s.setSections
 							? ({ slides, sections, slideIndex }) => {
 									history.markDirty();

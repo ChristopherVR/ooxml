@@ -51,6 +51,8 @@ export const RIBBON_TAB_STRINGS: Translations = {
 		'艺术字样式 {n}',
 	],
 	Icons: ['Icônes', 'Piktogramme', 'Iconos', '图标'],
+	Screenshot: ['Capture d’écran', 'Screenshot', 'Captura de pantalla', '屏幕截图'],
+	'Screen Clipping': ['Capture de zone', 'Bildschirmausschnitt', 'Recorte de pantalla', '屏幕剪辑'],
 	'Search icons': ['Rechercher des icônes', 'Piktogramme suchen', 'Buscar iconos', '搜索图标'],
 	'Icon color': ['Couleur de l’icône', 'Piktogrammfarbe', 'Color del icono', '图标颜色'],
 	'No matching icons.': [

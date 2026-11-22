@@ -1,3 +1,4 @@
+import { canCaptureDisplay } from '../form/display-capture';
 import { createMultilingualControls } from './multilingual-ribbon';
 import { createReviewControls } from './review-ribbon';
 import { buildParagraphSpacing } from './ribbon-home';
@@ -58,6 +59,21 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			...createReviewControls(),
 			languageControls,
 		);
+	const screenshot = menuSelect(
+		'Screenshot',
+		'picture',
+		[
+			['full', 'Screenshot'],
+			['clip', 'Screen Clipping'],
+		],
+		(value) => ({ type: 'insertScreenshot', clip: value === 'clip' }),
+		{ momentary: true },
+	);
+	const captureSelect = screenshot.querySelector('select');
+	if (captureSelect && !canCaptureDisplay()) {
+		captureSelect.disabled = true;
+		captureSelect.dataset.unavailable = '';
+	}
 	panels.get('Insert')!.append(
 		group(
 			'Tables',
@@ -71,6 +87,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 				{ type: 'insertPicture' },
 				{ large: true, caption: 'Pictures', name: 'ribbon.name.insertPictures' },
 			),
+			screenshot,
 			tool('Icons', 'insertIcon', { type: 'insertIcon' }, { large: true }),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
 			tool(

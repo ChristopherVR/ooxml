@@ -14,6 +14,7 @@ import type {
 	RibbonInsertCommand,
 	RibbonInsertAction,
 	RibbonInsertState,
+	RibbonInsertWorkflow,
 } from './ribbon-insert-state';
 
 export interface InsertMenuEntry {
@@ -79,6 +80,7 @@ const entry = (
 	intent?: RibbonInsertAction,
 ): InsertMenuEntry => ({ id, label: label(key, fallback), ...(intent ? { intent } : {}) });
 const command = (value: RibbonInsertCommand): RibbonInsertAction => ({ kind: 'command', value });
+const workflow = (value: RibbonInsertWorkflow): RibbonInsertAction => ({ kind: 'workflow', value });
 
 /** A control with its own label and ScreenTip. */
 const control = (
@@ -117,6 +119,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'reuseSlides',
 				'Reuse Slides',
 				'Insert slides from another presentation.',
+				{ intent: workflow('reuseSlides') },
 			),
 		],
 	},
@@ -156,7 +159,17 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'screenshot',
 				'Screenshot',
 				'Add a screenshot of a window or part of your screen.',
-				{ menu: [entry('screenClipping', 'pptx.insert.screenClipping', 'Screen Clipping')] },
+				{
+					menu: [
+						entry('screenshot', 'pptx.insert.screenshot', 'Screenshot', workflow('screenshot')),
+						entry(
+							'screenClipping',
+							'pptx.insert.screenClipping',
+							'Screen Clipping',
+							workflow('screenClipping'),
+						),
+					],
+				},
 			),
 			control(
 				'insert.images.photoAlbum',
@@ -164,7 +177,16 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'photoAlbum',
 				'Photo Album',
 				'Create a presentation from a set of pictures.',
-				{ menu: [entry('newPhotoAlbum', 'pptx.insert.newPhotoAlbum', 'New Photo Album...')] },
+				{
+					menu: [
+						entry(
+							'newPhotoAlbum',
+							'pptx.insert.newPhotoAlbum',
+							'New Photo Album...',
+							workflow('photoAlbum'),
+						),
+					],
+				},
 			),
 		],
 	},
@@ -383,6 +405,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'screenRecording',
 				'Screen Recording',
 				'Record your screen and audio, then add the recording to the slide.',
+				{ intent: workflow('screenRecording') },
 			),
 		],
 	},

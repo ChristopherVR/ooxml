@@ -138,6 +138,7 @@ export class RibbonInsertSectionComponent {
 				themeColors: this.loader.themeColorMap(),
 				insert: (element: PptxElement) => this.editor.addElement(this.slideIndex(), element),
 				sections: this.editor.sections(),
+				importSlides: this.editor.importSlides(),
 				insertSummary: this.editor.commitSummaryZoom.bind(this.editor),
 			}),
 			layouts: this.layouts(),

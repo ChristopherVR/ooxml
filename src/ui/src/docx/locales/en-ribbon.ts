@@ -6,6 +6,8 @@ export const enRibbon = {
 	'Your text here': 'Your text here',
 	'WordArt style': 'WordArt style',
 	Icons: 'Icons',
+	Screenshot: 'Screenshot',
+	'Screen Clipping': 'Screen Clipping',
 	'Search icons': 'Search icons',
 	'Icon color': 'Icon color',
 	'No matching icons.': 'No matching icons.',

@@ -13,6 +13,8 @@ export const zhCNRibbon: RibbonStrings = {
 	'Your text here': '在此输入文本',
 	'WordArt style': '艺术字样式',
 	Icons: '图标',
+	Screenshot: '屏幕截图',
+	'Screen Clipping': '屏幕剪辑',
 	'Search icons': '搜索图标',
 	'Icon color': '图标颜色',
 	'No matching icons.': '没有匹配的图标。',

@@ -37,6 +37,11 @@ export function insertTab(): RibbonTab {
 				label: 'Illustrations',
 				controls: [
 					{ kind: 'button', command: 'insert.pictures', size: 'large' },
+					{
+						kind: 'menu',
+						label: 'Screenshot',
+						items: [{ command: 'insert.screenshot' }, { command: 'insert.screen-clipping' }],
+					},
 					{ kind: 'button', command: 'insert.icons', size: 'large' },
 					{ kind: 'button', command: 'insert.smartart', size: 'large' },
 				],

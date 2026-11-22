@@ -1,4 +1,5 @@
 import { interpolate } from 'ooxml-core/i18n';
+import { canCaptureDisplay } from '../../form/display-capture';
 import type { Translator } from '../i18n/translator';
 import type { PptxElement, PptxSection, PptxSlide } from 'ooxml-core/pptx';
 import type { SummaryZoomMutation } from 'ooxml-core/pptx/editor/render/summary-zoom-operations';
@@ -51,10 +52,17 @@ export interface RibbonGraphicTarget {
 	insert: (element: PptxElement) => void;
 	sections: readonly PptxSection[];
 	insertSummary?: ((mutation: SummaryZoomMutation) => void) | undefined;
+	importSlides?: ((source: ArrayBuffer, indexes: readonly number[]) => Promise<void>) | undefined;
 }
 
 export type RibbonGraphic = 'icons' | 'symbol' | 'wordArt';
 export type RibbonZoom = 'slide' | 'section' | 'summary';
+export type RibbonInsertWorkflow =
+	| 'screenshot'
+	| 'screenClipping'
+	| 'screenRecording'
+	| 'photoAlbum'
+	| 'reuseSlides';
 
 export type RibbonInsertField = 'slidenum' | 'datetime' | 'header' | 'footer';
 
@@ -117,7 +125,8 @@ export type RibbonInsertIntent =
 
 export type GraphicInsertIntent =
 	| { kind: 'graphic'; value: RibbonGraphic }
-	| { kind: 'zoom'; value: RibbonZoom };
+	| { kind: 'zoom'; value: RibbonZoom }
+	| { kind: 'workflow'; value: RibbonInsertWorkflow };
 
 export type RibbonInsertAction = RibbonInsertIntent | GraphicInsertIntent;
 
@@ -277,6 +286,21 @@ export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertA
 		case 'graphic': {
 			const target = state.editable ? state.getGraphicTarget?.() : undefined;
 			return Boolean(target?.slides[target.slideIndex]);
+		}
+		case 'workflow': {
+			const target = state.editable ? state.getGraphicTarget?.() : undefined;
+			if (!target?.slides[target.slideIndex]) return false;
+			switch (intent.value) {
+				case 'reuseSlides':
+					return typeof target.importSlides === 'function';
+				case 'photoAlbum':
+					return true;
+				case 'screenshot':
+				case 'screenClipping':
+					return canCaptureDisplay();
+				case 'screenRecording':
+					return canCaptureDisplay() && typeof globalThis.MediaRecorder === 'function';
+			}
 		}
 		case 'zoom': {
 			const target = state.editable ? state.getGraphicTarget?.() : undefined;

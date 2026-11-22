@@ -40,6 +40,18 @@ Every request also sends what any browser request sends: the reader's IP address
 user agent and, for some requests, a `Referer`. That is the main privacy cost of each third-party
 destination above, even when no document content is sent.
 
+## Screenshots and screen recordings
+
+- **Trigger:** selecting Screenshot or Screen Clipping in PowerPoint, Word or Excel, or
+  starting a Screen Recording in PowerPoint. The browser asks the user which surface to share
+  each time. For a recording, the user can also share supported surface audio.
+- **Data:** the selected screen, window or tab is processed in memory. A screenshot or recording
+  is embedded in the open document only when inserted. The capture stops when the user finishes
+  or cancels and its permission is never stored by the app.
+- **Network:** capture makes no network requests. If the user inserts the result into a shared
+  document, the existing collaboration settings govern transfer to peers. Photo Album and Reuse
+  Slides read the chosen files locally. Existing linked-content rules apply to links in reused slides.
+
 ## PowerPoint (`ooxml-ui/pptx` and the `pptx-*-viewer` packages)
 
 ### Fonts that are neither installed nor embedded

@@ -131,6 +131,7 @@ export type RibbonAction =
 	| { type: 'reviewDisplay'; value: ReviewDisplayMode }
 	| { type: 'comments'; key: 'toggle' | 'add' | 'delete' | 'previous' | 'next' }
 	| { type: 'insertPicture' }
+	| { type: 'insertScreenshot'; clip: boolean }
 	| { type: 'insertIcon' }
 	| { type: 'insertWordArt' }
 	/** Bullets > Picture bullet...: choose an image file and start a list that draws it. */

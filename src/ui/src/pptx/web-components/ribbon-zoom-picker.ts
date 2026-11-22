@@ -8,7 +8,7 @@ import { createRibbonZoom, zoomChoices } from '../render/ribbon-zoom-insert';
 import { generateElementId } from '../render/element-clipboard';
 import type { RibbonGraphicTarget, RibbonZoom } from '../render/ribbon-insert-state';
 import type { InsertText } from './ribbon-graphic-insert';
-import { createInsertDialogFrame } from './insert-dialog-frame';
+import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { definePptxCheckbox, definePptxRadio } from './office-aliases';
 
 export function pickRibbonZoom(

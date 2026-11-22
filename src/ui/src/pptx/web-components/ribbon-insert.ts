@@ -1,3 +1,4 @@
+import type { OfficeUiDialog } from '../../dialog/dialog';
 import { defineElement } from '../../registry';
 import { canRequestInsert } from '../render';
 import type { RibbonInsertIntent, RibbonInsertState } from '../render';
@@ -32,7 +33,7 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 		private readonly insertGraphic = createGraphicInsert(this, () => this.model);
 		private readonly view = createRibbonInsertView(this.ownerDocument, (intent) => {
 			if (canRequestInsert(this.model, intent)) {
-				if (intent.kind === 'graphic' || intent.kind === 'zoom') {
+				if (intent.kind === 'graphic' || intent.kind === 'zoom' || intent.kind === 'workflow') {
 					this.insertGraphic(intent);
 					return;
 				}
@@ -75,6 +76,10 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 		}
 		disconnectedCallback(): void {
 			this.closeMenus();
+			queueMicrotask(() => {
+				if (!this.isConnected)
+					this.querySelector<OfficeUiDialog>('office-ui-dialog[open]')?.close();
+			});
 			this.ownerDocument.removeEventListener('pointerdown', this.outside);
 			this.ownerDocument.removeEventListener('keydown', this.escape, true);
 			this.ownerDocument.defaultView?.removeEventListener('resize', this.position);

@@ -1,5 +1,7 @@
 // Insert tab: Table, Pictures, Charts, Link, Comment and Symbol.
 import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
+import { canCaptureDisplay } from '../../form/display-capture';
+import { captureScreenshotFile } from '../../form/display-clipping';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { iconPngFile } from '../../form/local-svg';
 import type { Command } from 'ooxml-core/xlsx/ui';
@@ -59,8 +61,11 @@ async function imageSize(file: Blob): Promise<{ width: number; height: number }>
 }
 
 /** Inserts a picture file at the active cell (scaled to at most 640 px wide, like Excel's fit). */
-export async function insertPicture(ctx: EditorContext, file: File): Promise<void> {
-	const t = target(ctx);
+export async function insertPicture(
+	ctx: EditorContext,
+	file: File,
+	t = target(ctx),
+): Promise<void> {
 	if (!t) return;
 	if (!PICTURE_TYPES.includes(file.type)) {
 		ctx.toast(
@@ -71,6 +76,8 @@ export async function insertPicture(ctx: EditorContext, file: File): Promise<voi
 	}
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	const { width, height } = await imageSize(file);
+	const live = target(ctx);
+	if (ctx.readOnly() || live?.session !== t.session || live.ws !== t.ws) return;
 	t.session.addImage(
 		t.sheet,
 		bytes,
@@ -147,6 +154,42 @@ export function insertCommands(): Command[] {
 				if (file) await insertPicture(ctx, file);
 			},
 		}),
+		...(
+			[
+				['screenshot', 'Screenshot'],
+				['screen-clipping', 'Screen Clipping'],
+			] as const
+		).map(([id, label]) =>
+			editing({
+				id: 'insert.' + id,
+				label,
+				icon: icon('picture'),
+				lock: 'objects',
+				enabled: canCaptureDisplay,
+				run: async (ctx) => {
+					const current = target(ctx);
+					if (!current) return;
+					const t = (key: string) => ctx.t(key);
+					const file = await captureScreenshotFile(
+						ctx.root,
+						t('Screenshot'),
+						id === 'screen-clipping'
+							? {
+									heading: t('Screen Clipping'),
+									close: t('Close'),
+									cancel: t('Cancel'),
+									insert: t('Insert'),
+									x: 'X',
+									y: 'Y',
+									width: t('Width'),
+									height: t('Height'),
+								}
+							: undefined,
+					);
+					if (file) await insertPicture(ctx, file, current);
+				},
+			}),
+		),
 		editing({
 			id: 'insert.icons',
 			label: 'Icons',

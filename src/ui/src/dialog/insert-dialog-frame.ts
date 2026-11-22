@@ -1,7 +1,7 @@
-import { defineDialog } from '../../dialog/dialog';
-import type { OfficeUiDialog } from '../../dialog/dialog';
-import { defineDialogFooter } from '../../dialog/dialog-footer';
-import type { OfficeDialogFooterState } from '../../dialog/dialog-footer';
+import { defineDialog } from './dialog';
+import type { OfficeUiDialog } from './dialog';
+import { defineDialogFooter } from './dialog-footer';
+import type { OfficeDialogFooterState } from './dialog-footer';
 
 /** Translates a dictionary key; an untranslated key comes back unchanged. */
 export type InsertDialogTranslate = (key: string) => string;
@@ -20,7 +20,7 @@ type Dialog = OfficeUiDialog;
 type Footer = HTMLElement & { state: OfficeDialogFooterState; focusAction(id: string): void };
 
 /**
- * The frame of a PowerPoint insert dialog: the shared `office-ui-dialog` (heading, Escape,
+ * The frame of an Office insert dialog: the shared `office-ui-dialog` (heading, Escape,
  * backdrop, focus trap) around a shared picker, with Cancel and Insert in an
  * `office-ui-dialog-footer`. Rendered in the host element's light DOM so the dialog's focus
  * trap sees the picker's controls. `onClose` runs whenever the dialog closes itself.
@@ -38,7 +38,7 @@ export interface InsertDialogFrame {
 }
 
 export function createInsertDialogFrame(
-	host: HTMLElement,
+	host: HTMLElement | ShadowRoot,
 	body: HTMLElement,
 	onInsert: () => void,
 	onClose: () => void,

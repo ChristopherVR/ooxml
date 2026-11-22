@@ -59,6 +59,82 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 		if (!value) throw new Error('Open a presentation first');
 		return value;
 	};
+	async function importSlides(
+		insertAt: number,
+		getSource: () => Promise<ArrayBuffer | Uint8Array>,
+		slideIndices?: readonly number[],
+	): Promise<void> {
+		const before = snapshot();
+		if (before.editable === false) throw new Error('Presentation is read-only');
+		pending = true;
+		let handler: Handler | undefined,
+			committed = false;
+		const urls: string[] = [];
+		try {
+			const source = await getSource();
+			const destination = await before.handler.save(
+				buildSaveSlides(before.slides, before.templateElementsBySlideId).map(cloneSlide),
+			);
+			const imported = await importSlidePackage(destination, source, {
+				insertAt,
+				...(slideIndices ? { slideIndices } : {}),
+			});
+			handler = new PptxHandler();
+			const data = await handler.load(
+				imported.bytes.buffer.slice(
+					imported.bytes.byteOffset,
+					imported.bytes.byteOffset + imported.bytes.byteLength,
+				) as ArrayBuffer,
+				{ eagerDecodeImages: true, allowExternalImages: before.allowExternalImages ?? false },
+			);
+			data.slides = await resolveTableCellImageUrls(data.slides, (path) =>
+				handler!.getImageData(path),
+			);
+			data.slides = await resolveTextFillBlipUrls(data.slides, (path) =>
+				handler!.getImageData(path),
+			);
+			const importedPaths = new Set(imported.slidePaths);
+			const media: import('ooxml-core/pptx').MediaPptxElement[] = [];
+			for (const slide of data.slides)
+				if (importedPaths.has(slide.id)) collectMediaElements(slide.elements, media);
+			const nextMediaUrls = new Map<string, string>();
+			for (const element of media) {
+				const resolved = await resolveMediaElementSource(element, handler);
+				if (resolved.url && resolved.mediaPath) {
+					nextMediaUrls.set(resolved.mediaPath, resolved.url);
+					if (resolved.isBlobUrl) urls.push(resolved.url);
+				} else element.mediaMissing = true;
+			}
+			const current = host.getSnapshot();
+			if (
+				disposed ||
+				current?.editable === false ||
+				current?.handler !== before.handler ||
+				current?.templateElementsBySlideId !== before.templateElementsBySlideId ||
+				current.slides !== before.slides
+			)
+				throw new Error('Presentation changed while importing slides. Try again');
+			const partition = partitionTemplateElements(data.slides);
+			host.commit({
+				handler,
+				data,
+				...partition,
+				mediaUrls: nextMediaUrls,
+				insertAt: Math.min(Math.max(0, insertAt), before.slides.length),
+				count: imported.slidePaths.length,
+			});
+			retiredHandlers.add(before.handler);
+			for (const url of urls) mediaUrls.add(url);
+			committed = true;
+		} finally {
+			pending = false;
+			if (!committed) {
+				handler?.dispose();
+				for (const url of urls) URL.revokeObjectURL(url);
+			}
+		}
+	}
+
 	return {
 		updateHost(next: SlidePackageClipboardHost): void {
 			host = next;
@@ -124,74 +200,15 @@ export function createSlidePackageClipboard(initialHost: SlidePackageClipboardHo
 				pending = false;
 			}
 		},
-		async paste(insertAt: number): Promise<void> {
-			const before = snapshot();
-			if (before.editable === false) throw new Error('Presentation is read-only');
-			const clipboard = globalThis.navigator?.clipboard;
-			pending = true;
-			let handler: Handler | undefined,
-				committed = false;
-			const urls: string[] = [];
-			try {
-				const source = await readSlidePackage(clipboard);
-				const destination = await before.handler.save(
-					buildSaveSlides(before.slides, before.templateElementsBySlideId).map(cloneSlide),
-				);
-				const imported = await importSlidePackage(destination, source, { insertAt });
-				handler = new PptxHandler();
-				const data = await handler.load(
-					imported.bytes.buffer.slice(
-						imported.bytes.byteOffset,
-						imported.bytes.byteOffset + imported.bytes.byteLength,
-					) as ArrayBuffer,
-					{ eagerDecodeImages: true, allowExternalImages: before.allowExternalImages ?? false },
-				);
-				data.slides = await resolveTableCellImageUrls(data.slides, (path) =>
-					handler!.getImageData(path),
-				);
-				data.slides = await resolveTextFillBlipUrls(data.slides, (path) =>
-					handler!.getImageData(path),
-				);
-				const importedPaths = new Set(imported.slidePaths);
-				const media: import('ooxml-core/pptx').MediaPptxElement[] = [];
-				for (const slide of data.slides)
-					if (importedPaths.has(slide.id)) collectMediaElements(slide.elements, media);
-				const nextMediaUrls = new Map<string, string>();
-				for (const element of media) {
-					const resolved = await resolveMediaElementSource(element, handler);
-					if (resolved.url && resolved.mediaPath) {
-						nextMediaUrls.set(resolved.mediaPath, resolved.url);
-						if (resolved.isBlobUrl) urls.push(resolved.url);
-					} else element.mediaMissing = true;
-				}
-				const current = host.getSnapshot();
-				if (
-					disposed ||
-					current?.editable === false ||
-					current?.handler !== before.handler ||
-					current?.templateElementsBySlideId !== before.templateElementsBySlideId ||
-					current.slides !== before.slides
-				)
-					throw new Error('Presentation changed while preparing paste. Try again');
-				const partition = partitionTemplateElements(data.slides);
-				host.commit({
-					handler,
-					data,
-					...partition,
-					mediaUrls: nextMediaUrls,
-					insertAt: Math.min(Math.max(0, insertAt), before.slides.length),
-					count: imported.slidePaths.length,
-				});
-				retiredHandlers.add(before.handler);
-				for (const url of urls) mediaUrls.add(url);
-				committed = true;
-			} finally {
-				pending = false;
-				if (!committed) {
-					handler?.dispose();
-					for (const url of urls) URL.revokeObjectURL(url);
-				}
-			}
+		paste(insertAt: number): Promise<void> {
+			return importSlides(insertAt, () => readSlidePackage(globalThis.navigator?.clipboard));
+		},
+		importSlides(
+			insertAt: number,
+			source: ArrayBuffer,
+			slideIndices: readonly number[],
+		): Promise<void> {
+			return importSlides(insertAt, () => Promise.resolve(source), slideIndices);
 		},
 		dispose(): void {
 			disposed = true;

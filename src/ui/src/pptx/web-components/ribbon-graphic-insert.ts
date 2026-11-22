@@ -10,10 +10,13 @@ import { wordArtBodyStyle, wordArtRunStyle } from '../render/ribbon-galleries/wo
 import {
 	type GraphicInsertIntent,
 	type RibbonGraphicTarget,
+	type RibbonInsertWorkflow,
 	type RibbonInsertState,
 	insertLabel,
 } from '../render/ribbon-insert-state';
-import { createInsertDialogFrame } from './insert-dialog-frame';
+import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
+import { pickScreenshot, pickScreenRecording } from './ribbon-capture';
+import { downloadPhotoAlbum, pickPhotoAlbum, pickReuseSlides } from './ribbon-deck-insert';
 import { pickRibbonZoom } from './ribbon-zoom-picker';
 import css from './ribbon-graphic-insert.css?raw';
 
@@ -49,17 +52,19 @@ export function createGraphicInsert(
 				: undefined;
 		};
 		const picked =
-			intent.kind === 'zoom'
-				? pickRibbonZoom(host, target, intent.value, text, current, onInserted)
-				: inlineSymbol
-					? pickSymbol(host, text('pptx.insert.symbol', 'Symbol'), text).then((symbol) => {
-							const content = current() ? symbol : undefined;
-							if (inlineSymbol(content)) onInserted?.();
-							return undefined;
-						})
-					: intent.value === 'icons'
-						? pickIcons(host, target, text)
-						: pickGraphic(host, target, intent.value, text);
+			intent.kind === 'workflow'
+				? runInsertWorkflow(host, target, intent.value, text, current, onInserted)
+				: intent.kind === 'zoom'
+					? pickRibbonZoom(host, target, intent.value, text, current, onInserted)
+					: inlineSymbol
+						? pickSymbol(host, text('pptx.insert.symbol', 'Symbol'), text).then((symbol) => {
+								const content = current() ? symbol : undefined;
+								if (inlineSymbol(content)) onInserted?.();
+								return undefined;
+							})
+						: intent.value === 'icons'
+							? pickIcons(host, target, text)
+							: pickGraphic(host, target, intent.value, text);
 		void picked
 			.then((picked) => {
 				if (!picked) return;
@@ -86,6 +91,38 @@ export function createGraphicInsert(
 				busy = false;
 			});
 	};
+}
+
+async function runInsertWorkflow(
+	host: HTMLElement,
+	target: RibbonGraphicTarget,
+	workflow: RibbonInsertWorkflow,
+	text: InsertText,
+	current: () => RibbonGraphicTarget | undefined,
+	onInserted?: () => void,
+): Promise<PptxElement | undefined> {
+	switch (workflow) {
+		case 'screenshot':
+		case 'screenClipping':
+			return pickScreenshot(host, target.canvasSize, workflow === 'screenClipping', text);
+		case 'screenRecording':
+			return pickScreenRecording(host, target.canvasSize, text);
+		case 'photoAlbum': {
+			const options = await pickPhotoAlbum(host, text);
+			if (!options || !current()) return undefined;
+			await downloadPhotoAlbum(options);
+			onInserted?.();
+			return undefined;
+		}
+		case 'reuseSlides': {
+			const picked = await pickReuseSlides(host, text);
+			const live = current();
+			if (!picked || !live?.importSlides) return undefined;
+			await live.importSlides(picked.source, picked.indexes);
+			onInserted?.();
+			return undefined;
+		}
+	}
 }
 
 function newGraphicText(

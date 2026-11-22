@@ -73,8 +73,9 @@ test('WordArt stays styled and editable after reopening a DOCX', async ({ page }
 	await picker.getByRole('textbox', { name: 'WordArt text' }).fill('Annual review');
 	await picker.getByRole('button', { name: 'WordArt style 1', exact: true }).press('End');
 	await expect(
-		picker.getByRole('button', { name: 'WordArt style 30', pressed: true }),
+		picker.getByRole('button', { name: 'WordArt style 36', pressed: true }),
 	).toBeFocused();
+	await picker.getByRole('button', { name: 'WordArt style 30', exact: true }).click();
 	await picker.getByRole('combobox', { name: 'Transform' }).selectOption('textArchUp');
 	await expect(picker.locator('[data-word-art-transform="textArchUp"] textPath')).toHaveText(
 		'Annual review',
@@ -167,4 +168,45 @@ test.describe('phone Insert ribbon', () => {
 		await expect(editor.locator('.ProseMirror img[alt="Light bulb"]')).toBeVisible();
 		await expect(editor.locator('.ProseMirror img[alt="Check mark"]')).toBeVisible();
 	});
+});
+
+test('inserts a captured screenshot as a native Word picture', async ({ page }) => {
+	await page.addInitScript(() => {
+		Object.defineProperty(navigator.mediaDevices, 'getDisplayMedia', {
+			configurable: true,
+			value: () => {
+				const canvas = document.createElement('canvas');
+				canvas.width = 320;
+				canvas.height = 180;
+				const paint = canvas.getContext('2d')!;
+				const stream = canvas.captureStream(20);
+				let frame = 0;
+				const timer = setInterval(() => {
+					if (stream.getVideoTracks()[0]?.readyState === 'ended') clearInterval(timer);
+					else {
+						paint.fillStyle = frame++ % 2 ? '#0451a5' : '#00aa77';
+						paint.fillRect(0, 0, 320, 180);
+					}
+				}, 50);
+				return Promise.resolve(stream);
+			},
+		});
+	});
+	await page.setViewportSize({ width: 1700, height: 800 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror').click();
+	await page.keyboard.type('Before screenshot');
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const menu = editor.getByRole('combobox', { name: 'Screenshot', exact: true });
+	await reveal(editor, menu);
+	await menu.selectOption('full');
+	await expect(editor.getByRole('img', { name: 'Screenshot', exact: true })).toBeVisible();
+	const pending = page.waitForEvent('download');
+	await saveButton(page).click();
+	const zip = await JSZip.loadAsync(await readFile(await (await pending).path()));
+	expect(Object.keys(zip.files)).toEqual(
+		expect.arrayContaining([expect.stringMatching(/^word[/]media[/].+[.]png$/u)]),
+	);
 });

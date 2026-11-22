@@ -2034,6 +2034,8 @@ const baseRibbonProps = useViewerRibbonProps({
 		themeColors: themeColorMap.value,
 		insert: ops.addElement,
 		sections: sections.value,
+		importSlides: (source, indexes) =>
+			slidePackageClipboard.importSlides(activeSlideIndex.value + 1, source, indexes),
 		insertSummary: (mutation) => {
 			history.pushHistory();
 			sections.value = mutation.sections;

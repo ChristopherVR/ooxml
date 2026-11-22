@@ -191,6 +191,8 @@ Saving writes an edited chart part with the shared chart writer and updates only
 
 ## Privacy and network use
 
+Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
+
 By default the Word packages make no network request when opening, rendering, editing or saving a document: linked pictures are not fetched, linked data is not refreshed, and fonts come from the device and the file. Missing fonts are requested from Google Fonts, or a mirror the host chooses, only when the host sets the element's `googleFonts` property or the reader turns on font downloads in File > Options > Trust Center, which is off by default. Hyperlinks open only when the reader follows them. Small preferences, including that Trust Center choice, stay in the browser's localStorage. Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## Supported environments

@@ -39,6 +39,8 @@ const TILES = [
 	'insert.text.textBox',
 	'insert.illustrations.shapes',
 	'insert.images.pictures',
+	'insert.images.screenshot',
+	'insert.images.photoAlbum',
 	'insert.tables.table',
 	'insert.illustrations.chart',
 	'insert.illustrations.smartArt',
@@ -47,16 +49,19 @@ const TILES = [
 	'insert.text.wordArt',
 	'insert.illustrations.icons',
 	'insert.media.media',
+	'insert.media.screenRecording',
 	'insert.slides.newSlide',
+	'insert.slides.reuseSlides',
 	'insert.links.zoom',
 	'insert.links.link',
 	'insert.text.dateTime',
 	'insert.comments.comment',
 ] as const;
 
-type View = 'home' | 'shapes' | 'table' | 'chart' | 'layouts' | 'zoom';
+type View = 'home' | 'shapes' | 'table' | 'chart' | 'layouts' | 'zoom' | 'screenshot';
 
 const ZOOM_CONTROL = 'insert.links.zoom';
+const SCREENSHOT_CONTROL = 'insert.images.screenshot';
 
 const SPECS = new Map<string, InsertControlSpec>(
 	(INSERT_GROUPS.flatMap((group) => group.items.flat()) as InsertControlSpec[]).map((spec) => [
@@ -127,7 +132,7 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		}
 		private request(intent: RibbonInsertAction): void {
 			if (canRequestInsert(this.model, intent)) {
-				if (intent.kind === 'graphic' || intent.kind === 'zoom') {
+				if (intent.kind === 'graphic' || intent.kind === 'zoom' || intent.kind === 'workflow') {
 					this.insertGraphic(intent);
 					return;
 				}
@@ -156,19 +161,21 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 			const doc = this.ownerDocument;
 			const label = this.text(spec.label);
 			const submenu: View | null =
-				spec.special === 'shapes'
-					? 'shapes'
-					: spec.special === 'chart'
-						? 'chart'
-						: spec.control === ZOOM_CONTROL
-							? 'zoom'
-							: spec.picker === 'table'
-								? 'table'
-								: spec.special === 'layouts' &&
-									  ((this.model.layouts ?? []).length > 0 ||
-											this.model.slideTemplatesAvailable === true)
-									? 'layouts'
-									: null;
+				spec.control === SCREENSHOT_CONTROL
+					? 'screenshot'
+					: spec.special === 'shapes'
+						? 'shapes'
+						: spec.special === 'chart'
+							? 'chart'
+							: spec.control === ZOOM_CONTROL
+								? 'zoom'
+								: spec.picker === 'table'
+									? 'table'
+									: spec.special === 'layouts' &&
+										  ((this.model.layouts ?? []).length > 0 ||
+												this.model.slideTemplatesAvailable === true)
+										? 'layouts'
+										: null;
 			const caption = doc.createElement('span');
 			caption.textContent = label;
 			const tile = this.button('tile', label, insertIcon(doc, spec.icon), caption);
@@ -260,8 +267,8 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 					rows.append(row);
 				}
 				children.push(rows);
-			} else if (this.view === 'zoom') {
-				const spec = SPECS.get(ZOOM_CONTROL);
+			} else if (this.view === 'zoom' || this.view === 'screenshot') {
+				const spec = SPECS.get(this.view === 'zoom' ? ZOOM_CONTROL : SCREENSHOT_CONTROL);
 				if (spec) {
 					children.push(this.head(spec));
 					const rows = doc.createElement('div');

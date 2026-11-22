@@ -139,6 +139,9 @@ export interface EditorStateDeps {
 }
 
 export class EditorState {
+	importSlides = $state.raw<
+		((source: ArrayBuffer, indexes: readonly number[]) => Promise<void>) | undefined
+	>(undefined);
 	/** Mounted UI reader only; not persisted or included in editor history. */
 	readPendingInlineTextEdit?: () => PendingInlineTextEdit | undefined;
 	inlineListController?: InlineListController;

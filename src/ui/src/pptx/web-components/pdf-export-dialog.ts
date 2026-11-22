@@ -6,8 +6,8 @@ import {
 } from '../render/pdf-export-range';
 import type { PdfExportChoice } from '../render/pdf-export-range';
 import type { PdfSlideSelection } from '../export/pdf-vector-select';
-import { createInsertDialogFrame } from './insert-dialog-frame';
-import type { InsertDialogFrame } from './insert-dialog-frame';
+import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
+import type { InsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { createPdfExportDialogBody } from './pdf-export-dialog-body';
 import type { PdfExportDialogBody } from './pdf-export-dialog-body';
 

@@ -93,6 +93,9 @@ interface EditorSnapshot extends RecordedTheme {
 
 @Injectable()
 export class EditorStateService {
+	readonly importSlides = signal<
+		((source: ArrayBuffer, indexes: readonly number[]) => Promise<void>) | undefined
+	>(undefined);
 	private readonly loader: LoadContentService | null = (() => {
 		try {
 			return inject(LoadContentService);

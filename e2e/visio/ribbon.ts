@@ -158,7 +158,7 @@ export async function pickColor(
 	target: 'fill' | 'line' | 'font',
 	color: string,
 ): Promise<void> {
-	if (target === 'font') await viewer.locator('[data-menu="font-color"] .caret').click();
+	if (target === 'font') await viewer.locator('[data-menu="font-color"]:visible .caret').click();
 	else await viewer.locator(`[data-menu="${target}"] button`).first().click();
 	const grid = viewer.locator(
 		`office-ui-menu-button office-ui-color-grid[data-color-grid="${target}"]`,

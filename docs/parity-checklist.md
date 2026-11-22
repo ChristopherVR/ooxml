@@ -339,7 +339,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 - [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format, Chart Format (a pane instead),
       PivotTable Analyze and PivotTable Design (pivot commands sit in Insert > PivotTable).
-- [ ] **P1** Insert: Shapes, 3D Models, Screenshot, PivotChart, Recommended PivotTables,
+- [ ] **P1** Insert: Shapes, 3D Models, PivotChart, Recommended PivotTables,
       Equation, New Note, Text Box, Header & Footer, and Object.
 - [x] **P1** WordArt inserts and edits native worksheet shapes with fill, outline and shadow
       presets and DrawingML text transforms.
@@ -608,7 +608,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       survive native DOCX and XLSX saves. The editors preview the gradient and text path.
 - [ ] **P2** Word and Excel WordArt still need multi-stop and themed gradient editing, 3-D effects,
       direct adjustment handles and glyph-envelope rendering for deformation presets.
-- [ ] **P1** Insert: Quick Parts, Signature Line, Object, 3D Models, Screenshot,
+- [ ] **P1** Insert: Quick Parts, Signature Line, Object, 3D Models,
       Video; Header and Footer offer blank designs only.
 - [ ] **P2** View: Window group, Macros; Review: Thesaurus, Translate, Block Authors, Hide Ink;
       Home: Text Effects, Phonetic Guide, Character Border, Enclosed Characters; Backstage:
@@ -867,7 +867,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       differently stay linear (not measured).
 - [ ] **P2** Notes Master and Handout Master are placeholders; no Notes Page view; no Grayscale or
       Black and White view.
-- [ ] **P2** Designer, Rehearse with Coach, Screen Recording, Keep Slides Updated and Media
+- [ ] **P2** Designer, Rehearse with Coach, Keep Slides Updated and Media
       Controls are disabled.
 - [ ] **P2** Effect DAGs (`a:effectDag`) are painted as one effect list plus colour operations
       (`interpretDrawingEffectDag`, `src/core/drawingml/effect-dag.ts`): effects and colour
@@ -963,7 +963,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text caret, or creates a text box when no text edit is active.
       The gallery also browses Unicode equivalents for the five bundled legacy font mappings.
       Browsing arbitrary installed fonts remains open.
-- [ ] **P1** Insert: Object, 3D Models, Screenshot, Photo Album, Reuse Slides, Forms, add-ins
+- [ ] **P1** Insert: Object, 3D Models, Forms, add-ins
       and unimplemented menu entries (`ribbon-insert-layout.ts`).
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
@@ -1262,6 +1262,22 @@ installed Visio 16 build is used to check that saved files open without repair.
   comment whitespace, solid theme backgrounds and Visio infinite-line stencil previews. Kept
   remaining work explicit, including new mention authoring, untranslated function descriptions,
   exact Word tint rounding, rich comments, non-solid backgrounds and periodic NURBS.
+
+### Screen capture and slide creation
+
+- [x] Word, Excel and PowerPoint insert a screenshot from the browser's shared-surface picker.
+      Screen Clipping accepts a dragged rectangle or pixel coordinates and saves the result as
+      an embedded picture.
+- [x] PowerPoint Screen Recording can pause, resume and stop, optionally capture audio shared by
+      the browser, and embed the resulting video. The browser prompts for access.
+- [x] PowerPoint Photo Album downloads a standalone presentation with a title slide, 1, 2 or 4
+      pictures per slide, configurable picture order, and optional filename captions.
+- [x] PowerPoint Reuse Slides inserts selected slides from a local OOXML presentation and keeps
+      their source formats and related parts.
+- [ ] The browser controls which surfaces it can capture. PowerPoint's native window thumbnails,
+      recording arbitrary screen regions, pointer toggling, and in-place Photo Album editing are
+      open. Reuse Slides still needs destination-theme formatting and import between different
+      slide sizes or OOXML conformance classes.
 
 ### Insert Icons
 

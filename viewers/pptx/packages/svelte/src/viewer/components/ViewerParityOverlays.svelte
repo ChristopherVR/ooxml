@@ -109,7 +109,11 @@
 			onselectslide(result.insertAt);
 		},
 	});
-	onDestroy(() => slidePackageClipboard.dispose());
+	editor.importSlides = (source, indexes) => slidePackageClipboard.importSlides(editor.currentSlideIndex + 1, source, indexes);
+	onDestroy(() => {
+		editor.importSlides = undefined;
+		slidePackageClipboard.dispose();
+	});
 </script>
 
 {#if ui.setupSlideShowOpen}<SetUpSlideShowDialog properties={editor.presentationProperties} customShows={editor.customShows} slideCount={slides.length} onclose={() => (ui.setupSlideShowOpen = false)} onsave={(next) => { editor.presentationMetadata.updatePresentationProperties(next); ui.activeCustomShowId = resolveAuthoredCustomShowId(next, editor.customShows) ?? null; }} />{/if}

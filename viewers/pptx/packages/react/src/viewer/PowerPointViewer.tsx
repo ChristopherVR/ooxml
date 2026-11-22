@@ -1520,6 +1520,13 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 										<ViewerToolbarSection
 											mode={mode}
 											onNewPresentation={countDeckReplacement}
+											onImportSlides={(source, indexes) =>
+												slidePackageClipboardRef.current!.importSlides(
+													activeSlideIndex + 1,
+													source,
+													indexes,
+												)
+											}
 											canEdit={canEdit}
 											state={state}
 											selectedElement={selectedElement}

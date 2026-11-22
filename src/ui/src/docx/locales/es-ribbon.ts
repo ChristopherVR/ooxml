@@ -13,6 +13,8 @@ export const esRibbon: RibbonStrings = {
 	'Your text here': 'Tu texto aquí',
 	'WordArt style': 'Estilo de WordArt',
 	Icons: 'Iconos',
+	Screenshot: 'Captura de pantalla',
+	'Screen Clipping': 'Recorte de pantalla',
 	'Search icons': 'Buscar iconos',
 	'Icon color': 'Color del icono',
 	'No matching icons.': 'No hay iconos que coincidan.',

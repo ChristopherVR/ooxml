@@ -193,25 +193,29 @@ for (const fontFamily of [undefined, 'Courier New'])
 		);
 		// Insertion can rewrap and repaginate a paragraph. Its source character at the caret,
 		// rather than the original page's first line, identifies the correct projected line.
-		const currentIndex = await sourceLines.evaluateAll(
-			(lines, offset) =>
-				lines.findIndex(
-					(line) =>
-						Number((line as HTMLElement).dataset.sourceStart) <= offset &&
-						Number((line as HTMLElement).dataset.sourceEnd) > offset,
-				),
-			after.offset,
-		);
-		expect(currentIndex).toBeGreaterThanOrEqual(0);
-		const currentLine = sourceLines.nth(currentIndex);
+		const caretLineIndex = () =>
+			sourceLines.evaluateAll((lines, offset) => {
+				for (let index = lines.length - 1; index >= 0; index--) {
+					const line = lines[index];
+					if (!(line instanceof HTMLElement)) continue;
+					const { sourceStart, sourceEnd } = line.dataset;
+					if (Number(sourceStart) <= offset && Number(sourceEnd) >= offset) return index;
+				}
+				return -1;
+			}, after.offset);
 		await expect(editor.locator('.dve-print-caret')).toHaveCount(1);
 		await expect
 			.poll(async () => {
+				const index = await caretLineIndex();
+				if (index < 0) return Infinity;
 				const caret = await editor.locator('.dve-print-caret').boundingBox(),
-					lineRect = await currentLine.boundingBox();
+					lineRect = await sourceLines.nth(index).boundingBox();
 				return caret && lineRect ? Math.abs(caret.y - lineRect.y) : Infinity;
 			})
 			.toBeLessThan(2);
+		const currentIndex = await caretLineIndex();
+		expect(currentIndex).toBeGreaterThanOrEqual(0);
+		const currentLine = sourceLines.nth(currentIndex);
 		const caret = await editor.locator('.dve-print-caret').boundingBox(),
 			lineRect = await currentLine.boundingBox();
 		if (!caret || !lineRect) throw new Error('Missing caret geometry');

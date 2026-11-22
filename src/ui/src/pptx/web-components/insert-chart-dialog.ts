@@ -9,8 +9,8 @@ import {
 	insertChartPreviewSvg,
 } from '../render';
 import type { InsertChartGrouping, InsertChartKind } from '../render';
-import { createInsertDialogFrame, insertDialogText } from './insert-dialog-frame';
-import type { InsertDialogFrame, InsertDialogTranslate } from './insert-dialog-frame';
+import { createInsertDialogFrame, insertDialogText } from '../../dialog/insert-dialog-frame';
+import type { InsertDialogFrame, InsertDialogTranslate } from '../../dialog/insert-dialog-frame';
 
 /** What Insert hands the host: build the chart with `createDefaultChartElement(kind, _, rest)`. */
 export interface InsertChartDialogDetail {

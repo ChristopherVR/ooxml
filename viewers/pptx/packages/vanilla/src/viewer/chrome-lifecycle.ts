@@ -78,6 +78,7 @@ export interface ChromeLifecycle {
 }
 
 export interface MountChromeDeps extends ChromeCallbackDeps {
+	importSlides?: (source: ArrayBuffer, indexes: readonly number[]) => Promise<void>;
 	doc: Document;
 	container: HTMLElement;
 	t: Translator;
@@ -304,6 +305,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 					canvasSize,
 					themeColors: templateSchemeFromTheme(colorScheme),
 					insert: (element) => deps.getEditActions().insertElement(element),
+					importSlides: deps.importSlides,
 					insertSummary: (mutation) => {
 						deps.getEditActions().sections.commitSummaryZoom(mutation);
 						deps.goToSlide(mutation.slideIndex);
@@ -762,6 +764,7 @@ export function unmountChrome(
 
 /** The subset of `PptxViewer` needed to build its `MountChromeDeps`. */
 export interface ChromeHost {
+	importSlides?: (source: ArrayBuffer, indexes: readonly number[]) => Promise<void>;
 	subtitleOptionsStore?(): ViewerOptionsStore | undefined;
 	doc: Document;
 	container: HTMLElement;
@@ -1109,6 +1112,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		createPresentation: (templateId) => host.createPresentation(templateId),
 		getCloudFiles: () => host.getCloudFiles?.(),
 		getFileName: () => (host.getFileName ? host.getFileName() : host.options.fileName),
+		importSlides: host.importSlides,
 		getEditActions: () => host.editor.getEditActions(),
 		getFindReplaceActions: () => host.editor.getFindReplaceActions(),
 		applyPresentationTheme: (presetId) => host.applyPresentationTheme(presetId),
