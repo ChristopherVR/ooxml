@@ -1,4 +1,6 @@
 import { EMU_PER_PIXEL } from '../units/constants';
+import { buildXml } from '../xml/index';
+import { appendSvg, createSvg, setSvgAttributes } from './svg-elements';
 import { buildWarpPath, WARP_PATH_GENERATORS } from './text-warp-path';
 import {
 	WORD_ART_FONT,
@@ -8,9 +10,6 @@ import {
 	wordArtRgb,
 	type WordArtStyle,
 } from './word-art';
-
-const escaped = (text: string) =>
-	text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 export function wordArtTransforms(): string[] {
 	return ['textNoShape', ...Object.keys(WARP_PATH_GENERATORS)];
@@ -43,6 +42,7 @@ export interface WordArtSvgOptions {
 /** Renders a shared SVG preview. Native saves carry the preset and adjustment guides. */
 export function renderWordArtSvg(options: WordArtSvgOptions): string {
 	const { style, lines, width, height, fontPx, x = 0, y = 0, scale = 1 } = options;
+	if (![width, height, fontPx, x, y, scale].every(Number.isFinite)) return '';
 	if (width <= 0 || height <= 0 || !lines.length) return '';
 	const id = options.id.replace(/[^A-Za-z0-9_-]/g, '_');
 	const outline = wordArtRgb(style.outline);
@@ -50,15 +50,6 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 	const shadow = wordArtCssShadow(style, scale);
 	const gradient = normalizeWordArtGradient(style.gradient);
 	const gradientId = `${id}-gradient`;
-	const angle = ((gradient?.angle ?? 0) / 10800000) * Math.PI;
-	const dx = Math.cos(angle) / 2;
-	const dy = Math.sin(angle) / 2;
-	const defs = gradient
-		? `<defs><linearGradient id="${gradientId}" x1="${0.5 - dx}" y1="${0.5 - dy}" x2="${0.5 + dx}" y2="${0.5 + dy}"><stop stop-color="#${fill}"/><stop offset="1" stop-color="#${gradient.end}"/></linearGradient></defs>`
-		: '';
-	const stroke = outline
-		? ` stroke="#${outline}" stroke-width="${(WORD_ART_OUTLINE_EMU / EMU_PER_PIXEL) * scale}" paint-order="stroke fill"`
-		: '';
 	const preset = style.warp?.preset;
 	const usePath = preset && Object.hasOwn(WARP_PATH_GENERATORS, preset);
 	const adjustment = (name: string) => {
@@ -70,12 +61,51 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 	const longest = Math.max(1, ...lines.map((text) => Array.from(text).length));
 	const size = Math.min(fontPx, (width - 4) / (longest * 0.61), height / (lines.length + 0.5));
 	if (size <= 0) return '';
+	const svg = createSvg();
+	setSvgAttributes(svg, {
+		x,
+		y,
+		width,
+		height,
+		viewBox: `0 0 ${width} ${height}`,
+		'data-word-art-transform': usePath ? preset : 'textNoShape',
+	});
+	if (gradient) {
+		const angle = (gradient.angle / 10800000) * Math.PI;
+		const dx = Math.cos(angle) / 2;
+		const dy = Math.sin(angle) / 2;
+		const paint = appendSvg(appendSvg(svg, 'defs'), 'linearGradient', {
+			id: gradientId,
+			x1: 0.5 - dx,
+			y1: 0.5 - dy,
+			x2: 0.5 + dx,
+			y2: 0.5 + dy,
+		});
+		appendSvg(paint, 'stop', { 'stop-color': `#${fill}` });
+		appendSvg(paint, 'stop', { offset: 1, 'stop-color': `#${gradient.end}` });
+	}
+	const group = appendSvg(svg, 'g', {
+		'text-anchor': 'middle',
+		'font-family': `${WORD_ART_FONT}, sans-serif`,
+		'font-size': size,
+		'font-weight': 'bold',
+		fill: gradient ? `url(#${gradientId})` : `#${fill}`,
+	});
+	if (outline) {
+		setSvgAttributes(group, {
+			stroke: `#${outline}`,
+			'stroke-width': (WORD_ART_OUTLINE_EMU / EMU_PER_PIXEL) * scale,
+			'paint-order': 'stroke fill',
+		});
+	}
+	if (shadow) group.setAttribute('style', `filter:drop-shadow(${shadow})`);
 	const gap = size * 1.15;
 	const inset = Math.min(width / 5, size * 0.5);
-	const body = lines.map((line, index) => {
+	lines.forEach((line, index) => {
 		if (!usePath) {
 			const baseline = height / 2 + size * 0.34 + (index - (lines.length - 1) / 2) * gap;
-			return `<text x="${width / 2}" y="${baseline}">${escaped(line)}</text>`;
+			appendSvg(group, 'text', { x: width / 2, y: baseline }).textContent = line;
+			return;
 		}
 		const pathId = `${id}-${index}`;
 		const top = size * 0.8;
@@ -89,7 +119,12 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 			adjustment('adj2'),
 			gap,
 		);
-		return `<g transform="translate(${inset} ${top})"><defs><path id="${pathId}" d="${path}"/></defs><text><textPath href="#${pathId}" startOffset="50%">${escaped(line)}</textPath></text></g>`;
+		const warped = appendSvg(group, 'g', { transform: `translate(${inset} ${top})` });
+		appendSvg(appendSvg(warped, 'defs'), 'path', { id: pathId, d: path });
+		appendSvg(appendSvg(warped, 'text'), 'textPath', {
+			href: `#${pathId}`,
+			startOffset: '50%',
+		}).textContent = line;
 	});
-	return `<svg xmlns="http://www.w3.org/2000/svg" x="${x}" y="${y}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" data-word-art-transform="${usePath ? escaped(preset) : 'textNoShape'}">${defs}<g text-anchor="middle" font-family="${WORD_ART_FONT}, sans-serif" font-size="${size}" font-weight="bold" fill="${gradient ? `url(#${gradientId})` : `#${fill}`}"${stroke}${shadow ? ` style="filter:drop-shadow(${shadow})"` : ''}>${body.join('')}</g></svg>`;
+	return buildXml(svg);
 }

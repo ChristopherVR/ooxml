@@ -21,21 +21,11 @@ import {
 import type { ThemeCatalog } from './theme-model';
 import type { InlineImage } from './inline-model';
 import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
-import { buildXml, makeNS, parseXml, type XmlElement } from '../xml/index';
+import { appendSvg, createSvg, setSvgAttributes } from '../drawingml/svg-elements';
+import { buildXml, parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const round = (value: number) => Math.round(value * 100) / 100;
-
-function setAttributes(element: XmlElement, attributes: Record<string, string | number>): void {
-	for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, String(value));
-}
-
-function appendSvg(parent: XmlElement, name: string, attributes: Record<string, string | number>) {
-	const node = makeNS(parent.ownerDocument, SVG_NS, name);
-	setAttributes(node, attributes);
-	return parent.appendChild(node);
-}
 
 /** A colour as CSS, resolved through the document theme. */
 export function shapeColorCss(color: DrawingColor, theme?: ThemeCatalog): string | undefined {
@@ -148,8 +138,8 @@ export function shapeSvg(
 			? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
 			: undefined;
 	if (!geometry) return undefined;
-	const svg = parseXml(`<svg xmlns="${SVG_NS}"/>`).documentElement;
-	setAttributes(svg, {
+	const svg = createSvg();
+	setSvgAttributes(svg, {
 		width: round(w),
 		height: round(h),
 		viewBox: `0 0 ${round(w)} ${round(h)}`,

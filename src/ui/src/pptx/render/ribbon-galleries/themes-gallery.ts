@@ -38,10 +38,7 @@ export function themeTileSvg(
 		`<rect x="48" y="27" width="24" height="3" fill="${safeColor(scheme.dk1, '#000000')}" opacity="0.35"/>` +
 		swatches;
 	// Drawn on the Themes tile grid and scaled to `size`, so the smaller Variants tiles match.
-	return svgTile(TILE.width, TILE.height, '', body).replace(
-		`width="${TILE.width}" height="${TILE.height}"`,
-		`width="${size.width}" height="${size.height}"`,
-	);
+	return svgTile(size.width, size.height, '', body, TILE);
 }
 
 function tile(preset: PptxThemePreset, applied: boolean): RibbonGalleryItem {

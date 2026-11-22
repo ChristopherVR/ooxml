@@ -2,6 +2,8 @@ import { defineDialog, type OfficeUiDialog } from '../dialog/dialog';
 import { defineDialogFooter, type OfficeDialogFooterState } from '../dialog/dialog-footer';
 import css from './icon-picker.css?raw';
 
+const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+
 const ICONS = [
 	['Arrow right', 'M4 12h16m-6-6 6 6-6 6'],
 	['Bar chart', 'M4 4v16h16M8 16v-4m5 4V7m5 9v-6'],
@@ -87,8 +89,22 @@ export function pickOfficeIcon(
 
 	const selected = new Set<(typeof ICONS)[number]>();
 	const nameOf = (name: string) => labels.iconName?.(name) ?? name;
-	const svgOf = (path: string, stroke: string, size: number) =>
-		`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><path d="${path}" fill="none" stroke="${stroke}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+	const svgOf = (path: string, stroke: string, size: number): SVGSVGElement => {
+		const svg = doc.createElementNS(SVG_NAMESPACE, 'svg');
+		svg.setAttribute('xmlns', SVG_NAMESPACE);
+		svg.setAttribute('width', String(size));
+		svg.setAttribute('height', String(size));
+		svg.setAttribute('viewBox', '0 0 24 24');
+		const shape = doc.createElementNS(SVG_NAMESPACE, 'path');
+		shape.setAttribute('d', path);
+		shape.setAttribute('stroke', stroke);
+		shape.setAttribute('fill', 'none');
+		shape.setAttribute('stroke-width', '1.75');
+		shape.setAttribute('stroke-linecap', 'round');
+		shape.setAttribute('stroke-linejoin', 'round');
+		svg.append(shape);
+		return svg;
+	};
 	const syncSelection = () => {
 		footer.state = {
 			actions: [
@@ -115,8 +131,7 @@ export function pickOfficeIcon(
 				button.title = nameOf(name);
 				button.setAttribute('aria-label', button.title);
 				button.setAttribute('aria-pressed', String(selected.has(icon)));
-				// The path is from the bundled catalogue and color is normalized by the color input.
-				button.innerHTML = svgOf(path, color.value, 26);
+				button.append(svgOf(path, color.value, 26));
 				button.addEventListener('click', () => {
 					if (!selected.delete(icon)) selected.add(icon);
 					button.setAttribute('aria-pressed', String(selected.has(icon)));
@@ -145,7 +160,7 @@ export function pickOfficeIcon(
 						name: nameOf(name),
 						path,
 						color: color.value,
-						svg: svgOf(path, color.value, 96),
+						svg: svgOf(path, color.value, 96).outerHTML,
 					})),
 				);
 			}

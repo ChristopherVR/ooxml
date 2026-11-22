@@ -22,7 +22,4 @@ export function safeColor(color: string | undefined, fallback = 'none'): string 
 	return fallback;
 }
 
-/** The shared shell every tile uses. */
-export function svgTile(width: number, height: number, defs: string, body: string): string {
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" aria-hidden="true" focusable="false">${defs ? `<defs>${defs}</defs>` : ''}${body}</svg>`;
-}
+export { renderSvgPreview as svgTile } from 'ooxml-core/drawingml';
