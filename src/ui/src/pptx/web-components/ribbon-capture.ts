@@ -19,6 +19,7 @@ import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import type { InsertText } from './ribbon-graphic-insert';
 import type { OfficeUiCheckbox } from '../../form/checkbox';
 import { definePptxCheckbox } from './office-aliases';
+import { showRecordingDock } from './ribbon-recording-dock';
 
 export async function pickScreenshot(
 	host: HTMLElement,
@@ -83,16 +84,12 @@ export function pickScreenRecording(host: HTMLElement, canvasSize: CanvasSize, t
 	const previewPanel = doc.createElement('div');
 	const controls = doc.createElement('div');
 	controls.style.cssText = 'display:flex;gap:8px;margin-block:12px';
-	const pause = doc.createElement('button');
-	pause.type = 'button';
-	pause.hidden = true;
 	const status = doc.createElement('div');
 	status.setAttribute('role', 'alert');
-	controls.append(select, pause);
+	controls.append(select);
 	body.append(options, controls, previewPanel, status);
-	return new Promise<PptxElement | undefined>((resolve) => {
+	return new Promise<PptxElement | undefined>((resolve, reject) => {
 		const abort = new AbortController();
-		let recording: CapturedDisplayRecording | undefined;
 		let busy = false;
 		let source: MediaStream | undefined;
 		let preview: Awaited<ReturnType<typeof previewDisplay>> | undefined;
@@ -111,38 +108,27 @@ export function pickScreenRecording(host: HTMLElement, canvasSize: CanvasSize, t
 			host,
 			body,
 			() => {
-				if (recording) {
-					if (recording.recorder.state !== 'inactive') recording.recorder.stop();
-					return;
-				}
 				if (busy) return;
 				void start();
 			},
 			() => {
 				abort.abort();
-				recording?.cancel();
 				clearSelection();
 				resolve(undefined);
 				frame.dialog.remove();
 			},
 		);
 		const sync = () => {
-			const active = recording?.recorder.state;
 			audio.disabled = busy || !!source;
 			pointer.disabled = audio.disabled;
 			select.hidden = busy || !!source;
 			previewPanel.hidden = busy;
-			pause.hidden = !active || active === 'inactive';
-			pause.textContent =
-				active === 'paused'
-					? text('pptx.rehearse.resume', 'Resume')
-					: text('pptx.rehearse.pause', 'Pause');
 			frame.sync(
 				heading,
 				text('pptx.common.close', 'Close'),
 				text('pptx.common.cancel', 'Cancel'),
-				recording ? text('pptx.followMode.stop', 'Stop') : text('pptx.titleBar.record', 'Record'),
-				(!busy && (!preview || !!region)) || (active !== undefined && active !== 'inactive'),
+				text('pptx.titleBar.record', 'Record'),
+				!busy && (!preview || !!region),
 			);
 		};
 		select.addEventListener('click', () => void selectArea());
@@ -179,7 +165,6 @@ export function pickScreenRecording(host: HTMLElement, canvasSize: CanvasSize, t
 				);
 				previewPanel.append(picker.element);
 				picker.update();
-				previewPanel.querySelector('input')?.focus();
 			} catch {
 				clearSelection();
 				showFailure();
@@ -196,19 +181,36 @@ export function pickScreenRecording(host: HTMLElement, canvasSize: CanvasSize, t
 			busy = true;
 			status.textContent = '';
 			sync();
+			let recording: CapturedDisplayRecording | undefined;
+			let closeDock: (() => void) | undefined;
+			let discarded = false;
 			try {
 				source ??= await openDisplayCapture(audio.checked, abort.signal, pointer.checked);
-				if (!source) return;
-				source.getVideoTracks()[0]?.removeEventListener('ended', clearSelection);
+				if (!source || abort.signal.aborted || !host.isConnected) return;
+				const track = source.getVideoTracks()[0];
+				track?.removeEventListener('ended', clearSelection);
+				if (track?.readyState !== 'live') throw new Error('Screen sharing ended');
 				if (preview && region) {
 					const crop = cropDisplayStream(preview, source, region);
 					recording = startDisplayRecording(crop.stream, source, crop.release);
 				} else {
 					recording = startDisplayRecording(source);
 				}
-				sync();
-				const blob = await recording.result;
-				if (!blob || abort.signal.aborted || !host.isConnected) return;
+				// A successful start dismisses setup without going through its cancel handler.
+				frame.dialog.open = false;
+				const capture = recording;
+				closeDock = showRecordingDock(host, capture.recorder, text, () => {
+					discarded = true;
+					capture.cancel();
+				});
+				const blob = await capture.result;
+				closeDock();
+				closeDock = undefined;
+				if (discarded || abort.signal.aborted || !host.isConnected) {
+					resolve(undefined);
+					return;
+				}
+				if (!blob) throw new Error('No screen recording data');
 				const mimeType = blob.type.split(';')[0] ?? 'video/webm';
 				const file = new File(
 					[blob],
@@ -217,24 +219,22 @@ export function pickScreenRecording(host: HTMLElement, canvasSize: CanvasSize, t
 				);
 				const media = await mediaElementFromFile(file, canvasSize, doc);
 				if (!media) throw new Error('Could not insert screen recording');
-				if (abort.signal.aborted || !host.isConnected) return;
-				resolve({ ...media, name: heading });
-				frame.dialog.close();
-			} catch {
-				showFailure();
+				resolve(host.isConnected ? { ...media, name: heading } : undefined);
+			} catch (error) {
+				if (recording) {
+					recording.cancel();
+					if (host.isConnected && !discarded) reject(error);
+					else resolve(undefined);
+				} else if (!abort.signal.aborted) {
+					showFailure();
+				}
 			} finally {
-				recording = undefined;
-				clearSelection();
+				closeDock?.();
 				busy = false;
-				sync();
+				clearSelection();
+				if (recording) frame.dialog.remove();
 			}
 		}
-		pause.addEventListener('click', () => {
-			const recorder = recording?.recorder;
-			if (recorder?.state === 'paused') recorder.resume();
-			else if (recorder?.state === 'recording') recorder.pause();
-			sync();
-		});
 		sync();
 		frame.dialog.show();
 	});

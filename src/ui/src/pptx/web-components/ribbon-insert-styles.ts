@@ -20,7 +20,10 @@ svg { width:16px; height:16px; flex:none; fill:none; stroke:currentColor; stroke
 .trigger.large svg:first-child { width:32px; height:32px; stroke-width:1.4; }
 .trigger.large svg:last-child { width:8px; height:8px; margin:0; stroke-width:1.8; }
 .menu { position:relative; display:inline-flex; }
-/* Office split button: the face runs the default command, the chevron below opens the menu. */
+/* Keep the direct recording button on the same baselines as the Video and Audio menus. */
+pptx-ui-ribbon-group[data-ribbon-group="insert.media"]:not([data-scale]) .trigger.large { padding-block-start:var(--office-space-0,2px); }
+pptx-ui-ribbon-group[data-ribbon-group="insert.media"][data-scale="icons"] pptx-ui-ribbon-command::part(button) { min-height:var(--office-control-height,24px); height:var(--office-control-height,24px); padding-inline:6px; }
+ /* Office split button: the face runs the default command, the chevron below opens the menu. */
 .menu.split { flex-direction:column; align-items:stretch; }
 .primary { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:2px; box-sizing:border-box; min-width:48px; max-width:80px; height:50px; padding:3px 4px 0; border:0; border-radius:4px 4px 0 0; background:transparent; color:inherit; font:inherit; font-size:12px; line-height:15px; text-align:center; cursor:pointer; }
 .primary svg { width:32px; height:32px; flex:none; fill:none; stroke:var(--pptx-primary,#6366f1); stroke-width:1.4; stroke-linecap:round; stroke-linejoin:round; }

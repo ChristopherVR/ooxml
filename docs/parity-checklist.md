@@ -1280,7 +1280,9 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] PowerPoint Screen Recording can pause, resume and stop, optionally capture audio shared by
       the browser, and embed the resulting video. Select Area records a dragged rectangle or
       one entered as coordinates on the shared surface. Record Pointer passes a preference to
-      the browser's capture picker.
+      the browser's capture picker. An in-browser dock replaces the setup dialog during recording.
+      It shows elapsed recording time, collapses when unpinned and idle on desktop, and has a
+      keyboard- and touch-accessible handle to reveal the recording controls.
 - [x] PowerPoint Photo Album downloads a standalone presentation with a title slide, 1, 2 or 4
       pictures per slide, configurable picture order, and optional filename captions.
 - [x] PowerPoint Reuse Slides inserts selected slides from a local OOXML presentation and keeps

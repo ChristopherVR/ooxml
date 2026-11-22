@@ -83,6 +83,8 @@ export const translations: Record<string, string> = {
 	'pptx.insert.selectArea': '选择区域',
 	'pptx.gallery.graphicsFill': '图形填充',
 	'pptx.insert.recordPointer': '录制指针',
+	'pptx.insert.recordingControls': '录制控件',
+	'pptx.insert.pinRecordingDock': '固定工具栏',
 	'pptx.insert.captureAudio': '包含共享音频',
 	'pptx.insert.albumTitle': '相册标题',
 	'pptx.insert.picturesPerSlide': '每张幻灯片的图片数',

@@ -323,6 +323,9 @@ test.describe('Insert', () => {
 		for (const id of SMALL) {
 			expectSmall(controls[id], id);
 		}
+		const media = LARGE.filter((id) => id.startsWith('insert.media.')).map((id) => controls[id]!);
+		expect(media.map(({ iconY }) => iconY)).toEqual(media.map(() => media[0]!.iconY));
+		expect(media.map(({ h }) => h)).toEqual(media.map(() => media[0]!.h));
 		// Left to right, in PowerPoint's order.
 		const order = [SPLIT[0]!, ...LARGE.slice(0, 21), SPLIT[1]!, ...LARGE.slice(21)];
 		const xs = order.map((id) => controls[id]!.x);

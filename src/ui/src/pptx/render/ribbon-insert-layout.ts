@@ -401,7 +401,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 			},
 			control(
 				'insert.media.screenRecording',
-				'record',
+				'screenRecording',
 				'screenRecording',
 				'Screen Recording',
 				'Record your screen and audio, then add the recording to the slide.',

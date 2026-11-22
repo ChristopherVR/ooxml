@@ -83,6 +83,8 @@ export const translations = {
 	'pptx.insert.selectArea': '領域を選択',
 	'pptx.gallery.graphicsFill': 'グラフィックの塗りつぶし',
 	'pptx.insert.recordPointer': 'ポインターを記録',
+	'pptx.insert.recordingControls': '録画コントロール',
+	'pptx.insert.pinRecordingDock': 'コントロールを固定',
 	'pptx.insert.captureAudio': '共有オーディオを含める',
 	'pptx.insert.albumTitle': 'アルバムのタイトル',
 	'pptx.insert.picturesPerSlide': 'スライドあたりの画像数',

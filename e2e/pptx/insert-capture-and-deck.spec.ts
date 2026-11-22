@@ -3,9 +3,29 @@ import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 
-import { loadDeck, SAMPLE_DECK, slideElements, slideStage } from './support/deck';
+import { loadDeck, ribbonTab, SAMPLE_DECK, slideElements, slideStage } from './support/deck';
+
+declare global {
+	interface Window {
+		screenRecordingTestStream?: MediaStream;
+	}
+}
 
 test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+
+const recordingDock = (page: Page) => page.getByRole('group', { name: 'Screen Recording' });
+
+async function openRecordingPicker(page: Page) {
+	await page
+		.getByRole('navigation', { name: 'Editor actions' })
+		.getByRole('button', { name: 'Insert' })
+		.tap();
+	await page
+		.locator('pptx-ui-mobile-insert')
+		.getByRole('button', { name: 'Screen Recording', exact: true })
+		.tap();
+	return picker(page, 'Screen Recording');
+}
 
 const picker = (page: Page, name: string) =>
 	page.locator('office-ui-dialog[open]').filter({
@@ -29,6 +49,7 @@ test.beforeEach(async ({ page }) => {
 				};
 				tick();
 				const stream = canvas.captureStream(20);
+				window.screenRecordingTestStream = stream;
 				const timer = setInterval(() => {
 					if (stream.getVideoTracks()[0]?.readyState === 'ended') clearInterval(timer);
 					else tick();
@@ -61,17 +82,9 @@ test('captures a screen clipping as an image on the slide', async ({ page }) => 
 	await expect(slideStage(page).getByRole('img', { name: 'Screenshot' })).toBeVisible();
 });
 
-test('embeds a local screen recording as slide video', async ({ page }) => {
+test('embeds a local screen recording from the floating dock', async ({ page }) => {
 	const before = await slideElements(page).count();
-	await page
-		.getByRole('navigation', { name: 'Editor actions' })
-		.getByRole('button', { name: 'Insert' })
-		.tap();
-	await page
-		.locator('pptx-ui-mobile-insert')
-		.getByRole('button', { name: 'Screen Recording', exact: true })
-		.tap();
-	const dialog = picker(page, 'Screen Recording');
+	const dialog = await openRecordingPicker(page);
 	await dialog.getByRole('checkbox', { name: 'Record pointer' }).uncheck();
 	await dialog.getByRole('checkbox', { name: 'Include shared audio' }).uncheck();
 	await dialog.getByRole('button', { name: 'Select Area' }).tap();
@@ -81,9 +94,22 @@ test('embeds a local screen recording as slide video', async ({ page }) => {
 	await width.fill('96');
 	await dialog.getByRole('spinbutton', { name: /^(H|Height)$/ }).fill('64');
 	await dialog.getByRole('button', { name: 'Record', exact: true }).tap();
-	await dialog.getByRole('button', { name: 'Pause', exact: true }).tap();
-	await dialog.getByRole('button', { name: 'Resume', exact: true }).tap();
-	await dialog.getByRole('button', { name: 'Stop', exact: true }).tap();
+	await expect(dialog).toHaveCount(0);
+	const dock = recordingDock(page);
+	const controls = dock.getByRole('button', { name: 'Recording controls' });
+	const pause = dock.getByRole('button', { name: 'Pause', exact: true });
+	await expect(controls).toBeFocused();
+	await controls.tap();
+	await expect(pause).toBeHidden();
+	await controls.press('Enter');
+	await expect(pause).toBeVisible();
+	const pin = dock.getByRole('button', { name: 'Pin dock' });
+	await pin.tap();
+	await expect(pin).toHaveAttribute('aria-pressed', 'true');
+	await pause.tap();
+	await dock.getByRole('button', { name: 'Resume', exact: true }).tap();
+	await dock.getByRole('button', { name: 'Stop', exact: true }).tap();
+	await expect(dock).toHaveCount(0);
 	await expect(slideElements(page)).toHaveCount(before + 1);
 	const box = await page.evaluate(() =>
 		window.__pptxViewer.getSlides()[0]!.elements.find((element) => element.type === 'media'),
@@ -98,6 +124,48 @@ test('embeds a local screen recording as slide video', async ({ page }) => {
 	expect(Object.keys(archive.files)).toEqual(
 		expect.arrayContaining([expect.stringMatching(/^ppt[/]media[/]video\d+\.(mp4|webm)$/u)]),
 	);
+});
+
+test('cancels a recording from the dock, releases capture and allows a retry', async ({ page }) => {
+	const before = await slideElements(page).count();
+	const dialog = await openRecordingPicker(page);
+	await dialog.getByRole('button', { name: 'Record', exact: true }).tap();
+	const dock = recordingDock(page);
+	await dock.getByRole('button', { name: 'Cancel', exact: true }).tap();
+	await expect(dock).toHaveCount(0);
+	await expect(slideElements(page)).toHaveCount(before);
+	const canRecordAgain = page
+		.locator('pptx-ui-mobile-insert')
+		.getByRole('button', { name: 'Screen Recording', exact: true });
+	await canRecordAgain.tap();
+	await expect(dialog).toBeVisible();
+	const state = await page.evaluate(
+		() => window.screenRecordingTestStream?.getVideoTracks()[0]?.readyState,
+	);
+	expect(state).toBe('ended');
+});
+
+test.describe('recording dock on desktop', () => {
+	test.use({ viewport: { width: 1920, height: 900 }, hasTouch: false, isMobile: false });
+
+	test('hides unpinned controls and inserts the video when sharing stops', async ({ page }) => {
+		const before = await slideElements(page).count();
+		await ribbonTab(page, 'Insert').click();
+		await page.getByRole('button', { name: 'Screen Recording', exact: true }).click();
+		await picker(page, 'Screen Recording')
+			.getByRole('button', { name: 'Record', exact: true })
+			.click();
+		const dock = recordingDock(page);
+		const controls = dock.getByRole('button', { name: 'Recording controls' });
+		await expect(controls).toHaveAttribute('aria-expanded', 'false');
+		await controls.hover();
+		await expect(dock.getByRole('button', { name: 'Stop', exact: true })).toBeVisible();
+		await page.evaluate(() => {
+			window.screenRecordingTestStream?.getVideoTracks()[0]?.dispatchEvent(new Event('ended'));
+		});
+		await expect(dock).toHaveCount(0);
+		await expect(slideElements(page)).toHaveCount(before + 1);
+	});
 });
 
 test('creates and downloads a separate Photo Album', async ({ page }) => {
@@ -173,7 +241,12 @@ test('adds local models and Office file objects from the phone Insert sheet', as
 			.getByRole('button', { name: heading, exact: true })
 			.tap();
 		const dialog = picker(page, heading);
-		await dialog.locator('input[type=file]').setInputFiles(file);
+		const browse = dialog.getByRole('button', { name: 'Browse this device' });
+		await expect(browse).toBeFocused();
+		const chooser = page.waitForEvent('filechooser');
+		await browse.press('Enter');
+		await (await chooser).setFiles(file);
+		await expect(dialog.getByRole('status')).toHaveText(file.name);
 		await dialog.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(dialog).toHaveCount(0);
 	};

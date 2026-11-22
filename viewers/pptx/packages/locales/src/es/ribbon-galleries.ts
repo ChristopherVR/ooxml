@@ -85,6 +85,8 @@ export const translations: Record<string, string> = {
 	'pptx.insert.selectArea': 'Seleccionar área',
 	'pptx.gallery.graphicsFill': 'Relleno de gráficos',
 	'pptx.insert.recordPointer': 'Grabar puntero',
+	'pptx.insert.recordingControls': 'Controles de grabación',
+	'pptx.insert.pinRecordingDock': 'Anclar controles',
 	'pptx.insert.captureAudio': 'Incluir audio compartido',
 	'pptx.insert.albumTitle': 'Título del álbum',
 	'pptx.insert.picturesPerSlide': 'Imágenes por diapositiva',

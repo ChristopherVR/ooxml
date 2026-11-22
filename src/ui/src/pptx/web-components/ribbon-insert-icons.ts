@@ -26,6 +26,8 @@ export const RIBBON_INSERT_ICON_PATHS: Readonly<Record<string, string>> = {
 	symbol:
 		'M3 16.500h4.200C5.200 15.200 4 13 4 10.500a6 6 0 0 1 12 0c0 2.500-1.200 4.700-3.200 6H17',
 	audio: 'M3 8h3l5-4v12l-5-4H3ZM14 7.500a3.500 3.500 0 0 1 0 5M16 5a7 7 0 0 1 0 10',
+	screenRecording:
+		'M2.5 3.5h15v11h-15ZM7 17.5h6M10 14.5v3M7.5 9a2.5 2.5 0 1 0 5 0 2.5 2.5 0 1 0-5 0',
 	chevronDown: 'm5 8 5 5 5-5',
 };
 

@@ -1,0 +1,79 @@
+.pptx-recording-dock {
+	position: fixed;
+	z-index: calc(var(--office-z-popover) + 2);
+	inset: max(8px, env(safe-area-inset-top)) 0 auto;
+	margin: 0 auto;
+	width: max-content;
+	max-width: calc(100% - 16px);
+	box-sizing: border-box;
+	padding: 4px;
+	border: 1px solid var(--office-border);
+	border-radius: var(--office-radius-lg);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: 500 var(--office-font-size)/1.25 var(--office-font);
+	box-shadow: var(--office-shadow-lg);
+}
+.pptx-recording-dock::backdrop {
+	pointer-events: none;
+}
+.pptx-recording-strip,
+.pptx-recording-actions {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.pptx-recording-strip {
+	justify-content: space-between;
+}
+.pptx-recording-actions {
+	flex-wrap: wrap;
+	padding-top: 3px;
+	border-top: 1px solid var(--office-border);
+}
+.pptx-recording-actions[hidden] {
+	display: none;
+}
+.pptx-recording-dock button {
+	min-block-size: 36px;
+	padding: 4px 8px;
+	border: 1px solid transparent;
+	border-radius: var(--office-radius);
+	color: inherit;
+	font: inherit;
+	background: transparent;
+	cursor: pointer;
+}
+.pptx-recording-dock button:hover,
+.pptx-recording-dock button[aria-pressed='true'] {
+	background: var(--office-selected);
+}
+.pptx-recording-dock button:focus-visible {
+	outline: 2px solid var(--office-accent);
+	outline-offset: -2px;
+}
+.pptx-recording-dock .pptx-recording-handle {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+.pptx-recording-indicator {
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--office-danger);
+}
+.pptx-recording-dock[data-paused] .pptx-recording-indicator {
+	box-sizing: border-box;
+	border: 1px solid var(--office-danger);
+	background: transparent;
+}
+.pptx-recording-elapsed {
+	padding-inline: 4px 8px;
+	font-variant-numeric: tabular-nums;
+}
+@media (pointer: coarse) {
+	.pptx-recording-dock button {
+		min-block-size: 44px;
+	}
+}

@@ -83,6 +83,8 @@ export const translations = {
 	'pptx.insert.selectArea': '영역 선택',
 	'pptx.gallery.graphicsFill': '그래픽 채우기',
 	'pptx.insert.recordPointer': '포인터 기록',
+	'pptx.insert.recordingControls': '녹화 컨트롤',
+	'pptx.insert.pinRecordingDock': '컨트롤 고정',
 	'pptx.insert.captureAudio': '공유 오디오 포함',
 	'pptx.insert.albumTitle': '앨범 제목',
 	'pptx.insert.picturesPerSlide': '슬라이드당 그림 수',
