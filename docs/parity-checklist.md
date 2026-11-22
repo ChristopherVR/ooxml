@@ -339,8 +339,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 - [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format, Chart Format (a pane instead),
       PivotTable Analyze and PivotTable Design (pivot commands sit in Insert > PivotTable).
-- [ ] **P1** Insert: Shapes, 3D Models, PivotChart, Recommended PivotTables,
-      Equation, New Note, Text Box, Header & Footer, and Object.
+- [ ] **P1** Insert: Shapes, PivotChart, Recommended PivotTables, Equation, New Note,
+      Text Box, and Header & Footer.
+- [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG preview. Insert > Object
+      embeds an existing DOCX, XLSX or PPTX as a worksheet icon. The original bytes survive
+      save and reopen, and the embedded Office file can be downloaded from its icon.
+- [ ] **P1** Insert still needs stock models, other model formats, interactive 3D controls,
+      desktop OLE activation, Create New and link-to-file.
 - [x] **P1** WordArt inserts and edits native worksheet shapes with fill, outline and shadow
       presets and DrawingML text transforms.
 - [x] **P1** Insert Symbol replaces the editing selection or inserts at the cell's text caret.
@@ -416,7 +421,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       certificates, relationships and content types through `opc/signature`, including
       nonstandard part locations (`src/core/docx/signatures.test.ts`). A browser has no trust
       store, so a valid signature reads "signer not verified" there. The editor does not sign.
-- [ ] **P1** OLE objects and ActiveX controls are kept and drawn as placeholders only.
+- [ ] **P1** ActiveX controls and OLE objects without a supported preview display as placeholders.
+      OLE and ActiveX activation in the browser remains open.
 - [x] **P2** Comment metadata edits retain source bodies; plain-text edits patch existing runs;
       paragraph and durable IDs, reply anchors, UTC dates and metadata parts stay aligned.
       Evidence: `docx/comment-preservation.test.ts`, `docx/comments.test.ts`, six-binding
@@ -608,8 +614,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       survive native DOCX and XLSX saves. The editors preview the gradient and text path.
 - [ ] **P2** Word and Excel WordArt still need multi-stop and themed gradient editing, 3-D effects,
       direct adjustment handles and glyph-envelope rendering for deformation presets.
-- [ ] **P1** Insert: Quick Parts, Signature Line, Object, 3D Models,
-      Video; Header and Footer offer blank designs only.
+- [ ] **P1** Insert: Quick Parts, Signature Line and Video. Header and Footer offer blank designs only.
+- [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG fallback at the caret.
+      Insert > Object embeds an existing DOCX, XLSX or PPTX as a native inline file icon.
+      The original bytes and preview survive save and reopen.
+- [ ] **P1** Insert still needs stock models, other model formats, interactive 3D controls,
+      Create New and link-to-file.
 - [ ] **P2** View: Window group, Macros; Review: Thesaurus, Translate, Block Authors, Hide Ink;
       Home: Text Effects, Phonetic Guide, Character Border, Enclosed Characters; Backstage:
       Share, Account, Close.
@@ -1288,8 +1298,8 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] PowerPoint Reuse Slides inserts selected slides from a local OOXML presentation and keeps
       their source formats and related parts.
 - [ ] Desktop window thumbnails, selecting an area directly on the desktop, reliable pointer
-      control on every browser surface, the floating system recording dock, and in-place Photo
-      Album editing are open. Reuse Slides still needs destination-theme formatting and import
+      control on every browser surface, a recording dock that follows other apps, and in-place
+      Photo Album editing are open. Reuse Slides still needs destination-theme formatting and import
       between different slide sizes or OOXML conformance classes.
 
 ### Insert Icons
