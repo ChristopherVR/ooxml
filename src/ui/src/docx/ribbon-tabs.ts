@@ -245,8 +245,9 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			menuSelect(
 				'Symbol',
 				'symbol',
-				SYMBOLS.map((symbol) => [symbol, symbol]),
-				(value) => ({ type: 'insertSymbol', value }),
+				[...SYMBOLS.map((symbol): [string, string] => [symbol, symbol]), ['more', 'More Symbols…']],
+				(value) =>
+					value === 'more' ? { type: 'openSymbolGallery' } : { type: 'insertSymbol', value },
 				{ momentary: true },
 			),
 		),

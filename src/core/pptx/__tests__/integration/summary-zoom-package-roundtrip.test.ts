@@ -201,6 +201,9 @@ describe('summary zoom package integration', () => {
 
 		zoom!.summaryTargets![1].x = 400;
 		zoom!.summaryTargets![1].title = 'Deep details';
+		zoom!.summaryTargets![1].returnToParent = false;
+		zoom!.summaryTargets![1].transitionDurationMs = 750;
+		zoom!.summaryTargets![1].zoomShowBackground = false;
 		const saved = await handler.save(data.slides, { sections: data.sections });
 		const zip = await JSZip.loadAsync(saved);
 		const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
@@ -221,6 +224,9 @@ describe('summary zoom package integration', () => {
 			title: 'Deep details',
 			x: 400,
 			targetSlideIndex: 2,
+			returnToParent: false,
+			transitionDurationMs: 750,
+			zoomShowBackground: false,
 		});
 	});
 

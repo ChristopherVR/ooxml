@@ -198,6 +198,7 @@ export const enRibbon = {
 	'One page': 'One page',
 	'Word count': 'Word count',
 	Spelling: 'Spelling',
+	'More Symbols…': 'More Symbols…',
 	Symbol: 'Symbol',
 	'Line numbers': 'Line numbers',
 	'Restart Each Page': 'Restart Each Page',

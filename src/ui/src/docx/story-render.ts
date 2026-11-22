@@ -165,7 +165,11 @@ export function wordArtWarpElement(
 	height: number,
 ): HTMLElement | undefined {
 	const style = content.wordArt;
-	if (!style?.warp || !Object.hasOwn(WARP_PATH_GENERATORS, style.warp.preset)) return undefined;
+	if (
+		!style ||
+		(!style.gradient && (!style.warp || !Object.hasOwn(WARP_PATH_GENERATORS, style.warp.preset)))
+	)
+		return undefined;
 	const paragraphs = content.blocks.flatMap((block) => (block.type === 'paragraph' ? [block] : []));
 	const lines = paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join(''));
 	if (!lines.some(Boolean)) return undefined;

@@ -79,7 +79,7 @@ test.describe('phone Insert ribbon', () => {
 		await host.getByRole('button', { name: 'Symbols', exact: true }).tap();
 		await host.getByRole('button', { name: 'Symbol', exact: true }).tap();
 		const picker = host.locator('office-ui-dialog[data-dialog="symbol"]');
-		await picker.getByRole('grid').getByRole('button', { name: 'U+00A9', exact: true }).tap();
+		await picker.getByRole('textbox', { name: 'Character code', exact: true }).fill('U+00A9');
 		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(field).toHaveValue('ab©ef');
 	});
@@ -92,15 +92,19 @@ test.describe('phone Insert ribbon', () => {
 		await host.getByRole('button', { name: 'WordArt', exact: true }).tap();
 		const picker = host.locator('office-ui-dialog[open]');
 		await picker.getByRole('textbox', { name: 'WordArt text' }).fill('Phone WordArt');
-		await picker.getByRole('button', { name: 'WordArt style 3', exact: true }).tap();
+		await picker.getByRole('button', { name: 'WordArt style 31', exact: true }).tap();
 		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
-		await expect(host.locator('.xg-obj[aria-label="WordArt"]')).toContainText('Phone WordArt');
+		const wordArt = host.locator('.xg-obj[aria-label="WordArt"]');
+		await expect(wordArt).toContainText('Phone WordArt');
+		await expect(wordArt.locator('linearGradient')).toHaveCount(1);
 
 		await host.getByRole('button', { name: 'Illustrations', exact: true }).tap();
 		await host.getByRole('button', { name: 'Icons', exact: true }).tap();
 		await picker.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
 		await picker.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+		await picker.getByRole('searchbox', { name: 'Search icons' }).fill('Check mark');
+		await picker.getByRole('button', { name: 'Check mark', exact: true }).tap();
 		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
-		await expect(host.locator('.xg-obj img').first()).toBeVisible();
+		await expect(host.locator('.xg-obj img')).toHaveCount(2);
 	});
 });

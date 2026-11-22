@@ -1,4 +1,5 @@
-import { ELEMENT_GEOMETRY_SECTIONS } from 'ooxml-ui/pptx';
+import { ELEMENT_GEOMETRY_SECTIONS, sizePositionSections } from 'ooxml-ui/pptx';
+import type { ElementGeometryTarget } from 'ooxml-ui/pptx';
 
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
 import type { Translator } from '../../i18n';
@@ -58,6 +59,12 @@ export function createPositionSection(
 		sectionClassName: 'pptxv-inspector-grid',
 	});
 	el.appendChild(geometry.el);
+	const zoom = createInspectorFields(doc, t, {
+		sections: (element: ElementGeometryTarget) => sizePositionSections(element).slice(1),
+		onPatch: (patch) => setGeometry(patch),
+		sectionClassName: 'pptxv-inspector-grid',
+	});
+	el.appendChild(zoom.el);
 
 	return {
 		el,
@@ -76,6 +83,9 @@ export function createPositionSection(
 				},
 				!state.hasSelection,
 			);
+			const element = state.selectedElement;
+			zoom.el.hidden = element?.type !== 'zoom';
+			if (element?.type === 'zoom' && !zoom.el.hidden) zoom.update(element, !state.hasSelection);
 			lockBtn.setActive(state.isLocked);
 			lockBtn.setDisabled(!state.hasSelection);
 			const label = t(state.isLocked ? 'pptx.inspector.unlock' : 'pptx.inspector.lock');

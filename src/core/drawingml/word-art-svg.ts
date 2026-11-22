@@ -4,6 +4,7 @@ import {
 	WORD_ART_FONT,
 	WORD_ART_OUTLINE_EMU,
 	WORD_ART_SHADOW,
+	normalizeWordArtGradient,
 	wordArtRgb,
 	type WordArtStyle,
 } from './word-art';
@@ -47,6 +48,14 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 	const outline = wordArtRgb(style.outline);
 	const fill = wordArtRgb(style.fill) ?? '26374A';
 	const shadow = wordArtCssShadow(style, scale);
+	const gradient = normalizeWordArtGradient(style.gradient);
+	const gradientId = `${id}-gradient`;
+	const angle = ((gradient?.angle ?? 0) / 10800000) * Math.PI;
+	const dx = Math.cos(angle) / 2;
+	const dy = Math.sin(angle) / 2;
+	const defs = gradient
+		? `<defs><linearGradient id="${gradientId}" x1="${0.5 - dx}" y1="${0.5 - dy}" x2="${0.5 + dx}" y2="${0.5 + dy}"><stop stop-color="#${fill}"/><stop offset="1" stop-color="#${gradient.end}"/></linearGradient></defs>`
+		: '';
 	const stroke = outline
 		? ` stroke="#${outline}" stroke-width="${(WORD_ART_OUTLINE_EMU / EMU_PER_PIXEL) * scale}" paint-order="stroke fill"`
 		: '';
@@ -82,5 +91,5 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 		);
 		return `<g transform="translate(${inset} ${top})"><defs><path id="${pathId}" d="${path}"/></defs><text><textPath href="#${pathId}" startOffset="50%">${escaped(line)}</textPath></text></g>`;
 	});
-	return `<svg xmlns="http://www.w3.org/2000/svg" x="${x}" y="${y}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" data-word-art-transform="${usePath ? escaped(preset) : 'textNoShape'}"><g text-anchor="middle" font-family="${WORD_ART_FONT}, sans-serif" font-size="${size}" font-weight="bold" fill="#${fill}"${stroke}${shadow ? ` style="filter:drop-shadow(${shadow})"` : ''}>${body.join('')}</g></svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" x="${x}" y="${y}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" data-word-art-transform="${usePath ? escaped(preset) : 'textNoShape'}">${defs}<g text-anchor="middle" font-family="${WORD_ART_FONT}, sans-serif" font-size="${size}" font-weight="bold" fill="${gradient ? `url(#${gradientId})` : `#${fill}`}"${stroke}${shadow ? ` style="filter:drop-shadow(${shadow})"` : ''}>${body.join('')}</g></svg>`;
 }

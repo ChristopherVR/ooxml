@@ -67,6 +67,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				height: bottom - top,
 				imagePath: first.imagePath,
 				imageData: first.imageData,
+				zoomImageType: first.zoomImageType,
+				zoomShowBackground: first.zoomShowBackground,
 				summaryTargets: targets,
 				summaryLayout: zoom['psuz:fixedLayout'] !== undefined ? 'fixed' : 'grid',
 				// Mirrors the first tile's own zmPr attributes, same convention as

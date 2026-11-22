@@ -1,3 +1,4 @@
+import { zoomTargetInfo, type SummaryZoomTargetInfo } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import type { InjectionKey } from 'vue';
 import { inject, provide } from 'vue';
@@ -7,14 +8,7 @@ import { inject, provide } from 'vue';
  * fallback thumbnail (mirrors React's `ZoomSlideThumbnail`): the slide's own
  * background colour, its display number, and the friendly section name.
  */
-export interface ZoomTargetInfo {
-	/** Target slide background colour (CSS), used as the fallback tile fill. */
-	backgroundColor?: string;
-	/** The slide's own display number (not the array index + 1). */
-	slideNumber?: number;
-	/** Friendly section name, when the slide belongs to a named section. */
-	sectionName?: string;
-}
+export type ZoomTargetInfo = SummaryZoomTargetInfo;
 
 /**
  * Zoom-target lookup context.
@@ -31,15 +25,19 @@ export type ZoomTargetLookup = (targetSlideIndex: number) => ZoomTargetInfo | un
 export const ZoomTargetKey: InjectionKey<ZoomTargetLookup> = Symbol('pptx-vue-zoom-target');
 
 /** Map a target slide to the minimal descriptor a Zoom tile renders. */
-export function toZoomTargetInfo(slide: PptxSlide | undefined): ZoomTargetInfo | undefined {
-	if (!slide) {
-		return undefined;
-	}
-	return {
-		backgroundColor: slide.backgroundColor,
-		slideNumber: slide.slideNumber,
-		sectionName: slide.sectionName,
-	};
+export function toZoomTargetInfo(
+	slide: PptxSlide | undefined,
+	canvas?: { width: number; height: number },
+): ZoomTargetInfo | undefined {
+	if (canvas) return zoomTargetInfo(slide, canvas);
+	// Keep the metadata contract for hosts that omit a preview canvas.
+	return (
+		slide && {
+			backgroundColor: slide.backgroundColor,
+			slideNumber: slide.slideNumber,
+			sectionName: slide.sectionName,
+		}
+	);
 }
 
 /** Provide a zoom-target lookup over the presentation's slides to descendants. */

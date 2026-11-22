@@ -207,6 +207,7 @@ export const deRibbon: RibbonStrings = {
 	'One page': 'Eine Seite',
 	'Word count': 'Wörter zählen',
 	Spelling: 'Rechtschreibung',
+	'More Symbols…': 'Weitere Symbole…',
 	Symbol: 'Symbol',
 	'Line numbers': 'Zeilennummern',
 	'Restart Each Page': 'Jede Seite neu beginnen',

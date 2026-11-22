@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { buildSummaryZoomView, resolveZoomNavigationTarget } from 'ooxml-ui/pptx';
+import {
+	buildSummaryZoomView,
+	resolveZoomNavigationTarget,
+	zoomPreviewSource,
+} from 'ooxml-ui/pptx';
 import type { SummaryZoomTileView } from 'ooxml-ui/pptx';
 import type { PptxElement, ZoomPptxElement } from 'pptx-viewer-core';
 import { isZoomElement } from 'pptx-viewer-core';
@@ -61,8 +65,6 @@ const zoom = computed<ZoomPptxElement | undefined>(() =>
 	isZoomElement(props.element) ? props.element : undefined,
 );
 
-const previewSrc = computed<string | undefined>(() => zoom.value?.imageData);
-
 const targetSlideIndex = computed(() => zoom.value?.targetSlideIndex ?? 0);
 const zoomType = computed<'slide' | 'section' | 'summary'>(() => zoom.value?.zoomType ?? 'slide');
 const targetSectionId = computed<string | undefined>(() => zoom.value?.targetSectionId);
@@ -76,6 +78,9 @@ const badgeText = computed(() =>
 // background colour, its own slide number and the friendly section name.
 const targetLookup = injectZoomTargetLookup();
 const targetInfo = computed(() => targetLookup?.(targetSlideIndex.value));
+const previewSrc = computed(() =>
+	zoom.value ? zoomPreviewSource(zoom.value, targetInfo.value) : undefined,
+);
 const summaryView = computed(() =>
 	zoom.value
 		? buildSummaryZoomView(zoom.value, targetLookup, (key, params) => t(key, params ?? {}))

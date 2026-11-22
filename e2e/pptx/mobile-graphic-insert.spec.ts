@@ -44,20 +44,24 @@ test('phone Insert can open, cancel and commit WordArt', async ({ page }) => {
 	await expect(slideStage(page).getByText('Design review', { exact: true })).toBeVisible();
 });
 
-test('phone Insert can search for an icon and insert it', async ({ page }) => {
+test('phone Insert keeps selected icons while searching and inserts them together', async ({
+	page,
+}) => {
 	await insertSheet(page).tap();
 	const originalCount = await slideElements(page).count();
 	const picker = await openPicker(page, 'Icons');
 	await picker.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
 	await picker.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+	await picker.getByRole('searchbox', { name: 'Search icons' }).fill('Check mark');
+	await picker.getByRole('button', { name: 'Check mark', exact: true }).tap();
 	await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
 
 	await expect(picker).toHaveCount(0);
-	await expect(slideElements(page)).toHaveCount(originalCount + 1);
+	await expect(slideElements(page)).toHaveCount(originalCount + 2);
 	await expect(tiles(page)).toBeHidden();
-	await expect(
-		slideStage(page).getByRole('img', { name: 'Light bulb', exact: true }),
-	).toBeVisible();
+	for (const name of ['Light bulb', 'Check mark']) {
+		await expect(slideStage(page).getByRole('img', { name, exact: true })).toBeVisible();
+	}
 });
 
 test('phone Insert can add a character from the Symbol picker', async ({ page }) => {
@@ -93,10 +97,24 @@ test('phone Zoom inserts Summary, Section and Slide Zoom', async ({ page }) => {
 		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
 
 		await expect(tiles(page)).toBeHidden();
-		await expect(
-			slideStage(page).locator(`[data-zoom-type="${type.toLowerCase()}"] img`),
-		).toBeVisible();
+		const preview = slideStage(page).locator(`[data-zoom-type="${type.toLowerCase()}"] img`);
+		await expect(preview).toBeVisible();
 	}
+	const zoom = slideStage(page).locator('[data-zoom-type="slide"]');
+	const preview = zoom.locator('img');
+	await expect(preview).toHaveAttribute('src', /^data:image\/svg\+xml/);
+	const initialImage = await preview.getAttribute('src');
+	const destination = Number(await zoom.getAttribute('data-zoom-target'));
+	await page.evaluate(async (index) => {
+		const api = window.__pptxViewer;
+		const slide = api.getSlides()[index];
+		const shape = slide?.elements.find((element) => element.type === 'text');
+		if (!slide || !shape) throw new Error('Missing text on the Zoom destination');
+		await api.updateElements([
+			{ slideId: slide.id, elementId: shape.id, patch: { x: shape.x + 120 } },
+		]);
+	}, destination);
+	await expect.poll(() => preview.getAttribute('src')).not.toBe(initialImage);
 });
 
 test('phone Shapes inserts the chosen preset and Undo, Redo and Save act on it', async ({

@@ -1,6 +1,5 @@
 import type { PptxElement, TextPptxElement } from 'ooxml-core/pptx';
-import { defineDialog, type OfficeUiDialog } from '../../dialog/dialog';
-import { defineSymbolPicker } from '../../form/symbol-picker';
+import { pickOfficeSymbol } from '../../form/symbol-picker';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { renderLocalSvg } from '../../form/local-svg';
 import { generateElementId } from '../render/element-clipboard';
@@ -58,14 +57,17 @@ export function createGraphicInsert(
 							if (inlineSymbol(content)) onInserted?.();
 							return undefined;
 						})
-					: pickGraphic(host, target, intent.value, text);
+					: intent.value === 'icons'
+						? pickIcons(host, target, text)
+						: pickGraphic(host, target, intent.value, text);
 		void picked
-			.then((element) => {
-				const live = element && current();
-				if (element && live) {
-					live.insert(element);
-					onInserted?.();
-				}
+			.then((picked) => {
+				if (!picked) return;
+				const live = current();
+				const elements = Array.isArray(picked) ? picked : [picked];
+				if (!live || !elements.length) return;
+				for (const element of elements) live.insert(element);
+				onInserted?.();
 			})
 			.catch(() => {
 				inlineSymbol?.();
@@ -109,7 +111,7 @@ function newGraphicText(
 async function pickGraphic(
 	host: HTMLElement,
 	target: RibbonGraphicTarget,
-	kind: 'icons' | 'symbol' | 'wordArt',
+	kind: 'symbol' | 'wordArt',
 	text: InsertText,
 ): Promise<PptxElement | undefined> {
 	if (kind === 'symbol') {
@@ -117,8 +119,14 @@ async function pickGraphic(
 		const symbol = await pickSymbol(host, heading, text);
 		return symbol ? newGraphicText(target, heading, symbol, 24) : undefined;
 	}
-	if (kind === 'wordArt') return pickWordArt(host, target, text);
+	return pickWordArt(host, target, text);
+}
 
+async function pickIcons(
+	host: HTMLElement,
+	target: RibbonGraphicTarget,
+	text: InsertText,
+): Promise<PptxElement[]> {
 	const picked = await pickOfficeIcon(host, {
 		heading: text('pptx.insert.icons', 'Icons'),
 		search: text('pptx.graphic.searchIcons', 'Search icons'),
@@ -128,21 +136,28 @@ async function pickGraphic(
 		insert: text('pptx.common.insert', 'Insert'),
 		close: text('pptx.common.close', 'Close'),
 	});
-	if (!picked) return undefined;
-	const fallback = await renderLocalSvg(host.ownerDocument, picked.svg, 192, 192);
-	const size = Math.min(target.canvasSize.width, target.canvasSize.height) / 5;
-	return {
-		type: 'image',
-		id: generateElementId(),
-		name: picked.name,
-		altText: picked.name,
-		x: (target.canvasSize.width - size) / 2,
-		y: (target.canvasSize.height - size) / 2,
-		width: size,
-		height: size,
-		imageData: fallback.toDataURL('image/png'),
-		svgData: `data:image/svg+xml;base64,${btoa(picked.svg)}`,
-	};
+	const { width, height } = target.canvasSize;
+	const columns = Math.max(1, Math.ceil(Math.sqrt(picked.length)));
+	const rows = Math.max(1, Math.ceil(picked.length / columns));
+	const pitch = Math.min(width / (columns + 1), height / (rows + 1), height / 4);
+	const size = pitch * 0.8;
+	return Promise.all(
+		picked.map(async (icon, index): Promise<PptxElement> => {
+			const fallback = await renderLocalSvg(host.ownerDocument, icon.svg, 192, 192);
+			return {
+				type: 'image',
+				id: generateElementId(),
+				name: icon.name,
+				altText: icon.name,
+				x: (width - columns * pitch) / 2 + ((index % columns) + 0.1) * pitch,
+				y: (height - rows * pitch) / 2 + (Math.floor(index / columns) + 0.1) * pitch,
+				width: size,
+				height: size,
+				imageData: fallback.toDataURL('image/png'),
+				svgData: `data:image/svg+xml;base64,${btoa(icon.svg)}`,
+			};
+		}),
+	);
 }
 
 function pickSymbol(
@@ -150,27 +165,10 @@ function pickSymbol(
 	heading: string,
 	text: InsertText,
 ): Promise<string | undefined> {
-	const doc = host.ownerDocument;
-	const registry = doc.defaultView?.customElements;
-	defineDialog(registry);
-	defineSymbolPicker(registry);
-	const dialog = doc.createElement('office-ui-dialog') as OfficeUiDialog;
-	dialog.heading = heading;
-	dialog.closeLabel = text('pptx.common.close', 'Close');
-	const picker = doc.createElement('office-ui-symbol-picker');
-	picker.setAttribute('label', heading);
-	dialog.append(picker);
-	return new Promise((resolve) => {
-		picker.addEventListener('office-symbol-pick', (event) => {
-			resolve((event as CustomEvent<{ symbol: string }>).detail.symbol);
-			dialog.close();
-		});
-		dialog.addEventListener('office-dialog-close', () => {
-			resolve(undefined);
-			queueMicrotask(() => dialog.remove());
-		});
-		host.append(dialog);
-		dialog.show();
+	return pickOfficeSymbol(host, {
+		heading,
+		close: text('pptx.common.close', 'Close'),
+		font: text('pptx.ribbon.font', 'Font'),
 	});
 }
 

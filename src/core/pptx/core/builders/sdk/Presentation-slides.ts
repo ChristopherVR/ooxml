@@ -10,6 +10,7 @@
  */
 
 import type { PptxSlide, PptxData } from '../../types/presentation';
+import { remapZoomTargets } from '../../utils/remap-zoom-targets';
 import { duplicateSlide } from './slide-operations';
 import { SlideBuilder } from './SlideBuilder';
 import { at } from '../../../../geometry/indexed';
@@ -102,9 +103,11 @@ export function moveSlideImpl(data: PptxData, fromIndex: number, toIndex: number
 	if (fromIndex < 0 || fromIndex >= slides.length || toIndex < 0 || toIndex >= slides.length) {
 		throw new RangeError('Slide index out of range');
 	}
+	const next = [...slides];
 	const slide = at(slides, fromIndex);
-	slides.splice(fromIndex, 1);
-	slides.splice(toIndex, 0, slide);
+	next.splice(fromIndex, 1);
+	next.splice(toIndex, 0, slide);
+	data.slides = remapZoomTargets(slides, next);
 	renumberSlides(data);
 }
 
@@ -121,9 +124,10 @@ export function swapSlidesImpl(data: PptxData, indexA: number, indexB: number): 
 	if (indexA < 0 || indexA >= slides.length || indexB < 0 || indexB >= slides.length) {
 		throw new RangeError('Slide index out of range');
 	}
-	const slideA = at(slides, indexA);
-	slides[indexA] = at(slides, indexB);
-	slides[indexB] = slideA;
+	const next = [...slides];
+	next[indexA] = at(slides, indexB);
+	next[indexB] = at(slides, indexA);
+	data.slides = remapZoomTargets(slides, next);
 	renumberSlides(data);
 }
 
@@ -136,7 +140,7 @@ export function swapSlidesImpl(data: PptxData, indexA: number, indexB: number): 
 export function reorderSlidesImpl(data: PptxData, newOrder: number[]): void {
 	const slides = data.slides;
 	const reordered = newOrder.filter((i) => i >= 0 && i < slides.length).map((i) => at(slides, i));
-	data.slides = reordered;
+	data.slides = remapZoomTargets(slides, reordered);
 	renumberSlides(data);
 }
 

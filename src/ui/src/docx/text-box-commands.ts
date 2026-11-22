@@ -4,7 +4,7 @@ import type { EditorView } from 'prosemirror-view';
 import { simpleTextBoxDrawing } from 'ooxml-core/docx';
 import { schema } from './schema';
 import type { WordArtStyle } from 'ooxml-core/drawingml';
-import { wordArtRgb } from 'ooxml-core/drawingml';
+import { normalizeWordArtGradient, wordArtRgb } from 'ooxml-core/drawingml';
 
 export interface TextBoxSettings {
 	lines: string[];
@@ -37,6 +37,7 @@ export function selectedTextBox(
 	const fill = wordArtRgb(style?.fill);
 	const outline = wordArtRgb(style?.outline);
 	const shadow = wordArtRgb(style?.shadow);
+	const gradient = normalizeWordArtGradient(style?.gradient);
 	return {
 		pos: selection.from,
 		settings: {
@@ -48,6 +49,7 @@ export function selectedTextBox(
 				? {
 						wordArt: {
 							fill,
+							...(gradient ? { gradient } : {}),
 							...(outline ? { outline } : {}),
 							...(shadow ? { shadow } : {}),
 							...(style?.warp ? { warp: style.warp } : {}),

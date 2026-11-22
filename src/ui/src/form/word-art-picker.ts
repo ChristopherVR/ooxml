@@ -134,6 +134,11 @@ export function pickWordArt(
 			button.setAttribute('aria-label', labels.style(index + 1));
 			button.textContent = 'Aa';
 			button.style.color = `#${variant.fill}`;
+			if (variant.gradient) {
+				button.style.backgroundImage = `linear-gradient(${variant.gradient.angle / 60000 + 90}deg, #${variant.fill}, #${variant.gradient.end})`;
+				button.style.backgroundClip = 'text';
+				button.style.webkitTextFillColor = 'transparent';
+			}
 			if (variant.outline) button.style.webkitTextStroke = `1px #${variant.outline}`;
 			button.style.textShadow = wordArtCssShadow(variant, 0.7) ?? '';
 			button.addEventListener('click', () => {

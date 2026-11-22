@@ -62,11 +62,13 @@ import { RecentColorsService } from './recent-colors.service';
 								(change)="onToggle(section.id, $event)"
 							></pptx-ui-checkbox>
 							<span class="pptx-ng-fields__section-title">{{
-								section.labelKey ?? '' | translate
+								section.label ?? (section.labelKey ?? '' | translate)
 							}}</span>
 						</label>
-					} @else if (section.labelKey) {
-						<span class="pptx-ng-fields__section-title">{{ section.labelKey | translate }}</span>
+					} @else if (section.label || section.labelKey) {
+						<span class="pptx-ng-fields__section-title">{{
+							section.label ?? (section.labelKey ?? '' | translate)
+						}}</span>
 					}
 					@if (section.fields.length) {
 						<div class="pptx-ng-fields__fields">

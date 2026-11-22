@@ -1,3 +1,5 @@
+import { DINGBAT_CODE_POINTS } from './symbol-dingbats';
+
 /**
  * Unicode equivalents for text written in Office's symbol-encoded fonts.
  *
@@ -196,7 +198,15 @@ const TABLES: ReadonlyMap<string, ReadonlyMap<number, string>> = new Map([
 ]);
 
 /** Fonts whose characters select glyphs by code rather than by Unicode meaning. */
-const SYMBOL_ENCODED = new Set(['symbol', 'wingdings', 'wingdings 2', 'wingdings 3', 'webdings']);
+export const OFFICE_SYMBOL_FONTS = [
+	'Symbol',
+	'Wingdings',
+	'Wingdings 2',
+	'Wingdings 3',
+	'Webdings',
+] as const;
+
+const SYMBOL_ENCODED = new Set(OFFICE_SYMBOL_FONTS.map((font) => font.toLowerCase()));
 
 function normaliseFamily(family: string | undefined): string {
 	return (family ?? '')
@@ -217,10 +227,24 @@ export function isSymbolEncodedFont(family: string | undefined): boolean {
  * equivalent. Private-use code points (U+F020..U+F0FF) are read as their byte.
  */
 export function symbolCharToUnicode(family: string | undefined, char: string): string | undefined {
-	const table = TABLES.get(normaliseFamily(family));
+	const name = normaliseFamily(family);
+	if (!SYMBOL_ENCODED.has(name)) return undefined;
 	const code = char.codePointAt(0);
-	if (!table || code === undefined) return undefined;
-	return table.get(code >= 0xf020 && code <= 0xf0ff ? code - 0xf000 : code);
+	if (code === undefined) return undefined;
+	const byte = code >= 0xf020 && code <= 0xf0ff ? code - 0xf000 : code;
+	const known = TABLES.get(name)?.get(byte);
+	const standard = DINGBAT_CODE_POINTS[name]?.[byte - 0x21];
+	return known ?? (standard ? String.fromCodePoint(standard) : undefined);
+}
+
+/** Portable Unicode characters corresponding to the glyphs of a legacy symbol font. */
+export function officeSymbolFontGlyphs(family: string): string[] {
+	const glyphs = new Set<string>();
+	for (let byte = 0x21; byte <= 0xff; byte++) {
+		const symbol = symbolCharToUnicode(family, String.fromCharCode(byte));
+		if (symbol) glyphs.add(symbol);
+	}
+	return [...glyphs];
 }
 
 /**
@@ -228,7 +252,7 @@ export function symbolCharToUnicode(family: string | undefined, char: string): s
  * is symbol-encoded and every character has an equivalent (spaces stay).
  */
 export function symbolTextToUnicode(family: string | undefined, text: string): string | undefined {
-	if (!TABLES.has(normaliseFamily(family)) || text.length === 0) return undefined;
+	if (!isSymbolEncodedFont(family) || text.length === 0) return undefined;
 	let out = '';
 	for (const char of text) {
 		if (char === ' ' || char === ' ') {
@@ -240,4 +264,21 @@ export function symbolTextToUnicode(family: string | undefined, text: string): s
 		out += mapped;
 	}
 	return out;
+}
+
+/** A typed code point (`00A9`, `U+00A9`) as its character; undefined when not printable text. */
+export function parseOfficeSymbolCode(text: string): string | undefined {
+	const match = /^\s*(?:u\+|0x)?([0-9a-f]{1,6})\s*$/i.exec(text);
+	if (!match) return undefined;
+	const code = parseInt(match[1]!, 16);
+	if (
+		code < 0x20 ||
+		(code >= 0x7f && code <= 0x9f) ||
+		(code >= 0xd800 && code <= 0xdfff) ||
+		(code & 0xfffe) === 0xfffe ||
+		(code >= 0xfdd0 && code <= 0xfdef) ||
+		code > 0x10ffff
+	)
+		return undefined;
+	return String.fromCodePoint(code);
 }

@@ -41,7 +41,7 @@ describe('displayableSymbolBullet (issue #290)', () => {
 	});
 
 	it('falls back to a plain bullet for a glyph with no known equivalent', () => {
-		const unknown = { ...square, marker: 'K' };
+		const unknown = { ...square, marker: '\uF07F' };
 		expect(displayableSymbolBullet(unknown, () => false)?.marker).toBe('•');
 	});
 

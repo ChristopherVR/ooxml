@@ -148,7 +148,7 @@ describe('Symbol', () => {
 		const dialog = dialogEl(ctx, 'symbol');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Subset:'), 'currency');
 		dialog.querySelector<HTMLButtonElement>('[aria-label="U+20AC"]')!.click();
-		expect(dialog.textContent).toContain('U+20AC');
+		expect(inputByLabel<HTMLInputElement>(dialog, 'Character code').value).toBe('U+20AC');
 		clickButton(dialog, 'Insert');
 		expect(await result).toBe('€');
 		expect(v(ctx, 0, 0)).toBe('Price €');

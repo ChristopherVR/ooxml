@@ -132,6 +132,12 @@ test.describe('phone Insert ribbon', () => {
 		await reveal(editor, symbol);
 		await symbol.selectOption('©');
 		await expect(body).toHaveText('ab©cd');
+		await reveal(editor, symbol);
+		await symbol.selectOption('more');
+		const gallery = dialogByHeading(editor, 'Symbol');
+		await gallery.getByRole('combobox', { name: 'Font', exact: true }).selectOption('Wingdings 3');
+		await gallery.getByRole('button', { name: /U\+2B60/ }).tap();
+		await expect(body).toHaveText('ab©⭠cd');
 	});
 
 	test('inserts WordArt and an icon through folded groups', async ({ page }) => {
@@ -144,9 +150,10 @@ test.describe('phone Insert ribbon', () => {
 		await wordArt.tap();
 		const artPicker = dialogByHeading(editor, 'WordArt');
 		await artPicker.getByRole('textbox', { name: 'WordArt text' }).fill('Phone WordArt');
-		await artPicker.getByRole('button', { name: 'WordArt style 3', exact: true }).tap();
+		await artPicker.getByRole('button', { name: 'WordArt style 31', exact: true }).tap();
 		await artPicker.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(editor.locator('.ProseMirror .dve-shape')).toContainText('Phone WordArt');
+		await expect(editor.locator('.ProseMirror .dve-shape linearGradient')).toHaveCount(1);
 
 		const icons = editor.getByRole('button', { name: 'Icons', exact: true });
 		await reveal(editor, icons);
@@ -154,7 +161,10 @@ test.describe('phone Insert ribbon', () => {
 		const iconPicker = dialogByHeading(editor, 'Icons');
 		await iconPicker.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
 		await iconPicker.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+		await iconPicker.getByRole('searchbox', { name: 'Search icons' }).fill('Check mark');
+		await iconPicker.getByRole('button', { name: 'Check mark', exact: true }).tap();
 		await iconPicker.getByRole('button', { name: 'Insert', exact: true }).tap();
 		await expect(editor.locator('.ProseMirror img[alt="Light bulb"]')).toBeVisible();
+		await expect(editor.locator('.ProseMirror img[alt="Check mark"]')).toBeVisible();
 	});
 });

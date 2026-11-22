@@ -77,6 +77,7 @@ export interface RenderBodyOptions {
 	slideElements?: readonly PptxElement[];
 	/** All slides in the presentation, used for zoom element thumbnails. */
 	allSlides?: readonly PptxSlide[];
+	zoomCanvasSize?: { width: number; height: number } | undefined;
 	/** Callback fired when a zoom element is clicked in presentation mode. */
 	onZoomClick?: (target: ZoomNavigationTarget, returnSlideIndex: number) => void;
 	/** Index of the slide that contains the current element (for zoom return navigation). */

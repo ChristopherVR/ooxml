@@ -1,4 +1,5 @@
-import type { PptxElement, PptxSection, PptxSlide } from '../../core/types';
+import { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
+import type { PptxSection, PptxSlide } from '../../core/types';
 import { generateSectionId } from './section-operations';
 import { createBlankSlide } from './slide-operations';
 
@@ -68,30 +69,13 @@ export function prepareSummaryZoom(
 			result.sections.push(section);
 		}
 		if (target) entries.push({ ...target, index: result.slides.length, sectionId: section.id });
-		append({ ...slide, elements: shiftZoomTargets(slide.elements, first) }, section);
+		append(slide, section);
 	}
 
 	// Keep empty sections when requested. They have no slide boundary of their own.
 	if (options.keepUnused) {
 		result.sections.push(...sections.filter(({ slideIds }) => !slideIds.length));
 	}
+	result.slides = remapZoomTargets(slides, result.slides);
 	return { result, entries };
-}
-
-function shiftZoomTargets(elements: PptxElement[], insertAt: number): PptxElement[] {
-	const shift = (index: number) => (index >= insertAt ? index + 1 : index);
-	return elements.map((element) => {
-		if (element.type === 'group') {
-			return { ...element, children: shiftZoomTargets(element.children, insertAt) };
-		}
-		if (element.type !== 'zoom') return element;
-		return {
-			...element,
-			targetSlideIndex: shift(element.targetSlideIndex),
-			summaryTargets: element.summaryTargets?.map((target) => ({
-				...target,
-				targetSlideIndex: shift(target.targetSlideIndex),
-			})),
-		};
-	});
 }

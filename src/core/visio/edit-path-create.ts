@@ -20,6 +20,13 @@ export function visioPathFrame(edit: VisioPathCreateEdit): {
 	height: number;
 } {
 	const bounds = visioPathBounds(edit, edit.segments);
+	for (const stroke of edit.subpaths ?? []) {
+		const next = visioPathBounds(stroke, stroke.segments);
+		bounds.minX = Math.min(bounds.minX, next.minX);
+		bounds.minY = Math.min(bounds.minY, next.minY);
+		bounds.maxX = Math.max(bounds.maxX, next.maxX);
+		bounds.maxY = Math.max(bounds.maxY, next.maxY);
+	}
 	const width = bounds.maxX - bounds.minX,
 		height = bounds.maxY - bounds.minY;
 	if (!(width > MINIMUM_EXTENT) || !(height > MINIMUM_EXTENT))
@@ -51,6 +58,16 @@ export function createPath(
 		shapeId: edit.shapeId,
 		...expected,
 	});
+	if (edit.stroke) {
+		shape.setAttribute('Name', edit.stroke.name);
+		shape.setAttribute('NameU', edit.stroke.name);
+		setCell(shape, 'FillPattern', 0);
+		setCell(shape, 'LinePattern', 1);
+		setCell(shape, 'LineWeight', edit.stroke.weight);
+		setCell(shape, 'LineCap', 0);
+		setCell(shape, 'LineColor', 0);
+		cells(shape).get('LineColor')?.setAttribute('V', edit.stroke.color);
+	}
 	const doc = root.ownerDocument!;
 	const node = (name: string) => doc.createElementNS(root.namespaceURI, name);
 	const fx = (x: number) => (x - frame.minX) / frame.width,
@@ -74,33 +91,35 @@ export function createPath(
 		for (const [name, value, formula] of values) setCell(element, name, value, formula);
 		section.appendChild(element);
 	};
-	row('RelMoveTo', [
-		['X', fx(edit.x)],
-		['Y', fy(edit.y)],
-	]);
-	for (const segment of edit.segments) {
-		const end: [string, number][] = [
-			['X', fx(segment.x)],
-			['Y', fy(segment.y)],
-		];
-		if (segment.kind === 'line') row('RelLineTo', end);
-		else if (segment.kind === 'cubic')
-			row('RelCubBezTo', [
-				...end,
-				['A', fx(segment.x1)],
-				['B', fy(segment.y1)],
-				['C', fx(segment.x2)],
-				['D', fy(segment.y2)],
-			]);
-		else {
-			const factor = (segment.ratio * frame.height) / frame.width;
-			row('RelEllipticalArcTo', [
-				...end,
-				['A', fx(segment.a)],
-				['B', fy(segment.b)],
-				['C', 0],
-				['D', segment.ratio, `Width/Height*${decimal(factor)}`],
-			]);
+	for (const stroke of [edit, ...(edit.subpaths ?? [])]) {
+		row('RelMoveTo', [
+			['X', fx(stroke.x)],
+			['Y', fy(stroke.y)],
+		]);
+		for (const segment of stroke.segments) {
+			const end: [string, number][] = [
+				['X', fx(segment.x)],
+				['Y', fy(segment.y)],
+			];
+			if (segment.kind === 'line') row('RelLineTo', end);
+			else if (segment.kind === 'cubic')
+				row('RelCubBezTo', [
+					...end,
+					['A', fx(segment.x1)],
+					['B', fy(segment.y1)],
+					['C', fx(segment.x2)],
+					['D', fy(segment.y2)],
+				]);
+			else {
+				const factor = (segment.ratio * frame.height) / frame.width;
+				row('RelEllipticalArcTo', [
+					...end,
+					['A', fx(segment.a)],
+					['B', fy(segment.b)],
+					['C', 0],
+					['D', segment.ratio, `Width/Height*${decimal(factor)}`],
+				]);
+			}
 		}
 	}
 	shape.appendChild(section);

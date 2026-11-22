@@ -23,7 +23,7 @@ import {
 	type ShapeWrap,
 } from './shape-commands';
 import {
-	insertPicture,
+	insertPictures,
 	newPicturePartName,
 	PICTURE_TYPES,
 	readBytes,
@@ -36,6 +36,8 @@ import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, type EditorLocale } from './localization';
+import { pickOfficeSymbol } from '../form/symbol-picker';
+import { insertPlainText } from './insert-text-commands';
 import { pickOfficeIcon } from '../form/icon-picker';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
@@ -118,6 +120,8 @@ export class InsertController {
 		if (this.smartArt.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
+		} else if (action.type === 'openSymbolGallery') {
+			if (view?.editable) void this.insertSymbol(view);
 		} else if (action.type === 'insertIcon') {
 			if (view?.editable) void this.insertIcon(view);
 		} else if (action.type === 'insertWordArt') {
@@ -317,11 +321,25 @@ export class InsertController {
 		this.syncPaper();
 	}
 
+	private async insertSymbol(view: EditorView): Promise<void> {
+		const host = this.host.toolbar();
+		if (!host) return;
+		const symbol = await pickOfficeSymbol(host, {
+			heading: translate(this.locale, 'Symbol'),
+			close: translate(this.locale, 'Close'),
+			font: translate(this.locale, 'Font'),
+		});
+		if (symbol && this.host.view() === view && view.editable) {
+			insertPlainText(view, symbol);
+			focusView(view);
+		}
+	}
+
 	private async insertIcon(view: EditorView): Promise<void> {
 		const host = this.host.toolbar();
 		if (!host) return;
 		const t = (label: import('./localization').LocalizationKey) => translate(this.locale, label);
-		const icon = await pickOfficeIcon(host, {
+		const icons = await pickOfficeIcon(host, {
 			heading: t('Icons'),
 			search: t('Search icons'),
 			color: t('Icon color'),
@@ -330,9 +348,9 @@ export class InsertController {
 			insert: t('Insert'),
 			close: t('Close'),
 		});
-		if (icon && this.host.view() === view && view.editable) {
-			await this.insertPictureFile(
-				new File([icon.svg], `${icon.name}.svg`, { type: 'image/svg+xml' }),
+		if (this.host.view() === view && view.editable) {
+			await this.insertPictureFiles(
+				icons.map((icon) => new File([icon.svg], `${icon.name}.svg`, { type: 'image/svg+xml' })),
 			);
 		}
 	}
@@ -421,19 +439,32 @@ export class InsertController {
 	}
 
 	/** Stages `file` and inserts it at the selection; false when it could not be inserted. */
-	async insertPictureFile(file: File): Promise<boolean> {
+	insertPictureFile(file: File): Promise<boolean> {
+		return this.insertPictureFiles([file]);
+	}
+
+	private async insertPictureFiles(files: readonly File[]): Promise<boolean> {
 		const view = this.host.view();
-		if (!view?.editable) return false;
+		if (!view?.editable || !files.length) return false;
 		try {
-			const staged = await stagePicture(file, this.host.contentWidth(), this.host.newMediaPartName);
+			const staged = await Promise.all(
+				files.map((file) =>
+					stagePicture(file, this.host.contentWidth(), this.host.newMediaPartName),
+				),
+			);
 			if (this.host.view() !== view || !view.editable) return false;
-			this.host.stageMedia?.(staged.image.partName, staged.media);
-			if (staged.svg && staged.image.svgPartName)
-				this.host.stageMedia?.(staged.image.svgPartName, staged.svg);
-			this.pendingMedia.set(staged.image.partName, staged.media);
-			if (staged.svg && staged.image.svgPartName)
-				this.pendingMedia.set(staged.image.svgPartName, staged.svg);
-			const inserted = insertPicture(view, staged.image);
+			for (const { image, media, svg } of staged) {
+				this.host.stageMedia?.(image.partName, media);
+				this.pendingMedia.set(image.partName, media);
+				if (svg && image.svgPartName) {
+					this.host.stageMedia?.(image.svgPartName, svg);
+					this.pendingMedia.set(image.svgPartName, svg);
+				}
+			}
+			const inserted = insertPictures(
+				view,
+				staged.map(({ image }) => image),
+			);
 			focusView(view);
 			return inserted;
 		} catch (cause) {

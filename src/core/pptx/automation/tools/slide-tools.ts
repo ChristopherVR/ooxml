@@ -1,3 +1,4 @@
+import { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import { EMU_PER_POINT } from '../../../units/constants';
 import type { PptxSlideTransition, PptxTransitionType } from '../../index';
 import { duplicateSlide as duplicateSdkSlide } from '../../core/builders/sdk/slide-operations';
@@ -143,7 +144,10 @@ export function reorderSlides(
 		);
 	}
 
-	ctx.pptxData.slides = params.newOrder.map((idx) => slides[idx]);
+	ctx.pptxData.slides = remapZoomTargets(
+		slides,
+		params.newOrder.map((idx) => slides[idx]),
+	);
 	ctx.pptxData.slides.forEach((s, i) => {
 		s.slideNumber = i + 1;
 	});

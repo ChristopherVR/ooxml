@@ -3,6 +3,9 @@ import {
 	WORD_ART_OUTLINE_EMU,
 	WORD_ART_SIZE_PT,
 	wordArtRgb,
+	readWordArtFill,
+	wordArtFillElement,
+	wordArtPaintEquals,
 	readWordArtWarp,
 	wordArtShadowElement,
 	type WordArtStyle,
@@ -43,7 +46,7 @@ export function wordArtRunProperties(doc: XmlDocument, style: WordArtStyle): Xml
 		props.appendChild(outline);
 	}
 	const textFill = extension('textFill');
-	textFill.appendChild(solid(fill));
+	textFill.appendChild(wordArtFillElement(doc, style, WORD_2010, 'w14'));
 	props.appendChild(textFill);
 	return props;
 }
@@ -66,13 +69,21 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 	// Desktop Word drops a duplicate textFill when w:color already stores the same solid color.
 	const plainRgb = (node: XmlElement | undefined) =>
 		wordArtRgb(node?.getAttributeNS(WORD_MAIN, 'val'));
-	const fill = fills.length ? rgb(fills[0]) : plainRgb(colors[0]);
+	const plain = plainRgb(colors[0]);
+	const paint = fills.length
+		? readWordArtFill(fills[0], WORD_2010)
+		: plain
+			? { fill: plain }
+			: undefined;
 	const outline = rgb(outlines[0]);
 	const shadow = rgb(shadows[0]);
 	if (
-		!fill ||
-		fills.some((node) => rgb(node) !== fill) ||
-		(fills.length === 0 && colors.some((node) => plainRgb(node) !== fill)) ||
+		!paint ||
+		fills.some((node) => {
+			const item = readWordArtFill(node, WORD_2010);
+			return !item || !wordArtPaintEquals(item, paint);
+		}) ||
+		(fills.length === 0 && colors.some((node) => plainRgb(node) !== paint.fill)) ||
 		outlines.some((node) => rgb(node) !== outline) ||
 		shadows.some((node) => rgb(node) !== shadow)
 	) {
@@ -80,7 +91,7 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 	}
 	const warp = readWordArtWarp(bodies[0]);
 	return {
-		fill,
+		...paint,
 		...(outline ? { outline } : {}),
 		...(shadow ? { shadow } : {}),
 		...(warp ? { warp } : {}),

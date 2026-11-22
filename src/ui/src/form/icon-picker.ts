@@ -30,6 +30,8 @@ const ICONS = [
 export interface PickedOfficeIcon {
 	name: string;
 	svg: string;
+	path: string;
+	color: string;
 }
 
 interface IconPickerLabels {
@@ -43,11 +45,11 @@ interface IconPickerLabels {
 	iconName?: (english: string) => string;
 }
 
-/** Opens the bundled icon gallery and returns the selected graphic in the chosen color. */
+/** Opens the bundled icon gallery and returns the chosen graphics in selection order. */
 export function pickOfficeIcon(
 	host: HTMLElement | ShadowRoot,
 	labels: IconPickerLabels = {},
-): Promise<PickedOfficeIcon | undefined> {
+): Promise<PickedOfficeIcon[]> {
 	const doc = host.ownerDocument;
 	const registry = doc.defaultView?.customElements;
 	defineDialog(registry);
@@ -83,7 +85,7 @@ export function pickOfficeIcon(
 	body.append(filters, grid, empty);
 	dialog.append(style, body, footer);
 
-	let selected: (typeof ICONS)[number] | undefined;
+	const selected = new Set<(typeof ICONS)[number]>();
 	const nameOf = (name: string) => labels.iconName?.(name) ?? name;
 	const svgOf = (path: string, stroke: string, size: number) =>
 		`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24"><path d="${path}" fill="none" stroke="${stroke}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
@@ -91,7 +93,12 @@ export function pickOfficeIcon(
 		footer.state = {
 			actions: [
 				{ id: 'cancel', label: labels.cancel ?? 'Cancel' },
-				{ id: 'insert', label: labels.insert ?? 'Insert', variant: 'primary', disabled: !selected },
+				{
+					id: 'insert',
+					label: labels.insert ?? 'Insert',
+					variant: 'primary',
+					disabled: selected.size === 0,
+				},
 			],
 		};
 	};
@@ -100,7 +107,6 @@ export function pickOfficeIcon(
 		const matches = ICONS.filter(([name]) =>
 			[name, nameOf(name)].some((label) => label.toLocaleLowerCase().includes(query)),
 		);
-		if (selected && !matches.includes(selected)) selected = undefined;
 		grid.replaceChildren(
 			...matches.map((icon) => {
 				const [name, path] = icon;
@@ -108,13 +114,12 @@ export function pickOfficeIcon(
 				button.type = 'button';
 				button.title = nameOf(name);
 				button.setAttribute('aria-label', button.title);
-				button.setAttribute('aria-pressed', String(selected === icon));
+				button.setAttribute('aria-pressed', String(selected.has(icon)));
 				// The path is from the bundled catalogue and color is normalized by the color input.
 				button.innerHTML = svgOf(path, color.value, 26);
 				button.addEventListener('click', () => {
-					grid.querySelector('[aria-pressed="true"]')?.setAttribute('aria-pressed', 'false');
-					selected = icon;
-					button.setAttribute('aria-pressed', 'true');
+					if (!selected.delete(icon)) selected.add(icon);
+					button.setAttribute('aria-pressed', String(selected.has(icon)));
 					syncSelection();
 				});
 				return button;
@@ -130,12 +135,19 @@ export function pickOfficeIcon(
 	return new Promise((resolve) => {
 		dialog.addEventListener('office-dialog-close', () => {
 			queueMicrotask(() => dialog.remove());
-			resolve(undefined);
+			resolve([]);
 		});
 		footer.addEventListener('office-dialog-footer-request', (event) => {
 			const { id } = (event as CustomEvent<{ id: string }>).detail;
-			if (id === 'insert' && selected) {
-				resolve({ name: nameOf(selected[0]), svg: svgOf(selected[1], color.value, 96) });
+			if (id === 'insert') {
+				resolve(
+					[...selected].map(([name, path]) => ({
+						name: nameOf(name),
+						path,
+						color: color.value,
+						svg: svgOf(path, color.value, 96),
+					})),
+				);
 			}
 			dialog.close();
 		});

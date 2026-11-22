@@ -5,6 +5,7 @@ import { parseVsdx } from './parser';
 import { VisioPackage } from './package';
 import { fixture } from './test-fixtures';
 import { snapshotEdits } from './ui/edit-commands';
+import { visioIconInsertCommands } from './ui/icon-insert';
 import { visioPageEditToDrawing } from './ui/page-edit';
 import { attribute, children } from './sheet';
 import { buildXml } from '../xml';
@@ -117,6 +118,37 @@ it('creates freeform cubic paths, open unfilled and closed filled, and resizes t
 	const filled = (await parseVsdx(closed.bytes)).pages[0]!.shapes.find((item) => item.id === '2')!;
 	expect(filled.geometry[0]!.fill).toBe(true);
 	expect(filled.geometry[0]!.path).toBe('M 0 0 L 2 0 C 2 1 1 2 0 2 L 0 0');
+});
+
+it('creates compound vector icons and lets the native line color recolor them', async () => {
+	const source = await fixture();
+	const page = (await parseVsdx(source)).pages[0]!;
+	const [command] = visioIconInsertCommands(page, [
+		{
+			name: 'Home',
+			color: '#ab1234',
+			path: 'm3 11 9-8 9 8M6 9v12h12V9m-8 12v-6h4v6',
+		},
+	]);
+	const saved = await editVsdx(source, [command!]);
+	const { rows } = await rowsOf(saved.bytes);
+	expect(rows.filter((row) => attribute(row, 'T') === 'RelMoveTo')).toHaveLength(3);
+	expect(
+		(await parseVsdx(saved.bytes)).pages[0]?.shapes.find(({ id }) => id === '2'),
+	).toMatchObject({
+		name: 'Home',
+		geometry: [{ fill: false, stroke: true }],
+	});
+	const recolored = await editVsdx(saved.bytes, [
+		{ type: 'format-shape', pageId: '0', shapeId: '2', lineColor: '#0055aa' },
+	]);
+	const { shape } = await rowsOf(recolored.bytes);
+	expect(
+		attribute(
+			children(shape, 'Cell').find((cell) => attribute(cell, 'N') === 'LineColor'),
+			'V',
+		),
+	).toBe('#0055aa');
 });
 
 it('snapshots, scales and validates path creation', async () => {

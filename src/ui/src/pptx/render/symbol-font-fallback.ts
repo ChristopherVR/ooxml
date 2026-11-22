@@ -129,8 +129,10 @@ function displayablePiece<T extends { text: string; style?: RunStyle }>(
 	for (const char of piece.text) {
 		const mapped =
 			char.trim() === '' || probe(family, char) ? undefined : symbolCharToUnicode(family, char);
-		changed ||= mapped !== undefined;
-		text += mapped ?? char;
+		// Selection and measurement offsets refer to the source UTF-16 run.
+		const replacement = mapped?.length === char.length ? mapped : undefined;
+		changed ||= replacement !== undefined;
+		text += replacement ?? char;
 	}
 	if (!changed) return piece;
 	return {

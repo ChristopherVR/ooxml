@@ -185,7 +185,10 @@ export function editChart(
 
 /** A media part name not used by the workbook's package yet (`xl/media/imageN.ext`). */
 export function newMediaPart(workbook: Workbook, contentType: string): string {
-	const ext = IMAGE_EXTENSIONS[contentType] ?? contentType.split('/').pop() ?? 'bin';
+	const ext =
+		contentType === 'image/svg+xml'
+			? 'svg'
+			: (IMAGE_EXTENSIONS[contentType] ?? contentType.split('/').pop() ?? 'bin');
 	const taken = new Set([...(workbook.source?.parts.keys() ?? [])].map((p) => p.toLowerCase()));
 	for (const sheet of workbook.sheets)
 		for (const d of sheet.drawings) if (d.kind === 'image') taken.add(d.partName.toLowerCase());
@@ -206,11 +209,15 @@ export function addImage(
 	contentType: string,
 	anchor: DrawingAnchor,
 	name?: string,
+	svg?: Uint8Array,
 ): ImageObject {
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, s);
 	if (!contentType.startsWith('image/')) throw new Error(`Not an image type: ${contentType}`);
+	if (svg && contentType === 'image/svg+xml')
+		throw new Error('An SVG original needs a raster picture fallback.');
 	const partName = newMediaPart(workbook, contentType);
+	const svgPartName = svg ? newMediaPart(workbook, 'image/svg+xml') : undefined;
 	return ctx.run(
 		'Insert picture',
 		'annotations',
@@ -218,6 +225,7 @@ export function addImage(
 		() => {
 			workbook.source ??= { parts: new Map() };
 			workbook.source.parts.set(partName, bytes.slice());
+			if (svgPartName && svg) workbook.source.parts.set(svgPartName, svg.slice());
 			const image: ImageObject = {
 				kind: 'image',
 				anchor: structuredClone(anchor),
@@ -225,6 +233,7 @@ export function addImage(
 				contentType,
 			};
 			if (name) image.name = name;
+			if (svgPartName) image.svgPartName = svgPartName;
 			sheet.drawings.push(image);
 			return structuredClone(image);
 		},

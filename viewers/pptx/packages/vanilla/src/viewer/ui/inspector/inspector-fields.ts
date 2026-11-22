@@ -24,7 +24,9 @@ import {
 
 export interface InspectorFieldsOptions<T, P> {
 	/** The section descriptors to draw (from `ooxml-ui/pptx`). */
-	sections: readonly InspectorSectionDescriptor<T, P>[];
+	sections:
+		| readonly InspectorSectionDescriptor<T, P>[]
+		| ((target: T) => readonly InspectorSectionDescriptor<T, P>[]);
 	/** Receives the patch a control change produces. */
 	onPatch(patch: P): void;
 	/**
@@ -72,7 +74,7 @@ interface SectionSlot {
 
 /** A section's shape: its toggle, its visible fields and their choices (resolved per target). */
 const signatureOf = (view: InspectorSectionView): string =>
-	`${view.on}|${view.fields
+	`${view.on}|${view.label ?? view.labelKey ?? ''}|${view.fields
 		.map((field) =>
 			field.options
 				? `${field.id}:${field.options.map((o) => `${o.value}=${o.label ?? ''}`).join(';')}`
@@ -104,7 +106,8 @@ export function createInspectorFields<T, P>(
 	t: Translator,
 	options: InspectorFieldsOptions<T, P>,
 ): InspectorFieldsHandle<T> {
-	const { sections } = options;
+	const sectionsFor = (target: T) =>
+		typeof options.sections === 'function' ? options.sections(target) : options.sections;
 	const el = createEl(doc, 'div', 'pptxv-inspector-fields');
 	const slots = new Map<string, SectionSlot>();
 	let current: T;
@@ -116,13 +119,13 @@ export function createInspectorFields<T, P>(
 		}
 	};
 	const change = (sectionId: string, fieldId: string, raw: InspectorFieldValue): void =>
-		emit(inspectorFieldPatch(sections, sectionId, fieldId, current, raw));
+		emit(inspectorFieldPatch(sectionsFor(current), sectionId, fieldId, current, raw));
 
 	// One live controller per colour field (shared `createInspectorColorFields`):
 	// a drag previews through `onPreview` and settles as one `onPatch`. Kept
 	// outside the section slots, so a rebuilt section does not drop a drag.
 	const colorInput = createInspectorColorFields<T, P>({
-		sections: () => sections,
+		sections: () => sectionsFor(current),
 		target: () => current,
 		targetKey: () => currentKey,
 		lookup: (key) => options.lookup?.(key),
@@ -272,16 +275,16 @@ export function createInspectorFields<T, P>(
 		const slot: SectionSlot = { el: box, signature: signatureOf(view), fields: new Map() };
 		if (view.toggleable) {
 			const toggle = makeCheckboxField(doc, {
-				label: t(view.labelKey ?? ''),
-				onChange: (on) => emit(inspectorTogglePatch(sections, view.id, current, on)),
+				label: view.label ?? t(view.labelKey ?? ''),
+				onChange: (on) => emit(inspectorTogglePatch(sectionsFor(current), view.id, current, on)),
 			});
 			toggle.el.classList.add('pptxv-inspector-fields-toggle');
 			tagControl(toggle.el, view.toggleTestId);
 			box.appendChild(toggle.el);
 			slot.toggle = toggle;
-		} else if (view.labelKey) {
+		} else if (view.label || view.labelKey) {
 			const title = createEl(doc, 'div', 'pptxv-inspector-fields-title');
-			title.textContent = t(view.labelKey);
+			title.textContent = view.label ?? t(view.labelKey ?? '');
 			box.appendChild(title);
 		}
 		for (const field of view.fields) {
@@ -297,7 +300,7 @@ export function createInspectorFields<T, P>(
 		update(target, disabled = false, key = '') {
 			current = target;
 			currentKey = key;
-			const views = resolveInspectorSections(sections, target);
+			const views = resolveInspectorSections(sectionsFor(target), target);
 			views.forEach((view, index) => {
 				let slot = slots.get(view.id);
 				if (!slot || slot.signature !== signatureOf(view)) {

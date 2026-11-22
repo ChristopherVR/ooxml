@@ -1,3 +1,4 @@
+import { Fragment, Slice } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import type { InlineImage, PendingMediaPart } from 'ooxml-core/docx';
 import { schema } from './schema';
@@ -137,21 +138,30 @@ export async function stagePicture(
 
 /** Inserts an inline picture at the selection, replacing any selected content. */
 export function insertPicture(view: EditorView, image: InlineImage): boolean {
+	return insertPictures(view, [image]);
+}
+
+/** Replaces the selection with all pictures in a single edit. */
+export function insertPictures(view: EditorView, images: readonly InlineImage[]): boolean {
+	if (!images.length) return false;
 	const history = wordYjsPluginKey.getState(view.state);
 	history?.stopCapturing();
-	const node = schema.nodes.image.create({
-		relId: image.relId,
-		partName: image.partName,
-		contentType: image.contentType,
-		widthPx: image.widthPx,
-		heightPx: image.heightPx,
-		altText: image.altText ?? null,
-		title: image.title ?? null,
-		anchored: false,
-		unsupported: null,
-		svgPartName: image.svgPartName ?? null,
-	});
-	view.dispatch(view.state.tr.replaceSelectionWith(node, false).scrollIntoView());
+	const nodes = images.map((image) =>
+		schema.nodes.image.create({
+			relId: image.relId,
+			partName: image.partName,
+			contentType: image.contentType,
+			widthPx: image.widthPx,
+			heightPx: image.heightPx,
+			altText: image.altText ?? null,
+			title: image.title ?? null,
+			anchored: false,
+			unsupported: null,
+			svgPartName: image.svgPartName ?? null,
+		}),
+	);
+	const slice = new Slice(Fragment.fromArray(nodes), 0, 0);
+	view.dispatch(view.state.tr.replaceSelection(slice).scrollIntoView());
 	history?.stopCapturing();
 	return true;
 }

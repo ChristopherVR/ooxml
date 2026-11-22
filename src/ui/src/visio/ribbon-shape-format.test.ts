@@ -46,9 +46,14 @@ describe('Shape Format contextual tab', () => {
 		ribbon.remove();
 	});
 
-	it('lists the unsupported WordArt commands disabled with a reason', () => {
+	it('offers Text Fill and explains the unavailable text effects', () => {
 		const ribbon = createRibbon(document);
-		for (const id of ['text-fill', 'text-outline', 'text-effects']) {
+		const fill = ribbon.querySelector<HTMLElement>(
+			'[data-ribbon-tab="shape-format"] [data-menu="font-color"]',
+		);
+		expect(fill?.getAttribute('label')).toBe('Text Fill');
+		expect(fill?.querySelector('[data-color-grid="font"]')).not.toBeNull();
+		for (const id of ['text-outline', 'text-effects']) {
 			const el = ribbon.querySelector<HTMLElement>(
 				`[data-ribbon-tab="shape-format"] [data-menu="${id}"]`,
 			)!;

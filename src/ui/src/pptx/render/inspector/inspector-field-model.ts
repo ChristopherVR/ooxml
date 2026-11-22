@@ -123,6 +123,8 @@ export interface InspectorSectionDescriptor<T, P> {
 	 * untitled inside a pane that already heads them.
 	 */
 	labelKey?: string;
+	/** Direct section title when it comes from the document. */
+	label?: string;
 	toggle?: InspectorSectionToggle<T, P>;
 	fields: readonly InspectorFieldDescriptor<T, P>[];
 }
@@ -152,6 +154,7 @@ export interface InspectorSectionView {
 	id: string;
 	/** Absent for an untitled section (never for a toggleable one). */
 	labelKey?: string;
+	label?: string;
 	/** The section has an on/off checkbox. */
 	toggleable: boolean;
 	/** The toggle is on (always `true` for a section without one). */
@@ -228,6 +231,7 @@ export function resolveInspectorSections<T, P>(
 				: [],
 		};
 		if (section.labelKey !== undefined) view.labelKey = section.labelKey;
+		if (section.label !== undefined) view.label = section.label;
 		if (section.toggle?.testId !== undefined) view.toggleTestId = section.toggle.testId;
 		return view;
 	});

@@ -1,3 +1,4 @@
+import { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 
@@ -115,6 +116,22 @@ describe('slide zoom package integration', () => {
 		});
 	});
 
+	it('keeps the same Slide Zoom target after reordering and reopening', async () => {
+		const handler = new PptxHandler();
+		const data = await handler.load(await buildSlideZoomPackage());
+		const [first, second, target] = data.slides;
+		const reordered = remapZoomTargets(data.slides, [first, target, second]);
+		expect(reordered[0].elements.find((element) => element.type === 'zoom')).toMatchObject({
+			targetSlideIndex: 1,
+		});
+		const bytes = await handler.save(reordered);
+		const reloaded = await new PptxHandler().load(bytes.buffer as ArrayBuffer);
+		expect(reloaded.slides[0].elements.find((element) => element.type === 'zoom')).toMatchObject({
+			targetSlideIndex: 1,
+		});
+		expect(reloaded.slides[1].slideId).toBe(target.slideId);
+	});
+
 	it('preserves the Slide Zoom envelope when an automation tool edits speaker notes', async () => {
 		const input = new Uint8Array(await buildSlideZoomPackage());
 		const tool = pptxTools.find((candidate) => candidate.name === 'update_slide_properties');
@@ -147,7 +164,7 @@ describe('slide zoom package integration', () => {
 		}
 	});
 
-	it('serializes a new typed slide Zoom with preview relationship and content type', async () => {
+	it('serializes a slide Zoom cover and background options with its image relationship', async () => {
 		const { handler, data, createSlide } = await PresentationBuilder.create();
 		data.slides.push(createSlide('Blank').build());
 		data.slides.push(createSlide('Blank').build());
@@ -156,6 +173,8 @@ describe('slide zoom package integration', () => {
 			type: 'zoom',
 			zoomType: 'slide',
 			targetSlideIndex: 1,
+			zoomImageType: 'cover',
+			zoomShowBackground: false,
 			x: 80,
 			y: 90,
 			width: 320,
@@ -188,6 +207,8 @@ describe('slide zoom package integration', () => {
 		]);
 		expect(slideXml).toContain('returnToParent="0"');
 		expect(slideXml).toContain('transitionDur="750"');
+		expect(slideXml).toContain('imageType="cover"');
+		expect(slideXml).toContain('showBg="0"');
 		expect(slideXml).toContain('<pslz:sldZm>');
 		expect(slideXml).toContain(
 			'<p:cNvPr id="2" name="authored-slide-zoom" descr="Preview of slide 2"',
@@ -202,6 +223,8 @@ describe('slide zoom package integration', () => {
 		expect(reloaded.slides[0].elements.find((element) => element.type === 'zoom')).toMatchObject({
 			type: 'zoom',
 			targetSlideIndex: 1,
+			zoomImageType: 'cover',
+			zoomShowBackground: false,
 			x: 80,
 			y: 90,
 			width: 320,

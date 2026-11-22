@@ -1,3 +1,4 @@
+import { setSvgPictureRelationship } from '../../drawingml/svg-picture';
 import { applyPictureLayout } from '../../drawingml/picture-layout';
 import { applyPictureEffects, parsePictureEffects } from '../../drawingml/picture-effects';
 import { applyPictureCrop, parsePictureCrop } from '../../drawingml/picture-crop';
@@ -378,6 +379,13 @@ export function writeDrawing(
 			if (blip) {
 				blip.setAttributeNS(NS.r, 'r:embed', relId);
 				blip.removeAttributeNS(NS.r, 'link');
+				const svg = object.svgPartName;
+				const vector = svg ? source?.bytes(svg) : undefined;
+				if (svg && vector) {
+					if (!writer.has(svg)) writer.add(svg, vector, 'image/svg+xml');
+					const svgId = rels.ensure(RELATIONSHIP_TYPES.image, relativeTarget(partName, svg));
+					setSvgPictureRelationship(blip, svgId);
+				}
 			}
 			const identity = picture.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
 			if (identity) {

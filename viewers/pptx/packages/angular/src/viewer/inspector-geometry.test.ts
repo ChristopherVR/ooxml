@@ -33,7 +33,7 @@ function numberEvent(value: string): Event {
 describe('inspector Size & Position fields', () => {
 	it('mounts the shared geometry descriptors in the transform section', () => {
 		const source = componentSource(import.meta.dirname, 'inspector-panel.component.ts');
-		expect(source).toContain('[sections]="geometrySections"');
+		expect(source).toContain('[sections]="geometrySections()"');
 		expect(source).toContain('(patch)="onGeometryPatch($event)"');
 	});
 

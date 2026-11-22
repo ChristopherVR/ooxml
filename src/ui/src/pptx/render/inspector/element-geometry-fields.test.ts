@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { translationsEn } from '../../i18n/translations-en';
-import { ELEMENT_GEOMETRY_SECTIONS } from './element-geometry-fields';
+import { ELEMENT_GEOMETRY_SECTIONS, sizePositionSections } from './element-geometry-fields';
 import { inspectorFieldPatch, resolveInspectorSections } from './inspector-field-model';
 
 const frame = { x: 53.27, y: 10.5, width: 200.4, height: 99.6, rotation: 15.2 };
@@ -23,6 +23,52 @@ describe('element geometry section', () => {
 		const keys = ELEMENT_GEOMETRY_SECTIONS[0]!.fields.map((f) => f.labelKey);
 		expect(keys.filter((key) => !(key in translationsEn))).toStrictEqual([]);
 		expect(translationsEn[keys[0]!]).toBe('X');
+	});
+
+	it('exposes return, transparency and duration settings for inserted slide and section zooms', () => {
+		for (const zoomType of ['slide', 'section'] as const) {
+			const zoom = { ...frame, type: 'zoom' as const, zoomType };
+			const sections = sizePositionSections(zoom);
+			const options = resolveInspectorSections(sections, zoom).find(
+				({ id }) => id === 'zoomOptions',
+			);
+			expect(options?.fields.map(({ id }) => id)).toEqual([
+				'zoomReturn',
+				'zoomTransparent',
+				'zoomDuration',
+			]);
+			expect(inspectorFieldPatch(sections, 'zoomOptions', 'zoomReturn', zoom, false)).toEqual({
+				returnToParent: false,
+			});
+			expect(inspectorFieldPatch(sections, 'zoomOptions', 'zoomTransparent', zoom, true)).toEqual({
+				zoomShowBackground: false,
+			});
+			expect(inspectorFieldPatch(sections, 'zoomOptions', 'zoomDuration', zoom, '750')).toEqual({
+				transitionDurationMs: 750,
+			});
+		}
+		expect(sizePositionSections({ ...frame, type: 'shape' })).toHaveLength(1);
+	});
+
+	it('changes one named Summary Zoom tile independently', () => {
+		const first = { ...frame, sectionId: 'intro', title: 'Introduction', targetSlideIndex: 1 };
+		const second = { ...frame, sectionId: 'details', title: 'Details', targetSlideIndex: 3 };
+		const zoom = {
+			...frame,
+			type: 'zoom' as const,
+			zoomType: 'summary' as const,
+			summaryTargets: [first, second],
+		};
+		const sections = sizePositionSections(zoom);
+		expect(
+			resolveInspectorSections(sections, zoom)
+				.slice(1)
+				.map((section) => section.label),
+		).toEqual(['Introduction', 'Details']);
+		const patch = inspectorFieldPatch(sections, 'zoomTile-1', 'zoomDuration', zoom, '750');
+		expect(patch?.summaryTargets).toEqual([first, { ...second, transitionDurationMs: 750 }]);
+		expect(patch?.summaryTargets?.[0]).toBe(first);
+		expect(zoom.summaryTargets[1]).toBe(second);
 	});
 
 	it('writes a geometry patch, keeping the size at least 1px', () => {

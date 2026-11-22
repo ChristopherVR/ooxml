@@ -1,4 +1,5 @@
 import { arrangeGroup, shapeStylesGroup } from './ribbon-arrange';
+import { fontColorMenu } from './ribbon-home-format';
 import { command, commandRow, group, menu, stack } from './ribbon-parts';
 import { sizeFields } from './ribbon-size-fields';
 
@@ -21,7 +22,7 @@ export function buildShapeFormatPanel(doc: Document, panel: HTMLElement): void {
 			shapeStylesGroup(doc),
 			group(doc, 'WordArt Styles', [
 				stack(doc, [
-					wordArt('text-fill', 'Text Fill', 'fill'),
+					fontColorMenu(doc, 'Text Fill'),
 					wordArt('text-outline', 'Text Outline', 'line'),
 					wordArt('text-effects', 'Text Effects', 'effects'),
 				]),

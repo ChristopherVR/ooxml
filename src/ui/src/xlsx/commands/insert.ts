@@ -153,8 +153,8 @@ export function insertCommands(): Command[] {
 			icon: 'insertIcons',
 			lock: 'objects',
 			run: async (ctx) => {
-				const session = ctx.session();
-				const sheet = ctx.activeSheet();
+				const before = target(ctx);
+				if (!before) return;
 				const t = (key: string) => ctx.t(key);
 				try {
 					const selected = await pickOfficeIcon(ctx.root, {
@@ -167,11 +167,28 @@ export function insertCommands(): Command[] {
 						close: t('Close'),
 						iconName: t,
 					});
-					if (!selected) return;
-					const file = await iconPngFile(ctx.host.ownerDocument, selected);
-					if (ctx.session() === session && ctx.activeSheet() === sheet && !ctx.readOnly()) {
-						await insertPicture(ctx, file);
-					}
+					if (!selected.length) return;
+					const icons = await Promise.all(
+						selected.map(async (icon) => {
+							const file = await iconPngFile(ctx.host.ownerDocument, icon);
+							return {
+								name: icon.name,
+								png: new Uint8Array(await file.arrayBuffer()),
+								svg: new TextEncoder().encode(icon.svg),
+							};
+						}),
+					);
+					const live = target(ctx);
+					if (live?.session !== before.session || live.ws !== before.ws || ctx.readOnly()) return;
+					live.session.batch(t('Icons'), () => {
+						for (const [index, icon] of icons.entries()) {
+							const anchor = pictureAnchorAt(before.active, 96, 96);
+							anchor.from.colOffset += (index % 4) * 104 * 9525;
+							anchor.from.rowOffset += Math.floor(index / 4) * 104 * 9525;
+							live.session.addImage(live.sheet, icon.png, 'image/png', anchor, icon.name, icon.svg);
+						}
+					});
+					ctx.selection.set({ drawing: live.ws.drawings.length - 1 });
 				} catch {
 					ctx.toast(t('Could not insert the icon.'), 'error');
 				}

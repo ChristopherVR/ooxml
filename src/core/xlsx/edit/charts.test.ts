@@ -31,12 +31,14 @@ describe('charts and pictures', () => {
 			style: {
 				fill: '1769A5',
 				outline: '103D63',
+				gradient: { end: 'B7DDF5', angle: 16200000 },
 				warp: { preset: 'textArchUp', guides: [{ name: 'adj', formula: 'val 10800000' }] },
 			},
 		};
 		const position: DrawingAnchor = { from: anchor.from, ext: { cx: 2100000, cy: 600000 } };
 		createEditSession(workbook).addWordArt(0, position, value);
 		const original = await saveXlsx(workbook);
+		expect(await partText(original, 'xl/drawings/drawing1.xml')).toContain('a:gradFill');
 		const loaded = await loadXlsx(original);
 		expect(loaded.sheets[0]?.drawings[0]).toMatchObject({
 			shape: { text: { text: 'Sales' }, wordArt: value.style },
@@ -95,14 +97,21 @@ describe('charts and pictures', () => {
 		});
 		expect(index).toBe(0);
 		expect(s.undoLabel()).toBe('Insert chart');
-		const image = s.addImage(0, PNG, 'image/png', anchor, 'Logo');
+		const svg = new TextEncoder().encode(
+			'<svg xmlns="http://www.w3.org/2000/svg"><path d="m0 0 1 1"/></svg>',
+		);
+		const image = s.addImage(0, PNG, 'image/png', anchor, 'Logo', svg);
 		expect(image.partName).toBe('xl/media/image1.png');
+		expect(image.svgPartName).toBe('xl/media/image1.svg');
 		const bytes = await saveXlsx(wb);
 		const back = await loadXlsx(bytes);
 		const kinds = back.sheets[0]?.drawings.map((d) => d.kind);
 		expect(kinds).toEqual(['chart', 'image']);
+		expect(back.sheets[0]?.drawings[1]).toMatchObject({ svgPartName: 'xl/media/image1.svg' });
 		const zip = await JSZip.loadAsync(bytes);
 		expect(await zip.file('xl/media/image1.png')?.async('uint8array')).toEqual(PNG);
+		expect(await zip.file('xl/media/image1.svg')?.async('uint8array')).toEqual(svg);
+		expect(await partText(bytes, 'xl/drawings/drawing1.xml')).toContain('asvg:svgBlip');
 		s.undo();
 		expect(wb.sheets[0]?.drawings.length).toBe(1);
 	});

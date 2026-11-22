@@ -30,7 +30,7 @@ import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
 	createLiveColorInput,
-	ELEMENT_GEOMETRY_SECTIONS,
+	sizePositionSections,
 	elementLockTogglePatch,
 	formatSelectionElements,
 	handleLiveColorEvent,
@@ -494,7 +494,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 							<!-- X / Y / W / H / rotation: the shared Size & Position descriptors. -->
 							<pptx-inspector-fields
 								[attr.data-el-key]="key"
-								[sections]="geometrySections"
+								[sections]="geometrySections()"
 								[target]="el()"
 								(patch)="onGeometryPatch($event)"
 							/>
@@ -881,7 +881,7 @@ export class InspectorPanelComponent {
 	protected readonly editor = inject(EditorStateService);
 
 	/** The shared Size & Position descriptors (X, Y, W, H, rotation). */
-	protected readonly geometrySections = ELEMENT_GEOMETRY_SECTIONS;
+	protected readonly geometrySections = computed(() => sizePositionSections(this.el()));
 
 	/**
 	 * Optional: absent when the panel is rendered outside a viewer. The ribbon's
@@ -1182,11 +1182,8 @@ export class InspectorPanelComponent {
 		if (patch.width !== undefined || patch.height !== undefined) {
 			this.editor.resize(slide, cur.id, patch.width ?? cur.width, patch.height ?? cur.height);
 		}
-		if (patch.rotation !== undefined) {
-			this.editor.updateElement(slide, cur.id, {
-				rotation: patch.rotation,
-			} as Partial<PptxElement>);
-		}
+		const { x: _x, y: _y, width: _width, height: _height, ...options } = patch;
+		if (Object.keys(options).length) this.editor.updateElement(slide, cur.id, options);
 	}
 
 	// ── Opacity ──────────────────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+import { setSvgPictureRelationship } from '../drawingml/svg-picture';
 import { applyPictureCrop } from '../drawingml/picture-crop';
 import { applyPictureEffects } from '../drawingml/picture-effects';
 import { applyPictureLayout } from '../drawingml/picture-layout';
@@ -76,21 +77,6 @@ function appendAll(parent: XmlElement, ...items: XmlElement[]): void {
 	for (const item of items) parent.appendChild(item);
 }
 
-const SVG_EXTENSION_URI = '{96DAC541-7B7A-43D3-8B79-37D633B846F1}';
-const SVG_NS = 'http://schemas.microsoft.com/office/drawing/2016/SVG/main';
-
-/** Word 2016+ SVG pictures: the SVG rides in an a:blip extension beside its PNG fallback. */
-function svgExtension(doc: XmlDocument, svgRelId: string): XmlElement {
-	const extLst = el(doc, A_NS, 'a:extLst');
-	const ext = el(doc, A_NS, 'a:ext');
-	ext.setAttribute('uri', SVG_EXTENSION_URI);
-	const svgBlip = doc.createElementNS(SVG_NS, 'asvg:svgBlip');
-	svgBlip.setAttributeNS(REL_NS, 'r:embed', svgRelId);
-	ext.appendChild(svgBlip);
-	extLst.appendChild(ext);
-	return extLst;
-}
-
 function buildInlineDrawing(
 	doc: XmlDocument,
 	image: InlineImage,
@@ -124,7 +110,7 @@ function buildInlineDrawing(
 	appendAll(nvPicPr, cNvPr, el(doc, PIC_NS, 'pic:cNvPicPr'));
 	const blip = el(doc, A_NS, 'a:blip');
 	blip.setAttributeNS(REL_NS, 'r:embed', relId);
-	if (svgRelId) blip.appendChild(svgExtension(doc, svgRelId));
+	if (svgRelId) setSvgPictureRelationship(blip, svgRelId);
 	const stretch = el(doc, A_NS, 'a:stretch');
 	stretch.appendChild(el(doc, A_NS, 'a:fillRect'));
 	const blipFill = el(doc, PIC_NS, 'pic:blipFill');

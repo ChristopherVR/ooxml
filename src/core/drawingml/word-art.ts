@@ -1,4 +1,4 @@
-import { NS, first, type XmlDocument, type XmlElement } from '../xml/index';
+import { NS, elements, first, type XmlDocument, type XmlElement } from '../xml/index';
 import { parseDrawingTextWarp } from './read-text-body';
 import { writeDrawingTextWarp } from './write-text-body';
 import type { DrawingTextWarp } from './text-model';
@@ -6,9 +6,16 @@ import type { DrawingTextWarp } from './text-model';
 /** Text effects shared by editable WordArt in Word and Excel. Colors are OOXML sRGB. */
 export interface WordArtStyle {
 	fill: string;
+	gradient?: WordArtGradient;
 	outline?: string;
 	shadow?: string;
 	warp?: DrawingTextWarp;
+}
+
+/** Two-stop sRGB gradient with a DrawingML clockwise angle in 1/60000 degrees. */
+export interface WordArtGradient {
+	end: string;
+	angle: number;
 }
 
 export interface WordArtText {
@@ -22,12 +29,95 @@ export const WORD_ART_OUTLINE_EMU = 12700;
 export const WORD_ART_SHADOW = { blurRad: 25400, dist: 38100, dir: 2700000, opacity: 55000 };
 
 export const wordArtPaintEquals = (a: WordArtStyle, b: WordArtStyle): boolean =>
-	a.fill === b.fill && a.outline === b.outline && a.shadow === b.shadow;
+	a.fill === b.fill &&
+	a.outline === b.outline &&
+	a.shadow === b.shadow &&
+	a.gradient?.end === b.gradient?.end &&
+	a.gradient?.angle === b.gradient?.angle;
 
 export function wordArtRgb(color: unknown): string | undefined {
 	return typeof color === 'string' && /^[0-9a-f]{6}$/i.test(color)
 		? color.toUpperCase()
 		: undefined;
+}
+
+export function normalizeWordArtGradient(
+	gradient: WordArtGradient | undefined,
+): WordArtGradient | undefined {
+	const end = wordArtRgb(gradient?.end);
+	const angle = gradient?.angle;
+	return end &&
+		typeof angle === 'number' &&
+		Number.isInteger(angle) &&
+		angle >= 0 &&
+		angle < 21600000
+		? { end, angle }
+		: undefined;
+}
+
+/** Reads solid and two-stop linear sRGB text fills in DrawingML or Word 2010. */
+export function readWordArtFill(
+	parent: XmlElement | undefined,
+	namespace: string,
+): Pick<WordArtStyle, 'fill' | 'gradient'> | undefined {
+	const attr = (node: XmlElement | undefined, name: string) =>
+		namespace === NS.a ? node?.getAttribute(name) : node?.getAttributeNS(namespace, name);
+	const rgb = (node: XmlElement | undefined) => {
+		const color = first(node, 'srgbClr', namespace);
+		return color && elements(color).length === 0 ? wordArtRgb(attr(color, 'val')) : undefined;
+	};
+	const gradient = first(parent, 'gradFill', namespace);
+	if (!gradient) {
+		const fill = rgb(first(parent, 'solidFill', namespace));
+		return fill ? { fill } : undefined;
+	}
+	const list = first(gradient, 'gsLst', namespace);
+	const stops = list ? elements(list) : [];
+	const [firstStop, lastStop] = stops;
+	if (stops.length !== 2 || attr(firstStop, 'pos') !== '0' || attr(lastStop, 'pos') !== '100000')
+		return undefined;
+	const fill = rgb(firstStop);
+	const end = rgb(lastStop);
+	const direction = attr(first(gradient, 'lin', namespace), 'ang');
+	const paint =
+		direction && end ? normalizeWordArtGradient({ end, angle: Number(direction) }) : undefined;
+	return fill && paint ? { fill, gradient: paint } : undefined;
+}
+
+export function wordArtFillElement(
+	doc: XmlDocument,
+	style: Pick<WordArtStyle, 'fill' | 'gradient'>,
+	namespace: string,
+	prefix: 'a' | 'w14',
+): XmlElement {
+	const make = (name: string, attrs: Record<string, string> = {}) => {
+		const node = doc.createElementNS(namespace, `${prefix}:${name}`);
+		for (const [key, value] of Object.entries(attrs)) {
+			if (prefix === 'a') node.setAttribute(key, value);
+			else node.setAttributeNS(namespace, `${prefix}:${key}`, value);
+		}
+		return node;
+	};
+	const fill = wordArtRgb(style.fill) ?? '26374A';
+	const gradient = normalizeWordArtGradient(style.gradient);
+	if (!gradient) {
+		const solid = make('solidFill');
+		solid.appendChild(make('srgbClr', { val: fill }));
+		return solid;
+	}
+	const result = make('gradFill');
+	const list = make('gsLst');
+	for (const [pos, val] of [
+		['0', fill],
+		['100000', gradient.end],
+	] as const) {
+		const stop = make('gs', { pos });
+		stop.appendChild(make('srgbClr', { val }));
+		list.appendChild(stop);
+	}
+	result.appendChild(list);
+	result.appendChild(make('lin', { ang: String(gradient.angle), scaled: '0' }));
+	return result;
 }
 
 export function readWordArtWarp(body: XmlElement | undefined): DrawingTextWarp | undefined {

@@ -204,6 +204,7 @@ export const zhCNRibbon: RibbonStrings = {
 	'One page': '单页',
 	'Word count': '字数统计',
 	Spelling: '拼写',
+	'More Symbols…': '其他符号…',
 	Symbol: '符号',
 	'Line numbers': '行号',
 	'Restart Each Page': '每页重新编号',

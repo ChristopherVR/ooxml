@@ -3,6 +3,7 @@ import {
 	createBlankSlide,
 	insertedLayoutCompletion,
 	makeSlideId,
+	remapZoomTargets,
 	insertSlidePaste,
 	applySlidePasteTemplates,
 	templateSchemeFromTheme,
@@ -101,7 +102,7 @@ export function useSlideManagement(input: UseSlideManagementInput): SlideManagem
 			const next = [...prev];
 			const [moved] = next.splice(fromIndex, 1);
 			next.splice(toIndex, 0, moved);
-			return next;
+			return remapZoomTargets(prev, next);
 		});
 		setActiveSlideIndex(toIndex);
 		history.markDirty();

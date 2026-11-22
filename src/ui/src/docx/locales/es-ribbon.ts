@@ -207,6 +207,7 @@ export const esRibbon: RibbonStrings = {
 	'One page': 'Una página',
 	'Word count': 'Contar palabras',
 	Spelling: 'Ortografía',
+	'More Symbols…': 'Más símbolos…',
 	Symbol: 'Símbolo',
 	'Line numbers': 'Números de línea',
 	'Restart Each Page': 'Reiniciar cada página',

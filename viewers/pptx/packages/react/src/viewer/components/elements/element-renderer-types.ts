@@ -125,6 +125,7 @@ export interface ElementRendererProps {
 	presentationElementStates?: ReadonlyMap<string, ElementAnimationState>;
 	/** All slides in the presentation (for zoom element thumbnails). */
 	allSlides?: readonly PptxSlide[];
+	zoomCanvasSize?: { width: number; height: number } | undefined;
 	/** Callback fired when a zoom element is clicked in presentation mode. */
 	onZoomClick?: (target: ZoomNavigationTarget, returnSlideIndex: number) => void;
 	/** Index of the slide that contains this element (for zoom return navigation). */

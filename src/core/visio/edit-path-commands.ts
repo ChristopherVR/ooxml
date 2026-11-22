@@ -6,14 +6,19 @@ export type { VisioPathSegment } from './path-fit';
  * Create a 2D shape from a drawn path (Freeform, Pencil and Arc tools). Drawing inches with a
  * bottom-left origin; (`x`, `y`) is the start point. A closed path must end on its start point.
  */
-export interface VisioPathCreateEdit {
-	type: 'create-path';
-	pageId: string;
-	shapeId: string;
+export interface VisioPathStroke {
 	x: number;
 	y: number;
 	segments: VisioPathSegment[];
+}
+
+export interface VisioPathCreateEdit extends VisioPathStroke {
+	type: 'create-path';
+	pageId: string;
+	shapeId: string;
 	closed?: boolean;
+	subpaths?: VisioPathStroke[];
+	stroke?: { name: string; color: string; weight: number };
 }
 
 export const VISIO_PATH_SEGMENT_LIMIT = 2000;
@@ -28,15 +33,19 @@ export function snapshotPathCreation(
 			invalid('Path coordinates must be finite drawing inches within limits.');
 		return input;
 	};
-	if (
-		!Array.isArray(edit.segments) ||
-		!edit.segments.length ||
-		edit.segments.length > VISIO_PATH_SEGMENT_LIMIT
-	)
-		invalid(`A path needs between 1 and ${VISIO_PATH_SEGMENT_LIMIT} segments.`);
+	let segmentCount = 0;
+	const snapshotSegments = (segments: VisioPathSegment[]): VisioPathSegment[] => {
+		if (
+			!Array.isArray(segments) ||
+			!segments.length ||
+			(segmentCount += segments.length) > VISIO_PATH_SEGMENT_LIMIT
+		)
+			invalid(`A path needs between 1 and ${VISIO_PATH_SEGMENT_LIMIT} segments.`);
+		return Array.from(segments, snapshotSegment);
+	};
 	if (edit.closed !== undefined && typeof edit.closed !== 'boolean')
 		invalid('Path closure must be a boolean.');
-	const segments = Array.from(edit.segments, (segment): VisioPathSegment => {
+	const snapshotSegment = (segment: VisioPathSegment): VisioPathSegment => {
 		if (!segment || typeof segment !== 'object') invalid('Invalid path segment.');
 		const end = { x: value(segment.x), y: value(segment.y) };
 		switch (segment.kind) {
@@ -59,7 +68,31 @@ export function snapshotPathCreation(
 			default:
 				return invalid('Unknown path segment kind.');
 		}
+	};
+	const segments = snapshotSegments(edit.segments);
+	if (
+		edit.subpaths !== undefined &&
+		(!Array.isArray(edit.subpaths) ||
+			edit.subpaths.length > VISIO_PATH_SEGMENT_LIMIT ||
+			edit.closed)
+	)
+		invalid('A compound path must have bounded, unfilled strokes.');
+	const subpaths = edit.subpaths?.map((path) => {
+		if (!path || typeof path !== 'object') invalid('Invalid path stroke.');
+		return { x: value(path.x), y: value(path.y), segments: snapshotSegments(path.segments) };
 	});
+	const stroke = edit.stroke;
+	if (
+		stroke &&
+		(typeof stroke.name !== 'string' ||
+			!stroke.name.trim() ||
+			stroke.name.length > 128 ||
+			/[\u0000-\u001f]/u.test(stroke.name) ||
+			typeof stroke.color !== 'string' ||
+			!/^#[0-9a-f]{6}$/i.test(stroke.color) ||
+			!(value(stroke.weight) > 0))
+	)
+		invalid('Invalid path stroke style.');
 	const x = value(edit.x),
 		y = value(edit.y);
 	const last = segments[segments.length - 1]!;
@@ -72,6 +105,10 @@ export function snapshotPathCreation(
 		x,
 		y,
 		segments,
+		...(subpaths?.length ? { subpaths } : {}),
+		...(stroke
+			? { stroke: { name: stroke.name, color: stroke.color, weight: stroke.weight } }
+			: {}),
 		...(edit.closed === undefined ? {} : { closed: edit.closed }),
 	};
 }

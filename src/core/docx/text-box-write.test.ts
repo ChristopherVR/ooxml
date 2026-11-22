@@ -67,6 +67,22 @@ describe('inserted text boxes', () => {
 		expect(edited).not.toContain('prst="textArchUp"');
 	});
 
+	it('round-trips a native gradient WordArt text fill', async () => {
+		const loaded = await loadDocx(await blank());
+		const wordArt = { fill: '1769A5', gradient: { end: 'B7DDF5', angle: 16200000 } };
+		const image = { ...newBox(['Gradient'], false), textBoxContent: { blocks: [], wordArt } };
+		(loaded.model.blocks[0] as Paragraph).runs.push({ text: '', image });
+		const saved = await loaded.save();
+		expect(await xmlOf(saved)).toContain('<w14:gradFill');
+		const reopened = await loadDocx(saved);
+		expect(
+			(reopened.model.blocks[0] as Paragraph).runs.find((run) => run.image)?.image,
+		).toMatchObject({
+			textBoxEditable: true,
+			textBoxContent: { wordArt },
+		});
+	});
+
 	it('writes an inline wps text box that reads back as an editable box', async () => {
 		const loaded = await loadDocx(await blank());
 		(loaded.model.blocks[0] as Paragraph).runs.push({

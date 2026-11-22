@@ -332,6 +332,7 @@ export interface EditSession {
 		contentType: string,
 		anchor: DrawingAnchor,
 		name?: string,
+		svg?: Uint8Array,
 	): ImageObject;
 	/** Replaces the conditional format at `index` (Rules Manager > Edit Rule). */
 	replaceConditionalFormat(sheet: number, index: number, format: ConditionalFormat): void;

@@ -107,11 +107,13 @@ const checkedOf = (event: Event): boolean => (event.target as HTMLInputElement).
 				:disabled="props.disabled"
 				@change="onToggle(section.id, checkedOf($event))"
 			/>
-			{{ t(section.labelKey ?? '') }}
+			{{ section.label ?? t(section.labelKey ?? '') }}
 		</label>
-		<span v-else-if="section.labelKey" class="pptx-vue-fields-title text-foreground">{{
-			t(section.labelKey)
-		}}</span>
+		<span
+			v-else-if="section.label || section.labelKey"
+			class="pptx-vue-fields-title text-foreground"
+			>{{ section.label ?? t(section.labelKey ?? '') }}</span
+		>
 		<div v-if="section.fields.length" class="pptx-vue-fields-grid grid grid-cols-2 gap-2">
 			<template v-for="field in section.fields" :key="field.id">
 				<label

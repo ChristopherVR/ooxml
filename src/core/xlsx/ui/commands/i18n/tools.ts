@@ -583,12 +583,7 @@ export const TOOLS_STRINGS: Translations = {
 		'Símbolos utilizados recientemente:',
 		'近期使用过的符号:',
 	],
-	'Character code: {code}': [
-		'Code du caractère : {code}',
-		'Zeichencode: {code}',
-		'Código de carácter: {code}',
-		'字符代码: {code}',
-	],
+	'Character code': ['Code du caractère', 'Zeichencode', 'Código de carácter', '字符代码'],
 	// Series
 	Series: ['Série de données', 'Reihe', 'Series', '序列'],
 	'Series in': ['Série en', 'Reihe in', 'Series en', '序列产生在'],

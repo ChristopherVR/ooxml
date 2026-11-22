@@ -1,5 +1,4 @@
 import { pickOfficeIcon } from '../form/icon-picker';
-import { iconPngFile } from '../form/local-svg';
 import { canEditDiagram } from './controller';
 import {
 	inspectVisioRasterImage,
@@ -13,6 +12,7 @@ import {
 	normalizeVisioHyperlinkAddress,
 	visioChartObjectInsertCommand,
 	visioFollowTarget,
+	visioIconInsertCommands,
 	visioPictureInsertCommand,
 	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
@@ -219,17 +219,23 @@ export class ViewerInsert {
 	async #icon(): Promise<void> {
 		const { document, pageIndex } = this.controller.state;
 		const generation = this.controller.documentGeneration;
-		if (!document?.pages[pageIndex]) return;
+		const page = document?.pages[pageIndex];
+		if (!page || !this.#editable(this.controller.state)) return;
 		try {
-			const icon = await pickOfficeIcon(this.root);
-			if (!icon) return;
-			const file = await iconPngFile(this.root.ownerDocument, icon);
+			const icons = await pickOfficeIcon(this.root);
+			const live = this.controller.state;
+			const target = live.document?.pages[live.pageIndex];
 			if (
-				this.controller.documentGeneration === generation &&
-				this.controller.state.pageIndex === pageIndex
-			) {
-				await this.#picture(file);
-			}
+				!icons.length ||
+				!target ||
+				target.id !== page.id ||
+				this.controller.documentGeneration !== generation ||
+				!this.#editable(live)
+			)
+				return;
+			const token = this.controller.captureCreationToken(target.id);
+			const commands = visioIconInsertCommands(target, icons);
+			this.run(() => this.controller.applyCreationEdits(commands, token), 'Inserted icons.');
 		} catch {
 			this.announce('Could not insert the icon.');
 		}

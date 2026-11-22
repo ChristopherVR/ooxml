@@ -190,7 +190,9 @@ export class DrawingLayer {
 				drawing.layout?.tile ||
 				Object.values(drawing.layout?.fillRect ?? {}).some((value) => value !== 0))
 		) {
-			const url = this.#url(drawing.partName, drawing.contentType);
+			const url =
+				(drawing.svgPartName && this.#url(drawing.svgPartName, 'image/svg+xml')) ||
+				this.#url(drawing.partName, drawing.contentType);
 			if (url) {
 				const svg = pictureSvg(
 					doc,

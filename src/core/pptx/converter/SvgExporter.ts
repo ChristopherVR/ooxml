@@ -38,6 +38,8 @@ export interface SvgExportOptions {
 	slideIndices?: number[] | undefined;
 	/** Default font family when the element does not specify one. */
 	defaultFontFamily?: string;
+	/** Omit the slide background for a transparent Zoom preview. */
+	transparentBackground?: boolean;
 	/** Default font size in points when the element does not specify one. */
 	defaultFontSize?: number;
 	/** Optional host font metrics. Headless exports fall back to measured font tables. */
@@ -670,7 +672,7 @@ export class SvgExporter {
 		const ctx = createRenderContext(slide.elements.length);
 
 		const bodyParts: string[] = [];
-		bodyParts.push(renderBackground(slide, width, height));
+		if (!options?.transparentBackground) bodyParts.push(renderBackground(slide, width, height));
 
 		for (const el of slide.elements) {
 			bodyParts.push(renderElement(el, defaults, ctx));

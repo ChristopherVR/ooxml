@@ -169,8 +169,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	protected applyZoomPlayback(
 		properties: XmlObject,
-		playback: Pick<ZoomPptxElement, 'returnToParent' | 'transitionDurationMs'>,
+		playback: Pick<
+			ZoomPptxElement,
+			'returnToParent' | 'transitionDurationMs' | 'zoomImageType' | 'zoomShowBackground'
+		>,
 	): void {
+		if (playback.zoomImageType !== undefined) properties['@_imageType'] = playback.zoomImageType;
+		if (playback.zoomShowBackground !== undefined)
+			properties['@_showBg'] = playback.zoomShowBackground ? '1' : '0';
 		if (playback.returnToParent !== undefined) {
 			properties['@_returnToParent'] = playback.returnToParent ? '1' : '0';
 		}

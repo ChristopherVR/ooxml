@@ -65,6 +65,8 @@ export type { ShapeLineSection } from './shape-line-fields';
 export {
 	ELEMENT_GEOMETRY_SECTION,
 	ELEMENT_GEOMETRY_SECTIONS,
+	sizePositionSections,
+	ZOOM_OPTIONS_SECTION,
 	MIN_ELEMENT_SIZE,
 } from './element-geometry-fields';
 export type {

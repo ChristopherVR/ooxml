@@ -1,3 +1,4 @@
+import { svgPictureRelationship } from '../drawingml/svg-picture';
 import { parseDrawingPictureFill } from '../drawingml/picture-fill';
 import { imageContentType as guessContentType } from '../drawingml/image-content-type';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
@@ -86,12 +87,6 @@ function resolvePicture(
 		partName,
 		contentType: contentTypeForPart(context.contentTypes, partName) ?? guessContentType(partName),
 	};
-}
-const SVG_NS = 'http://schemas.microsoft.com/office/drawing/2016/SVG/main';
-/** The relationship id of an `asvg:svgBlip` in the blip's extension list (Word 2016+ SVG). */
-function svgBlipRelId(blip: XmlElement): string | undefined {
-	const svgBlip = descendantNS(blip, SVG_NS, 'svgBlip');
-	return (svgBlip && getR(svgBlip, 'embed')) || undefined;
 }
 /** The text of each paragraph in a `wps:txbx` text box, or undefined when the shape has none. */
 function textBoxParagraphs(graphicData: XmlElement | undefined): string[] | undefined {
@@ -183,7 +178,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	const blip = descendantNS(graphicData, A_NS, 'blip');
 	const relId = (blip && getR(blip, 'embed')) || undefined;
 	const picture = uri === PICTURE_GRAPHIC_URI && relId ? resolvePicture(relId, context) : undefined;
-	const svgRelId = blip && svgBlipRelId(blip);
+	const svgRelId = svgPictureRelationship(blip);
 	const svg = picture && svgRelId ? resolvePicture(svgRelId, context) : undefined;
 	if (picture)
 		return {

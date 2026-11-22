@@ -543,7 +543,9 @@ provide(ThemeColorMapKey, themeColorMap);
 // Expose a zoom-target lookup so Slide-Zoom / Section-Zoom tiles can render a
 // higher-fidelity fallback thumbnail (target slide's real background colour,
 // slide number and friendly section name) instead of the raw target index.
-provideZoomTargetLookup((targetSlideIndex) => toZoomTargetInfo(slides.value[targetSlideIndex]));
+provideZoomTargetLookup((targetSlideIndex) =>
+	toZoomTargetInfo(slides.value[targetSlideIndex], canvasSize.value),
+);
 
 // Expose the DECK-level OOXML field-substitution context (slide number,
 // date/time, header/footer, slide title, custom doc properties) to the text

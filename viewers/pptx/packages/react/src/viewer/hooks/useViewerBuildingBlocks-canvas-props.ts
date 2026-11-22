@@ -205,7 +205,7 @@ export function buildCanvasProps(input: BuildCanvasPropsInput): SlideCanvasProps
 		onEraseInkElement: insertHandlers.handleEraseInkElement,
 		onActionClick: handleActionClick,
 		onHyperlinkClick: handleHyperlinkClick,
-		allSlides: mode === 'present' ? slides : undefined,
+		allSlides: slides,
 		onZoomClick: mode === 'present' ? presentation.handleZoomClick : undefined,
 		sourceSlideIndex: mode === 'present' ? activeSlideIndex : undefined,
 		fieldContext,

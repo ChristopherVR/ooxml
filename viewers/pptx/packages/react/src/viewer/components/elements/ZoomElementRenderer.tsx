@@ -1,10 +1,14 @@
-import { buildSummaryZoomView, resolveZoomNavigationTarget } from 'ooxml-ui/pptx';
+import {
+	buildSummaryZoomView,
+	resolveZoomNavigationTarget,
+	zoomPreviewSource,
+	zoomTargetInfo,
+} from 'ooxml-ui/pptx';
 import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
 import type { ZoomPptxElement, PptxSlide } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { renderImg } from './ImageRenderer';
 
 /** Props for the ZoomElementRenderer component. */
 export interface ZoomElementRendererProps {
@@ -12,6 +16,7 @@ export interface ZoomElementRendererProps {
 	element: ZoomPptxElement;
 	/** All slides in the presentation (used to render target slide preview). */
 	slides?: readonly PptxSlide[];
+	canvasSize?: { width: number; height: number } | undefined;
 	/** Whether the viewer is in presentation mode (non-interactive editing). */
 	isPresentationMode?: boolean;
 	/** Callback fired when the zoom element is clicked in presentation mode. */
@@ -29,6 +34,7 @@ export interface ZoomElementRendererProps {
 export function ZoomElementRenderer({
 	element,
 	slides,
+	canvasSize,
 	isPresentationMode,
 	onZoomClick,
 	sourceSlideIndex,
@@ -36,16 +42,7 @@ export function ZoomElementRenderer({
 	const { t } = useTranslation();
 	const summaryView = buildSummaryZoomView(
 		element,
-		(index) => {
-			const slide = slides?.[index];
-			return slide
-				? {
-						slideNumber: slide.slideNumber,
-						sectionName: slide.sectionName,
-						backgroundColor: slide.backgroundColor,
-					}
-				: undefined;
-		},
+		(index) => zoomTargetInfo(slides?.[index], canvasSize),
 		// The tile captions and aria-labels are built in shared; without this the
 		// slide subtitle and the container's aria-label stay English.
 		(key: string, params?: Record<string, string>) => t(key, params ?? {}),
@@ -159,7 +156,7 @@ export function ZoomElementRenderer({
 	};
 
 	// If the zoom element has image data (its own preview thumbnail), render it
-	const hasPreviewImage = Boolean(element.imageData);
+	const preview = zoomPreviewSource(element, zoomTargetInfo(targetSlide, canvasSize));
 
 	return (
 		<div
@@ -187,17 +184,13 @@ export function ZoomElementRenderer({
 					: ''
 			}`}
 		>
-			{hasPreviewImage ? (
-				renderImg(
-					element,
-					{
-						width: '100%',
-						height: '100%',
-						objectFit: 'contain',
-					},
-					undefined,
-					`Preview of slide ${element.targetSlideIndex + 1}`,
-				)
+			{preview ? (
+				<img
+					src={preview}
+					alt={t('pptx.zoom.slidePreviewAlt', { number: element.targetSlideIndex + 1 })}
+					draggable={false}
+					style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+				/>
 			) : (
 				<ZoomSlideThumbnail targetSlide={targetSlide} slideIndex={element.targetSlideIndex} />
 			)}

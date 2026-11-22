@@ -75,19 +75,22 @@ test('on a phone the Illustrations group inserts an icon', async ({ page }) => {
 	const viewer = page.locator('visio-viewer');
 	const paper = viewer.locator('svg.paper');
 	await expect(paper).toContainText('Release workflow');
-	const images = paper.locator('image');
-	const before = await images.count();
+	const bulb = paper.locator('[data-shape-name="Light bulb"] [data-geometry]');
+	const check = paper.locator('[data-shape-name="Check mark"] [data-geometry]');
 	await viewer.getByRole('tab', { name: 'Insert', exact: true }).tap();
 	await ribbonGroup(viewer, 'Illustrations');
 	await viewer.getByRole('button', { name: 'Icons', exact: true }).tap();
 	await expect(page.getByRole('dialog', { name: 'Icons' })).toBeVisible();
 	await page.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
 	await page.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+	await page.getByRole('searchbox', { name: 'Search icons' }).fill('Check mark');
+	await page.getByRole('button', { name: 'Check mark', exact: true }).tap();
 	await viewer
 		.locator('office-ui-dialog[open]')
 		.getByRole('button', { name: 'Insert', exact: true })
 		.tap();
-	await expect(images).toHaveCount(before + 1);
+	await expect(bulb).toBeVisible();
+	await expect(check).toBeVisible();
 });
 
 test.describe('at narrow phone width', () => {

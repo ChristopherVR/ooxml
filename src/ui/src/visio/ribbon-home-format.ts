@@ -14,12 +14,12 @@ const small = (spec: CommandSpec): CommandSpec => ({ size: 'small', ...spec });
 const icon = (spec: CommandSpec): CommandSpec => ({ size: 'icon', ...spec });
 
 /** Home > Font Color: the button applies the last colour, the caret opens Office's picker. */
-function fontColorMenu(doc: Document) {
+export function fontColorMenu(doc: Document, label = 'Font Color') {
 	const el = menu(doc, {
 		id: 'font-color',
-		label: 'Font Color',
+		label,
 		icon: 'fontColor',
-		size: 'icon',
+		size: label === 'Font Color' ? 'icon' : 'small',
 		split: true,
 		action: { type: 'font-color' },
 		items: [],

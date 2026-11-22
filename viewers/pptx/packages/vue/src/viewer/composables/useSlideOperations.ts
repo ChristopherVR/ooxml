@@ -1,6 +1,7 @@
 import {
 	createBlankSlide,
 	makeSlideId,
+	remapZoomTargets,
 	insertSlidePaste,
 	applySlidePasteTemplates,
 } from 'ooxml-ui/pptx';
@@ -95,7 +96,7 @@ export function useSlideOperations(input: UseSlideOperationsInput): UseSlideOper
 		const next = [...slides.value];
 		const [moved] = next.splice(from, 1);
 		next.splice(to, 0, moved);
-		slides.value = next;
+		slides.value = remapZoomTargets(slides.value, next);
 		activeSlideIndex.value = to;
 	};
 

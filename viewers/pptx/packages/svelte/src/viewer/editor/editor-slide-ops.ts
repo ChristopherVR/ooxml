@@ -1,4 +1,9 @@
-import { buildSlideTemplateSlide, createBlankSlide, makeSlideId } from 'ooxml-ui/pptx';
+import {
+	buildSlideTemplateSlide,
+	createBlankSlide,
+	makeSlideId,
+	remapZoomTargets,
+} from 'ooxml-ui/pptx';
 import type { SlideTemplateBuildOptions, SlideTemplateId } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { duplicateSlide } from 'pptx-viewer-core';
@@ -146,5 +151,8 @@ export function moveSlide(
 	const next = [...slides];
 	const [moved] = next.splice(fromIndex, 1);
 	next.splice(toIndex, 0, moved);
-	return next.map((slide, index) => ({ ...slide, slideNumber: index + 1 }));
+	return remapZoomTargets(slides, next).map((slide, index) => ({
+		...slide,
+		slideNumber: index + 1,
+	}));
 }

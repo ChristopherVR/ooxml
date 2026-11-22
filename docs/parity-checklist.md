@@ -603,11 +603,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       stay available in the compact Quick Access Toolbar.
 - [x] **P1** The page thumbnail rail scales to fit narrow editors and keeps the document visible
       in both suite layouts at 320×256 and 360×225.
-- [x] **P2** Word and Excel share 30 WordArt styles and a text transform picker. Preset names
-      and adjustment guides are saved in the native drawing. The editor previews the text
-      along a path.
-- [ ] **P2** Word and Excel WordArt still need gradient and 3-D styles, direct adjustment
-      handles, and glyph-envelope rendering for deformation presets.
+- [x] **P2** Word and Excel share 36 WordArt styles, including six two-stop gradient presets,
+      and a text transform picker. Gradient stops, the angle, preset names and adjustment guides
+      survive native DOCX and XLSX saves. The editors preview the gradient and text path.
+- [ ] **P2** Word and Excel WordArt still need multi-stop and themed gradient editing, 3-D effects,
+      direct adjustment handles and glyph-envelope rendering for deformation presets.
 - [ ] **P1** Insert: Quick Parts, Signature Line, Object, 3D Models, Screenshot,
       Video; Header and Footer offer blank designs only.
 - [ ] **P2** View: Window group, Macros; Review: Thesaurus, Translate, Block Authors, Hide Ink;
@@ -800,8 +800,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       authored (`src/ui/src/pptx/render/image-background-removal.ts`).
 - [x] **P1** Summary Zoom creates a new overview slide before the first chosen slide, reuses
       existing sections, and starts new sections at the chosen slides.
-- [ ] **P1** Zoom still needs live preview refresh, custom thumbnails, Zoom formatting, and
-      retaining targets through subsequent slide reordering.
+- [x] **P1** Slide Zoom retains its destination and Section and Summary Zoom follow the beginning
+      of their sections after slide reordering. A save/reopen test checks the original slide ID.
+- [x] **P1** Zoom insertion offers Return to Zoom, duration and transparent thumbnails. Slide
+      and Section Zoom accept a local cover image. The resulting options save in native PPTX.
+- [x] **P1** The editor and live show refresh slide previews when destination artwork changes.
+      Custom covers retain their embedded image.
+- [x] **P1** Slide Zoom, Section Zoom and individual Summary Zoom tiles can change return
+      behavior, duration and thumbnail transparency after insertion in the Format pane.
+- [ ] **P1** Zoom still needs refreshed thumbnail media on save and post-insertion cover replacement.
 - [ ] **P1** Recording: no narration or Cameo; Clear and Reset of recorded timings are disabled
       (`ribbon-record-commands.ts`); Record Audio has no command.
 - [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;
@@ -954,7 +961,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       closes it. Shapes preserves the preset picked on the phone.
 - [x] **P1** Insert Symbol uses the common Unicode gallery or a character code at an active
       text caret, or creates a text box when no text edit is active.
-      Browsing font-specific glyphs remains open.
+      The gallery also browses Unicode equivalents for the five bundled legacy font mappings.
+      Browsing arbitrary installed fonts remains open.
 - [ ] **P1** Insert: Object, 3D Models, Screenshot, Photo Album, Reuse Slides, Forms, add-ins
       and unimplemented menu entries (`ribbon-insert-layout.ts`).
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
@@ -1222,8 +1230,10 @@ installed Visio 16 build is used to check that saved files open without repair.
 ### Ribbon
 
 - [x] **P1** The compact phone Quick Access Toolbar keeps Save, Undo and Redo reachable.
-- [x] **P1** A contextual Shape Format tab shows while shapes are selected (Shape Styles, WordArt
-      Styles disabled, Arrange, Size), reusing the Home commands (`ribbon-shape-format.ts`).
+- [x] **P1** The contextual Shape Format tab exposes solid WordArt Text Fill using the same
+      native text color edit as Home. Shape Styles, Arrange and Size are shared with Home.
+- [ ] **P1** Visio WordArt Text Outline and Text Effects remain disabled. Gradient text fill and
+      shape-text deformation are open.
 - [x] **P1** Picture Format, Container Format and Chart Design contextual tabs replace Shape Format
       for a lone picture, container or chart; Chart Design opens the chart editor
       (`ribbon-contextual-formats.ts`).
@@ -1255,11 +1265,12 @@ installed Visio 16 build is used to check that saved files open without repair.
 
 ### Insert Icons
 
-- [x] PowerPoint, Word, Excel and Visio offer a bundled, searchable gallery with color selection.
-      PowerPoint and Word save the icon as SVG with a PNG fallback. Excel and Visio save PNG
-      pictures.
-- [ ] **P1** The Microsoft 365 stock catalog, batch insertion, vector icons in Excel and Visio,
-      and graphics recoloring after insertion remain open.
+- [x] PowerPoint, Word, Excel and Visio offer a bundled, searchable gallery with color selection
+      and batch insertion. Selection persists while searching.
+- [x] PowerPoint, Word and Excel save icons as SVG with a PNG fallback. Visio saves native
+      vector paths that resize and can be recolored with the existing Line control.
+- [ ] **P1** The Microsoft 365 stock catalog and dedicated Graphics Fill controls for inserted
+      SVG icons in PowerPoint, Word and Excel remain open.
 
 ### Symbol-font fallback (#290)
 
@@ -1267,5 +1278,10 @@ installed Visio 16 build is used to check that saved files open without repair.
       Unicode substitution and an offline bundled symbol font fallback in the
       shared renderer. Evidence: `symbol-bullet-paragraph.test.ts`,
       `symbol-font-fallback.spec.ts`.
-- [ ] Full Wingdings 2/3 and Webdings mapping, exact symbol-outline parity, and
-      coverage outside the bundled U+2000-2BFF subset remain incomplete.
+- [x] Word, Excel, PowerPoint and Visio browse and insert Unicode equivalents for Symbol,
+      Wingdings, Wingdings 2, Wingdings 3 and Webdings. The dingbat mappings use the published
+      WG2 N4384 source references. Word exposes these through Insert > Symbol > More Symbols.
+- [ ] Exact symbol-font outlines, legacy symbols without a portable character, arbitrary
+      installed-font browsing and a bundled font for supplementary-plane characters remain
+      open. PowerPoint avoids expanding runs to two UTF-16 units when rendering stored text to
+      keep editing offsets valid.

@@ -501,6 +501,7 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 					imagePaste={insertHandlers.imagePaste}
 					onUpdateSlideAnimations={props.onUpdateSlideAnimations}
 					activeSlide={effectiveSlide}
+					allSlides={slides}
 					templateElements={effectiveTemplateElements}
 					canvasSize={canvasSize}
 					zoom={zoom}

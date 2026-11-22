@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
+import { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import type { PptxSection, ZoomPptxElement } from '../../core/types';
 
 const INTRO_SECTION = '{11111111-1111-1111-1111-111111111111}';
@@ -120,6 +121,25 @@ describe('section zoom package integration', () => {
 			x: 180,
 			imagePath: 'ppt/media/section-preview.png',
 		});
+	});
+
+	it('opens a Section Zoom at the first slide of its reordered section after saving', async () => {
+		const handler = new PptxHandler();
+		const { slides } = await handler.load(await buildSectionZoomPackage());
+		const [first, second, third] = slides;
+		const zoom = first.elements.find(
+			(element): element is ZoomPptxElement => element.type === 'zoom',
+		)!;
+		zoom.targetSectionId = INTRO_SECTION;
+		zoom.targetSlideIndex = 0;
+		const reordered = remapZoomTargets(slides, [second, first, third]);
+		const saved = await handler.save(reordered);
+		const reopened = await new PptxHandler().load(saved.buffer as ArrayBuffer);
+		expect(reopened.slides[1].elements.find((element) => element.type === 'zoom')).toMatchObject({
+			targetSectionId: INTRO_SECTION,
+			targetSlideIndex: 0,
+		});
+		expect(reopened.sections?.[0]?.slideIds).toEqual([second.slideId, first.slideId]);
 	});
 
 	it('authors a typed section Zoom with preview relationship and reload semantics', async () => {

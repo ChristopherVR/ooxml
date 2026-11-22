@@ -36,7 +36,10 @@ export function buildSlideReferenceRemap(init: SlideReferenceRemapInput): PptxSl
 
 	const rIdByOldRId = new Map<string, string>();
 	const removedRIds = new Set<string>();
-	let changed = false;
+	const oldOrder = [...init.originalSldIdToPath.values()];
+	let changed =
+		oldOrder.length !== init.slides.length ||
+		init.slides.some((slide, index) => slide.id !== oldOrder[index]);
 	for (const [oldRId, path] of init.originalRIdToPath.entries()) {
 		const newRId = pathToNewRId.get(path);
 		if (newRId === undefined) {

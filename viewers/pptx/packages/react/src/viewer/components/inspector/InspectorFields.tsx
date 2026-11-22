@@ -234,10 +234,10 @@ export function InspectorFields<T, P>({
 									}
 								}}
 							/>
-							{t(section.labelKey ?? '')}
+							{section.label ?? t(section.labelKey ?? '')}
 						</label>
-					) : section.labelKey ? (
-						<span className={`${LBL} ${COL2}`}>{t(section.labelKey)}</span>
+					) : section.label || section.labelKey ? (
+						<span className={`${LBL} ${COL2}`}>{section.label ?? t(section.labelKey ?? '')}</span>
 					) : null}
 					{section.fields.map((field) => renderField(section.id, field))}
 				</React.Fragment>

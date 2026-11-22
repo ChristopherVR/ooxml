@@ -200,6 +200,7 @@ export const frRibbon: RibbonStrings = {
 	'One page': 'Une page',
 	'Word count': 'Nombre de mots',
 	Spelling: 'Orthographe',
+	'More Symbols…': 'Autres symboles…',
 	Symbol: 'Symbole',
 	'Line numbers': 'Numéros de ligne',
 	'Restart Each Page': 'Redémarrer à chaque page',

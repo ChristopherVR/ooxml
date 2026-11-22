@@ -709,6 +709,10 @@ export interface ZoomPptxElement extends PptxElementBase, PptxImageProperties {
 	zoomType: 'slide' | 'section' | 'summary';
 	/** Zero-based index of the target slide. */
 	targetSlideIndex: number;
+	/** Whether the thumbnail is a slide preview or a custom cover. */
+	zoomImageType?: 'preview' | 'cover' | undefined;
+	/** Whether the thumbnail includes the destination slide background. */
+	zoomShowBackground?: boolean | undefined;
 	/** Section ID for section zoom. */
 	targetSectionId?: string | undefined;
 	/** Ordered section tiles in a Summary Zoom container. */
@@ -749,6 +753,8 @@ export interface ZoomPptxElement extends PptxElementBase, PptxImageProperties {
 export interface SummaryZoomTarget extends PptxImageProperties {
 	sectionId: string;
 	targetSlideIndex: number;
+	zoomImageType?: ZoomPptxElement['zoomImageType'];
+	zoomShowBackground?: boolean | undefined;
 	x: number;
 	y: number;
 	width: number;

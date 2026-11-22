@@ -1,4 +1,8 @@
-import type { ZoomNavigationTarget } from 'ooxml-ui/pptx';
+import {
+	zoomTargetInfo,
+	type SummaryZoomTargetInfo,
+	type ZoomNavigationTarget,
+} from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 import { getContext, setContext } from 'svelte';
 
@@ -12,9 +16,10 @@ export interface ZoomNavigationSource {
 	 */
 	navigateToZoomTarget: (target: ZoomNavigationTarget) => void;
 	getSlides: () => readonly PptxSlide[];
+	getCanvasSize?: () => { width: number; height: number };
 }
 
-export interface ZoomTargetInfo {
+export interface ZoomTargetInfo extends SummaryZoomTargetInfo {
 	backgroundColor: string | undefined;
 	slideNumber: number;
 	sectionName: string | undefined;
@@ -36,7 +41,9 @@ export function resolveZoomTargetInfo(
 	if (!slide) {
 		return undefined;
 	}
+	const preview = zoomTargetInfo(slide, source?.getCanvasSize?.());
 	return {
+		...preview,
 		backgroundColor: slide.backgroundColor,
 		slideNumber: slide.slideNumber ?? index + 1,
 		sectionName: slide.sectionName ?? slide.sectionId,

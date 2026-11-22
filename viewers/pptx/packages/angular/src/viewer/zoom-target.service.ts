@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { zoomTargetInfo, type SummaryZoomTargetInfo } from 'ooxml-ui/pptx';
 import type { PptxSlide } from 'pptx-viewer-core';
 
 /**
@@ -8,7 +9,7 @@ import type { PptxSlide } from 'pptx-viewer-core';
  * of grey/index/section-GUID placeholders. Mirrors the React
  * `ZoomSlideThumbnail` reference, which reads exactly these three fields.
  */
-export interface ZoomTargetInfo {
+export interface ZoomTargetInfo extends SummaryZoomTargetInfo {
 	/** The target slide's background colour, used as the tile background. */
 	readonly backgroundColor?: string;
 	/** The target slide's own 1-based number (not the array index + 1). */
@@ -34,10 +35,12 @@ export interface ZoomTargetInfo {
 export class ZoomTargetService {
 	/** The deck the lookup resolves against; seeded by the viewer. */
 	private readonly slides = signal<readonly PptxSlide[]>([]);
+	private readonly canvas = signal<{ width: number; height: number } | undefined>(undefined);
 
 	/** Replace the deck used to resolve zoom targets. */
-	setSlides(slides: readonly PptxSlide[]): void {
+	setSlides(slides: readonly PptxSlide[], canvas?: { width: number; height: number }): void {
 		this.slides.set(slides);
+		this.canvas.set(canvas);
 	}
 
 	/**
@@ -49,6 +52,8 @@ export class ZoomTargetService {
 		if (!slide) {
 			return undefined;
 		}
+		const canvas = this.canvas();
+		if (canvas) return zoomTargetInfo(slide, canvas);
 		return {
 			backgroundColor: slide.backgroundColor,
 			slideNumber: slide.slideNumber,

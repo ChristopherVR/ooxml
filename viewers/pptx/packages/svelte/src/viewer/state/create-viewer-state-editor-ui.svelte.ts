@@ -135,6 +135,7 @@ export function useEditorUiCluster(deps: EditorUiClusterDeps): EditorUiCluster {
 			}
 		},
 		getSlides: () => editor.renderedSlides,
+		getCanvasSize: () => loader.canvasSize,
 	});
 
 	let stageContextMenu = $state<StageContextMenu | null>(null);

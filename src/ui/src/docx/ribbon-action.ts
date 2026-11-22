@@ -112,6 +112,7 @@ export type RibbonAction =
 	| { type: 'wordCount' }
 	| { type: 'spelling' }
 	| { type: 'insertSymbol'; value: string }
+	| { type: 'openSymbolGallery' }
 	| { type: 'dropCap'; value: 'none' | 'drop' | 'margin' }
 	| { type: 'insertDateTime'; value: 'long' | 'short' | 'time' | 'datetime' }
 	| { type: 'showMarks' }

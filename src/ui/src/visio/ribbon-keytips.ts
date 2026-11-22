@@ -69,7 +69,7 @@ const PANELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
 		fill: 'SF',
 		line: 'SO',
 		effects: 'SE',
-		'text-fill': 'TF',
+		'font-color': 'TF',
 		'text-outline': 'TO',
 		'text-effects': 'TE',
 		align: 'GA',

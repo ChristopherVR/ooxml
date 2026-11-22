@@ -12,6 +12,7 @@
  */
 
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
+export { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import { cloneElement, cloneSlide, duplicateSlide } from '../../index';
 
 export interface SlidePasteRequest {

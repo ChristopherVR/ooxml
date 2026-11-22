@@ -18,6 +18,7 @@
 		buildSummaryZoomView,
 		resolveZoomNavigationTarget,
 		shouldRenderHitTarget,
+		zoomPreviewSource,
 	} from 'ooxml-ui/pptx';
 	import type { SummaryZoomTileView } from 'ooxml-ui/pptx';
 	import { resolveZoomView } from '../render';
@@ -53,6 +54,7 @@
 	const view = $derived(zoom ? resolveZoomView(zoom) : undefined);
 	const containerStyle = $derived(styleToString(getContainerStyle(element, zIndex)));
 	const targetInfo = $derived(view ? resolveZoomTargetInfo(navigation, view.target) : undefined);
+	const preview = $derived(zoom ? zoomPreviewSource(zoom, targetInfo) : undefined);
 	const summaryView = $derived(
 		zoom
 			? buildSummaryZoomView(zoom, (index) => resolveZoomTargetInfo(navigation, index), t)
@@ -163,10 +165,10 @@
 			</div>
 		{:else}
 		<div class="pptx-svelte-zoom-tile">
-			{#if view.imageSrc}
+			{#if preview}
 				<img
 					class="pptx-svelte-zoom-img"
-					src={view.imageSrc}
+					src={preview}
 					alt={t('pptx.zoom.slidePreviewAlt', { number: view.target + 1 })}
 					draggable="false"
 				/>

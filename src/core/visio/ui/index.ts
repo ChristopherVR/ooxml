@@ -58,6 +58,7 @@ export * from './page-size';
 export * from './page-setup';
 export * from './ruler-grid';
 export * from './insert';
+export * from './icon-insert';
 export * from './diagram-check';
 export * from './shape-report';
 export * from './subprocess';

@@ -101,8 +101,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 */
 	protected parseZoomObjectProperties(
 		zoomProperties: XmlObject,
-	): Pick<ZoomPptxElement, 'returnToParent' | 'transitionDurationMs'> {
+	): Pick<
+		ZoomPptxElement,
+		'returnToParent' | 'transitionDurationMs' | 'zoomImageType' | 'zoomShowBackground'
+	> {
+		const imageType = zoomProperties['@_imageType'];
 		return {
+			zoomImageType: imageType === 'cover' || imageType === 'preview' ? imageType : undefined,
+			zoomShowBackground: readBoolean(zoomProperties['@_showBg']),
 			returnToParent: readBoolean(zoomProperties['@_returnToParent']),
 			transitionDurationMs: readOptionalMs(zoomProperties['@_transitionDur']),
 		};

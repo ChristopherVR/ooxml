@@ -1,7 +1,12 @@
-import type { ZoomPptxElement } from 'ooxml-core/pptx';
+import type { PptxSlide, ZoomPptxElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
-import { buildSummaryZoomView, resolveSummaryZoomNavigation } from './summary-zoom';
+import {
+	buildSummaryZoomView,
+	resolveSummaryZoomNavigation,
+	zoomPreviewSource,
+	zoomTargetInfo,
+} from './summary-zoom';
 
 const summary: ZoomPptxElement = {
 	id: 'summary',
@@ -52,6 +57,33 @@ describe('summary zoom view model', () => {
 			},
 		]);
 		expect(resolveSummaryZoomNavigation(view, 1)).toBe(3);
+	});
+
+	it('renders current slide artwork in a preview and keeps custom covers', () => {
+		const slide: PptxSlide = {
+			id: 'target',
+			rId: 'rId2',
+			slideNumber: 2,
+			elements: [
+				{ type: 'text', id: 'text', text: 'Original', x: 20, y: 20, width: 140, height: 60 },
+			],
+		};
+		const size = { width: 960, height: 540 };
+		const thumbnail = { zoomImageType: 'preview' as const, imageData: 'embedded' };
+		const before = zoomPreviewSource(thumbnail, zoomTargetInfo(slide, size));
+		const updated: PptxSlide = {
+			...slide,
+			elements: [
+				{ type: 'text', id: 'text', text: 'Revised', x: 20, y: 20, width: 140, height: 60 },
+			],
+		};
+		expect(decodeURIComponent(before ?? '')).toContain('Original');
+		expect(
+			decodeURIComponent(zoomPreviewSource(thumbnail, zoomTargetInfo(updated, size)) ?? ''),
+		).toContain('Revised');
+		expect(
+			zoomPreviewSource({ ...thumbnail, zoomImageType: 'cover' }, zoomTargetInfo(updated, size)),
+		).toBe('embedded');
 	});
 
 	it('builds a grid and rejects invalid navigation indexes', () => {

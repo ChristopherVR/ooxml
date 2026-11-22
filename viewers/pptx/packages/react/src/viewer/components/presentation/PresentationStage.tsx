@@ -263,6 +263,7 @@ function PresentationStageContent({
 							animationState={presentationElementStates?.get(element.id)}
 							presentationElementStates={presentationElementStates}
 							allSlides={allSlides}
+							zoomCanvasSize={canvasSize}
 							onZoomClick={onZoomClick}
 							sourceSlideIndex={sourceSlideIndex}
 							fieldContext={fieldContext}
@@ -303,6 +304,7 @@ function PresentationStageContent({
 							animationState={presentationElementStates?.get(element.id)}
 							presentationElementStates={presentationElementStates}
 							allSlides={allSlides}
+							zoomCanvasSize={canvasSize}
 							onZoomClick={onZoomClick}
 							sourceSlideIndex={sourceSlideIndex}
 							fieldContext={fieldContext}

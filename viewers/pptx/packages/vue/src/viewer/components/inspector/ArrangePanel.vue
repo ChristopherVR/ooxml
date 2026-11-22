@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Lock, LockOpen } from '@lucide/vue';
-import { ELEMENT_GEOMETRY_SECTIONS, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
+import { sizePositionSections, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -76,7 +76,7 @@ function onFlipVertical(checked: boolean): void {
 		</div>
 		<InspectorFields
 			v-if="showGeometry"
-			:sections="ELEMENT_GEOMETRY_SECTIONS"
+			:sections="sizePositionSections(element)"
 			:target="element"
 			:disabled="!props.canEdit"
 			@patch="(patch) => emit('update', patch as Partial<PptxElement>)"

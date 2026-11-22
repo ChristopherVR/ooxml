@@ -3,7 +3,12 @@ import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
 import { deleteTimeline } from './timelines';
 import { type EditContext, sheetAt, sheetDrawingAt } from './context';
-import { wordArtPaintEquals, wordArtRgb, type WordArtText } from '../../drawingml/word-art';
+import {
+	normalizeWordArtGradient,
+	wordArtPaintEquals,
+	wordArtRgb,
+	type WordArtText,
+} from '../../drawingml/word-art';
 import { wordArtShape } from '../word-art';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
@@ -32,9 +37,11 @@ function normalizeWordArt(value: WordArtText): WordArtText {
 	const fill = wordArtRgb(value.style.fill);
 	const outline = wordArtRgb(value.style.outline);
 	const shadow = wordArtRgb(value.style.shadow);
+	const gradient = normalizeWordArtGradient(value.style.gradient);
 	if (
 		!text ||
 		!fill ||
+		(value.style.gradient !== undefined && !gradient) ||
 		(value.style.outline !== undefined && !outline) ||
 		(value.style.shadow !== undefined && !shadow)
 	) {
@@ -44,6 +51,7 @@ function normalizeWordArt(value: WordArtText): WordArtText {
 		text,
 		style: {
 			fill,
+			...(gradient ? { gradient } : {}),
 			...(outline ? { outline } : {}),
 			...(shadow ? { shadow } : {}),
 			...(value.style.warp ? { warp: structuredClone(value.style.warp) } : {}),

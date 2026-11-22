@@ -1,4 +1,10 @@
-import { buildSummaryZoomView, getContainerStyle, resolveZoomNavigationTarget } from '../../index';
+import {
+	buildSummaryZoomView,
+	getContainerStyle,
+	resolveZoomNavigationTarget,
+	zoomPreviewSource,
+	zoomTargetInfo,
+} from '../../index';
 
 import type { Translator } from '../../i18n/translator';
 import { createEl } from '../dom';
@@ -24,16 +30,7 @@ export const renderZoomElement: ElementRenderer = (element, zIndex, context) => 
 	const doc = context.document;
 	const summaryView = buildSummaryZoomView(
 		element,
-		(index) => {
-			const slide = context.slides?.[index];
-			return slide
-				? {
-						slideNumber: slide.slideNumber,
-						sectionName: slide.sectionName,
-						backgroundColor: slide.backgroundColor,
-					}
-				: undefined;
-		},
+		(index) => zoomTargetInfo(context.slides?.[index], context.canvasSize),
 		// The tile captions and the container aria-label are built in shared; the
 		// translator is what keeps them from rendering English inside an otherwise
 		// translated viewer.
@@ -160,7 +157,8 @@ export const renderZoomElement: ElementRenderer = (element, zIndex, context) => 
 		boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
 	});
 
-	if (element.imageData) {
+	const preview = zoomPreviewSource(element, zoomTargetInfo(targetSlide, context.canvasSize));
+	if (preview) {
 		const img = createEl(doc, 'img', 'pptxv-zoom-img', {
 			width: '100%',
 			height: '100%',
@@ -170,7 +168,7 @@ export const renderZoomElement: ElementRenderer = (element, zIndex, context) => 
 			WebkitUserSelect: 'none',
 			display: 'block',
 		});
-		img.src = element.imageData;
+		img.src = preview;
 		img.alt = context.t('pptx.zoom.slidePreviewAlt', { number: target + 1 });
 		img.draggable = false;
 		tile.appendChild(img);

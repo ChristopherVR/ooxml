@@ -1,4 +1,4 @@
-import { ELEMENT_GEOMETRY_SECTIONS, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
+import { sizePositionSections, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
 import type { FormatSectionView } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
@@ -261,7 +261,7 @@ export function ElementInspectorBody({
 							data-pptx-inspector-section='transform'
 						>
 							<InspectorFields
-								sections={ELEMENT_GEOMETRY_SECTIONS}
+								sections={sizePositionSections(selectedElement)}
 								target={selectedElement}
 								onPatch={(patch) => onUpdateElement(patch as Partial<PptxElement>)}
 								disabled={!canEdit}

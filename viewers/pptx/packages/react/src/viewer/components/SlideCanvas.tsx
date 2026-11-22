@@ -447,7 +447,10 @@ function SlideCanvasContent({
 							onHyperlinkClick={onHyperlinkClick}
 							animationState={presentationElementStates?.get(element.id)}
 							presentationElementStates={presentationElementStates}
-							allSlides={allSlides}
+							allSlides={
+								element.type === 'zoom' || element.type === 'group' ? allSlides : undefined
+							}
+							zoomCanvasSize={canvasSize}
 							onZoomClick={onZoomClick}
 							sourceSlideIndex={sourceSlideIndex}
 							fieldContext={fieldContext}
@@ -502,7 +505,10 @@ function SlideCanvasContent({
 							onHyperlinkClick={onHyperlinkClick}
 							animationState={presentationElementStates?.get(element.id)}
 							presentationElementStates={presentationElementStates}
-							allSlides={allSlides}
+							allSlides={
+								element.type === 'zoom' || element.type === 'group' ? allSlides : undefined
+							}
+							zoomCanvasSize={canvasSize}
 							onZoomClick={onZoomClick}
 							sourceSlideIndex={sourceSlideIndex}
 							fieldContext={fieldContext}
@@ -556,6 +562,7 @@ function SlideCanvasContent({
 								onFormatText={stableFormatText}
 								onHyperlinkClick={onHyperlinkClick}
 								allSlides={allSlides}
+								zoomCanvasSize={canvasSize}
 								sourceSlideIndex={sourceSlideIndex}
 								fieldContext={fieldContext}
 								tableStyleContext={tableStyleContext}

@@ -1,9 +1,14 @@
 // Symbol: a grid of common characters by subset with a recently used row; Insert adds the
 // character to the active cell (through the in-cell editor when the grid is mounted).
+import {
+	OFFICE_SYMBOL_FONTS,
+	officeSymbolFontGlyphs,
+	parseOfficeSymbolCode,
+} from 'ooxml-core/text';
 import { getCell } from 'ooxml-core/xlsx';
 import { target } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
-import { el, field, select, text } from './fields';
+import { el, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 
 const range = (from: number, to: number, skip: number[] = []): string[] => {
@@ -203,17 +208,27 @@ export function openSymbol(ctx: EditorContext): Promise<string | undefined> {
 		SYMBOL_SUBSETS.map(([id, label]) => [id, label] as const),
 		'latin1',
 	);
+	for (const font of OFFICE_SYMBOL_FONTS) {
+		const option = subset.ownerDocument.createElement('option');
+		option.value = font;
+		option.textContent = font;
+		subset.append(option);
+	}
 	const grid = el(ctx, 'div', 'xve-symbols');
 	grid.setAttribute('role', 'grid');
 	grid.setAttribute('aria-label', ctx.t('Symbols'));
 	const recentRow = el(ctx, 'div', 'xve-symbols');
 	recentRow.setAttribute('aria-label', ctx.t('Recently used symbols:'));
-	const code = text(ctx, 'Character code: {code}', 'xve-note', { code: '' });
+	const code = textInput(ctx);
+	code.spellcheck = false;
+	code.maxLength = 8;
+	code.placeholder = '00A9';
 	let chosen = '';
 	let confirm: () => void = () => undefined;
 	const choose = (ch: string, b?: HTMLButtonElement): void => {
 		chosen = ch;
-		code.textContent = ctx.t('Character code: {code}', { code: codeOf(ch) });
+		code.value = codeOf(ch);
+		code.removeAttribute('aria-invalid');
 		for (const other of [...grid.children, ...recentRow.children])
 			other.setAttribute('aria-pressed', String(other === b));
 	};
@@ -230,12 +245,26 @@ export function openSymbol(ctx: EditorContext): Promise<string | undefined> {
 		return b;
 	};
 	const fill = (): void => {
-		const chars = SYMBOL_SUBSETS.find(([id]) => id === subset.value)?.[2] ?? [];
+		const chars =
+			SYMBOL_SUBSETS.find(([id]) => id === subset.value)?.[2] ??
+			officeSymbolFontGlyphs(subset.value);
 		grid.replaceChildren(...chars.map(cellButton));
 		const first = grid.firstElementChild as HTMLButtonElement | null;
-		if (first && !chosen) choose(first.textContent ?? '', first);
+		if (first) choose(first.textContent ?? '', first);
 	};
 	subset.addEventListener('change', fill);
+	code.addEventListener('input', () => {
+		chosen = parseOfficeSymbolCode(code.value) ?? '';
+		code.setAttribute('aria-invalid', String(!chosen));
+		for (const option of [...grid.children, ...recentRow.children])
+			option.setAttribute('aria-pressed', 'false');
+	});
+	code.addEventListener('keydown', (event) => {
+		if (event.key === 'Enter' && !event.isComposing) {
+			event.preventDefault();
+			confirm();
+		}
+	});
 	recentRow.replaceChildren(...recent.map(cellButton));
 	fill();
 	grid.addEventListener('keydown', (event) => {
@@ -267,7 +296,7 @@ export function openSymbol(ctx: EditorContext): Promise<string | undefined> {
 				grid,
 				text(ctx, 'Recently used symbols:', 'xve-field-label'),
 				recentRow,
-				code,
+				field(ctx, 'Character code', code),
 			],
 			opened: () => (grid.firstElementChild as HTMLElement | null)?.focus(),
 			submit: () => {

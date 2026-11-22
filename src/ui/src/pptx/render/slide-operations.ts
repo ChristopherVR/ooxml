@@ -1,6 +1,7 @@
 // Compatibility exports: document operations live in ooxml-core.
 export {
 	makeSlideId,
+	remapZoomTargets,
 	createBlankSlide,
 	captureSlideClipboard,
 	createSlidePaste,

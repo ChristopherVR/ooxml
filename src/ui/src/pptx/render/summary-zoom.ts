@@ -10,20 +10,86 @@
  *
  * @module render/summary-zoom
  */
-import type { ZoomPptxElement } from 'ooxml-core/pptx';
+import type { PptxSlide, ZoomPptxElement } from 'ooxml-core/pptx';
+import { SvgExporter } from 'ooxml-core/pptx/converter';
+import type { CanvasSize } from '../types';
 
 /** Resolves a `pptx.*` key, interpolating `{{...}}` params when given. */
 export type SummaryZoomTranslate = (key: string, params?: Record<string, string>) => string;
 
 export interface SummaryZoomTargetInfo {
-	slideNumber?: number;
-	sectionName?: string;
-	backgroundColor?: string;
+	slideNumber?: number | undefined;
+	sectionName?: string | undefined;
+	backgroundColor?: string | undefined;
+	livePreview?: (transparent: boolean) => string | undefined;
 }
 
 export type SummaryZoomTargetLookup = (
 	targetSlideIndex: number,
 ) => SummaryZoomTargetInfo | undefined;
+
+const livePreviews = new WeakMap<
+	PptxSlide,
+	{
+		width: number;
+		height: number;
+		opaque?: string | undefined;
+		transparent?: string | undefined;
+	}
+>();
+
+/** Deck context shared by the Zoom tiles and the five native renderers. */
+export function zoomTargetInfo(
+	slide: PptxSlide | undefined,
+	canvas?: CanvasSize,
+): SummaryZoomTargetInfo | undefined {
+	if (!slide) return undefined;
+	return {
+		slideNumber: slide.slideNumber,
+		...(slide.sectionName ? { sectionName: slide.sectionName } : {}),
+		...(slide.backgroundColor ? { backgroundColor: slide.backgroundColor } : {}),
+		...(canvas
+			? { livePreview: (transparent: boolean) => livePreview(slide, canvas, transparent) }
+			: {}),
+	};
+}
+
+function livePreview(
+	slide: PptxSlide,
+	canvas: CanvasSize,
+	transparent: boolean,
+): string | undefined {
+	const { width, height } = canvas;
+	if (!(width > 0 && height > 0)) return undefined;
+	let previews = livePreviews.get(slide);
+	if (!previews || previews.width !== width || previews.height !== height) {
+		previews = { width, height };
+		livePreviews.set(slide, previews);
+	}
+	const kind = transparent ? 'transparent' : 'opaque';
+	if (Object.hasOwn(previews, kind)) return previews[kind];
+	try {
+		const svg = SvgExporter.exportSlide(slide, width, height, {
+			transparentBackground: transparent,
+		});
+		previews[kind] = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+	} catch {
+		previews[kind] = undefined;
+	}
+	return previews[kind];
+}
+
+/** Custom covers are immutable. Slide previews follow the current edited deck. */
+export function zoomPreviewSource(
+	zoom: Pick<ZoomPptxElement, 'zoomImageType' | 'zoomShowBackground' | 'imageData'>,
+	target: SummaryZoomTargetInfo | undefined,
+): string | undefined {
+	return (
+		(zoom.zoomImageType === 'preview'
+			? target?.livePreview?.(zoom.zoomShowBackground === false)
+			: undefined) ?? zoom.imageData
+	);
+}
 
 export interface SummaryZoomTileView {
 	key: string;
@@ -75,8 +141,11 @@ export function buildSummaryZoomView(
 			slideLabel: translate
 				? translate('pptx.zoom.slideNumber', { number: String(slideNumber) })
 				: `Slide ${slideNumber}`,
-			imageSrc: target.imageData,
-			backgroundColor: targetInfo?.backgroundColor ?? '#f0f0f0',
+			imageSrc: zoomPreviewSource(target, targetInfo),
+			backgroundColor:
+				target.zoomShowBackground === false
+					? 'transparent'
+					: (targetInfo?.backgroundColor ?? '#f0f0f0'),
 			style:
 				layout === 'fixed'
 					? fixedTileStyle(element, target.x, target.y, target.width, target.height)

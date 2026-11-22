@@ -262,13 +262,19 @@ export function applySections(
 	const effectiveSections = sections.map((section) => {
 		if (!remap) return section;
 		const pending = section.slideIds.some((id) => !/^\d+$/.test(id));
-		const current = pending ? remap.sldIdsBySection?.get(section.id) : undefined;
-		if (current) return { ...section, slideIds: current };
+		const current = remap.sldIdsBySection?.get(section.id);
+		if (pending && current) return { ...section, slideIds: current };
 		if (!remap.changed) return section;
-		return {
-			...section,
-			slideIds: remapReferenceList(section.slideIds, remap.sldIdByOldSldId, remap.removedSldIds),
-		};
+		const slideIds = remapReferenceList(
+			section.slideIds,
+			remap.sldIdByOldSldId,
+			remap.removedSldIds,
+		);
+		const members = new Set(slideIds);
+		// Preserve the explicitly supplied membership. When it agrees with the live section,
+		// save its slide list in deck order so the first member is the same before and after open.
+		const ordered = current?.length === members.size && current.every((id) => members.has(id));
+		return { ...section, slideIds: ordered ? current : slideIds };
 	});
 	replaceChildren(list, 'section', effectiveSections.map(updateSection), 'p14:section');
 	location.parent[location.key] = list;

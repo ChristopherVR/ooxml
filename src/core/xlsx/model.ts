@@ -611,6 +611,8 @@ export interface ImageObject {
 	/** Package part of the image (`xl/media/image1.png`). */
 	partName: string;
 	contentType: string;
+	/** Original SVG, with partName pointing at the compatible raster fallback. */
+	svgPartName?: string;
 	name?: string;
 	description?: string;
 	crop?: import('../drawingml/picture-crop').DrawingPictureCrop;

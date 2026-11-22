@@ -22,4 +22,5 @@ export const WORD_ART_STYLES: readonly WordArtStyle[] = [
 		{ fill, shadow: dark },
 		{ fill: 'FFFFFF', outline: dark, shadow: dark },
 	]),
+	...accents.map(([fill, , end]) => ({ fill, gradient: { end, angle: 16200000 } })),
 ];

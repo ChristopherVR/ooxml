@@ -24,6 +24,7 @@ import {
 	loadDeckWebfontOutlines,
 	loadPresentationDeck,
 	makeSlideId,
+	remapZoomTargets,
 	mayLeaveSlideShow,
 	openPptxFile,
 	parsePresentationSessionId,
@@ -1379,13 +1380,14 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		if (!this.canMutate()) {
 			return;
 		}
-		const next = [...this.store.get().slides];
+		const slides = this.store.get().slides;
+		const next = [...slides];
 		if (!next[fromIndex] || toIndex < 0 || toIndex >= next.length || fromIndex === toIndex) {
 			return;
 		}
 		const [slide] = next.splice(fromIndex, 1);
 		next.splice(toIndex, 0, slide);
-		this.editor.commitSlides(this.renumber(next), toIndex);
+		this.editor.commitSlides(this.renumber(remapZoomTargets(slides, next)), toIndex);
 	};
 	toggleHideSlides = (indexes: number[]): void => {
 		if (!this.canMutate()) {

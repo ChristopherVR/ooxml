@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSymbolEncodedFont, symbolCharToUnicode, symbolTextToUnicode } from './symbol-fonts';
+import {
+	isSymbolEncodedFont,
+	officeSymbolFontGlyphs,
+	symbolCharToUnicode,
+	symbolTextToUnicode,
+} from './symbol-fonts';
 
 describe('symbol-encoded fonts', () => {
 	it('recognises the Office symbol fonts by family, ignoring case, quotes and fallbacks', () => {
@@ -40,19 +45,17 @@ describe('symbol-encoded fonts', () => {
 	});
 
 	it('returns undefined for unknown glyphs and ordinary fonts', () => {
-		expect(symbolCharToUnicode('Wingdings', 'K')).toBeUndefined();
+		expect(symbolCharToUnicode('Wingdings', '\u007f')).toBeUndefined();
 		expect(symbolCharToUnicode('Arial', '§')).toBeUndefined();
-		expect(symbolTextToUnicode('Wingdings', 'nK')).toBeUndefined();
-		expect(symbolTextToUnicode('Wingdings 2', 'n')).toBeUndefined();
+		expect(symbolTextToUnicode('Wingdings', 'n\u007f')).toBeUndefined();
 		expect(symbolTextToUnicode('Wingdings', 'n n')).toBe('■ ■');
 	});
 
-	it('substitutes one UTF-16 unit per glyph so run offsets stay valid', () => {
-		for (const family of ['Symbol', 'Wingdings']) {
-			for (let code = 0x20; code <= 0xff; code++) {
-				const mapped = symbolCharToUnicode(family, String.fromCharCode(code));
-				if (mapped !== undefined) expect(mapped.length, `${family} ${code}`).toBe(1);
-			}
-		}
+	it('maps Webdings and Wingdings 2 and 3 from their byte or private-use code', () => {
+		expect(symbolCharToUnicode('Webdings', '!')).toBe('\u{1F577}');
+		expect(symbolCharToUnicode('Wingdings 2', '\uF021')).toBe('\u{1F58A}');
+		expect(symbolCharToUnicode('Wingdings 3', '!')).toBe('\u2B60');
+		expect(officeSymbolFontGlyphs('Wingdings 2')).toContain('\u{1F58A}');
+		expect(officeSymbolFontGlyphs('Arial')).toEqual([]);
 	});
 });

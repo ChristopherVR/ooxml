@@ -1,3 +1,4 @@
+import type { ZoomPptxElement } from 'ooxml-core/pptx';
 import { SvgExporter } from 'ooxml-core/pptx/converter';
 import { prepareSummaryZoom } from 'ooxml-core/pptx/editor/render/summary-zoom-operations';
 import type { OfficeUiCheckbox } from '../../form/checkbox';
@@ -50,6 +51,7 @@ export function pickRibbonZoom(
 		keepLabel.append(keepUnused, ` ${name}`);
 		body.append(keepLabel);
 	}
+	const settings = zoomInsertSettings(body, kind, text);
 	const sectionStarts = new Set<string>();
 	const radioGroup = generateElementId();
 	const entries = options.map((choice) => {
@@ -85,16 +87,23 @@ export function pickRibbonZoom(
 			body,
 			() => {
 				const selected = entries.filter(({ input }) => input.checked);
-				if (committing || !selected.length) return;
+				if (committing || !selected.length || !settings.duration.checkValidity()) return;
 				committing = true;
 				for (const { input } of entries) input.disabled = true;
 				keepUnused.disabled = true;
+				const { cover, ...format } = settings.read();
+				settings.disable();
 				sync();
 				void Promise.all(
 					selected.map(async ({ choice, name }) => {
 						const { width, height } = target.canvasSize;
 						const ratio = Math.min(1, 360 / Math.max(width, height));
-						const svg = SvgExporter.exportSlide(choice.slide, width, height);
+						if (cover) {
+							return { ...choice, title: name, preview: await zoomCover(doc, cover) };
+						}
+						const svg = SvgExporter.exportSlide(choice.slide, width, height, {
+							transparentBackground: format.zoomShowBackground === false,
+						});
 						const preview = await renderLocalSvg(
 							doc,
 							svg,
@@ -131,6 +140,8 @@ export function pickRibbonZoom(
 									heading,
 								);
 								if (zoom && live.insertSummary) {
+									Object.assign(zoom, format);
+									for (const tile of zoom.summaryTargets ?? []) Object.assign(tile, format);
 									const { width, height } = live.canvasSize;
 									prepared.result.slides[prepared.result.slideIndex]?.elements.push(
 										{
@@ -167,7 +178,8 @@ export function pickRibbonZoom(
 							return choice ? [{ ...preview, ...choice }] : [];
 						});
 						if (resolved.length === previews.length) {
-							resolve(createRibbonZoom(kind, resolved, live.canvasSize, heading));
+							const zoom = createRibbonZoom(kind, resolved, live.canvasSize, heading);
+							resolve(zoom && { ...zoom, ...format });
 						}
 						frame.dialog.close();
 					})
@@ -188,10 +200,86 @@ export function pickRibbonZoom(
 				text('pptx.common.close', 'Close'),
 				text('pptx.common.cancel', 'Cancel'),
 				text('pptx.common.insert', 'Insert'),
-				!committing && entries.some(({ input }) => input.checked),
+				!committing &&
+					settings.duration.checkValidity() &&
+					entries.some(({ input }) => input.checked),
 			);
 		list.addEventListener('change', sync);
+		settings.duration.addEventListener('input', sync);
 		sync();
 		frame.dialog.show();
 	});
+}
+
+function zoomInsertSettings(body: HTMLElement, kind: RibbonZoom, text: InsertText) {
+	const doc = body.ownerDocument;
+	const options = doc.createElement('fieldset');
+	const heading = doc.createElement('legend');
+	heading.textContent = text('pptx.graphic.zoomOptions', 'Zoom Options');
+	options.append(heading);
+	const input = (type: string, label: string) => {
+		const control = doc.createElement('input');
+		control.type = type;
+		const name = doc.createElement('label');
+		name.style.display = 'block';
+		name.append(control, ` ${label}`);
+		options.append(name);
+		return control;
+	};
+	const back = input('checkbox', text('pptx.graphic.zoomReturn', 'Return to Zoom'));
+	back.checked = kind !== 'slide';
+	const transparent = input(
+		'checkbox',
+		text('pptx.graphic.zoomTransparent', 'Transparent background'),
+	);
+	const duration = input('number', text('pptx.transition.duration', 'Duration (ms)'));
+	duration.min = '0';
+	duration.max = '60000';
+	duration.step = '1';
+	duration.style.width = '9ch';
+	const thumbnail =
+		kind === 'summary'
+			? undefined
+			: input('file', text('pptx.graphic.zoomCoverImage', 'Cover image'));
+	if (thumbnail) {
+		thumbnail.accept = 'image/png,image/jpeg,image/webp,image/gif';
+		thumbnail.style.maxWidth = '100%';
+	}
+	body.append(options);
+	return {
+		duration,
+		disable: () => {
+			options.disabled = true;
+		},
+		read: (): Pick<
+			ZoomPptxElement,
+			'returnToParent' | 'transitionDurationMs' | 'zoomShowBackground' | 'zoomImageType'
+		> & { cover?: File } => {
+			const cover = thumbnail?.files?.[0];
+			return {
+				returnToParent: back.checked,
+				transitionDurationMs: duration.value ? duration.valueAsNumber : undefined,
+				zoomImageType: cover ? 'cover' : 'preview',
+				zoomShowBackground: !transparent.checked,
+				...(cover ? { cover } : {}),
+			};
+		},
+	};
+}
+
+async function zoomCover(doc: Document, file: File): Promise<string> {
+	if (file.size > 16 * 1024 * 1024) throw new Error('The Zoom cover image is too large.');
+	const bitmap = await createImageBitmap(file);
+	try {
+		const scale = Math.min(1, 360 / Math.max(bitmap.width, bitmap.height));
+		const canvas = doc.createElement('canvas');
+		canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+		canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+		const context = canvas.getContext('2d');
+		if (!context) throw new Error('Could not render the Zoom cover image.');
+		context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+		return canvas.toDataURL('image/png');
+	} finally {
+		bitmap.close();
+	}
 }

@@ -1,4 +1,10 @@
 import { html } from 'lit';
+import {
+	OFFICE_SYMBOL_FONTS,
+	officeSymbolFontGlyphs,
+	parseOfficeSymbolCode,
+} from 'ooxml-core/text';
+import { defineDialog, type OfficeUiDialog } from '../dialog/dialog';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { definer, emit, present } from '../registry';
 import css from './symbol-picker.css?raw';
@@ -55,22 +61,7 @@ export const OFFICE_SYMBOLS: readonly string[] = [
 	'½',
 ];
 
-/** A typed code point (`00A9`, `U+00A9`) as its character; undefined when not printable text. */
-export function parseOfficeSymbolCode(text: string): string | undefined {
-	const match = /^\s*(?:u\+|0x)?([0-9a-f]{1,6})\s*$/i.exec(text);
-	if (!match) return undefined;
-	const code = parseInt(match[1]!, 16);
-	if (
-		code < 0x20 ||
-		(code >= 0x7f && code <= 0x9f) ||
-		(code >= 0xd800 && code <= 0xdfff) ||
-		(code & 0xfffe) === 0xfffe ||
-		(code >= 0xfdd0 && code <= 0xfdef) ||
-		code > 0x10ffff
-	)
-		return undefined;
-	return String.fromCodePoint(code);
-}
+export { parseOfficeSymbolCode } from 'ooxml-core/text';
 const codeOf = (symbol: string) =>
 	`U+${symbol.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`;
 
@@ -85,20 +76,26 @@ export class OfficeUiSymbolPicker extends OfficeElement {
 	static override properties = {
 		symbols: { attribute: false },
 		label: { type: String },
+		fontLabel: { type: String },
 		disabled: flag,
 		code: { state: true },
+		font: { state: true },
 	};
 	declare symbols: readonly string[];
 	declare label: string | null;
+	declare fontLabel: string | null;
 	declare disabled: boolean;
 	declare code: string;
+	declare font: string;
 
 	constructor() {
 		super();
 		this.symbols = OFFICE_SYMBOLS;
 		this.label = null;
+		this.fontLabel = null;
 		this.disabled = false;
 		this.code = '';
+		this.font = '';
 	}
 
 	private pick(symbol: string): void {
@@ -124,8 +121,18 @@ export class OfficeUiSymbolPicker extends OfficeElement {
 	protected override render() {
 		const disabled = present(this.disabled);
 		const typed = parseOfficeSymbolCode(this.code);
-		return html`<div class="grid" part="grid"
-				>${(this.symbols ?? []).map(
+		const symbols = this.font ? officeSymbolFontGlyphs(this.font) : (this.symbols ?? []);
+		return html`<select
+				aria-label=${this.fontLabel ?? 'Font'}
+				?disabled=${disabled}
+				@change=${(event: Event) => {
+					if (event.target instanceof HTMLSelectElement) this.font = event.target.value;
+				}}
+			>
+				<option value="">Unicode</option>
+				${OFFICE_SYMBOL_FONTS.map((font) => html`<option value=${font}>${font}</option>`)} </select
+			><div class="grid" part="grid"
+				>${symbols.map(
 					(symbol) =>
 						html`<button
 							type="button"
@@ -165,3 +172,33 @@ export class OfficeUiSymbolPicker extends OfficeElement {
 }
 
 export const defineSymbolPicker = definer('office-ui-symbol-picker', () => OfficeUiSymbolPicker);
+
+/** Opens the common symbol gallery without changing the document selection. */
+export function pickOfficeSymbol(
+	host: HTMLElement,
+	labels: { heading: string; close: string; font?: string },
+): Promise<string | undefined> {
+	const doc = host.ownerDocument;
+	const registry = doc.defaultView?.customElements;
+	defineDialog(registry);
+	defineSymbolPicker(registry);
+	const dialog = doc.createElement('office-ui-dialog') as OfficeUiDialog;
+	dialog.heading = labels.heading;
+	dialog.closeLabel = labels.close;
+	const picker = doc.createElement('office-ui-symbol-picker') as OfficeUiSymbolPicker;
+	picker.label = labels.heading;
+	picker.fontLabel = labels.font ?? null;
+	dialog.append(picker);
+	return new Promise((resolve) => {
+		picker.addEventListener('office-symbol-pick', (event) => {
+			resolve((event as CustomEvent<{ symbol: string }>).detail.symbol);
+			dialog.close();
+		});
+		dialog.addEventListener('office-dialog-close', () => {
+			resolve(undefined);
+			queueMicrotask(() => dialog.remove());
+		});
+		host.append(dialog);
+		dialog.show();
+	});
+}

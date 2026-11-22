@@ -1,3 +1,4 @@
+import { zoomPreviewSource } from 'ooxml-ui/pptx';
 import type { PptxElement, ZoomPptxElement } from 'pptx-viewer-core';
 import { isZoomElement } from 'pptx-viewer-core';
 
@@ -73,7 +74,7 @@ export function buildZoomViewModel(
 	translate?: ZoomTranslate,
 ): ZoomViewModel {
 	const zoom = isZoomElement(element) ? element : undefined;
-	const previewSrc = zoom?.imageData;
+	const previewSrc = zoom ? zoomPreviewSource(zoom, targetInfo) : undefined;
 	const targetSlideIndex = zoom?.targetSlideIndex ?? 0;
 	const zoomType: 'slide' | 'section' | 'summary' = zoom?.zoomType ?? 'slide';
 	const targetSectionId = zoom?.targetSectionId;

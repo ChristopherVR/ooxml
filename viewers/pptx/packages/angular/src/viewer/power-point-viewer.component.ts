@@ -3037,7 +3037,7 @@ export class PowerPointViewerComponent
 		// thumbnail can resolve its target slide's background / number / section
 		// name (mirrors React's ZoomSlideThumbnail).
 		effect(() => {
-			this.zoomTarget.setSlides(this.mergedSlides());
+			this.zoomTarget.setSlides(this.mergedSlides(), this.loader.canvasSize());
 		});
 
 		// Connect / disconnect real-time collaboration when the host config changes.

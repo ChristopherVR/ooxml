@@ -3,6 +3,8 @@ import {
 	WORD_ART_OUTLINE_EMU,
 	WORD_ART_SIZE_PT,
 	wordArtRgb,
+	readWordArtFill,
+	wordArtFillElement,
 	applyWordArtWarp,
 	readWordArtWarp,
 	wordArtShadowElement,
@@ -62,16 +64,16 @@ export function readWordArtShape(body: XmlElement | undefined): ShapeNode['wordA
 	const props = a(run, 'rPr');
 	const rgb = (parent: XmlElement | undefined) =>
 		wordArtRgb(a(a(parent, 'solidFill'), 'srgbClr')?.getAttribute('val'));
-	const fill = rgb(props);
+	const paint = readWordArtFill(props, NS.a);
 	const line = a(props, 'ln');
 	const outline = rgb(line);
 	const shadow = wordArtRgb(
 		a(a(a(props, 'effectLst'), 'outerShdw'), 'srgbClr')?.getAttribute('val'),
 	);
 	const warp = readWordArtWarp(bodyProperties);
-	return fill && (!line || outline)
+	return paint && (!line || outline)
 		? {
-				fill,
+				...paint,
 				...(outline ? { outline } : {}),
 				...(shadow ? { shadow } : {}),
 				...(warp ? { warp } : {}),
@@ -80,13 +82,13 @@ export function readWordArtShape(body: XmlElement | undefined): ShapeNode['wordA
 }
 
 export function wordArtShapeXml(node: ShapeNode, id: number): string {
-	const fill = `<a:solidFill><a:srgbClr val="${wordArtRgb(node.wordArt?.fill) ?? '26374A'}"/></a:solidFill>`;
 	const outline = wordArtRgb(node.wordArt?.outline);
 	const stroke = outline
 		? `<a:ln w="${WORD_ART_OUTLINE_EMU}"><a:solidFill><a:srgbClr val="${outline}"/></a:solidFill></a:ln>`
 		: '';
 	const { width, height } = node.frame;
 	const doc = parseXml(`<a:bodyPr xmlns:a="${NS.a}" fromWordArt="1" anchor="ctr"/>`);
+	const fill = buildXml(wordArtFillElement(doc, node.wordArt ?? { fill: '26374A' }, NS.a, 'a'));
 	applyWordArtWarp(doc.documentElement!, node.wordArt?.warp);
 	const shadow = wordArtRgb(node.wordArt?.shadow);
 	const effect = shadow
@@ -107,13 +109,13 @@ export function patchWordArtShape(xml: string, node: ShapeNode): string {
 	const run = first(first(body, 'p', NS.a), 'r', NS.a);
 	const text = first(run, 't', NS.a);
 	const props = first(run, 'rPr', NS.a);
-	const color = first(first(props, 'solidFill', NS.a), 'srgbClr', NS.a);
+	const fill = first(props, 'solidFill', NS.a) ?? first(props, 'gradFill', NS.a);
 	const line = first(props, 'ln', NS.a);
-	if (!text || !props || !color || !node.wordArt) return xml;
+	if (!text || !props || !fill || !node.wordArt) return xml;
 	const bodyProperties = first(body, 'bodyPr', NS.a);
 	if (bodyProperties) applyWordArtWarp(bodyProperties, node.wordArt.warp);
 	text.textContent = node.text?.text ?? '';
-	color.setAttribute('val', node.wordArt.fill);
+	props.replaceChild(wordArtFillElement(doc, node.wordArt, NS.a, 'a'), fill);
 	const outline = node.wordArt.outline;
 	if (outline) {
 		const next = line ?? doc.createElementNS(NS.a, 'a:ln');

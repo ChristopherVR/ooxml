@@ -10,18 +10,35 @@
  *
  * @module render/inspector/element-geometry-fields
  */
-import type { PptxElement } from 'ooxml-core/pptx';
+import type { PptxElement, SummaryZoomTarget, ZoomPptxElement } from 'ooxml-core/pptx';
 
 import type { InspectorFieldDescriptor, InspectorSectionDescriptor } from './inspector-field-model';
 
 /** The frame the Size & Position fields read. */
 export type ElementGeometryTarget = Pick<PptxElement, 'x' | 'y' | 'width' | 'height'> & {
 	rotation?: number | undefined;
+	type?: PptxElement['type'] | undefined;
+	zoomType?: ZoomPptxElement['zoomType'] | undefined;
+	returnToParent?: boolean | undefined;
+	zoomShowBackground?: boolean | undefined;
+	transitionDurationMs?: number | undefined;
+	summaryTargets?: SummaryZoomTarget[] | undefined;
 };
 
 /** The patch a Size & Position field produces. */
 export type ElementGeometryPatch = Partial<
-	Pick<PptxElement, 'x' | 'y' | 'width' | 'height' | 'rotation'>
+	Pick<
+		ElementGeometryTarget,
+		| 'x'
+		| 'y'
+		| 'width'
+		| 'height'
+		| 'rotation'
+		| 'returnToParent'
+		| 'zoomShowBackground'
+		| 'transitionDurationMs'
+		| 'summaryTargets'
+	>
 >;
 
 export type ElementGeometrySection = InspectorSectionDescriptor<
@@ -67,3 +84,67 @@ export const ELEMENT_GEOMETRY_SECTION: ElementGeometrySection = {
 export const ELEMENT_GEOMETRY_SECTIONS: readonly ElementGeometrySection[] = [
 	ELEMENT_GEOMETRY_SECTION,
 ];
+
+type ZoomOptions = Pick<
+	ZoomPptxElement,
+	'returnToParent' | 'zoomShowBackground' | 'transitionDurationMs'
+>;
+const ZOOM_OPTION_FIELDS: readonly InspectorFieldDescriptor<ZoomOptions, ZoomOptions>[] = [
+	{
+		id: 'zoomReturn',
+		kind: 'toggle',
+		labelKey: 'pptx.graphic.zoomReturn',
+		read: (zoom) => zoom.returnToParent !== false,
+		write: (_zoom, value) => ({ returnToParent: value === true }),
+	},
+	{
+		id: 'zoomTransparent',
+		kind: 'toggle',
+		labelKey: 'pptx.graphic.zoomTransparent',
+		read: (zoom) => zoom.zoomShowBackground === false,
+		write: (_zoom, value) => ({ zoomShowBackground: value !== true }),
+	},
+	{
+		id: 'zoomDuration',
+		kind: 'number',
+		labelKey: 'pptx.transition.duration',
+		min: 0,
+		max: 60000,
+		decimals: 0,
+		read: (zoom) => zoom.transitionDurationMs ?? 0,
+		write: (_zoom, value) => ({ transitionDurationMs: Number(value) }),
+	},
+];
+export const ZOOM_OPTIONS_SECTION: ElementGeometrySection = {
+	id: 'zoomOptions',
+	labelKey: 'pptx.graphic.zoomOptions',
+	fields: ZOOM_OPTION_FIELDS,
+};
+const ZOOM_GEOMETRY_SECTIONS: readonly ElementGeometrySection[] = [
+	ELEMENT_GEOMETRY_SECTION,
+	ZOOM_OPTIONS_SECTION,
+];
+
+function summaryTileSections(targets: readonly SummaryZoomTarget[]): ElementGeometrySection[] {
+	return targets.map((target, index): ElementGeometrySection => ({
+		id: `zoomTile-${index}`,
+		label: target.title?.trim() || `#${target.targetSlideIndex + 1}`,
+		fields: ZOOM_OPTION_FIELDS.map((field): GeometryField => ({
+			...field,
+			read: (zoom) => field.read(zoom.summaryTargets?.[index] ?? {}),
+			write: (zoom, value) => ({
+				summaryTargets: zoom.summaryTargets?.map((tile, tileIndex) =>
+					tileIndex === index ? { ...tile, ...field.write(tile, value) } : tile,
+				),
+			}),
+		})),
+	}));
+}
+
+/** Playback and appearance settings for a Slide Zoom, Section Zoom or individual Summary tile. */
+export function sizePositionSections(element: ElementGeometryTarget | undefined) {
+	if (element?.type !== 'zoom') return ELEMENT_GEOMETRY_SECTIONS;
+	return element.zoomType === 'summary'
+		? [...ELEMENT_GEOMETRY_SECTIONS, ...summaryTileSections(element.summaryTargets ?? [])]
+		: ZOOM_GEOMETRY_SECTIONS;
+}

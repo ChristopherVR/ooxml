@@ -69,6 +69,7 @@ export function renderBody(options: RenderBodyOptions): React.ReactNode {
 		isStaticSurface,
 		handleMediaPlayStateChange,
 		allSlides,
+		zoomCanvasSize,
 		onZoomClick,
 		sourceSlideIndex,
 		tableStyleContext,
@@ -96,6 +97,7 @@ export function renderBody(options: RenderBodyOptions): React.ReactNode {
 			<ZoomElementRenderer
 				element={el as ZoomPptxElement}
 				slides={allSlides as PptxSlide[] | undefined}
+				canvasSize={zoomCanvasSize}
 				isPresentationMode={isPresentationPassive}
 				onZoomClick={onZoomClick}
 				sourceSlideIndex={sourceSlideIndex}

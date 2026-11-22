@@ -12,7 +12,7 @@ import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
 import { chooseCommand, openMenuOn, stageElements } from './support/context-menu';
-import { inspector, loadDeck, SAMPLE_DECK, selectElement } from './support/deck';
+import { inspector, loadDeck, SAMPLE_DECK, selectElement, slideStage } from './support/deck';
 import { formatSection } from './support/format-pane';
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -52,6 +52,67 @@ test('the Properties tab follows the selection with collapsible sections', async
 	await selectElement(page, canvasShape(page, 'Q2 2026'));
 	await expect(sections).toHaveAttribute('data-pptx-format-sections', category);
 	await expect(formatSection(page, 'sizePosition')).toHaveAttribute('open', '');
+});
+
+test('the Format pane edits each Summary Zoom tile independently', async ({ page }) => {
+	await loadDeck(page);
+	await page.evaluate(() => {
+		window.__pptxViewer.addElement({
+			type: 'zoom',
+			id: 'summary-format-probe',
+			zoomType: 'summary',
+			targetSlideIndex: 1,
+			x: 250,
+			y: 260,
+			width: 400,
+			height: 100,
+			summaryTargets: [
+				{
+					title: 'Introduction',
+					sectionId: 'intro',
+					targetSlideIndex: 1,
+					x: 250,
+					y: 260,
+					width: 200,
+					height: 100,
+				},
+				{
+					title: 'Details',
+					sectionId: 'details',
+					targetSlideIndex: 2,
+					x: 450,
+					y: 260,
+					width: 200,
+					height: 100,
+				},
+			],
+		});
+	});
+
+	const zoom = slideStage(page).locator('[data-zoom-type="summary"]');
+	await expect(zoom).toBeVisible();
+	await selectElement(page, zoom);
+	const size = formatSection(page, 'sizePosition');
+	await expect(size).toBeVisible();
+	if ((await size.getAttribute('open')) === null) await size.locator('summary').click();
+	await expect(size.getByText('Introduction', { exact: true })).toBeVisible();
+	await expect(size.getByText('Details', { exact: true })).toBeVisible();
+	const duration = size.getByRole('spinbutton', { name: 'Duration (ms)', exact: true }).nth(1);
+	await duration.fill('750');
+	await duration.press('Tab');
+
+	await expect
+		.poll(() =>
+			page.evaluate(() => {
+				const element = window.__pptxViewer
+					.getElements(0)
+					.find((candidate) => candidate.type === 'zoom' && candidate.zoomType === 'summary');
+				return element?.type === 'zoom'
+					? element.summaryTargets?.map((tile) => tile.transitionDurationMs ?? 0)
+					: null;
+			}),
+		)
+		.toEqual([0, 750]);
 });
 
 test('Format Shape reveals and focuses the Fill section', async ({ page }) => {

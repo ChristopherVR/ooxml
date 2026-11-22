@@ -9,7 +9,7 @@
 	import type { PptxElement } from 'pptx-viewer-core';
 	import type { ElementGeometryPatch } from 'ooxml-ui/pptx';
 	import {
-		ELEMENT_GEOMETRY_SECTIONS,
+		sizePositionSections,
 		elementLockTogglePatch,
 		isElementLocked,
 	} from 'ooxml-ui/pptx';
@@ -68,7 +68,7 @@
 {/if}
 {#if part !== 'lock'}
 	<div data-pptx-inspector-section={part === 'geometry' ? 'transform' : undefined}>
-		<InspectorFields sections={ELEMENT_GEOMETRY_SECTIONS} target={el} onpatch={commit} />
+		<InspectorFields sections={sizePositionSections(el)} target={el} onpatch={commit} />
 	</div>
 {/if}
 

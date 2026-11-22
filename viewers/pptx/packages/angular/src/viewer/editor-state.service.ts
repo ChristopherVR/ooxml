@@ -31,6 +31,7 @@ import {
 	makeCloneId,
 	rerouteConnectorsForMovedElements,
 	slideSpaceElement,
+	remapZoomTargets,
 	templateSchemeFromTheme,
 } from 'ooxml-ui/pptx';
 import type {
@@ -1081,7 +1082,7 @@ export class EditorStateService {
 		const next = [...slides];
 		const [moved] = next.splice(from, 1);
 		next.splice(to, 0, moved);
-		this.slides.set(this.renumber(next));
+		this.slides.set(this.renumber(remapZoomTargets(slides, next)));
 		this.dirty.set(true);
 	}
 

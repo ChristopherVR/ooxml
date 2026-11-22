@@ -37,8 +37,10 @@ label {
 	gap: var(--office-space-1);
 	font-size: var(--office-font-size-sm);
 }
+select,
 input {
-	width: 9ch;
+	width: fit-content;
+	max-width: 100%;
 	height: var(--office-field-height);
 	padding: 0 var(--office-space-2);
 	border: var(--office-border-width) solid var(--office-field-border);
@@ -47,6 +49,10 @@ input {
 	color: var(--office-field-foreground);
 	font: inherit;
 }
+input {
+	width: 9ch;
+}
+select:focus,
 input:focus {
 	border-color: var(--office-field-border-focus);
 	outline: none;
@@ -69,6 +75,7 @@ input:focus {
 	cursor: pointer;
 }
 button:disabled,
+select:disabled,
 input:disabled {
 	opacity: 0.5;
 	cursor: default;

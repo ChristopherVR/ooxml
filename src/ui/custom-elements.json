@@ -5020,6 +5020,9 @@
 							"name": "disabled"
 						},
 						{
+							"name": "fontlabel"
+						},
+						{
 							"name": "label"
 						}
 					],
@@ -5033,6 +5036,17 @@
 							"name": "disabled",
 							"type": {
 								"text": "boolean"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "font"
+						},
+						{
+							"kind": "field",
+							"name": "fontLabel",
+							"type": {
+								"text": "string"
 							}
 						},
 						{

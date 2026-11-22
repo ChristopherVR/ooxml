@@ -1,3 +1,4 @@
+import { svgPictureRelationship } from '../../drawingml/svg-picture';
 import { parsePictureLayout } from '../../drawingml/picture-layout';
 import { parsePictureEffects } from '../../drawingml/picture-effects';
 import { parsePictureCrop } from '../../drawingml/picture-crop';
@@ -128,6 +129,11 @@ export function parseDrawing(
 				partName: target,
 				contentType: source.contentType(target) ?? 'application/octet-stream',
 			};
+			const svgId = svgPictureRelationship(blip);
+			const svgRel = svgId ? rels.get(svgId) : undefined;
+			const svgPart = svgRel ? source.target(partName, svgRel) : undefined;
+			if (svgPart && source.contentType(svgPart) === 'image/svg+xml' && source.has(svgPart))
+				image.svgPartName = svgPart;
 			if (name) image.name = name;
 			const descr = att(cNvPr, 'descr');
 			if (descr) image.description = descr;

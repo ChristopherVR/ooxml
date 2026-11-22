@@ -9,7 +9,13 @@ import {
 	shapeFillChange,
 	strokeColorChange,
 } from 'ooxml-ui/pptx';
-import type { Guide, InsertChartKind, InsertChartOptions, ShapePresetType } from 'ooxml-ui/pptx';
+import type {
+	ElementGeometryPatch,
+	Guide,
+	InsertChartKind,
+	InsertChartOptions,
+	ShapePresetType,
+} from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per action); merging them isn't a
    style choice here. */
@@ -73,13 +79,7 @@ import { createTransitionActions } from './editor-transition-actions';
 import { isDeckViewToggleOption, patchViewPropertiesForToggle } from './editor-view-preferences';
 
 /** A geometry patch from the inspector (all fields optional). */
-export interface GeometryPatch {
-	x?: number;
-	y?: number;
-	width?: number;
-	height?: number;
-	rotation?: number;
-}
+export type GeometryPatch = ElementGeometryPatch;
 
 /**
  * The full set of formatting / insert / arrange / clipboard / slide actions
@@ -276,7 +276,7 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 		pushRecentColor: (hex) => recordRecentColor(store, hex),
 
 		setGeometry(patch) {
-			applyToSelected(() => {
+			applyToSelected((element) => {
 				const next: Partial<PptxElement> = {};
 				if (patch.x !== undefined && Number.isFinite(patch.x)) {
 					next.x = Math.round(patch.x);
@@ -292,6 +292,21 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 				}
 				if (patch.rotation !== undefined && Number.isFinite(patch.rotation)) {
 					next.rotation = patch.rotation;
+				}
+				if (element.type === 'zoom' && element.zoomType === 'summary' && patch.summaryTargets) {
+					return { ...next, summaryTargets: patch.summaryTargets };
+				}
+				if (element.type === 'zoom' && element.zoomType !== 'summary') {
+					return {
+						...next,
+						...(patch.returnToParent !== undefined ? { returnToParent: patch.returnToParent } : {}),
+						...(patch.zoomShowBackground !== undefined
+							? { zoomShowBackground: patch.zoomShowBackground }
+							: {}),
+						...(patch.transitionDurationMs !== undefined
+							? { transitionDurationMs: patch.transitionDurationMs }
+							: {}),
+					};
 				}
 				return next;
 			});
