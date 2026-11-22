@@ -7,7 +7,8 @@
 	flex: none;
 	flex-direction: column;
 	box-sizing: border-box;
-	width: 156px;
+	width: min(156px, 25%);
+	container: page-thumbnails / inline-size;
 	min-height: 0;
 	border-right: 1px solid var(--line);
 	background: var(--surface);
@@ -25,6 +26,11 @@
 	font-size: 11px;
 	font-weight: 600;
 }
+.dve-pages-head > span {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
 .dve-pages-close {
 	border: 0;
 	border-radius: var(--dve-radius, var(--office-radius, 4px));
@@ -38,6 +44,8 @@
 	background: var(--word-soft);
 }
 .dve-pages-message {
+	overflow: auto;
+	overflow-wrap: anywhere;
 	margin: 0;
 	padding: 12px 10px;
 	color: var(--muted);
@@ -53,6 +61,7 @@
 	flex: 1;
 	min-height: 0;
 	overflow-y: auto;
+	scrollbar-width: thin;
 	padding: 10px 0 16px;
 	display: flex;
 	flex-direction: column;
@@ -97,6 +106,19 @@
 .dve-page-thumb[aria-selected='true'] .dve-page-thumb-number {
 	color: var(--ink);
 	font-weight: 600;
+}
+@container page-thumbnails (width < 144px) {
+	.dve-page-thumb {
+		padding: 2px;
+	}
+	.dve-page-thumb-sheet {
+		zoom: 0.4;
+	}
+}
+@container page-thumbnails (100px <= width < 144px) {
+	.dve-page-thumb-sheet {
+		zoom: 0.65;
+	}
 }
 @media print {
 	.dve-pages-rail {

@@ -78,7 +78,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		const pop = doc.createElement('div');
 		pop.className = 'ribbon-popover ribbon-overflow-panel';
 		const content = doc.createElement('div');
-		content.className = 'ribbon-group ribbon-overflow-content';
+		content.className = `${group.className} ribbon-overflow-content`;
 		content.dataset.label = group.dataset.label ?? '';
 		content.dataset.caption = group.dataset.caption ?? '';
 		content.setAttribute('role', 'group');
@@ -92,6 +92,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		pop.style.top = `${box.bottom + 2}px`;
 		const width = doc.defaultView?.innerWidth ?? 1024;
 		pop.style.left = `${Math.max(4, Math.min(box.left, width - pop.offsetWidth - 8))}px`;
+		syncScrollMore(pop, options.moreLabel);
 		button.setAttribute('aria-expanded', 'true');
 		open = pop;
 		const outside = (event: Event) => {
@@ -103,6 +104,14 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		};
 		const escape = (event: KeyboardEvent) => {
 			if (event.key !== 'Escape') return;
+			if (
+				event
+					.composedPath()
+					.some(
+						(node) => node !== pop && node instanceof Element && node.matches('.ribbon-popover'),
+					)
+			)
+				return;
 			closeOpen?.();
 			button.focus();
 		};

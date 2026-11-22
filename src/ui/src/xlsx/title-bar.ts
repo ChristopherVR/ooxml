@@ -51,6 +51,7 @@ export function createTitleBar(ctx: EditorContext, handlers: TitleBarHandlers): 
 	const doc = ctx.host.ownerDocument;
 	const element = doc.createElement('office-ui-title-bar') as TitleBarElement;
 	element.className = 'xve-titlebar';
+	element.setAttribute('mobile-quick-access', '');
 	element.setAttribute('part', 'title-bar');
 
 	definePresence();

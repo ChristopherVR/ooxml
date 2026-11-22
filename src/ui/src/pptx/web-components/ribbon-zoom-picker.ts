@@ -16,6 +16,7 @@ export function pickRibbonZoom(
 	kind: RibbonZoom,
 	text: InsertText,
 	current: () => RibbonGraphicTarget | undefined,
+	onInserted?: () => void,
 ) {
 	const doc = host.ownerDocument;
 	const registry = doc.defaultView?.customElements;
@@ -129,7 +130,7 @@ export function pickRibbonZoom(
 									live.canvasSize,
 									heading,
 								);
-								if (zoom) {
+								if (zoom && live.insertSummary) {
 									const { width, height } = live.canvasSize;
 									prepared.result.slides[prepared.result.slideIndex]?.elements.push(
 										{
@@ -148,7 +149,10 @@ export function pickRibbonZoom(
 										},
 										zoom,
 									);
-									live.insertSummary?.(prepared.result);
+									live.insertSummary(prepared.result);
+									frame.dialog.close();
+									onInserted?.();
+									return;
 								}
 							}
 							frame.dialog.close();

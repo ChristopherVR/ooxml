@@ -32,7 +32,7 @@ export interface InsertSectionProps {
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
 	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
-	onAddShape: () => void;
+	onAddShape: (type?: SupportedShapeType) => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	/** Opens the Insert Chart dialog; without it the Chart menu leaves "Insert Chart..." out. */
@@ -164,7 +164,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 					p.onSetNewShapeType(intent.value as SupportedShapeType);
 					break;
 				case 'shape':
-					p.onAddShape();
+					p.onAddShape(intent.value as SupportedShapeType);
 					break;
 				case 'chartType':
 					setChartKind(intent.value as InsertChartKind);
@@ -194,8 +194,13 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 			}
 			p.onRequestHandled?.();
 		};
+		const complete = () => p.onRequestHandled?.();
 		host.addEventListener('insert-request', request);
-		return () => host.removeEventListener('insert-request', request);
+		host.addEventListener('mobile-insert-complete', complete);
+		return () => {
+			host.removeEventListener('insert-request', request);
+			host.removeEventListener('mobile-insert-complete', complete);
+		};
 	}, [p, hosted]);
 	return (
 		<>

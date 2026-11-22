@@ -153,7 +153,7 @@ describe('insertSection', () => {
 			vi.runAllTimers();
 		});
 		vi.useRealTimers();
-		expect(props.onAddShape).toHaveBeenCalledOnce();
+		expect(props.onAddShape).toHaveBeenCalledExactlyOnceWith('star5');
 		expect(props.onAddChart).toHaveBeenCalledExactlyOnceWith('pie');
 		const curve = container.querySelector<HTMLElement>('[data-pptx-drawing-tool="curve"]')!;
 		expect(curve.shadowRoot!.querySelector('button')!.getAttribute('aria-pressed')).toBe('true');

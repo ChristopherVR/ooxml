@@ -63,3 +63,44 @@ test('Symbol replaces the selected characters in the active cell edit', async ({
 	await picker.getByRole('button', { name: 'Insert', exact: true }).click();
 	await expect(field).toHaveValue('ab©ef');
 });
+
+test.describe('phone Insert ribbon', () => {
+	test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+
+	test('inserts a symbol at the Formula Bar selection through the folded ribbon', async ({
+		page,
+	}) => {
+		await newWorkbook(page);
+		const host = editor(page);
+		const field = host.getByRole('textbox', { name: 'Formula Bar', exact: true });
+		await field.fill('abcdef');
+		await field.evaluate((node: HTMLTextAreaElement) => node.setSelectionRange(2, 4));
+		await host.getByRole('tab', { name: 'Insert', exact: true }).tap();
+		await host.getByRole('button', { name: 'Symbols', exact: true }).tap();
+		await host.getByRole('button', { name: 'Symbol', exact: true }).tap();
+		const picker = host.locator('office-ui-dialog[data-dialog="symbol"]');
+		await picker.getByRole('grid').getByRole('button', { name: 'U+00A9', exact: true }).tap();
+		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
+		await expect(field).toHaveValue('ab©ef');
+	});
+
+	test('inserts WordArt and an icon through folded groups', async ({ page }) => {
+		await newWorkbook(page);
+		const host = editor(page);
+		await host.getByRole('tab', { name: 'Insert', exact: true }).tap();
+		await host.getByRole('button', { name: 'Symbols', exact: true }).tap();
+		await host.getByRole('button', { name: 'WordArt', exact: true }).tap();
+		const picker = host.locator('office-ui-dialog[open]');
+		await picker.getByRole('textbox', { name: 'WordArt text' }).fill('Phone WordArt');
+		await picker.getByRole('button', { name: 'WordArt style 3', exact: true }).tap();
+		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
+		await expect(host.locator('.xg-obj[aria-label="WordArt"]')).toContainText('Phone WordArt');
+
+		await host.getByRole('button', { name: 'Illustrations', exact: true }).tap();
+		await host.getByRole('button', { name: 'Icons', exact: true }).tap();
+		await picker.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
+		await picker.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+		await picker.getByRole('button', { name: 'Insert', exact: true }).tap();
+		await expect(host.locator('.xg-obj img').first()).toBeVisible();
+	});
+});

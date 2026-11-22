@@ -1,3 +1,4 @@
+import type { OfficeUiDialog } from '../../dialog/dialog';
 import { defineElement } from '../../registry';
 import {
 	INSERT_CHART_TYPES,
@@ -47,12 +48,15 @@ const TILES = [
 	'insert.illustrations.icons',
 	'insert.media.media',
 	'insert.slides.newSlide',
+	'insert.links.zoom',
 	'insert.links.link',
 	'insert.text.dateTime',
 	'insert.comments.comment',
 ] as const;
 
-type View = 'home' | 'shapes' | 'table' | 'chart' | 'layouts';
+type View = 'home' | 'shapes' | 'table' | 'chart' | 'layouts' | 'zoom';
+
+const ZOOM_CONTROL = 'insert.links.zoom';
 
 const SPECS = new Map<string, InsertControlSpec>(
 	(INSERT_GROUPS.flatMap((group) => group.items.flat()) as InsertControlSpec[]).map((spec) => [
@@ -64,8 +68,7 @@ const CHEVRON = 'M12 4 6 10l6 6';
 const MORE = 'm5 8 5 5 5-5';
 
 /**
- * The phone Insert sheet body: PowerPoint mobile's tile grid (Text Box, Shapes, Pictures, Table,
- * Chart, SmartArt, Equation, Video, New Slide, Link, Date & Time, Comment). It draws the same shared Insert
+ * The phone Insert sheet draws its tiles and menus from the same shared Insert
  * definitions as `pptx-ui-ribbon-insert` (labels, icons, availability, the shape, chart and
  * layout catalogues and the Table grid) and emits the same `insert-request` intents, so a host
  * routes it exactly like the ribbon tab and adds no command logic of its own.
@@ -81,14 +84,20 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 			shapeType: 'rect',
 			chartKind: 'column',
 		};
-		private readonly insertGraphic = createGraphicInsert(this, () => this.model);
+		private readonly insertGraphic = createGraphicInsert(
+			this,
+			() => this.model,
+			() => {
+				this.dispatchEvent(new Event('mobile-insert-complete', { bubbles: true, composed: true }));
+			},
+		);
 		private view: View = 'home';
 		private readonly body = this.ownerDocument.createElement('div');
 		constructor() {
 			super();
 			const root = this.attachShadow({ mode: 'open' });
 			attachControlStyles(root, MOBILE_INSERT_STYLES);
-			root.append(this.body);
+			root.append(this.body, this.ownerDocument.createElement('slot'));
 		}
 		get state() {
 			return this.model;
@@ -100,9 +109,18 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		connectedCallback(): void {
 			this.render();
 		}
+		disconnectedCallback(): void {
+			queueMicrotask(() => {
+				if (!this.isConnected) this.closePicker();
+			});
+		}
 		reset(): void {
+			this.closePicker();
 			this.view = 'home';
 			this.render();
+		}
+		private closePicker(): void {
+			this.querySelector<OfficeUiDialog>('office-ui-dialog[open]')?.close();
 		}
 		private text(label: InsertLabel): string {
 			return insertLabel(this.model, label);
@@ -142,13 +160,15 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 					? 'shapes'
 					: spec.special === 'chart'
 						? 'chart'
-						: spec.picker === 'table'
-							? 'table'
-							: spec.special === 'layouts' &&
-								  ((this.model.layouts ?? []).length > 0 ||
-										this.model.slideTemplatesAvailable === true)
-								? 'layouts'
-								: null;
+						: spec.control === ZOOM_CONTROL
+							? 'zoom'
+							: spec.picker === 'table'
+								? 'table'
+								: spec.special === 'layouts' &&
+									  ((this.model.layouts ?? []).length > 0 ||
+											this.model.slideTemplatesAvailable === true)
+									? 'layouts'
+									: null;
 			const caption = doc.createElement('span');
 			caption.textContent = label;
 			const tile = this.button('tile', label, insertIcon(doc, spec.icon), caption);
@@ -240,6 +260,23 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 					rows.append(row);
 				}
 				children.push(rows);
+			} else if (this.view === 'zoom') {
+				const spec = SPECS.get(ZOOM_CONTROL);
+				if (spec) {
+					children.push(this.head(spec));
+					const rows = doc.createElement('div');
+					rows.className = 'rows';
+					for (const item of spec.menu ?? []) {
+						const { intent } = item;
+						if (!intent) continue;
+						const label = this.text(item.label);
+						const row = this.button('row', label, doc.createTextNode(label));
+						row.disabled = !canRequestInsert(this.model, intent);
+						row.addEventListener('click', () => this.request(intent));
+						rows.append(row);
+					}
+					children.push(rows);
+				}
 			} else if (this.view === 'layouts') {
 				children.push(this.head(SPECS.get('insert.slides.newSlide') as InsertControlSpec));
 				const rows = doc.createElement('div');

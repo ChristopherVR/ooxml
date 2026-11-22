@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import type { DocxEditorElement } from 'docx-web-component';
-import { openSample } from './helpers';
+import { openSample, reveal } from './helpers';
 
 const editor = (page: Page) => page.locator('docx-editor');
 
@@ -25,6 +25,36 @@ const pageEvents = (page: Page) =>
 	page.evaluate(
 		() => (window as unknown as { pageEvents: { page: number; pageCount: number }[] }).pageEvents,
 	);
+
+test.describe('phone page thumbnails', () => {
+	test.use({ viewport: { width: 320, height: 720 }, hasTouch: true, isMobile: true });
+
+	test('the rail leaves room for the document and its thumbnails still navigate', async ({
+		page,
+	}) => {
+		await openSample(page);
+		await useLongDocument(page);
+		const host = editor(page);
+		await host.getByRole('tab', { name: 'View', exact: true }).tap();
+		const thumbnails = host.getByRole('button', { name: 'Page thumbnails', exact: true });
+		await reveal(host, thumbnails);
+		await thumbnails.tap();
+		const rail = host.getByRole('complementary', { name: 'Page thumbnails', exact: true });
+		await expect(rail).toBeVisible();
+		const canvas = host.locator('.dve-canvas');
+		await expect.poll(() => canvas.evaluate((node) => node.clientWidth)).toBeGreaterThan(200);
+
+		const layout = host.getByRole('combobox', { name: 'Layout view', exact: true });
+		await reveal(host, layout);
+		await layout.selectOption('print');
+		const second = rail.getByRole('option').nth(1);
+		await expect(second).toBeVisible();
+		const sheet = second.locator('.dve-page-thumb-sheet');
+		await expect(sheet).toBeInViewport({ ratio: 1 });
+		await second.tap();
+		await expect(second).toHaveAttribute('aria-selected', 'true');
+	});
+});
 
 test.describe('page thumbnail rail', () => {
 	test('toggles from the View tab and explains it needs Print Layout', async ({ page }) => {

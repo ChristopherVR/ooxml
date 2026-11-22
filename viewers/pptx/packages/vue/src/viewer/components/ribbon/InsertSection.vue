@@ -40,7 +40,7 @@ interface Props {
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddTextBox: () => void;
 	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
-	onAddShape: () => void;
+	onAddShape: (type?: SupportedShapeType) => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	onAddSmartArt: () => void;
@@ -160,7 +160,7 @@ function request(event: RibbonInsertRequestEvent): void {
 			props.onSetNewShapeType(intent.value as SupportedShapeType);
 			break;
 		case 'shape':
-			props.onAddShape();
+			props.onAddShape(intent.value as SupportedShapeType);
 			break;
 		case 'chartType':
 			chartKind.value = intent.value as InsertChartKind;
@@ -202,7 +202,12 @@ function insertDate(formatted: string): void {
 </script>
 
 <template>
-	<pptx-ui-mobile-insert v-if="props.phone" :state.prop="state" @insert-request="request" />
+	<pptx-ui-mobile-insert
+		v-if="props.phone"
+		:state.prop="state"
+		@insert-request="request"
+		@mobile-insert-complete="props.onRequestHandled?.()"
+	/>
 	<pptx-ui-ribbon-insert v-else :state.prop="state" @insert-request="request" />
 	<SlideTemplateGalleryDialog
 		v-if="templatesAvailable && !props.dialogHost"

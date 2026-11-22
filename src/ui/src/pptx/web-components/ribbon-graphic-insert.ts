@@ -27,6 +27,7 @@ export type InsertText = (
 export function createGraphicInsert(
 	host: HTMLElement,
 	readState: () => RibbonInsertState,
+	onInserted?: () => void,
 ): (intent: GraphicInsertIntent) => void {
 	let busy = false;
 	return (intent) => {
@@ -50,16 +51,21 @@ export function createGraphicInsert(
 		};
 		const picked =
 			intent.kind === 'zoom'
-				? pickRibbonZoom(host, target, intent.value, text, current)
+				? pickRibbonZoom(host, target, intent.value, text, current, onInserted)
 				: inlineSymbol
 					? pickSymbol(host, text('pptx.insert.symbol', 'Symbol'), text).then((symbol) => {
-							inlineSymbol(current() ? symbol : undefined);
+							const content = current() ? symbol : undefined;
+							if (inlineSymbol(content)) onInserted?.();
 							return undefined;
 						})
 					: pickGraphic(host, target, intent.value, text);
 		void picked
 			.then((element) => {
-				if (element) current()?.insert(element);
+				const live = element && current();
+				if (element && live) {
+					live.insert(element);
+					onInserted?.();
+				}
 			})
 			.catch(() => {
 				inlineSymbol?.();

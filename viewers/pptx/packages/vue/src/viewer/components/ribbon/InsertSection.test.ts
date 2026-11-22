@@ -114,7 +114,7 @@ describe('insert section', () => {
 		pick('insert.illustrations.chart', 'pie');
 		vi.runAllTimers();
 		vi.useRealTimers();
-		expect(props.onAddShape).toHaveBeenCalledOnce();
+		expect(props.onAddShape).toHaveBeenCalledExactlyOnceWith('star5');
 		expect(props.onAddChart).toHaveBeenCalledOnce();
 		document.body
 			.querySelector<HTMLButtonElement>('[data-ribbon-control="insert.links.action"] .trigger')!

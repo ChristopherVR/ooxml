@@ -38,7 +38,7 @@ export interface InsertElementHandlers {
 	imagePaste?: CanvasImagePasteHandlers;
 	addElement: (element: PptxElement) => void;
 	handleAddTextBox: () => void;
-	handleAddShape: () => void;
+	handleAddShape: (type?: SupportedShapeType) => void;
 	handleAddTable: (rows?: number, columns?: number) => void;
 	handleAddChart: (chartKind: InsertChartKind, options?: InsertChartOptions) => void;
 	handleInsertSmartArt: (layout: SmartArtLayout, defaultItems: string[]) => void;
@@ -94,7 +94,7 @@ export function useInsertElements(input: UseInsertElementsInput): InsertElementH
 		} as TextPptxElement);
 	};
 
-	const handleAddShape = () => {
+	const handleAddShape = (shapeType = newShapeType) => {
 		if (!activeSlide) {
 			return;
 		}
@@ -105,7 +105,7 @@ export function useInsertElements(input: UseInsertElementsInput): InsertElementH
 			y: 150,
 			width: 200,
 			height: 150,
-			shapeType: newShapeType,
+			shapeType,
 			shapeStyle: {
 				fillColor: '#3b82f6',
 				strokeColor: '#1f2937',

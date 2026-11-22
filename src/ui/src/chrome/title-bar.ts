@@ -35,7 +35,9 @@ type SearchField = HTMLElement & { value: string };
  * `account` slots). Controlled: set `state` (`OfficeTitleBarState`, every string translated); the bar
  * owns no effects. The `centered` attribute puts the file name in the middle of the bar.
  * `placement="belowRibbon"` renders only the Quick Access row and hides
- * itself (`data-empty`) while that row is empty. Events (bubbling, composed; static names let a
+ * itself (`data-empty`) while that row is empty. The `mobile-quick-access` attribute keeps the
+ * app mark, Quick Access buttons and document name and status visible in the phone layout.
+ * Events (bubbling, composed; static names let a
  * product subclass keep its published ones): `office-autosave-toggle`, `office-command`
  * `{ command }` from a Quick Access button and `office-command-search` `{ query, command? }`.
  * Override `activate(id)` to route Quick Access buttons differently and `rendered()` to mirror

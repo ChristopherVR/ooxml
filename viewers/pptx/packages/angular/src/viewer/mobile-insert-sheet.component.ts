@@ -27,22 +27,24 @@ import { RibbonInsertSectionComponent } from './ribbon-insert-section.component'
 			[title]="'pptx.mobileBar.insert' | translate"
 			(closed)="closed.emit()"
 		>
-			<div class="p-3">
-				<pptx-ribbon-insert-section
-					[phone]="true"
-					[canEdit]="canEdit()"
-					[slideIndex]="slideIndex()"
-					[commentsOpen]="commentsOpen()"
-					(handled)="closed.emit()"
-					(openSmartArtDialog)="openSmartArtDialog.emit()"
-					(openChartDialog)="openChartDialog.emit()"
-					(openEquationDialog)="openEquationDialog.emit()"
-					(openHyperlink)="openHyperlink.emit()"
-					(toggleComments)="toggleComments.emit()"
-					(openTemplateGallery)="openTemplateGallery.emit()"
-					(openDateTime)="fields()?.openDatePicker()"
-				/>
-			</div>
+			@if (open()) {
+				<div class="p-3">
+					<pptx-ribbon-insert-section
+						[phone]="true"
+						[canEdit]="canEdit()"
+						[slideIndex]="slideIndex()"
+						[commentsOpen]="commentsOpen()"
+						(handled)="closed.emit()"
+						(openSmartArtDialog)="openSmartArtDialog.emit()"
+						(openChartDialog)="openChartDialog.emit()"
+						(openEquationDialog)="openEquationDialog.emit()"
+						(openHyperlink)="openHyperlink.emit()"
+						(toggleComments)="toggleComments.emit()"
+						(openTemplateGallery)="openTemplateGallery.emit()"
+						(openDateTime)="fields()?.openDatePicker()"
+					/>
+				</div>
+			}
 		</pptx-mobile-sheet>
 		<!-- The Date & Time picker lives outside the sheet so it stays open after the sheet closes. -->
 		<pptx-ribbon-insert-fields [slideIndex]="slideIndex()" />

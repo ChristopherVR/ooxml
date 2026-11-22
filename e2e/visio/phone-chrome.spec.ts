@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { openDemo } from './demo-page';
+import { createVsdxFixture } from './fixture.mjs';
+import { history, ribbonGroup } from './ribbon';
 
 test.use({ hasTouch: true });
 
@@ -65,4 +67,93 @@ test('the status bar keeps the zoom controls inside it on a tablet-width editor'
 		viewer.locator('office-ui-zoom-slider').boundingBox(),
 	]);
 	expect(zoom!.x + zoom!.width).toBeLessThanOrEqual(bar!.x + bar!.width + 1);
+});
+
+test('on a phone the Illustrations group inserts an icon', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 812 });
+	await openDemo(page);
+	const viewer = page.locator('visio-viewer');
+	const paper = viewer.locator('svg.paper');
+	await expect(paper).toContainText('Release workflow');
+	const images = paper.locator('image');
+	const before = await images.count();
+	await viewer.getByRole('tab', { name: 'Insert', exact: true }).tap();
+	await ribbonGroup(viewer, 'Illustrations');
+	await viewer.getByRole('button', { name: 'Icons', exact: true }).tap();
+	await expect(page.getByRole('dialog', { name: 'Icons' })).toBeVisible();
+	await page.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
+	await page.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+	await viewer
+		.locator('office-ui-dialog[open]')
+		.getByRole('button', { name: 'Insert', exact: true })
+		.tap();
+	await expect(images).toHaveCount(before + 1);
+});
+
+test.describe('at narrow phone width', () => {
+	test.use({ viewport: { width: 320, height: 720 }, isMobile: true });
+
+	test('finds diagram text and uses nested View commands after paging the tabs', async ({
+		page,
+	}) => {
+		await openDemo(page);
+		const viewer = page.locator('visio-viewer');
+		const home = viewer.locator('#home-panel');
+		await home.getByRole('button', { name: 'More', exact: true }).tap();
+		const editing = home.getByRole('button', { name: 'Editing', exact: true });
+		await expect(editing).toBeInViewport({ ratio: 1 });
+		await editing.tap();
+		const find = viewer.getByRole('button', { name: 'Find', exact: true });
+		await find.tap();
+		const menu = viewer.locator('office-ui-menu-button[data-menu="find"]');
+		const findText = menu.getByText('Find...', { exact: true });
+		await expect(findText).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(findText).toBeHidden();
+		await expect(find).toBeVisible();
+		await find.tap();
+		await findText.tap();
+		const query = viewer.getByRole('searchbox', { name: 'Search diagram text' });
+		await query.fill('Start with an idea');
+		await expect(viewer.locator('office-ui-find-bar [role="status"]')).toHaveText(
+			'1 matching shapes',
+		);
+
+		const moreTabs = viewer.getByRole('button', { name: 'More tabs', exact: true });
+		const view = viewer.getByRole('tab', { name: 'View', exact: true });
+		await moreTabs.tap();
+		await expect(view).toBeInViewport({ ratio: 0.25 });
+		await moreTabs.tap();
+		await expect(view).toBeInViewport({ ratio: 1 });
+		await view.tap();
+		await ribbonGroup(viewer, 'Zoom');
+		const zoom = viewer.locator('office-ui-menu-button[data-menu="zoom"]');
+		await zoom.getByRole('button', { name: 'Zoom', exact: true }).tap();
+		await zoom.locator('office-ui-menu-item[label="200%"]').tap();
+		await expect(viewer.locator('office-ui-zoom-slider output')).toHaveText('200%');
+	});
+
+	test('formats a shape and uses the phone Undo, Redo and Save controls', async ({ page }) => {
+		await openDemo(page);
+		await page.locator('#file').setInputFiles({
+			name: 'phone-toolbar.vsdx',
+			mimeType: 'application/vnd.ms-visio.drawing',
+			buffer: await createVsdxFixture('Phone diagram'),
+		});
+		const viewer = page.locator('visio-viewer');
+		const shape = viewer.locator('svg.paper [data-shape-id="1"]');
+		await expect(shape).toHaveAttribute('aria-label', 'Phone diagram');
+		await shape.tap();
+		await ribbonGroup(viewer, 'Font');
+		await viewer.getByRole('button', { name: 'Bold', exact: true }).tap();
+		const textRun = shape.locator('tspan[font-family]').first();
+		await expect(textRun).toHaveAttribute('font-weight', 'bold');
+		await history(viewer, 'Undo').tap();
+		await expect(textRun).not.toHaveAttribute('font-weight', 'bold');
+		await history(viewer, 'Redo').tap();
+		await expect(textRun).toHaveAttribute('font-weight', 'bold');
+		const download = page.waitForEvent('download');
+		await viewer.locator('.qat').getByRole('button', { name: 'Save', exact: true }).tap();
+		expect((await download).suggestedFilename()).toMatch(/\.vsdx$/);
+	});
 });

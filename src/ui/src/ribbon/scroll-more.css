@@ -1,3 +1,12 @@
+.ribbon-popover.ribbon-overflow-panel {
+	box-sizing: border-box;
+	display: flex;
+	max-width: calc(100vw - 12px);
+	overflow-x: auto;
+	overscroll-behavior-x: contain;
+	scrollbar-width: thin;
+}
+
 .ribbon-scroll-more {
 	position: sticky;
 	right: 0;

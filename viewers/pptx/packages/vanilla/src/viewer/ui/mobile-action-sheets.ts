@@ -91,6 +91,7 @@ export function createMobileActionSheets(
 		);
 		close();
 	});
+	insertSheet.addEventListener('mobile-insert-complete', () => close());
 	let active: MobileSheetKey = null;
 	let current = 0;
 	let slides: readonly PptxSlide[] = [];
@@ -234,7 +235,7 @@ export function createMobileActionSheets(
 			body.appendChild(add);
 		} else {
 			const buttons: readonly [string, () => void, ToolbarActionId | null][] = [
-				[t('pptx.ribbon.insert'), () => handlers.insert.insert('text'), null],
+				[t('pptx.ribbon.insert'), () => openSheet('insert'), null],
 				[t('pptx.presenter.previousSlide'), handlers.nav.prev, 'navigation'],
 				[t('pptx.presenter.nextSlide'), handlers.nav.next, 'navigation'],
 				[t('pptx.statusBar.zoomOut'), handlers.nav.zoomOut, 'zoom'],

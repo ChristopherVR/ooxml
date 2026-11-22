@@ -54,6 +54,17 @@ describe('mobile action sheets bottom bar adapter', () => {
 		]);
 	});
 
+	it('routes Menu > Insert to the shared sheet', () => {
+		const { sheets, handlers } = open();
+		sheets.toggle('menu');
+		const insert = [...sheets.el.querySelectorAll('button')].find(
+			(button) => button.textContent === 'Insert',
+		);
+		insert?.click();
+		expect(sheets.el.querySelector('pptx-ui-mobile-insert')).not.toBeNull();
+		expect(handlers.insert.insert).not.toHaveBeenCalled();
+	});
+
 	it('toggles the notes drawer through the handlers', () => {
 		const { buttons, handlers } = open();
 		buttons()[4].click();
@@ -84,6 +95,7 @@ describe('mobile action sheets bottom bar adapter', () => {
 			'insert.illustrations.icons',
 			'insert.media.media',
 			'insert.slides.newSlide',
+			'insert.links.zoom',
 			'insert.links.link',
 			'insert.text.dateTime',
 			'insert.comments.comment',

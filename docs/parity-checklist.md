@@ -344,6 +344,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** WordArt inserts and edits native worksheet shapes with fill, outline and shadow
       presets and DrawingML text transforms.
 - [x] **P1** Insert Symbol replaces the editing selection or inserts at the cell's text caret.
+- [x] **P1** Wide folded ribbon groups scroll within the phone screen. Save, Undo and Redo
+      stay available in the compact Quick Access Toolbar.
 - [ ] **P1** Page Layout: Scale to Fit, Print Titles, Background and the Arrange group.
 - [ ] **P1** Data: Get Data and its sources, Queries & Connections, Refresh All, Edit Links.
 - [ ] **P2** Review: Spelling, Thesaurus, Translate, Check Accessibility, Notes; View: Window group
@@ -597,6 +599,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Rotate) and Text Direction.
 - [x] **P1** Insert WordArt creates editable OOXML text boxes with fill, outline and shadow
       presets and DrawingML text transforms.
+- [x] **P1** Wide folded ribbon groups scroll within the phone screen. Save, Undo and Redo
+      stay available in the compact Quick Access Toolbar.
+- [x] **P1** The page thumbnail rail scales to fit narrow editors and keeps the document visible
+      in both suite layouts at 320×256 and 360×225.
 - [x] **P2** Word and Excel share 30 WordArt styles and a text transform picker. Preset names
       and adjustment guides are saved in the native drawing. The editor previews the text
       along a path.
@@ -943,6 +949,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Ribbon
 
 - [x] **P1** Insert WordArt creates editable text with a preset from the WordArt Styles gallery.
+- [x] **P1** The phone Insert sheet opens WordArt, Icons, Symbol, Slide Zoom, Section Zoom and
+      Summary Zoom in all five bindings. Cancel returns to the sheet and a successful insert
+      closes it. Shapes preserves the preset picked on the phone.
 - [x] **P1** Insert Symbol uses the common Unicode gallery or a character code at an active
       text caret, or creates a text box when no text edit is active.
       Browsing font-specific glyphs remains open.
@@ -1212,6 +1221,7 @@ installed Visio 16 build is used to check that saved files open without repair.
 
 ### Ribbon
 
+- [x] **P1** The compact phone Quick Access Toolbar keeps Save, Undo and Redo reachable.
 - [x] **P1** A contextual Shape Format tab shows while shapes are selected (Shape Styles, WordArt
       Styles disabled, Arrange, Size), reusing the Home commands (`ribbon-shape-format.ts`).
 - [x] **P1** Picture Format, Container Format and Chart Design contextual tabs replace Shape Format

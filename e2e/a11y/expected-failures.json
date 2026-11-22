@@ -1,18 +1,6 @@
 {
 	"$comment": "Checks that fail today, each with the 2.0 work package that closes it and the text its failure message contains (`fails`). A listed check passes only while it fails that way: it fails as soon as the gap closes (delete the entry in that commit) and when it fails for any other reason. Entries may be removed but never added or given another `fails` (check-baseline.mjs).",
 	"gaps": {
-		"reflow/320x256/docx/office/document": {
-			"owner": "P8 Ribbon navigation and reflow",
-			"finding": "A11Y-15",
-			"why": "the ribbon and page margins leave the page under half the window wide",
-			"fails": "the document is at least half the window wide"
-		},
-		"reflow/320x256/docx/simple/document": {
-			"owner": "P8 Ribbon navigation and reflow",
-			"finding": "A11Y-15",
-			"why": "the page is shown under half the window wide",
-			"fails": "the document is at least half the window wide"
-		},
 		"reflow/320x256/teams/controls": {
 			"owner": "P8 Ribbon navigation and reflow",
 			"finding": "A11Y-15",
@@ -42,18 +30,6 @@
 			"finding": "A11Y-15",
 			"why": "Attach, the model picker and Send are cut off with nothing to scroll them into view",
 			"fails": "controls outside the window that nothing scrolls to"
-		},
-		"reflow/360x225/docx/office/document": {
-			"owner": "P8 Ribbon navigation and reflow",
-			"finding": "A11Y-15",
-			"why": "the ribbon and page margins leave the page under half the window wide",
-			"fails": "the document is at least half the window wide"
-		},
-		"reflow/360x225/docx/simple/document": {
-			"owner": "P8 Ribbon navigation and reflow",
-			"finding": "A11Y-15",
-			"why": "the page is shown under half the window wide",
-			"fails": "the document is at least half the window wide"
 		},
 		"reflow/360x225/teams/controls": {
 			"owner": "P8 Ribbon navigation and reflow",

@@ -28,10 +28,10 @@ export function captureInlineSymbolCaret(doc: Document) {
 	choosingSymbol.add(editor);
 	return (symbol?: string) => {
 		choosingSymbol.delete(editor);
-		if (!editor.isConnected) return;
+		if (!editor.isConnected) return false;
 		editor.focus({ preventScroll: true });
 		selection.removeAllRanges();
 		selection.addRange(range);
-		if (symbol) doc.execCommand('insertText', false, symbol);
+		return symbol !== undefined && doc.execCommand('insertText', false, symbol);
 	};
 }

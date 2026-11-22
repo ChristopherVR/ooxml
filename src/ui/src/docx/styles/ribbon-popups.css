@@ -230,7 +230,6 @@
 	background: var(--accent-soft);
 }
 .ribbon-popover.ribbon-overflow-panel {
-	display: block;
 	padding: 6px 8px 2px;
 }
 .ribbon-overflow-panel .ribbon-group {

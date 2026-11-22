@@ -66,7 +66,11 @@ import { ViewerDialogsService } from './viewer-dialogs.service';
 	imports: [RibbonInsertFieldsComponent],
 	template: `
 		@if (phone()) {
-			<pptx-ui-mobile-insert [state]="view()" (insert-request)="request($event)" />
+			<pptx-ui-mobile-insert
+				[state]="view()"
+				(insert-request)="request($event)"
+				(mobile-insert-complete)="handled.emit()"
+			/>
 		} @else {
 			<pptx-ui-ribbon-insert [state]="view()" (insert-request)="request($event)" />
 		}

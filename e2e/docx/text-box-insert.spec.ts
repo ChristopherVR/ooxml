@@ -113,3 +113,48 @@ test('WordArt stays styled and editable after reopening a DOCX', async ({ page }
 		'Annual results',
 	);
 });
+
+test.describe('phone Insert ribbon', () => {
+	test.use({ viewport: { width: 375, height: 812 }, hasTouch: true, isMobile: true });
+
+	test('inserts a symbol at the text caret through the folded ribbon', async ({ page }) => {
+		await page.goto('/?framework=vanilla');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		const body = editor.locator('.ProseMirror');
+		await body.tap();
+		await page.keyboard.type('abcd');
+		await page.keyboard.press('ArrowLeft');
+		await page.keyboard.press('ArrowLeft');
+
+		await editor.getByRole('tab', { name: 'Insert', exact: true }).tap();
+		const symbol = editor.getByRole('combobox', { name: 'Symbol', exact: true });
+		await reveal(editor, symbol);
+		await symbol.selectOption('©');
+		await expect(body).toHaveText('ab©cd');
+	});
+
+	test('inserts WordArt and an icon through folded groups', async ({ page }) => {
+		await page.goto('/?framework=vanilla');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await editor.getByRole('tab', { name: 'Insert', exact: true }).tap();
+		const wordArt = editor.getByRole('button', { name: 'WordArt', exact: true });
+		await reveal(editor, wordArt);
+		await wordArt.tap();
+		const artPicker = dialogByHeading(editor, 'WordArt');
+		await artPicker.getByRole('textbox', { name: 'WordArt text' }).fill('Phone WordArt');
+		await artPicker.getByRole('button', { name: 'WordArt style 3', exact: true }).tap();
+		await artPicker.getByRole('button', { name: 'Insert', exact: true }).tap();
+		await expect(editor.locator('.ProseMirror .dve-shape')).toContainText('Phone WordArt');
+
+		const icons = editor.getByRole('button', { name: 'Icons', exact: true });
+		await reveal(editor, icons);
+		await icons.tap();
+		const iconPicker = dialogByHeading(editor, 'Icons');
+		await iconPicker.getByRole('searchbox', { name: 'Search icons' }).fill('Light bulb');
+		await iconPicker.getByRole('button', { name: 'Light bulb', exact: true }).tap();
+		await iconPicker.getByRole('button', { name: 'Insert', exact: true }).tap();
+		await expect(editor.locator('.ProseMirror img[alt="Light bulb"]')).toBeVisible();
+	});
+});

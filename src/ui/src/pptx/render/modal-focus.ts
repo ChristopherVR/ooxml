@@ -49,20 +49,27 @@ export function activateModalFocus(
 			doc.removeEventListener('keydown', onKeydown, true);
 			return;
 		}
-		if (options.keyScope === 'panel' && !event.composedPath().includes(panel)) {
+		const path = event.composedPath();
+		if (options.keyScope === 'panel' && !path.includes(panel)) return;
+		// A nested Office dialog manages its own focus and Escape before the sheet.
+		if (
+			path.some(
+				(node) =>
+					node instanceof Element &&
+					node.matches('office-ui-dialog[open]') &&
+					containsDeep(panel, node),
+			)
+		)
 			return;
-		}
 		if (event.key === 'Escape' && options.onEscape) {
 			// An open select popup consumes the first Escape; the dialog stays open.
 			if (
-				event
-					.composedPath()
-					.some(
-						(node) =>
-							node instanceof Element &&
-							node.localName === 'pptx-ui-select' &&
-							node.hasAttribute('open'),
-					)
+				path.some(
+					(node) =>
+						node instanceof Element &&
+						node.localName === 'pptx-ui-select' &&
+						node.hasAttribute('open'),
+				)
 			) {
 				return;
 			}

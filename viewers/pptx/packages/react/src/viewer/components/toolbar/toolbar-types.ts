@@ -101,7 +101,7 @@ export interface ToolbarProps {
 	onArmFreeformTool?: (tool: FreeformToolKind | null) => void;
 	onAddTextBox: () => void;
 	getGraphicTarget?: import('ooxml-ui/pptx').RibbonInsertState['getGraphicTarget'];
-	onAddShape: () => void;
+	onAddShape: (type?: SupportedShapeType) => void;
 	onAddTable: (rows?: number, columns?: number) => void;
 	onAddChart?: (chartKind: InsertChartKind) => void;
 	/** Opens the Insert Chart dialog; without it the Chart menu leaves "Insert Chart..." out. */

@@ -281,7 +281,7 @@
 	<pptx-ui-ribbon-insert bind:this={host} state={insertState} oninsert-request={request}></pptx-ui-ribbon-insert>
 {:else if open}
 	<MobileSheet title={t('pptx.mobileBar.insert')} onclose={() => onclose?.()}>
-		<pptx-ui-mobile-insert state={insertState} oninsert-request={request}></pptx-ui-mobile-insert>
+		<pptx-ui-mobile-insert state={insertState} oninsert-request={request} onmobile-insert-complete={() => onclose?.()}></pptx-ui-mobile-insert>
 	</MobileSheet>
 {/if}
 <input bind:this={imageInput} type="file" accept="image/*" class="pptx-svelte-inserttab-file" onchange={onImageFileChange} />

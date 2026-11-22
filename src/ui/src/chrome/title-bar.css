@@ -235,7 +235,27 @@ button:focus-visible {
 	outline-offset: var(--office-focus-offset);
 }
 @media (max-width: 767px), (max-width: 1023px) and (max-height: 520px) {
-	:host(:not([placement='belowRibbon'])) {
+	:host(:not([placement='belowRibbon'], [mobile-quick-access])) {
+		display: none !important;
+	}
+	:host([mobile-quick-access]) .bar > :not(.mark, .qat, .file) {
+		display: none;
+	}
+	:host([mobile-quick-access]) .file {
+		flex: 1;
+	}
+	:host([mobile-quick-access][centered]) .file {
+		position: static;
+		transform: none;
+	}
+	:host([mobile-quick-access]) .status {
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+}
+/* Keep room for the document at the short viewports used for reflow. */
+@media (max-width: 1023px) and (max-height: 280px) {
+	:host([mobile-quick-access]:not([placement='belowRibbon'])) {
 		display: none !important;
 	}
 }
