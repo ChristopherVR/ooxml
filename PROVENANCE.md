@@ -1,5 +1,16 @@
 # Provenance
 
+## Shared local 3D Models and Insert Object (2026-11-23)
+
+Source repository: ChristopherVR/ooxml, commit `823fdfb30`.
+`src/core/pptx/core/utils/glb-import.ts` and its tests moved to `src/core/drawingml`.
+The default scene writer and relationship constants from the adjacent `model3d-writing.ts`
+moved to `src/core/drawingml/model3d.ts`; the PowerPoint exports remain available.
+Office file admission and metadata from `src/ui/src/pptx/web-components/ribbon-local-object.ts`
+moved to `src/core/opc/embeddable-office-package.ts`.
+The file picker and PNG fallback moved to `src/ui/src/form/local-model-object.ts`.
+PowerPoint continues to own slide positioning and element conversion.
+
 ## Provider-neutral storage sessions (2026-11-04)
 
 Source repository: ChristopherVR/ooxml, commit `194529b06`. The serialized session and

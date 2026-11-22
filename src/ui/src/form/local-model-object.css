@@ -1,0 +1,76 @@
+.office-local-object-picker {
+	display: grid;
+	min-inline-size: 0;
+	justify-items: start;
+	gap: var(--office-space-2);
+	font: var(--office-font-size) / var(--office-line-height) var(--office-font);
+	color: var(--office-foreground);
+}
+
+.office-local-object-picker > button {
+	box-sizing: border-box;
+	max-inline-size: 100%;
+	min-block-size: var(--office-control-height-lg);
+	padding: var(--office-space-1-5) var(--office-space-3-5);
+	border: var(--office-border-width) solid var(--office-control-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-surface);
+	color: var(--office-foreground);
+	font: inherit;
+	font-weight: var(--office-font-weight-medium);
+	overflow-wrap: anywhere;
+	cursor: pointer;
+	touch-action: manipulation;
+}
+
+.office-local-object-picker > button:hover:not(:disabled) {
+	background: var(--office-selected);
+}
+
+.office-local-object-picker > button:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+
+.office-local-object-picker > button:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.office-local-object-picker > p {
+	margin: 0;
+	color: var(--office-muted-foreground);
+}
+
+.office-local-object-picker > [role='status'] {
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	overflow-wrap: anywhere;
+}
+
+.office-local-object-picker > [role='alert'] {
+	color: var(--office-danger);
+	overflow-wrap: anywhere;
+}
+
+.office-local-object-picker > :is([role='status'], [role='alert']):empty {
+	position: absolute;
+}
+
+@media (pointer: coarse), (max-width: 767px) {
+	.office-local-object-picker > button {
+		min-block-size: var(--office-target-size-touch);
+	}
+}
+
+@media (forced-colors: active) {
+	.office-local-object-picker > button {
+		border-color: ButtonText;
+		background: ButtonFace;
+		color: ButtonText;
+	}
+
+	.office-local-object-picker > button:focus-visible {
+		outline-color: Highlight;
+	}
+}

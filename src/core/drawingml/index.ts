@@ -89,3 +89,5 @@ export * from './word-art-svg';
 export { renderSvgPreview } from './svg-preview';
 export * from './text-warp-arch';
 export * from './text-warp-path';
+export * from './model3d';
+export { isSelfContainedGlb } from './glb-import';
