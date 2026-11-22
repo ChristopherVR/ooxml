@@ -204,11 +204,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
-	/**
-	 * Parse a DrawingML 3D model or a legacy `p16:model3D` element — a 3D model object embedded via
-	 * mc:AlternateContent in PowerPoint 365+. Extracts transform, model
-	 * relationship, and poster/fallback image for display.
-	 */
+	/** Parse a DrawingML 3D model or its legacy `p16:model3D` representation. */
 	protected async parseModel3DElement(
 		model3d: XmlObject,
 		id: string,
