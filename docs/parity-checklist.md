@@ -808,7 +808,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Custom covers retain their embedded image.
 - [x] **P1** Slide Zoom, Section Zoom and individual Summary Zoom tiles can change return
       behavior, duration and thumbnail transparency after insertion in the Format pane.
-- [ ] **P1** Zoom still needs refreshed thumbnail media on save and post-insertion cover replacement.
+- [x] **P1** Browser saves refresh embedded Zoom thumbnails when their destination or format changes.
+      Custom covers stay intact.
+- [x] **P1** The Format pane can change or reset the cover image for a Slide or Section Zoom
+      and for individual Summary Zoom tiles.
 - [ ] **P1** Recording: no narration or Cameo; Clear and Reset of recorded timings are disabled
       (`ribbon-record-commands.ts`); Record Audio has no command.
 - [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;

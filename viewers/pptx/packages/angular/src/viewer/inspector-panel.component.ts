@@ -18,14 +18,20 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
 	inject,
 	input,
 	linkedSignal,
 } from '@angular/core';
 import { LucideArrowDown, LucideArrowUp } from '@lucide/angular';
-import { TranslatePipe } from '@ngx-translate/core';
-import type { ElementGeometryPatch, LiveColorInput, ThemeColorPickerCommit } from 'ooxml-ui/pptx';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import type {
+	ElementGeometryPatch,
+	LiveColorInput,
+	ThemeColorPickerCommit,
+	ZoomCoverPatchEvent,
+} from 'ooxml-ui/pptx';
 import {
 	applyTableStyleDelete,
 	applyTableStyleMapChange,
@@ -107,6 +113,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 	selector: 'pptx-inspector-panel',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [
 		AccessibilityTextPanelComponent,
 		EffectsPanelComponent,
@@ -498,6 +505,12 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 								[target]="el()"
 								(patch)="onGeometryPatch($event)"
 							/>
+							@if (el().type === 'zoom') {
+								<pptx-ui-zoom-cover
+									[state]="zoomCoverState()"
+									(zoom-cover-patch)="onZoomCoverPatch($event)"
+								/>
+							}
 							<div class="pptx-ng-inspector__row pptx-ng-inspector__row--pairs">
 								<label class="pptx-ng-inspector__label" for="insp-opacity">{{
 									'pptx.inspector.opacity' | translate
@@ -882,6 +895,16 @@ export class InspectorPanelComponent {
 
 	/** The shared Size & Position descriptors (X, Y, W, H, rotation). */
 	protected readonly geometrySections = computed(() => sizePositionSections(this.el()));
+	private readonly translation = inject(TranslateService, { optional: true });
+	protected readonly zoomCoverState = computed(() => ({
+		element: this.el(),
+		disabled: !this.canEdit(),
+		translate: (key: string) => this.translation?.instant(key) ?? key,
+	}));
+
+	protected onZoomCoverPatch(event: Event): void {
+		if (this.canEdit()) this.onGeometryPatch((event as ZoomCoverPatchEvent).detail);
+	}
 
 	/**
 	 * Optional: absent when the panel is rendered outside a viewer. The ribbon's

@@ -299,6 +299,13 @@ export function createEditActions(deps: EditActionsDeps): EditActions {
 				if (element.type === 'zoom' && element.zoomType !== 'summary') {
 					return {
 						...next,
+						...(patch.zoomImageType !== undefined
+							? {
+									zoomImageType: patch.zoomImageType,
+									imagePath: patch.imagePath,
+									imageData: patch.imageData,
+								}
+							: {}),
 						...(patch.returnToParent !== undefined ? { returnToParent: patch.returnToParent } : {}),
 						...(patch.zoomShowBackground !== undefined
 							? { zoomShowBackground: patch.zoomShowBackground }

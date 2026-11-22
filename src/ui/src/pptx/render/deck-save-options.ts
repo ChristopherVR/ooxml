@@ -40,8 +40,16 @@ import type {
 } from 'ooxml-core/pptx';
 
 import { embeddedFontSaveOptions } from './font-embedding';
+import { renderZoomSlidePreview } from './zoom-slide-preview';
 import { tableStyleSaveOptions } from './table-style-map-edits';
 import type { TableStyleSaveOptionsState } from './table-style-map-edits';
+
+const renderBrowserZoomPreview: NonNullable<PptxHandlerSaveOptions['renderZoomPreview']> = (
+	slide,
+	width,
+	height,
+	transparent,
+) => renderZoomSlidePreview(document, slide, width, height, transparent);
 
 /** The plain-value snapshot a binding's main serialize path assembles from. */
 export interface DeckSaveState {
@@ -97,6 +105,7 @@ export function buildDeckSaveOptions(state: DeckSaveState): PptxHandlerSaveOptio
 		handoutMaster: state.handoutMaster,
 		slideSize: state.slideSize,
 		outputFormat: state.outputFormat,
+		renderZoomPreview: typeof document === 'undefined' ? undefined : renderBrowserZoomPreview,
 		pptPassword: state.pptPassword,
 		...tableStyleSaveOptions({
 			tableStyleMap: state.tableStyleMap,

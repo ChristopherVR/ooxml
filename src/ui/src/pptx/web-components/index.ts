@@ -69,6 +69,7 @@ import {
 	definePptxRibbonHomeSlides,
 } from './ribbon-home';
 import { definePptxRibbonInsert } from './ribbon-insert';
+import { definePptxZoomCover } from './zoom-cover-control';
 import { definePptxRibbonAddIn } from './ribbon-add-in';
 import { definePptxRibbonSection } from './ribbon-section';
 import { definePptxRibbonTransitions } from './ribbon-transitions';
@@ -156,6 +157,11 @@ export type {
 } from './ribbon-transitions';
 export type { PptxUiRibbonInsertElement, RibbonInsertRequestEvent } from './ribbon-insert';
 export type { PptxUiRibbonViewElement, RibbonViewRequestEvent } from './ribbon-view';
+export type {
+	ZoomCoverControlState,
+	PptxUiZoomCoverElement,
+	ZoomCoverPatchEvent,
+} from './zoom-cover-control';
 export type { PptxUiRibbonSectionElement } from './ribbon-section';
 export type { PptxUiRibbonAddInElement } from './ribbon-add-in';
 export type {
@@ -226,6 +232,7 @@ const controls = [
 	['pptx-ui-ribbon-animations', definePptxRibbonAnimations],
 	['pptx-ui-ribbon-draw', definePptxRibbonDraw],
 	['pptx-ui-ribbon-insert', definePptxRibbonInsert],
+	['pptx-ui-zoom-cover', definePptxZoomCover],
 	['pptx-ui-ribbon-home-clipboard', definePptxRibbonHomeClipboard],
 	['pptx-ui-ribbon-home-font', definePptxRibbonHomeFont],
 	['pptx-ui-ribbon-home-paragraph', definePptxRibbonHomeParagraph],

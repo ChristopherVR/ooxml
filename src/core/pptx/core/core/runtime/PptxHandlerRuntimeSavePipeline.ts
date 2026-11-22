@@ -9,6 +9,7 @@ import type { PptxHandlerSaveOptions } from '../types';
 import { withValidCustomShowIds } from './custom-show-save-ids';
 import { readElementSourceRelationships } from './element-part-binding';
 import { shouldKeepSourceCommentAuthors } from './comment-authors-retention';
+import { refreshZoomPreviews } from './refresh-zoom-previews';
 import { applyHeaderFooterToMaster } from './header-footer-parts';
 import { slidesPerPageToPrintOutput } from './pptx-print-properties';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveStructuralIds';
@@ -82,6 +83,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					conformance: 'transitional',
 				}),
 			);
+		}
+		if (options?.renderZoomPreview) {
+			const emu = PptxHandlerRuntime.EMU_PER_PX;
+			const width = (options.slideSize?.widthEmu || this.rawSlideWidthEmu) / emu;
+			const height = (options.slideSize?.heightEmu || this.rawSlideHeightEmu) / emu;
+			if (width > 0 && height > 0) {
+				const render = options.renderZoomPreview;
+				const resized =
+					width * emu !== this.rawSlideWidthEmu || height * emu !== this.rawSlideHeightEmu;
+				await refreshZoomPreviews(
+					slides,
+					(slide) => resized || !this.canSkipSlideSave(slide),
+					(slide, transparent) => render(slide, width, height, transparent),
+				);
+			}
 		}
 		const effectiveConformance = this.resolveEffectiveConformance(options?.conformance);
 		const saveConstants = createPptxSaveConstants(effectiveConformance);

@@ -34,6 +34,7 @@ import type { ShapeTextPart } from './ShapeTextPanels';
 import { SmartArtPropertiesPanel } from './SmartArtPropertiesPanel';
 import { TableDataGrid } from './TableDataGrid';
 import { TablePropertiesPanel } from './TablePropertiesPanel';
+import { ZoomCoverControls } from './ZoomCoverControls';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -267,6 +268,14 @@ export function ElementInspectorBody({
 								disabled={!canEdit}
 							/>
 						</div>
+						{selectedElement.type === 'zoom' && (
+							<ZoomCoverControls
+								element={selectedElement}
+								disabled={!canEdit}
+								translate={t}
+								onPatch={onUpdateElement}
+							/>
+						)}
 						<TransformPanel
 							selectedElement={selectedElement}
 							canEdit={canEdit}

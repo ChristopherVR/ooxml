@@ -1,6 +1,6 @@
 import { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import JSZip from 'jszip';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { NS } from '../../../xml/namespaces';
 import { parseXml } from '../../../xml/xml';
@@ -114,6 +114,50 @@ describe('slide zoom package integration', () => {
 			width: 240,
 			imagePath: 'ppt/media/zoom-preview.png',
 		});
+	});
+
+	it('refreshes the native PNG when its target changes, preserving the former image part', async () => {
+		const handler = new PptxHandler();
+		const reopened = new PptxHandler();
+		const updatedPng =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jHuoAAAAASUVORK5CYII=';
+		try {
+			const { slides } = await handler.load(await buildSlideZoomPackage(), {
+				eagerDecodeImages: true,
+			});
+			const renderZoomPreview = vi.fn(async () => updatedPng);
+			await handler.save(slides, { renderZoomPreview });
+			expect(renderZoomPreview).not.toHaveBeenCalled();
+
+			slides[2].backgroundColor = '#4e69b3';
+			const bytes = await handler.save(slides, { renderZoomPreview });
+			expect(renderZoomPreview).toHaveBeenCalledExactlyOnceWith(
+				slides[2],
+				expect.any(Number),
+				expect.any(Number),
+				false,
+			);
+			const saved = await reopened.load(bytes.slice().buffer, { eagerDecodeImages: true });
+			const zoom = saved.slides[0].elements.find((element) => element.type === 'zoom');
+			expect(zoom?.imagePath).toMatch(/^ppt\/media\/image\d+\.png$/u);
+			const zip = await JSZip.loadAsync(bytes);
+			expect(await zip.file(zoom!.imagePath!)?.async('base64')).toBe(updatedPng.split(',')[1]);
+			expect(await zip.file('ppt/media/zoom-preview.png')?.async('base64')).toBe(
+				PNG_DATA.split(',')[1],
+			);
+			const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+			const slide = parseXml(xml);
+			const envelope = slide.getElementsByTagNameNS(NS.mc, 'AlternateContent')[0];
+			const blips = Array.from(envelope.getElementsByTagNameNS(NS.a, 'blip'));
+			expect(blips).toHaveLength(2);
+			const embeds = blips.map((blip) => blip.getAttributeNS(NS.r, 'embed'));
+			expect(embeds[0]).toBeTruthy();
+			expect(embeds[0]).toBe(embeds[1]);
+			expect(embeds[0]).not.toBe('rIdZoomPreview');
+		} finally {
+			handler.dispose();
+			reopened.dispose();
+		}
 	});
 
 	it('keeps the same Slide Zoom target after reordering and reopening', async () => {

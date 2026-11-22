@@ -6,7 +6,15 @@ import JSZip from 'jszip';
 
 import { savePptxViaBackstage } from './save-pptx';
 import { chooseCommand, openMenuOn } from './support/context-menu';
-import { loadDeck, ribbonTab, slideElements, slideStage, thumbnail } from './support/deck';
+import {
+	loadDeck,
+	ribbonTab,
+	selectElement,
+	slideElements,
+	slideStage,
+	thumbnail,
+} from './support/deck';
+import { openFormatSection } from './support/format-pane';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -143,4 +151,86 @@ test('creates sections from selected slides in a deck without any sections', asy
 	await page.getByRole('button', { name: 'Redo', exact: true }).first().click();
 	await expect(thumbnail(page, 8)).toBeVisible();
 	await expect(stage.locator('[data-zoom-type="summary"] img')).toHaveCount(2);
+});
+
+async function embeddedZoomPng(path: string): Promise<Uint8Array> {
+	const zip = await JSZip.loadAsync(await readFile(path));
+	const xml = await zip.file('ppt/slides/slide1.xml')?.async('string');
+	const rels = await zip.file('ppt/slides/_rels/slide1.xml.rels')?.async('string');
+	const id = xml?.match(/<pslz:zmPr\b[^>]*>\s*<p166:blipFill>\s*<a:blip\s+r:embed="([^"]+)"/u)?.[1];
+	const relationship = rels
+		?.match(/<Relationship\b[^>]*>/gu)
+		?.find((entry) => id && entry.includes(`Id="${id}"`));
+	const image = relationship?.match(/Target="\.\.\/(media\/[^"]+\.png)"/u)?.[1];
+	if (!image) throw new Error('Slide Zoom has no native PNG relationship');
+	const bytes = await zip.file(`ppt/${image}`)?.async('uint8array');
+	if (!bytes?.length) throw new Error('Slide Zoom PNG is missing from the package');
+	return bytes;
+}
+
+test('Slide Zoom saves destination edits and lets the Format pane replace and reset the image', async ({
+	page,
+}, testInfo) => {
+	await loadDeck(page);
+	await ribbonTab(page, 'Insert').click();
+	const ribbon = page.locator('pptx-ui-ribbon-insert');
+	await ribbon.getByRole('button', { name: 'Zoom', exact: true }).click();
+	await ribbon.locator('[data-insert-item="slideZoom"]').click();
+	const dialog = ribbon.locator('office-ui-dialog[open]');
+	await dialog.getByRole('radio', { name: /^Slide 2\b/ }).check();
+	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+	await expect(slideStage(page).locator('[data-zoom-type="slide"] img')).toBeVisible();
+
+	const before = testInfo.outputPath('original-zoom.pptx');
+	await (await savePptxViaBackstage(page)).saveAs(before);
+	const original = await embeddedZoomPng(before);
+	await thumbnail(page, 2).click();
+	await ribbonTab(page, 'Insert').click();
+	await ribbon.getByRole('button', { name: 'WordArt', exact: true }).click();
+	await dialog.getByRole('textbox', { name: 'WordArt text' }).fill('New Zoom destination heading');
+	await dialog.locator('.pptx-wordart-grid button').nth(4).click();
+	await dialog.getByRole('button', { name: 'Insert', exact: true }).click();
+	await expect(slideStage(page).getByText('New Zoom destination heading')).toBeVisible();
+
+	const after = testInfo.outputPath('refreshed-zoom.pptx');
+	await (await savePptxViaBackstage(page)).saveAs(after);
+	const refreshed = await embeddedZoomPng(after);
+	expect(refreshed).not.toEqual(original);
+
+	await thumbnail(page, 1).click();
+	const zoom = slideStage(page).locator('[data-zoom-type="slide"]');
+	await selectElement(page, zoom);
+	const sizePosition = await openFormatSection(page, 'sizePosition');
+	const cover = sizePosition.locator('pptx-ui-zoom-cover');
+	const choose = cover.getByRole('button', { name: 'Change Image', exact: true });
+	const reset = cover.getByRole('button', { name: 'Reset Image', exact: true });
+	await expect(reset).toBeDisabled();
+	const coverBase64 = await page.evaluate(() => {
+		const canvas = document.createElement('canvas');
+		canvas.width = 24;
+		canvas.height = 16;
+		const context = canvas.getContext('2d')!;
+		context.fillStyle = '#102b8b';
+		context.fillRect(0, 0, canvas.width, canvas.height);
+		return canvas.toDataURL().split(',')[1]!;
+	});
+	const choosing = page.waitForEvent('filechooser');
+	await choose.click();
+	await (
+		await choosing
+	).setFiles({
+		name: 'cover.png',
+		mimeType: 'image/png',
+		buffer: Buffer.from(coverBase64, 'base64'),
+	});
+	await expect(reset).toBeEnabled();
+	const covered = testInfo.outputPath('covered-zoom.pptx');
+	await (await savePptxViaBackstage(page)).saveAs(covered);
+	expect(await embeddedZoomPng(covered)).not.toEqual(refreshed);
+
+	await reset.click();
+	await expect(reset).toBeDisabled();
+	const restored = testInfo.outputPath('restored-zoom.pptx');
+	await (await savePptxViaBackstage(page)).saveAs(restored);
+	expect(await embeddedZoomPng(restored)).toEqual(refreshed);
 });

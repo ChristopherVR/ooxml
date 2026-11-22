@@ -243,6 +243,13 @@ export interface PptxHandlerSaveOptions {
 	 * `ooxml-core/pptx/node` (it needs the optional Node canvas peer).
 	 */
 	rasterizeSvg?: PptxSvgRasterizer;
+	/** Render a destination slide to an embedded PNG when its Zoom preview needs refreshing. */
+	renderZoomPreview?: (
+		slide: PptxSlide,
+		width: number,
+		height: number,
+		transparent: boolean,
+	) => Promise<string | undefined>;
 	/**
 	 * Embedded fonts to write back (or add) to the saved PPTX.
 	 *

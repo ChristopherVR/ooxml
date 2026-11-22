@@ -671,6 +671,7 @@ describe('editorState save', () => {
 			headerFooter: {},
 			presentationProperties: {},
 			slideMasters: [],
+			renderZoomPreview: expect.any(Function),
 		});
 		expect(editor.dirty).toBeFalsy();
 	});
@@ -687,6 +688,7 @@ describe('editorState save', () => {
 			headerFooter: {},
 			presentationProperties: {},
 			slideMasters: [],
+			renderZoomPreview: expect.any(Function),
 		});
 	});
 

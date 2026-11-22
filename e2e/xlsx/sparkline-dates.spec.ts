@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { editor, goToCell, grid, newWorkbook, ribbon, typeInActiveCell } from './helpers';
+import {
+	clickRibbonControl,
+	editor,
+	goToCell,
+	grid,
+	newWorkbook,
+	ribbon,
+	typeInActiveCell,
+} from './helpers';
 
 test('authors, saves and clears a sparkline date axis with keyboard undo', async ({
 	page,
@@ -18,7 +26,7 @@ test('authors, saves and clears a sparkline date axis with keyboard undo', async
 	}
 	await goToCell(page, 'F1');
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).locator('[data-command="insert.sparkline-line"]').click();
+	await clickRibbonControl(page, ribbon(page).locator('[data-command="insert.sparkline-line"]'));
 	const create = editor(page).locator('[data-dialog="create-sparklines"]');
 	await create.getByLabel('Data Range:', { exact: true }).fill('A1:C1');
 	await create.getByLabel('Date Range (optional):', { exact: true }).fill('A2:C2');
@@ -48,7 +56,10 @@ test('authors, saves and clears a sparkline date axis with keyboard undo', async
 	await goToCell(page, 'F1');
 	expect(await ratio()).toBeCloseTo(0.05, 2);
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).locator('[data-command="sparkline.settings"]').first().click();
+	await clickRibbonControl(
+		page,
+		ribbon(page).locator('[data-command="sparkline.settings"]').first(),
+	);
 	const settings = editor(page).locator('[data-dialog="sparkline-settings"]');
 	await expect(settings.getByLabel('Date Range (optional):', { exact: true })).toHaveValue(
 		"'Sheet1'!A2:C2",

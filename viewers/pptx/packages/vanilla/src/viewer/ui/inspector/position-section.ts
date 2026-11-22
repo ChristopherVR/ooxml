@@ -1,5 +1,5 @@
 import { ELEMENT_GEOMETRY_SECTIONS, sizePositionSections } from 'ooxml-ui/pptx';
-import type { ElementGeometryTarget } from 'ooxml-ui/pptx';
+import type { ElementGeometryTarget, ZoomCoverPatchEvent } from 'ooxml-ui/pptx';
 
 import type { GeometryPatch } from '../../editor/editor-edit-ops';
 import type { Translator } from '../../i18n';
@@ -65,6 +65,11 @@ export function createPositionSection(
 		sectionClassName: 'pptxv-inspector-grid',
 	});
 	el.appendChild(zoom.el);
+	const cover = doc.createElement('pptx-ui-zoom-cover');
+	cover.addEventListener('zoom-cover-patch', (event) =>
+		setGeometry((event as ZoomCoverPatchEvent).detail),
+	);
+	el.appendChild(cover);
 
 	return {
 		el,
@@ -84,6 +89,7 @@ export function createPositionSection(
 				!state.hasSelection,
 			);
 			const element = state.selectedElement;
+			cover.state = { element, translate: t, disabled: !state.hasSelection };
 			zoom.el.hidden = element?.type !== 'zoom';
 			if (element?.type === 'zoom' && !zoom.el.hidden) zoom.update(element, !state.hasSelection);
 			lockBtn.setActive(state.isLocked);

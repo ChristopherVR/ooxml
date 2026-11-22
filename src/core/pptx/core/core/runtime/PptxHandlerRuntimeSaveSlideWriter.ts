@@ -103,7 +103,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 *    ZIP itself and only ever added to, so skipping is safe there.
 	 * 4. Otherwise the fingerprint decides: unchanged model, unchanged bytes.
 	 */
-	private canSkipSlideSave(slide: PptxSlide): boolean {
+	protected canSkipSlideSave(slide: PptxSlide): boolean {
 		if (slide.isDirty === true) {
 			return false;
 		}

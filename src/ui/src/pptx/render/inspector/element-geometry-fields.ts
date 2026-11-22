@@ -38,7 +38,8 @@ export type ElementGeometryPatch = Partial<
 		| 'zoomShowBackground'
 		| 'transitionDurationMs'
 		| 'summaryTargets'
-	>
+	> &
+		Pick<ZoomPptxElement, 'zoomImageType' | 'imagePath' | 'imageData'>
 >;
 
 export type ElementGeometrySection = InspectorSectionDescriptor<

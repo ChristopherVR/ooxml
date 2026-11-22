@@ -7,7 +7,7 @@
 	 * sections without blowing the file-size budget.
 	 */
 	import type { PptxElement } from 'pptx-viewer-core';
-	import type { ElementGeometryPatch } from 'ooxml-ui/pptx';
+	import type { ElementGeometryPatch, ZoomCoverPatchEvent } from 'ooxml-ui/pptx';
 	import {
 		sizePositionSections,
 		elementLockTogglePatch,
@@ -31,6 +31,10 @@
 		part?: 'lock' | 'geometry';
 	} = $props();
 	const t = useTranslator();
+	const zoomCover = $derived({ element: el, disabled: !editor.editable, translate: t });
+	function applyCover(event: ZoomCoverPatchEvent): void {
+		commit(event.detail);
+	}
 
 	function commit(patch: ElementGeometryPatch): void {
 		editor.applyElementPatch(el.id, patch as Partial<PptxElement>);
@@ -69,6 +73,9 @@
 {#if part !== 'lock'}
 	<div data-pptx-inspector-section={part === 'geometry' ? 'transform' : undefined}>
 		<InspectorFields sections={sizePositionSections(el)} target={el} onpatch={commit} />
+		{#if el.type === 'zoom'}
+			<pptx-ui-zoom-cover state={zoomCover} onzoom-cover-patch={applyCover}></pptx-ui-zoom-cover>
+		{/if}
 	</div>
 {/if}
 

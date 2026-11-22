@@ -65,6 +65,7 @@ declare module 'react' {
 			'pptx-ui-ribbon-insert': WebControlProps;
 			'pptx-ui-mobile-insert': WebControlProps;
 			'pptx-ui-ribbon-view': WebControlProps;
+			'pptx-ui-zoom-cover': WebControlProps;
 			'pptx-ui-ribbon-group': WebControlProps;
 			'pptx-ui-ribbon-section': WebControlProps;
 			'pptx-ui-color-grid': WebControlProps;

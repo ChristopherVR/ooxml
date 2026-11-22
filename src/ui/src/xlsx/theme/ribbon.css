@@ -347,7 +347,7 @@
 	display: none;
 }
 .ribbon-overflow-panel .ribbon-group {
-	height: 84px;
+	min-height: 84px;
 	padding-right: 2px;
 	border: 0;
 }

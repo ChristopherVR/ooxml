@@ -130,7 +130,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (typeof el.imageData === 'string') {
 			const parsed = this.parseDataUrlToBytes(el.imageData);
 			if (parsed) {
-				imagePath ??= ctx.saveSession.nextMediaPath(parsed.extension);
+				if (!imagePath) {
+					imagePath = ctx.saveSession.nextMediaPath(parsed.extension);
+					// A replacement can share its previous relationship or image part with another picture.
+					relationshipId = undefined;
+				}
 				this.zip.file(imagePath, parsed.bytes);
 			}
 		}

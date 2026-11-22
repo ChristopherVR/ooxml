@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Lock, LockOpen } from '@lucide/vue';
 import { sizePositionSections, elementLockTogglePatch, isElementLocked } from 'ooxml-ui/pptx';
+import type { ZoomCoverPatchEvent } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -33,6 +34,14 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const zoomCover = computed(() => ({
+	element: props.element,
+	disabled: !props.canEdit,
+	translate: t,
+}));
+function applyCover(event: Event): void {
+	emit('update', (event as ZoomCoverPatchEvent).detail);
+}
 
 const flipHorizontal = computed(() => Boolean(props.element.flipHorizontal));
 const flipVertical = computed(() => Boolean(props.element.flipVertical));
@@ -82,6 +91,11 @@ function onFlipVertical(checked: boolean): void {
 			@patch="(patch) => emit('update', patch as Partial<PptxElement>)"
 		/>
 
+		<pptx-ui-zoom-cover
+			v-if="showGeometry && element.type === 'zoom'"
+			:state.prop="zoomCover"
+			@zoom-cover-patch="applyCover"
+		/>
 		<div v-if="showArrange" class="pptx-vue-arrange-flips grid grid-cols-2 gap-2">
 			<label class="pptx-vue-arrange-check inline-flex items-center gap-2 text-foreground">
 				<pptx-ui-checkbox

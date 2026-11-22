@@ -329,11 +329,15 @@ test.describe('Word-style ribbon', () => {
 		await surface.click();
 		await page.keyboard.type('Body paragraph');
 		await editor.locator('[role="tab"][data-tab="insert"]').click();
-		await editor.getByRole('button', { name: 'Bookmark', exact: true }).click();
+		const bookmark = editor.getByRole('button', { name: 'Bookmark', exact: true });
+		await reveal(editor, bookmark);
+		await bookmark.click();
 		await editor.getByLabel('Bookmark name', { exact: true }).fill('KeyPoint');
 		await editor.locator('.dve-bookmark-dialog').getByRole('button', { name: 'Add' }).click();
 		await expect(editor.locator('.dve-bookmark-dialog')).toBeHidden();
-		await editor.getByRole('button', { name: 'Cover page', exact: true }).click();
+		const cover = editor.getByRole('button', { name: 'Cover page', exact: true });
+		await reveal(editor, cover);
+		await cover.click();
 		await expect(surface.locator('p').nth(1)).toHaveText('Document title');
 		const pending = page.waitForEvent('download');
 		await saveButton(page).click();
