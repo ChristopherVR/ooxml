@@ -78,6 +78,7 @@ export const EXCEL_RIBBON_TAB_IDS = [
 	'table-design',
 	'chart-design',
 	'graphics-format',
+	'embedded-object',
 	'smartart-design',
 	'slicer',
 	'timeline',
