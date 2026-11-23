@@ -1,6 +1,7 @@
 import type { CellRange } from '../address';
 import type { Workbook } from '../model';
 import type { FormulaAst, FormulaError } from './ast';
+import type { CalcExternalProviders } from './providers';
 import type { TextRule } from './text-compare';
 import type { Matrix, RefValue, Scalar, Scope, Value } from './values';
 
@@ -47,6 +48,8 @@ export interface EvalHost {
 	parse(formula: string): FormulaAst | FormulaError;
 	now(): Date;
 	random(): number;
+	/** Host-supplied external function providers, if configured on `CalcEngineOptions`. */
+	readonly providers?: CalcExternalProviders | undefined;
 }
 
 /** Work shared by every frame of one formula evaluation (names are evaluated once per caller). */

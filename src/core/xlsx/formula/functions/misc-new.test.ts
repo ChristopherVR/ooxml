@@ -60,10 +60,15 @@ describe('PERCENTOF and TRIMRANGE', () => {
 		expect(calc('PERCENTOF(A1:A2,A1:A4)', { A1: 1, A2: 2, A3: 3, A4: 4 })).toBe(0.3);
 		expect(calc('PERCENTOF(A1,B1)', { A1: 1, B1: 0 })).toEqual(E.DIV0);
 	});
-	it('TRIMRANGE drops blank edges', () => {
+	it('TRIMRANGE drops blank edges and preserves references', () => {
 		expect(calc('ROWS(TRIMRANGE(A1:C5))', { B2: 1, B3: 2 })).toBe(2);
 		expect(calc('COLUMNS(TRIMRANGE(A1:C5))', { B2: 1, B3: 2 })).toBe(1);
 		expect(calc('ROWS(TRIMRANGE(A1:C5,1))', { B2: 1, B3: 2 })).toBe(4);
+		expect(calc('ISREF(TRIMRANGE(A1:C5))', { B2: 1, B3: 2 })).toBe(true);
+		expect(calc('ROW(TRIMRANGE(A1:C5))', { B2: 1, B3: 2 })).toBe(2);
+		expect(calc('COLUMN(TRIMRANGE(A1:C5))', { B2: 1, B3: 2 })).toBe(2);
+		expect(calc('SUM(TRIMRANGE(A:A))', { A2: 10, A4: 5 })).toBe(15);
+		expect(calc('ISREF(TRIMRANGE({1,2;3,4}))')).toBe(false);
 	});
 });
 

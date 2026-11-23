@@ -1,5 +1,35 @@
 import type { CellRange } from '../address';
 import type { CellValue } from '../model';
+import type { CalcExternalProviders } from './providers';
+
+export type {
+	CalcExternalProviders,
+	CopilotPromptPart,
+	CopilotProvider,
+	CopilotRequest,
+	CubeHandle,
+	CubeKpiProperty,
+	CubeMemberHandle,
+	CubeMemberResult,
+	CubeProvider,
+	CubeSetHandle,
+	CubeSetOptions,
+	CubeSetResult,
+	CubeSortOrder,
+	CubeValueArg,
+	DetectLanguageProvider,
+	ImageProvider,
+	ImageRequest,
+	ImageSizing,
+	RtdProvider,
+	StockHistoryBar,
+	StockHistoryInterval,
+	StockHistoryProperty,
+	StockHistoryProvider,
+	StockHistoryRequest,
+	TranslateProvider,
+	WebserviceProvider,
+} from './providers';
 
 export interface CellPosition {
 	sheet: number;
@@ -80,6 +110,13 @@ export interface CalcEngineOptions {
 	 * budget: for a quick first attempt that leaves slow formulas to a second one elsewhere.
 	 */
 	workCap?: number;
+	/**
+	 * Host-supplied synchronous providers for external/integration functions (`CUBE*`, `COPILOT`,
+	 * `STOCKHISTORY`, `TRANSLATE`, `DETECTLANGUAGE`, `IMAGE`, `RTD`, `WEBSERVICE`). Unconfigured by
+	 * default: the engine never makes outbound network requests itself, keeps cached values on
+	 * initial load for unconfigured functions, and returns `#NAME?` for newly entered ones.
+	 */
+	providers?: CalcExternalProviders;
 }
 
 export const CIRCULAR_REFERENCE_WARNING =

@@ -21,11 +21,37 @@ export const DEVIATIONS: Readonly<Record<string, string>> = {
 	GETPIVOTDATA: "Reads this editor's worksheet-range pivots; `#REF!` for anything else.",
 	GROUPBY: 'Subset: one aggregating function, grand totals only, flat output.',
 	PIVOTBY: 'Subset: one aggregating function, one column field, grand totals only.',
-	TRIMRANGE: 'Returns the trimmed values as an array rather than a reference.',
 	ODDFPRICE: 'Quasi-coupon method; long odd first periods not checked against Excel.',
 	ODDFYIELD: 'Quasi-coupon method; long odd first periods not checked against Excel.',
 	ODDLPRICE: 'Quasi-coupon method; not checked against Excel.',
 	ODDLYIELD: 'Quasi-coupon method; not checked against Excel.',
+	CUBEKPIMEMBER:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBEMEMBER:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBEMEMBERPROPERTY:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBERANKEDMEMBER:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBESET:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBESETCOUNT:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	CUBEVALUE:
+		'Requires a host-supplied `CalcEngineOptions.providers.cube` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	COPILOT:
+		'Requires a host-supplied `CalcEngineOptions.providers.copilot` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	STOCKHISTORY:
+		'Requires a host-supplied `CalcEngineOptions.providers.stockHistory` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	TRANSLATE:
+		'Requires a host-supplied `CalcEngineOptions.providers.translate` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	DETECTLANGUAGE:
+		'Requires a host-supplied `CalcEngineOptions.providers.detectLanguage` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	IMAGE:
+		'Requires a host-supplied `CalcEngineOptions.providers.image` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	RTD: 'Requires a host-supplied `CalcEngineOptions.providers.rtd` provider (volatile when configured); returns `#NAME?` (or keeps cached values on load) when unconfigured.',
+	WEBSERVICE:
+		'Requires a host-supplied `CalcEngineOptions.providers.webservice` provider; returns `#NAME?` (or keeps cached values on load) when unconfigured.',
 };
 
 const FIXTURES = [
@@ -81,18 +107,23 @@ export function buildFunctionList(): string {
 		'nested in a larger formula, and one case does not prove every argument combination);',
 		'**Unit** means unit tests only.',
 		'',
-		'## Unsupported integrations',
+		'## Host-provided integrations',
 		'',
-		'These functions are not calculated. No network request, external process or AI call is made.',
+		'Core never makes outbound network requests, external process calls or AI calls itself.',
+		'These 14 functions are unconfigured by default (preserving cached values on initial load and',
+		'returning `#NAME?` when newly entered) and execute only when the host supplies the matching',
+		'provider on `CalcEngineOptions.providers`.',
 		'',
-		'| Functions | Missing capability |',
+		'| Functions | Required host provider |',
 		'| --- | --- |',
-		'| `CUBEKPIMEMBER`, `CUBEMEMBER`, `CUBEMEMBERPROPERTY`, `CUBERANKEDMEMBER`, `CUBESET`, `CUBESETCOUNT`, `CUBEVALUE` | OLAP connection and query execution. |',
-		'| `WEBSERVICE` | HTTP retrieval. |',
-		'| `STOCKHISTORY` | Historical market data service. |',
-		'| `RTD` | Real-time data provider. |',
-		'| `IMAGE` | Formula-driven image retrieval and in-cell image results. |',
-		'| `COPILOT`, `TRANSLATE`, `DETECTLANGUAGE` | AI and language services. |',
+		'| `CUBEKPIMEMBER`, `CUBEMEMBER`, `CUBEMEMBERPROPERTY`, `CUBERANKEDMEMBER`, `CUBESET`, `CUBESETCOUNT`, `CUBEVALUE` | `providers.cube` (OLAP / local cube provider; `createMemoryCubeProvider` included). |',
+		'| `WEBSERVICE` | `providers.webservice` (HTTP(S) retrieval). |',
+		'| `STOCKHISTORY` | `providers.stockHistory` (historical market data). |',
+		'| `RTD` | `providers.rtd` (real-time data, volatile when configured). |',
+		'| `IMAGE` | `providers.image` (image resolution). |',
+		'| `COPILOT` | `providers.copilot` (AI prompt/context evaluation). |',
+		'| `TRANSLATE` | `providers.translate` (text translation). |',
+		'| `DETECTLANGUAGE` | `providers.detectLanguage` (language detection). |',
 		'',
 	];
 	for (const [category, fns] of [...byCategory].sort(([a], [b]) => a.localeCompare(b))) {

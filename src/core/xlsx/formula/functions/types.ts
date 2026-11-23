@@ -1,4 +1,5 @@
 import type { CallContext, LazyArg } from '../context';
+import type { CalcExternalProviders } from '../providers';
 import type { Scalar, Value } from '../values';
 import type { ErrorCode } from '../../model';
 
@@ -25,6 +26,8 @@ export interface FunctionSpec {
 	params?: readonly ParamKind[];
 	/** Recalculated on every recalculation (NOW, RAND, OFFSET, INDIRECT, ...). */
 	volatile?: boolean;
+	/** Host provider required to evaluate this function; without it the function acts as unsupported. */
+	provider?: keyof CalcExternalProviders;
 	fn?: (args: Value[], ctx: CallContext) => Value;
 	/**
 	 * The work one call costs of the formula's work budget when an array lifts the call over its

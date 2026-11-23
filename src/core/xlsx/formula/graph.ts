@@ -140,8 +140,9 @@ function visit(node: FormulaAst, c: DepContext): void {
 			return;
 		case 'call': {
 			const spec = getFunction(node.name);
-			if (spec?.volatile) c.volatile = true;
-			if (!spec && !isLocalOrDefined(node.rawName, c)) c.unsupported = true;
+			const configured = !spec?.provider || c.host.providers?.[spec.provider] !== undefined;
+			if (spec?.volatile && configured) c.volatile = true;
+			if ((!spec || !configured) && !isLocalOrDefined(node.rawName, c)) c.unsupported = true;
 			const reference = spec !== undefined && REFERENCE_ARGUMENT.has(node.name);
 			node.args.forEach((arg, i) => {
 				if (reference && i === 0) {

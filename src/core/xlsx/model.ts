@@ -29,7 +29,12 @@ export const ERROR_CODES = [
 	'#N/A',
 	'#GETTING_DATA',
 	'#SPILL!',
+	'#CONNECT!',
+	'#BLOCKED!',
+	'#UNKNOWN!',
+	'#FIELD!',
 	'#CALC!',
+	'#BUSY!',
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 

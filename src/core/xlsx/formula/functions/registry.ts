@@ -19,6 +19,8 @@ import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
 import { TEXT_EAST_ASIAN_FUNCTIONS } from './text-east-asian';
 import { EUROCONVERT } from './euroconvert';
 import { FILTERXML } from './filterxml';
+import { CUBE_FUNCTIONS } from './cube';
+import { INTEGRATION_FUNCTIONS } from './integrations';
 import type { FunctionInfo, FunctionSpec } from './types';
 
 const ALL: readonly FunctionSpec[] = [
@@ -43,6 +45,8 @@ const ALL: readonly FunctionSpec[] = [
 	EUROCONVERT,
 	...ENGINEERING_FUNCTIONS,
 	...DATABASE_FUNCTIONS,
+	...CUBE_FUNCTIONS,
+	...INTEGRATION_FUNCTIONS,
 ];
 
 const REGISTRY = new Map<string, FunctionSpec>();

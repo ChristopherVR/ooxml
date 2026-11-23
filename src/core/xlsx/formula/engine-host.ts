@@ -5,7 +5,7 @@ import { forEachCellInRange } from '../cells';
 import type { Cell, Workbook } from '../model';
 import { FormulaError, type FormulaAst } from './ast';
 import type { EvalHost } from './context';
-import type { CalcEngineOptions } from './engine-types';
+import type { CalcEngineOptions, CalcExternalProviders } from './engine-types';
 import type { FormulaOrder } from './engine-order';
 import { analyze, type FormulaNode } from './graph';
 import { AreaIndex, ColumnIndex, ReverseIndex } from './graph-index';
@@ -194,6 +194,10 @@ export abstract class EngineHost implements EvalHost {
 
 	random(): number {
 		return this.options.random ? this.options.random() : Math.random();
+	}
+
+	get providers(): CalcExternalProviders | undefined {
+		return this.options.providers;
 	}
 
 	// ---- graph ----

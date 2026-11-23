@@ -1,5 +1,5 @@
 // PERCENTOF and TRIMRANGE.
-import { ERR, fail, Matrix, type Scalar } from '../values';
+import { ERR, fail, Matrix, RefValue, type Scalar } from '../values';
 import { collectNumbers, spec } from './helpers';
 import type { FunctionSpec } from './types';
 
@@ -12,6 +12,43 @@ function trimmed(blank: boolean[], mode: number): [number, number] {
 	if (mode === 1 || mode === 3) while (start < end && blank[start]) start++;
 	if (mode === 2 || mode === 3) while (end > start && blank[end - 1]) end--;
 	return [start, end];
+}
+
+/** Trims a padded or dense matrix without materialising trailing null padding. */
+function trimBounds(
+	matrix: Matrix,
+	rowMode: number,
+	colMode: number,
+): [number, number, number, number] {
+	const blockRows = matrix.blockRows;
+	const blockCols = matrix.blockCols;
+	const padBlank = !matrix.isPadded || matrix.fill === null;
+	if (!padBlank) {
+		const data = matrix.data;
+		const cols = data[0]?.length ?? 0;
+		const [r0, r1] = trimmed(
+			data.map((row) => row.every((v) => v === null)),
+			rowMode,
+		);
+		const [c0, c1] = trimmed(
+			Array.from({ length: cols }, (_, c) => data.every((row) => row[c] === null)),
+			colMode,
+		);
+		return [r0, r1, c0, c1];
+	}
+	const rowBlank = Array.from({ length: blockRows }, (_, r) => {
+		for (let c = 0; c < blockCols; c++) if (matrix.get(r, c) !== null) return false;
+		return true;
+	});
+	const colBlank = Array.from({ length: blockCols }, (_, c) => {
+		for (let r = 0; r < blockRows; r++) if (matrix.get(r, c) !== null) return false;
+		return true;
+	});
+	let [r0, r1] = trimmed(rowBlank, rowMode);
+	let [c0, c1] = trimmed(colBlank, colMode);
+	if (rowMode === 0 || rowMode === 1) r1 = matrix.rows;
+	if (colMode === 0 || colMode === 1) c1 = matrix.cols;
+	return [r0, r1, c0, c1];
 }
 
 export const MODERN_FUNCTIONS: FunctionSpec[] = [
@@ -40,22 +77,30 @@ export const MODERN_FUNCTIONS: FunctionSpec[] = [
 			const mode = (i: number): number => {
 				const v = args[i];
 				if (v === undefined || v === null) return 3;
-				const n = Math.trunc(ctx.toScalar(v) as number);
-				if (typeof ctx.toScalar(v) !== 'number' || n < 0 || n > 3) fail(ERR.VALUE);
+				const s = ctx.toScalar(v);
+				const n = Math.trunc(s as number);
+				if (typeof s !== 'number' || n < 0 || n > 3) fail(ERR.VALUE);
 				return n;
 			};
-			const data = ctx.toMatrix(args[0] ?? null).data;
-			const cols = data[0]?.length ?? 0;
-			const [r0, r1] = trimmed(
-				data.map((row) => row.every((v) => v === null)),
-				mode(1),
-			);
-			const [c0, c1] = trimmed(
-				Array.from({ length: cols }, (_, c) => data.every((row) => row[c] === null)),
-				mode(2),
-			);
+			const rowMode = mode(1);
+			const colMode = mode(2);
+			const source = args[0] ?? null;
+			const matrix = ctx.toMatrix(source);
+			const [r0, r1, c0, c1] = trimBounds(matrix, rowMode, colMode);
 			if (r1 <= r0 || c1 <= c0) fail(ERR.CALC);
-			return new Matrix(data.slice(r0, r1).map((row): Scalar[] => row.slice(c0, c1)));
+			if (source instanceof RefValue && source.areas.length === 1 && source.first) {
+				const area = source.first;
+				return new RefValue([
+					{
+						sheet: area.sheet,
+						range: {
+							start: { row: area.range.start.row + r0, col: area.range.start.col + c0 },
+							end: { row: area.range.start.row + r1 - 1, col: area.range.start.col + c1 - 1 },
+						},
+					},
+				]);
+			}
+			return Matrix.build(r1 - r0, c1 - c0, (r, c): Scalar => matrix.get(r0 + r, c0 + c));
 		},
 		['any'],
 	),

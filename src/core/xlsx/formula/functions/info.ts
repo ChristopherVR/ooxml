@@ -26,6 +26,10 @@ const ERROR_NUMBERS: Partial<Record<ErrorCode, number>> = {
 	'#N/A': 7,
 	'#GETTING_DATA': 8,
 	'#SPILL!': 9,
+	'#CONNECT!': 10,
+	'#BLOCKED!': 11,
+	'#UNKNOWN!': 12,
+	'#FIELD!': 13,
 	'#CALC!': 14,
 };
 

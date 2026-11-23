@@ -34,8 +34,8 @@ const MAX_NAME_DEPTH = 32;
 const LAMBDA_CALL_WORK = 500;
 /** Uncached defined-name evaluations one formula may start before it gives up with `#NAME?`. */
 const MAX_NAME_WORK = 100_000;
-/** Names that read the clock or a random source are not memoized (they differ per reference). */
-const VOLATILE_NAME = /\b(RAND|RANDBETWEEN|RANDARRAY|NOW|TODAY|OFFSET|INDIRECT)\s*\(/i;
+/** Names that read the clock, a random source or RTD are not memoized (they differ per reference). */
+const VOLATILE_NAME = /\b(RAND|RANDBETWEEN|RANDARRAY|NOW|TODAY|OFFSET|INDIRECT|RTD)\s*\(/i;
 
 /** Evaluates `node`; references stay references (the caller decides how to read them). */
 export function evaluateNode(node: FormulaAst, frame: Frame): Value {

@@ -73,7 +73,7 @@ export function callFunction(node: Extract<FormulaAst, { type: 'call' }>, frame:
 		);
 	}
 	const spec = getFunction(node.name);
-	if (!spec) {
+	if (!spec || (spec.provider && !frame.host.providers?.[spec.provider])) {
 		const named = evaluateDefinedName(node.rawName, frame.sheet, false, frame);
 		if (named instanceof LambdaValue) {
 			return invokeLambda(

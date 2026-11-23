@@ -26,8 +26,14 @@ export const ERR = {
 	NAME: err('#NAME?'),
 	NUM: err('#NUM!'),
 	NA: err('#N/A'),
+	GETTING_DATA: err('#GETTING_DATA'),
 	SPILL: err('#SPILL!'),
+	CONNECT: err('#CONNECT!'),
+	BLOCKED: err('#BLOCKED!'),
+	UNKNOWN: err('#UNKNOWN!'),
+	FIELD: err('#FIELD!'),
 	CALC: err('#CALC!'),
+	BUSY: err('#BUSY!'),
 } as const;
 
 export const isError = isCellError;
