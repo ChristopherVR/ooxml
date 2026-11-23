@@ -200,4 +200,40 @@ export const INFO_FUNCTIONS: FunctionSpec[] = [
 		['any'],
 		true,
 	),
+	spec(
+		'INFO',
+		C,
+		'INFO(type_text)',
+		'Information about the current workbook and calculation environment.',
+		1,
+		1,
+		(args, ctx) => {
+			const v = scalar(args[0]);
+			if (isError(v)) return v;
+			if (v === null) return ERR.VALUE;
+			const kind = str(v).toLowerCase();
+			switch (kind) {
+				case 'directory':
+					return '';
+				case 'numfile':
+					return ctx.workbook.sheets.length;
+				case 'origin': {
+					const topLeft = ctx.workbook.sheets[ctx.sheet]?.view.topLeft;
+					return `$A:$${columnLabel(topLeft?.col ?? 0)}$${(topLeft?.row ?? 0) + 1}`;
+				}
+				case 'osversion':
+					return 'Web';
+				case 'recalc':
+					return ctx.workbook.calcMode === 'manual' ? 'Manual' : 'Automatic';
+				case 'release':
+					return '16.0';
+				case 'system':
+					return 'pcdos';
+				default:
+					return ERR.VALUE;
+			}
+		},
+		['value'],
+		true,
+	),
 ];

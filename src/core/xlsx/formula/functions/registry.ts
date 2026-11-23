@@ -16,6 +16,8 @@ import { GETPIVOTDATA } from './getpivotdata';
 import { GROUPBY_FUNCTIONS } from './groupby';
 import { MODERN_FUNCTIONS } from './modern';
 import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
+import { TEXT_EAST_ASIAN_FUNCTIONS } from './text-east-asian';
+import { EUROCONVERT } from './euroconvert';
 import { FILTERXML } from './filterxml';
 import type { FunctionInfo, FunctionSpec } from './types';
 
@@ -27,6 +29,7 @@ const ALL: readonly FunctionSpec[] = [
 	...LOGICAL_FUNCTIONS,
 	...TEXT_FUNCTIONS,
 	...TEXT_EXTRA_FUNCTIONS,
+	...TEXT_EAST_ASIAN_FUNCTIONS,
 	FILTERXML,
 	BAHTTEXT,
 	GETPIVOTDATA,
@@ -37,6 +40,7 @@ const ALL: readonly FunctionSpec[] = [
 	...ARRAY_FUNCTIONS,
 	...INFO_FUNCTIONS,
 	...FINANCIAL_FUNCTIONS,
+	EUROCONVERT,
 	...ENGINEERING_FUNCTIONS,
 	...DATABASE_FUNCTIONS,
 ];

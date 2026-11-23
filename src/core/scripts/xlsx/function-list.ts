@@ -94,8 +94,6 @@ export function buildFunctionList(): string {
 		'| `IMAGE` | Formula-driven image retrieval and in-cell image results. |',
 		'| `COPILOT`, `TRANSLATE`, `DETECTLANGUAGE` | AI and language services. |',
 		'',
-		'`INFO`, `ASC`, `DBCS`, `JIS`, `PHONETIC` and `EUROCONVERT` remain unimplemented too.',
-		'',
 	];
 	for (const [category, fns] of [...byCategory].sort(([a], [b]) => a.localeCompare(b))) {
 		out.push(

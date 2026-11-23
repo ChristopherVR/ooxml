@@ -339,11 +339,10 @@ line/marker swatches and position-authoring controls remain incomplete.
    checked against Excel when sorting left to right.
    The criteria and sort modes were checked against the ECMA-376 semantics and unit tests, not against real
    Excel row results.
-9. Functions. 502 functions are registered (`viewers/xlsx/docs/functions.md`); these 20
-   return `#NAME?`: INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT (no external service
-   needed), and CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,
+9. Functions. 508 functions are registered (`viewers/xlsx/docs/functions.md`); these 14
+   return `#NAME?`: CUBEKPIMEMBER, CUBEMEMBER, CUBEMEMBERPROPERTY, CUBERANKEDMEMBER, CUBESET,
    CUBESETCOUNT, CUBEVALUE, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT,
-   TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service). These integrations are named in Feature Status and the generated function list. Cached unsupported results can survive initial loading, but cannot be refreshed. FILTERXML is implemented locally.
+   TRANSLATE and DETECTLANGUAGE (need an OLAP, web or AI service). These integrations are named in Feature Status and the generated function list. Cached unsupported results can survive initial loading, but cannot be refreshed. FILTERXML, INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are implemented locally.
 10. Data tools and auditing (View > Split is implemented: `layout/split.ts`, `SheetView.split`):
     Flash Fill, Subtotal, Consolidate and Advanced filter have no commands. Formula auditing (Trace
     Precedents and Dependents, Remove Arrows, Evaluate Formula with Step In and Step Out, Error

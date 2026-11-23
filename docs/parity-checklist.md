@@ -255,8 +255,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Data Sort, the AutoFilter value list and Find still compare text with the browser's
       accent-insensitive collation (`src/core/xlsx/edit/sort-keys.ts`, `filter-menu.ts`), not the
       linguistic rule formulas use; Excel's behaviour there has not been measured.
-- [ ] **P2** INFO, ASC, DBCS, JIS, PHONETIC and EUROCONVERT are not implemented
-      (no external service needed).
+- [x] **P2** `INFO`, `ASC`, `DBCS`, `JIS`, `PHONETIC` and `EUROCONVERT` are implemented locally
+      (`formula/functions/info.ts`, `text-east-asian.ts`, `euroconvert.ts`; unit tests in
+      `info-east-asian-euro.test.ts`; regenerated `viewers/xlsx/docs/functions.md`). `INFO("directory")`
+      returns `""` and `INFO("osversion")` returns `"Web"` without disclosing host paths or OS details.
 - [x] **P2** FILTERXML evaluates XPath locally and spills selected values, with Excel's namespace,
       whitespace, direct-text and value conversion behavior. Evidence: 35 recorded Excel cases,
       core edit/undo/save regressions and `e2e/xlsx/filterxml.spec.ts` in all six bindings. Excel 16
