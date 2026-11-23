@@ -516,7 +516,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Layout and rendering
 
-- [ ] **P1** Hyphenation: `autoHyphenation` is read but never applied by `src/core/docx/layout`.
+- [x] **P1** Hyphenation: `autoHyphenation`, `hyphenationZone`, `consecutiveHyphenLimit`,
+      `doNotHyphenateCaps`, paragraph/style `suppressAutoHyphens` and explicit soft hyphens
+      (`\u00AD`) are applied by `src/core/docx/layout` using the offline English/Latin hyphenator
+      (`text/hyphenation.ts`, `docx/layout/hyphenate-line.ts`; verified in
+      `text/hyphenation.test.ts`, `docx/hyphenation.test.ts`, `docx/layout/hyphenation.test.ts`).
+      Non-English hyphenation dictionaries remain open.
 - [ ] **P1** Compatibility mode: `docx/compatibility.ts` reads `w:compat` into one profile; mode 15
       versus 14 and earlier changes page-break spacing, footnote separators and columns, and the
       width AutoFit tables size against (measured in modes 12, 14 and no mode). Legacy tables are
