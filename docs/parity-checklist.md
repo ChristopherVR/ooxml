@@ -1028,8 +1028,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
       Picture Border, Picture Layout, Alt Text and Arrange.
-- [ ] **P1** SmartArt Design: Text Pane, Promote, Demote, Right to Left, Move Up, Move Down and
-      Convert are disabled (`ribbon-galleries/smartart-commands.ts`).
+- [x] **P1** SmartArt Design: Text Pane, Promote, Demote, Right to Left, Move Up, Move Down and
+      Convert (to shapes) are enabled and wired across all five bindings
+      (`ribbon-galleries/smartart-commands.ts`, `smartart-layout.ts`, `smartart-commands.test.ts`
+      and per-binding ribbon gallery regressions).
 - [ ] **P2** Table Design lacks Shading, Borders, Effects and Draw Borders; Table Layout's Select,
       View Gridlines, Cell Margins, Table Size and Arrange are disabled.
 - [x] **P2** Ribbon Display Options (Always show Ribbon, Show tabs only, Full-screen mode,
