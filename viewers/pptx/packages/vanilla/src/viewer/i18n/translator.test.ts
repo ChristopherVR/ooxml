@@ -32,6 +32,16 @@ describe('createTranslator', () => {
 		expect(t('pptx.statusBar.noSlides')).toBe('Empty deck');
 	});
 
+	it('uses a language dictionary for regional tags and prefers exact host overrides', () => {
+		const key = 'pptx.statusBar.noSlides';
+		const messages = {
+			fr: { [key]: 'Aucune diapositive' },
+			fr_CA: { [key]: 'Présentation vide' },
+		};
+		expect(createTranslator('fr-FR', messages)(key)).toBe('Aucune diapositive');
+		expect(createTranslator('fr_CA', messages)(key)).toBe('Présentation vide');
+	});
+
 	it('leaves unknown placeholders untouched', () => {
 		const t = createTranslator('en', { en: { greeting: 'Hi {{name}} and {{other}}' } });
 		expect(t('greeting', { name: 'Ada' })).toBe('Hi Ada and {{other}}');

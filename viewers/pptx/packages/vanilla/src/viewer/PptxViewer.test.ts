@@ -431,12 +431,13 @@ describe('createPptxViewer', () => {
 		expect(root?.style.getPropertyValue('--pptx-background')).toBe('');
 	});
 
-	it('translates chrome labels through the shared dictionary and setLocale', () => {
+	it('localizes the empty slide area even when the toolbar is hidden', () => {
 		const { container, viewer } = mount({
-			locale: 'de',
-			messages: { de: { 'pptx.statusBar.noSlides': 'Keine Folien' } },
+			locale: 'fr-FR',
+			showToolbar: false,
+			messages: { fr: { 'pptx.statusBar.noSlides': 'Aucune diapositive' } },
 		});
-		expect(container.querySelector('.pptxv-empty')?.textContent).toBe('Keine Folien');
+		expect(container.querySelector('.pptxv-empty')?.textContent).toBe('Aucune diapositive');
 
 		viewer.setLocale('en');
 		expect(container.querySelector('.pptxv-empty')?.textContent).toBe('No slides');

@@ -1,4 +1,4 @@
-import { createTranslator as createMessageTranslator } from 'ooxml-core/i18n';
+import { createTranslator as createMessageTranslator, normalizeLocale } from 'ooxml-core/i18n';
 import { keyToLabel, translationsEn } from './translations-en';
 
 /**
@@ -22,13 +22,16 @@ export type Translator = (key: string, params?: Record<string, string | number>)
 export type TranslationMessages = Record<string, Record<string, string>>;
 
 /**
- * Build a {@link Translator} for a locale. `messages[locale]` (when provided)
- * wins over the built-in English dictionary; English is always the fallback.
+ * Build a {@link Translator} for a locale. Prefer an exact host dictionary,
+ * then a matching language dictionary, with English as the fallback.
  */
 export function createTranslator(locale = 'en', messages?: TranslationMessages): Translator {
+	const active = messages?.[locale]
+		? locale
+		: normalizeLocale(locale, Object.keys(messages ?? {}), 'en');
 	return createMessageTranslator(
-		messages?.[locale],
-		[locale !== 'en' ? messages?.en : undefined, translationsEn],
+		messages?.[active],
+		[active !== 'en' ? messages?.en : undefined, translationsEn],
 		{ placeholder: 'double', missing: keyToLabel },
 	);
 }
