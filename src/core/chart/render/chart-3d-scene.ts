@@ -27,6 +27,7 @@ export function chart3DPolygon(
 	pts: readonly Vec3[],
 	fill: string,
 	extra = '',
+	stroke?: string,
 ): string {
 	const points = pts
 		.map((p) => {
@@ -34,7 +35,9 @@ export function chart3DPolygon(
 			return `${n(q.x)},${n(q.y)}`;
 		})
 		.join(' ');
-	return `<polygon points="${points}" fill="${fill}" stroke="${fill}" stroke-width="0.5" stroke-linejoin="round"${extra}/>`;
+	const edge = stroke ?? fill;
+	const width = stroke !== undefined ? '1' : '0.5';
+	return `<polygon points="${points}" fill="${fill}" stroke="${edge}" stroke-width="${width}" stroke-linejoin="round"${extra}/>`;
 }
 
 /** The meshes far to near, each a `<g>` carrying its series and point for hit testing. */
@@ -50,7 +53,13 @@ export function chart3DMeshesSvg(camera: Chart3DCamera, meshes: readonly Chart3D
 		out.push(`<g data-chart-series="${mesh.series}" data-chart-point="${mesh.point}">`);
 		for (const { face } of faces)
 			out.push(
-				chart3DPolygon(camera, face.pts, face.fill ?? shadeChart3DFace(mesh.color, face.kind)),
+				chart3DPolygon(
+					camera,
+					face.pts,
+					face.fill ?? shadeChart3DFace(mesh.color, face.kind),
+					'',
+					face.stroke,
+				),
 			);
 		out.push('</g>');
 	}

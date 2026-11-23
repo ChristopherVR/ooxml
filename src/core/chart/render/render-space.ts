@@ -76,9 +76,11 @@ export function chartSpaceKind(space: ChartSpace): {
 	drawn: boolean;
 } {
 	if (!space.plotArea.groups.length) return { drawn: false };
-	const type = chartSummaryFromSpace(space).chartType;
-	const summary3D = type === 'surface' && chartSummaryFromSpace(space).view3D !== undefined;
-	return { type, drawn: DRAWN_CHART_TYPES.has(type) || summary3D };
+	const summary = chartSummaryFromSpace(space);
+	const type = summary.chartType;
+	const surfaceDrawn =
+		type === 'surface' && (summary.view3D !== undefined || summary.surfaceContour === true);
+	return { type, drawn: DRAWN_CHART_TYPES.has(type) || surfaceDrawn };
 }
 
 /** A standalone SVG document for a parsed chart part, from its cached values. */

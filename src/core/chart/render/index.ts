@@ -54,3 +54,6 @@ export {
 	type Vec3,
 } from './chart-3d-mesh';
 export { chart3DApplies, chart3DSvg } from './chart-3d-svg';
+export { barShapeMesh, type BarShapeBounds } from './chart-3d-shapes';
+export { chartContourSvg } from './chart-3d-surface';
+export type { Chart3DSurfaceStyle, Chart3DSurfacesView } from './chart-3d-walls';

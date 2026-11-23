@@ -1,11 +1,33 @@
 // Mesh generation for the 3-D bar / column, line (ribbon) and area charts, from a chart view model
 // and its {@link Chart3DLayout}. Bars are boxes, line segments are thin parallelogram prisms and
 // areas are prisms of their outline; series stand in depth rows when the grouping is `standard`.
-import { boxMesh, extrudeMesh, type Chart3DMesh } from './chart-3d-mesh';
+import { extrudeMesh, type Chart3DMesh, type Vec3 } from './chart-3d-mesh';
 import type { Chart3DLayout } from './chart-3d-layout';
 import { chart3DSeriesInDepth } from './chart-3d-layout';
+import { barShapeMesh } from './chart-3d-shapes';
 import { plotted } from './chart-svg-cartesian';
-import type { ChartViewModel } from './chart-view';
+import type { ChartSeriesView, ChartViewModel } from './chart-view';
+
+/** A 3-D data-label anchor recorded while building bar, line or area meshes. */
+export type Chart3DLabelAnchor =
+	| {
+			kind: 'bar';
+			series: ChartSeriesView;
+			index: number;
+			negative: boolean;
+			v0: number;
+			v1: number;
+			c0: number;
+			c1: number;
+			z0: number;
+			z1: number;
+	  }
+	| {
+			kind: 'point';
+			series: ChartSeriesView;
+			index: number;
+			point: Vec3;
+	  };
 
 /** Thickness of a line ribbon as a fraction of the value axis length. */
 const RIBBON_THICKNESS = 0.025;
@@ -13,8 +35,12 @@ const RIBBON_THICKNESS = 0.025;
 const stackedOf = (model: ChartViewModel): boolean =>
 	model.grouping === 'stacked' || model.grouping === 'percentStacked';
 
-/** Bars and columns: boxes clustered, stacked or standing in depth rows. */
-export function chart3DBarMeshes(model: ChartViewModel, layout: Chart3DLayout): Chart3DMesh[] {
+/** Bars and columns: boxes, cylinders, cones or pyramids, clustered, stacked or in depth rows. */
+export function chart3DBarMeshes(
+	model: ChartViewModel,
+	layout: Chart3DLayout,
+	anchors?: Chart3DLabelAnchor[],
+): Chart3DMesh[] {
 	const bars = layout.bars;
 	if (!bars) return [];
 	const values = plotted(model);
@@ -28,6 +54,7 @@ export function chart3DBarMeshes(model: ChartViewModel, layout: Chart3DLayout): 
 	model.series.forEach((s, si) => {
 		const slot = clustered ? si : 0;
 		const [z0, z1] = layout.rowZ(inDepth ? si : 0);
+		const shape = s.barShape ?? model.barShape;
 		values[si]?.forEach((v, i) => {
 			if (v === null || i >= model.categories.length) return;
 			let from = 0;
@@ -41,40 +68,58 @@ export function chart3DBarMeshes(model: ChartViewModel, layout: Chart3DLayout): 
 			const a = stacked ? layout.value(from) : base;
 			const b = layout.value(to);
 			const centre = (i + 0.5) * layout.band;
+			const c0 = layout.horizontal
+				? centre -
+					(bars.clusterWidth / 2 - bars.singleBarWidth - slot * bars.step) -
+					bars.singleBarWidth
+				: centre - bars.clusterWidth / 2 + slot * bars.step;
+			const c1 = c0 + bars.singleBarWidth;
 			const meta = {
 				series: s.sourceIndex ?? si,
 				point: i,
 				color: s.pointColors?.[i] ?? s.color,
 			};
-			const mesh = layout.horizontal
-				? boxMesh(
-						a,
-						b,
-						centre -
-							(bars.clusterWidth / 2 - bars.singleBarWidth - slot * bars.step) -
-							bars.singleBarWidth,
-						centre - (bars.clusterWidth / 2 - bars.singleBarWidth - slot * bars.step),
-						z0,
-						z1,
-						meta,
-					)
-				: boxMesh(
-						centre - bars.clusterWidth / 2 + slot * bars.step,
-						centre - bars.clusterWidth / 2 + slot * bars.step + bars.singleBarWidth,
-						a,
-						b,
-						z0,
-						z1,
-						meta,
-					);
+			const mesh = barShapeMesh(
+				shape,
+				{
+					v0: a,
+					v1: b,
+					c0,
+					c1,
+					z0,
+					z1,
+					horizontal: layout.horizontal,
+					base,
+					extreme: v < 0 ? 0 : layout.valueLength,
+				},
+				meta,
+			);
 			if (mesh) meshes.push(mesh);
+			if (anchors) {
+				anchors.push({
+					kind: 'bar',
+					series: s,
+					index: i,
+					negative: v < 0,
+					v0: a,
+					v1: b,
+					c0,
+					c1,
+					z0,
+					z1,
+				});
+			}
 		});
 	});
 	return meshes;
 }
 
 /** Lines: one ribbon prism per segment between consecutive present points. */
-export function chart3DLineMeshes(model: ChartViewModel, layout: Chart3DLayout): Chart3DMesh[] {
+export function chart3DLineMeshes(
+	model: ChartViewModel,
+	layout: Chart3DLayout,
+	anchors?: Chart3DLabelAnchor[],
+): Chart3DMesh[] {
 	const values = plotted(model);
 	const stacked = stackedOf(model);
 	const inDepth = chart3DSeriesInDepth(model);
@@ -83,10 +128,14 @@ export function chart3DLineMeshes(model: ChartViewModel, layout: Chart3DLayout):
 	const meshes: Chart3DMesh[] = [];
 	model.series.forEach((s, si) => {
 		const [z0, z1] = layout.rowZ(inDepth ? si : 0);
+		const zMid = (z0 + z1) / 2;
 		const pts = (values[si] ?? []).map((v, i): [number, number] | null => {
 			if (v === null || i >= model.categories.length) return null;
 			const top = stacked ? (acc[i] = (acc[i] ?? 0) + v) : v;
-			return [(i + 0.5) * layout.band, layout.value(top)];
+			const px = (i + 0.5) * layout.band;
+			const py = layout.value(top);
+			if (anchors) anchors.push({ kind: 'point', series: s, index: i, point: [px, py, zMid] });
+			return [px, py];
 		});
 		for (let i = 0; i + 1 < pts.length; i++) {
 			const p = pts[i];
@@ -104,7 +153,11 @@ export function chart3DLineMeshes(model: ChartViewModel, layout: Chart3DLayout):
 }
 
 /** Areas: a prism of each series' outline down to the baseline (or the stack below it). */
-export function chart3DAreaMeshes(model: ChartViewModel, layout: Chart3DLayout): Chart3DMesh[] {
+export function chart3DAreaMeshes(
+	model: ChartViewModel,
+	layout: Chart3DLayout,
+	anchors?: Chart3DLabelAnchor[],
+): Chart3DMesh[] {
 	const values = plotted(model);
 	const stacked = stackedOf(model);
 	const inDepth = chart3DSeriesInDepth(model);
@@ -116,14 +169,20 @@ export function chart3DAreaMeshes(model: ChartViewModel, layout: Chart3DLayout):
 	const meshes: Chart3DMesh[] = [];
 	model.series.forEach((s, si) => {
 		const [z0, z1] = layout.rowZ(inDepth ? si : 0);
+		const zMid = (z0 + z1) / 2;
 		const upper: [number, number][] = [];
 		const lower: [number, number][] = [];
 		for (let i = 0; i < cats; i++) {
-			const v = values[si]?.[i] ?? 0;
+			const raw = values[si]?.[i];
+			const v = raw ?? 0;
 			const below = stacked ? (acc[i] ?? 0) : 0;
 			if (stacked) acc[i] = below + v;
-			upper.push([x(i), layout.value(below + v)]);
-			lower.push([x(i), stacked ? layout.value(below) : base]);
+			const px = x(i);
+			const py = layout.value(below + v);
+			upper.push([px, py]);
+			lower.push([px, stacked ? layout.value(below) : base]);
+			if (anchors && raw !== null && raw !== undefined)
+				anchors.push({ kind: 'point', series: s, index: i, point: [px, py, zMid] });
 		}
 		const mesh = extrudeMesh([...upper, ...lower.reverse()], z0, z1, {
 			series: s.sourceIndex ?? si,

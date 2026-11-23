@@ -4,7 +4,7 @@
 // `ChartSpace` (`chartSummaryFromSpace`).
 import type { ChartMarkerSummary } from './chart-view-markers';
 import type { ChartManualLayout } from '../manual-layout';
-import type { ChartDataTable } from '../model-chrome';
+import type { ChartDataTable, ChartSurface } from '../model-chrome';
 import type { ChartAxis } from '../model';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
 import type { DataLabelFlagLevel } from '../data-label-text';
@@ -62,6 +62,22 @@ export interface ChartSummaryDataLabels {
 	points?: Record<number, ChartSummaryLabelLevel>;
 }
 
+/** 3-D bar shape (`c:shape`, ECMA-376 ST_Shape). */
+export type Chart3DBarShape =
+	| 'box'
+	| 'cylinder'
+	| 'cone'
+	| 'coneToMax'
+	| 'pyramid'
+	| 'pyramidToMax';
+
+/** Floor and wall formatting of a 3-D chart (`c:floor`, `c:sideWall`, `c:backWall`). */
+export interface Chart3DSurfacesSummary {
+	floor?: ChartSurface;
+	sideWall?: ChartSurface;
+	backWall?: ChartSurface;
+}
+
 export interface ChartSummarySeries extends ChartMarkerSummary {
 	regionMap?: import('../region-map/types').RegionMapOptions;
 	boxWhisker?: import('../ex/model').ChartExLayoutProperties;
@@ -69,6 +85,12 @@ export interface ChartSummarySeries extends ChartMarkerSummary {
 	smooth?: boolean;
 	showLine?: boolean;
 	line?: DrawingLine;
+	/** 3-D bar shape override on the series (`c:ser/c:shape`). */
+	barShape?: Chart3DBarShape;
+	/** Pie slice explosion percent (`c:ser/c:explosion`). */
+	explosion?: number;
+	/** Per-point pie slice explosion percents (`c:dPt/c:explosion`), indexed by `c:idx`. */
+	pointExplosions?: Record<number, number>;
 	name?: string;
 	/** Formula reference for the series name (`Sheet1!$B$1`). */
 	nameRef?: string;
@@ -197,6 +219,16 @@ export interface ChartSummary<S extends ChartSummarySeries = ChartSummarySeries>
 	stock?: StockSummaryStyle;
 	/** 3-D charts (`c:view3D` of a bar3D, line3D, area3D, pie3D or surface3D group): the view the painter projects. */
 	view3D?: import('./chart-3d-projection').Chart3DViewInput;
+	/** 3-D bar shape (`c:bar3DChart/c:shape`). */
+	barShape?: Chart3DBarShape;
+	/** 3-D floor and wall formatting (`c:floor`, `c:sideWall`, `c:backWall`). */
+	surfaces3D?: Chart3DSurfacesSummary;
+	/** Surface charts: drawn as a wireframe without filled bands (`c:wireframe`). */
+	wireframe?: boolean;
+	/** 2-D contour surface chart (`c:surfaceChart`, top-down view). */
+	surfaceContour?: boolean;
+	/** Pie and doughnut: angle of the first slice in degrees clockwise from 12 o'clock. */
+	firstSliceAngle?: number;
 	/** Bubble: the display options of its `c:bubbleChart`. */
 	bubble?: BubbleSummaryOptions;
 	/** Treemap and sunburst: the category levels of its `cx:strDim`. */

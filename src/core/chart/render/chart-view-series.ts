@@ -147,6 +147,9 @@ export function seriesView<S extends ChartSummarySeries>(
 	if (s.numberFormat !== undefined) view.numberFormat = s.numberFormat;
 	if (s.showLine !== undefined) view.showLine = s.showLine;
 	if (s.smooth !== undefined) view.smooth = s.smooth;
+	if (s.barShape !== undefined) view.barShape = s.barShape;
+	if (s.explosion !== undefined) view.explosion = s.explosion;
+	if (s.pointExplosions !== undefined) view.pointExplosions = s.pointExplosions;
 	if (s.line)
 		view.stroke = strokeOf(s.line, { color, width: 2.25 }, ctx.drawingColor) ?? {
 			color: 'none',

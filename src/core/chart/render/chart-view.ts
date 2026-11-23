@@ -6,8 +6,10 @@ import { extentOf } from '../extent';
 import type { ParentLabelLayout } from '../hierarchy';
 import { bubbleView, hierarchyView } from './chart-view-families';
 import { stockView, type StockView } from './chart-view-stock';
+import { resolveSurfaces3D, type Chart3DSurfacesView } from './chart-3d-walls';
 import type {
 	BubbleSummaryOptions,
+	Chart3DBarShape,
 	ChartSummary,
 	ChartSummaryGroupType,
 	ChartSummarySeries,
@@ -78,6 +80,12 @@ export interface ChartSeriesView extends ChartMarkerSeriesView {
 	trendlines?: ChartTrendlineView[];
 	/** Error bars drawn at each point. */
 	errorBars?: ChartErrorBarsView[];
+	/** 3-D bar shape override on the series (`c:ser/c:shape`). */
+	barShape?: Chart3DBarShape;
+	/** Pie slice explosion percent (`c:ser/c:explosion`). */
+	explosion?: number;
+	/** Per-point pie slice explosion percents (`c:dPt/c:explosion`). */
+	pointExplosions?: Record<number, number>;
 }
 
 export interface ValueAxisView extends AxisScale {
@@ -150,6 +158,16 @@ export interface ChartViewModel {
 	horizontal: boolean;
 	/** 3-D charts: the view the painter projects (bar3D, line3D, area3D, pie3D, surface3D). */
 	view3D?: import('./chart-3d-projection').Chart3DViewInput;
+	/** 3-D bar shape (`c:bar3DChart/c:shape`). */
+	barShape?: Chart3DBarShape;
+	/** 3-D floor and wall formatting (`c:floor`, `c:sideWall`, `c:backWall`). */
+	surfaces3D?: Chart3DSurfacesView;
+	/** Surface charts: drawn as a wireframe without filled bands (`c:wireframe`). */
+	wireframe?: boolean;
+	/** 2-D contour surface chart (`c:surfaceChart`, top-down view). */
+	surfaceContour?: boolean;
+	/** Pie and doughnut: angle of the first slice in degrees clockwise from 12 o'clock. */
+	firstSliceAngle?: number;
 	/** False for chart types this painter does not draw (a surface without a 3-D view). */
 	supported: boolean;
 }
@@ -250,9 +268,17 @@ export function chartSummaryView<S extends ChartSummarySeries>(
 		categories,
 		series: type === 'boxWhisker' ? series.filter((s) => !s.hidden) : series,
 		horizontal: type === 'bar',
-		supported: SUPPORTED.has(type) || (type === 'surface' && chart.view3D !== undefined),
+		supported:
+			SUPPORTED.has(type) ||
+			(type === 'surface' && (chart.view3D !== undefined || chart.surfaceContour === true)),
 	};
 	if (chart.view3D) model.view3D = chart.view3D;
+	if (chart.barShape) model.barShape = chart.barShape;
+	if (chart.wireframe !== undefined) model.wireframe = chart.wireframe;
+	if (chart.surfaceContour !== undefined) model.surfaceContour = chart.surfaceContour;
+	if (chart.firstSliceAngle !== undefined) model.firstSliceAngle = chart.firstSliceAngle;
+	const surfaces3D = resolveSurfaces3D(chart.surfaces3D, ctx.drawingColor, ctx.gradient);
+	if (surfaces3D) model.surfaces3D = surfaces3D;
 	if (chart.funnelGapWidth !== undefined) model.funnelGapWidth = chart.funnelGapWidth;
 	if (chart.series[0]?.regionMap)
 		model.regionMap = resolveRegionValueColors(chart.series[0].regionMap, ctx.drawingColor);

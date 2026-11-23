@@ -187,7 +187,7 @@ describe('3-D chart SVG', () => {
 		expect(chartSpaceKind(space)).toMatchObject({ type: 'surface', drawn: true });
 	});
 
-	it('still draws flat charts and an unviewed surface the old way', () => {
+	it('still draws flat charts the old way and draws surfaceChart as a 2-D contour', () => {
 		const flat = render(
 			chart(
 				`<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/>${series}<c:axId val="1"/><c:axId val="2"/></c:barChart>`,
@@ -200,6 +200,9 @@ describe('3-D chart SVG', () => {
 			`<c:surfaceChart>${series}<c:axId val="1"/><c:axId val="2"/></c:surfaceChart>`,
 			'',
 		);
-		expect(render(surface)).toContain('surface charts are not drawn');
+		expect(chartSpaceKind(surface)).toMatchObject({ type: 'surface', drawn: true });
+		const svg = render(surface);
+		expect(svg).toContain('data-chart-part="contourCell"');
+		expect(svg).not.toContain('not drawn');
 	});
 });

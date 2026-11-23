@@ -1,14 +1,79 @@
 // The floor, walls, gridlines and axis labels of a 3-D cartesian chart. The back wall is the plane
 // at the far depth and the side wall the one on the far side of the viewer's x position, so they
 // always show their inside to the camera.
+import type { DrawingColor, DrawingFill } from '../../drawingml/types';
+import type { ChartGradientFill } from '../gradient-definition';
+import type { ChartSurface } from '../model-chrome';
 import type { Chart3DCamera } from './chart-3d-camera';
 import type { Chart3DLayout } from './chart-3d-layout';
 import type { Vec3 } from './chart-3d-mesh';
+import { strokeAttributes } from './chart-svg-analysis';
 import { axisTickText } from './chart-svg-axes';
-import { AXIS_COLOR, GRID_COLOR, n, text, textWidth } from './chart-svg-util';
+import { AXIS_COLOR, esc, GRID_COLOR, n, text, textWidth } from './chart-svg-util';
 import type { ChartViewModel } from './chart-view';
+import { strokeOf, type ChartStrokeView } from './chart-view-analysis';
+import type { Chart3DSurfacesSummary } from './summary';
 
 const LABEL_SIZE = 10;
+
+/** Resolved fill and outline for a 3-D floor or wall (`c:floor`, `c:sideWall`, `c:backWall`). */
+export interface Chart3DSurfaceStyle {
+	fill?: string;
+	gradient?: ChartGradientFill;
+	stroke?: ChartStrokeView;
+}
+
+/** Resolved 3-D floor and wall styles on a {@link ChartViewModel}. */
+export interface Chart3DSurfacesView {
+	floor?: Chart3DSurfaceStyle;
+	sideWall?: Chart3DSurfaceStyle;
+	backWall?: Chart3DSurfaceStyle;
+}
+
+function resolveSurface(
+	surface: ChartSurface | undefined,
+	drawingColor: (color: DrawingColor | undefined) => string | undefined,
+	gradient: (fill: DrawingFill | undefined) => ChartGradientFill | undefined,
+): Chart3DSurfaceStyle | undefined {
+	const spPr = surface?.spPr;
+	if (!spPr) return undefined;
+	const style: Chart3DSurfaceStyle = {};
+	if (spPr.fill?.kind === 'none') style.fill = 'none';
+	else if (spPr.fill?.kind === 'solid') {
+		const color = drawingColor(spPr.fill.color);
+		if (color) style.fill = color;
+	} else if (spPr.fill?.kind === 'gradient') {
+		const resolved = gradient(spPr.fill);
+		if (resolved) style.gradient = resolved;
+	}
+	if (spPr.line) {
+		style.stroke = strokeOf(spPr.line, { color: AXIS_COLOR, width: 1 }, drawingColor) ?? {
+			color: 'none',
+			width: 0,
+		};
+	}
+	return style.fill !== undefined || style.gradient !== undefined || style.stroke !== undefined
+		? style
+		: undefined;
+}
+
+/** Resolves `c:floor`, `c:sideWall` and `c:backWall` shape properties against the theme. */
+export function resolveSurfaces3D(
+	surfaces: Chart3DSurfacesSummary | undefined,
+	drawingColor: (color: DrawingColor | undefined) => string | undefined,
+	gradient: (fill: DrawingFill | undefined) => ChartGradientFill | undefined,
+): Chart3DSurfacesView | undefined {
+	if (!surfaces) return undefined;
+	const floor = resolveSurface(surfaces.floor, drawingColor, gradient);
+	const sideWall = resolveSurface(surfaces.sideWall, drawingColor, gradient);
+	const backWall = resolveSurface(surfaces.backWall, drawingColor, gradient);
+	if (!floor && !sideWall && !backWall) return undefined;
+	return {
+		...(floor ? { floor } : {}),
+		...(sideWall ? { sideWall } : {}),
+		...(backWall ? { backWall } : {}),
+	};
+}
 
 function line(camera: Chart3DCamera, a: Vec3, b: Vec3, color: string): string {
 	const p = camera.project(a);
@@ -16,14 +81,26 @@ function line(camera: Chart3DCamera, a: Vec3, b: Vec3, color: string): string {
 	return `<line x1="${n(p.x)}" y1="${n(p.y)}" x2="${n(q.x)}" y2="${n(q.y)}" stroke="${color}" stroke-width="1"/>`;
 }
 
-function outline(camera: Chart3DCamera, pts: Vec3[], fill: string): string {
+function wallPolygon(
+	camera: Chart3DCamera,
+	pts: Vec3[],
+	defaultFill: string,
+	part: 'floor' | 'backWall' | 'sideWall',
+	style: Chart3DSurfaceStyle | undefined,
+): string {
 	const points = pts
 		.map((p) => {
 			const q = camera.project(p);
 			return `${n(q.x)},${n(q.y)}`;
 		})
 		.join(' ');
-	return `<polygon points="${points}" fill="${fill}" stroke="${AXIS_COLOR}" stroke-width="1"/>`;
+	const fill = style?.fill ?? defaultFill;
+	const stroke = style?.stroke
+		? style.stroke.color === 'none'
+			? 'stroke="none"'
+			: strokeAttributes(style.stroke)
+		: `stroke="${AXIS_COLOR}" stroke-width="1"`;
+	return `<polygon points="${points}" fill="${esc(fill)}" ${stroke} data-chart-part="${part}"/>`;
 }
 
 /** The pixel room the axis labels of a 3-D chart need left of and below its box. */
@@ -51,9 +128,10 @@ export function chart3DWallsSvg(
 ): string {
 	const { w, h, d } = layout.size;
 	const sx = camera.sideWallAtZero ? 0 : w;
+	const surfaces = model.surfaces3D;
 	const out: string[] = [];
 	out.push(
-		outline(
+		wallPolygon(
 			camera,
 			[
 				[0, 0, 0],
@@ -62,10 +140,12 @@ export function chart3DWallsSvg(
 				[0, 0, d],
 			],
 			'#F2F2F2',
+			'floor',
+			surfaces?.floor,
 		),
 	);
 	out.push(
-		outline(
+		wallPolygon(
 			camera,
 			[
 				[0, 0, d],
@@ -74,10 +154,12 @@ export function chart3DWallsSvg(
 				[0, h, d],
 			],
 			'none',
+			'backWall',
+			surfaces?.backWall,
 		),
 	);
 	out.push(
-		outline(
+		wallPolygon(
 			camera,
 			[
 				[sx, 0, 0],
@@ -86,6 +168,8 @@ export function chart3DWallsSvg(
 				[sx, h, 0],
 			],
 			'none',
+			'sideWall',
+			surfaces?.sideWall,
 		),
 	);
 	for (const tick of model.valueAxis?.ticks ?? []) {

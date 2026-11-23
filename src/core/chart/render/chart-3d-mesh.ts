@@ -13,6 +13,8 @@ export interface Chart3DMeshFace {
 	kind: Chart3DFace;
 	/** A colour replacing the mesh colour (surface bands shade per face). */
 	fill?: string;
+	/** An explicit outline colour (wireframe surfaces stroke without filling). */
+	stroke?: string;
 }
 
 export interface Chart3DMesh {

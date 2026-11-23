@@ -1,8 +1,14 @@
 // The 3-D chart painter: dispatches a chart view model that carries a `c:view3D` to the pie, or to
 // the cartesian scene (walls, marks, labels) for bars, lines, areas and surfaces.
 import { createChart3DCamera } from './chart-3d-camera';
+import { chart3DDataLabelsSvg } from './chart-3d-labels';
 import { chart3DLayout } from './chart-3d-layout';
-import { chart3DAreaMeshes, chart3DBarMeshes, chart3DLineMeshes } from './chart-3d-marks';
+import {
+	chart3DAreaMeshes,
+	chart3DBarMeshes,
+	chart3DLineMeshes,
+	type Chart3DLabelAnchor,
+} from './chart-3d-marks';
 import type { Chart3DMesh } from './chart-3d-mesh';
 import { chart3DPieSvg } from './chart-3d-pie';
 import { resolveChart3DProjection } from './chart-3d-projection';
@@ -42,11 +48,12 @@ export function chart3DSvg(model: ChartViewModel, area: Rect): string {
 	};
 	const layout = chart3DLayout(model, inner, view);
 	const camera = createChart3DCamera(projection, layout.size, inner);
+	const anchors: Chart3DLabelAnchor[] = [];
 	let meshes: Chart3DMesh[];
 	if (model.type === 'surface') meshes = chart3DSurfaceMeshes(model, layout);
-	else if (model.type === 'line') meshes = chart3DLineMeshes(model, layout);
-	else if (model.type === 'area') meshes = chart3DAreaMeshes(model, layout);
-	else meshes = chart3DBarMeshes(model, layout);
+	else if (model.type === 'line') meshes = chart3DLineMeshes(model, layout, anchors);
+	else if (model.type === 'area') meshes = chart3DAreaMeshes(model, layout, anchors);
+	else meshes = chart3DBarMeshes(model, layout, anchors);
 	const edge = model.type === 'area' || model.type === 'surface';
 	const cats = model.categories.length;
 	const catPos = edge
@@ -57,5 +64,6 @@ export function chart3DSvg(model: ChartViewModel, area: Rect): string {
 		chart3DWallsSvg(model, layout, camera),
 		chart3DMeshesSvg(camera, meshes),
 		chart3DLabelsSvg(model, layout, camera, catPos),
+		chart3DDataLabelsSvg(model, camera, anchors),
 	].join('');
 }

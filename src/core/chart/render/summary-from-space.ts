@@ -11,12 +11,25 @@ import { summaryAnalysis } from './summary-analysis';
 import { chartPictureOptionsStack, chartPictureOptionsUnit } from './chart-picture-paint';
 import { summaryDataLabels } from './summary-labels';
 import type {
+	Chart3DBarShape,
 	ChartSummary,
 	ChartSummaryGroup,
 	ChartSummarySeries,
 	ChartSummaryType,
 	StockSummaryStyle,
 } from './summary';
+
+const BAR_SHAPES: ReadonlySet<string> = new Set<Chart3DBarShape>([
+	'box',
+	'cylinder',
+	'cone',
+	'coneToMax',
+	'pyramid',
+	'pyramidToMax',
+]);
+
+const barShapeOf = (raw: string | undefined): Chart3DBarShape | undefined =>
+	raw && BAR_SHAPES.has(raw) ? (raw as Chart3DBarShape) : undefined;
 
 const solidColor = (fill: DrawingFill | undefined): DrawingColor | undefined =>
 	fill?.kind === 'solid' ? fill.color : undefined;
@@ -82,6 +95,7 @@ export function chartSummarySeries(
 		out.fill = fill;
 	const points: NonNullable<ChartSummarySeries['pointColors']> = {};
 	const pointFills: NonNullable<ChartSummarySeries['pointFills']> = {};
+	const pointExplosions: NonNullable<ChartSummarySeries['pointExplosions']> = {};
 	for (const point of source.dataPoints) {
 		const properties: ChartShapeProperties | undefined = point.spPr ?? point.marker?.spPr;
 		if (point.index === undefined) continue;
@@ -89,9 +103,14 @@ export function chartSummarySeries(
 		if (pointColor) points[point.index] = pointColor;
 		if (properties?.fill && properties.fill.kind !== 'solid')
 			pointFills[point.index] = properties.fill;
+		if (point.explosion !== undefined) pointExplosions[point.index] = point.explosion;
 	}
 	if (Object.keys(points).length) out.pointColors = points;
 	if (Object.keys(pointFills).length) out.pointFills = pointFills;
+	if (Object.keys(pointExplosions).length) out.pointExplosions = pointExplosions;
+	if (source.explosion !== undefined) out.explosion = source.explosion;
+	const barShape = barShapeOf(source.shape);
+	if (barShape) out.barShape = barShape;
 	if ('pictureOptionsXml' in source && chartPictureOptionsStack(source.pictureOptionsXml)) {
 		out.pictureStack = true;
 		const unit = chartPictureOptionsUnit(source.pictureOptionsXml);
@@ -224,6 +243,18 @@ export function chartSummaryFromSpace(
 			...(v?.depthPercent === undefined ? {} : { depthPercent: v.depthPercent }),
 			...(v?.heightPercent === undefined ? {} : { hPercent: v.heightPercent }),
 			...(group.gapDepth === undefined ? {} : { gapDepth: group.gapDepth }),
+		};
+	}
+	const groupShape = barShapeOf(group?.shape);
+	if (groupShape) summary.barShape = groupShape;
+	if (group?.wireframe !== undefined) summary.wireframe = group.wireframe;
+	if (group?.element === 'surfaceChart') summary.surfaceContour = true;
+	if (group?.firstSliceAngle !== undefined) summary.firstSliceAngle = group.firstSliceAngle;
+	if (chartSpace.floor || chartSpace.sideWall || chartSpace.backWall) {
+		summary.surfaces3D = {
+			...(chartSpace.floor ? { floor: chartSpace.floor } : {}),
+			...(chartSpace.sideWall ? { sideWall: chartSpace.sideWall } : {}),
+			...(chartSpace.backWall ? { backWall: chartSpace.backWall } : {}),
 		};
 	}
 	const grouping = group?.grouping;

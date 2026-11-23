@@ -1,4 +1,5 @@
 import { chart3DApplies, chart3DSvg } from './chart-3d-svg';
+import { chartContourSvg } from './chart-3d-surface';
 import { regionMapSvg } from './chart-svg-region-map';
 import { funnelSvg } from './chart-svg-funnel';
 import { cartesianSvg } from './chart-svg-plots';
@@ -95,6 +96,8 @@ export function renderChartSvg(
 	if (!legend.foreground) out.push(legend.markup);
 	if (area.w > 4 && area.h > 4) {
 		if (chart3DApplies(model)) out.push(chart3DSvg(model, area));
+		else if (model.type === 'surface' && model.surfaceContour)
+			out.push(chartContourSvg(model, area));
 		else if (model.type === 'regionMap')
 			out.push(regionMapSvg(model, area, options.mapApproximationLabel));
 		else if (model.type === 'pie' || model.type === 'doughnut') out.push(pieSvg(model, area));

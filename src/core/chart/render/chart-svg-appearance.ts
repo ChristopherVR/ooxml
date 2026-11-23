@@ -81,8 +81,27 @@ export function chartGradientPaint(
 		}
 		return view;
 	});
+	let surfaces3D = model.surfaces3D;
+	if (surfaces3D) {
+		const next = { ...surfaces3D };
+		let changed = false;
+		for (const part of ['floor', 'sideWall', 'backWall'] as const) {
+			const entry = next[part];
+			if (entry?.gradient) {
+				next[part] = {
+					...entry,
+					fill: paint(entry.gradient, part, { width, height, shape: 'rect' }),
+				};
+				changed = true;
+			}
+		}
+		if (changed) surfaces3D = next;
+	}
 	return defs.length
-		? { model: { ...model, appearance, series }, defs: `<defs>${defs.join('')}</defs>` }
+		? {
+				model: { ...model, appearance, series, ...(surfaces3D ? { surfaces3D } : {}) },
+				defs: `<defs>${defs.join('')}</defs>`,
+			}
 		: { model, defs: '' };
 }
 
