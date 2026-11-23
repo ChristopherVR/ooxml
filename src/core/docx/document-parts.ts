@@ -3,9 +3,10 @@
 // sections.ts and notes.ts. Kept out of parse.ts so the hub file only needs one hook call.
 import type JSZip from 'jszip';
 import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model';
+import type { Twips } from './units';
 import { first, getW, parseXml, type XmlElement } from './xml';
 import { readCompatibilitySettings } from './compatibility';
-import { onOffElement } from './simple-types';
+import { onOffElement, parseTwips, parseUnsignedInteger } from './simple-types';
 import { parseKinsokuSettings } from './kinsoku-settings';
 import type { KinsokuSettings } from '../text/kinsoku';
 import { isStNumberFormat, type StNumberFormat } from './generated/wml-simple-types';
@@ -38,6 +39,9 @@ async function readPart(zip: JSZip, path: string): Promise<string | undefined> {
 interface SettingsInfo {
 	evenAndOddHeaders: boolean;
 	autoHyphenation: boolean;
+	hyphenationZoneTwips?: Twips;
+	consecutiveHyphenLimit?: number;
+	doNotHyphenateCaps?: boolean;
 	compatibilityMode?: number;
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	kinsoku?: KinsokuSettings;
@@ -58,11 +62,19 @@ function parseSettings(xml: string | undefined): SettingsInfo {
 		'w:endnotePr/w:numFmt',
 	);
 	const kinsoku = parseKinsokuSettings(root);
+	const hyphenationZoneTwips = parseTwips(getW(first(root, 'hyphenationZone'), 'val'));
+	const consecutiveHyphenLimit = parseUnsignedInteger(
+		getW(first(root, 'consecutiveHyphenLimit'), 'val'),
+	);
+	const doNotHyphenateCaps = onOffElement(first(root, 'doNotHyphenateCaps')) === true;
 	return {
 		...readCompatibilitySettings(first(root, 'compat')),
 		...(kinsoku ? { kinsoku } : {}),
 		evenAndOddHeaders: onOffElement(first(root, 'evenAndOddHeaders')) === true,
 		autoHyphenation: onOffElement(first(root, 'autoHyphenation')) === true,
+		...(hyphenationZoneTwips !== undefined ? { hyphenationZoneTwips } : {}),
+		...(consecutiveHyphenLimit !== undefined ? { consecutiveHyphenLimit } : {}),
+		...(doNotHyphenateCaps ? { doNotHyphenateCaps: true } : {}),
 		...(footnoteNumFmt ? { footnoteNumFmt } : {}),
 		...(endnoteNumFmt ? { endnoteNumFmt } : {}),
 	};
@@ -112,6 +124,9 @@ export interface DocumentPartsResult {
 	endnoteNumFmt?: StNumberFormat;
 	evenAndOddHeaders?: boolean;
 	autoHyphenation?: boolean;
+	hyphenationZoneTwips?: Twips;
+	consecutiveHyphenLimit?: number;
+	doNotHyphenateCaps?: boolean;
 	warnings: string[];
 }
 
@@ -192,6 +207,13 @@ export async function parseDocumentParts(
 		...(settings.endnoteNumFmt ? { endnoteNumFmt: settings.endnoteNumFmt } : {}),
 		...(settings.evenAndOddHeaders ? { evenAndOddHeaders: true } : {}),
 		...(settings.autoHyphenation ? { autoHyphenation: true } : {}),
+		...(settings.hyphenationZoneTwips !== undefined
+			? { hyphenationZoneTwips: settings.hyphenationZoneTwips }
+			: {}),
+		...(settings.consecutiveHyphenLimit !== undefined
+			? { consecutiveHyphenLimit: settings.consecutiveHyphenLimit }
+			: {}),
+		...(settings.doNotHyphenateCaps ? { doNotHyphenateCaps: true } : {}),
 		warnings,
 	};
 }

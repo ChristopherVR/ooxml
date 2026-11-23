@@ -20,6 +20,7 @@ export * from './locale-number';
 export * from './realign-runs';
 export * from './east-asian';
 export * from './kinsoku';
+export * from './hyphenation';
 export * from './complex-breaks';
 
 export * from './font-substitution';

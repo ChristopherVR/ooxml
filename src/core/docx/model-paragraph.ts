@@ -64,6 +64,8 @@ export interface Paragraph {
 	contextualSpacing?: boolean;
 	/** `w:suppressLineNumbers`: omit this paragraph from line numbering; false overrides a style. */
 	suppressLineNumbers?: boolean;
+	/** `w:suppressAutoHyphens`: suppress automatic hyphenation on this paragraph; read-only. */
+	suppressAutoHyphens?: boolean;
 	/**
 	 * `w:kinsoku`: East Asian line-start and line-end prohibition (on when absent). Read-only like
 	 * `borders`: the source XML keeps it and it is not written for new paragraphs.
@@ -127,6 +129,7 @@ export type ParagraphFormatting = Pick<
 	| 'widowControl'
 	| 'contextualSpacing'
 	| 'suppressLineNumbers'
+	| 'suppressAutoHyphens'
 	| 'kinsoku'
 	| 'autoSpaceDE'
 	| 'autoSpaceDN'

@@ -181,6 +181,11 @@ export async function readPackage(
 	if (parts.endnoteNumFmt) model.endnoteNumFmt = parts.endnoteNumFmt;
 	if (parts.evenAndOddHeaders) model.evenAndOddHeaders = true;
 	if (parts.autoHyphenation) model.autoHyphenation = true;
+	if (parts.hyphenationZoneTwips !== undefined)
+		model.hyphenationZoneTwips = parts.hyphenationZoneTwips;
+	if (parts.consecutiveHyphenLimit !== undefined)
+		model.consecutiveHyphenLimit = parts.consecutiveHyphenLimit;
+	if (parts.doNotHyphenateCaps) model.doNotHyphenateCaps = true;
 	const coreFile = zip.file('docProps/core.xml');
 	if (coreFile) {
 		const properties = parseCoreProperties(await coreFile.async('string'));

@@ -3,6 +3,7 @@ import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFragment } from './result';
 import { hangsAtLineEnd, kinsokuSets, type KinsokuSets } from '../../text/kinsoku';
 import { AUTO_SPACE_EM, eastAsianAutoSpace } from '../../text/east-asian';
+import { stripSoftHyphens } from '../../text/hyphenation';
 import {
 	appendBreakMarker,
 	breakAllowedBetween,
@@ -42,13 +43,14 @@ export function runTextWidth(
 	measurer: TextMeasurer,
 	font = fontOf(run),
 ): number {
+	const visible = stripSoftHyphens(text);
 	let characters = 0;
 	if (run.characterSpacingPx) {
-		for (const _segment of graphemes.segment(text)) characters++;
+		for (const _segment of graphemes.segment(visible)) characters++;
 	}
 	return Math.max(
 		0,
-		(measurer.widthOf(text, font) * (run.textScalePercent ?? 100)) / 100 +
+		(measurer.widthOf(visible, font) * (run.textScalePercent ?? 100)) / 100 +
 			characters * (run.characterSpacingPx ?? 0),
 	);
 }
@@ -196,6 +198,8 @@ export function tokenizeParagraph(paragraph: LayoutParagraph): {
 export interface PlacedToken {
 	token: BreakToken;
 	widthPx: number;
+	/** Rendered text when it differs from `token.text` (e.g. a hyphenated prefix with `-`). */
+	displayText?: string;
 	/** Glyph position and consumed advance differ for centered/right-aligned list markers. */
 	xOffsetPx?: number;
 	advancePx?: number;

@@ -159,6 +159,12 @@ export interface DocumentModel {
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */
 	autoHyphenation?: boolean;
+	/** `w:hyphenationZone` in settings.xml (twips; Word defaults to 360 twips / 0.25 in); read-only. */
+	hyphenationZoneTwips?: Twips;
+	/** `w:consecutiveHyphenLimit` in settings.xml (0 or absent means unlimited); read-only. */
+	consecutiveHyphenLimit?: number;
+	/** `w:doNotHyphenateCaps` in settings.xml: skip ALL-CAPS words during auto-hyphenation; read-only. */
+	doNotHyphenateCaps?: boolean;
 	/** Page colour (`w:document/w:background`), six uppercase hex digits without `#`; unset for none. */
 	pageColor?: string;
 	footnotes?: Note[];

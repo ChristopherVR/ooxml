@@ -43,4 +43,16 @@ describe('automatic hyphenation', () => {
 		delete off.autoHyphenation;
 		expect(await settingsOf(await again.save(off))).not.toContain('autoHyphenation');
 	});
+
+	it('reads hyphenationZone, consecutiveHyphenLimit, and doNotHyphenateCaps from settings.xml', async () => {
+		const { model } = await loadDocx(
+			await packageWith(
+				'<w:autoHyphenation/><w:hyphenationZone w:val="720"/><w:consecutiveHyphenLimit w:val="3"/><w:doNotHyphenateCaps/>',
+			),
+		);
+		expect(model.autoHyphenation).toBe(true);
+		expect(model.hyphenationZoneTwips).toBe(720);
+		expect(model.consecutiveHyphenLimit).toBe(3);
+		expect(model.doNotHyphenateCaps).toBe(true);
+	});
 });

@@ -65,6 +65,8 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 		const value = enabled(first(pPr, key));
 		if (value !== undefined) result[key] = value;
 	}
+	const suppressAutoHyphens = enabled(first(pPr, 'suppressAutoHyphens'));
+	if (suppressAutoHyphens !== undefined) result.suppressAutoHyphens = suppressAutoHyphens;
 	const outline = parseOutlineLevel(first(pPr, 'outlineLvl'));
 	if (outline !== undefined) result.outlineLevel = outline;
 	const borders = parseParagraphBorders(first(pPr, 'pBdr'));
@@ -198,6 +200,7 @@ export function resolveParagraphFormatting(
 		'hangingTwips',
 		'pageBreakBefore',
 		...PAGINATION_KEYS,
+		'suppressAutoHyphens',
 		...EAST_ASIAN_TYPOGRAPHY_KEYS,
 		'outlineLevel',
 		'borders',

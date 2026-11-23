@@ -1,5 +1,6 @@
 import type { TextMeasurer } from './measure';
 import { gluedCarry, tokenPosition, type BreakToken, type TokenPosition } from './text-breaks';
+import { findHyphenSplit, lineUsedWidthPx } from './hyphenate-line';
 import { fittingWordPrefix } from './word-overflow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
@@ -144,6 +145,7 @@ function measureParagraph(
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
 	let marginReachPx = 0;
+	let consecutiveHyphens = 0;
 	let tokenCursor: TokenPosition = startToken;
 	let firstToken: TokenPosition = startToken;
 	const wordPosition = (index: number, token: BreakToken, advance = 0): TokenPosition => {
@@ -233,7 +235,11 @@ function measureParagraph(
 	// Width of the punctuation hanging past each line's end, which alignment does not count.
 	const hangingPx = new Map<number, number>();
 
-	function flushLine(forceEmpty: boolean, forcedByBreak: 'page' | 'column' | undefined) {
+	function flushLine(
+		forceEmpty: boolean,
+		forcedByBreak: 'page' | 'column' | undefined,
+		endedWithAutoHyphen = false,
+	) {
 		if (!placed.length && !forceEmpty) return;
 		const lineIndex = lines.length;
 		// Trailing whitespace at a wrap point is consumed (counts toward sourceEnd)
@@ -294,6 +300,37 @@ function measureParagraph(
 		lineSpacePx = 0;
 		jump = undefined;
 		marginReachPx = 0;
+		consecutiveHyphens = endedWithAutoHyphen ? consecutiveHyphens + 1 : 0;
+	}
+
+	function tryHyphenate(
+		index: number,
+		wordToken: Extract<BreakToken, { kind: 'word' }>,
+		availablePx: number,
+		gapPx: number,
+	): boolean {
+		const run = paragraph.runs[wordToken.runIndex];
+		if (wordToken.glue || run?.synthetic || run?.marker) return false;
+		const split = findHyphenSplit(
+			wordToken.text,
+			availablePx,
+			gapPx,
+			paragraph.hyphenation,
+			consecutiveHyphens,
+			(text) => tokenWidth({ ...wordToken, text }),
+		);
+		if (!split) return false;
+		if (!placed.length) firstToken = wordPosition(index, wordToken);
+		placed.push({
+			token: { ...wordToken, text: split.prefixSource },
+			widthPx: split.widthPx,
+			displayText: split.displayText,
+		});
+		tokenCursor = wordPosition(index, wordToken, split.resumeOffset);
+		flushLine(false, undefined, split.automatic);
+		resumeWord(index, split.resumeOffset);
+		widths[index] = tokenWidth(expectDefined(tokens[index], 'resumed word token'));
+		return true;
 	}
 
 	for (let tokenIndex = startIndex; tokenIndex < tokens.length; tokenIndex++) {
@@ -401,6 +438,14 @@ function measureParagraph(
 		if (pastHole !== undefined && lineWidthPx + pastHole + advance <= availableWidth(lineIndex)) {
 			jump = { index: placed.length, shiftPx: pastHole };
 		} else if (!wouldFit && token.kind !== 'space' && !hanging) {
+			if (token.kind === 'word' && !jump) {
+				const availableForWord = limit + squeezePx - lineWidthPx;
+				const gap = limit - lineUsedWidthPx(placed, lineWidthPx);
+				if (tryHyphenate(tokenIndex, token, availableForWord, gap)) {
+					tokenIndex--;
+					continue;
+				}
+			}
 			// Kinsoku and words split across runs: the glued tokens before this one go down with it.
 			const carry = jump ? 0 : gluedCarry(tokens, tokenIndex, placedTokens());
 			if (carry) {
@@ -429,6 +474,13 @@ function measureParagraph(
 				width > available + wordTolerance &&
 				placed.every(({ token }) => paragraph.runs[token.runIndex]?.synthetic)
 			) {
+				if (
+					!jump &&
+					tryHyphenate(tokenIndex, token, available + wordTolerance, available + wordTolerance)
+				) {
+					tokenIndex--;
+					continue;
+				}
 				const prefix = fittingWordPrefix(token.text, available + wordTolerance, (text) =>
 					tokenWidth({ ...token, text }),
 				);

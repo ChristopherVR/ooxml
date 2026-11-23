@@ -1,4 +1,5 @@
 import { definedProps } from '../defined-props';
+import { stripSoftHyphens } from '../../text/hyphenation';
 import type { LayoutFragment } from './result';
 import type { LayoutParagraph } from './input';
 import type { PlacedToken } from './paragraph-tokens';
@@ -9,9 +10,11 @@ export function buildFragments(
 ): LayoutFragment[] {
 	const fragments: LayoutFragment[] = [];
 	let x = 0;
-	for (const { token, widthPx, leader, xOffsetPx, advancePx } of tokensOnLine) {
+	for (const { token, widthPx, displayText, leader, xOffsetPx, advancePx } of tokensOnLine) {
 		const run = paragraph.runs[token.runIndex];
-		const text = token.kind === 'word' || token.kind === 'space' ? token.text : '';
+		const text =
+			displayText ??
+			(token.kind === 'word' || token.kind === 'space' ? stripSoftHyphens(token.text) : '');
 		fragments.push({
 			text,
 			xPx: x + (xOffsetPx ?? 0),

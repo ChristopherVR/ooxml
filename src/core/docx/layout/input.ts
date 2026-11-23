@@ -134,6 +134,16 @@ export interface LayoutNote {
 export type ParagraphAlign = 'left' | 'center' | 'right' | 'justify';
 export type LineSpacingRule = 'auto' | 'exact' | 'atLeast';
 
+/** Document automatic-hyphenation settings copied onto paragraphs where hyphenation is active. */
+export interface LayoutHyphenation {
+	/** `w:hyphenationZone` in twips; defaults to Word's 360 twips (0.25 in) when omitted. */
+	zoneTwips?: Twips;
+	/** `w:consecutiveHyphenLimit`: max consecutive auto-hyphenated lines (0 or omitted = unlimited). */
+	consecutiveLimit?: number;
+	/** `w:doNotHyphenateCaps`: skip ALL-CAPS words during automatic hyphenation. */
+	doNotHyphenateCaps?: boolean;
+}
+
 export interface LayoutParagraph {
 	/** Tolerance for differences between browser and Word advance widths in DrawingML text boxes. */
 	wordFitTolerancePx?: number;
@@ -184,6 +194,8 @@ export interface LayoutParagraph {
 	overflowPunct?: false;
 	/** The document's kinsoku settings (settings.xml), copied onto each paragraph that uses them. */
 	kinsokuSettings?: import('../../text/kinsoku').KinsokuSettings;
+	/** Active automatic hyphenation settings (present when `w:autoHyphenation` is on and not suppressed). */
+	hyphenation?: LayoutHyphenation;
 }
 
 /** A resolved cell border, ready to draw. */

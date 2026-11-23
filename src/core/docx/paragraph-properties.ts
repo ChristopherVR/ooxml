@@ -44,6 +44,8 @@ export function parseDirectParagraphProperties(
 		const value = onOffElement(first(props, key));
 		if (value !== undefined) paragraph[key] = value;
 	}
+	const suppressAutoHyphens = onOffElement(first(props, 'suppressAutoHyphens'));
+	if (suppressAutoHyphens !== undefined) paragraph.suppressAutoHyphens = suppressAutoHyphens;
 	const outline = parseOutlineLevel(first(props, 'outlineLvl'));
 	if (outline !== undefined) paragraph.outlineLevel = outline;
 	const frame = first(props, 'framePr');

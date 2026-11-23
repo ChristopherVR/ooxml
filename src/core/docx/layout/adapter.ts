@@ -379,6 +379,19 @@ export function adaptDocumentModel(
 			...(resolved.autoSpaceDN === false ? { autoSpaceDN: false as const } : {}),
 			...(resolved.overflowPunct === false ? { overflowPunct: false as const } : {}),
 			...(model.kinsoku ? { kinsokuSettings: model.kinsoku } : {}),
+			...(model.autoHyphenation && !resolved.suppressAutoHyphens
+				? {
+						hyphenation: {
+							...(model.hyphenationZoneTwips !== undefined
+								? { zoneTwips: model.hyphenationZoneTwips }
+								: {}),
+							...(model.consecutiveHyphenLimit !== undefined
+								? { consecutiveLimit: model.consecutiveHyphenLimit }
+								: {}),
+							...(model.doNotHyphenateCaps ? { doNotHyphenateCaps: true } : {}),
+						},
+					}
+				: {}),
 		};
 	}
 	function adaptBlock(block: Block): LayoutBlock {
