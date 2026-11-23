@@ -431,12 +431,19 @@ describe('createPptxViewer', () => {
 		expect(root?.style.getPropertyValue('--pptx-background')).toBe('');
 	});
 
-	it('localizes the empty slide area even when the toolbar is hidden', () => {
+	it('localizes a loaded presentation with no slides and a hidden toolbar', async () => {
+		const { PptxHandler } = await import('pptx-viewer-core');
+		const { handler, data } = await PptxHandler.create({ initialSlideCount: 0 });
+		const bytes = await handler.save(data.slides);
+		handler.dispose();
 		const { container, viewer } = mount({
 			locale: 'fr-FR',
 			showToolbar: false,
+			googleFonts: false,
 			messages: { fr: { 'pptx.statusBar.noSlides': 'Aucune diapositive' } },
 		});
+		await viewer.loadFile(bytes);
+		expect(viewer.getSlideCount()).toBe(0);
 		expect(container.querySelector('.pptxv-empty')?.textContent).toBe('Aucune diapositive');
 
 		viewer.setLocale('en');
