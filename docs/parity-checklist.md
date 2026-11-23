@@ -1109,7 +1109,9 @@ installed Visio 16 build is used to check that saved files open without repair.
       not projected point by point, and the shipped Visio themes carry no `a:bevelT`, so the
       themed bevel path has no real-file evidence. Text has no Visio font metrics.
 - [x] **P2** `InfiniteLine` rows are drawn across the page (`infinite-line.ts`).
-- [ ] **P2** Periodic NURBS are missing.
+- [x] **P2** Periodic NURBS are evaluated and drawn as closed loops (`nurbs.ts`, `nurbs-flatten.ts`;
+      degrees 1-8, rational weights, seam continuity and affine knot normalization verified against
+      a Cox-de Boor oracle in `visio/nurbs-periodic.test.ts`).
 - [x] **P2** Stencil previews draw `InfiniteLine` using the existing page clipper with each
       master's page bounds, including transformed groups. Missing page dimensions use a local-box
       thumbnail fallback. Evidence: `visio/master-infinite-line.test.ts`, the synthetic Visio 16
