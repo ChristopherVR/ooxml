@@ -80,9 +80,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       now projects `c:view3D` (oblique for right-angle axes, perspective otherwise) and paints
       bar3D, line3D, area3D, pie3D and surface3D with depth ordering and face shading; PowerPoint's
       projection and shading code is shared with it.
-- [ ] **P1** 3-D chart detail in the core painter: data labels, floor and wall formatting, bar
-      `c:shape` (cylinder, cone, pyramid), pie explosion, surface wireframe and contour modes, and
-      measurement against Office renders.
+- [ ] **P1** 3-D chart detail in the core painter: floor and wall formatting (`chart-3d-walls.ts`),
+      bar `c:shape` (`cylinder`, `cone`, `coneToMax`, `pyramid`, `pyramidToMax`;
+      `chart-3d-shapes.ts`), `pie3D` series/point explosion (`chart-3d-pie.ts`), `surface3D`
+      wireframe and 2-D `surfaceChart` contour (`chart-3d-surface.ts`), and projected 3-D data
+      labels (`chart-3d-labels.ts`; `chart-3d-detail.test.ts`) are implemented. Still open:
+      pixel-level measurement against Office renders.
 - [x] **P1** Pareto charts draw in the shared painter (bars in descending order, the cumulative
       line on a 0 to 100% secondary axis; `chart/pareto.ts`, `chart/ex/create-family.test.ts`), and
       Word, Excel and PowerPoint insert pareto charts as Office writes them (an owned `paretoLine`
