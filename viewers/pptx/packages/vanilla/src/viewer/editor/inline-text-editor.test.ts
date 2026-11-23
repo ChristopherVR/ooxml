@@ -833,6 +833,61 @@ describe('openInlineEditor chords it owns', () => {
 		done();
 	});
 
+	it('demotes a bulleted paragraph on Tab at start and promotes on Shift+Tab', () => {
+		const overlayRoot = document.createElement('div');
+		document.body.appendChild(overlayRoot);
+		const onInput = vi.fn();
+		const bulletEl: PptxElement = {
+			id: 'bullet-tab',
+			type: 'text',
+			x: 0,
+			y: 0,
+			width: 240,
+			height: 90,
+			text: 'Item',
+			textSegments: [{ text: 'Item', style: {}, bulletInfo: { char: '•' }, paragraphLevel: 0 }],
+		};
+		const session = openInlineEditor({
+			doc: document,
+			overlayRoot,
+			box: { x: 0, y: 0, width: 240, height: 90, rotation: 0 },
+			scale: 1,
+			element: bulletEl,
+			onInput,
+			onCommit: vi.fn(),
+			onClose: vi.fn(),
+		});
+		const walker = document.createTreeWalker(session.el, NodeFilter.SHOW_TEXT);
+		const textNode = walker.nextNode() as Text;
+		const range = document.createRange();
+		range.setStart(textNode, 0);
+		range.setEnd(textNode, 0);
+		const sel = window.getSelection()!;
+		sel.removeAllRanges();
+		sel.addRange(range);
+
+		session.el.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+		);
+		expect(onInput).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 1 })],
+			}),
+		);
+
+		session.el.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
+		);
+		expect(onInput).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 0 })],
+			}),
+		);
+		overlayRoot.remove();
+	});
+
 	it('cancels Ctrl+D (the browser bookmark dialog) and stays in the edit', () => {
 		const { session, onClose, done } = open();
 		const event = chord('d');

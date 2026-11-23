@@ -99,4 +99,60 @@ describe('inline text editor chords', () => {
 		expect(onclose).not.toHaveBeenCalled();
 		done();
 	});
+
+	it('demotes a bulleted paragraph on Tab at start and promotes on Shift+Tab', () => {
+		const host = document.createElement('div');
+		document.body.appendChild(host);
+		const oninput = vi.fn();
+		const bulletEl = {
+			...textElement(),
+			text: 'Item',
+			textSegments: [{ text: 'Item', style: {}, bulletInfo: { char: '•' }, paragraphLevel: 0 }],
+		} as unknown as PptxElement;
+		const component = mount(InlineTextEditor, {
+			target: host,
+			props: {
+				element: bulletEl,
+				box: { x: 0, y: 0, width: 200, height: 50 },
+				scale: 1,
+				oncommit: vi.fn(),
+				onclose: vi.fn(),
+				oninput,
+			},
+		});
+		flushSync();
+		const editor = host.querySelector<HTMLElement>('[data-inline-editor]')!;
+		const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+		const textNode = walker.nextNode() as Text;
+		const range = document.createRange();
+		range.setStart(textNode, 0);
+		range.setEnd(textNode, 0);
+		const sel = window.getSelection()!;
+		sel.removeAllRanges();
+		sel.addRange(range);
+
+		editor.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+		);
+		flushSync();
+		expect(oninput).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 1 })],
+			}),
+		);
+
+		editor.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
+		);
+		flushSync();
+		expect(oninput).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 0 })],
+			}),
+		);
+		unmount(component);
+		host.remove();
+	});
 });

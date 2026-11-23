@@ -325,6 +325,54 @@ describe('inline editor chords (shared mapInlineEditorChord)', () => {
 		expect(commit).not.toHaveBeenCalled();
 	});
 
+	it('demotes on Tab at the start of a bulleted paragraph and promotes on Shift+Tab', () => {
+		const change = vi.fn();
+		const bulletEl = {
+			...makeTextElement(),
+			text: 'Item',
+			textSegments: [{ text: 'Item', style: {}, bulletInfo: { char: '•' }, paragraphLevel: 0 }],
+		} as unknown as PptxElement;
+		mount(makeProps({ element: bulletEl, onInlineEditChange: change }));
+		const editor = getInlineEditor();
+		const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+		const textNode = walker.nextNode() as Text;
+		const range = document.createRange();
+		range.setStart(textNode, 0);
+		range.setEnd(textNode, 0);
+		const sel = window.getSelection()!;
+		sel.removeAllRanges();
+		sel.addRange(range);
+
+		act(() => {
+			editor.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+			);
+		});
+		expect(change).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 1 })],
+			}),
+		);
+
+		act(() => {
+			editor.dispatchEvent(
+				new KeyboardEvent('keydown', {
+					key: 'Tab',
+					shiftKey: true,
+					bubbles: true,
+					cancelable: true,
+				}),
+			);
+		});
+		expect(change).toHaveBeenLastCalledWith(
+			'Item',
+			expect.objectContaining({
+				textSegments: [expect.objectContaining({ paragraphLevel: 0 })],
+			}),
+		);
+	});
+
 	it('cancels Ctrl+D (the browser bookmark dialog) without leaving the edit', () => {
 		const commit = vi.fn();
 		const cancel = vi.fn();

@@ -4,9 +4,9 @@ import type { AfterViewInit, OnChanges, OnDestroy } from '@angular/core';
 import {
 	attachCollaborationInlineEditor,
 	attachInlineListController,
+	handleInlineEditorTab,
 	initializeInlineListDom,
 	inlineListBodyText,
-	insertInlineEditorText,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	placeCaretAt,
@@ -221,8 +221,8 @@ export class InlineListEditorComponent implements AfterViewInit, OnChanges, OnDe
 			// stops the browser opening its bookmark dialog.
 			event.preventDefault();
 			event.stopPropagation();
-			if (chord === 'tab') {
-				insertInlineEditorText(this.editor().nativeElement.ownerDocument, '\t');
+			if (chord === 'tab' || chord === 'shift-tab') {
+				handleInlineEditorTab(this.editor().nativeElement, chord === 'shift-tab');
 				return;
 			}
 			// Back to the slide; the blur that causes is the commit.

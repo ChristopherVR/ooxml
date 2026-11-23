@@ -79,6 +79,51 @@ function mountedEditor(
 }
 
 describe('angular list editor', () => {
+	it('demotes on Tab at bullet paragraph start and promotes on Shift+Tab', () => {
+		const mounted = mountedEditor();
+		try {
+			const walker = document.createTreeWalker(mounted.root, NodeFilter.SHOW_TEXT);
+			const textNode = walker.nextNode() as Text;
+			const range = document.createRange();
+			range.setStart(textNode, 0);
+			range.setEnd(textNode, 0);
+			const sel = window.getSelection()!;
+			sel.removeAllRanges();
+			sel.addRange(range);
+
+			const tab = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+			mounted.handlers.onKeyDown(tab);
+			expect(tab.defaultPrevented).toBe(true);
+			expect(mounted.inputs).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					text: 'Original',
+					snapshot: expect.objectContaining({
+						textSegments: [expect.objectContaining({ paragraphLevel: 2 })],
+					}),
+				}),
+			);
+
+			const shiftTab = new KeyboardEvent('keydown', {
+				key: 'Tab',
+				shiftKey: true,
+				bubbles: true,
+				cancelable: true,
+			});
+			mounted.handlers.onKeyDown(shiftTab);
+			expect(shiftTab.defaultPrevented).toBe(true);
+			expect(mounted.inputs).toHaveBeenLastCalledWith(
+				expect.objectContaining({
+					text: 'Original',
+					snapshot: expect.objectContaining({
+						textSegments: [expect.objectContaining({ paragraphLevel: 1 })],
+					}),
+				}),
+			);
+		} finally {
+			mounted.cleanup();
+		}
+	});
+
 	it.each(['render', 'host snapshot', 'pending snapshot', 'host readonly'] as const)(
 		'retires the exact connected target before %s on a duplicate slide',
 		(boundary) => {

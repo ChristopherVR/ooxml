@@ -140,10 +140,13 @@ export function mapInlineTextFormatKey(input: EditorKeyInput): InlineTextFormatP
 /**
  * What an inline text editor does with a chord it owns:
  *  - `commit`: leave the edit, keeping the text (as a click outside does);
- *  - `tab`: type a tab character (`insertInlineEditorText`);
+ *  - `tab`: demote a bulleted/numbered paragraph at its start (or multi-paragraph
+ *    selection), otherwise type a tab character (`handleInlineEditorTab`);
+ *  - `shift-tab`: promote a bulleted/numbered paragraph, otherwise keep the caret
+ *    in the text box (`handleInlineEditorTab`);
  *  - `suppress`: cancel the browser default and do nothing else.
  */
-export type InlineEditorChord = 'commit' | 'tab' | 'suppress';
+export type InlineEditorChord = 'commit' | 'tab' | 'shift-tab' | 'suppress';
 
 /** Keyboard event shape read by {@link mapInlineEditorChord}. */
 export interface InlineEditorChordInput extends EditorKeyInput {
@@ -164,10 +167,10 @@ export interface InlineEditorChordInput extends EditorKeyInput {
  * the deck mid-sentence. Duplicating the shape from inside the text is not
  * offered here.
  *
- * Tab types a tab character, as in PowerPoint, instead of moving focus out of
- * the text box (the browser default sent it to the format pane). Shift+Tab is
- * claimed too, so it cannot leave the edit either. PowerPoint's list-level
- * change from Tab at the start of a bulleted paragraph is not offered here.
+ * Tab and Shift+Tab are claimed so focus never leaves the text box: in a
+ * bulleted/numbered list `handleInlineEditorTab` demotes/promotes the paragraph
+ * list level (0..8), and otherwise Tab inserts a tab character while Shift+Tab
+ * stays in the text box.
  */
 export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEditorChord | null {
 	if (input.isComposing) {
@@ -177,7 +180,7 @@ export function mapInlineEditorChord(input: InlineEditorChordInput): InlineEdito
 		return 'commit';
 	}
 	if (input.key === 'Tab' && !(input.ctrlKey || input.metaKey || input.altKey)) {
-		return input.shiftKey ? 'suppress' : 'tab';
+		return input.shiftKey ? 'shift-tab' : 'tab';
 	}
 	if (!(input.ctrlKey || input.metaKey) || input.altKey) {
 		return null;

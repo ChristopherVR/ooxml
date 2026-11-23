@@ -6,7 +6,7 @@ import {
 	createInlineListSeed,
 	initializeInlineListDom,
 	getInlineEditorSelection,
-	insertInlineEditorText,
+	handleInlineEditorTab,
 	mapInlineEditorChord,
 	markInsertedParagraph,
 	placeCaretAt,
@@ -232,8 +232,8 @@ export function openInlineEditor(options: OpenInlineEditorOptions): InlineEditor
 		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			if (chord === 'tab') {
-				insertInlineEditorText(doc, '\t');
+			if (chord === 'tab' || chord === 'shift-tab') {
+				handleInlineEditorTab(surface, chord === 'shift-tab');
 			} else if (chord !== 'suppress') {
 				close(readEditableText(surface));
 			}

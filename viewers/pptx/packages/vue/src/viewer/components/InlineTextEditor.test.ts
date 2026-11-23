@@ -198,6 +198,49 @@ describe('inlineTextEditor', () => {
 		wrapper.unmount();
 	});
 
+	it('demotes a bulleted paragraph on Tab at start and promotes on Shift+Tab', async () => {
+		const bulletEl = {
+			...element,
+			text: 'Item',
+			textSegments: [{ text: 'Item', style: {}, bulletInfo: { char: '•' }, paragraphLevel: 0 }],
+		} as unknown as PptxElement;
+		const wrapper = mount(InlineTextEditor, {
+			props: { element: bulletEl },
+			attachTo: document.body,
+		});
+		const editor = wrapper.get('[data-inline-editor]').element as HTMLElement;
+		const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+		const textNode = walker.nextNode() as Text;
+		const range = document.createRange();
+		range.setStart(textNode, 0);
+		range.setEnd(textNode, 0);
+		const sel = window.getSelection()!;
+		sel.removeAllRanges();
+		sel.addRange(range);
+
+		editor.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }),
+		);
+		await wrapper.vm.$nextTick();
+		const afterTab = wrapper.emitted('change')?.at(-1);
+		expect(afterTab?.[0]).toBe('Item');
+		expect(
+			(afterTab?.[1] as { textSegments?: Array<{ paragraphLevel?: number }> })?.textSegments?.[0]
+				?.paragraphLevel,
+		).toBe(1);
+
+		editor.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true }),
+		);
+		await wrapper.vm.$nextTick();
+		const afterShiftTab = wrapper.emitted('change')?.at(-1);
+		expect(
+			(afterShiftTab?.[1] as { textSegments?: Array<{ paragraphLevel?: number }> })
+				?.textSegments?.[0]?.paragraphLevel,
+		).toBe(0);
+		wrapper.unmount();
+	});
+
 	it('emits a bold toggle on Ctrl+B', async () => {
 		const wrapper = mount(InlineTextEditor, { props: { element } });
 		await wrapper.get('[data-inline-editor]').trigger('keydown', { key: 'b', ctrlKey: true });

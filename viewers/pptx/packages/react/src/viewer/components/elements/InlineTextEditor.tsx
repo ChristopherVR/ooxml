@@ -1,6 +1,6 @@
 import {
 	getInlineEditorSelectionResult,
-	insertInlineEditorText,
+	handleInlineEditorTab,
 	isBulletMarkerSegment,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
@@ -269,8 +269,8 @@ export function InlineTextEditor({
 				if (chord) {
 					e.preventDefault();
 					e.stopPropagation();
-					if (chord === 'tab') {
-						insertInlineEditorText(e.currentTarget.ownerDocument, '\t');
+					if (chord === 'tab' || chord === 'shift-tab') {
+						handleInlineEditorTab(e.currentTarget, chord === 'shift-tab');
 						return;
 					}
 					if (chord === 'suppress' || !list.canCommit()) {

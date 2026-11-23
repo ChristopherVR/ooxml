@@ -15,9 +15,9 @@
 		buildInlineTextCommitPatch,
 		createInlineListSeed,
 		createInlineListModelObserver,
+		handleInlineEditorTab,
 		initializeInlineListDom,
 		inlineListBodyText,
-		insertInlineEditorText,
 		mapInlineEditorChord,
 		markInsertedParagraph,
 		readListActivationSelection,
@@ -191,8 +191,8 @@
 		const chord = mapInlineEditorChord(event);
 		if (event.key === 'Escape' || chord) {
 			event.preventDefault();
-			if (chord === 'tab') {
-				insertInlineEditorText(document, '\t');
+			if (chord === 'tab' || chord === 'shift-tab') {
+				handleInlineEditorTab(el, chord === 'shift-tab');
 			} else if (chord !== 'suppress') {
 				close(el ? readEditableText(el) : null);
 			}

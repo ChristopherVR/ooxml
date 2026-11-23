@@ -46,9 +46,9 @@ import {
 	findConnectorSiteNear,
 	getConnectorEndpointHandles,
 	getResizeHandleHitAreaStyle,
+	handleInlineEditorTab,
 	inlineListBodyText,
 	isTemplateElement,
-	insertInlineEditorText,
 	linkedContentView,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
@@ -1210,8 +1210,8 @@ export class SlideCanvasComponent implements SlideContext {
 			// browser opening its bookmark dialog over the deck.
 			event.preventDefault();
 			event.stopPropagation();
-			if (chord === 'tab') {
-				insertInlineEditorText(editor.ownerDocument, '\t');
+			if (chord === 'tab' || chord === 'shift-tab') {
+				handleInlineEditorTab(editor, chord === 'shift-tab');
 				return;
 			}
 			// Back to the slide; the blur that causes is the commit.

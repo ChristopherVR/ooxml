@@ -3,9 +3,9 @@ import {
 	attachCollaborationInlineEditor,
 	attachInlineListController,
 	createInlineListSeed,
+	handleInlineEditorTab,
 	initializeInlineListDom,
 	inlineListBodyText,
-	insertInlineEditorText,
 	mapInlineEditorChord,
 	mapInlineTextFormatKey,
 	markInsertedParagraph,
@@ -274,8 +274,11 @@ function onKeydown(event: KeyboardEvent): void {
 	if (chord) {
 		event.preventDefault();
 		event.stopPropagation();
-		if (chord === 'tab') {
-			insertInlineEditorText(document, '\t');
+		if (chord === 'tab' || chord === 'shift-tab') {
+			handleInlineEditorTab(
+				editorRef.value ?? (event.currentTarget as HTMLElement | null),
+				chord === 'shift-tab',
+			);
 			return;
 		}
 		// Back to the slide; the blur that causes is the commit.
