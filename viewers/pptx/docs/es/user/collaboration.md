@@ -45,7 +45,7 @@ Mientras hay una sesión activa verá:
 - **Cursores remotos** - el puntero de cada colaborador se mueve por el lienzo con una etiqueta de nombre de color. Los cursores solo aparecen para las personas que ven la misma diapositiva que usted.
 - **Selecciones remotas** - cuando alguien selecciona un elemento, este recibe un contorno de color con su nombre, para que sepa en qué está trabajando.
 - **Barra de seguimiento** - una franja en la parte superior etiquetada **Seguir a un colaborador**. Haga clic en una persona para seguirla: su vista cambia de diapositiva cada vez que ella lo hace. Haga clic en **Detener** para volver a navegar por su cuenta.
-- **Estado de la conexión** - un punto en la barra de estado: **Conectado** en verde (con el número de usuarios), **Conectando...** en amarillo, **Desconectado** en gris, o **Error de conexión** en rojo con un botón **Reintentar**.
+- **Estado de la conexión** - un punto en la barra de estado: **Conectado** en verde (con el número de usuarios), **Conectando...** en amarillo, **Desconectado** en gris, o **Error de conexión** en rojo con un botón **Reintentar**. Pase el cursor sobre el error para ver la causa, como una clave de sesión entre pares ausente, una página sin HTTPS o un servidor inaccesible. El cuadro **Compartir** muestra el mismo motivo encima del formulario.
 
 ## Cómo se comporta la edición simultánea
 

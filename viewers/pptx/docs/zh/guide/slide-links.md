@@ -29,4 +29,4 @@ const viewer = createPptxViewer(container, {
 });
 ```
 
-没有回调时，查看器会正常跟随链接。外部链接保留演示文稿的目标框架、URL 安全检查以及信任中心确认设置。
+没有回调时，查看器会正常跟随链接。外部链接经过 URL 安全检查和信任中心确认后，始终在带有 `noopener` 和 `noreferrer` 的新标签页中打开。演示文稿的目标框架（`tgtFrame`）原样保存。`file:` 和 `ftp:` 链接会保留在演示文稿中，但不会打开。

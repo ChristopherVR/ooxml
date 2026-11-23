@@ -1005,6 +1005,7 @@ const portal: ViewerCustomization = {
 | `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
 | `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery                                                        |
 | `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery                                                       |
+| `pictureFormat.pictureStyles.graphicsFill`        | 图形填充库                                                                    |
 | `pictureFormat.size.crop`                         | Crop                                                                          |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
 | `tableLayout.table.select`                        | Select                                                                        |

@@ -109,8 +109,7 @@ import { useEditorHistory, useAlignGroup } from 'pptx-vue-viewer/internals';
 | `useCustomShows`          | 自定义放映的创建、重命名和删除操作。                      |
 | `useCustomShowsWiring`    | 将自定义放映接入组件。                                    |
 | `useSlideShowSettings`    | 设置幻灯片放映对话框和字幕开关。                          |
-| `useSignatures`           | 数字签名验证和总体状态。                                  |
-| `useSignatureWorkflow`    | 签名面板及签名被移除警告的接线逻辑。                      |
+| `useSignatureWorkflow`    | 签名状态视图、签名面板及保存时移除签名的提示。            |
 | `useFontEmbedding`        | 字体嵌入对话框和已用字体族检测。                          |
 | `useSelectionPaneWiring`  | “视图 > 选择窗格”的接线逻辑，包括选择、切换可见性和重排。 |
 

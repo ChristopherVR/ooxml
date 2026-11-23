@@ -111,6 +111,17 @@ Every id, the rules and recipes are in the
 dictionary of dotted `pptx.*` keys. Theme and locale can be changed later via
 [`setTheme` / `setLocale`](/vanilla/api#theming--localization).
 
+The empty slide area uses `pptx.statusBar.noSlides`, including when the toolbar is hidden.
+Register the label in `messages`. A regional locale such as `fr-FR` can use a `fr` dictionary.
+
+```ts
+const viewer = createPptxViewer(container, {
+	showToolbar: false,
+	locale: 'fr-FR',
+	messages: { fr: { 'pptx.statusBar.noSlides': 'Aucune diapositive' } },
+});
+```
+
 `ThemeCatalogEntry` is `{ key: string; labelKey: string; theme: ViewerTheme | undefined }`
 (`undefined` resets to the built-in default); `LocaleCatalogEntry` is
 `{ code: string; label: string; nativeLabel: string }`.

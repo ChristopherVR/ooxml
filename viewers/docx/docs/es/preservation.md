@@ -128,9 +128,11 @@ supere un límite se rechaza antes de leer ninguna parte.
 ## Informado al cargar, no modificado por un guardado {#reported-at-load-not-changed-by-a-save}
 
 `model.warnings` enumera las funciones que se cargan pero que no se renderizan ni editan como en Word, por ejemplo
-objetos OLE incrustados (se conservan, se dibujan como marcador de posición), campos `HYPERLINK` complejos (se conservan
+modelos 3D (con la imagen guardada) y objetos de Office incrustados (con su icono, si está disponible), campos `HYPERLINK` complejos (se conservan
 como códigos de campo), cambios controlados de estructura de tabla (se conservan en el XML, no en el modelo), viñetas
 de imagen y parte de la numeración vinculada a estilos, y restricciones de edición que se conservan pero no se aplican.
+
+Use **Insertar > Modelos 3D** para agregar un GLB local autónomo con vista previa estática, e **Insertar > Objeto** para incrustar un DOCX, XLSX o PPTX local como icono. El DOCX conserva los datos originales. Word de escritorio puede girar el modelo y activar el objeto. El navegador muestra la vista previa o un marcador, también para objetos OLE antiguos sin vista previa compatible.
 
 ## Límites conocidos de la garantía {#known-limits-of-the-guarantee}
 

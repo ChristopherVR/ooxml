@@ -94,13 +94,15 @@ interface CollaborationConfig {
 	transport?: CollaborationTransport;
 	/** WebRTC signaling server URLs (webrtc transport only). */
 	signaling?: string[];
+	/** WebRTC 会话密钥，使用 createShareSecret() 生成。 */
+	secret?: string;
 	/** Display name for the local user. */
 	userName: string;
 	/** Avatar URL for the local user (optional). */
 	userAvatar?: string;
 	/** Hex colour for the local user's cursor / presence indicator. */
 	userColor?: string;
-	/** Optional auth token sent with the WebSocket handshake / used as the webrtc room password. */
+	/** WebSocket 握手令牌，WebRTC 使用 secret。 */
 	authToken?: string;
 	/** Session role - defaults to 'collaborator'. */
 	role?: CollaborationRole;
@@ -113,22 +115,25 @@ interface CollaborationConfig {
 }
 ```
 
-| 字段                  | 类型                                                              | 必填 | 说明                                                                                                                    |
-| --------------------- | ----------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| `roomId`              | `string`                                                          | 是   | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                                                                          |
-| `serverUrl`           | `string`                                                          | 是   | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                         |
-| `transport`           | `CollaborationTransport`                                          | 否   | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                      |
-| `signaling`           | `string[]`                                                        | 否   | y-webrtc 信令 URL，默认使用其公共列表。                                                                                 |
-| `userName`            | `string`                                                          | 是   | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。                                                          |
-| `userAvatar`          | `string`                                                          | 否   | 经过校验的头像 URL。                                                                                                    |
-| `userColor`           | `string`                                                          | 否   | 用户光标环的十六进制颜色。                                                                                              |
-| `authToken`           | `string`                                                          | 否   | WebSocket 握手参数或 WebRTC 房间密码。                                                                                  |
-| `role`                | `CollaborationRole`                                               | 否   | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                                                                      |
-| `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | 否   | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认信号；状态见 `collaborationState.writeBack`。 |
-| `writeBackDebounceMs` | `number`                                                          | 否   | 默认 5000 ms。                                                                                                          |
-| `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | 否   | 对被拒绝的 `onWriteBack` 做指数退避重试。默认不重试。                                                                   |
+| 字段                  | 类型                                                              | 必填        | 说明                                                                                                                    |
+| --------------------- | ----------------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `roomId`              | `string`                                                          | 是          | 会经过清理，建议仅使用字母、数字、`-` 和 `_`。                                                                          |
+| `serverUrl`           | `string`                                                          | 是          | `y-websocket` 服务器 URL；`transport: 'webrtc'` 时可以为 `''`。                                                         |
+| `transport`           | `CollaborationTransport`                                          | 否          | 默认 `'websocket'`，也可选 `'webrtc'` 点对点模式。                                                                      |
+| `signaling`           | `string[]`                                                        | 否          | y-webrtc 信令 URL，默认使用其公共列表。                                                                                 |
+| `secret`              | `string`                                                          | WebRTC 必填 | 使用 `createShareSecret()` 生成的会话密钥，用于推导信令房间名及 y-webrtc 密码。                                         |
+| `userName`            | `string`                                                          | 是          | 本地用户显示名称；未设置 `authorName` 时也用作批注和标记作者。                                                          |
+| `userAvatar`          | `string`                                                          | 否          | 经过校验的头像 URL。                                                                                                    |
+| `userColor`           | `string`                                                          | 否          | 用户光标环的十六进制颜色。                                                                                              |
+| `authToken`           | `string`                                                          | 否          | WebSocket 握手参数。WebRTC 使用 `secret`。                                                                              |
+| `role`                | `CollaborationRole`                                               | 否          | `'owner'`、默认的 `'collaborator'` 或 `'viewer'`。                                                                      |
+| `onWriteBack`         | `(bytes) => void \| Promise<void>`                                | 否          | 仅在 `'owner'` 端调用，提供防抖后的序列化 PPTX 快照。返回的 promise 即确认信号；状态见 `collaborationState.writeBack`。 |
+| `writeBackDebounceMs` | `number`                                                          | 否          | 默认 5000 ms。                                                                                                          |
+| `writeBackRetry`      | `{ attempts: number; baseDelayMs?: number; maxDelayMs?: number }` | 否          | 对被拒绝的 `onWriteBack` 做指数退避重试。默认不重试。                                                                   |
 
 ### 无需文档服务器的点对点模式 {#serverless-peer-to-peer-mode}
+
+`webrtc` 会话必须提供由 `createShareSecret()` 生成的新 128 位 `secret`（从 `ooxml-core/collab` 或 `ooxml-ui/pptx` 导入）。系统以密钥的 SHA-256 摘要作为信令房间名，并使用密钥作为 y-webrtc 密码，信令服务器看不到 `roomId` 或明文信令。内置对话框会生成密钥，邀请链接通过浏览器不会发送到服务器的 `#key=` 片段携带密钥。缺少密钥时无法连接。
 
 使用 `transport: 'webrtc'` 时无需文档服务器：参与者通过 WebRTC 直接交换更新，**同一浏览器**中的标签页甚至可以在完全断网时通过 BroadcastChannel 连接。托管在 GitHub Pages 上的演示就采用这种方式。跨设备会话通过 WebRTC 信令服务器建立连接（仅交换元数据，文档数据不会经过信令服务器）；生产环境请通过 `signaling` 指定自己的服务器。在内置共享或广播对话框中，将服务器 URL 留空即可选择此传输方式。
 

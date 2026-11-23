@@ -78,7 +78,9 @@ Le chargement est limité à 50 Mo par paquet, 5 000 entrées et 200 Mo décompr
 
 ## Signalé au chargement, non modifié par un enregistrement {#reported-at-load-not-changed-by-a-save}
 
-`model.warnings` liste les fonctionnalités qui se chargent sans se rendre ni se modifier comme dans Word, par exemple les objets OLE intégrés (conservés, dessinés sous forme de substitut), les champs `HYPERLINK` complexes (conservés comme codes de champ), les modifications suivies de structure de tableau (conservées dans le XML, non dans le modèle), les puces images et une partie de la numérotation liée au style, ainsi que les restrictions de modification conservées mais non appliquées.
+`model.warnings` liste les fonctionnalités qui se chargent sans se rendre ni se modifier comme dans Word, par exemple les modèles 3D (conservés avec leur image) et les objets Office incorporés (avec leur icône si elle est disponible), les champs `HYPERLINK` complexes (conservés comme codes de champ), les modifications suivies de structure de tableau (conservées dans le XML, non dans le modèle), les puces images et une partie de la numérotation liée au style, ainsi que les restrictions de modification conservées mais non appliquées.
+
+Utilisez **Insertion > Modèles 3D** pour ajouter un GLB local autonome avec un aperçu statique et **Insertion > Objet** pour incorporer un DOCX, XLSX ou PPTX local sous forme d’icône. Le DOCX conserve les données d’origine. Word pour ordinateur permet de faire pivoter le modèle et d’activer l’objet. Le navigateur affiche l’aperçu ou un emplacement réservé, y compris pour les anciens objets OLE sans aperçu compatible.
 
 ## Limites connues de la garantie {#known-limits-of-the-guarantee}
 

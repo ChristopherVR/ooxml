@@ -36,7 +36,8 @@ interface PptxData {
 	// flags
 	isPasswordProtected?: boolean;
 	hasMacros?: boolean; // is a .pptm
-	hasDigitalSignatures?: boolean;
+	hasDigitalSignatures?: boolean; // Signaturteile sind vorhanden
+	signatures?: SignatureSummary; // Prüfergebnis für vorhandene Signaturen
 	conformance?: 'strict' | 'transitional'; // original OOXML conformance class
 
 	warnings?: PptxCompatibilityWarning[]; // unsupported-feature notices

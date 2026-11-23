@@ -29,4 +29,4 @@ const viewer = createPptxViewer(container, {
 });
 ```
 
-Ohne Callback folgt der Viewer Links auf die übliche Weise. Externe Links behalten das Zielfenster der Präsentation sowie die URL-Sicherheitsprüfungen und die Einstellung der Bestätigung im Trust Center bei.
+Ohne Callback folgt der Viewer Links wie gewohnt. Externe Links öffnen nach der URL-Sicherheitsprüfung und der Bestätigung gemäß Trust Center stets einen neuen Tab mit `noopener` und `noreferrer`. Das Zielfenster der Präsentation (`tgtFrame`) bleibt beim Speichern erhalten. `file:`- und `ftp:`-Links bleiben in der Präsentation und werden nicht geöffnet.

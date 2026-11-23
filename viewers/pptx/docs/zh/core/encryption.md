@@ -130,4 +130,20 @@ const ok = await verifyPassword(encryptedBuffer, 'secret'); // => boolean, no fu
 
 ## 相关安全功能 {#related-security-features}
 
-引擎还将修改密码的写保护验证器解析到 `data.modifyVerifier`，通过[保存选项](/zh/core/saving)传回可保留，传 `null` 可移除写保护。`data.hasDigitalSignatures` 检测 XML 数字签名，保存时会移除已因修改而失效的签名。Node 专用签名和 PKI 校验工具位于 `pptx-viewer-core/signature-node`。可编辑范围见[功能限制](/zh/guide/limitations)。
+引擎将修改密码的写保护验证器解析为 `data.modifyVerifier`。通过[保存选项](/zh/core/saving)传回它可保留写保护，传 `null` 可移除写保护。加载时还会验证 XML 数字签名，结果位于 `data.signatures`。保存编辑后的文件时会移除签名。有关可编辑内容，请参阅[限制](/zh/guide/limitations)。
+
+## 数字签名 {#digital-signatures}
+
+`data.signatures` 是 `SignatureSummary`（`{ state, signatures }`）。浏览器验证签名覆盖的部件摘要、签名值和签名者证书的密钥。浏览器没有信任库，有效签名的最高状态为 `verified-untrusted`。Node 的 `pptx-viewer-core/signature-node` 还支持信任根、吊销检查和时间戳，可报告 `verified`。`data.hasDigitalSignatures` 仅表示存在签名部件。
+
+各绑定用 `ooxml-ui/pptx` 的 `signatureStatusView` 生成翻译后的徽章和签名列表。只有签名通过验证时，才显示为已签名。
+
+| 状态                 | 显示                 | 含义                                       |
+| -------------------- | -------------------- | ------------------------------------------ |
+| `unsigned`           | 无                   | 无签名。                                   |
+| `verified`           | 已签名               | 所有签名均验证通过且签名者受信任。         |
+| `verified-untrusted` | 已签名，签名者未验证 | 签名后的文件内容未变更，签名者身份未确认。 |
+| `invalid`            | 签名无效             | 签名未通过验证或未覆盖相关内容。           |
+| `unsupported`        | 签名未验证           | 签名使用了验证器不支持的功能。             |
+
+打开含签名的演示文稿时会显示可关闭的 `signatureLoadNotice`，说明签名状态及保存时将移除签名。首次编辑也会显示提醒。

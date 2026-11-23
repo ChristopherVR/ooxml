@@ -45,7 +45,7 @@ Pendant une session active, vous verrez :
 - **Curseurs distants** - le pointeur de chaque collaborateur se déplace sur le canevas avec une étiquette de nom colorée. Les curseurs n'apparaissent que pour les personnes qui consultent la même diapositive que vous.
 - **Sélections distantes** - lorsque quelqu'un sélectionne un élément, celui-ci reçoit un contour coloré portant son nom, pour que vous sachiez sur quoi il travaille.
 - **Barre de suivi** - une bande en haut intitulée **Suivre un collaborateur**. Cliquez sur une personne pour la suivre : votre affichage change alors de diapositive chaque fois qu'elle le fait. Cliquez sur **Arrêter** pour reprendre une navigation indépendante.
-- **État de la connexion** - un point dans la barre d'état : **Connecté** en vert (avec le nombre d'utilisateurs), **Connexion...** en jaune, **Déconnecté** en gris, ou **Erreur de connexion** en rouge avec un bouton **Réessayer**.
+- **État de la connexion** - un point dans la barre d'état : **Connecté** en vert (avec le nombre d'utilisateurs), **Connexion...** en jaune, **Déconnecté** en gris, ou **Erreur de connexion** en rouge avec un bouton **Réessayer**. Survolez l’erreur pour en voir la cause, par exemple une clé de session pair à pair manquante, une page sans HTTPS ou un serveur inaccessible. La boîte de dialogue **Partager** affiche la même raison au-dessus du formulaire.
 
 ## Comportement de l'édition simultanée
 

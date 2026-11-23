@@ -29,4 +29,4 @@ const viewer = createPptxViewer(container, {
 });
 ```
 
-Sin callback, el visualizador sigue los vínculos normalmente. Los vínculos externos conservan el marco de destino de la presentación, las comprobaciones de seguridad de URL y el ajuste de confirmación del Centro de confianza.
+Sin callback, el visor sigue los vínculos normalmente. Los vínculos externos se abren en una pestaña nueva con `noopener` y `noreferrer` tras comprobar la URL y aplicar la confirmación del Centro de confianza. El marco de destino (`tgtFrame`) se conserva al guardar. Los vínculos `file:` y `ftp:` se conservan y no se abren.

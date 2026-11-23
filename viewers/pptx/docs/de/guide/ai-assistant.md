@@ -144,15 +144,19 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 
 ## Änderungen prüfen: Vorschlag annehmen oder ablehnen {#reviewing-changes-the-propose-accept-flow}
 
-Standardmäßig (`writePolicy: 'stage'`) wird jede Änderung des Assistenten **zur Prüfung vorgemerkt**, statt sofort angewendet zu werden. Das Panel zeigt eine Vorschlagskarte mit einer kurzen Zusammenfassung der Änderung und den Schaltflächen Annehmen, Ablehnen und Alle annehmen. Das Annehmen übernimmt die Änderung über den eigenen Bearbeitungsverlauf des Viewers als einen einzigen Eintrag. Ein einziges Strg+Z macht daher eine angenommene KI-Änderung rückgängig. Ablehnen verwirft die Änderung. Lesende Werkzeuge (Folien lesen, Text suchen) und Navigation laufen sofort und werden nie vorgemerkt.
+Bei `writePolicy: "stage"` wartet jede Änderung auf Prüfung. **Anwenden** übernimmt, **Verwerfen** verwirft, und **Alle anwenden** übernimmt mehrere Vorschläge. Jede Folien- oder Designänderung erzeugt einen eigenen Rückgängig-Schritt, auch beim Anwenden aller Vorschläge. Andere Änderungen an der Präsentation, etwa an Eigenschaften, Abschnitten oder Foliengröße, folgen dem Verhalten der jeweiligen Bindung. Lese- und Navigationswerkzeuge laufen sofort.
 
-`writePolicy`-Optionen:
+Vorschläge bleiben beim Bearbeiten, im Folienmaster und beim Einfügen von Folien erhalten. Öffnen, Erstellen, Wiederherstellen oder der Wechsel in einen Raum, der die Folien ersetzt, verwirft sie und meldet das im Panel. Vorschläge beschreiben Änderungen, damit sich Änderungen an anderen Inhalten kombinieren lassen. Bei Konflikten am selben Inhalt kann der Nutzer den Vorschlag verwerfen oder neu erstellen.
 
-| Wert                 | Verhalten                                                                                                                                                             |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'stage'` (Standard) | Schreibvorgänge werden zum ausdrücklichen Annehmen oder Ablehnen vorgemerkt.                                                                                          |
-| `'approve'`          | Verwendet die native Freigabe pro Aufruf des AI SDK.                                                                                                                  |
-| `'auto'`             | Schreibvorgänge werden sofort angewendet (weiterhin rückgängig machbar). Destruktive Werkzeuge wie `delete_slides` erfordern unabhängig davon immer eine Bestätigung. |
+`stage` erlaubt Einzel- und Sammelanwendung, `approve` nur die Einzelprüfung, `auto` wendet Änderungen direkt an. `delete_slides` und `import_from_json` müssen immer einzeln bestätigt werden. Vor dem Aufruf werden Werkzeugargumente anhand des Schemas geprüft.
+
+Bei eigenen `PptxAiBridge`-Implementierungen prüft `checkPptxAiBridgeReadsItsWrites(bridge)` aus `ooxml-ui/pptx/ai/host` an einer Testpräsentation, ob Änderungen sofort lesbar sind. `getDeckLoad()` liefert pro Ladevorgang einen neuen und während aller Bearbeitungen denselben Wert. `applyTheme` erhält nur geänderte Designteile.
+
+## Ausführungslimits {#run-limits}
+
+Eine Nachricht startet einen Lauf. Das Panel meldet erreichte Limits, gekürzte oder gefilterte Antworten und einen fehlenden Abschluss. Die Standardwerte sind `limits: { maxSteps: 16, maxToolCalls: 48, maxRunMs: 600_000, maxRepeatedToolCalls: 4 }`. `session.getLastFinish()` (in Vanilla auch am Chat-Controller) liefert den Grund in `reason` und gegebenenfalls die Art der Grenze in `limit`.
+
+`reason`: `stop`, `tool-calls`, `length`, `filtered`, `cancelled`, `error`, `limit`, `unknown`. `limit`: `steps`, `tool-calls`, `time`, `repeats`.
 
 ## Was der Assistent kann (Werkzeuge) {#what-the-assistant-can-do-tools}
 
@@ -177,7 +181,7 @@ Es gibt **55** davon, typisiert als `PptxAiToolName`. Die meisten sind dieselben
   `manage_smart_art`, `apply_template`
 - **Folienstruktur** (6): `add_slide`, `duplicate_slide`, `delete_slides`,
   `reorder_slides`, `update_slide_properties`, `set_slide_transition`
-- **Design** (3): `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
+- **Design** (3): wird wie jede Änderung geprüft - `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
 - **Präsentationsebene** (7): `set_canvas_size`, `update_metadata`, `manage_sections`, `manage_custom_shows`,
   `update_presentation_properties`, `import_from_json`, `apply_layout`
 
@@ -195,7 +199,7 @@ const ai: PptxAiConfig = {
 
 ## Präsentationskontext {#deck-context}
 
-`contextStrategy` steuert, wie viel von der Präsentation pro Runde zusätzlich zu dem an das Modell gesendet wird, was es selbst über die Lesewerkzeuge abruft.
+`contextStrategy` steuert in allen Bindungen den Präsentationskontext je Anfrage zusätzlich zu den Lesewerkzeugen. Der aktuelle Fokus wird unabhängig von der Strategie mitgesendet.
 
 | Wert                   | Pro Runde gesendet                                                  |
 | ---------------------- | ------------------------------------------------------------------- |

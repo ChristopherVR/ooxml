@@ -252,6 +252,8 @@ const current = viewer?.getCustomization();
 
 `pptx-svelte-viewer/viewer` 入口还导出查看器内部不依赖框架的状态辅助接口：`ViewerState`、`PresentationLoader`、`clampSlideIndex`、`fitScale`、`resolveNavigationKey`、`zoomInPercent`、`zoomOutPercent`，供宿主基于相同基础能力构建自定义界面。这些接口比组件 API 更底层，常规嵌入场景无需使用。
 
+`PresentationLoader.signatures` 提供已加载演示文稿的 `SignatureSummary`，无签名时为 `undefined`，替代 `hasDigitalSignatures` 和 `digitalSignatureCount`。使用 `ooxml-ui/pptx` 的 `signatureStatusView(loader.signatures, locale)` 获取翻译后的徽章标签、说明、色调、图标和逐条签名数据，并将结果作为 `Ribbon` 的 `signatureView` 传入。只有签名验证通过才显示为已签名。
+
 ### 幻灯片缩略图栏 {#slide-thumbnail-rail}
 
 `SlidesPane` 是 `PowerPointViewer` 在画布旁显示的幻灯片缩略图栏，供基于 `createViewerState` 和 `SlideCanvas` 构建的自定义外壳使用（见[协作](/zh/svelte/collaboration#custom-host-chrome)）。它列出所有幻灯片（演示文稿包含节时按节分组）并突出显示当前幻灯片；点击缩略图会将画布切换到该幻灯片，不会把演示文稿标记为已修改。启用 `canEdit` 后，它还可以添加、复制、删除、隐藏、重新排序和分组幻灯片（按住 Ctrl 或 Shift 点击可多选），使用与完整编辑器相同的操作、撤销历史和协作同步。`createSlidesPaneProps(state)` 根据查看器状态构建其属性，这些属性是实时 getter，请原样展开传入。

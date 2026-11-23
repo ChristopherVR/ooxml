@@ -80,7 +80,9 @@ export class HeadlessDeckComponent {
 
 ### `LoadContentService` {#loadcontentservice}
 
-加载 `.pptx`，并通过信号提供解析出的全部内容，包括 `slides`、`canvasSize`、`theme`、`slideMasters`、`mediaDataUrls`、`embeddedFonts`、`coreProperties`、`appProperties`、`sections`、`loading`、`error`、`isEncrypted`、`hasMacros` 等，以及计算得到的 `slideCount`。
+加载 `.pptx`，并通过信号提供解析出的全部内容，包括 `slides`、`canvasSize`、`theme`、`slideMasters`、`mediaDataUrls`、`embeddedFonts`、`coreProperties`、`appProperties`、`sections`、`loading`、`error`、`isEncrypted`、`hasMacros`、`signatureSummary` 等，以及计算得到的 `slideCount`。
+
+`signatureSummary` 是演示文稿的签名验证摘要（`SignatureSummary`），无签名时为空。只有验证通过才显示为已签名。根入口的 `signatureStatusView(summary, locale)` 返回已翻译的 `label`、`description`、`tone`、`icon`、`present`、`signed` 及每个签名的行数据。用 `<pptx-signatures-panel [summary]="loader.signatureSummary()" />` 显示列表，用 `<pptx-signature-status-badge [summary]="..." (open)="..." />` 显示状态栏徽章。只要存在签名部件就显示徽章。
 
 | 成员                                     | 用途                                                                                                 |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |

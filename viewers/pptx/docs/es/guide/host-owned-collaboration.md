@@ -101,7 +101,7 @@ Una sesión activa con `role: 'viewer'` hace que el editor sea de solo lectura y
 
 ## Límites de integración {#integration-boundaries}
 
-Esta opción cambia la propiedad de la sesión, no el modelo de datos de colaboración existente. El visualizador es dueño de `pptx:slides` y de sus tipos Yjs anidados. Dé a todos los participantes el mismo PPTX de origen para los recursos del paquete, los temas y los medios. Otros datos de la aplicación pueden ocupar claves de Yjs separadas. No reconcilie de forma independiente instantáneas completas de diapositivas desde el host.
+El visor controla `pptx:slides`, `pptx:assets` y `pptx:media` y sus tipos Yjs anidados. La sala transfiere las imágenes y los medios incrustados mediante `pptx:media` (hasta 16 MiB por sala o 128 KiB en una sala entre pares). Proporcione a todos el mismo PPTX para los patrones, diseños y tema. Use claves Yjs separadas para datos de la aplicación. Evite conciliar instantáneas completas desde el host.
 
 Compruebe los límites de mensajes y de persistencia del host con presentaciones representativas, incluidas la actualización inicial del documento y `Y.encodeStateAsUpdate(doc)` tras editar. El tamaño de un archivo PPTX comprimido no es su tamaño de instantánea Yjs: el esquema compartido también transporta XML analizado, metadatos de formas y grupos y cargas de recursos. Mover las imágenes fuera del documento por sí solo puede no bastar. Esta API de sesión no añade fragmentación de transporte ni cambia los límites del host.
 

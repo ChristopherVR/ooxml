@@ -101,7 +101,7 @@ Vanilla 保留 `onCollaborationStatus` 和 `getCollaborationStatus()`，用于�
 
 ## 集成边界 {#integration-boundaries}
 
-此选项改变的是会话的所有权，而不是现有的协作数据模型。查看器拥有 `pptx:slides` 及其嵌套的 Yjs 类型。请为所有参与者提供相同的源 PPTX，以便共用包资源、主题和媒体。其他应用数据可以占用单独的 Yjs 键。不要在宿主端独立协调完整的幻灯片快照。
+查看器管理 `pptx:slides`、`pptx:assets`、`pptx:media` 及其嵌套的 Yjs 类型。房间通过 `pptx:media` 传递嵌入的图片和媒体，每个房间最多 16 MiB，点对点房间最多 128 KiB。请为所有参与者提供同一源 PPTX，以便共用母版、版式和主题。应用数据可使用独立的 Yjs 键。请勿在宿主端独立合并完整的幻灯片快照。
 
 请使用有代表性的演示文稿检查宿主的消息和持久化限制，包括初始文档更新以及编辑后的 `Y.encodeStateAsUpdate(doc)`。压缩后的 PPTX 文件大小并不等于其 Yjs 快照大小：共享 schema 还携带解析后的 XML、形状/组元数据和资源载荷。仅将图片移出文档可能并不足够。此会话 API 不会增加传输分块，也不会改变宿主的限制。
 

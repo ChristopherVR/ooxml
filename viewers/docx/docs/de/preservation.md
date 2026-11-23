@@ -79,7 +79,9 @@ Das Laden ist auf 50 MB pro Paket, 5.000 Einträge und 200 MB entpackt begrenzt 
 
 ## Beim Laden gemeldet, durch ein Speichern nicht verändert {#reported-at-load-not-changed-by-a-save}
 
-`model.warnings` führt Funktionen auf, die geladen werden, aber nicht wie in Word dargestellt oder bearbeitet werden, zum Beispiel eingebettete OLE-Objekte (bleiben erhalten, werden als Platzhalter gezeichnet), komplexe `HYPERLINK`-Felder (bleiben als Feldcodes erhalten), Änderungsverfolgung in Tabellenstrukturen (bleibt im XML, nicht im Modell), Bildaufzählungszeichen und manche mit Formatvorlagen verknüpfte Nummerierung sowie Bearbeitungseinschränkungen, die erhalten, aber nicht erzwungen werden.
+`model.warnings` führt Funktionen auf, die geladen werden, aber nicht wie in Word dargestellt oder bearbeitet werden, zum Beispiel 3D-Modelle (mit ihrem gespeicherten Bild) und eingebettete Office-Objekte (mit ihrem Symbol, sofern vorhanden), komplexe `HYPERLINK`-Felder (bleiben als Feldcodes erhalten), Änderungsverfolgung in Tabellenstrukturen (bleibt im XML, nicht im Modell), Bildaufzählungszeichen und manche mit Formatvorlagen verknüpfte Nummerierung sowie Bearbeitungseinschränkungen, die erhalten, aber nicht erzwungen werden.
+
+Über **Einfügen > 3D-Modelle** fügen Sie lokale eigenständige GLB-Dateien mit statischer Vorschau ein. **Einfügen > Objekt** bettet lokale DOCX-, XLSX- oder PPTX-Dateien als Symbol ein. Der DOCX speichert die Originaldaten. In Word für Desktop können Sie das Modell drehen und das Objekt aktivieren. Der Browser zeigt die Vorschau oder einen Platzhalter, auch bei alten OLE-Objekten ohne unterstützte Vorschau.
 
 ## Grenzen der Garantie {#known-limits-of-the-guarantee}
 

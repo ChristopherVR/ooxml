@@ -144,15 +144,19 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 
 ## Examiner les modifications : le flux proposer / accepter {#reviewing-changes-the-propose-accept-flow}
 
-Par défaut (`writePolicy: 'stage'`), chaque modification de l'assistant est **mise en attente**, et non appliquée. Le panneau affiche une carte de proposition avec un bref résumé de la modification et les boutons Accepter / Rejeter / Tout accepter. Accepter valide la modification via l'historique d'édition propre à la visionneuse, en une seule entrée : un seul Ctrl+Z annule une modification IA acceptée. Rejeter l'abandonne. Les outils de lecture (lecture des diapositives, recherche de texte) et la navigation s'exécutent immédiatement et ne sont jamais mis en attente.
+Avec `writePolicy: "stage"`, chaque modification attend une validation. **Appliquer** valide la proposition, **Écarter** la supprime et **Tout appliquer** en valide plusieurs. Chaque modification de diapositive ou de thème crée une étape d’annulation, même lors d’une application groupée. Les autres modifications de présentation, notamment les propriétés, sections et dimensions, suivent le comportement de l’édition manuelle dans chaque visionneuse. Les outils de lecture et de navigation s’exécutent immédiatement.
 
-Options de `writePolicy` :
+Les propositions restent disponibles pendant l’édition, y compris dans le masque et lors du collage de diapositives. Ouvrir, créer ou restaurer une présentation, ou rejoindre une salle qui remplace les diapositives, les écarte et affiche un message. Une proposition enregistre une modification et se combine avec les changements apportés à d’autres éléments. En cas de conflit sur le même contenu, l’utilisateur peut écarter la proposition ou réessayer.
 
-| Valeur             | Comportement                                                                                                                                    |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'stage'` (défaut) | Les écritures sont mises en attente d'une acceptation ou d'un rejet explicite.                                                                  |
-| `'approve'`        | Utilise la demande d'approbation native du SDK IA, appel par appel.                                                                             |
-| `'auto'`           | Les écritures s'appliquent immédiatement (restent annulables). Les outils destructeurs comme `delete_slides` exigent toujours une confirmation. |
+`stage` permet de valider une ou plusieurs propositions, `approve` impose de les valider une par une et `auto` les applique directement. `delete_slides` et `import_from_json` exigent toujours une validation individuelle. Les arguments d’un outil sont validés selon son schéma avant l’exécution.
+
+Pour une implémentation de `PptxAiBridge`, utilisez `checkPptxAiBridgeReadsItsWrites(bridge)` de `ooxml-ui/pptx/ai/host` sur une présentation de test pour vérifier que les modifications sont immédiatement lisibles. `getDeckLoad()` renvoie une valeur différente à chaque chargement et constante pendant l’édition. `applyTheme` reçoit les seules parties modifiées du thème.
+
+## Limites d’exécution {#run-limits}
+
+Chaque message lance une exécution. Le panneau signale une limite atteinte, une réponse tronquée ou filtrée, ou une fin sans signal. Les valeurs par défaut sont `limits: { maxSteps: 16, maxToolCalls: 48, maxRunMs: 600_000, maxRepeatedToolCalls: 4 }`. `session.getLastFinish()` (également sur le contrôleur de chat Vanilla) indique la raison dans `reason` et le type de limite éventuelle dans `limit`.
+
+`reason`: `stop`, `tool-calls`, `length`, `filtered`, `cancelled`, `error`, `limit`, `unknown`. `limit`: `steps`, `tool-calls`, `time`, `repeats`.
 
 ## Ce que l'assistant peut faire (outils) {#what-the-assistant-can-do-tools}
 
@@ -177,7 +181,7 @@ Il existe **55** outils, typés `PptxAiToolName`. La plupart sont les mêmes fon
   `manage_smart_art`, `apply_template`
 - **Structure des diapositives** (6) : `add_slide`, `duplicate_slide`, `delete_slides`,
   `reorder_slides`, `update_slide_properties`, `set_slide_transition`
-- **Thème** (3) : `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
+- **Thème** (3) : soumis à la même validation que les autres modifications - `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
 - **Niveau présentation** (7) : `set_canvas_size`, `update_metadata`, `manage_sections`, `manage_custom_shows`,
   `update_presentation_properties`, `import_from_json`, `apply_layout`
 
@@ -195,7 +199,7 @@ const ai: PptxAiConfig = {
 
 ## Contexte de la présentation {#deck-context}
 
-`contextStrategy` contrôle la quantité de présentation envoyée au modèle à chaque tour, en plus de ce que le modèle récupère lui-même via les outils de lecture.
+`contextStrategy` détermine le contexte envoyé à chaque requête dans toutes les visionneuses, en plus des données récupérées par les outils de lecture. Le contenu qui a le focus est toujours envoyé.
 
 | Valeur               | Envoyé à chaque tour                                                    |
 | -------------------- | ----------------------------------------------------------------------- |

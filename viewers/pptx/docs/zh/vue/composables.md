@@ -58,6 +58,8 @@ function useLoadContent(
 
 `UseLoadContentResult` 提供以下响应式字段：`slides`、`templateElementsBySlideId`、`canvasSize`、`theme`、`themeColorMap`、`slideMasters`、`layoutOptions`、`mediaDataUrls`、`loading`、`error`、`isEncrypted`、`handler`（用于保存的活动 `PptxHandler`），以及文档元数据，包括 `coreProperties`、`appProperties`、`customProperties`、`sections`、`customShows`、`embeddedFonts`、`signatures` 等。
 
+`signatures` 是演示文稿的 `SignatureSummary`，无签名时为 `undefined`。使用 `ooxml-ui/pptx` 的 `signatureStatusView(summary, locale)` 获取翻译后的标签、说明、色调和各签名的数据。仅在所有签名通过验证时显示为已签名。
+
 ```vue
 <script setup lang="ts">
 import { useLoadContent } from 'pptx-vue-viewer/viewer';

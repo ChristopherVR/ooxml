@@ -60,6 +60,8 @@ export function Editor() {
 
 组件引用（或原生 JS 的句柄）提供 `load(bytes)` 和 `save()`。加载时会识别 DOCX 和旧版 `.doc`。受密码保护的文件只能通过 `ooxml-core/docx/load` 中的 `loadDocument(bytes, { password })` 打开；元素的 `load()` 不接受密码，因此会将此类文件报告为 `document-error`。
 
+加载时会限制压缩包大小，防止解压后数据过大。默认允许 50 MiB 压缩数据、5,000 个部件、200 MiB 解压数据，并将 `word/document.xml` 限制为 25 MiB。宿主可向 `loadDocx(bytes, { limits })` 或 `loadDocument(bytes, { limits })` 传入自定义限制，例如 `{ maxDocumentPartBytes: 100 * 1024 * 1024 }`。`DEFAULT_DOCX_LOAD_LIMITS` 列出默认值。保存时沿用加载时的限制。
+
 ```ts
 const bytes = new Uint8Array(await file.arrayBuffer());
 await editor.load(bytes);

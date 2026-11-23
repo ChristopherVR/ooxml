@@ -29,4 +29,4 @@ const viewer = createPptxViewer(container, {
 });
 ```
 
-Sans fonction de rappel, la visionneuse suit les liens normalement. Les liens externes conservent le cadre cible de la présentation, les contrôles de sécurité des URL et le paramètre de confirmation du Centre de gestion de la confidentialité.
+Sans fonction de rappel, la visionneuse suit les liens normalement. Les liens externes s’ouvrent dans un nouvel onglet avec `noopener` et `noreferrer`, après les contrôles de l’URL et la confirmation définie dans le Centre de gestion de la confidentialité. Le cadre cible (`tgtFrame`) est conservé à l’enregistrement. Les liens `file:` et `ftp:` restent dans la présentation et ne sont pas ouverts.

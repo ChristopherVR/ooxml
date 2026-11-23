@@ -101,7 +101,7 @@ Eine aktive Sitzung mit `role: 'viewer'` macht den Editor schreibgeschützt und 
 
 ## Grenzen der Integration {#integration-boundaries}
 
-Diese Option ändert die Verantwortung für die Sitzung, nicht das bestehende Datenmodell der Zusammenarbeit. Der Viewer besitzt `pptx:slides` und seine verschachtelten Yjs-Typen. Geben Sie allen Teilnehmern dieselbe Quell-PPTX für Paketressourcen, Designs und Medien. Andere Anwendungsdaten können eigene Yjs-Schlüssel belegen. Gleichen Sie vollständige Folien-Snapshots nicht selbst im Host ab.
+Der Viewer verwaltet `pptx:slides`, `pptx:assets` und `pptx:media` mit ihren verschachtelten Yjs-Typen. Der Raum überträgt eingebettete Bilder und Medien in `pptx:media` (bis zu 16 MiB pro Raum bzw. 128 KiB bei Peer-to-Peer). Für Master, Layouts und Design benötigen alle dieselbe Quell-PPTX. Verwenden Sie für Anwendungsdaten eigene Yjs-Schlüssel. Gleichen Sie vollständige Folien-Snapshots nicht im Host ab.
 
 Prüfen Sie die Nachrichten- und Speicherlimits des Hosts anhand repräsentativer Präsentationen. Dazu gehören das initiale Dokument-Update und `Y.encodeStateAsUpdate(doc)` nach dem Bearbeiten. Die Dateigröße einer komprimierten PPTX ist nicht ihre Yjs-Snapshot-Größe: Das gemeinsame Schema trägt außerdem geparstes XML, Form- und Gruppenmetadaten sowie Asset-Nutzdaten. Allein das Auslagern von Bildern aus dem Dokument reicht möglicherweise nicht aus. Diese Sitzungs-API fügt kein Transport-Chunking hinzu und ändert keine Limits des Hosts.
 

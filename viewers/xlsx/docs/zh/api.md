@@ -58,7 +58,7 @@ editor.customization = {
 ```
 
 - `capabilities`：`false` 会移除通往该能力（`edit`, `open`, `save`, `export`, `print`, `share`, `settings`, `copy`, `comment`, `find`）的所有入口：功能区、“文件”选项卡页面、菜单和快捷键。`hiddenActions` 不变，两者取并集。
-- `ribbon.hiddenTabs`：要移除的原生功能区选项卡（包括上下文选项卡）。`file` 会在任何宽度下移除“文件”选项卡及其 Backstage 视图：按键提示（Alt、F）和其他入口都无法打开它，已打开的 Backstage 会关闭。保存、Ctrl+S、`storage` 和 `file-command` 照常工作，除非某项能力将其移除。宿主选项卡（`ribbonAddIns`）不受影响。
+- `ribbon.hiddenTabs`：要移除的原生功能区选项卡（包括上下文选项卡）。`file` 会在任何宽度下移除“文件”选项卡及其 Backstage 视图：按键提示（Alt、F）和其他入口都无法打开它，已打开的 Backstage 会关闭。保存、Ctrl+S、`storage` 和 `file-command` 照常工作，除非某项能力将其移除。宿主选项卡（`ribbonAddIns`）不受影响。 签名徽章和消息栏仍以纯文本显示验证状态。命令搜索会省略仅位于隐藏选项卡上的命令。
 - `backstage.extraPages`：宿主在“文件”选项卡中添加的页面 `{ id, label, group?, order?, render }`，位于其分组的内置页面之后。`render` 是挂载函数、自定义元素标签或 `{ element, properties }`，并会收到一个 `ExcelRegionContext`。
 - `contextMenu.extraCommands`：宿主命令 `{ id, label, icon?, group?, when?, disabled?, onSelect }`，位于内置项之上（`top`，默认）或之下（`bottom`）。`onSelect` 在菜单关闭后运行，并收到一个 `ExcelMenuContext`。标签按原样显示（请自行本地化）。
 

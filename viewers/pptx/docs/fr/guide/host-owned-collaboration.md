@@ -101,7 +101,7 @@ Une session active avec `role: 'viewer'` rend l'éditeur en lecture seule et blo
 
 ## Limites d'intégration {#integration-boundaries}
 
-Cette option modifie la propriété de la session, pas le modèle de données de collaboration existant. La visionneuse possède `pptx:slides` et ses types Yjs imbriqués. Donnez à tous les participants le même PPTX source pour les ressources du package, les thèmes et les médias. D'autres données applicatives peuvent occuper des clés Yjs distinctes. Ne réconciliez pas indépendamment, depuis l'hôte, des instantanés complets de diapositives.
+La visionneuse gère `pptx:slides`, `pptx:assets` et `pptx:media` et leurs types Yjs imbriqués. La salle transmet les images et médias incorporés par `pptx:media` (16 Mio par salle, ou 128 Kio en pair à pair). Fournissez le même PPTX source à tous pour les masques, les dispositions et le thème. Réservez des clés Yjs distinctes aux données de l’application. Évitez de réconcilier les instantanés complets depuis l’hôte.
 
 Vérifiez les limites de messages et de persistance de l'hôte sur des présentations représentatives, y compris la mise à jour initiale du document et `Y.encodeStateAsUpdate(doc)` après modification. La taille d'un fichier PPTX compressé n'est pas la taille de son instantané Yjs : le schéma partagé transporte aussi le XML analysé, les métadonnées de formes et de groupes et les charges utiles des ressources. Sortir les images du document ne suffit peut-être pas. Cette API de session n'ajoute ni découpage de transport ni modification des limites de l'hôte.
 

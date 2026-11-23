@@ -45,7 +45,7 @@ Solange eine Sitzung aktiv ist, sehen Sie:
 - **Remote-Cursor** - der Zeiger jedes Mitarbeiters bewegt sich mit einer farbigen Namensbeschriftung auf der Zeichenfläche. Cursor erscheinen nur für Personen, die dieselbe Folie ansehen wie Sie.
 - **Remote-Auswahlen** - markiert jemand ein Element, erhält es einen farbigen Umriss mit seinem Namen, sodass Sie wissen, woran er arbeitet.
 - **Folgeleiste** - ein Streifen oben mit der Aufschrift **Folgen Sie einem Mitarbeiter**. Klicken Sie auf eine Person, um ihr zu folgen: Ihre Ansicht wechselt dann die Folie, wann immer sie es tut. Klicken Sie auf **Stoppen**, um wieder selbst zu navigieren.
-- **Verbindungsstatus** - ein Punkt in der Statusleiste: grün **Verbunden** (mit der Nutzerzahl), gelb **Verbinden...**, grau **Getrennt** oder rot **Verbindungsfehler** mit einer Schaltfläche **Erneut versuchen**.
+- **Verbindungsstatus** - ein Punkt in der Statusleiste: grün **Verbunden** (mit der Nutzerzahl), gelb **Verbinden...**, grau **Getrennt** oder rot **Verbindungsfehler** mit einer Schaltfläche **Erneut versuchen**. Zeigen Sie auf den Fehler, um den Grund zu sehen, etwa einen fehlenden Peer-to-Peer-Sitzungsschlüssel, eine Seite ohne HTTPS oder einen nicht erreichbaren Server. Der Dialog **Teilen** zeigt denselben Grund über dem Formular.
 
 ## Wie sich gleichzeitiges Bearbeiten verhält
 

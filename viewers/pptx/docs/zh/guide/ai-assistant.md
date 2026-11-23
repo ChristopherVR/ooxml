@@ -144,15 +144,19 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 
 ## 审阅修改：提出建议与接受建议 {#reviewing-changes-the-propose-accept-flow}
 
-默认的 `writePolicy: 'stage'` 会先**暂存**助手提出的编辑。面板显示建议卡片，包含简短的修改说明以及接受、拒绝和全部接受按钮。接受后，该修改作为单条记录进入组件的编辑历史，可以通过一次 Ctrl+Z 撤销；拒绝则丢弃建议。读取幻灯片、查找文本等只读工具和导航操作会立即执行，不经过暂存。
+使用 `writePolicy: "stage"` 时，每项修改都需要审核。可选择“应用”“丢弃”，或用“全部应用”一次接受多项建议。每个幻灯片或主题修改都会单独记录一步撤销，批量应用时也是如此。文档属性、节和幻灯片大小等其他演示文稿级修改与各查看器中的手动编辑行为相同。读取和导航工具立即执行。
 
-`writePolicy` 支持以下选项：
+编辑演示文稿、使用幻灯片母版或粘贴幻灯片时，现有建议仍可应用。打开、新建或恢复演示文稿，或加入会替换幻灯片的协作房间时，会丢弃现有建议并显示提示。建议记录修改本身，因此可以与对其他内容的编辑合并。如果同一内容发生冲突，可丢弃建议或重试。
 
-| 值                | 行为                                                                                     |
-| ----------------- | ---------------------------------------------------------------------------------------- |
-| `'stage'`（默认） | 写入先暂存，由用户明确接受或拒绝。                                                       |
-| `'approve'`       | 使用 AI SDK 原生的逐次调用审批提示。                                                     |
-| `'auto'`          | 立即应用写入，仍然支持撤销。`delete_slides` 等破坏性工具无论采用何种策略，始终需要确认。 |
+`stage` 允许单独或批量应用，`approve` 要求逐项应用，`auto` 立即应用。`delete_slides` 和 `import_from_json` 始终需要单独批准。运行工具之前，系统会根据工具的架构验证参数。
+
+自定义 `PptxAiBridge` 可在测试演示文稿上使用 `ooxml-ui/pptx/ai/host` 的 `checkPptxAiBridgeReadsItsWrites(bridge)`，检查修改后能否立即读到结果。`getDeckLoad()` 应在每次加载时返回新值，编辑期间保持不变。`applyTheme` 只接收有改动的主题部件。
+
+## 运行限制 {#run-limits}
+
+每条消息启动一次运行。面板会提示达到限制、回复被截断或过滤、缺少结束信号等情况。默认值为 `limits: { maxSteps: 16, maxToolCalls: 48, maxRunMs: 600_000, maxRepeatedToolCalls: 4 }`。`session.getLastFinish()`（Vanilla 聊天控制器也提供此方法）通过 `reason` 返回结束原因，通过 `limit` 返回触发的限制类型。
+
+`reason`: `stop`, `tool-calls`, `length`, `filtered`, `cancelled`, `error`, `limit`, `unknown`. `limit`: `steps`, `tool-calls`, `time`, `repeats`.
 
 ## 助手可用的工具 {#what-the-assistant-can-do-tools}
 
@@ -166,7 +170,7 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 - **元素编辑工具**（13 个）：`add_element`、`update_element`、`delete_elements`、`arrange_elements`、`clone_element`、`set_element_animation`、`group_elements`、`ungroup_elements`、`batch_update_elements`、`update_element_style`、`replace_geometry`、`set_element_lock`、`manage_hyperlinks`
 - **文本、表格、图表和 SmartArt 工具**（11 个）：`replace_text`、`manage_comments`、`update_table_cells`、`manage_table_structure`、`create_chart`、`update_chart`、`add_chart_series`、`remove_chart_series`、`update_chart_series_data`、`manage_smart_art`、`apply_template`
 - **幻灯片结构工具**（6 个）：`add_slide`、`duplicate_slide`、`delete_slides`、`reorder_slides`、`update_slide_properties`、`set_slide_transition`
-- **主题工具**（3 个）：`apply_theme_preset`、`update_theme_colors`、`update_theme_fonts`
+- **主题工具**（3 个）：与其他修改采用相同的审核流程 - `apply_theme_preset`、`update_theme_colors`、`update_theme_fonts`
 - **演示文稿级工具**（7 个）：`set_canvas_size`、`update_metadata`、`manage_sections`、`manage_custom_shows`、`update_presentation_properties`、`import_from_json`、`apply_layout`
 
 演讲者备注可以通过 `get_speaker_notes` 读取，没有单独的写入工具；助手通过 `update_slide_properties` 修改备注。
@@ -183,7 +187,7 @@ const ai: PptxAiConfig = {
 
 ## 演示文稿上下文 {#deck-context}
 
-除了模型通过只读工具自行获取的信息，`contextStrategy` 还控制每轮对话主动发送多少演示文稿内容。
+`contextStrategy` 控制各绑定每次请求发送的演示文稿上下文，读取工具获取的内容另计。无论选择何种策略，当前焦点内容都会发送。
 
 | 值                  | 每轮发送的内容                         |
 | ------------------- | -------------------------------------- |

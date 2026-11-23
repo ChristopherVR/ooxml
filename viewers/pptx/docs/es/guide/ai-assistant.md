@@ -144,15 +144,19 @@ const ai: PptxAiConfig = { connection: { kind: 'transport', transport: myTranspo
 
 ## Revisar los cambios: el flujo de proponer y aceptar {#reviewing-changes-the-propose-accept-flow}
 
-De forma predeterminada (`writePolicy: 'stage'`), cada cambio que hace el asistente se **pone en espera**, no se aplica. El panel muestra una tarjeta de propuesta con un resumen breve del cambio y los botones Aceptar, Rechazar y Aceptar todo. Al aceptar, el cambio se confirma mediante el historial de edición del propio visualizador como una única entrada, de modo que un solo Ctrl+Z revierte un cambio de IA aceptado. Al rechazar, se descarta. Las herramientas de lectura (leer diapositivas, buscar texto) y la navegación se ejecutan de inmediato y nunca se ponen en espera.
+Con `writePolicy: "stage"`, cada cambio queda pendiente de revisión. **Aplicar** incorpora el cambio, **Descartar** lo elimina y **Aplicar todos** incorpora varias propuestas. Cada cambio de diapositiva o tema registra un paso de deshacer, incluso al aplicar varios. Los demás cambios de presentación, como las propiedades, secciones y tamaño, se comportan como una edición manual en cada visor. Las herramientas de lectura y navegación se ejecutan inmediatamente.
 
-Opciones de `writePolicy`:
+Las propuestas siguen disponibles al editar, incluso en el patrón de diapositivas y al pegar diapositivas. Abrir, crear o restaurar una presentación, o entrar en una sala que reemplace las diapositivas, descarta las propuestas y lo indica en el panel. Una propuesta registra el cambio y permite combinarlo con ediciones en otro contenido. Si cambia el mismo contenido, el usuario puede descartar la propuesta en conflicto o volver a intentarlo.
 
-| Valor               | Comportamiento                                                                                                                                        |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'stage'` (default) | Los cambios se ponen en espera para aceptarlos o rechazarlos de forma explícita.                                                                      |
-| `'approve'`         | Usa la solicitud de aprobación por llamada nativa del SDK de IA.                                                                                      |
-| `'auto'`            | Los cambios se aplican de inmediato (siguen siendo deshacibles). Las herramientas destructivas, como `delete_slides`, siempre requieren confirmación. |
+`stage` permite aplicar individualmente o en grupo, `approve` exige aplicar de uno en uno y `auto` aplica directamente. `delete_slides` e `import_from_json` exigen aprobación individual con cualquier política. Los argumentos se validan contra el esquema antes de ejecutar una herramienta.
+
+Si implementa `PptxAiBridge`, use `checkPptxAiBridgeReadsItsWrites(bridge)` de `ooxml-ui/pptx/ai/host` en una presentación de prueba para verificar que se pueden leer los cambios de inmediato. `getDeckLoad()` devuelve un valor nuevo en cada carga y lo mantiene durante la edición. `applyTheme` recibe solo las partes modificadas.
+
+## Límites de ejecución {#run-limits}
+
+Cada mensaje inicia una ejecución. El panel avisa cuando alcanza un límite, la respuesta se trunca, el contenido se filtra o falta la señal de finalización. Los valores predeterminados son `limits: { maxSteps: 16, maxToolCalls: 48, maxRunMs: 600_000, maxRepeatedToolCalls: 4 }`. `session.getLastFinish()` (también en el controlador de chat Vanilla) devuelve `reason` y, si procede, la clase de límite en `limit`.
+
+`reason`: `stop`, `tool-calls`, `length`, `filtered`, `cancelled`, `error`, `limit`, `unknown`. `limit`: `steps`, `tool-calls`, `time`, `repeats`.
 
 ## Qué puede hacer el asistente (herramientas) {#what-the-assistant-can-do-tools}
 
@@ -166,7 +170,7 @@ Hay **55** de ellas, tipadas como `PptxAiToolName`. La mayoría son las mismas f
 - **Edición de elementos** (13): `add_element`, `update_element`, `delete_elements`, `arrange_elements`, `clone_element`, `set_element_animation`, `group_elements`, `ungroup_elements`, `batch_update_elements`, `update_element_style`, `replace_geometry`, `set_element_lock`, `manage_hyperlinks`
 - **Texto, tablas, gráficos, SmartArt** (11): `replace_text`, `manage_comments`, `update_table_cells`, `manage_table_structure`, `create_chart`, `update_chart`, `add_chart_series`, `remove_chart_series`, `update_chart_series_data`, `manage_smart_art`, `apply_template`
 - **Estructura de diapositivas** (6): `add_slide`, `duplicate_slide`, `delete_slides`, `reorder_slides`, `update_slide_properties`, `set_slide_transition`
-- **Tema** (3): `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
+- **Tema** (3): se revisa como cualquier cambio - `apply_theme_preset`, `update_theme_colors`, `update_theme_fonts`
 - **Nivel de presentación** (7): `set_canvas_size`, `update_metadata`, `manage_sections`, `manage_custom_shows`, `update_presentation_properties`, `import_from_json`, `apply_layout`
 
 Las notas del orador se pueden leer (`get_speaker_notes`), pero no hay una herramienta de escritura específica para ellas; el asistente edita las notas mediante `update_slide_properties`.
@@ -183,7 +187,7 @@ const ai: PptxAiConfig = {
 
 ## Contexto de la presentación {#deck-context}
 
-`contextStrategy` controla cuánto de la presentación se envía al modelo en cada turno, además de lo que el modelo obtiene por sí mismo mediante las herramientas de lectura.
+`contextStrategy` controla el contexto enviado por solicitud en todos los visores, además de lo que las herramientas de lectura recuperen. Cualquiera que sea la estrategia, también se envía el contenido que tiene el foco.
 
 | Valor                 | Enviado en cada turno                                                |
 | --------------------- | -------------------------------------------------------------------- |
