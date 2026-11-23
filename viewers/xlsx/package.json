@@ -33,7 +33,7 @@
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"rxjs": "^7.8.2",
-		"svelte": "^5.57.3",
+		"svelte": "^5.58.0",
 		"vue": "^3.5.45"
 	},
 	"devDependencies": {
@@ -48,7 +48,7 @@
 		"oxlint": "^1.94.0",
 		"rollup": "^4.68.5",
 		"rollup-plugin-dts": "^6.5.1",
-		"solid-js": "^1.9.19",
+		"solid-js": "^1.9.20",
 		"svelte-check": "^4.7.8",
 		"tailwindcss": "^4.3.5",
 		"typescript": "~6.0.3",
