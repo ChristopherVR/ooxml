@@ -154,10 +154,10 @@
 		"ooxml-core": "workspace:*",
 		"ooxml-ui": "workspace:*",
 		"opentype.js": "^2.0.0",
-		"tailwind-merge": "^3.7.0"
+		"tailwind-merge": "^3.7.1"
 	},
 	"devDependencies": {
-		"@ai-sdk/react": "^4.0.180",
+		"@ai-sdk/react": "^4.0.181",
 		"@tailwindcss/cli": "^4.3.5",
 		"@types/opentype.js": "^1.3.10",
 		"@types/react": "^19.3.0",
