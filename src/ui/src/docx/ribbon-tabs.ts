@@ -76,11 +76,6 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 	}
 	panels.get('Insert')!.append(
 		group(
-			'Add-ins',
-			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
-			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
-		),
-		group(
 			'Tables',
 			tool('Insert table', 'table', { type: 'tablePicker' }, { large: true, caption: 'Table' }),
 		),
@@ -284,6 +279,11 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 					value === 'more' ? { type: 'openSymbolGallery' } : { type: 'insertSymbol', value },
 				{ momentary: true },
 			),
+		),
+		group(
+			'Add-ins',
+			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
+			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
 		),
 	);
 	panels.get('References')!.append(

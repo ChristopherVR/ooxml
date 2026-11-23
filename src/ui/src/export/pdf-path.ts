@@ -1,6 +1,11 @@
-import type { PathSegment } from 'ooxml-core/visio';
+import type { PathSegment } from 'ooxml-core/geometry';
 
-export { MAX_PATH_CHARS, MAX_PATH_SEGMENTS, parsePath, type PathSegment } from 'ooxml-core/visio';
+export {
+	MAX_PATH_CHARS,
+	MAX_PATH_SEGMENTS,
+	parsePath,
+	type PathSegment,
+} from 'ooxml-core/geometry';
 
 const n = (value: number) => (Number.isFinite(value) ? String(Math.round(value * 1e6) / 1e6) : '0');
 

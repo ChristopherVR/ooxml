@@ -1,6 +1,6 @@
 import { html } from 'lit';
 import { OfficeElement, controlStyles } from '../../base';
-import { defineElement } from '../../registry';
+import { defineOnce } from '../../registry';
 import css from './cameo-preview.css?raw';
 import { RIBBON_ICON_PATHS } from './ribbon-icons';
 
@@ -101,7 +101,7 @@ export class PptxUiCameoPreview extends OfficeElement {
 }
 
 export function definePptxCameoPreview(registry: CustomElementRegistry): void {
-	defineElement(registry, 'pptx-ui-cameo-preview', PptxUiCameoPreview);
+	defineOnce(registry, 'pptx-ui-cameo-preview', () => PptxUiCameoPreview);
 }
 
 declare global {

@@ -25,7 +25,8 @@ export function WebRibbonSection({
 		if (!host) {
 			return;
 		}
-		const request = (event: Event) => onCommand((event as RibbonCommandRequestEvent).detail.id, host);
+		const request = (event: Event) =>
+			onCommand((event as RibbonCommandRequestEvent).detail.id, host);
 		host.addEventListener('command-request', request);
 		return () => host.removeEventListener('command-request', request);
 	}, [onCommand]);

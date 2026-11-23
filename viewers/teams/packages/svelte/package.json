@@ -58,7 +58,7 @@
 		"ooxml-ui": "*"
 	},
 	"devDependencies": {
-		"svelte": "^5.57.3"
+		"svelte": "^5.58.0"
 	},
 	"peerDependencies": {
 		"svelte": "^5.0.0"

@@ -44,7 +44,9 @@ test('Record ribbon keeps its layout and inserts Cameo from the current-slide sc
 	await toolbar.screenshot({ path });
 	await testInfo.attach('record-ribbon', { path, contentType: 'image/png' });
 	await cameo.click();
-	const pick = page.getByRole('dialog', { name: 'Cameo', exact: true });
+	const pick = page.locator('office-ui-dialog[open]').filter({
+		has: page.getByRole('heading', { name: 'Cameo', exact: true }),
+	});
 	await pick.getByRole('button', { name: 'Current Slide', exact: true }).click();
 	await expect(page.locator('[data-pptx-viewport] pptx-ui-cameo-preview')).toHaveCount(1);
 	await cameo.click();

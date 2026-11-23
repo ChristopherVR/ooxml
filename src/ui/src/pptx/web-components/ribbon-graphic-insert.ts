@@ -181,6 +181,7 @@ async function pickGraphic(
 		element.actionClick = { url: form.url, tooltip: form.title };
 		return element;
 	}
+}
 
 async function pickIcons(
 	host: HTMLElement,

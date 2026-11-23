@@ -46,7 +46,7 @@ describe('editor chrome localization', () => {
 				'pptx.record.cameo',
 				'pptx.slideShow.fromBeginning',
 				'pptx.slideShow.fromCurrent',
-				'pptx.record.clear',
+				'pptx.record.clearTimings',
 				'pptx.record.resetToCameo',
 				'pptx.record.learnMore',
 			];

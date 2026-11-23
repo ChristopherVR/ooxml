@@ -23,16 +23,16 @@
 		"lint:fix": "oxlint --fix"
 	},
 	"dependencies": {
-		"@angular/common": "^22.2.6",
-		"@angular/compiler": "^22.2.6",
-		"@angular/core": "^22.2.6",
-		"@angular/platform-browser": "^22.2.6",
+		"@angular/common": "^22.3.0",
+		"@angular/compiler": "^22.3.0",
+		"@angular/core": "^22.3.0",
+		"@angular/platform-browser": "^22.3.0",
 		"@xmldom/xmldom": "^0.9.12",
 		"jszip": "^3.10.2",
 		"react": "^19.3.1",
 		"react-dom": "^19.3.1",
 		"rxjs": "^7.8.2",
-		"svelte": "^5.57.3",
+		"svelte": "^5.58.0",
 		"vue": "^3.5.45"
 	},
 	"devDependencies": {
@@ -46,13 +46,13 @@
 		"oxfmt": "^0.79.0",
 		"oxlint": "^1.94.0",
 		"prosemirror-view": "^1.42.9",
-		"rollup": "^4.68.5",
+		"rollup": "^4.68.7",
 		"rollup-plugin-dts": "^6.5.1",
-		"solid-js": "^1.9.19",
+		"solid-js": "^1.9.20",
 		"svelte-check": "^4.7.8",
 		"tailwindcss": "^4.3.5",
 		"typescript": "~6.0.3",
 		"vite": "^8.3.8",
-		"vitest": "^5.1.0"
+		"vitest": "^5.1.1"
 	}
 }

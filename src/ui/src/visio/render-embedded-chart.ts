@@ -1,4 +1,4 @@
-import { renderChartSvg } from 'ooxml-core/xlsx';
+import { renderChartSvg } from 'ooxml-core/chart';
 import type { VisioShape } from 'ooxml-core/visio';
 import { parseSvgPreview } from '../ribbon/safe-svg';
 import { svgElement } from './render-svg';

@@ -24,8 +24,9 @@ for (const hold of [true, false]) {
 				.getByRole('button', { name: /present/iu })
 				.first()
 				.click();
-		const shape = () =>
-			page.locator('[data-element-id]').filter({ hasText: 'Persistent text' }).last();
+		const showing = page.locator('[data-pptx-presenting][aria-roledescription="slide"]');
+		await expect(showing).toBeVisible();
+		const shape = () => showing.locator('[data-element-id]').filter({ hasText: 'Persistent text' });
 		await expect.poll(() => shape().evaluate((node) => getComputedStyle(node).opacity)).toBe('1');
 		await page.keyboard.press('PageDown');
 		if (hold) {

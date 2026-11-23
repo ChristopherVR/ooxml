@@ -83,7 +83,7 @@ const RIBBON_LABELS: ReadonlyArray<readonly [key: string, english: string]> = [
 	['pptx.slideShow.subtitleSettings', 'Subtitle Settings'],
 	// Record.
 	['pptx.record.cameo', 'Cameo'],
-	['pptx.record.clear', 'Clear'],
+	['pptx.record.clearTimings', 'Clear timings'],
 	['pptx.record.resetToCameo', 'Reset to Cameo'],
 	['pptx.record.learnMore', 'Learn More'],
 	// Review.

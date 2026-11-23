@@ -11,11 +11,11 @@
 	},
 	"dependencies": {
 		"@ai-sdk/openai-compatible": "^3.0.93",
-		"@angular/common": "^22.2.6",
-		"@angular/core": "^22.2.6",
-		"@angular/platform-browser": "^22.2.6",
+		"@angular/common": "^22.3.0",
+		"@angular/core": "^22.3.0",
+		"@angular/platform-browser": "^22.3.0",
 		"@ngx-translate/core": "^18.1.0",
-		"ai": "^7.0.176",
+		"ai": "^7.0.177",
 		"emf-converter": "5.0.0",
 		"fast-xml-parser": "^5.12.1",
 		"html2canvas-pro": "^2.6.4",
@@ -30,9 +30,9 @@
 	},
 	"devDependencies": {
 		"@analogjs/vite-plugin-angular": "^2.9.7",
-		"@angular/build": "^22.2.7",
-		"@angular/compiler": "^22.2.6",
-		"@angular/compiler-cli": "^22.2.6",
+		"@angular/build": "^22.3.0",
+		"@angular/compiler": "^22.3.0",
+		"@angular/compiler-cli": "^22.3.0",
 		"typescript": "6.0.3",
 		"vite": "^8.3.8"
 	}

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { editor, goToCell, newWorkbook, ribbon } from './helpers';
+import { clickRibbonControl, editor, goToCell, newWorkbook, ribbon } from './helpers';
 
 const fixture = (name: string) => [
 	...readFileSync(resolve(process.cwd(), `../../src/core/xlsx/__fixtures__/${name}`)),
@@ -170,7 +170,7 @@ test('a timeline filters a PivotTable by dragging over months, saves and reinser
 	expect(await pivotTotal(page)).toBe(66);
 	await goToCell(page, 'A4');
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).locator('[data-command="insert.timeline"]').click();
+	await clickRibbonControl(page, ribbon(page).locator('[data-command="insert.timeline"]'));
 	const dialog = editor(page).locator('[data-dialog="insert-timeline"]');
 	await dialog.getByLabel('Day', { exact: true }).check();
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
@@ -184,7 +184,7 @@ test('Insert > Slicer adds a slicer for a table column and the Slicer tab format
 	await open(page, 'excel-slicer-table.xlsx');
 	await goToCell(page, 'B3');
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).locator('[data-command="insert.slicer"]').click();
+	await clickRibbonControl(page, ribbon(page).locator('[data-command="insert.slicer"]'));
 	const dialog = editor(page).locator('[data-dialog="insert-slicer"]');
 	await dialog.getByLabel('Amount', { exact: true }).check();
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();

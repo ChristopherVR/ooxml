@@ -1123,7 +1123,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		getFileName: () => (host.getFileName ? host.getFileName() : host.options.fileName),
 		importSlides: host.importSlides,
 		getEditActions: () => host.editor.getEditActions(),
-		commitSlides: host.editor.commitSlides?.bind(host.editor),
+		commitSlides: (slides) => host.editor.commitSlides?.(slides),
 		getFindReplaceActions: () => host.editor.getFindReplaceActions(),
 		applyPresentationTheme: (presetId) => host.applyPresentationTheme(presetId),
 		setDrawTool: (tool) => host.editor.setDrawTool(tool),

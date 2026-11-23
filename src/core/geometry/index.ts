@@ -83,6 +83,12 @@ export { at } from './indexed';
 export * from './svg-path-flatten';
 export * from './svg-path-segments';
 export * from './svg-path-tokens';
+export {
+	MAX_PATH_CHARS,
+	MAX_PATH_SEGMENTS,
+	parsePath,
+	type PathSegment,
+} from './absolute-svg-path';
 export * from './snap-guides';
 export * from './align-distribute';
 

@@ -6,6 +6,7 @@ import {
 	fileInput,
 	fileNameLabel,
 	newDocument,
+	reveal,
 	saveButton,
 	waitForEditorFocus,
 } from './helpers';
@@ -221,8 +222,10 @@ test('formats text and inserts a picture inside a header from the ribbon', async
 	// The editor reads the caret End moved only while it has focus, which the ribbon takes next.
 	await waitForEditorFocus(headerEditor);
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const pictures = editor.getByRole('button', { name: 'Insert pictures', exact: true });
+	await reveal(editor, pictures);
 	const chooser = page.waitForEvent('filechooser');
-	await editor.getByRole('button', { name: 'Insert pictures', exact: true }).click();
+	await pictures.click();
 	await (await chooser).setFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png });
 	await expect(headerEditor.locator('img[data-docx-image]')).toHaveAttribute('src', /^blob:/);
 	await headerEditor.press('Escape');

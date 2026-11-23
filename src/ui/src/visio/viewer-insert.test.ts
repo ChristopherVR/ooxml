@@ -157,11 +157,14 @@ it('sets the ScreenTip and follows links with Ctrl+click without navigating the 
 
 it('opens the chart dialog from Insert > Chart and keeps it closed for a read-only drawing', async () => {
 	const view = await setup();
+	expect(view.root.querySelector('.chart-dialog')).toBeNull();
 	view.press('chart');
-	expect(view.dialog('chart-dialog').open).toBe(true);
+	await vi.waitFor(() => expect(view.dialog('chart-dialog')?.open).toBe(true));
 	view.dispose();
 	const readOnly = await setup(false);
 	expect(readOnly.button('chart').disabled).toBe(true);
 	expect(readOnly.button('chart').title).toMatch(/Open a \.vsdx file/);
+	readOnly.press('chart');
+	expect(readOnly.root.querySelector('.chart-dialog')).toBeNull();
 	readOnly.dispose();
 });
