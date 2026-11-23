@@ -136,6 +136,77 @@ describe('pictures in pagination', () => {
 		// Five filler lines carry over, so the anchor paragraph starts at 100 + 5 × 20.
 		expect(at(result.pages, 1).floats?.[0]).toMatchObject({ blockId: 'late', yPx: 200 });
 	});
+
+	it('moves paragraph to next page when paragraph-anchored float crosses bottom margin', () => {
+		// 38 lines = 760px; content height is 800px (1000 - 100 - 100).
+		// Text line (20px) fits on page 0 (760 + 20 = 780 <= 800),
+		// but float (100px) crosses bottom margin (100 + 760 + 100 = 960 > 900).
+		const filler: LayoutParagraph = {
+			kind: 'paragraph',
+			id: 'f',
+			runs: [{ text: Array(38).fill('x').join('\n') }],
+		};
+		const result = layoutDocument(
+			input([filler, anchoredIn('chart', { heightPx: 100, offsetYPx: 0 })]),
+			measurer,
+		);
+		expect(result.pages).toHaveLength(2);
+		expect(at(result.pages, 0).floats).toBeUndefined();
+		// The anchor paragraph moved to page 1, so the float starts at page top margin (100px).
+		expect(at(result.pages, 1).floats?.[0]).toMatchObject({ blockId: 'chart', yPx: 100 });
+		const page0Ids = at(result.pages, 0).columns[0]!.blocks.map((b) => b.blockId);
+		const page1Ids = at(result.pages, 1).columns[0]!.blocks.map((b) => b.blockId);
+		expect(page0Ids).toEqual(['f']);
+		expect(page1Ids).toEqual(['chart']);
+	});
+
+	it('places an oversized float on an empty page without an infinite loop', () => {
+		// Float height (1500px) is taller than the page (1000px).
+		const result = layoutDocument(
+			input([anchoredIn('huge', { heightPx: 1500, offsetYPx: 0 })]),
+			measurer,
+		);
+		expect(result.pages).toHaveLength(1);
+		expect(at(result.pages, 0).floats?.[0]).toMatchObject({ blockId: 'huge', yPx: 100 });
+	});
+
+	it('moves oversized float to next page when page has content and stops without looping', () => {
+		const filler: LayoutParagraph = {
+			kind: 'paragraph',
+			id: 'f',
+			runs: [{ text: 'hello' }],
+		};
+		const result = layoutDocument(
+			input([filler, anchoredIn('huge', { heightPx: 1500, offsetYPx: 0 })]),
+			measurer,
+		);
+		expect(result.pages).toHaveLength(2);
+		expect(at(result.pages, 0).floats).toBeUndefined();
+		expect(at(result.pages, 1).floats?.[0]).toMatchObject({ blockId: 'huge', yPx: 100 });
+	});
+
+	it('does not move paragraph if float is page- or margin-anchored even if bottom crosses margin', () => {
+		const filler: LayoutParagraph = {
+			kind: 'paragraph',
+			id: 'f',
+			runs: [{ text: Array(38).fill('x').join('\n') }],
+		};
+		const result = layoutDocument(
+			input([
+				filler,
+				anchoredIn('page-float', {
+					relativeFromV: 'page',
+					heightPx: 100,
+					offsetYPx: 920,
+				}),
+			]),
+			measurer,
+		);
+		// Page-anchored float stays on page 0 with its paragraph because its vertical
+		// position does not depend on paragraph placement.
+		expect(result.pages).toHaveLength(1);
+		expect(at(result.pages, 0).floats?.[0]).toMatchObject({ blockId: 'page-float', yPx: 920 });
+	});
 });
 
 describe('text wrapping around floats', () => {

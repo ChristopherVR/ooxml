@@ -35,10 +35,9 @@ test('Print Layout positions floating objects in their table cells and floating 
 	const editor = await open(page);
 	const sheet = editor.locator('.dve-print-page').first();
 	const floats = sheet.locator(':scope > .dve-print-float');
-	await expect(floats).toHaveCount(5);
-	// Both charts are painted as SVG, as inline charts are.
+	await expect(floats).toHaveCount(4);
+	// The table chart is painted as SVG, as inline charts are.
 	await expect(floats.nth(1).locator('svg').first()).toBeVisible();
-	await expect(floats.nth(4).locator('svg').first()).toBeVisible();
 	await expect(floats.nth(3)).toHaveClass(/dve-print-float-behind/);
 	const tables = sheet.locator('.dve-print-table');
 	await expect(tables).toHaveCount(4);
@@ -58,8 +57,12 @@ test('Print Layout positions floating objects in their table cells and floating 
 				rowBox.y + rowBox.height + 1,
 			);
 	}
-	// The body chart is aligned right in the margins, and the body text runs left of it.
-	const column = (await sheet.locator('.dve-print-column').first().boundingBox())!;
-	const chart = (await floats.nth(4).boundingBox())!;
+	// The body chart moves to page 2 because it crosses the bottom margin on page 1.
+	const secondSheet = editor.locator('.dve-print-page').nth(1);
+	const secondFloats = secondSheet.locator(':scope > .dve-print-float');
+	await expect(secondFloats).toHaveCount(1);
+	await expect(secondFloats.first().locator('svg').first()).toBeVisible();
+	const column = (await secondSheet.locator('.dve-print-column').first().boundingBox())!;
+	const chart = (await secondFloats.first().boundingBox())!;
 	expect(Math.abs(chart.x + chart.width - (column.x + column.width))).toBeLessThanOrEqual(1.5);
 });

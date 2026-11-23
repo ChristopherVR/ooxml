@@ -1,5 +1,6 @@
 import type { PageCursor } from './page-cursor';
 import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules';
+import { floatCrossesBottomMargin } from './floats';
 import type { ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutParagraph } from './input';
 import type { LayoutColumnBox, LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
@@ -76,6 +77,24 @@ export function placeParagraph(
 	let column: LayoutColumnBox = cursor.column;
 	let pageIndex = cursor.page.index;
 	if (paragraph.pageBreakBefore && cursor.hasPageContent) cursor.newPage();
+	if (
+		cursor.hasPageContent &&
+		paragraph.floats?.some((float) =>
+			floatCrossesBottomMargin(
+				cursor.page,
+				cursor.column,
+				{
+					topPx: cursor.page.marginTopPx + cursor.y + spacingBeforePx,
+					heightPx: layout.contentHeightPx,
+				},
+				layout.lines,
+				float,
+			),
+		)
+	) {
+		cursor.newPage();
+		if (dropsSpaceBefore()) spacingBeforePx = 0;
+	}
 	if (requiredTogetherPx > 0 && placement.footnotes) {
 		cursor.holdFootnotes(
 			paragraph.id,

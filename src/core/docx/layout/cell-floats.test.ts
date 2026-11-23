@@ -6,6 +6,7 @@ import {
 	anchor,
 	CHART_PARTS,
 	cellFloatCases,
+	cellFloatDemo,
 	cellFloatPackage,
 } from '../__fixtures__/cell-floats/cases';
 import { layoutDocumentModel } from './layout';
@@ -294,5 +295,30 @@ describe('character frames under each review display mode', () => {
 		const advance = 11 * (96 / 72) * (1229 / 2048);
 		const expected = page.marginLeftPx + (text.length - 1) * advance + 24;
 		expect(Math.abs(float.xPx - expected), `${mode} x ${float.xPx}`).toBeLessThanOrEqual(0.5);
+	});
+});
+
+describe('cell-floats demonstration document pagination', () => {
+	it('pushes the body chart paragraph to page 2 when its float crosses the bottom margin', async () => {
+		const entry = cellFloatDemo();
+		const parts = cellFloatPackage(entry, chartParts);
+		const bytes = zipSync(
+			Object.fromEntries(Object.entries(parts).map(([path, xml]) => [path, strToU8(xml)])),
+		);
+		const { model } = await loadDocx(bytes);
+		const result = layoutDocumentModel(model, courier);
+		expect(result.pages).toHaveLength(2);
+		// Page 0 holds only the 4 table cell floats; none exceed the bottom content limit.
+		expect(result.pages[0]!.floats).toHaveLength(4);
+		const bottomMargin0 = result.pages[0]!.heightPx - result.pages[0]!.marginBottomPx;
+		for (const float of result.pages[0]!.floats!) {
+			expect(float.yPx + float.heightPx).toBeLessThanOrEqual(bottomMargin0);
+		}
+		// Page 1 holds the body chart float pushed from page 0.
+		expect(result.pages[1]!.floats).toHaveLength(1);
+		const bodyChartFloat = result.pages[1]!.floats![0]!;
+		expect(bodyChartFloat.blockId).toBe('p8');
+		const bottomMargin1 = result.pages[1]!.heightPx - result.pages[1]!.marginBottomPx;
+		expect(bodyChartFloat.yPx + bodyChartFloat.heightPx).toBeLessThanOrEqual(bottomMargin1);
 	});
 });

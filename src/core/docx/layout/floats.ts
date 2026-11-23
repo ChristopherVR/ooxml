@@ -86,6 +86,15 @@ function verticalSpan(float: FloatFrame, frames: FloatFrames): Span {
 }
 
 /**
+ * Whether a floating object is vertically positioned relative to its paragraph (or line),
+ * rather than the page or margins.
+ */
+export function isParagraphAnchoredV(float: Pick<FloatFrame, 'relativeFromV'>): boolean {
+	const rel = float.relativeFromV;
+	return rel === undefined || rel === 'paragraph' || rel === 'line';
+}
+
+/**
  * The frames of a body paragraph's float: the page, its margins, the column and the paragraph;
  * `anchor` (from {@link anchorPoint}) is relative to the paragraph's box.
  */
@@ -170,6 +179,24 @@ export function floatOrigin(
 ): { xPx: number; yPx: number } {
 	const { originXPx, originYPx } = placeInFrames(float, pageFrames(page, column, paragraph));
 	return { xPx: originXPx, yPx: originYPx };
+}
+
+/**
+ * Whether a paragraph-anchored float would extend beyond the page's bottom margin
+ * if placed at `paragraph`.
+ */
+export function floatCrossesBottomMargin(
+	page: LayoutPageBox,
+	column: Pick<LayoutColumnBox, 'xPx' | 'widthPx'>,
+	paragraph: { topPx: number; heightPx: number },
+	lines: readonly LayoutLine[],
+	float: LayoutFloat,
+): boolean {
+	if (!isParagraphAnchoredV(float)) return false;
+	const frames = pageFrames(page, column, paragraph, anchorPoint(lines, float.sourceOffset));
+	const { yPx } = placeInFrames(float, frames);
+	const bottomMarginTopPx = page.heightPx - page.marginBottomPx;
+	return yPx + float.heightPx > bottomMarginTopPx;
 }
 
 /**
