@@ -17,6 +17,7 @@ import { PIVOT_STRINGS } from './pivots';
 import { SLICER_STRINGS } from './slicers';
 import { PRINT_LAYOUT_STRINGS } from './print-layout';
 import { SMARTART_STRINGS } from './smartart';
+import { FUNCTION_TABLES } from './functions/index';
 import { type CommandLocale, type Translations, flatten } from './types';
 
 export const COMMAND_TABLES: readonly Translations[] = [
@@ -38,6 +39,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	FILTER_STRINGS,
 	AUDIT_STRINGS,
 	DATA_TOOLS_STRINGS,
+	...FUNCTION_TABLES,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>
