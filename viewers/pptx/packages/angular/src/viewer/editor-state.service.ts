@@ -29,6 +29,7 @@ import {
 	isTemplateElement,
 	isTemplateElementId,
 	makeCloneId,
+	replaceElementInList,
 	rerouteConnectorsForMovedElements,
 	slideSpaceElement,
 	remapZoomTargets,
@@ -391,6 +392,16 @@ export class EditorStateService {
 		this.commit(this.t('pptx.undoAction.edit'), slideIndex, (els) =>
 			updateElementById(els, id, patch),
 		);
+	}
+
+	replaceElement(slideIndex: number, id: string, elements: readonly PptxElement[]): void {
+		if (elements.length === 0) {
+			return;
+		}
+		this.commit(this.t('pptx.undoAction.edit'), slideIndex, (els) => {
+			return replaceElementInList(els, id, elements) ?? els;
+		});
+		this.selectedIds.set(elements.map((element) => element.id));
 	}
 
 	deleteSelected(slideIndex: number): void {

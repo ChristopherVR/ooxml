@@ -66,7 +66,8 @@ export function galleryContextFor(
 
 /** What {@link dispatchGalleryResult} writes through. */
 export interface GalleryDispatchTargets {
-	editor: Pick<EditorStateService, 'updateElement'>;
+	editor: Pick<EditorStateService, 'updateElement'> &
+		Partial<Pick<EditorStateService, 'replaceElement'>>;
 	slideIndex: number;
 	themes: Pick<ViewerThemeGalleryService, 'applyThemeVariant'> | null;
 	/** The Design galleries' hover preview and their effect and background commits. */
@@ -100,6 +101,10 @@ export function dispatchGalleryResult(
 	}
 	targets.deckStyle?.endPreview();
 	if (result.kind === 'command') {
+		return true;
+	}
+	if (result.kind === 'replaceElement') {
+		targets.editor.replaceElement?.(targets.slideIndex, result.elementId, result.elements);
 		return true;
 	}
 	if (result.kind === 'element') {

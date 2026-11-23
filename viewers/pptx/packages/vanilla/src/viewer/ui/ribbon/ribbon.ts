@@ -154,7 +154,13 @@ export function createRibbon(
 	el.appendChild(formatBackgroundPanel.el);
 
 	const galleryHub = createRibbonGalleryHub(
-		(result) => handlers.edit.applyRibbonGalleryResult(result),
+		(result) => {
+			if (result.kind === 'command' && result.command === 'smartArtTextPane') {
+				handlers.nav.toggleInspector?.();
+				return;
+			}
+			handlers.edit.applyRibbonGalleryResult(result);
+		},
 		{
 			preview: (result) => handlers.edit.previewRibbonGalleryResult(result),
 			end: () => handlers.edit.endRibbonGalleryPreview(),

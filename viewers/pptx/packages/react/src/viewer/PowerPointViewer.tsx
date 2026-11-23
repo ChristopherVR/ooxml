@@ -1259,6 +1259,26 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			editable: canEdit && (mode === 'edit' || mode === 'master'),
 			tableEditorState: state.tableEditorState,
 			updateElementById: editorOps.ops.updateElementById,
+			replaceElement: (elementId, elements) => {
+				const index = editorOps.ops.activeElements.findIndex((el) => el.id === elementId);
+				if (index < 0) {
+					return;
+				}
+				editorOps.ops.updateActiveElements((prev) => {
+					const idx = prev.findIndex((el) => el.id === elementId);
+					if (idx < 0) {
+						return prev;
+					}
+					return [...prev.slice(0, idx), ...elements, ...prev.slice(idx + 1)];
+				});
+				state.setSelectedElementIds(elements.map((el) => el.id));
+				history.markDirty();
+			},
+			onCommand: (command) => {
+				if (command === 'smartArtTextPane') {
+					state.setIsInspectorPaneOpen((open) => !open);
+				}
+			},
 			updateThemeColorScheme: themeHandlers.handleUpdateThemeColorScheme,
 			updateThemeFontScheme: themeHandlers.handleUpdateThemeFontScheme,
 			applyThemeData: themeHandlers.handleApplyThemeData,

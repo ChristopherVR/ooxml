@@ -1930,6 +1930,28 @@ provideRibbonGalleryHost({
 	handler,
 	tableSelection: () => tableSelection.value,
 	updateElement: (id, patch) => ops.updateElement(id, patch),
+	replaceElement: (id, elements) => {
+		const slide = activeSlide.value;
+		if (!slide) return;
+		const index = slide.elements.findIndex((el) => el.id === id);
+		if (index < 0) return;
+		history.pushHistory();
+		const nextElements = [
+			...slide.elements.slice(0, index),
+			...elements,
+			...slide.elements.slice(index + 1),
+		];
+		const nextSlides = slides.value.slice();
+		nextSlides[activeSlideIndex.value] = { ...slide, elements: nextElements };
+		slides.value = nextSlides;
+		selectedElementIds.value = elements.map((el) => el.id);
+		autosave.isDirty.value = true;
+	},
+	onCommand: (command) => {
+		if (command === 'smartArtTextPane') {
+			inspectorOpen.value = !inspectorOpen.value;
+		}
+	},
 	applyTheme: applyAiTheme,
 });
 const aiBridge = useAiBridge({

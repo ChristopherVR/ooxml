@@ -1,5 +1,10 @@
 import { commitsThroughDeckStyle, galleryDeckView, tableLayoutCells } from 'ooxml-ui/pptx';
-import type { DeckStyleHost, RibbonGalleryApplyResult, RibbonGalleryContext } from 'ooxml-ui/pptx';
+import type {
+	DeckStyleHost,
+	RibbonGalleryApplyResult,
+	RibbonGalleryCommandId,
+	RibbonGalleryContext,
+} from 'ooxml-ui/pptx';
 /**
  * useRibbonGalleryCommands: builds the {@link RibbonGalleryCommands} value
  * the viewer provides to every ribbon gallery.
@@ -34,6 +39,10 @@ export interface UseRibbonGalleryCommandsInput {
 	/** The table cell cursor / range (Table Layout commands act on it). */
 	tableEditorState?: TableCellEditorState | null;
 	updateElementById: (elementId: string, updates: Partial<PptxElement>) => void;
+	/** Replace one element on the active slide with one or more elements (e.g. Convert to Shapes). */
+	replaceElement?: (elementId: string, elements: PptxElement[]) => void;
+	/** Run a host command requested by a gallery/command button (e.g. SmartArt Text Pane). */
+	onCommand?: (command: RibbonGalleryCommandId) => void;
 	updateThemeColorScheme: (colorScheme: PptxThemeColorScheme) => Promise<void>;
 	updateThemeFontScheme: (fontScheme: PptxThemeFontScheme) => Promise<void>;
 	/** The slide being edited, for Background Styles' applied mark. */
@@ -59,6 +68,8 @@ export function useRibbonGalleryCommands(
 		editable,
 		tableEditorState,
 		updateElementById,
+		replaceElement,
+		onCommand,
 		updateThemeColorScheme,
 		updateThemeFontScheme,
 		applyThemeData,
@@ -103,6 +114,12 @@ export function useRibbonGalleryCommands(
 				case 'element':
 					updateElementById(result.elementId, result.patch);
 					return;
+				case 'replaceElement':
+					replaceElement?.(result.elementId, result.elements);
+					return;
+				case 'command':
+					onCommand?.(result.command);
+					return;
 				case 'theme':
 					void applyThemeData?.(result.colorScheme, result.fontScheme, result.name);
 					return;
@@ -116,6 +133,8 @@ export function useRibbonGalleryCommands(
 		[
 			editable,
 			updateElementById,
+			replaceElement,
+			onCommand,
 			updateThemeColorScheme,
 			updateThemeFontScheme,
 			applyThemeData,

@@ -1,6 +1,7 @@
 import { applyRibbonGalleryItem, buildRibbonGallery } from 'ooxml-ui/pptx';
 import type {
 	PptxUiRibbonGalleryElement,
+	RibbonGalleryCommandId,
 	RibbonGalleryPickEvent,
 	RibbonGalleryPlacement,
 	RibbonGalleryPreviewEvent,
@@ -12,7 +13,7 @@ import { useRibbonGalleryCommands } from '../ribbon-gallery-context';
 
 export interface RibbonGalleryProps {
 	/** Runs a command a gallery lists under its tiles ("Format Background..."). */
-	onCommand?: (command: 'formatBackground') => void;
+	onCommand?: (command: RibbonGalleryCommandId) => void;
 	placement: RibbonGalleryPlacement;
 	icon?: React.ReactNode;
 	chevronOnly?: boolean;
@@ -54,7 +55,11 @@ export function RibbonGallery({
 			const result = applyRibbonGalleryItem(placement.gallery, itemId, commands.context, action);
 			if (result?.kind === 'command') {
 				commands.endPreview?.();
-				onCommand?.(result.command);
+				if (onCommand) {
+					onCommand(result.command);
+				} else {
+					commands.dispatch(result);
+				}
 			} else if (result) {
 				commands.dispatch(result);
 			}

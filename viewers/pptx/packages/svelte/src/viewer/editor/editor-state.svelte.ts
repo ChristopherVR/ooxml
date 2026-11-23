@@ -610,6 +610,8 @@ export class EditorState {
 	duplicateSelected = (): string | null => this.elementOps.duplicateSelected();
 	applyElementPatch = (id: string, patch: Partial<PptxElement>): void =>
 		this.elementOps.applyElementPatch(id, patch);
+	replaceElement = (id: string, elements: readonly PptxElement[]): void =>
+		this.elementOps.replaceElement(id, elements);
 	patchSelected = (
 		patch:
 			| Partial<PptxElement>

@@ -7,6 +7,7 @@ import {
 import type {
 	DeckStyleHost,
 	RibbonGalleryApplyResult,
+	RibbonGalleryCommandId,
 	RibbonGalleryContext,
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
@@ -58,6 +59,7 @@ export interface RibbonGalleryHost {
 export function createRibbonGalleryHost(
 	editor: EditorState,
 	onthemechange?: (theme: PptxTheme) => void,
+	oncommand?: (command: RibbonGalleryCommandId) => void,
 ): RibbonGalleryHost {
 	const deckStyle: DeckStyleHost = createEditorDeckStyleHost(editor, (theme) => {
 		if (theme) {
@@ -100,6 +102,10 @@ export function createRibbonGalleryHost(
 		deckStyle.endPreview();
 		if (result.kind === 'element') {
 			editor.applyElementPatch(result.elementId, result.patch);
+		} else if (result.kind === 'replaceElement') {
+			editor.replaceElement(result.elementId, result.elements);
+		} else if (result.kind === 'command') {
+			oncommand?.(result.command);
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { commitsThroughDeckStyle, createDeckStyleHost } from 'ooxml-ui/pptx';
+import { commitsThroughDeckStyle, createDeckStyleHost, replaceElementInList } from 'ooxml-ui/pptx';
 import type {
 	DeckStyleHandler,
 	DeckStyleHost,
@@ -108,6 +108,20 @@ export function createGalleryActions(deps: GalleryActionsDeps): GalleryActions {
 			}
 			deckStyle.endPreview();
 			if (result.kind === 'command') {
+				return;
+			}
+			if (result.kind === 'replaceElement') {
+				const elements = getActiveElements(state);
+				const next = replaceElementInList(elements, result.elementId, result.elements);
+				if (!next) {
+					return;
+				}
+				ops.pushHistory();
+				store.set({
+					...replaceActiveElements(state, next),
+					selectedElementIds: result.elements.map((element) => element.id),
+				});
+				ops.commitChange();
 				return;
 			}
 			if (result.kind === 'element') {

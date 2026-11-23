@@ -32,6 +32,7 @@ import {
 import { TranslateService } from '@ngx-translate/core';
 import { applyRibbonGalleryItem, buildRibbonGallery, galleryHasItems } from 'ooxml-ui/pptx';
 import type {
+	RibbonGalleryCommandId,
 	RibbonGalleryDescriptor,
 	RibbonGalleryId,
 	RibbonGalleryItem,
@@ -157,8 +158,8 @@ export class RibbonGalleryComponent {
 		this.inputs.update((s) => ({ ...s, chevronOnly }));
 	}
 
-	/** A command a gallery lists under its tiles ("Format Background...") was picked. */
-	@Output() readonly command = new EventEmitter<'formatBackground'>();
+	/** A command a gallery lists under its tiles ("Format Background...") or a command button was picked. */
+	@Output() readonly command = new EventEmitter<RibbonGalleryCommandId>();
 
 	private context() {
 		return galleryContextFor(

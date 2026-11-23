@@ -73,7 +73,17 @@
 		}
 	});
 	// svelte-ignore state_referenced_locally
-	provideRibbonGalleryHost(createRibbonGalleryHost(props.editor, (next) => props.onthemechange?.(next)));
+	provideRibbonGalleryHost(
+		createRibbonGalleryHost(
+			props.editor,
+			(next) => props.onthemechange?.(next),
+			(command) => {
+				if (command === 'smartArtTextPane') {
+					props.chromeUi?.toggleInspector();
+				}
+			},
+		),
+	);
 	let propertiesOpen = $state(false);
 	// eslint-disable-next-line prefer-const
 	let fontsOpen = $state(false);

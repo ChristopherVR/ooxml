@@ -103,6 +103,9 @@ export function createRibbonGalleryHub(
 			const result = applyRibbonGalleryItem(gallery, itemId, ctx, action);
 			if (result?.kind === 'command') {
 				previewHooks?.end();
+				if (result.command !== 'formatBackground') {
+					dispatch(result);
+				}
 				return result;
 			}
 			if (result) {

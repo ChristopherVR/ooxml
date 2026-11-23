@@ -83,6 +83,9 @@ export function useRibbonGallery(gallery: () => RibbonGalleryId): UseRibbonGalle
 			}
 			if (result.kind === 'command') {
 				host.endPreview?.();
+				if (result.command !== 'formatBackground') {
+					host.dispatch(result);
+				}
 			} else {
 				host.dispatch(result);
 			}

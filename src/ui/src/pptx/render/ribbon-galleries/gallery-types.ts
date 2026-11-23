@@ -217,11 +217,19 @@ export interface RibbonGalleryContext {
 	 * Layout commands. Omitted or empty when the table frame itself is selected.
 	 */
 	selectedTableCells?: ReadonlyArray<{ row: number; column: number }>;
+	/**
+	 * The focused or selected SmartArt node id, when known. SmartArt Design commands
+	 * (Add Shape, Promote, Demote, Move Up, Move Down) target this node when present.
+	 */
+	selectedSmartArtNodeId?: string | null;
 	/** The slide being edited (Background Styles marks the style it uses). */
 	activeSlide?: PptxSlide | null;
 	/** `PptxData.themeVariants`: real variants from the package, when it has any. */
 	themeVariants?: readonly PptxThemeVariant[];
 }
+
+/** Host commands a gallery or command-style ribbon entry can request. */
+export type RibbonGalleryCommandId = 'formatBackground' | 'smartArtTextPane';
 
 /** What a pick asks the binding to do. */
 export type RibbonGalleryApplyResult =
@@ -230,6 +238,12 @@ export type RibbonGalleryApplyResult =
 			elementId: string;
 			/** Merge onto the element with the binding's normal update + history path. */
 			patch: Partial<PptxElement>;
+	  }
+	| {
+			/** Replace one element on the active slide with one or more elements (e.g. Convert to Shapes). */
+			kind: 'replaceElement';
+			elementId: string;
+			elements: PptxElement[];
 	  }
 	| {
 			/** A whole theme: colour and font scheme together (Design > Themes). */
@@ -262,9 +276,9 @@ export type RibbonGalleryApplyResult =
 			scope: 'all' | 'selected';
 	  }
 	| {
-			/** A command the host runs (Format Background... opens its background pane). */
+			/** A command the host runs (Format Background... opens its background pane; Text Pane toggles the SmartArt text pane). */
 			kind: 'command';
-			command: 'formatBackground';
+			command: RibbonGalleryCommandId;
 	  }
 	| {
 			/** Several results in order (a real theme variant: colours and fonts, effects, background). */

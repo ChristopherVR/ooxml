@@ -1,5 +1,6 @@
 import { armEditorKeyboard, buildRibbonGallery } from 'ooxml-ui/pptx';
 import type {
+	RibbonGalleryCommandId,
 	RibbonGalleryContext,
 	RibbonGalleryPickEvent,
 	RibbonGalleryPlacement,
@@ -13,7 +14,7 @@ import type { RibbonGalleryHub, RibbonGalleryView } from './gallery-hub';
 export interface RibbonGalleryOptions {
 	chevronOnly?: boolean;
 	/** Runs a command a gallery lists under its tiles ("Format Background..."). */
-	onCommand?: (command: 'formatBackground') => void;
+	onCommand?: (command: RibbonGalleryCommandId) => void;
 }
 export interface RibbonGalleryControl extends RibbonGalleryView {
 	el: HTMLElement;

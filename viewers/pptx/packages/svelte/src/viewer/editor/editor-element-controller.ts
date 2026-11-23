@@ -2,6 +2,7 @@ import type { ElementBoxPatch } from 'ooxml-ui/pptx';
 import {
 	cloneElementForPaste,
 	inlineListBodyText,
+	replaceElementInList,
 	updateSlideNotes,
 	updateElementInTree,
 	updateTextSegmentStyle,
@@ -88,6 +89,21 @@ export class EditorElementController {
 		this.#editor.selection.set(copy.id);
 		this.#editor.commitChange();
 		return copy.id;
+	}
+
+	/** Replace element `id` with `elements` in place as one undoable edit (e.g. Convert to Shapes). */
+	replaceElement(id: string, elements: readonly PptxElement[]): void {
+		if (!this.#editor.editable || elements.length === 0) {
+			return;
+		}
+		const next = replaceElementInList(this.#editor.activeElements, id, elements);
+		if (!next) {
+			return;
+		}
+		this.#editor.pushHistory();
+		this.#editor.replaceActiveElements(next);
+		this.#editor.selection.setAll(elements.map((element) => element.id));
+		this.#editor.commitChange();
 	}
 
 	applyElementPatch(id: string, patch: Partial<PptxElement>): void {

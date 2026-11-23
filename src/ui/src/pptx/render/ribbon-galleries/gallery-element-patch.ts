@@ -76,3 +76,19 @@ export function recolorInheritedText(
 	}
 	return patch as Partial<PptxElement>;
 }
+
+/**
+ * Replace the element with `elementId` in `elements` with `replacements` in
+ * place, preserving paint order. Returns `null` when `elementId` is absent.
+ */
+export function replaceElementInList(
+	elements: readonly PptxElement[],
+	elementId: string,
+	replacements: readonly PptxElement[],
+): PptxElement[] | null {
+	const index = elements.findIndex((element) => element.id === elementId);
+	if (index < 0) {
+		return null;
+	}
+	return [...elements.slice(0, index), ...replacements, ...elements.slice(index + 1)];
+}

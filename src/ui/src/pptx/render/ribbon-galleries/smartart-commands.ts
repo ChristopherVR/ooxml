@@ -2,17 +2,23 @@
  * SmartArt Design > Create Graphic and Reset: PowerPoint's command buttons,
  * expressed as one-item gallery modules so every binding renders and dispatches
  * them through the gallery path it already has (descriptor, `gallery-pick`,
- * element patch + history). Entries the engine cannot back yet are present but
- * disabled and say why in their tooltip, never silently inert.
+ * element patch / replace / host command + history).
  *
- * - Add Shape / Add Bullet run the core node edits (`addSmartArtNode`,
- *   `addSmartArtNodeAsChild`) on the last top-level node; Add Shape Before inserts
- *   before the first top-level node (`addSmartArtNodeBefore`) and Add Shape Above
- *   puts a new parent over the last one (`addSmartArtNodeAbove`).
+ * - Add Shape / Add Bullet / Add Shape Before / Add Shape Above run the core
+ *   node edits (`addSmartArtNode`, `addSmartArtNodeAsChild`,
+ *   `addSmartArtNodeBefore`, `addSmartArtNodeAbove`) on the selected node when
+ *   known, or the boundary top-level node otherwise.
+ * - Text Pane requests the host command (`smartArtTextPane`) to toggle/open the
+ *   Inspector's SmartArt text pane.
+ * - Promote, Demote, Move Up and Move Down run `promoteSmartArtNode`,
+ *   `demoteSmartArtNode` and `reorderSmartArtNode` on the selected node (or,
+ *   without an explicit node selection, the last/first node for which the edit
+ *   is valid) and disable themselves when no valid edit exists.
+ * - Right to Left toggles `presLayoutVars.direction` (`'rev'` <-> `'norm'`) and
+ *   rebuilds drawing shapes so the layout flips direction.
  * - Reset Graphic restores the default colours and style (content and layout stay).
- * - Promote, Demote, Move Up and Move Down need a selected node; the ribbon has no
- *   node selection (nodes are chosen in the Inspector's text pane), so they stay
- *   disabled here. Text Pane, Right to Left and Convert have no engine support.
+ * - Convert decomposes the SmartArt into standard `PptxElement[]` shapes via
+ *   `decomposeSmartArt` and returns a `replaceElement` result.
  *
  * @module render/ribbon-galleries/smartart-commands
  */
@@ -22,6 +28,10 @@ import {
 	addSmartArtNodeAbove,
 	addSmartArtNodeAsChild,
 	addSmartArtNodeBefore,
+	decomposeSmartArt,
+	demoteSmartArtNode,
+	promoteSmartArtNode,
+	reorderSmartArtNode,
 } from 'ooxml-core/pptx';
 
 import type { RibbonGalleryModule } from './gallery-module';
@@ -40,18 +50,16 @@ interface CommandSpec {
 	label: string;
 	iconPath: string;
 	large?: boolean;
-	/** Why the command is unavailable; its presence disables it. */
-	unavailable?: { key: string; text: string };
-	run?: (data: PptxSmartArtData, ctx: RibbonGalleryContext) => RibbonGalleryApplyResult | null;
+	/** Return true when the command cannot run on this SmartArt right now. */
+	isDisabled?: (data: PptxSmartArtData, ctx: RibbonGalleryContext) => boolean;
+	/** Optional tooltip explaining why the command is disabled. */
+	disabledHint?: { key: string; text: string };
+	run: (data: PptxSmartArtData, ctx: RibbonGalleryContext) => RibbonGalleryApplyResult | null;
 }
 
 const NEEDS_NODE = {
 	key: 'pptx.gallery.smartArtCommand.needsNode',
 	text: 'Select a shape in the SmartArt text pane (Inspector) to use this command',
-};
-const NO_ENGINE = {
-	key: 'pptx.gallery.smartArtCommand.unsupported',
-	text: 'Not available yet in this viewer',
 };
 
 function topLevelIds(data: PptxSmartArtData): string[] {
@@ -63,6 +71,42 @@ function topLevelIds(data: PptxSmartArtData): string[] {
 
 function lastTopLevelId(data: PptxSmartArtData): string | undefined {
 	return topLevelIds(data).at(-1);
+}
+
+function selectedNodeId(data: PptxSmartArtData, ctx: RibbonGalleryContext): string | undefined {
+	const id = ctx.selectedSmartArtNodeId;
+	if (!id) {
+		return undefined;
+	}
+	return data.nodes.some((node) => node.id === id) ? id : undefined;
+}
+
+function resolveNodeOpTarget(
+	data: PptxSmartArtData,
+	ctx: RibbonGalleryContext,
+	op: (d: PptxSmartArtData, id: string) => PptxSmartArtData,
+	searchFromEnd: boolean,
+): string | undefined {
+	const explicit = selectedNodeId(data, ctx);
+	if (explicit) {
+		return op(data, explicit) !== data ? explicit : undefined;
+	}
+	const nodes = data.nodes;
+	if (searchFromEnd) {
+		for (let i = nodes.length - 1; i >= 0; i -= 1) {
+			const node = nodes[i];
+			if (node && op(data, node.id) !== data) {
+				return node.id;
+			}
+		}
+		return undefined;
+	}
+	for (const node of nodes) {
+		if (op(data, node.id) !== data) {
+			return node.id;
+		}
+	}
+	return undefined;
 }
 
 function viaData(
@@ -83,7 +127,12 @@ const SPECS: readonly CommandSpec[] = [
 		labelKey: 'pptx.gallery.smartArtCommand.addShape',
 		label: 'Add Shape',
 		iconPath: 'M3 4h14v12H3zM10 7v6M7 10h6',
-		run: (data, ctx) => viaData(ctx.element, addSmartArtNode(data, '', lastTopLevelId(data)), data),
+		run: (data, ctx) =>
+			viaData(
+				ctx.element,
+				addSmartArtNode(data, '', selectedNodeId(data, ctx) ?? lastTopLevelId(data)),
+				data,
+			),
 	},
 	{
 		id: 'smartArtAddShapeBefore',
@@ -91,7 +140,11 @@ const SPECS: readonly CommandSpec[] = [
 		label: 'Add Shape Before',
 		iconPath: 'M8 4h9v12H8zM4 10h6M4 10l2-2M4 10l2 2',
 		run: (data, ctx) =>
-			viaData(ctx.element, addSmartArtNodeBefore(data, '', topLevelIds(data)[0]), data),
+			viaData(
+				ctx.element,
+				addSmartArtNodeBefore(data, '', selectedNodeId(data, ctx) ?? topLevelIds(data)[0]),
+				data,
+			),
 	},
 	{
 		id: 'smartArtAddShapeAbove',
@@ -99,7 +152,7 @@ const SPECS: readonly CommandSpec[] = [
 		label: 'Add Shape Above',
 		iconPath: 'M5 3h10v5H5zM5 12h10v5H5zM10 8v4',
 		run: (data, ctx) => {
-			const target = lastTopLevelId(data);
+			const target = selectedNodeId(data, ctx) ?? lastTopLevelId(data);
 			return target ? viaData(ctx.element, addSmartArtNodeAbove(data, target, ''), data) : null;
 		},
 	},
@@ -109,52 +162,94 @@ const SPECS: readonly CommandSpec[] = [
 		label: 'Add Bullet',
 		iconPath: 'M4 6h.01M8 6h8M4 10h.01M8 10h8M4 14h.01M8 14h8',
 		run: (data, ctx) =>
-			viaData(ctx.element, addSmartArtNodeAsChild(data, lastTopLevelId(data), ''), data),
+			viaData(
+				ctx.element,
+				addSmartArtNodeAsChild(data, selectedNodeId(data, ctx) ?? lastTopLevelId(data), ''),
+				data,
+			),
 	},
 	{
 		id: 'smartArtTextPane',
 		labelKey: 'pptx.gallery.smartArtCommand.textPane',
 		label: 'Text Pane',
 		iconPath: 'M3 3.5h14v13H3zM7 3.5v13M10 7h5M10 10h5',
-		unavailable: {
-			key: 'pptx.gallery.smartArtCommand.textPaneHint',
-			text: 'Edit the shapes in the Inspector while the SmartArt is selected',
-		},
+		run: () => ({ kind: 'command', command: 'smartArtTextPane' }),
 	},
 	{
 		id: 'smartArtPromote',
 		labelKey: 'pptx.gallery.smartArtCommand.promote',
 		label: 'Promote',
 		iconPath: 'M16 10H5M8 6.5 4.5 10 8 13.5',
-		unavailable: NEEDS_NODE,
+		disabledHint: NEEDS_NODE,
+		isDisabled: (data, ctx) => !resolveNodeOpTarget(data, ctx, promoteSmartArtNode, true),
+		run: (data, ctx) => {
+			const target = resolveNodeOpTarget(data, ctx, promoteSmartArtNode, true);
+			return target ? viaData(ctx.element, promoteSmartArtNode(data, target), data) : null;
+		},
 	},
 	{
 		id: 'smartArtDemote',
 		labelKey: 'pptx.gallery.smartArtCommand.demote',
 		label: 'Demote',
 		iconPath: 'M4 10h11M12 6.5l3.5 3.5-3.5 3.5',
-		unavailable: NEEDS_NODE,
+		disabledHint: NEEDS_NODE,
+		isDisabled: (data, ctx) => !resolveNodeOpTarget(data, ctx, demoteSmartArtNode, true),
+		run: (data, ctx) => {
+			const target = resolveNodeOpTarget(data, ctx, demoteSmartArtNode, true);
+			return target ? viaData(ctx.element, demoteSmartArtNode(data, target), data) : null;
+		},
 	},
 	{
 		id: 'smartArtRightToLeft',
 		labelKey: 'pptx.gallery.smartArtCommand.rightToLeft',
 		label: 'Right to Left',
 		iconPath: 'M4 7h12M13 4l3 3-3 3M16 13H4M7 10l-3 3 3 3',
-		unavailable: NO_ENGINE,
+		run: (data, ctx) => {
+			const nextDirection = data.presLayoutVars?.direction === 'rev' ? 'norm' : 'rev';
+			const next: PptxSmartArtData = {
+				...data,
+				presLayoutVars: { ...data.presLayoutVars, direction: nextDirection },
+				...(data.drawingShapes && data.drawingShapes.length > 0 ? { drawingShapes: [] } : {}),
+				drawingDirty: true,
+			};
+			return viaData(ctx.element, next, data);
+		},
 	},
 	{
 		id: 'smartArtMoveUp',
 		labelKey: 'pptx.gallery.smartArtCommand.moveUp',
 		label: 'Move Up',
 		iconPath: 'M10 16V5M6.5 8 10 4.5 13.5 8',
-		unavailable: NEEDS_NODE,
+		disabledHint: NEEDS_NODE,
+		isDisabled: (data, ctx) =>
+			!resolveNodeOpTarget(data, ctx, (d, id) => reorderSmartArtNode(d, id, -1), true),
+		run: (data, ctx) => {
+			const target = resolveNodeOpTarget(
+				data,
+				ctx,
+				(d, id) => reorderSmartArtNode(d, id, -1),
+				true,
+			);
+			return target ? viaData(ctx.element, reorderSmartArtNode(data, target, -1), data) : null;
+		},
 	},
 	{
 		id: 'smartArtMoveDown',
 		labelKey: 'pptx.gallery.smartArtCommand.moveDown',
 		label: 'Move Down',
 		iconPath: 'M10 4v11M6.5 12 10 15.5 13.5 12',
-		unavailable: NEEDS_NODE,
+		disabledHint: NEEDS_NODE,
+		isDisabled: (data, ctx) =>
+			!resolveNodeOpTarget(data, ctx, (d, id) => reorderSmartArtNode(d, id, 1), false),
+		run: (data, ctx) => {
+			const target = resolveNodeOpTarget(
+				data,
+				ctx,
+				(d, id) => reorderSmartArtNode(d, id, 1),
+				false,
+			);
+			return target ? viaData(ctx.element, reorderSmartArtNode(data, target, 1), data) : null;
+		},
 	},
 	{
 		id: 'smartArtResetGraphic',
@@ -185,7 +280,22 @@ const SPECS: readonly CommandSpec[] = [
 		label: 'Convert',
 		iconPath: 'M4 6h8l-2-2M16 14H8l2 2M4 6v3M16 14v-3',
 		large: true,
-		unavailable: NO_ENGINE,
+		isDisabled: (data) => data.nodes.length === 0,
+		run: (data, ctx) => {
+			const element = ctx.element;
+			if (element?.type !== 'smartArt') {
+				return null;
+			}
+			const elements = decomposeSmartArt(
+				data,
+				{ x: element.x, y: element.y, width: element.width, height: element.height },
+				ctx.themeColorMap ? { ...ctx.themeColorMap } : undefined,
+			);
+			if (!elements || elements.length === 0) {
+				return null;
+			}
+			return { kind: 'replaceElement', elementId: element.id, elements };
+		},
 	},
 ];
 
@@ -193,16 +303,18 @@ function moduleFor(spec: CommandSpec): RibbonGalleryModule {
 	return {
 		build(ctx) {
 			const data = ctx.element?.type === 'smartArt' ? ctx.element.smartArtData : undefined;
+			const disabled = !data || Boolean(spec.isDisabled?.(data, ctx));
+			const hint = disabled && data ? spec.disabledHint : undefined;
 			return {
 				id: spec.id,
 				labelKey: spec.labelKey,
 				label: spec.label,
-				disabled: !data || Boolean(spec.unavailable),
+				disabled,
 				command: {
 					iconPath: spec.iconPath,
 					large: spec.large,
-					hintKey: spec.unavailable?.key,
-					hint: spec.unavailable?.text,
+					hintKey: hint?.key,
+					hint: hint?.text,
 				},
 				sections: [
 					{
@@ -225,7 +337,7 @@ function moduleFor(spec: CommandSpec): RibbonGalleryModule {
 		},
 		apply(itemId, ctx) {
 			const data = ctx.element?.type === 'smartArt' ? ctx.element.smartArtData : undefined;
-			if (itemId !== 'run' || !data || spec.unavailable || !spec.run) {
+			if (itemId !== 'run' || !data || spec.isDisabled?.(data, ctx)) {
 				return null;
 			}
 			return spec.run(data, ctx);

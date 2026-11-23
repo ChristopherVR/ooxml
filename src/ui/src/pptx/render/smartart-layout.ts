@@ -157,33 +157,37 @@ export function computeSmartArtLayout(
 		return interpreted;
 	}
 
+	const reversed = presLayoutVars?.direction === 'rev';
+	const orderedFlat = reversed ? [...flat].reverse() : flat;
+	const orderedNodes = reversed ? [...nodes].reverse() : nodes;
+
 	switch (family) {
 		case 'list':
-			return computeListLayout(flat, box, pal, style, elementId);
+			return computeListLayout(orderedFlat, box, pal, style, elementId);
 		case 'process':
-			return computeProcessLayout(flat, box, pal, style, elementId);
+			return computeProcessLayout(orderedFlat, box, pal, style, elementId);
 		case 'cycle':
-			return computeCycleLayout(flat, box, pal, style, elementId);
+			return computeCycleLayout(orderedFlat, box, pal, style, elementId);
 		case 'hierarchy':
-			return computeHierarchyLayout(nodes, box, pal, style, elementId);
+			return computeHierarchyLayout(orderedNodes, box, pal, style, elementId);
 		case 'matrix':
-			return computeMatrixLayout(flat, box, pal, style, elementId);
+			return computeMatrixLayout(orderedFlat, box, pal, style, elementId);
 		case 'radial':
-			return computeRadialLayout(flat, box, pal, style, elementId);
+			return computeRadialLayout(orderedFlat, box, pal, style, elementId);
 		case 'pyramid':
-			return computePyramidLayout(flat, box, pal, style, elementId);
+			return computePyramidLayout(orderedFlat, box, pal, style, elementId);
 		case 'venn':
-			return computeVennLayout(flat, box, pal, style, elementId);
+			return computeVennLayout(orderedFlat, box, pal, style, elementId);
 		case 'funnel':
-			return computeFunnelLayout(flat, box, pal, style, elementId);
+			return computeFunnelLayout(orderedFlat, box, pal, style, elementId);
 		case 'target':
-			return computeTargetLayout(flat, box, pal, style, elementId);
+			return computeTargetLayout(orderedFlat, box, pal, style, elementId);
 		case 'gear':
-			return computeGearLayout(flat, box, pal, style, elementId);
+			return computeGearLayout(orderedFlat, box, pal, style, elementId);
 		case 'timeline':
-			return computeTimelineLayout(flat, box, pal, style, elementId);
+			return computeTimelineLayout(orderedFlat, box, pal, style, elementId);
 		case 'bending':
-			return computeBendingLayout(flat, box, pal, style, elementId);
+			return computeBendingLayout(orderedFlat, box, pal, style, elementId);
 	}
 }
 

@@ -171,6 +171,7 @@ import { RibbonViewSectionComponent } from './ribbon-view-section.component';
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
 						[hiddenActions]="hiddenActions()"
+						(toggleInspector)="toggleInspector.emit()"
 					/>
 				}
 			}

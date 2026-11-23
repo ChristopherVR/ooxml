@@ -2,6 +2,7 @@ import { commitsThroughDeckStyle, galleryDeckView, tableLayoutCells } from 'ooxm
 import type {
 	DeckStyleHost,
 	RibbonGalleryApplyResult,
+	RibbonGalleryCommandId,
 	RibbonGalleryContext,
 	TableCursorState,
 } from 'ooxml-ui/pptx';
@@ -43,6 +44,10 @@ export const RibbonGalleryHostKey: InjectionKey<RibbonGalleryHost> =
 export interface RibbonGallerySinks {
 	/** History-tracked element update (shallow top-level merge). */
 	updateElement: (id: string, patch: Partial<PptxElement>) => void;
+	/** History-tracked element replacement (e.g. SmartArt Convert to Shapes). */
+	replaceElement?: (id: string, elements: PptxElement[]) => void;
+	/** Host command triggered by a gallery/command button (e.g. SmartArt Text Pane). */
+	onCommand?: (command: RibbonGalleryCommandId) => void;
 	/** Deck-wide theme update; unset scheme parts keep the current theme's. */
 	applyTheme: (updates: Partial<PptxTheme>) => void;
 	/** The Design galleries' hover preview and their effect and background commits. */
@@ -65,6 +70,12 @@ export function dispatchRibbonGalleryResult(
 	switch (result.kind) {
 		case 'element':
 			sinks.updateElement(result.elementId, result.patch);
+			return;
+		case 'replaceElement':
+			sinks.replaceElement?.(result.elementId, result.elements);
+			return;
+		case 'command':
+			sinks.onCommand?.(result.command);
 			return;
 		case 'theme':
 			sinks.applyTheme({

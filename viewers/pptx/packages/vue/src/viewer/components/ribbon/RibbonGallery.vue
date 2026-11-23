@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type {
 	RibbonControlId,
+	RibbonGalleryCommandId,
 	RibbonGalleryId,
 	RibbonGalleryPickEvent,
 	RibbonGalleryPreviewEvent,
@@ -13,7 +14,7 @@ const props = defineProps<{
 	control?: RibbonControlId;
 	mode: 'inline' | 'dropdown' | 'chevron';
 }>();
-const emit = defineEmits<{ command: [command: 'formatBackground'] }>();
+const emit = defineEmits<{ command: [command: RibbonGalleryCommandId] }>();
 const g = useRibbonGallery(() => props.gallery);
 function pick(event: Event): void {
 	const { itemId, action } = (event as RibbonGalleryPickEvent).detail;

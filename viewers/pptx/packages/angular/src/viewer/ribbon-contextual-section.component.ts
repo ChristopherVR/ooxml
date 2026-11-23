@@ -14,10 +14,15 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
 	input,
+	output,
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
-import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+import type {
+	RibbonContextualTabId,
+	RibbonGalleryCommandId,
+	ToolbarActionId,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { RibbonChartSelectionComponent } from './ribbon-chart-selection.component';
@@ -50,6 +55,7 @@ import { RibbonPictureSizeComponent } from './ribbon-picture-size.component';
 						[element]="selectedElement()"
 						[slideIndex]="slideIndex()"
 						[canEdit]="canEdit()"
+						(command)="onGalleryCommand($event)"
 					/>
 				}
 				@if (group.strip === 'picture-size') {
@@ -78,6 +84,14 @@ export class RibbonContextualSectionComponent {
 	readonly canEdit = input<boolean>(false);
 	/** Toolbar buttons the host hides (gates the Size group's Crop). */
 	readonly hiddenActions = input<readonly ToolbarActionId[]>([]);
+	/** Toggle the Inspector pane (SmartArt Design > Text Pane). */
+	readonly toggleInspector = output<void>();
 
 	readonly groups = computed(() => CONTEXTUAL_TAB_GROUPS[this.tab()]);
+
+	protected onGalleryCommand(command: RibbonGalleryCommandId): void {
+		if (command === 'smartArtTextPane') {
+			this.toggleInspector.emit();
+		}
+	}
 }

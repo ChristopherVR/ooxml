@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { buildRibbonGallery } from 'ooxml-ui/pptx';
 	import type {
+		RibbonGalleryCommandId,
 		RibbonGalleryPickEvent,
 		RibbonGalleryPlacement,
 		RibbonGalleryPreviewEvent,
@@ -10,7 +11,7 @@
 	import { strictTranslator } from './gallery-labels';
 	import { useRibbonGalleryHost } from './ribbon-gallery-host';
 
-	const { placement, chevronOnly = false, tagControl = true, oncommand }: { placement: RibbonGalleryPlacement; chevronOnly?: boolean; tagControl?: boolean; oncommand?: (command: 'formatBackground') => void } = $props();
+	const { placement, chevronOnly = false, tagControl = true, oncommand }: { placement: RibbonGalleryPlacement; chevronOnly?: boolean; tagControl?: boolean; oncommand?: (command: RibbonGalleryCommandId) => void } = $props();
 	const host = useRibbonGalleryHost();
 	const t = useTranslator();
 	const translateLabel = strictTranslator(t);
