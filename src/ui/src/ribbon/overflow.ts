@@ -112,6 +112,8 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 					)
 			)
 				return;
+			event.preventDefault();
+			event.stopPropagation();
 			closeOpen?.();
 			button.focus();
 		};

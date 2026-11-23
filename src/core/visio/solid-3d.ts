@@ -12,7 +12,7 @@
  * between the front outline and the back outline.
  * Lighting, materials and Visio's shading of the sides are not reproduced.
  */
-import { parsePath } from './path-segments';
+import { parsePath } from '../geometry/absolute-svg-path';
 
 export interface Point2 {
 	x: number;

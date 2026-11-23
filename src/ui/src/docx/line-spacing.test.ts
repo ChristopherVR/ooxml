@@ -152,6 +152,11 @@ describe('line spacing ribbon control', () => {
 			],
 		});
 
+		view.dispatch(
+			view.state.tr.setSelection(
+				TextSelection.create(view.state.doc, at(textRanges, 0).from, at(textRanges, 1).to),
+			),
+		);
 		chooseSpacing(editor, 'inherit');
 		const cleared = tableAt(documentModel(editor).blocks, 0);
 		const clearedRow = at(cleared.rows, 0);

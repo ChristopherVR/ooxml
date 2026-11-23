@@ -11,7 +11,10 @@ test('inserts styled WordArt, reopens the workbook, and edits the drawing', asyn
 	await newWorkbook(page);
 	const host = editor(page);
 	await host.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await clickRibbonControl(page, host.getByRole('button', { name: 'WordArt', exact: true }));
+	await clickRibbonControl(
+		page,
+		host.getByRole('button', { name: 'WordArt', exact: true, includeHidden: true }),
+	);
 	const picker = host.locator('office-ui-dialog[open]');
 	await picker.getByRole('textbox', { name: 'WordArt text' }).fill('Sales');
 	await picker.getByRole('button', { name: 'WordArt style 30' }).click();
@@ -57,7 +60,10 @@ test('Symbol replaces the selected characters in the active cell edit', async ({
 	await field.fill('abcdef');
 	await field.evaluate((node: HTMLTextAreaElement) => node.setSelectionRange(2, 4));
 	await host.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await clickRibbonControl(page, host.getByRole('button', { name: 'Symbol', exact: true }));
+	await clickRibbonControl(
+		page,
+		host.getByRole('button', { name: 'Symbol', exact: true, includeHidden: true }),
+	);
 	const picker = host.locator('office-ui-dialog[data-dialog="symbol"]');
 	await picker.getByRole('grid').getByRole('button', { name: 'U+00A9', exact: true }).click();
 	await picker.getByRole('button', { name: 'Insert', exact: true }).click();

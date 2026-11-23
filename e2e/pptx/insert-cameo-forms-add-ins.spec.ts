@@ -76,7 +76,10 @@ test('inserts a Cameo and response link and opens the add-in dialogs', async ({
 	await pressShortcut(page, 'F5');
 	const show = page.locator('[data-pptx-presenting][aria-roledescription="slide"]');
 	await show.getByText('Open form', { exact: true }).click();
-	const response = page.getByRole('dialog', { name: 'Forms', exact: true });
+	const response = page.locator('office-ui-dialog[open]').filter({
+		has: page.getByRole('heading', { name: 'Forms', exact: true }),
+	});
+	await expect(response).toBeVisible();
 	await expect(response.locator('iframe')).toHaveCount(0);
 	await response.getByRole('button', { name: 'Load Microsoft Form' }).click();
 	await expect(response.frameLocator('iframe').getByText('Form response surface')).toBeVisible();

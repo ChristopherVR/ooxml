@@ -405,7 +405,8 @@ const noopClose = (): void => undefined;
 					>
 						<span class="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true">&#128274;</span>
 						<p class="flex-1 text-xs text-amber-200">
-							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong>:
+							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong
+							>:
 							{{ 'pptx.options.trust.protectedViewInfo' | translate }}
 						</p>
 						<button

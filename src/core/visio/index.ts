@@ -230,7 +230,12 @@ export {
 	type Point2,
 	type Projection,
 } from './solid-3d';
-export { MAX_PATH_CHARS, MAX_PATH_SEGMENTS, parsePath, type PathSegment } from './path-segments';
+export {
+	MAX_PATH_CHARS,
+	MAX_PATH_SEGMENTS,
+	parsePath,
+	type PathSegment,
+} from '../geometry/absolute-svg-path';
 export {
 	VISIO_GLOW_SIZES,
 	VISIO_GLOW_TRANSPARENCY,

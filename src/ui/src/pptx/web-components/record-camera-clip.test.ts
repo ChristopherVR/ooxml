@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
+import type { OfficeUiCheckbox } from '../../form/checkbox';
 import { recordCameraClip } from './record-camera-clip';
 import type { RecordTarget } from '../render/ribbon-record-commands';
 import { mediaElementFromFile } from '../render/building-blocks/media-element-from-file';
@@ -85,7 +86,7 @@ it('requests camera permission only on Record and embeds the clip on Stop and In
 
 it('stops capture and discards the recording when the dialog is closed', async () => {
 	const ui = setup();
-	ui.dialog.querySelector('input')!.checked = true;
+	ui.dialog.querySelector<OfficeUiCheckbox>('pptx-ui-checkbox')!.checked = true;
 	ui.button.click();
 	await vi.waitFor(() => expect(ui.button.textContent).toBe('pptx.record.stopAndInsert'));
 	expect(ui.getUserMedia).toHaveBeenCalledExactlyOnceWith({ video: true, audio: true });

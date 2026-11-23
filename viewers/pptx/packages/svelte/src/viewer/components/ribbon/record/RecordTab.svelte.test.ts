@@ -1,6 +1,7 @@
-import { mount, unmount } from 'svelte';
+import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { EditorState } from '../../../editor/editor-state.svelte';
 import RecordTab from './RecordTab.svelte';
 
 let cleanup: (() => void) | undefined;
@@ -18,7 +19,12 @@ function mountTab(): {
 	const target = document.createElement('div');
 	const onfrombeginning = vi.fn();
 	const onfromcurrent = vi.fn();
-	const instance = mount(RecordTab, { target, props: { onfrombeginning, onfromcurrent } });
+	const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
+	const instance = mount(RecordTab, {
+		target,
+		props: { editor, canvasSize: { width: 960, height: 540 }, onfrombeginning, onfromcurrent },
+	});
+	flushSync();
 	cleanup = () => unmount(instance);
 	return { target, onfrombeginning, onfromcurrent };
 }
@@ -41,17 +47,17 @@ describe('recordTab', () => {
 		expect(onfromcurrent).toHaveBeenCalledOnce();
 	});
 
-	it('offers the camera/manage/help placeholders React ships, all disabled', () => {
+	it('disables editing commands in a read-only presentation', () => {
 		const { target } = mountTab();
 
 		expect(target.querySelectorAll('pptx-ui-ribbon-section > pptx-ui-ribbon-group')).toHaveLength(
 			4,
 		);
 
-		for (const name of ['Cameo', 'Clear', 'Reset to Cameo', 'Learn More']) {
+		for (const name of ['Cameo', 'Clear timings', 'Reset to Cameo', 'Learn More']) {
 			const button = byName(target, name);
 			expect(button, `${name} is missing from the Record tab`).toBeDefined();
-			expect(button?.disabled, `${name} should be a disabled placeholder`).toBeTruthy();
+			expect(button?.disabled, `${name} should be disabled`).toBeTruthy();
 		}
 	});
 });

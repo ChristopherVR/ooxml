@@ -133,7 +133,7 @@ describe('createRecordTab', () => {
 			t('pptx.record.cameo'),
 			t('pptx.slideShow.fromBeginning'),
 			t('pptx.slideShow.fromCurrent'),
-			t('pptx.record.clear'),
+			t('pptx.record.clearTimings'),
 			t('pptx.record.resetToCameo'),
 			t('pptx.record.learnMore'),
 		]) {

@@ -53,3 +53,16 @@ button[aria-pressed='true'] {
 	color: var(--office-foreground);
 	background: var(--office-background);
 }
+
+@media (forced-colors: active) {
+	button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		border-color: Highlight;
+		background: Highlight;
+		color: HighlightText;
+	}
+	button:focus-visible {
+		outline: 2px solid Highlight;
+		outline-offset: 2px;
+	}
+}

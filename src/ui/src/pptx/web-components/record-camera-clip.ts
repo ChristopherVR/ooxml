@@ -1,9 +1,11 @@
 import { CAMERA_CLIP_EXTENSION } from 'ooxml-core/pptx/editor/render/slide-operations';
 import { showOfficeServiceDialog } from '../../dialog/office-service-dialog';
+import type { OfficeUiCheckbox } from '../../form/checkbox';
 import { pickVideoRecordingFormat, VIDEO_MIME_CANDIDATES } from '../export/video-format';
 import type { Translator } from '../i18n/translator';
 import { mediaElementFromFile } from '../render/building-blocks/media-element-from-file';
 import type { RecordTarget } from '../render/ribbon-record-commands';
+import { definePptxCheckbox } from './office-aliases';
 
 const CAMERA_FORMATS = [
 	...VIDEO_MIME_CANDIDATES.filter((type) => type.startsWith('video/mp4')),
@@ -40,10 +42,12 @@ export function recordCameraClip(
 	preview.playsInline = true;
 	preview.style.maxWidth = '100%';
 	preview.hidden = true;
-	const mic = doc.createElement('input');
-	mic.type = 'checkbox';
+	definePptxCheckbox(view.customElements);
+	const mic = doc.createElement('pptx-ui-checkbox') as OfficeUiCheckbox;
+	const micCaption = t('pptx.record.includeMic');
+	mic.setAttribute('aria-label', micCaption);
 	const micLabel = doc.createElement('label');
-	micLabel.append(mic, ` ${t('pptx.record.includeMic')}`);
+	micLabel.append(mic, ` ${micCaption}`);
 	const control = doc.createElement('button');
 	control.type = 'button';
 	control.textContent = t('pptx.titleBar.record');

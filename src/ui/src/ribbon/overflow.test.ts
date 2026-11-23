@@ -69,6 +69,26 @@ describe('ribbon overflow', () => {
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
 	});
 
+	it('consumes Escape while closing a dropdown from outside the ribbon', () => {
+		const { el, groups } = panel(150);
+		overflow.fitPanel(el);
+		const toggle = groups[1]!.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!;
+		const editor = document.createElement('button');
+		document.body.append(editor);
+		editor.focus();
+		let received = 0;
+		editor.addEventListener('keydown', () => received++);
+		toggle.click();
+		const press = () =>
+			editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+		expect(press()).toBe(false);
+		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
+		expect(document.activeElement).toBe(toggle);
+		expect(received).toBe(0);
+		expect(press()).toBe(true);
+		expect(received).toBe(1);
+	});
+
 	it('ends the dropdown on a command but keeps it open for a button that opens a popup', async () => {
 		const { el, groups } = panel(150);
 		overflow.fitPanel(el);

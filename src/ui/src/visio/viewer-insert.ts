@@ -21,10 +21,11 @@ import type { VisioInsertItem } from './ribbon-action';
 import type { RibbonCommand } from './ribbon-parts';
 import { selectedShape, safeExternalHref } from './shape-inspector';
 import { InsertDialog } from './viewer-insert-dialog';
-import { InsertChartDialog, type ChartObjectData, type ChartTarget } from './viewer-insert-chart';
-import { ChartObjectEditor, type ChartEditMode } from './viewer-chart-editor';
+import type { ChartObjectData, ChartTarget, InsertChartDialog } from './viewer-insert-chart';
+import type { ChartEditMode, ChartObjectEditor } from './viewer-chart-editor';
 
 type Run = (action: () => Promise<void>, success: string) => void;
+type ChartDialogs = { chart: InsertChartDialog; editor: ChartObjectEditor };
 
 /**
  * Insert-tab Pictures, Link and ScreenTip, plus Ctrl+click link following. Pictures are read
@@ -34,8 +35,8 @@ export class ViewerInsert {
 	readonly input: HTMLInputElement;
 	readonly link: InsertDialog;
 	readonly tip: InsertDialog;
-	readonly chart: InsertChartDialog;
-	readonly chartEditor: ChartObjectEditor;
+	#charts: ChartDialogs | undefined;
+	#chartRequest = 0;
 	#target: { pageId: string; shapeId: string; row?: string; generation: number } | undefined;
 	constructor(
 		private readonly root: ShadowRoot,
@@ -67,8 +68,6 @@ export class ViewerInsert {
 			['OK', 'Remove Link', 'Cancel'],
 			(button) => void this.#applyLink(button),
 		);
-		this.chart = new InsertChartDialog(root, (data, target) => this.#saveChart(data, target));
-		this.chartEditor = new ChartObjectEditor(root, (data, target) => this.#saveChart(data, target));
 		this.tip = new InsertDialog(
 			root,
 			'screen-tip-dialog',
@@ -104,7 +103,8 @@ export class ViewerInsert {
 			return;
 		}
 		if (item === 'chart') {
-			if (state.document?.pages[state.pageIndex]) this.chart.open();
+			if (state.document?.pages[state.pageIndex])
+				void this.#openChartDialogs(({ chart }) => chart.open());
 			return;
 		}
 		if (item === 'chart-edit' || item === 'chart-data' || item === 'chart-format') {
@@ -148,10 +148,45 @@ export class ViewerInsert {
 		dialog.fields.values().next().value?.focus();
 	}
 	close(): void {
+		this.#chartRequest++;
 		this.link.dialog.close();
 		this.tip.dialog.close();
-		this.chart.close();
-		this.chartEditor.close();
+		this.#charts?.chart.close();
+		this.#charts?.editor.close();
+	}
+	/** Load the embedded workbook editors only when a chart command needs them. */
+	async #openChartDialogs(
+		action: (dialogs: ChartDialogs) => void | Promise<unknown>,
+	): Promise<void> {
+		const request = ++this.#chartRequest;
+		const generation = this.controller.documentGeneration;
+		const pageIndex = this.controller.state.pageIndex;
+		try {
+			if (this.#charts) {
+				await action(this.#charts);
+				return;
+			}
+			const [{ InsertChartDialog }, { ChartObjectEditor }] = await Promise.all([
+				import('./viewer-insert-chart'),
+				import('./viewer-chart-editor'),
+			]);
+			if (
+				request !== this.#chartRequest ||
+				generation !== this.controller.documentGeneration ||
+				pageIndex !== this.controller.state.pageIndex ||
+				!this.#editable(this.controller.state)
+			)
+				return;
+			const submit = (data: ChartObjectData, target: ChartTarget | undefined) =>
+				this.#saveChart(data, target);
+			this.#charts = {
+				chart: new InsertChartDialog(this.root, submit),
+				editor: new ChartObjectEditor(this.root, submit),
+			};
+			await action(this.#charts);
+		} catch (error) {
+			if (request === this.#chartRequest) this.announce(editErrorMessage(error));
+		}
 	}
 	/**
 	 * Open an editor for the embedded chart `shapeId` on this page: the chart dialog (type, title
@@ -169,8 +204,10 @@ export class ViewerInsert {
 			height: shape.height,
 			generation: this.controller.documentGeneration,
 		};
-		if (mode === 'chart') void this.chart.edit(target, shape.embeddedObject.bytes);
-		else void this.chartEditor.open(mode, target, shape.embeddedObject.bytes);
+		const { bytes } = shape.embeddedObject;
+		void this.#openChartDialogs(({ chart, editor }) =>
+			mode === 'chart' ? chart.edit(target, bytes) : editor.open(mode, target, bytes),
+		);
 		return true;
 	}
 	/**
@@ -401,14 +438,16 @@ export class ViewerInsert {
 			control.disabled = !shape;
 			control.title = shape ? label : `${label}: select one shape on an editable drawing.`;
 		}
-		if (this.chart.dialog.open && (!canEditDiagram(state) || state.loading)) this.chart.close();
+		const charts = this.#charts;
+		if (charts?.chart.dialog.open && (!canEditDiagram(state) || state.loading))
+			charts.chart.close();
 		if (
-			this.chartEditor.dialog.open &&
+			charts?.editor.dialog.open &&
 			(!canEditDiagram(state) ||
 				state.loading ||
-				this.chartEditor.target?.generation !== this.controller.documentGeneration)
+				charts.editor.target?.generation !== this.controller.documentGeneration)
 		)
-			this.chartEditor.close();
+			charts.editor.close();
 		for (const dialog of [this.link, this.tip]) {
 			if (!dialog.dialog.open) continue;
 			if (

@@ -105,6 +105,10 @@ describe('mobile action sheets bottom bar adapter', () => {
 			'insert.links.link',
 			'insert.text.dateTime',
 			'insert.comments.comment',
+			'insert.camera.cameo',
+			'insert.forms.forms',
+			'insert.addIns.getAddIns',
+			'insert.addIns.myAddIns',
 		]);
 		tile('insert.text.textBox').click();
 		expect(requests).toStrictEqual([{ kind: 'command', value: 'textBox' }]);
