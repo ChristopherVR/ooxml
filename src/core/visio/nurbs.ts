@@ -42,23 +42,33 @@ export function normalizedNurbs(
 		lastKnot = knots.at(-1)!;
 	let initial = 1;
 	while (initial < knots.length && knots[initial] === knots[0]) initial++;
-	if (initial < degree + 1) {
-		report(
-			'unsupported-geometry',
-			'Periodic NURBS is unsupported; its geometry section was omitted.',
-		);
-		return;
-	}
 	if (initial > degree + 1) return invalid('NURBS first-knot multiplicity exceeds degree + 1');
+	const periodic = initial < degree + 1;
 	let repeats = 1;
 	for (let i = initial; i < knots.length; i++) {
 		repeats = knots[i] === knots[i - 1] ? repeats + 1 : 1;
 		if (repeats > degree || (i === knots.length - 1 && repeats > 1))
 			return invalid('Invalid NURBS internal or last-knot multiplicity');
 	}
-	// Visio stores n + 1 knots for n controls; the repeated end knots are implicit.
-	for (let i = 0; i < degree; i++) knots.push(lastKnot);
-	const points = flattenNurbs(controls, knots, degree, consume, consumeWork);
+	let evalControls: readonly NurbsControl[] = controls;
+	let evalKnots: number[];
+	if (periodic) {
+		// Periodic Visio NURBS wraps the first `degree` controls and extends the n + 1
+		// knot sequence periodically across period = lastKnot - firstKnot (shifted to 0).
+		const count = controls.length;
+		const base = knots[0]!;
+		const period = lastKnot - base;
+		evalControls = [...controls, ...Array.from({ length: degree }, (_, i) => controls[i % count]!)];
+		evalKnots = Array.from({ length: count + 2 * degree + 1 }, (_, i) => {
+			const cycles = Math.floor(i / count);
+			return cycles * period + (knots[i % count]! - base);
+		});
+	} else {
+		// Visio stores n + 1 knots for n controls; the repeated end knots are implicit.
+		for (let i = 0; i < degree; i++) knots.push(lastKnot);
+		evalKnots = knots;
+	}
+	const points = flattenNurbs(evalControls, evalKnots, degree, consume, consumeWork, periodic);
 	if (!points) {
 		report(
 			'geometry-limit',
@@ -70,5 +80,10 @@ export function normalizedNurbs(
 		'geometry-approximation',
 		`${kind} was approximated by line segments with ${CURVE_TOLERANCE}-inch control-hull flatness; floating-point curve parity is not certified.`,
 	);
-	return points.map((p) => `L ${p.x === 0 ? 0 : p.x} ${p.y === 0 ? 0 : p.y}`).join(' ');
+	const fmt = (p: Point) => `${p.x === 0 ? 0 : p.x} ${p.y === 0 ? 0 : p.y}`;
+	if (periodic) {
+		const [first, ...rest] = points;
+		return `M ${fmt(first!)} ${rest.map((p) => `L ${fmt(p)}`).join(' ')} Z`;
+	}
+	return points.map((p) => `L ${fmt(p)}`).join(' ');
 }

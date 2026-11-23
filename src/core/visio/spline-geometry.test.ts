@@ -207,14 +207,28 @@ describe('cached contiguous Visio spline sequences', () => {
 			expect(run(move + rawStart + knot()).paths).toEqual([]);
 		}
 	});
-	it('rejects descending, repeated-end, empty and unsupported nonclamped knot vectors', () => {
+	it('rejects descending, repeated-end, and empty knot vectors', () => {
 		for (const rows of [
 			move + start({ B: 1, A: 0 }) + knot(),
 			move + start({ C: 0 }) + knot(),
 			move + start() + knot({ A: 1 }),
-			move + start({ A: 0.1 }) + knot({ A: 0.2 }),
 		])
 			expect(run(rows).paths).toEqual([]);
+	});
+	it('evaluates periodic SplineStart/SplineKnot sequences into a closed loop', () => {
+		const result = run(move + start({ A: 0.25 }) + knot({ A: 0.75 }));
+		expect(result.paths).toHaveLength(1);
+		const path = result.paths[0]!.path;
+		expect(path).toMatch(/M [^ ]+ [^ ]+ L .+ Z$/);
+		const points = vertices(path);
+		const loopMove = /M ([^ ]+) ([^ ]+) L/.exec(path);
+		expect(points.at(-1)).toEqual([Number(loopMove![1]), Number(loopMove![2])]);
+		expect(result.warnings).toEqual([
+			{
+				code: 'geometry-approximation',
+				message: expect.stringContaining('SplineStart/SplineKnot'),
+			},
+		]);
 	});
 	it('bounds cached tokens and coordinates before curve evaluation', () => {
 		for (const value of ['1e999', '9'.repeat(10000), '1+2', 'NaN'])

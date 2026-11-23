@@ -4,7 +4,7 @@ import { number, type Row, type Report } from './sheet';
 // Microsoft defines one cached control point per row, with implicit unit weights:
 // https://learn.microsoft.com/en-us/office/client-developer/visio/splinestart-row-geometry-section
 // https://learn.microsoft.com/en-us/office/client-developer/visio/splineknot-row-geometry-section
-// Only contiguous, cached, clamped sequences are supported. Never evaluate formulas.
+// Only contiguous, cached sequences are supported (clamped and periodic). Never evaluate formulas.
 export interface SplineResult {
 	path: string;
 	endX: number;

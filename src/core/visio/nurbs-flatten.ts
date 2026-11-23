@@ -30,6 +30,7 @@ export function flattenNurbs(
 	degree: number,
 	consume: () => void,
 	consumeWork: (units: number) => void,
+	periodic = false,
 ): NurbsPoint[] | undefined {
 	let work = 0;
 	const charge = (units: number) => {
@@ -40,16 +41,22 @@ export function flattenNurbs(
 		charge(controls.length + sourceKnots.length);
 		let points: Homogeneous[] = controls.map((p) => [p.x * p.weight, p.y * p.weight, p.weight]);
 		let knots = [...sourceKnots];
-		// Expand each internal knot to degree multiplicity. Refined spans are Beziers.
-		const internal = [...new Set(knots.slice(degree + 1, -degree - 1))];
-		for (const u of internal) {
+		const uStart = sourceKnots[degree]!;
+		const uEnd = sourceKnots[controls.length]!;
+		// Expand each active knot to degree multiplicity. Refined spans are Beziers.
+		// Periodic curves also refine their domain endpoints uStart and uEnd.
+		const refineKnots = periodic
+			? [...new Set(knots.slice(degree, -degree))]
+			: [...new Set(knots.slice(degree + 1, -degree - 1))];
+		for (const u of refineKnots) {
 			charge(knots.length);
 			let multiplicity = knots.filter((k) => k === u).length;
 			while (multiplicity < degree) {
 				charge(points.length + knots.length + degree * 4);
 				if (points.length >= MAX_REFINED_CONTROLS) throw failure;
 				let span = degree;
-				while (span < points.length - 1 && knots[span + 1]! <= u) span++;
+				const maxSpan = periodic ? knots.length - 2 : points.length - 1;
+				while (span < maxSpan && knots[span + 1]! <= u) span++;
 				const next: Homogeneous[] = new Array(points.length + 1);
 				for (let i = 0; i <= span - degree; i++) next[i] = points[i]!;
 				for (let i = span - multiplicity; i < points.length; i++) next[i + 1] = points[i]!;
@@ -64,6 +71,7 @@ export function flattenNurbs(
 			}
 		}
 		const output: NurbsPoint[] = [];
+		const maxOutput = periodic ? MAX_SEGMENTS + 1 : MAX_SEGMENTS;
 		const subdivide = (h: readonly Homogeneous[], depth: number): void => {
 			charge(h.length);
 			const p = h.map(project),
@@ -82,7 +90,7 @@ export function flattenNurbs(
 			const flat = p.every((q) => distance(q, a, b) <= CURVE_TOLERANCE);
 			// Retain at least four segments per span for consistent existing rendering.
 			if (depth >= 2 && flat) {
-				if (output.length >= MAX_SEGMENTS) throw failure;
+				if (output.length >= maxOutput) throw failure;
 				consume();
 				output.push(b);
 				return;
@@ -100,13 +108,37 @@ export function flattenNurbs(
 			subdivide(left, depth + 1);
 			subdivide(right.reverse(), depth + 1);
 		};
+		let startPoint: NurbsPoint | undefined;
 		for (let span = degree; span < points.length; span++) {
 			charge(1);
-			if (knots[span + 1]! > knots[span]!) subdivide(points.slice(span - degree, span + 1), 0);
+			if (
+				knots[span + 1]! > knots[span]! &&
+				(!periodic || (knots[span]! >= uStart && knots[span + 1]! <= uEnd))
+			) {
+				const segment = points.slice(span - degree, span + 1);
+				if (periodic && !startPoint) {
+					const first = project(segment[0]!);
+					if (
+						!Number.isFinite(first.x) ||
+						!Number.isFinite(first.y) ||
+						Math.abs(first.x) > 1e9 ||
+						Math.abs(first.y) > 1e9
+					)
+						throw failure;
+					startPoint = first;
+					output.push(first);
+				}
+				subdivide(segment, 0);
+			}
 		}
 		if (output.length) {
-			const last = controls.at(-1)!;
-			output[output.length - 1] = { x: last.x, y: last.y };
+			if (periodic) {
+				if (output.length < 2 || !startPoint) return undefined;
+				output[output.length - 1] = { x: startPoint.x, y: startPoint.y };
+			} else {
+				const last = controls.at(-1)!;
+				output[output.length - 1] = { x: last.x, y: last.y };
+			}
 		}
 		return output.length ? output : undefined;
 	} catch (error) {

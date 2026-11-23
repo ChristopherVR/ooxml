@@ -457,9 +457,9 @@ rows. They are bounded to 256 controls, degrees 1-25, 2,048 output segments and
 2 million weighted refinement/subdivision work units per curve. The package default
 `maxCurveWork` is 20 million aggregate units, checked during refinement and subdivision.
 Maximum degree and control counts are independent ceilings and may not be combined
-within the work budget. Only clamped, nondecreasing compact knot vectors are supported;
-missing numeric caches, malformed order and unsupported nonclamped/periodic
-sequences omit the complete geometry section with diagnostics. Approximation uses
+within the work budget. Clamped and periodic nondecreasing compact knot vectors are supported;
+missing numeric caches, malformed order and invalid knot multiplicities
+omit the complete geometry section with diagnostics. Approximation uses
 positive-weight homogeneous knot insertion and Bezier control-hull subdivision
 with a 0.0001-inch flatness threshold. This avoids fixed-sample aliasing, but
 floating-point fidelity is not certified. Generated analytic

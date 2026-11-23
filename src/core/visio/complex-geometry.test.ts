@@ -174,10 +174,18 @@ describe('bounded literal Visio complex geometry', () => {
 		expect(result.path).toBeUndefined();
 		expect(result.consumed).toBe(0);
 	});
-	it('explicitly reports periodic splines as unsupported', () => {
+	it('evaluates periodic NURBS into a closed loop with approximation diagnostic', () => {
 		const result = run('NURBSTo', 'NURBS(1,2,1,1,1,1,.25,1)', { values: { A: 0.75 } });
-		expect(result.path).toBeUndefined();
-		expect(result.warnings[0]!.message).toContain('Periodic');
+		expect(result.path).toBeDefined();
+		expect(result.path).toMatch(/^M .+ Z$/);
+		const startMatch = /^M ([^ ]+) ([^ ]+)/.exec(result.path!);
+		const start = [Number(startMatch![1]), Number(startMatch![2])];
+		const points = vertices(result.path!);
+		expect(points.at(-1)).toEqual(start);
+		expect(result.consumed).toBe(points.length);
+		expect(result.warnings).toEqual([
+			{ code: 'geometry-approximation', message: expect.stringContaining('control-hull flatness') },
+		]);
 	});
 	it('omits pathological curves when bounded sampling cannot reach its flatness target', () => {
 		const result = run('NURBSTo', 'NURBS(1,2,1,1,1e9,1e9,0,1)', { values: { X: 1e9, Y: 0 } });
