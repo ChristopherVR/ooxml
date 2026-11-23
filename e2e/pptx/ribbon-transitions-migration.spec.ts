@@ -136,11 +136,27 @@ test('Apply to All reaches other slides while a preset stays on the active slide
 test('Preview replays the transition on the stage without editing the deck', async ({ page }) => {
 	const host = await openTransitions(page);
 	await preset(host, 'Push').click();
+	await expect(preset(host, 'Push')).toHaveAttribute('aria-pressed', 'true');
 	const duration = host.locator('input[title="Transition duration in seconds"]');
 	await duration.fill('5');
 	await duration.blur();
+	await expect(duration).toHaveValue('5');
+	const stage = slideStage(page);
+	await stage.evaluate((element) => {
+		const marker = 'data-pptx-transition-preview';
+		const observer = new MutationObserver((records) => {
+			if (
+				element.getAttribute(marker) === 'push' ||
+				records.some((change) => change.oldValue === 'push')
+			) {
+				element.setAttribute('data-test-preview-played', 'push');
+				observer.disconnect();
+			}
+		});
+		observer.observe(element, { attributeFilter: [marker], attributeOldValue: true });
+	});
 	await host.getByRole('button', { name: 'Preview', exact: true }).click();
-	await expect(slideStage(page)).toHaveAttribute('data-pptx-transition-preview', 'push');
+	await expect(stage).toHaveAttribute('data-test-preview-played', 'push');
 	await expect(preset(host, 'Push')).toHaveAttribute('aria-pressed', 'true');
 });
 

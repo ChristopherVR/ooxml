@@ -122,14 +122,15 @@ describe('staged AI proposals across deck changes', () => {
 		const { container, viewer } = await openPanel();
 		const handler = viewer.getHandler();
 		viewer.toggleMasterNavigation();
-		container
-			.querySelector<HTMLButtonElement>('[data-testid="pptx-master-crud-addLayout"]')
-			?.click();
-		await vi.waitFor(() => {
-			if (viewer.getHandler() === handler) {
-				throw new Error('the layout is not inserted yet');
-			}
+		const addLayout = await vi.waitFor(() => {
+			const button = container.querySelector<HTMLButtonElement>(
+				'[data-testid="pptx-master-crud-addLayout"]',
+			);
+			if (!button || button.disabled) throw new Error('Insert Layout is not ready');
+			return button;
 		});
+		addLayout.click();
+		await vi.waitFor(() => expect(viewer.getHandler()).not.toBe(handler), { timeout: 8000 });
 		viewer.toggleMasterNavigation();
 
 		container.querySelector<HTMLButtonElement>('.pptxv-ai-proposal-btn.is-accept')?.click();
