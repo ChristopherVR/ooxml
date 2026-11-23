@@ -15,7 +15,7 @@
 		"package/ooxml-core/digest": 14336,
 		"package/ooxml-core/docx": 553984,
 		"package/ooxml-core/docx/embedded": 390144,
-		"package/ooxml-core/docx/layout": 247808,
+		"package/ooxml-core/docx/layout": 256000,
 		"package/ooxml-core/docx/load": 471040,
 		"package/ooxml-core/docx/ui": 342016,
 		"package/ooxml-core/drawingml": 70656,
