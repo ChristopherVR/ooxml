@@ -1,6 +1,11 @@
-// Page Layout tab: theme colours (read-only), margins, orientation, paper size, print area, the
-// Page Setup dialog and the Sheet Options (gridlines and headings, view and print).
-import type { PageSetup } from '../../index';
+// Page Layout tab: workbook themes (themes, colours, fonts), margins, orientation, paper size,
+// print area, the Page Setup dialog and the Sheet Options (gridlines and headings, view and print).
+import {
+	findThemeColorPreset,
+	findThemeFontPreset,
+	findThemePreset,
+	type PageSetup,
+} from '../../index';
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
 import { icon } from './icons';
@@ -46,17 +51,54 @@ const setPage = (ctx: EditorContext, patch: Partial<PageSetup>): void => {
 
 export function pageLayoutCommands(): Command[] {
 	return [
-		viewing({
+		editing({
+			id: 'page.themes',
+			label: 'Themes',
+			icon: icon('themes'),
+			lock: false,
+			run: (ctx, arg) => {
+				const t = target(ctx);
+				const preset = typeof arg === 'string' ? findThemePreset(arg) : undefined;
+				if (t && preset) {
+					t.session.setTheme(
+						{
+							colors: preset.colors,
+							majorFont: preset.majorFont,
+							minorFont: preset.minorFont,
+						},
+						`Theme: ${preset.label}`,
+					);
+				}
+			},
+		}),
+		editing({
 			id: 'page.theme-colors',
 			label: 'Colors',
 			icon: icon('themeColors'),
-			run: (ctx) =>
-				ctx.toast(
-					ctx.t(
-						'Theme colors are shown as read only; changing the workbook theme is not supported yet.',
-					),
-					'info',
-				),
+			lock: false,
+			run: (ctx, arg) => {
+				const t = target(ctx);
+				const preset = typeof arg === 'string' ? findThemeColorPreset(arg) : undefined;
+				if (t && preset) {
+					t.session.setTheme({ colors: preset.colors }, `Theme Colors: ${preset.label}`);
+				}
+			},
+		}),
+		editing({
+			id: 'page.theme-fonts',
+			label: 'Fonts',
+			icon: icon('themeFonts'),
+			lock: false,
+			run: (ctx, arg) => {
+				const t = target(ctx);
+				const preset = typeof arg === 'string' ? findThemeFontPreset(arg) : undefined;
+				if (t && preset) {
+					t.session.setTheme(
+						{ majorFont: preset.majorFont, minorFont: preset.minorFont },
+						`Theme Fonts: ${preset.label}`,
+					);
+				}
+			},
 		}),
 		editing({
 			id: 'page.margins',

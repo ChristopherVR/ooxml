@@ -1,5 +1,6 @@
 import type { ChartExSpace } from '../../chart/ex/model';
 import type { DocumentPropertiesPatch } from './doc-properties';
+import type { ThemePatch } from './theme';
 import type { DataTableRequest } from './data-table';
 import type { GoalSeekRequest, GoalSeekResult } from './goal-seek';
 import type { ScenarioDraft } from './scenarios';
@@ -436,6 +437,11 @@ export interface EditSession {
 	 * changed.
 	 */
 	setDocumentProperties(patch: DocumentPropertiesPatch): boolean;
+	/**
+	 * Changes the workbook theme's colour palette and/or scheme fonts as one undo step.
+	 * Returns whether anything changed.
+	 */
+	setTheme(patch: ThemePatch, label?: string): boolean;
 	/** `setCalcMode(enabled ? 'auto' : 'manual')`. */
 	setAutoRecalc(enabled: boolean): void;
 	/**

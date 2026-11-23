@@ -68,6 +68,7 @@ type BookSettings = Pick<
 	| 'properties'
 	| 'slicers'
 	| 'customViews'
+	| 'theme'
 >;
 const SETTING_KEYS = [
 	'structureLocked',
@@ -80,6 +81,8 @@ const SETTING_KEYS = [
 	'slicers',
 	// Replaced, never mutated, by the custom view edits.
 	'customViews',
+	// Replaced, never mutated, by `setTheme`, so the reference is the snapshot.
+	'theme',
 ] as const;
 
 function captureSettings(workbook: Workbook): BookSettings {

@@ -49,7 +49,9 @@ export function themePart(theme: ThemePalette, sourceXml: string | undefined): s
 	const themeElements = first(doc.documentElement, 'themeElements', NS.a);
 	const scheme = first(themeElements, 'clrScheme', NS.a);
 	if (!scheme) return defaultThemeXml(theme);
+	const slotSet = new Set<string>(THEME_COLOR_SLOTS);
 	for (const slot of elements(scheme)) {
+		if (!slotSet.has(slot.localName ?? '')) continue;
 		for (const child of elements(slot)) slot.removeChild(child);
 		const color = doc.createElementNS(NS.a, 'a:srgbClr');
 		color.setAttribute('val', colorOf(theme, slot.localName ?? ''));
@@ -59,7 +61,15 @@ export function themePart(theme: ThemePalette, sourceXml: string | undefined): s
 	for (const [kind, face] of [
 		['majorFont', theme.majorFont],
 		['minorFont', theme.minorFont],
-	] as const)
-		first(first(fonts, kind, NS.a), 'latin', NS.a)?.setAttribute('typeface', face);
+	] as const) {
+		const group = first(fonts, kind, NS.a);
+		if (!group) continue;
+		let latin = first(group, 'latin', NS.a);
+		if (!latin) {
+			latin = doc.createElementNS(NS.a, 'a:latin');
+			group.insertBefore(latin, group.firstChild);
+		}
+		latin.setAttribute('typeface', face);
+	}
 	return `${XML_HEADER}${buildXml(doc).replace(/^<\?xml[^>]*\?>\s*/, '')}`;
 }

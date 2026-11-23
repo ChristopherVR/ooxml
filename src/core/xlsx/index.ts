@@ -7,6 +7,7 @@ export * from './address';
 export * from './address-r1c1';
 export * from './cells';
 export * from './workbook';
+export * from './theme-presets';
 export * from './styles';
 export * from './cell-styles';
 export * from './time-period';

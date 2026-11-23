@@ -31,12 +31,6 @@ export const MESSAGE_STRINGS: Translations = {
 		'Este formato de imagen no es compatible. Use PNG, JPEG, GIF, BMP o WebP.',
 		'不支持此图片格式。请使用 PNG、JPEG、GIF、BMP 或 WebP。',
 	],
-	'Theme colors are shown as read only; changing the workbook theme is not supported yet.': [
-		"Les couleurs du thème sont en lecture seule ; la modification du thème du classeur n'est pas encore prise en charge.",
-		'Designfarben werden schreibgeschützt angezeigt; das Ändern des Arbeitsmappendesigns wird noch nicht unterstützt.',
-		'Los colores del tema son de solo lectura; aún no se admite cambiar el tema del libro.',
-		'主题颜色为只读；尚不支持更改工作簿主题。',
-	],
 	'Workbook structure is protected.': [
 		'La structure du classeur est protégée.',
 		'Die Arbeitsmappenstruktur ist geschützt.',

@@ -31,6 +31,7 @@ import { mergeScenarios } from './scenario-merge';
 import * as customViews from './custom-views';
 import * as sparklineGrouping from './sparkline-grouping';
 import * as docProps from './doc-properties';
+import * as themeEdits from './theme';
 import * as drawings from './drawings';
 import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
@@ -364,6 +365,7 @@ export function createEditSession(
 		deleteCustomView: (guid) => customViews.deleteCustomView(ctx, guid),
 		setCalcMode: (mode) => calcMode.setCalcMode(ctx, mode),
 		setDocumentProperties: (patch) => docProps.setDocumentProperties(ctx, patch),
+		setTheme: (patch, label) => themeEdits.setTheme(ctx, patch, label),
 		setAutoRecalc: (enabled) => calcMode.setCalcMode(ctx, enabled ? 'auto' : 'manual'),
 		autoRecalc: () => autoRecalc && calcMode.calcModeOf(workbook) === 'auto',
 		calculateNow(options) {

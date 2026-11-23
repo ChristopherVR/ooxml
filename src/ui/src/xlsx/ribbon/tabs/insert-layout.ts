@@ -2,7 +2,7 @@
 import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
 import { CHART_TYPES } from '../../commands/insert';
 import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
-import { themePaletteItems } from 'ooxml-core/xlsx/ui';
+import { themeFontItems, themePaletteItems, themePresetItems } from 'ooxml-core/xlsx/ui';
 
 const sep: RibbonMenuItem = { separator: true };
 
@@ -147,7 +147,11 @@ export function pageLayoutTab(): RibbonTab {
 			{
 				id: 'themes',
 				label: 'Themes',
-				controls: [{ kind: 'gallery', command: 'page.theme-colors', items: themePaletteItems }],
+				controls: [
+					{ kind: 'gallery', command: 'page.themes', items: themePresetItems },
+					{ kind: 'gallery', command: 'page.theme-colors', items: themePaletteItems },
+					{ kind: 'gallery', command: 'page.theme-fonts', items: themeFontItems },
+				],
 			},
 			{
 				id: 'page-setup',

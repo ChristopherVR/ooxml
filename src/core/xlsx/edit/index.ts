@@ -61,6 +61,7 @@ export {
 	type CalculatedSheet,
 } from './calc-results';
 export type { DocumentPropertiesPatch } from './doc-properties';
+export type { ThemePatch } from './theme';
 export type { ExternalChange } from './external';
 export { shiftRange, shiftSpan, subtractRange, type Axis, type AxisShift } from './range-math';
 export type {
