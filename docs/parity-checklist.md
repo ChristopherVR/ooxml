@@ -760,9 +760,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Editing and slide show
 
-- [ ] **P2** Tab and Shift+Tab in a text box: Tab types a tab character and Shift+Tab keeps the
-      caret in the text box (all five bindings). Open: Tab at the start of a bulleted paragraph
-      types a tab instead of demoting it to the next list level, and Shift+Tab does not promote.
+- [x] **P2** Tab and Shift+Tab in a text box: Tab at the start of a bulleted or numbered
+      paragraph (or across a multi-paragraph bullet selection) demotes its list level (up to 8),
+      Shift+Tab promotes it (down to 0), and Tab elsewhere inserts a tab character while Shift+Tab
+      keeps the caret in the text box, in all five bindings (`src/ui/src/pptx/render/inline-list-tab.ts`,
+      `inline-list-controller.ts`, `inline-list-tab.test.ts` and per-binding regressions).
 - [x] **P1** Table cells are edited as rich text with each run's markup kept (hyperlinks, fields
       until their own text is edited, theme colours and transforms, untyped run properties):
       Enter adds a paragraph, Tab/Shift+Tab and edge arrows move between cells, Tab in the last
