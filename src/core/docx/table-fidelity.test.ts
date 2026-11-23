@@ -149,10 +149,15 @@ describe('table grid, merge, border, shading and style fidelity', () => {
 		expect(await loaded.save()).toEqual(original);
 	});
 
-	it('rejects silently dropping a direct edit to table-level descriptive properties', async () => {
+	it('persists a direct edit to table-level descriptive properties through save and reload', async () => {
 		const { table, loaded } = await loadTable();
 		table.widthTwips = twips(9999);
-		await expect(loaded.save()).rejects.toThrow('Cannot edit table grid widths, width, alignment');
+		const saved = await loaded.save();
+		const zip = await JSZip.loadAsync(saved);
+		const xml = (await zip.file('word/document.xml')?.async('string')) ?? '';
+		expect(xml).toContain('<w:tblW w:w="9999" w:type="dxa"/>');
+		const reopened = await loadDocx(saved);
+		expect(expectTable(reopened.model.blocks[0]).widthTwips).toBe(9999);
 	});
 
 	it('writes a direct edit to a cell width of a merged table instead of dropping it', async () => {

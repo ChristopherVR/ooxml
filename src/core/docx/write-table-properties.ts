@@ -24,7 +24,7 @@ const ROW_ORDER = [
 	'del',
 	'trPrChange',
 ];
-const TABLE_ORDER = [
+export const TABLE_ORDER = [
 	'tblStyle',
 	'tblpPr',
 	'tblOverlap',
@@ -116,7 +116,16 @@ export const CELL_ORDER = [
 	'cellMerge',
 	'tcPrChange',
 ];
-const CELL_BORDER_ORDER = ['top', 'start', 'left', 'bottom', 'end', 'right', 'insideH', 'insideV'];
+export const CELL_BORDER_ORDER = [
+	'top',
+	'start',
+	'left',
+	'bottom',
+	'end',
+	'right',
+	'insideH',
+	'insideV',
+];
 const CELL_SIDES = ['top', 'left', 'bottom', 'right'] as const;
 
 /** Patches only vertical alignment; undefined restores table/style default inheritance. */

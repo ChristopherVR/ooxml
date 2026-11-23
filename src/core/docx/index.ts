@@ -138,6 +138,20 @@ export {
 	type UncomparedDocumentPart,
 } from './compare/index';
 export { DEFAULT_TABLE_BORDERS } from './table-defaults';
+export {
+	setTableAlignment,
+	setTableBorders,
+	setTableGridWidths,
+	setTableIndent,
+	setTableLook,
+	setTableStyle,
+	setTableWidth,
+	updateTableProperties,
+	type TableBordersPatch,
+	type TableLookPatch,
+	type TablePropertiesPatch,
+	type TableWidthSpec,
+} from './table-properties-edit';
 export { fieldName } from './field-runs';
 export { isFieldLocked } from './field-lock';
 export { dateFieldResult, datePicture, formatWordDate } from './field-date';

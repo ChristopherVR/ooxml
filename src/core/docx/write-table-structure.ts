@@ -15,6 +15,7 @@ import {
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties';
+import { patchTableGrid, patchTableProperties } from './write-table-level-properties';
 import { orderChildren } from './element-order';
 import { replaceSlots } from './write-slots';
 import { children, first, makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
@@ -95,22 +96,6 @@ function patchCellLayout(doc: XmlDocument, tc: XmlElement, cell: TableCell, base
 	orderChildren(props, CELL_ORDER);
 	if (!Array.from(props.childNodes).some((node) => node.nodeType === 1) && !props.attributes.length)
 		tc.removeChild(props);
-}
-
-/** Brings `w:tblGrid` to the model's column widths, keeping the `gridCol` elements that remain. */
-function patchGrid(doc: XmlDocument, node: XmlElement, table: Table): void {
-	const grid = first(node, 'tblGrid');
-	if (!grid || !table.grid) return;
-	const old = children(grid, 'gridCol');
-	table.grid.forEach((width, index) => {
-		let column = old[index];
-		if (!column) {
-			column = makeW(doc, 'gridCol');
-			grid.appendChild(column);
-		}
-		if (column.getAttributeNS(WORD_NS, 'w') !== String(width)) set(column, 'w', String(width));
-	});
-	for (const extra of old.slice(table.grid.length)) grid.removeChild(extra);
 }
 
 /**
@@ -196,7 +181,8 @@ export function writeRestructuredTable(
 		return tr;
 	});
 	replaceSlots(node, oldRows, nextRows);
+	patchTableProperties(doc, table, node, base);
 	patchTableMargins(doc, table, node, base);
-	patchGrid(doc, node, table);
+	patchTableGrid(doc, node, table, base);
 	return node;
 }

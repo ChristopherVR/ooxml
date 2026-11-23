@@ -51,6 +51,12 @@ function validateCell(c: Checker, cell: TableCell): void {
 /** Validates table-level and cell-level properties; cell paragraphs are walked by the caller. */
 export function validateTable(c: Checker, table: Table): void {
 	c.unsigned('widthTwips', table.widthTwips, 'ST_TwipsMeasure');
+	c.check(
+		'widthPercent',
+		table.widthPercent,
+		(v) => typeof v === 'number' && Number.isFinite(v) && v > 0,
+		'must be a positive finite fraction',
+	);
 	c.signed('indentTwips', table.indentTwips, 'ST_SignedTwipsMeasure');
 	c.check(
 		'alignment',

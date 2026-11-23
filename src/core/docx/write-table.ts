@@ -9,6 +9,11 @@ import {
 	patchRowProperties,
 	patchTableMargins,
 } from './write-table-properties';
+import {
+	patchCellWidth,
+	patchTableGrid,
+	patchTableProperties,
+} from './write-table-level-properties';
 import { placeTableControl, unwrapDroppedControls } from './write-table-controls';
 import { syncBlockControls } from './write-block-placement';
 import { replaceSlots } from './write-slots';
@@ -30,17 +35,8 @@ export { canEditTableStructure };
 const layout = (table: Table) =>
 	table.rows.map((row) => row.map((cell) => cell.paragraphs.map((p) => p.id)));
 
-/** Table/cell descriptive fields this writer does not yet serialize back to XML. */
-const TABLE_DESCRIPTOR_KEYS = [
-	'grid',
-	'widthTwips',
-	'alignment',
-	'indentTwips',
-	'borders',
-	'style',
-	'look',
-] as const;
-const CELL_DESCRIPTOR_KEYS = ['gridSpan', 'verticalMerge', 'widthTwips'] as const;
+/** Cell merge fields the plain rectangular writer does not serialize back to XML. */
+const CELL_DESCRIPTOR_KEYS = ['gridSpan', 'verticalMerge'] as const;
 function pick(source: object, keys: readonly string[]): Record<string, unknown> {
 	const record = source as Record<string, unknown>;
 	const result: Record<string, unknown> = {};
@@ -48,20 +44,12 @@ function pick(source: object, keys: readonly string[]): Record<string, unknown> 
 	return result;
 }
 /**
- * Table grid/width/border/style and per-cell width/merge values render but cannot be edited yet.
- * Cell borders, shading, margins and vertical alignment have preservation-safe writers below.
+ * Guards against unsupported merge edits on tables that are not routed through the merge-aware
+ * restructurer. Table-level properties and cell width/borders/shading/margins/vAlign are patched.
  */
 function assertNoDescriptorEdits(table: Table, base: Table | undefined, layoutEdits = false): void {
-	if (!base) return;
-	const tableKeys = layoutEdits
-		? TABLE_DESCRIPTOR_KEYS.filter((key) => key !== 'grid')
-		: TABLE_DESCRIPTOR_KEYS;
-	if (JSON.stringify(pick(table, tableKeys)) !== JSON.stringify(pick(base, tableKeys)))
-		throw new Error(
-			'Cannot edit table grid widths, width, alignment, indent, borders, or style; only cell text and row/column structure changes are supported. The original DOCX package remains unchanged.',
-		);
+	if (!base || layoutEdits) return;
 	const baseCellById = new Map<string, TableCell>();
-	if (layoutEdits) return;
 	for (const row of base.rows)
 		for (const cell of row) {
 			const id = cell.paragraphs[0]?.id;
@@ -77,7 +65,7 @@ function assertNoDescriptorEdits(table: Table, base: Table | undefined, layoutEd
 				JSON.stringify(pick(source, CELL_DESCRIPTOR_KEYS))
 			)
 				throw new Error(
-					'Cannot edit table cell width or merge on an existing cell; cell text, borders, shading, margins and vertical alignment are supported. The original DOCX package remains unchanged.',
+					'Cannot edit table cell merge on an existing cell; cell text, width, borders, shading, margins and vertical alignment are supported. The original DOCX package remains unchanged.',
 				);
 		}
 }
@@ -126,6 +114,7 @@ export function writeTable(
 		);
 	}
 	assertNoDescriptorEdits(table, base);
+	patchTableProperties(doc, table, node, base);
 	patchTableMargins(doc, table, node, base);
 	const structural = base && JSON.stringify(layout(table)) !== JSON.stringify(layout(base));
 	if (structural && !canEditTableStructure(node))
@@ -210,6 +199,7 @@ export function writeTable(
 			)
 				throw new Error('Moving paragraphs between table cells is not supported.');
 			const tc = source?.cell ?? makeW(doc, 'tc');
+			if (source) patchCellWidth(doc, tc, cell.widthTwips, source.model.widthTwips);
 			patchCellBorders(doc, tc, cell.borders, source?.model.borders);
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);
@@ -255,8 +245,11 @@ export function writeTable(
 		nextRows,
 		nextRows.map((_, ri) => table.rowProperties?.[ri]?.contentControl),
 	);
+	const gridEdited =
+		Boolean(table.grid?.length) && JSON.stringify(table.grid) !== JSON.stringify(base?.grid);
 	const grid = first(node, 'tblGrid');
-	if (
+	if (gridEdited) patchTableGrid(doc, node, table, base);
+	else if (
 		structural &&
 		grid &&
 		(width !== base.rows[0]?.length || [...columns].some(([next, old]) => next !== old))

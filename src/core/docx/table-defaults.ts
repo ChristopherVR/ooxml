@@ -3,9 +3,27 @@
 // table, and "Insert Table" gives new tables single-line borders on every edge.
 import type { Table } from './model';
 import type { StJcTable } from './generated/wml-simple-types';
-import type { TableBorderSide, TableBorders, TableCellMargins } from './table-model';
+import type { TableBorderSide, TableBorders, TableCellMargins, TableLook } from './table-model';
 import { eighthPoints } from './units';
 import { makeW, WORD_NS, type XmlDocument, type XmlElement } from './xml';
+
+export const TABLE_LOOK_FLAGS = [
+	['firstRow', 0x0020],
+	['lastRow', 0x0040],
+	['firstColumn', 0x0080],
+	['lastColumn', 0x0100],
+	['noHBand', 0x0200],
+	['noVBand', 0x0400],
+] as const;
+
+const DEFAULT_TABLE_LOOK: TableLook = {
+	firstRow: true,
+	lastRow: false,
+	firstColumn: true,
+	lastColumn: false,
+	noHBand: false,
+	noVBand: true,
+};
 
 const SINGLE: TableBorderSide = { style: 'single', sizeEighthPoints: eighthPoints(4) };
 
@@ -65,11 +83,24 @@ export function buildMargins(
 }
 
 /** The `w:tblPr/w:jc` value: the exact `justification` while `alignment` still matches it, else `alignment`. */
-function tableJustification(table: Table): StJcTable | undefined {
+export function tableJustification(table: Table): StJcTable | undefined {
 	const { alignment, justification } = table;
 	const implied =
 		justification === 'start' ? 'left' : justification === 'end' ? 'right' : justification;
 	return justification && implied === alignment ? justification : alignment;
+}
+
+/** Builds a `w:tblLook` element with both the packed `w:val` bitmask and explicit flag attributes. */
+export function buildTableLook(doc: XmlDocument, look: TableLook): XmlElement {
+	let mask = 0;
+	for (const [name, bit] of TABLE_LOOK_FLAGS) if (look[name]) mask |= bit;
+	const element = makeW(doc, 'tblLook');
+	setW(element, 'val', mask.toString(16).toUpperCase().padStart(4, '0'));
+	for (const [name] of TABLE_LOOK_FLAGS) {
+		const value = look[name];
+		if (value !== undefined) setW(element, name, value ? '1' : '0');
+	}
+	return element;
 }
 
 /** Number of grid columns a table spans (the widest row, counting horizontal merges). */
@@ -124,21 +155,12 @@ export function buildNewTableProperties(
 		setW(indent, 'type', 'dxa');
 		tblPr.appendChild(indent);
 	}
-	if (table.borders) tblPr.appendChild(buildBorders(doc, table.borders, 'tblBorders'));
+	const borders = table.borders && buildBorders(doc, table.borders, 'tblBorders');
+	if (borders?.childNodes.length) tblPr.appendChild(borders);
 	const margins = table.cellMargins && buildMargins(doc, table.cellMargins, 'tblCellMar');
 	if (margins) tblPr.appendChild(margins);
-	const look = makeW(doc, 'tblLook');
-	const lookAttributes: [string, string][] = [
-		['val', '04A0'],
-		['firstRow', '1'],
-		['lastRow', '0'],
-		['firstColumn', '1'],
-		['lastColumn', '0'],
-		['noHBand', '0'],
-		['noVBand', '1'],
-	];
-	for (const [name, value] of lookAttributes) setW(look, name, value);
-	tblPr.appendChild(look);
+	const hasLook = table.look && TABLE_LOOK_FLAGS.some(([name]) => table.look?.[name] !== undefined);
+	tblPr.appendChild(buildTableLook(doc, hasLook ? table.look! : DEFAULT_TABLE_LOOK));
 	const tblGrid = makeW(doc, 'tblGrid');
 	for (const value of newTableGridWidths(table, contentWidthTwips)) {
 		const column = makeW(doc, 'gridCol');
