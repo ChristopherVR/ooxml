@@ -139,6 +139,28 @@ describe('pictures in pagination', () => {
 });
 
 describe('text wrapping around floats', () => {
+	it('wraps a heading moved to the same page as a later margin-relative anchor', () => {
+		const doc = input([
+			{ kind: 'paragraph', id: 'first', runs: [{ text: 'First page' }] },
+			{ kind: 'paragraph', id: 'heading', pageBreakBefore: true, runs: [{ text: 'Heading' }] },
+			anchoredIn('box', {
+				relativeFromH: 'margin',
+				relativeFromV: 'margin',
+				offsetYPx: 7.56,
+				wrap: 'square',
+				wrapText: 'bothSides',
+			}),
+		]);
+		const result = layoutDocument(doc, measurer);
+		const page = at(result.pages, 1);
+		const heading = at(at(page.columns, 0).blocks, 0);
+		expect(heading.blockId).toBe('heading');
+		expect(page.floats?.[0]).toMatchObject({ blockId: 'box', xPx: 100, yPx: 107.56 });
+		expect((heading as import('./result').LayoutParagraphBox).lines[0]?.fragments[0]?.xPx).toBe(
+			112,
+		);
+	});
+
 	const words = Array.from({ length: 120 }, () => 'word').join(' ');
 	const lineRights = (result: ReturnType<typeof layoutDocument>) => {
 		const block = at(at(at(result.pages, 0).columns, 0).blocks, 0) as {

@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import { loadDocx, type DocumentModel, type HeaderFooterContent } from '../index';
+import { loadDocx, signedTwips, type DocumentModel, type HeaderFooterContent } from '../index';
+import { letterheadFixture } from '../test-support/letterhead-fixture';
 import { layoutDocumentModel } from './layout';
 import { createFakeMeasurer } from './measure';
 import type { LayoutPageBox } from './result';
@@ -80,4 +81,24 @@ describe('headerFooterSlotForPage', () => {
 			'default',
 		);
 	});
+});
+
+it('clears the first-page header paragraphs without counting the floating letterhead shapes', async () => {
+	const { model } = await loadDocx(await letterheadFixture());
+	const section = model.sections![0]!;
+	const header = section.headers!.first!;
+	header.blocks.unshift(
+		...Array.from({ length: 10 }, (_, index) => ({
+			type: 'paragraph' as const,
+			id: `blank-${index}`,
+			runs: [],
+		})),
+	);
+	const measurer = { widthOf: (text: string) => text.length * 10, lineHeightOf: () => 16 };
+	const first = layoutDocumentModel(model, measurer).pages[0]!;
+	expect(first.marginTopPx).toBeCloseTo(708 / 15 + 11 * 16);
+	expect(first.columns[0]?.blocks[0]?.yPx).toBe(0);
+
+	section.marginTopTwips = signedTwips(-1440);
+	expect(layoutDocumentModel(model, measurer).pages[0]?.marginTopPx).toBe(96);
 });

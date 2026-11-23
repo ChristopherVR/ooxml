@@ -1,5 +1,6 @@
 import type { TextMeasurer } from './measure';
-import { gluedCarry, type BreakToken } from './text-breaks';
+import { gluedCarry, tokenPosition, type BreakToken, type TokenPosition } from './text-breaks';
+import { fittingWordPrefix } from './word-overflow';
 import type { LayoutFragment, LayoutLine, LayoutParagraphFrame } from './result';
 import type { LayoutParagraph } from './input';
 import { NO_TWIPS, twipsToPx } from './units';
@@ -72,7 +73,7 @@ export function layoutParagraph(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	lineBox?: LineBoxFn,
-	startToken = 0,
+	startToken: TokenPosition = 0,
 ): ParagraphLayoutResult {
 	if (lineBox)
 		return measureParagraph(paragraph, contentWidthPx, measurer, note, lineBox, startToken);
@@ -94,13 +95,27 @@ function measureParagraph(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	lineBox?: LineBoxFn,
-	startToken = 0,
+	startToken: TokenPosition = 0,
 ): ParagraphLayoutResult {
 	const { leftPx, rightPx, firstLineExtraPx: initialIndent } = resolveIndents(paragraph);
 	const firstLineExtraPx = startToken ? 0 : initialIndent;
 	const bodyWidth = Math.max(1, contentWidthPx - leftPx - rightPx);
 	const fonts = paragraph.runs.map(fontOf);
 	const { tokens, runOffsets } = tokenizeParagraph(paragraph);
+	const startIndex = typeof startToken === 'number' ? startToken : startToken.index;
+	const originalWordStarts = new Map<number, number>();
+	const resumeWord = (index: number, offset: number) => {
+		const word = tokens[index];
+		if (word?.kind !== 'word') return;
+		const { glue: _glue, ...rest } = word;
+		originalWordStarts.set(index, originalWordStarts.get(index) ?? word.sourceStart);
+		tokens[index] = {
+			...rest,
+			sourceStart: word.sourceStart + offset,
+			text: word.text.slice(offset),
+		};
+	};
+	if (typeof startToken !== 'number') resumeWord(startToken.index, startToken.offset);
 	const globalOffset = (token: BreakToken, advance = 0) => {
 		const run = expectDefined(paragraph.runs[token.runIndex], 'source run');
 		const length = sourceLengthOf(run);
@@ -120,7 +135,6 @@ function measureParagraph(
 	const lines: LayoutLine[] = [];
 	const pageBreakAfterLine = new Set<number>();
 	const columnBreakAfterLine = new Set<number>();
-	let widthOverflowNoted = false;
 
 	let placed: PlacedToken[] = [];
 	let lineWidthPx = 0;
@@ -130,8 +144,13 @@ function measureParagraph(
 	let jump: { index: number; shiftPx: number } | undefined;
 	// How far a line holding a positional tab relative to the margins may reach: to the margin.
 	let marginReachPx = 0;
-	let tokenCursor = startToken;
-	let firstToken = startToken;
+	let tokenCursor: TokenPosition = startToken;
+	let firstToken: TokenPosition = startToken;
+	const wordPosition = (index: number, token: BreakToken, advance = 0): TokenPosition => {
+		const start = originalWordStarts.get(index) ?? token.sourceStart;
+		const offset = token.sourceStart - start + advance;
+		return tokenPosition(index, offset);
+	};
 
 	// Per-line boxes around wrapped floats, computed when each line starts (its top is then known).
 	const boxes: {
@@ -259,8 +278,12 @@ function measureParagraph(
 			fragments,
 			sourceStart: start,
 			sourceEnd: end,
-			nextToken: tokenCursor,
-			firstToken,
+			...(typeof tokenCursor === 'number'
+				? { nextToken: tokenCursor }
+				: { nextToken: tokenCursor.index, nextTokenOffset: tokenCursor.offset }),
+			...(typeof firstToken === 'number'
+				? { firstToken }
+				: { firstToken: firstToken.index, firstTokenOffset: firstToken.offset }),
 			...(gapBeforePx ? { gapBeforePx } : {}),
 		});
 		runningY += gapBeforePx + heightPx;
@@ -273,7 +296,7 @@ function measureParagraph(
 		marginReachPx = 0;
 	}
 
-	for (let tokenIndex = startToken; tokenIndex < tokens.length; tokenIndex++) {
+	for (let tokenIndex = startIndex; tokenIndex < tokens.length; tokenIndex++) {
 		const token = expectDefined(tokens[tokenIndex], 'token index');
 		tokenCursor = tokenIndex + 1;
 		if (token.kind === 'lineBreak') {
@@ -297,7 +320,7 @@ function measureParagraph(
 						? 0.5
 						: 0
 				: 0;
-		const advance = width * (1 - markerFactor);
+		let advance = width * (1 - markerFactor);
 		// Automatic East Asian/Western spacing follows the word; it never decides whether it fits.
 		const spacePx = token.kind === 'word' ? (token.spaceAfterPx ?? 0) : 0;
 		const positional = token.kind === 'tab' && paragraph.runs[token.runIndex]?.positionalTab;
@@ -348,7 +371,18 @@ function measureParagraph(
 		// pre-subtracted here.
 		const squeezePx =
 			effectiveAlign === 'justify' && token.kind === 'word' ? lineSpacePx * SPACE_SHRINK : 0;
-		const fits = lineWidthPx + (token.kind === 'tab' ? width : advance) <= limit + squeezePx;
+		// A nearly fitting final line of a justified text box should not turn into
+		// a stretched nonfinal line. Leave normal word-break decisions alone.
+		const wordTolerance =
+			effectiveAlign === 'justify' &&
+			token.kind === 'word' &&
+			!hole &&
+			tokenIndex === tokens.length - 1
+				? (paragraph.wordFitTolerancePx ?? 0)
+				: 0;
+		const fits =
+			lineWidthPx + (token.kind === 'tab' ? width : advance) <=
+			limit + Math.max(squeezePx, wordTolerance);
 		const wouldFit =
 			fits || placed.every((placed) => paragraph.runs[placed.token.runIndex]?.synthetic);
 		// A word that no longer fits before a picture continues after it, on the same line.
@@ -377,17 +411,48 @@ function measureParagraph(
 				continue;
 			}
 			tokenCursor = tokenIndex;
+			if (token.kind === 'word') tokenCursor = wordPosition(tokenIndex, token);
 			flushLine(false, undefined);
-			tokenCursor = tokenIndex + 1;
-			if (width > availableWidth(lines.length) && !widthOverflowNoted) {
-				widthOverflowNoted = true;
-				note(
-					'A word wider than its line/column was not split mid-word; it overflows the line box.',
+			tokenIndex--;
+			continue;
+		}
+		if (
+			token.kind === 'word' &&
+			!marker &&
+			!paragraph.runs[token.runIndex]?.synthetic &&
+			!hanging
+		) {
+			const available = jump
+				? availableWidth(lineIndex) - jump.shiftPx - lineWidthPx
+				: limit - lineWidthPx;
+			if (
+				width > available + wordTolerance &&
+				placed.every(({ token }) => paragraph.runs[token.runIndex]?.synthetic)
+			) {
+				const prefix = fittingWordPrefix(token.text, available + wordTolerance, (text) =>
+					tokenWidth({ ...token, text }),
 				);
+				if (prefix.length < token.text.length) {
+					if (!placed.length) firstToken = wordPosition(tokenIndex, token);
+					placed.push({
+						token: { ...token, text: prefix },
+						widthPx: tokenWidth({ ...token, text: prefix }),
+					});
+					tokenCursor = wordPosition(tokenIndex, token, prefix.length);
+					flushLine(false, undefined);
+					resumeWord(tokenIndex, prefix.length);
+					// The remainder begins a new line. Fit its prefix there without
+					// measuring the entire remainder again.
+					widths[tokenIndex] = Infinity;
+					tokenIndex--;
+					continue;
+				}
+				width = advance = tokenWidth(token);
+				widths[tokenIndex] = width;
 			}
 		}
 		if (token.kind === 'space' && placed.length === 0) continue; // leading space at wrap point is dropped
-		if (!placed.length) firstToken = tokenIndex;
+		if (!placed.length) firstToken = wordPosition(tokenIndex, token);
 		placed.push({
 			token,
 			widthPx: width,

@@ -72,7 +72,14 @@ export function sameExclusions(a: Map<number, Exclusion[]>, b: Map<number, Exclu
 		JSON.stringify(
 			[...map].map(([page, list]) => [
 				page,
-				list.map((item) => [Math.round(item.xPx), Math.round(item.yPx), item.topAndBottom]),
+				list.map((item) => [
+					Math.round(item.xPx),
+					Math.round(item.yPx),
+					Math.round(item.widthPx),
+					Math.round(item.heightPx),
+					item.topAndBottom,
+					item.bothSides,
+				]),
 			]),
 		);
 	return key(a) === key(b);

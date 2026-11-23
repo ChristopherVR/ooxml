@@ -160,7 +160,7 @@ describe('Thai, Lao, Khmer and Myanmar line breaking', () => {
 		});
 
 	it('does not break between Thai and an adjacent Latin word', () => {
-		expect(lines([{ text: 'กabcd' }], {}, 40)).toEqual(['กabcd']);
+		expect(lines([{ text: 'a กabcd' }], {}, 50)).toEqual(['a', 'กabcd']);
 	});
 
 	it('breaks after a zero width space', () => {

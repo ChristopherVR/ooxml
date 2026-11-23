@@ -2,7 +2,8 @@ import type { PageCursor } from './page-cursor';
 import { adjustForWidowOrphan, widowControlEnabled } from './keep-rules';
 import type { ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutParagraph } from './input';
-import type { LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
+import type { LayoutColumnBox, LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
+import { tokenPosition, type TokenPosition } from './text-breaks';
 import { expectDefined } from '../expect-defined';
 
 export interface ParagraphPlacement {
@@ -22,8 +23,9 @@ export interface ParagraphPlacement {
 	 * start; 0 when neither `keepNext` nor `keepLines` apply.
 	 */
 	requiredTogetherPx: number;
-	/** Lays unconsumed tokens out at the cursor's new column width. */
-	reflow?: (startToken: number) => ParagraphLayoutResult;
+	/** Lays unconsumed tokens out at the cursor's new column and page position. */
+	reflow?: (startToken: TokenPosition, spacingBeforePx: number) => ParagraphLayoutResult;
+	hasExclusions?: (pageIndex: number) => boolean;
 	/** Notes referenced by these lines, laid out at the cursor's current column width. */
 	footnotes?: (lines: readonly LayoutLine[], includeUnanchored: boolean) => LayoutFootnoteBox[];
 }
@@ -71,7 +73,8 @@ export function placeParagraph(
 		};
 	};
 	let layout = trailingBreakLine(placement.layout);
-	let width = cursor.columnWidthPx;
+	let column: LayoutColumnBox = cursor.column;
+	let pageIndex = cursor.page.index;
 	if (paragraph.pageBreakBefore && cursor.hasPageContent) cursor.newPage();
 	if (requiredTogetherPx > 0 && placement.footnotes) {
 		cursor.holdFootnotes(
@@ -93,7 +96,7 @@ export function placeParagraph(
 
 	const widow = widowControlEnabled(paragraph.widowControl);
 	let lineCursor = 0;
-	let nextToken = 0;
+	let nextToken: TokenPosition = 0;
 	let firstSegment = true;
 	const lineHeight = (line: LayoutLine, index: number) =>
 		placement.trimLeadingColumnBreak &&
@@ -116,10 +119,18 @@ export function placeParagraph(
 		return notes;
 	};
 	const reflowIfNeeded = () => {
-		if (!reflow || cursor.columnWidthPx === width) return;
-		layout = trailingBreakLine(reflow(nextToken));
-		lineCursor = 0;
-		width = cursor.columnWidthPx;
+		if (!reflow || column === cursor.column) return;
+		if (firstSegment && dropsSpaceBefore()) spacingBeforePx = 0;
+		if (
+			column.widthPx !== cursor.columnWidthPx ||
+			placement.hasExclusions?.(pageIndex) ||
+			placement.hasExclusions?.(cursor.page.index)
+		) {
+			layout = trailingBreakLine(reflow(nextToken, firstSegment ? spacingBeforePx : 0));
+			lineCursor = 0;
+		}
+		column = cursor.column;
+		pageIndex = cursor.page.index;
 	};
 	reflowIfNeeded();
 	if (!layout.lines.length) {
@@ -216,7 +227,9 @@ export function placeParagraph(
 			(firstSegment ? spacingBeforePx : 0) + segmentHeight + (isFinal ? spacingAfterPx : 0);
 		cursor.place(box, advance, firstSegment ? spacingBeforePx : 0);
 		for (const item of committedNotes) placedNotes.add(item.id);
-		nextToken = layout.lines[lineCursor + placedCount - 1]?.nextToken ?? nextToken;
+		const lastPlaced = layout.lines[lineCursor + placedCount - 1];
+		if (lastPlaced?.nextToken !== undefined)
+			nextToken = tokenPosition(lastPlaced.nextToken, lastPlaced.nextTokenOffset);
 		lineCursor += placedCount;
 		firstSegment = false;
 		if (forced === 'page') cursor.newPage();

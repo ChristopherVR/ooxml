@@ -9,10 +9,11 @@ import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout'
 import { layoutRow, stackParagraphs } from './table-layout';
 import { suppressesSpacing } from './keep-rules';
 import type { TextMeasurer } from './measure';
-import type { LayoutBlock, LayoutSection, LayoutNote } from './input';
+import type { LayoutBlock, LayoutSection, LayoutNote, StoryMargins } from './input';
 import type { LayoutFootnoteBox, LayoutLine, LayoutPageBox } from './result';
 import { lineBoxesFor, type Exclusion } from './wrap';
 import { expectDefined } from '../expect-defined';
+import { tokenPosition, type TokenPosition } from './text-breaks';
 
 /** Resumes a section part-way and observes each placed block (incremental layout). */
 export interface SectionFlowResume {
@@ -45,6 +46,7 @@ export class SectionFlow {
 		continueAt?: number,
 		private readonly balance?: { pageIndex: number; heightPx: number },
 		private readonly resume?: SectionFlowResume,
+		storyMargins?: StoryMargins,
 	) {
 		const noteColumns =
 			section.footnoteColumns ??
@@ -80,13 +82,19 @@ export class SectionFlow {
 			const source = sources.get(box.id);
 			if (!source) return box;
 			const ids = new Set(box.paragraphs.map((paragraph) => paragraph.blockId));
-			const key = JSON.stringify([box.id, width, [...ids], box.sourceTokenStarts]);
+			const key = JSON.stringify([
+				box.id,
+				width,
+				[...ids],
+				box.sourceTokenStarts,
+				box.sourceTokenOffsets,
+			]);
 			const cached = reflowCache.get(key);
 			if (cached) return { ...cached, continued: !!box.continued };
 			const paragraphs = source.paragraphs
 				.filter((paragraph) => ids.has(paragraph.id))
 				.map((paragraph) =>
-					box.sourceTokenStarts?.[paragraph.id]
+					box.sourceTokenStarts?.[paragraph.id] || box.sourceTokenOffsets?.[paragraph.id]
 						? { ...paragraph, spacingBeforeTwips: NO_TWIPS }
 						: paragraph,
 				);
@@ -96,7 +104,12 @@ export class SectionFlow {
 				measurer,
 				note,
 				0,
-				new Map(Object.entries(box.sourceTokenStarts ?? {})),
+				new Map(
+					Object.entries(box.sourceTokenStarts ?? {}).map(([id, index]) => [
+						id,
+						tokenPosition(index, box.sourceTokenOffsets?.[id]),
+					]),
+				),
 			);
 			const result = { ...box, yPx: 0, heightPx: stacked.heightPx, paragraphs: stacked.boxes };
 			reflowCache.set(key, result);
@@ -180,6 +193,7 @@ export class SectionFlow {
 			reflow,
 			section.legacyFootnoteColumns,
 			resume?.pageInSection ?? 0,
+			storyMargins,
 		);
 		this.referenceFootnotes = createReferenceFootnotes(
 			() => this.cursor.footnoteWidthPx,
@@ -263,29 +277,32 @@ export class SectionFlow {
 	}
 
 	/**
-	 * The paragraph laid out around wrapped pictures on the current page, when any of them reaches
-	 * the paragraph's lines; lines continuing onto a later page keep these widths.
+	 * Lay the remaining paragraph around the wrapped objects on the current page.
 	 */
-	private wrappedLayout(index: number, spacingBeforePx: number): ParagraphLayoutResult | undefined {
+	private layoutAtCursor(
+		index: number,
+		spacingBeforePx: number,
+		start: TokenPosition = 0,
+	): ParagraphLayoutResult {
 		const page = this.cursor.page;
 		const exclusions = this.exclusions?.get(page.index);
-		if (!exclusions) return undefined;
-		const plain = this.paragraphLayout(index);
+		const block = this.blocks[index] as Extract<LayoutBlock, { kind: 'paragraph' }>;
+		const width = this.cursor.columnWidthPx;
+		const plain = start
+			? layoutParagraph(block, width, this.measurer, this.note, undefined, start)
+			: this.paragraphLayout(index);
+		if (!exclusions) return plain;
 		const topPx = page.marginTopPx + this.cursor.y + spacingBeforePx;
 		const bottomPx = topPx + plain.contentHeightPx;
 		if (!exclusions.some((item) => item.yPx < bottomPx && item.yPx + item.heightPx > topPx))
-			return undefined;
+			return plain;
 		return layoutParagraph(
-			this.blocks[index] as Extract<LayoutBlock, { kind: 'paragraph' }>,
-			this.cursor.columnWidthPx,
+			block,
+			width,
 			this.measurer,
 			this.note,
-			lineBoxesFor(
-				exclusions,
-				topPx,
-				page.marginLeftPx + this.cursor.column.xPx,
-				this.cursor.columnWidthPx,
-			),
+			lineBoxesFor(exclusions, topPx, page.marginLeftPx + this.cursor.column.xPx, width),
+			start,
 		);
 	}
 
@@ -313,7 +330,10 @@ export class SectionFlow {
 			}
 			if (block.afterTableSectionBreak) this.cursor.endBalance();
 			const spacingBeforePx = this.spacingBeforeFor(index);
-			const layout = this.wrappedLayout(index, spacingBeforePx) ?? this.paragraphLayout(index);
+			const layout = this.layoutAtCursor(
+				index,
+				this.cursor.atContinuationTop ? 0 : spacingBeforePx,
+			);
 			const footnotes = (lines: readonly LayoutLine[], includeUnanchored: boolean) =>
 				this.referenceFootnotes(block, lines, includeUnanchored);
 			const requiredTogetherPx = block.keepNext
@@ -339,15 +359,10 @@ export class SectionFlow {
 						? { trimLeadingColumnBreak: true }
 						: {}),
 					requiredTogetherPx,
-					reflow: (token) =>
-						layoutParagraph(
-							block,
-							this.cursor.columnWidthPx,
-							this.measurer,
-							this.note,
-							undefined,
-							token,
-						),
+					reflow: (token, before) => this.layoutAtCursor(index, before, token),
+					...(this.exclusions
+						? { hasExclusions: (pageIndex) => this.exclusions!.has(pageIndex) }
+						: {}),
 				},
 				this.note,
 			);

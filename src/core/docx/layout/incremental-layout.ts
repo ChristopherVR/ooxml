@@ -53,7 +53,7 @@ function paragraphBoxes(page: LayoutPageBox): LayoutBlockBox[] {
  */
 function eligible(input: LayoutDocumentInput): boolean {
 	const [section] = input.sections;
-	if (!section || input.sections.length !== 1) return false;
+	if (!section || input.sections.length !== 1 || input.storyMargins) return false;
 	if (
 		(section.columns?.count ?? 1) > 1 ||
 		section.footnoteColumns ||

@@ -49,6 +49,8 @@ export type AdaptTextBoxBlocks = (blocks: Block[]) => LayoutBlock[];
 const DEFAULT_INSETS_EMU = { left: 91440, top: 45720, right: 91440, bottom: 45720 };
 /** Height of the column that takes every remaining line (the last box of a chain). */
 const UNBOUNDED_PX = 1_000_000;
+/** Allow up to 0.75 pt of advance-width rounding inside a text box. */
+const WORD_FIT_TOLERANCE_PX = 1;
 export const VERTICAL_TEXT_NOTE =
 	'East Asian and WordArt vertical text in text boxes is drawn turned a quarter clockwise, without upright East Asian characters or stacked letters.';
 
@@ -89,9 +91,10 @@ function paddingOf(box: Sized, content: TextBoxContent) {
 
 /** Word draws a page or column break inside a text box as a line break (measured, Word 16). */
 function breaksAsLines(block: LayoutBlock): LayoutBlock {
-	if (block.kind !== 'paragraph' || !block.runs.some((run) => run.breakAfter)) return block;
+	if (block.kind !== 'paragraph') return block;
 	return {
 		...block,
+		wordFitTolerancePx: WORD_FIT_TOLERANCE_PX,
 		runs: block.runs.map((run): LayoutRun => {
 			if (!run.breakAfter) return run;
 			const { breakAfter: _break, ...rest } = run;

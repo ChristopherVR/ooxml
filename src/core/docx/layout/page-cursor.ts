@@ -1,4 +1,4 @@
-import type { LayoutColumns, LayoutPageGeometry } from './input';
+import type { LayoutColumns, LayoutPageGeometry, StoryMargins } from './input';
 import { footnoteColumns, type ReflowFootnote } from './footnote-columns';
 import { expectDefined } from '../expect-defined';
 import { FootnoteFlow } from './footnote-flow';
@@ -39,6 +39,7 @@ export class PageCursor {
 		reflow?: ReflowFootnote,
 		private readonly legacyFootnoteColumns = false,
 		pageInSectionStart = 0,
+		private readonly storyMargins?: StoryMargins,
 	) {
 		this.footnotes = legacyFootnoteColumns
 			? new LegacyFootnoteFlow(report, separator, reflow)
@@ -99,6 +100,7 @@ export class PageCursor {
 			columns: columnBoxes,
 			...(this.columns.separator ? { columnSeparator: true } : {}),
 		});
+		if (this.storyMargins) Object.assign(this.page, this.storyMargins(this.pages));
 		this.columnIndex = 0;
 		this.columnTopPx = 0;
 		this.yPx = 0;
@@ -164,7 +166,11 @@ export class PageCursor {
 			: height;
 	}
 	get physicalColumnHeightPx(): number {
-		const pageHeight = this.page.heightPx - this.page.marginTopPx - this.geometry.marginBottomPx;
+		const bottom =
+			this.page.sectionIndex === this.sectionIndex
+				? this.page.marginBottomPx
+				: this.geometry.marginBottomPx;
+		const pageHeight = this.page.heightPx - this.page.marginTopPx - bottom;
 		const own = this.columns.widths?.[this.columnIndex]?.heightPx;
 		return Math.max(1, Math.min(pageHeight, own ?? pageHeight) - this.columnTopPx);
 	}

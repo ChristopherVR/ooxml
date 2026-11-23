@@ -94,7 +94,7 @@ export function stackFloatingCell(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	topPx: number,
-	startTokens: ReadonlyMap<string, number> | undefined,
+	startTokens: ReadonlyMap<string, import('./text-breaks').TokenPosition> | undefined,
 	cell: CellSides,
 ): { heightPx: number; boxes: LayoutParagraphBox[] } {
 	const start = (paragraph: LayoutParagraph) => startTokens?.get(paragraph.id) ?? 0;

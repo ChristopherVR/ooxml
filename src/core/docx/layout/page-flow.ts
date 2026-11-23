@@ -2,7 +2,7 @@ import { SectionFlow } from './section-flow';
 import { FOOTNOTE_SEPARATOR_PX } from './page-cursor';
 import { balanceColumns, canBalanceBlock } from './balance-columns';
 import type { TextMeasurer } from './measure';
-import type { LayoutDocumentInput, LayoutSection } from './input';
+import type { LayoutDocumentInput, LayoutSection, StoryMargins } from './input';
 import type { LayoutPageBox, LayoutResult } from './result';
 import { inFlow } from './result';
 import type { Exclusion } from './wrap';
@@ -11,7 +11,12 @@ import type { Exclusion } from './wrap';
  * Word starts an even-page (odd-page) section on the next even (odd) page, leaving a blank page
  * when needed. The blank page belongs to the previous section.
  */
-function insertParityBlank(pages: LayoutPageBox[], section: LayoutSection): void {
+function insertParityBlank(
+	pages: LayoutPageBox[],
+	section: LayoutSection,
+	original: LayoutSection | undefined,
+	storyMargins?: StoryMargins,
+): void {
 	const previous = pages.at(-1);
 	if (!previous || (section.break !== 'evenPage' && section.break !== 'oddPage')) return;
 	const nextNumber = pages.length + 1;
@@ -28,10 +33,13 @@ function insertParityBlank(pages: LayoutPageBox[], section: LayoutSection): void
 	} = previous;
 	pages.push({
 		...geometry,
+		marginTopPx: original?.page.marginTopPx ?? geometry.marginTopPx,
+		marginBottomPx: original?.page.marginBottomPx ?? geometry.marginBottomPx,
 		index: pages.length,
 		pageInSection: previous.pageInSection + 1,
 		columns: previous.columns.map((column) => ({ ...column, blocks: [] })),
 	});
+	if (storyMargins) Object.assign(pages.at(-1)!, storyMargins(pages));
 }
 
 /** Shifts each page's content down for centered or bottom-aligned sections (`w:vAlign`). */
@@ -82,9 +90,9 @@ export function layoutSections(
 	const pages: LayoutPageBox[] = [];
 	let previousFlow: SectionFlow | undefined;
 	input.sections.forEach((section, index) => {
-		insertParityBlank(pages, section);
-		const first = pages.length;
 		const previous = input.sections[index - 1];
+		insertParityBlank(pages, section, previous, input.storyMargins);
+		const first = pages.length;
 		const page = pages.at(-1);
 		let continueAt: number | undefined;
 		if (
@@ -117,7 +125,18 @@ export function layoutSections(
 			(!section.verticalAlign || section.verticalAlign === 'top') &&
 			section.blocks.every(canBalanceBlock);
 		const basePages = canBalance ? structuredClone(pages) : [];
-		let flow = new SectionFlow(section, pages, measurer, note, index, exclusions, continueAt);
+		let flow = new SectionFlow(
+			section,
+			pages,
+			measurer,
+			note,
+			index,
+			exclusions,
+			continueAt,
+			undefined,
+			undefined,
+			input.storyMargins,
+		);
 		flow.run();
 		const last = pages.at(-1)!;
 		if (canBalance && !last.footnotes?.length) {
@@ -137,6 +156,8 @@ export function layoutSections(
 						exclusions,
 						continueAt,
 						{ pageIndex: last.index, heightPx },
+						undefined,
+						input.storyMargins,
 					);
 					trial.run();
 					balancedNotes.set(trial, trialNotes);

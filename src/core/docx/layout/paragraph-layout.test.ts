@@ -4,6 +4,7 @@ import { layoutParagraph } from './paragraph-layout';
 import type { LayoutParagraph, LayoutRun } from './input';
 import type { TextMeasurer } from './measure';
 import { at } from './test-helpers';
+import { tokenPosition } from './text-breaks';
 
 // A measurer with clean, font-agnostic numbers: 10px per character, 20px lines.
 const measurer: TextMeasurer = {
@@ -17,6 +18,29 @@ function paragraph(runs: LayoutRun[], overrides: Partial<LayoutParagraph> = {}):
 }
 
 describe('layoutParagraph line breaking', () => {
+	it('breaks oversized words at complete graphemes and resumes from inside a word', () => {
+		const grapheme = 'e\u0301';
+		const text = grapheme.repeat(150);
+		const input = paragraph([{ text }]);
+		const result = layoutParagraph(input, 55, measurer, noop);
+		expect(result.lines).toHaveLength(75);
+		for (const [index, line] of result.lines.entries()) {
+			expect(lineText(line.fragments)).toBe(grapheme.repeat(2));
+			expect(line).toMatchObject({ sourceStart: index * 4, sourceEnd: index * 4 + 4 });
+			expect(at(line.fragments, 0).widthPx).toBe(40);
+		}
+		const continued = layoutParagraph(
+			input,
+			65,
+			measurer,
+			noop,
+			undefined,
+			tokenPosition(at(result.lines, 0).nextToken!, at(result.lines, 0).nextTokenOffset),
+		);
+		expect(at(continued.lines, 0)).toMatchObject({ sourceStart: 4, sourceEnd: 10 });
+		expect(continued.lines.map((line) => lineText(line.fragments)).join('')).toBe(text.slice(4));
+	});
+
 	it('wraps at word boundaries to fit the available width', () => {
 		const result = layoutParagraph(paragraph([{ text: 'aaaa bbbb cccc' }]), 90, measurer, noop);
 		expect(result.lines).toHaveLength(2);

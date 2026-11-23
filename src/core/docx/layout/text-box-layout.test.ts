@@ -5,7 +5,7 @@ import { loadDocx, type DocumentModel, type InlineImage } from '../index';
 import { createFakeMeasurer, layoutDocumentModel } from './index';
 import type { LayoutFontSpec, TextMeasurer } from './measure';
 import type { LayoutFloatBox, LayoutParagraphBox } from './result';
-import type { TextBoxLayout } from './text-box-layout';
+import { layoutTextBoxChain, type TextBoxLayout } from './text-box-layout';
 import { must } from '../test-support/access';
 import {
 	BOXES,
@@ -53,6 +53,29 @@ const box = (name: string) =>
 	);
 
 describe('text box layout by the page engine', () => {
+	it('keeps a fractionally oversized justified line together without stretching its spaces', () => {
+		const label = 'SIRET : 123.456.789.000.12';
+		const shape = {
+			widthPx: 193.47,
+			heightPx: 50,
+			textBoxContent: {
+				blocks: [],
+				insetLeftEmu: 0,
+				insetRightEmu: 0,
+			},
+		};
+		const [layout] = layoutTextBoxChain(
+			[shape],
+			[{ kind: 'paragraph', id: 'siret', align: 'justify', runs: [{ text: label }] }],
+			{
+				widthOf: (text) => (text === ' ' ? 1 : text.length * (192.14 / (label.length - 2))),
+				lineHeightOf: () => 16,
+			},
+		);
+		expect(lines(must(layout)).map((line) => line.text)).toEqual([label]);
+		expect(lines(must(layout))[0]?.right).toBeCloseTo(194.14);
+	});
+
 	it('reads the wps:bodyPr settings and the chain each box belongs to', async () => {
 		const { model } = await loadDocx(await textBoxLayoutFixture());
 		const images = drawings(model);

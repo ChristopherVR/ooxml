@@ -12,6 +12,7 @@ export function splitNote(
 	const after: LayoutParagraphBox[] = [];
 	let origin: number | undefined;
 	const sourceTokenStarts = { ...note.sourceTokenStarts };
+	const sourceTokenOffsets = { ...note.sourceTokenOffsets };
 	for (const paragraph of note.paragraphs) {
 		if (origin !== undefined) {
 			after.push({ ...paragraph, yPx: paragraph.yPx - origin });
@@ -31,9 +32,12 @@ export function splitNote(
 			before.push({ ...paragraph, heightPx: bottom, lines: head });
 		}
 		const first = tail[0];
-		if (head.length)
-			sourceTokenStarts[paragraph.blockId] =
-				head.at(-1)!.nextToken ?? sourceTokenStarts[paragraph.blockId] ?? 0;
+		const line = head.at(-1);
+		if (line?.nextToken !== undefined) {
+			sourceTokenStarts[paragraph.blockId] = line.nextToken;
+			if (line.nextTokenOffset) sourceTokenOffsets[paragraph.blockId] = line.nextTokenOffset;
+			else delete sourceTokenOffsets[paragraph.blockId];
+		}
 		origin = paragraph.yPx + (first?.yPx ?? 0);
 		after.push({
 			...paragraph,
@@ -55,6 +59,9 @@ export function splitNote(
 						paragraphs: after,
 						continued: true,
 						sourceTokenStarts,
+						...(note.sourceTokenOffsets || Object.keys(sourceTokenOffsets).length
+							? { sourceTokenOffsets }
+							: {}),
 					},
 				}
 			: {}),

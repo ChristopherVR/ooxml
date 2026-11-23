@@ -82,6 +82,7 @@ export class TableParagraphKeeps {
 					!deferred &&
 					source?.keepLines &&
 					(box.lines[0]?.firstToken ?? 0) === 0 &&
+					!box.lines[0]?.firstTokenOffset &&
 					box.yPx + box.heightPx + padding.bottom > available + 1e-6 &&
 					!atFreshOrigin
 				)

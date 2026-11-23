@@ -44,8 +44,11 @@ export interface LayoutLine {
 	sourceEnd: number;
 	/** First unconsumed paragraph token, for reflow into a column of a different width. */
 	nextToken?: number;
+	/** Offset in the token when the line break falls inside an oversized word. */
+	nextTokenOffset?: number;
 	/** First token on this line, for reflowing a split table-cell paragraph. */
 	firstToken?: number;
+	firstTokenOffset?: number;
 }
 
 export interface LayoutParagraphBox {
@@ -202,6 +205,8 @@ export interface LayoutFootnoteBox {
 	columnIndex?: number;
 	/** Internal token cursors for reflowing the remaining source across unequal note columns. */
 	sourceTokenStarts?: Record<string, number>;
+	/** Offsets within the start tokens of paragraphs continued inside an oversized word. */
+	sourceTokenOffsets?: Record<string, number>;
 	id: string;
 	/** This fragment continues the same note from an earlier page or a legacy body column. */
 	continued?: boolean;

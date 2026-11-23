@@ -588,9 +588,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Draft view's header, footer and note previews leave floating (`wp:anchor`) drawings
       out, as Word's Draft view does, and show inline pictures from the body's media cache
       (SVG originals and cropped or recoloured fills included) (`src/ui/src/docx/story-drawings.test.ts`).
+- [x] **P1** Print Layout reserves space for tall headers and footers based on their in-flow
+      content (#313). Paragraphs that move onto a page reflow around that page's floating drawings,
+      including drawings anchored below them (#312).
+- [x] **P2** Overlong words in Print Layout break at grapheme boundaries (#316). Nearly fitting
+      final lines in justified text boxes have a one-pixel fit tolerance (#314).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
-      and page boundaries is heuristic; no kerning or complex-script shaping; over-long Latin
-      words overflow instead of breaking by character. Single line heights come from the browser's
+      and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
+      come from the browser's
       font box without the font's line gap: Arial 11 pt lines are 16 px apart in Chromium against
       Word 16's 16.87 px (measured in text boxes), so a box or page can take one more line than Word.
 

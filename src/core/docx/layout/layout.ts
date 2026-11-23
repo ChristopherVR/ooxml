@@ -11,6 +11,7 @@ import type { TextMeasurer } from './measure';
 import type { LayoutReviewOptions } from './review-display';
 import { reviewDocumentFormatting, reviewFormattingWarnings } from '../review-document-formatting';
 import { createTextBoxLayouts, type TextBoxLayouts } from './text-box-layout';
+import { createStoryMargins } from './story-margins';
 
 /** Paginates an engine-native `LayoutDocumentInput` (bypasses the DocumentModel adapter). */
 export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasurer): LayoutResult {
@@ -56,6 +57,8 @@ export function layoutDocumentModel(
 		adaptDocumentModel(projected.model, note, options, textBoxes),
 		projected.model,
 	);
+	const storyMargins = createStoryMargins(projected.model, measurer, options, note);
+	if (storyMargins) input.storyMargins = storyMargins;
 	const result = layout(input, measurer);
 	return {
 		pages: result.pages,

@@ -2,6 +2,7 @@ import { reflowNestedFragments } from './nested-fragment-edges';
 import { cellContentBottom } from './table-content';
 import type { TextMeasurer } from './measure';
 import { layoutParagraph } from './paragraph-layout';
+import { tokenPosition, type TokenPosition } from './text-breaks';
 import type { LayoutParagraph, LayoutTableRow } from './input';
 import type { LayoutCellGeometry, LayoutParagraphBox, LayoutTableBox } from './result';
 import { stackCellBlocks } from './table-cell-layout';
@@ -31,7 +32,7 @@ export function stackParagraphs(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	topPx = 0,
-	startTokens?: ReadonlyMap<string, number>,
+	startTokens?: ReadonlyMap<string, TokenPosition>,
 	cell?: CellSides,
 ): { heightPx: number; boxes: LayoutParagraphBox[] } {
 	if (cell && hasCellFloats(paragraphs))
@@ -73,7 +74,7 @@ export function layoutRow(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	remaining?: LayoutParagraphBox[][],
-	startTokens?: ReadonlyMap<string, number>,
+	startTokens?: ReadonlyMap<string, TokenPosition>,
 	frameBorders = false,
 	frameLeftBorderPx?: number,
 	physicalFragments = reflowNestedFragments(row),
@@ -84,7 +85,12 @@ export function layoutRow(
 	const laidOut = row.cells.map((cell) => {
 		const continuation = remaining?.[geometry.length];
 		const starts = continuation
-			? new Map(continuation.map((box) => [box.blockId, box.lines[0]?.firstToken ?? 0]))
+			? new Map(
+					continuation.map((box) => [
+						box.blockId,
+						tokenPosition(box.lines[0]?.firstToken ?? 0, box.lines[0]?.firstTokenOffset),
+					]),
+				)
 			: startTokens;
 		const widthPx = cell.widthPx ?? tableWidthPx / count;
 

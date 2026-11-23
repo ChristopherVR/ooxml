@@ -18,6 +18,13 @@ export { isEastAsianChar };
  */
 export type TokenGlue = 'kinsoku' | 'word';
 
+/** Resume at a token boundary, or within a word split across lines. */
+export type TokenPosition = number | { index: number; offset: number };
+
+export function tokenPosition(index: number, offset?: number): TokenPosition {
+	return offset ? { index, offset } : index;
+}
+
 export type BreakToken =
 	| {
 			kind: 'word';

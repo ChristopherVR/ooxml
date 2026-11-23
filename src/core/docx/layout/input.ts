@@ -135,6 +135,8 @@ export type ParagraphAlign = 'left' | 'center' | 'right' | 'justify';
 export type LineSpacingRule = 'auto' | 'exact' | 'atLeast';
 
 export interface LayoutParagraph {
+	/** Tolerance for differences between browser and Word advance widths in DrawingML text boxes. */
+	wordFitTolerancePx?: number;
 	/** Mandatory paragraph after a table, outside the preceding table's column balance. */
 	afterTableSectionBreak?: boolean;
 	kind: 'paragraph';
@@ -331,4 +333,10 @@ export interface LayoutSection {
 
 export interface LayoutDocumentInput {
 	sections: LayoutSection[];
+	/** Expands the vertical body margins to clear the page's in-flow header and footer. */
+	storyMargins?: StoryMargins;
 }
+
+export type StoryMargins = (
+	pages: import('./result').LayoutPageBox[],
+) => Pick<LayoutPageGeometry, 'marginTopPx' | 'marginBottomPx'>;
