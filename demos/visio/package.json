@@ -5,9 +5,9 @@
 	"description": "The Visio demos. They build with the vite config and scripts of viewers/visio; these are the packages their own files import.",
 	"type": "module",
 	"dependencies": {
-		"@angular/common": "^22.2.6",
-		"@angular/core": "^22.2.6",
-		"@angular/platform-browser": "^22.2.6",
+		"@angular/common": "^22.3.0",
+		"@angular/core": "^22.3.0",
+		"@angular/platform-browser": "^22.3.0",
 		"ooxml-core": "*",
 		"ooxml-demo-onedrive": "workspace:*",
 		"ooxml-ui": "*",
