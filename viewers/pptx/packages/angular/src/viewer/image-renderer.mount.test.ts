@@ -85,6 +85,14 @@ describe('imageRendererComponent under a picture transparency morph (issue #141)
 	const to = picture('s9-faded', 100);
 	const plan = buildMorphTransitionPlan(slide('8', [from]), slide('9', [to]), 1000)!;
 
+	it('renders the Cameo control only when the camera picture is on a live surface', () => {
+		const root = render({ ...to, liveFeed: true } as PptxElement);
+		expect(root.querySelector('pptx-ui-cameo-preview')).toBeNull();
+		setSignalInput(fixture!.componentInstance, 'presenting', true);
+		fixture!.detectChanges();
+		expect(root.querySelector('pptx-ui-cameo-preview')).not.toBeNull();
+	});
+
 	it('paints the <img> the alpha keyframe rule selects', () => {
 		const css = buildMorphScopedCss(plan, '', 'incoming');
 		const selector = /(\[data-element-id="s9-faded"\] img) \{ animation: /u.exec(css)?.[1];

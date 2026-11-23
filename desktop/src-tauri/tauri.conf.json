@@ -22,7 +22,7 @@
 		],
 		"security": {
 			"capabilities": [],
-			"csp": "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: blob: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' blob: data: ipc: http://ipc.localhost https: wss: ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' https://christophervr.github.io https://www.youtube.com https://player.vimeo.com; manifest-src 'self'"
+			"csp": "default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; font-src 'self' data: blob: https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; connect-src 'self' blob: data: ipc: http://ipc.localhost https: wss: ws://localhost:* ws://127.0.0.1:* http://localhost:* http://127.0.0.1:*; worker-src 'self' blob:; frame-src 'self' https://christophervr.github.io https://www.youtube.com https://player.vimeo.com https://forms.office.com https://forms.cloud.microsoft; manifest-src 'self'"
 		}
 	},
 	"bundle": {

@@ -17,24 +17,26 @@ network request must update this file in the same commit.
 
 ## Summary
 
-| What                                               | Goes to                                     | On by default                    | Turn it off or redirect it                                         |
-| -------------------------------------------------- | ------------------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                              | `googleFonts` option; File > Options > Trust Center; suite setting |
-| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)            | `googleFonts` property; Trust Center (off by default); suite       |
-| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content    | `allowExternalContent` option; Trust Center; suite setting         |
-| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it     | Configure a signaling server or `serverUrl`                        |
-| PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it     | Do not start a session                                             |
-| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies  | `checkRevocation: false` (see below)                               |
-| PowerPoint: AI assistant                           | The connection the host configures          | No (host must enable it)         | Do not pass `ai`                                                   |
-| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured | Local mode                                                         |
-| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts          | `iceServers` (your own STUN/TURN, or `[]`)                         |
-| Teams: website tabs                                | The URL a member added                      | When the tab is opened           | Do not add or open website tabs                                    |
-| Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)          | `ai-config.json`                                                   |
-| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl` | No (host must configure it)      | Leave `collaboration.credentialsUrl` empty                         |
-| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)         | Do not configure it                                                |
-| Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                              | Not applicable (same origin)                                       |
-| Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                | Not applicable                                                     |
-| Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one    | Pass bytes instead                                                 |
+| What                                               | Goes to                                     | On by default                            | Turn it off or redirect it                                         |
+| -------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                                      | `googleFonts` option; File > Options > Trust Center; suite setting |
+| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)                    | `googleFonts` property; Trust Center (off by default); suite       |
+| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content            | `allowExternalContent` option; Trust Center; suite setting         |
+| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it             | Configure a signaling server or `serverUrl`                        |
+| PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it             | Do not start a session                                             |
+| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies          | `checkRevocation: false` (see below)                               |
+| PowerPoint: AI assistant                           | The connection the host configures          | No (host must enable it)                 | Do not pass `ai`                                                   |
+| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured         | Local mode                                                         |
+| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts                  | `iceServers` (your own STUN/TURN, or `[]`)                         |
+| Teams: website tabs                                | The URL a member added                      | When the tab is opened                   | Do not add or open website tabs                                    |
+| Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)                  | `ai-config.json`                                                   |
+| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl` | No (host must configure it)              | Leave `collaboration.credentialsUrl` empty                         |
+| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)                 | Do not configure it                                                |
+| Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                                      | Not applicable (same origin)                                       |
+| Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                        | Not applicable                                                     |
+| Word, Excel, PowerPoint: Get Add-ins               | `marketplace.microsoft.com`                 | Only when its link is clicked            | Leave the catalog link unopened                                    |
+| Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft` | Only when the user opens or loads a form | Leave the form unopened or close the response dialog               |
+| Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one            | Pass bytes instead                                                 |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
 user agent and, for some requests, a `Referer`. That is the main privacy cost of each third-party
@@ -65,6 +67,32 @@ inserted bytes and preview to the host-configured room transport as document ass
 room or omit the collaboration configuration to keep insertions local.
 
 ## PowerPoint (`ooxml-ui/pptx` and the `pptx-*-viewer` packages)
+
+### Cameo camera preview
+
+The Cameo button on a live slide surface can activate the device camera after the user
+chooses it and the browser grants permission. Video is displayed locally and the track
+stops when the preview is turned off or removed. The slide file contains a stock poster and
+the live-feed descriptor.
+
+Record > Cameo > Record camera clip requests camera access when the user selects Record.
+Microphone access requires selecting Include microphone. Recording happens locally and the
+clip becomes embedded video in the presentation if the user selects Stop and insert. Closing
+the dialog stops capture and discards the unsaved clip. Once inserted, the video follows the
+same save, share and collaboration behavior as other embedded media.
+Reset to Cameo removes editor-recorded clips from the slide. The package writer can retain
+the unused media parts when saving an existing file.
+
+### Forms and add-in links
+
+Get Add-ins in Word, Excel and PowerPoint opens a dialog with a link to Microsoft's
+Marketplace. Forms in Excel and PowerPoint offers a link to the Microsoft Forms site and
+inserts a Microsoft Forms response URL supplied by the user. Opening the dialog and entering
+a link make no request. During a PowerPoint slide show, a Forms response link offers to load
+the form in an isolated frame or open it in the browser. Loading the form sends its response
+URL and normal request metadata, without a referrer. Answers entered in the frame go directly
+to Microsoft. Closing the dialog removes the frame. Other link actions open the chosen
+destination in a new tab. My Add-ins reads the host's local ribbon tabs.
 
 ### Fonts that are neither installed nor embedded
 

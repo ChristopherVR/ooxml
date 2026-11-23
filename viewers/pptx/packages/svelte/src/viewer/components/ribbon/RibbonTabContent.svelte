@@ -95,7 +95,7 @@
 	{:else if tab === 'review'}
 		<ReviewTab slides={ribbon.slides} onnavigate={ribbon.onnavigatetoissue} editor={ribbon.editor} oncompare={ribbon.oncompare} onlanguage={ribbon.onsettings} spellCheck={ribbon.preferences.spellCheck} onspellcheckchange={(enabled) => ribbon.onpreferenceschange({ ...ribbon.preferences, spellCheck: enabled })} />
 	{:else if tab === 'record'}
-		<RecordTab onfrombeginning={ribbon.onrecordfrombeginning} onfromcurrent={ribbon.onrecordfromcurrent} />
+		<RecordTab editor={ribbon.editor} canvasSize={ribbon.canvasSize} onfrombeginning={ribbon.onrecordfrombeginning} onfromcurrent={ribbon.onrecordfromcurrent} />
 	{:else if tab === 'view'}
 		<ViewTab
 			editor={ribbon.editor}

@@ -4,6 +4,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { INSERT_GROUPS } from '../render';
 import type { RibbonInsertState } from '../render';
 import { registerPptxWebControls } from './index';
+import type { OfficeUiDialog } from '../../dialog/dialog';
 
 beforeAll(registerPptxWebControls);
 afterEach(() => document.body.replaceChildren());
@@ -104,6 +105,17 @@ const button = (host: HTMLElement, id: string) => {
 const calls = (requests: ReturnType<typeof vi.fn>) => requests.mock.calls.map(([detail]) => detail);
 
 describe('shared Insert view', () => {
+	it('opens add-in discovery and management while the slide is read-only', () => {
+		const { host } = mount({ editable: false });
+		button(host, 'insert.addIns.getAddIns').click();
+		const dialog = host.querySelector<OfficeUiDialog>('office-ui-dialog')!;
+		expect(dialog.querySelector('a')?.hostname).toBe('marketplace.microsoft.com');
+		dialog.close();
+		button(host, 'insert.addIns.myAddIns').click();
+		expect([...host.querySelectorAll('office-ui-dialog')].at(-1)?.textContent).toContain(
+			'No add-ins are available in this editor.',
+		);
+	});
 	it('lists the groups in PowerPoint order with its captions', () => {
 		const { host } = mount();
 		const groups = [...host.querySelectorAll<HTMLElement>('[data-ribbon-group]')];
@@ -266,8 +278,6 @@ describe('shared Insert view', () => {
 			'insert.illustrations.icons',
 			'insert.illustrations.threeDModels',
 			'insert.forms.forms',
-			'insert.addIns.getAddIns',
-			'insert.addIns.myAddIns',
 			'insert.links.zoom',
 			'insert.text.wordArt',
 			'insert.text.object',

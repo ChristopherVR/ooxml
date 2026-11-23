@@ -62,6 +62,7 @@ const s = computed(() => props.toolbarSection);
 
 	<RecordSection
 		v-if="s === 'record'"
+		:get-target="props.canEdit ? props.getGraphicTarget : undefined"
 		:on-record-from-beginning="props.onEnterRehearsalMode ?? (() => {})"
 		:on-record-from-current="props.onEnterRehearsalMode ?? (() => {})"
 	/>

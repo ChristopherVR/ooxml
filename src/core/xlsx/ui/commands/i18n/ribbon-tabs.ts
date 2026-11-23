@@ -2,6 +2,78 @@
 import type { Translations } from './types';
 
 export const RIBBON_TAB_STRINGS: Translations = {
+	'Microsoft Forms response links': [
+		'Liens de réponse Microsoft Forms',
+		'Antwortlinks für Microsoft Forms',
+		'Vínculos de respuesta de Microsoft Forms',
+		'Microsoft Forms 答复链接',
+	],
+	'Microsoft Forms response synchronization and Microsoft Marketplace add-in execution': [
+		'Synchronisation des réponses Microsoft Forms et exécution des compléments Microsoft Marketplace',
+		'Synchronisierung von Microsoft Forms-Antworten und Ausführung von Microsoft Marketplace-Add-Ins',
+		'Sincronización de respuestas de Microsoft Forms y ejecución de complementos de Microsoft Marketplace',
+		'同步 Microsoft Forms 答复和运行 Microsoft Marketplace 加载项',
+	],
+	'Add-ins': ['Compléments', 'Add-Ins', 'Complementos', '加载项'],
+	'Get Add-ins': [
+		'Obtenir des compléments',
+		'Add-Ins abrufen',
+		'Obtener complementos',
+		'获取加载项',
+	],
+	'My Add-ins': ['Mes compléments', 'Meine Add-Ins', 'Mis complementos', '我的加载项'],
+	Install: ['Installer', 'Installieren', 'Instalar', '安装'],
+	'Could not update the add-in.': [
+		'Impossible de modifier le complément.',
+		'Das Add-In konnte nicht aktualisiert werden.',
+		'No se pudo actualizar el complemento.',
+		'无法更新加载项。',
+	],
+	'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.': [
+		'Parcourez les compléments Microsoft Office. Cet éditeur exécute les compléments fournis par son hôte.',
+		'Durchsuchen Sie die Add-Ins für Microsoft Office. Dieser Editor führt die vom Host bereitgestellten Add-Ins aus.',
+		'Explore los complementos para Microsoft Office. Este editor ejecuta los complementos proporcionados por su aplicación anfitriona.',
+		'浏览 Microsoft Office 加载项。此编辑器运行宿主应用提供的加载项。',
+	],
+	'Browse Microsoft Marketplace': [
+		'Parcourir Microsoft Marketplace',
+		'Microsoft Marketplace durchsuchen',
+		'Explorar Microsoft Marketplace',
+		'浏览 Microsoft Marketplace',
+	],
+	'No add-ins are available in this editor.': [
+		'Aucun complément n’est disponible dans cet éditeur.',
+		'In diesem Editor sind keine Add-Ins verfügbar.',
+		'No hay complementos disponibles en este editor.',
+		'此编辑器中没有可用的加载项。',
+	],
+	Forms: ['Formulaires', 'Formulare', 'Formularios', '表单'],
+	'Open form': ['Ouvrir le formulaire', 'Formular öffnen', 'Abrir formulario', '打开表单'],
+	'Insert link': ['Insérer un lien', 'Link einfügen', 'Insertar vínculo', '插入链接'],
+	'Create or manage a form': [
+		'Créer ou gérer un formulaire',
+		'Formular erstellen oder verwalten',
+		'Crear o administrar un formulario',
+		'创建或管理表单',
+	],
+	'Text to display': [
+		'Texte à afficher',
+		'Anzuzeigender Text',
+		'Texto para mostrar',
+		'要显示的文本',
+	],
+	'Microsoft Forms response link': [
+		'Lien de réponse Microsoft Forms',
+		'Antwortlink für Microsoft Forms',
+		'Vínculo de respuesta de Microsoft Forms',
+		'Microsoft Forms 答复链接',
+	],
+	'Enter a Microsoft Forms response link.': [
+		'Saisissez un lien de réponse Microsoft Forms.',
+		'Geben Sie einen Antwortlink für Microsoft Forms ein.',
+		'Escriba un vínculo de respuesta de Microsoft Forms.',
+		'请输入 Microsoft Forms 答复链接。',
+	],
 	'Chart Styles': [
 		'Styles de graphique',
 		'Diagrammformatvorlagen',

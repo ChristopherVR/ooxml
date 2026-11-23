@@ -12,6 +12,7 @@ import {
 } from '../commands/test-support';
 import { safeAddress } from './hyperlink';
 import { registerRuleDialogs } from './register-rules';
+import { insertCommands } from '../commands/insert';
 
 afterEach(() => (document.body.innerHTML = ''));
 
@@ -44,6 +45,21 @@ describe('safeAddress', () => {
 });
 
 describe('hyperlink dialog', () => {
+	it('adds a form link to the selected cell and undoes the insert together', async () => {
+		const ctx = setup();
+		const command = insertCommands().find((command) => command.id === 'insert.forms')!;
+		const result = command.run(ctx);
+		const form = ctx.root.querySelector('office-ui-dialog form') as HTMLFormElement;
+		form.querySelector<HTMLInputElement>('input[type="url"]')!.value =
+			'https://forms.office.com/r/Demo123';
+		form.requestSubmit();
+		await result;
+		expect(links(ctx)[0]).toMatchObject({ target: 'https://forms.office.com/r/Demo123' });
+		expect(getCell(ctx.workbook()!.sheets[0]!, 1, 1)?.value).toBe('Open form');
+		ctx.session()!.undo();
+		expect(links(ctx)).toEqual([]);
+		expect(getCell(ctx.workbook()!.sheets[0]!, 1, 1)?.value ?? null).toBeNull();
+	});
 	it('inserts a web link and writes the display text', async () => {
 		const ctx = setup();
 		const result = ctx.dialogs.open('hyperlink');

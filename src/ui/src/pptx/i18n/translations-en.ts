@@ -22,6 +22,7 @@ import { chartFormatTranslationsEn } from './translations-en-chart-format';
  * instead of drifting into three separate copies.
  */
 export const translationsEn: Record<string, string> = {
+	'pptx.cameo.unavailable': 'Camera unavailable',
 	// Animation effect names for both preset vocabularies (278 mechanical
 	// entries), kept in their own module so they don't drown the UI copy here.
 	...animationPresetTranslationsEn,
@@ -853,6 +854,11 @@ export const translationsEn: Record<string, string> = {
 	'pptx.record.manage': 'Edit',
 	'pptx.record.camera': 'Cameo',
 	'pptx.record.clear': 'Clear',
+	'pptx.record.clearTimings': 'Clear timings',
+	'pptx.record.cameraClip': 'Record camera clip',
+	'pptx.record.includeMic': 'Include microphone',
+	'pptx.record.stopAndInsert': 'Stop and insert',
+	'pptx.record.cameraClipFailed': 'Could not record the camera clip.',
 	'pptx.record.learnMore': 'Learn More',
 	'pptx.record.resetToCameo': 'Reset to Cameo',
 
@@ -2775,9 +2781,31 @@ export const translationsEn: Record<string, string> = {
 	'pptx.insert.tip.models3d': 'Insert a 3D model from a GLB file.',
 	'pptx.insert.tip.smartArt': 'Insert a SmartArt graphic to visually communicate information.',
 	'pptx.insert.tip.chart': 'Insert a chart to illustrate and compare data.',
-	'pptx.insert.tip.forms': 'Add a form to collect responses from other people.',
+	'pptx.addIns.Get Add-ins': 'Get Add-ins',
+	'pptx.addIns.My Add-ins': 'My Add-ins',
+	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.',
+	'pptx.addIns.Browse Microsoft Marketplace': 'Browse Microsoft Marketplace',
+	'pptx.addIns.No add-ins are available in this editor.':
+		'No add-ins are available in this editor.',
+	'pptx.forms.Forms': 'Forms',
+	'pptx.forms.Open form': 'Open form',
+	'pptx.forms.Insert link': 'Insert link',
+	'pptx.forms.load': 'Load Microsoft Form',
+	'pptx.cameo.existing': 'This slide already has a Cameo.',
+	'pptx.forms.openInBrowser': 'Open in browser',
+	'pptx.forms.Create or manage a form': 'Create or manage a form',
+	'pptx.forms.Text to display': 'Text to display',
+	'pptx.forms.Microsoft Forms response link': 'Microsoft Forms response link',
+	'pptx.forms.Enter a Microsoft Forms response link.': 'Enter a Microsoft Forms response link.',
+	'pptx.forms.Close': 'Close',
+	'pptx.addIns.Install': 'Install',
+	'pptx.addIns.Remove': 'Remove',
+	'pptx.addIns.Could not update the add-in.': 'Could not update the add-in.',
+	'pptx.addIns.Close': 'Close',
+	'pptx.insert.tip.forms': 'Insert a link to a Microsoft form or quiz.',
 	'pptx.insert.tip.getAddIns': 'Get Office add-ins from the store.',
-	'pptx.insert.tip.myAddIns': 'Manage the add-ins you have installed.',
+	'pptx.insert.tip.myAddIns': 'Open an add-in supplied by this editor.',
 	'pptx.insert.tip.zoom': 'Insert a zoom to a slide or section to navigate the presentation.',
 	'pptx.insert.tip.link':
 		'Create a link to a web page, a file, an email address or a place in this presentation.',

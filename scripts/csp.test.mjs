@@ -35,6 +35,8 @@ test('the policy keeps script to this origin and allows what the editors load', 
 		'https://christophervr.github.io',
 		'https://www.youtube.com',
 		'https://player.vimeo.com',
+		'https://forms.office.com',
+		'https://forms.cloud.microsoft',
 	]);
 });
 

@@ -1,5 +1,6 @@
 /** Ribbon style galleries and their contextual tabs. */
 export const translations: Record<string, string> = {
+	'pptx.cameo.unavailable': 'Kamera nicht verfügbar',
 	'pptx.ribbon.tab.shapeFormat': 'Formformat',
 	'pptx.ribbon.tab.pictureFormat': 'Bildformat',
 	'pptx.ribbon.tab.tableDesign': 'Tabellenentwurf',
@@ -157,9 +158,32 @@ export const translations: Record<string, string> = {
 		'Fügt eine SmartArt-Grafik ein, um Informationen visuell darzustellen.',
 	'pptx.insert.tip.chart':
 		'Fügt ein Diagramm ein, um Daten zu veranschaulichen und zu vergleichen.',
-	'pptx.insert.tip.forms': 'Fügt ein Formular hinzu, um Antworten von anderen Personen zu sammeln.',
+	'pptx.addIns.Get Add-ins': 'Add-Ins abrufen',
+	'pptx.addIns.My Add-ins': 'Meine Add-Ins',
+	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Durchsuchen Sie die Add-Ins für Microsoft Office. Dieser Editor führt die vom Host bereitgestellten Add-Ins aus.',
+	'pptx.addIns.Browse Microsoft Marketplace': 'Microsoft Marketplace durchsuchen',
+	'pptx.addIns.No add-ins are available in this editor.':
+		'In diesem Editor sind keine Add-Ins verfügbar.',
+	'pptx.forms.Forms': 'Formulare',
+	'pptx.forms.Open form': 'Formular öffnen',
+	'pptx.forms.Insert link': 'Link einfügen',
+	'pptx.forms.load': 'Microsoft-Formular laden',
+	'pptx.cameo.existing': 'Diese Folie enthält bereits ein Cameo.',
+	'pptx.forms.openInBrowser': 'Im Browser öffnen',
+	'pptx.forms.Create or manage a form': 'Formular erstellen oder verwalten',
+	'pptx.forms.Text to display': 'Anzuzeigender Text',
+	'pptx.forms.Microsoft Forms response link': 'Antwortlink für Microsoft Forms',
+	'pptx.forms.Enter a Microsoft Forms response link.':
+		'Geben Sie einen Antwortlink für Microsoft Forms ein.',
+	'pptx.forms.Close': 'Schließen',
+	'pptx.addIns.Install': 'Installieren',
+	'pptx.addIns.Remove': 'Entfernen',
+	'pptx.addIns.Could not update the add-in.': 'Das Add-In konnte nicht aktualisiert werden.',
+	'pptx.addIns.Close': 'Schließen',
+	'pptx.insert.tip.forms': 'Einen Link zu einem Microsoft-Formular oder -Quiz einfügen.',
 	'pptx.insert.tip.getAddIns': 'Ruft Office-Add-Ins aus dem Store ab.',
-	'pptx.insert.tip.myAddIns': 'Verwaltet die installierten Add-Ins.',
+	'pptx.insert.tip.myAddIns': 'Ein vom Editor bereitgestelltes Add-In öffnen.',
 	'pptx.insert.tip.zoom':
 		'Fügt einen Zoom zu einer Folie oder einem Abschnitt ein, um in der Präsentation zu navigieren.',
 	'pptx.insert.tip.link':

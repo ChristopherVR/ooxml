@@ -7,6 +7,16 @@
 import type { RibbonStrings } from './en';
 
 export const zhCNRibbon: RibbonStrings = {
+	'Add-ins': '加载项',
+	'Get Add-ins': '获取加载项',
+	'My Add-ins': '我的加载项',
+	Install: '安装',
+	Remove: '删除',
+	'Could not update the add-in.': '无法更新加载项。',
+	'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'浏览 Microsoft Office 加载项。此编辑器运行宿主应用提供的加载项。',
+	'Browse Microsoft Marketplace': '浏览 Microsoft Marketplace',
+	'No add-ins are available in this editor.': '此编辑器中没有可用的加载项。',
 	Transform: '转换',
 	WordArt: '艺术字',
 	'WordArt text': '艺术字文本',

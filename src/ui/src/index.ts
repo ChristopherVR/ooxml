@@ -10,6 +10,7 @@ export * from './glyph';
 export * from './icons';
 export * from './embedding/index';
 export * from './ribbon/add-in-tabs';
+export { setOfficeAddInCatalog, type OfficeAddInCatalogEntry } from './ribbon/add-in-dialog';
 export * from './presence';
 export * from './smartart';
 export * from './teams/index';

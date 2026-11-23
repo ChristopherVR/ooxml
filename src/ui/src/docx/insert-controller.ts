@@ -40,12 +40,13 @@ import { pictureClipboardPlugin } from './picture-drop';
 import { SmartArtController } from './smartart-controller';
 import { setSelectedChartLegend } from './chart-commands';
 import type { RibbonAction } from './ribbon';
-import { translate, type EditorLocale } from './localization';
+import { translate, translateUiText, type EditorLocale } from './localization';
 import { pickOfficeSymbol } from '../form/symbol-picker';
 import { insertPlainText } from './insert-text-commands';
 import { insertLocalDrawing } from './insert-local-drawing';
 import { captureScreenshotFile } from '../form/display-clipping';
 import { pickOfficeIcon } from '../form/icon-picker';
+import { openOfficeAddIns } from '../ribbon/add-in-dialog';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
 import { updateFields } from './field-update';
@@ -131,6 +132,14 @@ export class InsertController {
 			if (view?.editable) void this.insertScreenshot(view, action.clip);
 		} else if (action.type === 'openSymbolGallery') {
 			if (view?.editable) void this.insertSymbol(view);
+		} else if (action.type === 'officeAddIns') {
+			const toolbar = this.host.toolbar();
+			const root = toolbar?.getRootNode();
+			if (toolbar && root?.nodeType === 11) {
+				openOfficeAddIns(root as ShadowRoot, action.mode, (label) =>
+					translateUiText(toolbar, label),
+				);
+			}
 		} else if (action.type === 'insertIcon') {
 			if (view?.editable) void this.insertIcon(view);
 		} else if (action.type === 'insertLocalDrawing') {

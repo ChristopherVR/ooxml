@@ -12,7 +12,7 @@ export function WebRibbonSection({
 	onCommand,
 }: {
 	groups: readonly RibbonGroupView[];
-	onCommand: (id: RibbonControlId) => void;
+	onCommand: (id: RibbonControlId, host: PptxUiRibbonSectionElement) => void;
 }): React.ReactElement {
 	const ref = useRef<PptxUiRibbonSectionElement>(null);
 	useEffect(() => {
@@ -25,7 +25,7 @@ export function WebRibbonSection({
 		if (!host) {
 			return;
 		}
-		const request = (event: Event) => onCommand((event as RibbonCommandRequestEvent).detail.id);
+		const request = (event: Event) => onCommand((event as RibbonCommandRequestEvent).detail.id, host);
 		host.addEventListener('command-request', request);
 		return () => host.removeEventListener('command-request', request);
 	}, [onCommand]);

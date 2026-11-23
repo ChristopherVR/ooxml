@@ -113,6 +113,7 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	title: 'scalar',
 	isDecorative: 'scalar',
 	preferRelativeResize: 'scalar',
+	liveFeed: 'scalar',
 	oleUpdateAutomatic: 'scalar',
 	cropLeft: 'scalar',
 	cropTop: 'scalar',

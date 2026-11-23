@@ -668,6 +668,10 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 						canvasSize: s.canvasSize,
 						themeColors: templateSchemeFromTheme(s.theme?.colorScheme),
 						insert: insertHandlers.addElement,
+						commitSlides: (slides) => {
+							history.markDirty();
+							s.setSlides(slides);
+						},
 						sections: s.sections ?? [],
 						importSlides: props.onImportSlides,
 						insertSummary: s.setSections

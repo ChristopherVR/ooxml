@@ -909,6 +909,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				return;
 			}
 			return attachViewerHyperlinks(root, {
+				translate: t,
 				getState: () => ({
 					slide: slides[activeSlideIndex],
 					slideCount: slides.length,

@@ -11,9 +11,56 @@
  * modules' id convention.
  */
 
-import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
+import type { PptxElement, PptxGraphicFrameExtension, PptxSlide } from 'ooxml-core/pptx';
 export { remapZoomTargets } from '../../core/utils/remap-zoom-targets';
 import { cloneElement, cloneSlide, duplicateSlide } from '../../index';
+
+/** Identifies footage created by the editor without treating ordinary slide videos as recordings. */
+export const CAMERA_CLIP_EXTENSION: PptxGraphicFrameExtension = {
+	uri: 'urn:ooxml:powerpoint:camera-clip',
+	xml: {
+		'@_uri': 'urn:ooxml:powerpoint:camera-clip',
+		'ooxml:cameraClip': { '@_xmlns:ooxml': 'urn:ooxml:powerpoint:camera-clip' },
+	},
+};
+
+export function isCameraClip(element: PptxElement): boolean {
+	return (
+		element.type === 'media' &&
+		element.mediaType === 'video' &&
+		!!element.extensionXml?.some(({ uri }) => uri === CAMERA_CLIP_EXTENSION.uri)
+	);
+}
+
+export function containsCameraClip(elements: readonly PptxElement[]): boolean {
+	return elements.some(
+		(element) =>
+			isCameraClip(element) || (element.type === 'group' && containsCameraClip(element.children)),
+	);
+}
+
+export function removeCameraClips(elements: PptxElement[]): PptxElement[] {
+	return elements.flatMap((element) => {
+		if (isCameraClip(element)) return [];
+		if (element.type !== 'group' || !containsCameraClip(element.children)) return [element];
+		const children = removeCameraClips(element.children);
+		return children.length ? [{ ...element, children }] : [];
+	});
+}
+
+/** Clear timed advances while preserving transition effects and click behavior. */
+export function clearSlideTimings(slides: readonly PptxSlide[], slideIndex?: number): PptxSlide[] {
+	return slides.map((slide, index) => {
+		if (
+			(slideIndex !== undefined && slideIndex !== index) ||
+			slide.transition?.advanceAfterMs === undefined
+		)
+			return slide;
+		const transition = { ...slide.transition };
+		delete transition.advanceAfterMs;
+		return { ...slide, transition, isDirty: true };
+	});
+}
 
 export interface SlidePasteRequest {
 	/** Independent slide copies with their new identities already assigned. */

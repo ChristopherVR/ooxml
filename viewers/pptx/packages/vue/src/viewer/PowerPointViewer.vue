@@ -1568,6 +1568,7 @@ watchEffect(
 		}
 		onCleanup(
 			attachViewerHyperlinks(root, {
+				translate: t,
 				getState: () => ({
 					slide: mergedSlides.value[activeSlideIndex.value],
 					slideCount: mergedSlides.value.length,
@@ -2033,6 +2034,10 @@ const baseRibbonProps = useViewerRibbonProps({
 		canvasSize: canvasSize.value,
 		themeColors: themeColorMap.value,
 		insert: ops.addElement,
+		commitSlides: (next) => {
+			history.pushHistory();
+			slides.value = next;
+		},
 		sections: sections.value,
 		importSlides: (source, indexes) =>
 			slidePackageClipboard.importSlides(activeSlideIndex.value + 1, source, indexes),

@@ -1,5 +1,6 @@
 /** Ribbon style galleries and their contextual tabs. */
 export const translations: Record<string, string> = {
+	'pptx.cameo.unavailable': 'Cámara no disponible',
 	'pptx.ribbon.tab.shapeFormat': 'Formato de forma',
 	'pptx.ribbon.tab.pictureFormat': 'Formato de imagen',
 	'pptx.ribbon.tab.tableDesign': 'Diseño de tabla',
@@ -155,9 +156,32 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.models3d': 'Inserta un modelo 3D desde un archivo GLB.',
 	'pptx.insert.tip.smartArt': 'Inserta un gráfico SmartArt para comunicar información visualmente.',
 	'pptx.insert.tip.chart': 'Inserta un gráfico para ilustrar y comparar datos.',
-	'pptx.insert.tip.forms': 'Agrega un formulario para recopilar respuestas de otras personas.',
+	'pptx.addIns.Get Add-ins': 'Obtener complementos',
+	'pptx.addIns.My Add-ins': 'Mis complementos',
+	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Explore los complementos para Microsoft Office. Este editor ejecuta los complementos proporcionados por su aplicación anfitriona.',
+	'pptx.addIns.Browse Microsoft Marketplace': 'Explorar Microsoft Marketplace',
+	'pptx.addIns.No add-ins are available in this editor.':
+		'No hay complementos disponibles en este editor.',
+	'pptx.forms.Forms': 'Formularios',
+	'pptx.forms.Open form': 'Abrir formulario',
+	'pptx.forms.Insert link': 'Insertar vínculo',
+	'pptx.forms.load': 'Cargar formulario de Microsoft',
+	'pptx.cameo.existing': 'Esta diapositiva ya contiene Cameo.',
+	'pptx.forms.openInBrowser': 'Abrir en el navegador',
+	'pptx.forms.Create or manage a form': 'Crear o administrar un formulario',
+	'pptx.forms.Text to display': 'Texto para mostrar',
+	'pptx.forms.Microsoft Forms response link': 'Vínculo de respuesta de Microsoft Forms',
+	'pptx.forms.Enter a Microsoft Forms response link.':
+		'Escriba un vínculo de respuesta de Microsoft Forms.',
+	'pptx.forms.Close': 'Cerrar',
+	'pptx.addIns.Install': 'Instalar',
+	'pptx.addIns.Remove': 'Quitar',
+	'pptx.addIns.Could not update the add-in.': 'No se pudo actualizar el complemento.',
+	'pptx.addIns.Close': 'Cerrar',
+	'pptx.insert.tip.forms': 'Inserta un vínculo a un formulario o cuestionario de Microsoft.',
 	'pptx.insert.tip.getAddIns': 'Obtiene complementos de Office de la tienda.',
-	'pptx.insert.tip.myAddIns': 'Administra los complementos instalados.',
+	'pptx.insert.tip.myAddIns': 'Abre un complemento proporcionado por este editor.',
 	'pptx.insert.tip.zoom':
 		'Inserta un zoom a una diapositiva o sección para navegar por la presentación.',
 	'pptx.insert.tip.link':

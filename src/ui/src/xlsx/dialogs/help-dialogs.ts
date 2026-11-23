@@ -48,6 +48,7 @@ export const SUPPORTED_FEATURES = [
 	'Editing threaded comment replies',
 	'Resolving and reopening comments',
 	'Hyperlinks',
+	'Microsoft Forms response links',
 	'Data validation',
 	'Sort and filter',
 	'AutoFilter drop-down: value checklist with search, Text, Number and Date filters, Top 10, Above and Below Average, colour and custom criteria',
@@ -65,6 +66,7 @@ export const UNSUPPORTED_FEATURES = [
 	'External formula services: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE',
 	'Creating @mentions',
 	'Macros (VBA is kept in the file but never run)',
+	'Microsoft Forms response synchronization and Microsoft Marketplace add-in execution',
 	'Changing the workbook theme',
 ] as const;
 

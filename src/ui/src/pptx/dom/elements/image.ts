@@ -73,7 +73,18 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 	}
 
 	const src = getImageSrc(element, new Map(context.mediaDataUrls));
+	const cameo =
+		(element.type === 'image' || element.type === 'picture') &&
+		element.liveFeed &&
+		(context.interactive || context.presenting)
+			? doc.createElement('pptx-ui-cameo-preview')
+			: undefined;
+	if (cameo) {
+		cameo.cameraLabel = context.t('pptx.insert.cameo');
+		cameo.unavailableLabel = context.t('pptx.cameo.unavailable');
+	}
 	if (!src) {
+		if (cameo) surface.append(cameo);
 		return el;
 	}
 
@@ -102,6 +113,11 @@ export const renderImageElement: ElementRenderer = (element, zIndex, context) =>
 	// It hangs off the box, beside a framed picture's clipped surface, as in the
 	// other bindings (their reflection rides `ShapeEffectOverlay` on the box).
 	const reflection = renderReflectionOverlay(doc, element, context.mediaDataUrls);
+	// The preview overlays the poster inside the same picture mask.
+	if (cameo) {
+		cameo.style.zIndex = '1';
+		surface.append(cameo);
+	}
 
 	// `@sx`/`@sy` (ECMA-376 §20.1.8.58) is a percentage of the picture's own
 	// NATIVE pixel size, not of this container. The tile is painted at the

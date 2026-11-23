@@ -25,7 +25,7 @@ import type {
 	ViewerOptionsStore,
 	ViewerTheme,
 } from 'ooxml-ui/pptx';
-import type { ParsedTableStyleMap, PptxSaveFormat, TextSegment } from 'pptx-viewer-core';
+import type { ParsedTableStyleMap, PptxSaveFormat, PptxSlide, TextSegment } from 'pptx-viewer-core';
 
 import { buildChromeCallbacks } from './chrome-callbacks';
 import type { ChromeCallbackDeps } from './chrome-callbacks';
@@ -79,6 +79,7 @@ export interface ChromeLifecycle {
 
 export interface MountChromeDeps extends ChromeCallbackDeps {
 	importSlides?: (source: ArrayBuffer, indexes: readonly number[]) => Promise<void>;
+	commitSlides?: ((slides: PptxSlide[]) => void) | undefined;
 	doc: Document;
 	container: HTMLElement;
 	t: Translator;
@@ -311,6 +312,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 					themeColors: templateSchemeFromTheme(colorScheme),
 					insert: (element) => deps.getEditActions().insertElement(element),
 					importSlides: deps.importSlides,
+					commitSlides: deps.commitSlides,
 					insertSummary: (mutation) => {
 						deps.getEditActions().sections.commitSummaryZoom(mutation);
 						deps.goToSlide(mutation.slideIndex);
@@ -594,6 +596,7 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	};
 	chrome.root.addEventListener('click', onHyperlinkClick);
 	const detachHyperlinks = attachViewerHyperlinks(chrome.root, {
+		translate: deps.t,
 		getState: () => {
 			const state = store.get();
 			return {
@@ -789,6 +792,7 @@ export interface ChromeHost {
 	/** The viewer's live theme (kept in sync by `setTheme`); read on mount/remount instead of the static `options.theme`. */
 	currentTheme: ViewerTheme | undefined;
 	editor: {
+		commitSlides?(slides: PptxSlide[]): void;
 		commitNotes(notes: string, notesSegments?: TextSegment[]): void;
 		getEditActions(): EditActions;
 		getFindReplaceActions(): FindReplaceActions;
@@ -1119,6 +1123,7 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		getFileName: () => (host.getFileName ? host.getFileName() : host.options.fileName),
 		importSlides: host.importSlides,
 		getEditActions: () => host.editor.getEditActions(),
+		commitSlides: host.editor.commitSlides?.bind(host.editor),
 		getFindReplaceActions: () => host.editor.getFindReplaceActions(),
 		applyPresentationTheme: (presetId) => host.applyPresentationTheme(presetId),
 		setDrawTool: (tool) => host.editor.setDrawTool(tool),

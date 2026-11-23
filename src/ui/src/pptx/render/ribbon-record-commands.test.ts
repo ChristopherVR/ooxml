@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { PptxSlide } from 'ooxml-core/pptx';
 
 import { buildRecordRibbon, RECORD_COMMAND_GROUPS } from './ribbon-record-commands';
 import { ribbonGroupViews, SLIDE_SHOW_COMMAND_GROUPS } from './ribbon-slide-show-commands';
@@ -39,5 +40,31 @@ describe('record ribbon model', () => {
 			id: 'slideShow.startSlideShow.fromBeginning',
 			title: 't:pptx.slideShow.fromBeginningTooltip',
 		});
+	});
+
+	it('enables Cameo and Clear timings when the editable deck has a usable scope', () => {
+		const slides: PptxSlide[] = [
+			{ id: 'first', rId: 'rId1', slideNumber: 1, elements: [] },
+			{
+				id: 'second',
+				rId: 'rId2',
+				slideNumber: 2,
+				elements: [],
+				transition: { type: 'fade', advanceAfterMs: 700 },
+			},
+		];
+		const target = {
+			slides,
+			slideIndex: 0,
+			canvasSize: { width: 800, height: 600 },
+			insert: () => {},
+		};
+		const disabled = (commitSlides?: () => void) =>
+			buildRecordRibbon(t, { ...target, commitSlides })
+				.flatMap((group) => group.commands)
+				.filter((command) => command.disabled)
+				.map((command) => command.id);
+		expect(disabled()).toContain('record.manage.clear');
+		expect(disabled(() => {})).toStrictEqual(['record.manage.reset', 'record.help.learnMore']);
 	});
 });

@@ -7,6 +7,16 @@
 import type { RibbonStrings } from './en';
 
 export const esRibbon: RibbonStrings = {
+	'Add-ins': 'Complementos',
+	'Get Add-ins': 'Obtener complementos',
+	'My Add-ins': 'Mis complementos',
+	Install: 'Instalar',
+	Remove: 'Quitar',
+	'Could not update the add-in.': 'No se pudo actualizar el complemento.',
+	'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Explore los complementos para Microsoft Office. Este editor ejecuta los complementos proporcionados por su aplicación anfitriona.',
+	'Browse Microsoft Marketplace': 'Explorar Microsoft Marketplace',
+	'No add-ins are available in this editor.': 'No hay complementos disponibles en este editor.',
 	Transform: 'Transformar',
 	WordArt: 'WordArt',
 	'WordArt text': 'Texto de WordArt',

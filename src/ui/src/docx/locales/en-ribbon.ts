@@ -1,5 +1,15 @@
 /** Ribbon, formatting and search strings. Keys are the English UI text the localizer looks up. */
 export const enRibbon = {
+	'Add-ins': 'Add-ins',
+	'Get Add-ins': 'Get Add-ins',
+	'My Add-ins': 'My Add-ins',
+	Install: 'Install',
+	Remove: 'Remove',
+	'Could not update the add-in.': 'Could not update the add-in.',
+	'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.',
+	'Browse Microsoft Marketplace': 'Browse Microsoft Marketplace',
+	'No add-ins are available in this editor.': 'No add-ins are available in this editor.',
 	Transform: 'Transform',
 	WordArt: 'WordArt',
 	'WordArt text': 'WordArt text',

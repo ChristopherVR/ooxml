@@ -1,6 +1,7 @@
 import type { OfficeUiDialog } from '../../dialog/dialog';
 import { defineElement } from '../../registry';
-import { canRequestInsert } from '../render';
+import { canRequestInsert, insertLabel } from '../render';
+import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
 import type { RibbonInsertIntent, RibbonInsertState } from '../render';
 import { attachRibbonInsertStyles } from './ribbon-insert-styles';
 import { createGraphicInsert } from './ribbon-graphic-insert';
@@ -33,6 +34,12 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 		private readonly insertGraphic = createGraphicInsert(this, () => this.model);
 		private readonly view = createRibbonInsertView(this.ownerDocument, (intent) => {
 			if (canRequestInsert(this.model, intent)) {
+				if (intent.kind === 'addIns') {
+					openOfficeAddIns(this, intent.value, (label) =>
+						insertLabel(this.model, [`pptx.addIns.${label}`, label]),
+					);
+					return;
+				}
 				if (intent.kind === 'graphic' || intent.kind === 'zoom' || intent.kind === 'workflow') {
 					this.insertGraphic(intent);
 					return;

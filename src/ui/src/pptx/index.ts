@@ -25,6 +25,7 @@ export * from './render';
 export * from './three-view';
 export * from './export';
 export * from './web-components';
+export { runRecordRibbonAction } from './web-components/ribbon-record-actions';
 // All bindings import this internal package, so registration happens once per page.
 registerPptxWebControls();
 

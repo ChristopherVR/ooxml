@@ -69,6 +69,7 @@ export function ToolbarLateTabs({
 
 			{section === 'record' && (
 				<RecordSection
+					getTarget={p.canEdit ? p.getGraphicTarget : undefined}
 					onRecordFromBeginning={p.onEnterRehearsalMode ?? (() => {})}
 					onRecordFromCurrent={p.onEnterRehearsalMode ?? (() => {})}
 				/>

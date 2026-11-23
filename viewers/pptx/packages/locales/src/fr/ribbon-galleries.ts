@@ -1,5 +1,6 @@
 /** Ribbon style galleries and their contextual tabs. */
 export const translations: Record<string, string> = {
+	'pptx.cameo.unavailable': 'Caméra indisponible',
 	'pptx.ribbon.tab.shapeFormat': 'Format de la forme',
 	'pptx.ribbon.tab.pictureFormat': "Format de l'image",
 	'pptx.ribbon.tab.tableDesign': 'Création de tableau',
@@ -157,9 +158,32 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.smartArt':
 		'Insère un graphique SmartArt pour communiquer visuellement des informations.',
 	'pptx.insert.tip.chart': 'Insère un graphique pour illustrer et comparer des données.',
-	'pptx.insert.tip.forms': 'Ajoute un formulaire pour recueillir les réponses d’autres personnes.',
+	'pptx.addIns.Get Add-ins': 'Obtenir des compléments',
+	'pptx.addIns.My Add-ins': 'Mes compléments',
+	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Parcourez les compléments Microsoft Office. Cet éditeur exécute les compléments fournis par son hôte.',
+	'pptx.addIns.Browse Microsoft Marketplace': 'Parcourir Microsoft Marketplace',
+	'pptx.addIns.No add-ins are available in this editor.':
+		'Aucun complément n’est disponible dans cet éditeur.',
+	'pptx.forms.Forms': 'Formulaires',
+	'pptx.forms.Open form': 'Ouvrir le formulaire',
+	'pptx.forms.Insert link': 'Insérer un lien',
+	'pptx.forms.load': 'Charger le formulaire Microsoft',
+	'pptx.cameo.existing': 'Cette diapositive contient déjà un Cameo.',
+	'pptx.forms.openInBrowser': 'Ouvrir dans le navigateur',
+	'pptx.forms.Create or manage a form': 'Créer ou gérer un formulaire',
+	'pptx.forms.Text to display': 'Texte à afficher',
+	'pptx.forms.Microsoft Forms response link': 'Lien de réponse Microsoft Forms',
+	'pptx.forms.Enter a Microsoft Forms response link.':
+		'Saisissez un lien de réponse Microsoft Forms.',
+	'pptx.forms.Close': 'Fermer',
+	'pptx.addIns.Install': 'Installer',
+	'pptx.addIns.Remove': 'Supprimer',
+	'pptx.addIns.Could not update the add-in.': 'Impossible de modifier le complément.',
+	'pptx.addIns.Close': 'Fermer',
+	'pptx.insert.tip.forms': 'Insérer un lien vers un formulaire ou un questionnaire Microsoft.',
 	'pptx.insert.tip.getAddIns': 'Obtient des compléments Office depuis le Store.',
-	'pptx.insert.tip.myAddIns': 'Gère les compléments installés.',
+	'pptx.insert.tip.myAddIns': 'Ouvrir un complément fourni par cet éditeur.',
 	'pptx.insert.tip.zoom':
 		'Insère un zoom vers une diapositive ou une section pour naviguer dans la présentation.',
 	'pptx.insert.tip.link':

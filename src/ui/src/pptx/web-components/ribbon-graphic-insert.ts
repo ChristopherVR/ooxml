@@ -2,6 +2,7 @@ import type { PptxElement, TextPptxElement } from 'ooxml-core/pptx';
 import { pickOfficeSymbol } from '../../form/symbol-picker';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { renderLocalSvg } from '../../form/local-svg';
+import { pickMicrosoftForm } from '../../form/microsoft-forms';
 import { generateElementId } from '../render/element-clipboard';
 import { captureInlineSymbolCaret } from '../render/inline-symbol';
 import { WORDART_STYLES } from '../render/ribbon-galleries/wordart-styles-gallery';
@@ -12,11 +13,14 @@ import {
 	type RibbonGraphicTarget,
 	type RibbonInsertWorkflow,
 	type RibbonInsertState,
+	type RibbonGraphic,
+	canRequestInsert,
 	insertLabel,
 } from '../render/ribbon-insert-state';
 import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { pickScreenshot, pickScreenRecording } from './ribbon-capture';
 import { downloadPhotoAlbum, pickPhotoAlbum, pickReuseSlides } from './ribbon-deck-insert';
+import { createCameoElement } from './cameo-insert';
 import { pickRibbonZoom } from './ribbon-zoom-picker';
 import { pickLocalObject } from './ribbon-local-object';
 import css from './ribbon-graphic-insert.css?raw';
@@ -71,7 +75,7 @@ export function createGraphicInsert(
 				if (!picked) return;
 				const live = current();
 				const elements = Array.isArray(picked) ? picked : [picked];
-				if (!live || !elements.length) return;
+				if (!live || !elements.length || !canRequestInsert(readState(), intent)) return;
 				for (const element of elements) live.insert(element);
 				onInserted?.();
 			})
@@ -152,7 +156,7 @@ function newGraphicText(
 async function pickGraphic(
 	host: HTMLElement,
 	target: RibbonGraphicTarget,
-	kind: 'symbol' | 'wordArt',
+	kind: RibbonGraphic,
 	text: InsertText,
 ): Promise<PptxElement | undefined> {
 	if (kind === 'symbol') {
@@ -160,8 +164,23 @@ async function pickGraphic(
 		const symbol = await pickSymbol(host, heading, text);
 		return symbol ? newGraphicText(target, heading, symbol, 24) : undefined;
 	}
-	return pickWordArt(host, target, text);
-}
+	if (kind === 'wordArt') return pickWordArt(host, target, text);
+	if (kind === 'cameo') {
+		return createCameoElement(
+			host.ownerDocument,
+			target.canvasSize,
+			text('pptx.insert.cameo', 'Cameo'),
+		);
+	}
+	if (kind === 'forms') {
+		const form = await pickMicrosoftForm(host, (label) => text(`pptx.forms.${label}`, label));
+		if (!form) return undefined;
+		const element = newGraphicText(target, form.title, form.title, 26);
+		element.height = 48;
+		element.textStyle = { ...element.textStyle, color: '#0563c1', underline: true };
+		element.actionClick = { url: form.url, tooltip: form.title };
+		return element;
+	}
 
 async function pickIcons(
 	host: HTMLElement,

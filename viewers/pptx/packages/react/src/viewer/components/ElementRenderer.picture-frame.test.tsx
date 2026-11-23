@@ -84,6 +84,12 @@ function frameFollowsImage(): boolean {
 }
 
 describe('react picture frame paints over the picture', () => {
+	it('renders a Cameo control on the interactive surface', () => {
+		const cameo = { ...PICTURE, liveFeed: true };
+		act(() => root.render(<ElementRenderer {...props(cameo)} canInteract />));
+		expect(container.querySelector('pptx-ui-cameo-preview')).not.toBeNull();
+	});
+
 	it('keeps its separately animated background frame above the image', () => {
 		act(() =>
 			root.render(

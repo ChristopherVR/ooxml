@@ -157,6 +157,8 @@ import { RibbonViewSectionComponent } from './ribbon-view-section.component';
 			}
 			@case ('record') {
 				<pptx-ribbon-record-section
+					[canEdit]="canEdit()"
+					[slideIndex]="slideIndex()"
 					(recordFromBeginning)="recordFromBeginning.emit()"
 					(recordFromCurrent)="recordFromCurrent.emit()"
 				/>

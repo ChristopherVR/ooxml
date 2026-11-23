@@ -16,6 +16,7 @@ import type {
 import { isInkElement } from 'pptx-viewer-core';
 import React from 'react';
 
+import { useTranslation } from '../../i18n/use-translation';
 import {
 	getImageSurfaceStyle,
 	getTextLayoutStyle,
@@ -36,6 +37,14 @@ import { renderTextElementBody } from './TextElementBody';
 import { ZoomElementRenderer } from './ZoomElementRenderer';
 
 export type { RenderBodyOptions } from './element-body-types';
+
+function CameoPreview() {
+	const { t } = useTranslation();
+	return React.createElement('pptx-ui-cameo-preview', {
+		'camera-label': t('pptx.insert.cameo'),
+		'unavailable-label': t('pptx.cameo.unavailable'),
+	});
+}
 
 export function renderBody(options: RenderBodyOptions): React.ReactNode {
 	const {
@@ -108,6 +117,9 @@ export function renderBody(options: RenderBodyOptions): React.ReactNode {
 		return (
 			<div className='absolute inset-0 pointer-events-none' style={getImageSurfaceStyle(el)}>
 				{renderImg(el, imgStyle, imgFilter, imgAlt, imgOpacity)}
+				{!isStaticSurface && (el.type === 'image' || el.type === 'picture') && el.liveFeed ? (
+					<CameoPreview />
+				) : null}
 				{vecShape ? <div className='pointer-events-none absolute inset-0'>{vecShape}</div> : null}
 			</div>
 		);

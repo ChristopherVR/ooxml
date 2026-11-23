@@ -1,6 +1,7 @@
 import { XmlObject, PptxElement } from '../../types';
 import type { MediaPptxElement } from '../../types';
 import { cropShapeForPresetGeometry } from '../../utils/crop-shape-geometry';
+import { isLiveFeedPicture } from '../../utils/cameo';
 import { isCNvPrMarkedDecorative } from '../../utils/decorative-extension';
 import { parseDrawingMediaReference } from '../../utils/drawing-media-reference';
 import { xmlAttr, xmlChild } from '../../utils/xml-access';
@@ -447,6 +448,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				id,
 				name: picElementName || undefined,
 				type: 'picture',
+				...(isLiveFeedPicture(pic) && { liveFeed: true }),
 				...(inheritedTransform !== undefined && { inheritedTransform }),
 				x,
 				y,

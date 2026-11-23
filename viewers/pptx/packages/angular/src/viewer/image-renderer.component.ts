@@ -1,7 +1,16 @@
 import { NgStyle, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	CUSTOM_ELEMENTS_SCHEMA,
+	inject,
+	input,
+	signal,
+} from '@angular/core';
 import type { SafeHtml } from '@angular/platform-browser';
 import { DomSanitizer } from '@angular/platform-browser';
+import { TranslateService } from '@ngx-translate/core';
 import {
 	elementHitTargetStyle,
 	getCachedNativeImageSize,
@@ -26,6 +35,7 @@ import { StrokeOutlineComponent } from './stroke-outline.component';
 	selector: 'pptx-image-renderer',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [
 		NgStyle,
 		NgTemplateOutlet,
@@ -116,10 +126,17 @@ import { StrokeOutlineComponent } from './stroke-outline.component';
 			@if (view().colorWashStyle; as washStyle) {
 				<div class="pptx-ng-image-color-wash" [ngStyle]="washStyle"></div>
 			}
+			@if (showCameo()) {
+				<pptx-ui-cameo-preview
+					[attr.camera-label]="translate?.instant('pptx.insert.cameo')"
+					[attr.unavailable-label]="translate?.instant('pptx.cameo.unavailable')"
+				></pptx-ui-cameo-preview>
+			}
 		</ng-template>
 	`,
 })
 export class ImageRendererComponent {
+	protected readonly translate = inject(TranslateService, { optional: true });
 	readonly element = input.required<PptxElement>();
 	readonly mediaDataUrls = input<Map<string, string>>(new Map());
 	readonly zIndex = input<number>(0);
@@ -137,6 +154,14 @@ export class ImageRendererComponent {
 	readonly editable = input<boolean>(false);
 	/** True only on the live presentation stage; see `ElementRendererComponent.presenting`. */
 	readonly presenting = input<boolean>(false);
+	readonly showCameo = computed(() => {
+		const element = this.element();
+		return (
+			(this.interactive() || this.presenting()) &&
+			(element.type === 'image' || element.type === 'picture') &&
+			Boolean(element.liveFeed)
+		);
+	});
 
 	/** `data-element-id` for this element, or null on a miniature surface. */
 	readonly elementIdAttr = computed<string | null>(() =>

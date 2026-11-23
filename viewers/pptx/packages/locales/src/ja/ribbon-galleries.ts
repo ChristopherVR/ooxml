@@ -1,4 +1,5 @@
 export const translations = {
+	'pptx.cameo.unavailable': 'カメラを利用できません',
 	'pptx.ribbon.tab.shapeFormat': '図形の書式',
 	'pptx.ribbon.tab.pictureFormat': '図の形式',
 	'pptx.ribbon.tab.tableDesign': 'テーブル デザイン',
@@ -153,9 +154,32 @@ export const translations = {
 	'pptx.insert.tip.models3d': 'GLB ファイルから 3D モデルを挿入します。',
 	'pptx.insert.tip.smartArt': 'SmartArt グラフィックを挿入して、情報を視覚的に伝えます。',
 	'pptx.insert.tip.chart': 'グラフを挿入して、データを図示および比較します。',
-	'pptx.insert.tip.forms': 'フォームを追加して、他のユーザーから回答を収集します。',
+	'pptx.addIns.Get Add-ins': 'アドインを入手',
+	'pptx.addIns.My Add-ins': '個人用アドイン',
+	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Microsoft Office のアドインを参照できます。このエディターはホストが提供するアドインを実行します。',
+	'pptx.addIns.Browse Microsoft Marketplace': 'Microsoft Marketplace を参照',
+	'pptx.addIns.No add-ins are available in this editor.':
+		'このエディターで利用できるアドインはありません。',
+	'pptx.forms.Forms': 'フォーム',
+	'pptx.forms.Open form': 'フォームを開く',
+	'pptx.forms.Insert link': 'リンクを挿入',
+	'pptx.forms.load': 'Microsoft フォームを読み込む',
+	'pptx.cameo.existing': 'このスライドには既にカメオがあります。',
+	'pptx.forms.openInBrowser': 'ブラウザーで開く',
+	'pptx.forms.Create or manage a form': 'フォームを作成または管理',
+	'pptx.forms.Text to display': '表示するテキスト',
+	'pptx.forms.Microsoft Forms response link': 'Microsoft Forms の回答リンク',
+	'pptx.forms.Enter a Microsoft Forms response link.':
+		'Microsoft Forms の回答リンクを入力してください。',
+	'pptx.forms.Close': '閉じる',
+	'pptx.addIns.Install': 'インストール',
+	'pptx.addIns.Remove': '削除',
+	'pptx.addIns.Could not update the add-in.': 'アドインを更新できませんでした。',
+	'pptx.addIns.Close': '閉じる',
+	'pptx.insert.tip.forms': 'Microsoft のフォームやクイズへのリンクを挿入します。',
 	'pptx.insert.tip.getAddIns': 'ストアから Office アドインを入手します。',
-	'pptx.insert.tip.myAddIns': 'インストールしたアドインを管理します。',
+	'pptx.insert.tip.myAddIns': 'このエディターが提供するアドインを開きます。',
 	'pptx.insert.tip.zoom':
 		'スライドまたはセクションへのズームを挿入して、プレゼンテーション内を移動します。',
 	'pptx.insert.tip.link':

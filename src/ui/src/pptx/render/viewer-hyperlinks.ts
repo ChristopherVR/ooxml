@@ -1,5 +1,7 @@
 import type { PptxAction, PptxSlide } from 'ooxml-core/pptx';
 
+import { microsoftFormsResponseUrl } from '../../form/microsoft-forms';
+import { createTranslator, type Translator } from '../i18n/translator';
 import {
 	clampSlideIndex,
 	isPpactionUrl,
@@ -7,6 +9,7 @@ import {
 	safeOpenUrl,
 } from './hyperlink-security';
 import { findPresentationActionTarget, resolvePresentationAction } from './presentation-action';
+import { presentMicrosoftForm } from './present-form';
 
 /** Offered to the host before following a text-run or shape hyperlink. */
 export interface HyperlinkClickEvent {
@@ -31,6 +34,7 @@ export interface ViewerHyperlinkState {
 export interface ViewerHyperlinkNavigation {
 	getState(): ViewerHyperlinkState;
 	goToSlide(index: number): void;
+	translate?: Translator;
 	onHyperlinkClick?: HyperlinkClickHandler;
 	/** Ask before an external link opens; may answer later (an in-app dialog), the link then opens on true. */
 	confirmExternalHyperlink?(url: string): boolean | Promise<boolean>;
@@ -70,6 +74,7 @@ export function attachViewerHyperlinks(
 	const readOnlyAttr = 'data-pptx-read-only';
 	const previousReadOnly = root.getAttribute(readOnlyAttr);
 	root.toggleAttribute(readOnlyAttr, !navigation.getState().editable);
+	let formDialog: ReturnType<typeof presentMicrosoftForm> | undefined;
 
 	const follow = (event: MouseEvent | KeyboardEvent): void => {
 		const target = event.target;
@@ -119,6 +124,22 @@ export function attachViewerHyperlinks(
 		}
 
 		const permitted = navigation.onHyperlinkClick?.(clickInfo(action, shape?.elementId)) !== false;
+		const formUrl =
+			state.presenting && resolution.intent.kind === 'openUrl'
+				? microsoftFormsResponseUrl(resolution.intent.url)
+				: undefined;
+		if (permitted && formUrl) {
+			event.preventDefault();
+			event.stopImmediatePropagation();
+			if (!formDialog?.open) {
+				formDialog = presentMicrosoftForm(
+					root,
+					formUrl,
+					navigation.translate ?? createTranslator(),
+				);
+			}
+			return;
+		}
 		// The show's existing runner owns its order, sound and highlight effects.
 		// Internal runs now participate in that same action-target resolution.
 		if (permitted && state.presenting && (internal || shape)) return;
@@ -151,6 +172,7 @@ export function attachViewerHyperlinks(
 	root.addEventListener('click', follow, true);
 	root.addEventListener('keydown', follow, true);
 	return () => {
+		if (formDialog?.open) formDialog.close();
 		root.removeEventListener('click', follow, true);
 		root.removeEventListener('keydown', follow, true);
 		if (previousReadOnly === null) root.removeAttribute(readOnlyAttr);

@@ -15,18 +15,34 @@ afterEach(() => {
 	document.body.innerHTML = '';
 });
 
-function render(element: PptxElement): HTMLElement {
+function render(element: PptxElement, presenting = false): HTMLElement {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
 	mounted = mount(ImageBox, {
 		target,
-		props: { element, mediaDataUrls: new Map<string, string>(), zIndex: 1 },
+		props: { element, mediaDataUrls: new Map<string, string>(), zIndex: 1, presenting },
 	});
 	flushSync();
 	return target;
 }
 
 describe('imageBox reflection (regression: ShapeEffectOverlay was never mounted here)', () => {
+	it('renders a Cameo control on the live presentation surface', () => {
+		const target = render(
+			{
+				type: 'image',
+				id: 'camera',
+				x: 0,
+				y: 0,
+				width: 100,
+				height: 100,
+				liveFeed: true,
+			},
+			true,
+		);
+		expect(target.querySelector('pptx-ui-cameo-preview')).not.toBeNull();
+	});
+
 	it('mirrors a reflected picture', () => {
 		// `ElementRenderer` only ever mounted `ShapeEffectOverlay` on its
 		// text/shape branch; a picture routed through this component instead

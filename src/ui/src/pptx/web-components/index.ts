@@ -70,6 +70,7 @@ import {
 } from './ribbon-home';
 import { definePptxRibbonInsert } from './ribbon-insert';
 import { definePptxZoomCover } from './zoom-cover-control';
+import { definePptxCameoPreview } from './cameo-preview';
 import { definePptxRibbonAddIn } from './ribbon-add-in';
 import { definePptxRibbonSection } from './ribbon-section';
 import { definePptxRibbonTransitions } from './ribbon-transitions';
@@ -233,6 +234,7 @@ const controls = [
 	['pptx-ui-ribbon-draw', definePptxRibbonDraw],
 	['pptx-ui-ribbon-insert', definePptxRibbonInsert],
 	['pptx-ui-zoom-cover', definePptxZoomCover],
+	['pptx-ui-cameo-preview', definePptxCameoPreview],
 	['pptx-ui-ribbon-home-clipboard', definePptxRibbonHomeClipboard],
 	['pptx-ui-ribbon-home-font', definePptxRibbonHomeFont],
 	['pptx-ui-ribbon-home-paragraph', definePptxRibbonHomeParagraph],

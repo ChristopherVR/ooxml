@@ -143,6 +143,7 @@ export const SCALAR_ELEMENT_KEYS: ReadonlySet<string> = new Set([
 	'title',
 	'isDecorative',
 	'preferRelativeResize',
+	'liveFeed',
 	'oleUpdateAutomatic',
 	'shapeType',
 	'imagePath',

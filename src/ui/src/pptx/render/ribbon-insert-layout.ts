@@ -7,7 +7,7 @@
  *
  * @module render/ribbon-insert-layout
  */
-import { INSERT_COMMANDS, canRequestInsert } from './ribbon-insert-state';
+import { INSERT_COMMANDS, canRequestInsert, slideHasCameo } from './ribbon-insert-state';
 import type {
 	InsertCommandSpec,
 	InsertLabel,
@@ -199,6 +199,7 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'cameo',
 				'Cameo',
 				'Add a live camera feed to the slide.',
+				{ intent: { kind: 'graphic', value: 'cameo' } },
 			),
 		],
 	},
@@ -249,7 +250,8 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'forms',
 				'forms',
 				'Forms',
-				'Add a form to collect responses from other people.',
+				'Insert a link to a Microsoft form or quiz.',
+				{ intent: { kind: 'graphic', value: 'forms' } },
 			),
 		],
 	},
@@ -262,13 +264,15 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 				'getAddIns',
 				'Get Add-ins',
 				'Get Office add-ins from the store.',
+				{ intent: { kind: 'addIns', value: 'getAddIns' } },
 			),
 			control(
 				'insert.addIns.myAddIns',
 				'addIns',
 				'myAddIns',
 				'My Add-ins',
-				'Manage the add-ins you have installed.',
+				'Open an add-in supplied by this editor.',
+				{ intent: { kind: 'addIns', value: 'myAddIns' } },
 			),
 		],
 	},
@@ -420,9 +424,9 @@ export const INSERT_GROUPS: readonly InsertGroupSpec[] = [
 export const INSERT_GROUP_SCALING: Readonly<
 	Record<string, { priority: number; lowValue?: boolean }>
 > = {
-	'insert.camera': { priority: 1, lowValue: true },
-	'insert.forms': { priority: 1, lowValue: true },
-	'insert.addIns': { priority: 1, lowValue: true },
+	'insert.camera': { priority: 1 },
+	'insert.forms': { priority: 1 },
+	'insert.addIns': { priority: 1 },
 	'insert.comments': { priority: 2 },
 	'insert.links': { priority: 3 },
 	'insert.slides': { priority: 4 },
@@ -438,8 +442,7 @@ export const INSERT_GROUP_SCALING: Readonly<
 export interface InsertControlStatus {
 	hidden: boolean;
 	disabled: boolean;
-	/** Why it is disabled: no backing feature, read-only, or nothing selected. */
-	reason: 'unsupported' | 'readOnly' | 'selection' | null;
+	reason: 'unsupported' | 'readOnly' | 'selection' | 'existingCameo' | null;
 }
 
 /** An entry is enabled when the host can act on its intent right now. */
@@ -474,6 +477,12 @@ export function insertControlStatus(
 	}
 	if (!state.editable) {
 		return { hidden, disabled: true, reason: 'readOnly' };
+	}
+	if (spec.intent?.kind === 'graphic' && spec.intent.value === 'cameo') {
+		const target = state.getGraphicTarget?.();
+		if (target && slideHasCameo(target.slides[target.slideIndex])) {
+			return { hidden, disabled: true, reason: 'existingCameo' };
+		}
 	}
 	const needsSelection = actions.some(
 		(intent) => intent.kind === 'command' && intent.value === 'link',

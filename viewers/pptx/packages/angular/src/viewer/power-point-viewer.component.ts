@@ -2120,6 +2120,7 @@ export class PowerPointViewerComponent
 		}
 		onCleanup(
 			attachViewerHyperlinks(root, {
+				translate: (key) => this.translateService.instant(key),
 				getState: () => ({
 					slide: this.editor.slides()[this.activeSlideIndex()],
 					slideCount: this.editor.slides().length,

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
+import { clearSlideTimings } from '../../editor/render/slide-operations';
 
 async function generatedDeck() {
 	const created = await PresentationBuilder.create();
@@ -21,6 +22,17 @@ async function generatedDeck() {
 }
 
 describe('slide transition package round-trip', () => {
+	it('removes the authored timed advance from the package and retains the transition', async () => {
+		const handler = new PptxHandler();
+		const deck = await handler.load((await generatedDeck()).buffer as ArrayBuffer);
+		const updated = clearSlideTimings(deck.slides, 0);
+		const saved = await handler.save(updated);
+		const zip = await JSZip.loadAsync(saved);
+		const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
+		expect(xml).not.toContain('advTm=');
+		expect(xml).toContain('advClick="0"');
+		expect(xml).toContain('<p:fade');
+	});
 	it('generates and reloads typed speed, timing, and start-sound options', async () => {
 		const bytes = await generatedDeck();
 		const zip = await JSZip.loadAsync(bytes);

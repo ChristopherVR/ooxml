@@ -229,7 +229,9 @@ export function createRibbon(
 	const slideShowTab = hidden('slideShow')
 		? null
 		: createSlideShowTab(doc, t, handlers.slideShow, hiddenActions);
-	const recordTab = hidden('record') ? null : createRecordTab(doc, t, handlers.slideShow);
+	const recordTab = hidden('record')
+		? null
+		: createRecordTab(doc, t, handlers.slideShow, handlers.insert.getGraphicTarget);
 	const reviewTab = hidden('review') ? null : createReviewTab(doc, t, handlers.nav);
 	const viewTab = hidden('view') ? null : createViewTab(doc, t, handlers.nav, hiddenActions);
 	const helpTab = hidden('help') ? null : createHelpTab(doc, t, handlers.nav);
@@ -468,6 +470,7 @@ export function createRibbon(
 			// follow the show settings even when the Set Up dialog changed them.
 			transitionsTab?.sync();
 			slideShowTab?.syncOptions();
+			recordTab?.sync(editable);
 			syncHome();
 			syncAnimations();
 		},

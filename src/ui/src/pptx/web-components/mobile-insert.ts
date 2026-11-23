@@ -1,5 +1,6 @@
 import type { OfficeUiDialog } from '../../dialog/dialog';
 import { defineElement } from '../../registry';
+import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
 import {
 	INSERT_CHART_TYPES,
 	INSERT_GROUPS,
@@ -58,6 +59,10 @@ const TILES = [
 	'insert.links.link',
 	'insert.text.dateTime',
 	'insert.comments.comment',
+	'insert.camera.cameo',
+	'insert.forms.forms',
+	'insert.addIns.getAddIns',
+	'insert.addIns.myAddIns',
 ] as const;
 
 type View = 'home' | 'shapes' | 'table' | 'chart' | 'layouts' | 'zoom' | 'screenshot';
@@ -134,6 +139,12 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		}
 		private request(intent: RibbonInsertAction): void {
 			if (canRequestInsert(this.model, intent)) {
+				if (intent.kind === 'addIns') {
+					openOfficeAddIns(this, intent.value, (label) =>
+						this.text([`pptx.addIns.${label}`, label]),
+					);
+					return;
+				}
 				if (intent.kind === 'graphic' || intent.kind === 'zoom' || intent.kind === 'workflow') {
 					this.insertGraphic(intent);
 					return;

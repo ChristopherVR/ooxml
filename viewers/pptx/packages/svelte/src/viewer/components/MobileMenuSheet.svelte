@@ -143,7 +143,7 @@
 					onspellcheckchange={(enabled) => props.onpreferenceschange({ ...props.preferences, spellCheck: enabled })}
 				/>
 			{:else if active === 'record'}
-				<RecordTab onfrombeginning={props.onrecordfrombeginning} onfromcurrent={props.onrecordfromcurrent} />
+				<RecordTab editor={props.editor} canvasSize={props.canvasSize} onfrombeginning={props.onrecordfrombeginning} onfromcurrent={props.onrecordfromcurrent} />
 			{:else if active === 'view'}
 				<ViewTab
 					editor={props.editor}

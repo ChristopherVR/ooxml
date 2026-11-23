@@ -1,4 +1,5 @@
 import type { XmlObject } from '../../types';
+import { liveFeedBlipExtension } from '../../utils/cameo';
 import type { IPictureXmlFactory, PictureXmlFactoryInit, PptxBuilderFactoryContext } from './types';
 
 /**
@@ -38,6 +39,7 @@ export class PictureXmlFactory implements IPictureXmlFactory {
 			'p:blipFill': {
 				'a:blip': {
 					'@_r:embed': relationshipId,
+					...(element.liveFeed && { 'a:extLst': liveFeedBlipExtension() }),
 				},
 				'a:stretch': {
 					'a:fillRect': {},

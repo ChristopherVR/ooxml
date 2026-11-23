@@ -567,6 +567,7 @@ watchEffect(
 		}
 		onCleanup(
 			attachViewerHyperlinks(root, {
+				translate: t,
 				getState: () => ({
 					slide: nav.activeSlide.value,
 					slideCount: props.slides.length,

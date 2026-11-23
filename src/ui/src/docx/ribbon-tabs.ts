@@ -76,6 +76,11 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 	}
 	panels.get('Insert')!.append(
 		group(
+			'Add-ins',
+			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
+			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
+		),
+		group(
 			'Tables',
 			tool('Insert table', 'table', { type: 'tablePicker' }, { large: true, caption: 'Table' }),
 		),

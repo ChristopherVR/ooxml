@@ -76,6 +76,9 @@ export class MediaGraphicFrameXmlFactory implements IMediaGraphicFrameXmlFactory
 					[mediaTag]: {
 						[linkAttr]: relationshipId,
 					},
+					...(element.extensionXml?.length && {
+						'a:extLst': { 'a:ext': element.extensionXml.map(({ xml }) => xml) },
+					}),
 				} as unknown as XmlObject,
 			},
 		};

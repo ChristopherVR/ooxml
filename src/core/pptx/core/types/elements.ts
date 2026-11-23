@@ -71,6 +71,8 @@ export interface PptxNonVisualDescription {
  * property distinct from `a:picLocks`.
  */
 export interface PptxPictureNonVisualProperties {
+	/** Office live-feed picture. Camera state is local to the viewer. */
+	liveFeed?: boolean | undefined;
 	/**
 	 * `a:cNvPicPr/@preferRelativeResize` (ST_Boolean, defaults to `true` when
 	 * absent). Controls whether a picture's crop rectangle is reinterpreted

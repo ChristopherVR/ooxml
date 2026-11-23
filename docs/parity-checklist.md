@@ -822,8 +822,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Custom covers stay intact.
 - [x] **P1** The Format pane can change or reset the cover image for a Slide or Section Zoom
       and for individual Summary Zoom tiles.
-- [ ] **P1** Recording: no narration or Cameo; Clear and Reset of recorded timings are disabled
-      (`ribbon-record-commands.ts`); Record Audio has no command.
+- [x] **P1** Insert > Cameo adds a live-feed picture with a saved poster and explicit local camera
+      control on the editing and live presentation surfaces.
+- [x] **P1** The Record tab inserts Cameo on the current slide or on all slides without one.
+      Clear Timings removes timed advances on the chosen slides and preserves their effects.
+- [x] **P1** The Record tab can record the camera and optional microphone into an embedded clip
+      on the current slide. Reset to Cameo removes editor-recorded clips, keeping an existing
+      Cameo or inserting a live placeholder when the slide lacks one.
+- [ ] **P1** Slide-show narration, recording directly into a styled Cameo, native PowerPoint
+      recording interoperability and Insert > Record Audio remain open.
 - [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;
       Color Typewriter plays a substitute without a warning; emphasis effects use preset
       keyframes; Blink is approximate.
@@ -981,7 +988,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** PowerPoint Insert > 3D Models accepts a local self-contained GLB 2.0 with a poster
       fallback. Insert > Object embeds an existing DOCX, XLSX or PPTX as a file icon.
 - [ ] **P1** PowerPoint Insert still lacks stock 3D assets, other 3D formats, desktop OLE activation,
-      Create New, link-to-file, live previews of newly inserted objects, Forms and add-ins.
+      Create New, link-to-file, live previews of newly inserted objects.
+- [x] **P1** Insert Microsoft Forms response links in PowerPoint and Excel, and open the response
+      form on demand during a PowerPoint slide show.
+- [ ] **P1** Native embedded Forms objects and signed-in Forms management in PowerPoint, and
+      Microsoft 365 workbook response synchronization in Excel.
+- [x] **P1** Get Add-ins installs from the host catalog and opens Microsoft Marketplace for
+      browsing. My Add-ins opens installed tabs and removes catalog add-ins when enabled by the host.
+- [ ] **P1** Store add-in installation and Office.js runtime for Word, Excel and PowerPoint.
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
       Picture Border, Picture Layout, Alt Text and Arrange.

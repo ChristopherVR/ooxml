@@ -25,8 +25,10 @@
 
 	import { getContainerStyle, getElementHitTargetStyle, getImageSrc, styleToString } from '../style';
 	import type { ElementRendererProps } from './props';
+	import { useTranslator } from '../../i18n/context';
 	import ShapeEffectOverlay from './ShapeEffectOverlay.svelte';
 
+	const t = useTranslator();
 	const {
 		element,
 		mediaDataUrls,
@@ -225,5 +227,8 @@
 				})}
 			></div>
 		{/if}
+	{/if}
+	{#if (interactive || presenting) && isImageLikeElement(element) && element.liveFeed}
+		<pptx-ui-cameo-preview camera-label={t('pptx.insert.cameo')} unavailable-label={t('pptx.cameo.unavailable')}></pptx-ui-cameo-preview>
 	{/if}
 {/snippet}

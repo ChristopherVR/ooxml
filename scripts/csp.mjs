@@ -15,8 +15,8 @@
  *   `data:` are documents and images the editors read back (embedded fonts, canvas exports).
  * - font-src: `blob:` serves fonts embedded in a document; fonts.gstatic.com serves fonts a
  *   document uses but neither the device nor the file has (docs/font-loading.md).
- * - frame-src: this site's own pages, and the players of the online-video hosts a deck may link
- *   (YouTube and Vimeo). Arbitrary websites are not framed, so a Teams website tab offers
+ * - frame-src: this site's own pages, linked video players (YouTube and Vimeo), and Microsoft
+ *   Forms response frames opened by the presenter. A Teams website tab offers
  *   "Open externally" instead of showing the site inside the app.
  * - style-src keeps 'unsafe-inline': the editors position and colour content with inline styles.
  */
@@ -55,6 +55,8 @@ export const POLICY = {
 		'https://christophervr.github.io',
 		'https://www.youtube.com',
 		'https://player.vimeo.com',
+		'https://forms.office.com',
+		'https://forms.cloud.microsoft',
 	],
 	'manifest-src': ["'self'"],
 };

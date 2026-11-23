@@ -122,6 +122,8 @@ export function createRibbonInsertView(
 			lines.push(text(UNSUPPORTED));
 		} else if (reason === 'selection') {
 			lines.push(text(NEEDS_SELECTION));
+		} else if (reason === 'existingCameo') {
+			lines.push(text(['pptx.cameo.existing', 'This slide already has a Cameo.']));
 		}
 		return lines.join('\n');
 	};

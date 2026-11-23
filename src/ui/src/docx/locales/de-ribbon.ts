@@ -7,6 +7,16 @@
 import type { RibbonStrings } from './en';
 
 export const deRibbon: RibbonStrings = {
+	'Add-ins': 'Add-Ins',
+	'Get Add-ins': 'Add-Ins abrufen',
+	'My Add-ins': 'Meine Add-Ins',
+	Install: 'Installieren',
+	Remove: 'Entfernen',
+	'Could not update the add-in.': 'Das Add-In konnte nicht aktualisiert werden.',
+	'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
+		'Durchsuchen Sie die Add-Ins für Microsoft Office. Dieser Editor führt die vom Host bereitgestellten Add-Ins aus.',
+	'Browse Microsoft Marketplace': 'Microsoft Marketplace durchsuchen',
+	'No add-ins are available in this editor.': 'In diesem Editor sind keine Add-Ins verfügbar.',
 	Transform: 'Transformieren',
 	WordArt: 'WordArt',
 	'WordArt text': 'WordArt-Text',

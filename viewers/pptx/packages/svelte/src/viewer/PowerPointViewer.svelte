@@ -144,6 +144,7 @@
 			return;
 		}
 		return attachViewerHyperlinks(rootEl, {
+			translate: t,
 			getState: () => ({
 				slide: vm.activeSlide,
 				slideCount: vm.editor.slides.length,

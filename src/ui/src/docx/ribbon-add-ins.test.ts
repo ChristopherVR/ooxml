@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { setOfficeAddInCatalog } from '../ribbon/add-in-dialog';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
+import type { OfficeUiRibbon } from '../ribbon/ribbon-tabs';
 import { DocxEditorElement, registerDocxEditor } from './index';
 
 registerDocxEditor();
@@ -13,6 +15,48 @@ const tab = (run: () => void): RibbonAddInTab => ({
 });
 
 describe('Word ribbon add-in tabs', () => {
+	it('installs and removes a catalog add-in through the editor’s two commands', async () => {
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		const pdf = tab(vi.fn());
+		const install = vi.fn(() => {
+			editor.ribbonAddIns = [pdf];
+		});
+		const remove = vi.fn(() => {
+			editor.ribbonAddIns = [];
+		});
+		setOfficeAddInCatalog(editor, [{ id: pdf.id, label: pdf.label, install, remove }]);
+		document.body.append(editor);
+		const root = editor.shadowRoot!;
+		const ribbon = root.querySelector<OfficeUiRibbon>('office-ui-ribbon')!;
+		await vi.waitFor(() => expect(ribbon.tabButton('insert')).toBeTruthy());
+		ribbon.tabButton('insert')!.click();
+		const click = (label: string) =>
+			root.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!.click();
+		click('Get Add-ins');
+		click('Install PDF');
+		await vi.waitFor(() => expect(root.querySelector('office-ui-dialog[open]')).toBeNull());
+		expect(install).toHaveBeenCalledOnce();
+		expect(ribbon.tabButton('pdf')).toBeTruthy();
+		click('My Add-ins');
+		click('Remove PDF');
+		await vi.waitFor(() => expect(root.querySelector('office-ui-dialog[open]')).toBeNull());
+		expect(remove).toHaveBeenCalledOnce();
+		expect(ribbon.tabButton('pdf')).toBeNull();
+	});
+
+	it('opens a host-provided add-in from Insert > My Add-ins', async () => {
+		const editor = document.createElement('docx-editor') as DocxEditorElement;
+		editor.ribbonAddIns = [tab(vi.fn())];
+		document.body.append(editor);
+		const root = editor.shadowRoot!;
+		const ribbon = root.querySelector<OfficeUiRibbon>('office-ui-ribbon')!;
+		await vi.waitFor(() => expect(ribbon.tabButton('pdf')).toBeTruthy());
+		ribbon.tabButton('insert')!.click();
+		root.querySelector<HTMLButtonElement>('button[aria-label="My Add-ins"]')!.click();
+		const dialog = root.querySelector('office-ui-dialog[open]')!;
+		dialog.querySelector<HTMLButtonElement>('li button')!.click();
+		expect(ribbon.selected).toBe('pdf');
+	});
 	it('keeps tabs set before the editor connects and reports their commands', () => {
 		const editor = document.createElement('docx-editor') as DocxEditorElement;
 		const run = vi.fn();

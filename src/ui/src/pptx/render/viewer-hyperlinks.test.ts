@@ -122,6 +122,33 @@ describe('viewer hyperlink navigation', () => {
 		expect(view.open).not.toHaveBeenCalled();
 	});
 
+	it('loads a Forms response in the slide show only after the viewer chooses to load it', async () => {
+		const url = 'https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=sample';
+		const view = mount({ url });
+		view.state.presenting = true;
+		const showClick = vi.fn();
+		view.root.addEventListener('click', showClick);
+		view.onHyperlinkClick.mockReturnValueOnce(false);
+		view.shape.click();
+		expect(view.root.querySelector('office-ui-dialog')).toBeNull();
+		view.shape.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+		);
+		const dialog = view.root.querySelector('office-ui-dialog')!;
+		expect(dialog.open).toBe(true);
+		expect(dialog.querySelector('iframe')).toBeNull();
+		expect(dialog.querySelector('a')?.href).toBe(url);
+		expect(showClick).not.toHaveBeenCalled();
+		expect(view.open).not.toHaveBeenCalled();
+		dialog.querySelector('button')!.click();
+		const frame = dialog.querySelector('iframe')!;
+		expect(frame.src).toBe(`${url}&embed=true`);
+		expect(frame.referrerPolicy).toBe('no-referrer');
+		dialog.close();
+		await Promise.resolve();
+		expect(frame.isConnected).toBe(false);
+	});
+
 	it('opens an external link in a new isolated tab whatever frame it names, after the Trust Center gate', () => {
 		const view = mount();
 		view.text.setAttribute('data-pptx-hyperlink', 'https://example.com');

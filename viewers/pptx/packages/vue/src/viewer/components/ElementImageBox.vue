@@ -20,7 +20,7 @@ import {
 import type { PptxElement, PptxImageEffects } from 'pptx-viewer-core';
 import { isImageLikeElement } from 'pptx-viewer-core';
 import type { CSSProperties } from 'vue';
-import { computed } from 'vue';
+import { computed, getCurrentInstance } from 'vue';
 
 import { useElementHitTargetStyle } from '../composables/element-hit-target';
 import { getContainerStyle, getImageSrc } from '../composables/element-style';
@@ -29,6 +29,7 @@ import type { ClrChangeEffect } from '../composables/use-color-change-image';
 import { useNativeImageSize } from '../composables/use-native-image-size';
 import ShapeEffectOverlay from './ShapeEffectOverlay.vue';
 
+const translate = getCurrentInstance()?.appContext.config.globalProperties.$t;
 const props = defineProps<{
 	element: PptxElement;
 	mediaDataUrls: Map<string, string>;
@@ -219,6 +220,16 @@ const hitTargetStyle = useElementHitTargetStyle(
 					backgroundColor: colorWash.backgroundColor,
 					opacity: colorWash.opacity,
 				}"
+			/>
+			<component
+				:is="'pptx-ui-cameo-preview'"
+				:camera-label="translate?.('pptx.insert.cameo')"
+				:unavailable-label="translate?.('pptx.cameo.unavailable')"
+				v-if="
+					(interactive || presenting) &&
+					(element.type === 'image' || element.type === 'picture') &&
+					element.liveFeed
+				"
 			/>
 		</div>
 		<!-- DAG fill-overlay tint, `a:reflection` mirror and the picture's own

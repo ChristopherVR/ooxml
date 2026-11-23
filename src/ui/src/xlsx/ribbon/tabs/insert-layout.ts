@@ -83,6 +83,19 @@ export function insertTab(): RibbonTab {
 				controls: [{ kind: 'button', command: 'insert.link', size: 'large' }],
 			},
 			{
+				id: 'forms',
+				label: 'Forms',
+				controls: [{ kind: 'button', command: 'insert.forms', size: 'large' }],
+			},
+			{
+				id: 'add-ins',
+				label: 'Add-ins',
+				controls: [
+					{ kind: 'button', command: 'insert.get-add-ins', size: 'large' },
+					{ kind: 'button', command: 'insert.my-add-ins', size: 'large' },
+				],
+			},
+			{
 				id: 'sparklines',
 				label: 'Sparklines',
 				launcher: 'sparkline.settings',

@@ -5,6 +5,25 @@ import { describe, expect, it } from 'vitest';
 import ElementImageBox from './ElementImageBox.vue';
 
 describe('element image box', () => {
+	it('renders a Cameo control only on the interactive and presentation surfaces', async () => {
+		const element: ImagePptxElement = {
+			type: 'image',
+			id: 'camera',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			liveFeed: true,
+		};
+		const wrapper = mount(ElementImageBox, {
+			props: { element, mediaDataUrls: new Map(), zIndex: 0 },
+		});
+		expect(wrapper.find('pptx-ui-cameo-preview').exists()).toBeFalsy();
+		await wrapper.setProps({ presenting: true });
+		expect(wrapper.find('pptx-ui-cameo-preview').exists()).toBeTruthy();
+		wrapper.unmount();
+	});
+
 	it('renders the shared clamped color-wash style', () => {
 		const element: ImagePptxElement = {
 			type: 'image',

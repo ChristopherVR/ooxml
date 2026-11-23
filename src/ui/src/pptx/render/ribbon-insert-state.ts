@@ -50,12 +50,25 @@ export interface RibbonGraphicTarget {
 	canvasSize: CanvasSize;
 	themeColors?: Record<string, string> | undefined;
 	insert: (element: PptxElement) => void;
+	commitSlides?: ((slides: PptxSlide[]) => void) | undefined;
 	sections: readonly PptxSection[];
 	insertSummary?: ((mutation: SummaryZoomMutation) => void) | undefined;
 	importSlides?: ((source: ArrayBuffer, indexes: readonly number[]) => Promise<void>) | undefined;
 }
 
-export type RibbonGraphic = 'icons' | 'symbol' | 'wordArt';
+export type RibbonGraphic = 'icons' | 'symbol' | 'wordArt' | 'forms' | 'cameo';
+
+function hasLiveFeed(elements: readonly PptxElement[]): boolean {
+	return elements.some((element) =>
+		element.type === 'group'
+			? hasLiveFeed(element.children)
+			: (element.type === 'image' || element.type === 'picture') && !!element.liveFeed,
+	);
+}
+
+export function slideHasCameo(slide: PptxSlide | undefined): boolean {
+	return slide !== undefined && hasLiveFeed(slide.elements);
+}
 export type RibbonZoom = 'slide' | 'section' | 'summary';
 export type RibbonInsertWorkflow =
 	| 'screenshot'
@@ -130,7 +143,10 @@ export type GraphicInsertIntent =
 	| { kind: 'zoom'; value: RibbonZoom }
 	| { kind: 'workflow'; value: RibbonInsertWorkflow };
 
-export type RibbonInsertAction = RibbonInsertIntent | GraphicInsertIntent;
+export type RibbonInsertAction =
+	| RibbonInsertIntent
+	| GraphicInsertIntent
+	| { kind: 'addIns'; value: 'getAddIns' | 'myAddIns' };
 
 export type InsertLabel = [key: string, fallback: string];
 
@@ -285,9 +301,12 @@ function commandAvailable(state: RibbonInsertState, command: RibbonInsertCommand
 /** Reject malformed programmatic intents as well as disabled pointer/keyboard picks. */
 export function canRequestInsert(state: RibbonInsertState, intent: RibbonInsertAction): boolean {
 	switch (intent.kind) {
+		case 'addIns':
+			return true;
 		case 'graphic': {
 			const target = state.editable ? state.getGraphicTarget?.() : undefined;
-			return Boolean(target?.slides[target.slideIndex]);
+			const slide = target?.slides[target.slideIndex];
+			return !!slide && (intent.value !== 'cameo' || !slideHasCameo(slide));
 		}
 		case 'workflow': {
 			const target = state.editable ? state.getGraphicTarget?.() : undefined;

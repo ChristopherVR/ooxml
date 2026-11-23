@@ -1,13 +1,15 @@
 // Insert tab: Table, Pictures, Charts, Link, Comment and Symbol.
-import { IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
 import { canCaptureDisplay } from '../../form/display-capture';
 import { captureScreenshotFile } from '../../form/display-clipping';
+import { getCell, IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
+import { pickMicrosoftForm } from '../../form/microsoft-forms';
+import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { iconPngFile } from '../../form/local-svg';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { icon } from 'ooxml-core/xlsx/ui';
-import { editing, target, INSERT_CHART_TYPES } from 'ooxml-core/xlsx/ui';
+import { editing, target, sheetLocked, INSERT_CHART_TYPES } from 'ooxml-core/xlsx/ui';
 
 /** Picture types the core stores that a browser can also paint. */
 const PICTURE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'].filter(
@@ -169,6 +171,49 @@ async function graphicsFill(ctx: EditorContext): Promise<void> {
 
 export function insertCommands(): Command[] {
 	return [
+		{
+			id: 'insert.get-add-ins',
+			label: 'Get Add-ins',
+			icon: icon('link'),
+			run: (ctx) => openOfficeAddIns(ctx.root, 'getAddIns', (label) => ctx.t(label)),
+		},
+		{
+			id: 'insert.my-add-ins',
+			label: 'My Add-ins',
+			icon: icon('link'),
+			run: (ctx) => openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label)),
+		},
+		editing({
+			id: 'insert.forms',
+			label: 'Forms',
+			icon: icon('link'),
+			lock: 'insertHyperlinks',
+			run: async (ctx) => {
+				const current = target(ctx);
+				if (!current) return;
+				const form = await pickMicrosoftForm(ctx.root, (label) => ctx.t(label));
+				const live = target(ctx);
+				if (
+					!form ||
+					ctx.readOnly() ||
+					sheetLocked(ctx, 'insertHyperlinks') ||
+					live?.ws !== current.ws ||
+					live.session !== current.session
+				)
+					return;
+				const { row, col } = current.active;
+				const range = { start: current.active, end: current.active };
+				const cell = getCell(current.ws, row, col);
+				current.session.batch('Insert form link', () => {
+					if (!cell?.formula && (cell?.value == null || cell.value === ''))
+						current.session.setCellValue(current.sheet, row, col, form.title);
+					current.session.setHyperlink(current.sheet, range, {
+						target: form.url,
+						display: form.title,
+					});
+				});
+			},
+		}),
 		editing({
 			id: 'insert.table',
 			label: 'Table',

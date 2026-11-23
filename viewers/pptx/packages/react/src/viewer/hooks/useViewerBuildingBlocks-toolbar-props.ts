@@ -201,6 +201,10 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 			canvasSize: s.canvasSize,
 			themeColors: templateSchemeFromTheme(s.theme?.colorScheme),
 			insert: insertHandlers.addElement,
+			commitSlides: (slides) => {
+				history.markDirty();
+				s.setSlides(slides);
+			},
 			sections: s.sections,
 			insertSummary: ({ slides, sections, slideIndex }) => {
 				history.markDirty();

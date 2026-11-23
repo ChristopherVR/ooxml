@@ -24,6 +24,26 @@ function context(): ElementRenderContext {
 describe('renderImageElement source effects', () => {
 	beforeEach(() => resolveSource.mockClear());
 
+	it('puts the Cameo control on the live stage only', () => {
+		const element: ImagePptxElement = {
+			type: 'image',
+			id: 'camera',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			liveFeed: true,
+		};
+		const live = renderImageElement(element, 0, {
+			...context(),
+			presenting: true,
+			t: (key) => key,
+		});
+		expect(live?.querySelector('pptx-ui-cameo-preview')).not.toBeNull();
+		expect(
+			renderImageElement(element, 0, context())?.querySelector('pptx-ui-cameo-preview'),
+		).toBeNull();
+	});
 	it('applies clrChange asynchronously and renders a color wash overlay', async () => {
 		const element: ImagePptxElement = {
 			type: 'image',
