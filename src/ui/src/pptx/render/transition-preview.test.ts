@@ -86,7 +86,9 @@ describe('playSlideTransitionPreview', () => {
 	it('replaces a preview that is already running', () => {
 		const stage = mountStage();
 		playSlideTransitionPreview({ type: 'fade', durationMs: 700 }, document);
+		const previous = stage.querySelectorAll('.pptx-transition-preview-layer')[1];
 		playSlideTransitionPreview({ type: 'wipe', durationMs: 700 }, document);
+		previous.dispatchEvent(new Event('animationend'));
 
 		expect(stage.getAttribute(TRANSITION_PREVIEW_ATTR)).toBe('wipe');
 		expect(stage.querySelectorAll('.pptx-transition-preview-layer')).toHaveLength(2);

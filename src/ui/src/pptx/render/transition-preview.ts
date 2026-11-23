@@ -148,7 +148,7 @@ export function playSlideTransitionPreview(
 	stage.append(cover, incoming);
 
 	const finish = (): void => {
-		clearPreview(stage);
+		if (incoming.parentElement === stage) clearPreview(stage);
 	};
 	incoming.addEventListener('animationend', finish, { once: true });
 	// Belt and braces: an animation that never fires `animationend` (a hidden
