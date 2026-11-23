@@ -44,6 +44,8 @@ import type { DiagramFormatChange } from '../../diagram/edit/format';
 import type { ChartEditIntent } from '../../chart/edit/intent';
 import type { TablePatch, TableRef } from './table-edits';
 import type { SparklineGroupPatch } from './sparklines';
+import type { RemoveSubtotalsResult, SubtotalOptions, SubtotalResult } from './subtotal';
+import type { ConsolidateOptions, ConsolidateResult, ConsolidateSource } from './consolidate';
 
 /** Border presets of the ribbon's border drop-down. */
 export type BorderPreset =
@@ -405,6 +407,17 @@ export interface EditSession {
 		columns: number[],
 		hasHeader: boolean,
 	): { removed: number; remaining: number };
+	/** Data > Subtotal: groups rows by a column, inserts SUBTOTAL rows and Grand Total, and sets row outline levels. */
+	applySubtotal(sheet: number, range: CellRange, options: SubtotalOptions): SubtotalResult;
+	/** Data > Subtotal > Remove All: removes subtotal rows in `range` and clears row outline levels. */
+	removeSubtotals(sheet: number, range: CellRange, hasHeader?: boolean): RemoveSubtotalsResult;
+	/** Data > Consolidate: aggregates multiple source ranges into `destination` by position or category labels. */
+	consolidate(
+		sheet: number,
+		destination: CellAddress,
+		sources: readonly ConsolidateSource[],
+		options: ConsolidateOptions,
+	): ConsolidateResult;
 	/**
 	 * Goal Seek: changes `changing` until `target` (a formula) equals `goal`, honouring the
 	 * workbook's iteration settings. One undo step; undo it to cancel. Throws when the request is

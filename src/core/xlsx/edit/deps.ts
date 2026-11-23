@@ -19,6 +19,8 @@ export {
 	tokenize,
 	translateFormula,
 } from '../formula/index';
+export { aggregate } from '../formula/functions/math-sum';
+export { ErrorSignal, type Scalar } from '../formula/values';
 export type {
 	CalcEngine,
 	CalculationStop,

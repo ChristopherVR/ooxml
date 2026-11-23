@@ -47,6 +47,26 @@ export { MAX_OUTLINE_LEVEL } from './outline';
 export { selectedSparklineGroups, type SparklineGroupPatch } from './sparklines';
 export type { RemoveDuplicatesResult } from './duplicates';
 export {
+	resolveSubtotalFunction,
+	type SubtotalFunction,
+	type SubtotalFunctionCode,
+	type SubtotalFunctionInput,
+	type SubtotalFunctionMeta,
+} from './subtotal-fn';
+export {
+	applySubtotal,
+	removeSubtotals,
+	type RemoveSubtotalsResult,
+	type SubtotalOptions,
+	type SubtotalResult,
+} from './subtotal';
+export {
+	consolidateRanges,
+	type ConsolidateOptions,
+	type ConsolidateResult,
+	type ConsolidateSource,
+} from './consolidate';
+export {
 	calcModeOf,
 	calculateOnOpen,
 	needsCalculationOnOpen,

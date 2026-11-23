@@ -46,6 +46,8 @@ import * as chartEx from './chart-ex';
 import * as smartArt from './smart-art';
 import * as tableEdits from './table-edits';
 import * as duplicates from './duplicates';
+import * as subtotal from './subtotal';
+import * as consolidate from './consolidate';
 import * as outline from './outline';
 import * as page from './page';
 import * as pageBreaks from './page-breaks';
@@ -353,6 +355,10 @@ export function createEditSession(
 		setDefaultColumnWidth: (s, width) => outline.setDefaultColumnWidth(ctx, s, width),
 		removeDuplicates: (s, range, cols, hasHeader) =>
 			duplicates.removeDuplicates(ctx, s, range, cols, hasHeader),
+		applySubtotal: (s, range, options) => subtotal.applySubtotal(ctx, s, range, options),
+		removeSubtotals: (s, range, hasHeader) => subtotal.removeSubtotals(ctx, s, range, hasHeader),
+		consolidate: (s, destination, sources, options) =>
+			consolidate.consolidateRanges(ctx, s, destination, sources, options),
 		goalSeek: (request) => goalSeek.goalSeek(ctx, request),
 		createDataTable: (s, request) => dataTable.createDataTable(ctx, s, request),
 		addScenario: (s, draft) => scenarios.addScenario(ctx, s, draft),
