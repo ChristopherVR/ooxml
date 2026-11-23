@@ -83,4 +83,7 @@ test('inserts a Cameo and response link and opens the add-in dialogs', async ({
 	await expect(response.locator('iframe')).toHaveCount(0);
 	await response.getByRole('button', { name: 'Load Microsoft Form' }).click();
 	await expect(response.frameLocator('iframe').getByText('Form response surface')).toBeVisible();
+	await response.getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(response).toHaveCount(0);
+	await expect(show).toBeVisible();
 });
