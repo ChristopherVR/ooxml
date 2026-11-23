@@ -94,10 +94,16 @@ it('clears the first-page header paragraphs without counting the floating letter
 			runs: [],
 		})),
 	);
+	const second = model.blocks[1];
+	if (second?.type !== 'paragraph') throw new Error('Expected a second letterhead paragraph');
+	second.pageBreakBefore = true;
 	const measurer = { widthOf: (text: string) => text.length * 10, lineHeightOf: () => 16 };
-	const first = layoutDocumentModel(model, measurer).pages[0]!;
+	const pages = layoutDocumentModel(model, measurer).pages;
+	expect(pages).toHaveLength(2);
+	const first = pages[0]!;
 	expect(first.marginTopPx).toBeCloseTo(708 / 15 + 11 * 16);
 	expect(first.columns[0]?.blocks[0]?.yPx).toBe(0);
+	expect(pages[1]?.marginTopPx).toBe(96);
 
 	section.marginTopTwips = signedTwips(-1440);
 	expect(layoutDocumentModel(model, measurer).pages[0]?.marginTopPx).toBe(96);

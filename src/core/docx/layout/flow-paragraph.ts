@@ -157,11 +157,12 @@ export function placeParagraph(
 		let cumulative = 0;
 		let end = lineCursor;
 		let forced: 'page' | 'column' | undefined;
+		// A fresh layout computed its first line against this column's floats.
+		// Only a line reused from the previous column can carry a stale gap.
+		const keepLeadingGap = firstSegment || lineCursor === 0;
 		for (let i = lineCursor; i < layout.lines.length; i++) {
-			// A line's gap (clearing a wrapped picture) moves with it, except when a later segment
-			// starts it at the top of a new column or page.
 			const line = expectDefined(layout.lines[i], 'paragraph line index');
-			const gap = i === lineCursor && !firstSegment ? 0 : (line.gapBeforePx ?? 0);
+			const gap = i === lineCursor && !keepLeadingGap ? 0 : (line.gapBeforePx ?? 0);
 			const height = lineHeight(line, i) + gap;
 			hold(
 				layout.lines.slice(lineCursor, i + 1),
@@ -200,7 +201,10 @@ export function placeParagraph(
 			cumulative + (firstSegment ? spacingBeforePx : 0),
 		);
 		const first = expectDefined(layout.lines[lineCursor], 'first line of paragraph segment');
-		const origin = first.yPx - (firstSegment ? (first.gapBeforePx ?? 0) + layout.insetTopPx : 0);
+		const origin =
+			first.yPx -
+			(keepLeadingGap ? (first.gapBeforePx ?? 0) : 0) -
+			(firstSegment ? layout.insetTopPx : 0);
 		const segmentLines = layout.lines
 			.slice(lineCursor, lineCursor + placedCount)
 			.map((line, index) => ({

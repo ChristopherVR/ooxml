@@ -27,6 +27,27 @@ const paragraph = (text: string, extra: Partial<LayoutParagraph> = {}): LayoutPa
 	...extra,
 });
 describe('unequal columns', () => {
+	it('continues a split word at the correct character in a wider column', () => {
+		const text = '0123456789'.repeat(6);
+		const result = layoutSections(
+			{ sections: [{ page, columns, blocks: [paragraph(text)] }] },
+			measure,
+		);
+		expect(result.pages).toHaveLength(1);
+		const lines = result.pages[0]!.columns.flatMap((column) =>
+			column.blocks.flatMap((block) => (block.kind === 'paragraph' ? block.lines : [])),
+		);
+		expect(lines.map((line) => [line.sourceStart, line.sourceEnd])).toEqual([
+			[0, 10],
+			[10, 20],
+			[20, 40],
+			[40, 60],
+		]);
+		expect(lines.flatMap((line) => line.fragments.map((fragment) => fragment.text)).join('')).toBe(
+			text,
+		);
+	});
+
 	it.each([false, true])(
 		'balances wrapped text before a continuous break (reverse widths: %s)',
 		(reverse) => {

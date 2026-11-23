@@ -56,7 +56,6 @@ describe('text box layout by the page engine', () => {
 	it('keeps a fractionally oversized justified line together without stretching its spaces', () => {
 		const label = 'SIRET : 123.456.789.000.12';
 		const shape = {
-			widthPx: 193.47,
 			heightPx: 50,
 			textBoxContent: {
 				blocks: [],
@@ -64,16 +63,23 @@ describe('text box layout by the page engine', () => {
 				insetRightEmu: 0,
 			},
 		};
-		const [layout] = layoutTextBoxChain(
-			[shape],
-			[{ kind: 'paragraph', id: 'siret', align: 'justify', runs: [{ text: label }] }],
-			{
-				widthOf: (text) => (text === ' ' ? 1 : text.length * (192.14 / (label.length - 2))),
-				lineHeightOf: () => 16,
-			},
-		);
-		expect(lines(must(layout)).map((line) => line.text)).toEqual([label]);
-		expect(lines(must(layout))[0]?.right).toBeCloseTo(194.14);
+		const layoutAtWidth = (widthPx: number) =>
+			lines(
+				must(
+					layoutTextBoxChain(
+						[{ ...shape, widthPx }],
+						[{ kind: 'paragraph', id: 'siret', align: 'justify', runs: [{ text: label }] }],
+						{
+							widthOf: (text) => (text === ' ' ? 1 : text.length * (192.14 / (label.length - 2))),
+							lineHeightOf: () => 16,
+						},
+					)[0],
+				),
+			);
+		const withinTolerance = layoutAtWidth(193.47);
+		expect(withinTolerance.map((line) => line.text)).toEqual([label]);
+		expect(withinTolerance[0]?.right).toBeCloseTo(194.14);
+		expect(layoutAtWidth(193).map((line) => line.text)).toEqual(['SIRET :', '123.456.789.000.12']);
 	});
 
 	it('reads the wps:bodyPr settings and the chain each box belongs to', async () => {

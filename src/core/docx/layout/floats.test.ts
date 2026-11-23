@@ -139,6 +139,29 @@ describe('pictures in pagination', () => {
 });
 
 describe('text wrapping around floats', () => {
+	it('keeps a continued paragraph below an object at the top of its new page', () => {
+		const text = Array.from({ length: 44 }, (_, index) => `line ${index}`).join('\n');
+		const result = layoutDocument(
+			input([
+				{ kind: 'paragraph', id: 'text', runs: [{ text }] },
+				anchoredIn('box', {
+					relativeFromH: 'margin',
+					relativeFromV: 'margin',
+					wrap: 'topAndBottom',
+				}),
+			]),
+			measurer,
+		);
+		const secondPage = at(result.pages, 1);
+		const continued = at(at(secondPage.columns, 0).blocks, 0);
+		expect(continued.blockId).toBe('text');
+		expect(secondPage.floats?.[0]).toMatchObject({ blockId: 'box', yPx: 100, heightPx: 50 });
+		expect((continued as import('./result').LayoutParagraphBox).lines[0]).toMatchObject({
+			sourceStart: text.indexOf('line 40'),
+			yPx: 50,
+		});
+	});
+
 	it('wraps a heading moved to the same page as a later margin-relative anchor', () => {
 		const doc = input([
 			{ kind: 'paragraph', id: 'first', runs: [{ text: 'First page' }] },
