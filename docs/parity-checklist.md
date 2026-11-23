@@ -315,8 +315,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Closed: the dialog offers Fixed width with typed break positions and a preview; the split
       rules are `splitFixedWidth` in `src/core/xlsx/edit/text-columns.ts`. Column-data-format
       conversion per column (Excel's Column data format step) is not offered.
-- [ ] **P1** Changing the workbook theme: Page Layout > Themes > Colors only reports that it is
-      not supported (`src/core/xlsx/ui/commands/page-layout.ts`); no Themes, Fonts or Effects.
+- [x] **P1** Changing the workbook theme: Page Layout > Themes, Colors and Fonts apply built-in
+      Office presets and colour/font schemes undoably (`xlsx/theme-presets.ts`, `edit/theme.ts`,
+      `ui/commands/page-layout.ts`, `write/theme.ts`; verified in `edit/theme.test.ts`,
+      `write/theme.test.ts` and `ui/commands/page-layout.test.ts`). Theme Effects presets remain
+      open.
 - [ ] **P1** Form controls cannot be moved or resized and buttons run no macros; shapes have no
       effects, 3-D, pattern or picture fills, and gradients are linear only.
 - [ ] **P1** Printing goes through the browser; Page Layout view has no copy and paste, per-view
