@@ -17,7 +17,6 @@ export function presentMicrosoftForm(root: HTMLElement, url: string, t: Translat
 	});
 	dialog.style.setProperty('--office-dialog-width', 'min(48rem, 95vw)');
 	const actions = doc.createElement('div');
-	actions.slot = 'footer';
 	const load = doc.createElement('button');
 	load.type = 'button';
 	load.textContent = t('pptx.forms.load');
