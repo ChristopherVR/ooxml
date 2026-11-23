@@ -98,8 +98,7 @@ export function computedFields(
 			}
 			if (name === '=') {
 				const text = formulaFieldResult(field.instr);
-				if (text === undefined || (text === ZERO_DIVIDE_ERROR && !options.errors))
-					return undefined;
+				if (text === undefined || (text === ZERO_DIVIDE_ERROR && !options.errors)) return undefined;
 				return { text };
 			}
 			if (AUTO_NUMBER_FIELDS.has(name)) {

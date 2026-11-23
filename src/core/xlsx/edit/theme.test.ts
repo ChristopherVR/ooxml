@@ -69,9 +69,9 @@ describe('setTheme', () => {
 		expect(wb.theme.minorFont).toBe('Calibri');
 
 		const georgia = findThemeFontPreset('georgia')!;
-		expect(
-			session.setTheme({ majorFont: georgia.majorFont, minorFont: georgia.minorFont }),
-		).toBe(true);
+		expect(session.setTheme({ majorFont: georgia.majorFont, minorFont: georgia.minorFont })).toBe(
+			true,
+		);
 		expect(wb.theme.colors[4]).toBe('B01513');
 		expect(wb.theme.majorFont).toBe('Georgia');
 		expect(wb.theme.minorFont).toBe('Georgia');

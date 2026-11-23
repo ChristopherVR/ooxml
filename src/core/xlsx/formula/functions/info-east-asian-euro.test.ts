@@ -47,18 +47,14 @@ describe('INFO', () => {
 describe('ASC, DBCS, and JIS', () => {
 	it('converts full-width ASCII, spaces, and Katakana (including dakuten/handakuten) to half-width', () => {
 		expect(calc('ASC("ＥＸＣＥＬ　１２３！")')).toBe('EXCEL 123!');
-		expect(calc('ASC("カタカナ・ガギグゲゴ・パピプペポ・ヴ")')).toBe(
-			'ｶﾀｶﾅ･ｶﾞｷﾞｸﾞｹﾞｺﾞ･ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ･ｳﾞ',
-		);
+		expect(calc('ASC("カタカナ・ガギグゲゴ・パピプペポ・ヴ")')).toBe('ｶﾀｶﾅ･ｶﾞｷﾞｸﾞｹﾞｺﾞ･ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ･ｳﾞ');
 		expect(calc('ASC("「東京」、テスト。")')).toBe('｢東京｣､ﾃｽﾄ｡');
 	});
 
 	it('converts half-width ASCII, spaces, and Katakana to full-width via JIS and DBCS', () => {
 		expect(calc('JIS("EXCEL 123!")')).toBe('ＥＸＣＥＬ　１２３！');
 		expect(calc('DBCS("EXCEL 123!")')).toBe('ＥＸＣＥＬ　１２３！');
-		expect(calc('JIS("ｶﾀｶﾅ･ｶﾞｷﾞｸﾞｹﾞｺﾞ･ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ･ｳﾞ")')).toBe(
-			'カタカナ・ガギグゲゴ・パピプペポ・ヴ',
-		);
+		expect(calc('JIS("ｶﾀｶﾅ･ｶﾞｷﾞｸﾞｹﾞｺﾞ･ﾊﾟﾋﾟﾌﾟﾍﾟﾎﾟ･ｳﾞ")')).toBe('カタカナ・ガギグゲゴ・パピプペポ・ヴ');
 		expect(calc('DBCS("｢東京｣､ﾃｽﾄ｡")')).toBe('「東京」、テスト。');
 	});
 

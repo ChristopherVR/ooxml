@@ -91,7 +91,8 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	themes: 'M3 3h14v14H3zM3 13h14M7 13v4M11 13v4M7.5 10 10 5.5 12.5 10M8.5 8.5h3',
 	themeColors:
 		'M10 3a7 7 0 1 0 0 14c1 0 1.5-.7 1.5-1.5 0-1.5 1-2 2-2H15a2 2 0 0 0 2-2A7 7 0 0 0 10 3zM6.5 9h.1M8.5 6h.1M12 6h.1M14 9h.1',
-	themeFonts: 'M3 15 7 5l4 10M4.5 11.5h5M13 11.5a2 2 0 1 1 4 0V15M17 12.5h-2.5a1.5 1.5 0 0 0 0 3H17',
+	themeFonts:
+		'M3 15 7 5l4 10M4.5 11.5h5M13 11.5a2 2 0 1 1 4 0V15M17 12.5h-2.5a1.5 1.5 0 0 0 0 3H17',
 	margins: 'M4 2h12v16H4zM7 2v16M13 2v16M4 5h12M4 15h12',
 	pageOrientation: 'M3 6h10v12H3zM7 2h10v8M15 13l2-2 2 2',
 	pageSize: 'M5 2h7l4 4v12H5zM12 2v4h4',

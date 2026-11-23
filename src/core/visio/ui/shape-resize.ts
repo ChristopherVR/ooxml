@@ -176,7 +176,8 @@ export function visioResizeDrag(
 				? shape.height
 				: Math.max(Math.min(1 / 16, shape.height), shape.height + k * (location.y === 1 ? y : -y)),
 	};
-	const proportional = !fixedWidth && !fixedHeight && (lockA || visioResizeKeepsProportions(handle, options));
+	const proportional =
+		!fixedWidth && !fixedHeight && (lockA || visioResizeKeepsProportions(handle, options));
 	const size = proportional ? visioProportionalSize(shape, raw, location) : raw;
 	// The opposite point stays fixed; a proportional side drag grows the other axis about its
 	// centre. A symmetric drag anchors the centre instead.

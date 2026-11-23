@@ -25,7 +25,10 @@ function tokenize(expr: string): Token[] | undefined {
 			i++;
 			continue;
 		}
-		if ((ch === '<' || ch === '>') && (expr[i + 1] === '=' || (ch === '<' && expr[i + 1] === '>'))) {
+		if (
+			(ch === '<' || ch === '>') &&
+			(expr[i + 1] === '=' || (ch === '<' && expr[i + 1] === '>'))
+		) {
 			tokens.push({ kind: 'op', value: ch + expr[i + 1]! });
 			i += 2;
 			continue;

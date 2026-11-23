@@ -18,11 +18,7 @@ import {
 } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
-import type {
-	RibbonContextualTabId,
-	RibbonGalleryCommandId,
-	ToolbarActionId,
-} from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId, RibbonGalleryCommandId, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { RibbonChartSelectionComponent } from './ribbon-chart-selection.component';

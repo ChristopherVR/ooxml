@@ -19,10 +19,15 @@ describe('OFFSET and INDIRECT precedent/dependent tracing', () => {
 		const source = (c: { sheet: number; row: number; col: number }) => calc.precedents(c);
 
 		const precC1 = directPrecedents(wb, { sheet: 0, row: 0, col: 2 }, source);
-		expect(precC1).toEqual([
-			{ sheet: 0, row: 0, col: 0 },
-			{ sheet: 0, row: 1, col: 1 },
-		].map(({ sheet, row, col }) => ({ sheet, range: { start: { row, col }, end: { row, col } } })));
+		expect(precC1).toEqual(
+			[
+				{ sheet: 0, row: 0, col: 0 },
+				{ sheet: 0, row: 1, col: 1 },
+			].map(({ sheet, row, col }) => ({
+				sheet,
+				range: { start: { row, col }, end: { row, col } },
+			})),
+		);
 
 		const depsB2 = directDependents(wb, { sheet: 0, row: 1, col: 1 }, source);
 		expect(depsB2).toEqual([{ sheet: 0, row: 0, col: 2 }]);

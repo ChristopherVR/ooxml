@@ -41,9 +41,16 @@ describe('Visio resize locks (LockWidth, LockHeight, LockAspect)', () => {
 		expect(reopened.height).toBeCloseTo(2, 10);
 
 		// Shift+drag on north still keeps width fixed.
-		const shiftN = visioResizeDrag(page, '1', 'n', { x: 3, y: -4.5 }, { x: 3, y: -5.5 }, {
-			proportional: true,
-		})!;
+		const shiftN = visioResizeDrag(
+			page,
+			'1',
+			'n',
+			{ x: 3, y: -4.5 },
+			{ x: 3, y: -5.5 },
+			{
+				proportional: true,
+			},
+		)!;
 		expect(shiftN.command.width).toBeCloseTo(2, 10);
 		expect(shiftN.command.height).toBeCloseTo(2, 10);
 
@@ -209,9 +216,16 @@ describe('Visio resize locks (LockWidth, LockHeight, LockAspect)', () => {
 		});
 		const page = (await parseVsdx(bytes)).pages[0]!;
 		// East edge of shape 1 is at x=4, west edge of shape 2 is at x=4 (exact X alignment).
-		const snapped = visioSnapResizeDrag(page, ['1'], 'ne', { x: 4, y: -4.5 }, { x: 4.02, y: -5.5 }, {
-			snap: { shapes: true, guides: false, threshold: 0.1 },
-		})!;
+		const snapped = visioSnapResizeDrag(
+			page,
+			['1'],
+			'ne',
+			{ x: 4, y: -4.5 },
+			{ x: 4.02, y: -5.5 },
+			{
+				snap: { shapes: true, guides: false, threshold: 0.1 },
+			},
+		)!;
 		expect(snapped.lines.some((line) => line.axis === 'x')).toBe(false);
 	});
 });

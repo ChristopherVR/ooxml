@@ -112,8 +112,10 @@ export function visioSnapResizeDrag(
 	const singleLocks = single?.locks;
 	const unrotated =
 		!!single && Math.abs(single.transform[1]) < 1e-9 && Math.abs(single.transform[2]) < 1e-9;
-	const fixedW = unrotated && (!!singleLocks?.width || (!!singleLocks?.height && !!singleLocks?.aspect));
-	const fixedH = unrotated && (!!singleLocks?.height || (!!singleLocks?.width && !!singleLocks?.aspect));
+	const fixedW =
+		unrotated && (!!singleLocks?.width || (!!singleLocks?.height && !!singleLocks?.aspect));
+	const fixedH =
+		unrotated && (!!singleLocks?.height || (!!singleLocks?.width && !!singleLocks?.aspect));
 	const useX = location.x !== 0.5 && !fixedW,
 		useY = location.y !== 0.5 && !fixedH;
 	const point = visioResizeHandlePoint(first.frame, location);

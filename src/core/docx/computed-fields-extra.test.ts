@@ -22,7 +22,14 @@ const emptyModel = (
 	properties?: DocumentModel['properties'],
 ): DocumentModel => ({
 	blocks,
-	page: { width: 816, height: 1056, marginTop: 96, marginRight: 96, marginBottom: 96, marginLeft: 96 },
+	page: {
+		width: 816,
+		height: 1056,
+		marginTop: 96,
+		marginRight: 96,
+		marginBottom: 96,
+		marginLeft: 96,
+	},
 	warnings: [],
 	...(properties ? { properties } : {}),
 });
@@ -117,9 +124,9 @@ describe('computedFields and refreshComputedFields integration', () => {
 			text: 'Katherine Johnson',
 		});
 		expect(fields.result({ from: 0, instr: '=1/0' }, pDiv)).toBeUndefined();
-		expect(computedFields(model, { errors: true }).result({ from: 0, instr: '=1/0' }, pDiv)).toEqual(
-			{ text: ZERO_DIVIDE_ERROR },
-		);
+		expect(
+			computedFields(model, { errors: true }).result({ from: 0, instr: '=1/0' }, pDiv),
+		).toEqual({ text: ZERO_DIVIDE_ERROR });
 
 		const refreshed = refreshComputedFields(model, { body: true });
 		expect((refreshed.blocks[0] as Paragraph).runs[3]?.text).toBe('Katherine Johnson');
