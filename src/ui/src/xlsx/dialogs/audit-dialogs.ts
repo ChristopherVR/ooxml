@@ -86,6 +86,10 @@ export function openEvaluateFormula(
 
 const RULE_TEXT: Record<ErrorRule, readonly [title: string, body: string]> = {
 	'error-value': ['Error in cell {cell}', 'The formula in this cell results in the error {code}.'],
+	'two-digit-text-year': [
+		'Text date with 2-digit year',
+		'The date in this cell is stored as text with a two-digit year.',
+	],
 	'number-as-text': [
 		'Number stored as text',
 		'The number in this cell is formatted as text or preceded by an apostrophe.',
@@ -105,6 +109,10 @@ const RULE_TEXT: Record<ErrorRule, readonly [title: string, body: string]> = {
 	'calculated-column': [
 		'Inconsistent calculated column formula',
 		'The formula in this cell differs from the formula of the rest of its table column.',
+	],
+	'list-data-validation': [
+		'Invalid list data validation',
+		'The value in this cell is not in the allowed list for its data validation rule.',
 	],
 	'unlocked-formula': [
 		'Unlocked cell containing formula',

@@ -121,6 +121,42 @@ export const AUDIT_STRINGS: Translations = {
 		'Celda desbloqueada que contiene una fórmula',
 		'包含公式的未锁定单元格',
 	],
+	'Text date with 2-digit year': [
+		'Date texte avec année à 2 chiffres',
+		'Textdatum mit zweistelliger Jahreszahl',
+		'Fecha de texto con año de 2 dígitos',
+		'包含两位数年份的文本日期',
+	],
+	'The date in this cell is stored as text with a two-digit year.': [
+		'La date de cette cellule est stockée sous forme de texte avec une année à deux chiffres.',
+		'Das Datum in dieser Zelle ist als Text mit einer zweistelligen Jahreszahl gespeichert.',
+		'La fecha de esta celda está almacenada como texto con un año de dos dígitos.',
+		'此单元格中的日期以包含两位数年份的文本形式存储。',
+	],
+	'Invalid list data validation': [
+		'Validation de liste non valide',
+		'Ungültige Listendatenüberprüfung',
+		'Validación de lista no válida',
+		'无效的列表数据验证',
+	],
+	'The value in this cell is not in the allowed list for its data validation rule.': [
+		'La valeur de cette cellule ne figure pas dans la liste autorisée par sa règle de validation.',
+		'Der Wert in dieser Zelle ist nicht in der zulässigen Liste der Datenüberprüfungsregel enthalten.',
+		'El valor de esta celda no está en la lista permitida por su regla de validación de datos.',
+		'此单元格中的值不在其数据验证规则允许的列表中。',
+	],
+	'Cells containing years represented as 2 digits': [
+		'Cellules contenant des années représentées par 2 chiffres',
+		'Zellen mit zweistelligen Jahreszahlen',
+		'Celdas con años representados con 2 dígitos',
+		'包含用两位数表示的年份的单元格',
+	],
+	'Data entered in a table is invalid': [
+		'Les données saisies dans un tableau ne sont pas valides',
+		'In einer Tabelle eingegebene Daten sind ungültig',
+		'Los datos especificados en una tabla no son válidos',
+		'在表中输入的数据无效',
+	],
 	'This cell contains a formula and is not locked, so it can still be changed when the sheet is protected.':
 		[
 			'Cette cellule contient une formule et n’est pas verrouillée ; elle reste modifiable quand la feuille est protégée.',

@@ -288,14 +288,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       in a roaming profile, and there is no Options > Edit Custom Lists manager to rename, delete
       or import a list from cells.
 - [ ] **P1** Formula auditing is implemented (`src/core/xlsx/audit/`: Trace Precedents/Dependents through
-      names, tables and 3D references with repeated levels, off-sheet markers and red error arrows,
-      cleared by structural edits; Remove Arrows; Evaluate Formula with Step In/Out; Error Checking
-      with seven rules, Ignore Error saved as `ignoredErrors` and the rules listed in File >
-      Options > Formulas; a live Watch Window). Still open: OFFSET and INDIRECT targets are not traced;
-      Error Checking lacks the two-digit-year and list-data-validation rules and the background
-      green-triangle indicators; the rule toggles in Options are not stored between sessions;
-      Evaluate Formula runs IF, IFERROR, IFNA, CHOOSE, IFS and SWITCH in one step once their first
-      argument is a value (Excel shows the chosen branch step by step).
+      names, tables, 3D references, `OFFSET` and `INDIRECT` targets with repeated levels, off-sheet
+      markers and red error arrows, cleared by structural edits; Remove Arrows; Evaluate Formula
+      with Step In/Out and step-by-step chosen-branch evaluation for `IF`, `IFERROR`, `IFNA`,
+      `CHOOSE`, `IFS` and `SWITCH`; Error Checking with all nine rules including two-digit text
+      years and list data validation, Ignore Error saved as `ignoredErrors` and the rules listed in
+      File > Options > Formulas; a live Watch Window; `audit-parity.test.ts`). Still open:
+      background green-triangle indicators on the grid and persisting rule toggles in Options
+      between sessions.
 - [x] **P1** Active cells, selections and the active tab are saved after navigation. Split panes
       retain separate selections; frozen panes share the sheet selection as Excel does. Disjoint
       ranges write `activeCellId`. Core regression: `xlsx/ui/selection-persistence.test.ts`;

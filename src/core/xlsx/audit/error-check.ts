@@ -2,6 +2,7 @@
 // issues a dialog can walk through (Next / Previous / Ignore Error).
 import { type CellRange, rangeContains } from '../address';
 import { forEachCell } from '../cells';
+import { listItemMatches, listSource } from '../edit/validation-list';
 import { translateFormula } from '../formula/transform';
 import { parseNumberText } from '../formula/text-number';
 import { isCellError, type IgnoredError, type IgnoredErrorFlag, type Workbook } from '../model';
@@ -10,21 +11,25 @@ import { type CellRef, formulaReferences } from './trace';
 
 export type ErrorRule =
 	| 'error-value'
+	| 'two-digit-text-year'
 	| 'inconsistent-formula'
 	| 'omits-adjacent-cells'
 	| 'number-as-text'
 	| 'unlocked-formula'
 	| 'empty-cell-reference'
+	| 'list-data-validation'
 	| 'calculated-column';
 
 export const ERROR_RULES: readonly ErrorRule[] = [
 	'error-value',
 	'calculated-column',
+	'two-digit-text-year',
 	'number-as-text',
 	'inconsistent-formula',
 	'omits-adjacent-cells',
 	'unlocked-formula',
 	'empty-cell-reference',
+	'list-data-validation',
 ];
 
 /** The rules Excel has on by default (references to empty cells is off). */
@@ -36,11 +41,13 @@ export const DEFAULT_ERROR_RULES: readonly ErrorRule[] = ERROR_RULES.filter(
 export const RULE_FLAG: Readonly<Record<ErrorRule, IgnoredErrorFlag>> = {
 	'error-value': 'evalError',
 	'calculated-column': 'calculatedColumn',
+	'two-digit-text-year': 'twoDigitTextYear',
 	'number-as-text': 'numberStoredAsText',
 	'inconsistent-formula': 'formula',
 	'omits-adjacent-cells': 'formulaRange',
 	'unlocked-formula': 'unlockedFormula',
 	'empty-cell-reference': 'emptyCellReference',
+	'list-data-validation': 'listDataValidation',
 };
 
 export interface ErrorIssue extends CellRef {
@@ -148,6 +155,45 @@ function readsEmptyCell(workbook: Workbook, at: CellRef, formula: string): boole
 	});
 }
 
+const NUMERIC_TWO_DIGIT_DATE = /^(\d{1,2})([/.-])(\d{1,2})\2(\d{2})$/;
+const NAMED_TWO_DIGIT_DATE =
+	/^(?:\d{1,2}[-\s]+(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*[-\s,]+\d{2}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s+\d{1,2},?\s+\d{2})$/i;
+
+/** Whether a text cell looks like a date written with a two-digit year (e.g. `1/15/26`, `15-Jan-26`). */
+function isTwoDigitTextYear(text: string): boolean {
+	const trimmed = text.trim();
+	if (!trimmed) return false;
+	const numMatch = NUMERIC_TWO_DIGIT_DATE.exec(trimmed);
+	if (numMatch) {
+		const a = Number(numMatch[1]);
+		const b = Number(numMatch[3]);
+		return a >= 1 && b >= 1 && a <= 31 && b <= 31 && (a <= 12 || b <= 12);
+	}
+	return NAMED_TWO_DIGIT_DATE.test(trimmed);
+}
+
+/** Whether a cell's value violates a `type="list"` data validation covering it. */
+function failsListValidation(
+	workbook: Workbook,
+	at: CellRef,
+	value: Workbook['sheets'][number]['rows'] extends Map<number, Map<number, infer C>>
+		? C extends { value: infer V }
+			? V
+			: never
+		: never,
+): boolean {
+	if (value === null || value === '') return false;
+	const ws = workbook.sheets[at.sheet];
+	if (!ws || ws.dataValidations.length === 0) return false;
+	const dv = ws.dataValidations.find(
+		(rule) => rule.type === 'list' && rule.ranges.some((r) => rangeContains(r, at)),
+	);
+	if (!dv || dv.formula1 === undefined) return false;
+	const items = listSource(workbook, at.sheet, dv.formula1, undefined, at);
+	if (!items) return false;
+	return !items.some((item) => listItemMatches(item, value));
+}
+
 /**
  * Every issue on a sheet (all sheets when `sheet` is undefined), in reading order, minus the
  * ones the sheet's `ignoredErrors` switch off.
@@ -186,13 +232,14 @@ export function findErrors(
 					styleAt(workbook, cell.styleId).protection?.locked === false
 				)
 					add('unlocked-formula');
-			} else if (
-				on.has('number-as-text') &&
-				typeof cell.value === 'string' &&
-				cell.value.trim() !== '' &&
-				parseNumberText(cell.value) !== undefined
-			)
-				add('number-as-text');
+			} else if (typeof cell.value === 'string' && cell.value.trim() !== '') {
+				if (on.has('number-as-text') && parseNumberText(cell.value) !== undefined)
+					add('number-as-text');
+				else if (on.has('two-digit-text-year') && isTwoDigitTextYear(cell.value))
+					add('two-digit-text-year');
+			}
+			if (on.has('list-data-validation') && failsListValidation(workbook, at, cell.value))
+				add('list-data-validation');
 		});
 		out.push(...found);
 	});

@@ -32,11 +32,13 @@ const DIRECT_KEYS = ['locale', 'theme', 'author', 'calculation'] as const;
 const RULE_LABELS: Readonly<Record<ErrorRule, string>> = {
 	'error-value': 'Cells containing formulas that result in an error',
 	'calculated-column': 'Inconsistent calculated column formula in tables',
+	'two-digit-text-year': 'Cells containing years represented as 2 digits',
 	'number-as-text': 'Numbers formatted as text or preceded by an apostrophe',
 	'inconsistent-formula': 'Formulas inconsistent with other formulas in the region',
 	'omits-adjacent-cells': 'Formulas which omit cells in a region',
 	'unlocked-formula': 'Unlocked cells containing formulas',
 	'empty-cell-reference': 'Formulas referring to empty cells',
+	'list-data-validation': 'Data entered in a table is invalid',
 };
 const ruleKey = (rule: ErrorRule): string => 'rule:' + rule;
 const ITERATION_KEYS = ['iterate', 'iterationCount', 'iterationDelta'];

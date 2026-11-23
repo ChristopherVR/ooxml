@@ -58,12 +58,94 @@ function childrenOf(node: FormulaAst): FormulaAst[] {
 	}
 }
 
+function literalTruthy(node: FormulaAst): boolean | undefined {
+	if (node.type === 'boolean') return node.value;
+	if (node.type === 'number') return node.value !== 0;
+	return undefined;
+}
+
+function literalEquals(a: FormulaAst, b: FormulaAst): boolean {
+	if (a.type !== b.type) return false;
+	if (a.type === 'number' && b.type === 'number') return a.value === b.value;
+	if (a.type === 'boolean' && b.type === 'boolean') return a.value === b.value;
+	if (a.type === 'string' && b.type === 'string')
+		return a.value.toLowerCase() === b.value.toLowerCase();
+	if (a.type === 'error' && b.type === 'error') return a.code === b.code;
+	return false;
+}
+
+/**
+ * Resolves the next sub-expression inside a lazy/branching call (`IF`, `IFERROR`, `IFNA`,
+ * `CHOOSE`, `IFS`, `SWITCH`) once its selector argument(s) are values, stepping through only
+ * the chosen branch as Excel does.
+ */
+function nextLazyNode(node: Extract<FormulaAst, { type: 'call' }>): FormulaAst {
+	const args = node.args;
+	const first = args[0];
+	if (!first) return node;
+	if (!isLiteral(first)) return nextNode(first) ?? first;
+
+	switch (node.name) {
+		case 'IF': {
+			const cond = literalTruthy(first);
+			if (cond === undefined) return node;
+			const branch = cond ? args[1] : args[2];
+			return branch && !isLiteral(branch) ? (nextNode(branch) ?? branch) : node;
+		}
+		case 'IFERROR': {
+			if (first.type === 'error' && args[1] && !isLiteral(args[1]))
+				return nextNode(args[1]) ?? args[1];
+			return node;
+		}
+		case 'IFNA': {
+			if (first.type === 'error' && first.code === '#N/A' && args[1] && !isLiteral(args[1]))
+				return nextNode(args[1]) ?? args[1];
+			return node;
+		}
+		case 'CHOOSE': {
+			if (first.type !== 'number') return node;
+			const index = Math.trunc(first.value);
+			const chosen = index >= 1 && index < args.length ? args[index] : undefined;
+			return chosen && !isLiteral(chosen) ? (nextNode(chosen) ?? chosen) : node;
+		}
+		case 'IFS': {
+			for (let i = 0; i + 1 < args.length; i += 2) {
+				const condNode = args[i]!;
+				if (!isLiteral(condNode)) return nextNode(condNode) ?? condNode;
+				const cond = literalTruthy(condNode);
+				if (cond === undefined) return node;
+				if (cond) {
+					const val = args[i + 1]!;
+					return !isLiteral(val) ? (nextNode(val) ?? val) : node;
+				}
+			}
+			return node;
+		}
+		case 'SWITCH': {
+			if (first.type === 'error' || first.type === 'array') return node;
+			for (let i = 1; i + 1 < args.length; i += 2) {
+				const caseNode = args[i]!;
+				if (!isLiteral(caseNode)) return nextNode(caseNode) ?? caseNode;
+				if (literalEquals(first, caseNode)) {
+					const val = args[i + 1]!;
+					return !isLiteral(val) ? (nextNode(val) ?? val) : node;
+				}
+			}
+			if (args.length % 2 === 0) {
+				const fallback = args[args.length - 1]!;
+				if (!isLiteral(fallback)) return nextNode(fallback) ?? fallback;
+			}
+			return node;
+		}
+		default:
+			return node;
+	}
+}
+
 /** The next node to compute: first in evaluation order whose operands are all values. */
 function nextNode(node: FormulaAst): FormulaAst | undefined {
 	if (isLiteral(node)) return undefined;
-	// These only compute the branch they need once the first argument is a value.
-	if (node.type === 'call' && LAZY.has(node.name) && node.args[0] && isLiteral(node.args[0]))
-		return node;
+	if (node.type === 'call' && LAZY.has(node.name)) return nextLazyNode(node);
 	for (const child of childrenOf(node)) {
 		const found = nextNode(child);
 		if (found) return found;

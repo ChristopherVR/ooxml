@@ -4,7 +4,7 @@ import { type CellRange, cellKey } from '../address';
 import { changeAreas } from './change-areas';
 import { getCell } from '../cells';
 import type { Cell, CellValue, Workbook } from '../model';
-import { FormulaError } from './ast';
+import { type FormulaAst, FormulaError } from './ast';
 import { withDateSystem } from './date-serial';
 import { GraphPreparation, type PreparedFormulas } from './engine-prepare';
 import { EngineStructure } from './engine-structure';
@@ -15,7 +15,15 @@ import { analyze, type FormulaNode } from './graph';
 import { implicitIntersection, toMatrix } from './references';
 import { CalculationStopped } from './recalc-limits';
 import { clearFootprint, isSpilledCell } from './spill';
-import { type Area, ERR, ErrorSignal, LambdaValue, type Value, withFormulaBudget } from './values';
+import {
+	type Area,
+	ERR,
+	ErrorSignal,
+	LambdaValue,
+	RefValue,
+	type Value,
+	withFormulaBudget,
+} from './values';
 
 export {
 	type CalcEngine,
@@ -311,10 +319,59 @@ class Engine extends EngineStructure implements CalcEngine {
 		if (parsed instanceof FormulaError) return [];
 		try {
 			const { deps, dynamicDeps } = analyze(parsed, this, at.sheet, at.row, at.col);
-			return [...deps, ...dynamicDeps].map(({ sheet, range }) => ({ sheet, range }));
+			const out = [...deps, ...dynamicDeps].map(({ sheet, range }) => ({ sheet, range }));
+			const dynamicTargets = this.resolveDynamicRefTargets(parsed, at);
+			if (dynamicTargets.length) out.push(...dynamicTargets);
+			return out;
 		} catch {
 			return [];
 		}
+	}
+
+	private resolveDynamicRefTargets(
+		ast: FormulaAst,
+		at: CellPosition,
+	): { sheet: number; range: CellRange }[] {
+		const calls: FormulaAst[] = [];
+		const walk = (node: FormulaAst): void => {
+			switch (node.type) {
+				case 'unary':
+				case 'percent':
+					walk(node.operand);
+					break;
+				case 'binary':
+					walk(node.left);
+					walk(node.right);
+					break;
+				case 'call':
+					for (const arg of node.args) walk(arg);
+					if (node.name === 'OFFSET' || node.name === 'INDIRECT') calls.push(node);
+					break;
+				case 'invoke':
+					walk(node.callee);
+					for (const arg of node.args) walk(arg);
+					break;
+			}
+		};
+		walk(ast);
+		if (!calls.length) return [];
+		const out: { sheet: number; range: CellRange }[] = [];
+		const frame = this.frameFor(at.sheet, at.row, at.col, ast);
+		withDateSystem(this.workbook.date1904, () =>
+			withFormulaBudget(() => {
+				for (const call of calls) {
+					try {
+						const value = evaluateNode(call, frame);
+						if (value instanceof RefValue) {
+							for (const area of value.areas) out.push({ sheet: area.sheet, range: area.range });
+						}
+					} catch {
+						// Ignore dynamic reference calls that error at audit time.
+					}
+				}
+			}),
+		);
+		return out;
 	}
 
 	circularCells(): CellPosition[] {
