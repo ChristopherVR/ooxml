@@ -105,6 +105,73 @@ function custom(property: CustomProperty): PropertyValue {
 	}
 }
 
+/** Word document-information fields that mirror a built-in DOCPROPERTY (ECMA-376 17.16.5). */
+export const DOC_INFO_FIELD_MAP: Readonly<Record<string, string>> = {
+	AUTHOR: 'author',
+	TITLE: 'title',
+	SUBJECT: 'subject',
+	KEYWORDS: 'keywords',
+	COMMENTS: 'comments',
+	LASTSAVEDBY: 'lastsavedby',
+	REVNUM: 'revisionnumber',
+	CREATEDATE: 'createtime',
+	SAVEDATE: 'lastsavedtime',
+	PRINTDATE: 'lastprinted',
+};
+
+/** Fields whose optional first argument supplies a literal override text in Word. */
+const OVERRIDABLE_INFO_FIELDS = new Set(['AUTHOR', 'TITLE', 'SUBJECT', 'KEYWORDS', 'COMMENTS']);
+
+/**
+ * Evaluates a document-information field (`AUTHOR`, `TITLE`, `SUBJECT`, `KEYWORDS`, `COMMENTS`,
+ * `LASTSAVEDBY`, `REVNUM`, `CREATEDATE`, `SAVEDATE`, `PRINTDATE`).
+ */
+export function docInfoFieldResult(
+	instr: string,
+	properties: DocumentPropertySet,
+): string | undefined {
+	const field = parseFieldInstruction(instr);
+	if (!field) return undefined;
+	const propKey = DOC_INFO_FIELD_MAP[field.name];
+	if (!propKey) return undefined;
+	if (field.args.length > 0 && OVERRIDABLE_INFO_FIELDS.has(field.name)) {
+		return applyFieldFormat(field.args[0]!, field.format);
+	}
+	const raw = rawDocInfoProperty(propKey, properties.core);
+	if (raw === undefined) return undefined;
+	const value = builtIn(propKey, properties.core, properties.app);
+	if (!value || value.kind === 'stale') return undefined;
+	if (value.kind === 'date') return fieldDateResult(value.date, field.format);
+	return applyFieldFormat(value.text, field.format);
+}
+
+function rawDocInfoProperty(key: string, core: CoreProperties): string | undefined {
+	switch (key) {
+		case 'author':
+			return core.creator;
+		case 'title':
+			return core.title;
+		case 'subject':
+			return core.subject;
+		case 'keywords':
+			return core.keywords;
+		case 'comments':
+			return core.description;
+		case 'lastsavedby':
+			return core.lastModifiedBy;
+		case 'revisionnumber':
+			return core.revision;
+		case 'createtime':
+			return core.created;
+		case 'lastsavedtime':
+			return core.modified;
+		case 'lastprinted':
+			return core.lastPrinted;
+		default:
+			return undefined;
+	}
+}
+
 /**
  * A DOCPROPERTY result, with its `\*` formats and, for a date, its `\@` picture. Undefined when
  * the field keeps its saved result: another field, an unevaluated switch, a statistic or a date

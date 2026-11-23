@@ -393,10 +393,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `w:del`) are modelled, accepted and rejected (`docx/table-row-revisions.test.ts`) but not yet
       exercised through the editor.
 - [ ] **P1** Fields computed today: PAGE, NUMPAGES, SECTIONPAGES, DATE, TIME, TOC, SEQ, REF,
-      PAGEREF, STYLEREF, DOCPROPERTY, AUTONUM, AUTONUMLGL, AUTONUMOUT, LISTNUM and SYMBOL
-      (`docx/computed-fields.ts`). IF, `=`, MERGEFIELD, INCLUDETEXT, INCLUDEPICTURE, AUTHOR,
-      INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached result (`layout/page-fields.ts`);
-      Update Fields skips the `\n \r \w \p` switches.
+      PAGEREF, STYLEREF, DOCPROPERTY, AUTHOR, TITLE, SUBJECT, KEYWORDS, COMMENTS, LASTSAVEDBY,
+      REVNUM, CREATEDATE, SAVEDATE, PRINTDATE, IF, `=` (scalar/list arithmetic & functions; table
+      and bookmark references keep their cached result), AUTONUM, AUTONUMLGL, AUTONUMOUT, LISTNUM
+      and SYMBOL (`docx/computed-fields.ts`, `computed-fields-extra.test.ts`). MERGEFIELD,
+      INCLUDETEXT, INCLUDEPICTURE, INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached
+      result (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
 - [ ] **P1** Grouped drawings (`wpg`) and canvases (`wpc`), legacy VML text boxes (`v:textbox`)
       and legacy VML WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical

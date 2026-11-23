@@ -9,11 +9,15 @@ import {
 	type AutoNumberState,
 } from './auto-number-fields';
 import {
+	DOC_INFO_FIELD_MAP,
 	NO_PROPERTY_NAME,
 	UNKNOWN_PROPERTY,
+	docInfoFieldResult,
 	docPropertyResult,
 	fieldProperties,
 } from './doc-property-field';
+import { ifFieldResult } from './conditional-field';
+import { ZERO_DIVIDE_ERROR, formulaFieldResult } from './formula-field';
 import type { ListNumberFields } from './list-number-fields';
 import { computeListNumbering } from './numbering-format';
 import { symbolFieldResult } from './symbol-field';
@@ -46,9 +50,19 @@ export interface ComputedFields {
 
 const CHARFORMAT = /\*\s*charformat\b/i;
 
+const DOC_INFO_NAMES = Object.keys(DOC_INFO_FIELD_MAP);
+
+const normalizedFieldName = (instr: string): string => {
+	const name = fieldName(instr);
+	return name.startsWith('=') ? '=' : name;
+};
+
 /** The names of the fields `computedFields` evaluates. */
 export const COMPUTED_FIELD_NAMES: ReadonlySet<string> = new Set([
 	'DOCPROPERTY',
+	...DOC_INFO_NAMES,
+	'IF',
+	'=',
 	...AUTO_NUMBER_FIELDS,
 	'LISTNUM',
 	'SYMBOL',
@@ -68,11 +82,25 @@ export function computedFields(
 	let listNumbers: ListNumberFields | undefined;
 	return {
 		result(field, paragraph) {
-			const name = fieldName(field.instr);
+			const name = normalizedFieldName(field.instr);
 			if (name === 'DOCPROPERTY') {
 				const text = docPropertyResult(field.instr, (properties ??= fieldProperties(model)));
 				const error = text === UNKNOWN_PROPERTY || text === NO_PROPERTY_NAME;
 				return text === undefined || (error && !options.errors) ? undefined : { text };
+			}
+			if (name in DOC_INFO_FIELD_MAP) {
+				const text = docInfoFieldResult(field.instr, (properties ??= fieldProperties(model)));
+				return text === undefined ? undefined : { text };
+			}
+			if (name === 'IF') {
+				const text = ifFieldResult(field.instr);
+				return text === undefined ? undefined : { text };
+			}
+			if (name === '=') {
+				const text = formulaFieldResult(field.instr);
+				if (text === undefined || (text === ZERO_DIVIDE_ERROR && !options.errors))
+					return undefined;
+				return { text };
 			}
 			if (AUTO_NUMBER_FIELDS.has(name)) {
 				const state = (autoNumbers ??= autoNumberStates(model)).get(paragraph.id);
@@ -100,7 +128,13 @@ export function computedFields(
 }
 
 /** The computed fields whose results do not depend on where they are in the main document. */
-const STORY_FIELD_NAMES: ReadonlySet<string> = new Set(['DOCPROPERTY', 'SYMBOL']);
+const STORY_FIELD_NAMES: ReadonlySet<string> = new Set([
+	'DOCPROPERTY',
+	...DOC_INFO_NAMES,
+	'IF',
+	'=',
+	'SYMBOL',
+]);
 
 /**
  * `model` with the cached result of every unlocked computed field brought up to date, in the
@@ -116,7 +150,7 @@ export function refreshComputedFields(
 	const fields = computedFields(model);
 	const story = (names: ReadonlySet<string>) => (blocks: Parameters<typeof withFieldResults>[0]) =>
 		withFieldResults(blocks, (field, paragraph) => {
-			if (!names.has(fieldName(field.instr))) return undefined;
+			if (!names.has(normalizedFieldName(field.instr))) return undefined;
 			const result = fields.result(field, paragraph);
 			return result && { text: result.text, charFormat: CHARFORMAT.test(field.instr) };
 		});
