@@ -390,8 +390,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Symbol-font character runs.
 - [ ] **P1** Styles: no new styles; the paragraph, character and table style catalogues and the
       theme are refused on save; latent styles are not modelled.
-- [ ] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)
-      are not editable.
+- [x] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)
+      are editable in core with both fresh and source-preserving save/reload round-trip support
+      (`docx/table-properties-edit.ts`, `write-table-level-properties.ts`; verified in
+      `table-properties-edit.test.ts` and `table-fidelity.test.ts`).
 - [ ] **P1** Table-structure revisions (`cellIns`, `cellDel`, `cellMerge`, `tblPrChange`,
       `trPrChange`, `tcPrChange`) are not modelled and block structure edits; `tblGridChange` and
       `numberingChange` have no code. Tracked row insertions and deletions (`w:trPr/w:ins`,
