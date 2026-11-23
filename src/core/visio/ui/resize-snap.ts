@@ -108,8 +108,14 @@ export function visioSnapResizeDrag(
 	if (!snap || !(snap.threshold > 0) || !(snap.shapes || snap.guides)) return plain;
 	const location = VISIO_RESIZE_HANDLES.find((item) => item.id === handle);
 	if (!location) return undefined;
-	const useX = location.x !== 0.5,
-		useY = location.y !== 0.5;
+	const single = ids.length === 1 ? page.shapes.find((shape) => shape.id === ids[0]) : undefined;
+	const singleLocks = single?.locks;
+	const unrotated =
+		!!single && Math.abs(single.transform[1]) < 1e-9 && Math.abs(single.transform[2]) < 1e-9;
+	const fixedW = unrotated && (!!singleLocks?.width || (!!singleLocks?.height && !!singleLocks?.aspect));
+	const fixedH = unrotated && (!!singleLocks?.height || (!!singleLocks?.width && !!singleLocks?.aspect));
+	const useX = location.x !== 0.5 && !fixedW,
+		useY = location.y !== 0.5 && !fixedH;
 	const point = visioResizeHandlePoint(first.frame, location);
 	const targets: SnapBox[] = visioSnapTargets(page, new Set(ids), snap);
 	const hit = computeSnap({ ...point, width: 0, height: 0 }, targets, snap.threshold);

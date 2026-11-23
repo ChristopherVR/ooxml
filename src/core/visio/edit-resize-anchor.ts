@@ -51,7 +51,8 @@ export function resizeVisioShapeAtAnchor(
 		)
 	)
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Nested shape identities cannot be resized as a local leaf.');
-	protectedShape(shape, document);
+	const resizeLocks = { width: false, height: false, aspect: false };
+	protectedShape(shape, document, new Set(), [], false, resizeLocks);
 	// Layer membership does not touch geometry; edit.ts refuses a shape on a locked layer.
 	for (const container of children(root, 'Connects'))
 		for (const connection of children(container, 'Connect'))
@@ -92,7 +93,7 @@ export function resizeVisioShapeAtAnchor(
 		children(shape, 'Section').some((section) => attribute(section, 'N') === 'Geometry')
 	)
 		resizeGeometry(shape, roots, edit, check, new Set(), glueShapes, group?.shapes);
-	if (numeric(local.get('LockAspect'), 0) !== 0 && !close(edit.width / width, edit.height / height))
+	if (resizeLocks.aspect && !close(edit.width / width, edit.height / height))
 		fail('EDIT_PROTECTED_CELL', 'LockAspect prevents changing the aspect ratio.');
 	const geometry = visioAnchoredResizeGeometry(
 		{
@@ -127,12 +128,12 @@ export function resizeVisioShapeAtAnchor(
 		if (numeric(local.get(name), 0) !== 0)
 			fail('EDIT_PROTECTED_CELL', `${name} prevents this operation.`);
 	};
-	for (const [name, value, old] of [
-		['Width', edit.width, width],
-		['Height', edit.height, height],
+	for (const [name, value, old, locked] of [
+		['Width', edit.width, width, resizeLocks.width],
+		['Height', edit.height, height, resizeLocks.height],
 	] as const)
 		if (value !== old) {
-			unlocked(`Lock${name}`);
+			if (locked) fail('EDIT_PROTECTED_CELL', `Lock${name} prevents this operation.`);
 			writable(name);
 			writes.push({ name, value });
 		}

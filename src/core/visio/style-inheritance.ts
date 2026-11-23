@@ -53,7 +53,7 @@ export function styleSheet(
 				? /^(Fill|Shdw|QuickStyleFill|QuickStyleEffectsMatrix|RotateGradientWithShape|UseGroupGradient)/
 				: /^(LeftMargin|RightMargin|TopMargin|BottomMargin|VerticalAlign|TextBkgnd|TextBkgndTrans|QuickStyleFont.*)$/;
 	const themeSelectors =
-		/^(ThemeIndex|ColorSchemeIndex|EffectSchemeIndex|ConnectorSchemeIndex|FontSchemeIndex|VariationColorIndex|VariationStyleIndex|QuickStyleType|QuickStyleVariation)$/;
+		/^(ThemeIndex|ColorSchemeIndex|EffectSchemeIndex|ConnectorSchemeIndex|FontSchemeIndex|VariationColorIndex|VariationStyleIndex|QuickStyleType|QuickStyleVariation|LockWidth|LockHeight|LockAspect)$/;
 	const result = {
 		cells: new Map(
 			[...full.cells].filter(([key]) => pattern.test(key) || themeSelectors.test(key)),

@@ -161,19 +161,23 @@ export function visioResizeDrag(
 		y = (-b * delta.x + a * delta.y) / determinant;
 	// A symmetric (Ctrl) drag keeps the centre fixed, so each moving edge travels twice as far.
 	const k = options.symmetric ? 2 : 1;
+	const lockW = !!shape.locks?.width,
+		lockH = !!shape.locks?.height,
+		lockA = !!shape.locks?.aspect;
+	const fixedWidth = lockW || (lockH && lockA),
+		fixedHeight = lockH || (lockW && lockA);
 	const raw = {
 		width:
-			location.x === 0.5
+			fixedWidth || location.x === 0.5
 				? shape.width
 				: Math.max(Math.min(1 / 16, shape.width), shape.width + k * (location.x === 1 ? x : -x)),
 		height:
-			location.y === 0.5
+			fixedHeight || location.y === 0.5
 				? shape.height
 				: Math.max(Math.min(1 / 16, shape.height), shape.height + k * (location.y === 1 ? y : -y)),
 	};
-	const size = visioResizeKeepsProportions(handle, options)
-		? visioProportionalSize(shape, raw, location)
-		: raw;
+	const proportional = !fixedWidth && !fixedHeight && (lockA || visioResizeKeepsProportions(handle, options));
+	const size = proportional ? visioProportionalSize(shape, raw, location) : raw;
 	// The opposite point stays fixed; a proportional side drag grows the other axis about its
 	// centre. A symmetric drag anchors the centre instead.
 	const anchor: VisioResizeAnchor = options.symmetric

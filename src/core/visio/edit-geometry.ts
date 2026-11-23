@@ -144,6 +144,8 @@ export function applyGeometryEdit(
 		);
 		const local = cells(shape);
 		const lineMove = edit.type === 'move-shape' && isLineSheet(local);
+		const resizeLocks =
+			edit.type === 'resize-shape' ? { width: false, height: false, aspect: false } : undefined;
 		const rotationLocked = protectedShape(
 			shape,
 			document,
@@ -158,6 +160,7 @@ export function applyGeometryEdit(
 							? ['LockRotate']
 							: [],
 			edit.type === 'flip-shape',
+			resizeLocks,
 		);
 		if (glue.connector && edit.type !== 'delete-shape')
 			unglueConnector(
@@ -302,10 +305,7 @@ export function applyGeometryEdit(
 			};
 			if (width === edit.width && height === edit.height) return [];
 			resizeGeometry(shape, roots, edit, check, lineEditShapes, glueShapes);
-			if (
-				numeric(local.get('LockAspect'), 0) !== 0 &&
-				Math.abs(edit.width / width - edit.height / height) > 1e-9
-			)
+			if (resizeLocks?.aspect && Math.abs(edit.width / width - edit.height / height) > 1e-9)
 				fail('EDIT_PROTECTED_CELL', 'LockAspect prevents changing the aspect ratio.');
 			// Make implicit pins explicit before dimensions change. Resizing holds the rotation pin fixed.
 			for (const [name, value] of [
@@ -313,12 +313,12 @@ export function applyGeometryEdit(
 				['PinY', height / 2],
 			] as const)
 				if (!local.has(name)) setCell(shape, name, value);
-			for (const [name, value, lock] of [
-				['Width', edit.width, 'LockWidth'],
-				['Height', edit.height, 'LockHeight'],
+			for (const [name, value, lock, locked] of [
+				['Width', edit.width, 'LockWidth', resizeLocks?.width],
+				['Height', edit.height, 'LockHeight', resizeLocks?.height],
 			] as const) {
 				if (numeric(local.get(name)) === value) continue;
-				unlocked(lock);
+				if (locked) fail('EDIT_PROTECTED_CELL', `${lock} prevents this operation.`);
 				if (!lineResize || name !== 'Width') editableCell(local.get(name));
 				setCell(shape, name, value);
 				add(name);

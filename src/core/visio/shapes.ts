@@ -319,6 +319,7 @@ export function normalizeShapes(
 					...(Number.isNaN(nonPrinting) ? {} : { nonPrinting: nonPrinting !== 0 }),
 				},
 				layerIds: membership.layerIds,
+				...resizeLocks(sheet),
 				children: normalizeShapes(shape.children, context, depth + 1, stack, toPage),
 				...(masterId === undefined ? {} : { masterId }),
 				...(shape.foreignVector
@@ -386,4 +387,19 @@ function pictureAdjustment(sheet: Parameters<typeof visioShapeStructure>[0], rep
 function structureOf(sheet: Parameters<typeof visioShapeStructure>[0]) {
 	const structure = visioShapeStructure(sheet);
 	return structure ? { structure } : {};
+}
+
+function resizeLocks(sheet: Parameters<typeof visioShapeStructure>[0]) {
+	const width = number(sheet.cells, 'LockWidth', 0) !== 0;
+	const height = number(sheet.cells, 'LockHeight', 0) !== 0;
+	const aspect = number(sheet.cells, 'LockAspect', 0) !== 0;
+	return width || height || aspect
+		? {
+				locks: {
+					...(width ? { width: true } : {}),
+					...(height ? { height: true } : {}),
+					...(aspect ? { aspect: true } : {}),
+				},
+			}
+		: {};
 }

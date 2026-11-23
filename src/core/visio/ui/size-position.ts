@@ -72,12 +72,20 @@ export function visioSizePositionCommand(
 			},
 		];
 	if (value <= 0) return undefined;
-	return [
-		{
-			type: 'resize-shape',
-			...target,
-			width: field === 'width' ? value : state.width,
-			height: field === 'height' ? value : state.height,
-		},
-	];
+	const shape = visioMovementShape(page, id);
+	const keepAspect = !!shape?.locks?.aspect && !shape.locks.width && !shape.locks.height;
+	const width =
+		field === 'width'
+			? value
+			: keepAspect && state.height > 0
+				? state.width * (value / state.height)
+				: state.width;
+	const height =
+		field === 'height'
+			? value
+			: keepAspect && state.width > 0
+				? state.height * (value / state.width)
+				: state.height;
+	if (!bounded(width) || !bounded(height) || width <= 0 || height <= 0) return undefined;
+	return [{ type: 'resize-shape', ...target, width, height }];
 }

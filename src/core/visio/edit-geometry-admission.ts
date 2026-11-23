@@ -116,8 +116,14 @@ export function admitted(
 		fail('UNSUPPORTED_GEOMETRY_EDIT', 'Positive proven Width and Height caches are required.');
 	return shape;
 }
+export interface VisioEffectiveResizeLocks {
+	width: boolean;
+	height: boolean;
+	aspect: boolean;
+}
 /** Validate scalar protection; return effective rotation lock for flips that retain Angle.
- * Certified master moves preserve active non-movement locks.
+ * Certified master moves preserve active non-movement locks; resize operations can pass
+ * `resizeLocks` to validate and receive effective LockWidth/LockHeight/LockAspect values.
  */
 export function protectedShape(
 	shape: Element,
@@ -125,6 +131,7 @@ export function protectedShape(
 	masterMovePins: ReadonlySet<Element> = new Set(),
 	additionalLocks: readonly ('LockBegin' | 'LockEnd' | 'LockRotate')[] = [],
 	preserveRotation = false,
+	resizeLocks?: VisioEffectiveResizeLocks,
 ): boolean {
 	const local = cells(shape);
 	const protectionLocks = [...locks, ...additionalLocks];
@@ -144,12 +151,12 @@ export function protectedShape(
 	const validateProtection = (cell: Element): void => {
 		try {
 			const cached = numeric(cell);
+			const lockName = attribute(cell, 'N') ?? '';
 			const operationIndependent =
-				(preserveRotation && attribute(cell, 'N') === 'LockRotate') ||
+				(preserveRotation && lockName === 'LockRotate') ||
+				(!!resizeLocks && ['LockWidth', 'LockHeight', 'LockAspect'].includes(lockName)) ||
 				(certifiedMove &&
-					['LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'].includes(
-						attribute(cell, 'N') ?? '',
-					));
+					['LockWidth', 'LockHeight', 'LockAspect', 'LockDelete'].includes(lockName));
 			if (
 				cell.hasAttribute('E') ||
 				visioFormulaCachedValue(attribute(cell, 'V') ?? '', attribute(cell, 'U')).unit !==
@@ -209,6 +216,11 @@ export function protectedShape(
 	};
 	const defaults = children(document, 'DocumentSheet')[0];
 	let inheritedRotationLocked = false;
+	const inheritedResize: VisioEffectiveResizeLocks = {
+		width: false,
+		height: false,
+		aspect: false,
+	};
 	for (const category of ['LineStyle', 'FillStyle', 'TextStyle']) {
 		const id =
 			attribute(shape, category) ??
@@ -217,7 +229,11 @@ export function protectedShape(
 		if (id === undefined) continue;
 		for (const lock of protectionLocks) {
 			const cell = resolve(id, category, lock);
-			if (lock === 'LockRotate' && cell && numeric(cell) === 1) inheritedRotationLocked = true;
+			if (!cell || numeric(cell) !== 1) continue;
+			if (lock === 'LockRotate') inheritedRotationLocked = true;
+			if (lock === 'LockWidth') inheritedResize.width = true;
+			if (lock === 'LockHeight') inheritedResize.height = true;
+			if (lock === 'LockAspect') inheritedResize.aspect = true;
 		}
 	}
 	for (const lock of protectionLocks)
@@ -247,6 +263,17 @@ export function protectedShape(
 			if (result.unit !== 'scalar' || result.value !== numeric(cell))
 				fail('EDIT_PROTECTED_CELL', 'Protection cache is stale.');
 		}
+	}
+	if (resizeLocks) {
+		resizeLocks.width = local.has('LockWidth')
+			? numeric(local.get('LockWidth'), 0) !== 0
+			: inheritedResize.width;
+		resizeLocks.height = local.has('LockHeight')
+			? numeric(local.get('LockHeight'), 0) !== 0
+			: inheritedResize.height;
+		resizeLocks.aspect = local.has('LockAspect')
+			? numeric(local.get('LockAspect'), 0) !== 0
+			: inheritedResize.aspect;
 	}
 	return local.has('LockRotate')
 		? numeric(local.get('LockRotate'), 0) !== 0

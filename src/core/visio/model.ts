@@ -370,6 +370,13 @@ export interface VisioShape {
 	 * placeable when a dynamic connector is glued to it; right-angle connectors avoid these only.
 	 */
 	placeable?: boolean;
+	/** Effective resize protection flags (LockWidth, LockHeight, LockAspect); absent when unlocked. */
+	locks?: VisioShapeLocks;
+}
+export interface VisioShapeLocks {
+	width?: boolean;
+	height?: boolean;
+	aspect?: boolean;
 }
 export interface VisioLocalPoint {
 	x: number;
