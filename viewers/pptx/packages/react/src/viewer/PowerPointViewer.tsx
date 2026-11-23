@@ -903,13 +903,27 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 		}, [customShowRunRequest]);
 
 		// ── Touch gestures: pinch-to-zoom on canvas viewport ──────
+		const hyperlinkHandlers = useRef({
+			presentation,
+			viewerOptions,
+			onHyperlinkClick: props.onHyperlinkClick,
+			t,
+		});
+		useEffect(() => {
+			hyperlinkHandlers.current = {
+				presentation,
+				viewerOptions,
+				onHyperlinkClick: props.onHyperlinkClick,
+				t,
+			};
+		}, [presentation, viewerOptions, props.onHyperlinkClick, t]);
 		useEffect(() => {
 			const root = containerRef.current;
 			if (!root) {
 				return;
 			}
 			return attachViewerHyperlinks(root, {
-				translate: t,
+				translate: (key, params) => hyperlinkHandlers.current.t(key, params),
 				getState: () => ({
 					slide: slides[activeSlideIndex],
 					slideCount: slides.length,
@@ -918,11 +932,17 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 					presenting: mode === 'present',
 				}),
 				goToSlide: (index) =>
-					mode === 'present' ? presentation.navigateToSlide(index) : setActiveSlideIndex(index),
-				onHyperlinkClick: props.onHyperlinkClick,
-				confirmExternalHyperlink: (url) =>
-					!shouldConfirmExternalHyperlink(viewerOptions, url) ||
-					confirmExternalHyperlinkDialog(url, { t, host: root }),
+					mode === 'present'
+						? hyperlinkHandlers.current.presentation.navigateToSlide(index)
+						: setActiveSlideIndex(index),
+				onHyperlinkClick: (link) => hyperlinkHandlers.current.onHyperlinkClick?.(link),
+				confirmExternalHyperlink: (url) => {
+					const { viewerOptions: currentOptions, t: translate } = hyperlinkHandlers.current;
+					return (
+						!shouldConfirmExternalHyperlink(currentOptions, url) ||
+						confirmExternalHyperlinkDialog(url, { t: translate, host: root })
+					);
+				},
 			});
 		}, [
 			containerRef,
@@ -930,11 +950,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			activeSlideIndex,
 			canEdit,
 			mode,
-			presentation,
 			setActiveSlideIndex,
-			props.onHyperlinkClick,
-			viewerOptions,
-			t,
 			loading,
 			error,
 		]);

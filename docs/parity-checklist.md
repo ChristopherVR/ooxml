@@ -41,17 +41,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Japanese and Korean exist only for PowerPoint: the suite's shared language list
       (`apps/office-suite/src/settings.js`) and `SUPPORTED_OFFICE_LOCALES` do not offer them, and
       Word, Excel, Visio, Teams, the diagram strings, the shared options and ChartEx tables have
-      no ja/ko. The rarer PowerPoint preset names (animations, newer SmartArt layouts, bevel,
-      material and 3-D camera presets) in ja/ko are unreviewed by a native speaker. CJK chrome
-      fonts apply only when the host sets `lang`.
+      no ja/ko. CJK chrome fonts apply only when the host sets `lang`.
+- [ ] **P2** PowerPoint's Japanese and Korean animation names, newer SmartArt layout names, and
+      bevel, material and 3-D camera presets still need review by native speakers.
 - [x] **P1** OneDrive save recovery only offered choosing/copying versions: format-aware three-way
       mergers now combine supported independent DOCX/XLSX/PPTX/VSDX edits automatically and rebase
       against the latest revision. The suite reloads the acknowledged combined file. Evidence:
       `src/core/embedding/onedrive/merge-session.test.ts`, each format's `merge-snapshots.test.ts`
       and `scripts/test-support/onedrive-merge-checks.mjs`.
-- [ ] **P1** Snapshot merging cannot resolve every structural or same-content overlap, nor provide
-      a live Microsoft Office operation stream. Ambiguous edits require retained-version recovery;
-      see `docs/onedrive-integration.md#automatically-combine-concurrent-edits-during-save`.
+- [ ] **P1** Ambiguous structural or same-content overlaps in OneDrive saves require
+      retained-version recovery. See [concurrent save merging](onedrive-integration.md#automatically-combine-concurrent-edits-during-save).
+- [ ] **P1** OneDrive collaboration with Microsoft Office lacks a live operation stream.
+      [Concurrent save merging](onedrive-integration.md#automatically-combine-concurrent-edits-during-save)
+      combines compatible saved snapshots.
 - [x] **P1** Fonts that are neither installed nor embedded were downloaded only in PowerPoint:
       Word, Excel and Visio now share its webfont fallback (`ooxml-core/text` `webfonts/`,
       `ooxml-ui/fonts/webfonts.ts`), with metric-compatible stacks wherever they measure and paint
@@ -993,8 +995,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       form on demand during a PowerPoint slide show.
 - [ ] **P1** Native embedded Forms objects and signed-in Forms management in PowerPoint, and
       Microsoft 365 workbook response synchronization in Excel.
-- [x] **P1** Get Add-ins installs from the host catalog and opens Microsoft Marketplace for
-      browsing. My Add-ins opens installed tabs and removes catalog add-ins when enabled by the host.
+- [x] **P1** In Word, Excel and PowerPoint, Get Add-ins installs from the host catalog and opens
+      Microsoft Marketplace for browsing. My Add-ins opens installed tabs and removes catalog
+      add-ins when enabled by the host.
 - [ ] **P1** Store add-in installation and Office.js runtime for Word, Excel and PowerPoint.
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
