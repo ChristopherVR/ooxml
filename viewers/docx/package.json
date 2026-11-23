@@ -46,13 +46,13 @@
 		"oxfmt": "^0.79.0",
 		"oxlint": "^1.94.0",
 		"prosemirror-view": "^1.42.9",
-		"rollup": "^4.68.5",
+		"rollup": "^4.68.7",
 		"rollup-plugin-dts": "^6.5.1",
 		"solid-js": "^1.9.20",
 		"svelte-check": "^4.7.8",
 		"tailwindcss": "^4.3.5",
 		"typescript": "~6.0.3",
 		"vite": "^8.3.8",
-		"vitest": "^5.1.0"
+		"vitest": "^5.1.1"
 	}
 }
