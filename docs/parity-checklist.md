@@ -301,7 +301,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       ranges write `activeCellId`. Core regression: `xlsx/ui/selection-persistence.test.ts`;
       all six bindings: `e2e/xlsx/selection-save.spec.ts`. Excel 16 reopened three generated
       workbooks with the expected active tab, disjoint ranges, frozen selection and split pane.
-- [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter.
+- [ ] **P1** Flash Fill and Advanced filter remain open; Subtotal and Consolidate edit operations
+      are implemented in core with undo/redo (`xlsx/edit/subtotal.ts`, `consolidate.ts`;
+      `subtotal.test.ts`, `consolidate.test.ts`), ribbon dialogs remain open.
 - [x] **P1** Split panes (only Freeze Panes exists).
       Closed: View > Split splits at the active cell (a cross in the middle for A1), giving two or
       four independently scrolling panes with draggable bars and double-click removal; Split and
