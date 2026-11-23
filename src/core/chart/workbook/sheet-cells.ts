@@ -10,7 +10,7 @@
  * @module chart/workbook/sheet-cells
  */
 import { buildXml, elements, parseXml, type XmlDocument, type XmlElement } from '../../xml/index';
-import { parseCellAddress } from './cellref';
+import { formatCellAddress, parseCellAddress } from './cellref';
 
 /** One resolved cell write: a concrete "A1"-style ref plus its new value. */
 export interface ChartCellWrite {
@@ -245,4 +245,112 @@ export function restoreWorksheetCells(
 		restored.push(change.ref);
 	}
 	return restored;
+}
+
+/**
+ * Shifts worksheet rows upward when rows are removed via chart Edit Data.
+ *
+ * Removes the rows listed in `removedRows` (0-based offsets from `startRow`), shifts surviving
+ * rows upward by the number of deleted rows before them, updating row numbers and cell references
+ * (`<c r="...">`) while preserving formulas, formatting, text, and cells outside the chart's range.
+ * Clears and removes vacated trailing rows.
+ *
+ * @param doc The parsed worksheet XML document.
+ * @param startRow The 1-based worksheet row number where data rows start.
+ * @param removedRows 0-based indices of removed rows relative to `startRow`.
+ * @param totalRowsBefore The total number of data rows before removal.
+ * @returns Whether any row was shifted or removed.
+ */
+export function shiftWorksheetRows(
+	doc: XmlDocument,
+	startRow: number,
+	removedRows: readonly number[],
+	totalRowsBefore: number,
+): boolean {
+	if (removedRows.length === 0 || totalRowsBefore <= 0) return false;
+	const sheetData = worksheetData(doc);
+	if (!sheetData) return false;
+
+	const endRowBefore = startRow + totalRowsBefore - 1;
+	const removedRowSet = new Set(removedRows.map((r) => startRow + r));
+	const removedSorted = [...removedRowSet].sort((a, b) => a - b);
+
+	const rowElements = childrenNamed(sheetData, 'row');
+	let changed = false;
+
+	for (const row of rowElements) {
+		const rowNumAttr = row.getAttribute('r');
+		if (!rowNumAttr) continue;
+		const rowNum = Number(rowNumAttr);
+		if (rowNum < startRow || rowNum > endRowBefore) continue;
+
+		if (removedRowSet.has(rowNum)) {
+			row.parentNode?.removeChild(row);
+			changed = true;
+			continue;
+		}
+
+		let shift = 0;
+		for (const rem of removedSorted) {
+			if (rem < rowNum) shift++;
+			else break;
+		}
+
+		if (shift > 0) {
+			const newRowNum = rowNum - shift;
+			row.setAttribute('r', String(newRowNum));
+			row.removeAttribute('spans');
+			for (const cell of childrenNamed(row, 'c')) {
+				const ref = cell.getAttribute('r');
+				if (!ref) continue;
+				const addr = parseCellAddress(ref);
+				if (!addr) continue;
+				cell.setAttribute('r', formatCellAddress({ col: addr.col, row: newRowNum - 1 }));
+			}
+			changed = true;
+		}
+	}
+
+	const endRowAfter = endRowBefore - removedRowSet.size;
+	for (const row of childrenNamed(sheetData, 'row')) {
+		const rowNum = Number(row.getAttribute('r'));
+		if (rowNum > endRowAfter && rowNum <= endRowBefore) {
+			row.parentNode?.removeChild(row);
+			changed = true;
+		}
+	}
+
+	return changed;
+}
+
+/**
+ * Clears all cells in columns between `startCol` and `endCol` (inclusive, 0-based).
+ * If `startRow` and `endRow` are provided (1-based), only cells within those rows are cleared.
+ */
+export function clearWorksheetColumns(
+	doc: XmlDocument,
+	startCol: number,
+	endCol: number,
+	startRow?: number,
+	endRow?: number,
+): boolean {
+	const sheetData = worksheetData(doc);
+	if (!sheetData) return false;
+	let changed = false;
+	for (const row of childrenNamed(sheetData, 'row')) {
+		const rowNum = Number(row.getAttribute('r'));
+		if (startRow !== undefined && rowNum < startRow) continue;
+		if (endRow !== undefined && rowNum > endRow) continue;
+		for (const cell of childrenNamed(row, 'c')) {
+			const ref = cell.getAttribute('r');
+			if (!ref) continue;
+			const addr = parseCellAddress(ref);
+			if (addr && addr.col >= startCol && addr.col <= endCol) {
+				row.removeChild(cell);
+				changed = true;
+			}
+		}
+		row.removeAttribute('spans');
+	}
+	return changed;
 }

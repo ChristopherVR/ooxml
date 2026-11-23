@@ -30,12 +30,18 @@ import {
 	childNamed,
 	childrenNamed,
 	restoreWorksheetCells,
+	shiftWorksheetRows,
 	worksheetData,
 	writeWorksheetCells,
 	type ChartCellChange,
 	type ChartCellWrite,
 } from './sheet-cells';
-import { sharedStringTexts, syncWorksheetTables, worksheetCellText } from './tables';
+import {
+	sharedStringTexts,
+	syncWorksheetTables,
+	worksheetCellText,
+	type SyncTableMeta,
+} from './tables';
 import { validateAtomicChartWorkbookWrites } from './validation';
 
 /** One cell of a chart data reference: its position in the range and its new text. */
@@ -60,6 +66,9 @@ export interface ChartWorkbookWrite {
 	 * range the chart did not read before, whose cells may hold anything.
 	 */
 	only?: boolean;
+	removedRows?: readonly number[] | undefined;
+	totalRowsBefore?: number | undefined;
+	seriesCount?: number | undefined;
 }
 
 /** Every value of a whole range as cells to write. */
@@ -126,6 +135,10 @@ interface ResolvedWrite {
 	isNumeric: boolean;
 	/** With `only`: the range and its size, to find the cells it does not list. */
 	only?: { range: ChartFormulaRange; count: number };
+	removedRows?: readonly number[] | undefined;
+	totalRowsBefore?: number | undefined;
+	seriesCount?: number | undefined;
+	startRow?: number | undefined;
 }
 
 /** Empties the cells of an `only` write's range that would read as a point it does not list. */
@@ -198,11 +211,16 @@ export async function writeChartWorkbookUpdates(
 			cells: write.cells,
 			isNumeric: write.isNumeric,
 			...(write.only ? { only: { range, count: write.cellCount } } : {}),
+			...(write.removedRows !== undefined ? { removedRows: write.removedRows } : {}),
+			...(write.totalRowsBefore !== undefined ? { totalRowsBefore: write.totalRowsBefore } : {}),
+			...(write.seriesCount !== undefined ? { seriesCount: write.seriesCount } : {}),
+			startRow: range.start.row + 1,
 		});
 		writesBySheet.set(sheetPath, bucket);
 	}
 	const changes: ChartWorkbookCellChange[] = [];
 	const shared = await sharedStringTexts(zip).catch(() => []);
+	let anySheetModified = false;
 	for (const [sheetPath, resolved] of writesBySheet) {
 		const file = zip.file(sheetPath);
 		if (!file) {
@@ -211,6 +229,28 @@ export async function writeChartWorkbookUpdates(
 		}
 		try {
 			const doc = parseXml(await file.async('string'), { label: 'Worksheet' });
+			let sheetModified = false;
+
+			const rowRemovalWrite = resolved.find(
+				(w) => w.removedRows && w.removedRows.length > 0 && w.totalRowsBefore && w.startRow,
+			);
+			if (
+				rowRemovalWrite?.removedRows &&
+				rowRemovalWrite.totalRowsBefore &&
+				rowRemovalWrite.startRow
+			) {
+				if (
+					shiftWorksheetRows(
+						doc,
+						rowRemovalWrite.startRow,
+						rowRemovalWrite.removedRows,
+						rowRemovalWrite.totalRowsBefore,
+					)
+				) {
+					sheetModified = true;
+				}
+			}
+
 			const cellWrites: ChartCellWrite[] = resolved.flatMap((write) => [
 				...write.cells.map(({ index, value }) => ({
 					ref: write.address(index),
@@ -220,10 +260,32 @@ export async function writeChartWorkbookUpdates(
 				...unlistedPointCells(doc, write),
 			]);
 			const written = writeWorksheetCells(doc, cellWrites, shared);
-			if (written.length > 0) {
-				await syncWorksheetTables(zip, sheetPath, doc, cellWrites, shared);
+			if (written.length > 0) sheetModified = true;
+
+			const seriesCountWrite = resolved.find((w) => w.seriesCount !== undefined);
+			const meta: SyncTableMeta = {
+				...(seriesCountWrite?.seriesCount !== undefined
+					? { seriesCount: seriesCountWrite.seriesCount }
+					: {}),
+				...(rowRemovalWrite?.removedRows
+					? { removedRowCount: rowRemovalWrite.removedRows.length }
+					: {}),
+			};
+
+			const tablesChanged = await syncWorksheetTables(
+				zip,
+				sheetPath,
+				doc,
+				cellWrites,
+				shared,
+				meta,
+			);
+			if (tablesChanged) sheetModified = true;
+
+			if (sheetModified) {
 				if (!options.dryRun) zip.file(sheetPath, buildXml(doc));
 				for (const change of written) changes.push({ sheetPath, ...change });
+				anySheetModified = true;
 			}
 		} catch {
 			unresolved += resolved.length;
@@ -231,7 +293,7 @@ export async function writeChartWorkbookUpdates(
 	}
 	if (options.atomic && unresolved > 0)
 		throw new Error('Chart label replacement could not update every source range.');
-	if (changes.length === 0 || options.dryRun) return { unresolved };
+	if ((changes.length === 0 && !anySheetModified) || options.dryRun) return { unresolved };
 	return { bytes: await packed(zip), unresolved, changes };
 }
 

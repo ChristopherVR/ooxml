@@ -176,4 +176,122 @@ describe('the data table Word and PowerPoint put behind a chart', () => {
 			.async('string');
 		expect(xml).toContain('<c r="B2" t="e"><v>#N/A</v></c>');
 	});
+
+	async function withTableAndFormulas(): Promise<Uint8Array> {
+		const zip = await JSZip.loadAsync(await createChartWorkbook(DEFAULT_CHART_DATA_SHEET));
+		const sheet = 'xl/worksheets/sheet1.xml';
+		let xml = await zip.file(sheet)!.async('string');
+		xml = xml
+			.replace(
+				'<c r="B4"><v>3.5</v></c>',
+				'<c r="B4"><f>SUM(B2:B3)</f><v>6.8</v></c><c r="E4" t="inlineStr"><is><t>Note 3</t></is></c>',
+			)
+			.replace(
+				'<c r="B5"><v>4.5</v></c>',
+				'<c r="B5"><v>4.5</v></c><c r="E5" t="inlineStr"><is><t>Note 4</t></is></c>',
+			)
+			.replace(
+				'</worksheet>',
+				'<tableParts count="1"><tablePart r:id="rId1"/></tableParts></worksheet>',
+			);
+		zip.file(sheet, xml);
+		zip.file(
+			'xl/worksheets/_rels/sheet1.xml.rels',
+			'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/table" Target="../tables/table1.xml"/></Relationships>',
+		);
+		zip.file(
+			'xl/tables/table1.xml',
+			'<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1" name="Table1" displayName="Table1" ref="A1:D5"><autoFilter ref="A1:D5"/><tableColumns count="4"><tableColumn id="1" name=" "/><tableColumn id="2" name="Series 1"/><tableColumn id="3" name="Series 2"/><tableColumn id="4" name="Series 3"/></tableColumns></table>',
+		);
+		return zip.generateAsync({ type: 'uint8array' });
+	}
+
+	it('shifts rows upward, preserves formulas and outside cells, and vacates trailing rows on row removal', async () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-category', category: 1 }]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		const initialBytes = await withTableAndFormulas();
+		const result = await writeChartWorkbookUpdates(initialBytes, writes);
+		expect(result.unresolved).toBe(0);
+		expect(result.bytes).toBeDefined();
+
+		const zip = await JSZip.loadAsync(result.bytes!);
+		const sheetXml = await zip.file('xl/worksheets/sheet1.xml')!.async('string');
+		const doc = parseXml(sheetXml);
+
+		const b3 = Array.from(doc.getElementsByTagName('c')).find((c) => c.getAttribute('r') === 'B3');
+		expect(b3).toBeDefined();
+		expect(b3?.getElementsByTagName('f')[0]?.textContent).toBe('SUM(B2:B3)');
+		expect(b3?.getElementsByTagName('v')[0]?.textContent).toBe('6.8');
+
+		const e3 = Array.from(doc.getElementsByTagName('c')).find((c) => c.getAttribute('r') === 'E3');
+		expect(e3).toBeDefined();
+		expect(e3?.getElementsByTagName('t')[0]?.textContent).toBe('Note 3');
+
+		const e4 = Array.from(doc.getElementsByTagName('c')).find((c) => c.getAttribute('r') === 'E4');
+		expect(e4).toBeDefined();
+		expect(e4?.getElementsByTagName('t')[0]?.textContent).toBe('Note 4');
+
+		const row5 = Array.from(doc.getElementsByTagName('row')).find(
+			(r) => r.getAttribute('r') === '5',
+		);
+		expect(row5).toBeUndefined();
+
+		const tableXml = await zip.file('xl/tables/table1.xml')!.async('string');
+		expect(tableXml).toContain('ref="A1:D4"');
+		expect(tableXml).toContain('<autoFilter ref="A1:D4"/>');
+	});
+
+	it('shrinks tableColumns and clears old last column cells when removing a series', async () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-series', series: 2 }]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		const initialBytes = await withTableAndFormulas();
+		const result = await writeChartWorkbookUpdates(initialBytes, writes);
+		expect(result.unresolved).toBe(0);
+		expect(result.bytes).toBeDefined();
+
+		const zip = await JSZip.loadAsync(result.bytes!);
+		const tableXml = await zip.file('xl/tables/table1.xml')!.async('string');
+		expect(tableXml).toContain('ref="A1:C5"');
+		expect(tableXml).toContain('<autoFilter ref="A1:C5"/>');
+		expect(tableXml).toContain('<tableColumns count="3">');
+		expect(tableXml).not.toContain('name="Series 3"');
+
+		const sheetXml = await zip.file('xl/worksheets/sheet1.xml')!.async('string');
+		const doc = parseXml(sheetXml);
+		const dCells = Array.from(doc.getElementsByTagName('c')).filter((c) =>
+			c.getAttribute('r')?.startsWith('D'),
+		);
+		expect(dCells).toEqual([]);
+	});
+
+	it('handles simultaneous row and series removal from table-layout charts', async () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [
+			{ kind: 'remove-category', category: 1 },
+			{ kind: 'remove-series', series: 2 },
+		]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		const initialBytes = await withTableAndFormulas();
+		const result = await writeChartWorkbookUpdates(initialBytes, writes);
+		expect(result.unresolved).toBe(0);
+		expect(result.bytes).toBeDefined();
+
+		const zip = await JSZip.loadAsync(result.bytes!);
+		const tableXml = await zip.file('xl/tables/table1.xml')!.async('string');
+		expect(tableXml).toContain('ref="A1:C4"');
+		expect(tableXml).toContain('<autoFilter ref="A1:C4"/>');
+		expect(tableXml).toContain('<tableColumns count="3">');
+
+		const sheetXml = await zip.file('xl/worksheets/sheet1.xml')!.async('string');
+		const doc = parseXml(sheetXml);
+		const dCells = Array.from(doc.getElementsByTagName('c')).filter((c) =>
+			c.getAttribute('r')?.startsWith('D'),
+		);
+		expect(dCells).toEqual([]);
+
+		const b3 = Array.from(doc.getElementsByTagName('c')).find((c) => c.getAttribute('r') === 'B3');
+		expect(b3?.getElementsByTagName('f')[0]?.textContent).toBe('SUM(B2:B3)');
+	});
 });

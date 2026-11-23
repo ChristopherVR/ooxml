@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { ChartSpace } from '../model';
+import { applyChartSpaceDataSheetEdits } from '../edit/data-sheet';
 import { newChartSpace } from '../edit/new-chart';
 import { chartSeriesEntries } from '../edit/draft';
 import { loadXlsx } from '../../xlsx/read/index';
@@ -86,5 +87,42 @@ describe('chartSpaceWorkbookWrites for a range the chart did not read before', (
 		const column = [1, 2, 3, 4].map((row) => book.sheets[0]!.rows.get(row)?.get(1)?.value ?? null);
 		// The cached points are written; under the blanks a stale number is emptied, text stays.
 		expect(column).toEqual([4.3, null, 'note', 4.5]);
+	});
+});
+
+describe('chartSpaceWorkbookWrites for row and series removal', () => {
+	it('detects removed category rows and omits cell writes for shifted unchanged cells', () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-category', category: 1 }]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		expect(writes.length).toBeGreaterThan(0);
+		for (const write of writes) {
+			expect(write.removedRows).toEqual([1]);
+			expect(write.totalRowsBefore).toBe(4);
+			expect(write.cells).toEqual([]);
+		}
+	});
+
+	it('emits cell writes only for surviving rows that were explicitly edited', () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [
+			{ kind: 'remove-category', category: 1 },
+			{ kind: 'value', series: 0, category: 1, value: 9.9 },
+		]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		const series1Write = writes.find((w) => w.formula.includes('$B$2'));
+		expect(series1Write).toBeDefined();
+		expect(series1Write?.removedRows).toEqual([1]);
+		expect(series1Write?.cells).toEqual([{ index: 1, value: '9.9' }]);
+	});
+
+	it('detects removed series and attaches seriesCount', () => {
+		const space = newChartSpace();
+		const edited = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-series', series: 2 }]);
+		const writes = chartSpaceWorkbookWrites(edited, space);
+		expect(writes.length).toBeGreaterThan(0);
+		for (const write of writes) {
+			expect(write.seriesCount).toBe(2);
+		}
 	});
 });

@@ -11,7 +11,18 @@ import type JSZip from 'jszip';
 import { parseRelationships, relationshipsPartFor, resolvePartPath } from '../../opc/relationships';
 import { buildXml, parseXml, type XmlDocument, type XmlElement } from '../../xml/index';
 import { formatCellAddress, parseCellAddress, type CellAddress } from './cellref';
-import { childNamed, childrenNamed, worksheetData, type ChartCellWrite } from './sheet-cells';
+import {
+	childNamed,
+	childrenNamed,
+	clearWorksheetColumns,
+	worksheetData,
+	type ChartCellWrite,
+} from './sheet-cells';
+
+export interface SyncTableMeta {
+	seriesCount?: number | undefined;
+	removedRowCount?: number | undefined;
+}
 
 interface Box {
 	start: CellAddress;
@@ -58,10 +69,43 @@ function syncTable(
 	doc: XmlDocument,
 	writes: ReadonlyMap<string, string>,
 	shared: readonly string[],
+	meta?: SyncTableMeta,
 ): boolean {
-	const box = parseBox(table.getAttribute('ref'));
+	const initialBox = parseBox(table.getAttribute('ref'));
 	const columns = childNamed(table, 'tableColumns');
-	if (!box || !columns) return false;
+	if (!initialBox || !columns) return false;
+	const box: Box = {
+		start: { col: initialBox.start.col, row: initialBox.start.row },
+		end: { col: initialBox.end.col, row: initialBox.end.row },
+	};
+	let changed = false;
+
+	let list = childrenNamed(columns, 'tableColumn');
+	if (meta?.seriesCount !== undefined) {
+		const targetColumns = 1 + meta.seriesCount;
+		if (list.length > targetColumns) {
+			for (let i = list.length - 1; i >= targetColumns; i--) {
+				const col = list[i];
+				if (col) {
+					columns.removeChild(col);
+					changed = true;
+				}
+			}
+			clearWorksheetColumns(doc, box.start.col + targetColumns, box.start.col + list.length - 1);
+			box.end.col = box.start.col + targetColumns - 1;
+			columns.setAttribute('count', String(targetColumns));
+			list = childrenNamed(columns, 'tableColumn');
+		}
+	}
+
+	if (meta?.removedRowCount !== undefined && meta.removedRowCount > 0) {
+		const newEndRow = Math.max(box.start.row, box.end.row - meta.removedRowCount);
+		if (newEndRow !== box.end.row) {
+			box.end.row = newEndRow;
+			changed = true;
+		}
+	}
+
 	const cells = [...writes.keys()].flatMap((ref) => parseCellAddress(ref) ?? []);
 	const cols = new Set(
 		cells
@@ -77,8 +121,6 @@ function syncTable(
 		start: box.start,
 		end: { col: grown(box.end.col, cols), row: grown(box.end.row, rows) },
 	};
-	let changed = false;
-	const list = childrenNamed(columns, 'tableColumn');
 	const used = new Set<string>();
 	let id = list.reduce((max, column) => Math.max(max, Number(column.getAttribute('id')) || 0), 0);
 	for (let col = next.start.col; col <= next.end.col; col++) {
@@ -106,7 +148,7 @@ function syncTable(
 			changed = true;
 		}
 	}
-	if (next.end.col !== box.end.col || next.end.row !== box.end.row) {
+	if (changed || next.end.col !== initialBox.end.col || next.end.row !== initialBox.end.row) {
 		const ref = formatBox(next);
 		table.setAttribute('ref', ref);
 		childNamed(table, 'autoFilter')?.setAttribute('ref', ref);
@@ -126,16 +168,25 @@ export async function syncWorksheetTables(
 	doc: XmlDocument,
 	writes: readonly ChartCellWrite[],
 	shared: readonly string[],
-): Promise<void> {
+	meta?: SyncTableMeta,
+): Promise<boolean> {
 	const values = new Map(writes.map((write) => [write.ref, write.value]));
 	const dimension = childNamed(doc.documentElement ?? undefined, 'dimension');
 	const area = parseBox(dimension?.getAttribute('ref') ?? null);
 	if (dimension && area) {
+		if (meta?.seriesCount !== undefined) {
+			const targetEndCol = area.start.col + meta.seriesCount;
+			if (area.end.col > targetEndCol) area.end.col = targetEndCol;
+		}
+		if (meta?.removedRowCount !== undefined && meta.removedRowCount > 0) {
+			area.end.row = Math.max(area.start.row, area.end.row - meta.removedRowCount);
+		}
 		for (const cell of [...values.keys()].flatMap((ref) => parseCellAddress(ref) ?? [])) {
 			area.end = { col: Math.max(area.end.col, cell.col), row: Math.max(area.end.row, cell.row) };
 		}
 		dimension.setAttribute('ref', formatBox(area));
 	}
+	let changed = false;
 	const rels = parseRelationships(await zip.file(relationshipsPartFor(sheetPath))?.async('string'));
 	for (const rel of rels.values()) {
 		if (rel.mode === 'External' || !rel.type.endsWith('/table')) continue;
@@ -144,8 +195,12 @@ export async function syncWorksheetTables(
 		if (!xml) continue;
 		const tableDoc = parseXml(xml, { label: 'Table' });
 		const table = tableDoc.documentElement;
-		if (table && syncTable(table, doc, values, shared)) zip.file(path, buildXml(tableDoc));
+		if (table && syncTable(table, doc, values, shared, meta)) {
+			zip.file(path, buildXml(tableDoc));
+			changed = true;
+		}
 	}
+	return changed;
 }
 
 /** The texts of the workbook's shared strings, in index order (rich runs joined). */

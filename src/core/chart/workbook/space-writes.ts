@@ -32,6 +32,157 @@ export function chartCacheCellChanges(
 	return cells;
 }
 
+/**
+ * The cells that make `before` read as `cache` when surviving rows have shifted:
+ * only points that differ from the surviving row's original value are emitted.
+ */
+export function chartShiftedCacheCellChanges(
+	cache: TextCache,
+	before: TextCache | undefined,
+	survivingAfterToBefore: ReadonlyMap<number, number>,
+): ChartWorkbookCell[] {
+	const after = cellTexts(cache);
+	const prior = cellTexts(before);
+	const cells: ChartWorkbookCell[] = [];
+	for (const [index, value] of after) {
+		const priorIndex = survivingAfterToBefore.get(index);
+		const priorValue = priorIndex !== undefined ? prior.get(priorIndex) : undefined;
+		if (priorValue !== value) cells.push({ index, value });
+	}
+	return cells;
+}
+
+function maxRowCount(seriesList: readonly ChartSpaceSeries[]): number {
+	let max = 0;
+	for (const s of seriesList) {
+		const c = s.categories ?? s.xValues;
+		if (c?.cache) max = Math.max(max, chartCacheCellCount(c.cache));
+		const v = s.values ?? s.yValues;
+		if (v?.cache) max = Math.max(max, chartCacheCellCount(v.cache));
+	}
+	return max;
+}
+
+function alignRows(
+	space: ChartSpace,
+	before: ChartSpace,
+):
+	| {
+			removedRows: number[];
+			totalRowsBefore: number;
+			survivingAfterToBefore: Map<number, number>;
+	  }
+	| undefined {
+	const seriesBefore = allSeries(before);
+	const seriesAfter = allSeries(space);
+	const totalBefore = maxRowCount(seriesBefore);
+	const totalAfter = maxRowCount(seriesAfter);
+
+	if (totalBefore <= 0 || totalAfter >= totalBefore) return undefined;
+
+	const firstBefore = seriesBefore[0];
+	const firstAfter = seriesAfter[0];
+	const catBefore = firstBefore?.categories ?? firstBefore?.xValues;
+	const catAfter = firstAfter?.categories ?? firstAfter?.xValues;
+	const catBeforeTexts = catBefore?.cache ? cellTexts(catBefore.cache) : undefined;
+	const catAfterTexts = catAfter?.cache ? cellTexts(catAfter.cache) : undefined;
+	const hasCatLabels =
+		catBeforeTexts &&
+		catAfterTexts &&
+		catBeforeTexts.size > 0 &&
+		[...catBeforeTexts.values()].some((v) => v.trim() !== '');
+
+	const commonSeriesCount = Math.min(seriesBefore.length, seriesAfter.length);
+	const beforeFp: string[] = [];
+	for (let i = 0; i < totalBefore; i++) {
+		if (hasCatLabels) {
+			beforeFp.push(catBeforeTexts.get(i) ?? '');
+		} else {
+			const parts: string[] = [];
+			for (let s = 0; s < commonSeriesCount; s++) {
+				const sb = seriesBefore[s];
+				if (!sb) continue;
+				const v = sb.values ?? sb.yValues;
+				if (v?.cache) parts.push(cellTexts(v.cache).get(i) ?? '');
+			}
+			beforeFp.push(parts.join('\0'));
+		}
+	}
+
+	const afterFp: string[] = [];
+	for (let j = 0; j < totalAfter; j++) {
+		if (hasCatLabels) {
+			afterFp.push(catAfterTexts.get(j) ?? '');
+		} else {
+			const parts: string[] = [];
+			for (let s = 0; s < commonSeriesCount; s++) {
+				const sa = seriesAfter[s];
+				if (!sa) continue;
+				const v = sa.values ?? sa.yValues;
+				if (v?.cache) parts.push(cellTexts(v.cache).get(j) ?? '');
+			}
+			afterFp.push(parts.join('\0'));
+		}
+	}
+
+	const dp: number[][] = Array.from({ length: totalBefore + 1 }, () =>
+		new Array<number>(totalAfter + 1).fill(0),
+	);
+
+	for (let i = 1; i <= totalBefore; i++) {
+		for (let j = 1; j <= totalAfter; j++) {
+			if (beforeFp[i - 1] === afterFp[j - 1]) {
+				dp[i]![j] = dp[i - 1]![j - 1]! + 1;
+			} else {
+				dp[i]![j] = Math.max(dp[i - 1]![j]!, dp[i]![j - 1]!);
+			}
+		}
+	}
+
+	const survivingAfterToBefore = new Map<number, number>();
+	const matchedBefore = new Set<number>();
+	let bi = totalBefore;
+	let aj = totalAfter;
+
+	while (bi > 0 && aj > 0) {
+		if (beforeFp[bi - 1] === afterFp[aj - 1]) {
+			survivingAfterToBefore.set(aj - 1, bi - 1);
+			matchedBefore.add(bi - 1);
+			bi--;
+			aj--;
+		} else if (dp[bi - 1]![aj]! >= dp[bi]![aj - 1]!) {
+			bi--;
+		} else {
+			aj--;
+		}
+	}
+
+	if (survivingAfterToBefore.size < totalAfter) {
+		let lastBefore = -1;
+		for (let a = 0; a < totalAfter; a++) {
+			if (!survivingAfterToBefore.has(a)) {
+				for (let b = lastBefore + 1; b < totalBefore; b++) {
+					if (!matchedBefore.has(b)) {
+						survivingAfterToBefore.set(a, b);
+						matchedBefore.add(b);
+						lastBefore = b;
+						break;
+					}
+				}
+			} else {
+				lastBefore = survivingAfterToBefore.get(a)!;
+			}
+		}
+	}
+
+	const removedRows: number[] = [];
+	for (let b = 0; b < totalBefore; b++) {
+		if (!matchedBefore.has(b)) removedRows.push(b);
+	}
+
+	return { removedRows, totalRowsBefore: totalBefore, survivingAfterToBefore };
+}
+
 /** The cells a cache's range holds: its declared count, or as many as the cache reaches. */
 export const chartCacheCellCount = (cache: TextCache): number =>
 	Math.max(cache.pointCount ?? 0, chartPointsLength(cache));
@@ -79,27 +230,46 @@ export function chartSpaceWorkbookWrites(
 			const start = rangeStart(source.formula);
 			if (!prior.has(start)) prior.set(start, source.cache);
 		}
+	const alignment = before ? alignRows(space, before) : undefined;
+	const seriesCount = allSeries(space).length;
+	const beforeSeriesCount = before ? allSeries(before).length : seriesCount;
+	const seriesRemoved = before !== undefined && seriesCount < beforeSeriesCount;
+
 	const seen = new Set<string>();
 	const writes: ChartWorkbookWrite[] = [];
-	for (const series of allSeries(space))
-		for (const { formula, cache } of writableSources(series)) {
+	for (const series of allSeries(space)) {
+		const isTx = (source: WritableSource) => source === series.tx?.reference;
+		for (const source of writableSources(series)) {
+			const { formula, cache } = source;
 			const start = rangeStart(formula);
 			if (seen.has(start)) continue;
 			seen.add(start);
 			const earlier = prior.get(start);
-			const cells = chartCacheCellChanges(cache, earlier);
+			const isDataRowRange = !isTx(source);
+			const cells =
+				alignment && isDataRowRange
+					? chartShiftedCacheCellChanges(cache, earlier, alignment.survivingAfterToBefore)
+					: chartCacheCellChanges(cache, earlier);
 			// A range `before` did not read may hold anything (a series removed and brought back by
 			// undo, data put back on a sheet it had left): the cache is all it holds.
 			const only = before !== undefined && earlier === undefined;
-			if (cells.length || !before || only)
+			if (cells.length || !before || only || (alignment && isDataRowRange) || seriesRemoved)
 				writes.push({
 					formula,
 					isNumeric: cache.type === 'number',
 					cells,
 					cellCount: chartCacheCellCount(cache),
 					...(only ? { only } : {}),
+					...(alignment && isDataRowRange
+						? {
+								removedRows: alignment.removedRows,
+								totalRowsBefore: alignment.totalRowsBefore,
+							}
+						: {}),
+					...(seriesRemoved ? { seriesCount } : {}),
 				});
 		}
+	}
 	return writes;
 }
 
