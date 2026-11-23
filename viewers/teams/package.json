@@ -39,7 +39,7 @@
 		"yjs": "^13.6.33"
 	},
 	"devDependencies": {
-		"@angular/core": "^22.2.6",
+		"@angular/core": "^22.3.0",
 		"@playwright/test": "^1.65.1",
 		"@types/node": "^26.6.6",
 		"@typescript/typescript6": "^6.0.2",
