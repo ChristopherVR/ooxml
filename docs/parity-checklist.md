@@ -268,11 +268,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       reopened 35-sheet outputs in both date systems without repair and recalculated matching values.
 - [ ] **P2** Most Insert Function descriptions are English-only. The dialog now translates
       descriptions through the command dictionary, but the existing catalogue needs locale entries.
-- [x] **P2** Unsupported external formula integrations are documented by name and missing
-      capability in the generated function list and Feature Status: CUBE\* (7), WEBSERVICE,
-      STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE. They remain unimplemented;
-      initial cached results can be retained but cannot be refreshed. Existing engine regressions
-      cover cached imports and `#NAME?` for newly entered unsupported formulas.
+- [x] **P2** External formula integrations (`CUBE*` (7), `WEBSERVICE`, `STOCKHISTORY`, `RTD`,
+      `IMAGE`, `COPILOT`, `TRANSLATE` and `DETECTLANGUAGE`) are registered with typed host-supplied
+      provider interfaces on `CalcEngineOptions` (`formula/providers.ts`, `functions/cube.ts`,
+      `functions/integrations.ts`, plus `createMemoryCubeProvider` in `formula/cube-memory.ts`;
+      `integrations.test.ts` and `viewers/xlsx/docs/functions.md`). Core makes zero network
+      requests: when a host does not supply a provider, cached results survive initial loading and
+      newly entered formulas return `#NAME?`. `TRIMRANGE` now also returns a trimmed `RefValue`
+      for single-area references.
 
 ### Editing and behaviour
 
