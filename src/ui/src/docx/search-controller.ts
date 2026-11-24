@@ -1,5 +1,6 @@
 import { NodeSelection, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
+import { hasFormatCriteria, type ReplaceFormatPatch } from 'ooxml-core/docx';
 import { expectDefined, FindPatternError, type FindOptions } from 'ooxml-core/docx/ui';
 import { findDocumentMatches } from './search-document';
 import {
@@ -29,6 +30,8 @@ export interface SearchStoryInfo {
 
 export interface SearchStatus {
 	query: string;
+	/** True when active Format > Font/Paragraph/Style criteria are set (enables format-only Find). */
+	hasFormat: boolean;
 	count: number;
 	active: number;
 	readOnly: boolean;
@@ -72,6 +75,7 @@ export class SearchController {
 		const story = this.matches[this.activeIndex]?.unit.story;
 		return {
 			query: this.query,
+			hasFormat: hasFormatCriteria(this.options.format),
 			count: this.matches.length,
 			active: this.activeIndex < 0 ? 0 : this.activeIndex + 1,
 			readOnly: !this.getView()?.editable,
@@ -96,7 +100,7 @@ export class SearchController {
 		this.matches = [];
 		this.units = [];
 		this.invalid = false;
-		if (view && this.query) {
+		if (view && (this.query || hasFormatCriteria(this.options.format))) {
 			const open = this.stories?.openStory();
 			const units = (this.units = this.stories
 				? searchUnits(
@@ -153,23 +157,23 @@ export class SearchController {
 		return this.select((previous + this.matches.length) % this.matches.length);
 	}
 
-	replaceOne(replacement: string): boolean {
+	replaceOne(replacement: string, replaceFormat?: ReplaceFormatPatch): boolean {
 		const view = this.getView();
-		if (!view?.editable || !this.query) return false;
+		if (!view?.editable || (!this.query && !hasFormatCriteria(this.options.format))) return false;
 		this.refresh();
 		if (this.activeIndex < 0 && !this.findNext()) return false;
 		const match = this.matches[this.activeIndex];
 		if (!match) return false;
-		return this.replace(view, [match], replacement) > 0;
+		return this.replace(view, [match], replacement, replaceFormat) > 0;
 	}
 
-	replaceAll(replacement: string): number {
+	replaceAll(replacement: string, replaceFormat?: ReplaceFormatPatch): number {
 		const view = this.getView();
-		if (!view?.editable || !this.query) return 0;
+		if (!view?.editable || (!this.query && !hasFormatCriteria(this.options.format))) return 0;
 		this.refresh();
 		if (!this.matches.length) return 0;
 		if (this.matches.some((match) => match.unit.key !== 'main')) this.stories?.closeStory();
-		return this.replace(view, [...this.matches], replacement);
+		return this.replace(view, [...this.matches], replacement, replaceFormat);
 	}
 
 	/** The open story's selection, a placed match, or the body caret, as a search-order position. */
@@ -235,11 +239,17 @@ export class SearchController {
 	}
 
 	/** Replaces the matches, one undoable step per story; the count replaced, 0 if invalid. */
-	private replace(view: EditorView, matches: StoryMatch[], replacement: string): number {
+	private replace(
+		view: EditorView,
+		matches: StoryMatch[],
+		replacement: string,
+		replaceFormat?: ReplaceFormatPatch,
+	): number {
 		try {
 			const count = applyReplacements(view, this.stories, matches, {
 				replacement,
 				wildcards: Boolean(this.options.wildcards),
+				...(replaceFormat ? { replaceFormat } : {}),
 			});
 			this.placed = undefined;
 			this.refresh();

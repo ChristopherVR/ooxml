@@ -10,6 +10,12 @@ import {
 } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import {
+	hasFormatCriteria,
+	hasReplaceFormat,
+	type FindFormatCriteria,
+	type ReplaceFormatPatch,
+} from 'ooxml-core/docx';
+import {
 	expectDefined,
 	findMatches,
 	FIND_LINE_BREAK,
@@ -20,6 +26,11 @@ import {
 	type FindOptions,
 	type ReplacementPart,
 } from 'ooxml-core/docx/ui';
+import {
+	applyFormatPatchToMarks,
+	applyFormatPatchToParagraphAttrs,
+	positionMatchesFormat,
+} from './search-format-match';
 
 export interface DocumentMatch {
 	readonly from: number;
@@ -96,14 +107,73 @@ export function findableText(doc: ProseMirrorNode): FindableText {
 	return { text, from, to };
 }
 
-/** Every match of the query in the document, in document order. */
+/** Maximal contiguous formatted spans within each paragraph when `query` is empty. */
+function findFormatOnlyDocumentMatches(
+	doc: ProseMirrorNode,
+	flat: FindableText,
+	criteria: FindFormatCriteria,
+): DocumentMatch[] {
+	const matches: DocumentMatch[] = [];
+	let spanStart = -1;
+	let spanParaPos = -1;
+
+	const flush = (endIndex: number): void => {
+		if (spanStart < 0 || endIndex <= spanStart) return;
+		const from = expectDefined(flat.from[spanStart], 'match start');
+		const to = expectDefined(flat.to[endIndex - 1], 'match end');
+		const text = flat.text.slice(spanStart, endIndex);
+		matches.push({ from, to, text, groups: [text] });
+		spanStart = -1;
+		spanParaPos = -1;
+	};
+
+	for (let i = 0; i < flat.text.length; i++) {
+		const ch = flat.text.charAt(i);
+		const pos = flat.from[i]!;
+		if (ch === FIND_PARAGRAPH_MARK || ch === FIND_OBJECT) {
+			flush(i);
+			continue;
+		}
+		if (positionMatchesFormat(doc, pos, criteria)) {
+			const paraPos = doc.resolve(pos).before(doc.resolve(pos).depth);
+			if (spanStart < 0) {
+				spanStart = i;
+				spanParaPos = paraPos;
+			} else if (paraPos !== spanParaPos) {
+				flush(i);
+				spanStart = i;
+				spanParaPos = paraPos;
+			}
+		} else {
+			flush(i);
+		}
+	}
+	flush(flat.text.length);
+	return matches;
+}
+
+/** Every match of the query (and/or `options.format`) in the document, in document order. */
 export function findDocumentMatches(
 	doc: ProseMirrorNode,
 	query: string,
 	options: FindOptions = {},
 ): DocumentMatch[] {
+	const criteria = options.format;
+	const hasCriteria = hasFormatCriteria(criteria);
+	if (!query && !hasCriteria) return [];
 	const flat = findableText(doc);
-	return findMatches(flat.text, query, options).map((match) => ({
+	if (!query && criteria) return findFormatOnlyDocumentMatches(doc, flat, criteria);
+	const raw = findMatches(flat.text, query, options);
+	const filtered =
+		criteria && hasCriteria
+			? raw.filter((match) => {
+					for (let i = match.start; i < match.end; i++) {
+						if (!positionMatchesFormat(doc, flat.from[i]!, criteria)) return false;
+					}
+					return true;
+				})
+			: raw;
+	return filtered.map((match) => ({
 		from: expectDefined(flat.from[match.start], 'match start'),
 		to: expectDefined(flat.to[match.end - 1], 'match end'),
 		text: match.text,
@@ -187,6 +257,7 @@ function replacementParagraphs(
 export function replaceTargets(
 	state: EditorState,
 	targets: readonly ReplacementTarget[],
+	replaceFormat?: ReplaceFormatPatch,
 ): Transaction {
 	const { schema } = state;
 	const ids = new Set<string>();
@@ -202,19 +273,49 @@ export function replaceTargets(
 		return id;
 	};
 	const paragraph = expectDefined(schema.nodes.paragraph, 'paragraph node type');
+	const patch = hasReplaceFormat(replaceFormat) ? replaceFormat : undefined;
 	let transaction = state.tr;
 	for (const target of [...targets].sort((left, right) => right.from - left.from)) {
 		const $from = state.doc.resolve(target.from);
-		const attrs = $from.parent.attrs;
-		const blocks = replacementParagraphs(schema, target.parts, marksAt(state.doc, target.from));
+		const baseAttrs = $from.parent.attrs;
+		const patchedAttrs = patch ? applyFormatPatchToParagraphAttrs(baseAttrs, patch) : baseAttrs;
+		// Empty replacement text with a format patch keeps the matched text and applies formatting only.
+		if (patch && target.parts.length === 0) {
+			const originalMarks = marksAt(state.doc, target.from);
+			const nextMarks = applyFormatPatchToMarks(schema, originalMarks, patch);
+			const text = state.doc.textBetween(target.from, target.to, '\n');
+			if (text) {
+				transaction = transaction.replaceWith(
+					target.from,
+					target.to,
+					schema.text(text, insertedTextMarks(nextMarks, text)),
+				);
+			}
+			if (patchedAttrs !== baseAttrs) {
+				const paraPos = $from.before($from.depth);
+				transaction = transaction.setNodeMarkup(paraPos, undefined, patchedAttrs);
+			}
+			continue;
+		}
+		const baseMarks = marksAt(state.doc, target.from);
+		const marks = patch ? applyFormatPatchToMarks(schema, baseMarks, patch) : baseMarks;
+		const blocks = replacementParagraphs(schema, target.parts, marks);
 		const nodes = blocks.map((content, index) =>
-			paragraph.create(index === 0 ? attrs : { ...attrs, id: nextId() }, content),
+			paragraph.create(index === 0 ? patchedAttrs : { ...patchedAttrs, id: nextId() }, content),
 		);
 		transaction = transaction.replace(
 			target.from,
 			target.to,
 			new Slice(Fragment.from(nodes), 1, 1),
 		);
+		if (patch && patchedAttrs !== baseAttrs) {
+			const paraPos = $from.before($from.depth);
+			const mapped = transaction.mapping.map(paraPos);
+			const node = transaction.doc.nodeAt(mapped);
+			if (node?.type === paragraph) {
+				transaction = transaction.setNodeMarkup(mapped, undefined, patchedAttrs);
+			}
+		}
 	}
 	return transaction;
 }

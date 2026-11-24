@@ -1,10 +1,12 @@
 import type { EditorView } from 'prosemirror-view';
+import type { FindFormatCriteria, ReplaceFormatPatch } from 'ooxml-core/docx';
 import {
 	SearchController,
 	type SearchOptions,
 	type SearchStatus,
 	type SearchStoryHost,
 } from './search-controller';
+import { createFormatPicker } from './search-format-controls';
 import {
 	OPTION_LABELS,
 	SPECIAL_CODES,
@@ -50,6 +52,11 @@ const styleText = `
 	.dve-search-panel button:disabled{opacity:.55;cursor:default}
 	.dve-search-panel [role=status]{min-width:100px;color:var(--muted,#666)}
 	.dve-search-panel .dve-search-story{color:var(--muted,#666);font-style:italic}
+	.dve-search-panel .dve-search-format{display:flex;flex-basis:100%;flex-wrap:wrap;align-items:center;gap:6px;margin:4px 0 0;padding:6px 8px;border:1px solid var(--line,#ddd);border-radius:4px}
+	.dve-search-panel .dve-search-format legend{padding:0 4px;color:var(--muted,#666);font-size:11px}
+	.dve-search-panel .dve-search-size{width:62px;height:29px;padding:4px 6px;border:1px solid var(--line,#ddd);border-radius:3px;background:var(--surface,#fff);color:var(--ink,#222);font:inherit}
+	.dve-search-panel .dve-search-color{width:84px;height:29px;padding:4px 6px;border:1px solid var(--line,#ddd);border-radius:3px;background:var(--surface,#fff);color:var(--ink,#222);font:inherit}
+	.dve-search-panel .dve-search-format-summary{color:var(--muted,#666);font-size:11px;font-style:italic}
 `;
 
 export function createSearchPanel(
@@ -154,16 +161,38 @@ export function createSearchPanel(
 			lastField = field;
 		});
 
+	const styleNames = () => Object.keys(options.stories?.model().paragraphStyles?.styles ?? {});
+	const findFormat = createFormatPicker<FindFormatCriteria>(
+		'find',
+		() => {
+			findFormat.refreshSummary(locale);
+			refreshQuery();
+		},
+		styleNames,
+	);
+	const replaceFormat = createFormatPicker<ReplaceFormatPatch>(
+		'replace',
+		() => {
+			replaceFormat.refreshSummary(locale);
+		},
+		styleNames,
+	);
+	optionsSection.append(findFormat.element, replaceFormat.element);
+
 	const checked = (name: string): boolean => optionBoxes.get(name)?.box.checked === true;
-	const currentOptions = (): SearchOptions => ({
-		matchCase: caseInput.checked,
-		wholeWords: checked('wholeWords'),
-		wildcards: checked('wildcards'),
-		matchPrefix: checked('matchPrefix'),
-		matchSuffix: checked('matchSuffix'),
-		ignorePunctuation: checked('ignorePunctuation'),
-		ignoreWhitespace: checked('ignoreWhitespace'),
-	});
+	const currentOptions = (): SearchOptions => {
+		const format = findFormat.value();
+		return {
+			matchCase: caseInput.checked,
+			wholeWords: checked('wholeWords'),
+			wildcards: checked('wildcards'),
+			matchPrefix: checked('matchPrefix'),
+			matchSuffix: checked('matchSuffix'),
+			ignorePunctuation: checked('ignorePunctuation'),
+			ignoreWhitespace: checked('ignoreWhitespace'),
+			...(format ? { format } : {}),
+		};
+	};
 	const syncWildcards = () => {
 		const wildcards = optionBoxes.get('wildcards')?.box.checked ?? false;
 		for (const name of WILDCARD_DISABLED) {
@@ -177,7 +206,7 @@ export function createSearchPanel(
 	const renderStatus = (status: SearchStatus) => {
 		result.textContent = status.invalid
 			? translate(locale, 'Invalid search pattern')
-			: !status.query
+			: !status.query && !status.hasFormat
 				? translate(locale, 'Enter text to search')
 				: !status.count
 					? translate(locale, 'No matches')
@@ -223,11 +252,11 @@ export function createSearchPanel(
 	);
 	replace.addEventListener(
 		'click',
-		run(() => controller.replaceOne(replaceInput.value)),
+		run(() => controller.replaceOne(replaceInput.value, replaceFormat.value())),
 	);
 	replaceAll.addEventListener(
 		'click',
-		run(() => controller.replaceAll(replaceInput.value)),
+		run(() => controller.replaceAll(replaceInput.value, replaceFormat.value())),
 	);
 	findInput.addEventListener('keydown', (event) => {
 		if (event.key === 'Enter') {
@@ -289,6 +318,8 @@ export function createSearchPanel(
 		setLocale(value: string) {
 			locale = normalizeEditorLocale(value);
 			localizeElement(panel, locale);
+			findFormat.refreshSummary(locale);
+			replaceFormat.refreshSummary(locale);
 			more.textContent = translate(locale, optionsSection.hidden ? 'More >>' : '<< Less');
 			renderStatus(controller.status);
 		},

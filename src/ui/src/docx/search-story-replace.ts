@@ -5,7 +5,7 @@
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import type { Block, DocumentModel } from 'ooxml-core/docx';
+import type { Block, DocumentModel, ReplaceFormatPatch } from 'ooxml-core/docx';
 import { expectDefined, replacementParts, type FindStory } from 'ooxml-core/docx/ui';
 import { replaceTargets, type ReplacementTarget } from './search-document';
 import { textBoxDrawingAttrs } from './text-box-commands';
@@ -39,10 +39,15 @@ interface Entry {
 }
 
 /** One transaction over a view, the caret after the first replacement. */
-function replaceInView(view: EditorView, entries: readonly Entry[]): number {
+function replaceInView(
+	view: EditorView,
+	entries: readonly Entry[],
+	replaceFormat?: ReplaceFormatPatch,
+): number {
 	const transaction = replaceTargets(
 		view.state,
 		entries.map((entry) => entry.target),
+		replaceFormat,
 	);
 	const first = expectDefined(entries[0], 'first match').match;
 	const cursor = transaction.mapping.map(first.to, 1);
@@ -93,7 +98,11 @@ export function applyReplacements(
 	view: EditorView,
 	host: SearchStoryHost | undefined,
 	matches: readonly StoryMatch[],
-	options: { readonly replacement: string; readonly wildcards: boolean },
+	options: {
+		readonly replacement: string;
+		readonly wildcards: boolean;
+		readonly replaceFormat?: ReplaceFormatPatch;
+	},
 ): number {
 	const entries: Entry[] = matches.map((match) => ({
 		match,
@@ -113,7 +122,7 @@ export function applyReplacements(
 	for (const [group, own] of groups) {
 		const { unit } = expectDefined(own[0], 'group match').match;
 		if (group === 'main') {
-			count += replaceInView(view, own);
+			count += replaceInView(view, own, options.replaceFormat);
 			continue;
 		}
 		if (!host) continue;
@@ -124,7 +133,7 @@ export function applyReplacements(
 		if (!host.canEditStories()) continue;
 		const open = host.openStory();
 		if (open && own.every((entry) => entry.match.unit.key === open.key)) {
-			count += replaceInView(open.view, own);
+			count += replaceInView(open.view, own, options.replaceFormat);
 			continue;
 		}
 		const { story } = unit;
@@ -137,6 +146,7 @@ export function applyReplacements(
 						replacedStoryBlocks(
 							noteUnit,
 							list.map((entry) => entry.target),
+							options.replaceFormat,
 						),
 					);
 			host.writeNotes(story.kind, notes);
@@ -146,6 +156,7 @@ export function applyReplacements(
 				replacedStoryBlocks(
 					unit,
 					own.map((entry) => entry.target),
+					options.replaceFormat,
 				),
 			);
 		else continue;

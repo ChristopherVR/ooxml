@@ -475,8 +475,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Special codes (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`), and
       formatting search & replacement (`FindFormatCriteria`, `ReplaceFormatPatch` for font,
       paragraph and style, including format-only search over maximal contiguous spans;
-      `docx/find-format*.ts`, `find-format.test.ts`). Search-panel UI pickers for Format > Font,
-      Paragraph and Style remain open.
+      `docx/find-format*.ts`, `find-format.test.ts`, plus search-panel UI pickers for Format >
+      Font, Paragraph and Style in `src/ui/src/docx/search-format-controls.ts`,
+      `search-format-match.ts`, `search-format.test.ts`).
 - [ ] **P2** Find and Replace search the main document, headers and footers, footnotes, endnotes and
       text boxes in turn (`docx/find-stories.ts`, `src/ui/src/docx/search-stories.test.ts`,
       `e2e/docx/search.spec.ts`); a match in a header, footer or note opens its editor (Print Layout

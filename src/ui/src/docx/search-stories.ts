@@ -4,7 +4,12 @@
 // Boxes story, its lines a paragraph each.
 import { EditorState } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { createDocument, type Block, type DocumentModel } from 'ooxml-core/docx';
+import {
+	createDocument,
+	type Block,
+	type DocumentModel,
+	type ReplaceFormatPatch,
+} from 'ooxml-core/docx';
 import {
 	findStories,
 	findStoryGroup,
@@ -136,10 +141,11 @@ export function findUnitMatches(
 export function replacedStoryBlocks(
 	unit: SearchUnit,
 	targets: readonly ReplacementTarget[],
+	replaceFormat?: ReplaceFormatPatch,
 ): Block[] {
 	const { story } = unit;
 	const original = editableBlocks(story);
-	const doc = replaceTargets(EditorState.create({ doc: unit.doc }), targets).doc;
+	const doc = replaceTargets(EditorState.create({ doc: unit.doc }), targets, replaceFormat).doc;
 	const blocks = docToModel(doc, { ...createDocument(), blocks: original }).blocks;
 	if (story.kind !== 'footnote' && story.kind !== 'endnote') return blocks;
 	return withMark(blocks, withoutMark([...story.blocks]).mark);
