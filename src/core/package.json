@@ -164,6 +164,16 @@
 			"import": "./dist/docx/load/index.mjs",
 			"require": "./dist/docx/load/index.cjs"
 		},
+		"./docx/pdf-import": {
+			"types": "./dist/docx/pdf-import/index.d.ts",
+			"import": "./dist/docx/pdf-import/index.mjs",
+			"require": "./dist/docx/pdf-import/index.cjs"
+		},
+		"./pdf": {
+			"types": "./dist/pdf/index.d.ts",
+			"import": "./dist/pdf/index.mjs",
+			"require": "./dist/pdf/index.cjs"
+		},
 		"./visio": {
 			"types": "./dist/visio/index.d.ts",
 			"import": "./dist/visio/index.mjs",

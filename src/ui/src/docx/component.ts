@@ -7,6 +7,7 @@ import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
 import { loadDocument } from 'ooxml-core/docx/load';
+import { isPdfBytes } from './file-commands';
 import { setRibbonLocale } from './ribbon';
 import { closeRibbonOverflow } from './ribbon-overflow';
 import { closeRibbonPopover } from './ribbon-popover';
@@ -73,6 +74,15 @@ export interface DocxEditorElement {
 		listener: EventListenerOrEventListenerObject,
 		options?: boolean | EventListenerOptions,
 	): void;
+}
+
+/** A PDF converted into a document; the converter loads only when a PDF is opened. */
+async function openPdf(bytes: Uint8Array): Promise<LoadedDocument> {
+	const { convertPdf } = await import('ooxml-core/docx/pdf-import');
+	const converted = await convertPdf(bytes);
+	const session = await loadDocument(converted.docx);
+	session.model.warnings.unshift(...converted.warnings);
+	return session;
 }
 
 export class DocxEditorElement extends DocxEditorApi {
@@ -265,9 +275,11 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.readAloud.stop();
 		core.refreshControls();
 		try {
+			const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
 			// The file's fonts start downloading while it parses.
-			core.webfonts.prefetch(this.ownerDocument, input);
-			const session = await loadDocument(input);
+			if (!isPdfBytes(bytes)) core.webfonts.prefetch(this.ownerDocument, input);
+			// A PDF is converted to an editable document (loaded on demand), as Word opens one.
+			const session = isPdfBytes(bytes) ? await openPdf(bytes) : await loadDocument(input);
 			if (generation !== core.loadGeneration) return;
 			// As PowerPoint does: wait (bounded) for missing fonts' webfonts while loading shows, so
 			// the first layout already breaks lines and pages with their metrics.

@@ -154,7 +154,7 @@ export class EditorChrome {
 		this.statusBar.element.append(this.signatures.badge);
 		this.fileInput = document.createElement('input');
 		this.fileInput.type = 'file';
-		this.fileInput.accept = '.docx,.doc';
+		this.fileInput.accept = '.docx,.doc,.pdf';
 		this.fileInput.hidden = true;
 		this.fileInput.className = 'dve-file-input';
 		this.fileInput.addEventListener('change', () => void this.openSelectedFile());

@@ -644,6 +644,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       line numbers and floating objects in headers, footers and table cells (each reported), and
       has no links, bookmarks, tagged PDF or PDF/A yet. Text uses the standard PDF fonts unless the
       host supplies font files; remote fonts are never fetched (#318).
+- [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
+      (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
+      paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,
+      underline, colour, super- and subscript), alignment, indents and spacing, size-ranked
+      headings, running heads and feet as the header and footer with PAGE and NUMPAGES fields,
+      pictures (JPEG as is, other samples as PNG), external links, page size and margins, document
+      properties, passwords (RC4, AES-128, AES-256), permission flags and a per-page report.
+      Checked against PDFs Word 16 exported and pypdf encrypted.
+- [ ] **P1** PDF conversion does not yet rebuild tables (cells become tab-separated text), lists
+      (typed bullets and numbers stay text), multi-column pages, footnotes, internal links,
+      tagged-PDF structure or vector drawings, and leaves out rotated text, inline images and CMYK
+      JPEG, JPEG 2000, JBIG2 and CCITT pictures (each reported). Scanned pages stay pictures unless
+      the host supplies OCR (#319).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
       come from the browser's

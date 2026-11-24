@@ -68,7 +68,7 @@ editor.customization = {
 
 | Method                                                          | Description                                                                                                                                                                    |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `load(bytes)`                                                   | Load DOCX or legacy DOC bytes. Rejects and emits `document-error` on failure.                                                                                                  |
+| `load(bytes)`                                                   | Load DOCX or legacy DOC bytes, or a PDF, which is converted into an editable document (see [PDF import](#pdf-import)). Rejects and emits `document-error` on failure.          |
 | `save()`                                                        | Resolves to a `Blob` of the serialized document.                                                                                                                               |
 | `saveBytes()`                                                   | Resolves to the raw `Uint8Array`.                                                                                                                                              |
 | `download(fileName?)`                                           | Saves and starts a browser download.                                                                                                                                           |
@@ -85,6 +85,12 @@ editor.customization = {
 | `receiveCollaboration(batch)`                                   | Apply an accepted batch from the authority.                                                                                                                                    |
 | `stopCollaboration(discardPending?)`                            | Leave the session; pending edits must be acknowledged or explicitly discarded.                                                                                                 |
 | `publishPresence`, `receivePresence`, `leavePresence`           | Transient presence channel; see [collaboration](/collaboration#presence).                                                                                                      |
+
+### PDF import {#pdf-import}
+
+`load()` and File > Open accept a PDF and convert it the way Word's PDF Reflow does: the text becomes flowing paragraphs with their fonts, sizes, bold, italic, underline, colours and super- and subscripts, alignment, indents and spacing; larger short lines become headings; text repeated at the top or bottom of the pages becomes the header and footer, with page numbers as PAGE fields; pictures and external links stay. The document then saves as `.docx` (its name changes to `.docx`) and the PDF is not changed. A PDF that needs a password to open is refused; one that only restricts permissions opens. `importPdf(bytes, options)` from `ooxml-core/docx/pdf-import` does the same outside the editor and returns a report per page.
+
+This first version does not rebuild tables, lists, columns, footnotes or drawings, and leaves out rotated text and some picture formats (each reported). Scanned pages stay pictures unless `importPdf` is given an `ocr` provider.
 
 ### PDF export {#pdf-export}
 

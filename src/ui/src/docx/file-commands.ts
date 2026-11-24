@@ -65,6 +65,12 @@ export function downloadText(text: string, fileName: string): void {
 	setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/** Whether `bytes` are a PDF (`%PDF-` within the first kilobyte), which the editor converts. */
+export function isPdfBytes(bytes: Uint8Array): boolean {
+	const head = String.fromCharCode(...bytes.subarray(0, 1024));
+	return head.includes('%PDF-');
+}
+
 /** Replaces the extension of `fileName` (or appends one). */
 export function withExtension(fileName: string, extension: string): string {
 	const base = fileName.replace(/\.[^./\\]+$/, '') || 'Document';
@@ -73,8 +79,8 @@ export function withExtension(fileName: string, extension: string): string {
 
 /**
  * The name a document is saved under. The editor writes WordprocessingML only (a Word 97-2003
- * `.doc` is converted when it is opened), so a `.doc` name becomes `.docx`.
+ * `.doc` or a PDF is converted when it is opened), so a `.doc` or `.pdf` name becomes `.docx`.
  */
 export function docxFileName(fileName: string): string {
-	return /\.doc$/i.test(fileName) ? withExtension(fileName, 'docx') : fileName;
+	return /\.(doc|pdf)$/i.test(fileName) ? withExtension(fileName, 'docx') : fileName;
 }
