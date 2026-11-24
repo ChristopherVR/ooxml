@@ -312,10 +312,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       ranges write `activeCellId`. Core regression: `xlsx/ui/selection-persistence.test.ts`;
       all six bindings: `e2e/xlsx/selection-save.spec.ts`. Excel 16 reopened three generated
       workbooks with the expected active tab, disjoint ranges, frozen selection and split pane.
-- [ ] **P1** Flash Fill, Subtotal, Consolidate and Advanced filter are implemented in core with
-      undo/redo (`xlsx/edit/flash-fill.ts`, `subtotal.ts`, `consolidate.ts`, `advanced-filter.ts`;
+- [x] **P1** Flash Fill (`Ctrl+E`), Subtotal, Consolidate and Advanced filter are implemented in
+      core with undo/redo (`xlsx/edit/flash-fill.ts`, `subtotal.ts`, `consolidate.ts`,
+      `advanced-filter.ts`) and wired on the Data ribbon tab with dialogs and all four locales
+      (`ui/commands/data.ts`, `src/ui/src/xlsx/dialogs/{subtotal,consolidate,advanced-filter}.ts`;
       verified in `flash-fill.test.ts`, `subtotal.test.ts`, `consolidate.test.ts`,
-      `advanced-filter.test.ts`); ribbon commands and dialogs remain open.
+      `advanced-filter.test.ts`, `data.test.ts` and `data-tools.test.ts`).
 - [x] **P1** Split panes (only Freeze Panes exists).
       Closed: View > Split splits at the active cell (a cross in the middle for A1), giving two or
       four independently scrolling panes with draggable bars and double-click removal; Split and
@@ -475,9 +477,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 ### Editing and behaviour
 
 - [ ] **P1** Mail merge: no data source or MERGEFIELD engine.
-- [ ] **P1** Find & Replace: formatting search (Format > Font, Paragraph, Style) remains. Wildcards,
-      whole words, prefix and suffix, the ignore options and the Special codes are done
-      (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`).
+- [x] **P1** Find & Replace supports wildcards, whole words, prefix and suffix, ignore options,
+      Special codes (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`), and
+      formatting search & replacement (`FindFormatCriteria`, `ReplaceFormatPatch` for font,
+      paragraph and style, including format-only search over maximal contiguous spans;
+      `docx/find-format*.ts`, `find-format.test.ts`). Search-panel UI pickers for Format > Font,
+      Paragraph and Style remain open.
 - [ ] **P2** Find and Replace search the main document, headers and footers, footnotes, endnotes and
       text boxes in turn (`docx/find-stories.ts`, `src/ui/src/docx/search-stories.test.ts`,
       `e2e/docx/search.spec.ts`); a match in a header, footer or note opens its editor (Print Layout
@@ -1091,9 +1096,11 @@ installed Visio 16 build is used to check that saved files open without repair.
       invalid, not verified) in the status bar, a load notice and File > Info, translated, and is
       never called signed unless the signature verifies
       (`src/ui/src/visio/signature-status.test.ts`). The viewer does not sign drawings.
-- [ ] **P1** No Save as template; a signature relationship outside the standard layout, or a VBA
-      project in a package that does not declare macros, still refuses an edit. No native check of
-      an edited `.vsdm` yet.
+- [ ] **P1** Save as template (`.vsdx` -> `.vstx` and `.vsdm` -> `.vstm`, `visio/save-template.ts`,
+      `EditVsdxOptions.saveAsTemplate`) and stripping non-standard signature relationships on edit
+      (`package-kind.ts`, `opc/signature`; `package-kinds.test.ts`) are implemented. Still open:
+      native Visio check of an edited `.vsdm` (unadvertised VBA in non-macro packages stays refused
+      for macro-smuggling safety).
 - [ ] **P1** Legacy `.vsd` is preview only (no groups, masters, styles, connections, layers or
       text formats; no conversion or editing); `.vdx` is not supported; `.vss` and `.vst` are
       refused.
