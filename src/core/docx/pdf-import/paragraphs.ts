@@ -3,7 +3,9 @@
  * left edge match and the line before reaches the right margin; hyphenated line ends rejoin. Each
  * paragraph gets its alignment, indents and spacing from where its lines sit in the text area.
  */
+import { markerOf } from './list-markers';
 import type { Fragment, Line } from './lines';
+import type { ListItem } from './lists';
 
 export interface TextArea {
 	left: number;
@@ -30,10 +32,10 @@ export interface ParagraphBlock {
 	heading?: 1 | 2 | 3;
 	/** The paragraph continues on the next page in the PDF. */
 	continues?: boolean;
+	/** A list item (its typed marker removed), set by `assignLists`. */
+	list?: ListItem;
 }
 
-const BULLET =
-	/^\s*([\u2022\u25cf\u25e6\u25aa\u25a0\u2013\u2014\u00b7\u2219\u27a2\u2043-]|\d{1,3}[.)]|[a-zA-Z][.)]|\(?[ivxIVX]{1,4}[.)])\s/;
 const TERMINAL = /[.!?:;\u2026\u00bb\u201d"')\]]\s*$/;
 /** Single spacing as a multiple of the font size, by family (the fonts' line heights). */
 function singleSpacing(line: Line): number {
@@ -107,7 +109,7 @@ export function buildParagraphs(lines: Line[], area: TextArea, bodySize: number)
 		const shortLine =
 			previous.right < area.right - Math.max(3 * previous.size, 0.12 * (area.right - area.left));
 		const firstLineIndent = current.length === 1 && line.left < previous.left - 1;
-		const listContinuation = BULLET.test(current[0]!.text) && line.left > current[0]!.left + 2;
+		const listContinuation = !!markerOf(current[0]!) && line.left > current[0]!.left + 2;
 		const leftShift =
 			Math.abs(line.left - previous.left) > previous.size && !firstLineIndent && !listContinuation;
 		const centeredRun =
@@ -117,7 +119,7 @@ export function buildParagraphs(lines: Line[], area: TextArea, bodySize: number)
 			spacing < 0 ||
 			sizeChange ||
 			weightChange ||
-			BULLET.test(line.text) ||
+			!!markerOf(line) ||
 			(shortLine && !centeredRun) ||
 			(leftShift && !centeredRun);
 		if (brk) {
@@ -200,6 +202,6 @@ export function continuesOnNextPage(last: ParagraphBlock, next: ParagraphBlock):
 		Math.abs(end.size - start.size) < 0.5 &&
 		end.bold === start.bold &&
 		!TERMINAL.test(end.text) &&
-		!BULLET.test(start.text)
+		!markerOf(start)
 	);
 }

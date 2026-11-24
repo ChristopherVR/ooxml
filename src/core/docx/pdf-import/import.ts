@@ -7,6 +7,9 @@ import { writePackage, type PictureBlock, type StoryContent } from './package';
 import { buildParagraphs, rankHeadings, type ParagraphBlock, type TextArea } from './paragraphs';
 import type { PdfImportReport, PdfOcrProvider } from './report';
 import { extractStories } from './stories';
+import { findGrids } from './table-grid';
+import { ruledTables, type TableBlock } from './tables';
+import { assignLists } from './lists';
 
 export interface ImportPdfOptions {
 	/** Pages to convert, 1-based and inclusive; all by default. */
@@ -78,6 +81,7 @@ interface PageWork {
 	height: number;
 	lines: Line[];
 	pictures: (PictureBlock & { x: number })[];
+	tables: TableBlock[];
 	notes: string[];
 	scanned?: true;
 }
@@ -125,10 +129,13 @@ async function readPage(
 			notes.push('The page is a scan: its text comes from OCR and the scan was left out.');
 		} else notes.push('The page is a scan without text: it was kept as a picture.');
 	}
-	const { lines, rotated } = pageLines(content.index, spans);
+	const { lines: all, rotated } = pageLines(content.index, spans);
 	if (rotated) notes.push(`Rotated text (${rotated} pieces) was left out.`);
-	applyRules(lines, content.rules);
-	applyLinks(lines, content.links);
+	// Table rules are not underlines: only the rules no table uses mark text.
+	const { grids, rest } = findGrids(content.rules);
+	applyRules(all, rest);
+	applyLinks(all, content.links);
+	const { tables, lines } = ruledTables(content.index, all, grids, 11);
 	const keep = scanned && spans.length ? pictures.filter((image) => image !== fullPage) : pictures;
 	return {
 		index: content.index,
@@ -146,6 +153,7 @@ async function readPage(
 			align: 'left',
 			x: image.x,
 		})),
+		tables,
 		notes,
 		...(scanned ? { scanned } : {}),
 	};
@@ -184,7 +192,21 @@ export async function convertPdf(
 	}
 	if (!pages.length) throw new RangeError('The page range selects no page of the PDF.');
 	const repeated = options.headersFooters === false ? [] : extractStories(pages);
-	const allLines = pages.flatMap((page) => page.lines);
+	// Table text counts for the body size, the fonts and the text area like any other text.
+	const tableLines = (page: PageWork) =>
+		page.tables.flatMap((table) =>
+			table.cells.flatMap((cell) => cell.blocks.flatMap((block) => block.lines)),
+		);
+	const allLines = pages.flatMap((page) => [...page.lines, ...tableLines(page)]);
+	const extents = pages
+		.map((page) => [
+			...page.lines,
+			...page.tables.map((table) => ({
+				left: table.left,
+				right: table.left + table.columns.reduce((sum, width) => sum + width, 0),
+			})),
+		])
+		.filter((boxes) => boxes.length);
 	const bodySize = weightedMode(
 		allLines.map((line) => [Math.round(line.size * 2) / 2, line.text.length]),
 		11,
@@ -199,20 +221,17 @@ export async function convertPdf(
 	);
 	const area: TextArea = {
 		left: median(
-			pages
-				.filter((page) => page.lines.length)
-				.map((page) => Math.min(...page.lines.map((line) => line.left))),
+			extents.map((boxes) => Math.min(...boxes.map((box) => box.left))),
 			72,
 		),
 		right: median(
-			pages
-				.filter((page) => page.lines.length)
-				.map((page) => Math.max(...page.lines.map((line) => line.right))),
+			extents.map((boxes) => Math.max(...boxes.map((box) => box.right))),
 			540,
 		),
 	};
 	const { blocks, sections } = assemble(pages, area, bodySize, repeated);
 	rankHeadings(blocks.filter((block): block is ParagraphBlock => block.kind === 'paragraph'));
+	const numbering = assignLists(blocks);
 	const stories: StoryContent[] = repeated.map((story) => ({
 		kind: story.kind,
 		blocks: buildParagraphs(story.lines, area, bodySize).map(({ heading: _heading, ...block }) => ({
@@ -225,6 +244,7 @@ export async function convertPdf(
 	const info = reader.info;
 	const packageBytes = await writePackage({
 		blocks,
+		numbering,
 		sections,
 		stories,
 		defaults: { family, size: bodySize },

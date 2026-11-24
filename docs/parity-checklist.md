@@ -666,8 +666,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       pictures (JPEG as is, other samples as PNG), external links, page size and margins, document
       properties, passwords (RC4, AES-128, AES-256), permission flags and a per-page report.
       Checked against PDFs Word 16 exported and pypdf encrypted.
-- [ ] **P1** PDF conversion does not yet rebuild tables (cells become tab-separated text), lists
-      (typed bullets and numbers stay text), multi-column pages, footnotes, internal links,
+- [ ] **P1** PDF conversion rebuilds ruled tables (merged cells, borders, shading, continued on
+      the next page), aligned borderless tables, bulleted and numbered lists and two- or
+      three-column regions (continuous `w:cols` sections), but not yet borderless tables whose
+      cells wrap or are empty, lists inside table cells, footnotes, internal links,
       tagged-PDF structure or vector drawings, and leaves out rotated text, inline images and CMYK
       JPEG, JPEG 2000, JBIG2 and CCITT pictures (each reported). Scanned pages stay pictures unless
       the host supplies OCR (#319).

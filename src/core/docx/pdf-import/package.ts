@@ -5,8 +5,14 @@
  */
 import JSZip from 'jszip';
 import { el, esc, ROOT_NAMESPACES, XML_DECLARATION } from '../load/legacy-doc/xml';
+import type { ColumnLayout } from './flow';
 import type { Fragment } from './lines';
+import type { ListDefinition } from './lists';
+import { numberingXml } from './package-numbering';
+import { sectionXml } from './package-section';
+import { tableXml } from './package-table';
 import type { ParagraphBlock } from './paragraphs';
+import type { TableBlock } from './tables';
 
 export interface PictureBlock {
 	kind: 'picture';
@@ -31,6 +37,10 @@ export interface SectionLayout {
 	footer: number;
 	/** Index of the first block of the section. */
 	start: number;
+	/** Newspaper columns; one column when unset. */
+	columns?: ColumnLayout;
+	/** The section starts on the same page as the one before (a column layout change). */
+	continuous?: boolean;
 }
 
 export interface StoryContent {
@@ -42,7 +52,9 @@ export interface StoryContent {
 }
 
 export interface PackageInput {
-	blocks: (ParagraphBlock | PictureBlock)[];
+	blocks: (ParagraphBlock | PictureBlock | TableBlock)[];
+	/** The lists the blocks' `list` refers to. */
+	numbering?: ListDefinition[];
 	sections: SectionLayout[];
 	stories: StoryContent[];
 	defaults: { family: string; size: number };
@@ -56,7 +68,7 @@ const PIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const WML = 'application/vnd.openxmlformats-officedocument.wordprocessingml';
 
-class Part {
+export class Part {
 	readonly rels: string[] = [];
 	link(target: string): string {
 		const id = `rId${this.rels.length + 1}`;
@@ -75,7 +87,7 @@ class Part {
 	}
 }
 
-class Writer {
+export class Writer {
 	readonly media: { name: string; data: Uint8Array }[] = [];
 	#drawing = 0;
 	constructor(readonly defaults: PackageInput['defaults']) {}
@@ -170,7 +182,10 @@ class Writer {
 			'w:lineRule': block.lineSpacing !== 1 ? 'auto' : undefined,
 		});
 		const style = block.heading ? el('w:pStyle', { 'w:val': `Heading${block.heading}` }) : '';
-		return `<w:p><w:pPr>${style}${spacing}${indent}${jc}${sectPr}</w:pPr>${this.runs(block.fragments, part, fields)}</w:p>`;
+		const numbering = block.list
+			? `<w:numPr>${el('w:ilvl', { 'w:val': block.list.level })}${el('w:numId', { 'w:val': block.list.numId })}</w:numPr>`
+			: '';
+		return `<w:p><w:pPr>${style}${numbering}${spacing}${indent}${jc}${sectPr}</w:pPr>${this.runs(block.fragments, part, fields)}</w:p>`;
 	}
 
 	picture(block: PictureBlock, part: Part, sectPr = ''): string {
@@ -190,28 +205,6 @@ class Writer {
 			`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`
 		);
 	}
-}
-
-function sectionXml(section: SectionLayout, references: string): string {
-	const landscape = section.width > section.height;
-	return (
-		`<w:sectPr>${references}` +
-		el('w:pgSz', {
-			'w:w': twips(section.width),
-			'w:h': twips(section.height),
-			'w:orient': landscape ? 'landscape' : undefined,
-		}) +
-		el('w:pgMar', {
-			'w:top': twips(section.margins.top),
-			'w:right': twips(section.margins.right),
-			'w:bottom': twips(section.margins.bottom),
-			'w:left': twips(section.margins.left),
-			'w:header': twips(section.header),
-			'w:footer': twips(section.footer),
-			'w:gutter': 0,
-		}) +
-		'</w:sectPr>'
-	);
 }
 
 function stylesXml(input: PackageInput): string {
@@ -288,11 +281,24 @@ export async function writePackage(input: PackageInput): Promise<Uint8Array> {
 		// A section ends at the block before the next one starts.
 		const ending = input.sections.findIndex((section, at) => at > 0 && section.start === index + 1);
 		const sectPr = ending > 0 ? sectionXml(input.sections[ending - 1]!, references) : '';
-		body +=
-			block.kind === 'picture'
-				? writer.picture(block, documentPart, sectPr)
-				: writer.paragraph(block, documentPart, undefined, sectPr);
+		if (block.kind === 'table') {
+			// A table is followed by a paragraph before a section break, another table or the end.
+			const next = input.blocks[index + 1];
+			body += tableXml(writer, block, documentPart);
+			if (sectPr || !next || next.kind === 'table') body += `<w:p><w:pPr>${sectPr}</w:pPr></w:p>`;
+		} else
+			body +=
+				block.kind === 'picture'
+					? writer.picture(block, documentPart, sectPr)
+					: writer.paragraph(block, documentPart, undefined, sectPr);
 	});
+	if (input.numbering?.length) {
+		zip.file('word/numbering.xml', numberingXml(input.numbering));
+		overrides.push(['/word/numbering.xml', `${WML}.numbering+xml`]);
+		documentPart.rels.push(
+			`<Relationship Id="rId${documentPart.rels.length + 1}" Type="${REL}/numbering" Target="numbering.xml"/>`,
+		);
+	}
 	const last = input.sections[input.sections.length - 1]!;
 	zip.file(
 		'word/document.xml',
