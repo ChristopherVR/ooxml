@@ -271,6 +271,8 @@ export interface VisioEmbeddedObject {
 	objectType?: number;
 	bytes: Uint8Array;
 	chart: ChartViewModel;
+	/** True when the embedded chart came from an Office 2016+ ChartEx (`cx:chartSpace`) part. */
+	chartEx?: boolean;
 	opacity?: number;
 	x?: number;
 	y?: number;

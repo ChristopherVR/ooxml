@@ -6,11 +6,15 @@ import { svgElement } from './render-svg';
 /** Pixels per inch the chart is laid out at before it is scaled into the shape's frame. */
 const DPI = 96;
 
+const MAP_APPROXIMATION_LABEL =
+	'Map outlines here are approximate. Office draws a new map only after it adds map data through its online service.';
+
 /**
  * An embedded chart object (Insert > Chart) drawn from its own workbook, so it stays sharp at any
- * zoom and follows resizing. The chart's SVG comes from trusted geometry and escaped text and is
- * parsed as a document with anything executable removed. Drawn like a picture: into the shape's
- * y-up frame, flipped back so it reads upright.
+ * zoom and follows resizing. Supports both classic `c:chartSpace` charts and Office 2016+ ChartEx
+ * (`cx:chartSpace`) charts via the shared SVG painter. The chart's SVG comes from trusted geometry
+ * and escaped text and is parsed as a document with anything executable removed. Drawn like a
+ * picture: into the shape's y-up frame, flipped back so it reads upright.
  */
 export function renderEmbeddedChart(shape: VisioShape): SVGGElement | undefined {
 	const object = shape.embeddedObject;
@@ -23,11 +27,16 @@ export function renderEmbeddedChart(shape: VisioShape): SVGGElement | undefined 
 	const altText = shape.alternativeText || shape.accessibilityTitle || '';
 	const markup = renderChartSvg(object.chart, Math.round(width * DPI), Math.round(height * DPI), {
 		...(altText ? { altText } : {}),
+		...(object.chart.type === 'regionMap'
+			? { mapApproximationLabel: MAP_APPROXIMATION_LABEL }
+			: {}),
 	});
 	const chart = parseSvgPreview(document, markup);
 	if (!chart) return undefined;
 	const node = svgElement('svg');
 	node.setAttribute('role', 'img');
+	const fontFamily = chart.getAttribute('font-family');
+	if (fontFamily) node.setAttribute('font-family', fontFamily);
 	for (const child of Array.from(chart.childNodes)) node.append(document.importNode(child, true));
 	node.setAttribute(
 		'viewBox',
@@ -43,6 +52,8 @@ export function renderEmbeddedChart(shape: VisioShape): SVGGElement | undefined 
 	node.setAttribute('opacity', String(object.opacity ?? 1));
 	const group = svgElement('g');
 	group.dataset.embeddedChart = '';
+	group.dataset.chartType = object.chart.type;
+	if (object.chartEx) group.dataset.embeddedChartEx = '';
 	group.append(node);
 	return group;
 }

@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
+import type { ChartExFamily } from 'ooxml-core/chart';
 import type { VisioShape } from 'ooxml-core/visio';
+import type { CellValue } from 'ooxml-core/xlsx';
 import { gridChartWorkbook, parseChartGrid, readEmbeddedChart } from 'ooxml-core/xlsx/ui';
 import { renderEmbeddedChart } from './render-embedded-chart';
+import { gridChartExWorkbook } from './viewer-insert-chart-ex';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -73,4 +76,133 @@ describe('embedded chart drawing', () => {
 		expect(group.querySelector('script')).toBeNull();
 		expect(group.innerHTML).not.toContain('<script');
 	});
+});
+
+const CHART_EX_CASES: ReadonlyArray<
+	readonly [family: ChartExFamily, expectedType: string, rows: readonly (readonly CellValue[])[]]
+> = [
+	[
+		'waterfall',
+		'waterfall',
+		[
+			['Item', 'Amount'],
+			['Start', 100],
+			['Sales', 60],
+			['Costs', -40],
+		],
+	],
+	[
+		'clusteredColumn',
+		'histogram',
+		[
+			['Sample', 'Score'],
+			['A', 10],
+			['B', 14],
+			['C', 18],
+			['D', 22],
+			['E', 28],
+		],
+	],
+	[
+		'pareto',
+		'histogram',
+		[
+			['Defect', 'Count'],
+			['Scratch', 40],
+			['Dent', 25],
+			['Crack', 10],
+		],
+	],
+	[
+		'boxWhisker',
+		'boxWhisker',
+		[
+			['Group', 'S1'],
+			['A', 10],
+			['A', 15],
+			['A', 22],
+			['B', 8],
+			['B', 18],
+			['B', 26],
+		],
+	],
+	[
+		'treemap',
+		'treemap',
+		[
+			['Branch', 'Leaf', 'Value'],
+			['Fruit', 'Apple', 30],
+			['Fruit', 'Pear', 20],
+			['Veg', 'Kale', 25],
+		],
+	],
+	[
+		'sunburst',
+		'sunburst',
+		[
+			['Branch', 'Leaf', 'Value'],
+			['Fruit', 'Apple', 30],
+			['Fruit', 'Pear', 20],
+			['Veg', 'Kale', 25],
+		],
+	],
+	[
+		'funnel',
+		'funnel',
+		[
+			['Stage', 'Count'],
+			['Visits', 1000],
+			['Trials', 240],
+			['Paid', 80],
+		],
+	],
+	[
+		'regionMap',
+		'regionMap',
+		[
+			['Country', 'Sales'],
+			['United States', 120],
+			['Canada', 80],
+			['France', 60],
+		],
+	],
+];
+
+describe('embedded ChartEx drawing', () => {
+	it.each(CHART_EX_CASES)(
+		'renders embedded %s ChartEx via the shared SVG painter',
+		async (family, expectedType, rows) => {
+			const title = `ChartEx ${family}`;
+			const bytes = (await gridChartExWorkbook(rows, family, { title }))!;
+			const embedded = (await readEmbeddedChart(bytes))!;
+			const shape = {
+				id: '10',
+				kind: 'foreign',
+				width: 6.4,
+				height: 4,
+				embeddedObject: { bytes, chart: embedded.view, chartEx: true },
+			} as unknown as VisioShape;
+			const group = renderEmbeddedChart(shape)!;
+			expect(group.hasAttribute('data-embedded-chart')).toBe(true);
+			expect(group.hasAttribute('data-embedded-chart-ex')).toBe(true);
+			expect(group.dataset.chartType).toBe(expectedType);
+			const svg = group.querySelector('svg')!;
+			expect(svg.getAttribute('role')).toBe('img');
+			expect(svg.querySelector('title')?.textContent).toBe(title);
+			expect(group.textContent).toContain(title);
+			expect(group.textContent).not.toContain('not drawn');
+			if (family === 'sunburst') {
+				expect(group.querySelectorAll('path').length).toBeGreaterThan(0);
+			} else if (family === 'regionMap') {
+				expect(group.querySelector('[data-chart-part="regionMap"]')).not.toBeNull();
+				expect(group.querySelectorAll('path').length).toBeGreaterThan(0);
+				expect(group.textContent).toContain('approximate');
+			} else {
+				expect(group.querySelectorAll('rect').length).toBeGreaterThan(0);
+			}
+			if (family === 'pareto') {
+				expect(group.querySelectorAll('polyline').length).toBeGreaterThan(0);
+			}
+		},
+	);
 });

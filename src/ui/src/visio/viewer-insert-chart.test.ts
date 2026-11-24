@@ -47,7 +47,7 @@ describe('Insert > Chart dialog', () => {
 		expect(chart.dialog.getAttribute('heading')).toBe('Insert Chart');
 		expect(chart.picker.value.data).toContain('Series 1');
 		expect(chart.picker.shadowRoot!.querySelector('.preview svg')).not.toBeNull();
-		expect(chart.picker.shadowRoot!.querySelectorAll('[data-gallery-item]')).toHaveLength(8);
+		expect(chart.picker.shadowRoot!.querySelectorAll('[data-gallery-item]')).toHaveLength(16);
 	});
 
 	it('hands over an Excel workbook that holds the chart, and an EMF preview', async () => {
@@ -165,5 +165,32 @@ describe('Edit Chart', () => {
 		expect(chart.dialog.getAttribute('heading')).toBe('Insert Chart');
 		expect(chart.target).toBeUndefined();
 		expect(chart.dialog.querySelector<HTMLElement>('.chart-note')!.hidden).toBe(true);
+	});
+
+	it('inserts and re-edits a ChartEx workbook without falling back to a classic chart', async () => {
+		const submit = vi.fn<Submit>(async () => {});
+		const { chart, press } = setup(submit);
+		chart.open();
+		chart.picker.value = {
+			...chart.picker.value,
+			type: 'cx:waterfall',
+			title: 'Bridge',
+			data: 'Step\tDelta\nStart\t100\nSales\t50\nCosts\t-30',
+		};
+		press('Insert');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+		const inserted = submit.mock.calls[0]![0];
+		expect(isEmf(inserted.preview)).toBe(true);
+		const embedded = (await readEmbeddedChart(inserted.workbook))!;
+		expect(embedded.chart.chartType).toBe('waterfall');
+		expect(embedded.chart.title).toBe('Bridge');
+
+		expect(await chart.edit(target, inserted.workbook)).toBe(true);
+		expect(chart.picker.value.type).toBe('cx:waterfall');
+		expect(chart.picker.value.title).toBe('Bridge');
+		press('Insert');
+		await vi.waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+		const updated = (await readEmbeddedChart(submit.mock.calls[1]![0].workbook))!;
+		expect(updated.chart.chartType).toBe('waterfall');
 	});
 });

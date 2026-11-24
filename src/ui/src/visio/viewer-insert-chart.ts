@@ -1,5 +1,6 @@
 import {
 	GROUPED_CHART_TYPES,
+	INSERT_CHART_EX_TYPES,
 	INSERT_CHART_TYPES,
 	chartGridText,
 	gridChart,
@@ -12,6 +13,12 @@ import type { ChartType } from 'ooxml-core/xlsx';
 import { encodeBitmapEmf } from 'ooxml-core/visio';
 import { defineChartPicker } from '../dialog/chart-picker';
 import type { OfficeChartPreview, OfficeChartValue } from '../dialog/chart-picker';
+import {
+	chartExFamilyFromPickerType,
+	gridChartExSvg,
+	gridChartExWorkbook,
+	pickerTypeFromEmbeddedChart,
+} from './viewer-insert-chart-ex';
 
 type Dialog = HTMLElement & { open: boolean; show(): void; close(): void };
 type Button = HTMLElement & { disabled: boolean };
@@ -114,10 +121,20 @@ export class InsertChartDialog {
 		this.dialog = doc.createElement('office-ui-dialog') as Dialog;
 		this.dialog.className = 'chart-dialog';
 		this.picker = doc.createElement('office-ui-chart-picker') as Picker;
-		this.picker.types = INSERT_CHART_TYPES.map(([id, label]) => ({ id, label }));
+		this.picker.types = [
+			...INSERT_CHART_TYPES.map(([id, label]) => ({ id: id as string, label })),
+			...INSERT_CHART_EX_TYPES.map(([family, label]) => ({ id: `cx:${family}`, label })),
+		];
 		this.picker.groupings = GROUPINGS;
 		this.picker.groupedTypes = [...GROUPED_CHART_TYPES];
 		this.picker.drawPreview = (value, size, tile) => {
+			const family = chartExFamilyFromPickerType(value.type);
+			if (family) {
+				return gridChartExSvg(parseChartGrid(value.data ?? ''), family, size.width, size.height, {
+					...(value.title.trim() ? { title: value.title.trim() } : {}),
+					tile,
+				});
+			}
 			const grid = this.#grid(value);
 			return grid ? gridChartSvg(grid, size.width, size.height, tile) : '';
 		};
@@ -167,7 +184,7 @@ export class InsertChartDialog {
 		if (!embedded) return false;
 		this.#target = target;
 		this.picker.value = {
-			type: embedded.chart.chartType,
+			type: pickerTypeFromEmbeddedChart(embedded.chart),
 			grouping: embedded.chart.grouping ?? 'clustered',
 			title: embedded.chart.title ?? '',
 			data: chartGridText(embedded.rows),
@@ -185,8 +202,20 @@ export class InsertChartDialog {
 	async #save(): Promise<void> {
 		if (this.#busy) return;
 		const value = this.picker.value;
-		const grid = this.#grid(value);
-		if (!grid || grid.chart.series.length === 0) {
+		const rows = parseChartGrid(value.data ?? '');
+		const family = chartExFamilyFromPickerType(value.type);
+		const title = value.title.trim();
+		const grid = family ? undefined : this.#grid(value);
+		const target = this.#target;
+		const height = target
+			? Math.min(1600, Math.max(120, Math.round((PREVIEW_WIDTH * target.height) / target.width)))
+			: NEW_HEIGHT;
+		const previewSvg = family
+			? gridChartExSvg(rows, family, PREVIEW_WIDTH, height, { ...(title ? { title } : {}) })
+			: grid && grid.chart.series.length > 0
+				? gridChartSvg(grid, PREVIEW_WIDTH, height)
+				: '';
+		if (!previewSvg) {
 			this.error.textContent =
 				'Enter a header row and at least one row of numbers, separated by tabs or commas.';
 			return;
@@ -194,24 +223,18 @@ export class InsertChartDialog {
 		this.#busy = true;
 		for (const button of this.#buttons.values()) button.disabled = true;
 		try {
-			const target = this.#target;
-			const height = target
-				? Math.min(1600, Math.max(120, Math.round((PREVIEW_WIDTH * target.height) / target.width)))
-				: NEW_HEIGHT;
 			const raster = await this.#rasterize(
 				this.dialog.ownerDocument,
-				gridChartSvg(grid, PREVIEW_WIDTH, height),
+				previewSvg,
 				PREVIEW_WIDTH,
 				height,
 			);
-			const workbook = await gridChartWorkbook(
-				parseChartGrid(value.data ?? ''),
-				value.type as ChartType,
-				{
-					grouping: value.grouping as 'clustered' | 'stacked' | 'percentStacked',
-					...(value.title.trim() ? { title: value.title.trim() } : {}),
-				},
-			);
+			const workbook = family
+				? await gridChartExWorkbook(rows, family, { ...(title ? { title } : {}) })
+				: await gridChartWorkbook(rows, value.type as ChartType, {
+						grouping: value.grouping as 'clustered' | 'stacked' | 'percentStacked',
+						...(title ? { title } : {}),
+					});
 			if (!workbook) throw new Error('The chart could not be written.');
 			await this.#submit(
 				{ workbook, preview: encodeBitmapEmf(raster.width, raster.height, raster.rgba) },
