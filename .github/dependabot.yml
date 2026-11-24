@@ -122,3 +122,7 @@ updates:
         applies-to: version-updates
         patterns:
           - '*'
+    ignore:
+      # ghcr.io/ossf/scorecard-action:v2.6.0 references deleted manifests (ossf/scorecard-action#1752).
+      - dependency-name: 'ossf/scorecard-action'
+        versions: ['2.6.0']
