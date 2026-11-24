@@ -838,10 +838,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Save as PDF options lack Selection and custom-show ranges, Publish what (handouts,
       notes pages, outline), document properties, accessibility structure tags, PDF/A and
       bitmap-text options; "Save slides as pictures" has no options step and writes every slide.
-- [ ] **P2** Table cells: turning one run's bold off in an otherwise bold cell can paint bold until
-      reload (the saved `b="0"` is right); some font buttons enabled for tables (highlight,
-      spacing, shadow, change case) do nothing on cells; Esc does not restore the cell selection in
-      vanilla and Svelte.
+- [x] **P2** Table cells: explicit `bold: false` (`b="0"`) inside bold cells emits normal weight
+      (`table-style.ts`), Home-tab highlight, character spacing, text shadow and change case apply
+      to selected table cells (`table-cells-format.ts`, `table-cells-format.test.ts`), and `Esc`
+      restores cell selection in Vanilla and Svelte as well as React, Vue and Angular.
 - [ ] **P1** Opening a deck parses every slide before the first paints (no progressive open, no
       time-to-first-slide or interaction-latency benchmarks in `e2e/pptx`).
 - [ ] **P1** Headless SVG export (`pptx/converter/SvgExporter.ts`, the CLI `export-svg` and the
