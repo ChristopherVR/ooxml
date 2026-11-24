@@ -19,12 +19,16 @@ vi.mock<typeof import('../i18n/use-translation')>(import('../i18n/use-translatio
 const FAMILIES = ['DM Sans Light', 'DM Sans Medium', 'DM Sans Black'];
 
 /** A header row and one body row; every cell mixes the three families. */
-function weightTable(families: readonly string[] = FAMILIES): TablePptxElement {
+function weightTable(families: readonly string[] = FAMILIES, runBold?: false): TablePptxElement {
 	const cell = (prefix: string, notBold: boolean) => ({
 		text: prefix,
 		// An explicit `b="0"` turns bold off even in a header row.
 		style: { fontFamily: families[0], ...(notBold ? { bold: false } : {}) },
-		textRuns: families.map((fontFamily, i) => ({ text: `${prefix}${i}`, fontFamily, bold: false })),
+		textRuns: families.map((fontFamily, i) => ({
+			text: `${prefix}${i}`,
+			fontFamily,
+			...(runBold === false ? { bold: false } : {}),
+		})),
 	});
 	return {
 		id: 'tbl-1',
@@ -61,6 +65,15 @@ describe('table weight variants', () => {
 		expect(body).toStrictEqual({ cell: '300', runs: ['inherit', '500', '900'] });
 		expect(header.cell).toMatch(/^(bold|700)$/u);
 		expect(header.runs).toStrictEqual(['inherit', 'inherit', '900']);
+	});
+
+	it('draws explicitly non-bold runs in a bold header row at their regular weight', () => {
+		const markup = renderToStaticMarkup(
+			renderTableElement(weightTable(FAMILIES, false), { color: '#000000' }),
+		);
+		const [header, , body] = weights(markup);
+		expect(header.runs).toStrictEqual(['300', '500', '900']);
+		expect(body).toStrictEqual({ cell: '300', runs: ['inherit', '500', '900'] });
 	});
 
 	it('does not read a Black first run as a bold cell', () => {
