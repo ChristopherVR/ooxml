@@ -71,4 +71,12 @@ export * from '../find-syntax';
 export * from '../find-pattern';
 export * from '../find-replacement';
 export * from '../find-stories';
+export * from '../find-format-criteria';
+export * from '../find-format';
+export {
+	replaceFormattedMatches,
+	type ReplaceFormatOptions,
+	type ReplaceFormatResult,
+} from '../find-format-replace';
+export * from '../find-format-document';
 export * from './edit-restriction';

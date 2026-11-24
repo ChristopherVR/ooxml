@@ -1,6 +1,7 @@
 // Find (Word's Find and Replace dialog) as a matcher over the document's text. The text holds a
 // paragraph mark as `\r` and every break or object as the codes in find-syntax.ts; this module
 // only matches strings, so the UI maps each match back to document positions.
+import type { FindFormatCriteria } from './find-format-criteria';
 import { escapeFindChar, findCodeSource, FindPatternError } from './find-syntax';
 import { wildcardSource } from './find-wildcards';
 
@@ -13,6 +14,8 @@ export interface FindOptions {
 	readonly matchSuffix?: boolean;
 	readonly ignorePunctuation?: boolean;
 	readonly ignoreWhitespace?: boolean;
+	/** Optional formatting criteria (Word's Format > Font, Paragraph, Style). */
+	readonly format?: FindFormatCriteria;
 }
 
 export interface FindMatch {

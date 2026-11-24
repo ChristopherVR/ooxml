@@ -243,3 +243,32 @@ export { simpleTextBoxDrawing } from './text-box-drawing';
 
 export * from './chart-ex-edit';
 export * from './clipboard/index';
+export {
+	applyParagraphFormatPatch,
+	applyRunFormatPatch,
+	hasFormatCriteria,
+	hasReplaceFormat,
+	matchesFormatCriteria,
+	matchesParagraphFormat,
+	normalizeFormatColor,
+	type FindFormatContext,
+	type FindFormatCriteria,
+	type ReplaceFormatPatch,
+} from './find-format-criteria';
+export {
+	findDocumentFormattedMatches,
+	findFormattedMatches,
+	flattenBlocksForFind,
+	modelFormatContext,
+	type FindFormatOptions,
+	type FormattedFindMatch,
+} from './find-format';
+export {
+	replaceFormattedMatches,
+	type ReplaceFormatOptions,
+	type ReplaceFormatResult,
+} from './find-format-replace';
+export {
+	replaceDocumentFormattedMatches,
+	type DocumentReplaceFormatResult,
+} from './find-format-document';
