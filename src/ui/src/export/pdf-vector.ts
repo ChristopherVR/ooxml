@@ -7,6 +7,22 @@
 import { zlibCompress } from 'ooxml-core/opc';
 import { pdfLiteral } from './pdf-fonts';
 import type { PdfCidFont } from './pdf-cid-font';
+import { fileIdentifier, infoDates, PDF_PRODUCER, writeArchiveObjects } from './pdf-archive';
+import {
+	pdfName,
+	pdfTextString,
+	structAnnotations,
+	writeAnnotation,
+	writeOutline,
+	writeStructTree,
+	type PdfAnnotation,
+	type PdfObjectSink,
+	type PdfOutlineItem,
+	type PdfStructElement,
+} from './pdf-structure';
+
+export { pdfTextString } from './pdf-structure';
+export type * from './pdf-structure';
 
 /** Pixel data for one image XObject. `data` is the (optionally compressed) sample stream. */
 export interface PdfImageResource {
@@ -65,6 +81,9 @@ export class PdfVectorPage {
 	readonly images = new Map<string, PdfImageResource>();
 	readonly embeddedFonts = new Map<string, PdfCidFont>();
 	readonly shadings = new Map<string, PdfShading>();
+	/** Links and notes placed on the page. */
+	readonly annotations: PdfAnnotation[] = [];
+	#mcid = 0;
 	constructor(
 		/** Page size in points. */
 		readonly width: number,
@@ -81,6 +100,29 @@ export class PdfVectorPage {
 	}
 	op(operator: string): void {
 		this.#ops.push(operator);
+	}
+	/** Marked-content ids handed out so far (the next one's value). */
+	get markedContentCount(): number {
+		return this.#mcid;
+	}
+	/** Opens a tagged marked-content sequence (`/P <</MCID n>> BDC`); returns its id. */
+	beginMarked(tag: string): number {
+		const mcid = this.#mcid++;
+		this.op(`${pdfName(tag)} <</MCID ${mcid}>> BDC`);
+		return mcid;
+	}
+	/** Opens an artifact sequence: content that is not part of the document's text (`BDC`). */
+	beginArtifact(type?: 'Pagination' | 'Layout', subtype?: 'Header' | 'Footer' | 'Watermark'): void {
+		const entries = [type ? `/Type /${type}` : '', subtype ? `/Subtype /${subtype}` : '']
+			.filter(Boolean)
+			.join(' ');
+		this.op(entries ? `/Artifact <<${entries}>> BDC` : '/Artifact BMC');
+	}
+	endMarked(): void {
+		this.op('EMC');
+	}
+	annotate(annotation: PdfAnnotation): void {
+		this.annotations.push(annotation);
 	}
 	save = () => this.op('q');
 	restore = () => this.op('Q');
@@ -191,15 +233,20 @@ export interface PdfVectorOptions {
 	keywords?: string;
 	/** Natural language of the document (`/Lang` in the catalog), e.g. `en-US`. */
 	language?: string;
-}
-
-/** A PDF text string: a literal for printable ASCII, else UTF-16BE hex with a byte order mark. */
-export function pdfTextString(text: string): string {
-	if (/^[\x20-\x7e]*$/.test(text)) return pdfLiteral(text);
-	let hex = 'FEFF';
-	for (let index = 0; index < text.length; index++)
-		hex += text.charCodeAt(index).toString(16).padStart(4, '0').toUpperCase();
-	return `<${hex}>`;
+	/**
+	 * The logical structure (usually one `Document` element): the file becomes a tagged PDF whose
+	 * elements refer to the pages' marked content (`PdfVectorPage.beginMarked`).
+	 */
+	structure?: PdfStructElement;
+	/** Bookmarks shown in the viewer's navigation pane. */
+	outline?: readonly PdfOutlineItem[];
+	/**
+	 * Writes the PDF/A-2b parts: XMP metadata, an sRGB output intent and the file identifier.
+	 * The file conforms only if its text uses embedded fonts (no standard-14 font).
+	 */
+	pdfA?: boolean;
+	/** Creation date written with `pdfA`; now by default. */
+	date?: Date;
 }
 
 const latin1 = (text: string): Uint8Array => {
@@ -287,13 +334,28 @@ export function buildVectorPdf(
 		emit(packed);
 		emit('\nendstream\nendobj\n');
 	};
-	emit('%PDF-1.4\n%\xe2\xe3\xcf\xd3\n');
+	emit(`%PDF-${options.pdfA ? '1.7' : '1.4'}\n%\xe2\xe3\xcf\xd3\n`);
 	// 1 catalog, 2 page tree, 3 info; the rest from 4.
 	let next = 4;
 	const fontIds = new Map<string, number>();
 	const embeddedIds = new Map<PdfCidFont, number>();
 	const kids: number[] = [];
-	for (const page of pages) {
+	// Links and bookmarks name pages that may come later, so their numbers are taken first.
+	const pageIds = new Map<PdfVectorPage, number>();
+	const structure = options.structure;
+	if (structure || options.outline?.length || pages.some((page) => page.annotations.length))
+		for (const page of pages) if (!pageIds.has(page)) pageIds.set(page, next++);
+	const sink: PdfObjectSink = {
+		object,
+		stream: (id, dictionary, data, raw) => stream(id, dictionary, data, raw),
+		allocate: () => next++,
+		pageId: (page) => pageIds.get(page),
+	};
+	const tagged = structure ? structAnnotations(structure) : new Set<PdfAnnotation>();
+	const pageKeys = new Map<PdfVectorPage, number>();
+	const annotationIds = new Map<PdfAnnotation, { id: number; key: number }>();
+	let nextKey = pages.length;
+	pages.forEach((page, index) => {
 		const xobjects: string[] = [];
 		for (const [name, image] of page.images) {
 			if (!(image.width > 0 && image.height > 0))
@@ -349,18 +411,43 @@ export function buildVectorPdf(
 		const content = latin1(page.content);
 		const contentId = next++;
 		stream(contentId, '', content);
-		const pageId = next++;
+		const annots: string[] = [];
+		for (const annotation of page.annotations) {
+			const key = tagged.has(annotation) ? nextKey : undefined;
+			const id = writeAnnotation(annotation, sink, key);
+			if (id === undefined) continue;
+			annots.push(`${id} 0 R`);
+			if (key !== undefined) annotationIds.set(annotation, { id, key: nextKey++ });
+		}
+		let extra = annots.length ? ` /Annots [${annots.join(' ')}]` : '';
+		if (structure) {
+			extra += ' /Tabs /S';
+			if (page.markedContentCount) {
+				pageKeys.set(page, index);
+				extra += ` /StructParents ${index}`;
+			}
+		}
+		const pageId = pageIds.get(page) ?? next++;
+		pageIds.set(page, pageId);
 		kids.push(pageId);
 		object(
 			pageId,
-			`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Contents ${contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << ${fontEntries.join(' ')} >> /XObject << ${xobjects.join(' ')} >> /ExtGState << ${states.join(' ')} >> /Shading << ${shadings.join(' ')} >> >> >>`,
+			`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Contents ${contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << ${fontEntries.join(' ')} >> /XObject << ${xobjects.join(' ')} >> /ExtGState << ${states.join(' ')} >> /Shading << ${shadings.join(' ')} >> >>${extra} >>`,
 		);
-	}
+	});
+	let catalog = '';
+	if (options.outline?.length)
+		catalog += ` /Outlines ${writeOutline(options.outline, sink)} 0 R /PageMode /UseOutlines`;
+	if (structure)
+		catalog += ` /MarkInfo << /Marked true >> /StructTreeRoot ${writeStructTree(structure, sink, pageKeys, annotationIds, nextKey)} 0 R`;
+	if (options.title) catalog += ' /ViewerPreferences << /DisplayDocTitle true >>';
+	const date = options.date ?? new Date();
+	if (options.pdfA) catalog += writeArchiveObjects(sink, options, date, options.language);
 	const language =
 		options.language && /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/.test(options.language)
 			? ` /Lang ${pdfLiteral(options.language)}`
 			: '';
-	object(1, `<< /Type /Catalog /Pages 2 0 R${language} >>`);
+	object(1, `<< /Type /Catalog /Pages 2 0 R${language}${catalog} >>`);
 	object(
 		2,
 		`<< /Type /Pages /Kids [${kids.map((id) => `${id} 0 R`).join(' ')}] /Count ${kids.length} >>`,
@@ -369,12 +456,17 @@ export function buildVectorPdf(
 		.filter((key) => options[key])
 		.map((key) => ` /${key[0]!.toUpperCase()}${key.slice(1)} ${pdfTextString(options[key]!)}`)
 		.join('');
-	object(3, `<< /Producer (ooxml-ui)${info} >>`);
+	object(3, `<< /Producer (${PDF_PRODUCER})${info}${options.pdfA ? infoDates(date) : ''} >>`);
+	const id = options.pdfA
+		? ` /ID ${fileIdentifier(`${date.toISOString()}\u0000${position}\u0000${info}\u0000${pages.length}`)}`
+		: '';
 	const xref = position;
 	let table = `xref\n0 ${next}\n0000000000 65535 f \n`;
 	for (let id = 1; id < next; id++)
 		table += `${String(offsets[id] ?? 0).padStart(10, '0')} 00000 n \n`;
-	emit(`${table}trailer\n<< /Size ${next} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+	emit(
+		`${table}trailer\n<< /Size ${next} /Root 1 0 R /Info 3 0 R${id} >>\nstartxref\n${xref}\n%%EOF\n`,
+	);
 	const result = new Uint8Array(new ArrayBuffer(position));
 	let offset = 0;
 	for (const chunk of chunks) {
