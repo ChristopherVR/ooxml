@@ -110,3 +110,40 @@ export function chartQuickLayoutPatch(chart: ChartObject, n: number): ChartPatch
 	}
 	return patch as ChartPatch;
 }
+
+/**
+ * Chart Design > Switch Row/Column: transposes categories and series on an xlsx `ChartObject`.
+ * Calling it twice restores the original series names, categories and values.
+ */
+export function switchXlsxChartRowColumnPatch(chart: ChartObject): ChartPatch | undefined {
+	if (!chart.series.length) return undefined;
+	const categories = chart.series[0]?.categories ?? [];
+	const catCount = Math.max(categories.length, ...chart.series.map((s) => s.values.length));
+	if (catCount === 0) return undefined;
+	const nextCategories = chart.series.map((s, i) => s.name || `Series ${i + 1}`);
+	const nextSeries: ChartSeries[] = Array.from({ length: catCount }, (_, catIndex) => ({
+		name: String(categories[catIndex] ?? `Category ${catIndex + 1}`),
+		categories: [...nextCategories],
+		values: chart.series.map((s) => s.values[catIndex] ?? null),
+	}));
+	return { series: nextSeries };
+}
+
+/** Chart Design > Add Chart Element: toggles data labels on every series of an xlsx `ChartObject`. */
+export function toggleXlsxChartDataLabelsPatch(chart: ChartObject): ChartPatch {
+	const hasAny = chart.series.some((s) => s.dataLabels?.chart?.showValue);
+	return {
+		series: chart.series.map((source) => {
+			const copy = structuredClone(source);
+			if (hasAny) {
+				delete copy.dataLabels;
+			} else {
+				copy.dataLabels = {
+					...copy.dataLabels,
+					chart: { ...copy.dataLabels?.chart, showValue: true },
+				};
+			}
+			return copy;
+		}),
+	};
+}

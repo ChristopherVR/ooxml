@@ -110,8 +110,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `viewer-insert-chart.test.ts`).
 - [ ] **P1** Pivot charts: `pivotSource` and `pivotFmts` are only carried through; no field
       buttons and no link to PivotTable edits.
-- [ ] **P1** Chart Design lacks Add Chart Element and Select Data in Word, Excel and PowerPoint,
-      plus Switch Row/Column in Word and Excel and Change Chart Type in PowerPoint.
+- [ ] **P1** Chart Design: Word and Excel now have Add Chart Element (Title, Legend, Data Labels),
+      Switch Row/Column (`switchChartRowColumn` in `src/core/chart/edit/data-sheet.ts`,
+      `switchXlsxChartRowColumnPatch` in `src/core/xlsx/edit/chart-design.ts`) and Select Data
+      (`chart-design-ribbon.ts`, `xlsx/ribbon/tabs/contextual.ts`; evidence: `data-sheet.test.ts`,
+      `chart-ui.test.ts`, `chart-design.test.ts`). Still open: Add Chart Element, Select Data and
+      Change Chart Type in PowerPoint.
 - [ ] **P2** Edit Data row removal in Word, PowerPoint and Visio matches Excel's chart (ranges,
       counts and every point, measured against hidden Excel), but the embedded workbook gets the
       cells below the row from the chart's cache: a text or formula cell in a value range does not

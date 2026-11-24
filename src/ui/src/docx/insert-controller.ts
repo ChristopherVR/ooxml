@@ -38,7 +38,11 @@ import {
 } from './picture-format-commands';
 import { pictureClipboardPlugin } from './picture-drop';
 import { SmartArtController } from './smartart-controller';
-import { setSelectedChartLegend } from './chart-commands';
+import {
+	setSelectedChartLegend,
+	switchSelectedChartRowColumn,
+	toggleSelectedChartElement,
+} from './chart-commands';
 import type { RibbonAction } from './ribbon';
 import { translate, translateUiText, type EditorLocale } from './localization';
 import { pickOfficeSymbol } from '../form/symbol-picker';
@@ -160,6 +164,12 @@ export class InsertController {
 			focusView(view);
 		} else if (action.type === 'chart' && action.key === 'legend') {
 			if (view) setSelectedChartLegend(view, action.value);
+			focusView(view);
+		} else if (action.type === 'chart' && action.key === 'addElement') {
+			if (view) toggleSelectedChartElement(view, action.value);
+			focusView(view);
+		} else if (action.type === 'chart' && action.key === 'switchRowColumn') {
+			if (view) switchSelectedChartRowColumn(view);
 			focusView(view);
 		} else if (action.type === 'insertEquation') {
 			const entry = EQUATION_GALLERY.find((item) => item.id === action.id);

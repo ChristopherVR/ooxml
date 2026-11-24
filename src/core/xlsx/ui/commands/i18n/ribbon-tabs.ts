@@ -512,6 +512,20 @@ export const RIBBON_TAB_STRINGS: Translations = {
 	'Last Column': ['Dernière colonne', 'Letzte Spalte', 'Última columna', '最后一列'],
 	'Table Styles': ['Styles de tableau', 'Tabellenformatvorlagen', 'Estilos de tabla', '表格样式'],
 	'Chart Design': ['Création de graphique', 'Diagrammentwurf', 'Diseño de gráfico', '图表设计'],
+	'Add Chart Element': [
+		'Ajouter un élément de graphique',
+		'Diagrammelement hinzufügen',
+		'Agregar elemento de gráfico',
+		'添加图表元素',
+	],
+	'Switch Row/Column': [
+		'Intervertir ligne/colonne',
+		'Zeile/Spalte wechseln',
+		'Cambiar fila/columna',
+		'切换行/列',
+	],
+	'Select Data': ['Sélectionner des données', 'Daten auswählen', 'Seleccionar datos', '选择数据'],
+	'Data Labels': ['Étiquettes de données', 'Datenbeschriftungen', 'Etiquetas de datos', '数据标签'],
 	'Chart Layouts': [
 		'Dispositions du graphique',
 		'Diagrammlayouts',

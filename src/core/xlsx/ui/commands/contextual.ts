@@ -16,6 +16,8 @@ import {
 	chartQuickLayoutPatch,
 	chartStylePresetPatch,
 	chartTakesQuickLayout,
+	switchXlsxChartRowColumnPatch,
+	toggleXlsxChartDataLabelsPatch,
 } from '../../edit/chart-design';
 
 export const activeTable = (ctx: EditorContext): Table | undefined => {
@@ -217,6 +219,32 @@ export function contextualCommands(): Command[] {
 			icon: icon('legend'),
 			checked: (ctx) => !!activeChart(ctx)?.chart.showLegend,
 			run: (ctx) => editChart(ctx, (chart) => ({ showLegend: !chart.showLegend })),
+		}),
+		chartCmd({
+			id: 'chart.data-labels',
+			label: 'Data Labels',
+			icon: icon('chartTitle'),
+			checked: (ctx) =>
+				!!activeChart(ctx)?.chart.series.some((s) => s.dataLabels?.chart?.showValue),
+			run: (ctx) => editChart(ctx, (chart) => toggleXlsxChartDataLabelsPatch(chart)),
+		}),
+		chartCmd({
+			id: 'chart.add-element',
+			label: 'Add Chart Element',
+			icon: icon('chartType'),
+			run: (ctx) => void ctx.dialogs.open('chart-title'),
+		}),
+		chartCmd({
+			id: 'chart.switch-row-column',
+			label: 'Switch Row/Column',
+			icon: icon('chartType'),
+			run: (ctx) => editChart(ctx, (chart) => switchXlsxChartRowColumnPatch(chart) ?? {}),
+		}),
+		chartCmd({
+			id: 'chart.select-data',
+			label: 'Select Data',
+			icon: icon('chartType'),
+			run: (ctx) => void ctx.dialogs.open('insert-chart', { change: true }),
 		}),
 		chartCmd({
 			id: 'chart.delete',

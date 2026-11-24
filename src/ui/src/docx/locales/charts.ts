@@ -54,6 +54,11 @@ export const enCharts = {
 	'Current Selection': 'Current Selection',
 	'Format Selection': 'Format Selection',
 	'Format Chart Area...': 'Format Chart Area...',
+	'Add Chart Element': 'Add Chart Element',
+	'Chart Title': 'Chart Title',
+	'Data Labels': 'Data Labels',
+	'Switch Row/Column': 'Switch Row/Column',
+	'Select Data': 'Select Data',
 } as const;
 
 export type ChartStrings = Record<keyof typeof enCharts, string>;
@@ -113,6 +118,11 @@ export const frCharts: ChartStrings = {
 	'Current Selection': 'Sélection active',
 	'Format Selection': 'Mettre en forme la sélection',
 	'Format Chart Area...': 'Mettre en forme la zone de graphique...',
+	'Add Chart Element': 'Ajouter un élément de graphique',
+	'Chart Title': 'Titre du graphique',
+	'Data Labels': 'Étiquettes de données',
+	'Switch Row/Column': 'Intervertir ligne/colonne',
+	'Select Data': 'Sélectionner des données',
 };
 
 export const deCharts: ChartStrings = {
@@ -170,6 +180,11 @@ export const deCharts: ChartStrings = {
 	'Current Selection': 'Aktuelle Auswahl',
 	'Format Selection': 'Auswahl formatieren',
 	'Format Chart Area...': 'Diagrammbereich formatieren...',
+	'Add Chart Element': 'Diagrammelement hinzufügen',
+	'Chart Title': 'Diagrammtitel',
+	'Data Labels': 'Datenbeschriftungen',
+	'Switch Row/Column': 'Zeile/Spalte wechseln',
+	'Select Data': 'Daten auswählen',
 };
 
 export const esCharts: ChartStrings = {
@@ -227,6 +242,11 @@ export const esCharts: ChartStrings = {
 	'Current Selection': 'Selección actual',
 	'Format Selection': 'Aplicar formato a la selección',
 	'Format Chart Area...': 'Formato del área del gráfico...',
+	'Add Chart Element': 'Agregar elemento de gráfico',
+	'Chart Title': 'Título del gráfico',
+	'Data Labels': 'Etiquetas de datos',
+	'Switch Row/Column': 'Cambiar fila/columna',
+	'Select Data': 'Seleccionar datos',
 };
 
 export const zhCharts: ChartStrings = {
@@ -283,4 +303,9 @@ export const zhCharts: ChartStrings = {
 	'Current Selection': '当前所选内容',
 	'Format Selection': '设置所选内容格式',
 	'Format Chart Area...': '设置图表区域格式...',
+	'Add Chart Element': '添加图表元素',
+	'Chart Title': '图表标题',
+	'Data Labels': '数据标签',
+	'Switch Row/Column': '切换行/列',
+	'Select Data': '选择数据',
 };

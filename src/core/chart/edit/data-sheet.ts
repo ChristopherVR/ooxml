@@ -146,3 +146,51 @@ export function applyChartSpaceDataSheetEdits(
 	const count = sheet.categories.length;
 	return editChartSpace(next, (draft) => applyStandardChartLayout(draft, layoutSheet, count));
 }
+
+/**
+ * Chart Design > Switch Row/Column: transposes categories and series of `space`.
+ * Calling it twice restores the original categories, series names and point values.
+ */
+export function switchChartRowColumn(space: ChartSpace): ChartSpace {
+	const sheet = chartSpaceDataSheet(space);
+	const oldCats = sheet.categories;
+	const oldSeries = sheet.series;
+	if (!oldCats.length || !oldSeries.length) return space;
+	const newCategories = oldSeries.map((s) => s.name);
+	const newSeriesCount = oldCats.length;
+	let next = space;
+	// Adjust series count to match old category count
+	const currentCount = oldSeries.length;
+	for (let i = currentCount; i < newSeriesCount; i++) {
+		next = addChartSeries(next, {
+			name: oldCats[i] ?? nextChartSeriesName(i),
+			values: oldSeries.map((s) => s.values[i] ?? null),
+		});
+	}
+	for (let i = currentCount - 1; i >= newSeriesCount; i--) {
+		next = removeChartSeries(next, i);
+	}
+	// Adjust category count to match old series count (trimming/adding points on every series)
+	for (let i = oldCats.length - 1; i >= newCategories.length; i--) {
+		next = removeChartCategory(next, i);
+	}
+	for (let i = oldCats.length; i < newCategories.length; i++) {
+		next = addChartCategory(next, newCategories[i] ?? nextChartCategoryName(i), 0, i);
+	}
+	// Set categories to old series names
+	next = setChartCategories(next, newCategories);
+	// Update each series name and point values
+	for (let sIdx = 0; sIdx < newSeriesCount; sIdx++) {
+		next = renameSeries(next, sIdx, oldCats[sIdx] ?? '');
+		for (let cIdx = 0; cIdx < newCategories.length; cIdx++) {
+			next = setChartSeriesPoint(next, sIdx, cIdx, oldSeries[cIdx]?.values[sIdx] ?? null);
+		}
+	}
+	const layoutSheet = standardChartLayoutSheet(next, newCategories.length);
+	if (layoutSheet) {
+		next = editChartSpace(next, (draft) =>
+			applyStandardChartLayout(draft, layoutSheet, newCategories.length),
+		);
+	}
+	return next;
+}

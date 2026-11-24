@@ -5,9 +5,12 @@
 import type { EditorView } from 'prosemirror-view';
 import {
 	CHART_EX_FAMILIES,
+	setChartDataLabels,
 	setChartExLegend,
 	setChartLegend,
+	setChartTitleVisible,
 	setChartType,
+	switchChartRowColumn,
 	type ChartExFamily,
 	type ChartTypeTarget,
 } from 'ooxml-core/chart';
@@ -113,5 +116,37 @@ export function setSelectedChartLegend(view: EditorView, value: string): boolean
 						? setChartLegend(space, { visible: false })
 						: setChartLegend(space, { position: value as 'r' | 't' | 'l' | 'b' }),
 				),
+	);
+}
+
+/** Chart Design > Switch Row/Column: transposes categories and series on the selected chart. */
+export function switchSelectedChartRowColumn(view: EditorView): boolean {
+	return editSelectedChart(view, (chart) =>
+		editDocxChart(chart, (space) => switchChartRowColumn(space)),
+	);
+}
+
+/** Chart Design > Add Chart Element: toggles chart title, legend, or data labels. */
+export function toggleSelectedChartElement(view: EditorView, element: string): boolean {
+	return editSelectedChart(view, (chart) =>
+		editDocxChart(chart, (space) => {
+			if (element === 'title') {
+				const visible = !space.autoTitleDeleted && Boolean(space.title);
+				return setChartTitleVisible(space, !visible);
+			}
+			if (element === 'legend') {
+				return setChartLegend(space, space.legend ? { visible: false } : { position: 'r' });
+			}
+			if (element === 'dataLabels') {
+				const hasLabels = space.plotArea.groups.some(
+					(g) => g.dataLabels?.showValue || g.series.some((s) => s.dataLabels?.showValue),
+				);
+				return setChartDataLabels(
+					space,
+					hasLabels ? { show: false } : { show: true, showValue: true },
+				);
+			}
+			return space;
+		}),
 	);
 }

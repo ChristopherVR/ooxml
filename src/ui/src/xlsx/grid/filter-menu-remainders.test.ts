@@ -42,7 +42,7 @@ describe('Excel AutoFilter remainders', () => {
 		expect(popup).not.toBeNull();
 		// Uncheck Banana and click OK
 		const labels = [...popup.querySelectorAll('label.xg-fm-check')];
-		const banana = labels.find((l) => l.textContent === 'Banana')?.querySelector('input')!;
+		const banana = labels.find((l) => l.textContent === 'Banana')!.querySelector('input')!;
 		banana.checked = false;
 		banana.dispatchEvent(new Event('change'));
 		popup.querySelector<HTMLButtonElement>('.xg-fm-ok')!.click();

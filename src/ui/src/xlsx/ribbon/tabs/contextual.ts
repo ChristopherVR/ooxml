@@ -336,6 +336,16 @@ export function chartDesignTab(): RibbonTab {
 				label: 'Chart Layouts',
 				controls: [
 					{
+						kind: 'split',
+						command: 'chart.add-element',
+						size: 'large',
+						menu: [
+							{ command: 'chart.title', label: 'Chart Title' },
+							{ command: 'chart.legend', label: 'Legend' },
+							{ command: 'chart.data-labels', label: 'Data Labels' },
+						],
+					},
+					{
 						kind: 'gallery',
 						command: 'chart.quick-layout',
 						items: chartQuickLayoutGalleryItems,
@@ -343,6 +353,14 @@ export function chartDesignTab(): RibbonTab {
 					},
 					{ kind: 'button', command: 'chart.title', size: 'large' },
 					{ kind: 'toggle', command: 'chart.legend', size: 'large' },
+				],
+			},
+			{
+				id: 'chart-data',
+				label: 'Data',
+				controls: [
+					{ kind: 'button', command: 'chart.switch-row-column', size: 'large' },
+					{ kind: 'button', command: 'chart.select-data', size: 'large' },
 				],
 			},
 			{

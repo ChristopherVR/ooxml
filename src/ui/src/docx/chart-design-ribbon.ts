@@ -16,16 +16,41 @@ const LEGEND: Array<[string, string]> = [
 	['b', 'Bottom'],
 ];
 
+const ELEMENTS: Array<[string, string]> = [
+	['title', 'Chart Title'],
+	['legend', 'Legend'],
+	['dataLabels', 'Data Labels'],
+];
+
 export function buildChartDesignPanel(panel: HTMLElement): void {
 	panel.append(
 		group(
 			'Chart Layouts',
+			menuSelect(
+				'Add Chart Element',
+				'chartType',
+				ELEMENTS,
+				(value) => ({ type: 'chart', key: 'addElement', value }),
+				{ momentary: true },
+			),
 			menuSelect('Legend', 'legend', LEGEND, (value) => ({ type: 'chart', key: 'legend', value }), {
 				momentary: true,
 			}),
 		),
 		group(
 			'Data',
+			tool(
+				'Switch Row/Column',
+				'chartType',
+				{ type: 'chart', key: 'switchRowColumn' },
+				{ large: true, caption: 'Switch Row/Column' },
+			),
+			tool(
+				'Select Data',
+				'editData',
+				{ type: 'formatDialog', kind: 'chartData' },
+				{ large: true, caption: 'Select Data' },
+			),
 			tool(
 				'Edit Data',
 				'editData',

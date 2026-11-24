@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { parseChartSpace } from '../parse-space';
 import { writeChartSpace } from '../write-space';
 import { parseXml } from '../../xml/index';
-import { applyChartSpaceDataSheetEdits, chartSpaceDataSheet } from './data-sheet';
+import {
+	applyChartSpaceDataSheetEdits,
+	chartSpaceDataSheet,
+	switchChartRowColumn,
+} from './data-sheet';
 import { DEFAULT_CHART_DATA_SHEET, newChartSpace } from './new-chart';
 import { columnChart } from './test-support/column-chart';
 
@@ -131,5 +135,18 @@ describe('the data sheet of a column chart part', () => {
 		);
 		const one = applyChartSpaceDataSheetEdits(space, [{ kind: 'remove-series', series: 0 }]);
 		expect(applyChartSpaceDataSheetEdits(one, [{ kind: 'remove-series', series: 0 }])).toBe(one);
+	});
+
+	it('transposes categories and series on switchChartRowColumn and restores on double switch', () => {
+		const orig = columnChart();
+		const before = chartSpaceDataSheet(orig);
+		const switched = switchChartRowColumn(orig);
+		const mid = chartSpaceDataSheet(switched);
+		expect(mid.categories).toEqual(before.series.map((s) => s.name));
+		expect(mid.series.map((s) => s.name)).toEqual(before.categories);
+		expect(mid.series[0]?.values).toEqual(before.series.map((s) => s.values[0]));
+
+		const back = switchChartRowColumn(switched);
+		expect(chartSpaceDataSheet(back)).toEqual(before);
 	});
 });

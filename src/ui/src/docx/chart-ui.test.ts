@@ -9,7 +9,13 @@ import { docToModel, modelToDoc } from './model-adapter';
 import { createChartDataDialog, createChartTypeDialog } from './chart-dialogs';
 import { chartExFamilyOf } from 'ooxml-core/chart';
 import { translate } from './localization';
-import { chartPickerChoice, chartTypeTarget, setSelectedChartLegend } from './chart-commands';
+import {
+	chartPickerChoice,
+	chartTypeTarget,
+	setSelectedChartLegend,
+	switchSelectedChartRowColumn,
+	toggleSelectedChartElement,
+} from './chart-commands';
 import { syncChartDesign } from './chart-design-ribbon';
 import { createRibbon } from './ribbon';
 import { panelOf, isTabHidden } from './ribbon-tab-api';
@@ -132,5 +138,31 @@ describe('Word charts in the editor', () => {
 		const chart = chartsIn((await loadDocx(saved)).model.blocks)[0]!;
 		expect(chart.chartSpace?.plotArea.groups[0]?.kind).toBe('line');
 		expect(chart.workbookPartName).toBe('word/embeddings/Microsoft_Excel_Worksheet.xlsx');
+	});
+
+	it('switches rows/columns and toggles chart elements via Chart Design commands', () => {
+		const { view } = editor();
+		insertChart(view);
+		const beforeCats = selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.series[0]
+			?.categories?.cache?.points.length;
+		const beforeSeries = selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.series
+			.length;
+
+		expect(switchSelectedChartRowColumn(view)).toBe(true);
+		const afterCats = selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.series[0]
+			?.categories?.cache?.points.length;
+		const afterSeries = selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.series
+			.length;
+		expect(afterCats).toBe(beforeSeries);
+		expect(afterSeries).toBe(beforeCats);
+
+		expect(toggleSelectedChartElement(view, 'dataLabels')).toBe(true);
+		expect(
+			selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.dataLabels?.showValue,
+		).toBe(true);
+		expect(toggleSelectedChartElement(view, 'dataLabels')).toBe(true);
+		expect(
+			selectedChart(view.state)?.chart.chartSpace?.plotArea.groups[0]?.dataLabels?.showValue,
+		).toBeFalsy();
 	});
 });
