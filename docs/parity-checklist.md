@@ -651,13 +651,23 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       watermarks (text turned and half transparent, pictures washed out), page borders and line
       numbers where Word's PDF puts them, and floating objects in headers, footers and table cells
       (#318).
-- [ ] **P1** Save as PDF needs a DOM (`DOMParser`) for charts and shapes (a DOM-less run reports them
-      as left out); shadows lose their blur, WordArt warps and text effects are plain text, and text
-      watermarks are not stretched to their shape. Lists are tagged as paragraphs (no `L`/`LI`),
-      links in headers and footers are not clickable, formatting changes and comment balloons are
-      not drawn with markup, and PDF/A conformance needs the host's font files (standard PDF fonts
-      are not embedded; the report says so). Text uses the standard PDF fonts unless the host
-      supplies font files; remote fonts are never fetched (#318).
+- [x] **P1** Save as PDF writes charts and shapes without a DOM (their SVG is read with the DOM-free
+      XML parser when there is no `DOMParser`), draws shadow blur as a soft-masked raster under the
+      vector shapes, draws WordArt warps from bent glyph outlines of the embedded fonts (with
+      invisible text for selection) and outline, gradient and shadow text effects, tags lists as
+      `L`/`LI`/`Lbl`/`LBody` with `ListNumbering`, makes links in headers and footers clickable on
+      every page, shows formatting changes ("Formatted: ...") and comment balloons in a markup pane
+      as Word's Print Markup does (`markupBalloons`), has an Options step like Word's Publish as PDF
+      Options, and is validated with veraPDF (`scripts/pdfa-validate.mjs`): with the host's font
+      files every corpus document passes PDF/A-2b and 2u, and the file declares 2u (#318).
+- [ ] **P1** Save as PDF: text watermarks are not stretched to their shape; Word shape and picture
+      shadows are not read by the core (so neither Print Layout nor the PDF draws them), chart text
+      shadows are dropped, and WordArt glow and reflection are not drawn; WordArt without a supplied
+      font file is set letter by letter (turned, not bent). Lists in headers, footers, notes and text
+      boxes are not tagged as lists; links in floating text boxes in headers and footers are not
+      clickable. Table, row, cell and section property changes get no balloons. PDF/A level A and
+      PDF/UA are not claimed, and PDF/A needs the host's font files. Text uses the standard PDF fonts
+      unless the host supplies font files; remote fonts are never fetched (#318).
 - [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
       (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
       paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,
@@ -666,15 +676,21 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       pictures (JPEG as is, other samples as PNG), external links, page size and margins, document
       properties, passwords (RC4, AES-128, AES-256), permission flags and a per-page report.
       Checked against PDFs Word 16 exported and pypdf encrypted.
-- [ ] **P1** PDF conversion rebuilds ruled tables (merged cells, borders, shading, continued on
-      the next page), aligned borderless tables, bulleted and numbered lists and two- or
-      three-column regions (continuous `w:cols` sections), footnotes, internal links (to
-      bookmarks), headings from tags and bookmarks, and rotated text (as turned text boxes), but not
-      yet borderless tables whose cells wrap or are empty, lists inside table cells, or vector
-      drawings, and leaves out JPEG 2000 and JBIG2 pictures (each reported). Footnotes are found
-      only at the bottom of the page their mark is on (a footnote with a symbol mark keeps it as
-      Word's custom mark; this editor shows the number beside it). Scanned pages stay pictures
-      unless the host supplies OCR (#319).
+- [x] **P1** PDF conversion rebuilds ruled tables (merged cells, borders, shading, continued on
+      the next page, rows a page break cut joined back), borderless tables including wrapped and
+      empty cells, bulleted and numbered lists (also inside table cells) and two- or three-column
+      regions (continuous `w:cols` sections), footnotes (also continued on the next page, or
+      starting on the page after their mark), endnotes collected at the end of the document,
+      internal links (to bookmarks), headings from tags and bookmarks, rotated text (as turned text
+      boxes), vector drawings as floating DrawingML shapes and `wpg` groups, and decodes JBIG2 and
+      JPEG 2000 pictures (#319).
+- [ ] **P1** PDF conversion leaves out (and reports) gradients, pattern fills and clipped shapes in
+      vector drawings, whose text stays ordinary flowing text; endnotes collected per section stay
+      body text; a row split between sentences in a table where empty cells are normal stays two
+      rows; JBIG2 amendment features, High Throughput JPEG 2000 and JPX Part 2 extensions are
+      reported, and JPEG 2000 ICC profiles are not applied. A footnote with a symbol mark keeps it
+      as Word's custom mark (this editor shows the number beside it). This editor shows `wpg` groups
+      as placeholders. Scanned pages stay pictures unless the host supplies OCR (#319).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
       come from the browser's

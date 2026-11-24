@@ -32,6 +32,8 @@ import { attachEditorInteractions } from './editor-interactions';
 import { attachCanvasClick } from './canvas-click';
 import { createChartFormatPane } from './chart-format-pane';
 import { fontDownloadOptions, setFontDownloads } from './docx-webfonts';
+import type { EditorPdfOptions } from './pdf/editor-pdf';
+import { editorPdfContext } from './pdf/pdf-context';
 
 /** Element-level operations the chrome needs; they stay on the element because they are public API. */
 export interface ShellApi {
@@ -39,7 +41,7 @@ export interface ShellApi {
 	setDocumentModel(model: DocumentModel): void;
 	load(bytes: Uint8Array | ArrayBuffer): Promise<void>;
 	saveBytes(): Promise<Uint8Array>;
-	exportPdf(): Promise<{ bytes: Uint8Array }>;
+	exportPdf(options?: EditorPdfOptions): Promise<{ bytes: Uint8Array }>;
 }
 
 function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
@@ -61,7 +63,8 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
-		exportPdf: () => api.exportPdf(),
+		exportPdf: (options) => api.exportPdf(options),
+		pdfContext: () => editorPdfContext(core),
 		storage: () => core.cloudFile?.storage ?? core.storage,
 		fileProviders: () => core.fileProviders,
 		useCloudFile: (file) => {

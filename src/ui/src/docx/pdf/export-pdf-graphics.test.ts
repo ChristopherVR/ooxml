@@ -125,12 +125,13 @@ describe('exportDocxPdf graphics', () => {
 		expect(omittedKinds(report)).not.toContain('chart');
 	});
 
-	it('reports charts as left out when no DOMParser can read them', async () => {
-		vi.stubGlobal('DOMParser', undefined);
+	it('writes the same chart without a DOMParser, through the DOM-free XML parser', async () => {
 		const { model } = await loadDocx(new Uint8Array(readFileSync(join(FIXTURES, 'chart.docx'))));
+		const withDom = inspect((await exportDocxPdf(model, { measurer })).bytes);
+		vi.stubGlobal('DOMParser', undefined);
 		const { bytes, report } = await exportDocxPdf(model, { measurer });
-		expect(omittedKinds(report)).toContain('chart');
-		expect(inspect(bytes).text).not.toContain('Sales by region');
+		expect(omittedKinds(report)).not.toContain('chart');
+		expect(inspect(bytes).content).toBe(withDom.content);
 	});
 
 	it('draws floating objects in table cells and a text box with its laid-out lines', async () => {

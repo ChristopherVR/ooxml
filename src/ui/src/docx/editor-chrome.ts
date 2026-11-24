@@ -32,6 +32,9 @@ import {
 import { saveProgressLabel } from '../files/save-progress-label';
 import { createSignatureChrome, type SignatureChrome } from '../notices/signature-chrome';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
+import type { EditorPdfOptions } from './pdf/editor-pdf';
+import { createPdfOptionsDialog, type PdfOptionsDialog } from './pdf/pdf-options-dialog';
+import type { PdfOptionsContext } from './pdf/pdf-options-form';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
 export interface ChromeHost {
@@ -45,8 +48,10 @@ export interface ChromeHost {
 	newDocument(): void;
 	load(bytes: Uint8Array): Promise<void>;
 	save(): Promise<Uint8Array>;
-	/** The document as a PDF (File > Export > Create a PDF). */
-	exportPdf(): Promise<{ bytes: Uint8Array }>;
+	/** The document as a PDF (File > Export > Create a PDF), with the Options step's choices. */
+	exportPdf(options?: EditorPdfOptions): Promise<{ bytes: Uint8Array }>;
+	/** What the PDF Options step can offer (current page, selection). */
+	pdfContext?(): PdfOptionsContext;
 	/** Host-owned storage for Save and Open, when the host set one. */
 	storage?(): DocumentStorage | undefined;
 	/** Cloud places File > Open offers next to this device. */
@@ -94,6 +99,8 @@ export class EditorChrome {
 	/** The signature badge (status bar) and load notice (under the ribbon). */
 	readonly signatures: SignatureChrome;
 	readonly fileInput: HTMLInputElement;
+	/** File > Export > Create a PDF's Options step. */
+	readonly pdfOptions: PdfOptionsDialog = createPdfOptionsDialog();
 	private ribbon: RibbonElement | undefined;
 	private shareDialog: ShareDialogController | undefined;
 	private _fileName = DEFAULT_FILE_NAME;
@@ -171,6 +178,7 @@ export class EditorChrome {
 			this.statusBar.element,
 			this.backstage.element,
 			this.backstage.optionsDialog,
+			this.pdfOptions.element,
 			this.fileInput,
 		);
 		this.ribbon = ribbon as RibbonElement;
@@ -221,6 +229,7 @@ export class EditorChrome {
 		this.titleBar.relocalize();
 		this.ribbonActions.relocalize(locale);
 		this.shareDialog?.relocalize();
+		this.pdfOptions.setLocale(locale);
 		const fileTab = this.host.ribbon()?.querySelector('.dve-file-tab');
 		if (fileTab) fileTab.textContent = translate(locale, 'File');
 		this.fileInput.setAttribute('aria-label', translate(locale, 'Open'));
@@ -266,8 +275,7 @@ export class EditorChrome {
 			if (command === 'new') await this.newDocument();
 			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
-			else if (command === 'exportPdf')
-				downloadBytes((await this.host.exportPdf()).bytes, withExtension(this._fileName, 'pdf'));
+			else if (command === 'exportPdf') await this.exportPdf();
 			// A host that cancels `file-command` shares its own way; otherwise the Share dialog.
 			else if (command === 'share') this.shareDialog?.open();
 			else if (command === 'exportText')
@@ -292,6 +300,14 @@ export class EditorChrome {
 			if (command === 'save' || command === 'saveAs') this.setSaveState('dirty');
 			this.host.reportError(cause instanceof Error ? cause : new Error(String(cause)));
 		}
+	}
+
+	/** Asks for the PDF options, then downloads the PDF; Cancel exports nothing. */
+	private async exportPdf(): Promise<void> {
+		const context = this.host.pdfContext?.() ?? { hasSelection: false };
+		const options = await this.pdfOptions.choose(context);
+		if (!options) return;
+		downloadBytes((await this.host.exportPdf(options)).bytes, withExtension(this._fileName, 'pdf'));
 	}
 
 	/** True while a save is pending. */

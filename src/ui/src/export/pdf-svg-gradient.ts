@@ -5,6 +5,7 @@
  */
 import type { PdfShading } from './pdf-vector';
 import type { PathSegment } from './pdf-path';
+import { childElements } from './pdf-svg-dom';
 import { number, parseColor, parseTransform } from './pdf-svg-style';
 
 export interface GradientPaint {
@@ -60,7 +61,7 @@ export function gradientPaint(
 	bounds: [number, number, number, number] | undefined,
 ): GradientPaint | undefined {
 	const units = gradient.getAttribute('gradientUnits') !== 'userSpaceOnUse';
-	const stops = Array.from(gradient.children)
+	const stops = childElements(gradient)
 		.filter((child) => child.localName === 'stop')
 		.map((stop) => {
 			const raw = stop.getAttribute('offset') ?? '0';

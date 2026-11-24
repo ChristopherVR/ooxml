@@ -1,6 +1,7 @@
 import type { PdfVectorPage } from './pdf-vector';
 import type { PdfEmbeddedFont, PdfFontSet } from './pdf-embedded-font';
 import { encodeWinAnsi, pdfBaseFont, pdfTextWidth } from './pdf-fonts';
+import { childElements } from './pdf-svg-dom';
 import { inherited, number, parseColor, PdfFallback } from './pdf-svg-style';
 
 interface Run {
@@ -55,14 +56,14 @@ export function drawSvgText(
 	fonts?: PdfFontSet,
 	familyOf: SvgFontFamilyMapper = asWritten,
 ): void {
-	const rows = Array.from(text.children).filter((child) => child.localName === 'tspan');
+	const rows = childElements(text).filter((child) => child.localName === 'tspan');
 	if (!rows.length) {
 		if (text.textContent) drawRow(page, text, [text], alpha, fonts, familyOf);
 		return;
 	}
 	let count = 0;
 	for (const row of rows) {
-		const spans = Array.from(row.children).filter((child) => child.localName === 'tspan');
+		const spans = childElements(row).filter((child) => child.localName === 'tspan');
 		count += spans.length || 1;
 		if (count > MAX_RUNS) throw new PdfFallback('too much text');
 		drawRow(page, row, spans.length ? spans : [row], alpha, fonts, familyOf);
@@ -97,9 +98,9 @@ function drawRow(
 		const letterSpacing = number(span.getAttribute('letter-spacing'));
 		const decoration = inherited(span, 'text-decoration') ?? '';
 		// A supplied font of the requested family keeps the document's typeface; any supplied
-		// font that covers the characters rescues text outside WinAnsi.
+		// font that covers the characters rescues text outside WinAnsi (and, for PDF/A, any text).
 		const winAnsi = encodeWinAnsi(raw);
-		const named = fonts?.has(family) ? fonts.pick(family, bold, italic, raw) : undefined;
+		const named = fonts?.prefers(family) ? fonts.pick(family, bold, italic, raw) : undefined;
 		const embedded =
 			named ?? (winAnsi === undefined ? fonts?.pick(family, bold, italic, raw) : undefined);
 		if (winAnsi === undefined && !embedded)

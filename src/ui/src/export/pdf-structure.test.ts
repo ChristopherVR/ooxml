@@ -61,6 +61,28 @@ describe('buildVectorPdf navigation and structure', () => {
 		expect(first.content).toContain('/Figure <</MCID 1>> BDC');
 	});
 
+	it('writes standard attributes by owner', () => {
+		const page = new PdfVectorPage(100, 100);
+		const list: PdfStructElement = {
+			type: 'L',
+			kids: [{ page, mcid: page.beginMarked('L') }],
+			attributes: { List: { ListNumbering: 'Decimal' } },
+		};
+		page.endMarked();
+		const table: PdfStructElement = {
+			type: 'TH',
+			kids: [{ page, mcid: page.beginMarked('TH') }],
+			attributes: { Table: { Scope: 'Column' }, Layout: { Placement: 'Block' } },
+		};
+		page.endMarked();
+		const raw = text(
+			buildVectorPdf([page], { structure: { type: 'Document', kids: [list, table] } }),
+		);
+		expect(raw).toContain('/S /L /P');
+		expect(raw).toContain('/A << /O /List /ListNumbering /Decimal >>');
+		expect(raw).toContain('/A [<< /O /Table /Scope /Column >> << /O /Layout /Placement /Block >>]');
+	});
+
 	it('escapes names', () => {
 		expect(pdfName('H1')).toBe('/H1');
 		expect(pdfName('A B/C')).toBe('/A#20B#2fC');

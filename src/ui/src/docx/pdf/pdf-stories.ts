@@ -28,6 +28,7 @@ import {
 	type PageFieldContext,
 	type TextMeasurer,
 } from 'ooxml-core/docx/layout';
+import { fieldLinkTarget } from './pdf-navigation';
 import type { DocxPdfReportBuilder } from './pdf-report';
 
 /** A header or footer laid out for one page, in page coordinates. */
@@ -36,6 +37,8 @@ export interface PlacedStory {
 	x: number;
 	y: number;
 	blocks: LayoutBlockBox[];
+	/** The paragraphs and tables laid out, with this page's field results (for their links). */
+	source: Block[];
 	/** The header or footer as the document has it (its floating objects and watermark). */
 	content: HeaderFooterContent;
 	/** The header or footer distance from its page edge. */
@@ -60,7 +63,10 @@ function fillParagraph(
 			continue;
 		}
 		const { field: _field, ...plain } = run;
-		runs.push({ ...plain, text: fieldDisplayText(run, values) });
+		// A HYPERLINK field, or a cross-reference with `\h`, stays a link once its result is filled in.
+		const target = plain.link ? undefined : fieldLinkTarget(run.field.instr);
+		const link = target && ('uri' in target ? { href: target.uri } : { anchor: target.anchor });
+		runs.push({ ...plain, text: fieldDisplayText(run, values), ...(link ? { link } : {}) });
 	}
 	return { ...paragraph, runs };
 }
@@ -181,6 +187,7 @@ export function placeStories(
 				x: page.marginLeftPx,
 				y: kind === 'header' ? distancePx : page.heightPx - distancePx - height,
 				blocks: boxes,
+				source: blocks,
 				content,
 				distancePx,
 			});

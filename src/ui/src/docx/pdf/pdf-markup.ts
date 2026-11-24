@@ -1,10 +1,11 @@
 /**
  * "Document showing markup" for the Word PDF export, drawn the way Print Layout's All Markup
  * view draws it: inserted text underlined and deleted text struck through in its author's
- * colour (moved text in green), a change bar in the left margin beside each changed line, and
- * comments as PDF notes at the start of the text they cover. DOM-free.
+ * colour (moved text in green), a change bar in the left margin beside each changed line
+ * (formatting changes included), and comments as PDF notes at the start of the text they cover.
+ * Balloons in the markup pane are `pdf-balloon-items.ts`. DOM-free.
  */
-import type { Comment, TextRun } from 'ooxml-core/docx';
+import type { Comment, Paragraph, TextRun } from 'ooxml-core/docx';
 import { authorColor } from 'ooxml-core/docx/ui';
 import type { LayoutFragment } from 'ooxml-core/docx/layout';
 import type { PdfNoteAnnotation, PdfVectorPage } from '../../export/pdf-vector';
@@ -34,6 +35,18 @@ export const isChanged = (run: TextRun | undefined): boolean => {
 	const kind = run?.revision?.kind;
 	return kind === 'insert' || kind === 'delete' || kind === 'moveFrom' || kind === 'moveTo';
 };
+
+/**
+ * Whether a run's formatting, or its paragraph's, is a tracked change (`w:rPrChange`,
+ * `w:pPrChange`): Word gives those lines a change bar too.
+ */
+export const isFormatChanged = (
+	run: TextRun | undefined,
+	paragraph: Paragraph | undefined,
+): boolean =>
+	run?.formatRevision?.kind === 'formatChange' ||
+	run?.revision?.kind === 'formatChange' ||
+	paragraph?.formatRevision?.kind === 'paragraphChange';
 
 /** The change bars of one page: one per changed line, in the left margin. */
 export class DocxPdfChangeBars {

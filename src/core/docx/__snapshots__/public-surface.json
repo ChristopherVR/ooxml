@@ -175,6 +175,8 @@
 	"datePicture",
 	"defaultPlaceholder",
 	"defaultStyleCatalogs",
+	"describeParagraphFormatChange",
+	"describeRunFormatChange",
 	"diagramColorTheme",
 	"diagramsIn",
 	"displayListLabel",
@@ -212,6 +214,7 @@
 	"formDropDownIndex",
 	"formFieldDisplayText",
 	"formFieldOfRun",
+	"formatChangeText",
 	"formatDocxDiagram",
 	"formatListNumber",
 	"formatNoteNumber",
@@ -498,5 +501,6 @@
 	"withSection",
 	"withTocBookmarks",
 	"withValue",
+	"wordColorName",
 	"wordHighlightColors"
 ]

@@ -1,3 +1,5 @@
+import { pdfALevel, type PdfALevel } from '../../export/pdf-archive';
+
 /** What a Word PDF export approximated or left out, as Word's own export would not have. */
 export interface DocxPdfReport {
 	/** Pages written. */
@@ -12,28 +14,41 @@ export interface DocxPdfReport {
 	omitted: { kind: DocxPdfOmittedKind; reason: string; pages: number[] }[];
 	/** The layout's own approximations relative to Word, and the painter's. */
 	notes: string[];
-	/** Set when PDF/A was requested: whether the file meets PDF/A-2b, and why not. */
+	/** Set when PDF/A was requested: whether the file meets PDF/A-2, at which level, and why not. */
 	pdfA?: DocxPdfConformance;
 }
 
 export interface DocxPdfConformance {
 	conformant: boolean;
+	/**
+	 * The level the file declares (`pdfaid:conformance`): `U` (PDF/A-2u) when all its text is in
+	 * embedded fonts with Unicode maps, else `B` (PDF/A-2b, which it then does not meet either).
+	 */
+	level: PdfALevel;
 	issues: string[];
 }
 
-/** PDF/A-2b needs every font embedded: text written in a standard PDF font breaks it. */
+const STANDARD_FAMILIES = new Set(['Helvetica', 'Times', 'Courier']);
+
+/**
+ * PDF/A-2 needs every font embedded: text written in a standard PDF font breaks it. With every
+ * font embedded the file meets level U (validated with veraPDF, `scripts/pdfa-validate.mjs`).
+ */
 export function pdfAConformance(
 	report: DocxPdfReport,
 	pages: readonly { fonts: ReadonlyMap<string, string> }[],
 ): DocxPdfConformance {
 	const issues: string[] = [];
-	if (pages.some((page) => page.fonts.size > 0)) {
-		const families = report.substitutedFonts.map((font) => font.family);
+	const level = pdfALevel(pages);
+	if (level !== 'U') {
+		const families = report.substitutedFonts
+			.filter((font) => STANDARD_FAMILIES.has(font.standardFont))
+			.map((font) => font.family);
 		issues.push(
 			`Text${families.length ? ` in ${families.join(', ')}` : ''} uses standard PDF fonts, which are not embedded; supply the font files to embed them.`,
 		);
 	}
-	return { conformant: issues.length === 0, issues };
+	return { conformant: issues.length === 0, level, issues };
 }
 
 export type DocxPdfOmittedKind =

@@ -124,7 +124,13 @@ export class PdfEmbeddedFont implements PdfCidFont {
 export class PdfFontSet {
 	readonly fonts: PdfEmbeddedFont[];
 	#textLayer: PdfTextLayerFont | undefined;
-	constructor(files: readonly PdfFontFile[] = []) {
+	/**
+	 * Write text in a family no supplied font is named for with a supplied font that covers it,
+	 * rather than an unembedded standard PDF font (PDF/A needs every font embedded).
+	 */
+	readonly embedAll: boolean;
+	constructor(files: readonly PdfFontFile[] = [], options: { embedAll?: boolean } = {}) {
+		this.embedAll = !!options.embedAll;
 		this.fonts = files.flatMap((file) => {
 			const font = PdfEmbeddedFont.create(file);
 			return font ? [font] : [];
@@ -154,6 +160,10 @@ export class PdfFontSet {
 			(font.bold === bold ? 2 : 0) +
 			(font.italic === italic ? 1 : 0);
 		return [...this.fonts].sort((a, b) => score(b) - score(a)).find((font) => font.covers(text));
+	}
+	/** Whether text in `family` should be written with a supplied font when one covers it. */
+	prefers(family: string): boolean {
+		return this.embedAll ? this.fonts.length > 0 : this.has(family);
 	}
 	/** Whether a font was asked for by name (so a standard font would be a substitution). */
 	has(family: string): boolean {

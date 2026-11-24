@@ -61,6 +61,11 @@ export interface PdfStructElement {
 	/** Alternate text (`/Alt`), for figures. */
 	alt?: string;
 	lang?: string;
+	/**
+	 * Standard structure attributes (`/A`, ISO 32000-1 14.8.5) by owner, each value a PDF name
+	 * without its slash: `{ List: { ListNumbering: 'Decimal' } }`.
+	 */
+	attributes?: Readonly<Record<string, Readonly<Record<string, string>>>>;
 }
 
 /** One bookmark of the outline, with its nested bookmarks. */
@@ -213,6 +218,18 @@ export function structAnnotations(root: PdfStructElement): Set<PdfAnnotation> {
 	return found;
 }
 
+/** The `/A` entry of an element: one attribute dictionary, or an array of them, by owner. */
+function attributeObjects(attributes: PdfStructElement['attributes']): string {
+	const dictionaries = Object.entries(attributes ?? {}).map(
+		([owner, values]) =>
+			`<< /O ${pdfName(owner)}${Object.entries(values)
+				.map(([key, value]) => ` ${pdfName(key)} ${pdfName(value)}`)
+				.join('')} >>`,
+	);
+	if (!dictionaries.length) return '';
+	return dictionaries.length === 1 ? ` /A ${dictionaries[0]}` : ` /A [${dictionaries.join(' ')}]`;
+}
+
 /** Whether an element holds any content (marked content or an annotation) at any depth. */
 const hasContent = (element: PdfStructElement): boolean =>
 	element.kids.some((kid) => !isElement(kid) || hasContent(kid));
@@ -268,6 +285,7 @@ export function writeStructTree(
 		const extra = [
 			element.alt !== undefined ? ` /Alt ${pdfTextString(element.alt)}` : '',
 			element.lang ? ` /Lang ${pdfTextString(element.lang)}` : '',
+			attributeObjects(element.attributes),
 		].join('');
 		sink.object(
 			id,

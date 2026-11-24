@@ -30,6 +30,7 @@ export * from './symbol-fonts';
 export * from './truetype/embedding';
 export { glyphlessTrueType, MAX_GLYPHLESS_GLYPHS } from './truetype/glyphless';
 export { parseTrueType, type TrueTypeFont } from './truetype/parse';
+export { glyphOutlinePath, type GlyphPathCommand } from './truetype/outline';
 export { subsetTrueType, type TrueTypeSubset } from './truetype/subset';
 export * from './webfonts';
 export {

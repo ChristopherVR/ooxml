@@ -50,6 +50,28 @@ export const frApp: AppStrings = {
 	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
 		'Enregistre le document au format PDF avec du texte sélectionnable, avec les pages du mode Page.',
 	'Create PDF': 'Créer un PDF',
+	'PDF options': 'Options PDF',
+	'Page range': 'Étendue de pages',
+	All: 'Tout',
+	'Current page': 'Page active',
+	Selection: 'Sélection',
+	From: 'De',
+	To: 'À',
+	'Publish what': 'Publier',
+	Document: 'Document',
+	'Document showing markup': 'Document avec marques',
+	'Include non-printing information': 'Inclure les informations non imprimables',
+	'Create bookmarks using': 'Créer des signets à l’aide de',
+	'Word bookmarks': 'Signets Word',
+	'Document structure tags for accessibility':
+		'Balises de structure de document pour l’accessibilité',
+	'PDF/A compliant': 'Conforme à PDF/A',
+	Balloons: 'Bulles',
+	'Show only comments and formatting in balloons':
+		'Afficher uniquement les commentaires et la mise en forme dans les bulles',
+	'Show revisions in balloons': 'Afficher les révisions dans des bulles',
+	'Show all revisions inline': 'Afficher toutes les révisions dans le texte',
+	'Show no balloons': 'N’afficher aucune bulle',
 	'Download the document as a Word .docx file.': 'Téléchargez le document au format Word .docx.',
 	'Export as plain text': 'Exporter en texte brut',
 	'Download the text only, without formatting, pictures or notes.':

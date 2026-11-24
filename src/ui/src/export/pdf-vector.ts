@@ -7,7 +7,14 @@
 import { zlibCompress } from 'ooxml-core/opc';
 import { pdfLiteral } from './pdf-fonts';
 import type { PdfCidFont } from './pdf-cid-font';
-import { fileIdentifier, infoDates, PDF_PRODUCER, writeArchiveObjects } from './pdf-archive';
+import {
+	fileIdentifier,
+	infoDates,
+	infoText,
+	pdfALevel,
+	PDF_PRODUCER,
+	writeArchiveObjects,
+} from './pdf-archive';
 import {
 	pdfName,
 	pdfTextString,
@@ -241,8 +248,9 @@ export interface PdfVectorOptions {
 	/** Bookmarks shown in the viewer's navigation pane. */
 	outline?: readonly PdfOutlineItem[];
 	/**
-	 * Writes the PDF/A-2b parts: XMP metadata, an sRGB output intent and the file identifier.
-	 * The file conforms only if its text uses embedded fonts (no standard-14 font).
+	 * Writes the PDF/A-2 parts: XMP metadata, an sRGB output intent and the file identifier. The
+	 * file conforms only if its text uses embedded fonts (no standard-14 font); it then declares
+	 * level U (`pdfALevel`), else B.
 	 */
 	pdfA?: boolean;
 	/** Creation date written with `pdfA`; now by default. */
@@ -442,7 +450,8 @@ export function buildVectorPdf(
 		catalog += ` /MarkInfo << /Marked true >> /StructTreeRoot ${writeStructTree(structure, sink, pageKeys, annotationIds, nextKey)} 0 R`;
 	if (options.title) catalog += ' /ViewerPreferences << /DisplayDocTitle true >>';
 	const date = options.date ?? new Date();
-	if (options.pdfA) catalog += writeArchiveObjects(sink, options, date, options.language);
+	if (options.pdfA)
+		catalog += writeArchiveObjects(sink, options, date, options.language, pdfALevel(pages));
 	const language =
 		options.language && /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/.test(options.language)
 			? ` /Lang ${pdfLiteral(options.language)}`
@@ -454,7 +463,10 @@ export function buildVectorPdf(
 	);
 	const info = (['title', 'author', 'subject', 'keywords'] as const)
 		.filter((key) => options[key])
-		.map((key) => ` /${key[0]!.toUpperCase()}${key.slice(1)} ${pdfTextString(options[key]!)}`)
+		.map(
+			(key) =>
+				` /${key[0]!.toUpperCase()}${key.slice(1)} ${pdfTextString(infoText(options[key]!))}`,
+		)
 		.join('');
 	object(3, `<< /Producer (${PDF_PRODUCER})${info}${options.pdfA ? infoDates(date) : ''} >>`);
 	const id = options.pdfA

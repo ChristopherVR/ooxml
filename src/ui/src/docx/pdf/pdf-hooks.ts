@@ -3,7 +3,7 @@
  * draws, so the export can tag it (`pdf-tagging.ts`), link it (`pdf-navigation.ts`) and show
  * its tracked changes (`pdf-markup.ts`). Coordinates are CSS pixels, y down. DOM-free.
  */
-import type { Comment, DocumentModel, ReviewDisplayMode } from 'ooxml-core/docx';
+import type { Block, Comment, DocumentModel, ReviewDisplayMode } from 'ooxml-core/docx';
 import type {
 	LayoutFloatBox,
 	LayoutFragment,
@@ -14,23 +14,41 @@ import type {
 } from 'ooxml-core/docx/layout';
 import { pdfDate } from '../../export/pdf-archive';
 import type { PdfStructElement, PdfVectorPage } from '../../export/pdf-vector';
-import { commentNote, DocxPdfChangeBars, isChanged, markupFragment } from './pdf-markup';
+import type { DocxPdfBalloons } from './pdf-balloon-items';
+import type { DocxPdfBalloonFrame } from './pdf-balloons';
+import { documentListItems, type DocxPdfListItem } from './pdf-lists';
+import {
+	commentNote,
+	DocxPdfChangeBars,
+	isChanged,
+	isFormatChanged,
+	markupFragment,
+} from './pdf-markup';
 import {
 	DocxPdfNavigation,
 	DocxPdfParagraphs,
 	outlineLevel,
 	runLinkTarget,
 	type DocxPdfBookmarks,
+	type DocxPdfLinkLabel,
 	type DocxPdfLinkTarget,
 } from './pdf-navigation';
 import { DocxPdfTagger } from './pdf-tagging';
 
 const PT_PER_PX = 0.75;
 
+/** A list item's generated marker (its number or bullet and the separator after it). */
+const isMarker = (box: LayoutParagraphBox, fragment: LayoutFragment, line: LayoutLine) =>
+	line === box.lines[0] &&
+	fragment.runIndex === 0 &&
+	(fragment.sourceEnd ?? 0) <= (fragment.sourceStart ?? 0);
+
 export interface DocxPdfHookOptions {
 	tagged: boolean;
 	bookmarks: DocxPdfBookmarks;
 	mode: ReviewDisplayMode;
+	/** The markup pane's balloons (`pdf-balloon-items.ts`), with markup shown. */
+	balloons?: DocxPdfBalloons;
 }
 
 export class DocxPdfHooks {
@@ -42,8 +60,20 @@ export class DocxPdfHooks {
 	readonly #noted = new Set<string>();
 	#page: PdfVectorPage | undefined;
 	#layout: LayoutPageBox | undefined;
+	/** The page's shrink to make room for the markup pane, if any. */
+	#frame: DocxPdfBalloonFrame | undefined;
+	#boxStart = { x: 0, top: 0, height: 0 };
 	#paragraph: PdfStructElement | undefined;
-	#link: { target: DocxPdfLinkTarget; element: PdfStructElement | undefined } | undefined;
+	/** The `Lbl` of the list item being painted, until its marker is drawn. */
+	#marker: PdfStructElement | undefined;
+	readonly #listItems: Map<string, DocxPdfListItem>;
+	#link:
+		| {
+				target: DocxPdfLinkTarget;
+				element: PdfStructElement | undefined;
+				label: DocxPdfLinkLabel;
+		  }
+		| undefined;
 	#decorative = 0;
 	readonly #rows: boolean[] = [];
 
@@ -54,6 +84,7 @@ export class DocxPdfHooks {
 		this.tagger = new DocxPdfTagger(options.tagged);
 		this.navigation = new DocxPdfNavigation(model, options.bookmarks, options.mode);
 		this.paragraphs = new DocxPdfParagraphs(model);
+		this.#listItems = options.tagged ? documentListItems(model) : new Map();
 		this.#comments = new Map((model.comments ?? []).map((comment) => [comment.id, comment]));
 	}
 
@@ -64,6 +95,7 @@ export class DocxPdfHooks {
 	startPage(page: PdfVectorPage, layout: LayoutPageBox): void {
 		this.#page = page;
 		this.#layout = layout;
+		this.#frame = this.options.balloons?.frame(layout);
 		this.tagger.startPage(page);
 	}
 
@@ -74,12 +106,20 @@ export class DocxPdfHooks {
 			this.tagger.artifact();
 			this.#bars.paint(page, layout.marginLeftPx);
 		}
+		if (page && layout && this.#frame) {
+			this.tagger.artifact();
+			this.options.balloons?.endPage(page, layout);
+		}
 		this.tagger.endPage();
 	}
 
-	/** A point of the page (CSS pixels, y down) in PDF points (y up). */
+	/** A point of the page (CSS pixels, y down) in PDF points (y up), on the shrunk page if any. */
 	#point(x: number, y: number): [number, number] {
-		return [x * PT_PER_PX, ((this.#layout?.heightPx ?? 0) - y) * PT_PER_PX];
+		const scale = this.#frame?.scale ?? 1;
+		return [
+			x * PT_PER_PX * scale,
+			(this.#frame?.offsetYPt ?? 0) + ((this.#layout?.heightPx ?? 0) - y) * PT_PER_PX * scale,
+		];
 	}
 
 	/** Borders, shading and rules: not part of the text. */
@@ -93,12 +133,23 @@ export class DocxPdfHooks {
 
 	beginParagraph(box: LayoutParagraphBox, x: number, y: number): void {
 		this.#link = undefined;
+		this.#marker = undefined;
 		const paragraph = this.paragraphs.get(box.blockId);
 		const continued = (box.lines[0]?.sourceStart ?? 0) > 0;
+		this.#boxStart = { x, top: y, height: box.lines[0]?.heightPx ?? 0 };
+		this.options.balloons?.beginParagraph(paragraph, this.tagger.inArtifact);
 		if (this.tagger.active) {
 			const level = paragraph ? outlineLevel(paragraph, this.model.paragraphStyles) : undefined;
-			const type = level === undefined ? 'P' : `H${Math.min(6, level)}`;
-			this.#paragraph = this.tagger.paragraph(box.blockId, type, continued);
+			// A numbered heading stays a heading, its number part of its text, as Word tags it.
+			const item = level === undefined ? this.#listItems.get(box.blockId) : undefined;
+			const listed = item && this.tagger.listItem(box.blockId, item, continued);
+			if (listed) {
+				this.#paragraph = listed.body;
+				this.#marker = listed.label;
+			} else {
+				const type = level === undefined ? 'P' : `H${Math.min(6, level)}`;
+				this.#paragraph = this.tagger.paragraph(box.blockId, type, continued);
+			}
 		} else this.#paragraph = undefined;
 		if (paragraph && !continued && this.#page && !this.tagger.inArtifact) {
 			const [left, top] = this.#point(x, y);
@@ -121,17 +172,26 @@ export class DocxPdfHooks {
 					? this.paragraphs.runAt(box.blockId, fragment.sourceStart)
 					: undefined;
 		const paragraph = this.#paragraph;
-		const navigable = !this.tagger.inArtifact && !!this.#page;
-		const target = run && navigable ? runLinkTarget(run) : undefined;
-		if (target) {
+		// Links in headers, footers and repeated rows are clickable on every page they are drawn.
+		const target = run && this.#page ? runLinkTarget(run) : undefined;
+		if (this.#marker && isMarker(box, fragment, line)) {
+			this.#link = undefined;
+			this.tagger.mark(this.#marker);
+		} else if (target) {
 			// Consecutive runs to the same place are one link.
-			if (!this.#link || JSON.stringify(this.#link.target) !== JSON.stringify(target))
-				this.#link = { target, element: paragraph && this.tagger.child(paragraph, 'Link') };
+			if (!this.#link || JSON.stringify(this.#link.target) !== JSON.stringify(target)) {
+				const element = this.tagger.inArtifact
+					? this.tagger.artifactLink()
+					: paragraph && this.tagger.child(paragraph, 'Link');
+				this.#link = { target, element, label: { text: '' } };
+			}
 			if (this.#link.element) this.tagger.mark(this.#link.element);
+			this.#link.label.text += fragment.text;
 			if (fragment.widthPx > 0) {
 				const [left, bottom] = this.#point(x, lineTop + line.heightPx);
 				const [right, top] = this.#point(x + fragment.widthPx, lineTop);
-				this.navigation.link(this.#page!, target, [left, bottom, right, top], this.#link.element);
+				const { element, label } = this.#link;
+				this.navigation.link(this.#page!, target, [left, bottom, right, top], element, label);
 			}
 		} else {
 			this.#link = undefined;
@@ -143,9 +203,13 @@ export class DocxPdfHooks {
 			} else if (paragraph) this.tagger.mark(paragraph);
 		}
 		if (!this.markup || !this.#page) return fragment;
-		if (isChanged(run)) this.#bars.add(lineTop, line.heightPx);
+		const formatted = isFormatChanged(run, this.paragraphs.get(box.blockId));
+		if (isChanged(run) || formatted) this.#bars.add(lineTop, line.heightPx);
+		const balloons = this.options.balloons;
+		balloons?.fragment(run, fragment, x, lineTop, line.heightPx);
 		this.#comment(run, lineTop);
-		return markupFragment(fragment, run);
+		const marked = markupFragment(fragment, run);
+		return balloons ? balloons.style(marked, run) : marked;
 	}
 
 	#comment(run: { commentIds?: string[] } | undefined, lineTop: number): void {
@@ -168,6 +232,7 @@ export class DocxPdfHooks {
 				top,
 			);
 			this.#page.annotate(note);
+			this.options.balloons?.comment(id, note, layout);
 			if (this.#paragraph) {
 				const annot = this.tagger.child(this.#paragraph, 'Annot');
 				annot?.kids.push({ page: this.#page, annotation: note });
@@ -189,8 +254,15 @@ export class DocxPdfHooks {
 		this.tagger.close();
 	}
 
+	/** The header or footer about to be painted (its blocks with the page's field results). */
+	story(blocks: readonly Block[] | undefined): void {
+		this.paragraphs.story(blocks);
+	}
+
 	endParagraph(): void {
+		this.options.balloons?.endParagraph(this.#boxStart);
 		this.#link = undefined;
+		this.#marker = undefined;
 		this.tagger.close();
 	}
 

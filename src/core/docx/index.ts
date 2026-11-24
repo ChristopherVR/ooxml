@@ -117,6 +117,7 @@ export {
 } from './note-convert';
 export * from './review-formatting-display';
 export * from './review-document-formatting';
+export * from './format-change-description';
 export {
 	acceptAllRevisions,
 	acceptRevision,

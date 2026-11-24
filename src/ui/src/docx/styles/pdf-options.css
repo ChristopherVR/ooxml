@@ -1,0 +1,34 @@
+/* File > Export > Create a PDF: the Options step, one choice per line as in Word. */
+.dve-format-dialog.dve-pdf-options-dialog
+	.dve-dialog-fieldset:has(> .dve-dialog-check):not(:has(> .dve-dialog-cols)) {
+	grid-template-columns: minmax(0, 1fr);
+	gap: 6px;
+}
+.dve-pdf-options-dialog input[type='radio'] {
+	width: 16px;
+	height: 16px;
+	padding: 0;
+	margin: 0;
+	accent-color: var(--word);
+}
+.dve-pdf-options-dialog .dve-pdf-pages {
+	grid-template-columns: auto repeat(2, minmax(0, 1fr));
+	align-items: end;
+}
+.dve-pdf-options-dialog .dve-pdf-pages input[type='number'] {
+	min-width: 0;
+}
+.dve-pdf-options-dialog input[aria-invalid='true'] {
+	border-color: var(--office-danger, #b3261e);
+}
+.dve-pdf-options-dialog .dve-pdf-balloons {
+	padding-inline-start: 22px;
+}
+.dve-pdf-options-dialog .dve-pdf-bookmark-sources {
+	display: grid;
+	gap: 6px;
+	padding-inline-start: 22px;
+}
+.dve-pdf-options-dialog .dve-dialog-check:has(input:disabled) {
+	opacity: 0.6;
+}

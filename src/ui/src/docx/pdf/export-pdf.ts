@@ -17,6 +17,7 @@ import { layoutDocumentModel, type LayoutPageBox, type TextMeasurer } from 'ooxm
 import { PdfFontSet, type PdfFontFile } from '../../export/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfVectorOptions } from '../../export/pdf-vector';
 import { createCanvasMeasurer } from '../canvas-measurer';
+import { DocxPdfBalloons, type DocxPdfMarkupBalloons } from './pdf-balloon-items';
 import { paintBlock, type DocxPdfPainter } from './pdf-blocks';
 import { DocxPdfDrawings } from './pdf-drawings';
 import { paintFootnotes } from './pdf-footnotes';
@@ -38,6 +39,7 @@ import { paintWatermark } from './pdf-watermark';
 
 export type { DocxPdfReport, DocxPdfOmittedKind, DocxPdfConformance } from './pdf-report';
 export type { DocxPdfBookmarks } from './pdf-navigation';
+export type { DocxPdfMarkupBalloons } from './pdf-balloon-items';
 export type { DecodedPicture, DocxPdfMedia, DocxPdfPictureDecoder } from './pdf-pictures';
 
 export interface DocxPdfOptions {
@@ -50,6 +52,15 @@ export interface DocxPdfOptions {
 	 */
 	markup?: 'none' | 'all';
 	/**
+	 * Word's "Balloons" setting, with `markup: 'all'`. Pages with balloons are shrunk to leave a
+	 * markup pane on the right, as Word prints them; each balloon is joined to its text by a
+	 * dotted line, and comments stay PDF notes too. `commentsAndFormatting` (Word's default) shows
+	 * comments and formatting changes ("Formatted: Font: Bold") in balloons and insertions and
+	 * deletions in the text; `all` moves deletions to balloons ("Deleted: ..."); `comments` shows
+	 * only comments in balloons (Word's "Show all revisions inline"); `none` draws no pane.
+	 */
+	markupBalloons?: DocxPdfMarkupBalloons;
+	/**
 	 * Word's "Create bookmarks using": `headings` (the default) turns headings into the PDF's
 	 * outline, nested by level; `wordBookmarks` lists the document's own bookmarks (not hidden
 	 * ones such as `_Toc`); `none` writes no outline.
@@ -59,14 +70,16 @@ export interface DocxPdfOptions {
 	documentProperties?: boolean;
 	/**
 	 * Word's "Document structure tags for accessibility": a tagged PDF whose headings,
-	 * paragraphs, tables, figures (with their alternative text) and links read in order, with
+	 * paragraphs, lists, tables, figures (with their alternative text) and links read in order, with
 	 * headers and footers as artifacts. On by default.
 	 */
 	taggedPdf?: boolean;
 	/**
-	 * Word's "PDF/A compliant": writes PDF/A-2b metadata (XMP), an sRGB output intent and the file
-	 * identifier. The file only conforms when every font is embedded; `report.pdfA` says whether
-	 * it does.
+	 * Word's "PDF/A compliant": writes PDF/A-2 metadata (XMP), an sRGB output intent and the file
+	 * identifier, and writes text in families no supplied font is named for with a supplied font
+	 * that covers it (as a substitution) rather than an unembedded standard font. The file only
+	 * conforms when every font is embedded, and then declares PDF/A-2u; `report.pdfA` says whether
+	 * it does and at which level (see `docs/docx-pdf-export.md`, validated with veraPDF).
 	 */
 	pdfA?: boolean;
 	/** Natural language of the document, e.g. `en-US`. */
@@ -118,15 +131,27 @@ function paintPage(
 ): void {
 	const pdf = painter.page;
 	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, page.heightPx * PT_PER_PX]);
-	paintPageMarks(painter, page, marks, 'back', model, measurer, report);
-	paintWatermark(painter, graphics, page, measurer);
-	paintStoryFloats(painter, graphics, 'header', true);
-	paintStoryFloats(painter, graphics, 'footer', true);
+	const hooks = painter.hooks;
+	hooks?.startPage(pdf, page);
+	// Page borders, line numbers, watermarks and floats behind the header and footer are
+	// pagination artifacts in a tagged PDF (PDF/UA: all content is tagged or an artifact).
+	const decoration = (paint: () => void) => (hooks ? hooks.tagger.asArtifact(paint) : paint());
+	const marked = !!marks?.borders || !!marks?.lineNumbers.length;
+	if (
+		marked ||
+		graphics?.watermark ||
+		graphics?.pictureWatermark ||
+		graphics?.floats.some((float) => float.behindText)
+	)
+		decoration(() => {
+			paintPageMarks(painter, page, marks, 'back', model, measurer, report);
+			paintWatermark(painter, graphics, page, measurer);
+			paintStoryFloats(painter, graphics, 'header', true);
+			paintStoryFloats(painter, graphics, 'footer', true);
+		});
 	const floats = page.floats ?? [];
 	const paintFloat = (float: (typeof floats)[number]) =>
 		painter.pictures.draw(pdf, float, float.xPx, float.yPx);
-	const hooks = painter.hooks;
-	hooks?.startPage(pdf, page);
 	const placeFloat = (float: (typeof floats)[number]) =>
 		hooks ? hooks.float(float, () => paintFloat(float)) : paintFloat(float);
 	for (const float of floats) if (float.behindText) placeFloat(float);
@@ -134,8 +159,11 @@ function paintPage(
 	// are pagination artifacts in a tagged PDF.
 	const paintStories = (kind: 'header' | 'footer') => {
 		for (const story of stories)
-			if (story.kind === kind)
+			if (story.kind === kind) {
+				hooks?.story(story.source);
 				for (const block of story.blocks) paintBlock(painter, block, story.x, story.y);
+				hooks?.story(undefined);
+			}
 		paintStoryFloats(painter, graphics, kind, false);
 	};
 	const artifact = (paint: () => void, subtype: 'Header' | 'Footer') =>
@@ -150,7 +178,8 @@ function paintPage(
 	paintFootnotes(painter, page);
 	artifact(() => paintStories('footer'), 'Footer');
 	for (const float of floats) if (!float.behindText) placeFloat(float);
-	paintPageMarks(painter, page, marks, 'front', model, measurer, report);
+	if (marked)
+		decoration(() => paintPageMarks(painter, page, marks, 'front', model, measurer, report));
 	hooks?.endPage();
 }
 
@@ -165,7 +194,11 @@ export async function exportDocxPdf(
 	const measurer = options.measurer ?? createCanvasMeasurer();
 	const report = new DocxPdfReportBuilder();
 	const projected = reviewDocumentFormatting(refreshComputedFields(model), mode);
-	const layout = layoutDocumentModel(projected.model, measurer, { reviewDisplayMode: mode });
+	const balloonMode = options.markupBalloons ?? 'commentsAndFormatting';
+	// Deletions shown in balloons leave the text, as Word's "Show revisions in balloons" does.
+	const layout = layoutDocumentModel(projected.model, measurer, {
+		reviewDisplayMode: mode === 'all' && balloonMode === 'all' ? 'simple' : mode,
+	});
 	for (const message of [
 		...layout.approximations,
 		...reviewFormattingWarnings(projected.diagnostics),
@@ -183,7 +216,11 @@ export async function exportDocxPdf(
 	);
 	const marks = pageMarks(projected.model, layout.pages);
 	const graphics = storyGraphics(projected.model, layout.pages, stories, measurer, mode, report);
-	const text = new DocxPdfText(new PdfFontSet(options.fonts ?? []), measurer, report);
+	const text = new DocxPdfText(
+		new PdfFontSet(options.fonts ?? [], { embedAll: !!options.pdfA }),
+		measurer,
+		report,
+	);
 	const pictures = new DocxPdfPictures(options.media, options.decodePicture, report);
 	pictures.drawings = new DocxPdfDrawings(pictures, text, report);
 	for (const index of indices) {
@@ -196,6 +233,7 @@ export async function exportDocxPdf(
 		tagged,
 		bookmarks: options.bookmarks ?? 'headings',
 		mode,
+		balloons: new DocxPdfBalloons(projected.model, balloonMode, mode === 'all', text, report),
 	});
 	const pages: PdfVectorPage[] = [];
 	for (const index of indices) {
@@ -203,6 +241,8 @@ export async function exportDocxPdf(
 		const page = layout.pages[index]!;
 		report.page = index + 1;
 		const pdf = new PdfVectorPage(page.widthPx * PT_PER_PX, page.heightPx * PT_PER_PX);
+		const shrink = hooks.options.balloons?.frame(page);
+		if (shrink) pdf.concat(shrink.matrix);
 		paintPage(
 			{ page: pdf, text, pictures, hooks },
 			page,
@@ -218,6 +258,7 @@ export async function exportDocxPdf(
 		pages.push(pdf);
 	}
 	const { outline, unresolved } = hooks.navigation.finish();
+	hooks.tagger.finish();
 	if (unresolved.length)
 		report.note(
 			`Links to bookmarks on no page written stay plain text: ${unresolved.slice(0, 5).join(', ')}${unresolved.length > 5 ? '...' : ''}.`,

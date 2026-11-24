@@ -1,11 +1,13 @@
 /**
  * The tagged-PDF structure of the Word PDF export, as Word's "Document structure tags for
- * accessibility" writes it: a `Document` of headings (`H1`-`H6`), paragraphs (`P`), tables
- * (`Table`, `TR`, `TD`), figures with their alternative text and links, in reading order. Each
- * painted element is wrapped in its own marked-content sequence; borders, shading, headers,
- * footers and repeated table headings are artifacts. Disabled, every call is a no-op. DOM-free.
+ * accessibility" writes it: a `Document` of headings (`H1`-`H6`), paragraphs (`P`), lists (`L`,
+ * `pdf-lists.ts`), tables (`Table`, `TR`, `TD`), figures with their alternative text and links,
+ * in reading order. Each painted element is wrapped in its own marked-content sequence; borders,
+ * shading, headers, footers and repeated table headings are artifacts (their links get a `Link`
+ * holding only the annotation). Disabled, every call is a no-op. DOM-free.
  */
 import type { PdfStructElement, PdfVectorPage } from '../../export/pdf-vector';
+import { DocxPdfListNesting, type DocxPdfListItem } from './pdf-lists';
 
 type Open = PdfStructElement | 'artifact' | undefined;
 
@@ -19,6 +21,8 @@ export class DocxPdfTagger {
 	readonly #paragraphs = new Map<string, PdfStructElement>();
 	readonly #tables = new Map<string, PdfStructElement>();
 	readonly #figures: { blockId: string; element: PdfStructElement }[] = [];
+	readonly #lists = new WeakMap<PdfStructElement, DocxPdfListNesting>();
+	readonly #artifactLinks: PdfStructElement[] = [];
 
 	constructor(readonly enabled: boolean) {}
 
@@ -99,9 +103,53 @@ export class DocxPdfTagger {
 		const existing = this.#paragraphs.get(blockId);
 		if (existing && continued) return existing;
 		const element: PdfStructElement = { type, kids: [] };
-		this.#containers.at(-1)!.kids.push(element);
+		const container = this.#containers.at(-1)!;
+		this.#nesting(container).reset();
+		container.kids.push(element);
 		this.#paragraphs.set(blockId, element);
 		return element;
+	}
+
+	/**
+	 * The `LBody` of a list item's box and, on its first box, the `Lbl` its marker goes in; a box
+	 * that continues one from an earlier page reuses the body.
+	 */
+	listItem(
+		blockId: string,
+		item: DocxPdfListItem,
+		continued: boolean,
+	): { label?: PdfStructElement; body: PdfStructElement } | undefined {
+		if (!this.active) return undefined;
+		const existing = this.#paragraphs.get(blockId);
+		if (existing && continued) return { body: existing };
+		const container = this.#containers.at(-1)!;
+		const { label, body } = this.#nesting(container).add(container, item);
+		this.#paragraphs.set(blockId, body);
+		return { label, body };
+	}
+
+	#nesting(container: PdfStructElement): DocxPdfListNesting {
+		let nesting = this.#lists.get(container);
+		if (!nesting) this.#lists.set(container, (nesting = new DocxPdfListNesting()));
+		return nesting;
+	}
+
+	/**
+	 * A `Link` for a link painted as an artifact (in a header, footer or repeated table row): its
+	 * text stays an artifact, so the element holds only the link's annotation, which PDF/UA wants
+	 * in the structure. Filed at the end of the document.
+	 */
+	artifactLink(): PdfStructElement | undefined {
+		if (!this.enabled || !this.#page) return undefined;
+		const element: PdfStructElement = { type: 'Link', kids: [] };
+		this.#artifactLinks.push(element);
+		return element;
+	}
+
+	/** Files the links of headers, footers and repeated rows, after the document's content. */
+	finish(): void {
+		if (!this.#artifactLinks.length) return;
+		this.root.kids.push(...this.#artifactLinks.splice(0));
 	}
 
 	/** A child of `parent` (a `Link` or `Figure`) whose content follows. */
@@ -124,6 +172,7 @@ export class DocxPdfTagger {
 	open(type: 'Table' | 'TR' | 'TD', blockId?: string): void {
 		if (!this.active) return;
 		this.close();
+		if (type === 'Table') this.#nesting(this.#containers.at(-1)!).reset();
 		let element = type === 'Table' && blockId ? this.#tables.get(blockId) : undefined;
 		if (!element) {
 			element = { type, kids: [] };

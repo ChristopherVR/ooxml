@@ -23,6 +23,7 @@ import smartArt from './smartart.css?raw';
 import contentControls from './content-controls.css?raw';
 import shapesCss from './shapes.css?raw';
 import pasteOptions from './paste-options.css?raw';
+import pdfOptions from './pdf-options.css?raw';
 
 // Legacy custom properties remain inputs, never defaults that hide an inherited Office theme.
 // Resolve at the host before mapping onto inner shared controls to avoid CSS variable cycles.
@@ -58,4 +59,5 @@ export const editorStyleText = [
 	contentControls,
 	shapesCss,
 	pasteOptions,
+	pdfOptions,
 ].join('\n');

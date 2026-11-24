@@ -3,11 +3,15 @@
  * and shape painters, the drawing Print Layout shows) goes through the shared SVG to PDF converter,
  * so they stay vector paths with real text; a text box's lines are written as the page engine laid
  * them out, clipped to its text rectangle and turned for vertical text, as `print-text-box.ts`
- * draws them. Reading the SVG needs a `DOMParser`: without one (a DOM-less run) charts and shapes
- * are reported as left out, and text box lines are still written.
+ * draws them. The SVG is read with the host's `DOMParser` where there is one and with the DOM-free
+ * XML parser otherwise, so Node and workers write charts and shapes the same way. WordArt that
+ * Print Layout warps is drawn by `pdf-word-art.ts`; its outline and shadow on laid-out lines by
+ * `pdf-text-effects.ts`.
  */
 import type { LayoutBlockBox } from 'ooxml-core/docx/layout';
+import { wordArtRgb, wordArtShadowGeometry } from 'ooxml-core/drawingml';
 import { collectSvgImages, drawSvgSubtree } from '../../export/pdf-svg';
+import { descendantElements, parseSvgMarkup } from '../../export/pdf-svg-dom';
 import { PDF_SVG_NOTES } from '../../export/pdf-svg-notes';
 import { PdfFallback } from '../../export/pdf-svg-style';
 import { viewBoxMatrix } from '../../export/pdf-svg-viewbox';
@@ -17,6 +21,8 @@ import { blockPictures } from './pdf-objects';
 import type { DocxPdfPicture, DocxPdfPictures } from './pdf-pictures';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import type { DocxPdfText } from './pdf-text';
+import { DocxPdfOutlineText, paintTextShadow } from './pdf-text-effects';
+import { isDrawnAsWordArt, paintWordArt } from './pdf-word-art';
 
 interface PreparedSvg {
 	svg: Element;
@@ -24,8 +30,6 @@ interface PreparedSvg {
 }
 
 const DATA_URL = /^data:([\w.+-]+\/[\w.+-]+)?((?:;[\w-]+=[^;,]*)*)(;base64)?,(.*)$/s;
-const WORD_ART_NOTE =
-	'WordArt warps, gradients, outlines and shadows are written to PDF as plain text in the text box.';
 
 /** The first family of a CSS font stack, unquoted: the name supplied fonts are matched by. */
 function firstFamily(stack: string): string {
@@ -74,11 +78,9 @@ export class DocxPdfDrawings {
 	}
 
 	async #parse(markup: string): Promise<PreparedSvg | string> {
-		if (typeof DOMParser === 'undefined')
-			return 'Charts and drawing shapes need a DOMParser to be exported to PDF; this run has none.';
-		const svg = new DOMParser().parseFromString(markup, 'image/svg+xml').documentElement;
-		if (svg?.localName !== 'svg') return 'The drawing could not be read.';
-		for (const node of [svg, ...Array.from(svg.querySelectorAll('[font-family]'))])
+		const svg = await parseSvgMarkup(markup);
+		if (!svg) return 'The drawing could not be read.';
+		for (const node of [svg, ...descendantElements(svg)])
 			if (node.hasAttribute('font-family'))
 				node.setAttribute('font-family', firstFamily(node.getAttribute('font-family')!));
 		const images = new Map<string, PdfImageResource>();
@@ -122,7 +124,11 @@ export class DocxPdfDrawings {
 		else if (!prepared || typeof prepared === 'string')
 			this.report.omitted(kind, prepared ?? 'The drawing was not prepared for the export.');
 		else this.#paintSvg(page, prepared, object, x, y, !!chart.shape);
-		if (object.textBoxLayout) this.#paintTextBox(page, object, x, y);
+		// Print Layout draws warped and gradient WordArt in place of the laid-out lines.
+		const box = object.textBox;
+		if (chart.svg && chart.shape && box && isDrawnAsWordArt(box))
+			paintWordArt(page, this.text, this.report, box, x, y, object.widthPx, object.heightPx);
+		else if (object.textBoxLayout) this.#paintTextBox(page, object, x, y);
 		else if (object.textBox)
 			this.report.omitted('textBox', 'A text box the page engine did not lay out was left out.');
 	}
@@ -163,12 +169,18 @@ export class DocxPdfDrawings {
 		// Turned about the frame's top-left: `vert` puts the first line at the right, `vert270` left.
 		if (rotation === 90) page.concat([0, 1, -1, 0, depth, 0]);
 		if (rotation === 270) page.concat([0, -1, 1, 0, 0, length]);
-		const painter = { page, text: this.text, pictures: this.pictures };
-		for (const block of withTextColor(layout.blocks, object.chart?.textColor))
-			paintBlock(painter, block, 0, 0);
+		const blocks = withTextColor(layout.blocks, object.chart?.textColor);
+		// WordArt outline and shadow on the lines, as `paintWordArtEffects` paints them.
+		const style = object.textBox?.wordArt;
+		const shadow = style && wordArtShadowGeometry(style);
+		if (shadow) paintTextShadow(page, this.text, this.pictures, blocks, shadow);
+		// `-webkit-text-stroke: 1px`.
+		const outline = wordArtRgb(style?.outline);
+		const text = outline
+			? new DocxPdfOutlineText(this.text, { color: outline, width: 1 })
+			: this.text;
+		const painter = { page, text, pictures: this.pictures };
+		for (const block of blocks) paintBlock(painter, block, 0, 0);
 		page.restore();
-		const wordArt = object.textBox?.wordArt;
-		if (wordArt && (wordArt.warp || wordArt.gradient || wordArt.outline || wordArt.shadow))
-			this.report.note(WORD_ART_NOTE);
 	}
 }

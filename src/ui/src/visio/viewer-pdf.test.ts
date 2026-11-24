@@ -101,8 +101,11 @@ describe('vector page conversion', () => {
 		} as never;
 		const result = convert(model);
 		expect(result.fallback).toEqual([]);
-		// The gradient is a real shading and the shadow an offset copy; only the blur is lost.
-		expect(result.degraded).toEqual(['Shadow blur is not applied: shadows are drawn hard-edged.']);
+		// The gradient is a real shading and the shadow a blurred, soft-masked picture of the shape.
+		expect(result.degraded).toEqual([]);
+		const shadow = [...result.page!.images.values()];
+		expect(shadow).toHaveLength(1);
+		expect(shadow[0]!.alpha).toBeDefined();
 		expect(result.page!.shadings.size).toBeGreaterThan(0);
 		expect(result.page!.content).toMatch(/\/Sh0 sh/);
 	});

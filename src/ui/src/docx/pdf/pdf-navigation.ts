@@ -1,14 +1,16 @@
 /**
  * Links and bookmarks for the Word PDF export, as Word's Save As PDF writes them: hyperlinks
  * (external ones as URI actions, internal ones to the place of their bookmark), cross-references
- * and table of contents entries made with `\h` stay clickable, and headings or Word bookmarks
- * become the PDF's outline. Layout fragments are mapped back to the model's runs through their
- * source offsets. DOM-free.
+ * and table of contents entries made with `\h` stay clickable (in headers and footers too, on
+ * every page they are drawn), each with its text as its description, and headings or Word
+ * bookmarks become the PDF's outline. Layout fragments are mapped back to the model's runs
+ * through their source offsets. DOM-free.
  */
 import {
 	headingLevel,
 	isRunHiddenForReview,
 	resolveParagraphFormatting,
+	type Block,
 	type DocumentModel,
 	type Paragraph,
 	type ParagraphStyleCatalog,
@@ -68,34 +70,51 @@ export function runLinkTarget(run: TextRun): DocxPdfLinkTarget | undefined {
 	return run.field ? fieldLinkTarget(run.field.instr) : undefined;
 }
 
+type ParagraphIndex = Map<string, { paragraph: Paragraph; starts: number[] }>;
+
+function indexBlocks(index: ParagraphIndex, blocks: readonly Block[]): void {
+	const add = (paragraph: Paragraph) => {
+		const starts: number[] = [];
+		let offset = 0;
+		for (const run of paragraph.runs) {
+			starts.push(offset);
+			offset += reviewSourceLength(run);
+		}
+		index.set(paragraph.id, { paragraph, starts });
+	};
+	for (const block of blocks)
+		if (block.type === 'paragraph') add(block);
+		else for (const row of block.rows) for (const cell of row) cell.paragraphs.forEach(add);
+}
+
 /** Every paragraph of the document by id, with its runs' source offsets. */
 export class DocxPdfParagraphs {
-	readonly #paragraphs = new Map<string, { paragraph: Paragraph; starts: number[] }>();
+	readonly #paragraphs: ParagraphIndex = new Map();
+	#story: ParagraphIndex | undefined;
 	constructor(model: DocumentModel) {
-		const add = (paragraph: Paragraph) => {
-			const starts: number[] = [];
-			let offset = 0;
-			for (const run of paragraph.runs) {
-				starts.push(offset);
-				offset += reviewSourceLength(run);
-			}
-			this.#paragraphs.set(paragraph.id, { paragraph, starts });
-		};
 		const blocks = [
 			model.blocks,
 			...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].map((note) => note.blocks),
 		];
-		for (const list of blocks)
-			for (const block of list)
-				if (block.type === 'paragraph') add(block);
-				else for (const row of block.rows) for (const cell of row) cell.paragraphs.forEach(add);
+		for (const list of blocks) indexBlocks(this.#paragraphs, list);
+	}
+	/**
+	 * The header or footer being painted (with that page's field results), whose paragraphs are
+	 * found before the document's; none after it.
+	 */
+	story(blocks: readonly Block[] | undefined): void {
+		this.#story = undefined;
+		if (blocks) indexBlocks((this.#story = new Map()), blocks);
+	}
+	#entry(id: string) {
+		return this.#story?.get(id) ?? this.#paragraphs.get(id);
 	}
 	get(id: string): Paragraph | undefined {
-		return this.#paragraphs.get(id)?.paragraph;
+		return this.#entry(id)?.paragraph;
 	}
 	/** The run holding source offset `offset` of paragraph `id`. */
 	runAt(id: string, offset: number | undefined): TextRun | undefined {
-		const entry = this.#paragraphs.get(id);
+		const entry = this.#entry(id);
 		if (!entry || offset === undefined) return undefined;
 		const { paragraph, starts } = entry;
 		let low = 0;
@@ -137,6 +156,13 @@ interface PendingLink {
 	target: DocxPdfLinkTarget;
 	rect: [number, number, number, number];
 	element?: PdfStructElement;
+	/** The text of the whole link (all its lines), its annotation's alternate description. */
+	label?: DocxPdfLinkLabel;
+}
+
+/** The text of one link, gathered while its fragments are painted. */
+export interface DocxPdfLinkLabel {
+	text: string;
 }
 
 /** Collects destinations, links and bookmarks while the pages are painted. */
@@ -174,12 +200,14 @@ export class DocxPdfNavigation {
 		target: DocxPdfLinkTarget,
 		rect: [number, number, number, number],
 		element?: PdfStructElement,
+		label?: DocxPdfLinkLabel,
 	): void {
 		const last = this.#links.at(-1);
 		if (
 			last &&
 			last.page === page &&
 			last.element === element &&
+			last.label === label &&
 			JSON.stringify(last.target) === JSON.stringify(target) &&
 			Math.abs(last.rect[1] - rect[1]) < 0.01 &&
 			Math.abs(last.rect[3] - rect[3]) < 0.01 &&
@@ -189,13 +217,19 @@ export class DocxPdfNavigation {
 			last.rect[2] = Math.max(last.rect[2], rect[2]);
 			return;
 		}
-		this.#links.push({ page, target, rect, ...(element ? { element } : {}) });
+		this.#links.push({
+			page,
+			target,
+			rect,
+			...(element ? { element } : {}),
+			...(label ? { label } : {}),
+		});
 	}
 
 	/** Places the link annotations; returns the outline and the anchors no page holds. */
 	finish(): { outline: PdfOutlineItem[]; unresolved: string[] } {
 		const unresolved = new Set<string>();
-		for (const { page, target, rect, element } of this.#links) {
+		for (const { page, target, rect, element, label } of this.#links) {
 			let annotation: PdfLinkAnnotation | undefined;
 			if ('uri' in target) annotation = { kind: 'link', rect, uri: target.uri };
 			else {
@@ -204,6 +238,9 @@ export class DocxPdfNavigation {
 				else unresolved.add(target.anchor);
 			}
 			if (!annotation) continue;
+			// PDF/UA asks every link annotation for an alternate description (`/Contents`).
+			const contents = label?.text.replace(/\s+/g, ' ').trim();
+			if (contents) annotation.contents = contents;
 			page.annotate(annotation);
 			element?.kids.push({ page, annotation });
 		}

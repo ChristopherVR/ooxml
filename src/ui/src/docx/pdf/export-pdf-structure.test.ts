@@ -158,6 +158,7 @@ describe('exportDocxPdf navigation and structure', () => {
 		// Standard fonts are not embedded, so the file says it does not conform.
 		expect(result.report.pdfA).toEqual({
 			conformant: false,
+			level: 'B',
 			issues: [expect.stringContaining('Calibri')],
 		});
 		const embedded = await docx(
@@ -168,7 +169,10 @@ describe('exportDocxPdf navigation and structure', () => {
 			pdfA: true,
 			fonts: [{ family: 'Synth', data: syntheticTrueType() }],
 		});
-		expect(conformant.report.pdfA).toEqual({ conformant: true, issues: [] });
+		expect(conformant.report.pdfA).toEqual({ conformant: true, level: 'U', issues: [] });
+		expect(Buffer.from(conformant.bytes).toString('latin1')).toContain(
+			'<pdfaid:conformance>U</pdfaid:conformance>',
+		);
 		expect((await exportDocxPdf(model, { measurer })).report.pdfA).toBeUndefined();
 	});
 

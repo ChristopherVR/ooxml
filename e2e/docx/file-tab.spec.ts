@@ -10,6 +10,23 @@ const openFile = async (page: import('@playwright/test').Page) => {
 };
 const navigate = (editor: import('@playwright/test').Locator, name: string) =>
 	editor.locator('.dve-backstage .item', { hasText: name }).click();
+/** File > Export > Create a PDF's Options step (its fields are the shared dialog's slotted children). */
+const pdfOptions = (editor: import('@playwright/test').Locator) =>
+	editor.locator('.dve-pdf-options-dialog');
+/** A downloaded PDF's raw bytes and its page text (the `Tj` strings of its content streams). */
+async function readPdf(path: string): Promise<{ raw: string; words: string }> {
+	const bytes = await readFile(path);
+	const raw = bytes.toString('latin1');
+	const { inflateSync } = await import('node:zlib');
+	const text = [...raw.matchAll(/<< \/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)]
+		.map((match) => {
+			const start = match.index + match[0].length;
+			return inflateSync(bytes.subarray(start, start + Number(match[1]))).toString('latin1');
+		})
+		.join('\n');
+	const words = [...text.matchAll(/\(((?:\\.|[^\\)])*)\) Tj/g)].map((match) => match[1]).join('');
+	return { raw, words };
+}
 
 test.describe('File tab', () => {
 	test.beforeEach(async ({ page }) => {
@@ -101,24 +118,110 @@ test.describe('File tab', () => {
 			.locator('.dve-backstage-content:not([hidden])')
 			.getByRole('button', { name: 'Create PDF' })
 			.click();
+		// The Options step, then Export with its defaults.
+		const options = pdfOptions(editor);
+		await expect(options).toBeVisible();
+		await options.getByRole('button', { name: 'Export' }).click();
 		const download = await pending;
 		expect(download.suggestedFilename()).toBe('Document1.pdf');
-		const bytes = await readFile((await download.path())!);
-		const raw = bytes.toString('latin1');
-		expect(raw.startsWith('%PDF-')).toBe(true);
-		expect(raw).toContain('/Type /Page ');
-		expect(raw).not.toContain('/Subtype /Image');
+		const pdf = await readPdf((await download.path())!);
+		expect(pdf.raw.startsWith('%PDF-')).toBe(true);
+		expect(pdf.raw).toContain('/Type /Page ');
+		expect(pdf.raw).not.toContain('/Subtype /Image');
 		// The text is real PDF text, written word by word with its spaces.
-		const { inflateSync } = await import('node:zlib');
-		const text = [...raw.matchAll(/<< \/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)]
-			.map((match) => {
-				const start = match.index + match[0].length;
-				return inflateSync(bytes.subarray(start, start + Number(match[1]))).toString('latin1');
-			})
-			.join('\n');
-		const words = [...text.matchAll(/\(((?:\\.|[^\\)])*)\) Tj/g)].map((match) => match[1]).join('');
-		expect(words).toBe('Hello file tab');
+		expect(pdf.words).toBe('Hello file tab');
+		expect(pdf.raw).toContain('/StructTreeRoot');
 		expect(printed).toBe(false);
+	});
+
+	test('the PDF Options step is keyboard accessible and Escape cancels', async ({ page }) => {
+		let downloads = 0;
+		page.on('download', () => downloads++);
+		const editor = await openFile(page);
+		await navigate(editor, 'Export');
+		await editor
+			.locator('.dve-backstage-content:not([hidden])')
+			.getByRole('button', { name: 'Create PDF' })
+			.click();
+		const options = pdfOptions(editor);
+		await expect(options).toBeVisible();
+		await expect(options.getByRole('radio', { name: 'All', exact: true })).toBeFocused();
+		// Draft view has no current page and nothing is selected.
+		await expect(options.getByRole('radio', { name: 'Current page' })).toBeDisabled();
+		await expect(options.getByRole('radio', { name: 'Selection' })).toBeDisabled();
+		// Tab keeps focus inside the dialog.
+		for (let step = 0; step < 20; step++) {
+			await page.keyboard.press('Tab');
+			const inside = await options.evaluate((dialog) => {
+				let active: Element | null = document.activeElement;
+				while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+				return dialog.contains(active) || Boolean(dialog.shadowRoot?.contains(active));
+			});
+			expect(inside).toBe(true);
+		}
+		await page.keyboard.press('Escape');
+		await expect(options).toBeHidden();
+		await expect(editor.locator('.dve-ribbon .file')).toBeFocused();
+		expect(downloads).toBe(0);
+	});
+
+	test('the PDF Options step exports the selection as PDF/A without bookmarks', async ({
+		page,
+	}) => {
+		await page.keyboard.press('Enter');
+		await page.keyboard.type('Second line');
+		await page.keyboard.press('Shift+Home');
+		const editor = await openFile(page);
+		await navigate(editor, 'Export');
+		const pending = page.waitForEvent('download');
+		await editor
+			.locator('.dve-backstage-content:not([hidden])')
+			.getByRole('button', { name: 'Create PDF' })
+			.click();
+		const options = pdfOptions(editor);
+		await options.getByRole('radio', { name: 'Selection' }).check();
+		await options.getByRole('radio', { name: 'Document showing markup' }).check();
+		await options.getByRole('checkbox', { name: 'Create bookmarks using' }).uncheck();
+		await expect(options.getByRole('radio', { name: 'Headings' })).toBeDisabled();
+		await options
+			.getByRole('checkbox', { name: 'Document structure tags for accessibility' })
+			.uncheck();
+		await options.getByRole('checkbox', { name: 'PDF/A compliant' }).check();
+		await page.keyboard.press('Enter');
+		const pdf = await readPdf((await (await pending).path())!);
+		expect(pdf.words).toBe('Second line');
+		expect(pdf.raw).toContain('<pdfaid:part>2</pdfaid:part>');
+		expect(pdf.raw).not.toContain('/StructTreeRoot');
+		expect(pdf.raw).not.toContain('/Type /Outlines');
+	});
+
+	test('the PDF Options step exports a page range of Print Layout', async ({ page }) => {
+		await page.keyboard.press('Control+Enter');
+		await page.keyboard.type('Page two');
+		await page
+			.locator('docx-editor')
+			.getByRole('button', { name: 'Print Layout', exact: true })
+			.click();
+		const editor = await openFile(page);
+		await navigate(editor, 'Export');
+		const pending = page.waitForEvent('download');
+		await editor
+			.locator('.dve-backstage-content:not([hidden])')
+			.getByRole('button', { name: 'Create PDF' })
+			.click();
+		const options = pdfOptions(editor);
+		await expect(options.getByRole('radio', { name: 'Current page' })).toBeEnabled();
+		const from = options.getByRole('spinbutton', { name: 'From' });
+		await from.fill('3');
+		await options.getByRole('button', { name: 'Export' }).click();
+		// Page 3 does not exist: the field is marked and the dialog stays open.
+		await expect(from).toHaveAttribute('aria-invalid', 'true');
+		await from.fill('2');
+		await options.getByRole('spinbutton', { name: 'To' }).fill('2');
+		await options.getByRole('button', { name: 'Export' }).click();
+		const pdf = await readPdf((await (await pending).path())!);
+		expect(pdf.words).toBe('Page two');
+		expect(pdf.raw.match(/\/Type \/Page /g)).toHaveLength(1);
 	});
 
 	test('Options switches the display language and the review author', async ({ page }) => {

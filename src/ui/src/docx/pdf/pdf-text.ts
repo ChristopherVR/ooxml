@@ -160,7 +160,7 @@ export class DocxPdfText {
 			(gapPx * 100) / scale - spaceNatural - spacing;
 		const ascii = encodeWinAnsi(text);
 		const embedded =
-			this.fonts.has(family) || ascii === undefined
+			this.fonts.prefers(family) || ascii === undefined
 				? this.fonts.pick(family, bold, italic, text)
 				: undefined;
 		if (embedded) {

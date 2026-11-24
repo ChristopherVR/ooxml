@@ -11,7 +11,9 @@ import { pathEnds, pathOperators, parsePath, type PathSegment } from './pdf-path
 import { drawSvgText, type SvgFontFamilyMapper } from './pdf-svg-text';
 import { gradientPaint, isGradient, pathBounds, type GradientPaint } from './pdf-svg-gradient';
 import { PDF_SVG_NOTES, type PdfSvgNoteCode } from './pdf-svg-notes';
+import { childElements, descendantElements, elementId } from './pdf-svg-dom';
 import { basicShapePath } from './pdf-svg-shapes';
+import { paintSvgShadow, readShadowFilter } from './pdf-svg-shadow';
 import {
 	hrefOf,
 	number,
@@ -49,7 +51,8 @@ const SKIPPED = new Set([
 /** Every distinct image `href` (data URL) the page draws, for the caller to decode. */
 export function collectSvgImages(svg: Element): string[] {
 	const found = new Set<string>();
-	for (const node of Array.from(svg.querySelectorAll('use, image'))) {
+	for (const node of descendantElements(svg)) {
+		if (node.localName !== 'use' && node.localName !== 'image') continue;
 		const image = imageHref(svg, node);
 		if (image) found.add(image);
 	}
@@ -57,7 +60,8 @@ export function collectSvgImages(svg: Element): string[] {
 }
 
 function elementById(root: Element, id: string): Element | undefined {
-	for (const node of Array.from(root.querySelectorAll('[id]'))) if (node.id === id) return node;
+	for (const node of descendantElements(root))
+		if (node.hasAttribute('id') && elementId(node) === id) return node;
 	return undefined;
 }
 
@@ -66,7 +70,10 @@ function imageHref(root: Element, node: Element): string | undefined {
 	if (!href) return undefined;
 	if (!href.startsWith('#')) return href;
 	const target = elementById(root, href.slice(1));
-	const image = target?.localName === 'image' ? target : target?.querySelector('image');
+	const image =
+		target?.localName === 'image'
+			? target
+			: target && descendantElements(target).find((child) => child.localName === 'image');
 	return image ? (hrefOf(image) ?? undefined) : undefined;
 }
 
@@ -86,8 +93,8 @@ class Converter {
 	#byId(id: string | undefined): Element | undefined {
 		if (!id) return undefined;
 		if (!this.#ids.size)
-			for (const node of Array.from(this.root.querySelectorAll('[id]')))
-				this.#ids.set(node.id, node);
+			for (const node of descendantElements(this.root))
+				if (node.hasAttribute('id')) this.#ids.set(elementId(node), node);
 		return this.#ids.get(id);
 	}
 	/** A flat colour, or (for fills with `bounds`) a gradient shading. */
@@ -108,7 +115,7 @@ class Converter {
 					return paint;
 				}
 			}
-			const stops = Array.from(target.children).filter((child) => child.localName === 'stop');
+			const stops = childElements(target).filter((child) => child.localName === 'stop');
 			const stop = stops[Math.floor(stops.length / 2)];
 			this.degraded.add(gradient ? 'gradientFlatFill' : 'gradientOutlineFlat');
 			if (!stop) return null;
@@ -125,7 +132,6 @@ class Converter {
 		if (SKIPPED.has(name) || element.getAttribute('display') === 'none') return;
 		const shadow = element.hasAttribute('data-shadow');
 		const glow = element.hasAttribute('data-glow');
-		if (shadow && element.hasAttribute('filter')) this.degraded.add('shadowBlurDropped');
 		if (glow) {
 			this.degraded.add('glowApproximated');
 			this.#glow = this.#glowWidth(element);
@@ -143,7 +149,10 @@ class Converter {
 		if (element.hasAttribute('data-solid3d')) this.degraded.add('solid3dFlat');
 		else if (element.hasAttribute('data-perspective')) this.degraded.add('perspectiveParallel');
 		if (element.hasAttribute('data-embedded-chart')) throw new PdfFallback('embedded chart');
-		if (element.hasAttribute('filter') && !shadow && !glow) this.degraded.add('filterDropped');
+		const filter = element.hasAttribute('filter') && !glow;
+		const soft = filter
+			? readShadowFilter(this.#byId(urlId(element.getAttribute('filter'))))
+			: undefined;
 		const opacity = alpha * number(element.getAttribute('opacity'), 1) * (glow ? 0.5 : 1);
 		const transforms = parseTransform(element.getAttribute('transform'));
 		const clip = this.#clip(element);
@@ -156,10 +165,18 @@ class Converter {
 				this.page.op('W n');
 			}
 		}
+		// A blurred shadow group is drawn as its soft silhouette; a drop shadow goes beneath.
+		const painted = soft ? paintSvgShadow(this.page, element, soft, opacity) : 'none';
+		if (filter && painted === 'none')
+			this.degraded.add(shadow ? 'shadowBlurDropped' : 'filterDropped');
+		if (painted === 'replaced') {
+			if (wrap) this.page.restore();
+			return;
+		}
 		switch (name) {
 			case 'g':
 			case 'svg':
-				for (const child of Array.from(element.children)) this.walk(child, opacity);
+				for (const child of childElements(element)) this.walk(child, opacity);
 				break;
 			case 'path':
 				this.#path(element, element.getAttribute('d') ?? '', opacity);
@@ -202,7 +219,7 @@ class Converter {
 	#glowWidth(element: Element): number {
 		const filter = this.#byId(urlId(element.getAttribute('filter')));
 		const radius = number(
-			Array.from(filter?.children ?? [])
+			(filter ? childElements(filter) : [])
 				.find((child) => child.localName === 'feMorphology')
 				?.getAttribute('radius') ?? null,
 		);
@@ -212,7 +229,7 @@ class Converter {
 		const id = urlId(element.getAttribute('clip-path'));
 		if (!id) return undefined;
 		const target = this.#byId(id);
-		const shapes = Array.from(target?.children ?? []);
+		const shapes = target ? childElements(target) : [];
 		const rect = shapes[0];
 		if (
 			target?.localName !== 'clipPath' ||
@@ -317,7 +334,7 @@ class Converter {
 				-number(marker.getAttribute('refX')),
 				-number(marker.getAttribute('refY')),
 			]);
-			for (const child of Array.from(marker.children)) this.walk(child, alpha);
+			for (const child of childElements(marker)) this.walk(child, alpha);
 			this.page.restore();
 		}
 	}
@@ -355,7 +372,7 @@ export function convertSvgPage(
 	try {
 		// SVG user space is y-down inches: map it to PDF points, origin bottom left.
 		page.concat([72, 0, 0, -72, 0, page.height]);
-		for (const child of Array.from(svg.children)) converter.walk(child, 1);
+		for (const child of childElements(svg)) converter.walk(child, 1);
 		return {
 			page,
 			fallback: [],
@@ -382,6 +399,6 @@ export function drawSvgSubtree(
 	alpha = 1,
 ): PdfSvgNoteCode[] {
 	const converter = new Converter(svg, page, images, fonts);
-	for (const child of Array.from(svg.children)) converter.walk(child, alpha);
+	for (const child of childElements(svg)) converter.walk(child, alpha);
 	return [...converter.degraded];
 }

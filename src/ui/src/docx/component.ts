@@ -101,7 +101,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		},
 		load: (bytes) => this.load(bytes),
 		saveBytes: () => this.saveBytes(),
-		exportPdf: () => this.exportPdf(),
+		exportPdf: (options) => this.exportPdf(options),
 	};
 
 	/** Internal seams that in-repo tests reach for; not public API. */
