@@ -78,7 +78,7 @@ export interface DocxEditorElement {
 
 /** A PDF converted into a document; the converter loads only when a PDF is opened. */
 async function openPdf(bytes: Uint8Array): Promise<LoadedDocument> {
-	const { convertPdf } = await import('ooxml-core/docx/pdf-import');
+	const { convertPdf } = await import('ooxml-core/docx/pdf-convert');
 	const converted = await convertPdf(bytes);
 	const session = await loadDocument(converted.docx);
 	session.model.warnings.unshift(...converted.warnings);

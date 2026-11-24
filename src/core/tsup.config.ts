@@ -29,6 +29,7 @@ export default defineConfig({
 		'docx/embedded': 'docx/embedded.ts',
 		'docx/layout/index': 'docx/layout/index.ts',
 		'docx/load/index': 'docx/load/index.ts',
+		'docx/pdf-convert/index': 'docx/pdf-convert/index.ts',
 		'docx/pdf-import/index': 'docx/pdf-import/index.ts',
 		'pdf/index': 'pdf/index.ts',
 		'docx/ui/index': 'docx/ui/index.ts',

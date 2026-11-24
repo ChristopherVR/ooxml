@@ -5,8 +5,6 @@ import {
 	type PdfPageRule,
 	type PdfTextSpan,
 } from '../../pdf/index';
-import type { DocumentModel, LoadedDocument } from '../model';
-import { loadDocx } from '../parse';
 import { applyInternalLinks, applyOutline, resolveAnchors } from './anchors';
 import { applyLinks, applyRules, pageLines, type Line } from './lines';
 import { assemble } from './assemble';
@@ -33,13 +31,6 @@ export interface ImportPdfOptions {
 	ocr?: PdfOcrProvider;
 	limits?: PdfLimits;
 	signal?: AbortSignal;
-}
-
-export interface ImportPdfResult {
-	/** The converted document: `save()` writes it as a .docx. */
-	document: LoadedDocument;
-	model: DocumentModel;
-	report: PdfImportReport;
 }
 
 /** The notice every converted document carries, as Word shows one. */
@@ -336,15 +327,4 @@ export async function convertPdf(
 		notes,
 	};
 	return { docx: packageBytes, report, warnings: [PDF_IMPORT_NOTICE, ...notes] };
-}
-
-/** Converts `bytes` (a PDF) to an editable Word document. */
-export async function importPdf(
-	bytes: Uint8Array,
-	options: ImportPdfOptions = {},
-): Promise<ImportPdfResult> {
-	const { docx, report, warnings } = await convertPdf(bytes, options);
-	const document = await loadDocx(docx);
-	document.model.warnings.unshift(...warnings);
-	return { document, model: document.model, report };
 }

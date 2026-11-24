@@ -164,6 +164,11 @@
 			"import": "./dist/docx/load/index.mjs",
 			"require": "./dist/docx/load/index.cjs"
 		},
+		"./docx/pdf-convert": {
+			"types": "./dist/docx/pdf-convert/index.d.ts",
+			"import": "./dist/docx/pdf-convert/index.mjs",
+			"require": "./dist/docx/pdf-convert/index.cjs"
+		},
 		"./docx/pdf-import": {
 			"types": "./dist/docx/pdf-import/index.d.ts",
 			"import": "./dist/docx/pdf-import/index.mjs",

@@ -53,6 +53,8 @@ try {
 		'dist/docx/load/index.cjs',
 		'dist/pdf/index.mjs',
 		'dist/pdf/index.cjs',
+		'dist/docx/pdf-convert/index.mjs',
+		'dist/docx/pdf-convert/index.cjs',
 		'dist/docx/pdf-import/index.mjs',
 		'dist/docx/pdf-import/index.cjs',
 		'dist/xlsx/load/index.mjs',
