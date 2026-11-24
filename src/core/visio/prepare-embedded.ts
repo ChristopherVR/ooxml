@@ -1,4 +1,5 @@
-import JSZip from 'jszip';
+import type JSZip from 'jszip';
+import { openZip } from '../opc/zip-limits';
 import {
 	chartExSummaryFromModel,
 	chartSummaryView,
@@ -38,7 +39,7 @@ export const isChartExViewType = (type: ChartViewModel['type']): boolean =>
 async function readStandaloneChartEx(bytes: Uint8Array): Promise<ChartViewModel | undefined> {
 	let zip: JSZip;
 	try {
-		zip = await JSZip.loadAsync(bytes);
+		zip = await openZip(bytes);
 	} catch {
 		return undefined;
 	}
