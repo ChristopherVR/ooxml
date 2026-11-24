@@ -2,6 +2,8 @@
 import { signedTwips, twips } from 'ooxml-core/docx';
 import { describe, expect, it } from 'vitest';
 import JSZip from 'jszip';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
 	createDocument,
 	loadDocx,
@@ -201,6 +203,26 @@ describe('Print Layout headers, footers and page fields', () => {
 				for (const side of ['top', 'bottom', 'left', 'right'] as const)
 					expect(cell.style.getPropertyValue(`border-${side}`)).toMatch(/^1px solid/);
 			expect(sheet.querySelectorAll(`.dve-print-${kind} col`)).toHaveLength(2);
+		}
+	});
+
+	it('draws the letterhead tables of the t10 report fixture with borders (#321)', async () => {
+		const url = join(
+			import.meta.dirname,
+			'../../../core/docx/layout/fixtures/table-reports/t10-tableau-entete-pied.docx',
+		);
+		const { model } = await loadDocx(new Uint8Array(await readFile(url)));
+		const sheet = document.createElement('div');
+		decoratePages(model, [page(0, 0, 0)], [sheet]);
+		for (const [kind, count] of [
+			['header', 4],
+			['footer', 6],
+		] as const) {
+			const cells = [...sheet.querySelectorAll<HTMLElement>(`.dve-print-${kind} td`)];
+			expect(cells).toHaveLength(count);
+			for (const cell of cells)
+				for (const side of ['top', 'bottom', 'left', 'right'] as const)
+					expect(cell.style.getPropertyValue(`border-${side}`)).toMatch(/^1px solid/);
 		}
 	});
 
