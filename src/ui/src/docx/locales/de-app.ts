@@ -53,8 +53,8 @@ export const deApp: AppStrings = {
 		'Der Druck verwendet den Druckdialog des Browsers. Seitenumbrüche stammen aus dem Seitenlayout, das Word nur annähert.',
 	Export: 'Exportieren',
 	'Create a PDF': 'PDF erstellen',
-	'Opens the print dialog; choose Save as PDF as the destination.':
-		'Öffnet den Druckdialog; wählen Sie „Als PDF speichern“ als Ziel.',
+	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
+		'Das Dokument als PDF mit auswählbarem Text speichern, mit den Seiten des Seitenlayouts.',
 	'Create PDF': 'PDF erstellen',
 	'Download the document as a Word .docx file.':
 		'Laden Sie das Dokument als Word-.docx-Datei herunter.',

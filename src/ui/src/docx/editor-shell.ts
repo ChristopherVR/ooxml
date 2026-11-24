@@ -39,6 +39,7 @@ export interface ShellApi {
 	setDocumentModel(model: DocumentModel): void;
 	load(bytes: Uint8Array | ArrayBuffer): Promise<void>;
 	saveBytes(): Promise<Uint8Array>;
+	exportPdf(): Promise<{ bytes: Uint8Array }>;
 }
 
 function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
@@ -60,6 +61,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		newDocument: () => api.setDocumentModel(createDocument()),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
+		exportPdf: () => api.exportPdf(),
 		storage: () => core.cloudFile?.storage ?? core.storage,
 		fileProviders: () => core.fileProviders,
 		useCloudFile: (file) => {

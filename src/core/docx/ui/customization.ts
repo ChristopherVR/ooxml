@@ -69,6 +69,7 @@ export type WordFileCommandId =
 	| 'saveAs'
 	| 'export'
 	| 'exportText'
+	| 'exportPdf'
 	| 'print'
 	| 'share';
 
@@ -79,7 +80,7 @@ export const WORD_CAPABILITY_FILE_COMMANDS: CapabilityActionMap<
 > = {
 	open: ['new', 'open'],
 	save: ['save'],
-	export: ['saveAs', 'export', 'exportText'],
+	export: ['saveAs', 'export', 'exportText', 'exportPdf'],
 	print: ['print'],
 	share: ['share'],
 };

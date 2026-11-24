@@ -15,6 +15,8 @@ export interface PdfImageResource {
 	/** 8-bit RGB samples, a Flate stream of them, or JPEG bytes (`DCTDecode`). */
 	data: Uint8Array;
 	filter?: 'FlateDecode' | 'DCTDecode';
+	/** The samples' colour space; RGB unless set (a greyscale JPEG keeps its one channel). */
+	colorSpace?: 'DeviceRGB' | 'DeviceGray';
 	/** Optional 8-bit alpha plane of the same pixel size. */
 	alpha?: { data: Uint8Array; filter?: 'FlateDecode' };
 }
@@ -184,6 +186,20 @@ export class PdfVectorPage {
 
 export interface PdfVectorOptions {
 	title?: string;
+	author?: string;
+	subject?: string;
+	keywords?: string;
+	/** Natural language of the document (`/Lang` in the catalog), e.g. `en-US`. */
+	language?: string;
+}
+
+/** A PDF text string: a literal for printable ASCII, else UTF-16BE hex with a byte order mark. */
+export function pdfTextString(text: string): string {
+	if (/^[\x20-\x7e]*$/.test(text)) return pdfLiteral(text);
+	let hex = 'FEFF';
+	for (let index = 0; index < text.length; index++)
+		hex += text.charCodeAt(index).toString(16).padStart(4, '0').toUpperCase();
+	return `<${hex}>`;
 }
 
 const latin1 = (text: string): Uint8Array => {
@@ -296,7 +312,7 @@ export function buildVectorPdf(
 			const id = next++;
 			stream(
 				id,
-				`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /DeviceRGB /BitsPerComponent 8${image.filter ? ` /Filter /${image.filter}` : ''}${mask}`,
+				`/Type /XObject /Subtype /Image /Width ${image.width} /Height ${image.height} /ColorSpace /${image.colorSpace ?? 'DeviceRGB'} /BitsPerComponent 8${image.filter ? ` /Filter /${image.filter}` : ''}${mask}`,
 				image.data,
 				!!image.filter,
 			);
@@ -340,15 +356,20 @@ export function buildVectorPdf(
 			`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${num(page.width)} ${num(page.height)}] /Contents ${contentId} 0 R /Resources << /ProcSet [/PDF /Text /ImageC] /Font << ${fontEntries.join(' ')} >> /XObject << ${xobjects.join(' ')} >> /ExtGState << ${states.join(' ')} >> /Shading << ${shadings.join(' ')} >> >> >>`,
 		);
 	}
-	object(1, '<< /Type /Catalog /Pages 2 0 R >>');
+	const language =
+		options.language && /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/.test(options.language)
+			? ` /Lang ${pdfLiteral(options.language)}`
+			: '';
+	object(1, `<< /Type /Catalog /Pages 2 0 R${language} >>`);
 	object(
 		2,
 		`<< /Type /Pages /Kids [${kids.map((id) => `${id} 0 R`).join(' ')}] /Count ${kids.length} >>`,
 	);
-	object(
-		3,
-		`<< /Producer (ooxml-ui)${options.title ? ` /Title ${pdfLiteral(options.title.replace(/[^\x20-\x7e]/g, '?'))}` : ''} >>`,
-	);
+	const info = (['title', 'author', 'subject', 'keywords'] as const)
+		.filter((key) => options[key])
+		.map((key) => ` /${key[0]!.toUpperCase()}${key.slice(1)} ${pdfTextString(options[key]!)}`)
+		.join('');
+	object(3, `<< /Producer (ooxml-ui)${info} >>`);
 	const xref = position;
 	let table = `xref\n0 ${next}\n0000000000 65535 f \n`;
 	for (let id = 1; id < next; id++)

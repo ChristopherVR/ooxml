@@ -77,7 +77,7 @@ document.body.append(element);
 
 编辑器在其 Shadow Root 内绘制 Word 风格的外观：标题栏（快速访问的保存、撤销和重做，文件名与保存状态，以及“告诉我你想要做什么”(Tell me what you want to do) 命令搜索）、编辑/查看模式切换、功能区选项卡行右端的 **评论**（Comments）和 **共享**（Share）（与 Word 365 一致），以及 **文件** 选项卡及其后台视图（信息，其中包含兼容性说明；新建、打开、保存、另存为 DOCX、打印），还有状态栏（页数、字数、兼容性说明、Web/打印版式及缩放）。
 
-设置 `element.fileName` 可以为打开的文档命名。文件命令会先以可取消的 `file-command` 事件发出，其 `detail.command` 为 `new`、`open`、`save`、`saveAs`、`export`、`exportText`、`print` 或 `share` 之一。调用 `preventDefault()` 即可由你的应用自行处理（例如保存到你自己的存储）；否则编辑器使用其仅限浏览器的默认行为：文件选择器、下载或打印对话框。`share`（共享按钮）会打开所有 Office 编辑器都使用的共享对话框：可以开始一个会话（会话名称、你的名称以及可选的服务器），或通过邀请链接或会话名称加入会话；然后复制邀请链接、查看会话中的成员并停止共享，这些操作会设置 `collaboration` 属性；取消该事件即可改用你自己的共享方式。选择 **查看**（Viewing）会触发 `readonly-change`。
+设置 `element.fileName` 可以为打开的文档命名。文件命令会先以可取消的 `file-command` 事件发出，其 `detail.command` 为 `new`、`open`、`save`、`saveAs`、`export`、`exportText`、`exportPdf`、`print` 或 `share` 之一。调用 `preventDefault()` 即可由你的应用自行处理（例如保存到你自己的存储）；否则编辑器使用其仅限浏览器的默认行为：文件选择器、下载或打印对话框。`share`（共享按钮）会打开所有 Office 编辑器都使用的共享对话框：可以开始一个会话（会话名称、你的名称以及可选的服务器），或通过邀请链接或会话名称加入会话；然后复制邀请链接、查看会话中的成员并停止共享，这些操作会设置 `collaboration` 属性；取消该事件即可改用你自己的共享方式。选择 **查看**（Viewing）会触发 `readonly-change`。
 
 ```ts
 editor.fileName = 'Quarterly report.docx';

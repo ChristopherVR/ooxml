@@ -35,17 +35,39 @@ const HELVETICA = [
 	222, 833, 556, 556, 556, 556, 333, 500, 278, 556, 500, 722, 500, 500, 500, 334, 260, 334, 584,
 ];
 
-/** Approximate width of `text` in em units (Helvetica based, scaled per family). */
+// Helvetica-Bold advance widths (1000 units/em) for U+0020..U+007E.
+const HELVETICA_BOLD = [
+	278, 333, 474, 556, 556, 889, 722, 238, 333, 333, 389, 584, 278, 333, 278, 278, 556, 556, 556,
+	556, 556, 556, 556, 556, 556, 556, 333, 333, 584, 584, 584, 611, 975, 722, 722, 722, 722, 667,
+	611, 778, 722, 278, 556, 722, 611, 833, 722, 778, 667, 778, 722, 667, 611, 722, 667, 944, 667,
+	667, 611, 333, 278, 333, 584, 556, 333, 556, 611, 556, 611, 556, 333, 611, 611, 278, 278, 556,
+	278, 889, 611, 611, 611, 611, 389, 556, 333, 611, 556, 778, 556, 556, 500, 389, 280, 389, 584,
+];
+
+// Times-Roman advance widths (1000 units/em) for U+0020..U+007E.
+const TIMES = [
+	250, 333, 408, 500, 500, 833, 778, 180, 333, 333, 500, 564, 250, 333, 250, 278, 500, 500, 500,
+	500, 500, 500, 500, 500, 500, 500, 278, 278, 564, 564, 564, 444, 921, 722, 667, 667, 722, 611,
+	556, 722, 722, 333, 389, 722, 611, 889, 722, 722, 556, 722, 667, 556, 611, 722, 722, 944, 722,
+	722, 611, 333, 278, 333, 469, 500, 333, 444, 500, 444, 500, 444, 333, 500, 500, 278, 278, 500,
+	278, 778, 500, 500, 500, 500, 333, 389, 278, 500, 500, 722, 500, 500, 444, 480, 200, 480, 541,
+];
+
+/**
+ * Approximate width of `text` in em units: the standard fonts' own ASCII advances (Helvetica,
+ * Helvetica-Bold, Times-Roman; bold Times scaled from roman), an average for other characters.
+ */
 export function pdfTextWidth(text: string, baseFont: string): number {
 	if (baseFont.startsWith('Courier')) return text.length * 0.6;
-	const scale = baseFont.startsWith('Times') ? 0.9 : 1;
-	const bold = /Bold/.test(baseFont) ? 1.05 : 1;
+	const times = baseFont.startsWith('Times');
+	const bold = /Bold/.test(baseFont);
+	const table = times ? TIMES : bold ? HELVETICA_BOLD : HELVETICA;
 	let total = 0;
 	for (let index = 0; index < text.length; index++) {
 		const code = text.charCodeAt(index);
-		total += code >= 32 && code <= 126 ? HELVETICA[code - 32]! : 556;
+		total += code >= 32 && code <= 126 ? table[code - 32]! : 556;
 	}
-	return (total / 1000) * scale * bold;
+	return (total / 1000) * (times && bold ? 1.05 : 1);
 }
 
 // Windows-1252 code points 0x80..0x9F (0 where undefined).

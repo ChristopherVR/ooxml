@@ -1,0 +1,149 @@
+/**
+ * Pictures for the Word PDF export: JPEG bytes go into the file as they are (no re-encoding,
+ * original resolution); PNG is decoded to its samples and alpha. Other formats go through a
+ * decoder the host supplies, or are left out and reported. Charts and drawing shapes are left
+ * out in this version. DOM-free.
+ */
+import { decodePng, jpegComponents, inspectRasterImage } from 'ooxml-core/drawingml';
+import type { LayoutObject } from 'ooxml-core/docx/layout';
+import type { PdfImageResource, PdfVectorPage } from '../../export/pdf-vector';
+import type { DocxPdfReportBuilder } from './pdf-report';
+
+/** RGBA pixels a host decoder returns for a picture format the export cannot read itself. */
+export interface DecodedPicture {
+	width: number;
+	height: number;
+	/** 8-bit RGBA, `width * height * 4` bytes. */
+	rgba: Uint8Array | Uint8ClampedArray;
+}
+
+export type DocxPdfMedia =
+	| ReadonlyMap<string, Uint8Array>
+	| ((partName: string) => Uint8Array | undefined);
+
+export type DocxPdfPictureDecoder = (
+	bytes: Uint8Array,
+	contentType: string,
+) => Promise<DecodedPicture | undefined> | DecodedPicture | undefined;
+
+/** A picture to draw: what the layout's inline objects and floats have in common. */
+export type DocxPdfPicture = Pick<
+	LayoutObject,
+	'partName' | 'contentType' | 'widthPx' | 'heightPx' | 'pictureFill' | 'chart'
+>;
+
+function fromRgba(picture: DecodedPicture): PdfImageResource | undefined {
+	const { width, height, rgba } = picture;
+	if (!(width > 0 && height > 0) || rgba.length < width * height * 4) return undefined;
+	const rgb = new Uint8Array(width * height * 3);
+	const alpha = new Uint8Array(width * height);
+	let translucent = false;
+	for (let pixel = 0; pixel < width * height; pixel++) {
+		rgb[pixel * 3] = rgba[pixel * 4]!;
+		rgb[pixel * 3 + 1] = rgba[pixel * 4 + 1]!;
+		rgb[pixel * 3 + 2] = rgba[pixel * 4 + 2]!;
+		alpha[pixel] = rgba[pixel * 4 + 3]!;
+		if (alpha[pixel] !== 255) translucent = true;
+	}
+	return { width, height, data: rgb, ...(translucent ? { alpha: { data: alpha } } : {}) };
+}
+
+/** Reads, decodes and caches each picture part once per export. */
+export class DocxPdfPictures {
+	readonly #resources = new Map<string, PdfImageResource | null>();
+	constructor(
+		readonly media: DocxPdfMedia | undefined,
+		readonly decode: DocxPdfPictureDecoder | undefined,
+		readonly report: DocxPdfReportBuilder,
+	) {}
+
+	#bytes(partName: string): Uint8Array | undefined {
+		if (!this.media) return undefined;
+		return typeof this.media === 'function' ? this.media(partName) : this.media.get(partName);
+	}
+
+	/** Loads every picture `pictures` name, so painting stays synchronous. */
+	async prepare(pictures: Iterable<DocxPdfPicture>): Promise<void> {
+		for (const picture of pictures) {
+			if (picture.chart || !picture.partName || this.#resources.has(picture.partName)) continue;
+			this.#resources.set(picture.partName, await this.#load(picture));
+		}
+	}
+
+	async #load(picture: DocxPdfPicture): Promise<PdfImageResource | null> {
+		const bytes = this.#bytes(picture.partName);
+		if (!bytes) return null;
+		let kind: string | undefined;
+		try {
+			kind = inspectRasterImage(bytes).mimeType;
+		} catch {
+			kind = undefined;
+		}
+		if (kind === 'image/jpeg') {
+			const components = jpegComponents(bytes);
+			const size = inspectRasterImage(bytes);
+			if (components === 1 || components === 3)
+				return {
+					width: size.pixelWidth,
+					height: size.pixelHeight,
+					data: bytes,
+					filter: 'DCTDecode',
+					...(components === 1 ? { colorSpace: 'DeviceGray' as const } : {}),
+				};
+		}
+		if (kind === 'image/png') {
+			const decoded = decodePng(bytes);
+			if (decoded)
+				return {
+					width: decoded.width,
+					height: decoded.height,
+					data: decoded.rgb,
+					...(decoded.alpha ? { alpha: { data: decoded.alpha } } : {}),
+				};
+		}
+		const decoded = await this.decode?.(bytes, picture.contentType);
+		return (decoded && fromRgba(decoded)) ?? null;
+	}
+
+	/** Draws a picture into the box at (x, y), cropped as the document crops it. */
+	draw(page: PdfVectorPage, picture: DocxPdfPicture, x: number, y: number): void {
+		const { widthPx: width, heightPx: height } = picture;
+		if (!(width > 0 && height > 0)) return;
+		if (picture.chart) {
+			this.report.omitted(
+				picture.chart.shape ? 'shape' : 'chart',
+				'Charts and drawing shapes are not exported to PDF yet.',
+			);
+			return;
+		}
+		const resource = this.#resources.get(picture.partName);
+		if (!resource) {
+			this.report.omitted(
+				'picture',
+				`Picture ${picture.partName} (${picture.contentType}) could not be read.`,
+			);
+			return;
+		}
+		const crop = picture.pictureFill?.crop ?? {};
+		const left = crop.cropLeft ?? 0;
+		const top = crop.cropTop ?? 0;
+		const right = crop.cropRight ?? 0;
+		const bottom = crop.cropBottom ?? 0;
+		const fullWidth = width / Math.max(0.01, 1 - left - right);
+		const fullHeight = height / Math.max(0.01, 1 - top - bottom);
+		page.save();
+		page.rect(x, y, width, height);
+		page.op('W n');
+		// The image fills the unit square with y up; the page space is y down.
+		page.concat([
+			fullWidth,
+			0,
+			0,
+			-fullHeight,
+			x - left * fullWidth,
+			y - top * fullHeight + fullHeight,
+		]);
+		page.drawImage(resource);
+		page.restore();
+	}
+}

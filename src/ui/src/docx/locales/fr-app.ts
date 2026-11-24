@@ -47,8 +47,8 @@ export const frApp: AppStrings = {
 		'L’impression utilise la boîte de dialogue du navigateur. Les sauts de page viennent de la mise en page Impression, qui approche Word.',
 	Export: 'Exporter',
 	'Create a PDF': 'Créer un PDF',
-	'Opens the print dialog; choose Save as PDF as the destination.':
-		'Ouvre la boîte de dialogue d’impression ; choisissez Enregistrer au format PDF comme destination.',
+	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
+		'Enregistre le document au format PDF avec du texte sélectionnable, avec les pages du mode Page.',
 	'Create PDF': 'Créer un PDF',
 	'Download the document as a Word .docx file.': 'Téléchargez le document au format Word .docx.',
 	'Export as plain text': 'Exporter en texte brut',

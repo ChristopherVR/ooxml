@@ -188,7 +188,7 @@ describe('File backstage', () => {
 		click(backstage.element, 'Save a copy as DOCX');
 		backstage.open('export');
 		click(backstage.element, 'Export as plain text');
-		expect(calls.map(([command]) => command)).toEqual(['print', 'export', 'exportText']);
+		expect(calls.map(([command]) => command)).toEqual(['exportPdf', 'export', 'exportText']);
 	});
 
 	it('Print shows paper facts and prints', () => {

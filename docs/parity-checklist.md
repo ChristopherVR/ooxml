@@ -630,6 +630,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       including drawings anchored below them (#312).
 - [x] **P2** Overlong words in Print Layout break at grapheme boundaries (#316). Nearly fitting
       final lines in justified text boxes have a one-pixel fit tolerance (#314).
+- [x] **P1** Auto-fit tables stay inside the text column when a cell holds an unbreakable token
+      or many columns need more than their share; the token breaks inside its cell (#320). Header
+      and footer tables draw their borders (#321), and Draft view keeps table widths inside the
+      paper (#322). Checked against Word 16 with `src/core/docx/layout/fixtures/table-reports/`,
+      where a "keep row together" row taller than a page is clipped on one page, as Word does (#323).
+- [x] **P1** Save as PDF (File > Export > Create a PDF, `exportPdf()`, `exportDocxPdf`) writes real
+      text, vector borders, shading and rules, and pictures at their own resolution on the Print
+      Layout pages, with headers, footers, page fields and footnotes, a page range, document
+      properties and a report, without a print dialog (`src/ui/src/docx/pdf/`, #318).
+- [ ] **P1** Save as PDF leaves out charts, drawing shapes, text boxes, watermarks, page borders,
+      line numbers and floating objects in headers, footers and table cells (each reported), and
+      has no links, bookmarks, tagged PDF or PDF/A yet. Text uses the standard PDF fonts unless the
+      host supplies font files; remote fonts are never fetched (#318).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
       come from the browser's

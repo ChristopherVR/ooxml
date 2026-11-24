@@ -77,21 +77,21 @@ editor.customization = {
 
 Todos los eventos burbujean y son compuestos, por lo que atraviesan el límite del shadow DOM.
 
-| Evento                 | Detalle                              | Significado                                                                                          |
-| ---------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`                      | El documento cambió mediante acciones de edición o de revisión.                                      |
-| `document-error`       | `Error`                              | Falló la carga, el guardado, la impresión o una edición.                                             |
-| `document-warning`     | `string`                             | Aviso no fatal.                                                                                      |
-| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | El usuario alternó Edición/Visualización en la interfaz.                                             |
-| `file-command`         | `{ command, fileName? }`             | Cancelable. `command` es `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` o `share`. |
-| `dirty-change`         | `boolean`                            | Cambió el estado de cambios sin guardar.                                                             |
-| `page-change`          | `{ page, pageCount }`                | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).              |
-| `ribbon-action`        | `RibbonAction`                       | Se activó un control de la cinta.                                                                    |
-| `ribbon-customize`     | `readonly string[]`                  | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea.       |
-| `office-ribbon-add-in` | `{ tab, command }`                   | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                       |
-| `presence-send`        | `PresenceMessage`                    | Cambió la presencia local; transpórtela a los demás clientes.                                        |
-| `collaboration-send`   | `StepBatch`                          | Hay pasos locales pendientes; transpórtelos a la autoridad.                                          |
-| `collaboration-change` | `DocxCollaborationState`             | Cambió el estado de la colaboración: `{ active, roomId, status, synced, people }`.                   |
+| Evento                 | Detalle                              | Significado                                                                                                       |
+| ---------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | El documento cambió mediante acciones de edición o de revisión.                                                   |
+| `document-error`       | `Error`                              | Falló la carga, el guardado, la impresión o una edición.                                                          |
+| `document-warning`     | `string`                             | Aviso no fatal.                                                                                                   |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | El usuario alternó Edición/Visualización en la interfaz.                                                          |
+| `file-command`         | `{ command, fileName? }`             | Cancelable. `command` es `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `exportPdf`, `print` o `share`. |
+| `dirty-change`         | `boolean`                            | Cambió el estado de cambios sin guardar.                                                                          |
+| `page-change`          | `{ page, pageCount }`                | Cambió la página o el número de páginas en Diseño de impresión (paginación aproximada).                           |
+| `ribbon-action`        | `RibbonAction`                       | Se activó un control de la cinta.                                                                                 |
+| `ribbon-customize`     | `readonly string[]`                  | El usuario cambió los comandos visibles de la cinta; persista los identificadores si lo desea.                    |
+| `office-ribbon-add-in` | `{ tab, command }`                   | Se eligió un comando de una pestaña del host (`ribbonAddIns`).                                                    |
+| `presence-send`        | `PresenceMessage`                    | Cambió la presencia local; transpórtela a los demás clientes.                                                     |
+| `collaboration-send`   | `StepBatch`                          | Hay pasos locales pendientes; transpórtelos a la autoridad.                                                       |
+| `collaboration-change` | `DocxCollaborationState`             | Cambió el estado de la colaboración: `{ active, roomId, status, synced, people }`.                                |
 
 El paquete exporta el mapa de eventos tipado (`DocxEditorEventMap`) y la lista en tiempo de ejecución `DOCX_EDITOR_EVENTS`.
 

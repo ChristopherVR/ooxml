@@ -77,21 +77,21 @@ editor.customization = {
 
 Alle Ereignisse sind bubbling und composed und überschreiten daher die Shadow-Grenze.
 
-| Ereignis               | Detail                               | Bedeutung                                                                                                |
-| ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`                      | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                                |
-| `document-error`       | `Error`                              | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                                      |
-| `document-warning`     | `string`                             | Nicht schwerwiegender Hinweis.                                                                           |
-| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.                        |
-| `file-command`         | `{ command, fileName? }`             | Abbrechbar. `command` ist `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` oder `share`. |
-| `dirty-change`         | `boolean`                            | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                              |
-| `page-change`          | `{ page, pageCount }`                | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).                   |
-| `ribbon-action`        | `RibbonAction`                       | Ein Menübandsteuerelement wurde aktiviert.                                                               |
-| `ribbon-customize`     | `readonly string[]`                  | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf.             |
-| `office-ribbon-add-in` | `{ tab, command }`                   | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                                          |
-| `presence-send`        | `PresenceMessage`                    | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                              |
-| `collaboration-send`   | `StepBatch`                          | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                                         |
-| `collaboration-change` | `DocxCollaborationState`             | Der Zusammenarbeitsstatus hat sich geändert: `{ active, roomId, status, synced, people }`.               |
+| Ereignis               | Detail                               | Bedeutung                                                                                                             |
+| ---------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | Das Dokument wurde durch Bearbeiten oder Überarbeitungsaktionen geändert.                                             |
+| `document-error`       | `Error`                              | Laden, Speichern, Drucken oder eine Bearbeitung ist fehlgeschlagen.                                                   |
+| `document-warning`     | `string`                             | Nicht schwerwiegender Hinweis.                                                                                        |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | Der Benutzer hat in der Oberfläche zwischen Bearbeiten und Anzeigen umgeschaltet.                                     |
+| `file-command`         | `{ command, fileName? }`             | Abbrechbar. `command` ist `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `exportPdf`, `print` oder `share`. |
+| `dirty-change`         | `boolean`                            | Der Zustand „ungespeicherte Änderungen“ hat sich umgekehrt.                                                           |
+| `page-change`          | `{ page, pageCount }`                | Seite oder Seitenanzahl im Drucklayout hat sich geändert (näherungsweise Paginierung).                                |
+| `ribbon-action`        | `RibbonAction`                       | Ein Menübandsteuerelement wurde aktiviert.                                                                            |
+| `ribbon-customize`     | `readonly string[]`                  | Der Benutzer hat die angezeigten Menübandbefehle geändert; speichern Sie die IDs bei Bedarf.                          |
+| `office-ribbon-add-in` | `{ tab, command }`                   | Ein Befehl eines Host-Registers (`ribbonAddIns`) wurde gewählt.                                                       |
+| `presence-send`        | `PresenceMessage`                    | Die lokale Präsenz hat sich geändert; übertragen Sie sie an andere Clients.                                           |
+| `collaboration-send`   | `StepBatch`                          | Lokale Schritte stehen aus; übertragen Sie sie an die Autorität.                                                      |
+| `collaboration-change` | `DocxCollaborationState`             | Der Zusammenarbeitsstatus hat sich geändert: `{ active, roomId, status, synced, people }`.                            |
 
 Das Paket exportiert die typisierte Ereigniszuordnung (`DocxEditorEventMap`) und die Laufzeitliste `DOCX_EDITOR_EVENTS`.
 

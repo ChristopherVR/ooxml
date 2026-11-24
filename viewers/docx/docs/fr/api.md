@@ -77,21 +77,21 @@ editor.customization = {
 
 Tous les événements remontent (bubble) et sont composés, de sorte qu'ils traversent la frontière du shadow DOM.
 
-| Événement              | Détail                               | Signification                                                                                          |
-| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| `document-change`      | `DocumentModel`                      | Le document a changé par l'édition ou par des actions de révision.                                     |
-| `document-error`       | `Error`                              | Le chargement, l'enregistrement, l'impression ou une modification a échoué.                            |
-| `document-warning`     | `string`                             | Avertissement non fatal.                                                                               |
-| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | L'utilisateur a basculé Édition/Lecture dans l'interface.                                              |
-| `file-command`         | `{ command, fileName? }`             | Annulable. `command` vaut `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` ou `share`. |
-| `dirty-change`         | `boolean`                            | L'état « modifications non enregistrées » a basculé.                                                   |
-| `page-change`          | `{ page, pageCount }`                | La page ou le nombre de pages de la mise en page Impression a changé (pagination approximative).       |
-| `ribbon-action`        | `RibbonAction`                       | Une commande du ruban a été activée.                                                                   |
-| `ribbon-customize`     | `readonly string[]`                  | L'utilisateur a modifié les commandes affichées du ruban ; persistez les identifiants si besoin.       |
-| `office-ribbon-add-in` | `{ tab, command }`                   | Une commande d'un onglet de l'hôte (`ribbonAddIns`) a été choisie.                                     |
-| `presence-send`        | `PresenceMessage`                    | La présence locale a changé ; transmettez-la aux autres clients.                                       |
-| `collaboration-send`   | `StepBatch`                          | Des étapes locales sont en attente ; transmettez-les à l'autorité.                                     |
-| `collaboration-change` | `DocxCollaborationState`             | L'état de la collaboration a changé : `{ active, roomId, status, synced, people }`.                    |
+| Événement              | Détail                               | Signification                                                                                                       |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | Le document a changé par l'édition ou par des actions de révision.                                                  |
+| `document-error`       | `Error`                              | Le chargement, l'enregistrement, l'impression ou une modification a échoué.                                         |
+| `document-warning`     | `string`                             | Avertissement non fatal.                                                                                            |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | L'utilisateur a basculé Édition/Lecture dans l'interface.                                                           |
+| `file-command`         | `{ command, fileName? }`             | Annulable. `command` vaut `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `exportPdf`, `print` ou `share`. |
+| `dirty-change`         | `boolean`                            | L'état « modifications non enregistrées » a basculé.                                                                |
+| `page-change`          | `{ page, pageCount }`                | La page ou le nombre de pages de la mise en page Impression a changé (pagination approximative).                    |
+| `ribbon-action`        | `RibbonAction`                       | Une commande du ruban a été activée.                                                                                |
+| `ribbon-customize`     | `readonly string[]`                  | L'utilisateur a modifié les commandes affichées du ruban ; persistez les identifiants si besoin.                    |
+| `office-ribbon-add-in` | `{ tab, command }`                   | Une commande d'un onglet de l'hôte (`ribbonAddIns`) a été choisie.                                                  |
+| `presence-send`        | `PresenceMessage`                    | La présence locale a changé ; transmettez-la aux autres clients.                                                    |
+| `collaboration-send`   | `StepBatch`                          | Des étapes locales sont en attente ; transmettez-les à l'autorité.                                                  |
+| `collaboration-change` | `DocxCollaborationState`             | L'état de la collaboration a changé : `{ active, roomId, status, synced, people }`.                                 |
 
 Le paquet exporte la table typée des événements (`DocxEditorEventMap`) et la liste d'exécution `DOCX_EDITOR_EVENTS`.
 

@@ -26,6 +26,7 @@ export type FileCommand =
 	| 'saveAs'
 	| 'export'
 	| 'exportText'
+	| 'exportPdf'
 	| 'exportCsv'
 	| 'print'
 	| 'share';
@@ -33,7 +34,7 @@ export type FileCommand =
 /** The File commands `<docx-editor>` announces. */
 export type WordFileCommand = Exclude<FileCommand, 'exportCsv'>;
 /** The File commands `<xlsx-editor>` announces. */
-export type ExcelFileCommand = Exclude<FileCommand, 'exportText'>;
+export type ExcelFileCommand = Exclude<FileCommand, 'exportText' | 'exportPdf'>;
 /** The File commands `<visio-viewer>` announces. */
 export type VisioFileCommand = Extract<FileCommand, 'new' | 'open' | 'save' | 'share'>;
 

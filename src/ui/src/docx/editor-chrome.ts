@@ -45,6 +45,8 @@ export interface ChromeHost {
 	newDocument(): void;
 	load(bytes: Uint8Array): Promise<void>;
 	save(): Promise<Uint8Array>;
+	/** The document as a PDF (File > Export > Create a PDF). */
+	exportPdf(): Promise<{ bytes: Uint8Array }>;
 	/** Host-owned storage for Save and Open, when the host set one. */
 	storage?(): DocumentStorage | undefined;
 	/** Cloud places File > Open offers next to this device. */
@@ -264,6 +266,8 @@ export class EditorChrome {
 			if (command === 'new') await this.newDocument();
 			else if (command === 'open') await this.open();
 			else if (command === 'print') this.host.print();
+			else if (command === 'exportPdf')
+				downloadBytes((await this.host.exportPdf()).bytes, withExtension(this._fileName, 'pdf'));
 			// A host that cancels `file-command` shares its own way; otherwise the Share dialog.
 			else if (command === 'share') this.shareDialog?.open();
 			else if (command === 'exportText')

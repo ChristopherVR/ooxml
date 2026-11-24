@@ -88,6 +88,39 @@ test.describe('File tab', () => {
 		expect(await readFile((await download.path())!, 'utf8')).toBe('Hello file tab');
 	});
 
+	test('Create a PDF downloads a PDF with real text, without a print dialog', async ({ page }) => {
+		let printed = false;
+		await page.exposeFunction('notePrint', () => (printed = true));
+		await page.evaluate(() => {
+			window.print = () => void (window as unknown as { notePrint(): void }).notePrint();
+		});
+		const editor = await openFile(page);
+		await navigate(editor, 'Export');
+		const pending = page.waitForEvent('download');
+		await editor
+			.locator('.dve-backstage-content:not([hidden])')
+			.getByRole('button', { name: 'Create PDF' })
+			.click();
+		const download = await pending;
+		expect(download.suggestedFilename()).toBe('Document1.pdf');
+		const bytes = await readFile((await download.path())!);
+		const raw = bytes.toString('latin1');
+		expect(raw.startsWith('%PDF-')).toBe(true);
+		expect(raw).toContain('/Type /Page ');
+		expect(raw).not.toContain('/Subtype /Image');
+		// The text is real PDF text, written word by word with its spaces.
+		const { inflateSync } = await import('node:zlib');
+		const text = [...raw.matchAll(/<< \/Filter \/FlateDecode \/Length (\d+) >>\nstream\n/g)]
+			.map((match) => {
+				const start = match.index + match[0].length;
+				return inflateSync(bytes.subarray(start, start + Number(match[1]))).toString('latin1');
+			})
+			.join('\n');
+		const words = [...text.matchAll(/\(((?:\\.|[^\\)])*)\) Tj/g)].map((match) => match[1]).join('');
+		expect(words).toBe('Hello file tab');
+		expect(printed).toBe(false);
+	});
+
 	test('Options switches the display language and the review author', async ({ page }) => {
 		const editor = await openFile(page);
 		await navigate(editor, 'Options');

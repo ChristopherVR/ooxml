@@ -297,8 +297,8 @@ export function renderExport({ handlers, t, content }: PageContext): void {
 		heading(t('Export')),
 		card(
 			t('Create a PDF'),
-			t('Opens the print dialog; choose Save as PDF as the destination.'),
-			primary(t('Create PDF'), run('print')),
+			t('Save the document as a PDF with selectable text, with the pages of Print Layout.'),
+			primary(t('Create PDF'), run('exportPdf')),
 		),
 		card(
 			t('Save a copy as DOCX'),

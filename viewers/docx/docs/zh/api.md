@@ -77,21 +77,21 @@ editor.customization = {
 
 所有事件都会冒泡且为 composed，因此可以穿过 Shadow 边界。
 
-| 事件                   | Detail                               | 含义                                                                                               |
-| ---------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`                      | 文档因编辑或审阅操作而发生变化。                                                                   |
-| `document-error`       | `Error`                              | 加载、保存、打印或某次编辑失败。                                                                   |
-| `document-warning`     | `string`                             | 非致命的提示。                                                                                     |
-| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | 用户在界面中切换了编辑/查看模式。                                                                  |
-| `file-command`         | `{ command, fileName? }`             | 可取消。`command` 为 `new`、`open`、`save`、`saveAs`、`export`、`exportText`、`print` 或 `share`。 |
-| `dirty-change`         | `boolean`                            | 未保存更改的状态发生了翻转。                                                                       |
-| `page-change`          | `{ page, pageCount }`                | 打印布局的页码或页数发生变化（分页为近似结果）。                                                   |
-| `ribbon-action`        | `RibbonAction`                       | 某个功能区控件被激活。                                                                             |
-| `ribbon-customize`     | `readonly string[]`                  | 用户更改了显示的功能区命令；如有需要，请持久化这些 ID。                                            |
-| `office-ribbon-add-in` | `{ tab, command }`                   | 选择了宿主选项卡（`ribbonAddIns`）中的某个命令。                                                   |
-| `presence-send`        | `PresenceMessage`                    | 本地在线状态发生变化；请将其传输给其他客户端。                                                     |
-| `collaboration-send`   | `StepBatch`                          | 本地步骤待发送；请将其传输给权威端。                                                               |
-| `collaboration-change` | `DocxCollaborationState`             | 协作状态已变化：`{ active, roomId, status, synced, people }`。                                     |
+| 事件                   | Detail                               | 含义                                                                                                            |
+| ---------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `document-change`      | `DocumentModel`                      | 文档因编辑或审阅操作而发生变化。                                                                                |
+| `document-error`       | `Error`                              | 加载、保存、打印或某次编辑失败。                                                                                |
+| `document-warning`     | `string`                             | 非致命的提示。                                                                                                  |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | 用户在界面中切换了编辑/查看模式。                                                                               |
+| `file-command`         | `{ command, fileName? }`             | 可取消。`command` 为 `new`、`open`、`save`、`saveAs`、`export`、`exportText`、`exportPdf`、`print` 或 `share`。 |
+| `dirty-change`         | `boolean`                            | 未保存更改的状态发生了翻转。                                                                                    |
+| `page-change`          | `{ page, pageCount }`                | 打印布局的页码或页数发生变化（分页为近似结果）。                                                                |
+| `ribbon-action`        | `RibbonAction`                       | 某个功能区控件被激活。                                                                                          |
+| `ribbon-customize`     | `readonly string[]`                  | 用户更改了显示的功能区命令；如有需要，请持久化这些 ID。                                                         |
+| `office-ribbon-add-in` | `{ tab, command }`                   | 选择了宿主选项卡（`ribbonAddIns`）中的某个命令。                                                                |
+| `presence-send`        | `PresenceMessage`                    | 本地在线状态发生变化；请将其传输给其他客户端。                                                                  |
+| `collaboration-send`   | `StepBatch`                          | 本地步骤待发送；请将其传输给权威端。                                                                            |
+| `collaboration-change` | `DocxCollaborationState`             | 协作状态已变化：`{ active, roomId, status, synced, people }`。                                                  |
 
 该包导出了类型化的事件映射（`DocxEditorEventMap`）和运行时列表 `DOCX_EDITOR_EVENTS`。
 

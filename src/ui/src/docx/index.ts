@@ -25,6 +25,17 @@ export {
 export type { LegacyRibbonLabel, RibbonActionId, RibbonActionInput } from 'ooxml-core/docx/ui';
 export type { PageChangeDetail } from './page-sync';
 export type { FileCommand, FileCommandDetail } from './file-commands';
+export { exportDocxPdf } from './pdf/export-pdf-entry';
+export type {
+	DecodedPicture,
+	DocxPdfMedia,
+	DocxPdfOmittedKind,
+	DocxPdfOptions,
+	DocxPdfPictureDecoder,
+	DocxPdfReport,
+	DocxPdfResult,
+} from './pdf/export-pdf';
+export type { EditorPdfOptions } from './pdf/editor-pdf';
 export type { DocxEditorEventMap, DocxEditorEventName, DocxEditorEventDetail } from './events';
 export { DOCX_EDITOR_ATTRIBUTES } from './editor-attributes';
 export type { DocxEditorAttribute } from './editor-attributes';

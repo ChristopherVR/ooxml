@@ -53,8 +53,8 @@ export const esApp: AppStrings = {
 		'La impresión usa el cuadro de diálogo del navegador. Los saltos de página provienen del diseño de impresión, que aproxima a Word.',
 	Export: 'Exportar',
 	'Create a PDF': 'Crear un PDF',
-	'Opens the print dialog; choose Save as PDF as the destination.':
-		'Abre el cuadro de impresión; elija Guardar como PDF como destino.',
+	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
+		'Guarda el documento como PDF con texto seleccionable, con las páginas del diseño de impresión.',
 	'Create PDF': 'Crear PDF',
 	'Download the document as a Word .docx file.':
 		'Descargue el documento como archivo .docx de Word.',

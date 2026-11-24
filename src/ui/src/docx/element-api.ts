@@ -7,9 +7,10 @@ import { joinYjs } from './collaboration-room';
 import type { DocxCollaborationState } from './collaboration-types';
 import { yjsPresenceProfile } from './yjs-presence';
 import { saveDocx } from 'ooxml-core/docx';
-import { schema } from './schema';
-import { docToModel } from './model-adapter';
 import type { EditorCore } from './editor-core';
+import { currentModel } from './current-model';
+import type { EditorPdfOptions } from './pdf/editor-pdf';
+import type { DocxPdfResult } from './pdf/export-pdf';
 import { modifiedStamp, reflectAttribute } from './editor-attributes';
 import { docxFileName, downloadBytes, wordBlob } from './file-commands';
 import {
@@ -294,11 +295,7 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Serialized document bytes: the loaded package's own writer, else a fresh DOCX from the model. */
 	async saveBytes(): Promise<Uint8Array> {
 		const { core } = this;
-		if (core.collab.yjs) {
-			core.model = docToModel(core.collab.yjs.state(schema).doc, core.model);
-			if (core.collab.yjs.sharedComments)
-				core.model = { ...core.model, comments: core.collab.yjs.comments.all() };
-		}
+		currentModel(core);
 		// Only pass staged pictures when there are any: legacy DOC sessions take the model alone.
 		const pending = new Map([
 			...core.inserts.pendingMedia,
@@ -318,6 +315,16 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** The saved document as a Blob. Does not change `dirty`; call `markClean()` after persisting it. */
 	async save(): Promise<Blob> {
 		return wordBlob(await this.saveBytes(), this.fileName);
+	}
+
+	/**
+	 * The document as a PDF with real text and vector graphics, paginated as Print Layout shows it
+	 * (Word's Save As PDF), without a dialog. The report lists what was approximated or left out.
+	 */
+	async exportPdf(options?: EditorPdfOptions): Promise<DocxPdfResult> {
+		// Loaded on first use: the PDF writer stays out of the editor's start-up code.
+		const { editorPdf } = await import('./pdf/editor-pdf');
+		return editorPdf(this.core, options);
 	}
 
 	/** Saves and starts a browser download, then marks the document clean. */

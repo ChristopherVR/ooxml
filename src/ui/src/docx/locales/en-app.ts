@@ -45,8 +45,8 @@ export const enApp = {
 		'Printing uses the browser print dialog. Page breaks come from Print Layout, which approximates Word.',
 	Export: 'Export',
 	'Create a PDF': 'Create a PDF',
-	'Opens the print dialog; choose Save as PDF as the destination.':
-		'Opens the print dialog; choose Save as PDF as the destination.',
+	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
+		'Save the document as a PDF with selectable text, with the pages of Print Layout.',
 	'Create PDF': 'Create PDF',
 	'Download the document as a Word .docx file.': 'Download the document as a Word .docx file.',
 	'Export as plain text': 'Export as plain text',

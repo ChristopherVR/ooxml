@@ -52,8 +52,8 @@ export const zhCNApp: AppStrings = {
 		'打印使用浏览器的打印对话框。分页来自页面视图，它只是近似 Word 的分页。',
 	Export: '导出',
 	'Create a PDF': '创建 PDF',
-	'Opens the print dialog; choose Save as PDF as the destination.':
-		'打开打印对话框；请选择“另存为 PDF”作为目标。',
+	'Save the document as a PDF with selectable text, with the pages of Print Layout.':
+		'将文档另存为文本可选的 PDF，分页与页面视图相同。',
 	'Create PDF': '创建 PDF',
 	'Download the document as a Word .docx file.': '将文档下载为 Word .docx 文件。',
 	'Export as plain text': '导出为纯文本',

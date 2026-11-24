@@ -66,44 +66,60 @@ editor.customization = {
 
 ## Methods
 
-| Method                                                          | Description                                                                                                                           |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `load(bytes)`                                                   | Load DOCX or legacy DOC bytes. Rejects and emits `document-error` on failure.                                                         |
-| `save()`                                                        | Resolves to a `Blob` of the serialized document.                                                                                      |
-| `saveBytes()`                                                   | Resolves to the raw `Uint8Array`.                                                                                                     |
-| `download(fileName?)`                                           | Saves and starts a browser download.                                                                                                  |
-| `markClean()`                                                   | Clears the dirty flag after the host persisted the document.                                                                          |
-| `setLoadedDocument(session)`                                    | Mounts a `LoadedDocument` already parsed by `loadDocument`.                                                                           |
-| `openCloudFile(file)`                                           | Opens a file from a `CloudFileProvider`, as File > Open > OneDrive does.                                                              |
-| `getToolbarProps()`, `getNavigationProps()`, `getStatusProps()` | State and callbacks for host-built toolbar, page and status controls.                                                                 |
-| `subscribeEditorState(listener)`                                | Calls `listener` on selection and formatting changes, including ones that do not dirty the document. Returns an unsubscribe function. |
-| `startCollaboration(config)`                                    | Join a collaboration session; see [collaboration](/collaboration).                                                                    |
-| `startYjsCollaboration(session, options)`                       | Join a synchronized Yjs room with its matching source package.                                                                        |
-| `reconnectCollaboration()`, `resyncCollaboration()`             | Recover the Yjs connection or request provider state exchange.                                                                        |
-| `getPendingCollaboration()`                                     | The pending step batch, or `null`.                                                                                                    |
-| `receiveCollaboration(batch)`                                   | Apply an accepted batch from the authority.                                                                                           |
-| `stopCollaboration(discardPending?)`                            | Leave the session; pending edits must be acknowledged or explicitly discarded.                                                        |
-| `publishPresence`, `receivePresence`, `leavePresence`           | Transient presence channel; see [collaboration](/collaboration#presence).                                                             |
+| Method                                                          | Description                                                                                                                                                                    |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `load(bytes)`                                                   | Load DOCX or legacy DOC bytes. Rejects and emits `document-error` on failure.                                                                                                  |
+| `save()`                                                        | Resolves to a `Blob` of the serialized document.                                                                                                                               |
+| `saveBytes()`                                                   | Resolves to the raw `Uint8Array`.                                                                                                                                              |
+| `download(fileName?)`                                           | Saves and starts a browser download.                                                                                                                                           |
+| `exportPdf(options?)`                                           | Resolves to `{ bytes, blob, report }`: a PDF with real, selectable text and vector borders, paginated as Print Layout shows it, with no dialog. See [PDF export](#pdf-export). |
+| `markClean()`                                                   | Clears the dirty flag after the host persisted the document.                                                                                                                   |
+| `setLoadedDocument(session)`                                    | Mounts a `LoadedDocument` already parsed by `loadDocument`.                                                                                                                    |
+| `openCloudFile(file)`                                           | Opens a file from a `CloudFileProvider`, as File > Open > OneDrive does.                                                                                                       |
+| `getToolbarProps()`, `getNavigationProps()`, `getStatusProps()` | State and callbacks for host-built toolbar, page and status controls.                                                                                                          |
+| `subscribeEditorState(listener)`                                | Calls `listener` on selection and formatting changes, including ones that do not dirty the document. Returns an unsubscribe function.                                          |
+| `startCollaboration(config)`                                    | Join a collaboration session; see [collaboration](/collaboration).                                                                                                             |
+| `startYjsCollaboration(session, options)`                       | Join a synchronized Yjs room with its matching source package.                                                                                                                 |
+| `reconnectCollaboration()`, `resyncCollaboration()`             | Recover the Yjs connection or request provider state exchange.                                                                                                                 |
+| `getPendingCollaboration()`                                     | The pending step batch, or `null`.                                                                                                                                             |
+| `receiveCollaboration(batch)`                                   | Apply an accepted batch from the authority.                                                                                                                                    |
+| `stopCollaboration(discardPending?)`                            | Leave the session; pending edits must be acknowledged or explicitly discarded.                                                                                                 |
+| `publishPresence`, `receivePresence`, `leavePresence`           | Transient presence channel; see [collaboration](/collaboration#presence).                                                                                                      |
+
+### PDF export {#pdf-export}
+
+`exportPdf()` (and File > Export > Create a PDF, which downloads it) writes the document the way Word's Save As PDF does: real text you can select, search and copy, vector table borders, shading and rules, and pictures at their own resolution, on the pages Print Layout shows (it paints the same layout result). No page is turned into a picture and no print dialog opens. Outside the editor, `exportDocxPdf(model, options)` from `ooxml-ui/docx` does the same for any `DocumentModel` (pass `media` for its pictures, and a `measurer` to run without a canvas).
+
+| Option               | Default                             | Effect                                                                                                           |
+| -------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `pages`              | `'all'`                             | `{ from, to }` (1-based, inclusive) writes a range.                                                              |
+| `markup`             | `'none'`                            | `'none'` writes the document with changes accepted, `'all'` shows tracked changes.                               |
+| `fonts`              | the page's local `@font-face` files | TrueType files (`{ family, bold?, italic?, data }`) embedded as subsets; other text uses the standard PDF fonts. |
+| `documentProperties` | `true`                              | Writes the title, author, subject and keywords.                                                                  |
+| `language`           |                                     | The document language (`/Lang`), e.g. `en-US`.                                                                   |
+| `signal`             |                                     | An `AbortSignal` that stops the export.                                                                          |
+
+The `report` lists the fonts embedded and those written with a standard font instead, characters no font could write, and what was left out by page. This first version leaves out charts, drawing shapes, text boxes, watermarks, page borders, line numbers and floating objects in headers and footers (each reported), and has no links, bookmarks or tagged PDF yet. Remote fonts are never fetched: supply font files to embed the document's typefaces.
 
 ## Events
 
 All events bubble and are composed, so they cross the shadow boundary.
 
-| Event                  | Detail                               | Meaning                                                                                               |
-| ---------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `document-change`      | `DocumentModel`                      | The document changed through editing or review actions.                                               |
-| `document-error`       | `Error`                              | Loading, saving, printing or an edit failed.                                                          |
-| `document-warning`     | `string`                             | Non-fatal notice.                                                                                     |
-| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | The user toggled Editing/Viewing in the chrome.                                                       |
-| `file-command`         | `{ command, fileName? }`             | Cancelable. `command` is `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `print` or `share`. |
-| `dirty-change`         | `boolean`                            | Unsaved-changes state flipped.                                                                        |
-| `page-change`          | `{ page, pageCount }`                | Print Layout page or page count changed (approximate pagination).                                     |
-| `ribbon-action`        | `RibbonAction`                       | A ribbon control was activated.                                                                       |
-| `ribbon-customize`     | `readonly string[]`                  | The user changed which ribbon commands are shown; persist the ids if wanted.                          |
-| `office-ribbon-add-in` | `{ tab, command }`                   | A command of a host tab (`ribbonAddIns`) was chosen.                                                  |
-| `presence-send`        | `PresenceMessage`                    | Local presence changed; transport it to other clients.                                                |
-| `collaboration-send`   | `StepBatch`                          | Local steps are pending; transport them to the authority.                                             |
-| `collaboration-change` | `DocxCollaborationState`             | The collaboration state changed: `{ active, roomId, status, synced, people }`.                        |
+| Event                  | Detail                               | Meaning                                                                                                            |
+| ---------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `document-change`      | `DocumentModel`                      | The document changed through editing or review actions.                                                            |
+| `document-error`       | `Error`                              | Loading, saving, printing or an edit failed.                                                                       |
+| `document-warning`     | `string`                             | Non-fatal notice.                                                                                                  |
+| `readonly-change`      | `{ readOnly, locked, hostReadOnly }` | The user toggled Editing/Viewing in the chrome.                                                                    |
+| `file-command`         | `{ command, fileName? }`             | Cancelable. `command` is `new`, `open`, `save`, `saveAs`, `export`, `exportText`, `exportPdf`, `print` or `share`. |
+| `dirty-change`         | `boolean`                            | Unsaved-changes state flipped.                                                                                     |
+| `page-change`          | `{ page, pageCount }`                | Print Layout page or page count changed (approximate pagination).                                                  |
+| `ribbon-action`        | `RibbonAction`                       | A ribbon control was activated.                                                                                    |
+| `ribbon-customize`     | `readonly string[]`                  | The user changed which ribbon commands are shown; persist the ids if wanted.                                       |
+| `office-ribbon-add-in` | `{ tab, command }`                   | A command of a host tab (`ribbonAddIns`) was chosen.                                                               |
+| `presence-send`        | `PresenceMessage`                    | Local presence changed; transport it to other clients.                                                             |
+| `collaboration-send`   | `StepBatch`                          | Local steps are pending; transport them to the authority.                                                          |
+| `collaboration-change` | `DocxCollaborationState`             | The collaboration state changed: `{ active, roomId, status, synced, people }`.                                     |
 
 The package exports the typed event map (`DocxEditorEventMap`) and the runtime list `DOCX_EDITOR_EVENTS`.
 
