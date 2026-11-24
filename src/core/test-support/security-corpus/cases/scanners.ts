@@ -6,6 +6,7 @@ import { loadDocx } from '../../../docx/parse';
 import { readDeclaredFonts } from '../../../opc/declared-fonts';
 import { PresentationBuilder } from '../../../pptx/core/builders/sdk';
 import { PptxHandler } from '../../../pptx/core/PptxHandler';
+import { createMemoryCubeProvider } from '../../../xlsx/formula/cube-memory';
 import { loadXlsx } from '../../../xlsx/read/load';
 import type { SecurityCase } from '../case';
 
@@ -113,5 +114,18 @@ export const cases: readonly SecurityCase[] = [
 			return { slides: loaded.slides.length };
 		},
 		expected: { slides: 1 },
+	},
+	{
+		name: 'cube member expressions with many unclosed brackets resolve in linear time',
+		limits: { ms: 1_500, heapMb: 128 },
+		run() {
+			const expr = '['.repeat(150_000);
+			const provider = createMemoryCubeProvider({
+				Sales: { members: { [expr]: {} } },
+			});
+			const result = provider.member('Sales', expr);
+			return { matched: 'caption' in result && result.caption.length === expr.length };
+		},
+		expected: { matched: true },
 	},
 ];

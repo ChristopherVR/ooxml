@@ -130,7 +130,8 @@ function standardLines(
 		const slots: Slot[] = [];
 		let x = 0;
 		for (const char of line.text) {
-			const encoded = encodeWinAnsi(char.replace(/[\t\n\r]/, ' '));
+			const normalized = char === '\t' || char === '\n' || char === '\r' ? ' ' : char;
+			const encoded = encodeWinAnsi(normalized);
 			if (encoded === undefined) report.missing(char);
 			const code = encoded ?? '?';
 			const advance = pdfTextWidth(code, base) * size;

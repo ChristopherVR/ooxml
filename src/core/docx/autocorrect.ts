@@ -6,7 +6,7 @@ export interface AutoCorrectOptions {
 	smartQuotes?: boolean;
 	/** Convert `- `, `* `, `1. ` and `1) ` at paragraph start into lists (default true). */
 	autoLists?: boolean;
-	/** Replace `--` with em dash `—` and ` - ` with en dash ` – ` (default true). */
+	/** Replace `--` with an em dash (U+2014) and ` - ` with an en dash (U+2013) (default true). */
 	dashes?: boolean;
 	/** Replace `1/2`, `1/4`, `3/4` with `½`, `¼`, `¾` on word boundary (default true). */
 	fractions?: boolean;

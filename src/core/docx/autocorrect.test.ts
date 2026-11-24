@@ -55,7 +55,7 @@ describe('Word AutoCorrect and AutoFormat As You Type', () => {
 		expect(autoCorrectTextInput('wait-', '-')).toEqual({
 			kind: 'replace',
 			deleteBefore: 1,
-			text: '—',
+			text: '\u2014',
 		});
 		expect(autoCorrectTextInput('wait..', '.')).toEqual({
 			kind: 'replace',

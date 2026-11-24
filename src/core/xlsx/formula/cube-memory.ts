@@ -43,8 +43,13 @@ export interface MemoryCubeData {
 }
 
 const defaultCaption = (expression: string): string => {
-	const match = /\[([^\]]+)\]\s*$/u.exec(expression);
-	return match?.[1] ?? expression;
+	const trimmed = expression.trimEnd();
+	if (!trimmed.endsWith(']')) return expression;
+	const prevClose = trimmed.lastIndexOf(']', trimmed.length - 2);
+	const open = trimmed.indexOf('[', prevClose + 1);
+	if (open === -1) return expression;
+	const inner = trimmed.slice(open + 1, -1);
+	return inner.length > 0 ? inner : expression;
 };
 
 const compareSort = (a: number | string | undefined, b: number | string | undefined): number => {

@@ -11,13 +11,16 @@ const run = (cmd, args) =>
 		);
 	});
 
-rmSync('dist', { recursive: true, force: true });
+rmSync('dist', { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 // Strict embedded surfaces consume the relaxed PowerPoint declarations, never its source.
-rmSync('.types-pptx', { recursive: true, force: true });
+rmSync('.types-pptx', { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
 await run('tsc', ['-p', 'tsconfig.pptx.json', '--outDir', '.types-pptx']);
 await Promise.all([
-	run('tsc', ['-p', 'tsconfig.build.json']),
-	run('tsc', ['-p', 'tsconfig.pptx.json']),
+	(async () => {
+		// Both projects emit shared declarations into `dist/`; run them sequentially to avoid races.
+		await run('tsc', ['-p', 'tsconfig.pptx.json']);
+		await run('tsc', ['-p', 'tsconfig.build.json']);
+	})(),
 	run('tsup', ['--config', 'tsup.pptx.config.ts']),
 	run('tsup', ['--config', 'tsup.config.ts']),
 ]);
