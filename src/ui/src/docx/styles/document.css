@@ -81,10 +81,14 @@
 	border-collapse: collapse;
 	margin: 0;
 }
+/* A Word cell width includes its margins, and a word wider than its cell breaks inside it, so
+   Draft keeps a table as wide as Print Layout does (#322). */
 .dve-paper td {
+	box-sizing: border-box;
 	min-width: 44px;
 	border: var(--dve-cell-border, 1px dashed #c8c6c4);
 	vertical-align: top;
+	overflow-wrap: anywhere;
 }
 .dve-paper td p {
 	margin: 0;
