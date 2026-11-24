@@ -9,8 +9,8 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.93",
-		"ai": "^7.0.177",
+		"@ai-sdk/openai-compatible": "^3.0.94",
+		"ai": "^7.0.179",
 		"emf-converter": "5.0.0",
 		"fast-xml-parser": "^5.12.1",
 		"jszip": "^3.10.2",

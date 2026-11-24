@@ -9,9 +9,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@ai-sdk/openai-compatible": "^3.0.93",
-		"@ai-sdk/vue": "^4.0.177",
-		"ai": "^7.0.177",
+		"@ai-sdk/openai-compatible": "^3.0.94",
+		"@ai-sdk/vue": "^4.0.179",
+		"ai": "^7.0.179",
 		"emf-converter": "5.0.0",
 		"fast-xml-parser": "^5.12.1",
 		"jspdf": "^4.2.1",
@@ -20,7 +20,7 @@
 		"pptx-viewer-core": "workspace:*",
 		"pptx-viewer-locales": "workspace:*",
 		"pptx-vue-viewer": "workspace:*",
-		"vue": "^3.5.45",
+		"vue": "^3.5.46",
 		"vue-i18n": "^11.4.23"
 	},
 	"devDependencies": {
