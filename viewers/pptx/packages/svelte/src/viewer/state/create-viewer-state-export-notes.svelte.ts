@@ -56,6 +56,8 @@ export interface ExportNotesClusterDeps {
 	onnotesupdate?: (notes: string) => void;
 	/** Show the PDF approximation notice in the compatibility toast stack. */
 	notify?(toast: CompatibilityWarningToast): void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?(id: string): void;
 	/** The host's `onpdfexportreport`. */
 	onpdfexportreport?(result: VectorPdfExportResult): void;
 }
@@ -103,6 +105,7 @@ export function buildExportNotesCluster(deps: ExportNotesClusterDeps): ExportNot
 		getDeckData: () => buildDeckExportData(editor, loader),
 		getFileName: () => deps.getFileName?.(),
 		notify: (toast) => deps.notify?.(toast),
+		dismissNotice: (id) => deps.dismissNotice?.(id),
 		onPdfExportReport: (result) => deps.onpdfexportreport?.(result),
 	});
 	const exportUi = new ExportUiState({

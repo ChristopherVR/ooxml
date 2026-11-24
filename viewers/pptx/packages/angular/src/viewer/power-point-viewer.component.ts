@@ -3142,6 +3142,7 @@ export class PowerPointViewerComponent
 			pdfExportSettings: () => this.viewerOpts.pdfExportSettings(),
 			pdfOptionsContainer: () => this.viewerRoot()?.nativeElement,
 			notify: (toast) => this.loadNotices.notify(toast),
+			dismissNotice: (id) => this.loadNotices.dismissToast(id),
 			onPdfExportReport: (result) => this.pdfExportReport.emit(result),
 		});
 

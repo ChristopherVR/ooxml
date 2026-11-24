@@ -598,6 +598,10 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				this.store.set({
 					compatToasts: [toast, ...this.store.get().compatToasts.filter((t) => t.id !== toast.id)],
 				}),
+			dismissNotice: (id) =>
+				this.store.set({
+					compatToasts: this.store.get().compatToasts.filter((t) => t.id !== id),
+				}),
 		});
 		// File > Options controller: owns the persisted options store and turns
 		// option values into behavior. Created before the parity workflows (which

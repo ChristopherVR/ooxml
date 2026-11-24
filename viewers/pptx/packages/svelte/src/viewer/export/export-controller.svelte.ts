@@ -113,6 +113,8 @@ export interface ExportControllerDeps {
 	getImageResolutionScale?(): number;
 	/** Show the PDF approximation notice in the viewer's toast stack. */
 	notify?(toast: CompatibilityWarningToast): void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?(id: string): void;
 	/** The host's `onpdfexportreport`, told what every vector PDF approximated. */
 	onPdfExportReport?(result: VectorPdfExportResult): void;
 }
@@ -253,6 +255,9 @@ export class ExportController {
 						this.#deps.onPdfExportReport?.(result);
 					},
 					...(this.#deps.notify ? { notify: (toast) => this.#deps.notify?.(toast) } : {}),
+					...(this.#deps.dismissNotice
+						? { dismissNotice: (id) => this.#deps.dismissNotice?.(id) }
+						: {}),
 				});
 			} finally {
 				this.exporting = false;

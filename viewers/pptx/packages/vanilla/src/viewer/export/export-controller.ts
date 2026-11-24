@@ -94,6 +94,8 @@ export interface ExportControllerDeps {
 	onPdfExportReport?: (result: VectorPdfExportResult) => void;
 	/** Show the PDF approximation notice in the compatibility toast stack. */
 	notify?: (toast: CompatibilityWarningToast) => void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?: (id: string) => void;
 }
 
 export interface ExportController {
@@ -285,6 +287,7 @@ export function createExportController(deps: ExportControllerDeps): ExportContro
 						deps.onPdfExportReport?.(result);
 					},
 					...(deps.notify ? { notify: deps.notify } : {}),
+					...(deps.dismissNotice ? { dismissNotice: deps.dismissNotice } : {}),
 				});
 			});
 		}

@@ -179,6 +179,7 @@ export class ViewerExportService {
 					save: (blob) => downloadBlob(blob, 'presentation.pdf'),
 					...(host.onPdfExportReport ? { onApproximated: host.onPdfExportReport } : {}),
 					...(host.notify ? { notify: host.notify } : {}),
+					...(host.dismissNotice ? { dismissNotice: host.dismissNotice } : {}),
 				});
 				this.progress.set(EXPORT_DONE_PERCENT);
 			} catch (err) {

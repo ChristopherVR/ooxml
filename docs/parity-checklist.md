@@ -865,10 +865,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       font is read or downloaded for the PDF); embedding a deck's own fonts is unit-tested only.
 - [x] **P1** Save as PDF says what it approximated: one translated notice counts elements and
       slides saved as pictures, substituted fonts, and slides with content left out or effects
-      simplified, with a Details list; all five bindings emit `pdfExportReport`. Export > PDF first
-      offers Range (All, Current slide, Slides from-to) and Include hidden slides
-      (`export/pdf-export-notice.ts`, `web-components/pdf-export-dialog.ts`). Open: a later clean
-      export leaves the previous notice until it is dismissed.
+      simplified, with a Details list; all five bindings emit `pdfExportReport`, and a later clean
+      export dismisses any earlier notice (`export/pdf-export-notice.ts`, `export/pdf-export-run.ts`,
+      `web-components/pdf-export-dialog.ts`). Export > PDF first offers Range (All, Current slide,
+      Slides from-to) and Include hidden slides.
 - [x] **P1** Save as PDF (vector, the default) is fast on effect-heavy decks and its element
       pictures hold only their element. Each slide's styled clone is built once and every picture
       is cut from it (`export/pdf-vector-raster-batch.ts`); a picture shows only its target

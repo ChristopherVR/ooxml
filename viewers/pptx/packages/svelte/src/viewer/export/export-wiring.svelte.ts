@@ -54,6 +54,8 @@ export interface ExportWiringDeps {
 	getPdfExportSettings?(): PdfExportSettings | undefined;
 	/** Show the PDF approximation notice in the viewer's toast stack. */
 	notify?: ExportControllerDeps['notify'];
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?: ExportControllerDeps['dismissNotice'];
 	/** The host's `onpdfexportreport`. */
 	onPdfExportReport?: ExportControllerDeps['onPdfExportReport'];
 	/** The deck's theme and table styles for the capture stage. */
@@ -122,6 +124,7 @@ export function createExportWiring(deps: ExportWiringDeps): ExportWiring {
 		getImageResolutionScale: deps.getImageResolutionScale,
 		getTranslator: deps.getTranslator,
 		notify: (toast) => deps.notify?.(toast),
+		dismissNotice: (id) => deps.dismissNotice?.(id),
 		onPdfExportReport: (result) => deps.onPdfExportReport?.(result),
 	});
 

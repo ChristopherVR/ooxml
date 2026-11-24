@@ -6,7 +6,7 @@
  */
 import type { PdfExportSettings } from '../render/options/viewer-options-apply';
 import type { CompatibilityWarningToast } from '../render/compatibility-warning-toasts';
-import { pdfExportNoticeToast } from './pdf-export-notice';
+import { PDF_EXPORT_NOTICE_ID, pdfExportNoticeToast } from './pdf-export-notice';
 import {
 	exportSlidesVectorPdf,
 	type VectorPdfExportOptions,
@@ -28,6 +28,11 @@ export interface RunPdfExportOptions {
 	 * the vector export approximated. Not called when nothing was.
 	 */
 	notify?: (toast: CompatibilityWarningToast) => void;
+	/**
+	 * Dismiss an earlier PDF approximation notice by id when a later export completes cleanly with
+	 * no approximations.
+	 */
+	dismissNotice?: (id: string) => void;
 }
 
 /** The prefix of the console note listing what a vector PDF approximated. */
@@ -39,6 +44,7 @@ export async function runPdfExport(
 ): Promise<VectorPdfExportResult | undefined> {
 	if (options.settings.mode === 'pictures') {
 		await options.pictures();
+		options.dismissNotice?.(PDF_EXPORT_NOTICE_ID);
 		return undefined;
 	}
 	const result = await exportSlidesVectorPdf({
@@ -53,5 +59,6 @@ export async function runPdfExport(
 	}
 	const toast = pdfExportNoticeToast(result);
 	if (toast) options.notify?.(toast);
+	else options.dismissNotice?.(PDF_EXPORT_NOTICE_ID);
 	return result;
 }

@@ -89,6 +89,8 @@ export interface UseExportHandlersInput {
 	pdfExportContainerRef?: RefObject<HTMLElement | null> | undefined;
 	/** Shows the PDF approximation notice in the viewer's toast stack. */
 	notifyPdfExport?: ((toast: CompatibilityWarningToast) => void) | undefined;
+	/** Dismiss an earlier PDF approximation notice when a later export is clean. */
+	dismissPdfExportNotice?: ((id: string) => void) | undefined;
 	/** The host's `onPdfExportReport`: what a vector PDF export approximated. */
 	onPdfExportReport?: ((result: VectorPdfExportResult) => void) | undefined;
 }

@@ -52,6 +52,8 @@ export interface ExportHost {
 	readonly pdfOptionsContainer?: () => HTMLElement | undefined;
 	/** Show a notice in the viewer's toast stack (what a vector PDF approximated). */
 	readonly notify?: (toast: CompatibilityWarningToast) => void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	readonly dismissNotice?: (id: string) => void;
 	/** Tell the host what a vector PDF approximated (the `pdfExportReport` output). */
 	readonly onPdfExportReport?: (result: VectorPdfExportResult) => void;
 }

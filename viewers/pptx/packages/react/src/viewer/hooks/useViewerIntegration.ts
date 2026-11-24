@@ -358,6 +358,8 @@ export function useViewerIntegration(input: UseViewerIntegrationInput): ViewerIn
 		pdfExportContainerRef: state.containerRef,
 		notifyPdfExport: (toast) =>
 			setCompatToasts((prev) => [toast, ...prev.filter((entry) => entry.id !== toast.id)]),
+		dismissPdfExportNotice: (id) =>
+			setCompatToasts((prev) => prev.filter((entry) => entry.id !== id)),
 		onPdfExportReport: input.onPdfExportReport,
 	});
 

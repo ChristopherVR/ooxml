@@ -1,8 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PDF_SVG_NOTE_CODES } from '../../export/pdf-svg-notes';
 import { translationsEn } from '../i18n/translations-en';
 import { createTranslator } from '../i18n/translator';
+import * as pdfVectorExportEntry from './pdf-vector-export-entry';
 import {
 	distinctPdfDiagnostics,
 	PDF_EXPORT_DIAGNOSTIC_CODES,
@@ -11,6 +12,7 @@ import {
 	type PdfExportDiagnostic,
 } from './pdf-export-diagnostics';
 import {
+	PDF_EXPORT_NOTICE_ID,
 	pdfDiagnosticMessage,
 	pdfExportNoticeToast,
 	summarizePdfExport,
@@ -113,8 +115,11 @@ describe('pdfExportNoticeToast', () => {
 });
 
 describe('runPdfExport notice', () => {
-	it('never notifies for the picture export', async () => {
+	afterEach(() => vi.restoreAllMocks());
+
+	it('never notifies for the picture export and dismisses any earlier notice', async () => {
 		const notify = vi.fn();
+		const dismissNotice = vi.fn();
 		const pictures = vi.fn(() => Promise.resolve());
 		await runPdfExport({
 			settings: { mode: 'pictures', includeHiddenSlides: false },
@@ -122,8 +127,33 @@ describe('runPdfExport notice', () => {
 			pictures,
 			save: vi.fn(),
 			notify,
+			dismissNotice,
 		});
 		expect(pictures).toHaveBeenCalledOnce();
 		expect(notify).not.toHaveBeenCalled();
+		expect(dismissNotice).toHaveBeenCalledWith(PDF_EXPORT_NOTICE_ID);
+	});
+
+	it('dismisses an earlier notice when a vector export completes cleanly with no approximations', async () => {
+		vi.spyOn(pdfVectorExportEntry, 'exportSlidesVectorPdf').mockResolvedValue({
+			blob: new Blob(),
+			bytes: new Uint8Array(),
+			slides: [{ index: 0, mode: 'vector', pictures: 0, diagnostics: [] }],
+			diagnostics: [],
+		} as never);
+		const notify = vi.fn();
+		const dismissNotice = vi.fn();
+		const save = vi.fn();
+		await runPdfExport({
+			settings: { mode: 'vector', includeHiddenSlides: false },
+			vector: {} as never,
+			pictures: vi.fn(() => Promise.resolve()),
+			save,
+			notify,
+			dismissNotice,
+		});
+		expect(save).toHaveBeenCalledOnce();
+		expect(notify).not.toHaveBeenCalled();
+		expect(dismissNotice).toHaveBeenCalledWith(PDF_EXPORT_NOTICE_ID);
 	});
 });

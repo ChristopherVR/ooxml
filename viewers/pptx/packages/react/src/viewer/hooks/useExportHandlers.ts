@@ -183,6 +183,7 @@ export function useExportHandlers(input: UseExportHandlersInput): ExportHandlers
 					...pdfInputRef.current,
 					selection,
 					notify: host.input.notifyPdfExport,
+					dismissNotice: host.input.dismissPdfExportNotice,
 					onApproximated: host.input.onPdfExportReport,
 					scale: imageExportScale,
 					onProgress: (current, total) => {

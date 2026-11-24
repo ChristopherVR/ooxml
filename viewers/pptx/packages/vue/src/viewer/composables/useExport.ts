@@ -60,6 +60,8 @@ export interface UseExportOptions {
 	onReport?: (result: VectorPdfExportResult) => void;
 	/** Show the PDF notice in the viewer's compatibility toast stack. */
 	notify?: (toast: CompatibilityWarningToast) => void;
+	/** Dismiss an earlier PDF notice when a later export completes cleanly. */
+	dismissNotice?: (id: string) => void;
 }
 
 /** Per-slide progress callback: `(currentSlideIndex, totalSlides)`. */
@@ -167,6 +169,7 @@ export function useExport(options: UseExportOptions): UseExportResult {
 						? { onApproximated: (result) => reporters.forEach((report) => report(result)) }
 						: {}),
 					...(options.notify ? { notify: options.notify } : {}),
+					...(options.dismissNotice ? { dismissNotice: options.dismissNotice } : {}),
 				});
 			} finally {
 				exporting.value = false;

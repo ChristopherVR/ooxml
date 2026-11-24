@@ -80,6 +80,8 @@ export interface UseExportWiringInput {
 	onPdfExportReport?: (result: VectorPdfExportResult) => void;
 	/** Show a notice (the PDF approximation summary) in the compatibility toast stack. */
 	notify?: (toast: CompatibilityWarningToast) => void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?: (id: string) => void;
 	/** Where File > Export > PDF mounts its options dialog (inside the viewer root, for the theme). */
 	dialogContainer?: () => HTMLElement | null | undefined;
 	/** Active-language translator for the options dialog. */
@@ -163,6 +165,7 @@ export function useExportWiring(input: UseExportWiringInput): UseExportWiringRes
 		getPdfExportSettings,
 		...(input.onPdfExportReport ? { onReport: input.onPdfExportReport } : {}),
 		...(input.notify ? { notify: input.notify } : {}),
+		...(input.dismissNotice ? { dismissNotice: input.dismissNotice } : {}),
 		...(imageExportScale ? { imageExportScale } : {}),
 	});
 	const mediaExport = useMediaExport({ slideCount, rasterizeSlide });

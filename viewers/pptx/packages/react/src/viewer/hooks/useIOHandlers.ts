@@ -65,6 +65,7 @@ export interface UseIOHandlersInput {
 	/** See the matching fields on `UseExportHandlersInput`. */
 	pdfExportContainerRef?: UseExportHandlersInput['pdfExportContainerRef'];
 	notifyPdfExport?: UseExportHandlersInput['notifyPdfExport'];
+	dismissPdfExportNotice?: UseExportHandlersInput['dismissPdfExportNotice'];
 	onPdfExportReport?: UseExportHandlersInput['onPdfExportReport'];
 }
 
@@ -106,6 +107,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		pdfExportSettings,
 		pdfExportContainerRef,
 		notifyPdfExport,
+		dismissPdfExportNotice,
 		onPdfExportReport,
 	} = input;
 
@@ -138,6 +140,7 @@ export function useIOHandlers(input: UseIOHandlersInput): IOHandlersResult {
 		pdfExportSettings,
 		pdfExportContainerRef,
 		notifyPdfExport,
+		dismissPdfExportNotice,
 		onPdfExportReport,
 	});
 

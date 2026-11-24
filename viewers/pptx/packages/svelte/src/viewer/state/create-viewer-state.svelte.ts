@@ -341,6 +341,7 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 		getFileName: () => options.getFileName?.(),
 		onnotesupdate: options.onnotesupdate,
 		notify: (toast) => editorUi.compatToasts.notify(toast),
+		dismissNotice: (id) => editorUi.compatToasts.dismiss(id),
 		onpdfexportreport: (result) => options.onpdfexportreport?.(result),
 	});
 

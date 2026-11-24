@@ -31,6 +31,8 @@ export interface PresentationPdfOptions extends PdfExportOptions {
 	selection?: PdfSlideSelection | undefined;
 	/** Show the approximation notice in the viewer's toast stack. */
 	notify?: ((toast: CompatibilityWarningToast) => void) | undefined;
+	/** Dismiss an earlier PDF approximation notice when a later export is clean. */
+	dismissNotice?: ((id: string) => void) | undefined;
 }
 
 /** Export the presentation as a PDF download (see the module comment). */
@@ -92,6 +94,7 @@ export async function exportPresentationPdf(
 			save: (blob) => downloadBlob(blob, filename),
 			...(options.onApproximated ? { onApproximated: options.onApproximated } : {}),
 			...(options.notify ? { notify: options.notify } : {}),
+			...(options.dismissNotice ? { dismissNotice: options.dismissNotice } : {}),
 		});
 	} finally {
 		setActiveSlide(currentSlideIndex);

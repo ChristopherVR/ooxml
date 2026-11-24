@@ -71,6 +71,8 @@ export interface ExportLifecycleDeps {
 	onPdfExportReport?(result: VectorPdfExportResult): void;
 	/** Show the PDF approximation notice in the compatibility toast stack. */
 	notify?(toast: CompatibilityWarningToast): void;
+	/** Dismiss an earlier PDF approximation notice when a later export completes cleanly. */
+	dismissNotice?(id: string): void;
 }
 
 /** The export slice of the public viewer API (see `PptxViewerInstance`). */
@@ -172,6 +174,7 @@ export function createExportLifecycle(deps: ExportLifecycleDeps): ExportLifecycl
 		getPrintHighQuality: deps.getPrintHighQuality,
 		onPdfExportReport: (result) => deps.onPdfExportReport?.(result),
 		...(deps.notify ? { notify: (toast: CompatibilityWarningToast) => deps.notify?.(toast) } : {}),
+		...(deps.dismissNotice ? { dismissNotice: (id: string) => deps.dismissNotice?.(id) } : {}),
 	});
 	// Multi-slide exports (PDF / GIF / video) run through the progress envelope
 	// so a visible modal (bar + status + Cancel) accompanies them, exactly like
