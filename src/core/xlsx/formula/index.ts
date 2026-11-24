@@ -52,6 +52,17 @@ export {
 	type MemoryCubeSetEntry,
 } from './cube-memory';
 export {
+	createFetchImageProvider,
+	createFetchWebserviceProvider,
+	type CachingImageProvider,
+	type CachingWebserviceProvider,
+	type FetchImageProviderOptions,
+	type FetchLike,
+	type FetchProviderBaseOptions,
+	type FetchWebserviceProviderOptions,
+	type LoadedCellImage,
+} from './web-providers';
+export {
 	formatRefSpec,
 	referencedRanges,
 	referenceSpans,

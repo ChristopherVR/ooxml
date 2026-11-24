@@ -36,6 +36,7 @@ network request must update this file in the same commit.
 | Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                        | Not applicable                                                     |
 | Word, Excel, PowerPoint: Get Add-ins               | `marketplace.microsoft.com`                 | Only when its link is clicked            | Leave the catalog link unopened                                    |
 | Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft` | Only when the user opens or loads a form | Leave the form unopened or close the response dialog               |
+| Excel: `WEBSERVICE` and `IMAGE` fetch providers    | Any `http:`/`https:` URL in the formula     | No (host must opt in via `providers`)    | Omit `providers.webservice`/`image` or restrict `allowedOrigins`   |
 | Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one            | Pass bytes instead                                                 |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's

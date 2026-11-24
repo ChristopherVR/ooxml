@@ -158,6 +158,8 @@
 	"createCalcEngine",
 	"createConditionalFormatEvaluator",
 	"createEditSession",
+	"createFetchImageProvider",
+	"createFetchWebserviceProvider",
 	"createGridMetrics",
 	"createMemoryCubeProvider",
 	"createPrintMergeIndex",
