@@ -5307,6 +5307,10 @@
 						},
 						{
 							"kind": "field",
+							"name": "searchExpanded"
+						},
+						{
+							"kind": "field",
 							"name": "state"
 						},
 						{
