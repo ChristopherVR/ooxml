@@ -3,13 +3,18 @@ import { readFile } from 'node:fs/promises';
 import { fileInput } from './helpers';
 
 // The table report fixtures (generated in the core, see their README): an auto-fit table of
-// twelve columns and a centred one with thick borders and large cell margins (#322).
+// twelve columns, a centred one with thick borders and large cell margins, and a fixed one whose
+// cells all claim the table's width (#322).
 const fixture = (name: string) =>
 	readFile(
 		new URL(`../../src/core/docx/layout/fixtures/table-reports/${name}.docx`, import.meta.url),
 	);
 
-for (const name of ['t02-autofit-12-colonnes', 't15-centre-bordures-epaisses']) {
+for (const name of [
+	't02-autofit-12-colonnes',
+	't15-centre-bordures-epaisses',
+	't25-largeurs-cellules-perimees',
+]) {
 	test(`Draft view keeps the table of ${name} inside the paper, as Print Layout does (#322)`, async ({
 		page,
 	}) => {

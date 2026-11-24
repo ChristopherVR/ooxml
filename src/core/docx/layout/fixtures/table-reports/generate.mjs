@@ -31,6 +31,7 @@ function table(rows, options = {}) {
 		'<w:tblStyle w:val="TableGrid"/>',
 		tblW,
 		options.center ? '<w:jc w:val="center"/>' : '',
+		options.fixed ? '<w:tblLayout w:type="fixed"/>' : '',
 		options.borders ? `<w:tblBorders>${allBorders(options.borders)}</w:tblBorders>` : '',
 		options.cellMargin
 			? `<w:tblCellMar><w:top w:w="${options.cellMargin}" w:type="dxa"/><w:left w:w="${options.cellMargin}" w:type="dxa"/><w:bottom w:w="${options.cellMargin}" w:type="dxa"/><w:right w:w="${options.cellMargin}" w:type="dxa"/></w:tblCellMar>`
@@ -48,7 +49,7 @@ function table(rows, options = {}) {
 			const tcs = cells
 				.map((content, index) => {
 					const paragraphs = Array.isArray(content) ? content : [content];
-					return `<w:tc><w:tcPr><w:tcW w:w="${widths[index]}" w:type="dxa"/></w:tcPr>${paragraphs.map(paragraph).join('')}</w:tc>`;
+					return `<w:tc><w:tcPr><w:tcW w:w="${options.cellWidth ?? widths[index]}" w:type="dxa"/></w:tcPr>${paragraphs.map(paragraph).join('')}</w:tc>`;
 				})
 				.join('');
 			return `<w:tr>${trPr}${tcs}</w:tr>`;
@@ -193,6 +194,22 @@ await save(
 				...Array.from({ length: 5 }, (_, index) => [`Indication ${index + 1}`, '0', '0']),
 			],
 			{ header: 4320 },
+		) +
+		paragraph('Fin du document.'),
+);
+
+// A fixed-layout table whose cells all claim the table's width (a generator's stale `tcW`); its
+// grid adds up to the text column, which is what Word lays the columns out from.
+await save(
+	't25-largeurs-cellules-perimees',
+	paragraph('Tableau à largeur fixe, largeurs de cellule périmées.') +
+		table(
+			[
+				['Nature', 'N-2', 'N-1', 'N'],
+				['Chiffre d’affaires', '0', '0', '0'],
+				['Résultat', '0', '0', '0'],
+			],
+			{ fixed: true, width: TEXT_WIDTH, widths: [2340, 2100, 2100, 2100], cellWidth: TEXT_WIDTH },
 		) +
 		paragraph('Fin du document.'),
 );

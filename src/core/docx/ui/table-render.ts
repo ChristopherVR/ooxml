@@ -66,6 +66,32 @@ export function tableStyle(attrs: Record<string, unknown>): string {
 	return declarations.join(';');
 }
 
+/**
+ * The table grid's column widths in CSS pixels (`w:tblGrid`, as JSON in `attrs.grid`), when it
+ * has one positive width per column. Word sizes columns from the grid; a cell's own preferred
+ * width (`w:tcW`) can be stale (some generators write the table width on every cell), so a view
+ * that set columns from the cells could draw the table wider than the page.
+ */
+export function tableGridColumns(
+	attrs: Record<string, unknown>,
+	columnCount: number,
+): number[] | null {
+	if (typeof attrs.grid !== 'string' || !attrs.grid) return null;
+	let grid: unknown;
+	try {
+		grid = JSON.parse(attrs.grid);
+	} catch {
+		return null;
+	}
+	if (
+		!Array.isArray(grid) ||
+		grid.length !== columnCount ||
+		!grid.every((width) => Number.isFinite(width) && width > 0)
+	)
+		return null;
+	return grid.map((width: number) => width / 15);
+}
+
 /** Word's default cell margins: none above/below, 0.075" (108 twips) left and right. */
 const DEFAULT_CELL_MARGINS = { top: 0, bottom: 0, left: 108, right: 108 };
 

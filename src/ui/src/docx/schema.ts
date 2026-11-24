@@ -6,7 +6,7 @@ import {
 	hardBreakNodeSpec,
 	commentHistoryAttributes,
 } from 'ooxml-core/docx/ui';
-import { paragraphBoxCss, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
+import { paragraphBoxCss, tableGridColumns, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
 import { controlFromData, markSpecs } from 'ooxml-core/docx/ui';
 import { equationNodeSpec } from './equation-schema';
@@ -290,7 +290,16 @@ export const schema = new Schema({
 				contentControl: { default: null },
 			},
 			parseDOM: [{ tag: 'table' }],
-			toDOM: (node) => ['table', { style: tableStyle(node.attrs) }, ['tbody', 0]],
+			toDOM: (node) => {
+				// Columns come from the table grid, as in Word and Print Layout, not from cell widths.
+				let columns = 0;
+				node.firstChild?.forEach((cell) => (columns += Number(cell.attrs.colspan) || 1));
+				const grid = tableGridColumns(node.attrs, columns);
+				const colgroup: DOMOutputSpec[] = grid
+					? [['colgroup', ...grid.map((width) => ['col', { style: `width:${width}px` }])]]
+					: [];
+				return ['table', { style: tableStyle(node.attrs) }, ...colgroup, ['tbody', 0]];
+			},
 		},
 		tableRow: {
 			// A row whose cells all continue vertical merges from above holds no cell of its own.
