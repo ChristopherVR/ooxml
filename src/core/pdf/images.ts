@@ -3,14 +3,17 @@
  * passes through as it is (a CMYK one with its Adobe marker set to keep the PDF's colours);
  * samples (1 to 16 bits, Flate, LZW, run length or CCITT fax coded) in any colour space this
  * reader knows become a PNG, with the /Decode array applied and the soft mask, stencil mask or
- * colour key as its alpha. JPEG 2000 and JBIG2 images are reported, not decoded.
+ * colour key as its alpha. JPEG 2000 images are decoded to samples first (`jpx-image.ts`),
+ * JBIG2 images to 1-bit samples (`jbig2-pdf.ts`).
  */
 import { encodePng } from '../drawingml/raster-encode';
 import { jpegComponents } from '../drawingml/raster-decode';
 import { decodeCcitt } from './ccitt';
 import type { PdfDocument } from './document';
 import { colorSpace, gray, type ColorSpace } from './image-color';
+import { jbig2Samples } from './jbig2-pdf';
 import { cmykJpegForDocument } from './jpeg-cmyk';
+import { jpxSamples } from './jpx-image';
 import { isNumber, PdfStream, type PdfDict, type PdfValue } from './objects';
 import type { PdfPageImage } from './page-content';
 
@@ -36,20 +39,17 @@ export const streamSource = (document: PdfDocument, stream: PdfStream): ImageSou
 	data: () => document.streamData(stream),
 });
 
-const UNSUPPORTED: Record<string, string> = {
-	JPXDecode: 'its JPEG 2000 compression is not supported',
-	JBIG2Decode: 'its JBIG2 compression is not supported',
-};
-
-/** The samples of decoded image data (CCITT fax decoded here), or why there are none. */
-function samples(
+/** The samples of decoded image data (CCITT fax and JBIG2 decoded here), or why there are none. */
+async function samples(
 	document: PdfDocument,
 	decoded: Decoded,
 	width: number,
 	height: number,
-): { bytes: Uint8Array; fax: boolean } | string {
+): Promise<{ bytes: Uint8Array; fax: boolean } | string> {
 	const filter = decoded.imageFilter;
 	if (!filter) return { bytes: decoded.bytes, fax: false };
+	if (filter.name === 'JBIG2Decode')
+		return jbig2Samples(document, decoded.bytes, filter.parms, width, height);
 	if (filter.name === 'CCITTFaxDecode') {
 		const parm = (key: string) => filter.parms?.get(key);
 		const number = (key: string, fallback: number) => {
@@ -69,10 +69,7 @@ function samples(
 		);
 		return { bytes, fax: true };
 	}
-	return (
-		UNSUPPORTED[filter.name] ??
-		`its ${filter.name.replace(/Decode$/, '')} compression is not supported`
-	);
+	return `its ${filter.name.replace(/Decode$/, '')} compression is not supported`;
 }
 
 /** Per component, a table from the raw sample to its 0..255 value (or palette index). */
@@ -125,12 +122,21 @@ async function maskPlane(
 	const mw = await get('Width');
 	const mh = await get('Height');
 	if (!isNumber(mw) || !isNumber(mh) || mw < 1 || mh < 1 || mw * mh > MAX_PIXELS) return undefined;
-	const raw = samples(document, await document.streamData(mask), mw, mh);
+	const decoded = await document.streamData(mask);
+	const jpx =
+		decoded.imageFilter?.name === 'JPXDecode'
+			? await jpxSamples(document, mask, decoded.bytes, mw, mh, true)
+			: undefined;
+	const raw = jpx
+		? typeof jpx === 'string'
+			? jpx
+			: { bytes: jpx.bytes, fax: false }
+		: await samples(document, decoded, mw, mh);
 	if (typeof raw === 'string') return undefined;
 	const bpcValue = await get('BitsPerComponent');
-	const bpc = stencil || raw.fax ? 1 : isNumber(bpcValue) ? bpcValue : 8;
+	const bpc = jpx ? 8 : stencil || raw.fax ? 1 : isNumber(bpcValue) ? bpcValue : 8;
 	if (![1, 2, 4, 8, 16].includes(bpc)) return undefined;
-	const table = lookups(await get('Decode'), 1, bpc, undefined)[0]!;
+	const table = lookups(jpx && !stencil ? undefined : await get('Decode'), 1, bpc, undefined)[0]!;
 	const read = reader(raw.bytes, mw, 1, bpc);
 	const alpha = new Uint8Array(width * height);
 	for (let y = 0; y < height; y++) {
@@ -197,17 +203,32 @@ export async function decodeImage(
 			? { ...base, format: 'jpeg', data }
 			: unsupported('it is a YCCK JPEG whose colours would need decoding');
 	}
-	const raw = samples(document, decoded, width, height);
+	const jpx =
+		decoded.imageFilter?.name === 'JPXDecode'
+			? await jpxSamples(document, source, decoded.bytes, width, height)
+			: undefined;
+	if (typeof jpx === 'string') return unsupported(jpx);
+	const raw = jpx
+		? { bytes: jpx.bytes, fax: false }
+		: await samples(document, decoded, width, height);
 	if (typeof raw === 'string') return unsupported(raw);
 	const imageMask = (await get('ImageMask')) === true;
 	const bpcValue = await get('BitsPerComponent');
-	const bpc = imageMask || raw.fax ? 1 : isNumber(bpcValue) ? bpcValue : 8;
+	const bpc = jpx ? 8 : imageMask || raw.fax ? 1 : isNumber(bpcValue) ? bpcValue : 8;
 	if (![1, 2, 4, 8, 16].includes(bpc)) return unsupported('its sample size is not supported');
-	const space: ColorSpace | undefined = imageMask
-		? gray
-		: await colorSpace(document, source.dict.get('ColorSpace'), source.named);
+	const space: ColorSpace | undefined = jpx
+		? jpx.space
+		: imageMask
+			? gray
+			: await colorSpace(document, source.dict.get('ColorSpace'), source.named);
 	if (!space) return unsupported('its colour space is not supported');
-	const tables = lookups(decode, space.components, bpc, space.hival);
+	// JPEG 2000 data ignores /Decode unless it is an image mask (ISO 32000-1 Table 89).
+	const tables = lookups(
+		jpx && !imageMask ? undefined : decode,
+		space.components,
+		bpc,
+		space.hival,
+	);
 	const read = reader(raw.bytes, width, space.components, bpc);
 	const out = new Uint8Array(width * height * 3);
 	const pixel: number[] = [];
@@ -217,7 +238,7 @@ export async function decodeImage(
 			? (colorKey as number[])
 			: undefined;
 	let alpha: Uint8Array | undefined =
-		keyRanges || imageMask ? new Uint8Array(width * height) : undefined;
+		jpx?.alpha ?? (keyRanges || imageMask ? new Uint8Array(width * height) : undefined);
 	const fill = parseHex(options.fill);
 	for (let y = 0; y < height; y++)
 		for (let x = 0; x < width; x++) {

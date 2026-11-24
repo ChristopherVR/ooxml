@@ -123,6 +123,15 @@ function row2d(bits: Bits, columns: number, reference: number[]): number[] | und
 
 /** Decodes CCITT fax data into packed 1-bit rows. */
 export function decodeCcitt(data: Uint8Array, options: CcittOptions, maxBytes: number): Uint8Array {
+	return decodeCcittBits(data, options, maxBytes).bytes;
+}
+
+/** Decodes CCITT fax data; also returns the bit position where decoding stopped. */
+export function decodeCcittBits(
+	data: Uint8Array,
+	options: CcittOptions,
+	maxBytes: number,
+): { bytes: Uint8Array; bits: number } {
 	const columns = Math.floor(options.columns);
 	if (columns < 1 || columns > 65_536) throw new Error('The CCITT image width is out of range.');
 	const stride = (columns + 7) >> 3;
@@ -166,7 +175,7 @@ export function decodeCcitt(data: Uint8Array, options: CcittOptions, maxBytes: n
 		reference = [...changes.filter((change) => change < columns), columns, columns];
 		if (options.encodedByteAlign && options.k >= 0) bits.align();
 	}
-	return out;
+	return { bytes: out, bits: bits.at };
 }
 
 function fillBlack(out: Uint8Array, start: number, from: number, to: number, set: boolean): void {

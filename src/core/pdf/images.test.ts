@@ -162,15 +162,15 @@ describe('image codecs and masks', () => {
 		expect([...keyed.alpha!]).toEqual([0, 255]);
 	});
 
-	it('reports JBIG2 and JPEG 2000 pictures with the reason', async () => {
+	it('reports damaged JBIG2 and JPEG 2000 pictures with the reason', async () => {
 		expect(
 			await one(xobject('/Width 4 /Height 4 /BitsPerComponent 1 /Filter /JBIG2Decode', 'xx')),
 		).toMatchObject({
 			format: 'unsupported',
-			reason: 'its JBIG2 compression is not supported',
+			reason: 'its JBIG2 data could not be decoded (the JBIG2 data ends early)',
 		});
 		expect((await one(xobject('/Width 4 /Height 4 /Filter /JPXDecode', 'xx'))).reason).toBe(
-			'its JPEG 2000 compression is not supported',
+			'it is not a JPEG 2000 file',
 		);
 	});
 });
