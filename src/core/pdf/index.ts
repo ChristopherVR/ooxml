@@ -13,6 +13,8 @@ export type {
 	PdfPageContent,
 	PdfPageImage,
 	PdfPageLink,
+	PdfPagePath,
 	PdfPageRule,
+	PdfPathSegment,
 	PdfTextSpan,
 } from './page-content';

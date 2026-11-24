@@ -42,8 +42,14 @@ export interface PdfReader {
 	page(index: number, options?: { images?: boolean }): Promise<PdfPageContent>;
 }
 
-/** Painted shapes on a page beyond which the reader reports drawings it left out. */
-const DRAWINGS_NOTED = 3;
+/** Why the reader could not return a painted shape as a path. */
+const DRAWING_REASONS = {
+	shading: 'shadings (gradients) are not supported',
+	pattern: 'pattern fills are not supported',
+	clip: 'a clipping path cuts them',
+	size: 'they have too many segments',
+	count: 'the page has too many shapes',
+} as const;
 
 async function contentBytes(
 	document: PdfDocument,
@@ -179,8 +185,13 @@ export async function openPdf(bytes: Uint8Array, options: PdfOpenOptions = {}): 
 					} else if (mark.alt && !item.alt) item.alt = mark.alt;
 				}
 			}
-			if (result.drawings >= DRAWINGS_NOTED)
-				result.notes.add(`Vector drawings (${result.drawings} shapes) were left out.`);
+			const leftOut = [...result.drawings.values()].reduce((sum, count) => sum + count, 0);
+			if (leftOut) {
+				const why = [...result.drawings.keys()].map((reason) => DRAWING_REASONS[reason]).join(', ');
+				result.notes.add(
+					`Vector drawings (${leftOut} shape${leftOut === 1 ? '' : 's'}) were left out: ${why}.`,
+				);
+			}
 			return {
 				index,
 				width,
@@ -188,6 +199,7 @@ export async function openPdf(bytes: Uint8Array, options: PdfOpenOptions = {}): 
 				spans: result.spans,
 				images: result.images,
 				rules: result.rules,
+				paths: result.paths,
 				links: await links(document, node, matrix, destinations),
 				notes: [...result.notes],
 			};

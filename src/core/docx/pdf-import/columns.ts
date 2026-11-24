@@ -1,11 +1,12 @@
 /**
  * Multi-column regions: a run of lines that a vertical gutter (no ink, text on both sides) cuts
  * all the way down is read column by column. Columns must be wide and mostly filled, so a
- * borderless table with wide gaps stays one column (`tables.ts` rebuilds it).
+ * borderless table (wide gaps, or column-gap tabs inside a column) stays one column
+ * (`borderless.ts` rebuilds it).
  */
 import type { Line } from './lines';
 import type { TextArea } from './paragraphs';
-import { inkIntervals, splitLine } from './sublines';
+import { inkIntervals, inkRight, splitLine } from './sublines';
 
 export interface SingleBand {
 	kind: 'single';
@@ -60,6 +61,14 @@ function narrow(gutter: Gap, line: Line): Gap | undefined {
 	return best && best[1] - best[0] >= MIN_GUTTER * 0.75 ? best : undefined;
 }
 
+const tabInsideColumn = (line: Line, cuts: number[]) =>
+	line.fragments.some((fragment, index) => {
+		if (!/\t\s*$/.test(fragment.text) || fragment.leader) return false;
+		const next = line.fragments.slice(index + 1).find((item) => item.text.trim());
+		const start = inkRight(fragment);
+		return !!next && !cuts.some((cut) => cut > start && cut < next.x);
+	});
+
 const straddles = (line: Line, gutter: Gap) => {
 	const ink = inkIntervals(line, 0);
 	return (
@@ -91,6 +100,8 @@ function region(
 	);
 	if (!gutters.length || run.length < 4) return undefined;
 	const cuts = gutters.map(([a, b]) => (a + b) / 2).sort((a, b) => a - b);
+	// Column-gap tabs inside a column are table cells: a borderless table, not page columns.
+	if (run.filter((line) => tabInsideColumn(line, cuts)).length >= 2) return undefined;
 	const columns: Line[][] = cuts.map(() => []).concat([[]]);
 	for (const line of run)
 		splitLine(line, cuts).forEach((piece, index) => {

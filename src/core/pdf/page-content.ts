@@ -66,6 +66,42 @@ export interface PdfPageRule {
 	filled: boolean;
 	color: string;
 	lineWidth: number;
+	/** The outline colour of a rectangle both filled and stroked (`color` is then the fill). */
+	strokeColor?: string;
+	/** Opacity below 1 (the graphics state's `ca` or `CA`). */
+	alpha?: number;
+	/** The dash pattern of a stroke, in points. */
+	dash?: number[];
+	/** Painted with a pattern or shading: `color` is not what it shows. */
+	pattern?: true;
+	/** A clipping path cuts it (or a clip that is not a rectangle is active). */
+	clipped?: true;
+}
+
+/** A piece of a painted path, in reading coordinates. */
+export type PdfPathSegment =
+	| { op: 'M' | 'L'; x: number; y: number }
+	| { op: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+	| { op: 'Z' };
+
+/** A painted path that is not a straight rule or rectangle: curves, diagonals, polygons. */
+export interface PdfPagePath {
+	segments: PdfPathSegment[];
+	/** The bounds of the segments' points (control points included). */
+	x0: number;
+	y0: number;
+	x1: number;
+	y1: number;
+	/** `#rrggbb` when the path is filled. */
+	fill?: string;
+	/** `#rrggbb` when the path is stroked. */
+	stroke?: string;
+	lineWidth: number;
+	fillAlpha?: number;
+	strokeAlpha?: number;
+	dash?: number[];
+	/** Filled with the even-odd rule. */
+	evenOdd?: true;
 }
 
 /** A link annotation: the area and its target. */
@@ -100,6 +136,8 @@ export interface PdfPageContent {
 	spans: PdfTextSpan[];
 	images: PdfPageImage[];
 	rules: PdfPageRule[];
+	/** Painted paths other than rules (absent when the engine does not supply them). */
+	paths?: PdfPagePath[];
 	links: PdfPageLink[];
 	/** What the reader could not take from the page. */
 	notes: string[];

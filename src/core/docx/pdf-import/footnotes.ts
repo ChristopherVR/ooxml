@@ -3,17 +3,26 @@
  * starting with a mark (a raised number or symbol, or a number set before the text) that a raised
  * mark in the page's body text matches, often under a short separator rule. Matched notes leave
  * the body and become Word footnotes; the body mark becomes the footnote reference.
+ *
+ * A note can run over a page break: Word continues it at the top of the next page's note area,
+ * under the continuation separator and before that page's own notes, so unmarked note lines
+ * under a separator go on with the previous page's last note. A note can also start on the page
+ * after its mark when the mark's page has no room left; its mark is then looked for on the
+ * previous page.
  */
 import type { PdfPageRule } from '../../pdf/index';
 import type { Fragment, Line } from './lines';
+import {
+	groupNotes,
+	isSeparatorRule,
+	leadingMark,
+	noteLines,
+	referenceFor,
+	separatorAbove,
+	type NoteContent,
+} from './note-marks';
 
-export interface FootnoteContent {
-	id: number;
-	/** The mark, when it is not the note's number (a symbol, or numbering that restarts). */
-	customMark?: string;
-	/** The note's lines, its mark removed. */
-	lines: Line[];
-}
+export type FootnoteContent = NoteContent;
 
 export interface FootnotePage {
 	lines: Line[];
@@ -23,36 +32,51 @@ export interface FootnotePage {
 	notesBottom?: number;
 }
 
-const MARK = /^(\d{1,3}|[*\u2020\u2021\u00a7\u00b6]{1,3}|[a-z])$/;
-
-/** The mark a note line starts with, and the fragments after it, if it starts with one. */
-function leadingMark(line: Line): { mark: string; rest: Fragment[]; raised: boolean } | undefined {
-	const [first, ...others] = line.fragments.filter((fragment) => fragment.text.length);
-	if (!first) return undefined;
-	const text = first.text.trim();
-	if (first.script === 'super' && MARK.test(text))
-		return { mark: text, rest: others, raised: true };
-	// A number set on the baseline before the note text: "1 Text" or "1. Text".
-	const match = /^\s*(\d{1,3})[.)]?\s+(?=\S)/.exec(first.text);
-	if (match && !first.script) {
-		const remainder = { ...first, text: first.text.slice(match[0].length) };
-		return { mark: match[1]!, rest: [remainder, ...others], raised: false };
-	}
-	return undefined;
+interface PreviousPage {
+	/** The page's body lines, top to bottom. */
+	body: Line[];
+	/** The note the page's note area ends with, which the next page may continue. */
+	last?: FootnoteContent;
+	hadNotes: boolean;
 }
 
-/** The body fragment carrying reference mark `mark` (raised), searching from the bottom up. */
-function referenceFor(lines: Line[], mark: string): Fragment | undefined {
-	for (let index = lines.length - 1; index >= 0; index--) {
-		const found = [...lines[index]!.fragments]
-			.reverse()
-			.find(
-				(fragment) =>
-					fragment.script === 'super' && fragment.text.trim() === mark && !fragment.note,
-			);
-		if (found) return found;
+/** The small lines at the foot of a page that may be notes, top to bottom. */
+function noteZone(sorted: Line[], height: number, bodySize: number): number {
+	let start = sorted.length;
+	while (
+		start > 0 &&
+		sorted[start - 1]!.size < bodySize * 0.92 &&
+		sorted[start - 1]!.top > height * 0.45
+	)
+		start--;
+	return start;
+}
+
+/** The trailing lines of `before` that sit under a separator: a note going on from the last page. */
+function continuedLines(before: Line[], rules: readonly PdfPageRule[], bodySize: number): Line[] {
+	for (let index = before.length - 1; index >= 0; index--) {
+		const line = before[index]!;
+		const above = before[index - 1]?.bottom ?? -Infinity;
+		// The continuation separator may run across the whole column.
+		const rule = rules.some(
+			(item) =>
+				isSeparatorRule(item, Infinity) &&
+				item.y0 < line.top &&
+				item.y0 > Math.max(above, line.top - 3 * bodySize),
+		);
+		if (rule) return before.slice(index);
 	}
-	return undefined;
+	return [];
+}
+
+/** The mark on the previous page that a note starting on this page answers, if any. */
+function deferredReference(previous: PreviousPage | undefined, mark: string): Fragment | undefined {
+	if (!previous) return undefined;
+	const reference = referenceFor(previous.body, mark);
+	if (!reference) return undefined;
+	// The mark's page had a full note area, or the mark sits on one of its last lines.
+	const line = previous.body.findIndex((item) => item.fragments.includes(reference));
+	return previous.hadNotes || line >= previous.body.length - 3 ? reference : undefined;
 }
 
 /**
@@ -61,64 +85,58 @@ function referenceFor(lines: Line[], mark: string): Fragment | undefined {
  */
 export function extractFootnotes(pages: FootnotePage[], bodySize: number): FootnoteContent[] {
 	const notes: FootnoteContent[] = [];
+	let previous: PreviousPage | undefined;
 	for (const page of pages) {
 		const sorted = [...page.lines].sort((a, b) => a.baseline - b.baseline);
-		let start = sorted.length;
-		while (
-			start > 0 &&
-			sorted[start - 1]!.size < bodySize * 0.92 &&
-			sorted[start - 1]!.top > page.height * 0.45
-		)
-			start--;
-		const zone = sorted.slice(start);
+		const zone = sorted.slice(noteZone(sorted, page.height, bodySize));
 		const firstNote = zone.findIndex((line) => leadingMark(line));
-		if (firstNote < 0) continue;
-		const noteLines = zone.slice(firstNote);
-		const body = sorted.slice(0, start + firstNote);
-		const zoneTop = noteLines[0]!.top;
-		const separator = page.rules.some(
-			(rule) =>
-				rule.y1 - rule.y0 < 2 &&
-				rule.x1 - rule.x0 < 250 &&
-				rule.y0 < zoneTop &&
-				rule.y0 > zoneTop - 3 * bodySize,
-		);
-		const groups: { mark: string; lines: Line[]; first: Fragment[]; raised: boolean }[] = [];
-		for (const line of noteLines) {
-			const lead = leadingMark(line);
-			if (lead)
-				groups.push({ mark: lead.mark, lines: [line], first: lead.rest, raised: lead.raised });
-			else groups[groups.length - 1]?.lines.push(line);
-		}
+		const marked = firstNote < 0 ? [] : zone.slice(firstNote);
+		const before = firstNote < 0 ? zone : zone.slice(0, firstNote);
+		const continuing = previous?.last;
+		const continued = continuing ? continuedLines(before, page.rules, bodySize) : [];
+		const body = sorted.filter((line) => !marked.includes(line) && !continued.includes(line));
 		const taken: Line[] = [];
-		for (const group of groups) {
-			const reference = referenceFor(body, group.mark);
+		// The note that unmarked or unmatched note lines go on with.
+		let current: FootnoteContent | undefined;
+		if (continuing && continued.length) {
+			continuing.lines.push(...continued);
+			taken.push(...continued);
+			current = continuing;
+		}
+		const separator = marked.length > 0 && separatorAbove(page.rules, marked[0]!.top, bodySize);
+		let last: FootnoteContent | undefined = current;
+		for (const group of groupNotes(marked)) {
+			const reference = referenceFor(body, group.mark) ?? deferredReference(previous, group.mark);
 			// A number on the baseline is a note mark only under a separator rule.
-			if (!reference || (!group.raised && !separator)) continue;
+			if (!reference || (!group.raised && !separator)) {
+				// A line of a note that starts with a number goes on with the note before it.
+				if (current && !group.raised) {
+					current.lines.push(...group.lines);
+					taken.push(...group.lines);
+				} else current = undefined;
+				last = current;
+				continue;
+			}
 			const id = notes.length + 1;
 			reference.note = { id, mark: group.mark, custom: group.mark !== String(id) };
-			const [head, ...tail] = group.lines;
-			const first = group.first.map((fragment) => ({ ...fragment }));
-			if (first[0]) first[0].text = first[0].text.replace(/^\s+/, '');
-			const left = first[0]?.x ?? head!.left;
-			notes.push({
+			current = {
 				id,
 				...(reference.note.custom ? { customMark: group.mark } : {}),
-				lines: [
-					{
-						...head!,
-						fragments: first,
-						text: first.map((fragment) => fragment.text).join(''),
-						left,
-					},
-					...tail,
-				],
-			});
+				lines: noteLines(group),
+			};
+			notes.push(current);
+			last = current;
 			taken.push(...group.lines);
 		}
-		if (!taken.length) continue;
-		page.notesBottom = Math.max(...taken.map((line) => line.bottom));
-		page.lines = page.lines.filter((line) => !taken.includes(line));
+		if (taken.length) {
+			page.notesBottom = Math.max(...taken.map((line) => line.bottom));
+			page.lines = page.lines.filter((line) => !taken.includes(line));
+		}
+		previous = {
+			body: body.filter((line) => !taken.includes(line)),
+			...(last ? { last } : {}),
+			hadNotes: taken.length > 0,
+		};
 	}
 	return notes;
 }

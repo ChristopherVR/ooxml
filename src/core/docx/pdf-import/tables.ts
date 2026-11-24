@@ -1,11 +1,12 @@
 /**
  * Word tables from the page: the text of a ruled grid goes to its cells (several paragraphs per
- * cell), and runs of three or more lines whose column-gap pieces line up become a borderless
- * table. A table that goes on at the top of the next page with the same columns joins the one
- * before, dropping the header row the PDF repeats.
+ * cell); borderless tables come from `borderless.ts`. A table that goes on at the top of the next
+ * page with the same columns joins the one before, dropping the header row the PDF repeats and
+ * joining a row the page break cut (`row-split.ts`).
  */
 import type { Line } from './lines';
 import { buildParagraphs, type ParagraphBlock } from './paragraphs';
+import { joinSplitRow } from './row-split';
 import { splitLine } from './sublines';
 import type { GridBorder, RuledGrid } from './table-grid';
 
@@ -36,10 +37,11 @@ export interface TableBlock {
 	indent?: number;
 }
 
-const DEFAULT_PADDING = 5.4;
+export const DEFAULT_PADDING = 5.4;
 
-function cellParagraphs(lines: Line[], left: number, right: number, bodySize: number) {
-	return buildParagraphs(lines, { left, right }, bodySize).map(
+/** A cell's paragraphs, between its padded edges. */
+export function cellParagraphs(lines: Line[], left: number, right: number, bodySize: number) {
+	return buildParagraphs(lines, { left, right }, bodySize, { wrapped: true }).map(
 		({ heading: _heading, ...block }, index) => ({
 			...block,
 			...(index ? {} : { spaceBefore: 0 }),
@@ -139,108 +141,6 @@ export function ruledTables(
 	return { tables, lines: rest };
 }
 
-interface Piece {
-	line: Line;
-	left: number;
-	right: number;
-}
-
-/** A line's pieces between column-gap tabs. */
-function pieces(line: Line): Piece[] {
-	const cuts: number[] = [];
-	line.fragments.forEach((fragment, index) => {
-		const next = line.fragments.slice(index + 1).find((item) => item.text.trim());
-		// A leader tab (a table of contents) is not a column gap.
-		if (/\t\s*$/.test(fragment.text) && next && !fragment.leader) cuts.push(next.x - 0.5);
-	});
-	if (!cuts.length) return [];
-	const parts = splitLine(line, cuts);
-	if (parts.some((part) => !part)) return [];
-	return (parts as Line[]).map((part) => ({ line: part, left: part.left, right: part.right }));
-}
-
-const aligned = (a: Piece, b: Piece) =>
-	Math.abs(a.left - b.left) < 3 ||
-	Math.abs(a.right - b.right) < 3 ||
-	Math.abs(a.left + a.right - b.left - b.right) < 6;
-
-/** Borderless tables: three or more consecutive lines cut into the same aligned columns. */
-export function unruledTables(
-	page: number,
-	lines: Line[],
-	bodySize: number,
-): { tables: TableBlock[]; lines: Line[] } {
-	const tables: TableBlock[] = [];
-	const rest: Line[] = [];
-	let index = 0;
-	while (index < lines.length) {
-		const first = pieces(lines[index]!);
-		let end = index + 1;
-		const rows = [first];
-		if (first.length >= 2)
-			while (end < lines.length) {
-				const next = pieces(lines[end]!);
-				const pitch = lines[end]!.baseline - lines[end - 1]!.baseline;
-				if (
-					next.length !== first.length ||
-					pitch > 2.5 * lines[end]!.size ||
-					!next.every((piece, at) => aligned(piece, first[at]!))
-				)
-					break;
-				rows.push(next);
-				end++;
-			}
-		if (rows.length < 3) {
-			rest.push(lines[index]!);
-			index++;
-			continue;
-		}
-		tables.push(borderless(page, rows, bodySize));
-		index = end;
-	}
-	return { tables, lines: rest };
-}
-
-function borderless(page: number, rows: Piece[][], bodySize: number): TableBlock {
-	const count = rows[0]!.length;
-	const starts = Array.from({ length: count }, (_, col) =>
-		Math.min(...rows.map((row) => row[col]!.left)),
-	);
-	// The last column gets some slack, so its longest text does not wrap in Word's own metrics.
-	const end = Math.max(...rows.map((row) => row[count - 1]!.right)) + rows[0]![0]!.line.size;
-	const edges = [...starts.map((start) => start - DEFAULT_PADDING), end + DEFAULT_PADDING];
-	const lines = rows.map((row) => row[0]!.line);
-	const top = lines[0]!.top - 1;
-	const bottom = lines[lines.length - 1]!.bottom + 1;
-	return {
-		kind: 'table',
-		page,
-		top,
-		bottom,
-		left: edges[0]!,
-		columns: edges.slice(1).map((edge, at) => edge - edges[at]!),
-		rows: rows.map((row, at) => ({
-			height: (lines[at + 1]?.top ?? bottom) - (at ? row[0]!.line.top : top),
-		})),
-		padding: DEFAULT_PADDING,
-		cells: rows.flatMap((row, r) =>
-			row.map((piece, col) => ({
-				row: r,
-				col,
-				rowSpan: 1,
-				colSpan: 1,
-				borders: {},
-				blocks: cellParagraphs(
-					[piece.line],
-					edges[col]! + DEFAULT_PADDING,
-					edges[col + 1]! - DEFAULT_PADDING,
-					bodySize,
-				),
-			})),
-		),
-	};
-}
-
 const rowText = (table: TableBlock, row: number) =>
 	table.cells
 		.filter((cell) => cell.row === row)
@@ -262,6 +162,8 @@ export function joinTables(table: TableBlock, next: TableBlock): boolean {
 		table.rows[0]!.header = true;
 		skip = 1;
 	}
+	// The first row the page shows may be the rest of the row the page break cut.
+	if (skip < next.rows.length && joinSplitRow(table, next, skip)) skip++;
 	const offset = table.rows.length - skip;
 	table.rows.push(...next.rows.slice(skip));
 	for (const cell of next.cells)

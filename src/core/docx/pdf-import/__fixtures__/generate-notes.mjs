@@ -46,7 +46,10 @@ const SETTINGS = `${DECL}<w:settings xmlns:w="${W}"><w:compat><w:compatSetting w
 
 const SECTION = `<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1417" w:right="1417" w:bottom="1417" w:left="1417" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr>`;
 
-async function save(name, { document, parts = {}, rels = [], overrides = [] }) {
+async function save(
+	name,
+	{ document, parts = {}, rels = [], overrides = [], section = SECTION, styles = '' },
+) {
 	const zip = new JSZip();
 	const add = (path, data) => zip.file(path, data, { date: DATE, createFolders: false });
 	add(
@@ -65,9 +68,9 @@ async function save(name, { document, parts = {}, rels = [], overrides = [] }) {
 		'word/_rels/document.xml.rels',
 		`${DECL}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdStyles" Type="${R}/styles" Target="styles.xml"/><Relationship Id="rIdSettings" Type="${R}/settings" Target="settings.xml"/>${rels.join('')}</Relationships>`,
 	);
-	add('word/styles.xml', STYLES);
+	add('word/styles.xml', STYLES.replace('</w:styles>', `${styles}</w:styles>`));
 	add('word/settings.xml', SETTINGS);
-	add('word/document.xml', `${DECL}<w:document ${NS}><w:body>${document}${SECTION}</w:body></w:document>`);
+	add('word/document.xml', `${DECL}<w:document ${NS}><w:body>${document}${section}</w:body></w:document>`);
 	for (const [path, data] of Object.entries(parts)) add(path, data);
 	await mkdir(new URL('./source/', import.meta.url), { recursive: true });
 	await writeFile(
@@ -140,4 +143,85 @@ await save('rotation', {
 		),
 		para(run(body(3)), '<w:jc w:val="both"/>'),
 	].join(''),
+});
+
+// notes-suite.docx: a long footnote near the foot of page 1 that Word continues on page 2,
+// under the continuation separator, above the note of page 2.
+const notePart = (kind, notes) => {
+	const tag = `w:${kind}`;
+	const style = kind === 'footnote' ? 'Footnote' : 'Endnote';
+	const separator = (type, id) =>
+		`<${tag} w:type="${type}" w:id="${id}"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:${type}/></w:r></w:p></${tag}>`;
+	return (
+		`${DECL}<${tag}s ${NS}>${separator('separator', -1)}${separator('continuationSeparator', 0)}` +
+		notes
+			.map(
+				(paragraphs, index) =>
+					`<${tag} w:id="${index + 1}">` +
+					paragraphs
+						.map(
+							(text, at) =>
+								`<w:p><w:pPr><w:pStyle w:val="${style}Text"/></w:pPr>` +
+								(at === 0
+									? `<w:r><w:rPr><w:rStyle w:val="${style}Reference"/></w:rPr><w:${kind}Ref/></w:r>${run(` ${text}`)}`
+									: run(text)) +
+								'</w:p>',
+						)
+						.join('') +
+					`</${tag}>`,
+			)
+			.join('') +
+		`</${tag}s>`
+	);
+};
+const longNote = [
+	'Cette note est volontairement longue. Elle reprend le raisonnement du paragraphe, précise les hypothèses retenues et donne plusieurs exemples, de sorte que la zone des notes de la première page ne suffit pas à la contenir.',
+	`Son second paragraphe continue la démonstration. ${body(24)} Elle se termine sur la page suivante, sous le séparateur de continuation.`,
+];
+await save('notes-suite', {
+	document: [
+		para(run('Notes qui continuent', '<w:b/><w:sz w:val="32"/>')),
+		...Array.from({ length: 8 }, () => para(run(body(3)), '<w:jc w:val="both"/>')),
+		para(run(body(1)) + note(1) + run(' ' + body(1)), '<w:jc w:val="both"/>'),
+		...Array.from({ length: 3 }, () => para(run(body(3)), '<w:jc w:val="both"/>')),
+		para(run(body(2)) + note(2) + run(' ' + body(1)), '<w:jc w:val="both"/>'),
+	].join(''),
+	parts: {
+		'word/footnotes.xml': notePart('footnote', [longNote, ['La note courte de la deuxième page.']]),
+	},
+	rels: [`<Relationship Id="rIdFootnotes" Type="${R}/footnotes" Target="footnotes.xml"/>`],
+	overrides: [`<Override PartName="/word/footnotes.xml" ContentType="${WML}.footnotes+xml"/>`],
+});
+
+// notes-fin.docx: endnotes numbered i, ii, iii (Word's default) collected at the end of the
+// document, after the separator, with references on both pages.
+const ref = (id) =>
+	`<w:r><w:rPr><w:rStyle w:val="EndnoteReference"/></w:rPr><w:endnoteReference w:id="${id}"/></w:r>`;
+await save('notes-fin', {
+	document: [
+		para(run('Notes de fin', '<w:b/><w:sz w:val="32"/>')),
+		para(run(body(3)) + ref(1) + run(' ' + body(2)), '<w:jc w:val="both"/>'),
+		...Array.from({ length: 6 }, () => para(run(body(3)), '<w:jc w:val="both"/>')),
+		para(run(body(2)) + ref(2) + run(' ' + body(1)), '<w:jc w:val="both"/>'),
+		...Array.from({ length: 4 }, () => para(run(body(3)), '<w:jc w:val="both"/>')),
+		para(run(body(1)) + ref(3) + run(' La conclusion du document.'), '<w:jc w:val="both"/>'),
+	].join(''),
+	section: SECTION.replace(
+		'<w:sectPr>',
+		'<w:sectPr><w:endnotePr><w:numFmt w:val="lowerRoman"/></w:endnotePr>',
+	),
+	styles:
+		'<w:style w:type="paragraph" w:styleId="EndnoteText"><w:name w:val="endnote text"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:rPr><w:sz w:val="20"/></w:rPr></w:style>' +
+		'<w:style w:type="character" w:styleId="EndnoteReference"><w:name w:val="endnote reference"/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style>',
+	parts: {
+		'word/endnotes.xml': notePart('endnote', [
+			['Première note de fin, rassemblée à la fin du document.'],
+			[
+				'Deuxième note de fin, assez longue pour occuper deux lignes de la zone des notes, avec une explication de détail.',
+			],
+			['Troisième note de fin.'],
+		]),
+	},
+	rels: [`<Relationship Id="rIdEndnotes" Type="${R}/endnotes" Target="endnotes.xml"/>`],
+	overrides: [`<Override PartName="/word/endnotes.xml" ContentType="${WML}.endnotes+xml"/>`],
 });

@@ -91,7 +91,9 @@ describe('tagged structure', () => {
 		expect(title!.element).not.toBe(one!.element);
 		expect(artifact).toMatchObject({ text: 'Page 1', artifact: true });
 		expect(artifact!.role).toBeUndefined();
-		expect(page.notes).toContain('Vector drawings (3 shapes) were left out.');
+		// The curves and the triangle are returned as paths, not reported as left out.
+		expect(page.paths).toHaveLength(3);
+		expect(page.notes.some((note) => note.startsWith('Vector drawings'))).toBe(false);
 	});
 
 	it('reads figure alternate text from a named property list', async () => {

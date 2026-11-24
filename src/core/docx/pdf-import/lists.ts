@@ -6,6 +6,7 @@
  */
 import { markerOf, type ListFormat, type ListMarker } from './list-markers';
 import type { ParagraphBlock } from './paragraphs';
+import type { TableBlock } from './tables';
 
 export interface ListItem {
 	numId: number;
@@ -31,6 +32,7 @@ export interface ListDefinition {
 }
 
 const isBlock = (block: { kind: string }): block is ParagraphBlock => block.kind === 'paragraph';
+const isTable = (block: { kind: string }): block is TableBlock => block.kind === 'table';
 
 /** The paragraph's text area left edge, from its first line and indents. */
 const base = (block: ParagraphBlock) => block.lines[0]!.left - block.indentLeft - block.firstLine;
@@ -110,9 +112,14 @@ function strip(block: ParagraphBlock, count: number): void {
 
 /**
  * Makes the list item paragraphs of `blocks` (in document order) Word list items and returns the
- * list definitions their `list` refers to.
+ * list definitions their `list` refers to. The paragraphs of table cells are lists of their own,
+ * cell by cell, numbered on from a list in a cell before when their numbers go on.
  */
-export function assignLists(blocks: { kind: string }[]): ListDefinition[] {
+export function assignLists(
+	blocks: { kind: string }[],
+	definitions: ListDefinition[] = [],
+	lastNumber = new Map<number, number>(),
+): ListDefinition[] {
 	const paragraphs = blocks.map((block) => (isBlock(block) ? block : undefined));
 	const markers = paragraphs.map((block) => (block ? candidate(block) : undefined));
 	const items = markers.map((marker, at) =>
@@ -120,11 +127,13 @@ export function assignLists(blocks: { kind: string }[]): ListDefinition[] {
 			? marker
 			: undefined,
 	);
-	const definitions: ListDefinition[] = [];
-	const lastNumber = new Map<number, number>();
 	let at = 0;
 	while (at < blocks.length) {
 		if (!items[at]) {
+			const block = blocks[at]!;
+			if (isTable(block))
+				for (const cell of [...block.cells].sort((a, b) => a.row - b.row || a.col - b.col))
+					assignLists(cell.blocks, definitions, lastNumber);
 			at++;
 			continue;
 		}

@@ -8,9 +8,13 @@ import {
 import { applyInternalLinks, applyOutline, resolveAnchors } from './anchors';
 import { applyLinks, applyRules, pageLines, type Line } from './lines';
 import { assemble } from './assemble';
+import { drawingSource, type DrawingSource } from './drawings';
+import { placeDrawings } from './drawings-place';
 import { attachFloats } from './floats';
+import { extractEndnotes } from './endnotes';
 import { extractFootnotes } from './footnotes';
 import { applyLeaders, leaderTabs } from './leaders';
+import { noteParagraphs, type NoteContent } from './note-marks';
 import { writePackage, type PictureBlock, type StoryContent } from './package';
 import { buildParagraphs, rankHeadings, type ParagraphBlock, type TextArea } from './paragraphs';
 import type { PdfImportReport, PdfOcrProvider } from './report';
@@ -87,6 +91,8 @@ interface PageWork {
 	notes: string[];
 	rules: PdfPageRule[];
 	rotated: FloatingText[];
+	/** The rules and paths no table or text took: the page's vector drawings. */
+	drawing: DrawingSource;
 	notesBottom?: number;
 	scanned?: true;
 }
@@ -142,11 +148,12 @@ async function readPage(
 		);
 	// Table rules are not underlines: only the rules no table uses mark text.
 	const { grids, rest } = findGrids(content.rules);
-	applyRules(all, rest);
+	const marks = applyRules(all, rest);
 	applyLinks(all, content.links);
 	applyInternalLinks(all, content.links);
 	applyLeaders(all);
 	const { tables, lines } = ruledTables(content.index, all, grids, 11);
+	const drawing = drawingSource(content.rules, content.paths ?? [], rest, marks, tables, content);
 	const keep = scanned && spans.length ? pictures.filter((image) => image !== fullPage) : pictures;
 	return {
 		index: content.index,
@@ -169,6 +176,7 @@ async function readPage(
 		notes,
 		rules: content.rules,
 		rotated: rotated.floats,
+		drawing,
 		...(scanned ? { scanned } : {}),
 	};
 }
@@ -233,6 +241,8 @@ export async function convertPdf(
 		),
 		'Calibri',
 	);
+	// Endnotes first: a footnote is only looked for on its mark's page and the next.
+	const endnotes = extractEndnotes(pages, bodySize);
 	const footnotes = extractFootnotes(pages, bodySize);
 	const area: TextArea = {
 		left: median(
@@ -264,16 +274,15 @@ export async function convertPdf(
 		pages.flatMap((page) => page.rotated),
 		bodySize,
 	);
-	const noteBlocks = footnotes.map((note) => ({
-		id: note.id,
-		...(note.customMark !== undefined ? { customMark: note.customMark } : {}),
-		blocks: buildParagraphs(note.lines, area, bodySize).map(({ heading: _heading, ...block }) => ({
-			...block,
-			indentLeft: 0,
-			firstLine: 0,
-			spaceBefore: 0,
-		})),
-	}));
+	placeDrawings(pages, [...footnotes, ...(endnotes?.notes ?? [])], blocks, sections, bodySize);
+	const toBlocks = (list: NoteContent[]) =>
+		list.map((note) => ({
+			id: note.id,
+			...(note.customMark !== undefined ? { customMark: note.customMark } : {}),
+			blocks: noteParagraphs(note.lines, area, bodySize),
+		}));
+	const noteBlocks = toBlocks(footnotes);
+	const endnoteBlocks = toBlocks(endnotes?.notes ?? []);
 	const stories: StoryContent[] = repeated.map((story) => ({
 		kind: story.kind,
 		blocks: buildParagraphs(story.lines, area, bodySize).map(({ heading: _heading, ...block }) => ({
@@ -298,6 +307,9 @@ export async function convertPdf(
 		},
 		...(info.language ? { language: info.language } : {}),
 		...(noteBlocks.length ? { footnotes: noteBlocks } : {}),
+		...(endnotes && endnoteBlocks.length
+			? { endnotes: endnoteBlocks, endnoteFormat: endnotes.format }
+			: {}),
 	});
 	const notes: string[] = [];
 	if (unresolved)

@@ -12,6 +12,14 @@ export function inkRight(fragment: Fragment): number {
 	return fragment.x + fragment.width * kept;
 }
 
+/** The width of a line's first word, points (what a line before it lacked room for if it wrapped). */
+export function firstWordWidth(line: Line): number {
+	const fragment = line.fragments.find((item) => !blank(item));
+	if (!fragment) return 0;
+	const word = /^\S+/.exec(fragment.text.trimStart())?.[0] ?? '';
+	return (fragment.width * word.length) / Math.max(1, fragment.text.length);
+}
+
 /** A line made of some of `line`'s fragments, or undefined when they hold no text. */
 export function subLine(line: Line, fragments: Fragment[]): Line | undefined {
 	const kept = fragments.map((fragment) => ({

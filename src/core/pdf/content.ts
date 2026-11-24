@@ -1,9 +1,11 @@
 /**
  * The content stream interpreter (ISO 32000-1 sections 8 and 9): runs a page's operators with
  * the graphics and text state and collects what the page shows as text spans, pictures and
- * rules, in reading coordinates. Shading, clipping and painting details are ignored.
+ * rules and paths, in reading coordinates. Shadings and pattern fills are not drawn; clipping only
+ * marks what it cuts.
  */
 import { inlineImage, unitBox, xobjectImage } from './content-images';
+import { PathBuilder, type ClipBox } from './content-paths';
 import type { PdfDocument } from './document';
 import { PdfFont } from './fonts';
 import { EOF, PdfKeyword, PdfLexer } from './lexer';
@@ -18,7 +20,7 @@ import {
 	type PdfDict,
 	type PdfValue,
 } from './objects';
-import type { PdfPageImage, PdfPageRule, PdfTextSpan } from './page-content';
+import type { PdfPageImage, PdfPagePath, PdfPageRule, PdfTextSpan } from './page-content';
 
 export type { Matrix };
 export { apply, multiply };
@@ -38,6 +40,12 @@ interface State {
 	fontSize: number;
 	render: number;
 	rise: number;
+	fillAlpha: number;
+	strokeAlpha: number;
+	dash: number[];
+	fillPattern: boolean;
+	strokePattern: boolean;
+	clip: ClipBox | undefined;
 }
 
 const hex = (value: number) =>
@@ -54,18 +62,34 @@ function colorOf(values: number[]): string {
 	return '#000000';
 }
 
+/** The clip after intersecting `clip` with a new clipping path's bounds. */
+function intersect(clip: ClipBox | undefined, next: ClipBox | undefined): ClipBox | undefined {
+	if (!next) return clip;
+	if (!clip) return next;
+	return {
+		x0: Math.max(clip.x0, next.x0),
+		y0: Math.max(clip.y0, next.y0),
+		x1: Math.min(clip.x1, next.x1),
+		y1: Math.min(clip.y1, next.y1),
+		rect: clip.rect && next.rect,
+	};
+}
+
 const MAX_RULES = 20_000;
+const MAX_PATHS = 2_000;
 const MAX_FORM_DEPTH = 12;
 
 export interface ContentResult {
 	spans: PdfTextSpan[];
 	images: PdfPageImage[];
 	rules: PdfPageRule[];
+	/** Painted paths that are not straight rules or rectangles (curves, diagonals, polygons). */
+	paths: PdfPagePath[];
 	notes: Set<string>;
 	/** The marked-content id each span or picture was drawn under. */
 	marks: Map<PdfTextSpan | PdfPageImage, number>;
-	/** Painted paths that are not straight rules or rectangles (curves, shapes). */
-	drawings: number;
+	/** Drawings not returned as paths, by reason (shadings, patterns, clips, size, count). */
+	drawings: Map<'shading' | 'pattern' | 'clip' | 'size' | 'count', number>;
 }
 
 export class ContentReader {
@@ -75,10 +99,15 @@ export class ContentReader {
 		spans: [],
 		images: [],
 		rules: [],
+		paths: [],
 		notes: new Set(),
 		marks: new Map(),
-		drawings: 0,
+		drawings: new Map(),
 	};
+
+	#leftOut(reason: 'shading' | 'pattern' | 'clip' | 'size' | 'count'): void {
+		this.result.drawings.set(reason, (this.result.drawings.get(reason) ?? 0) + 1);
+	}
 
 	constructor(
 		readonly document: PdfDocument,
@@ -107,32 +136,40 @@ export class ContentReader {
 		ctm: Matrix,
 		depth = 0,
 		forms = new Set<PdfStream>(),
+		/** The graphics state a form XObject inherits from the content that draws it. */
+		parent?: State,
 	): Promise<void> {
 		const lexer = new PdfLexer(data);
 		const stack: State[] = [];
-		let state: State = {
-			ctm,
-			fill: '#000000',
-			stroke: '#000000',
-			fillComponents: 1,
-			strokeComponents: 1,
-			lineWidth: 1,
-			charSpacing: 0,
-			wordSpacing: 0,
-			scale: 1,
-			leading: 0,
-			font: undefined,
-			fontSize: 0,
-			render: 0,
-			rise: 0,
-		};
+		let state: State = parent
+			? { ...parent, ctm }
+			: {
+					ctm,
+					fill: '#000000',
+					stroke: '#000000',
+					fillComponents: 1,
+					strokeComponents: 1,
+					lineWidth: 1,
+					charSpacing: 0,
+					wordSpacing: 0,
+					scale: 1,
+					leading: 0,
+					font: undefined,
+					fontSize: 0,
+					render: 0,
+					rise: 0,
+					fillAlpha: 1,
+					strokeAlpha: 1,
+					dash: [],
+					fillPattern: false,
+					strokePattern: false,
+					clip: undefined,
+				};
 		let tm: Matrix = [1, 0, 0, 1, 0, 0];
 		let tlm: Matrix = [1, 0, 0, 1, 0, 0];
-		let path: { kind: 'rect' | 'line'; points: number[] }[] = [];
-		let pathComplex = false;
-		let pathDiagonal = false;
+		const path = new PathBuilder();
+		let clipping = false;
 		const markBase = this.#marked.length;
-		let current: [number, number] | undefined;
 		const operands: PdfValue[] = [];
 		const num = (index: number) => {
 			const value = operands[index];
@@ -172,30 +209,23 @@ export class ContentReader {
 			}
 			flush();
 		};
-		const paint = (stroked: boolean, filled: boolean) => {
-			if (pathComplex || pathDiagonal) this.result.drawings++;
-			pathDiagonal = false;
-			if (!pathComplex && this.result.rules.length < MAX_RULES)
-				for (const item of path) {
-					const [x0, y0, x1, y1] = item.points as [number, number, number, number];
-					const a = apply(multiply(state.ctm, this.page), x0, y0);
-					const b = apply(multiply(state.ctm, this.page), x1, y1);
-					const scale = Math.hypot(state.ctm[0], state.ctm[1]) || 1;
-					this.result.rules.push({
-						x0: Math.min(a[0], b[0]),
-						y0: Math.min(a[1], b[1]),
-						x1: Math.max(a[0], b[0]),
-						y1: Math.max(a[1], b[1]),
-						kind: item.kind,
-						stroked,
-						filled,
-						color: filled ? state.fill : state.stroke,
-						lineWidth: state.lineWidth * scale,
-					});
-				}
-			path = [];
-			pathComplex = false;
-			current = undefined;
+		const paint = (stroked: boolean, filled: boolean, evenOdd = false) => {
+			// A clip set by `W` applies after the path that sets it is painted.
+			const clip = clipping ? path.bounds(this.page, state.ctm) : undefined;
+			const painted =
+				stroked || filled ? path.paint(this.page, state, stroked, filled, evenOdd) : undefined;
+			path.clear();
+			if (clipping) {
+				clipping = false;
+				state.clip = intersect(state.clip, clip);
+			}
+			if (!painted) return;
+			if ('rules' in painted) {
+				const room = MAX_RULES - this.result.rules.length;
+				this.result.rules.push(...painted.rules.slice(0, Math.max(0, room)));
+			} else if ('unsupported' in painted) this.#leftOut(painted.unsupported);
+			else if (this.result.paths.length < MAX_PATHS) this.result.paths.push(painted.path);
+			else this.#leftOut('count');
 		};
 		let guard = 0;
 		for (;;) {
@@ -223,15 +253,30 @@ export class ContentReader {
 				case 'w':
 					state.lineWidth = num(0);
 					break;
+				case 'd': {
+					const array = operands[0];
+					state.dash = Array.isArray(array)
+						? array.filter(isNumber).filter((value) => value >= 0)
+						: [];
+					if (state.dash.every((value) => value === 0)) state.dash = [];
+					break;
+				}
+				case 'gs': {
+					const name = operands[0];
+					if (name instanceof PdfName) await this.#extGState(resources, name.name, state);
+					break;
+				}
 				case 'g':
 				case 'rg':
 				case 'k':
 					state.fill = colorOf(operands.filter(isNumber));
+					state.fillPattern = false;
 					break;
 				case 'G':
 				case 'RG':
 				case 'K':
 					state.stroke = colorOf(operands.filter(isNumber));
+					state.strokePattern = false;
 					break;
 				case 'cs':
 				case 'CS': {
@@ -252,6 +297,9 @@ export class ContentReader {
 				case 'SC':
 				case 'SCN': {
 					const values = operands.filter(isNumber);
+					const pattern = isName(operands[operands.length - 1]);
+					if (op.startsWith('s')) state.fillPattern = pattern;
+					else state.strokePattern = pattern;
 					if (values.length === 1 || values.length === 3 || values.length === 4) {
 						if (op.startsWith('s')) state.fill = colorOf(values);
 						else state.stroke = colorOf(values);
@@ -318,43 +366,58 @@ export class ContentReader {
 					break;
 				}
 				case 'm':
-					current = [num(0), num(1)];
+					path.moveTo(num(0), num(1));
 					break;
 				case 'l':
-					if (current) {
-						path.push({ kind: 'line', points: [current[0], current[1], num(0), num(1)] });
-						if (Math.abs(current[0] - num(0)) > 0.01 && Math.abs(current[1] - num(1)) > 0.01)
-							pathDiagonal = true;
-					}
-					current = [num(0), num(1)];
+					path.lineTo(num(0), num(1));
 					break;
 				case 're':
-					path.push({ kind: 'rect', points: [num(0), num(1), num(0) + num(2), num(1) + num(3)] });
+					path.rect(num(0), num(1), num(2), num(3));
 					break;
 				case 'c':
-				case 'v':
+					path.curveTo(num(0), num(1), num(2), num(3), num(4), num(5));
+					break;
+				case 'v': {
+					const [x, y] = path.current ?? [num(0), num(1)];
+					path.curveTo(x, y, num(0), num(1), num(2), num(3));
+					break;
+				}
 				case 'y':
-					pathComplex = true;
+					path.curveTo(num(0), num(1), num(2), num(3), num(2), num(3));
+					break;
+				case 'h':
+					path.close();
 					break;
 				case 'S':
+					paint(true, false);
+					break;
 				case 's':
+					path.close();
 					paint(true, false);
 					break;
 				case 'f':
 				case 'F':
 				case 'f*':
-					paint(false, true);
+					paint(false, true, op === 'f*');
 					break;
 				case 'B':
 				case 'B*':
+					paint(true, true, op === 'B*');
+					break;
 				case 'b':
 				case 'b*':
-					paint(true, true);
+					path.close();
+					paint(true, true, op === 'b*');
 					break;
 				case 'n':
-					path = [];
-					pathComplex = false;
-					pathDiagonal = false;
+					paint(false, false);
+					break;
+				case 'W':
+				case 'W*':
+					clipping = true;
+					break;
+				case 'sh':
+					this.#leftOut('shading');
 					break;
 				case 'BMC':
 				case 'BDC':
@@ -383,6 +446,19 @@ export class ContentReader {
 			operands.length = 0;
 		}
 		this.#marked.length = Math.min(this.#marked.length, markBase);
+	}
+
+	/** Opacity and dashes from a graphics state parameter dictionary (`gs`). */
+	async #extGState(resources: PdfDict, name: string, state: State): Promise<void> {
+		const states = await this.document.dict(resources.get('ExtGState'));
+		const dict = await this.document.dict(states?.get(name));
+		if (!dict) return;
+		const fill = await this.document.resolve(dict.get('ca'));
+		const stroke = await this.document.resolve(dict.get('CA'));
+		const width = await this.document.resolve(dict.get('LW'));
+		if (isNumber(fill)) state.fillAlpha = Math.min(1, Math.max(0, fill));
+		if (isNumber(stroke)) state.strokeAlpha = Math.min(1, Math.max(0, stroke));
+		if (isNumber(width)) state.lineWidth = width;
 	}
 
 	#addImage(image: PdfPageImage): void {
@@ -445,7 +521,7 @@ export class ContentReader {
 				return;
 			}
 			forms.add(stream);
-			await this.run(data, formResources, multiply(matrix, state.ctm), depth + 1, forms);
+			await this.run(data, formResources, multiply(matrix, state.ctm), depth + 1, forms, state);
 			forms.delete(stream);
 			return;
 		}

@@ -1,6 +1,7 @@
 /**
- * The parts of the reconstruction beyond plain paragraphs: footnotes (`word/footnotes.xml` with
- * Word's separator notes), footnote references, bookmarks and the text boxes that hold rotated
+ * The parts of the reconstruction beyond plain paragraphs: footnotes and endnotes
+ * (`word/footnotes.xml` and `word/endnotes.xml` with Word's separator notes), note references,
+ * bookmarks and the text boxes that hold rotated
  * text.
  */
 import { esc, NS, ROOT_NAMESPACES, XML_DECLARATION } from '../load/legacy-doc/xml';
@@ -14,32 +15,50 @@ export const FOOTNOTE_STYLES =
 	'<w:style w:type="paragraph" w:styleId="FootnoteText"><w:name w:val="footnote text"/><w:basedOn w:val="Normal"/><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:style>' +
 	'<w:style w:type="character" w:styleId="FootnoteReference"><w:name w:val="footnote reference"/><w:rPr><w:vertAlign w:val="superscript"/></w:rPr></w:style>';
 
-/** The run of a footnote reference mark (a custom mark when the PDF's mark is not the number). */
+export const ENDNOTE_STYLES = FOOTNOTE_STYLES.replace(/Footnote/g, 'Endnote').replace(
+	/footnote/g,
+	'endnote',
+);
+
+export type NoteKind = 'footnote' | 'endnote';
+
+const referenceStyle = (kind: NoteKind) =>
+	`<w:rPr><w:rStyle w:val="${kind === 'footnote' ? 'Footnote' : 'Endnote'}Reference"/></w:rPr>`;
+
+/** The run of a note reference mark (a custom mark when the PDF's mark is not the number). */
 export function noteReferenceRun(note: NonNullable<Fragment['note']>): string {
-	const style = '<w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr>';
+	const kind = note.kind ?? 'footnote';
+	const style = referenceStyle(kind);
 	// A custom mark is the text that follows the reference, written as a run of its own.
 	return (
-		`<w:r>${style}<w:footnoteReference${note.custom ? ' w:customMarkFollows="1"' : ''} w:id="${note.id}"/></w:r>` +
+		`<w:r>${style}<w:${kind}Reference${note.custom ? ' w:customMarkFollows="1"' : ''} w:id="${note.id}"/></w:r>` +
 		(note.custom ? `<w:r>${style}<w:t>${esc(note.mark)}</w:t></w:r>` : '')
 	);
 }
 
 /** The mark that starts a note's own text: its number, or the custom mark as text. */
-export function noteMarkRun(customMark?: string): string {
-	const mark = customMark === undefined ? '<w:footnoteRef/>' : `<w:t>${esc(customMark)}</w:t>`;
-	return `<w:r><w:rPr><w:rStyle w:val="FootnoteReference"/></w:rPr>${mark}</w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>`;
+export function noteMarkRun(customMark?: string, kind: NoteKind = 'footnote'): string {
+	const mark = customMark === undefined ? `<w:${kind}Ref/>` : `<w:t>${esc(customMark)}</w:t>`;
+	return `<w:r>${referenceStyle(kind)}${mark}</w:r><w:r><w:t xml:space="preserve"> </w:t></w:r>`;
 }
 
-/** `word/footnotes.xml`: the separator notes Word expects, then the notes' paragraphs. */
-export function footnotesXml(notes: { id: number; body: string }[]): string {
-	const separator = (type: string, id: number, mark: string) =>
-		`<w:footnote w:type="${type}" w:id="${id}"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:${mark}/></w:r></w:p></w:footnote>`;
+/**
+ * `word/footnotes.xml` (or `word/endnotes.xml`): the separator notes Word expects, then the notes'
+ * paragraphs.
+ */
+export function footnotesXml(
+	notes: { id: number; body: string }[],
+	kind: NoteKind = 'footnote',
+): string {
+	const tag = `w:${kind}`;
+	const separator = (type: string, id: number) =>
+		`<${tag} w:type="${type}" w:id="${id}"><w:p><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr><w:r><w:${type}/></w:r></w:p></${tag}>`;
 	return (
-		`${XML_DECLARATION}<w:footnotes ${ROOT_NAMESPACES}>` +
-		separator('separator', -1, 'separator') +
-		separator('continuationSeparator', 0, 'continuationSeparator') +
-		notes.map((note) => `<w:footnote w:id="${note.id}">${note.body}</w:footnote>`).join('') +
-		'</w:footnotes>'
+		`${XML_DECLARATION}<${tag}s ${ROOT_NAMESPACES}>` +
+		separator('separator', -1) +
+		separator('continuationSeparator', 0) +
+		notes.map((note) => `<${tag} w:id="${note.id}">${note.body}</${tag}>`).join('') +
+		`</${tag}s>`
 	);
 }
 

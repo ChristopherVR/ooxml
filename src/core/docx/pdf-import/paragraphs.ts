@@ -7,6 +7,7 @@ import { markerOf } from './list-markers';
 import type { Fragment, Line } from './lines';
 import type { ListItem } from './lists';
 import type { FloatingText } from './rotated';
+import { firstWordWidth } from './sublines';
 
 export interface TextArea {
 	left: number;
@@ -41,6 +42,8 @@ export interface ParagraphBlock {
 	bookmarks?: string[];
 	/** Text boxes anchored to the paragraph (rotated text). */
 	floats?: FloatingText[];
+	/** Vector drawings anchored to the paragraph. */
+	drawings?: import('./drawings').VectorDrawing[];
 }
 
 export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
@@ -108,7 +111,16 @@ function alignment(lines: Line[], area: TextArea): Alignment {
 	return 'left';
 }
 
-export function buildParagraphs(lines: Line[], area: TextArea, bodySize: number): ParagraphBlock[] {
+/**
+ * `wrapped`: a line that ends short of the right edge still goes on when the next line's first
+ * word would not have fitted after it (narrow table cells).
+ */
+export function buildParagraphs(
+	lines: Line[],
+	area: TextArea,
+	bodySize: number,
+	options: { wrapped?: boolean } = {},
+): ParagraphBlock[] {
 	const groups: Line[][] = [];
 	let current: Line[] = [];
 	for (const line of lines) {
@@ -125,7 +137,11 @@ export function buildParagraphs(lines: Line[], area: TextArea, bodySize: number)
 		const sizeChange = Math.abs(line.size - previous.size) > 0.1 * previous.size;
 		const weightChange = line.bold !== previous.bold;
 		const shortLine =
-			previous.right < area.right - Math.max(3 * previous.size, 0.12 * (area.right - area.left));
+			previous.right < area.right - Math.max(3 * previous.size, 0.12 * (area.right - area.left)) &&
+			!(
+				options.wrapped &&
+				previous.right + 0.25 * previous.size + firstWordWidth(line) > area.right - 1
+			);
 		const firstLineIndent = current.length === 1 && line.left < previous.left - 1;
 		const listContinuation = !!markerOf(current[0]!) && line.left > current[0]!.left + 2;
 		const leftShift =

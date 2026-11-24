@@ -8,11 +8,13 @@ import { el, esc, ROOT_NAMESPACES, XML_DECLARATION } from '../load/legacy-doc/xm
 import type { ColumnLayout } from './flow';
 import type { Fragment } from './lines';
 import type { ListDefinition } from './lists';
+import { drawingXml } from './package-drawing';
 import { numberingXml } from './package-numbering';
 import { sectionXml } from './package-section';
 import { tableXml } from './package-table';
 import {
 	bookmarkXml,
+	ENDNOTE_STYLES,
 	FOOTNOTE_STYLES,
 	footnotesXml,
 	noteMarkRun,
@@ -71,7 +73,16 @@ export interface PackageInput {
 	properties: { title?: string; author?: string; subject?: string; keywords?: string };
 	language?: string;
 	/** Footnotes, numbered as the references in the blocks give them. */
-	footnotes?: { id: number; blocks: ParagraphBlock[]; customMark?: string }[];
+	footnotes?: NoteInput[];
+	/** Endnotes, numbered the same way, shown in `endnoteFormat` (`w:endnotePr/w:numFmt`). */
+	endnotes?: NoteInput[];
+	endnoteFormat?: string;
+}
+
+export interface NoteInput {
+	id: number;
+	blocks: ParagraphBlock[];
+	customMark?: string;
 }
 
 const twips = (points: number) => Math.round(points * 20);
@@ -228,7 +239,10 @@ export class Writer {
 				),
 			)
 			.join('');
-		return `<w:p><w:pPr>${style}${numbering}${tabs}${spacing}${indent}${jc}${sectPr}</w:pPr>${marks.start}${floats}${extra.lead ?? ''}${this.runs(block.fragments, part, fields)}${marks.end}</w:p>`;
+		const drawings = (block.drawings ?? [])
+			.map((drawing) => drawingXml(drawing, () => ++this.#drawing))
+			.join('');
+		return `<w:p><w:pPr>${style}${numbering}${tabs}${spacing}${indent}${jc}${sectPr}</w:pPr>${marks.start}${drawings}${floats}${extra.lead ?? ''}${this.runs(block.fragments, part, fields)}${marks.end}</w:p>`;
 	}
 
 	picture(block: PictureBlock, part: Part, sectPr = ''): string {
@@ -265,6 +279,7 @@ function stylesXml(input: PackageInput): string {
 		'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>' +
 		[1, 2, 3, 4, 5, 6].map(heading).join('') +
 		(input.footnotes?.length ? FOOTNOTE_STYLES : '') +
+		(input.endnotes?.length ? ENDNOTE_STYLES : '') +
 		'<w:style w:type="paragraph" w:styleId="Header"><w:name w:val="header"/><w:basedOn w:val="Normal"/></w:style>' +
 		'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/></w:style>' +
 		'<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>' +
@@ -318,26 +333,29 @@ export async function writePackage(input: PackageInput): Promise<Uint8Array> {
 		);
 		references += el(`w:${story.kind}Reference`, { 'w:type': 'default', 'r:id': id });
 	}
-	if (input.footnotes?.length) {
+	for (const kind of ['footnote', 'endnote'] as const) {
+		const list = kind === 'footnote' ? input.footnotes : input.endnotes;
+		if (!list?.length) continue;
 		const part = new Part();
-		const notes = input.footnotes.map((note) => ({
+		const style = `${kind === 'footnote' ? 'Footnote' : 'Endnote'}Text`;
+		const notes = list.map((note) => ({
 			id: note.id,
 			body:
 				note.blocks
 					.map((block, index) =>
 						writer.paragraph(block, part, undefined, '', {
-							style: 'FootnoteText',
-							...(index === 0 ? { lead: noteMarkRun(note.customMark) } : {}),
+							style,
+							...(index === 0 ? { lead: noteMarkRun(note.customMark, kind) } : {}),
 						}),
 					)
 					.join('') ||
-				`<w:p><w:pPr><w:pStyle w:val="FootnoteText"/></w:pPr>${noteMarkRun(note.customMark)}</w:p>`,
+				`<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr>${noteMarkRun(note.customMark, kind)}</w:p>`,
 		}));
-		zip.file('word/footnotes.xml', footnotesXml(notes));
-		if (part.rels.length) zip.file('word/_rels/footnotes.xml.rels', part.xml());
-		overrides.push(['/word/footnotes.xml', `${WML}.footnotes+xml`]);
+		zip.file(`word/${kind}s.xml`, footnotesXml(notes, kind));
+		if (part.rels.length) zip.file(`word/_rels/${kind}s.xml.rels`, part.xml());
+		overrides.push([`/word/${kind}s.xml`, `${WML}.${kind}s+xml`]);
 		documentPart.rels.push(
-			`<Relationship Id="rId${documentPart.rels.length + 1}" Type="${REL}/footnotes" Target="footnotes.xml"/>`,
+			`<Relationship Id="rId${documentPart.rels.length + 1}" Type="${REL}/${kind}s" Target="${kind}s.xml"/>`,
 		);
 	}
 	let body = '';
@@ -371,7 +389,7 @@ export async function writePackage(input: PackageInput): Promise<Uint8Array> {
 	zip.file('word/styles.xml', stylesXml(input));
 	zip.file(
 		'word/settings.xml',
-		`${XML_DECLARATION}<w:settings ${ROOT_NAMESPACES}><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`,
+		`${XML_DECLARATION}<w:settings ${ROOT_NAMESPACES}>${input.endnotes?.length ? `<w:endnotePr>${el('w:numFmt', { 'w:val': input.endnoteFormat ?? 'decimal' })}<w:endnote w:id="-1"/><w:endnote w:id="0"/></w:endnotePr>` : ''}<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`,
 	);
 	zip.file('docProps/core.xml', coreXml(input.properties));
 	for (const item of writer.media) zip.file(`word/${item.name}`, item.data);

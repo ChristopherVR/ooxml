@@ -11,7 +11,8 @@ import {
 	type ParagraphBlock,
 	type TextArea,
 } from './paragraphs';
-import { unruledTables, type TableBlock } from './tables';
+import { unruledTables } from './borderless';
+import type { TableBlock } from './tables';
 
 export type FlowItem = ParagraphBlock | PictureBlock | TableBlock;
 

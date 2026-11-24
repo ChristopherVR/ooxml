@@ -23,8 +23,8 @@ export interface Fragment {
 	anchor?: string;
 	/** A tab that replaced a dot leader, and where the item after it ends. */
 	leader?: { kind: 'dot' | 'underscore'; right: number };
-	/** The fragment is the reference mark of a footnote. */
-	note?: { id: number; mark: string; custom: boolean };
+	/** The fragment is the reference mark of a footnote (or an endnote). */
+	note?: { id: number; mark: string; custom: boolean; kind?: 'endnote' };
 	/** Tagged PDF: the structure role and element of the span (see `PdfTextSpan`). */
 	role?: string;
 	element?: number;
@@ -159,8 +159,12 @@ export function pageLines(
 	return { lines, rotated };
 }
 
-/** Marks fragments that a thin rule runs under (underline) or through (strike-through). */
-export function applyRules(lines: Line[], rules: readonly PdfPageRule[]): void {
+/**
+ * Marks fragments that a thin rule runs under (underline) or through (strike-through); returns the
+ * rules that became one.
+ */
+export function applyRules(lines: Line[], rules: readonly PdfPageRule[]): Set<PdfPageRule> {
+	const used = new Set<PdfPageRule>();
 	const thin = rules.filter((rule) => rule.y1 - rule.y0 <= 1.5 && rule.x1 - rule.x0 > 2);
 	for (const rule of thin) {
 		const y = (rule.y0 + rule.y1) / 2;
@@ -172,9 +176,12 @@ export function applyRules(lines: Line[], rules: readonly PdfPageRule[]): void {
 				if (overlap < 0.6 * fragment.width || !fragment.text.trim()) continue;
 				if (y > line.baseline - 0.05 * line.size) fragment.underline = true;
 				else if (y > line.baseline - 0.45 * line.size) fragment.strike = true;
+				else continue;
+				used.add(rule);
 			}
 		}
 	}
+	return used;
 }
 
 /** Gives fragments under a link annotation their address. */
