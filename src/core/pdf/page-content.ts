@@ -27,6 +27,15 @@ export interface PdfTextSpan {
 	rise: number;
 	/** Text rendering mode 3: invisible, as an OCR layer over a scanned page. */
 	invisible?: true;
+	/** Drawn as an artifact (page furniture such as running heads, in a tagged file). */
+	artifact?: true;
+	/**
+	 * In a tagged file, the standard structure type of the block the text belongs to (`P`, `H1`
+	 * to `H6`, `LI`, `LBody`, `TD`, `Caption`...), after the role map.
+	 */
+	role?: string;
+	/** In a tagged file, an id shared by the spans of one structure element (one paragraph). */
+	element?: number;
 }
 
 /** A picture drawn on the page, with its encoded bytes when the reader could take them. */
@@ -42,6 +51,8 @@ export interface PdfPageImage {
 	data?: Uint8Array;
 	/** Why the picture could not be read (an unsupported codec or colour space). */
 	reason?: string;
+	/** Alternate text, from the figure's structure element or its marked content. */
+	alt?: string;
 }
 
 /** A straight line or a rectangle (filled or stroked): table rules, borders, underlines. */
@@ -66,6 +77,20 @@ export interface PdfPageLink {
 	uri?: string;
 	/** A page index for an internal link. */
 	page?: number;
+	/** Where on that page the link goes (reading coordinates), when the destination says. */
+	targetY?: number;
+	/** The named destination the link goes to, if it uses one. */
+	destination?: string;
+}
+
+/** An entry of the document outline (bookmarks), in document order. */
+export interface PdfOutlineItem {
+	title: string;
+	/** Nesting depth, 0 for a top-level entry. */
+	level: number;
+	page?: number;
+	y?: number;
+	destination?: string;
 }
 
 export interface PdfPageContent {

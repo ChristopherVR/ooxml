@@ -6,8 +6,10 @@ export { isPdf, type PdfLimits, type PdfOpenOptions } from './document';
 export { PdfPasswordError, type PdfPermissions } from './crypt';
 export { PdfLimitError } from './filters';
 export { familyName } from './fonts';
+export { decodeCcitt, type CcittOptions } from './ccitt';
 export type {
 	PdfFontInfo,
+	PdfOutlineItem,
 	PdfPageContent,
 	PdfPageImage,
 	PdfPageLink,

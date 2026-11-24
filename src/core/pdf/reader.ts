@@ -1,13 +1,19 @@
 /**
  * Opens a PDF and reads what each page shows (`PdfPageContent`). The file's JavaScript, launch
  * actions and embedded files are never run or opened; only page content, fonts, pictures, link
- * annotations and the document information are read.
+ * annotations, destinations, the outline, the structure tree and the document information are
+ * read.
  */
 import { ContentReader, type Matrix } from './content';
 import type { PdfPermissions } from './crypt';
 import { PdfDocument, type PdfOpenOptions, type PdfPageNode } from './document';
-import { decodeTextString, isName, isNumber, PdfRef, PdfStream, type PdfValue } from './objects';
-import type { PdfPageContent, PdfPageLink } from './page-content';
+import { pageMatrix } from './matrix';
+import { Destinations } from './navigation';
+import { decodeTextString, isName, isNumber, PdfStream, type PdfValue } from './objects';
+import type { PdfOutlineItem, PdfPageContent, PdfPageLink } from './page-content';
+import { readStructure, type StructureMarks } from './structure';
+
+export { pageMatrix };
 
 export interface PdfDocumentInfo {
 	title?: string;
@@ -30,30 +36,14 @@ export interface PdfReader {
 	/** The file is tagged (has a structure tree). */
 	readonly tagged: boolean;
 	readonly info: PdfDocumentInfo;
+	/** The document outline (bookmarks), flattened in document order. */
+	readonly outline: PdfOutlineItem[];
 	/** What page `index` (0-based) shows. */
 	page(index: number, options?: { images?: boolean }): Promise<PdfPageContent>;
 }
 
-/** The matrix from user space to reading space: crop box origin, rotation, y down. */
-export function pageMatrix(node: Pick<PdfPageNode, 'cropBox' | 'rotate'>): {
-	matrix: Matrix;
-	width: number;
-	height: number;
-} {
-	const [x0, y0, x1, y1] = node.cropBox as [number, number, number, number];
-	const w = x1 - x0;
-	const h = y1 - y0;
-	switch (node.rotate) {
-		case 90:
-			return { matrix: [0, 1, 1, 0, -y0, -x0], width: h, height: w };
-		case 180:
-			return { matrix: [-1, 0, 0, 1, x1, -y0], width: w, height: h };
-		case 270:
-			return { matrix: [0, -1, -1, 0, y1, x1], width: h, height: w };
-		default:
-			return { matrix: [1, 0, 0, -1, -x0, y1], width: w, height: h };
-	}
-}
+/** Painted shapes on a page beyond which the reader reports drawings it left out. */
+const DRAWINGS_NOTED = 3;
 
 async function contentBytes(
 	document: PdfDocument,
@@ -80,7 +70,7 @@ async function links(
 	document: PdfDocument,
 	node: PdfPageNode,
 	matrix: Matrix,
-	pageRefs: Map<string, number>,
+	destinations: Destinations,
 ): Promise<PdfPageLink[]> {
 	const annots = await document.resolve(node.dict.get('Annots'));
 	if (!Array.isArray(annots)) return [];
@@ -90,36 +80,32 @@ async function links(
 		if (!annot || !isName(annot.get('Subtype'), 'Link')) continue;
 		const rect = await document.resolve(annot.get('Rect'));
 		if (!Array.isArray(rect) || rect.length !== 4 || !rect.every(isNumber)) continue;
-		const [ax, ay, bx, by] = rect as number[];
-		const p = [
-			[
-				matrix[0] * ax! + matrix[2] * ay! + matrix[4],
-				matrix[1] * ax! + matrix[3] * ay! + matrix[5],
-			],
-			[
-				matrix[0] * bx! + matrix[2] * by! + matrix[4],
-				matrix[1] * bx! + matrix[3] * by! + matrix[5],
-			],
+		const [ax, ay, bx, by] = rect as [number, number, number, number];
+		const a = [
+			matrix[0] * ax + matrix[2] * ay + matrix[4],
+			matrix[1] * ax + matrix[3] * ay + matrix[5],
+		];
+		const b = [
+			matrix[0] * bx + matrix[2] * by + matrix[4],
+			matrix[1] * bx + matrix[3] * by + matrix[5],
 		];
 		const link: PdfPageLink = {
-			x: Math.min(p[0]![0]!, p[1]![0]!),
-			y: Math.min(p[0]![1]!, p[1]![1]!),
-			width: Math.abs(p[1]![0]! - p[0]![0]!),
-			height: Math.abs(p[1]![1]! - p[0]![1]!),
+			x: Math.min(a[0]!, b[0]!),
+			y: Math.min(a[1]!, b[1]!),
+			width: Math.abs(b[0]! - a[0]!),
+			height: Math.abs(b[1]! - a[1]!),
 		};
 		const action = await document.dict(annot.get('A'));
 		if (action && isName(action.get('S'), 'URI')) {
 			const uri = decodeTextString(await document.resolve(action.get('URI')));
 			if (uri && /^(https?:|mailto:)/i.test(uri)) link.uri = uri;
 		}
-		const destination = await document.resolve(
-			annot.get('Dest') ??
-				(action && isName(action.get('S'), 'GoTo') ? action.get('D') : undefined),
-		);
-		if (Array.isArray(destination) && destination[0] instanceof PdfRef) {
-			const page = pageRefs.get(destination[0].key);
-			if (page !== undefined) link.page = page;
+		const target = await destinations.linkTarget(annot, action);
+		if (target?.page !== undefined) {
+			link.page = target.page;
+			if (target.y !== undefined) link.targetY = target.y;
 		}
+		if (target?.destination !== undefined) link.destination = target.destination;
 		if (link.uri || link.page !== undefined) out.push(link);
 	}
 	return out;
@@ -145,6 +131,18 @@ export async function openPdf(bytes: Uint8Array, options: PdfOpenOptions = {}): 
 	const markInfo = await document.dict(catalog?.get('MarkInfo'));
 	const pageRefs = new Map<string, number>();
 	document.pages.forEach((node, index) => node.ref && pageRefs.set(node.ref.key, index));
+	const destinations = new Destinations(document, catalog, pageRefs);
+	let outline: PdfOutlineItem[] = [];
+	try {
+		outline = await destinations.outline();
+	} catch {
+		// A damaged outline only loses the bookmarks.
+	}
+	let structure: Promise<StructureMarks> | undefined;
+	const marksOf = (index: number) => {
+		structure ??= readStructure(document, catalog, pageRefs).catch(() => new Map());
+		return structure.then((marks) => marks.get(index));
+	};
 	return {
 		pageCount: document.pages.length,
 		permissions: document.permissions,
@@ -152,6 +150,7 @@ export async function openPdf(bytes: Uint8Array, options: PdfOpenOptions = {}): 
 		signed: isNumber(sigFlags) && (sigFlags & 1) === 1,
 		tagged: !!catalog?.has('StructTreeRoot') || markInfo?.get('Marked') === true,
 		info,
+		outline,
 		async page(index, pageOptions = {}) {
 			const node = document.pages[index];
 			if (!node) throw new RangeError(`The PDF has no page ${index + 1}.`);
@@ -168,15 +167,29 @@ export async function openPdf(bytes: Uint8Array, options: PdfOpenOptions = {}): 
 					`The page content could not be read completely (${error instanceof Error ? error.message : 'error'}).`,
 				);
 			}
+			const { result } = reader;
+			if (result.marks.size) {
+				const marks = await marksOf(index);
+				for (const [item, mcid] of result.marks) {
+					const mark = marks?.get(mcid);
+					if (!mark) continue;
+					if ('text' in item) {
+						item.role = mark.role;
+						item.element = mark.element;
+					} else if (mark.alt && !item.alt) item.alt = mark.alt;
+				}
+			}
+			if (result.drawings >= DRAWINGS_NOTED)
+				result.notes.add(`Vector drawings (${result.drawings} shapes) were left out.`);
 			return {
 				index,
 				width,
 				height,
-				spans: reader.result.spans,
-				images: reader.result.images,
-				rules: reader.result.rules,
-				links: await links(document, node, matrix, pageRefs),
-				notes: [...reader.result.notes],
+				spans: result.spans,
+				images: result.images,
+				rules: result.rules,
+				links: await links(document, node, matrix, destinations),
+				notes: [...result.notes],
 			};
 		},
 	};

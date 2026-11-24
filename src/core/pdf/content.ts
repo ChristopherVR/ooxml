@@ -3,10 +3,12 @@
  * the graphics and text state and collects what the page shows as text spans, pictures and
  * rules, in reading coordinates. Shading, clipping and painting details are ignored.
  */
+import { inlineImage, unitBox, xobjectImage } from './content-images';
 import type { PdfDocument } from './document';
 import { PdfFont } from './fonts';
-import { readImage } from './images';
-import { EOF, isWhite, PdfKeyword, PdfLexer } from './lexer';
+import { EOF, PdfKeyword, PdfLexer } from './lexer';
+import { currentMark, markedEntry, type MarkedEntry } from './marked';
+import { apply, multiply, type Matrix } from './matrix';
 import {
 	isName,
 	isNumber,
@@ -17,22 +19,9 @@ import {
 	type PdfValue,
 } from './objects';
 import type { PdfPageImage, PdfPageRule, PdfTextSpan } from './page-content';
-import { indexOf } from './xref';
 
-export type Matrix = [number, number, number, number, number, number];
-
-export const multiply = (m: Matrix, n: Matrix): Matrix => [
-	m[0] * n[0] + m[1] * n[2],
-	m[0] * n[1] + m[1] * n[3],
-	m[2] * n[0] + m[3] * n[2],
-	m[2] * n[1] + m[3] * n[3],
-	m[4] * n[0] + m[5] * n[2] + n[4],
-	m[4] * n[1] + m[5] * n[3] + n[5],
-];
-export const apply = (m: Matrix, x: number, y: number): [number, number] => [
-	m[0] * x + m[2] * y + m[4],
-	m[1] * x + m[3] * y + m[5],
-];
+export type { Matrix };
+export { apply, multiply };
 
 interface State {
 	ctm: Matrix;
@@ -73,11 +62,23 @@ export interface ContentResult {
 	images: PdfPageImage[];
 	rules: PdfPageRule[];
 	notes: Set<string>;
+	/** The marked-content id each span or picture was drawn under. */
+	marks: Map<PdfTextSpan | PdfPageImage, number>;
+	/** Painted paths that are not straight rules or rectangles (curves, shapes). */
+	drawings: number;
 }
 
 export class ContentReader {
 	readonly #fonts = new Map<PdfValue, PdfFont>();
-	readonly result: ContentResult = { spans: [], images: [], rules: [], notes: new Set() };
+	readonly #marked: MarkedEntry[] = [];
+	readonly result: ContentResult = {
+		spans: [],
+		images: [],
+		rules: [],
+		notes: new Set(),
+		marks: new Map(),
+		drawings: 0,
+	};
 
 	constructor(
 		readonly document: PdfDocument,
@@ -129,6 +130,8 @@ export class ContentReader {
 		let tlm: Matrix = [1, 0, 0, 1, 0, 0];
 		let path: { kind: 'rect' | 'line'; points: number[] }[] = [];
 		let pathComplex = false;
+		let pathDiagonal = false;
+		const markBase = this.#marked.length;
 		let current: [number, number] | undefined;
 		const operands: PdfValue[] = [];
 		const num = (index: number) => {
@@ -170,6 +173,8 @@ export class ContentReader {
 			flush();
 		};
 		const paint = (stroked: boolean, filled: boolean) => {
+			if (pathComplex || pathDiagonal) this.result.drawings++;
+			pathDiagonal = false;
 			if (!pathComplex && this.result.rules.length < MAX_RULES)
 				for (const item of path) {
 					const [x0, y0, x1, y1] = item.points as [number, number, number, number];
@@ -316,8 +321,11 @@ export class ContentReader {
 					current = [num(0), num(1)];
 					break;
 				case 'l':
-					if (current)
+					if (current) {
 						path.push({ kind: 'line', points: [current[0], current[1], num(0), num(1)] });
+						if (Math.abs(current[0] - num(0)) > 0.01 && Math.abs(current[1] - num(1)) > 0.01)
+							pathDiagonal = true;
+					}
 					current = [num(0), num(1)];
 					break;
 				case 're':
@@ -346,6 +354,15 @@ export class ContentReader {
 				case 'n':
 					path = [];
 					pathComplex = false;
+					pathDiagonal = false;
+					break;
+				case 'BMC':
+				case 'BDC':
+					if (this.#marked.length < 256)
+						this.#marked.push(await markedEntry(this.document, resources, operands));
+					break;
+				case 'EMC':
+					if (this.#marked.length > markBase) this.#marked.pop();
 					break;
 				case 'Do': {
 					const name = operands[0];
@@ -353,12 +370,26 @@ export class ContentReader {
 						await this.#xobject(resources, name.name, state, depth, forms);
 					break;
 				}
-				case 'BI':
-					this.#inlineImage(lexer, state);
+				case 'BI': {
+					const box = unitBox(state.ctm, this.page);
+					const image = await inlineImage(this.document, lexer, resources, box, {
+						decode: this.withImages && box.width > 4 && box.height > 4,
+						fill: state.fill,
+					});
+					if (image) this.#addImage(image);
 					break;
+				}
 			}
 			operands.length = 0;
 		}
+		this.#marked.length = Math.min(this.#marked.length, markBase);
+	}
+
+	#addImage(image: PdfPageImage): void {
+		const mark = currentMark(this.#marked);
+		if (mark.alt) image.alt = mark.alt;
+		if (mark.mcid !== undefined) this.result.marks.set(image, mark.mcid);
+		this.result.images.push(image);
 	}
 
 	#emit(text: string, start: Matrix, advance: number, state: State, size: number): void {
@@ -381,6 +412,9 @@ export class ContentReader {
 			rise: Math.hypot(rx - x, ry - y) * Math.sign(state.rise),
 		};
 		if (state.render === 3 || state.render === 7) span.invisible = true;
+		const mark = currentMark(this.#marked);
+		if (mark.artifact) span.artifact = true;
+		if (mark.mcid !== undefined) this.result.marks.set(span, mark.mcid);
 		this.result.spans.push(span);
 	}
 
@@ -416,71 +450,7 @@ export class ContentReader {
 			return;
 		}
 		if (!isName(subtype, 'Image') || !this.withImages) return;
-		const box = this.#unitBox(state.ctm);
-		try {
-			this.result.images.push(await readImage(this.document, stream, box));
-		} catch {
-			this.result.images.push({
-				...box,
-				pixelWidth: 0,
-				pixelHeight: 0,
-				format: 'unsupported',
-				reason: 'it could not be decoded',
-			});
-		}
-	}
-
-	/** Where the unit square lands on the page. */
-	#unitBox(ctm: Matrix): { x: number; y: number; width: number; height: number } {
-		const toPage = multiply(ctm, this.page);
-		const corners = [
-			apply(toPage, 0, 0),
-			apply(toPage, 1, 0),
-			apply(toPage, 0, 1),
-			apply(toPage, 1, 1),
-		];
-		const xs = corners.map((point) => point[0]);
-		const ys = corners.map((point) => point[1]);
-		const x = Math.min(...xs);
-		const y = Math.min(...ys);
-		return { x, y, width: Math.max(...xs) - x, height: Math.max(...ys) - y };
-	}
-
-	/** Skips an inline image (`BI ... ID data EI`), noting where it was. */
-	#inlineImage(lexer: PdfLexer, state: State): void {
-		const dict: PdfDict = new Map();
-		for (;;) {
-			const key = lexer.object();
-			if (key === EOF) return;
-			if (key instanceof PdfKeyword) {
-				if (key.word === 'ID') break;
-				continue;
-			}
-			if (key instanceof PdfName) {
-				const value = lexer.object();
-				if (value !== EOF && !(value instanceof PdfKeyword)) dict.set(key.name, value);
-			}
-		}
-		const start = lexer.pos + 1;
-		let end = start;
-		for (;;) {
-			end = indexOf(lexer.bytes, 'EI', end);
-			if (end < 0) {
-				lexer.pos = lexer.bytes.length;
-				return;
-			}
-			if (
-				isWhite(lexer.bytes[end - 1]) &&
-				(end + 2 >= lexer.bytes.length || isWhite(lexer.bytes[end + 2]))
-			)
-				break;
-			end += 2;
-		}
-		lexer.pos = end + 2;
-		const box = this.#unitBox(state.ctm);
-		if (this.withImages && box.width > 4 && box.height > 4)
-			this.result.notes.add(
-				'Pictures stored inside the page content (inline images) were left out.',
-			);
+		const box = unitBox(state.ctm, this.page);
+		this.#addImage(await xobjectImage(this.document, stream, box, { fill: state.fill }));
 	}
 }
