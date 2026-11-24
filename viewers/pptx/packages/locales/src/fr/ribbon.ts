@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': 'Mode Plein écran',
 	'pptx.ribbon.display.tabs': 'Afficher les onglets uniquement',
 	'pptx.ribbon.display.always': 'Toujours afficher le ruban',
+	'pptx.ribbon.display.hideQuickAccess': "Masquer la barre d'outils Accès rapide",
 	'pptx.ribbon.showRibbon': 'Afficher le ruban',
 	'pptx.ribbon.open': 'Ouvrir',
 	'pptx.ribbon.openAnotherPresentation': 'Ouvrir une autre présentation',

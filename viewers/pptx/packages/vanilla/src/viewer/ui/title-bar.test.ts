@@ -255,4 +255,24 @@ describe('the quick-access strip follows File > Options', () => {
 		titleBar.dockQuickAccessElement();
 		expect(strip.parentElement).toBeNull();
 	});
+
+	it('collapses and expands the search box live via setSearchCollapsed', () => {
+		const titleBar = createTitleBar(
+			document,
+			createTranslator(),
+			makeDeps({ searchCollapsed: true }),
+		);
+		const toggle = shadow(titleBar.el).querySelector<HTMLButtonElement>('[part="search-toggle"]')!;
+		const box = shadow(titleBar.el).querySelector<HTMLElement>('.box')!;
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+
+		titleBar.setSearchCollapsed(false);
+		expect(toggle.hidden).toBe(true);
+		expect(box.hidden).toBe(false);
+
+		titleBar.setSearchCollapsed(true);
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+	});
 });

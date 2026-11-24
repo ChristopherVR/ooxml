@@ -51,6 +51,8 @@ export interface OfficeTitleBarSearch {
 	content?: ((query: string) => string) | undefined;
 	/** Glyph of the content row; defaults to `search`. */
 	contentIcon?: string | undefined;
+	/** Start collapsed to a compact search icon button that expands on click or focus. */
+	collapsed?: boolean | undefined;
 }
 
 /** Detail of the search request: a chosen command, or a document search when `command` is absent. */

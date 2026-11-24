@@ -85,6 +85,7 @@
 			hiddenActions,
 			quickAccess: optionsState.options.quickAccess,
 			quickAccessAllowed: customization.isPanelVisible('quickAccessToolbar'),
+			searchCollapsed: optionsState.options.general.collapseSearchByDefault,
 			screenTip: (label) => optionsState.screenTip(label),
 			translate: t,
 		}),

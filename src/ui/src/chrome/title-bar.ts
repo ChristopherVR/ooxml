@@ -58,14 +58,17 @@ export class OfficeUiTitleBar extends OfficeElement {
 		found: { state: true },
 		active: { state: true },
 		resultsOpen: { state: true },
+		searchExpanded: { state: true },
 		live: { state: true },
 	};
 	declare stop: string;
 	declare found: readonly OfficeTitleBarCommand[];
 	declare active: number;
 	declare resultsOpen: boolean;
+	declare searchExpanded: boolean;
 	declare live: string;
 	private model: OfficeTitleBarState = EMPTY;
+	private wasCollapsed = false;
 
 	constructor() {
 		super();
@@ -73,6 +76,7 @@ export class OfficeUiTitleBar extends OfficeElement {
 		this.found = [];
 		this.active = 0;
 		this.resultsOpen = false;
+		this.searchExpanded = false;
 		this.live = '';
 	}
 
@@ -193,10 +197,24 @@ export class OfficeUiTitleBar extends OfficeElement {
 		this.found = [];
 	}
 
+	private expandSearch(): void {
+		this.searchExpanded = true;
+		if (this.isUpdatePending) this.performUpdate();
+		this.searchField?.focus();
+	}
+
+	private onSearchFocus(): void {
+		if (this.model.search?.collapsed && !this.searchExpanded) {
+			this.searchExpanded = true;
+		}
+		this.openResults();
+	}
+
 	private commit(entry?: OfficeTitleBarCommand): void {
 		const query = this.query;
 		(this.searchField as SearchField).value = '';
 		this.closeResults();
+		if (this.model.search?.collapsed) this.searchExpanded = false;
 		this.fire(
 			(this.constructor as unknown as Statics).searchEvent,
 			entry ? { query, command: entry.id } : { query },
@@ -210,6 +228,10 @@ export class OfficeUiTitleBar extends OfficeElement {
 		else if (key === 'Escape' && field.value) {
 			field.value = '';
 			this.closeResults();
+		} else if (key === 'Escape' && this.model.search?.collapsed && this.searchExpanded) {
+			this.searchExpanded = false;
+			if (this.isUpdatePending) this.performUpdate();
+			this.renderRoot.querySelector<HTMLButtonElement>('.search-toggle')?.focus();
 		} else if ((key === 'ArrowDown' || key === 'ArrowUp') && this.found.length > 0) {
 			event.preventDefault();
 			this.active =
@@ -222,7 +244,10 @@ export class OfficeUiTitleBar extends OfficeElement {
 	private onSearchBlur(event: FocusEvent): void {
 		const next = event.relatedTarget as Node | null;
 		const box = this.renderRoot.querySelector('.box');
-		if (!next || !box?.contains(next)) this.closeResults();
+		if (!next || !box?.contains(next)) {
+			this.closeResults();
+			if (this.model.search?.collapsed) this.searchExpanded = false;
+		}
 	}
 
 	private results(search: OfficeTitleBarState['search']): TemplateResult {
@@ -274,9 +299,21 @@ export class OfficeUiTitleBar extends OfficeElement {
 
 	private searchBox(): TemplateResult {
 		const search = this.model.search;
+		const collapsed = Boolean(search?.collapsed) && !this.searchExpanded;
 		const tag = unsafeStatic((this.constructor as unknown as Statics).searchTag);
 		return html`<span class="search" ?hidden=${!search}>
-			<div class="box" ?hidden=${!search} @focusout=${this.onSearchBlur}>
+			<button
+				type="button"
+				class="search-toggle"
+				part="search-toggle"
+				aria-label=${search?.label ?? ''}
+				title=${search?.label ?? ''}
+				aria-expanded=${String(!collapsed)}
+				?hidden=${!search || !collapsed}
+				@click=${this.expandSearch}
+				>${glyph(search?.contentIcon ?? 'search', 'icon')}</button
+			>
+			<div class="box" ?hidden=${!search || collapsed} @focusout=${this.onSearchBlur}>
 				${staticHtml`<${tag}
 					variant="titlebar"
 					part="search"
@@ -286,7 +323,7 @@ export class OfficeUiTitleBar extends OfficeElement {
 						this.active = 0;
 						this.openResults();
 					}}
-					@focusin=${this.openResults}
+					@focusin=${this.onSearchFocus}
 					@keydown=${this.onSearchKey}
 				></${tag}>`}
 				${this.results(search)}
@@ -323,6 +360,11 @@ export class OfficeUiTitleBar extends OfficeElement {
 	protected override willUpdate(changed: PropertyValues<this>): void {
 		const items = this.model.quickAccess?.items ?? [];
 		this.toggleAttribute('data-empty', this.placement === 'belowRibbon' && items.length === 0);
+		const nextCollapsed = Boolean(this.model.search?.collapsed);
+		if (nextCollapsed !== this.wasCollapsed) {
+			this.wasCollapsed = nextCollapsed;
+			this.searchExpanded = false;
+		}
 		// A refreshed search model redraws an open result list.
 		if (changed.has('state' as never) && this.resultsOpen) this.openResults();
 	}

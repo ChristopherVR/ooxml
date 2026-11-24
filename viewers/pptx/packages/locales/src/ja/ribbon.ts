@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': '全画面表示モード',
 	'pptx.ribbon.display.tabs': 'タブのみを表示する',
 	'pptx.ribbon.display.always': '常にリボンを表示する',
+	'pptx.ribbon.display.hideQuickAccess': 'クイック アクセス ツール バーを非表示にする',
 	'pptx.ribbon.showRibbon': 'リボンを表示する',
 	'pptx.ribbon.open': '開く',
 	'pptx.ribbon.openAnotherPresentation': '別のプレゼンテーションを開く',

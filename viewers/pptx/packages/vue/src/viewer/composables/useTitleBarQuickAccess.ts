@@ -14,6 +14,7 @@ import { ScreenTipKey, ViewerOptionsKey } from './useViewerOptionsStore';
  */
 export function useTitleBarQuickAccess(): {
 	quickAccess: ComputedRef<ViewerQuickAccessOptions>;
+	collapseSearchByDefault: ComputedRef<boolean>;
 	screenTip: (label: string) => string | undefined;
 } {
 	const options = inject(ViewerOptionsKey, undefined);
@@ -25,5 +26,10 @@ export function useTitleBarQuickAccess(): {
 			? live
 			: { ...live, visible: false };
 	});
-	return { quickAccess, screenTip: (label) => tip(label) };
+	const collapseSearchByDefault = computed(
+		() =>
+			options?.value.general.collapseSearchByDefault ??
+			DEFAULT_VIEWER_OPTIONS.general.collapseSearchByDefault,
+	);
+	return { quickAccess, collapseSearchByDefault, screenTip: (label) => tip(label) };
 }

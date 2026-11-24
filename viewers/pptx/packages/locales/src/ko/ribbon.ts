@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': '전체 화면 모드',
 	'pptx.ribbon.display.tabs': '탭만 표시',
 	'pptx.ribbon.display.always': '항상 리본 표시',
+	'pptx.ribbon.display.hideQuickAccess': '빠른 실행 도구 모음 숨기기',
 	'pptx.ribbon.showRibbon': '리본 표시',
 	'pptx.ribbon.open': '열기',
 	'pptx.ribbon.openAnotherPresentation': '다른 프레젠테이션 열기',

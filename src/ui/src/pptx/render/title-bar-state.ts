@@ -67,6 +67,8 @@ export interface TitleBarViewState {
 	editing: boolean;
 	/** Whether the command search shows; hosts pass `editing`. */
 	searchVisible: boolean;
+	/** Options > General > "Collapse the search box by default". */
+	searchCollapsed?: boolean;
 	/** Display name; the translated default shows when empty. */
 	fileName?: string;
 	autosave: TitleBarAutosaveView;
@@ -184,6 +186,8 @@ export interface TitleBarHostInput {
 	hiddenActions?: readonly ToolbarActionId[];
 	/** Default true; React hides Save when the host gives no save handler. */
 	showSave?: boolean;
+	/** Options > General > "Collapse the search box by default". */
+	searchCollapsed?: boolean;
 	quickAccess: TitleBarQuickAccessView;
 	commands?: readonly CommandSearchEntry[];
 	contentSearch?: boolean;
@@ -197,6 +201,7 @@ export function buildTitleBarState(input: TitleBarHostInput): TitleBarViewState 
 	return {
 		editing: input.editing,
 		searchVisible: input.editing,
+		searchCollapsed: input.searchCollapsed,
 		fileName: input.fileName,
 		autosave: {
 			enabled: input.autosaveEnabled,

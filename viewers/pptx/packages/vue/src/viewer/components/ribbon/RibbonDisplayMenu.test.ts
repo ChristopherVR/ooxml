@@ -63,4 +63,27 @@ describe('ribbonDisplayMenu', () => {
 		expect(controller.getSnapshot().mode).toBe('fullScreen');
 		expect(onChange).not.toHaveBeenCalled();
 	});
+
+	it('renders the fourth Quick Access Toolbar entry and toggles visibility', async () => {
+		const onQuickAccessVisibleChange = vi.fn();
+		const controller = createRibbonDisplayController({
+			initial: 'always',
+			quickAccessVisible: true,
+			onQuickAccessVisibleChange,
+		});
+		controller.setMenuOpen(true);
+		const wrapper = mount(RibbonDisplayMenu, {
+			props: { state: controller.getSnapshot(), controller },
+		});
+		const qat = wrapper.find('[data-ribbon-display-action="toggle-quick-access"]');
+		expect(qat.exists()).toBe(true);
+		expect(qat.text()).toBe('Hide Quick Access Toolbar');
+
+		await qat.trigger('click');
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledExactlyOnceWith(false);
+		expect(controller.getSnapshot().menuOpen).toBe(false);
+		expect(controller.getSnapshot().quickAccessItem?.labelKey).toBe(
+			'pptx.options.quickAccess.show',
+		);
+	});
 });

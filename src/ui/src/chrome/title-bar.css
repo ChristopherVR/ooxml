@@ -69,6 +69,7 @@
 	min-width: 0;
 }
 .qat button,
+.search-toggle,
 .results button {
 	box-sizing: border-box;
 	display: inline-flex;
@@ -86,10 +87,12 @@
 	cursor: pointer;
 	touch-action: manipulation;
 }
-.qat button:hover:not(:disabled) {
+.qat button:hover:not(:disabled),
+.search-toggle:hover:not(:disabled) {
 	background: var(--office-selected);
 }
-.qat button:active:not(:disabled) {
+.qat button:active:not(:disabled),
+.search-toggle:active:not(:disabled) {
 	opacity: 0.7;
 }
 .qat button:disabled {
@@ -269,6 +272,7 @@ button:focus-visible {
 }
 @media (pointer: coarse) {
 	.qat button,
+	.search-toggle,
 	.results button {
 		min-width: var(--office-target-size-touch);
 		min-height: var(--office-target-size-touch);
@@ -294,6 +298,7 @@ button:focus-visible {
 	.status,
 	.name,
 	.qat button,
+	.search-toggle,
 	.results button {
 		color: CanvasText;
 	}
@@ -301,6 +306,7 @@ button:focus-visible {
 		background: CanvasText;
 	}
 	.qat button:hover:not(:disabled),
+	.search-toggle:hover:not(:disabled),
 	.results button:hover,
 	.results button[aria-selected='true'] {
 		forced-color-adjust: none;

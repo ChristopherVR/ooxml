@@ -3,6 +3,8 @@ import {
 	RIBBON_AUTO_COLLAPSE_MEDIA,
 	RIBBON_DISPLAY_OPTIONS_LABEL_KEY,
 	RIBBON_DISPLAY_REVEAL_LABEL_KEY,
+	isRibbonCommandChange,
+	isRibbonCommandClick,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -67,7 +69,14 @@ export function createRibbonDisplay(
 	reveal.setAttribute('aria-label', t(RIBBON_DISPLAY_REVEAL_LABEL_KEY));
 
 	const sync = (): void => {
-		const { effectiveMode, peek, layout, menu: items, menuOpen } = controller.getSnapshot();
+		const {
+			effectiveMode,
+			peek,
+			layout,
+			menu: items,
+			menuOpen,
+			quickAccessItem,
+		} = controller.getSnapshot();
 		ribbon.dataset.ribbonDisplay = effectiveMode;
 		ribbon.toggleAttribute('data-ribbon-peek', peek);
 		// The title bar is a sibling of the ribbon, so the viewer root carries the mode too.
@@ -103,6 +112,18 @@ export function createRibbonDisplay(
 			entry.addEventListener('click', () => controller.choose(item.mode));
 			menu.appendChild(entry);
 		}
+		if (quickAccessItem) {
+			const sep = createEl(doc, 'div', 'pptxv-ribbon-display-sep');
+			sep.setAttribute('role', 'separator');
+			menu.appendChild(sep);
+			const qatEntry = createEl(doc, 'button', 'pptxv-primary-menu-item');
+			qatEntry.type = 'button';
+			qatEntry.setAttribute('role', 'menuitem');
+			qatEntry.dataset.ribbonDisplayAction = 'toggle-quick-access';
+			qatEntry.textContent = t(quickAccessItem.labelKey);
+			qatEntry.addEventListener('click', () => controller.toggleQuickAccess());
+			menu.appendChild(qatEntry);
+		}
 		deps.onLayout();
 	};
 	const unsubscribe = controller.subscribe(sync);
@@ -127,6 +148,43 @@ export function createRibbonDisplay(
 		}
 	});
 
+	const pendingCommandClicks = new WeakSet<Event>();
+	const inRibbon = (event: Event): boolean => {
+		const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+		if (path.includes(ribbon)) {
+			return true;
+		}
+		return event.target instanceof Node && ribbon.contains(event.target);
+	};
+	const onClickCapture = (event: MouseEvent): void => {
+		if (destroyed) {
+			return;
+		}
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandClick(event)) {
+			pendingCommandClicks.add(event);
+		}
+	};
+	const onClickBubble = (event: MouseEvent): void => {
+		if (destroyed) {
+			return;
+		}
+		if (pendingCommandClicks.has(event)) {
+			pendingCommandClicks.delete(event);
+			controller.commandExecuted();
+		}
+	};
+	const onChange = (event: Event): void => {
+		if (destroyed) {
+			return;
+		}
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandChange(event)) {
+			controller.commandExecuted();
+		}
+	};
+	doc.addEventListener('click', onClickCapture, true);
+	doc.addEventListener('click', onClickBubble);
+	doc.addEventListener('change', onChange);
+
 	const onKey = (event: KeyboardEvent): void => {
 		const root = ribbon.closest('.pptxv');
 		const target = event.target as Node | null;
@@ -150,6 +208,9 @@ export function createRibbonDisplay(
 		destroy() {
 			destroyed = true;
 			unsubscribe();
+			doc.removeEventListener('click', onClickCapture, true);
+			doc.removeEventListener('click', onClickBubble);
+			doc.removeEventListener('change', onChange);
 			doc.removeEventListener('keydown', onKey);
 			short?.removeEventListener('change', onShort);
 			reveal.remove();

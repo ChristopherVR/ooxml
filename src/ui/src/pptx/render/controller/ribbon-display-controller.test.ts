@@ -104,4 +104,60 @@ describe('ribbon display controller', () => {
 		controller.setMode('always');
 		expect(listener).toHaveBeenCalledOnce();
 	});
+
+	it('exposes the fourth Quick Access Toolbar entry and syncs toggles with the host', () => {
+		const onQuickAccessVisibleChange = vi.fn();
+		const controller = createRibbonDisplayController({
+			quickAccessVisible: true,
+			onQuickAccessVisibleChange,
+		});
+		expect(controller.getSnapshot().quickAccessItem).toEqual({
+			visible: true,
+			labelKey: 'pptx.ribbon.display.hideQuickAccess',
+		});
+
+		controller.toggleMenu();
+		controller.toggleQuickAccess();
+		expect(controller.getSnapshot().menuOpen).toBe(false);
+		expect(controller.getSnapshot().quickAccessItem).toEqual({
+			visible: false,
+			labelKey: 'pptx.options.quickAccess.show',
+		});
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledExactlyOnceWith(false);
+
+		// External sync from Options > Quick Access Toolbar updates the label without re-notifying.
+		controller.setQuickAccessVisible(true);
+		expect(controller.getSnapshot().quickAccessItem?.labelKey).toBe(
+			'pptx.ribbon.display.hideQuickAccess',
+		);
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledOnce();
+
+		// When the host hides the quickAccessToolbar panel, the fourth entry disappears.
+		controller.setQuickAccessAvailable(false);
+		expect(controller.getSnapshot().quickAccessItem).toBeNull();
+		controller.toggleQuickAccess();
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledOnce();
+	});
+
+	it('dismisses a peeked ribbon after a command executes, without affecting docked mode', () => {
+		const tabs = createRibbonDisplayController({ initial: 'tabs' });
+		tabs.tabChosen('home');
+		expect(tabs.getSnapshot().peek).toBe(true);
+		tabs.commandExecuted();
+		expect(tabs.getSnapshot().peek).toBe(false);
+		expect(tabs.getSnapshot().layout.commands).toBe('hidden');
+
+		const full = createRibbonDisplayController({ initial: 'fullScreen' });
+		full.reveal();
+		expect(full.getSnapshot().peek).toBe(true);
+		full.commandExecuted();
+		expect(full.getSnapshot().peek).toBe(false);
+		expect(full.getSnapshot().layout.reveal).toBe(true);
+
+		const docked = createRibbonDisplayController({ initial: 'always' });
+		docked.toggleMenu();
+		docked.commandExecuted();
+		expect(docked.getSnapshot().layout.commands).toBe('docked');
+		expect(docked.getSnapshot().menuOpen).toBe(true);
+	});
 });

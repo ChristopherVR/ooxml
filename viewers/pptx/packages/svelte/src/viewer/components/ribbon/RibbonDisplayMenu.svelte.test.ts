@@ -64,6 +64,29 @@ describe('ribbon display options menu', () => {
 
 		expect(target.querySelector('[role="menu"]')).toBeNull();
 	});
+
+	it('renders the fourth Quick Access Toolbar entry and toggles visibility', () => {
+		const onQuickAccessVisibleChange = vi.fn();
+		const controller = createRibbonDisplayController({
+			initial: 'always',
+			quickAccessVisible: true,
+			onQuickAccessVisibleChange,
+		});
+		controller.toggleMenu();
+		const target = render(RibbonDisplayMenu, { ribbonDisplay: controller });
+		flushSync();
+
+		const qat = target.querySelector<HTMLButtonElement>(
+			'[data-ribbon-display-action="toggle-quick-access"]',
+		);
+		expect(qat).not.toBeNull();
+		expect(qat?.textContent?.trim()).toBe('Hide Quick Access Toolbar');
+
+		qat?.click();
+		flushSync();
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledExactlyOnceWith(false);
+		expect(target.querySelector('[role="menu"]')).toBeNull();
+	});
 });
 
 describe('ribbon reveal strip', () => {

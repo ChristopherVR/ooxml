@@ -1,4 +1,8 @@
-import { RIBBON_AUTO_COLLAPSE_MEDIA } from 'ooxml-ui/pptx';
+import {
+	RIBBON_AUTO_COLLAPSE_MEDIA,
+	isRibbonCommandChange,
+	isRibbonCommandClick,
+} from 'ooxml-ui/pptx';
 import type { RibbonDisplayController } from 'ooxml-ui/pptx';
 import { onBeforeUnmount, onMounted } from 'vue';
 
@@ -10,15 +14,25 @@ const MENU_CHROME =
 /**
  * The document-level gestures of Ribbon Display Options: a press outside the ribbon (or its
  * reveal strip) puts the peeked commands away, a press inside it outside the menu closes the
- * menu, Ctrl+F1 and Escape reach the controller from this viewer only, and the
- * "Collapse the ribbon automatically" viewport query is kept current. Registered on mount and
- * removed before unmount, so a viewer that goes away leaves no listener behind.
+ * menu, a command inside a peeked ribbon puts the peeked commands away, Ctrl+F1 and Escape reach
+ * the controller from this viewer only, and the "Collapse the ribbon automatically" viewport query
+ * is kept current. Registered on mount and removed before unmount, so a viewer that goes away
+ * leaves no listener behind.
  */
 export function useRibbonDisplayListeners(
 	controller: RibbonDisplayController,
 	viewerRoot: () => HTMLElement | null,
 ): void {
 	let short: MediaQueryList | undefined;
+	const pendingCommandClicks = new WeakSet<Event>();
+
+	const inRibbon = (event: Event): boolean => {
+		const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+		if (path.some((node) => node instanceof Element && node.matches(RIBBON_CHROME))) {
+			return true;
+		}
+		return event.target instanceof Element && event.target.closest(RIBBON_CHROME) !== null;
+	};
 
 	const onPointerDown = (event: PointerEvent): void => {
 		const target = event.target instanceof Element ? event.target : null;
@@ -26,6 +40,25 @@ export function useRibbonDisplayListeners(
 			controller.dismiss();
 		} else if (!target?.closest(MENU_CHROME)) {
 			controller.setMenuOpen(false);
+		}
+	};
+
+	const onClickCapture = (event: MouseEvent): void => {
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandClick(event)) {
+			pendingCommandClicks.add(event);
+		}
+	};
+
+	const onClickBubble = (event: MouseEvent): void => {
+		if (pendingCommandClicks.has(event)) {
+			pendingCommandClicks.delete(event);
+			controller.commandExecuted();
+		}
+	};
+
+	const onChange = (event: Event): void => {
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandChange(event)) {
+			controller.commandExecuted();
 		}
 	};
 
@@ -44,6 +77,9 @@ export function useRibbonDisplayListeners(
 
 	onMounted(() => {
 		document.addEventListener('pointerdown', onPointerDown);
+		document.addEventListener('click', onClickCapture, true);
+		document.addEventListener('click', onClickBubble);
+		document.addEventListener('change', onChange);
 		document.addEventListener('keydown', onKeyDown);
 		short = window.matchMedia?.(RIBBON_AUTO_COLLAPSE_MEDIA);
 		short?.addEventListener('change', onShortViewport);
@@ -52,6 +88,9 @@ export function useRibbonDisplayListeners(
 
 	onBeforeUnmount(() => {
 		document.removeEventListener('pointerdown', onPointerDown);
+		document.removeEventListener('click', onClickCapture, true);
+		document.removeEventListener('click', onClickBubble);
+		document.removeEventListener('change', onChange);
 		document.removeEventListener('keydown', onKeyDown);
 		short?.removeEventListener('change', onShortViewport);
 		short = undefined;

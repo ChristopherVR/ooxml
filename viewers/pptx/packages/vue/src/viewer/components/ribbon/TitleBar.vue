@@ -53,7 +53,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), { autosaveToggleAvailable: true });
 const { t } = useI18n();
 const slots = useSlots();
-const { quickAccess, screenTip } = useTitleBarQuickAccess();
+const { quickAccess, collapseSearchByDefault, screenTip } = useTitleBarQuickAccess();
 
 const state = computed(() =>
 	buildTitleBarState({
@@ -70,6 +70,7 @@ const state = computed(() =>
 		redoLabel: props.redoLabel,
 		hiddenActions: props.hiddenActions,
 		showSave: Boolean(props.onSave),
+		searchCollapsed: collapseSearchByDefault.value,
 		quickAccess: quickAccess.value,
 		screenTip,
 		translate: t,

@@ -109,6 +109,32 @@ describe('ribbon display options menu', () => {
 		expect(onChange).not.toHaveBeenCalled();
 		expect(controller.getSnapshot().mode).toBe('fullScreen');
 	});
+
+	it('renders the fourth Quick Access Toolbar entry and toggles visibility', () => {
+		const onQuickAccessVisibleChange = vi.fn();
+		const controller = createRibbonDisplayController({
+			initial: 'always',
+			quickAccessVisible: true,
+			onQuickAccessVisibleChange,
+		});
+		const state = controllerSignal(controller);
+		const fixture = createMenu(controller, () => state());
+		controller.toggleMenu();
+		fixture.componentRef.setInput('state', signal(state()));
+		fixture.detectChanges();
+
+		const qat = fixture.nativeElement.querySelector(
+			'[data-ribbon-display-action="toggle-quick-access"]',
+		) as HTMLButtonElement | null;
+		expect(qat).not.toBeNull();
+		const translate = TestBed.inject(TranslateService);
+		expect(qat!.textContent!).toContain(translate.instant('pptx.ribbon.display.hideQuickAccess'));
+
+		qat!.click();
+		fixture.detectChanges();
+		expect(onQuickAccessVisibleChange).toHaveBeenCalledExactlyOnceWith(false);
+		expect(controller.getSnapshot().menuOpen).toBe(false);
+	});
 });
 
 describe('ribbon display gestures on the tab row', () => {

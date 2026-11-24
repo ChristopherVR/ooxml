@@ -405,8 +405,7 @@ const noopClose = (): void => undefined;
 					>
 						<span class="h-4 w-4 shrink-0 text-amber-400" aria-hidden="true">&#128274;</span>
 						<p class="flex-1 text-xs text-amber-200">
-							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong
-							>:
+							<strong>{{ 'pptx.security.protectedViewTitle' | translate }}</strong>:
 							{{ 'pptx.options.trust.protectedViewInfo' | translate }}
 						</p>
 						<button
@@ -2046,6 +2045,8 @@ export class PowerPointViewerComponent
 	 */
 	protected readonly ribbonDisplayController = createRibbonDisplayController({
 		onChange: (mode) => this.ribbonDisplayChange.emit(mode),
+		onQuickAccessVisibleChange: (visible) =>
+			this.viewerOpts.store.setValue('quickAccess', 'visible', visible),
 	});
 	protected readonly ribbonDisplayState = controllerSignal(
 		this.ribbonDisplayController,
@@ -2966,6 +2967,16 @@ export class PowerPointViewerComponent
 		effect(() => {
 			this.ribbonDisplayController.setAutoCollapse(
 				this.viewerOpts.options().general.collapseRibbonAutomatically === true,
+			);
+		});
+		effect(() => {
+			this.ribbonDisplayController.setQuickAccessVisible(
+				this.viewerOpts.options().quickAccess.visible,
+			);
+		});
+		effect(() => {
+			this.ribbonDisplayController.setQuickAccessAvailable(
+				this.customizationService.panelVisible('quickAccessToolbar'),
 			);
 		});
 		listenRibbonDisplayGestures({

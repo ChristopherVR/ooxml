@@ -23,12 +23,14 @@ import {
 	normalizeRibbonDisplayMode,
 	ribbonDisplayLayout,
 	ribbonDisplayMenu,
+	ribbonDisplayQuickAccessItem,
 	toggleRibbonCollapsed,
 } from '../ribbon-display';
 import type {
 	RibbonDisplayLayout,
 	RibbonDisplayMenuItem,
 	RibbonDisplayMode,
+	RibbonDisplayQuickAccessItem,
 } from '../ribbon-display';
 import type { PptxController } from './controller';
 import { createControllerStore } from './controller';
@@ -55,6 +57,11 @@ export interface RibbonDisplayState {
 	readonly layout: RibbonDisplayLayout;
 	/** The menu's radio items, the drawn mode checked. */
 	readonly menu: readonly RibbonDisplayMenuItem[];
+	/**
+	 * PowerPoint's fourth menu entry ("Show/Hide Quick Access Toolbar"), or `null` when the host
+	 * removed the Quick Access Toolbar panel.
+	 */
+	readonly quickAccessItem: RibbonDisplayQuickAccessItem | null;
 }
 
 export interface RibbonDisplayControllerOptions {
@@ -62,6 +69,12 @@ export interface RibbonDisplayControllerOptions {
 	initial?: unknown;
 	/** The user picked a mode (menu, Ctrl+F1, double click on a tab). Not called for `setMode`. */
 	onChange?: ((mode: RibbonDisplayMode) => void) | undefined;
+	/** Initial Quick Access Toolbar visibility (Options > Quick Access Toolbar > Show). */
+	quickAccessVisible?: boolean | undefined;
+	/** Whether the host allows the Quick Access Toolbar (`quickAccessToolbar` panel visible). */
+	quickAccessAvailable?: boolean | undefined;
+	/** Called when the user toggles Quick Access Toolbar from the Ribbon Display Options menu. */
+	onQuickAccessVisibleChange?: ((visible: boolean) => void) | undefined;
 }
 
 /** The part of a keyboard event the controller reads. */
@@ -84,8 +97,16 @@ export interface RibbonDisplayController extends PptxController<RibbonDisplaySta
 	reveal(): void;
 	/** A press outside the ribbon, or Escape: put the peeked commands and the menu away. */
 	dismiss(): void;
+	/** A command ran inside a peeked ribbon: put the peeked commands away (no-op when docked). */
+	commandExecuted(): void;
 	setMenuOpen(open: boolean): void;
 	toggleMenu(): void;
+	/** Sync Options > Quick Access Toolbar > Show into the fourth menu entry. */
+	setQuickAccessVisible(visible: boolean): void;
+	/** Whether the host allows the Quick Access Toolbar (`quickAccessToolbar` panel visible). */
+	setQuickAccessAvailable(available: boolean): void;
+	/** The user chose the fourth menu entry: flips QAT visibility, closes menu and notifies host. */
+	toggleQuickAccess(): void;
 	/** Options > General > "Collapse the ribbon automatically". */
 	setAutoCollapse(enabled: boolean): void;
 	/** Whether the viewport matches {@link RIBBON_AUTO_COLLAPSE_MEDIA}. */
@@ -102,6 +123,8 @@ interface Inputs {
 	shortViewport: boolean;
 	/** The user picked a mode themselves, which wins over the automatic collapse. */
 	chosen: boolean;
+	quickAccessVisible: boolean;
+	quickAccessAvailable: boolean;
 }
 
 function derive(inputs: Inputs): RibbonDisplayState {
@@ -117,6 +140,9 @@ function derive(inputs: Inputs): RibbonDisplayState {
 		menuOpen: inputs.menuOpen,
 		layout: ribbonDisplayLayout(effectiveMode, peek),
 		menu: ribbonDisplayMenu(effectiveMode),
+		quickAccessItem: inputs.quickAccessAvailable
+			? ribbonDisplayQuickAccessItem(inputs.quickAccessVisible)
+			: null,
 	};
 }
 
@@ -130,6 +156,8 @@ export function createRibbonDisplayController(
 		autoCollapse: false,
 		shortViewport: false,
 		chosen: false,
+		quickAccessVisible: options.quickAccessVisible ?? true,
+		quickAccessAvailable: options.quickAccessAvailable ?? true,
 	};
 	const store = createControllerStore(derive(inputs));
 	const commit = (patch: Partial<Inputs>): void => {
@@ -167,8 +195,23 @@ export function createRibbonDisplayController(
 			}
 		},
 		dismiss,
+		commandExecuted() {
+			if (store.getSnapshot().peek) {
+				commit({ peek: false, menuOpen: false });
+			}
+		},
 		setMenuOpen: (open) => commit({ menuOpen: open }),
 		toggleMenu: () => commit({ menuOpen: !inputs.menuOpen }),
+		setQuickAccessVisible: (visible) => commit({ quickAccessVisible: visible }),
+		setQuickAccessAvailable: (available) => commit({ quickAccessAvailable: available }),
+		toggleQuickAccess() {
+			if (!inputs.quickAccessAvailable) {
+				return;
+			}
+			const next = !inputs.quickAccessVisible;
+			commit({ quickAccessVisible: next, menuOpen: false });
+			options.onQuickAccessVisibleChange?.(next);
+		},
 		// Changing the setting is a fresh instruction: it applies again even after the user
 		// picked a mode by hand.
 		setAutoCollapse: (enabled) =>

@@ -154,6 +154,40 @@ describe('office-ui-title-bar', () => {
 		expect(bar.hasAttribute('data-empty')).toBe(false);
 	});
 
+	it('collapses the search box to an icon button when search.collapsed is true and expands on click', () => {
+		const bar = make({ ...STATE, search: { ...STATE.search!, collapsed: true } });
+		const toggle = $<HTMLButtonElement>(bar, '.search-toggle');
+		const box = $(bar, '.box');
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+
+		toggle.click();
+		expect(toggle.hidden).toBe(true);
+		expect(box.hidden).toBe(false);
+
+		// Escape with an empty query collapses back to the icon button.
+		bar.searchField.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+
+		// Expanding again and blurring outside collapses back.
+		toggle.click();
+		expect(box.hidden).toBe(false);
+		box.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+
+		// Toggling collapsed off live restores the full search box immediately.
+		bar.state = { ...STATE, search: { ...STATE.search!, collapsed: false } };
+		expect(toggle.hidden).toBe(true);
+		expect(box.hidden).toBe(false);
+
+		// Toggling collapsed back on collapses it live.
+		bar.state = { ...STATE, search: { ...STATE.search!, collapsed: true } };
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+	});
+
 	it('lets a product subclass rename events and route buttons', () => {
 		const Base = customElements.get('office-ui-title-bar')!;
 		class Product extends (Base as unknown as { new (): TitleBar }) {

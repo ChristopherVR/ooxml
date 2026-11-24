@@ -24,7 +24,13 @@
 		themeToCssVars,
 	} from 'ooxml-ui/pptx';
 	import type { PowerPointViewerAPI, ViewerCustomizationApi, ViewerMode } from 'ooxml-ui/pptx';
-	import { installSvgIdScope, signatureLoadNotice, signatureStatusView } from 'ooxml-ui/pptx';
+	import {
+		installSvgIdScope,
+		isRibbonCommandChange,
+		isRibbonCommandClick,
+		signatureLoadNotice,
+		signatureStatusView,
+	} from 'ooxml-ui/pptx';
 
 	import { createTranslator } from '../i18n/translator';
 	import { aiAssistants } from './ai-assistant-registry';
@@ -170,12 +176,22 @@
 	const ribbonDisplayController = createRibbonDisplayController({
 		initial: props.ribbonDisplay,
 		onChange: (mode) => props.onribbondisplaychange?.(mode),
+		quickAccessVisible: vm.optionsState.options.quickAccess.visible,
+		quickAccessAvailable: customization.isPanelVisible('quickAccessToolbar'),
+		onQuickAccessVisibleChange: (visible) =>
+			vm.optionsState.setValue('quickAccess', 'visible', visible),
 	});
 	$effect(() => {
 		ribbonDisplayController.setMode(props.ribbonDisplay);
 	});
 	$effect(() => {
 		ribbonDisplayController.setAutoCollapse(Boolean(vm.optionsState.options.general.collapseRibbonAutomatically));
+	});
+	$effect(() => {
+		ribbonDisplayController.setQuickAccessVisible(vm.optionsState.options.quickAccess.visible);
+	});
+	$effect(() => {
+		ribbonDisplayController.setQuickAccessAvailable(customization.isPanelVisible('quickAccessToolbar'));
 	});
 	$effect(() => {
 		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
@@ -191,6 +207,11 @@
 		if (typeof document === 'undefined') {
 			return;
 		}
+		const pendingCommandClicks = new WeakSet<Event>();
+		const inRibbon = (event: Event): boolean =>
+			event
+				.composedPath()
+				.some((node) => node instanceof Element && node.matches('[data-pptx-chrome="ribbon"]'));
 		// A press outside the ribbon and its reveal strip puts the peeked commands away; a press
 		// inside it, but outside the menu and its button, closes the menu.
 		const onPointerDown = (event: PointerEvent): void => {
@@ -206,6 +227,30 @@
 				ribbonDisplayController.setMenuOpen(false);
 			}
 		};
+		const onClickCapture = (event: MouseEvent): void => {
+			if (
+				ribbonDisplayController.getSnapshot().peek &&
+				inRibbon(event) &&
+				isRibbonCommandClick(event)
+			) {
+				pendingCommandClicks.add(event);
+			}
+		};
+		const onClickBubble = (event: MouseEvent): void => {
+			if (pendingCommandClicks.has(event)) {
+				pendingCommandClicks.delete(event);
+				ribbonDisplayController.commandExecuted();
+			}
+		};
+		const onChange = (event: Event): void => {
+			if (
+				ribbonDisplayController.getSnapshot().peek &&
+				inRibbon(event) &&
+				isRibbonCommandChange(event)
+			) {
+				ribbonDisplayController.commandExecuted();
+			}
+		};
 		// Only this viewer's shortcuts: the focus is inside its root, or nowhere in particular.
 		const onKeydown = (event: KeyboardEvent): void => {
 			const target = event.target as Node | null;
@@ -214,9 +259,15 @@
 			}
 		};
 		document.addEventListener('pointerdown', onPointerDown);
+		document.addEventListener('click', onClickCapture, true);
+		document.addEventListener('click', onClickBubble);
+		document.addEventListener('change', onChange);
 		document.addEventListener('keydown', onKeydown);
 		return () => {
 			document.removeEventListener('pointerdown', onPointerDown);
+			document.removeEventListener('click', onClickCapture, true);
+			document.removeEventListener('click', onClickBubble);
+			document.removeEventListener('change', onChange);
 			document.removeEventListener('keydown', onKeydown);
 		};
 	});

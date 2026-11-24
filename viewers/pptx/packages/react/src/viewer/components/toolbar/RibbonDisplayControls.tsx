@@ -130,6 +130,21 @@ export function RibbonDisplayMenu({
 						{t(item.labelKey)}
 					</button>
 				))}
+				{state.quickAccessItem && (
+					<>
+						<hr className='my-0.5 border-0 border-t border-border' />
+						<button
+							type='button'
+							role='menuitem'
+							data-ribbon-display-action='toggle-quick-access'
+							onClick={() => ribbon.toggleQuickAccess()}
+							className='flex w-full items-center gap-2 whitespace-nowrap rounded-sm px-2 py-1.5 text-left text-foreground hover:bg-accent/30'
+						>
+							<span aria-hidden='true' className='inline-block h-3 w-3 shrink-0' />
+							{t(state.quickAccessItem.labelKey)}
+						</button>
+					</>
+				)}
 			</div>
 		</div>
 	);

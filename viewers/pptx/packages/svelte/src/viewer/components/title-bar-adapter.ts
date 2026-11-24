@@ -24,6 +24,8 @@ export interface TitleBarAdapterInput {
 	quickAccess: ViewerQuickAccessOptions;
 	/** False when the host removed the strip (`quickAccessToolbar` panel). */
 	quickAccessAllowed: boolean;
+	/** Options > General > "Collapse the search box by default". */
+	searchCollapsed?: boolean;
 	screenTip: (label: string) => string | undefined;
 	translate: (key: string, params?: Record<string, string | number>) => string;
 }
@@ -42,6 +44,7 @@ export function titleBarViewState(input: TitleBarAdapterInput): TitleBarViewStat
 		undoLabel: input.undoLabel || undefined,
 		redoLabel: input.redoLabel || undefined,
 		hiddenActions: input.hiddenActions,
+		searchCollapsed: input.searchCollapsed,
 		quickAccess: {
 			...input.quickAccess,
 			visible: input.quickAccess.visible && input.quickAccessAllowed,

@@ -262,6 +262,26 @@ describe('pptx-ui-title-bar', () => {
 		expect(root(host).querySelector('.content')).toBeNull();
 	});
 
+	it('collapses the search box when searchCollapsed is true and updates live', () => {
+		const host = mount({ searchCollapsed: true });
+		const toggle = root(host).querySelector<HTMLButtonElement>('[part="search-toggle"]')!;
+		const box = root(host).querySelector<HTMLElement>('.box')!;
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+
+		toggle.click();
+		expect(toggle.hidden).toBe(true);
+		expect(box.hidden).toBe(false);
+
+		host.state = { ...base, searchCollapsed: false };
+		expect(toggle.hidden).toBe(true);
+		expect(box.hidden).toBe(false);
+
+		host.state = { ...base, searchCollapsed: true };
+		expect(toggle.hidden).toBe(false);
+		expect(box.hidden).toBe(true);
+	});
+
 	it('keeps typing out of the viewer shortcuts', () => {
 		const host = mount();
 		const outer = vi.fn();

@@ -99,6 +99,7 @@ export function officeTitleBarState(
 					label: t('pptx.titleBar.search'),
 					heading: t('pptx.titleBar.searchCommands'),
 					empty: t('pptx.titleBar.searchNoResults'),
+					collapsed: state.searchCollapsed === true,
 					match: (query) =>
 						filterCommands(query, t, state.commands).map((entry) => ({
 							id: entry.command,

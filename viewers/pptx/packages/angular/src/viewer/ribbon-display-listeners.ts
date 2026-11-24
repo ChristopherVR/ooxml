@@ -5,7 +5,11 @@
  * that collapses the ribbon automatically. Every listener is removed when the viewer is destroyed.
  */
 import type { DestroyRef } from '@angular/core';
-import { RIBBON_AUTO_COLLAPSE_MEDIA } from 'ooxml-ui/pptx';
+import {
+	RIBBON_AUTO_COLLAPSE_MEDIA,
+	isRibbonCommandChange,
+	isRibbonCommandClick,
+} from 'ooxml-ui/pptx';
 import type { RibbonDisplayController } from 'ooxml-ui/pptx';
 
 /** Attributes of the parts a press may land on; see the ribbon templates. */
@@ -32,17 +36,45 @@ export function listenRibbonDisplayGestures({
 	}
 	const doc = document;
 
+	const pendingCommandClicks = new WeakSet<Event>();
+	const inRibbon = (event: Event): boolean => {
+		const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+		if (path.some((node) => node instanceof Element && node.matches(RIBBON_SELECTOR))) {
+			return true;
+		}
+		return event.target instanceof Element && event.target.closest(RIBBON_SELECTOR) !== null;
+	};
+
 	const onPointerDown = (event: Event): void => {
 		const target = event.target instanceof Element ? event.target : null;
 		if (!target) {
 			return;
 		}
-		const inRibbon = target.closest(RIBBON_SELECTOR) !== null;
+		const inRibbonEl = target.closest(RIBBON_SELECTOR) !== null;
 		const inStrip = target.closest(REVEAL_SELECTOR) !== null;
-		if (!inRibbon && !inStrip) {
+		if (!inRibbonEl && !inStrip) {
 			controller.dismiss();
-		} else if (inRibbon && target.closest(MENU_PARTS_SELECTOR) === null) {
+		} else if (inRibbonEl && target.closest(MENU_PARTS_SELECTOR) === null) {
 			controller.setMenuOpen(false);
+		}
+	};
+
+	const onClickCapture = (event: Event): void => {
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandClick(event)) {
+			pendingCommandClicks.add(event);
+		}
+	};
+
+	const onClickBubble = (event: Event): void => {
+		if (pendingCommandClicks.has(event)) {
+			pendingCommandClicks.delete(event);
+			controller.commandExecuted();
+		}
+	};
+
+	const onChange = (event: Event): void => {
+		if (controller.getSnapshot().peek && inRibbon(event) && isRibbonCommandChange(event)) {
+			controller.commandExecuted();
 		}
 	};
 
@@ -59,12 +91,18 @@ export function listenRibbonDisplayGestures({
 	const onShortViewport = (): void => controller.setShortViewport(short?.matches ?? false);
 
 	doc.addEventListener('pointerdown', onPointerDown);
+	doc.addEventListener('click', onClickCapture, true);
+	doc.addEventListener('click', onClickBubble);
+	doc.addEventListener('change', onChange);
 	doc.addEventListener('keydown', onKeyDown);
 	short?.addEventListener('change', onShortViewport);
 	onShortViewport();
 
 	destroyRef.onDestroy(() => {
 		doc.removeEventListener('pointerdown', onPointerDown);
+		doc.removeEventListener('click', onClickCapture, true);
+		doc.removeEventListener('click', onClickBubble);
+		doc.removeEventListener('change', onChange);
 		doc.removeEventListener('keydown', onKeyDown);
 		short?.removeEventListener('change', onShortViewport);
 	});

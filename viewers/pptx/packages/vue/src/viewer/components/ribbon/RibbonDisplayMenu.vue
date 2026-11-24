@@ -43,6 +43,19 @@ const { t } = useI18n();
 				/>
 				{{ t(item.labelKey) }}
 			</button>
+			<template v-if="props.state.quickAccessItem">
+				<div role="separator" class="my-1 h-px bg-border" />
+				<button
+					type="button"
+					role="menuitem"
+					data-ribbon-display-action="toggle-quick-access"
+					class="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-foreground hover:bg-muted transition-colors"
+					@click="props.controller.toggleQuickAccess()"
+				>
+					<span class="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+					{{ t(props.state.quickAccessItem.labelKey) }}
+				</button>
+			</template>
 		</div>
 	</div>
 </template>

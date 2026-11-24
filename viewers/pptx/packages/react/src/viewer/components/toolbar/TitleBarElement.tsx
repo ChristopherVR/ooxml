@@ -49,6 +49,7 @@ export function TitleBarElement(p: TitleBarElementProps): React.ReactElement {
 		}
 		host.state = buildTitleBarState({
 			...p.input,
+			searchCollapsed: options.general.collapseSearchByDefault,
 			quickAccess: { ...options.quickAccess, visible: stripVisible },
 			screenTip: (label) => resolveScreenTip(options, label),
 			translate: t,

@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': '全屏模式',
 	'pptx.ribbon.display.tabs': '仅显示选项卡',
 	'pptx.ribbon.display.always': '始终显示功能区',
+	'pptx.ribbon.display.hideQuickAccess': '隐藏快速访问工具栏',
 	'pptx.ribbon.showRibbon': '显示功能区',
 	'pptx.ribbon.open': '打开',
 	'pptx.ribbon.openAnotherPresentation': '打开另一个演示文稿',

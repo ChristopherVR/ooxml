@@ -49,6 +49,8 @@ export interface ViewerOptionsHost {
 	setRibbonHiddenTabs(tabIds: readonly ToolbarTabId[]): void;
 	/** Options > General > "Collapse the ribbon automatically" (on a short viewport). */
 	setRibbonAutoCollapse(enabled: boolean): void;
+	/** Options > General > "Collapse the search box by default". */
+	setSearchCollapsed(collapsed: boolean): void;
 	refreshQuickAccess(): void;
 	applyScreenTips(): void;
 	/**
@@ -121,6 +123,7 @@ export function createViewerOptionsController(
 			host.setHistoryDepth(resolveHistoryDepth(options));
 			host.setRibbonHiddenTabs(options.ribbon.hiddenTabIds);
 			host.setRibbonAutoCollapse(options.general.collapseRibbonAutomatically);
+			host.setSearchCollapsed(options.general.collapseSearchByDefault);
 			host.refreshQuickAccess();
 			host.applyScreenTips();
 			host.renderStage();

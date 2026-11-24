@@ -583,6 +583,10 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			ribbonDisplay,
 			onRibbonDisplayChange,
 			collapseRibbonAutomatically: viewerOptions.general.collapseRibbonAutomatically,
+			quickAccessVisible: viewerOptions.quickAccess.visible,
+			quickAccessAvailable: isPanelVisible(customizationResolved, 'quickAccessToolbar'),
+			onQuickAccessVisibleChange: (visible) =>
+				optionsStore.setValue('quickAccess', 'visible', visible),
 			rootRef: containerRef,
 		});
 

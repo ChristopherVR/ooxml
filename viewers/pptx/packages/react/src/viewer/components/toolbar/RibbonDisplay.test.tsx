@@ -265,4 +265,38 @@ describe('ribbon display options in the Toolbar', () => {
 		expect(ribbonContent().classList.contains('hidden')).toBe(true);
 		expect(onRibbonDisplayChange).not.toHaveBeenCalled();
 	});
+
+	it('includes the fourth Quick Access Toolbar entry in the menu and toggles it', () => {
+		render({ ribbonDisplay: 'always' });
+		openMenu();
+
+		const qat = container.querySelector<HTMLButtonElement>(
+			'[data-ribbon-display-action="toggle-quick-access"]',
+		);
+		expect(qat).not.toBeNull();
+		expect(qat?.textContent).toBe('pptx.ribbon.display.hideQuickAccess');
+
+		click(qat!);
+		expect(container.querySelector('[data-pptx-chrome="ribbon-display-menu"]')).toBeNull();
+
+		openMenu();
+		expect(
+			container.querySelector('[data-ribbon-display-action="toggle-quick-access"]')?.textContent,
+		).toBe('pptx.options.quickAccess.show');
+	});
+
+	it('dismisses the peeked ribbon after executing a command button inside it', () => {
+		render({ ribbonDisplay: 'tabs' });
+		click(tabByLabel('pptx.ribbon.tab.home'));
+		expect(ribbonRoot().hasAttribute('data-ribbon-peek')).toBe(true);
+
+		const cmd = document.createElement('button');
+		cmd.type = 'button';
+		cmd.textContent = 'Run command';
+		ribbonContent().appendChild(cmd);
+		click(cmd);
+
+		expect(ribbonRoot().hasAttribute('data-ribbon-peek')).toBe(false);
+		expect(ribbonContent().classList.contains('hidden')).toBe(true);
+	});
 });

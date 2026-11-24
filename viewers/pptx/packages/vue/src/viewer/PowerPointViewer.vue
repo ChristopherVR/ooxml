@@ -32,6 +32,7 @@ import {
 	resolveCloudDocumentView,
 	resolveCollaborationConfig,
 	confirmExternalHyperlinkDialog,
+	isPanelVisible,
 	signatureLoadNotice,
 	signatureStatusView,
 } from 'ooxml-ui/pptx';
@@ -1545,6 +1546,9 @@ const viewerRootRef = ref<HTMLElement | null>(null);
 const ribbonDisplay = createRibbonDisplayController({
 	initial: props.ribbonDisplay,
 	onChange: (mode: RibbonDisplayMode) => emit('ribbon-display-change', mode),
+	quickAccessVisible: viewerOptions.value.quickAccess.visible,
+	quickAccessAvailable: isPanelVisible(customization.resolved.value, 'quickAccessToolbar'),
+	onQuickAccessVisibleChange: (visible) => optionsStore.setValue('quickAccess', 'visible', visible),
 });
 const ribbonDisplayState = useController(ribbonDisplay);
 watch(
@@ -1554,6 +1558,16 @@ watch(
 watch(
 	() => viewerOptions.value.general.collapseRibbonAutomatically,
 	(enabled) => ribbonDisplay.setAutoCollapse(enabled),
+	{ immediate: true },
+);
+watch(
+	() => viewerOptions.value.quickAccess.visible,
+	(visible) => ribbonDisplay.setQuickAccessVisible(visible),
+	{ immediate: true },
+);
+watch(
+	() => isPanelVisible(customization.resolved.value, 'quickAccessToolbar'),
+	(available) => ribbonDisplay.setQuickAccessAvailable(available),
 	{ immediate: true },
 );
 useRibbonDisplayListeners(ribbonDisplay, () => viewerRootRef.value);

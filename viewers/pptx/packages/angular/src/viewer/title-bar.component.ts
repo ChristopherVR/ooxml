@@ -158,6 +158,7 @@ export class TitleBarComponent {
 			undoLabel: this.undoLabel(),
 			redoLabel: this.redoLabel(),
 			hiddenActions: this.hiddenActions(),
+			searchCollapsed: this.viewerOpts?.options().general.collapseSearchByDefault ?? false,
 			quickAccess: this.quickAccess() ?? DEFAULT_VIEWER_OPTIONS.quickAccess,
 			screenTip: (label) =>
 				this.viewerOpts ? (this.viewerOpts.screenTip(label) ?? undefined) : label,

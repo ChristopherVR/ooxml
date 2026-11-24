@@ -130,6 +130,7 @@ export const RIBBON_QUICK_CSS = `
 /* The menu hangs under the right end of the tab row; the row itself scrolls and would clip it. */
 .pptxv-ribbon-display-anchor { position: relative; height: 0; }
 .pptxv-ribbon-display-menu { top: 2px; right: 6px; }
+.pptxv-ribbon-display-sep { height: 1px; margin: 4px 0; background: var(--pptx-border); }
 .pptxv-ribbon-display-menu .pptxv-primary-menu-item { padding-left: 26px; position: relative; }
 .pptxv-ribbon-display-menu .pptxv-primary-menu-item[aria-checked='true']::before {
 	content: '';

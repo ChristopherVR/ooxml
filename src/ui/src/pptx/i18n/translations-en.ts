@@ -2189,6 +2189,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.ribbon.display.fullScreen': 'Full-screen mode',
 	'pptx.ribbon.display.tabs': 'Show tabs only',
 	'pptx.ribbon.display.always': 'Always show Ribbon',
+	'pptx.ribbon.display.hideQuickAccess': 'Hide Quick Access Toolbar',
 	'pptx.ribbon.showRibbon': 'Show the ribbon',
 	'pptx.ribbon.open': 'Open',
 	'pptx.ribbon.openAnotherPresentation': 'Open another presentation',

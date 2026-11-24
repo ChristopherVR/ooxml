@@ -53,6 +53,8 @@ export interface TitleBarDeps {
 	hiddenActions?: readonly ToolbarActionId[];
 	/** Options-driven Quick Access strip; omitted = the classic Save/Undo/Redo. */
 	quickAccess?: TitleBarQuickAccess;
+	/** Options > General > "Collapse the search box by default". */
+	searchCollapsed?: boolean;
 	/**
 	 * Fires whenever the below-the-ribbon strip's emptiness is recomputed, so the
 	 * detached dock (see `ViewerChrome.setQuickAccessPosition`) can hide instead
@@ -86,6 +88,8 @@ export interface TitleBar {
 	dockQuickAccessElement(): void;
 	/** Switch the strips between the title bar and the below-ribbon dock. */
 	setQuickAccessDetached(detached: boolean): void;
+	/** Options > General > "Collapse the search box by default". */
+	setSearchCollapsed(collapsed: boolean): void;
 }
 
 const DEFAULT_QUICK_ACCESS: TitleBarQuickAccessState = {
@@ -113,6 +117,7 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 	let autosaveState: TitleBarAutosaveKind = 'idle';
 	let dirty = false;
 	let detached = false;
+	let searchCollapsed = Boolean(deps.searchCollapsed);
 	let edit: RibbonEditState = { editable: true, canUndo: false, canRedo: false };
 
 	const sync = (): void => {
@@ -129,6 +134,7 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 			undoLabel: edit.undoLabel,
 			redoLabel: edit.redoLabel,
 			hiddenActions: deps.hiddenActions,
+			searchCollapsed,
 			quickAccess: {
 				visible: qa.visible,
 				position: detached ? 'below' : 'above',
@@ -196,6 +202,10 @@ export function createTitleBar(doc: Document, t: Translator, deps: TitleBarDeps)
 		},
 		setQuickAccessDetached(next) {
 			detached = next;
+			sync();
+		},
+		setSearchCollapsed(next) {
+			searchCollapsed = next;
 			sync();
 		},
 	};

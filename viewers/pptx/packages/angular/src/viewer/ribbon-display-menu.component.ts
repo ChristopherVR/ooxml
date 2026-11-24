@@ -39,6 +39,18 @@ import type { RibbonDisplayController, RibbonDisplayState } from 'ooxml-ui/pptx'
 							{{ item.labelKey | translate }}
 						</button>
 					}
+					@if (quickAccessItem(); as qat) {
+						<div role="separator" class="my-1 h-px bg-border"></div>
+						<button
+							type="button"
+							role="menuitem"
+							data-ribbon-display-action="toggle-quick-access"
+							class="relative flex w-full items-center whitespace-nowrap py-1.5 pl-7 pr-3 text-left text-[12px] text-foreground transition-colors hover:bg-accent/30"
+							(click)="controller()?.toggleQuickAccess()"
+						>
+							{{ qat.labelKey | translate }}
+						</button>
+					}
 				</div>
 			}
 		</div>
@@ -53,4 +65,5 @@ export class RibbonDisplayMenuComponent {
 	protected readonly labelKey = RIBBON_DISPLAY_OPTIONS_LABEL_KEY;
 	protected readonly open = computed(() => this.state()?.menuOpen ?? false);
 	protected readonly menu = computed(() => this.state()?.menu ?? []);
+	protected readonly quickAccessItem = computed(() => this.state()?.quickAccessItem ?? null);
 }

@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': 'Vollbildmodus',
 	'pptx.ribbon.display.tabs': 'Nur Registerkarten anzeigen',
 	'pptx.ribbon.display.always': 'Menüband immer anzeigen',
+	'pptx.ribbon.display.hideQuickAccess': 'Symbolleiste für den Schnellzugriff ausblenden',
 	'pptx.ribbon.showRibbon': 'Menüband anzeigen',
 	'pptx.ribbon.open': 'Öffnen',
 	'pptx.ribbon.openAnotherPresentation': 'Öffnen Sie eine andere Präsentation',

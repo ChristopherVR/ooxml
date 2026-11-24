@@ -37,6 +37,18 @@
 				{t(item.labelKey)}
 			</button>
 		{/each}
+		{#if state.current.quickAccessItem}
+			<div class="pptx-svelte-ribbon-display-sep" role="separator"></div>
+			<button
+				type="button"
+				class="pptx-svelte-ribbon-display-item"
+				role="menuitem"
+				data-ribbon-display-action="toggle-quick-access"
+				onclick={() => ribbonDisplay.toggleQuickAccess()}
+			>
+				{t(state.current.quickAccessItem.labelKey)}
+			</button>
+		{/if}
 	</div>
 {/if}
 
@@ -73,6 +85,12 @@
 
 	.pptx-svelte-ribbon-display-item:hover {
 		background: var(--pptx-accent, var(--office-selected, #e5e7eb));
+	}
+
+	.pptx-svelte-ribbon-display-sep {
+		height: 1px;
+		margin: 4px 0;
+		background: var(--pptx-border, var(--office-border, #d1d5db));
 	}
 
 	.pptx-svelte-ribbon-display-item-checked::before {

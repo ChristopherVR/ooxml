@@ -76,6 +76,7 @@ export const translations = {
 	'pptx.ribbon.display.fullScreen': 'Modo de pantalla completa',
 	'pptx.ribbon.display.tabs': 'Mostrar solo pestañas',
 	'pptx.ribbon.display.always': 'Mostrar siempre la cinta',
+	'pptx.ribbon.display.hideQuickAccess': 'Ocultar la barra de herramientas de acceso rápido',
 	'pptx.ribbon.showRibbon': 'Mostrar la cinta',
 	'pptx.ribbon.open': 'Abrir',
 	'pptx.ribbon.openAnotherPresentation': 'Abrir otra presentación',

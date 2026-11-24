@@ -337,6 +337,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.ribbonDisplay = createRibbonDisplayController({
 			initial: options.ribbonDisplay,
 			onChange: (mode) => this.options.onRibbonDisplayChange?.(mode),
+			onQuickAccessVisibleChange: (visible) =>
+				this.optionsController?.optionsStore.setValue('quickAccess', 'visible', visible),
 		});
 		// `readOnly` is AND-ed in: it can only take editing away.
 		this.requestedEditable = options.editable ?? false;
@@ -617,9 +619,16 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				setHistoryDepth: (depth) => this.editor?.setHistoryDepth(depth),
 				setRibbonHiddenTabs: (tabIds) => this.lifecycle?.chrome.ribbon?.setHiddenOptionTabs(tabIds),
 				setRibbonAutoCollapse: (enabled) => this.ribbonDisplay.setAutoCollapse(enabled),
+				setSearchCollapsed: (collapsed) =>
+					this.lifecycle?.chrome.titleBar?.setSearchCollapsed(collapsed),
 				refreshQuickAccess: () => {
+					const qat = this.getQuickAccessOptions();
+					this.ribbonDisplay.setQuickAccessVisible(qat.visible);
+					this.ribbonDisplay.setQuickAccessAvailable(
+						isPanelVisible(this.customization.getResolved(), 'quickAccessToolbar'),
+					);
 					this.lifecycle?.chrome.titleBar?.refreshQuickAccess();
-					this.lifecycle?.chrome.setQuickAccessPosition(this.getQuickAccessOptions().position);
+					this.lifecycle?.chrome.setQuickAccessPosition(qat.position);
 				},
 				applyScreenTips: () =>
 					this.lifecycle?.chrome.ribbon?.applyScreenTips((label) =>
