@@ -28,6 +28,8 @@ export type { FileCommand, FileCommandDetail } from './file-commands';
 export { exportDocxPdf } from './pdf/export-pdf-entry';
 export type {
 	DecodedPicture,
+	DocxPdfBookmarks,
+	DocxPdfConformance,
 	DocxPdfMedia,
 	DocxPdfOmittedKind,
 	DocxPdfOptions,

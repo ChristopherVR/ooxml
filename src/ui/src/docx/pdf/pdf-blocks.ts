@@ -13,6 +13,7 @@ import {
 	type LayoutTableBox,
 } from 'ooxml-core/docx/layout';
 import type { PdfVectorPage } from '../../export/pdf-vector';
+import type { DocxPdfHooks } from './pdf-hooks';
 import type { DocxPdfPictures } from './pdf-pictures';
 import { cssRgba, fillWith, type DocxPdfText } from './pdf-text';
 
@@ -20,6 +21,8 @@ export interface DocxPdfPainter {
 	page: PdfVectorPage;
 	text: DocxPdfText;
 	pictures: DocxPdfPictures;
+	/** Tags, links and markup (`pdf-hooks.ts`); absent, blocks are only painted. */
+	hooks?: DocxPdfHooks;
 }
 
 const borderWidth = (border: LayoutBorder | undefined) => (border ? border.widthPx : 0);
@@ -105,10 +108,14 @@ export function paintParagraph(
 	originX: number,
 	originY: number,
 ): void {
-	const { page, text, pictures } = painter;
+	const { page, text, pictures, hooks } = painter;
 	const x = originX + (box.xPx ?? 0);
 	const y = originY + box.yPx;
-	if (box.frame) paragraphFrame(page, box.frame, x, y, box.heightPx);
+	if (box.frame) {
+		hooks?.decoration();
+		paragraphFrame(page, box.frame, x, y, box.heightPx);
+	}
+	hooks?.beginParagraph(box, x, y);
 	if (box.floats?.length)
 		painter.text.report.omitted(
 			'picture',
@@ -116,7 +123,8 @@ export function paintParagraph(
 		);
 	for (const line of box.lines) {
 		const lineTop = y + line.yPx;
-		line.fragments.forEach((fragment, index) => {
+		line.fragments.forEach((laid, index) => {
+			const fragment = hooks ? hooks.fragment(box, laid, x + laid.xPx, lineTop, line) : laid;
 			if (fragment.object) {
 				pictures.draw(page, fragment.object, x + fragment.xPx, lineTop + (fragment.topPx ?? 0));
 				return;
@@ -133,6 +141,7 @@ export function paintParagraph(
 			text.draw(page, fragment, x + fragment.xPx, line, lineTop, gap);
 		});
 	}
+	hooks?.endParagraph();
 }
 
 export function paintTable(
@@ -142,13 +151,17 @@ export function paintTable(
 	originY: number,
 	withText = true,
 ): void {
-	const { page } = painter;
+	const { page, hooks } = painter;
 	const tableX = originX + (box.xPx ?? 0);
 	const tableY = originY + box.yPx;
+	hooks?.beginTable(box.blockId, withText);
 	box.rows.forEach((row, rowIndex) => {
 		const rowY = tableY + row.yPx;
 		const lastRow = rowIndex === box.rows.length - 1;
+		hooks?.beginRow(row);
 		row.cells.forEach((paragraphs, cellIndex) => {
+			hooks?.beginCell();
+			hooks?.decoration();
 			const geometry = row.geometry?.[cellIndex] ?? {
 				xPx: (cellIndex * (box.widthPx ?? 0)) / Math.max(1, row.cells.length),
 				widthPx: (box.widthPx ?? 0) / Math.max(1, row.cells.length),
@@ -191,18 +204,24 @@ export function paintTable(
 			const contentY = rowY + (reserved ? 0 : borderWidth(borders?.top)) + offset;
 			for (const nested of row.cellTables?.[cellIndex] ?? [])
 				paintTable(painter, nested, x + geometry.paddingLeftPx, rowY + offset, false);
-			if (!withText || !paragraphs.length) return;
-			// A vertical merge shows its text below its first row; other cells clip to their box.
-			const clip = !(geometry.mergeRows && geometry.mergeRows > 1);
-			if (clip) {
-				page.save();
-				page.rect(x, rowY, width, height);
-				page.op('W n');
+			if (withText && paragraphs.length) {
+				// A vertical merge shows its text below its first row; other cells clip to their box.
+				const clip = !(geometry.mergeRows && geometry.mergeRows > 1);
+				hooks?.close();
+				if (clip) {
+					page.save();
+					page.rect(x, rowY, width, height);
+					page.op('W n');
+				}
+				for (const paragraph of paragraphs) paintParagraph(painter, paragraph, contentX, contentY);
+				hooks?.close();
+				if (clip) page.restore();
 			}
-			for (const paragraph of paragraphs) paintParagraph(painter, paragraph, contentX, contentY);
-			if (clip) page.restore();
+			hooks?.endCell();
 		});
+		hooks?.endRow();
 	});
+	hooks?.endTable();
 }
 
 export function paintBlock(

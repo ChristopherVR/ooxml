@@ -12,6 +12,28 @@ export interface DocxPdfReport {
 	omitted: { kind: DocxPdfOmittedKind; reason: string; pages: number[] }[];
 	/** The layout's own approximations relative to Word, and the painter's. */
 	notes: string[];
+	/** Set when PDF/A was requested: whether the file meets PDF/A-2b, and why not. */
+	pdfA?: DocxPdfConformance;
+}
+
+export interface DocxPdfConformance {
+	conformant: boolean;
+	issues: string[];
+}
+
+/** PDF/A-2b needs every font embedded: text written in a standard PDF font breaks it. */
+export function pdfAConformance(
+	report: DocxPdfReport,
+	pages: readonly { fonts: ReadonlyMap<string, string> }[],
+): DocxPdfConformance {
+	const issues: string[] = [];
+	if (pages.some((page) => page.fonts.size > 0)) {
+		const families = report.substitutedFonts.map((font) => font.family);
+		issues.push(
+			`Text${families.length ? ` in ${families.join(', ')}` : ''} uses standard PDF fonts, which are not embedded; supply the font files to embed them.`,
+		);
+	}
+	return { conformant: issues.length === 0, issues };
 }
 
 export type DocxPdfOmittedKind =

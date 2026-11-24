@@ -640,10 +640,19 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text, vector borders, shading and rules, and pictures at their own resolution on the Print
       Layout pages, with headers, footers, page fields and footnotes, a page range, document
       properties and a report, without a print dialog (`src/ui/src/docx/pdf/`, #318).
+- [x] **P1** Save as PDF keeps hyperlinks, links to bookmarks, `\h` cross-references and table of
+      contents entries clickable, writes headings or Word bookmarks as the PDF's bookmarks, tags
+      the PDF for accessibility (headings, paragraphs, tables, figures with alt text, links;
+      headers and footers as artifacts), writes PDF/A-2b metadata and an sRGB output intent, and
+      with markup shows tracked changes in author colours with change bars and comments as notes
+      (`src/ui/src/docx/pdf/pdf-hooks.ts`, `export/pdf-structure.ts`, #318).
 - [ ] **P1** Save as PDF leaves out charts, drawing shapes, text boxes, watermarks, page borders,
-      line numbers and floating objects in headers, footers and table cells (each reported), and
-      has no links, bookmarks, tagged PDF or PDF/A yet. Text uses the standard PDF fonts unless the
-      host supplies font files; remote fonts are never fetched (#318).
+      line numbers and floating objects in headers, footers and table cells (each reported). Lists
+      are tagged as paragraphs (no `L`/`LI`), links in headers and footers are not clickable,
+      formatting changes and comment balloons are not drawn with markup, and PDF/A conformance
+      needs the host's font files (standard PDF fonts are not embedded; the report says so). Text
+      uses the standard PDF fonts unless the host supplies font files; remote fonts are never
+      fetched (#318).
 - [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
       (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
       paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,

@@ -30,6 +30,9 @@ export function paintFootnotes(painter: DocxPdfPainter, page: LayoutPageBox): vo
 	const widthPx = page.widthPx - page.marginLeftPx - page.marginRightPx;
 	const left = page.marginLeftPx;
 	const top = page.heightPx - page.marginBottomPx - heightPx;
+	// The separators are decoration, not text, in a tagged PDF.
+	const tagger = painter.hooks?.tagger;
+	tagger?.suspend();
 	if (page.footnoteColumnAreas)
 		for (const area of page.footnoteColumnAreas)
 			separator(
@@ -49,6 +52,7 @@ export function paintFootnotes(painter: DocxPdfPainter, page: LayoutPageBox): vo
 			widthPx,
 			notes.some((note) => note.continued),
 		);
+	tagger?.resume();
 	for (const note of notes)
 		for (const paragraph of note.paragraphs)
 			paintParagraph(painter, paragraph, left + (note.xPx ?? 0), top + note.yPx);
