@@ -1,6 +1,7 @@
 import { strToU8, zipSync } from 'fflate';
 import JSZip from 'jszip';
 
+import { autoCorrectTextInput } from '../../../docx/autocorrect';
 import { docx, p } from '../../../docx/test-support/compare-docs';
 import { loadDocx } from '../../../docx/parse';
 import { readDeclaredFonts } from '../../../opc/declared-fonts';
@@ -127,5 +128,14 @@ export const cases: readonly SecurityCase[] = [
 			return { matched: 'caption' in result && result.caption.length === expr.length };
 		},
 		expected: { matched: true },
+	},
+	{
+		name: 'autocorrect trailing token lookup runs in linear time on long text ending in whitespace',
+		limits: { ms: 1_500, heapMb: 128 },
+		run() {
+			const before = `${'a'.repeat(150_000)} `;
+			return { action: autoCorrectTextInput(before, ' ') ?? null };
+		},
+		expected: { action: null },
 	},
 ];

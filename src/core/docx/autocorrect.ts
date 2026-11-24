@@ -141,8 +141,9 @@ export function autoCorrectTextInput(
 		if (dashes && inserted === ' ' && /\S -$/.test(beforeText)) {
 			return { kind: 'replace', deleteBefore: 1, text: '\u2013 ' };
 		}
-		const tokenMatch = /([^\s]+)$/.exec(beforeText);
-		const token = tokenMatch?.[1];
+		let tokenStart = beforeText.length;
+		while (tokenStart > 0 && !/\s/.test(beforeText[tokenStart - 1]!)) tokenStart--;
+		const token = tokenStart < beforeText.length ? beforeText.slice(tokenStart) : undefined;
 		if (token) {
 			if (fractions && Object.prototype.hasOwnProperty.call(FRACTIONS, token)) {
 				return {
