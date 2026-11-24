@@ -196,7 +196,9 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	} else if (run.bold === false) {
 		const family = run.fontFamily ?? (cellCss?.fontFamily as string | undefined);
 		const weight = resolveFontWeight(family, false);
-		css.fontWeight = weight === 400 ? 'normal' : weight;
+		if (!cellCss || isBoldCell(cellCss) || weight !== cssFontWeightNumber(cellCss.fontWeight)) {
+			css.fontWeight = weight === 400 ? 'normal' : weight;
+		}
 	} else if (run.fontFamily && cellCss) {
 		const cellWeight = cssFontWeightNumber(cellCss.fontWeight);
 		const weight = resolveFontWeight(run.fontFamily, isBoldCell(cellCss));

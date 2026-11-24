@@ -40,12 +40,11 @@ export function getEffectiveTextStyle(
 		return element.textStyle;
 	}
 	if (element.type === 'table' && element.tableData) {
-		const cells =
-			tableEditorState && tableEditorState.elementId === element.id
-				? tableEditorState.selectedCells?.length
-					? tableEditorState.selectedCells
-					: [{ row: tableEditorState.rowIndex, col: tableEditorState.columnIndex }]
-				: undefined;
+		const cells = tableEditorState
+			? tableEditorState.selectedCells?.length
+				? tableEditorState.selectedCells
+				: [{ row: tableEditorState.rowIndex, col: tableEditorState.columnIndex }]
+			: undefined;
 		const cell = tableEditorState
 			? element.tableData.rows[tableEditorState.rowIndex]?.cells[tableEditorState.columnIndex]
 			: undefined;
