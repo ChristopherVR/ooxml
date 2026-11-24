@@ -26,4 +26,19 @@ export const options: Record<string, string> = {
 		'Wenn aktiviert, ruft Ihr Browser fehlende Schriftarten von fonts.googleapis.com und fonts.gstatic.com (oder vom Schriftartserver Ihrer Organisation) ab. Wenn deaktiviert, verwendet Text installierte, eingebettete oder Ersatzschriftarten, sodass Zeilenumbrüche von Excel abweichen können.',
 	'This setting is managed by your organization':
 		'Diese Einstellung wird von Ihrer Organisation verwaltet',
+	// Advanced > Edit Custom Lists
+	'Edit Custom Lists': 'Benutzerdefinierte Listen bearbeiten',
+	'Create lists for use in sorts and fill sequences.':
+		'Erstellen Sie Listen für Sortier- und Ausfüllreihen.',
+	'Custom lists:': 'Benutzerdefinierte Listen:',
+	'List entries:': 'Listeneinträge:',
+	'Press Enter to separate list entries.':
+		'Drücken Sie die Eingabetaste, um Listeneinträge zu trennen.',
+	'NEW LIST': 'NEUE LISTE',
+	'Import list from cells:': 'Liste aus Zellen importieren:',
+	Import: 'Importieren',
+	'Enter at least one list entry.': 'Geben Sie mindestens einen Listeneintrag ein.',
+	'Enter a valid cell range such as A1:A5.': 'Geben Sie einen gültigen Zellbereich wie A1:A5 ein.',
+	'The selected range has no text or number entries to import.':
+		'Der ausgewählte Bereich enthält keine Text- oder Zahleneinträge zum Importieren.',
 };

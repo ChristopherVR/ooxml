@@ -26,4 +26,19 @@ export const options: Record<string, string> = {
 	'When on, your browser contacts fonts.googleapis.com and fonts.gstatic.com (or the font server your organisation set up) to get missing fonts. When off, text uses installed, embedded or substitute fonts, so line breaks can differ from Excel.':
 		'Lorsque cette option est activée, votre navigateur contacte fonts.googleapis.com et fonts.gstatic.com (ou le serveur de polices de votre organisation) pour obtenir les polices manquantes. Lorsqu’elle est désactivée, le texte utilise des polices installées, incorporées ou de substitution, et les sauts de ligne peuvent donc différer d’Excel.',
 	'This setting is managed by your organization': 'Ce paramètre est géré par votre organisation',
+	// Advanced > Edit Custom Lists
+	'Edit Custom Lists': 'Modifier les listes personnalisées',
+	'Create lists for use in sorts and fill sequences.':
+		'Créez des listes à utiliser dans les tris et les séquences de remplissage.',
+	'Custom lists:': 'Listes personnalisées :',
+	'List entries:': 'Entrées de la liste :',
+	'Press Enter to separate list entries.':
+		'Appuyez sur Entrée pour séparer les entrées de la liste.',
+	'NEW LIST': 'NOUVELLE LISTE',
+	'Import list from cells:': 'Importer la liste à partir des cellules :',
+	Import: 'Importer',
+	'Enter at least one list entry.': 'Entrez au moins une entrée de liste.',
+	'Enter a valid cell range such as A1:A5.': 'Entrez une plage de cellules valide telle que A1:A5.',
+	'The selected range has no text or number entries to import.':
+		'La plage sélectionnée ne contient aucune entrée de texte ou de nombre à importer.',
 };

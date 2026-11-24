@@ -316,8 +316,9 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   (`pptx-viewer-prefs`). File > Account > Storage & Privacy shows and clears them. Fonts the
   user adds under File > Options > Custom fonts are kept for the session only.
 - **Word, Excel, Visio:** small preferences in localStorage (view options, custom lists, saved
-  shapes), including the Trust Center font-download choice (`ooxml.docx.allowFontDownloads`,
-  `ooxml.xlsx.allowFontDownloads`, and `allowFontDownloads` in Visio's `ooxml-visio-options`).
+  shapes, Excel's Error Checking rules in `ooxml.xlsx.errorCheckingRules`), including the Trust
+  Center font-download choice (`ooxml.docx.allowFontDownloads`, `ooxml.xlsx.allowFontDownloads`,
+  and `allowFontDownloads` in Visio's `ooxml-visio-options`).
 - **Teams:** chat snapshots, read state, drafts, presence and follows in the storage the host
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per

@@ -20,6 +20,7 @@ import {
 	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
+	webfontRunsKey,
 	type WebfontReadiness,
 } from '../fonts/webfonts';
 import { effectiveFontDownloads, fontDownloadLock } from '../fonts/font-download-policy';
@@ -53,6 +54,7 @@ export class XlsxWebfonts {
 	readonly linkId: string;
 	readonly #owner: XlsxWebfontsHost;
 	#prepared = new WeakMap<Workbook, Prepared>();
+	#lastKey: string | undefined;
 	#fonts: FontFaceSet | undefined;
 	#queued = false;
 	readonly #onFonts = () => this.schedule();
@@ -106,6 +108,7 @@ export class XlsxWebfonts {
 	#off(doc: Document): void {
 		syncGoogleWebfontStylesheet(doc, this.linkId, null);
 		this.#prepared = new WeakMap();
+		this.#lastKey = undefined;
 	}
 
 	/**
@@ -137,6 +140,7 @@ export class XlsxWebfonts {
 		} catch {
 			return Promise.resolve(OFF);
 		}
+		this.#lastKey = webfontRunsKey(base, runs);
 		const entry: Prepared = { base, settled: false, promise: Promise.resolve(OFF) };
 		entry.promise = prepareWebfonts({ document: doc, linkId: this.linkId, runs, base })
 			.catch(() => OFF)
@@ -145,6 +149,28 @@ export class XlsxWebfonts {
 			});
 		this.#prepared.set(workbook, entry);
 		return entry.promise;
+	}
+
+	/**
+	 * After a workbook edit (such as picking a new font): requests newly referenced faces when the
+	 * workbook's font set changed, and remeasures once they arrive.
+	 */
+	refresh(workbook: Workbook | undefined): void {
+		if (!workbook) return;
+		const base = this.base();
+		if (base === null) return;
+		let runs: ReturnType<typeof collectWorkbookWebfontRuns>;
+		try {
+			runs = collectWorkbookWebfontRuns(workbook);
+		} catch {
+			return;
+		}
+		const key = webfontRunsKey(base, runs);
+		if (key === this.#lastKey) return;
+		this.#prepared.delete(workbook);
+		void this.prepare(workbook).then((readiness) => {
+			if (readiness.families.length && this.#owner.workbook() === workbook) this.schedule();
+		});
 	}
 
 	/**

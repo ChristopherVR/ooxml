@@ -5,6 +5,7 @@ import {
 	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
+	webfontRunsKey,
 	type WebfontReadiness,
 } from '../fonts/webfonts';
 
@@ -25,6 +26,7 @@ export class ViewerWebfonts {
 	readonly linkId: string;
 	/** Bumped by every request and option change, so a superseded wait is ignored. */
 	#generation = 0;
+	#lastKey: string | undefined;
 	constructor(
 		private readonly host: () => Document,
 		private readonly prepare: typeof prepareWebfonts = prepareWebfonts,
@@ -49,6 +51,7 @@ export class ViewerWebfonts {
 	}
 	#changed(): void {
 		++this.#generation;
+		this.#lastKey = undefined;
 		// Off: drop the stylesheet now, so nothing more is requested from the mirror or Google.
 		if (this.base() === null) this.remove();
 	}
@@ -72,12 +75,14 @@ export class ViewerWebfonts {
 		const generation = ++this.#generation;
 		const base = this.base();
 		if (base === null || !document) return undefined;
+		const runs = collectVisioWebfontRuns(document);
+		this.#lastKey = webfontRunsKey(base, runs);
 		let readiness: WebfontReadiness;
 		try {
 			readiness = await this.prepare({
 				document: this.host(),
 				linkId: this.linkId,
-				runs: collectVisioWebfontRuns(document),
+				runs,
 				base,
 			});
 		} catch {
@@ -85,6 +90,17 @@ export class ViewerWebfonts {
 		}
 		if (generation !== this.#generation || readiness.families.length === 0) return undefined;
 		return readiness;
+	}
+	/**
+	 * After a drawing edit (such as picking a new font): requests newly referenced faces only when
+	 * the drawing's font set changed since the last load.
+	 */
+	loadIfChanged(document: VisioDocument | null): Promise<WebfontReadiness | undefined> {
+		const base = this.base();
+		if (base === null || !document) return Promise.resolve(undefined);
+		const key = webfontRunsKey(base, collectVisioWebfontRuns(document));
+		if (key === this.#lastKey) return Promise.resolve(undefined);
+		return this.load(document);
 	}
 	/**
 	 * Start downloading the faces the file declares before it is parsed (see `prefetchWebfonts`),
@@ -100,6 +116,7 @@ export class ViewerWebfonts {
 	/** Remove this viewer's stylesheet (option off, viewer destroyed). */
 	remove(): void {
 		++this.#generation;
+		this.#lastKey = undefined;
 		try {
 			syncGoogleWebfontStylesheet(this.host(), this.linkId, null);
 		} catch {

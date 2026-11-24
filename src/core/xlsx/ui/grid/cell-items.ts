@@ -43,6 +43,11 @@ export interface BuildInput {
 	/** Formula cells with an error value get Excel's green error-check corner. */
 	hasFormula(row: number, col: number): boolean;
 	/**
+	 * Background error-checking indicator (green triangle) from `findErrors` + `ignoredErrors`.
+	 * Falls back to `view.isError && hasFormula(row, col)` when omitted.
+	 */
+	hasErrorMark?(row: number, col: number): boolean;
+	/**
 	 * The number's text fitted to `width` CSS px as Excel does (General drops decimals or goes
 	 * scientific, anything else becomes `###`), from the core's `formatValue` width option.
 	 */
@@ -103,7 +108,9 @@ function makeItem(
 		overflowing: false,
 		fontScale: 1,
 		merged: Boolean(merge),
-		errorMark: view.isError && input.hasFormula(row, col),
+		errorMark: input.hasErrorMark
+			? input.hasErrorMark(row, col)
+			: view.isError && input.hasFormula(row, col),
 	};
 	if (!view.text || view.wrap || view.verticalText || view.rotation) return item;
 	const inner = w - 2 * PADDING - view.indentPx * (input.zoom / 100);

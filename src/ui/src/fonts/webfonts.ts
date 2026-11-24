@@ -103,6 +103,13 @@ export function resetWebfontSessionCache(): void {
 	resolvedFamilies.clear();
 }
 
+/** Stable fingerprint of a document's webfont runs and base URL, for detecting font edits. */
+export function webfontRunsKey(base: string, runs: readonly WebfontRun[]): string {
+	const seen = new Set<string>();
+	for (const run of runs) seen.add(`${run.family}:${run.bold ? 1 : 0}:${run.italic ? 1 : 0}`);
+	return `${base}\0${[...seen].sort().join('|')}`;
+}
+
 /** The families to look up: neither embedded nor installed (and not already resolved). */
 export function selectWebfontCandidates(
 	families: Iterable<string>,

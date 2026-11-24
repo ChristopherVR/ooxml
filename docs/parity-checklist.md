@@ -64,8 +64,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       PowerPoint's "Download fonts that are not installed or embedded" in File > Options > Trust
       Center (off by default; a host `googleFonts` value locks it). Evidence:
       `src/ui/src/fonts/font-download-policy.test.ts` and each product's Trust Center tests.
-- [ ] **P2** In Word, Excel and Visio a font picked while editing is requested only on the next
-      load.
+- [x] **P2** In Word, Excel and Visio a font picked while editing is requested immediately without
+      waiting for the next load (`webfontRunsKey` in `src/ui/src/fonts/webfonts.ts`,
+      `DocxWebfonts.refreshIfChanged`, `XlsxWebfonts.refresh`, `ViewerWebfonts.loadIfChanged`;
+      evidence: `src/ui/src/docx/docx-webfonts.test.ts`, `src/ui/src/xlsx/webfonts.test.ts`,
+      `src/ui/src/visio/viewer-webfonts.test.ts`).
 
 | Capability    | Word         | Excel        | PowerPoint                 | Visio                 |
 | ------------- | ------------ | ------------ | -------------------------- | --------------------- |
@@ -142,7 +145,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
       Excel reads its workbook, Word and Visio only cells the chart caches). Stacked groups move
-      their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`).
+      their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`);
+      PowerPoint saves the move through the same operation, so PowerPoint 16 reads the moved series
+      on axis group 2 (`chart-neutral-save-series-axis.ts`, 2026-11-16).
 - [x] **P1** Chart picture fills are drawn by `src/core/chart/render` (stretched, tiled with
       `a:tile` scale, offset and alignment, stacked along bars for `c:pictureOptions`, with
       transparency) on series, points, the plot area and the chart area, and Word, Excel and Visio
@@ -153,18 +158,6 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       period, forecasts, equation and R-squared, Add trendline) and error bars (amount, direction,
       end caps and custom values) in all five bindings; custom error amounts are literal values
       (PowerPoint's model keeps no custom range).
-- [ ] **P1** PowerPoint saves a stacked group's last series moved to the secondary axis without the
-      secondary group: the model move succeeds, but the saved part keeps one stacked group and
-      PowerPoint reads the series on the primary axis (`chart-analysis-native-acceptance.ps1`).
-      Word and Excel save the same move natively.
-
-      their first or last series to the secondary axis and merge back (`chart/edit/secondary-axis.ts`);
-      PowerPoint saves the move through the same operation, so PowerPoint 16 reads the moved series
-      on axis group 2 (`chart-neutral-save-series-axis.ts`, 2026-11-16).
-
-- [ ] **P1** Chart picture fills are not drawn by `src/core/chart/render`, so Word, Excel and Visio
-      keep Picture or texture fill disabled; relationship allocation is shared
-      (`chart/picture-parts.ts`) and PowerPoint saves through it.
 - [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
       dedicated painter.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
@@ -293,20 +286,21 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       file are evaluated through conditional formats), colour list entries that come only from
       conditional formats.
 - [ ] **P1** Sort on cell colour, font colour or icon, custom lists, case sensitivity and
-      left-to-right sorting, a table's own saved sort and Data > Reapply are done
+      left-to-right sorting, a table's own saved sort, Data > Reapply and File > Options > Advanced > Edit Custom Lists (add, edit/rename, delete, and import from cells;
+      `src/ui/src/xlsx/backstage/options-custom-lists.ts`, `options-custom-lists.test.ts`) are done
       (`src/ui/src/xlsx/dialogs/sort-dialog.ts`, `src/core/xlsx/edit/sort*.ts`). Still open: user
       custom lists are kept in the browser's localStorage (session only when it is blocked), not
-      in a roaming profile, and there is no Options > Edit Custom Lists manager to rename, delete
-      or import a list from cells.
-- [ ] **P1** Formula auditing is implemented (`src/core/xlsx/audit/`: Trace Precedents/Dependents through
+      in a roaming profile.
+- [x] **P1** Formula auditing is implemented (`src/core/xlsx/audit/`: Trace Precedents/Dependents through
       names, tables, 3D references, `OFFSET` and `INDIRECT` targets with repeated levels, off-sheet
       markers and red error arrows, cleared by structural edits; Remove Arrows; Evaluate Formula
       with Step In/Out and step-by-step chosen-branch evaluation for `IF`, `IFERROR`, `IFNA`,
       `CHOOSE`, `IFS` and `SWITCH`; Error Checking with all nine rules including two-digit text
       years and list data validation, Ignore Error saved as `ignoredErrors` and the rules listed in
-      File > Options > Formulas; a live Watch Window; `audit-parity.test.ts`). Still open:
-      background green-triangle indicators on the grid and persisting rule toggles in Options
-      between sessions.
+      File > Options > Formulas; a live Watch Window; `audit-parity.test.ts`). Background
+      green-triangle indicators on the grid react to enabled rules and `ignoredErrors`
+      (`src/ui/src/xlsx/grid/grid-view.ts`), and Options > Formulas rule toggles persist between
+      sessions in localStorage (`src/ui/src/xlsx/error-rules.ts`, `error-rules.test.ts`).
 - [x] **P1** Active cells, selections and the active tab are saved after navigation. Split panes
       retain separate selections; frozen panes share the sheet selection as Excel does. Disjoint
       ranges write `activeCellId`. Core regression: `xlsx/ui/selection-persistence.test.ts`;
@@ -765,8 +759,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** 40 coverage-manifest constructs are `preserve: unassessed` and 30 `edit: unassessed`
       (`src/core/pptx/core/openxml/openxml-coverage*.ts`): add a dirty-save round trip with unknown
       elements on every part type, and ratchet the counts in CI.
-- [ ] **P1** Chart and ChartEx save is not native-certified for fresh templates (a six-slide deck
-      failed to open in PowerPoint).
+- [ ] **P1** Chart save is not native-certified for every fresh template. New ChartEx parts now
+      carry the chart style and colour style parts Office requires (without them Word and PowerPoint
+      refuse the file): a fresh PowerPoint deck, Word document and Excel workbook with one chart of
+      each of the eight families open in Office 16 and keep every family and value on Office's own
+      re-save (`src/core/scripts/chartex-acceptance.ps1`, 2026-11-16).
 - [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers
       (`chart-neutral-save-plan.ts` leaves them unclaimed): cleared group subtype settings those
       writers keep, a cleared series number format, a category edit made in the same save as a
@@ -789,22 +786,6 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Splits inside a stack, groups with unknown extensions and a turn on a chart that already has
       secondary axes keep the object-tree path; 3-D or bubble series types switch the whole chart,
       as Office does. Groups of one type that are not neighbours after a conversion stay separate.
-
-- [ ] **P1** Chart save is not native-certified for every fresh template. New ChartEx parts now
-      carry the chart style and colour style parts Office requires (without them Word and PowerPoint
-      refuse the file): a fresh PowerPoint deck, Word document and Excel workbook with one chart of
-      each of the eight families open in Office 16 and keep every family and value on Office's own
-      re-save (`src/core/scripts/chartex-acceptance.ps1`, 2026-11-16).
-- [ ] **P2** PowerPoint chart edits still saved only by the object-tree writers (no neutral
-      adapter, `chart-neutral-save-plan.ts`): group `varyColors`, bar direction and scatter style on
-      their own, the `standard` grouping flag, a series' own number format, the chart-wide gridline
-      flag, the colour style part, colour map override, print settings, user shapes, pivot formats,
-      filtered series and the external data auto-update flag. Group subtype settings moved
-      (`chart-neutral-save-subtype.ts`).
-- [ ] **P2** Per-series chart combinations: a series of a vertical 2-D category chart can become
-      column, line, area or scatter (`chart/edit/series-type.ts`, native PowerPoint reopen checked);
-      combinations on horizontal bars or on two value axes and splits inside a stack keep the
-      object-tree path, and 3-D or bubble series types switch the whole chart, as Office does.
 - [x] `a:linkedTxbx` (Word-style linked text boxes) is not flowed: PowerPoint ignores it (measured
       with COM `Slide.Export`: the head keeps all text unclipped, successors stay empty), so the
       renderer matches by default (`setLinkedTextBoxFlow` opts in). The link is parsed and

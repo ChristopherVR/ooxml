@@ -5,6 +5,7 @@
 import {
 	createWorksheet,
 	createGridMetrics,
+	findErrors,
 	getCell,
 	mergeAt,
 	visibleCells,
@@ -20,7 +21,7 @@ import {
 	type VisibleCells,
 	type Worksheet,
 } from 'ooxml-core/xlsx';
-import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { auditState, onAuditChange, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { buildItems } from 'ooxml-core/xlsx/ui';
 import { fitNumber } from 'ooxml-core/xlsx/ui';
 import { CellLayer } from './cell-layer';
@@ -91,6 +92,8 @@ export class GridView {
 	#paintedMode: { sheet: Worksheet | undefined; kind: string; ox: number; oy: number } | undefined;
 	#splitScroll = new WeakMap<Worksheet, { left: number; top: number }>();
 	#sheetRef: Worksheet | undefined;
+	#errorCells: Set<string> | undefined;
+	#offAudit: (() => void) | undefined;
 
 	constructor(ctx: EditorContext, container: HTMLElement) {
 		this.ctx = ctx;
@@ -143,6 +146,10 @@ export class GridView {
 			},
 			{ passive: true },
 		);
+		this.#offAudit = onAuditChange(ctx, () => {
+			this.#errorCells = undefined;
+			this.schedule();
+		});
 		this.rebuild();
 	}
 
@@ -191,6 +198,23 @@ export class GridView {
 
 	clearViews(): void {
 		this.#cache.clear();
+		this.#errorCells = undefined;
+	}
+
+	/** Cells on the active sheet currently flagged by enabled background Error Checking rules. */
+	#backgroundErrors(): Set<string> {
+		if (this.#errorCells) return this.#errorCells;
+		const cells = new Set<string>();
+		const wb = this.workbook();
+		if (wb) {
+			const rules = auditState(this.ctx).rules;
+			if (rules.length > 0) {
+				for (const issue of findErrors(wb, this.sheetIndex(), rules))
+					cells.add(`${issue.row}:${issue.col}`);
+			}
+		}
+		this.#errorCells = cells;
+		return cells;
 	}
 
 	/** Grows the scroll extent so `row`/`col` (and some margin) are reachable. */
@@ -427,6 +451,7 @@ export class GridView {
 			Math.max(vis.cols[vis.cols.length - 1] ?? 0, vis.frozenCols[vis.frozenCols.length - 1] ?? 0) +
 			1;
 		const activeRange = this.activeRange();
+		const errorCells = sheet ? this.#backgroundErrors() : undefined;
 		for (const q of QUADRANTS) {
 			const nodes = this.quads[q];
 			const box = g.box(q);
@@ -448,6 +473,7 @@ export class GridView {
 						view: (r, c) => this.cellViewAt(r, c),
 						measure: (text, font) => this.measurer.measure(text, font),
 						hasFormula: (r, c) => getCell(sheet, r, c)?.formula !== undefined,
+						hasErrorMark: (r, c) => errorCells?.has(`${r}:${c}`) ?? false,
 						fitNumber: (r, c, width, font) =>
 							fitNumber(this.workbook(), sheet, r, c, width, (text) =>
 								this.measurer.measure(text, font),
@@ -484,6 +510,8 @@ export class GridView {
 
 	destroy(): void {
 		this.#cancelFrame?.();
+		this.#offAudit?.();
+		this.#offAudit = undefined;
 		this.root.remove();
 		this.hooks.clear();
 	}

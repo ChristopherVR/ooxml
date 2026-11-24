@@ -25,6 +25,7 @@ import {
 	prefetchWebfonts,
 	prepareWebfonts,
 	syncGoogleWebfontStylesheet,
+	webfontRunsKey,
 	type PrepareWebfontsOptions,
 	type WebfontReadiness,
 } from '../fonts/webfonts';
@@ -65,6 +66,7 @@ export class DocxWebfonts {
 	/** The host's `googleFonts` value; unset leaves the choice to the reader. */
 	option: GoogleFontsOption | undefined;
 	readonly linkId = `${DOCX_WEBFONT_LINK_PREFIX}-${++instances}`;
+	#lastKey: string | undefined;
 
 	/** The CSS2 base the loader uses: the host's value, else the reader's Trust Center choice. */
 	base(): string | null {
@@ -83,14 +85,17 @@ export class DocxWebfonts {
 		if (!doc?.head) return OFF;
 		const base = this.base();
 		if (base === null) {
+			this.#lastKey = undefined;
 			syncGoogleWebfontStylesheet(doc, this.linkId, null);
 			return OFF;
 		}
+		const runs = runsOf(model);
+		this.#lastKey = webfontRunsKey(base, runs);
 		try {
 			return await prepareWebfonts({
 				document: doc,
 				linkId: this.linkId,
-				runs: runsOf(model),
+				runs,
 				embedded: [],
 				base,
 				...wait,
@@ -98,6 +103,27 @@ export class DocxWebfonts {
 		} catch {
 			return OFF;
 		}
+	}
+
+	/**
+	 * Requests newly picked fonts while editing without touching the stylesheet when the document's
+	 * font set has not changed. Never rejects.
+	 */
+	refreshIfChanged(doc: Document | undefined, model: DocumentModel): Promise<WebfontReadiness> {
+		if (!doc?.head) return Promise.resolve(OFF);
+		const base = this.base();
+		if (base === null) return Promise.resolve(OFF);
+		const runs = runsOf(model);
+		const key = webfontRunsKey(base, runs);
+		if (key === this.#lastKey) return Promise.resolve(OFF);
+		this.#lastKey = key;
+		return prepareWebfonts({
+			document: doc,
+			linkId: this.linkId,
+			runs,
+			embedded: [],
+			base,
+		}).catch(() => OFF);
 	}
 
 	/**

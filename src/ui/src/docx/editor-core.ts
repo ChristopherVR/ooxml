@@ -428,6 +428,7 @@ export class EditorCore {
 		if (docChanged) {
 			this.readAloud.documentEdited();
 			this.model = docToModel(view.state.doc, this.model, previousDoc);
+			void this.webfonts.refreshIfChanged(this.element.ownerDocument, this.model);
 			if (previousComments !== view.state.doc.attrs.commentThreads)
 				this.shell.review?.commentsPanel.refresh();
 			this.pages.refreshPageStyles();

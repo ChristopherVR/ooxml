@@ -27,4 +27,18 @@ export const options: Record<string, string> = {
 		'Cuando está activado, el navegador se conecta a fonts.googleapis.com y fonts.gstatic.com (o al servidor de fuentes de su organización) para obtener las fuentes que faltan. Cuando está desactivado, el texto usa fuentes instaladas, incrustadas o sustitutas, por lo que los saltos de línea pueden diferir de Excel.',
 	'This setting is managed by your organization':
 		'Esta configuración la administra su organización',
+	// Advanced > Edit Custom Lists
+	'Edit Custom Lists': 'Modificar listas personalizadas',
+	'Create lists for use in sorts and fill sequences.':
+		'Cree listas para usarlas en ordenaciones y secuencias de relleno.',
+	'Custom lists:': 'Listas personalizadas:',
+	'List entries:': 'Entradas de lista:',
+	'Press Enter to separate list entries.': 'Presione Entrar para separar las entradas de la lista.',
+	'NEW LIST': 'NUEVA LISTA',
+	'Import list from cells:': 'Importar lista desde las celdas:',
+	Import: 'Importar',
+	'Enter at least one list entry.': 'Escriba al menos una entrada de lista.',
+	'Enter a valid cell range such as A1:A5.': 'Escriba un rango de celdas válido como A1:A5.',
+	'The selected range has no text or number entries to import.':
+		'El rango seleccionado no tiene entradas de texto o número para importar.',
 };

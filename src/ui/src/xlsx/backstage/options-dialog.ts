@@ -15,8 +15,10 @@ import {
 import { ERROR_RULES, type ErrorRule } from 'ooxml-core/xlsx';
 import { auditState, setErrorRules } from 'ooxml-core/xlsx/ui';
 import { renderCustomizeRibbon } from './options-customize';
+import { renderCustomListsPane } from './options-custom-lists';
 import { FONT_DOWNLOADS_OPTION, trustCategory } from './options-trust';
 import { FONT_DOWNLOADS_DEFAULT } from '../../fonts/font-download-policy';
+import { saveErrorRules } from '../error-rules';
 import type { BackstageHost, IterationSettings } from './parts';
 
 const LANGUAGES: ReadonlyArray<readonly [string, string]> = [
@@ -190,7 +192,13 @@ function excelCategories(context: OptionsContext, host: BackstageHost): OfficeOp
 			],
 		},
 		unavailableCategory(context, 'accessibility'),
-		unavailableCategory(context, 'advanced'),
+		{
+			id: 'advanced',
+			label: t('Advanced'),
+			description: t('Create lists for use in sorts and fill sequences.'),
+			sections: [],
+			custom: true,
+		},
 		{
 			id: 'ribbon',
 			label: t('Customize Ribbon'),
@@ -242,7 +250,9 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 	element.className = 'xve-options';
 	const ribbon = doc.createElement('div');
 	ribbon.slot = 'pane-ribbon';
-	element.append(ribbon);
+	const advanced = doc.createElement('div');
+	advanced.slot = 'pane-advanced';
+	element.append(ribbon, advanced);
 	const context: OptionsContext = { product: 'Excel', t: (text) => ctx.t(text) };
 	let hiddenOnOpen: readonly string[] = [];
 	const build = () => {
@@ -273,11 +283,11 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 		).detail;
 		for (const key of DIRECT_KEYS)
 			if (changed.includes(key)) host.setOption(key, String(values[key]));
-		if (changed.some((key) => key.startsWith('rule:')))
-			setErrorRules(
-				ctx,
-				ERROR_RULES.filter((rule) => values[ruleKey(rule)] === true),
-			);
+		if (changed.some((key) => key.startsWith('rule:'))) {
+			const rules = ERROR_RULES.filter((rule) => values[ruleKey(rule)] === true);
+			saveErrorRules(rules);
+			setErrorRules(ctx, rules);
+		}
 		if (changed.some((key) => ITERATION_KEYS.includes(key)))
 			host.setOption('iteration', iterationOf(values));
 		if (changed.includes(FONT_DOWNLOADS_OPTION) && host.options().fontDownloadsLocked !== true)
@@ -297,6 +307,7 @@ export function createExcelOptions(host: BackstageHost): ExcelOptions {
 			build();
 			hiddenOnOpen = [...host.hiddenActions()];
 			renderCustomizeRibbon(ribbon, host);
+			renderCustomListsPane(advanced, host);
 			element.category = category;
 			element.show();
 		},

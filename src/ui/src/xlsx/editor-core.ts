@@ -15,7 +15,12 @@ import {
 	type Worksheet,
 	workbookFontFamily,
 } from 'ooxml-core/xlsx';
-import { createCommandRegistry, editBridge, type CommandRegistry } from 'ooxml-core/xlsx/ui';
+import {
+	auditState,
+	createCommandRegistry,
+	editBridge,
+	type CommandRegistry,
+} from 'ooxml-core/xlsx/ui';
 import type { EditorContext, GridController, SelectionModel } from 'ooxml-core/xlsx/ui';
 import { createDialogRegistry, type DialogRegistry } from 'ooxml-core/xlsx/ui';
 import { DirtyState } from 'ooxml-core/xlsx/ui';
@@ -37,6 +42,7 @@ import {
 import type { CalculationMode } from './backstage';
 import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
+import { savedErrorRules } from './error-rules';
 import { XlsxWebfonts } from './webfonts';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
 import type { EditorThemeMode, XlsxTheme } from './theme';
@@ -163,6 +169,7 @@ export class EditorCore {
 			this.requestRender();
 		});
 		this.ctx = this.createContext();
+		auditState(this.ctx).rules = savedErrorRules();
 		provideCustomization(this.ctx, () => this.customization);
 		provideContextMenuHost(this.ctx, {
 			handler: () => this.surfaceActions.onContextMenu,
@@ -333,6 +340,7 @@ export class EditorCore {
 		this.dirty.set(true);
 		if (workbook) emit(this.host, 'workbook-change', { workbook });
 		this.notifyModel(change);
+		if (workbook) this.webfonts.refresh(workbook);
 	}
 
 	setActiveSheet(index: number, force = false): void {

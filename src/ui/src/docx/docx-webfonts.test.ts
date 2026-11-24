@@ -80,4 +80,24 @@ describe('Word webfont option', () => {
 		editor.googleFonts = false;
 		await vi.waitFor(() => expect(webfontLinks()).toHaveLength(0));
 	});
+
+	it('requests a newly picked font immediately on edit without waiting for reload', async () => {
+		const webfonts = new DocxWebfonts();
+		webfonts.option = { baseUrl: BASE };
+		const model = calibriDocument();
+		await webfonts.prepare(document, model, { isLocallyInstalled: notInstalled, timeoutMs: 10 });
+		expect(document.getElementById(webfonts.linkId)?.getAttribute('href')).toContain('Carlito');
+
+		// Editing text without changing fonts is a no-op.
+		const unchanged = await webfonts.refreshIfChanged(document, model);
+		expect(unchanged.href).toBeNull();
+
+		// Picking a new font while editing requests it immediately.
+		model.blocks = [
+			{ type: 'paragraph', id: 'p', runs: [{ text: 'Hello', fontFamily: 'Roboto' }] },
+		];
+		const updated = await webfonts.refreshIfChanged(document, model);
+		expect(updated.href).toContain('Roboto');
+		expect(document.getElementById(webfonts.linkId)?.getAttribute('href')).toContain('Roboto');
+	});
 });

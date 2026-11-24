@@ -68,6 +68,8 @@ export function setErrorRules(ctx: EditorContext, rules: ErrorRule[]): void {
 	const state = auditState(ctx);
 	state.rules = rules;
 	notify(state);
+	ctx.grid()?.invalidate();
+	ctx.requestRender();
 }
 
 export function addWatch(ctx: EditorContext, cell: CellRef): void {

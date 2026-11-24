@@ -23,4 +23,17 @@ export const options: Record<string, string> = {
 	'When on, your browser contacts fonts.googleapis.com and fonts.gstatic.com (or the font server your organisation set up) to get missing fonts. When off, text uses installed, embedded or substitute fonts, so line breaks can differ from Excel.':
 		'开启时，浏览器会连接 fonts.googleapis.com 和 fonts.gstatic.com（或贵组织设置的字体服务器）以获取缺少的字体。关闭时，文本使用已安装、已嵌入或替代字体，因此换行可能与 Excel 不同。',
 	'This setting is managed by your organization': '此设置由你的组织管理',
+	// Advanced > Edit Custom Lists
+	'Edit Custom Lists': '编辑自定义列表',
+	'Create lists for use in sorts and fill sequences.': '创建用于排序和填充序列的列表。',
+	'Custom lists:': '自定义序列:',
+	'List entries:': '输入序列:',
+	'Press Enter to separate list entries.': '按 Enter 键分隔列表项。',
+	'NEW LIST': '新序列',
+	'Import list from cells:': '从单元格中导入序列:',
+	Import: '导入',
+	'Enter at least one list entry.': '请至少输入一个列表项。',
+	'Enter a valid cell range such as A1:A5.': '请输入有效的单元格区域，例如 A1:A5。',
+	'The selected range has no text or number entries to import.':
+		'所选区域没有可导入的文本或数字项。',
 };

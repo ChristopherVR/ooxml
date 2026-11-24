@@ -95,4 +95,26 @@ describe('XlsxWebfonts', () => {
 			delete (document as { fonts?: unknown }).fonts;
 		}
 	});
+
+	it('requests a newly picked font when the workbook is edited', async () => {
+		const workbook = createWorkbook();
+		const sheet = workbook.sheets[0]!;
+		const { fonts, remeasure, link } = setup(workbook);
+		fonts.option = { baseUrl: 'https://fonts.example/css2' };
+		await fonts.prepare(workbook);
+		expect(decodeURIComponent(link()?.getAttribute('href') ?? '')).not.toContain('Roboto');
+
+		// Non-font edit does not re-request or remeasure.
+		fonts.refresh(workbook);
+		await settle();
+		expect(remeasure).toHaveBeenCalledTimes(0);
+
+		// Picking a new font on a cell requests it immediately and schedules a remeasure.
+		workbook.styles.push({ ...workbook.styles[0]!, font: { name: 'Roboto' } });
+		putCell(sheet, 0, 0, { value: 'Hi', styleId: workbook.styles.length - 1 });
+		fonts.refresh(workbook);
+		await settle();
+		expect(decodeURIComponent(link()?.getAttribute('href') ?? '')).toContain('family=Roboto');
+		expect(remeasure).toHaveBeenCalledTimes(1);
+	});
 });

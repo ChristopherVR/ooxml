@@ -691,6 +691,13 @@ export class VisioViewerElement extends BaseElement {
 		this.#canvas.invalidate();
 		this.#render(this.controller.state);
 	}
+	/** After an edit, load any newly picked font families and redraw once they arrive. */
+	async #refreshWebfontsIfChanged(): Promise<void> {
+		const readiness = await this.#webfonts.loadIfChanged(this.controller.state.document);
+		if (!readiness || this.#disposed) return;
+		this.#canvas.invalidate();
+		this.#render(this.controller.state);
+	}
 	#forgetOpenedFile(): void {
 		this.#openedStorage = undefined;
 		this.controller.setFileReadOnly(false);
@@ -1138,6 +1145,8 @@ export class VisioViewerElement extends BaseElement {
 		);
 		const previous = this.#handleState;
 		this.#handleState = state;
+		if (state.document && state.document !== previous?.document && this.#webfonts.base() !== null)
+			void this.#refreshWebfontsIfChanged();
 		if (
 			changed ||
 			!previous ||

@@ -101,4 +101,23 @@ describe('ViewerWebfonts', () => {
 		release();
 		expect(await pending).toBeUndefined();
 	});
+
+	it('requests a newly picked font on edit without re-requesting unchanged drawings', async () => {
+		const prepare = vi.fn(quick);
+		const fonts = new ViewerWebfonts(() => document, prepare);
+		fonts.option = { baseUrl: 'https://fonts.example.test/css2' };
+		const initial = drawing('Calibri');
+		await fonts.load(initial);
+		expect(prepare).toHaveBeenCalledTimes(1);
+
+		// Same font set: loadIfChanged is a no-op.
+		expect(await fonts.loadIfChanged(initial)).toBeUndefined();
+		expect(prepare).toHaveBeenCalledTimes(1);
+
+		// Picking a new font while editing requests it immediately.
+		const edited = drawing('Roboto');
+		await fonts.loadIfChanged(edited);
+		expect(prepare).toHaveBeenCalledTimes(2);
+		expect(document.getElementById(fonts.linkId)?.getAttribute('href')).toContain('Roboto');
+	});
 });

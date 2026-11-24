@@ -208,6 +208,45 @@
 	padding: 2px 8px 2px 0;
 	font-size: 12px;
 }
+/* File > Options > Advanced > Edit Custom Lists. */
+.xve-custom-lists {
+	display: grid;
+	grid-template-columns: 1fr 1fr auto;
+	gap: 10px;
+	align-items: start;
+	margin-bottom: 10px;
+}
+.xve-custom-lists-col {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	font-size: 12px;
+}
+.xve-custom-lists-select,
+.xve-custom-lists-entries,
+.xve-custom-lists-range {
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	padding: 4px 6px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+	font-size: 12px;
+}
+.xve-custom-lists-actions {
+	display: flex;
+	flex-direction: column;
+	padding-top: 20px;
+}
+.xve-custom-lists-import {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 12px;
+}
+.xve-custom-lists-import .xve-options-action {
+	margin: 0;
+}
 @media (max-width: 760px) {
 	.xve-backstage-content {
 		padding: 20px;
