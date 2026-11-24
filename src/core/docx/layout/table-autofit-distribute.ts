@@ -43,6 +43,23 @@ function roundToTotal(widths: number[]): number[] {
 	return floors;
 }
 
+/**
+ * Caps the widest columns at one common width so that they add up to `total`: narrow columns keep
+ * their minimum and only the columns that need more than their share give way.
+ */
+export function capToTotal(widths: number[], total: number): number[] {
+	if (!widths.length || total <= 0) return widths.map(() => 0);
+	const sorted = [...widths].sort((a, b) => a - b);
+	let rest = total;
+	let cap = total / widths.length;
+	for (const [index, width] of sorted.entries()) {
+		cap = rest / (sorted.length - index);
+		if (width > cap) break;
+		rest -= width;
+	}
+	return widths.map((width) => Math.min(width, cap));
+}
+
 /** Column widths in whole twips. */
 export function distributeColumns(columns: AutofitColumn[], target: AutofitTarget): number[] {
 	if (!columns.length) return [];
@@ -85,7 +102,11 @@ export function distributeColumns(columns: AutofitColumn[], target: AutofitTarge
 	);
 	const sum = (values: number[]) => values.reduce((acc, value) => acc + value, 0);
 	const limit = tableWidth ?? available;
-	if (sum(min) >= limit) return roundToTotal(min);
+	// A preferred table width below the content minimum gives way to the minimum (Word's grids),
+	// but the minimum itself stays inside the text column: an unbreakable token (a URL, an IBAN)
+	// then breaks inside its cell instead of pushing the table off the page (#320).
+	if (sum(min) >= limit)
+		return roundToTotal(sum(min) > available ? capToTotal(min, available) : min);
 	if (sum(max) <= limit) {
 		if (tableWidth === undefined) return roundToTotal(max);
 		// A table wider than its content grows the automatic columns in proportion to their

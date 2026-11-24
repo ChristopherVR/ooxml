@@ -116,9 +116,35 @@ describe('resolveTableAutofit', () => {
 		expect(Math.abs(resolved.rows[0]!.cells[0]!.widthPx! - 10 * char)).toBeLessThan(0.14);
 	});
 
-	it('keeps unbreakable words whole when the text column is too narrow', () => {
-		const resolved = resolveTableAutofit(table(['Supercalifragilistic', 'xy']), 20, courier);
+	it('keeps the table inside the text column when an unbreakable word is wider (#320)', () => {
 		const char = ((11 * 96) / 72) * (1229 / 2048);
-		expect(resolved.rows[0]!.cells[0]!.widthPx!).toBeGreaterThanOrEqual(20 * char);
+		const resolved = resolveTableAutofit(
+			table(['https://example.com/a/very/long/unbroken/address', 'xy']),
+			20 * char,
+			courier,
+		);
+		const cells = resolved.rows[0]!.cells;
+		expect(resolved.widthPx!).toBeLessThanOrEqual(20 * char + 0.07);
+		// The narrow column keeps its minimum; the long token gives way and breaks in its cell.
+		expect(Math.abs(cells[1]!.widthPx! - 2 * char)).toBeLessThan(0.07);
+		expect(Math.abs(cells[0]!.widthPx! - 18 * char)).toBeLessThan(0.14);
+	});
+
+	it('shares the text column between many columns whose minimums do not fit (#320)', () => {
+		const words = Array.from({ length: 12 }, (_, index) => `Colonne${index + 1}`);
+		const resolved = resolveTableAutofit(table(words), 600, courier);
+		const widths = resolved.rows[0]!.cells.map((cell) => cell.widthPx!);
+		expect(resolved.widthPx!).toBeLessThanOrEqual(600.07);
+		expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(0.14);
+	});
+
+	it('lets a preferred table width below the minimum give way to the minimum', () => {
+		const source = {
+			...table(['Supercalifragilistic', 'xy']),
+			autofit: { columns: 2, widthPx: 20 },
+		};
+		const char = ((11 * 96) / 72) * (1229 / 2048);
+		const resolved = resolveTableAutofit(source, 600, courier);
+		expect(resolved.rows[0]!.cells[0]!.widthPx!).toBeGreaterThanOrEqual(20 * char - 0.07);
 	});
 });
