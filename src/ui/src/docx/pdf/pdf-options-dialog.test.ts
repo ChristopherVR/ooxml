@@ -130,7 +130,12 @@ describe('File > Export > Create a PDF', () => {
 			.shadowRoot!.querySelector<HTMLButtonElement>('[data-backstage-item="export"]')!
 			.click();
 		button(root.querySelector('[data-backstage-page="export"]')!, 'Create PDF').click();
-		return root.querySelector<HTMLElement>('.dve-pdf-options-dialog')!;
+		// The dialog loads on first use.
+		return vi.waitFor(() => {
+			const dialog = root.querySelector<HTMLElement & { open: boolean }>('.dve-pdf-options-dialog');
+			if (!dialog?.open) throw new Error('The PDF options dialog is not open yet.');
+			return dialog;
+		});
 	}
 
 	it('asks for the options, then exports with them; Cancel exports nothing', async () => {

@@ -33,7 +33,7 @@ import { saveProgressLabel } from '../files/save-progress-label';
 import { createSignatureChrome, type SignatureChrome } from '../notices/signature-chrome';
 import { createTitleBar, type SaveState, type TitleBar } from './title-bar';
 import type { EditorPdfOptions } from './pdf/editor-pdf';
-import { createPdfOptionsDialog, type PdfOptionsDialog } from './pdf/pdf-options-dialog';
+import type { PdfOptionsDialog } from './pdf/pdf-options-dialog';
 import type { PdfOptionsContext } from './pdf/pdf-options-form';
 
 /** What the chrome needs from the editor element; keeps component.ts free of chrome details. */
@@ -99,8 +99,8 @@ export class EditorChrome {
 	/** The signature badge (status bar) and load notice (under the ribbon). */
 	readonly signatures: SignatureChrome;
 	readonly fileInput: HTMLInputElement;
-	/** File > Export > Create a PDF's Options step. */
-	readonly pdfOptions: PdfOptionsDialog = createPdfOptionsDialog();
+	/** File > Export > Create a PDF's Options step, loaded and added on first use. */
+	private pdfOptions: Promise<PdfOptionsDialog> | undefined;
 	private ribbon: RibbonElement | undefined;
 	private shareDialog: ShareDialogController | undefined;
 	private _fileName = DEFAULT_FILE_NAME;
@@ -178,7 +178,6 @@ export class EditorChrome {
 			this.statusBar.element,
 			this.backstage.element,
 			this.backstage.optionsDialog,
-			this.pdfOptions.element,
 			this.fileInput,
 		);
 		this.ribbon = ribbon as RibbonElement;
@@ -229,7 +228,7 @@ export class EditorChrome {
 		this.titleBar.relocalize();
 		this.ribbonActions.relocalize(locale);
 		this.shareDialog?.relocalize();
-		this.pdfOptions.setLocale(locale);
+		void this.pdfOptions?.then((dialog) => dialog.setLocale(locale));
 		const fileTab = this.host.ribbon()?.querySelector('.dve-file-tab');
 		if (fileTab) fileTab.textContent = translate(locale, 'File');
 		this.fileInput.setAttribute('aria-label', translate(locale, 'Open'));
@@ -305,9 +304,20 @@ export class EditorChrome {
 	/** Asks for the PDF options, then downloads the PDF; Cancel exports nothing. */
 	private async exportPdf(): Promise<void> {
 		const context = this.host.pdfContext?.() ?? { hasSelection: false };
-		const options = await this.pdfOptions.choose(context);
+		const options = await (await this.pdfOptionsDialog()).choose(context);
 		if (!options) return;
 		downloadBytes((await this.host.exportPdf(options)).bytes, withExtension(this._fileName, 'pdf'));
+	}
+
+	private pdfOptionsDialog(): Promise<PdfOptionsDialog> {
+		this.pdfOptions ??= import('./pdf/pdf-options-dialog').then(({ createPdfOptionsDialog }) => {
+			const dialog = createPdfOptionsDialog();
+			dialog.setLocale(this.host.locale());
+			// Next to the other dialogs, which `mount` puts just before the file input.
+			this.fileInput.before(dialog.element);
+			return dialog;
+		});
+		return this.pdfOptions;
 	}
 
 	/** True while a save is pending. */

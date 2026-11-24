@@ -5,7 +5,7 @@
  * read.
  */
 import { ContentReader, type Matrix } from './content';
-import type { PdfPermissions } from './crypt';
+import type { PdfPermissions } from './crypt-types';
 import { PdfDocument, type PdfOpenOptions, type PdfPageNode } from './document';
 import { pageMatrix } from './matrix';
 import { Destinations } from './navigation';

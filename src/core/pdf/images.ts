@@ -11,9 +11,9 @@ import { jpegComponents } from '../drawingml/raster-decode';
 import { decodeCcitt } from './ccitt';
 import type { PdfDocument } from './document';
 import { colorSpace, gray, type ColorSpace } from './image-color';
-import { jbig2Samples } from './jbig2-pdf';
 import { cmykJpegForDocument } from './jpeg-cmyk';
-import { jpxSamples } from './jpx-image';
+import type { jbig2Samples as decodeJbig2Samples } from './jbig2-pdf';
+import type { jpxSamples as decodeJpxSamples } from './jpx-image';
 import { isNumber, PdfStream, type PdfDict, type PdfValue } from './objects';
 import type { PdfPageImage } from './page-content';
 
@@ -33,6 +33,13 @@ export interface ImageOptions {
 	/** The fill colour a stencil mask paints, `#rrggbb`. */
 	fill?: string;
 }
+
+// JBIG2 and JPEG 2000 are rare in the PDFs people open and their decoders are most of the reader,
+// so they load only when an image uses them.
+const jbig2Samples: typeof decodeJbig2Samples = async (...args) =>
+	(await import('./jbig2-pdf')).jbig2Samples(...args);
+const jpxSamples: typeof decodeJpxSamples = async (...args) =>
+	(await import('./jpx-image')).jpxSamples(...args);
 
 export const streamSource = (document: PdfDocument, stream: PdfStream): ImageSource => ({
 	dict: stream.dict,

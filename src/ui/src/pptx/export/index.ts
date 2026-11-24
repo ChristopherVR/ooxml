@@ -59,11 +59,11 @@ export * from './pdf-slides';
 // Vector PDF (Save as PDF): slide selection and page size, the display-list painter and the
 // DOM entry every binding calls with its own capture stage (`exportSlidesVectorPdf`).
 export * from './pdf-vector-select';
-export * from './pdf-vector-export';
+export * from './pdf-vector-export-entry';
 export * from './pdf-export-run';
 export * from './pdf-export-diagnostics';
 export * from './pdf-export-notice';
-export { resolvePdfTextFont } from './pdf-vector-paint';
+export { resolvePdfTextFont } from './pdf-text-font';
 export * from './pdf-notes-builder';
 export * from './pdf-page-size';
 // Pure print helpers: settings validation, slide-range / colour-filter

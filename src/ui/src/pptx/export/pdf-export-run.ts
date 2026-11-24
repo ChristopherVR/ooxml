@@ -7,8 +7,11 @@
 import type { PdfExportSettings } from '../render/options/viewer-options-apply';
 import type { CompatibilityWarningToast } from '../render/compatibility-warning-toasts';
 import { pdfExportNoticeToast } from './pdf-export-notice';
-import type { VectorPdfExportOptions, VectorPdfExportResult } from './pdf-vector-export';
-import { exportSlidesVectorPdf } from './pdf-vector-export';
+import {
+	exportSlidesVectorPdf,
+	type VectorPdfExportOptions,
+	type VectorPdfExportResult,
+} from './pdf-vector-export-entry';
 
 export interface RunPdfExportOptions {
 	settings: PdfExportSettings;

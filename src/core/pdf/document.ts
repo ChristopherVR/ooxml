@@ -2,7 +2,8 @@
  * A parsed PDF file: resolves indirect objects (from the file or from object streams), decrypts
  * them when the file is encrypted, decodes streams within size limits and walks the page tree.
  */
-import { PdfDecryptor, type PdfPermissions } from './crypt';
+import type { PdfDecryptor } from './crypt';
+import type { PdfPermissions } from './crypt-types';
 import { decodeFilters } from './filters';
 import { EOF, PdfKeyword, PdfLexer } from './lexer';
 import {
@@ -74,6 +75,8 @@ export class PdfDocument {
 			const ids = document.xref.trailer.get('ID');
 			const id =
 				Array.isArray(ids) && ids[0] instanceof PdfString ? ids[0].bytes : new Uint8Array();
+			// Only an encrypted file loads the security handler and its digests.
+			const { PdfDecryptor } = await import('./crypt');
 			document.decryptor = await PdfDecryptor.open(encrypt, id, options.password);
 		}
 		await document.#readPages();

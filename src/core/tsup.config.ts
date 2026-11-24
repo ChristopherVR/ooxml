@@ -1,9 +1,15 @@
-import { defineConfig } from 'tsup';
+import { defineConfig, type Options } from 'tsup';
+
+const pdfEntries = {
+	'docx/pdf-convert/index': 'docx/pdf-convert/index.ts',
+	'docx/pdf-import/index': 'docx/pdf-import/index.ts',
+	'pdf/index': 'pdf/index.ts',
+};
 
 // Every strict area (the shared building blocks and the docx format) is bundled the same way as
 // the pptx area (see tsup.pptx.config.ts): ESM (`.mjs`) and CJS (`.cjs`) per subpath entry.
 // Declarations come from `tsc` (tsconfig.build.json, emitDeclarationOnly).
-export default defineConfig({
+const shared = {
 	entry: {
 		index: 'index.ts',
 		'units/index': 'units/index.ts',
@@ -29,9 +35,6 @@ export default defineConfig({
 		'docx/embedded': 'docx/embedded.ts',
 		'docx/layout/index': 'docx/layout/index.ts',
 		'docx/load/index': 'docx/load/index.ts',
-		'docx/pdf-convert/index': 'docx/pdf-convert/index.ts',
-		'docx/pdf-import/index': 'docx/pdf-import/index.ts',
-		'pdf/index': 'pdf/index.ts',
 		'docx/ui/index': 'docx/ui/index.ts',
 		'collab/index': 'collab/index.ts',
 		'teams/index': 'teams/index.ts',
@@ -47,10 +50,8 @@ export default defineConfig({
 	},
 	outDir: 'dist',
 	tsconfig: 'tsconfig.build.json',
-	format: ['esm', 'cjs'],
 	outExtension: ({ format }) => ({ js: format === 'esm' ? '.mjs' : '.cjs' }),
 	dts: false,
-	splitting: false,
 	sourcemap: false,
 	// dist also holds the declarations and the pptx bundle: never clean it here.
 	clean: false,
@@ -60,4 +61,21 @@ export default defineConfig({
 	// The legacy .doc and .xls loaders and the package encryption (its CFB container) inline the
 	// shared ole2 codecs (a devDependency), like the pptx bundle.
 	noExternal: [/^@christophervr\/ole2(?:\/|$)/],
-});
+} satisfies Options;
+
+// The PDF reader and its converters split their ESM build, so the decoders a PDF rarely needs
+// (JBIG2, JPEG 2000, the security handler) are chunks loaded on first use and the three entries
+// share one copy of the reader. The CJS build keeps one self-contained file per entry.
+export default defineConfig([
+	{ ...shared, format: ['esm', 'cjs'], splitting: false },
+	{
+		...shared,
+		entry: pdfEntries,
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'pdf/chunks/[name]-[hash]';
+		},
+	},
+	{ ...shared, entry: pdfEntries, format: ['cjs'], splitting: false },
+]);

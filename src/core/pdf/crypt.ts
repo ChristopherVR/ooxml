@@ -21,27 +21,9 @@ import {
 	type PdfDict,
 	type PdfValue,
 } from './objects';
+import { PdfPasswordError, type PdfPermissions } from './crypt-types';
 
-export class PdfPasswordError extends Error {
-	constructor(
-		message: string,
-		readonly code: 'password-required' | 'incorrect-password',
-	) {
-		super(message);
-	}
-}
-
-/** What the file's permission flags allow (ISO 32000-1 table 22). */
-export interface PdfPermissions {
-	print: boolean;
-	modify: boolean;
-	copy: boolean;
-	annotate: boolean;
-	fillForms: boolean;
-	extractForAccessibility: boolean;
-	assemble: boolean;
-	printHighQuality: boolean;
-}
+export { PdfPasswordError, type PdfPermissions } from './crypt-types';
 
 const PAD = Uint8Array.from([
 	0x28, 0xbf, 0x4e, 0x5e, 0x4e, 0x75, 0x8a, 0x41, 0x64, 0x00, 0x4e, 0x56, 0xff, 0xfa, 0x01, 0x08,

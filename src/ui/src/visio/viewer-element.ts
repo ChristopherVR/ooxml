@@ -87,7 +87,6 @@ import { editErrorMessage, editSizeLimit } from 'ooxml-core/visio/ui';
 import { registerViewerControls } from './office-ui';
 import { exportPageSvg, type SvgExportOptions, type SvgExportResult } from './export-svg';
 import { exportPagePng } from './viewer-export';
-import { exportDocumentPdfDetailed } from './viewer-pdf';
 import { pdfOptionsFor } from './viewer-pdf-options';
 import type { PdfFontFile } from '../export/pdf-embedded-font';
 import { applyHostRibbonTabs } from '../embedding/host-ribbon-tabs';
@@ -490,6 +489,8 @@ export class VisioViewerElement extends BaseElement {
 				const doc = this.ownerDocument;
 				if (format === 'png')
 					return { blob: await exportPagePng(doc, model, pageIndex), pageIndex };
+				// The PDF writer loads on first use, so opening a drawing never downloads it.
+				const { exportDocumentPdfDetailed } = await import('./viewer-pdf');
 				const result = await exportDocumentPdfDetailed(doc, model, {
 					...pdfOptionsFor(choice ?? { scope: 'all' }, pageIndex),
 					fonts: this.pdfFonts,
