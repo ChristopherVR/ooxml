@@ -38,8 +38,13 @@ function table(rows, options = {}) {
 		'<w:tblLook w:val="04A0" w:firstRow="1" w:lastRow="0" w:firstColumn="1" w:lastColumn="0" w:noHBand="0" w:noVBand="1"/>',
 	].join('');
 	const body = rows
-		.map((cells) => {
-			const trPr = options.cantSplit ? '<w:trPr><w:cantSplit/></w:trPr>' : '';
+		.map((cells, rowIndex) => {
+			const header =
+				options.header && rowIndex === 0
+					? `<w:trHeight w:val="${options.header}" w:hRule="exact"/><w:tblHeader/>`
+					: '';
+			const rowProperties = `${options.cantSplit ? '<w:cantSplit/>' : ''}${header}`;
+			const trPr = rowProperties ? `<w:trPr>${rowProperties}</w:trPr>` : '';
 			const tcs = cells
 				.map((content, index) => {
 					const paragraphs = Array.isArray(content) ? content : [content];
@@ -58,7 +63,8 @@ const STYLES = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 async function save(name, body, stories = {}) {
 	const zip = new JSZip();
 	// A fixed date keeps the archive bytes stable between runs.
-	const add = (part, text) => zip.file(part, text, { date: new Date('2026-11-24T00:00:00Z') });
+	const add = (part, text) =>
+		zip.file(part, text, { date: new Date('2026-11-24T00:00:00Z'), createFolders: false });
 	const overrides = [
 		['/word/document.xml', `${MAIN}.document.main+xml`],
 		['/word/styles.xml', `${MAIN}.styles+xml`],
@@ -173,6 +179,20 @@ await save(
 				['Frais de dossier', '1', '150,00 €'],
 			],
 			{ center: true, borders: 24, cellMargin: 340, width: TEXT_WIDTH },
+		) +
+		paragraph('Fin du document.'),
+);
+
+// 40 lines leave less than the 3-inch repeating header row needs, so the table starts on page 2.
+await save(
+	't24-entete-repete-haut-de-page',
+	Array.from({ length: 40 }, (_, index) => paragraph(`Ligne ${index + 1}`)).join('') +
+		table(
+			[
+				['Nature des indications', 'N-1', 'N'],
+				...Array.from({ length: 5 }, (_, index) => [`Indication ${index + 1}`, '0', '0']),
+			],
+			{ header: 4320 },
 		) +
 		paragraph('Fin du document.'),
 );

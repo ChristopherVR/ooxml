@@ -135,10 +135,13 @@ export function placeTable(
 		fragmentRows = [];
 		fragmentHeight = 0;
 	}
+	// Header rows repeat only once the table's own header rows are placed: a header row that moves
+	// to the next page is drawn there once, not also as its own repeat (#324).
+	let headersPlaced = headerRows.length === 0;
 	function startNewFragment() {
 		flushFragment();
 		cursor.newColumn();
-		addHeaders();
+		if (headersPlaced) addHeaders();
 	}
 	function addHeaders() {
 		for (const header of headerRows)
@@ -371,6 +374,7 @@ export function placeTable(
 				headerRows.includes(source) ||
 				(!!footnotes && row.heightRule === 'exact'),
 		);
+		if (index === headerRows.length - 1) headersPlaced = true;
 	}
 	flushFragment();
 }

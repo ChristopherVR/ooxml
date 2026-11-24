@@ -635,6 +635,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and footer tables draw their borders (#321), and Draft view keeps table widths inside the
       paper (#322). Checked against Word 16 with `src/core/docx/layout/fixtures/table-reports/`,
       where a "keep row together" row taller than a page is clipped on one page, as Word does (#323).
+      A repeating header row that moves to the next page is drawn there once (#324).
 - [x] **P1** Save as PDF (File > Export > Create a PDF, `exportPdf()`, `exportDocxPdf`) writes real
       text, vector borders, shading and rules, and pictures at their own resolution on the Print
       Layout pages, with headers, footers, page fields and footnotes, a page range, document

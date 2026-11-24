@@ -160,6 +160,31 @@ describe('layoutSections: table row fragmentation', () => {
 		}
 	});
 
+	it('draws the header row once when it moves to the top of the next page (#324)', () => {
+		const filler = para('filler', 4); // leaves 20px, too little for the two-line header
+		const table: LayoutTable = {
+			kind: 'table',
+			id: 't324',
+			rows: [
+				{ isHeader: true, cells: [{ paragraphs: [para('h', 2)] }] },
+				{ cells: [{ paragraphs: [para('r0', 1)] }] },
+				{ cells: [{ paragraphs: [para('r1', 1)] }] },
+			],
+		};
+		const result = layoutSections(
+			{ sections: [{ page: geometry(200, 100), blocks: [filler, table] }] },
+			measurer,
+		);
+		const boxes = result.pages.flatMap((page) =>
+			at(page.columns, 0).blocks.filter((block) => block.kind === 'table'),
+		);
+		expect(boxes).toHaveLength(1);
+		const box = at(boxes, 0);
+		if (box.kind !== 'table') throw new Error('table expected');
+		expect(box.rows.map((row) => row.repeated)).toEqual([false, false, false]);
+		expect(box.rows.map((row) => at(at(row.cells, 0), 0).blockId)).toEqual(['h', 'r0', 'r1']);
+	});
+
 	it('moves a cantSplit row whole to the next page instead of splitting it', () => {
 		const tall: LayoutTable = {
 			kind: 'table',

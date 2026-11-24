@@ -68,6 +68,20 @@ describe('table report fixtures', () => {
 		}
 	});
 
+	it('draws a repeating header row once when the table starts at the top of a page (#324)', async () => {
+		const result = layoutDocumentModel(
+			await load('t24-entete-repete-haut-de-page'),
+			createFakeMeasurer(),
+		);
+		// Word 16: two pages; the table, header row included, is drawn once on page 2.
+		expect(result.pages).toHaveLength(2);
+		const placed = tables(result);
+		expect(placed.map((entry) => entry.pageIndex)).toEqual([1]);
+		const { table } = placed[0]!;
+		expect(table.rows.map((row) => row.repeated)).toEqual(Array(6).fill(false));
+		expect(table.yPx).toBe(0);
+	});
+
 	it('keeps a keep-together row taller than a page on one page, clipped, as Word does (#323)', async () => {
 		const result = layoutDocumentModel(
 			await load('t14-ligne-plus-haute-que-page'),
