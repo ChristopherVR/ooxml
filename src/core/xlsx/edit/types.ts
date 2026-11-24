@@ -46,6 +46,8 @@ import type { TablePatch, TableRef } from './table-edits';
 import type { SparklineGroupPatch } from './sparklines';
 import type { RemoveSubtotalsResult, SubtotalOptions, SubtotalResult } from './subtotal';
 import type { ConsolidateOptions, ConsolidateResult, ConsolidateSource } from './consolidate';
+import type { FlashFillOptions, FlashFillResult } from './flash-fill';
+import type { AdvancedFilterOptions, AdvancedFilterResult } from './advanced-filter';
 
 /** Border presets of the ribbon's border drop-down. */
 export type BorderPreset =
@@ -192,6 +194,12 @@ export interface EditSession {
 		options?: Pick<import('./sort-keys').SortOptions, 'leftToRight' | 'caseSensitive'>,
 	): void;
 	fill(sheet: number, source: CellRange, target: CellRange, mode?: FillMode): void;
+	/** Data > Flash Fill (Ctrl+E): infers a string transformation from examples and fills empty cells. */
+	flashFill(
+		sheet: number,
+		target: CellAddress | CellRange,
+		options?: FlashFillOptions,
+	): FlashFillResult;
 	copy(sheet: number, range: CellRange): ClipboardPayload;
 	/**
 	 * Copies several areas as one block (Excel's rule: the areas share their rows or their
@@ -235,6 +243,8 @@ export interface EditSession {
 	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
 	/** Re-evaluates the auto-filter against the current cell values. */
 	reapplyFilter(sheet: number, at?: CellAddress): void;
+	/** Data > Advanced Filter: filters a list in place or copies matching (optionally unique) rows. */
+	applyAdvancedFilter(sheet: number, options: AdvancedFilterOptions): AdvancedFilterResult;
 	/** Sorts the auto-filter (or table) containing `col` by that column, keeping the header. */
 	sortByColumn(sheet: number, col: number, descending?: boolean): void;
 	createTable(sheet: number, range: CellRange, hasHeader: boolean, styleName?: string): Table;

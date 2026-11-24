@@ -66,6 +66,13 @@ export {
 	type ConsolidateResult,
 	type ConsolidateSource,
 } from './consolidate';
+export { flashFill, type FlashFillOptions, type FlashFillResult } from './flash-fill';
+export {
+	applyAdvancedFilter,
+	type AdvancedFilterAction,
+	type AdvancedFilterOptions,
+	type AdvancedFilterResult,
+} from './advanced-filter';
 export {
 	calcModeOf,
 	calculateOnOpen,

@@ -48,6 +48,8 @@ import * as tableEdits from './table-edits';
 import * as duplicates from './duplicates';
 import * as subtotal from './subtotal';
 import * as consolidate from './consolidate';
+import * as flashFillOp from './flash-fill';
+import * as advancedFilter from './advanced-filter';
 import * as outline from './outline';
 import * as page from './page';
 import * as pageBreaks from './page-breaks';
@@ -251,6 +253,7 @@ export function createEditSession(
 		sort: (s, range, keys, hasHeader, options) =>
 			sort.sortRange(ctx, s, range, keys, hasHeader, options),
 		fill: (s, source, target, mode) => fill.fillRange(ctx, s, source, target, mode),
+		flashFill: (s, target, options) => flashFillOp.flashFill(ctx, s, target, options),
 		copy: (s, range) => clipboard.copyRange(workbook, s, range),
 		copyAreas: (s, ranges) => copyAreas(workbook, s, ranges),
 		cut: (s, range) => ({ ...clipboard.copyRange(workbook, s, range), cut: true }),
@@ -281,6 +284,7 @@ export function createEditSession(
 		filterColumn: (s, col, vals) => filter.filterColumn(ctx, s, col, vals),
 		setFilterCriteria: (s, col, criteria) => filter.setColumnCriteria(ctx, s, col, criteria),
 		reapplyFilter: (s, at) => filter.reapplyFilter(ctx, s, at),
+		applyAdvancedFilter: (s, options) => advancedFilter.applyAdvancedFilter(ctx, s, options),
 		sortByColumn: (s, col, descending) => filter.sortByColumn(ctx, s, col, descending ?? false),
 		createTable: (s, range, hasHeader, styleName) =>
 			tables.createTable(ctx, s, range, hasHeader, styleName),
