@@ -100,6 +100,16 @@ export interface CellTextRun {
 	baseline?: number;
 	/** Character spacing from `a:rPr/@spc`, in hundredths of a point. */
 	characterSpacing?: number;
+	/** Text highlight background colour as a hex string, e.g. `"#FFFF00"`. */
+	highlightColor?: string;
+	/** Text shadow colour as a CSS colour string, e.g. `"#000000"`. */
+	textShadowColor?: string;
+	/** Text shadow blur radius in px. */
+	textShadowBlur?: number;
+	/** Text shadow horizontal offset in px. */
+	textShadowOffsetX?: number;
+	/** Text shadow vertical offset in px. */
+	textShadowOffsetY?: number;
 	/**
 	 * CSS `line-height` for the run's span. Set by `cellParagraphBlocks` on the
 	 * runs of a paragraph with exact line spacing, as shape text does (see
@@ -175,12 +185,18 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	if (run.color) {
 		css.color = run.color;
 	}
-	// A bold run is at least bold, and a bold "Black" run stays 900. A regular
-	// run in its own family takes that family's weight, bold when the cell is
-	// (a table style's bold header row); otherwise it inherits the cell's.
+	// A bold run is at least bold, and a bold "Black" run stays 900. An
+	// explicitly non-bold run (`b="0"`) overrides a bold cell/style ancestor at
+	// its family's regular weight. A regular run (`bold === undefined`) in its
+	// own family takes that family's weight, bold when the cell is (a table
+	// style's bold header row); otherwise it inherits the cell's.
 	if (run.bold) {
 		const family = run.fontFamily ?? (cellCss?.fontFamily as string | undefined);
 		css.fontWeight = fontWeightAttribute(family, true) ?? 'bold';
+	} else if (run.bold === false) {
+		const family = run.fontFamily ?? (cellCss?.fontFamily as string | undefined);
+		const weight = resolveFontWeight(family, false);
+		css.fontWeight = weight === 400 ? 'normal' : weight;
 	} else if (run.fontFamily && cellCss) {
 		const cellWeight = cssFontWeightNumber(cellCss.fontWeight);
 		const weight = resolveFontWeight(run.fontFamily, isBoldCell(cellCss));
@@ -190,6 +206,15 @@ export function cellRunStyle(run: CellTextRun, cellCss?: TableCellCss): TableCel
 	}
 	if (resolveFontItalic(run.fontFamily, run.italic)) {
 		css.fontStyle = 'italic';
+	}
+	if (run.highlightColor) {
+		css.backgroundColor = normalizeHexColor(run.highlightColor, 'transparent');
+	}
+	if (run.textShadowColor) {
+		const offX = run.textShadowOffsetX ?? 1;
+		const offY = run.textShadowOffsetY ?? 1;
+		const blur = run.textShadowBlur ?? 2;
+		css.textShadow = `${offX}px ${offY}px ${blur}px ${normalizeHexColor(run.textShadowColor, '#000000')}`;
 	}
 	const deco: string[] = [];
 	if (run.underline) {

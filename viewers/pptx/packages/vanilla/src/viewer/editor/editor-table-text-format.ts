@@ -1,5 +1,9 @@
-import type { TableCellsTextFormat, TableCellTextStyleUpdate } from 'ooxml-ui/pptx';
-import { tableCellsTextFormat, tableCellsTextStylePatch } from 'ooxml-ui/pptx';
+import type { ChangeCaseMode, TableCellsFontUpdate, TableCellsTextFormat } from 'ooxml-ui/pptx';
+import {
+	tableCellsChangeCasePatch,
+	tableCellsTextFormat,
+	tableCellsTextStylePatch,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
@@ -23,11 +27,23 @@ function selectedCells(state: ViewerState): Array<{ row: number; col: number }> 
 export function tableTextFormatPatch(
 	store: Store<ViewerState>,
 	el: PptxElement,
-	build: (current: TableCellsTextFormat) => TableCellTextStyleUpdate,
+	build: (current: TableCellsTextFormat) => TableCellsFontUpdate,
 ): Partial<PptxElement> | undefined {
 	if (el.type !== 'table') {
 		return undefined;
 	}
 	const cells = selectedCells(store.get());
 	return tableCellsTextStylePatch(el, cells, build(tableCellsTextFormat(el, cells)));
+}
+
+/** Rewrite the character case of every run in the selected cells of a table. */
+export function tableTextChangeCasePatch(
+	store: Store<ViewerState>,
+	el: PptxElement,
+	mode: ChangeCaseMode,
+): Partial<PptxElement> | undefined {
+	if (el.type !== 'table') {
+		return undefined;
+	}
+	return tableCellsChangeCasePatch(el, selectedCells(store.get()), mode);
 }

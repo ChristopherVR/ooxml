@@ -14,9 +14,10 @@ import {
 	getCellText,
 	setCellText,
 	resolveTableCellEditEnd,
-	applyTableCellsTextStyle,
+	tableCellsChangeCasePatch,
+	tableCellsTextStylePatch,
 } from 'ooxml-ui/pptx';
-import type { TableCellEditEnd, TableCellTextStyleUpdate } from 'ooxml-ui/pptx';
+import type { ChangeCaseMode, TableCellEditEnd, TableCellsFontUpdate } from 'ooxml-ui/pptx';
 
 import type { TableCellEditorState } from '../types';
 import { updateCellTextInRawXml } from '../utils/table-parse';
@@ -118,27 +119,38 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 	// Every run of every selected cell (the Shift+click range, else the active
 	// cell; the whole table when no cell is active), through the shared core
 	// op so `tableData`, the painted runs and `rawXml` change together.
-	const handleUpdateCellTextStyle = (styleUpdates: Record<string, unknown>) => {
-		if (!selectedElement || selectedElement.type !== 'table') {
-			return;
-		}
-		const cells = ts
+	const selectedTableCells = () =>
+		ts
 			? ts.selectedCells?.length
 				? ts.selectedCells
 				: [{ row: ts.rowIndex, col: ts.columnIndex }]
 			: undefined;
-		const next = applyTableCellsTextStyle(
-			selectedElement,
-			cells,
-			styleUpdates as TableCellTextStyleUpdate,
-		);
-		if (next === selectedElement) {
+
+	const handleUpdateCellTextStyle = (styleUpdates: Record<string, unknown>) => {
+		if (!selectedElement || selectedElement.type !== 'table') {
 			return;
 		}
-		ops.updateElementById(selectedElement.id, {
-			tableData: next.tableData,
-			...(next.rawXml ? { rawXml: next.rawXml } : {}),
-		});
+		const patch = tableCellsTextStylePatch(
+			selectedElement,
+			selectedTableCells(),
+			styleUpdates as TableCellsFontUpdate,
+		);
+		if (Object.keys(patch).length === 0) {
+			return;
+		}
+		ops.updateElementById(selectedElement.id, patch);
+		history.markDirty();
+	};
+
+	const handleTransformCellTextCase = (mode: ChangeCaseMode) => {
+		if (!selectedElement || selectedElement.type !== 'table') {
+			return;
+		}
+		const patch = tableCellsChangeCasePatch(selectedElement, selectedTableCells(), mode);
+		if (Object.keys(patch).length === 0) {
+			return;
+		}
+		ops.updateElementById(selectedElement.id, patch);
 		history.markDirty();
 	};
 
@@ -226,6 +238,7 @@ export function createTableStructHandlers(input: UseTableOperationsInput): Table
 	return {
 		handleCommitCellEdit,
 		handleUpdateCellTextStyle,
+		handleTransformCellTextCase,
 		handleResizeTableColumns,
 		handleResizeTableRow,
 		handleInsertTableRow,

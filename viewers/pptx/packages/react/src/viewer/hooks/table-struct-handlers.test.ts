@@ -228,6 +228,40 @@ describe('createTableStructHandlers', () => {
 			]);
 			expect(rows[0].cells[2].style?.bold).toBeUndefined();
 		});
+
+		it('applies highlight, character spacing, text shadow and change case to selected cells', () => {
+			const input = createMockInput({
+				tableEditorState: {
+					rowIndex: 0,
+					columnIndex: 0,
+					selectedCells: [{ row: 0, col: 0 }],
+				},
+			});
+			const table = input.selectedElement as TablePptxElement;
+			table.tableData!.rows[0].cells[0].text = 'hello world';
+			table.tableData!.rows[0].cells[1].text = 'untouched';
+
+			const handlers = createTableStructHandlers(input);
+			handlers.handleUpdateCellTextStyle({
+				highlightColor: '#ffff00',
+				characterSpacing: 150,
+				textShadowColor: '#000000',
+			});
+			const styled = vi.mocked(input.ops.updateElementById).mock.calls[0][1] as TablePptxElement;
+			expect(styled.tableData!.rows[0].cells[0].textRuns).toMatchObject([
+				{
+					text: 'hello world',
+					highlightColor: '#ffff00',
+					characterSpacing: 150,
+					textShadowColor: '#000000',
+				},
+			]);
+
+			handlers.handleTransformCellTextCase('upper');
+			const cased = vi.mocked(input.ops.updateElementById).mock.calls[1][1] as TablePptxElement;
+			expect(cased.tableData!.rows[0].cells[0].text).toBe('HELLO WORLD');
+			expect(cased.tableData!.rows[0].cells[1].text).toBe('untouched');
+		});
 	});
 
 	describe('handleCommitCellEdit from the rich cell editor', () => {

@@ -3,6 +3,7 @@ import {
 	selectionBulletKind,
 	getInlineEditorSelectionResult,
 	getSelectionTextStyleFlags,
+	tableCellsTextFormat,
 	TEXT_DECORATION_FLAGS,
 } from 'ooxml-ui/pptx';
 import type { ElementBulletKind, SelectionTextStyleFlags, TextDecorationFlag } from 'ooxml-ui/pptx';
@@ -38,10 +39,32 @@ export function getEffectiveTextStyle(
 	if (hasTextProperties(element)) {
 		return element.textStyle;
 	}
-	if (element.type === 'table' && tableEditorState && element.tableData) {
-		const cell =
-			element.tableData.rows[tableEditorState.rowIndex]?.cells[tableEditorState.columnIndex];
-		return cell?.style as Partial<TextStyle> | undefined;
+	if (element.type === 'table' && element.tableData) {
+		const cells =
+			tableEditorState && tableEditorState.elementId === element.id
+				? tableEditorState.selectedCells?.length
+					? tableEditorState.selectedCells
+					: [{ row: tableEditorState.rowIndex, col: tableEditorState.columnIndex }]
+				: undefined;
+		const cell = tableEditorState
+			? element.tableData.rows[tableEditorState.rowIndex]?.cells[tableEditorState.columnIndex]
+			: undefined;
+		const format = tableCellsTextFormat(element, cells);
+		return {
+			...(cell?.style as Partial<TextStyle> | undefined),
+			bold: format.bold,
+			italic: format.italic,
+			underline: format.underline,
+			strikethrough: format.strikethrough,
+			...(format.fontSize !== undefined ? { fontSize: format.fontSize } : {}),
+			...(format.fontFamily ? { fontFamily: format.fontFamily } : {}),
+			...(format.color ? { color: format.color } : {}),
+			...(format.highlightColor ? { highlightColor: format.highlightColor } : {}),
+			...(format.characterSpacing !== undefined
+				? { characterSpacing: format.characterSpacing }
+				: {}),
+			...(format.textShadowColor ? { textShadowColor: format.textShadowColor } : {}),
+		};
 	}
 	return undefined;
 }

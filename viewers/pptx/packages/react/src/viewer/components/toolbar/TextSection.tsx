@@ -75,7 +75,7 @@ export function TextSection(p: TextSectionProps): React.ReactElement {
 			? (p.selectedElement.textSegments?.[0]?.style?.highlightColor ??
 				p.selectedElement.textStyle?.highlightColor ??
 				'#ffff00')
-			: '#ffff00';
+			: (effectiveTs?.highlightColor ?? '#ffff00');
 
 	return (
 		<>

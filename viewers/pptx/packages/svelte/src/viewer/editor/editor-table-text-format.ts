@@ -1,5 +1,9 @@
-import type { TableCellsTextFormat, TableCellTextStyleUpdate } from 'ooxml-ui/pptx';
-import { tableCellsTextFormat, tableCellsTextStylePatch } from 'ooxml-ui/pptx';
+import type { ChangeCaseMode, TableCellsFontUpdate, TableCellsTextFormat } from 'ooxml-ui/pptx';
+import {
+	tableCellsChangeCasePatch,
+	tableCellsTextFormat,
+	tableCellsTextStylePatch,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import type { EditorState } from './editor-state.svelte';
@@ -13,7 +17,7 @@ import type { EditorState } from './editor-state.svelte';
 export function tableTextFormatPatch(
 	editor: EditorState,
 	element: PptxElement,
-	build: (current: TableCellsTextFormat) => TableCellTextStyleUpdate,
+	build: (current: TableCellsTextFormat) => TableCellsFontUpdate,
 ): Partial<PptxElement> | undefined {
 	if (element.type !== 'table') {
 		return undefined;
@@ -21,6 +25,19 @@ export function tableTextFormatPatch(
 	const cells = editor.tableCells.cellsFor(element.id);
 	const range = cells.length > 0 ? cells : undefined;
 	return tableCellsTextStylePatch(element, range, build(tableCellsTextFormat(element, range)));
+}
+
+/** Rewrite the character case of every run in the selected cells of a table. */
+export function tableTextChangeCasePatch(
+	editor: EditorState,
+	element: PptxElement,
+	mode: ChangeCaseMode,
+): Partial<PptxElement> | undefined {
+	if (element.type !== 'table') {
+		return undefined;
+	}
+	const cells = editor.tableCells.cellsFor(element.id);
+	return tableCellsChangeCasePatch(element, cells.length > 0 ? cells : undefined, mode);
 }
 
 /** The ribbon's toggle state for a selected table (its first selected cell). */

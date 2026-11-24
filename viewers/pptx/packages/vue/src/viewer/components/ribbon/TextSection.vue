@@ -64,7 +64,7 @@ const currentHighlight = computed(() =>
 		? (props.selectedElement.textSegments?.[0]?.style?.highlightColor ??
 			props.selectedElement.textStyle?.highlightColor ??
 			'#ffff00')
-		: '#ffff00',
+		: (effectiveTs.value?.highlightColor ?? '#ffff00'),
 );
 
 function handleColorChange(color: string, ref?: PptxThemeColorRef): void {
@@ -161,11 +161,7 @@ function handleChangeCase(value: ChangeCaseMode): void {
 	if (!canFormat.value) {
 		return;
 	}
-	if (isTable.value) {
-		props.onUpdateTextStyle({ textCaps: value === 'upper' ? 'all' : 'none' });
-	} else {
-		props.onTransformTextCase(value);
-	}
+	props.onTransformTextCase(value);
 }
 </script>
 

@@ -1,3 +1,4 @@
+import type { ChangeCaseMode } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 /**
  * Shared types for useTableOperations and its sub-modules.
@@ -27,6 +28,7 @@ export interface TableStructHandlers {
 		text: string,
 	) => void;
 	handleUpdateCellTextStyle: (styleUpdates: Record<string, unknown>) => void;
+	handleTransformCellTextCase: (mode: ChangeCaseMode) => void;
 	handleResizeTableColumns: (elementId: string, newWidths: number[]) => void;
 	handleResizeTableRow: (elementId: string, rowIndex: number, newHeight: number) => void;
 	handleInsertTableRow: (position: 'above' | 'below') => void;

@@ -10,7 +10,11 @@ import {
 	elementPictureFilename,
 	rasterResultToPngBlob,
 } from 'ooxml-ui/pptx';
-import type { ListConversionScope, ResolvedKeyboardCustomization } from 'ooxml-ui/pptx';
+import type {
+	ChangeCaseMode,
+	ListConversionScope,
+	ResolvedKeyboardCustomization,
+} from 'ooxml-ui/pptx';
 import type { PptxHandler, PptxSlide, PptxElement, TextStyle } from 'pptx-viewer-core';
 import type React from 'react';
 import { useCallback, useMemo } from 'react';
@@ -398,12 +402,24 @@ export function useEditorOperations(input: UseEditorOperationsInput): EditorOper
 		[selectedElement, tableOps, ops],
 	);
 
+	const combinedUpdateTextCase = useCallback(
+		(caseMode: ChangeCaseMode) => {
+			if (selectedElement?.type === 'table') {
+				tableOps.handleTransformCellTextCase(caseMode);
+				return;
+			}
+			ops.updateSelectedTextCase(caseMode);
+		},
+		[selectedElement, tableOps, ops],
+	);
+
 	const combinedOps: ElementOperations = useMemo(
 		() => ({
 			...ops,
 			updateSelectedTextStyle: combinedUpdateTextStyle,
+			updateSelectedTextCase: combinedUpdateTextCase,
 		}),
-		[ops, combinedUpdateTextStyle],
+		[ops, combinedUpdateTextStyle, combinedUpdateTextCase],
 	);
 
 	// ── Format Painter ────────────────────────────────────────────────

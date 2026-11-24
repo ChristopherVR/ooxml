@@ -193,10 +193,10 @@ describe('textSection shared font extras', () => {
 		expect(onUpdateTextStyle).toHaveBeenCalledWith({ highlightColor: '#ffff00' });
 	});
 
-	it('falls back to the visual caps hint for table cells', async () => {
-		const onUpdateTextStyle = vi.fn();
+	it('routes changeCase through onTransformTextCase for table cells', async () => {
+		const onTransformTextCase = vi.fn();
 		const wrapper = mountSection({
-			onUpdateTextStyle,
+			onTransformTextCase,
 			selectedElement: {
 				id: 'table',
 				type: 'table',
@@ -209,7 +209,7 @@ describe('textSection shared font extras', () => {
 			tableEditorState: { elementId: 'table', rowIndex: 0, columnIndex: 0 },
 		});
 		await pick(wrapper, 'home.font.changeCase', 'upper');
-		expect(onUpdateTextStyle).toHaveBeenCalledWith({ textCaps: 'all' });
+		expect(onTransformTextCase).toHaveBeenCalledWith('upper');
 	});
 
 	it('applies line spacing, direction and columns from the paragraph selects', () => {

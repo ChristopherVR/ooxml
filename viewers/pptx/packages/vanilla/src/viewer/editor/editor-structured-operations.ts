@@ -89,15 +89,25 @@ export function createStructuredEditorOperations(deps: {
 				...(deps.transformCommittedText ? { transformText: deps.transformCommittedText } : {}),
 			});
 			const next = outcome.element;
+			const focusCell = outcome.edit ?? outcome.select;
+			const cellPatch = focusCell
+				? {
+						selectedTableCell: { row: focusCell.row, column: focusCell.col },
+						selectedTableCells: [{ row: focusCell.row, column: focusCell.col }],
+					}
+				: {};
 			if (next) {
 				deps.pushHistory();
-				deps.store.set(
-					replaceActiveElements(
+				deps.store.set({
+					...replaceActiveElements(
 						state,
 						mapActiveElement(state, id, () => next),
 					),
-				);
+					...cellPatch,
+				});
 				deps.commitChange();
+			} else if (focusCell) {
+				deps.store.set(cellPatch);
 			}
 			return outcome;
 		},

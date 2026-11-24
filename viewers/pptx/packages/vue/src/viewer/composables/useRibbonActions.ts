@@ -3,7 +3,7 @@ import type {
 	ChangeCaseMode,
 	InlineTextEditSnapshot,
 	ListConversionScope,
-	TableCellTextStyleUpdate,
+	TableCellsFontUpdate,
 } from 'ooxml-ui/pptx';
 import {
 	applyTextStyleUpdate,
@@ -12,9 +12,10 @@ import {
 	getInlineEditorSelectionResult,
 	remapTextToSegments,
 	setElementBullets,
+	tableCellsChangeCasePatch,
+	tableCellsTextStylePatch,
 	transformTextCase,
 	transformInlineListCase,
-	applyTableCellsTextStyle,
 } from 'ooxml-ui/pptx';
 import { hasTextProperties } from 'pptx-viewer-core';
 import type { PptxElement, PptxSlide, TablePptxElement, TextStyle } from 'pptx-viewer-core';
@@ -111,25 +112,28 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 	 * Shift+click range, else the active cell; the whole table when no cell of
 	 * it is selected), through the shared core op.
 	 */
-	function applyCellTextStyle(el: TablePptxElement, updates: Partial<TextStyle>): void {
+	function selectedTableCellsFor(el: TablePptxElement) {
 		const sel = tableSelection.value;
+		return sel && sel.elementId === el.id
+			? sel.selectedCells?.length
+				? sel.selectedCells
+				: [{ row: sel.rowIndex, col: sel.columnIndex }]
+			: undefined;
+	}
+
+	function applyCellTextStyle(el: TablePptxElement, updates: Partial<TextStyle>): void {
 		if (!canEdit() || !el.tableData) {
 			return;
 		}
-		const cells =
-			sel && sel.elementId === el.id
-				? sel.selectedCells?.length
-					? sel.selectedCells
-					: [{ row: sel.rowIndex, col: sel.columnIndex }]
-				: undefined;
-		const next = applyTableCellsTextStyle(el, cells, updates as TableCellTextStyleUpdate);
-		if (next === el) {
+		const patch = tableCellsTextStylePatch(
+			el,
+			selectedTableCellsFor(el),
+			updates as TableCellsFontUpdate,
+		);
+		if (Object.keys(patch).length === 0) {
 			return;
 		}
-		ops.updateElement(el.id, {
-			tableData: next.tableData,
-			...(next.rawXml ? { rawXml: next.rawXml } : {}),
-		} as Partial<PptxElement>);
+		ops.updateElement(el.id, patch as Partial<PptxElement>);
 	}
 
 	function ribbonUpdateTextStyle(updates: Partial<TextStyle>): void {
@@ -220,7 +224,20 @@ export function useRibbonActions(input: UseRibbonActionsInput) {
 			return;
 		}
 		const el = activeSlide.value?.elements.find((e) => e.id === id);
-		if (!el || !hasTextProperties(el)) {
+		if (!el) {
+			return;
+		}
+		if (el.type === 'table') {
+			if (!canEdit()) {
+				return;
+			}
+			const patch = tableCellsChangeCasePatch(el, selectedTableCellsFor(el), mode);
+			if (Object.keys(patch).length > 0) {
+				ops.updateElement(el.id, patch as Partial<PptxElement>);
+			}
+			return;
+		}
+		if (!hasTextProperties(el)) {
 			return;
 		}
 		// Reconcile the uncontrolled editor's current draft before transforming case.

@@ -247,6 +247,29 @@ describe('cellRunStyle', () => {
 		expect(cellRunStyle({ text: 'tight', characterSpacing: -75 }).letterSpacing).toBe('-1px');
 		expect(cellRunStyle({ text: 'plain' })).not.toHaveProperty('letterSpacing');
 	});
+
+	it('emits normal weight when a run explicitly turns bold off inside a bold cell', () => {
+		const boldCell = { fontWeight: 700 };
+		expect(cellRunStyle({ text: 'off', bold: false }, boldCell).fontWeight).toBe('normal');
+		expect(cellRunStyle({ text: 'off', bold: false }).fontWeight).toBe('normal');
+		expect(
+			cellRunStyle({ text: 'light', fontFamily: 'DM Sans Light', bold: false }, boldCell)
+				.fontWeight,
+		).toBe(300);
+	});
+
+	it('paints per-run highlight colour and text shadow', () => {
+		expect(cellRunStyle({ text: 'hi', highlightColor: '#FFFF00' }).backgroundColor).toBe('#FFFF00');
+		expect(
+			cellRunStyle({
+				text: 'sh',
+				textShadowColor: '#112233',
+				textShadowBlur: 3,
+				textShadowOffsetX: 2,
+				textShadowOffsetY: 4,
+			}).textShadow,
+		).toBe('2px 4px 3px #112233');
+	});
 });
 
 describe('getDiagonalBorders', () => {

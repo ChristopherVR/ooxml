@@ -42,4 +42,34 @@ describe('ribbon Font group on a table', () => {
 			tableFontRequestPatch({ ...table, type: 'shape' } as never, null, 'home.font.bold', 0),
 		).toBeUndefined();
 	});
+
+	it('applies highlight, character spacing, text shadow and change case to selected cells', () => {
+		const selection = {
+			elementId: 't',
+			rowIndex: 0,
+			columnIndex: 0,
+			selectedCells: [{ row: 0, col: 0 }],
+		};
+		const hl = tableFontRequestPatch(table, selection, 'home.font.highlightColor', '#ffff00');
+		expect((hl as Partial<TablePptxElement>).tableData!.rows[0]!.cells[0]!.textRuns).toMatchObject([
+			{ text: 'a', highlightColor: '#ffff00' },
+		]);
+
+		const spc = tableFontRequestPatch(table, selection, 'home.font.characterSpacing', 75);
+		expect((spc as Partial<TablePptxElement>).tableData!.rows[0]!.cells[0]!.textRuns).toMatchObject(
+			[{ text: 'a', characterSpacing: 75 }],
+		);
+
+		const shOn = tableFontRequestPatch(table, selection, 'home.font.shadow', undefined);
+		const withShadow = { ...table, ...shOn } as TablePptxElement;
+		expect(tableFontStyle(withShadow, selection)?.textShadowColor).toBe('#000000');
+		const shOff = tableFontRequestPatch(withShadow, selection, 'home.font.shadow', undefined);
+		expect(
+			(shOff as Partial<TablePptxElement>).tableData!.rows[0]!.cells[0]!.style?.textShadowColor,
+		).toBeUndefined();
+
+		const cased = tableFontRequestPatch(table, selection, 'home.font.changeCase', 'upper');
+		expect((cased as Partial<TablePptxElement>).tableData!.rows[0]!.cells[0]!.text).toBe('A');
+		expect((cased as Partial<TablePptxElement>).tableData!.rows[0]!.cells[1]!.text).toBe('b');
+	});
 });

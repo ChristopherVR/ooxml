@@ -213,7 +213,7 @@ export class RibbonFontControlsComponent {
 	protected fontRequest(event: Event): void {
 		const { id, value, ref } = (event as RibbonHomeRequestEvent).detail;
 		if (this.tableRequest(id, value)) {
-			if (id === 'home.font.fontColor') {
+			if (id === 'home.font.fontColor' || id === 'home.font.highlightColor') {
 				this.recentColors?.push(String(value));
 			}
 			return;

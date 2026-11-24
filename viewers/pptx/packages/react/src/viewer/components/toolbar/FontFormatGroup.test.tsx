@@ -148,12 +148,12 @@ describe('font extras', () => {
 		expect(props.onUpdateTextStyle).toHaveBeenLastCalledWith({ highlightColor: '#ffff00' });
 	});
 
-	it('falls back to the all-caps hint for a table cell', () => {
+	it('routes changeCase through onTransformTextCase for a table cell', () => {
 		const { props } = mountGroup({ isTable: true });
 		act(() => slot('changeCase').querySelector('button')!.click());
 		act(() => slot('changeCase').querySelector<HTMLElement>('[data-value="upper"]')!.click());
-		expect(props.onUpdateTextStyle).toHaveBeenLastCalledWith({ textCaps: 'all' });
-		expect(props.onTransformTextCase).not.toHaveBeenCalled();
+		expect(props.onTransformTextCase).toHaveBeenCalledWith('upper');
+		expect(props.onUpdateTextStyle).not.toHaveBeenCalled();
 	});
 
 	it('disables the extras with the rest of the strip when nothing can be formatted', () => {

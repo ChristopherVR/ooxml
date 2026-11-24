@@ -1,5 +1,5 @@
 import type { ChangeCaseMode, ListConversionScope } from 'ooxml-ui/pptx';
-import { stepFontSizePt, transformInlineListCase } from 'ooxml-ui/pptx';
+import { stepFontSizePt, tableTextShadowUpdate, transformInlineListCase } from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef, TextStyle } from 'pptx-viewer-core';
 
 import type { Store, ViewerState } from '../state';
@@ -27,7 +27,7 @@ import {
 	toggleListType,
 } from './editor-paragraph-mutations';
 import { recordRecentColor } from './editor-recent-colors';
-import { tableTextFormatPatch } from './editor-table-text-format';
+import { tableTextChangeCasePatch, tableTextFormatPatch } from './editor-table-text-format';
 
 /**
  * Character + paragraph formatting actions for the ribbon's Home > Font and
@@ -86,7 +86,12 @@ export function createTextActions(
 		toggleItalic: () => toggle('italic'),
 		toggleUnderline: () => toggle('underline'),
 		toggleStrikethrough: () => toggle('strikethrough'),
-		toggleTextShadow: () => applyToSelected((el) => toggleTextShadow(el)),
+		toggleTextShadow: () =>
+			applyToSelected(
+				(el) =>
+					table(el, (current) => tableTextShadowUpdate(Boolean(current.textShadowColor))) ??
+					toggleTextShadow(el),
+			),
 		changeFontSize: (delta) =>
 			applyToSelected(
 				(el) =>
@@ -111,18 +116,39 @@ export function createTextActions(
 		},
 		setHighlightColor: (color) => {
 			recordRecentColor(store, color);
-			applyToSelected((el) => setHighlightColor(el, color));
+			applyToSelected(
+				(el) => table(el, () => ({ highlightColor: color })) ?? setHighlightColor(el, color),
+			);
 		},
-		setCharacterSpacing: (value) => applyToSelected((el) => setCharacterSpacing(el, value)),
+		setCharacterSpacing: (value) =>
+			applyToSelected(
+				(el) => table(el, () => ({ characterSpacing: value })) ?? setCharacterSpacing(el, value),
+			),
 		changeCase: (mode) =>
 			applyToSelected((el, snapshot) => {
+				const tablePatch = tableTextChangeCasePatch(store, el, mode);
+				if (tablePatch) {
+					return tablePatch;
+				}
 				if (!snapshot) {
 					return changeTextCase(el, mode);
 				}
 				const { text, textSegments } = transformInlineListCase(snapshot, null, mode);
 				return { text, textSegments };
 			}),
-		clearFormatting: () => applyToSelected((el) => clearFormatting(el)),
+		clearFormatting: () =>
+			applyToSelected(
+				(el) =>
+					table(el, () => ({
+						bold: false,
+						italic: false,
+						underline: false,
+						strikethrough: false,
+						highlightColor: undefined,
+						characterSpacing: 0,
+						...tableTextShadowUpdate(true),
+					})) ?? clearFormatting(el),
+			),
 		patchSelectedTextStyle: (patch) => applyToSelected((el) => patchTextStyle(el, patch)),
 		toggleBulletList: () =>
 			applyToSelected((el, snapshot) => toggleListType(el, 'bullet', snapshot, listOptions())),

@@ -1,11 +1,21 @@
 <script lang="ts">
 	import { hasTextProperties } from 'pptx-viewer-core';
-	import { fontHomeControls, homeSnapshotTranslator, textColorOf,transformInlineListCase } from 'ooxml-ui/pptx';
-	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
+	import {
+		fontHomeControls,
+		homeSnapshotTranslator,
+		tableTextShadowUpdate,
+		textColorOf,
+		transformInlineListCase,
+	} from 'ooxml-ui/pptx';
+	import type { ChangeCaseMode, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import FontPickerGroup from './FontPickerGroup.svelte';
-	import { tableTextFormatOf, tableTextFormatPatch } from '../../../editor/editor-table-text-format';
+	import {
+		tableTextChangeCasePatch,
+		tableTextFormatOf,
+		tableTextFormatPatch,
+	} from '../../../editor/editor-table-text-format';
 	import {
 		adjustFontSizePatch,
 		changeCasePatch,
@@ -43,16 +53,16 @@
 			italic: Boolean(table?.italic ?? style?.italic),
 			underline: Boolean(table?.underline ?? style?.underline),
 			strikethrough: Boolean(table?.strikethrough ?? style?.strikethrough),
-			shadow: hasTextShadow(element),
-			characterSpacing: style?.characterSpacing,
+			shadow: table ? Boolean(table.textShadowColor) : hasTextShadow(element),
+			characterSpacing: table ? table.characterSpacing : style?.characterSpacing,
 			fontColor: {
-				value: element ? textColorOf(element) : '#000000',
-				ref: style?.colorRef,
+				value: table?.color ?? (element ? textColorOf(element) : '#000000'),
+				ref: table ? undefined : style?.colorRef,
 				themeColors: editor.themeColorMap,
 				recent: editor.mruColors,
 			},
 			highlight: {
-				value: (element ? highlightColorOf(element) : '') || '#ffff00',
+				value: (table?.highlightColor ?? (element ? highlightColorOf(element) : '')) || '#ffff00',
 				recent: editor.mruColors,
 			},
 		}),
@@ -61,6 +71,14 @@
 
 	/** Table cells take the character formats through the shared range op. */
 	function requestTable(name: string, value: unknown): boolean {
+		if (!table) {
+			return false;
+		}
+		if (name === 'changeCase') {
+			const mode = value as ChangeCaseMode;
+			editor.patchSelected((current) => tableTextChangeCasePatch(editor, current, mode) ?? {});
+			return true;
+		}
 		const size = (pt: number) => ({ fontSize: Math.min(400, Math.max(1, pt)) });
 		const build = (current: NonNullable<typeof table>) => {
 			switch (name) {
@@ -69,21 +87,37 @@
 				case 'underline':
 				case 'strikethrough':
 					return { [name]: !current[name] };
+				case 'shadow':
+					return tableTextShadowUpdate(Boolean(current.textShadowColor));
+				case 'clearFormatting':
+					return {
+						bold: false,
+						italic: false,
+						underline: false,
+						strikethrough: false,
+						highlightColor: undefined,
+						characterSpacing: 0,
+						...tableTextShadowUpdate(true),
+					};
 				case 'increaseFontSize':
 					return size((current.fontSize ?? 18) + 2);
 				case 'decreaseFontSize':
 					return size((current.fontSize ?? 18) - 2);
 				case 'fontColor':
 					return { color: String(value) };
+				case 'highlightColor':
+					return { highlightColor: String(value) };
+				case 'characterSpacing':
+					return { characterSpacing: Number(value) };
 				default:
 					return undefined;
 			}
 		};
-		if (!table || build(table) === undefined) {
+		if (build(table) === undefined) {
 			return false;
 		}
 		editor.patchSelected((current) => tableTextFormatPatch(editor, current, (now) => build(now) ?? {}) ?? {});
-		if (name === 'fontColor') {
+		if (name === 'fontColor' || name === 'highlightColor') {
 			editor.recordRecentColor(String(value));
 		}
 		return true;

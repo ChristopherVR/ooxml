@@ -48,7 +48,7 @@ const TEXT_SHADOW_OFF = {
  */
 export function FontFormatGroup(p: FontFormatGroupProps): React.ReactElement {
 	const { canMut, canFormat, isTextEl, selectedElement, tableEditorState, effectiveTs } = p;
-	const { onUpdateTextStyle, onTransformTextCase, isTable, currentColor, currentHighlight } = p;
+	const { onUpdateTextStyle, onTransformTextCase, currentColor, currentHighlight } = p;
 	const themeColors = useThemeColorMap();
 	const { recentColors, pushColor } = useRecentColors();
 	// Pressed state over the whole element; the DOM selection is only read at
@@ -100,13 +100,7 @@ export function FontFormatGroup(p: FontFormatGroupProps): React.ReactElement {
 					onUpdateTextStyle({ characterSpacing: Number(value) });
 					return;
 				case 'home.font.changeCase':
-					if (isTable) {
-						// Table-cell text is plain (no textSegments to rewrite); fall
-						// back to the visual all-caps render hint.
-						onUpdateTextStyle({ textCaps: value === 'upper' ? 'all' : 'none' });
-					} else {
-						onTransformTextCase(value as ChangeCaseMode);
-					}
+					onTransformTextCase(value as ChangeCaseMode);
 					return;
 				case 'home.font.fontColor':
 					onUpdateTextStyle({ color: String(value), colorRef: intent?.ref });
@@ -159,7 +153,6 @@ export function FontFormatGroup(p: FontFormatGroupProps): React.ReactElement {
 			shadow,
 			onUpdateTextStyle,
 			onTransformTextCase,
-			isTable,
 			pushColor,
 		],
 	);

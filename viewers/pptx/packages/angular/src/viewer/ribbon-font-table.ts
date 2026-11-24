@@ -5,8 +5,19 @@
  * shared `tableCellsTextStylePatch`; the toggles read the first selected cell.
  * Pure (no DI), so it is testable without TestBed.
  */
-import type { TableCellRef, TableCellsTextFormat, TableCellTextStyleUpdate } from 'ooxml-ui/pptx';
-import { stepFontSizePt, tableCellsTextFormat, tableCellsTextStylePatch } from 'ooxml-ui/pptx';
+import type {
+	ChangeCaseMode,
+	TableCellRef,
+	TableCellsFontUpdate,
+	TableCellsTextFormat,
+} from 'ooxml-ui/pptx';
+import {
+	stepFontSizePt,
+	tableCellsChangeCasePatch,
+	tableCellsTextFormat,
+	tableCellsTextStylePatch,
+	tableTextShadowUpdate,
+} from 'ooxml-ui/pptx';
 import type { PptxElement, TablePptxElement, TextStyle } from 'pptx-viewer-core';
 
 import { fontHomeAction } from './ribbon-font-home';
@@ -42,6 +53,9 @@ export function tableFontStyle(
 		...(format.fontSize === undefined ? {} : { fontSize: (format.fontSize * 96) / 72 }),
 		...(format.fontFamily ? { fontFamily: format.fontFamily } : {}),
 		...(format.color ? { color: format.color } : {}),
+		...(format.highlightColor ? { highlightColor: format.highlightColor } : {}),
+		...(format.characterSpacing !== undefined ? { characterSpacing: format.characterSpacing } : {}),
+		...(format.textShadowColor ? { textShadowColor: format.textShadowColor } : {}),
 	};
 }
 
@@ -49,22 +63,37 @@ function tableUpdate(
 	id: string,
 	value: unknown,
 	current: TableCellsTextFormat,
-): TableCellTextStyleUpdate | undefined {
+): TableCellsFontUpdate | undefined {
 	const size = (pt: number) => ({ fontSize: Math.min(400, Math.max(1, pt)) });
 	const action = fontHomeAction(id as Parameters<typeof fontHomeAction>[0]);
 	if (action?.kind === 'toggle') {
 		return { [action.flag]: !current[action.flag] };
+	}
+	if (action?.kind === 'shadow') {
+		return tableTextShadowUpdate(Boolean(current.textShadowColor));
 	}
 	if (action?.kind === 'step') {
 		const step = action.direction === 1 ? 'increase' : 'decrease';
 		return size(stepFontSizePt(current.fontSize ?? 18, step));
 	}
 	if (action?.kind === 'clear') {
-		return { bold: false, italic: false, underline: false, strikethrough: false };
+		return {
+			bold: false,
+			italic: false,
+			underline: false,
+			strikethrough: false,
+			highlightColor: undefined,
+			characterSpacing: 0,
+			...tableTextShadowUpdate(true),
+		};
 	}
 	switch (id) {
 		case 'home.font.fontColor':
 			return { color: String(value) };
+		case 'home.font.highlightColor':
+			return { highlightColor: String(value) };
+		case 'home.font.characterSpacing':
+			return { characterSpacing: Number(value) };
 		case 'home.font.fontFamily':
 			return { fontFamily: String(value) };
 		case 'home.font.fontSize':
@@ -89,6 +118,9 @@ export function tableFontRequestPatch(
 		return undefined;
 	}
 	const cells = tableFontCells(element, selection);
+	if (id === 'home.font.changeCase') {
+		return tableCellsChangeCasePatch(element, cells, value as ChangeCaseMode);
+	}
 	const update = tableUpdate(id, value, tableCellsTextFormat(element, cells));
 	return update ? tableCellsTextStylePatch(element, cells, update) : undefined;
 }

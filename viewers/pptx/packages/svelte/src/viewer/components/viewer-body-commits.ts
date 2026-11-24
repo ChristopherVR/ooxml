@@ -57,14 +57,20 @@ export function createEditCommits(editor: EditorState): EditCommitHandlers {
 			}
 			if (end) {
 				// The rich cell editor: runs, an appended row or a grid paste, as one patch.
-				const next = resolveTableCellEditEnd(table, rowIndex, cellIndex, end, {
+				const outcome = resolveTableCellEditEnd(table, rowIndex, cellIndex, end, {
 					transformText: (text, previous) => editor.transformCommittedText(text, previous),
-				}).element;
+				});
+				const next = outcome.element;
 				if (next) {
 					editor.applyElementPatch(id, {
 						tableData: next.tableData,
 						...(next.rawXml ? { rawXml: next.rawXml } : {}),
 					});
+				}
+				const target = outcome.edit ?? outcome.select;
+				const tableData = (next ?? table).tableData;
+				if (target && tableData) {
+					editor.tableCells.begin(id, { rowIndex: target.row, columnIndex: target.col }, tableData);
 				}
 				return;
 			}
