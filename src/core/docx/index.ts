@@ -119,6 +119,11 @@ export * from './review-formatting-display';
 export * from './review-document-formatting';
 export * from './format-change-description';
 export {
+	autoCorrectTextInput,
+	type AutoCorrectAction,
+	type AutoCorrectOptions,
+} from './autocorrect';
+export {
 	acceptAllRevisions,
 	acceptRevision,
 	findRevision,

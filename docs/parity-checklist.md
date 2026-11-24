@@ -527,7 +527,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`docx/content-control-model.ts`).
 - [x] **P2** Hyperlinks to http, https, mailto, tel and ftp targets open on Ctrl+click, as in Word;
       script and disguised schemes are refused (`docx/hyperlink.test.ts`).
-- [ ] **P1** No AutoCorrect or AutoFormat as you type (smart quotes, automatic lists).
+- [x] **P1** AutoCorrect and AutoFormat as you type: smart quotes, automatic bulleted and numbered
+      lists (`- `, `* `, `1. `, `1) `), em/en dashes, ellipsis, common symbols (`(c)`, `(r)`,
+      `(tm)`, arrows), fractions (`1/2`, `1/4`, `3/4`) and common English typos, with single-step
+      Undo back to the raw typed characters (`src/core/docx/autocorrect.ts`,
+      `src/ui/src/docx/autocorrect-plugin.ts`; evidence: `autocorrect.test.ts`,
+      `autocorrect-plugin.test.ts`). User-editable AutoCorrect dictionary UI remains open.
 - [ ] **P1** Collaboration covers the body and comments; headers, footers and notes are
       incomplete, table commands are off during collaboration, and there are no mentions.
 - [ ] **P2** Customize Ribbon can show and hide, not reorder; Options are not persisted.

@@ -25,6 +25,7 @@ import { sectionBreaksPlugin } from './section-commands';
 import { trackChangesPlugin } from './track-changes-mode';
 import { reviewRunMarksPlugin } from './review-run-marks';
 import { wordPastePlugin } from './word-paste';
+import { autoCorrectPlugin } from './autocorrect-plugin';
 import { PasteController, pasteOptionsPlugin } from './paste-options';
 import { pasteOptionsButtonPlugin, type PasteOptionsButtonHost } from './paste-options-button';
 
@@ -88,6 +89,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		formFieldViewPlugin(() => host.model()),
 		symbolFontPlugin(),
 		positionalTabInputPlugin(),
+		autoCorrectPlugin(() => host.model()),
 		reviewRunMarksPlugin(() => host.reviewDisplayMode()),
 		tabStopsPlugin(),
 		keymap({
