@@ -46,9 +46,9 @@ export async function openEditablePackage(
 			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package has a VBA project but is not macro-enabled.');
 		if (isSignaturePart(decoded))
 			fail('UNSUPPORTED_EDIT_PACKAGE', 'The package still has digital signature parts.');
-		// Preparation removes only the standard signature layout. A signature relationship that is
-		// left (in a part's own .rels), or a VBA relationship in a package that does not advertise
-		// macros, would be saved as stale or inconsistent data: refuse the edit instead.
+		// Defense in depth: preparation strips digital signatures (standard and non-standard);
+		// any remaining signature relationship, or a VBA relationship in a package that does not
+		// advertise macros, would be saved as stale or inconsistent data, so refuse the edit.
 		if (path === '_rels/.rels' || /(^|\/)\_rels\/[^/]+\.rels$/.test(path)) {
 			const source =
 				path === '_rels/.rels' ? '' : path.replace(/(^|\/)\_rels\/([^/]+)\.rels$/, '$1$2');

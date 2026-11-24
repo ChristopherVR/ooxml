@@ -3,6 +3,7 @@ import { operationStep, withOperationMemory } from './memory-budget';
 import { visioXml, related } from './parts';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { prepareVisioPackageForEdit } from './package-kind';
+import { convertVsdxToTemplate } from './save-template';
 import { serializeEditedXml } from './edit-text';
 import { masterTemplate, replaceScopedPlainText } from './edit-text-scope';
 import { measuresOwnText, refreshTextSizes, type TextSizeTarget } from './edit-text-size';
@@ -157,6 +158,8 @@ export interface EditVsdxOptions {
 	maxEdits?: number;
 	maxTextCharacters?: number;
 	maxOutputBytes?: number;
+	/** Save the edited package as a Visio template (`.vstx` or `.vstm`) instead of a drawing. */
+	saveAsTemplate?: boolean;
 }
 export interface EditVsdxResult {
 	bytes: Uint8Array;
@@ -220,12 +223,27 @@ async function editVsdxWith(
 					},
 				]
 			: []),
-		...(prepared.templateConverted
+		...(prepared.templateConverted && !options.saveAsTemplate
 			? [{ code: 'TEMPLATE_SAVED_AS_DRAWING', message: 'The template was saved as a drawing.' }]
 			: []),
 	];
-	const final = await editWithDeletionsLast(prepared.bytes, snapshot, options, clock);
-	return notes.length ? { ...final, diagnostics: [...notes, ...final.diagnostics] } : final;
+	const { saveAsTemplate, ...innerOptions } = options;
+	const final = await editWithDeletionsLast(prepared.bytes, snapshot, innerOptions, clock);
+	const output = saveAsTemplate
+		? {
+				...final,
+				bytes: await convertVsdxToTemplate(final.bytes, {
+					...(options.limits ? { limits: options.limits } : {}),
+					...(options.maxOutputBytes !== undefined
+						? { maxOutputBytes: options.maxOutputBytes }
+						: {}),
+				}),
+				changedParts: final.changedParts.includes('[Content_Types].xml')
+					? final.changedParts
+					: [...final.changedParts, '[Content_Types].xml'],
+			}
+		: final;
+	return notes.length ? { ...output, diagnostics: [...notes, ...output.diagnostics] } : output;
 }
 
 /**

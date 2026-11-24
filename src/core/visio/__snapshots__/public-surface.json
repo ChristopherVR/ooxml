@@ -84,6 +84,7 @@
 	"checkVisioAlternativeText",
 	"collectVisioWebfontRuns",
 	"convertVisioMetafile",
+	"convertVsdxToTemplate",
 	"createProjection",
 	"createVsdx",
 	"deserializeVisioClipboard",

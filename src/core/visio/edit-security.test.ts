@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { describe, expect, it, vi } from 'vitest';
 import { editVsdx } from './edit';
-import { fixture, shape, relations } from './test-fixtures';
+import { fixture, relation, shape, relations } from './test-fixtures';
 const command = { type: 'replace-plain-text' as const, pageId: '0', shapeId: '1', text: 'New' };
 const input = (edit?: (zip: JSZip) => void) =>
 	fixture({
@@ -103,17 +103,36 @@ describe('VSDX edit security boundaries', () => {
 				(await editVsdx(await input(change), [command])).diagnostics.map((item) => item.code),
 			).toContain('SIGNATURE_REMOVED');
 	});
-	it('refuses a signature relationship it cannot remove', async () => {
+	it('strips a non-standard signature relationship in a part .rels and refuses unadvertised VBA', async () => {
 		const signed = await input((zip) => {
 			zip.file('signature.bin', 'opaque');
 			zip.file(
 				'visio/_rels/document.xml.rels',
 				relations(
-					'<Relationship Id="sig" Type="http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature" Target="../signature.bin"/>',
+					relation('rId1', 'pages', 'pages/pages.xml') +
+						'<Relationship Id="sig" Type="http://schemas.openxmlformats.org/package/2006/relationships/digital-signature/signature" Target="../signature.bin"/>',
 				),
 			);
 		});
-		await expect(editVsdx(signed, [command])).rejects.toMatchObject({
+		const edited = await editVsdx(signed, [command]);
+		expect(edited.diagnostics.map((item) => item.code)).toContain('SIGNATURE_REMOVED');
+		const zip = await JSZip.loadAsync(edited.bytes);
+		expect(zip.file('signature.bin')).toBeNull();
+		expect(await zip.file('visio/_rels/document.xml.rels')!.async('string')).not.toContain(
+			'digital-signature',
+		);
+
+		const unadvertisedVba = await input((zip) => {
+			zip.file('visio/vbaProject.bin', new Uint8Array([1, 2, 3]));
+			zip.file(
+				'visio/_rels/document.xml.rels',
+				relations(
+					relation('rId1', 'pages', 'pages/pages.xml') +
+						'<Relationship Id="rId9" Type="http://schemas.microsoft.com/office/2006/relationships/vbaProject" Target="vbaProject.bin"/>',
+				),
+			);
+		});
+		await expect(editVsdx(unadvertisedVba, [command])).rejects.toMatchObject({
 			code: 'UNSUPPORTED_EDIT_PACKAGE',
 		});
 	});

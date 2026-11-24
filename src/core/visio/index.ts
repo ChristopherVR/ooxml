@@ -152,6 +152,7 @@ export {
 	type VisioClipboardSnapshot,
 } from './clipboard';
 export { createVsdx, type CreateVsdxOptions } from './create-document';
+export { convertVsdxToTemplate, type ConvertVsdxToTemplateOptions } from './save-template';
 export { VISIO_PATH_SEGMENT_LIMIT, type VisioPathCreateEdit } from './edit-path-commands';
 export {
 	VISIO_CONNECTOR_ROUTES,
