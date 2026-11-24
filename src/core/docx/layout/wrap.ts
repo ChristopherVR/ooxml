@@ -47,9 +47,22 @@ export function wrapExclusions(pages: LayoutPageBox[]): Map<number, Exclusion[]>
 		const list = (page.floats ?? [])
 			.filter((float) => wrapsText(float) && !float.inCell)
 			.map(floatExclusion);
-		// Floating tables (`w:tblpPr`): text may run on both sides, kept at their distances.
+		// Floating tables (`w:tblpPr`) and text frames (`w:framePr`): text wraps around their boxes.
 		for (const column of page.columns)
 			for (const block of column.blocks) {
+				if (block.kind === 'paragraph' && block.floating) {
+					const frame = block.floating;
+					if (frame.wrap === 'none' || frame.frameHeightPx === undefined) continue;
+					list.push({
+						xPx: page.marginLeftPx + column.xPx + (block.xPx ?? 0) - frame.hSpacePx,
+						yPx: page.marginTopPx + block.yPx - frame.vSpacePx,
+						widthPx: (block.widthPx ?? 0) + frame.hSpacePx * 2,
+						heightPx: frame.frameHeightPx + frame.vSpacePx * 2,
+						topAndBottom: frame.wrap === 'notBeside',
+						...(frame.wrap === 'around' ? { bothSides: true } : {}),
+					});
+					continue;
+				}
 				if (block.kind !== 'table' || !block.floating) continue;
 				const distance = block.floating;
 				list.push({

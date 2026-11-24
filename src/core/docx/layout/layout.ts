@@ -20,7 +20,10 @@ export function layoutDocument(input: LayoutDocumentInput, measurer: TextMeasure
 	const tables = input.sections.some((section) =>
 		section.blocks.some((block) => block.kind === 'table' && block.floating),
 	);
-	if (!pictures && !tables) return result;
+	const frames = input.sections.some((section) =>
+		section.blocks.some((block) => block.kind === 'paragraph' && block.textFrame),
+	);
+	if (!pictures && !tables && !frames) return result;
 	// Wrapped pictures and floating tables take room from the text, which can move their anchors:
 	// lay out again around them until their positions settle (usually one extra pass).
 	let exclusions = wrapExclusions(result.pages);

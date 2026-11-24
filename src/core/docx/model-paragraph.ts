@@ -1,8 +1,34 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { StJc, StTabJc, StTabTlc } from './generated/wml-simple-types';
+import type {
+	StHAnchor,
+	StHeightRule,
+	StJc,
+	StTabJc,
+	StTabTlc,
+	StVAnchor,
+	StWrap,
+	StXAlign,
+	StYAlign,
+} from './generated/wml-simple-types';
 import type { ContentControl } from './content-control-model';
 import type { Revision, TextRun } from './model-run';
 import type { SignedTwips, Twips } from './units';
+
+/** Text frame properties (`w:framePr`) for a non-drop-cap framed paragraph; read-only. */
+export interface ParagraphFrame {
+	widthTwips?: Twips;
+	heightTwips?: Twips;
+	heightRule?: StHeightRule;
+	xTwips?: SignedTwips;
+	yTwips?: SignedTwips;
+	xAlign?: StXAlign;
+	yAlign?: StYAlign;
+	hAnchor?: StHAnchor;
+	vAnchor?: StVAnchor;
+	hSpaceTwips?: Twips;
+	vSpaceTwips?: Twips;
+	wrap?: StWrap;
+}
 
 /** A paragraph tab stop (`w:tab`): position from the text margin, alignment and leader fill. */
 export interface TabStop {
@@ -87,6 +113,11 @@ export interface Paragraph {
 	 * paragraph that follows. `lines` is the number of text lines it spans.
 	 */
 	dropCap?: { style: 'drop' | 'margin'; lines: number; distanceTwips?: Twips };
+	/**
+	 * `w:framePr` for a non-drop-cap text frame; read-only (preserved in the source XML, not
+	 * written for new paragraphs). Drop caps use `dropCap` instead.
+	 */
+	frame?: ParagraphFrame;
 	/** `w:pBdr`; read-only (preserved in the source XML, not written for new paragraphs). */
 	borders?: import('./table-model').ParagraphBorders;
 	/** `w:shd/@w:fill` as `#rrggbb`; read-only like `borders`. */
@@ -135,6 +166,7 @@ export type ParagraphFormatting = Pick<
 	| 'autoSpaceDN'
 	| 'overflowPunct'
 	| 'outlineLevel'
+	| 'frame'
 	| 'borders'
 	| 'shadingFill'
 >;

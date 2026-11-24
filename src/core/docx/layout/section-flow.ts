@@ -4,6 +4,7 @@ import { NO_TWIPS } from './units';
 import { PageCursor } from './page-cursor';
 import { placeParagraph } from './flow-paragraph';
 import { placeTable } from './flow-table';
+import { placeTextFrame, sameTextFrame } from './flow-text-frame';
 import { resolveTableAutofit } from './table-autofit';
 import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout';
 import { layoutRow, stackParagraphs } from './table-layout';
@@ -242,7 +243,7 @@ export class SectionFlow {
 		const previous = index > 0 ? this.blocks[index - 1] : undefined;
 		if (index === 0 && !this.section.addParagraphSpacing)
 			return Math.max(0, layout.spacingBeforePx - (this.section.leadingSpacingAfterPx ?? 0));
-		if (previous?.kind !== 'paragraph') return layout.spacingBeforePx;
+		if (previous?.kind !== 'paragraph' || previous.textFrame) return layout.spacingBeforePx;
 		if (suppressesSpacing(previous, block)) return 0;
 		// Unless the document sets doNotUseHTMLParagraphAutoSpacing, Word leaves the larger of the space
 		// after the first paragraph and the space before the second (measured, spacing-probe.json), not
@@ -256,7 +257,11 @@ export class SectionFlow {
 		const block = this.blocks[index];
 		const next = this.blocks[index + 1];
 		return (
-			block?.kind === 'paragraph' && next?.kind === 'paragraph' && suppressesSpacing(block, next)
+			block?.kind === 'paragraph' &&
+			!block.textFrame &&
+			next?.kind === 'paragraph' &&
+			!next.textFrame &&
+			suppressesSpacing(block, next)
 		);
 	}
 
@@ -264,8 +269,9 @@ export class SectionFlow {
 	private requiredKeepHeight(index: number, depth = 0): number {
 		if (index >= this.blocks.length || depth > 64) return 0;
 		const block = expectDefined(this.blocks[index], 'keep-chain block index');
-		// A floating table takes no room from the flow.
+		// Floating tables and text frames take no room from the flow.
 		if (block.kind === 'table') return block.floating ? 0 : this.firstRowHeight(index);
+		if (block.textFrame) return 0;
 		const layout = this.paragraphLayout(index);
 		const before = this.spacingBeforeFor(index);
 		const own =
@@ -329,6 +335,18 @@ export class SectionFlow {
 				continue;
 			}
 			if (block.afterTableSectionBreak) this.cursor.endBalance();
+			if (block.textFrame) {
+				const group = [block];
+				while (index + 1 < this.blocks.length) {
+					const next = this.blocks[index + 1];
+					if (next?.kind !== 'paragraph' || !sameTextFrame(block.textFrame, next.textFrame)) break;
+					group.push(next);
+					index++;
+				}
+				placeTextFrame(this.cursor, group, block.textFrame, this.measurer, this.note);
+				if (this.resume?.afterBlock(index, this.cursor)) return;
+				continue;
+			}
 			const spacingBeforePx = this.spacingBeforeFor(index);
 			const layout = this.layoutAtCursor(
 				index,

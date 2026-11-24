@@ -67,7 +67,12 @@ function eligible(input: LayoutDocumentInput): boolean {
 	return section.blocks.every((block: LayoutBlock) => {
 		if (block.kind !== 'paragraph' || ids.has(block.id)) return false;
 		ids.add(block.id);
-		return !block.floats?.length && !block.footnotes?.length && !block.afterTableSectionBreak;
+		return (
+			!block.floats?.length &&
+			!block.textFrame &&
+			!block.footnotes?.length &&
+			!block.afterTableSectionBreak
+		);
 	});
 }
 

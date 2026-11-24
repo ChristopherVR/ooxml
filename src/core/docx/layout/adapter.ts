@@ -35,6 +35,7 @@ import {
 	usesModernFootnoteLayout,
 } from '../compatibility';
 import { foldDropCaps } from './adapt-drop-cap';
+import { adaptTextFrame } from './flow-text-frame';
 import { groupParagraphBorders, paragraphBox } from './adapt-paragraph-box';
 import { endnoteParagraphs, noteLabels, paragraphFootnotes } from './adapt-notes';
 import { isRunHiddenForReview } from '../review-formatting-display';
@@ -391,6 +392,9 @@ export function adaptDocumentModel(
 							...(model.doNotHyphenateCaps ? { doNotHyphenateCaps: true } : {}),
 						},
 					}
+				: {}),
+			...(!paragraph.dropCap && resolved.frame
+				? { textFrame: adaptTextFrame(resolved.frame) }
 				: {}),
 		};
 	}

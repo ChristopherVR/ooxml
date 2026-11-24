@@ -4,7 +4,7 @@ import type { LayoutBlock } from './input';
 /** Only layouts whose trial flow can preserve every indivisible unit are balanced. */
 export function canBalanceBlock(block: LayoutBlock): boolean {
 	if (block.kind === 'paragraph')
-		return !block.floats?.length && !block.runs.some((run) => run.breakAfter);
+		return !block.floats?.length && !block.textFrame && !block.runs.some((run) => run.breakAfter);
 	return (
 		block.rows.length > 0 &&
 		block.rows.every((row) =>

@@ -1,9 +1,18 @@
 import type {
 	Paragraph,
 	ParagraphFormatting,
+	ParagraphFrame,
 	ParagraphStyleCatalog,
 	ParagraphStyleDefinition,
 } from './model';
+import {
+	isStHAnchor,
+	isStHeightRule,
+	isStVAnchor,
+	isStWrap,
+	isStXAlign,
+	isStYAlign,
+} from './generated/wml-simple-types';
 import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
 import {
 	cachedResolver,
@@ -51,6 +60,39 @@ export function parseOutlineLevel(element: XmlElement | undefined): number | und
 	return value === 9 ? 0 : value + 1;
 }
 
+/** Non-drop-cap `w:framePr` text frame properties; returns undefined for drop caps or empty elements. */
+export function parseFrameProperties(element: XmlElement | undefined): ParagraphFrame | undefined {
+	if (!element) return undefined;
+	const dropCap = getW(element, 'dropCap');
+	if (dropCap === 'drop' || dropCap === 'margin') return undefined;
+	const frame: ParagraphFrame = {};
+	const widthTwips = twipValue(getW(element, 'w'));
+	const heightTwips = twipValue(getW(element, 'h'));
+	const heightRule = getW(element, 'hRule');
+	const xTwips = signedTwipValue(getW(element, 'x'));
+	const yTwips = signedTwipValue(getW(element, 'y'));
+	const xAlign = getW(element, 'xAlign');
+	const yAlign = getW(element, 'yAlign');
+	const hAnchor = getW(element, 'hAnchor');
+	const vAnchor = getW(element, 'vAnchor');
+	const hSpaceTwips = twipValue(getW(element, 'hSpace'));
+	const vSpaceTwips = twipValue(getW(element, 'vSpace'));
+	const wrap = getW(element, 'wrap');
+	if (widthTwips !== undefined) frame.widthTwips = widthTwips;
+	if (heightTwips !== undefined) frame.heightTwips = heightTwips;
+	if (isStHeightRule(heightRule)) frame.heightRule = heightRule;
+	if (xTwips !== undefined) frame.xTwips = xTwips;
+	if (yTwips !== undefined) frame.yTwips = yTwips;
+	if (isStXAlign(xAlign)) frame.xAlign = xAlign;
+	if (isStYAlign(yAlign)) frame.yAlign = yAlign;
+	if (isStHAnchor(hAnchor)) frame.hAnchor = hAnchor;
+	if (isStVAnchor(vAnchor)) frame.vAnchor = vAnchor;
+	if (hSpaceTwips !== undefined) frame.hSpaceTwips = hSpaceTwips;
+	if (vSpaceTwips !== undefined) frame.vSpaceTwips = vSpaceTwips;
+	if (isStWrap(wrap)) frame.wrap = wrap;
+	return Object.keys(frame).length > 0 ? frame : undefined;
+}
+
 /** Parses `w:pPr` formatting (shared by styles, docDefaults and direct paragraph properties). */
 export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormatting {
 	const result: ParagraphFormatting = {};
@@ -69,6 +111,8 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	if (suppressAutoHyphens !== undefined) result.suppressAutoHyphens = suppressAutoHyphens;
 	const outline = parseOutlineLevel(first(pPr, 'outlineLvl'));
 	if (outline !== undefined) result.outlineLevel = outline;
+	const frame = parseFrameProperties(first(pPr, 'framePr'));
+	if (frame) result.frame = frame;
 	const borders = parseParagraphBorders(first(pPr, 'pBdr'));
 	if (borders) result.borders = borders;
 	const shading = parseShadingFill(first(pPr, 'shd'));
@@ -167,7 +211,12 @@ function styleFormatting(
 		chainResolver(
 			catalog.styles,
 			(style) => style.formatting,
-			(resolved, formatting) => Object.assign({}, resolved, formatting),
+			(resolved, formatting) => {
+				const merged = Object.assign({}, resolved, formatting);
+				if (resolved.frame && formatting.frame)
+					merged.frame = { ...resolved.frame, ...formatting.frame };
+				return merged;
+			},
 			{},
 		),
 	)(styleId);
@@ -203,6 +252,7 @@ export function resolveParagraphFormatting(
 		'suppressAutoHyphens',
 		...EAST_ASIAN_TYPOGRAPHY_KEYS,
 		'outlineLevel',
+		'frame',
 		'borders',
 		'shadingFill',
 	];
@@ -210,7 +260,9 @@ export function resolveParagraphFormatting(
 		const value = paragraph[key];
 		if (value !== undefined) Object.assign(direct, { [key]: value });
 	}
+	const inheritedFrame = result.frame;
 	Object.assign(result, direct);
+	if (inheritedFrame && direct.frame) result.frame = { ...inheritedFrame, ...direct.frame };
 	// A direct alignment without its own `w:jc` value supersedes any inherited exact value.
 	if (paragraph.align !== undefined && paragraph.justification === undefined)
 		delete result.justification;

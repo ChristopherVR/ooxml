@@ -51,13 +51,22 @@ export interface LayoutLine {
 	firstTokenOffset?: number;
 }
 
+/** Wrap metadata for a framed paragraph (`w:framePr`) placed out of the text flow. */
+export interface LayoutParagraphFloating {
+	hSpacePx: number;
+	vSpacePx: number;
+	wrap: 'around' | 'notBeside' | 'none';
+	/** Total height of the frame (set on the first paragraph of a frame group for wrap exclusion). */
+	frameHeightPx?: number;
+}
+
 export interface LayoutParagraphBox {
 	kind: 'paragraph';
 	blockId: string;
 	yPx: number;
 	heightPx: number;
 	lines: LayoutLine[];
-	/** Local bounds for paragraphs projected from a nested table cell. */
+	/** Local bounds for paragraphs projected from a nested table cell or placed in a text frame. */
 	xPx?: number;
 	widthPx?: number;
 	/** The paragraph cannot take the caret on the page (no editing surface backs it). */
@@ -72,6 +81,8 @@ export interface LayoutParagraphBox {
 	tableFragmentBottomPx?: number;
 	/** Floating objects laid out in this paragraph's table cell (`cell-floats.ts`). */
 	floats?: LayoutCellFloat[];
+	/** A framed paragraph (`w:framePr`) placed out of the text flow; `xPx` and `widthPx` are set. */
+	floating?: LayoutParagraphFloating;
 }
 
 /**
@@ -147,9 +158,9 @@ export interface LayoutTableBox {
 
 export type LayoutBlockBox = LayoutParagraphBox | LayoutTableBox;
 
-/** Whether a box takes room in its column's flow (a floating table does not). */
+/** Whether a box takes room in its column's flow (floating tables and text frames do not). */
 export function inFlow(block: LayoutBlockBox): boolean {
-	return block.kind !== 'table' || !block.floating;
+	return !block.floating;
 }
 
 export interface LayoutColumnBox {

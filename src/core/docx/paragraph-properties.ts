@@ -9,7 +9,12 @@ import {
 	parseSignedTwips,
 	parseTwips,
 } from './simple-types';
-import { EAST_ASIAN_TYPOGRAPHY_KEYS, PAGINATION_KEYS, parseOutlineLevel } from './paragraph-styles';
+import {
+	EAST_ASIAN_TYPOGRAPHY_KEYS,
+	PAGINATION_KEYS,
+	parseFrameProperties,
+	parseOutlineLevel,
+} from './paragraph-styles';
 import { parseParagraphBorders, parseShadingFill } from './table-borders';
 
 export type DirectParagraphProperties = Omit<
@@ -59,6 +64,9 @@ export function parseDirectParagraphProperties(
 				? { distanceTwips: twipValue(getW(frame, 'hSpace'))! }
 				: {}),
 		};
+	} else {
+		const parsedFrame = parseFrameProperties(frame);
+		if (parsedFrame) paragraph.frame = parsedFrame;
 	}
 	const borders = parseParagraphBorders(first(props, 'pBdr'));
 	if (borders) paragraph.borders = borders;

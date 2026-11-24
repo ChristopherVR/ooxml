@@ -12,6 +12,7 @@ export type { Revision, TextRun } from './model-run';
 export type {
 	Paragraph,
 	ParagraphFormatting,
+	ParagraphFrame,
 	ParagraphStyleCatalog,
 	ParagraphStyleDefinition,
 	TabStop,

@@ -144,6 +144,28 @@ export interface LayoutHyphenation {
 	doNotHyphenateCaps?: boolean;
 }
 
+/** A text frame (`w:framePr`) placing one or more consecutive paragraphs out of the text flow. */
+export interface LayoutTextFrame {
+	/** Explicit frame width in px; undefined auto-sizes to content width up to the column width. */
+	widthPx?: number;
+	/** Explicit frame height in px, governed by `heightRule`. */
+	heightPx?: number;
+	heightRule?: 'auto' | 'exact' | 'atLeast';
+	relativeFromH: 'page' | 'margin' | 'column';
+	alignH?: 'left' | 'center' | 'right' | 'inside' | 'outside';
+	offsetXPx: number;
+	/** `paragraph` is the current vertical flow cursor (`vAnchor="text"` or `yAlign="inline"`). */
+	relativeFromV: 'page' | 'margin' | 'paragraph';
+	alignV?: 'top' | 'center' | 'bottom' | 'inside' | 'outside';
+	offsetYPx: number;
+	/** Horizontal distance kept between the frame and wrapped text (`w:hSpace`). */
+	hSpacePx: number;
+	/** Vertical distance kept between the frame and wrapped text (`w:vSpace`). */
+	vSpacePx: number;
+	/** `around` wraps beside, `notBeside` clears both sides, `none` leaves text unwrapped. */
+	wrap: 'around' | 'notBeside' | 'none';
+}
+
 export interface LayoutParagraph {
 	/** Tolerance for differences between browser and Word advance widths in DrawingML text boxes. */
 	wordFitTolerancePx?: number;
@@ -196,6 +218,8 @@ export interface LayoutParagraph {
 	kinsokuSettings?: import('../../text/kinsoku').KinsokuSettings;
 	/** Active automatic hyphenation settings (present when `w:autoHyphenation` is on and not suppressed). */
 	hyphenation?: LayoutHyphenation;
+	/** `w:framePr` (non-drop-cap): positioned text frame; consecutive matching frames group together. */
+	textFrame?: LayoutTextFrame;
 }
 
 /** A resolved cell border, ready to draw. */
