@@ -1,9 +1,11 @@
 import { type CellAddress, type CellRange, normalizeRange, rangeContains } from '../address';
+import { displayText } from '../display-text';
 import { getCell } from '../cells';
 import type { AutoFilter, AutoFilterColumn, FilterCriteria, Worksheet } from '../model';
 import { type EditContext, sheetAt } from './context';
 import { compileAutoFilter, setRowFiltered, type FilterEvalOptions } from '../filter-rows';
 import { createConditionalFormatEvaluator } from '../layout/cf-evaluator';
+import { applyTableFilter, tableFilterBounds } from '../slicer/table-filter';
 import { sortRows } from './sort';
 import { reapplySavedSort, savedSortAt } from './sort-reapply';
 
@@ -110,14 +112,59 @@ export function filterColumn(
 	);
 }
 
-/** Sets (or with `undefined` clears) any criteria of one auto-filter column and reapplies. */
+/** Sets (or with `undefined` clears) any criteria of one auto-filter or table column and reapplies. */
 export function setColumnCriteria(
 	ctx: EditContext,
 	s: number,
 	col: number,
 	criteria: FilterCriteria | undefined,
+	tableName?: string,
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
+	if (tableName !== undefined) {
+		const table = sheet.tables.find((t) => t.name === tableName);
+		if (!table || !table.headerRow || col < table.range.start.col || col > table.range.end.col)
+			throw new Error('The column is not inside the specified table.');
+		const offset = col - table.range.start.col;
+		const tableCol = table.columns[offset];
+		if (!tableCol) throw new Error('The column is not inside the specified table.');
+		ctx.run(
+			criteria ? 'Filter column' : 'Clear column filter',
+			'view',
+			[{ kind: 'sheet', sheet: s }],
+			() => {
+				if (!criteria) {
+					delete tableCol.filter;
+				} else if (criteria.values !== undefined || criteria.blank) {
+					tableCol.filter = {
+						values: [...(criteria.values ?? [])],
+						...(criteria.blank ? { blank: true as const } : {}),
+					};
+				} else {
+					const bounds = tableFilterBounds(table);
+					const probe: AutoFilter = { range: bounds, columns: [{ offset, ...criteria }] };
+					const match = compileAutoFilter(
+						ctx.workbook,
+						sheet,
+						probe,
+						filterOptions(ctx, sheet, probe),
+					);
+					const kept = new Set<string>();
+					let blank = false;
+					for (let row = bounds.start.row + 1; row <= bounds.end.row; row++) {
+						if (!match(row)) continue;
+						const text = displayText(ctx.workbook, getCell(sheet, row, col));
+						if (text === '') blank = true;
+						else kept.add(text);
+					}
+					tableCol.filter = { values: [...kept], ...(blank ? { blank: true as const } : {}) };
+				}
+				applyTableFilter(ctx.workbook, sheet, table);
+			},
+			{ sheet: s, structural: true },
+		);
+		return;
+	}
 	const filter = sheet.autoFilter;
 	if (!filter || col < filter.range.start.col || col > filter.range.end.col)
 		throw new Error('The column is not inside an auto-filter range.');

@@ -1,9 +1,15 @@
 // The model behind an AutoFilter drop-down: the value checklist, the colours on offer, the kind
 // of the column and the criteria the menu's presets build. Pure, so the DOM only paints it.
 import { getCell } from './cells';
-import { compileAutoFilter } from './filter-criteria';
-import { cellFillColor, cellFontColor } from './filter-criteria';
+import {
+	cellFillColor,
+	cellFontColor,
+	compileAutoFilter,
+	type FilterEvalOptions,
+} from './filter-criteria';
 import { displayText } from './display-text';
+import { createConditionalFormatEvaluator } from './layout/cf-evaluator';
+import { serialToDate } from './numfmt/date';
 import { isDateFormat } from './numfmt/format';
 import type {
 	AutoFilter,
@@ -12,6 +18,7 @@ import type {
 	CustomFilters,
 	FilterCriteria,
 	FilterOperator,
+	IconFilter,
 	Workbook,
 	Worksheet,
 } from './model';
@@ -19,11 +26,18 @@ import { styleAt } from './styles';
 
 export type FilterColumnKind = 'text' | 'number' | 'date';
 
+export interface FilterMenuIcon {
+	iconSet: IconFilter['iconSet'];
+	iconId: number;
+}
+
 export interface FilterMenuValue {
 	text: string;
 	checked: boolean;
 	/** Date or number value of the first row showing the text. */
 	number?: number;
+	/** Calendar date parts when the cell carries a date number format (for the Y/M/D tree). */
+	date?: { year: number; month: number; day: number };
 }
 
 export interface FilterMenuModel {
@@ -32,10 +46,12 @@ export interface FilterMenuModel {
 	values: FilterMenuValue[];
 	/** Present when the candidate rows hold blank cells. */
 	blanks?: { checked: boolean };
-	/** `#RRGGBB` fills of the candidate rows; `noFill` when some have none. */
+	/** `#RRGGBB` fills of the candidate rows (including conditional formats); `noFill` when some have none. */
 	fills: string[];
 	noFill: boolean;
 	fonts: string[];
+	/** Distinct conditional-format icons present in the candidate rows. */
+	icons: FilterMenuIcon[];
 	hasCriteria: boolean;
 }
 
@@ -84,43 +100,83 @@ export function filterMenuModel(
 	sheet: Worksheet,
 	filter: AutoFilter,
 	offset: number,
+	options: FilterEvalOptions = {},
 ): FilterMenuModel {
 	const column = filter.columns?.find((c) => c.offset === offset);
 	const col = filter.range.start.col + offset;
-	const others = compileAutoFilter(workbook, sheet, {
-		range: filter.range,
-		columns: (filter.columns ?? []).filter((c) => c.offset !== offset),
-	});
-	const own = compileAutoFilter(workbook, sheet, {
-		range: filter.range,
-		columns: column ? [column] : [],
-	});
+	let formatAt = options.formatAt;
+	if (!formatAt && sheet.conditionalFormats.length > 0) {
+		const sheetIndex = workbook.sheets.indexOf(sheet);
+		if (sheetIndex >= 0) {
+			try {
+				const cf = createConditionalFormatEvaluator(workbook, sheetIndex, () => null);
+				formatAt = (r, c) => cf.at(r, c);
+			} catch {
+				// Formula-only CF without an evaluator falls back to direct cell styles.
+			}
+		}
+	}
+	const evalOpts: FilterEvalOptions = formatAt ? { ...options, formatAt } : options;
+	const others = compileAutoFilter(
+		workbook,
+		sheet,
+		{
+			range: filter.range,
+			columns: (filter.columns ?? []).filter((c) => c.offset !== offset),
+		},
+		evalOpts,
+	);
+	const own = compileAutoFilter(
+		workbook,
+		sheet,
+		{
+			range: filter.range,
+			columns: column ? [column] : [],
+		},
+		evalOpts,
+	);
 	const seen = new Map<string, FilterMenuValue>();
 	const fills = new Set<string>();
 	const fonts = new Set<string>();
+	const iconMap = new Map<string, FilterMenuIcon>();
 	let blanks: { checked: boolean } | undefined;
 	let noFill = false;
 	const last = Math.min(filter.range.end.row, filter.range.start.row + MAX_ROWS);
 	for (let row = filter.range.start.row + 1; row <= last; row++) {
 		if (!others(row)) continue;
 		const cell = getCell(sheet, row, col);
+		const cf = formatAt?.(row, col);
 		const checked = own(row);
 		const text = displayText(workbook, cell);
 		if (text === '') blanks = { checked: (blanks?.checked ?? false) || checked };
 		else {
 			const known = seen.get(text);
 			if (known) known.checked ||= checked;
-			else
+			else {
+				let date: { year: number; month: number; day: number } | undefined;
+				if (
+					typeof cell?.value === 'number' &&
+					isDateFormat(styleAt(workbook, cell.styleId).numFmt)
+				) {
+					const d = serialToDate(Math.floor(cell.value), workbook.date1904);
+					date = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
+				}
 				seen.set(text, {
 					text,
 					checked,
 					...(typeof cell?.value === 'number' ? { number: cell.value } : {}),
+					...(date ? { date } : {}),
 				});
+			}
 		}
-		const fill = cellFillColor(workbook, cell);
+		const fill = cellFillColor(workbook, cell, cf);
 		if (fill) fills.add(fill);
 		else noFill = true;
-		fonts.add(cellFontColor(workbook, cell));
+		fonts.add(cellFontColor(workbook, cell, cf));
+		if (cf?.icon) {
+			const key = `${cf.icon.set}:${cf.icon.index}`;
+			if (!iconMap.has(key)) iconMap.set(key, { iconSet: cf.icon.set, iconId: cf.icon.index });
+		}
 	}
 	const values = [...seen.values()].sort((a, b) =>
 		a.number !== undefined && b.number !== undefined
@@ -131,6 +187,9 @@ export function filterMenuModel(
 					? 1
 					: a.text.localeCompare(b.text, undefined, { sensitivity: 'base' }),
 	);
+	const icons = [...iconMap.values()].sort((a, b) =>
+		a.iconSet === b.iconSet ? a.iconId - b.iconId : a.iconSet.localeCompare(b.iconSet),
+	);
 	return {
 		kind: filterColumnKind(workbook, sheet, filter, offset),
 		values,
@@ -138,8 +197,14 @@ export function filterMenuModel(
 		fills: [...fills].sort(),
 		noFill,
 		fonts: [...fonts].sort(),
+		icons,
 		hasCriteria: hasFilterCriteria(column),
 	};
+}
+
+/** Criteria for filtering a column by a conditional-format icon. */
+export function iconFilterCriteria(iconSet: IconFilter['iconSet'], iconId: number): FilterCriteria {
+	return { icon: { iconSet, iconId } };
 }
 
 /** The criteria for a checklist choice; `undefined` (clear the filter) when everything is ticked. */

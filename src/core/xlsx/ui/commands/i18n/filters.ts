@@ -40,6 +40,12 @@ export const FILTER_STRINGS: Translations = {
 		'Filtrar por color de fuente',
 		'按字体颜色筛选',
 	],
+	'Filter by Cell Icon': [
+		'Filtrer par icône de cellule',
+		'Nach Zellensymbol filtern',
+		'Filtrar por icono de celda',
+		'按单元格图标筛选',
+	],
 	'No Fill': ['Aucun remplissage', 'Keine Füllung', 'Sin relleno', '无填充'],
 	'Text Filters': ['Filtres textuels', 'Textfilter', 'Filtros de texto', '文本筛选'],
 	'Number Filters': ['Filtres numériques', 'Zahlenfilter', 'Filtros de número', '数字筛选'],

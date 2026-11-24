@@ -240,7 +240,12 @@ export interface EditSession {
 	/** Filters an auto-filter column to display texts in `values` (`''` keeps blanks); undefined clears. */
 	filterColumn(sheet: number, col: number, values: string[] | undefined): void;
 	/** Sets any criteria (checklist, custom, top 10, dynamic, colour, icon) of an auto-filter column; undefined clears. */
-	setFilterCriteria(sheet: number, col: number, criteria: FilterCriteria | undefined): void;
+	setFilterCriteria(
+		sheet: number,
+		col: number,
+		criteria: FilterCriteria | undefined,
+		tableName?: string,
+	): void;
 	/** Re-evaluates the auto-filter against the current cell values. */
 	reapplyFilter(sheet: number, at?: CellAddress): void;
 	/** Data > Advanced Filter: filters a list in place or copies matching (optionally unique) rows. */

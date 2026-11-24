@@ -282,7 +282,8 @@ export function createEditSession(
 		setDataValidation: (s, dv, range) => annotations.setDataValidation(ctx, s, dv, range),
 		setAutoFilter: (s, range) => filter.setAutoFilter(ctx, s, range),
 		filterColumn: (s, col, vals) => filter.filterColumn(ctx, s, col, vals),
-		setFilterCriteria: (s, col, criteria) => filter.setColumnCriteria(ctx, s, col, criteria),
+		setFilterCriteria: (s, col, criteria, tableName) =>
+			filter.setColumnCriteria(ctx, s, col, criteria, tableName),
 		reapplyFilter: (s, at) => filter.reapplyFilter(ctx, s, at),
 		applyAdvancedFilter: (s, options) => advancedFilter.applyAdvancedFilter(ctx, s, options),
 		sortByColumn: (s, col, descending) => filter.sortByColumn(ctx, s, col, descending ?? false),

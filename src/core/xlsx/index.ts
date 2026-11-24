@@ -12,6 +12,7 @@ export * from './styles';
 export * from './cell-styles';
 export * from './time-period';
 export * from './filter-menu';
+export { tableAutoFilter, tableFilterBounds } from './slicer/table-filter';
 export { compileAutoFilter, rowMatchesFilter } from './filter-criteria';
 export type { FilterEvalOptions } from './filter-criteria';
 export * from './numfmt/index';

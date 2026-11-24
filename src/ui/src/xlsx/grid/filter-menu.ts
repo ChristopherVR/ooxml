@@ -6,14 +6,37 @@ import {
 	displayText,
 	getCell,
 	filterMenuModel,
+	iconFilterCriteria,
+	type AutoFilter,
 	type FilterCriteria,
 	type FilterMenuModel,
+	type FilterMenuValue,
 } from 'ooxml-core/xlsx';
-import { h } from './dom';
+import { iconSvg } from 'ooxml-core/xlsx/ui';
+import { h, svgNode } from './dom';
 import { presetItems, presetTitle, sortLabels, type PresetItem } from './filter-presets';
 import type { GridView } from './grid-view';
 
 const MAX_LISTED = 2000;
+const MONTHS = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December',
+];
+
+export interface FilterTarget {
+	filter: AutoFilter;
+	tableName?: string;
+}
 
 export interface FilterMenuHandle {
 	close(): void;
@@ -35,12 +58,14 @@ export function openFilterMenu(
 	anchor: { x: number; y: number; w: number; h: number },
 	onClose: () => void,
 	refocus: () => void,
+	target?: FilterTarget,
 ): FilterMenuHandle | undefined {
 	const ctx = view.ctx;
 	const workbook = view.workbook();
 	const sheet = view.sheet();
 	const session = ctx.session();
-	const filter = sheet?.autoFilter;
+	const filter = target?.filter ?? sheet?.autoFilter;
+	const tableName = target?.tableName;
 	if (!workbook || !sheet || !session || !filter) return undefined;
 	const sheetIndex = view.sheetIndex();
 	const offset = col - filter.range.start.col;
@@ -72,7 +97,7 @@ export function openFilterMenu(
 	};
 	const apply = (criteria: FilterCriteria | undefined) => {
 		close(true);
-		session.setFilterCriteria(sheetIndex, col, criteria);
+		session.setFilterCriteria(sheetIndex, col, criteria, tableName);
 	};
 	const openDialog = (dialog: string, props: object) => {
 		close();
@@ -133,7 +158,8 @@ export function openFilterMenu(
 		close(true);
 		session.sortByColumn(sheetIndex, col, descending);
 	};
-	const hasColors = model.fills.length > 0 || model.fonts.some((c) => c !== '#000000');
+	const hasColors =
+		model.fills.length > 0 || model.fonts.some((c) => c !== '#000000') || model.icons.length > 0;
 	const top: Item[] = [
 		{ label: asc, run: sort(false) },
 		{ label: desc, run: sort(true) },
@@ -216,6 +242,28 @@ function colorSections(
 		);
 	const fonts = model.fonts.filter((c) => c !== '#000000');
 	if (fonts.length) out.push(section('Filter by Font Color', fonts, true, false));
+	if (model.icons.length) {
+		const box = h(doc, 'div', 'xg-fm-colors', {
+			role: 'group',
+			'aria-label': ctx.t('Filter by Cell Icon'),
+		});
+		const head = h(doc, 'div', 'xg-fm-head');
+		head.textContent = ctx.t('Filter by Cell Icon');
+		box.append(head);
+		const icons = h(doc, 'div', 'xg-fm-swatches');
+		for (const icon of model.icons) {
+			const b = h(doc, 'button', 'xg-fm-swatch xg-fm-icon', {
+				type: 'button',
+				'aria-label': `${icon.iconSet} #${icon.iconId + 1}`,
+				title: `${icon.iconSet} #${icon.iconId + 1}`,
+			});
+			b.append(svgNode(doc, iconSvg(icon.iconSet, icon.iconId, 16)));
+			b.addEventListener('click', () => apply(iconFilterCriteria(icon.iconSet, icon.iconId)));
+			icons.append(b);
+		}
+		box.append(icons);
+		out.push(box);
+	}
 	return out;
 }
 
@@ -262,14 +310,95 @@ function checklistPanel(
 		selectAll.checked = total > 0 && on === total;
 		selectAll.indeterminate = on > 0 && on < total;
 	};
+	const renderDateTree = (dated: readonly FilterMenuValue[]) => {
+		const byYear = new Map<number, Map<number, FilterMenuValue[]>>();
+		for (const v of dated) {
+			if (!v.date) continue;
+			let months = byYear.get(v.date.year);
+			if (!months) byYear.set(v.date.year, (months = new Map()));
+			let days = months.get(v.date.month);
+			if (!days) months.set(v.date.month, (days = []));
+			days.push(v);
+		}
+		for (const [year, months] of [...byYear].sort((a, b) => a[0] - b[0])) {
+			const yearVals = [...months.values()].flat();
+			const yearLi = h(doc, 'li', 'xg-fm-tree-year');
+			const yearDetails = h(doc, 'details');
+			const yearSummary = h(doc, 'summary', 'xg-fm-check');
+			const yearBox = h(doc, 'input', '', { type: 'checkbox' });
+			const yearOn = yearVals.filter((v) => checked.has(v.text)).length;
+			yearBox.checked = yearOn === yearVals.length;
+			yearBox.indeterminate = yearOn > 0 && yearOn < yearVals.length;
+			yearBox.addEventListener('change', () => {
+				for (const v of yearVals) {
+					if (yearBox.checked) checked.add(v.text);
+					else checked.delete(v.text);
+				}
+				render();
+			});
+			const yearLabel = h(doc, 'span');
+			yearLabel.textContent = String(year);
+			yearSummary.append(yearBox, yearLabel);
+			const monthUl = h(doc, 'ul', 'xg-fm-tree-months');
+			for (const [month, days] of [...months].sort((a, b) => a[0] - b[0])) {
+				const monthLi = h(doc, 'li', 'xg-fm-tree-month');
+				const monthDetails = h(doc, 'details');
+				const monthSummary = h(doc, 'summary', 'xg-fm-check');
+				const monthBox = h(doc, 'input', '', { type: 'checkbox' });
+				const monthOn = days.filter((v) => checked.has(v.text)).length;
+				monthBox.checked = monthOn === days.length;
+				monthBox.indeterminate = monthOn > 0 && monthOn < days.length;
+				monthBox.addEventListener('change', () => {
+					for (const v of days) {
+						if (monthBox.checked) checked.add(v.text);
+						else checked.delete(v.text);
+					}
+					render();
+				});
+				const monthLabel = h(doc, 'span');
+				monthLabel.textContent = MONTHS[month - 1] ?? String(month);
+				monthSummary.append(monthBox, monthLabel);
+				const dayUl = h(doc, 'ul', 'xg-fm-tree-days');
+				for (const v of days) {
+					dayUl.append(
+						entry(String(v.date?.day ?? v.text), checked.has(v.text), (on) => {
+							if (on) checked.add(v.text);
+							else checked.delete(v.text);
+							render();
+						}),
+					);
+				}
+				monthDetails.append(monthSummary, dayUl);
+				monthLi.append(monthDetails);
+				monthUl.append(monthLi);
+			}
+			yearDetails.append(yearSummary, monthUl);
+			yearLi.append(yearDetails);
+			list.append(yearLi);
+		}
+	};
+
 	const render = () => {
 		list.replaceChildren();
-		for (const v of visible())
-			list.append(
-				entry(v.text, checked.has(v.text), (on) =>
-					on ? checked.add(v.text) : checked.delete(v.text),
-				),
-			);
+		const shown = visible();
+		if (!query && model.kind === 'date' && shown.some((v) => v.date)) {
+			const dated = shown.filter((v) => v.date);
+			const plain = shown.filter((v) => !v.date);
+			renderDateTree(dated);
+			for (const v of plain)
+				list.append(
+					entry(v.text, checked.has(v.text), (on) =>
+						on ? checked.add(v.text) : checked.delete(v.text),
+					),
+				);
+		} else {
+			for (const v of shown)
+				list.append(
+					entry(v.text, checked.has(v.text), (on) =>
+						on ? checked.add(v.text) : checked.delete(v.text),
+					),
+				);
+		}
 		if (showBlanks()) list.append(entry(ctx.t('(Blanks)'), blanks, (on) => (blanks = on)));
 		if (!list.childElementCount) {
 			const empty = h(doc, 'li', 'xg-fm-empty');

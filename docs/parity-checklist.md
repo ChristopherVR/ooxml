@@ -281,10 +281,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and Date Filters (Custom AutoFilter and Top 10 dialogs, Above/Below Average, date periods),
       search and the value checklist. Value, date-group, custom, Top 10, dynamic and colour
       criteria are read, written and evaluated (`src/core/xlsx/filter-criteria.ts`).
-- [ ] **P1** AutoFilter remainders: drop-downs on table headers (tables keep value lists only),
-      the date checklist as a year/month/day tree, icon filters in the menu (icon criteria in a
-      file are evaluated through conditional formats), colour list entries that come only from
-      conditional formats.
+- [x] **P1** AutoFilter remainders: drop-downs on table headers (with undoable table column
+      filtering via `setFilterCriteria`), the date checklist as an expandable year/month/day tree,
+      icon filters in the menu (`Filter by Cell Icon`, `iconFilterCriteria`), and conditional-format
+      fill/font colours in the colour list (`src/core/xlsx/filter-menu.ts`,
+      `src/ui/src/xlsx/grid/filter-buttons.ts`, `src/ui/src/xlsx/grid/filter-menu.ts`; evidence:
+      `src/ui/src/xlsx/grid/filter-menu-remainders.test.ts`).
 - [ ] **P1** Sort on cell colour, font colour or icon, custom lists, case sensitivity and
       left-to-right sorting, a table's own saved sort, Data > Reapply and File > Options > Advanced > Edit Custom Lists (add, edit/rename, delete, and import from cells;
       `src/ui/src/xlsx/backstage/options-custom-lists.ts`, `options-custom-lists.test.ts`) are done
