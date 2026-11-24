@@ -150,7 +150,8 @@ function pieces(line: Line): Piece[] {
 	const cuts: number[] = [];
 	line.fragments.forEach((fragment, index) => {
 		const next = line.fragments.slice(index + 1).find((item) => item.text.trim());
-		if (/\t\s*$/.test(fragment.text) && next) cuts.push(next.x - 0.5);
+		// A leader tab (a table of contents) is not a column gap.
+		if (/\t\s*$/.test(fragment.text) && next && !fragment.leader) cuts.push(next.x - 0.5);
 	});
 	if (!cuts.length) return [];
 	const parts = splitLine(line, cuts);

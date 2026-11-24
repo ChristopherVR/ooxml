@@ -17,6 +17,17 @@ export interface Fragment {
 	underline?: boolean;
 	strike?: boolean;
 	link?: string;
+	/** An internal link's destination, until it is resolved to a bookmark (`anchor`). */
+	target?: { page: number; y?: number };
+	/** The bookmark an internal link goes to. */
+	anchor?: string;
+	/** A tab that replaced a dot leader, and where the item after it ends. */
+	leader?: { kind: 'dot' | 'underscore'; right: number };
+	/** The fragment is the reference mark of a footnote. */
+	note?: { id: number; mark: string; custom: boolean };
+	/** Tagged PDF: the structure role and element of the span (see `PdfTextSpan`). */
+	role?: string;
+	element?: number;
 }
 
 export interface Line {
@@ -74,6 +85,8 @@ function finish(page: number, baseline: number, spans: PdfTextSpan[]): Line {
 			font: span.font,
 			color: span.color,
 		};
+		if (span.role !== undefined) fragment.role = span.role;
+		if (span.element !== undefined) fragment.element = span.element;
 		fragments.push(fragment);
 		if (raised || lowered) fragment.script = raised ? 'super' : 'sub';
 		previous = span;

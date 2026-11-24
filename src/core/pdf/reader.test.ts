@@ -168,7 +168,29 @@ describe('a Word PDF', () => {
 		expect(page.images).toHaveLength(1);
 		expect(page.images[0]).toMatchObject({ pixelWidth: 40, pixelHeight: 24 });
 		expect(page.images[0]!.format).not.toBe('unsupported');
+		expect(page.notes).toEqual([]);
 		// The underline is a thin rule under its word.
 		expect(page.rules.some((rule) => rule.y1 - rule.y0 < 1.5 && rule.x1 - rule.x0 > 20)).toBe(true);
+	});
+
+	it('reads its outline, internal link targets and structure roles', async () => {
+		const reader = await openPdf(await fixture('notes'));
+		expect(reader.outline.map((item) => [item.title, item.level, item.page])).toEqual([
+			['Introduction', 0, 0],
+			['Contexte', 1, 0],
+			['Méthode', 0, 0],
+			['Étapes', 1, 1],
+			['Annexe', 0, 1],
+		]);
+		const page = await reader.page(0);
+		expect(
+			page.spans.find((span) => span.text === 'Introduction' && span.role === 'H1'),
+		).toBeDefined();
+		expect(page.spans.find((span) => span.text === 'Contexte' && span.role === 'H2')).toBeDefined();
+		// The table of contents and the cross-reference go to page 2's "Annexe" heading.
+		const annexe = reader.outline[4]!;
+		expect(page.links.filter((link) => link.page === 1 && link.targetY === annexe.y)).toHaveLength(
+			2,
+		);
 	});
 });

@@ -16,6 +16,8 @@ export interface AssemblePage {
 	lines: Line[];
 	pictures: (PictureBlock & { x: number })[];
 	tables?: TableBlock[];
+	/** The bottom of the footnotes taken off the page, which still take room above the margin. */
+	notesBottom?: number;
 }
 
 function sectionFor(
@@ -36,7 +38,14 @@ function sectionFor(
 		margins: {
 			top: clamp(boxes.length ? Math.min(...boxes.map((box) => box.top)) - 2 : 72, page.height / 3),
 			bottom: clamp(
-				boxes.length ? page.height - Math.max(...boxes.map((box) => box.bottom)) - 2 : 72,
+				boxes.length
+					? page.height -
+							Math.max(
+								...boxes.map((box) => box.bottom),
+								...pages.map((item) => item.notesBottom ?? 0),
+							) -
+							2
+					: 72,
 				page.height / 3,
 			),
 			left: clamp(area.left, page.width / 3),

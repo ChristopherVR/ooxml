@@ -6,6 +6,7 @@
 import { markerOf } from './list-markers';
 import type { Fragment, Line } from './lines';
 import type { ListItem } from './lists';
+import type { FloatingText } from './rotated';
 
 export interface TextArea {
 	left: number;
@@ -29,11 +30,28 @@ export interface ParagraphBlock {
 	/** Line spacing as a multiple of single spacing (1 for one-line paragraphs). */
 	lineSpacing: number;
 	size: number;
-	heading?: 1 | 2 | 3;
+	heading?: HeadingLevel;
 	/** The paragraph continues on the next page in the PDF. */
 	continues?: boolean;
 	/** A list item (its typed marker removed), set by `assignLists`. */
 	list?: ListItem;
+	/** Tab stops (right-aligned, with a leader) for dot leaders. */
+	tabs?: import('./leaders').LeaderTab[];
+	/** Bookmarks starting at the paragraph (targets of internal links). */
+	bookmarks?: string[];
+	/** Text boxes anchored to the paragraph (rotated text). */
+	floats?: FloatingText[];
+}
+
+export type HeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
+
+/** Whether two lines belong to different structure elements of a tagged file. */
+function elementChange(previous: Line, line: Line): boolean {
+	const last = [...previous.fragments].reverse().find((fragment) => fragment.text.trim());
+	const first = line.fragments.find((fragment) => fragment.text.trim());
+	return (
+		last?.element !== undefined && first?.element !== undefined && last.element !== first.element
+	);
 }
 
 const TERMINAL = /[.!?:;\u2026\u00bb\u201d"')\]]\s*$/;
@@ -120,6 +138,7 @@ export function buildParagraphs(lines: Line[], area: TextArea, bodySize: number)
 			sizeChange ||
 			weightChange ||
 			!!markerOf(line) ||
+			elementChange(previous, line) ||
 			(shortLine && !centeredRun) ||
 			(leftShift && !centeredRun);
 		if (brk) {

@@ -115,7 +115,12 @@ describe('importPdf', () => {
 			simplePdf('BT /F1 12 Tf 72 700 Td (Flat) Tj 0 1 -1 0 300 300 Tm (Turned) Tj ET'),
 		);
 		expect(paragraphs(rotated.model.blocks).map(textOf)).toEqual(['Flat']);
-		expect(rotated.report.pages[0]!.notes).toContain('Rotated text (1 pieces) was left out.');
+		const box = paragraphs(rotated.model.blocks)[0]!.runs.find((run) => run.image)!.image!;
+		expect(box.textBoxContent?.vertical).toBe('vert270');
+		expect(paragraphs(box.textBoxContent!.blocks).map(textOf)).toEqual(['Turned']);
+		expect(rotated.report.pages[0]!.notes).toContain(
+			'Rotated text (1 line) was put in text boxes turned like the original.',
+		);
 	});
 
 	it('keeps a scanned page as a picture unless OCR is supplied', async () => {

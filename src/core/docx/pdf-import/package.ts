@@ -11,6 +11,14 @@ import type { ListDefinition } from './lists';
 import { numberingXml } from './package-numbering';
 import { sectionXml } from './package-section';
 import { tableXml } from './package-table';
+import {
+	bookmarkXml,
+	FOOTNOTE_STYLES,
+	footnotesXml,
+	noteMarkRun,
+	noteReferenceRun,
+	textBoxXml,
+} from './package-extras';
 import type { ParagraphBlock } from './paragraphs';
 import type { TableBlock } from './tables';
 
@@ -26,6 +34,8 @@ export interface PictureBlock {
 	align: 'left' | 'center' | 'right';
 	/** Space above the picture, in points. */
 	spaceBefore?: number;
+	/** Alternate text (a tagged figure's). */
+	alt?: string;
 }
 
 export interface SectionLayout {
@@ -60,6 +70,8 @@ export interface PackageInput {
 	defaults: { family: string; size: number };
 	properties: { title?: string; author?: string; subject?: string; keywords?: string };
 	language?: string;
+	/** Footnotes, numbered as the references in the blocks give them. */
+	footnotes?: { id: number; blocks: ParagraphBlock[]; customMark?: string }[];
 }
 
 const twips = (points: number) => Math.round(points * 20);
@@ -90,6 +102,7 @@ export class Part {
 export class Writer {
 	readonly media: { name: string; data: Uint8Array }[] = [];
 	#drawing = 0;
+	readonly #bookmarks = { next: 0 };
 	constructor(readonly defaults: PackageInput['defaults']) {}
 
 	runProperties(fragment: Fragment): string {
@@ -120,12 +133,20 @@ export class Writer {
 
 	runs(fragments: Fragment[], part: Part, fields?: Map<string, string>): string {
 		const merged: Fragment[] = [];
+		const target = (fragment: Fragment) =>
+			fragment.link
+				? `uri:${fragment.link}`
+				: fragment.anchor
+					? `anchor:${fragment.anchor}`
+					: undefined;
 		for (const fragment of fragments) {
 			const last = merged[merged.length - 1];
 			if (
 				last &&
+				!last.note &&
+				!fragment.note &&
 				this.runProperties(last) === this.runProperties(fragment) &&
-				last.link === fragment.link
+				target(last) === target(fragment)
 			)
 				last.text += fragment.text;
 			else merged.push({ ...fragment });
@@ -133,12 +154,14 @@ export class Writer {
 		let out = '';
 		let open: string | undefined;
 		for (const fragment of merged) {
-			if (fragment.link !== open) {
+			if (target(fragment) !== open) {
 				if (open) out += '</w:hyperlink>';
-				open = fragment.link;
-				if (open) out += `<w:hyperlink r:id="${part.link(open)}" w:history="1">`;
+				open = target(fragment);
+				if (fragment.link) out += `<w:hyperlink r:id="${part.link(fragment.link)}" w:history="1">`;
+				else if (fragment.anchor)
+					out += `<w:hyperlink w:anchor="${esc(fragment.anchor)}" w:history="1">`;
 			}
-			out += this.#textRuns(fragment, fields);
+			out += fragment.note ? noteReferenceRun(fragment.note) : this.#textRuns(fragment, fields);
 		}
 		if (open) out += '</w:hyperlink>';
 		return out;
@@ -165,7 +188,13 @@ export class Writer {
 			.join('');
 	}
 
-	paragraph(block: ParagraphBlock, part: Part, fields?: Map<string, string>, sectPr = ''): string {
+	paragraph(
+		block: ParagraphBlock,
+		part: Part,
+		fields?: Map<string, string>,
+		sectPr = '',
+		extra: { style?: string; lead?: string } = {},
+	): string {
 		const jc = block.align === 'left' ? '' : el('w:jc', { 'w:val': block.align });
 		const indent =
 			block.indentLeft || block.firstLine
@@ -181,11 +210,25 @@ export class Writer {
 			'w:line': block.lineSpacing !== 1 ? Math.round(block.lineSpacing * 240) : undefined,
 			'w:lineRule': block.lineSpacing !== 1 ? 'auto' : undefined,
 		});
-		const style = block.heading ? el('w:pStyle', { 'w:val': `Heading${block.heading}` }) : '';
+		const styleId = extra.style ?? (block.heading ? `Heading${block.heading}` : undefined);
+		const style = styleId ? el('w:pStyle', { 'w:val': styleId }) : '';
+		const tabs = block.tabs?.length
+			? `<w:tabs>${block.tabs.map((tab) => el('w:tab', { 'w:val': 'right', 'w:leader': tab.leader, 'w:pos': twips(tab.position) })).join('')}</w:tabs>`
+			: '';
 		const numbering = block.list
 			? `<w:numPr>${el('w:ilvl', { 'w:val': block.list.level })}${el('w:numId', { 'w:val': block.list.numId })}</w:numPr>`
 			: '';
-		return `<w:p><w:pPr>${style}${numbering}${spacing}${indent}${jc}${sectPr}</w:pPr>${this.runs(block.fragments, part, fields)}</w:p>`;
+		const marks = bookmarkXml(block.bookmarks, this.#bookmarks);
+		const floats = (block.floats ?? [])
+			.map((float) =>
+				textBoxXml(
+					float,
+					float.blocks.map((inner) => this.paragraph(inner, part)).join('') || '<w:p/>',
+					++this.#drawing,
+				),
+			)
+			.join('');
+		return `<w:p><w:pPr>${style}${numbering}${tabs}${spacing}${indent}${jc}${sectPr}</w:pPr>${marks.start}${floats}${extra.lead ?? ''}${this.runs(block.fragments, part, fields)}${marks.end}</w:p>`;
 	}
 
 	picture(block: PictureBlock, part: Part, sectPr = ''): string {
@@ -199,7 +242,7 @@ export class Writer {
 		const jc = block.align === 'left' ? '' : el('w:jc', { 'w:val': block.align });
 		return (
 			`<w:p><w:pPr>${el('w:spacing', { 'w:before': block.spaceBefore ? twips(block.spaceBefore) : undefined, 'w:after': 0 })}${jc}${sectPr}</w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/>` +
-			`<wp:docPr id="${docPr}" name="Picture ${docPr}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
+			`<wp:docPr id="${docPr}" name="Picture ${docPr}"${block.alt ? ` descr="${esc(block.alt)}"` : ''}/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr>` +
 			`<a:graphic><a:graphicData uri="${PIC_URI}"><pic:pic><pic:nvPicPr><pic:cNvPr id="0" name="Picture ${docPr}"/><pic:cNvPicPr/></pic:nvPicPr>` +
 			`<pic:blipFill><a:blip r:embed="${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>` +
 			`<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`
@@ -220,9 +263,8 @@ function stylesXml(input: PackageInput): string {
 		lang +
 		'</w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>' +
 		'<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>' +
-		heading(1) +
-		heading(2) +
-		heading(3) +
+		[1, 2, 3, 4, 5, 6].map(heading).join('') +
+		(input.footnotes?.length ? FOOTNOTE_STYLES : '') +
 		'<w:style w:type="paragraph" w:styleId="Header"><w:name w:val="header"/><w:basedOn w:val="Normal"/></w:style>' +
 		'<w:style w:type="paragraph" w:styleId="Footer"><w:name w:val="footer"/><w:basedOn w:val="Normal"/></w:style>' +
 		'<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>' +
@@ -275,6 +317,28 @@ export async function writePackage(input: PackageInput): Promise<Uint8Array> {
 			`<Relationship Id="${id}" Type="${REL}/${story.kind}" Target="${name}"/>`,
 		);
 		references += el(`w:${story.kind}Reference`, { 'w:type': 'default', 'r:id': id });
+	}
+	if (input.footnotes?.length) {
+		const part = new Part();
+		const notes = input.footnotes.map((note) => ({
+			id: note.id,
+			body:
+				note.blocks
+					.map((block, index) =>
+						writer.paragraph(block, part, undefined, '', {
+							style: 'FootnoteText',
+							...(index === 0 ? { lead: noteMarkRun(note.customMark) } : {}),
+						}),
+					)
+					.join('') ||
+				`<w:p><w:pPr><w:pStyle w:val="FootnoteText"/></w:pPr>${noteMarkRun(note.customMark)}</w:p>`,
+		}));
+		zip.file('word/footnotes.xml', footnotesXml(notes));
+		if (part.rels.length) zip.file('word/_rels/footnotes.xml.rels', part.xml());
+		overrides.push(['/word/footnotes.xml', `${WML}.footnotes+xml`]);
+		documentPart.rels.push(
+			`<Relationship Id="rId${documentPart.rels.length + 1}" Type="${REL}/footnotes" Target="footnotes.xml"/>`,
+		);
 	}
 	let body = '';
 	input.blocks.forEach((block, index) => {

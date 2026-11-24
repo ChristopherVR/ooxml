@@ -668,11 +668,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Checked against PDFs Word 16 exported and pypdf encrypted.
 - [ ] **P1** PDF conversion rebuilds ruled tables (merged cells, borders, shading, continued on
       the next page), aligned borderless tables, bulleted and numbered lists and two- or
-      three-column regions (continuous `w:cols` sections), but not yet borderless tables whose
-      cells wrap or are empty, lists inside table cells, footnotes, internal links,
-      tagged-PDF structure or vector drawings, and leaves out rotated text, inline images and CMYK
-      JPEG, JPEG 2000, JBIG2 and CCITT pictures (each reported). Scanned pages stay pictures unless
-      the host supplies OCR (#319).
+      three-column regions (continuous `w:cols` sections), footnotes, internal links (to
+      bookmarks), headings from tags and bookmarks, and rotated text (as turned text boxes), but not
+      yet borderless tables whose cells wrap or are empty, lists inside table cells, or vector
+      drawings, and leaves out JPEG 2000 and JBIG2 pictures (each reported). Footnotes are found
+      only at the bottom of the page their mark is on (a footnote with a symbol mark keeps it as
+      Word's custom mark; this editor shows the number beside it). Scanned pages stay pictures
+      unless the host supplies OCR (#319).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
       come from the browser's

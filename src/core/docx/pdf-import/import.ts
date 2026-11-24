@@ -1,11 +1,22 @@
-import { openPdf, type PdfLimits, type PdfPageContent, type PdfTextSpan } from '../../pdf/index';
+import {
+	openPdf,
+	type PdfLimits,
+	type PdfPageContent,
+	type PdfPageRule,
+	type PdfTextSpan,
+} from '../../pdf/index';
 import type { DocumentModel, LoadedDocument } from '../model';
 import { loadDocx } from '../parse';
+import { applyInternalLinks, applyOutline, resolveAnchors } from './anchors';
 import { applyLinks, applyRules, pageLines, type Line } from './lines';
 import { assemble } from './assemble';
+import { attachFloats } from './floats';
+import { extractFootnotes } from './footnotes';
+import { applyLeaders, leaderTabs } from './leaders';
 import { writePackage, type PictureBlock, type StoryContent } from './package';
 import { buildParagraphs, rankHeadings, type ParagraphBlock, type TextArea } from './paragraphs';
 import type { PdfImportReport, PdfOcrProvider } from './report';
+import { rotatedText, type FloatingText } from './rotated';
 import { extractStories } from './stories';
 import { findGrids } from './table-grid';
 import { ruledTables, type TableBlock } from './tables';
@@ -83,6 +94,9 @@ interface PageWork {
 	pictures: (PictureBlock & { x: number })[];
 	tables: TableBlock[];
 	notes: string[];
+	rules: PdfPageRule[];
+	rotated: FloatingText[];
+	notesBottom?: number;
 	scanned?: true;
 }
 
@@ -129,12 +143,18 @@ async function readPage(
 			notes.push('The page is a scan: its text comes from OCR and the scan was left out.');
 		} else notes.push('The page is a scan without text: it was kept as a picture.');
 	}
-	const { lines: all, rotated } = pageLines(content.index, spans);
-	if (rotated) notes.push(`Rotated text (${rotated} pieces) was left out.`);
+	const { lines: all } = pageLines(content.index, spans);
+	const rotated = rotatedText(content.index, spans, 11);
+	if (rotated.lines)
+		notes.push(
+			`Rotated text (${rotated.lines} line${rotated.lines === 1 ? '' : 's'}) was put in text boxes turned like the original.`,
+		);
 	// Table rules are not underlines: only the rules no table uses mark text.
 	const { grids, rest } = findGrids(content.rules);
 	applyRules(all, rest);
 	applyLinks(all, content.links);
+	applyInternalLinks(all, content.links);
+	applyLeaders(all);
 	const { tables, lines } = ruledTables(content.index, all, grids, 11);
 	const keep = scanned && spans.length ? pictures.filter((image) => image !== fullPage) : pictures;
 	return {
@@ -152,9 +172,12 @@ async function readPage(
 			height: image.height,
 			align: 'left',
 			x: image.x,
+			...(image.alt ? { alt: image.alt } : {}),
 		})),
 		tables,
 		notes,
+		rules: content.rules,
+		rotated: rotated.floats,
 		...(scanned ? { scanned } : {}),
 	};
 }
@@ -219,6 +242,7 @@ export async function convertPdf(
 		),
 		'Calibri',
 	);
+	const footnotes = extractFootnotes(pages, bodySize);
 	const area: TextArea = {
 		left: median(
 			extents.map((boxes) => Math.min(...boxes.map((box) => box.left))),
@@ -230,8 +254,35 @@ export async function convertPdf(
 		),
 	};
 	const { blocks, sections } = assemble(pages, area, bodySize, repeated);
+	// Paragraphs in table cells count too, for links, bookmarks, headings and leaders.
+	const paragraphBlocks = blocks.flatMap((block): ParagraphBlock[] =>
+		block.kind === 'paragraph'
+			? [block]
+			: block.kind === 'table'
+				? block.cells.flatMap((cell) => cell.blocks)
+				: [],
+	);
 	rankHeadings(blocks.filter((block): block is ParagraphBlock => block.kind === 'paragraph'));
 	const numbering = assignLists(blocks);
+	applyOutline(paragraphBlocks, reader.outline);
+	leaderTabs(paragraphBlocks, area);
+	const unresolved = resolveAnchors(paragraphBlocks);
+	attachFloats(
+		blocks,
+		sections,
+		pages.flatMap((page) => page.rotated),
+		bodySize,
+	);
+	const noteBlocks = footnotes.map((note) => ({
+		id: note.id,
+		...(note.customMark !== undefined ? { customMark: note.customMark } : {}),
+		blocks: buildParagraphs(note.lines, area, bodySize).map(({ heading: _heading, ...block }) => ({
+			...block,
+			indentLeft: 0,
+			firstLine: 0,
+			spaceBefore: 0,
+		})),
+	}));
 	const stories: StoryContent[] = repeated.map((story) => ({
 		kind: story.kind,
 		blocks: buildParagraphs(story.lines, area, bodySize).map(({ heading: _heading, ...block }) => ({
@@ -255,8 +306,15 @@ export async function convertPdf(
 			...(info.keywords ? { keywords: info.keywords } : {}),
 		},
 		...(info.language ? { language: info.language } : {}),
+		...(noteBlocks.length ? { footnotes: noteBlocks } : {}),
 	});
 	const notes: string[] = [];
+	if (unresolved)
+		notes.push(
+			unresolved === 1
+				? 'An internal link points to text that was not converted; it was left as plain text.'
+				: `${unresolved} internal links point to text that was not converted; they were left as plain text.`,
+		);
 	if (reader.signed)
 		notes.push('The PDF was digitally signed; the converted document has no signature.');
 	if (pages.some((page) => page.scanned))

@@ -203,3 +203,6 @@ await save(
 	),
 	{},
 );
+
+// Footnotes, links and headings, and rotated text.
+await import('./generate-notes.mjs');
