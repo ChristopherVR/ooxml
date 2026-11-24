@@ -53,6 +53,7 @@ export * from './schema-marks';
 export * from './smartart-theme';
 export * from './smartart-approximate';
 export * from './table-render';
+export * from './table-cell-views';
 export * from './table-visuals';
 export * from './theme/css-vars';
 export * from './theme/defaults';

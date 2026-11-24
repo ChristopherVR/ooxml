@@ -169,6 +169,41 @@ describe('Print Layout headers, footers and page fields', () => {
 		]);
 	});
 
+	it('draws header and footer tables with their table style borders (#321)', async () => {
+		const w = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+		const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		const rels = 'http://schemas.openxmlformats.org/package/2006/relationships';
+		const line = 'w:val="single" w:sz="4" w:space="0" w:color="auto"';
+		const table = (text: string) =>
+			`<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid><w:gridCol w:w="4680"/><w:gridCol w:w="4680"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>${text}</w:t></w:r></w:p></w:tc><w:tc><w:p/></w:tc></w:tr></w:tbl><w:p/>`;
+		const zip = new JSZip();
+		zip.file(
+			'word/document.xml',
+			`<w:document xmlns:w="${w}" xmlns:r="${r}"><w:body><w:p><w:r><w:t>Body</w:t></w:r></w:p><w:sectPr><w:headerReference w:type="default" r:id="rIdH"/><w:footerReference w:type="default" r:id="rIdF"/></w:sectPr></w:body></w:document>`,
+		);
+		zip.file(
+			'word/_rels/document.xml.rels',
+			`<Relationships xmlns="${rels}"><Relationship Id="rIdH" Type="${r}/header" Target="header1.xml"/><Relationship Id="rIdF" Type="${r}/footer" Target="footer1.xml"/><Relationship Id="rIdS" Type="${r}/styles" Target="styles.xml"/></Relationships>`,
+		);
+		zip.file('word/header1.xml', `<w:hdr xmlns:w="${w}">${table('Ref')}</w:hdr>`);
+		zip.file('word/footer1.xml', `<w:ftr xmlns:w="${w}">${table('Legal')}</w:ftr>`);
+		zip.file(
+			'word/styles.xml',
+			`<w:styles xmlns:w="${w}"><w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/><w:tblPr><w:tblBorders><w:top ${line}/><w:left ${line}/><w:bottom ${line}/><w:right ${line}/><w:insideH ${line}/><w:insideV ${line}/></w:tblBorders></w:tblPr></w:style></w:styles>`,
+		);
+		const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+		const sheet = document.createElement('div');
+		decoratePages(model, [page(0, 0, 0)], [sheet]);
+		for (const kind of ['header', 'footer']) {
+			const cells = [...sheet.querySelectorAll<HTMLElement>(`.dve-print-${kind} td`)];
+			expect(cells).toHaveLength(2);
+			for (const cell of cells)
+				for (const side of ['top', 'bottom', 'left', 'right'] as const)
+					expect(cell.style.getPropertyValue(`border-${side}`)).toMatch(/^1px solid/);
+			expect(sheet.querySelectorAll(`.dve-print-${kind} col`)).toHaveLength(2);
+		}
+	});
+
 	it('updates DATE fields in headers and footers to the layout time', () => {
 		const model: DocumentModel = {
 			...createDocument(),

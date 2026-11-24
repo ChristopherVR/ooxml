@@ -27,6 +27,7 @@ import {
 	type LayoutPageBox,
 	type TextBoxLayouts,
 } from 'ooxml-core/docx/layout';
+import { tableCellStyle, tableCellViews, tableStyle, tableViewAttrs } from 'ooxml-core/docx/ui';
 import { printPicture, type PictureUrl } from './print-layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
@@ -112,17 +113,32 @@ function paragraphElement(paragraph: Paragraph, values: PageFieldValues): HTMLEl
 
 function blockElement(block: Block, values: PageFieldValues): HTMLElement {
 	if (block.type === 'paragraph') return paragraphElement(block, values);
+	// The same borders, shading and margins as a body table (direct formatting over the table style).
 	const table = document.createElement('table');
-	for (const row of block.rows) {
+	table.setAttribute('style', tableStyle(tableViewAttrs(block)));
+	if (block.grid?.length) {
+		const colgroup = document.createElement('colgroup');
+		for (const width of block.grid) {
+			const col = document.createElement('col');
+			col.style.width = `${width / 15}px`;
+			colgroup.append(col);
+		}
+		table.append(colgroup);
+	}
+	const tbody = document.createElement('tbody');
+	for (const views of tableCellViews(block, values.model?.tableStyles)) {
 		const tr = document.createElement('tr');
-		for (const cell of row) {
+		for (const { cell, colspan, rowspan, attrs } of views) {
 			const td = document.createElement('td');
-			if (cell.gridSpan && cell.gridSpan > 1) td.colSpan = cell.gridSpan;
+			if (colspan > 1) td.colSpan = colspan;
+			if (rowspan > 1) td.rowSpan = rowspan;
+			td.setAttribute('style', tableCellStyle(attrs));
 			for (const paragraph of cell.paragraphs) td.append(paragraphElement(paragraph, values));
 			tr.append(td);
 		}
-		table.append(tr);
+		tbody.append(tr);
 	}
+	table.append(tbody);
 	return table;
 }
 

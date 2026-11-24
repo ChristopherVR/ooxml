@@ -12,7 +12,7 @@ import type {
 	TableStyleCatalog,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { continuationsOf, resolveCellVisuals, rowSpanOf, tableGrid } from 'ooxml-core/docx/ui';
+import { tableCellViews, tableGrid, tableViewAttrs } from 'ooxml-core/docx/ui';
 import { convertRestructuredTable, structureChanged } from './table-restructure-convert';
 
 function cellKey(cell: TableCell): string {
@@ -25,42 +25,9 @@ export function tableNode(
 	tableStyles?: TableStyleCatalog,
 	nested = false,
 ): ProseMirrorNode {
-	const columnCount = Math.max(
-		1,
-		...block.rows.map((row) => row.reduce((sum, cell) => sum + (cell.gridSpan ?? 1), 0)),
-	);
 	const layout = tableGrid(block);
-	const rows = block.rows.map((row, rowIndex) => {
-		const cells: ProseMirrorNode[] = [];
-		let gridColumn = 0;
-		row.forEach((cell, columnIndex) => {
-			const column = gridColumn;
-			gridColumn += cell.gridSpan ?? 1;
-			if (cell.verticalMerge === 'continue') return;
-			let rowspan = 1;
-			const entry = layout?.rows[rowIndex]?.[columnIndex];
-			const continues = layout && entry ? continuationsOf(layout, entry) : [];
-			if (layout && entry) rowspan = rowSpanOf(layout, entry);
-			else if (cell.verticalMerge === 'restart') {
-				let next = rowIndex + 1;
-				while (block.rows[next]?.[columnIndex]?.verticalMerge === 'continue') {
-					rowspan++;
-					next++;
-				}
-			}
-			const visuals = resolveCellVisuals(
-				block,
-				cell,
-				{
-					row: rowIndex,
-					lastRow: rowIndex + rowspan - 1,
-					column,
-					lastColumn: column + (cell.gridSpan ?? 1) - 1,
-					rowCount: block.rows.length,
-					columnCount,
-				},
-				tableStyles,
-			);
+	const rows = tableCellViews(block, tableStyles).map((views, rowIndex) => {
+		const cells = views.map(({ cell, rowspan, continues, attrs }) => {
 			const children = cell.sourceBlocks
 				? cellSourceBlocks(cell).map((child) =>
 						child.type === 'paragraph'
@@ -73,27 +40,23 @@ export function tableNode(
 							schema.nodes.nestedTablePreview.create({ rowsJson: JSON.stringify(preview.rows) }),
 						),
 					];
-			cells.push(
-				schema.node(
-					'tableCell',
-					{
-						sourceCellKey: cellKey(cell),
-						colspan: cell.gridSpan ?? 1,
-						rowspan,
-						continueKeys: continues.length
-							? JSON.stringify(continues.map((c) => cellKey(c.cell)))
-							: null,
-						widthTwips: cell.widthTwips ?? null,
-						verticalAlign: cell.verticalAlign ?? null,
-						shadingFill: visuals.shadingFill ?? null,
-						directShadingFill: cell.shadingFill ?? null,
-						borders: visuals.borders ? JSON.stringify(visuals.borders) : null,
-						directBorders: cell.borders ? JSON.stringify(cell.borders) : null,
-						margins: cell.margins ? JSON.stringify(cell.margins) : null,
-						contentControl: cell.contentControl ?? null,
-					},
-					children,
-				),
+			return schema.node(
+				'tableCell',
+				{
+					sourceCellKey: cellKey(cell),
+					colspan: cell.gridSpan ?? 1,
+					rowspan,
+					continueKeys: continues.length ? JSON.stringify(continues.map(cellKey)) : null,
+					widthTwips: attrs.widthTwips,
+					verticalAlign: attrs.verticalAlign,
+					shadingFill: attrs.shadingFill,
+					directShadingFill: cell.shadingFill ?? null,
+					borders: attrs.borders,
+					directBorders: cell.borders ? JSON.stringify(cell.borders) : null,
+					margins: attrs.margins,
+					contentControl: cell.contentControl ?? null,
+				},
+				children,
 			);
 		});
 		const heightTwips = block.rowProperties?.[rowIndex]?.heightTwips;
@@ -116,11 +79,7 @@ export function tableNode(
 			restructurable:
 				block.restructurable === true || (block.structureEditable !== false && Boolean(layout)),
 			grid: block.grid ? JSON.stringify(block.grid) : null,
-			widthTwips: block.widthTwips ?? null,
-			alignment: block.alignment ?? null,
-			indentTwips: block.indentTwips ?? null,
-			borders: block.borders ? JSON.stringify(block.borders) : null,
-			cellMargins: block.cellMargins ? JSON.stringify(block.cellMargins) : null,
+			...tableViewAttrs(block),
 			inheritedCellMargins: JSON.stringify(
 				resolveTableCellMargins(block.style ? { style: block.style } : {}, tableStyles),
 			),
