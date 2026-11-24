@@ -120,8 +120,12 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 		'M5 2h10v16H5zM7 4h6v3H7zM7 10h.1M10 10h.1M13 10h.1M7 13h.1M10 13h.1M13 13h.1M7 16h.1M10 16h.1M13 16h.1',
 	calcNow: 'M5 2h10v16H5zM7 4h6v3H7zM9 9l-1 4h4l-1 4',
 	textColumns: 'M2 4h7v12H2zM11 4h7v12h-7zM4 8h3M13 8h3M4 12h3M13 12h3',
+	flashFill: 'M3 3h10v14H3zM3 8h10M8 3v14M15.5 6l-2.5 5h3l-2.5 5',
 	removeDuplicates: 'M3 4h9v4H3zM3 11h9v4H3zM14 11l4 4M18 11l-4 4',
 	validation: `${GRID}M3 8h14M7 12l2 2 4-4`,
+	consolidate: 'M2 3h6v5H2zM2 12h6v5H2zM12 7h6v6h-6zM8 5.5l4 4.5M8 14.5l4-4.5',
+	subtotal: 'M3 4h14M3 8h10M3 12h10M3 16h14M15 8v8M13 14l2 2 2-2',
+	advancedFilter: 'M2.5 4h11l-4.5 5.5V15l-2 1v-6.5zM15 11v6M12 14h6',
 	scenarios: 'M3 3h9v11H3zM8 6h9v11H8zM10.5 9h4M10.5 12h4',
 	goalSeek:
 		'M10 3a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM10 6.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM10 10 17 3M14.5 3H17v2.5',

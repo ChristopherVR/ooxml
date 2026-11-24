@@ -142,6 +142,7 @@ export function dataTab(): RibbonTab {
 						controls: [
 							{ kind: 'button', command: 'data.filter-clear', showLabel: true },
 							{ kind: 'button', command: 'data.filter-reapply', showLabel: true },
+							{ kind: 'button', command: 'data.advanced-filter', showLabel: true },
 						],
 					},
 				],
@@ -151,8 +152,10 @@ export function dataTab(): RibbonTab {
 				label: 'Data Tools',
 				controls: [
 					{ kind: 'button', command: 'data.text-to-columns', size: 'large' },
+					{ kind: 'button', command: 'data.flash-fill', size: 'large' },
 					{ kind: 'button', command: 'data.remove-duplicates', size: 'large' },
 					{ kind: 'button', command: 'data.validation', size: 'large' },
+					{ kind: 'button', command: 'data.consolidate', size: 'large' },
 				],
 			},
 			{
@@ -179,6 +182,7 @@ export function dataTab(): RibbonTab {
 				controls: [
 					{ kind: 'button', command: 'data.group', size: 'large' },
 					{ kind: 'button', command: 'data.ungroup', size: 'large' },
+					{ kind: 'button', command: 'data.subtotal', size: 'large' },
 				],
 			},
 		],

@@ -2,6 +2,7 @@
 import { AUDIT_STRINGS } from './audit';
 import { CORE_FEATURE_STRINGS } from './core-features';
 import { CHART_SERIES_STRINGS } from './chart-series';
+import { DATA_TOOLS_STRINGS } from './data-tools';
 import { FILTER_STRINGS } from './filters';
 import { FORMAT_CELLS_STRINGS } from './format-cells';
 import { MESSAGE_STRINGS } from './messages';
@@ -36,6 +37,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	SMARTART_STRINGS,
 	FILTER_STRINGS,
 	AUDIT_STRINGS,
+	DATA_TOOLS_STRINGS,
 ];
 
 export const commandStrings = (locale: CommandLocale): Record<string, string> =>

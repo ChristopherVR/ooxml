@@ -14,6 +14,7 @@ export * from './commands/font';
 export * from './commands/formulas';
 export * from './commands/icons';
 export * from './commands/i18n/core-features';
+export * from './commands/i18n/data-tools';
 export * from './commands/i18n/format-cells';
 export * from './commands/i18n/index';
 export * from './commands/i18n/messages';

@@ -89,6 +89,7 @@ export const SHORTCUTS: readonly Shortcut[] = [
 	{ keys: ['Mod+PageUp'], label: 'Previous sheet', command: 'sheet.previous' },
 	{ keys: ['Mod+PageDown'], label: 'Next sheet', command: 'sheet.next' },
 	{ keys: ['Mod+Shift+L'], label: 'Filter', command: 'data.filter' },
+	{ keys: ['Mod+E'], label: 'Flash Fill', command: 'data.flash-fill' },
 	{ keys: ['Mod+T', 'Mod+L'], label: 'Create a table', command: 'insert.table' },
 	{ keys: ['Mod+K'], label: 'Insert link', command: 'insert.link' },
 	{ keys: ['Shift+F2'], label: 'New comment', command: 'review.new-comment' },

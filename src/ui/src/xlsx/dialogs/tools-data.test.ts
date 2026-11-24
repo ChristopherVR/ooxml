@@ -204,3 +204,103 @@ describe('Create Table', () => {
 		expect(dialogEl(ctx, 'create-table')).toBeTruthy();
 	});
 });
+
+describe('Subtotal', () => {
+	it('inserts group subtotals and removes all subtotals', async () => {
+		const ctx = setup();
+		ctx.session()!.setRangeValues(0, { row: 0, col: 0 }, [
+			['Region', 'Sales'],
+			['East', 10],
+			['East', 20],
+			['West', 5],
+		]);
+		ctx.select('A1');
+		const applied = ctx.dialogs.open('subtotal');
+		const dialog = dialogEl(ctx, 'subtotal');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'At each change in:').value).toBe('0');
+		expect(inputByLabel<HTMLSelectElement>(dialog, 'Use function:').value).toBe('sum');
+		expect(inputByLabel(dialog, 'Sales').checked).toBe(true);
+		clickButton(dialog, 'OK');
+		const res = (await applied) as { subtotalRows: number[]; grandTotalRow: number | undefined };
+		expect(res.subtotalRows).toEqual([3, 5]);
+		expect(res.grandTotalRow).toBe(6);
+		expect(v(ctx, 3, 0)).toBe('East Total');
+		expect(v(ctx, 6, 0)).toBe('Grand Total');
+
+		ctx.select('A1:B7');
+		const removed = ctx.dialogs.open('subtotal');
+		clickButton(dialogEl(ctx, 'subtotal'), 'Remove All');
+		const rm = (await removed) as { removed: number };
+		expect(rm.removed).toBe(3);
+		expect(v(ctx, 3, 0)).toBe('West');
+	});
+});
+
+describe('Consolidate', () => {
+	it('aggregates multiple references by top row and left column labels', async () => {
+		const ctx = setup();
+		ctx.session()!.setRangeValues(0, { row: 0, col: 0 }, [
+			['Item', 'Q1'],
+			['Apple', 10],
+			['Pear', 5],
+		]);
+		ctx.session()!.setRangeValues(0, { row: 0, col: 3 }, [
+			['Item', 'Q1'],
+			['Apple', 15],
+			['Plum', 7],
+		]);
+		ctx.select('A6');
+		const done = ctx.dialogs.open('consolidate');
+		const dialog = dialogEl(ctx, 'consolidate');
+		setValue(inputByLabel(dialog, 'Reference:'), 'A1:B3');
+		clickButton(dialog, 'Add');
+		setValue(inputByLabel(dialog, 'Reference:'), 'D1:E3');
+		clickButton(dialog, 'Add');
+		inputByLabel(dialog, 'Top row').click();
+		inputByLabel(dialog, 'Left column').click();
+		clickButton(dialog, 'OK');
+		await done;
+		expect(v(ctx, 5, 1)).toBe('Q1');
+		expect(v(ctx, 6, 0)).toBe('Apple');
+		expect(v(ctx, 6, 1)).toBe(25);
+		expect(v(ctx, 7, 0)).toBe('Pear');
+		expect(v(ctx, 7, 1)).toBe(5);
+		expect(v(ctx, 8, 0)).toBe('Plum');
+		expect(v(ctx, 8, 1)).toBe(7);
+	});
+});
+
+describe('Advanced Filter', () => {
+	it('filters in place and copies unique matching rows to another location', async () => {
+		const ctx = setup();
+		ctx.session()!.setRangeValues(0, { row: 0, col: 0 }, [
+			['Region', 'Sales'],
+			['East', 10],
+			['West', 30],
+			['West', 30],
+		]);
+		ctx.session()!.setRangeValues(0, { row: 0, col: 3 }, [['Sales'], ['>20']]);
+		ctx.select('A1');
+		const inPlace = ctx.dialogs.open('advanced-filter');
+		const dialog = dialogEl(ctx, 'advanced-filter');
+		expect(inputByLabel(dialog, 'List range:').value).toBe('A1:B4');
+		setValue(inputByLabel(dialog, 'Criteria range:'), 'D1:D2');
+		clickButton(dialog, 'OK');
+		await inPlace;
+		expect(ws(ctx).rowInfo.get(1)?.hidden).toBe(true);
+		expect(ws(ctx).rowInfo.get(2)?.hidden).toBeUndefined();
+
+		const copied = ctx.dialogs.open('advanced-filter');
+		const dialog2 = dialogEl(ctx, 'advanced-filter');
+		inputByLabel(dialog2, 'Copy to another location').click();
+		setValue(inputByLabel(dialog2, 'Criteria range:'), 'D1:D2');
+		setValue(inputByLabel(dialog2, 'Copy to:'), 'F1');
+		inputByLabel(dialog2, 'Unique records only').click();
+		clickButton(dialog2, 'OK');
+		await copied;
+		expect(v(ctx, 0, 5)).toBe('Region');
+		expect(v(ctx, 1, 5)).toBe('West');
+		expect(v(ctx, 1, 6)).toBe(30);
+		expect(v(ctx, 2, 5)).toBeUndefined();
+	});
+});

@@ -1,5 +1,6 @@
-// Data tab: Data Tools (Text to Columns, Remove Duplicates, Data Validation) and Outline (group
-// and ungroup rows or columns). Sort & Filter commands live in sort-filter.ts.
+// Data tab: Data Tools (Text to Columns, Flash Fill, Remove Duplicates, Data Validation,
+// Consolidate), Advanced Filter and Outline (Group, Ungroup, Subtotal). Sort & Filter commands
+// live in sort-filter.ts.
 import type { Command } from '../commands';
 import { icon } from './icons';
 import { editing, hasOutlinedRow, target, wholeColumns, wholeRows } from './util';
@@ -13,6 +14,19 @@ export function dataCommands(): Command[] {
 			run: (ctx) => void ctx.dialogs.open('text-to-columns'),
 		}),
 		editing({
+			id: 'data.flash-fill',
+			label: 'Flash Fill',
+			icon: icon('flashFill'),
+			shortcut: 'Ctrl+E',
+			run: (ctx) => {
+				const t = target(ctx);
+				if (!t) return;
+				const fillTarget = t.range.start.col === t.range.end.col ? t.range : t.active;
+				const result = t.session.flashFill(t.sheet, fillTarget);
+				if (result.filled === 0) ctx.toast(ctx.t('No pattern found for Flash Fill.'), 'info');
+			},
+		}),
+		editing({
 			id: 'data.remove-duplicates',
 			label: 'Remove Duplicates',
 			icon: icon('removeDuplicates'),
@@ -23,6 +37,25 @@ export function dataCommands(): Command[] {
 			label: 'Data Validation...',
 			icon: icon('validation'),
 			run: (ctx) => void ctx.dialogs.open('data-validation'),
+		}),
+		editing({
+			id: 'data.consolidate',
+			label: 'Consolidate',
+			icon: icon('consolidate'),
+			run: (ctx) => void ctx.dialogs.open('consolidate'),
+		}),
+		editing({
+			id: 'data.advanced-filter',
+			label: 'Advanced Filter',
+			icon: icon('advancedFilter'),
+			lock: 'autoFilter',
+			run: (ctx) => void ctx.dialogs.open('advanced-filter'),
+		}),
+		editing({
+			id: 'data.subtotal',
+			label: 'Subtotal',
+			icon: icon('subtotal'),
+			run: (ctx) => void ctx.dialogs.open('subtotal'),
 		}),
 		...(['group', 'ungroup'] as const).map((mode) =>
 			editing({
