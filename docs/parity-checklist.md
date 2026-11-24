@@ -1050,11 +1050,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P2** Ribbon Display Options (Always show Ribbon, Show tabs only, Full-screen mode,
       Ctrl+F1, double click on a tab) and Options > General > "Collapse the ribbon
       automatically", in all five bindings on the shared `createRibbonDisplayController`.
-- [ ] **P2** Options > General > "Collapse the search box by default" is stored but nothing
-      reads it, in any binding.
-- [ ] **P2** Ribbon Display Options: PowerPoint's fourth menu entry (Show or Hide Quick Access
-      Toolbar) is not in the menu; it stays under Options > Quick Access Toolbar. The peeked
-      ribbon closes on a press outside or Escape, not after a command as in PowerPoint.
+- [x] **P2** Options > General > "Collapse the search box by default" collapses the title-bar
+      search box to an expandable icon toggle (`office-ui-title-bar`, `buildTitleBarState`) in
+      all five bindings and updates live when toggled (`title-bar.test.ts` and per-binding tests).
+- [x] **P2** Ribbon Display Options includes the fourth menu entry (Show/Hide Quick Access
+      Toolbar, synchronized with Options > Quick Access Toolbar in all six locales) and dismisses
+      the peeked ribbon after executing a command as well as on outside press or Escape, in all
+      five bindings (`src/ui/src/pptx/render/ribbon-display.ts`, `ribbon-display.test.ts` and
+      per-binding regressions).
 - [ ] **P2** Home: Align Text and Convert to SmartArt; Review: Thesaurus, Translate, Mark All as
       Read, Restrict Permission, Hide Ink; View: Zoom and Macros are placeholders.
 
