@@ -32,7 +32,12 @@ describe('page border drawing', () => {
 			right: line,
 			offsetFrom: 'text',
 		})!;
-		expect([text.style.left, text.style.top, text.style.width]).toEqual(['64px', '64px', '688px']);
+		// From the text, the 24 pt space reaches the 1 pt line's inner edge, as Word draws it.
+		expect([text.style.left, text.style.top, text.style.width]).toEqual([
+			'62.6667px',
+			'62.6667px',
+			'690.667px',
+		]);
 	});
 
 	it('draws only the sides present and honours the display rule and stacking order', () => {

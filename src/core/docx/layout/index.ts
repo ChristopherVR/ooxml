@@ -15,6 +15,7 @@ export { placeParagraph, type ParagraphPlacement } from './flow-paragraph';
 export { placeTable } from './flow-table';
 export { layoutSections } from './page-flow';
 export { adaptDocumentModel } from './adapter';
+export { border as layoutBorder } from './adapt-table';
 export { paragraphFloats } from './adapt-floats';
 export { shapePaint } from './shape-paint';
 export {

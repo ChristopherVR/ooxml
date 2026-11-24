@@ -646,13 +646,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       headers and footers as artifacts), writes PDF/A-2b metadata and an sRGB output intent, and
       with markup shows tracked changes in author colours with change bars and comments as notes
       (`src/ui/src/docx/pdf/pdf-hooks.ts`, `export/pdf-structure.ts`, #318).
-- [ ] **P1** Save as PDF leaves out charts, drawing shapes, text boxes, watermarks, page borders,
-      line numbers and floating objects in headers, footers and table cells (each reported). Lists
-      are tagged as paragraphs (no `L`/`LI`), links in headers and footers are not clickable,
-      formatting changes and comment balloons are not drawn with markup, and PDF/A conformance
-      needs the host's font files (standard PDF fonts are not embedded; the report says so). Text
-      uses the standard PDF fonts unless the host supplies font files; remote fonts are never
-      fetched (#318).
+- [x] **P1** Save as PDF writes charts and drawing shapes as vector paths with real text (through
+      the shared SVG to PDF converter), text boxes with the lines the page engine laid out,
+      watermarks (text turned and half transparent, pictures washed out), page borders and line
+      numbers where Word's PDF puts them, and floating objects in headers, footers and table cells
+      (#318).
+- [ ] **P1** Save as PDF needs a DOM (`DOMParser`) for charts and shapes (a DOM-less run reports them
+      as left out); shadows lose their blur, WordArt warps and text effects are plain text, and text
+      watermarks are not stretched to their shape. Lists are tagged as paragraphs (no `L`/`LI`),
+      links in headers and footers are not clickable, formatting changes and comment balloons are
+      not drawn with markup, and PDF/A conformance needs the host's font files (standard PDF fonts
+      are not embedded; the report says so). Text uses the standard PDF fonts unless the host
+      supplies font files; remote fonts are never fetched (#318).
 - [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
       (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
       paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,

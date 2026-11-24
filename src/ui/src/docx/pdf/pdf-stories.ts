@@ -36,6 +36,10 @@ export interface PlacedStory {
 	x: number;
 	y: number;
 	blocks: LayoutBlockBox[];
+	/** The header or footer as the document has it (its floating objects and watermark). */
+	content: HeaderFooterContent;
+	/** The header or footer distance from its page edge. */
+	distancePx: number;
 }
 
 const TALL_PAGE_TWIPS = 31680 * 4;
@@ -45,22 +49,12 @@ function fillParagraph(
 	paragraph: Paragraph,
 	values: PageFieldContext,
 	mode: ReviewDisplayMode,
-	report: DocxPdfReportBuilder,
 ): Paragraph {
 	const runs: TextRun[] = [];
 	for (const run of paragraph.runs) {
 		if (isRunHiddenForReview(run, mode)) continue;
-		if (run.image?.watermark || run.image?.pictureWatermark) {
-			report.omitted('watermark', 'Watermarks are not exported to PDF yet.');
-			continue;
-		}
-		if (run.image?.anchored) {
-			report.omitted(
-				'headerFooterFloat',
-				'Floating objects in headers and footers are not exported to PDF yet.',
-			);
-			continue;
-		}
+		// Watermarks and floating objects are drawn on the page (`pdf-story-graphics.ts`).
+		if (run.image?.watermark || run.image?.pictureWatermark || run.image?.anchored) continue;
 		if (!run.field) {
 			runs.push(run);
 			continue;
@@ -75,17 +69,16 @@ function fillBlocks(
 	blocks: readonly Block[],
 	values: PageFieldContext,
 	mode: ReviewDisplayMode,
-	report: DocxPdfReportBuilder,
 ): Block[] {
 	return blocks.map((block) =>
 		block.type === 'paragraph'
-			? fillParagraph(block, values, mode, report)
+			? fillParagraph(block, values, mode)
 			: {
 					...block,
 					rows: block.rows.map((row) =>
 						row.map((cell) => ({
 							...cell,
-							paragraphs: cell.paragraphs.map((p) => fillParagraph(p, values, mode, report)),
+							paragraphs: cell.paragraphs.map((p) => fillParagraph(p, values, mode)),
 						})),
 					),
 				},
@@ -150,6 +143,7 @@ export function placeStories(
 			};
 		}
 		const result = layoutDocumentModel(story, measurer, { reviewDisplayMode: mode });
+		for (const message of result.approximations) report.note(message);
 		const placed = result.pages[0]?.columns[0]?.blocks ?? [];
 		const height = placed.reduce(
 			(bottom, block) => Math.max(bottom, block.yPx + block.heightPx),
@@ -177,7 +171,7 @@ export function placeStories(
 				`${kind}s`,
 			);
 			if (!content?.blocks.length) continue;
-			const blocks = fillBlocks(styleRefs.content(content, index).blocks, values, mode, report);
+			const blocks = fillBlocks(styleRefs.content(content, index).blocks, values, mode);
 			const { blocks: boxes, height } = layout(blocks, widthPx, page.sectionIndex);
 			const distanceTwips =
 				kind === 'header' ? section?.headerDistanceTwips : section?.footerDistanceTwips;
@@ -187,6 +181,8 @@ export function placeStories(
 				x: page.marginLeftPx,
 				y: kind === 'header' ? distancePx : page.heightPx - distancePx - height,
 				blocks: boxes,
+				content,
+				distancePx,
 			});
 		}
 		return placed;

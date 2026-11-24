@@ -67,7 +67,8 @@ export function drawBorder(
 	page.op('f');
 }
 
-function paragraphFrame(
+/** Shading and borders inside a box `frame.widthPx` wide and `height` tall (a CSS border box). */
+export function paragraphFrame(
 	page: PdfVectorPage,
 	frame: LayoutParagraphFrame,
 	x: number,
@@ -111,16 +112,12 @@ export function paintParagraph(
 	const { page, text, pictures, hooks } = painter;
 	const x = originX + (box.xPx ?? 0);
 	const y = originY + box.yPx;
+	// Objects floating in table cells (`box.floats`) are on the page's floats, drawn with them.
 	if (box.frame) {
 		hooks?.decoration();
 		paragraphFrame(page, box.frame, x, y, box.heightPx);
 	}
 	hooks?.beginParagraph(box, x, y);
-	if (box.floats?.length)
-		painter.text.report.omitted(
-			'picture',
-			'Floating pictures inside table cells are not exported to PDF yet.',
-		);
 	for (const line of box.lines) {
 		const lineTop = y + line.yPx;
 		line.fragments.forEach((laid, index) => {

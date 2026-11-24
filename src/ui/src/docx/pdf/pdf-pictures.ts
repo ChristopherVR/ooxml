@@ -1,12 +1,13 @@
 /**
  * Pictures for the Word PDF export: JPEG bytes go into the file as they are (no re-encoding,
  * original resolution); PNG is decoded to its samples and alpha. Other formats go through a
- * decoder the host supplies, or are left out and reported. Charts and drawing shapes are left
- * out in this version. DOM-free.
+ * decoder the host supplies, or are left out and reported. Charts, drawing shapes and text boxes
+ * go to `drawings` (`pdf-drawings.ts`). DOM-free.
  */
 import { decodePng, jpegComponents, inspectRasterImage } from 'ooxml-core/drawingml';
 import type { LayoutObject } from 'ooxml-core/docx/layout';
 import type { PdfImageResource, PdfVectorPage } from '../../export/pdf-vector';
+import type { DocxPdfDrawings } from './pdf-drawings';
 import type { DocxPdfReportBuilder } from './pdf-report';
 
 /** RGBA pixels a host decoder returns for a picture format the export cannot read itself. */
@@ -29,7 +30,14 @@ export type DocxPdfPictureDecoder = (
 /** A picture to draw: what the layout's inline objects and floats have in common. */
 export type DocxPdfPicture = Pick<
 	LayoutObject,
-	'partName' | 'contentType' | 'widthPx' | 'heightPx' | 'pictureFill' | 'chart'
+	| 'partName'
+	| 'contentType'
+	| 'widthPx'
+	| 'heightPx'
+	| 'pictureFill'
+	| 'chart'
+	| 'textBox'
+	| 'textBoxLayout'
 >;
 
 function fromRgba(picture: DecodedPicture): PdfImageResource | undefined {
@@ -51,9 +59,11 @@ function fromRgba(picture: DecodedPicture): PdfImageResource | undefined {
 /** Reads, decodes and caches each picture part once per export. */
 export class DocxPdfPictures {
 	readonly #resources = new Map<string, PdfImageResource | null>();
+	/** Draws charts, shapes and text boxes; without it they are reported as left out. */
+	drawings: DocxPdfDrawings | undefined;
 	constructor(
 		readonly media: DocxPdfMedia | undefined,
-		readonly decode: DocxPdfPictureDecoder | undefined,
+		readonly decoder: DocxPdfPictureDecoder | undefined,
 		readonly report: DocxPdfReportBuilder,
 	) {}
 
@@ -65,14 +75,26 @@ export class DocxPdfPictures {
 	/** Loads every picture `pictures` name, so painting stays synchronous. */
 	async prepare(pictures: Iterable<DocxPdfPicture>): Promise<void> {
 		for (const picture of pictures) {
-			if (picture.chart || !picture.partName || this.#resources.has(picture.partName)) continue;
-			this.#resources.set(picture.partName, await this.#load(picture));
+			if (picture.chart) {
+				await this.drawings?.prepare(picture);
+				continue;
+			}
+			if (!picture.partName || this.#resources.has(picture.partName)) continue;
+			const bytes = this.#bytes(picture.partName);
+			this.#resources.set(
+				picture.partName,
+				bytes ? await this.decode(bytes, picture.contentType) : null,
+			);
 		}
 	}
 
-	async #load(picture: DocxPdfPicture): Promise<PdfImageResource | null> {
-		const bytes = this.#bytes(picture.partName);
-		if (!bytes) return null;
+	/** A loaded picture part, after `prepare`. */
+	resource(partName: string): PdfImageResource | undefined {
+		return this.#resources.get(partName) ?? undefined;
+	}
+
+	/** Reads picture bytes as an image resource: JPEG as it is, PNG decoded, others by the host. */
+	async decode(bytes: Uint8Array, contentType: string): Promise<PdfImageResource | null> {
 		let kind: string | undefined;
 		try {
 			kind = inspectRasterImage(bytes).mimeType;
@@ -101,7 +123,7 @@ export class DocxPdfPictures {
 					...(decoded.alpha ? { alpha: { data: decoded.alpha } } : {}),
 				};
 		}
-		const decoded = await this.decode?.(bytes, picture.contentType);
+		const decoded = await this.decoder?.(bytes, contentType);
 		return (decoded && fromRgba(decoded)) ?? null;
 	}
 
@@ -110,10 +132,12 @@ export class DocxPdfPictures {
 		const { widthPx: width, heightPx: height } = picture;
 		if (!(width > 0 && height > 0)) return;
 		if (picture.chart) {
-			this.report.omitted(
-				picture.chart.shape ? 'shape' : 'chart',
-				'Charts and drawing shapes are not exported to PDF yet.',
-			);
+			if (this.drawings) this.drawings.draw(page, picture, x, y);
+			else
+				this.report.omitted(
+					picture.chart.shape ? 'shape' : 'chart',
+					'Charts and drawing shapes are not exported to PDF without a drawing painter.',
+				);
 			return;
 		}
 		const resource = this.#resources.get(picture.partName);

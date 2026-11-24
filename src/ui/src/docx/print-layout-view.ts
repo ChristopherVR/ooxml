@@ -1,6 +1,5 @@
 import type { DocumentModel } from 'ooxml-core/docx';
 import {
-	resolveParagraphFormatting,
 	listRevisions,
 	reviewDocumentFormatting,
 	reviewFormattingWarnings,
@@ -11,6 +10,7 @@ import { createCanvasMeasurer } from './canvas-measurer';
 import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout';
 import { decoratePages } from './print-header-footer';
 import { printBlockPages } from './print-block-pages';
+import { suppressedLineNumberParagraphs } from './print-line-numbers';
 
 const RELAYOUT_DELAY_MS = 32;
 
@@ -134,17 +134,7 @@ export function createPrintLayoutController(
 			},
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),
-			suppressedLineNumberParagraphs: new Set(
-				model.blocks
-					.filter(
-						(block) =>
-							block.type === 'paragraph' &&
-							(model.paragraphStyles
-								? resolveParagraphFormatting(block, model.paragraphStyles).suppressLineNumbers
-								: block.suppressLineNumbers),
-					)
-					.map((block) => block.id),
-			),
+			suppressedLineNumberParagraphs: suppressedLineNumberParagraphs(model),
 		});
 		if (model.pageColor)
 			handle.element.style.setProperty('--dve-page-color', `#${model.pageColor}`);

@@ -10,7 +10,11 @@ import {
 } from 'ooxml-core/docx/layout';
 import { renderTable } from './print-table';
 import { PrintPageWindow } from './print-page-window';
-import { lineNumberLabels, type PrintLineNumbering } from './print-line-numbers';
+import {
+	lineNumberLabel,
+	pageLineNumberMarks,
+	type PrintLineNumbering,
+} from './print-line-numbers';
 import { pageBorderBox } from './print-page-borders';
 import { resolveFragmentClick, type PrintFragmentHit } from './print-fragment-hit';
 import { pictureElement, type PictureUrl } from './print-picture';
@@ -330,26 +334,14 @@ export function renderPrintLayout(
 		sheet.dataset.pageIndex = String(pageIndex);
 		sheet.style.width = `${page.widthPx}px`;
 		sheet.style.height = `${page.heightPx}px`;
-		const labels: HTMLElement[] = [];
-		const bands = new Map<number, typeof page.columns>();
-		for (const column of page.columns) {
-			const index = column.sectionIndex ?? page.sectionIndex;
-			const band = bands.get(index) ?? [];
-			band.push(column);
-			bands.set(index, band);
-		}
-		for (const [sectionIndex, columns] of bands) {
-			const numbering = options.lineNumbers?.[sectionIndex];
-			if (numbering)
-				labels.push(
-					...lineNumberLabels(
-						{ ...page, sectionIndex, columns },
-						numbering,
-						counter,
-						options.suppressedLineNumberParagraphs,
-					),
-				);
-		}
+		const labels = options.lineNumbers
+			? pageLineNumberMarks(
+					page,
+					options.lineNumbers,
+					counter,
+					options.suppressedLineNumberParagraphs,
+				).map(lineNumberLabel)
+			: [];
 		window.add(sheet, () => {
 			const hitboxes: LineHitBox[] = [];
 			const borders = options.pageBorders?.[page.sectionIndex];

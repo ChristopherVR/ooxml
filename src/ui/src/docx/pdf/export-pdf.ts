@@ -1,7 +1,8 @@
 /**
  * Saves a Word document as a real PDF, the way Word's Save As PDF does: selectable text in the
  * document's fonts (embedded as subsets when the host supplies them), vector borders, shading and
- * rules, and pictures at their own resolution, on the pages Print Layout shows. It paints the
+ * rules, charts, shapes and text boxes as vector drawings with real text, pictures at their own
+ * resolution, watermarks, page borders and line numbers, on the pages Print Layout shows. It paints the
  * layout engine's result, so line and page breaks match the screen. No page is rasterised and no
  * print dialog opens. DOM-free: give a measurer to run it without a canvas.
  */
@@ -12,28 +13,28 @@ import {
 	type DocumentModel,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
-import {
-	layoutDocumentModel,
-	type LayoutBlockBox,
-	type LayoutPageBox,
-	type TextMeasurer,
-} from 'ooxml-core/docx/layout';
+import { layoutDocumentModel, type LayoutPageBox, type TextMeasurer } from 'ooxml-core/docx/layout';
 import { PdfFontSet, type PdfFontFile } from '../../export/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfVectorOptions } from '../../export/pdf-vector';
 import { createCanvasMeasurer } from '../canvas-measurer';
 import { paintBlock, type DocxPdfPainter } from './pdf-blocks';
+import { DocxPdfDrawings } from './pdf-drawings';
 import { paintFootnotes } from './pdf-footnotes';
 import { DocxPdfHooks } from './pdf-hooks';
 import type { DocxPdfBookmarks } from './pdf-navigation';
-import {
-	DocxPdfPictures,
-	type DocxPdfMedia,
-	type DocxPdfPicture,
-	type DocxPdfPictureDecoder,
-} from './pdf-pictures';
+import { blockPictures, pagePictures } from './pdf-objects';
+import { pageMarks, paintPageMarks, type DocxPdfPageMarks } from './pdf-page-marks';
+import { DocxPdfPictures, type DocxPdfMedia, type DocxPdfPictureDecoder } from './pdf-pictures';
 import { DocxPdfReportBuilder, pdfAConformance, type DocxPdfReport } from './pdf-report';
+import {
+	paintStoryFloats,
+	storyGraphicPictures,
+	storyGraphics,
+	type DocxPdfStoryGraphics,
+} from './pdf-story-graphics';
 import { placeStories } from './pdf-stories';
 import { DocxPdfText } from './pdf-text';
+import { paintWatermark } from './pdf-watermark';
 
 export type { DocxPdfReport, DocxPdfOmittedKind, DocxPdfConformance } from './pdf-report';
 export type { DocxPdfBookmarks } from './pdf-navigation';
@@ -91,31 +92,19 @@ export interface DocxPdfResult {
 
 const PT_PER_PX = 0.75;
 
-function* blockPictures(blocks: readonly LayoutBlockBox[]): Generator<DocxPdfPicture> {
-	for (const block of blocks) {
-		if (block.kind === 'paragraph') {
-			for (const line of block.lines)
-				for (const fragment of line.fragments) if (fragment.object) yield fragment.object;
-		} else
-			for (const row of block.rows) {
-				for (const cell of row.cells) yield* blockPictures(cell);
-				for (const nested of row.cellTables ?? []) yield* blockPictures(nested);
-			}
-	}
-}
-
-function* pagePictures(page: LayoutPageBox): Generator<DocxPdfPicture> {
-	for (const column of page.columns) yield* blockPictures(column.blocks);
-	for (const note of page.footnotes ?? []) yield* blockPictures(note.paragraphs);
-	yield* page.floats ?? [];
-}
-
 function selectedPages(count: number, pages: DocxPdfOptions['pages']): number[] {
 	const all = Array.from({ length: count }, (_, index) => index);
 	if (!pages || pages === 'all') return all;
 	const from = Math.max(1, Math.floor(pages.from));
 	const to = Math.min(count, Math.floor(pages.to));
 	return all.filter((index) => index + 1 >= from && index + 1 <= to);
+}
+
+/** What a page draws besides its text flow (`pdf-page-marks.ts`, `pdf-story-graphics.ts`). */
+interface PageExtras {
+	marks: DocxPdfPageMarks | undefined;
+	graphics: DocxPdfStoryGraphics | undefined;
+	measurer: TextMeasurer;
 }
 
 /** Paints one laid-out page. */
@@ -125,19 +114,17 @@ function paintPage(
 	stories: ReturnType<typeof placeStories>[number],
 	model: DocumentModel,
 	report: DocxPdfReportBuilder,
+	{ marks, graphics, measurer }: PageExtras,
 ): void {
 	const pdf = painter.page;
 	pdf.concat([PT_PER_PX, 0, 0, -PT_PER_PX, 0, page.heightPx * PT_PER_PX]);
-	const section = model.sections?.[page.sectionIndex];
-	if (section?.pageBorders)
-		report.omitted('pageBorder', 'Page borders are not exported to PDF yet.');
-	if (section?.lineNumbering) report.note('Line numbers are not exported to PDF yet.');
+	paintPageMarks(painter, page, marks, 'back', model, measurer, report);
+	paintWatermark(painter, graphics, page, measurer);
+	paintStoryFloats(painter, graphics, 'header', true);
+	paintStoryFloats(painter, graphics, 'footer', true);
 	const floats = page.floats ?? [];
-	const paintFloat = (float: (typeof floats)[number]) => {
-		if (float.textBox || float.textBoxLayout)
-			report.omitted('textBox', 'Text boxes are not exported to PDF yet.');
+	const paintFloat = (float: (typeof floats)[number]) =>
 		painter.pictures.draw(pdf, float, float.xPx, float.yPx);
-	};
 	const hooks = painter.hooks;
 	hooks?.startPage(pdf, page);
 	const placeFloat = (float: (typeof floats)[number]) =>
@@ -149,6 +136,7 @@ function paintPage(
 		for (const story of stories)
 			if (story.kind === kind)
 				for (const block of story.blocks) paintBlock(painter, block, story.x, story.y);
+		paintStoryFloats(painter, graphics, kind, false);
 	};
 	const artifact = (paint: () => void, subtype: 'Header' | 'Footer') =>
 		hooks && stories.some((story) => story.kind === subtype.toLowerCase())
@@ -162,6 +150,7 @@ function paintPage(
 	paintFootnotes(painter, page);
 	artifact(() => paintStories('footer'), 'Footer');
 	for (const float of floats) if (!float.behindText) placeFloat(float);
+	paintPageMarks(painter, page, marks, 'front', model, measurer, report);
 	hooks?.endPage();
 }
 
@@ -192,12 +181,16 @@ export async function exportDocxPdf(
 		report,
 		options.now ?? new Date(),
 	);
+	const marks = pageMarks(projected.model, layout.pages);
+	const graphics = storyGraphics(projected.model, layout.pages, stories, measurer, mode, report);
+	const text = new DocxPdfText(new PdfFontSet(options.fonts ?? []), measurer, report);
 	const pictures = new DocxPdfPictures(options.media, options.decodePicture, report);
+	pictures.drawings = new DocxPdfDrawings(pictures, text, report);
 	for (const index of indices) {
 		await pictures.prepare(pagePictures(layout.pages[index]!));
 		for (const story of stories[index] ?? []) await pictures.prepare(blockPictures(story.blocks));
+		if (graphics[index]) await pictures.prepare(storyGraphicPictures(graphics[index]));
 	}
-	const text = new DocxPdfText(new PdfFontSet(options.fonts ?? []), measurer, report);
 	const tagged = options.taggedPdf !== false;
 	const hooks = new DocxPdfHooks(projected.model, {
 		tagged,
@@ -216,6 +209,11 @@ export async function exportDocxPdf(
 			stories[index] ?? [],
 			projected.model,
 			report,
+			{
+				marks: marks[index],
+				graphics: graphics[index],
+				measurer,
+			},
 		);
 		pages.push(pdf);
 	}
