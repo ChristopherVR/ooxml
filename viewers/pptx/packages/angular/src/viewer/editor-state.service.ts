@@ -398,9 +398,9 @@ export class EditorStateService {
 		if (elements.length === 0) {
 			return;
 		}
-		this.commit(this.t('pptx.undoAction.edit'), slideIndex, (els) => {
-			return replaceElementInList(els, id, elements) ?? els;
-		});
+		this.commit(this.t('pptx.undoAction.edit'), slideIndex, (els) => [
+			...(replaceElementInList(els, id, elements) ?? els),
+		]);
 		this.selectedIds.set(elements.map((element) => element.id));
 	}
 

@@ -3,6 +3,7 @@
 import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
+	Cube: ['Cube', 'Cube', 'Cubo', '多维数据集'],
 	Web: ['Web', 'Web', 'Web', '网络'],
 	'Returns XML element or attribute values selected by XPath, as a column.': [
 		'Renvoie dans une colonne les valeurs des éléments ou attributs XML sélectionnés par XPath.',
