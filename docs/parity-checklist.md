@@ -71,7 +71,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 | ------------- | ------------ | ------------ | -------------------------- | --------------------- |
 | Chart render  | 2-D and 3-D  | 2-D and 3-D  | yes, own renderer with 3-D | 2-D and 3-D, embedded |
 | Chart editing | yes          | yes          | yes                        | partial               |
-| ChartEx       | partial      | partial      | partial                    | no                    |
+| ChartEx       | partial      | partial      | partial                    | partial               |
 | SmartArt      | render, edit | render, edit | render, edit               | no (by design)        |
 | Equations     | yes          | no           | yes                        | no                    |
 | Proofing      | browser only | none         | browser only               | browser only          |
@@ -99,7 +99,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       approximate country outlines with a translated notice. A new map has no `cx:geoCache`, and
       Office 16 draws it empty until Office itself adds map data through its online service; this
       code never fetches geodata. Exact shapes need a cache Office wrote.
-- [ ] **P1** Visio has no ChartEx path (`src/ui/src/visio/render-embedded-chart.ts`).
+- [x] **P1** Visio ChartEx path: embedded Excel ChartEx workbooks (all 8 families, including
+      standalone `xl/charts/chartEx*.xml`) are read, rendered via the shared SVG painter, and
+      insertable/editable in Visio's Insert Chart dialog (`visio/prepare-embedded.ts`,
+      `src/ui/src/visio/render-embedded-chart.ts`, `viewer-insert-chart-ex.ts`; verified in
+      `edit-chart-object-chartex.test.ts`, `render-embedded-chart.test.ts` and
+      `viewer-insert-chart.test.ts`).
 - [ ] **P1** Pivot charts: `pivotSource` and `pivotFmts` are only carried through; no field
       buttons and no link to PivotTable edits.
 - [ ] **P1** Chart Design lacks Add Chart Element and Select Data in Word, Excel and PowerPoint,
