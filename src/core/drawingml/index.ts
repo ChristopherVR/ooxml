@@ -74,6 +74,7 @@ export * from './picture-artistic';
 export { inspectRasterImage, RasterImageError, RASTER_IMAGE_LIMITS } from './raster-image';
 export type { RasterImageInfo, RasterImageOptions, RasterImageErrorCode } from './raster-image';
 export { decodePng, jpegComponents, type DecodedRaster } from './raster-decode';
+export { encodePng } from './raster-encode';
 export * from './picture-hsl-pixels';
 
 export {
