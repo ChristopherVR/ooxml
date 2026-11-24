@@ -542,7 +542,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `__fixtures__/floating-table`). They stay on the page where they occur; tables that do not
       fit, hold footnotes or merge cells vertically fall back to the flow; narrow gaps stay empty;
       floating tables in cells, on multi-column pages and in modes before 15 are unmeasured.
-- [ ] **P1** Text frames (`w:framePr`) other than drop caps are laid out as ordinary paragraphs.
+- [x] **P1** Text frames (`w:framePr`) other than drop caps are parsed with style inheritance and
+      laid out at their anchored box positions (`hAnchor`/`vAnchor`, `x`/`y`, `xAlign`/`yAlign`,
+      `w`/`h`/`hRule`), grouping consecutive matching paragraphs into one frame and registering
+      wrap exclusions (`around`, `notBeside`, `none`) (`docx/layout/flow-text-frame.ts`,
+      `docx/layout/text-frame.test.ts`).
 - [ ] **P2** East Asian layout: kinsoku (per-language default sets measured from Word 16,
       `w:strictFirstAndLastChars`, `w:noLineBreaksBefore`/`After`), `w:autoSpaceDE`/`DN` (a quarter
       em) and hanging punctuation in justified paragraphs (`w:overflowPunct`) are applied
