@@ -46,6 +46,11 @@ function tiff(): Buffer {
 test('Visio picks SVG and BMP files and decodes dropped TIFF to visible pixels', async ({
 	page,
 }) => {
+	const decoderRequests: string[] = [];
+	page.context().on('request', (request) => {
+		if (/\/UTIF-[\w-]+\.js$/.test(new URL(request.url()).pathname))
+			decoderRequests.push(request.url());
+	});
 	await page.setViewportSize({ width: 1600, height: 1000 });
 	await openDemo(page);
 	const viewer = page.locator('visio-viewer');
@@ -69,6 +74,7 @@ test('Visio picks SVG and BMP files and decodes dropped TIFF to visible pixels',
 	await expect(images).toHaveCount(1);
 	await picker.setInputFiles({ name: 'red.bmp', mimeType: 'image/bmp', buffer: bitmap() });
 	await expect(images).toHaveCount(2);
+	expect(decoderRequests).toEqual([]);
 	await viewer.locator('svg.paper').evaluate((paper, bytes) => {
 		const dataTransfer = new DataTransfer();
 		dataTransfer.items.add(new File([new Uint8Array(bytes)], 'gray.tif', { type: 'image/tiff' }));
@@ -78,6 +84,10 @@ test('Visio picks SVG and BMP files and decodes dropped TIFF to visible pixels',
 			);
 	}, Array.from(tiff()));
 	await expect(images).toHaveCount(3);
+	await expect.poll(() => decoderRequests.length).toBeGreaterThan(0);
+	expect([...new Set(decoderRequests.map((url) => new URL(url).origin))]).toEqual([
+		new URL(page.url()).origin,
+	]);
 	const pixels = await images.evaluateAll(async (elements) =>
 		Promise.all(
 			elements.map(async (element) => {

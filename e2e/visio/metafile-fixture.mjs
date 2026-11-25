@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { createVsdxFixture } from './fixture.mjs';
-import { emf, record } from '../../viewers/visio/scripts/emf-audit/fixtures.mjs';
-/** Original generated EMF primitives in a generated VSDX package. No corpus bytes. */
+import { comment, emf, record } from '../../viewers/visio/scripts/emf-audit/fixtures.mjs';
+/** A generated classic EMF with balanced DC state, optionally followed by an EMF+ comment. */
 export async function createMetafileFixture(unsupported = false) {
 	const zip = await JSZip.loadAsync(await createVsdxFixture('Embedded vector'));
 	const path = 'visio/pages/page1.xml';
@@ -17,9 +17,8 @@ export async function createMetafileFixture(unsupported = false) {
 		'visio/pages/_rels/page1.xml.rels',
 		'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="emf" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/generated.emf"/></Relationships>',
 	);
-	zip.file(
-		'visio/media/generated.emf',
-		emf(unsupported ? [record(33), record(34, [-1])] : [record(43, [5, 10, 95, 90])], 100, 100),
-	);
+	const records = [record(33), record(43, [5, 10, 95, 90]), record(34, [-1])];
+	if (unsupported) records.push(comment([]));
+	zip.file('visio/media/generated.emf', emf(records, 100, 100));
 	return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }

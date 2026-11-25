@@ -300,7 +300,14 @@ const consumerPackages = createRequire(resolve(consumer, 'package.json'));
 const { svelte } = await import(
 	pathToFileURL(consumerPackages.resolve('@sveltejs/vite-plugin-svelte')).href
 );
-await build({ configFile: false, root: consumer, plugins: [svelte()], build: { outDir: 'dist' } });
+await build({
+	configFile: false,
+	root: consumer,
+	plugins: [svelte()],
+	// Match the demos and suite: Vite's default IIFE workers inline the lazy TIFF decoder.
+	worker: { format: 'es' },
+	build: { outDir: 'dist' },
+});
 writeFileSync(
 	resolve(root, `.package-build/consumer${workspaceRuntime ? '.workspace' : ''}.txt`),
 	consumer,

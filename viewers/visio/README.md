@@ -112,6 +112,8 @@ The [viewer API](docs/api.md) is the full reference, and the [bindings guide](do
 
 Visio opens, renders, edits and saves drawings locally. The browser can load the bundled TIFF decoder from the app's origin when it first needs it. When the host or reader enables Google Fonts, only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
 
+In a Vite consumer, set `worker.format` to `'es'` to keep the TIFF decoder in an on-demand worker chunk.
+
 ## Development
 
 The viewer is part of the `ooxml` monorepo (a Bun workspace). Install once at the repository root, then work from `viewers/visio` with Node.js 22.12 or newer and Bun. `ooxml-core` (`src/core/visio`) and `ooxml-ui` (`src/ui/src/visio`) resolve to the same checkout, so there is nothing to link.

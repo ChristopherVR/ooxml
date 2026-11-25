@@ -168,7 +168,7 @@ test('isolated import renders the bounded embedded EMF subset and safely omits o
 	});
 	await expect(page.locator('#file-name')).toHaveText('unsupported.vsdx');
 	await expect(page.locator('visio-viewer [data-shape-id="emf"] svg')).toHaveCount(0);
-	await expect(page.locator('#notes')).toContainText('conversion subset');
+	await expect(page.locator('#notes')).toContainText('All EMF+ payloads are rejected');
 	await loadSampleTemplate(page.locator('visio-viewer'));
 	await expect(page.locator('visio-viewer svg.paper')).toHaveAttribute(
 		'aria-label',

@@ -74,8 +74,10 @@ try {
 		const metafileResult = await metafileReply;
 		assert.equal(metafileResult.ok, true, metafileResult.message);
 		const emf = metafileResult.document.pages[0].shapes.find((candidate) => candidate.id === 'emf');
-		if (unsupported) assert.equal(emf.foreignVector, undefined);
-		else {
+		if (unsupported) {
+			assert.equal(emf.foreignVector, undefined);
+			assert.ok(metafileResult.document.diagnostics.some((note) => note.code === 'emf-emf-plus'));
+		} else {
 			assert.ok(emf.foreignVector.vector.items.length > 0);
 			assert.equal(emf.foreignVector.vector.width, 100);
 			assert.ok(

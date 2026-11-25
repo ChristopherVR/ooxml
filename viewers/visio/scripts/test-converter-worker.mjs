@@ -2,14 +2,14 @@ import assert from 'node:assert/strict';
 import { parentPort } from 'node:worker_threads';
 import { convertMetafileToSvgTree } from 'emf-converter';
 import { convertVisioMetafile, validateVisioForeignVector } from 'ooxml-core/visio';
-import { emf, record } from './emf-audit/fixtures.mjs';
+import { comment, emf, record } from './emf-audit/fixtures.mjs';
 assert.ok(
 	import.meta.resolve('emf-converter').endsWith('/dist/browser.mjs'),
 	'The browser export must be selected; never load Node codecs.',
 );
 for (const records of [
 	[],
-	[record(43, [0, 0, 99, 99])],
+	[record(33), record(43, [0, 0, 99, 99]), record(34, [-1])],
 	[record(42, [5, 10, 95, 90])],
 	[record(27, [5, 10]), record(54, [95, 90])],
 ]) {
@@ -20,13 +20,17 @@ for (const records of [
 	assert.deepEqual(validateVisioForeignVector(structuredClone(result.vector)), result.vector);
 	if (records.length) assert.ok(result.vector.items.length > 0);
 }
-for (const records of [[record(70, [4, 0x2b464d45])], [record(33), record(34, [-1])]]) {
+for (const [records, code] of [
+	[[comment([])], 'emf-plus'],
+	[[record(34, [-1])], 'restore-state'],
+]) {
 	let called = false;
 	const result = await convertVisioMetafile(emf(records), async () => {
 		called = true;
 		return null;
 	});
 	assert.notEqual(result.status, 'ok');
+	assert.equal(result.code, code);
 	assert.equal(called, false);
 }
 // Stock white pen plus null brush must not silently fall back to black or fill.

@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
 	// page keeps its demo/index.html output path, and the config's own folder keeps `public` and the output.
 	root: resolve('../../demos/visio'),
 	publicDir: resolve('public'),
+	worker: { format: 'es' },
 	build: {
 		outDir: resolve(
 			process.env.PAGES_OUT ?? (mode === 'browser-tests' ? '.browser-test-dist' : 'site-dist'),

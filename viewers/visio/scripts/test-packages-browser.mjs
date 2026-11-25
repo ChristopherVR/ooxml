@@ -14,10 +14,11 @@ const consumer = readFileSync(
 );
 const consumerRequire = createRequire(resolve(consumer, 'package.json'));
 const { parseVsdx } = await import(pathToFileURL(consumerRequire.resolve('ooxml-core/visio')).href);
+const port = Number(process.env.PLAYWRIGHT_PORT ?? 4288);
 const server = await preview({
 	configFile: false,
 	root: consumer,
-	preview: { port: 4288, strictPort: true, host: '127.0.0.1' },
+	preview: { port, strictPort: true, host: '127.0.0.1' },
 });
 const browser = await chromium.launch(
 	process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {},
@@ -26,7 +27,7 @@ try {
 	const page = await browser.newPage();
 	const errors = [];
 	page.on('pageerror', (error) => errors.push(error.message));
-	await page.goto('http://127.0.0.1:4288');
+	await page.goto(`http://127.0.0.1:${port}`);
 	await page.waitForFunction(() => window.viewer);
 	await page.locator('#file').setInputFiles(resolve(consumer, 'fixture.vsdx'));
 	await page.waitForFunction(

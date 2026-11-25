@@ -17,4 +17,4 @@ The Visio editor (`src/ui/src/visio/parse-worker.ts`, `worker-parser.ts`) inject
 
 Conversion failure omits the asset with a diagnostic while preserving the rest of the drawing. Successful output reports the limited primitive subset explicitly; it does not establish Microsoft Visio visual fidelity. Cached image placement, opacity, shape transforms, master inheritance and local replacement remain core-owned.
 
-Generated tests cover admission, failure, deduplication, limits, placement and inheritance. In a Visio 16.0 automation probe, a bounded EMF with a custom brush and rectangle rendered after VSDX reopen. Broader record coverage and a visual comparison corpus remain open.
+Generated tests cover admission, failure, deduplication, limits, placement and inheritance. The packed worker and browser tests render classic EMF with balanced SaveDC/RestoreDC records and omit the whole asset when it also contains an EMF+ comment. In a Visio 16.0 automation probe, a bounded EMF with a custom brush and rectangle rendered after VSDX reopen. Broader record coverage and a visual comparison corpus remain open.
