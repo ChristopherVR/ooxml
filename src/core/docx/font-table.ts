@@ -8,7 +8,8 @@ export interface FontFallback {
 const families: ReadonlyMap<string, NonNullable<FontFallback['generic']>> = new Map([
 	['roman', 'serif'],
 	['swiss', 'sans-serif'],
-	['modern', 'monospace'],
+	// Word also assigns modern to proportional fonts such as Montserrat.
+	['modern', 'sans-serif'],
 	['script', 'cursive'],
 	['decorative', 'fantasy'],
 ]);
@@ -20,7 +21,9 @@ export function parseFontTable(source: string): ReadonlyMap<string, FontFallback
 		const name = getW(font, 'name')?.trim();
 		if (!name) continue;
 		const alternate = getW(first(font, 'altName'), 'val')?.trim();
-		const generic = families.get(getW(first(font, 'family'), 'val') ?? '');
+		const pitch = getW(first(font, 'pitch'), 'val');
+		const generic =
+			pitch === 'fixed' ? 'monospace' : families.get(getW(first(font, 'family'), 'val') ?? '');
 		if (alternate || generic)
 			result.set(name.toLowerCase(), {
 				...(alternate ? { alternate } : {}),

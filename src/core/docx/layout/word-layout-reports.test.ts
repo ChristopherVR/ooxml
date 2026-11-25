@@ -154,6 +154,46 @@ it('tries the font table alternate followed by a matching generic family (#337)'
 	expect(stack).toBe('"Fakeserif Std", "Cambria", "Caladea", serif');
 });
 
+it('uses explicit fixed pitch and keeps proportional modern fonts proportional (#337)', async () => {
+	const cases = [
+		{ name: 'Montserrat', family: 'modern', pitch: 'variable', expected: 'sans-serif' },
+		{ name: 'Modern Default', family: 'modern', pitch: 'default', expected: 'sans-serif' },
+		{ name: 'Modern Unspecified', family: 'modern', expected: 'sans-serif' },
+		{ name: 'Modern Fixed', family: 'modern', pitch: 'fixed', expected: 'monospace' },
+		{ name: 'Swiss Fixed', family: 'swiss', pitch: 'fixed', expected: 'monospace' },
+		{ name: 'Unclassified Fixed', pitch: 'fixed', expected: 'monospace' },
+		{ name: 'Roman Variable', family: 'roman', pitch: 'variable', expected: 'serif' },
+	];
+	const ns = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+	const zip = new JSZip();
+	const fonts = cases.map(({ name, family, pitch }) => {
+		const fontFamily = family ? `<w:family w:val="${family}"/>` : '';
+		const fontPitch = pitch ? `<w:pitch w:val="${pitch}"/>` : '';
+		return `<w:font w:name="${name}">${fontFamily}${fontPitch}</w:font>`;
+	});
+	const paragraphs = cases.map(
+		({ name }) =>
+			`<w:p><w:r><w:rPr><w:rFonts w:ascii="${name}" w:hAnsi="${name}"/></w:rPr><w:t>Wi</w:t></w:r></w:p>`,
+	);
+	zip.file('word/fontTable.xml', `<w:fonts ${ns}>${fonts.join('')}</w:fonts>`);
+	zip.file(
+		'word/document.xml',
+		`<w:document ${ns}><w:body>${paragraphs.join('')}</w:body></w:document>`,
+	);
+	const { model } = await loadDocx(await zip.generateAsync({ type: 'uint8array' }));
+	const { pages } = layoutDocumentModel(model, measurer);
+	const stacks = at(at(pages, 0).columns, 0).blocks.flatMap((block) =>
+		block.kind === 'paragraph'
+			? block.lines.flatMap((line) =>
+					line.fragments.map(({ fontFamily, fontFallback }) =>
+						cssFontStack(fontFamily, fontFallback),
+					),
+				)
+			: [],
+	);
+	expect(stacks).toEqual(cases.map(({ name, expected }) => `"${name}", ${expected}`));
+});
+
 it('uses the same height for omitted size and explicit 10 pt (#338)', async () => {
 	const { lines } = await layout('k4-taille-par-defaut');
 	expect(DEFAULT_FONT_SIZE_PT).toBe(10);
