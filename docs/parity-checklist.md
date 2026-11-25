@@ -690,13 +690,16 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       internal links (to bookmarks), headings from tags and bookmarks, rotated text (as turned text
       boxes), vector drawings as floating DrawingML shapes and `wpg` groups, and decodes JBIG2 and
       JPEG 2000 pictures (#319).
-- [ ] **P1** PDF conversion leaves out (and reports) gradients, pattern fills and clipped shapes in
-      vector drawings, whose text stays ordinary flowing text; endnotes collected per section stay
-      body text; a row split between sentences in a table where empty cells are normal stays two
-      rows; JBIG2 amendment features, High Throughput JPEG 2000 and JPX Part 2 extensions are
-      reported, and JPEG 2000 ICC profiles are not applied. A footnote with a symbol mark keeps it
-      as Word's custom mark (this editor shows the number beside it). This editor shows `wpg` groups
-      as placeholders. Scanned pages stay pictures unless the host supplies OCR (#319).
+- [x] **P1** PDF conversion rebuilds gradient fills (axial/radial shadings and shading patterns),
+      tiling pattern fills, rectangularly clipped vector shapes, and text enclosed inside drawing
+      shapes (as `wps:txbx`), extracts endnotes collected at the end of each section (`sectEnd`),
+      joins table rows split between two sentences when empty cells are normal, applies embedded
+      JPEG 2000 ICC Matrix/TRC profiles, decodes JBIG2 T.88 Amendment 2 extended generic templates
+      (`EXTTEMPLATE=1`), and renders `wpg:wgp` groups as vector SVG shapes in the Word editor
+      instead of placeholders (#319).
+- [ ] **P2** PDF conversion still reports (without silently dropping) non-rectangular clipping
+      paths, mesh shadings (Type 4-7), JBIG2 colour extensions, High Throughput JPEG 2000 and JPX
+      Part 2 extensions; scanned pages stay pictures unless the host supplies OCR (#319).
 - [ ] **P1** Pagination is approximate (no Word-rendered page corpus yet); caret placement at line
       and page boundaries is heuristic; no kerning or complex-script shaping. Single line heights
       come from the browser's

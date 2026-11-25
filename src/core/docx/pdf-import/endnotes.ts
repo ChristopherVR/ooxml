@@ -31,6 +31,8 @@ export type EndnoteFormat = 'decimal' | 'lowerRoman' | 'upperRoman' | 'lowerLett
 export interface Endnotes {
 	notes: NoteContent[];
 	format: EndnoteFormat;
+	/** Whether the endnotes were collected at the end of the document or at the end of each section. */
+	position?: 'docEnd' | 'sectEnd';
 }
 
 const HEADING = /^(end ?notes?|notes?|notes de fin|endnoten|anmerkungen|notas( finales)?|note)$/i;
@@ -145,7 +147,107 @@ export function extractEndnotes(pages: EndnotePage[], bodySize: number): Endnote
 		});
 		const taken = new Set<Line>([...block, ...(start.heading ? [start.heading] : [])]);
 		for (const page of pages) page.lines = page.lines.filter((line) => !taken.has(line));
-		return { notes, format };
+		return { notes, format, position: 'docEnd' };
 	}
-	return undefined;
+	return extractSectionEndnotes(sorted, pages, bodySize, foot);
+}
+
+/**
+ * Endnotes collected at the end of each section: one or more separator- or heading-introduced
+ * note blocks whose marks match raised marks in the preceding section.
+ */
+function extractSectionEndnotes(
+	sorted: Line[][],
+	pages: EndnotePage[],
+	bodySize: number,
+	foot: number,
+): Endnotes | undefined {
+	const candidates = starts(sorted, pages);
+	if (!candidates.length) return undefined;
+	const allGroups: { group: ReturnType<typeof groupNotes>[number]; ref: Fragment }[] = [];
+	const taken = new Set<Line>();
+	let prevEndPage = 0;
+	let prevEndIndex = 0;
+	for (let ci = 0; ci < candidates.length; ci++) {
+		const start = candidates[ci]!;
+		if (start.page < prevEndPage || (start.page === prevEndPage && start.index < prevEndIndex))
+			continue;
+		const nextStart = candidates[ci + 1];
+		const firstLine = sorted[start.page]?.[start.index];
+		if (!firstLine) continue;
+		const limit = start.heading ? firstLine.size + 0.5 : bodySize * 0.95;
+		const block: Line[] = [];
+		let endPage = start.page;
+		let endIndex = start.index;
+		for (let p = start.page; p < sorted.length; p++) {
+			const pageLines = sorted[p]!;
+			const from = p === start.page ? start.index : 0;
+			const stopAt = nextStart && nextStart.page === p ? nextStart.index : pageLines.length;
+			let broke = false;
+			for (let idx = from; idx < stopAt; idx++) {
+				const line = pageLines[idx]!;
+				if (line.size >= limit) {
+					broke = true;
+					break;
+				}
+				// On a later page, stop if the text jumps to a non-note paragraph (new section).
+				if (p > start.page && idx === 0 && !leadingMark(line) && line.size >= bodySize * 0.95) {
+					broke = true;
+					break;
+				}
+				block.push(line);
+				endPage = p;
+				endIndex = idx + 1;
+			}
+			// Section endnotes end at a section break (typically a page boundary).
+			if (broke || p === start.page) break;
+		}
+		if (!block.length) continue;
+		const groups = groupNotes(block);
+		if (!groups.length) continue;
+		// Body lines in this section, before the note block.
+		const before: Line[] = [];
+		for (let p = prevEndPage; p <= start.page; p++) {
+			const pageLines = sorted[p]!;
+			const from = p === prevEndPage ? prevEndIndex : 0;
+			const to = p === start.page ? start.index : pageLines.length;
+			for (let idx = from; idx < to; idx++) before.push(pageLines[idx]!);
+		}
+		const marks = before.flatMap((line) =>
+			line.fragments
+				.filter((fragment, index) => index > 0 || !fragment.script)
+				.map((fragment) => ({ fragment, page: line.page })),
+		);
+		let at = 0;
+		const references: { fragment: Fragment; page: number }[] = [];
+		for (const group of groups) {
+			while (at < marks.length && !isFreeMark(marks[at]!.fragment, group.mark)) at++;
+			if (at >= marks.length) break;
+			references.push(marks[at++]!);
+		}
+		if (references.length !== groups.length) continue;
+		const blockPage = block[0]!.page;
+		const atFoot = block[block.length - 1]!.bottom > foot - 1.5 * bodySize;
+		const farBack = references.some((reference) => reference.page < blockPage - 1);
+		if (!start.heading && atFoot && !farBack) continue;
+		groups.forEach((group, index) => allGroups.push({ group, ref: references[index]!.fragment }));
+		for (const line of block) taken.add(line);
+		if (start.heading) taken.add(start.heading);
+		prevEndPage = endPage;
+		prevEndIndex = endIndex;
+	}
+	if (!allGroups.length) return undefined;
+	const format =
+		FORMATS.find(([, mark]) =>
+			allGroups.every(({ group }, index) => group.mark === mark(index + 1)),
+		)?.[0] ?? 'decimal';
+	const numbered = FORMATS.find(([name]) => name === format)![1];
+	const notes = allGroups.map(({ group, ref }, index): NoteContent => {
+		const id = index + 1;
+		const custom = group.mark !== numbered(id);
+		ref.note = { id, mark: group.mark, custom, kind: 'endnote' };
+		return { id, ...(custom ? { customMark: group.mark } : {}), lines: noteLines(group) };
+	});
+	for (const page of pages) page.lines = page.lines.filter((line) => !taken.has(line));
+	return { notes, format, position: 'sectEnd' };
 }

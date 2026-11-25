@@ -20,7 +20,15 @@ import {
 	type PdfDict,
 	type PdfValue,
 } from './objects';
-import type { PdfPageImage, PdfPagePath, PdfPageRule, PdfTextSpan } from './page-content';
+import type {
+	PdfGradientFill,
+	PdfPageImage,
+	PdfPagePath,
+	PdfPageRule,
+	PdfPatternFill,
+	PdfTextSpan,
+} from './page-content';
+import { readPdfPattern, readPdfShading } from './shading';
 
 export type { Matrix };
 export { apply, multiply };
@@ -45,6 +53,8 @@ interface State {
 	dash: number[];
 	fillPattern: boolean;
 	strokePattern: boolean;
+	fillGradient: PdfGradientFill | undefined;
+	fillPatternFill: PdfPatternFill | undefined;
 	clip: ClipBox | undefined;
 }
 
@@ -163,6 +173,8 @@ export class ContentReader {
 					dash: [],
 					fillPattern: false,
 					strokePattern: false,
+					fillGradient: undefined,
+					fillPatternFill: undefined,
 					clip: undefined,
 				};
 		let tm: Matrix = [1, 0, 0, 1, 0, 0];
@@ -271,6 +283,8 @@ export class ContentReader {
 				case 'k':
 					state.fill = colorOf(operands.filter(isNumber));
 					state.fillPattern = false;
+					state.fillGradient = undefined;
+					state.fillPatternFill = undefined;
 					break;
 				case 'G':
 				case 'RG':
@@ -297,13 +311,33 @@ export class ContentReader {
 				case 'SC':
 				case 'SCN': {
 					const values = operands.filter(isNumber);
-					const pattern = isName(operands[operands.length - 1]);
-					if (op.startsWith('s')) state.fillPattern = pattern;
-					else state.strokePattern = pattern;
+					const lastOperand = operands[operands.length - 1];
+					const pattern = isName(lastOperand);
 					if (values.length === 1 || values.length === 3 || values.length === 4) {
 						if (op.startsWith('s')) state.fill = colorOf(values);
 						else state.stroke = colorOf(values);
 					}
+					if (op.startsWith('s')) {
+						state.fillGradient = undefined;
+						state.fillPatternFill = undefined;
+						if (pattern) {
+							const resolved = await readPdfPattern(
+								this.document,
+								resources,
+								lastOperand.name,
+								state.ctm,
+								this.page,
+								state.fill,
+							);
+							if (resolved?.gradient) {
+								state.fillGradient = resolved.gradient;
+								state.fillPattern = false;
+							} else if (resolved?.patternFill) {
+								state.fillPatternFill = resolved.patternFill;
+								state.fillPattern = false;
+							} else state.fillPattern = true;
+						} else state.fillPattern = false;
+					} else state.strokePattern = pattern;
 					break;
 				}
 				case 'BT':
@@ -416,9 +450,39 @@ export class ContentReader {
 				case 'W*':
 					clipping = true;
 					break;
-				case 'sh':
-					this.#leftOut('shading');
+				case 'sh': {
+					const name = operands[0];
+					const shadings =
+						name instanceof PdfName
+							? await this.document.dict(resources.get('Shading'))
+							: undefined;
+					const gradient =
+						name instanceof PdfName && shadings
+							? await readPdfShading(this.document, shadings.get(name.name), state.ctm, this.page)
+							: undefined;
+					if (
+						gradient &&
+						state.clip &&
+						state.clip.x1 > state.clip.x0 &&
+						state.clip.y1 > state.clip.y0
+					) {
+						if (this.result.rules.length < MAX_RULES)
+							this.result.rules.push({
+								x0: state.clip.x0,
+								y0: state.clip.y0,
+								x1: state.clip.x1,
+								y1: state.clip.y1,
+								kind: 'rect',
+								stroked: false,
+								filled: true,
+								color: gradient.stops[0]!.color,
+								lineWidth: 0,
+								...(state.fillAlpha < 1 ? { alpha: state.fillAlpha } : {}),
+								gradient,
+							});
+					} else this.#leftOut('shading');
 					break;
+				}
 				case 'BMC':
 				case 'BDC':
 					if (this.#marked.length < 256)

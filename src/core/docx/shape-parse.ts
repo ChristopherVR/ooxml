@@ -139,17 +139,12 @@ export function isTextBoxShape(graphicData: XmlElement | undefined): boolean {
 	return child(shapeElement(graphicData), WPS_NS, 'cNvSpPr')?.getAttribute('txBox') === '1';
 }
 
-/**
- * The shape in a `wps:wsp`, or undefined when it has no preset geometry the editor can draw. A text
- * box (`txBox="1"`) is read as its frame only: it is drawn like any shape, but its text, size and
- * outline are edited as a text box, so the shape model leaves it alone (`editable: false`). Editing
- * a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces the pair with the modern
- * drawing alone.
- */
-export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | undefined {
-	const wsp = shapeElement(graphicData);
+/** Parses a single `wps:wsp` element into a `ShapeSpec` (used directly and for `wpg:wgp` children). */
+export function parseShapeElement(
+	wsp: XmlElement | undefined,
+	textBox = false,
+): ShapeSpec | undefined {
 	if (!wsp) return undefined;
-	const textBox = isTextBoxShape(graphicData);
 	const spPr = child(wsp, WPS_NS, 'spPr');
 	if (!spPr) return undefined;
 	const custom = child(spPr, A_NS, 'custGeom');
@@ -186,4 +181,15 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 		editable: simple,
 		textEditable: plain.plain,
 	};
+}
+
+/**
+ * The shape in a `wps:wsp`, or undefined when it has no preset geometry the editor can draw. A text
+ * box (`txBox="1"`) is read as its frame only: it is drawn like any shape, but its text, size and
+ * outline are edited as a text box, so the shape model leaves it alone (`editable: false`). Editing
+ * a shape Word wrote with a VML fallback (`mc:AlternateContent`) replaces the pair with the modern
+ * drawing alone.
+ */
+export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | undefined {
+	return parseShapeElement(shapeElement(graphicData), isTextBoxShape(graphicData));
 }

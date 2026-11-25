@@ -148,12 +148,15 @@ export function genericRegion(
 	const info = readRegionInfo(data, start, end);
 	const flags = data[start + 17];
 	if (flags === undefined) throw new Jbig2Error('A JBIG2 generic region is too short.');
-	if (flags & 16) throw new Jbig2Error('JBIG2 extended generic templates are not supported.');
 	const mmr = (flags & 1) === 1;
 	const template = (flags >> 1) & 3;
+	const extTemplate = (flags & 16) !== 0;
+	if (extTemplate && (mmr || template !== 0))
+		throw new Jbig2Error('JBIG2 extended generic templates require template 0 arithmetic coding.');
 	let at = start + 18;
-	const pixels = mmr ? [] : readAt(data, at, template === 0 ? 4 : 1);
-	if (!mmr) at += template === 0 ? 8 : 2;
+	const atCount = mmr ? 0 : extTemplate ? 12 : template === 0 ? 4 : 1;
+	const pixels = atCount ? readAt(data, at, atCount) : [];
+	at += atCount * 2;
 	if (segment.unknownLength) {
 		// The data ends with the end marker and the row count (7.2.7).
 		info.height = Math.min(info.height, u32(data, end - 4));
@@ -165,7 +168,14 @@ export function genericRegion(
 		: decodeGeneric(
 				new ArithmeticDecoder(data, at, end),
 				genericContexts(template),
-				{ width: info.width, height: info.height, template, at: pixels, tpgdon: (flags & 8) !== 0 },
+				{
+					width: info.width,
+					height: info.height,
+					template,
+					at: pixels,
+					tpgdon: (flags & 8) !== 0,
+					...(extTemplate ? { extTemplate: true } : {}),
+				},
 				budget,
 			);
 	return { info, bitmap };

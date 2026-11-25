@@ -77,6 +77,8 @@ export interface PackageInput {
 	/** Endnotes, numbered the same way, shown in `endnoteFormat` (`w:endnotePr/w:numFmt`). */
 	endnotes?: NoteInput[];
 	endnoteFormat?: string;
+	/** Where Word places endnotes (`w:endnotePr/w:pos`): `sectEnd` or default end of document. */
+	endnotePosition?: 'docEnd' | 'sectEnd';
 }
 
 export interface NoteInput {
@@ -389,7 +391,7 @@ export async function writePackage(input: PackageInput): Promise<Uint8Array> {
 	zip.file('word/styles.xml', stylesXml(input));
 	zip.file(
 		'word/settings.xml',
-		`${XML_DECLARATION}<w:settings ${ROOT_NAMESPACES}>${input.endnotes?.length ? `<w:endnotePr>${el('w:numFmt', { 'w:val': input.endnoteFormat ?? 'decimal' })}<w:endnote w:id="-1"/><w:endnote w:id="0"/></w:endnotePr>` : ''}<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`,
+		`${XML_DECLARATION}<w:settings ${ROOT_NAMESPACES}>${input.endnotes?.length ? `<w:endnotePr>${input.endnotePosition === 'sectEnd' ? '<w:pos w:val="sectEnd"/>' : ''}${el('w:numFmt', { 'w:val': input.endnoteFormat ?? 'decimal' })}<w:endnote w:id="-1"/><w:endnote w:id="0"/></w:endnotePr>` : ''}<w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`,
 	);
 	zip.file('docProps/core.xml', coreXml(input.properties));
 	for (const item of writer.media) zip.file(`word/${item.name}`, item.data);

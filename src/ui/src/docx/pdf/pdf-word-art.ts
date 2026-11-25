@@ -76,14 +76,8 @@ function outlineLines(page: PdfVectorPage, font: PdfEmbeddedFont, layout: WordAr
 	const shadow = layout.shadow;
 	const reflection = layout.reflection;
 	if (reflection) {
-		const bottom = Math.max(
-			0,
-			...drawn.map(({ bounds }) => (bounds ? bounds[3] : 0)),
-		);
-		const top = Math.min(
-			bottom,
-			...drawn.map(({ bounds }) => (bounds ? bounds[1] : bottom)),
-		);
+		const bottom = Math.max(0, ...drawn.map(({ bounds }) => (bounds ? bounds[3] : 0)));
+		const top = Math.min(bottom, ...drawn.map(({ bounds }) => (bounds ? bounds[1] : bottom)));
 		const span = Math.max(1, bottom - top);
 		const axisY = bottom + reflection.distance / 2;
 		const bands = 4;

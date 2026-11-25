@@ -2,18 +2,26 @@
 // A drawing shape (`wps:wsp` with a preset geometry): what the editor draws, edits and writes. The
 // geometry, fill and outline are the format-neutral DrawingML types, so the same readers and
 // writers serve every format.
-import type {
-	DrawingColor,
-	DrawingEffectList,
-	DrawingFill,
-	DrawingLine,
-} from '../drawingml/index';
+import type { DrawingColor, DrawingEffectList, DrawingFill, DrawingLine } from '../drawingml/index';
+
+/** One child shape inside a WordprocessingML group (`wpg:wgp`), in group-child pixel space. */
+export interface GroupShapeChild {
+	xPx: number;
+	yPx: number;
+	widthPx: number;
+	heightPx: number;
+	shape: ShapeSpec;
+}
 
 export interface ShapeSpec {
 	/** `a:prstGeom/@prst`, e.g. `rect`, `roundRect`, `rightArrow`, `line`. */
 	preset: string;
 	/** Source-backed custom geometry; retained verbatim through formatting and resize edits. */
 	customGeometryXml?: string;
+	/** Child shapes when this drawing is a `wpg:wgp` group. */
+	groupChildren?: GroupShapeChild[];
+	/** Group child coordinate space (`a:xfrm/a:chOff`, `a:chExt`) in CSS pixels. */
+	groupExtent?: { xPx: number; yPx: number; widthPx: number; heightPx: number };
 	/** `a:avLst` guide values by name (Word's yellow handles), in the guide's own units. */
 	adjustments?: Record<string, number>;
 	/** `spPr` fill. Undefined takes the shape style's fill (the theme's first accent colour). */

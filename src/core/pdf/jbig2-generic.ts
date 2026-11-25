@@ -50,6 +50,8 @@ export interface GenericOptions {
 	template: number;
 	at: At[];
 	tpgdon: boolean;
+	/** T.88 Amendment 2 EXTTEMPLATE=1 (12 adaptive template pixels for template 0). */
+	extTemplate?: boolean;
 	skip?: Bitmap;
 }
 
@@ -64,8 +66,13 @@ export function decodeGeneric(
 	const bitmap = new Bitmap(width, height, budget);
 	budget.spend(width * height);
 	const offsets: At[] = [];
-	for (const entry of TEMPLATES[template]!)
-		offsets.push(typeof entry === 'number' ? options.at[entry]! : entry);
+	if (options.extTemplate && template === 0 && options.at.length >= 12) {
+		// T.88 Amendment 2: 12 adaptive pixels (a11..a0) replace the 12 pixels above the current row.
+		for (let i = 11; i >= 0; i--) offsets.push(options.at[i]!);
+	} else {
+		for (const entry of TEMPLATES[template]!)
+			offsets.push(typeof entry === 'number' ? options.at[entry]! : entry);
+	}
 	const rowPixels = ROW_PIXELS[template]!;
 	const data = bitmap.data;
 	let ltp = 0;

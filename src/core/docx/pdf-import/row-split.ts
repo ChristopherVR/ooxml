@@ -70,7 +70,26 @@ export function joinSplitRow(table: TableBlock, next: TableBlock, row: number): 
 	const continued = before.every(
 		(cell, at) => !hasText(after[at]) || (hasText(cell) && midParagraph(cell, after[at]!)),
 	);
-	if (!emptied && !continued) return false;
+	// A row split between two sentences in a table where empty cells are normal:
+	// 1. Interior rows carry horizontal borders, yet the cut boundary lacks a bottom or top border;
+	// 2. Or column 0 is filled in `before` and empty in `after`, and `after` only continues cells
+	//    that already had text in `before`, with at least one multi-line cell continuing.
+	const borderedTable =
+		others.length >= 2 &&
+		others.filter((cell) => !!cell.borders.bottom).length >= Math.ceil(others.length / 2);
+	const borderlessCut =
+		borderedTable &&
+		before.every((cell, at) => hasText(cell) || !hasText(after[at])) &&
+		(before.every((cell) => !cell.borders.bottom) || after.every((cell) => !cell.borders.top));
+	const lineCount = (cell: TableCellBlock) =>
+		cell.blocks.reduce((sum, block) => sum + block.lines.length, 0);
+	const multiLineContinuation =
+		before.length >= 2 &&
+		hasText(before[0]) &&
+		!hasText(after[0]) &&
+		before.every((cell, at) => hasText(cell) || !hasText(after[at])) &&
+		before.some((cell, at) => lineCount(cell) >= 2 && hasText(after[at]));
+	if (!emptied && !continued && !borderlessCut && !multiLineContinuation) return false;
 	before.forEach((cell, at) => {
 		const rest = after[at]!;
 		const blocks = [...rest.blocks];

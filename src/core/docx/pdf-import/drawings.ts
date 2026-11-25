@@ -5,7 +5,14 @@
  * custom geometry), fill, outline, opacity and dashes. A page holds a bounded number of pieces;
  * the rest is reported.
  */
-import type { PdfPagePath, PdfPageRule, PdfPathSegment } from '../../pdf/index';
+import type {
+	PdfGradientFill,
+	PdfPagePath,
+	PdfPageRule,
+	PdfPathSegment,
+	PdfPatternFill,
+} from '../../pdf/index';
+import type { Line } from './lines';
 import { isSeparatorRule } from './note-marks';
 
 export type PieceGeometry =
@@ -21,11 +28,15 @@ export interface DrawingPiece {
 	y1: number;
 	geometry: PieceGeometry;
 	fill?: string;
+	gradient?: PdfGradientFill;
+	patternFill?: PdfPatternFill;
 	stroke?: string;
 	lineWidth: number;
 	fillAlpha?: number;
 	strokeAlpha?: number;
 	dash?: number[];
+	/** Horizontal text lines enclosed inside this shape, written as `wps:txbx`. */
+	textLines?: Line[];
 }
 
 /** One drawing at a place on its page: one shape, or several kept together. */
@@ -121,6 +132,8 @@ function rulePiece(rule: PdfPageRule): DrawingPiece {
 		};
 	const piece: DrawingPiece = { ...base, geometry: { kind: 'rect' } };
 	if (rule.filled) piece.fill = rule.color;
+	if (rule.gradient) piece.gradient = rule.gradient;
+	if (rule.patternFill) piece.patternFill = rule.patternFill;
 	if (rule.stroked) piece.stroke = rule.strokeColor ?? rule.color;
 	if (rule.alpha !== undefined) piece[rule.filled ? 'fillAlpha' : 'strokeAlpha'] = rule.alpha;
 	if (rule.stroked && rule.dash) piece.dash = rule.dash;
@@ -173,6 +186,8 @@ function pathPiece(path: PdfPagePath): DrawingPiece {
 	else if (first?.op === 'M' && second?.op === 'L' && !third && !path.fill)
 		piece.geometry = { kind: 'line', flipH: (second.x - first.x) * (second.y - first.y) < 0 };
 	if (path.fill) piece.fill = path.fill;
+	if (path.gradient) piece.gradient = path.gradient;
+	if (path.patternFill) piece.patternFill = path.patternFill;
 	if (path.stroke) piece.stroke = path.stroke;
 	if (path.fillAlpha !== undefined) piece.fillAlpha = path.fillAlpha;
 	if (path.strokeAlpha !== undefined) piece.strokeAlpha = path.strokeAlpha;
@@ -240,4 +255,47 @@ export function pageDrawings(
 	});
 	drawings.sort((a, b) => a.y - b.y || a.x - b.x);
 	return { drawings, pieces: pieces.length, overLimit };
+}
+
+/**
+ * Moves horizontal lines that sit completely inside a closed drawing shape (not a full-page
+ * backdrop) into that piece's `textLines`, returning the remaining body lines.
+ */
+export function attachDrawingText(
+	drawings: readonly VectorDrawing[],
+	lines: readonly Line[],
+	pageArea: number,
+): Line[] {
+	const candidates: DrawingPiece[] = [];
+	for (const drawing of drawings) {
+		for (const piece of drawing.pieces) {
+			if (piece.geometry.kind === 'line') continue;
+			const w = piece.x1 - piece.x0;
+			const h = piece.y1 - piece.y0;
+			if (w < 16 || h < 12 || w * h > pageArea * 0.5) continue;
+			if (!piece.fill && !piece.gradient && !piece.patternFill && !piece.stroke) continue;
+			candidates.push(piece);
+		}
+	}
+	if (!candidates.length || !lines.length) return [...lines];
+	// Prefer the smallest enclosing piece when shapes are nested.
+	candidates.sort((a, b) => (a.x1 - a.x0) * (a.y1 - a.y0) - (b.x1 - b.x0) * (b.y1 - b.y0));
+	const remaining: Line[] = [];
+	const tol = 2;
+	for (const line of lines) {
+		if (!line.text.trim()) {
+			remaining.push(line);
+			continue;
+		}
+		const owner = candidates.find(
+			(p) =>
+				line.left >= p.x0 - tol &&
+				line.right <= p.x1 + tol &&
+				line.top >= p.y0 - tol &&
+				line.bottom <= p.y1 + tol,
+		);
+		if (owner) (owner.textLines ??= []).push(line);
+		else remaining.push(line);
+	}
+	return remaining;
 }

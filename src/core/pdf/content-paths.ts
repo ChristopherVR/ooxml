@@ -5,7 +5,13 @@
  * diagonals and polygons. Paths painted with patterns or cut by a clip are not returned as paths.
  */
 import { apply, multiply, type Matrix } from './matrix';
-import type { PdfPagePath, PdfPageRule, PdfPathSegment } from './page-content';
+import type {
+	PdfGradientFill,
+	PdfPagePath,
+	PdfPageRule,
+	PdfPathSegment,
+	PdfPatternFill,
+} from './page-content';
 
 /** The clipping region's bounds in reading coordinates, and whether it is exactly that box. */
 export interface ClipBox {
@@ -26,6 +32,8 @@ export interface PaintStyle {
 	dash: number[];
 	fillPattern: boolean;
 	strokePattern: boolean;
+	fillGradient?: PdfGradientFill | undefined;
+	fillPatternFill?: PdfPatternFill | undefined;
 	clip: ClipBox | undefined;
 }
 
@@ -183,24 +191,42 @@ export class PathBuilder {
 		};
 		const clip = style.clip;
 		const reach = stroked ? lineWidth / 2 : 0;
-		const clipped =
-			!!clip &&
-			(!clip.rect ||
-				box.x0 - reach < clip.x0 - CLIP_TOLERANCE ||
+		const outsideRectClip =
+			!!clip?.rect &&
+			(box.x1 + reach <= clip.x0 ||
+				box.x0 - reach >= clip.x1 ||
+				box.y1 + reach <= clip.y0 ||
+				box.y0 - reach >= clip.y1);
+		if (outsideRectClip) return { rules: [] };
+		const rectClipped =
+			!!clip?.rect &&
+			(box.x0 - reach < clip.x0 - CLIP_TOLERANCE ||
 				box.y0 - reach < clip.y0 - CLIP_TOLERANCE ||
 				box.x1 + reach > clip.x1 + CLIP_TOLERANCE ||
 				box.y1 + reach > clip.y1 + CLIP_TOLERANCE);
+		const clipped = !!clip && !clip.rect;
 		const pattern = (filled && style.fillPattern) || (stroked && style.strokePattern);
 		const rules: PdfPageRule[] = [];
 		let complex = false;
 		const rule = (points: Point[], kind: 'line' | 'rect', fill: boolean) => {
 			const xs = points.map((point) => point[0]);
 			const ys = points.map((point) => point[1]);
+			let x0 = Math.min(...xs);
+			let y0 = Math.min(...ys);
+			let x1 = Math.max(...xs);
+			let y1 = Math.max(...ys);
+			if (clip?.rect && rectClipped) {
+				x0 = Math.max(x0, clip.x0);
+				y0 = Math.max(y0, clip.y0);
+				x1 = Math.min(x1, clip.x1);
+				y1 = Math.min(y1, clip.y1);
+				if (kind === 'rect' ? x1 <= x0 || y1 <= y0 : x1 < x0 || y1 < y0) return;
+			}
 			const item: PdfPageRule = {
-				x0: Math.min(...xs),
-				y0: Math.min(...ys),
-				x1: Math.max(...xs),
-				y1: Math.max(...ys),
+				x0,
+				y0,
+				x1,
+				y1,
 				kind,
 				stroked,
 				filled: fill,
@@ -211,6 +237,8 @@ export class PathBuilder {
 			const alpha = fill ? style.fillAlpha : style.strokeAlpha;
 			if (alpha < 1) item.alpha = alpha;
 			if (stroked && style.dash.length) item.dash = style.dash.map((value) => value * scale);
+			if (fill && style.fillGradient) item.gradient = style.fillGradient;
+			if (fill && style.fillPatternFill) item.patternFill = style.fillPatternFill;
 			if (pattern) item.pattern = true;
 			if (clipped) item.clipped = true;
 			rules.push(item);
@@ -238,7 +266,7 @@ export class PathBuilder {
 		if (pattern) return { unsupported: 'pattern' };
 		if (clipped) return { unsupported: 'clip' };
 		if (count > MAX_SEGMENTS) return { unsupported: 'size' };
-		const segments = subpaths.flatMap((sub) =>
+		let segments = subpaths.flatMap((sub) =>
 			sub.segments.map((segment): PdfPathSegment => {
 				if (segment.op === 'Z') return segment;
 				const [x, y] = apply(m, segment.x, segment.y);
@@ -248,8 +276,33 @@ export class PathBuilder {
 				return { op: 'C', x1, y1, x2, y2, x, y };
 			}),
 		);
-		const path: PdfPagePath = { segments, ...box, lineWidth };
+		let outBox = box;
+		if (clip?.rect && rectClipped) {
+			const allPolygons = subpaths.every((sub) => !sub.curves && sub.closed);
+			if (allPolygons && filled) {
+				const clippedSegs: PdfPathSegment[] = [];
+				for (const points of reading) {
+					const poly = clipPolygonToRect(points, clip);
+					if (poly.length < 3) continue;
+					clippedSegs.push({ op: 'M', x: poly[0]![0], y: poly[0]![1] });
+					for (let i = 1; i < poly.length; i++)
+						clippedSegs.push({ op: 'L', x: poly[i]![0], y: poly[i]![1] });
+					clippedSegs.push({ op: 'Z' });
+				}
+				if (!clippedSegs.length) return { rules: [] };
+				segments = clippedSegs;
+			}
+			outBox = {
+				x0: Math.max(box.x0, clip.x0),
+				y0: Math.max(box.y0, clip.y0),
+				x1: Math.min(box.x1, clip.x1),
+				y1: Math.min(box.y1, clip.y1),
+			};
+		}
+		const path: PdfPagePath = { segments, ...outBox, lineWidth };
 		if (filled) path.fill = style.fill;
+		if (filled && style.fillGradient) path.gradient = style.fillGradient;
+		if (filled && style.fillPatternFill) path.patternFill = style.fillPatternFill;
 		if (stroked) path.stroke = style.stroke;
 		if (filled && style.fillAlpha < 1) path.fillAlpha = style.fillAlpha;
 		if (stroked && style.strokeAlpha < 1) path.strokeAlpha = style.strokeAlpha;
@@ -257,6 +310,52 @@ export class PathBuilder {
 		if (filled && evenOdd) path.evenOdd = true;
 		return { path };
 	}
+}
+
+/** Sutherland-Hodgman polygon clipping against an axis-aligned rectangle. */
+function clipPolygonToRect(points: Point[], clip: ClipBox): Point[] {
+	let poly = [...points];
+	if (
+		poly.length > 2 &&
+		near(poly[0]![0], poly[poly.length - 1]![0]) &&
+		near(poly[0]![1], poly[poly.length - 1]![1])
+	)
+		poly.pop();
+	const edges: [(p: Point) => boolean, (a: Point, b: Point) => Point][] = [
+		[
+			(p) => p[0] >= clip.x0,
+			(a, b) => [clip.x0, a[1] + ((clip.x0 - a[0]) / (b[0] - a[0])) * (b[1] - a[1])],
+		],
+		[
+			(p) => p[0] <= clip.x1,
+			(a, b) => [clip.x1, a[1] + ((clip.x1 - a[0]) / (b[0] - a[0])) * (b[1] - a[1])],
+		],
+		[
+			(p) => p[1] >= clip.y0,
+			(a, b) => [a[0] + ((clip.y0 - a[1]) / (b[1] - a[1])) * (b[0] - a[0]), clip.y0],
+		],
+		[
+			(p) => p[1] <= clip.y1,
+			(a, b) => [a[0] + ((clip.y1 - a[1]) / (b[1] - a[1])) * (b[0] - a[0]), clip.y1],
+		],
+	];
+	for (const [inside, intersect] of edges) {
+		if (!poly.length) break;
+		const next: Point[] = [];
+		let prev = poly[poly.length - 1]!;
+		let prevIn = inside(prev);
+		for (const curr of poly) {
+			const currIn = inside(curr);
+			if (currIn) {
+				if (!prevIn) next.push(intersect(prev, curr));
+				next.push(curr);
+			} else if (prevIn) next.push(intersect(prev, curr));
+			prev = curr;
+			prevIn = currIn;
+		}
+		poly = next;
+	}
+	return poly;
 }
 
 /** Whether the points (a closing repeat allowed) are the corners of an axis-aligned rectangle. */

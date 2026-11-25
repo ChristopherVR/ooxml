@@ -5,8 +5,9 @@
  * when all pieces look the same, or a `wpg:wgp` group of shapes otherwise.
  */
 import type { PdfPathSegment } from '../../pdf/index';
-import { NS } from '../load/legacy-doc/xml';
+import { esc, NS } from '../load/legacy-doc/xml';
 import type { DrawingPiece, VectorDrawing } from './drawings';
+import type { Line } from './lines';
 
 const EMU = 12700;
 const WPS_URI = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape';
@@ -40,10 +41,32 @@ function dashXml(dash: number[] | undefined, width: number): string {
 	return `<a:custDash>${out}</a:custDash>`;
 }
 
-function styleXml(piece: DrawingPiece): string {
-	const fill = piece.fill
+function fillXml(piece: DrawingPiece): string {
+	if (piece.gradient && piece.gradient.stops.length >= 2) {
+		const stops = piece.gradient.stops
+			.map(
+				(stop) =>
+					`<a:gs pos="${Math.round(Math.max(0, Math.min(1, stop.pos)) * 100_000)}">${colorXml(stop.color, piece.fillAlpha)}</a:gs>`,
+			)
+			.join('');
+		const dir =
+			piece.gradient.kind === 'radial'
+				? '<a:path path="circle"><a:fillToRect l="50000" t="50000" r="50000" b="50000"/></a:path>'
+				: `<a:lin ang="${Math.round(((((piece.gradient.angle ?? 0) % 360) + 360) % 360) * 60_000)}" scaled="1"/>`;
+		return `<a:gradFill><a:gsLst>${stops}</a:gsLst>${dir}</a:gradFill>`;
+	}
+	if (piece.patternFill) {
+		const fg = colorXml(piece.patternFill.fg, piece.fillAlpha);
+		const bg = colorXml(piece.patternFill.bg ?? '#ffffff', piece.fillAlpha);
+		return `<a:pattFill prst="${piece.patternFill.preset}"><a:fgClr>${fg}</a:fgClr><a:bgClr>${bg}</a:bgClr></a:pattFill>`;
+	}
+	return piece.fill
 		? `<a:solidFill>${colorXml(piece.fill, piece.fillAlpha)}</a:solidFill>`
 		: '<a:noFill/>';
+}
+
+function styleXml(piece: DrawingPiece): string {
+	const fill = fillXml(piece);
 	if (!piece.stroke) return `${fill}<a:ln><a:noFill/></a:ln>`;
 	// PDF draws a zero width as the thinnest line the device can show.
 	const width = Math.max(0.25, piece.lineWidth);
@@ -51,6 +74,32 @@ function styleXml(piece: DrawingPiece): string {
 		`${fill}<a:ln w="${Math.min(MAX_LINE_WIDTH, emu(width))}"><a:solidFill>${colorXml(piece.stroke, piece.strokeAlpha)}</a:solidFill>` +
 		`${dashXml(piece.dash, width)}</a:ln>`
 	);
+}
+
+function shapeTextXml(lines: readonly Line[] | undefined): string {
+	if (!lines?.length) return '';
+	const paragraphs = lines
+		.map((line) => {
+			const runs = line.fragments
+				.map((fragment) => {
+					const rPr: string[] = [];
+					if (fragment.font.family)
+						rPr.push(
+							`<w:rFonts w:ascii="${esc(fragment.font.family)}" w:hAnsi="${esc(fragment.font.family)}"/>`,
+						);
+					if (fragment.font.bold) rPr.push('<w:b/>');
+					if (fragment.font.italic) rPr.push('<w:i/>');
+					const sz = Math.max(2, Math.round(fragment.size * 2));
+					rPr.push(`<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>`);
+					if (fragment.color && fragment.color !== '#000000')
+						rPr.push(`<w:color w:val="${fragment.color.replace('#', '').toUpperCase()}"/>`);
+					return `<w:r><w:rPr>${rPr.join('')}</w:rPr><w:t xml:space="preserve">${esc(fragment.text)}</w:t></w:r>`;
+				})
+				.join('');
+			return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>${runs}</w:p>`;
+		})
+		.join('');
+	return `<wps:txbx><w:txbxContent>${paragraphs}</w:txbxContent></wps:txbx>`;
 }
 
 /** The piece as path segments (for a shape holding several pieces). */
@@ -142,6 +191,9 @@ const boxOf = (piece: DrawingPiece): Box => ({
 const lookOf = (piece: DrawingPiece) =>
 	[
 		piece.fill,
+		piece.gradient ? JSON.stringify(piece.gradient) : '',
+		piece.patternFill ? JSON.stringify(piece.patternFill) : '',
+		piece.textLines?.length ? `text:${piece.textLines.length}` : '',
 		piece.stroke,
 		piece.stroke ? piece.lineWidth.toFixed(2) : '',
 		piece.fillAlpha,
@@ -154,7 +206,10 @@ export function drawingXml(drawing: VectorDrawing, nextId: () => number): string
 	const id = nextId();
 	const pieces = drawing.pieces;
 	const look = lookOf(pieces[0]!);
-	const together = pieces.length === 1 || pieces.every((piece) => lookOf(piece) === look);
+	const together =
+		pieces.length === 1 ||
+		(pieces.every((piece) => lookOf(piece) === look) &&
+			pieces.every((piece) => !piece.textLines?.length));
 	const box: Box = drawing;
 	const preset = pieces.length === 1 && pieces[0]!.geometry.kind !== 'path';
 	const cx = preset ? emu(box.width) : size(box.width);
@@ -162,11 +217,12 @@ export function drawingXml(drawing: VectorDrawing, nextId: () => number): string
 	let graphic: string;
 	let requires = 'wps';
 	let name = `Shape ${id}`;
-	if (together)
+	if (together) {
+		const hasText = !!pieces[0]?.textLines?.length;
 		graphic =
 			`<a:graphicData uri="${WPS_URI}"><wps:wsp><wps:cNvSpPr/>` +
-			`${shapeProperties(pieces, box, box)}<wps:bodyPr/></wps:wsp></a:graphicData>`;
-	else {
+			`${shapeProperties(pieces, box, box)}${shapeTextXml(pieces[0]?.textLines)}${hasText ? '<wps:bodyPr anchor="ctr"/>' : '<wps:bodyPr/>'}</wps:wsp></a:graphicData>`;
+	} else {
 		requires = 'wpg';
 		name = `Group ${id}`;
 		graphic =
@@ -178,7 +234,7 @@ export function drawingXml(drawing: VectorDrawing, nextId: () => number): string
 					const shapeId = nextId();
 					return (
 						`<wps:wsp><wps:cNvPr id="${shapeId}" name="Shape ${shapeId}"/><wps:cNvSpPr/>` +
-						`${shapeProperties([piece], boxOf(piece), box)}<wps:bodyPr/></wps:wsp>`
+						`${shapeProperties([piece], boxOf(piece), box)}${shapeTextXml(piece.textLines)}${piece.textLines?.length ? '<wps:bodyPr anchor="ctr"/>' : '<wps:bodyPr/>'}</wps:wsp>`
 					);
 				})
 				.join('') +

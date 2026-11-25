@@ -119,7 +119,9 @@ export function pdfUaConformance(
 		);
 	}
 	if (!check.title?.trim())
-		issues.push('PDF/UA-1 requires a document title (`properties.title` with `documentProperties: true`).');
+		issues.push(
+			'PDF/UA-1 requires a document title (`properties.title` with `documentProperties: true`).',
+		);
 	if (!check.language?.trim())
 		issues.push('PDF/UA-1 requires a document language (`language` option).');
 	const missingAlt = figuresMissingAltText(check.structure);

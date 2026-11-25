@@ -71,7 +71,7 @@ describe('file organisations and malformed streams', () => {
 		expect(() => decodeJbig2Pages(truncated)).toThrow(Jbig2Error);
 		const extended = stream(
 			segment(0, 48, pageInfo(W, H)),
-			segment(1, 39, [...regionInfo(W, H), 16, ...new Array(24).fill(0)]),
+			segment(1, 39, [...regionInfo(W, H), 18, ...new Array(24).fill(0)]),
 		);
 		expect(() => decodeJbig2Pages(extended)).toThrow(/extended generic templates/);
 		// A symbol dictionary that claims four billion new symbols is refused before decoding.

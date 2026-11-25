@@ -37,7 +37,9 @@ export function describeTableFormatChange(table: Table): string[] | undefined {
 			(getW(priorW, 'type') ?? 'dxa') === 'dxa' ? parseTwips(getW(priorW, 'w')) : undefined;
 		if (priorWidth !== table.widthTwips)
 			items.push(
-				table.widthTwips !== undefined ? `Table width: ${inches(table.widthTwips)}` : 'Table width: Auto',
+				table.widthTwips !== undefined
+					? `Table width: ${inches(table.widthTwips)}`
+					: 'Table width: Auto',
 			);
 		const priorJc = getW(first(prior, 'jc'), 'val');
 		if (priorJc !== table.justification)
@@ -100,7 +102,9 @@ export function describeCellFormatChange(cell: TableCell): string[] | undefined 
 			(getW(priorW, 'type') ?? 'dxa') === 'dxa' ? parseTwips(getW(priorW, 'w')) : undefined;
 		if (priorWidth !== cell.widthTwips)
 			items.push(
-				cell.widthTwips !== undefined ? `Cell width: ${inches(cell.widthTwips)}` : 'Cell width: Auto',
+				cell.widthTwips !== undefined
+					? `Cell width: ${inches(cell.widthTwips)}`
+					: 'Cell width: Auto',
 			);
 		const priorVAlign = getW(first(prior, 'vAlign'), 'val');
 		if (priorVAlign !== cell.verticalAlign)
@@ -131,7 +135,9 @@ export function describeSectionFormatChange(section: SectionProperties): string[
 		const priorW = parseTwips(getW(size, 'w')) ?? 12240;
 		const priorH = parseTwips(getW(size, 'h')) ?? 15840;
 		if (priorW !== section.pageWidthTwips || priorH !== section.pageHeightTwips)
-			items.push(`Page size: ${inches(section.pageWidthTwips)} x ${inches(section.pageHeightTwips)}`);
+			items.push(
+				`Page size: ${inches(section.pageWidthTwips)} x ${inches(section.pageHeightTwips)}`,
+			);
 		const priorOrient = getW(size, 'orient') === 'landscape' ? 'landscape' : 'portrait';
 		if (priorOrient !== section.orientation)
 			items.push(`Orientation: ${title(section.orientation)}`);

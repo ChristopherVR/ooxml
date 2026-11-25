@@ -97,7 +97,9 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 		(fills.length === 0 && colors.some((node) => plainRgb(node) !== paint.fill)) ||
 		outlines.some((node) => rgb(node) !== outline) ||
 		shadows.some((node) => rgb(node) !== shadow) ||
-		glows.some((node) => JSON.stringify(readWordArtGlow(node, WORD_2010)) !== JSON.stringify(glow)) ||
+		glows.some(
+			(node) => JSON.stringify(readWordArtGlow(node, WORD_2010)) !== JSON.stringify(glow),
+		) ||
 		reflections.some(
 			(node) =>
 				JSON.stringify(readWordArtReflection(node, WORD_2010)) !== JSON.stringify(reflection),

@@ -42,7 +42,7 @@ export interface WordArtSvgOptions {
 
 /** Renders a shared SVG preview. Native saves carry the preset and adjustment guides. */
 export function renderWordArtSvg(options: WordArtSvgOptions): string {
-	const { style, width, height, x = 0, y = 0, scale = 1 } = options;
+	const { width, height, x = 0, y = 0 } = options;
 	if (![x, y].every(Number.isFinite)) return '';
 	const layout = wordArtLayout(options);
 	if (!layout) return '';

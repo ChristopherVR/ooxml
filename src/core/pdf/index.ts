@@ -9,6 +9,7 @@ export { familyName } from './fonts';
 export { decodeCcitt, type CcittOptions } from './ccitt';
 export type {
 	PdfFontInfo,
+	PdfGradientFill,
 	PdfOutlineItem,
 	PdfPageContent,
 	PdfPageImage,
@@ -16,5 +17,6 @@ export type {
 	PdfPagePath,
 	PdfPageRule,
 	PdfPathSegment,
+	PdfPatternFill,
 	PdfTextSpan,
 } from './page-content';

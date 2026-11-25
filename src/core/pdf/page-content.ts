@@ -55,6 +55,21 @@ export interface PdfPageImage {
 	alt?: string;
 }
 
+/** A linear or radial gradient fill read from a PDF shading or shading pattern. */
+export interface PdfGradientFill {
+	kind: 'linear' | 'radial';
+	/** Clockwise angle in degrees (DrawingML convention: 0 left-to-right, 90 top-to-bottom). */
+	angle?: number;
+	stops: { pos: number; color: string }[];
+}
+
+/** A tiling pattern fill read from a PDF PatternType 1 dictionary. */
+export interface PdfPatternFill {
+	preset: string;
+	fg: string;
+	bg?: string;
+}
+
 /** A straight line or a rectangle (filled or stroked): table rules, borders, underlines. */
 export interface PdfPageRule {
 	x0: number;
@@ -74,6 +89,10 @@ export interface PdfPageRule {
 	dash?: number[];
 	/** Painted with a pattern or shading: `color` is not what it shows. */
 	pattern?: true;
+	/** Gradient fill from a PDF shading or shading pattern. */
+	gradient?: PdfGradientFill;
+	/** Tiling pattern fill from a PDF PatternType 1 resource. */
+	patternFill?: PdfPatternFill;
 	/** A clipping path cuts it (or a clip that is not a rectangle is active). */
 	clipped?: true;
 }
@@ -94,6 +113,10 @@ export interface PdfPagePath {
 	y1: number;
 	/** `#rrggbb` when the path is filled. */
 	fill?: string;
+	/** Gradient fill from a PDF shading or shading pattern. */
+	gradient?: PdfGradientFill;
+	/** Tiling pattern fill from a PDF PatternType 1 resource. */
+	patternFill?: PdfPatternFill;
 	/** `#rrggbb` when the path is stroked. */
 	stroke?: string;
 	lineWidth: number;

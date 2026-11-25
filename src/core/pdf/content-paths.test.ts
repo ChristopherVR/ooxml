@@ -54,10 +54,10 @@ describe('painted paths', () => {
 		expect(result.paths).toEqual([]);
 	});
 
-	it('reports shadings, pattern fills and clipped shapes instead of returning them', async () => {
+	it('clips rectangular clips and reports unsupported shadings, patterns and non-rectangular clips', async () => {
 		const result = await page(
 			'q 0 0 612 792 re W n 1 0 0 rg 100 100 m 150 150 l 200 100 l f Q ' +
-				'q 100 100 50 50 re W n 0 0 1 rg 90 90 m 300 300 l 90 300 l f Q ' +
+				'q 100 100 m 150 100 l 125 150 l h W n 0 0 1 rg 90 90 m 300 300 l 90 300 l f Q ' +
 				'/Pattern cs /P1 scn 100 400 m 150 450 l 200 400 l f ' +
 				'/Sh1 sh',
 		);

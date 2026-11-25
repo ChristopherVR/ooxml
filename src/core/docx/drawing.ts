@@ -20,6 +20,7 @@ import { parsePictureWatermarkShape } from './picture-watermark';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
 import { readWordArtStyle } from './word-art';
 import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
+import { parseGroupShape } from './group-shape';
 import { getR, isElement, type XmlElement } from './xml';
 import { isStRelFromH, isStRelFromV } from './generated/wml-simple-types';
 import { enumValue } from './parse-diagnostics';
@@ -220,7 +221,12 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			? parseChartGraphic(graphicData, docPr, context.rels, Boolean(anchored))
 			: undefined;
 	const isShapeGraphic = uri.includes('wordprocessingShape');
-	const shape = isShapeGraphic ? parseShape(graphicData) : undefined;
+	const isGroupGraphic = uri.includes('wordprocessingGroup');
+	const shape = isShapeGraphic
+		? parseShape(graphicData)
+		: isGroupGraphic
+			? parseGroupShape(graphicData)
+			: undefined;
 	// A text box (`txBox="1"`) is drawn through its frame like any shape and edited as a text box.
 	const textBox =
 		isShapeGraphic && (!shape || isTextBoxShape(graphicData))

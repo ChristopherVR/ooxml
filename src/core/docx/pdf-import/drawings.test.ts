@@ -60,11 +60,12 @@ function asLockedCanvas(xml: string): string {
 			/<a:graphicData uri="([^"]+)"><wps:wsp><wps:cNvSpPr\/>/g,
 			`<a:graphicData uri="$1"><lc:lockedCanvas xmlns:lc="${lc}">${group}<a:grpSpPr/><a:sp><a:nvSpPr><a:cNvPr id="0" name="s"/><a:cNvSpPr/></a:nvSpPr>`,
 		)
+		.replace(/<wps:txbx>[\s\S]*?<\/wps:txbx>/g, '')
 		.replace(
-			/<wps:bodyPr\/><\/wps:wsp><\/a:graphicData>/g,
+			/<wps:bodyPr(?:\s[^>]*)?\/><\/wps:wsp><\/a:graphicData>/g,
 			'</a:sp></lc:lockedCanvas></a:graphicData>',
 		)
-		.replace(/<wps:bodyPr\/><\/wps:wsp>/g, '</a:sp>')
+		.replace(/<wps:bodyPr(?:\s[^>]*)?\/><\/wps:wsp>/g, '</a:sp>')
 		.replace(/<(\/?)wps:spPr>/g, '<$1a:spPr>');
 }
 

@@ -76,7 +76,13 @@ export class DocxPdfHooks {
 		| undefined;
 	#decorative = 0;
 	readonly #rows: boolean[] = [];
-	readonly #tableStack: { blockId: string; x: number; y: number; height: number; rowIndex: number }[] = [];
+	readonly #tableStack: {
+		blockId: string;
+		x: number;
+		y: number;
+		height: number;
+		rowIndex: number;
+	}[] = [];
 	readonly #transforms: ((x: number, y: number) => [number, number])[] = [];
 
 	constructor(
@@ -302,7 +308,10 @@ export class DocxPdfHooks {
 			return;
 		}
 		this.#tableStack.push({ blockId, x, y, height, rowIndex: -1 });
-		if (this.markup && this.options.balloons?.table(blockId, { x, top: y, height: Math.max(12, height) }))
+		if (
+			this.markup &&
+			this.options.balloons?.table(blockId, { x, top: y, height: Math.max(12, height) })
+		)
 			this.#bars.add(y, Math.max(12, height));
 		this.tagger.open('Table', blockId);
 	}
@@ -325,7 +334,15 @@ export class DocxPdfHooks {
 		const table = this.#tableStack.at(-1);
 		if (table) {
 			table.rowIndex = rowIndex;
-			if (!row.repeated && this.markup && this.options.balloons?.row(table.blockId, rowIndex, { x: table.x, top: y, height: Math.max(12, row.heightPx) }))
+			if (
+				!row.repeated &&
+				this.markup &&
+				this.options.balloons?.row(table.blockId, rowIndex, {
+					x: table.x,
+					top: y,
+					height: Math.max(12, row.heightPx),
+				})
+			)
 				this.#bars.add(y, Math.max(12, row.heightPx));
 		}
 		// A heading row repeated on a later page is pagination, as Word tags it.
@@ -348,7 +365,11 @@ export class DocxPdfHooks {
 			cellIndex !== undefined &&
 			!this.#rows.at(-1) &&
 			this.markup &&
-			this.options.balloons?.cell(table.blockId, table.rowIndex, cellIndex, { x, top: y, height: Math.max(12, height) })
+			this.options.balloons?.cell(table.blockId, table.rowIndex, cellIndex, {
+				x,
+				top: y,
+				height: Math.max(12, height),
+			})
 		)
 			this.#bars.add(y, Math.max(12, height));
 		this.tagger.open('TD');

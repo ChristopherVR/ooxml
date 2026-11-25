@@ -9,7 +9,7 @@ import { applyInternalLinks, applyOutline, resolveAnchors } from './anchors';
 import { applyLinks, applyRules, pageLines, type Line } from './lines';
 import { assemble } from './assemble';
 import { drawingSource, type DrawingSource } from './drawings';
-import { placeDrawings } from './drawings-place';
+import { placeDrawings, prepareDrawings } from './drawings-place';
 import { attachFloats } from './floats';
 import { extractEndnotes } from './endnotes';
 import { extractFootnotes } from './footnotes';
@@ -244,6 +244,11 @@ export async function convertPdf(
 	// Endnotes first: a footnote is only looked for on its mark's page and the next.
 	const endnotes = extractEndnotes(pages, bodySize);
 	const footnotes = extractFootnotes(pages, bodySize);
+	const preparedDrawings = prepareDrawings(
+		pages,
+		[...footnotes, ...(endnotes?.notes ?? [])],
+		bodySize,
+	);
 	const area: TextArea = {
 		left: median(
 			extents.map((boxes) => Math.min(...boxes.map((box) => box.left))),
@@ -274,7 +279,14 @@ export async function convertPdf(
 		pages.flatMap((page) => page.rotated),
 		bodySize,
 	);
-	placeDrawings(pages, [...footnotes, ...(endnotes?.notes ?? [])], blocks, sections, bodySize);
+	placeDrawings(
+		pages,
+		[...footnotes, ...(endnotes?.notes ?? [])],
+		blocks,
+		sections,
+		bodySize,
+		preparedDrawings,
+	);
 	const toBlocks = (list: NoteContent[]) =>
 		list.map((note) => ({
 			id: note.id,
@@ -308,7 +320,11 @@ export async function convertPdf(
 		...(info.language ? { language: info.language } : {}),
 		...(noteBlocks.length ? { footnotes: noteBlocks } : {}),
 		...(endnotes && endnoteBlocks.length
-			? { endnotes: endnoteBlocks, endnoteFormat: endnotes.format }
+			? {
+					endnotes: endnoteBlocks,
+					endnoteFormat: endnotes.format,
+					...(endnotes.position ? { endnotePosition: endnotes.position } : {}),
+				}
 			: {}),
 	});
 	const notes: string[] = [];

@@ -201,7 +201,9 @@ describe('exportDocxPdf remaining Issue #318 gaps', () => {
 		expect(tbl.type).toBe('table');
 		if (tbl.type === 'table') {
 			expect(describeTableFormatChange(tbl)).toContain('Table alignment: Center');
-			expect(describeRowFormatChange(tbl.rowProperties![0]!)).toContain('Prevent row from splitting');
+			expect(describeRowFormatChange(tbl.rowProperties![0]!)).toContain(
+				'Prevent row from splitting',
+			);
 			expect(describeCellFormatChange(tbl.rows[0]![0]!)).toContain('Shading: Yellow');
 		}
 		expect(describeSectionFormatChange(model.sections![0]!)).toContain('Margins: Top: 1"');

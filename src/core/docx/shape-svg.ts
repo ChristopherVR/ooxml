@@ -8,7 +8,12 @@ import {
 	parseCustomGeometry,
 	drawingPathData,
 } from '../drawingml/index';
-import type { DrawingColor, DrawingEffectList, DrawingFill, DrawingSvgShadow } from '../drawingml/index';
+import type {
+	DrawingColor,
+	DrawingEffectList,
+	DrawingFill,
+	DrawingSvgShadow,
+} from '../drawingml/index';
 import { evaluatePresetShape, lookupPresetShape } from '../geometry/preset-shape-evaluator';
 import { normalizeHexColor } from '../color/color-primitives';
 import { diagramColorTheme } from './diagram-theme';
@@ -120,15 +125,45 @@ export function drawingOuterShadow(
 		: undefined;
 }
 
-/** Standalone `<svg>` for the shape at the given size, or undefined for an unknown preset. */
-export function shapeSvg(
+function appendShapeContent(
+	parent: ReturnType<typeof createSvg>,
 	spec: ShapeSpec,
-	widthPx: number,
-	heightPx: number,
-	theme?: ThemeCatalog,
-): string | undefined {
-	const w = Math.max(1, widthPx);
-	const h = Math.max(1, heightPx);
+	w: number,
+	h: number,
+	theme: ThemeCatalog | undefined,
+	defs: ReturnType<typeof createSvg>,
+	idPrefix: string,
+): boolean {
+	if (spec.groupChildren?.length) {
+		const extent = spec.groupExtent ?? { xPx: 0, yPx: 0, widthPx: w, heightPx: h };
+		const sx = w / Math.max(1, extent.widthPx);
+		const sy = h / Math.max(1, extent.heightPx);
+		const transform = [
+			spec.rotation ? `rotate(${Number(spec.rotation)} ${round(w / 2)} ${round(h / 2)})` : '',
+			spec.flipH || spec.flipV
+				? `translate(${spec.flipH ? w : 0} ${spec.flipV ? h : 0}) scale(${spec.flipH ? -1 : 1} ${spec.flipV ? -1 : 1})`
+				: '',
+			`scale(${round(sx)} ${round(sy)}) translate(${round(-extent.xPx)} ${round(-extent.yPx)})`,
+		]
+			.filter(Boolean)
+			.join(' ');
+		const group = appendSvg(parent, 'g', { transform });
+		spec.groupChildren.forEach((child, index) => {
+			const childGroup = appendSvg(group, 'g', {
+				transform: `translate(${round(child.xPx)} ${round(child.yPx)})`,
+			});
+			appendShapeContent(
+				childGroup,
+				child.shape,
+				Math.max(1, child.widthPx),
+				Math.max(1, child.heightPx),
+				theme,
+				defs,
+				`${idPrefix}-${index}`,
+			);
+		});
+		return true;
+	}
 	const customPaths = spec.customGeometryXml
 		? parseCustomGeometry(
 				parseXml(spec.customGeometryXml).documentElement,
@@ -149,16 +184,7 @@ export function shapeSvg(
 		: lookupPresetShape(spec.preset)
 			? evaluatePresetShape(spec.preset, w, h, spec.adjustments)
 			: undefined;
-	if (!geometry) return undefined;
-	const svg = createSvg();
-	setSvgAttributes(svg, {
-		width: round(w),
-		height: round(h),
-		viewBox: `0 0 ${round(w)} ${round(h)}`,
-		style: 'overflow:visible',
-		role: 'img',
-		'aria-label': lookupPresetShape(spec.preset) ? spec.preset : 'Shape',
-	});
+	if (!geometry) return false;
 	const transform = [
 		spec.rotation ? `rotate(${Number(spec.rotation)} ${round(w / 2)} ${round(h / 2)})` : '',
 		spec.flipH || spec.flipV
@@ -168,9 +194,10 @@ export function shapeSvg(
 		.filter(Boolean)
 		.join(' ');
 	const shadow = drawingOuterShadow(spec.effects, theme);
+	const filterId = `${idPrefix}-shadow`;
 	if (shadow) {
-		const filter = appendSvg(appendSvg(svg, 'defs'), 'filter', {
-			id: 'shape-shadow',
+		const filter = appendSvg(defs, 'filter', {
+			id: filterId,
 			x: '-50%',
 			y: '-50%',
 			width: '200%',
@@ -184,9 +211,9 @@ export function shapeSvg(
 			'flood-opacity': round(shadow.opacity),
 		});
 	}
-	const group = appendSvg(svg, 'g', {
+	const group = appendSvg(parent, 'g', {
 		...(transform ? { transform } : {}),
-		...(shadow ? { filter: 'url(#shape-shadow)' } : {}),
+		...(shadow ? { filter: `url(#${filterId})` } : {}),
 	});
 	const look = shapeAppearance(spec, theme);
 	for (const path of geometry.paths) {
@@ -220,6 +247,34 @@ export function shapeSvg(
 			}).textContent = line;
 		});
 	}
+	return true;
+}
+
+/** Standalone `<svg>` for the shape at the given size, or undefined for an unknown preset. */
+export function shapeSvg(
+	spec: ShapeSpec,
+	widthPx: number,
+	heightPx: number,
+	theme?: ThemeCatalog,
+): string | undefined {
+	const w = Math.max(1, widthPx);
+	const h = Math.max(1, heightPx);
+	const svg = createSvg();
+	setSvgAttributes(svg, {
+		width: round(w),
+		height: round(h),
+		viewBox: `0 0 ${round(w)} ${round(h)}`,
+		style: 'overflow:visible',
+		role: 'img',
+		'aria-label': spec.groupChildren?.length
+			? 'Group'
+			: lookupPresetShape(spec.preset)
+				? spec.preset
+				: 'Shape',
+	});
+	const defs = appendSvg(svg, 'defs');
+	if (!appendShapeContent(svg, spec, w, h, theme, defs, 'shape')) return undefined;
+	if (!defs.childNodes.length) svg.removeChild(defs);
 	return buildXml(svg);
 }
 

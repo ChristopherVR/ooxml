@@ -25,6 +25,8 @@ export interface JpxHeader {
 	enumerated?: number;
 	/** The colour space signature of an embedded ICC profile ('RGB ', 'GRAY', 'CMYK', 'Lab '). */
 	icc?: string;
+	/** Raw ICC profile bytes from the `colr` box (method 2 or 3). */
+	iccProfile?: Uint8Array;
 	palette?: JpxPalette;
 	/** Component mapping: each channel from a component directly or through a palette column. */
 	mapping?: { component: number; palette: boolean; column: number }[];
@@ -91,8 +93,10 @@ function readHeader(data: Uint8Array, box: Box, header: JpxHeader): void {
 		if (child.type === 'colr' && header.enumerated === undefined && header.icc === undefined) {
 			const method = data[at];
 			if (method === 1 && child.end - at >= 7) header.enumerated = u32(data, at + 3);
-			else if ((method === 2 || method === 3) && child.end - at >= 3 + 20)
+			else if ((method === 2 || method === 3) && child.end - at >= 3 + 20) {
 				header.icc = type(data, at + 3 + 16);
+				header.iccProfile = data.subarray(at + 3, child.end);
+			}
 		} else if (child.type === 'pclr') header.palette = palette(data, child);
 		else if (child.type === 'cmap')
 			header.mapping = Array.from({ length: Math.floor((child.end - at) / 4) }, (_, index) => ({

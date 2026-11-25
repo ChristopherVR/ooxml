@@ -7,6 +7,7 @@
  * /Decode and /BitsPerComponent are ignored, as the standard says, except for image masks.
  */
 import type { PdfDocument } from './document';
+import { applyIccProfile } from './icc-profile';
 import { cmyk, colorSpace, gray, rgb, type ColorSpace } from './image-color';
 import { decodeJpx, JpxError, type JpxComponent, type JpxImage } from './jpx/index';
 import { isNumber, type PdfDict, type PdfValue } from './objects';
@@ -162,6 +163,8 @@ export async function jpxSamples(
 		}
 	});
 	if (ycc) toRgb(out, n);
+	else if (!pdfSpace && !asMask && !imageMask && image.header.iccProfile)
+		applyIccProfile(out, n, image.header.iccProfile);
 	const pixels = width * height;
 	const components = space.components;
 	if (n === components) return { bytes: out, space };
