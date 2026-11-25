@@ -20,14 +20,10 @@ import { alignFragments, buildFragments } from './paragraph-fragments';
 import { expectDefined } from '../expect-defined';
 import { cachedParagraphLayout } from './paragraph-cache';
 
-/**
- * How far justified text may squeeze its spaces, as a fraction of their width, to fit one more word.
- * Word 16 does this. The value is fitted to probes of justified Courier New paragraphs from 9 to
- * 13 pt (it reproduces all but 2 of 106 line-end decisions; Word accepted up to 0.20 at 13 pt and
- * refused 0.14 at 10 pt, so no constant is exact), not a documented rule: the one number to revisit
- * if more references disagree.
- */
-const SPACE_SHRINK = 0.145;
+// Word 16 mode 15 probes in Courier New, Times New Roman, Arial and Arial Narrow.
+// The line can give up a quarter of its spaces, with a smaller budget for a short next word.
+const SPACE_SHRINK = 0.25;
+const WORD_SHRINK = 0.35;
 
 export interface ParagraphLayoutResult {
 	/** Lines with `yPx` relative to the paragraph box's own top (0 for the first line). */
@@ -210,6 +206,12 @@ function measureParagraph(
 	};
 	const widths = tokens.map(tokenWidth);
 	const ends = new Set(['tab', 'lineBreak', 'pageBreak', 'columnBreak']);
+	const beforeStart = tokens[startIndex - 1]?.kind;
+	let keepLeadingSpaces =
+		startIndex === 0 ||
+		beforeStart === 'lineBreak' ||
+		beforeStart === 'pageBreak' ||
+		beforeStart === 'columnBreak';
 	/** Width of the text after the tab at `index`, whole and up to its first decimal separator. */
 	function segmentAfter(index: number): { followingPx: number; beforeDecimalPx: number } {
 		let followingPx = 0;
@@ -235,6 +237,7 @@ function measureParagraph(
 	const placedTokens = () => placed.map((entry) => entry.token);
 	// Width of the punctuation hanging past each line's end, which alignment does not count.
 	const hangingPx = new Map<number, number>();
+	const squeezedLines = new Set<number>();
 
 	function flushLine(
 		forceEmpty: boolean,
@@ -300,6 +303,7 @@ function measureParagraph(
 		placed = [];
 		lineWidthPx = 0;
 		lineSpacePx = 0;
+		keepLeadingSpaces = false;
 		jump = undefined;
 		marginReachPx = 0;
 		consecutiveHyphens = endedWithAutoHyphen ? consecutiveHyphens + 1 : 0;
@@ -335,17 +339,34 @@ function measureParagraph(
 		return true;
 	}
 
+	function placeWordPrefix(
+		index: number,
+		token: Extract<BreakToken, { kind: 'word' }>,
+		prefix: string,
+		widthPx: number,
+	) {
+		if (!placed.length) firstToken = wordPosition(index, token);
+		placed.push({ token: { ...token, text: prefix }, widthPx });
+		tokenCursor = wordPosition(index, token, prefix.length);
+		flushLine(false, undefined);
+		resumeWord(index, prefix.length);
+		// Fit the remainder's prefix on the next line without shaping all of it again.
+		widths[index] = Infinity;
+	}
+
 	for (let tokenIndex = startIndex; tokenIndex < tokens.length; tokenIndex++) {
 		const token = expectDefined(tokens[tokenIndex], 'token index');
 		tokenCursor = tokenIndex + 1;
 		if (token.kind === 'lineBreak') {
 			if (!placed.length) firstToken = tokenIndex;
 			flushLine(true, undefined);
+			keepLeadingSpaces = true;
 			continue;
 		}
 		if (token.kind === 'pageBreak' || token.kind === 'columnBreak') {
 			if (!placed.length) firstToken = tokenIndex;
 			flushLine(true, token.kind === 'pageBreak' ? 'page' : 'column');
+			keepLeadingSpaces = true;
 			continue;
 		}
 		let leader: LayoutFragment['leader'];
@@ -409,11 +430,13 @@ function measureParagraph(
 		// internal (i.e. this token fits after it); a trailing space at an actual
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
+		const previous = placed.at(-1);
+		const wordGapPx = previous?.token.kind === 'space' ? previous.widthPx : 0;
 		const squeezePx =
 			effectiveAlign === 'justify' &&
 			paragraph.squeezeJustifiedSpaces !== false &&
 			token.kind === 'word'
-				? lineSpacePx * SPACE_SHRINK
+				? Math.min(lineSpacePx * SPACE_SHRINK, (advance + wordGapPx) * WORD_SHRINK)
 				: 0;
 		// A nearly fitting final line of a justified text box should not turn into
 		// a stretched nonfinal line. Leave normal word-break decisions alone.
@@ -462,6 +485,23 @@ function measureParagraph(
 				tokenIndex -= carry + 1;
 				continue;
 			}
+			// An overlong word already on its own line can break inside its next run.
+			if (
+				!jump &&
+				token.kind === 'word' &&
+				token.glue === 'word' &&
+				placed.at(-1)?.token === tokens[tokenIndex - 1]
+			) {
+				const available = limit - lineWidthPx;
+				const measure = (text: string) => tokenWidth({ ...token, text });
+				const prefix = fittingWordPrefix(token.text, available, measure);
+				const prefixWidth = measure(prefix);
+				if (prefix.length < token.text.length && prefixWidth <= available) {
+					placeWordPrefix(tokenIndex, token, prefix, prefixWidth);
+					tokenIndex--;
+					continue;
+				}
+			}
 			tokenCursor = tokenIndex;
 			if (token.kind === 'word') tokenCursor = wordPosition(tokenIndex, token);
 			flushLine(false, undefined);
@@ -492,17 +532,7 @@ function measureParagraph(
 					tokenWidth({ ...token, text }),
 				);
 				if (prefix.length < token.text.length) {
-					if (!placed.length) firstToken = wordPosition(tokenIndex, token);
-					placed.push({
-						token: { ...token, text: prefix },
-						widthPx: tokenWidth({ ...token, text: prefix }),
-					});
-					tokenCursor = wordPosition(tokenIndex, token, prefix.length);
-					flushLine(false, undefined);
-					resumeWord(tokenIndex, prefix.length);
-					// The remainder begins a new line. Fit its prefix there without
-					// measuring the entire remainder again.
-					widths[tokenIndex] = Infinity;
+					placeWordPrefix(tokenIndex, token, prefix, tokenWidth({ ...token, text: prefix }));
 					tokenIndex--;
 					continue;
 				}
@@ -510,7 +540,7 @@ function measureParagraph(
 				widths[tokenIndex] = width;
 			}
 		}
-		if (token.kind === 'space' && placed.length === 0) continue; // leading space at wrap point is dropped
+		if (token.kind === 'space' && placed.length === 0 && !keepLeadingSpaces) continue;
 		if (!placed.length) firstToken = wordPosition(tokenIndex, token);
 		placed.push({
 			token,
@@ -519,6 +549,8 @@ function measureParagraph(
 			...(markerFactor ? { xOffsetPx: -width * markerFactor } : {}),
 			...(markerFactor || spacePx ? { advancePx: advance + spacePx } : {}),
 		});
+		if (fits && squeezePx > wordTolerance && lineWidthPx + advance > limit + wordTolerance)
+			squeezedLines.add(lineIndex);
 		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
 		if (token.kind === 'space') lineSpacePx += advance;
 	}
@@ -539,6 +571,7 @@ function measureParagraph(
 				width + (hangingPx.get(index) ?? 0),
 				index === lastIndex,
 				boxes[index]?.split ? 'left' : effectiveAlign,
+				squeezedLines.has(index),
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),
 		};
 	}

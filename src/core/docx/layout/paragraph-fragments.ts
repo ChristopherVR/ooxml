@@ -68,10 +68,12 @@ export function alignFragments(
 	width: number,
 	isLastLine: boolean,
 	effectiveAlign: 'left' | 'right' | 'center' | 'justify',
+	squeezed = false,
 ): LayoutFragment[] {
 	if (!fragments.length) return fragments;
-	if (effectiveAlign === 'justify' && !isLastLine) return justify(fragments, width);
 	const natural = fragments.at(-1)!.xPx + fragments.at(-1)!.widthPx;
+	if (effectiveAlign === 'justify' && (!isLastLine || (squeezed && natural > width)))
+		return justify(fragments, width);
 	const offset =
 		effectiveAlign === 'center'
 			? Math.max(0, width - natural) / 2

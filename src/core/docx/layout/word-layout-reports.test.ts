@@ -48,6 +48,15 @@ it.each(['l01-times-12pt', 'l02-arial-12pt'])(
 		const { pages, paragraphs, lines, model } = await layout(name);
 		expect(pages).toHaveLength(7);
 		expect(paragraphs).toHaveLength(43);
+		const pageParagraphs = pages.map((page) =>
+			page.columns.flatMap((column) => column.blocks.filter((block) => block.kind === 'paragraph')),
+		);
+		expect(pageParagraphs.map((blocks) => blocks.length)).toEqual([43, 43, 43, 43, 43, 43, 42]);
+		expect(
+			pageParagraphs.flatMap((blocks) =>
+				blocks.map((block) => [block.blockId, block.lines.map((line) => line.sourceStart)]),
+			),
+		).toEqual(Array.from({ length: 300 }, (_, index) => [`p${index}`, [0]]));
 		expect(lines[0]?.heightPx).toBeCloseTo(16 / 0.75, 0);
 		// Word switches to true single spacing when the package supplies a style catalog
 		// with no line spacing. Keep both branches exercised with identical text.

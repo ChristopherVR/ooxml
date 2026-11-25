@@ -83,6 +83,79 @@ describe('justified text squeezes its spaces', () => {
 	});
 });
 
+describe('Word line break references', () => {
+	const courier: TextMeasurer = {
+		widthOf: (value, font) => value.length * font.sizePx * 0.6,
+		lineHeightOf: () => 20,
+	};
+	const wraps = (value: string, widthPt: number, extra: Partial<LayoutParagraph> = {}) =>
+		layoutParagraph(
+			text('p', value, { runs: [{ text: value, fontSizePt: 12 }], ...extra }),
+			(widthPt * 4) / 3,
+			courier,
+			noop,
+		).lines.map((line) => line.fragments.map((fragment) => fragment.text).join(''));
+
+	it.each(['\u2013', '\u2014'])('allows a line to break after %s in a word', (dash) => {
+		// Word COM at 118 points, Courier New 12 pt, legacy left alignment.
+		expect(wraps(`0006 alpha beta${dash}gamma delta epsilon`, 118)).toEqual([
+			`0006 alpha beta${dash}`,
+			'gamma delta',
+			'epsilon',
+		]);
+	});
+
+	it('can break between consecutive em dashes', () => {
+		expect(wraps('0000 alpha beta\u2014\u2014gamma delta', 118)).toEqual([
+			'0000 alpha beta\u2014',
+			'\u2014gamma delta',
+		]);
+	});
+
+	it('fills a line through the formatting boundary of an overlong word', () => {
+		// Word COM at 51 pt, with the first three letters regular and the rest bold.
+		expect(
+			wraps('', 51, {
+				runs: [
+					{ text: 'abc', fontSizePt: 12 },
+					{ text: 'defghijklmnop', bold: true, fontSizePt: 12 },
+				],
+			}),
+		).toEqual(['abcdefg', 'hijklmn', 'op']);
+	});
+
+	it('preserves authored indentation after a paragraph or manual line break', () => {
+		expect(wraps('    alpha beta gamma', 94)).toEqual(['    alpha', 'beta gamma']);
+		expect(wraps('alpha\n    beta gamma', 94)).toEqual(['alpha', '    beta', 'gamma']);
+	});
+
+	it('squeezes the internal spaces of a modern justified line enough for the next word', () => {
+		// Word at 168 pt fits 25 Courier characters (180 pt natural) with seven spaces.
+		expect(wraps('0714 alpha beta     gamma delta epsilon', 168, { align: 'justify' })).toEqual([
+			'0714 alpha beta     gamma',
+			'delta epsilon',
+		]);
+	});
+
+	it.each([
+		{ word: 'MARK', shrinkPt: 12, fits: true },
+		{ word: 'MARK', shrinkPt: 14.4, fits: false },
+		{ word: 'ordonnance', shrinkPt: 17.4, fits: true },
+		{ word: 'Z', shrinkPt: 11.4, fits: false },
+	])(
+		'uses the overflowing word to limit the squeeze for $word at $shrinkPt pt',
+		({ word, shrinkPt, fits }) => {
+			const prefix = '0000 aa aa aa aa aa aa aa aa aa';
+			const first = `${prefix} ${word}`;
+			// Word COM mode 15 in Courier New. A longer final word permits more total
+			// compression, given exactly the same spaces and font on the line.
+			expect(wraps(`${first} extra`, first.length * 7.2 - shrinkPt, { align: 'justify' })[0]).toBe(
+				fits ? first : prefix,
+			);
+		},
+	);
+});
+
 describe('space between paragraphs', () => {
 	it('puts a paragraph below its own space before', () => {
 		const [first] = boxes(flow([text('a', 'one', { spacingBeforeTwips: twips(300) })]));

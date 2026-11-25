@@ -48,13 +48,19 @@ const ZERO_WIDTH_SPACE = '​';
 
 /**
  * Whether the line breaker may break between two adjacent graphemes of text, before kinsoku: after
- * a plain hyphen or a zero width space, before or after an East Asian character, and between two
- * grapheme clusters of Thai, Lao, Khmer or Myanmar (`text/complex-breaks.ts`). U+2011
+ * a plain hyphen, an en or em dash, or a zero width space, before or after an East Asian
+ * character, and between graphemes of Thai, Lao, Khmer or Myanmar (`text/complex-breaks.ts`). U+2011
  * (non-breaking hyphen, `w:noBreakHyphen`) is never split on.
  */
 export function breakAllowedBetween(before: string, after: string): boolean {
 	if (!before || !after) return false;
-	if (before === '-' || before.endsWith(ZERO_WIDTH_SPACE)) return true;
+	if (
+		before === '-' ||
+		before === '\u2013' ||
+		before === '\u2014' ||
+		before.endsWith(ZERO_WIDTH_SPACE)
+	)
+		return true;
 	return isEastAsianChar(before) || isEastAsianChar(after) || complexBreakAllowed(before, after);
 }
 

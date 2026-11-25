@@ -640,8 +640,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       references agree on the first-page break and page count (#330).
 - [x] **P2** All 44 page starts in the anonymized contract from #330 match between Print Layout in
       Edge on Windows and Word 16 COM, including the leading blanks and the split table row.
-- [ ] **P2** Browser and Word can still wrap individual lines of mixed-format justified text at
-      different words within a page.
+- [x] **P2** Word 16 COM and Windows Print Layout agree on the page and visible source position
+      of all 2,238 body and table lines of the anonymized #330 contract, and on all 600 lines of
+      its two single-spacing controls. Regressions cover Word's breaks at dashes, authored
+      indentation, overlong words across formatting runs and modern justification.
+- [ ] **P2** Word's justification near a line's fitting threshold is still approximated. Font
+      substitutions can also shift line breaks. Literal U+00AD in a text run and the discretionary
+      `w:softHyphen` element still share the same representation in Print Layout.
 - [x] **P2** Overlong words in Print Layout break at grapheme boundaries (#316). Nearly fitting
       final lines in justified text boxes have a one-pixel fit tolerance (#314).
 - [x] **P1** Auto-fit tables stay inside the text column when a cell holds an unbreakable token

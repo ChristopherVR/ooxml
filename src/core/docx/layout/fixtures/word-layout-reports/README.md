@@ -24,4 +24,14 @@ enabled. A 12 pt Arial list marker raised the baseline of a 12 pt Times New Roma
 without increasing its 13.8 pt height. In `cell-end-marker.docx`, Word omitted the empty final
 paragraph in a cell with `w:hideMark`. An explicit break or space in the cell still took room.
 
+The follow-up #330 check compared all 2,238 rendered contract body and table line starts and
+their page assignments to Word COM. It compared the visible prefix length of each Word range
+so hidden field instructions did not affect the offsets. All 600 lines of the two single-spacing
+samples also matched Word. The contract's four hidden end-of-cell marks occupy no line.
+
+Word COM wrapping probes are captured by `word-corpus-rules.test.ts`. Word broke after an
+unspaced en or em dash, preserved leading spaces after explicit breaks, and used the line's
+remaining width for a long word that spans two formatting runs. In mode 15, the amount a
+justified line could give up depended on the spaces available and the width of the next word.
+
 Run the Word export again with `pwsh -File src/core/scripts/docx-layout-reports-word.ps1`.
