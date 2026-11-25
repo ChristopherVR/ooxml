@@ -371,13 +371,14 @@ export class DrawingLayer {
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
 		const node = event.currentTarget as ObjectNode;
+		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
+		if (drawing.kind === 'timeline' && this.#pressTimeline(event, index, drawing, node)) return;
+		// After the slicer and timeline: their own modifier clicks extend the filter.
 		if (event.ctrlKey || event.metaKey || event.shiftKey) {
 			selectDrawing(view.ctx, index, true);
 			view.ctx.grid()?.focus();
 			return;
 		}
-		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
-		if (drawing.kind === 'timeline' && this.#pressTimeline(event, index, drawing, node)) return;
 		if (
 			drawing.kind === 'formControl' &&
 			pressFormControl(view, event, drawing, node, {
