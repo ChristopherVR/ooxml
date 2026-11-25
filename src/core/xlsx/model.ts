@@ -611,6 +611,11 @@ export interface DrawingAnchor {
 }
 
 export interface ImageObject {
+	/** DrawingML transform and visibility. */
+	rotation?: number;
+	flipH?: boolean;
+	flipV?: boolean;
+	hidden?: boolean;
 	kind: 'image';
 	anchor: DrawingAnchor;
 	/** Package part of the image (`xl/media/image1.png`). */
@@ -700,6 +705,7 @@ export interface UnsupportedDrawingObject {
 	sourceXml?: string;
 	/** A DrawingML shape, connector or group the painter draws (saved from `sourceXml`). */
 	shape?: ShapeNode;
+	shapeEdit?: { transform?: true; text?: true; visibility?: true };
 	/** The source-backed WordArt text and effects were edited. */
 	wordArtEdited?: true;
 	/**
@@ -951,6 +957,8 @@ export interface Worksheet {
 	 * for those pages), read for display; the VML part itself is kept verbatim.
 	 */
 	headerFooterImages?: Record<string, HeaderFooterImage>;
+	/** Tiled worksheet background image, excluded from printing. */
+	backgroundPicture?: Pick<ImageObject, 'partName' | 'contentType'>;
 	/** Custom views of this sheet (`customSheetViews`); see {@link Workbook.customViews}. */
 	customViews?: CustomSheetView[];
 	/** Print options; absent means none set. */

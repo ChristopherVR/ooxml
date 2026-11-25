@@ -180,6 +180,7 @@ function transformOf(node: ShapeNode, box: Box): string {
 }
 
 function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
+	if (node.hidden) return '';
 	const transform = transformOf(node, box);
 	const open = transform ? `<g transform="${escapeXml(transform)}">` : '<g>';
 	if (node.kind === 'group') {

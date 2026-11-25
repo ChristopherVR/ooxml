@@ -1,5 +1,12 @@
 # Provenance
 
+## Shared shape gallery thumbnails (2026-11-26)
+
+Source repository: ChristopherVR/ooxml, commit `fa40aa8ad`.
+The preset outline thumbnail from `src/ui/src/pptx/render/shape-gallery.ts` moved to
+`src/ui/src/ribbon/shape-thumbnail.ts`. It calls the shared preset geometry evaluator directly
+and retains the PowerPoint exports. Excel uses it with Word's preset palette and localized labels.
+
 ## Shared local 3D Models and Insert Object (2026-11-23)
 
 Source repository: ChristopherVR/ooxml, commit `823fdfb30`.

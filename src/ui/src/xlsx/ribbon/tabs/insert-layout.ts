@@ -1,10 +1,19 @@
 // Insert and Page Layout tabs.
 import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
+import { ALIGNMENTS } from '../../commands/arrange';
+import { shapeSections } from '../../commands/insert-shapes';
 import { CHART_TYPES } from '../../commands/insert';
 import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
 import { themeFontItems, themePaletteItems, themePresetItems } from 'ooxml-core/xlsx/ui';
 
 const sep: RibbonMenuItem = { separator: true };
+const fitOptions = [
+	{ value: '0', label: 'Automatic' },
+	...Array.from({ length: 9 }, (_, index) => ({
+		value: String(index + 1),
+		label: String(index + 1),
+	})),
+];
 
 export function insertTab(): RibbonTab {
 	return {
@@ -37,6 +46,7 @@ export function insertTab(): RibbonTab {
 				label: 'Illustrations',
 				controls: [
 					{ kind: 'button', command: 'insert.pictures', size: 'large' },
+					{ kind: 'gallery', command: 'insert.shapes', items: () => [], sections: shapeSections },
 					{
 						kind: 'menu',
 						label: 'Screenshot',
@@ -124,7 +134,18 @@ export function insertTab(): RibbonTab {
 			{
 				id: 'comments',
 				label: 'Comments',
-				controls: [{ kind: 'button', command: 'insert.comment', size: 'large' }],
+				controls: [
+					{ kind: 'button', command: 'insert.comment', size: 'large' },
+					{ kind: 'button', command: 'insert.note', size: 'large' },
+				],
+			},
+			{
+				id: 'text',
+				label: 'Text',
+				controls: [
+					{ kind: 'button', command: 'insert.text-box', size: 'large' },
+					{ kind: 'button', command: 'insert.header-footer', size: 'large' },
+				],
 			},
 			{
 				id: 'symbols',
@@ -213,6 +234,65 @@ export function pageLayoutTab(): RibbonTab {
 						],
 					},
 					{ kind: 'button', command: 'page.preview', size: 'large' },
+					{ kind: 'button', command: 'page.print-titles', size: 'large' },
+					{ kind: 'button', command: 'page.background', size: 'large' },
+					{ kind: 'button', command: 'page.background-delete', size: 'large' },
+				],
+			},
+			{
+				id: 'scale-to-fit',
+				label: 'Scale to Fit',
+				launcher: 'page.setup',
+				controls: [
+					{
+						kind: 'stack',
+						controls: [
+							{ kind: 'select', command: 'page.fit-width', options: fitOptions, showLabel: true },
+							{ kind: 'select', command: 'page.fit-height', options: fitOptions, showLabel: true },
+							{
+								kind: 'select',
+								command: 'page.scale',
+								options: [],
+								editable: true,
+								showLabel: true,
+								width: 58,
+							},
+						],
+					},
+				],
+			},
+			{
+				id: 'arrange',
+				label: 'Arrange',
+				controls: [
+					{ kind: 'button', command: 'arrange.forward', size: 'large' },
+					{ kind: 'button', command: 'arrange.backward', size: 'large' },
+					{ kind: 'button', command: 'arrange.selection-pane', size: 'large' },
+					{
+						kind: 'stack',
+						controls: [
+							{
+								kind: 'menu',
+								label: 'Align',
+								items: ALIGNMENTS.map(([id]) => ({ command: 'arrange.align-' + id })),
+							},
+							{
+								kind: 'menu',
+								label: 'Group',
+								items: [{ command: 'arrange.group' }, { command: 'arrange.ungroup' }],
+							},
+							{
+								kind: 'menu',
+								label: 'Rotate',
+								items: [
+									{ command: 'arrange.rotate-right' },
+									{ command: 'arrange.rotate-left' },
+									{ command: 'arrange.flip-horizontal' },
+									{ command: 'arrange.flip-vertical' },
+								],
+							},
+						],
+					},
 				],
 			},
 			{

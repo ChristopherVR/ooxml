@@ -18,6 +18,7 @@ import { parseDrawing } from './drawing';
 import { readEmbeddedDeclarations } from './local-object';
 import { attachFormControls } from './form-control';
 import { readCustomSheetViews } from './custom-views';
+import { imageContentType } from '../../drawingml/image-content-type';
 import { readHeaderFooterImages } from './header-footer-images';
 import { parseDataXml } from './limits';
 import type { SourceIndex } from './package';
@@ -266,6 +267,20 @@ function readWorksheet(
 	if (hfImages) sheet.headerFooterImages = hfImages;
 	const printOptions = readPrintOptions(byName.get('printOptions'));
 	if (printOptions) sheet.printOptions = printOptions;
+	const picture = byName.get('picture');
+	const pictureId = relAttr(picture, 'id');
+	const pictureRel = pictureId ? ctx.source.rels(partName).get(pictureId) : undefined;
+	if (pictureId && pictureRel?.type === RELATIONSHIP_TYPES.image) {
+		const image = ctx.source.target(partName, pictureRel);
+		if (image && ctx.source.has(image)) {
+			sheet.backgroundPicture = {
+				partName: image,
+				contentType: ctx.source.contentType(image) ?? imageContentType(image),
+			};
+			sheet.preserved.delete('picture');
+			sheet.preserved.set('source:backgroundPicture', [pictureId]);
+		}
+	}
 	const drawing = byName.get('drawing');
 	if (drawing) {
 		const rel = ctx.source.rels(partName).get(relAttr(drawing, 'id') ?? '');

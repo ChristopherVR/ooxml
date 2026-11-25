@@ -40,7 +40,8 @@ import {
 	previewPartRelationship,
 } from './local-object';
 import { XML_HEADER, escapeAttr } from './xml-out';
-import { patchWordArtShape, wordArtShapeXml } from '../word-art';
+import { nativeShapeXml, patchNativeShape } from './native-shape';
+import { patchWordArtShape } from '../word-art';
 import {
 	droppedSmartArtDrawings,
 	isRewrittenSmartArt,
@@ -348,13 +349,21 @@ export function writeDrawing(
 						);
 			continue;
 		}
+		if (object.kind === 'unsupported' && object.shape && !object.sourceXml) {
+			body += anchorXml(
+				object.anchor,
+				nativeShapeXml(object.shape, () => nextId++),
+				'oneCell',
+			);
+			continue;
+		}
 		if (object.kind === 'unsupported' && object.shape?.wordArt) {
-			if (!object.sourceXml) {
-				body += anchorXml(object.anchor, wordArtShapeXml(object.shape, nextId++), 'oneCell');
-				continue;
-			}
-			if (object.wordArtEdited) {
-				body += reanchor(patchWordArtShape(object.sourceXml, object.shape), object.anchor);
+			if (object.wordArtEdited && object.sourceXml) {
+				const xml = patchWordArtShape(object.sourceXml, object.shape);
+				body += reanchor(
+					object.shapeEdit ? patchNativeShape(xml, object.shape, object.shapeEdit) : xml,
+					object.anchor,
+				);
 				continue;
 			}
 		}
@@ -401,7 +410,12 @@ export function writeDrawing(
 				object.sourceXml &&
 				(sourceDrawing || !/r:(?:id|embed|link|pict)=/.test(object.sourceXml))
 			)
-				body += reanchor(object.sourceXml, object.anchor);
+				body += reanchor(
+					object.kind === 'unsupported' && object.shape && object.shapeEdit
+						? patchNativeShape(object.sourceXml, object.shape, object.shapeEdit)
+						: object.sourceXml,
+					object.anchor,
+				);
 			continue;
 		}
 		if (object.kind === 'image') {
@@ -435,8 +449,23 @@ export function writeDrawing(
 					setSvgPictureRelationship(blip, svgId);
 				}
 			}
+			const properties = picture.getElementsByTagNameNS(NS.xdr, 'spPr')[0];
+			const transform = first(properties, 'xfrm', NS.a);
+			if (transform && object.rotation !== undefined) {
+				if (object.rotation)
+					transform.setAttribute('rot', String(Math.round(object.rotation * 60000)));
+				else transform.removeAttribute('rot');
+			}
+			if (transform) {
+				for (const attr of ['flipH', 'flipV'] as const) {
+					if (object[attr]) transform.setAttribute(attr, '1');
+					else if (object[attr] === false) transform.removeAttribute(attr);
+				}
+			}
 			const identity = picture.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
 			if (identity) {
+				if (object.hidden) identity.setAttribute('hidden', '1');
+				else if (object.hidden === false) identity.removeAttribute('hidden');
 				if (object.name !== undefined) identity.setAttribute('name', object.name);
 				if (object.description !== undefined) identity.setAttribute('descr', object.description);
 				else identity.removeAttribute('descr');

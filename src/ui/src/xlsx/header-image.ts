@@ -10,6 +10,15 @@ export function headerFooterImageUrl(
 	workbook: Workbook,
 	image: HeaderFooterImage,
 ): string | undefined {
+	return workbookImageUrl(workbook, image);
+}
+
+/** Produces an image URL from embedded media bytes. */
+export function workbookImageUrl(
+	workbook: Workbook,
+	image: Pick<HeaderFooterImage, 'partName' | 'contentType'>,
+): string | undefined {
+	if (!/^image\/[a-z0-9+.-]+$/i.test(image.contentType)) return undefined;
 	const bytes = workbook.source?.parts.get(image.partName);
 	if (!bytes) return undefined;
 	const cached = urls.get(bytes);

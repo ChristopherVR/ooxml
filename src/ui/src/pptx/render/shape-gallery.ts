@@ -12,7 +12,8 @@ import {
 	shapeGalleryCategoryKey,
 	shapeGalleryNameKey,
 } from 'ooxml-core/geometry';
-import { evaluatePresetShape } from 'ooxml-core/pptx';
+import { shapeThumbnailPath } from '../../ribbon/shape-thumbnail';
+export { SHAPE_THUMB_VIEW_BOX, shapeThumbnailPath } from '../../ribbon/shape-thumbnail';
 
 import { FREEFORM_TOOL_LABEL_KEYS } from './edit-points/freeform-tool-geometry';
 import type { FreeformToolKind } from './edit-points/freeform-tool-geometry';
@@ -43,10 +44,6 @@ export interface ShapeGallerySection {
 	items: readonly ShapeGalleryItem[];
 }
 
-/** The grid every thumbnail is drawn on (an 18 px box with a pixel of margin). */
-export const SHAPE_THUMB_VIEW_BOX = '-1 -1 20 20';
-const THUMB = 18;
-
 export const RECENT_SHAPES_KEY = 'pptx-ui.shapes.recent';
 export const RECENT_SHAPES_MAX = 8;
 export const RECENT_SHAPES_HEADING_KEY = 'pptx.shapes.category.recent';
@@ -65,18 +62,6 @@ const FREEFORM_FALLBACK: Record<string, string> = {
 /** The UI token the editor inserts for a preset (a straight connector is a real connector). */
 const insertToken = (preset: string): string =>
 	preset === 'straightConnector1' ? 'connector' : preset;
-
-const thumbCache = new Map<string, string>();
-
-/** Outline path of a preset on the thumbnail grid; an empty string when it cannot be drawn. */
-export function shapeThumbnailPath(preset: string): string {
-	let path = thumbCache.get(preset);
-	if (path === undefined) {
-		path = evaluatePresetShape(preset, THUMB, THUMB)?.svgPath ?? '';
-		thumbCache.set(preset, path);
-	}
-	return path;
-}
 
 function freeformItem(tool: 'freeformShape' | 'curve' | 'scribble'): ShapeGalleryItem {
 	const known = tool !== 'scribble';

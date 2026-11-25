@@ -13,7 +13,9 @@ export function applyRibbonVisibility(root: HTMLElement, isHidden: (id: string) 
 		const menu = control.dataset.menuCommands?.split(' ').filter(Boolean);
 		const hide = id ? isHidden(id) : Boolean(menu?.length && menu.every(isHidden));
 		control.toggleAttribute(HIDDEN, hide);
-		const holder = control.closest<HTMLElement>('.ribbon-split, .ribbon-combo');
+		const holder =
+			control.closest<HTMLElement>('.ribbon-labelled-select') ??
+			control.closest<HTMLElement>('.ribbon-split, .ribbon-combo');
 		if (holder && holder.querySelector('[data-command]') === control)
 			holder.toggleAttribute(HIDDEN, hide);
 	}

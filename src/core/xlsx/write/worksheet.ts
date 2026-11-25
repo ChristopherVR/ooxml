@@ -10,6 +10,7 @@ import { dataValidationsXml } from './data-validations';
 import { validationExtensionsXml } from '../validation-extensions';
 import { conditionalExtensionsXml } from '../conditional-extensions';
 import { RelationshipSet } from './package-writer';
+import { relativeTarget } from './drawing';
 import { pageXml } from './page-setup';
 import { sheetDataXml } from './sheet-data';
 import {
@@ -83,6 +84,7 @@ export function writeWorksheet(
 			if (
 				REGENERATED.has(rel.type) ||
 				localObjectRels.has(id) ||
+				sheet.preserved.get('source:backgroundPicture')?.includes(id) ||
 				(rel.type === RELATIONSHIP_TYPES.vmlDrawing && id === ids.legacy)
 			)
 				continue;
@@ -138,6 +140,14 @@ export function writeWorksheet(
 		),
 	);
 	blocks.set('headerFooter', page.headerFooter);
+	const picture = sheet.backgroundPicture;
+	const pictureBytes = picture && source?.bytes(picture.partName);
+	if (picture && pictureBytes) {
+		if (!writer.has(picture.partName))
+			writer.add(picture.partName, pictureBytes, picture.contentType);
+		const id = rels.ensure(RELATIONSHIP_TYPES.image, relativeTarget(partName, picture.partName));
+		blocks.set('picture', `<picture r:id="${id}"/>`);
+	}
 	const drawing = writeSheetDrawing(ctx, sheet, partName, rels, sourceDrawing);
 	blocks.set('drawing', drawing.drawing);
 	blocks.set('oleObjects', drawing.oleObjects);

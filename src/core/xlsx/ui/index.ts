@@ -1,3 +1,5 @@
+export { canGroupDrawings, canUngroupDrawing } from '../edit/group-drawings';
+export { canRotateDrawing, drawingHidden, type DrawingAlignment } from '../edit/arrange-drawings';
 export * from './audit-state';
 export * from './backstage/templates';
 export * from './commands';

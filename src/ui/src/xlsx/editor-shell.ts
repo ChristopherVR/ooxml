@@ -40,6 +40,7 @@ import { createToaster } from './toast';
 import { packagePassword } from './dialogs/package-password';
 import { attachShareDialog, type ShareDialogController } from '../dialog/share-controller';
 import { modalFocusableElements } from '../dialog/focus';
+import { createSelectionPane } from './selection-pane';
 import { createChartFormatPane } from './chart-format-pane';
 import { createChartExPane } from './chart-ex-pane';
 import { createSmartArtController } from './smartart-controller';
@@ -230,6 +231,7 @@ export function buildShell(core: EditorCore): Shell {
 	const toaster = createToaster(doc, () => ctx.t('Close'));
 
 	const workspace = el(doc, 'div', 'xve-workspace');
+	const selectionPane = createSelectionPane(ctx);
 	const chartFormatPane = createChartFormatPane(ctx);
 	const chartExPane = createChartExPane(ctx);
 	const smartArt = createSmartArtController(ctx);
@@ -241,7 +243,13 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, chartFormatPane.element, chartExPane.element, smartArt.element);
+	canvasRow.append(
+		workspace,
+		chartFormatPane.element,
+		chartExPane.element,
+		smartArt.element,
+		selectionPane.element,
+	);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -278,6 +286,7 @@ export function buildShell(core: EditorCore): Shell {
 			chartFormatPane.element,
 			chartExPane.element,
 			smartArt.element,
+			selectionPane.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
@@ -350,6 +359,7 @@ export function buildShell(core: EditorCore): Shell {
 			chartFormatPane.refresh();
 			chartExPane.refresh();
 			smartArt.refresh();
+			selectionPane.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');

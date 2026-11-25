@@ -22,6 +22,8 @@ export interface Selection {
 	 * cell selection change clears it.
 	 */
 	drawing?: number | undefined;
+	/** Multiple drawings for Arrange commands; drawing is the primary item. */
+	drawings?: number[] | undefined;
 }
 
 export interface SelectionModel {

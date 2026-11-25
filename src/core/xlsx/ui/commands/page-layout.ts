@@ -9,6 +9,7 @@ import {
 import type { Command } from '../commands';
 import type { EditorContext } from '../context';
 import { icon } from './icons';
+import { printScalingCommands } from './print-scaling';
 import { editing, target, viewing } from './util';
 
 type Margins = NonNullable<PageSetup['margins']>;
@@ -51,6 +52,7 @@ const setPage = (ctx: EditorContext, patch: Partial<PageSetup>): void => {
 
 export function pageLayoutCommands(): Command[] {
 	return [
+		...printScalingCommands(),
 		editing({
 			id: 'page.themes',
 			label: 'Themes',

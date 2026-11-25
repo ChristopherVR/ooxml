@@ -228,7 +228,13 @@ export interface EditSession {
 	setFreeze(sheet: number, freeze: FreezePane | undefined): void;
 	/** Splits the window (twentieths of a point); removes any frozen pane. Undefined removes the split. */
 	setSplit(sheet: number, split: SplitPane | undefined, topLeft?: CellAddress): void;
-	setComment(sheet: number, at: CellAddress, text: string | undefined, author: string): void;
+	setComment(
+		sheet: number,
+		at: CellAddress,
+		text: string | undefined,
+		author: string,
+		threaded?: boolean,
+	): void;
 	/** Edits the zero-based reply, preserving its author and timestamp. */
 	setCommentReply(sheet: number, at: CellAddress, replyIndex: number, text: string): void;
 	setCommentResolved(sheet: number, at: CellAddress, resolved: boolean): void;
@@ -271,6 +277,23 @@ export interface EditSession {
 		index: number,
 		crop: import('../../drawingml/picture-crop').DrawingPictureCrop,
 	): void;
+	addShape(
+		sheet: number,
+		anchor: DrawingAnchor,
+		value: import('./native-shapes').NewDrawingShape,
+	): number;
+	setTextBoxText(sheet: number, index: number, text: string): void;
+	reorderDrawing(sheet: number, index: number, direction: -1 | 1): number;
+	groupDrawings(sheet: number, indices: readonly number[], name: string): number | undefined;
+	ungroupDrawing(sheet: number, index: number): number[];
+	alignDrawings(
+		sheet: number,
+		indices: readonly number[],
+		alignment: import('./arrange-drawings').DrawingAlignment,
+	): void;
+	flipDrawing(sheet: number, index: number, axis: 'horizontal' | 'vertical'): void;
+	setDrawingHidden(sheet: number, index: number, hidden: boolean): void;
+	rotateDrawing(sheet: number, index: number, degrees: number): void;
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
@@ -383,6 +406,11 @@ export interface EditSession {
 	convertTableToRange(sheet: number, table: TableRef): void;
 	/** Applies a named cell style (built-in such as `Good`, or one the workbook defines). */
 	applyCellStyle(sheet: number, ranges: CellRange[], name: string): void;
+	/** Sets the worksheet's background picture, or removes it when undefined. */
+	setSheetBackground(
+		sheet: number,
+		image: { bytes: Uint8Array; contentType: string } | undefined,
+	): void;
 	/** Patches the page setup; `undefined` entries clear a setting. */
 	setPageSetup(sheet: number, patch: { [K in keyof PageSetup]?: PageSetup[K] | undefined }): void;
 	setPageBreak(sheet: number, axis: 'row' | 'col', before: number, present?: boolean): void;

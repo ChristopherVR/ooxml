@@ -244,6 +244,14 @@
 }
 
 /* Editable combo boxes (font name and size) and plain selects. */
+.ribbon-labelled-select {
+	display: grid;
+	grid-template-columns: 1fr 58px;
+	align-items: center;
+	gap: 4px;
+	white-space: nowrap;
+}
+
 .ribbon-combo {
 	display: inline-flex;
 	align-items: stretch;

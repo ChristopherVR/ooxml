@@ -46,7 +46,12 @@ export function createSelectionModel(initial: Selection = initialSelection(0)): 
 			const cellsMoved =
 				next.active !== undefined || next.ranges !== undefined || next.sheet !== undefined;
 			const drawing = 'drawing' in next ? next.drawing : cellsMoved ? undefined : current.drawing;
-			if (drawing !== undefined) merged.drawing = drawing;
+			if (drawing !== undefined) {
+				merged.drawing = drawing;
+				const drawings =
+					'drawings' in next ? next.drawings : 'drawing' in next ? undefined : current.drawings;
+				if (drawings && drawings.length > 1) merged.drawings = drawings;
+			}
 			if (same(merged, current)) return;
 			current = merged;
 			for (const listener of [...listeners]) listener(current);
@@ -82,7 +87,7 @@ export class SheetSelections {
 		const sheet = workbook?.sheets[index];
 		const saved = sheet ? this.saved.get(sheet) : undefined;
 		if (!saved) return initialSelection(index, workbook);
-		const { drawing: _drawing, ...cells } = saved;
+		const { drawing: _drawing, drawings: _drawings, ...cells } = saved;
 		return { ...cells, sheet: index };
 	}
 }

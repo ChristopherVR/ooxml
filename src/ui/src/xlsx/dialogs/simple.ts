@@ -137,7 +137,8 @@ export function registerSimpleDialogs(ctx: EditorContext): void {
 			apply: (value) => editChart(c, () => ({ title: value.trim() || UNSET })),
 		});
 	});
-	d.register('comment', openCommentEditor);
+	d.register('comment', (ctx) => openCommentEditor(ctx));
+	d.register('note', (ctx) => openCommentEditor(ctx, 'note'));
 	d.register('unhide-sheet', (c) => {
 		const session = c.session();
 		if (!session) return Promise.resolve(undefined);

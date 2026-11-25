@@ -10,6 +10,7 @@ export const GRID_CSS = `
 .xg-space{position:relative}
 .xg-view{position:sticky;left:0;top:0;overflow:hidden;cursor:cell;touch-action:pan-x pan-y}
 .xg-q,.xg-hbox{position:absolute;overflow:hidden}
+.xg-q{background-image:var(--xg-background, none)}
 .xg-plane{position:absolute;left:0;top:0;will-change:transform}
 .xg-cells,.xg-lines,.xg-overlay,.xg-drawings{position:absolute;left:0;top:0}
 .xg-gl{position:absolute;background:var(--xve-grid-line, var(--office-canvas-gridline, #e1e1e1))}
@@ -21,6 +22,7 @@ export const GRID_CSS = `
 .xg-t.xg-wrap>.xg-tx{display:block;width:100%}
 .xg-t.xg-vert{writing-mode:vertical-rl;text-orientation:upright}
 .xg-t.xg-over{background:var(--xve-sheet-bg, var(--office-paper, #fff))}
+.xg-view[data-sheet-background] .xg-t.xg-over{background:transparent}
 .xg-c[style*="background-color"]>.xg-t.xg-over,.xg-c-fill>.xg-t.xg-over{background:transparent}
 .xg-tx{display:inline-block;white-space:inherit}
 .xg-link{cursor:pointer}

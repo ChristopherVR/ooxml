@@ -1,5 +1,7 @@
 import { needsPicturePixels } from '../../picture-pixels';
 import { pictureSvg } from '../../picture-view';
+import { drawingHidden } from 'ooxml-core/xlsx/ui';
+import { selectedDrawings, selectDrawing } from '../drawing-selection';
 import { imageContentType } from 'ooxml-core/drawingml';
 import { pictureUrl } from 'ooxml-core/opc';
 import { pictureEffectFilter } from '../../picture-effects';
@@ -90,6 +92,7 @@ export class DrawingLayer {
 		const keep = new Set<string>();
 		const g = view.geometry;
 		sheet?.drawings.forEach((drawing, index) => {
+			if (drawingHidden(drawing)) return;
 			const box = anchorToPixelBox(sheet, drawing.anchor, view.metrics);
 			// An object may cross the frozen-pane split: paint it in every pane (each clips its part).
 			for (const quadrant of QUADRANTS) {
@@ -128,6 +131,12 @@ export class DrawingLayer {
 							void view.ctx.commands.run('drawing.edit-word-art');
 							return;
 						}
+						if (frame?.kind === 'unsupported' && frame.shape?.textBox && !frame.shape.wordArt) {
+							event.stopPropagation();
+							view.ctx.selection.set({ drawing: index });
+							void view.ctx.commands.run('drawing.edit-text-box');
+							return;
+						}
 						if (frame?.kind === 'unsupported' && frame.chartExSpace) {
 							event.stopPropagation();
 							view.ctx.selection.set({ drawing: index });
@@ -155,6 +164,11 @@ export class DrawingLayer {
 				}
 				if (node.parentNode !== parent) parent.append(node);
 				place(node, box.x, box.y, box.w, box.h);
+				node.style.zIndex = String(index);
+				node.style.transform =
+					drawing.kind === 'image' && (drawing.rotation || drawing.flipH || drawing.flipV)
+						? `rotate(${drawing.rotation ?? 0}deg) scale(${drawing.flipH ? -1 : 1}, ${drawing.flipV ? -1 : 1})`
+						: '';
 				const multi = drawing.kind === 'slicer' && this.#slicerState(drawing.name).multi;
 				const open = this.#openDrop === index;
 				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${multi}:${open}`;
@@ -325,9 +339,10 @@ export class DrawingLayer {
 	}
 
 	#selection(node: HTMLElement, index: number): void {
-		const selected = this.#selected === index;
+		const indices = selectedDrawings(this.#view.ctx);
+		const selected = indices.includes(index);
 		node.classList.toggle('xg-obj-sel', selected);
-		if (!selected) {
+		if (!selected || indices.length > 1) {
 			for (const grip of node.querySelectorAll('.xg-grip')) grip.remove();
 		} else if (!node.querySelector('.xg-grip')) {
 			for (const pos of ['nw', 'ne', 'sw', 'se']) {
@@ -356,6 +371,11 @@ export class DrawingLayer {
 		const drawing = sheet?.drawings[index];
 		if (!sheet || !drawing) return;
 		const node = event.currentTarget as ObjectNode;
+		if (event.ctrlKey || event.metaKey || event.shiftKey) {
+			selectDrawing(view.ctx, index, true);
+			view.ctx.grid()?.focus();
+			return;
+		}
 		if (drawing.kind === 'slicer' && this.#pressSlicer(event, index, drawing)) return;
 		if (drawing.kind === 'timeline' && this.#pressTimeline(event, index, drawing, node)) return;
 		if (

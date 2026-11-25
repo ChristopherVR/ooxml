@@ -42,6 +42,7 @@ import { HeaderLayer } from './headers';
 import { createTextMeasurer, type TextMeasurer } from './measure';
 import { SelectionLayer, type OverlayState } from './selection-layer';
 import { cellRange } from 'ooxml-core/xlsx/ui';
+import { workbookImageUrl } from '../header-image';
 
 interface QuadrantNodes {
 	box: HTMLDivElement;
@@ -438,6 +439,12 @@ export class GridView {
 		const selection = this.ctx.selection.get();
 		const editable = !this.ctx.readOnly();
 		const gridlines = sheet?.view.showGridLines !== false;
+		const workbook = this.workbook();
+		const image = sheet?.backgroundPicture;
+		const background = workbook && image ? workbookImageUrl(workbook, image) : undefined;
+		this.view.toggleAttribute('data-sheet-background', background !== undefined);
+		if (background) this.view.style.setProperty('--xg-background', `url("${background}")`);
+		else this.view.style.removeProperty('--xg-background');
 		const sets: Record<Quadrant, [readonly number[], readonly number[]]> = {
 			main: [vis.rows, vis.cols],
 			top: [vis.frozenRows, vis.cols],
@@ -460,6 +467,7 @@ export class GridView {
 			if (nodes.box.hidden) continue;
 			place(nodes.box, box.x, box.y, box.w, box.h);
 			const { ox, oy } = g.origin(q);
+			nodes.box.style.backgroundPosition = background ? `${-ox}px ${-oy}px` : '';
 			nodes.plane.style.transform = `translate3d(${-ox}px, ${-oy}px, 0)`;
 			nodes.lines.render(this.metrics, rows, cols, gridlines);
 			if (sheet)

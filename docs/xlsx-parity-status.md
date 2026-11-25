@@ -365,11 +365,15 @@ line/marker swatches and position-authoring controls remain incomplete.
     but not displayed, edited or copied,
     connections and query tables are only carried verbatim, and named sheet views and
     ActiveX controls are not modelled.
-12. Ribbon. There are no Draw, Picture Format, Shape Format, Chart Format (a pane instead),
-    PivotTable Analyze or PivotTable Design tabs; Insert has no Shapes, Screenshot or
-    Text group (Text Box, Header & Footer, Object), Page Layout has no Scale to
-    Fit, Print Titles, Background or Arrange group, and Review has no Spelling,
-    Accessibility checker or Notes commands.
+12. Ribbon. Insert offers a preset Shapes gallery, editable text boxes, New Note, and Header &
+    Footer. Header & Footer opens the inline editor in Page Layout view. PivotChart, Recommended
+    PivotTables and Equation remain open. Page Layout offers fit width and height, percentage
+    scaling, Print Titles, and local worksheet background pictures. Arrange offers drawing
+    stacking, a Selection Pane, alignment, grouping of standalone shapes, and rotation,
+    flipping, and visibility controls for shapes and pictures. Grouping pictures or mixed drawings, nested groups, and rotation of other
+    drawing types remain open. Draw, Picture Format, Shape Format, Chart Format, PivotTable Analyze
+    and PivotTable Design tabs, Review spelling and accessibility checks, and the Review Notes menu
+    remain open.
 
 Insert > WordArt creates an editable worksheet drawing. The picker offers 30
 fill, outline and shadow styles and 40 text transforms. Excel retains the

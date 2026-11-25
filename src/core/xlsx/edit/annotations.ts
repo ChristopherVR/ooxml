@@ -15,6 +15,7 @@ export function setComment(
 	at: CellAddress,
 	text: string | undefined,
 	author: string,
+	threaded = false,
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const index = sheet.comments.findIndex(
@@ -34,7 +35,14 @@ export function setComment(
 			if (existing) {
 				existing.text = text;
 				existing.author = author;
-			} else sheet.comments.push({ address: { row: at.row, col: at.col }, author, text });
+			} else {
+				sheet.comments.push({
+					address: { row: at.row, col: at.col },
+					author,
+					text,
+					...(threaded ? { replies: [] } : {}),
+				});
+			}
 		},
 		{ sheet: s, ranges: [{ start: at, end: at }] },
 	);

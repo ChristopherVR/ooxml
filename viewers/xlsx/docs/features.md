@@ -20,6 +20,14 @@ The browser tests (`e2e/xlsx/*.spec.ts`) cover opening `.xlsx`, `.xls` and `.csv
 | Password-protected | yes  | yes        | Encrypted .xlsx/.xlsm files prompt for a password. File > Info > Encrypt Workbook sets a password for subsequent Excel saves. Opening an encrypted file does not retain its password for saving; set it again before saving. |
 | `.xlsb`, `.ods`    | no   | no         |                                                                                                                                                                                                                              |
 
+## Ribbon authoring
+
+Insert offers preset shapes, editable text boxes, legacy notes and direct editing of header and
+footer bands in Page Layout view. Page Layout offers print scaling, Print Titles, and a tiled
+worksheet background for the grid. Sheet backgrounds are excluded from printed pages. Arrange
+can reorder and align drawings, select them from a pane, group standalone shapes, and rotate
+shapes and pictures. These workbook edits can be undone.
+
 ## Grid and formatting
 
 - Cell values, shared strings with rich text runs, booleans, errors and dates (1900 and 1904 date systems).

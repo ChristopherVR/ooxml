@@ -14,6 +14,7 @@ import type { DrawingAnchor } from './model';
 export interface ShapeNode {
 	kind: 'shape' | 'connector' | 'group';
 	name?: string;
+	hidden?: boolean;
 	/** `txBox="1"`: a text box (no style-derived fill or line). */
 	textBox?: boolean;
 	/** Position and size in EMU, in the coordinates of the parent (the group's child space). */
@@ -24,6 +25,8 @@ export interface ShapeNode {
 	flipV?: boolean;
 	/** Preset name (`rect`, `rightArrow`...) or `custom`. */
 	geometry: string;
+	/** Shape content retained when moving it between a group and a top-level anchor. */
+	sourceShapeXml?: string;
 	adjustments?: Record<string, number>;
 	paths?: DrawingPath[];
 	fill?: DrawingFill;

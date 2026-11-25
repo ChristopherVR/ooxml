@@ -32,6 +32,10 @@ import * as customViews from './custom-views';
 import * as sparklineGrouping from './sparkline-grouping';
 import * as docProps from './doc-properties';
 import * as themeEdits from './theme';
+import { setSheetBackground } from './background';
+import * as nativeShapes from './native-shapes';
+import * as groups from './group-drawings';
+import * as arrange from './arrange-drawings';
 import * as drawings from './drawings';
 import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
@@ -273,7 +277,8 @@ export function createEditSession(
 		setTabColor: (i, color) => sheets.setTabColor(ctx, i, color),
 		setFreeze: (s, freeze) => view.setFreeze(ctx, s, freeze),
 		setSplit: (s, split, topLeft) => view.setSplit(ctx, s, split, topLeft),
-		setComment: (s, at, text, author) => annotations.setComment(ctx, s, at, text, author),
+		setComment: (s, at, text, author, threaded) =>
+			annotations.setComment(ctx, s, at, text, author, threaded),
 		setCommentReply: (s, at, index, text) => annotations.setCommentReply(ctx, s, at, index, text),
 		setCommentResolved: (s, at, resolved) => annotations.setCommentResolved(ctx, s, at, resolved),
 		setHyperlink: (s, range, link) => annotations.setHyperlink(ctx, s, range, link),
@@ -295,6 +300,15 @@ export function createEditSession(
 		deleteDefinedName: (name, localSheet) => view.deleteDefinedName(ctx, name, localSheet),
 		editPictureEffects: (s, index, patch) => drawings.editPictureEffects(ctx, s, index, patch),
 		setPictureCrop: (s, index, crop) => drawings.setPictureCrop(ctx, s, index, crop),
+		addShape: (s, anchor, value) => nativeShapes.addShape(ctx, s, anchor, value),
+		setTextBoxText: (s, index, text) => nativeShapes.setTextBoxText(ctx, s, index, text),
+		reorderDrawing: (s, index, direction) => arrange.reorderDrawing(ctx, s, index, direction),
+		groupDrawings: (s, indices, name) => groups.groupDrawings(ctx, s, indices, name),
+		ungroupDrawing: (s, index) => groups.ungroupDrawing(ctx, s, index),
+		alignDrawings: (s, indices, alignment) => arrange.alignDrawings(ctx, s, indices, alignment),
+		flipDrawing: (s, index, axis) => arrange.flipDrawing(ctx, s, index, axis),
+		setDrawingHidden: (s, index, hidden) => arrange.setDrawingHidden(ctx, s, index, hidden),
+		rotateDrawing: (s, index, degrees) => arrange.rotateDrawing(ctx, s, index, degrees),
 		setDrawingAnchor: (s, index, anchor) => drawings.setDrawingAnchor(ctx, s, index, anchor),
 		createPivotTable: (s, destination, options) =>
 			pivots.createPivotTable(ctx, s, destination, options),
@@ -344,6 +358,7 @@ export function createEditSession(
 		resizeTable: (s, table, range) => tableEdits.resizeTable(ctx, s, table, range),
 		convertTableToRange: (s, table) => tableEdits.convertTableToRange(ctx, s, table),
 		applyCellStyle: (s, ranges, name) => cellStyle.applyCellStyle(ctx, s, ranges, name),
+		setSheetBackground: (s, image) => setSheetBackground(ctx, s, image),
 		setPageSetup: (s, patch) => page.setPageSetup(ctx, s, patch),
 		setPageBreak: (s, axis, before, present) =>
 			pageBreaks.setPageBreak(ctx, s, axis, before, present),

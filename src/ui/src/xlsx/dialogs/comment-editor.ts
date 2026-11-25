@@ -3,11 +3,16 @@ import { checkbox, field, invalid, textArea } from './fields';
 import { showDialog } from './frame';
 
 /** The existing comment command also edits the replies of an imported thread. */
-export function openCommentEditor(ctx: EditorContext): Promise<string | undefined> {
+export function openCommentEditor(
+	ctx: EditorContext,
+	mode: 'comment' | 'note' = 'comment',
+): Promise<string | undefined> {
 	const t = target(ctx);
 	if (!t) return Promise.resolve(undefined);
+	const note = mode === 'note';
 	const at = t.active;
 	const existing = t.ws.comments.find((c) => c.address.row === at.row && c.address.col === at.col);
+	if (note && existing?.replies) return Promise.resolve(undefined);
 	const initialText = existing?.text;
 	const initialXml = existing?.threadedXml;
 	const initialResolved = existing?.resolved ?? false;
@@ -24,7 +29,7 @@ export function openCommentEditor(ctx: EditorContext): Promise<string | undefine
 		? checkbox(ctx, 'Resolved', existing.resolved ?? false)
 		: undefined;
 	const body = [
-		field(ctx, 'Comment', root),
+		field(ctx, note ? 'Note' : 'Comment', root),
 		...replies.map(({ input, author }, index) =>
 			field(
 				ctx,
@@ -38,8 +43,14 @@ export function openCommentEditor(ctx: EditorContext): Promise<string | undefine
 	];
 	if (resolved) body.push(resolved.wrapper);
 	return showDialog<string>(ctx, {
-		name: 'comment',
-		heading: existing ? 'Edit Comment' : 'New Comment',
+		name: mode,
+		heading: note
+			? existing
+				? 'Edit Note'
+				: 'New Note'
+			: existing
+				? 'Edit Comment'
+				: 'New Comment',
 		body,
 		opened: () => {
 			root.focus();
@@ -53,7 +64,8 @@ export function openCommentEditor(ctx: EditorContext): Promise<string | undefine
 				...(rootChanged ? [root] : []),
 				...changed.map((reply) => reply.input),
 			]) {
-				if (!input.value.trim()) return invalid(ctx, input, 'Type a comment first.');
+				if (!input.value.trim())
+					return invalid(ctx, input, note ? 'Type a note first.' : 'Type a comment first.');
 			}
 			if (!rootChanged && !changed.length && !resolutionChanged) return root.value;
 			const sheet = t.session.workbook.sheets.indexOf(t.ws);
@@ -75,15 +87,18 @@ export function openCommentEditor(ctx: EditorContext): Promise<string | undefine
 					);
 				});
 			if (conflict) return invalid(ctx, root, 'The comment changed. Reopen it and try again.');
-			t.session.batch(existing ? 'Edit comment' : 'New comment', () => {
-				if (rootChanged && root.value !== current?.text) {
-					t.session.setComment(sheet, at, root.value, current?.author ?? ctx.authorName());
-				}
-				changed.forEach(({ input, index }) => {
-					t.session.setCommentReply(sheet, at, index, input.value);
-				});
-				if (resolutionChanged) t.session.setCommentResolved(sheet, at, resolved.input.checked);
-			});
+			t.session.batch(
+				note ? (existing ? 'Edit note' : 'New note') : existing ? 'Edit comment' : 'New comment',
+				() => {
+					if (rootChanged && root.value !== current?.text) {
+						t.session.setComment(sheet, at, root.value, current?.author ?? ctx.authorName(), !note);
+					}
+					changed.forEach(({ input, index }) => {
+						t.session.setCommentReply(sheet, at, index, input.value);
+					});
+					if (resolutionChanged) t.session.setCommentResolved(sheet, at, resolved.input.checked);
+				},
+			);
 			return root.value;
 		},
 	});

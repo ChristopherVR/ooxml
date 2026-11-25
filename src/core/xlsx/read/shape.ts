@@ -8,7 +8,7 @@ import { parseDrawingTextBody } from '../../drawingml/drawing-text';
 import { NS, elements, first, type XmlElement } from '../../xml/index';
 import type { ShapeNode } from '../model-shapes';
 import { readWordArtShape } from '../word-art';
-import { att } from './xml-util';
+import { att, boolAttr } from './xml-util';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
 
@@ -50,6 +50,7 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 	};
 	const name = att(cNvPr, 'name');
 	if (name) node.name = name;
+	if (boolAttr(cNvPr, 'hidden')) node.hidden = true;
 	if (att(xdr(nv, 'cNvSpPr'), 'txBox') === '1') node.textBox = true;
 	if (transform?.rotation) node.rotation = transform.rotation;
 	if (transform?.flipHorizontal) node.flipH = true;

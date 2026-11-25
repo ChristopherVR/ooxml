@@ -103,6 +103,52 @@
 	border-top: 1px solid var(--line);
 	background: var(--chrome);
 }
+.xve-selection-pane {
+	flex: none;
+	width: 230px;
+	max-width: 40%;
+	overflow: auto;
+	box-sizing: border-box;
+	padding: 10px;
+	border-left: 1px solid var(--line);
+	background: var(--surface);
+}
+.xve-selection-pane header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.xve-selection-pane h2 {
+	margin: 0;
+	font-size: 1em;
+}
+.xve-selection-pane ul {
+	margin: 8px 0 0;
+	padding: 0;
+	list-style: none;
+}
+.xve-selection-pane li {
+	display: flex;
+}
+.xve-selection-pane li > button {
+	width: 100%;
+	text-align: start;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 0;
+	padding: 6px;
+}
+.xve-selection-pane li > .xve-selection-visibility {
+	flex: none;
+	width: 32px;
+	text-align: center;
+}
+.xve-selection-pane li > button:hover:not(:disabled),
+.xve-selection-pane li > button[aria-pressed='true'] {
+	background: var(--xl-soft);
+}
 .xve-empty {
 	position: absolute;
 	z-index: 5;

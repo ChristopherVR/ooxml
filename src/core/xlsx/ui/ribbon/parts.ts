@@ -44,6 +44,7 @@ export type RibbonControl =
 			options: RibbonOption[] | ((ctx: EditorContext) => RibbonOption[]);
 			width?: number;
 			editable?: boolean;
+			showLabel?: boolean;
 	  }
 	/** Split with a theme and standard colour grid; the command arg is a `Color` or undefined. */
 	| { kind: 'color'; command: string; label: string; icon: string }

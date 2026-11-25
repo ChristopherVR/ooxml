@@ -22,6 +22,7 @@ import { editBand, renderBand, type BandOptions } from './page-layout-bands';
 import { PAGE_LAYOUT_CSS } from './page-layout-css';
 import { paintRulers } from './page-layout-rulers';
 import { createPageEditor } from './page-layout-editor';
+import { hasHeaderEditRequest, takeHeaderEditRequest } from './header-edit-request';
 
 const PAD = 24;
 const el = <K extends keyof HTMLElementTagNameMap>(doc: Document, tag: K, cls: string) => {
@@ -195,6 +196,12 @@ export function createPageLayoutView(
 		scaled.append(selection);
 		fillVisible();
 		paintSelection();
+		if (!bandEditing && takeHeaderEditRequest(ctx)) {
+			const { row, col } = ctx.selection.get().active;
+			const number = pageOfCell(layout, row, col);
+			const page = layout.pages.find((page) => page.number === number) ?? layout.pages[0];
+			if (page) openBand(page, 'header', 'center');
+		}
 	};
 
 	const schedule = () => {
@@ -366,7 +373,12 @@ export function createPageLayoutView(
 	return {
 		element: root,
 		refresh() {
-			if (active && renderedKey !== `${zoom()}|${ctx.locale()}`) schedule();
+			if (
+				active &&
+				!bandEditing &&
+				(hasHeaderEditRequest(ctx) || renderedKey !== `${zoom()}|${ctx.locale()}`)
+			)
+				schedule();
 		},
 		setActive(on) {
 			if (active === on) return;

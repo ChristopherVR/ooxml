@@ -225,7 +225,7 @@ describe('comment and unhide dialogs', () => {
 		clickButton(dialog, 'OK');
 		await result;
 		expect(ctx.workbook()!.sheets[0]!.comments).toEqual([
-			{ address: { row: 1, col: 1 }, author: 'Tester', text: 'Check this' },
+			{ address: { row: 1, col: 1 }, author: 'Tester', text: 'Check this', replies: [] },
 		]);
 	});
 

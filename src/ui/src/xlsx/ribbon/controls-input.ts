@@ -36,9 +36,13 @@ export function renderSelect(
 	control: SelectControl,
 	command: Command,
 ): HTMLElement {
-	return control.editable
+	const input = control.editable
 		? renderCombo(scope, control, command)
 		: renderNativeSelect(scope, control, command);
+	if (!control.showLabel) return input;
+	const label = el(scope.doc, 'label', 'ribbon-labelled-select');
+	label.append(scope.ctx.t(command.label), input);
+	return label;
 }
 
 function renderNativeSelect(

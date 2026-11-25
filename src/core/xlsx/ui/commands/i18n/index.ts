@@ -10,6 +10,7 @@ import { NAVIGATION_STRINGS } from './navigation';
 import { RIBBON_HOME_STRINGS } from './ribbon-home';
 import { RULES_STRINGS } from './rules';
 import { RIBBON_TAB_STRINGS } from './ribbon-tabs';
+import { RIBBON_AUTHORING_STRINGS } from './ribbon-authoring';
 import { TOOLS_STRINGS } from './tools';
 import { WHAT_IF_STRINGS } from './what-if';
 import { SPARKLINE_STRINGS } from './sparklines';
@@ -23,6 +24,7 @@ import { type CommandLocale, type Translations, flatten } from './types';
 export const COMMAND_TABLES: readonly Translations[] = [
 	RIBBON_HOME_STRINGS,
 	RIBBON_TAB_STRINGS,
+	RIBBON_AUTHORING_STRINGS,
 	MESSAGE_STRINGS,
 	NAVIGATION_STRINGS,
 	TOOLS_STRINGS,
