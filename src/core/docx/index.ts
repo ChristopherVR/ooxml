@@ -1,6 +1,11 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 export { mergeDocxSnapshots } from './merge-snapshots';
-export * from './mail-merge/index';
+// The mail-merge engine is the `ooxml-core/docx/mail-merge` subpath; only its settings live here.
+export type {
+	MailMergeFieldMapping,
+	MailMergeSettings,
+	MailMergeSourceReference,
+} from './mail-merge/settings';
 export * from './model';
 export * from './highlight';
 export { LIGATURE_VALUES, isLigatures, type Ligatures } from './ligatures';

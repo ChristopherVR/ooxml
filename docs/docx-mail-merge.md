@@ -1,6 +1,6 @@
 # Word mail merge API
 
-`ooxml-core/docx` exposes mail merge for hosts that work with a `DocumentModel`. The host
+`ooxml-core/docx/mail-merge` exposes mail merge for hosts that work with a `DocumentModel`. The host
 loads recipients, selects records, previews a record, and saves the merged document models.
 The Word editor's Mailings tab still needs UI integration.
 
@@ -29,14 +29,14 @@ ordering. The filtered and sorted list determines the one-based record numbers.
 ## Preview, check, and finish
 
 ```ts
+import { loadDocx } from 'ooxml-core/docx';
 import {
 	checkMailMerge,
 	finishMailMerge,
-	loadDocx,
 	mailMergeDelimitedText,
 	previewMailMerge,
 	selectMailMergeRecipients,
-} from 'ooxml-core/docx';
+} from 'ooxml-core/docx/mail-merge';
 
 const template = await loadDocx(templateBytes);
 const source = mailMergeDelimitedText(csv);
