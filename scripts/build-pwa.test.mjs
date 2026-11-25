@@ -106,6 +106,16 @@ test('every shell script and style tag carries the integrity of the file it load
 		assert.deepEqual(loads, ['appearance-init.js', shell, 'suite.js'], page);
 		for (const [i, tag] of tags.entries())
 			assert.equal(attribute(tag, 'integrity'), sri(builds.A, loads[i]), `${page}: ${loads[i]}`);
+		const preloads = [];
+		const walk = (node) => {
+			if (node.tagName === 'link' && attribute(node, 'rel') === 'modulepreload')
+				preloads.push(attribute(node, 'href'));
+			for (const child of node.childNodes ?? []) walk(child);
+		};
+		walk(parse(html));
+		const expected =
+			page === 'index.html' ? 'suite-assets/boot-1.js' : '../../suite-assets/boot-1.js';
+		assert.deepEqual(preloads, [expected], `${page}: modulepreload boot chunk`);
 	}
 });
 

@@ -54,7 +54,19 @@ function icon(size, color) {
 }
 export async function buildPwa(out) {
 	const shellCss = await bundleShellCss(out);
-	const template = await readFile(join(out, 'index.html'), 'utf8');
+	const suiteEntry = await readFile(join(out, 'suite.js'), 'utf8').catch(() => '');
+	const bootChunk = /import\s+['"]\.\/(suite-assets\/[^'"]+)['"]/.exec(suiteEntry)?.[1];
+	let template = await readFile(join(out, 'index.html'), 'utf8');
+	if (bootChunk) {
+		const preload = `<link rel="modulepreload" href="${bootChunk}" />\n\t\t`;
+		if (!template.includes(bootChunk)) {
+			template = template.replace(
+				'<script type="module" src="suite.js"></script>',
+				`${preload}<script type="module" src="suite.js"></script>`,
+			);
+			await writeFile(join(out, 'index.html'), template);
+		}
+	}
 	await mkdir(join(out, 'icons'), { recursive: true });
 	for (const [slug, name, product, color] of products) {
 		const prefix = product ? '../../' : './';
@@ -94,7 +106,7 @@ export async function buildPwa(out) {
 				.replace('<title>OOXML Office</title>', `<title>${name}</title>`)
 				.replace('name="ooxml-root" content="./"', 'name="ooxml-root" content="../../"')
 				.replace(
-					/(src|href)="(appearance-init\.js|favicon\.svg|shell-[0-9a-f]+\.css|suite\.js)"/g,
+					/(src|href)="(appearance-init\.js|favicon\.svg|shell-[0-9a-f]+\.css|suite\.js|suite-assets\/[^"]+)"/g,
 					`$1="../../$2"`,
 				)
 				.replace('href="icons/office-192.png"', `href="../../icons/${slug}-192.png"`);

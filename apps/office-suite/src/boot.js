@@ -21,13 +21,21 @@ if (/^https?:$/.test(location.protocol)) {
 	});
 }
 
+const loadMain = () =>
+	import('./main.js').catch((error) => {
+		delete document.documentElement.dataset.boot;
+		throw error;
+	});
+
 if (needsChooser()) {
 	document.body.dataset.start = '';
 	showChooser({
 		required: true,
 		onSuite: () => {
+			document.documentElement.dataset.boot = 'pending';
 			delete document.body.dataset.start;
-			void import('./main.js');
+			void loadMain();
 		},
 	});
-} else void import('./main.js');
+	delete document.documentElement.dataset.boot;
+} else void loadMain();

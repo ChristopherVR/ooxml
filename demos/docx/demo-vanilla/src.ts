@@ -47,19 +47,31 @@ const oneDrive = createDemoOneDriveProvider({
 });
 
 let editor: EditorHandle | undefined;
+function setLoading(loading: boolean) {
+	if (loading) document.documentElement.dataset.demoLoading = 'true';
+	else {
+		delete document.documentElement.dataset.demoLoading;
+		delete document.documentElement.dataset.demoAutostart;
+	}
+}
 async function showEditor(): Promise<EditorHandle> {
 	get('landing').hidden = true;
 	get('workspace').hidden = false;
-	editor ??= await mountFramework(get('editor'), {
-		documentModel: createDocument(),
-		locale,
-		fileProviders: [oneDrive],
-		onDocumentError(error) {
-			toast(error.message);
-		},
-	});
-	editor.element.addEventListener('file-command', onShare);
-	return editor;
+	setLoading(true);
+	try {
+		editor ??= await mountFramework(get('editor'), {
+			documentModel: createDocument(),
+			locale,
+			fileProviders: [oneDrive],
+			onDocumentError(error) {
+				toast(error.message);
+			},
+		});
+		editor.element.addEventListener('file-command', onShare);
+		return editor;
+	} finally {
+		setLoading(false);
+	}
 }
 
 /** The session this window hosts or joined, if any. */
@@ -175,6 +187,8 @@ if (room && /^[A-Za-z0-9_-]{1,64}$/.test(room)) {
 	})();
 } else if (query.get('sample') === '1') {
 	void openModel(createSampleDocument(), 'Sample document.docx');
+} else {
+	setLoading(false);
 }
 const dropzone = get('dropzone');
 dropzone.addEventListener('click', () => landingFile.click());

@@ -365,6 +365,44 @@
 		}
 	}
 }
+/* Keep the unhydrated workspace hidden until boot.js shows the start screen or main.js finishes
+   hydrating navigation, icons and local files. */
+html[data-boot='pending'] body > :not(dialog, .start-screen) {
+	visibility: hidden;
+}
+/* On slower connections, show a quiet spinner if boot takes longer than a brief beat. */
+html[data-boot='pending'] body::after {
+	content: '';
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: 28px;
+	height: 28px;
+	margin: -14px 0 0 -14px;
+	border: 2px solid var(--line);
+	border-top-color: var(--blue);
+	border-radius: 50%;
+	opacity: 0;
+	pointer-events: none;
+	animation:
+		boot-show 0.2s ease 0.25s forwards,
+		boot-spin 0.8s linear 0.25s infinite;
+}
+@keyframes boot-show {
+	to {
+		opacity: 1;
+	}
+}
+@keyframes boot-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	html[data-boot='pending'] body::after {
+		animation: boot-show 0.2s ease 0.25s forwards;
+	}
+}
 /* The root asks what to open before the suite loads: show only the start screen until then. */
 body[data-start] > :not(dialog, .start-screen) {
 	visibility: hidden;

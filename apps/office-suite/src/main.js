@@ -570,9 +570,6 @@ document.addEventListener('drop', (event) => {
 		task(() => importFiles([...event.dataTransfer.files]));
 	}
 });
-// The home rises into place once; after that, switching back to it is instant (styles.css).
-document.body.classList.add('entering');
-setTimeout(() => document.body.classList.remove('entering'), 1200);
 mountThemes();
 mountProfile({
 	beforeSwitch: async () => {
@@ -633,7 +630,14 @@ $('tabs').addEventListener('keydown', (event) => {
 task(async () => {
 	// Earlier versions could keep AI keys in local storage, which every page of a shared origin reads.
 	forgetRememberedKeys();
-	await refresh();
+	try {
+		await refresh();
+	} finally {
+		delete document.documentElement.dataset.boot;
+		// The home rises into place once; after that, switching back to it is instant (styles.css).
+		document.body.classList.add('entering');
+		setTimeout(() => document.body.classList.remove('entering'), 1200);
+	}
 	// The assistant is off unless the deployment configures it (ai/policy.js).
 	await loadPolicy();
 	document.body.dataset.ai = assistantEnabled() ? 'on' : 'off';

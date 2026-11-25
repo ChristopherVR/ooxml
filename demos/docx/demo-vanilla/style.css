@@ -247,3 +247,34 @@ body:has(#landing:not([hidden])) .floating-controls {
 body:has(#workspace:not([hidden])) .floating-controls {
 	display: none;
 }
+html[data-demo-autostart='true'] #landing,
+html[data-demo-autostart='true'] .floating-controls {
+	display: none !important;
+}
+html[data-demo-autostart='true'] body::after,
+html[data-demo-loading='true'] body::after {
+	content: '';
+	position: fixed;
+	z-index: 40;
+	top: 50%;
+	left: 50%;
+	width: 28px;
+	height: 28px;
+	margin: -14px 0 0 -14px;
+	border: 2px solid var(--demo-line);
+	border-top-color: var(--demo-accent);
+	border-radius: 50%;
+	pointer-events: none;
+	animation: demo-spin 0.8s linear infinite;
+}
+@keyframes demo-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	html[data-demo-autostart='true'] body::after,
+	html[data-demo-loading='true'] body::after {
+		animation-duration: 2.5s;
+	}
+}

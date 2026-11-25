@@ -9,4 +9,6 @@ try {
 		(mode !== 'light' && mode !== 'system');
 	document.documentElement.dataset.theme = dark ? 'dark' : 'light';
 	document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+	if (document.querySelector('meta[name="ooxml-root"]'))
+		document.documentElement.dataset.boot = 'pending';
 } catch {}
