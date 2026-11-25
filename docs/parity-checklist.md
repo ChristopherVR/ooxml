@@ -117,10 +117,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `chart-ui.test.ts`, `chart-design.test.ts`). Still open: Add Chart Element, Select Data and
       Change Chart Type in PowerPoint.
 - [ ] **P2** Edit Data row removal in Word, PowerPoint and Visio matches Excel's chart (ranges,
-      counts and every point, measured against hidden Excel), but the embedded workbook gets the
-      cells below the row from the chart's cache: a text or formula cell in a value range does not
-      move up with its row, cells outside the chart's ranges stay, and removing a series of a
-      table-layout chart leaves the old last column's cells, which Excel's table clears.
+      counts and every point, measured against hidden Excel), and the embedded workbook's cells
+      below the row, inside and outside the chart's ranges, move up with it; removing a series
+      shrinks the table and clears its old last column (`chart/workbook/workbook.test.ts`). Open:
+      a moved formula keeps its references (`SUM(B2:B3)` stays as written), where Excel rewrites
+      them for the deleted row; the chart area cannot use `xlsx/formula/shift-formula.ts` without
+      a shared reference shifter.
 - [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
       `src/ui/src/docx/equation-*` are the template).
 - [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`;
@@ -144,7 +146,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
 - [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
-      Word Picture Format (Wrap Text, Crop and Format only), and in Word and PowerPoint Shape
+      Word Picture Format (Wrap Text, Crop and Format only), in Word Shape Format (Wrap Text and
+      Size; no position, order, align, group or rotate, and no Alt Text), and in PowerPoint Shape
       Format (no Arrange, Size or Alt Text).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
@@ -162,8 +165,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       period, forecasts, equation and R-squared, Add trendline) and error bars (amount, direction,
       end caps and custom values) in all five bindings; custom error amounts are literal values
       (PowerPoint's model keeps no custom range).
-- [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn; surface charts have no
-      dedicated painter.
+- [ ] **P2** `c:userShapes` (shapes over a chart) is parsed but not drawn by the shared chart
+      painter; PowerPoint projects them over the chart instead.
 - [x] **P2** Equation ownership audited: all 11 non-test `latex-*` and `omml-*` modules in
       `src/ui/src/pptx/render` are re-export facades over `ooxml-core/math`; none contains duplicate
       conversion logic. The shared math suite and four facade regression files pass (192 and
@@ -268,8 +271,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       whitespace, direct-text and value conversion behavior. Evidence: 35 recorded Excel cases,
       core edit/undo/save regressions and `e2e/xlsx/filterxml.spec.ts` in all six bindings. Excel 16
       reopened 35-sheet outputs in both date systems without repair and recalculated matching values.
-- [ ] **P2** Most Insert Function descriptions are English-only. The dialog now translates
-      descriptions through the command dictionary, but the existing catalogue needs locale entries.
+- [x] **P2** Every Insert Function description has French, German, Spanish and Chinese entries
+      (`xlsx/ui/commands/i18n/functions/`), enforced over the whole catalogue by
+      `xlsx/ui/localization.test.ts`.
 - [x] **P2** External formula integrations (`CUBE*` (7), `WEBSERVICE`, `STOCKHISTORY`, `RTD`,
       `IMAGE`, `COPILOT`, `TRANSLATE` and `DETECTLANGUAGE`) are registered with typed host-supplied
       provider interfaces on `CalcEngineOptions` (`formula/providers.ts`, `functions/cube.ts`,
@@ -420,7 +424,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       and SYMBOL (`docx/computed-fields.ts`, `computed-fields-extra.test.ts`). MERGEFIELD,
       INCLUDETEXT, INCLUDEPICTURE, INDEX/XE, TA/TOA and CITATION/BIBLIOGRAPHY keep their cached
       result (`layout/page-fields.ts`); Update Fields skips the `\n \r \w \p` switches.
-- [ ] **P1** Grouped drawings (`wpg`) and canvases (`wpc`), legacy VML text boxes (`v:textbox`)
+- [ ] **P1** Canvases (`wpc`), legacy VML text boxes (`v:textbox`)
       and legacy VML WordArt, ink and gradient or picture fills are kept but not drawn.
 - [ ] **P1** Ruby (`w:ruby`) has no model and probably blocks editing its paragraph; vertical
       text (`tbRl`, `btLr`), `eastAsianLayout`, `fitText` and emphasis marks are not laid out.
@@ -604,9 +608,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       text one box cannot fit continues in the next box of the chain, in `seq` order, reflowed at
       that box's width; the last box keeps the rest clipped, as Word 16 draws it. Saved byte for byte
       (`docx/layout/text-box-layout.test.ts`).
-- [ ] **P2** A floating object positioned from its paragraph that would cross the bottom margin
-      stays on its paragraph's page, where Word moves the paragraph to the next page so the object
-      fits (`e2e/docx/support/cell-floats-demo.docx`, the body chart).
+- [x] **P2** A floating object positioned from its paragraph that would cross the bottom margin
+      moves its paragraph to the next page, as Word does (`layout/floats.ts`
+      `floatCrossesBottomMargin`, `layout/floats.test.ts`, `e2e/docx/print-cell-floats.spec.ts`).
 - [x] **P1** Text boxes are drawn on pages: a shape holding a `wps:txbx` (a `rect` text box, a line
       or connector) and a text box written with `txBox="1"` are drawn with their frame and their
       paragraphs, floating or inline, in the body and in headers and footers, and `txBox="1"`
@@ -749,7 +753,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Create New and link-to-file.
 - [ ] **P2** View: Window group, Macros; Review: Thesaurus, Translate, Block Authors, Hide Ink;
       Home: Text Effects, Phonetic Guide, Character Border, Enclosed Characters; Backstage:
-      Share, Account, Close.
+      Share, Close.
 
 ## PowerPoint
 
@@ -833,8 +837,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Clipboard interop with desktop Office is partial. Done: HTML (`text/html`, CF_HTML)
       pastes into a text box being edited as formatted runs, bullets, numbering and links
       (Keep Source Formatting; Ctrl+Shift+V keeps text only), and copying shapes writes a PNG and
-      their text to the system clipboard. Open: no Paste Options toolbar or Paste Special for
-      text (Use Destination Theme is not offered); copied slides add no picture yet (no binding
+      their text to the system clipboard. Open: copied slides add no picture yet (no binding
       supplies `renderSlidePng`); pasting HTML onto the slide (not into a text box) does not create
       a text box; no RTF or Office native formats (`Art::GVML`, PowerPoint 14.0 Slides) are read
       or written; a rich paste can take two Undo steps.
@@ -851,7 +854,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       cannot sign, and saving an edit removes the signatures.
 - [ ] **P2** 3-D models: `am3d:preTrans` is parsed, not applied; `rot` handedness and
       orthographic scale are unverified.
-- [ ] **P2** `p:smartTags` has no model; `p:revisionInfo` survival is unverified.
+- [ ] **P2** `p:smartTags` is parsed and its recognizer part is kept, but has no editable model;
+      `p:revisionInfo` survival is unverified.
 
 ### Editing and slide show
 
@@ -1134,7 +1138,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       five bindings (`src/ui/src/pptx/render/ribbon-display.ts`, `ribbon-display.test.ts` and
       per-binding regressions).
 - [ ] **P2** Home: Align Text and Convert to SmartArt; Review: Thesaurus, Translate, Mark All as
-      Read, Restrict Permission, Hide Ink; View: Zoom and Macros are placeholders.
+      Read, Restrict Permission, Hide Ink; View: Macros is a placeholder.
 
 ## Visio
 
@@ -1157,8 +1161,7 @@ installed Visio 16 build is used to check that saved files open without repair.
       `edit-style-admission.ts`, `edit-scope.ts`, `edit-page-size.ts` and others) still refuse an
       edit of a cell whose own formula is dynamic, and kept caches are not recomputed: Visio would
       recompute them, so they can be stale until it recalculates. Master-defined cells are not read
-      through master inheritance. Container `DEPENDSON`/`SheetRef` relationships are still not
-      written.
+      through master inheritance.
 - [x] **P1** `.vsdm`, `.vstx` and `.vstm` open as drawings and `.vssm` for its masters; an edit
       keeps the VBA project byte for byte (never run), saves a template as a drawing and removes a
       standard signature with a notice (`package-kind.ts`, `package-kinds.test.ts`).
@@ -1174,7 +1177,7 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [ ] **P1** Legacy `.vsd` is preview only (no groups, masters, styles, connections, layers or
       text formats; no conversion or editing); `.vdx` is not supported; `.vss` and `.vst` are
       refused.
-- [ ] **P1** No `.vssx` or `.vstx` writer; built-in stencils are outlines without master
+- [ ] **P1** No `.vssx` stencil writer; built-in stencils are outlines without master
       ShapeSheets, connection points or Shape Data.
 - [x] **P1** Controls, Actions, User-defined and Scratch cells and tab stops are in the model
       (`controls`, `actions`, `userCells`, `scratch`, paragraph `tabs`). Control handles are drawn
