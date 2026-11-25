@@ -81,3 +81,4 @@ export {
 } from '../find-format-replace';
 export * from '../find-format-document';
 export * from './edit-restriction';
+export { EQUATION_GALLERY } from '../../math/equation-gallery';

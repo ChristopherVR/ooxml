@@ -11,8 +11,7 @@ import { createPictureDialog, type PictureDialog } from './picture-dialog';
 import { NodeSelection } from 'prosemirror-state';
 import { followLinkAt } from './link-commands';
 import { insertContentControl } from 'ooxml-core/docx/ui';
-import { EQUATION_GALLERY } from 'ooxml-core/math';
-import { insertEquation } from './equation-commands';
+import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 import { ShapeTool, shapeDrawPlugin } from './shape-draw';
 import {
 	setShapeFill,
@@ -173,8 +172,19 @@ export class InsertController {
 			focusView(view);
 		} else if (action.type === 'insertEquation') {
 			const entry = EQUATION_GALLERY.find((item) => item.id === action.id);
-			if (view?.editable && entry) insertEquation(view, entry.latex);
-			focusView(view);
+			if (view?.editable && entry) {
+				const selection = view.state.selection;
+				void import('./equation-commands').then(
+					({ insertEquation }) => {
+						if (this.host.view() === view && selection.eq(view.state.selection)) {
+							insertEquation(view, entry.latex);
+							focusView(view);
+						}
+					},
+					(cause: unknown) =>
+						this.host.reportError(cause instanceof Error ? cause : new Error(String(cause))),
+				);
+			}
 		} else if (action.type === 'link') {
 			if (editable) this.linkDialog.open();
 		} else if (action.type === 'formatPicture') {

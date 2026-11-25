@@ -302,6 +302,8 @@ export function createEditSession(
 		setPictureCrop: (s, index, crop) => drawings.setPictureCrop(ctx, s, index, crop),
 		addShape: (s, anchor, value) => nativeShapes.addShape(ctx, s, anchor, value),
 		setTextBoxText: (s, index, text) => nativeShapes.setTextBoxText(ctx, s, index, text),
+		setShapeEquation: (s, index, equation, value) =>
+			nativeShapes.setShapeEquation(ctx, s, index, equation, value),
 		reorderDrawing: (s, index, direction) => arrange.reorderDrawing(ctx, s, index, direction),
 		groupDrawings: (s, indices, name) => groups.groupDrawings(ctx, s, indices, name),
 		ungroupDrawing: (s, index) => groups.ungroupDrawing(ctx, s, index),

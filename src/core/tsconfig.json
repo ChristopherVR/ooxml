@@ -13,7 +13,7 @@
 		"declaration": true,
 		"types": ["node", "vitest/globals"],
 		// The editor modules import the model by its package name, as consumers do.
-		"paths": { "ooxml-core/pptx": ["./pptx/index.ts"] }
+		"paths": { "ooxml-core/pptx": ["./pptx/index.ts"], "ooxml-core/math": ["./math/index.ts"] }
 	},
 	"include": ["**/*.ts"],
 	"exclude": [

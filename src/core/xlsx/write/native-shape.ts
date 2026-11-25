@@ -4,6 +4,7 @@ import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../../
 import type { ShapeNode } from '../model-shapes';
 import { attrs, escapeText } from './xml-out';
 import { wordArtShapeXml } from '../word-art';
+import { equationShapeBranches, wrapEquationShape } from '../shape-equations';
 
 const offset = (name: string, x: number, y: number) =>
 	`<a:${name}${attrs({ x: Math.round(x), y: Math.round(y) })}/>`;
@@ -69,7 +70,11 @@ export function nativeShapeXml(shape: ShapeNode, nextId: () => number): string {
 	const fill = shape.fill ? (drawingFillXml(shape.fill) ?? '') : '';
 	const line = shape.line ? drawingLineXml(shape.line) : '';
 	const text = shape.textBox ? textBody(shape.text?.text ?? '') : '';
-	return `<xdr:${tag}><xdr:nv${nonVisual}>${nv}<xdr:cNv${nonVisual}${shape.textBox ? ' txBox="1"' : ''}/></xdr:nv${nonVisual}><xdr:spPr>${transform(shape)}${geometry}${fill}${line}</xdr:spPr>${text}</xdr:${tag}>`;
+	const base = `<xdr:${tag}><xdr:nv${nonVisual}>${nv}<xdr:cNv${nonVisual}${shape.textBox ? ' txBox="1"' : ''}/></xdr:nv${nonVisual}><xdr:spPr>${transform(shape)}${geometry}${fill}${line}</xdr:spPr>`;
+	const equation = shape.equationParagraphs?.[0]?.[0];
+	if (equation?.kind === 'equation' && equation.omml)
+		return wrapEquationShape(base, { omml: equation.omml, fallback: equation.fallback });
+	return `${base}${text}</xdr:${tag}>`;
 }
 
 function patchTransform(node: XmlElement, shape: ShapeNode, replaceFrame: boolean): void {
@@ -101,17 +106,24 @@ export function patchNativeShape(
 	edit: { transform?: true; text?: true; visibility?: true },
 ): string {
 	const doc = parseXml(xml);
-	const node = elements(doc.documentElement).find(
-		(child) => child.namespaceURI === NS.xdr && ['sp', 'cxnSp', 'grpSp'].includes(child.localName),
-	);
-	if (!node) return xml;
-	if (edit.transform) patchTransform(node, shape, false);
-	if (edit.visibility) {
-		const id = node.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
-		if (shape.hidden) id?.setAttribute('hidden', '1');
-		else id?.removeAttribute('hidden');
+	for (const child of elements(doc.documentElement)) {
+		const branches = equationShapeBranches(child);
+		const nodes = branches
+			? [branches.shape, branches.fallback]
+			: child.namespaceURI === NS.xdr && ['sp', 'cxnSp', 'grpSp'].includes(child.localName)
+				? [child]
+				: [];
+		for (const node of nodes) {
+			if (!node) continue;
+			if (edit.transform) patchTransform(node, shape, false);
+			if (edit.visibility) {
+				const id = node.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
+				if (shape.hidden) id?.setAttribute('hidden', '1');
+				else id?.removeAttribute('hidden');
+			}
+			if (edit.text && !shape.equationParagraphs) replaceShapeText(node, shape.text?.text ?? '');
+		}
 	}
-	if (edit.text) replaceShapeText(node, shape.text?.text ?? '');
 	return buildXml(doc);
 }
 

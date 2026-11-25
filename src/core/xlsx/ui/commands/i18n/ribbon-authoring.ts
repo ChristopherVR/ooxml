@@ -13,11 +13,38 @@ export const RIBBON_AUTHORING_STRINGS: Translations = {
 		'Escala de impresión, títulos de impresión, fondos de hoja y edición de encabezados y pies',
 		'打印缩放、打印标题、工作表背景以及页眉和页脚编辑',
 	],
-	'PivotChart, Recommended PivotTables and Equation': [
-		'Graphique croisé dynamique, tableaux croisés dynamiques recommandés et équation',
-		'PivotChart, empfohlene PivotTables und Formel',
-		'Gráfico dinámico, tablas dinámicas recomendadas y ecuación',
-		'数据透视图、推荐的数据透视表和公式',
+	'PivotChart and Recommended PivotTables': [
+		'Graphique croisé dynamique et tableaux croisés dynamiques recommandés',
+		'PivotChart und empfohlene PivotTables',
+		'Gráfico dinámico y tablas dinámicas recomendadas',
+		'数据透视图和推荐的数据透视表',
+	],
+	Equation: ['Équation', 'Gleichung', 'Ecuación', '公式'],
+	'Edit Equation': ['Modifier l’équation', 'Gleichung bearbeiten', 'Editar ecuación', '编辑公式'],
+	'LaTeX equation': ['Équation LaTeX', 'LaTeX-Gleichung', 'Ecuación LaTeX', 'LaTeX 公式'],
+	'Type a LaTeX equation to see a preview.': [
+		'Saisissez une équation LaTeX pour afficher un aperçu.',
+		'Geben Sie eine LaTeX-Gleichung ein, um eine Vorschau zu sehen.',
+		'Escribe una ecuación LaTeX para ver una vista previa.',
+		'输入 LaTeX 公式以查看预览。',
+	],
+	'This LaTeX could not be converted to an equation.': [
+		'Impossible de convertir ce texte LaTeX en équation.',
+		'Dieser LaTeX-Text konnte nicht in eine Gleichung umgewandelt werden.',
+		'No se pudo convertir este texto LaTeX en una ecuación.',
+		'无法将此 LaTeX 文本转换为公式。',
+	],
+	'Select an editable equation text box on an editable sheet.': [
+		'Sélectionnez une zone d’équation modifiable dans une feuille modifiable.',
+		'Wählen Sie ein bearbeitbares Gleichungsfeld auf einem bearbeitbaren Blatt aus.',
+		'Selecciona un cuadro de ecuación editable en una hoja editable.',
+		'请在可编辑的工作表上选择可编辑的公式文本框。',
+	],
+	'An editable sheet that allows objects is required.': [
+		'Une feuille modifiable autorisant les objets est requise.',
+		'Ein bearbeitbares Blatt, das Objekte zulässt, ist erforderlich.',
+		'Se necesita una hoja editable que permita objetos.',
+		'需要允许对象的可编辑工作表。',
 	],
 	'Grouping pictures, mixed drawings and nested drawing groups': [
 		'Groupement des images, des dessins mixtes et des groupes de dessins imbriqués',

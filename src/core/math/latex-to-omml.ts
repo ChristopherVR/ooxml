@@ -24,6 +24,7 @@ import type { LatexParserContext } from './latex-to-omml-constructs';
 import { parseScriptArgs, tryParseScripts } from './latex-to-omml-constructs';
 import { buildPrescript } from './latex-to-omml-environments';
 import type { OmmlNode } from './omml-to-mathml';
+import { MAX_LATEX_LENGTH } from './limits';
 
 export { convertOmmlToLatex } from './omml-to-latex';
 
@@ -152,6 +153,10 @@ class LatexParser implements LatexParserContext {
 	}
 
 	public parseAtom(): OmmlNode | null {
+		return this.nest(() => this.readAtom());
+	}
+
+	private readAtom(): OmmlNode | null {
 		const tok = this.peek();
 		if (!tok) {
 			return null;
@@ -162,6 +167,7 @@ class LatexParser implements LatexParserContext {
 			while (this.peek()?.type === 'whitespace') this.next();
 			return this.parseAtom();
 		}
+		if (tok.type === 'group_end') throw new Error('Unexpected closing brace');
 
 		const bare = this.bare;
 		this.bare = false;
@@ -236,6 +242,7 @@ class LatexParser implements LatexParserContext {
  * matching what the core pipeline stores as `TextSegment.equationXml`.
  */
 export function convertLatexToOmml(latex: string): Record<string, unknown> {
+	if (latex.length > MAX_LATEX_LENGTH) throw new Error('LaTeX exceeds the size limit');
 	// Trim surrounding whitespace, but keep a trailing `\ ` (escaped space run).
 	const trimmed = latex.replace(/^\s+/u, '').replace(/(?<!\\)\s+$/u, '');
 	if (trimmed.length === 0) {

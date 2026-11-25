@@ -134,6 +134,7 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	whatIf: 'M3 3h14v14H3zM7 7.5a3 3 0 1 1 3 3v1.2M10 14h.1M3 10h2M15 10h2',
 	shapes: 'M3 12a4 4 0 1 0 8 0 4 4 0 0 0-8 0zM11 3l6 9H8z',
 	textBox: 'M3 4h14v12H3zM6 8h8M6 12h5',
+	equation: 'M16 4H5l5 6-5 6h11',
 	bringForward: 'M3 8h9v9H3zM8 3h9v9h-3',
 	sendBackward: 'M8 3h9v9H8zM6 8H3v9h9v-3',
 	selectionPane: 'M3 4h14v12H3zM8 4v12M10 7h5M10 10h5M10 13h5',

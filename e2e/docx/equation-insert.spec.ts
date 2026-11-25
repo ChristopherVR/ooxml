@@ -30,7 +30,7 @@ test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draw
 	await source.fill('\\frac{a');
 	await expect(dialog.getByRole('button', { name: 'OK', exact: true })).toBeDisabled();
 	await source.fill('\\frac{a}{b} + \\sum_{i=1}^{n} i');
-	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await source.press('Control+Enter');
 	await expect(equation.locator('munderover, msubsup')).toHaveCount(1);
 
 	// Print Layout draws it as a sized object instead of a "[Equation]" marker.

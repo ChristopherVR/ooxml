@@ -15,3 +15,4 @@ export * from './omml-to-latex-helpers';
 export * from './omml-to-latex-layout';
 export type { Token } from './latex-omml-siblings';
 export { EQUATION_GALLERY, type GalleryEquation } from './equation-gallery';
+export { MAX_LATEX_LENGTH } from './limits';

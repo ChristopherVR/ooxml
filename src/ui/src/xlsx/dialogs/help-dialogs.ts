@@ -67,7 +67,7 @@ export const UNSUPPORTED_FEATURES = [
 	'Interactive 3D editing and opening OLE objects in place',
 	'External formula services: CUBE*, WEBSERVICE, STOCKHISTORY, RTD, IMAGE, COPILOT, TRANSLATE and DETECTLANGUAGE',
 	'Creating @mentions',
-	'PivotChart, Recommended PivotTables and Equation',
+	'PivotChart and Recommended PivotTables',
 	'Grouping pictures, mixed drawings and nested drawing groups',
 	'Macros (VBA is kept in the file but never run)',
 	'Microsoft Forms response synchronization and Microsoft Marketplace add-in execution',

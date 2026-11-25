@@ -39,7 +39,7 @@ function textBox(ctx: EditorContext, edit: boolean) {
 	const index = edit ? ctx.selection.get().drawing : undefined;
 	const drawing = index === undefined ? undefined : t.ws.drawings[index];
 	const shape = drawing?.kind === 'unsupported' ? drawing.shape : undefined;
-	if (edit && (!shape?.textBox || shape.wordArt)) return;
+	if (edit && (!shape?.textBox || shape.wordArt || shape.equationParagraphs)) return;
 	const input = textArea(ctx, shape?.text?.text ?? '', 4);
 	return showDialog(ctx, {
 		name: 'text-box',
@@ -87,6 +87,45 @@ export function insertShapeCommands() {
 				ctx.selection.set({ drawing: index });
 			},
 		}),
+		...([false, true] as const).map((edit) =>
+			editing({
+				id: edit ? 'drawing.edit-equation' : 'insert.equation',
+				label: edit ? 'Edit Equation' : 'Equation',
+				icon: icon('equation'),
+				lock: 'objects',
+				unavailable: edit
+					? 'Select an editable equation text box on an editable sheet.'
+					: 'An editable sheet that allows objects is required.',
+				enabled: (ctx) => {
+					if (!edit) return true;
+					const index = ctx.selection.get().drawing;
+					const drawing = index === undefined ? undefined : target(ctx)?.ws.drawings[index];
+					return (
+						drawing?.kind === 'unsupported' &&
+						Boolean(
+							drawing.shape?.textBox &&
+							drawing.shape.equationParagraphs?.some((p) =>
+								p.some((run) => run.kind === 'equation' && run.omml),
+							),
+						)
+					);
+				},
+				run: async (ctx) => {
+					const before = target(ctx);
+					const selected = ctx.selection.get().drawing;
+					const { openEquation } = await import('./equation');
+					const live = target(ctx);
+					if (
+						live?.ws !== before?.ws ||
+						live?.session !== before?.session ||
+						(edit && selected !== ctx.selection.get().drawing)
+					)
+						return;
+					if (ctx.commands.isEnabled(edit ? 'drawing.edit-equation' : 'insert.equation'))
+						await openEquation(ctx, edit);
+				},
+			}),
+		),
 		...([false, true] as const).map((edit) =>
 			editing({
 				id: edit ? 'drawing.edit-text-box' : 'insert.text-box',

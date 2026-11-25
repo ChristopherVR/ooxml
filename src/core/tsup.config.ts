@@ -56,7 +56,7 @@ const shared = {
 	sourcemap: false,
 	// dist also holds the declarations and the pptx bundle: never clean it here.
 	clean: false,
-	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0'],
+	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0', 'ooxml-core/math'],
 	treeshake: true,
 	platform: 'neutral',
 	// The legacy .doc and .xls loaders and the package encryption (its CFB container) inline the

@@ -44,6 +44,10 @@ const common = {
 	resolve: {
 		alias: [
 			{
+				find: /^ooxml-core\/math$/,
+				replacement: fileURLToPath(new URL('./math/index.ts', import.meta.url)),
+			},
+			{
 				find: /^ooxml-core\/pptx$/,
 				replacement: fileURLToPath(new URL('./pptx/index.ts', import.meta.url)),
 			},

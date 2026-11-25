@@ -218,7 +218,9 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   Opening or inserting a TIFF
   picture in Visio can load its bundled decoder on demand. The request carries no picture bytes
   or filename. If the decoder is unavailable offline, the drawing still opens and the TIFF is
-  omitted from the preview.
+  omitted from the preview. Rendering or editing Office Math can load bundled equation code from
+  the same origin. These requests carry only the application asset URL. The file still opens and
+  retains its equations if that code is unavailable.
 - Word's Mailings commands load editor code on demand from the app's origin. Choosing a local
   recipient file also loads a same-origin parser worker where supported. These requests carry no
   file name, recipient data or document bytes. Hosts can disable Mailings with the editor's

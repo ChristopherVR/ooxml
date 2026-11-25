@@ -1,16 +1,8 @@
 import type { EditorView } from 'prosemirror-view';
-import { checkbox, dialogButton, labelled } from './dialog-fields';
-import {
-	aloneOnItsLine,
-	equationMarkup,
-	insertEquation,
-	selectedEquation,
-	updateEquation,
-} from './equation-commands';
-import { equationDom } from './equation-schema';
+import { dialogButton } from './dialog-fields';
 import { focusView } from './focus-view';
 import type { FormatDialog } from './font-dialog';
-import { localizeElement, type EditorLocale } from './localization';
+import { translate, type EditorLocale } from './localization';
 import {
 	createDialogShell,
 	dialogActions,
@@ -20,96 +12,99 @@ import {
 	localizeDialog,
 } from './dialog-shell';
 
-/**
- * Insert > Equation: type LaTeX (or a Word linear-format equation that uses the same commands)
- * and watch the equation take shape. With an equation selected the dialog edits it.
- */
-export function createEquationDialog(getView: () => EditorView | undefined): FormatDialog {
+export function createEquationDialog(
+	getView: () => EditorView | undefined,
+	reportError?: (error: Error) => void,
+) {
 	const element = createDialogShell('Equation', 'dve-format-dialog dve-equation-dialog');
-	const source = document.createElement('textarea');
-	source.rows = 3;
-	source.spellcheck = false;
-	source.className = 'dve-equation-source';
-	const display = checkbox('Display equation on its own line');
-	const preview = document.createElement('div');
-	preview.className = 'dve-equation-preview';
-	preview.setAttribute('role', 'img');
-	const message = document.createElement('p');
-	message.setAttribute('role', 'status');
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
-	const content = [
-		labelled('LaTeX equation', source),
-		display.wrapper,
-		labelled('Preview', preview),
-		message,
-		dialogActions(cancel, ok),
-	];
+	const actions = dialogActions(cancel, ok);
 	let locale: EditorLocale = 'en';
-	let editing: number | undefined;
-	const say = (text: string) => {
-		message.textContent = text;
-		localizeElement(message, locale);
-	};
-	const refresh = () => {
-		const latex = source.value.trim();
-		const omml = latex ? equationMarkup(latex, display.input.checked) : undefined;
-		preview.replaceChildren();
-		if (omml) preview.append(equationDom(omml, display.input.checked));
-		else if (latex) preview.textContent = '';
-		say(
-			!latex
-				? 'Type a LaTeX equation to see a preview.'
-				: omml
-					? ''
-					: 'This LaTeX could not be converted to an equation.',
-		);
-		ok.disabled = !omml;
-	};
-	source.addEventListener('input', refresh);
-	display.input.addEventListener('change', refresh);
+	let request = 0;
+	let pending = false;
+	let submit: (() => void) | undefined;
 	const hide = () => {
+		request++;
+		pending = false;
+		submit = undefined;
 		setDialogOpen(element, false);
 		element.replaceChildren();
 		focusView(getView());
 	};
-	ok.addEventListener('click', () => {
-		const view = getView();
-		if (!view) return;
-		const latex = source.value.trim();
-		const result =
-			editing === undefined
-				? insertEquation(view, latex, display.input.checked)
-				: updateEquation(view, editing, latex, display.input.checked);
-		if (result === 'invalid') refresh();
-		else hide();
-	});
+	ok.addEventListener('click', () => submit?.());
 	cancel.addEventListener('click', hide);
 	onDialogDismiss(element, hide);
-	element.addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !ok.disabled) ok.click();
-	});
-	return {
+	const dialog = {
 		element,
 		close: hide,
-		setLocale(next) {
+		setLocale(next: EditorLocale) {
 			locale = next;
 		},
 		get isOpen() {
-			return isDialogOpen(element);
+			return pending || isDialogOpen(element);
 		},
-		open() {
+		async open() {
 			const view = getView();
 			if (!view?.editable) return;
-			const selected = selectedEquation(view.state);
-			editing = selected?.pos;
-			element.replaceChildren(...content);
+			const activeRequest = ++request;
+			const selection = view.state.selection;
+			pending = true;
+			const loaded = await Promise.all([
+				import('../math/equation-fields'),
+				import('./equation-commands'),
+			])
+				.catch((cause: unknown) => {
+					if (activeRequest === request)
+						reportError?.(cause instanceof Error ? cause : new Error(String(cause)));
+					return undefined;
+				})
+				.finally(() => {
+					if (activeRequest === request) pending = false;
+				});
+			if (
+				!loaded ||
+				activeRequest !== request ||
+				getView() !== view ||
+				!view.editable ||
+				!selection.eq(view.state.selection)
+			)
+				return;
+			const [{ createEquationFields }, commands] = loaded;
+			const selected = commands.selectedEquation(view.state);
+			const fields = createEquationFields(element.ownerDocument, {
+				labels: {
+					equation: translate(locale, 'Equation'),
+					source: translate(locale, 'LaTeX equation'),
+					display: translate(locale, 'Display equation on its own line'),
+					preview: translate(locale, 'Preview'),
+					empty: translate(locale, 'Type a LaTeX equation to see a preview.'),
+					invalid: translate(locale, 'This LaTeX could not be converted to an equation.'),
+				},
+				...(selected ? { latex: selected.latex } : {}),
+				display: selected?.display ?? commands.aloneOnItsLine(view.state),
+				allowInline: true,
+				onChange: (value) => {
+					ok.disabled = !value;
+				},
+				accept: () => ok.click(),
+			});
+			fields.source.classList.add('dve-equation-source');
+			fields.preview.classList.add('dve-equation-preview');
+			submit = () => {
+				const value = fields.draft;
+				if (!value || getView() !== view || !selection.eq(view.state.selection)) return;
+				if (!selected || value.latex !== selected.latex || value.display !== selected.display) {
+					if (selected) commands.updateEquation(view, selected.pos, value.latex, value.display);
+					else commands.insertEquation(view, value.latex, value.display);
+				}
+				hide();
+			};
+			element.replaceChildren(fields.element, actions);
 			localizeDialog(element, locale);
-			source.value = selected?.latex ?? '';
-			display.input.checked = selected?.display ?? aloneOnItsLine(view.state);
-			refresh();
 			setDialogOpen(element, true);
-			source.focus();
+			fields.source.focus();
 		},
-	};
+	} satisfies FormatDialog;
+	return dialog;
 }

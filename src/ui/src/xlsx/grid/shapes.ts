@@ -17,6 +17,7 @@ import {
 import { h, svgNode } from './dom';
 import type { GridView } from './grid-view';
 import { trackPointerGesture } from '../../pointer-gesture';
+import { mountShapeEquations } from './shape-equations';
 
 /** Paints a shape, connector or group into `node` from its drawing box. */
 export function paintShape(
@@ -27,18 +28,24 @@ export function paintShape(
 	idPrefix: string,
 ): void {
 	node.classList.add('xg-shape');
-	node.setAttribute('role', 'img');
 	node.setAttribute('aria-label', shape.name ?? '');
-	node.append(
-		svgNode(
-			view.doc,
-			shapeSvg(shape, box.w, box.h, {
-				theme: view.workbook()?.theme,
-				scale: view.zoom() / 100,
-				idPrefix,
-			}),
-		),
+	const equations: NonNullable<NonNullable<Parameters<typeof shapeSvg>[3]>['equations']> = [];
+	const svg = svgNode(
+		view.doc,
+		shapeSvg(shape, box.w, box.h, {
+			theme: view.workbook()?.theme,
+			scale: view.zoom() / 100,
+			idPrefix,
+			equations,
+		}),
 	);
+	node.setAttribute('role', equations.length ? 'group' : 'img');
+	if (equations.length) {
+		svg.removeAttribute('role');
+		svg.removeAttribute('aria-label');
+		mountShapeEquations(svg, equations, view.ctx.t('Equation'));
+	}
+	node.append(svg);
 }
 
 /** Paints a form control into `node` from its linked cell, with the drop-down list when open. */

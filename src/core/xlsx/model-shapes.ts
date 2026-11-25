@@ -38,6 +38,7 @@ export interface ShapeNode {
 		font?: { color?: DrawingColor };
 	};
 	text?: DrawingTextBody;
+	equationParagraphs?: import('./shape-equations').EquationParagraphs;
 	wordArt?: import('../drawingml/word-art').WordArtStyle;
 	/** A group's children and the child coordinate space they are drawn in. */
 	children?: ShapeNode[];

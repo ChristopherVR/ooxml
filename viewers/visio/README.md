@@ -110,7 +110,7 @@ The [viewer API](docs/api.md) is the full reference, and the [bindings guide](do
 
 ## Privacy and network use
 
-Visio opens, renders, edits and saves drawings locally. The browser can load the bundled TIFF decoder from the app's origin when it first needs it. When the host or reader enables Google Fonts, only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
+Visio opens, renders, edits and saves drawings locally. The browser can load the bundled TIFF decoder or equation renderer from the app's origin when it first needs them. When the host or reader enables Google Fonts, only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
 
 In a Vite consumer, set `worker.format` to `'es'` to keep the TIFF decoder in an on-demand worker chunk.
 

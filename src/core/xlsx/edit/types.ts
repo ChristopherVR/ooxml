@@ -283,6 +283,12 @@ export interface EditSession {
 		value: import('./native-shapes').NewDrawingShape,
 	): number;
 	setTextBoxText(sheet: number, index: number, text: string): void;
+	setShapeEquation(
+		sheet: number,
+		index: number,
+		equation: number,
+		value: Required<import('../shape-equations').ShapeEquation>,
+	): boolean;
 	reorderDrawing(sheet: number, index: number, direction: -1 | 1): number;
 	groupDrawings(sheet: number, indices: readonly number[], name: string): number | undefined;
 	ungroupDrawing(sheet: number, index: number): number[];

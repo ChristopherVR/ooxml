@@ -87,11 +87,11 @@ describe('Insert > Equation', () => {
 });
 
 describe('equation dialog', () => {
-	it('previews while typing, inserts on OK and edits the selected equation', () => {
+	it('previews while typing, inserts on OK and edits the selected equation', async () => {
 		const { view } = editor('Sum ');
 		const dialog = createEquationDialog(() => view);
 		document.body.append(dialog.element);
-		dialog.open();
+		await dialog.open();
 		const source = dialog.element.querySelector('textarea')!;
 		const ok = [...dialog.element.querySelectorAll('button')].find((b) => b.textContent === 'OK')!;
 		expect(ok.disabled).toBe(true);

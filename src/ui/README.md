@@ -594,6 +594,9 @@ decisions that still apply (layout, style rules, the tag aliases and the token m
 
 Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 
+Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
+asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
+
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
 Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.

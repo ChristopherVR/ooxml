@@ -180,7 +180,7 @@ The areas below are covered by unit, browser and native Excel tests. Content the
 
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
-The Excel packages make no network request when opening, rendering, editing or saving a workbook. Linked pictures are not fetched, external workbook links and linked data are not refreshed, `WEBSERVICE` is not evaluated, and fonts come from the device and the file unless the reader turns on the Trust Center font download (off by default) or the host sets `googleFonts`. Workers load from the page's own origin. Hyperlinks open only when the reader follows them, collaboration talks only to the server the host configures, and OneDrive only when the host connects it. Nothing collects analytics or telemetry. See [PRIVACY.md](../../PRIVACY.md).
+Excel opens, renders, edits and saves workbooks locally by default. Linked pictures are not fetched, external workbook links and linked data are not refreshed, `WEBSERVICE` is not evaluated, and fonts come from the device and the file unless the reader turns on the Trust Center font download (off by default) or the host sets `googleFonts`. Workers and bundled equation code load from the page's own origin. Hyperlinks open only when the reader follows them, collaboration talks only to the server the host configures, and OneDrive only when the host connects it. Nothing collects analytics or telemetry. See [PRIVACY.md](../../PRIVACY.md).
 
 ## OneDrive and your own storage
 

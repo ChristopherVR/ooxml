@@ -134,7 +134,9 @@ export class DrawingLayer {
 						if (frame?.kind === 'unsupported' && frame.shape?.textBox && !frame.shape.wordArt) {
 							event.stopPropagation();
 							view.ctx.selection.set({ drawing: index });
-							void view.ctx.commands.run('drawing.edit-text-box');
+							void view.ctx.commands.run(
+								frame.shape.equationParagraphs ? 'drawing.edit-equation' : 'drawing.edit-text-box',
+							);
 							return;
 						}
 						if (frame?.kind === 'unsupported' && frame.chartExSpace) {

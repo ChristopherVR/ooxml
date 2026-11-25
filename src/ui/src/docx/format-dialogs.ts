@@ -66,6 +66,7 @@ export type FormatDialogKind =
 
 export interface FormatDialogsHost {
 	view(): EditorView | undefined;
+	reportError?(error: Error): void;
 	/** Header/footer edits use the main document's history; notes use their own. */
 	historyView?(): EditorView | undefined;
 	/** Recording preferences always belong to the main document, including while editing a story. */
@@ -141,7 +142,7 @@ export class FormatDialogs {
 			}),
 			textBox: createTextBoxDialog(() => host.view()),
 			contentControl: createContentControlDialog(() => host.view()),
-			equation: createEquationDialog(() => host.view()),
+			equation: createEquationDialog(() => host.view(), host.reportError),
 			shapeText: createShapeTextDialog(() => host.view()),
 			lineNumbers: createLineNumberDialog({
 				...(host.lineNumbers ?? {

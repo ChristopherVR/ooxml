@@ -24,6 +24,9 @@ interface Context {
 	prefix: string;
 	counter: { n: number };
 	defs: string[];
+	equations:
+		| { paragraphs: NonNullable<ShapeNode['equationParagraphs']>; scale: number }[]
+		| undefined;
 }
 
 const escapeXml = (text: string) =>
@@ -88,6 +91,10 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 	const top = ((body.insetsEmu?.top ?? 45720) / EMU_PER_PX) * ctx.scale;
 	const bottom = ((body.insetsEmu?.bottom ?? 45720) / EMU_PER_PX) * ctx.scale;
 	const innerW = Math.max(1, rect.w - left - right);
+	if (node.equationParagraphs && ctx.equations) {
+		const index = ctx.equations.push({ paragraphs: node.equationParagraphs, scale: ctx.scale }) - 1;
+		return `<foreignObject data-equation-text="${index}" x="${round(rect.x + left)}" y="${round(rect.y + top)}" width="${round(innerW)}" height="${round(Math.max(1, rect.h - top - bottom))}"/>`;
+	}
 	const lines: {
 		text: string;
 		fontPx: number;
@@ -97,7 +104,15 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 		align: string;
 		family: string;
 	}[] = [];
-	for (const paragraph of body.paragraphs) {
+	const paragraphs = node.equationParagraphs
+		? node.equationParagraphs.map((segments, index) => ({
+				...body.paragraphs[index],
+				runs: [
+					{ text: segments.map((run) => (run.kind === 'text' ? run.text : run.fallback)).join('') },
+				],
+			}))
+		: body.paragraphs;
+	for (const paragraph of paragraphs) {
 		const info = paragraphText(body, paragraph);
 		const fontPx = info.sizePt * POINT_PX * ctx.scale;
 		const color =
@@ -255,7 +270,12 @@ export function shapeSvg(
 	node: ShapeNode,
 	widthPx: number,
 	heightPx: number,
-	options: { theme?: ThemePalette | undefined; scale?: number; idPrefix?: string } = {},
+	options: {
+		theme?: ThemePalette | undefined;
+		scale?: number;
+		idPrefix?: string;
+		equations?: Context['equations'];
+	} = {},
 ): string {
 	const w = Math.max(1, widthPx);
 	const h = Math.max(1, heightPx);
@@ -265,6 +285,7 @@ export function shapeSvg(
 		prefix: options.idPrefix ?? 'xs',
 		counter: { n: 0 },
 		defs: [],
+		equations: options.equations,
 	};
 	const body = drawNode({ ...node, rotation: node.rotation ?? 0 }, { x: 0, y: 0, w, h }, ctx);
 	const defs = ctx.defs.length ? `<defs>${ctx.defs.join('')}</defs>` : '';

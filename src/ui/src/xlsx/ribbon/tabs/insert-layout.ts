@@ -154,6 +154,8 @@ export function insertTab(): RibbonTab {
 					{ kind: 'button', command: 'insert.word-art', size: 'large' },
 					{ kind: 'button', command: 'insert.object', size: 'large' },
 					{ kind: 'button', command: 'insert.symbol', size: 'large' },
+					{ kind: 'button', command: 'insert.equation', size: 'large' },
+					{ kind: 'button', command: 'drawing.edit-equation' },
 				],
 			},
 		],

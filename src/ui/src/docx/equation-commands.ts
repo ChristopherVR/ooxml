@@ -2,8 +2,10 @@
 import { closeHistory } from 'prosemirror-history';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { convertOmmlToLatex, latexToOmmlXml, parseOmml } from 'ooxml-core/math';
+import { convertOmmlToLatex, parseOmml } from 'ooxml-core/math';
 import { schema } from './schema';
+import { equationMarkup } from '../math/equation-fields';
+export { equationMarkup } from '../math/equation-fields';
 
 export interface SelectedEquation {
 	pos: number;
@@ -23,15 +25,6 @@ export function selectedEquation(state: EditorState): SelectedEquation | undefin
 		latex = '';
 	}
 	return { pos: selection.from, latex, display: Boolean(selection.node.attrs.display) };
-}
-
-/** Whether `latex` produces an equation; the dialog previews and validates through this. */
-export function equationMarkup(latex: string, display: boolean): string | undefined {
-	try {
-		return latexToOmmlXml(latex, display);
-	} catch {
-		return undefined;
-	}
 }
 
 export type EquationResult = 'done' | 'invalid' | 'unavailable';

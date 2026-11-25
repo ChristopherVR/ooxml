@@ -1,5 +1,13 @@
 # Provenance
 
+## Shared equation editor fields (2026-11-26)
+
+Source repository: ChristopherVR/ooxml, commit `96421e1ec`.
+The LaTeX fields, validation and live preview from `src/ui/src/docx/equation-dialog.ts`,
+`equation-commands.ts` and `equation-schema.ts` now live in `src/ui/src/math/`.
+Word and Excel share the editor fields and MathML renderer. Word retains its ProseMirror
+commands and modal shell, and Excel writes the equation to a worksheet drawing.
+
 ## Shared shape gallery thumbnails (2026-11-26)
 
 Source repository: ChristopherVR/ooxml, commit `fa40aa8ad`.

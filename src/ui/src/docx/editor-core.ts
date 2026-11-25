@@ -221,6 +221,7 @@ export class EditorCore {
 		});
 		this.formatDialogs = new FormatDialogs({
 			view: () => this.targetView(),
+			reportError: (error) => emit(element, 'document-error', error),
 			reviewView: () => this.view,
 			historyView: () => (this.parts.usesBodyHistory() ? this.view : this.targetView()),
 			model: () => this.model,

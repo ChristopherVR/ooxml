@@ -365,16 +365,26 @@ line/marker swatches and position-authoring controls remain incomplete.
     but not displayed, edited or copied,
     connections and query tables are only carried verbatim, and named sheet views and
     ActiveX controls are not modelled.
-12. Ribbon. Insert offers a preset Shapes gallery, editable text boxes, New Note, and Header &
-    Footer. Recommended Charts is available through the Charts group when the ribbon folds it.
-    Header & Footer opens the inline editor in Page Layout view. PivotChart, Recommended
-    PivotTables and Equation remain open. Page Layout offers fit width and height, percentage
+12. Ribbon. Insert offers a preset Shapes gallery, editable text boxes, Equation, New Note, and
+    Header & Footer. Recommended Charts is available through the Charts group when the ribbon
+    folds it. Equation inserts a text box with Office Math and a linear text fallback.
+    Edit Equation opens the LaTeX editor for a selected equation text box. Imported equation
+    branches are kept on save and supported equations render as MathML on the grid. Grouped
+    equations are read-only inside the group. Header & Footer opens the inline editor in Page
+    Layout view. PivotChart and Recommended PivotTables remain open. Page Layout offers fit width and height, percentage
     scaling, Print Titles, and local worksheet background pictures. Arrange offers drawing
     stacking, a Selection Pane, alignment, grouping of standalone shapes, and rotation,
     flipping, and visibility controls for shapes and pictures. Grouping pictures or mixed drawings, nested groups, and rotation of other
     drawing types remain open. Draw, Picture Format, Shape Format, Chart Format, PivotTable Analyze
     and PivotTable Design tabs, Review spelling and accessibility checks, and the Review Notes menu
     remain open.
+
+The Excel 16.0 fixture `excel-equation-native.xlsx` was saved using the documented
+`CommandBars.ExecuteMso("EquationInsertNew")` automation call. Its drawing uses a one-cell
+anchor, `mc:Choice Requires="a14"` containing `xdr:sp/xdr:txBody/a:p/a14:m/m:oMathPara`, and
+an `mc:Fallback` text box with a plain DrawingML run. Excel 16.0 reopened an inserted fraction
+and an edited native text box and kept the structured equations when it saved both workbooks.
+[DrawingML Math](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-odrawxml/a2d24a62-1cc5-4079-8196-acd517dbfb61)
 
 Insert > WordArt creates an editable worksheet drawing. The picker offers 30
 fill, outline and shadow styles and 40 text transforms. Excel retains the

@@ -8,6 +8,7 @@ import { parseDrawingTextBody } from '../../drawingml/drawing-text';
 import { NS, elements, first, type XmlElement } from '../../xml/index';
 import type { ShapeNode } from '../model-shapes';
 import { readWordArtShape } from '../word-art';
+import { equationShapeBranches, readEquationParagraphs } from '../shape-equations';
 import { att, boolAttr } from './xml-util';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
@@ -34,6 +35,8 @@ function readStyle(style: XmlElement | undefined): ShapeNode['style'] | undefine
 
 /** Reads one shape, connector or group; children of a group are read recursively. */
 export function readShapeNode(element: XmlElement): ShapeNode | undefined {
+	const branches = equationShapeBranches(element);
+	if (branches) element = branches.shape;
 	const local = element.localName;
 	if (local !== 'sp' && local !== 'cxnSp' && local !== 'grpSp') return undefined;
 	const isGroup = local === 'grpSp';
@@ -66,7 +69,9 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 		if (style) node.style = style;
 		const body = xdr(element, 'txBody');
 		const text = parseDrawingTextBody(body);
-		if (text?.text) node.text = text;
+		const equations = readEquationParagraphs(element, branches?.fallback);
+		if (equations) node.equationParagraphs = equations;
+		if (text && (text.text || equations)) node.text = text;
 		const wordArt = node.textBox && readWordArtShape(body);
 		if (wordArt) node.wordArt = wordArt;
 		return node;

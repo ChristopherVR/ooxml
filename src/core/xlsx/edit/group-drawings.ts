@@ -33,6 +33,7 @@ export function canGroupDrawings(sheet: Worksheet, indices: readonly number[]): 
 			return (
 				isWorksheetShape(drawing) &&
 				drawing.shape.kind !== 'group' &&
+				!drawing.shape.equationParagraphs &&
 				(!drawing.sourceXml || selfContained(drawing.sourceXml))
 			);
 		})

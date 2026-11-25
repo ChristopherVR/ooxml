@@ -4,7 +4,7 @@ import { createReviewControls } from './review-ribbon';
 import { buildParagraphSpacing } from './ribbon-home';
 import { SYMBOLS } from './insert-text-commands';
 import { PAGE_SIZE_OPTIONS } from 'ooxml-core/docx';
-import { EQUATION_GALLERY } from 'ooxml-core/math';
+import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 
 const TOC_OPTIONS: Array<[string, string]> = [
 	['3', 'Table of contents, levels 1 to 3'],
