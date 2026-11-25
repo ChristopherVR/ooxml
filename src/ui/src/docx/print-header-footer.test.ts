@@ -197,12 +197,15 @@ describe('Print Layout headers, footers and page fields', () => {
 		const sheet = document.createElement('div');
 		decoratePages(model, [page(0, 0, 0)], [sheet]);
 		for (const kind of ['header', 'footer']) {
-			const cells = [...sheet.querySelectorAll<HTMLElement>(`.dve-print-${kind} td`)];
+			const table = must(sheet.querySelector<HTMLElement>(`.dve-print-${kind} [role="table"]`));
+			const cells = [...table.querySelectorAll<HTMLElement>('[role="cell"]')];
 			expect(cells).toHaveLength(2);
-			for (const cell of cells)
-				for (const side of ['top', 'bottom', 'left', 'right'] as const)
-					expect(cell.style.getPropertyValue(`border-${side}`)).toMatch(/^1px solid/);
-			expect(sheet.querySelectorAll(`.dve-print-${kind} col`)).toHaveLength(2);
+			expect(at(cells, 0).style.borderLeft).toMatch(/^0\.666667px solid/);
+			expect(at(cells, 1).style.borderRight).toMatch(/^0\.666667px solid/);
+			for (const cell of cells) {
+				expect(cell.style.borderTop).toMatch(/^0\.666667px solid/);
+				expect(cell.style.borderBottom).toMatch(/^0\.666667px solid/);
+			}
 		}
 	});
 
@@ -218,11 +221,12 @@ describe('Print Layout headers, footers and page fields', () => {
 			['header', 4],
 			['footer', 6],
 		] as const) {
-			const cells = [...sheet.querySelectorAll<HTMLElement>(`.dve-print-${kind} td`)];
+			const cells = [...sheet.querySelectorAll<HTMLElement>(`.dve-print-${kind} [role="cell"]`)];
 			expect(cells).toHaveLength(count);
-			for (const cell of cells)
-				for (const side of ['top', 'bottom', 'left', 'right'] as const)
-					expect(cell.style.getPropertyValue(`border-${side}`)).toMatch(/^1px solid/);
+			expect(at(cells, 0).style.borderTop).toMatch(/^0\.666667px solid/);
+			expect(at(cells, 0).style.borderLeft).toMatch(/^0\.666667px solid/);
+			expect(at(cells, count - 1).style.borderRight).toMatch(/^0\.666667px solid/);
+			expect(at(cells, count - 1).style.borderBottom).toMatch(/^0\.666667px solid/);
 		}
 	});
 

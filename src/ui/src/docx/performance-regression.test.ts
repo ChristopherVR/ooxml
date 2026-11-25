@@ -139,26 +139,31 @@ describe('Word performance regression coverage', () => {
 		expect(converted.blocks[0]).not.toBe(source.blocks[0]);
 	});
 
-	it('measures a font once for ascent and height, but remeasures a different size', () => {
+	it('reuses reference font metrics across sizes and includes the natural line gap', () => {
 		const measureText = vi.fn(() => ({
 			width: 20,
-			fontBoundingBoxAscent: 12,
-			fontBoundingBoxDescent: 4,
+			fontBoundingBoxAscent: 88,
+			fontBoundingBoxDescent: 22,
 		}));
 		const context = vi
 			.spyOn(HTMLCanvasElement.prototype, 'getContext')
 			.mockReturnValue({ measureText } as unknown as CanvasRenderingContext2D);
+		const bounds = vi
+			.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+			.mockReturnValue(new DOMRect(0, 0, 0, 115));
 		try {
 			const measurer = createCanvasMeasurer();
 			const font = { family: 'Arial', sizePx: 16 };
 			for (let i = 0; i < 100; i++) {
-				expect(measurer.ascentOf!(font)).toBe(12);
-				expect(measurer.lineHeightOf(font)).toBe(16);
+				expect(measurer.ascentOf!(font)).toBeCloseTo(14.48);
+				expect(measurer.lineHeightOf(font)).toBeCloseTo(18.4);
 			}
 			expect(measureText).toHaveBeenCalledTimes(1);
-			measurer.lineHeightOf({ ...font, sizePx: 20 });
-			expect(measureText).toHaveBeenCalledTimes(2);
+			expect(measurer.lineHeightOf({ ...font, sizePx: 20 })).toBeCloseTo(23);
+			expect(measureText).toHaveBeenCalledTimes(1);
+			expect(bounds).toHaveBeenCalledTimes(1);
 		} finally {
+			bounds.mockRestore();
 			context.mockRestore();
 		}
 	});

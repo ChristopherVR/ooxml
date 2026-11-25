@@ -1,3 +1,4 @@
+import { parsePercentageShading } from './percentage-shading';
 import type {
 	Paragraph,
 	ParagraphFormatting,
@@ -115,7 +116,10 @@ export function parseFormatting(pPr: XmlElement | undefined): ParagraphFormattin
 	if (frame) result.frame = frame;
 	const borders = parseParagraphBorders(first(pPr, 'pBdr'));
 	if (borders) result.borders = borders;
-	const shading = parseShadingFill(first(pPr, 'shd'));
+	const shadingElement = first(pPr, 'shd');
+	const shading = parseShadingFill(shadingElement);
+	const pattern = parsePercentageShading(shadingElement);
+	if (pattern) result.percentageShading = pattern;
 	if (shading) result.shadingFill = shading;
 	const spacing = first(pPr, 'spacing');
 	const before = twipValue(getW(spacing, 'before'));
@@ -255,6 +259,7 @@ export function resolveParagraphFormatting(
 		'frame',
 		'borders',
 		'shadingFill',
+		'percentageShading',
 	];
 	for (const key of keys) {
 		const value = paragraph[key];

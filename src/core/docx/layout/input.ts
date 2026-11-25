@@ -20,10 +20,12 @@ export interface LayoutRun {
 	bold?: boolean;
 	italic?: boolean;
 	fontFamily?: string;
+	fontFallback?: import('../font-table').FontFallback;
 	/** Points, matching `TextRun.fontSize` in docx-core. */
 	fontSizePt?: number;
 	textScalePercent?: number;
 	ligatures?: import('../ligatures').Ligatures;
+	smallCaps?: boolean;
 	characterSpacingPx?: number;
 	kerningThresholdPt?: number;
 	/** Positive raises the baseline, negative lowers it. */
@@ -118,6 +120,8 @@ export interface LayoutTabStop {
 /** A paragraph border side: the line and its `w:space` gap to the text. */
 export interface LayoutParagraphBorder extends LayoutBorder {
 	spacePx: number;
+	/** Alternating stroke and gap widths, ordered from the outside of the frame in. */
+	compound?: readonly number[];
 }
 export interface LayoutParagraphBorders {
 	top?: LayoutParagraphBorder;
@@ -170,11 +174,14 @@ export interface LayoutTextFrame {
 export interface LayoutParagraph {
 	/** Tolerance for differences between browser and Word advance widths in DrawingML text boxes. */
 	wordFitTolerancePx?: number;
+	/** Older Word compatibility modes wrap before tightening justified spaces. */
+	squeezeJustifiedSpaces?: false;
 	/** Mandatory paragraph after a table, outside the preceding table's column balance. */
 	afterTableSectionBreak?: boolean;
 	kind: 'paragraph';
 	id: string;
 	runs: LayoutRun[];
+	emptyLineFont?: import('./measure').LayoutFontSpec;
 	align?: ParagraphAlign;
 	direction?: 'ltr' | 'rtl';
 	spacingBeforeTwips?: Twips;
@@ -202,10 +209,12 @@ export interface LayoutParagraph {
 	floats?: LayoutFloat[];
 	/** Custom tab stops (`w:tabs`). */
 	tabStops?: LayoutTabStop[];
+	defaultTabStopPx?: number;
 	/** Footnotes referenced here. Runs identify their marker; unanchored notes use the first line. */
 	footnotes?: LayoutNote[];
 	/** Border lines around the paragraph, with each side's gap to the text. */
 	borders?: LayoutParagraphBorders;
+	borderJoinNext?: boolean;
 	/** `#rrggbb` shading behind the paragraph. */
 	shading?: string;
 	/** `w:kinsoku w:val="0"`: no line-start or line-end prohibition (on when absent). */

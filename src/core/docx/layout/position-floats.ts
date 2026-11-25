@@ -31,6 +31,7 @@ function anchorParagraphs(input: LayoutDocumentInput): Map<string, LayoutFloat[]
  */
 function tableFloats(
 	page: LayoutPageBox,
+	originYPx: number,
 	column: LayoutColumnBox,
 	table: LayoutTableBox,
 	floatsById: ReadonlyMap<string, LayoutFloat[]>,
@@ -38,7 +39,7 @@ function tableFloats(
 	boxes: LayoutFloatBox[],
 ): void {
 	const left = page.marginLeftPx + column.xPx + (table.xPx ?? 0);
-	const top = page.marginTopPx + table.yPx;
+	const top = originYPx + table.yPx;
 	for (const row of table.rows)
 		row.cells.forEach((paragraphs, cellIndex) => {
 			const geometry = row.geometry?.[cellIndex];
@@ -91,22 +92,28 @@ function tableFloats(
  * `wp:positionH`/`wp:positionV` reference frame, alignment and offset, and the floating objects
  * of table cells where their cells placed them. Returns whether any were placed.
  */
-export function positionFloats(input: LayoutDocumentInput, pages: LayoutPageBox[]): boolean {
+export function positionFloats(
+	input: LayoutDocumentInput,
+	pages: LayoutPageBox[],
+	/** A header or footer starts at its own page distance. */
+	storyTopPx?: number,
+): boolean {
 	const floatsById = anchorParagraphs(input);
 	if (!floatsById.size) return false;
 	const placed = new Set<string>();
 	for (const page of pages) {
 		const boxes: LayoutFloatBox[] = [];
+		const originYPx = storyTopPx ?? page.marginTopPx;
 		for (const column of page.columns)
 			for (const block of column.blocks) {
 				if (block.kind === 'table') {
-					tableFloats(page, column, block, floatsById, placed, boxes);
+					tableFloats(page, originYPx, column, block, floatsById, placed, boxes);
 					continue;
 				}
 				const floats = floatsById.get(block.blockId);
 				if (!floats || placed.has(block.blockId)) continue;
 				placed.add(block.blockId);
-				const paragraph = { topPx: page.marginTopPx + block.yPx, heightPx: block.heightPx };
+				const paragraph = { topPx: originYPx + block.yPx, heightPx: block.heightPx };
 				for (const [position, float] of floats.entries()) {
 					const frames = pageFrames(
 						page,

@@ -37,12 +37,14 @@ function updateShading(
 	paragraph: Paragraph,
 	base?: Paragraph,
 ): void {
-	if (base && paragraph.shadingFill === base.shadingFill) return;
+	const samePattern = base && sameJson(paragraph.percentageShading, base.percentageShading);
+	if (samePattern && paragraph.shadingFill === base?.shadingFill) return;
 	for (const element of children(props, 'shd')) props.removeChild(element);
-	if (!paragraph.shadingFill) return;
+	const pattern = samePattern ? undefined : paragraph.percentageShading;
+	if (!paragraph.shadingFill && !pattern) return;
 	const shd = makeW(doc, 'shd');
-	shd.setAttributeNS(WORD_NS, 'w:val', 'clear');
-	shd.setAttributeNS(WORD_NS, 'w:color', 'auto');
+	shd.setAttributeNS(WORD_NS, 'w:val', pattern?.pattern ?? 'clear');
+	shd.setAttributeNS(WORD_NS, 'w:color', wordColor(pattern?.color));
 	shd.setAttributeNS(WORD_NS, 'w:fill', wordColor(paragraph.shadingFill));
 	props.appendChild(shd);
 }

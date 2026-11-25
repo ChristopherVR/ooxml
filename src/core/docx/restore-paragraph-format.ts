@@ -31,6 +31,7 @@ export const PARAGRAPH_FORMAT_KEYS = [
 	'dropCap',
 	'borders',
 	'shadingFill',
+	'percentageShading',
 ] as const satisfies readonly (keyof Paragraph)[];
 
 /** Restore formatting without changing text, stable identity, bookmarks or paragraph mark revisions. */

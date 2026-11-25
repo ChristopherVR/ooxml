@@ -40,12 +40,13 @@ export function lineMetrics(
 	paragraph: LayoutParagraph,
 	measurer: TextMeasurer,
 ): { heightPx: number; baselinePx: number } {
-	const tokens = placed.length
-		? placed.map((p) => p.token)
-		: [{ kind: 'space', text: ' ', runIndex: 0, sourceStart: 0 } as BreakToken];
-	let above = 0;
-	let below = 0;
-	for (const token of tokens) {
+	const empty = placed.length
+		? undefined
+		: fontMetrics(measurer, paragraph.emptyLineFont ?? fonts[0] ?? fontOf({ text: '' }));
+	let above = empty?.ascent ?? 0;
+	let below = empty?.descent ?? 0;
+	let objectAscent = 0;
+	for (const { token } of placed) {
 		const run = paragraph.runs[token.runIndex];
 		const metrics = run?.object?.noteSeparator
 			? fontMetrics(measurer, fonts[token.runIndex] ?? fontOf(run))
@@ -53,6 +54,7 @@ export function lineMetrics(
 		const extent = metrics
 			? { above: metrics.ascent, below: metrics.descent }
 			: tokenExtent(token, paragraph, fonts, measurer);
+		if (token.kind === 'object' && !metrics) objectAscent = Math.max(objectAscent, extent.above);
 		above = Math.max(above, extent.above);
 		below = Math.max(below, extent.below);
 	}
@@ -66,6 +68,6 @@ export function lineMetrics(
 				: natural
 			: rule === 'atLeast'
 				? Math.max(natural, spacingTwips != null ? twipsToPx(spacingTwips) : 0)
-				: natural * ((spacingTwips ?? 240) / 240);
+				: Math.max(objectAscent + below, natural * ((spacingTwips ?? 240) / 240));
 	return { heightPx, baselinePx: heightPx - below };
 }

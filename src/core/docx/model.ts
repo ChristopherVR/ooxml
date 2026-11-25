@@ -139,6 +139,10 @@ export interface DocumentModel {
 	signatures?: SignatureSummary;
 	/** Source paragraph defaults/styles; editing the catalog itself is not supported. */
 	paragraphStyles?: ParagraphStyleCatalog;
+	/** A DOCX package with no styles part inherits Word's Normal template for display. */
+	usesImplicitNormalStyle?: true;
+	/** Display fallback metadata from the source font table, keyed by lowercase family name. */
+	fontFallbacks?: ReadonlyMap<string, import('./font-table').FontFallback>;
 	/** Parsed `word/numbering.xml`. Existing entries are read-only; new list definitions may be added. */
 	numberingCatalog?: NumberingCatalog;
 	/**
@@ -162,6 +166,8 @@ export interface DocumentModel {
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */
 	autoHyphenation?: boolean;
+	/** Document default interval for tab stops. */
+	defaultTabStopTwips?: Twips;
 	/** `w:hyphenationZone` in settings.xml (twips; Word defaults to 360 twips / 0.25 in); read-only. */
 	hyphenationZoneTwips?: Twips;
 	/** `w:consecutiveHyphenLimit` in settings.xml (0 or absent means unlimited); read-only. */

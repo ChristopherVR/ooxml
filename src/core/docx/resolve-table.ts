@@ -77,6 +77,8 @@ function mergeFormatting(
 	const next = { ...result };
 	if (level.borders) next.borders = { ...result.borders, ...level.borders };
 	if (level.shadingFill) next.shadingFill = level.shadingFill;
+	if (level.percentageShading) next.percentageShading = level.percentageShading;
+	else if (level.shadingFill) delete next.percentageShading;
 	if (level.shadingThemeFill) next.shadingThemeFill = level.shadingThemeFill;
 	if (level.run) next.run = { ...result.run, ...level.run };
 	return next;
@@ -90,6 +92,8 @@ function ownFormatting(
 	let result: TableStyleConditionalFormatting = {};
 	if (style.borders) result.borders = { ...style.borders };
 	if (style.shadingFill) result.shadingFill = style.shadingFill;
+	if (style.percentageShading) result.percentageShading = style.percentageShading;
+	else if (style.shadingFill) delete result.percentageShading;
 	for (const region of regions) {
 		const formatting = style.conditional[region as keyof typeof style.conditional];
 		if (formatting) result = mergeFormatting(result, formatting);

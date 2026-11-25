@@ -5,25 +5,15 @@
  */
 import {
 	isRunHiddenForReview,
-	type DocumentModel,
 	type HeaderFooterContent,
 	type Paragraph,
 	type PictureWatermarkSpec,
 	type ReviewDisplayMode,
 	type WatermarkSpec,
 } from 'ooxml-core/docx';
-import {
-	floatPosition,
-	paragraphFloats,
-	storyTextBoxLayouts,
-	type LayoutPageBox,
-	type TextBoxLayouts,
-	type TextMeasurer,
-} from 'ooxml-core/docx/layout';
+import type { PlacedStory } from 'ooxml-core/docx/layout';
 import type { DocxPdfPainter } from './pdf-blocks';
 import type { DocxPdfPicture } from './pdf-pictures';
-import type { DocxPdfReportBuilder } from './pdf-report';
-import type { PlacedStory } from './pdf-stories';
 
 /** A header or footer object, placed on the page. */
 export interface DocxPdfStoryFloat extends DocxPdfPicture {
@@ -50,70 +40,26 @@ function storyParagraphs(content: HeaderFooterContent): Paragraph[] {
 
 /** Every page's header and footer graphics. */
 export function storyGraphics(
-	model: DocumentModel,
-	pages: readonly LayoutPageBox[],
 	stories: readonly (readonly PlacedStory[])[],
-	measurer: TextMeasurer,
 	mode: ReviewDisplayMode,
-	report: DocxPdfReportBuilder,
 ): DocxPdfStoryGraphics[] {
-	const hidden = (run: Paragraph['runs'][number]) => isRunHiddenForReview(run, mode);
-	const textBoxes = new Map<HeaderFooterContent, TextBoxLayouts>();
-	const textBoxesOf = (content: HeaderFooterContent) => {
-		let layouts = textBoxes.get(content);
-		if (!layouts) {
-			layouts = storyTextBoxLayouts(
-				model,
-				content.blocks,
-				measurer,
-				{ reviewDisplayMode: mode },
-				(m) => report.note(m),
-			);
-			textBoxes.set(content, layouts);
-		}
-		return layouts;
-	};
-	return pages.map((page, index) => {
+	return stories.map((pageStories) => {
 		const graphics: DocxPdfStoryGraphics = { floats: [] };
-		const column = { xPx: 0, widthPx: page.widthPx - page.marginLeftPx - page.marginRightPx };
-		for (const story of stories[index] ?? []) {
+		for (const story of pageStories) {
 			const paragraphs = storyParagraphs(story.content);
 			if (story.kind === 'header') {
 				const image = paragraphs
 					.flatMap((paragraph) => paragraph.runs)
 					.find(
-						(run) => !hidden(run) && (run.image?.watermark || run.image?.pictureWatermark),
+						(run) =>
+							!isRunHiddenForReview(run, mode) &&
+							(run.image?.watermark || run.image?.pictureWatermark),
 					)?.image;
 				if (image?.pictureWatermark) graphics.pictureWatermark = image.pictureWatermark;
 				else if (image?.watermark?.text) graphics.watermark = image.watermark;
 			}
-			for (const paragraph of paragraphs) {
-				if (!paragraph.runs.some((run) => run.image?.anchored)) continue;
-				// The anchor paragraph where the story laid it out; a paragraph of a table cell
-				// anchors at the story's top.
-				const box = story.blocks.find((block) => block.blockId === paragraph.id);
-				const anchor = {
-					topPx: story.y + (box?.yPx ?? 0),
-					heightPx: box?.heightPx ?? 0,
-				};
-				const floats = paragraphFloats(
-					paragraph,
-					model.theme,
-					textBoxesOf(story.content),
-					false,
-					hidden,
-				);
-				for (const float of floats) {
-					const { xPx, yPx } = floatPosition(float, page, column, anchor);
-					graphics.floats.push({
-						...float,
-						kind: story.kind,
-						xPx,
-						yPx,
-						behindText: !!float.behindText,
-					});
-				}
-			}
+			for (const float of story.floats)
+				graphics.floats.push({ ...float, kind: story.kind, behindText: !!float.behindText });
 		}
 		return graphics;
 	});

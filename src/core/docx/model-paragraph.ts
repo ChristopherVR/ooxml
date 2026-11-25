@@ -122,6 +122,7 @@ export interface Paragraph {
 	borders?: import('./table-model').ParagraphBorders;
 	/** `w:shd/@w:fill` as `#rrggbb`; read-only like `borders`. */
 	shadingFill?: string;
+	percentageShading?: import('./percentage-shading').PercentageShading;
 	/**
 	 * Bookmark names starting in this paragraph (`w:bookmarkStart/@w:name`). Added names are
 	 * written around the whole paragraph; removed names lose their markers here. Exact character
@@ -169,6 +170,7 @@ export type ParagraphFormatting = Pick<
 	| 'frame'
 	| 'borders'
 	| 'shadingFill'
+	| 'percentageShading'
 >;
 export interface ParagraphStyleDefinition {
 	id: string;

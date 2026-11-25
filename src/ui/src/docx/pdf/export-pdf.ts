@@ -14,6 +14,8 @@ import {
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import {
+	createPageStories,
+	type PlacedStory,
 	layoutDocumentModel,
 	type LayoutPageBox,
 	type OversizedCantSplitRow,
@@ -43,7 +45,6 @@ import {
 	storyGraphics,
 	type DocxPdfStoryGraphics,
 } from './pdf-story-graphics';
-import { placeStories } from './pdf-stories';
 import { DocxPdfText } from './pdf-text';
 import { paintWatermark } from './pdf-watermark';
 
@@ -153,7 +154,7 @@ interface PageExtras {
 function paintPage(
 	painter: DocxPdfPainter,
 	page: LayoutPageBox,
-	stories: ReturnType<typeof placeStories>[number],
+	stories: readonly PlacedStory[],
 	model: DocumentModel,
 	report: DocxPdfReportBuilder,
 	{ marks, graphics, measurer }: PageExtras,
@@ -238,16 +239,17 @@ export async function exportDocxPdf(
 		report.note(message);
 	const indices = selectedPages(layout.pages.length, options.pages);
 	if (!indices.length) throw new RangeError('The page range selects no page of the document.');
-	const stories = placeStories(
+	const placeStories = createPageStories(
 		projected.model,
 		layout.pages,
 		measurer,
-		mode,
-		report,
-		options.now ?? new Date(),
+		{ reviewDisplayMode: mode },
+		(message) => report.note(message),
+		options.now,
 	);
+	const stories = layout.pages.map((_, index) => placeStories(index));
 	const marks = pageMarks(projected.model, layout.pages);
-	const graphics = storyGraphics(projected.model, layout.pages, stories, measurer, mode, report);
+	const graphics = storyGraphics(stories, mode);
 	const text = new DocxPdfText(
 		new PdfFontSet(options.fonts ?? [], { embedAll: !!(options.pdfA || options.pdfUa) }),
 		measurer,

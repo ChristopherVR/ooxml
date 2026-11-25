@@ -40,6 +40,7 @@ export function runFormattingCss(
 	formatting: RunFormatting,
 	theme?: Theme,
 	direct: RunFormatting = {},
+	fontFallbacks?: DocumentModel['fontFallbacks'],
 ): string {
 	const css: string[] = [];
 	const script =
@@ -68,7 +69,8 @@ export function runFormattingCss(
 	const family = formatting.fontFamily ?? themeFontOf(formatting, theme);
 	// The metric-compatible stack Print Layout measures with (Calibri, then Carlito), so a loaded
 	// clone paints here too and Web Layout breaks lines like the pages.
-	if (family) css.push(`font-family:${cssFontStack(family)}`);
+	if (family)
+		css.push(`font-family:${cssFontStack(family, fontFallbacks?.get(family.toLowerCase()))}`);
 	const color =
 		safeColor(formatting.color) ??
 		(formatting.colorTheme && theme
@@ -143,7 +145,9 @@ export function runStylesPlugin(
 					model.characterStyles,
 					model.paragraphStyles,
 					model.theme,
+					model.fontFallbacks,
 					model.tableStyles,
+					model.fontFallbacks,
 					mode,
 				];
 				const cached = cache.get(state.doc, inputs);
@@ -160,6 +164,7 @@ export function runStylesPlugin(
 						model.characterStyles,
 						model.paragraphStyles,
 						model.theme,
+						model.fontFallbacks,
 						mode,
 						measurer,
 						JSON.stringify(tableStyleRun),
@@ -189,8 +194,8 @@ export function runStylesPlugin(
 						});
 						const style =
 							mode === 'original'
-								? `${runFormattingCss(resolved, model.theme)};${reviewRunCss(resolved)}`
-								: runFormattingCss(resolved, model.theme, run);
+								? `${runFormattingCss(resolved, model.theme, undefined, model.fontFallbacks)};${reviewRunCss(resolved)}`
+								: runFormattingCss(resolved, model.theme, run, model.fontFallbacks);
 						const originalAttrs =
 							mode === 'original'
 								? {
@@ -203,7 +208,7 @@ export function runStylesPlugin(
 						if (!child.isText) {
 							localDecorations.push(
 								builder.node(start + offset, start + offset + child.nodeSize, {
-									style: `${runFormattingCss(resolved, model.theme)};${reviewRunCss(resolved)}`,
+									style: `${runFormattingCss(resolved, model.theme, undefined, model.fontFallbacks)};${reviewRunCss(resolved)}`,
 									...(run.language ? { lang: run.language } : {}),
 									...(run.rtl !== undefined ? { dir: run.rtl ? 'rtl' : 'ltr' } : {}),
 									...(projected.error ? { 'data-review-format-error': projected.error } : {}),

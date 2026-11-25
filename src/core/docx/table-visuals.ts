@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Display borders and shading for table cells, shared by the editor and Print Layout.
+import { percentageShadingColor } from './percentage-shading';
 import type { Table } from './model';
 import { resolveTableStyleFormatting } from './resolve-table';
 import type { TableBorderSide, TableBorders, TableStyleCatalog } from './table-model';
@@ -46,7 +47,10 @@ export function resolveCellVisuals(
 			)
 		: {};
 	const hasBorderInfo = Boolean(styled.borders || table.borders || cell.borders);
-	const shadingFill = cell.shadingFill ?? styled.shadingFill;
+	const shadingFill = percentageShadingColor(
+		cell.shadingFill ?? styled.shadingFill,
+		cell.percentageShading ?? (cell.shadingFill ? undefined : styled.percentageShading),
+	);
 	if (!hasBorderInfo) return shadingFill ? { shadingFill } : {};
 	const boundary: Record<Side, boolean> = {
 		top: placement.row === 0,

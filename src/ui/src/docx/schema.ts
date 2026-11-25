@@ -66,7 +66,7 @@ export function paragraphStyle(attrs: Record<string, unknown>): string {
 						? `max(${NATURAL_LINE_HEIGHT}em, ${Number(attrs.lineSpacingTwips) / 15}px)`
 						: `${Number(attrs.lineSpacingTwips) / 15}px`
 			}`,
-		...paragraphBoxCss(attrs.borders, attrs.shadingFill),
+		...paragraphBoxCss(attrs.borders, attrs.shadingFill, attrs.percentageShading),
 		...dropCapCss(attrs.dropCap),
 	].filter(Boolean);
 	return declarations.join(';');
@@ -173,6 +173,7 @@ export const schema = new Schema({
 				/** `w:pBdr` (object) and shading fill; read-only, drawn around the paragraph. */
 				borders: { default: null },
 				shadingFill: { default: null },
+				percentageShading: { default: null },
 				/** Custom tab stops (`w:tabs`) as an array; kept for saving, not rendered at their positions. */
 				tabStops: { default: null },
 				/** Read-only bookmark names starting in this paragraph; not user-editable. */

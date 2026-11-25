@@ -88,6 +88,7 @@ export interface TableCell {
 	widthPercent?: number;
 	verticalAlign?: StVerticalJc;
 	shadingFill?: string;
+	percentageShading?: import('./percentage-shading').PercentageShading;
 	shadingThemeFill?: ThemeColorReference;
 	borders?: TableBorders;
 	margins?: TableCellMargins;
@@ -121,6 +122,7 @@ export type TableConditionalRegion =
 export interface TableStyleConditionalFormatting {
 	borders?: TableBorders;
 	shadingFill?: string;
+	percentageShading?: import('./percentage-shading').PercentageShading;
 	shadingThemeFill?: ThemeColorReference;
 	run?: RunFormatting;
 }
@@ -131,6 +133,7 @@ export interface TableStyleDefinition {
 	isDefault?: boolean;
 	borders?: TableBorders;
 	shadingFill?: string;
+	percentageShading?: import('./percentage-shading').PercentageShading;
 	/** `w:tblPr/w:tblCellMar`: default cell margins of tables with this style. */
 	cellMargins?: TableCellMargins;
 	conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>>;

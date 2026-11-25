@@ -20,6 +20,6 @@ export function ptToPx(pt: number): number {
 export const DEFAULT_TAB_STOP_PX = twipsToPx(twips(720));
 /** Word's default body font when a run specifies neither family nor size. */
 export const DEFAULT_FONT_FAMILY = 'Calibri';
-export const DEFAULT_FONT_SIZE_PT = 11;
+export const DEFAULT_FONT_SIZE_PT = 10;
 /** Single line-spacing is expressed by Word as 240 twentieths-of-a-line. */
 export const SINGLE_LINE_SPACING_UNITS = 240;

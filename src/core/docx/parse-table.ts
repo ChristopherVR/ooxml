@@ -1,3 +1,4 @@
+import { parsePercentageShading } from './percentage-shading';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { buildXml } from '../xml/index';
 import type { NestedTablePreview, TableCell, TableLook, TableRowProperties } from './table-model';
@@ -81,6 +82,8 @@ function parseCell(
 		parseShadingFill(shd) ??
 		(getW(shd, 'fill') === 'auto' && !getW(shd, 'themeFill') ? 'auto' : undefined);
 	if (fill) result.shadingFill = fill;
+	const pattern = parsePercentageShading(shd);
+	if (pattern) result.percentageShading = pattern;
 	const themeFill = parseShadingThemeFill(shd);
 	if (themeFill) result.shadingThemeFill = themeFill;
 	const borders = parseTableBorders(first(props, 'tcBorders'));

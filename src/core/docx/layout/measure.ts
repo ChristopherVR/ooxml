@@ -1,6 +1,7 @@
 /** A font as the measurer needs it; sizes are already in CSS pixels. */
 export interface LayoutFontSpec {
 	family: string;
+	fallback?: import('../font-table').FontFallback;
 	sizePx: number;
 	bold?: boolean;
 	italic?: boolean;

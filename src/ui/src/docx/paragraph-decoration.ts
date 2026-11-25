@@ -56,6 +56,7 @@ export function setShading(view: EditorView, value: string | null): boolean {
 			tr = tr.setNodeMarkup(pos, undefined, {
 				...node.attrs,
 				shadingFill: value ? value.toUpperCase() : null,
+				percentageShading: null,
 			});
 	}
 	if (!tr.docChanged) return false;
@@ -179,6 +180,7 @@ export function applyBordersAndShading(view: EditorView, settings: BordersAndSha
 			...node.attrs,
 			borders: Object.keys(borders).length ? borders : null,
 			shadingFill: fill,
+			percentageShading: null,
 		});
 	}
 	if (!tr.docChanged) return false;

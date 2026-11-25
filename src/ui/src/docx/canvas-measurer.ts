@@ -26,21 +26,35 @@ export function createCanvasMeasurer(): TextMeasurer {
 		}
 		return context;
 	};
-	const fontString = (font: LayoutFontSpec) =>
-		`${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${font.sizePx}px ${cssFontStack(font.family)}`;
+	const referencePx = 100;
+	const fontString = (font: LayoutFontSpec, sizePx = font.sizePx) =>
+		`${font.italic ? 'italic ' : ''}${font.bold ? 'bold ' : ''}${sizePx}px ${cssFontStack(font.family, font.fallback)}`;
 	const metricsOf = (c: CanvasRenderingContext2D, font: LayoutFontSpec) => {
-		const key = fontString(font);
+		// Measure a reference size once per face. At small sizes Canvas rounds the
+		// ascender and descender separately and doesn't include the font's line gap.
+		const key = fontString(font, referencePx);
 		const cached = metricCache.get(key);
 		if (cached) return cached;
 		c.font = key;
 		const measured = c.measureText('Mg');
+		const ascent = measured.fontBoundingBoxAscent ?? referencePx * 0.95;
+		const fontBox = ascent + (measured.fontBoundingBoxDescent ?? referencePx * 0.27);
+		const span = document.createElement('span');
+		span.style.cssText =
+			'position:fixed;visibility:hidden;display:inline-block;padding:0;border:0;margin:0';
+		span.style.font = key;
+		span.style.lineHeight = 'normal';
+		span.textContent = 'Mg';
+		document.body?.append(span);
+		let height: number;
+		try {
+			height = span.getBoundingClientRect().height || fontBox;
+		} finally {
+			span.remove();
+		}
 		const metrics = {
-			ascent: measured.fontBoundingBoxAscent ?? font.sizePx * 0.95,
-			height:
-				measured.fontBoundingBoxAscent !== undefined &&
-				measured.fontBoundingBoxDescent !== undefined
-					? measured.fontBoundingBoxAscent + measured.fontBoundingBoxDescent
-					: font.sizePx * 1.22,
+			ascent: (ascent + (height - fontBox) / 2) / referencePx,
+			height: height / referencePx,
 		};
 		if (metricCache.size >= 256) metricCache.delete(metricCache.keys().next().value!);
 		metricCache.set(key, metrics);
@@ -82,12 +96,12 @@ export function createCanvasMeasurer(): TextMeasurer {
 		ascentOf(font) {
 			const c = ctx();
 			if (!c) return fallback.lineHeightOf(font) * 0.8;
-			return metricsOf(c, font).ascent;
+			return metricsOf(c, font).ascent * font.sizePx;
 		},
 		lineHeightOf(font) {
 			const c = ctx();
 			if (!c) return fallback.lineHeightOf(font);
-			return metricsOf(c, font).height;
+			return metricsOf(c, font).height * font.sizePx;
 		},
 	};
 }

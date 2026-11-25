@@ -43,10 +43,10 @@ export function buildCellProperties(doc: XmlDocument, cell: TableCell): XmlEleme
 		const borders = buildBorders(doc, cell.borders, 'tcBorders');
 		if (borders.childNodes.length) tcPr.appendChild(borders);
 	}
-	if (cell.shadingFill || cell.shadingThemeFill) {
+	if (cell.shadingFill || cell.shadingThemeFill || cell.percentageShading) {
 		const shd = makeW(doc, 'shd');
-		setW(shd, 'val', 'clear');
-		setW(shd, 'color', 'auto');
+		setW(shd, 'val', cell.percentageShading?.pattern ?? 'clear');
+		setW(shd, 'color', cell.percentageShading?.color?.replace(/^#/, '') ?? 'auto');
 		setW(shd, 'fill', cell.shadingFill ? cell.shadingFill.replace(/^#/, '') : 'auto');
 		const theme = cell.shadingThemeFill;
 		if (theme) {

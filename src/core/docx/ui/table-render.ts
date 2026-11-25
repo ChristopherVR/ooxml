@@ -1,3 +1,4 @@
+import { isPercentageShading, percentageShadingColor } from '../percentage-shading';
 // Visual rendering helpers for table/cell borders, shading and layout.
 // Direct margins, borders and shading are edited in the shared editor;
 // inherited visual formatting is kept separate from direct document formatting.
@@ -148,7 +149,7 @@ export function tableCellStyle(attrs: Record<string, unknown>): string {
  * CSS for paragraph borders (`w:pBdr`) and shading: each side's line plus its `w:space` gap as
  * padding, so the text keeps its position and the border sits outside it as in Word.
  */
-export function paragraphBoxCss(borders: unknown, shadingFill: unknown): string[] {
+export function paragraphBoxCss(borders: unknown, fill: unknown, pattern?: unknown): string[] {
 	const parsed = (typeof borders === 'string' ? parseBordersJson(borders) : borders) as
 		| Record<
 				'top' | 'bottom' | 'left' | 'right',
@@ -164,6 +165,10 @@ export function paragraphBoxCss(borders: unknown, shadingFill: unknown): string[
 			`padding-${side}:${((parsed![side]!.spacePoints ?? 0) * 4) / 3}px`,
 		);
 	}
+	const shadingFill = percentageShadingColor(
+		typeof fill === 'string' ? fill : undefined,
+		isPercentageShading(pattern) ? pattern : undefined,
+	);
 	if (typeof shadingFill === 'string' && /^#?[0-9a-f]{6}$/i.test(shadingFill))
 		css.push(`background-color:#${shadingFill.replace(/^#/, '')}`);
 	return css;

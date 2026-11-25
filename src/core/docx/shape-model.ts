@@ -34,6 +34,8 @@ export interface ShapeSpec {
 	fontColor?: DrawingColor;
 	/** Paragraphs of text inside the shape (`wps:txbx`). */
 	text?: string[];
+	/** Uniform direct size of a grouped shape's runs, in points. */
+	groupTextSizePt?: number;
 	/**
 	 * `RRGGBB`: the one `w:color` every run of the shape's plain text sets, written back on its
 	 * runs when the text is rewritten. Absent when the runs set none.

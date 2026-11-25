@@ -27,7 +27,13 @@ export function paragraphFloats(
 		const image = run.image;
 		const offset = sourceOffset;
 		sourceOffset += reviewSourceLength(run);
-		if (hidden?.(run) || !image?.anchored || (!image.partName && !image.shape && !image.chart))
+		if (
+			hidden?.(run) ||
+			!image?.anchored ||
+			image.watermark ||
+			image.pictureWatermark ||
+			(!image.partName && !image.shape && !image.chart)
+		)
 			continue;
 		const placement = image.placement;
 		const shadow = drawingOuterShadow(image.effects, theme);

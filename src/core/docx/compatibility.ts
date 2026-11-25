@@ -62,6 +62,11 @@ export function addsParagraphSpacing(profile: CompatibilityProfile): boolean {
 	return profile.doNotUseHtmlParagraphAutoSpacing;
 }
 
+/** Word's modern justification can squeeze word spaces to fit an extra word. */
+export function squeezesJustifiedSpaces(profile: CompatibilityProfile): boolean {
+	return profile.generation === 'modern';
+}
+
 /**
  * A `pageBreakBefore` paragraph at the top of a page keeps its space before. Measured: kept in
  * modes 12 and 14, dropped in 15; other modes (including later numbers) keep the legacy rule

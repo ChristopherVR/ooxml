@@ -29,7 +29,7 @@ const schema = new Schema({
 	marks: markSpecs,
 });
 
-it.each(['<w:r><w:t/></w:r>', '<w:r/>', '<w:r><w:rPr><w:b/></w:rPr></w:r>'])(
+it.each(['', '<w:r><w:t/></w:r>', '<w:r/>', '<w:r><w:rPr><w:b/></w:rPr></w:r>'])(
 	'preserves an explicitly empty simple result without placeholder text: %s',
 	async (result) => {
 		const loaded = await loadDocx(await source(result));
@@ -51,14 +51,6 @@ it.each(['<w:r><w:t/></w:r>', '<w:r/>', '<w:r><w:rPr><w:b/></w:rPr></w:r>'])(
 		if (result.includes('<w:b/>')) expect(runs.some((run) => run.bold)).toBe(true);
 	},
 );
-
-it('retains the existing display fallback when a simple field has no saved result runs', async () => {
-	const loaded = await loadDocx(await source(''));
-	expect((loaded.model.blocks[0] as Paragraph).runs[1]).toMatchObject({
-		text: '[Field]',
-		field: { instr: 'REF Target', simple: true },
-	});
-});
 
 it('keeps a supported nontext field cache instead of replacing it with a placeholder', async () => {
 	const loaded = await loadDocx(await source('<w:r><w:br w:type="page"/></w:r>'));

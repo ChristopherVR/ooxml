@@ -10,9 +10,11 @@ export interface LayoutFragment {
 	bold?: boolean;
 	italic?: boolean;
 	fontFamily?: string;
+	fontFallback?: import('../font-table').FontFallback;
 	fontSizePt?: number;
 	textScalePercent?: number;
 	ligatures?: import('../ligatures').Ligatures;
+	smallCaps?: boolean;
 	characterSpacingPx?: number;
 	kerningThresholdPt?: number;
 	/** An inline picture drawn in this fragment's box, bottom-aligned on the line. */
@@ -100,6 +102,8 @@ export interface LayoutCellFloat {
 
 export interface LayoutParagraphFrame {
 	leftPx: number;
+	/** Paint through the gap to the next paragraph of the same border group. */
+	heightPx?: number;
 	widthPx: number;
 	borders?: import('./input').LayoutParagraphBorders;
 	shading?: string;

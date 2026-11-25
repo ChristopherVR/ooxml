@@ -38,6 +38,7 @@ export function renderTable(
 ): HTMLElement {
 	const table = document.createElement('div');
 	table.className = 'dve-print-block dve-print-table';
+	table.setAttribute('role', 'table');
 	table.style.top = `${box.yPx}px`;
 	table.style.height = `${box.heightPx}px`;
 	if (box.widthPx !== undefined) table.style.width = `${box.widthPx}px`;
@@ -45,6 +46,7 @@ export function renderTable(
 	box.rows.forEach((row, rowIndex) => {
 		const rowEl = document.createElement('div');
 		rowEl.className = 'dve-print-row';
+		rowEl.setAttribute('role', 'row');
 		rowEl.style.top = `${row.yPx}px`;
 		rowEl.style.height = `${row.heightPx}px`;
 		if (row.repeated) rowEl.dataset.repeated = 'true';
@@ -55,6 +57,7 @@ export function renderTable(
 			const geometry = geometryOf(row, cellIndex, columnWidthPx);
 			const cell = document.createElement('div');
 			cell.className = 'dve-print-cell';
+			cell.setAttribute('role', 'cell');
 			Object.assign(cell.style, {
 				left: `${geometry.xPx}px`,
 				width: `${geometry.widthPx}px`,

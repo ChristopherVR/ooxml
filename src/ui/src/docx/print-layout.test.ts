@@ -346,7 +346,7 @@ describe('Print Layout footnotes', () => {
 		expect(area.querySelector('.dve-print-footnote-separator')).not.toBeNull();
 		const mark = area.querySelector<HTMLElement>('.dve-print-line span')!;
 		expect(mark.textContent).toBe('1');
-		expect(mark.style.fontSize).toBe('7.15pt');
+		expect(mark.style.fontSize).toBe('6.5pt');
 	});
 	it('positions balanced columns against the maximum height rather than their combined height', () => {
 		const result = sampleResult(),

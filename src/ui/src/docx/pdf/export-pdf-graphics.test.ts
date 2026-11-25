@@ -205,7 +205,7 @@ describe('exportDocxPdf graphics', () => {
 		// Word's PDF: line numbers end 0.25 in left of the text, on the line's baseline.
 		expect(pdf.content).toMatch(/1 0 0 -1 (\d+(\.\d+)?) [\d.]+ Tm[^\n]*\(1\) Tj/);
 		const numberX = Number(/1 0 0 -1 ([\d.]+) [\d.]+ Tm[^\n]*\(1\) Tj/.exec(pdf.content)![1]);
-		expect(numberX + measurer.widthOf('1', { family: 'Calibri', sizePx: 44 / 3 })).toBeCloseTo(
+		expect(numberX + measurer.widthOf('1', { family: 'Calibri', sizePx: 40 / 3 })).toBeCloseTo(
 			72,
 			3,
 		);

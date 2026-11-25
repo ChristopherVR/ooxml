@@ -19,6 +19,7 @@ export function placeTab(
 	hangingStopPx: number | undefined,
 	followingPx: number,
 	beforeDecimalPx: number,
+	defaultStopPx = DEFAULT_TAB_STOP_PX,
 ): TabPlacement {
 	const epsilon = 0.5;
 	const custom = stops
@@ -42,7 +43,7 @@ export function placeTab(
 	}
 	if (hangingStopPx !== undefined && hangingStopPx > positionPx + epsilon)
 		return { widthPx: hangingStopPx - positionPx };
-	const next = (Math.floor(positionPx / DEFAULT_TAB_STOP_PX) + 1) * DEFAULT_TAB_STOP_PX;
+	const next = (Math.floor(positionPx / defaultStopPx) + 1) * defaultStopPx;
 	return { widthPx: next - positionPx };
 }
 

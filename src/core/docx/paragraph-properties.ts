@@ -1,3 +1,4 @@
+import { parsePercentageShading } from './percentage-shading';
 import type { Paragraph } from './model';
 import { first, getW, type XmlElement } from './xml';
 import { parseTabStops } from './tab-stops';
@@ -70,7 +71,10 @@ export function parseDirectParagraphProperties(
 	}
 	const borders = parseParagraphBorders(first(props, 'pBdr'));
 	if (borders) paragraph.borders = borders;
-	const shading = parseShadingFill(first(props, 'shd'));
+	const shadingElement = first(props, 'shd');
+	const shading = parseShadingFill(shadingElement);
+	const pattern = parsePercentageShading(shadingElement);
+	if (pattern) paragraph.percentageShading = pattern;
 	if (shading) paragraph.shadingFill = shading;
 	const tabStops = parseTabStops(first(props, 'tabs'));
 	if (tabStops.length) paragraph.tabStops = tabStops;

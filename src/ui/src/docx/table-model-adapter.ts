@@ -168,6 +168,7 @@ export function convertSimpleTable(
 			if (cell.attrs.shadingEdited) {
 				const target = cells[cells.length - 1]!;
 				delete target.shadingThemeFill;
+				delete target.percentageShading;
 				target.shadingFill = String(cell.attrs.directShadingFill);
 			}
 		});

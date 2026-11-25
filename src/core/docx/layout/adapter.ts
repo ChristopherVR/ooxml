@@ -26,6 +26,10 @@ import { kinsokuLanguage } from '../../text/kinsoku';
 import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
 import { formFieldDisplayText } from '../form-fields';
+import { wordHighlightColors } from '../highlight';
+import { first, parseXml } from '../xml';
+import { parseDirectRunProperties } from '../run-properties';
+import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
 import {
 	addsParagraphSpacing,
@@ -34,6 +38,7 @@ import {
 	honoursLayoutInCell,
 	keepsSpaceBeforePageBreak,
 	usesModernFootnoteLayout,
+	squeezesJustifiedSpaces,
 } from '../compatibility';
 import { foldDropCaps } from './adapt-drop-cap';
 import { adaptTextFrame } from './flow-text-frame';
@@ -68,6 +73,22 @@ const TEXT_BOX_NOTE =
 const EQUATION_NOTE =
 	'Equations that cannot be drawn show a marker in Print Layout instead of the typeset equation.';
 const NEXT_COLUMN_NOTE = 'A "next column" section break is laid out as a continuous section break.';
+
+// Word 16.0.20625 opens a package without styles using its current Normal template.
+const implicitParagraphStyles = {
+	docDefaults: {
+		lineSpacingTwips: twips(278),
+		lineSpacingRule: 'auto',
+		spacingAfterTwips: twips(160),
+	},
+	styles: {},
+	warnings: [],
+} satisfies NonNullable<DocumentModel['paragraphStyles']>;
+const implicitRunStyles = {
+	docDefaults: { fontSize: 12, fontFamily: 'Aptos' },
+	styles: {},
+	warnings: [],
+} satisfies NonNullable<DocumentModel['characterStyles']>;
 
 const twipsToPx = twipsToPixels;
 /** Word gives `beforeAutospacing` and `afterAutospacing` 14 pt (measured in spacing-probe.json). */
@@ -104,9 +125,13 @@ export function adaptDocumentModel(
 ): LayoutDocumentInput {
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
-	const catalog = model.paragraphStyles;
+	const catalog =
+		model.paragraphStyles ?? (model.usesImplicitNormalStyle ? implicitParagraphStyles : undefined);
+	const runCatalog =
+		model.characterStyles ?? (model.usesImplicitNormalStyle ? implicitRunStyles : undefined);
 	const compatibility = compatibilityProfile(model);
 	const addParagraphSpacing = addsParagraphSpacing(compatibility);
+	const squeeze = squeezesJustifiedSpaces(compatibility);
 	const keepSpaceBeforePageBreak = keepsSpaceBeforePageBreak(compatibility);
 	/** HTML auto spacing is 14 pt when the compatibility option is off; otherwise the twips are used. */
 	const autoSpaced = (auto: boolean | undefined, twipsValue: Twips | undefined) =>
@@ -124,7 +149,7 @@ export function adaptDocumentModel(
 	/** Effective run formatting: document defaults, paragraph and character styles, theme fonts. */
 	function effective(run: TextRun, paragraphStyleId: string | undefined) {
 		const formatting = resolveRunFormatting(run, {
-			runCatalog: model.characterStyles,
+			runCatalog,
 			paragraphCatalog: catalog,
 			paragraphStyleId,
 		});
@@ -169,6 +194,13 @@ export function adaptDocumentModel(
 		const formText = formFieldDisplayText(run);
 		const shaded =
 			model.formFieldShading !== false && (formText !== undefined || name === 'FORMTEXT');
+		const highlight = formatting.highlight;
+		const background =
+			highlight && highlight !== 'none'
+				? wordHighlightColors[highlight]
+				: shaded
+					? FORM_FIELD_SHADING
+					: undefined;
 		const text =
 			noteText ??
 			formText ??
@@ -200,7 +232,7 @@ export function adaptDocumentModel(
 						noteSeparator: run.noteSeparator,
 					}
 				: // A picture watermark floats behind the page text and takes no room in the header.
-					image && !image.anchored && !image.pictureWatermark
+					image && !image.anchored && !image.watermark && !image.pictureWatermark
 					? {
 							partName: image.partName,
 							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
@@ -240,6 +272,8 @@ export function adaptDocumentModel(
 				fontSizePt: formatting.fontSize,
 				textScalePercent: formatting.textScalePercent,
 				ligatures: formatting.ligatures,
+				smallCaps: formatting.caps ? undefined : formatting.smallCaps,
+				background,
 				characterSpacingPx:
 					formatting.characterSpacingTwips === undefined
 						? undefined
@@ -252,7 +286,6 @@ export function adaptDocumentModel(
 						: (formatting.positionHalfPoints * 2) / 3,
 			}),
 			...(color && /^#[0-9a-f]{6}$/i.test(color) ? { color } : {}),
-			...(shaded ? { background: FORM_FIELD_SHADING } : {}),
 			...(run.positionalTab ? { positionalTab: run.positionalTab } : {}),
 			...(formatting.underline ? { underline: true } : {}),
 			...(formatting.strike || formatting.doubleStrike ? { strike: true } : {}),
@@ -261,7 +294,7 @@ export function adaptDocumentModel(
 			...definedProps({
 				kinsokuLanguage: kinsokuLanguage(
 					resolveEastAsiaLanguage(run, {
-						runCatalog: model.characterStyles,
+						runCatalog,
 						paragraphCatalog: catalog,
 						paragraphStyleId,
 					}),
@@ -278,7 +311,9 @@ export function adaptDocumentModel(
 		const pictureWidthPx = label.picture
 			? (pictureBulletSizePt(
 					label.picture,
-					marker?.fontSizeHalfPoints ? marker.fontSizeHalfPoints / 2 : (first.fontSizePt ?? 11),
+					marker?.fontSizeHalfPoints
+						? marker.fontSizeHalfPoints / 2
+						: (first.fontSizePt ?? DEFAULT_FONT_SIZE_PT),
 				).widthPt *
 					4) /
 				3
@@ -310,6 +345,19 @@ export function adaptDocumentModel(
 		if (between) betweenBorders.set(adapted, between);
 		return adapted;
 	}
+	/** The saved paragraph mark supplies the font for a line with no visible runs. */
+	function emptyLineFont(paragraph: Paragraph, runs: LayoutRun[]) {
+		if (runs.some((run) => !run.hidden && (run.text || run.object))) return undefined;
+		const source = paragraph.sourceParagraphPropertiesXml;
+		const props = source ? first(parseXml(source).documentElement, 'rPr') : undefined;
+		return fontOf(
+			withFontFallback(adaptRun({ text: '', ...parseDirectRunProperties(props) }, paragraph.style)),
+		);
+	}
+	function withFontFallback(run: LayoutRun): LayoutRun {
+		const fallback = run.fontFamily && model.fontFallbacks?.get(run.fontFamily.toLowerCase());
+		return fallback ? { ...run, fontFallback: fallback } : run;
+	}
 	function adaptParagraphOnly(paragraph: Paragraph, markLabel?: string): LayoutParagraph {
 		const resolved = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
 		const label = labels.get(paragraph.id);
@@ -336,7 +384,8 @@ export function adaptDocumentModel(
 		return {
 			kind: 'paragraph',
 			id: paragraph.id,
-			runs: label ? [labelRun(paragraph, label), ...runs] : runs,
+			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
+			runs: (label ? [labelRun(paragraph, label), ...runs] : runs).map(withFontFallback),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
 			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
@@ -358,6 +407,10 @@ export function adaptDocumentModel(
 				isRunHiddenForReview(run, reviewMode),
 			),
 			...definedProps({
+				defaultTabStopPx: model.defaultTabStopTwips
+					? twipsToPx(model.defaultTabStopTwips)
+					: undefined,
+				emptyLineFont: label ? undefined : emptyLineFont(paragraph, runs),
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
 				spacingBeforeTwips: autoSpaced(resolved.spacingBeforeAuto, resolved.spacingBeforeTwips),

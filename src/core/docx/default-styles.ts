@@ -1,7 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// Word's modern Normal-template defaults for documents created here. Without a styles.xml, Word
-// falls back to its application defaults (Times New Roman 10pt, no spacing), so new documents
-// would open looking different from how they were edited.
+// Write the editor's Normal style with new documents so their appearance travels with the file.
+// A package without a styles part inherits the current Word installation's Normal template.
 import type { DocumentModel } from './model';
 import { parseRunStyleCatalog } from './character-styles';
 import { parseParagraphStyleCatalog } from './paragraph-styles';

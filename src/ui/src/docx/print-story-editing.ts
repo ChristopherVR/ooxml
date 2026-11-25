@@ -3,7 +3,7 @@ import type { PartsController } from './parts-controller';
 import type { HeaderFooterSlotName } from './header-footer-editor';
 import { effectiveHeaderFooter } from './header-footer-link';
 import { newHeaderFooterId } from './header-footer-commands';
-import { renderHeaderFooter } from './print-header-footer';
+import { headerFooterElement } from './print-header-footer';
 
 export interface PrintStoryHost {
 	/** The `.dve-print-pages` element. */
@@ -76,11 +76,7 @@ export function attachPrintStoryEditing(host: PrintStoryHost): () => void {
 			let container = area.element;
 			if (!container) {
 				// An empty story has no element yet; give it the place a header or footer would take.
-				container = renderHeaderFooter(
-					{ blocks },
-					{ page: '1', numPages: '1', sectionPages: '1', now: new Date() },
-					kind,
-				);
+				container = headerFooterElement(kind);
 				container.style.left = `${sheet.dataset.marginLeft}px`;
 				container.style.right = `${sheet.dataset.marginRight}px`;
 				container.style[kind === 'header' ? 'top' : 'bottom'] =

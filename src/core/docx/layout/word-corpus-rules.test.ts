@@ -1,8 +1,8 @@
 // Layout rules found by comparing with the Word reference corpus (word-corpus.test.ts), pinned
 // here with small synthetic inputs so a regression names the rule.
 import { describe, expect, it } from 'vitest';
-import { twips } from '../index';
-import { layoutDocument } from './layout';
+import { createDocument, twips } from '../index';
+import { layoutDocument, layoutDocumentModel } from './layout';
 import { layoutParagraph } from './paragraph-layout';
 import type { LayoutDocumentInput, LayoutParagraph } from './input';
 import type { TextMeasurer } from './measure';
@@ -54,6 +54,19 @@ describe('justified text squeezes its spaces', () => {
 		const last = at(first?.fragments, first!.fragments.length - 1);
 		// The squeezed line is closed up to the column edge.
 		expect(last.xPx + last.widthPx).toBeCloseTo(89, 5);
+	});
+	it.each([11, 12, 14, 15])('uses the justification rule for Word mode %d', (mode) => {
+		const base = createDocument();
+		const doc = {
+			...base,
+			page: { ...base.page, width: 89, marginLeft: 0, marginRight: 0 },
+			compatibilityMode: mode,
+			blocks: [{ type: 'paragraph' as const, id: 'p', runs: words, align: 'justify' as const }],
+		};
+		const { pages } = layoutDocumentModel(doc, measurer);
+		const block = at(at(at(pages, 0).columns, 0).blocks, 0);
+		expect(block.kind).toBe('paragraph');
+		if (block.kind === 'paragraph') expect(block.lines).toHaveLength(mode === 15 ? 2 : 3);
 	});
 	it('does not squeeze left-aligned text', () => {
 		const result = layoutParagraph({ kind: 'paragraph', id: 'p', runs: words }, 89, measurer, noop);

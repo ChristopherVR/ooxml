@@ -1,3 +1,4 @@
+import { parsePercentageShading } from './percentage-shading';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type {
 	TableConditionalRegion,
@@ -38,6 +39,8 @@ function conditionalFormatting(block: XmlElement): TableStyleConditionalFormatti
 	if (borders) result.borders = borders;
 	const shd = first(tcPr, 'shd');
 	const fill = parseShadingFill(shd);
+	const pattern = parsePercentageShading(shd);
+	if (pattern) result.percentageShading = pattern;
 	if (fill) result.shadingFill = fill;
 	const themeFill = parseShadingThemeFill(shd);
 	if (themeFill) result.shadingThemeFill = themeFill;
@@ -58,7 +61,9 @@ export function parseTableStyleCatalog(xml: string): TableStyleCatalog {
 		const name = getW(first(element, 'name'), 'val');
 		const tblPr = first(element, 'tblPr');
 		const borders = parseTableBorders(first(tblPr, 'tblBorders'));
-		const shadingFill = parseShadingFill(first(tblPr, 'shd'));
+		const shd = first(tblPr, 'shd');
+		const shadingFill = parseShadingFill(shd);
+		const pattern = parsePercentageShading(shd);
 		const cellMargins = parseCellMargins(first(tblPr, 'tblCellMar'));
 		const conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>> =
 			{};
@@ -74,6 +79,7 @@ export function parseTableStyleCatalog(xml: string): TableStyleCatalog {
 			...(isDefault === undefined ? {} : { isDefault }),
 			...(borders ? { borders } : {}),
 			...(shadingFill ? { shadingFill } : {}),
+			...(pattern ? { percentageShading: pattern } : {}),
 			...(cellMargins ? { cellMargins } : {}),
 			conditional,
 		};

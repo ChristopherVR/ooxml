@@ -50,6 +50,9 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 		),
 		...(attrs.dropCap ? { dropCap: { ...attrs.dropCap } } : {}),
 		...(attrs.borders ? { borders: structuredClone(attrs.borders) } : {}),
+		...(attrs.percentageShading
+			? { percentageShading: structuredClone(attrs.percentageShading) }
+			: {}),
 		...(attrs.shadingFill ? { shadingFill: attrs.shadingFill } : {}),
 		...(attrs.bookmarks?.length ? { bookmarks: [...attrs.bookmarks] } : {}),
 		...(attrs.permissions?.length ? { permissions: structuredClone(attrs.permissions) } : {}),
@@ -96,6 +99,7 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		dropCap: paragraph.dropCap ?? null,
 		borders: paragraph.borders ?? null,
 		shadingFill: paragraph.shadingFill ?? null,
+		percentageShading: paragraph.percentageShading ?? null,
 		bookmarks: paragraph.bookmarks ?? [],
 		permissions: paragraph.permissions ?? null,
 		contentControl: paragraph.contentControl ?? null,

@@ -28,7 +28,9 @@ export { layoutDocument, layoutDocumentModel, storyTextBoxLayouts } from './layo
 export { reviewSourceLength, type LayoutReviewOptions } from './review-display';
 export { floatPosition, floatOrigin, FLOAT_WRAP_NOTE } from './floats';
 export { positionFloats } from './position-floats';
+export { paragraphBorderBands } from './adapt-paragraph-box';
 export { cssFontStack } from './fonts';
+export { createPageStories, type PlacedStory } from './story-flow';
 export { collectDocxWebfontRuns } from './webfont-runs';
 export { placeTab, type TabPlacement } from './tab-stops';
 export { createLayoutSession, type LayoutSessionOptions } from './layout-session';

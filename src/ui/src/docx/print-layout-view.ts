@@ -8,7 +8,7 @@ import {
 import { createLayoutSession, type LayoutResult } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { renderPrintLayout, type PictureUrl, type PrintLayoutHandle } from './print-layout';
-import { decoratePages } from './print-header-footer';
+import { createPageDecorator } from './print-header-footer';
 import { printBlockPages } from './print-block-pages';
 import { suppressedLineNumberParagraphs } from './print-line-numbers';
 
@@ -60,12 +60,14 @@ export function createPrintLayoutController(
 	getReviewMode: () => ReviewDisplayMode = () => 'all',
 	isEditing: () => boolean = () => false,
 ): PrintLayoutController {
-	let session = createLayoutSession(createCanvasMeasurer(), { incremental: true });
+	let measurer = createCanvasMeasurer();
+	let session = createLayoutSession(measurer, { incremental: true });
 	let lastModel: DocumentModel | null = null;
 	// Widths measured before a web font loads come from a fallback font; measure again once it has.
 	const fonts = typeof document === 'undefined' ? undefined : document.fonts;
 	const onFontsLoaded = () => {
-		session = createLayoutSession(createCanvasMeasurer(), { incremental: true });
+		measurer = createCanvasMeasurer();
+		session = createLayoutSession(measurer, { incremental: true });
 		const model = pendingModel ?? lastModel;
 		if (model && !element.hidden) {
 			if (timer) clearTimeout(timer);
@@ -127,11 +129,7 @@ export function createPrintLayoutController(
 		handle = renderPrintLayout(result, pictureUrl, {
 			virtual: pages.length > 10,
 			model,
-			onPageRender(sheet, index) {
-				const sheets: HTMLElement[] = [];
-				sheets[index] = sheet;
-				decoratePages(model, pages, sheets, new Date(), pictureUrl, mode);
-			},
+			onPageRender: createPageDecorator(model, pages, new Date(), pictureUrl, mode, measurer),
 			lineNumbers: (model.sections ?? []).map((section) => section.lineNumberSettings),
 			pageBorders: (model.sections ?? []).map((section) => section.pageBorders),
 			suppressedLineNumberParagraphs: suppressedLineNumberParagraphs(model),

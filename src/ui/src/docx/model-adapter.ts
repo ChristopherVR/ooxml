@@ -245,6 +245,8 @@ export function docToModel(
 			) &&
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&
 			sameJson(previous.borders ?? null, node.attrs.borders ?? null) &&
+			JSON.stringify(previous.percentageShading ?? null) ===
+				JSON.stringify(node.attrs.percentageShading ?? null) &&
 			(previous.shadingFill ?? null) === (node.attrs.shadingFill ?? null) &&
 			sameJson(previous.bookmarks ?? [], node.attrs.bookmarks ?? []) &&
 			sameJson(previous.permissions ?? null, node.attrs.permissions ?? null) &&

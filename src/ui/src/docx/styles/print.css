@@ -202,15 +202,6 @@
 	cursor: text;
 	z-index: 3;
 }
-.dve-print-header p,
-.dve-print-footer p {
-	margin: 0;
-}
-.dve-print-header table,
-.dve-print-footer table {
-	width: 100%;
-	border-collapse: collapse;
-}
 
 /* Complex field begin/code/separate/end markers: kept in the document, never shown. */
 .dve-field-marker {

@@ -27,18 +27,6 @@ import {
 	runFormatRevision,
 } from './parse-revisions';
 
-const FIELD_PLACEHOLDERS: Record<string, string> = {
-	PAGE: '[Page #]',
-	NUMPAGES: '[Total pages]',
-	DATE: '[Date]',
-	TIME: '[Time]',
-	FILENAME: '[File name]',
-};
-function fieldPlaceholderText(instr: string | undefined): string {
-	const code = (instr ?? '').trim().split(/\s+/)[0]?.toUpperCase();
-	return (code && FIELD_PLACEHOLDERS[code]) || '[Field]';
-}
-
 /**
  * Package context (relationships, content types, media parts) for the container currently being
  * parsed. Only the main document body supplies one; headers, footers and notes have their own
@@ -231,9 +219,6 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 		const flags = parseFieldFlags(item);
 		const fieldState = flags ? { fieldFlags: flags } : {};
 		const fieldInstanceId = `${id}:simple-field-${simpleFieldIndex++}`;
-		// A missing cache can show a placeholder; an explicitly empty cache must stay empty.
-		if (!results.length)
-			return [{ text: fieldPlaceholderText(instr), field, fieldInstanceId, ...fieldState }];
 		if (
 			results.every(
 				(run) =>

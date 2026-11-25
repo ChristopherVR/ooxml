@@ -22,7 +22,13 @@ export function fontOf(run: LayoutRun): LayoutFontSpec {
 	return {
 		family: run.fontFamily || DEFAULT_FONT_FAMILY,
 		sizePx: ptToPx(run.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * (run.script ? SCRIPT_SCALE : 1),
-		...definedProps({ bold: run.bold, italic: run.italic, ligatures: run.ligatures }),
+		...definedProps({
+			bold: run.bold,
+			italic: run.italic,
+			ligatures: run.ligatures,
+			smallCaps: run.smallCaps,
+			fallback: run.fontFallback,
+		}),
 		...(run.kerningThresholdPt === undefined
 			? {}
 			: {

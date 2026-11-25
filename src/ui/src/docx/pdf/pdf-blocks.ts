@@ -4,6 +4,7 @@
  * borders inside each cell's box, cell content inset by its border and padding and aligned
  * vertically, clipped to the cell. Coordinates are CSS pixels, y down. DOM-free.
  */
+import { paragraphBorderBands } from 'ooxml-core/docx/layout';
 import {
 	cellVerticalOffset,
 	type LayoutBlockBox,
@@ -82,25 +83,30 @@ export function paragraphFrame(
 	}
 	const borders = frame.borders;
 	if (!borders) return;
-	// Borders sit inside the frame's box, as the CSS border-box frame draws them.
-	drawBorder(page, borders.top, left, y, frame.widthPx, true);
-	drawBorder(
-		page,
-		borders.bottom,
-		left,
-		y + height - borderWidth(borders.bottom),
-		frame.widthPx,
-		true,
-	);
-	drawBorder(page, borders.left, left, y, height, false);
-	drawBorder(
-		page,
-		borders.right,
-		left + frame.widthPx - borderWidth(borders.right),
-		y,
-		height,
-		false,
-	);
+	for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+		const line = borders[side];
+		if (!line) continue;
+		const horizontal = side === 'top' || side === 'bottom';
+		const reverse = side === 'right' || side === 'bottom';
+		const length = horizontal ? frame.widthPx : height;
+		const edge = horizontal ? y : left;
+		const start = edge + (reverse ? (horizontal ? height : frame.widthPx) - line.widthPx : 0);
+		if (!line.compound) {
+			drawBorder(page, line, horizontal ? left : start, horizontal ? start : y, length, horizontal);
+			continue;
+		}
+		for (const { offsetPx, widthPx } of paragraphBorderBands(line, reverse)) {
+			const offset = start + offsetPx;
+			drawBorder(
+				page,
+				{ ...line, widthPx },
+				horizontal ? left : offset,
+				horizontal ? offset : y,
+				length,
+				horizontal,
+			);
+		}
+	}
 }
 
 export function paintParagraph(
@@ -115,7 +121,7 @@ export function paintParagraph(
 	// Objects floating in table cells (`box.floats`) are on the page's floats, drawn with them.
 	if (box.frame) {
 		hooks?.decoration();
-		paragraphFrame(page, box.frame, x, y, box.heightPx);
+		paragraphFrame(page, box.frame, x, y, box.frame.heightPx ?? box.heightPx);
 	}
 	hooks?.beginParagraph(box, x, y);
 	for (const line of box.lines) {

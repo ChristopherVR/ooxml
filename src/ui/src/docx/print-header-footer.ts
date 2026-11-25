@@ -1,195 +1,28 @@
-import { pictureNeedsSvg, pictureSvg } from '../picture-view';
 import {
-	fieldName,
 	isRunHiddenForReview,
-	refreshComputedFields,
-	type Block,
 	type DocumentModel,
 	type HeaderFooterContent,
-	type Paragraph,
-	type TextRun,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
 import {
 	cssFontStack,
-	floatPosition,
-	paragraphFloats,
-	shapePaint,
-	pageNumbers,
+	createPageStories,
 	pageNumberValues,
-	sectionPageCounts,
-	headerFooterForPage,
 	headerFooterSlotForPage,
-	fieldDisplayText,
-	pageStyleRefs,
-	storyTextBoxLayouts,
-	type PageFieldContext,
 	type LayoutPageBox,
-	type TextBoxLayouts,
+	type TextMeasurer,
 } from 'ooxml-core/docx/layout';
-import { tableCellStyle, tableCellViews, tableStyle, tableViewAttrs } from 'ooxml-core/docx/ui';
-import { printPicture, type PictureUrl } from './print-layout';
+import { printPicture, renderStoryBlocks, type PictureUrl } from './print-layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { pictureWatermarkElement, type WatermarkPage } from './print-picture-watermark';
 
-/** Page facts a header or footer field can show. */
-export interface PageFieldValues extends PageFieldContext {
-	reviewDisplayMode?: ReviewDisplayMode;
-	/** Resolves header/footer pictures to displayable URLs. */
-	pictureUrl?: PictureUrl;
-	/** The document: its theme colours shapes, its styles a text box's paragraphs. */
-	model?: DocumentModel;
-	/** The header or footer's text boxes laid out by the page engine, as the body's are. */
-	textBoxes?: TextBoxLayouts;
-}
-
 export { pageNumbers, headerFooterForPage, fieldDisplayText } from 'ooxml-core/docx/layout';
 
-/** An inline header/footer shape, drawn as Print Layout draws one in the body. */
-function inlineShape(image: NonNullable<TextRun['image']>, values: PageFieldValues) {
-	const { chart, ...paint } = shapePaint(image, values.model?.theme, values.textBoxes);
-	if (!chart) return undefined;
-	const element = printPicture(
-		{ ...image, ...paint, chart },
-		{ pictureUrl: undefined, model: values.model },
-	);
-	Object.assign(element.style, { position: 'relative', display: 'inline-block' });
-	element.style.verticalAlign = 'bottom';
-	return element;
-}
-
-/** An inline header/footer picture, or a placeholder box when its bytes are unavailable. */
-function inlinePicture(image: NonNullable<TextRun['image']>, values: PageFieldValues): HTMLElement {
-	const shape = inlineShape(image, values);
-	if (shape) return shape;
-	const url = image.partName ? values.pictureUrl?.(image.partName, image.contentType) : undefined;
-	const element = document.createElement(
-		url && !pictureNeedsSvg(image.pictureFill) ? 'img' : 'span',
-	);
-	if (url && image.pictureFill && pictureNeedsSvg(image.pictureFill)) {
-		element.append(pictureSvg(document, image.pictureFill, url, image.widthPx, image.heightPx));
-		element.setAttribute('aria-label', image.altText ?? '');
-	} else if (url) {
-		(element as HTMLImageElement).src = url;
-		(element as HTMLImageElement).alt = image.altText ?? '';
-	} else element.className = 'dve-print-picture-missing';
-	element.style.display = 'inline-block';
-	element.style.verticalAlign = 'bottom';
-	element.style.width = `${image.widthPx}px`;
-	element.style.height = `${image.heightPx}px`;
-	return element;
-}
-
-function runElement(run: TextRun, values: PageFieldValues): HTMLElement {
-	if (run.image) return inlinePicture(run.image, values);
-	const span = document.createElement('span');
-	span.textContent = fieldDisplayText(run, values);
-	if (run.field) span.dataset.field = fieldName(run.field.instr);
-	if (run.bold) span.style.fontWeight = '700';
-	if (run.italic) span.style.fontStyle = 'italic';
-	if (run.underline) span.style.textDecoration = 'underline';
-	if (run.fontSize) span.style.fontSize = `${run.fontSize}pt`;
-	if (run.fontFamily) span.style.fontFamily = cssFontStack(run.fontFamily);
-	if (run.color && /^#[0-9a-f]{6}$/i.test(run.color)) span.style.color = run.color;
-	return span;
-}
-
-function paragraphElement(paragraph: Paragraph, values: PageFieldValues): HTMLElement {
-	const element = document.createElement('p');
-	if (paragraph.align) element.style.textAlign = paragraph.align;
-	if (paragraph.direction) element.dir = paragraph.direction;
-	// Floating pictures are placed on the sheet by `decoratePages`, not in the text flow.
-	for (const run of paragraph.runs)
-		if (
-			!isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all') &&
-			!run.break &&
-			!run.image?.anchored &&
-			!run.image?.watermark &&
-			!run.image?.pictureWatermark
-		)
-			element.append(runElement(run, values));
-	return element;
-}
-
-function blockElement(block: Block, values: PageFieldValues): HTMLElement {
-	if (block.type === 'paragraph') return paragraphElement(block, values);
-	// The same borders, shading and margins as a body table (direct formatting over the table style).
-	const table = document.createElement('table');
-	table.setAttribute('style', tableStyle(tableViewAttrs(block)));
-	if (block.grid?.length) {
-		const colgroup = document.createElement('colgroup');
-		for (const width of block.grid) {
-			const col = document.createElement('col');
-			col.style.width = `${width / 15}px`;
-			colgroup.append(col);
-		}
-		table.append(colgroup);
-	}
-	const tbody = document.createElement('tbody');
-	for (const views of tableCellViews(block, values.model?.tableStyles)) {
-		const tr = document.createElement('tr');
-		for (const { cell, colspan, rowspan, attrs } of views) {
-			const td = document.createElement('td');
-			if (colspan > 1) td.colSpan = colspan;
-			if (rowspan > 1) td.rowSpan = rowspan;
-			td.setAttribute('style', tableCellStyle(attrs));
-			for (const paragraph of cell.paragraphs) td.append(paragraphElement(paragraph, values));
-			tr.append(td);
-		}
-		tbody.append(tr);
-	}
-	table.append(tbody);
-	return table;
-}
-
-/** Renders read-only header/footer content with page fields filled in for one page. */
-export function renderHeaderFooter(
-	content: HeaderFooterContent,
-	values: PageFieldValues,
-	kind: 'header' | 'footer',
-): HTMLElement {
+export function headerFooterElement(kind: 'header' | 'footer'): HTMLElement {
 	const element = document.createElement('div');
 	element.className = `dve-print-${kind}`;
 	element.setAttribute('aria-label', kind === 'header' ? 'Header' : 'Footer');
-	for (const block of content.blocks) element.append(blockElement(block, values));
 	return element;
-}
-
-/** Adds each page's header and footer, positioned at the section's header/footer distances. */
-/** Header/footer floating pictures, positioned on the sheet from their anchor frames. */
-function floatingPictures(
-	content: HeaderFooterContent,
-	page: LayoutPageBox,
-	anchorTopPx: number,
-	values: PageFieldValues,
-): HTMLElement[] {
-	const paragraphs = content.blocks.flatMap((block) =>
-		block.type === 'paragraph'
-			? [block]
-			: block.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs)),
-	);
-	const column = { xPx: 0, widthPx: page.widthPx - page.marginLeftPx - page.marginRightPx };
-	return paragraphs.flatMap((paragraph) =>
-		paragraphFloats(
-			{
-				...paragraph,
-				runs: paragraph.runs.filter(
-					(run) => !isRunHiddenForReview(run, values.reviewDisplayMode ?? 'all'),
-				),
-			},
-			values.model?.theme,
-			values.textBoxes,
-		).map((float) => {
-			const { xPx, yPx } = floatPosition(float, page, column, { topPx: anchorTopPx, heightPx: 0 });
-			// The body's floating pictures and shapes are drawn by the same function.
-			const element = printPicture(float, { pictureUrl: values.pictureUrl, model: values.model });
-			element.classList.add('dve-print-float');
-			if (float.behindText) element.classList.add('dve-print-float-behind');
-			element.style.left = `${xPx}px`;
-			element.style.top = `${yPx}px`;
-			return element;
-		}),
-	);
 }
 
 /**
@@ -249,52 +82,24 @@ export function watermarkElement(
 	return layer;
 }
 
-export function decoratePages(
+/** Creates a decorator for both eagerly rendered and virtualized pages. */
+export function createPageDecorator(
 	model: DocumentModel,
 	pages: LayoutPageBox[],
-	sheets: HTMLElement[],
-	now: Date = new Date(),
-	pictureUrl?: PictureUrl,
-	reviewDisplayMode: ReviewDisplayMode = 'all',
+	now: Date,
+	pictureUrl: PictureUrl | undefined,
+	reviewDisplayMode: ReviewDisplayMode,
+	measurer: TextMeasurer,
 ) {
-	// Header and footer DOCPROPERTY results follow the document's properties.
-	model = refreshComputedFields(model);
-	const numbers = pageNumbers(model, pages);
-	const numericValues = pageNumberValues(model, pages);
-	const counts = sectionPageCounts(pages);
-	// STYLEREF fields show the text of the page they are drawn on, as in Word.
-	const styleRefs = pageStyleRefs(model, pages);
-	// Each header and footer's text boxes are laid out once, with one measurer for the pass.
-	let measurer: ReturnType<typeof createCanvasMeasurer> | undefined;
-	const textBoxes = new Map<HeaderFooterContent, TextBoxLayouts>();
-	const textBoxesOf = (content: HeaderFooterContent) => {
-		let layouts = textBoxes.get(content);
-		if (!layouts) {
-			measurer ??= createCanvasMeasurer();
-			layouts = storyTextBoxLayouts(model, content.blocks, measurer, { reviewDisplayMode });
-			textBoxes.set(content, layouts);
-		}
-		return layouts;
-	};
-	pages.forEach((page, index) => {
-		const sheet = sheets[index];
-		if (!sheet) return;
-		const label = numbers[index] ?? String(index + 1);
-		const values: PageFieldValues = {
-			reviewDisplayMode,
-			model,
-			page: label,
-			numPages: String(pages.length),
-			sectionPages: String(counts.get(page.sectionIndex) ?? 1),
-			now,
-			...(pictureUrl ? { pictureUrl } : {}),
-		};
+	const numbers = pageNumberValues(model, pages);
+	const stories = createPageStories(model, pages, measurer, { reviewDisplayMode }, undefined, now);
+	return (sheet: HTMLElement, index: number) => {
+		const page = pages[index];
+		if (!page) return;
 		const section = model.sections?.[page.sectionIndex];
-		const pageNumber = numericValues[index] ?? index + 1;
-		// What a double-click on the page's header or footer area needs to edit the right story.
 		Object.assign(sheet.dataset, {
 			sectionIndex: String(page.sectionIndex),
-			headerFooterSlot: headerFooterSlotForPage(model, page, pageNumber),
+			headerFooterSlot: headerFooterSlotForPage(model, page, numbers[index] ?? index + 1),
 			marginTop: String(page.marginTopPx),
 			marginBottom: String(page.marginBottomPx),
 			marginLeft: String(page.marginLeftPx),
@@ -302,26 +107,40 @@ export function decoratePages(
 			headerDistance: String((section?.headerDistanceTwips ?? 720) / 15),
 			footerDistance: String((section?.footerDistanceTwips ?? 720) / 15),
 		});
-		for (const kind of ['header', 'footer'] as const) {
-			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
-			if (!content) continue;
-			const storyValues = { ...values, textBoxes: textBoxesOf(content) };
-			const element = renderHeaderFooter(styleRefs.content(content, index), storyValues, kind);
-			const distanceTwips =
-				kind === 'header' ? section?.headerDistanceTwips : section?.footerDistanceTwips;
-			const distancePx = (distanceTwips ?? 720) / 15;
-			element.style.left = `${page.marginLeftPx}px`;
-			element.style.right = `${page.marginRightPx}px`;
-			element.style[kind === 'header' ? 'top' : 'bottom'] = `${distancePx}px`;
+		const media = { model, pictureUrl };
+		for (const story of stories(index)) {
+			const element = headerFooterElement(story.kind);
+			element.style.left = `${story.x}px`;
+			element.style.width = `${story.widthPx}px`;
+			element.style.height = `${story.heightPx}px`;
+			element.style[story.kind === 'header' ? 'top' : 'bottom'] = `${story.distancePx}px`;
+			element.append(...renderStoryBlocks(story.blocks, media, story.widthPx));
 			sheet.append(element);
-			// Anchors in a footer sit roughly one line above its bottom distance.
-			const anchorTop = kind === 'header' ? distancePx : page.heightPx - distancePx - 20;
-			sheet.append(...floatingPictures(content, page, anchorTop, storyValues));
-			if (kind === 'header') {
-				const mark = watermarkElement(content, page, reviewDisplayMode, values.pictureUrl);
-				// First in the sheet so the page text paints over it, as a Word watermark sits behind text.
+			for (const float of story.floats) {
+				const picture = printPicture(float, media);
+				picture.classList.add('dve-print-float');
+				if (float.behindText) picture.classList.add('dve-print-float-behind');
+				picture.style.left = `${float.xPx}px`;
+				picture.style.top = `${float.yPx}px`;
+				sheet.append(picture);
+			}
+			if (story.kind === 'header') {
+				const mark = watermarkElement(story.content, page, reviewDisplayMode, pictureUrl);
 				if (mark) sheet.prepend(mark);
 			}
 		}
-	});
+	};
+}
+
+export function decoratePages(
+	model: DocumentModel,
+	pages: LayoutPageBox[],
+	sheets: HTMLElement[],
+	now = new Date(),
+	pictureUrl?: PictureUrl,
+	reviewDisplayMode: ReviewDisplayMode = 'all',
+) {
+	sheets.forEach(
+		createPageDecorator(model, pages, now, pictureUrl, reviewDisplayMode, createCanvasMeasurer()),
+	);
 }

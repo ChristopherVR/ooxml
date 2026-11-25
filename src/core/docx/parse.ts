@@ -6,6 +6,8 @@ import { inspectPackageSignatures, verifySignedPackage } from '../opc/signature/
 import { resolveDocxLimits } from './package-limits';
 import type { ZipLimits } from '../opc/zip-limits';
 import type { Block, DocumentModel, DocxLoadOptions, LoadedDocument } from './model';
+import { parseTwips } from './simple-types';
+import { parseFontTable } from './font-table';
 import { children, first, getW, parseXml, type XmlDocument } from './xml';
 import { remember, saveDocx } from './save';
 import { parseParagraphStyleCatalog } from './paragraph-styles';
@@ -24,7 +26,7 @@ const px = (twips: string | undefined, fallback: number): number =>
 	twips === undefined ? fallback : (Number(twips) * 96) / 1440;
 
 import { type DrawingContext } from './drawing';
-import { parseContentTypes, parseRelationships } from './package-parts';
+import { parseContentTypes, parseRelationships, resolveInternalTarget } from './package-parts';
 import { withParseWarnings } from './parse-diagnostics';
 import {
 	forEachParagraph,
@@ -126,11 +128,24 @@ export async function readPackage(
 		model.characterStyles = catalogs.character;
 		model.tableStyles = catalogs.table;
 		model.warnings.push(
-			'Paragraph style, character style and docDefaults inheritance resolve for rendering, including toggle-property XOR semantics and basedOn chains. Linked styles beyond a basedOn chain, numbering-derived formatting and font metric substitution are not modeled; display can still differ from Word.',
+			'Paragraph style, character style and docDefaults inheritance resolve for rendering, including toggle-property XOR semantics and basedOn chains. Linked styles beyond a basedOn chain, numbering-derived formatting are not modeled; display can still differ from Word.',
 			...model.paragraphStyles.warnings,
 			...model.characterStyles.warnings,
 			...model.tableStyles.warnings,
 		);
+	} else if (contentTypesFile && zip.file('_rels/.rels')) {
+		model.usesImplicitNormalStyle = true;
+	}
+	const fontTableRel = [...drawings.rels.values()].find(
+		(rel) => rel.mode === 'Internal' && rel.type.endsWith('/fontTable'),
+	);
+	const fontTablePart = fontTableRel
+		? resolveInternalTarget(fontTableRel.target)
+		: 'word/fontTable.xml';
+	const fontTable = zip.file(fontTablePart);
+	if (fontTable) {
+		const fallbacks = parseFontTable(await fontTable.async('string'));
+		if (fallbacks.size) model.fontFallbacks = fallbacks;
 	}
 	const themeFile = zip.file('word/theme/theme1.xml');
 	const settingsFile = zip.file('word/settings.xml');
@@ -222,6 +237,10 @@ export async function readPackage(
 	if (settingsFile) {
 		const settingsXml = await settingsFile.async('string');
 		model.trackChanges = parseTrackChangesSetting(settingsXml);
+		const tabStop = parseTwips(
+			getW(first(parseXml(settingsXml).documentElement, 'defaultTabStop'), 'val'),
+		);
+		if (tabStop && tabStop > 0) model.defaultTabStopTwips = tabStop;
 		Object.assign(model, parseReviewPreferences(settingsXml), parseFormSettings(settingsXml));
 		const warning = model.protection?.enforced && protectionWarning(model.protection.edit);
 		if (warning) model.warnings.push(warning);

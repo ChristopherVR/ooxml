@@ -20,10 +20,24 @@ export const METRIC_FONT_SUBSTITUTES: Record<string, { fallbacks: string[]; gene
 };
 
 /** Metric-compatible policy used where stable pagination is required. */
-export function metricFontFamily(name: string): string {
+export function metricFontFamily(
+	name: string,
+	fallback?: { alternate?: string; generic?: string },
+): string {
 	const key = name.trim();
 	const known = Object.hasOwn(METRIC_FONT_SUBSTITUTES, key.toLowerCase())
 		? METRIC_FONT_SUBSTITUTES[key.toLowerCase()]
 		: undefined;
-	return buildFontFamilyString(key, [...(known?.fallbacks ?? []), known?.generic ?? 'sans-serif']);
+	const alternate = fallback?.alternate;
+	const alternateMetrics = alternate
+		? Object.hasOwn(METRIC_FONT_SUBSTITUTES, alternate.toLowerCase())
+			? METRIC_FONT_SUBSTITUTES[alternate.toLowerCase()]
+			: undefined
+		: undefined;
+	return buildFontFamilyString(key, [
+		...(alternate ? [alternate] : []),
+		...(known?.fallbacks ?? []),
+		...(alternateMetrics?.fallbacks ?? []),
+		fallback?.generic ?? known?.generic ?? alternateMetrics?.generic ?? 'sans-serif',
+	]);
 }

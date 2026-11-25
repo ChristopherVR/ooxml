@@ -633,7 +633,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (SVG originals and cropped or recoloured fills included) (`src/ui/src/docx/story-drawings.test.ts`).
 - [x] **P1** Print Layout reserves space for tall headers and footers based on their in-flow
       content (#313). Paragraphs that move onto a page reflow around that page's floating drawings,
-      including drawings anchored below them (#312).
+      including drawings anchored below them (#312). Print Layout and PDF export use the same
+      story geometry for default and first-page footers, paragraph borders and indents, tab
+      stops and pictures anchored inside table cells (#331, #332, #333, #342).
+- [x] **P1** Single-spaced lines use the selected font's natural line height. The 300-line Word
+      references agree on the first-page break and page count (#330).
+- [ ] **P2** Browser and Word can still wrap mixed-format justified text at different words.
+      The anonymized contract from #330 has 44 pages in both the Windows browser and Word 16.
+      Some corresponding pages begin with different lines.
 - [x] **P2** Overlong words in Print Layout break at grapheme boundaries (#316). Nearly fitting
       final lines in justified text boxes have a one-pixel fit tolerance (#314).
 - [x] **P1** Auto-fit tables stay inside the text column when a cell holds an unbreakable token

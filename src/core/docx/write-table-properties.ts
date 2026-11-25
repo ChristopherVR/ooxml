@@ -209,9 +209,12 @@ export function patchCellShading(
 	next: TableCell,
 	base?: TableCell,
 ): void {
+	const samePattern =
+		JSON.stringify(next.percentageShading) === JSON.stringify(base?.percentageShading);
 	if (
 		next.shadingFill === base?.shadingFill &&
-		JSON.stringify(next.shadingThemeFill) === JSON.stringify(base?.shadingThemeFill)
+		JSON.stringify(next.shadingThemeFill) === JSON.stringify(base?.shadingThemeFill) &&
+		samePattern
 	)
 		return;
 	if (next.shadingFill && next.shadingFill !== 'auto' && !/^#?[0-9a-f]{6}$/i.test(next.shadingFill))
@@ -222,7 +225,10 @@ export function patchCellShading(
 		tc.insertBefore(props, tc.firstChild);
 	}
 	for (const old of children(props, 'shd')) props.removeChild(old);
-	const built = buildCellProperties(doc, next);
+	// Setting a different fill replaces the existing shade unless its pattern was also set.
+	const shading = { ...next };
+	if (samePattern) delete shading.percentageShading;
+	const built = buildCellProperties(doc, shading);
 	const replacement = built && first(built, 'shd');
 	if (replacement) props.appendChild(replacement);
 	orderChildren(props, CELL_ORDER);

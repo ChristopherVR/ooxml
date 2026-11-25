@@ -1,10 +1,8 @@
 import type { DocumentModel, HeaderFooterContent } from '../model';
-import { adaptDocumentModel } from './adapter';
 import type { StoryMargins } from './input';
 import type { TextMeasurer } from './measure';
 import { headerFooterForPage, pageNumberValues } from './page-fields';
-import { layoutSections } from './page-flow';
-import { inFlow } from './result';
+import { flowStory } from './story-flow';
 import type { LayoutReviewOptions } from './review-display';
 import { twipsToPx } from './units';
 import { twips } from '../index';
@@ -25,35 +23,7 @@ export function createStoryMargins(
 		if (!heights) cache.set(content, (heights = new Map()));
 		const cached = heights.get(widthPx);
 		if (cached !== undefined) return cached;
-		const { sections: adapted } = adaptDocumentModel(
-			{ ...base, blocks: content.blocks },
-			note,
-			options,
-		);
-		const story = adapted[0];
-		if (!story) return 0;
-		const { pages } = layoutSections(
-			{
-				sections: [
-					{
-						blocks: story.blocks,
-						page: {
-							widthPx,
-							heightPx: 1_000_000,
-							marginTopPx: 0,
-							marginRightPx: 0,
-							marginBottomPx: 0,
-							marginLeftPx: 0,
-						},
-						...(story.addParagraphSpacing ? { addParagraphSpacing: true } : {}),
-					},
-				],
-			},
-			measurer,
-		);
-		let height = 0;
-		for (const block of pages[0]?.columns[0]?.blocks ?? [])
-			if (inFlow(block)) height = Math.max(height, block.yPx + block.heightPx);
+		const height = flowStory(base, content.blocks, widthPx, measurer, options, note).heightPx;
 		heights.set(widthPx, height);
 		return height;
 	};

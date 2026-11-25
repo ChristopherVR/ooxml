@@ -56,6 +56,7 @@ export class DocxPdfText {
 		return {
 			family: fragment.fontFamily ?? DEFAULT_FAMILY,
 			sizePx: (sizePt * 96) / 72,
+			...(fragment.fontFallback ? { fallback: fragment.fontFallback } : {}),
 			...(fragment.bold ? { bold: true } : {}),
 			...(fragment.italic ? { italic: true } : {}),
 		};
@@ -109,7 +110,9 @@ export class DocxPdfText {
 			);
 		} else if (text.trim()) {
 			fillWith(page, fragment.color);
-			this.#text(page, text, font, x, baseline, fragment, fragment.leader ? 0 : gapPx);
+			if (fragment.smallCaps && !fragment.leader)
+				this.#smallCaps(page, text, font, x, baseline, fragment, gapPx);
+			else this.#text(page, text, font, x, baseline, fragment, fragment.leader ? 0 : gapPx);
 		}
 		const thickness = Math.max(0.75, font.sizePx * 0.06);
 		if (fragment.underline && !fragment.leader)
@@ -133,6 +136,37 @@ export class DocxPdfText {
 		if (!fragment.widthPx || !fillWith(page, fragment.color)) return;
 		page.rect(x, y - thickness / 2, fragment.widthPx, thickness);
 		page.op('f');
+	}
+
+	#smallCaps(
+		page: PdfVectorPage,
+		text: string,
+		font: LayoutFontSpec,
+		x: number,
+		y: number,
+		fragment: LayoutFragment,
+		gapPx: number,
+	): void {
+		const parts = [...text.matchAll(/(?:\p{Ll}\p{M}*)+|[^\p{Ll}]+/gu)].map(([part]) => {
+			const upper = part.toUpperCase();
+			const face = upper === part ? font : { ...font, sizePx: font.sizePx * 0.8 };
+			return { text: upper, face, width: this.measurer.widthOf(upper, face) };
+		});
+		const natural = parts.reduce((sum, part) => sum + part.width, 0);
+		if (natural <= 0) return;
+		for (const [index, part] of parts.entries()) {
+			const widthPx = (fragment.widthPx * part.width) / natural;
+			this.#text(
+				page,
+				part.text,
+				part.face,
+				x,
+				y,
+				{ ...fragment, widthPx },
+				index === parts.length - 1 ? gapPx : 0,
+			);
+			x += widthPx;
+		}
 	}
 
 	#text(
@@ -184,7 +218,14 @@ export class DocxPdfText {
 				written += code ?? '?';
 			}
 		}
-		const base = pdfBaseFont(family, bold, italic);
+		const substitute =
+			font.fallback?.alternate ??
+			(font.fallback?.generic === 'serif'
+				? 'Times New Roman'
+				: font.fallback?.generic === 'monospace'
+					? 'Courier New'
+					: family);
+		const base = pdfBaseFont(substitute, bold, italic);
 		// Reported by family (Helvetica, Times, Courier): the style follows the text.
 		this.report.substituted(family, base.replace(/-.*$/, ''));
 		const scale = fit(pdfTextWidth(written, base) * sizePx);

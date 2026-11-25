@@ -4,7 +4,8 @@
 import type { GroupShapeChild, ShapeSpec } from './shape-model';
 import { A_NS, parseShapeElement, WPS_NS } from './shape-parse';
 import { EMU_PER_PIXEL } from './units';
-import { isElement, type XmlElement } from './xml';
+import { first, getW, isElement, WORD_NS, type XmlElement } from './xml';
+import { parseHalfPoints } from './simple-types';
 
 export const WPG_NS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingGroup';
 
@@ -36,8 +37,8 @@ function childBox(spPr: XmlElement | undefined): {
 	return {
 		xPx: emuPx(off?.getAttribute('x') ?? null),
 		yPx: emuPx(off?.getAttribute('y') ?? null),
-		widthPx: Math.max(1, emuPx(ext?.getAttribute('cx') ?? null)),
-		heightPx: Math.max(1, emuPx(ext?.getAttribute('cy') ?? null)),
+		widthPx: Math.max(0, emuPx(ext?.getAttribute('cx') ?? null)),
+		heightPx: Math.max(0, emuPx(ext?.getAttribute('cy') ?? null)),
 	};
 }
 
@@ -52,8 +53,16 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 	for (const node of Array.from(wgp.childNodes)) {
 		if (!isElement(node)) continue;
 		if (node.namespaceURI === WPS_NS && node.localName === 'wsp') {
-			const shape = parseShapeElement(node, false);
-			if (!shape) continue;
+			const parsed = parseShapeElement(node, false);
+			if (!parsed) continue;
+			const runs = parsed.text?.some(Boolean)
+				? Array.from(node.getElementsByTagNameNS(WORD_NS, 'r'))
+				: [];
+			const sizes = new Set(
+				runs.map((run) => parseHalfPoints(getW(first(first(run, 'rPr'), 'sz'), 'val'))),
+			);
+			const [size] = sizes;
+			const shape = sizes.size === 1 && size ? { ...parsed, groupTextSizePt: size / 2 } : parsed;
 			const box = childBox(childNS(node, WPS_NS, 'spPr'));
 			groupChildren.push({ ...box, shape });
 		} else if (node.namespaceURI === WPG_NS && node.localName === 'wgp') {
@@ -66,8 +75,8 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 	if (!groupChildren.length) return undefined;
 	const chW = emuPx(chExt?.getAttribute('cx') ?? null) || emuPx(ext?.getAttribute('cx') ?? null);
 	const chH = emuPx(chExt?.getAttribute('cy') ?? null) || emuPx(ext?.getAttribute('cy') ?? null);
-	const chX = emuPx(chOff?.getAttribute('x') ?? null) || emuPx(off?.getAttribute('x') ?? null);
-	const chY = emuPx(chOff?.getAttribute('y') ?? null) || emuPx(off?.getAttribute('y') ?? null);
+	const chX = emuPx(chOff?.getAttribute('x') ?? off?.getAttribute('x') ?? null);
+	const chY = emuPx(chOff?.getAttribute('y') ?? off?.getAttribute('y') ?? null);
 	const maxX = Math.max(...groupChildren.map((item) => item.xPx + item.widthPx));
 	const maxY = Math.max(...groupChildren.map((item) => item.yPx + item.heightPx));
 	const rot = Number(xfrm?.getAttribute('rot'));
@@ -79,8 +88,8 @@ function parseGroupNode(wgp: XmlElement): ShapeSpec | undefined {
 		groupExtent: {
 			xPx: chX,
 			yPx: chY,
-			widthPx: Math.max(1, chW || maxX - chX),
-			heightPx: Math.max(1, chH || maxY - chY),
+			widthPx: Math.max(1 / EMU_PER_PIXEL, chW || maxX - chX),
+			heightPx: Math.max(1 / EMU_PER_PIXEL, chH || maxY - chY),
 		},
 		...(Number.isFinite(rot) && rot !== 0
 			? { rotation: Math.round((rot / 60000) * 100) / 100 }

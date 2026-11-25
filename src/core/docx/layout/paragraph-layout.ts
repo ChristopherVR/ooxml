@@ -159,6 +159,7 @@ function measureParagraph(
 		leftInsetPx: number;
 		rightInsetPx: number;
 		gapBeforePx: number;
+		split?: boolean;
 		hole?: { startPx: number; endPx: number };
 	}[] = [];
 	let runningY = 0;
@@ -275,6 +276,7 @@ function measureParagraph(
 			if (token.kind !== 'object') fragment.boxHeightPx = extent.ascent + extent.descent;
 		});
 		if (jump) {
+			boxFor(lineIndex).split = true;
 			for (const fragment of fragments.slice(jump.index)) fragment.xPx += jump.shiftPx;
 		}
 		lines.push({
@@ -391,6 +393,7 @@ function measureParagraph(
 				hangingStopPx,
 				followingPx,
 				beforeDecimalPx,
+				paragraph.defaultTabStopPx,
 			);
 			width = tab.widthPx;
 			leader = tab.leader === 'none' ? undefined : tab.leader;
@@ -407,7 +410,11 @@ function measureParagraph(
 		// wrap point is trimmed in flushLine instead, so it must not be
 		// pre-subtracted here.
 		const squeezePx =
-			effectiveAlign === 'justify' && token.kind === 'word' ? lineSpacePx * SPACE_SHRINK : 0;
+			effectiveAlign === 'justify' &&
+			paragraph.squeezeJustifiedSpaces !== false &&
+			token.kind === 'word'
+				? lineSpacePx * SPACE_SHRINK
+				: 0;
 		// A nearly fitting final line of a justified text box should not turn into
 		// a stretched nonfinal line. Leave normal word-break decisions alone.
 		const wordTolerance =
@@ -519,14 +526,17 @@ function measureParagraph(
 
 	const lastIndex = lines.length - 1;
 	for (const [index, line] of lines.entries()) {
+		const hole = boxes[index]?.hole;
+		const width = hole
+			? Math.min(availableWidth(index), hole.startPx - lineStart(index))
+			: availableWidth(index);
 		lines[index] = {
 			...line,
 			fragments: alignFragments(
 				line.fragments,
-				availableWidth(index) + (hangingPx.get(index) ?? 0),
+				width + (hangingPx.get(index) ?? 0),
 				index === lastIndex,
-				// A line that runs around a picture is not aligned across it.
-				boxes[index]?.hole ? 'left' : effectiveAlign,
+				boxes[index]?.split ? 'left' : effectiveAlign,
 			).map((fragment) => ({ ...fragment, xPx: fragment.xPx + lineStart(index) })),
 		};
 	}
@@ -544,11 +554,13 @@ function measureParagraph(
 		line.yPx = y;
 		y += line.heightPx;
 	}
+	const hanging = borders ? Math.min(0, firstLineExtraPx) : 0;
+	const rtl = paragraph.direction === 'rtl';
 	const frame =
 		borders || paragraph.shading
 			? {
-					leftPx: leftPx - extent('left'),
-					widthPx: bodyWidth + extent('left') + extent('right'),
+					leftPx: leftPx - extent('left') + (rtl ? 0 : hanging),
+					widthPx: bodyWidth + extent('left') + extent('right') - hanging,
 					...(borders ? { borders } : {}),
 					...(paragraph.shading ? { shading: paragraph.shading } : {}),
 				}

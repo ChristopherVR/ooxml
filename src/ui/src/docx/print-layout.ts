@@ -2,6 +2,7 @@ import type { DocumentModel, PageBorders } from 'ooxml-core/docx';
 import {
 	cssFontStack,
 	ligatureCss,
+	paragraphBorderBands,
 	DEFAULT_FONT_SIZE_PT,
 	type LayoutBlockBox,
 	type LayoutLine,
@@ -81,7 +82,7 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	if (fragment.bold) el.style.fontWeight = '700';
 	if (fragment.italic) el.style.fontStyle = 'italic';
 	// The same metric-compatible stack the measurer used, so rendered text matches its line breaks.
-	el.style.fontFamily = cssFontStack(fragment.fontFamily);
+	el.style.fontFamily = cssFontStack(fragment.fontFamily, fragment.fontFallback);
 	el.style.fontSize = `${(fragment.fontSizePt ?? DEFAULT_FONT_SIZE_PT) * (fragment.script ? 0.65 : 1)}pt`;
 	const scale = (fragment.textScalePercent ?? 100) / 100;
 	if (!fragment.text) el.style.width = `${scale ? fragment.widthPx / scale : fragment.widthPx}px`;
@@ -102,6 +103,7 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	if (fragment.boxHeightPx !== undefined) el.style.lineHeight = `${fragment.boxHeightPx}px`;
 	if (fragment.color) el.style.color = fragment.color;
 	if (fragment.background) el.style.backgroundColor = fragment.background;
+	if (fragment.smallCaps) el.style.fontVariantCaps = 'small-caps';
 	if (fragment.ligatures !== undefined)
 		el.style.fontVariantLigatures = ligatureCss(fragment.ligatures);
 	const lines = [fragment.underline && 'underline', fragment.strike && 'line-through'].filter(
@@ -175,10 +177,37 @@ function paragraphFrame(frame: LayoutParagraphFrame, heightPx: number): HTMLElem
 	if (frame.shading) el.style.background = frame.shading;
 	for (const side of ['top', 'right', 'bottom', 'left'] as const) {
 		const line = frame.borders?.[side];
-		if (line)
+		if (!line) continue;
+		if (!line.compound) {
 			el.style.setProperty(`border-${side}`, `${line.widthPx}px ${line.style} ${line.color}`);
+			continue;
+		}
+		const horizontal = side === 'top' || side === 'bottom';
+		for (const band of paragraphBorderBands(line, false)) {
+			// Absolute children use the padding box; compensate for ordinary cross-side borders.
+			const stroke = document.createElement('div');
+			stroke.className = 'dve-print-paragraph-border-band';
+			stroke.style.position = 'absolute';
+			stroke.style.backgroundColor = line.color;
+			stroke.style[side] = `${band.offsetPx}px`;
+			stroke.style[horizontal ? 'height' : 'width'] = `${band.widthPx}px`;
+			for (const edge of horizontal ? (['left', 'right'] as const) : (['top', 'bottom'] as const)) {
+				const adjacent = frame.borders?.[edge];
+				stroke.style[edge] = `${adjacent && !adjacent.compound ? -adjacent.widthPx : 0}px`;
+			}
+			el.append(stroke);
+		}
 	}
 	return el;
+}
+
+/** Renders a header/footer using the same line, paragraph and table painter as the body. */
+export function renderStoryBlocks(
+	blocks: readonly LayoutBlockBox[],
+	media: PrintMedia,
+	widthPx: number,
+): HTMLElement[] {
+	return blocks.map((box) => renderBlock(box, [], media, widthPx));
 }
 
 function renderBlock(
@@ -199,7 +228,7 @@ function renderBlock(
 			el.dataset.readOnly = 'true';
 			el.title = 'Read-only content';
 		}
-		if (box.frame) el.append(paragraphFrame(box.frame, box.heightPx));
+		if (box.frame) el.append(paragraphFrame(box.frame, box.frame.heightPx ?? box.heightPx));
 		for (const line of box.lines) el.append(renderLine(line, box.blockId, hitboxes, media));
 		return el;
 	}

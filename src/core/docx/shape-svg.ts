@@ -98,8 +98,12 @@ export function shapeDefaultTextColor(spec: ShapeSpec, theme?: ThemeCatalog): st
 const FONT_PX = 14.67;
 
 /** Breaks `lines` to fit `widthPx` with an average-width estimate (no measuring in the core). */
-export function wrapShapeText(lines: readonly string[], widthPx: number): string[] {
-	const perLine = Math.max(1, Math.floor(widthPx / (FONT_PX * 0.52)));
+export function wrapShapeText(
+	lines: readonly string[],
+	widthPx: number,
+	fontPx = FONT_PX,
+): string[] {
+	const perLine = Math.max(1, Math.floor(widthPx / (fontPx * 0.52)));
 	return lines.flatMap((line) => {
 		if (line.length <= perLine) return [line];
 		const out: string[] = [];
@@ -136,27 +140,27 @@ function appendShapeContent(
 ): boolean {
 	if (spec.groupChildren?.length) {
 		const extent = spec.groupExtent ?? { xPx: 0, yPx: 0, widthPx: w, heightPx: h };
-		const sx = w / Math.max(1, extent.widthPx);
-		const sy = h / Math.max(1, extent.heightPx);
+		// Map coordinates into the output space before painting physical strokes and text.
+		const sx = extent.widthPx > 0 ? w / extent.widthPx : 1;
+		const sy = extent.heightPx > 0 ? h / extent.heightPx : 1;
 		const transform = [
 			spec.rotation ? `rotate(${Number(spec.rotation)} ${round(w / 2)} ${round(h / 2)})` : '',
 			spec.flipH || spec.flipV
 				? `translate(${spec.flipH ? w : 0} ${spec.flipV ? h : 0}) scale(${spec.flipH ? -1 : 1} ${spec.flipV ? -1 : 1})`
 				: '',
-			`scale(${round(sx)} ${round(sy)}) translate(${round(-extent.xPx)} ${round(-extent.yPx)})`,
 		]
 			.filter(Boolean)
 			.join(' ');
-		const group = appendSvg(parent, 'g', { transform });
+		const group = appendSvg(parent, 'g', transform ? { transform } : {});
 		spec.groupChildren.forEach((child, index) => {
 			const childGroup = appendSvg(group, 'g', {
-				transform: `translate(${round(child.xPx)} ${round(child.yPx)})`,
+				transform: `translate(${round((child.xPx - extent.xPx) * sx)} ${round((child.yPx - extent.yPx) * sy)})`,
 			});
 			appendShapeContent(
 				childGroup,
 				child.shape,
-				Math.max(1, child.widthPx),
-				Math.max(1, child.heightPx),
+				Math.max(0.01, child.widthPx * sx),
+				Math.max(0.01, child.heightPx * sy),
 				theme,
 				defs,
 				`${idPrefix}-${index}`,
@@ -227,18 +231,19 @@ function appendShapeContent(
 		});
 	}
 	const textRect = geometry.textRect ?? { l: 0, t: 0, r: w, b: h };
+	const fontPx = spec.groupTextSizePt ? (spec.groupTextSizePt * 4) / 3 : FONT_PX;
 	const lines = spec.text?.some(Boolean)
-		? wrapShapeText(spec.text, textRect.r - textRect.l - 14)
+		? wrapShapeText(spec.text, textRect.r - textRect.l - 14, fontPx)
 		: [];
 	if (lines.length) {
 		const text = appendSvg(group, 'text', {
 			'font-family': 'Calibri,Arial,sans-serif',
-			'font-size': FONT_PX,
+			'font-size': fontPx,
 			fill: normalizeHexColor(spec.textColor, shapeDefaultTextColor(spec, theme)),
 			'text-anchor': 'middle',
 			'dominant-baseline': 'central',
 		});
-		const lineHeight = FONT_PX * 1.2;
+		const lineHeight = fontPx * 1.2;
 		const first = (textRect.t + textRect.b) / 2 - ((lines.length - 1) * lineHeight) / 2;
 		lines.forEach((line, index) => {
 			appendSvg(text, 'tspan', {
