@@ -7,12 +7,6 @@ export const FUNCTION_TEXT_STRINGS: Translations = {
 		'Texto para una matriz.',
 		'数组的文本表示。',
 	],
-	'Converts full-width (double-byte) characters to half-width (single-byte) characters.': [
-		'Convertit les caractères à deux octets (pleine largeur) en caractères à un octet (demi-largeur).',
-		'Wandelt Zeichen mit doppelter Breite (Doppelbyte) in Zeichen mit einfacher Breite (Einzelbyte) um.',
-		'Convierte caracteres de dos bytes (ancho completo) en caracteres de un byte (ancho medio).',
-		'将全角(双字节)字符转换为半角(单字节)字符。',
-	],
 	'A number as Thai text with the baht suffix.': [
 		'Un nombre sous forme de texte thaï avec le suffixe baht.',
 		'Eine Zahl als thailändischer Text mit dem Suffix Baht.',
@@ -48,12 +42,6 @@ export const FUNCTION_TEXT_STRINGS: Translations = {
 		'Verknüpft mehrere Textelemente.',
 		'Une elementos de texto.',
 		'连接多个文本项。',
-	],
-	'Converts half-width (single-byte) characters to full-width (double-byte) characters.': [
-		'Convertit les caractères à un octet (demi-largeur) en caractères à deux octets (pleine largeur).',
-		'Wandelt Zeichen mit einfacher Breite (Einzelbyte) in Zeichen mit doppelter Breite (Doppelbyte) um.',
-		'Convierte caracteres de un byte (ancho medio) en caracteres de dos bytes (ancho completo).',
-		'将半角(单字节)字符转换为全角(双字节)字符。',
 	],
 	'Formats a number as currency text.': [
 		'Met en forme un nombre au format monétaire.',
