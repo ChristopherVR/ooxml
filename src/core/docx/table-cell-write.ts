@@ -20,7 +20,7 @@ function withVal(doc: XmlDocument, name: string, value: string): XmlElement {
 /**
  * Builds `w:tcPr` in CT_TcPr order (wml.xsd): tcW, gridSpan, vMerge, tcBorders, shd, noWrap,
  * tcMar, textDirection, tcFitText, vAlign, hideMark. The model records none of noWrap,
- * textDirection, tcFitText or hideMark.
+ * textDirection or tcFitText.
  */
 export function buildCellProperties(doc: XmlDocument, cell: TableCell): XmlElement | undefined {
 	const tcPr = makeW(doc, 'tcPr');
@@ -59,6 +59,8 @@ export function buildCellProperties(doc: XmlDocument, cell: TableCell): XmlEleme
 	const margins = cell.margins && buildMargins(doc, cell.margins, 'tcMar');
 	if (margins) tcPr.appendChild(margins);
 	if (cell.verticalAlign) tcPr.appendChild(withVal(doc, 'vAlign', cell.verticalAlign));
+	if (cell.hideMark !== undefined)
+		tcPr.appendChild(withVal(doc, 'hideMark', cell.hideMark ? '1' : '0'));
 	return tcPr.childNodes.length ? tcPr : undefined;
 }
 

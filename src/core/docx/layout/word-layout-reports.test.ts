@@ -291,3 +291,24 @@ it('extends a horizontal paragraph border to the hanging first line (#344)', asy
 		(normal?.frame?.leftPx ?? 0) - (indent ? twipsToPixels(indent) : 0),
 	);
 });
+
+it('omits a hidden table cell end marker from row height, while keeping explicit content (#330)', async () => {
+	const { paragraphs } = await layout('cell-end-marker');
+	// Word COM PDF baselines: 84.02, 114.02, 144.02, 159.02, 189.02, 234.02, 279.05 pt.
+	const offsets = paragraphs.map((paragraph) => (paragraph.yPx - at(paragraphs, 0).yPx) * 0.75);
+	for (const [index, expected] of [0, 30, 60, 75, 105, 150, 195].entries())
+		expect(at(offsets, index)).toBeCloseTo(expected, 1);
+
+	const loaded = await load('cell-end-marker');
+	const first = at(loaded.model.blocks, 0);
+	if (first.type !== 'paragraph') throw new Error('Expected a body paragraph');
+	const model = {
+		...loaded.model,
+		blocks: [{ ...first, runs: [{ text: 'Edited' }] }, ...loaded.model.blocks.slice(1)],
+	};
+	const saved = await loadDocx(await loaded.save(model));
+	const { pages } = layoutDocumentModel(saved.model, measurer);
+	const edited = at(at(pages, 0).columns, 0).blocks.filter((block) => block.kind === 'paragraph');
+	expect(at(edited, 0).lines[0]?.fragments[0]?.text).toBe('Edited');
+	expect(edited.map((paragraph) => (paragraph.yPx - at(edited, 0).yPx) * 0.75)).toEqual(offsets);
+});

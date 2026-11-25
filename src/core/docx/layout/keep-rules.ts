@@ -20,7 +20,10 @@ export function adjustForWidowOrphan(
 	if (fittingLines <= 0 || fittingLines >= totalLines) return fittingLines;
 	const remaining = totalLines - fittingLines;
 	if (fittingLines === 1) return 0; // orphan: the first line would be stranded alone
-	if (remaining === 1) return fittingLines - 1; // widow: the last line would start alone
+	if (remaining === 1) {
+		// Moving the last line forward must leave at least two lines behind.
+		return fittingLines === 2 ? 0 : fittingLines - 1;
+	}
 	return fittingLines;
 }
 

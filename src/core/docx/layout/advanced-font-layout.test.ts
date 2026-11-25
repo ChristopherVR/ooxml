@@ -86,3 +86,29 @@ describe('advanced font line layout', () => {
 		expect(line.fragments.map((fragment) => fragment.boxHeightPx)).toEqual([20, 20, 20]);
 	});
 });
+
+it.each([
+	{ markerPt: 12, heightPx: 18.4, baselinePx: 14.88 },
+	{ markerPt: 18, heightPx: 26, baselinePx: 22.32 },
+])('measures a $markerPt pt Arial list marker with 12 pt Times New Roman text', (expected) => {
+	// Word keeps the line at 13.8 pt with a 12 pt marker. A larger marker adds room
+	// above the baseline while keeping the body text's descent.
+	const mixedFonts: TextMeasurer = {
+		...measurer,
+		lineHeightOf: (font) => font.sizePx * 1.15,
+		ascentOf: (font) => font.sizePx * (font.family === 'Arial' ? 0.93 : 0.92),
+	};
+	const numbered = paragraph([
+		{
+			text: '-\t',
+			fontFamily: 'Arial',
+			fontSizePt: expected.markerPt,
+			synthetic: true,
+			marker: { length: 1, alignment: 'left' },
+		},
+		{ text: 'Numbered', fontFamily: 'Times New Roman', fontSizePt: 12 },
+	]);
+	const { lines } = layoutParagraph(numbered, 300, mixedFonts, () => {});
+	expect(lines[0]?.heightPx).toBeCloseTo(expected.heightPx);
+	expect(lines[0]?.baselinePx).toBeCloseTo(expected.baselinePx);
+});

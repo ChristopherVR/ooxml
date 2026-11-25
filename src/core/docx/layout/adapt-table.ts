@@ -163,16 +163,24 @@ export function adaptTable(
 				const fill = cssHex(visuals.shadingFill);
 				const entry = merges?.rows[rowIndex]?.[cellIndex];
 				const rowSpan = merges && entry ? rowSpanOf(merges, entry) : 1;
+				const blocks = cellSourceBlocks(cell);
+				const last = blocks.at(-1);
+				const adaptCellParagraph = (paragraph: Paragraph): LayoutParagraph => {
+					const adapted = adaptParagraph(paragraph);
+					return cell.hideMark && last?.id === paragraph.id
+						? { ...adapted, hideCellEndMark: true }
+						: adapted;
+				};
 				return {
-					paragraphs: cell.paragraphs.map(adaptParagraph),
+					paragraphs: cell.paragraphs.map(adaptCellParagraph),
 					...(cell.gridSpan !== undefined ? { gridSpan: cell.gridSpan } : {}),
 					...(cell.verticalMerge ? { verticalMerge: cell.verticalMerge } : {}),
 					...(rowSpan > 1 ? { rowSpan } : {}),
 					...(cell.sourceBlocks
 						? {
-								blocks: cellSourceBlocks(cell).map((block) =>
+								blocks: blocks.map((block) =>
 									block.type === 'paragraph'
-										? adaptParagraph(block)
+										? adaptCellParagraph(block)
 										: adaptTable(block, model, adaptParagraph, true),
 								),
 							}

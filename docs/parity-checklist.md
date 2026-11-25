@@ -638,9 +638,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       stops and pictures anchored inside table cells (#331, #332, #333, #342).
 - [x] **P1** Single-spaced lines use the selected font's natural line height. The 300-line Word
       references agree on the first-page break and page count (#330).
-- [ ] **P2** Browser and Word can still wrap mixed-format justified text at different words.
-      The anonymized contract from #330 has 44 pages in both the Windows browser and Word 16.
-      Some corresponding pages begin with different lines.
+- [x] **P2** All 44 page starts in the anonymized contract from #330 match between Print Layout in
+      Edge on Windows and Word 16 COM, including the leading blanks and the split table row.
+- [ ] **P2** Browser and Word can still wrap individual lines of mixed-format justified text at
+      different words within a page.
 - [x] **P2** Overlong words in Print Layout break at grapheme boundaries (#316). Nearly fitting
       final lines in justified text boxes have a one-pixel fit tolerance (#314).
 - [x] **P1** Auto-fit tables stay inside the text column when a cell holds an unbreakable token

@@ -278,8 +278,7 @@ export function adaptDocumentModel(
 					formatting.characterSpacingTwips === undefined
 						? undefined
 						: formatting.characterSpacingTwips / 15,
-				kerningThresholdPt:
-					formatting.kerningHalfPoints === undefined ? undefined : formatting.kerningHalfPoints / 2,
+				kerningThresholdPt: (formatting.kerningHalfPoints ?? 0) / 2,
 				positionPx:
 					formatting.positionHalfPoints === undefined
 						? undefined

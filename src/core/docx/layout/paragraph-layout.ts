@@ -522,7 +522,9 @@ function measureParagraph(
 		lineWidthPx += token.kind === 'tab' ? width : advance + spacePx;
 		if (token.kind === 'space') lineSpacePx += advance;
 	}
-	flushLine(lines.length === 0, undefined);
+	// A cell's terminal paragraph with no content consists solely of its end mark.
+	const hiddenCellMark = paragraph.hideCellEndMark && tokens.length === 0;
+	if (!hiddenCellMark) flushLine(lines.length === 0, undefined);
 
 	const lastIndex = lines.length - 1;
 	for (const [index, line] of lines.entries()) {
@@ -568,8 +570,8 @@ function measureParagraph(
 
 	return {
 		lines,
-		spacingBeforePx: twipsToPx(paragraph.spacingBeforeTwips ?? NO_TWIPS),
-		spacingAfterPx: twipsToPx(paragraph.spacingAfterTwips ?? NO_TWIPS),
+		spacingBeforePx: hiddenCellMark ? 0 : twipsToPx(paragraph.spacingBeforeTwips ?? NO_TWIPS),
+		spacingAfterPx: hiddenCellMark ? 0 : twipsToPx(paragraph.spacingAfterTwips ?? NO_TWIPS),
 		contentHeightPx: y + insetBottomPx,
 		insetTopPx,
 		insetBottomPx,

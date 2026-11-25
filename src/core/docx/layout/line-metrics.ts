@@ -46,6 +46,9 @@ export function lineMetrics(
 	let above = empty?.ascent ?? 0;
 	let below = empty?.descent ?? 0;
 	let objectAscent = 0;
+	let objectDescent = 0;
+	let textSizePx = 0;
+	let marker: { above: number; below: number; sizePx: number } | undefined;
 	for (const { token } of placed) {
 		const run = paragraph.runs[token.runIndex];
 		const metrics = run?.object?.noteSeparator
@@ -54,9 +57,26 @@ export function lineMetrics(
 		const extent = metrics
 			? { above: metrics.ascent, below: metrics.descent }
 			: tokenExtent(token, paragraph, fonts, measurer);
-		if (token.kind === 'object' && !metrics) objectAscent = Math.max(objectAscent, extent.above);
+		const sizePx = fonts[token.runIndex]?.sizePx ?? 0;
+		if (run?.marker) {
+			marker = { ...extent, sizePx };
+			continue;
+		}
+		if (token.kind === 'object' && !metrics) {
+			objectAscent = Math.max(objectAscent, extent.above);
+			objectDescent = Math.max(objectDescent, extent.below);
+		} else {
+			textSizePx = Math.max(textSizePx, sizePx);
+		}
 		above = Math.max(above, extent.above);
 		below = Math.max(below, extent.below);
+	}
+	// A list label that raises the baseline uses its own descent at the text size.
+	// An oversized label adds room above the text without increasing its descent.
+	if (marker && marker.above > above) {
+		const markerDescent = textSizePx && marker.sizePx > textSizePx ? below : marker.below;
+		below = Math.max(markerDescent, objectDescent, above + below - marker.above);
+		above = marker.above;
 	}
 	const natural = above + below;
 	const rule = paragraph.lineSpacingRule ?? 'auto';

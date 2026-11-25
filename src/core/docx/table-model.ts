@@ -87,6 +87,8 @@ export interface TableCell {
 	/** A percentage `w:tcW` (`type="pct"`) as a fraction of the table width; read-only layout input. */
 	widthPercent?: number;
 	verticalAlign?: StVerticalJc;
+	/** Layout input from `w:hideMark`: ignore the final cell mark when sizing the row. */
+	hideMark?: boolean;
 	shadingFill?: string;
 	percentageShading?: import('./percentage-shading').PercentageShading;
 	shadingThemeFill?: ThemeColorReference;

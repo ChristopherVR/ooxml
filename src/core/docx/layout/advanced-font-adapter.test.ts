@@ -1,6 +1,8 @@
 import { createDocument, halfPoints } from '../index';
 import { describe, expect, it } from 'vitest';
 import { adaptDocumentModel } from './adapter';
+import { layoutDocumentModel } from './layout';
+import { at } from './test-helpers';
 
 describe('advanced font layout adaptation', () => {
 	it('keeps explicit baseline full size even with inherited superscript', () => {
@@ -67,4 +69,26 @@ describe('advanced font layout adaptation', () => {
 		adaptDocumentModel(model, (note) => notes.push(note));
 		expect(notes).toEqual([]);
 	});
+});
+
+it('wraps a Word paragraph without kerning unless its run formatting enables it', () => {
+	const model = createDocument();
+	model.page = { ...model.page, width: 100, marginLeft: 0, marginRight: 0 };
+	model.blocks = [undefined, halfPoints(24)].map((kern, index) => ({
+		type: 'paragraph',
+		id: `p${index}`,
+		runs: [
+			{ text: 'AV AV', fontSize: 12, ...(kern === undefined ? {} : { kerningHalfPoints: kern }) },
+		],
+	}));
+	const measurer = {
+		widthOf: (text: string, font: { kerning?: string }) =>
+			text === 'AV' ? (font.kerning === 'none' ? 52 : 40) : 4,
+		lineHeightOf: () => 20,
+	};
+	const { pages } = layoutDocumentModel(model, measurer);
+	const blocks = at(at(pages, 0).columns, 0).blocks;
+	expect(blocks.map((block) => (block.kind === 'paragraph' ? block.lines.length : 0))).toEqual([
+		2, 1,
+	]);
 });

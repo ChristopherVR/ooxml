@@ -1,6 +1,6 @@
 # Word layout issue fixtures
 
-Borris-pro attached these generated minimal DOCX files to the issues below. The anonymized production documents were used locally for comparison.
+Borris-pro attached the original generated samples to the issues below. `cell-end-marker.docx` is a generated follow-up for #330. The anonymized production documents were used locally for comparison.
 
 Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. The fixture tests exercise the same DOCX import and layout engine as Print Layout and PDF export.
 
@@ -16,5 +16,12 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#339](https://github.com/ChristopherVR/ooxml/issues/339), [#340](https://github.com/ChristopherVR/ooxml/issues/340) | The percentage shades export as solid grays. Highlight exports in yellow and small capitals use reduced glyphs for the lower-case part of the text.                                                                                                                                                                                                         |
 | [#341](https://github.com/ChristopherVR/ooxml/issues/341), [#342](https://github.com/ChristopherVR/ooxml/issues/342) | The uncached merge field has no displayed result. Footer tabs advance to both the document's default intervals and the explicit 5 cm stop.                                                                                                                                                                                                                  |
 | [#343](https://github.com/ChristopherVR/ooxml/issues/343), [#344](https://github.com/ChristopherVR/ooxml/issues/344) | The two groups of empty lines use their respective 2 pt and 8 pt paragraph marks. The hanging-indent border extends 284 twips toward the start margin.                                                                                                                                                                                                      |
+
+For #330, Word moved all three lines of a paragraph together when widow and orphan control
+would have left one line on either page. At a 453.5 pt text width, an italic Times New Roman
+control wrapped before its final word with kerning omitted and fit that word with kerning
+enabled. A 12 pt Arial list marker raised the baseline of a 12 pt Times New Roman line
+without increasing its 13.8 pt height. In `cell-end-marker.docx`, Word omitted the empty final
+paragraph in a cell with `w:hideMark`. An explicit break or space in the cell still took room.
 
 Run the Word export again with `pwsh -File src/core/scripts/docx-layout-reports-word.ps1`.

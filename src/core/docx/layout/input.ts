@@ -182,6 +182,8 @@ export interface LayoutParagraph {
 	id: string;
 	runs: LayoutRun[];
 	emptyLineFont?: import('./measure').LayoutFontSpec;
+	/** The final line carries only a table cell mark, which can be excluded from row height. */
+	hideCellEndMark?: true;
 	align?: ParagraphAlign;
 	direction?: 'ltr' | 'rtl';
 	spacingBeforeTwips?: Twips;

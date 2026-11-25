@@ -85,6 +85,15 @@ describe('layoutSections: widow/orphan control', () => {
 		expect(linesOf(1, result)).toEqual([2]);
 	});
 
+	it('moves a three-line paragraph when the only possible split would strand a line', () => {
+		const result = layoutSections(
+			{ sections: [{ page: geometry(200, 100), blocks: [para('filler', 3), para('target', 3)] }] },
+			measurer,
+		);
+		expect(linesOf(0, result)).toEqual([3]);
+		expect(linesOf(1, result)).toEqual([3]);
+	});
+
 	it('never leaves a single line alone at the bottom of a page (orphan)', () => {
 		const filler = para('filler', 4); // consumes 80px of the 100px page, leaving one line's worth
 		const target = para('target', 3);

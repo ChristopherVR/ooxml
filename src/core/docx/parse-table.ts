@@ -77,6 +77,8 @@ function parseCell(
 	if (percent !== undefined) result.widthPercent = percent;
 	const vAlign = enumValue(isStVerticalJc, getW(first(props, 'vAlign'), 'val'), 'w:tcPr/w:vAlign');
 	if (vAlign) result.verticalAlign = vAlign;
+	const hideMark = onOffElement(first(props, 'hideMark'));
+	if (hideMark !== undefined) result.hideMark = hideMark;
 	const shd = first(props, 'shd');
 	const fill =
 		parseShadingFill(shd) ??
