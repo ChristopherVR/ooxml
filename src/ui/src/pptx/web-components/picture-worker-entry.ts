@@ -1,0 +1,34 @@
+import {
+	compressRaster,
+	openRaster,
+	rasterSegmentationSample,
+	removeRasterBackground,
+} from './picture-raster';
+import type { PictureWorkerRequest, PictureWorkerResult } from './picture-worker-protocol';
+
+let picture: Awaited<ReturnType<typeof openRaster>> | undefined;
+let sample: ImageData | undefined;
+
+async function respond(request: PictureWorkerRequest): Promise<PictureWorkerResult> {
+	if (request.kind === 'open') {
+		picture?.bitmap.close();
+		picture = undefined;
+		sample = undefined;
+		picture = await openRaster(request.source, request.header);
+		const { bitmap } = picture;
+		return { kind: 'opened', width: bitmap.width, height: bitmap.height };
+	}
+	if (!picture) return { kind: 'error' };
+	if (request.kind === 'compress') return compressRaster(picture, request.options);
+	sample ??= rasterSegmentationSample(picture.bitmap);
+	return removeRasterBackground(picture.bitmap, sample, request.marks, request.preview);
+}
+
+export function runPictureWorker(): void {
+	globalThis.addEventListener('message', (event: MessageEvent<PictureWorkerRequest>) => {
+		void respond(event.data).then(
+			(result) => globalThis.postMessage(result),
+			() => globalThis.postMessage({ kind: 'error' }),
+		);
+	});
+}

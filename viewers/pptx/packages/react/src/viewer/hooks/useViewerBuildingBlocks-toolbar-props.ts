@@ -37,6 +37,7 @@ export interface BuildToolbarPropsInput {
 	canEdit: boolean;
 	state: ViewerState;
 	selectedElement: PptxElement | null;
+	loadPicture?: (path: string) => Promise<string | undefined>;
 	activeSlide: PptxSlide | undefined;
 	/** Index of `activeSlide` in the deck, for per-slide ribbon commands. */
 	activeSlideIndex: number;
@@ -147,6 +148,17 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 	const selectionSize = selectedElement === null ? 0 : 1;
 
 	return {
+		picture: {
+			element: selectedElement,
+			editable: canEdit,
+			slides: s.slides,
+			loadImage: input.loadPicture,
+			patch: ops.updateElementById,
+			updateSlides: (update) => {
+				ops.updateSlides(update);
+				history.markDirty();
+			},
+		},
 		fileName,
 		mode,
 		canEdit,

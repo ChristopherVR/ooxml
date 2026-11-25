@@ -4,7 +4,7 @@ import {
 	canMergeShapes,
 	galleryDeckView,
 } from 'ooxml-ui/pptx';
-import type { DeckStyleState, RibbonGalleryContext } from 'ooxml-ui/pptx';
+import type { DeckStyleState, PictureRibbonState, RibbonGalleryContext } from 'ooxml-ui/pptx';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s building each chrome update payload);
    merging them isn't a style choice here. */
@@ -123,6 +123,7 @@ export interface EditingChromeSyncDeps {
 	layoutPreviews?(): ReadonlyMap<string, PptxLayoutPreview>;
 	/** The loaded deck's handler (ribbon gallery style-matrix resolution); null before a load. */
 	getHandler?(): PptxHandler | null;
+	updatePictureSlides?: PictureRibbonState['updateSlides'];
 	/** The original deck while a Design gallery hover preview shows. */
 	getHeldDeckStyle?(): DeckStyleState | undefined;
 }
@@ -189,6 +190,11 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 				deps.getHandler?.(),
 				deps.getHeldDeckStyle?.(),
 			),
+			picture: {
+				slides: state.slides,
+				updateSlides: deps.updatePictureSlides,
+				loadImage: (path) => deps.getHandler?.()?.getImageData(path) ?? Promise.resolve(undefined),
+			},
 			chartFormatTarget: chartFormatTargetOf(state),
 		});
 		ribbon?.setDrawState({

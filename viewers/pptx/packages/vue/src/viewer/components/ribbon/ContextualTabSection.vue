@@ -8,7 +8,7 @@
  * draws its shared strip as well.
  */
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
-import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+import type { PictureRibbonState, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -20,11 +20,21 @@ interface Props {
 	tab: RibbonContextualTabId;
 	/** Host + customisation hidden actions (gates the Size group's Crop). */
 	hiddenActions?: readonly ToolbarActionId[];
+	picture?: Omit<PictureRibbonState, 'translate'> | undefined;
 }
 
 const props = defineProps<Props>();
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const groups = computed(() => CONTEXTUAL_TAB_GROUPS[props.tab]);
+const pictureState = computed(() => {
+	const language = locale.value;
+	return (
+		props.picture && {
+			...props.picture,
+			translate: (key: string) => t(key, 1, { locale: language }),
+		}
+	);
+});
 
 function caption(labelKey: string, fallback: string): string {
 	const translated = t(labelKey);
@@ -48,5 +58,11 @@ function caption(labelKey: string, fallback: string): string {
 		/>
 		<PictureSizeStrip v-if="group.strip === 'picture-size'" :hidden-actions="props.hiddenActions" />
 		<ChartSelectionStrip v-else-if="group.strip === 'chart-selection'" />
+		<slot v-if="group.pictureStrip === 'picture-arrange'" name="arrange" />
+		<pptx-ui-picture-ribbon
+			v-if="group.pictureStrip"
+			:family.prop="group.pictureStrip"
+			:state.prop="pictureState"
+		/>
 	</pptx-ui-ribbon-group>
 </template>

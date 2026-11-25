@@ -234,6 +234,7 @@ export function useViewerBuildingBlocks(
 		fileLimits: input.fileLimits,
 	});
 	const toolbarProps = buildToolbarProps({
+		loadPicture: (path) => handlerRef.current?.getImageData(path) ?? Promise.resolve(undefined),
 		mode,
 		canEdit,
 		state,

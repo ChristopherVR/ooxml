@@ -11,6 +11,7 @@ import type { RibbonControlId, RibbonGroupId } from '../customization/ribbon-con
 import { RIBBON_CONTEXTUAL_TABS } from '../toolbar-actions';
 import type { RibbonContextualTabId } from '../toolbar-actions';
 import type { RibbonGalleryId } from './gallery-types';
+import type { PictureStripGroup } from '../../web-components/picture-ribbon-state';
 
 /** One gallery inside a group: the gallery and the control id it is tagged with. */
 export interface RibbonGalleryPlacement {
@@ -31,6 +32,7 @@ export interface RibbonGalleryGroupPlacement {
 	galleries: readonly RibbonGalleryPlacement[];
 	/** The `pptx-ui-ribbon-home-<strip>` drawn after the galleries (Picture Format > Size). */
 	strip?: 'picture-size' | 'chart-selection';
+	pictureStrip?: PictureStripGroup;
 }
 
 /** Galleries the format inspector shows as panels (`mode="panel"`) instead of the ribbon. */
@@ -67,6 +69,7 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 	pictureFormat: [
 		{
 			group: 'pictureFormat.adjust',
+			pictureStrip: 'picture-adjust',
 			labelKey: 'pptx.ribbon.groupAdjust',
 			label: 'Adjust',
 			galleries: [
@@ -85,6 +88,7 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 		},
 		{
 			group: 'pictureFormat.pictureStyles',
+			pictureStrip: 'picture-styles',
 			labelKey: 'pptx.ribbon.groupPictureStyles',
 			label: 'Picture Styles',
 			galleries: [
@@ -111,6 +115,20 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			label: 'Size',
 			galleries: [],
 			strip: 'picture-size',
+		},
+		{
+			group: 'pictureFormat.accessibility',
+			labelKey: 'pptx.pictureFormat.altText',
+			label: 'Alt Text',
+			galleries: [],
+			pictureStrip: 'picture-accessibility',
+		},
+		{
+			group: 'pictureFormat.arrange',
+			labelKey: 'pptx.ribbon.arrange',
+			label: 'Arrange',
+			galleries: [],
+			pictureStrip: 'picture-arrange',
 		},
 	],
 	tableDesign: [

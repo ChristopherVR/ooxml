@@ -89,6 +89,9 @@ describe('picture adjust galleries', () => {
 			}),
 		});
 		expect(wrapper.find('[data-ribbon-group="pictureFormat.adjust"]').exists()).toBeTruthy();
+		expect(
+			wrapper.find('[data-ribbon-control="pictureFormat.adjust.changePicture"]').exists(),
+		).toBeTruthy();
 		for (const control of Object.values(CONTROLS)) {
 			expect(wrapper.find(`[data-ribbon-control="${control}"]`).exists()).toBeTruthy();
 		}

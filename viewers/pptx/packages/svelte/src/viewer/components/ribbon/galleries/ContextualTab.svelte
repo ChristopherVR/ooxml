@@ -7,11 +7,14 @@
 	 * A command group (Picture Format > Size) draws its shared strip as well.
 	 */
 	import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
-	import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+	import type { PictureRibbonState, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import ChartSelectionStrip from './ChartSelectionStrip.svelte';
+	import ArrangeExtras from '../home/ArrangeExtras.svelte';
+	import ArrangeHomeStrip from '../home/ArrangeHomeStrip.svelte';
+	import type { ChromeUiState } from '../../../state/chrome-ui.svelte';
 	import PictureSizeStrip from './PictureSizeStrip.svelte';
 	import RibbonGallery from './RibbonGallery.svelte';
 	import { translatedOr } from './gallery-labels';
@@ -20,13 +23,28 @@
 		tab,
 		editor,
 		hiddenActions,
+		chromeUi,
+		onselectionpane,
 	}: {
 		tab: RibbonContextualTabId;
 		editor: EditorState;
 		hiddenActions?: readonly ToolbarActionId[];
+		chromeUi?: ChromeUiState | undefined;
+		onselectionpane?: (() => void) | undefined;
 	} = $props();
 	const t = useTranslator();
 	const groups = $derived(CONTEXTUAL_TAB_GROUPS[tab]);
+	const picture = $derived<PictureRibbonState>({
+		element: editor.selectedElement,
+		editable: editor.editable,
+		translate: t,
+		slides: editor.slides,
+		patch: (id, patch) => editor.applyElementPatch(id, patch),
+		loadImage: (path) => editor.getHandler()?.getImageData(path) ?? Promise.resolve(undefined),
+		updateSlides: (update) => editor.commitSlides(update(editor.slides)),
+		altText: chromeUi && (() => chromeUi.formatPane.requestFormatPane('picture', { focus: true })),
+		selectionPane: onselectionpane,
+	});
 </script>
 
 <div class="pptx-svelte-ctxtab" data-ribbon-contextual-panel={tab}>
@@ -39,6 +57,13 @@
 				<PictureSizeStrip {editor} {hiddenActions} />
 			{:else if group.strip === 'chart-selection'}
 				<ChartSelectionStrip {editor} />
+			{/if}
+			{#if group.pictureStrip === 'picture-arrange'}
+				<ArrangeExtras {editor} {hiddenActions} />
+				<ArrangeHomeStrip {editor} strip="order" />
+			{/if}
+			{#if group.pictureStrip}
+				<pptx-ui-picture-ribbon family={group.pictureStrip} state={picture}></pptx-ui-picture-ribbon>
 			{/if}
 		</pptx-ui-ribbon-group>
 	{/each}

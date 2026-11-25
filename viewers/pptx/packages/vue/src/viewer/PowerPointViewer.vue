@@ -2149,7 +2149,23 @@ const viewZoom = {
 	},
 	fit: zoomReset,
 };
-const ribbonProps = computed(() => ({ ...customizedRibbonProps.value, viewZoom }));
+const ribbonProps = computed(() => ({
+	...customizedRibbonProps.value,
+	viewZoom,
+	picture: {
+		element: selectedElements.value[0] ?? null,
+		editable: canEditEffective.value,
+		slides: slides.value,
+		loadImage: (path: string) => handler.value?.getImageData(path) ?? Promise.resolve(undefined),
+		patch: ops.updateElement,
+		updateSlides: (update: (current: PptxSlide[]) => PptxSlide[]) => {
+			history.pushHistory();
+			slides.value = update(slides.value);
+			autosave.isDirty.value = true;
+		},
+		altText: () => formatPane.requestFormatPane('picture', { focus: true }),
+	},
+}));
 
 // -- Imperative surface (implements the shared PowerPointViewerAPI) ----
 useCanvasImagePaste(viewerRootRef, {

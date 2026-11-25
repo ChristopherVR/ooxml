@@ -808,7 +808,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		);
 
 		// Image crop / effects / alt text
-		this.applyImageProperties(shape, el);
+		this.applyImageProperties(shape, el, ctx);
 		this.finalizePictureBlipFillOrder(shape);
 
 		// Geometry

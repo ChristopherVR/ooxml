@@ -414,6 +414,14 @@ export function createEditorController(deps: EditorControllerDeps): EditorContro
 		selectedElement: (state) => ops.selectedElement(state),
 		layoutPreviews: ensureLayoutPreviews,
 		getHandler: deps.getHandler,
+		updatePictureSlides: (update) => {
+			if (!store.get().editable) {
+				return;
+			}
+			ops.pushHistory();
+			store.set({ slides: update(store.get().slides) });
+			ops.commitChange();
+		},
 		getHeldDeckStyle: () => editActions.heldDeckStyleState(),
 	});
 

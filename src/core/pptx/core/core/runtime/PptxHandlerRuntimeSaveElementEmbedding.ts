@@ -29,6 +29,7 @@ import { ensureXmlChild } from '../../utils/xml-access';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
 import { addSvgBlipExtension } from './picture-svg-blip';
+import { pictureBlipFill as readPictureBlipFill, rebindPictureBlip } from './picture-source-edit';
 import { withSegmentSlideJumpTargets } from './run-slide-jump-targets';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
 import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
@@ -161,15 +162,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/** Apply image crop, effects, and alt text for picture/image elements. */
-	protected applyImageProperties(shape: XmlObject, el: PptxElement): void {
+	protected applyImageProperties(shape: XmlObject, el: PptxElement, ctx: SaveSlideContext): void {
 		if (el.type !== 'picture' && el.type !== 'image') {
 			return;
 		}
-		const pictureBlipFill =
-			(shape['p:blipFill'] as XmlObject | undefined) ||
-			((shape['p:spPr'] as XmlObject | undefined)?.['a:blipFill'] as XmlObject | undefined);
+		const pictureBlipFill = readPictureBlipFill(shape);
 		this.applyImageCropToBlipFill(pictureBlipFill, el);
-		this.applyImageEffectsToBlip(pictureBlipFill, el.imageEffects);
+		const source =
+			el.imageEffects?.backgroundRemoval && el.originalPictureData
+				? this.parseDataUrlToBytes(el.originalPictureData)
+				: undefined;
+		const effects = source
+			? { ...el.imageEffects, originalImageRelId: this.embedEditedPictureBytes(source, ctx) }
+			: el.imageEffects;
+		this.applyImageEffectsToBlip(pictureBlipFill, effects);
 		const cNvPrNode = (shape?.['p:nvPicPr'] as XmlObject | undefined)?.['p:cNvPr'] as
 			| XmlObject
 			| undefined;
@@ -258,6 +264,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	): XmlObject | undefined {
 		const parsedImage = this.parseDataUrlToBytes(el.imageData!);
 		if (parsedImage) {
+			if (el.imageDataEdited) {
+				const relationshipId = this.embedEditedPictureBytes(parsedImage, ctx);
+				const edited = shape && rebindPictureBlip(shape, relationshipId);
+				if (edited) return edited;
+				const picture = this.createPictureXml(el, relationshipId);
+				const blipFill = readPictureBlipFill(picture);
+				if (blipFill) applyNewPictureLayout(blipFill, el, this.pictureFillSaveContext(el, ctx));
+				return picture;
+			}
 			let targetImagePath = el.imagePath;
 			if (!targetImagePath) {
 				// A new picture: identical bytes share one media part (and, on one
@@ -340,6 +355,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			'@_Target': mediaPath.replace(/^ppt\//u, '../'),
 		});
 		return relationshipId;
+	}
+
+	private embedEditedPictureBytes(
+		image: { bytes: Uint8Array; extension: string },
+		ctx: SaveSlideContext,
+	): string {
+		const media = ctx.saveSession.mediaPathForContent(image.bytes, image.extension);
+		if (!media.reused) this.zip.file(media.path, image.bytes);
+		const target = media.path.replace(/^ppt\//u, '../');
+		const existing = ctx.slideRelationships.find(
+			(rel) => rel['@_Type'] === ctx.slideImageRelationshipType && rel['@_Target'] === target,
+		)?.['@_Id'];
+		return typeof existing === 'string'
+			? existing
+			: this.addSlideImageRelationship(media.path, ctx);
 	}
 
 	/** What the picture-fill writers need, bound to `el` on the slide being saved. */

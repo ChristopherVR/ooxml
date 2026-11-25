@@ -17,6 +17,8 @@
 // ── Core PPTX engine (parse, save, types, geometry, services) ──
 export * from './core';
 export { mergePptxSnapshots } from './merge-snapshots';
+export * from './core/utils/picture-edits';
+export * from './core/utils/picture-raster-header';
 export {
 	createPresentationFromOutline,
 	inspectPresentationText,

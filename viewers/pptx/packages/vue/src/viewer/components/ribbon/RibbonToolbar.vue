@@ -22,6 +22,7 @@ import {
 	visibleContextualTabs,
 } from 'ooxml-ui/pptx';
 import type {
+	PictureRibbonState,
 	RibbonContextualTabId,
 	RibbonDisplayController,
 	RibbonDisplayState,
@@ -54,6 +55,7 @@ import ToolbarPrimaryRow from './ToolbarPrimaryRow.vue';
 import TransitionsSection from './TransitionsSection.vue';
 
 interface Props extends RibbonProps {
+	picture?: Omit<PictureRibbonState, 'translate'>;
 	/** Ribbon Display Options state; absent, the ribbon docks as in `always` mode. */
 	ribbonDisplay?: RibbonDisplayState;
 	/** The viewer's Ribbon Display Options controller (menu, tab clicks, double clicks). */
@@ -65,11 +67,10 @@ const { t } = useI18n();
 
 const showRibbon = computed(() => props.mode === 'edit' || props.mode === 'master');
 /**
- * The ribbon props without the Ribbon Display Options pair: the sections that take the whole
- * contract with `v-bind` would otherwise receive them as stray attributes.
+ * Pass only the common ribbon contract to sections that take the whole contract with `v-bind`.
  */
 const sharedProps = computed(() => {
-	const { ribbonDisplay, ribbonDisplayController, ...rest } = props;
+	const { ribbonDisplay, ribbonDisplayController, picture, ...rest } = props;
 	return rest;
 });
 const displayLayout = computed(
@@ -140,6 +141,28 @@ const { visibleTabs } = useToolbarVisibility(
 	() => props.hiddenActions,
 	() => viewerOptions?.value,
 );
+
+const arrangeProps = computed(() => ({
+	canEdit: props.canEdit,
+	selectedElement: props.selectedElement,
+	selectedCount: props.selectedCount,
+	selectionGroupable: props.selectionGroupable,
+	onAlignElements: props.onAlignElements,
+	onDistributeElements: props.onDistributeElements,
+	canDistribute: props.canDistribute,
+	onFlip: props.onFlip,
+	onMoveLayer: props.onMoveLayer,
+	onMoveLayerToEdge: props.onMoveLayerToEdge,
+	onGroupElements: props.onGroupElements,
+	onUngroupElement: props.onUngroupElement,
+	onUpdateElementStyle: props.onUpdateElementStyle,
+	onDuplicate: props.onDuplicate,
+	onDelete: props.onDelete,
+	formatPainterActive: props.formatPainterActive,
+	onToggleFormatPainter: props.onToggleFormatPainter,
+	canActivateFormatPainter: props.canActivateFormatPainter,
+	hiddenActions: props.hiddenActions,
+}));
 
 // Groups collapse into popup buttons when the window is too narrow, as in Office.
 // Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
@@ -367,28 +390,7 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-set-drawing-width="props.onSetDrawingWidth"
 					/>
 
-					<ArrangeSection
-						v-if="s === 'home' || s === 'arrange'"
-						:can-edit="props.canEdit"
-						:selected-element="props.selectedElement"
-						:selected-count="props.selectedCount"
-						:selection-groupable="props.selectionGroupable"
-						:on-align-elements="props.onAlignElements"
-						:on-distribute-elements="props.onDistributeElements"
-						:can-distribute="props.canDistribute"
-						:on-flip="props.onFlip"
-						:on-move-layer="props.onMoveLayer"
-						:on-move-layer-to-edge="props.onMoveLayerToEdge"
-						:on-group-elements="props.onGroupElements"
-						:on-ungroup-element="props.onUngroupElement"
-						:on-update-element-style="props.onUpdateElementStyle"
-						:on-duplicate="props.onDuplicate"
-						:on-delete="props.onDelete"
-						:format-painter-active="props.formatPainterActive"
-						:on-toggle-format-painter="props.onToggleFormatPainter"
-						:can-activate-format-painter="props.canActivateFormatPainter"
-						:hidden-actions="props.hiddenActions"
-					/>
+					<ArrangeSection v-if="s === 'home' || s === 'arrange'" v-bind="arrangeProps" />
 
 					<DesignSection
 						v-if="s === 'design'"
@@ -432,7 +434,12 @@ onBeforeUnmount(() => detachOverflow?.());
 						v-if="activeContextualTab"
 						:tab="activeContextualTab"
 						:hidden-actions="props.hiddenActions"
-					/>
+						:picture="
+							props.picture && { ...props.picture, selectionPane: props.onToggleSelectionPane }
+						"
+					>
+						<template #arrange><ArrangeSection v-bind="arrangeProps" embedded /></template>
+					</ContextualTabSection>
 				</template>
 			</div>
 		</div>

@@ -127,6 +127,31 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	// Full-screen mode keeps the strip in the layout, so a peeked ribbon moves nothing.
 	const showStrip = layout.reveal || effectiveMode === 'fullScreen';
 
+	const arrange = (
+		<ArrangeSection
+			embedded={contextual.active === 'pictureFormat'}
+			canEdit={p.canEdit}
+			selectedElement={p.selectedElement}
+			selectedCount={p.selectedCount}
+			selectionGroupable={p.selectionGroupable}
+			onAlignElements={p.onAlignElements}
+			onDistributeElements={p.onDistributeElements}
+			canDistribute={p.canDistribute}
+			onFlip={p.onFlip}
+			onMoveLayer={p.onMoveLayer}
+			onMoveLayerToEdge={p.onMoveLayerToEdge}
+			onGroupElements={p.onGroupElements}
+			onUngroupElement={p.onUngroupElement}
+			onUpdateElementStyle={p.onUpdateElementStyle}
+			onDuplicate={p.onDuplicate}
+			onDelete={p.onDelete}
+			formatPainterActive={p.formatPainterActive}
+			onToggleFormatPainter={p.onToggleFormatPainter}
+			canActivateFormatPainter={p.canActivateFormatPainter}
+			hiddenActions={p.hiddenActions}
+		/>
+	);
+
 	return (
 		<div className='relative'>
 			{showStrip && <RibbonRevealStrip ribbon={ribbon} />}
@@ -379,29 +404,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 							/>
 						)}
 
-						{sArr && (
-							<ArrangeSection
-								canEdit={p.canEdit}
-								selectedElement={p.selectedElement}
-								selectedCount={p.selectedCount}
-								selectionGroupable={p.selectionGroupable}
-								onAlignElements={p.onAlignElements}
-								onDistributeElements={p.onDistributeElements}
-								canDistribute={p.canDistribute}
-								onFlip={p.onFlip}
-								onMoveLayer={p.onMoveLayer}
-								onMoveLayerToEdge={p.onMoveLayerToEdge}
-								onGroupElements={p.onGroupElements}
-								onUngroupElement={p.onUngroupElement}
-								onUpdateElementStyle={p.onUpdateElementStyle}
-								onDuplicate={p.onDuplicate}
-								onDelete={p.onDelete}
-								formatPainterActive={p.formatPainterActive}
-								onToggleFormatPainter={p.onToggleFormatPainter}
-								canActivateFormatPainter={p.canActivateFormatPainter}
-								hiddenActions={p.hiddenActions}
-							/>
-						)}
+						{sArr && arrange}
 
 						{sDes && (
 							<DesignSection
@@ -420,7 +423,19 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 						<ToolbarLateTabs p={p} section={section} />
 
 						{contextual.active && !addIns.active && (
-							<ContextualTabSection tab={contextual.active} hiddenActions={p.hiddenActions} />
+							<ContextualTabSection
+								tab={contextual.active}
+								arrange={arrange}
+								hiddenActions={p.hiddenActions}
+								picture={
+									p.picture && {
+										...p.picture,
+										translate: t,
+										altText: () => formatPane.requestFormatPane('picture', { focus: true }),
+										selectionPane: p.onToggleSelectionPane,
+									}
+								}
+							/>
 						)}
 
 						{addIns.active && <RibbonAddInSection tab={addIns.active} />}

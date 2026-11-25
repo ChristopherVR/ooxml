@@ -34,6 +34,7 @@ import { MergeCropKey } from '../../composables/merge-crop-context';
 import { useToolbarVisibility } from '../../composables/useToolbarVisibility';
 
 interface Props {
+	embedded?: boolean;
 	canEdit: boolean;
 	selectedElement: PptxElement | null;
 	/** How many elements the multi-select currently holds; Group needs two. */
@@ -173,11 +174,14 @@ function requestEdit(event: RibbonHomeRequestEvent): void {
 </script>
 
 <template>
-	<div class="flex flex-col items-center gap-0.5" data-ribbon-group="home.arrange">
+	<div
+		class="flex flex-col items-center gap-0.5"
+		:data-ribbon-group="props.embedded ? undefined : 'home.arrange'"
+	>
 		<div data-pptx-chrome="arrange-controls">
 			<pptx-ui-ribbon-home-arrange-align :state.prop="state" @home-request="requestAlign" />
 			<pptx-ui-ribbon-home-arrange-painter
-				v-if="props.onToggleFormatPainter"
+				v-if="!props.embedded && props.onToggleFormatPainter"
 				:state.prop="painterState"
 				@home-request="props.onToggleFormatPainter()"
 			/>
@@ -187,8 +191,14 @@ function requestEdit(event: RibbonHomeRequestEvent): void {
 				<pptx-ui-ribbon-home-arrange-shape :state.prop="shapeState" @home-request="requestShape" />
 			</div>
 			<pptx-ui-ribbon-home-arrange-order :state.prop="state" @home-request="requestOrder" />
-			<pptx-ui-ribbon-home-arrange-edit :state.prop="state" @home-request="requestEdit" />
+			<pptx-ui-ribbon-home-arrange-edit
+				v-if="!props.embedded"
+				:state.prop="state"
+				@home-request="requestEdit"
+			/>
 		</div>
-		<span data-pptx-chrome="ribbon-group-label">{{ t('pptx.ribbon.arrange') }}</span>
+		<span v-if="!props.embedded" data-pptx-chrome="ribbon-group-label">{{
+			t('pptx.ribbon.arrange')
+		}}</span>
 	</div>
 </template>

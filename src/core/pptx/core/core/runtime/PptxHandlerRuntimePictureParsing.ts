@@ -417,6 +417,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				| XmlObject
 				| undefined;
 			const picSlideRels = this.slideRelsMap.get(slidePath);
+			const originalRel = imageEffects?.backgroundRemoval && imageEffects.originalImageRelId;
+			const originalTarget = originalRel ? picSlideRels?.get(originalRel) : undefined;
+			const originalPicturePath =
+				originalTarget &&
+				!/^\w+:/u.test(originalTarget) &&
+				/\.(?:png|jpe?g)$/iu.test(originalTarget)
+					? this.resolveImagePath(slidePath, originalTarget)
+					: undefined;
 			const { actionClick: picActionClick, actionHover: picActionHover } = this.parseElementActions(
 				picCNvPr,
 				picSlideRels,
@@ -460,6 +468,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				heightEmu,
 				imageData,
 				imagePath,
+				...(originalPicturePath && { originalPicturePath }),
 				...(svgData !== undefined && { svgData }),
 				...(svgPath !== undefined && { svgPath }),
 				altText: altTextRaw.length > 0 ? altTextRaw : undefined,

@@ -120,7 +120,7 @@
 	{:else if tab === 'help'}
 		<HelpTab onaccessibility={() => onselecttab('review')} onshortcuts={ribbon.onshortcuts} onsettings={ribbon.onsettings} />
 	{:else if isContextualTab(tab)}
-		<ContextualTab {tab} editor={ribbon.editor} hiddenActions={ribbon.hiddenActions} />
+		<ContextualTab {tab} editor={ribbon.editor} hiddenActions={ribbon.hiddenActions} chromeUi={ribbon.chromeUi} onselectionpane={ribbon.onselectionpane} />
 	{/if}
 </div>
 

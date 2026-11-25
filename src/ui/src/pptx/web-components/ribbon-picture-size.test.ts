@@ -31,6 +31,8 @@ describe('picture Format > Size', () => {
 			'pictureFormat.adjust',
 			'pictureFormat.pictureStyles',
 			'pictureFormat.size',
+			'pictureFormat.accessibility',
+			'pictureFormat.arrange',
 		]);
 		expect(groups[2]).toMatchObject({ labelKey: 'pptx.ribbon.groupSize', strip: 'picture-size' });
 		expect(translationsEn['pptx.ribbon.groupSize']).toBe('Size');

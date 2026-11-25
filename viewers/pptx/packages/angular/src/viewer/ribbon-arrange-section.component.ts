@@ -39,6 +39,7 @@ export class RibbonArrangeSectionComponent {
 	protected readonly editor = inject(EditorStateService);
 
 	readonly slideIndex = input<number>(0);
+	readonly embedded = input(false);
 	/** The active selection, which gates Ungroup and the outline-width spinner. */
 	readonly selectedElement = input<PptxElement | null>(null);
 	/** Whether the deck is editable; a read-only deck cannot group or restyle. */
@@ -46,7 +47,7 @@ export class RibbonArrangeSectionComponent {
 	readonly formatPainterActive = input<boolean>(false);
 	readonly canActivateFormatPainter = input<boolean>(false);
 	/** Toolbar buttons the host hides (gates Merge Shapes and Crop). */
-	readonly hiddenActions = input<ToolbarActionId[]>([]);
+	readonly hiddenActions = input<readonly ToolbarActionId[]>([]);
 
 	readonly toggleFormatPainter = output<void>();
 

@@ -69,6 +69,15 @@ room or omit the collaboration configuration to keep insertions local.
 
 ## PowerPoint (`ooxml-ui/pptx` and the `pptx-*-viewer` packages)
 
+Picture Format reads the selected local PNG or JPEG, or an embedded picture's
+local object URL, when a picture editing command is invoked. The browser loads
+the picture worker from the application and processes the bytes on the device.
+The worker receives no remote picture URLs. Keep Changes stores the edited
+bitmap, original bitmap and marks in the presentation through the existing
+save path. When AutoSave or AutoRecover stores a presentation snapshot, that
+snapshot can include the picture edits. The existing AutoSave and AutoRecover
+settings control those snapshots.
+
 ### Cameo camera preview
 
 The Cameo button on a live slide surface can activate the device camera after the user

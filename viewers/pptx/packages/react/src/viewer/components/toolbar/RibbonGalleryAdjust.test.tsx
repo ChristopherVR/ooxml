@@ -114,6 +114,9 @@ describe('picture adjust galleries', () => {
 	it('mounts the Adjust group on the Picture Format tab', () => {
 		act(() => root.render(<ContextualTabSection tab='pictureFormat' />));
 		expect(container.querySelector('[data-ribbon-group="pictureFormat.adjust"]')).not.toBeNull();
+		expect(
+			container.querySelector('[data-ribbon-control="pictureFormat.adjust.changePicture"]'),
+		).not.toBeNull();
 		for (const gallery of ['pictureCorrections', 'pictureColor', 'pictureArtisticEffects']) {
 			expect(container.querySelector(`[data-ribbon-gallery="${gallery}"]`)).not.toBeNull();
 		}

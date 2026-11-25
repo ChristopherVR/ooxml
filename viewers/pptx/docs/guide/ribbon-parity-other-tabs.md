@@ -138,6 +138,16 @@ Evidence: `shape-format/`, `picture-format/`, `table-design/`, `chart-design/`, 
 | Gallery strips show six tiles, PowerPoint shows seven to ten                                                                                   | Low      | Not fixed: `INLINE_GALLERY_TILE_COUNT` is part of the tested gallery contract                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Contextual tabs are not highlighted with the red accent PowerPoint uses                                                                        | Low      | Not fixed: tab strip styling belongs to the shared ribbon chrome                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
+Picture Format offers Change Picture, Compress Pictures, Remove Background, Reset Picture,
+Reset Picture & Size, Picture Border, Alt Text and Arrange. Raster commands use local PNG or
+JPEG files and run their pixel operations in a browser worker. Compression can target one
+picture or the eligible pictures in the presentation, with the option to delete cropped
+pixels. Its summary counts image bytes before packaging and lists skipped pictures.
+Remove Background previews an edge-based guess, takes keep/remove marks by pointer or
+keyboard, and saves the rendered bitmap and edit marks. The viewer can reopen originals it
+saved as PNG or JPEG. Editing PowerPoint HD Photo originals and converting selected pictures
+to SmartArt are open.
+
 ## Cross-cutting changes
 
 - `pptx-ui-ribbon-command` accepts a `caret` attribute and draws the drop-down chevron after
@@ -169,7 +179,8 @@ overflow is the viewer's own mobile sheet and is out of scope here.
 
 1. Contextual command groups (High): Insert Shapes, Arrange (Bring Forward, Send Backward,
    Selection Pane, Align, Group, Rotate), Size (Height, Width, Crop) and Alt Text on Shape
-   Format and Picture Format. Reuse the one-button command entry that
+   Format. Add the contextual height and width fields and SmartArt Picture Layout to Picture
+   Format. Reuse the one-button command entry that
    `pptx-ui-ribbon-gallery` now supports (`descriptor.command`) or the Home arrange strips;
    the per-binding work is wiring the existing z-order and size actions into the gallery
    context.

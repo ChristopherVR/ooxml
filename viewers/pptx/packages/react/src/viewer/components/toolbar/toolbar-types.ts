@@ -1,5 +1,6 @@
 import type {
 	AnimationApplyGroup,
+	PictureRibbonState,
 	CommitRibbonAnimations,
 	FreeformToolKind,
 	InsertChartKind,
@@ -32,6 +33,7 @@ import type {
 import type { ChangeCaseMode } from '../../utils/text-case-transform';
 
 export interface ToolbarProps {
+	picture?: Omit<PictureRibbonState, 'translate' | 'altText' | 'selectionPane'>;
 	fileName?: string;
 	mode: ViewerMode;
 	canEdit: boolean;

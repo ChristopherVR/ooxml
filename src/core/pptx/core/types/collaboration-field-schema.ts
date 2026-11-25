@@ -105,6 +105,9 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	// PptxImageProperties
 	imageData: 'scalar',
 	imagePath: 'scalar',
+	imageDataEdited: 'scalar',
+	originalPictureData: 'scalar',
+	originalPicturePath: 'scalar',
 	svgData: 'scalar',
 	svgPath: 'scalar',
 	altText: 'scalar',

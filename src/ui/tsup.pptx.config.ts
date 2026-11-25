@@ -5,6 +5,7 @@ export default defineConfig({
 	entry: {
 		'dom/index': 'src/pptx/dom/index.ts',
 		index: 'src/pptx/index.ts',
+		'picture-worker': 'src/pptx/web-components/picture-worker.mjs',
 		'theme/index': 'src/pptx/theme/index.ts',
 		'loader/index': 'src/pptx/loader/index.ts',
 		'onedrive/index': 'src/pptx/onedrive/index.ts',

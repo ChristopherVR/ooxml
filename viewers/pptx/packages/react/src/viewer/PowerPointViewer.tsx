@@ -1559,6 +1559,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 								<RecentColorsProvider value={recentColorsValue}>
 									{mode !== 'present' && rootOptions.showToolbar && (
 										<ViewerToolbarSection
+											loadPicture={(path) =>
+												handlerRef.current?.getImageData(path) ?? Promise.resolve(undefined)
+											}
 											mode={mode}
 											onNewPresentation={countDeckReplacement}
 											onImportSlides={(source, indexes) =>

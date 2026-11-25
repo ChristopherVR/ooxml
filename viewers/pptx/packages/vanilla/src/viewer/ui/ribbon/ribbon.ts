@@ -293,6 +293,11 @@ export function createRibbon(
 		'picture-size': pictureSize.el,
 		'chart-selection': chartSelection.el,
 	});
+	const picturePane = contextualPanes.get('pictureFormat');
+	const pictureStrips = picturePane?.querySelectorAll('pptx-ui-picture-ribbon') ?? [];
+	const pictureArrange = picturePane?.querySelector('[data-ribbon-group="pictureFormat.arrange"]');
+	const homeArrange = homeTab?.el.querySelector('[data-ribbon-group="home.arrange"]');
+	const homeArrangeRow = homeArrange?.querySelector('[data-pptx-chrome="arrange-controls"]');
 	for (const [id, pane] of contextualPanes) {
 		pane.hidden = true;
 		detachOverflow.push(attachRibbonOverflow(pane, { launchers }));
@@ -312,6 +317,12 @@ export function createRibbon(
 			galleryHub.closeAll();
 		}
 		activeTab = tab;
+		if (homeArrange && homeArrangeRow && pictureArrange) {
+			const group = tab === 'pictureFormat' ? pictureArrange : homeArrange;
+			if (homeArrangeRow.parentElement !== group) {
+				group.prepend(homeArrangeRow);
+			}
+		}
 		tabBar.setActive(tab);
 		fileTab?.setVisible(tab === 'file');
 		// "Show tabs only" keeps the commands away until a tab is chosen, then lays them over the
@@ -366,6 +377,18 @@ export function createRibbon(
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
 		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
+		for (const strip of pictureStrips) {
+			strip.state = {
+				...latestExtra.picture,
+				element: latestSelected,
+				editable: lastEditable,
+				translate: t,
+				patch: (elementId, patch) =>
+					handlers.edit.applyRibbonGalleryResult({ kind: 'element', elementId, patch }),
+				altText: () => handlers.nav.requestFormatPane('picture'),
+				selectionPane: handlers.nav.openSelectionPane,
+			};
+		}
 		chartSelection.update({
 			editable: lastEditable,
 			element: latestSelected,

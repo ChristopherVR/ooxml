@@ -1,5 +1,6 @@
 import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
+	PictureRibbonState,
 	CloudFileProvider,
 	CloudOpenedFile,
 	FreeformToolKind,
@@ -343,6 +344,7 @@ export interface RibbonSelectionState {
 	cropActive?: boolean;
 	/** What the shared ribbon galleries build their descriptors from. */
 	galleryContext?: RibbonGalleryContext;
+	picture?: Pick<PictureRibbonState, 'slides' | 'updateSlides' | 'loadImage'>;
 	/** Chart Format > Current Selection: the selected chart's current element. */
 	chartFormatTarget?: string;
 }

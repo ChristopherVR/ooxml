@@ -42,6 +42,9 @@ export type {
 import { definePptxSmartArtTextPane } from './smartart-text-pane';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
+import { definePptxPictureRibbon } from './picture-ribbon';
+export type { PptxPictureRibbonElement } from './picture-ribbon';
+export type { PictureRibbonState, PictureStripGroup } from './picture-ribbon-state';
 import { definePptxInsertChartDialog } from './insert-chart-dialog';
 import { definePptxPdfExportDialog } from './pdf-export-dialog';
 import { definePptxInsertSmartArtDialog } from './insert-smartart-dialog';
@@ -249,6 +252,7 @@ const controls = [
 	['pptx-ui-ribbon-home-arrange-painter', definePptxRibbonHomeArrangePainter],
 	['pptx-ui-ribbon-home-arrange-shape', definePptxRibbonHomeArrangeShape],
 	['pptx-ui-ribbon-home-picture-size', definePptxRibbonHomePictureSize],
+	['pptx-ui-picture-ribbon', definePptxPictureRibbon],
 	['pptx-ui-ribbon-home-chart-selection', definePptxRibbonHomeChartSelection],
 	['pptx-ui-ribbon-view', definePptxRibbonView],
 	['pptx-ui-ribbon-transitions', definePptxRibbonTransitions],

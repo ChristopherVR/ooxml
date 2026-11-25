@@ -14,6 +14,7 @@ import { applyHeaderFooterToMaster } from './header-footer-parts';
 import { slidesPerPageToPrintOutput } from './pptx-print-properties';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveStructuralIds';
 import { validateElementGeometry, validateSlideGeometry } from './save-geometry-validation';
+import { archiveWithEditedPictures } from './save-picture-media';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/**
@@ -429,7 +430,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				file.date = this.saveFixedDate;
 			}
 		}
-		return await this.zip.generateAsync({
+		const output = await archiveWithEditedPictures(this.zip, slides);
+		return await output.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',
 			compressionOptions: { level: 6 },

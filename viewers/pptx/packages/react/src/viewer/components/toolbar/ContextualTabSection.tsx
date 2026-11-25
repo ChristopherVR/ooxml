@@ -1,4 +1,4 @@
-import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
+import type { PictureRibbonState, RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import { CONTEXTUAL_TAB_GROUPS } from 'ooxml-ui/pptx';
 import React from 'react';
 
@@ -16,9 +16,13 @@ import { WebRibbonGroup } from './WebRibbonControls';
 export function ContextualTabSection({
 	tab,
 	hiddenActions,
+	picture,
+	arrange,
 }: {
 	tab: RibbonContextualTabId;
 	hiddenActions?: readonly ToolbarActionId[];
+	picture?: PictureRibbonState | undefined;
+	arrange?: React.ReactNode;
 }): React.ReactElement {
 	const translateOr = useTranslateOr();
 	return (
@@ -34,6 +38,17 @@ export function ContextualTabSection({
 					))}
 					{group.strip === 'picture-size' && <PictureSizeStrip hiddenActions={hiddenActions} />}
 					{group.strip === 'chart-selection' && <ChartSelectionStrip />}
+					{group.pictureStrip === 'picture-arrange' && arrange}
+					{group.pictureStrip &&
+						React.createElement('pptx-ui-picture-ribbon', {
+							ref: (node: HTMLElementTagNameMap['pptx-ui-picture-ribbon'] | null) => {
+								if (!node || !group.pictureStrip) {
+									return;
+								}
+								node.family = group.pictureStrip;
+								node.state = picture;
+							},
+						})}
 				</WebRibbonGroup>
 			))}
 		</>

@@ -57,6 +57,11 @@ export function createGalleryGroup(
 	if (strip) {
 		shell.row.appendChild(strip);
 	}
+	if (group.pictureStrip) {
+		const picture = doc.createElement('pptx-ui-picture-ribbon');
+		picture.family = group.pictureStrip;
+		shell.row.append(picture);
+	}
 	return shell.el;
 }
 

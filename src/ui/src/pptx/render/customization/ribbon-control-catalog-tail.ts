@@ -168,6 +168,11 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 				corrections: 'Corrections gallery',
 				color: 'Color gallery',
 				artisticEffects: 'Artistic Effects gallery',
+				removeBackground: 'Remove Background',
+				compress: 'Compress Pictures',
+				changePicture: 'Change Picture',
+				resetPicture: 'Reset Picture',
+				resetSize: 'Reset Picture & Size',
 			},
 		},
 		pictureStyles: {
@@ -176,9 +181,16 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 				gallery: 'Picture Styles gallery',
 				pictureEffects: 'Picture Effects gallery',
 				graphicsFill: 'Graphics Fill gallery',
+				border: 'Picture Border',
+				layout: 'Picture Layout',
 			},
 		},
 		size: { label: 'Size', controls: { crop: 'Crop' } },
+		accessibility: { label: 'Alt Text', controls: { altText: 'Alt Text' } },
+		arrange: {
+			label: 'Arrange',
+			controls: { rotateRight: 'Rotate Right 90°', selectionPane: 'Selection Pane' },
+		},
 	},
 	tableDesign: {
 		tableStyles: { label: 'Table Styles', controls: { gallery: 'Table Styles gallery' } },

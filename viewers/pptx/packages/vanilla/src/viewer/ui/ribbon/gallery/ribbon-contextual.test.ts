@@ -92,6 +92,22 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 	);
 
 describe('ribbon contextual tabs (vanilla)', () => {
+	it('mounts the picture commands and shares Home Arrange', () => {
+		const ribbon = mount();
+		const picture: PptxElement = { id: 'pic', type: 'image', x: 0, y: 0, width: 100, height: 50 };
+		ribbon.updateSelection(picture, selection(picture));
+		ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="pictureFormat"]')?.click();
+		const pane = visiblePane(ribbon.el);
+		expect(
+			pane?.querySelector('[data-ribbon-control="pictureFormat.adjust.changePicture"]'),
+		).not.toBeNull();
+		expect(
+			pane?.querySelector(
+				'[data-ribbon-group="pictureFormat.arrange"] [data-ribbon-control="home.arrange.bringForward"]',
+			),
+		).not.toBeNull();
+	});
+
 	it('shows Shape Format for a shape selection without switching to it', () => {
 		const ribbon = mount();
 		expect(ribbonTab(ribbon.el, '[data-ribbon-contextual-tab]')).toBeNull();

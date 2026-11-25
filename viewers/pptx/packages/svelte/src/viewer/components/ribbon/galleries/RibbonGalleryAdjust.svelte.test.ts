@@ -80,6 +80,9 @@ describe('picture adjust galleries', () => {
 		const editor = makeEditor();
 		const target = mountComponent(editor, ContextualTab, { tab: 'pictureFormat', editor });
 		expect(target.querySelector('[data-ribbon-group="pictureFormat.adjust"]')).not.toBeNull();
+		expect(
+			target.querySelector('[data-ribbon-control="pictureFormat.adjust.changePicture"]'),
+		).not.toBeNull();
 		for (const gallery of ['pictureCorrections', 'pictureColor', 'pictureArtisticEffects']) {
 			expect(target.querySelector(`[data-ribbon-gallery="${gallery}"]`)).not.toBeNull();
 		}

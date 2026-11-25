@@ -65,6 +65,7 @@ export interface ViewerToolbarSectionProps {
 	onNewPresentation?: () => void;
 	onImportSlides?: (source: ArrayBuffer, indexes: readonly number[]) => Promise<void>;
 	canEdit: boolean;
+	loadPicture?: (path: string) => Promise<string | undefined>;
 	state: {
 		isDirty: boolean;
 		isSlidesPaneOpen: boolean;
@@ -599,6 +600,17 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					/>
 				)}
 			<Toolbar
+				picture={{
+					element: selectedElement,
+					editable: canEdit,
+					slides: s.slides,
+					loadImage: props.loadPicture,
+					patch: ops.updateElementById,
+					updateSlides: (update) => {
+						ops.updateSlides(update);
+						history.markDirty();
+					},
+				}}
 				fileName={fileName}
 				mode={mode}
 				canEdit={canEdit}

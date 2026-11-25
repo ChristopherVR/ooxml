@@ -365,10 +365,15 @@ export interface PptxImageProperties {
 	imageData?: string | undefined;
 	/** Path within the PPTX ZIP archive. */
 	imagePath?: string | undefined;
+	/** New raster payload for an existing picture. Save rebinds its blip without overwriting shared media. */
+	imageDataEdited?: boolean | undefined;
+	/** Editable source of a baked background removal, when available as a supported raster. */
+	originalPicturePath?: string | undefined;
+	originalPictureData?: string | undefined;
 	/** Base64 data-URL for an SVG variant (from blip extension asvg:svgBlip). Preferred over raster when available. */
-	svgData?: string;
+	svgData?: string | undefined;
 	/** Path to the SVG file within the PPTX ZIP archive. */
-	svgPath?: string;
+	svgPath?: string | undefined;
 	/** Alt text / description from `p:cNvPr/@descr`. */
 	altText?: string | undefined;
 	/** Crop from left edge as 0..1 fraction (OOXML `a:srcRect/@l`). */

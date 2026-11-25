@@ -121,6 +121,9 @@ describe('picture adjust galleries', () => {
 		fixture.detectChanges();
 		const root = fixture.nativeElement as HTMLElement;
 		expect(root.querySelector('[data-ribbon-group="pictureFormat.adjust"]')).not.toBeNull();
+		expect(
+			root.querySelector('[data-ribbon-control="pictureFormat.adjust.changePicture"]'),
+		).not.toBeNull();
 		for (const control of Object.values(CONTROLS)) {
 			expect(root.querySelector(`[data-ribbon-control="${control}"]`)).not.toBeNull();
 		}

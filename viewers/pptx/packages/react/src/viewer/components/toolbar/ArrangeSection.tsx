@@ -9,6 +9,7 @@ import { ShapeArrangeExtras } from './ShapeArrangeExtras';
 import { WebHomeControls } from './WebHomeControls';
 
 export interface ArrangeSectionProps {
+	embedded?: boolean;
 	canEdit: boolean;
 	selectedElement: PptxElement | null;
 	/** How many elements the multi-select currently holds. */
@@ -109,10 +110,13 @@ export function ArrangeSection(p: ArrangeSectionProps): React.ReactElement {
 	);
 
 	return (
-		<div className='flex flex-col items-center gap-0.5' {...groupAttr('home.arrange')}>
+		<div
+			className='flex flex-col items-center gap-0.5'
+			{...(!p.embedded && groupAttr('home.arrange'))}
+		>
 			<div className='flex items-center gap-1' data-pptx-chrome='arrange-controls'>
 				<WebHomeControls family='arrange-align' controls={controls} onRequest={requestAlign} />
-				{p.onToggleFormatPainter && (
+				{!p.embedded && p.onToggleFormatPainter && (
 					<WebHomeControls
 						family='arrange-painter'
 						controls={painterControls}
@@ -131,9 +135,13 @@ export function ArrangeSection(p: ArrangeSectionProps): React.ReactElement {
 					hiddenActions={p.hiddenActions}
 				/>
 				<WebHomeControls family='arrange-order' controls={controls} onRequest={requestOrder} />
-				<WebHomeControls family='arrange-edit' controls={controls} onRequest={requestEdit} />
+				{!p.embedded && (
+					<WebHomeControls family='arrange-edit' controls={controls} onRequest={requestEdit} />
+				)}
 			</div>
-			<span data-pptx-chrome='ribbon-group-label'>{t('pptx.arrange.groupLabel')}</span>
+			{!p.embedded && (
+				<span data-pptx-chrome='ribbon-group-label'>{t('pptx.arrange.groupLabel')}</span>
+			)}
 		</div>
 	);
 }
