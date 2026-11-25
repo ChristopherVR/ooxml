@@ -68,6 +68,7 @@ jobs:
         env:
           EXIT_CODE: ${{ needs.check.outputs.exit_code }}
         with:
+          retries: 3
           script: |
             const fs = require('node:fs');
             const broken = process.env.EXIT_CODE !== '0';

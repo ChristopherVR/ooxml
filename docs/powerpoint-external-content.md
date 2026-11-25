@@ -68,8 +68,8 @@ statement about Microsoft Office says where it comes from:
    the policy is set "in the OCT and with the 2007 Office system Administrative Templates (.adm
    files)". No source here covers current PowerPoint administrative templates or security
    baselines, and they were not checked.
-3. Microsoft Support, [PowerPoint 2013 or PowerPoint 2010 stops working after you repair a presentation](https://support.microsoft.com/en-us/topic/powerpoint-2013-or-powerpoint-2010-stops-working-after-you-repair-a-presentation-0e04c3d0-b3dc-c043-8c49-7dbe6b82bfd7)
-   (KB 982972, also at <https://support.microsoft.com/kb/982972>; both resolved on 2026-11-20; applies to PowerPoint 2013, PowerPoint 2010 and PowerPoint Home and Student 2010). The article
+3. Microsoft Support, [PowerPoint 2013 or PowerPoint 2010 stops working after you repair a presentation](https://web.archive.org/web/20260715131656/https://support.microsoft.com/en-us/topic/powerpoint-2013-or-powerpoint-2010-stops-working-after-you-repair-a-presentation-0e04c3d0-b3dc-c043-8c49-7dbe6b82bfd7)
+   (KB 982972, archived copy; the original Microsoft Support page and `support.microsoft.com/kb/982972` resolved on 2026-11-20 and began returning 404 on 2026-11-25; applies to PowerPoint 2013, PowerPoint 2010 and PowerPoint Home and Student 2010). The article
    is about a crash after a repair. It says that opening a presentation that contains links to an
    OLE object shows a security message, that its workaround is to click **Cancel** instead of
    **Update Links**, and that reopening a saved copy prompts "to update the presentation links".
