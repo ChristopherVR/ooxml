@@ -1,10 +1,6 @@
-import { group, stack, tool } from './ribbon-parts';
+import { group, tool } from './ribbon-parts';
 import { designControl } from './design-ribbon-controls';
-import type { RibbonIcon } from './ribbon-icons';
 import { buildMailings } from './mailings-ribbon';
-
-const unavailable = (label: string, icon: RibbonIcon, inline = false) =>
-	tool(label, icon, null, inline ? { inline: true } : { large: true });
 
 /** Office's tabs and groups, with unsupported operations explicitly disabled. */
 export function buildNativeTabs(panels: Map<string, HTMLElement>): void {
