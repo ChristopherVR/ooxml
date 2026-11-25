@@ -1,5 +1,8 @@
 /** Visio ribbon strings for the zh-CN locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const zhCNText: Readonly<Record<string, string>> = {
+	'Insert a picture from this device (up to 8 MB).': '从此设备插入图片（最大 8 MB）。',
+	'{file} cannot be inserted. {reason}': '无法插入 {file}。{reason}',
+	'Unreadable picture.': '无法读取图片。',
 	'Connects {from} to {to}': '连接 {from} 与 {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'此图表包含不受支持的内容，只能以只读方式查看。其原始工作簿将予以保留。',

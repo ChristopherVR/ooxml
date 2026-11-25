@@ -1,7 +1,7 @@
 import { pickOfficeIcon } from '../form/icon-picker';
 import { canEditDiagram } from './controller';
 import {
-	inspectVisioRasterImage,
+	inspectVisioPicture,
 	VISIO_METADATA_TEXT_LIMIT,
 	VISIO_PICTURE_MAX_BYTES,
 	type VisioShape,
@@ -47,7 +47,8 @@ export class ViewerInsert {
 		const doc = root.ownerDocument;
 		this.input = doc.createElement('input');
 		this.input.type = 'file';
-		this.input.accept = 'image/png,image/jpeg,image/gif,.png,.jpg,.jpeg,.gif';
+		this.input.accept =
+			'image/png,image/jpeg,image/gif,image/svg+xml,image/bmp,image/tiff,image/x-emf,.png,.jpg,.jpeg,.gif,.svg,.bmp,.tif,.tiff,.emf';
 		this.input.hidden = true;
 		this.input.dataset.insertPicture = '';
 		this.input.addEventListener('change', () => {
@@ -287,13 +288,13 @@ export class ViewerInsert {
 			return;
 		}
 		const token = this.controller.captureCreationToken(page.id);
-		const bytes = new Uint8Array(await file.arrayBuffer());
 		let command;
 		try {
-			command = visioPictureInsertCommand(page, inspectVisioRasterImage(bytes), bytes);
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			command = visioPictureInsertCommand(page, inspectVisioPicture(bytes), bytes);
 		} catch (error) {
 			this.announce(
-				`${file.name} cannot be inserted: ${error instanceof Error ? error.message : 'unreadable picture'} Use a PNG, JPEG or GIF file.`,
+				`${file.name} cannot be inserted. ${error instanceof Error ? error.message : 'Unreadable picture.'}`,
 			);
 			return;
 		}
@@ -389,8 +390,28 @@ export class ViewerInsert {
 			viewport.ownerDocument.defaultView?.open(href, '_blank', 'noopener,noreferrer');
 			this.announce(`Opened ${href} in a new tab.`);
 		};
+		const dragover = (event: DragEvent) => {
+			if (!event.dataTransfer?.types.includes('Files') || !this.#editable(this.controller.state))
+				return;
+			const item = event.dataTransfer.items[0];
+			if (item?.type && !item.type.startsWith('image/') && item.type !== 'application/octet-stream')
+				return;
+			event.preventDefault();
+			event.dataTransfer.dropEffect = 'copy';
+		};
+		const drop = (event: DragEvent) => {
+			const file = event.dataTransfer?.files[0];
+			if (!file || !/\.(?:png|jpe?g|gif|svg|bmp|tiff?|emf)$/i.test(file.name)) return;
+			event.preventDefault();
+			event.stopPropagation();
+			void this.#picture(file);
+		};
+		viewport.addEventListener('dragover', dragover);
+		viewport.addEventListener('drop', drop);
 		viewport.addEventListener('click', listener, true);
 		return () => {
+			viewport.removeEventListener('dragover', dragover);
+			viewport.removeEventListener('drop', drop);
 			viewport.removeEventListener('click', listener, true);
 			this.close();
 		};
@@ -404,7 +425,7 @@ export class ViewerInsert {
 		if (pictures) {
 			pictures.disabled = !editing || !page;
 			pictures.title = editing
-				? 'Insert a PNG, JPEG or GIF picture from this device (up to 8 MB).'
+				? 'Insert a picture from this device (up to 8 MB).'
 				: 'Open a .vsdx file to insert pictures.';
 		}
 		const chart = button('chart');

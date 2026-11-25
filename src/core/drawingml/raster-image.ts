@@ -10,7 +10,7 @@ export interface RasterImageInfo {
 	pixelWidth: number;
 	pixelHeight: number;
 }
-type ImageLimits = Required<RasterImageOptions>;
+export type ImageLimits = Required<RasterImageOptions>;
 /** Defaults and hard ceilings for inspecting caller-owned raster bytes. */
 export const RASTER_IMAGE_LIMITS: Readonly<ImageLimits> = Object.freeze({
 	maxImageBytes: 8 * 1024 * 1024,
@@ -37,7 +37,7 @@ const invalid = (message: string): never => {
 const unsupported = (message: string): never => {
 	throw new RasterImageError('unsupported-image', message);
 };
-function dimensions(width: number, height: number, limits: ImageLimits): void {
+export function checkImageDimensions(width: number, height: number, limits: ImageLimits): void {
 	if (!width || !height) invalid('Raster image has zero dimensions.');
 	if (
 		width > limits.maxDimension ||
@@ -57,7 +57,7 @@ function png(bytes: Uint8Array, limits: ImageLimits): [number, number] {
 		return invalid('PNG is missing a complete IHDR header.');
 	const width = view.getUint32(16),
 		height = view.getUint32(20);
-	dimensions(width, height, limits);
+	checkImageDimensions(width, height, limits);
 	const depth = bytes[24]!,
 		color = bytes[25]!;
 	const depths: Record<number, number[]> = {
@@ -94,7 +94,7 @@ function gif(bytes: Uint8Array, limits: ImageLimits): [number, number] {
 	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const width = view.getUint16(6, true),
 		height = view.getUint16(8, true);
-	dimensions(width, height, limits);
+	checkImageDimensions(width, height, limits);
 	let at = 13 + (bytes[10]! & 128 ? 3 * 2 ** ((bytes[10]! & 7) + 1) : 0);
 	let frames = 0,
 		pixels = 0;
@@ -124,7 +124,7 @@ function gif(bytes: Uint8Array, limits: ImageLimits): [number, number] {
 			top = view.getUint16(at + 2, true);
 		const frameWidth = view.getUint16(at + 4, true),
 			frameHeight = view.getUint16(at + 6, true);
-		dimensions(frameWidth, frameHeight, limits);
+		checkImageDimensions(frameWidth, frameHeight, limits);
 		if (left + frameWidth > width || top + frameHeight > height)
 			invalid('GIF frame exceeds its screen.');
 		// Bound animation work as well as the logical canvas size.
@@ -174,7 +174,7 @@ function jpeg(bytes: Uint8Array, limits: ImageLimits): [number, number] {
 				invalid('JPEG has an invalid frame header.');
 			height = view.getUint16(at + 3);
 			width = view.getUint16(at + 5);
-			dimensions(width, height, limits);
+			checkImageDimensions(width, height, limits);
 		}
 		if (marker === 0xdc) unsupported('JPEG deferred dimensions are unsupported.');
 		at = end;
@@ -211,6 +211,10 @@ export function inspectRasterImage(
 	bytes: Uint8Array,
 	options: RasterImageOptions = {},
 ): RasterImageInfo {
+	return inspectRasterImageStructure(bytes, checkedImageLimits(bytes, options));
+}
+
+export function checkedImageLimits(bytes: Uint8Array, options: RasterImageOptions): ImageLimits {
 	if (!options || typeof options !== 'object' || Array.isArray(options))
 		throw new RasterImageError('invalid-limit', 'Image limits must be an options object.');
 	const limits = { ...RASTER_IMAGE_LIMITS, ...options };
@@ -222,7 +226,7 @@ export function inspectRasterImage(
 	if (!(bytes instanceof Uint8Array)) invalid('Raster image bytes must be a Uint8Array.');
 	if (bytes.byteLength > limits.maxImageBytes)
 		throw new RasterImageError('image-limit', 'Raster image bytes exceed the configured limit.');
-	return inspectRasterImageStructure(bytes, limits);
+	return limits;
 }
 
 export function inspectRasterImageStructure(

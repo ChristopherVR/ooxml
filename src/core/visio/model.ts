@@ -246,8 +246,8 @@ export interface VisioPlacedForeignVector {
 	opacity: number;
 }
 export interface VisioImage {
-	mimeType: 'image/png' | 'image/jpeg' | 'image/gif';
-	/** Validated embedded raster bytes shared between instances. Consumers must not modify them. */
+	mimeType: 'image/png' | 'image/jpeg' | 'image/gif' | 'image/bmp' | 'image/svg+xml';
+	/** Validated browser-renderable bytes shared between instances. Consumers must not modify them. */
 	bytes: Uint8Array;
 	pixelWidth: number;
 	pixelHeight: number;

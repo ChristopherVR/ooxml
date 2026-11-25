@@ -9,17 +9,23 @@ import { setCell } from './edit-geometry-cells';
 import { applyShapeCreationStyles, createShape } from './edit-shape-create';
 import { openEditablePackage, writeEditedPackage } from './edit-package';
 import { serializeEditedXml } from './edit-text';
-import { inspectVisioRasterImage, VisioImageError, type VisioRasterImageInfo } from './media';
+import { RasterImageError } from '../drawingml/raster-image';
+import { svgPictureBytes } from '../drawingml/static-svg-picture';
+import { inspectPictureInput, type VisioPictureMime } from './picture-inspection';
 import type { VisioPictureInsertEdit } from './edit-metadata-commands';
 import type { EditVsdxResult } from './edit';
 
 const FORMATS: Record<
-	VisioRasterImageInfo['mimeType'],
-	{ extension: string; compression: string }
+	VisioPictureMime,
+	{ extension: string; compression?: string; type?: 'EnhMetaFile' }
 > = {
 	'image/png': { extension: 'png', compression: 'PNG' },
 	'image/jpeg': { extension: 'jpeg', compression: 'JPEG' },
 	'image/gif': { extension: 'gif', compression: 'GIF' },
+	'image/bmp': { extension: 'bmp' },
+	'image/tiff': { extension: 'tiff', compression: 'TIFF' },
+	'image/svg+xml': { extension: 'svg' },
+	'image/x-emf': { extension: 'emf', type: 'EnhMetaFile' },
 };
 
 export function cloneRoot(root: Element): Element {
@@ -109,7 +115,7 @@ export async function assertShapeIdUnreferenced(
 	}
 }
 
-/** Embed one validated raster as visio/media part, page relationship and Foreign shape. */
+/** Embed one validated picture as visio/media part, page relationship and Foreign shape. */
 export async function editVsdxPicture(
 	pkg: VisioPackage,
 	parts: Map<string, Uint8Array>,
@@ -120,11 +126,13 @@ export async function editVsdxPicture(
 	deadline: number,
 	check: () => void,
 ): Promise<EditVsdxResult> {
-	let info: VisioRasterImageInfo;
+	let info: ReturnType<typeof inspectPictureInput>;
+	let image: Uint8Array;
 	try {
-		info = inspectVisioRasterImage(edit.image);
+		info = inspectPictureInput(edit.image);
+		image = 'svg' in info ? svgPictureBytes(info.svg) : edit.image;
 	} catch (error) {
-		if (error instanceof VisioImageError) fail('INVALID_PICTURE', error.message);
+		if (error instanceof RasterImageError) fail('INVALID_PICTURE', error.message);
 		throw error;
 	}
 	const format = FORMATS[info.mimeType];
@@ -158,8 +166,8 @@ export async function editVsdxPicture(
 	while (ids.has(`rId${index}`)) index++;
 	const relId = `rId${index}`;
 	foreignFrameShape(root, document, edit, relId, {
-		ForeignType: 'Bitmap',
-		CompressionType: format.compression,
+		ForeignType: format.type ?? 'Bitmap',
+		...(format.compression ? { CompressionType: format.compression } : {}),
 	});
 	const relationship = rels.ownerDocument!.createElementNS(rels.namespaceURI, 'Relationship');
 	relationship.setAttribute('Id', relId);
@@ -188,7 +196,7 @@ export async function editVsdxPicture(
 	]);
 	if (new Set([...parts.keys(), ...dirty.keys(), media]).size > limits.maxEntries)
 		fail('LIMIT_ENTRIES', 'Picture insertion exceeds the package entry limit.');
-	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0) + edit.image.length;
+	let total = [...parts.values()].reduce((sum, bytes) => sum + bytes.length, 0) + image.length;
 	let nodes = 0;
 	for (const [name, xml] of dirty) {
 		const serialized = serializeEditedXml(xml, limits, check);
@@ -199,7 +207,7 @@ export async function editVsdxPicture(
 		if (total > limits.maxTotalBytes) fail('LIMIT_TOTAL', 'Edited package total exceeds limit.');
 		parts.set(name, serialized.bytes);
 	}
-	parts.set(media, new Uint8Array(edit.image));
+	parts.set(media, image);
 	const bytes = await writeEditedPackage(parts, maxOutput, deadline, check);
 	const verified = await openEditablePackage(
 		bytes,
@@ -215,7 +223,7 @@ export async function editVsdxPicture(
 			{
 				code: 'edit-picture-experimental',
 				message:
-					'The picture was embedded as a Foreign bitmap shape with a media part. Native Visio reopen fidelity is limited to tested cases.',
+					'The picture was embedded as a Foreign shape with a media part. Native Visio reopen fidelity is limited to tested cases.',
 			},
 		],
 	};

@@ -46,11 +46,13 @@ export {
 } from './visibility';
 export {
 	inspectVisioRasterImage,
+	inspectVisioPicture,
 	VisioImageError,
 	VISIO_RASTER_IMAGE_LIMITS,
 	type VisioImageOptions,
 	type VisioImageErrorCode,
 	type VisioRasterImageInfo,
+	type VisioPictureInfo,
 } from './media';
 export {
 	inspectVisioEmfAdmission,

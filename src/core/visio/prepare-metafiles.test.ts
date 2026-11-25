@@ -214,16 +214,15 @@ describe('opt-in isolated package converter integration', () => {
 		expect(codes(model)).not.toContain('emf-rendering-disabled');
 		expect(codes(model)).not.toContain('unsupported-foreign-object');
 	});
-	it.each([
-		new Uint8Array([1]),
-		emf([record(33), record(34, [-1])]),
-		emf([record(70, [4, 0x2b464d45])]),
-	])('never converts unsupported or malformed parts', async (bytes) => {
-		const converter = vi.fn(async () => inertTree());
-		const model = await parseVsdx(await build(bytes), { metafileConverter: converter });
-		expect(converter).not.toHaveBeenCalled();
-		expect(model.pages[0]!.shapes[0]!.foreignVector).toBeUndefined();
-	});
+	it.each([new Uint8Array([1]), emf([record(34, [-1])]), emf([record(70, [4, 0x2b464d45])])])(
+		'never converts unsupported or malformed parts',
+		async (bytes) => {
+			const converter = vi.fn(async () => inertTree());
+			const model = await parseVsdx(await build(bytes), { metafileConverter: converter });
+			expect(converter).not.toHaveBeenCalled();
+			expect(model.pages[0]!.shapes[0]!.foreignVector).toBeUndefined();
+		},
+	);
 	it.each([
 		async () => {
 			throw new Error('private converter detail');

@@ -7,9 +7,8 @@ The Visio editor (`src/ui/src/visio/parse-worker.ts`, `worker-parser.ts`) inject
 ## Admission and retention
 
 - Internal image relationships only; no network loading
-- Structural EMF inspection before conversion; no converter invocation for rejected input
-- Conversion allowlist: header, EOF, MoveTo, LineTo, ellipse, rectangle, and admitted stock SelectObject records
-- No mapping changes, clipping records, paths, custom GDI objects, text, bitmap records, comments, EMF+, WMF, SVG, or OLE conversion in this slice
+- The bounded classic EMF parser checks record framing, payloads, object references, graphics state and work before conversion. The converter receives only inputs the parser admits.
+- The admitted vector subset includes basic shapes, validated polygons, selected mapping and clipping records, and bounded pen and brush objects. Text, bitmap drawing, EMF+, WMF, nested formats and unresolved record semantics remain outside conversion.
 - At most eight unique conversion attempts and 1 MiB aggregate input per document; repeated references reuse the validated result
 - At most 256 KiB, 512 records, 4096 inspected points and 2048 by 2048 pixels per converted asset
 - Output sanitizer rejects unknown tags, attributes, URLs, markup, fonts, images and non-inert styles. The retained scene contains only validated numeric geometry, paint, and bounded clips
@@ -18,4 +17,4 @@ The Visio editor (`src/ui/src/visio/parse-worker.ts`, `worker-parser.ts`) inject
 
 Conversion failure omits the asset with a diagnostic while preserving the rest of the drawing. Successful output reports the limited primitive subset explicitly; it does not establish Microsoft Visio visual fidelity. Cached image placement, opacity, shape transforms, master inheritance and local replacement remain core-owned.
 
-Generated tests cover admission, failure, deduplication, limits, placement and inheritance. Real Microsoft Visio rendering comparison and broader record support remain future work.
+Generated tests cover admission, failure, deduplication, limits, placement and inheritance. In a Visio 16.0 automation probe, a bounded EMF with a custom brush and rectangle rendered after VSDX reopen. Broader record coverage and a visual comparison corpus remain open.

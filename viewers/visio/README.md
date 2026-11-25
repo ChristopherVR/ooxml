@@ -110,7 +110,7 @@ The [viewer API](docs/api.md) is the full reference, and the [bindings guide](do
 
 ## Privacy and network use
 
-The Visio packages make no network request when opening, rendering, editing or saving a drawing, unless the host or the reader turns on Google Fonts, and then only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
+Visio opens, renders, edits and saves drawings locally. The browser can load the bundled TIFF decoder from the app's origin when it first needs it. When the host or reader enables Google Fonts, only public font family names are requested. Linked pictures are not fetched, linked data is not refreshed, and nothing collects analytics or telemetry. [PRIVACY.md](../../PRIVACY.md) lists every request the repository's packages can make.
 
 ## Development
 

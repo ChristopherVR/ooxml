@@ -99,6 +99,7 @@
 	"formatVisioFieldValue",
 	"getVisioPageLayers",
 	"inspectVisioEmfAdmission",
+	"inspectVisioPicture",
 	"inspectVisioRasterImage",
 	"isUndrawnBevelMaterial",
 	"isVisioBasicShape",

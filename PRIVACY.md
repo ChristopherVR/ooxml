@@ -205,8 +205,7 @@ to globally routable addresses, and the connection is made to the address that w
 
 ## Word, Excel and Visio
 
-By default the Word, Excel and Visio packages make no network request when opening, rendering,
-editing or saving a document:
+By default Word, Excel and Visio open, render, edit and save documents locally.
 
 - linked (external) pictures are not fetched (Word and Excel download them on open, so this is
   stricter than those applications; see
@@ -214,7 +213,10 @@ editing or saving a document:
 - external workbook links, Visio data record sets and linked chart data are kept but never
   refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
-- workers are loaded from the page's own origin.
+- workers and application code are loaded from the page's own origin. Opening or inserting a TIFF
+  picture in Visio can load its bundled decoder on demand. The request carries no picture bytes
+  or filename. If the decoder is unavailable offline, the drawing still opens and the TIFF is
+  omitted from the preview.
 
 **Fonts, when the host or the reader turns them on.** `<docx-editor>`, `<xlsx-editor>` and
 `<visio-viewer>` take the same `googleFonts` value as PowerPoint, but unset leaves it to the

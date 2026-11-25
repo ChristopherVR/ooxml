@@ -1,5 +1,9 @@
 /** Visio ribbon strings for the es locale (text), keyed by the English text. Not reviewed by a native speaker. */
 export const esText: Readonly<Record<string, string>> = {
+	'Insert a picture from this device (up to 8 MB).':
+		'Inserta una imagen de este dispositivo (hasta 8 MB).',
+	'{file} cannot be inserted. {reason}': 'No se puede insertar {file}. {reason}',
+	'Unreadable picture.': 'No se puede leer la imagen.',
 	'Connects {from} to {to}': 'Conecta {from} con {to}',
 	'This chart contains unsupported content and is read-only. Its original workbook is preserved.':
 		'Este gráfico contiene contenido no compatible y es de solo lectura. Se conserva su libro original.',

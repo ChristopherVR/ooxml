@@ -260,9 +260,10 @@ export function createWorkspace(doc: Document = document): Workspace {
 		});
 		view.addEventListener('dragend', reset);
 		view.addEventListener('blur', reset);
+		// The canvas consumes picture drops before they reach the workspace's file opener.
+		view.addEventListener('drop', reset, true);
 		view.addEventListener('drop', (event) => {
 			event.preventDefault();
-			reset();
 			const file = event.dataTransfer?.files[0];
 			if (file) open(file);
 		});

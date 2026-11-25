@@ -1,6 +1,12 @@
 import { NS } from '../xml/index';
 import { VisioPackage, VisioPackageError } from './package';
 import { children, type Report } from './sheet';
+import { inspectPicture, inspectPictureInput, type VisioPictureInfo } from './picture-inspection';
+import { svgPictureBytes } from '../drawingml/static-svg-picture';
+import { tiffPictureToPng } from '../drawingml/tiff-picture';
+import type { VisioImage } from './model';
+
+export type { VisioPictureInfo } from './picture-inspection';
 
 export type {
 	RasterImageOptions as VisioImageOptions,
@@ -8,7 +14,6 @@ export type {
 } from '../drawingml/raster-image';
 import {
 	inspectRasterImage,
-	inspectRasterImageStructure,
 	RasterImageError,
 	RASTER_IMAGE_LIMITS,
 	type RasterImageOptions as VisioImageOptions,
@@ -16,9 +21,6 @@ import {
 	type RasterImageErrorCode as VisioImageErrorCode,
 } from '../drawingml/raster-image';
 export type { RasterImageErrorCode as VisioImageErrorCode } from '../drawingml/raster-image';
-export interface VisioRasterImage extends VisioRasterImageInfo {
-	bytes: Uint8Array;
-}
 type ImageLimits = Required<VisioImageOptions>;
 export const VISIO_RASTER_IMAGE_LIMITS = RASTER_IMAGE_LIMITS;
 export class VisioImageError extends Error {
@@ -28,14 +30,6 @@ export class VisioImageError extends Error {
 	) {
 		super(message);
 		this.name = 'VisioImageError';
-	}
-}
-function inspect(bytes: Uint8Array, limits: ImageLimits): VisioRasterImageInfo {
-	try {
-		return inspectRasterImageStructure(bytes, limits);
-	} catch (error) {
-		if (error instanceof RasterImageError) throw new VisioImageError(error.code, error.message);
-		throw error;
 	}
 }
 export function inspectVisioRasterImage(
@@ -50,14 +44,25 @@ export function inspectVisioRasterImage(
 	}
 }
 
-/** Read only authenticated internal raster parts; no URLs or active media are returned. */
+/** Inspect a local picture by bytes, before constructing an insert command. */
+export function inspectVisioPicture(bytes: Uint8Array): VisioPictureInfo {
+	try {
+		const { mimeType, pixelWidth, pixelHeight } = inspectPictureInput(bytes);
+		return { mimeType, pixelWidth, pixelHeight };
+	} catch (error) {
+		if (error instanceof RasterImageError) throw new VisioImageError(error.code, error.message);
+		throw error;
+	}
+}
+
+/** Read only authenticated internal image parts; no URLs or active media are returned. */
 export async function readVisioImage(
 	pkg: VisioPackage,
 	sourcePart: string,
 	foreignData: Element,
 	report: Report,
 	options: VisioImageOptions = {},
-): Promise<VisioRasterImage | undefined> {
+): Promise<VisioImage | undefined> {
 	const limits: ImageLimits = {
 		...VISIO_RASTER_IMAGE_LIMITS,
 		...options,
@@ -92,25 +97,61 @@ export async function readVisioImage(
 		return omit('image-limit', 'Raster image bytes exceed the configured limit.');
 	let cache = validationCache.get(pkg);
 	if (!cache) {
-		cache = new Map();
+		cache = { assets: new Map(), tiffPixels: 0, tiffPreviewBytes: 0 };
 		validationCache.set(pkg, cache);
 	}
 	const key = `${rel.target}\0${limits.maxImageBytes}/${limits.maxPixels}/${limits.maxDimension}`;
-	let result = cache.get(key);
-	if (!result) {
-		try {
-			result = { ...inspect(bytes, limits), bytes };
-		} catch (error) {
-			if (!(error instanceof VisioImageError)) throw error;
-			result = error;
-		}
-		cache.set(key, result);
+	let pending = cache.assets.get(key);
+	if (!pending) {
+		pending = prepareImage(bytes, limits, cache, rel.target);
+		cache.assets.set(key, pending);
 	}
-	return result instanceof VisioImageError ? omit(result.code, result.message) : result;
+	try {
+		return await pending;
+	} catch (error) {
+		if (error instanceof RasterImageError) return omit(error.code, error.message);
+		throw error;
+	}
 }
 
+interface ImageCache {
+	assets: Map<string, Promise<VisioImage>>;
+	tiffPixels: number;
+	tiffPreviewBytes: number;
+}
 // Package-keyed cache is weak, so finished imports do not retain package buffers.
-const validationCache = new WeakMap<
-	VisioPackage,
-	Map<string, VisioRasterImage | VisioImageError>
->();
+const validationCache = new WeakMap<VisioPackage, ImageCache>();
+
+async function prepareImage(
+	bytes: Uint8Array,
+	limits: ImageLimits,
+	cache: ImageCache,
+	target: string,
+): Promise<VisioImage> {
+	const info = inspectPicture(bytes, limits, false);
+	const { pixelWidth, pixelHeight } = info;
+	if (info.mimeType === 'image/svg+xml') {
+		if (!target.toLowerCase().endsWith('.svg'))
+			throw new RasterImageError('unsupported-image', 'SVG requires an SVG image part.');
+		return { mimeType: info.mimeType, pixelWidth, pixelHeight, bytes: svgPictureBytes(info.svg) };
+	}
+	if (info.mimeType === 'image/tiff') {
+		cache.tiffPixels += pixelWidth * pixelHeight;
+		if (cache.tiffPixels > 32_000_000)
+			throw new RasterImageError(
+				'image-limit',
+				'Document TIFF previews exceed the decoded pixel limit.',
+			);
+		const preview = await tiffPictureToPng(info.tiff);
+		cache.tiffPreviewBytes += preview.length;
+		if (
+			preview.length > VISIO_RASTER_IMAGE_LIMITS.maxImageBytes ||
+			cache.tiffPreviewBytes > 32 * 1024 * 1024
+		)
+			throw new RasterImageError('image-limit', 'TIFF previews exceed the PNG byte limit.');
+		return { mimeType: 'image/png', pixelWidth, pixelHeight, bytes: preview };
+	}
+	if (info.mimeType === 'image/x-emf')
+		throw new RasterImageError('unsupported-image', 'Expected a bitmap.');
+	return { mimeType: info.mimeType, pixelWidth, pixelHeight, bytes };
+}

@@ -115,3 +115,11 @@ export type VisioEmfAdmissionResult = VisioEmfAdmissionBase &
 				readonly renderingEnabled: false;
 		  }
 	);
+
+/** Tighter ceilings for media accepted by the browser converter. */
+export const VISIO_EMF_CONVERSION_LIMITS = {
+	maxInputBytes: 256 * 1024,
+	maxRecords: 512,
+	maxPoints: 4096,
+} as const;
+export const VISIO_EMF_CONVERSION_MAX_DIMENSION = 2048;

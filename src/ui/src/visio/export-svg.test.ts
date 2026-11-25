@@ -234,20 +234,32 @@ describe('embedded raster resources and export bounds', () => {
 			expect(exportPageSvg(model).svg).toContain(`data:${mimeType};base64,`);
 		},
 	);
-	it('rejects executable foreign image MIME before creating DOM', () => {
+	it('embeds validated static SVG pictures as opaque image data', () => {
+		const model = imageScene();
+		Object.assign(model.pages[0]!.shapes[0]!.image!, {
+			mimeType: 'image/svg+xml',
+			bytes: new TextEncoder().encode(
+				'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><rect width="1" height="1" fill="red"/></svg>',
+			),
+		});
+		expect(exportPageSvg(model).svg).toContain('data:image/svg+xml;base64,');
+	});
+	it('rejects a mismatched SVG MIME before creating DOM', () => {
 		const model = imageScene();
 		Object.assign(model.pages[0]!.shapes[0]!.image!, { mimeType: 'image/svg+xml' });
 		const create = vi.spyOn(document, 'createElementNS');
-		expect(() => exportPageSvg(model)).toThrow('Unsupported embedded image');
+		expect(() => exportPageSvg(model)).toThrow('MIME or dimensions do not match');
 		expect(create).not.toHaveBeenCalled();
 	});
 	it('rejects active or corrupt bytes disguised as an allowed raster MIME before DOM allocation', () => {
 		const model = imageScene();
 		model.pages[0]!.shapes[0]!.image!.bytes = Uint8Array.from(
-			new TextEncoder().encode('<svg onload="alert(1)"/>'),
+			new TextEncoder().encode(
+				'<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" onload="void(0)"/>',
+			),
 		);
 		const create = vi.spyOn(document, 'createElementNS');
-		expect(() => exportPageSvg(model)).toThrow('not a supported');
+		expect(() => exportPageSvg(model)).toThrow('active or unsupported content');
 		expect(create).not.toHaveBeenCalled();
 	});
 	it.each([0, -1, 0.5, NaN, Infinity, MAX_SVG_EXPORT_BYTES + 1])(

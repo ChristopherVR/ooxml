@@ -86,7 +86,7 @@ const COLOR = /^(?:#[\da-f]{3,8}|rgba?\([\d\s.,%]+\)|[a-z]+)$/iu;
 const FILTER_STYLE =
 	/^filter:(?:(?:blur|brightness|contrast|grayscale|hue-rotate|invert|opacity|saturate|sepia)\([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:%|px|deg)?\)\s*)+$/u;
 
-function safeAttribute({ localName, namespaceURI, value }: Attr): boolean {
+export function safeSvgPreviewAttribute({ localName, namespaceURI, value }: Attr): boolean {
 	if (namespaceURI) return false;
 	if (PAINT_ATTRIBUTES.has(localName)) return COLOR.test(value) || LOCAL_REFERENCE.test(value);
 	if (REFERENCE_ATTRIBUTES.has(localName)) return LOCAL_REFERENCE.test(value);
@@ -102,7 +102,7 @@ function safeChildren(parent: XmlElement): boolean {
 			node.namespaceURI === SVG_NAMESPACE &&
 			!node.prefix &&
 			ELEMENTS.has(node.localName) &&
-			Array.from(node.attributes).every(safeAttribute) &&
+			Array.from(node.attributes).every(safeSvgPreviewAttribute) &&
 			safeChildren(node)
 		);
 	});

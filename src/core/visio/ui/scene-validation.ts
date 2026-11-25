@@ -1,6 +1,7 @@
 import { assertVisioFillGradient } from './gradient-details';
 import {
 	inspectVisioRasterImage,
+	inspectVisioPicture,
 	VISIO_RASTER_IMAGE_LIMITS,
 	VISIO_COMMENT_LIMIT,
 	VISIO_COMMENT_TEXT_LIMIT,
@@ -396,7 +397,9 @@ export function assertViewableDocument(model: VisioDocument): void {
 		if (shape.image) {
 			const image = shape.image;
 			if (
-				!['image/png', 'image/jpeg', 'image/gif'].includes(image.mimeType) ||
+				!['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/svg+xml'].includes(
+					image.mimeType,
+				) ||
 				!(image.bytes instanceof Uint8Array)
 			)
 				throw new Error('Unsupported embedded image.');
@@ -434,7 +437,7 @@ export function assertViewableDocument(model: VisioDocument): void {
 	// browser decoding/export. Validate each shared resource once per pass, after cheap
 	// aggregate checks. Never cache by byte identity across calls: typed arrays can mutate.
 	for (const image of imageResources.values()) {
-		const actual = inspectVisioRasterImage(image.bytes);
+		const actual = inspectVisioPicture(image.bytes);
 		if (
 			actual.mimeType !== image.mimeType ||
 			actual.pixelWidth !== image.pixelWidth ||

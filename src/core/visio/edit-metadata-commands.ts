@@ -29,7 +29,7 @@ export interface VisioShapeScreenTipEdit {
 	shapeId: string;
 	text: string;
 }
-/** Embed a PNG, JPEG or GIF as a new Foreign shape. Drawing inches, bottom-left origin. */
+/** Embed a validated picture as a new Foreign shape. Drawing inches, bottom-left origin. */
 export interface VisioPictureInsertEdit {
 	type: 'insert-picture';
 	pageId: string;

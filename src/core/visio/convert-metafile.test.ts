@@ -27,7 +27,7 @@ describe('bounded package conversion adapter', () => {
 	it.each([
 		new Uint8Array(),
 		emf([record(0xffff)]),
-		emf([record(33), record(34, [-1])]),
+		emf([record(34, [-1])]),
 		new Uint8Array(256 * 1024 + 1),
 	])('never calls the package for rejected input', async (bytes) => {
 		const convert = vi.fn();

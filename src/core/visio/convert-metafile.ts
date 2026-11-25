@@ -1,6 +1,10 @@
 import { inspectVisioEmfAdmission } from './emf-admission';
 import { emfInputView } from './emf-admission-input';
 import {
+	VISIO_EMF_CONVERSION_LIMITS,
+	VISIO_EMF_CONVERSION_MAX_DIMENSION,
+} from './emf-admission-types';
+import {
 	sanitizeVisioForeignVectorTree,
 	VisioForeignVectorError,
 	type VisioForeignVector,
@@ -29,9 +33,6 @@ export type VisioMetafileConversionResult =
 			code: string;
 			message: string;
 	  };
-// Deliberately narrower than structural inspection. No mapping changes, clipping,
-// path accumulation, comments, bitmaps, text, EMF+, WMF, or user-created GDI objects.
-const RECORDS = new Set([1, 14, 27, 37, 42, 43, 54]);
 /** Package adapter, not a second EMF renderer. Never returns raw SVG or partial output.
  * Document import must explicitly inject the trusted converter in an isolated worker.
  * Post-conversion validation bounds retained output, not peak converter heap allocation.
@@ -43,7 +44,7 @@ export async function convertVisioMetafile(
 	const source = emfInputView(input);
 	if (!source)
 		return { status: 'invalid', code: 'input', message: 'Expected fixed, unshared EMF bytes.' };
-	if (source.byteLength > 256 * 1024)
+	if (source.byteLength > VISIO_EMF_CONVERSION_LIMITS.maxInputBytes)
 		return {
 			status: 'budget-exceeded',
 			code: 'input-limit',
@@ -53,7 +54,7 @@ export async function convertVisioMetafile(
 	// between inspection and the converter's first asynchronous continuation.
 	const bytes = new Uint8Array(source.byteLength);
 	bytes.set(new Uint8Array(source.buffer, source.byteOffset, source.byteLength));
-	const admission = inspectVisioEmfAdmission(bytes, { maxRecords: 512, maxPoints: 4096 });
+	const admission = inspectVisioEmfAdmission(bytes, VISIO_EMF_CONVERSION_LIMITS);
 	if (admission.status !== 'admitted') {
 		const note = admission.diagnostics[0];
 		return {
@@ -62,14 +63,9 @@ export async function convertVisioMetafile(
 			message: note?.message ?? 'Metafile did not pass bounded preflight.',
 		};
 	}
-	if (admission.recordTypes.some(({ type }) => !RECORDS.has(type)))
-		return {
-			status: 'unsupported',
-			code: 'conversion-subset',
-			message: 'Record is outside the experimental package conversion subset.',
-		};
 	const header = admission.header!;
-	if (header.pixelWidth > 2048 || header.pixelHeight > 2048)
+	const maxDimension = VISIO_EMF_CONVERSION_MAX_DIMENSION;
+	if (header.pixelWidth > maxDimension || header.pixelHeight > maxDimension)
 		return {
 			status: 'budget-exceeded',
 			code: 'dimension-limit',
@@ -78,9 +74,9 @@ export async function convertVisioMetafile(
 	try {
 		const tree = await converter(bytes.buffer, {
 			dpiScale: 1,
-			maxWidth: 2048,
-			maxHeight: 2048,
-			maxCanvasDimension: 2048,
+			maxWidth: maxDimension,
+			maxHeight: maxDimension,
+			maxCanvasDimension: maxDimension,
 			exactRasterOps: false,
 			includeSize: true,
 			idPrefix: 'visio-emf-',
