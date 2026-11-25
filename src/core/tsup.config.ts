@@ -5,6 +5,7 @@ const pdfEntries = {
 	'docx/pdf-import/index': 'docx/pdf-import/index.ts',
 	'pdf/index': 'pdf/index.ts',
 };
+const xlsxEntry = { 'xlsx/index': 'xlsx/index.ts' };
 
 // Every strict area (the shared building blocks and the docx format) is bundled the same way as
 // the pptx area (see tsup.pptx.config.ts): ESM (`.mjs`) and CJS (`.cjs`) per subpath entry.
@@ -42,7 +43,6 @@ const shared = {
 		'visio/index': 'visio/index.ts',
 		'visio/ui/index': 'visio/ui/index.ts',
 		'visio/collab/index': 'visio/collab/index.ts',
-		'xlsx/index': 'xlsx/index.ts',
 		'xlsx/load/index': 'xlsx/load/index.ts',
 		'xlsx/collab/index': 'xlsx/collab/index.ts',
 		'xlsx/ui/index': 'xlsx/ui/index.ts',
@@ -81,6 +81,16 @@ export default defineConfig([
 			options.chunkNames = 'drawingml/chunks/[name]-[hash]';
 		},
 	},
+	{
+		...shared,
+		entry: xlsxEntry,
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'xlsx/chunks/[name]-[hash]';
+		},
+	},
+	{ ...shared, entry: xlsxEntry, format: ['cjs'], splitting: false },
 	{
 		...shared,
 		entry: pdfEntries,

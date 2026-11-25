@@ -1,6 +1,91 @@
 import type { Translations } from './types';
 
 export const PIVOT_STRINGS: Translations = {
+	PivotChart: ['Graphique croisé dynamique', 'Pivotdiagramm', 'Gráfico dinámico', '数据透视图'],
+	'Recommended PivotTables': [
+		'Tableaux croisés dynamiques recommandés',
+		'Empfohlene PivotTables',
+		'Tablas dinámicas recomendadas',
+		'推荐的数据透视表',
+	],
+	'Field Buttons': ['Boutons de champ', 'Feldschaltflächen', 'Botones de campo', '字段按钮'],
+	'Filter PivotTable Field': [
+		'Filtrer un champ du tableau croisé dynamique',
+		'PivotTable-Feld filtern',
+		'Filtrar campo de tabla dinámica',
+		'筛选数据透视表字段',
+	],
+	'Report filter': ['Filtre de rapport', 'Berichtsfilter', 'Filtro de informe', '报表筛选器'],
+	'Axis field': ['Champ d’axe', 'Achsenfeld', 'Campo de eje', '轴字段'],
+	'Legend field': ['Champ de légende', 'Legendenfeld', 'Campo de leyenda', '图例字段'],
+	'Value field': ['Champ de valeurs', 'Wertfeld', 'Campo de valor', '值字段'],
+	'{role}: {field}': ['{role} : {field}', '{role} – {field}', '{role}: {field}', '{role}：{field}'],
+	'{value} by {field}': [
+		'{value} par {field}',
+		'{value} nach {field}',
+		'{value} por {field}',
+		'按{field}汇总{value}',
+	],
+	'{value} by {field} (year and month)': [
+		'{value} par {field} (année et mois)',
+		'{value} nach {field} (Jahr und Monat)',
+		'{value} por {field} (año y mes)',
+		'按{field}（年和月）汇总{value}',
+	],
+	'Preview uses a sample of the source data.': [
+		'L’aperçu utilise un échantillon des données source.',
+		'Die Vorschau verwendet eine Stichprobe der Quelldaten.',
+		'La vista previa usa una muestra de los datos de origen.',
+		'预览使用源数据的样本。',
+	],
+	'No recommendations for this source. Select data with headers and a numeric field.': [
+		'Aucune recommandation pour cette source. Sélectionnez des données avec des en-têtes et un champ numérique.',
+		'Keine Empfehlungen für diese Quelle. Wählen Sie Daten mit Überschriften und einem Zahlenfeld aus.',
+		'No hay recomendaciones para este origen. Seleccione datos con encabezados y un campo numérico.',
+		'此数据源没有推荐项。请选择包含标题和数值字段的数据。',
+	],
+	'Select the source range or a table.': [
+		'Sélectionnez la plage source ou un tableau.',
+		'Wählen Sie den Quellbereich oder eine Tabelle aus.',
+		'Seleccione el rango de origen o una tabla.',
+		'请选择源区域或表格。',
+	],
+	'Select a source range or table in an editable workbook.': [
+		'Sélectionnez une plage source ou un tableau dans un classeur modifiable.',
+		'Wählen Sie einen Quellbereich oder eine Tabelle in einer bearbeitbaren Arbeitsmappe aus.',
+		'Seleccione un rango de origen o una tabla en un libro editable.',
+		'请在可编辑的工作簿中选择源区域或表格。',
+	],
+	'Select a source range, table or PivotTable in an editable workbook.': [
+		'Sélectionnez une plage source, un tableau ou un tableau croisé dynamique dans un classeur modifiable.',
+		'Wählen Sie einen Quellbereich, eine Tabelle oder eine PivotTable in einer bearbeitbaren Arbeitsmappe aus.',
+		'Seleccione un rango de origen, una tabla o una tabla dinámica en un libro editable.',
+		'请在可编辑的工作簿中选择源区域、表格或数据透视表。',
+	],
+	'Select an editable PivotChart linked to a worksheet PivotTable.': [
+		'Sélectionnez un graphique croisé dynamique modifiable lié à un tableau croisé dynamique de la feuille.',
+		'Wählen Sie ein bearbeitbares Pivotdiagramm aus, das mit einer PivotTable auf einem Arbeitsblatt verknüpft ist.',
+		'Seleccione un gráfico dinámico editable vinculado a una tabla dinámica de una hoja.',
+		'请选择与工作表数据透视表关联的可编辑数据透视图。',
+	],
+	'Select a PivotTable to filter its fields.': [
+		'Sélectionnez un tableau croisé dynamique pour filtrer ses champs.',
+		'Wählen Sie eine PivotTable aus, um ihre Felder zu filtern.',
+		'Seleccione una tabla dinámica para filtrar sus campos.',
+		'请选择要筛选字段的数据透视表。',
+	],
+	'Use the PivotTable fields to change PivotChart data.': [
+		'Modifiez les données du graphique à l’aide des champs du tableau croisé dynamique.',
+		'Ändern Sie die Daten des Pivotdiagramms über die PivotTable-Felder.',
+		'Use los campos de la tabla dinámica para cambiar los datos del gráfico dinámico.',
+		'请使用数据透视表字段更改数据透视图数据。',
+	],
+	'This field has no supported items or has too many items to list.': [
+		'Ce champ ne contient aucun élément pris en charge ou en contient trop pour les afficher.',
+		'Dieses Feld enthält keine unterstützten oder zu viele Elemente für die Liste.',
+		'Este campo no tiene elementos compatibles o tiene demasiados para mostrarlos.',
+		'此字段没有受支持的项，或项过多而无法列出。',
+	],
 	'Report Filter Field:': [
 		'Champ de filtre du rapport :',
 		'Berichtsfilterfeld:',

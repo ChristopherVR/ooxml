@@ -252,6 +252,8 @@ export type PivotTablePatch = Partial<
 	dateGroups?: PivotDateGroup[];
 	additionalValues?: PivotValueFieldOptions[];
 	pageFilter?: PivotPageFilter | null;
+	/** Replaces the hidden source items (an empty list clears the filters). */
+	itemFilters?: PivotItemFilter[];
 	/** Replaces every number group (an empty list ungroups). */
 	fieldGroups?: PivotFieldGroup[];
 };

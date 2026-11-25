@@ -52,7 +52,7 @@ export function chartView(
 		{ ...withHierarchyRanges(workbook, chart), date1904: chart.date1904 ?? workbook.date1904 },
 		theme,
 		{
-			evaluateRef,
+			...(chart.chartSpace?.pivotSource ? {} : { evaluateRef }),
 			seriesColor: (series) => resolveColor(series.color, theme),
 			pictureSource: xlsxChartPictureSource(workbook, chart),
 		},

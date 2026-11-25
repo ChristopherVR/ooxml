@@ -35,6 +35,7 @@ import {
 } from './slicers';
 import { openPrintPreview } from './print-preview';
 import type { SparklineType } from 'ooxml-core/xlsx';
+import type { PivotChartFieldProps } from './pivot-field-filter';
 
 const props = <T>(value: unknown): T =>
 	value && typeof value === 'object' ? (value as T) : ({} as T);
@@ -43,7 +44,13 @@ export function registerToolDialogs(ctx: EditorContext): void {
 	const d = ctx.dialogs;
 	d.register('print-preview', (c) => openPrintPreview(c));
 	d.register('create-pivot-table', (c) => openPivotTable(c));
-	d.register('pivot-settings', (c) => openPivotTable(c, true));
+	d.register('pivot-settings', (c) => openPivotTable(c, { kind: 'settings' }));
+	d.register('pivot-field-filter', async (c) =>
+		(await import('./pivot-field-filter')).openPivotFieldFilter(c),
+	);
+	d.register('pivot-chart-field', async (c, p) =>
+		(await import('./pivot-field-filter')).openPivotChartField(c, props<PivotChartFieldProps>(p)),
+	);
 	d.register('pivot-group', (c) => openPivotGroup(c));
 	d.register('pivot-group-dates', (c) => openPivotGroupDates(c));
 	d.register('pivot-field-settings', (c) => openPivotFieldSettings(c));

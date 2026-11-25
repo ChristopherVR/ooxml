@@ -121,6 +121,7 @@ const SPACE = new Set([
 	'AlternateContent',
 	'style',
 	'clrMapOvr',
+	'pivotSource',
 	'chart',
 	'spPr',
 	'txPr',
@@ -161,6 +162,10 @@ export function parseChartSpace(
 	const printSettings = cChild(root, 'printSettings');
 	const colorMap = cChild(root, 'clrMapOvr');
 	const pivotFormats = cChild(chart, 'pivotFmts');
+	const pivotSource = cChild(root, 'pivotSource');
+	const pivotName = cChild(pivotSource, 'name')?.textContent;
+	const pivotId = cNumber(context, pivotSource, 'fmtId');
+	const pivotExtensions = extensionList(pivotSource);
 	const chartSpace = assignDefined<ChartSpace>(
 		{ plotArea: parsePlotArea(context, cChild(chart, 'plotArea')) },
 		{
@@ -174,6 +179,18 @@ export function parseChartSpace(
 			title: title ? parseTitle(context, title) : undefined,
 			autoTitleDeleted: cBool(context, chart, 'autoTitleDeleted'),
 			pivotFormatsXml: pivotFormats ? buildXml(pivotFormats) : undefined,
+			pivotSource:
+				pivotName &&
+				pivotId !== undefined &&
+				Number.isInteger(pivotId) &&
+				pivotId >= 0 &&
+				pivotId <= 2_147_483_647
+					? {
+							name: pivotName,
+							formatId: pivotId,
+							...(pivotExtensions ? { extLst: pivotExtensions } : {}),
+						}
+					: undefined,
 			view3D: view3D ? parseView3D(context, view3D) : undefined,
 			floor: parseSurface(context, cChild(chart, 'floor')),
 			sideWall: parseSurface(context, cChild(chart, 'sideWall')),

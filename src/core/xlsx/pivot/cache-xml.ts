@@ -2,7 +2,7 @@ import { NS } from '../../xml/index';
 import type { CellValue, PivotTable, Workbook } from '../model';
 import { isCellError } from '../model';
 import { formatRange } from '../address';
-import { sparklineDataRange } from '../edit/sparkline-ranges';
+import { pivotSourceRange } from './source';
 import { XML_HEADER, attrs, encodeEscapes, escapeAttr } from '../write/xml-out';
 import { pivotValueKey } from './data';
 import { serialToIso } from './dates';
@@ -51,7 +51,7 @@ export function pivotCacheDefinitionXml(
 	data: PivotCacheData,
 	recordRel: string,
 ): string {
-	const source = sparklineDataRange(workbook, 0, pivot.source);
+	const source = pivotSourceRange(workbook, 0, pivot.source);
 	const iso = (serial: number) => serialToIso(serial, workbook.date1904);
 	const derived = derivedFields(pivot, workbook.date1904);
 	const fields = pivot.fields
@@ -76,7 +76,10 @@ export function pivotCacheDefinitionXml(
 		})
 		.join('');
 	const extra = derived.map((entry) => derivedFieldXml(pivot, entry, workbook.date1904)).join('');
-	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs({ ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name })}/></cacheSource><cacheFields count="${pivot.fields.length + derived.length}">${fields}${extra}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
+	const reference = source.tableName
+		? { name: source.tableName }
+		: { ref: formatRange(source.range), sheet: workbook.sheets[source.sheet]!.name };
+	return `${XML_HEADER}<pivotCacheDefinition xmlns="${NS.x}" xmlns:r="${NS.r}" r:id="${recordRel}" createdVersion="6" refreshedVersion="6" minRefreshableVersion="3" recordCount="${pivot.records.length}"><cacheSource type="worksheet"><worksheetSource${attrs(reference)}/></cacheSource><cacheFields count="${pivot.fields.length + derived.length}">${fields}${extra}</cacheFields>${slicerExt(pivot)}</pivotCacheDefinition>`;
 }
 
 interface DerivedCacheField extends DerivedDateField {

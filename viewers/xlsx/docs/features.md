@@ -142,6 +142,18 @@ The workbook keeps the native model, which Excel can edit. The browser shows the
 saved poster or icon and lets you download the embedded Office file. Interactive
 3D editing, stock models, file linking and in-place OLE activation require Excel.
 
+**PivotChart** on the Insert tab creates a clustered column chart from a range, an Excel
+table or the PivotTable under the active cell. Refreshing the PivotTable or changing
+its supported fields and filters updates the chart. The chart field buttons open
+the same settings and item filters as the PivotTable. Chart Design > Field Buttons
+hides or shows them together. The projection is limited to 128 series and 50,000
+cached points. Imported charts with unsupported content retain their original parts.
+
+**Recommended PivotTables** on the Insert tab previews up to four layouts using
+samples of at most 256 rows and 32 columns. It suggests sums by a category or by
+year and month for date-formatted columns. Inserting a preview builds the chosen
+PivotTable from the full source on a new sheet.
+
 ## Not supported (preserved where possible)
 
 | Feature                             | Behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |

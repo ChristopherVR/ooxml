@@ -238,12 +238,16 @@ export function contextualCommands(): Command[] {
 			id: 'chart.switch-row-column',
 			label: 'Switch Row/Column',
 			icon: icon('chartType'),
+			enabled: (ctx) => !activeChart(ctx)?.chart.chartSpace?.pivotSource,
+			unavailable: 'Use the PivotTable fields to change PivotChart data.',
 			run: (ctx) => editChart(ctx, (chart) => switchXlsxChartRowColumnPatch(chart) ?? {}),
 		}),
 		chartCmd({
 			id: 'chart.select-data',
 			label: 'Select Data',
 			icon: icon('chartType'),
+			enabled: (ctx) => !activeChart(ctx)?.chart.chartSpace?.pivotSource,
+			unavailable: 'Use the PivotTable fields to change PivotChart data.',
 			run: (ctx) => void ctx.dialogs.open('insert-chart', { change: true }),
 		}),
 		chartCmd({

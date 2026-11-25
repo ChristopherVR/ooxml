@@ -1,7 +1,7 @@
 // Saving an edited chart part over its source: `writeChartSpace` writes what `ChartSpace` models,
 // and the direct children of `c:chartSpace` and `c:chart` the parser reports as not modelled
-// (`c:pivotSource`, and `c:protection` when the model leaves it alone) are carried over from the source
-// part at their schema positions, so a pivot chart or a protected chart keeps them through an edit.
+// are carried over at their schema positions when the model leaves them alone, including an
+// unrecognized pivot source or chart protection.
 // `c:clrMapOvr` and `c:pivotFmts` are modelled as written (`colorMapOverrideXml`, `pivotFormatsXml`).
 // Unmodelled content deeper in the part (inside the plot area, a series or an axis) cannot be
 // carried this way: `keep-source.ts` says when a part has some, and such a part keeps its bytes.
@@ -71,6 +71,7 @@ export function withUnmodelledChartChildren(
 	source: string,
 	written: string,
 	omitProtection = false,
+	omitPivotSource = false,
 ): string {
 	if (!/<(?:\w+:)?(?:pivotSource|protection)\b/.test(source)) return written;
 	const from = parseXml(source, { label: 'Chart part' }).documentElement;
@@ -80,7 +81,11 @@ export function withUnmodelledChartChildren(
 		from,
 		to,
 		SPACE_ORDER,
-		omitProtection ? new Set(['pivotSource']) : UNMODELLED.space,
+		new Set(
+			[...UNMODELLED.space].filter((kind) =>
+				kind === 'pivotSource' ? !omitPivotSource : !omitProtection,
+			),
+		),
 	);
 	const fromChart = first(from, 'chart', NS.c);
 	const toChart = first(to, 'chart', NS.c);

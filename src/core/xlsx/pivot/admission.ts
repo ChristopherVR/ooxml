@@ -5,7 +5,7 @@ const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 const LAYOUT = 'http://schemas.microsoft.com/office/spreadsheetml/2016/pivotdefaultlayout';
 const TABLE: Record<string, string> = {
 	pivotTableDefinition:
-		'name cacheId dataCaption grandTotalCaption rowHeaderCaption colHeaderCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals',
+		'name cacheId dataCaption grandTotalCaption rowHeaderCaption colHeaderCaption dataOnRows dataPosition updatedVersion minRefreshableVersion createdVersion applyNumberFormats applyBorderFormats applyFontFormats applyPatternFormats applyAlignmentFormats applyWidthHeightFormats useAutoFormatting itemPrintTitles indent compact compactData outline outlineData multipleFieldFilters rowGrandTotals colGrandTotals chartFormat',
 	location: 'ref firstHeaderRow firstDataRow firstDataCol rowPageCount colPageCount',
 	pageFields: 'count',
 	pageField: 'fld item hier',
@@ -23,6 +23,12 @@ const TABLE: Record<string, string> = {
 	x: 'v',
 	dataFields: 'count',
 	dataField: 'name fld subtotal baseField baseItem showDataAs',
+	chartFormats: 'count',
+	chartFormat: 'chart format series',
+	pivotArea:
+		'type outline fieldPosition dataOnly labelOnly grandRow grandCol cacheIndex collapsedLevelsAreSubtotals',
+	references: 'count',
+	reference: 'field count selected',
 	pivotTableStyleInfo:
 		'name showRowHeaders showColHeaders showRowStripes showColStripes showLastColumn',
 	filters: 'count',
@@ -35,11 +41,15 @@ const TABLE: Record<string, string> = {
 	ext: 'uri',
 };
 const X15 = 'http://schemas.microsoft.com/office/spreadsheetml/2010/11/main';
+const VERSION_INFO = 'http://schemas.microsoft.com/office/spreadsheetml/2022/pivotVersionInfo';
+const SOURCE_CLEAN = 'http://schemas.microsoft.com/office/spreadsheetml/2026/pivotDataSourceClean';
+const CACHE_VERSION = '{9F748A41-CAEA-4470-BF7A-CE61E8FFA7F9}';
+const CACHE_CLEAN = '{F4336242-56EE-4DD3-A5F7-E900642BF6E9}';
 const CACHE: Record<string, string> = {
 	pivotCacheDefinition:
 		'id refreshedBy refreshedDate createdVersion refreshedVersion minRefreshableVersion recordCount',
 	cacheSource: 'type',
-	worksheetSource: 'ref sheet',
+	worksheetSource: 'ref sheet name',
 	cacheFields: 'count',
 	cacheField: 'name numFmtId databaseField',
 	sharedItems:
@@ -56,6 +66,40 @@ const CACHE: Record<string, string> = {
 	extLst: '',
 	ext: 'uri',
 };
+
+const noOptions = (element: XmlElement) =>
+	Array.from({ length: element.attributes.length }, (_, i) => element.attributes.item(i)).every(
+		(attr) => attr?.namespaceURI === 'http://www.w3.org/2000/xmlns/',
+	);
+
+/** Excel records when it last refreshed the cache, separately from features required to refresh. */
+function isCacheMetadata(node: XmlElement): boolean {
+	const uri = node.getAttribute('uri');
+	if (uri !== CACHE_VERSION && uri !== CACHE_CLEAN) return false;
+	const [metadata, extra] = elements(node);
+	if (
+		node.parentNode?.parentNode?.nodeName?.split(':').at(-1) !== 'pivotCacheDefinition' ||
+		!metadata ||
+		extra ||
+		!noOptions(metadata)
+	)
+		return false;
+	const entries = elements(metadata);
+	return uri === CACHE_VERSION
+		? metadata.namespaceURI === VERSION_INFO &&
+				metadata.localName === 'cacheVersionInfo' &&
+				entries.every(
+					(entry) =>
+						entry.namespaceURI === VERSION_INFO &&
+						entry.localName === 'lastRefreshFeature' &&
+						noOptions(entry) &&
+						elements(entry).length === 0,
+				)
+		: metadata.namespaceURI === SOURCE_CLEAN &&
+				metadata.localName === 'dataSourceClean' &&
+				entries.length === 0 &&
+				['0', '1'].includes(metadata.textContent ?? '');
+}
 
 function inspect(node: XmlElement, profile: Record<string, string>, cache: boolean): void {
 	if (node.namespaceURI !== NS.x) {
@@ -117,6 +161,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 	}
 	const allowed = profile[node.localName!]?.split(' ');
 	if (!allowed) throw new Error('Unsupported PivotTable markup');
+	const metadata = cache && node.localName === 'ext' && isCacheMetadata(node);
 	if (node.localName === 'ext') {
 		const uris = cache
 			? ['{725AE2AE-9491-48be-B2B4-4EB974FC3084}']
@@ -126,7 +171,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 					'{2946ED86-A175-432a-8AC1-64E0C546D7DE}',
 					'{0605FD5F-26C8-4aeb-8148-2DB25E43C511}',
 				];
-		if (!uris.includes(node.getAttribute('uri') ?? ''))
+		if (!metadata && !uris.includes(node.getAttribute('uri') ?? ''))
 			throw new Error('Unsupported PivotTable extension identity');
 	}
 	if (node.localName === 'cacheSource' && node.getAttribute('type') !== 'worksheet')
@@ -187,7 +232,7 @@ function inspect(node: XmlElement, profile: Record<string, string>, cache: boole
 		)
 			throw new Error('Unsupported PivotTable field layout');
 	}
-	for (const child of elements(node)) inspect(child, profile, cache);
+	if (!metadata) for (const child of elements(node)) inspect(child, profile, cache);
 }
 
 /** Only the explicitly modeled profile and inert native layout extensions are editable. */

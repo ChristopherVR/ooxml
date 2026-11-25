@@ -20,6 +20,7 @@ import { readFieldGroups } from './group-read';
 import { databaseFieldCount, readDateGroups } from './date-group-read';
 import { fieldSubtotalsOf } from './subtotal-read';
 import { isoToSerial } from './dates';
+import { pivotSourceRange } from './source';
 import { readItemFilters, readSlicerCacheId } from './item-filters-read';
 import { readItemNames } from './item-names-read';
 import { assertPageAxisItems } from './page-filter-admission';
@@ -69,15 +70,16 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const sourceNode = first(first(cache, 'cacheSource', NS.x), 'worksheetSource', NS.x);
 	const dataSheet = sourceNode && att(sourceNode, 'sheet');
 	const dataRange = sourceNode && parseRange(att(sourceNode, 'ref') ?? '');
+	const tableName = att(sourceNode, 'name');
+	const sourceTable = tableName && pivotSourceRange(workbook, 0, tableName).tableName;
+	const reference =
+		sourceTable ||
+		(dataSheet && dataRange && workbook.sheets.some((sheet) => sheet.name === dataSheet)
+			? `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`
+			: undefined);
 	const recordPart = source.targetOfType(cachePart, `${NS.r}/pivotCacheRecords`);
 	const rowsAxis = att(root, 'dataOnRows') === '1';
-	if (
-		!dataSheet ||
-		!dataRange ||
-		!recordPart ||
-		!workbook.sheets.some((sheet) => sheet.name === dataSheet)
-	)
-		throw new Error('Unsupported pivot source');
+	if (!reference || !recordPart) throw new Error('Unsupported pivot source');
 	const recordRoot = parseXml(source.text(recordPart)!).documentElement;
 	assertPivotRecords(recordRoot);
 	const allFields = children(first(cache, 'cacheFields', NS.x)!, 'cacheField', NS.x);
@@ -176,6 +178,11 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 	const compact = att(outer, 'compact') !== '0';
 	const outline = att(outer, 'outline') !== '0';
 	const layout = compact ? 'compact' : outline ? 'outline' : 'tabular';
+	const defaultCompact =
+		compact &&
+		outline &&
+		att(root, 'outline') === undefined &&
+		att(root, 'outlineData') === undefined;
 	if (
 		tableFields.some(
 			(field) =>
@@ -183,8 +190,9 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		) ||
 		(att(root, 'compact') !== '0') !== compact ||
 		(att(root, 'compactData') !== '0') !== compact ||
-		(att(root, 'outline') === '1') !== outline ||
-		(att(root, 'outlineData') === '1') !== outline ||
+		(!defaultCompact &&
+			((att(root, 'outline') === '1') !== outline ||
+				(att(root, 'outlineData') === '1') !== outline)) ||
 		(layout === 'compact' && att(root, 'indent') !== '0')
 	)
 		throw new Error('Mixed field layouts or custom compact indentation are preserved');
@@ -276,7 +284,7 @@ function readOne(workbook: Workbook, source: SourceIndex, part: string): PivotTa
 		...(dateFilter ? { dateFilter } : {}),
 		...(slicerCacheId !== undefined ? { slicerCacheId } : {}),
 		name: att(root, 'name') ?? 'PivotTable',
-		source: `${quoteSheetName(dataSheet)}!${formatRange(dataRange)}`,
+		source: reference,
 		rowField: row,
 		layout,
 		...(rowsAxis ? { valuesAxis: 'rows' as const } : {}),

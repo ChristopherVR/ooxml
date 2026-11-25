@@ -213,6 +213,8 @@ export interface ChartSpace {
 	autoTitleDeleted?: boolean;
 	/** `c:chart/c:pivotFmts` as written (pivot chart format overrides), kept for round-trip. */
 	pivotFormatsXml?: string;
+	/** Worksheet PivotTable name and its chart format group. */
+	pivotSource?: { name: string; formatId: number; extLst?: string };
 	view3D?: ChartView3D;
 	/** 3-D chart floor and walls (`c:floor`, `c:sideWall`, `c:backWall`). */
 	floor?: ChartSurface;

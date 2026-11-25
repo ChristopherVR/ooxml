@@ -1,5 +1,12 @@
 // Editing existing tables: options, rename, header/totals toggles, resize, convert to range.
-import { type CellRange, MAX_ROW, normalizeRange, rangesIntersect } from '../address';
+import {
+	type CellRange,
+	MAX_ROW,
+	formatRange,
+	normalizeRange,
+	quoteSheetName,
+	rangesIntersect,
+} from '../address';
 import { forEachCell, getCell } from '../cells';
 import { structuredToA1 } from '../formula/structured-to-a1';
 import { renameTableInFormula } from '../formula/table-refs';
@@ -268,6 +275,13 @@ export function convertTableToRange(ctx: EditContext, s: number, ref: TableRef):
 			const live = byId(sheet, table.id);
 			const base = { table: live, tableSheet: sheet.name };
 			const { start, end } = live.range;
+			const source = `${quoteSheetName(sheet.name)}!${formatRange({ start, end: { ...end, row: end.row - Number(live.totalsRow) } })}`;
+			for (const ws of workbook.sheets)
+				for (const pivot of ws.pivotTables ?? []) {
+					if (pivot.source !== live.name) continue;
+					pivot.source = source;
+					pivot.dirty = true;
+				}
 			for (const ws of workbook.sheets)
 				forEachCell(ws, (cell, row, col) => {
 					if (cell.formula === undefined) return;

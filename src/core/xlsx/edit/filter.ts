@@ -13,8 +13,9 @@ import { reapplySavedSort, savedSortAt } from './sort-reapply';
  * The current region around a cell (Ctrl+A / Ctrl+Shift+8): the smallest rectangle bounded by
  * empty rows and columns that contains the cell.
  */
-export function currentRegion(sheet: Worksheet, at: CellAddress): CellRange {
+export function currentRegion(sheet: Worksheet, at: CellAddress, maxProbes = Infinity): CellRange {
 	const filled = (row: number, col: number): boolean => {
+		if (--maxProbes < 0) throw new Error('Select the source range or a table.');
 		const cell = getCell(sheet, row, col);
 		return !!cell && cell.value !== null && cell.value !== '';
 	};

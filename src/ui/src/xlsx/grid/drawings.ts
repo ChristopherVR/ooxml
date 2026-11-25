@@ -34,6 +34,7 @@ import { paintFormControl, paintShape, pressFormControl } from './shapes';
 import { selectionOfPeriods } from 'ooxml-core/xlsx';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
+import { paintPivotChartButtons } from './pivot-chart-buttons';
 
 interface ObjectNode extends HTMLDivElement {
 	xgSig?: string | undefined;
@@ -339,6 +340,7 @@ export class DrawingLayer {
 			node.append(description);
 			node.setAttribute('aria-describedby', id);
 		}
+		if (drawing.chartSpace?.pivotSource) paintPivotChartButtons(view, node, drawing);
 	}
 
 	#selection(node: HTMLElement, index: number): void {

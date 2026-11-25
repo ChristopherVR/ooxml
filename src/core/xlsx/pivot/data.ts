@@ -1,7 +1,6 @@
 import { getCell } from '../cells';
 import { isCellError, type CellValue, type PivotTable, type Workbook } from '../model';
-import { formatRange, quoteSheetName } from '../address';
-import { sparklineDataRange } from '../edit/sparkline-ranges';
+import { pivotSourceRange } from './source';
 import { parseXml } from '../../xml/index';
 import { pivotColumnFields, pivotRowFields } from './axes';
 import { pivotCaptions, pivotMeasureName, type CaptionHolder } from './captions';
@@ -33,7 +32,7 @@ export function pivotSourceData(
 	sheet: number,
 	source: string,
 ): Pick<PivotTable, 'source' | 'fields' | 'records'> {
-	const data = sparklineDataRange(workbook, sheet, source);
+	const data = pivotSourceRange(workbook, sheet, source);
 	const ws = workbook.sheets[data.sheet]!;
 	const { start, end } = data.range;
 	if (end.row <= start.row || (end.row - start.row + 1) * (end.col - start.col + 1) > 1_000_000)
@@ -54,7 +53,7 @@ export function pivotSourceData(
 			record.push(getCell(ws, row, col)?.value ?? null);
 		records.push(record);
 	}
-	return { source: `${quoteSheetName(ws.name)}!${formatRange(data.range)}`, fields, records };
+	return { source: data.source, fields, records };
 }
 
 /** Type tags keep text "1", the number 1, booleans and blanks in distinct groups. */

@@ -7,6 +7,7 @@ import { PackageWriter, RelationshipSet } from '../write/package-writer';
 import { relativeTarget } from '../write/drawing';
 import { pivotCacheData, pivotCacheDefinitionXml, pivotCacheRecordsXml } from './cache-xml';
 import { pivotTableXml } from './table-xml';
+import { pivotChartTable } from './chart-binding';
 
 const TYPES = {
 	table: 'application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml',
@@ -27,6 +28,19 @@ export class PivotWritePlan {
 		bookRels: RelationshipSet,
 		reserved: ReadonlySet<string>,
 	) {
+		const chartFormats = new Map<PivotTable, Map<number, number>>();
+		const rewrite = new Set<PivotTable>();
+		for (const sheet of workbook.sheets)
+			for (const drawing of sheet.drawings) {
+				if (drawing.kind !== 'chart' || !drawing.chartSpace?.pivotSource) continue;
+				const binding = pivotChartTable(workbook, drawing);
+				if (!binding) continue;
+				if (drawing.partName && (!binding.pivot.dirty || drawing.editBlocked)) continue;
+				let entries = chartFormats.get(binding.pivot);
+				if (!entries) chartFormats.set(binding.pivot, (entries = new Map()));
+				entries.set(drawing.chartSpace.pivotSource.formatId, drawing.series.length);
+				if (!drawing.partName) rewrite.add(binding.pivot);
+			}
 		const sourceCaches = source?.text(bookPart)
 			? children(
 					first(parseXml(source.text(bookPart)!).documentElement, 'pivotCaches', NS.x) ??
@@ -44,7 +58,10 @@ export class PivotWritePlan {
 					const part = source.target(sheet.partName, rel);
 					if (!part) continue;
 					const pivot = sheet.pivotTables?.find((entry) => entry.partName === part);
-					if (pivot?.dirty || (!pivot && sheet.preserved.get('source:pivotTables')?.includes(part)))
+					if (
+						(pivot && (pivot.dirty || rewrite.has(pivot))) ||
+						(!pivot && sheet.preserved.get('source:pivotTables')?.includes(part))
+					)
 						continue;
 					const xml = source.text(part);
 					if (xml) retained.add(Number(parseXml(xml).documentElement.getAttribute('cacheId')));
@@ -71,7 +88,7 @@ export class PivotWritePlan {
 			) + 1;
 		for (const sheet of workbook.sheets)
 			for (const pivot of sheet.pivotTables ?? []) {
-				if (pivot.partName && !pivot.dirty) {
+				if (pivot.partName && !pivot.dirty && !rewrite.has(pivot)) {
 					this.tableParts.set(pivot, pivot.partName);
 					continue;
 				}
@@ -98,7 +115,11 @@ export class PivotWritePlan {
 					TYPES.definition,
 				);
 				writer.rels(definition, cacheRels);
-				writer.add(table, pivotTableXml(pivot, cacheId, cache), TYPES.table);
+				writer.add(
+					table,
+					pivotTableXml(pivot, cacheId, cache, chartFormats.get(pivot)),
+					TYPES.table,
+				);
 				const tableRels = new RelationshipSet();
 				tableRels.add(RELATIONSHIP_TYPES.pivotCacheDefinition, relativeTarget(table, definition));
 				writer.rels(table, tableRels);

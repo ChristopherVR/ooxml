@@ -77,7 +77,8 @@ export function chartSummarySeries(
 		out.bubbleSizes = chartSourceValues(source.bubbleSizes).map(numeric);
 		if (source.bubbleSizes.formula) out.bubbleSizesRef = source.bubbleSizes.formula;
 	}
-	if (source.tx?.text !== undefined) out.name = source.tx.text;
+	const name = source.tx?.text ?? source.tx?.value;
+	if (name !== undefined) out.name = name;
 	const nameRef = source.tx?.reference?.formula;
 	if (nameRef) out.nameRef = nameRef;
 	if (categories?.formula) out.categoriesRef = categories.formula;

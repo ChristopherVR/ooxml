@@ -361,6 +361,7 @@ export function chartDesignTab(): RibbonTab {
 				controls: [
 					{ kind: 'button', command: 'chart.switch-row-column', size: 'large' },
 					{ kind: 'button', command: 'chart.select-data', size: 'large' },
+					{ kind: 'toggle', command: 'chart.pivot-field-buttons', showLabel: true },
 				],
 			},
 			{

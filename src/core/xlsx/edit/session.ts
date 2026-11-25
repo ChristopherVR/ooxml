@@ -40,6 +40,7 @@ import * as drawings from './drawings';
 import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
+import * as pivotCharts from './pivot-charts';
 import * as slicers from './slicers';
 import * as timelines from './timelines';
 import { rangesIntersect } from '../address';
@@ -315,6 +316,10 @@ export function createEditSession(
 		createPivotTable: (s, destination, options) =>
 			pivots.createPivotTable(ctx, s, destination, options),
 		refreshPivotTable: (s, name, patch) => pivots.refreshPivotTable(ctx, s, name, patch),
+		addPivotChart: (s, pivotSheet, name, anchor) =>
+			pivotCharts.addPivotChart(ctx, s, pivotSheet, name, anchor),
+		showPivotChartButtons: (s, index, visible) =>
+			pivotCharts.showPivotChartButtons(ctx, s, index, visible),
 		deletePivotTable: (s, name) => pivots.deletePivotTable(ctx, s, name),
 		setSlicerSelection: (cache, keys) => slicers.setSlicerSelection(ctx, cache, keys),
 		updateSlicer: (name, patch) => slicers.updateSlicer(ctx, name, patch),

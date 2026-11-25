@@ -1,14 +1,24 @@
 import {
 	pivotGroupableDateFields,
 	pivotGroupableFields,
+	pivotChartButtons,
+	pivotChartTable,
 	pivotSubtotalFields,
 	pivotTableAt,
 } from 'ooxml-core/xlsx';
-import { editing, icon, target, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
+import {
+	activeChart,
+	editing,
+	icon,
+	structureLocked,
+	target,
+	type Command,
+	type EditorContext,
+} from 'ooxml-core/xlsx/ui';
 
 function selected(ctx: EditorContext) {
 	const t = target(ctx);
-	const pivot = t ? pivotTableAt(t.ws, t.range.start) : undefined;
+	const pivot = t ? pivotTableAt(t.ws, t.active) : undefined;
 	return t && pivot ? { t, pivot } : undefined;
 }
 
@@ -20,6 +30,60 @@ export function pivotCommands(): Command[] {
 			icon: icon('table'),
 			lock: 'objects',
 			run: (ctx) => void ctx.dialogs.open('create-pivot-table'),
+		}),
+		editing({
+			id: 'insert.pivot-chart',
+			label: 'PivotChart',
+			icon: icon('chartType'),
+			lock: 'objects',
+			unavailable: 'Select a source range, table or PivotTable in an editable workbook.',
+			enabled: (ctx) =>
+				!!selected(ctx) || (!structureLocked(ctx) && target(ctx)?.ranges.length === 1),
+			run: async (ctx) => (await import('../dialogs/pivot-charts')).insertPivotChart(ctx),
+		}),
+		editing({
+			id: 'insert.recommended-pivot-tables',
+			label: 'Recommended PivotTables',
+			icon: icon('table'),
+			lock: 'objects',
+			unavailable: 'Select a source range or table in an editable workbook.',
+			enabled: (ctx) => !structureLocked(ctx) && !selected(ctx) && target(ctx)?.ranges.length === 1,
+			run: async (ctx) => (await import('../dialogs/pivot-charts')).openRecommendedPivotTables(ctx),
+		}),
+		editing({
+			id: 'chart.pivot-field-buttons',
+			label: 'Field Buttons',
+			icon: icon('filter'),
+			lock: 'objects',
+			unavailable: 'Select an editable PivotChart linked to a worksheet PivotTable.',
+			enabled: (ctx) => {
+				const chart = activeChart(ctx)?.chart;
+				const workbook = ctx.workbook();
+				return !!chart && !!workbook && !chart.editBlocked && !!pivotChartTable(workbook, chart);
+			},
+			checked: (ctx) => {
+				const chart = activeChart(ctx)?.chart;
+				return !!chart?.chartSpace?.pivotSource && pivotChartButtons(chart).size > 0;
+			},
+			run: (ctx) => {
+				const t = target(ctx);
+				const active = activeChart(ctx);
+				if (t && active)
+					t.session.showPivotChartButtons(
+						t.sheet,
+						active.index,
+						pivotChartButtons(active.chart).size === 0,
+					);
+			},
+		}),
+		editing({
+			id: 'pivot.filter-field',
+			label: 'Filter PivotTable Field',
+			icon: icon('filter'),
+			lock: 'objects',
+			unavailable: 'Select a PivotTable to filter its fields.',
+			enabled: (ctx) => !!selected(ctx),
+			run: (ctx) => void ctx.dialogs.open('pivot-field-filter'),
 		}),
 		editing({
 			id: 'pivot.settings',

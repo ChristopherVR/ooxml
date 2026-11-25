@@ -8,9 +8,12 @@ import {
 	pivotTableAt,
 	pivotValuesIndex,
 	type PivotAggregate,
+	type PivotChartButton,
 	type PivotLayout,
 	type PivotTable,
+	type PivotTableOptions,
 	type PivotValuesPosition,
+	type CellAddress,
 } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, select, text, textInput } from './fields';
@@ -35,15 +38,30 @@ function placementValue(pivot: PivotTable): string {
 const positionOf = (value: string): PivotValuesPosition =>
 	value === 'first' || value === 'last' || value === 'between' ? value : Number(value);
 
-export function openPivotTable(ctx: EditorContext, settings = false): Promise<boolean | undefined> {
+type PivotDialogMode =
+	| { kind: 'table' }
+	| { kind: 'settings'; binding?: { sheet: number; pivot: PivotTable; role: PivotChartButton } }
+	| { kind: 'chart'; source: string; create(at: CellAddress, options: PivotTableOptions): void };
+
+export function openPivotTable(
+	ctx: EditorContext,
+	mode: PivotDialogMode = { kind: 'table' },
+): Promise<boolean | undefined> {
 	const t = target(ctx);
 	if (!t) return Promise.resolve(undefined);
-	const pivot = settings ? pivotTableAt(t.ws, t.range.start) : undefined;
+	const settings = mode.kind === 'settings';
+	const binding = settings ? mode.binding : undefined;
+	const sheet = binding?.sheet ?? t.sheet;
+	const pivot = settings ? (binding?.pivot ?? pivotTableAt(t.ws, t.active)) : undefined;
 	if (settings && !pivot) return Promise.resolve(undefined);
-	const source = textInput(ctx, pivot?.source ?? formatRange(t.range));
+	const chart = mode.kind === 'chart';
+	const source = textInput(ctx, pivot?.source ?? (chart ? mode.source : formatRange(t.range)));
 	const destination = textInput(
 		ctx,
-		formatAddress(pivot?.location.start ?? { row: t.range.start.row, col: t.range.end.col + 2 }),
+		formatAddress(
+			pivot?.location.start ??
+				(chart ? { row: 2, col: 0 } : { row: t.range.start.row, col: t.range.end.col + 2 }),
+		),
 	);
 	source.disabled = settings;
 	destination.disabled = settings;
@@ -141,7 +159,7 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	const loadFields = () => {
 		let fields: string[];
 		try {
-			const data = pivotSourceData(ctx.workbook()!, t.sheet, source.value);
+			const data = pivot ?? pivotSourceData(t.workbook, t.sheet, source.value);
 			fields = data.fields;
 			pageData = pivot ?? data;
 		} catch {
@@ -246,8 +264,8 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 	source.addEventListener('change', updateRows);
 	updateRows();
 	return showDialog(ctx, {
-		name: settings ? 'pivot-settings' : 'create-pivot-table',
-		heading: settings ? 'PivotTable Settings' : 'Create PivotTable',
+		name: settings ? 'pivot-settings' : chart ? 'create-pivot-chart' : 'create-pivot-table',
+		heading: settings ? 'PivotTable Settings' : chart ? 'PivotChart' : 'Create PivotTable',
 		body: [
 			field(ctx, 'Source Range:', source),
 			field(ctx, 'Destination Cell:', destination),
@@ -269,7 +287,19 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 			field(ctx, 'Values Placement:', valuesPlacement),
 			multipleNotice,
 		],
-		opened: () => (settings ? row : source).focus(),
+		opened: () => {
+			const focus =
+				binding?.role === 'filter'
+					? page.item
+					: binding?.role === 'legend'
+						? column
+						: binding?.role === 'value'
+							? aggregate
+							: settings
+								? row
+								: source;
+			focus.focus();
+		},
 		submit: () => {
 			const pageFilter = page.read();
 			const options = {
@@ -309,17 +339,17 @@ export function openPivotTable(ctx: EditorContext, settings = false): Promise<bo
 					pivot.aggregate !== options.aggregate ||
 					JSON.stringify(pivot.additionalValues ?? []) !== JSON.stringify(options.additionalValues)
 				)
-					t.session.refreshPivotTable(t.sheet, pivot.name, { ...options, pageFilter });
+					t.session.refreshPivotTable(sheet, pivot.name, { ...options, pageFilter });
 			} else {
 				const at = parseAddress(destination.value.trim().replaceAll('$', ''));
 				if (!at) throw new Error('The reference is not valid.');
 				// A new report is captioned in the editor's language, as Excel does in its UI language.
-				t.session.createPivotTable(t.sheet, at, {
-					...options,
-					source: source.value,
-					locale: ctx.locale(),
-				});
-				ctx.selection.set({ ranges: [{ start: at, end: at }], active: at, anchor: at });
+				const insertion = { ...options, source: source.value, locale: ctx.locale() };
+				if (chart) mode.create(at, insertion);
+				else {
+					t.session.createPivotTable(t.sheet, at, insertion);
+					ctx.selection.set({ ranges: [{ start: at, end: at }], active: at, anchor: at });
+				}
 			}
 			return true;
 		},

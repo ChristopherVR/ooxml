@@ -131,6 +131,11 @@ export const GRID_CSS = `
 .xg-obj img,.xg-obj svg{display:block;width:100%;height:100%;pointer-events:none}
 .xg-chart svg [data-chart-series],.xg-chart svg [data-chart-part]{pointer-events:auto}
 .xg-obj.xg-chart{background:#fff;outline:1px solid #d9d9d9;outline-offset:-1px}
+.xg-pivot-chart-buttons{position:absolute;inset:3px 3px auto;display:flex;gap:3px;flex-wrap:wrap;max-height:35%;overflow:auto;pointer-events:auto}
+.xg-pivot-chart-buttons button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--office-surface,#f4f4f4);color:var(--office-text,#222);border:1px solid var(--office-border,#888);border-radius:2px;font:inherit;cursor:pointer}
+.xg-pivot-chart-buttons button::after{content:' ▾'}
+.xg-pivot-chart-buttons button[aria-disabled=true]{cursor:default;opacity:.65}
+.xg-pivot-chart-buttons button:focus-visible{outline:2px solid var(--office-accent,#217346);outline-offset:-2px}
 .xg-obj.xg-obj-sel{outline:1px solid #8a8a8a;outline-offset:0}
 .xg-obj .xg-grip{position:absolute;width:8px;height:8px;background:#fff;border:1px solid #555;box-sizing:border-box;border-radius:50%}
 @media(pointer:coarse){.xg-grip::before{content:'';position:absolute;inset:-${(MIN_TOUCH_TARGET_PX - 8) / 2}px;touch-action:none}}

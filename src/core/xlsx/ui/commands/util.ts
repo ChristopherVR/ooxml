@@ -105,9 +105,10 @@ export function hasOutlinedRow(ws: Worksheet, ranges: readonly CellRange[]): boo
 }
 
 /** The selection, or its current region when only one cell is selected (Excel's sort / filter). */
-export function regionOf(t: Target): CellRange {
+export function regionOf(t: Target, maxProbes?: number): CellRange {
 	const r = t.range;
-	if (r.start.row === r.end.row && r.start.col === r.end.col) return currentRegion(t.ws, r.start);
+	if (r.start.row === r.end.row && r.start.col === r.end.col)
+		return currentRegion(t.ws, r.start, maxProbes);
 	return r;
 }
 

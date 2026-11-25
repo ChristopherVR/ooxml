@@ -11,6 +11,8 @@ import { deleteSheetInFormula, renameSheetInFormula, renameTableInFormula } from
 import { rewriteFormulas, rewriteSheetFormulas } from './shift-formulas';
 import { reservedPivotNames } from './pivots';
 import { resetCommentIdentities } from './comment-identities';
+import { pivotChartSource } from '../pivot/chart-binding';
+import { applyPivotChartUpdates, detachPivotCharts } from './pivot-charts';
 
 function assertUnlocked(workbook: Workbook): void {
 	if (workbook.structureLocked) throw new Error('The workbook structure is protected.');
@@ -74,7 +76,9 @@ export function deleteSheet(ctx: EditContext, index: number): void {
 			(other) =>
 				other !== sheet &&
 				other.pivotTables?.some(
-					(pivot) => deleteSheetInFormula(pivot.source, sheet.name, []) !== pivot.source,
+					(pivot) =>
+						sheet.tables.some((table) => table.name === pivot.source) ||
+						deleteSheetInFormula(pivot.source, sheet.name, []) !== pivot.source,
 				),
 		)
 	)
@@ -84,6 +88,11 @@ export function deleteSheet(ctx: EditContext, index: number): void {
 		'sheets',
 		[{ kind: 'workbook' }],
 		() => {
+			for (const pivot of sheet.pivotTables ?? [])
+				applyPivotChartUpdates(
+					workbook,
+					detachPivotCharts(workbook, sheet.name, pivot.name, index),
+				);
 			const tables = sheet.tables.map((t) => t.name);
 			workbook.sheets.splice(index, 1);
 			remapSheets(workbook, (i) => (i === index ? undefined : i > index ? i - 1 : i));
@@ -115,6 +124,13 @@ export function renameSheet(ctx: EditContext, index: number, name: string): void
 		[{ kind: 'refs' }],
 		() => {
 			rewriteFormulas(workbook, (formula) => renameSheetInFormula(formula, old, name));
+			for (const host of workbook.sheets)
+				for (const chart of host.drawings) {
+					if (chart.kind !== 'chart' || !chart.chartSpace?.pivotSource) continue;
+					const binding = pivotChartSource(chart.chartSpace);
+					if (binding?.sheet === old)
+						chart.chartSpace.pivotSource.name = `${binding.prefix}${name}!${binding.pivot}`;
+				}
 			sheet.name = name;
 		},
 		{ sheet: index, structural: true, calc: { kind: 'rename', from: old, to: name } },

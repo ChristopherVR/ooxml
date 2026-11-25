@@ -11,7 +11,14 @@ import { chartProtectionXml } from './protection';
 import { plotAreaXml } from './write-plot';
 import { layoutXml, shapePropertiesXml, textBodyXml } from './write-shape';
 import { titleXml } from './write-text';
-import { elementXml, escapeAttribute, raw, valXml, type ChartWriteContext } from './write-util';
+import {
+	elementXml,
+	escapeAttribute,
+	escapeText,
+	raw,
+	valXml,
+	type ChartWriteContext,
+} from './write-util';
 import { CHART_ROOT_BINDINGS } from './xml-fragment';
 
 /** Options of {@link writeChartSpace}. */
@@ -111,6 +118,14 @@ export function writeChartSpace(space: ChartSpace, options: WriteChartSpaceOptio
 		valXml('roundedCorners', space.roundedCorners) +
 		styleXml(context, space) +
 		raw(context, space.colorMapOverrideXml) +
+		(space.pivotSource
+			? elementXml(
+					'pivotSource',
+					elementXml('name', escapeText(space.pivotSource.name)) +
+						valXml('fmtId', space.pivotSource.formatId) +
+						raw(context, space.pivotSource.extLst),
+				)
+			: '') +
 		chartProtectionXml(context, space.protection) +
 		chart +
 		shapePropertiesXml(context, space.spPr) +

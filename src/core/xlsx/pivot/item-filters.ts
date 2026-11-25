@@ -13,6 +13,20 @@ export function hiddenItemKeys(pivot: Pick<PivotTable, 'itemFilters'>, field: st
 	return new Set((filter?.hidden ?? []).map(pivotValueKey));
 }
 
+/** Limits the number of choices an interactive field filter can present. */
+export function pivotFilterItems(pivot: PivotTable, field: string): CellValue[] | undefined {
+	const index = pivot.fields.indexOf(field);
+	if (index < 0 || pivot.fieldGroups?.some((group) => group.field === field)) return undefined;
+	const keys = new Set<string>();
+	for (const row of pivot.records) {
+		const value = row[index] ?? null;
+		if (typeof value === 'string' && value.length > 1_000) return undefined;
+		keys.add(pivotValueKey(value));
+		if (keys.size > 1_000) return undefined;
+	}
+	return pivotItems(pivot, field);
+}
+
 /** Fields that carry at least one hidden item. */
 export function filteredFields(pivot: Pick<PivotTable, 'itemFilters'>): Set<string> {
 	return new Set(

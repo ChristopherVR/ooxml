@@ -1,5 +1,5 @@
 import { getCell } from '../cells';
-import { sparklineDataRange } from '../edit/sparkline-ranges';
+import { pivotSourceRange } from './source';
 import { serialToYmd, ymdToSerial } from '../formula/date-serial';
 import type { PivotTable, Workbook } from '../model';
 import { isDateFormat } from '../numfmt/index';
@@ -40,7 +40,7 @@ export function pivotDateColumns(
 	fields: readonly string[],
 	skip: ReadonlySet<string>,
 ): string[] {
-	const data = sparklineDataRange(workbook, sheet, source);
+	const data = pivotSourceRange(workbook, sheet, source);
 	const ws = workbook.sheets[data.sheet]!;
 	const { start, end } = data.range;
 	const dates: string[] = [];

@@ -15,11 +15,17 @@ import { pivotItemName } from './item-labels';
 import { pivotMeasures } from './measures';
 import { fieldSubtotalFunctions, PIVOT_SUBTOTALS } from './subtotals';
 import { pivotValueAxisItems, remapPivotRowEntries } from './values-axis';
+import { updatePivotChartFormats } from './chart-formats';
 
 const X14 = 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/main';
 
 /** Writes the supported table structure while retaining unrelated native attributes/extensions. */
-export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotCacheData): string {
+export function pivotTableXml(
+	source: PivotTable,
+	cacheId: number,
+	cache: PivotCacheData,
+	charts?: ReadonlyMap<number, number>,
+): string {
 	const grid = pivotGrid(source);
 	// Date groups add their derived fields after the cache fields; the table lists them all.
 	const pivot = expandDateGroups(source);
@@ -223,6 +229,7 @@ export function pivotTableXml(source: PivotTable, cacheId: number, cache: PivotC
 	const replacement = parseXml(`<root xmlns="${NS.x}">${body}</root>`).documentElement;
 	const before = root.firstChild;
 	for (const child of elements(replacement)) root.insertBefore(doc.importNode(child, true), before);
+	if (charts) updatePivotChartFormats(root, pivot, grid, columnIdx, columnIndicesFull, charts);
 	if (pivot.dateFilter) {
 		// `filters` follows the table style and precedes the extension list.
 		const filters = parseXml(

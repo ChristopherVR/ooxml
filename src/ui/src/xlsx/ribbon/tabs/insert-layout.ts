@@ -26,11 +26,13 @@ export function insertTab(): RibbonTab {
 				controls: [
 					{ kind: 'button', command: 'insert.table', size: 'large' },
 					{ kind: 'button', command: 'insert.pivot-table', size: 'large' },
+					{ kind: 'button', command: 'insert.recommended-pivot-tables', size: 'large' },
 					{
 						kind: 'menu',
 						label: 'PivotTable',
 						items: [
 							{ command: 'pivot.settings' },
+							{ command: 'pivot.filter-field' },
 							{ command: 'pivot.refresh' },
 							{ command: 'pivot.group' },
 							{ command: 'pivot.group-selection' },
@@ -63,6 +65,7 @@ export function insertTab(): RibbonTab {
 				launcher: 'insert.chart',
 				controls: [
 					{ kind: 'button', command: 'insert.chart', size: 'large' },
+					{ kind: 'button', command: 'insert.pivot-chart', size: 'large' },
 					{
 						kind: 'stack',
 						controls: CHART_TYPES.slice(0, 3).map(([type]) => ({

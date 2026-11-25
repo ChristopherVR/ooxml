@@ -23,11 +23,12 @@ const source =
 describe('withUnmodelledChartChildren', () => {
 	it('carries pivot, protection and colour-map children into an edited part, in schema order', () => {
 		const { chartSpace, issues } = parseChartSpace(source);
-		expect(issues.map((issue) => issue.message).join(' ')).toContain('pivotSource');
+		expect(issues).toEqual([]);
+		expect(chartSpace.pivotSource).toEqual({ name: '[Book1.xlsx]Sheet1!PivotTable1', formatId: 0 });
 		const written = writeChartSpace(setChartTitle(chartSpace, 'Pivot sales'), {
 			declarationBreak: '\n',
 		});
-		expect(written).not.toContain('pivotSource');
+		expect(written).toContain('pivotSource');
 		const kept = withUnmodelledChartChildren(source, written);
 		const order = [
 			'c:roundedCorners ',

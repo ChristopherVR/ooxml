@@ -371,7 +371,11 @@ line/marker swatches and position-authoring controls remain incomplete.
     Edit Equation opens the LaTeX editor for a selected equation text box. Imported equation
     branches are kept on save and supported equations render as MathML on the grid. Grouped
     equations are read-only inside the group. Header & Footer opens the inline editor in Page
-    Layout view. PivotChart and Recommended PivotTables remain open. Page Layout offers fit width and height, percentage
+    Layout view. PivotChart can create a clustered column chart from a worksheet range, Excel
+    table or existing worksheet PivotTable. Its field buttons open PivotTable controls and can be
+    hidden together. Supported PivotTable edits and refresh regenerate the chart caches.
+    Recommended PivotTables previews at most four sampled reports, including year and month
+    grouping for date columns. Page Layout offers fit width and height, percentage
     scaling, Print Titles, and local worksheet background pictures. Arrange offers drawing
     stacking, a Selection Pane, alignment, grouping of standalone shapes, and rotation,
     flipping, and visibility controls for shapes and pictures. Grouping pictures or mixed drawings, nested groups, and rotation of other

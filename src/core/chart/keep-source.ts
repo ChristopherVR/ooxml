@@ -144,5 +144,6 @@ export function writeChartSpaceOverSource(
 		source,
 		writeChartSpace(space, options),
 		space.protection === null,
+		!!parsed.chartSpace.pivotSource && !space.pivotSource,
 	);
 }

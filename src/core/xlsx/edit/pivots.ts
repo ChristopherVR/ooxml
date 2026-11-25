@@ -17,7 +17,7 @@ import {
 	pivotSourceData,
 	validatePivotFields,
 } from '../pivot/data';
-import { sparklineDataRange } from './sparkline-ranges';
+import { pivotSourceRange } from '../pivot/source';
 import { type EditContext, sheetAt } from './context';
 import { stylePatcher } from './format';
 import { styleAt } from '../styles';
@@ -27,6 +27,7 @@ import { pivotDateFieldsOf, roundDateRecords } from '../pivot/dates';
 import { reconcileDateAxes } from '../pivot/date-axes';
 import { normalizedFieldSubtotals } from '../pivot/subtotals';
 import { pruneItemFilters } from '../pivot/item-filters';
+import { applyPivotChartUpdates, detachPivotCharts, pivotChartUpdates } from './pivot-charts';
 import {
 	markDirty,
 	pivotHasSlicers,
@@ -87,7 +88,7 @@ function plan(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable) 
 		location.end.col > MAX_COL
 	)
 		throw new Error('The PivotTable result does not fit on the worksheet.');
-	const source = sparklineDataRange(ctx.workbook, s, pivot.source);
+	const source = pivotSourceRange(ctx.workbook, s, pivot.source);
 	if (
 		(source.sheet === s && rangesIntersect(source.range, location)) ||
 		sheet.merges.some((range) => rangesIntersect(range, location)) ||
@@ -117,6 +118,8 @@ export function writePivot(
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const { grid, location } = plan(ctx, s, pivot, old);
+	const next = { ...pivot, location, dirty: true };
+	const charts = old ? pivotChartUpdates(ctx.workbook, sheet.name, next, grid) : undefined;
 	const ranges = [...(old ? [old.location] : []), location];
 	ctx.run(
 		label ?? (old ? 'Refresh PivotTable' : 'Create PivotTable'),
@@ -124,6 +127,11 @@ export function writePivot(
 		[
 			{ kind: 'parts', sheet: s, parts: ['pivotTables'] },
 			{ kind: 'cells', sheet: s, ranges },
+			...[...(charts?.keys() ?? [])].map((sheet) => ({
+				kind: 'parts' as const,
+				sheet,
+				parts: ['drawings' as const],
+			})),
 			...(inside ? [{ kind: 'meta' as const }] : []),
 		],
 		() => {
@@ -150,11 +158,11 @@ export function writePivot(
 					else deleteCell(sheet, row, col);
 				});
 			inside?.();
-			const next = { ...pivot, location, dirty: true };
 			const list = sheet.pivotTables ?? [];
 			sheet.pivotTables = old
 				? list.map((entry) => (entry === old ? next : entry))
 				: [...list, next];
+			applyPivotChartUpdates(ctx.workbook, charts);
 			grid.values.forEach((line, row) =>
 				line.forEach((value, col) => {
 					const r = startRow(location, row);
@@ -320,7 +328,8 @@ export function refreshPivotTable(
 		if (left.length) next.fieldSubtotals = left;
 		else delete next.fieldSubtotals;
 	}
-	const kept = pruneItemFilters(next);
+	if (patch.itemFilters !== undefined) next.itemFilters = structuredClone(patch.itemFilters);
+	const kept = patch.itemFilters ?? pruneItemFilters(next);
 	if (kept) next.itemFilters = kept;
 	else delete next.itemFilters;
 	validatePivotFields(next);
@@ -338,12 +347,18 @@ export function refreshPivotTable(
 export function deletePivotTable(ctx: EditContext, s: number, name: string): void {
 	const sheet = sheetAt(ctx.workbook, s);
 	const pivot = pivotAt(ctx, s, name);
+	const charts = detachPivotCharts(ctx.workbook, sheet.name, name);
 	ctx.run(
 		'Delete PivotTable',
 		'annotations',
 		[
 			{ kind: 'parts', sheet: s, parts: ['pivotTables'] },
 			{ kind: 'cells', sheet: s, ranges: [pivot.location] },
+			...[...charts.keys()].map((sheet) => ({
+				kind: 'parts' as const,
+				sheet,
+				parts: ['drawings' as const],
+			})),
 			...(pivotHasSlicers(ctx.workbook, sheet.sheetId, pivot.name)
 				? [{ kind: 'workbook' as const }]
 				: []),
@@ -356,6 +371,7 @@ export function deletePivotTable(ctx: EditContext, s: number, name: string): voi
 				timelineOnPivot(ctx.workbook, timeline.cache, sheet.sheetId, pivot.name),
 			);
 			sheet.pivotTables = sheet.pivotTables!.filter((entry) => entry !== pivot);
+			applyPivotChartUpdates(ctx.workbook, charts);
 			forEachCellInRange(sheet, pivot.location, (_cell, row, col) => deleteCell(sheet, row, col));
 		},
 		{ sheet: s, ranges: [pivot.location] },
