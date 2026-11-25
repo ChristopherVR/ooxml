@@ -41,3 +41,37 @@ export function documentParagraphs(blocks: readonly Block[]): Paragraph[] {
 	visit(blocks);
 	return result;
 }
+
+/** Maps paragraphs in story order, including current direct paragraphs and nested tables. */
+export function mapStoryBlocks(
+	blocks: Block[],
+	paragraph: (value: Paragraph) => Paragraph,
+	tableId: (id: string) => string = (id) => id,
+): Block[] {
+	let storyChanged = false;
+	const updated = blocks.map((block): Block => {
+		if (block.type === 'paragraph') {
+			const next = paragraph(block);
+			storyChanged ||= next !== block;
+			return next;
+		}
+		let changed = false;
+		const rows = block.rows.map((row) =>
+			row.map((cell) => {
+				const original = cellSourceBlocks(cell);
+				const source = mapStoryBlocks(original, paragraph, tableId);
+				if (source === original) return cell;
+				changed = true;
+				return {
+					...cell,
+					paragraphs: source.filter((item) => item.type === 'paragraph'),
+					...(cell.sourceBlocks && { sourceBlocks: source }),
+				};
+			}),
+		);
+		const id = tableId(block.id);
+		storyChanged ||= changed || id !== block.id;
+		return changed || id !== block.id ? { ...block, id, rows } : block;
+	});
+	return storyChanged ? updated : blocks;
+}

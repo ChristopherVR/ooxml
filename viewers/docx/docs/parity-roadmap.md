@@ -87,8 +87,9 @@ detail and limits of each feature already built.
 4. **Word authoring breadth.** Word can create and modify styles from the Home ribbon, and
    DOCX export writes style catalogues, latent styles and theme edits. Remaining work includes
    the Design tab (themes, colours, fonts,
-   paragraph spacing, all disabled), Mailings (all 16 commands disabled, no merge
-   engine), object positioning and wrapping (no Layout > Arrange group, no Picture
+   paragraph spacing, all disabled), Mailings (all 16 commands disabled, with a headless
+   `ooxml-core/docx` engine for recipient selection, preview, and document output), object
+   positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,
    wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly

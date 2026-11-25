@@ -1,5 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, DocumentModel, Paragraph, SectionProperties } from './model';
+import { copySourceBlock, type BlockCopies } from './block-copies';
+import { cellSourceBlocks } from './cell-blocks';
 import { flatBlocks } from './parse-content-control';
 import { placeBlocksById } from './write-block-placement';
 import { replaceSlots } from './write-slots';
@@ -55,8 +57,12 @@ function createTable(
 					: cell,
 			);
 			if (tcPr) tc.appendChild(tcPr);
-			for (const paragraph of cell.paragraphs)
-				tc.appendChild(createParagraph(doc, paragraph, allocator, spans));
+			for (const block of cellSourceBlocks(cell))
+				tc.appendChild(
+					block.type === 'paragraph'
+						? createParagraph(doc, block, allocator, spans)
+						: createTable(doc, block, allocator, Math.max(1, gridWidth), spans),
+				);
 			if (!cell.paragraphs.length) tc.appendChild(makeW(doc, 'p'));
 			tr.appendChild(tc);
 			placeTableControl(doc, tc, cell.contentControl, undefined);
@@ -85,6 +91,7 @@ export function applyBlocks(
 	allocator: RelationshipAllocator | undefined,
 	contentWidthTwips: number,
 	anchor: XmlElement | null = null,
+	copies?: BlockCopies,
 ): void {
 	const nextId = annotationIdAllocator(doc, blocks);
 	const spans: CommentSpans = {
@@ -106,10 +113,28 @@ export function applyBlocks(
 		if (oldNodes[index]) oldById.set(block.id, oldNodes[index]);
 	});
 	const bases = baseMap(original);
+	const copied = new Map<string, ReturnType<typeof copySourceBlock>>();
+	const bookmarks = new Map<string, string>();
+	for (const [id, copy] of copies ?? []) {
+		const source = oldById.get(copy.sourceId);
+		const base = bases.get(copy.sourceId);
+		if (!source || !base) continue;
+		copied.set(
+			id,
+			copySourceBlock(source, base, copy, allocator, (key) => {
+				const known = bookmarks.get(key);
+				if (known) return known;
+				const value = nextId();
+				bookmarks.set(key, value);
+				return value;
+			}),
+		);
+	}
 	const output: XmlElement[] = [];
 	for (const block of blocks) {
-		const old = oldById.get(block.id);
-		const base = bases.get(block.id);
+		const copy = copied.get(block.id);
+		const old = oldById.get(block.id) ?? copy?.node;
+		const base = bases.get(block.id) ?? copy?.base;
 		if (block.type === 'paragraph')
 			output.push(
 				old
@@ -151,6 +176,7 @@ export function applyModel(
 	docPrIds?: DocPrIdAllocator,
 	/** Relationship ids of header/footer parts created for this save, by part name. */
 	headerFooterReferences: ReadonlyMap<string, string> = new Map(),
+	copies?: BlockCopies,
 ): ApplyModelResult {
 	const body = Array.from(doc.getElementsByTagNameNS(WORD_NS, 'body'))[0];
 	if (!body) throw new Error('DOCX document.xml has no w:body');
@@ -170,6 +196,7 @@ export function applyModel(
 		allocator,
 		contentWidthTwips,
 		children(body, 'sectPr').at(-1) ?? null,
+		copies,
 	);
 	let section = children(body, 'sectPr').at(-1);
 	if (!section) {

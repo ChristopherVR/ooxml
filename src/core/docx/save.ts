@@ -6,6 +6,7 @@ import { openZip } from '../opc/zip-limits';
 import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { stripPackageSignatures } from '../opc/signature/index';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
+import { blockCopiesOf } from './block-copies';
 import { stampModified } from './save-modified';
 import { applyDataBindings } from './data-binding';
 import { buildXml, parseXml, type XmlDocument } from './xml';
@@ -15,6 +16,7 @@ import { DocPrIdAllocator } from './docpr-ids';
 import { assertValidDocumentModel } from './validate-model';
 import { applyCoreProperties } from './core-properties';
 import { applyPackageInformation } from './package-information-save';
+import { writeMailMergeSettings } from './mail-merge/settings';
 import { scrubPersonalParts } from './personal-information';
 import { applyNumberingCatalog } from './numbering-package';
 import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
@@ -106,6 +108,7 @@ export async function saveDocx(
 					}
 	}
 	const binding = contexts.get(model);
+	const copies = blockCopiesOf(model);
 	if (binding && JSON.stringify(model) === JSON.stringify(binding.base))
 		return new Uint8Array(binding.original);
 	assertValidDocumentModel(model);
@@ -139,6 +142,7 @@ export async function saveDocx(
 			binding?.base.sections ?? [],
 			docPrIds,
 			headerFooterIds,
+			copies,
 		);
 	// The body's computed field results (DOCPROPERTY...) are saved up to date; a body the writer
 	// cannot rebuild with them is written as the model holds it.
@@ -201,6 +205,7 @@ export async function saveDocx(
 		await applyComments(zip, model.comments ?? []);
 	if (binding) await applyDataBindings(zip, model, binding.base, binding.sourceXml);
 	await applyPackageInformation(zip, model.packageInformation, binding?.base.packageInformation);
+	await writeMailMergeSettings(zip, model.mailMerge, binding?.base.mailMerge);
 	const privacy = model.packageInformation;
 	if (privacy?.removePersonalInformation)
 		await scrubPersonalParts(zip, privacy.removeDateAndTime === true);

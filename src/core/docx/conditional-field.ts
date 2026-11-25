@@ -1,10 +1,14 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // IF field (ECMA-376 Part 1, 17.16.5.25): IF expr1 operator expr2 trueText [falseText].
-import { applyFieldFormat, parseFieldInstruction } from './field-format';
+import { applyFieldFormat, parseFieldInstruction, type ParsedField } from './field-format';
 
 type ComparisonOp = '=' | '<>' | '<' | '<=' | '>' | '>=';
 
-const OPS: ReadonlySet<string> = new Set(['=', '<>', '<', '<=', '>', '>=']);
+const OPS: ReadonlySet<string> = new Set<ComparisonOp>(['=', '<>', '<', '<=', '>', '>=']);
+
+function isComparisonOp(op: string): op is ComparisonOp {
+	return OPS.has(op);
+}
 
 function parseNumeric(text: string): number | undefined {
 	const trimmed = text.trim();
@@ -39,7 +43,8 @@ function wildcardMatch(text: string, pattern: string): boolean {
 	return pi === p.length;
 }
 
-function compare(left: string, op: ComparisonOp, right: string): boolean {
+export function compareFieldValues(left: string, op: string, right: string): boolean | undefined {
+	if (!isComparisonOp(op)) return undefined;
 	const ln = parseNumeric(left);
 	const rn = parseNumeric(right);
 	if (ln !== undefined && rn !== undefined) {
@@ -80,11 +85,19 @@ function compare(left: string, op: ComparisonOp, right: string): boolean {
 export function ifFieldResult(instr: string): string | undefined {
 	const field = parseFieldInstruction(instr);
 	if (field?.name !== 'IF') return undefined;
+	return evaluateIfField(field);
+}
+
+/** Resolves the operands and only the selected branch, so nested fields can be evaluated lazily. */
+export function evaluateIfField(
+	field: ParsedField,
+	resolve: (arg: string) => string = (arg) => arg,
+): string | undefined {
 	if (field.args.length < 4 || field.args.length > 5) return undefined;
 	const [left, op, right, trueText, falseText] = field.args;
 	if (left === undefined || op === undefined || right === undefined || trueText === undefined)
 		return undefined;
-	if (!OPS.has(op)) return undefined;
-	const chosen = compare(left, op as ComparisonOp, right) ? trueText : (falseText ?? '');
-	return applyFieldFormat(chosen, field.format);
+	const test = compareFieldValues(resolve(left), op, resolve(right));
+	if (test === undefined) return undefined;
+	return applyFieldFormat(resolve(test ? trueText : (falseText ?? '')), field.format);
 }

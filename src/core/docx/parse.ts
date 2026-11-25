@@ -1,5 +1,6 @@
 import { parseCoreProperties } from './core-properties';
 import { readPackageInformation } from './package-information';
+import { readMailMergeSettings } from './mail-merge/settings';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { declaredEntrySize, openZip } from '../opc/zip-limits';
 import { inspectPackageSignatures, verifySignedPackage } from '../opc/signature/index';
@@ -156,16 +157,15 @@ export async function readPackage(
 		if (fallbacks.size) model.fontFallbacks = fallbacks;
 	}
 	const themeFile = zip.file(documentPartPath(drawings.rels, 'theme', 'word/theme/theme1.xml'));
-	const settingsFile = zip.file('word/settings.xml');
+	const settingsXml = await zip.file('word/settings.xml')?.async('string');
 	if (themeFile) {
 		model.theme = parseTheme(await themeFile.async('string'));
-		const themeSettings = zip.file(
-			documentPartPath(drawings.rels, 'settings', 'word/settings.xml'),
-		);
-		if (themeSettings) {
-			const settingsXml = await themeSettings.async('string');
+		const themeSettingsXml = await zip
+			.file(documentPartPath(drawings.rels, 'settings', 'word/settings.xml'))
+			?.async('string');
+		if (themeSettingsXml) {
 			model.theme.colorMapping = withParseWarnings(schemaWarnings, () =>
-				parseColorSchemeMapping(settingsXml),
+				parseColorSchemeMapping(themeSettingsXml),
 			);
 		}
 		model.warnings.push(
@@ -221,6 +221,8 @@ export async function readPackage(
 	if (packageProperties) model.packageProperties = packageProperties;
 	const packageInformation = await readPackageInformation(zip);
 	if (packageInformation) model.packageInformation = packageInformation;
+	const mailMerge = await readMailMergeSettings(zip, drawings.rels, settingsXml);
+	if (mailMerge) model.mailMerge = mailMerge;
 	await readPlaceholderTexts(zip, drawings.rels, model);
 	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;
@@ -245,8 +247,7 @@ export async function readPackage(
 			'Comment ranges are modeled at run granularity (they may span paragraphs); a range edge outside any run, such as around an empty paragraph or a table, moves to the nearest commented text when that paragraph is edited.',
 		);
 	}
-	if (settingsFile) {
-		const settingsXml = await settingsFile.async('string');
+	if (settingsXml) {
 		model.trackChanges = parseTrackChangesSetting(settingsXml);
 		const tabStop = parseTwips(
 			getW(first(parseXml(settingsXml).documentElement, 'defaultTabStop'), 'val'),

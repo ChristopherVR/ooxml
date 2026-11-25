@@ -24,6 +24,8 @@ export interface FieldFormat {
 	charFormat?: true;
 	/** `\@` date-time picture. */
 	datePicture?: string;
+	/** `\#` numeric picture, for callers that evaluate that switch. */
+	numberPicture?: string;
 }
 
 /** A field instruction: its name, arguments, own switches and general formatting. */
@@ -42,7 +44,7 @@ export interface ParsedField {
  */
 function numberFormat(argument: string): string | undefined {
 	const lower = argument.toLowerCase();
-	const upper = argument[0] !== argument[0]!.toLowerCase();
+	const upper = argument[0] !== argument[0]?.toLowerCase();
 	if (lower === 'arabic') return 'decimal';
 	if (lower === 'roman') return upper ? 'upperRoman' : 'lowerRoman';
 	if (lower === 'alphabetic') return upper ? 'upperLetter' : 'lowerLetter';
@@ -63,6 +65,7 @@ function numberFormat(argument: string): string | undefined {
 export function parseFieldInstruction(
 	instr: string,
 	own: Readonly<Record<string, 'arg' | 'flag'>> = {},
+	options: { numberPictures?: boolean } = {},
 ): ParsedField | undefined {
 	const tokens = fieldTokens(instr);
 	const head = tokens[0];
@@ -101,6 +104,10 @@ export function parseFieldInstruction(
 			const picture = argument();
 			if (picture === undefined) return undefined;
 			field.format.datePicture = picture;
+		} else if (token.value === '#' && options.numberPictures) {
+			const picture = argument();
+			if (picture === undefined) return undefined;
+			field.format.numberPicture = picture;
 		} else if (token.value === '!') continue;
 		else if (own[token.value] === 'arg') {
 			const value = argument();

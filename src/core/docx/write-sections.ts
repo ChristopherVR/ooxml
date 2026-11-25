@@ -124,6 +124,10 @@ export function applySectionEdits(
 		body.appendChild(bodySection);
 	}
 	const baseByEnd = new Map(base.map((section) => [section.endsAtBlockId, section]));
+	const finalBase = base.at(-1);
+	// The previous body-level section may now end at an inserted paragraph break.
+	const finalSource =
+		finalBase && ends.has(finalBase.endsAtBlockId) ? bodySection.cloneNode(true) : undefined;
 	// Walk backwards so each new break can copy the section that follows it.
 	let following = bodySection;
 	for (let index = sections.length - 1; index >= 0; index--) {
@@ -133,7 +137,7 @@ export function applySectionEdits(
 		let sectPr: XmlElement | undefined = last
 			? bodySection
 			: paragraphSection(nodeFor(section.endsAtBlockId));
-		const previous = last ? base.at(-1) : baseByEnd.get(section.endsAtBlockId);
+		const previous = last ? finalBase : baseByEnd.get(section.endsAtBlockId);
 		if (!sectPr) {
 			const paragraph = nodeFor(section.endsAtBlockId);
 			if (paragraph?.localName !== 'p')
@@ -143,7 +147,9 @@ export function applySectionEdits(
 				pPr = makeW(doc, 'pPr');
 				paragraph.insertBefore(pPr, paragraph.firstChild);
 			}
-			sectPr = following.cloneNode(true) as XmlElement;
+			sectPr = (
+				previous && previous === finalBase && finalSource ? finalSource : following.cloneNode(true)
+			) as XmlElement;
 			pPr.appendChild(sectPr);
 			orderParagraphProperties(pPr);
 		}

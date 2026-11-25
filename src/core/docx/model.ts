@@ -165,6 +165,8 @@ export interface DocumentModel {
 	 * custom XML data, the attached template, the reviewer list and the privacy settings.
 	 */
 	packageInformation?: import('./package-information').PackageInformation;
+	/** Mail merge template settings and source relationship targets. */
+	mailMerge?: import('./mail-merge/settings').MailMergeSettings;
 	/** Whether `settings.xml` requests separate even-page headers/footers (`w:evenAndOddHeaders`). */
 	evenAndOddHeaders?: boolean;
 	/** `w:autoHyphenation` in settings.xml: Word hyphenates words at line ends. */

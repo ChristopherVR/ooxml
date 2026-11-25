@@ -12,7 +12,7 @@ import { buildXml, children, getW, makeW, parseXml, type XmlElement, WORD_NS } f
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 
 const SETTINGS_PATH = 'word/settings.xml';
-const SETTINGS_CONTENT_TYPE =
+export const SETTINGS_CONTENT_TYPE =
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml';
 const SETTINGS_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings';
@@ -184,19 +184,21 @@ export async function applySettingsFlag(zip: JSZip, name: string, enabled: boole
 	const doc = parseXml(xml);
 	const root = doc.documentElement as XmlElement;
 	for (const element of children(root, name)) root.removeChild(element);
-	if (enabled) {
-		const rank = SETTINGS_ORDER.indexOf(name);
-		const after = Array.from(root.childNodes).find((node) => {
-			const index = SETTINGS_ORDER.indexOf((node as XmlElement).localName ?? '');
-			return node.nodeType === 1 && index > rank;
-		});
-		root.insertBefore(makeW(doc, name), after ?? null);
-	}
+	if (enabled) insertSetting(root, makeW(doc, name));
 	zip.file(SETTINGS_PATH, buildXml(doc));
 	if (!file) {
 		await ensureContentTypeOverride(zip, SETTINGS_PATH, SETTINGS_CONTENT_TYPE);
 		await ensureDocumentRelationship(zip, SETTINGS_RELATIONSHIP_TYPE, 'settings.xml');
 	}
+}
+
+/** Inserts an element in CT_Settings sequence order without rearranging the source. */
+export function insertSetting(root: XmlElement, setting: XmlElement): void {
+	const rank = SETTINGS_ORDER.indexOf(setting.localName);
+	const after = Array.from(root.childNodes).find(
+		(node) => node.nodeType === 1 && SETTINGS_ORDER.indexOf((node as XmlElement).localName) > rank,
+	);
+	root.insertBefore(setting, after ?? null);
 }
 
 /** Word's Review > Track Changes toggle, written as `w:trackRevisions`. */
