@@ -18,7 +18,6 @@
 							? 'dark'
 							: 'light';
 				document.documentElement.dataset.theme = theme;
-				document.documentElement.dataset.officeTheme = theme;
 				document.documentElement.style.colorScheme = theme;
 				const params = new URLSearchParams(location.search);
 				if (params.get('sample') === '1' || params.has('room'))
