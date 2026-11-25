@@ -1,5 +1,5 @@
 import { isUpdateRefusal } from 'ooxml-core/collab';
-import { EditorState, Plugin } from 'prosemirror-state';
+import { EditorState, NodeSelection, Plugin } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { EditorCore } from './editor-core';
 import { modelToDoc, docToModel } from './model-adapter';
@@ -98,8 +98,11 @@ export function renderDocument(core: EditorCore): void {
 			}),
 		},
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),
-		handleDoubleClickOn: (view, _pos, node) => {
+		handleDoubleClickOn: (view, _pos, node, nodePos) => {
 			if (node.type !== schema.nodes.equation || !view.editable) return false;
+			const { selection } = view.state;
+			if (!(selection instanceof NodeSelection) || selection.from !== nodePos)
+				view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos)));
 			core.formatDialogs.open('equation');
 			return true;
 		},

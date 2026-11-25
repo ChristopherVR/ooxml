@@ -408,31 +408,49 @@ ${sharedContextCheck('CommonJS')}`,
 		const load = (specifier) =>
 			format === 'esm' ? `(await import(${specifier}))` : `require(${specifier})`;
 		return `const config = { connection: { kind: 'endpoint', api: '/api/chat' } };
+const withSvelteDomGlobals = async (fn) => {
+  const keys = ['window', 'document', 'navigator', 'Element', 'HTMLElement', 'Node', 'Text', 'customElements'];
+  const saved = new Map(keys.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
+  class StubNode { get firstChild() { return null; } get nextSibling() { return null; } }
+  class StubElement extends StubNode {}
+  class StubText extends StubNode {}
+  const stubs = { window: globalThis, document: { createTreeWalker: () => ({}), getElementById: () => ({}) }, navigator: { userAgent: '' }, Element: StubElement, HTMLElement: StubElement, Node: StubNode, Text: StubText, customElements: { get: () => StubElement, define: () => {} } };
+  for (const [k, v] of Object.entries(stubs)) {
+    if (!(k in globalThis)) Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+  }
+  try { return await fn(); } finally {
+    for (const [k, desc] of saved) {
+      if (desc) Object.defineProperty(globalThis, k, desc);
+      else delete globalThis[k];
+    }
+  }
+};
+const loadFor = async (pkg, specifier) => pkg === 'pptx-svelte-viewer' ? withSvelteDomGlobals(async () => ${load('specifier')}) : ${load('specifier')};
 const registriesIn = (api) => Object.values(api).filter(
   (value) => value && typeof value === 'object' && typeof value.register === 'function' && typeof value.resolve === 'function',
 );
 const handleExports = (api) => Object.keys(api).filter((key) => /AiAssistant/u.test(key)).sort();
 for (const { key, name, entries, registry, root } of ${JSON.stringify(plan)}) {
   for (const subpath of entries) {
-    const api = ${load('name + subpath.slice(1)')};
-    const expected = subpath === './ai' ? ['createAiAssistant'] : key === 'angular' && api === ${load('name')} ? ['createAiAssistantHandle'] : [];
+    const api = await loadFor(name, name + subpath.slice(1));
+    const expected = subpath === './ai' ? ['createAiAssistant'] : key === 'angular' && api === await loadFor(name, name) ? ['createAiAssistantHandle'] : [];
     assert.deepEqual(handleExports(api), expected, name + subpath.slice(1) + ' handle exports (${format})');
     assert.deepEqual(registriesIn(api), [], name + subpath.slice(1) + ' exports no handle registry (${format})');
   }
-  const ai = ${load("name + '/ai'")};
+  const ai = await loadFor(name, name + '/ai');
   const handle = ai.createAiAssistant(config);
   assert.deepEqual(Reflect.ownKeys(handle), [], name + '/ai returns an opaque handle (${format})');
   assert.ok(Object.isFrozen(handle), name + '/ai returns a frozen handle (${format})');
   assert.equal(Object.prototype.toString.call(handle), '[object PptxAiAssistant]');
   if (registry) {
-    const [shared, ...others] = registriesIn(${load(format === 'esm' ? 'pathToFileURL(registry).href' : 'registry')});
+    const [shared, ...others] = registriesIn(await loadFor(name, ${format === 'esm' ? 'pathToFileURL(registry).href' : 'registry'}));
     assert.equal(others.length, 0, name + ' registry module holds one registry (${format})');
     const resolved = shared.resolve(handle, { development: false });
     assert.equal(resolved?.config, config, name + '/ai handle resolves in the viewer registry (${format})');
     assert.ok(resolved?.panel, name + '/ai handle carries its chat panel (${format})');
   } else {
     assert.equal(ai.createAiAssistant.length, 1);
-    assert.equal(${load('name')}.createAiAssistantHandle.length, 1, name + ' createAiAssistantHandle takes a config only');
+    assert.equal((await loadFor(name, name)).createAiAssistantHandle.length, 1, name + ' createAiAssistantHandle takes a config only');
     ${format === 'esm' ? "assert.equal(realpathSync(fileURLToPath(import.meta.resolve(name))), root, name + '/ai imports the root entry');" : ''}
   }
   console.log(name + ': packed ./ai handle resolves through the viewer registry; no entry exports a registry (${format})');
@@ -459,7 +477,9 @@ ${aiEntriesCheck('esm', aiChecks.esm)}`,
 	writeFileSync(
 		join(consumer, 'ai-entries.cjs'),
 		`const assert = require('node:assert/strict');
-${aiEntriesCheck('cjs', aiChecks.cjs)}`,
+(async () => {
+${aiEntriesCheck('cjs', aiChecks.cjs)}
+})().catch((error) => { console.error(error); process.exit(1); });`,
 	);
 	run(process.execPath, ['ai-entries.cjs'], consumer);
 
