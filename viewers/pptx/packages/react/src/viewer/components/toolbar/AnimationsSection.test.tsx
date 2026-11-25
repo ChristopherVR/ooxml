@@ -126,6 +126,22 @@ describe('animationsSection Preview button', () => {
 });
 
 describe('animationsSection native routing', () => {
+	it('commits ribbon Duration for the animated selection', () => {
+		const onCommitAnimations = vi.fn();
+		mount({ onCommitAnimations });
+		const duration = container.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.duration"]',
+		)!;
+		expect(duration.value).toBe('0.5');
+		act(() => {
+			duration.value = '0.875';
+			duration.dispatchEvent(new Event('change', { bubbles: true }));
+		});
+		expect(onCommitAnimations).toHaveBeenCalledExactlyOnceWith([
+			expect.objectContaining({ elementId: 'sp1', durationMs: 875 }),
+		]);
+	});
+
 	it('routes presets, motion paths, exit and path shortcuts to onAddAnimation', () => {
 		const onAddAnimation = vi.fn();
 		mount({ onAddAnimation });

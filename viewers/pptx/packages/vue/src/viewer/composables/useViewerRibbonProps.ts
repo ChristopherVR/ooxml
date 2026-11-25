@@ -84,6 +84,7 @@ export interface RibbonSlideMutationsInput {
 	toggleSlideHidden: (index: number) => void;
 	onAddAnimation: RibbonProps['onAddAnimation'];
 	onRemoveAnimation: RibbonProps['onRemoveAnimation'];
+	onCommitAnimations?: RibbonProps['onCommitAnimations'];
 	onTransitionChange: RibbonProps['onTransitionChange'];
 	onApplyTransitionToAll: () => void;
 }
@@ -249,6 +250,7 @@ export function useViewerRibbonProps(o: UseViewerRibbonPropsOptions): ComputedRe
 		compareWithPresentation: o.compareWithPresentation,
 		onAddAnimation: o.slideMutations.onAddAnimation,
 		onRemoveAnimation: o.slideMutations.onRemoveAnimation,
+		onCommitAnimations: o.slideMutations.onCommitAnimations,
 		zoomIn: o.zoomIn,
 		zoomOut: o.zoomOut,
 		zoomReset: o.zoomReset,

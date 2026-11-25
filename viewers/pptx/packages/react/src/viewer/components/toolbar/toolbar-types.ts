@@ -1,9 +1,10 @@
-import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
+	CommitRibbonAnimations,
 	FreeformToolKind,
 	InsertChartKind,
 	RibbonDisplayController,
+	RibbonViewZoom,
 	ReviewCommentsHost,
 	SlideTemplateId,
 	ToolbarActionId,
@@ -89,6 +90,7 @@ export interface ToolbarProps {
 	onAddAnimation?: (preset: string, group: AnimationApplyGroup) => void;
 	/** Removes all animations from the selected element. */
 	onRemoveAnimation?: () => void;
+	onCommitAnimations?: CommitRibbonAnimations;
 	onToggleCompactToolbar: () => void;
 	onSetToolbarSection: (section: ToolbarSection) => void;
 	onZoomIn: () => void;

@@ -10,6 +10,7 @@
 import { Injector, runInInjectionContext } from '@angular/core';
 import {
 	DEFAULT_MOTION_PATH_PRESET_ID,
+	registerPptxWebControls,
 	MOTION_PATH_FAMILIES,
 	MOTION_PATH_PRESETS,
 	motionPathFor,
@@ -31,7 +32,7 @@ const SHAPE = { id: 'shape-1', type: 'shape', x: 0, y: 0, width: 10, height: 10 
 /** The protected members the animations-section template binds to. */
 interface AnimationsSectionInternals {
 	request: (event: Event) => void;
-	view: () => { editable: boolean; hasSelection: boolean; paneOpen: boolean };
+	view: () => HTMLElementTagNameMap['pptx-ui-ribbon-animations']['state'];
 	openAnimationPanel: { emit: () => void };
 }
 
@@ -138,6 +139,28 @@ describe('animations section request routing', () => {
 			section.request(intent({ kind: 'command', value }));
 		}
 		expect(emit).toHaveBeenCalledTimes(3);
+	});
+
+	it('routes a timing edit from the shared element to the current slide', () => {
+		registerPptxWebControls();
+		const editor = editorWith([{ elementId: SHAPE.id, entrance: 'flyIn' }]);
+		const ribbon = document.createElement('pptx-ui-ribbon-animations');
+		ribbon.state = createSection(editor).view();
+		document.body.append(ribbon);
+		try {
+			const duration = ribbon.querySelector<HTMLInputElement>(
+				'[data-ribbon-control="animations.timing.duration"]',
+			)!;
+			expect(duration.disabled).toBeFalsy();
+			duration.value = '1.2';
+			duration.dispatchEvent(new Event('change'));
+			expect(editor.slides()[0].animations?.[0]).toMatchObject({
+				elementId: SHAPE.id,
+				durationMs: 1200,
+			});
+		} finally {
+			ribbon.remove();
+		}
 	});
 
 	it('reflects the controlled selection, permission and pane state', () => {

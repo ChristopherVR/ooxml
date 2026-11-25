@@ -1,6 +1,10 @@
 /** Semantic hooks keep this stylesheet independent of framework class names. */
 export const EDITOR_LAYOUT_CSS = `
 [data-pptx-editor-chrome] [data-pptx-chrome][hidden] { display: none !important; }
+[data-pptx-animation-painter] [data-pptx-viewport] [data-element-id],
+[data-pptx-animation-painter] [data-pptx-viewport] [data-element-id] * {
+  cursor: copy !important;
+}
 [data-pptx-editor-chrome] [data-pptx-viewport]:focus-visible {
   outline: 2px solid var(--pptx-ring, currentColor); outline-offset: -2px;
 }

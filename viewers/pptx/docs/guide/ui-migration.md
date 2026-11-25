@@ -166,16 +166,18 @@ motion-path galleries, icons, labels, pressed and disabled state. Hosts supply
 the selection, edit permission, Animation Pane state and a translator, and route
 typed `animations-request` intents (`add` or `command`) to native handlers.
 
-Native hosts keep every effect edit (adding, removing and reordering effects,
-triggers, timing, direction and repeat), the animation play-order timeline with
+Native hosts keep the animation play-order timeline with
 drag reordering in Svelte and Vanilla, the Animation Pane/inspector lifecycle,
 in-canvas Preview playback, document history and persistence. All five bindings
 now share one control set: Exit Effects carries the catalogue's
 `animations.advancedAnimation.addAnimation` id everywhere, the Animation Pane
 shows its pressed state when the inspector is open, and the Angular Effect
 Options and Trigger commands open the Animation Panel like the other bindings.
-Animation Painter and the Timing Start/Duration fields remain disabled
-placeholders; Vanilla's panel commands still toggle the inspector.
+Animation Painter copies editor-authored effects in all five bindings. Click
+once for one target, double-click to paint several, and press Escape to exit.
+The Timing group edits Start, Duration and Delay and reorders the selected
+editor-authored animation via the same operations as the Animation Pane.
+Imported native effects remain read-only in the timeline.
 
 Public customization ids are unchanged. Boundary: the Svelte and Vanilla
 play-order timeline rows and the inspector Animation panel are native and not

@@ -129,6 +129,7 @@ export const translations = {
 	'pptx.undoAction.ungroup': '取消组合',
 	'pptx.animations.advanced': '高级动画',
 	'pptx.animations.afterPrevious': '上一动画之后',
+	'pptx.animations.delay': '延迟',
 	'pptx.animations.duration': '时长',
 	'pptx.animations.effectOptions': '效果选项',
 	'pptx.animations.exitEffects': '退出效果',

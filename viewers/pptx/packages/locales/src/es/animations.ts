@@ -167,6 +167,7 @@ export const translations = {
 	'pptx.undoAction.ungroup': 'Desagrupar',
 	'pptx.animations.advanced': 'Animación avanzada',
 	'pptx.animations.afterPrevious': 'Después de la anterior',
+	'pptx.animations.delay': 'Retraso',
 	'pptx.animations.duration': 'Duración',
 	'pptx.animations.effectOptions': 'Opciones de efectos',
 	'pptx.animations.exitEffects': 'Efectos de salida',

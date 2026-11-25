@@ -10,10 +10,12 @@
  */
 import JSZip from 'jszip';
 import { PptxHandler } from 'ooxml-core/pptx';
-import type { PptxSlide } from 'ooxml-core/pptx';
+import type { PptxSlide, PptxTextElement } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
 import { removeAnimation, setAnimationEntrance, setDuration } from './animation-authoring';
+import { applyAnimationPaint, captureAnimationPaint } from './animation-painter';
+import { editRibbonAnimationTiming } from './ribbon-animation-editing';
 
 async function saveAndReload(handler: PptxHandler, slides: PptxSlide[]) {
 	const bytes = await handler.save(slides);
@@ -41,6 +43,84 @@ function countEffects(slideXml: string): number {
 }
 
 describe('element animation save/reload round trip', () => {
+	it('paints a second effect and writes ribbon timing edits into an existing timing tree', async () => {
+		const { handler, data } = await PptxHandler.create({
+			title: 'Animation Painter',
+			initialSlideCount: 1,
+		});
+		const [slide] = data.slides;
+		const textBox = (id: string, x: number): PptxTextElement => ({
+			id,
+			type: 'text',
+			x,
+			y: 50,
+			width: 100,
+			height: 50,
+			text: id,
+			textStyle: {},
+		});
+		const initial = await saveAndReload(handler, [
+			{ ...slide, elements: [textBox('source', 50), textBox('target', 200)] },
+		]);
+		const [initialSlide] = initial.data.slides;
+		const [source, target] = initialSlide.elements;
+		const animations = [
+			{
+				elementId: source.id,
+				order: 0,
+				entrance: 'flyIn',
+				direction: 'fromLeft',
+				trigger: 'onShapeClick',
+				triggerShapeId: target.id,
+			},
+		] satisfies PptxSlide['animations'];
+		const first = await saveAndReload(initial.handler, [{ ...initialSlide, animations }]);
+		const [editingSlide] = first.data.slides;
+		const paint = captureAnimationPaint(editingSlide, source.id)!;
+		editingSlide.animations = applyAnimationPaint(paint, editingSlide, target.id);
+		const painted = await saveAndReload(first.handler, [editingSlide]);
+		const [paintedSlide] = painted.data.slides;
+		const copied = paintedSlide.animations?.find((entry) => entry.elementId === target.id);
+		expect(copied).toMatchObject({
+			entrance: 'flyIn',
+			direction: 'fromLeft',
+			trigger: 'onClick',
+		});
+		expect(copied?.triggerShapeId).toBeUndefined();
+
+		const editing = {
+			slide: paintedSlide,
+			elementId: target.id,
+			commit: (next: NonNullable<PptxSlide['animations']>) => {
+				paintedSlide.animations = next;
+			},
+		};
+		editRibbonAnimationTiming(editing, { field: 'start', value: 'afterPrevious' });
+		editRibbonAnimationTiming(editing, { field: 'duration', value: 1250 });
+		editRibbonAnimationTiming(editing, { field: 'delay', value: 400 });
+		const last = await saveAndReload(painted.handler, [paintedSlide]);
+		const slideXml = await readPart(last.bytes, 'ppt/slides/slide1.xml');
+		expect(countEffects(slideXml)).toBe(2);
+		expect(slideXml).toContain('nodeType="afterEffect"');
+		expect(slideXml).toContain('dur="1250"');
+		expect(slideXml).toContain('delay="400"');
+		expect(
+			last.data.slides[0].animations?.find((entry) => entry.elementId === target.id),
+		).toMatchObject({ trigger: 'afterPrevious', durationMs: 1250, delayMs: 400 });
+		expect(last.data.slides[0].nativeAnimations).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					targetId: target.id,
+					presetId: 2,
+					presetSubtype: 8,
+					triggerDelayMs: 400,
+					durationMs: 1250,
+					delayMs: 400,
+				}),
+			]),
+		);
+	});
+
 	it('writes an authored entrance into p:timing, not only the editor extension', async () => {
 		const { handler, data } = await PptxHandler.create({
 			title: 'Animation authoring',

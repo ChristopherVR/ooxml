@@ -493,8 +493,9 @@ pressed, and Angular does not pass it either.
 
 `pptx-ui-ribbon-animations.state` is a controlled `RibbonAnimationsViewState`:
 `editable`, `hasSelection`, optional `paneOpen` (the Animation Pane's pressed
-state), optional `previewActive` (a transient Preview highlight, for hosts that
-track one) and a translation callback. The light-DOM view renders the five
+state), optional `previewActive` (a transient Preview highlight), an optional
+`editing` context with the active slide, selected object and animation commit
+callback, and a translation callback. The light-DOM view renders the five
 Animations groups (Preview, Animation, Motion Paths, Advanced Animation and
 Timing) with the public customization ids, including the entrance/emphasis/exit
 preset gallery and the five-family motion-path gallery. Every effect is a real
@@ -510,15 +511,14 @@ preset name, or a motion-path catalogue id for `motionPath`) or `command`
 rejected while read-only or without a selection, except the Animation Pane,
 which stays reachable. Setting state emits no intent.
 
-Native hosts retain every effect edit (adding, removing and ordering effects,
-triggers, timing, direction, repeat), the play-order timeline and drag
-reordering (Svelte and Vanilla), the Animation Pane/inspector lifecycle,
-Preview playback, history and persistence. The Timing group's Start and
-Duration fields and Animation Painter remain disabled placeholders in every
-binding; per-effect timing is authored in the Animation Panel (and, in Svelte
-and Vanilla, the timeline row), not from these fields. Effect Options and
-Trigger open the Animation Panel in React, Vue, Svelte and Angular; Vanilla's
-panel command is the inspector toggle.
+The Timing group uses the Animation Pane's editing operations for Start,
+Duration, Delay and reordering. Animation Painter arms on click, locks on
+double-click, and exits on Escape. It copies editor-authored effects and
+timing, omitting interactive triggers. The shared painter scopes canvas clicks
+to its viewer's `data-pptx-theme-root`. The host records each edit through the
+commit callback. Imported native effects remain read-only timeline rows.
+Effect Options and Trigger open the Animation Panel in React, Vue, Svelte and
+Angular. Vanilla's panel command toggles the inspector.
 
 ## Insert ribbon
 

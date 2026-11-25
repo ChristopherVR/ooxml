@@ -2,7 +2,7 @@
  * ribbon-animations-section.component.ts: the Animations ribbon tab, a thin
  * adapter over the shared `pptx-ui-ribbon-animations` view (Preview, the
  * always-visible preset and motion-path galleries, Advanced Animation and the
- * inert Timing fields). Animation edits go through the immutable helpers in
+ * Timing controls). Animation edits go through the immutable helpers in
  * animation-author-helpers.ts and commit via {@link EditorStateService}, so
  * document mutation, history and the inspector lifecycle stay native here.
  */
@@ -81,6 +81,12 @@ export class RibbonAnimationsSectionComponent {
 			editable: this.canEdit(),
 			hasSelection: this.hasSel(),
 			paneOpen: this.inspectorOpen(),
+			editing: {
+				slide: this.editor.slides()[this.slideIndex()],
+				elementId: this.selectedElement()?.id,
+				commit: (animations: PptxElementAnimation[]) =>
+					this.editor.updateSlide(this.slideIndex(), { animations }),
+			},
 			translate: (key: string) => this.translation?.instant(key) ?? key,
 		};
 	}

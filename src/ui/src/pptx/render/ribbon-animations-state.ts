@@ -8,6 +8,7 @@ import {
 import type { AnimationGroup } from './animation-authoring';
 import type { AnimationApplyGroup } from './motion-path-authoring';
 import { motionPathPresetById } from './motion-path-presets';
+import type { RibbonAnimationEditing } from './ribbon-animation-editing';
 
 /** Commands that carry no payload; the host decides what each one does natively. */
 export type RibbonAnimationsCommand =
@@ -30,6 +31,8 @@ export interface RibbonAnimationsViewState {
 	paneOpen?: boolean;
 	/** Transient highlight while a host's Preview is playing, where it tracks one. */
 	previewActive?: boolean;
+	/** Live slide, selection and history commit for the editor's timing tools. */
+	editing?: RibbonAnimationEditing | undefined;
 	translate?: (key: string) => string;
 }
 

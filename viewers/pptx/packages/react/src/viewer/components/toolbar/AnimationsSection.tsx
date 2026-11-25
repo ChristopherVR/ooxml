@@ -1,10 +1,12 @@
 import { playAnimationRibbonPreview } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
+	AnimationEditingSlide,
+	CommitRibbonAnimations,
 	PptxUiRibbonAnimationsElement,
 	RibbonAnimationsRequestEvent,
 } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import type { PptxElement } from 'pptx-viewer-core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -13,12 +15,13 @@ export interface AnimationsSectionProps {
 	canEdit: boolean;
 	selectedElement: PptxElement | null;
 	/** The slide holding `selectedElement`; animations are stored per-slide, keyed by elementId. */
-	activeSlide?: Pick<PptxSlide, 'animations'>;
+	activeSlide?: AnimationEditingSlide;
 	isInspectorPaneOpen: boolean;
 	onToggleInspector: () => void;
 	onOpenAnimationPanel?: () => void;
 	onAddAnimation?: (preset: string, group: AnimationApplyGroup) => void;
 	onRemoveAnimation?: () => void;
+	onCommitAnimations?: CommitRibbonAnimations;
 }
 
 /**
@@ -50,9 +53,22 @@ export function AnimationsSection(p: AnimationsSectionProps): React.ReactElement
 			hasSelection: p.selectedElement !== null,
 			paneOpen: p.isInspectorPaneOpen,
 			previewActive,
+			editing: {
+				slide: p.activeSlide,
+				elementId: p.selectedElement?.id,
+				commit: p.onCommitAnimations,
+			},
 			translate: t,
 		};
-	}, [p.canEdit, p.selectedElement, p.isInspectorPaneOpen, previewActive, t]);
+	}, [
+		p.canEdit,
+		p.activeSlide,
+		p.selectedElement,
+		p.isInspectorPaneOpen,
+		p.onCommitAnimations,
+		previewActive,
+		t,
+	]);
 	useEffect(() => {
 		const host = ref.current;
 		if (!host) {

@@ -129,6 +129,7 @@ export const translations = {
 	'pptx.undoAction.ungroup': '그룹 해제',
 	'pptx.animations.advanced': '고급 애니메이션',
 	'pptx.animations.afterPrevious': '이전 효과 다음에',
+	'pptx.animations.delay': '지연',
 	'pptx.animations.duration': '재생 시간',
 	'pptx.animations.effectOptions': '효과 옵션',
 	'pptx.animations.exitEffects': '끝내기 효과',

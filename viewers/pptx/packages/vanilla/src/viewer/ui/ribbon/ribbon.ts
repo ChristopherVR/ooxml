@@ -377,6 +377,7 @@ export function createRibbon(
 			editable: lastEditable,
 			hasSelection: latestSelected !== undefined,
 			selectedElementId: latestExtra.selectedElementId,
+			animationSlideId: latestExtra.animationSlideId,
 			animations: latestExtra.animations ?? [],
 			animationTimelineAnchors: latestExtra.animationTimelineAnchors ?? [],
 			paneOpen: inspectorOpen,

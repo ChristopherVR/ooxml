@@ -155,5 +155,6 @@ export function useSlideMutations(input: UseSlideMutationsInput) {
 		onApplyTransitionToAll,
 		onAddAnimation,
 		onRemoveAnimation,
+		writeActiveSlideAnimations,
 	};
 }

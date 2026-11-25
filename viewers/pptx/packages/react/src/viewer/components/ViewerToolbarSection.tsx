@@ -641,6 +641,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 				}}
 				onAddAnimation={handleAddAnimation}
 				onRemoveAnimation={handleRemoveAnimation}
+				onCommitAnimations={(animations) => propertyHandlers.handleUpdateSlide({ animations })}
 				onToggleCompactToolbar={() => s.setIsCompactToolbarOpen((p) => !p)}
 				onSetToolbarSection={s.setToolbarSection}
 				onZoomIn={zoom.handleZoomIn}

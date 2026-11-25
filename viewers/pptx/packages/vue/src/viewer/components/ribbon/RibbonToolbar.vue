@@ -423,6 +423,7 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-open-animation-panel="props.onOpenAnimationPanel"
 						:on-add-animation="props.onAddAnimation"
 						:on-remove-animation="props.onRemoveAnimation"
+						:on-commit-animations="props.onCommitAnimations"
 					/>
 
 					<RibbonTailSections v-bind="sharedProps" />

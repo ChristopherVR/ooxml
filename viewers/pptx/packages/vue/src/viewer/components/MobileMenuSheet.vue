@@ -227,6 +227,7 @@ const WRAP = 'flex flex-wrap items-center gap-2';
 						:on-open-animation-panel="props.onOpenAnimationPanel"
 						:on-add-animation="props.onAddAnimation"
 						:on-remove-animation="props.onRemoveAnimation"
+						:on-commit-animations="props.onCommitAnimations"
 					/>
 				</div>
 

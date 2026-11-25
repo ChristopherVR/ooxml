@@ -17,7 +17,7 @@ registerPptxWebControls();
  * AnimationsTab adapter tests: the shared view emits typed intents and this
  * binding applies them through `EditorState.animationOps` and the chrome state.
  * Covers the commands that add an effect, the ones that route to the
- * inspector, selection/read-only gating and the placeholders React parks.
+ * inspector, selection/read-only gating and timing edits.
  */
 
 let cleanup: (() => void) | undefined;
@@ -115,6 +115,20 @@ describe('animationsTab', () => {
 		control(target, 'animations.advancedAnimation.addAnimation').click();
 		flushSync();
 		expect(editor.slides[0]?.animations?.[0]).toMatchObject({ exit: 'fadeOut' });
+	});
+
+	it('commits ribbon Delay through the editor', () => {
+		const editor = makeEditor();
+		editor.animationOps.addAnimation('entrance', 'fadeIn');
+		const target = mountTab(editor);
+		const delay = target.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.delay"]',
+		)!;
+		expect(delay.disabled).toBeFalsy();
+		delay.value = '0.625';
+		delay.dispatchEvent(new Event('change'));
+		flushSync();
+		expect(editor.slides[0]?.animations?.[0]).toMatchObject({ elementId: 'text-1', delayMs: 625 });
 	});
 
 	it('applies the default MOTION PATH from Path Animation, and removes it again', () => {

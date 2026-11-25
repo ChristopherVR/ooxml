@@ -166,6 +166,7 @@ export function createEditingChromeSync(deps: EditingChromeSyncDeps): () => void
 			selectionGroupable: resolveSelectionGroupable(state),
 			formatPainterActive: state.formatPainterSourceId !== null,
 			selectedElementId: state.selectedElementId ?? undefined,
+			animationSlideId: state.slides[state.currentSlide]?.id,
 			animations: state.slides[state.currentSlide]?.animations ?? [],
 			animationTimelineAnchors: state.slides[state.currentSlide]?.animationTimelineAnchors ?? [],
 			layouts: collectLayoutOptions(state),

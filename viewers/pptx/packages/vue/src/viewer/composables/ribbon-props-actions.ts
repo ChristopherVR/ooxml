@@ -31,6 +31,7 @@ export function buildRibbonPropsActions(input: UseRibbonPropsInput) {
 		},
 		onAddAnimation: input.onAddAnimation,
 		onRemoveAnimation: input.onRemoveAnimation,
+		onCommitAnimations: input.onCommitAnimations,
 		onToggleCompactToolbar: () => {
 			input.ribbonExpanded.value = !input.ribbonExpanded.value;
 		},

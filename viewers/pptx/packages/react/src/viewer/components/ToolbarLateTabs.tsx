@@ -44,6 +44,7 @@ export function ToolbarLateTabs({
 					onOpenAnimationPanel={p.onOpenAnimationPanel}
 					onAddAnimation={p.onAddAnimation}
 					onRemoveAnimation={p.onRemoveAnimation}
+					onCommitAnimations={p.onCommitAnimations}
 				/>
 			)}
 

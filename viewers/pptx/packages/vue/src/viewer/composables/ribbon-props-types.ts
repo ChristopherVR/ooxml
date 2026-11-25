@@ -129,6 +129,7 @@ export interface UseRibbonPropsActionsInput {
 	compareWithPresentation: () => Promise<void>;
 	onAddAnimation: RibbonProps['onAddAnimation'];
 	onRemoveAnimation: RibbonProps['onRemoveAnimation'];
+	onCommitAnimations?: RibbonProps['onCommitAnimations'];
 	zoomIn: () => void;
 	zoomOut: () => void;
 	zoomReset: () => void;

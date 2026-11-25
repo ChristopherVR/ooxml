@@ -14,6 +14,7 @@ import type {
 	RibbonAnimationsIntent,
 	RibbonAnimationsViewState,
 } from '../render';
+import type { RibbonAnimationTimingEdit } from '../render/ribbon-animation-editing';
 import { createAnimationsGalleryView } from './ribbon-animations-gallery-view';
 import type { AnimationsGalleryColumn } from './ribbon-animations-gallery-view';
 import { createAnimationsTimingView } from './ribbon-animations-timing-view';
@@ -29,7 +30,7 @@ interface CommandSpec {
 	command?: RibbonAnimationsCommand;
 	add?: { group: 'exit' | 'motionPath'; preset: string };
 	compact?: boolean;
-	placeholder?: boolean;
+	painter?: boolean;
 	/** Always available, even without a selection (the pane is not an element edit). */
 	ungated?: boolean;
 }
@@ -86,7 +87,7 @@ const PAINTER = spec({
 	id: 'animations.advancedAnimation.animationPainter',
 	icon: 'paintbrush',
 	compact: true,
-	placeholder: true,
+	painter: true,
 	label: ['pptx.animations.painter', 'Animation Painter'],
 });
 const REMOVE = spec({
@@ -130,8 +131,13 @@ const CAPTIONS: Record<string, Label> = {
 /** All Animations markup lives here. The host only reflects state and routes native intents. */
 export function createRibbonAnimationsView(
 	doc: Document,
-	request: (intent: RibbonAnimationsIntent) => void,
+	actions: {
+		request: (intent: RibbonAnimationsIntent) => void;
+		editTiming: (edit: RibbonAnimationTimingEdit) => void;
+		armPainter: (mode: 'once' | 'locked') => void;
+	},
 ) {
+	const { request, editTiming, armPainter } = actions;
 	const groups = new Map<string, HTMLElement>();
 	const group = (id: string, ...children: HTMLElement[]) => {
 		const el = doc.createElement('pptx-ui-ribbon-group');
@@ -147,7 +153,9 @@ export function createRibbonAnimationsView(
 		return el;
 	};
 	const dispatch = (item: CommandSpec) => {
-		if (item.command) {
+		if (item.painter) {
+			armPainter('once');
+		} else if (item.command) {
 			request({ kind: 'command', value: item.command });
 		} else if (item.add) {
 			request({ kind: 'add', group: item.add.group, preset: item.add.preset });
@@ -166,6 +174,9 @@ export function createRibbonAnimationsView(
 			event.stopPropagation();
 			dispatch(item);
 		});
+		if (item.painter) {
+			el.addEventListener('dblclick', () => armPainter('locked'));
+		}
 		// Path Animation has no customization id, so the command never emits its own request.
 		el.addEventListener('click', () => {
 			if (!item.id && !el.hasAttribute('disabled')) {
@@ -193,7 +204,7 @@ export function createRibbonAnimationsView(
 		PATH_COLUMNS,
 		(_key, preset) => request({ kind: 'add', group: 'motionPath', preset }),
 	);
-	const timing = createAnimationsTimingView(doc);
+	const timing = createAnimationsTimingView(doc, editTiming);
 	const root: HTMLElement[] = [
 		group('animations.preview', command(PREVIEW)),
 		group('animations.animation', presets.el, command(OPTIONS)),
@@ -207,7 +218,7 @@ export function createRibbonAnimationsView(
 		),
 		group('animations.timing', timing.el),
 	];
-	const sync = (state: RibbonAnimationsViewState) => {
+	const sync = (state: RibbonAnimationsViewState, painterActive: boolean, canPaint: boolean) => {
 		const text = (label: Label) => animationsLabel(state, label[0], label[1]);
 		for (const [id, el] of groups) {
 			el.setAttribute('label', text(CAPTIONS[id]));
@@ -216,12 +227,13 @@ export function createRibbonAnimationsView(
 		for (const { el, spec: item } of commands) {
 			el.setAttribute('label', text(item.label));
 			el.setAttribute('title', text(item.title ?? item.label));
-			el.toggleAttribute('disabled', Boolean(item.placeholder) || (gated && !item.ungated));
-			if (item.command === 'animationPane') {
-				el.setAttribute('pressed', String(Boolean(state.paneOpen)));
+			el.toggleAttribute('disabled', item.painter ? !canPaint : gated && !item.ungated);
+			if (item.command === 'animationPane' || item.painter) {
+				el.setAttribute('pressed', String(item.painter ? painterActive : Boolean(state.paneOpen)));
 			}
-			const active =
-				item.command === 'animationPane'
+			const active = item.painter
+				? painterActive
+				: item.command === 'animationPane'
 					? state.paneOpen
 					: item.command === 'preview'
 						? state.previewActive

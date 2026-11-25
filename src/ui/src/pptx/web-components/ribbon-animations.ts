@@ -1,6 +1,12 @@
 import { defineElement } from '../../registry';
 import { canRequestAnimations } from '../render';
 import type { RibbonAnimationsIntent, RibbonAnimationsViewState } from '../render';
+import { createAnimationPainterController } from '../render/controller/animation-painter-controller';
+import {
+	editRibbonAnimationTiming,
+	ribbonAnimationTiming,
+} from '../render/ribbon-animation-editing';
+import { ANIMATION_PAINTER_SCOPE, connectAnimationPainterInput } from './animation-painter-input';
 import { attachRibbonAnimationsStyles } from './ribbon-animations-styles';
 import { createRibbonAnimationsView } from './ribbon-animations-view';
 
@@ -21,23 +27,69 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 	}
 	class RibbonAnimations extends HTMLElement implements PptxUiRibbonAnimationsElement {
 		private model: RibbonAnimationsViewState = { editable: false, hasSelection: false };
-		private readonly view = createRibbonAnimationsView(this.ownerDocument, (intent) => {
-			if (canRequestAnimations(this.model, intent)) {
-				this.dispatchEvent(
-					new CustomEvent('animations-request', { detail: intent, bubbles: true, composed: true }),
-				);
-			}
+		private readonly painter = createAnimationPainterController();
+		private root: HTMLElement | null = null;
+		private unsubscribe?: () => void;
+		private disconnectInput?: () => void;
+		private readonly view = createRibbonAnimationsView(this.ownerDocument, {
+			request: (intent) => {
+				if (canRequestAnimations(this.model, intent)) {
+					this.dispatchEvent(
+						new CustomEvent('animations-request', {
+							detail: intent,
+							bubbles: true,
+							composed: true,
+						}),
+					);
+				}
+			},
+			editTiming: (edit) => {
+				if (this.model.editable) {
+					editRibbonAnimationTiming(this.model.editing, edit);
+					this.render();
+				}
+			},
+			armPainter: (mode) => {
+				if (this.model.editable && this.root) {
+					this.painter.arm(this.model.editing, mode);
+				}
+			},
 		});
 		get state() {
 			return this.model;
 		}
 		set state(value: RibbonAnimationsViewState) {
 			this.model = value;
+			if (!value.editable || !value.editing?.slide || !value.editing.commit) {
+				this.painter.cancel();
+			}
 			this.render();
 		}
 		connectedCallback(): void {
 			attachRibbonAnimationsStyles(this.ownerDocument);
+			this.root = this.closest(ANIMATION_PAINTER_SCOPE);
+			if (this.root) {
+				this.disconnectInput = connectAnimationPainterInput(this.root, {
+					isArmed: () => this.model.editable && this.painter.getSnapshot().mode !== 'off',
+					apply: (id) => this.painter.apply(this.model.editing, id),
+					cancel: this.painter.cancel,
+				});
+			}
+			this.unsubscribe = this.painter.subscribe(() => {
+				this.root?.toggleAttribute(
+					'data-pptx-animation-painter',
+					this.painter.getSnapshot().mode !== 'off',
+				);
+				this.render();
+			});
 			this.render();
+		}
+		disconnectedCallback(): void {
+			this.painter.cancel();
+			this.unsubscribe?.();
+			this.disconnectInput?.();
+			this.disconnectInput = undefined;
+			this.root = null;
 		}
 		private render(): void {
 			this.view.groups.forEach((el, index) => {
@@ -45,7 +97,13 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 					this.insertBefore(el, this.children[index] ?? null);
 				}
 			});
-			this.view.sync(this.model);
+			const active = this.painter.getSnapshot().mode !== 'off';
+			this.view.sync(
+				this.model,
+				active,
+				active ||
+					Boolean(this.root && this.model.editable && ribbonAnimationTiming(this.model.editing)),
+			);
 		}
 	}
 	defineElement(registry, 'pptx-ui-ribbon-animations', RibbonAnimations);

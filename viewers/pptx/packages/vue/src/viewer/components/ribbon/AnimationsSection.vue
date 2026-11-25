@@ -1,14 +1,19 @@
 <!--
 	Animations ribbon section: a thin adapter over the shared
 	`pptx-ui-ribbon-animations` view (Preview, the always-visible preset and
-	motion-path galleries, Advanced Animation and the inert Timing fields).
+	motion-path galleries, Advanced Animation and the Timing controls).
 	The slide model, selection, Preview playback and inspector lifecycle stay
 	native to this binding.
 -->
 <script setup lang="ts">
 import { playAnimationRibbonPreview } from 'ooxml-ui/pptx';
-import type { AnimationApplyGroup, RibbonAnimationsRequestEvent } from 'ooxml-ui/pptx';
-import type { PptxElement, PptxSlide } from 'pptx-viewer-core';
+import type {
+	AnimationApplyGroup,
+	AnimationEditingSlide,
+	CommitRibbonAnimations,
+	RibbonAnimationsRequestEvent,
+} from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -16,7 +21,7 @@ interface Props {
 	canEdit: boolean;
 	selectedElement: PptxElement | null;
 	/** The slide holding `selectedElement`; animations are stored per-slide, keyed by elementId. */
-	activeSlide?: Pick<PptxSlide, 'animations'>;
+	activeSlide?: AnimationEditingSlide;
 	isInspectorPaneOpen: boolean;
 	onToggleInspector: () => void;
 	/** Opens the inspector and switches to properties tab to show the animation panel. */
@@ -29,6 +34,7 @@ interface Props {
 	onAddAnimation?: (preset: string, group: AnimationApplyGroup) => void;
 	/** Removes all animations from the selected element. */
 	onRemoveAnimation?: () => void;
+	onCommitAnimations?: CommitRibbonAnimations;
 }
 
 const props = defineProps<Props>();
@@ -47,6 +53,11 @@ const state = computed(() => ({
 	hasSelection: props.selectedElement !== null,
 	paneOpen: props.isInspectorPaneOpen,
 	previewActive: previewActive.value,
+	editing: {
+		slide: props.activeSlide,
+		elementId: props.selectedElement?.id,
+		commit: props.onCommitAnimations,
+	},
 	translate: t,
 }));
 

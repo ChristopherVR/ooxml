@@ -1932,6 +1932,7 @@ export * from './editor-chrome';
 export * from './ribbon-icons';
 export * from './theme-editor-model';
 export * from './ribbon-animations-state';
+export type { AnimationEditingSlide, CommitRibbonAnimations } from './ribbon-animation-editing';
 export * from './ribbon-draw-state';
 export * from './ribbon-insert-state';
 export * from './ribbon-insert-layout';

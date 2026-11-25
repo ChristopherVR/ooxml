@@ -1057,6 +1057,7 @@ const {
 	onApplyTransitionToAll,
 	onAddAnimation,
 	onRemoveAnimation,
+	writeActiveSlideAnimations,
 } = useSlideMutations({
 	slides,
 	activeSlideIndex,
@@ -2051,6 +2052,7 @@ const baseRibbonProps = useViewerRibbonProps({
 		toggleSlideHidden,
 		onAddAnimation,
 		onRemoveAnimation,
+		onCommitAnimations: writeActiveSlideAnimations,
 		onTransitionChange,
 		onApplyTransitionToAll,
 	},

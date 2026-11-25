@@ -315,6 +315,7 @@ export interface RibbonSelectionState {
 	selectionGroupable?: boolean;
 	formatPainterActive?: boolean;
 	selectedElementId?: string;
+	animationSlideId?: string | undefined;
 	animations?: readonly PptxElementAnimation[];
 	/** Read-only anchors for the active slide's deck-native effect groups. */
 	animationTimelineAnchors?: readonly PptxAnimationTimelineAnchor[];

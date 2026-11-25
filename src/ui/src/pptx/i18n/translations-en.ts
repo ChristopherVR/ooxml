@@ -3698,6 +3698,7 @@ export const translationsEn: Record<string, string> = {
 	// Animations tab: Advanced Animation and Timing groups
 	'pptx.animations.advanced': 'Advanced Animation',
 	'pptx.animations.afterPrevious': 'After Previous',
+	'pptx.animations.delay': 'Delay',
 	'pptx.animations.duration': 'Duration',
 	'pptx.animations.effectOptions': 'Effect Options',
 	'pptx.animations.exitEffects': 'Exit Effects',

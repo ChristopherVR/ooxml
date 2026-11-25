@@ -114,14 +114,35 @@ describe('animationsSection', () => {
 		wrapper.unmount();
 	});
 
-	it('names the timing fields so they are reachable by name, inert like the other bindings', () => {
+	it('labels and disables timing for an unanimated selection', () => {
 		const wrapper = mountAnimations();
 		const root = wrapper.element;
 		const start = root.querySelector<HTMLSelectElement>('pptx-ui-select')!;
 		expect(root.querySelector(`label[for="${start.id}"]`)!.textContent).toBe('Start');
 		expect(start.disabled).toBeTruthy();
-		expect(root.querySelector('input[aria-label="Duration"]')).toBeTruthy();
+		expect(
+			root.querySelector<HTMLInputElement>('[data-ribbon-control="animations.timing.duration"]')
+				?.labels?.[0]?.textContent,
+		).toBe('Duration');
 		expect(control(root, 'animations.advancedAnimation.animationPainter').disabled).toBeTruthy();
+		wrapper.unmount();
+	});
+
+	it('commits ribbon Delay for the selected animation', () => {
+		const onCommitAnimations = vi.fn();
+		const wrapper = mountAnimations({
+			activeSlide: { animations: [{ elementId: 'e1', entrance: 'fadeIn' }] },
+			onCommitAnimations,
+		});
+		const delay = wrapper.element.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.delay"]',
+		)!;
+		expect(delay.disabled).toBeFalsy();
+		delay.value = '0.325';
+		delay.dispatchEvent(new Event('change'));
+		expect(onCommitAnimations).toHaveBeenCalledExactlyOnceWith([
+			expect.objectContaining({ elementId: 'e1', delayMs: 325 }),
+		]);
 		wrapper.unmount();
 	});
 

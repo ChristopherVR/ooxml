@@ -1,11 +1,12 @@
-import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
 	AnimationApplyGroup,
 	ChangeCaseMode,
+	CommitRibbonAnimations,
 	InsertChartKind,
 	InsertChartOptions,
 	ReviewCommentsHost,
 	RibbonContextualTabId,
+	RibbonViewZoom,
 	SlideTemplateId,
 	ToolbarActionId,
 } from 'ooxml-ui/pptx';
@@ -221,6 +222,7 @@ export interface RibbonProps {
 	/** `motionPath` carries a motion-path catalogue id in `preset`, not a preset name. */
 	onAddAnimation?: (preset: string, group: AnimationApplyGroup) => void;
 	onRemoveAnimation?: () => void;
+	onCommitAnimations?: CommitRibbonAnimations;
 	onToggleCompactToolbar: () => void;
 	onSetToolbarSection: (section: ToolbarSection) => void;
 	onZoomIn: () => void;

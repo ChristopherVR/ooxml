@@ -283,6 +283,7 @@ function MobileSectionBody({
 						onOpenAnimationPanel={p.onOpenAnimationPanel}
 						onAddAnimation={p.onAddAnimation}
 						onRemoveAnimation={p.onRemoveAnimation}
+						onCommitAnimations={p.onCommitAnimations}
 					/>
 				</div>
 			);

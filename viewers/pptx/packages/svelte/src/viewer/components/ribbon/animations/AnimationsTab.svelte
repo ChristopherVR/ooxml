@@ -2,7 +2,7 @@
 	/**
 	 * AnimationsTab: the ribbon's Animations tab, a thin adapter over the shared
 	 * `pptx-ui-ribbon-animations` view (Preview, the full preset and motion-path
-	 * galleries, Advanced Animation and the inert Timing fields).
+	 * galleries, Advanced Animation and the Timing controls).
 	 *
 	 * Effects are added to the currently selected element through
 	 * `EditorState.animationOps`, which writes `PptxSlide.animations` (keyed by
@@ -12,7 +12,7 @@
 	 * inspector lifecycle and this binding's own play-order timeline stay native.
 	 */
 	import type { PptxAnimationPreset } from 'pptx-viewer-core';
-	import type { RibbonAnimationsRequestEvent } from 'ooxml-ui/pptx';
+	import type { CommitRibbonAnimations, RibbonAnimationsRequestEvent } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
@@ -28,10 +28,12 @@
 			(animation) => animation.elementId === editor.selectedElementId,
 		),
 	);
+	const commit: CommitRibbonAnimations = (animations) => editor.animationOps.commitAnimations(animations);
 	const state = $derived({
 		editable: editor.editable,
 		hasSelection: Boolean(editor.selectedElementId),
 		paneOpen: chromeUi?.inspectorOpen,
+		editing: { slide: editor.slides[editor.currentSlideIndex], elementId: editor.selectedElementId ?? undefined, commit },
 		translate: t,
 	});
 

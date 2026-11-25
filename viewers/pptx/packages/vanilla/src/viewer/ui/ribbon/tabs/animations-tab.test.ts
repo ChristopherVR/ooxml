@@ -18,6 +18,7 @@ function handlers() {
 		reorderAnimation: vi.fn(),
 		setAnimationTiming: vi.fn(),
 		moveAnimation: vi.fn(),
+		updateActiveSlide: vi.fn(),
 	};
 }
 
@@ -112,9 +113,12 @@ describe('createAnimationsTab', () => {
 		]) {
 			expect(command(tab, id)).toBeTruthy();
 		}
-		const duration = tab.el.querySelector('[data-ribbon-control="animations.timing.duration"]');
-		expect(duration?.getAttribute('aria-label')).toBe(t('pptx.animations.duration'));
-		// The Start select is named by its associated <label>, not an aria-label.
+		const duration = tab.el.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.duration"]',
+		);
+		expect(tab.el.querySelector(`label[for="${duration?.id}"]`)?.textContent).toBe(
+			t('pptx.animations.duration'),
+		);
 		expect(tab.el.querySelector('label[for^="pptx-animations-start"]')?.textContent).toBe(
 			t('pptx.animations.start'),
 		);
@@ -161,7 +165,26 @@ describe('createAnimationsTab', () => {
 		expect(pane.getAttribute('aria-pressed')).toBe('false');
 	});
 
-	it('leaves the unimplemented placeholders disabled even with a selection', () => {
+	it('commits ribbon Duration in a slide patch', () => {
+		const actions = handlers();
+		const tab = createAnimationsTab(document, createTranslator(), actions, vi.fn());
+		tab.update({
+			...selected,
+			selectedElementId: 'source',
+			animations: [{ elementId: 'source', entrance: 'fadeIn' }],
+		});
+		const duration = tab.el.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.duration"]',
+		)!;
+		expect(duration.disabled).toBeFalsy();
+		duration.value = '0.75';
+		duration.dispatchEvent(new Event('change'));
+		expect(actions.updateActiveSlide).toHaveBeenCalledExactlyOnceWith({
+			animations: [expect.objectContaining({ elementId: 'source', durationMs: 750 })],
+		});
+	});
+
+	it('disables timing and the painter for an unanimated selection', () => {
 		const tab = createAnimationsTab(document, createTranslator(), handlers(), vi.fn());
 		tab.update(selected);
 		expect(command(tab, 'animations.advancedAnimation.animationPainter').disabled).toBeTruthy();

@@ -19,6 +19,7 @@ import type {
 
 import { playAnimationPreview } from '../../../animation';
 import type { AnimationActions } from '../../../editor/editor-animation-actions';
+import type { DeckActions } from '../../../editor/editor-deck-actions';
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
 import { createInspectorSelect } from '../../inspector/controls-extra';
@@ -34,6 +35,7 @@ export interface AnimationsTabState {
 	/** Whether an element is currently selected on the slide (Add/Remove need a target). */
 	hasSelection: boolean;
 	selectedElementId?: string;
+	animationSlideId?: string | undefined;
 	animations: readonly PptxElementAnimation[];
 	/** Whether the inspector is open (the Animation Pane command's pressed state). */
 	paneOpen?: boolean;
@@ -49,7 +51,7 @@ export interface AnimationsTab {
 /**
  * The Animations ribbon tab: Preview, a preset gallery that adds an effect to
  * the selected element, the Advanced Animation shortcuts, the Timing
- * placeholders, and this binding's own play-order timeline.
+ * controls, and this binding's own play-order timeline.
  *
  * Every applier routes through {@link AnimationActions}, which writes
  * `PptxSlide.animations` (keyed by `elementId`), the exact field the
@@ -67,7 +69,8 @@ export function createAnimationsTab(
 		| 'reorderAnimation'
 		| 'setAnimationTiming'
 		| 'moveAnimation'
-	>,
+	> &
+		Pick<DeckActions, 'updateActiveSlide'>,
 	onOpenAnimationPanel: () => void,
 ): AnimationsTab {
 	registerPptxWebControls();
@@ -209,11 +212,22 @@ export function createAnimationsTab(
 			editable,
 			hasSelection,
 			selectedElementId,
+			animationSlideId,
 			animations,
 			animationTimelineAnchors,
 			paneOpen,
 		}) {
-			view = { ...view, editable, hasSelection, paneOpen };
+			view = {
+				...view,
+				editable,
+				hasSelection,
+				paneOpen,
+				editing: {
+					slide: { id: animationSlideId, animations, animationTimelineAnchors },
+					elementId: selectedElementId,
+					commit: (next) => handlers.updateActiveSlide({ animations: next }),
+				},
+			};
 			syncShell();
 			const ordered = [...animations].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 			selectedAnimation = ordered.find(({ elementId }) => elementId === selectedElementId);

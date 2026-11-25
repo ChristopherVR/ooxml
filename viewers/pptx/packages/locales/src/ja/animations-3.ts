@@ -130,6 +130,7 @@ export const translations = {
 	'pptx.undoAction.ungroup': 'グループ解除',
 	'pptx.animations.advanced': 'アニメーションの詳細設定',
 	'pptx.animations.afterPrevious': '直前の動作の後',
+	'pptx.animations.delay': '遅延',
 	'pptx.animations.duration': '継続時間',
 	'pptx.animations.effectOptions': '効果のオプション',
 	'pptx.animations.exitEffects': '終了効果',

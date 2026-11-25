@@ -33,6 +33,13 @@ export class EditorAnimationController {
 		this.#editor = editor;
 	}
 
+	commitAnimations(animations: PptxElementAnimation[]): void {
+		const current = this.#editor.currentSlideIndex;
+		if (this.#editor.editable && this.#editor.slides[current]) {
+			this.#editor.commitSlides(updateSlide(this.#editor.slides, current, { animations }));
+		}
+	}
+
 	addAnimation(group: AnimationGroup, preset: PptxAnimationPreset): void {
 		const elementId = this.#editor.selectedElementId;
 		const current = this.#editor.currentSlideIndex;

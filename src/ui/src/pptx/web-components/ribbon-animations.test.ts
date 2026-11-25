@@ -50,6 +50,8 @@ describe('shared Animations view', () => {
 			'animations.advancedAnimation.remove',
 			'animations.timing.start',
 			'animations.timing.duration',
+			'animations.timing.delay',
+			'animations.timing.reorder',
 		]) {
 			expect(host.querySelectorAll(`[data-ribbon-control="${id}"]`)).toHaveLength(1);
 		}
@@ -81,7 +83,7 @@ describe('shared Animations view', () => {
 		]);
 	});
 
-	it('gates selection-dependent controls but keeps the pane and placeholders honest', () => {
+	it('gates selection-dependent controls and keeps the Animation Pane available', () => {
 		const host = mount({ hasSelection: false, paneOpen: true });
 		const request = vi.fn();
 		host.addEventListener('animations-request', request);
@@ -159,18 +161,94 @@ describe('shared Animations view', () => {
 	});
 });
 
-describe('shared Animations timing placeholders', () => {
-	it('names the duration input, whose caption is a span rather than a label', () => {
+describe('shared Animations timing', () => {
+	it('associates accessible labels with the timing controls', () => {
 		const host = mount();
 		const duration = host.querySelector<HTMLInputElement>(
 			'[data-ribbon-control="animations.timing.duration"]',
 		)!;
-		expect(duration.getAttribute('aria-label')).toBe('Duration');
+		expect(duration.labels?.[0]?.textContent).toBe('Duration');
 		const start = host.querySelector<HTMLSelectElement>(
 			'[data-ribbon-control="animations.timing.start"]',
 		)!;
 		expect(host.querySelector(`label[for="${start.id}"]`)!.textContent).toBe('Start');
 		expect(mount().querySelector('pptx-ui-select')!.id).not.toBe(start.id);
+	});
+
+	it('reads the current timing, commits seconds as milliseconds and gates unavailable moves', () => {
+		const commit = vi.fn();
+		const host = mount({
+			editing: {
+				slide: {
+					animations: [{ elementId: 'source', entrance: 'fadeIn', durationMs: 600, order: 0 }],
+				},
+				elementId: 'source',
+				commit,
+			},
+		});
+		const duration = host.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="animations.timing.duration"]',
+		)!;
+		const start = host.querySelector('pptx-ui-select')!;
+		expect(duration.value).toBe('0.6');
+		expect(start.options.map((option) => option.value)).toStrictEqual([
+			'onClick',
+			'withPrevious',
+			'afterPrevious',
+		]);
+		expect(
+			[...host.querySelectorAll<HTMLButtonElement>('.timing-reorder button')].every(
+				(button) => button.disabled,
+			),
+		).toBeTruthy();
+		duration.value = '1.125';
+		host.state = { ...host.state, paneOpen: true };
+		expect(duration.value).toBe('1.125');
+		duration.dispatchEvent(new Event('change'));
+		expect(commit).toHaveBeenCalledExactlyOnceWith([expect.objectContaining({ durationMs: 1125 })]);
+	});
+
+	it('only applies a painter click to canvas objects in its own viewer', () => {
+		const host = mount();
+		const viewer = document.createElement('div');
+		viewer.setAttribute('data-pptx-theme-root', '');
+		const canvas = document.createElement('div');
+		canvas.setAttribute('data-pptx-viewport', '');
+		const target = document.createElement('button');
+		target.dataset.elementId = 'target';
+		canvas.append(target);
+		viewer.append(host, canvas);
+		document.body.append(viewer);
+		const commit = vi.fn();
+		host.state = {
+			...host.state,
+			editing: {
+				slide: { animations: [{ elementId: 'source', entrance: 'fadeIn' }] },
+				elementId: 'source',
+				commit,
+			},
+		};
+		const painter = button(host, 'animations.advancedAnimation.animationPainter');
+		painter.click();
+		expect(painter.getAttribute('aria-pressed')).toBe('true');
+		canvas.click();
+		expect(commit).not.toHaveBeenCalled();
+		const pointer = (type: string, x: number) =>
+			new PointerEvent(type, { bubbles: true, pointerId: 1, isPrimary: true, clientX: x });
+		target.dispatchEvent(pointer('pointerdown', 10));
+		target.dispatchEvent(pointer('pointermove', 15));
+		target.dispatchEvent(pointer('pointerup', 10));
+		expect(commit).not.toHaveBeenCalled();
+
+		target.dispatchEvent(pointer('pointerdown', 10));
+		const redrawn = target.cloneNode();
+		target.replaceWith(redrawn);
+		redrawn.dispatchEvent(pointer('pointerup', 10));
+		expect(commit).toHaveBeenCalledExactlyOnceWith([
+			expect.objectContaining({ elementId: 'source' }),
+			expect.objectContaining({ elementId: 'target', entrance: 'fadeIn' }),
+		]);
+		expect(painter.getAttribute('aria-pressed')).toBe('false');
 	});
 });
 

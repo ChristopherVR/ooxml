@@ -21,9 +21,11 @@ const RIBBON_ANIMATIONS_STYLES = `
 .more { flex:none; width:16px; padding:0; border:0; border-inline-start:1px solid color-mix(in srgb,var(--pptx-border,#374151) 70%,transparent); background:transparent; color:inherit; cursor:pointer; }
 .more:hover { background:var(--pptx-accent,#33334d); }
 .more-icon { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; transform:rotate(-90deg); }
-.timing { display:grid; grid-template-columns:48px 82px; align-items:center; gap:4px; font-size:10px; }
-.timing span { display:inline-flex; align-items:center; gap:4px; }
-.timing svg { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:1.6; }
+.timing { display:grid; grid-template-columns:auto 102px auto; align-items:center; column-gap:6px; font-size:10px; }
+.timing-reorder { grid-column:3; grid-row:1 / span 3; align-self:start; }
+.timing-reorder button { border:1px solid transparent; border-radius:2px; background:transparent; color:inherit; font:inherit; text-align:start; padding:4px; cursor:pointer; white-space:nowrap; }
+.timing-reorder button:hover:not(:disabled) { border-color:var(--pptx-border,#374151); background:var(--pptx-accent,#33334d); }
+.timing-reorder button:disabled { opacity:.4; cursor:default; }
 pptx-ui-select { min-width:0; font-size:10px; }
 input { box-sizing:border-box; height:24px; min-width:0; padding:0 4px; border:1px solid var(--pptx-border,#374151); border-radius:2px; background:var(--pptx-muted,#2a2a3d); color:inherit; font:inherit; font-size:10px; }
 input:disabled { opacity:.4; }

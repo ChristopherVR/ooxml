@@ -88,7 +88,7 @@ export interface GestureController {
 }
 
 /** Dead zone in screen px before a pointerdown becomes a drag. */
-const DRAG_DEAD_ZONE_PX = 2;
+export const DRAG_DEAD_ZONE_PX = 2;
 
 interface ActiveGesture {
 	kind: GestureKind;
