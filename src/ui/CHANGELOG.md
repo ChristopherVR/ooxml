@@ -3,6 +3,85 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.0) - 2026-11-25
+
+### Features
+
+- **ui:** Add Office icon, symbol, WordArt and Zoom commands ([f122688](https://github.com/ChristopherVR/ooxml/commit/f1226885ee2c9ad3b9baee408a3fc91ddf2705a2))
+- **office:** Extend icon, symbol, WordArt and Zoom workflows ([6668363](https://github.com/ChristopherVR/ooxml/commit/66683637681d54f4980e76fc37372cd8d4dc7bac))
+- **pptx:** Add screen capture, photo albums and slide reuse ([c05b53d](https://github.com/ChristopherVR/ooxml/commit/c05b53d266912988b1494f6ab2916c8fd84b1b5b))
+- **pptx:** Refresh saved Zoom previews and edit covers ([719a7bb](https://github.com/ChristopherVR/ooxml/commit/719a7bbd87db66e62c0d16063c79b771fda979ed))
+- **office:** Close recording, zoom, and graphics editing gaps ([823fdfb](https://github.com/ChristopherVR/ooxml/commit/823fdfb307cbb06abfddfd63924fdce3bbdcae71))
+- **pptx:** Add a floating screen recording dock ([994f3a4](https://github.com/ChristopherVR/ooxml/commit/994f3a4f5054431e7a44fdb4af66b76988667b9c))
+- **ui:** Share local 3d and object insertion across editors ([73c7c38](https://github.com/ChristopherVR/ooxml/commit/73c7c3829be15a0cbf47070228c143fee94cce11))
+- **docx:** Insert local 3d models and office objects ([8f6228d](https://github.com/ChristopherVR/ooxml/commit/8f6228d00d4c58b5e3cf7f68591202693f051224))
+- **xlsx:** Insert local 3d models and embedded office files ([f6d4ab3](https://github.com/ChristopherVR/ooxml/commit/f6d4ab3cc51680688a314de7785ac030981b211f))
+- **office:** Add cameo, forms, and add-in commands ([8398d42](https://github.com/ChristopherVR/ooxml/commit/8398d423d317397d3fe1f796315d284cd0cfa050))
+- **xlsx:** Trace OFFSET/INDIRECT, add two-digit-year and list-validation error rules, step chosen branches ([3592ca7](https://github.com/ChristopherVR/ooxml/commit/3592ca7a99f349a49b60f97cb832ef2678cff375))
+- **xlsx:** Support changing workbook themes, colors, and fonts ([5b22209](https://github.com/ChristopherVR/ooxml/commit/5b2220978086dde3edb3ffa3a6d5c2afc91246de))
+- **pptx:** Demote/promote bulleted paragraphs on Tab/Shift+Tab ([bf68c12](https://github.com/ChristopherVR/ooxml/commit/bf68c12efd29d822f8ebd0961126cc83ef1edc1a))
+- **pptx:** Enable SmartArt Design commands across all five bindings ([a5e4b8f](https://github.com/ChristopherVR/ooxml/commit/a5e4b8f9d4ce259c566caaf9ff1a53d330996f37))
+- **visio:** Support ChartEx embedded chart reading, rendering and insertion ([1a721c8](https://github.com/ChristopherVR/ooxml/commit/1a721c86b013a7dfb287a225e4c7cc5dff9accb1))
+- **pptx:** Wire collapsed search box and ribbon display options parity ([9612487](https://github.com/ChristopherVR/ooxml/commit/9612487593853b3ed4d3b2fa40a8dafceef57806))
+- **xlsx:** Wire Flash Fill, Subtotal, Consolidate and Advanced Filter UI ([da14ffe](https://github.com/ChristopherVR/ooxml/commit/da14ffe7c70179f03c6d05c684865f378590ebf5))
+- **docx:** Save Word documents as real vector PDFs ([d594dc6](https://github.com/ChristopherVR/ooxml/commit/d594dc6a72e9fe0dabc23299a37a0c37ea7b2ffd))
+- **docx:** Open PDFs as editable documents ([5fbf424](https://github.com/ChristopherVR/ooxml/commit/5fbf4245775092dc176babcaad71da3b8db8664e))
+- **ui:** Add links, outlines, tags and PDF/A to the vector PDF writer ([19a68b8](https://github.com/ChristopherVR/ooxml/commit/19a68b8ec2e048162993dffb34c6c8fe20f58b72))
+- **docx:** Add links, bookmarks, tags, PDF/A and markup to PDF export ([c7b577d](https://github.com/ChristopherVR/ooxml/commit/c7b577ddad5962a32e458d735c23d7e6657df3a4))
+- **docx:** Export charts, shapes, text boxes and page marks to PDF ([34804a9](https://github.com/ChristopherVR/ooxml/commit/34804a9110a2df04edc8bfbf8531bbbde457d23d))
+- **docx:** Add a light pdf-convert entry for the editor ([84a58d4](https://github.com/ChristopherVR/ooxml/commit/84a58d4fe9ec2c9b304ae094538e2c2df03febe0))
+- **docx:** Close the remaining Save as PDF gaps ([73618be](https://github.com/ChristopherVR/ooxml/commit/73618bec44cc143552e02ab72ba701b97d6f58bb))
+- **xlsx:** Close AutoFilter remainders (table headers, date tree, CF colors and icons) ([cdd2be9](https://github.com/ChristopherVR/ooxml/commit/cdd2be9cdbf7333eae83161cda67ce1720b52409))
+- **docx:** Add AutoCorrect and AutoFormat as you type ([336774b](https://github.com/ChristopherVR/ooxml/commit/336774b084d4b173bfbc54f6be00312e1f5f6f9b))
+- **docx:** Close remaining Save as PDF gaps (watermarks, shadows, WordArt, lists, balloons, PDF/A-2a, PDF/UA) ([31ff2d1](https://github.com/ChristopherVR/ooxml/commit/31ff2d1f222e5f8a66a52e89c208d567932a7296))
+- **docx:** Close remaining PDF import gaps (gradients, patterns, clips, shape text, wpg groups, section endnotes, split rows, ICC, JBIG2 ext) ([4a31b5c](https://github.com/ChristopherVR/ooxml/commit/4a31b5c5416277b1f309964e88fb435b2810a85c))
+
+### Bug Fixes
+
+- **security:** Address open CodeQL findings ([d3cfa23](https://github.com/ChristopherVR/ooxml/commit/d3cfa23a430dad131e7a62a5b6db929b7082ce49))
+- **ci:** Preserve Office ribbon and section contracts ([db09977](https://github.com/ChristopherVR/ooxml/commit/db09977aa79fb5fc306c52907977ea30481e157c))
+- **ui:** Restore mobile Office ribbon actions ([a3a4e67](https://github.com/ChristopherVR/ooxml/commit/a3a4e679892608f65ea7fe2957be9d94a28d44db))
+- **pptx:** Use the shared element base for Zoom cover controls ([0e8b065](https://github.com/ChristopherVR/ooxml/commit/0e8b065dc0debdd038acf00d3551bef11d320f94))
+- **security:** Harden inline SVG previews ([a2041da](https://github.com/ChristopherVR/ooxml/commit/a2041dabc71fa57805d9d8e2d7ea772c648a0d51))
+- **pptx:** Show pinned recording controls in contrast themes ([bd4331a](https://github.com/ChristopherVR/ooxml/commit/bd4331af6f7eb872a9d4099ef00b886dc28f6335))
+- **office:** Restore parity builds and editor startup ([7c63d22](https://github.com/ChristopherVR/ooxml/commit/7c63d229692d9e4565adaafecd46d298900a9c2d))
+- **pptx:** Keep Forms actions and preview replay reachable ([40bf470](https://github.com/ChristopherVR/ooxml/commit/40bf470cc88309362a77f910a92149f13c60b58a))
+- **pptx:** Preserve Forms during React updates ([28e2f2b](https://github.com/ChristopherVR/ooxml/commit/28e2f2b8190bc0b4c4ad37d8f65ed594381053a8))
+- **pptx:** Localize empty decks for regional locales ([41e4404](https://github.com/ChristopherVR/ooxml/commit/41e44048e15c2117494b2c4c16b1446c7b63cd58))
+- **pptx:** Fix table cell bold:false paint, font buttons, and Esc selection ([9c2763d](https://github.com/ChristopherVR/ooxml/commit/9c2763d35ddcd008a2251768bf98f22e9e931a5f))
+- **pptx:** Keep non-bold cell weight inheritance and remove elementId check on TableCellEditorState ([0d5f08b](https://github.com/ChristopherVR/ooxml/commit/0d5f08b32f0a51e913c28783cffe786bf65c1288))
+- **docx:** Draw header and footer tables with their borders ([48fc436](https://github.com/ChristopherVR/ooxml/commit/48fc43622e5a5b892da98730330183dd8ca11466))
+- **docx:** Keep Draft view tables inside the paper ([3cd001b](https://github.com/ChristopherVR/ooxml/commit/3cd001bf773d9deac69c7cd636fdae14cc78a55e))
+- **docx:** Lay Draft view table columns out from the grid ([5ba38f4](https://github.com/ChristopherVR/ooxml/commit/5ba38f4ba19b869cd4292654d74320ed401ef501))
+- **pptx:** Dismiss previous PDF approximation notice on clean export ([fdee453](https://github.com/ChristopherVR/ooxml/commit/fdee453b42708b69258f4fe694c642e24e89e713))
+- **ci:** Fix docx equation double-click, svelte binding check, and perf budgets ([fba38d6](https://github.com/ChristopherVR/ooxml/commit/fba38d690675f25a9038aa3a46d55b5b4cfa9c43))
+- **docx:** Split oversized cantSplit rows by default with configurable Word clipping ([#323](https://github.com/ChristopherVR/ooxml/issues/323)) ([7b7890f](https://github.com/ChristopherVR/ooxml/commit/7b7890f88da1e080a52a70f302bd5def9773c92f))
+
+### Testing
+
+- **docx:** Add table report fixtures checked against Word ([0574d61](https://github.com/ChristopherVR/ooxml/commit/0574d6102a85b8dec34baf8b1ab20154770f4848))
+
+### Dependencies
+
+- **deps:** Bump the production-minor-and-patch group with 6 updates ([#306](https://github.com/ChristopherVR/ooxml/issues/306)) ([9d239b5](https://github.com/ChristopherVR/ooxml/commit/9d239b52371093145a6a3bef5c234e871c6ba473))
+- **deps:** Bump the production-minor-and-patch group with 19 updates ([8b8f178](https://github.com/ChristopherVR/ooxml/commit/8b8f1780e565ac02151ddad4f58e3c74903ab2f8))
+- **deps:** Update compatible production dependencies ([69e7fba](https://github.com/ChristopherVR/ooxml/commit/69e7fba6a231e6b0461ed91840582667ae3d6012))
+- **deps:** Apply compatible updates from PRs #326 and #327 ([6130d6a](https://github.com/ChristopherVR/ooxml/commit/6130d6afc55d3f459423042525d735f5d48a2501))
+- **deps:** Bump the production-minor-and-patch group across 1 directory with 3 updates ([#328](https://github.com/ChristopherVR/ooxml/issues/328)) ([38becc0](https://github.com/ChristopherVR/ooxml/commit/38becc0cdb61a88f8282f14617a1778f4ffaef5b))
+
+### Chores
+
+- **deps-dev:** Bump the development-minor-and-patch group with 5 updates ([1de2f58](https://github.com/ChristopherVR/ooxml/commit/1de2f5802035cecc41059252691efc14fc6d2951))
+- **deps-dev:** Reconcile development dependency updates ([1b1f293](https://github.com/ChristopherVR/ooxml/commit/1b1f29363b97bb4ac83728892938829dedd0a0b0))
+- **ci:** Apply the latest Office browser repairs ([be63008](https://github.com/ChristopherVR/ooxml/commit/be63008d57e4d0a966e6c0fcb6fc15d6e59dff28))
+- **ci:** Apply the latest Office browser repairs ([e202e5f](https://github.com/ChristopherVR/ooxml/commit/e202e5fd7c74a296b83c74c0f1780f5e418c736f))
+- **ci:** Apply the latest Office browser repairs ([cb7635a](https://github.com/ChristopherVR/ooxml/commit/cb7635ab113541b0f054990888f63fed0117a5be))
+- **ci:** Incorporate verified PowerPoint and parity updates ([008ece4](https://github.com/ChristopherVR/ooxml/commit/008ece4a3d696bbad0e9266f38eb2d3737a954d8))
+- **ci:** Incorporate verified PowerPoint and parity updates ([bc50118](https://github.com/ChristopherVR/ooxml/commit/bc5011889ea0f1f42493d733bceda72b2b576f70))
+- **ci:** Incorporate verified PowerPoint and parity updates ([b50553d](https://github.com/ChristopherVR/ooxml/commit/b50553d719635921c206d240de37f7c0269dc1df))
+- **ci:** Integrate Office fixes and dependency updates ([3d436e0](https://github.com/ChristopherVR/ooxml/commit/3d436e0c7505cee722dafa343e5c6c2b290e5e24))
+- **ui:** Update custom-elements.json for searchExpanded ([117558a](https://github.com/ChristopherVR/ooxml/commit/117558acde4728c233b2ca5f193e7f81e8b70fc0))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
