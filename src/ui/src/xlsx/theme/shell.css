@@ -196,7 +196,8 @@
 
 /* Forced colours: selected, current and pressed states keep a system highlight. */
 @media (forced-colors: active) {
-	.xve-icon-button[aria-pressed='true'] {
+	.xve-icon-button[aria-pressed='true'],
+	.xve-selection-pane li > button[aria-pressed='true'] {
 		forced-color-adjust: none;
 		border-color: Highlight;
 		background: Highlight;
