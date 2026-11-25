@@ -1,3 +1,6 @@
+import { syncDesignControls } from './design-ribbon-controls';
+import { bodyImageNodeViews } from './body-image-node-views';
+import type { WordDesignPreferences } from './design-preferences';
 import { withStyleCatalogs } from './style-catalog-state';
 import type { ContextMenu } from './context-menu';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
@@ -152,6 +155,7 @@ export class EditorCore {
 	surfaceActions: SurfaceHostActions = {};
 	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
 	storage: DocumentStorage | undefined = undefined;
+	wordDesignPreferences: WordDesignPreferences | undefined;
 	/** Cloud places File > Open offers next to this device (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
 	/**
@@ -428,7 +432,14 @@ export class EditorCore {
 		const next = repaired ? applied.apply(repaired) : applied;
 		const stylesChanged = previousDoc.attrs.styleCatalogs !== next.doc.attrs.styleCatalogs;
 		if (stylesChanged) this.model = withStyleCatalogs(this.model, next.doc);
+		const themeChanged = previousDoc.attrs.documentTheme !== next.doc.attrs.documentTheme;
+		if (themeChanged) {
+			const { theme: _old, ...rest } = this.model;
+			const theme: DocumentModel['theme'] | null = next.doc.attrs.documentTheme;
+			this.model = theme ? { ...rest, theme } : rest;
+		}
 		view.updateState(next);
+		if (themeChanged) view.setProps({ nodeViews: bodyImageNodeViews(this) });
 		if (docChanged) {
 			this.readAloud.documentEdited();
 			this.model = docToModel(view.state.doc, this.model, previousDoc);
@@ -437,7 +448,7 @@ export class EditorCore {
 				this.shell.review?.commentsPanel.refresh();
 			this.pages.refreshPageStyles();
 			this.pages.relayout();
-			if (stylesChanged) this.parts.refreshReviewDisplay();
+			if (stylesChanged || themeChanged) this.parts.refreshReviewDisplay();
 			this.shell.chrome?.setSaveState('dirty');
 			this.notifyChange();
 			if (
@@ -487,6 +498,7 @@ export class EditorCore {
 				!this.collab.active &&
 				!this.model.protection?.enforced,
 		);
+		if (toolbar) syncDesignControls(this, toolbar);
 		this.inserts.smartArt.sync();
 		const target = this.targetView();
 		if (toolbar && target)

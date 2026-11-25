@@ -66,16 +66,15 @@ export function runFormattingCss(
 		css.push(
 			`vertical-align:${formatting.verticalAlign === 'baseline' ? 'baseline' : formatting.verticalAlign === 'superscript' ? 'super' : 'sub'}`,
 		);
-	const family = formatting.fontFamily ?? themeFontOf(formatting, theme);
+	const family = themeFontOf(formatting, theme) ?? formatting.fontFamily;
 	// The metric-compatible stack Print Layout measures with (Calibri, then Carlito), so a loaded
 	// clone paints here too and Web Layout breaks lines like the pages.
 	if (family)
 		css.push(`font-family:${cssFontStack(family, fontFallbacks?.get(family.toLowerCase()))}`);
 	const color =
-		safeColor(formatting.color) ??
 		(formatting.colorTheme && theme
 			? safeColor(resolveThemeColorReference(formatting.colorTheme, theme))
-			: undefined);
+			: undefined) ?? safeColor(formatting.color);
 	if (color) css.push(`color:${color}`);
 	if (formatting.characterSpacingTwips !== undefined)
 		css.push(`letter-spacing:${formatting.characterSpacingTwips / 20}pt`);
@@ -220,7 +219,7 @@ export function runStylesPlugin(
 						const segments = scaledSegments(
 							child.text!,
 							resolved,
-							resolved.fontFamily ?? themeFontOf(resolved, model.theme),
+							themeFontOf(resolved, model.theme) ?? resolved.fontFamily,
 							measurer,
 						);
 						if (segments.length) {

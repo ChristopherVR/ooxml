@@ -191,6 +191,8 @@ Saving writes an edited chart part with the shared chart writer and updates only
 
 ## Privacy and network use
 
+Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
+
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
 3D Models and Object read the file you choose and embed it in your local document. In an active Word collaboration session, the selected file and its preview are shared with that session's peers through its configured connection, like inserted pictures. For local-only editing, leave the session.

@@ -95,3 +95,6 @@ export * from './text-warp-path';
 export * from './model3d';
 export { isSelfContainedGlb } from './glb-import';
 export * from './shape-palette';
+
+/** Loads the shared gallery data once the host opens document design tools. */
+export const loadThemePresets = () => import('./theme-presets');

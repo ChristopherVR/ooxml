@@ -161,6 +161,13 @@ export function parseShapeElement(
 			? parsedLine
 			: { ...parsedLine, fill: { kind: 'none' } };
 	const effects = parseDrawingEffects(child(spPr, A_NS, 'effectLst'));
+	const effect = child(style, A_NS, 'effectRef');
+	const effectIndex = Number(effect?.getAttribute('idx'));
+	const effectColor = parseDrawingColorIn(effect);
+	const effectRef =
+		!child(spPr, A_NS, 'effectDag') && Number.isSafeInteger(effectIndex) && effectIndex > 0
+			? { index: effectIndex, ...(effectColor && { color: effectColor }) }
+			: undefined;
 	const fontColor = parseDrawingColorIn(child(style, A_NS, 'fontRef'));
 	const text = textBox ? undefined : shapeParagraphs(wsp);
 	const simple = !textBox && spPrIsSimple(spPr);
@@ -174,6 +181,7 @@ export function parseShapeElement(
 		...(fill && fill.kind !== 'unsupported' ? { fill } : {}),
 		...(line ? { line } : {}),
 		...(effects ? { effects } : {}),
+		...(effectRef ? { effectRef } : {}),
 		...(fontColor ? { fontColor } : {}),
 		...(text ? { text } : {}),
 		...(plain.plain && plain.color ? { textColor: plain.color } : {}),

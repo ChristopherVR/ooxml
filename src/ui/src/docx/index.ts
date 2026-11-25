@@ -84,3 +84,4 @@ export type {
 } from './customization';
 export { WORD_CAPABILITY_IDS } from 'ooxml-core/docx/ui';
 export type { WordCapabilities, WordCapabilityId } from 'ooxml-core/docx/ui';
+export type { WordDesignPreferences } from './design-preferences';

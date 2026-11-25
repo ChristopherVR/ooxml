@@ -30,7 +30,7 @@ export function effectiveFont(
 		paragraphStyleId: paragraph.attrs.style || undefined,
 	});
 	return {
-		family: resolved.fontFamily ?? themeFontOf(resolved, model.theme) ?? DEFAULT_FAMILY,
+		family: themeFontOf(resolved, model.theme) ?? resolved.fontFamily ?? DEFAULT_FAMILY,
 		size: resolved.fontSize ?? DEFAULT_SIZE,
 	};
 }

@@ -1,3 +1,4 @@
+import { openDesignMenu } from './design-ribbon-controls';
 import type { EditorCore } from './editor-core';
 import type { RibbonAction } from './ribbon';
 import { runRibbonCommand } from './editor-commands';
@@ -27,6 +28,10 @@ import { applyFontFormat } from './font-format';
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
 	const { inserts, pages, parts, shell } = core;
+	if (action.type === 'documentDesign') {
+		void openDesignMenu(core, action.menu).catch(core.host.reportError);
+		return;
+	}
 	if (action.type === 'help') {
 		core.element.ownerDocument.defaultView?.open(
 			'https://christophervr.github.io/ooxml/docx/',

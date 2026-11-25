@@ -1,0 +1,42 @@
+.dve-design-menu {
+	max-height: min(55vh, 360px);
+	overflow: auto;
+}
+.dve-design-menu button > span[aria-hidden='true'] {
+	flex: 0 0 auto;
+}
+.dve-design-swatches,
+.dve-design-effects,
+.dve-design-fonts {
+	display: inline-flex;
+	gap: 2px;
+	align-items: center;
+	min-width: 46px;
+}
+.dve-design-swatches span,
+.dve-design-effects span {
+	display: inline-block;
+	width: 9px;
+	height: 12px;
+	border: 1px solid var(--line);
+	border-radius: 2px;
+}
+.dve-design-effects span {
+	width: 12px;
+}
+.dve-design-fonts {
+	gap: 5px;
+	font-size: 14px;
+}
+.dve-design-spacing {
+	display: inline-grid;
+	width: 30px;
+	justify-items: start;
+}
+.dve-design-spacing span {
+	height: 1px;
+	background: currentColor;
+}
+.dve-design-spacing .dve-design-paragraph {
+	margin-top: var(--dve-design-after);
+}

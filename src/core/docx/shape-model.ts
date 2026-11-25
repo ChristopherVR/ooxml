@@ -30,6 +30,8 @@ export interface ShapeSpec {
 	line?: DrawingLine;
 	/** `spPr/a:effectLst` (outer shadows and other DrawingML effects). */
 	effects?: DrawingEffectList;
+	/** The one-based style matrix effect reference, resolved at paint time. */
+	effectRef?: { index: number; color?: DrawingColor };
 	/** `wps:style/a:fontRef` colour: the colour of the shape's text where its runs set none. */
 	fontColor?: DrawingColor;
 	/** Paragraphs of text inside the shape (`wps:txbx`). */
@@ -59,7 +61,12 @@ export const DEFAULT_SHAPE_LINE_EMU = 12700;
 
 /** A shape in Word's default style, ready to place. */
 export function newShape(preset: string): ShapeSpec {
-	return { preset, editable: true, textEditable: true };
+	return {
+		preset,
+		effectRef: { index: 2, color: { kind: 'scheme', value: 'accent1', transforms: [] } },
+		editable: true,
+		textEditable: true,
+	};
 }
 
 /** Whether the preset is an open line or connector: no fill, drawn as an outline only. */

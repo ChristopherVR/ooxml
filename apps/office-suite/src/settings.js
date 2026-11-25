@@ -51,6 +51,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
 	corners: 'rounded',
 	reduceMotion: false,
 	confirmClose: true,
+	rememberWordDesign: true,
 	searchShortcut: true,
 });
 

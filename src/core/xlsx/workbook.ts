@@ -1,21 +1,9 @@
+import { OFFICE_COLORS } from '../drawingml/office-theme-colors';
 import type { CellStyle, ThemePalette, Workbook, Worksheet } from './model';
 
 /** The Office 2013+ default theme ("Office") palette, used when a package has no theme part. */
 export const DEFAULT_THEME: ThemePalette = {
-	colors: [
-		'FFFFFF',
-		'000000',
-		'E7E6E6',
-		'44546A',
-		'4472C4',
-		'ED7D31',
-		'A5A5A5',
-		'FFC000',
-		'5B9BD5',
-		'70AD47',
-		'0563C1',
-		'954F72',
-	],
+	colors: [...OFFICE_COLORS],
 	majorFont: 'Calibri Light',
 	minorFont: 'Calibri',
 };

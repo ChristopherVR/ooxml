@@ -3123,3 +3123,11 @@ Moved within this repository from `src/ui/src/pptx/render/text-warp.ts` and
 `text-warp-arch.ts` at `9d239b523` into `src/core/drawingml/text-warp-path.ts`,
 `text-warp-paths.ts` and `text-warp-arch.ts`. The path generators retain their
 formulas. Word and Excel now use the same paths as the PowerPoint renderer.
+
+## Shared document theme presets
+
+Source: ChristopherVR/ooxml, commit `96421e1ec`, `src/core/xlsx/theme-presets.ts`
+and the default palette in `src/core/xlsx/workbook.ts`. Move the preset data to
+`src/core/drawingml/theme-presets.ts`, `theme-color-presets.ts` and
+`office-theme-colors.ts` so Word and Excel share the same colour and font values.
+The Excel subpath keeps its existing exports.

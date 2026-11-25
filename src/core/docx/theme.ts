@@ -30,6 +30,9 @@ export function parseTheme(xml: string): ThemeCatalog {
 	}
 	const { major, minor } = theme.fontScheme;
 	return {
+		...(theme.name !== undefined && { name: theme.name }),
+		...(theme.colorScheme.name !== undefined && { colorSchemeName: theme.colorScheme.name }),
+		...(theme.fontScheme.name !== undefined && { fontSchemeName: theme.fontScheme.name }),
 		colors,
 		colorMapping: {},
 		fonts: { major: fontSetOf(major), minor: fontSetOf(minor) },

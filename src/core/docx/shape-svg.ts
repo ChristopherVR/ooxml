@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // Draws a shape as SVG from its preset geometry (the shared DrawingML geometry tables), fill and
 // outline, with its text centred inside. The editor, Print Layout and tests all use this one drawing.
+import { resolveThemeEffectStyle } from '../drawingml/format-scheme';
 import {
 	drawingColorCss,
 	resolveDrawingColor,
@@ -197,7 +198,12 @@ function appendShapeContent(
 	]
 		.filter(Boolean)
 		.join(' ');
-	const shadow = drawingOuterShadow(spec.effects, theme);
+	const effects =
+		spec.effects ??
+		(spec.effectRef &&
+			theme?.formatScheme &&
+			resolveThemeEffectStyle(theme.formatScheme, spec.effectRef.index, spec.effectRef.color));
+	const shadow = drawingOuterShadow(effects, theme);
 	const filterId = `${idPrefix}-shadow`;
 	if (shadow) {
 		const filter = appendSvg(defs, 'filter', {

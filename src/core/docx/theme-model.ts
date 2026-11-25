@@ -13,6 +13,9 @@ export interface ThemeFontSet {
 }
 /** Parsed word/theme/theme1.xml plus word/settings.xml clrSchemeMapping; never flattened onto runs. */
 export interface ThemeCatalog {
+	name?: string;
+	colorSchemeName?: string;
+	fontSchemeName?: string;
 	formatScheme?: ThemeFormatScheme;
 	colors: Partial<Record<ThemeColorSlot, string>>;
 	colorMapping: Partial<Record<'bg1' | 'tx1' | 'bg2' | 'tx2', ThemeColorSlot>>;

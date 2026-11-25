@@ -6,6 +6,7 @@ import { EditorState } from 'prosemirror-state';
 import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
+import { applyWordDesignPreferences, type WordDesignPreferences } from './design-preferences';
 import { loadDocument } from 'ooxml-core/docx/load';
 import { isPdfBytes } from './file-commands';
 import { setRibbonLocale } from './ribbon';
@@ -86,6 +87,14 @@ async function openPdf(bytes: Uint8Array): Promise<LoadedDocument> {
 }
 
 export class DocxEditorElement extends DocxEditorApi {
+	get wordDesignPreferences(): WordDesignPreferences | undefined {
+		return this.core.wordDesignPreferences;
+	}
+	set wordDesignPreferences(value: WordDesignPreferences | undefined) {
+		this.core.wordDesignPreferences = value;
+		this.core.refreshControls();
+	}
+
 	/** Attributes mirrored to the `locale`, `readOnly`, `fileName`, `reviewAuthor` and `theme` properties. */
 	static get observedAttributes(): string[] {
 		return [...DOCX_EDITOR_ATTRIBUTES];
@@ -188,7 +197,9 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 	set documentModel(value: DocumentModel | null) {
 		this.assertDocumentReplaceable();
-		this.replaceDocument(value || createDocument());
+		this.replaceDocument(
+			value ?? applyWordDesignPreferences(createDocument(), this.core.wordDesignPreferences),
+		);
 		this.core.shell.chrome?.setSaveState('saved');
 		if (this.isConnected) renderDocument(this.core);
 		void refreshDocxWebfonts(this.core);
@@ -227,6 +238,11 @@ export class DocxEditorElement extends DocxEditorApi {
 		clearTimeout(this.leaving);
 		this.leaving = undefined;
 		installOfficeUiThemeFor(this);
+		if (!this.core.shell.paper && !this.core.loadGeneration && this.core.wordDesignPreferences)
+			this.core.model = applyWordDesignPreferences(
+				this.core.model,
+				this.core.wordDesignPreferences,
+			);
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
 		this.core.room.resume();

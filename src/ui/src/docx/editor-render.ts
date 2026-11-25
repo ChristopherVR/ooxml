@@ -6,7 +6,7 @@ import { modelToDoc, docToModel } from './model-adapter';
 import { schema } from './schema';
 import { bodyPlugins } from './editor-plugins';
 import { resetStylePicker } from './paragraph-styles';
-import { imageNodeView } from './image-media';
+import { bodyImageNodeViews } from './body-image-node-views';
 import { yjsPresence } from './yjs-presence';
 
 /** Rebuilds the ProseMirror view for the current model (or the detached state kept while unmounted). */
@@ -87,16 +87,7 @@ export function renderDocument(core: EditorCore): void {
 			core.view = view;
 			core.applyTransaction(transaction);
 		},
-		nodeViews: {
-			image: imageNodeView(core.imageMedia, {
-				editPicture: (pos) => core.inserts.pictureDialog.open(pos),
-				editChart: () => core.formatDialogs.open('chartData'),
-				maxWidth: () => core.contentWidth(),
-				theme: () => core.model.theme,
-				model: () => core.model,
-				locale: () => core.locale,
-			}),
-		},
+		nodeViews: bodyImageNodeViews(core),
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),
 		handleDoubleClickOn: (view, _pos, node, nodePos) => {
 			if (node.type !== schema.nodes.equation || !view.editable) return false;

@@ -34,7 +34,7 @@ export function collectDocxWebfontRuns(model: DocumentModel): WebfontRun[] {
 	};
 	const familyOf = (formatting: RunFormatting) => {
 		const role = formatting.fontTheme?.ascii ?? formatting.fontTheme?.hAnsi;
-		return formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined);
+		return (role && theme ? theme.fonts[role]?.latin : undefined) ?? formatting.fontFamily;
 	};
 	/** The font an empty paragraph (and the caret in it) is drawn in: no text, but a face to load. */
 	const emptyRun = (formatting: RunFormatting): void => {

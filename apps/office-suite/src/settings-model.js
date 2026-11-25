@@ -11,11 +11,36 @@ export const blockSlot = (name) => `block-${name}`;
 
 const toggle = (key, label, info) => ({ kind: 'toggle', key, label, ...(info ? { info } : {}) });
 
+const wordDesignLabels = {
+	en: [
+		'Word',
+		'Remember my default Word design',
+		'Lets Word save your design for new blank documents on this device.',
+	],
+	de: [
+		'Word',
+		'Mein Word-Standarddesign speichern',
+		'Word speichert Ihr Design für neue leere Dokumente auf diesem Gerät.',
+	],
+	es: [
+		'Word',
+		'Recordar mi diseño predeterminado de Word',
+		'Word guarda el diseño de los nuevos documentos en blanco en este dispositivo.',
+	],
+	fr: [
+		'Word',
+		'Mémoriser ma conception Word par défaut',
+		'Word enregistre sur cet appareil la conception des nouveaux documents vierges.',
+	],
+	'zh-CN': ['Word', '记住我的默认 Word 设计', '让 Word 在此设备上保存新建空白文档的设计。'],
+};
+
 /**
  * The categories. `profileName` fills the user name hint; `assistant` adds the Assistant
  * category when the deployment's policy turns the assistant on.
  */
-export function settingsCategories({ profileName = '', assistant = false } = {}) {
+export function settingsCategories({ profileName = '', assistant = false, locale = 'en' } = {}) {
+	const [wordTitle, wordLabel, wordHelp] = wordDesignLabels[locale] ?? wordDesignLabels.en;
 	const categories = [
 		{
 			id: 'general',
@@ -54,6 +79,11 @@ export function settingsCategories({ profileName = '', assistant = false } = {})
 						),
 					],
 					slot: blockSlot('appearance'),
+				},
+				{
+					id: 'word-design',
+					title: wordTitle,
+					controls: [toggle('rememberWordDesign', wordLabel, wordHelp)],
 				},
 				{
 					id: 'closing',

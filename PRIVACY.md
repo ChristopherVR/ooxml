@@ -213,7 +213,9 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
 - external workbook links, Visio data record sets and linked chart data are kept but never
   refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
-- workers and application code are loaded from the page's own origin. Opening or inserting a TIFF
+- workers and application code are loaded from the page's own origin. Opening Word's Design tab
+  loads its gallery code and built-in presets from that origin, with no document data in the request.
+  Opening or inserting a TIFF
   picture in Visio can load its bundled decoder on demand. The request carries no picture bytes
   or filename. If the decoder is unavailable offline, the drawing still opens and the TIFF is
   omitted from the preview.
@@ -226,8 +228,9 @@ which is off by default (a host value locks the toggle). With
 requests PowerPoint does, from the same shared code (`ooxml-core/text`, `ooxml-ui/fonts`): the
 public catalogue families (or metric-compatible clones such as Carlito for Calibri) the file
 declares (theme, styles, font table) and the device lacks, then the font files for the faces it
-draws. The file, its text and the names of fonts outside
-Google's public catalogue are never sent. `false` or an invalid `baseUrl` sends nothing.
+draws. When downloads are enabled, choosing a new theme or font scheme in Word can cause the same
+requests during editing. The file, its text and the names of fonts outside Google's public
+catalogue are never sent. `false` or an invalid `baseUrl` sends nothing.
 
 Hyperlinks and in-product help links open only when the reader follows them.
 
@@ -323,6 +326,13 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   and `allowFontDownloads` in Visio's `ooxml-visio-options`).
 - **Teams:** chat snapshots, read state, drafts, presence and follows in the storage the host
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
+- **Word document design:** Set as Default writes the document theme palette and names, font
+  names, a built-in effect choice and paragraph spacing to the host's preference store.
+  Embedders enable this by assigning `wordDesignPreferences` and disable it by clearing that
+  property. The suite stores these values on this device by profile under
+  `ooxml-suite-word-design-<profile id>` in localStorage. Saving requires the explicit command,
+  and Word reads the values when creating a blank document. In suite Settings > General, turn
+  off Remember my default Word design to stop reading and writing this preference. Nothing is sent.
 - **Suite:** the document library, attachments, versions and chat history in IndexedDB per
   profile; profiles, favourites, theme (`ooxml-suite-theme`), fonts (`ooxml-suite-fonts`), the
   other Settings (`ooxml-suite-settings`) and AI preferences in localStorage; AI keys in session

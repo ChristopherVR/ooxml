@@ -4,6 +4,7 @@ import { applyShellLabels } from './shell-labels';
 import type { CollaborativeEditor } from 'ooxml-core/collab';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
+import { applyWordDesignPreferences } from './design-preferences';
 import type { EditorCore } from './editor-core';
 import { emit, on } from './events';
 import { createRibbon } from './ribbon';
@@ -60,7 +61,10 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		setReadOnly: (readOnly) => {
 			core.reportReadOnly(() => api.setReadOnly(readOnly));
 		},
-		newDocument: () => api.setDocumentModel(createDocument()),
+		newDocument: () =>
+			api.setDocumentModel(
+				applyWordDesignPreferences(createDocument(), core.wordDesignPreferences),
+			),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
 		exportPdf: (options) => api.exportPdf(options),

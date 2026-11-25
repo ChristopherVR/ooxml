@@ -8,7 +8,7 @@ import { defineOptionsDialog } from 'ooxml-ui/controls';
 import { notify } from './ui.js';
 import { DEFAULT_THEME, onTheme, setThemePreferences, themePreferences } from './themes.js';
 import { fontDownloads, normalizeFontServer, setFontDownloads } from './font-downloads.js';
-import { resetSettings, settings, updateSettings } from './settings.js';
+import { displayLanguage, resetSettings, settings, updateSettings } from './settings.js';
 import { currentProfile } from './profile-state.js';
 import { assistantEnabled, isManaged } from './ai/policy.js';
 import { connectionLabel, currentConnection, provider } from './ai/providers.js';
@@ -163,6 +163,7 @@ export function openSettings(category) {
 	dialog.categories = settingsCategories({
 		profileName: currentProfile().name ?? '',
 		assistant: assistantEnabled(),
+		locale: displayLanguage().lang,
 	});
 	dialog.values = settingsValues(settings());
 	if (category) dialog.category = category;

@@ -65,7 +65,7 @@ export function stylePreviewRuns(
 					const segments = scaledSegments(
 						text.data,
 						resolved,
-						resolved.fontFamily ?? themeFontOf(resolved, model.theme),
+						themeFontOf(resolved, model.theme) ?? resolved.fontFamily,
 						measurer,
 					);
 					if (!segments.length) continue;
@@ -81,7 +81,7 @@ export function stylePreviewRuns(
 							span,
 							span.textContent,
 							resolved,
-							resolved.fontFamily ?? themeFontOf(resolved, model.theme),
+							themeFontOf(resolved, model.theme) ?? resolved.fontFamily,
 						);
 						fragment.append(span);
 						from = segment.to;

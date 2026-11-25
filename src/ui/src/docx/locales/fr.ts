@@ -1,3 +1,4 @@
+import { frDesign } from './design';
 import { frStyleDialog } from './style-dialog';
 import { frSplitCells } from './split-cells';
 import { frOptions } from './options';
@@ -25,6 +26,7 @@ import { frRibbon } from './fr-ribbon';
 import { frRibbonNames } from './ribbon-names';
 
 export const fr: LocaleStrings = {
+	...frDesign,
 	...frStyleDialog,
 	...frOptions,
 	...frRibbon,

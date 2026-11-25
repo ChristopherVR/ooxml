@@ -85,9 +85,11 @@ detail and limits of each feature already built.
    serializer contracts preserve the source package. Keep UI controls in `ooxml-ui`
    and framework adapters in the viewer.
 4. **Word authoring breadth.** Word can create and modify styles from the Home ribbon, and
-   DOCX export writes style catalogues, latent styles and theme edits. Remaining work includes
-   the Design tab (themes, colours, fonts,
-   paragraph spacing, all disabled), Mailings (all 16 commands disabled, with a headless
+   DOCX export writes style catalogues, latent styles and theme edits. Design offers a shared
+   theme, colour and font catalogue, custom colours and fonts, paragraph spacing presets and a
+   custom dialog, three shadow presets, and host-managed defaults for new documents. The full
+   Word catalogue, theme file import/export, and broader DrawingML effect rendering remain open.
+   Other remaining work includes Mailings (all 16 commands disabled, with a headless
    `ooxml-core/docx` engine for recipient selection, preview, and document output), object
    positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,

@@ -1,3 +1,4 @@
+import { zhDesign } from './design';
 import { zhCNStyleDialog } from './style-dialog';
 import { zhSplitCells } from './split-cells';
 import { zhOptions } from './options';
@@ -25,6 +26,7 @@ import { zhCNRibbon } from './zh-CN-ribbon';
 import { zhCNRibbonNames } from './ribbon-names';
 
 export const zhCN: LocaleStrings = {
+	...zhDesign,
 	...zhCNStyleDialog,
 	...zhOptions,
 	...zhCNRibbon,

@@ -1,4 +1,5 @@
 import { group, stack, tool } from './ribbon-parts';
+import { designControl } from './design-ribbon-controls';
 import type { RibbonIcon } from './ribbon-icons';
 
 const unavailable = (label: string, icon: RibbonIcon, inline = false) =>
@@ -10,12 +11,12 @@ export function buildNativeTabs(panels: Map<string, HTMLElement>): void {
 	design.append(
 		group(
 			'Document Formatting',
-			unavailable('Themes', 'pageColor'),
-			unavailable('Colors', 'fontColor'),
-			unavailable('Fonts', 'changeCase'),
-			unavailable('Paragraph spacing', 'lineSpacing'),
-			unavailable('Effects', 'formatPainter'),
-			unavailable('Set as Default', 'accept'),
+			designControl('Themes', 'pageColor', 'theme'),
+			designControl('Colors', 'fontColor', 'colors'),
+			designControl('Fonts', 'changeCase', 'fonts'),
+			designControl('Paragraph spacing', 'lineSpacing', 'spacing'),
+			designControl('Effects', 'formatPainter', 'effects'),
+			designControl('Set as Default', 'accept', 'default'),
 		),
 	);
 	const background = panels

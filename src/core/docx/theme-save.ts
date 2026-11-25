@@ -49,8 +49,9 @@ function rgb(hex: string): DrawingColor {
 function newTheme(theme: ThemeCatalog): string {
 	return drawingThemeXml(
 		{
-			name: 'Office Theme',
+			name: theme.name ?? 'Office Theme',
 			colorScheme: {
+				...(theme.colorSchemeName !== undefined && { name: theme.colorSchemeName }),
 				colors: Object.fromEntries(
 					THEME_COLOR_SLOTS.map((slot, index) => [
 						slot,
@@ -59,6 +60,7 @@ function newTheme(theme: ThemeCatalog): string {
 				),
 			},
 			fontScheme: {
+				...(theme.fontSchemeName !== undefined && { name: theme.fontSchemeName }),
 				major: { scripts: {}, ...theme.fonts.major },
 				minor: { scripts: {}, ...theme.fonts.minor },
 			},
@@ -120,6 +122,15 @@ function patchTheme(xml: string, next: ThemeCatalog, base: ThemeCatalog): string
 		'extLst',
 	]);
 	const order = ['clrScheme', 'fontScheme', 'fmtScheme', 'extLst'];
+	for (const [key, local] of [
+		['name', ''],
+		['colorSchemeName', 'clrScheme'],
+		['fontSchemeName', 'fontScheme'],
+	] as const) {
+		if (next[key] === base[key]) continue;
+		const node = local ? ensure(theme, local, order) : doc.documentElement;
+		node.setAttribute('name', next[key] ?? 'Custom');
+	}
 	for (const [index, slot] of THEME_COLOR_SLOTS.entries()) {
 		const value = next.colors[slot];
 		if (value === base.colors[slot]) continue;
@@ -169,8 +180,7 @@ export async function applyWordTheme(
 				'theme/theme1.xml',
 			);
 	} else if (
-		JSON.stringify([next.colors, next.fonts, next.formatScheme]) !==
-		JSON.stringify([base.colors, base.fonts, base.formatScheme])
+		JSON.stringify({ ...next, colorMapping: {} }) !== JSON.stringify({ ...base, colorMapping: {} })
 	) {
 		zip.file(path, patchTheme(await file.async('string'), next, base));
 	}

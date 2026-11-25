@@ -67,8 +67,20 @@ const shared = {
 // The PDF reader and its converters split their ESM build, so the decoders a PDF rarely needs
 // (JBIG2, JPEG 2000, the security handler) are chunks loaded on first use and the three entries
 // share one copy of the reader. The CJS build keeps one self-contained file per entry.
+const { 'drawingml/index': drawingml, ...eagerEntries } = shared.entry;
+
 export default defineConfig([
-	{ ...shared, format: ['esm', 'cjs'], splitting: false },
+	{ ...shared, entry: eagerEntries, format: ['esm'], splitting: false },
+	{ ...shared, format: ['cjs'], splitting: false },
+	{
+		...shared,
+		entry: { 'drawingml/index': drawingml },
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'drawingml/chunks/[name]-[hash]';
+		},
+	},
 	{
 		...shared,
 		entry: pdfEntries,

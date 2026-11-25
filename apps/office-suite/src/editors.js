@@ -16,6 +16,7 @@ import {
 	updateSettings,
 } from './settings.js';
 import { currentProfile } from './profile-state.js';
+import { wordDesignPreferences } from './word-design-preferences.js';
 
 /** PowerPoint's dictionary for `locale` (English is built in). */
 async function pptxMessages(locale) {
@@ -243,6 +244,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	if (doc.kind === 'docx') {
 		(await import('ooxml-ui/docx')).registerDocxEditor();
 		element = document.createElement('docx-editor');
+		element.wordDesignPreferences = wordDesignPreferences();
 	} else if (doc.kind === 'xlsx') {
 		(await import('ooxml-ui/xlsx')).defineXlsxEditor();
 		element = document.createElement('xlsx-editor');
@@ -273,9 +275,11 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	observer.observe(element, { attributes: true, attributeFilter: ['theme'] });
 	host.append(element);
 	applyEditorSettings(element, doc.kind, settings());
-	const stopSettings = onSettings((next, keys) =>
-		applyEditorSettings(element, doc.kind, next, keys),
-	);
+	const stopSettings = onSettings((next, keys) => {
+		applyEditorSettings(element, doc.kind, next, keys);
+		if (doc.kind === 'docx' && keys.includes('rememberWordDesign'))
+			element.wordDesignPreferences = wordDesignPreferences();
+	});
 	setEditorReadOnly(element, doc.kind, accessReadOnly);
 	// Visio opens at 100%; fit the page to the canvas once it has a layout, as the Visio demo does.
 	const fit = () =>
@@ -445,8 +449,8 @@ function editorView(element, kind) {
 /** A new empty file, made with the format's own area, which its editor loads anyway. */
 export async function blankDocument(kind) {
 	if (kind === 'docx') {
-		const { createDocument, saveDocx } = await import('ooxml-core/docx');
-		return saveDocx(createDocument());
+		const { createDocument, saveDocx, withWordDesignDefaults } = await import('ooxml-core/docx');
+		return saveDocx(withWordDesignDefaults(createDocument(), wordDesignPreferences()?.read()));
 	}
 	if (kind === 'xlsx') {
 		const { createWorkbook, saveXlsx } = await import('ooxml-core/xlsx');

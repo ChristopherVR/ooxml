@@ -54,6 +54,26 @@ export const DIRECT_RUN_PROPERTY_KEYS = [
 	'style',
 ] as const satisfies readonly (keyof TextRun)[];
 
+function mergeRunStyle(prior: RunFormatting, next: RunFormatting): RunFormatting {
+	const result = mergeDefined(prior, next);
+	replaceThemeFallbacks(result, next);
+	return result;
+}
+
+function replaceThemeFallbacks(result: RunFormatting, next: RunFormatting): void {
+	// A new direct value replaces the inherited reference and vice versa. If both
+	// came from the same level, keep the literal as the theme reference's fallback.
+	if (next.color !== undefined && next.colorTheme === undefined) delete result.colorTheme;
+	if (next.colorTheme && next.color === undefined) delete result.color;
+	if (next.fontFamily !== undefined && !next.fontTheme?.ascii && !next.fontTheme?.hAnsi) {
+		const { ascii: _ascii, hAnsi: _hAnsi, ...scripts } = result.fontTheme ?? {};
+		if (Object.keys(scripts).length) result.fontTheme = scripts;
+		else delete result.fontTheme;
+	}
+	if ((next.fontTheme?.ascii || next.fontTheme?.hAnsi) && next.fontFamily === undefined)
+		delete result.fontFamily;
+}
+
 type Resolver = (id: string | undefined) => RunFormatting | undefined;
 const paragraphRunResolvers = new WeakMap<object, WeakMap<RunStyleCatalog, Resolver>>();
 const characterResolvers = new WeakMap<object, Resolver>();
@@ -75,7 +95,7 @@ function paragraphStyleRun(
 		resolve = chainResolver(
 			paragraphCatalog.styles,
 			(_style, id) => runCatalog.styles[id]?.formatting,
-			mergeDefined,
+			mergeRunStyle,
 			{},
 		);
 		byRunCatalog.set(runCatalog, resolve);
@@ -90,7 +110,7 @@ function characterStyleRun(
 ): RunFormatting {
 	if (!styleId || !runCatalog) return {};
 	const resolve = cachedResolver(characterResolvers, runCatalog.styles, () =>
-		chainResolver(runCatalog.styles, (style) => style.formatting, mergeDefined, {}),
+		chainResolver(runCatalog.styles, (style) => style.formatting, mergeRunStyle, {}),
 	);
 	return resolve(styleId) ?? {};
 }
@@ -139,11 +159,12 @@ export function resolveRunFormatting(
 						(chainValue(tableStyle, key) !== chainValue(characterStyle, key)));
 		if (state) result[key] = true;
 	}
-	for (const key of OVERRIDE_KEYS) {
-		for (const level of levels) {
+	for (const level of levels) {
+		for (const key of OVERRIDE_KEYS) {
 			const value = level[key];
 			if (value !== undefined) (result as Record<string, unknown>)[key] = value;
 		}
+		replaceThemeFallbacks(result, level);
 	}
 	return result;
 }

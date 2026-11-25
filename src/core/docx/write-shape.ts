@@ -2,7 +2,7 @@
 // Writes drawing shapes (`wps:wsp`): a new inline or floating shape, and an edited one rebuilt from
 // its model while keeping the identity (`wp:docPr`), style, text-body properties and any text the
 // model cannot edit from the drawing it replaces.
-import { drawingFillXml } from '../drawingml/index';
+import { drawingColorXml, drawingFillXml } from '../drawingml/index';
 import type { DrawingFill } from '../drawingml/index';
 import { drawingLineXml } from '../drawingml/write-line';
 import { parseXml } from '../xml/index';
@@ -87,7 +87,7 @@ function textParagraphs(doc: XmlDocument, lines: readonly string[], color?: stri
 	});
 }
 
-function shapeStyle(doc: XmlDocument): XmlElement {
+function shapeStyle(doc: XmlDocument, spec: ShapeSpec): XmlElement {
 	const ref = (name: string, idx: string, scheme: string, shade?: string) => {
 		const node = attrs(el(doc, A_NS, `a:${name}`), { idx });
 		const color = attrs(el(doc, A_NS, 'a:schemeClr'), { val: scheme });
@@ -98,7 +98,12 @@ function shapeStyle(doc: XmlDocument): XmlElement {
 		el(doc, WPS_NS, 'wps:style'),
 		ref('lnRef', '2', 'accent1', '50000'),
 		ref('fillRef', '1', 'accent1'),
-		ref('effectRef', '0', 'accent1'),
+		spec.effectRef?.color
+			? add(
+					attrs(el(doc, A_NS, 'a:effectRef'), { idx: String(spec.effectRef.index) }),
+					...importFragment(doc, drawingColorXml(spec.effectRef.color)),
+				)
+			: ref('effectRef', String(spec.effectRef?.index ?? 0), 'accent1'),
 		ref('fontRef', 'minor', 'lt1'),
 	);
 }
@@ -196,7 +201,7 @@ export function buildShapeDrawing(
 		el(doc, WPS_NS, 'wps:wsp'),
 		el(doc, WPS_NS, 'wps:cNvSpPr'),
 		spPr,
-		shapeStyle(doc),
+		shapeStyle(doc, spec),
 	);
 	if (spec.text?.length) {
 		const content = add(

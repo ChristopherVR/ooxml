@@ -46,7 +46,8 @@ export function mountPopover(
 	const escape = (event: KeyboardEvent) => {
 		if (event.key !== 'Escape') return;
 		close?.();
-		anchor.querySelector('input')?.focus();
+		if (anchor instanceof HTMLButtonElement) anchor.focus();
+		else anchor.querySelector('input')?.focus();
 	};
 	document.addEventListener('pointerdown', outside, true);
 	document.addEventListener('keydown', escape, true);

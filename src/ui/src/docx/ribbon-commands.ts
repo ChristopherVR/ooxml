@@ -2,6 +2,8 @@ import type { DocumentModel } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { DEFAULT_TABLE_BORDERS } from 'ooxml-core/docx';
+import { cssFontStack } from 'ooxml-core/docx/layout';
+import { themeFontOf } from './run-styles';
 import { schema } from './schema';
 import { parseLineSpacingValue } from 'ooxml-core/docx';
 import { twipsAttr } from 'ooxml-core/docx';
@@ -116,6 +118,11 @@ export function updateParagraphs(
 
 export function applyPageStyles(paper: HTMLElement, model: DocumentModel, zoom: number) {
 	const page = model.page;
+	const defaults = model.characterStyles?.docDefaults;
+	const family = defaults && (themeFontOf(defaults, model.theme) ?? defaults.fontFamily);
+	paper.style.fontFamily = family
+		? cssFontStack(family, model.fontFallbacks?.get(family.toLowerCase()))
+		: '';
 	paper.style.width = `${page.width}px`;
 	paper.style.minHeight = `${page.height}px`;
 	paper.style.padding = `${page.marginTop}px ${page.marginRight}px ${page.marginBottom}px ${page.marginLeft}px`;

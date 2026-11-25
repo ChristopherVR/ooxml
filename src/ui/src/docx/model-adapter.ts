@@ -94,6 +94,7 @@ export function modelToDoc(model: DocumentModel) {
 			commentThreads: JSON.stringify(model.comments ?? []),
 			documentInformation: documentInformationJson(model),
 			styleCatalogs: styleCatalogsOf(model),
+			documentTheme: model.theme ?? null,
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,

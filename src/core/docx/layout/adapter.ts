@@ -157,12 +157,11 @@ export function adaptDocumentModel(
 		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
 		const family =
 			(symbolOnly(run) && run.symbol?.font) ||
-			(formatting.fontFamily ?? (role && theme ? theme.fonts[role]?.latin : undefined));
+			((role && theme ? theme.fonts[role]?.latin : undefined) ?? formatting.fontFamily);
 		const color =
-			formatting.color ??
 			(formatting.colorTheme && theme
 				? resolveThemeColorReference(formatting.colorTheme, theme)
-				: undefined);
+				: undefined) ?? formatting.color;
 		return { formatting, family, color };
 	}
 	const noteLabel = noteLabels(visibleModel);

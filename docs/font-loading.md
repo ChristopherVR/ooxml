@@ -25,7 +25,9 @@ in `ooxml-core/text` and a generic family, in every place that measures or paint
 
 The fonts a file uses are collected by `collectDocxWebfontRuns` (`ooxml-core/docx/layout`),
 `collectWorkbookWebfontRuns` (`ooxml-core/xlsx`) and `collectVisioWebfontRuns`
-(`ooxml-core/visio`). A font chosen while editing is only requested on the next load.
+(`ooxml-core/visio`). Word checks for newly used families after formatting edits, including
+changes to the document theme or font scheme. It requests those fonts only when downloads are
+enabled. Excel and Visio pick up newly named fonts on the next load.
 
 Why off by default: unlike PowerPoint, which has always downloaded fonts, these products made no
 network request at all, and a new request that names fonts to a third party must be chosen by

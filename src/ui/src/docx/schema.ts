@@ -123,6 +123,7 @@ export const schema = new Schema({
 				/** Document properties and package information as JSON (`document-information-attr.ts`). */
 				documentInformation: { default: null },
 				styleCatalogs: { default: null },
+				documentTheme: { default: null },
 				...commentHistoryAttributes,
 			},
 		},

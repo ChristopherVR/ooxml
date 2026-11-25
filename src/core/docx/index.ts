@@ -298,3 +298,5 @@ export {
 	type StyleEdit,
 	type StyleKind,
 } from './edit-styles';
+export * from './document-design';
+export * from './design-defaults';
