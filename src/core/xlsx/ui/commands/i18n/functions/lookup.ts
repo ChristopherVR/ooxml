@@ -325,10 +325,4 @@ export const FUNCTION_LOOKUP_STRINGS: Translations = {
 		'La varianza poblacional de los registros coincidentes.',
 		'匹配记录总体的方差。',
 	],
-	'Returns XML element or attribute values selected by XPath, as a column.': [
-		"Renvoie sous forme de colonne les valeurs d'éléments ou attributs XML sélectionnés par XPath.",
-		'Gibt Werte von XML-Elementen oder -Attributen basierend auf XPath als Spalte zurück.',
-		'Devuelve como columna los valores de elementos o atributos XML seleccionados mediante XPath.',
-		'以列的形式返回由 XPath 选择的 XML 元素或属性值。',
-	],
 };
