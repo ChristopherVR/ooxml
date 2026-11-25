@@ -62,6 +62,7 @@ export function layoutDocumentModel(
 	);
 	const storyMargins = createStoryMargins(projected.model, measurer, options, note);
 	if (storyMargins) input.storyMargins = storyMargins;
+	if (options.oversizedCantSplitRow) input.oversizedCantSplitRow = options.oversizedCantSplitRow;
 	const result = layout(input, measurer);
 	return {
 		pages: result.pages,

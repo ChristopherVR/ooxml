@@ -1,9 +1,12 @@
 import type { DocumentModel, Paragraph, TextRun } from '../model';
 import { mapDocumentParagraphs } from '../document-paragraphs';
 import { isRunHiddenForReview, type ReviewDisplayMode } from '../review-formatting-display';
+import type { OversizedCantSplitRow } from './input';
 
 export interface LayoutReviewOptions {
 	reviewDisplayMode?: ReviewDisplayMode;
+	/** How to paginate a `w:cantSplit` row taller than an empty page/column (`'split'` by default). */
+	oversizedCantSplitRow?: OversizedCantSplitRow;
 }
 
 /** Inline atoms occupy one source position even when their display text is empty. */

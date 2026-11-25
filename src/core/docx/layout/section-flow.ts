@@ -10,7 +10,13 @@ import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout'
 import { layoutRow, stackParagraphs } from './table-layout';
 import { suppressesSpacing } from './keep-rules';
 import type { TextMeasurer } from './measure';
-import type { LayoutBlock, LayoutSection, LayoutNote, StoryMargins } from './input';
+import type {
+	LayoutBlock,
+	LayoutSection,
+	LayoutNote,
+	OversizedCantSplitRow,
+	StoryMargins,
+} from './input';
 import type { LayoutFootnoteBox, LayoutLine, LayoutPageBox } from './result';
 import { lineBoxesFor, type Exclusion } from './wrap';
 import { expectDefined } from '../expect-defined';
@@ -48,6 +54,7 @@ export class SectionFlow {
 		private readonly balance?: { pageIndex: number; heightPx: number },
 		private readonly resume?: SectionFlowResume,
 		storyMargins?: StoryMargins,
+		private readonly oversizedCantSplitRow: OversizedCantSplitRow = 'split',
 	) {
 		const noteColumns =
 			section.footnoteColumns ??
@@ -328,6 +335,7 @@ export class SectionFlow {
 					)
 						? this.referenceFootnotes
 						: undefined,
+					this.oversizedCantSplitRow,
 				);
 				if (this.balance?.pageIndex === this.cursor.page.index && !this.cursor.columnContentFits)
 					this.balanceValid = false;

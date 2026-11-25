@@ -136,6 +136,7 @@ export function layoutSections(
 			undefined,
 			undefined,
 			input.storyMargins,
+			input.oversizedCantSplitRow,
 		);
 		flow.run();
 		const last = pages.at(-1)!;
@@ -158,6 +159,7 @@ export function layoutSections(
 						{ pageIndex: last.index, heightPx },
 						undefined,
 						input.storyMargins,
+						input.oversizedCantSplitRow,
 					);
 					trial.run();
 					balancedNotes.set(trial, trialNotes);

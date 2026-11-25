@@ -12,7 +12,7 @@ import { splitRowAtHeight, type RowLayout } from './table-layout';
 import { resolveTableAutofit } from './table-autofit';
 import { placeFloatingTable } from './flow-floating-table';
 import type { TextMeasurer } from './measure';
-import type { LayoutTable, LayoutTableRow } from './input';
+import type { LayoutTable, LayoutTableRow, OversizedCantSplitRow } from './input';
 import type { LayoutTableBox, LayoutTableRowBox } from './result';
 
 /**
@@ -28,6 +28,7 @@ export function placeTable(
 	measurer: TextMeasurer,
 	note: (message: string) => void,
 	resolveFootnotes?: ReferenceFootnotes,
+	oversizedCantSplitRow: OversizedCantSplitRow = 'split',
 ): void {
 	// AutoFit columns are sized for the text column the table starts in.
 	const table = resolveTableAutofit(source, cursor.columnWidthPx, measurer, note);
@@ -148,7 +149,8 @@ export function placeTable(
 			fragmentRows.push(toRowBox(layoutRow(header, cursor.columnWidthPx, measurer, note), true));
 	}
 
-	function placeRow(row: LayoutTableRow, initial: RowLayout, cantSplit: boolean) {
+	function placeRow(row: LayoutTableRow, initial: RowLayout, cantSplit: boolean, isHeader = false) {
+		const canSplitOversized = oversizedCantSplitRow !== 'clip' && !isHeader;
 		let remainingRow: RowLayout | null = initial;
 		while (remainingRow) {
 			fragmentHeight += fragmentBorders.remove(fragmentRows.at(-1));
@@ -284,8 +286,13 @@ export function placeTable(
 					}
 				}
 				const freshRemaining = cursor.remainingHeightPx() - fragmentHeight;
-				if (remainingRow.heightPx > freshRemaining)
+				if (remainingRow.heightPx > freshRemaining) {
+					if (canSplitOversized) {
+						cantSplit = false;
+						continue;
+					}
 					note('A table row marked "keep row together" is taller than an empty page/column.');
+				}
 				fragmentRows.push(toRowBox(remainingRow, false));
 				remainingRow = null;
 				continue;
@@ -367,12 +374,12 @@ export function placeTable(
 			note(
 				'Independent inner-cell continuation around nested note references remains approximate when an enclosing bordered row splits.',
 			);
+		const isHeader = headerRows.includes(source);
 		placeRow(
 			row,
 			layout,
-			Boolean(row.cantSplit) ||
-				headerRows.includes(source) ||
-				(!!footnotes && row.heightRule === 'exact'),
+			Boolean(row.cantSplit) || isHeader || (!!footnotes && row.heightRule === 'exact'),
+			isHeader,
 		);
 		if (index === headerRows.length - 1) headersPlaced = true;
 	}

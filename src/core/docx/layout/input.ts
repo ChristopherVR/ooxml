@@ -368,10 +368,21 @@ export interface LayoutSection {
 	verticalAlign?: 'top' | 'center' | 'both' | 'bottom';
 }
 
+/**
+ * How a `w:cantSplit` ("keep row together") table row taller than an empty page/column is handled:
+ * - `'split'` (default, LibreOffice behaviour): ignore `cantSplit` for the oversized row and split
+ *   it across pages so content is not clipped or lost.
+ * - `'clip'` (Microsoft Word behaviour): move the row whole to a fresh page and clip the overflow
+ *   at the bottom of that page.
+ */
+export type OversizedCantSplitRow = 'split' | 'clip';
+
 export interface LayoutDocumentInput {
 	sections: LayoutSection[];
 	/** Expands the vertical body margins to clear the page's in-flow header and footer. */
 	storyMargins?: StoryMargins;
+	/** How to paginate a `w:cantSplit` row taller than an empty page/column (`'split'` by default). */
+	oversizedCantSplitRow?: OversizedCantSplitRow;
 }
 
 export type StoryMargins = (

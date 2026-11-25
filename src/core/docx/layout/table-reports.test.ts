@@ -18,7 +18,7 @@ const tables = (result: LayoutResult) =>
 		page.columns.flatMap((column) =>
 			column.blocks
 				.filter((block): block is LayoutTableBox => block.kind === 'table')
-				.map((table) => ({ pageIndex, column, table })),
+				.map((table) => ({ page, pageIndex, column, table })),
 		),
 	);
 const cellParagraphs = (table: LayoutTableBox): LayoutParagraphBox[] =>
@@ -82,10 +82,32 @@ describe('table report fixtures', () => {
 		expect(table.yPx).toBe(0);
 	});
 
-	it('keeps a keep-together row taller than a page on one page, clipped, as Word does (#323)', async () => {
+	it('splits a keep-together row taller than a page across pages by default, as LibreOffice does (#323)', async () => {
 		const result = layoutDocumentModel(
 			await load('t14-ligne-plus-haute-que-page'),
 			createFakeMeasurer(),
+		);
+		// Default ('split', LibreOffice behaviour): ignore cantSplit for rows taller than a page so
+		// no paragraphs are clipped or lost.
+		const placed = tables(result);
+		expect(placed.length).toBeGreaterThan(1);
+		expect(placed.flatMap((entry) => cellParagraphs(entry.table))).toHaveLength(80);
+		for (const { page, table } of placed)
+			expect(table.yPx + table.heightPx).toBeLessThanOrEqual(
+				page.heightPx - page.marginTopPx - page.marginBottomPx + 1,
+			);
+		expect(result.approximations).not.toContain(
+			'A table row marked "keep row together" is taller than an empty page/column.',
+		);
+		const lastPage = result.pages.at(-1)!.columns[0]!.blocks;
+		expect(lastPage.at(-1)!.kind).toBe('paragraph');
+	});
+
+	it('can clip a keep-together row taller than a page when configured for Word behaviour (#323)', async () => {
+		const result = layoutDocumentModel(
+			await load('t14-ligne-plus-haute-que-page'),
+			createFakeMeasurer(),
+			{ oversizedCantSplitRow: 'clip' },
 		);
 		// Word 16: the row moves to page 2 whole and is cut at the bottom of that page; page 3
 		// holds only the paragraph after the table.

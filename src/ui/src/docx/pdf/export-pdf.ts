@@ -13,7 +13,12 @@ import {
 	type DocumentModel,
 	type ReviewDisplayMode,
 } from 'ooxml-core/docx';
-import { layoutDocumentModel, type LayoutPageBox, type TextMeasurer } from 'ooxml-core/docx/layout';
+import {
+	layoutDocumentModel,
+	type LayoutPageBox,
+	type OversizedCantSplitRow,
+	type TextMeasurer,
+} from 'ooxml-core/docx/layout';
 import { PdfFontSet, type PdfFontFile } from '../../export/pdf-embedded-font';
 import { buildVectorPdf, PdfVectorPage, type PdfVectorOptions } from '../../export/pdf-vector';
 import { createCanvasMeasurer } from '../canvas-measurer';
@@ -114,6 +119,8 @@ export interface DocxPdfOptions {
 	decodePicture?: DocxPdfPictureDecoder;
 	/** Measures text for the layout; a canvas measurer by default (the one Print Layout uses). */
 	measurer?: TextMeasurer;
+	/** How to paginate a `w:cantSplit` row taller than an empty page/column (`'split'` by default). */
+	oversizedCantSplitRow?: OversizedCantSplitRow;
 	/** The time DATE and TIME fields show; now by default. */
 	now?: Date;
 	signal?: AbortSignal;
@@ -220,6 +227,9 @@ export async function exportDocxPdf(
 	// Deletions shown in balloons leave the text, as Word's "Show revisions in balloons" does.
 	const layout = layoutDocumentModel(projected.model, measurer, {
 		reviewDisplayMode: mode === 'all' && balloonMode === 'all' ? 'simple' : mode,
+		...(options.oversizedCantSplitRow
+			? { oversizedCantSplitRow: options.oversizedCantSplitRow }
+			: {}),
 	});
 	for (const message of [
 		...layout.approximations,
