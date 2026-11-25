@@ -34,11 +34,15 @@ describe('Print Layout floating objects in table cells', () => {
 		renderAll();
 		const sheet = element.querySelector<HTMLElement>('.dve-print-page')!;
 		const floats = [...sheet.querySelectorAll<HTMLElement>(':scope > .dve-print-float')];
-		// A square shape, a chart, a top-and-bottom shape and a shape behind text in cells, and a
-		// chart floating in the body.
-		expect(floats).toHaveLength(5);
+		// A square shape, a chart, a top-and-bottom shape and a shape behind text in cells. The chart
+		// floating in the body would cross the bottom margin, so its paragraph moves to page 2.
+		expect(floats).toHaveLength(4);
 		const charts = floats.filter((float) => float.querySelector('svg') && float.title !== 'Shape');
-		expect(charts.length).toBeGreaterThanOrEqual(2);
+		expect(charts.length).toBeGreaterThanOrEqual(1);
+		const second = element.querySelectorAll<HTMLElement>('.dve-print-page')[1]!;
+		const moved = [...second.querySelectorAll<HTMLElement>(':scope > .dve-print-float')];
+		expect(moved).toHaveLength(1);
+		expect(moved[0]!.querySelector('svg')).not.toBeNull();
 		expect(floats[3]!.classList.contains('dve-print-float-behind')).toBe(true);
 
 		const column = sheet.querySelector<HTMLElement>('.dve-print-column')!;
