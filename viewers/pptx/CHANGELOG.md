@@ -6,7 +6,7 @@ released that day; the full history of each package is in its own `CHANGELOG.md`
 
 ## 2026-11-25
 
-_Releases: pptx-react-viewer@5.1.1, pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.1, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5.1.1, pptx-angular-viewer@5.1.0, pptx-svelte-viewer@5.1.1, pptx-svelte-viewer@5.1.0, pptx-vanilla-viewer@4.1.1, pptx-vanilla-viewer@4.1.0_
+_Releases: pptx-react-viewer@5.1.2, pptx-react-viewer@5.1.1, pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.2, pptx-vue-viewer@5.1.1, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5.1.2, pptx-angular-viewer@5.1.1, pptx-angular-viewer@5.1.0, pptx-svelte-viewer@5.1.2, pptx-svelte-viewer@5.1.1, pptx-svelte-viewer@5.1.0, pptx-vanilla-viewer@4.1.2, pptx-vanilla-viewer@4.1.1, pptx-vanilla-viewer@4.1.0_
 
 ### Features
 

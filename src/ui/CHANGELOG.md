@@ -3,6 +3,8 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.2](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.2) - 2026-11-25
+
 ## [2.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.1) - 2026-11-25
 
 ### Bug Fixes
