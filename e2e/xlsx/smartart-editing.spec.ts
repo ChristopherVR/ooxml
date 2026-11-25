@@ -1,5 +1,15 @@
 import { expect, test, type Page } from '@playwright/test';
-import { FRAMEWORKS, editor, editorProperty, newWorkbook, pageErrors } from './helpers';
+import {
+	FRAMEWORKS,
+	clickRibbonControl,
+	editor,
+	editorProperty,
+	newWorkbook,
+	pageErrors,
+} from './helpers';
+
+const smartArtButton = (page: Page) =>
+	editor(page).getByRole('button', { name: 'SmartArt', exact: true, includeHidden: true }).first();
 
 type Book = {
 	sheets: {
@@ -37,7 +47,8 @@ for (const framework of FRAMEWORKS)
 		const errors = pageErrors(page);
 		await newWorkbook(page, framework);
 		await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await editor(page).getByRole('button', { name: 'SmartArt', exact: true }).first().click();
+		// Insert's Illustrations group folds at narrow widths; open SmartArt from its overflow.
+		await clickRibbonControl(page, smartArtButton(page));
 		const dialog = editor(page).locator('[data-dialog="insert-smartart"]');
 		await expect(dialog.locator('office-ui-smartart-picker')).toBeVisible();
 		await dialog.getByRole('button', { name: 'OK', exact: true }).click();
@@ -123,7 +134,7 @@ for (const framework of FRAMEWORKS)
 test('Excel saves a generated 2D cache and identifies it after reload', async ({ page }) => {
 	await newWorkbook(page, 'vanilla');
 	await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor(page).getByRole('button', { name: 'SmartArt', exact: true }).first().click();
+	await clickRibbonControl(page, smartArtButton(page));
 	await editor(page)
 		.locator('[data-dialog="insert-smartart"]')
 		.getByRole('button', { name: 'OK', exact: true })
