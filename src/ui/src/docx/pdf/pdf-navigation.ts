@@ -79,6 +79,8 @@ function indexBlocks(index: ParagraphIndex, blocks: readonly Block[]): void {
 		for (const run of paragraph.runs) {
 			starts.push(offset);
 			offset += reviewSourceLength(run);
+			const boxBlocks = run.image?.textBoxContent?.blocks;
+			if (boxBlocks?.length) indexBlocks(index, boxBlocks);
 		}
 		index.set(paragraph.id, { paragraph, starts });
 	};
@@ -92,10 +94,17 @@ export class DocxPdfParagraphs {
 	readonly #paragraphs: ParagraphIndex = new Map();
 	#story: ParagraphIndex | undefined;
 	constructor(model: DocumentModel) {
-		const blocks = [
+		const blocks: Block[][] = [
 			model.blocks,
 			...[...(model.footnotes ?? []), ...(model.endnotes ?? [])].map((note) => note.blocks),
 		];
+		for (const section of model.sections ?? []) {
+			for (const group of [section.headers, section.footers]) {
+				if (!group) continue;
+				for (const content of [group.default, group.first, group.even])
+					if (content?.blocks.length) blocks.push(content.blocks);
+			}
+		}
 		for (const list of blocks) indexBlocks(this.#paragraphs, list);
 	}
 	/**

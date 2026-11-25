@@ -19,6 +19,7 @@ import { shapePaint } from './shape-paint';
 import type { TextBoxLayouts } from './text-box-layout';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
+import { drawingOuterShadow } from '../shape-svg';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
 import { kinsokuLanguage } from '../../text/kinsoku';
@@ -203,6 +204,10 @@ export function adaptDocumentModel(
 					? {
 							partName: image.partName,
 							...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
+							...(() => {
+								const shadow = drawingOuterShadow(image.effects, theme);
+								return shadow ? { shadow } : {};
+							})(),
 							contentType: image.contentType,
 							widthPx: image.widthPx,
 							heightPx: image.heightPx,

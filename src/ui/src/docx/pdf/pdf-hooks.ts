@@ -76,6 +76,8 @@ export class DocxPdfHooks {
 		| undefined;
 	#decorative = 0;
 	readonly #rows: boolean[] = [];
+	readonly #tableStack: { blockId: string; x: number; y: number; height: number; rowIndex: number }[] = [];
+	readonly #transforms: ((x: number, y: number) => [number, number])[] = [];
 
 	constructor(
 		readonly model: DocumentModel,
@@ -115,11 +117,37 @@ export class DocxPdfHooks {
 
 	/** A point of the page (CSS pixels, y down) in PDF points (y up), on the shrunk page if any. */
 	#point(x: number, y: number): [number, number] {
+		let px = x;
+		let py = y;
+		for (let index = this.#transforms.length - 1; index >= 0; index--) {
+			[px, py] = this.#transforms[index]!(px, py);
+		}
 		const scale = this.#frame?.scale ?? 1;
 		return [
-			x * PT_PER_PX * scale,
-			(this.#frame?.offsetYPt ?? 0) + ((this.#layout?.heightPx ?? 0) - y) * PT_PER_PX * scale,
+			px * PT_PER_PX * scale,
+			(this.#frame?.offsetYPt ?? 0) + ((this.#layout?.heightPx ?? 0) - py) * PT_PER_PX * scale,
 		];
+	}
+
+	/** Runs `paint` with a local-to-parent pixel coordinate transform (for text boxes). */
+	withTransform(map: (x: number, y: number) => [number, number], paint: () => void): void {
+		this.#transforms.push(map);
+		try {
+			paint();
+		} finally {
+			this.#transforms.pop();
+		}
+	}
+
+	/** Tags a text box's blocks inside a `Div` container when tagging is active. */
+	textBox(paint: () => void): void {
+		const active = this.tagger.active;
+		if (active) this.tagger.open('Div');
+		try {
+			paint();
+		} finally {
+			if (active) this.tagger.end();
+		}
 	}
 
 	/** Borders, shading and rules: not part of the text. */
@@ -267,22 +295,39 @@ export class DocxPdfHooks {
 	}
 
 	/** A table; `withText` false is a decorative nested frame (its text is in its cell). */
-	beginTable(blockId: string, withText: boolean): void {
+	beginTable(blockId: string, withText: boolean, x = 0, y = 0, height = 0): void {
 		if (!withText || this.#decorative) {
 			this.#decorative++;
 			this.tagger.artifact();
 			return;
 		}
+		this.#tableStack.push({ blockId, x, y, height, rowIndex: -1 });
+		if (this.markup && this.options.balloons?.table(blockId, { x, top: y, height: Math.max(12, height) }))
+			this.#bars.add(y, Math.max(12, height));
 		this.tagger.open('Table', blockId);
 	}
 
 	endTable(): void {
 		if (this.#decorative) this.#decorative--;
-		else this.tagger.end();
+		else {
+			const table = this.#tableStack.pop();
+			if (table && this.markup) {
+				const endY = table.y + table.height;
+				if (this.options.balloons?.section(table.blockId, { x: table.x, top: endY, height: 12 }))
+					this.#bars.add(endY, 12);
+			}
+			this.tagger.end();
+		}
 	}
 
-	beginRow(row: LayoutTableRowBox): void {
+	beginRow(row: LayoutTableRowBox, rowIndex = 0, y = 0): void {
 		if (this.#decorative) return;
+		const table = this.#tableStack.at(-1);
+		if (table) {
+			table.rowIndex = rowIndex;
+			if (!row.repeated && this.markup && this.options.balloons?.row(table.blockId, rowIndex, { x: table.x, top: y, height: Math.max(12, row.heightPx) }))
+				this.#bars.add(y, Math.max(12, row.heightPx));
+		}
 		// A heading row repeated on a later page is pagination, as Word tags it.
 		this.#rows.push(row.repeated);
 		if (row.repeated) this.tagger.suspend();
@@ -295,8 +340,18 @@ export class DocxPdfHooks {
 		else this.tagger.end();
 	}
 
-	beginCell(): void {
-		if (!this.#decorative) this.tagger.open('TD');
+	beginCell(cellIndex?: number, x = 0, y = 0, height = 12): void {
+		if (this.#decorative) return;
+		const table = this.#tableStack.at(-1);
+		if (
+			table &&
+			cellIndex !== undefined &&
+			!this.#rows.at(-1) &&
+			this.markup &&
+			this.options.balloons?.cell(table.blockId, table.rowIndex, cellIndex, { x, top: y, height: Math.max(12, height) })
+		)
+			this.#bars.add(y, Math.max(12, height));
+		this.tagger.open('TD');
 	}
 
 	endCell(): void {

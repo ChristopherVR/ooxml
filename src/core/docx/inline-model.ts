@@ -44,6 +44,8 @@ export interface InlineImage {
 	contentType: string;
 	/** Shared source-backed crop, placement and ordered picture effects. */
 	pictureFill?: Extract<import('../drawingml/types').DrawingFill, { kind: 'picture' }>;
+	/** DrawingML effect list (`pic:spPr/a:effectLst`), e.g. picture drop shadows. */
+	effects?: import('../drawingml/effect-model').DrawingEffectList;
 	/** An SVG original (`asvg:svgBlip`) shown instead of the raster `partName`, which is its PNG fallback. */
 	svgPartName?: string;
 	/** Display size in CSS pixels (96 dpi), derived from the drawing extent in EMU (may be fractional). */
@@ -88,6 +90,10 @@ export interface WatermarkSpec {
 	/** Drawn at half opacity. */
 	semitransparent: boolean;
 	layout: 'diagonal' | 'horizontal';
+	/** Shape width in points (from VML `style`), when read from a document. */
+	widthPt?: number;
+	/** Shape height in points (from VML `style`), when read from a document. */
+	heightPt?: number;
 }
 /**
  * A Word picture watermark: a VML picture centred on the margins behind the text of every page,

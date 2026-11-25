@@ -1,5 +1,6 @@
 import type { Paragraph, TextRun, ThemeCatalog } from '../index';
 import { docxChartPaint } from '../chart-paint';
+import { drawingOuterShadow } from '../shape-svg';
 import { shapePaint } from './shape-paint';
 import type { LayoutFloat } from './input';
 import { reviewSourceLength } from './review-display';
@@ -29,6 +30,7 @@ export function paragraphFloats(
 		if (hidden?.(run) || !image?.anchored || (!image.partName && !image.shape && !image.chart))
 			continue;
 		const placement = image.placement;
+		const shadow = drawingOuterShadow(image.effects, theme);
 		floats.push({
 			index: floats.length,
 			sourceOffset: offset,
@@ -39,6 +41,7 @@ export function paragraphFloats(
 				: {}),
 			partName: image.partName,
 			...(image.pictureFill ? { pictureFill: image.pictureFill } : {}),
+			...(shadow ? { shadow } : {}),
 			contentType: image.contentType,
 			widthPx: image.widthPx,
 			heightPx: image.heightPx,

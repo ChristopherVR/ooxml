@@ -43,12 +43,16 @@ export function parseWatermarkShape(shape: XmlElement | undefined): InlineImage 
 	const width = /width:\s*([\d.]+)pt/i.exec(style);
 	const height = /height:\s*([\d.]+)pt/i.exec(style);
 	const rotation = /rotation:\s*(-?[\d.]+)/i.exec(style);
+	const widthPt = width ? Number(width[1]) : undefined;
+	const heightPt = height ? Number(height[1]) : undefined;
 	const spec: WatermarkSpec = {
 		text: path.getAttribute('string') ?? '',
 		color: colorOf(shape.getAttribute('fillcolor')),
 		semitransparent: opacity !== null && opacity !== '' && opacity !== '1',
 		layout: rotation && Math.abs(Number(rotation[1]) % 360) > 1 ? 'diagonal' : 'horizontal',
 		...(family ? { fontFamily: family.trim() } : {}),
+		...(widthPt && widthPt > 0 ? { widthPt } : {}),
+		...(heightPt && heightPt > 0 ? { heightPt } : {}),
 	};
 	return {
 		relId: '',

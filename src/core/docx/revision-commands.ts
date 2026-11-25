@@ -1,12 +1,12 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, DocumentModel, Paragraph } from './model';
+import type { Block, DocumentModel, Paragraph, Revision } from './model';
 import { restoreRunFormatting } from './restore-run-format';
 import { restoreParagraphFormatting } from './restore-paragraph-format';
 import { documentBlockLists } from './document-paragraphs';
 
 export interface RevisionEntry {
 	id: string;
-	kind: 'insert' | 'delete' | 'moveFrom' | 'moveTo' | 'formatChange' | 'paragraphChange';
+	kind: Revision['kind'];
 	author: string;
 	date?: string;
 	paragraphId: string;

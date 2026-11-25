@@ -36,11 +36,16 @@ The level the file declares follows what it contains (`pdfALevel`):
 | Some in standard fonts (not embedded) | PDF/A-2b     | `conformant: false`, the families in `issues`  |
 
 Level U is level B plus a Unicode mapping for every character; every embedded font carries a
-ToUnicode map, so a file that meets B meets U. The export does not declare level A: veraPDF
-passes the tagged corpus against the 2a profile, but level A also asks for things no validator
-can check (a meaningful reading order, alternative text on every figure), and a document without
-alternative text on its pictures would make that claim false. It does not declare PDF/UA either
-(see below).
+ToUnicode map, so a file that meets B meets U. Passing `pdfALevel: 'A'` checks the additional
+PDF/A-2a requirements (structure tags, a document language and alternative text on every figure)
+and declares level A only when all of them are met, otherwise falling back to level U or B and
+listing the unmet requirements in `report.pdfA.issues`.
+
+Passing `pdfUa: true` checks PDF/UA-1 (ISO 14289-1) conformance (structure tags, embedded fonts,
+document title, language and alternative text on every figure). When all requirements are met, it
+writes the PDF/UA-1 identification schema (`pdfuaid:part` = 1) in XMP and sets
+`report.pdfUa.conformant` to `true`; otherwise it omits the claim and lists the issues in
+`report.pdfUa.issues`.
 
 ## Validating with veraPDF
 

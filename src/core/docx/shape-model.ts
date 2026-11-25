@@ -2,7 +2,12 @@
 // A drawing shape (`wps:wsp` with a preset geometry): what the editor draws, edits and writes. The
 // geometry, fill and outline are the format-neutral DrawingML types, so the same readers and
 // writers serve every format.
-import type { DrawingColor, DrawingFill, DrawingLine } from '../drawingml/index';
+import type {
+	DrawingColor,
+	DrawingEffectList,
+	DrawingFill,
+	DrawingLine,
+} from '../drawingml/index';
 
 export interface ShapeSpec {
 	/** `a:prstGeom/@prst`, e.g. `rect`, `roundRect`, `rightArrow`, `line`. */
@@ -15,6 +20,8 @@ export interface ShapeSpec {
 	fill?: DrawingFill;
 	/** `spPr/a:ln`. Undefined takes the shape style's outline (a darker accent). */
 	line?: DrawingLine;
+	/** `spPr/a:effectLst` (outer shadows and other DrawingML effects). */
+	effects?: DrawingEffectList;
 	/** `wps:style/a:fontRef` colour: the colour of the shape's text where its runs set none. */
 	fontColor?: DrawingColor;
 	/** Paragraphs of text inside the shape (`wps:txbx`). */

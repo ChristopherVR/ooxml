@@ -319,3 +319,10 @@ export function describeParagraphFormatChange(
 /** The balloon text Word shows: `Formatted: <items>`, or `Formatted` alone. */
 export const formatChangeText = (items: readonly string[]): string =>
 	items.length ? `Formatted: ${items.join(', ')}` : 'Formatted';
+
+export {
+	describeCellFormatChange,
+	describeRowFormatChange,
+	describeSectionFormatChange,
+	describeTableFormatChange,
+} from './structure-change-description';

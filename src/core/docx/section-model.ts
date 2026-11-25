@@ -98,6 +98,8 @@ export interface SectionProperties {
 	pageBorders?: PageBorders;
 	headers?: HeaderFooterSlots;
 	footers?: HeaderFooterSlots;
+	/** `w:sectPr/w:sectPrChange`: a tracked section-property change. */
+	formatRevision?: import('./model-run').Revision;
 }
 /** One footnote or endnote body, parsed with the same paragraph/table parser as the body. */
 export interface Note {

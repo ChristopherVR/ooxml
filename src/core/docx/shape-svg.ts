@@ -4,10 +4,11 @@
 import {
 	drawingColorCss,
 	resolveDrawingColor,
+	resolveDrawingOuterShadow,
 	parseCustomGeometry,
 	drawingPathData,
 } from '../drawingml/index';
-import type { DrawingColor, DrawingFill } from '../drawingml/index';
+import type { DrawingColor, DrawingEffectList, DrawingFill, DrawingSvgShadow } from '../drawingml/index';
 import { evaluatePresetShape, lookupPresetShape } from '../geometry/preset-shape-evaluator';
 import { normalizeHexColor } from '../color/color-primitives';
 import { diagramColorTheme } from './diagram-theme';
@@ -108,6 +109,17 @@ export function wrapShapeText(lines: readonly string[], widthPx: number): string
 	});
 }
 
+/** Resolves the first outer shadow in a DrawingML effect list to pixel geometry. */
+export function drawingOuterShadow(
+	effects: DrawingEffectList | undefined,
+	theme?: ThemeCatalog,
+): DrawingSvgShadow | undefined {
+	const outerShadow = effects?.effects.find((effect) => effect.kind === 'outerShadow');
+	return outerShadow?.kind === 'outerShadow'
+		? resolveDrawingOuterShadow(outerShadow, diagramColorTheme(theme))
+		: undefined;
+}
+
 /** Standalone `<svg>` for the shape at the given size, or undefined for an unknown preset. */
 export function shapeSvg(
 	spec: ShapeSpec,
@@ -155,7 +167,27 @@ export function shapeSvg(
 	]
 		.filter(Boolean)
 		.join(' ');
-	const group = appendSvg(svg, 'g', transform ? { transform } : {});
+	const shadow = drawingOuterShadow(spec.effects, theme);
+	if (shadow) {
+		const filter = appendSvg(appendSvg(svg, 'defs'), 'filter', {
+			id: 'shape-shadow',
+			x: '-50%',
+			y: '-50%',
+			width: '200%',
+			height: '200%',
+		});
+		appendSvg(filter, 'feDropShadow', {
+			dx: round(shadow.dx),
+			dy: round(shadow.dy),
+			stdDeviation: round(shadow.blur / 2),
+			'flood-color': shadow.color,
+			'flood-opacity': round(shadow.opacity),
+		});
+	}
+	const group = appendSvg(svg, 'g', {
+		...(transform ? { transform } : {}),
+		...(shadow ? { filter: 'url(#shape-shadow)' } : {}),
+	});
 	const look = shapeAppearance(spec, theme);
 	for (const path of geometry.paths) {
 		appendSvg(group, 'path', {

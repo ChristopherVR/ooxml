@@ -48,21 +48,28 @@ const xml = (text: string) =>
 		.replace(/"/g, '&quot;');
 
 /**
- * The PDF/A conformance level a file can declare: `U` (ISO 19005-2 level U: every character
- * maps to Unicode) when all its text is in embedded fonts, which always carry a ToUnicode map;
- * else `B`. A file with unembedded standard fonts meets neither (`pdf-report` says so).
+ * The PDF/A conformance level a file can declare: `A` (ISO 19005-2 level A: tagged structure,
+ * language and figure alternative text in addition to level U), `U` (every character maps to
+ * Unicode via embedded fonts), else `B`. A file with unembedded standard fonts meets none
+ * (`pdf-report` says so).
  */
-export type PdfALevel = 'B' | 'U';
+export type PdfALevel = 'A' | 'B' | 'U';
 export const pdfALevel = (pages: readonly { fonts: ReadonlyMap<string, string> }[]): PdfALevel =>
 	pages.some((page) => page.fonts.size > 0) ? 'B' : 'U';
 
-/** The XMP packet (UTF-8) for a PDF/A-2 file of `level` with these properties. */
+export interface XmpArchiveOptions {
+	pdfA?: PdfALevel;
+	pdfUa?: boolean;
+}
+
+/** The XMP packet (UTF-8) for a PDF/A-2 and/or PDF/UA-1 file with these properties. */
 export function xmpMetadata(
 	info: PdfInfoFields,
 	date: Date,
 	language?: string,
-	level: PdfALevel = 'B',
+	level: PdfALevel | XmpArchiveOptions = 'B',
 ): Uint8Array {
+	const opts: XmpArchiveOptions = typeof level === 'string' ? { pdfA: level } : level;
 	const lang = xml(language || 'x-default');
 	const alt = (value: string) =>
 		`<rdf:Alt><rdf:li xml:lang="x-default">${xml(value)}</rdf:li></rdf:Alt>`;
@@ -75,11 +82,26 @@ export function xmpMetadata(
 		language ? `<dc:language><rdf:Bag><rdf:li>${lang}</rdf:li></rdf:Bag></dc:language>` : '',
 		info.keywords ? `<pdf:Keywords>${xml(info.keywords)}</pdf:Keywords>` : '',
 	].join('');
+	const namespaces = [
+		'xmlns:dc="http://purl.org/dc/elements/1.1/"',
+		'xmlns:pdf="http://ns.adobe.com/pdf/1.3/"',
+		'xmlns:xmp="http://ns.adobe.com/xap/1.0/"',
+		...(opts.pdfA ? ['xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/"'] : []),
+		...(opts.pdfUa ? ['xmlns:pdfuaid="http://www.aiim.org/pdfua/ns/id/"'] : []),
+	].join(' ');
+	const ids = [
+		opts.pdfA
+			? `<pdfaid:part>2</pdfaid:part><pdfaid:conformance>${opts.pdfA}</pdfaid:conformance>`
+			: '',
+		opts.pdfUa ? '<pdfuaid:part>1</pdfuaid:part>' : '',
+	]
+		.filter(Boolean)
+		.join('\n');
 	const packet = `<?xpacket begin="\ufeff" id="W5M0MpCehiHzreSzNTczkc9d"?>
 <x:xmpmeta xmlns:x="adobe:ns:meta/">
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:pdf="http://ns.adobe.com/pdf/1.3/" xmlns:xmp="http://ns.adobe.com/xap/1.0/" xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/">
-<pdfaid:part>2</pdfaid:part><pdfaid:conformance>${level}</pdfaid:conformance>
+<rdf:Description rdf:about="" ${namespaces}>
+${ids}
 <pdf:Producer>${PDF_PRODUCER}</pdf:Producer>
 <xmp:CreateDate>${xmpDate(date)}</xmp:CreateDate><xmp:ModifyDate>${xmpDate(date)}</xmp:ModifyDate><xmp:MetadataDate>${xmpDate(date)}</xmp:MetadataDate>
 ${properties}
@@ -91,31 +113,36 @@ ${properties}
 }
 
 /**
- * Writes the metadata stream and the sRGB output intent; returns the catalog entries that name
- * them. The metadata stream is not compressed, so tools that scan for XMP find it.
+ * Writes the metadata stream (and, for PDF/A, the sRGB output intent); returns the catalog entries
+ * that name them. The metadata stream is not compressed, so tools that scan for XMP find it.
  */
 export function writeArchiveObjects(
 	sink: PdfObjectSink,
 	info: PdfInfoFields,
 	date: Date,
 	language?: string,
-	level: PdfALevel = 'B',
+	level: PdfALevel | XmpArchiveOptions = 'B',
 ): string {
+	const opts: XmpArchiveOptions = typeof level === 'string' ? { pdfA: level } : level;
 	const metadata = sink.allocate();
 	sink.stream(
 		metadata,
 		'/Type /Metadata /Subtype /XML',
-		xmpMetadata(info, date, language, level),
+		xmpMetadata(info, date, language, opts),
 		true,
 	);
-	const profile = sink.allocate();
-	sink.stream(profile, '/N 3 /Alternate /DeviceRGB', srgbIccProfile());
-	const intent = sink.allocate();
-	sink.object(
-		intent,
-		`<< /Type /OutputIntent /S /GTS_PDFA1 /OutputConditionIdentifier (sRGB IEC61966-2.1) /Info (sRGB IEC61966-2.1) /RegistryName (http://www.color.org) /DestOutputProfile ${profile} 0 R >>`,
-	);
-	return ` /Metadata ${metadata} 0 R /OutputIntents [${intent} 0 R]`;
+	let entries = ` /Metadata ${metadata} 0 R`;
+	if (opts.pdfA) {
+		const profile = sink.allocate();
+		sink.stream(profile, '/N 3 /Alternate /DeviceRGB', srgbIccProfile());
+		const intent = sink.allocate();
+		sink.object(
+			intent,
+			`<< /Type /OutputIntent /S /GTS_PDFA1 /OutputConditionIdentifier (sRGB IEC61966-2.1) /Info (sRGB IEC61966-2.1) /RegistryName (http://www.color.org) /DestOutputProfile ${profile} 0 R >>`,
+		);
+		entries += ` /OutputIntents [${intent} 0 R]`;
+	}
+	return entries;
 }
 
 /** The trailer's `/ID` array: two copies of a digest of the file's identity. */

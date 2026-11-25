@@ -22,7 +22,19 @@ export interface Revision {
 	previousRunPropertiesXml?: string;
 	/** Prior `w:pPr` snapshot for an imported paragraph-formatting change. */
 	previousParagraphPropertiesXml?: string;
-	kind: 'insert' | 'delete' | 'moveFrom' | 'moveTo' | 'formatChange' | 'paragraphChange';
+	/** Prior `w:tblPr`, `w:trPr`, `w:tcPr` or `w:sectPr` snapshot for a property change. */
+	previousPropertiesXml?: string;
+	kind:
+		| 'insert'
+		| 'delete'
+		| 'moveFrom'
+		| 'moveTo'
+		| 'formatChange'
+		| 'paragraphChange'
+		| 'tableChange'
+		| 'rowChange'
+		| 'cellChange'
+		| 'sectionChange';
 	/**
 	 * For `moveFrom`/`moveTo`: the move this text belongs to. Both sides share `name` (from
 	 * `w:moveFromRangeStart`/`w:moveToRangeStart`); `rangeId` is that range marker's `w:id`.

@@ -116,6 +116,8 @@ export interface Table {
 	cellMargins?: import('./table-model').TableCellMargins;
 	/** Per-row properties, parallel to `rows` (read from `w:trPr`; preserved on save). */
 	rowProperties?: import('./table-model').TableRowProperties[];
+	/** `w:tblPr/w:tblPrChange`: a tracked table-property formatting change. */
+	formatRevision?: import('./model-run').Revision;
 }
 export type Block = Paragraph | Table;
 export interface DocumentModel {

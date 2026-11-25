@@ -1,4 +1,5 @@
 import { svgPictureRelationship } from '../drawingml/svg-picture';
+import { parseDrawingEffects } from '../drawingml/drawing-effects';
 import { parseDrawingPictureFill } from '../drawingml/picture-fill';
 import { imageContentType as guessContentType } from '../drawingml/image-content-type';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
@@ -182,18 +183,23 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	const picture = uri === PICTURE_GRAPHIC_URI && relId ? resolvePicture(relId, context) : undefined;
 	const svgRelId = svgPictureRelationship(blip);
 	const svg = picture && svgRelId ? resolvePicture(svgRelId, context) : undefined;
-	if (picture)
+	if (picture) {
+		const pic = descendantNS(graphicData, PICTURE_GRAPHIC_URI, 'pic');
+		const picSpPr = firstNS(pic, PICTURE_GRAPHIC_URI, 'spPr');
+		const effects = parseDrawingEffects(firstNS(picSpPr, A_NS, 'effectLst'));
 		return {
 			...picture,
 			...(blip?.parentNode
 				? { pictureFill: parseDrawingPictureFill(blip.parentNode as XmlElement) }
 				: {}),
+			...(effects ? { effects } : {}),
 			widthPx,
 			heightPx,
 			...definedProps({ altText, title, anchored }),
 			...(placement ? { placement } : {}),
 			...(svg ? { svgPartName: svg.partName } : {}),
 		};
+	}
 	if (graphicData && uri === MODEL3D_URI) {
 		const { payload, unsupported, ...preview } = model3dDrawing(graphicData, context);
 		return {

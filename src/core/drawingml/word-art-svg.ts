@@ -2,20 +2,30 @@ import { buildXml } from '../xml/index';
 import { appendSvg, createSvg, setSvgAttributes } from './svg-elements';
 import { WARP_PATH_GENERATORS } from './text-warp-path';
 import { WORD_ART_FONT, type WordArtStyle } from './word-art';
-import { wordArtLayout, wordArtShadowGeometry } from './word-art-layout';
+import { wordArtGlowGeometry, wordArtLayout, wordArtShadowGeometry } from './word-art-layout';
 
 export function wordArtTransforms(): string[] {
 	return ['textNoShape', ...Object.keys(WARP_PATH_GENERATORS)];
 }
 
-/** The same outer shadow in the style picker, worksheet drawing and document. */
+/** The same outer shadow (and glow, if any) in the style picker, worksheet drawing and document. */
 export function wordArtCssShadow(style: WordArtStyle, scale = 1): string | undefined {
+	const parts: string[] = [];
+	const glow = wordArtGlowGeometry(style, scale);
+	if (glow) {
+		const alpha = Math.round(glow.opacity * 255)
+			.toString(16)
+			.padStart(2, '0');
+		parts.push(`0px 0px ${glow.radius}px #${glow.color}${alpha}`);
+	}
 	const shadow = wordArtShadowGeometry(style, scale);
-	if (!shadow) return undefined;
-	const alpha = Math.round(shadow.opacity * 255)
-		.toString(16)
-		.padStart(2, '0');
-	return `${shadow.dx}px ${shadow.dy}px ${shadow.blur}px #${shadow.color}${alpha}`;
+	if (shadow) {
+		const alpha = Math.round(shadow.opacity * 255)
+			.toString(16)
+			.padStart(2, '0');
+		parts.push(`${shadow.dx}px ${shadow.dy}px ${shadow.blur}px #${shadow.color}${alpha}`);
+	}
+	return parts.length ? parts.join(' ') : undefined;
 }
 
 export interface WordArtSvgOptions {
@@ -37,7 +47,6 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 	const layout = wordArtLayout(options);
 	if (!layout) return '';
 	const id = options.id.replace(/[^A-Za-z0-9_-]/g, '_');
-	const shadow = wordArtCssShadow(style, scale);
 	const { gradient, fill, outline, size } = layout;
 	const gradientId = `${id}-gradient`;
 	const svg = createSvg();
@@ -77,7 +86,22 @@ export function renderWordArtSvg(options: WordArtSvgOptions): string {
 			'paint-order': 'stroke fill',
 		});
 	}
-	if (shadow) group.setAttribute('style', `filter:drop-shadow(${shadow})`);
+	const filters: string[] = [];
+	if (layout.glow) {
+		const alpha = Math.round(layout.glow.opacity * 255)
+			.toString(16)
+			.padStart(2, '0');
+		filters.push(`drop-shadow(0px 0px ${layout.glow.radius}px #${layout.glow.color}${alpha})`);
+	}
+	if (layout.shadow) {
+		const alpha = Math.round(layout.shadow.opacity * 255)
+			.toString(16)
+			.padStart(2, '0');
+		filters.push(
+			`drop-shadow(${layout.shadow.dx}px ${layout.shadow.dy}px ${layout.shadow.blur}px #${layout.shadow.color}${alpha})`,
+		);
+	}
+	if (filters.length) group.setAttribute('style', `filter:${filters.join(' ')}`);
 	layout.lines.forEach((line, index) => {
 		if (line.kind === 'straight') {
 			appendSvg(group, 'text', { x: line.x, y: line.y }).textContent = line.text;

@@ -118,6 +118,7 @@ export {
 export * from './review-formatting-display';
 export * from './review-document-formatting';
 export * from './format-change-description';
+export { watermarkSizePt } from './watermark';
 export {
 	autoCorrectTextInput,
 	type AutoCorrectAction,

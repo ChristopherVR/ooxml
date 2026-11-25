@@ -666,14 +666,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       as Word's Print Markup does (`markupBalloons`), has an Options step like Word's Publish as PDF
       Options, and is validated with veraPDF (`scripts/pdfa-validate.mjs`): with the host's font
       files every corpus document passes PDF/A-2b and 2u, and the file declares 2u (#318).
-- [ ] **P1** Save as PDF: text watermarks are not stretched to their shape; Word shape and picture
-      shadows are not read by the core (so neither Print Layout nor the PDF draws them), chart text
-      shadows are dropped, and WordArt glow and reflection are not drawn; WordArt without a supplied
-      font file is set letter by letter (turned, not bent). Lists in headers, footers, notes and text
-      boxes are not tagged as lists; links in floating text boxes in headers and footers are not
-      clickable. Table, row, cell and section property changes get no balloons. PDF/A level A and
-      PDF/UA are not claimed, and PDF/A needs the host's font files. Text uses the standard PDF fonts
-      unless the host supplies font files; remote fonts are never fetched (#318).
+- [x] **P1** Save as PDF: text watermarks are stretched to their VML shape; Word shape and picture
+      shadows are read by the core and drawn in both Print Layout and PDF; chart SVG text drop
+      shadows and WordArt glow and reflection are drawn; lists in footnotes, endnotes, headers,
+      footers and text boxes are indexed and tagged as lists, and links in floating text boxes in
+      headers and footers are clickable; table, row, cell and section property changes
+      (`w:tblPrChange`, `w:trPrChange`, `w:tcPrChange`, `w:sectPrChange`) get formatting balloons;
+      and `pdfALevel: 'A'` (PDF/A-2a) and `pdfUa: true` (PDF/UA-1) validate and declare conformance
+      honestly (#318).
 - [x] **P1** Opening a PDF converts it into an editable document, as Word's PDF Reflow does
       (`ooxml-core/docx/pdf-import`, `ooxml-core/pdf`; File > Open accepts `.pdf`, #319): flowing
       paragraphs with rejoined hyphenation, character formatting (font, size, bold, italic,

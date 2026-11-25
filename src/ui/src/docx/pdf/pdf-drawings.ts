@@ -9,7 +9,12 @@
  * `pdf-text-effects.ts`.
  */
 import type { LayoutBlockBox } from 'ooxml-core/docx/layout';
-import { wordArtRgb, wordArtShadowGeometry } from 'ooxml-core/drawingml';
+import {
+	wordArtGlowGeometry,
+	wordArtReflectionGeometry,
+	wordArtRgb,
+	wordArtShadowGeometry,
+} from 'ooxml-core/drawingml';
 import { collectSvgImages, drawSvgSubtree } from '../../export/pdf-svg';
 import { descendantElements, parseSvgMarkup } from '../../export/pdf-svg-dom';
 import { PDF_SVG_NOTES } from '../../export/pdf-svg-notes';
@@ -17,11 +22,17 @@ import { PdfFallback } from '../../export/pdf-svg-style';
 import { viewBoxMatrix } from '../../export/pdf-svg-viewbox';
 import { PdfVectorPage, type PdfImageResource } from '../../export/pdf-vector';
 import { paintBlock } from './pdf-blocks';
+import type { DocxPdfHooks } from './pdf-hooks';
 import { blockPictures } from './pdf-objects';
 import type { DocxPdfPicture, DocxPdfPictures } from './pdf-pictures';
 import type { DocxPdfReportBuilder } from './pdf-report';
 import type { DocxPdfText } from './pdf-text';
-import { DocxPdfOutlineText, paintTextShadow } from './pdf-text-effects';
+import {
+	DocxPdfOutlineText,
+	paintTextGlow,
+	paintTextReflection,
+	paintTextShadow,
+} from './pdf-text-effects';
 import { isDrawnAsWordArt, paintWordArt } from './pdf-word-art';
 
 interface PreparedSvg {
@@ -63,6 +74,8 @@ export function withTextColor(blocks: readonly LayoutBlockBox[], color: string |
 export class DocxPdfDrawings {
 	/** Parsed SVG by its markup, or why it cannot be written as vectors. */
 	readonly #svgs = new Map<string, PreparedSvg | string>();
+	/** Set by `exportDocxPdf` so text boxes tag lists and make links clickable. */
+	hooks: DocxPdfHooks | undefined;
 	constructor(
 		readonly pictures: DocxPdfPictures,
 		readonly text: DocxPdfText,
@@ -162,16 +175,29 @@ export class DocxPdfDrawings {
 		const { frame, rotation } = layout;
 		const length = rotation ? frame.heightPx : frame.widthPx;
 		const depth = rotation ? frame.widthPx : frame.heightPx;
+		const ox = x + frame.xPx;
+		const oy = y + frame.yPx;
+		const mapPoint = (lx: number, ly: number): [number, number] => {
+			if (rotation === 90) return [ox + depth - ly, oy + lx];
+			if (rotation === 270) return [ox + ly, oy + length - lx];
+			return [ox + lx, oy + ly];
+		};
+		const hooks = this.hooks;
+		hooks?.close();
 		page.save();
-		page.rect(x + frame.xPx, y + frame.yPx, frame.widthPx, frame.heightPx);
+		page.rect(ox, oy, frame.widthPx, frame.heightPx);
 		page.op('W n');
-		page.concat([1, 0, 0, 1, x + frame.xPx, y + frame.yPx]);
+		page.concat([1, 0, 0, 1, ox, oy]);
 		// Turned about the frame's top-left: `vert` puts the first line at the right, `vert270` left.
 		if (rotation === 90) page.concat([0, 1, -1, 0, depth, 0]);
 		if (rotation === 270) page.concat([0, -1, 1, 0, 0, length]);
 		const blocks = withTextColor(layout.blocks, object.chart?.textColor);
-		// WordArt outline and shadow on the lines, as `paintWordArtEffects` paints them.
+		// WordArt outline, glow, reflection and shadow on the lines, as `paintWordArtEffects` paints them.
 		const style = object.textBox?.wordArt;
+		const reflection = style && wordArtReflectionGeometry(style);
+		if (reflection) paintTextReflection(page, this.text, this.pictures, blocks, reflection);
+		const glow = style && wordArtGlowGeometry(style);
+		if (glow) paintTextGlow(page, this.text, this.pictures, blocks, glow);
 		const shadow = style && wordArtShadowGeometry(style);
 		if (shadow) paintTextShadow(page, this.text, this.pictures, blocks, shadow);
 		// `-webkit-text-stroke: 1px`.
@@ -179,8 +205,13 @@ export class DocxPdfDrawings {
 		const text = outline
 			? new DocxPdfOutlineText(this.text, { color: outline, width: 1 })
 			: this.text;
-		const painter = { page, text, pictures: this.pictures };
-		for (const block of blocks) paintBlock(painter, block, 0, 0);
+		const painter = { page, text, pictures: this.pictures, ...(hooks ? { hooks } : {}) };
+		const paint = () => {
+			for (const block of blocks) paintBlock(painter, block, 0, 0);
+		};
+		if (hooks) hooks.withTransform(mapPoint, () => hooks.textBox(paint));
+		else paint();
+		hooks?.close();
 		page.restore();
 	}
 }

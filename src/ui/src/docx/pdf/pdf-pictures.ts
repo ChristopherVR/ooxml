@@ -6,9 +6,12 @@
  */
 import { decodePng, jpegComponents, inspectRasterImage } from 'ooxml-core/drawingml';
 import type { LayoutObject } from 'ooxml-core/docx/layout';
+import { drawBlurredSilhouette } from '../../export/pdf-blur-mask';
+import { parsePath } from '../../export/pdf-path';
 import type { PdfImageResource, PdfVectorPage } from '../../export/pdf-vector';
 import type { DocxPdfDrawings } from './pdf-drawings';
 import type { DocxPdfReportBuilder } from './pdf-report';
+import { cssRgba } from './pdf-text';
 
 /** RGBA pixels a host decoder returns for a picture format the export cannot read itself. */
 export interface DecodedPicture {
@@ -35,6 +38,7 @@ export type DocxPdfPicture = Pick<
 	| 'widthPx'
 	| 'heightPx'
 	| 'pictureFill'
+	| 'shadow'
 	| 'chart'
 	| 'textBox'
 	| 'textBoxLayout'
@@ -147,6 +151,24 @@ export class DocxPdfPictures {
 				`Picture ${picture.partName} (${picture.contentType}) could not be read.`,
 			);
 			return;
+		}
+		if (picture.shadow) {
+			const color = cssRgba(picture.shadow.color) ?? { r: 0, g: 0, b: 0, a: 1 };
+			const segments = parsePath(`M 0 0 L ${width} 0 L ${width} ${height} L 0 ${height} Z`);
+			if (segments)
+				drawBlurredSilhouette(
+					page,
+					[
+						{
+							segments,
+							fill: 'nonzero',
+							matrix: [1, 0, 0, 1, x + picture.shadow.dx, y + picture.shadow.dy],
+						},
+					],
+					picture.shadow.blur / 2,
+					color,
+					picture.shadow.opacity,
+				);
 		}
 		const crop = picture.pictureFill?.crop ?? {};
 		const left = crop.cropLeft ?? 0;

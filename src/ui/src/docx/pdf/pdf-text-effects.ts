@@ -6,7 +6,11 @@
  * faint offset copies, marked with an empty `ActualText` so the copies do not extract. DOM-free.
  */
 import type { LayoutBlockBox, LayoutFragment, LayoutLine } from 'ooxml-core/docx/layout';
-import type { WordArtShadowGeometry } from 'ooxml-core/drawingml';
+import type {
+	WordArtGlowGeometry,
+	WordArtReflectionGeometry,
+	WordArtShadowGeometry,
+} from 'ooxml-core/drawingml';
 import { drawBlurredSilhouette, type SilhouettePart } from '../../export/pdf-blur-mask';
 import type { PdfCidFont } from '../../export/pdf-cid-font';
 import { PdfEmbeddedFont } from '../../export/pdf-embedded-font';
@@ -131,6 +135,69 @@ export function paintTextShadow(
 			page.text(run.font, run.size, run.x + dx, run.y + dy, run.text, run.spacing);
 	});
 	return true;
+}
+
+/**
+ * Paints the glow of the text `blocks` draw (in the current space) beneath them.
+ */
+export function paintTextGlow(
+	page: PdfVectorPage,
+	text: DocxPdfText,
+	pictures: DocxPdfPictures,
+	blocks: readonly LayoutBlockBox[],
+	glow: WordArtGlowGeometry,
+): boolean {
+	return paintTextShadow(page, text, pictures, blocks, {
+		color: glow.color,
+		dx: 0,
+		dy: 0,
+		blur: glow.radius,
+		opacity: glow.opacity,
+	});
+}
+
+/**
+ * Paints a vertically flipped, fading reflection of the text `blocks` draw beneath them.
+ * Marked with an empty `ActualText` so reflected text never extracts.
+ */
+export function paintTextReflection(
+	page: PdfVectorPage,
+	text: DocxPdfText,
+	pictures: DocxPdfPictures,
+	blocks: readonly LayoutBlockBox[],
+	reflection: WordArtReflectionGeometry,
+): void {
+	const recorder = new TextRecorder();
+	const painter = { page: recorder, text, pictures };
+	for (const block of blocks) paintBlock(painter, block, 0, 0);
+	if (!recorder.runs.length) return;
+	const maxY = Math.max(...recorder.runs.map((run) => run.y));
+	const minY = Math.min(...recorder.runs.map((run) => run.y - run.size));
+	const span = Math.max(1, maxY - minY);
+	const axisY = maxY + reflection.distance / 2;
+	const bands = 4;
+	page.op('/Span <</ActualText ()>> BDC');
+	for (let band = 0; band < bands; band++) {
+		const t0 = band / bands;
+		const t1 = (band + 1) / bands;
+		const alpha =
+			reflection.startOpacity + (reflection.endOpacity - reflection.startOpacity) * ((t0 + t1) / 2);
+		if (alpha <= 0.005) continue;
+		const top = maxY + reflection.distance + t0 * span * Math.abs(reflection.scaleY);
+		const height = (t1 - t0) * span * Math.abs(reflection.scaleY);
+		page.save();
+		page.rect(-1e5, top, 2e5, height + 0.5);
+		page.op('W n');
+		page.alpha(alpha);
+		page.concat([1, 0, 0, reflection.scaleY, 0, axisY * (1 - reflection.scaleY)]);
+		for (const run of recorder.runs) {
+			if (run.kind === 'embedded')
+				page.embeddedText(run.font, run.size, run.x, run.y, run.text, run.spacing);
+			else page.text(run.font, run.size, run.x, run.y, run.text, run.spacing);
+		}
+		page.restore();
+	}
+	page.endMarked();
 }
 
 /** Text drawn with an outline: fill, then a stroke of `width` in `color` (render mode 2). */

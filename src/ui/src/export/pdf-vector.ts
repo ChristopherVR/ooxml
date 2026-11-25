@@ -253,7 +253,11 @@ export interface PdfVectorOptions {
 	 * level U (`pdfALevel`), else B.
 	 */
 	pdfA?: boolean;
-	/** Creation date written with `pdfA`; now by default. */
+	/** Explicit PDF/A-2 conformance level (`A`, `U` or `B`) to declare in XMP. */
+	pdfALevel?: import('./pdf-archive').PdfALevel;
+	/** Writes PDF/UA-1 identification (`pdfuaid:part` = 1) in XMP metadata. */
+	pdfUa?: boolean;
+	/** Creation date written with `pdfA` or `pdfUa`; now by default. */
 	date?: Date;
 }
 
@@ -450,8 +454,13 @@ export function buildVectorPdf(
 		catalog += ` /MarkInfo << /Marked true >> /StructTreeRoot ${writeStructTree(structure, sink, pageKeys, annotationIds, nextKey)} 0 R`;
 	if (options.title) catalog += ' /ViewerPreferences << /DisplayDocTitle true >>';
 	const date = options.date ?? new Date();
-	if (options.pdfA)
-		catalog += writeArchiveObjects(sink, options, date, options.language, pdfALevel(pages));
+	if (options.pdfA || options.pdfUa) {
+		const archiveLevel = options.pdfA ? (options.pdfALevel ?? pdfALevel(pages)) : undefined;
+		catalog += writeArchiveObjects(sink, options, date, options.language, {
+			...(archiveLevel ? { pdfA: archiveLevel } : {}),
+			...(options.pdfUa ? { pdfUa: true } : {}),
+		});
+	}
 	const language =
 		options.language && /^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$/.test(options.language)
 			? ` /Lang ${pdfLiteral(options.language)}`
@@ -468,10 +477,14 @@ export function buildVectorPdf(
 				` /${key[0]!.toUpperCase()}${key.slice(1)} ${pdfTextString(infoText(options[key]!))}`,
 		)
 		.join('');
-	object(3, `<< /Producer (${PDF_PRODUCER})${info}${options.pdfA ? infoDates(date) : ''} >>`);
-	const id = options.pdfA
-		? ` /ID ${fileIdentifier(`${date.toISOString()}\u0000${position}\u0000${info}\u0000${pages.length}`)}`
-		: '';
+	object(
+		3,
+		`<< /Producer (${PDF_PRODUCER})${info}${options.pdfA || options.pdfUa ? infoDates(date) : ''} >>`,
+	);
+	const id =
+		options.pdfA || options.pdfUa
+			? ` /ID ${fileIdentifier(`${date.toISOString()}\u0000${position}\u0000${info}\u0000${pages.length}`)}`
+			: '';
 	const xref = position;
 	let table = `xref\n0 ${next}\n0000000000 65535 f \n`;
 	for (let id = 1; id < next; id++)

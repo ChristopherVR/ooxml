@@ -216,6 +216,7 @@ export function floatBox(
 		heightPx: float.heightPx,
 		partName: float.partName,
 		...(float.pictureFill ? { pictureFill: float.pictureFill } : {}),
+		...(float.shadow ? { shadow: float.shadow } : {}),
 		contentType: float.contentType,
 		...(float.chart ? { chart: float.chart } : {}),
 		...(float.textBox ? { textBox: float.textBox } : {}),

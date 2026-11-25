@@ -1,6 +1,7 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
+import { buildXml } from '../xml/index';
 import type { NestedTablePreview, TableCell, TableLook, TableRowProperties } from './table-model';
-import type { Paragraph, Table } from './model';
+import type { Paragraph, Revision, Table } from './model';
 import { children, first, getW, type XmlElement, WORD_NS } from './xml';
 import { canEditTableStructure, canRestructureTable } from './table-structure-check';
 import { tableGrid } from './table-grid';
@@ -86,6 +87,8 @@ function parseCell(
 	if (borders) result.borders = borders;
 	const margins = parseCellMargins(first(props, 'tcMar'));
 	if (margins) result.margins = margins;
+	const cellFormatRevision = parsePropertyChange(props, 'tcPrChange', 'tcPr', 'cellChange');
+	if (cellFormatRevision) result.formatRevision = cellFormatRevision;
 	const nested = children(cell, 'tbl').map(nestedPreview);
 	if (nested.length) result.nestedTables = nested;
 	if (nested.length) {
@@ -132,6 +135,31 @@ function parseLook(element: XmlElement | undefined): TableLook | undefined {
 	return Object.keys(look).length ? look : undefined;
 }
 
+function parsePropertyChange(
+	parent: XmlElement | undefined,
+	changeTag: string,
+	priorTag: string,
+	kind: 'tableChange' | 'rowChange' | 'cellChange',
+): Revision | undefined {
+	const change = first(parent, changeTag);
+	if (!change) return undefined;
+	const author = getW(change, 'author') ?? '';
+	const date = getW(change, 'date');
+	const dateUtc = change.getAttributeNS(
+		'http://schemas.microsoft.com/office/word/2023/wordml/word16du',
+		'dateUtc',
+	);
+	const prior = first(change, priorTag);
+	return {
+		id: getW(change, 'id') ?? '',
+		kind,
+		author,
+		...(date ? { date } : {}),
+		...(dateUtc ? { dateUtc } : {}),
+		...(prior ? { previousPropertiesXml: buildXml(prior) } : {}),
+	};
+}
+
 /** Row height (`w:trHeight`, `auto` rule meaning at least), keep-together and header flags. */
 function parseRowProperties(row: XmlElement): TableRowProperties {
 	const trPr = first(row, 'trPr');
@@ -146,6 +174,8 @@ function parseRowProperties(row: XmlElement): TableRowProperties {
 	if (onOffElement(first(trPr, 'tblHeader'))) result.header = true;
 	const revision = rowRevision(trPr);
 	if (revision) result.revision = revision;
+	const formatRevision = parsePropertyChange(trPr, 'trPrChange', 'trPr', 'rowChange');
+	if (formatRevision) result.formatRevision = formatRevision;
 	return result;
 }
 
@@ -210,6 +240,8 @@ export function parseTable(
 	if (look) table.look = look;
 	const cellMargins = parseCellMargins(first(tblPr, 'tblCellMar'));
 	if (cellMargins) table.cellMargins = cellMargins;
+	const tableFormatRevision = parsePropertyChange(tblPr, 'tblPrChange', 'tblPr', 'tableChange');
+	if (tableFormatRevision) table.formatRevision = tableFormatRevision;
 	const rowProperties = rowEntries.map(({ element, control }) => {
 		const properties = parseRowProperties(element);
 		if (control) properties.contentControl = control;

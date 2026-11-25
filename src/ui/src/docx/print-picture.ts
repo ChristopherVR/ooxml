@@ -1,5 +1,5 @@
 import { pictureNeedsSvg, pictureSvg } from '../picture-view';
-import type { DrawingFill } from 'ooxml-core/drawingml';
+import type { DrawingFill, DrawingSvgShadow } from 'ooxml-core/drawingml';
 import type { DocumentModel, TextBoxContent } from 'ooxml-core/docx';
 import type { TextBoxLayout } from 'ooxml-core/docx/layout';
 import { paintWordArtEffects, textBoxContentElement, wordArtWarpElement } from './story-render';
@@ -69,9 +69,18 @@ function chartElement(chart: { svg?: string; label: string; shape?: true }): HTM
 	return element;
 }
 
+function pictureShadowCss(shadow: DrawingSvgShadow): string {
+	const alpha = Math.round(Math.max(0, Math.min(1, shadow.opacity)) * 255)
+		.toString(16)
+		.padStart(2, '0');
+	const color = shadow.color.startsWith('#') ? shadow.color : `#${shadow.color}`;
+	return `drop-shadow(${shadow.dx}px ${shadow.dy}px ${shadow.blur / 2}px ${color}${alpha})`;
+}
+
 export function pictureElement(
 	object: {
 		pictureFill?: Extract<DrawingFill, { kind: 'picture' }>;
+		shadow?: DrawingSvgShadow;
 		partName: string;
 		contentType: string;
 		widthPx: number;
@@ -127,6 +136,7 @@ export function pictureElement(
 		element.style.position = 'absolute';
 		element.style.width = `${object.widthPx}px`;
 		element.style.height = `${object.heightPx}px`;
+		if (object.shadow) element.style.filter = pictureShadowCss(object.shadow);
 		element.append(pictureSvg(document, object.pictureFill, url, object.widthPx, object.heightPx));
 		return element;
 	}
@@ -139,5 +149,6 @@ export function pictureElement(
 	element.style.position = 'absolute';
 	element.style.width = `${object.widthPx}px`;
 	element.style.height = `${object.heightPx}px`;
+	if (object.shadow) element.style.filter = pictureShadowCss(object.shadow);
 	return element;
 }

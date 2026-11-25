@@ -166,7 +166,9 @@ class Converter {
 			}
 		}
 		// A blurred shadow group is drawn as its soft silhouette; a drop shadow goes beneath.
-		const painted = soft ? paintSvgShadow(this.page, element, soft, opacity) : 'none';
+		const painted = soft
+			? paintSvgShadow(this.page, element, soft, opacity, this.fonts, this.familyOf)
+			: 'none';
 		if (filter && painted === 'none')
 			this.degraded.add(shadow ? 'shadowBlurDropped' : 'filterDropped');
 		if (painted === 'replaced') {

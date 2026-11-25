@@ -6,13 +6,19 @@
  * keeps its size and comments are only PDF notes). DOM-free.
  */
 import {
+	describeCellFormatChange,
 	describeParagraphFormatChange,
+	describeRowFormatChange,
 	describeRunFormatChange,
+	describeSectionFormatChange,
+	describeTableFormatChange,
 	formatChangeText,
 	listRevisions,
 	type DocumentModel,
 	type Paragraph,
 	type Revision,
+	type SectionProperties,
+	type Table,
 	type TextRun,
 } from 'ooxml-core/docx';
 import {
@@ -66,6 +72,8 @@ export class DocxPdfBalloons {
 	readonly #labelFamily: string;
 	readonly #deletions = new Map<string, Deletion[]>();
 	readonly #seen = new Set<string>();
+	readonly #tables = new Map<string, Table>();
+	readonly #sections = new Map<string, SectionProperties>();
 	#items: Balloon[] = [];
 	#pageComments = new Map<string, Balloon>();
 	#paragraph: { paragraph: Paragraph; last: Anchor | undefined; lastEnd: number } | undefined;
@@ -86,13 +94,27 @@ export class DocxPdfBalloons {
 			text: this.#family,
 			label: this.#labelFamily,
 		});
+		let hasStructuralFormatChange = false;
+		for (const block of model.blocks) {
+			if (block.type !== 'table') continue;
+			this.#tables.set(block.id, block);
+			if (block.formatRevision) hasStructuralFormatChange = true;
+			if (block.rowProperties?.some((row) => row.formatRevision)) hasStructuralFormatChange = true;
+			if (block.rows.some((row) => row.some((cell) => cell.formatRevision)))
+				hasStructuralFormatChange = true;
+		}
+		for (const section of model.sections ?? []) {
+			if (section.endsAtBlockId) this.#sections.set(section.endsAtBlockId, section);
+			if (section.formatRevision) hasStructuralFormatChange = true;
+		}
 		const kinds = listRevisions(model).map((entry) => entry.kind);
 		this.active =
 			markup &&
 			mode !== 'none' &&
 			(this.#comments.size > 0 ||
 				(this.formatting &&
-					kinds.some((kind) => kind === 'formatChange' || kind === 'paragraphChange')) ||
+					(hasStructuralFormatChange ||
+						kinds.some((kind) => kind === 'formatChange' || kind === 'paragraphChange'))) ||
 				(this.deletions && kinds.some((kind) => kind === 'delete' || kind === 'moveFrom')));
 	}
 
@@ -199,6 +221,59 @@ export class DocxPdfBalloons {
 			const items = describeParagraphFormatChange(paragraph, this.model);
 			if (items) this.#revision(paragraph.formatRevision, formatChangeText(items), end, 'format');
 		}
+		this.section(paragraph.id, end);
+	}
+
+	/** Emits a table property change balloon (`w:tblPrChange`), returning whether one fired. */
+	table(blockId: string, anchor: Anchor): boolean {
+		if (!this.active || !this.formatting) return false;
+		const table = this.#tables.get(blockId);
+		const key = `${blockId}:table`;
+		if (!table?.formatRevision || this.#seen.has(key)) return false;
+		this.#seen.add(key);
+		const items = describeTableFormatChange(table);
+		if (!items) return false;
+		this.#revision(table.formatRevision, formatChangeText(items), anchor, 'format');
+		return true;
+	}
+
+	/** Emits a row property change balloon (`w:trPrChange`), returning whether one fired. */
+	row(blockId: string, rowIndex: number, anchor: Anchor): boolean {
+		if (!this.active || !this.formatting) return false;
+		const row = this.#tables.get(blockId)?.rowProperties?.[rowIndex];
+		const key = `${blockId}:row:${rowIndex}`;
+		if (!row?.formatRevision || this.#seen.has(key)) return false;
+		this.#seen.add(key);
+		const items = describeRowFormatChange(row);
+		if (!items) return false;
+		this.#revision(row.formatRevision, formatChangeText(items), anchor, 'format');
+		return true;
+	}
+
+	/** Emits a cell property change balloon (`w:tcPrChange`), returning whether one fired. */
+	cell(blockId: string, rowIndex: number, cellIndex: number, anchor: Anchor): boolean {
+		if (!this.active || !this.formatting) return false;
+		const cell = this.#tables.get(blockId)?.rows[rowIndex]?.[cellIndex];
+		const key = `${blockId}:cell:${rowIndex}:${cellIndex}`;
+		if (!cell?.formatRevision || this.#seen.has(key)) return false;
+		this.#seen.add(key);
+		const items = describeCellFormatChange(cell);
+		if (!items) return false;
+		this.#revision(cell.formatRevision, formatChangeText(items), anchor, 'format');
+		return true;
+	}
+
+	/** Emits a section property change balloon (`w:sectPrChange`) at the section's last block. */
+	section(blockId: string, anchor: Anchor): boolean {
+		if (!this.active || !this.formatting) return false;
+		const section = this.#sections.get(blockId);
+		const key = `${blockId}:section`;
+		if (!section?.formatRevision || this.#seen.has(key)) return false;
+		this.#seen.add(key);
+		const items = describeSectionFormatChange(section);
+		if (!items) return false;
+		this.#revision(section.formatRevision, formatChangeText(items), anchor, 'format');
+		return true;
 	}
 
 	/** Moves the comment's PDF note onto its balloon once the balloon is placed. */

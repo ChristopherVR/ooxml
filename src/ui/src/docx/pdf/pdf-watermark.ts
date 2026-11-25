@@ -5,7 +5,7 @@
  * semitransparent; a picture centred on the margins, washed out as Word's Washout does. DOM-free.
  */
 import { fontMetrics, type LayoutPageBox, type TextMeasurer } from 'ooxml-core/docx/layout';
-import type { PictureWatermarkSpec, WatermarkSpec } from 'ooxml-core/docx';
+import { watermarkSizePt, type PictureWatermarkSpec, type WatermarkSpec } from 'ooxml-core/docx';
 import type { PdfImageResource } from '../../export/pdf-vector';
 import type { DocxPdfPainter } from './pdf-blocks';
 import type { DocxPdfStoryGraphics } from './pdf-story-graphics';
@@ -40,23 +40,29 @@ function paintText(
 	page: LayoutPageBox,
 	measurer: TextMeasurer,
 ): void {
-	painter.text.report.note(
-		'Text watermarks are sized from their length as Print Layout shows them, not stretched to the watermark shape as Word does.',
-	);
-	const chars = Math.max(1, [...spec.text].length);
-	const span = Math.min(page.widthPx * (spec.layout === 'diagonal' ? 0.78 : 0.7), 560);
-	const sizePx = Math.max(12, Math.min(220, span / (chars * 0.6)));
+	const shapeSize =
+		spec.widthPt && spec.heightPt
+			? { width: spec.widthPt, height: spec.heightPt }
+			: watermarkSizePt(spec);
+	const targetWidthPx = (shapeSize.width * 4) / 3;
+	const targetHeightPx = (shapeSize.height * 4) / 3;
+	const sizePx = Math.max(12, Math.min(220, targetHeightPx));
 	const family = spec.fontFamily ?? DEFAULT_FAMILY;
 	const font = { family, sizePx, bold: true };
-	const widthPx = measurer.widthOf(spec.text, font);
+	const widthPx = Math.max(1, measurer.widthOf(spec.text, font));
 	const { ascent, descent } = fontMetrics(measurer, font);
+	const heightPx = Math.max(1, ascent + descent);
+	const scaleX = targetWidthPx / widthPx;
+	const scaleY = targetHeightPx / heightPx;
 	const pdf = painter.page;
 	pdf.save();
 	if (spec.semitransparent) pdf.alpha(0.5);
 	const turn = spec.layout === 'diagonal' ? Math.SQRT1_2 : 0;
 	const keep = spec.layout === 'diagonal' ? Math.SQRT1_2 : 1;
-	// About the page's centre, a quarter of a half turn anticlockwise (CSS `rotate(-45deg)`).
+	// About the page's centre, a quarter of a half turn anticlockwise (CSS `rotate(-45deg)`),
+	// then stretched to fill the watermark shape (`v:textpath fitshape="t"`).
 	pdf.concat([keep, -turn, turn, keep, page.widthPx / 2, page.heightPx / 2]);
+	pdf.concat([scaleX, 0, 0, scaleY, 0, 0]);
 	const fragment = {
 		text: spec.text,
 		xPx: 0,
@@ -69,13 +75,13 @@ function paintText(
 	};
 	const line = {
 		yPx: 0,
-		heightPx: ascent + descent,
+		heightPx,
 		baselinePx: ascent,
 		fragments: [fragment],
 		sourceStart: 0,
 		sourceEnd: 0,
 	};
-	painter.text.draw(pdf, fragment, -widthPx / 2, line, -(ascent + descent) / 2);
+	painter.text.draw(pdf, fragment, -widthPx / 2, line, -heightPx / 2);
 	pdf.restore();
 }
 

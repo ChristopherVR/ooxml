@@ -68,6 +68,8 @@ export interface TableRowProperties {
 	header?: boolean;
 	/** `w:trPr/w:ins` or `w:trPr/w:del`: the whole row is a tracked insertion or deletion. */
 	revision?: import('./model-run').Revision;
+	/** `w:trPr/w:trPrChange`: a tracked row-property formatting change. */
+	formatRevision?: import('./model-run').Revision;
 }
 /** A read-only preview of a nested table's text, rendered but not independently editable. */
 export interface NestedTablePreview {
@@ -93,6 +95,8 @@ export interface TableCell {
 	nestedTables?: NestedTablePreview[];
 	/** Parsed OOXML child order for cells containing nested tables. Read-only source content. */
 	sourceBlocks?: Block[];
+	/** `w:tcPr/w:tcPrChange`: a tracked cell-property formatting change. */
+	formatRevision?: import('./model-run').Revision;
 }
 /** Which `tblStyle` conditional formatting regions apply, from `w:tblLook`. */
 export interface TableLook {

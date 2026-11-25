@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-import type { Block, SectionColumns, SectionProperties } from './model';
+import { buildXml } from '../xml/index';
+import type { Block, Revision, SectionColumns, SectionProperties } from './model';
 import { children, elements, first, getW, named, type XmlElement } from './xml';
 import { getRelationshipId } from './relationships';
 import { flatBlocks } from './parse-content-control';
@@ -85,6 +86,26 @@ function lineNumbering(
 	};
 }
 
+function sectionFormatRevision(section: XmlElement): Revision | undefined {
+	const change = first(section, 'sectPrChange');
+	if (!change) return undefined;
+	const author = getW(change, 'author') ?? '';
+	const date = getW(change, 'date');
+	const dateUtc = change.getAttributeNS(
+		'http://schemas.microsoft.com/office/word/2023/wordml/word16du',
+		'dateUtc',
+	);
+	const prior = first(change, 'sectPr');
+	return {
+		id: getW(change, 'id') ?? '',
+		kind: 'sectionChange',
+		author,
+		...(date ? { date } : {}),
+		...(dateUtc ? { dateUtc } : {}),
+		...(prior ? { previousPropertiesXml: buildXml(prior) } : {}),
+	};
+}
+
 function pageBordersOf(element: XmlElement | undefined) {
 	const borders = parsePageBorders(element);
 	return borders ? { pageBorders: borders } : {};
@@ -111,6 +132,7 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 	const gutter = twipInt(getW(margins, 'gutter'));
 	const pageNumberingStart = parseUnsignedInteger(getW(pgNum, 'start'));
 	const pageNumberingFormat = enumValue(isStNumberFormat, getW(pgNum, 'fmt'), 'w:pgNumType/@w:fmt');
+	const formatRevision = sectionFormatRevision(section);
 	return {
 		endsAtBlockId,
 		type: typeValue ?? 'nextPage',
@@ -141,6 +163,7 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 			: {}),
 		...lineNumbering(first(section, 'lnNumType')),
 		...pageBordersOf(first(section, 'pgBorders')),
+		...(formatRevision ? { formatRevision } : {}),
 		headerRefs: parseHeaderFooterRefs(section, 'headerReference'),
 		footerRefs: parseHeaderFooterRefs(section, 'footerReference'),
 	};

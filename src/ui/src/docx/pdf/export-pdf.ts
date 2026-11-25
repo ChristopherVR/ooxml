@@ -26,7 +26,12 @@ import type { DocxPdfBookmarks } from './pdf-navigation';
 import { blockPictures, pagePictures } from './pdf-objects';
 import { pageMarks, paintPageMarks, type DocxPdfPageMarks } from './pdf-page-marks';
 import { DocxPdfPictures, type DocxPdfMedia, type DocxPdfPictureDecoder } from './pdf-pictures';
-import { DocxPdfReportBuilder, pdfAConformance, type DocxPdfReport } from './pdf-report';
+import {
+	DocxPdfReportBuilder,
+	pdfAConformance,
+	pdfUaConformance,
+	type DocxPdfReport,
+} from './pdf-report';
 import {
 	paintStoryFloats,
 	storyGraphicPictures,
@@ -37,7 +42,12 @@ import { placeStories } from './pdf-stories';
 import { DocxPdfText } from './pdf-text';
 import { paintWatermark } from './pdf-watermark';
 
-export type { DocxPdfReport, DocxPdfOmittedKind, DocxPdfConformance } from './pdf-report';
+export type {
+	DocxPdfReport,
+	DocxPdfOmittedKind,
+	DocxPdfConformance,
+	DocxPdfUaConformance,
+} from './pdf-report';
 export type { DocxPdfBookmarks } from './pdf-navigation';
 export type { DocxPdfMarkupBalloons } from './pdf-balloon-items';
 export type { DecodedPicture, DocxPdfMedia, DocxPdfPictureDecoder } from './pdf-pictures';
@@ -82,6 +92,18 @@ export interface DocxPdfOptions {
 	 * it does and at which level (see `docs/docx-pdf-export.md`, validated with veraPDF).
 	 */
 	pdfA?: boolean;
+	/**
+	 * Requested PDF/A-2 conformance level when `pdfA` is true: `'U'` (default) or `'A'` (requires
+	 * structure tags, document language and alternative text on every figure). Only declared when
+	 * every requirement is met.
+	 */
+	pdfALevel?: 'A' | 'U';
+	/**
+	 * Requests PDF/UA-1 (ISO 14289-1) accessibility metadata (`pdfuaid:part` = 1) and checks
+	 * structure tags, embedded fonts, document title, language and figure alternative text.
+	 * Declared only when every requirement is met; `report.pdfUa` reports conformance and issues.
+	 */
+	pdfUa?: boolean;
 	/** Natural language of the document, e.g. `en-US`. */
 	language?: string;
 	/** Font files to embed (TrueType); text in other fonts uses the standard PDF fonts. */
@@ -217,7 +239,7 @@ export async function exportDocxPdf(
 	const marks = pageMarks(projected.model, layout.pages);
 	const graphics = storyGraphics(projected.model, layout.pages, stories, measurer, mode, report);
 	const text = new DocxPdfText(
-		new PdfFontSet(options.fonts ?? [], { embedAll: !!options.pdfA }),
+		new PdfFontSet(options.fonts ?? [], { embedAll: !!(options.pdfA || options.pdfUa) }),
 		measurer,
 		report,
 	);
@@ -235,6 +257,7 @@ export async function exportDocxPdf(
 		mode,
 		balloons: new DocxPdfBalloons(projected.model, balloonMode, mode === 'all', text, report),
 	});
+	pictures.drawings.hooks = hooks;
 	const pages: PdfVectorPage[] = [];
 	for (const index of indices) {
 		signal?.throwIfAborted();
@@ -264,6 +287,16 @@ export async function exportDocxPdf(
 			`Links to bookmarks on no page written stay plain text: ${unresolved.slice(0, 5).join(', ')}${unresolved.length > 5 ? '...' : ''}.`,
 		);
 	const properties = options.documentProperties === false ? undefined : model.properties;
+	const built = report.build(pages.length);
+	const check = {
+		...(options.pdfALevel ? { requestedLevel: options.pdfALevel } : {}),
+		tagged,
+		...(tagged ? { structure: hooks.tagger.root } : {}),
+		...(options.language ? { language: options.language } : {}),
+		...(properties?.title ? { title: properties.title } : {}),
+	};
+	if (options.pdfA) built.pdfA = pdfAConformance(built, pages, check);
+	if (options.pdfUa) built.pdfUa = pdfUaConformance(built, pages, check);
 	const info: PdfVectorOptions = {
 		...(properties?.title ? { title: properties.title } : {}),
 		...(properties?.creator ? { author: properties.creator } : {}),
@@ -272,10 +305,17 @@ export async function exportDocxPdf(
 		...(options.language ? { language: options.language } : {}),
 		...(tagged ? { structure: hooks.tagger.root } : {}),
 		...(outline.length ? { outline } : {}),
-		...(options.pdfA ? { pdfA: true, ...(options.now ? { date: options.now } : {}) } : {}),
+		...(options.pdfA
+			? {
+					pdfA: true,
+					...(built.pdfA ? { pdfALevel: built.pdfA.level } : {}),
+					...(options.now ? { date: options.now } : {}),
+				}
+			: {}),
+		...(options.pdfUa && built.pdfUa?.conformant
+			? { pdfUa: true, ...(options.now ? { date: options.now } : {}) }
+			: {}),
 	};
 	const bytes = buildVectorPdf(pages, info);
-	const built = report.build(pages.length);
-	if (options.pdfA) built.pdfA = pdfAConformance(built, pages);
 	return { bytes, blob: new Blob([bytes], { type: 'application/pdf' }), report: built };
 }

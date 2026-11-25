@@ -24,6 +24,52 @@ export interface WordArtShadowGeometry {
 	opacity: number;
 }
 
+/** WordArt's outer glow in pixels: radius and alpha. */
+export interface WordArtGlowGeometry {
+	color: string;
+	radius: number;
+	opacity: number;
+}
+
+/** WordArt's reflection in pixels: blur, vertical fade, distance and vertical scale. */
+export interface WordArtReflectionGeometry {
+	blur: number;
+	startOpacity: number;
+	endOpacity: number;
+	distance: number;
+	scaleY: number;
+}
+
+export function wordArtGlowGeometry(
+	style: WordArtStyle,
+	scale = 1,
+): WordArtGlowGeometry | undefined {
+	const glow = style.glow;
+	const color = glow && wordArtRgb(glow.color);
+	if (!glow || !color || !(glow.radiusEmu > 0)) return undefined;
+	return {
+		color,
+		radius: (glow.radiusEmu / EMU_PER_PIXEL) * scale,
+		opacity: Math.max(0, Math.min(1, (glow.opacity ?? 40000) / 100000)),
+	};
+}
+
+export function wordArtReflectionGeometry(
+	style: WordArtStyle,
+	scale = 1,
+): WordArtReflectionGeometry | undefined {
+	const reflection = style.reflection;
+	if (!reflection) return undefined;
+	const rawScaleY = reflection.scaleY !== undefined ? reflection.scaleY / 100000 : -1;
+	return {
+		blur: ((reflection.blurRadiusEmu ?? 0) / EMU_PER_PIXEL) * scale,
+		startOpacity: Math.max(0, Math.min(1, (reflection.startOpacity ?? 50000) / 100000)),
+		endOpacity: Math.max(0, Math.min(1, (reflection.endOpacity ?? 0) / 100000)),
+		distance: ((reflection.distanceEmu ?? 0) / EMU_PER_PIXEL) * scale,
+		scaleY: rawScaleY === 0 ? -1 : -Math.abs(rawScaleY),
+	};
+}
+
 export function wordArtShadowGeometry(
 	style: WordArtStyle,
 	scale = 1,
@@ -56,6 +102,8 @@ export interface WordArtLayout {
 	gradient: WordArtGradient | undefined;
 	outline: { color: string; width: number } | undefined;
 	shadow: WordArtShadowGeometry | undefined;
+	glow: WordArtGlowGeometry | undefined;
+	reflection: WordArtReflectionGeometry | undefined;
 }
 
 export interface WordArtLayoutOptions {
@@ -95,6 +143,8 @@ export function wordArtLayout(options: WordArtLayoutOptions): WordArtLayout | un
 			? { color: outline, width: (WORD_ART_OUTLINE_EMU / EMU_PER_PIXEL) * scale }
 			: undefined,
 		shadow: wordArtShadowGeometry(style, scale),
+		glow: wordArtGlowGeometry(style, scale),
+		reflection: wordArtReflectionGeometry(style, scale),
 		lines: lines.map((text, index): WordArtLayoutLine => {
 			if (!usePath)
 				return {

@@ -4,8 +4,12 @@ import {
 	WORD_ART_SIZE_PT,
 	wordArtRgb,
 	readWordArtFill,
+	readWordArtGlow,
+	readWordArtReflection,
 	wordArtFillElement,
+	wordArtGlowElement,
 	wordArtPaintEquals,
+	wordArtReflectionElement,
 	readWordArtWarp,
 	wordArtShadowElement,
 	type WordArtStyle,
@@ -39,6 +43,9 @@ export function wordArtRunProperties(doc: XmlDocument, style: WordArtStyle): Xml
 	const stroke = wordArtRgb(style.outline);
 	const shadow = wordArtRgb(style.shadow);
 	if (shadow) props.appendChild(wordArtShadowElement(doc, shadow, WORD_2010, 'w14'));
+	if (style.glow) props.appendChild(wordArtGlowElement(doc, style.glow, WORD_2010, 'w14'));
+	if (style.reflection)
+		props.appendChild(wordArtReflectionElement(doc, style.reflection, WORD_2010, 'w14'));
 	if (stroke) {
 		const outline = extension('textOutline');
 		outline.setAttributeNS(WORD_2010, 'w14:w', String(WORD_ART_OUTLINE_EMU));
@@ -62,6 +69,8 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 	const colors = Array.from(box.getElementsByTagNameNS(WORD_MAIN, 'color'));
 	const outlines = Array.from(box.getElementsByTagNameNS(WORD_2010, 'textOutline'));
 	const shadows = Array.from(box.getElementsByTagNameNS(WORD_2010, 'shadow'));
+	const glows = Array.from(box.getElementsByTagNameNS(WORD_2010, 'glow'));
+	const reflections = Array.from(box.getElementsByTagNameNS(WORD_2010, 'reflection'));
 	const rgb = (parent: XmlElement | undefined) =>
 		wordArtRgb(
 			parent?.getElementsByTagNameNS(WORD_2010, 'srgbClr')[0]?.getAttributeNS(WORD_2010, 'val'),
@@ -77,6 +86,8 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 			: undefined;
 	const outline = rgb(outlines[0]);
 	const shadow = rgb(shadows[0]);
+	const glow = readWordArtGlow(glows[0], WORD_2010);
+	const reflection = readWordArtReflection(reflections[0], WORD_2010);
 	if (
 		!paint ||
 		fills.some((node) => {
@@ -85,7 +96,12 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 		}) ||
 		(fills.length === 0 && colors.some((node) => plainRgb(node) !== paint.fill)) ||
 		outlines.some((node) => rgb(node) !== outline) ||
-		shadows.some((node) => rgb(node) !== shadow)
+		shadows.some((node) => rgb(node) !== shadow) ||
+		glows.some((node) => JSON.stringify(readWordArtGlow(node, WORD_2010)) !== JSON.stringify(glow)) ||
+		reflections.some(
+			(node) =>
+				JSON.stringify(readWordArtReflection(node, WORD_2010)) !== JSON.stringify(reflection),
+		)
 	) {
 		return undefined;
 	}
@@ -94,6 +110,8 @@ export function readWordArtStyle(box: XmlElement | undefined): WordArtStyle | un
 		...paint,
 		...(outline ? { outline } : {}),
 		...(shadow ? { shadow } : {}),
+		...(glow ? { glow } : {}),
+		...(reflection ? { reflection } : {}),
 		...(warp ? { warp } : {}),
 	};
 }

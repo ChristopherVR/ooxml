@@ -168,8 +168,8 @@ export class DocxPdfTagger {
 		return element;
 	}
 
-	/** Opens a table (continued across pages under one element), row or cell. */
-	open(type: 'Table' | 'TR' | 'TD', blockId?: string): void {
+	/** Opens a table (continued across pages under one element), row, cell or text-box div. */
+	open(type: 'Table' | 'TR' | 'TD' | 'Div', blockId?: string): void {
 		if (!this.active) return;
 		this.close();
 		if (type === 'Table') this.#nesting(this.#containers.at(-1)!).reset();

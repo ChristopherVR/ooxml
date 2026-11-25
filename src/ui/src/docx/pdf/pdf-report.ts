@@ -1,4 +1,5 @@
 import { pdfALevel, type PdfALevel } from '../../export/pdf-archive';
+import type { PdfStructElement } from '../../export/pdf-vector';
 
 /** What a Word PDF export approximated or left out, as Word's own export would not have. */
 export interface DocxPdfReport {
@@ -16,31 +17,61 @@ export interface DocxPdfReport {
 	notes: string[];
 	/** Set when PDF/A was requested: whether the file meets PDF/A-2, at which level, and why not. */
 	pdfA?: DocxPdfConformance;
+	/** Set when PDF/UA-1 was requested: whether the file meets PDF/UA-1, and why not. */
+	pdfUa?: DocxPdfUaConformance;
 }
 
 export interface DocxPdfConformance {
 	conformant: boolean;
 	/**
-	 * The level the file declares (`pdfaid:conformance`): `U` (PDF/A-2u) when all its text is in
-	 * embedded fonts with Unicode maps, else `B` (PDF/A-2b, which it then does not meet either).
+	 * The level the file declares (`pdfaid:conformance`): `A` (PDF/A-2a) when requested and met,
+	 * `U` (PDF/A-2u) when all its text is in embedded fonts with Unicode maps, else `B`.
 	 */
 	level: PdfALevel;
 	issues: string[];
 }
 
+export interface DocxPdfUaConformance {
+	conformant: boolean;
+	issues: string[];
+}
+
 const STANDARD_FAMILIES = new Set(['Helvetica', 'Times', 'Courier']);
+
+/** Counts `Figure` elements in the structure tree that lack non-empty alternative text. */
+export function figuresMissingAltText(root: PdfStructElement | undefined): number {
+	if (!root) return 0;
+	let missing = 0;
+	const walk = (element: PdfStructElement) => {
+		if (element.type === 'Figure' && !element.alt?.trim()) missing++;
+		for (const kid of element.kids) if ('type' in kid) walk(kid);
+	};
+	walk(root);
+	return missing;
+}
+
+export interface PdfConformanceCheck {
+	requestedLevel?: 'A' | 'U';
+	tagged?: boolean;
+	structure?: PdfStructElement;
+	language?: string;
+	title?: string;
+}
 
 /**
  * PDF/A-2 needs every font embedded: text written in a standard PDF font breaks it. With every
  * font embedded the file meets level U (validated with veraPDF, `scripts/pdfa-validate.mjs`).
+ * When `requestedLevel` is `'A'`, level A additionally requires structure tags, a document
+ * language and alternative text on every figure.
  */
 export function pdfAConformance(
 	report: DocxPdfReport,
 	pages: readonly { fonts: ReadonlyMap<string, string> }[],
+	check: PdfConformanceCheck = {},
 ): DocxPdfConformance {
 	const issues: string[] = [];
-	const level = pdfALevel(pages);
-	if (level !== 'U') {
+	const base = pdfALevel(pages);
+	if (base !== 'U') {
 		const families = report.substitutedFonts
 			.filter((font) => STANDARD_FAMILIES.has(font.standardFont))
 			.map((font) => font.family);
@@ -48,7 +79,55 @@ export function pdfAConformance(
 			`Text${families.length ? ` in ${families.join(', ')}` : ''} uses standard PDF fonts, which are not embedded; supply the font files to embed them.`,
 		);
 	}
-	return { conformant: issues.length === 0, level, issues };
+	if (check.requestedLevel === 'A') {
+		if (!check.tagged || !check.structure)
+			issues.push('PDF/A-2a requires structure tags (`taggedPdf: true`).');
+		if (!check.language?.trim())
+			issues.push('PDF/A-2a requires a document language (`language` option).');
+		const missingAlt = figuresMissingAltText(check.structure);
+		if (missingAlt > 0)
+			issues.push(
+				`${missingAlt} figure${missingAlt === 1 ? '' : 's'} lack alternative text, which PDF/A-2a requires.`,
+			);
+		return {
+			conformant: issues.length === 0,
+			level: issues.length === 0 ? 'A' : base,
+			issues,
+		};
+	}
+	return { conformant: issues.length === 0, level: base, issues };
+}
+
+/**
+ * Checks PDF/UA-1 (ISO 14289-1) conformance: structure tags, embedded fonts with Unicode maps,
+ * a document title, a natural language, and alternative text on every figure.
+ */
+export function pdfUaConformance(
+	report: DocxPdfReport,
+	pages: readonly { fonts: ReadonlyMap<string, string> }[],
+	check: PdfConformanceCheck,
+): DocxPdfUaConformance {
+	const issues: string[] = [];
+	if (!check.tagged || !check.structure)
+		issues.push('PDF/UA-1 requires structure tags (`taggedPdf: true`).');
+	if (pdfALevel(pages) !== 'U') {
+		const families = report.substitutedFonts
+			.filter((font) => STANDARD_FAMILIES.has(font.standardFont))
+			.map((font) => font.family);
+		issues.push(
+			`Text${families.length ? ` in ${families.join(', ')}` : ''} uses standard PDF fonts, which are not embedded; supply the font files to embed them.`,
+		);
+	}
+	if (!check.title?.trim())
+		issues.push('PDF/UA-1 requires a document title (`properties.title` with `documentProperties: true`).');
+	if (!check.language?.trim())
+		issues.push('PDF/UA-1 requires a document language (`language` option).');
+	const missingAlt = figuresMissingAltText(check.structure);
+	if (missingAlt > 0)
+		issues.push(
+			`${missingAlt} figure${missingAlt === 1 ? '' : 's'} lack alternative text, which PDF/UA-1 requires.`,
+		);
+	return { conformant: issues.length === 0, issues };
 }
 
 export type DocxPdfOmittedKind =

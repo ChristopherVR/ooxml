@@ -6,11 +6,15 @@
  * caller, which reports it.
  */
 import { drawBlurredSilhouette, type SilhouettePart } from './pdf-blur-mask';
+import type { PdfCidFont } from './pdf-cid-font';
+import { PdfEmbeddedFont, type PdfFontSet } from './pdf-embedded-font';
+import { runOutlines } from './pdf-glyph-outlines';
 import { parsePath } from './pdf-path';
 import { childElements } from './pdf-svg-dom';
 import { basicShapePath } from './pdf-svg-shapes';
 import { number, parseColor, parseTransform, PdfFallback, type Rgba } from './pdf-svg-style';
-import type { PdfVectorPage } from './pdf-vector';
+import { drawSvgText, type SvgFontFamilyMapper } from './pdf-svg-text';
+import { PdfVectorPage, type PdfTextSpacing } from './pdf-vector';
 
 /** What a filter does that the converter can paint. */
 export type SvgShadowFilter =
@@ -83,18 +87,68 @@ const compose = (a: readonly number[], b: readonly number[]): number[] => [
 	a[1]! * b[4]! + a[3]! * b[5]! + a[5]!,
 ];
 
+interface StandardTextRun {
+	font: string;
+	size: number;
+	x: number;
+	y: number;
+	text: string;
+	spacing: PdfTextSpacing;
+	matrix: readonly number[];
+}
+
 interface Collected {
 	parts: SilhouettePart[];
 	/** The flat paints the parts use (with their alpha). */
 	colors: Rgba[];
+	/** Text runs in standard PDF fonts (no outlines to blur), drawn as soft offset copies. */
+	standardText: StandardTextRun[];
 }
 
-/** The shapes an element draws, in its own space; `false` when it draws text or pictures. */
+class SvgTextRecorder extends PdfVectorPage {
+	readonly embedded: {
+		font: PdfEmbeddedFont;
+		size: number;
+		x: number;
+		y: number;
+		text: string;
+		spacing: PdfTextSpacing;
+	}[] = [];
+	readonly standard: Omit<StandardTextRun, 'matrix'>[] = [];
+	constructor() {
+		super(1, 1);
+	}
+	override text(
+		font: string,
+		size: number,
+		x: number,
+		y: number,
+		text: string,
+		spacing: PdfTextSpacing = {},
+	): void {
+		if (text.trim()) this.standard.push({ font, size, x, y, text, spacing });
+	}
+	override embeddedText(
+		font: PdfCidFont,
+		size: number,
+		x: number,
+		y: number,
+		text: string,
+		spacing: PdfTextSpacing = {},
+	): void {
+		if (font instanceof PdfEmbeddedFont && text.trim())
+			this.embedded.push({ font, size, x, y, text, spacing });
+	}
+}
+
+/** The shapes and text an element draws, in its own space; `false` when it draws pictures. */
 function collect(
 	element: Element,
 	matrix: readonly number[],
 	into: Collected,
 	alpha: number,
+	fonts?: PdfFontSet,
+	familyOf?: SvgFontFamilyMapper,
 	depth = 0,
 ): boolean {
 	const name = element.localName;
@@ -106,8 +160,20 @@ function collect(
 		for (const child of childElements(element)) {
 			const transforms = parseTransform(child.getAttribute('transform'));
 			const childMatrix = transforms.reduce<readonly number[]>(compose, matrix);
-			if (!collect(child, childMatrix, into, own, depth + 1)) return false;
+			if (!collect(child, childMatrix, into, own, fonts, familyOf, depth + 1)) return false;
 		}
+		return true;
+	}
+	if (name === 'text') {
+		const recorder = new SvgTextRecorder();
+		drawSvgText(recorder, element, own, fonts, familyOf);
+		const color = parseColor(element.getAttribute('fill') ?? '#000000');
+		if (color) into.colors.push({ ...color, a: color.a * own });
+		for (const run of recorder.embedded) {
+			const segments = runOutlines(run.font, run.size, run.x, run.y, run.text, run.spacing);
+			if (segments.length) into.parts.push({ segments, fill: 'nonzero', matrix });
+		}
+		for (const run of recorder.standard) into.standardText.push({ ...run, matrix });
 		return true;
 	}
 	let d: string | undefined;
@@ -143,6 +209,39 @@ function collect(
 const sameColor = (a: Rgba, b: Rgba) =>
 	Math.abs(a.r - b.r) + Math.abs(a.g - b.g) + Math.abs(a.b - b.b) + Math.abs(a.a - b.a) < 1e-3;
 
+function drawStandardTextShadow(
+	page: PdfVectorPage,
+	runs: readonly StandardTextRun[],
+	dx: number,
+	dy: number,
+	sigma: number,
+	color: Rgba,
+	opacity: number,
+): void {
+	const copies = 8;
+	const offsets: [number, number][] = [[dx, dy]];
+	if (sigma > 0)
+		for (let index = 0; index < copies; index++) {
+			const angle = (index / copies) * 2 * Math.PI;
+			offsets.push([dx + Math.cos(angle) * sigma, dy + Math.sin(angle) * sigma]);
+		}
+	const each = 1 - Math.pow(1 - Math.min(0.999, opacity), 1 / offsets.length);
+	page.op('/Span <</ActualText ()>> BDC');
+	page.save();
+	page.fillColor(color.r, color.g, color.b);
+	page.alpha(each);
+	for (const [ox, oy] of offsets) {
+		for (const run of runs) {
+			page.save();
+			page.concat(compose([1, 0, 0, 1, ox, oy], run.matrix));
+			page.text(run.font, run.size, run.x, run.y, run.text, run.spacing);
+			page.restore();
+		}
+	}
+	page.restore();
+	page.endMarked();
+}
+
 /**
  * Paints `element`'s soft shadow for `filter` in the element's own space (its transform already
  * applied). A blur of a one-colour shadow group replaces the group; a drop shadow is painted
@@ -153,27 +252,53 @@ export function paintSvgShadow(
 	element: Element,
 	filter: SvgShadowFilter,
 	opacity: number,
+	fonts?: PdfFontSet,
+	familyOf?: SvgFontFamilyMapper,
 ): SvgShadowResult {
-	const collected: Collected = { parts: [], colors: [] };
+	const collected: Collected = { parts: [], colors: [], standardText: [] };
 	const identity = [1, 0, 0, 1, 0, 0];
 	try {
-		if (!collect(element, identity, collected, 1)) return 'none';
+		if (!collect(element, identity, collected, 1, fonts, familyOf)) return 'none';
 	} catch (error) {
 		// What the shadow cannot read, the caller's own drawing reports.
 		if (error instanceof PdfFallback) return 'none';
 		throw error;
 	}
-	if (!collected.parts.length) return filter.kind === 'blur' ? 'replaced' : 'none';
+	if (!collected.parts.length && !collected.standardText.length)
+		return filter.kind === 'blur' ? 'replaced' : 'none';
 	if (filter.kind === 'blur') {
 		const [color] = collected.colors;
 		if (!color || collected.colors.some((other) => !sameColor(other, color))) return 'none';
-		drawBlurredSilhouette(page, collected.parts, filter.sigma, color, color.a * opacity);
+		if (collected.parts.length)
+			drawBlurredSilhouette(page, collected.parts, filter.sigma, color, color.a * opacity);
+		if (collected.standardText.length)
+			drawStandardTextShadow(
+				page,
+				collected.standardText,
+				0,
+				0,
+				filter.sigma,
+				color,
+				color.a * opacity,
+			);
 		return 'replaced';
 	}
-	const shifted = collected.parts.map((part) => ({
-		...part,
-		matrix: compose([1, 0, 0, 1, filter.dx, filter.dy], part.matrix ?? identity),
-	}));
-	drawBlurredSilhouette(page, shifted, filter.sigma, filter.color, filter.color.a * opacity);
+	if (collected.parts.length) {
+		const shifted = collected.parts.map((part) => ({
+			...part,
+			matrix: compose([1, 0, 0, 1, filter.dx, filter.dy], part.matrix ?? identity),
+		}));
+		drawBlurredSilhouette(page, shifted, filter.sigma, filter.color, filter.color.a * opacity);
+	}
+	if (collected.standardText.length)
+		drawStandardTextShadow(
+			page,
+			collected.standardText,
+			filter.dx,
+			filter.dy,
+			filter.sigma,
+			filter.color,
+			filter.color.a * opacity,
+		);
 	return 'under';
 }

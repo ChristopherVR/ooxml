@@ -43,12 +43,13 @@ describe('soft shadows in the SVG converter', () => {
 		expect(content).toMatch(/\n[\d.]+ 0 0 -[\d.]+ 17 \S+ cm\n\/Im0 Do/);
 	});
 
-	it('keeps reporting shadows it cannot blur and draws them hard-edged', async () => {
+	it('paints text shadows as soft copies and keeps reporting shadows it cannot blur', async () => {
 		const { notes, content } = await draw(
 			`<svg ${SVG}><defs><filter id="f"><feGaussianBlur stdDeviation="2"/></filter></defs>` +
 				`<g data-shadow="" filter="url(#f)"><text x="0" y="10" fill="#000000">Hi</text></g></svg>`,
 		);
-		expect(notes).toContain('shadowBlurDropped');
+		expect(notes).not.toContain('shadowBlurDropped');
+		expect(content).toContain('/ActualText ()');
 		expect(content).toContain('(Hi) Tj');
 		const mixed = await draw(
 			`<svg ${SVG}><defs><filter id="f"><feGaussianBlur stdDeviation="2"/></filter></defs>` +

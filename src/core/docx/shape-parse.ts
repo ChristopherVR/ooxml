@@ -3,6 +3,7 @@
 // outline readers are the shared DrawingML ones.
 import {
 	parseDrawingColorIn,
+	parseDrawingEffects,
 	parseDrawingFill,
 	parseDrawingGeometry,
 	parseDrawingLine,
@@ -164,6 +165,7 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 		parsedLine?.fill || styleGives(style, 'lnRef')
 			? parsedLine
 			: { ...parsedLine, fill: { kind: 'none' } };
+	const effects = parseDrawingEffects(child(spPr, A_NS, 'effectLst'));
 	const fontColor = parseDrawingColorIn(child(style, A_NS, 'fontRef'));
 	const text = textBox ? undefined : shapeParagraphs(wsp);
 	const simple = !textBox && spPrIsSimple(spPr);
@@ -176,6 +178,7 @@ export function parseShape(graphicData: XmlElement | undefined): ShapeSpec | und
 			: {}),
 		...(fill && fill.kind !== 'unsupported' ? { fill } : {}),
 		...(line ? { line } : {}),
+		...(effects ? { effects } : {}),
 		...(fontColor ? { fontColor } : {}),
 		...(text ? { text } : {}),
 		...(plain.plain && plain.color ? { textColor: plain.color } : {}),

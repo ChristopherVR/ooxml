@@ -151,13 +151,13 @@ export function paintTable(
 	const { page, hooks } = painter;
 	const tableX = originX + (box.xPx ?? 0);
 	const tableY = originY + box.yPx;
-	hooks?.beginTable(box.blockId, withText);
+	hooks?.beginTable(box.blockId, withText, tableX, tableY, box.heightPx);
 	box.rows.forEach((row, rowIndex) => {
 		const rowY = tableY + row.yPx;
 		const lastRow = rowIndex === box.rows.length - 1;
-		hooks?.beginRow(row);
+		hooks?.beginRow(row, rowIndex, rowY);
 		row.cells.forEach((paragraphs, cellIndex) => {
-			hooks?.beginCell();
+			hooks?.beginCell(cellIndex, tableX, rowY, row.heightPx);
 			hooks?.decoration();
 			const geometry = row.geometry?.[cellIndex] ?? {
 				xPx: (cellIndex * (box.widthPx ?? 0)) / Math.max(1, row.cells.length),

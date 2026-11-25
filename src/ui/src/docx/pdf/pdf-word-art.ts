@@ -72,7 +72,54 @@ function outlineLines(page: PdfVectorPage, font: PdfEmbeddedFont, layout: WordAr
 		drawn.push({ segments, ...(bounds ? { bounds } : {}) });
 	}
 	const outline = layout.outline;
+	const glow = layout.glow;
 	const shadow = layout.shadow;
+	const reflection = layout.reflection;
+	if (reflection) {
+		const bottom = Math.max(
+			0,
+			...drawn.map(({ bounds }) => (bounds ? bounds[3] : 0)),
+		);
+		const top = Math.min(
+			bottom,
+			...drawn.map(({ bounds }) => (bounds ? bounds[1] : bottom)),
+		);
+		const span = Math.max(1, bottom - top);
+		const axisY = bottom + reflection.distance / 2;
+		const bands = 4;
+		const fill = rgb(layout.fill);
+		for (let band = 0; band < bands; band++) {
+			const t0 = band / bands;
+			const t1 = (band + 1) / bands;
+			const alpha =
+				reflection.startOpacity +
+				(reflection.endOpacity - reflection.startOpacity) * ((t0 + t1) / 2);
+			if (alpha <= 0.005) continue;
+			const bandTop = bottom + reflection.distance + t0 * span * Math.abs(reflection.scaleY);
+			const bandHeight = (t1 - t0) * span * Math.abs(reflection.scaleY);
+			page.save();
+			page.rect(-1e5, bandTop, 2e5, bandHeight + 0.5);
+			page.op('W n');
+			page.alpha(alpha);
+			page.concat([1, 0, 0, reflection.scaleY, 0, axisY * (1 - reflection.scaleY)]);
+			page.fillColor(fill.r, fill.g, fill.b);
+			for (const { segments } of drawn) {
+				if (!segments.length) continue;
+				for (const op of pathOperators(segments)) page.op(op);
+				page.op('f');
+			}
+			page.restore();
+		}
+	}
+	if (glow) {
+		const parts: SilhouettePart[] = drawn.map(({ segments }) => ({
+			segments,
+			fill: 'nonzero',
+			matrix: [1, 0, 0, 1, 0, 0],
+			...(outline ? { stroke: outline.width } : {}),
+		}));
+		drawBlurredSilhouette(page, parts, glow.radius / 2, rgb(glow.color), glow.opacity);
+	}
 	if (shadow) {
 		const parts: SilhouettePart[] = drawn.map(({ segments }) => ({
 			segments,
@@ -156,7 +203,60 @@ function standardLines(
 		}
 		page.op(`${ops} ET`);
 	};
+	const glow = layout.glow;
 	const shadow = layout.shadow;
+	const reflection = layout.reflection;
+	if (reflection) {
+		const bottom = Math.max(
+			0,
+			...lines.map(({ slots, place }) => {
+				const b = cellBounds(slots, place, ASCENT * size, DESCENT * size);
+				return b ? b[3] : 0;
+			}),
+		);
+		const top = Math.min(
+			bottom,
+			...lines.map(({ slots, place }) => {
+				const b = cellBounds(slots, place, ASCENT * size, DESCENT * size);
+				return b ? b[1] : bottom;
+			}),
+		);
+		const span = Math.max(1, bottom - top);
+		const axisY = bottom + reflection.distance / 2;
+		const fill = rgb(layout.fill);
+		const bands = 4;
+		page.op('/Span <</ActualText ()>> BDC');
+		for (let band = 0; band < bands; band++) {
+			const t0 = band / bands;
+			const t1 = (band + 1) / bands;
+			const alpha =
+				reflection.startOpacity +
+				(reflection.endOpacity - reflection.startOpacity) * ((t0 + t1) / 2);
+			if (alpha <= 0.005) continue;
+			const bandTop = bottom + reflection.distance + t0 * span * Math.abs(reflection.scaleY);
+			const bandHeight = (t1 - t0) * span * Math.abs(reflection.scaleY);
+			page.save();
+			page.rect(-1e5, bandTop, 2e5, bandHeight + 0.5);
+			page.op('W n');
+			page.alpha(alpha);
+			page.concat([1, 0, 0, reflection.scaleY, 0, axisY * (1 - reflection.scaleY)]);
+			page.fillColor(fill.r, fill.g, fill.b);
+			for (const { slots, place } of lines) text(slots, place, 0);
+			page.restore();
+		}
+		page.endMarked();
+	}
+	if (glow) {
+		const color = rgb(glow.color);
+		wordArtSoftCopies(
+			page,
+			{ color: glow.color, dx: 0, dy: 0, blur: glow.radius, opacity: glow.opacity },
+			(dx, dy) => {
+				page.fillColor(color.r, color.g, color.b);
+				for (const { slots, place } of lines) text(slots, place, 0, dx, dy);
+			},
+		);
+	}
 	if (shadow) {
 		const color = rgb(shadow.color);
 		wordArtSoftCopies(page, shadow, (dx, dy) => {

@@ -239,6 +239,7 @@ export interface LayoutFloatBox {
 	widthPx: number;
 	heightPx: number;
 	pictureFill?: Extract<import('../../drawingml/types').DrawingFill, { kind: 'picture' }>;
+	shadow?: import('../../drawingml/drawing-shadow').DrawingSvgShadow;
 	partName: string;
 	contentType: string;
 	/** A drawing shape painted as SVG (it has no media part); the print view draws it like a chart. */

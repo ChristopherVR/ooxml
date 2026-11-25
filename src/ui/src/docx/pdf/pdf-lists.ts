@@ -7,6 +7,7 @@
 import {
 	computeListLabels,
 	resolveNumberingLevel,
+	type Block,
 	type DocumentModel,
 	type ParagraphListLabel,
 } from 'ooxml-core/docx';
@@ -61,16 +62,51 @@ export function listNumbering(numFmt: string, marker: string): PdfListNumbering 
 	}
 }
 
-/** The list item of every numbered or bulleted paragraph of the body, by paragraph id. */
+function collectTextBoxStories(blocks: readonly Block[], out: Block[][]): void {
+	const visitRuns = (runs: readonly { image?: { textBoxContent?: { blocks: Block[] } } }[]) => {
+		for (const run of runs) {
+			const boxBlocks = run.image?.textBoxContent?.blocks;
+			if (boxBlocks?.length) {
+				out.push(boxBlocks);
+				collectTextBoxStories(boxBlocks, out);
+			}
+		}
+	};
+	for (const block of blocks) {
+		if (block.type === 'paragraph') visitRuns(block.runs);
+		else
+			for (const row of block.rows)
+				for (const cell of row) for (const p of cell.paragraphs) visitRuns(p.runs);
+	}
+}
+
+/**
+ * The list item of every numbered or bulleted paragraph across the document body, footnotes,
+ * endnotes, headers, footers and text boxes, by paragraph id.
+ */
 export function documentListItems(model: DocumentModel): Map<string, DocxPdfListItem> {
 	const items = new Map<string, DocxPdfListItem>();
 	const catalog = model.numberingCatalog;
 	if (!catalog) return items;
-	const labels: Map<string, ParagraphListLabel> = computeListLabels(model);
-	for (const [id, label] of labels) {
-		const numFmt = resolveNumberingLevel(catalog, label.numId, label.level)?.numFmt ?? 'decimal';
-		const numbering = label.picture ? 'Disc' : listNumbering(numFmt, label.text);
-		items.set(id, { numId: label.numId, level: label.level, numbering });
+	const stories: Block[][] = [model.blocks];
+	for (const note of [...(model.footnotes ?? []), ...(model.endnotes ?? [])])
+		if (note.blocks.length) stories.push(note.blocks);
+	for (const section of model.sections ?? []) {
+		for (const group of [section.headers, section.footers]) {
+			if (!group) continue;
+			for (const content of [group.default, group.first, group.even])
+				if (content?.blocks.length) stories.push(content.blocks);
+		}
+	}
+	const boxStories: Block[][] = [];
+	for (const story of stories) collectTextBoxStories(story, boxStories);
+	for (const blocks of [...stories, ...boxStories]) {
+		const labels: Map<string, ParagraphListLabel> = computeListLabels({ ...model, blocks });
+		for (const [id, label] of labels) {
+			const numFmt = resolveNumberingLevel(catalog, label.numId, label.level)?.numFmt ?? 'decimal';
+			const numbering = label.picture ? 'Disc' : listNumbering(numFmt, label.text);
+			items.set(id, { numId: label.numId, level: label.level, numbering });
+		}
 	}
 	return items;
 }
