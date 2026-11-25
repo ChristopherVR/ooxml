@@ -126,9 +126,16 @@ export function attachSurfaceNavigation(core: EditorCore): () => void {
 		event.preventDefault();
 		mirror();
 	};
+	const onMouseDown = () => {
+		const view = core.view;
+		if (!view || view.isDestroyed || view.editable) return;
+		canvas.focus({ preventScroll: true });
+	};
+	canvas.addEventListener('mousedown', onMouseDown);
 	canvas.addEventListener('keydown', onKeyDown);
 	return () => {
 		doc.removeEventListener('selectionchange', mirror);
+		canvas.removeEventListener('mousedown', onMouseDown);
 		canvas.removeEventListener('keydown', onKeyDown);
 	};
 }

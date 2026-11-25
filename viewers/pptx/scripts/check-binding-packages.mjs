@@ -212,9 +212,29 @@ assert.equal(typeof core.PptxHandler, 'function', 'packed core exports PptxHandl
 await import('@angular/compiler');
 const bindings = ${checks};
 const failures = [];
+// Svelte 5.59+ client bundles eagerly import svelte/internal/init-operations, which reads DOM
+// globals on load. Provide minimal stubs only for pptx-svelte-viewer so the other bindings stay
+// verified in bare Node.
+const withSvelteDomGlobals = async (fn) => {
+  const keys = ['window', 'document', 'navigator', 'Element', 'HTMLElement', 'Node', 'Text', 'customElements'];
+  const saved = new Map(keys.map((k) => [k, Object.getOwnPropertyDescriptor(globalThis, k)]));
+  class StubNode { get firstChild() { return null; } get nextSibling() { return null; } }
+  class StubElement extends StubNode {}
+  class StubText extends StubNode {}
+  const stubs = { window: globalThis, document: { createTreeWalker: () => ({}), getElementById: () => ({}) }, navigator: { userAgent: '' }, Element: StubElement, HTMLElement: StubElement, Node: StubNode, Text: StubText, customElements: { get: () => StubElement, define: () => {} } };
+  for (const [k, v] of Object.entries(stubs)) {
+    if (!(k in globalThis)) Object.defineProperty(globalThis, k, { value: v, configurable: true, writable: true });
+  }
+  try { return await fn(); } finally {
+    for (const [k, desc] of saved) {
+      if (desc) Object.defineProperty(globalThis, k, desc);
+      else delete globalThis[k];
+    }
+  }
+};
 for (const { name, entry } of bindings) {
   try {
-    const api = await import(name);
+    const api = name === 'pptx-svelte-viewer' ? await withSvelteDomGlobals(() => import(name)) : await import(name);
     assert.ok(api[entry], name + ' exports ' + entry);
     console.log(name + ': isolated packed entry imported and exported ' + entry);
   } catch (error) {

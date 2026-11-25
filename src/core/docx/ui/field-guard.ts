@@ -83,12 +83,25 @@ export function fieldGuardPlugin(): Plugin {
 				return Boolean(transaction);
 			},
 		},
-		appendTransaction: (transactions, _old, state) =>
-			transactions.some((transaction) => transaction.docChanged)
-				? markFieldResults(state)
-				: transactions.some((transaction) => transaction.selectionSet)
-					? trimSelection(state)
-					: null,
+		appendTransaction: (transactions, _old, state) => {
+			if (transactions.some((transaction) => transaction.docChanged)) {
+				const repair = markFieldResults(state);
+				if (repair) return repair;
+				if (
+					transactions.some(
+						(transaction) =>
+							(transaction.getMeta('history$') as { redo?: boolean } | undefined)?.redo,
+					)
+				) {
+					const caret = enterEmptyFieldResult(state);
+					if (caret) return caret;
+				}
+				return null;
+			}
+			return transactions.some((transaction) => transaction.selectionSet)
+				? trimSelection(state)
+				: null;
+		},
 		filterTransaction(transaction, state) {
 			if (!transaction.docChanged) return true;
 			let hadMarkers = false;
@@ -160,6 +173,21 @@ function markFieldResults(state: EditorState): Transaction | null {
 }
 
 const isMarker = (node: ProseMirrorNode | null | undefined) => node?.type.name === 'fieldMarker';
+
+/**
+ * When history redo places a collapsed caret right after an empty complex field's `end` marker
+ * (`[separate][end]|`), step inside to `[separate]|[end]` so subsequent typing fills the field.
+ */
+function enterEmptyFieldResult(state: EditorState): Transaction | null {
+	const { selection, doc } = state;
+	if (!(selection instanceof TextSelection) || !selection.empty || selection.from < 2) return null;
+	const end = doc.resolve(selection.from).nodeBefore;
+	if (!isMarker(end) || end?.attrs.kind !== 'end') return null;
+	const inside = selection.from - end.nodeSize;
+	const separate = doc.resolve(inside).nodeBefore;
+	if (!isMarker(separate) || separate?.attrs.kind !== 'separate') return null;
+	return state.tr.setSelection(TextSelection.create(doc, inside));
+}
 
 /** Drops hidden field markers from a text selection's edges, so a selected result is just its text. */
 function trimSelection(state: EditorState): Transaction | null {

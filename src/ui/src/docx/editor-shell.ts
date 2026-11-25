@@ -139,7 +139,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	const { element, shell } = core;
 	if (shell.paper) {
 		attachPrintEditing(core);
-		if (core.surfaceOnly) attachSurface(core);
+		attachSurface(core);
 		return;
 	}
 	element.classList.add('dve-host');
@@ -275,6 +275,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	if (core.pendingFileName) chrome.fileName = core.pendingFileName;
 	root.append(style, frame);
 	Object.assign(shell, { toolbar, canvas, paper });
+	attachSurface(core);
 	attachPrintEditing(core);
 	applyRibbonAddIns(core);
 	// After the toolbar is registered: the File tab label is localized through the shell.

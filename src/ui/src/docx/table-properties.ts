@@ -89,36 +89,32 @@ export function applyTableProperties(
 		return true;
 	const tr = closeHistory(view.state.tr);
 	for (const row of context.rows) {
-		const node = tr.doc.nodeAt(row.pos)!;
 		const properties = { ...row.properties, ...rowPatch };
 		for (const key of Object.keys(properties) as Array<keyof TableRowProperties>)
 			if (properties[key] === undefined) delete properties[key];
-		tr.setNodeMarkup(row.pos, undefined, {
-			...node.attrs,
-			properties,
-			heightPx: properties.heightTwips ? properties.heightTwips / 15 : null,
-		});
+		tr.setNodeAttribute(row.pos, 'properties', properties);
+		tr.setNodeAttribute(
+			row.pos,
+			'heightPx',
+			properties.heightTwips ? properties.heightTwips / 15 : null,
+		);
 	}
 	if (Object.keys(marginPatch).length)
-		tr.setNodeMarkup(context.pos, undefined, {
-			...context.table.attrs,
-			cellMargins: JSON.stringify({ ...context.margins, ...marginPatch }),
-		});
+		tr.setNodeAttribute(
+			context.pos,
+			'cellMargins',
+			JSON.stringify({ ...context.margins, ...marginPatch }),
+		);
 	if (cellMarginPatch !== undefined || cellAlignment !== undefined)
 		for (const cell of context.cells) {
-			const node = tr.doc.nodeAt(cell.pos)!;
-			tr.setNodeMarkup(cell.pos, undefined, {
-				...node.attrs,
-				...(cellMarginPatch === undefined
-					? {}
-					: {
-							margins:
-								cellMarginPatch === null
-									? null
-									: JSON.stringify({ ...cell.margins, ...cellMarginPatch }),
-						}),
-				...(cellAlignment === undefined ? {} : { verticalAlign: cellAlignment }),
-			});
+			if (cellMarginPatch !== undefined)
+				tr.setNodeAttribute(
+					cell.pos,
+					'margins',
+					cellMarginPatch === null ? null : JSON.stringify({ ...cell.margins, ...cellMarginPatch }),
+				);
+			if (cellAlignment !== undefined)
+				tr.setNodeAttribute(cell.pos, 'verticalAlign', cellAlignment);
 		}
 	view.dispatch(tr);
 	return true;
