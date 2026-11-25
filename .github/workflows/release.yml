@@ -471,11 +471,13 @@ jobs:
   #   `id-token`; `publish` (environment `npm`, `id-token: write`) installs nothing, builds nothing
   #   and uploads only the tarballs `build-packages` produced.
   #
-  # The packages are split into publish groups (core, ui, mcp, and one group per viewer, see
-  # `publish-released.mjs --groups`) that run as parallel matrix jobs. The core is built once
-  # (`build-core`) and its dist is shared. A group whose package needs a sibling released in the
-  # same run (ooxml-ui on ooxml-core, a viewer on both) waits for that sibling to appear on npm,
-  # which can take many minutes for the core tarball, so nothing relies on publish order.
+  # The packages are split into build groups (core, ui, mcp, and one group per viewer, see
+  # `publish-released.mjs --groups`) so `build-packages` builds and packs them in parallel. The
+  # core is built once (`build-core`) and its dist is shared. `publish` then runs as a single job
+  # in dependency order so GitHub records one `npm` deployment per release run (parallel matrix
+  # jobs on the same environment race and mark earlier-finishing deployments inactive, leaving the
+  # newest deployment ID inactive whenever another group finishes last). A package whose sibling
+  # was released earlier in the run waits for that sibling to appear on npm.
   #
   # Auth: npm trusted publishing (OIDC), no token. The package needs a trusted publisher on
   # npmjs.com pointing at this repository, the workflow file `release.yml` and the environment `npm`.
@@ -732,30 +734,28 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # The only job with `id-token: write`. It runs no `bun install` and no build: it checks out the
-  # repository for the (dependency-free) release scripts only, downloads the tarballs the
-  # `build-packages` job made, and uploads exactly those with provenance. publish-released.mjs
-  # checks each tarball against its recorded checksum and against the release target (name and
-  # version) before uploading, and still waits for a sibling released in the same run and skips
-  # a version already on npm.
+  # The only job with `id-token: write` in the `npm` environment. It runs as a single job (not a
+  # matrix) so GitHub records one `npm` deployment per release run instead of parallel deployments
+  # marking each other inactive. It runs no `bun install` and no build: it checks out the
+  # repository for the (dependency-free) release scripts only, downloads every group's tarballs
+  # from `build-packages`, and uploads them in dependency order with provenance.
+  # publish-released.mjs checks each tarball against its recorded checksum and against the release
+  # target (name and version) before uploading, waits for a sibling released earlier in the run,
+  # and skips a version already on npm.
   publish:
     needs: [release, publish-plan, build-packages]
-    # A group whose build failed has no artifact and fails alone; the other groups still publish.
+    # A group whose build failed has no artifact and is recorded as a failure; the other groups
+    # still publish.
     if: |
       always() &&
       needs.publish-plan.result == 'success' &&
+      needs.publish-plan.outputs.groups != '[]' &&
       (needs.build-packages.result == 'success' || needs.build-packages.result == 'failure')
     runs-on: ubuntu-latest
     environment: npm
     permissions:
       contents: read
       id-token: write # OIDC trusted publishing and provenance
-    strategy:
-      # One group failing must not cancel the others: a re-run only publishes what is missing.
-      fail-fast: false
-      matrix:
-        group: ${{ fromJSON(needs.publish-plan.outputs.groups) }}
-    name: publish (${{ matrix.group }})
     steps:
       - name: Refuse to run off main
         if: github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main'
@@ -788,17 +788,12 @@ jobs:
         with:
           name: release-plan-${{ github.run_id }}
 
-      # Artifact names cannot contain `/` (a viewer group is `viewers/docx`).
-      - name: Name the tarball artifact
-        id: artifact
-        env:
-          GROUP: ${{ matrix.group }}
-        run: echo "name=packages-${GROUP//\//-}-${GITHUB_RUN_ID}" >> "$GITHUB_OUTPUT"
-
+      # Each group's artifact extracts into its own subdirectory under `$RUNNER_TEMP/packed`
+      # (`merge-multiple` defaults to false), keeping each group's `packed.json` intact.
       - name: Download the tarballs
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: ${{ steps.artifact.outputs.name }}
+          pattern: packages-*-${{ github.run_id }}
           path: ${{ runner.temp }}/packed
 
       # Node 24 plus npm >= 11.5.1 is required for trusted publishing and --provenance. Node 24
@@ -818,18 +813,45 @@ jobs:
           fi
           echo "npm $version"
 
-      # The publish waits for any sibling released in this same run to be visible on the registry.
+      # Publishes each group in dependency order (core, ui, mcp, then the viewers) and waits for
+      # any sibling released earlier in this run to become visible on the registry.
       - name: Publish to npm
         env:
           INPUT_TAG: ${{ inputs.tag }}
-          GROUP: ${{ matrix.group }}
+          GROUPS: ${{ needs.publish-plan.outputs.groups }}
         run: |
           # publish-released.mjs runs `npm publish <tarball> --provenance` once per package.
-          if [ -n "$INPUT_TAG" ]; then
-            node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$GROUP" --from-dir "$RUNNER_TEMP/packed"
-          else
-            node scripts/publish-released.mjs --plan release-plan.json --group "$GROUP" --from-dir "$RUNNER_TEMP/packed"
-          fi
+          failed=0
+          ui_failed=0
+          while IFS= read -r group; do
+            [ -z "$group" ] && continue
+            if [ "$ui_failed" -ne 0 ] && [[ "$group" == viewers/* ]]; then
+              echo "::error::Skipping group '$group' because 'ui' failed to publish."
+              continue
+            fi
+            dir="$RUNNER_TEMP/packed/packages-${group//\//-}-${GITHUB_RUN_ID}"
+            if [ ! -d "$dir" ]; then
+              echo "::error::Missing packed artifact for group '$group' (its build job failed)."
+              failed=1
+              if [ "$group" = "core" ]; then break; fi
+              if [ "$group" = "ui" ]; then ui_failed=1; fi
+              continue
+            fi
+            if [ -n "$INPUT_TAG" ]; then
+              if ! node scripts/publish-released.mjs --tag "$INPUT_TAG" --group "$group" --from-dir "$dir"; then
+                failed=1
+                if [ "$group" = "core" ]; then break; fi
+                if [ "$group" = "ui" ]; then ui_failed=1; fi
+              fi
+            else
+              if ! node scripts/publish-released.mjs --plan release-plan.json --group "$group" --from-dir "$dir"; then
+                failed=1
+                if [ "$group" = "core" ]; then break; fi
+                if [ "$group" = "ui" ]; then ui_failed=1; fi
+              fi
+            fi
+          done < <(node -e "for (const g of JSON.parse(process.env.GROUPS)) console.log(g)")
+          exit "$failed"
 
   # A package that was tagged but never published needs recovery. The next online planner cuts
   # a fresh version; also fail loudly here with the command for retrying the existing version.
