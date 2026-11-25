@@ -19,6 +19,7 @@ import { readCommentParts } from './comment-parts';
 import { parseFormSettings, parseReviewPreferences, parseTrackChangesSetting } from './settings';
 import { parsePageBackground } from './page-background';
 import { parseRunStyleCatalog } from './character-styles';
+import { readLatentStyles } from './latent-styles';
 import { parseTableStyleCatalog } from './table-styles';
 import { parseTheme, parseColorSchemeMapping } from './theme';
 
@@ -26,7 +27,12 @@ const px = (twips: string | undefined, fallback: number): number =>
 	twips === undefined ? fallback : (Number(twips) * 96) / 1440;
 
 import { type DrawingContext } from './drawing';
-import { parseContentTypes, parseRelationships, resolveInternalTarget } from './package-parts';
+import {
+	documentPartPath,
+	parseContentTypes,
+	parseRelationships,
+	resolveInternalTarget,
+} from './package-parts';
 import { withParseWarnings } from './parse-diagnostics';
 import {
 	forEachParagraph,
@@ -116,19 +122,21 @@ export async function readPackage(
 	};
 	if ((await inspectPackageSignatures(zip)).hasSignatures)
 		model.signatures = await verifySignedPackage(zip);
-	const stylesFile = zip.file('word/styles.xml');
+	const stylesFile = zip.file(documentPartPath(drawings.rels, 'styles', 'word/styles.xml'));
 	if (stylesFile) {
-		const stylesXml = await stylesFile.async('string');
+		const stylesRoot = parseXml(await stylesFile.async('string')).documentElement;
 		const catalogs = withParseWarnings(schemaWarnings, () => ({
-			paragraph: parseParagraphStyleCatalog(stylesXml),
-			character: parseRunStyleCatalog(stylesXml),
-			table: parseTableStyleCatalog(stylesXml),
+			paragraph: parseParagraphStyleCatalog(stylesRoot),
+			character: parseRunStyleCatalog(stylesRoot),
+			table: parseTableStyleCatalog(stylesRoot),
 		}));
 		model.paragraphStyles = catalogs.paragraph;
 		model.characterStyles = catalogs.character;
 		model.tableStyles = catalogs.table;
+		const latent = readLatentStyles(stylesRoot);
+		if (latent) model.latentStyles = latent;
 		model.warnings.push(
-			'Paragraph style, character style and docDefaults inheritance resolve for rendering, including toggle-property XOR semantics and basedOn chains. Linked styles beyond a basedOn chain, numbering-derived formatting are not modeled; display can still differ from Word.',
+			'Paragraph and character styles resolve supported formatting through basedOn chains and document defaults. Style rendering and numbering-derived formatting can still differ from Word.',
 			...model.paragraphStyles.warnings,
 			...model.characterStyles.warnings,
 			...model.tableStyles.warnings,
@@ -147,12 +155,15 @@ export async function readPackage(
 		const fallbacks = parseFontTable(await fontTable.async('string'));
 		if (fallbacks.size) model.fontFallbacks = fallbacks;
 	}
-	const themeFile = zip.file('word/theme/theme1.xml');
+	const themeFile = zip.file(documentPartPath(drawings.rels, 'theme', 'word/theme/theme1.xml'));
 	const settingsFile = zip.file('word/settings.xml');
 	if (themeFile) {
 		model.theme = parseTheme(await themeFile.async('string'));
-		if (settingsFile) {
-			const settingsXml = await settingsFile.async('string');
+		const themeSettings = zip.file(
+			documentPartPath(drawings.rels, 'settings', 'word/settings.xml'),
+		);
+		if (themeSettings) {
+			const settingsXml = await themeSettings.async('string');
 			model.theme.colorMapping = withParseWarnings(schemaWarnings, () =>
 				parseColorSchemeMapping(settingsXml),
 			);

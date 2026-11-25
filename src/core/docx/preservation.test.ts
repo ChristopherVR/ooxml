@@ -205,11 +205,18 @@ describe('preservation of parts and XML the editor does not model', () => {
 		);
 	});
 
-	it('refuses an edit of the style catalogue instead of dropping it', async () => {
+	it('writes a theme colour edit without changing other parts', async () => {
 		const source = await buildPackage();
 		const loaded = await loadDocx(source);
-		const model = structuredClone(loaded.model);
-		model.theme = { ...(model.theme ?? {}), name: 'Changed' } as never;
-		await expect(loaded.save(model)).rejects.toThrow(/preserved unchanged/);
+		expect(loaded.model.theme).toBeDefined();
+		if (!loaded.model.theme) throw new Error('Missing theme fixture');
+		loaded.model.theme.colors.accent1 = 'ABC123';
+		const saved = await loaded.save();
+		expect((await loadDocx(saved)).model.theme?.colors.accent1).toBe('ABC123');
+		const before = await JSZip.loadAsync(source);
+		const after = await JSZip.loadAsync(saved);
+		expect(await after.file('word/styles.xml')?.async('string')).toEqual(
+			await before.file('word/styles.xml')?.async('string'),
+		);
 	});
 });

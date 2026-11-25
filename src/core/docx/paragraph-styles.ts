@@ -1,3 +1,4 @@
+import { readStyleMetadata } from './style-metadata';
 import { parsePercentageShading } from './percentage-shading';
 import type {
 	Paragraph,
@@ -14,7 +15,7 @@ import {
 	isStXAlign,
 	isStYAlign,
 } from './generated/wml-simple-types';
-import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
+import { children, first, getW, parseXml, type XmlElement } from './xml';
 import {
 	cachedResolver,
 	chainResolver,
@@ -165,30 +166,22 @@ function parseStyleNumbering(
 	return { numId, level: parseInteger(getW(first(numPr, 'ilvl'), 'val')) ?? 0 };
 }
 
-function styleElements(document: XmlDocument): XmlElement[] {
-	return Array.from(document.getElementsByTagName('*')).filter(
-		(element): element is XmlElement =>
-			named(element, 'style') && getW(element, 'type') === 'paragraph',
-	);
-}
-
-export function parseParagraphStyleCatalog(xml: string): ParagraphStyleCatalog {
-	const document = parseXml(xml);
-	const defaults = first(first(document.documentElement, 'docDefaults'), 'pPrDefault');
+export function parseParagraphStyleCatalog(xml: string | XmlElement): ParagraphStyleCatalog {
+	const root = typeof xml === 'string' ? parseXml(xml).documentElement : xml;
+	const defaults = first(first(root, 'docDefaults'), 'pPrDefault');
 	const pDefaults = first(defaults, 'pPr');
 	const styles = Object.create(null) as Record<string, ParagraphStyleDefinition>;
-	for (const element of styleElements(document)) {
+	for (const element of children(root, 'style')) {
+		if (getW(element, 'type') !== 'paragraph') continue;
 		const id = getW(element, 'styleId');
 		if (!id) continue;
-		const basedOn = getW(first(element, 'basedOn'), 'val');
-		const isDefault = parseOnOff(getW(element, 'default'));
-		const name = getW(first(element, 'name'), 'val');
+		const next = getW(first(element, 'next'), 'val');
+		const linkedStyle = getW(first(element, 'link'), 'val');
 		const numbering = parseStyleNumbering(first(element, 'pPr'));
 		styles[id] = {
-			id,
-			...(name ? { name } : {}),
-			...(basedOn ? { basedOn } : {}),
-			...(isDefault === undefined ? {} : { isDefault }),
+			...readStyleMetadata(element, id),
+			...(next !== undefined && { next }),
+			...(linkedStyle !== undefined && { linkedStyle }),
 			...(numbering ? { numbering } : {}),
 			formatting: parseFormatting(first(element, 'pPr')),
 		};

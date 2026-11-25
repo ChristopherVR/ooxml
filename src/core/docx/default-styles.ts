@@ -62,15 +62,3 @@ export function defaultStyleCatalogs(): Required<
 	};
 	return structuredClone(cached) as Required<typeof cached>;
 }
-
-/** Whether `model` still carries exactly the built-in catalogs, so the default styles.xml fits it. */
-export function hasDefaultStyles(model: DocumentModel): boolean {
-	const defaults = defaultStyleCatalogs();
-	return (
-		JSON.stringify(model.paragraphStyles) === JSON.stringify(defaults.paragraphStyles) &&
-		JSON.stringify(model.characterStyles ?? defaults.characterStyles) ===
-			JSON.stringify(defaults.characterStyles) &&
-		JSON.stringify(model.tableStyles ?? defaults.tableStyles) ===
-			JSON.stringify(defaults.tableStyles)
-	);
-}

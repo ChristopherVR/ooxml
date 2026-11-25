@@ -35,6 +35,7 @@ export function refreshEditorControls(
 	printPageStatus?: { current: number; total: number } | null,
 	commentsOpen = false,
 	canEditComments = !readOnly && !collaboration,
+	canAuthorStyles = !readOnly && !collaboration && !model.protection?.enforced,
 ): { pageText: string; wordText: string } | undefined {
 	toolbar
 		?.querySelectorAll<HTMLButtonElement | HTMLSelectElement | HTMLInputElement>(
@@ -72,7 +73,7 @@ export function refreshEditorControls(
 	const { state } = view;
 	if (toolbar) {
 		syncMultilingualControls(toolbar, state);
-		syncStylePicker(toolbar, view, model, locale);
+		syncStylePicker(toolbar, view, model, locale, canAuthorStyles);
 		syncCharacterStylePicker(toolbar, view, model, locale);
 		syncFormatControls(toolbar, state);
 		for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-action]')) {

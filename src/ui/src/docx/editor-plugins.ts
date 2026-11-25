@@ -111,7 +111,10 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 			host.revisionIds,
 		),
 		reviewDisplayPlugin(() => host.reviewDisplayMode()),
-		editorKeymap(() => host.showSearch()),
+		editorKeymap(
+			() => host.showSearch(),
+			() => host.model(),
+		),
 		...host.collaborationPlugins,
 	];
 }

@@ -55,10 +55,15 @@ describe('heading-linked list styles', () => {
 		expect(ids.map((id) => labels.get(id)?.text)).toEqual(['1.', '1.1.']);
 	});
 
-	it('still rejects other style catalog edits', async () => {
+	it('writes a heading rename alongside its numbering association', async () => {
 		const loaded = await loadDocx(await fixture());
 		loaded.model.paragraphStyles!.styles.Heading1!.name = 'Renamed';
-		await expect(loaded.save()).rejects.toThrow(/Editing the paragraph style catalog/);
+		loaded.model.paragraphStyles!.styles.Heading1!.numbering = { numId: 1, level: 0 };
+		const reopened = await loadDocx(await loaded.save());
+		expect(reopened.model.paragraphStyles?.styles.Heading1).toMatchObject({
+			name: 'Renamed',
+			numbering: { numId: 1, level: 0 },
+		});
 	});
 
 	it('removes a link when numbering is cleared', async () => {

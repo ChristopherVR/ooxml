@@ -123,6 +123,26 @@
 	display: grid;
 	gap: 4px;
 }
+.dve-styles-pane-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-block-start: 8px;
+}
+.dve-styles-pane-actions button {
+	padding: 4px 7px;
+	border: 1px solid var(--line);
+	border-radius: 4px;
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+.dve-styles-pane-actions button:disabled {
+	color: var(--muted);
+}
+.dve-style-dialog [hidden] {
+	display: none;
+}
 .dve-styles-pane .style-tile {
 	flex-direction: row;
 	justify-content: space-between;

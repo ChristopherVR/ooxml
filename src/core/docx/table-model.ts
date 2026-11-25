@@ -1,3 +1,4 @@
+import type { StyleMetadata } from './style-metadata';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { Block, Paragraph } from './model';
 import type { RunFormatting } from './run-style-model';
@@ -128,11 +129,10 @@ export interface TableStyleConditionalFormatting {
 	shadingThemeFill?: ThemeColorReference;
 	run?: RunFormatting;
 }
-export interface TableStyleDefinition {
-	id: string;
-	name?: string;
-	basedOn?: string;
-	isDefault?: boolean;
+export interface TableStyleDefinition extends StyleMetadata {
+	paragraphFormatting?: import('./model-paragraph').ParagraphFormatting;
+	runFormatting?: RunFormatting;
+	shadingThemeFill?: ThemeColorReference;
 	borders?: TableBorders;
 	shadingFill?: string;
 	percentageShading?: import('./percentage-shading').PercentageShading;
@@ -141,7 +141,7 @@ export interface TableStyleDefinition {
 	conditional: Partial<Record<TableConditionalRegion, TableStyleConditionalFormatting>>;
 }
 /**
- * Parsed `styles.xml` table styles; conditional formatting resolves for rendering only. Like the
+ * Parsed `styles.xml` table styles with conditional formatting. Like the
  * paragraph catalog, it is a value: an edit replaces the `styles` record.
  */
 export interface TableStyleCatalog {

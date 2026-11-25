@@ -66,7 +66,7 @@ Every locale defines every string key (checked at compile time and by tests). Th
 Spanish and Simplified Chinese strings have not been reviewed by native speakers. Changing the interface language preserves
 the current document, selection, undo history and document-language metadata.
 
-## Imported paragraph styles
+## Create and modify styles
 
 The Home ribbon's Style picker lists paragraph styles from the loaded DOCX.
 The editor resolves supported alignment, direction, spacing and indentation through
@@ -74,8 +74,15 @@ document defaults and the selected style's inheritance chain. Direct paragraph
 formatting still takes precedence. Choosing a style changes its reference, without
 flattening inherited properties into every paragraph.
 
-The original styles part is preserved when saving the loaded document. Creating or
-editing style definitions is not supported yet. Character styles can be applied from the
-character style picker, and inherited run formatting and theme colours are resolved when
-the document is displayed. Exporting a new package whose style catalog differs from the built-in
-defaults is rejected; use Save on the loaded document to preserve its original style definitions.
+Expand the **Styles** gallery or open the **Styles pane**, then choose **Create a Style** to
+start from the selection's formatting. Choose a paragraph, character, linked or table style.
+Use **Modify Style** to rename a style, change its base style or following paragraph style, and edit
+basic font and paragraph formatting. Undo and redo cover the style definition and any application
+to the selection.
+
+Save writes style definitions to the DOCX. When you edit a loaded document, Save also keeps
+unmodeled style children in its original package.
+
+Style authoring is available in local, unprotected documents. A new table style applies to the
+selected table when its structure is editable. Table-style paragraph formatting is saved in the
+DOCX and may display differently in the editor.

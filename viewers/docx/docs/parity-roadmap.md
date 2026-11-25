@@ -84,8 +84,9 @@ detail and limits of each feature already built.
    typography/3D, picture relationship authoring and shapes beyond preset geometry. Add each only after model, parser, layout and
    serializer contracts preserve the source package. Keep UI controls in `ooxml-ui`
    and framework adapters in the viewer.
-4. **Word authoring breadth.** Creating styles and editing the style catalogue and
-   theme (both refused on save today), the Design tab (themes, colours, fonts,
+4. **Word authoring breadth.** Word can create and modify styles from the Home ribbon, and
+   DOCX export writes style catalogues, latent styles and theme edits. Remaining work includes
+   the Design tab (themes, colours, fonts,
    paragraph spacing, all disabled), Mailings (all 16 commands disabled, no merge
    engine), object positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,

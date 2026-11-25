@@ -4,11 +4,12 @@ import { ySyncPluginKey } from 'y-prosemirror';
 
 /**
  * Document attributes kept out of the room: comment threads have their own shared maps, and the
- * document properties and package information (`documentInformation`) stay on this device.
+ * document properties, package information and source style catalogs stay on this device.
  */
 export const LOCAL_DOCUMENT_ATTRIBUTES: ReadonlySet<string> = new Set([
 	'commentThreads',
 	'documentInformation',
+	'styleCatalogs',
 ]);
 
 /** Word root attributes use a separate map because the body binding omits them. */

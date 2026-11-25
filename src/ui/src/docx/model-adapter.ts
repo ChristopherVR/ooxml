@@ -1,3 +1,5 @@
+import { styleCatalogsOf } from 'ooxml-core/docx';
+import { withStyleCatalogs } from './style-catalog-state';
 import { EditorState, Transaction } from 'prosemirror-state';
 import type {
 	DocumentModel,
@@ -91,6 +93,7 @@ export function modelToDoc(model: DocumentModel) {
 			noteParts: notePartsJson(model),
 			commentThreads: JSON.stringify(model.comments ?? []),
 			documentInformation: documentInformationJson(model),
+			styleCatalogs: styleCatalogsOf(model),
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
 			trackChanges: Boolean(model.trackChanges),
 			trackFormatting: model.trackFormatting !== false,
@@ -274,24 +277,29 @@ export function docToModel(
 					(node.attrs.structureEditable === false && node.attrs.restructurable))
 			)
 				blocks.push(convertStructuredTable(node, prior, asParagraph));
-			else
+			else {
+				const { style: priorStyle, ...descriptors } = prior ?? {};
+				const style =
+					typeof node.attrs.tableStyleId === 'string' ? node.attrs.tableStyleId : priorStyle;
 				blocks.push({
 					// Table-level properties (grid, width, borders, style, look) have no editor node;
 					// carry them over from the prior model so editing cell text never drops them.
 					...(prior
 						? {
-								...prior,
+								...descriptors,
 								structureEditable: undefined,
 								contentControl: undefined,
 							}
 						: tableBordersFromNode(node.attrs.borders)),
 					type: 'table',
 					id,
+					...(style && { style }),
 					rows: convertSimpleTable(node, asParagraph, prior),
 					...tableFormattingFromNode(node),
 					...(node.attrs.structureEditable === false ? { structureEditable: false } : {}),
 					...tableControl(node, prior),
 				} as Table);
+			}
 		}
 	});
 	// The editor document is the source of truth for section layout (so undo covers page setup).
@@ -325,7 +333,9 @@ export function docToModel(
 			: sectionLayout;
 	const threads = commentThreadsFromDoc(doc);
 	return {
-		...rest,
+		...(previousDoc && previousDoc.attrs.styleCatalogs !== doc.attrs.styleCatalogs
+			? withStyleCatalogs(rest, doc)
+			: rest),
 		...(threads === undefined
 			? priorComments !== undefined
 				? { comments: priorComments }

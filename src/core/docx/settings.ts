@@ -1,3 +1,7 @@
+import { MAPPING_KEYS, TOKEN_TO_SLOT } from './theme';
+import type { ThemeCatalog } from './theme-model';
+import { first } from './xml';
+import { orderChildren } from './element-order';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { onOffElement, parseOnOff } from './simple-types';
 import { isStDocProtect } from './generated/wml-simple-types';
@@ -309,5 +313,35 @@ export async function applyDocumentProtection(
 	if (!file) {
 		await ensureContentTypeOverride(zip, SETTINGS_PATH, SETTINGS_CONTENT_TYPE);
 		await ensureDocumentRelationship(zip, SETTINGS_RELATIONSHIP_TYPE, 'settings.xml');
+	}
+}
+
+export async function applyColorSchemeMapping(
+	zip: JSZip,
+	next: ThemeCatalog['colorMapping'],
+	base: ThemeCatalog['colorMapping'] = {},
+	relatedPath?: string,
+): Promise<void> {
+	if (MAPPING_KEYS.every((key) => next[key] === base[key])) return;
+	const path = relatedPath || SETTINGS_PATH;
+	const file = zip.file(path);
+	const doc = parseXml((await file?.async('string')) ?? `<w:settings xmlns:w="${WORD_NS}"/>`);
+	const root = doc.documentElement;
+	const mapping = first(root, 'clrSchemeMapping') ?? makeW(doc, 'clrSchemeMapping');
+	for (const key of MAPPING_KEYS) {
+		if (next[key] === base[key]) continue;
+		const token = Object.entries(TOKEN_TO_SLOT).find(([, slot]) => slot === next[key])?.[0];
+		if (token) mapping.setAttributeNS(WORD_NS, `w:${key}`, token);
+		else mapping.removeAttributeNS(WORD_NS, key);
+	}
+	if (mapping.attributes.length || mapping.childNodes.length) {
+		if (!mapping.parentNode) root.appendChild(mapping);
+	} else if (mapping.parentNode) root.removeChild(mapping);
+	orderChildren(root, SETTINGS_ORDER);
+	zip.file(path, buildXml(doc));
+	if (!file) {
+		await ensureContentTypeOverride(zip, path, SETTINGS_CONTENT_TYPE);
+		if (!relatedPath)
+			await ensureDocumentRelationship(zip, SETTINGS_RELATIONSHIP_TYPE, 'settings.xml');
 	}
 }

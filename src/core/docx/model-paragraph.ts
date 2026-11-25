@@ -1,3 +1,4 @@
+import type { StyleMetadata } from './style-metadata';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type {
 	StHAnchor,
@@ -172,11 +173,9 @@ export type ParagraphFormatting = Pick<
 	| 'shadingFill'
 	| 'percentageShading'
 >;
-export interface ParagraphStyleDefinition {
-	id: string;
-	name?: string;
-	basedOn?: string;
-	isDefault?: boolean;
+export interface ParagraphStyleDefinition extends StyleMetadata {
+	next?: string;
+	linkedStyle?: string;
 	formatting: ParagraphFormatting;
 	/** Numbering inherited by paragraphs using this style through `w:pPr/w:numPr` in `styles.xml`. */
 	numbering?: { numId: number; level: number };

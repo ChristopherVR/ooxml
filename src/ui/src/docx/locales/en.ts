@@ -1,3 +1,4 @@
+import { enStyleDialog } from './style-dialog';
 import { enSplitCells } from './split-cells';
 import { enObjects } from './objects';
 import { enShapes } from '../../ribbon/shape-names';
@@ -27,6 +28,7 @@ import { enRibbonNames } from './ribbon-names';
  * localizer looks up (or dotted ids for templates); every other locale must define every key.
  */
 export const en = {
+	...enStyleDialog,
 	...enOptions,
 	...enRibbon,
 	...enRibbonNames,

@@ -1,3 +1,4 @@
+import { dialogButton } from './dialog-fields';
 import { localizeElement, translate, type EditorLocale } from './localization';
 import { createStyleTile, markSelectedTiles } from './style-gallery';
 import type { StylesData } from './styles-popover';
@@ -20,8 +21,16 @@ export function createStylesPane(onClose: () => void): StylesPane {
 	element.className = 'dve-styles-pane';
 	element.setAttribute('role', 'complementary');
 	element.hidden = true;
+	let latest: StylesData | undefined;
 	let key = '';
 	let locale: EditorLocale = 'en';
+	const create = dialogButton('Create a Style');
+	const modify = dialogButton('Modify Style');
+	create.addEventListener('click', () => latest?.author(false));
+	modify.addEventListener('click', () => latest?.author(true));
+	const actions = document.createElement('div');
+	actions.className = 'dve-styles-pane-actions';
+	actions.append(create, modify);
 	const close = () => {
 		element.hidden = true;
 		onClose();
@@ -42,6 +51,10 @@ export function createStylesPane(onClose: () => void): StylesPane {
 		render(data, next) {
 			if (element.hidden) return;
 			locale = next;
+			const catalogsChanged =
+				latest?.model.paragraphStyles !== data.model.paragraphStyles ||
+				latest?.model.characterStyles !== data.model.characterStyles;
+			latest = data;
 			const signature = JSON.stringify([
 				data.allParagraph,
 				data.allCharacter,
@@ -49,8 +62,10 @@ export function createStylesPane(onClose: () => void): StylesPane {
 				data.selectedParagraph,
 				data.selectedCharacter,
 				data.disabled,
+				data.canAuthor,
+				data.canModify,
 			]);
-			const listsChanged = signature !== key;
+			const listsChanged = signature !== key || catalogsChanged;
 			key = signature;
 			if (listsChanged) {
 				const header = document.createElement('div');
@@ -91,8 +106,11 @@ export function createStylesPane(onClose: () => void): StylesPane {
 					wrap.append(label, items);
 					return wrap;
 				};
+				create.disabled = !data.canAuthor;
+				modify.disabled = !data.canAuthor || !data.canModify;
 				element.replaceChildren(
 					header,
+					actions,
 					list(translate(locale, 'Paragraph styles'), data.allParagraph, 'paragraph'),
 					...(data.allCharacter.length
 						? [

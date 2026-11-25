@@ -1,3 +1,5 @@
+import { splitWithFollowingStyle } from './style-commands';
+import type { DocumentModel } from 'ooxml-core/docx';
 import { setDropCap } from './drop-cap-command';
 import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -93,7 +95,7 @@ export const editorBindings: Record<string, Command> = {
 	'Mod-Space': (_state, _dispatch, view) => runIfEditable(view, clearFormatting),
 };
 
-export function editorKeymap(showSearch: () => void) {
+export function editorKeymap(showSearch: () => void, getModel?: () => DocumentModel) {
 	const shortcuts = Object.fromEntries(
 		Object.entries({ ...baseKeymap, ...editorBindings }).map(([key, command]) => [
 			key,
@@ -102,6 +104,15 @@ export function editorKeymap(showSearch: () => void) {
 	);
 	return keymap({
 		...shortcuts,
+		...(getModel && {
+			Enter: editable(
+				chainCommands(
+					exitListOnEmptyEnter,
+					splitWithFollowingStyle(getModel),
+					expectDefined(baseKeymap.Enter, 'the base Enter command'),
+				),
+			),
+		}),
 		'Mod-f': () => {
 			showSearch();
 			return true;

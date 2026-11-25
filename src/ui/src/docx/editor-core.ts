@@ -1,3 +1,4 @@
+import { withStyleCatalogs } from './style-catalog-state';
 import type { ContextMenu } from './context-menu';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type { SurfaceHostActions } from './building-blocks-actions';
@@ -424,7 +425,10 @@ export class EditorCore {
 							this.collab.ids,
 						)
 					: assignMissingParagraphIds(applied);
-		view.updateState(repaired ? applied.apply(repaired) : applied);
+		const next = repaired ? applied.apply(repaired) : applied;
+		const stylesChanged = previousDoc.attrs.styleCatalogs !== next.doc.attrs.styleCatalogs;
+		if (stylesChanged) this.model = withStyleCatalogs(this.model, next.doc);
+		view.updateState(next);
 		if (docChanged) {
 			this.readAloud.documentEdited();
 			this.model = docToModel(view.state.doc, this.model, previousDoc);
@@ -433,6 +437,7 @@ export class EditorCore {
 				this.shell.review?.commentsPanel.refresh();
 			this.pages.refreshPageStyles();
 			this.pages.relayout();
+			if (stylesChanged) this.parts.refreshReviewDisplay();
 			this.shell.chrome?.setSaveState('dirty');
 			this.notifyChange();
 			if (
@@ -477,6 +482,10 @@ export class EditorCore {
 			printLayout?.pageStatus(),
 			Boolean(review?.commentsOpen),
 			this.canEditBody() && (!this.collab.active || Boolean(this.collab.yjs?.sharedComments)),
+			this.targetView() === this.view &&
+				this.canEditBody() &&
+				!this.collab.active &&
+				!this.model.protection?.enforced,
 		);
 		this.inserts.smartArt.sync();
 		const target = this.targetView();

@@ -86,11 +86,12 @@ function setLanguageAttribute(
 		props.removeChild(language);
 }
 
-function setRunProperties(
+export function setRunProperties(
 	doc: XmlDocument,
 	runNode: XmlElement,
 	run: TextRun,
 	base?: TextRun,
+	updateRevision = true,
 ): void {
 	let props = first(runNode, 'rPr');
 	const changed = (key: keyof TextRun): boolean => runPropertyChanged(run, base, key);
@@ -142,7 +143,7 @@ function setRunProperties(
 		runNode.insertBefore(props, runNode.firstChild);
 	}
 	if (!props) return;
-	writeRunFormatRevision(doc, props, run.formatRevision ?? run.revision);
+	if (updateRevision) writeRunFormatRevision(doc, props, run.formatRevision ?? run.revision);
 	if (changed('bold')) setToggle(doc, props, 'b', run.bold);
 	if (changed('italic')) setToggle(doc, props, 'i', run.italic);
 	if (changed('boldComplexScript')) setToggle(doc, props, 'bCs', run.boldComplexScript);
@@ -253,7 +254,7 @@ function setRunProperties(
 	orderChildren(props, RPR_ORDER);
 	// w14:* run properties (MS-DOCX CT_RPr) come after the ECMA-376 w:* sequence.
 	if (changed('ligatures')) writeLigatures(doc, props, run.ligatures);
-	if (!props.childNodes.length) runNode.removeChild(props);
+	if (!props.childNodes.length && !props.attributes.length) runNode.removeChild(props);
 }
 
 /** A run's text as ordinary stretches and the single characters Word stores as elements. */

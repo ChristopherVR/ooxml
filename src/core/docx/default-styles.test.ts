@@ -31,10 +31,12 @@ describe('new document styles', () => {
 		expect(reloaded.model.paragraphStyles?.styles).toEqual(model.paragraphStyles?.styles);
 	});
 
-	it('still refuses changed style catalogs in the standalone writer', async () => {
+	it('writes changes to built-in styles in the standalone writer', async () => {
 		const model = createDocument();
 		must(model.paragraphStyles?.styles.Normal, 'Normal style').formatting.spacingAfterTwips =
 			twips(0);
-		await expect(saveDocx(model)).rejects.toThrow(/built-in default styles/);
+		const reloaded = await loadDocx(await saveDocx(model));
+		expect(reloaded.model.paragraphStyles?.styles.Normal?.formatting.spacingAfterTwips).toBe(0);
+		expect(reloaded.model.paragraphStyles?.styles.Heading1).toBeDefined();
 	});
 });

@@ -257,6 +257,7 @@ export function runStylesPlugin(
 					if (block.type.name === 'paragraph') return visitParagraph(block, blockOffset + 1);
 					if (block.type.name !== 'table') return;
 					const table = tables.get(String(block.attrs.id));
+					const styleId = block.attrs.tableStyleId ?? table?.style;
 					let columnCount = 1;
 					block.forEach((row) => {
 						let width = 0;
@@ -267,11 +268,11 @@ export function runStylesPlugin(
 						let column = 0;
 						const rowStart = blockOffset + 1 + rowOffset + 1;
 						row.forEach((cell, cellOffset) => {
-							const tableStyleRun = table?.style
+							const tableStyleRun = styleId
 								? resolveTableStyleFormatting(
-										table.style,
+										styleId,
 										model.tableStyles,
-										table.look,
+										table?.look,
 										rowIndex,
 										block.childCount,
 										column,

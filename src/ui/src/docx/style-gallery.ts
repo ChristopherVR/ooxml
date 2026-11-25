@@ -93,10 +93,12 @@ export function markSelectedTiles(root: ParentNode, selected: string, disabled: 
 	}
 }
 
-/**
- * Word's Styles gallery: a scrolling strip of tiles, each previewing its style. Tiles are rebuilt
- * only when the list changes; `selected` just moves the pressed state. `choose` receives the id.
- */
+const galleryCatalogs = new WeakMap<
+	HTMLElement,
+	Pick<DocumentModel, 'paragraphStyles' | 'characterStyles'>
+>();
+
+/** Updates the gallery when its styles or inherited previews change. */
 export function syncStyleGallery(
 	gallery: HTMLElement,
 	styles: readonly GalleryStyle[],
@@ -106,8 +108,14 @@ export function syncStyleGallery(
 	disabled: boolean,
 ): void {
 	const key = JSON.stringify(styles);
-	if (gallery.dataset.key !== key) {
+	const previous = galleryCatalogs.get(gallery);
+	if (
+		gallery.dataset.key !== key ||
+		previous?.paragraphStyles !== model.paragraphStyles ||
+		previous?.characterStyles !== model.characterStyles
+	) {
 		gallery.dataset.key = key;
+		galleryCatalogs.set(gallery, model);
 		gallery.replaceChildren(
 			...styles.map((style) => createStyleTile(style, model, 'paragraph', choose)),
 		);

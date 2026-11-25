@@ -1,3 +1,4 @@
+import { resolvePartPath, type Relationship } from '../opc/index';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 // OPC plumbing (relationships, content types) lives in the sibling `opc` area; this
 // module re-exports it and keeps the Word-specific base-part resolution.
@@ -15,4 +16,15 @@ export {
 export function resolveInternalTarget(target: string): string {
 	if (target.startsWith('/')) return target.replace(/^\//, '');
 	return `word/${target.replace(/^\.\//, '')}`;
+}
+
+export function documentPartPath(
+	rels: ReadonlyMap<string, Relationship>,
+	kind: string,
+	fallback: string,
+): string {
+	const rel = [...rels.values()].find(
+		(entry) => entry.mode === 'Internal' && entry.type.endsWith('/' + kind),
+	);
+	return (rel && resolvePartPath('word/document.xml', rel.target)) || fallback;
 }

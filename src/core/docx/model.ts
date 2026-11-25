@@ -1,3 +1,4 @@
+import type { LatentStyles } from './latent-styles';
 import type { DocumentProperties } from './core-properties';
 import type { SignatureSummary } from '../opc/signature/state';
 import type { DocumentPropertySet } from '../opc/properties/types';
@@ -137,8 +138,10 @@ export interface DocumentModel {
 	 * removes them (changes invalidate signatures); saving an unchanged document keeps the file.
 	 */
 	signatures?: SignatureSummary;
-	/** Source paragraph defaults/styles; editing the catalog itself is not supported. */
+	/** Paragraph defaults and style definitions, including custom styles. */
 	paragraphStyles?: ParagraphStyleCatalog;
+	/** Defaults and named exceptions for built-in styles absent from the explicit catalog. */
+	latentStyles?: LatentStyles;
 	/** A DOCX package with no styles part inherits Word's Normal template for display. */
 	usesImplicitNormalStyle?: true;
 	/** Display fallback metadata from the source font table, keyed by lowercase family name. */

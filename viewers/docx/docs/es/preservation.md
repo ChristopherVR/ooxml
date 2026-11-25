@@ -42,7 +42,7 @@ las partes de comentarios creadas):
 | `word/people.xml`                                                                                                                                                                                                                             | Consulte "Comentarios" más abajo.                                                                                              |
 | `word/fontTable.xml` y las fuentes incrustadas (`word/fonts/*.odttf`)                                                                                                                                                                         | No se usan para el renderizado; se conservan con sus relaciones.                                                               |
 | `word/settings.xml` (zoom, `w:extLst`, elementos de compatibilidad y protección)                                                                                                                                                              | Solo se parchean las marcas que gestiona el editor (control de cambios, encabezados pares e impares, guionado, ...).           |
-| `word/theme/theme1.xml`, `word/webSettings.xml`, `docProps/custom.xml`, miniaturas                                                                                                                                                            | La edición del tema se rechaza (abajo).                                                                                        |
+| `word/theme/theme1.xml`, `word/webSettings.xml`, `docProps/custom.xml`, miniaturas                                                                                                                                                            | El núcleo guarda los cambios de tema y conserva las demás partes.                                                              |
 | Imágenes y otros medios que no se sustituyen                                                                                                                                                                                                  | Una imagen que el usuario sustituye recibe una parte nueva.                                                                    |
 | Partes y relaciones desconocidas de cualquier tipo                                                                                                                                                                                            | Todo lo que contiene el paquete y para lo que el editor no tiene lector.                                                       |
 | Dentro de `document.xml`: `mc:AlternateContent`, listas de extensiones (`w:extLst`), marcado `w14:`/`w15:`, `w:tblPrChange`, `w:trPrChange`, `w:tcPrChange`, marcadores, códigos de campo, propiedades de fragmento y de párrafo desconocidas | En párrafos y tablas que el usuario no reestructuró. Los párrafos editados conservan sus hijos `w:pPr` y `w:rPr` no modelados. |
@@ -114,10 +114,7 @@ modelo lanza `Cannot edit table grid widths, width, alignment, indent, borders, 
 
 Guardar lanza una excepción, indicando el motivo y dejando el paquete de origen intacto, cuando el modelo:
 
-- edita el catálogo de estilos de párrafo, de carácter o de tabla (`Editing the paragraph style catalog is not
-  supported; source styles.xml is preserved unchanged.`, y las variantes de carácter y de tabla), salvo el formato por
-  estilo que gestiona el editor;
-- edita el tema (`Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.`);
+- elimina el tema (`Removing a Word theme is unsupported.`);
 - repite un id de bloque o de párrafo (`Duplicate document block id` / `Duplicate document node id`);
 - solicita una imagen, un vínculo, una forma o un gráfico que necesita una relación que el llamador no puede asignar;
 - no supera la validación del modelo (`assertValidDocumentModel`: por ejemplo, un documento sin sección).

@@ -25,7 +25,7 @@
 | `word/people.xml`                                                                                                                                                           | 参见下文“批注”。                                                                     |
 | `word/fontTable.xml` 及嵌入字体（`word/fonts/*.odttf`）                                                                                                                     | 不用于渲染；与其关系一并保留。                                                       |
 | `word/settings.xml`（缩放、`w:extLst`、兼容性和保护元素）                                                                                                                   | 仅修补编辑器所拥有的标志（修订跟踪、奇偶页不同的页眉、断字等）。                     |
-| `word/theme/theme1.xml`、`word/webSettings.xml`、`docProps/custom.xml`、缩略图                                                                                              | 主题编辑被拒绝（见下文）。                                                           |
+| `word/theme/theme1.xml`、`word/webSettings.xml`、`docProps/custom.xml`、缩略图                                                                                              | 核心会保存主题编辑并保留其他部件。                                                   |
 | 未被替换的图片和其他媒体                                                                                                                                                    | 用户替换的图片会获得一个新部件。                                                     |
 | 任何类型的未知部件和关系                                                                                                                                                    | 包中编辑器没有读取器的任何内容。                                                     |
 | `document.xml` 内部：`mc:AlternateContent`、扩展列表（`w:extLst`）、`w14:`/`w15:` 标记、`w:tblPrChange`、`w:trPrChange`、`w:tcPrChange`、书签、域代码、未知的行内和段落属性 | 位于用户未重组的段落和表格中。已编辑的段落保留其未建模的 `w:pPr` 和 `w:rPr` 子元素。 |
@@ -68,8 +68,7 @@
 
 当模型出现以下情况时，保存会抛出错误，说明原因，并保持源包不变：
 
-- 编辑段落、字符或表格样式目录（`Editing the paragraph style catalog is not supported; source styles.xml is preserved unchanged.`，以及字符和表格的对应变体），编辑器所拥有的按样式格式除外；
-- 编辑主题（`Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.`）；
+- 删除主题（`Removing a Word theme is unsupported.`）；
 - 重复了块或段落 ID（`Duplicate document block id` / `Duplicate document node id`）；
 - 请求的图片、超链接、形状或图表需要一个调用方无法分配的关系；
 - 未通过模型验证（`assertValidDocumentModel`：例如文档没有节）。

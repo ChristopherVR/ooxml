@@ -37,8 +37,8 @@ export function parseTheme(xml: string): ThemeCatalog {
 	};
 }
 
-const MAPPING_KEYS = ['bg1', 'tx1', 'bg2', 'tx2'] as const;
-const TOKEN_TO_SLOT: Record<StWmlColorSchemeIndex, ThemeColorSlot> = {
+export const MAPPING_KEYS = ['bg1', 'tx1', 'bg2', 'tx2'] as const;
+export const TOKEN_TO_SLOT: Record<StWmlColorSchemeIndex, ThemeColorSlot> = {
 	dark1: 'dk1',
 	light1: 'lt1',
 	dark2: 'dk2',

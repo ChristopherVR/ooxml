@@ -16,6 +16,9 @@ export interface StylesData {
 	selectedCharacter: string;
 	model: DocumentModel;
 	disabled: boolean;
+	canAuthor: boolean;
+	canModify: boolean;
+	author(modify: boolean): void;
 	chooseParagraph(id: string): void;
 	chooseCharacter(id: string): void;
 	clearFormatting(): void;
@@ -94,14 +97,27 @@ export function openStylesGallery(
 				),
 			),
 		);
+	const author = (modify: boolean) => () => {
+		onClose();
+		anchor.focus();
+		data.author(modify);
+	};
+	const create = commandButton(translate(locale, 'Create a Style'), 'stylesPane', author(false));
+	const modify = commandButton(translate(locale, 'Modify Style'), 'stylesPane', author(true));
+	create.disabled = !data.canAuthor;
+	modify.disabled = !data.canAuthor || !data.canModify;
 	const commands = document.createElement('div');
 	commands.className = 'styles-commands';
+	const clear = commandButton(
+		translate(locale, 'Clear formatting'),
+		'clear',
+		finish(() => data.clearFormatting()),
+	);
+	clear.disabled = data.disabled;
 	commands.append(
-		commandButton(
-			translate(locale, 'Clear formatting'),
-			'clear',
-			finish(() => data.clearFormatting()),
-		),
+		create,
+		modify,
+		clear,
 		commandButton(
 			translate(locale, 'Styles pane'),
 			'stylesPane',
@@ -117,8 +133,6 @@ export function openStylesGallery(
 			data.disabled,
 		);
 	}
-	for (const button of commands.querySelectorAll('button'))
-		(button as HTMLButtonElement).disabled = data.disabled && button.textContent !== 'Styles pane';
 	mountPopover(anchor, pop, anchor, 'end');
 	pop.querySelector<HTMLElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
 }

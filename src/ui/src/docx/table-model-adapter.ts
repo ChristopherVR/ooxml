@@ -73,6 +73,7 @@ export function tableNode(
 		'table',
 		{
 			id: block.id,
+			tableStyleId: block.style ?? '',
 			// Nested tables edit their text on the page; their grid and merges stay as authored.
 			structureEditable: !nested && block.structureEditable !== false,
 			// Merge and split work on any table whose cells tile its grid.

@@ -53,12 +53,15 @@ describe('editing the formatting of existing paragraph styles', () => {
 		expect(xml).toContain('<w:textAlignment w:val="baseline"/>');
 	});
 
-	it('still refuses renames and outline level edits', async () => {
-		const renamed = await load();
-		must(renamed.model.paragraphStyles?.styles.Body).name = 'Other';
-		await expect(renamed.save(renamed.model)).rejects.toThrow(/style catalog is not supported/);
-		const outlined = await load();
-		must(outlined.model.paragraphStyles?.styles.Body).formatting.outlineLevel = 2;
-		await expect(outlined.save(outlined.model)).rejects.toThrow(/style catalog is not supported/);
+	it('saves a name and outline level edit with the rest of the paragraph properties', async () => {
+		const loaded = await load();
+		const style = must(loaded.model.paragraphStyles?.styles.Body);
+		style.name = 'Other';
+		style.formatting.outlineLevel = 2;
+		const reopened = await loadDocx(await loaded.save());
+		expect(reopened.model.paragraphStyles?.styles.Body).toMatchObject({
+			name: 'Other',
+			formatting: { ...style.formatting, outlineLevel: 2 },
+		});
 	});
 });

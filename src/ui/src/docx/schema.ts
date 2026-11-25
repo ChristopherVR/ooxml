@@ -122,6 +122,7 @@ export const schema = new Schema({
 				noteParts: { default: null },
 				/** Document properties and package information as JSON (`document-information-attr.ts`). */
 				documentInformation: { default: null },
+				styleCatalogs: { default: null },
 				...commentHistoryAttributes,
 			},
 		},
@@ -271,6 +272,7 @@ export const schema = new Schema({
 			group: 'block',
 			attrs: {
 				id: { default: '' },
+				tableStyleId: { default: null },
 				structureEditable: { default: true },
 				/** Merged or nested table whose rows, columns and cells the structure commands can edit. */
 				restructurable: { default: false },

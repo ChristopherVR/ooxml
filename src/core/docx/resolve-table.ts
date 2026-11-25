@@ -90,8 +90,10 @@ function ownFormatting(
 	regions: readonly string[],
 ): TableStyleConditionalFormatting {
 	let result: TableStyleConditionalFormatting = {};
+	if (style.runFormatting) result.run = { ...style.runFormatting };
 	if (style.borders) result.borders = { ...style.borders };
 	if (style.shadingFill) result.shadingFill = style.shadingFill;
+	if (style.shadingThemeFill) result.shadingThemeFill = style.shadingThemeFill;
 	if (style.percentageShading) result.percentageShading = style.percentageShading;
 	else if (style.shadingFill) delete result.percentageShading;
 	for (const region of regions) {

@@ -1,41 +1,32 @@
+import { readStyleMetadata } from './style-metadata';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import type { CharacterStyleDefinition, RunStyleCatalog } from './run-style-model';
-import { first, getW, named, parseXml, type XmlDocument, type XmlElement } from './xml';
+import { children, first, getW, parseXml, type XmlElement } from './xml';
 import { parseRunProperties } from './run-properties';
-import { parseOnOff } from './simple-types';
 import { inheritanceCycleEntries } from './style-inheritance';
-
-function styleElements(document: XmlDocument): XmlElement[] {
-	return Array.from(document.getElementsByTagName('*')).filter(
-		(element): element is XmlElement =>
-			named(element, 'style') &&
-			(getW(element, 'type') === 'character' || getW(element, 'type') === 'paragraph'),
-	);
-}
 
 const eastAsiaLanguageOf = (rPr: XmlElement | undefined) => getW(first(rPr, 'lang'), 'eastAsia');
 
 /** Parses `styles.xml`'s `rPrDefault` plus every character/paragraph style's `w:rPr`. */
-export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
-	const document = parseXml(xml);
-	const defaults = first(first(document.documentElement, 'docDefaults'), 'rPrDefault');
+export function parseRunStyleCatalog(xml: string | XmlElement): RunStyleCatalog {
+	const root = typeof xml === 'string' ? parseXml(xml).documentElement : xml;
+	const defaults = first(first(root, 'docDefaults'), 'rPrDefault');
 	const styles = Object.create(null) as Record<string, CharacterStyleDefinition>;
-	for (const element of styleElements(document)) {
+	const reservedStyleIds: string[] = [];
+	for (const element of children(root, 'style')) {
+		const type = getW(element, 'type');
 		const id = getW(element, 'styleId');
 		if (!id) continue;
-		const type = getW(element, 'type') === 'character' ? 'character' : 'paragraph';
-		const basedOn = getW(first(element, 'basedOn'), 'val');
+		if (type !== 'character' && type !== 'paragraph') {
+			if (type !== 'table') reservedStyleIds.push(id);
+			continue;
+		}
 		const linkedStyle = getW(first(element, 'link'), 'val');
-		const isDefault = parseOnOff(getW(element, 'default'));
-		const name = getW(first(element, 'name'), 'val');
 		const eastAsiaLanguage = eastAsiaLanguageOf(first(element, 'rPr'));
 		styles[id] = {
-			id,
+			...readStyleMetadata(element, id),
 			type,
-			...(name ? { name } : {}),
-			...(basedOn ? { basedOn } : {}),
 			...(linkedStyle ? { linkedStyle } : {}),
-			...(isDefault === undefined ? {} : { isDefault }),
 			formatting: parseRunProperties(first(element, 'rPr')),
 			...(eastAsiaLanguage ? { eastAsiaLanguage } : {}),
 		};
@@ -48,6 +39,7 @@ export function parseRunStyleCatalog(xml: string): RunStyleCatalog {
 		docDefaults: parseRunProperties(first(defaults, 'rPr')),
 		...(docDefaultsEastAsiaLanguage ? { docDefaultsEastAsiaLanguage } : {}),
 		styles,
+		...(reservedStyleIds.length && { reservedStyleIds }),
 		warnings,
 	};
 }

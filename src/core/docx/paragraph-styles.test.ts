@@ -117,7 +117,7 @@ describe('paragraph style catalog', () => {
 		expect(styled).toMatchObject({ style: 'Derived', spacingAfterTwips: 480 });
 		expect(styled.align).toBeUndefined();
 		expect(loaded.model.warnings.join(' ')).toContain(
-			'Paragraph style, character style and docDefaults inheritance resolve for rendering',
+			'Paragraph and character styles resolve supported formatting',
 		);
 	});
 
@@ -151,12 +151,12 @@ describe('paragraph style catalog', () => {
 		);
 	});
 
-	it('rejects catalog mutations the writer cannot express', async () => {
+	it('renames a style without changing the paragraph reference', async () => {
 		const loaded = await loadDocx(await fixture());
 		must(loaded.model.paragraphStyles?.styles.Derived, 'Derived style').name = 'Renamed';
-		await expect(loaded.save()).rejects.toThrow(
-			'Editing the paragraph style catalog is not supported',
-		);
+		const reopened = await loadDocx(await loaded.save());
+		expect(reopened.model.paragraphStyles?.styles.Derived?.name).toBe('Renamed');
+		expect(reopened.model.blocks).toContainEqual(expect.objectContaining({ style: 'Derived' }));
 	});
 
 	it('handles prototype-like style ids and long inheritance chains safely', () => {

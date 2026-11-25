@@ -1,110 +1,152 @@
-// Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// Changes to the paragraph formatting of styles already in `word/styles.xml`: alignment,
-// direction, spacing, indents, pagination toggles, borders and shading. The style's other
-// children, and every `w:pPr` child the model does not hold, stay as they were; the properties
-// are written by the same code as a paragraph's direct formatting.
-import type JSZip from 'jszip';
-import type { DocumentModel, Paragraph, ParagraphFormatting } from './model';
+import { orderChildren } from './element-order';
+import type { Paragraph, ParagraphFormatting } from './model';
 import { paragraphJustification } from './paragraph-alignment';
+import { EAST_ASIAN_TYPOGRAPHY_KEYS } from './paragraph-styles';
+import type { RunFormatting } from './run-style-model';
 import { orderParagraphProperties } from './tab-stops';
 import { writeParagraphProperties } from './write-paragraph-properties';
-import { buildXml, children, first, getW, makeW, parseXml, WORD_NS, type XmlElement } from './xml';
+import { setRunProperties, setToggle } from './write-run';
+import { children, first, makeW, WORD_NS, type XmlElement } from './xml';
 
-const STYLES_PART = 'word/styles.xml';
-/** Children of `w:style` that follow `w:pPr` in the schema sequence. */
-const AFTER_PPR = ['rPr', 'tblPr', 'trPr', 'tcPr', 'tblStylePr'];
-
-/** The formatting keys a style edit can write. Others (the outline level) are still refused. */
-export const WRITABLE_STYLE_FORMATTING: readonly (keyof ParagraphFormatting)[] = [
-	'align',
-	'justification',
-	'direction',
-	'spacingBeforeTwips',
-	'spacingAfterTwips',
-	'lineSpacingTwips',
-	'lineSpacingRule',
-	'indentLeftTwips',
-	'indentRightTwips',
-	'indentStartTwips',
-	'indentEndTwips',
-	'firstLineTwips',
-	'hangingTwips',
-	'pageBreakBefore',
-	'keepNext',
-	'keepLines',
-	'widowControl',
-	'contextualSpacing',
-	'suppressLineNumbers',
-	'borders',
-	'shadingFill',
-];
-
-/** `formatting` without the keys a style edit can write. */
-export function unwritableFormatting(formatting: ParagraphFormatting): ParagraphFormatting {
-	const rest: Record<string, unknown> = { ...formatting };
-	for (const key of WRITABLE_STYLE_FORMATTING) delete rest[key];
-	return rest as ParagraphFormatting;
+export function setStyleAttribute(
+	element: XmlElement,
+	key: string,
+	value: string | number | boolean | undefined,
+): void {
+	if (value === undefined) element.removeAttributeNS(WORD_NS, key);
+	else
+		element.setAttributeNS(
+			WORD_NS,
+			`w:${key}`,
+			String(typeof value === 'boolean' ? Number(value) : value),
+		);
 }
 
-const asParagraph = (formatting: ParagraphFormatting): Paragraph => ({
+export function setStyleValue(
+	parent: XmlElement,
+	key: string,
+	value: string | number | boolean | undefined,
+): void {
+	const doc = parent.ownerDocument;
+	const old = first(parent, key);
+	if (value === undefined && old) parent.removeChild(old);
+	if (value === undefined) return;
+	const node = old ?? makeW(doc, key);
+	setStyleAttribute(node, 'val', value);
+	if (!old) parent.appendChild(node);
+}
+
+export function styleChild(parent: XmlElement, key: string): XmlElement {
+	const old = first(parent, key);
+	if (old) return old;
+	const node = makeW(parent.ownerDocument, key);
+	parent.appendChild(node);
+	return node;
+}
+
+const asParagraph = (formatting: ParagraphFormatting | undefined): Paragraph => ({
 	type: 'paragraph',
 	id: 'style',
 	runs: [],
 	...formatting,
 });
 
-function pPrOf(style: XmlElement): XmlElement {
-	let pPr = first(style, 'pPr');
-	if (pPr) return pPr;
-	pPr = makeW(style.ownerDocument, 'pPr');
-	const anchor =
-		Array.from(style.childNodes).find(
-			(node): node is XmlElement =>
-				node.nodeType === 1 && AFTER_PPR.includes((node as XmlElement).localName),
-		) ?? null;
-	style.insertBefore(pPr, anchor);
-	return pPr;
-}
-
-/** Writes the changed formatting of existing paragraph styles into `word/styles.xml`. */
-export async function applyStyleFormatting(
-	zip: JSZip,
-	model: DocumentModel,
-	base: DocumentModel,
-): Promise<void> {
-	const next = model.paragraphStyles?.styles ?? {};
-	const prior = base.paragraphStyles?.styles ?? {};
-	const changed = Object.keys(next).filter(
-		(id) => JSON.stringify(next[id]?.formatting) !== JSON.stringify(prior[id]?.formatting),
-	);
-	if (!changed.length) return;
-	const file = zip.file(STYLES_PART);
-	if (!file) throw new Error('Cannot edit a style: the package has no styles.xml.');
-	const doc = parseXml(await file.async('string'));
-	const styles = children(doc.documentElement, 'style');
-	for (const id of changed) {
-		const style = styles.find(
-			(element) => getW(element, 'type') === 'paragraph' && getW(element, 'styleId') === id,
-		);
-		if (!style) throw new Error(`Cannot edit style "${id}": it is not in styles.xml.`);
-		const after = asParagraph(next[id]!.formatting);
-		const before = asParagraph(prior[id]?.formatting ?? {});
-		const pPr = pPrOf(style);
+export function patchStyleParagraph(
+	style: XmlElement,
+	next: ParagraphFormatting | undefined,
+	prior: ParagraphFormatting | undefined,
+	numbering?: { numId: number; level: number },
+	priorNumbering?: { numId: number; level: number },
+): void {
+	const formatChanged = JSON.stringify(next ?? {}) !== JSON.stringify(prior ?? {});
+	const numberChanged = JSON.stringify(numbering) !== JSON.stringify(priorNumbering);
+	if (!formatChanged && !numberChanged) return;
+	const doc = style.ownerDocument;
+	const pPr = styleChild(style, 'pPr');
+	if (numberChanged) {
+		if (numbering) {
+			const numPr = styleChild(pPr, 'numPr');
+			setStyleValue(numPr, 'ilvl', numbering.level);
+			setStyleValue(numPr, 'numId', numbering.numId);
+			orderChildren(numPr, ['ilvl', 'numId', 'numberingChange', 'ins']);
+		} else {
+			for (const node of children(pPr, 'numPr')) pPr.removeChild(node);
+		}
+	}
+	if (formatChanged) {
+		const after = asParagraph(next);
+		const before = asParagraph(prior);
 		if (
 			after.align !== before.align ||
 			after.justification !== before.justification ||
 			after.direction !== before.direction
-		) {
-			for (const jc of children(pPr, 'jc')) pPr.removeChild(jc);
-			const value = paragraphJustification(after);
-			if (value) {
-				const jc = makeW(doc, 'jc');
-				jc.setAttributeNS(WORD_NS, 'w:val', value);
-				pPr.appendChild(jc);
-			}
-		}
+		)
+			setStyleValue(pPr, 'jc', paragraphJustification(after));
+		if (after.outlineLevel !== before.outlineLevel)
+			setStyleValue(
+				pPr,
+				'outlineLvl',
+				after.outlineLevel === undefined
+					? undefined
+					: after.outlineLevel === 0
+						? 9
+						: after.outlineLevel - 1,
+			);
+		for (const key of [...EAST_ASIAN_TYPOGRAPHY_KEYS, 'suppressAutoHyphens'] as const)
+			if (after[key] !== before[key]) setToggle(doc, pPr, key, after[key]);
 		writeParagraphProperties(doc, pPr, after, before);
-		orderParagraphProperties(pPr);
+		for (const [key, attr] of [
+			['spacingBeforeAuto', 'beforeAutospacing'],
+			['spacingAfterAuto', 'afterAutospacing'],
+		] as const) {
+			if (after[key] === before[key]) continue;
+			const spacing = styleChild(pPr, 'spacing');
+			setStyleAttribute(spacing, attr, after[key]);
+			if (!spacing.attributes.length && !spacing.childNodes.length) pPr.removeChild(spacing);
+		}
+		if (JSON.stringify(after.frame) !== JSON.stringify(before.frame)) {
+			const frame = styleChild(pPr, 'framePr');
+			for (const [key, attr] of [
+				['widthTwips', 'w'],
+				['heightTwips', 'h'],
+				['heightRule', 'hRule'],
+				['xTwips', 'x'],
+				['yTwips', 'y'],
+				['xAlign', 'xAlign'],
+				['yAlign', 'yAlign'],
+				['hAnchor', 'hAnchor'],
+				['vAnchor', 'vAnchor'],
+				['hSpaceTwips', 'hSpace'],
+				['vSpaceTwips', 'vSpace'],
+				['wrap', 'wrap'],
+			] as const) {
+				if (after.frame?.[key] !== before.frame?.[key])
+					setStyleAttribute(frame, attr, after.frame?.[key]);
+			}
+			if (!frame.attributes.length && !frame.childNodes.length) pPr.removeChild(frame);
+		}
 	}
-	zip.file(STYLES_PART, buildXml(doc));
+	orderParagraphProperties(pPr);
+	if (!pPr.childNodes.length && !pPr.attributes.length) style.removeChild(pPr);
+}
+
+export function patchStyleRun(
+	style: XmlElement,
+	next: RunFormatting | undefined,
+	prior: RunFormatting | undefined,
+	eastAsiaLanguage?: string,
+	priorLanguage?: string,
+): void {
+	if (
+		JSON.stringify(next ?? {}) === JSON.stringify(prior ?? {}) &&
+		eastAsiaLanguage === priorLanguage
+	)
+		return;
+	setRunProperties(
+		style.ownerDocument,
+		style,
+		{ text: '', ...next, ...(eastAsiaLanguage !== undefined && { eastAsiaLanguage }) },
+		{ text: '', ...prior, ...(priorLanguage !== undefined && { eastAsiaLanguage: priorLanguage }) },
+		false,
+	);
 }

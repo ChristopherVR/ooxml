@@ -1,3 +1,5 @@
+import { commitStyleEdit, selectionStyle } from './style-commands';
+import { createStyleDialog } from './style-dialog';
 import type { DocumentModel } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { characterStyleAtSelection } from './character-style-picker';
@@ -19,7 +21,10 @@ interface Latest {
 	view: EditorView;
 	model: DocumentModel;
 	locale: EditorLocale;
+	canAuthor: boolean;
 }
+
+const openDialogs = new WeakMap<HTMLElement, HTMLElement>();
 
 /** Scrolls the gallery by roughly one tile and a half per press. */
 const TILE_STEP = 170;
@@ -129,6 +134,24 @@ function currentData(
 	const { view, model, locale } = latest;
 	const definitions = Object.values(model.paragraphStyles?.styles ?? {});
 	const normal = definitions.find((style) => style.isDefault);
+	const author = (modify: boolean) => {
+		if (!latest.canAuthor || !latest.view.editable || openDialogs.get(group)?.isConnected) return;
+		const { model, view, locale } = latest;
+		const dialog = createStyleDialog({
+			model,
+			locale,
+			modify,
+			selection: selectionStyle(view, model),
+			submit: (edit) =>
+				latest.view === view && latest.canAuthor && commitStyleEdit(view, latest.model, edit),
+		});
+		const host =
+			(group as HTMLElement & { stylesPane?: StylesPane }).stylesPane?.element.parentElement ??
+			group;
+		openDialogs.set(group, dialog.element);
+		host.append(dialog.element);
+		dialog.open();
+	};
 	const all: GalleryStyle[] = [
 		{ id: '', name: normal?.name || translate(locale, 'styles.inherit') },
 		...definitions
@@ -148,6 +171,12 @@ function currentData(
 		selectedCharacter: characterStyleAtSelection(view),
 		model,
 		disabled: select.disabled,
+		canAuthor: latest.canAuthor && view.editable,
+		canModify:
+			definitions.length > 0 ||
+			characters.length > 0 ||
+			Object.keys(model.tableStyles?.styles ?? {}).length > 0,
+		author,
 		chooseParagraph: applyParagraph,
 		chooseCharacter: (value) => emit(group, 'ribbon-action', { type: 'characterStyle', value }),
 		clearFormatting: () => emit(group, 'ribbon-action', { type: 'clear' }),
@@ -165,8 +194,9 @@ export function syncStylePicker(
 	view: EditorView,
 	model: DocumentModel,
 	locale: EditorLocale,
+	canAuthor = view.editable && !model.protection?.enforced,
 ): void {
-	const latest: Latest = { view, model, locale };
+	const latest: Latest = { view, model, locale, canAuthor };
 	let group = toolbar.querySelector<HTMLElement & { latest?: Latest }>('[data-styles-group]');
 	if (!group) {
 		group = build(toolbar, latest) as HTMLElement & { latest?: Latest };
@@ -212,6 +242,7 @@ export function resetStylePicker(toolbar?: HTMLElement): void {
 	const group = toolbar?.querySelector<HTMLElement & { stylesPane?: StylesPane }>(
 		'[data-styles-group]',
 	);
+	if (group) openDialogs.get(group)?.remove();
 	group?.stylesPane?.element.remove();
 	group?.remove();
 }

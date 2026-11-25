@@ -18,7 +18,7 @@ only the parts the edits reach:
   alternate content, bookmarks, tracked-change wrappers) stays where it was.
 - A part is rewritten only when the model changed what it holds: a header, footer, footnote or
   endnote part, the comments and their extended/identity metadata parts, `word/numbering.xml`, the style
-  parts for edited paragraph style formatting, `docProps/core.xml`, `word/settings.xml` flags the
+  parts for edited style definitions and latent styles, the edited theme part, `docProps/core.xml`, `word/settings.xml` flags the
   editor owns, the chart and SmartArt parts that were edited, and the bound `customXml` item of an
   edited data-bound control.
 - `[Content_Types].xml` and the relationship parts change only to register a part or relationship the
@@ -27,7 +27,7 @@ only the parts the edits reach:
   did not change returns the original bytes.
 
 A package created by the editor (not loaded) has no source to preserve and is written from the
-model with the built-in default styles.
+model. New documents start with the built-in default styles.
 
 ## Kept verbatim
 
@@ -44,7 +44,7 @@ comment parts):
 | `word/people.xml`                                                                                                                                                                                               | See "Comments" below.                                                                                                       |
 | `word/fontTable.xml` and embedded fonts (`word/fonts/*.odttf`)                                                                                                                                                  | Not used for rendering; kept with their relationships.                                                                      |
 | `word/settings.xml` (zoom, `w:extLst`, compatibility and protection elements)                                                                                                                                   | Only the flags the editor owns are patched (track changes, even/odd headers, hyphenation, ...).                             |
-| `word/theme/theme1.xml`, `word/webSettings.xml`, `docProps/custom.xml`, thumbnails                                                                                                                              | Theme editing is refused (below).                                                                                           |
+| `word/theme/theme1.xml`, `word/webSettings.xml`, `docProps/custom.xml`, thumbnails                                                                                                                              | Core saves theme edits and keeps the other parts.                                                                           |
 | Pictures and other media that are not replaced                                                                                                                                                                  | A picture the user replaces gets a new part.                                                                                |
 | Unknown parts and relationships of any type                                                                                                                                                                     | Anything the package holds that the editor has no reader for.                                                               |
 | Inside `document.xml`: `mc:AlternateContent`, extension lists (`w:extLst`), `w14:`/`w15:` markup, `w:tblPrChange`, `w:trPrChange`, `w:tcPrChange`, bookmarks, field codes, unknown run and paragraph properties | In paragraphs and tables the user did not restructure. Edited paragraphs keep their unmodeled `w:pPr` and `w:rPr` children. |
@@ -65,7 +65,7 @@ replies and nonstandard part locations. Six browser bindings check saved reply a
 
 ## Modeled and editable
 
-Text and character formatting, paragraph formatting and styles (use and per-style formatting edits),
+Text and character formatting, paragraph formatting and styles (application and style definitions),
 lists and numbering definitions, sections and page setup, headers, footers and footnotes, fields
 (editable results, Update Fields), comments and tracked changes, content controls and form fields,
 tables (below), hyperlinks and bookmarks, pictures, simple shapes and text boxes, SmartArt, classic
@@ -110,15 +110,17 @@ Table-level properties other than the margins the Table Properties dialog edits 
 indent, borders, style, look) are rendered and preserved but not editable: changing them in the model
 raises `Cannot edit table grid widths, width, alignment, indent, borders, or style; ...`.
 
+## Styles and themes
+
+Save updates paragraph, character, linked and table styles and latent-style settings in the
+source package. Surviving style definitions keep unmodeled child elements and extensions.
+Core also writes changes to theme colours, fonts, the format scheme and colour mapping.
+
 ## Refused with a diagnostic
 
 Saving throws, naming the reason and leaving the source package untouched, when the model:
 
-- edits the paragraph, character or table style catalog (`Editing the paragraph style catalog is not
-  supported; source styles.xml is preserved unchanged.`, and the character and table variants), apart
-  from the per-style formatting the editor owns;
-- edits the theme (`Editing the theme catalog is not supported; source theme1.xml/settings.xml are
-  preserved unchanged.`);
+- removes the theme (`Removing a Word theme is unsupported.`);
 - repeats a block or paragraph id (`Duplicate document block id` / `Duplicate document node id`);
 - asks for a picture, hyperlink, shape or chart that needs a relationship the caller cannot allocate;
 - fails model validation (`assertValidDocumentModel`: for example a document with no section).

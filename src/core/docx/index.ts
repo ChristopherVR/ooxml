@@ -279,3 +279,16 @@ export {
 	replaceDocumentFormattedMatches,
 	type DocumentReplaceFormatResult,
 } from './find-format-document';
+
+export type { LatentStyleException, LatentStyles } from './latent-styles';
+
+export {
+	canBaseStyleOn,
+	editStyleCatalogs,
+	paragraphStyleId,
+	styleCatalogsOf,
+	stylesOf,
+	type StyleCatalogs,
+	type StyleEdit,
+	type StyleKind,
+} from './edit-styles';

@@ -1,3 +1,5 @@
+import { applyStyleCatalogs } from './style-catalog-save';
+import { applyWordTheme } from './theme-save';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import JSZip from 'jszip';
 import { openZip } from '../opc/zip-limits';
@@ -5,7 +7,6 @@ import { dropAddedFolders, entryNames } from '../opc/zip-folders';
 import { stripPackageSignatures } from '../opc/signature/index';
 import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { stampModified } from './save-modified';
-import { applyStyleFormatting } from './style-formatting-package';
 import { applyDataBindings } from './data-binding';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
@@ -16,7 +17,6 @@ import { applyCoreProperties } from './core-properties';
 import { applyPackageInformation } from './package-information-save';
 import { scrubPersonalParts } from './personal-information';
 import { applyNumberingCatalog } from './numbering-package';
-import { applyStyleNumbering, differsOnlyByStyleNumbering } from './style-numbering-package';
 import { applyHeaderFooterEdits, createHeaderFooterParts } from './write-header-footer';
 import { applyNoteEdits } from './write-notes';
 import { writeNewRelationships } from './part-relationships';
@@ -29,15 +29,12 @@ import {
 import { applyPageBackground } from './page-background';
 import { applyComments } from './write-comments';
 import { numberCommentIds } from './comment-spans';
-import { DEFAULT_STYLES_XML, hasDefaultStyles } from './default-styles';
-import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
 import { refreshStyleRefFields } from './style-ref-fields';
 import { refreshComputedFields } from './computed-fields';
 import { applyDiagramEdits } from './diagram-save';
 import { applyGeneratedDiagramCaches } from './diagram-cache';
 import { applyChartPartEdits } from './chart-save';
 
-const DEFAULT_STYLES_PATH = 'word/styles.xml';
 import { maxWordId, numberRevisionIds } from './revision-ids';
 import { numberMoveNames } from './move-names';
 import { parseRelationships } from './package-parts';
@@ -115,29 +112,6 @@ export async function saveDocx(
 	model = numberMoveNames(
 		numberRevisionIds(numberCommentIds(model), maxWordId(binding?.sourceXml)),
 	);
-	if (binding && !differsOnlyByStyleNumbering(model.paragraphStyles, binding.base.paragraphStyles))
-		throw new Error(
-			'Editing the paragraph style catalog is not supported; source styles.xml is preserved unchanged.',
-		);
-	if (!binding && model.paragraphStyles && !hasDefaultStyles(model))
-		throw new Error(
-			'Creating or editing paragraph styles is not supported by the standalone DOCX writer; new documents use the built-in default styles.',
-		);
-	if (
-		binding &&
-		JSON.stringify(model.characterStyles) !== JSON.stringify(binding.base.characterStyles)
-	)
-		throw new Error(
-			'Editing the character style catalog is not supported; source styles.xml is preserved unchanged.',
-		);
-	if (binding && JSON.stringify(model.tableStyles) !== JSON.stringify(binding.base.tableStyles))
-		throw new Error(
-			'Editing the table style catalog is not supported; source styles.xml is preserved unchanged.',
-		);
-	if (binding && JSON.stringify(model.theme) !== JSON.stringify(binding.base.theme))
-		throw new Error(
-			'Editing the theme catalog is not supported; source theme1.xml/settings.xml are preserved unchanged.',
-		);
 	const zip = binding ? await openZip(binding.original, binding.zipLimits) : new JSZip();
 	const sourceEntries = entryNames(zip);
 	let document = binding ? parseXml(binding.sourceXml) : newDocument();
@@ -202,8 +176,8 @@ export async function saveDocx(
 	await applyChartPartEdits(zip, model, binding?.base);
 	await applyNumberingCatalog(zip, model, binding, pendingMedia);
 	await applyCoreProperties(zip, model.properties, binding?.base.properties);
-	if (binding) await applyStyleNumbering(zip, model, binding.base);
-	if (binding) await applyStyleFormatting(zip, model, binding.base);
+	await applyStyleCatalogs(zip, model, binding?.base);
+	await applyWordTheme(zip, model.theme, binding?.base.theme);
 	if (model.compatibilityMode !== binding?.base.compatibilityMode)
 		await applyCompatibilityMode(zip, model.compatibilityMode);
 	if (Boolean(model.evenAndOddHeaders) !== Boolean(binding?.base.evenAndOddHeaders))
@@ -223,20 +197,6 @@ export async function saveDocx(
 	] as const)
 		if ((model[key] !== false) !== (binding?.base[key] !== false))
 			await applySettingsFlag(zip, flag, model[key] === false);
-	// New documents carry Word's modern defaults, so they open in Word as they were edited.
-	if (!binding && model.paragraphStyles) {
-		zip.file(DEFAULT_STYLES_PATH, DEFAULT_STYLES_XML);
-		await ensureContentTypeOverride(
-			zip,
-			DEFAULT_STYLES_PATH,
-			'application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml',
-		);
-		await ensureDocumentRelationship(
-			zip,
-			'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles',
-			'styles.xml',
-		);
-	}
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
 	if (binding) await applyDataBindings(zip, model, binding.base, binding.sourceXml);

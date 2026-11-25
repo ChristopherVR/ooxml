@@ -1,3 +1,4 @@
+import { esStyleDialog } from './style-dialog';
 import { esSplitCells } from './split-cells';
 import { esOptions } from './options';
 import { esColumns } from './columns';
@@ -24,6 +25,7 @@ import { esRibbon } from './es-ribbon';
 import { esRibbonNames } from './ribbon-names';
 
 export const es: LocaleStrings = {
+	...esStyleDialog,
 	...esOptions,
 	...esRibbon,
 	...esRibbonNames,
