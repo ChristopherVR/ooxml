@@ -3,6 +3,12 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.1) - 2026-11-25
+
+### Bug Fixes
+
+- **docx:** Match Word paragraph and page story layout ([8873a17](https://github.com/ChristopherVR/ooxml/commit/8873a17629ee89d792b7ae074b2394a7fe6bbfd4))
+
 ## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-ui@2.1.0) - 2026-11-25
 
 ### Features

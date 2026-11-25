@@ -6,7 +6,7 @@ released that day; the full history of each package is in its own `CHANGELOG.md`
 
 ## 2026-11-25
 
-_Releases: pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5.1.0, pptx-svelte-viewer@5.1.0, pptx-vanilla-viewer@4.1.0_
+_Releases: pptx-react-viewer@5.1.1, pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.1, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5.1.1, pptx-angular-viewer@5.1.0, pptx-svelte-viewer@5.1.1, pptx-svelte-viewer@5.1.0, pptx-vanilla-viewer@4.1.1, pptx-vanilla-viewer@4.1.0_
 
 ### Features
 
@@ -31,6 +31,7 @@ _Releases: pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5
 
 ### Bug Fixes
 
+- **docx:** Match Word paragraph and page story layout ([8873a17](https://github.com/ChristopherVR/ooxml/commit/8873a17629ee89d792b7ae074b2394a7fe6bbfd4))
 - **security:** Address open CodeQL findings ([d3cfa23](https://github.com/ChristopherVR/ooxml/commit/d3cfa23a430dad131e7a62a5b6db929b7082ce49))
 - **ci:** Preserve Office ribbon and section contracts ([db09977](https://github.com/ChristopherVR/ooxml/commit/db09977aa79fb5fc306c52907977ea30481e157c))
 - **ui:** Restore mobile Office ribbon actions ([a3a4e67](https://github.com/ChristopherVR/ooxml/commit/a3a4e679892608f65ea7fe2957be9d94a28d44db))
@@ -66,6 +67,7 @@ _Releases: pptx-react-viewer@5.1.0, pptx-vue-viewer@5.1.0, pptx-angular-viewer@5
 
 ### Chores
 
+- **ci:** Replace vendored ECMA-376 XSDs with OpenXmlValidator and VSDX validator ([6f1a542](https://github.com/ChristopherVR/ooxml/commit/6f1a542c4705f694408ec5d4acd21a373e509d84))
 - **deps-dev:** Bump the development-minor-and-patch group with 5 updates ([1de2f58](https://github.com/ChristopherVR/ooxml/commit/1de2f5802035cecc41059252691efc14fc6d2951))
 - **deps-dev:** Reconcile development dependency updates ([1b1f293](https://github.com/ChristopherVR/ooxml/commit/1b1f29363b97bb4ac83728892938829dedd0a0b0))
 - **ci:** Incorporate verified PowerPoint and parity updates ([008ece4](https://github.com/ChristopherVR/ooxml/commit/008ece4a3d696bbad0e9266f38eb2d3737a954d8))

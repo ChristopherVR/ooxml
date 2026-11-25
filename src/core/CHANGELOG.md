@@ -3,6 +3,17 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.1](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.1.1) - 2026-11-25
+
+### Bug Fixes
+
+- **docx:** Match Word paragraph and page story layout ([8873a17](https://github.com/ChristopherVR/ooxml/commit/8873a17629ee89d792b7ae074b2394a7fe6bbfd4))
+- **docx:** Respect font pitch when choosing a fallback ([741573e](https://github.com/ChristopherVR/ooxml/commit/741573e3054314c8cc3ce3073600d2162695599d))
+
+### Chores
+
+- **ci:** Replace vendored ECMA-376 XSDs with OpenXmlValidator and VSDX validator ([6f1a542](https://github.com/ChristopherVR/ooxml/commit/6f1a542c4705f694408ec5d4acd21a373e509d84))
+
 ## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/ooxml-core@2.1.0) - 2026-11-25
 
 ### Features
