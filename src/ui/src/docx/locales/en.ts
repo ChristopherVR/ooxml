@@ -1,6 +1,6 @@
 import { enSplitCells } from './split-cells';
 import { enObjects } from './objects';
-import { enShapes } from './shapes';
+import { enShapes } from '../../ribbon/shape-names';
 import { enSmartArt } from './smartart';
 import { enCharts } from './charts';
 import { enOptions } from './options';

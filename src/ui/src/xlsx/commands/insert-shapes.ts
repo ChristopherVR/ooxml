@@ -1,7 +1,7 @@
-import { SHAPE_PALETTE } from 'ooxml-core/docx';
+import { SHAPE_PALETTE } from 'ooxml-core/drawingml';
 import { pictureAnchorAt } from 'ooxml-core/xlsx';
 import { editing, icon, target, type EditorContext } from 'ooxml-core/xlsx/ui';
-import { deShapes, enShapes, esShapes, frShapes, zhShapes } from '../../docx/locales/shapes';
+import { deShapes, enShapes, esShapes, frShapes, zhShapes } from '../../ribbon/shape-names';
 import { SHAPE_THUMB_VIEW_BOX, shapeThumbnailPath } from '../../ribbon/shape-thumbnail';
 import { field, textArea } from '../dialogs/fields';
 import { showDialog } from '../dialogs/frame';

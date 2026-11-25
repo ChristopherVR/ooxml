@@ -14,7 +14,7 @@ import { esConvertNotes } from './convert-notes';
 import { esDocumentInspector } from './document-inspector';
 import { esLineNumbers } from './line-numbers';
 import { esObjects } from './objects';
-import { esShapes } from './shapes';
+import { esShapes } from '../../ribbon/shape-names';
 import { esSmartArt } from './smartart';
 import { esCharts } from './charts';
 import type { LocaleStrings } from './en';

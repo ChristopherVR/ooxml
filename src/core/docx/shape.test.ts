@@ -5,7 +5,7 @@ import { loadDocx, saveDocx } from './index';
 import type { DocumentModel, InlineImage, Paragraph } from './model';
 import { expectParagraph } from './test-support/access';
 import { newShape } from './shape-model';
-import { SHAPE_PALETTE } from './shape-palette';
+import { SHAPE_PALETTE } from '../drawingml/shape-palette';
 import { shapeSvg } from './shape-svg';
 import { createDocument } from './model';
 import { parseXml } from '../xml';

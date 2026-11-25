@@ -14,7 +14,7 @@ import { frConvertNotes } from './convert-notes';
 import { frDocumentInspector } from './document-inspector';
 import { frLineNumbers } from './line-numbers';
 import { frObjects } from './objects';
-import { frShapes } from './shapes';
+import { frShapes } from '../../ribbon/shape-names';
 import { frSmartArt } from './smartart';
 import { frCharts } from './charts';
 import type { LocaleStrings } from './en';

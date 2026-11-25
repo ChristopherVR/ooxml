@@ -94,3 +94,4 @@ export * from './text-warp-arch';
 export * from './text-warp-path';
 export * from './model3d';
 export { isSelfContainedGlb } from './glb-import';
+export * from './shape-palette';

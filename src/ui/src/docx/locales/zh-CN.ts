@@ -14,7 +14,7 @@ import { zhPictureWatermark } from './picture-watermark';
 import { zhConvertNotes } from './convert-notes';
 import { zhDocumentInspector } from './document-inspector';
 import { zhObjects } from './objects';
-import { zhShapes } from './shapes';
+import { zhShapes } from '../../ribbon/shape-names';
 import { zhSmartArt } from './smartart';
 import { zhCharts } from './charts';
 import type { LocaleStrings } from './en';

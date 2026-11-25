@@ -1,5 +1,4 @@
-// Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
-// The shapes Insert > Shapes offers, grouped as Word groups them. Every entry is a preset geometry
+// The shapes Insert > Shapes offers in Word and Excel, grouped as Office groups them. Every entry is a preset geometry
 // the shared geometry tables can draw; `name` is the English label the editor translates.
 
 export interface PaletteShape {

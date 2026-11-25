@@ -5,7 +5,10 @@
 Source repository: ChristopherVR/ooxml, commit `fa40aa8ad`.
 The preset outline thumbnail from `src/ui/src/pptx/render/shape-gallery.ts` moved to
 `src/ui/src/ribbon/shape-thumbnail.ts`. It calls the shared preset geometry evaluator directly
-and retains the PowerPoint exports. Excel uses it with Word's preset palette and localized labels.
+and retains the PowerPoint exports. Excel uses it with the shared preset palette and labels:
+`src/core/docx/shape-palette.ts` moved to `src/core/drawingml/shape-palette.ts` (re-exported from
+`ooxml-core/docx`) and `src/ui/src/docx/locales/shapes.ts` to `src/ui/src/ribbon/shape-names.ts`,
+so Excel does not import the Word area.
 
 ## Shared local 3D Models and Insert Object (2026-11-23)
 

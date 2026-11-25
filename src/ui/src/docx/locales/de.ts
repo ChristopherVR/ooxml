@@ -14,7 +14,7 @@ import { deConvertNotes } from './convert-notes';
 import { deDocumentInspector } from './document-inspector';
 import { deLineNumbers } from './line-numbers';
 import { deObjects } from './objects';
-import { deShapes } from './shapes';
+import { deShapes } from '../../ribbon/shape-names';
 import { deSmartArt } from './smartart';
 import { deCharts } from './charts';
 import type { LocaleStrings } from './en';

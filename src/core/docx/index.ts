@@ -238,7 +238,7 @@ export {
 } from './form-fields';
 export { parseContentControl } from './content-control';
 export * from './shape-model';
-export * from './shape-palette';
+export * from '../drawingml/shape-palette';
 export {
 	drawingShapeSvg,
 	shapeSvg,
