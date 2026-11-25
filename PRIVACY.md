@@ -239,6 +239,12 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   calls a host's `mailMergeDataSource.read()` only after **Use host recipients**, and the host controls any
   requests it makes. In the Office suite, **Edit Individual Documents** creates a new local
   profile document containing the merged text. It uses the suite's existing document storage.
+- Excel requests the selected non-English language file from the app's own origin when the
+  user or host selects that display language. English is built in and is used until the file
+  loads, or whenever it is unavailable. Excel also loads bundled chart and PivotTable dialog
+  code from that origin when the associated controls are used. These requests send only the
+  asset URL and standard browser request metadata. Keep `locale` at `en` to skip language
+  requests, and leave a dialog or pane unopened to skip its request.
 
 **Fonts, when the host or the reader turns them on.** `<docx-editor>`, `<xlsx-editor>` and
 `<visio-viewer>` take the same `googleFonts` value as PowerPoint, but unset leaves it to the
@@ -314,7 +320,9 @@ The suite uses the editors above, so their sections apply. In addition:
   cached for windows still running it and are deleted once none is. Each version's cache also
   keeps its file list and an anonymous marker per window it served (a hash of the browser's
   window id), so a later version can tell which saved files those windows may use. The shell's
-  script and style tags carry subresource integrity.
+  script and style tags carry subresource integrity. Excel's non-English language files are
+  saved only after they are requested and match their recorded hashes. Languages already saved
+  for that version can be used offline.
 - **Desktop:** the Tauri shell has no updater, telemetry or plugins. It reads and writes the
   files the user opens, and lists the file names inside a folder the user connects so they can be
   found; nothing is sent. Its window only shows the bundled app: a web or `mailto:` link the user

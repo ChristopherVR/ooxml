@@ -1,11 +1,21 @@
 import { defineConfig, type Options } from 'tsup';
+import { xlsxCjsLocaleImports, xlsxCommandLocales } from './scripts/xlsx-command-locales';
 
 const pdfEntries = {
 	'docx/pdf-convert/index': 'docx/pdf-convert/index.ts',
 	'docx/pdf-import/index': 'docx/pdf-import/index.ts',
 	'pdf/index': 'pdf/index.ts',
 };
-const xlsxEntry = { 'xlsx/index': 'xlsx/index.ts' };
+
+const xlsxEntries = {
+	'xlsx/index': 'xlsx/index.ts',
+	'xlsx/ui/index': 'xlsx/ui/index.ts',
+};
+const xlsxLocaleEntries = Object.fromEntries(
+	['fr', 'de', 'es', 'zh-CN'].map((locale) => {
+		return [`xlsx/ui/locales/xlsx-locale-${locale}`, `xlsx/ui/locales/${locale}/index.ts`];
+	}),
+);
 
 // Every strict area (the shared building blocks and the docx format) is bundled the same way as
 // the pptx area (see tsup.pptx.config.ts): ESM (`.mjs`) and CJS (`.cjs`) per subpath entry.
@@ -45,7 +55,6 @@ const shared = {
 		'visio/collab/index': 'visio/collab/index.ts',
 		'xlsx/load/index': 'xlsx/load/index.ts',
 		'xlsx/collab/index': 'xlsx/collab/index.ts',
-		'xlsx/ui/index': 'xlsx/ui/index.ts',
 		'automation/index': 'automation/index.ts',
 		'automation/node': 'automation/node.ts',
 	},
@@ -81,16 +90,25 @@ export default defineConfig([
 			options.chunkNames = 'drawingml/chunks/[name]-[hash]';
 		},
 	},
+	// Share the workbook code between Excel's model and UI entries and keep
+	// each non-English dictionary in its own dynamically imported module.
 	{
 		...shared,
-		entry: xlsxEntry,
+		entry: { ...xlsxEntries, ...xlsxLocaleEntries },
 		format: ['esm'],
 		splitting: true,
+		esbuildPlugins: [xlsxCommandLocales],
 		esbuildOptions(options) {
 			options.chunkNames = 'xlsx/chunks/[name]-[hash]';
 		},
 	},
-	{ ...shared, entry: xlsxEntry, format: ['cjs'], splitting: false },
+	{
+		...shared,
+		entry: { ...xlsxEntries, ...xlsxLocaleEntries },
+		format: ['cjs'],
+		splitting: false,
+		esbuildPlugins: [xlsxCommandLocales, xlsxCjsLocaleImports],
+	},
 	{
 		...shared,
 		entry: pdfEntries,

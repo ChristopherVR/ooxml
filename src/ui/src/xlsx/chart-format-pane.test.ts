@@ -9,7 +9,8 @@ import {
 } from 'ooxml-core/xlsx';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from './commands/test-support';
-import { chartAreaCommand, chartSeriesCommand, createChartFormatPane } from './chart-format-pane';
+import { createChartFormatPane } from './chart-format-pane';
+import { chartAreaCommand, chartSeriesCommand } from './commands/chart-format';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -22,6 +23,8 @@ function mount(ctx: ReturnType<typeof createTestContext>) {
 	ctx.commands.register(chartAreaCommand());
 	ctx.commands.register(chartSeriesCommand());
 	const pane = createChartFormatPane(ctx);
+	ctx.dialogs.register('format-chart-area', async (_, arg) => pane.openArea(arg));
+	ctx.dialogs.register('format-chart-series', async (_, arg) => pane.openSeries(arg));
 	ctx.root.append(pane.element);
 	ctx.onModelChange(pane.refresh);
 	ctx.selection.onChange(pane.refresh);
@@ -191,7 +194,7 @@ describe('Excel chart Format pane', () => {
 		expect(pane.element.disabled).toBe(true);
 		change(input('Fill'), 'none');
 		expect(chartElementTransparency(chart, 'plotArea')).toBe(37);
-		pane.close();
+		pane.element.dispatchEvent(new CustomEvent('office-chart-format-close'));
 		expect(pane.element.hidden).toBe(true);
 	});
 

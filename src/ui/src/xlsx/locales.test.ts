@@ -5,7 +5,12 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { EDITOR_LOCALES, STRINGS, normalizeEditorLocale } from 'ooxml-core/xlsx/ui';
+import {
+	EDITOR_LOCALES,
+	STRINGS,
+	loadEditorStrings,
+	normalizeEditorLocale,
+} from 'ooxml-core/xlsx/ui';
 import { SHORTCUTS } from './keyboard';
 import { shellCommands } from './shell-commands';
 import { allCommands, commandTabs } from './commands/index';
@@ -59,8 +64,8 @@ describe('locale catalogue', () => {
 
 	for (const locale of EDITOR_LOCALES)
 		describe(locale, () => {
-			it('defines every key, without extras or empty strings, keeping placeholders', () => {
-				const table = STRINGS[locale];
+			it('defines every key, without extras or empty strings, keeping placeholders', async () => {
+				const table = await loadEditorStrings(locale);
 				expect(
 					Object.keys(table).filter((key) => !(key in english)),
 					'extra keys',
@@ -78,10 +83,11 @@ describe('locale catalogue', () => {
 			});
 
 			if (locale !== 'en')
-				it('does not leave longer UI text in English', () => {
+				it('does not leave longer UI text in English', async () => {
+					const table = await loadEditorStrings(locale);
 					const same = Object.keys(english).filter(
 						(key) =>
-							STRINGS[locale][key] === english[key] &&
+							table[key] === english[key] &&
 							key.split(' ').length > 2 &&
 							!MAY_MATCH.test(key) &&
 							/^[a-z]/i.test(key),
@@ -90,11 +96,11 @@ describe('locale catalogue', () => {
 				});
 		});
 
-	it('has English identity text and no em-dashes', () => {
+	it('has English identity text and no em-dashes', async () => {
 		for (const [key, value] of Object.entries(english))
 			if (!key.includes('.')) expect(value, key).toBe(key);
 		for (const locale of EDITOR_LOCALES)
-			for (const value of Object.values(STRINGS[locale]))
+			for (const value of Object.values(await loadEditorStrings(locale)))
 				expect(value).not.toContain(String.fromCharCode(0x2014));
 	});
 });

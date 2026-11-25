@@ -18,9 +18,6 @@ import { chartSpaceFormatSource, type ChartFormatSource } from '../chart/format-
 /** The slot Excel's fill controls go into. */
 export const XLSX_CHART_FILL_SLOT = 'fill';
 
-/** Whether the chart has series to format. */
-export const formatsSeries = (chart: ChartObject): boolean => chart.series.length > 0;
-
 /** The workbook theme as the pane resolves scheme colours (`accent1`, `tx1`...). */
 export function workbookChartTheme(workbook: Workbook): DrawingColorTheme {
 	const scheme = chartColorScheme(workbook.theme) as unknown as Readonly<Record<string, string>>;

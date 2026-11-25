@@ -13,6 +13,7 @@ import {
 	setValue,
 } from '../commands/test-support';
 import { pivotCommands } from '../commands/pivots';
+import { waitForDialog } from '../commands/test-support';
 import { registerToolDialogs } from './register-tools';
 
 afterEach(() => {
@@ -71,7 +72,7 @@ describe('Values on rows with many fields', () => {
 	it('offers a placement after every row field and moves the Values there', async () => {
 		const { ctx, pivot } = many();
 		const done = ctx.dialogs.open('pivot-settings');
-		const dialog = dialogEl(ctx, 'pivot-settings');
+		const dialog = await waitForDialog(ctx, 'pivot-settings');
 		const placement = inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:');
 		expect(placement.disabled).toBe(false);
 		expect([...placement.options].map((option) => option.textContent)).toEqual([
@@ -92,13 +93,13 @@ describe('Values on rows with many fields', () => {
 	it('keeps the placement choice when reopened and when fields are added', async () => {
 		const { ctx, pivot } = many();
 		let done = ctx.dialogs.open('pivot-settings');
-		let dialog = dialogEl(ctx, 'pivot-settings');
+		let dialog = await waitForDialog(ctx, 'pivot-settings');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:'), 'first');
 		clickButton(dialog, 'OK');
 		await done;
 		expect(pivot().valuesPosition).toBe('first');
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		const placement = inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:');
 		expect(placement.value).toBe('first');
 		clickButton(dialog, 'Add Row Field');

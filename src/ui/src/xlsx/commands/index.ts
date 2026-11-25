@@ -29,7 +29,7 @@ import { pageBreakCommands } from 'ooxml-core/xlsx/ui';
 import { reviewCommands } from './review';
 import { styleCommands } from './styles';
 import { viewCommands } from './view';
-import { chartAreaCommand, chartSeriesCommand } from '../chart-format-pane';
+import { chartAreaCommand, chartSeriesCommand } from './chart-format';
 import { smartArtCommands } from '../smartart-controller';
 
 /** Every UI-COMMANDS command (fresh objects; safe to register on several editors). */

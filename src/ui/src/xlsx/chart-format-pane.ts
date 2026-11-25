@@ -5,7 +5,7 @@
 // slotted, which edit through `updateChart`.
 import { parseChartFormatTargetKey, type ChartFormatTarget } from 'ooxml-core/chart';
 import { chartSpaceOf, workbookChartRangeNumbers, type ChartFillPart } from 'ooxml-core/xlsx';
-import { activeChart, editing, icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { activeChart, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { chartView, createRefEvaluator } from 'ooxml-core/xlsx';
 import {
 	defineChartFormatPane,
@@ -15,7 +15,6 @@ import {
 } from '../chart/format-pane';
 import { backgroundFillBinding } from './chart-fill-binding';
 import {
-	formatsSeries,
 	workbookChartTheme,
 	xlsxChartFormatSource,
 	xlsxFillsTarget,
@@ -23,36 +22,6 @@ import {
 	XLSX_CHART_FILL_SLOT,
 } from './chart-format-source';
 import { createSeriesFill } from './chart-series-fill';
-import { activeChartEx } from './chart-ex-pane';
-
-export function chartAreaCommand(): Command {
-	return editing({
-		id: 'chart.format-area',
-		label: 'Format Chart Area',
-		icon: icon('chartColumn'),
-		lock: 'objects',
-		enabled: (ctx) => {
-			const chart = activeChart(ctx)?.chart;
-			return (!!chart && !chart.editBlocked) || !!activeChartEx(ctx);
-		},
-		run: (ctx, arg) =>
-			void ctx.dialogs.open(activeChartEx(ctx) ? 'chart-ex' : 'format-chart-area', arg),
-	});
-}
-
-export function chartSeriesCommand(): Command {
-	return editing({
-		id: 'chart.format-series',
-		label: 'Format Data Series',
-		icon: icon('chartColumn'),
-		lock: 'objects',
-		enabled: (ctx) => {
-			const chart = activeChart(ctx)?.chart;
-			return !!chart && !chart.editBlocked && formatsSeries(chart);
-		},
-		run: (ctx, arg) => void ctx.dialogs.open('format-chart-series', arg),
-	});
-}
 
 const BACKGROUNDS: readonly string[] = ['chartArea', 'plotArea', 'title', 'legend'];
 
@@ -184,17 +153,17 @@ export function createChartFormatPane(ctx: EditorContext) {
 		refresh();
 		element.shadowRoot?.querySelector<HTMLElement>(focus)?.focus();
 	};
-	ctx.dialogs.register('format-chart-area', async (_ctx, arg) => {
+	const openArea = (arg: unknown) => {
 		target = typeof arg === 'string' && BACKGROUNDS.includes(arg) ? arg : 'chartArea';
 		open('[data-chart-format-target]');
-	});
-	ctx.dialogs.register('format-chart-series', async (_ctx, arg) => {
+	};
+	const openSeries = (arg: unknown) => {
 		const found = activeChart(ctx);
 		const index =
 			typeof arg === 'number' && Number.isInteger(arg) && found?.chart.series[arg] ? arg : 0;
 		target = `series:${index}`;
 		open('[data-chart-format-field="series.overlap"] input');
-	});
+	};
 	relocalize();
-	return { element, refresh, relocalize, close };
+	return { element, refresh, relocalize, openArea, openSeries };
 }

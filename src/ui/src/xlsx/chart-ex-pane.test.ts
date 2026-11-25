@@ -4,8 +4,8 @@ import path from 'node:path';
 import { afterEach, expect, it } from 'vitest';
 import { loadXlsx, xlsxChartExDataSheet } from 'ooxml-core/xlsx';
 import { createTestContext } from './commands/test-support';
-import { chartAreaCommand } from './chart-format-pane';
-import { createChartExPane } from './chart-ex-pane';
+import { chartAreaCommand } from './commands/chart-format';
+import { registerChartPanes } from './chart-panes';
 afterEach(() => document.body.replaceChildren());
 it('opens ChartEx controls, updates cells and title, and follows undo', async () => {
 	const book = await loadXlsx(
@@ -23,12 +23,18 @@ it('opens ChartEx controls, updates cells and title, and follows undo', async ()
 	ctx.setActiveSheet(s);
 	ctx.selection.set({ drawing: i });
 	ctx.commands.register(chartAreaCommand());
-	const pane = createChartExPane(ctx);
-	ctx.root.append(pane.element);
-	ctx.onModelChange(pane.refresh);
+	const workspace = document.createElement('div');
+	const smartArt = document.createElement('div');
+	ctx.root.append(workspace, smartArt);
+	const panes = registerChartPanes(ctx, workspace, smartArt);
+	ctx.onModelChange(panes.refresh);
+	expect(panes.elements()).toEqual([]);
 	await ctx.commands.run('chart.format-area');
-	expect(pane.element.hidden).toBe(false);
-	const options = pane.element.querySelector('office-ui-chart-ex-options')!;
+	const [pane] = panes.elements();
+	expect(pane?.hidden).toBe(false);
+	expect(workspace.nextElementSibling).toBe(pane);
+	expect(pane?.nextElementSibling).toBe(smartArt);
+	const options = pane!.querySelector('office-ui-chart-ex-options')!;
 	options.dispatchEvent(
 		new CustomEvent('office-chart-ex-edit', {
 			detail: { action: { op: 'title', text: 'Changed' } },
@@ -38,7 +44,7 @@ it('opens ChartEx controls, updates cells and title, and follows undo', async ()
 	expect(drawing.kind === 'unsupported' && drawing.chartExSpace?.title?.tx?.rich?.text).toBe(
 		'Changed',
 	);
-	pane.element.querySelector('office-ui-chart-data-sheet')!.dispatchEvent(
+	pane!.querySelector('office-ui-chart-data-sheet')!.dispatchEvent(
 		new CustomEvent('office-chart-data-change', {
 			detail: { edits: [{ kind: 'value', series: 0, category: 0, value: 77 }] },
 		}),
@@ -46,7 +52,9 @@ it('opens ChartEx controls, updates cells and title, and follows undo', async ()
 	expect(xlsxChartExDataSheet(book, s, i).series[0]!.values[0]).toBe(77);
 	ctx.session()!.undo();
 	expect(xlsxChartExDataSheet(book, s, i).series[0]!.values[0]).not.toBe(77);
+	await ctx.commands.run('chart.format-area');
+	expect(panes.elements()).toEqual([pane]);
 	ctx.setReadOnly(true);
-	pane.refresh();
+	panes.refresh();
 	expect((options as HTMLElement & { disabled: boolean }).disabled).toBe(true);
 });

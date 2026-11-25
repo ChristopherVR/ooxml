@@ -93,7 +93,8 @@ async function requested(browser, url, route) {
 		await page.goto(url + route.path, { waitUntil: 'load' });
 		await page.locator(route.ready).first().waitFor();
 		if (route.create) {
-			await page.locator(`#create-row button[data-create="${route.create}"]`).click();
+			// Focus and activate the measured tile. A moving pointer can prefetch a neighboring app.
+			await page.locator(`#create-row button[data-create="${route.create}"]`).press('Enter');
 			await page.locator(route.opened).first().waitFor({ state: 'attached' });
 			await page.waitForFunction(() => document.querySelector('#status')?.textContent === 'Ready');
 		}

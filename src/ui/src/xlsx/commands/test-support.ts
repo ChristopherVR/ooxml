@@ -12,6 +12,7 @@ import {
 import { createCommandRegistry } from 'ooxml-core/xlsx/ui';
 import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
 import { createDialogRegistry } from 'ooxml-core/xlsx/ui';
+import { vi } from 'vitest';
 
 export interface TestContext extends EditorContext {
 	select(ref: string): void;
@@ -124,6 +125,11 @@ export function dialogEl(ctx: EditorContext, name: string): HTMLElement {
 	const el = ctx.root.querySelector<HTMLElement>(`[data-dialog="${name}"]`);
 	if (!el) throw new Error(`Dialog ${name} is not open`);
 	return el;
+}
+
+/** Waits for the first paint of a dialog opened through a lazy registry entry. */
+export function waitForDialog(ctx: EditorContext, name: string): Promise<HTMLElement> {
+	return vi.waitFor(() => dialogEl(ctx, name));
 }
 
 export function clickButton(root: HTMLElement, label: string): void {

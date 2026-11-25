@@ -300,8 +300,7 @@ describe('attributes and properties', () => {
 		element.setAttribute('locale', 'fr-CA');
 		expect(element.locale).toBe('fr');
 		const ribbon = element.shadowRoot!.querySelector<RibbonElement>('office-ui-ribbon')!;
-		await ribbon.updateComplete;
-		expect(ribbon.fileButton()!.textContent).toBe('Fichier');
+		await vi.waitFor(() => expect(ribbon.fileButton()!.textContent).toBe('Fichier'));
 		element.showFormulaBar = false;
 		expect(element.getAttribute('show-formula-bar')).toBe('false');
 		element.setAttribute('show-toolbar', 'false');

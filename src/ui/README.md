@@ -597,6 +597,8 @@ Word's Design > Set as Default uses the host's optional `wordDesignPreferences` 
 Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
 asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
 
+Excel loads the selected non-English language, chart insertion and formatting tools, and PivotTable creation and settings dialogs from the app's own origin on demand. English is bundled, and the editor uses it if the selected language cannot load.
+
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
 Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.

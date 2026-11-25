@@ -24,6 +24,9 @@ await editor.load(bytes, 'Budget.xlsx');
 | `show-toolbar`     | `showToolbar`    | boolean (`"false"` hides)                             | `true`       |
 | `show-formula-bar` | `showFormulaBar` | boolean (`"false"` hides)                             | `true`       |
 
+Setting `locale` to French, German, Spanish or Simplified Chinese loads that language on demand.
+The editor uses English while it loads and relabels the live interface when it is ready.
+
 Properties only:
 
 | Property             | Type                                 | Notes                                                                                                                                                        |

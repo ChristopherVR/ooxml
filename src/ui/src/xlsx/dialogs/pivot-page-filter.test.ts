@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import {
 	createTestContext,
-	dialogEl,
+	waitForDialog,
 	inputByLabel,
 	setValue,
 	clickButton,
@@ -28,7 +28,7 @@ it.each(['compact', 'outline', 'tabular'])(
 		ctx.select('A1:D4');
 		registerToolDialogs(ctx);
 		let done = ctx.dialogs.open('create-pivot-table'),
-			dialog = dialogEl(ctx, 'create-pivot-table');
+			dialog = await waitForDialog(ctx, 'create-pivot-table');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), layout);
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Column Field:'), 'Year');
@@ -51,7 +51,7 @@ it.each(['compact', 'outline', 'tabular'])(
 		expect(pivot.pageFilter).toEqual({ field: 'Region', item: 'West' });
 		expect(getCell(wb.sheets[0]!, 0, 6)?.value).toBe('West');
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '');
 		clickButton(dialog, 'OK');
 		await done;
@@ -60,7 +60,7 @@ it.each(['compact', 'outline', 'tabular'])(
 		expect(wb.sheets[0]!.pivotTables![0]!.pageFilter?.item).toBe('West');
 		edit.redo();
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), '');
 		expect(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:').disabled).toBe(false);
 		clickButton(dialog, 'OK');
@@ -83,7 +83,7 @@ it.each(['tabular', 'compact', 'outline'])(
 		ctx.select('A1:F4');
 		registerToolDialogs(ctx);
 		let done = ctx.dialogs.open('create-pivot-table'),
-			dialog = dialogEl(ctx, 'create-pivot-table');
+			dialog = await waitForDialog(ctx, 'create-pivot-table');
 		setValue(inputByLabel<HTMLInputElement>(dialog, 'Destination Cell:'), 'H1');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), 'Market');
@@ -100,12 +100,12 @@ it.each(['tabular', 'compact', 'outline'])(
 		expect(pivot.records).toHaveLength(3);
 		ctx.select('H1');
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		clickButton(dialog, 'OK');
 		await done;
 		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:'), '');
 		clickButton(dialog, 'OK');
 		await done;
@@ -122,7 +122,7 @@ it('preserves untouched native filter/cache definitions when accepting settings'
 	ctx.select('A1');
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('pivot-settings'),
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').value).toBe('Region');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Item:').value).toBe('1');
 	clickButton(dialog, 'OK');
@@ -146,7 +146,7 @@ it('retains a selected report field when adding a default value field', async ()
 	ctx.select('A1:E2');
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('create-pivot-table'),
-		dialog = dialogEl(ctx, 'create-pivot-table');
+		dialog = await waitForDialog(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:'), 'Year');
 	clickButton(dialog, 'Add Value Field');
@@ -184,7 +184,7 @@ it('compares unchanged public filter properties independently of object key orde
 	ctx.select('G1');
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('pivot-settings'),
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 	clickButton(dialog, 'OK');
 	await done;
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
@@ -202,7 +202,7 @@ it('authors a report filter above Values on rows and keeps it when the axis chan
 	ctx.select('A1:D4');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table'),
-		dialog = dialogEl(ctx, 'create-pivot-table');
+		dialog = await waitForDialog(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 	clickButton(dialog, 'Add Value Field');
 	const extra = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
@@ -222,7 +222,7 @@ it('authors a report filter above Values on rows and keeps it when the axis chan
 	});
 	expect(getCell(wb.sheets[0]!, 0, 6)?.value).toBe('West');
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').value).toBe('rows');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Filter Field:').value).toBe('Region');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'columns');

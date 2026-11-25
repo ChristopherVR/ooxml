@@ -2,7 +2,8 @@
 import { afterEach, expect, it } from 'vitest';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { createTestContext } from './commands/test-support';
-import { chartSeriesCommand, createChartFormatPane } from './chart-format-pane';
+import { createChartFormatPane } from './chart-format-pane';
+import { chartSeriesCommand } from './commands/chart-format';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -22,6 +23,7 @@ it('keeps the chosen series through fill edits and undo and guards stale color m
 	ctx.selection.set({ drawing: ctx.session()!.addChart(0, chart) });
 	ctx.commands.register(chartSeriesCommand());
 	const pane = createChartFormatPane(ctx);
+	ctx.dialogs.register('format-chart-series', async (_, arg) => pane.openSeries(arg));
 	ctx.root.append(pane.element);
 	ctx.onModelChange(pane.refresh);
 	await ctx.commands.run('chart.format-series', 1);

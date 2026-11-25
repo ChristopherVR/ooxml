@@ -26,19 +26,8 @@ import {
 import { chartExSpaceFormatSource } from '../chart/format-pane-chartex';
 import { chartDataSheetLabels } from '../chart/data-sheet-locales';
 import { workbookChartTheme } from './chart-format-source';
+import { activeChartEx } from './commands/chart-format';
 
-export function activeChartEx(ctx: EditorContext) {
-	const index = ctx.selection.get().drawing;
-	const book = ctx.workbook();
-	if (index === undefined || !book) return undefined;
-	const drawing = book.sheets[ctx.activeSheet()]?.drawings[index];
-	return drawing?.kind === 'unsupported' &&
-		drawing.chartExSpace &&
-		drawing.chartExPartName &&
-		!drawing.chartExIssues?.length
-		? { drawing, index }
-		: undefined;
-}
 export function createChartExPane(ctx: EditorContext) {
 	const doc = ctx.host.ownerDocument;
 	defineChartExOptions(doc.defaultView?.customElements);
@@ -110,11 +99,11 @@ export function createChartExPane(ctx: EditorContext) {
 		format.target = (event as ChartFormatTargetEvent).detail.target;
 	});
 	format.addEventListener('office-chart-format-close', close);
-	ctx.dialogs.register('chart-ex', async () => {
+	const open = () => {
 		if (!activeChartEx(ctx) || ctx.readOnly()) return;
 		element.hidden = false;
 		error.textContent = '';
 		refresh();
-	});
-	return { element, refresh, close, relocalize: refresh };
+	};
+	return { element, refresh, open, relocalize: refresh };
 }

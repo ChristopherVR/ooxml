@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createWorkbook, pivotGrid, type PivotTable } from 'ooxml-core/xlsx';
-import { EDITOR_LOCALES, STRINGS } from 'ooxml-core/xlsx/ui';
+import { EDITOR_LOCALES, loadEditorStrings } from 'ooxml-core/xlsx/ui';
 import {
 	clickButton,
 	createTestContext,
@@ -9,6 +9,7 @@ import {
 	setValue,
 } from '../commands/test-support';
 import { pivotCommands } from '../commands/pivots';
+import { waitForDialog } from '../commands/test-support';
 import { registerToolDialogs } from './register-tools';
 
 afterEach(() => {
@@ -141,7 +142,7 @@ describe('Group Selection on a date field', () => {
 		clickButton(group, 'Cancel');
 		await done;
 		const settings = ctx.dialogs.open('pivot-settings');
-		const dialog = dialogEl(ctx, 'pivot-settings');
+		const dialog = await waitForDialog(ctx, 'pivot-settings');
 		const row = inputByLabel<HTMLSelectElement>(dialog, 'Row Field:');
 		expect(row.value).toBe('Years (Date)');
 		expect([...row.options].map((option) => option.value)).toEqual([
@@ -187,7 +188,7 @@ describe('many row fields and field settings', () => {
 	it('adds and removes row fields in the PivotTable settings', async () => {
 		const { ctx, pivot } = rows();
 		let done = ctx.dialogs.open('pivot-settings');
-		let dialog = dialogEl(ctx, 'pivot-settings');
+		let dialog = await waitForDialog(ctx, 'pivot-settings');
 		clickButton(dialog, 'Add Row Field');
 		const extra = dialog.querySelector<HTMLElement>('[data-pivot-row]')!;
 		setValue(inputByLabel<HTMLSelectElement>(extra, 'Row Field:'), 'Amount');
@@ -196,7 +197,7 @@ describe('many row fields and field settings', () => {
 		expect(pivot().moreRowFields).toEqual(['Amount']);
 		expect(pivotGrid(pivot()).values.map((line) => line[0])).toContain('Pear');
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		expect(
 			inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').querySelector<HTMLOptionElement>(
 				'[value=rows]',
@@ -211,7 +212,7 @@ describe('many row fields and field settings', () => {
 	it('adds and removes column fields in the PivotTable settings', async () => {
 		const { ctx, pivot } = setup({ columnField: 'Product' });
 		let done = ctx.dialogs.open('pivot-settings');
-		let dialog = dialogEl(ctx, 'pivot-settings');
+		let dialog = await waitForDialog(ctx, 'pivot-settings');
 		clickButton(dialog, 'Add Column Field');
 		const extra = dialog.querySelector<HTMLElement>('[data-pivot-column]')!;
 		setValue(inputByLabel<HTMLSelectElement>(extra, 'Column Field:'), 'Region');
@@ -220,7 +221,7 @@ describe('many row fields and field settings', () => {
 		expect(pivot()).toMatchObject({ columnField: 'Product', moreColumnFields: ['Region'] });
 		expect(pivotGrid(pivot()).values[1]).toContain('Apple Total');
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		expect(dialog.querySelector('[data-pivot-column]')).not.toBeNull();
 		clickButton(dialog, 'Remove Column Field');
 		clickButton(dialog, 'OK');
@@ -320,7 +321,8 @@ describe('translations of the new text', () => {
 		'Choose valid PivotTable row fields.',
 		'Choose valid field subtotals.',
 	];
-	it.each(EDITOR_LOCALES)('%s has every new key', (locale) => {
-		expect(KEYS.filter((key) => !STRINGS[locale][key])).toEqual([]);
+	it.each(EDITOR_LOCALES)('%s has every new key', async (locale) => {
+		const strings = await loadEditorStrings(locale);
+		expect(KEYS.filter((key) => !strings[key])).toEqual([]);
 	});
 });

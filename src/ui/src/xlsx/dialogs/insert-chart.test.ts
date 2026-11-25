@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook, loadXlsx, saveXlsx } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { clickButton, createTestContext, dialogEl, pressKey } from '../commands/test-support';
+import { clickButton, createTestContext, pressKey, waitForDialog } from '../commands/test-support';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools';
 import { chartExFamilyOf } from 'ooxml-core/chart';
@@ -55,7 +55,7 @@ describe('Insert Chart dialog', () => {
 	it('previews the selection and adds a chart of the chosen type', async () => {
 		const ctx = setup();
 		const result = ctx.dialogs.open('insert-chart', { type: 'column' });
-		const dialog = dialogEl(ctx, 'insert-chart');
+		const dialog = await waitForDialog(ctx, 'insert-chart');
 		expect(pickerRoot(dialog).querySelector('.preview svg')).not.toBeNull();
 		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="line"]')!.click();
 		expect(
@@ -78,7 +78,7 @@ describe('Insert Chart dialog', () => {
 		for (const family of ['pareto', 'regionMap']) {
 			const ctx = setup();
 			const result = ctx.dialogs.open('insert-chart');
-			const dialog = dialogEl(ctx, 'insert-chart');
+			const dialog = await waitForDialog(ctx, 'insert-chart');
 			pickerRoot(dialog)
 				.querySelector<HTMLButtonElement>(`[data-gallery-item="cx:${family}"]`)!
 				.click();
@@ -99,10 +99,10 @@ describe('Insert Chart dialog', () => {
 	it('Cancel and Escape add nothing', async () => {
 		const ctx = setup();
 		const a = ctx.dialogs.open('insert-chart');
-		clickButton(dialogEl(ctx, 'insert-chart'), 'Cancel');
+		clickButton(await waitForDialog(ctx, 'insert-chart'), 'Cancel');
 		expect(await a).toBeUndefined();
 		const b = ctx.dialogs.open('insert-chart');
-		pressKey(dialogEl(ctx, 'insert-chart'), 'Escape');
+		pressKey(await waitForDialog(ctx, 'insert-chart'), 'Escape');
 		expect(await b).toBeUndefined();
 		expect(ctx.workbook()!.sheets[0]!.drawings).toHaveLength(0);
 	});
@@ -121,7 +121,7 @@ describe('Insert Chart dialog', () => {
 		);
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
-		const dialog = dialogEl(ctx, 'insert-chart');
+		const dialog = await waitForDialog(ctx, 'insert-chart');
 		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="pie"]')!.click();
 		clickButton(dialog, 'OK');
 		await result;
@@ -142,7 +142,7 @@ describe('Insert Chart dialog', () => {
 		const added = structuredClone(ctx.workbook()!.sheets[0]!.drawings[0]!);
 		ctx.selection.set({ drawing: 0 });
 		const result = ctx.dialogs.open('insert-chart', { change: true });
-		const dialog = dialogEl(ctx, 'insert-chart');
+		const dialog = await waitForDialog(ctx, 'insert-chart');
 		expect(pickerRoot(dialog).querySelector('[data-key="grouping"]')).not.toBeNull();
 		pickerRoot(dialog).querySelector<HTMLButtonElement>('[data-gallery-item="bar"]')!.click();
 		const grouping = pickerRoot(dialog).querySelector<HTMLSelectElement>('[data-key="grouping"]')!;

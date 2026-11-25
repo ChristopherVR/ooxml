@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { RibbonControl, RibbonMenuItem } from 'ooxml-core/xlsx/ui';
-import { COMMAND_TABLES, commandStrings } from 'ooxml-core/xlsx/ui';
+import { STRINGS, loadEditorStrings } from 'ooxml-core/xlsx/ui';
 import { allCommands, commandTabs } from './index';
 import { BUILTIN_CELL_STYLES } from 'ooxml-core/xlsx';
 
-const known = new Set(COMMAND_TABLES.flatMap((table) => Object.keys(table)));
+const known = new Set(Object.keys(STRINGS.en));
 
 /** Every translatable key the ribbon shows (function and font names are proper names). */
 function ribbonKeys(): string[] {
@@ -41,27 +41,10 @@ describe('command strings', () => {
 		expect(ribbonKeys().filter((key) => !known.has(key))).toEqual([]);
 	});
 
-	it('has four non-empty translations per key, keeping placeholders and no em-dash', () => {
-		const problems: string[] = [];
-		for (const table of COMMAND_TABLES)
-			for (const [key, texts] of Object.entries(table)) {
-				const holes = (key.match(/\{\w+\}/g) ?? []).sort().join();
-				texts.forEach((text, i) => {
-					if (!text.trim()) problems.push(`${key} [${i}] empty`);
-					if (text.includes(String.fromCharCode(0x2014))) problems.push(`${key} [${i}] em-dash`);
-					if ((text.match(/\{\w+\}/g) ?? []).sort().join() !== holes)
-						problems.push(`${key} [${i}] placeholders`);
-				});
-				if (key.includes(String.fromCharCode(0x2014))) problems.push(`${key} em-dash`);
-			}
-		expect(problems).toEqual([]);
-	});
-
-	it('flattens English as the identity and other locales as translations', () => {
-		expect(commandStrings('en').Bold).toBe('Bold');
-		expect(commandStrings('fr').Bold).toBe('Gras');
-		expect(commandStrings('de')['Merge & Center']).toBe('Verbinden und zentrieren');
-		expect(commandStrings('zh-CN').Paste).toBe('粘贴');
-		expect(Object.keys(commandStrings('es'))).toEqual(Object.keys(commandStrings('en')));
+	it('flattens English as the identity and other locales as translations', async () => {
+		expect(STRINGS.en.Bold).toBe('Bold');
+		expect((await loadEditorStrings('fr')).Bold).toBe('Gras');
+		expect((await loadEditorStrings('de'))['Merge & Center']).toBe('Verbinden und zentrieren');
+		expect((await loadEditorStrings('zh-CN')).Paste).toBe('粘贴');
 	});
 });

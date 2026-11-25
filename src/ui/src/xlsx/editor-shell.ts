@@ -41,8 +41,7 @@ import { packagePassword } from './dialogs/package-password';
 import { attachShareDialog, type ShareDialogController } from '../dialog/share-controller';
 import { modalFocusableElements } from '../dialog/focus';
 import { createSelectionPane } from './selection-pane';
-import { createChartFormatPane } from './chart-format-pane';
-import { createChartExPane } from './chart-ex-pane';
+import { registerChartPanes } from './chart-panes';
 import { createSmartArtController } from './smartart-controller';
 
 /** Element properties the shell's options and customize pages change. */
@@ -232,8 +231,6 @@ export function buildShell(core: EditorCore): Shell {
 
 	const workspace = el(doc, 'div', 'xve-workspace');
 	const selectionPane = createSelectionPane(ctx);
-	const chartFormatPane = createChartFormatPane(ctx);
-	const chartExPane = createChartExPane(ctx);
 	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
@@ -243,13 +240,8 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(
-		workspace,
-		chartFormatPane.element,
-		chartExPane.element,
-		smartArt.element,
-		selectionPane.element,
-	);
+	canvasRow.append(workspace, smartArt.element, selectionPane.element);
+	const chartPanes = registerChartPanes(ctx, workspace, smartArt.element);
 	frame.append(
 		titleBar.element,
 		ribbon.element,
@@ -283,8 +275,7 @@ export function buildShell(core: EditorCore): Shell {
 			formulaRow,
 			gridHost,
 			tabsRow,
-			chartFormatPane.element,
-			chartExPane.element,
+			...chartPanes.elements(),
 			smartArt.element,
 			selectionPane.element,
 			statusBar.element,
@@ -356,8 +347,7 @@ export function buildShell(core: EditorCore): Shell {
 			ribbonActions.refresh();
 			statusBar.refresh();
 			pageViews?.refresh();
-			chartFormatPane.refresh();
-			chartExPane.refresh();
+			chartPanes.refresh();
 			smartArt.refresh();
 			selectionPane.refresh();
 			titleBar.setFileName(core.fileName);
@@ -382,8 +372,7 @@ export function buildShell(core: EditorCore): Shell {
 			statusBar.relocalize();
 			backstage.relocalize();
 			share.relocalize();
-			chartFormatPane.relocalize();
-			chartExPane.relocalize();
+			chartPanes.relocalize();
 			smartArt.relocalize();
 			core.requestRender();
 		},

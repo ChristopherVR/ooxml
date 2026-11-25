@@ -38,7 +38,7 @@ function placementValue(pivot: PivotTable): string {
 const positionOf = (value: string): PivotValuesPosition =>
 	value === 'first' || value === 'last' || value === 'between' ? value : Number(value);
 
-type PivotDialogMode =
+export type PivotDialogMode =
 	| { kind: 'table' }
 	| { kind: 'settings'; binding?: { sheet: number; pivot: PivotTable; role: PivotChartButton } }
 	| { kind: 'chart'; source: string; create(at: CellAddress, options: PivotTableOptions): void };

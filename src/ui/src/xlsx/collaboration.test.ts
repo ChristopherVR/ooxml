@@ -13,6 +13,7 @@ import {
 import { collabStrings } from 'ooxml-core/i18n';
 import { getCell } from 'ooxml-core/xlsx';
 import { sanitizeXlsxPresence, type XlsxPresence } from 'ooxml-core/xlsx/collab';
+import { loadEditorStrings } from 'ooxml-core/xlsx/ui';
 import type { EditorCore } from './editor-core';
 import { defineXlsxEditor, type XlsxEditorElement } from './index';
 import type { OfficeUiShareDialog } from '../dialog/share-dialog';
@@ -133,6 +134,7 @@ describe('<xlsx-editor> collaboration', () => {
 	it('explains a refused update in the display language and stops sharing', async () => {
 		const { hub, a } = await pair();
 		a.element.locale = 'de';
+		await loadEditorStrings('de');
 		const errors: string[] = [];
 		a.element.addEventListener('workbook-error', (event) =>
 			errors.push((event as CustomEvent<{ message: string }>).detail.message),

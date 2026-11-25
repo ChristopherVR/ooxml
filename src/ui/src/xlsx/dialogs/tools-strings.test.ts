@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-// Every string the tool dialogs translate has an entry in TOOLS_STRINGS.
+// Every string the tool dialogs translate has an entry in the editor dictionary.
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { STRINGS, TOOLS_STRINGS } from 'ooxml-core/xlsx/ui';
-import { createTestContext } from '../commands/test-support';
+import { STRINGS } from 'ooxml-core/xlsx/ui';
+import { clickButton, createTestContext, waitForDialog } from '../commands/test-support';
 import { buildChart } from 'ooxml-core/xlsx/ui';
 import { registerToolDialogs } from './register-tools';
 
@@ -12,7 +12,7 @@ afterEach(() => (document.body.innerHTML = ''));
 const FRAME = new Set(['OK', 'Cancel', 'Close']);
 
 describe('tool dialog strings', () => {
-	it('are all translated', () => {
+	it('are all translated', async () => {
 		const ctx = createTestContext(createWorkbook());
 		const used = new Set<string>();
 		const base = ctx.t;
@@ -35,8 +35,10 @@ describe('tool dialog strings', () => {
 				'column',
 			),
 		);
+		const newChart = ctx.dialogs.open('insert-chart');
+		clickButton(await waitForDialog(ctx, 'insert-chart'), 'Cancel');
+		await newChart;
 		const names = [
-			'insert-chart',
 			'paste-special',
 			'page-setup',
 			'zoom',
@@ -55,17 +57,10 @@ describe('tool dialog strings', () => {
 		];
 		for (const name of names) void ctx.dialogs.open(name);
 		ctx.select('E2');
-		void ctx.dialogs.open('insert-chart', { change: true });
-		const missing = [...used].filter(
-			(key) => !FRAME.has(key) && !(key in TOOLS_STRINGS) && !(key in STRINGS.en),
-		);
+		const changeChart = ctx.dialogs.open('insert-chart', { change: true });
+		clickButton(await waitForDialog(ctx, 'insert-chart'), 'Cancel');
+		await changeChart;
+		const missing = [...used].filter((key) => !FRAME.has(key) && !(key in STRINGS.en));
 		expect(missing).toEqual([]);
-		for (const [key, texts] of Object.entries(TOOLS_STRINGS)) {
-			expect(
-				texts.every((t) => t.length > 0),
-				key,
-			).toBe(true);
-			expect(texts.join('').includes(String.fromCharCode(0x2014)), key).toBe(false);
-		}
 	});
 });

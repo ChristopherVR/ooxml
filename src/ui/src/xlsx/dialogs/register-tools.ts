@@ -6,7 +6,7 @@ import { type CreateTableProps, openCreateTable } from './create-table';
 import { type CustomAutoFilterProps, openCustomAutoFilter } from './custom-autofilter';
 import { type Top10Props, openTop10Filter } from './top10-filter';
 import { openFillSeries } from './fill-series';
-import { type InsertChartProps, openInsertChart } from './insert-chart';
+import type { InsertChartProps } from './insert-chart';
 import { openMoveCopySheet } from './move-copy-sheet';
 import { type PageSetupProps, openPageSetup } from './page-setup';
 import { openPasteSpecial } from './paste-special';
@@ -26,7 +26,6 @@ import { openCreateSparklines, openSparklineSettings } from './sparklines';
 import { openPivotFieldSettings } from './pivot-field-settings';
 import { openPivotGroup } from './pivot-group';
 import { openPivotGroupDates } from './pivot-group-dates';
-import { openPivotTable } from './pivots';
 import {
 	openInsertSlicer,
 	openInsertTimeline,
@@ -36,6 +35,7 @@ import {
 import { openPrintPreview } from './print-preview';
 import type { SparklineType } from 'ooxml-core/xlsx';
 import type { PivotChartFieldProps } from './pivot-field-filter';
+import type { PivotDialogMode } from './pivots';
 
 const props = <T>(value: unknown): T =>
 	value && typeof value === 'object' ? (value as T) : ({} as T);
@@ -43,8 +43,12 @@ const props = <T>(value: unknown): T =>
 export function registerToolDialogs(ctx: EditorContext): void {
 	const d = ctx.dialogs;
 	d.register('print-preview', (c) => openPrintPreview(c));
-	d.register('create-pivot-table', (c) => openPivotTable(c));
-	d.register('pivot-settings', (c) => openPivotTable(c, { kind: 'settings' }));
+	const openPivot = async (c: EditorContext, mode?: PivotDialogMode) => {
+		const { openPivotTable } = await import('./pivots');
+		return openPivotTable(c, mode);
+	};
+	d.register('create-pivot-table', (c) => openPivot(c));
+	d.register('pivot-settings', (c) => openPivot(c, { kind: 'settings' }));
 	d.register('pivot-field-filter', async (c) =>
 		(await import('./pivot-field-filter')).openPivotFieldFilter(c),
 	);
@@ -62,7 +66,10 @@ export function registerToolDialogs(ctx: EditorContext): void {
 		openCreateSparklines(c, props<{ type?: SparklineType }>(p).type),
 	);
 	d.register('sparkline-settings', (c) => openSparklineSettings(c));
-	d.register('insert-chart', (c, p) => openInsertChart(c, props<InsertChartProps>(p)));
+	d.register('insert-chart', async (c, p) => {
+		const { openInsertChart } = await import('./insert-chart');
+		return openInsertChart(c, props<InsertChartProps>(p));
+	});
 	d.register('paste-special', (c) => openPasteSpecial(c));
 	d.register('page-setup', (c, p) => openPageSetup(c, props<PageSetupProps>(p)));
 	d.register('zoom', (c) => openZoom(c));

@@ -4,25 +4,58 @@
  * This locale never changes the workbook's own language or number formats.
  */
 import { createTranslator, interpolate, normalizeLocale } from '../../i18n/index';
-import { de } from './locales/de/index';
 import { en } from './locales/en/index';
-import { es } from './locales/es/index';
-import { fr } from './locales/fr/index';
-import { zhCN } from './locales/zh-CN/index';
 
 export type EditorLocale = 'en' | 'fr' | 'de' | 'es' | 'zh-CN';
 /** A supported locale or any BCP 47 tag that maps onto one (`de-DE`, `zh-Hans`). */
 export type EditorLocaleInput = EditorLocale | (string & {});
 export const EDITOR_LOCALES: readonly EditorLocale[] = ['en', 'fr', 'de', 'es', 'zh-CN'];
 
-/** Every display locale, keyed by its canonical code. `en` defines the key set. */
-export const STRINGS: Readonly<Record<EditorLocale, Readonly<Record<string, string>>>> = {
-	en,
-	fr,
-	de,
-	es,
-	'zh-CN': zhCN,
+type EditorStrings = Readonly<Record<string, string>>;
+type TranslatedLocale = Exclude<EditorLocale, 'en'>;
+
+const loaders: Readonly<Record<TranslatedLocale, () => Promise<EditorStrings>>> = {
+	fr: () => import('./locales/fr/index').then(({ fr }) => fr),
+	de: () => import('./locales/de/index').then(({ de }) => de),
+	es: () => import('./locales/es/index').then(({ es }) => es),
+	'zh-CN': () => import('./locales/zh-CN/index').then(({ zhCN }) => zhCN),
 };
+const loaded: Partial<Record<TranslatedLocale, EditorStrings>> = {};
+const pending = new Map<TranslatedLocale, Promise<EditorStrings>>();
+
+/** The current dictionaries, with English available before another language loads. */
+export const STRINGS: Readonly<Record<EditorLocale, EditorStrings>> = {
+	en,
+	get fr() {
+		return loaded.fr ?? en;
+	},
+	get de() {
+		return loaded.de ?? en;
+	},
+	get es() {
+		return loaded.es ?? en;
+	},
+	get 'zh-CN'() {
+		return loaded['zh-CN'] ?? en;
+	},
+};
+
+/** Loads just the selected language. Callers can keep using English if loading fails. */
+export function loadEditorStrings(locale: EditorLocale): Promise<EditorStrings> {
+	if (locale === 'en') return Promise.resolve(en);
+	const cached = loaded[locale];
+	if (cached) return Promise.resolve(cached);
+	const loading = pending.get(locale);
+	if (loading) return loading;
+	const request = loaders[locale]()
+		.then((strings) => {
+			loaded[locale] = strings;
+			return strings;
+		})
+		.finally(() => pending.delete(locale));
+	pending.set(locale, request);
+	return request;
+}
 
 /**
  * Maps any BCP 47 tag to a supported display locale, falling back to English. Region variants

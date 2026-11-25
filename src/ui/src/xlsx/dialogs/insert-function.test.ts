@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { createWorkbook, getCell } from 'ooxml-core/xlsx';
-import { translator } from 'ooxml-core/xlsx/ui';
+import { loadEditorStrings, translator } from 'ooxml-core/xlsx/ui';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
 	clickButton,
@@ -17,6 +17,7 @@ afterEach(() => (document.body.innerHTML = ''));
 
 describe('insert function dialog', () => {
 	it('translates the FILTERXML description in the function picker', async () => {
+		await loadEditorStrings('fr');
 		const ctx = createTestContext(createWorkbook());
 		ctx.t = translator(() => 'fr');
 		registerNavigationDialogs(ctx);

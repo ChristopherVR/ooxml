@@ -189,6 +189,8 @@ CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })`) types fields the
 
 ## Privacy and network use
 
+Excel's UI dictionaries load from the app's own origin when a non-English language is selected. English is bundled and stays available offline. Hosts that use the core translator directly can await `loadEditorStrings(locale)` before translating.
+
 `ooxml-core` parses, edits and writes documents locally. In a web build, Visio can load its bundled TIFF decoder from the app's origin when it first needs it. External requests can go to a source URL you pass, collaboration or Teams servers you configure, OneDrive when you set it up, and the OCSP responder named in a signing certificate during Node signature inspection (turn it off with `{ checkRevocation: false }`). An active Word collaboration session shares added pictures, 3D models and Office file objects with the session's peers. Linked pictures and media are not fetched unless the load allows linked content. Nothing collects analytics or telemetry. Every request is listed in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
 ## Related packages

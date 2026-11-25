@@ -40,6 +40,8 @@ async function deploy(boot) {
 		'panes.css': '.pane { display: grid }',
 		'suite.js': `import './suite-assets/${boot}';\n`,
 		[`suite-assets/${boot}`]: `globalThis.booted = ${JSON.stringify(boot)};`,
+		'suite-assets/xlsx-locale-de-DE123.js': 'export const home = "Start";',
+		'suite-assets/xlsx-locale-fr-FR123.js': 'export const home = "Accueil";',
 	};
 	for (const [name, text] of Object.entries(files)) writeFileSync(join(out, name), text);
 	await buildPwa(out);
@@ -212,6 +214,25 @@ async function runningA(clients = ['w1']) {
 	await a.run('fetch', navigate(`${ORIGIN}index.html?suite`, 'w1'));
 	return a;
 }
+
+test('Excel language files remain available on demand and cache only after use', async () => {
+	const app = await runningA();
+	const german = 'xlsx-locale-de-DE123.js';
+	const french = 'xlsx-locale-fr-FR123.js';
+	assert.equal(
+		app.fetches.some((href) => href.includes('xlsx-locale-')),
+		false,
+	);
+	app.fetches.length = 0;
+	const response = await app.run('fetch', chunk(german, 'w1'));
+	assert.equal(await response.text(), read(builds.A, `suite-assets/${german}`).toString());
+	assert.deepEqual(app.fetches, [`${ORIGIN}suite-assets/${german}`]);
+
+	const down = worker(builds.A, { network: offline, stores: app.stores, clients: ['w1'] });
+	const saved = await down.run('fetch', chunk(german, 'w1'));
+	assert.equal(await saved.text(), read(builds.A, `suite-assets/${german}`).toString());
+	await assert.rejects(down.run('fetch', chunk(french, 'w1')), /Failed to fetch/u);
+});
 
 test('the worker serves a saved file only while it is the one the build shipped', async () => {
 	const { run, fetches, cache } = await runningA();

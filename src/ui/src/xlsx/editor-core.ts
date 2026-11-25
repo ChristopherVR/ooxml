@@ -27,8 +27,10 @@ import { DirtyState } from 'ooxml-core/xlsx/ui';
 import { emit, emitEvent } from './events';
 import { DEFAULT_AUTHOR_NAME, DEFAULT_FILE_NAME } from './editor-attributes';
 import {
+	loadEditorStrings,
 	normalizeEditorLocale,
 	sheetBaseName,
+	STRINGS,
 	translator,
 	type EditorLocale,
 } from 'ooxml-core/xlsx/ui';
@@ -431,6 +433,17 @@ export class EditorCore {
 		const next = normalizeEditorLocale(value);
 		if (next === this.locale) return;
 		this.locale = next;
+		this.relocalize();
+		if (next === 'en' || STRINGS[next] !== STRINGS.en) return;
+		void loadEditorStrings(next).then(
+			() => {
+				if (this.locale === next) this.relocalize();
+			},
+			() => {},
+		);
+	}
+
+	private relocalize(): void {
 		this.shell?.relocalize();
 		this.notifyModel({ kind: 'locale' });
 	}

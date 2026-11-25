@@ -129,7 +129,10 @@ async function prune(activating, arriving) {
 self.addEventListener('install', (event) =>
 	event.waitUntil(
 		(async () => {
-			const queue = [...current.files.keys()];
+			// Optional language modules keep their integrity hashes and are saved on first use.
+			const onDemand = new Set(ON_DEMAND.map((file) => new URL(file, BASE).href));
+			const required = [...current.files.keys()].filter((href) => !onDemand.has(href));
+			const queue = required.slice();
 			await Promise.all(
 				Array.from({ length: 4 }, async () => {
 					while (queue.length) {
@@ -150,7 +153,7 @@ self.addEventListener('install', (event) =>
 			);
 			const cache = await caches.open(CACHE);
 			const kept = new Set((await cache.keys()).map((request) => request.url));
-			if (![...current.files.keys()].every((href) => kept.has(href)))
+			if (!required.every((href) => kept.has(href)))
 				throw new Error('App resources were removed during the install');
 			await cache.put(TABLE, new Response(JSON.stringify(FILES)));
 			// Pages load their shell from the network and every script and style URL is versioned,

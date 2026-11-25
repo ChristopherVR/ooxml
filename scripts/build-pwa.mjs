@@ -192,9 +192,12 @@ export async function buildPwa(out) {
 			.digest('base64');
 	const json = JSON.stringify(table);
 	const version = createHash('sha256').update(json).digest('hex');
+	const onDemand = files.filter((file) =>
+		/^suite-assets\/xlsx-locale-(?:fr|de|es|zh-CN)-[\w-]+\.js$/u.test(file),
+	);
 	const worker = await readFile(new URL('./pwa/service-worker.js', import.meta.url), 'utf8');
 	await writeFile(
 		join(out, 'sw.js'),
-		`const VERSION=${JSON.stringify(version)};\nconst FILES=${json};\n${worker}`,
+		`const VERSION=${JSON.stringify(version)};\nconst FILES=${json};\nconst ON_DEMAND=${JSON.stringify(onDemand)};\n${worker}`,
 	);
 }

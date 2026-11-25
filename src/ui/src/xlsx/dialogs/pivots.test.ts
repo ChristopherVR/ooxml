@@ -3,7 +3,7 @@ import { createWorkbook, getCell } from 'ooxml-core/xlsx';
 import {
 	clickButton,
 	createTestContext,
-	dialogEl,
+	waitForDialog,
 	inputByLabel,
 	setValue,
 } from '../commands/test-support';
@@ -28,7 +28,7 @@ it.each(['tabular', 'compact', 'outline'])(
 		ctx.select('A1:D3');
 		registerToolDialogs(ctx);
 		let done = ctx.dialogs.open('create-pivot-table'),
-			dialog = dialogEl(ctx, 'create-pivot-table');
+			dialog = await waitForDialog(ctx, 'create-pivot-table');
 		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
@@ -45,13 +45,13 @@ it.each(['tabular', 'compact', 'outline'])(
 		const pivot = wb.sheets[0]!.pivotTables![0]!;
 		expect(pivot).toMatchObject({ layout: form, valuesPosition: 'between', valuesAxis: 'rows' });
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('between');
 		clickButton(dialog, 'OK');
 		await done;
 		expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 		done = ctx.dialogs.open('pivot-settings');
-		dialog = dialogEl(ctx, 'pivot-settings');
+		dialog = await waitForDialog(ctx, 'pivot-settings');
 		setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'columns');
 		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').disabled).toBe(true);
 		expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Placement:').value).toBe('last');
@@ -88,14 +88,14 @@ it('keeps compact multiple measures on unchanged settings and switches to outlin
 	registerToolDialogs(ctx);
 	const pivot = wb.sheets[0]!.pivotTables![0]!;
 	let done = ctx.dialogs.open('pivot-settings');
-	let dialog = dialogEl(ctx, 'pivot-settings');
+	let dialog = await waitForDialog(ctx, 'pivot-settings');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('compact');
 	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(true);
 	clickButton(dialog, 'OK');
 	await done;
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:'), 'bottom');
 	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(false);
@@ -126,7 +126,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 	ctx.select('A1:C4');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
-	let dialog = dialogEl(ctx, 'create-pivot-table');
+	let dialog = await waitForDialog(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
 	clickButton(dialog, 'Add Value Field');
@@ -148,7 +148,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 	expect(getCell(wb.sheets[0]!, 1, 5)?.value).toBe(30);
 	expect(getCell(wb.sheets[0]!, 1, 6)?.value).toBe(2);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	expect(
 		inputByLabel<HTMLSelectElement>(dialog.querySelector('[data-pivot-value]')!, 'Value Field:')
 			.value,
@@ -157,7 +157,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 	await done;
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	const measure = dialog.querySelector<HTMLElement>('[data-pivot-value]')!;
 	const caption = inputByLabel<HTMLInputElement>(measure, 'Value Caption:');
 	setValue(caption, 'Units');
@@ -171,7 +171,7 @@ it('authors multiple values in tabular form and preserves no-op settings before 
 		aggregate: 'max',
 	});
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	clickButton(dialog, 'Remove Value Field');
 	clickButton(dialog, 'OK');
 	await done;
@@ -192,7 +192,7 @@ it('defaults to compact and switches outline subtotal placement with undo', asyn
 	ctx.select('A1:C3');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
-	let dialog = dialogEl(ctx, 'create-pivot-table');
+	let dialog = await waitForDialog(ctx, 'create-pivot-table');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:').value).toBe('compact');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
 	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(true);
@@ -204,7 +204,7 @@ it('defaults to compact and switches outline subtotal placement with undo', asyn
 	});
 	expect(getCell(wb.sheets[0]!, 1, 5)?.value).toBe(30);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
 	expect(inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').disabled).toBe(false);
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Subtotal Position:'), 'bottom');
@@ -230,7 +230,7 @@ it('authors hierarchical row fields and reconfigures subtotals with one undo ste
 	ctx.select('A1:C4');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
-	let dialog = dialogEl(ctx, 'create-pivot-table');
+	let dialog = await waitForDialog(ctx, 'create-pivot-table');
 	expect(inputByLabel<HTMLInputElement>(dialog, 'Show subtotals').disabled).toBe(true);
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Second Row Field:'), 'Region');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'tabular');
@@ -243,7 +243,7 @@ it('authors hierarchical row fields and reconfigures subtotals with one undo ste
 	});
 	expect(getCell(wb.sheets[0]!, 3, 4)?.value).toBe('Fruit Total');
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	inputByLabel<HTMLInputElement>(dialog, 'Show subtotals').click();
 	inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels').click();
 	clickButton(dialog, 'OK');
@@ -266,20 +266,20 @@ it('authors fields from source headers and leaves unchanged settings alone', asy
 	ctx.select('A1:B3');
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('create-pivot-table');
-	const dialog = dialogEl(ctx, 'create-pivot-table');
+	const dialog = await waitForDialog(ctx, 'create-pivot-table');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:').value).toBe('Amount');
 	clickButton(dialog, 'OK');
 	expect(await done).toBe(true);
 	const pivot = wb.sheets[0]!.pivotTables![0]!;
 	pivot.valueCaption = 'Custom caption';
 	const settingsDone = ctx.dialogs.open('pivot-settings');
-	const settings = dialogEl(ctx, 'pivot-settings');
+	const settings = await waitForDialog(ctx, 'pivot-settings');
 	clickButton(settings, 'OK');
 	expect(await settingsDone).toBe(true);
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 	expect(pivot.valueCaption).toBe('Custom caption');
 	const changeDone = ctx.dialogs.open('pivot-settings');
-	const change = dialogEl(ctx, 'pivot-settings');
+	const change = await waitForDialog(ctx, 'pivot-settings');
 	setValue(inputByLabel<HTMLSelectElement>(change, 'Summarize Values By:'), 'count');
 	clickButton(change, 'OK');
 	await changeDone;
@@ -311,7 +311,7 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 	ctx.select('A1:C4');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
-	let dialog = dialogEl(ctx, 'create-pivot-table');
+	let dialog = await waitForDialog(ctx, 'create-pivot-table');
 	const axis = inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:');
 	expect(axis.disabled).toBe(true);
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
@@ -338,12 +338,12 @@ it('authors Values last on rows, preserves unchanged settings and removes the fi
 	expect(getCell(wb.sheets[0]!, 2, 4)?.value).toBe('Fruit');
 	expect(getCell(wb.sheets[0]!, 2, 6)?.value).toBe(2);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	clickButton(dialog, 'OK');
 	await done;
 	expect(wb.sheets[0]!.pivotTables![0]).toBe(pivot);
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	clickButton(dialog, 'Remove Value Field');
 	expect(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:').value).toBe('columns');
 	clickButton(dialog, 'OK');
@@ -370,7 +370,7 @@ it.each(['compact', 'outline', 'tabular'])(
 		ctx.select('A1:C2');
 		registerToolDialogs(ctx);
 		const done = ctx.dialogs.open('create-pivot-table');
-		const dialog = dialogEl(ctx, 'create-pivot-table');
+		const dialog = await waitForDialog(ctx, 'create-pivot-table');
 		clickButton(dialog, 'Add Value Field');
 		setValue(
 			inputByLabel<HTMLSelectElement>(
@@ -420,7 +420,7 @@ it('keeps compact Values-row layout and switches to outline repeated labels with
 	ctx.select('A1:C3');
 	registerToolDialogs(ctx);
 	let done = ctx.dialogs.open('create-pivot-table');
-	let dialog = dialogEl(ctx, 'create-pivot-table');
+	let dialog = await waitForDialog(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 	clickButton(dialog, 'Add Value Field');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Values Axis:'), 'rows');
@@ -432,7 +432,7 @@ it('keeps compact Values-row layout and switches to outline repeated labels with
 	expect(getCell(wb.sheets[0]!, 1, 4)?.value).toBe('Fruit');
 	expect(getCell(wb.sheets[0]!, 2, 4)?.value).toBe('Sum of Amount');
 	done = ctx.dialogs.open('pivot-settings');
-	dialog = dialogEl(ctx, 'pivot-settings');
+	dialog = await waitForDialog(ctx, 'pivot-settings');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Report Layout:'), 'outline');
 	const repeat = inputByLabel<HTMLInputElement>(dialog, 'Repeat row labels');
 	expect(repeat.disabled).toBe(false);
@@ -458,7 +458,7 @@ it.each(['compact', 'outline', 'tabular'])(
 		ctx.select('A1:C2');
 		registerToolDialogs(ctx);
 		const done = ctx.dialogs.open('create-pivot-table');
-		const dialog = dialogEl(ctx, 'create-pivot-table');
+		const dialog = await waitForDialog(ctx, 'create-pivot-table');
 		clickButton(dialog, 'Add Value Field');
 		setValue(
 			inputByLabel<HTMLSelectElement>(
@@ -502,7 +502,7 @@ it.each([
 	ctx.select('A1:B3');
 	registerToolDialogs(ctx);
 	const done = ctx.dialogs.open('create-pivot-table');
-	const dialog = dialogEl(ctx, 'create-pivot-table');
+	const dialog = await waitForDialog(ctx, 'create-pivot-table');
 	setValue(inputByLabel<HTMLSelectElement>(dialog, 'Value Field:'), 'Amount');
 	clickButton(dialog, 'OK');
 	await done;

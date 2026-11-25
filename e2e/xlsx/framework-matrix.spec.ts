@@ -80,12 +80,41 @@ test('the chosen locale reaches the editor mounted through an adapter', async ({
 	await page.locator('#sample').click();
 	await expect(grid(page)).toBeVisible();
 	expect(await editorProperty<string>(page, 'locale')).toBe('fr');
+	await expect(part(page, 'ribbon').getByRole('tab', { name: 'Accueil' })).toBeVisible();
 });
 
-test('switching the locale relabels the ribbon live', async ({ page }) => {
-	await openSample(page);
+test('switching the locale downloads only the selected language and relabels the ribbon live', async ({
+	page,
+}) => {
+	const languages = new Set<string>();
+	page.on('request', (request) => {
+		const match = /\/xlsx-locale-(fr|de|es|zh-CN)-[^/]+\.js$/.exec(new URL(request.url()).pathname);
+		if (match?.[1]) languages.add(match[1]);
+	});
+	await newWorkbook(page);
 	await expect(part(page, 'ribbon').getByRole('tab', { name: 'Home' })).toBeVisible();
+	expect([...languages]).toEqual([]);
+	await typeInActiveCell(page, '=2*21');
 	await editor(page).evaluate((node) => node.setAttribute('locale', 'de'));
 	await expect(part(page, 'ribbon').getByRole('tab', { name: 'Start' })).toBeVisible();
 	await expect(part(page, 'status-bar')).toContainText('Bereit');
+	await expect(grid(page)).toContainText('42');
+	expect([...languages]).toEqual(['de']);
+	await editor(page).evaluate((node) => node.setAttribute('locale', 'en'));
+	await expect(part(page, 'ribbon').getByRole('tab', { name: 'Home' })).toBeVisible();
+});
+
+test('an unavailable translation leaves English and keeps the workbook editable', async ({
+	page,
+}) => {
+	await page.route('**/xlsx-locale-es-*.js', (route) => route.abort());
+	await newWorkbook(page);
+	const request = page.waitForEvent('requestfailed', (entry) =>
+		/\/xlsx-locale-es-/.test(entry.url()),
+	);
+	await editor(page).evaluate((node) => node.setAttribute('locale', 'es'));
+	await request;
+	await expect(part(page, 'ribbon').getByRole('tab', { name: 'Home' })).toBeVisible();
+	await typeInActiveCell(page, 'still editable');
+	await expect(grid(page)).toContainText('still editable');
 });

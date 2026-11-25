@@ -44,6 +44,13 @@ complete end-to-end Excel comparison.
 
 ## Latest completed increments
 
+2026-11-26: The editor loads French, German, Spanish and Simplified Chinese dictionaries when selected,
+including command labels and Insert Function descriptions. English ships with the editor and
+serves as the fallback. Insert Chart, the chart formatting panes, and the PivotTable creation and
+settings dialogs load when opened. The suite's New Excel route now requests 1,930,012 bytes of
+gzipped JavaScript, down from 2,587,657. The initial workbook engine still includes chart rendering
+and pivot calculation used by existing workbooks.
+
 2026-10-31: FILTERXML now evaluates XPath 1.0 through the shared XML area, using the existing
 bounded XML parser and the `xpath` dependency already used by signature tooling. It returns
 vertical spill arrays and follows the native cases for element/attribute values, namespaces,

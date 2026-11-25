@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { createWorkbook, FUNCTION_CATALOG } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it } from 'vitest';
-import { NAVIGATION_STRINGS, STRINGS } from 'ooxml-core/xlsx/ui';
+import { STRINGS } from 'ooxml-core/xlsx/ui';
 import { SHORTCUTS } from '../keyboard';
 import { clickButton, createTestContext, dialogEl } from '../commands/test-support';
 import { registerNavigationDialogs } from './register-navigation';
@@ -58,9 +58,5 @@ describe('navigation dialog strings', () => {
 				!/^[A-Z][A-Z0-9.]+$/.test(key),
 		);
 		expect(missing).toEqual([]);
-		for (const [key, texts] of Object.entries(NAVIGATION_STRINGS)) {
-			expect(texts.length, key).toBe(4);
-			for (const text of texts) expect(text, key).not.toContain(String.fromCharCode(0x2014));
-		}
 	});
 });
