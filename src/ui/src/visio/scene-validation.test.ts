@@ -235,7 +235,8 @@ describe('aggregate raster and metadata limits', () => {
 		shape.image.bytes = Uint8Array.from(
 			new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>'),
 		);
-		expect(() => assertViewableDocument(model)).toThrow('not a supported');
+		// Sniffed as SVG whatever its declared type, and refused for its event handler.
+		expect(() => assertViewableDocument(model)).toThrow('active or unsupported content');
 	});
 	it('revalidates mutated byte buffers on every call and catches conflicting shared declarations', () => {
 		const model = structuredClone(demoDocument),

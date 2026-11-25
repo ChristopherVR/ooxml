@@ -400,7 +400,7 @@ export class ViewerInsert {
 			event.dataTransfer.dropEffect = 'copy';
 		};
 		const drop = (event: DragEvent) => {
-			const file = event.dataTransfer?.files[0];
+			const file = event.dataTransfer?.files?.[0];
 			if (!file || !/\.(?:png|jpe?g|gif|svg|bmp|tiff?|emf)$/i.test(file.name)) return;
 			event.preventDefault();
 			event.stopPropagation();
