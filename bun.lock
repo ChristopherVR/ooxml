@@ -531,7 +531,6 @@
         "unrun": "^0.3.1",
         "vitest": "^5.1.1",
         "xml-crypto": "^6.4.0",
-        "xmllint-wasm": "5.3.0",
         "zod": "^4.6.7",
       },
       "peerDependencies": {
@@ -3961,8 +3960,6 @@
     "xml-naming": ["xml-naming@0.3.0", "", {}, "sha512-ghig2TBE/H11aOVgmahA3MhimvkBr6JIYknH/Dhdk10nXwdbIqBJsbfMxpvFPG8bAw77gN29aQWvKpmVoPlvPQ=="],
 
     "xmlchars": ["xmlchars@2.2.0", "", {}, "sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw=="],
-
-    "xmllint-wasm": ["xmllint-wasm@5.3.0", "", { "peerDependencies": { "@types/node": ">=16" } }, "sha512-sEgRXdf2t13eYCFCURmCE6h2hwleEOIS9VL/jOh9JJJnez2YXIooi2Ghm05/JZEPXyPawN8sMASPVZlmh8Sd6A=="],
 
     "xpath": ["xpath@0.0.36", "", {}, "sha512-HuqAnJx5YJoDeLub7hhcNoiRvnqqrgoSsI4kLrOtv6XkaUI0zY9ylL4+ULozB35JT1SVMfdexsMqRbTp7bkFGQ=="],
 

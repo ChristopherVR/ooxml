@@ -343,6 +343,25 @@ jobs:
       - run: bun run test:scripts
       - run: bun run check:changelog
 
+  # Validates generated DOCX, XLSX and PPTX packages with Microsoft's OpenXmlValidator (.NET)
+  # against Microsoft365 rules, and VSDX packages with the structural [MS-VSDX] validator.
+  schema-validation:
+    needs: plan
+    if: fromJSON(needs.plan.outputs.plan).schemaValidation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.plan.outputs.ref }}
+      - uses: ./.github/actions/setup
+      - name: Cache NuGet packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('scripts/ooxml-validate/ooxml-validate.csproj') }}
+      - run: bun run validate:schemas
+
   mcp:
     needs: plan
     if: fromJSON(needs.plan.outputs.plan).mcp
@@ -952,6 +971,7 @@ jobs:
         ui,
         ui-test,
         scripts,
+        schema-validation,
         perf-budgets,
         mcp,
         viewers,

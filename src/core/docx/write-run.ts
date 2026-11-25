@@ -1,5 +1,6 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { orderChildren, RPR_ORDER } from './element-order';
+import { writeLigatures } from './ligatures';
 import type { TextRun } from './model';
 import {
 	children,
@@ -250,6 +251,8 @@ function setRunProperties(
 	}
 	setExtendedRunProperties(doc, props, run, base);
 	orderChildren(props, RPR_ORDER);
+	// w14:* run properties (MS-DOCX CT_RPr) come after the ECMA-376 w:* sequence.
+	if (changed('ligatures')) writeLigatures(doc, props, run.ligatures);
 	if (!props.childNodes.length) runNode.removeChild(props);
 }
 

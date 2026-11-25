@@ -3,7 +3,6 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { simplePdf } from '../../pdf/test-support/build';
 import type { Block, Paragraph } from '../model';
-import { schemaErrors } from '../test-support/schema-validation';
 import { convertPdf } from './import';
 import { importPdf } from './index';
 
@@ -34,40 +33,6 @@ const content =
 	text(72, 200, 'Underlined') +
 	'0 g 72 197 60 0.75 re f ' +
 	table;
-
-/** document.xml with each drawing turned into the DrawingML locked canvas it is equivalent to. */
-function asLockedCanvas(xml: string): string {
-	const lc = 'http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas';
-	const group = '<a:nvGrpSpPr><a:cNvPr id="0" name="g"/><a:cNvGrpSpPr/></a:nvGrpSpPr>';
-	return xml
-		.replace(/<mc:AlternateContent[^>]*><mc:Choice Requires="wp[sg]">/g, '')
-		.replace(/<\/mc:Choice><mc:Fallback\/><\/mc:AlternateContent>/g, '')
-		.replace(
-			/uri="http:\/\/schemas\.microsoft\.com\/office\/word\/2010\/wordprocessing(Shape|Group)"/g,
-			`uri="${lc}"`,
-		)
-		.replace(
-			/<wpg:wgp><wpg:cNvGrpSpPr\/><wpg:grpSpPr>/g,
-			`<lc:lockedCanvas xmlns:lc="${lc}">${group}<a:grpSpPr>`,
-		)
-		.replace(/<\/wpg:grpSpPr>/g, '</a:grpSpPr>')
-		.replace(/<\/wpg:wgp>/g, '</lc:lockedCanvas>')
-		.replace(
-			/<wps:wsp><wps:cNvPr (id="\d+" name="[^"]*")\/><wps:cNvSpPr\/>/g,
-			'<a:sp><a:nvSpPr><a:cNvPr $1/><a:cNvSpPr/></a:nvSpPr>',
-		)
-		.replace(
-			/<a:graphicData uri="([^"]+)"><wps:wsp><wps:cNvSpPr\/>/g,
-			`<a:graphicData uri="$1"><lc:lockedCanvas xmlns:lc="${lc}">${group}<a:grpSpPr/><a:sp><a:nvSpPr><a:cNvPr id="0" name="s"/><a:cNvSpPr/></a:nvSpPr>`,
-		)
-		.replace(/<wps:txbx>[\s\S]*?<\/wps:txbx>/g, '')
-		.replace(
-			/<wps:bodyPr(?:\s[^>]*)?\/><\/wps:wsp><\/a:graphicData>/g,
-			'</a:sp></lc:lockedCanvas></a:graphicData>',
-		)
-		.replace(/<wps:bodyPr(?:\s[^>]*)?\/><\/wps:wsp>/g, '</a:sp>')
-		.replace(/<(\/?)wps:spPr>/g, '<$1a:spPr>');
-}
 
 const paragraphs = (blocks: Block[]) =>
 	blocks.filter((block): block is Paragraph => block.type === 'paragraph');
@@ -129,10 +94,6 @@ describe('vector drawings', async () => {
 		).toBe(true);
 	});
 
-	it('writes valid DrawingML', async () => {
-		expect(await schemaErrors(asLockedCanvas(xml))).toEqual([]);
-	});
-
 	it('opens a page that holds only drawings, and reports shapes over the limit', async () => {
 		// 520 short diagonal strokes, far enough apart to stay separate drawings.
 		const many = Array.from({ length: 520 }, (_, index) => {
@@ -153,7 +114,6 @@ describe('vector drawings', async () => {
 			.file('word/document.xml')!
 			.async('string');
 		expect(page.match(/<wp:anchor /g)?.length).toBe(500);
-		expect(await schemaErrors(asLockedCanvas(page))).toEqual([]);
 	});
 });
 
@@ -191,9 +151,5 @@ describe('vector drawings in a Word PDF (dessins.pdf, exported by Word 16)', asy
 			Math.max(...anchors.map((anchor) => (anchor.match(/<wps:wsp>/g) ?? []).length)),
 		).toBeGreaterThan(20);
 		expect(report.pages[0]!.notes.some((note) => note.includes('left out'))).toBe(false);
-	});
-
-	it('writes valid DrawingML', async () => {
-		expect(await schemaErrors(asLockedCanvas(xml))).toEqual([]);
 	});
 });

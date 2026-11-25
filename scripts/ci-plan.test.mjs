@@ -77,6 +77,7 @@ test('a docs-only change runs nothing', () => {
 	assert.deepEqual(result.test.shards, []);
 	assert.equal(result.typecheck.strict, false);
 	assert.equal(result.build, false);
+	assert.equal(result.schemaValidation, false);
 	assert.deepEqual(result.viewers, []);
 });
 
@@ -85,6 +86,7 @@ test('a docx change tests the changed files, typechecks and checks only the docx
 	assert.equal(result.test.mode, 'changed');
 	assert.deepEqual(result.test.shards, [1]);
 	assert.equal(result.typecheck.strict, true);
+	assert.equal(result.schemaValidation, true);
 	assert.deepEqual(viewers(result), ['docx']);
 });
 

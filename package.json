@@ -51,6 +51,7 @@
 		"test": "bun run --cwd src/core test",
 		"test:package": "bun run --cwd src/core test:package",
 		"gen:docx-schema-types": "bun run --cwd src/core gen:docx-schema-types",
+		"validate:schemas": "bun scripts/validate-schemas.mjs",
 		"fmt": "oxfmt '!viewers/**'",
 		"fmt:check": "oxfmt --check '!viewers/**'",
 		"docs:check": "node scripts/check-docs.mjs --out docs-health.md",

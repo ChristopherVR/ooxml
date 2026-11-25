@@ -704,6 +704,14 @@ export function plan(changed, { full = false, testFiles, reference = false, reac
 	const pptxTypes = src.some((file) => viewersOfArea(file.split('/')[2]).includes('pptx'));
 	// A test cannot change what ships, so it moves no budget.
 	const budgets = everything || live.some((file) => BUDGET_REACH.test(file) && !isTestFile(file));
+	const schemaValidation =
+		everything ||
+		coreCode ||
+		live.some((file) =>
+			/^scripts\/(?:ooxml-validate\/|generate-schema-fixtures\.ts$|validate-(?:schemas\.mjs|vsdx\.ts)$)/.test(
+				file,
+			),
+		);
 
 	const testsNeeded = everything || core;
 	return {
@@ -741,6 +749,7 @@ export function plan(changed, { full = false, testFiles, reference = false, reac
 			a11y.run ||
 			budgets,
 		checks: { core: everything || coreCode || uiCode, ui: everything || ui || coreCode },
+		schemaValidation,
 		scripts: everything || scripts,
 		// The byte budgets of the entry points and the suite's screens (perf-budgets job).
 		budgets,

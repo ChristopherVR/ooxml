@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { generate, OUTPUT_PATH, schemaFingerprint } from '../../scripts/gen-schema-types';
+import { OUTPUT_PATH, schemaFingerprint } from '../../scripts/gen-schema-types';
 import { isStJc, isStJcTable, isStRelFromV, ST_Jc, ST_RelFromH } from './wml-simple-types';
 
 describe('generated schema simple types', () => {
@@ -11,10 +11,6 @@ describe('generated schema simple types', () => {
 		expect(schemaFingerprint('<schema>\n<changed/>\n</schema>')).not.toBe(
 			schemaFingerprint('<schema>\n<type/>\n</schema>'),
 		);
-	});
-	it('is identical to a fresh generation from the checked-in XSDs (drift check)', () => {
-		// Working copies may carry CRLF line endings (Windows autocrlf); the generator writes LF.
-		expect(readFileSync(OUTPUT_PATH, 'utf8').replace(/\r\n/g, '\n')).toBe(generate());
 	});
 
 	it('exposes enumerations, guards and provenance from the schemas', () => {
