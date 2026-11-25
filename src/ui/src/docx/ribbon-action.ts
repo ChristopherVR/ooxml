@@ -6,6 +6,7 @@ import type { DiagramFormatChange } from 'ooxml-core/diagram';
 /** Every command the ribbon can raise, dispatched as a `ribbon-action` event. */
 export type RibbonAction =
 	| { type: 'documentDesign'; menu: import('./design-ribbon-controls').DesignMenu }
+	| { type: 'mailings'; key: import('./mailings-ribbon').MailingsCommand }
 	| { type: 'smartArtFormat'; change: DiagramFormatChange }
 	| { type: 'help' }
 	| {

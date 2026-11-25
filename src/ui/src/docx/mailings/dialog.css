@@ -1,0 +1,54 @@
+.dve-mailings-dialog {
+	--office-dialog-width: min(640px, 90vw);
+	--office-dialog-max-width: min(640px, 90vw);
+}
+.dve-mailings-content {
+	display: grid;
+	gap: 8px;
+}
+.dve-mailings-content p {
+	margin: 0;
+}
+.dve-mailings-example {
+	white-space: pre-wrap;
+}
+.dve-mailings-content button {
+	min-height: 30px;
+	padding: 0 14px;
+	border: 1px solid var(--office-border);
+	border-radius: var(--office-radius);
+	background: var(--surface);
+	color: var(--ink);
+	font: inherit;
+}
+.dve-mailings-content button:disabled {
+	opacity: 0.55;
+}
+.dve-mailings-content input[type='checkbox'] {
+	height: auto;
+}
+.dve-mailings-table {
+	max-height: 36vh;
+	overflow: auto;
+}
+.dve-mailings-table table {
+	border-collapse: collapse;
+	text-align: start;
+}
+.dve-mailings-table :is(th, td) {
+	padding: 4px 8px;
+	max-width: 180px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	border-bottom: 1px solid var(--office-border);
+	text-align: start;
+}
+.dve-mailings-pager {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.dve-mailings-content [hidden] {
+	display: none;
+}

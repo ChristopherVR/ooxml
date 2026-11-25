@@ -219,6 +219,15 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   picture in Visio can load its bundled decoder on demand. The request carries no picture bytes
   or filename. If the decoder is unavailable offline, the drawing still opens and the TIFF is
   omitted from the preview.
+- Word's Mailings commands load editor code on demand from the app's origin. Choosing a local
+  recipient file also loads a same-origin parser worker where supported. These requests carry no
+  file name, recipient data or document bytes. Hosts can disable Mailings with the editor's
+  read-only setting or by disabling editing in its customization. Use the app's cached files
+  offline. If workers are unavailable or blocked by the host's `worker-src` policy, the editor
+  reads the file locally on the page. Recipient lists and selections stay in memory. The editor
+  calls a host's `mailMergeDataSource.read()` only after **Use host recipients**, and the host controls any
+  requests it makes. In the Office suite, **Edit Individual Documents** creates a new local
+  profile document containing the merged text. It uses the suite's existing document storage.
 
 **Fonts, when the host or the reader turns them on.** `<docx-editor>`, `<xlsx-editor>` and
 `<visio-viewer>` take the same `googleFonts` value as PowerPoint, but unset leaves it to the

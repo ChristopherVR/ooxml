@@ -78,7 +78,10 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		saveStateChanged: (state) => {
 			if (state !== 'saving') core.dirtyState.set(state === 'dirty');
 		},
-		print: () => core.pages.print(),
+		print: () => {
+			core.mailings?.stopPreview();
+			core.pages.print();
+		},
 		history: (key) => {
 			if (!core.view) return;
 			if (core.parts.usesBodyHistory()) core.parts.runHistory(key);

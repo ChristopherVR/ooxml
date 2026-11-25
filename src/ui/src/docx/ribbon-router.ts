@@ -24,9 +24,28 @@ import { withHeaderFooterDistance } from './header-footer-position';
 import { closeHistory } from 'prosemirror-history';
 import { sectionLayoutJson } from 'ooxml-core/docx';
 import { applyFontFormat } from './font-format';
+import { mailingsReason } from './mailings-ribbon';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
+	if (action.type === 'mailings') {
+		if (mailingsReason(core, action.key)) return;
+		const generation = core.loadGeneration;
+		const view = core.view;
+		void import('./mailings/controller')
+			.then(({ MailingsController }) => {
+				if (
+					view !== core.view ||
+					generation !== core.loadGeneration ||
+					mailingsReason(core, action.key)
+				)
+					return;
+				return (core.mailings ??= new MailingsController(core)).run(action.key);
+			})
+			.catch((error: unknown) => core.host.reportError(error));
+		return;
+	}
+	core.mailings?.stopPreview();
 	const { inserts, pages, parts, shell } = core;
 	if (action.type === 'documentDesign') {
 		void openDesignMenu(core, action.menu).catch(core.host.reportError);

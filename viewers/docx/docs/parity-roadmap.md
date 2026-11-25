@@ -89,8 +89,9 @@ detail and limits of each feature already built.
    theme, colour and font catalogue, custom colours and fonts, paragraph spacing presets and a
    custom dialog, three shadow presets, and host-managed defaults for new documents. The full
    Word catalogue, theme file import/export, and broader DrawingML effect rendering remain open.
-   Other remaining work includes Mailings (all 16 commands disabled, with a headless
-   `ooxml-core/docx` engine for recipient selection, preview, and document output), object
+   Mailings supports letters and directories with local or host recipients, field authoring,
+   preview, validation, and DOCX or print output; email delivery and envelope and label layouts
+   remain open. Other remaining work includes object
    positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,

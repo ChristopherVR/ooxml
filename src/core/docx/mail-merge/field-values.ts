@@ -5,6 +5,7 @@ import { fieldName } from '../field-runs';
 import type { MailMergeData, MailMergeValue } from './data-source';
 import { formatMergeNumber } from './number-picture';
 import type { MailMergeFieldMapping } from './settings';
+import { mailMergeFieldMap } from './authoring';
 
 const MERGE_SWITCHES = { b: 'arg', f: 'arg', m: 'flag', v: 'flag' } as const;
 const PROMPT_SWITCHES = { d: 'arg', o: 'flag' } as const;
@@ -19,40 +20,6 @@ const MERGE_FIELDS = new Set([
 	'FILLIN',
 ]);
 const UNSUPPORTED_FIELDS = new Set(['ADDRESSBLOCK', 'GREETINGLINE', 'MERGEBARCODE']);
-
-// [MS-OI29500] 2.1.369 defines the positional ODSO names Word writes, including empty slots.
-const ODSO_NAMES = [
-	'Unique',
-	'CourtesyTitle',
-	'FirstName',
-	'MiddleName',
-	'LastName',
-	'Suffix',
-	'Nickname',
-	'JobTitle',
-	'Company',
-	'Address1',
-	'Address2',
-	'City',
-	'State',
-	'PostalCode',
-	'CountryorRegion',
-	'BusinessPhone',
-	'BusinessFax',
-	'HomePhone',
-	'HomeFax',
-	'EmailAddress',
-	'WebPage',
-	'SpouseCourtesyTitle',
-	'SpouseFirstName',
-	'SpouseMiddleName',
-	'SpouseLastName',
-	'SpouseNickname',
-	'RubyFirstName',
-	'RubyLastName',
-	'Address3',
-	'Department',
-];
 
 export type MailMergeIssueCode =
 	| 'no-recipients'
@@ -143,7 +110,7 @@ export class MergeFields {
 	skipped = false;
 	readonly issues: MailMergeIssue[] = [];
 	private readonly fields: ReadonlySet<string>;
-	private readonly mappings = new Map<string, string>();
+	private readonly mappings: ReadonlyMap<string, string>;
 	private readonly answers = new Map<string, string>();
 
 	constructor(
@@ -155,20 +122,7 @@ export class MergeFields {
 		this.index = start;
 		const fields = data.fields ?? [...new Set(data.records.flatMap(Object.keys))];
 		this.fields = new Set(fields);
-		const mappings = options.fieldMappings ?? [];
-		mappings.forEach((mapping, index) => {
-			if (mapping.type === 'null') return;
-			const column =
-				mapping.name || (mapping.column !== undefined ? fields[mapping.column] : undefined);
-			const name = ODSO_NAMES[index];
-			if (name && column) this.mappings.set(name.toLowerCase(), column);
-		});
-		for (const mapping of mappings) {
-			if (!mapping.mappedName || mapping.type === 'null') continue;
-			const column =
-				mapping.name || (mapping.column !== undefined ? fields[mapping.column] : undefined);
-			if (column) this.mappings.set(mapping.mappedName.toLowerCase(), column);
-		}
+		this.mappings = mailMergeFieldMap(fields, options.fieldMappings);
 	}
 
 	issue(code: FieldIssueCode, blockId: string, field: string): undefined {

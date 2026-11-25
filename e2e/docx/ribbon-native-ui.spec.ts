@@ -40,7 +40,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await ribbon.getByRole('tab', { name: 'Mailings', exact: true }).click();
 		await expect(
 			ribbon.getByRole('button', { name: 'Start Mail Merge', exact: true }),
-		).toBeDisabled();
+		).toBeEnabled();
 		await ribbon.getByRole('tab', { name: 'Design', exact: true }).click();
 		await expect(ribbon.getByRole('button', { name: 'Watermark', exact: true })).toBeVisible();
 	});

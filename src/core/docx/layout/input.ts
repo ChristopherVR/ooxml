@@ -49,6 +49,7 @@ export interface LayoutRun {
 	color?: string;
 	/** `#rrggbb` shading behind the run's text, display only (Word's form field shading). */
 	background?: string;
+	mergeField?: true;
 	/** `w:ptab`: the run's tabs go to a fixed point of the line, whatever the tab stops. */
 	positionalTab?: TextRun['positionalTab'];
 	underline?: boolean;

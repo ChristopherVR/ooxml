@@ -314,11 +314,12 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 	// Word, Excel and Visio announce New, Open and Save as the cancelable `file-command` event
 	// (`ooxml-core/embedding`); the suite takes them over so files stay in its profile storage.
 	element.addEventListener('file-command', (event) => {
-		if (SUITE_FILE_COMMANDS.has(event.detail.command)) {
+		const { detail } = event;
+		if (detail.command === 'openMergedDocument' || SUITE_FILE_COMMANDS.has(detail.command)) {
 			event.preventDefault();
 			// Native custom-element events are fire-and-forget; the suite callback reports failures.
 			void Promise.resolve()
-				.then(() => command(event.detail.command))
+				.then(() => command(detail.command, detail))
 				.catch(() => {});
 		}
 	});

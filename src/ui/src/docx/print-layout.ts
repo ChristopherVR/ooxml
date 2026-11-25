@@ -103,6 +103,7 @@ function styleFragment(el: HTMLSpanElement, fragment: LayoutLine['fragments'][nu
 	if (fragment.boxHeightPx !== undefined) el.style.lineHeight = `${fragment.boxHeightPx}px`;
 	if (fragment.color) el.style.color = fragment.color;
 	if (fragment.background) el.style.backgroundColor = fragment.background;
+	if (fragment.mergeField) el.dataset.mergeField = '';
 	if (fragment.smallCaps) el.style.fontVariantCaps = 'small-caps';
 	if (fragment.ligatures !== undefined)
 		el.style.fontVariantLigatures = ligatureCss(fragment.ligatures);

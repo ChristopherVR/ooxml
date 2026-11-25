@@ -21,6 +21,7 @@ export interface LayoutFragment {
 	object?: import('./input').LayoutObject;
 	color?: string;
 	background?: string;
+	mergeField?: true;
 	underline?: boolean;
 	strike?: boolean;
 	script?: 'super' | 'sub';

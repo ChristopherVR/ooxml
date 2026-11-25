@@ -116,7 +116,7 @@ This is not Microsoft Word, and it does not claim Word's layout or a lossless ro
 - Pagination, line breaking and table AutoFit are the editor's own and can break pages differently from Word.
 - Legacy `.doc` files open their main body text, and only paragraph text edits are saved back to `.doc`.
 - An inserted or edited SmartArt is drawn with an approximate layout until Word lays it out again, and SmartArt in headers, footers and notes is not editable. Charts are drawn from their cached values, and floating charts are not placed on Print Layout pages.
-- Not available yet: Read Mode, Web Layout and Outline views, mail merge data sources, AutoCorrect and AutoFormat as you type, hyphenation, and right-to-left run reordering.
+- Not available yet: Read Mode, Web Layout and Outline views, mail merge email, envelopes and labels, AutoCorrect and AutoFormat as you type, hyphenation, and right-to-left run reordering.
 
 The full list is in the [support roadmap](https://github.com/ChristopherVR/ooxml/blob/main/viewers/docx/docs/parity-roadmap.md) and the [parity checklist](https://github.com/ChristopherVR/ooxml/blob/main/docs/parity-checklist.md).
 

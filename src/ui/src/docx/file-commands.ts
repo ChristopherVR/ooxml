@@ -16,7 +16,22 @@ import { emit } from './events';
 export type FileCommand = WordFileCommand;
 
 /** The detail of `file-command`; the shared `ooxml-core/embedding` shape. */
-export type FileCommandDetail = SharedFileCommandDetail<FileCommand>;
+export type FileCommandDetail =
+	| SharedFileCommandDetail<FileCommand>
+	| { command: 'openMergedDocument'; fileName: string; bytes: Uint8Array };
+
+/** A host can open the generated DOCX in a separate session by canceling the file event. */
+export function openMergedDocument(host: HTMLElement, bytes: Uint8Array, fileName: string): void {
+	if (
+		emit(
+			host,
+			'file-command',
+			{ command: 'openMergedDocument', fileName, bytes },
+			{ cancelable: true },
+		)
+	)
+		downloadBytes(bytes, fileName);
+}
 
 export function announceFileCommand(
 	host: HTMLElement,

@@ -36,6 +36,7 @@ export function buildFragments(
 			...(run?.script ? { script: run.script } : {}),
 			...(run?.color ? { color: run.color } : {}),
 			...(run?.background ? { background: run.background } : {}),
+			...(run?.mergeField ? { mergeField: true } : {}),
 			...(run?.underline ? { underline: true } : {}),
 			...(run?.strike ? { strike: true } : {}),
 			...(token.kind === 'object' && run?.object ? { object: run.object } : {}),

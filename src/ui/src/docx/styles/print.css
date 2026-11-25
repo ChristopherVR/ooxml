@@ -336,6 +336,29 @@ a.dve-link[data-anchor^='_Toc'] {
 .dve-print-pages {
 	position: relative;
 }
+.dve-canvas[data-mail-merge-preview] > :not(.dve-mailings-record, [data-merge-projection]) {
+	display: none;
+}
+.dve-mailings-record {
+	display: block;
+	text-align: center;
+}
+@media screen {
+	:host([data-highlight-merge-fields])
+		:is(
+			[data-merge-field],
+			[data-field^='MERGEFIELD ' i],
+			[data-field^='ADDRESSBLOCK' i],
+			[data-field^='GREETINGLINE' i]
+		) {
+		background-color: var(--office-selected) !important;
+	}
+}
+@media print {
+	.dve-mailings-record {
+		display: none;
+	}
+}
 .dve-print-selection-layer {
 	position: absolute;
 	inset: 0;

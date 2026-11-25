@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbon, setRibbonLocale } from './ribbon';
-import { refreshEditorControls } from './editor-controls';
-import { createDocument } from 'ooxml-core/docx';
+import { createRibbon } from './ribbon';
+import './component';
+import { findLocalizedControl } from './localization';
+import { must } from './test-support';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -16,16 +17,23 @@ describe('Word native tab surfaces', () => {
 		expect(ribbon.querySelector('[data-panel="Layout"] [data-label="Page background"]')).toBeNull();
 	});
 
-	it('keeps unavailable mail merge commands disabled after refresh and locale changes', () => {
-		const ribbon = createRibbon();
-		refreshEditorControls(ribbon, undefined, createDocument(), false, false, 'en', 'en-US');
-		const mailings = ribbon.querySelector('[data-panel="Mailings"]')!;
-		const commands = [...mailings.querySelectorAll<HTMLButtonElement>('button')];
-		expect(commands.length).toBeGreaterThan(10);
-		expect(commands.every((command) => command.disabled && !command.dataset.action)).toBe(true);
-		expect(commands[0]!.title).toBe('Not available in this editor');
-		setRibbonLocale(ribbon, 'fr');
-		expect(commands[0]!.title).toBe('Indisponible dans cet éditeur');
-		expect(commands.every((command) => command.disabled)).toBe(true);
+	it('enables Mailings commands only when the editor can use them and localizes the reasons', () => {
+		const editor = document.createElement('docx-editor');
+		document.body.append(editor);
+		const panel = must(editor.shadowRoot?.querySelector('[data-panel="Mailings"]'));
+		const button = (label: string) => must(findLocalizedControl<HTMLButtonElement>(panel, label));
+		expect(button('Start Mail Merge').disabled).toBe(false);
+		expect(button('Select Recipients').disabled).toBe(false);
+		expect(button('Preview Results').disabled).toBe(true);
+		expect(button('Preview Results').title).toBe('Include at least one recipient');
+		expect(button('Insert Merge Field').title).toBe('Select a recipient source first');
+		expect(button('Envelopes').disabled).toBe(true);
+		editor.locale = 'fr';
+		expect(button('Envelopes').title).toBe(
+			'Les mises en page des enveloppes et étiquettes sont indisponibles dans cet éditeur',
+		);
+		expect(button('Preview Results').title).toBe('Incluez au moins un destinataire');
+		editor.readOnly = true;
+		expect(button('Start Mail Merge').disabled).toBe(true);
 	});
 });

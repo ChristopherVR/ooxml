@@ -2,7 +2,18 @@
 
 `ooxml-core/docx/mail-merge` exposes mail merge for hosts that work with a `DocumentModel`. The host
 loads recipients, selects records, previews a record, and saves the merged document models.
-The Word editor's Mailings tab still needs UI integration.
+The Word editor's Mailings tab supports letters and directories, local CSV/TSV and first-sheet
+XLSX files, recipient filtering and sorting, field insertion and matching, record preview,
+validation, and combined DOCX and browser print output. A host can set
+`docxEditor.mailMergeDataSource` to offer its own provider. The cancelable `file-command` event
+with `command: 'openMergedDocument'`, `fileName` and `bytes` lets a host open the output as a
+separate session. Without a handler the editor downloads it. The editor keeps recipient data in
+memory and accepts up to 1,000 records, 64 fields and 5 MiB per local file. Large merges may need
+a smaller selection. Email, envelopes and labels remain unavailable.
+
+The Address Block and Greeting Line commands insert standard merge fields using the selected
+matches. ASK and FILL-IN use the defaults entered in the Rules dialog. Field insertion targets a
+paragraph in the document body, and the Mailings controls require an editable, unshared document.
 
 ## Recipient data
 
@@ -62,7 +73,8 @@ if (data.records.length && issues.length === 0) {
   instructions, and record rules in unsupported locations. Field issues include the block ID,
   field name, and one-based record position. Missing values in known columns produce blanks.
 - `finishMailMerge(model, data, options?)` returns one combined document and a `mergedCount`.
-  Each output copy starts a new page section. Templates with internal section breaks keep
+  Letters start each copy on a new page. Directory copies start with a continuous section.
+  Templates with internal section breaks keep
   those breaks. A template that ends with a table gains a paragraph when it needs a break.
 - `finishMailMergeIndividually(model, data, options?)` returns `{ recordNumber, document }`
   entries in merge order. Both finish functions return the same field issues as Check for

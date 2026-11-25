@@ -37,7 +37,7 @@ export class SuiteSessions {
 					this.update();
 				}
 			},
-			(command) => this.command(command, doc.id),
+			(command, detail) => this.command(command, doc.id, detail),
 			// The slide or page in view, or the selection's formatting, changed (Simple view's bar).
 			() => {
 				if (!session.loading) this.moved?.();

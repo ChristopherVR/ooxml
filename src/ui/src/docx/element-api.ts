@@ -6,12 +6,12 @@ import type { WordYjsOptions } from 'ooxml-core/docx/ui';
 import { joinYjs } from './collaboration-room';
 import type { DocxCollaborationState } from './collaboration-types';
 import { yjsPresenceProfile } from './yjs-presence';
-import { saveDocx } from 'ooxml-core/docx';
+import { saveEditorModel } from './editor-save';
 import type { EditorCore } from './editor-core';
 import { currentModel } from './current-model';
 import type { EditorPdfOptions } from './pdf/editor-pdf';
 import type { DocxPdfResult } from './pdf/export-pdf';
-import { modifiedStamp, reflectAttribute } from './editor-attributes';
+import { reflectAttribute } from './editor-attributes';
 import { docxFileName, downloadBytes, wordBlob } from './file-commands';
 import {
 	normalizeRibbonActions,
@@ -34,6 +34,7 @@ import type { SurfaceHostActions } from './building-blocks-actions';
 import type { GoogleFontsOption } from 'ooxml-core/text';
 import { refreshDocxWebfonts } from './docx-webfonts';
 import type { ReadAloudOptions } from './read-aloud-session';
+import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -43,6 +44,13 @@ const HTMLElementBase: typeof HTMLElement =
  * the shared `EditorCore`, so the element class stays a thin lifecycle facade.
  */
 export abstract class DocxEditorApi extends HTMLElementBase {
+	/** Optional recipient provider, called only when selected from Mailings. */
+	get mailMergeDataSource(): MailMergeDataSource | undefined {
+		return this.core.mailMergeDataSource;
+	}
+	set mailMergeDataSource(source: MailMergeDataSource | undefined) {
+		this.core.mailMergeDataSource = source;
+	}
 	/** Choose before connecting. This mode mounts only the document and its editing surface. */
 	get surfaceOnly(): boolean {
 		return this.core.surfaceOnly;
@@ -295,21 +303,7 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Serialized document bytes: the loaded package's own writer, else a fresh DOCX from the model. */
 	async saveBytes(): Promise<Uint8Array> {
 		const { core } = this;
-		currentModel(core);
-		// Only pass staged pictures when there are any: legacy DOC sessions take the model alone.
-		const pending = new Map([
-			...core.inserts.pendingMedia,
-			...(core.collab.yjs?.media.all() ?? []),
-		]);
-		const media = pending.size ? pending : undefined;
-		if (core.loaded) {
-			// A converted Word 97-2003 .doc saves as .docx here; its `save()` keeps the binary format.
-			const options = { modified: modifiedStamp(core.reviewAuthor) };
-			return core.loaded.saveDocx
-				? core.loaded.saveDocx(core.model, media, options)
-				: core.loaded.save(core.model, media, options);
-		}
-		return saveDocx(core.model, media);
+		return saveEditorModel(core, currentModel(core));
 	}
 
 	/** The saved document as a Blob. Does not change `dirty`; call `markClean()` after persisting it. */

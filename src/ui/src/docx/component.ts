@@ -250,6 +250,7 @@ export class DocxEditorElement extends DocxEditorApi {
 
 	disconnectedCallback() {
 		const { core } = this;
+		core.mailings?.disconnect();
 		// Open popups listen on the document, which would keep this editor alive.
 		closeRibbonPopover(this);
 		closeRibbonOverflow(this);
@@ -370,6 +371,9 @@ export class DocxEditorElement extends DocxEditorApi {
 	/** Swaps in a new model (and the session that produced it) and invalidates in-flight loads. */
 	private replaceDocument(model: DocumentModel, session?: LoadedDocument, bumpGeneration = true) {
 		const { core } = this;
+		core.mailings?.disconnect();
+		delete core.mailings;
+		this.removeAttribute('data-highlight-merge-fields');
 		core.readAloud.stop();
 		core.detachedState = undefined;
 		if (bumpGeneration) core.loadGeneration++;

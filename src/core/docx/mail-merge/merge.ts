@@ -260,7 +260,11 @@ export function finishMailMerge(
 				...layout,
 				endsAtBlockId:
 					index === all.length - 1 ? (blocks.at(-1)?.id ?? '') : rekey(section.endsAtBlockId),
-				type: startsCopy ? 'nextPage' : layout.type,
+				type: startsCopy
+					? model.mailMerge?.mainDocumentType === 'catalog'
+						? 'continuous'
+						: 'nextPage'
+					: layout.type,
 				...(copiedHeaders && { headers: copiedHeaders }),
 				...(copiedFooters && { footers: copiedFooters }),
 			});

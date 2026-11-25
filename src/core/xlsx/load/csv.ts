@@ -11,6 +11,9 @@ import { createFieldReader, type CsvImportOptions } from './csv-import';
 export interface CsvOptions {
 	/** Field delimiter; detected from the text when omitted. */
 	delimiter?: string;
+	/** Optional bounds for callers reading an interactive data source. */
+	maxRows?: number;
+	maxColumns?: number;
 }
 
 const CANDIDATES = [',', ';', '\t'] as const;
@@ -70,6 +73,17 @@ export function parseCsv(input: string, options: CsvOptions = {}): string[][] {
 	let field = '';
 	let quoted = false;
 	let fieldStarted = false;
+	const pushField = () => {
+		if (options.maxColumns !== undefined && row.length >= options.maxColumns)
+			throw new RangeError('Too many delimited text columns.');
+		row.push(field);
+	};
+	const pushRow = () => {
+		if (options.maxRows !== undefined && rows.length >= options.maxRows)
+			throw new RangeError('Too many delimited text rows.');
+		pushField();
+		rows.push(row);
+	};
 	for (let i = 0; i < text.length; i++) {
 		const char = text[i] ?? '';
 		if (quoted) {
@@ -85,14 +99,13 @@ export function parseCsv(input: string, options: CsvOptions = {}): string[][] {
 			quoted = true;
 			fieldStarted = true;
 		} else if (text.startsWith(delimiter, i)) {
-			row.push(field);
+			pushField();
 			field = '';
 			fieldStarted = false;
 			i += delimiter.length - 1;
 		} else if (char === '\n' || char === '\r') {
 			if (char === '\r' && text[i + 1] === '\n') i++;
-			row.push(field);
-			rows.push(row);
+			pushRow();
 			row = [];
 			field = '';
 			fieldStarted = false;
@@ -101,10 +114,7 @@ export function parseCsv(input: string, options: CsvOptions = {}): string[][] {
 			fieldStarted = true;
 		}
 	}
-	if (fieldStarted || field !== '' || row.length > 0) {
-		row.push(field);
-		rows.push(row);
-	}
+	if (fieldStarted || field !== '' || row.length > 0) pushRow();
 	return rows;
 }
 

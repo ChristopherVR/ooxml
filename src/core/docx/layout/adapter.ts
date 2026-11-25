@@ -260,6 +260,9 @@ export function adaptDocumentModel(
 			sourceLength: reviewSourceLength(run),
 			// Hidden text (`w:vanish`) takes no space when printed, as in Word by default.
 			text: image || formatting.vanish ? '' : formatting.caps ? text.toUpperCase() : text,
+			...((name === 'MERGEFIELD' || name === 'ADDRESSBLOCK' || name === 'GREETINGLINE') && {
+				mergeField: true,
+			}),
 			...(run.noteReference?.kind === 'footnote'
 				? { footnoteReferenceId: run.noteReference.id }
 				: {}),

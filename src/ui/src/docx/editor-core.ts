@@ -50,6 +50,9 @@ import { DocxWebfonts } from './docx-webfonts';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
 import { syncSmartArtDesign } from './smartart-design-ribbon';
+import { syncMailingsRibbon } from './mailings-ribbon';
+import type { MailingsController } from './mailings/controller';
+import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
 
 export type LoadedDocument = Awaited<ReturnType<typeof loadDocument>>;
 
@@ -91,6 +94,8 @@ export class EditorCore {
 	loaded?: LoadedDocument | undefined;
 	loadGeneration = 0;
 	loading = false;
+	mailings?: MailingsController;
+	mailMergeDataSource?: MailMergeDataSource | undefined;
 	/** The host's `readOnly` switch. A collaboration `viewer` role locks the editor on top of it. */
 	hostReadOnly = false;
 	/** True while `applyReadOnly` writes the `read-only` attribute. */
@@ -464,6 +469,8 @@ export class EditorCore {
 	}
 
 	refreshControls(): void {
+		if (this.mailings?.state.preview && !this.host.canEditOutsideBody())
+			this.mailings.stopPreview();
 		this.element.dispatchEvent(new CustomEvent('editor-state-change'));
 		this.parts.syncSection(this.shell.canvas, this.shell.paper);
 		this.shell.headings?.sync(this.locale);
@@ -499,6 +506,7 @@ export class EditorCore {
 				!this.model.protection?.enforced,
 		);
 		if (toolbar) syncDesignControls(this, toolbar);
+		syncMailingsRibbon(this);
 		this.inserts.smartArt.sync();
 		const target = this.targetView();
 		if (toolbar && target)
