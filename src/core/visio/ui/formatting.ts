@@ -89,13 +89,17 @@ export function visioFormatTargetShape(page: VisioPage, shapeId: string): VisioS
  * ordering) take as it is: a 2D shape or group that stays an instance of its master. Lines and
  * connectors from a stencil are left out, and so is a shape on a locked layer.
  */
-export function visioStencilShape(page: VisioPage, shapeId: string): VisioShape | undefined {
+export function visioStencilShape(
+	page: VisioPage,
+	shapeId: string,
+	allowConnector = false,
+): VisioShape | undefined {
 	const candidates = page.shapes.filter((shape) => shape.id === shapeId);
 	const shape = candidates.length === 1 ? candidates[0]! : undefined;
 	if (
 		!shape?.masterId ||
 		shape.hidden ||
-		!['shape', 'group'].includes(shape.kind) ||
+		!['shape', 'group', ...(allowConnector ? ['connector'] : [])].includes(shape.kind) ||
 		shape.image ||
 		shape.foreignVector ||
 		shape.layerIds?.some(

@@ -171,7 +171,14 @@ export function isDynamicConnectorMaster(template: Element): boolean {
 	const form = controlled ? [...MASTER_FORM, ...CONTROLLED_TEXT_PIN] : MASTER_FORM;
 	if (
 		!form.every(([name, forms]) => forms.includes(normal(attribute(cells.get(name), 'F')) ?? '')) ||
-		(!controlled && ['TxtPinX', 'TxtPinY'].some((name) => cells.get(name)?.hasAttribute('F')))
+		(!controlled &&
+			[
+				['TxtPinX', 'width*0.5'],
+				['TxtPinY', 'height*0.5'],
+			].some(([name, expected]) => {
+				const formula = normal(attribute(cells.get(name!), 'F'));
+				return formula && formula !== expected;
+			}))
 	)
 		return false;
 	for (const name of ['Angle', 'FlipX', 'FlipY']) {
@@ -191,7 +198,17 @@ export function isDynamicConnectorMaster(template: Element): boolean {
 				attribute(row, 'IX') !== String(index + 1) ||
 				deleted(row) ||
 				(index > 0 && attribute(row, 'T') !== 'LineTo') ||
-				children(row, 'Cell').some((cell) => executableCellFormula(attribute(cell, 'F'))),
+				children(row, 'Cell').some((cell) => {
+					const formula = normal(attribute(cell, 'F'));
+					if (!formula) return false;
+					const dimension =
+						attribute(cell, 'N') === 'X'
+							? 'width'
+							: attribute(cell, 'N') === 'Y'
+								? 'height'
+								: undefined;
+					return !dimension || ![`${dimension}*0`, `${dimension}*1`].includes(formula);
+				}),
 		)
 	)
 		return false;
@@ -209,7 +226,9 @@ export function isDynamicConnectorMaster(template: Element): boolean {
 /** A registered stencil instance of a 1-D master (a connector or line from a stencil). */
 export function isStencilConnector(shape: Element | undefined): boolean {
 	const template = stencilTemplate(shape);
-	return !!template && END_CELLS.some((name) => cellMap(template).has(name));
+	if (!template) return false;
+	const cells = cellMap(template);
+	return END_CELLS.some((name) => cells.has(name));
 }
 
 export const STENCIL_CONNECTOR_FORM =

@@ -13,6 +13,8 @@ export const zhCNCommands: Readonly<Record<string, string>> = {
 	Paste: '粘贴',
 	'Paste Special...': '选择性粘贴...',
 	Duplicate: '复制副本',
+	'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.':
+		'所选内容包含无法复制的形状，或同时选择了连接线及其粘附的形状。',
 	Cut: '剪切',
 	Copy: '复制',
 	'Format Painter': '格式刷',

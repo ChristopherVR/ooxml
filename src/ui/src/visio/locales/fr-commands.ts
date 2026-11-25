@@ -13,6 +13,8 @@ export const frCommands: Readonly<Record<string, string>> = {
 	Paste: 'Coller',
 	'Paste Special...': 'Collage spécial...',
 	Duplicate: 'Dupliquer',
+	'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.':
+		'La sélection contient une forme qui ne peut pas être dupliquée ou un connecteur sélectionné avec la forme à laquelle il est collé.',
 	Cut: 'Couper',
 	Copy: 'Copier',
 	'Format Painter': 'Reproduire la mise en forme',

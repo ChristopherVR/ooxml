@@ -35,6 +35,7 @@ import {
 } from './edit-commands';
 import { applyGeometryEdit } from './edit-geometry';
 import { rerouteBlockedConnectors } from './edit-connector-follow';
+import { obstacleBox } from './edit-connector-obstacles';
 import { topShape } from './edit-connector';
 import { refuseStencilConnector } from './edit-connector-reroute';
 import { isStencilConnector, registerStencilShapes } from './edit-stencil-connector';
@@ -921,6 +922,8 @@ async function runTransaction(
 				check,
 			))
 				dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+			if (command.copies.some(({ newShapeId }) => isStencilConnector(topShape(root, newShapeId))))
+				clock.jumpPages.add(command.pageId);
 			duplicateChanged = true;
 		} else if (
 			command.type !== 'insert-picture' &&
@@ -941,23 +944,30 @@ async function runTransaction(
 				if (attribute(target, 'Type') === 'Group' && !target?.hasAttribute('Master'))
 					await assertGeometryPackageScope(pkg, new Set(pages.values()), [command], check, roots);
 			}
+			const mayBlock =
+				command.type === 'move-shape' ||
+				command.type === 'resize-shape' ||
+				command.type === 'rotate-shape' ||
+				command.type === 'flip-shape';
+			const obstacle = mayBlock ? topShape(root, command.shapeId) : undefined;
+			const previous = obstacle && obstacleBox(obstacle);
 			const changedPages =
 				instanceCommands.has(command) && isInstanceGeometryEdit(roots, command)
 					? await applyInstanceGeometryEdit(roots, command, masterTemplate(pkg), check)
 					: applyGeometryEdit(roots, document!, command, check, masterMovePins, formulaDiagnostics);
 			for (const pageId of changedPages) dirty.set(pages.get(pageId)!, roots.get(pageId)!);
 			// A shape moved, resized or turned onto a right-angle connector's path pushes it aside.
-			if (
-				changedPages.length &&
-				['move-shape', 'resize-shape', 'rotate-shape', 'flip-shape'].includes(command.type)
-			)
+			if (changedPages.length && mayBlock)
 				for (const pageId of rerouteBlockedConnectors(
 					roots,
 					command.pageId,
-					(command as { shapeId: string }).shapeId,
+					command.shapeId,
 					check,
-				))
+					previous,
+				)) {
 					dirty.set(pages.get(pageId)!, roots.get(pageId)!);
+					clock.jumpPages.add(pageId);
+				}
 			// A text height that follows the width (a text box, Resize with Text) is measured again.
 			if (command.type === 'resize-shape') await noteTextSize(command, roots.get(command.pageId)!);
 		}

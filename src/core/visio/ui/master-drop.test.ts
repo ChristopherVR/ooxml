@@ -27,16 +27,15 @@ const drawing = () =>
 	});
 
 describe('dropping a document-stencil master', () => {
-	it('says why a master cannot be dropped', async () => {
+	it('admits one-dimensional masters along with shapes and multi-root groups', async () => {
 		const [process, connector, pair] = (await parseVsdx(await drawing())).masters!;
 		expect(visioMasterDropRefusal(process!)).toBeUndefined();
-		// A line master that is not built like Visio's Dynamic connector is not dropped.
-		expect(visioMasterDropRefusal(connector!)).toMatch(/Dynamic connector/);
+		expect(visioMasterDropRefusal(connector!)).toBeUndefined();
 		expect(visioMasterDropRefusal({ ...connector!, dynamicConnector: true })).toBeUndefined();
 		// Several top-level shapes drop as the group Visio makes.
 		expect(visioMasterDropRefusal(pair!)).toBeUndefined();
 		const page = (await parseVsdx(await drawing())).pages[0]!;
-		expect(() => visioMasterDropCommand(page, connector!)).toThrow(/Dynamic connector/);
+		expect(visioMasterDropCommand(page, connector!).masterId).toBe('4');
 	});
 
 	it('crops the preview to the shape, not the master page', async () => {

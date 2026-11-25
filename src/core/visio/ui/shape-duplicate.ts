@@ -9,8 +9,22 @@ import { visioLocalFormattingShape, visioStencilShape } from './formatting';
  * with the original, as in Visio; a shape that is itself glued to another is left out.
  */
 export function visioCopyableShape(page: VisioPage, shapeId: string): VisioShape | undefined {
+	return copyCandidate(page, shapeId);
+}
+
+function copyCandidate(
+	page: VisioPage,
+	shapeId: string,
+	duplicateSelection?: ReadonlySet<string>,
+): VisioShape | undefined {
 	const local = visioLocalFormattingShape(page, shapeId);
-	const shape = local ?? visioStencilShape(page, shapeId);
+	const shape = local ?? visioStencilShape(page, shapeId, duplicateSelection !== undefined);
+	if (duplicateSelection && !local && shape && (shape.kind === 'connector' || shape.lineEnds))
+		return page.connectors.some(
+			(row) => row.fromShapeId === shapeId && duplicateSelection.has(row.toShapeId),
+		)
+			? undefined
+			: shape;
 	if (
 		!shape ||
 		(local && shape.kind !== 'shape') ||
@@ -30,11 +44,12 @@ export function visioDuplicateCommand(
 	page: VisioPage,
 	shapeIds: readonly string[],
 ): VisioDuplicateShapesEdit | undefined {
+	const selected = new Set(shapeIds);
 	if (
 		!shapeIds.length ||
 		shapeIds.length > 1000 ||
-		new Set(shapeIds).size !== shapeIds.length ||
-		shapeIds.some((id) => !visioCopyableShape(page, id))
+		selected.size !== shapeIds.length ||
+		shapeIds.some((id) => !copyCandidate(page, id, selected))
 	)
 		return undefined;
 	let next: number;
@@ -44,7 +59,6 @@ export function visioDuplicateCommand(
 		return undefined;
 	}
 	if (next + shapeIds.length - 1 > 0xffffffff) return undefined;
-	const selected = new Set(shapeIds);
 	const mapping = new Map(
 		page.shapes
 			.filter((shape) => selected.has(shape.id))

@@ -7,11 +7,10 @@ import { visioNextShapeId } from './shape-id';
 /** Why a document-stencil master cannot be dropped as a shape, or nothing when it can. */
 export function visioMasterDropRefusal(master: VisioMaster): string | undefined {
 	if (master.rootCount < 1) return 'The master has no shapes to drop.';
-	// Visio's Dynamic connector drops as a connector with two free ends, to be glued by its ends.
-	if (master.oneDimensional)
-		return master.dynamicConnector
-			? undefined
-			: "A line or connector master that is not built like Visio's Dynamic connector cannot be dropped; use the Connector tool.";
+	if (master.shapes.some((shape) => shape.kind === 'foreign'))
+		return 'A picture or connector master cannot be dropped.';
+	// Single-root connector masters keep their stencil geometry when dropped.
+	if (master.oneDimensional && master.rootCount === 1) return undefined;
 	if (master.shapes.some((shape) => shape.kind !== 'shape' && shape.kind !== 'group'))
 		return 'A picture or connector master cannot be dropped.';
 	// Several top-level shapes are dropped as one group; turned ones were not recorded from Visio.

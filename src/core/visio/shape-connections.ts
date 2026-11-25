@@ -44,7 +44,11 @@ export function shapeConnections(
 		}
 	}
 	if (!oneD && number(sheet.cells, 'ObjType', 0) === 1) result.placeable = true;
-	if (sheet.cells.has('ShapeRouteStyle') || sheet.cells.has('ConLineRouteExt'))
+	if (
+		sheet.cells.has('ShapeRouteStyle') ||
+		sheet.cells.has('ConLineRouteExt') ||
+		(oneD && number(sheet.cells, 'ObjType', 0) === 2)
+	)
 		result.connectorRoute =
 			number(sheet.cells, 'ConLineRouteExt', 0) === 2
 				? 'curved'

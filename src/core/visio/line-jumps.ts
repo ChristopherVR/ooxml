@@ -1,5 +1,6 @@
 import type { VisioMatrix, VisioPage, VisioShape } from './model';
 import { visioPageLayout } from './page-layout';
+import { simplifyVisioRoute } from './connector-route';
 
 /** Default jump width in inches at 1:1 scale, measured in Visio 16 (factor * routing spacing). */
 export const VISIO_LINE_JUMP_WIDTH = (2 / 3) * 0.125;
@@ -18,6 +19,22 @@ interface Segment {
 type Polyline = Point[];
 
 const TOKEN = /([MLZmlz]|[A-Za-z])|([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)/g;
+
+/** Replace the cached semicircles on a right-angle route with their original straight runs. */
+function withoutCachedJumps(path: string): string {
+	return path.replace(
+		/ L (-?[\d.]+) (-?[\d.]+) A ([\d.]+) ([\d.]+) 0 [01] [01] (-?[\d.]+) (-?[\d.]+)(?= L )/g,
+		(match, x1: string, y1: string, rx: string, ry: string, x2: string, y2: string) => {
+			const dx = Math.abs(Number(x2) - Number(x1));
+			const dy = Math.abs(Number(y2) - Number(y1));
+			return rx === ry &&
+				Math.min(dx, dy) < 1e-6 &&
+				Math.abs(Math.max(dx, dy) - 2 * Number(rx)) < 1e-5
+				? ` L ${x2} ${y2}`
+				: match;
+		},
+	);
+}
 
 /** Polylines of a path made only of absolute M and L commands; undefined for anything else. */
 function polylines(path: string): Polyline[] | undefined {
@@ -165,7 +182,10 @@ const connector = (shape: VisioShape, glued: ReadonlySet<string>) =>
  * the shape's own coordinates, index for index with `shape.geometry`; a shape without crossings
  * is not in the map.
  */
-export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
+export function visioLineJumpPaths(
+	page: VisioPage,
+	rebuildRightAngleCaches = false,
+): Map<VisioShape, string[]> {
 	const result = new Map<VisioShape, string[]>();
 	const layout = visioPageLayout(page);
 	const code = layout.lineJumpCode;
@@ -173,10 +193,27 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 	const shapes = page.shapes
 		.filter((shape) => connector(shape, glued))
 		.slice(0, VISIO_LINE_JUMP_LIMITS.connectors);
+	const enabled =
+		(code >= 1 && code <= 5) ||
+		shapes.some((shape) => shape.lineJumpCode === 2 || shape.lineJumpCode === 3);
 	// Visio persists jump decorations inside a dynamic connector's Geometry rows.
 	// A straight route's endpoints are authoritative: rebuild its baseline before
 	// applying current jump settings, including when jumps have been turned off.
 	for (const shape of shapes) {
+		if (
+			(enabled || rebuildRightAngleCaches) &&
+			shape.connectorRoute === 'right-angle' &&
+			shape.geometry.length === 1
+		) {
+			const geometry = shape.geometry[0]!;
+			if (geometry.path.includes(' A ') && geometry.stroke && !geometry.fill) {
+				const lines = polylines(withoutCachedJumps(geometry.path));
+				if (lines?.length === 1) {
+					const points = simplifyVisioRoute(lines[0]!);
+					result.set(shape, [`M ${points.map(text).join(' L ')}`]);
+				}
+			}
+		}
 		if (shape.connectorRoute !== 'straight' || !shape.lineEnds) continue;
 		if (shape.geometry.length !== 1) continue;
 		const geometry = shape.geometry[0]!;
@@ -186,12 +223,7 @@ export function visioLineJumpPaths(page: VisioPage): Map<VisioShape, string[]> {
 		const path = `M ${text(begin)} L ${text(end)}`;
 		if (geometry.path !== path) result.set(shape, [path]);
 	}
-	if (shapes.length < 2) return result;
-	if (
-		(code < 1 || code > 5) &&
-		!shapes.some((shape) => shape.lineJumpCode === 2 || shape.lineJumpCode === 3)
-	)
-		return result;
+	if (shapes.length < 2 || !enabled) return result;
 	const lines: { shape: VisioShape; owner: number; geometry: number; points: Polyline }[] = [];
 	const segments: Segment[] = [];
 	shapes.forEach((shape, owner) => {

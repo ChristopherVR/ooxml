@@ -10,6 +10,7 @@ const pointGlue =
 	/^\s*PAR\(PNT\(Sheet\.([1-9]\d{0,9})!Connections\.X([1-9]\d{0,4}),\s*Sheet\.\1!Connections\.Y\2\)\)\s*$/i;
 
 export const visioGlueTrigger = (shapeId: string) => `_XFTRIGGER(Sheet.${shapeId}!EventXFMod)`;
+export const isVisioWalkGlue = (formula: string) => walkGlue.test(formula);
 /**
  * The formula Visio writes on both coordinates of an end glued to a connection point (point-to-point
  * glue). `index` is the zero-based Connection row; ShapeSheet names count rows from 1.

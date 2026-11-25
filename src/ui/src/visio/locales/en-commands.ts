@@ -13,6 +13,8 @@ export const enCommands: Readonly<Record<string, string>> = {
 	Paste: 'Paste',
 	'Paste Special...': 'Paste Special...',
 	Duplicate: 'Duplicate',
+	'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.':
+		'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.',
 	Cut: 'Cut',
 	Copy: 'Copy',
 	'Format Painter': 'Format Painter',

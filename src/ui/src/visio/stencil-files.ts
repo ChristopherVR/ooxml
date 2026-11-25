@@ -76,9 +76,7 @@ export class StencilFiles {
 		const index = this.#next++;
 		const prefix = `${FILE_MASTER_PREFIX}${index}:`;
 		const masters = file.masters.slice(0, MAX_LISTED).map((master): Master => {
-			const unsupported = master.oneDimensional
-				? 'A line or connector master from a stencil file cannot be dropped yet; use the Connector tool.'
-				: visioMasterDropRefusal(master);
+			const unsupported = visioMasterDropRefusal(master);
 			const listed: Master = {
 				id: `${prefix}${master.id}`,
 				name: master.name,

@@ -1240,15 +1240,13 @@ the sample reopens with `BASFLO_U.vssx` docked.
 
 Limits:
 
-- A line or connector master that is not built like Visio's Dynamic connector
-  and a master with more than one top-level shape are listed disabled with the
-  reason; they cannot be dropped. The Dynamic connector itself drops as a
-  connector (see the section above).
+- Single-root connector masters, including grouped connectors, can be dropped from the
+  Document Stencil or an opened stencil. Visio 16 captures for straight, angled, curved,
+  elbow and grouped masters are in `native-connector-copy-drop.json`. Picture masters and
+  multi-root rotated masters still have drop refusals.
 - A dropped instance is not put on the master's layers and gets no name
   (Visio names it `Process.5`), and the page is not grown to hold it.
 
-- A 1-D master (Dynamic connector) and a master with more than one top-level
-  shape are listed disabled with the reason; they cannot be dropped.
 - The built-in stencils are this editor's own outlines, not Visio's masters:
   no connection points, Shape Data or shapesheet behaviour. A docked stencil
   file without a built-in stand-in is listed by its file name as unavailable;

@@ -3,7 +3,6 @@ import JSZip from 'jszip';
 import type { VisioViewerElement } from 'ooxml-ui/visio';
 import { createVsdxFixture } from './fixture.mjs';
 import { openDemo } from './demo-page';
-import { history } from './ribbon';
 
 const NS = 'http://schemas.microsoft.com/office/visio/2012/main';
 const REL = 'http://schemas.microsoft.com/visio/2010/relationships/';
@@ -11,6 +10,7 @@ const RELS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 const cell = (name: string, value: number) => `<Cell N="${name}" V="${value}"/>`;
 const box = `${cell('PinX', 2)}${cell('PinY', 2)}${cell('Width', 1)}${cell('Height', 0.75)}${cell('LocPinX', 0.5)}${cell('LocPinY', 0.375)}`;
 const outline = `<Section N="Geometry" IX="0"><Row T="RelMoveTo" IX="1">${cell('X', 0)}${cell('Y', 0)}</Row><Row T="RelLineTo" IX="2">${cell('X', 1)}${cell('Y', 0)}</Row><Row T="RelLineTo" IX="3">${cell('X', 1)}${cell('Y', 1)}</Row><Row T="RelLineTo" IX="4">${cell('X', 0)}${cell('Y', 1)}</Row><Row T="RelLineTo" IX="5">${cell('X', 0)}${cell('Y', 0)}</Row></Section>`;
+const line = `<Section N="Geometry" IX="0">${cell('NoFill', 1)}<Row T="MoveTo" IX="1">${cell('X', 0)}${cell('Y', 0)}</Row><Row T="LineTo" IX="2">${cell('X', 1)}${cell('Y', 0)}</Row></Section>`;
 
 /** An original drawing with a document stencil of two masters: a box and a 1-D line. */
 async function drawingWithMasters(): Promise<Buffer> {
@@ -33,7 +33,7 @@ async function drawingWithMasters(): Promise<Buffer> {
 	);
 	zip.file(
 		'visio/masters/master2.xml',
-		`<MasterContents xmlns="${NS}"><Shapes><Shape ID="5" Type="Shape">${cell('BeginX', 1)}${cell('BeginY', 1)}${cell('EndX', 2)}${cell('EndY', 1)}${box}</Shape></Shapes></MasterContents>`,
+		`<MasterContents xmlns="${NS}"><Shapes><Shape ID="5" Type="Shape">${cell('BeginX', 1.5)}${cell('BeginY', 1.625)}${cell('EndX', 2.5)}${cell('EndY', 1.625)}${box}${line}</Shape></Shapes></MasterContents>`,
 	);
 	return zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
 }
@@ -135,8 +135,7 @@ test('a drawing lists its own masters and drops them as master instances', async
 	await expect(step.locator('svg.master-preview path').first()).toBeAttached();
 	await expect(step.locator('svg text')).toHaveCount(0);
 	const link = stencil.locator('[data-master="document:4"]');
-	await expect(link).toHaveAttribute('aria-disabled', 'true');
-	await expect(link).toHaveAttribute('title', /not built like Visio's Dynamic connector/);
+	await expect(link).not.toHaveAttribute('aria-disabled', 'true');
 
 	const shapes = viewer.locator('svg.paper > g > [data-shape-id]');
 	await expect(shapes).toHaveCount(1);
@@ -163,13 +162,26 @@ test('a drawing lists its own masters and drops them as master instances', async
 	expect(await zip.file('visio/pages/_rels/page1.xml.rels')!.async('string')).toContain(
 		'relationships/master" Target="../masters/master1.xml"',
 	);
-	// The connector master says why it is not dropped.
-	await link.click({ force: true });
-	await expect(status).toHaveText(/Link: A line or connector master/);
-	await expect(shapes).toHaveCount(2);
-	// One undo removes the instance; Search finds the drawing's masters.
-	await history(viewer, 'Undo').click();
-	await expect(shapes).toHaveCount(1);
+	// The connector master is keyboard reachable and can be duplicated as the same master.
+	await link.focus();
+	await link.press('Enter');
+	await expect(status).toHaveText(/Link 3 added from Document Stencil/);
+	await expect(shapes).toHaveCount(3);
+	await viewer.locator('.viewport').press('Control+d');
+	await expect(shapes).toHaveCount(4);
+	const reopened = await viewer.evaluate(async (node) => {
+		const element = node as VisioViewerElement;
+		const bytes = element.controller.exportVsdx().bytes;
+		await element.load(bytes);
+		return element.controller.state
+			.document!.pages[0]!.shapes.slice(-2)
+			.map(({ kind, masterId, lineEnds }) => ({ kind, masterId, lineEnds }));
+	});
+	expect(reopened).toHaveLength(2);
+	expect(reopened[0]).toMatchObject({ kind: 'connector', masterId: '4' });
+	expect(reopened[1]!.lineEnds?.begin.x).toBeCloseTo(reopened[0]!.lineEnds!.begin.x, 9);
+	expect(reopened[1]!.lineEnds?.end.x).toBeCloseTo(reopened[0]!.lineEnds!.end.x, 9);
+	// Search still finds the drawing's masters after reloading.
 	await viewer.locator('.shapes-search-field').fill('step');
 	await expect(viewer.locator('#shapes-search li:not([hidden]) [data-master]')).toHaveAttribute(
 		'data-master',

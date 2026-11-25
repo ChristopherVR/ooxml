@@ -538,7 +538,14 @@ share history, selection retention and VSDX download/reopen with other edits.
 
 ## Duplication
 
-Stable scope: `duplicate-shapes` of ordinary local 2D leaves, of one-shape master instances, of lines and connectors (below), and of a shape that connectors are glued to. Native evidence: cases `duplicate`, `duplicate-connected`, `glue-duplicate-line` and the flat-document equivalents in `evidence/native-edit-families-*-2026-10-29.json`, plus the Visio duplicate probe `evidence/native-duplicate-glue-2026-10-29.json`. Limits: groups, layers, foreign content and a connector copied together with a shape it is glued to are refused; a copy of a stencil connector whose end point box meets another dynamic connector is refused because Visio lays both out again on the next layout; Visio's own offset of a lone glued dynamic connector (none) is not reproduced, the edit offset is applied.
+Stable scope: `duplicate-shapes` of ordinary local 2D leaves, master instances, lines and
+connectors, and a shape that connectors are glued to. A single-root connector master keeps
+its geometry and its sub-shapes. Copies that cross a Dynamic connector get the page's line
+jumps. The perpendicular crossing is recorded in `native-connector-copy-drop.json`. Parallel
+and coincident runs can still differ from Visio's layout. The command applies the supplied
+offset, including for a lone glued Dynamic connector. Locally drawn groups, drawn shapes
+on layers, foreign content and a connector selected with its glue target remain outside
+the duplication scope.
 
 **Glue.** Like Visio, copying a glued line keeps its end points and drops its glue: no Connect rows are written, end formulas become plain values (a stencil connector keeps its `_WALKGLUE` formulas and its triggers name the copy's own sheet). Copying a shape that connectors are glued to leaves the connectors with the original. Moving or resizing a glued shape follows its connectors (Visio's walking glue for right-angle dynamic connectors, point glue for drawn lines); shapes without connection points float the connector along the shared extent as Visio does.
 
@@ -551,8 +558,8 @@ clipboard.
 The core `visioDuplicateCommand(page, selectedIds)` helper produces a
 `duplicate-shapes` source command with fresh page-local IDs. Copies retain source
 XML, mixed text and stacking order, receive fresh names without copied unique
-IDs, and move 0.33 drawing inches right and down. Source validation admits local 2D leaf shapes, glued or not, and the lines and connectors above, excluding groups, foreign content,
-layers, ambiguous identities and unsupported dependencies. Pin protection and
+IDs, and move 0.33 drawing inches right and down. Source validation also checks ambiguous
+identities and unsupported dependencies. Pin protection and
 affected formula caches are checked before accepting any source change.
 
 The resulting copies become the selection in one atomic history step. Undo

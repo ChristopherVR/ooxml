@@ -13,6 +13,8 @@ export const deCommands: Readonly<Record<string, string>> = {
 	Paste: 'Einfügen',
 	'Paste Special...': 'Inhalte einfügen...',
 	Duplicate: 'Duplizieren',
+	'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.':
+		'Die Auswahl enthält ein Shape, das nicht dupliziert werden kann, oder einen Verbinder zusammen mit dem Shape, an das er geklebt ist.',
 	Cut: 'Ausschneiden',
 	Copy: 'Kopieren',
 	'Format Painter': 'Format übertragen',

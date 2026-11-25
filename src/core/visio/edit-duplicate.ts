@@ -20,17 +20,22 @@ import { recalculateVisioCells, type VisioCellKey } from './edit-recalculate';
 import { createVisioDependencyQuery } from './edit-recalculate';
 import { rerouteBlockedConnectors } from './edit-connector-follow';
 import { assertGeometryPackageScope } from './edit-scope';
-import { finishInstanceCopy, planInstanceCopy } from './edit-instance-duplicate';
+import { planInstanceCopy, renumberInstanceMembers } from './edit-instance-duplicate';
 import {
-	assertConnectorCopyApart,
 	assertGlueDroppable,
 	finishConnectorCopy,
 	finishLineCopy,
 	isLineSheet,
 	planLineCopy,
 } from './edit-duplicate-line';
-import { pageShapes, shapeIsStructural, stencilInstance } from './edit-instance-shape';
+import {
+	pageShapes,
+	placeInstance,
+	shapeIsStructural,
+	stencilInstance,
+} from './edit-instance-shape';
 import { masterTemplate } from './edit-text-scope';
+import { registerStencilShape } from './edit-stencil-connector';
 
 /** Native duplication drops UniqueID and gives each copy a fresh sheet name. */
 function copyIdentity(shape: Element, newId: string, names: Map<string, Set<string>>): void {
@@ -194,9 +199,6 @@ export async function duplicateVisioShapes(
 		size(source);
 		plans.push({ source, id: copy.newShapeId, x: x + edit.offsetX, y: y + edit.offsetY });
 	}
-	const connectorSources = plans.filter((plan) => plan.connector).map((plan) => plan.source);
-	if (connectorSources.length)
-		assertConnectorCopyApart(root, connectorSources, edit.offsetX, edit.offsetY);
 	const order = new Map(
 		children(children(sourceRoot, 'Shapes')[0], 'Shape').map((source, index) => [source, index]),
 	);
@@ -232,15 +234,14 @@ export async function duplicateVisioShapes(
 			container.appendChild(shape);
 			continue;
 		}
-		if (plan.connector) {
-			finishConnectorCopy(shape, plan.id, edit.offsetX, edit.offsetY);
-			container.appendChild(shape);
-			continue;
-		}
 		if (plan.template) {
 			// Sub-shapes of a group instance take IDs beyond the page's and every copy's own.
 			for (const id of newIds) ids.add(id);
-			finishInstanceCopy(shape, plan.template, plan.x, plan.y, ids, check);
+			renumberInstanceMembers(shape, ids, check);
+			if (plan.connector)
+				finishConnectorCopy(shape, plan.template, plan.id, edit.offsetX, edit.offsetY);
+			else placeInstance({ instance: shape, template: plan.template }, plan.x, plan.y, check);
+			registerStencilShape(shape, plan.template);
 			container.appendChild(shape);
 			continue;
 		}

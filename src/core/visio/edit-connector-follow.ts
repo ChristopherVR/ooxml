@@ -1,32 +1,50 @@
 import { attribute, children } from './sheet';
 import { VisioPackageError } from './package-common';
 import { cells, numeric } from './edit-geometry-cells';
-import { routeCrossings } from './connector-route-avoid';
-import type { VisioRoutePoint } from './connector-route';
-import { connectRows, proveConnector, topShape, type ConnectorGlue } from './edit-connector';
-import { obstacleBox } from './edit-connector-obstacles';
-import { rerouteConnector, routeOf } from './edit-connector-reroute';
+import { routeCrossings, VISIO_ROUTE_CLEARANCE } from './connector-route-avoid';
+import type { VisioRouteBox, VisioRoutePoint } from './connector-route';
+import { connectRows, proveConnector, topShape } from './edit-connector';
+import { isVisioWalkGlue, visioGlueTrigger } from './edit-connector-glue';
+import { connectorObstacles, obstacleBox } from './edit-connector-obstacles';
+import { isRoutedConnector, rerouteConnector, routeOf } from './edit-connector-reroute';
 import { effectiveCells, effectiveRows, isStencilConnector } from './edit-stencil-connector';
+import { pageShapes } from './edit-instance-shape';
+import { freeConnectorObstaclePath } from './connector-route-free';
+import { layoutStencilConnector } from './edit-stencil-connector-layout';
+import { executableCellFormula } from './cell-formula';
 
 /**
  * The page-space vertices of a right-angle connector as it is saved, read from its cached
- * Geometry rows (relative to its begin point, the form both this editor and Visio's Dynamic
- * connector use), or nothing when the rows are anything but one MoveTo and LineTo runs.
+ * Geometry rows. Dynamic masters use the local pin, including the quarter-inch transform box
+ * for level or plumb connectors. Local routed lines start at their begin point.
  */
 export function connectorPolyline(shape: Element): VisioRoutePoint[] | undefined {
 	const stencil = isStencilConnector(shape);
 	const own = stencil ? effectiveCells(shape) : cells(shape);
 	const read = (rows: Iterable<Map<string, Element>>): VisioRoutePoint[] => {
-		const origin = { x: numeric(own.get('BeginX')), y: numeric(own.get('BeginY')) };
+		const origin = stencil
+			? {
+					x: numeric(own.get('PinX')) - numeric(own.get('LocPinX')),
+					y: numeric(own.get('PinY')) - numeric(own.get('LocPinY')),
+				}
+			: { x: numeric(own.get('BeginX')), y: numeric(own.get('BeginY')) };
 		return [...rows].map((row) => ({
 			x: origin.x + numeric(row.get('X')),
 			y: origin.y + numeric(row.get('Y')),
 		}));
 	};
 	if (stencil) {
-		// The master's rows are proven to be a MoveTo followed by LineTo rows.
+		// ArcTo rows on right-angle routes are saved jumps; their chords are the route.
+		const section = children(shape, 'Section').find((node) => attribute(node, 'N') === 'Geometry');
+		if (
+			children(section, 'Row').some((row) => {
+				const type = attribute(row, 'T');
+				return type && !['MoveTo', 'LineTo', 'ArcTo'].includes(type);
+			})
+		)
+			return undefined;
 		const rows = effectiveRows(shape, 'Geometry');
-		return [...rows.keys()].length >= 2
+		return rows.size >= 2
 			? read([...rows.entries()].sort((a, b) => a[0] - b[0]).map(([, row]) => row))
 			: undefined;
 	}
@@ -56,23 +74,66 @@ export function rerouteBlockedConnectors(
 	pageId: string,
 	shapeId: string,
 	check: () => void,
+	previous?: VisioRouteBox,
 ): readonly string[] {
 	const root = roots.get(pageId);
 	const moved = root && topShape(root, shapeId);
 	const box = moved && obstacleBox(moved);
-	if (!root || !box) return [];
+	if (!root || (!box && !previous)) return [];
+	const adjacent = previous && {
+		minX: previous.minX - VISIO_ROUTE_CLEARANCE - 1e-5,
+		maxX: previous.maxX + VISIO_ROUTE_CLEARANCE + 1e-5,
+		minY: previous.minY - VISIO_ROUTE_CLEARANCE - 1e-5,
+		maxY: previous.maxY + VISIO_ROUTE_CLEARANCE + 1e-5,
+	};
+	const glued = new Set(connectRows(root).map((row) => attribute(row, 'FromSheet')));
 	const pages = new Set<string>();
-	for (const id of new Set(connectRows(root).map((row) => attribute(row, 'FromSheet') ?? ''))) {
+	let obstacles: VisioRouteBox[] | undefined;
+	for (const shape of pageShapes(root)) {
 		check();
+		const id = attribute(shape, 'ID');
 		if (!id || id === shapeId) continue;
 		try {
-			const shape = topShape(root, id);
-			if (!shape || routeOf(shape) !== 'right-angle') continue;
+			if (!isRoutedConnector(shape) || routeOf(shape) !== 'right-angle') continue;
+			const own = isStencilConnector(shape) ? effectiveCells(shape) : cells(shape);
+			const policy = numeric(own.get('ConFixedCode'), 0);
+			if (policy === 1 || policy === 2) continue;
 			const path = connectorPolyline(shape);
-			if (!path || !routeCrossings(path, [box])) continue;
-			const glue: ConnectorGlue = proveConnector(root, id);
+			if (!path) continue;
+			const blocked = box && routeCrossings(path, [box]);
+			if (!blocked && (!adjacent || glued.has(id) || !routeCrossings(path, [adjacent]))) continue;
+			const glue = glued.has(id) ? proveConnector(root, id) : { shape, ends: {} };
 			if (glue.ends.begin?.target === shapeId || glue.ends.end?.target === shapeId) continue;
-			for (const page of rerouteConnector(roots, pageId, glue, check)) pages.add(page);
+			const free = !glue.ends.begin && !glue.ends.end;
+			if (
+				free &&
+				['BeginX', 'BeginY', 'EndX', 'EndY'].some((name) => {
+					const formula = executableCellFormula(attribute(own.get(name), 'F'));
+					if (!formula) return false;
+					const triggerName = name.startsWith('Begin') ? 'BegTrigger' : 'EndTrigger';
+					const trigger = own.get(triggerName);
+					const expression = attribute(trigger, 'F');
+					return (
+						!isVisioWalkGlue(formula) ||
+						numeric(trigger) !== 1 ||
+						(expression !== visioGlueTrigger(id) && expression !== '_XFTRIGGER(EventXFMod)')
+					);
+				})
+			)
+				continue;
+			if (free) obstacles ??= connectorObstacles(root, new Set());
+			const begin = { x: numeric(own.get('BeginX')), y: numeric(own.get('BeginY')) };
+			const end = { x: numeric(own.get('EndX')), y: numeric(own.get('EndY')) };
+			const cleared = !blocked && !!previous && !!routeCrossings([begin, end], [previous]);
+			if (!blocked && !cleared) continue;
+			const native =
+				obstacles && free && isStencilConnector(shape)
+					? freeConnectorObstaclePath(begin, end, obstacles, cleared)
+					: undefined;
+			const changed = native
+				? layoutStencilConnector(root, pageId, shape, 'right-angle', native, check)
+				: rerouteConnector(roots, pageId, glue, check, free && obstacles ? { obstacles } : {});
+			for (const page of changed) pages.add(page);
 		} catch (error) {
 			if (!benign(error)) throw error;
 		}

@@ -215,7 +215,9 @@ export function writeStencilConnector(
 		const inherited = base && attribute(base, 'T') === wanted.type ? cellsOf(base) : undefined;
 		const changed = wanted.cells.filter(([name, value, formula]) => {
 			if (typeof value !== 'number' || formula !== undefined) return true;
-			const known = cached(inherited?.get(name));
+			const source = inherited?.get(name);
+			if (source?.hasAttribute('F')) return true;
+			const known = cached(source);
 			return known === undefined || !same(known, value);
 		});
 		if (!changed.length) continue;

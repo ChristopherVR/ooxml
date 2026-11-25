@@ -43,8 +43,10 @@ no longer refuses every edit of a document.
   shape without connection points floats along the shared extent (a straight run through the
   middle of the overlap); the core now does the same for the horizontal case and leaves the
   vertical case unverified.
-- A connector copy that meets another dynamic connector makes Visio route both again; the core
-  refuses that placement.
+- Visio may redistribute both routes when a connector copy overlaps another dynamic connector.
+  Copies now retain their saved routes and get the documented line jumps at crossings. The
+  perpendicular crossing in `native-connector-copy-drop.json` matches Visio 16, including the
+  saved arc. Redistribution of parallel or coincident routes remains open.
 
 ### Implemented in this increment
 
@@ -170,15 +172,15 @@ by Visio when opened and remains a live-routing gap. See
   and copies the master, with its style sheets, into the drawing's masters part before saving an
   instance that references it (reused by UniqueID). The Shapes pane opens stencils from More
   Shapes > Open Stencil and collects My Shapes for the session. Open limits: legacy `.vss` and macro
-  packages are refused, masters that own pictures are refused, stencil line and connector masters
-  are listed disabled, nothing persists between sessions, and master icons are redrawn from shapes
-  rather than read from the `<Icon>` element.
+  packages and masters that own pictures are refused. Single-root straight, curved, elbow and
+  grouped connector masters now drop with their inherited geometry and free ends. Stencils
+  opened for the session are held in memory, and previews are drawn from the master shapes.
 - Routing: a placeable shape moved, resized or turned onto a right-angle connector's saved path
   makes the core route that connector around it (`edit-connector-follow.ts`), for drawn connectors
-  and Dynamic connector instances. Not done: reroute preview during the drag for connectors that are
-  not glued to the dragged shape, straightening when the obstacle leaves, non-Dynamic connector
-  masters, and any comparison against fresh Visio captures (the existing recordings cover the
-  glued-end cases only).
+  and Dynamic connector instances. Free-ended right-angle connectors also reroute on commit.
+  The horizontal and vertical single-obstacle cases in `native-connector-copy-drop.json` cover
+  both the detour and the return route when the obstacle clears. Live previews for unrelated
+  connectors and native routing across complex obstacle layouts remain open.
 - Recalculation: ROUND, INT, TRUNC, POW, EXP, LN, LOG10, ASIN, ACOS, ATAN and the TRUE/FALSE
   constants are evaluated, so formulas that use them no longer refuse a resize or move. Still
   refused when this round landed: SUM, DEG, RAD, string and document-property functions, INDIRECT and the other

@@ -32,7 +32,7 @@ import {
 	type ConnectorGlue,
 } from './edit-connector';
 import { shapeChain } from './edit-connector-world';
-import type { VisioRoutePoint } from './connector-route';
+import type { VisioRouteBox, VisioRoutePoint } from './connector-route';
 import { connectorObstacles } from './edit-connector-obstacles';
 import {
 	effectiveCells,
@@ -108,7 +108,11 @@ export function rerouteConnector(
 	pageId: string,
 	glue: ConnectorGlue,
 	check: () => void,
-	options: { free?: Partial<Record<End, VisioRoutePoint>>; route?: VisioConnectorRoute } = {},
+	options: {
+		free?: Partial<Record<End, VisioRoutePoint>>;
+		route?: VisioConnectorRoute;
+		obstacles?: readonly VisioRouteBox[];
+	} = {},
 ): readonly string[] {
 	const root = roots.get(pageId)!;
 	const shape = glue.shape;
@@ -168,7 +172,8 @@ export function rerouteConnector(
 	if (options.route) setRouteCells(shape, options.route);
 	const obstacles =
 		route === 'right-angle'
-			? connectorObstacles(
+			? (options.obstacles ??
+				connectorObstacles(
 					root,
 					new Set([
 						attribute(shape, 'ID') ?? '',
@@ -178,7 +183,7 @@ export function rerouteConnector(
 							return (shapeChain(root, target) ?? []).map((item) => attribute(item, 'ID') ?? '');
 						}),
 					]),
-				)
+				))
 			: [];
 	const pages = stencil
 		? layoutStencilConnector(

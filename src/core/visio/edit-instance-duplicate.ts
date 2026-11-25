@@ -1,12 +1,7 @@
 import { executableCellFormula } from './cell-formula';
 import { connectRows } from './edit-connector';
 import { isStencilConnector, planConnectorCopy } from './edit-duplicate-line';
-import {
-	assertInstanceUnlocked,
-	instancePin,
-	placeInstance,
-	type StencilInstance,
-} from './edit-instance-shape';
+import { assertInstanceUnlocked, instancePin, type StencilInstance } from './edit-instance-shape';
 import { mapVisioFormulaSyntax } from './formula-source';
 import type { VisioPackage } from './package';
 import { fail } from './package-common';
@@ -28,24 +23,16 @@ export async function planInstanceCopy(
 	allowConnector = code === 'UNSUPPORTED_DUPLICATE',
 ): Promise<{ x: number; y: number; connector: boolean }> {
 	const id = attribute(target.instance, 'ID');
-	const connector = allowConnector && isStencilConnector(target);
+	const line = isStencilConnector(target);
+	const connector = allowConnector && line;
 	if (
 		!connector &&
-		(isStencilConnector(target) ||
-			connectRows(sourceRoot).some((row) => attribute(row, 'FromSheet') === id))
+		(line || connectRows(sourceRoot).some((row) => attribute(row, 'FromSheet') === id))
 	)
 		fail(code, 'Lines and connectors that come from a stencil cannot be copied yet.');
 	await assertInstanceUnlocked(pkg, pageId, target, ['LockSelect'], 'selection');
 	// A connector copy keeps its end points and loses its glue, as Visio does (edit-duplicate-line.ts).
-	if (connector) {
-		const pin = planConnectorCopy(target, code);
-		const x = pin.x + offsetX,
-			y = pin.y + offsetY;
-		if (Math.abs(x) > 1e6 || Math.abs(y) > 1e6)
-			fail(code, 'Duplicated pins exceed coordinate limits.');
-		return { x, y, connector };
-	}
-	const pin = instancePin(target);
+	const pin = connector ? planConnectorCopy(target, code) : instancePin(target);
 	const x = pin.x + offsetX,
 		y = pin.y + offsetY;
 	if (Math.abs(x) > 1e6 || Math.abs(y) > 1e6)
@@ -54,24 +41,20 @@ export async function planInstanceCopy(
 }
 
 /**
- * Finish a cloned instance: its sub-shapes (a group master) take the next free sheet IDs, with
- * the copy's own `Sheet.N!` references following, and the pin moves to (`x`, `y`).
+ * Give the sub-shapes of a cloned instance fresh sheet IDs and update their references.
  */
-export function finishInstanceCopy(
+export function renumberInstanceMembers(
 	clone: Element,
-	template: Element,
-	x: number,
-	y: number,
 	taken: Set<string>,
 	check: () => void,
-): string[] {
+): void {
 	const mapping = new Map<string, string>();
 	let next = 0;
 	for (const id of taken) next = Math.max(next, Number(id) || 0);
 	const pending = children(clone, 'Shapes').flatMap((container) => children(container, 'Shape'));
-	while (pending.length) {
+	for (let index = 0; index < pending.length; index++) {
 		check();
-		const shape = pending.shift()!;
+		const shape = pending[index]!;
 		const old = attribute(shape, 'ID');
 		do next++;
 		while (taken.has(String(next)));
@@ -100,6 +83,4 @@ export function finishInstanceCopy(
 				),
 			);
 		}
-	placeInstance({ instance: clone, template }, x, y, check);
-	return [...mapping.values()];
 }

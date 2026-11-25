@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DOMParser } from '@xmldom/xmldom';
 import {
-	assertConnectorCopyApart,
 	assertGlueDroppable,
 	finishLineCopy,
 	isLineSheet,
@@ -58,13 +57,5 @@ describe('copying a glued line', () => {
 		);
 		expect(() => assertGlueDroppable(page, '3', new Set(['3']))).not.toThrow();
 		expect(() => assertGlueDroppable(page, '3', new Set(['3', '1']))).toThrow(/glued to/);
-	});
-	it('refuses a stencil connector copy that meets another dynamic connector', () => {
-		const walk = (id: string, y: number) =>
-			`<Shape ID="${id}">${cell('BeginX', 2, '_WALKGLUE(BegTrigger,EndTrigger,WalkPreference)')}${cell('BeginY', y)}${cell('EndX', 5)}${cell('EndY', y)}</Shape>`;
-		const page = root(walk('4', 5) + walk('9', 8));
-		const source = page.getElementsByTagName('Shape')[1]! as unknown as Element;
-		expect(() => assertConnectorCopyApart(page, [source], 0, -1)).not.toThrow();
-		expect(() => assertConnectorCopyApart(page, [source], 0, -2.9)).toThrow(/lays out again/);
 	});
 });

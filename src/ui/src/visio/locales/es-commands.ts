@@ -13,6 +13,8 @@ export const esCommands: Readonly<Record<string, string>> = {
 	Paste: 'Pegar',
 	'Paste Special...': 'Pegado especial...',
 	Duplicate: 'Duplicar',
+	'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.':
+		'La selección contiene una forma que no se puede duplicar o un conector seleccionado junto con la forma a la que está pegado.',
 	Cut: 'Cortar',
 	Copy: 'Copiar',
 	'Format Painter': 'Copiar formato',

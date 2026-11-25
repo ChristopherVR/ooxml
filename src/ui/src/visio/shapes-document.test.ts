@@ -92,7 +92,7 @@ describe('the Document Stencil in the Shapes window', () => {
 		ui.dispose();
 	});
 
-	it('drops a master as an instance and refuses a connector master with its reason', async () => {
+	it('drops shape and connector masters as instances', async () => {
 		const ui = await open(drawing());
 		ui.pane.querySelector<HTMLButtonElement>('[data-master="document:2"]')!.click();
 		await ui.settle();
@@ -111,13 +111,13 @@ describe('the Document Stencil in the Shapes window', () => {
 		]);
 		expect(ui.messages.at(-1)).toMatch(/^Process \d+ added from Document Stencil\.$/);
 		const connector = ui.pane.querySelector<HTMLButtonElement>('[data-master="document:4"]')!;
-		expect(connector.draggable).toBe(false);
-		expect(connector.getAttribute('aria-disabled')).toBe('true');
-		expect(connector.title).toMatch(/^Dynamic connector: A line or connector master/);
+		expect(connector.draggable).toBe(true);
+		expect(connector.getAttribute('aria-disabled')).not.toBe('true');
 		connector.click();
 		await ui.settle();
-		expect(ui.edits).toHaveLength(1);
-		expect(ui.messages.at(-1)).toMatch(/^Dynamic connector: A line or connector master/);
+		expect(ui.edits[1]).toEqual([
+			expect.objectContaining({ type: 'insert-master-instance', masterId: '4' }),
+		]);
 		ui.dispose();
 	});
 
@@ -191,14 +191,13 @@ describe('the Document Stencil in the Shapes window', () => {
 		ui.dispose();
 	});
 
-	it('offers the drawing masters in Quick Shapes, without the ones that cannot be dropped', async () => {
+	it('offers droppable shapes and connector masters in Quick Shapes', async () => {
 		const ui = await open(drawing());
 		ui.pane.querySelector<HTMLButtonElement>('#shapes-quick-toggle')!.click();
 		const quick = [...ui.pane.querySelectorAll<HTMLElement>('#shapes-quick [data-master]')].map(
 			(item) => item.dataset.master,
 		);
-		expect(quick.slice(0, 2)).toEqual(['document:2', 'document:7']);
-		expect(quick).not.toContain('document:4');
+		expect(quick.slice(0, 3)).toEqual(['document:2', 'document:4', 'document:7']);
 		expect(quick).toContain('rectangle');
 		ui.dispose();
 	});

@@ -23,7 +23,7 @@ export class ViewerDuplication {
 				state.selectedShapes.map((shape) => shape.id),
 			)
 		)
-			return 'Duplicate does not take lines, connectors, pictures, groups made here, drawn shapes on a layer or with glue, shapes on a locked layer or shapes glued to another shape.';
+			return 'The selection contains a shape that cannot be duplicated or a connector selected with its glue target.';
 		return '';
 	}
 	run(): void {

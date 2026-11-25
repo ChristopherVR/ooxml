@@ -395,15 +395,15 @@ describe("Visio's Dynamic connector (a stencil instance)", () => {
 		expect(await connector(followed, '8')).toContain(
 			c('EndX', 5.5, 'PAR(PNT(Sheet.2!Connections.X1,Sheet.2!Connections.Y1))'),
 		);
-		// A 2-D master takes no ends, and a line master that is not the Dynamic connector is refused.
+		// A 2-D master takes no ends. A custom line master can translate but keeps its geometry.
 		expect(
 			(await refused(bytes, [drop({ masterId: '2', begin: { x: 1, y: 1 }, end: { x: 2, y: 2 } })]))
 				?.code,
 		).toBe('INVALID_EDIT');
 		const other = await source({ master: DYNAMIC('GUARD(BeginX+Width/2)') });
-		const error = await refused(other, [drop()]);
+		await expect(edited(other, drop())).resolves.toBeInstanceOf(Uint8Array);
+		const error = await refused(other, [drop({ begin: { x: 1, y: 1 }, end: { x: 2, y: 2 } })]);
 		expect(error?.code).toBe('UNSUPPORTED_MASTER_INSTANCE');
-		expect(error?.message).toMatch(/Dynamic connector/);
 		const [, line] = (await parseVsdx(bytes)).masters!;
 		expect(line).toMatchObject({ oneDimensional: true, dynamicConnector: true });
 		expect((await parseVsdx(other)).masters![1]!.dynamicConnector).toBeUndefined();

@@ -1,8 +1,10 @@
 import { executableCellFormula } from './cell-formula';
-import { isNativeGlueCell, visioGlueTrigger } from './edit-connector-glue';
+import { isNativeGlueCell, isVisioWalkGlue, visioGlueTrigger } from './edit-connector-glue';
 import { cells, numeric } from './edit-geometry-admission';
+import { setCell } from './edit-geometry-cells';
 import { proveLocalLine } from './edit-line-move';
 import { instanceCell, type StencilInstance } from './edit-instance-shape';
+import { isDynamicConnectorMaster } from './edit-stencil-connector';
 import { fail } from './package-common';
 import { attribute, children } from './sheet';
 
@@ -75,32 +77,62 @@ export function finishLineCopy(shape: Element, dx: number, dy: number): void {
 	shift(local.get('PinY'), dy, 'PinY');
 }
 
-/** A stencil connector (Visio's Dynamic connector) is a 1D instance with end point cells. */
+/** A stencil connector is a 1D instance with end point cells. */
 export const isStencilConnector = (target: StencilInstance): boolean =>
 	ENDS.some((name) => instanceCell(target, name));
 
-/** Admit a stencil connector whose end points, pin and triggers are local cells. */
+/** Admit a stencil connector whose ends are constants or native glue. */
 export function planConnectorCopy(
 	target: StencilInstance,
 	code = 'UNSUPPORTED_DUPLICATE',
 ): { x: number; y: number } {
-	const local = cells(target.instance);
+	const read = (name: string) => instanceCell(target, name);
 	for (const name of [...ENDS, 'PinX', 'PinY']) {
-		const node = local.get(name);
+		const node = read(name);
 		if (!node?.hasAttribute('V') || node.hasAttribute('E'))
 			fail(code, `The stencil connector has no usable local ${name}.`);
 		numeric(node);
 	}
-	assertEndFormulas((name) => local.get(name), code);
-	return { x: numeric(local.get('PinX')), y: numeric(local.get('PinY')) };
+	assertEndFormulas(read, code);
+	return { x: numeric(read('PinX')), y: numeric(read('PinY')) };
 }
 
 /** Copy of a stencil connector: ends and pin move, and the triggers name the copy's own sheet. */
-export function finishConnectorCopy(shape: Element, id: string, dx: number, dy: number): void {
+export function finishConnectorCopy(
+	shape: Element,
+	template: Element,
+	id: string,
+	dx: number,
+	dy: number,
+): void {
 	const local = cells(shape);
-	for (const name of ENDS) shift(local.get(name), name.endsWith('X') ? dx : dy, name);
-	shift(local.get('PinX'), dx, 'PinX');
-	shift(local.get('PinY'), dy, 'PinY');
+	const inherited = cells(template);
+	const dynamic = isDynamicConnectorMaster(template);
+	const pins = ['PinX', 'PinY'] as const;
+	for (const name of [...ENDS, ...pins]) {
+		const node = local.get(name);
+		const base = inherited.get(name);
+		const value = numeric(node?.hasAttribute('V') ? node : base) + (name.endsWith('X') ? dx : dy);
+		if (Math.abs(value) > 1e6)
+			fail('UNSUPPORTED_DUPLICATE', 'Duplicated connector coordinates exceed limits.');
+		if (name === 'PinX' || name === 'PinY') {
+			const formula =
+				attribute(node, 'F') ?? (executableCellFormula(attribute(base, 'F')) ? 'Inh' : undefined);
+			setCell(shape, name, value, formula);
+		} else {
+			const formula = executableCellFormula(attribute(node, 'F'));
+			setCell(
+				shape,
+				name,
+				value,
+				dynamic && formula && isVisioWalkGlue(formula) ? formula : undefined,
+			);
+		}
+	}
+	if (!dynamic) return;
+	const fixed = local.get('ConFixedCode');
+	if (fixed && !fixed.hasAttribute('F') && [4, 5, 6].includes(Number(attribute(fixed, 'V'))))
+		shape.removeChild(fixed);
 	// Visio rewrites the triggers of an unglued connector to its own sheet.
 	for (const name of ['BegTrigger', 'EndTrigger']) {
 		const node = local.get(name);
@@ -108,53 +140,4 @@ export function finishConnectorCopy(shape: Element, id: string, dx: number, dy: 
 		node.setAttribute('F', visioGlueTrigger(id));
 		node.setAttribute('V', '1');
 	}
-}
-
-/** The inflation of a connector's end point box: Visio keeps its routes about a clearance apart. */
-const CLEARANCE = 0.25;
-const endsBox = (shape: Element, dx: number, dy: number) => {
-	const local = cells(shape);
-	const x = [numeric(local.get('BeginX')) + dx, numeric(local.get('EndX')) + dx];
-	const y = [numeric(local.get('BeginY')) + dy, numeric(local.get('EndY')) + dy];
-	return {
-		minX: Math.min(...x) - CLEARANCE,
-		maxX: Math.max(...x) + CLEARANCE,
-		minY: Math.min(...y) - CLEARANCE,
-		maxY: Math.max(...y) + CLEARANCE,
-	};
-};
-
-/**
- * Visio lays out a connector that crosses or touches another dynamic connector again, which moves
- * both routes a little on the next layout (native-edit-families-full-2026-10-29.json, the
- * overlapping copies of `glue-duplicate-line`). The copy of a stencil connector is therefore
- * refused when its end point box meets the box of a dynamically glued connector it does not
- * replace, instead of leaving routes in the file that Visio would change.
- */
-export function assertConnectorCopyApart(
-	root: Element,
-	copies: readonly Element[],
-	dx: number,
-	dy: number,
-	code = 'UNSUPPORTED_DUPLICATE',
-): void {
-	const boxes = copies.map((shape) => endsBox(shape, dx, dy));
-	for (const container of children(root, 'Shapes'))
-		for (const other of children(container, 'Shape')) {
-			const local = cells(other);
-			const formula = executableCellFormula(attribute(local.get('BeginX'), 'F')) ?? '';
-			if (!/^_WALKGLUE\(/i.test(formula)) continue;
-			const box = endsBox(other, 0, 0);
-			for (const copy of boxes)
-				if (
-					copy.minX <= box.maxX &&
-					box.minX <= copy.maxX &&
-					copy.minY <= box.maxY &&
-					box.minY <= copy.maxY
-				)
-					fail(
-						code,
-						'The copy of a connector would meet another connector, which Visio lays out again.',
-					);
-		}
 }

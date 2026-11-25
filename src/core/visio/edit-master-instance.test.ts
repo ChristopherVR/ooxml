@@ -119,7 +119,7 @@ describe('dropping a master on a page', () => {
 			],
 			`<Shapes>${shape('2', size + cell('Width', 1, 'Sheet.9!Width'))}</Shapes>`,
 		);
-		await expect(drop(bytes, '4')).rejects.toMatchObject({ code: 'UNSUPPORTED_MASTER_INSTANCE' });
+		await expect(drop(bytes, '4')).resolves.toMatchObject({ changedParts: expect.any(Array) });
 		// Several top-level shapes drop as a group (edit-instance-group.test.ts).
 		await expect(drop(bytes, '7')).resolves.toMatchObject({ changedParts: expect.any(Array) });
 		await expect(drop(bytes, '3')).rejects.toMatchObject({ code: 'EDIT_TARGET_NOT_FOUND' });

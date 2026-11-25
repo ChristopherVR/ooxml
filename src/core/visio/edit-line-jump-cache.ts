@@ -8,9 +8,10 @@ import { parseVsdx } from './parser';
 import { visioXml } from './parts';
 import { attribute, children } from './sheet';
 import { visioLineJumpPaths } from './line-jumps';
-import { executableCellFormula } from './cell-formula';
 import { visioPageLayout } from './page-layout';
 import type { VisioPage } from './model';
+import { isDynamicConnectorMaster } from './edit-stencil-connector';
+import { executableCellFormula } from './cell-formula';
 
 const jumpState = (page: VisioPage) =>
 	JSON.stringify([
@@ -21,6 +22,7 @@ const jumpState = (page: VisioPage) =>
 			shape.lineJumpStyle,
 			shape.lineJumpDirectionX,
 			shape.lineJumpDirectionY,
+			shape.kind === 'connector' && [shape.transform, shape.geometry.map(({ path }) => path)],
 		]),
 	]);
 
@@ -51,16 +53,18 @@ function plainRows(section: Element): boolean {
 function cacheRows(path: string): { type: string; x: number; y: number; bow?: number }[] {
 	const tokens = path.trim().split(/\s+/);
 	const rows: ReturnType<typeof cacheRows> = [];
-	while (tokens.length) {
-		const command = tokens.shift();
+	let index = 0;
+	while (index < tokens.length) {
+		const command = tokens[index++];
 		if (command === 'M' || command === 'L') {
 			rows.push({
 				type: command === 'M' ? 'MoveTo' : 'LineTo',
-				x: Number(tokens.shift()),
-				y: Number(tokens.shift()),
+				x: Number(tokens[index++]),
+				y: Number(tokens[index++]),
 			});
 		} else if (command === 'A') {
-			const [rx, ry, rotation, large, sweep, x, y] = tokens.splice(0, 7).map(Number);
+			const [rx, ry, rotation, large, sweep, x, y] = tokens.slice(index, index + 7).map(Number);
+			index += 7;
 			if (
 				rx === undefined ||
 				ry !== rx ||
@@ -108,7 +112,7 @@ export async function refreshLineJumpCaches(
 		if (!/^visio\/.*\.xml$/i.test(path)) continue;
 		const root = await pkg.readXml(path);
 		for (const node of Array.from(root.getElementsByTagName('*')))
-			if (/\b(?:Geometry|Geom)\d*\./i.test(attribute(node, 'F') ?? '')) referenced = true;
+			if (/!\s*(?:Geometry|Geom)\d*\./i.test(attribute(node, 'F') ?? '')) referenced = true;
 	}
 	for (const page of model.pages) {
 		if (!pageIds.has(page.id)) continue;
@@ -117,12 +121,16 @@ export async function refreshLineJumpCaches(
 		const path = pages.get(page.id)!;
 		const root = await visioXml(pkg, path, 'PageContents');
 		let dirty = false;
-		for (const [shape, paths] of visioLineJumpPaths(page)) {
+		const targets = new Map(
+			children(children(root, 'Shapes')[0], 'Shape').map((target) => [
+				attribute(target, 'ID'),
+				target,
+			]),
+		);
+		for (const [shape, paths] of visioLineJumpPaths(page, true)) {
 			check();
-			if (shape.connectorRoute !== 'straight' || paths.length !== 1) continue;
-			const target = children(children(root, 'Shapes')[0], 'Shape').find(
-				(node) => attribute(node, 'ID') === shape.id,
-			);
+			if (shape.connectorRoute === 'curved' || paths.length !== 1) continue;
+			const target = targets.get(shape.id);
 			if (!target) continue;
 			const sections = children(target, 'Section').filter(
 				(node) => attribute(node, 'N') === 'Geometry',
@@ -135,6 +143,9 @@ export async function refreshLineJumpCaches(
 				sections.length !== 1 ||
 				!rows.length ||
 				!plainRows(section) ||
+				Array.from(target.getElementsByTagName('Cell')).some((node) =>
+					/\b(?:Geometry|Geom)\d*\./i.test(attribute(node, 'F') ?? ''),
+				) ||
 				Array.from(section.getElementsByTagName('*')).some((node) =>
 					executableCellFormula(attribute(node, 'F')),
 				)
@@ -146,6 +157,7 @@ export async function refreshLineJumpCaches(
 			const masterId = attribute(target, 'Master');
 			if (masterId) {
 				const master = await template(masterId, attribute(target, 'MasterShape'));
+				if (shape.connectorRoute !== 'straight' && !isDynamicConnectorMaster(master)) continue;
 				const base = children(master, 'Section').find(
 					(node) =>
 						attribute(node, 'N') === 'Geometry' &&

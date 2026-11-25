@@ -80,10 +80,11 @@ layers by name (missing layers are added to the page; not for group masters) and
 Size page. A master with several top-level shapes is dropped as the group Visio makes: a
 `Type="Group"` shape that names the master, as large as the shapes together, with each shape as a
 sub-shape whose pin and size follow the group (`Sheet.N!Width*0.25`). Visio's Dynamic connector
-master drops as a connector with two free ends (`begin`/`end`). Another 1-D master, a master that
-inherits another and a master whose top-level shapes are turned or flipped are refused
-(`UNSUPPORTED_MASTER_INSTANCE`). `visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit
-from a pointer position.
+master drops as a connector with two free ends (`begin`/`end`). A single-root straight,
+curved, elbow or grouped connector master keeps its inherited drawing when placed or copied.
+Custom end placement is supported for Dynamic connectors. Chained masters, pictures and
+multi-root masters with turned or flipped shapes remain outside the drop scope.
+`visioMasterDropCommand` (`ooxml-core/visio/ui`) builds the edit from a pointer position.
 
 `drop-stencil-master` drops a master of a built-in stencil (`VISIO_BUILT_IN_STENCILS`: Basic
 Shapes, Basic Flowchart Shapes, Miscellaneous Flowchart Shapes, Arrow Shapes) the way Visio drops
