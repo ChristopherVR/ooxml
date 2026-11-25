@@ -1,18 +1,27 @@
-import { expect, test } from '@playwright/test';
-import { FRAMEWORKS, editor, editorProperty, openSample, pageErrors } from './helpers';
+import { expect, test, type Page } from '@playwright/test';
+import {
+	FRAMEWORKS,
+	clickRibbonControl,
+	editor,
+	editorProperty,
+	openSample,
+	pageErrors,
+} from './helpers';
+
+const recommendedCharts = (page: Page) =>
+	editor(page).locator('button[data-command="insert.chart"]:not([data-launcher])');
 
 test('shared chart gallery supports keyboard selection, grouping edits and save/reopen', async ({
 	page,
 }) => {
 	const errors = pageErrors(page);
+	await page.setViewportSize({ width: 1024, height: 800 });
 	await openSample(page);
 	await editor(page).getByRole('combobox', { name: 'Name Box', exact: true }).fill('A3:C8');
 	await page.keyboard.press('Enter');
 	await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await editor(page)
-		.getByRole('button', { name: 'Recommended Charts', exact: true })
-		.first()
-		.click();
+	await expect(editor(page).getByRole('button', { name: 'Charts', exact: true })).toBeVisible();
+	await clickRibbonControl(page, recommendedCharts(page));
 	const dialog = editor(page).locator('[data-dialog="insert-chart"]');
 	const gallery = dialog.locator('office-ui-gallery[mode="panel"]');
 	await expect(gallery.locator('.tile svg')).toHaveCount(17);
@@ -76,10 +85,7 @@ for (const framework of FRAMEWORKS)
 		await editor(page).getByRole('combobox', { name: 'Name Box', exact: true }).fill('A3:C8');
 		await page.keyboard.press('Enter');
 		await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await editor(page)
-			.getByRole('button', { name: 'Recommended Charts', exact: true })
-			.first()
-			.click();
+		await clickRibbonControl(page, recommendedCharts(page));
 		const dialog = editor(page).locator('[data-dialog="insert-chart"]');
 		await dialog.getByLabel('Chart title', { exact: true }).fill('Palette sales');
 		await dialog.getByRole('button', { name: 'OK', exact: true }).click();
@@ -161,10 +167,7 @@ for (const framework of FRAMEWORKS)
 		await editor(page).getByRole('combobox', { name: 'Name Box', exact: true }).fill('A3:C8');
 		await page.keyboard.press('Enter');
 		await editor(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await editor(page)
-			.getByRole('button', { name: 'Recommended Charts', exact: true })
-			.first()
-			.click();
+		await clickRibbonControl(page, recommendedCharts(page));
 		const dialog = editor(page).locator('[data-dialog="insert-chart"]');
 		await dialog.getByLabel('Chart title', { exact: true }).fill('Design sales');
 		await dialog.getByRole('button', { name: 'OK', exact: true }).click();

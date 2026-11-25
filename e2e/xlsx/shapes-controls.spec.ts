@@ -51,6 +51,7 @@ for (const framework of FRAMEWORKS)
 		await control(page, 'dropdown')
 			.locator('[data-control-part="item"][data-control-index="3"]')
 			.click();
+		await expect(control(page, 'dropdown').locator('.xg-fc-pop')).toHaveCount(0);
 		await expect.poll(() => cellText(page, 'C3')).toBe('3');
 
 		// Spin button: one step up from 3.

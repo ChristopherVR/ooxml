@@ -164,13 +164,14 @@ export class DrawingLayer {
 				}
 				if (node.parentNode !== parent) parent.append(node);
 				place(node, box.x, box.y, box.w, box.h);
-				node.style.zIndex = String(index);
+				const open = drawing.kind === 'formControl' && this.#openDrop === index;
+				// The popup is inside its drawing's stacking context. Raise it while open.
+				node.style.zIndex = String(open ? sheet.drawings.length : index);
 				node.style.transform =
 					drawing.kind === 'image' && (drawing.rotation || drawing.flipH || drawing.flipV)
 						? `rotate(${drawing.rotation ?? 0}deg) scale(${drawing.flipH ? -1 : 1}, ${drawing.flipV ? -1 : 1})`
 						: '';
 				const multi = drawing.kind === 'slicer' && this.#slicerState(drawing.name).multi;
-				const open = this.#openDrop === index;
 				const sig = `${drawing.kind}:${Math.round(box.w)}x${Math.round(box.h)}:${this.#generation}:${multi}:${open}`;
 				if (node.xgSig !== sig) {
 					node.xgSig = sig;
