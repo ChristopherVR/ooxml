@@ -366,8 +366,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 - [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format, Chart Format (a pane instead),
       PivotTable Analyze and PivotTable Design (pivot commands sit in Insert > PivotTable).
-- [ ] **P1** Insert: Shapes, PivotChart, Recommended PivotTables, Equation, New Note,
-      Text Box, and Header & Footer.
+- [x] **P1** Insert: Shapes (the shared preset gallery), Text Box, New Note (a legacy note) and
+      Header & Footer (edited in Page Layout view), with undo and save round trips
+      (`xlsx/edit/page-authoring.test.ts`, `src/ui/src/xlsx/commands/ribbon-authoring.test.ts`,
+      `e2e/xlsx/ribbon-page-authoring.spec.ts`).
+- [ ] **P1** Insert: PivotChart, Recommended PivotTables and Equation.
 - [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG preview. Insert > Object
       embeds an existing DOCX, XLSX or PPTX as a worksheet icon. The original bytes survive
       save and reopen, and the embedded Office file can be downloaded from its icon.
@@ -378,7 +381,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** Insert Symbol replaces the editing selection or inserts at the cell's text caret.
 - [x] **P1** Wide folded ribbon groups scroll within the phone screen. Save, Undo and Redo
       stay available in the compact Quick Access Toolbar.
-- [ ] **P1** Page Layout: Scale to Fit, Print Titles, Background and the Arrange group.
+- [x] **P1** Page Layout: Scale to Fit (width, height, scale), Print Titles, a sheet background
+      (drawn behind the cells, never printed) and Arrange (order, Selection Pane, align, group of
+      shapes, rotate, flip, hide) (`xlsx/edit/arrange-drawings.test.ts`,
+      `src/ui/src/xlsx/commands/arrange.test.ts`).
+- [ ] **P1** Page Layout > Arrange: grouping pictures, mixed drawings and nested groups, and
+      rotation, flip and Selection Pane visibility for drawings other than shapes and pictures.
 - [ ] **P1** Data: Get Data and its sources, Queries & Connections, Refresh All, Edit Links.
 - [ ] **P2** Review: Spelling, Thesaurus, Translate, Check Accessibility, Notes; View: Window group
       and Macros; Help: Help, Training, Feedback; Backstage: Account, Close.
@@ -406,8 +414,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (the preview picture is kept), WordArt, line numbering, footnote numbering settings, macros,
       document protection, table-style definitions, hyperlink and field flags, `PICT` and
       Symbol-font character runs.
-- [ ] **P1** Styles: no new styles; the paragraph, character and table style catalogues and the
-      theme are refused on save; latent styles are not modelled.
+- [x] **P1** Styles: Create a Style and Modify Style for paragraph, character, linked and table
+      styles with undo; edited style catalogues, latent styles and the theme are saved with
+      unknown markup kept (`style-catalog-save.test.ts`, `theme-save.test.ts`,
+      `src/ui/src/docx/style-commands.test.ts`). Desktop Word 16 opens a saved file without repair
+      and lists all four new styles with their base styles and the edited theme colour and font.
+- [ ] **P2** A table style's paragraph formatting can be drawn differently on the editing surface
+      from how it is saved.
 - [x] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)
       are editable in core with both fresh and source-preserving save/reload round-trip support
       (`docx/table-properties-edit.ts`, `write-table-level-properties.ts`; verified in
@@ -480,7 +493,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Editing and behaviour
 
-- [ ] **P1** Mail merge: no data source or MERGEFIELD engine.
+- [ ] **P1** Mail merge: the headless engine (`ooxml-core/docx/mail-merge`,
+      `docs/docx-mail-merge.md`) reads CSV, TSV, `.xlsx` and host-supplied recipients, filters and
+      sorts them, evaluates MERGEFIELD, NEXT, NEXTIF, SKIPIF, MERGEREC, MERGESEQ, ASK, FILLIN and
+      IF, previews a record, checks for errors and writes one document or one per record; desktop
+      Word 16 opens a merged result without repair. Open: fields that span paragraphs, merges inside
+      text boxes, and locale-specific number and date results checked against Word.
 - [x] **P1** Find & Replace supports wildcards, whole words, prefix and suffix, ignore options,
       Special codes (`src/core/docx/find-pattern.ts`, `src/ui/src/docx/search-panel.ts`), and
       formatting search & replacement (`FindFormatCriteria`, `ReplaceFormatPatch` for font,
@@ -954,8 +972,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;
       Color Typewriter plays a substitute without a warning; emphasis effects use preset
       keyframes; Blink is approximate.
-- [ ] **P1** Animation Painter and the ribbon's Start and Duration fields are disabled
-      placeholders (timing is edited in the Animation Pane).
+- [x] **P1** Animation Painter (single use, locked with a double-click, Esc, one undo step per
+      apply) and the ribbon's Start, Duration, Delay and Move Earlier/Later work in all five
+      bindings through the shared controller (`render/controller/animation-painter-controller.ts`,
+      `e2e/pptx/ribbon-animation-painter.spec.ts`).
+- [ ] **P1** Animation Painter and the ribbon's Timing fields do not edit imported native
+      effects, timing applies to the selected object's first effect rather than a chosen one, and
+      painting across slides drops a sound embedded in the source slide.
 - [ ] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay (Pen,
       Highlighter, Eraser and Freeform work).
 - [x] **P1** Custom shows have editing operations (`editor/render/custom-show-operations`), the
@@ -1204,8 +1227,13 @@ installed Visio 16 build is used to check that saved files open without repair.
       refresh matches rows by the key column and reports shapes whose row vanished
       (`data-connections.ts`, `data-refresh.ts`). Visio does not yet refresh from the
       source itself: the connection names the file, not its folder.
-- [ ] **P1** OLE objects are not supported; EMF admission is an allowlist; SVG, BMP and TIFF
-      pictures are refused on insert.
+- [x] **P1** Insert > Pictures and drops admit static SVG (an allowlist: no scripts, events or
+      external references), BMP, TIFF (decoded for display) and bounded classic EMF
+      (`visio/edit-picture-formats.test.ts`, `e2e/visio/picture-format-insertion.spec.ts`, the
+      security corpus); desktop Visio 16 reopens the BMP, TIFF and EMF pictures.
+- [ ] **P1** General OLE objects are not supported, and desktop Visio 16 shows an inserted SVG
+      blank (also with the documented fallback picture). EMF conversion covers classic vector
+      records only, BMP uncompressed and bitfield scanlines, and TIFF single-image strips.
 - [ ] **P1** Bevel and 3-D rotation are approximations, not Visio's renderer. Perspective
       foreshortening (camera distance fitted to Visio 16 renders), extrusion (flat-shaded side
       faces) and the contour are drawn (`solid-3d.ts`, `render-solid.ts`), and a themed top bevel
