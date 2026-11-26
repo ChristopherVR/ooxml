@@ -377,8 +377,9 @@ line/marker swatches and position-authoring controls remain incomplete.
     lists over another sheet. Excel rich-data parts and value metadata are kept byte-for-byte
     through unedited saves. The grid shows bounded PNG, JPEG and GIF in-cell pictures, including
     insertion, conversion to and from floating pictures, and alt text. IMAGE() displays raster
-    results through an opt-in host HTTPS fetcher and returns `#BLOCKED!` without one. Cached linked
-    entities have an icon and a read-only card for scalar fields. Gaps include linked-data refresh,
+    results through an opt-in host HTTPS fetcher and returns `#BLOCKED!` without one, following
+    [Excel's documented response to blocked images](https://support.microsoft.com/en-us/excel/functions/image-function).
+    Cached linked entities have an icon and a read-only card for scalar fields. Gaps include linked-data refresh,
     nested card layouts and fields, additional raster formats and persisted IMAGE() results.
     Phonetic guides (`rPh`) are read and written with their string
     but not displayed, edited or copied,

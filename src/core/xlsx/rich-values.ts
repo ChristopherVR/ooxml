@@ -165,28 +165,27 @@ export function linkedDataCard(workbook: Workbook, cell: Cell): LinkedDataCard |
 			fields.find(({ name, type }) => name === '_DisplayString' && type === 's')?.value;
 		const text = label(record.fields) ?? label(body.fields);
 		const hidden = store.hiddenCardFields;
-		cards.set(
-			record,
-			text === undefined
-				? undefined
-				: {
-						text: text.slice(0, 1024),
-						fields: body.fields
-							.filter(
-								({ name, type }) =>
-									/^[a-z0-9]/i.test(name) &&
-									!hidden.get('')?.has(name) &&
-									!hidden.get(body.type)?.has(name) &&
-									['s', 'i', 'd', 'b', 'e'].includes(type),
-							)
-							.slice(0, 100)
-							.map((field) => ({
-								...field,
-								name: field.name.slice(0, 256),
-								value: field.value.slice(0, 1024),
-							})),
-					},
-		);
+		if (text === undefined) {
+			cards.set(record, undefined);
+			return undefined;
+		}
+		const fields: RichValueField[] = [];
+		const globalHidden = hidden.get('');
+		const typeHidden = hidden.get(body.type);
+		for (const { name, type, value } of body.fields) {
+			if (
+				!name ||
+				name.startsWith('_') ||
+				name.startsWith('%') ||
+				globalHidden?.has(name) ||
+				typeHidden?.has(name) ||
+				!['s', 'i', 'd', 'b', 'e'].includes(type)
+			)
+				continue;
+			fields.push({ name: name.slice(0, 256), type, value: value.slice(0, 1024) });
+			if (fields.length === 100) break;
+		}
+		cards.set(record, { text: text.slice(0, 1024), fields });
 	}
 	return cards.get(record);
 }

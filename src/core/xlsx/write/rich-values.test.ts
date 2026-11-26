@@ -73,8 +73,8 @@ describe('SpreadsheetML rich values', () => {
 	it('shows cached entity fields and preserves unknown data, flags and namespace prefixes', async () => {
 		const parts = {
 			'xl/metadata.xml': `\ufeff<metadata xmlns="${X}" xmlns:rvalue="${RICH_NS}"><metadataTypes count="1"><metadataType name="XLRICHVALUE" minSupportedVersion="120000"/></metadataTypes><futureMetadata name="XLRICHVALUE" count="1"><bk><extLst><ext uri="${RICH_METADATA_EXT}"><rvalue:rvb i="1"/></ext></extLst></bk></futureMetadata><valueMetadata count="1"><bk><rc t="1" v="0"/></bk></valueMetadata></metadata>`,
-			'xl/richData/rdrichvalue.xml': `<r:rvData xmlns:r="${RICH_NS}" count="999999999"><r:rv s="0"><r:v>Seattle</r:v><r:v>WA</r:v><r:v>secret</r:v></r:rv><r:rv s="1"><r:v>0</r:v></r:rv><r:rv s="4294967295"><r:v>unknown</r:v></r:rv></r:rvData>`,
-			'xl/richData/rdrichvaluestructure.xml': `<rvStructures xmlns="${RICH_NS}"><s t="_linkedentitycore"><k n="_DisplayString" t="s"/><k n="State" t="s"/><k n="Internal" t="s"/></s><s t="_linkedentity"><k n="%cvi" t="r"/></s></rvStructures>`,
+			'xl/richData/rdrichvalue.xml': `<r:rvData xmlns:r="${RICH_NS}" count="999999999"><r:rv s="0"><r:v>Seattle</r:v><r:v>WA</r:v><r:v>755078</r:v><r:v>secret</r:v></r:rv><r:rv s="1"><r:v>0</r:v></r:rv><r:rv s="4294967295"><r:v>unknown</r:v></r:rv></r:rvData>`,
+			'xl/richData/rdrichvaluestructure.xml': `<rvStructures xmlns="${RICH_NS}"><s t="_linkedentitycore"><k n="_DisplayString" t="s"/><k n="State" t="s"/><k n="人口" t="i"/><k n="Internal" t="s"/></s><s t="_linkedentity"><k n="%cvi" t="r"/></s></rvStructures>`,
 			'xl/richData/rdRichValueTypes.xml': `<rvTypesInfo xmlns="${RICH_TYPES_NS}"><global><keyFlags><key name="Internal"><flag name="ShowInCardView" value="0"/></key></keyFlags></global></rvTypesInfo>`,
 		};
 		const links = Object.values(RICH_PARTS)
@@ -96,7 +96,12 @@ describe('SpreadsheetML rich values', () => {
 		expect(cellView(book, 0, 0, 0)).toMatchObject({
 			text: 'Seattle',
 			isError: false,
-			linkedData: { fields: [{ name: 'State', type: 's', value: 'WA' }] },
+			linkedData: {
+				fields: [
+					{ name: 'State', type: 's', value: 'WA' },
+					{ name: '人口', type: 'i', value: '755078' },
+				],
+			},
 		});
 		const saved = await JSZip.loadAsync(await saveXlsx(book));
 		for (const [name, xml] of Object.entries(parts))
