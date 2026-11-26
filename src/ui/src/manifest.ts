@@ -20,6 +20,8 @@ interface ElementClass extends CustomElementConstructor {
 
 /** Tests run from the package root, so the source and the manifest are found from there. */
 const SRC = resolve(process.cwd(), 'src');
+// Product editor elements have their own entry points and are outside OFFICE_UI_TAGS.
+const PRODUCT_EDITOR_DIRECTORIES = new Set(['docx', 'pptx', 'visio', 'xlsx']);
 /** Where the prototype walk stops: members of these classes are not an element's own API. */
 const BASES = new Set(['OfficeElement', 'LitElement', 'ReactiveElement', 'HTMLElement']);
 const FIRE = /\b(?:fire|emit)\(\s*(?:this,\s*)?['"]([a-z][\w-]*-[\w-]+)['"]/g;
@@ -28,7 +30,10 @@ const EVENT_FIELD = /\b\w*[eE]vent\s*=\s*['"]([a-z][\w-]*-[\w-]+)['"]/g;
 function sources(dir: string): string[] {
 	return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
 		const path = join(dir, entry.name);
-		if (entry.isDirectory()) return sources(path);
+		if (entry.isDirectory()) {
+			if (dir === SRC && PRODUCT_EDITOR_DIRECTORIES.has(entry.name)) return [];
+			return sources(path);
+		}
 		return /\.ts$/.test(entry.name) && !/\.(test|d)\.ts$/.test(entry.name) ? [path] : [];
 	});
 }
