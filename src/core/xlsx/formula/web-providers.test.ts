@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { encodePng } from '../../drawingml/raster-encode';
 import { cellView } from '../layout/cell-view';
 import { createCalcEngine } from './engine';
@@ -103,6 +103,15 @@ describe('createFetchImageProvider', () => {
 		expect(image.resolve({ source: 'https://cdn.example/page', altText: '', sizing: 0 })).toEqual({
 			error: '#VALUE!',
 		});
+	});
+
+	it('blocks HTTP even when a host fetcher is configured', () => {
+		const fetch = vi.fn<FetchLike>();
+		const provider = createFetchImageProvider({ fetch });
+		expect(
+			provider.resolve({ source: 'http://cdn.example/picture', altText: '', sizing: 0 }),
+		).toEqual({ error: '#BLOCKED!' });
+		expect(fetch).not.toHaveBeenCalled();
 	});
 
 	it('requires an explicit fetcher and cancels an oversized streamed response', async () => {

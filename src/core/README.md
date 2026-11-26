@@ -193,7 +193,9 @@ The optional `ooxml-core/automation/add-ins` reader validates local XML and unif
 manifests and ZIP packages offline. It returns metadata and a SHA-256 digest without
 fetching URLs, decoding icons or storing data.
 
-Excel `IMAGE` formulas fetch only through a host-supplied fetcher. Hosts can pass
+Excel `IMAGE` formulas fetch only through a host-supplied fetcher. `createFetchImageProvider()`
+without a fetcher can serve explicitly seeded HTTPS images. Pass `fetch` explicitly to load other
+HTTPS images. HTTP URLs return `#BLOCKED!`. Hosts can pass
 `createFetchImageProvider({ fetch, allowedOrigins, onUpdate })` as `providers.image` to the
 calculation engine or as `calcOptions.providers.image` on an edit session. Recalculate after
 `onUpdate` to display a settled image. Cached linked data cards are available offline.
