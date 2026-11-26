@@ -41,8 +41,7 @@ export function renderAddInDetails(addIn: LocalAddIn, t: OfficeServiceText) {
 		<p>${t('This add-in requests:')}</p>
 		<ul
 			>${permissions.map((permission) => html`<li>${permission}</li>`)}</ul
-		>
-		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}`;
+		>`;
 }
 
 export function renderAddInConsent(
@@ -60,6 +59,7 @@ export function renderAddInConsent(
 		<p class="tile-name">${manifest.name} (${manifest.version})</p><p>${description}</p>
 		${update ? html`<p>${update}</p>` : nothing} ${renderAddInDetails(addIn, t)}
 		<p>${t('Install for this editor session. Add-in code stays inactive.')}</p>
+		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
 		${already ? html`<p>${t('This add-in is already installed.')}</p>` : nothing}
 		<div class="consent-actions">
 			<button

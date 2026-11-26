@@ -129,6 +129,14 @@ referrer, or document data. The endpoint receives normal request metadata. The l
 makes no request itself. Resolution is off by default and hosts can pass `null` to
 `setOfficeAddInMarketplaceResolver` to disable it.
 
+Compatible task panes are off by default. When a host approves a separate HTTPS execution
+origin and a user opens an installed add-in, the sandboxed frame requests the chosen pane URL.
+The destination receives network metadata without a referrer. Its page can request its own
+assets or services. The bridge returns only bounded selected text when the manifest permission,
+the install review, and the live editor allow it. A publisher can transmit data it receives
+using network access allowed by its deployment. Hosts control `frame-src`, their execution
+service's policy, and `setOfficeAddInRuntime`. Passing `null` disables execution in that scope.
+
 Get Add-ins and My Add-ins open Office Add-ins in Word, Excel, PowerPoint and Visio.
 The Store pivot is off by default. A host can use `setOfficeAddInStorefront` to enable
 the Microsoft Marketplace handoff or specify its own HTTPS link. Clicking the link opens

@@ -12,6 +12,12 @@ export * from './embedding/index';
 export * from './ribbon/add-in-tabs';
 export { defineOfficeAddInsDialog } from './ribbon/add-in-dialog';
 export {
+	setOfficeAddInRuntime,
+	type OfficeAddInRuntime,
+	type OfficeAddInSelection,
+} from './ribbon/add-in-runtime-settings';
+export { connectOfficeAddIn, type OfficeAddInResult } from './ribbon/add-in-client';
+export {
 	setOfficeAddInCatalog,
 	setOfficeAddInMarketplaceResolver,
 	setOfficeAddInStorefront,

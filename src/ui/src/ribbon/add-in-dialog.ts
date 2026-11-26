@@ -3,6 +3,7 @@ import { normalizeLocale } from 'ooxml-core/i18n';
 import { composedWithin } from '../composed';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
+import type { OfficeAddInSelection } from './add-in-runtime-settings';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
@@ -58,6 +59,7 @@ export interface OpenAddInsOptions {
 	product: AddInDialogProduct;
 	manifestLocale: string;
 	scopes: readonly AddInDialogHost[];
+	selection?: () => OfficeAddInSelection | undefined;
 }
 
 export async function openOfficeAddIns(
@@ -66,6 +68,7 @@ export async function openOfficeAddIns(
 	t: OfficeServiceText,
 	product: AddInDialogProduct,
 	locale: string,
+	selection?: OpenAddInsOptions['selection'],
 ): Promise<void> {
 	const pending: PendingHost = host;
 	if (
@@ -83,7 +86,10 @@ export async function openOfficeAddIns(
 	try {
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
 		if (host.isConnected) {
-			mountAddInsDialog({ host, mode, t, product, manifestLocale: locale, scopes }, restore);
+			mountAddInsDialog(
+				{ host, mode, t, product, manifestLocale: locale, scopes, ...(selection && { selection }) },
+				restore,
+			);
 		}
 	} catch {
 		if (!host.isConnected) return;

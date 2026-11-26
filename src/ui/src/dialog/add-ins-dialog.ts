@@ -5,6 +5,7 @@ import { definer } from '../registry';
 import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { addInSettings } from '../ribbon/add-in-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
+import { addInLauncher } from '../ribbon/add-in-launch';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import { installAddIn, localAddIns } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
@@ -19,11 +20,14 @@ export type Pivot = (typeof PIVOTS)[number];
 function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 	const { host, manifestLocale, t, product, scopes } = options;
 	const locale = addInLocale(manifestLocale);
+	const installed = localAddIns(host);
+	const translate = localAddInText(locale, t);
 	return {
 		...addInSettings(scopes),
-		installed: localAddIns(host),
+		installed,
+		launcher: addInLauncher(options, installed, translate),
 		tabs: editorAddIns(host),
-		t: localAddInText(locale, t),
+		t: translate,
 		product,
 		locale,
 		manifestLocale,
@@ -172,8 +176,10 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const preview = this.#preview;
 		const session = this.#session;
 		if (!preview || !session) return;
-		if (installAddIn(session.installed, preview.addIn, preview.previous)) this.shell?.close();
-		else {
+		if (installAddIn(session.installed, preview.addIn, preview.previous)) {
+			session.launcher.close(preview.addIn.manifest.id);
+			this.shell?.close();
+		} else {
 			this.#message = session.t('Could not update the add-in.');
 			this.requestUpdate();
 		}

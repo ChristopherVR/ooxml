@@ -128,6 +128,26 @@ require Microsoft's CDN library and host protocol have no supported launch path 
 
 ### Start with published sample workflows
 
+For the compatible Common API client, a host can call
+`setOfficeAddInRuntime(root, { origins: ['https://approved-add-ins.example'] })`.
+Allow the same execution origin in the embedding site's `frame-src` and provision
+publisher-controlled pages without redirects or credentials. The library checks the approved
+origin before opening. The opaque sandbox verifies a handshake from the exact frame window
+and accepts one private message port. A second frame load closes that port. The parent cannot
+authenticate the HTTP origin of an opaque document, so the execution service and CSP must
+enforce the host's redirect and origin policy.
+
+In the compatible publisher build, assign
+`window.Office = connectOfficeAddIn('https://editor.example')` before the app starts.
+Bundle the client into a classic script on the execution origin. The client exposes
+`Office.onReady`, `Office.context.host`, and the document's text
+`getSelectedDataAsync` and `setSelectedDataAsync` callbacks. Word uses the live text
+selection. Excel supports one selected cell. PowerPoint requires a host selection adapter
+for the document methods. Other coercions, requirement sets, batch APIs, custom functions,
+content add-ins, Microsoft identity and the CDN Office.js host protocol are unsupported.
+Client API errors identify unavailable operations and denied permissions. Use
+`setOfficeAddInRuntime(root, null)` to disable execution.
+
 Use sample coverage as the initial usage signal. Record which members each sample calls and
 count recurring workflows in the pinned sample corpus. Add host-supplied add-in requirements as
 they become available. These are implementation targets, with no claim about installed-base

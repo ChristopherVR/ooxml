@@ -4,6 +4,7 @@ import { captureScreenshotFile } from '../../form/display-clipping';
 import { getCell, IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
 import { pickMicrosoftForm } from '../../form/microsoft-forms';
 import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
+import { excelAddInSelection } from './add-in-selection';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { iconPngFile } from '../../form/local-svg';
 import type { Command } from 'ooxml-core/xlsx/ui';
@@ -191,6 +192,7 @@ export function insertCommands(): Command[] {
 					(label) => ctx.t(label),
 					'excel',
 					ctx.locale(),
+					() => excelAddInSelection(ctx),
 				);
 			},
 		},
@@ -199,7 +201,14 @@ export function insertCommands(): Command[] {
 			label: 'My Add-ins',
 			icon: 'addIns',
 			run: (ctx) => {
-				void openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label), 'excel', ctx.locale());
+				void openOfficeAddIns(
+					ctx.root,
+					'myAddIns',
+					(label) => ctx.t(label),
+					'excel',
+					ctx.locale(),
+					() => excelAddInSelection(ctx),
+				);
 			},
 		},
 		editing({

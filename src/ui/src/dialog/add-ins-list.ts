@@ -1,8 +1,9 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { glyph } from '../glyph';
 import type { OfficeAddInOffer } from '../ribbon/add-in-settings';
-import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 import type { AddInSession, Pivot } from './add-ins-dialog';
+import { renderAddInDetails } from './add-ins-consent';
+import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 
 const MARKETPLACE = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
 export const LOCAL_INSTALL_REASON_ID = 'upload-unavailable';
@@ -36,7 +37,7 @@ interface ListOptions {
 }
 
 export function renderAddInList({ session, pivot, query, busy, open, change, read }: ListOptions) {
-	const { installed, tabs, catalog, storefront, t, locale, product } = session;
+	const { installed, tabs, catalog, storefront, t, locale, product, launcher } = session;
 	const filter = query.trim().toLocaleLowerCase(locale);
 	const matches = (label: string) => label.toLocaleLowerCase(locale).includes(filter);
 	const action = (label: string, name: string, run: () => void, disabledReason?: string) =>
@@ -62,18 +63,34 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 						remove ? action('Remove', label, () => change(remove)) : nothing,
 					]);
 				});
-			for (const { manifest } of installed.values()) {
+			for (const addIn of installed.values()) {
+				const { manifest } = addIn;
 				if (!matches(manifest.name)) continue;
+				const { reason } = launcher.pane(addIn);
+				const reasonId = `pane-unavailable-${manifest.id}`;
 				tiles.push(
 					tile(
 						`${manifest.name} (${manifest.version})`,
-						action('Remove', manifest.name, () =>
-							change(() => {
-								installed.delete(manifest.id);
-							}),
-						),
-						html`<p>${t('Installed for this editor. Running add-ins is unavailable.')}</p>
-							${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}`,
+						[
+							action(
+								'Open',
+								manifest.name,
+								() => open(() => void launcher.open(addIn, undefined, session.restoreFocus)),
+								reason ? reasonId : undefined,
+							),
+							action('Remove', manifest.name, () =>
+								change(() => {
+									launcher.close(manifest.id);
+									installed.delete(manifest.id);
+								}),
+							),
+						],
+						html`${reason ? html`<p id=${reasonId}>${reason}</p>` : nothing}
+							${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
+							<details
+								><summary>${t('Add-in details')}</summary>
+								${renderAddInDetails(addIn, t)}
+							</details>`,
 					),
 				);
 			}
