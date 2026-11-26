@@ -49,6 +49,7 @@ export function ribbonFields(context: ContextualControls) {
 		reason?: string,
 	) =>
 		html`<label
+			class="contextual-number"
 			data-ribbon-control=${id(name)}
 			title=${reason ?? (available ? label : unavailable)}
 			aria-description=${description(reason)}

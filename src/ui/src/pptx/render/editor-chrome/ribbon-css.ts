@@ -8,6 +8,16 @@ export const EDITOR_RIBBON_CSS = `
 [data-pptx-editor-chrome] .contextual-fields > pptx-ui-ribbon-gallery[mode="inline"] {
   grid-row: span 3;
 }
+[data-pptx-editor-chrome] .contextual-number {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 6px; font-size: 12px; white-space: nowrap;
+}
+[data-pptx-editor-chrome] .contextual-number > input {
+  box-sizing: border-box; width: 68px; height: 24px; padding: 0 4px;
+  border: 1px solid var(--pptx-border); border-radius: var(--pptx-radius, 4px);
+  background: var(--pptx-background); color: var(--pptx-foreground);
+}
+[data-pptx-editor-chrome] .contextual-number > input:disabled { opacity: 0.5; }
 [data-pptx-editor-chrome] .contextual-color {
   display: inline-flex; align-items: center; gap: 6px; min-height: 24px;
   padding: 0 6px; font-size: 12px; white-space: nowrap;

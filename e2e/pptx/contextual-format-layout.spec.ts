@@ -66,3 +66,28 @@ for (const { tab, deck } of formats) {
 		}
 	});
 }
+
+test('Audio Format Size exposes editable width and height inputs at 1600px', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 960 });
+	await loadDeck(page, fixture('audio-embed.pptx'));
+	await selectElement(page, elementsOfType(page, 'media player').first());
+	await page.locator('[data-ribbon-contextual-tab="audioFormat"]').click();
+	const size = page.locator('[data-ribbon-group="audioFormat.size"]');
+	for (const name of ['Width', 'Height']) {
+		const field = size.getByRole('spinbutton', { name, exact: true });
+		await expect(field).toBeVisible();
+		await expect(field).toBeEnabled();
+		await expect(field).toHaveCSS('border-top-width', '1px');
+		await expect(field).toHaveValue(/^[1-9]\d*(\.\d+)?$/u);
+	}
+	const width = size.getByRole('spinbutton', { name: 'Width', exact: true });
+	const height = size.getByRole('spinbutton', { name: 'Height', exact: true });
+	await width.fill('120');
+	await width.press('Tab');
+	await height.fill('80');
+	await height.press('Tab');
+	await page.locator('[data-ribbon-contextual-tab="playback"]').click();
+	await page.locator('[data-ribbon-contextual-tab="audioFormat"]').click();
+	await expect(width).toHaveValue('120');
+	await expect(height).toHaveValue('80');
+});

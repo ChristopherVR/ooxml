@@ -98,6 +98,16 @@ describe('ribbon overflow', () => {
 		expect(reflowRibbon(row)).toStrictEqual(['videoFormat.size', 'videoFormat.adjust']);
 	});
 
+	it('keeps audio Size expanded when other groups can collapse to make room', () => {
+		const row = content(540, [
+			'audioFormat.adjust',
+			'audioFormat.pictureStyles',
+			'audioFormat.arrange',
+			'audioFormat.size',
+		]);
+		expect(reflowRibbon(row)).toStrictEqual(['audioFormat.adjust', 'audioFormat.arrange']);
+	});
+
 	it('does not collapse on a phone-width window, where the mobile sheet takes over', () => {
 		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 600 });
 		const row = content(300, ['home.clipboard', 'home.slides']);

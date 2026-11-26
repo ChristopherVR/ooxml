@@ -59,6 +59,35 @@ it('edits the selected clip and gates unsupported options', async () => {
 	expect(volume.disabled).toBe(true);
 });
 
+it.each(['audio', 'video'] as const)(
+	'edits %s dimensions using the same ribbon fields',
+	async (mediaType) => {
+		const strip = document.createElement('pptx-ui-contextual-ribbon');
+		const patch = vi.fn();
+		strip.group = `${mediaType}Format.size`;
+		strip.state = {
+			element: { ...video, mediaType },
+			editable: true,
+			translate: (key) => key,
+			patch,
+		};
+		document.body.append(strip);
+		const dimensions = await vi.waitFor(() => {
+			const fields = [
+				...strip.querySelectorAll<HTMLInputElement>('.contextual-number input[type="number"]'),
+			];
+			expect(fields.map((field) => field.value)).toEqual(['160', '90']);
+			return fields;
+		});
+		for (const [index, dimension] of (['width', 'height'] as const).entries()) {
+			const field = dimensions[index]!;
+			field.value = '120';
+			field.dispatchEvent(new Event('change'));
+			expect(patch).toHaveBeenCalledWith(video.id, { [dimension]: 120 });
+		}
+	},
+);
+
 it('explains why trim and fade are unavailable for media outside a picture', async () => {
 	const strip = document.createElement('pptx-ui-contextual-ribbon');
 	strip.group = 'playback.editing';

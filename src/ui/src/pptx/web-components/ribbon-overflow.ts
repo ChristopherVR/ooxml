@@ -60,6 +60,7 @@ const CONTEXTUAL_PRIORITY: Readonly<Record<string, number>> = {
 	wordArtStyles: 2,
 	pictureStyles: 3,
 	shapeStyles: 3,
+	'audioFormat.size': 4,
 };
 
 /** Group elements a row owns: outermost only, and only those that take part in layout. */
@@ -243,7 +244,9 @@ function priorityOf(group: HTMLElement): number {
 	const family = id.split('.')[1] ?? '';
 	return Number(
 		group.dataset.ribbonPriority ??
-			(CONTEXTUAL_FORMAT.test(id) ? CONTEXTUAL_PRIORITY[family] : undefined) ??
+			(CONTEXTUAL_FORMAT.test(id)
+				? (CONTEXTUAL_PRIORITY[id] ?? CONTEXTUAL_PRIORITY[family])
+				: undefined) ??
 			0,
 	);
 }
