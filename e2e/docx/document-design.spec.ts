@@ -65,6 +65,60 @@ test('Word Design previews, applies, undoes and reopens design choices', async (
 	await expect(surface.locator('p')).toHaveCSS('line-height', '35.2px');
 });
 
+test('Word navigates theme rows and confirms deletion of custom schemes', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await demoReady(page);
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
+	const themes = editor.getByRole('button', { name: 'Themes', exact: true });
+	await themes.click();
+	const items = editor
+		.getByRole('menu', { name: 'Themes', exact: true })
+		.getByRole('menuitemradio');
+	await items.first().focus();
+	await page.keyboard.press('ArrowDown');
+	await expect(items.nth(3)).toBeFocused();
+	await page.keyboard.press('ArrowUp');
+	await expect(items.first()).toBeFocused();
+	await page.keyboard.press('Escape');
+
+	await editor.evaluate((element) => {
+		if (!('wordDesignPreferences' in element)) throw new Error('Missing Word preferences');
+		let schemes = [{ kind: 'fonts', name: 'Reading', majorFont: 'Georgia', minorFont: 'Verdana' }];
+		element.wordDesignPreferences = {
+			read: () => undefined,
+			write: () => {},
+			schemes: {
+				read: () => schemes,
+				write: (value: typeof schemes) => {
+					schemes = value;
+				},
+			},
+		};
+	});
+	const fonts = editor.getByRole('button', { name: 'Fonts', exact: true });
+	await fonts.click();
+	const custom = editor.getByRole('group', { name: 'Custom', exact: true });
+	await expect(custom.getByRole('menuitemradio', { name: 'Reading', exact: true })).toBeVisible();
+	await expect(custom.getByRole('menuitem')).toHaveCount(0);
+	await editor
+		.getByRole('group', { name: 'Manage custom schemes' })
+		.getByRole('menuitem', { name: 'Edit Reading' })
+		.click();
+	const edit = editor.getByRole('dialog', { name: 'Customize Fonts', exact: true });
+	await edit.getByRole('button', { name: 'Delete', exact: true }).click();
+	const confirm = editor.getByRole('dialog', { name: 'Delete custom scheme', exact: true });
+	await expect(confirm).toContainText('Reading');
+	await confirm.getByRole('button', { name: 'Cancel', exact: true }).click();
+	await expect(edit.getByRole('button', { name: 'Delete', exact: true })).toBeFocused();
+	await edit.getByRole('button', { name: 'Delete', exact: true }).click();
+	await confirm.getByRole('button', { name: 'Delete', exact: true }).click();
+	await expect(fonts).toBeFocused();
+	await fonts.click();
+	await expect(custom).toHaveCount(0);
+});
+
 test('Word exports an edited theme and imports it into a new document', async ({ page }) => {
 	await page.goto('/?framework=vanilla');
 	await demoReady(page);

@@ -28,6 +28,7 @@ export function translateTemplate(
 	return interpolate(translate(locale, key), values);
 }
 function translateDynamic(locale: EditorLocale, text: string): string {
+	if (text in strings.en) return translate(locale, text as LocalizationKey);
 	if (locale === 'en') return text;
 	const line = /^(\d+(?:\.\d+)?) lines$/.exec(text);
 	if (line)
@@ -48,7 +49,7 @@ function translateDynamic(locale: EditorLocale, text: string): string {
 		return translateTemplate(locale, points[1] === 'Exact' ? 'dyn.exact' : 'dyn.atLeast', {
 			n: points[2] ?? '',
 		});
-	return text in strings.en ? translate(locale, text as LocalizationKey) : text;
+	return text;
 }
 export function translateUiText(root: HTMLElement, englishText: string): string {
 	return translate(

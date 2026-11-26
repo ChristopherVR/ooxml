@@ -199,7 +199,37 @@ export function openDesignDialog(
 	if (existing) {
 		const remove = dialogButton('Delete');
 		remove.addEventListener('click', () => {
-			if (canEditDesign(core) && existing.remove()) close();
+			if (!canEditDesign(core)) return;
+			const generation = core.loadGeneration;
+			const confirmation = createDialogShell('design.deleteSchemeTitle', 'dve-format-dialog');
+			const message = document.createElement('p');
+			message.textContent = translate(core.locale, 'design.deleteSchemeMessage').replace(
+				'{name}',
+				() => existing.scheme.name,
+			);
+			const keep = dialogButton('Cancel');
+			const confirm = dialogButton('Delete', true);
+			const dismiss = () => {
+				setDialogOpen(confirmation, false);
+				confirmation.remove();
+				remove.focus();
+			};
+			keep.addEventListener('click', dismiss);
+			confirm.addEventListener('click', () => {
+				dismiss();
+				if (
+					element.isConnected &&
+					generation === core.loadGeneration &&
+					canEditDesign(core) &&
+					existing.remove()
+				)
+					close();
+			});
+			onDialogDismiss(confirmation, dismiss);
+			confirmation.append(message, dialogActions(keep, confirm));
+			localizeDialog(confirmation, core.locale);
+			root.append(confirmation);
+			setDialogOpen(confirmation, true);
 		});
 		actions.prepend(remove);
 	}

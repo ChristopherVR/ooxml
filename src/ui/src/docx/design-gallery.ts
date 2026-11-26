@@ -10,6 +10,8 @@ import { browseTheme, saveTheme } from './design-theme-files';
 import { customEntry, designEntries, type Entry, type Presets } from './design-gallery-entries';
 import styles from './design-gallery.css?raw';
 
+const themeColumns = 3;
+
 function saveDefault(core: EditorCore): void {
 	if (!core.wordDesignPreferences || !canEditDesign(core)) return;
 	const defaults = wordDesignDefaults(core.model);
@@ -100,10 +102,11 @@ export function openDocumentDesign(
 		if (saved.length) {
 			const group = galleryGroup(menu, say('Custom'));
 			for (const scheme of saved) pickEntry(group, customEntry(core, scheme));
+			const manage = galleryGroup(menu, say('design.manageSchemes'));
 			for (const scheme of saved) {
 				items.push(
 					appendItem(
-						group,
+						manage,
 						say('design.editScheme').replace('{name}', () => scheme.name),
 						() =>
 							pick(() =>
@@ -132,8 +135,12 @@ export function openDocumentDesign(
 		kind === 'theme' || kind === 'colors' || kind === 'fonts'
 			? galleryGroup(menu, kind === 'theme' ? 'Office' : say('design.builtIn'))
 			: menu;
-	if (kind === 'theme') builtIn.classList.add('dve-design-theme-grid');
+	if (kind === 'theme') {
+		builtIn.classList.add('dve-design-theme-grid');
+		builtIn.style.setProperty('--dve-design-theme-columns', String(themeColumns));
+	}
 	for (const entry of designEntries(core, kind, presets)) pickEntry(builtIn, entry);
+	const gridSize = kind === 'theme' ? items.length : 0;
 	if (kind === 'theme') {
 		items.push(
 			appendItem(menu, say('design.browseThemes'), () => pick(() => browseTheme(core, anchor))),
@@ -149,6 +156,19 @@ export function openDocumentDesign(
 	}
 	menu.addEventListener('keydown', (event) => {
 		const at = items.findIndex((item) => item === event.target);
+		const vertical = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+		if (vertical && at >= 0 && at < gridSize) {
+			event.preventDefault();
+			const row = Math.floor(at / themeColumns) + vertical;
+			const destination =
+				row < 0
+					? items.length - 1
+					: row * themeColumns >= gridSize
+						? gridSize
+						: Math.min(at + vertical * themeColumns, gridSize - 1);
+			items[destination]?.focus();
+			return;
+		}
 		const next = {
 			ArrowDown: at + 1,
 			ArrowUp: at - 1,

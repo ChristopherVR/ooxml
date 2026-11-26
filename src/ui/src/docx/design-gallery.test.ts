@@ -75,6 +75,15 @@ it('previews gallery items, changes theme formatting live, and undoes one choice
 	const { editor, root, button, pick, open } = mount();
 	await open('Themes');
 	expect(root.querySelectorAll('.dve-design-menu .dve-design-swatches').length).toBeGreaterThan(2);
+	button('Office')?.focus();
+	button('Office')?.dispatchEvent(
+		new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+	);
+	expect(root.activeElement).toBe(button('Integral'));
+	button('Integral')?.dispatchEvent(
+		new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }),
+	);
+	expect(root.activeElement).toBe(button('Office'));
 	button('Facet')?.click();
 	expect(editor.documentModel?.theme?.name).toBe('Facet');
 	expect(root.querySelector('.ProseMirror p')?.innerHTML).toContain('Trebuchet MS');
@@ -149,8 +158,25 @@ it('keeps named colour and font schemes across editors and supports rename, reus
 		{ name: 'Research colors' },
 		{ name: 'Report faces', minorFont: 'Arial' },
 	]);
-	await second.pick('Fonts', 'Edit Report faces');
+	await second.open('Fonts');
+	const manage = second.root.querySelector('[role="group"][aria-label="Manage custom schemes"]');
+	expect(manage?.querySelector('[role="menuitem"][aria-label="Edit Report faces"]')).not.toBeNull();
+	expect(
+		second.root.querySelector('[role="group"][aria-label="Custom"] [role="menuitem"]'),
+	).toBeNull();
+	second.button('Edit Report faces')?.click();
 	second.button('Delete')?.click();
+	const confirmation = second.root.querySelector('[data-title="design.deleteSchemeTitle"]');
+	expect(confirmation?.textContent).toContain('Report faces');
+	expect(schemes).toHaveLength(2);
+	confirmation?.querySelector<HTMLButtonElement>('[aria-label="Cancel"]')?.click();
+	expect(schemes).toHaveLength(2);
+	second.button('Delete')?.click();
+	second.root
+		.querySelector<HTMLButtonElement>(
+			'[data-title="design.deleteSchemeTitle"] [aria-label="Delete"]',
+		)
+		?.click();
 	expect(schemes).toMatchObject([{ name: 'Research colors' }]);
 	expect((await loadDocx(await second.editor.saveBytes())).model.theme?.fonts.minor.latin).toBe(
 		'Arial',
