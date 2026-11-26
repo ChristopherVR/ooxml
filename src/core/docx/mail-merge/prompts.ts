@@ -15,7 +15,7 @@ export async function resolveMailMergePrompts(
 	model: DocumentModel,
 	data: MailMergeData,
 	ask: (request: MailMergePrompt) => Promise<string | undefined>,
-	options: Pick<MailMergeOptions, 'locale' | 'fieldMappings'> = {},
+	options: Omit<MailMergeOptions, 'answerPrompt'> = {},
 	current: () => boolean = () => true,
 ): Promise<MailMergeOptions | undefined> {
 	const prepared = selectMailMergeRecipients(data);

@@ -39,6 +39,8 @@ Finish & Merge > Send Email Messages asks for the recipient column, subject and 
 The browser fallback supports up to five recipients from a plain-text template and limits each
 `mailto:` URL to 1,800 characters. The user opens each draft individually in their local mail
 app and sends it there.
+Email output uses one source record per message. A NEXT or NEXTIF rule that would
+advance to another recipient stops email preparation and appears in Check for Errors.
 
 Hosts can assign `editor.emailProvider` to an object with `send(message)`. Word calls it only
 after the user reviews the recipient addresses and confirms Send messages. The method receives
@@ -112,7 +114,9 @@ if (data.records.length && issues.length === 0) {
   those breaks. A template that ends with a table gains a paragraph when it needs a break.
 - `finishMailMergeIndividually(model, data, options?)` returns `{ recordNumber, document }`
   entries in merge order. Both finish functions return the same field issues as Check for
-  Errors. An empty list or a merge that skips every record produces no output documents.
+  Errors. For output addressed to individual recipients, set `allowRecordAdvance: false`
+  and reject any reported issues before sending. An empty list or a merge that skips
+  every record produces no output documents.
 
 Pass each finished model directly to the loaded template's `save()` method. This gives the
 writer access to the original package, including styles, media, and source XML for repeated

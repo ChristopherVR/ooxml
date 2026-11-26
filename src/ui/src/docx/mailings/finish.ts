@@ -54,7 +54,7 @@ export async function finishWorkflow(
 		model,
 		recipients,
 		(request) => askMergePrompt((build) => show(title, build), locale, request),
-		{ locale },
+		{ locale, ...(email && { allowRecordAdvance: false }) },
 		current,
 	);
 	if (!options || !current()) return;

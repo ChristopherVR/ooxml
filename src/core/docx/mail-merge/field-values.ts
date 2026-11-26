@@ -29,6 +29,7 @@ export type MailMergeIssueCode =
 	| 'unknown-field'
 	| 'invalid-instruction'
 	| 'unsupported-field'
+	| 'record-advance-disabled'
 	| 'invalid-record-rule-location';
 
 type FieldIssueCode = Exclude<MailMergeIssueCode, 'no-recipients'>;
@@ -45,6 +46,8 @@ export type MailMergeIssue =
 
 export interface MailMergeOptions {
 	locale?: string;
+	/** Set to false for output addressed to the starting recipient alone. */
+	allowRecordAdvance?: boolean;
 	/** Overrides the mappings read from the template. */
 	fieldMappings?: readonly MailMergeFieldMapping[];
 	/** Uses the field's default when the callback is absent or returns undefined. */
@@ -274,6 +277,7 @@ export class MergeFields {
 		if (matches === undefined) return issue('invalid-instruction');
 		if (matches && this.index < this.data.records.length) {
 			if (name === 'SKIPIF') this.skipped = true;
+			else if (this.options.allowRecordAdvance === false) issue('record-advance-disabled');
 			else this.index++;
 		}
 		return result('');

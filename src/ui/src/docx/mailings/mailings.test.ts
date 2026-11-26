@@ -306,3 +306,44 @@ it('cancels a prompt safely and sends escaped personalized HTML only after provi
 	});
 	expect(send.mock.calls[1]?.[0]).toMatchObject({ recipients: ['bea@example.test'] });
 });
+
+it('blocks email output when NEXTIF would merge another recipient into the message', async () => {
+	const model = createDocument();
+	const { mailMergeField, mailMergeRule } = await import('ooxml-core/docx/mail-merge');
+	model.blocks[0] = {
+		type: 'paragraph',
+		id: 'p1',
+		runs: [
+			...mailMergeRule({
+				kind: 'NEXTIF',
+				field: 'Name',
+				operator: '=',
+				value: 'Ada',
+				yes: '',
+				no: '',
+			}),
+			mailMergeField('Name'),
+		],
+	};
+	const { editor, ribbon, dialog, button } = await mount(model);
+	const send = vi.fn<(message: MailMergeEmailMessage) => void>();
+	editor.emailProvider = { send };
+	editor.mailMergeDataSource = {
+		read: () => ({
+			records: [
+				{ Name: 'Ada', Email: 'ada@example.test' },
+				{ Name: 'Bea', Email: 'bea@example.test' },
+			],
+		}),
+	};
+	ribbon('Select Recipients').click();
+	button(await dialog(), 'Use host recipients').click();
+	await vi.waitFor(() => expect(ribbon('Finish & Merge').disabled).toBe(false));
+	ribbon('Finish & Merge').click();
+	button(await dialog(), 'Send Email Messages').click();
+	button(await dialog(), 'Review email merge').click();
+	expect((await dialog()).textContent).toContain(
+		'An email merge cannot advance to another recipient. · NEXTIF',
+	);
+	expect(send).not.toHaveBeenCalled();
+});

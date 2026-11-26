@@ -350,6 +350,12 @@ export const extendedMailingsTranslations = {
 		fr: 'Une adresse e-mail est manquante ou non valide.',
 		'zh-CN': '有收件人的电子邮件地址缺失或无效。',
 	},
+	'An email merge cannot advance to another recipient.': {
+		de: 'Ein E-Mail-Seriendruck kann nicht zum nächsten Empfänger wechseln.',
+		es: 'Una combinación por correo no puede avanzar a otro destinatario.',
+		fr: 'Une fusion par e-mail ne peut pas passer à un autre destinataire.',
+		'zh-CN': '电子邮件合并不能跳转到另一位收件人。',
+	},
 	'Messages accepted by the provider': {
 		de: 'Vom Anbieter angenommene Nachrichten',
 		es: 'Mensajes aceptados por el proveedor',

@@ -128,6 +128,7 @@ const issueLabels: Record<MailMergeIssue['code'], MailingsLabel> = {
 	'unknown-field': 'Unknown field',
 	'invalid-instruction': 'Invalid field instruction',
 	'unsupported-field': 'Unsupported merge field',
+	'record-advance-disabled': 'An email merge cannot advance to another recipient.',
 	'invalid-record-rule-location': 'Record rule in an unsupported location',
 };
 
