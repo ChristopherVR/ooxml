@@ -8,7 +8,15 @@ import {
 	resolvePartPath,
 } from '../opc/relationships';
 import { declaredEntrySize, inflateEntryGuarded, openZip } from '../opc/zip-limits';
-import { NS, decodeXmlBytes, elements, named, parseXml, type XmlElement } from '../xml/index';
+import {
+	NS,
+	buildXml,
+	decodeXmlBytes,
+	elements,
+	named,
+	parseXml,
+	type XmlElement,
+} from '../xml/index';
 import { resolveDrawingColor } from './drawing-color';
 import { isDrawingFillElement } from './drawing-fill';
 import { parseTheme } from './theme';
@@ -28,6 +36,11 @@ const XML = {
 	limits: { maxDepth: 40, maxNodes: 5000 },
 };
 
+type ThemePackageWarning = 'pictureFillsReplaced';
+interface ThemePackageOptions {
+	onWarning?: (warning: ThemePackageWarning) => void;
+}
+
 function expectChildren(parent: XmlElement, names: readonly string[]) {
 	const items = elements(parent);
 	for (const [index, name] of names.entries()) {
@@ -36,16 +49,33 @@ function expectChildren(parent: XmlElement, names: readonly string[]) {
 	return items;
 }
 
-function validateReferences(root: XmlElement): void {
-	for (const attribute of Array.from(root.attributes)) {
-		if (attribute.namespaceURI === NS.r)
-			throw new Error('Office theme: related resources are unsupported.');
+function hasReferences(root: XmlElement): boolean {
+	return (
+		Array.from(root.attributes).some((attribute) => attribute.namespaceURI === NS.r) ||
+		elements(root).some(hasReferences)
+	);
+}
+
+function replacePictureFills(lists: readonly XmlElement[]): boolean {
+	let replaced = false;
+	for (const list of lists) {
+		for (const fill of elements(list)) {
+			if (!named(fill, 'blipFill', NS.a, false) || !hasReferences(fill)) continue;
+			const doc = list.ownerDocument;
+			const solid = doc.createElementNS(NS.a, 'a:solidFill');
+			const color = doc.createElementNS(NS.a, 'a:schemeClr');
+			color.setAttribute('val', 'phClr');
+			solid.appendChild(color);
+			list.replaceChild(solid, fill);
+			replaced = true;
+		}
 	}
-	for (const child of elements(root)) validateReferences(child);
+	return replaced;
 }
 
 function validateTheme(xml: string) {
-	const root = parseXml(xml, XML).documentElement;
+	const doc = parseXml(xml, XML);
+	const root = doc.documentElement;
 	if (!named(root, 'theme', NS.a, false)) throw new Error('Office theme: expected theme.');
 	const [holder] = expectChildren(root, ['themeElements']);
 	if (!holder) throw new Error('Office theme: missing theme elements.');
@@ -87,7 +117,8 @@ function validateTheme(xml: string) {
 		if (!named(entry, 'effectLst', NS.a, false) && !named(entry, 'effectDag', NS.a, false))
 			throw new Error('Office theme: invalid effect style.');
 	}
-	validateReferences(root);
+	const replaced = replacePictureFills(lists.filter((_, index) => index === 0 || index === 3));
+	if (hasReferences(root)) throw new Error('Office theme: related resources are unsupported.');
 	const theme = parseTheme(root);
 	if (
 		THEME_COLOR_SLOTS.some((slot) => {
@@ -99,7 +130,7 @@ function validateTheme(xml: string) {
 		theme.formatScheme.effectStyles.length < 3
 	)
 		throw new Error('Office theme: incomplete schemes.');
-	return theme;
+	return { theme, xml: replaced ? buildXml(doc) : xml, replaced };
 }
 
 function relationshipTarget(xml: string, source: string, type: string): string {
@@ -116,13 +147,17 @@ function relationshipTarget(xml: string, source: string, type: string): string {
 }
 
 /** Reads the default DrawingML theme from a .thmx package, without loading its ancillary parts. */
-export async function readThemePackage(bytes: Uint8Array | ArrayBuffer) {
+export async function readThemePackage(
+	bytes: Uint8Array | ArrayBuffer,
+	options?: ThemePackageOptions,
+) {
 	const zip = await openZip(bytes, {
 		label: 'Office theme',
 		maxInputBytes: MAX_THEME_PACKAGE_BYTES,
 		maxEntryBytes: 8 * 1024 * 1024,
 		maxTotalBytes: 24 * 1024 * 1024,
-		maxEntries: 256,
+		// Office saves the default theme alongside variants with their own slide layouts and media.
+		maxEntries: 640,
 	});
 	const entries = new Map<string, string>();
 	for (const { name, dir } of Object.values(zip.files)) {
@@ -166,20 +201,28 @@ export async function readThemePackage(bytes: Uint8Array | ArrayBuffer) {
 	const part = relationshipTarget(await read(relationshipsPartFor(manager)), manager, THEME_REL);
 	if (contentTypeForPart(types, part) !== THEME_CT)
 		throw new Error('Office theme: invalid theme type.');
-	return validateTheme(await read(part));
+	const { theme, replaced } = validateTheme(await read(part));
+	if (replaced) options?.onWarning?.('pictureFillsReplaced');
+	return theme;
 }
 
 /** Packages a self-contained DrawingML theme part in the standalone Office theme envelope. */
-export async function writeThemePackage(themeXml: string): Promise<Uint8Array> {
+export async function writeThemePackage(
+	themeXml: string,
+	options?: ThemePackageOptions,
+): Promise<Uint8Array> {
 	if (themeXml.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
 	// The byte encoding is ours to choose, regardless of the source XML declaration.
 	const xml = themeXml.replace(
 		/^\uFEFF?<\?xml\s[^?]*\?>/u,
 		'<?xml version="1.0" encoding="UTF-8"?>',
 	);
-	const bytes = new TextEncoder().encode(xml);
+	const encoder = new TextEncoder();
+	if (encoder.encode(xml).length > MAX_THEME_XML_BYTES)
+		throw new Error('Office theme XML is too large.');
+	const validated = validateTheme(xml);
+	const bytes = encoder.encode(validated.xml);
 	if (bytes.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
-	validateTheme(themeXml);
 	const zip = new JSZip();
 	const rels = (type: string, target: string) =>
 		buildRelationshipsXml(new Map([['rId1', { type, target, mode: 'Internal' }]]));
@@ -197,5 +240,7 @@ export async function writeThemePackage(themeXml: string): Promise<Uint8Array> {
 	zip.file(MANAGER, `<a:themeManager xmlns:a="${NS.a}"/>`);
 	zip.file(relationshipsPartFor(MANAGER), rels(THEME_REL, 'theme1.xml'));
 	zip.file(THEME, bytes);
-	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+	const packageBytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+	if (validated.replaced) options?.onWarning?.('pictureFillsReplaced');
+	return packageBytes;
 }

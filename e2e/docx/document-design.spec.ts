@@ -130,6 +130,15 @@ test('Word exports an edited theme and imports it into a new document', async ({
 	expect(part).toContain('name="Glow Edge"');
 	expect(part).toContain('<a:gradFill');
 	expect(part).toContain('<a:lnStyleLst');
+	if (!part) throw new Error('Missing theme XML');
+	zip.file(
+		'theme/theme/theme1.xml',
+		part.replace(
+			/<a:bgFillStyleLst[^>]*><a:solidFill[^>]*>.*?<\/a:solidFill>/u,
+			'<a:bgFillStyleLst><a:blipFill><a:blip xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:embed="rId2"/></a:blipFill>',
+		),
+	);
+	const pictureTheme = await zip.generateAsync({ type: 'nodebuffer' });
 	await newDocument(page);
 	await editor
 		.locator('office-ui-message-dialog')
@@ -141,7 +150,14 @@ test('Word exports an edited theme and imports it into a new document', async ({
 	await editor.getByRole('menuitem', { name: 'Browse for Themes', exact: true }).click();
 	await (
 		await chooser
-	).setFiles({ name: 'Research.thmx', mimeType: 'application/vnd.ms-officetheme', buffer: bytes });
+	).setFiles({
+		name: 'Research.thmx',
+		mimeType: 'application/vnd.ms-officetheme',
+		buffer: pictureTheme,
+	});
+	const warning = editor.getByRole('alertdialog', { name: 'Theme picture fills replaced' });
+	await expect(warning).toContainText('The theme uses solid colors in place of picture fills.');
+	await warning.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect
 		.poll(() =>
 			editor.evaluate((element) => {

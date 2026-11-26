@@ -27,6 +27,11 @@ const theme: DrawingTheme = {
 const part = 'theme/theme/theme1.xml';
 const managerRels = 'theme/theme/_rels/themeManager.xml.rels';
 const bytes = () => writeThemePackage(drawingThemeXml(theme));
+const withPictureFills = (xml: string) =>
+	xml.replace(
+		/<a:(fillStyleLst|bgFillStyleLst)><a:solidFill>.*?<\/a:solidFill>/gu,
+		'<a:$1><a:blipFill><a:blip xmlns:media="' + NS.r + '" media:embed="rId2"/></a:blipFill>',
+	);
 
 async function replacePart(name: string, change: (xml: string) => string) {
 	const zip = await JSZip.loadAsync(await bytes());
@@ -74,6 +79,49 @@ describe('standalone Office themes', () => {
 		const zip = await JSZip.loadAsync(await writeThemePackage(xml));
 		expect(await zip.file(part)?.async('string')).not.toContain('UTF-16');
 		expect(await readThemePackage(await writeThemePackage(xml))).toMatchObject(theme);
+	});
+
+	it('replaces picture fills in both lists on import and warns once', async () => {
+		const warnings: string[] = [];
+		const loaded = await readThemePackage(await replacePart(part, withPictureFills), {
+			onWarning: (warning) => warnings.push(warning),
+		});
+		expect(warnings).toEqual(['pictureFillsReplaced']);
+		expect(loaded).toMatchObject(theme);
+		expect(loaded.formatScheme?.sourceXml).not.toContain('rId2');
+		expect(loaded.formatScheme?.fillStyles).toHaveLength(3);
+		expect(loaded.formatScheme?.backgroundFillStyles).toHaveLength(3);
+	});
+
+	it('exports a self-contained package with picture fills replaced and a warning', async () => {
+		const warnings: string[] = [];
+		const output = await writeThemePackage(withPictureFills(drawingThemeXml(theme)), {
+			onWarning: (warning) => warnings.push(warning),
+		});
+		expect(
+			await readThemePackage(output, { onWarning: (warning) => warnings.push(warning) }),
+		).toMatchObject(theme);
+		expect(warnings).toEqual(['pictureFillsReplaced']);
+		const zip = await JSZip.loadAsync(output);
+		expect(await zip.file(part)?.async('string')).not.toContain('blipFill');
+	});
+
+	it('admits Office packages with variant parts within the package part cap', async () => {
+		const zip = await JSZip.loadAsync(await bytes());
+		for (let index = 0; index < 568; index++) {
+			zip.file(`themeVariants/part${index}.xml`, '<variant/>', { createFolders: false });
+		}
+		expect(await readThemePackage(await zip.generateAsync({ type: 'uint8array' }))).toMatchObject(
+			theme,
+		);
+		for (let index = 568; index < 640; index++) {
+			zip.file(`themeVariants/part${index}.xml`, '<variant/>', { createFolders: false });
+		}
+		await expect(
+			readThemePackage(await zip.generateAsync({ type: 'uint8array' })),
+		).rejects.toMatchObject({
+			kind: 'maxEntries',
+		});
 	});
 
 	it.each([

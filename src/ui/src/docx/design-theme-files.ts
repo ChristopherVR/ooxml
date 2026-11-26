@@ -1,5 +1,6 @@
 import { loadThemePackage } from 'ooxml-core/drawingml';
 import { designTheme, wordThemeXml } from 'ooxml-core/docx';
+import { alertDialog } from '../dialog/message-dialogs';
 import { applyDesignEdit } from './design-commands';
 import { dialogButton, labelled } from './dialog-fields';
 import {
@@ -13,6 +14,15 @@ import type { EditorCore } from './editor-core';
 import { downloadBytes } from './file-commands';
 import { translate } from './localization';
 import { canEditDesign } from './design-ribbon-controls';
+
+function warnAboutPictureFills(core: EditorCore, root: ShadowRoot): void {
+	void alertDialog({
+		title: translate(core.locale, 'design.themePictureWarningTitle'),
+		message: translate(core.locale, 'design.themePictureWarning'),
+		confirmLabel: translate(core.locale, 'OK'),
+		host: root,
+	});
+}
 
 export function browseTheme(core: EditorCore, anchor: HTMLButtonElement): void {
 	const root = anchor.getRootNode();
@@ -35,9 +45,16 @@ export function browseTheme(core: EditorCore, anchor: HTMLButtonElement): void {
 			try {
 				const { MAX_THEME_PACKAGE_BYTES, readThemePackage } = await loadThemePackage();
 				if (file.size > MAX_THEME_PACKAGE_BYTES) throw new Error();
-				const theme = await readThemePackage(await file.arrayBuffer());
-				if (generation === core.loadGeneration && anchor.isConnected)
+				let fallback = false;
+				const theme = await readThemePackage(await file.arrayBuffer(), {
+					onWarning: () => {
+						fallback = true;
+					},
+				});
+				if (generation === core.loadGeneration && anchor.isConnected) {
 					applyDesignEdit(core, { kind: 'importTheme', theme });
+					if (fallback) warnAboutPictureFills(core, root);
+				}
 			} catch {
 				if (generation === core.loadGeneration)
 					core.host.reportError(translate(core.locale, 'design.importError'));
@@ -83,10 +100,16 @@ export function saveTheme(core: EditorCore, anchor: HTMLButtonElement): void {
 		close();
 		try {
 			const { writeThemePackage } = await loadThemePackage();
+			let fallback = false;
 			downloadBytes(
-				await writeThemePackage(wordThemeXml({ ...theme, name: themeName })),
+				await writeThemePackage(wordThemeXml({ ...theme, name: themeName }), {
+					onWarning: () => {
+						fallback = true;
+					},
+				}),
 				`${themeName}.thmx`,
 			);
+			if (fallback && anchor.isConnected) warnAboutPictureFills(core, root);
 		} catch {
 			core.host.reportError(translate(core.locale, 'design.exportError'));
 		}
