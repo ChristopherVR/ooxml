@@ -26,7 +26,6 @@ export function stencilFilePicker(
 	input.multiple = true;
 	input.hidden = true;
 	input.dataset.openStencil = '';
-	input.setAttribute('aria-label', 'Open Stencil');
 	const status = doc.createElement('p');
 	status.className = 'stencil-status';
 	status.setAttribute('role', 'status');

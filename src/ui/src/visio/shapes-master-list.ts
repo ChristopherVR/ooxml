@@ -1,7 +1,8 @@
+import { interpolate } from 'ooxml-core/i18n';
 import type { Master } from './stencil-catalog';
 
 /** One master button: drag it onto the page, or activate it to add it at the page centre. */
-export function masterButton(doc: Document, master: Master): HTMLLIElement {
+function masterButton(doc: Document, master: Master, t: (text: string) => string): HTMLLIElement {
 	const item = doc.createElement('li');
 	item.dataset.name = master.name;
 	const button = doc.createElement('button');
@@ -24,18 +25,27 @@ export function masterButton(doc: Document, master: Master): HTMLLIElement {
 		// Listed as Visio lists it, but not offered: the reason is the tooltip.
 		button.dataset.unsupported = '';
 		button.setAttribute('aria-disabled', 'true');
-		button.title = `${master.name}: ${master.unsupported}`;
+		button.title = `${master.name}: ${t(master.unsupported)}`;
 	} else {
 		button.draggable = true;
-		button.title = `${master.name}: drag onto the page, or press Enter to add it at the centre.`;
+		button.title = interpolate(
+			t('{name}: drag onto the page, or press Enter to add it at the centre.'),
+			{
+				name: master.name,
+			},
+		);
 	}
 	item.append(button);
 	return item;
 }
-export function masterList(doc: Document, masters: readonly Master[]): HTMLUListElement {
+export function masterList(
+	doc: Document,
+	masters: readonly Master[],
+	t: (text: string) => string,
+): HTMLUListElement {
 	const list = doc.createElement('ul');
 	list.className = 'masters';
-	list.append(...masters.map((master) => masterButton(doc, master)));
+	list.append(...masters.map((master) => masterButton(doc, master, t)));
 	return list;
 }
 export function menuItem(

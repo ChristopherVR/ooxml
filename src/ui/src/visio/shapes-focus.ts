@@ -10,7 +10,7 @@ function findByAttribute(
 	);
 }
 
-export function rememberQuickFocus(
+export function rememberMasterFocus(
 	quick: HTMLElement,
 	quickToggle: HTMLElement,
 ): (() => void) | undefined {

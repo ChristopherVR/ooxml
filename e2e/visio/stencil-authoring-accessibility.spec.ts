@@ -118,7 +118,31 @@ test('confirms deletion and undoes the latest edit through the stencil or master
 test('localizes German stencil labels and exposes menu and input states', async ({ page }) => {
 	test.setTimeout(60_000);
 	const { viewer, more, menu, dialog } = await drawingWithShape(page);
-	await viewer.evaluate((node) => node.setAttribute('locale', 'de-DE'));
+	await viewer.evaluate((node) => {
+		const element = node.closest('visio-viewer');
+		if (element) element.locale = 'de';
+	});
+	const pane = viewer.getByRole('complementary', { name: 'Shapes', exact: true });
+	await expect(pane.getByRole('searchbox', { name: 'Shapes suchen' })).toBeVisible();
+	await expect(pane.getByRole('button', { name: 'Weitere Shapes' })).toBeVisible();
+	await expect(pane.getByRole('button', { name: 'Quick-Shapes' })).toBeVisible();
+	await expect(pane.getByRole('region', { name: 'Standard-Shapes' })).toBeVisible();
+	await pane.getByRole('button', { name: 'Shapes schließen' }).click();
+	await viewer.getByRole('button', { name: 'Shapes öffnen' }).click();
+	await pane.locator('[data-stencil="basic"] [data-master="rectangle"]').click();
+	await expect(pane.getByRole('region', { name: 'Dokumentschablone' })).toBeVisible();
+	await more.press('Enter');
+	await expect(
+		menu('more', 'open-stencil-file').getByRole('menuitem', {
+			name: 'Schablone öffnen...',
+		}),
+	).toBeVisible();
+	await menu('more', 'stencil:basic-flowchart')
+		.getByRole('menuitemcheckbox', { name: 'Standardflussdiagramm-Shapes' })
+		.click();
+	await expect(
+		pane.getByRole('button', { name: 'Standardflussdiagramm-Shapes schließen' }),
+	).toBeVisible();
 	await more.press('Enter');
 	await menu('more', 'new-stencil').getByRole('menuitem', { name: 'Neue Schablone' }).click();
 	await expect(dialog.getByRole('dialog', { name: 'Neue Schablone', exact: true })).toHaveAttribute(
@@ -133,11 +157,11 @@ test('localizes German stencil labels and exposes menu and input states', async 
 	await expect(field).toBeFocused();
 	await expect(field).toHaveAttribute('aria-invalid', 'true');
 	await expect(field).toHaveAccessibleDescription('Geben Sie einen Namen ein.');
-	await field.fill('Valves');
+	await field.fill('Basic Shapes');
 	await expect(field).not.toHaveAttribute('aria-invalid');
 	await confirm.click();
-	const section = viewer.getByRole('region', { name: 'Valves' });
-	await expect(section.getByRole('button', { name: 'Valves schließen' })).toBeVisible();
+	const section = viewer.getByRole('region', { name: 'Basic Shapes', exact: true });
+	await expect(section.getByRole('button', { name: 'Basic Shapes schließen' })).toBeVisible();
 	const actions = section.getByRole('button', { name: 'Schablonenaktionen' });
 	await actions.press('Enter');
 	const edit = menu('stencil', 'edit-stencil').getByRole('menuitemcheckbox', {

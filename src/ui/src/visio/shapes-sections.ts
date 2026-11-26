@@ -1,8 +1,7 @@
-import { interpolate } from 'ooxml-core/i18n';
-import { rememberQuickFocus, rememberSectionFocus } from './shapes-focus';
+import { createStencilSection } from './shapes-section';
+import { rememberMasterFocus, rememberSectionFocus } from './shapes-focus';
 import { BASIC_STENCIL_ID, STENCILS, findMaster, type Stencil } from './stencil-catalog';
 import {
-	DOCUMENT_MASTER_LIMIT,
 	DOCUMENT_STENCIL_ID,
 	DOCUMENT_STENCIL_NAME,
 	EMPTY_SHAPES_DOCUMENT,
@@ -13,7 +12,6 @@ import { loadShapes as load, saveShapes as save } from './shapes-storage';
 import { MY_SHAPES_ID, stencilErrorMessage, stencilFiles } from './stencil-files';
 import { lazyStencilMenus } from './shapes-stencil-menus';
 import { masterList, menuItem } from './shapes-master-list';
-export { masterButton, masterList } from './shapes-master-list';
 import { stencilFilePicker } from './shapes-files-ui';
 import { loadStencilStrings, translateStencilText } from './stencil-locale';
 import type { ViewerController } from './controller';
@@ -60,21 +58,18 @@ export function buildStencilsView(
 	/** Docked stencils the user has not closed in this session. */
 	let docked: string[] = [];
 	const collapsed = new Set<string>();
-	const row = (id: string, label: string) => {
+	const row = (id: string) => {
 		const button = doc.createElement('button');
 		button.type = 'button';
 		button.id = id;
 		button.className = 'shapes-row';
-		button.textContent = label;
 		return button;
 	};
-	const more = row('shapes-more', 'More Shapes');
+	const more = row('shapes-more');
 	more.setAttribute('aria-haspopup', 'menu');
-	more.title = 'More Shapes: open another stencil.';
-	const quickToggle = row('shapes-quick-toggle', 'Quick Shapes');
+	const quickToggle = row('shapes-quick-toggle');
 	quickToggle.setAttribute('aria-expanded', 'false');
 	quickToggle.setAttribute('aria-controls', 'shapes-quick');
-	quickToggle.title = 'Quick Shapes: favourite masters of every open stencil.';
 	const quick = doc.createElement('div');
 	quick.id = 'shapes-quick';
 	quick.hidden = true;
@@ -93,10 +88,17 @@ export function buildStencilsView(
 	);
 	const moreMenu = doc.createElement('office-ui-context-menu') as Menu;
 	moreMenu.dataset.shapesMenu = 'more';
-	moreMenu.setAttribute('label', 'More Shapes');
 	const masterMenu = doc.createElement('office-ui-context-menu') as Menu;
 	masterMenu.dataset.shapesMenu = 'master';
-	masterMenu.setAttribute('label', 'Master');
+	const localize = () => {
+		more.textContent = t('More Shapes');
+		more.title = t('More Shapes: open another stencil.');
+		quickToggle.textContent = t('Quick Shapes');
+		quickToggle.title = t('Quick Shapes: favourite masters of every open stencil.');
+		moreMenu.setAttribute('label', more.textContent);
+		masterMenu.setAttribute('label', t('Master'));
+		picker.input.setAttribute('aria-label', t('Open Stencil'));
+	};
 
 	const openIds = () => [...new Set([...docked, BASIC_STENCIL_ID, ...saved.open])];
 	const fileSections = () => files.opened.map((stencil) => stencil.id);
@@ -135,7 +137,7 @@ export function buildStencilsView(
 
 	const renderQuick = () => {
 		if (quick.hidden) return quick.replaceChildren();
-		const restoreFocus = rememberQuickFocus(quick, quickToggle);
+		const restoreFocus = rememberMasterFocus(quick, quickToggle);
 		const masters = [
 			// The drawing's own masters lead, as its Document Stencil leads the stencils.
 			...drawing.masters.filter((master) => !master.unsupported).slice(0, DEFAULT_QUICK),
@@ -145,8 +147,8 @@ export function buildStencilsView(
 		];
 		const empty = doc.createElement('p');
 		empty.className = 'shapes-empty';
-		empty.textContent = 'No Quick Shapes. Right-click a master to add it.';
-		quick.replaceChildren(masters.length ? masterList(doc, masters) : empty);
+		empty.textContent = t('No Quick Shapes. Right-click a master to add it.');
+		quick.replaceChildren(masters.length ? masterList(doc, masters, t) : empty);
 		restoreFocus?.();
 	};
 	const renderSections = () => {
@@ -154,70 +156,30 @@ export function buildStencilsView(
 		sections.replaceChildren(
 			...sectionIds().map((id) => {
 				const stencil = sectionStencil(id);
-				const section = doc.createElement('section');
-				section.dataset.stencil = id;
-				const name = id === MY_SHAPES_ID ? t(stencil.name) : stencil.name;
-				section.setAttribute('aria-label', name);
-				const header = doc.createElement('div');
-				header.className = 'stencil-header';
-				const title = doc.createElement('button');
-				title.type = 'button';
-				title.className = 'stencil-title';
-				title.textContent = name;
-				const list = masterList(doc, stencil.masters);
-				list.id = `stencil-${id}-masters`;
-				title.setAttribute('aria-controls', list.id);
-				const open = !collapsed.has(id);
-				title.setAttribute('aria-expanded', String(open));
-				list.hidden = !open;
-				if (!open) section.dataset.collapsed = '';
-				header.append(title);
-				if (files.get(id)?.editable) {
-					const actions = doc.createElement('button');
-					actions.className = 'stencil-close';
-					actions.type = 'button';
-					actions.textContent = '⋯';
-					actions.setAttribute('aria-haspopup', 'menu');
-					actions.setAttribute('aria-label', t('Stencil actions'));
-					actions.title = t('Stencil actions');
-					actions.dataset.stencilActions = id;
-					header.append(actions);
-				}
-				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID) {
-					const close = doc.createElement('button');
-					close.type = 'button';
-					close.className = 'stencil-close';
-					close.dataset.closeStencil = id;
-					const closeLabel = interpolate(t('Close {name}'), { name });
-					close.setAttribute('aria-label', closeLabel);
-					close.title = closeLabel;
-					close.textContent = '×';
-					header.append(close);
-				}
-				section.append(header, list);
-				if (id === DOCUMENT_STENCIL_ID && drawing.omitted) {
-					const note = doc.createElement('p');
-					note.className = 'shapes-empty';
-					note.hidden = !open;
-					note.textContent = `Showing the first ${DOCUMENT_MASTER_LIMIT} masters; ${drawing.omitted} more are not listed.`;
-					section.append(note);
-				}
-				return section;
+				const file = files.get(id);
+				return createStencilSection(doc, {
+					stencil,
+					name: file && id !== MY_SHAPES_ID ? stencil.name : t(stencil.name),
+					open: !collapsed.has(id),
+					editable: file?.editable ?? false,
+					omitted: id === DOCUMENT_STENCIL_ID ? drawing.omitted : 0,
+					t,
+				});
 			}),
 			// Stencil files this viewer cannot open are still named, as Visio lists them.
-			...drawing.unavailable.map((file) => unavailableStencil(doc, file)),
+			...drawing.unavailable.map((file) => unavailableStencil(doc, file, t)),
 		);
 		restoreFocus?.();
 	};
 	const renderMenu = () =>
 		moreMenu.replaceChildren(
 			...STENCILS.filter((stencil) => stencil.id !== BASIC_STENCIL_ID).map((stencil) =>
-				menuItem(doc, `stencil:${stencil.id}`, stencil.name, openIds().includes(stencil.id)),
+				menuItem(doc, `stencil:${stencil.id}`, t(stencil.name), openIds().includes(stencil.id)),
 			),
 			doc.createElement('office-ui-menu-separator'),
 			menuItem(doc, 'new-stencil', t('New Stencil')),
-			Object.assign(menuItem(doc, 'open-stencil-file', 'Open Stencil...'), {
-				title: 'Open Stencil: a .vssx stencil file. Legacy .vss files are not supported.',
+			Object.assign(menuItem(doc, 'open-stencil-file', t('Open Stencil...')), {
+				title: t('Open Stencil: a .vssx stencil file. Legacy .vss files are not supported.'),
 			}),
 		);
 	const render = () => {
@@ -292,12 +254,16 @@ export function buildStencilsView(
 		else collapsed.add(section.dataset.stencil!);
 	});
 
+	localize();
 	render();
 	panel.append(more, quickToggle, quick, picker.status, sections, picker.input);
 	return {
 		// The caller puts the menus on the pane, so they open from the Search view too.
 		menus: [moreMenu, masterMenu],
-		refreshLocale: renderSections,
+		refreshLocale() {
+			localize();
+			render();
+		},
 		setDocument(next, opened = true) {
 			// An opened drawing always starts from its own stencils, even when it lists what the
 			// last one did (two drawings without masters or docked stencils).

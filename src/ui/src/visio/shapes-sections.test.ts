@@ -38,7 +38,17 @@ describe('More Shapes and Quick Shapes', () => {
 			element.querySelector('[data-close-stencil="basic-flowchart"]')?.getAttribute('aria-label');
 		expect(closeLabel()).toBe('Close Basic Flowchart Shapes');
 		setShapesLocale(element, 'de-DE');
-		expect(closeLabel()).toBe('Basic Flowchart Shapes schließen');
+		expect(closeLabel()).toBe('Standardflussdiagramm-Shapes schließen');
+		expect(element.querySelector('[data-stencil="basic"]')?.getAttribute('aria-label')).toBe(
+			'Standard-Shapes',
+		);
+		expect(element.querySelector('[command="stencil:arrow-shapes"]')?.getAttribute('label')).toBe(
+			'Pfeil-Shapes',
+		);
+		setShapesLocale(element, 'fr');
+		expect(closeLabel()).toBe('Fermer Formes de diagramme de flux simple');
+		setShapesLocale(element, 'en');
+		expect(closeLabel()).toBe('Close Basic Flowchart Shapes');
 		expect(element.querySelector('[data-shapes-menu="stencil"]')).toBeNull();
 	});
 	it('opens a built-in stencil as a collapsible section that can be closed', () => {

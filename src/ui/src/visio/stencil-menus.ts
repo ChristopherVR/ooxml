@@ -71,9 +71,11 @@ export function bindStencilMenus(
 				menuItem(
 					doc,
 					'quick-shapes',
-					options.quickIds(found.stencil).includes(id)
-						? 'Remove from Quick Shapes'
-						: 'Add to Quick Shapes',
+					t(
+						options.quickIds(found.stencil).includes(id)
+							? 'Remove from Quick Shapes'
+							: 'Add to Quick Shapes',
+					),
 				),
 			);
 		if (menuSection !== MY_SHAPES_ID)

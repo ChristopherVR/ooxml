@@ -120,7 +120,11 @@ export function shapesDocument(model: VisioDocument | null | undefined): ShapesD
 }
 
 /** The Shapes window section of a docked stencil file that has no built-in stand-in. */
-export function unavailableStencil(doc: Document, file: string): HTMLElement {
+export function unavailableStencil(
+	doc: Document,
+	file: string,
+	t: (text: string) => string,
+): HTMLElement {
 	const section = doc.createElement('section');
 	section.dataset.stencilFile = file;
 	section.dataset.unavailable = '';
@@ -133,8 +137,9 @@ export function unavailableStencil(doc: Document, file: string): HTMLElement {
 	header.append(title);
 	const note = doc.createElement('p');
 	note.className = 'shapes-empty';
-	note.textContent =
-		'This stencil file is not available here. Its shapes already used in the drawing are in the Document Stencil.';
+	note.textContent = t(
+		'This stencil file is not available here. Its shapes already used in the drawing are in the Document Stencil.',
+	);
 	section.append(header, note);
 	return section;
 }
