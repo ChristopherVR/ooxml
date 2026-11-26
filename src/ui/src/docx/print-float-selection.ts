@@ -42,6 +42,17 @@ export interface PrintFloats {
 	destroy(): void;
 }
 
+function drawingRotation(node: Located['node']): number {
+	const shape = shapeSpecOf(node);
+	if (shape) return shape.rotation ?? 0;
+	try {
+		const rotation: unknown = JSON.parse(String(node.attrs.transform))?.rotation;
+		return typeof rotation === 'number' && Number.isFinite(rotation) ? rotation : 0;
+	} catch {
+		return 0;
+	}
+}
+
 /**
  * Floating pictures, shapes and text boxes on Print Layout pages are selectable like in Word: a press selects the object
  * (the same node selection the Draft surface uses) and draws a frame with eight handles; dragging
@@ -98,18 +109,21 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 		const selected = selectedFloat(view.state);
 		const element = selected && floatElement(selected.blockId, selected.index);
 		const sheet = element?.closest<HTMLElement>('.dve-print-page');
-		if (!element || !sheet) return;
+		if (!selected || !element || !sheet) return;
 		frame = document.createElement('div');
 		frame.className = 'dve-print-float-frame';
 		frame.setAttribute('aria-hidden', 'true');
-		for (const handle of FLOAT_HANDLES) {
+		const rotation = drawingRotation(selected.node);
+		const cursorOffset = Math.round(rotation / 45);
+		for (const [index, handle] of FLOAT_HANDLES.entries()) {
 			const grip = document.createElement('span');
 			grip.className = 'dve-print-float-handle';
 			grip.dataset.floatHandle = handle;
-			grip.style.cursor = CURSORS[handle];
+			grip.style.cursor = CURSORS[FLOAT_HANDLES[(index + cursorOffset + 8) % 8] ?? handle];
 			frame.append(grip);
 		}
 		place(frame, boxOf(element));
+		if (rotation) frame.style.rotate = `${rotation}deg`;
 		frameFor = element;
 		sheet.append(frame);
 		for (const pos of drawingPositions(view.state)) {
@@ -120,11 +134,13 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			});
 			const matching = other && floatElement(other.blockId, other.index);
 			const page = matching?.closest('.dve-print-page');
-			if (!matching || !page) continue;
+			if (!other || !matching || !page) continue;
 			const extra = document.createElement('div');
 			extra.className = 'dve-print-float-frame dve-print-float-frame-secondary';
 			extra.setAttribute('aria-hidden', 'true');
 			place(extra, boxOf(matching));
+			const angle = drawingRotation(other.node);
+			if (angle) extra.style.rotate = `${angle}deg`;
 			page.append(extra);
 			extraFrames.push(extra);
 		}
@@ -209,6 +225,7 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			!handle && wasSelected && Boolean(shapeSpecOf(located.node)?.text?.some(Boolean));
 		const scale = scaleOf(sheet);
 		const start = boxOf(element);
+		const rotation = drawingRotation(located.node);
 		const origin = originOf(element);
 		const lockAspect = !isShapeFloat(located.node) && !located.node.attrs.unsupported;
 		let box = start;
@@ -218,7 +235,9 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			const dy = (moveEvent.clientY - event.clientY) / scale;
 			if (!moved && Math.hypot(dx, dy) < 3) return;
 			moved = true;
-			box = handle ? resizeBox(start, handle, dx, dy, lockAspect) : moveBox(start, dx, dy);
+			box = handle
+				? resizeBox(start, handle, dx, dy, lockAspect, rotation)
+				: moveBox(start, dx, dy);
 			place(element, box);
 			if (frame) place(frame, box);
 		};

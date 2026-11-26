@@ -303,6 +303,29 @@ test('one floating shape disables Align and Group with accessible reasons', asyn
 	);
 });
 
+test('the print selection frame rotates around the shape center', async ({ page }) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await editor.locator('.dve-print-float').nth(2).click({ force: true });
+	const frame = editor.locator('.dve-print-float-frame');
+	const starting = await frame.boundingBox();
+	expect(starting).not.toBeNull();
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('combobox', { name: 'Rotate', exact: true }).selectOption('right');
+	await expect(frame).toHaveCSS('rotate', '90deg');
+	await expect
+		.poll(async () => {
+			const rotated = await frame.boundingBox();
+			if (!rotated || !starting) return Infinity;
+			return Math.max(
+				Math.abs(rotated.width - starting.height),
+				Math.abs(rotated.height - starting.width),
+			);
+		})
+		.toBeLessThan(1);
+});
+
 async function choosePosition(editor: Locator, value: string) {
 	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');

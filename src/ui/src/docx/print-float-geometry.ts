@@ -26,11 +26,17 @@ export function resizeBox(
 	dx: number,
 	dy: number,
 	lockAspect: boolean,
+	rotation = 0,
 ): FloatBox {
+	const radians = rotation * (Math.PI / 180);
+	const cos = Math.cos(radians);
+	const sin = Math.sin(radians);
+	const localX = dx * cos + dy * sin;
+	const localY = dy * cos - dx * sin;
 	const sx = handle.includes('e') ? 1 : handle.includes('w') ? -1 : 0;
 	const sy = handle.includes('s') ? 1 : handle.includes('n') ? -1 : 0;
-	let width = start.width + sx * dx;
-	let height = start.height + sy * dy;
+	let width = start.width + sx * localX;
+	let height = start.height + sy * localY;
 	if (lockAspect && sx !== 0 && sy !== 0) {
 		const floor = Math.max(MIN_FLOAT_SIZE / start.width, MIN_FLOAT_SIZE / start.height);
 		const scale = Math.max(floor, (width / start.width + height / start.height) / 2);
@@ -39,9 +45,11 @@ export function resizeBox(
 	}
 	width = Math.max(MIN_FLOAT_SIZE, width);
 	height = Math.max(MIN_FLOAT_SIZE, height);
+	const centerX = sx < 0 ? (start.width - width) / 2 : (width - start.width) / 2;
+	const centerY = sy < 0 ? (start.height - height) / 2 : (height - start.height) / 2;
 	return {
-		x: sx < 0 ? start.x + start.width - width : start.x,
-		y: sy < 0 ? start.y + start.height - height : start.y,
+		x: start.x + (start.width - width) / 2 + centerX * cos - centerY * sin,
+		y: start.y + (start.height - height) / 2 + centerX * sin + centerY * cos,
 		width,
 		height,
 	};

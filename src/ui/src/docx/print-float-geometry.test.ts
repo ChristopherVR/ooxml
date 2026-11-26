@@ -4,6 +4,14 @@ import { MIN_FLOAT_SIZE, moveBox, placementAt, resizeBox } from './print-float-g
 const start = { x: 100, y: 200, width: 200, height: 100 };
 
 describe('float resize and move geometry', () => {
+	it('projects a resize drag into the rotated frame, retaining its opposite edge', () => {
+		const box = resizeBox({ x: 100, y: 60, width: 100, height: 50 }, 'e', 0, 20, false, 90);
+		expect(box.width).toBeCloseTo(120);
+		expect(box.height).toBeCloseTo(50);
+		expect(box.x).toBeCloseTo(90);
+		expect(box.y).toBeCloseTo(70);
+	});
+
 	it('keeps the aspect ratio and the opposite corner for corner handles', () => {
 		const grown = resizeBox(start, 'se', 100, 0, true);
 		expect(grown).toEqual({ x: 100, y: 200, width: 250, height: 125 });
