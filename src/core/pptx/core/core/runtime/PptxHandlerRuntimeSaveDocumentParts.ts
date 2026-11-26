@@ -1,3 +1,4 @@
+import { writeZipBytes, writeZipText } from '../../../../opc/zip-save';
 import { XmlObject, PptxElement } from '../../types';
 import type {
 	SmartArtPptxElement,
@@ -571,7 +572,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * present, `customXml/itemProps{id}.xml` and
 	 * `customXml/_rels/item{id}.xml.rels`.
 	 */
-	protected applyCustomXmlPartsPreservation(): void {
+	protected async applyCustomXmlPartsPreservation(): Promise<void> {
 		if (this.customXmlParts.length === 0) {
 			return;
 		}
@@ -585,12 +586,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		for (const part of this.customXmlParts) {
 			const rawId = String(part.id);
 			const safeId = SAFE_ID.test(rawId) ? rawId : String(fallbackIndex++);
-			this.zip.file(`customXml/item${safeId}.xml`, part.data);
+			const dataPath = `customXml/item${safeId}.xml`;
+			writeZipText(this.zip, dataPath, part.data, await this.zip.file(dataPath)?.async('string'));
 			if (part.properties) {
-				this.zip.file(`customXml/itemProps${safeId}.xml`, part.properties);
+				const propertiesPath = `customXml/itemProps${safeId}.xml`;
+				writeZipText(
+					this.zip,
+					propertiesPath,
+					part.properties,
+					await this.zip.file(propertiesPath)?.async('string'),
+				);
 			}
 			if (part.rels) {
-				this.zip.file(`customXml/_rels/item${safeId}.xml.rels`, part.rels);
+				const relsPath = `customXml/_rels/item${safeId}.xml.rels`;
+				writeZipText(this.zip, relsPath, part.rels, await this.zip.file(relsPath)?.async('string'));
 			}
 		}
 	}
@@ -602,7 +611,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * file path (`.jpeg`, `.jpg`, `.png`, `.emf`). If none exists,
 	 * defaults to `docProps/thumbnail.jpeg`.
 	 */
-	protected applyThumbnailPreservation(): void {
+	protected async applyThumbnailPreservation(): Promise<void> {
 		if (!this.thumbnailData) {
 			return;
 		}
@@ -621,7 +630,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 		}
 
-		this.zip.file(targetPath, this.thumbnailData);
+		await writeZipBytes(this.zip, targetPath, this.thumbnailData);
 	}
 
 	/**
@@ -633,11 +642,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		// Write the raw VBA project binary back
-		this.zip.file('ppt/vbaProject.bin', this.vbaProjectBin);
+		await writeZipBytes(this.zip, 'ppt/vbaProject.bin', this.vbaProjectBin);
 
 		// Write any additional VBA-related parts (vbaData.xml, etc.)
 		for (const [partPath, partData] of this.vbaRelatedParts) {
-			this.zip.file(partPath, partData);
+			await writeZipBytes(this.zip, partPath, partData);
 		}
 	}
 
@@ -837,7 +846,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 				}
 
-				this.zip.file(fontPartPath, bytesToWrite);
+				if (hasOriginal) {
+					await writeZipBytes(this.zip, fontPartPath, bytesToWrite);
+				} else {
+					this.zip.file(fontPartPath, bytesToWrite);
+				}
 
 				// Determine variant key
 				const variantKey =

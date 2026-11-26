@@ -1,3 +1,4 @@
+import { keepCompressedMedia } from '../opc/zip-save';
 import { applyStyleCatalogs } from './style-catalog-save';
 import { applyWordTheme } from './theme-save';
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
@@ -213,5 +214,6 @@ export async function saveDocx(
 		await stampModified(zip, options?.modified, privacy?.removePersonalInformation === true);
 	if (binding) await stripPackageSignatures(zip);
 	dropAddedFolders(zip, sourceEntries);
+	keepCompressedMedia(zip);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }

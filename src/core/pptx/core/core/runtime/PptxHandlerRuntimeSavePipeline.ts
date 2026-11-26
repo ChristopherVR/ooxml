@@ -1,3 +1,4 @@
+import { keepCompressedMedia, writeZipText } from '../../../../opc/zip-save';
 import { nextRelationshipId } from '../../../../opc/relationships';
 import { XmlObject, PptxSlide } from '../../types';
 import type { PptxHeaderFooter, PptxSlideSize } from '../../types';
@@ -160,7 +161,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				usedInkPaths: saveSession.getUsedInkPaths(),
 				slideContentType,
 			});
-			this.zip.file('[Content_Types].xml', this.builder.build(contentTypesData));
+			writeZipText(
+				this.zip,
+				'[Content_Types].xml',
+				this.builder.build(contentTypesData),
+				contentTypesXml,
+			);
 		}
 
 		// ── Post-processing ──────────────────────────────────────
@@ -218,7 +224,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				commentAuthorContentType,
 				commentAuthorsPartName,
 			});
-			this.zip.file('[Content_Types].xml', this.builder.build(contentTypesData));
+			writeZipText(
+				this.zip,
+				'[Content_Types].xml',
+				this.builder.build(contentTypesData),
+				contentTypesXmlAfterComments,
+			);
 		}
 		const modernPackage = await persistModernCommentPackage({
 			slides,
@@ -259,12 +270,24 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// the passthrough and the rebuilt-from-elements route reach the ZIP
 		// tag-bucketed otherwise.
 		for (const [layoutPath, layoutXmlObj] of this.layoutXmlMap.entries()) {
-			const ordered = await this.withTemplateSpTreeOrder(layoutPath, layoutXmlObj, 'p:sldLayout');
-			this.zip.file(layoutPath, this.builder.build(ordered));
+			const source = await this.zip.file(layoutPath)?.async('string');
+			const ordered = await this.withTemplateSpTreeOrder(
+				layoutPath,
+				layoutXmlObj,
+				'p:sldLayout',
+				source,
+			);
+			writeZipText(this.zip, layoutPath, this.builder.build(ordered), source);
 		}
 		for (const [masterPath, masterXmlObj] of this.masterXmlMap.entries()) {
-			const ordered = await this.withTemplateSpTreeOrder(masterPath, masterXmlObj, 'p:sldMaster');
-			this.zip.file(masterPath, this.builder.build(ordered));
+			const source = await this.zip.file(masterPath)?.async('string');
+			const ordered = await this.withTemplateSpTreeOrder(
+				masterPath,
+				masterXmlObj,
+				'p:sldMaster',
+				source,
+			);
+			writeZipText(this.zip, masterPath, this.builder.build(ordered), source);
 		}
 
 		// Theme parts. Re-emit dirty themes from in-memory state; clean themes
@@ -369,7 +392,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		await this.processPendingOleContentUpdates();
 		await this.ensureDiagramPartContentTypes();
 		await this.processPendingSmartArtUpdates();
-		this.applyCustomXmlPartsPreservation();
+		await this.applyCustomXmlPartsPreservation();
 
 		// Update content types for custom XML parts
 		if (this.customXmlParts.length > 0) {
@@ -387,7 +410,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		await this.applyCustomerDataChanges(options?.customerData, slides);
 
-		this.applyThumbnailPreservation();
+		await this.applyThumbnailPreservation();
 		await this.applyVbaProjectPreservation();
 		await this.stripDigitalSignatures();
 
@@ -417,12 +440,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 		}
 
-		// JSZip defaults to STORE, which writes every part verbatim and turns a
-		// 4.9 MB deck into 7.5 MB on a no-op open-and-save. PowerPoint DEFLATEs
-		// its own packages, so matching it keeps the file the user downloads the
-		// same size as the one they opened. Level 6 is zlib's default: the knee
-		// of the ratio/time curve, and near-free next to the XML re-serialization
-		// that already dominates a save.
+		// Keep existing compressed media and avoid deflating newly embedded compressed formats.
+		// Level 3 speeds up XML and other new or edited parts while keeping the package compact.
+		keepCompressedMedia(this.zip);
 		// A reproducible save dates every ZIP entry the same, not when each part
 		// was last written.
 		if (this.saveFixedDate) {
@@ -434,7 +454,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return await output.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',
-			compressionOptions: { level: 6 },
+			compressionOptions: { level: 3 },
 		});
 	}
 

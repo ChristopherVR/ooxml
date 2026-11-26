@@ -1,3 +1,4 @@
+import { keepCompressedMedia } from '../../opc/zip-save';
 import JSZip from 'jszip';
 import {
 	buildContentTypesXml,
@@ -167,6 +168,7 @@ export class PackageWriter {
 		const names = [...this.parts.keys()].sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 		for (const name of names) zip.file(name, this.parts.get(name) ?? '', options);
 		for (const step of this.finishers) await step(zip);
+		keepCompressedMedia(zip);
 		return zip.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',
