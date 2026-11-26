@@ -891,9 +891,12 @@ object per tenant, and feed it back through `setCustomization`.
 Generated from the shared id catalogues (`bun run docs:customization`); a
 unit test fails if an id is missing here.
 
-Home's Arrange menu uses `home.drawing.arrange`. The old `home.arrange` group is no longer on Home.
-Its command IDs still apply where those commands are shown in Drawing or in Shape Format and
-Picture Format. Use `shapeFormat.arrange` or `pictureFormat.arrange` to hide a contextual group.
+Home's Arrange menu moved into Drawing. Existing `hiddenGroups: ['home.arrange']` settings
+still hide the menu and its commands. Use `home.drawing.arrange` to hide the menu trigger alone.
+Use `home.arrange.align-left` and the other alignment and distribution row IDs below to hide
+individual rows. The older `home.arrange.align` ID hides all eight rows in Drawing and the
+alignment control in contextual tabs. Use `shapeFormat.arrange` or `pictureFormat.arrange` to
+hide a contextual group.
 Duplicate and Delete are available from the context menu and their keyboard shortcuts.
 Format Painter uses `home.clipboard.formatPainter`.
 
@@ -936,7 +939,7 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `home.font`                         | Font                         |
 | `home.paragraph`                    | Paragraph                    |
 | `home.drawing`                      | Drawing                      |
-| `home.arrange`                      | Arrange (legacy control IDs) |
+| `home.arrange`                      | Arrange (legacy group alias) |
 | `home.editing`                      | Editing                      |
 | `insert.slides`                     | Slides                       |
 | `insert.tables`                     | Tables                       |
@@ -1091,7 +1094,15 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `home.arrange.delete`                             | Delete                                                                        |
 | `home.arrange.group`                              | Group                                                                         |
 | `home.arrange.ungroup`                            | Ungroup                                                                       |
-| `home.arrange.align`                              | Align                                                                         |
+| `home.arrange.align`                              | Align and Distribute (alias)                                                  |
+| `home.arrange.align-left`                         | Align Left                                                                    |
+| `home.arrange.align-center`                       | Align Center                                                                  |
+| `home.arrange.align-right`                        | Align Right                                                                   |
+| `home.arrange.align-top`                          | Align Top                                                                     |
+| `home.arrange.align-middle`                       | Align Middle                                                                  |
+| `home.arrange.align-bottom`                       | Align Bottom                                                                  |
+| `home.arrange.distribute-horizontal`              | Distribute Horizontally                                                       |
+| `home.arrange.distribute-vertical`                | Distribute Vertically                                                         |
 | `home.arrange.mergeShapes`                        | Merge Shapes                                                                  |
 | `home.arrange.crop`                               | Crop                                                                          |
 | `home.arrange.outlineWidth`                       | Outline width                                                                 |

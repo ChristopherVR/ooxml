@@ -1,16 +1,17 @@
 import type { PptxElement } from 'ooxml-core/pptx';
 
+import type { RibbonControlId } from './customization/ribbon-control-ids';
 import type { AlignEdge } from './element-align';
 import { canInteractWithElement } from './element-locks';
 import type { RibbonHomeItem } from './ribbon-home-spec';
 
 const ALIGN = {
-	left: ['pptx.ribbon.alignLeft', 'Align Left'],
-	centerH: ['pptx.ribbon.alignCenter', 'Align Center'],
-	right: ['pptx.ribbon.alignRight', 'Align Right'],
-	top: ['pptx.ribbon.alignTop', 'Align Top'],
-	middle: ['pptx.ribbon.alignMiddle', 'Align Middle'],
-	bottom: ['pptx.ribbon.alignBottom', 'Align Bottom'],
+	left: ['pptx.ribbon.alignLeft', 'Align Left', 'home.arrange.align-left'],
+	centerH: ['pptx.ribbon.alignCenter', 'Align Center', 'home.arrange.align-center'],
+	right: ['pptx.ribbon.alignRight', 'Align Right', 'home.arrange.align-right'],
+	top: ['pptx.ribbon.alignTop', 'Align Top', 'home.arrange.align-top'],
+	middle: ['pptx.ribbon.alignMiddle', 'Align Middle', 'home.arrange.align-middle'],
+	bottom: ['pptx.ribbon.alignBottom', 'Align Bottom', 'home.arrange.align-bottom'],
 } as const;
 
 export interface DrawingArrangeActions {
@@ -31,13 +32,14 @@ export interface DrawingArrangeActions {
 
 interface ArrangeItem extends RibbonHomeItem {
 	action?: keyof DrawingArrangeActions;
+	attrs: { 'data-ribbon-control': RibbonControlId };
 }
 
 const item = (
 	value: string,
 	labelKey: string,
 	fallback: string,
-	control: string,
+	control: RibbonControlId,
 	action?: keyof DrawingArrangeActions,
 	separator = false,
 ): ArrangeItem => ({
@@ -50,7 +52,7 @@ const item = (
 	descriptionKey: 'pptx.insert.needsSelection',
 	description: 'Select an object first.',
 });
-const legacy = (name: string) => `home.arrange.${name}`;
+const legacy = <Name extends string>(name: Name): `home.arrange.${Name}` => `home.arrange.${name}`;
 
 export const HOME_DRAWING_ARRANGE_ITEMS: readonly ArrangeItem[] = [
 	item('forward', 'pptx.contextMenu.bringForward', 'Bring Forward', legacy('bringForward')),
@@ -67,21 +69,21 @@ export const HOME_DRAWING_ARRANGE_ITEMS: readonly ArrangeItem[] = [
 		'position',
 		true,
 	),
-	...Object.entries(ALIGN).map(([edge, [key, label]]) =>
-		item(edge, key, label, legacy('align'), 'align', edge === 'left'),
+	...Object.entries(ALIGN).map(([edge, [key, label, id]]) =>
+		item(edge, key, label, id, 'align', edge === 'left'),
 	),
 	item(
 		'distribute-horizontal',
 		'pptx.arrange.distributeHorizontal',
 		'Distribute Horizontally',
-		legacy('align'),
+		legacy('distribute-horizontal'),
 		'distribute',
 	),
 	item(
 		'distribute-vertical',
 		'pptx.arrange.distributeVertical',
 		'Distribute Vertically',
-		legacy('align'),
+		legacy('distribute-vertical'),
 		'distribute',
 	),
 	item(

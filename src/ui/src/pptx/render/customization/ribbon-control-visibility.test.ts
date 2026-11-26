@@ -18,7 +18,7 @@ describe('ribbon control catalogue', () => {
 			expect(id).toMatch(/^[a-zA-Z]+\.[a-zA-Z]+$/u);
 		}
 		for (const id of RIBBON_CONTROL_IDS) {
-			expect(id).toMatch(/^[a-zA-Z]+\.[a-zA-Z]+\.[a-zA-Z]+$/u);
+			expect(id).toMatch(/^[a-zA-Z]+\.[a-zA-Z]+\.[a-zA-Z]+(?:-[a-zA-Z]+)*$/u);
 		}
 		for (const group of RIBBON_GROUPS) {
 			expect(group.label.length).toBeGreaterThan(0);
@@ -92,6 +92,22 @@ describe('ribbon group / control customisation', () => {
 		expect(isRibbonControlVisible(resolved, 'insert.text.dateTime')).toBeFalsy();
 		expect(isRibbonControlVisible(resolved, 'insert.text.slideNumber')).toBeFalsy();
 		expect(isRibbonControlVisible(resolved, 'insert.text.textBox')).toBeTruthy();
+	});
+
+	it('keeps the old Arrange group and Align control ids working', () => {
+		const group = resolveCustomization({ ribbon: { hiddenGroups: ['home.arrange'] } });
+		expect(isRibbonControlVisible(group, 'home.drawing.arrange')).toBe(false);
+		expect(isRibbonControlVisible(group, 'home.drawing.selectionPane')).toBe(false);
+		expect(ribbonCustomizationCss(group)).toContain('[data-ribbon-control="home.arrange.group"]');
+
+		const align = resolveCustomization({ ribbon: { hiddenButtons: ['home.arrange.align'] } });
+		expect(isRibbonControlVisible(align, 'home.arrange.align-left')).toBe(false);
+		expect(isRibbonControlVisible(align, 'home.arrange.distribute-vertical')).toBe(false);
+		expect(isRibbonControlVisible(align, 'home.arrange.group')).toBe(true);
+
+		const row = resolveCustomization({ ribbon: { hiddenButtons: ['home.arrange.align-left'] } });
+		expect(isRibbonControlVisible(row, 'home.arrange.align-left')).toBe(false);
+		expect(isRibbonControlVisible(row, 'home.arrange.align-center')).toBe(true);
 	});
 
 	it('ignores ids and scopes that are not catalogued or not safe', () => {

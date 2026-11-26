@@ -18,6 +18,7 @@
  *
  * @module render/customization/ribbon-control-visibility
  */
+import { HOME_DRAWING_ARRANGE_ITEMS } from '../ribbon-drawing-arrange';
 import { FORMAT_SECTION_ATTRIBUTE, FORMAT_SECTION_IDS } from '../inspector/format-sections';
 import { INSPECTOR_CARD_IDS } from './inspector-customization';
 import type { ResolvedCustomization } from './customization-resolve';
@@ -60,6 +61,13 @@ export function isRibbonGroupVisible(resolved: ResolvedCustomization, id: Ribbon
  */
 export const RIBBON_CONTROL_ALIASES: Readonly<Record<string, readonly RibbonControlId[]>> = {
 	'insert.text.field': ['insert.text.dateTime', 'insert.text.slideNumber'],
+	'home.arrange': [
+		'home.drawing.arrange',
+		...HOME_DRAWING_ARRANGE_ITEMS.map((row) => row.attrs['data-ribbon-control']),
+	],
+	'home.arrange.align': HOME_DRAWING_ARRANGE_ITEMS.filter(
+		({ action }) => action === 'align' || action === 'distribute',
+	).map((row) => row.attrs['data-ribbon-control']),
 };
 
 /** True unless the host hid this control, an alias that covers it, or the group it sits in. */
@@ -71,7 +79,11 @@ export function isRibbonControlVisible(
 		return false;
 	}
 	for (const [alias, covered] of Object.entries(RIBBON_CONTROL_ALIASES)) {
-		if (covered.includes(id) && resolved.hiddenRibbonControls.has(alias as RibbonControlId)) {
+		if (
+			covered.includes(id) &&
+			((isRibbonControlId(alias) && resolved.hiddenRibbonControls.has(alias)) ||
+				(isRibbonGroupId(alias) && resolved.hiddenRibbonGroups.has(alias)))
+		) {
 			return false;
 		}
 	}
@@ -119,6 +131,9 @@ export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: 
 	for (const id of resolved.hiddenRibbonGroups) {
 		if (isRibbonGroupId(id)) {
 			selectors.push(attrSelector(safeScope, RIBBON_GROUP_ATTR, id));
+			for (const covered of RIBBON_CONTROL_ALIASES[id] ?? []) {
+				selectors.push(attrSelector(safeScope, RIBBON_CONTROL_ATTR, covered));
+			}
 		}
 	}
 	for (const id of resolved.hiddenRibbonControls) {

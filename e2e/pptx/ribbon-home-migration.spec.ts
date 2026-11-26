@@ -586,6 +586,26 @@ test.describe('Home drawing popovers and arrange extras', () => {
 		expect(xml).toContain('rot="5400000"');
 	});
 
+	test('keeps Arrange group and alignment customization working', async ({ page }) => {
+		const home = (ribbon: { hiddenGroups?: string[]; hiddenButtons?: string[] }) =>
+			openHome(page, `/?customization=${encodeURIComponent(JSON.stringify({ ribbon }))}`);
+
+		await home({ hiddenGroups: ['home.arrange'] });
+		await expect(inner(page, 'home.drawing.arrange')).toBeHidden();
+		await expect(inner(page, 'home.drawing.quickStyles')).toBeVisible();
+
+		await home({ hiddenButtons: ['home.arrange.align'] });
+		await inner(page, 'home.drawing.arrange').click();
+		await expect(control(page, 'home.arrange.align-left')).toBeHidden();
+		await expect(control(page, 'home.arrange.distribute-horizontal')).toBeHidden();
+		await expect(control(page, 'home.arrange.group')).toBeVisible();
+
+		await home({ hiddenButtons: ['home.arrange.align-left'] });
+		await inner(page, 'home.drawing.arrange').click();
+		await expect(control(page, 'home.arrange.align-left')).toBeHidden();
+		await expect(control(page, 'home.arrange.align-center')).toBeVisible();
+	});
+
 	test('Merge Shapes and Crop stay gated without two shapes or a picture', async ({ page }) => {
 		await openHome(page);
 		await insertRectangle(page);

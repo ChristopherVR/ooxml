@@ -11,7 +11,14 @@ export interface HomePopup {
 	reposition(): void;
 }
 
-const FOCUSABLE = 'button:not(:disabled), [role="menuitem"]:not([aria-disabled="true"]), input';
+const FOCUSABLE =
+	'button:not(:disabled), [role="menuitem"]:not(button, [aria-disabled="true"]), input';
+
+function menuTargets(menu: HTMLElement): HTMLElement[] {
+	return [...menu.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
+		(item) => item.ownerDocument.defaultView?.getComputedStyle(item).display !== 'none',
+	);
+}
 
 /**
  * `slot` wraps the trigger and owns the popup (so the popup stays inside the
@@ -100,7 +107,7 @@ export function createHomePopup(
 	}
 	// Roving focus inside the popup for the keyboard.
 	el.addEventListener('keydown', (event) => {
-		const items = [...el.querySelectorAll<HTMLElement>(FOCUSABLE)];
+		const items = menuTargets(el);
 		const index = items.indexOf(doc.activeElement as HTMLElement);
 		const move = (next: number) => {
 			event.preventDefault();
@@ -124,7 +131,7 @@ export function createHomePopup(
 			event.preventDefault();
 			event.stopPropagation();
 			open();
-			el.querySelector<HTMLElement>(FOCUSABLE)?.focus();
+			menuTargets(el)[0]?.focus();
 		}
 	});
 	slot.append(el);
