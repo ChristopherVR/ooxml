@@ -7,6 +7,8 @@ class PendingPrompt {
 	constructor(readonly request: MailMergePrompt) {}
 }
 
+const MAX_PROMPTS_PER_COPY = 64;
+
 /**
  * Resolves only prompts reached by the selected records and their rules. Projection resumes by
  * replaying the current output copy with its known answers. Returning undefined cancels the run.
@@ -21,6 +23,7 @@ export async function resolveMailMergePrompts(
 	const prepared = selectMailMergeRecipients(data);
 	const fieldMappings = options.fieldMappings ?? model.mailMerge?.fieldMappings;
 	const answers = new Map<string, string>();
+	const maxPrompts = prepared.records.length * MAX_PROMPTS_PER_COPY;
 	const resolved = { ...options, ...(fieldMappings && { fieldMappings }) };
 	const projectOptions: MailMergeOptions = {
 		...resolved,
@@ -40,7 +43,7 @@ export async function resolveMailMergePrompts(
 			copyPrompts = 0;
 		} catch (cause) {
 			if (!(cause instanceof PendingPrompt)) throw cause;
-			if (++copyPrompts > 64 || answers.size >= 1000)
+			if (++copyPrompts > MAX_PROMPTS_PER_COPY || answers.size >= maxPrompts)
 				throw new RangeError('Too many mail merge prompts.');
 			const answer = await ask(cause.request);
 			if (answer === undefined) return undefined;
