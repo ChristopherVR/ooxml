@@ -25,6 +25,7 @@ import {
 	elementWithText,
 	fixture,
 	loadDeck,
+	ribbonTab,
 	selectElement,
 	slideElements,
 	slideStage,
@@ -33,7 +34,7 @@ import { downloadBytes } from './support/exports';
 import { pressShortcut } from './support/keyboard';
 import { extractElementBlock, readZipPartText } from './support/pptx-xml';
 
-// Wide enough that the Home Arrange extras (Merge, Crop, align) have not collapsed into a popup.
+// Keep the contextual ribbon groups expanded.
 test.use({ viewport: { width: 2600, height: 900 } });
 
 const DECK = fixture('merge-crop.pptx');
@@ -45,8 +46,16 @@ const MERGE_LABELS = [
 	'subtract shapes',
 ];
 
-function control(page: Page, id: string): Locator {
-	return page.locator(`[data-pptx-ribbon-control="${id}"]:visible`).first();
+function mergeButton(page: Page): Locator {
+	return page.locator(
+		'[data-ribbon-group="shapeFormat.arrange"] [data-pptx-ribbon-control="merge-shapes"]',
+	);
+}
+
+function cropButton(page: Page, id: 'crop' | 'crop-menu'): Locator {
+	return page.locator(
+		`[data-ribbon-group="pictureFormat.size"] [data-pptx-ribbon-control="${id}"]`,
+	);
 }
 
 function picture(page: Page): Locator {
@@ -86,12 +95,17 @@ async function dragBy(page: Page, target: Locator, dx: number, dy: number): Prom
 }
 
 async function pictureWidth(page: Page): Promise<number> {
-	return (await picture(page).boundingBox())?.width ?? 0;
+	// Read canvas units so changing ribbon height or selection cannot change the measured width.
+	return picture(page).evaluate((element) => Number.parseFloat(getComputedStyle(element).width));
+}
+
+async function openPictureFormat(page: Page): Promise<void> {
+	await selectElement(page, picture(page));
+	await ribbonTab(page, 'Picture Format').click();
 }
 
 async function enterCropMode(page: Page): Promise<void> {
-	await selectElement(page, picture(page));
-	await control(page, 'crop').click();
+	await cropButton(page, 'crop').click();
 	await expect(cropOverlay(page)).toBeVisible();
 }
 
@@ -101,11 +115,14 @@ test.describe('Merge Shapes', () => {
 	}) => {
 		await openDeck(page);
 		await expect(slideElements(page)).toHaveCount(3);
-		await expect(control(page, 'merge-shapes')).toBeDisabled();
+		await selectElement(page, elementWithText(page, 'Merge A'));
+		await ribbonTab(page, 'Shape Format').click();
+		await expect(mergeButton(page)).toBeDisabled();
 
 		await selectBothShapes(page);
-		await expect(control(page, 'merge-shapes')).toBeEnabled();
-		await control(page, 'merge-shapes').click();
+		await ribbonTab(page, 'Shape Format').click();
+		await expect(mergeButton(page)).toBeEnabled();
+		await mergeButton(page).click();
 		await page.locator('[data-pptx-merge-op="union"]:visible').first().click();
 
 		await expect(slideElements(page)).toHaveCount(2);
@@ -146,6 +163,7 @@ test.describe('Picture crop', () => {
 		page,
 	}) => {
 		await openDeck(page);
+		await openPictureFormat(page);
 		const before = await pictureWidth(page);
 		await enterCropMode(page);
 		await expect(page.locator('[data-pptx-crop-handle]')).toHaveCount(8);
@@ -167,6 +185,7 @@ test.describe('Picture crop', () => {
 
 	test('Escape cancels the crop and restores the picture', async ({ page }) => {
 		await openDeck(page);
+		await openPictureFormat(page);
 		const before = await pictureWidth(page);
 		await enterCropMode(page);
 		await dragBy(page, page.locator('[data-pptx-crop-handle="e"]').first(), -80, 0);
@@ -178,8 +197,8 @@ test.describe('Picture crop', () => {
 
 	test('Crop to Aspect Ratio 1:1 squares the picture frame', async ({ page }) => {
 		await openDeck(page);
-		await selectElement(page, picture(page));
-		await control(page, 'crop-menu').click();
+		await openPictureFormat(page);
+		await cropButton(page, 'crop-menu').click();
 		await page.locator('[data-pptx-crop-aspect="1:1"]:visible').first().click();
 		await expect
 			.poll(async () => {
@@ -202,8 +221,13 @@ test.describe('Picture crop', () => {
 test('a host can hide both controls through the customisation model', async ({ page }) => {
 	const customization = { ribbon: { hiddenButtons: ['mergeShapes', 'crop'] } };
 	await openDeck(page, `/?customization=${encodeURIComponent(JSON.stringify(customization))}`);
-	// The shared Home strip keeps a hidden control in the DOM (as the other hidden Home
-	// controls are), so assert it is not shown rather than that it is absent.
-	await expect(page.locator('[data-pptx-ribbon-control="merge-shapes"]')).toBeHidden();
-	await expect(page.locator('[data-pptx-ribbon-control="crop"]')).toBeHidden();
+	await selectBothShapes(page);
+	await ribbonTab(page, 'Shape Format').click();
+	await expect(page.locator('[data-ribbon-group="shapeFormat.arrange"]')).toBeVisible();
+	await expect(mergeButton(page)).toBeAttached();
+	await expect(mergeButton(page)).toBeHidden();
+	await openPictureFormat(page);
+	await expect(page.locator('[data-ribbon-group="pictureFormat.size"]')).toBeVisible();
+	await expect(cropButton(page, 'crop')).toBeAttached();
+	await expect(cropButton(page, 'crop')).toBeHidden();
 });

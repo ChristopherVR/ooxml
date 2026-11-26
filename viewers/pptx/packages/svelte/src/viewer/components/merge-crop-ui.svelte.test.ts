@@ -4,11 +4,10 @@ import type { Component } from 'svelte';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { FindReplaceState } from '../editor/editor-find-replace.svelte';
 import { EditorState } from '../editor/editor-state.svelte';
 import CropOverlay from './CropOverlay.svelte';
+import ContextualTab from './ribbon/galleries/ContextualTab.svelte';
 import ArrangeExtras from './ribbon/home/ArrangeExtras.svelte';
-import HomeTab from './ribbon/home/HomeTab.svelte';
 
 /**
  * The Merge Shapes and Crop ribbon controls and the on-canvas crop overlay,
@@ -202,30 +201,25 @@ describe('crop overlay', () => {
 	});
 });
 
-describe('home tab customisation', () => {
-	function mountHome(hiddenActions?: Array<'mergeShapes' | 'crop'>): HTMLElement {
-		const editor = makeEditor([RECT]);
-		const findReplace = new FindReplaceState({
-			getSlides: () => editor.slides,
-			commitSlides: () => {},
-		});
-		return render(HomeTab, { editor, findReplace, onnavigateslide: () => {}, hiddenActions });
-	}
-
-	it('shows Merge Shapes and Crop in the Arrange group by default', () => {
-		const target = mountHome();
-
-		expect(target.querySelector('[data-pptx-ribbon-control="merge-shapes"]')).not.toBeNull();
-		expect(target.querySelector('[data-pptx-ribbon-control="crop"]')).not.toBeNull();
-	});
-
-	it('drops both controls when the host hides them', () => {
-		const target = mountHome(['mergeShapes', 'crop']);
-
-		// The shared strip keeps the controls in the DOM but hides them.
-		for (const id of ['merge-shapes', 'crop', 'crop-menu']) {
-			const node = target.querySelector<HTMLElement>(`[data-pptx-ribbon-control="${id}"]`)!;
-			expect(node.hidden || node.closest<HTMLElement>('.slot')?.hidden).toBeTruthy();
-		}
-	});
+describe('contextual ribbon customisation', () => {
+	it.each([
+		{ tab: 'shapeFormat', group: 'arrange', ids: ['merge-shapes'], selection: ['a', 'b'] },
+		{ tab: 'pictureFormat', group: 'size', ids: ['crop', 'crop-menu'], selection: ['pic'] },
+	] as const)(
+		'shows $tab controls by default and hides them on host request',
+		({ tab, group, ids, selection }) => {
+			const editor = makeEditor([RECT, ELLIPSE, PICTURE]);
+			editor.selection.setAll([...selection]);
+			const shown = render(ContextualTab, { tab, editor });
+			const hidden = render(ContextualTab, { tab, editor, hiddenActions: ['mergeShapes', 'crop'] });
+			for (const id of ids) {
+				const selector = `[data-ribbon-group="${tab}.${group}"] [data-pptx-ribbon-control="${id}"]`;
+				const shownButton = shown.querySelector<HTMLButtonElement>(selector);
+				const hiddenButton = hidden.querySelector<HTMLButtonElement>(selector);
+				expect(shownButton).toHaveProperty('disabled', false);
+				expect(shownButton?.closest('[hidden]')).toBeNull();
+				expect(hiddenButton?.closest('[hidden]')).toBeInstanceOf(HTMLElement);
+			}
+		},
+	);
 });
