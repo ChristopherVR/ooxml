@@ -377,6 +377,8 @@ const deckStyleHeldDeck = shallowRef<
 	{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
 >(undefined);
 const deck = useLoadContent(() => activeContent.value, {
+	preview: { getRoot: () => viewerRootRef.value, translate: (key, params) => t(key, params) },
+	getInitialSlide: () => props.initialSlide,
 	getHeldDeck: () => deckStyleHeldDeck.value,
 	getPendingInlineEdit: () => {
 		if (!canEditEffective.value) {
@@ -2387,7 +2389,13 @@ onBeforeUnmount(() => slidePackageClipboard.dispose());
 		<EditorChromeStyle />
 		<RibbonCustomizationStyle :css="ribbonScope.css.value" />
 		<!-- Loading -->
-		<div v-if="loading" class="pptx-vue-state pptx-vue-loading" role="status" aria-live="polite">
+		<div
+			v-if="loading"
+			class="pptx-vue-state pptx-vue-loading"
+			role="status"
+			aria-live="polite"
+			data-pptx-load-preview-host
+		>
 			<div class="pptx-vue-spinner" aria-hidden="true" />
 			<p>
 				{{

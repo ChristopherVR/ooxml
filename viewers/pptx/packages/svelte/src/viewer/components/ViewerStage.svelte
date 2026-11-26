@@ -220,7 +220,7 @@
 </script>
 
 {#if loading}
-	<div class="pptx-svelte-message" role="status">
+	<div class="pptx-svelte-message" role="status" data-pptx-load-preview-host>
 		{fontProgress
 			? t('pptx.viewer.loadingFonts', { loaded: fontProgress.loaded, total: fontProgress.total })
 			: t('pptx.common.loading')}

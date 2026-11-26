@@ -10,6 +10,7 @@ import {
 	applyImagePathPatches,
 	compatibilityWarningToasts,
 	createPresentationLoadResources,
+	createProgressiveSlidePreview,
 	pptxLoadErrorMessage,
 	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
@@ -70,6 +71,7 @@ import { GOOGLE_FONTS_LINK_ID } from './useFontInjection';
 
 export interface UseLoadContentInput {
 	content: ArrayBuffer | Uint8Array | null | undefined;
+	previewRoot?: React.RefObject<HTMLElement | null>;
 	clearSelection: () => void;
 	history: EditorHistoryResult;
 	setSlides: React.Dispatch<React.SetStateAction<PptxSlide[]>>;
@@ -170,6 +172,7 @@ export interface UseLoadContentResult {
 
 export function useLoadContent({
 	content,
+	previewRoot,
 	clearSelection,
 	history,
 	setSlides,
@@ -244,6 +247,12 @@ export function useLoadContent({
 		// on unmount or when a new file is loaded.
 		const handler = new PptxHandler();
 		const resources = createPresentationLoadResources(handler);
+		const preview = createProgressiveSlidePreview({
+			getRoot: () => previewRoot?.current,
+			isCurrent: () => !cancelled && token === renderTokenRef.current,
+			translate: translateRef.current,
+			initialSlide: initialSlideRef.current,
+		});
 		const loadBlobUrls = resources.blobUrls;
 		// Releases this deck's embedded fonts from the glyph-outline cache.
 		let releaseOutlineFonts: (() => void) | undefined;
@@ -318,6 +327,7 @@ export function useLoadContent({
 					allowExternalImages,
 					limits: limitsRef.current,
 					onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+					onSlideLoaded: (progress) => preview.show(handler, progress),
 				});
 				if (cancelled || token !== renderTokenRef.current) {
 					return;
@@ -514,6 +524,7 @@ export function useLoadContent({
 					}
 				}
 			} finally {
+				preview.dispose();
 				resources.releaseIfUncommitted();
 				if (!cancelled && token === renderTokenRef.current) {
 					setFontProgress?.(null);

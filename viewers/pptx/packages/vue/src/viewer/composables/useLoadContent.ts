@@ -12,6 +12,7 @@ import type {
 import {
 	applyInlineTextDraft,
 	createPresentationLoadResources,
+	createProgressiveSlidePreview,
 	applyImagePathPatches,
 	buildDeckSaveOptions,
 	overlayInlineTextSnapshot,
@@ -218,6 +219,8 @@ export interface UseLoadContentResult {
 }
 
 export interface UseLoadContentOptions {
+	preview?: Pick<Parameters<typeof createProgressiveSlidePreview>[0], 'getRoot' | 'translate'>;
+	getInitialSlide?: () => number | undefined;
 	/** Current list edit only; serialization does not blur or commit the editor. */
 	getPendingInlineEdit?: () => PendingInlineTextEdit | undefined;
 	/** The real deck while a Design gallery hover preview shows; save and recovery serialize it. */
@@ -337,6 +340,13 @@ export function useLoadContent(
 		const token = ++renderToken;
 		const newHandler = new PptxHandler();
 		const resources = createPresentationLoadResources(newHandler);
+		const preview =
+			options?.preview &&
+			createProgressiveSlidePreview({
+				...options.preview,
+				initialSlide: options.getInitialSlide?.(),
+				isCurrent: () => token === renderToken,
+			});
 		const loadBlobUrls = resources.blobUrls;
 
 		try {
@@ -403,6 +413,7 @@ export function useLoadContent(
 				allowExternalImages: options?.getAllowExternalImages?.(),
 				limits: options?.getLimits?.(),
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+				...(preview && { onSlideLoaded: (progress) => preview.show(newHandler, progress) }),
 			});
 			if (token !== renderToken) {
 				return;
@@ -548,6 +559,7 @@ export function useLoadContent(
 				}
 			}
 		} finally {
+			preview?.dispose();
 			resources.releaseIfUncommitted();
 			if (token === renderToken) {
 				fontProgress.value = null;

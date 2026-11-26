@@ -33,6 +33,12 @@ test('a budget fails when broken, stale, missing or unmeasured', () => {
 	assert.match(problems({}, { gone: 1 })[0], /was not measured/);
 });
 
+test('a work budget measures exact counts without byte rounding', () => {
+	const name = 'work/pptx/large deck missed first-slide previews';
+	assert.deepEqual(problems({ [name]: 0 }, { [name]: 0 }), []);
+	assert.match(problems({ [name]: 1 }, { [name]: 0 })[0], /1 is over its budget of 0 by 1/);
+});
+
 test('update writes sorted limits that check then accepts', () => {
 	const dir = mkdtempSync(join(tmpdir(), 'ooxml-perf-budgets-'));
 	try {
@@ -42,6 +48,8 @@ test('update writes sorted limits that check then accepts', () => {
 		const limits = readLimits(file);
 		assert.deepEqual(Object.keys(limits), ['package/a', 'package/b']);
 		assert.deepEqual(problems(sizes, limits), []);
+		writeLimits(sizes, file, { 'package/a': 300_000 });
+		assert.equal(readLimits(file)['package/a'], 300_000);
 	} finally {
 		rmSync(dir, { recursive: true, force: true });
 	}

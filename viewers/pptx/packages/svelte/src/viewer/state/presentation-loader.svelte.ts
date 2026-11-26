@@ -11,6 +11,7 @@ import {
 	DEFAULT_CANVAS_WIDTH,
 	createEmbeddedOutlineFontsSlot,
 	createPresentationLoadResources,
+	createProgressiveSlidePreview,
 	pptxLoadErrorMessage,
 	prefetchDeckWebfonts,
 	prepareDeckWebfonts,
@@ -190,6 +191,7 @@ export class PresentationLoader {
 	 * the core's English message.
 	 */
 	translate: LoadLimitTranslate | undefined = undefined;
+	getPreviewOptions?: () => Omit<Parameters<typeof createProgressiveSlidePreview>[0], 'isCurrent'>;
 
 	/**
 	 * The host `googleFonts` prop, read when a load waits for the deck's
@@ -203,6 +205,13 @@ export class PresentationLoader {
 		const token = ++this.#renderToken;
 		const newHandler = new PptxHandler();
 		const resources = createPresentationLoadResources(newHandler);
+		const previewOptions = this.getPreviewOptions?.();
+		const preview =
+			previewOptions &&
+			createProgressiveSlidePreview({
+				...previewOptions,
+				isCurrent: () => token === this.#renderToken,
+			});
 		const loadBlobUrls = resources.blobUrls;
 
 		try {
@@ -260,6 +269,7 @@ export class PresentationLoader {
 			const parsed = await newHandler.load(buffer as ArrayBuffer, {
 				...this.getLoadOptions(),
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+				...(preview && { onSlideLoaded: (progress) => preview.show(newHandler, progress) }),
 			});
 			if (token !== this.#renderToken) {
 				return;
@@ -365,6 +375,7 @@ export class PresentationLoader {
 				}
 			}
 		} finally {
+			preview?.dispose();
 			resources.releaseIfUncommitted();
 			if (token === this.#renderToken) {
 				this.fontProgress = null;

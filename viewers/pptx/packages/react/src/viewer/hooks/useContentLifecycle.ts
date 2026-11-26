@@ -130,6 +130,7 @@ export function useContentLifecycle(input: UseContentLifecycleInput): ContentLif
 
 	const { handlerRef } = useLoadContent({
 		content,
+		previewRoot: state.containerRef,
 		clearSelection: ops.clearSelection,
 		history,
 		setSlides: state.setSlides,

@@ -28,9 +28,8 @@ import type {
 } from 'ooxml-core/pptx';
 import { PptxHandler } from 'ooxml-core/pptx';
 import type { CanvasSize, SlideSizeEmu } from '../index';
+import { resolveImageUrls } from '../loader/resolve-image-urls';
 import {
-	applyImagePathPatches,
-	collectImagePaths,
 	DEFAULT_CANVAS_HEIGHT,
 	DEFAULT_CANVAS_WIDTH,
 	resolveMediaUrls,
@@ -151,6 +150,11 @@ export interface LoadPresentationOptions {
 	 * download, `prepareDeckWebfonts`) while they do.
 	 */
 	onSlidesParsed?: PptxHandlerLoadOptions['onSlidesParsed'];
+	/** Paint read-only previews using the same archive that will back the editor. */
+	onSlideLoaded?: (
+		handler: PptxHandler,
+		progress: Parameters<NonNullable<PptxHandlerLoadOptions['onSlideLoaded']>>[0],
+	) => void | Promise<void>;
 }
 
 export async function loadPresentation(
@@ -159,12 +163,14 @@ export async function loadPresentation(
 ): Promise<LoadedPresentation> {
 	const handler = new PptxHandler();
 	const blobUrls: string[] = [];
+	const onSlideLoaded = options?.onSlideLoaded;
 	try {
 		const parsed = await handler.load(buffer, {
 			allowExternalImages: options?.allowExternalImages,
 			maxUncompressedBytes: options?.maxUncompressedBytes,
 			limits: options?.limits,
 			onSlidesParsed: options?.onSlidesParsed,
+			...(onSlideLoaded && { onSlideLoaded: (progress) => onSlideLoaded(handler, progress) }),
 		});
 
 		const getImageData = (path: string): Promise<string | undefined> => handler.getImageData(path);
@@ -250,31 +256,4 @@ export function revokeBlobUrls(urls: Iterable<string>): void {
 			URL.revokeObjectURL(url);
 		}
 	}
-}
-
-/** Resolve lazily-loaded picture URLs and patch them into the slide tree. */
-async function resolveImageUrls(handler: PptxHandler, slides: PptxSlide[]): Promise<PptxSlide[]> {
-	const { paths, refs } = collectImagePaths(slides);
-	if (paths.size === 0) {
-		return slides;
-	}
-
-	const resolvedMap = new Map<string, string>();
-	await Promise.all(
-		Array.from(paths).map(async (path) => {
-			try {
-				const url = await handler.getImageData(path);
-				if (url) {
-					resolvedMap.set(path, url);
-				}
-			} catch {
-				// Non-critical: image will show as broken.
-			}
-		}),
-	);
-
-	return slides.map((slide) => {
-		const newElements = applyImagePathPatches(slide.elements, resolvedMap, refs);
-		return newElements === slide.elements ? slide : { ...slide, elements: newElements };
-	});
 }

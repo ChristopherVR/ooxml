@@ -497,7 +497,10 @@ export function buildViewerChrome(
 	root.appendChild(runProgramNotices.el);
 
 	const loadingOverlay = createEl(doc, 'div', 'pptxv-overlay pptxv-loading');
-	loadingOverlay.textContent = t('pptx.common.loading');
+	const loadingMessage = createEl(doc, 'div');
+	loadingOverlay.style.flexDirection = 'column';
+	loadingOverlay.dataset.pptxLoadPreviewHost = '';
+	loadingOverlay.append(loadingMessage);
 	loadingOverlay.setAttribute('role', 'status');
 	loadingOverlay.setAttribute('aria-live', 'polite');
 	loadingOverlay.hidden = true;
@@ -533,7 +536,7 @@ export function buildViewerChrome(
 		},
 		setLoading(loading, fontProgress) {
 			loadingOverlay.hidden = !loading;
-			loadingOverlay.textContent = fontProgress
+			loadingMessage.textContent = fontProgress
 				? t('pptx.viewer.loadingFonts', { loaded: fontProgress.loaded, total: fontProgress.total })
 				: t('pptx.common.loading');
 			root.setAttribute('aria-busy', String(loading));

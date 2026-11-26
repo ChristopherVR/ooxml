@@ -1,5 +1,6 @@
 import {
 	compatibilityWarningToasts,
+	createProgressiveSlidePreview,
 	describeFontEmbedding,
 	partitionTemplateElements,
 	pptxLoadErrorMessage,
@@ -31,6 +32,7 @@ export interface LoadingControllerDeps {
 	options: PptxViewerOptions;
 	store: Store<ViewerState>;
 	getTranslator(): Translator;
+	getRoot?: () => HTMLElement | undefined;
 	getEditor(): EditorController | undefined;
 	/**
 	 * Called synchronously right before a successfully parsed deck is committed
@@ -126,6 +128,12 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 		loadOptions?: LoadOptions,
 	): Promise<void> {
 		const token = ++loadToken;
+		const preview = createProgressiveSlidePreview({
+			getRoot: () => deps.getRoot?.(),
+			isCurrent: () => token === loadToken,
+			translate: deps.getTranslator(),
+			initialSlide: options.initialSlide,
+		});
 		deps.getEditor()?.reset();
 		store.set({ loading: true, fontProgress: null, error: null });
 		try {
@@ -179,6 +187,7 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 				allowExternalImages: true,
 				limits: options.limits,
 				onSlidesParsed: ({ slides, embeddedFonts }) => startWebfonts(slides, embeddedFonts),
+				onSlideLoaded: preview.show,
 			});
 			// A JSON document is imported without the slide hook.
 			if (!webfonts) {
@@ -315,6 +324,8 @@ export function createLoadingController(deps: LoadingControllerDeps): LoadingCon
 					: pptxLoadErrorMessage(error, t);
 			store.set({ loading: false, fontProgress: null, error: message });
 			options.onError?.(message, error);
+		} finally {
+			preview.dispose();
 		}
 	}
 

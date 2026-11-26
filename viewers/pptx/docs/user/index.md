@@ -22,7 +22,7 @@ pptx-viewer opens PowerPoint files directly in your browser and renders each sli
 ## Opening a file
 
 1. Drag a `.pptx` file onto the drop area labelled **"Drop a .pptx file here or click to browse"**, or click the area to open your system's file picker.
-2. Wait a moment while the file is parsed. The first slide appears on the canvas with thumbnails on the left.
+2. While a multi-slide PowerPoint file opens, a read-only slide preview appears and its thumbnails fill in. Once the deck is ready, the editor appears with the full slide rail on the left.
 
 You can also click **"or create a New Presentation"** to start from a blank one-slide deck.
 

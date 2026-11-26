@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { measurePackage } from './bundle-size.mjs';
+import { measurePptxOpeningWork, PPTX_OPEN_WORK } from './perf-budget-pptx.mjs';
 import { measureSuiteSite, scriptFiles } from './perf-budget-routes.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -27,6 +28,7 @@ export const HEADROOM = 0.03;
 /** A limit this far above what `update` would write hides a regression of that size: it fails. */
 export const STALE = 0.1;
 const KIB = 1024;
+const isWork = (name) => name.startsWith('work/');
 
 /**
  * Refuses output that names the checkout it was built in (a bundler comment with an absolute
@@ -56,6 +58,7 @@ export async function measure({ onRoute } = {}) {
 	} finally {
 		rmSync(site, { recursive: true, force: true });
 	}
+	sizes[PPTX_OPEN_WORK] = await measurePptxOpeningWork();
 	return sizes;
 }
 
@@ -70,15 +73,15 @@ export const limitFor = (bytes) =>
  */
 export function problems(sizes, limits) {
 	const out = [];
-	const kib = (bytes) => `${(bytes / KIB).toFixed(1)} KiB`;
 	for (const [name, bytes] of Object.entries(sizes)) {
+		const kib = (value) => (isWork(name) ? String(value) : `${(value / KIB).toFixed(1)} KiB`);
 		const limit = limits[name];
 		if (limit === undefined) out.push(`${name}: ${kib(bytes)} has no budget.`);
 		else if (bytes > limit)
 			out.push(
 				`${name}: ${kib(bytes)} is over its budget of ${kib(limit)} by ${kib(bytes - limit)}.`,
 			);
-		else if (limit > limitFor(bytes) * (1 + STALE))
+		else if (!isWork(name) && limit > limitFor(bytes) * (1 + STALE))
 			out.push(
 				`${name}: ${kib(bytes)} is far under its budget of ${kib(limit)}; lower it to keep the win.`,
 			);
@@ -92,14 +95,17 @@ export function readLimits(file = BUDGETS_FILE) {
 	return JSON.parse(readFileSync(file, 'utf8')).budgets;
 }
 
-export function writeLimits(sizes, file = BUDGETS_FILE) {
+export function writeLimits(sizes, file = BUDGETS_FILE, previous = {}) {
 	const budgets = Object.fromEntries(
 		Object.entries(sizes)
 			.sort(([a], [b]) => a.localeCompare(b))
-			.map(([name, bytes]) => [name, limitFor(bytes)]),
+			.map(([name, bytes]) => [
+				name,
+				isWork(name) ? 0 : Math.min(limitFor(bytes), previous[name] ?? Infinity),
+			]),
 	);
 	const $comment =
-		'Gzipped byte limits. Written by `node scripts/perf-budgets.mjs update`; read docs/performance-budgets.md before changing one.';
+		'Gzipped byte and work limits. Written by `node scripts/perf-budgets.mjs update`; read docs/performance-budgets.md before changing one.';
 	writeFileSync(file, `${JSON.stringify({ $comment, budgets }, null, '\t')}\n`);
 }
 
@@ -111,7 +117,7 @@ async function main(command, flags) {
 		return 0;
 	}
 	if (command === 'update') {
-		writeLimits(await measure());
+		writeLimits(await measure(), BUDGETS_FILE, flags.includes('--no-increase') ? readLimits() : {});
 		console.log(`Wrote ${relative(process.cwd(), BUDGETS_FILE)}. Say why in the commit.`);
 		return 0;
 	}
@@ -122,7 +128,7 @@ async function main(command, flags) {
 			console.log(`${name.padEnd(48)} ${String(bytes).padStart(10)} / ${limits[name] ?? '-'}`);
 		const found = problems(sizes, limits);
 		if (!found.length) {
-			console.log(`All ${Object.keys(sizes).length} byte budgets hold.`);
+			console.log(`All ${Object.keys(sizes).length} byte and work budgets hold.`);
 			return 0;
 		}
 		for (const line of found) console.error(process.env.GITHUB_ACTIONS ? `::error::${line}` : line);

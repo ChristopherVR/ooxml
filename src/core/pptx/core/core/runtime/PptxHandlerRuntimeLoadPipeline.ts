@@ -322,7 +322,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			await this.initializeLoadSession(data, options);
 			reader = this.beginPartReads();
 			try {
-				return await this.loadInitializedSession(options.onSlidesParsed);
+				return await this.loadInitializedSession(options);
 			} catch (error) {
 				// A slide or shape limit stops the load after the session replaced the
 				// archive: release what was parsed so far (Blob URLs, caches, the
@@ -337,9 +337,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
-	private async loadInitializedSession(
-		onSlidesParsed?: PptxHandlerLoadOptions['onSlidesParsed'],
-	): Promise<PptxData> {
+	private async loadInitializedSession({
+		onSlidesParsed,
+		onSlideLoaded,
+	}: PptxHandlerLoadOptions): Promise<PptxData> {
 		await this.detectAndPreserveVbaProject();
 		this.detectDigitalSignatureParts();
 		await this.verifySignedPackage();
@@ -347,7 +348,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		const presentationState = await this.loadPresentationState();
 		const slideMasters = await this.parseSlideMasters();
 		await this.enrichSlideMastersWithTxStyles(slideMasters);
-		const slides = await this.loadSlidesForPresentation(presentationState.sectionBySlideId);
+		const { width, height, sectionBySlideId } = presentationState;
+		const theme = onSlideLoaded ? this.buildThemeObject() : undefined;
+		const slides = await this.loadSlidesForPresentation(
+			sectionBySlideId,
+			onSlideLoaded &&
+				((slide, index, total) => onSlideLoaded({ slide, index, total, width, height, theme })),
+		);
 		const slidesWithWarnings = this.attachSlideWarnings(slides);
 		this.resetElementIdCounter(slides);
 		// Baseline for the save pipeline's "this slide still matches the bytes

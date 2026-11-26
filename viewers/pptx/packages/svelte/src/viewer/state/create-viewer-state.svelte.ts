@@ -241,6 +241,11 @@ export function createViewerState(options: CreateViewerStateOptions): ViewerStat
 	});
 	provideLinkedContent(() => externalContent.allowed);
 	loader.translate = (key, params) => options.t(key, params);
+	loader.getPreviewOptions = () => ({
+		getRoot: options.getRootEl,
+		translate: options.t,
+		initialSlide: options.getInitialSlide() || undefined,
+	});
 	loader.getGoogleFonts = () => editorUi.getGoogleFonts();
 
 	// Each 3D opt-in flag ANDs the host's own prop with Options > Advanced >

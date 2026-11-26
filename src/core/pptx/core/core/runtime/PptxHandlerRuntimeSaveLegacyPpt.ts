@@ -1,12 +1,3 @@
-import {
-	buildDeckMasterRoundTripsFromPptx,
-	buildMetroBlobs,
-	buildPptFile,
-	convertDeckToWriteModel,
-	deckNeedsMetroBlobs,
-	convertMasterTextStyles,
-	resolvePictureSources,
-} from '../../ppt/writer';
 import type { PptxMasterTextStyles, PptxSlide } from '../../types';
 import type { PptxHandlerSaveOptions } from '../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveHandoutInfrastructure';
@@ -78,26 +69,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	}
 
 	/**
-	 * Build the `metroBlob` round-trip packages (see
-	 * `ppt/writer/metro-blob-package.ts`) that let PowerPoint 2007+ reopen
-	 * ink, SmartArt, charts and 3D models from the `.ppt` as native objects.
-	 * Their OOXML comes from this handler's own lossless `.pptx` save of the
-	 * same slides (always Transitional: the package is read by PowerPoint's
-	 * Transitional DrawingML loader), so an edited element round-trips its
-	 * current state, not the state it was loaded with. Skipped entirely when
-	 * the deck holds no such element.
-	 */
-	private async resolveMetroBlobs(
-		slides: PptxSlide[],
-		pptxBytes: Uint8Array | undefined,
-	): Promise<Map<string, Uint8Array> | undefined> {
-		if (!pptxBytes || !deckNeedsMetroBlobs(slides)) {
-			return undefined;
-		}
-		return buildMetroBlobs(pptxBytes, slides);
-	}
-
-	/**
 	 * The text styles of the master at `masterPath` (the first slide's master
 	 * when omitted), preferring an edited copy passed in `options.slideMasters`
 	 * over the styles parsed at load.
@@ -137,10 +108,22 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		options: PptxHandlerSaveOptions | undefined,
 		saveAsPptx?: LegacyPptxSerializer,
 	): Promise<Uint8Array> {
+		const {
+			buildDeckMasterRoundTripsFromPptx,
+			buildMetroBlobs,
+			buildPptFile,
+			convertDeckToWriteModel,
+			deckNeedsMetroBlobs,
+			convertMasterTextStyles,
+			resolvePictureSources,
+		} = await import('../../ppt/writer');
 		// One Transitional .pptx save feeds both the metroBlob packages and each
 		// main master's placeholders, theme and text-style round-trip atoms.
 		const pptxBytes = saveAsPptx ? await saveAsPptx() : undefined;
-		const metroBlobs = await this.resolveMetroBlobs(slides, pptxBytes);
+		const metroBlobs =
+			pptxBytes && deckNeedsMetroBlobs(slides)
+				? await buildMetroBlobs(pptxBytes, slides)
+				: undefined;
 		const deckMasters = pptxBytes ? await buildDeckMasterRoundTripsFromPptx(pptxBytes) : undefined;
 		this.compatibilityService.resetWarnings();
 		const resolvedMedia = await this.resolveAudioMediaBytes(slides);

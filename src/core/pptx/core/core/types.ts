@@ -95,6 +95,16 @@ export interface PptxHandlerLoadOptions {
 		slides: readonly PptxSlide[];
 		embeddedFonts: readonly PptxEmbeddedFont[];
 	}) => void;
+	/** Observe each parsed slide before the parser advances. The host can await
+	 * a paint or idle turn. Wait for `load()` before editing or saving. */
+	onSlideLoaded?: (progress: {
+		slide: Readonly<PptxSlide>;
+		index: number;
+		total: number;
+		width: number;
+		height: number;
+		theme: PptxData['theme'];
+	}) => void | Promise<void>;
 	/**
 	 * When `false` (default), relationship targets that resolve to
 	 * `http://` or `https://` URLs are dropped from rendered slides

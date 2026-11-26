@@ -492,12 +492,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	protected async loadSlidesForPresentation(
 		sectionBySlideId: Map<string, { sectionId: string; sectionName: string }>,
+		onSlideLoaded?: Parameters<typeof this.slideLoaderService.loadSlides>[0]['onSlideLoaded'],
 	): Promise<import('../../types').PptxSlide[]> {
 		if (!this.presentationData) {
 			return [];
 		}
 
 		return this.slideLoaderService.loadSlides({
+			onSlideLoaded,
 			presentationData: this.presentationData,
 			parser: this.parser,
 			zip: this.zip,

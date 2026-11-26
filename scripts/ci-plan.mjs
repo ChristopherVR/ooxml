@@ -424,7 +424,7 @@ const A11Y_REACH =
  * screens load in the Playwright the accessibility gates install (`e2e/a11y/package.json`).
  */
 const BUDGET_REACH =
-	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|e2e\/a11y\/package\.json$|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
+	/^(src\/(core|ui)\/|apps\/office-suite\/|viewers\/pptx\/packages\/|site\/(?!docs\/)|e2e\/a11y\/package\.json$|scripts\/(perf-budgets\.json|(perf-budgets|perf-budget-pptx|perf-budget-routes|bundle-size|bundle-suite|build-suite|build-pwa|shell-css|preview-site)\.mjs)$)/;
 
 /** The core's writers: what a save writes, which the export round trip (`export.spec.ts`) reads. */
 const CORE_WRITER = /^src\/core\/.*(writ|serializ|save)/i;

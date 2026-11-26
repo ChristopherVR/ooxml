@@ -375,7 +375,12 @@ const noopClose = (): void => undefined;
 			<span hidden pptxEditorChromeStyle></span>
 			<span hidden [pptxRibbonCustomizationStyle]="ribbonCustomizationCss()"></span>
 			@if (loader.loading()) {
-				<div class="pptx-ng-state pptx-ng-loading" role="status" aria-live="polite">
+				<div
+					class="pptx-ng-state pptx-ng-loading"
+					role="status"
+					aria-live="polite"
+					data-pptx-load-preview-host
+				>
 					<div class="pptx-ng-spinner" aria-hidden="true"></div>
 					@if (loader.fontProgress(); as fontProgress) {
 						<p>
@@ -2828,7 +2833,14 @@ export class PowerPointViewerComponent
 		// write re-parse the deck and re-seed the editor from the original bytes.
 		effect(() => {
 			const content = this.fileIO.activeContent();
-			untracked(() => void this.loader.load(content));
+			untracked(
+				() =>
+					void this.loader.load(content, {
+						getRoot: () => this.viewerRoot()?.nativeElement,
+						translate: (key, params) => this.translateService.instant(key, params),
+						initialSlide: this.initialSlide(),
+					}),
+			);
 		});
 
 		// Reset to the first slide and seed the editable deck whenever a new

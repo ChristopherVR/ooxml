@@ -78,13 +78,14 @@
 		"suite/route/excel landing": 59392,
 		"suite/route/home": 59392,
 		"suite/route/new excel": 1988608,
-		"suite/route/new powerpoint": 2911232,
+		"suite/route/new powerpoint": 2897920,
 		"suite/route/new visio": 1592320,
 		"suite/route/new word": 2204672,
 		"suite/route/powerpoint landing": 59392,
 		"suite/route/start chooser": 11264,
 		"suite/route/teams": 1012736,
 		"suite/route/visio landing": 59392,
-		"suite/route/word landing": 59392
+		"suite/route/word landing": 59392,
+		"work/pptx/large deck missed first-slide previews": 0
 	}
 }

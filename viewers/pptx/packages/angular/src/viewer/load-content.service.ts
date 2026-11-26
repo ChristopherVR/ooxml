@@ -7,6 +7,7 @@ import {
 	buildDeckSaveOptions,
 	collectImagePaths,
 	createPresentationLoadResources,
+	createProgressiveSlidePreview,
 	describeFontEmbedding,
 	overlayInlineTextSnapshot,
 	overlayMasterViewInlineSnapshot,
@@ -442,13 +443,22 @@ export class LoadContentService {
 	}
 
 	/** Parse the supplied `.pptx` bytes into the reactive signals. */
-	async load(raw: Uint8Array | ArrayBuffer | null | undefined): Promise<void> {
+	async load(
+		raw: Uint8Array | ArrayBuffer | null | undefined,
+		previewOptions?: Omit<Parameters<typeof createProgressiveSlidePreview>[0], 'isCurrent'>,
+	): Promise<void> {
 		if (!raw) {
 			return;
 		}
 		const token = ++this.renderToken;
 		const newHandler = new PptxHandler();
 		const resources = createPresentationLoadResources(newHandler);
+		const preview =
+			previewOptions &&
+			createProgressiveSlidePreview({
+				...previewOptions,
+				isCurrent: () => token === this.renderToken,
+			});
 		const loadBlobUrls = resources.blobUrls;
 
 		try {
@@ -522,6 +532,7 @@ export class LoadContentService {
 				allowExternalImages: true,
 				limits,
 				onSlidesParsed: (deck) => startWebfonts([...deck.slides], [...deck.embeddedFonts]),
+				...(preview && { onSlideLoaded: (progress) => preview.show(newHandler, progress) }),
 			});
 			if (token !== this.renderToken) {
 				return;
@@ -671,6 +682,7 @@ export class LoadContentService {
 				}
 			}
 		} finally {
+			preview?.dispose();
 			resources.releaseIfUncommitted();
 			if (token === this.renderToken) {
 				this.fontProgress.set(null);

@@ -77,6 +77,11 @@ export interface PptxSlideLoaderThemeOverride {
  * parse, enrich, and assemble slide data from the PPTX archive.
  */
 export interface PptxSlideLoaderParams {
+	/** Yield after a slide has been parsed and enriched for the opening preview. */
+	onSlideLoaded?:
+		| ((slide: PptxSlide, index: number, total: number) => void | Promise<void>)
+		| undefined;
+
 	/** Parsed root presentation XML object. */
 	presentationData: XmlObject;
 	/** XML parser instance for parsing raw XML strings. */

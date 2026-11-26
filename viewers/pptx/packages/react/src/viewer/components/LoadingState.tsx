@@ -17,8 +17,9 @@ export function LoadingState({ className, fontProgress }: LoadingStateProps): Re
 			role='status'
 			aria-live='polite'
 			aria-atomic='true'
+			data-pptx-load-preview-host
 			className={cn(
-				'h-full w-full flex items-center justify-center text-muted-foreground',
+				'h-full w-full flex flex-col items-center justify-center text-muted-foreground',
 				className,
 			)}
 		>

@@ -371,6 +371,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.loading = createLoadingController({
 			options,
 			store: this.store,
+			getRoot: () => this.lifecycle?.chrome.root,
 			doc: this.doc,
 			getTranslator: () => this.t,
 			getLocale: () => this.currentLocale,

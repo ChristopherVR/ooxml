@@ -937,6 +937,7 @@ test('the byte budgets run when shipped code, the suite site or the budgets chan
 		'viewers/pptx/packages/vanilla/src/viewer/PptxViewer.ts',
 		'site/index.html',
 		'scripts/perf-budgets.json',
+		'scripts/perf-budget-pptx.mjs',
 		'scripts/perf-budget-routes.mjs',
 		'scripts/build-suite.mjs',
 	]) {

@@ -52,6 +52,7 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 	 * @returns Array of fully assembled {@link PptxSlide} objects.
 	 */
 	public async loadSlides(params: PptxSlideLoaderParams): Promise<PptxSlide[]> {
+		const { onSlideLoaded } = params;
 		const presentation = params.presentationData['p:presentation'] as XmlObject | undefined;
 		const sldIdLst = presentation?.['p:sldIdLst'] as XmlObject | undefined;
 		const sldIds = this.toXmlObjectArray(sldIdLst?.['p:sldId']);
@@ -84,13 +85,18 @@ export class PptxSlideLoaderService implements IPptxSlideLoaderService {
 			const slide = await this.loadSingleSlide(params, at(sldIds, index), index, relsMap);
 			if (slide) {
 				slides.push(slide);
+				if (onSlideLoaded) {
+					await this.enrichSmartArtData([slide], params);
+					await this.enrichChartData([slide], params);
+					await onSlideLoaded(slide, index, sldIds.length);
+				}
 			}
 		}
 
-		// Post-process: enrich SmartArt elements with diagram data
-		await this.enrichSmartArtData(slides, params);
-		// Post-process: enrich chart elements with parsed chart data
-		await this.enrichChartData(slides, params);
+		if (!onSlideLoaded) {
+			await this.enrichSmartArtData(slides, params);
+			await this.enrichChartData(slides, params);
+		}
 		return slides;
 	}
 
