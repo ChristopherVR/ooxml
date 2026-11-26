@@ -55,6 +55,6 @@ describe('swatch and style names follow the locale', () => {
 		expect(first.getAttribute('aria-label')).toBe('Blaue Füllung');
 		expect(
 			gallery.el.querySelector('.gallery-panel[role="group"]')?.getAttribute('aria-label'),
-		).toBe('Schnelle Stile');
+		).toBe('Schnellformatvorlagen');
 	});
 });

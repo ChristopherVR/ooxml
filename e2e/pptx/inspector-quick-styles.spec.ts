@@ -14,7 +14,7 @@ import type { Page } from '@playwright/test';
 import JSZip from 'jszip';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { elementWithText, inspector, loadDeck, selectElement } from './support/deck';
+import { elementWithText, inspector, loadDeck, SAMPLE_DECK, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -92,4 +92,17 @@ test('touch-size Quick Styles tiles stay inside a narrow inspector', async ({ pa
 	const state = await quickStylesState(page);
 	expect(state!.inside).toBeTruthy();
 	expect(state!.smallest).toBeGreaterThanOrEqual(24);
+});
+
+test('the German inspector names its Quick Styles gallery and tiles', async ({ page }) => {
+	await loadDeck(page, SAMPLE_DECK, '/?locale=de');
+	await selectElement(page, elementWithText(page, 'Product Overview'));
+	const gallery = inspector(page).locator('.gallery-panel[role="group"]', {
+		has: page.locator('[data-gallery-item="blueFill"]'),
+	});
+	await expect(gallery).toHaveAttribute('aria-label', 'Schnellformatvorlagen');
+	await expect(gallery.locator('[data-gallery-item="blueFill"]')).toHaveAttribute(
+		'aria-label',
+		'Blaue Füllung',
+	);
 });
