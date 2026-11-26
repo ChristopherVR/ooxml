@@ -55,11 +55,8 @@ test('authors, saves and clears a sparkline date axis with keyboard undo', async
 	);
 	await goToCell(page, 'F1');
 	expect(await ratio()).toBeCloseTo(0.05, 2);
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await clickRibbonControl(
-		page,
-		ribbon(page).locator('[data-command="sparkline.settings"]').first(),
-	);
+	await ribbon(page).getByRole('tab', { name: 'Sparkline', exact: true }).click();
+	await clickRibbonControl(page, ribbon(page).locator('[data-command="sparkline.settings"]'));
 	const settings = editor(page).locator('[data-dialog="sparkline-settings"]');
 	await expect(settings.getByLabel('Date Range (optional):', { exact: true })).toHaveValue(
 		"'Sheet1'!A2:C2",
