@@ -388,20 +388,42 @@ test('Bring Forward and Send Backward change which drawing paints over an overla
 	await expect.poll(top).toBe('arrow');
 });
 
-test('one floating shape disables Align and Group with accessible reasons', async ({ page }) => {
+test('one floating shape aligns to the margin or page and leaves Group disabled', async ({
+	page,
+}) => {
 	const editor = await openShapes(page);
 	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
-	await editor.locator('.dve-print-float').nth(2).click({ force: true });
+	const ellipse = editor.locator('.dve-print-float').nth(2);
+	await ellipse.click({ force: true });
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	await unfoldArrange(editor, 'Layout');
 	const align = editor.getByRole('combobox', { name: 'Align', exact: true });
 	const group = editor.getByRole('combobox', { name: 'Group', exact: true });
-	await expect(align).toBeDisabled();
-	await expect(align).toHaveAccessibleDescription('Select two or more floating drawings.');
+	await expect(align).toBeEnabled();
+	for (const value of ['selected', 'x', 'y'])
+		await expect(align.locator(`option[value="${value}"]`)).toBeDisabled();
 	await expect(group).toBeDisabled();
 	await expect(group).toHaveAccessibleDescription(
 		'Select two or more floating shapes in one paragraph.',
 	);
+	for (const [target, selector] of [
+		['margin', '.dve-print-column'],
+		['page', '.dve-print-page'],
+	] as const) {
+		await align.selectOption(target);
+		await align.selectOption('right');
+		await expect
+			.poll(() =>
+				ellipse.evaluate((element, selector) => {
+					const sheet = element.closest('.dve-print-page')!;
+					const reference = sheet.matches(selector) ? sheet : sheet.querySelector(selector)!;
+					return Math.abs(
+						reference.getBoundingClientRect().right - element.getBoundingClientRect().right,
+					);
+				}, selector),
+			)
+			.toBeLessThan(1);
+	}
 });
 
 test('the print selection frame rotates around the shape center', async ({ page }) => {

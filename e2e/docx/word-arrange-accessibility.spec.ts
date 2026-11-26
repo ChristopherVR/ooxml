@@ -46,8 +46,10 @@ test('French labels reach Arrange menus, disabled reasons and the Selection Pane
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	await unfoldArrange(editor, 'Layout');
 	await editor.evaluate((element) => element.setAttribute('locale', 'fr'));
-	const align = editor.getByRole('combobox', { name: 'Aligner', exact: true });
-	await expect(align).toHaveAccessibleDescription('Sélectionnez au moins deux dessins flottants.');
+	const group = editor.locator('select[data-arrange="group"]:visible');
+	await expect(group).toHaveAccessibleDescription(
+		'Sélectionnez au moins deux formes flottantes dans un paragraphe.',
+	);
 	await editor.locator('select[data-arrange="position"]:visible').press('Enter');
 	await expect(editor.getByRole('menuitemradio', { name: /En bas à droite/ })).toBeVisible();
 	await page.keyboard.press('Escape');

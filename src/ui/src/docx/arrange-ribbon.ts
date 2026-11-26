@@ -181,7 +181,7 @@ export function syncArrange(
 			!node?.attrs.title,
 		);
 	const alignable =
-		positions.length > 1 &&
+		positions.length > 0 &&
 		positions.every((pos) => Boolean(state.doc.nodeAt(pos)?.attrs.anchored));
 	for (const control of toolbar.querySelectorAll<HTMLSelectElement>('select[data-arrange]')) {
 		const key = control.dataset.arrange;
@@ -193,7 +193,7 @@ export function syncArrange(
 		} else if ((key === 'align' || key === 'group' || key === 'position') && !printLayout)
 			unavailable = 'Switch to Print Layout to arrange drawings.';
 		else if (!drawing) unavailable = reason;
-		else if (key === 'align' && !alignable) unavailable = 'Select two or more floating drawings.';
+		else if (key === 'align' && !alignable) unavailable = 'Select a floating drawing.';
 		else if (key === 'group' && !(floated && (groupable || ungroupable)))
 			unavailable = 'Select two or more floating shapes in one paragraph.';
 		const possible = unavailable === undefined;
@@ -235,7 +235,11 @@ export function syncArrange(
 				['x', 3],
 				['y', 3],
 			] as const)
-				disableOption(value, positions.length < count);
+				disableOption(
+					value,
+					positions.length < count,
+					value === 'selected' ? 'Select two or more floating drawings.' : undefined,
+				);
 		if (key === 'group') {
 			disableOption('group', !groupable, 'Select two or more floating shapes in one paragraph.');
 			disableOption('ungroup', !ungroupable);

@@ -100,10 +100,14 @@ function align(
 	value: string,
 ) {
 	if (value === 'page' || value === 'margin' || value === 'selected') {
-		targets.set(view, value);
+		if (value !== 'selected' || positions.length >= 2) targets.set(view, value);
 		return;
 	}
-	const target = targets.get(view) ?? (positions.length > 1 ? 'selected' : 'margin');
+	const preferred = targets.get(view);
+	const target =
+		positions.length === 1 && preferred === 'selected'
+			? 'margin'
+			: (preferred ?? (positions.length > 1 ? 'selected' : 'margin'));
 	const drawings = positions.map((pos) => ({
 		pos,
 		placement: drawingImage(view.state.doc.nodeAt(pos))?.placement,
