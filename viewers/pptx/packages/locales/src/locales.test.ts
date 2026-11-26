@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, test } from 'vitest';
 
 import {
 	translationsDe,
@@ -19,6 +19,10 @@ const locales = {
 	ja: translationsJa,
 	ko: translationsKo,
 };
+
+test('uses PowerPoint’s German label for shape Quick Styles', () => {
+	expect(translationsDe['pptx.shape.quickStyles']).toBe('Schnellformatvorlagen');
+});
 
 describe('complete locale dictionaries', () => {
 	for (const [locale, translations] of Object.entries(locales)) {

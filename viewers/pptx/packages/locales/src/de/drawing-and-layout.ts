@@ -60,7 +60,7 @@ export const translations = {
 	'pptx.arrange.needsDistributeSelection': 'Wählen Sie mindestens drei Objekte zum Verteilen aus.',
 	'pptx.arrange.needsRotateSelection': 'Wählen Sie ein Objekt zum Drehen aus.',
 	'pptx.arrange.objectLocked': 'Ein ausgewähltes Objekt ist gesperrt.',
-	'pptx.shape.quickStyles': 'Schnelle Stile',
+	'pptx.shape.quickStyles': 'Schnellformatvorlagen',
 	'pptx.shape.quickStyleAccent': 'Akzent',
 	'pptx.shape.quickStyleSubtle': 'Dezent',
 	'pptx.shape.quickStyleOutline': 'Kontur',
