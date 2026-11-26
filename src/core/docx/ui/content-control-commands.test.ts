@@ -163,6 +163,20 @@ describe('content control commands', () => {
 		expect(typeOverPlaceholder(drop, 2, 'x')).toBe('blocked');
 	});
 
+	it('types beside an untagged check box that ends where a tagged control starts', () => {
+		const state = stateOf(
+			[
+				{ text: 'ab' },
+				{ text: '☐', contentControl: control({ id: '5', kind: 'checkbox', checked: false }) },
+				{ text: 'xyz', contentControl: control({ id: '6', appearance: 'tags' }) },
+			],
+			4,
+		);
+		const tr = typeOverPlaceholder(state, 4, 'Q');
+		if (tr === 'blocked' || !tr) throw new Error('expected a transaction');
+		expect(text(state.apply(tr))).toBe('ab☐Qxyz');
+	});
+
 	it('deleting all text brings the placeholder back', () => {
 		const state = stateOf([{ text: 'Hi', contentControl: control({ kind: 'text' }) }], 1);
 		const all = state.apply(state.tr.setSelection(TextSelection.create(state.doc, 1, 3)));

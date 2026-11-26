@@ -339,8 +339,11 @@ export function typeOverPlaceholder(
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') {
+		// Only a tagged control's own edge can hold the caret inside it.
 		const inside =
-			taggedEdge || (from > span.from && from < span.to) || (from === span.from && to === span.to);
+			(taggedEdge && control.appearance === 'tags') ||
+			(from > span.from && from < span.to) ||
+			(from === span.from && to === span.to);
 		if (inside || (from === span.from && to > from)) return 'blocked';
 		// Beside the control: the new text must not become part of it.
 		const type = state.schema.marks.contentControl!;
