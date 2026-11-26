@@ -129,7 +129,26 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	await expect
 		.poll(() => canvas.locator('.dve-paper').evaluate((el) => el.scrollLeft))
 		.toBeGreaterThan(0);
-	await controls.getByRole('button', { name: 'Previous page' }).click();
+	const previous = controls.getByRole('button', { name: 'Previous page' });
+	const next = controls.getByRole('button', { name: 'Next page' });
+	await previous.click();
+	await expect(previous).toBeFocused();
+	await expect(status).toHaveText(/Page 1 of/);
+	await page.keyboard.press('ArrowRight');
+	await expect(status).toHaveText(/Page 2 of/);
+	await page.keyboard.press('ArrowLeft');
+	await expect(status).toHaveText(/Page 1 of/);
+	await next.click();
+	await expect(next).toBeFocused();
+	await page.keyboard.press('PageUp');
+	await expect(status).toHaveText(/Page 1 of/);
+	await page.keyboard.press('PageDown');
+	await expect(status).toHaveText(/Page 2 of/);
+	await page.keyboard.press('PageUp');
+	await page.keyboard.press('Enter');
+	await expect(status).toHaveText(/Page 2 of/);
+	await previous.focus();
+	await page.keyboard.press('Space');
 	await expect(status).toHaveText(/Page 1 of/);
 	await page.setViewportSize({ width: 600, height: 640 });
 	await expect(body).toHaveCSS('column-count', '1');

@@ -170,21 +170,30 @@ it('pages by one spread and gap, tolerates rounding and clamps after resize', as
 		const status = frame.querySelector('[role="status"]');
 		const buttons = frame.querySelectorAll<HTMLButtonElement>('.dve-reader-controls button');
 		const [previous, next] = buttons;
+		if (!previous || !next) throw new Error('Expected reader paging buttons');
 		expect(status?.textContent).toBe('Page 1 of 3');
-		expect(previous?.getAttribute('aria-disabled')).toBe('true');
+		expect(previous.getAttribute('aria-disabled')).toBe('true');
 		await new Promise(requestAnimationFrame);
-		next?.click();
+		next.click();
 		expect(status?.textContent).toBe('Page 2 of 3');
 		expect(paper.scrollLeft).toBe(632);
-		next?.click();
+		next.focus();
+		const press = (key: string) =>
+			next.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+		expect(press('PageUp')).toBe(false);
+		expect(paper.scrollLeft).toBe(0);
+		expect(press(' ')).toBe(true);
+		expect(press('Enter')).toBe(true);
+		next.click();
+		next.click();
 		expect(paper.scrollLeft).toBe(1264);
-		expect(next?.getAttribute('aria-disabled')).toBe('true');
+		expect(next.getAttribute('aria-disabled')).toBe('true');
 		width = flowWidth = 500;
 		resize();
 		await new Promise(requestAnimationFrame);
 		expect(paper.scrollLeft).toBe(0);
 		expect(status?.textContent).toBe('Page 1 of 1');
-		expect(next?.getAttribute('aria-disabled')).toBe('true');
+		expect(next.getAttribute('aria-disabled')).toBe('true');
 	} finally {
 		presentation.dispose();
 		view.destroy();

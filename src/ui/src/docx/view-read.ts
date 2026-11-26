@@ -86,17 +86,20 @@ export function mountView(host: ViewHost): ViewPresentation {
 	};
 	const keys = (event: KeyboardEvent) => {
 		if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+		const path = event.composedPath();
+		const pagingButton = path.find((target) => target === previous || target === next);
+		if (pagingButton && !['ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown'].includes(event.key))
+			return;
 		if (
-			event
-				.composedPath()
-				.some(
-					(target) =>
-						target instanceof HTMLElement &&
-						(target.isContentEditable ||
-							target.matches(
-								'input, textarea, select, button, dialog, [role="dialog"], office-ui-dialog',
-							)),
-				)
+			path.some(
+				(target) =>
+					target instanceof HTMLElement &&
+					target !== pagingButton &&
+					(target.isContentEditable ||
+						target.matches(
+							'input, textarea, select, button, dialog, [role="dialog"], office-ui-dialog',
+						)),
+			)
 		)
 			return;
 		switch (event.key) {
