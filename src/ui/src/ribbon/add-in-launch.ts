@@ -63,14 +63,8 @@ export function addInLauncher(
 		});
 	}
 	const close = (id: string) => {
-		for (const child of host.children) {
-			if (
-				child instanceof HTMLElement &&
-				child.dataset.addInId === id &&
-				child.localName === 'office-ui-add-in-pane'
-			)
-				child.remove();
-		}
+		const pane = host.querySelector<HTMLElement>('office-ui-add-in-pane');
+		if (pane?.dataset.addInId === id) pane.remove();
 	};
 	return { pane, open, close };
 }

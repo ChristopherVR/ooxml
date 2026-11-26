@@ -1,4 +1,12 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'Resize add-in pane': [
+		'Redimensionner le volet du complément',
+		'Add-In-Bereich vergrößern oder verkleinern',
+		'Cambiar el tamaño del panel del complemento',
+		'调整加载项窗格大小',
+		'アドイン ウィンドウのサイズを変更',
+		'추가 기능 창 크기 조정',
+	],
 	'The host must enforce a frame policy to run add-ins.': [
 		'L’hôte doit appliquer une politique de cadres pour exécuter les compléments.',
 		'Der Host muss zum Ausführen von Add-Ins eine Frame-Richtlinie durchsetzen.',

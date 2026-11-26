@@ -1,7 +1,8 @@
 const BODY = '[data-pptx-editor-chrome] [data-pptx-chrome="body"]';
 const COMMENTS = '[data-pptx-comments-panel]';
 const SELECTION = '[data-pptx-selection-pane]';
-const PANE_CONTENT = `:is(${COMMENTS}, ${SELECTION})`;
+const ADD_IN = 'office-ui-add-in-pane';
+const PANE_CONTENT = `:is(${COMMENTS}, ${SELECTION}, ${ADD_IN})`;
 const PANE = `:is(${PANE_CONTENT}, :has(${PANE_CONTENT}))`;
 const INSPECTOR = ':is([data-pptx-inspector], [data-pptx-chrome="inspector"])';
 
@@ -33,7 +34,7 @@ ${COMMENTS} button[data-pptx-comment-post]:hover:enabled { filter: brightness(.9
   ${COMMENTS} button[data-pptx-comment-post] { min-block-size: 44px; }
 }
 @media (min-width: 768px) {
-  ${BODY} > ${PANE} {
+  ${BODY} > ${PANE}:not(${ADD_IN}) {
     position: relative;
     order: 1;
     flex: 0 0 clamp(224px, 30%, var(--office-side-pane-width, 320px));
@@ -41,6 +42,7 @@ ${COMMENTS} button[data-pptx-comment-post]:hover:enabled { filter: brightness(.9
     min-block-size: 0;
   }
   ${BODY} > ${PANE} :is(${INSPECTOR}, ${SELECTION}) { inline-size: 100% !important; min-inline-size: 0; }
+  ${BODY}:has(> ${ADD_IN}) > ${PANE}:not(${ADD_IN}),
   ${BODY}:has(${SELECTION}) > :is(${COMMENTS}, :has(${COMMENTS})):not(:has(${SELECTION})) {
     display: none;
   }

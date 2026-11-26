@@ -235,6 +235,7 @@ export function buildShell(core: EditorCore): Shell {
 	const commentsPane = createCommentsPaneSlot(ctx);
 	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
+	canvasRow.dataset.officeAddInDock = '';
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
 	const gridHost = el(doc, 'div', 'xve-grid-host');
 	const tabsRow = el(doc, 'div', 'xve-tabs-row');

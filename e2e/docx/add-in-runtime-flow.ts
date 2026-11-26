@@ -92,6 +92,16 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 			await dialog.getByRole('button', { name: 'Open Notes', exact: true }).click();
 		}
 		await expect(pane.getByRole('heading', { name: addInName })).toBeFocused();
+		const separator = editor.getByRole('separator', { name: 'Resize add-in pane' });
+		await expect(separator).toHaveAttribute('aria-valuenow', '320');
+		await separator.focus();
+		await separator.press('ArrowLeft');
+		await expect(separator).toHaveAttribute('aria-valuenow', '336');
+		const bounds = await pane.boundingBox();
+		expect(bounds?.x).toBeGreaterThan(320);
+		expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(
+			page.viewportSize()?.width ?? 0,
+		);
 		await expect(pane.locator('iframe')).toHaveAttribute('sandbox', 'allow-scripts');
 		await expect(pane.locator('iframe')).toHaveAttribute('referrerpolicy', 'no-referrer');
 		await expect(frame.locator('#ready')).toHaveText(

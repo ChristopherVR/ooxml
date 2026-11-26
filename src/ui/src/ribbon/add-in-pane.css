@@ -1,17 +1,40 @@
 :host {
-	position: fixed;
-	inset: auto 0 0 auto;
-	z-index: 100;
-	width: min(360px, 100%);
-	height: min(600px, 70dvh);
+	display: flex;
+	order: 2;
+	flex: 0 0 var(--add-in-pane-width, 320px);
+	min-inline-size: 0;
+	min-block-size: 0;
+	box-sizing: border-box;
+}
+.resize {
+	flex: 0 0 8px;
+	border-inline-end: 1px solid var(--office-border);
+	cursor: col-resize;
+	touch-action: none;
+	background: var(--office-background);
+}
+.resize:hover,
+.resize:focus-visible {
+	background: var(--office-accent);
+}
+.resize:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: calc(-1 * var(--office-focus-width));
 }
 office-ui-task-pane {
-	height: 100%;
-	border: 1px solid var(--office-border);
-	box-shadow: 0 0 16px #0003;
+	flex: 1;
+}
+office-ui-task-pane::part(body) {
+	display: flex;
+	flex-direction: column;
+	padding: 0;
+}
+[role='status'] {
+	padding-inline: var(--office-space-3);
 }
 iframe {
+	flex: 1;
 	width: 100%;
-	height: 100%;
+	min-height: 0;
 	border: 0;
 }

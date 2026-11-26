@@ -267,6 +267,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	core.formatDialogs.setLocale(core.locale);
 	const body = document.createElement('div');
 	body.className = 'dve-body';
+	body.dataset.officeAddInDock = '';
 	shell.chartFormat = createChartFormatPane({
 		view: () => core.targetView(),
 		theme: () => core.model.theme,

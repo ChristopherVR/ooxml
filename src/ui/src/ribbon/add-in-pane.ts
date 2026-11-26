@@ -14,6 +14,7 @@ import {
 	isPaneHandshake,
 	type BridgeResult,
 } from './add-in-protocol';
+import { AddInPaneWidth } from './add-in-pane-resize';
 import css from './add-in-pane.css?raw';
 
 interface PaneOptions {
@@ -35,12 +36,21 @@ class OfficeUiAddInPane extends OfficeElement {
 	#options: PaneOptions | undefined;
 	#frame: HTMLIFrameElement | undefined;
 	#status = '';
+	#width = new AddInPaneWidth(this, () => this.requestUpdate());
+	#sizeObserver: ResizeObserver | undefined;
 	#stop: (() => void) | undefined;
 
 	show(options: PaneOptions): void {
 		this.#options = options;
 		const window = this.ownerDocument.defaultView;
 		if (!window) return;
+
+		const dock = this.parentElement;
+		if (dock && window.ResizeObserver) {
+			this.#sizeObserver = new window.ResizeObserver(() => this.#width.layout());
+			this.#sizeObserver.observe(dock);
+		}
+		this.#width.layout();
 
 		const frame = this.ownerDocument.createElement('iframe');
 		frame.title = options.name;
@@ -126,6 +136,7 @@ class OfficeUiAddInPane extends OfficeElement {
 	}
 
 	override disconnectedCallback() {
+		this.#sizeObserver?.disconnect();
 		this.#stop?.();
 		this.#stop = undefined;
 		super.disconnectedCallback();
@@ -138,14 +149,31 @@ class OfficeUiAddInPane extends OfficeElement {
 			this.remove();
 			options.restoreFocus();
 		};
-		return html`<office-ui-task-pane
-			.label=${options.name}
-			.closeLabel=${options.t('Close')}
-			@office-pane-close=${close}
-		>
-			<p role="status" ?hidden=${!this.#status}>${this.#status}</p>
-			${this.#frame}
-		</office-ui-task-pane>`;
+		const width = this.#width;
+		return html`<div
+				class="resize"
+				role="separator"
+				tabindex="0"
+				aria-label=${options.t('Resize add-in pane')}
+				aria-controls="add-in-content"
+				aria-orientation="vertical"
+				aria-valuemin=${width.min}
+				aria-valuemax=${width.max}
+				aria-valuenow=${width.value}
+				@keydown=${width.key}
+				@pointerdown=${width.press}
+				@pointermove=${width.move}
+				@lostpointercapture=${width.release}
+			></div
+			><office-ui-task-pane
+				id="add-in-content"
+				.label=${options.name}
+				.closeLabel=${options.t('Close')}
+				@office-pane-close=${close}
+			>
+				<p role="status" ?hidden=${!this.#status}>${this.#status}</p>
+				${this.#frame}
+			</office-ui-task-pane>`;
 	}
 }
 
@@ -153,12 +181,12 @@ const define = definer('office-ui-add-in-pane', () => OfficeUiAddInPane, [define
 
 export function openAddInPane(host: AddInDialogHost, options: PaneOptions): void {
 	define(host.ownerDocument.defaultView?.customElements);
-	for (const child of host.children)
-		if (child.localName === 'office-ui-add-in-pane') child.remove();
+	host.querySelector('office-ui-add-in-pane')?.remove();
+	const dock = host.querySelector('[data-office-add-in-dock], [data-pptx-chrome="body"]') ?? host;
 	const pane = host.ownerDocument.createElement('office-ui-add-in-pane');
 	if (!('show' in pane) || typeof pane.show !== 'function') return;
 	pane.dataset.addInId = options.id;
-	host.append(pane);
+	dock.append(pane);
 	pane.show(options);
 	pane.shadowRoot?.querySelector<OfficeUiTaskPane>('office-ui-task-pane')?.focusHeading();
 }
