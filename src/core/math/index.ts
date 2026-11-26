@@ -16,3 +16,9 @@ export * from './omml-to-latex-layout';
 export type { Token } from './latex-omml-siblings';
 export { EQUATION_GALLERY, type GalleryEquation } from './equation-gallery';
 export { MAX_LATEX_LENGTH } from './limits';
+export { EQUATION_PLACEHOLDER, fillPlaceholders, stripPlaceholders } from './equation-placeholder';
+/** The equation editor's galleries, linear format and math AutoCorrect, loaded on first use. */
+export const loadEquationTools = () => import('./equation-tools');
+export type EquationTools = Awaited<ReturnType<typeof loadEquationTools>>;
+export type { EquationInputFormat } from './linear-format';
+export type { EquationStructure, EquationStructureGroup } from './equation-structures';

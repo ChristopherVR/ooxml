@@ -96,6 +96,7 @@ const {
 	'drawingml/index': drawingml,
 	'docx/mail-merge/index': mailMerge,
 	'docx/ui/index': wordUi,
+	'math/index': math,
 	'xlsx/load/index': xlsxLoad,
 	'xlsx/collab/index': xlsxCollab,
 	'visio/index': _visio,
@@ -110,6 +111,7 @@ export default defineConfig([
 			...eagerEntries,
 			'docx/ui/references': 'docx/references/index.ts',
 			'docx/ui/table-tools': 'docx/ui/table-tools.ts',
+			'math/equation-tools': 'math/equation-tools.ts',
 		},
 		format: ['esm'],
 		splitting: false,
@@ -134,6 +136,25 @@ export default defineConfig([
 		esbuildOptions(options) {
 			options.chunkNames = 'docx/mail-merge/chunks/[name]-[hash]';
 		},
+	},
+	{
+		...shared,
+		entry: { 'math/index': math },
+		format: ['esm'],
+		splitting: false,
+		// The equation editor's tools (`loadEquationTools`) download on first use.
+		esbuildPlugins: [
+			{
+				name: 'math-lazy-equation-tools',
+				setup(build) {
+					build.onResolve({ filter: /^\.\/equation-tools$/ }, (args) =>
+						args.kind === 'dynamic-import'
+							? { path: './equation-tools.mjs', external: true }
+							: undefined,
+					);
+				},
+			},
+		],
 	},
 	{
 		...shared,

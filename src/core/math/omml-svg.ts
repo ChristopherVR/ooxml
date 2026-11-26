@@ -4,6 +4,7 @@ import { layoutEquation } from './omml-box-layout';
 import { escapeXml } from './omml-mathml-helpers';
 import { parseOmml } from './omml-dom';
 import type { OmmlNode } from './omml-node';
+import { EQUATION_PLACEHOLDER, fillPlaceholders } from './equation-placeholder';
 
 const FONT_FAMILY = "'Cambria Math','STIX Two Math','Latin Modern Math','Times New Roman',serif";
 
@@ -58,15 +59,24 @@ export function drawOmmlTree(
 	return { svg, widthPx, heightPx, descentPx };
 }
 
-/** Draws OMML markup (`m:oMath` or `m:oMathPara`); undefined when it cannot be read or is empty. */
+/**
+ * Draws OMML markup (`m:oMath` or `m:oMathPara`); undefined when it cannot be read or is empty.
+ * With `placeholders`, empty arguments (and an empty equation) show the box an editor shows.
+ */
 export function drawEquation(
 	omml: string,
 	sizePx: number,
 	label = '',
-	options: { display?: boolean } = {},
+	options: { display?: boolean; placeholders?: boolean } = {},
 ): EquationDrawing | undefined {
 	try {
-		return drawOmmlTree(parseOmml(omml), sizePx, label, options);
+		const tree = parseOmml(omml);
+		if (!options.placeholders) return drawOmmlTree(tree, sizePx, label, options);
+		const box = { 'm:oMath': { 'm:r': { 'm:t': EQUATION_PLACEHOLDER } } };
+		return (
+			drawOmmlTree(fillPlaceholders(tree), sizePx, label, options) ??
+			drawOmmlTree(box, sizePx, label, options)
+		);
 	} catch {
 		return undefined;
 	}

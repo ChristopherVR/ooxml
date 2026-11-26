@@ -7,7 +7,8 @@ const cache = new Map<string, LayoutObject | null>();
 const CACHE_LIMIT = 256;
 
 /**
- * The inline object for an equation at `sizePx`, or undefined when its markup holds nothing that
+ * The inline object for an equation at `sizePx`, empty arguments drawn as placeholders as Word
+ * shows them; undefined when its markup cannot be read or holds nothing that
  * can be drawn (the caller then shows a marker).
  */
 export function equationObject(
@@ -18,7 +19,7 @@ export function equationObject(
 	const key = `${sizePx}|${display}|${omml}`;
 	const hit = cache.get(key);
 	if (hit !== undefined) return hit ?? undefined;
-	const drawing = drawEquation(omml, sizePx, 'Equation', { display });
+	const drawing = drawEquation(omml, sizePx, 'Equation', { display, placeholders: true });
 	const object: LayoutObject | null = drawing
 		? {
 				partName: '',

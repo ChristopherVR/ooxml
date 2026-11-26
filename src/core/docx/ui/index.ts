@@ -87,7 +87,8 @@ export {
 } from '../find-format-replace';
 export * from '../find-format-document';
 export * from './edit-restriction';
-export { EQUATION_GALLERY } from '../../math/equation-gallery';
+export { EQUATION_GALLERY, type GalleryEquation } from '../../math/equation-gallery';
+export { EQUATION_UI_STRINGS } from '../../math/equation-strings';
 /** Load table editing tools and gallery presets when a table command needs them. */
 export const loadWordTableTools = () => import('./table-tools');
 export type WordTableTools = Awaited<ReturnType<typeof loadWordTableTools>>;

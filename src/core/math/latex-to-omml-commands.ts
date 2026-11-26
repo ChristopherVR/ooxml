@@ -72,6 +72,8 @@ function parseRadical(ctx: LatexParserContext): OmmlNode {
 	return {
 		'm:rad': {
 			'm:radPr': { 'm:degHide': { '@_val': '1' } } as unknown as OmmlNode,
+			// The schema requires m:deg even when the degree is hidden; Word writes it empty.
+			'm:deg': ctx.wrapE([]),
 			'm:e': ctx.wrapE(ctx.parseGroup()),
 		} as unknown as OmmlNode,
 	};

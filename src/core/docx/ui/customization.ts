@@ -145,6 +145,7 @@ export const WORD_RIBBON_TAB_IDS = [
 	'picture-format',
 	'smartart-design',
 	'chart-design',
+	'equation',
 	'outlining',
 ] as const;
 

@@ -294,6 +294,24 @@ export const RIBBON_ACTION_IDS = [
 	'formula',
 	'sort-table',
 	'crop',
+	// Equation tab.
+	'ink-equation',
+	'convert-equation',
+	'equation-normal-text',
+	'equation-unicode',
+	'equation-latex',
+	'equation-symbols',
+	'equation-fraction',
+	'equation-script',
+	'equation-radical',
+	'equation-integral',
+	'equation-large-operator',
+	'equation-bracket',
+	'equation-function',
+	'equation-accent',
+	'equation-limit-log',
+	'equation-operator',
+	'equation-matrix',
 ] as const;
 
 export type RibbonActionId = (typeof RIBBON_ACTION_IDS)[number];
@@ -587,6 +605,23 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	formula: 'Formula',
 	'sort-table': 'Sort Table',
 	crop: 'Crop',
+	'ink-equation': 'Ink Equation',
+	'convert-equation': 'Convert',
+	'equation-normal-text': 'Normal Text',
+	'equation-unicode': 'Unicode',
+	'equation-latex': 'LaTeX',
+	'equation-symbols': 'Symbols',
+	'equation-fraction': 'Fraction',
+	'equation-script': 'Script',
+	'equation-radical': 'Radical',
+	'equation-integral': 'Integral',
+	'equation-large-operator': 'Large Operator',
+	'equation-bracket': 'Bracket',
+	'equation-function': 'Function',
+	'equation-accent': 'Accent',
+	'equation-limit-log': 'Limit and Log',
+	'equation-operator': 'Operator',
+	'equation-matrix': 'Matrix',
 };
 
 export type { LegacyRibbonLabel };

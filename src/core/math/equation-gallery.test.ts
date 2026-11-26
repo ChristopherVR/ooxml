@@ -5,12 +5,17 @@ import { latexToOmmlXml } from './omml-to-xml';
 import { drawEquation } from './omml-svg';
 
 describe('equation gallery', () => {
-	it('lists the four built-in equations', () => {
+	it("lists Word's nine built-in equations", () => {
 		expect(EQUATION_GALLERY.map((entry) => entry.id)).toEqual([
 			'area',
-			'quadratic',
-			'pythagorean',
 			'binomial',
+			'expansion',
+			'fourier',
+			'pythagorean',
+			'quadratic',
+			'taylor',
+			'trig1',
+			'trig2',
 		]);
 	});
 
@@ -29,7 +34,10 @@ describe('equation gallery', () => {
 	);
 
 	it('the binomial theorem keeps its sum, its binomial coefficient and both scripts', () => {
-		const xml = latexToOmmlXml(EQUATION_GALLERY[3]!.latex, true)!;
+		const xml = latexToOmmlXml(
+			EQUATION_GALLERY.find((entry) => entry.id === 'binomial')!.latex,
+			true,
+		)!;
 		expect(xml).toContain('<m:nary>');
 		expect(xml).toContain('<m:f>');
 		expect(xml).toContain('<m:sSup>');
