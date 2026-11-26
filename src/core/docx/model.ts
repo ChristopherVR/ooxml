@@ -88,8 +88,8 @@ export interface Table {
 	/** Whether row, cell and paragraph structure can be edited without losing unsupported table XML. */
 	structureEditable?: boolean;
 	/**
-	 * Set on a table that is not rectangular (merged cells, nested tables) but whose cells tile its
-	 * grid and carry no XML the merge-aware structure editors (table-structure.ts) cannot keep.
+	 * The merge-aware structure editor can rebuild this table. An edited table can keep this
+	 * capability after its cells become rectangular again.
 	 */
 	restructurable?: boolean;
 	rows: TableCell[][];

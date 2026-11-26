@@ -167,7 +167,11 @@ function paragraphNode(
 }
 
 /** A table node for `result`, a structure edit of `old`'s skeleton; surviving cells keep their content. */
-export function nodeFromResult(old: ProseMirrorNode, result: Table): ProseMirrorNode | undefined {
+export function nodeFromResult(
+	old: ProseMirrorNode,
+	result: Table,
+	nested: boolean,
+): ProseMirrorNode | undefined {
 	const grid = tableGrid(result);
 	if (!grid) return undefined;
 	const cellOf = new Map<string, ProseMirrorNode>();
@@ -235,8 +239,16 @@ export function nodeFromResult(old: ProseMirrorNode, result: Table): ProseMirror
 	return schema.nodes.table.create(
 		{
 			...old.attrs,
-			// A table that was edited this way is saved through the merge-aware writer from now on.
-			structureEditable: false,
+			structureEditable:
+				!nested &&
+				rows.every((row) =>
+					row.children.every(
+						(cell) =>
+							cell.attrs.colspan === 1 &&
+							cell.attrs.rowspan === 1 &&
+							cell.children.every((block) => block.type === schema.nodes.paragraph),
+					),
+				),
 			restructurable: true,
 			grid: result.grid ? JSON.stringify(result.grid) : null,
 		},

@@ -74,5 +74,19 @@ for (const gesture of ['drag', 'Shift+Arrow'] as const) {
 		await expect(cells).toHaveCount(4);
 		await expect(cells.first()).toHaveText(across ? 'First' : 'FirstSecond');
 		if (across) await expect(cells.nth(1)).toHaveText('Second');
+		const width = editor.getByRole('spinbutton', { name: 'Column Width (inches)' });
+		const height = editor.getByRole('spinbutton', { name: 'Row Height (inches)' });
+		await expect(width).toBeEnabled();
+		await expect(height).toBeEnabled();
+		await width.fill('1.25');
+		await width.press('Enter');
+		await expect(cells.first()).toHaveAttribute('style', /width:\s*120px/);
+		await height.fill('0.75');
+		await height.press('Enter');
+		await expect(cells.first().locator('..')).toHaveAttribute('style', /height:\s*72px/);
+		const split = await savedDocument(page, 'split-new-table.docx');
+		expect(split.xml).not.toMatch(/<w:(?:gridSpan|vMerge)\b/);
+		expect(split.xml).toMatch(/<w:gridCol w:w="1800"/);
+		expect(split.xml).toMatch(/<w:trHeight\b[^>]*w:val="1080"/);
 	});
 }

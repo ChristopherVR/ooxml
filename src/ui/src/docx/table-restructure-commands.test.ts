@@ -196,6 +196,54 @@ describe('merge and split on a plain table', () => {
 		expect(executeTableCommand(ctx.view, 'columnAfter')).toBe(true);
 		expect(ctx.view.state.doc.child(0).attrs.structureEditable).toBe(true);
 	});
+
+	it('restores rectangular editing and drops the imported spans after splitting', async () => {
+		const ctx = await setup(MERGED, 'A');
+		const { view } = ctx;
+		expect(executeTableCommand(view, 'splitCell')).toBe(true);
+		expect(view.state.doc.child(0).attrs.structureEditable).toBe(false);
+		const firstSplit = view.state.doc;
+		const firstModel = docToModel(firstSplit, ctx.loaded.model);
+		let start = -1;
+		firstSplit.descendants((node, pos) => {
+			if (node.type === schema.nodes.paragraph && node.textContent === 'B') start = pos + 1;
+			return start < 0;
+		});
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(firstSplit, start)));
+		expect(executeTableCommand(view, 'splitCell')).toBe(true);
+		expect(view.state.doc.child(0).attrs.structureEditable).toBe(true);
+		const model = docToModel(view.state.doc, firstModel, firstSplit);
+		expect(tableAt(model.blocks, 0).structureEditable).toBe(true);
+		const bytes = await ctx.loaded.save(model);
+		const reopened = tableAt((await loadDocx(bytes)).model.blocks, 0);
+		expect(layout(reopened)).toEqual([
+			['A', '', 'B'],
+			['C', 'D', ''],
+		]);
+		expect(reopened.structureEditable).toBe(true);
+	});
+
+	it('saves redistributed paragraphs after merging and splitting a rectangular source', async () => {
+		const { loaded, view } = await setup(SIMPLE, 'a');
+		const { doc, selection } = view.state;
+		let to = -1;
+		doc.descendants((node, pos) => {
+			if (node.type === schema.nodes.paragraph && node.textContent === 'c') to = pos + 1;
+			return to < 0;
+		});
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from, to)));
+		expect(executeTableCommand(view, 'mergeCells')).toBe(true);
+		const merged = view.state.doc;
+		const mergedModel = docToModel(merged, loaded.model, doc);
+		expect(executeTableCommand(view, 'splitCell')).toBe(true);
+		const model = docToModel(view.state.doc, mergedModel, merged);
+		const reopened = tableAt((await loadDocx(await loaded.save(model))).model.blocks, 0);
+		expect(layout(reopened)).toEqual([
+			['a/c', 'b'],
+			['', 'd'],
+		]);
+		expect(reopened.structureEditable).toBe(true);
+	});
 });
 
 describe('table commands on a nested table', () => {

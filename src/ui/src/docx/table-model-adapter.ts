@@ -94,9 +94,9 @@ export function tableNode(
 			tableLayout: block.layout ?? null,
 			// Nested tables edit their text on the page; their grid and merges stay as authored.
 			structureEditable: !nested && block.structureEditable !== false,
-			// Merge and split work on any table whose cells tile its grid.
 			restructurable:
-				block.restructurable === true || (block.structureEditable !== false && Boolean(layout)),
+				block.restructurable === true ||
+				(nested && block.structureEditable !== false && Boolean(layout)),
 			grid: block.grid ? JSON.stringify(block.grid) : null,
 			layout: block.layout ?? null,
 			...tableViewAttrs(block),
@@ -294,7 +294,10 @@ export function convertStructuredTable(
 	prior: Table,
 	convertParagraph: (paragraph: ProseMirrorNode) => Paragraph,
 ): Table {
-	if (!node.attrs.restructurable || !structureChanged(node, prior))
+	if (
+		(!node.attrs.restructurable && node.attrs.structureEditable === false) ||
+		!structureChanged(node, prior)
+	)
 		return convertMergedTable(node, prior, convertParagraph);
 	const updated = convertRestructuredTable(
 		node,

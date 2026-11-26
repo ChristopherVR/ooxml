@@ -291,6 +291,8 @@ export function docToModel(
 					widthTwips: _width,
 					widthPercent: _percent,
 					borders: _borders,
+					structureEditable: _structureEditable,
+					restructurable: _restructurable,
 					...descriptors
 				} = prior ?? {};
 				const style =
@@ -299,7 +301,6 @@ export function docToModel(
 					...(prior
 						? {
 								...descriptors,
-								structureEditable: undefined,
 								contentControl: undefined,
 							}
 						: {
@@ -318,7 +319,10 @@ export function docToModel(
 					...tablePropertiesFromNode(node, prior),
 					rows: convertSimpleTable(node, asParagraph, prior),
 					...tableFormattingFromNode(node),
-					...(node.attrs.structureEditable === false ? { structureEditable: false } : {}),
+					...(prior?.structureEditable !== undefined || node.attrs.structureEditable === false
+						? { structureEditable: node.attrs.structureEditable === true }
+						: {}),
+					...(node.attrs.restructurable ? { restructurable: true } : {}),
 					...tableControl(node, prior),
 				} as Table);
 			}

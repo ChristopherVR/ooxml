@@ -50,9 +50,9 @@ export function convertRestructuredTable(
 	heldControl: (cell: ProseMirrorNode, prior: ContentControl | undefined) => Partial<TableCell>,
 ): Table {
 	const updated = structuredClone(prior);
-	// From here the table is saved through the merge-aware writer, whatever its source shape.
-	updated.structureEditable = false;
-	updated.restructurable = true;
+	updated.structureEditable = node.attrs.structureEditable === true;
+	if (node.attrs.restructurable) updated.restructurable = true;
+	else delete updated.restructurable;
 	const sources = new Map<string, TableCell>();
 	for (const row of prior.rows) for (const cell of row) sources.set(keyOf(cell), cell);
 	const before = tableGrid(prior);
@@ -77,7 +77,10 @@ export function convertRestructuredTable(
 			}
 			if (Number(slot.cell.attrs.rowspan) > 1) cell.verticalMerge = 'restart';
 			// A merge start with nothing merged into it that the source already had stays as it was.
-			else if (!(base?.verticalMerge === 'restart' && (merged.get(slot.key) ?? 1) === 1))
+			else if (
+				updated.structureEditable ||
+				!(base?.verticalMerge === 'restart' && (merged.get(slot.key) ?? 1) === 1)
+			)
 				delete cell.verticalMerge;
 			const paragraphs: Paragraph[] = [];
 			const nested: ProseMirrorNode[] = [];

@@ -105,7 +105,10 @@ export function writeTable(
 	if (
 		base &&
 		baseGrid &&
-		(nested || !base.structureEditable || table.structureEditable === false) &&
+		(nested ||
+			!base.structureEditable ||
+			table.structureEditable === false ||
+			table.restructurable) &&
 		restructured(table, base) &&
 		canRestructureTable(node)
 	) {

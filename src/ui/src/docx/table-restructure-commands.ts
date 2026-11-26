@@ -259,7 +259,7 @@ export function executeRestructure(
 	const { tablePos, table } = ctx;
 	let replacement: ProseMirrorNode | undefined;
 	if (outcome === 'table') replacement = schema.nodes.paragraph.create({ id: newId() });
-	else replacement = nodeFromResult(table, outcome);
+	else replacement = nodeFromResult(table, outcome, ctx.nested);
 	if (!replacement) return false;
 	const transaction = view.state.tr.replaceWith(tablePos, tablePos + table.nodeSize, replacement);
 	transaction.setMeta(RESTRUCTURE_TABLE_META, true);
