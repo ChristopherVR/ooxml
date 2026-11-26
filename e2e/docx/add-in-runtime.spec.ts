@@ -66,4 +66,38 @@ test('reviews a Marketplace listing through the configured resolver without enab
 	await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveCount(0);
 	await expect(dialog.getByRole('button', { name: 'Open Notes', exact: true })).toHaveCount(0);
+	const upload = dialog.getByRole('button', { name: 'Upload My Add-in' });
+	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+		name: 'broken.xml',
+		mimeType: 'application/xml',
+		buffer: Buffer.from('<OfficeApp>'),
+	});
+	const error = dialog.getByRole('alert');
+	await expect(error).toHaveText('The add-in manifest is invalid.');
+	await expect(error).toBeInViewport();
+	await expect(upload).toHaveAttribute('aria-describedby', 'add-in-error');
+});
+
+test('explains why an OfficeTab command is disabled', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const button = editor
+		.getByRole('button', { name: 'Add-ins', exact: true })
+		.and(editor.locator('button[data-action]'));
+	await reveal(editor, button);
+	await button.click();
+	const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+		name: 'home.xml',
+		mimeType: 'application/xml',
+		buffer: Buffer.from(
+			xmlManifest.replaceAll('CustomTab', 'OfficeTab').replace('id="NotesTab"', 'id="TabHome"'),
+		),
+	});
+	const command = dialog.getByRole('button', { name: 'Open Notes', exact: true });
+	await expect(command).toBeDisabled();
+	await expect(command).toHaveAccessibleDescription(
+		'This editor cannot add commands to built-in ribbon tabs.',
+	);
 });

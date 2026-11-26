@@ -1,6 +1,6 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { test } from '@playwright/test';
-import { editor as excel, newWorkbook } from './helpers';
+import { demoReady, editor as excel, newWorkbook } from './helpers';
 import {
 	addInReviewScenarios,
 	checkAddInRuntime,
@@ -17,7 +17,10 @@ for (const scenario of addInReviewScenarios) {
 			page,
 			editor,
 			host: 'Excel',
-			reloadEditor: () => newWorkbook(page),
+			async reloadEditor() {
+				await demoReady(page);
+				await newWorkbook(page);
+			},
 			async openDialog() {
 				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 				const home = editor.locator('button[data-command="home.add-ins"]');

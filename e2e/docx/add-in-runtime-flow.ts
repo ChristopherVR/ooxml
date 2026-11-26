@@ -121,6 +121,8 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		await expect(editor.locator('[data-office-add-in-status]')).toHaveText('Notes installed.');
 		if (file.name !== 'manifest.xml')
 			await expect(editor.getByRole('tab', { name: addInName, exact: true })).toBeFocused();
+		if (file.name === 'app.zip')
+			await expect(editor.locator('office-ui-button[icon-image] img')).toBeVisible();
 
 		if (file.name === 'manifest.json') {
 			const tab = editor.getByRole('tab', { name: addInName, exact: true });
