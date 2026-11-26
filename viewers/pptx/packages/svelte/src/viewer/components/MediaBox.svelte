@@ -182,7 +182,9 @@
 				}
 				return;
 			}
-			startMediaAutoplay(el, { trimStartMs: trim });
+			if (!source.startMode || source.startMode === 'auto') {
+				startMediaAutoplay(el, { trimStartMs: trim });
+			}
 			// G20: trim-end stop + fade in/out, shared with the other four
 			// bindings so a trimmed/faded clip behaves identically everywhere
 			// (this used to be React-only logic).
@@ -191,6 +193,7 @@
 				trimEndMs: source.trimEndMs,
 				fadeInDuration: source.fadeInDuration,
 				fadeOutDuration: source.fadeOutDuration,
+				rewindAfterPlaying: source.rewindAfterPlaying,
 				volume: mediaPlaybackAttributes(source).volume,
 			});
 		} else if (!el.paused) {

@@ -38,6 +38,20 @@ afterEach(() => {
 });
 
 describe('scheduleMediaTrimAndFade', () => {
+	it('rewinds to the trim start on natural completion', () => {
+		const fake = new FakeMediaElement();
+		fake.currentTime = 10;
+		const cleanup = scheduleMediaTrimAndFade(asMediaElement(fake), {
+			trimStartMs: 1300,
+			rewindAfterPlaying: true,
+		});
+		fake.dispatchEvent(new Event('ended'));
+		expect(fake.currentTime).toBe(1.3);
+		cleanup();
+		fake.currentTime = 10;
+		fake.dispatchEvent(new Event('ended'));
+		expect(fake.currentTime).toBe(10);
+	});
 	it('is a no-op (nothing scheduled) when the source has no trim or fade', () => {
 		const fake = new FakeMediaElement();
 		const cancel = scheduleMediaTrimAndFade(asMediaElement(fake), {});

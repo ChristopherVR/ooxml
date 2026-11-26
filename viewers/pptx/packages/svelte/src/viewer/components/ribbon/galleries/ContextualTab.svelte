@@ -58,9 +58,12 @@
 			{:else if group.strip === 'chart-selection'}
 				<ChartSelectionStrip {editor} />
 			{/if}
-			{#if group.pictureStrip === 'picture-arrange'}
+			{#if group.pictureStrip === 'picture-arrange' || group.arrange}
 				<ArrangeExtras {editor} {hiddenActions} />
 				<ArrangeHomeStrip {editor} strip="order" />
+			{/if}
+			{#if group.contextualStrip}
+				<pptx-ui-contextual-ribbon group={group.group} state={picture}></pptx-ui-contextual-ribbon>
 			{/if}
 			{#if group.pictureStrip}
 				<pptx-ui-picture-ribbon family={group.pictureStrip} state={picture}></pptx-ui-picture-ribbon>

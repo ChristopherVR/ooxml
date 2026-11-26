@@ -23,10 +23,12 @@
 
 import { RIBBON_CATALOG_CORE_TABS } from './ribbon-control-catalog-core';
 import { RIBBON_CATALOG_TAIL_TABS } from './ribbon-control-catalog-tail';
+import { RIBBON_CATALOG_MEDIA_TABS } from './ribbon-control-catalog-media';
 
 export type { ControlLabels, GroupEntry, TabEntry } from './ribbon-control-catalog-types';
 
 export const RIBBON_CONTROL_CATALOG = {
 	...RIBBON_CATALOG_CORE_TABS,
 	...RIBBON_CATALOG_TAIL_TABS,
+	...RIBBON_CATALOG_MEDIA_TABS,
 } as const;

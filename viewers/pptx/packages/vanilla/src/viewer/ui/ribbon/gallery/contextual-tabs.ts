@@ -62,6 +62,11 @@ export function createGalleryGroup(
 		picture.family = group.pictureStrip;
 		shell.row.append(picture);
 	}
+	if (group.contextualStrip) {
+		const contextual = doc.createElement('pptx-ui-contextual-ribbon');
+		contextual.group = group.group;
+		shell.row.append(contextual);
+	}
 	return shell.el;
 }
 

@@ -1,6 +1,6 @@
 import { readPictureEffect } from '../../../../drawingml/picture-effects';
 import { XmlObject } from '../../types';
-import type { PptxImageEffects, MediaBookmark } from '../../types';
+import type { PptxImageEffects, MediaBookmark, MediaPptxElement } from '../../types';
 import { xmlAttr, xmlChild } from '../../utils/xml-access';
 import { parseA14ImageExtension } from './image-a14-effects';
 import { applyA14ExtensionToEffects } from './image-a14-effects-model';
@@ -14,11 +14,13 @@ export interface MediaTimingData {
 	trimEndMs?: number | undefined;
 	fullScreen?: boolean | undefined;
 	loop?: boolean | undefined;
+	rewindAfterPlaying?: boolean | undefined;
 	posterFramePath?: string | undefined;
 	volume?: number | undefined;
 	fadeInDuration?: number | undefined;
 	fadeOutDuration?: number | undefined;
 	autoPlay?: boolean | undefined;
+	startMode?: MediaPptxElement['startMode'];
 	playAcrossSlides?: boolean | undefined;
 	hideWhenNotPlaying?: boolean | undefined;
 	bookmarks?: MediaBookmark[] | undefined;

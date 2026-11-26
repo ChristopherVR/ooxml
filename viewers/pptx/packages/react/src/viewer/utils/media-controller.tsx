@@ -132,6 +132,7 @@ export function PresentationMediaController({
 			trimEndMs: element.trimEndMs,
 			fadeInDuration: element.fadeInDuration,
 			fadeOutDuration: element.fadeOutDuration,
+			rewindAfterPlaying: element.rewindAfterPlaying,
 			volume: playbackVolume,
 		});
 	}, [
@@ -140,6 +141,7 @@ export function PresentationMediaController({
 		element.trimEndMs,
 		element.fadeInDuration,
 		element.fadeOutDuration,
+		element.rewindAfterPlaying,
 		playbackVolume,
 	]);
 

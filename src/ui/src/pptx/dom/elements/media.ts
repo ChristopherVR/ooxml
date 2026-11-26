@@ -60,11 +60,14 @@ import { wireMediaFullscreenOverlay } from './media-fullscreen-overlay';
 export function applyMediaPresentingState(
 	el: HTMLMediaElement,
 	presenting: boolean,
-	playback: MediaPlaybackSource & MediaTrimFadeSource,
+	playback: MediaPlaybackSource &
+		MediaTrimFadeSource & { startMode?: 'auto' | 'sequence' | 'click' | undefined },
 ): void {
 	applyMediaPlaybackAttributes(el, playback);
 	if (presenting) {
-		startMediaAutoplay(el, { trimStartMs: playback.trimStartMs });
+		if (!playback.startMode || playback.startMode === 'auto') {
+			startMediaAutoplay(el, { trimStartMs: playback.trimStartMs });
+		}
 		// G20: trim-end stop + fade in/out, shared with the other four
 		// bindings so a trimmed/faded clip behaves identically everywhere
 		// (this used to be React-only logic). No cleanup is captured: the

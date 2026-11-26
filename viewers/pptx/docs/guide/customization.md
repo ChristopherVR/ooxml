@@ -916,6 +916,10 @@ unit test fails if an id is missing here.
 | `chartDesign`    | Chart Design    |
 | `chartFormat`    | Chart Format    |
 | `smartArtDesign` | SmartArt Design |
+| `videoFormat`    | Video Format    |
+| `audioFormat`    | Audio Format    |
+| `playback`       | Playback        |
+| `smartArtFormat` | SmartArt Format |
 
 ### Ribbon groups (`ribbon.hiddenGroups`)
 
@@ -997,6 +1001,23 @@ unit test fails if an id is missing here.
 | `smartArtDesign.layouts`            | Layouts                  |
 | `smartArtDesign.smartArtStyles`     | SmartArt Styles          |
 | `smartArtDesign.reset`              | Reset                    |
+| `videoFormat.poster`                | Poster Frame             |
+| `videoFormat.adjust`                | Adjust                   |
+| `videoFormat.pictureStyles`         | Video Styles             |
+| `videoFormat.arrange`               | Arrange                  |
+| `videoFormat.size`                  | Size                     |
+| `audioFormat.adjust`                | Adjust                   |
+| `audioFormat.pictureStyles`         | Picture Styles           |
+| `audioFormat.arrange`               | Arrange                  |
+| `audioFormat.size`                  | Size                     |
+| `playback.bookmarks`                | Bookmarks                |
+| `playback.editing`                  | Editing                  |
+| `playback.options`                  | Playback                 |
+| `smartArtFormat.shapes`             | Shapes                   |
+| `smartArtFormat.shapeStyles`        | Shape Styles             |
+| `smartArtFormat.wordArtStyles`      | WordArt Styles           |
+| `smartArtFormat.arrange`            | Arrange                  |
+| `smartArtFormat.size`               | Size                     |
 
 ### Ribbon controls (`ribbon.hiddenButtons`)
 
@@ -1256,6 +1277,53 @@ unit test fails if an id is missing here.
 | `smartArtDesign.smartArtStyles.gallery`           | SmartArt Styles gallery                                                       |
 | `smartArtDesign.reset.resetGraphic`               | Reset Graphic                                                                 |
 | `smartArtDesign.reset.convert`                    | Convert                                                                       |
+| `videoFormat.poster.current`                      | Current Frame                                                                 |
+| `videoFormat.poster.file`                         | Image from File                                                               |
+| `videoFormat.poster.reset`                        | Reset Poster Frame                                                            |
+| `videoFormat.adjust.corrections`                  | Corrections                                                                   |
+| `videoFormat.adjust.color`                        | Color                                                                         |
+| `videoFormat.pictureStyles.gallery`               | Video Styles                                                                  |
+| `videoFormat.pictureStyles.shape`                 | Video Shape                                                                   |
+| `videoFormat.pictureStyles.border`                | Video Border                                                                  |
+| `videoFormat.pictureStyles.effects`               | Video Effects                                                                 |
+| `videoFormat.arrange.rotateRight`                 | Rotate Right 90°                                                              |
+| `videoFormat.size.width`                          | Width                                                                         |
+| `videoFormat.size.height`                         | Height                                                                        |
+| `videoFormat.size.crop`                           | Crop                                                                          |
+| `audioFormat.adjust.corrections`                  | Corrections                                                                   |
+| `audioFormat.adjust.color`                        | Color                                                                         |
+| `audioFormat.pictureStyles.gallery`               | Picture Styles                                                                |
+| `audioFormat.pictureStyles.shape`                 | Shape                                                                         |
+| `audioFormat.pictureStyles.border`                | Border                                                                        |
+| `audioFormat.pictureStyles.effects`               | Picture Effects                                                               |
+| `audioFormat.arrange.rotateRight`                 | Rotate Right 90°                                                              |
+| `audioFormat.size.width`                          | Width                                                                         |
+| `audioFormat.size.height`                         | Height                                                                        |
+| `playback.bookmarks.add`                          | Add Bookmark                                                                  |
+| `playback.bookmarks.remove`                       | Remove Bookmark                                                               |
+| `playback.editing.trim`                           | Trim                                                                          |
+| `playback.editing.fadeIn`                         | Fade In                                                                       |
+| `playback.editing.fadeOut`                        | Fade Out                                                                      |
+| `playback.options.volume`                         | Volume                                                                        |
+| `playback.options.start`                          | Start                                                                         |
+| `playback.options.fullScreen`                     | Play Full Screen                                                              |
+| `playback.options.hide`                           | Hide While Not Playing                                                        |
+| `playback.options.loop`                           | Loop until Stopped                                                            |
+| `playback.options.rewind`                         | Rewind after Playing                                                          |
+| `playback.options.across`                         | Play Across Slides                                                            |
+| `smartArtFormat.shapes.node`                      | SmartArt Node                                                                 |
+| `smartArtFormat.shapes.shape`                     | Change Shape                                                                  |
+| `smartArtFormat.shapes.larger`                    | Larger                                                                        |
+| `smartArtFormat.shapes.smaller`                   | Smaller                                                                       |
+| `smartArtFormat.shapeStyles.fill`                 | Shape Fill                                                                    |
+| `smartArtFormat.shapeStyles.border`               | Shape Outline                                                                 |
+| `smartArtFormat.wordArtStyles.color`              | Text Fill                                                                     |
+| `smartArtFormat.wordArtStyles.bold`               | Bold                                                                          |
+| `smartArtFormat.wordArtStyles.italic`             | Italic                                                                        |
+| `smartArtFormat.arrange.x`                        | Horizontal Position                                                           |
+| `smartArtFormat.arrange.y`                        | Vertical Position                                                             |
+| `smartArtFormat.size.width`                       | Width                                                                         |
+| `smartArtFormat.size.height`                      | Height                                                                        |
 
 ### Toolbar buttons (`ribbon.hiddenButtons`)
 

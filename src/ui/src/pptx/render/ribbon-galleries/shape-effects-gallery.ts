@@ -10,6 +10,8 @@
  */
 import type { PptxElement } from 'ooxml-core/pptx';
 import { hasShapeProperties } from 'ooxml-core/pptx';
+import type { ShapeStyle } from 'ooxml-core/pptx';
+import { isPictureElement } from './picture-adjust-gallery';
 
 import type { RibbonGalleryModule } from './gallery-module';
 import type {
@@ -33,7 +35,7 @@ function findEntry(itemId: string, ctx: RibbonGalleryContext): ShapeEffectEntry 
 
 function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 	const element = ctx.element;
-	const style = element && hasShapeProperties(element) ? (element.shapeStyle ?? {}) : undefined;
+	const style = element && hasEffectStyle(element) ? (element.shapeStyle ?? {}) : undefined;
 	return {
 		id: 'shapeEffects',
 		labelKey: 'pptx.gallery.shapeEffects.title',
@@ -60,7 +62,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 
 function apply(itemId: string, ctx: RibbonGalleryContext): RibbonGalleryApplyResult | null {
 	const element = ctx.element;
-	if (!element || !hasShapeProperties(element)) {
+	if (!element || !hasEffectStyle(element)) {
 		return null;
 	}
 	const entry = findEntry(itemId, ctx);
@@ -72,6 +74,12 @@ function apply(itemId: string, ctx: RibbonGalleryContext): RibbonGalleryApplyRes
 		elementId: element.id,
 		patch: { shapeStyle: entry.edit(element.shapeStyle ?? {}) } as Partial<PptxElement>,
 	};
+}
+
+function hasEffectStyle(
+	element: PptxElement,
+): element is PptxElement & { shapeStyle?: ShapeStyle | undefined } {
+	return hasShapeProperties(element) || (element.type === 'media' && isPictureElement(element));
 }
 
 export const SHAPE_EFFECTS_GALLERY: RibbonGalleryModule = { build, apply };

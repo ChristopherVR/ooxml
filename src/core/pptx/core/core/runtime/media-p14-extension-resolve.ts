@@ -1,4 +1,10 @@
-import type { MediaBookmark, MediaPptxElement, XmlObject } from '../../types';
+import type {
+	MediaBookmark,
+	MediaPptxElement,
+	PptxGraphicFrameExtension,
+	XmlObject,
+} from '../../types';
+import { xmlAttr, xmlChild, xmlChildren } from '../../utils/xml-access';
 import { parseMediaExtensionData } from './PptxHandlerRuntimeMediaParsingUtils';
 import type { EnsureArrayFn } from './PptxHandlerRuntimeMediaParsingUtils';
 
@@ -26,6 +32,7 @@ export interface P14MediaResolution {
 	fadeOutDuration: number | undefined;
 	playbackSpeed: number | undefined;
 	bookmarks: MediaBookmark[] | undefined;
+	extensions: PptxGraphicFrameExtension[];
 }
 
 /**
@@ -45,6 +52,10 @@ export function resolveP14MediaForPicture(
 	getMediaMimeType: (mediaPath: string | undefined) => string | undefined,
 ): P14MediaResolution {
 	const mediaExt = nvPr ? parseMediaExtensionData(nvPr, {}, shapeId, ensureArray) : undefined;
+	const extensions = xmlChildren(xmlChild(nvPr, 'p:extLst'), 'p:ext').flatMap((xml) => {
+		const uri = xmlAttr(xml, 'uri');
+		return uri && !xmlChild(xml, 'p14:media') && !xmlChild(xml, 'p14:bmkLst') ? [{ uri, xml }] : [];
+	});
 
 	let mediaPath = primaryMediaPath;
 	let mediaMimeType = primaryMediaMimeType;
@@ -63,6 +74,7 @@ export function resolveP14MediaForPicture(
 		playbackSpeed: mediaExt?.playbackSpeed,
 		bookmarks:
 			mediaExt?.bookmarks && mediaExt.bookmarks.length > 0 ? mediaExt.bookmarks : undefined,
+		extensions,
 	};
 }
 

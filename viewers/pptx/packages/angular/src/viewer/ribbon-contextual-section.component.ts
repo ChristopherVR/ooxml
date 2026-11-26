@@ -81,7 +81,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						[canEdit]="canEdit()"
 					/>
 				}
-				@if (group.pictureStrip === 'picture-arrange') {
+				@if (group.pictureStrip === 'picture-arrange' || group.arrange) {
 					<pptx-ribbon-arrange-section
 						[embedded]="true"
 						[hiddenActions]="hiddenActions()"
@@ -89,6 +89,9 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						[selectedElement]="selectedElement()"
 						[canEdit]="canEdit()"
 					/>
+				}
+				@if (group.contextualStrip) {
+					<pptx-ui-contextual-ribbon [group]="group.group" [state]="picture()" />
 				}
 				@if (group.pictureStrip; as family) {
 					<pptx-ui-picture-ribbon [family]="family" [state]="picture()" />

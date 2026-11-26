@@ -29,6 +29,8 @@ export interface MediaTrimFadeSource {
 	fadeOutDuration?: number;
 	/** The DOM-facing target volume (post `mediaPlaybackAttributes` clamp). */
 	volume?: number;
+	/** Return to the trim start at the end of playback. */
+	rewindAfterPlaying?: boolean | undefined;
 }
 
 /**
@@ -53,7 +55,13 @@ export function scheduleMediaTrimAndFade(
 	const fadeOut = source.fadeOutDuration ?? 0;
 	const targetVolume = source.volume ?? el.volume;
 
-	if (trimStartSec <= 0 && trimEndDistanceSec <= 0 && fadeIn <= 0 && fadeOut <= 0) {
+	if (
+		trimStartSec <= 0 &&
+		trimEndDistanceSec <= 0 &&
+		fadeIn <= 0 &&
+		fadeOut <= 0 &&
+		!source.rewindAfterPlaying
+	) {
 		return () => {
 			/* nothing was scheduled */
 		};
@@ -121,8 +129,13 @@ export function scheduleMediaTrimAndFade(
 		}
 		stopTimer = window.setTimeout(() => {
 			if (!el.paused) {
+				if (el.loop) {
+					el.currentTime = trimStartSec;
+					handlePlay();
+					return;
+				}
 				el.pause();
-				el.currentTime = endSeconds;
+				el.currentTime = source.rewindAfterPlaying ? trimStartSec : endSeconds;
 			}
 		}, remaining * 1000);
 	};
@@ -174,11 +187,17 @@ export function scheduleMediaTrimAndFade(
 		}
 	};
 
+	const handleEnd = (): void => {
+		clearScheduled();
+		el.currentTime = trimStartSec;
+	};
 	el.addEventListener('play', handlePlay);
+	if (source.rewindAfterPlaying) el.addEventListener('ended', handleEnd);
 
 	return () => {
 		cancelled = true;
 		clearScheduled();
 		el.removeEventListener('play', handlePlay);
+		el.removeEventListener('ended', handleEnd);
 	};
 }

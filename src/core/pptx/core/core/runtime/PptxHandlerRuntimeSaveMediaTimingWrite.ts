@@ -1,7 +1,13 @@
 import { XmlObject, PptxElement } from '../../types';
 import type { MediaPptxElement } from '../../types';
-import { resolvePlayAcrossSlides } from './PptxHandlerRuntimeMediaParsingUtils';
+import { maxTimeNodeId } from '../../services/animation-timing-tree';
+import { xmlChild } from '../../utils/xml-access';
+import {
+	getXmlShapeIdFromXml,
+	resolvePlayAcrossSlides,
+} from './PptxHandlerRuntimeMediaParsingUtils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSavePresPropsAndSignatures';
+import { applyMediaSequenceStarts } from './media-start-sequence';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected collectMediaElements(elements: PptxElement[], output: MediaPptxElement[]): void {
@@ -14,27 +20,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
-	protected getShapeIdFromRawXml(rawXml: XmlObject | undefined): string | undefined {
-		if (!rawXml) {
-			return undefined;
-		}
-		const cNvPr =
-			(rawXml['p:nvSpPr'] as XmlObject | undefined)?.['p:cNvPr'] ||
-			(rawXml['p:nvPicPr'] as XmlObject | undefined)?.['p:cNvPr'] ||
-			(rawXml['p:nvCxnSpPr'] as XmlObject | undefined)?.['p:cNvPr'] ||
-			(rawXml['p:nvGraphicFramePr'] as XmlObject | undefined)?.['p:cNvPr'];
-		const rawId = (cNvPr as XmlObject | undefined)?.['@_id'];
-		if (rawId === undefined || rawId === null) {
-			return undefined;
-		}
-		const shapeId = String(rawId).trim();
-		return shapeId.length > 0 ? shapeId : undefined;
-	}
-
 	protected applyMediaTimingToTimingTree(
 		node: XmlObject,
 		mediaByShapeId: Map<string, MediaPptxElement>,
+		seen = new Set<string>(),
+		depth = 0,
 	): void {
+		if (depth > 64) return;
 		for (const mediaTag of ['p:video', 'p:audio']) {
 			const mediaNodes = this.ensureArray(node[mediaTag]) as XmlObject[];
 			mediaNodes.forEach((mediaNode) => {
@@ -59,6 +51,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (!media) {
 					return;
 				}
+				seen.add(shapeId);
 
 				let cTn = cMediaNode['p:cTn'] as XmlObject | undefined;
 				if (!cTn) {
@@ -66,36 +59,35 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					cMediaNode['p:cTn'] = cTn;
 				}
 
-				// G18/G19: `p:cTn` (`CT_TLCommonTimeNodeData`) has no `st`/`end`
-				// attributes; a prior version of this writer put trim there, which
-				// only round-tripped against this codebase's own (wrong-location)
-				// reader, never real PowerPoint. Trim now goes onto the picture's
-				// own `p:nvPr/p:extLst/p14:media/p14:trim` (see
-				// `writeMediaP14Extension` below), the location PowerPoint uses.
-
 				if (media.loop) {
 					cTn['@_repeatCount'] = 'indefinite';
-				} else {
+				} else if (String(cTn['@_repeatCount']) === 'indefinite') {
 					delete cTn['@_repeatCount'];
 				}
 
-				// Auto-play: nodeType=1 means "with previous" (auto-start on slide entry)
-				if (media.autoPlay) {
-					cTn['@_nodeType'] = '1';
-				} else {
+				if (media.autoPlay && !media.startMode) {
 					delete cTn['@_nodeType'];
+					cTn['p:stCondLst'] = { 'p:cond': { '@_delay': '0' } };
+				} else if (
+					media.startMode !== undefined ||
+					media.autoPlay === false ||
+					['1', '2'].includes(String(cTn['@_nodeType']))
+				) {
+					delete cTn['@_nodeType'];
+					cTn['p:stCondLst'] = { 'p:cond': { '@_delay': 'indefinite' } };
+				}
+				if (media.rewindAfterPlaying !== undefined) {
+					cTn['@_fill'] = media.rewindAfterPlaying ? 'remove' : 'hold';
 				}
 
 				// Play across slides has two storage forms (see
 				// `resolvePlayAcrossSlides`): cTn `dur="indefinite"` and PowerPoint's
 				// own `cMediaNode/@numSld` span. When the node already says it through
-				// `numSld`, adding `dur` too only grows the XML (issue-132 decks gained
-				// a `dur` on every rewrite), so write `dur` only when nothing else
-				// carries the flag.
+				// `numSld`, adding `dur` too only grows the XML.
 				const spansSlides = resolvePlayAcrossSlides(cMediaNode, false, mediaTag);
 				if (media.playAcrossSlides && mediaTag === 'p:audio') {
 					if (!spansSlides) {
-						cTn['@_dur'] = 'indefinite';
+						cMediaNode['@_numSld'] = '999';
 					}
 				} else if (!media.playAcrossSlides) {
 					// Only remove if we're sure it was previously set for play-across
@@ -109,15 +101,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					}
 				}
 
-				if (media.fullScreen) {
-					cMediaNode['@_fullScrn'] = '1';
+				delete cMediaNode['@_fullScrn'];
+				if (media.fullScreen && mediaTag === 'p:video') {
+					mediaNode['@_fullScrn'] = '1';
 				} else {
-					delete cMediaNode['@_fullScrn'];
+					delete mediaNode['@_fullScrn'];
 				}
 
 				// Volume (0-1 → 0-100000)
 				if (media.volume !== undefined && Number.isFinite(media.volume)) {
-					cMediaNode['@_vol'] = String(Math.round(media.volume * 100000));
+					cMediaNode['@_vol'] = String(Math.round(Math.min(1, Math.max(0, media.volume)) * 100000));
 				}
 
 				// Hide when not playing → showWhenStopped="0"
@@ -128,11 +121,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					// value written explicitly and must survive the rewrite.
 					delete cMediaNode['@_showWhenStopped'];
 				}
-
-				// G18: trim/fade/speed/bookmarks go onto the PICTURE's own
-				// `p:nvPr/p:extLst` (a sibling of `a:videoFile`/`a:audioFile`), not
-				// this timing-tree `mediaNode`'s extLst - see `writeMediaP14Extension`.
-				this.writeMediaP14Extension(media);
 			});
 		}
 
@@ -140,162 +128,103 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (cTn) {
 			const childTnLst = cTn['p:childTnLst'] as XmlObject | undefined;
 			if (childTnLst) {
-				for (const containerTag of ['p:par', 'p:seq', 'p:excl']) {
-					const containerNodes = this.ensureArray(childTnLst[containerTag]) as XmlObject[];
-					containerNodes.forEach((containerNode) => {
-						this.applyMediaTimingToTimingTree(containerNode, mediaByShapeId);
-					});
-				}
-				this.applyMediaTimingToTimingTree(childTnLst, mediaByShapeId);
+				this.applyMediaTimingToTimingTree(childTnLst, mediaByShapeId, seen, depth + 1);
 			}
 		}
 
 		for (const containerTag of ['p:par', 'p:seq', 'p:excl', 'p:tnLst']) {
 			const containerNodes = this.ensureArray(node[containerTag]) as XmlObject[];
 			containerNodes.forEach((containerNode) => {
-				this.applyMediaTimingToTimingTree(containerNode, mediaByShapeId);
+				this.applyMediaTimingToTimingTree(containerNode, mediaByShapeId, seen, depth + 1);
 			});
 		}
 	}
 
-	/**
-	 * Write trim/fade/speed/bookmarks into the PICTURE's own
-	 * `p:nvPicPr/p:nvPr/p:extLst/p:ext[@uri="{DAA4B4D4-...}"]/p14:media`
-	 * (G18): real PowerPoint writes this extension as a sibling of the
-	 * `a:videoFile`/`a:audioFile` reference on the shape's own non-visual
-	 * properties, never on the animation timing tree's `p:video`/`p:audio`
-	 * node (that location only ever round-tripped against this codebase's own
-	 * prior writer, never real PowerPoint XML).
-	 *
-	 * `media.rawXml` is the same object graph the element writer serialises
-	 * (`PptxHandlerRuntimeSaveElementWriter.processSlideElement` uses
-	 * `el.rawXml` directly, uncloned, as the `<p:pic>` shape it emits), so
-	 * mutating its `nvPr` here reaches the final XML. A media element with no
-	 * `rawXml` (freshly inserted via the SDK in the same session, never yet
-	 * round-tripped through a load) has no `nvPr` to attach to and is skipped;
-	 * its trim/fade/bookmarks are written correctly starting from its next
-	 * load, once the SDK-built shape's `rawXml` exists.
-	 */
-	protected writeMediaP14Extension(media: MediaPptxElement): void {
-		const rawXml = media.rawXml as XmlObject | undefined;
-		const nvPr = (rawXml?.['p:nvPicPr'] as XmlObject | undefined)?.['p:nvPr'] as
-			| XmlObject
-			| undefined;
-		if (!nvPr) {
-			return;
-		}
-
-		const hasTrim = media.trimStartMs !== undefined || media.trimEndMs !== undefined;
-		const hasFade =
-			(media.fadeInDuration !== undefined && media.fadeInDuration > 0) ||
-			(media.fadeOutDuration !== undefined && media.fadeOutDuration > 0);
-		const hasSpeed = media.playbackSpeed !== undefined && media.playbackSpeed !== 1;
-		const hasBookmarks = media.bookmarks !== undefined && media.bookmarks.length > 0;
-		if (!hasTrim && !hasFade && !hasSpeed && !hasBookmarks) {
-			return;
-		}
-
-		let extLst = nvPr['p:extLst'] as XmlObject | undefined;
-		if (!extLst) {
-			extLst = {};
-			nvPr['p:extLst'] = extLst;
-		}
-		const existingExts = Array.isArray(extLst['p:ext'])
-			? (extLst['p:ext'] as XmlObject[])
-			: extLst['p:ext']
-				? [extLst['p:ext'] as XmlObject]
-				: [];
-
-		if (hasTrim || hasFade || hasSpeed) {
-			// Find or create the p14:media extension (embed fallback rId, trim,
-			// fade, speed). Any pre-existing `@_r:embed` on it is left alone: it
-			// names a relationship this writer does not own creating.
-			let mediaExt = existingExts.find((e) => e['p14:media'] !== undefined);
-			if (!mediaExt) {
-				mediaExt = { '@_uri': '{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}' };
-				existingExts.push(mediaExt);
-			}
-			let p14Media = mediaExt['p14:media'] as XmlObject | undefined;
-			if (!p14Media) {
-				p14Media = {};
-				mediaExt['p14:media'] = p14Media;
-			}
-			if (hasTrim) {
-				// COM-verified (see PptxHandlerRuntimeMediaParsingUtils.ts):
-				// decimal milliseconds, verbatim - `st` absolute from the start,
-				// `end` a distance from the clip's END, not an absolute stop.
-				const trimObj: XmlObject = {};
-				if (media.trimStartMs !== undefined) {
-					trimObj['@_st'] = String(media.trimStartMs);
-				}
-				if (media.trimEndMs !== undefined) {
-					trimObj['@_end'] = String(media.trimEndMs);
-				}
-				p14Media['p14:trim'] = trimObj;
-			}
-			if (hasFade) {
-				const fadeObj: XmlObject = {};
-				if (media.fadeInDuration !== undefined && media.fadeInDuration > 0) {
-					fadeObj['@_in'] = String(Math.round(media.fadeInDuration * 1000));
-				}
-				if (media.fadeOutDuration !== undefined && media.fadeOutDuration > 0) {
-					fadeObj['@_out'] = String(Math.round(media.fadeOutDuration * 1000));
-				}
-				p14Media['p14:fade'] = fadeObj;
-			}
-			// Playback speed: multiplier to OOXML percentage (1x = 100000)
-			if (hasSpeed && media.playbackSpeed !== undefined) {
-				p14Media['@_spd'] = String(Math.round(media.playbackSpeed * 100000));
-			} else {
-				delete p14Media['@_spd'];
-			}
-		}
-
-		if (hasBookmarks && media.bookmarks) {
-			// Update the list where it already lives: inside `p14:media` (the
-			// form PowerPoint writes) or, for a deck saved by an older build, a
-			// sibling extension. Adding a second list beside PowerPoint's own
-			// would leave two disagreeing copies.
-			const p14MediaExt = existingExts.find((e) => e['p14:media'] !== undefined);
-			const p14Media = p14MediaExt?.['p14:media'] as XmlObject | undefined;
-			let bmkExt: XmlObject | undefined =
-				p14Media && p14Media['p14:bmkLst'] !== undefined
-					? p14Media
-					: existingExts.find((e) => e['p14:bmkLst'] !== undefined);
-			if (!bmkExt) {
-				bmkExt = { '@_uri': '{C809E50D-3E49-4677-B9B1-B2B30C8E0B5F}' };
-				existingExts.push(bmkExt);
-			}
-			bmkExt['p14:bmkLst'] = {
-				'p14:bmk': media.bookmarks.map((bmk) => ({
-					'@_name': bmk.label,
-					'@_time': String(Math.round(bmk.time * 1000)),
-				})),
-			};
-		}
-
-		extLst['p:ext'] = existingExts.length === 1 ? existingExts[0] : existingExts;
-	}
-
-	protected applyMediaTimingToRawTiming(rawTiming: XmlObject, elements: PptxElement[]): void {
+	protected applyMediaTimingToRawTiming(
+		rawTiming: XmlObject | undefined,
+		elements: PptxElement[],
+		ids: ReadonlyMap<string, string>,
+	): XmlObject | undefined {
 		const mediaElements: MediaPptxElement[] = [];
 		this.collectMediaElements(elements, mediaElements);
 		if (mediaElements.length === 0) {
-			return;
+			return rawTiming;
 		}
 
 		const mediaByShapeId = new Map<string, MediaPptxElement>();
 		mediaElements.forEach((mediaElement) => {
-			const shapeId = this.getShapeIdFromRawXml(mediaElement.rawXml as XmlObject | undefined);
+			const shapeId = getXmlShapeIdFromXml(mediaElement.rawXml) ?? ids.get(mediaElement.id);
 			if (!shapeId) {
 				return;
 			}
 			mediaByShapeId.set(shapeId, mediaElement);
 		});
-		if (mediaByShapeId.size === 0) {
-			return;
+		const seen = new Set<string>();
+		const timing = rawTiming ? structuredClone(rawTiming) : {};
+		this.applyMediaTimingToTimingTree(timing, mediaByShapeId, seen);
+		const missing = [...mediaByShapeId].filter(
+			([id, media]) =>
+				!seen.has(id) &&
+				(media.rawXml?.['p:nvPicPr'] || !media.rawXml) &&
+				(media.mediaPath || media.mediaData) &&
+				[
+					media.autoPlay,
+					media.startMode,
+					media.volume,
+					media.loop,
+					media.fullScreen,
+					media.hideWhenNotPlaying,
+					media.rewindAfterPlaying,
+					media.playAcrossSlides,
+				].some((value) => value !== undefined),
+		);
+		let nextId = maxTimeNodeId(timing) + 1;
+		const allocateId = () => nextId++;
+		if (missing.length === 0) {
+			if (rawTiming) applyMediaSequenceStarts(timing, mediaByShapeId, allocateId);
+			return rawTiming ? timing : undefined;
 		}
-
-		this.applyMediaTimingToTimingTree(rawTiming, mediaByShapeId);
+		const list = xmlChild(timing, 'p:tnLst') ?? {};
+		timing['p:tnLst'] = list;
+		const roots = this.ensureArray(list['p:par']) as XmlObject[];
+		let root = roots
+			.map((node) => xmlChild(node, 'p:cTn'))
+			.find((node) => node?.['@_nodeType'] === 'tmRoot');
+		if (!root) {
+			root = {
+				'@_id': String(nextId++),
+				'@_dur': 'indefinite',
+				'@_restart': 'never',
+				'@_nodeType': 'tmRoot',
+			};
+			list['p:par'] = [...roots, { 'p:cTn': root }];
+		}
+		const children = xmlChild(root, 'p:childTnLst') ?? {};
+		root['p:childTnLst'] = children;
+		const added: XmlObject = {};
+		for (const [id, media] of missing) {
+			const tag = media.mediaType === 'audio' ? 'p:audio' : 'p:video';
+			const nodes = this.ensureArray(added[tag]) as XmlObject[];
+			added[tag] = [
+				...nodes,
+				{
+					'p:cMediaNode': {
+						'p:cTn': {
+							'@_id': String(nextId++),
+							'@_fill': 'hold',
+							'@_display': '0',
+							'p:stCondLst': { 'p:cond': { '@_delay': 'indefinite' } },
+						},
+						'p:tgtEl': { 'p:spTgt': { '@_spid': id } },
+					},
+				},
+			];
+		}
+		this.applyMediaTimingToTimingTree(added, mediaByShapeId);
+		for (const [tag, nodes] of Object.entries(added)) {
+			children[tag] = [...this.ensureArray(children[tag]), ...this.ensureArray(nodes)];
+		}
+		applyMediaSequenceStarts(timing, mediaByShapeId, allocateId);
+		return timing;
 	}
 }

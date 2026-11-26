@@ -145,7 +145,13 @@ describe('contextual tabs', () => {
 		expect(of('picture')).toStrictEqual(['pictureFormat']);
 		expect(of('table')).toStrictEqual(['tableDesign', 'tableLayout']);
 		expect(of('chart')).toStrictEqual(['chartDesign', 'chartFormat']);
-		expect(of('smartArt')).toStrictEqual(['smartArtDesign']);
+		expect(of('smartArt')).toStrictEqual(['smartArtDesign', 'smartArtFormat']);
+		expect(
+			contextualTabsForElement({ ...shape(), type: 'media', mediaType: 'video' }),
+		).toStrictEqual(['videoFormat', 'playback']);
+		expect(
+			contextualTabsForElement({ ...shape(), type: 'media', mediaType: 'audio' }),
+		).toStrictEqual(['audioFormat', 'playback']);
 	});
 
 	it('keeps the SmartArt Design tab and its Change Colors and Styles galleries wired', () => {
@@ -155,9 +161,9 @@ describe('contextual tabs', () => {
 		// Change Colors and SmartArt Styles stay wired; the tab also carries Layouts (and command groups).
 		expect(galleries).toStrictEqual(expect.arrayContaining(['smartArtColors', 'smartArtStyles']));
 		const smartArt = { ...shape(), type: 'smartArt' } as unknown as PptxElement;
-		expect(visibleContextualTabs(smartArt)).toStrictEqual(['smartArtDesign']);
+		expect(visibleContextualTabs(smartArt)).toStrictEqual(['smartArtDesign', 'smartArtFormat']);
 		const hidden = resolveCustomization({ ribbon: { hiddenTabs: ['smartArtDesign'] } });
-		expect(visibleContextualTabs(smartArt, hidden)).toStrictEqual([]);
+		expect(visibleContextualTabs(smartArt, hidden)).toStrictEqual(['smartArtFormat']);
 	});
 
 	it('honours hidden contextual tabs and falls back to Home', () => {

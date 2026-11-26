@@ -172,6 +172,8 @@ describe('linked content in a loaded deck', () => {
 				'imageDataUrl',
 				'imagePath',
 				'mediaPath',
+				'posterFrameData',
+				'posterFramePath',
 				'posterImage',
 				'soundPath',
 			].sort(),

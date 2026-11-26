@@ -4,7 +4,7 @@
  * one Home > Arrange uses).
  */
 import type { PptxElement } from 'pptx-viewer-core';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { nextTick } from 'vue';
 
 import { mountWithMergeCrop } from '../../composables/merge-crop-test-harness';
@@ -38,6 +38,27 @@ const sizeControl = (h: MergeCropHarness, hook: string) =>
 	h.wrapper.get<HTMLButtonElement>(
 		`[data-ribbon-group="pictureFormat.size"] [data-pptx-ribbon-control="${hook}"]`,
 	);
+
+it('passes the clip selection and edit callback to the shared Audio Format strip', () => {
+	const element: PptxElement = {
+		type: 'media',
+		mediaType: 'audio',
+		id: 'clip',
+		x: 0,
+		y: 0,
+		width: 40,
+		height: 40,
+	};
+	const patch = vi.fn();
+	const h = mountTab([], { tab: 'audioFormat', picture: { element, patch, editable: true } });
+	const strip = h.wrapper.get(
+		'[data-ribbon-group="audioFormat.size"] pptx-ui-contextual-ribbon',
+	).element;
+	expect(strip).toMatchObject({
+		group: 'audioFormat.size',
+		state: { element, patch, editable: true },
+	});
+});
 
 describe('picture Format > Size', () => {
 	it('toggles crop mode and keeps its presses inside the crop session', async () => {

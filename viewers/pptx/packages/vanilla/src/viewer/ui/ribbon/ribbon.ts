@@ -296,6 +296,12 @@ export function createRibbon(
 	const picturePane = contextualPanes.get('pictureFormat');
 	const pictureStrips = picturePane?.querySelectorAll('pptx-ui-picture-ribbon') ?? [];
 	const pictureArrange = picturePane?.querySelector('[data-ribbon-group="pictureFormat.arrange"]');
+	const mediaArranges = new Map(
+		(['videoFormat', 'audioFormat'] as const).map((tab) => [
+			tab,
+			contextualPanes.get(tab)?.querySelector(`[data-ribbon-group="${tab}.arrange"]`),
+		]),
+	);
 	const homeArrange = homeTab?.el.querySelector('[data-ribbon-group="home.arrange"]');
 	const homeArrangeRow = homeArrange?.querySelector('[data-pptx-chrome="arrange-controls"]');
 	for (const [id, pane] of contextualPanes) {
@@ -318,7 +324,12 @@ export function createRibbon(
 		}
 		activeTab = tab;
 		if (homeArrange && homeArrangeRow && pictureArrange) {
-			const group = tab === 'pictureFormat' ? pictureArrange : homeArrange;
+			const group =
+				tab === 'pictureFormat'
+					? pictureArrange
+					: tab === 'videoFormat' || tab === 'audioFormat'
+						? (mediaArranges.get(tab) ?? homeArrange)
+						: homeArrange;
 			if (homeArrangeRow.parentElement !== group) {
 				group.prepend(homeArrangeRow);
 			}
@@ -377,7 +388,7 @@ export function createRibbon(
 		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
 		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
-		for (const strip of pictureStrips) {
+		for (const strip of [...pictureStrips, ...el.querySelectorAll('pptx-ui-contextual-ribbon')]) {
 			strip.state = {
 				...latestExtra.picture,
 				element: latestSelected,

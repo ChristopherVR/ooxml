@@ -487,7 +487,7 @@ describe('fresh media p14 extension (no rawXml)', () => {
 		expect(slideXml).toMatch(/<p14:trim st="1000" end="5000">/u);
 		// The embed relationship id is synthesised too, not left blank, so the
 		// extension resolves the media on its very first save.
-		expect(slideXml).toMatch(/<p14:media r:embed="rId\d+">/u);
+		expect(slideXml).toMatch(/<p14:media[^>]+ r:embed="rId\d+"/u);
 
 		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
 		const reloadedVideo = reloaded.slides

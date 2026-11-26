@@ -91,6 +91,29 @@ function mount<T>(
 }
 
 describe('contextual ribbon tabs', () => {
+	it('passes the selected SmartArt to the shared SmartArt Format strip', () => {
+		const selectedElement: PptxElement = {
+			type: 'smartArt',
+			id: 'dia',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 80,
+		};
+		const root = mount(RibbonContextualSectionComponent, {
+			tab: 'smartArtFormat',
+			selectedElement,
+			slideIndex: 0,
+			canEdit: true,
+		});
+		const strip = root.querySelector(
+			'[data-ribbon-group="smartArtFormat.shapes"] pptx-ui-contextual-ribbon',
+		);
+		expect(strip).toMatchObject({
+			group: 'smartArtFormat.shapes',
+			state: { element: selectedElement, editable: true },
+		});
+	});
 	it('appear for a shape, are not auto-selected, and fall back to Home on deselect', () => {
 		const selected: WritableSignal<PptxElement | null> = signal(null);
 		const state = createRibbonTabState(selected, signal(EMPTY_RESOLVED_CUSTOMIZATION));

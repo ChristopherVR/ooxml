@@ -95,6 +95,32 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 	);
 
 describe('ribbon contextual tabs (vanilla)', () => {
+	it('passes the selected video to the shared Playback strip', () => {
+		const ribbon = mount();
+		try {
+			const element: PptxElement = {
+				type: 'media',
+				mediaType: 'video',
+				id: 'clip',
+				x: 0,
+				y: 0,
+				width: 100,
+				height: 50,
+			};
+			ribbon.updateSelection(element, selection(element));
+			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="playback"]')?.click();
+			const strip = visiblePane(ribbon.el)?.querySelector(
+				'[data-ribbon-group="playback.options"] pptx-ui-contextual-ribbon',
+			);
+			expect(strip).toMatchObject({
+				group: 'playback.options',
+				state: { element, editable: true },
+			});
+		} finally {
+			ribbon.destroy();
+			ribbon.el.remove();
+		}
+	});
 	it.each([true, false])('enables picture alt text only with a format pane (%s)', (hasPane) => {
 		const requestFormatPane = vi.fn();
 		const ribbon = mount(hasPane ? { requestFormatPane } : {});

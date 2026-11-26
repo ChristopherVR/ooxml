@@ -58,7 +58,12 @@ function caption(labelKey: string, fallback: string): string {
 		/>
 		<PictureSizeStrip v-if="group.strip === 'picture-size'" :hidden-actions="props.hiddenActions" />
 		<ChartSelectionStrip v-else-if="group.strip === 'chart-selection'" />
-		<slot v-if="group.pictureStrip === 'picture-arrange'" name="arrange" />
+		<slot v-if="group.pictureStrip === 'picture-arrange' || group.arrange" name="arrange" />
+		<pptx-ui-contextual-ribbon
+			v-if="group.contextualStrip"
+			:group.prop="group.group"
+			:state.prop="pictureState"
+		/>
 		<pptx-ui-picture-ribbon
 			v-if="group.pictureStrip"
 			:family.prop="group.pictureStrip"

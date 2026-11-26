@@ -19,6 +19,31 @@ vi.mock(import('../../i18n/use-translation'), () => ({
 const { ContextualTabSection } = await import('./ContextualTabSection');
 const { ShapeFormatContext } = await import('../shape-format-context');
 
+it('passes the clip selection and edit callback to the shared Playback strip', () => {
+	const element = { type: 'media' as const, id: 'clip', x: 0, y: 0, width: 100, height: 50 };
+	const patch = vi.fn();
+	act(() =>
+		root.render(
+			<ContextualTabSection
+				tab='playback'
+				picture={{
+					element,
+					patch,
+					editable: true,
+					translate: (key) => key,
+				}}
+			/>,
+		),
+	);
+	const strip = container.querySelector(
+		'[data-ribbon-group="playback.options"] pptx-ui-contextual-ribbon',
+	);
+	expect(strip).toMatchObject({
+		group: 'playback.options',
+		state: { element, patch, editable: true },
+	});
+});
+
 function cropStub(overrides: Partial<PictureCropController> = {}): PictureCropController {
 	return {
 		element: null,

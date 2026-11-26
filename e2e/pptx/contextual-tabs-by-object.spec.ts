@@ -2,9 +2,8 @@
 /**
  * Selecting an object brings up exactly its contextual tab, with that tab's
  * groups and galleries reachable, in every binding. Selecting something else
- * swaps the tab, and clearing the selection removes it. Media (audio/video) and
- * text boxes without shape properties have no contextual tab by design, so they
- * are not asserted here.
+ * swaps the tab, and clearing the selection removes it. Media tabs are covered
+ * by contextual-media-tabs.spec.ts.
  */
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';

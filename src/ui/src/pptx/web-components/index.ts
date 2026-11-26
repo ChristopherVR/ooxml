@@ -43,6 +43,8 @@ import { definePptxSmartArtTextPane } from './smartart-text-pane';
 import { OFFICE_TOKEN_BRIDGE } from './office-token-bridge';
 import { definePptxOptionsDialog } from './options-dialog';
 import { definePptxPictureRibbon } from './picture-ribbon';
+import { definePptxContextualRibbon } from './contextual-ribbon';
+export type { PptxContextualRibbonElement } from './contextual-ribbon';
 export type { PptxPictureRibbonElement } from './picture-ribbon';
 export type { PictureRibbonState, PictureStripGroup } from './picture-ribbon-state';
 import { definePptxInsertChartDialog } from './insert-chart-dialog';
@@ -253,6 +255,7 @@ const controls = [
 	['pptx-ui-ribbon-home-arrange-shape', definePptxRibbonHomeArrangeShape],
 	['pptx-ui-ribbon-home-picture-size', definePptxRibbonHomePictureSize],
 	['pptx-ui-picture-ribbon', definePptxPictureRibbon],
+	['pptx-ui-contextual-ribbon', definePptxContextualRibbon],
 	['pptx-ui-ribbon-home-chart-selection', definePptxRibbonHomeChartSelection],
 	['pptx-ui-ribbon-view', definePptxRibbonView],
 	['pptx-ui-ribbon-transitions', definePptxRibbonTransitions],

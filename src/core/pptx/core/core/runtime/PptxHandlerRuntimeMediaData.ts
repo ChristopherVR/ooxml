@@ -213,8 +213,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (timing.volume !== undefined) {
 				el.volume = timing.volume;
 			}
+			if (timing.rewindAfterPlaying !== undefined) {
+				el.rewindAfterPlaying = timing.rewindAfterPlaying;
+			}
 			if (timing.autoPlay !== undefined) {
 				el.autoPlay = timing.autoPlay;
+			}
+			if (timing.startMode !== undefined) {
+				el.startMode = timing.startMode;
 			}
 			if (timing.playAcrossSlides !== undefined) {
 				el.playAcrossSlides = timing.playAcrossSlides;

@@ -80,6 +80,7 @@ const trimFadeSource = computed<MediaTrimFadeSource>(() =>
 				trimEndMs: props.element.trimEndMs,
 				fadeInDuration: props.element.fadeInDuration,
 				fadeOutDuration: props.element.fadeOutDuration,
+				rewindAfterPlaying: props.element.rewindAfterPlaying,
 				volume: mediaPlaybackAttributes(playbackSource.value).volume,
 			}
 		: {},

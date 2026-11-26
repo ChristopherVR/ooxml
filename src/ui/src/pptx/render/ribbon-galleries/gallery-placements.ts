@@ -12,6 +12,7 @@ import { RIBBON_CONTEXTUAL_TABS } from '../toolbar-actions';
 import type { RibbonContextualTabId } from '../toolbar-actions';
 import type { RibbonGalleryId } from './gallery-types';
 import type { PictureStripGroup } from '../../web-components/picture-ribbon-state';
+import { MEDIA_FORMAT_GROUPS } from './media-format-groups';
 
 /** One gallery inside a group: the gallery and the control id it is tagged with. */
 export interface RibbonGalleryPlacement {
@@ -33,6 +34,8 @@ export interface RibbonGalleryGroupPlacement {
 	/** The `pptx-ui-ribbon-home-<strip>` drawn after the galleries (Picture Format > Size). */
 	strip?: 'picture-size' | 'chart-selection';
 	pictureStrip?: PictureStripGroup;
+	contextualStrip?: boolean;
+	arrange?: boolean;
 }
 
 /** Galleries the format inspector shows as panels (`mode="panel"`) instead of the ribbon. */
@@ -43,6 +46,7 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 	RibbonContextualTabId,
 	readonly RibbonGalleryGroupPlacement[]
 > = {
+	...MEDIA_FORMAT_GROUPS,
 	shapeFormat: [
 		{
 			group: 'shapeFormat.shapeStyles',
@@ -447,7 +451,9 @@ export function contextualTabsForElement(element: PptxElement | null): RibbonCon
 		case 'chart':
 			return ['chartDesign', 'chartFormat'];
 		case 'smartArt':
-			return ['smartArtDesign'];
+			return ['smartArtDesign', 'smartArtFormat'];
+		case 'media':
+			return [element.mediaType === 'audio' ? 'audioFormat' : 'videoFormat', 'playback'];
 		default:
 			return hasShapeProperties(element) ? ['shapeFormat'] : [];
 	}

@@ -411,7 +411,9 @@ export class MediaRendererComponent {
 					}
 					return;
 				}
-				startMediaAutoplay(el, { trimStartMs: media?.trimStartMs });
+				if (!media?.startMode || media.startMode === 'auto') {
+					startMediaAutoplay(el, { trimStartMs: media?.trimStartMs });
+				}
 				// G20: trim-end stop + fade in/out, shared with the other four
 				// bindings so a trimmed/faded clip behaves identically everywhere
 				// (this used to be React-only logic).

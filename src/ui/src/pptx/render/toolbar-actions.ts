@@ -63,7 +63,11 @@ export type RibbonContextualTabId =
 	| 'tableLayout'
 	| 'chartDesign'
 	| 'chartFormat'
-	| 'smartArtDesign';
+	| 'smartArtDesign'
+	| 'videoFormat'
+	| 'audioFormat'
+	| 'playback'
+	| 'smartArtFormat';
 
 export interface RibbonContextualTabDefinition {
 	id: RibbonContextualTabId;
@@ -79,6 +83,10 @@ export const RIBBON_CONTEXTUAL_TABS: readonly RibbonContextualTabDefinition[] = 
 	{ id: 'chartDesign', labelKey: 'pptx.ribbon.tab.chartDesign' },
 	{ id: 'chartFormat', labelKey: 'pptx.ribbon.tab.chartFormat' },
 	{ id: 'smartArtDesign', labelKey: 'pptx.ribbon.tab.smartArtDesign' },
+	{ id: 'videoFormat', labelKey: 'pptx.ribbon.tab.videoFormat' },
+	{ id: 'audioFormat', labelKey: 'pptx.ribbon.tab.audioFormat' },
+	{ id: 'playback', labelKey: 'pptx.media.playback' },
+	{ id: 'smartArtFormat', labelKey: 'pptx.ribbon.tab.smartArtFormat' },
 ];
 
 export interface ToolbarTabDefinition {

@@ -1,5 +1,5 @@
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
-import type { ToolbarActionId } from 'ooxml-ui/pptx';
+import type { RibbonContextualTabId, ToolbarActionId } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -40,13 +40,17 @@ function makeEditor(selected: string): EditorState {
 	return editor;
 }
 
-function render(editor: EditorState, hiddenActions?: ToolbarActionId[]): HTMLElement {
+function render(
+	editor: EditorState,
+	hiddenActions?: ToolbarActionId[],
+	tab: RibbonContextualTabId = 'pictureFormat',
+): HTMLElement {
 	cleanup?.();
 	const target = document.createElement('div');
 	document.body.appendChild(target);
 	const instance = mount(ContextualTab, {
 		target,
-		props: { tab: 'pictureFormat', editor, hiddenActions },
+		props: { tab, editor, hiddenActions },
 	});
 	flushSync();
 	cleanup = () => {
@@ -55,6 +59,26 @@ function render(editor: EditorState, hiddenActions?: ToolbarActionId[]): HTMLEle
 	};
 	return target;
 }
+
+it('passes the selected video to the shared Video Format strip', () => {
+	const element: PptxElement = {
+		type: 'media',
+		mediaType: 'video',
+		id: 'clip',
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 50,
+	};
+	const editor = makeEditor('clip');
+	editor.setSlides([{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [element] }]);
+	editor.selection.set('clip');
+	const target = render(editor, undefined, 'videoFormat');
+	const strip = target.querySelector(
+		'[data-ribbon-group="videoFormat.poster"] pptx-ui-contextual-ribbon',
+	);
+	expect(strip).toMatchObject({ group: 'videoFormat.poster', state: { element, editable: true } });
+});
 
 function sizeControl(target: HTMLElement, hook: string): HTMLButtonElement {
 	const node = target.querySelector<HTMLButtonElement>(

@@ -5,7 +5,7 @@ export interface PictureRibbonState {
 	element: PptxElement | null | undefined;
 	editable: boolean;
 	translate: (key: string) => string;
-	patch: (id: string, patch: Partial<PptxImageLikeElement>) => void;
+	patch: (id: string, patch: Partial<PptxElement>) => void;
 	altText?: (() => void) | undefined;
 	selectionPane?: (() => void) | undefined;
 	loadImage?: ((path: string) => Promise<string | undefined>) | undefined;

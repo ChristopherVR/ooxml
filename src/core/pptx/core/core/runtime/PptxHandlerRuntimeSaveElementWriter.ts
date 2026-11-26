@@ -812,7 +812,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		this.finalizePictureBlipFillOrder(shape);
 
 		// Geometry
-		this.applyGeometryUpdate(shape, el);
+		const styledElement: PptxElement =
+			el.type === 'media' && this.isPictureShape(shape) ? { ...el, type: 'picture' } : el;
+		this.applyGeometryUpdate(shape, styledElement);
 
 		// Shape styles (fill, stroke, effects, 3D)
 		//
@@ -826,15 +828,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// whose `rawXml['p:spPr']` is `''`; a solid fill set on one of them left
 		// no trace in the saved part. Bare `<p:spPr/>` occurs 623 times across
 		// all 45 committed decks, so this was the common case, not the corner.
-		if (hasShapeProperties(el) && el.shapeStyle) {
+		if (hasShapeProperties(styledElement) && styledElement.shapeStyle) {
+			const { shapeStyle } = styledElement;
 			const spPr = ensureXmlChild(shape, 'p:spPr');
 			if (spPr) {
-				this.applyFillAndStroke(spPr, el.shapeStyle, ctx.inheritedGroupFill);
-				writeBackgroundFillFlag(shape, spPr, el.shapeStyle);
-				this.applyEffectsAndThreeD(spPr, el.shapeStyle);
+				this.applyFillAndStroke(spPr, shapeStyle, ctx.inheritedGroupFill);
+				writeBackgroundFillFlag(shape, spPr, shapeStyle);
+				this.applyEffectsAndThreeD(spPr, shapeStyle);
 				this.finalizeSpPrSchemaOrder(shape);
 				// Re-emit `<p:style>` (lnRef/fillRef/effectRef/fontRef) — Phase 2 Stream B / C-H2.
-				this.applyShapeStyleRefs(shape, el.shapeStyle);
+				this.applyShapeStyleRefs(shape, shapeStyle);
 			}
 		}
 

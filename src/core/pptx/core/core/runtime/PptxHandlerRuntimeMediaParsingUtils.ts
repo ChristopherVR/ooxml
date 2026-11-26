@@ -178,7 +178,14 @@ export function parseCtnMediaTiming(cTn: XmlObject | undefined, mediaTag: string
 		}
 		// Auto-play: nodeType=1 means "with previous" (auto), 2 = "after previous"
 		const nodeType = cTn['@_nodeType'];
-		if (nodeType === '1' || nodeType === '2') {
+		const start = (cTn['p:stCondLst'] as XmlObject | undefined)?.['p:cond'] as
+			| XmlObject
+			| undefined;
+		if (
+			nodeType === '1' ||
+			nodeType === '2' ||
+			(start?.['@_delay'] === '0' && !start['@_evt'] && !start['p:tn'])
+		) {
 			autoPlay = true;
 		}
 		// Play across slides: dur="indefinite" on the cTn means the media

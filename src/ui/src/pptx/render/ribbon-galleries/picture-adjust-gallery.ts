@@ -46,7 +46,11 @@ export interface AdjustSection {
 }
 
 export function isPictureElement(element: PptxElement | null): element is PptxElement {
-	return element?.type === 'image' || element?.type === 'picture';
+	return (
+		element?.type === 'image' ||
+		element?.type === 'picture' ||
+		(element?.type === 'media' && (!element.rawXml || Boolean(element.rawXml['p:nvPicPr'])))
+	);
 }
 
 /** The picture's image effects (empty when it has none). */

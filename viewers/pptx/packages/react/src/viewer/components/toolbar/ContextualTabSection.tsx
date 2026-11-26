@@ -38,7 +38,17 @@ export function ContextualTabSection({
 					))}
 					{group.strip === 'picture-size' && <PictureSizeStrip hiddenActions={hiddenActions} />}
 					{group.strip === 'chart-selection' && <ChartSelectionStrip />}
-					{group.pictureStrip === 'picture-arrange' && arrange}
+					{(group.pictureStrip === 'picture-arrange' || group.arrange) && arrange}
+					{group.contextualStrip &&
+						React.createElement('pptx-ui-contextual-ribbon', {
+							ref: (node: HTMLElementTagNameMap['pptx-ui-contextual-ribbon'] | null) => {
+								if (!node) {
+									return;
+								}
+								node.group = group.group;
+								node.state = picture;
+							},
+						})}
 					{group.pictureStrip &&
 						React.createElement('pptx-ui-picture-ribbon', {
 							ref: (node: HTMLElementTagNameMap['pptx-ui-picture-ribbon'] | null) => {

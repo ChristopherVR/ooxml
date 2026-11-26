@@ -20,7 +20,7 @@ import type { PptxChartData } from './chart';
 import type { XmlObject } from './common';
 import type { PptxElementBase, PptxTextProperties, PptxShapeProperties } from './element-base';
 import type { PptxCustomPathProperties } from './geometry';
-import type { PptxImageProperties } from './image';
+import type { PptxImageEffects, PptxImageProperties } from './image';
 import type {
 	PptxMediaType,
 	PptxMediaReferenceKind,
@@ -437,14 +437,19 @@ export interface MediaPptxElement extends PptxElementBase {
 	audioCdStart?: PptxAudioCdPosition | undefined;
 	audioCdEnd?: PptxAudioCdPosition | undefined;
 	rawMediaReferenceXml?: XmlObject | undefined;
-	/** Trim start in milliseconds (from p:cMediaNode p:cTn @st). */
+	/** Trim start in milliseconds from the start of the clip. */
 	trimStartMs?: number | undefined;
-	/** Trim end in milliseconds (from p:cMediaNode p:cTn @end). */
+	/** Trim end in milliseconds measured from the end of the clip. */
 	trimEndMs?: number | undefined;
 	/** Path to the poster/preview image inside the ZIP. */
 	posterFramePath?: string | undefined;
 	/** Base64 data-URL for the poster frame image. */
 	posterFrameData?: string | undefined;
+	/** DrawingML treatment of the media picture. */
+	imageEffects?: PptxImageEffects | undefined;
+	shapeStyle?: ShapeStyle | undefined;
+	shapeType?: string | undefined;
+	shapeAdjustments?: Record<string, number> | undefined;
 	/** Poster source crop from the left edge as a 0..1 fraction. */
 	cropLeft?: number | undefined;
 	/** Poster source crop from the top edge as a 0..1 fraction. */
@@ -463,6 +468,8 @@ export interface MediaPptxElement extends PptxElementBase {
 	fillRectBottom?: number | undefined;
 	/** Whether media should play full-screen during presentation. */
 	fullScreen?: boolean | undefined;
+	/** Return to the initial frame when playback finishes. */
+	rewindAfterPlaying?: boolean | undefined;
 	/** Whether media should loop continuously. */
 	loop?: boolean | undefined;
 	/** Fade-in duration in seconds. */
@@ -473,6 +480,8 @@ export interface MediaPptxElement extends PptxElementBase {
 	volume?: number | undefined;
 	/** Whether media auto-plays on slide entry. */
 	autoPlay?: boolean | undefined;
+	/** Where a clip starts in the slide-show timeline. */
+	startMode?: 'auto' | 'sequence' | 'click' | undefined;
 	/** Whether audio continues playing across slide transitions (presentation mode). */
 	playAcrossSlides?: boolean | undefined;
 	/** Hide the element when media is not actively playing. */

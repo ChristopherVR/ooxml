@@ -1,4 +1,6 @@
 import type { MediaPptxElement, XmlObject } from '../../types';
+import { xmlChild } from '../../utils/xml-access';
+import { reorderObjectKeys } from '../../utils/xml-reorder';
 
 /**
  * Pure construction of the `p14:media` / `p14:bmkLst` extension entries a
@@ -120,4 +122,50 @@ export function buildFreshMediaNvPr(
 		return {};
 	}
 	return { 'p:extLst': { 'p:ext': exts.length === 1 ? exts[0] : exts } };
+}
+
+/** Apply playback edits while retaining the embed reference and other extensions. */
+export function mergeMediaP14Extensions(
+	nvPr: XmlObject,
+	media: MediaPptxElement,
+	embedRelationshipId?: string,
+): void {
+	const list = xmlChild(nvPr, 'p:extLst') ?? {};
+	const entries = list['p:ext'];
+	const exts = (Array.isArray(entries) ? [...entries] : entries ? [entries] : []) as XmlObject[];
+	const fresh = buildMediaP14Extensions(media, embedRelationshipId);
+	const nextMedia = fresh.find((ext) => ext['p14:media'])?.['p14:media'] as XmlObject | undefined;
+	const nextBookmarks = fresh.find((ext) => ext['p14:bmkLst'])?.['p14:bmkLst'];
+	let mediaExt = exts.find((ext) => xmlChild(ext, 'p14:media'));
+	if (!mediaExt && (nextMedia || embedRelationshipId || nextBookmarks)) {
+		mediaExt = {
+			'@_uri': '{DAA4B4D4-6D71-4841-9C94-3DE7FCFB9230}',
+			'p14:media': { '@_xmlns:p14': 'http://schemas.microsoft.com/office/powerpoint/2010/main' },
+		};
+		exts.push(mediaExt);
+	}
+	const target = xmlChild(mediaExt, 'p14:media');
+	if (target) {
+		if (embedRelationshipId) target['@_r:embed'] = embedRelationshipId;
+		for (const key of ['p14:trim', 'p14:fade', '@_spd']) {
+			const value = nextMedia?.[key];
+			if (value === undefined) delete target[key];
+			else target[key] = value;
+		}
+		if (nextBookmarks) target['p14:bmkLst'] = nextBookmarks;
+		else delete target['p14:bmkLst'];
+		mediaExt!['p14:media'] = reorderObjectKeys(target, [
+			'p14:trim',
+			'p14:fade',
+			'p14:bmkLst',
+			'p14:extLst',
+		]);
+	}
+	const kept = exts.filter((ext) => {
+		if (ext['p14:bmkLst'] === undefined) return true;
+		delete ext['p14:bmkLst'];
+		return Object.keys(ext).some((key) => !key.startsWith('@_'));
+	});
+	if (kept.length === 0) delete nvPr['p:extLst'];
+	else nvPr['p:extLst'] = { ...list, 'p:ext': kept.length === 1 ? kept[0] : kept };
 }

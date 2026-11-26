@@ -26,9 +26,11 @@ import {
 	parseDrawingMediaReference,
 } from '../../utils/drawing-media-reference';
 import { ensureXmlChild } from '../../utils/xml-access';
+import { reorderObjectKeys } from '../../utils/xml-reorder';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import type { GroupChildSpaceOwner } from './group-xfrm-preservation';
-import { addSvgBlipExtension } from './picture-svg-blip';
+import { mergeMediaP14Extensions } from './media-p14-extension-write';
+import { addSvgBlipExtension, TRANSPARENT_PNG_DATA_URL } from './picture-svg-blip';
 import { pictureBlipFill as readPictureBlipFill, rebindPictureBlip } from './picture-source-edit';
 import { withSegmentSlideJumpTargets } from './run-slide-jump-targets';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveTextWriter';
@@ -36,6 +38,9 @@ import { shouldWritePictureGeometry } from './save-picture-geometry-gate';
 import { applyNewPictureLayout, type PictureFillSaveContext } from './save-picture-fill';
 import { buildRichCellParagraphs, hasTableCellSource } from './table-cell-rich-xml';
 import { buildCellTextBody, tableCellSegmentsForSave } from './table-cell-segments-xml';
+
+/** Part type used by the Office 2010 media extension's embedded relationship. */
+const P14_MEDIA_RELATIONSHIP_TYPE = 'http://schemas.microsoft.com/office/2007/relationships/media';
 
 /** Context passed to per-element save processing. */
 export interface SaveSlideContext {
@@ -163,6 +168,12 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/** Apply image crop, effects, and alt text for picture/image elements. */
 	protected applyImageProperties(shape: XmlObject, el: PptxElement, ctx: SaveSlideContext): void {
+		if (el.type === 'media') {
+			const blip = readPictureBlipFill(shape);
+			this.applyImageCropToBlipFill(blip, { ...el, type: 'picture' });
+			if (el.imageEffects) this.applyImageEffectsToBlip(blip, el.imageEffects);
+			return;
+		}
 		if (el.type !== 'picture' && el.type !== 'image') {
 			return;
 		}
@@ -449,12 +460,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			originalReference?.relationshipId ??
 			this.slideMediaRelationshipBuilder.getMediaRelationshipIdFromShape(shape);
 		const relTypes = {
-			media: ctx.slideMediaRelationshipType,
+			media: shape ? ctx.slideMediaRelationshipType : P14_MEDIA_RELATIONSHIP_TYPE,
 			video: ctx.slideVideoRelationshipType,
 			audio: ctx.slideAudioRelationshipType,
 		};
 
-		if (typeof mediaElement.mediaData === 'string') {
+		if (
+			typeof mediaElement.mediaData === 'string' &&
+			!(shape && mediaElement.mediaPath && this.zip.file(mediaElement.mediaPath))
+		) {
 			const parsedMedia =
 				ctx.resolvedMediaBytes.get(mediaElement.id) ??
 				this.parseDataUrlToBytes(mediaElement.mediaData);
@@ -468,19 +482,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (!mediaRelationshipId) {
 					mediaRelationshipId = ctx.slideRelationshipRegistry.nextRelationshipId();
 				}
-				// Embedded media (bytes written into the package) must use the
-				// generic `media` relationship type regardless of media kind. The
-				// type-specific `video`/`audio` types are for *externally linked*
-				// media with TargetMode="External"; using them for embedded parts
-				// makes the relationship schema-invalid and causes PowerPoint to
-				// reject the file.
+				// The new picture also gets a separate DrawingML video/audio
+				// relationship for its legacy r:link, created below.
 				ctx.slideRelationshipRegistry.upsertRelationship(
 					mediaRelationshipId,
 					relTypes.media,
 					relationshipTarget,
 				);
 				if (!shape) {
-					shape = this.createMediaGraphicFrameXml(mediaElement, mediaRelationshipId);
+					shape = this.createMediaPicture(
+						mediaElement,
+						relationshipTarget,
+						mediaRelationshipId,
+						ctx,
+					);
 				} else if (getMediaReferenceContainer(shape)) {
 					applyDrawingMediaReference(
 						getMediaReferenceContainer(shape)!,
@@ -514,8 +529,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		) {
 			const relationshipTarget = mediaElement.mediaPath.replace(/^ppt\//u, '../');
 			mediaRelationshipId ||= ctx.slideRelationshipRegistry.nextRelationshipId();
-			// Linked media (external URL, isLinked=true) uses the type-specific
-			// relationship. Package-internal paths (isLinked falsy) use `media`.
+			// Linked media uses the DrawingML type-specific relationship alone.
 			const pathRelType = mediaElement.isLinked
 				? this.slideMediaRelationshipBuilder.resolveMediaRelationshipType(mediaType, relTypes)
 				: relTypes.media;
@@ -524,15 +538,82 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				pathRelType,
 				relationshipTarget,
 			);
-			shape = this.createMediaGraphicFrameXml(mediaElement, mediaRelationshipId);
+			shape = this.createMediaPicture(mediaElement, relationshipTarget, mediaRelationshipId, ctx);
 		}
 		if (!shape && mediaElement.mediaReferenceKind === 'audioCd') {
 			shape = this.createMediaGraphicFrameXml(mediaElement, '');
 		}
 		const referenceContainer = getMediaReferenceContainer(shape);
-		if (referenceContainer) {
+		if (
+			referenceContainer &&
+			(originalReference || mediaElement.mediaReferenceKind === 'audioCd')
+		) {
 			applyDrawingMediaReference(referenceContainer, mediaElement, mediaRelationshipId);
 		}
+		const nv =
+			shape && ensureXmlChild(shape, shape['p:nvPicPr'] ? 'p:nvPicPr' : 'p:nvGraphicFramePr');
+		const properties = nv && ensureXmlChild(nv, 'p:nvPr');
+		if (properties) mergeMediaP14Extensions(properties, mediaElement);
+		if (nv && properties && shape?.['p:nvPicPr']) {
+			nv['p:nvPr'] = reorderObjectKeys(properties, [
+				'p:ph',
+				'a:audioCd',
+				'a:wavAudioFile',
+				'a:audioFile',
+				'a:videoFile',
+				'a:quickTimeFile',
+				'p:custDataLst',
+				'p:extLst',
+			]);
+		}
+		if (shape?.['p:nvPicPr'] && !mediaElement.posterFramePath && mediaElement.posterFrameData) {
+			const poster = this.parseDataUrlToBytes(mediaElement.posterFrameData);
+			if (poster && ['png', 'jpg', 'jpeg'].includes(poster.extension)) {
+				shape = rebindPictureBlip(shape, this.embedEditedPictureBytes(poster, ctx)) ?? shape;
+			}
+		}
 		return shape;
+	}
+
+	private createMediaPicture(
+		media: MediaPptxElement,
+		target: string,
+		relationshipId: string,
+		ctx: SaveSlideContext,
+	): XmlObject {
+		const poster = this.parseDataUrlToBytes(TRANSPARENT_PNG_DATA_URL)!;
+		const picture = this.createPictureXml(
+			{ ...media, type: 'picture' },
+			this.embedEditedPictureBytes(poster, ctx),
+		);
+		const nv = ensureXmlChild(picture, 'p:nvPicPr')!;
+		const nvPr = ensureXmlChild(nv, 'p:nvPr')!;
+		const audio = media.mediaType === 'audio';
+		const legacyId = media.isLinked
+			? relationshipId
+			: ctx.slideRelationshipRegistry.nextRelationshipId();
+		if (!media.isLinked) {
+			ctx.slideRelationshipRegistry.upsertRelationship(
+				legacyId,
+				audio ? ctx.slideAudioRelationshipType : ctx.slideVideoRelationshipType,
+				target,
+			);
+		}
+		applyDrawingMediaReference(
+			nvPr,
+			{
+				...media,
+				mediaReferenceKind: media.mediaReferenceKind ?? (audio ? 'audioFile' : 'videoFile'),
+			},
+			legacyId,
+		);
+		if (media.extensionXml?.length) {
+			nvPr['p:extLst'] = { 'p:ext': media.extensionXml.map(({ xml }) => xml) };
+		}
+		mergeMediaP14Extensions(nvPr, media, media.isLinked ? undefined : relationshipId);
+		const cNvPr = ensureXmlChild(nv, 'p:cNvPr');
+		const shapeId = ctx.connectorShapeIds?.get(media.id);
+		if (cNvPr && shapeId) cNvPr['@_id'] = shapeId;
+		return picture;
 	}
 }

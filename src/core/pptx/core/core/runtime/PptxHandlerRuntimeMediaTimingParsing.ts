@@ -2,6 +2,7 @@ import { parseTimeTargetElement } from '../../services/animation-target-build-he
 import { resolveSlideTimingNode } from '../../services/slide-transition-envelope';
 import { XmlObject } from '../../types';
 import type { MediaTimingData } from './PptxHandlerRuntimeImageEffects';
+import { readMediaSequenceStarts } from './media-start-sequence';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeImageEffects';
 import {
 	getXmlShapeIdFromXml,
@@ -51,9 +52,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Extract timing from p:cTn
 				const cTn = cMediaNode['p:cTn'] as XmlObject | undefined;
 				const timing = parseCtnMediaTiming(cTn, mediaTag);
+				const startList = cTn?.['p:stCondLst'] as XmlObject | undefined;
+				const start = startList?.['p:cond'] as XmlObject | undefined;
 
 				// Full-screen flag
-				const fullScreen = cMediaNode['@_fullScrn'] === '1';
+				const fullScreen = ['1', 'true'].includes(
+					String(mediaNode['@_fullScrn'] ?? cMediaNode['@_fullScrn']),
+				);
 
 				// Volume (0-100000 in OOXML, maps to 0-1)
 				let volume: number | undefined;
@@ -94,9 +99,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				result.set(shapeId, {
 					...(fullScreen && { fullScreen: true }),
 					...(timing.loop && { loop: true }),
+					...(cTn?.['@_fill'] === 'remove' && { rewindAfterPlaying: true }),
 					...(posterFramePath !== undefined && { posterFramePath }),
 					...(volume !== undefined && { volume }),
 					...(timing.autoPlay && { autoPlay: true }),
+					...(!timing.autoPlay &&
+						start?.['@_delay'] === 'indefinite' &&
+						Object.keys(start).length === 1 && { startMode: 'click' as const }),
 					...(playAcrossSlides && { playAcrossSlides: true }),
 					...(hideWhenNotPlaying && { hideWhenNotPlaying: true }),
 				});
@@ -153,6 +162,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			}
 
 			this.walkMediaTimingTree(timing, result, slidePath);
+			for (const [id, startMode] of readMediaSequenceStarts(timing)) {
+				result.set(id, {
+					...result.get(id),
+					startMode,
+					...(startMode === 'auto' && { autoPlay: true }),
+				});
+			}
 		} catch (e) {
 			console.warn('Failed to parse media timing data:', e);
 		}

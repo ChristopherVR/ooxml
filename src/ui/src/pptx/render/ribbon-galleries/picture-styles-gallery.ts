@@ -18,14 +18,11 @@ import type {
 import { PICTURE_STYLE_TILE, pictureStyleTileSvg } from '../../../ribbon/picture-style-tile-svg';
 import { PICTURE_STYLES } from 'ooxml-core/drawingml';
 import { pictureStylePatch } from './picture-styles-patch';
+import { isPictureElement } from './picture-adjust-gallery';
 import type { PictureStyleSpec } from 'ooxml-core/drawingml';
 
 const KEY = 'pptx.gallery.pictureStyles';
 const EMU_PER_PX = 9525;
-
-function isPicture(element: PptxElement | null): element is PptxElement {
-	return element?.type === 'image' || element?.type === 'picture';
-}
 
 function near(value: number | undefined, expected: number, tolerance = 0.05): boolean {
 	return Math.abs((value ?? 0) - expected) <= tolerance;
@@ -62,7 +59,7 @@ export function pictureStyleMatches(spec: PictureStyleSpec, element: PptxElement
 }
 
 function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
-	const element = isPicture(ctx.element) ? ctx.element : null;
+	const element = isPictureElement(ctx.element) ? ctx.element : null;
 	return {
 		id: 'pictureStyles',
 		labelKey: `${KEY}.title`,
@@ -88,7 +85,7 @@ function build(ctx: RibbonGalleryContext): RibbonGalleryDescriptor {
 
 function apply(itemId: string, ctx: RibbonGalleryContext): RibbonGalleryApplyResult | null {
 	const element = ctx.element;
-	if (!isPicture(element)) {
+	if (!isPictureElement(element)) {
 		return null;
 	}
 	const spec = PICTURE_STYLES.find((candidate) => candidate.key === itemId);

@@ -315,9 +315,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		} else {
 			timingToWrite = slide.rawTiming;
 		}
-		if (timingToWrite) {
-			this.applyMediaTimingToRawTiming(timingToWrite, slide.elements);
-		}
+		const nativeShapeIds = resolveConnectorShapeIds(slide.elements, this.maxCnvPrId(spTree));
+		timingToWrite = this.applyMediaTimingToRawTiming(timingToWrite, slide.elements, nativeShapeIds);
 		if (timingToWrite || slide.rawTiming) {
 			reconcileSlideTiming({
 				slideNode,
@@ -442,7 +441,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		};
 
 		const ctx: SaveSlideContext = {
-			connectorShapeIds: resolveConnectorShapeIds(slide.elements, this.maxCnvPrId(spTree)),
+			connectorShapeIds: nativeShapeIds,
 			slide,
 			slideRelationships,
 			slideRelationshipRegistry,
