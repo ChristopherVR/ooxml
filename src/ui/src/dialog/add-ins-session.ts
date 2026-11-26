@@ -2,7 +2,7 @@ import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import { addInLauncher } from '../ribbon/add-in-launch';
-import { INSTALLED_ADD_IN_LIMIT, localAddIns } from '../ribbon/add-in-local-dialog';
+import { INSTALLED_ADD_IN_LIMIT, localAddIns } from '../ribbon/add-in-installations';
 import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
 import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
 import { addInCapabilities } from '../ribbon/add-in-requirements';
@@ -78,12 +78,14 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 			if (installed.get(id) !== previous || (!previous && installed.size >= INSTALLED_ADD_IN_LIMIT))
 				throw new Error('Add-in installation changed or reached its limit.');
 			if (store && product !== 'visio') await store.write(product, id, bytes);
+			if (addInPreferences(scopes) !== store) return;
 			launcher.close(id);
 			installed.set(id, addIn);
 			syncTabs();
 		},
 		async remove(id: string) {
 			if (store && product !== 'visio') await store.write(product, id, undefined);
+			if (addInPreferences(scopes) !== store) return;
 			launcher.close(id);
 			installed.delete(id);
 			syncTabs();

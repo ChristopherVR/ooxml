@@ -2,6 +2,7 @@ import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import { modalActiveElement } from '../dialog/focus';
 import type { OpenAddInsOptions } from './add-in-dialog';
+import { addInPreferences } from './add-in-preferences';
 import { addInRuntime, allowedPaneUrl } from './add-in-runtime-settings';
 
 export function addInLauncher(
@@ -10,6 +11,7 @@ export function addInLauncher(
 	t: OfficeServiceText,
 ) {
 	const { host, product, scopes, selection } = options;
+	const store = addInPreferences(scopes);
 	function pane(addIn: LocalAddIn, source: string | null = addIn.manifest.pane) {
 		const runtime = addInRuntime(scopes);
 		if (addIn.manifest.identity)
@@ -37,6 +39,7 @@ export function addInLauncher(
 			return (
 				host.isConnected &&
 				installed.get(manifest.id) === addIn &&
+				addInPreferences(scopes) === store &&
 				current.url?.href === live.url.href &&
 				current.runtime === live.runtime
 			);

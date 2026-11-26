@@ -3,6 +3,7 @@ import { normalizeLocale } from 'ooxml-core/i18n';
 import { composedWithin } from '../composed';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
+import { localAddIns } from './add-in-installations';
 import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
 import type { OfficeAddInSelection } from './add-in-runtime-settings';
 
@@ -79,11 +80,20 @@ export function watchOfficeAddIns(
 	const scopes = addInScopes(host, null);
 	const listeners = new AbortController();
 	let pending: AbortController | undefined;
+	let activeStore = addInPreferences(scopes);
 
 	const restore = () => {
 		pending?.abort();
 		delete host[RESTORE];
-		if (!addInPreferences(scopes)) return;
+		const store = addInPreferences(scopes);
+		const changed = activeStore !== store;
+		if (changed) {
+			activeStore = store;
+			localAddIns(host).clear();
+			host.querySelector('office-ui-add-in-pane')?.remove();
+			host.querySelector('office-ui-add-ins-dialog')?.remove();
+		}
+		if (!store && !changed) return;
 		const { signal } = (pending = new AbortController());
 		host[RESTORE] = import('../dialog/add-ins-session').then(async ({ addInSession }) => {
 			if (signal.aborted || !host.isConnected) return;
@@ -99,6 +109,7 @@ export function watchOfficeAddIns(
 				},
 				() => {},
 			);
+			if (changed) session.syncTabs();
 			await session.restore?.(signal);
 			if (!signal.aborted && host.isConnected) session.syncTabs();
 		});

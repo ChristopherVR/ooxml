@@ -1,6 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
+import { localAddIns } from './add-in-installations';
 import { mountedAddInRestore, openOfficeAddIns, watchOfficeAddIns } from './add-in-dialog';
 import { setOfficeAddInRuntime } from './add-in-runtime-settings';
 import {
@@ -380,6 +381,11 @@ it('restores the saved commands on editor mount without opening the dialog', asy
 	try {
 		await mountedAddInRestore(root);
 		expect(sync).toHaveBeenCalledOnce();
+		expect(localAddIns(root).size).toBe(1);
+		setOfficeAddInPreferences(host, { read: async () => [], write: async () => {} });
+		expect(localAddIns(root).size).toBe(0);
+		await mountedAddInRestore(root);
+		expect(localAddIns(root).size).toBe(0);
 		expect(root.querySelector('office-ui-add-ins-dialog')).toBeNull();
 	} finally {
 		stop();
