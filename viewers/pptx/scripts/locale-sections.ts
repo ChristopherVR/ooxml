@@ -130,6 +130,7 @@ const SECTION_DEFINITIONS = [
 			'image',
 			'imageAdjustments',
 			'imageTransform',
+			'pictureFormat',
 			'effects',
 			'media',
 			'model3d',
