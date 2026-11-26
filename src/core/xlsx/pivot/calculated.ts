@@ -1,6 +1,6 @@
 import { elements, type XmlElement } from '../../xml/index';
 import type { PivotCalculatedField, PivotTable } from '../model';
-import { decodeEscapes } from '../read/xml-util';
+import { att, decodeEscapes } from '../read/xml-util';
 
 const identifier = /^[A-Za-z_][A-Za-z0-9_]{0,254}$/;
 
@@ -43,10 +43,42 @@ export function validatePivotCalculatedField(pivot: PivotTable): void {
 		);
 }
 
+export function splitCalculatedCacheField(allFields: XmlElement[]) {
+	const formulas = allFields.filter((field) => field.hasAttribute('formula'));
+	const formula = formulas[0];
+	if (formulas.length > 1 || (formula && formula !== allFields.at(-1)))
+		throw new Error('Multiple calculated PivotTable fields are preserved.');
+	return { groupedFields: formula ? allFields.slice(0, -1) : allFields, formula };
+}
+
 export function readPivotCalculatedField(
-	cacheField: XmlElement,
-	dataField: XmlElement,
-): PivotCalculatedField {
+	formula: XmlElement | undefined,
+	dataFields: XmlElement[],
+	cacheFieldCount: number,
+): PivotCalculatedField | undefined {
+	if (!formula) return;
+	const last = dataFields.at(-1);
+	if (dataFields.length <= 1 || !last || att(last, 'fld') !== String(cacheFieldCount - 1))
+		throw new Error('Unsupported calculated PivotTable field.');
+	return parseCalculatedField(formula, last);
+}
+
+export function assertPivotFieldPlacement(
+	tableFields: XmlElement[],
+	calculatedIndex: number,
+): void {
+	if (
+		tableFields.some((field, index) =>
+			['dragToRow', 'dragToCol', 'dragToPage'].some(
+				(option) =>
+					field.hasAttribute(option) && (index !== calculatedIndex || att(field, option) !== '0'),
+			),
+		)
+	)
+		throw new Error('Unsupported PivotTable field placement restrictions.');
+}
+
+function parseCalculatedField(cacheField: XmlElement, dataField: XmlElement): PivotCalculatedField {
 	const formula = cacheField.getAttribute('formula') ?? '';
 	const parts = /^([A-Za-z_][A-Za-z0-9_]{0,254})\*(-?\d+(?:\.\d+)?(?:[Ee][+-]?\d+)?)$/.exec(
 		formula,

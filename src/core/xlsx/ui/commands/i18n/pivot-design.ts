@@ -1,0 +1,117 @@
+import type { Translations } from './types';
+
+export const PIVOT_DESIGN_STRINGS: Translations = {
+	Layout: ['Disposition', 'Layout', 'Diseño', '布局'],
+	'PivotTable Design': [
+		'Création du tableau croisé dynamique',
+		'PivotTable-Entwurf',
+		'Diseño de tabla dinámica',
+		'数据透视表设计',
+	],
+	'Grand Totals': ['Totaux généraux', 'Gesamtergebnisse', 'Totales generales', '总计'],
+	'Report Layout': ['Disposition du rapport', 'Berichtslayout', 'Diseño de informe', '报表布局'],
+	'Blank Rows': ['Lignes vides', 'Leerzeilen', 'Filas en blanco', '空行'],
+	'PivotTable Style Options': [
+		'Options de style du tableau croisé dynamique',
+		'PivotTable-Formatoptionen',
+		'Opciones de estilo de tabla dinámica',
+		'数据透视表样式选项',
+	],
+	'PivotTable Styles': [
+		'Styles de tableau croisé dynamique',
+		'PivotTable-Formate',
+		'Estilos de tabla dinámica',
+		'数据透视表样式',
+	],
+	'Show All Subtotals at Top': [
+		'Afficher tous les sous-totaux en haut',
+		'Alle Teilergebnisse oben anzeigen',
+		'Mostrar todos los subtotales arriba',
+		'在组顶部显示所有分类汇总',
+	],
+	'Show All Subtotals at Bottom': [
+		'Afficher tous les sous-totaux en bas',
+		'Alle Teilergebnisse unten anzeigen',
+		'Mostrar todos los subtotales abajo',
+		'在组底部显示所有分类汇总',
+	],
+	'Do Not Show Subtotals': [
+		'Ne pas afficher les sous-totaux',
+		'Keine Teilergebnisse anzeigen',
+		'No mostrar subtotales',
+		'不显示分类汇总',
+	],
+	'Off for Rows and Columns': [
+		'Désactivé pour les lignes et les colonnes',
+		'Für Zeilen und Spalten deaktiviert',
+		'Desactivado para filas y columnas',
+		'对行和列禁用',
+	],
+	'On for Rows and Columns': [
+		'Activé pour les lignes et les colonnes',
+		'Für Zeilen und Spalten aktiviert',
+		'Activado para filas y columnas',
+		'对行和列启用',
+	],
+	'On for Rows Only': [
+		'Activé pour les lignes uniquement',
+		'Nur für Zeilen aktiviert',
+		'Activado solo para filas',
+		'仅对行启用',
+	],
+	'On for Columns Only': [
+		'Activé pour les colonnes uniquement',
+		'Nur für Spalten aktiviert',
+		'Activado solo para columnas',
+		'仅对列启用',
+	],
+	'Repeat All Item Labels': [
+		'Répéter toutes les étiquettes d’élément',
+		'Alle Elementbeschriftungen wiederholen',
+		'Repetir todas las etiquetas de elementos',
+		'重复所有项目标签',
+	],
+	'Do Not Repeat Item Labels': [
+		'Ne pas répéter les étiquettes d’élément',
+		'Elementbeschriftungen nicht wiederholen',
+		'No repetir etiquetas de elementos',
+		'不重复项目标签',
+	],
+	'Insert Blank Line After Each Item': [
+		'Insérer une ligne vide après chaque élément',
+		'Leerzeile nach jedem Element einfügen',
+		'Insertar línea en blanco después de cada elemento',
+		'在每项后插入空行',
+	],
+	'Remove Blank Line After Each Item': [
+		'Supprimer la ligne vide après chaque élément',
+		'Leerzeile nach jedem Element entfernen',
+		'Quitar línea en blanco después de cada elemento',
+		'删除每项后的空行',
+	],
+	'Row Headers': ['En-têtes de ligne', 'Zeilenüberschriften', 'Encabezados de fila', '行标题'],
+	'Column Headers': [
+		'En-têtes de colonne',
+		'Spaltenüberschriften',
+		'Encabezados de columna',
+		'列标题',
+	],
+	'Select an outline or tabular PivotTable with multiple row fields.': [
+		'Sélectionnez un tableau croisé dynamique en mode plan ou tabulaire avec plusieurs champs de ligne.',
+		'Wählen Sie eine PivotTable in Gliederungs- oder Tabellenform mit mehreren Zeilenfeldern aus.',
+		'Seleccione una tabla dinámica de esquema o tabular con varios campos de fila.',
+		'请选择包含多个行字段的大纲或表格形式数据透视表。',
+	],
+	'Select a PivotTable with multiple row fields and Values on columns.': [
+		'Sélectionnez un tableau croisé dynamique avec plusieurs champs de ligne et des valeurs en colonnes.',
+		'Wählen Sie eine PivotTable mit mehreren Zeilenfeldern und Werten in Spalten aus.',
+		'Seleccione una tabla dinámica con varios campos de fila y valores en columnas.',
+		'请选择包含多个行字段且值显示在列中的数据透视表。',
+	],
+	'Choose a built-in PivotTable style.': [
+		'Choisissez un style de tableau croisé dynamique intégré.',
+		'Wählen Sie eine integrierte PivotTable-Formatvorlage aus.',
+		'Elija un estilo integrado de tabla dinámica.',
+		'请选择内置的数据透视表样式。',
+	],
+};

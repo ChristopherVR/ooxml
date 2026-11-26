@@ -18,19 +18,21 @@ const ATTRIBUTES = {
 	dataCaption: 'values',
 } as const;
 
-/** The captions the definition itself names: the header, grand total and Values captions. */
-export function readPivotCaptionAttributes(root: XmlElement): PivotCaptionOverrides {
+/** The captions named by the report attributes and data fields. */
+export function readPivotCaptions(root: XmlElement, pivot: PivotTable): PivotCaptionOverrides {
 	const out: PivotCaptionOverrides = {};
 	for (const [attribute, key] of Object.entries(ATTRIBUTES)) {
 		const text = att(root, attribute);
 		if (text !== undefined)
 			out[key as (typeof ATTRIBUTES)[keyof typeof ATTRIBUTES]] = decodeEscapes(text);
 	}
+	const aggregates = aggregateCaptionsOf(pivot);
+	if (aggregates) out.aggregates = aggregates;
 	return out;
 }
 
 /** The default value field names the file's data fields follow (`Summe von {0}`). */
-export function aggregateCaptionsOf(pivot: PivotTable): PivotCaptionOverrides['aggregates'] {
+function aggregateCaptionsOf(pivot: PivotTable): PivotCaptionOverrides['aggregates'] {
 	const out: Partial<Record<PivotAggregate, string>> = {};
 	for (const measure of [
 		{ field: pivot.valueField, aggregate: pivot.aggregate, caption: pivot.valueCaption },
