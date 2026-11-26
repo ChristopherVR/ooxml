@@ -155,6 +155,53 @@ test('closing Outline restores Print Layout', async ({ page }) => {
 	await expect(canvas).toHaveAttribute('data-document-view', 'print');
 });
 
+test('a following table stays within the Outline editing area, including in Focus', async ({
+	page,
+}) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.evaluate((element) => {
+		const host = element as DocxEditorElement;
+		const model = host.documentModel;
+		if (!model) throw new Error('Expected a document');
+		host.documentModel = {
+			...model,
+			blocks: [
+				{ type: 'paragraph', id: 'topic', outlineLevel: 2, runs: [{ text: 'Topic' }] },
+				{ type: 'paragraph', id: 'body', runs: [{ text: 'Body' }] },
+				{
+					type: 'table',
+					id: 'table',
+					rows: [
+						[
+							{
+								paragraphs: [{ type: 'paragraph', id: 'cell', runs: [{ text: 'A table cell' }] }],
+							},
+						],
+					],
+				},
+			],
+		};
+	});
+	await setView(editor, 'outline');
+	await editor.getByRole('heading', { name: 'Topic' }).click();
+	await editor.getByRole('button', { name: 'Demote', exact: true }).click();
+	await expect(editor.getByRole('heading', { name: 'Topic' })).toHaveAttribute('aria-level', '3');
+	const body = editor.locator('.dve-paper .ProseMirror');
+	const table = body.getByRole('table');
+	async function checkTableBounds() {
+		const [area, bounds] = await Promise.all([body.boundingBox(), table.boundingBox()]);
+		if (!area || !bounds) throw new Error('Expected a table in the editing area');
+		expect(bounds.x).toBeCloseTo(area.x, 0);
+		expect(bounds.x + bounds.width).toBeLessThanOrEqual(area.x + area.width + 1);
+	}
+	await checkTableBounds();
+	await editor.getByRole('button', { name: 'Focus', exact: true }).click();
+	await expect(editor.getByRole('button', { name: 'Exit Focus' })).toBeVisible();
+	await checkTableBounds();
+});
+
 test('Outlining filters and collapses branches and saves an undoable edit', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 800 });
 	await page.goto('/?framework=vanilla');

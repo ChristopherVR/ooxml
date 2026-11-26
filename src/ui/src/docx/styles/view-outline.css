@@ -8,9 +8,12 @@
 [data-document-view='outline'] .ProseMirror > .dve-outline-hidden {
 	display: none !important;
 }
-[data-document-view='outline'] .ProseMirror > .dve-outline-block {
+[data-document-view='outline'] .ProseMirror > p.dve-outline-block {
 	margin-inline-start: min(var(--dve-outline-indent), 24%) !important;
 	overflow-wrap: anywhere;
+}
+[data-document-view='outline'] .ProseMirror > table.dve-outline-block {
+	max-inline-size: 100%;
 }
 [data-document-view='outline'] .dve-outline-block[role='heading'] {
 	border-inline-start: 2px solid var(--line);
