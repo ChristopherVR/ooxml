@@ -343,6 +343,12 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 			),
 		),
 	);
+	home.append(
+		group(
+			'Add-ins',
+			tool('Add-ins', 'addIns', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
+		),
+	);
 	home
 		.querySelector('[data-label="Font"]')
 		?.append(launcher('Font settings', { type: 'formatDialog', kind: 'font' }));

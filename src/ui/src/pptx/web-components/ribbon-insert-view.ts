@@ -117,7 +117,10 @@ export function createRibbonInsertView(
 		scales.get(groupOf.get(spec.control) ?? '') ?? 'large';
 	const applyScale = (el: HTMLElement, spec: InsertControlSpec) => {
 		el.toggleAttribute('compact', !spec.large || scaleOf(spec) !== 'large');
-		el.toggleAttribute('icon-only', scaleOf(spec) === 'icons');
+		el.toggleAttribute(
+			'icon-only',
+			scaleOf(spec) === 'icons' && groupOf.get(spec.control) !== 'insert.addIns',
+		);
 	};
 	/** ScreenTip: the title, its description and, when disabled, the honest reason. */
 	const tooltip = (

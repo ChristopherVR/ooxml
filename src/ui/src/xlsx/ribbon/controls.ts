@@ -72,7 +72,7 @@ export function commandButton(
 ): HTMLButtonElement {
 	const { ctx, doc } = scope;
 	const large = options.size === 'large';
-	const opensAddIns = command.id === 'insert.get-add-ins' || command.id === 'insert.my-add-ins';
+	const opensAddIns = command.icon === 'addIns';
 	const button = plainButton(scope, large ? 'ribbon-large' : 'ribbon-small', opensAddIns);
 	tagCommand(button, command);
 	const label = ctx.t(command.label);

@@ -426,7 +426,7 @@ export const INSERT_GROUP_SCALING: Readonly<
 > = {
 	'insert.camera': { priority: 1 },
 	'insert.forms': { priority: 1 },
-	'insert.addIns': { priority: 1 },
+	'insert.addIns': { priority: 10 },
 	'insert.comments': { priority: 2 },
 	'insert.links': { priority: 3 },
 	'insert.slides': { priority: 4 },

@@ -166,6 +166,11 @@ export function homeTab(): RibbonTab {
 				],
 			},
 			...homeStyleGroups(),
+			{
+				id: 'add-ins',
+				label: 'Add-ins',
+				controls: [{ kind: 'button', command: 'home.add-ins', size: 'large' }],
+			},
 		],
 	};
 }

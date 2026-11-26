@@ -14,6 +14,12 @@ test('installs, runs, and removes XML, JSON and ZIP task panes in Excel', async 
 		editor,
 		host: 'Excel',
 		async openDialog() {
+			await editor.getByRole('tab', { name: 'Home', exact: true }).click();
+			const homeAddIns = editor.getByRole('button', { name: 'Add-ins', exact: true });
+			if ((await homeAddIns.count()) === 1 && (await homeAddIns.isVisible())) {
+				await homeAddIns.click();
+				if (await editor.locator('office-ui-add-ins-dialog').count()) return;
+			}
 			await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 			const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 			if (!(await mine.isVisible()))

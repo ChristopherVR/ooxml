@@ -1,5 +1,6 @@
 import { getCell } from 'ooxml-core/xlsx';
-import { target, sheetLocked, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { target, sheetLocked, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { openOfficeAddIns, type AddInDialogMode } from '../../ribbon/add-in-dialog';
 import type { OfficeAddInSelection } from '../../ribbon/add-in-runtime-settings';
 
 export function excelAddInSelection(ctx: EditorContext): OfficeAddInSelection {
@@ -28,4 +29,27 @@ export function excelAddInSelection(ctx: EditorContext): OfficeAddInSelection {
 			return true;
 		},
 	};
+}
+
+export function addInCommands(): Command[] {
+	const launch = (id: string, label: string, mode: AddInDialogMode): Command => ({
+		id,
+		label,
+		icon: 'addIns',
+		run: (ctx) => {
+			void openOfficeAddIns(
+				ctx.root,
+				mode,
+				(text) => ctx.t(text),
+				'excel',
+				ctx.locale(),
+				() => excelAddInSelection(ctx),
+			);
+		},
+	});
+	return [
+		launch('home.add-ins', 'Add-ins', 'myAddIns'),
+		launch('insert.get-add-ins', 'Get Add-ins', 'getAddIns'),
+		launch('insert.my-add-ins', 'My Add-ins', 'myAddIns'),
+	];
 }

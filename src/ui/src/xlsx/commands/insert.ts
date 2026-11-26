@@ -3,8 +3,6 @@ import { canCaptureDisplay } from '../../form/display-capture';
 import { captureScreenshotFile } from '../../form/display-clipping';
 import { getCell, IMAGE_EXTENSIONS, pictureAnchorAt, type ChartType } from 'ooxml-core/xlsx';
 import { pickMicrosoftForm } from '../../form/microsoft-forms';
-import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
-import { excelAddInSelection } from './add-in-selection';
 import { pickOfficeIcon } from '../../form/icon-picker';
 import { iconPngFile } from '../../form/local-svg';
 import type { Command } from 'ooxml-core/xlsx/ui';
@@ -181,36 +179,6 @@ async function graphicsFill(ctx: EditorContext): Promise<void> {
 
 export function insertCommands(): Command[] {
 	return [
-		{
-			id: 'insert.get-add-ins',
-			label: 'Get Add-ins',
-			icon: 'addIns',
-			run: (ctx) => {
-				void openOfficeAddIns(
-					ctx.root,
-					'getAddIns',
-					(label) => ctx.t(label),
-					'excel',
-					ctx.locale(),
-					() => excelAddInSelection(ctx),
-				);
-			},
-		},
-		{
-			id: 'insert.my-add-ins',
-			label: 'My Add-ins',
-			icon: 'addIns',
-			run: (ctx) => {
-				void openOfficeAddIns(
-					ctx.root,
-					'myAddIns',
-					(label) => ctx.t(label),
-					'excel',
-					ctx.locale(),
-					() => excelAddInSelection(ctx),
-				);
-			},
-		},
 		editing({
 			id: 'insert.forms',
 			label: 'Forms',

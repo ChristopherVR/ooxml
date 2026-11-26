@@ -18,6 +18,7 @@ import { arrangeCommands } from './arrange';
 import { drawingFormatCommands } from './drawing-format';
 import { insertShapeCommands } from './insert-shapes';
 import { drawCommands } from './draw';
+import { addInCommands } from './add-in-selection';
 import { insertCommands } from './insert';
 import { insertAnnotationCommands } from './insert-annotations';
 import { sheetPictureCommands } from './sheet-picture';
@@ -48,6 +49,7 @@ export function allCommands(): Command[] {
 		...editingCommands(),
 		...insertNowCommands(),
 		...insertCommands(),
+		...addInCommands(),
 		...insertShapeCommands(),
 		...drawCommands(),
 		...arrangeCommands(),

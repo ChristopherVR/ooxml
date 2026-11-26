@@ -1,5 +1,6 @@
 import { defineElement } from '../../registry';
-import { canRequestHome } from '../render';
+import { openOfficeAddIns, officeAddInsMount } from '../../ribbon/add-in-dialog';
+import { canRequestHome, homeLabel } from '../render';
 import type { RibbonHomeFamily, RibbonHomeIntent, RibbonHomeViewState } from '../render';
 import type { HomeLayoutArtwork } from './ribbon-home-layout';
 import { attachRibbonHomeStyles } from './ribbon-home-styles';
@@ -52,6 +53,18 @@ export function definePptxRibbonHome(
 			family,
 			(intent) => {
 				if (canRequestHome(family, this.model, intent)) {
+					if (intent.id === 'home.editing.addIns') {
+						const host = officeAddInsMount(this);
+						if (host)
+							void openOfficeAddIns(
+								host,
+								'myAddIns',
+								(label) => homeLabel(this.model, `pptx.addIns.${label}`, label),
+								'powerpoint',
+								homeLabel(this.model, 'pptx.addIns.manifestLocale', 'en'),
+							);
+						return;
+					}
 					this.dispatchEvent(
 						new CustomEvent('home-request', { detail: intent, bubbles: true, composed: true }),
 					);
