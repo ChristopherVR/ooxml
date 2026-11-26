@@ -148,6 +148,8 @@ export const SCALAR_ELEMENT_KEYS: ReadonlySet<string> = new Set([
 	'shapeType',
 	'imagePath',
 	'imageData',
+	'imageDataEdited',
+	'originalPicturePath',
 	'svgData',
 	'svgPath',
 	'cropLeft',

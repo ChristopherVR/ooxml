@@ -106,7 +106,7 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	imageData: 'scalar',
 	imagePath: 'scalar',
 	imageDataEdited: 'scalar',
-	originalPictureData: 'scalar',
+	originalPictureData: 'asset',
 	originalPicturePath: 'scalar',
 	svgData: 'scalar',
 	svgPath: 'scalar',

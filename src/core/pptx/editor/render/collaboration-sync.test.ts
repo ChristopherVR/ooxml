@@ -57,6 +57,55 @@ function roundTripSlide(slide: PptxSlide): PptxSlide {
 }
 
 describe('collaboration-sync: element field coverage', () => {
+	it('syncs original picture data and removal edits through a peer update and reset', () => {
+		const picture: PptxElement = {
+			type: 'picture',
+			id: 'picture',
+			x: 0,
+			y: 0,
+			width: 100,
+			height: 100,
+			imageData: 'data:image/png;base64,AAA',
+			imageDataEdited: true,
+			originalPicturePath: 'ppt/media/original.png',
+			originalPictureData: 'data:image/png;base64,BBB',
+			imageEffects: { backgroundRemoval: { top: 0, left: 0, bottom: 1, right: 1 } },
+		};
+		const doc = new Y.Doc();
+		const peer = new Y.Doc();
+		try {
+			const map = new Y.Map();
+			const assets = getAssetsMap(asDoc(doc));
+			writeElementToYMap(picture, asMap(map), factories, assets);
+			doc.getMap('test').set(picture.id, map);
+			const readPeer = () => {
+				Y.applyUpdate(peer, Y.encodeStateAsUpdate(doc, Y.encodeStateVector(peer)));
+				return readElementFromYMap(
+					peer.getMap('test').get(picture.id) as YMapLike,
+					getAssetsMap(asDoc(peer)),
+				);
+			};
+			expect(map.has('originalPictureData')).toBe(false);
+			expect(assets.get('picture:originalPictureData')).toBe(picture.originalPictureData);
+			expect(readPeer()).toStrictEqual(picture);
+			const replacement = { ...picture, originalPictureData: 'data:image/png;base64,CCC' };
+			reconcileElementYMap(asMap(map), replacement, factories, assets);
+			expect(readPeer()).toStrictEqual(replacement);
+			const reset = {
+				...picture,
+				originalPictureData: undefined,
+				originalPicturePath: undefined,
+				imageEffects: undefined,
+			};
+			reconcileElementYMap(asMap(map), reset, factories, assets);
+			expect(readPeer()).toEqual(reset);
+			expect(assets.get('picture:originalPictureData')).toBeUndefined();
+		} finally {
+			peer.destroy();
+			doc.destroy();
+		}
+	});
+
 	it('keeps the inherited transform baseline when a peer receives an edited placeholder', () => {
 		const element: PptxElement = {
 			type: 'shape',

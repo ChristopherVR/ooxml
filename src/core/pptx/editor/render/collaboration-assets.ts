@@ -28,6 +28,7 @@ export const YDOC_ASSETS_KEY = 'pptx:assets';
  * of being embedded inline as a scalar or complex JSON-blob field.
  */
 export const ASSET_ELEMENT_FIELDS: ReadonlySet<string> = new Set([
+	'originalPictureData',
 	'mediaData',
 	'posterFrameData',
 	'oleEmbeddedData',
@@ -36,6 +37,7 @@ export const ASSET_ELEMENT_FIELDS: ReadonlySet<string> = new Set([
 ]);
 
 const ASSET_REF_KEYS: Readonly<Record<string, string>> = {
+	originalPictureData: '_opdRef',
 	mediaData: '_mdRef',
 	posterFrameData: '_pfdRef',
 	oleEmbeddedData: '_oedRef',

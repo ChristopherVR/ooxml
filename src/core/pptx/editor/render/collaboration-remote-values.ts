@@ -14,6 +14,7 @@
 
 import type { PptxCompatibilityWarning, PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
+import { MAX_PICTURE_EDIT_BYTES } from '../../core/utils/picture-raster-header';
 import { safeIdToken } from '../../../opc/part-name';
 import {
 	isAllowedResourceUrl,
@@ -51,6 +52,8 @@ const VIEW_ONLY_CODES: ReadonlySet<string> = new Set([
  */
 const ELEMENT_RESOURCES: Readonly<Record<string, ResourceRule>> = {
 	imageData: { kind: 'image', web: true },
+	originalPictureData: { kind: 'image' },
+	originalPicturePath: { kind: 'image', path: true },
 	svgData: { kind: 'image' },
 	posterImage: { kind: 'image', web: true, path: true },
 	posterFrameData: { kind: 'image', web: true },
@@ -111,6 +114,14 @@ export function sanitizeRemoteElement(
 	}
 	const elementId = safeIdToken(element.id);
 	element.id = elementId;
+	const originalPicture = element.originalPictureData;
+	if (
+		typeof originalPicture === 'string' &&
+		originalPicture.length > (MAX_PICTURE_EDIT_BYTES / 3) * 4 + 32
+	) {
+		delete element.originalPictureData;
+		rejected.push({ elementId, field: 'originalPictureData' });
+	}
 	dropInvalidResources(element, ELEMENT_RESOURCES, rejected, elementId, media);
 	for (const field of CONTENT_TYPE_FIELDS) {
 		if (element[field] !== undefined && !isWellFormedContentType(element[field])) {

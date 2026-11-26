@@ -77,6 +77,9 @@ bitmap, original bitmap and marks in the presentation through the existing
 save path. When AutoSave or AutoRecover stores a presentation snapshot, that
 snapshot can include the picture edits. The existing AutoSave and AutoRecover
 settings control those snapshots.
+During an active PowerPoint collaboration session, a picture edit also shares
+the edited image, its original bitmap and removal marks with the room through
+the existing collaboration transport. Leave the room to keep edits local.
 
 ### Cameo camera preview
 

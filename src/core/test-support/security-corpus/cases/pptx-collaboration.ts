@@ -54,4 +54,24 @@ export const cases: readonly SecurityCase[] = [
 		},
 		expected: { scriptUrl: null, claimedType: null, safeId: true, markupPicture: null },
 	},
+	{
+		name: 'original picture resources from a peer must be local images',
+		limits: { ms: 2_000, heapMb: 160 },
+		run() {
+			const [picture] = received([
+				{
+					...box,
+					id: 'picture',
+					type: 'picture',
+					originalPictureData: 'data:text/html,<p>x</p>',
+					originalPicturePath: 'https://example.invalid/remote.png',
+				},
+			]);
+			return {
+				data: picture?.originalPictureData ?? null,
+				path: picture?.originalPicturePath ?? null,
+			};
+		},
+		expected: { data: null, path: null },
+	},
 ];
