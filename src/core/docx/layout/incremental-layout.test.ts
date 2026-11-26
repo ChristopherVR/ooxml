@@ -1,3 +1,4 @@
+import { deepStrictEqual } from 'node:assert/strict';
 import { describe, expect, it } from 'vitest';
 import { twips } from '../index';
 import { layoutDocument } from './layout';
@@ -84,6 +85,30 @@ function edit(blocks: LayoutParagraph[], rand: () => number, serial: { next: num
 }
 
 describe('incremental pagination', () => {
+	it('keeps measured fragments independent between nonincremental results', () => {
+		const blocks: LayoutParagraph[] = [
+			{ kind: 'paragraph', id: 'plain', runs: [{ text: 'Plain' }] },
+			{
+				kind: 'paragraph',
+				id: 'fallback',
+				runs: [{ text: 'Fallback', fontFallback: { alternate: 'Arial' } }],
+			},
+		];
+		const session = createLayoutSession(createFakeMeasurer());
+		const expected = layoutDocument(document(blocks), createFakeMeasurer());
+		// Exercise both the first (cache-fill) result and a later cache hit.
+		for (let pass = 0; pass < 2; pass++) {
+			const result = session.layoutDocument(document(blocks));
+			expect(result).toEqual(expected);
+			const [plain, fallback] = result.pages[0]!.columns[0]!.blocks;
+			if (plain?.kind !== 'paragraph' || fallback?.kind !== 'paragraph')
+				throw new Error('Expected two paragraphs');
+			plain.lines[0]!.fragments[0]!.text = 'Edited';
+			fallback.lines[0]!.fragments[0]!.fontFallback!.alternate = 'Edited';
+		}
+		expect(session.layoutDocument(document(blocks))).toEqual(expected);
+	});
+
 	it('matches a full layout after every random edit', () => {
 		const modes = { full: 0, incremental: 0, unchanged: 0 };
 		let resumedLate = 0;
@@ -103,7 +128,7 @@ describe('incremental pagination', () => {
 				for (let count = 0; count < batch; count++) edit(blocks, rand, serial);
 				const actual = session.layoutDocument(document(blocks));
 				const expected = layoutDocument(document(blocks), createFakeMeasurer());
-				expect(actual, `seed ${seed} step ${step}`).toEqual(expected);
+				deepStrictEqual(actual, expected, `seed ${seed} step ${step}`);
 				const pass = session.lastPass()!;
 				modes[pass.mode]++;
 				if (pass.mode === 'incremental' && pass.fromPage > 0) resumedLate++;
