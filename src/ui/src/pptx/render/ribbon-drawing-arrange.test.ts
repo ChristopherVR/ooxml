@@ -1,6 +1,10 @@
 import { expect, it, vi } from 'vitest';
 
-import { drawingArrangeItems, runDrawingArrange } from './ribbon-drawing-arrange';
+import {
+	drawingArrangeItems,
+	flipArrangeSelection,
+	runDrawingArrange,
+} from './ribbon-drawing-arrange';
 import { drawingHomeControls } from './ribbon-home-state-objects';
 
 it('keeps Selection Pane reachable without a selection and routes the editing rows', () => {
@@ -60,6 +64,20 @@ it('reports the selection, edit mode and lock that disable each command', () => 
 	expect(reason('rotate-right')).toBe('pptx.arrange.objectLocked');
 	expect(reason('front', { canEdit: false })).toBe('pptx.draw.readOnly');
 	expect(reason('distribute-horizontal', { selectedCount: 3 })).toBeUndefined();
+});
+
+it('flips each selected object on the requested axis and skips missing selections', () => {
+	const shape = { id: 'a', type: 'shape', x: 0, y: 0, width: 30, height: 40 } as const;
+	const elements = [shape, { ...shape, id: 'b', flipHorizontal: true }, { ...shape, id: 'c' }];
+	const patch = vi.fn();
+	flipArrangeSelection(elements, ['a', 'missing', 'b'], 'horizontal', patch);
+	expect(patch.mock.calls).toStrictEqual([
+		['a', { flipHorizontal: true }],
+		['b', { flipHorizontal: false }],
+	]);
+	patch.mockClear();
+	flipArrangeSelection(elements, ['b'], 'vertical', patch);
+	expect(patch).toHaveBeenCalledExactlyOnceWith('b', { flipVertical: true });
 });
 
 it('rotates the selected object in either direction and honors its rotation lock', () => {

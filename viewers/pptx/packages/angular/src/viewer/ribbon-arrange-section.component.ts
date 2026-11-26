@@ -19,7 +19,12 @@ import {
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { RibbonHomeRequestEvent, ToolbarActionId } from 'ooxml-ui/pptx';
-import { arrangeAlignAction, arrangeHomeControls, arrangePainterHomeControls } from 'ooxml-ui/pptx';
+import {
+	arrangeAlignAction,
+	arrangeHomeControls,
+	arrangePainterHomeControls,
+	flipArrangeSelection,
+} from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
@@ -136,21 +141,12 @@ export class RibbonArrangeSectionComponent {
 
 	/** Toggle horizontal/vertical flip on each selected element. */
 	protected flipSelected(axis: 'horizontal' | 'vertical'): void {
-		const idx = this.slideIndex();
-		const slide = this.editor.slides()[idx];
-		if (!slide) {
-			return;
-		}
-		for (const id of this.editor.selectedIds()) {
-			const el = slide.elements.find((e) => e.id === id);
-			if (!el) {
-				continue;
-			}
-			const patch: Partial<PptxElement> =
-				axis === 'horizontal'
-					? ({ flipHorizontal: !el.flipHorizontal } as Partial<PptxElement>)
-					: ({ flipVertical: !el.flipVertical } as Partial<PptxElement>);
-			this.editor.updateElement(idx, id, patch);
-		}
+		const index = this.slideIndex();
+		flipArrangeSelection(
+			this.editor.slides()[index]?.elements ?? [],
+			this.editor.selectedIds(),
+			axis,
+			(id, patch) => this.editor.updateElement(index, id, patch),
+		);
 	}
 }

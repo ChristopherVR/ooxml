@@ -222,6 +222,28 @@ export function runDrawingArrange(value: string, actions: DrawingArrangeActions)
 	}
 }
 
+/** Apply a flip to each selected element of the active slide. */
+export function flipArrangeSelection(
+	elements: readonly PptxElement[],
+	selectedIds: readonly string[],
+	axis: 'horizontal' | 'vertical',
+	patch: (
+		id: string,
+		change: Partial<Pick<PptxElement, 'flipHorizontal' | 'flipVertical'>>,
+	) => void,
+): void {
+	const selected = new Set(selectedIds);
+	for (const element of elements) {
+		if (!selected.has(element.id)) continue;
+		patch(
+			element.id,
+			axis === 'horizontal'
+				? { flipHorizontal: !element.flipHorizontal }
+				: { flipVertical: !element.flipVertical },
+		);
+	}
+}
+
 export function quarterTurnPatch(element: PptxElement, clockwise: boolean): { rotation: number } {
 	const delta = clockwise ? 90 : -90;
 	return { rotation: ((((element.rotation ?? 0) + delta) % 360) + 360) % 360 };

@@ -11,6 +11,7 @@ import type { RibbonHomeRequestEvent, ShapePresetType } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
 	runDrawingArrange,
+	flipArrangeSelection,
 	homeGalleryApply,
 	homeGalleryControls,
 	SHAPE_PRESET_DEFS,
@@ -102,18 +103,12 @@ export class RibbonDrawingGroupComponent {
 			this.editor.distributeSelected(this.slideIndex(), axis),
 		flip: (axis: 'horizontal' | 'vertical') => {
 			const index = this.slideIndex();
-			const elements = this.editor.slides()[index]?.elements;
-			for (const element of elements ?? []) {
-				if (this.editor.selectedIds().includes(element.id)) {
-					this.editor.updateElement(
-						index,
-						element.id,
-						axis === 'horizontal'
-							? { flipHorizontal: !element.flipHorizontal }
-							: { flipVertical: !element.flipVertical },
-					);
-				}
-			}
+			flipArrangeSelection(
+				this.editor.slides()[index]?.elements ?? [],
+				this.editor.selectedIds(),
+				axis,
+				(id, patch) => this.editor.updateElement(index, id, patch),
+			);
 		},
 		group: () => this.editor.groupSelected(this.slideIndex()),
 		rotation: () => ({

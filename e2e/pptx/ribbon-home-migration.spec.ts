@@ -583,13 +583,15 @@ test.describe('Home drawing popovers and arrange extras', () => {
 		await inner(page, 'home.drawing.arrange').click();
 		await page.getByRole('menuitem', { name: 'Send to Back', exact: true }).click();
 		await inner(page, 'home.drawing.arrange').click();
+		await control(page, 'home.arrange.flipHorizontal').click();
+		await inner(page, 'home.drawing.arrange').click();
 		await page.getByRole('menuitem', { name: 'Rotate Right 90°', exact: true }).click();
 		const bytes = await downloadBytes(await savePptxViaBackstage(page));
 		const xml = await (await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
 		await writeFile(info.outputPath('home-shape.pptx'), bytes);
 		expect(xml.toLowerCase()).toContain(`val="${colour.slice(1)}"`);
 		expect(xml).toContain('w="57150"');
-		expect(xml).toContain('rot="5400000"');
+		expect(xml).toMatch(/<a:xfrm\b(?=[^>]*\brot="5400000")(?=[^>]*\bflipH="(?:1|true)")/u);
 	});
 
 	test('keeps Arrange group and alignment customization working', async ({ page }) => {
