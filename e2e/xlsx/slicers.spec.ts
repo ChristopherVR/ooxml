@@ -170,7 +170,13 @@ test('a timeline filters a PivotTable by dragging over months, saves and reinser
 	expect(await pivotTotal(page)).toBe(66);
 	await goToCell(page, 'A4');
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await clickRibbonControl(page, ribbon(page).locator('[data-command="insert.timeline"]'));
+	await clickRibbonControl(
+		page,
+		// PivotTable Analyze repeats Timeline; use the Insert tab's Filters group.
+		ribbon(page)
+			.getByRole('group', { name: 'Filters', exact: true })
+			.locator('[data-command="insert.timeline"]'),
+	);
 	const dialog = editor(page).locator('[data-dialog="insert-timeline"]');
 	await dialog.getByLabel('Day', { exact: true }).check();
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
