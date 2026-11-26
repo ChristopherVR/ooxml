@@ -22,11 +22,14 @@ describe('ribbon control catalogue', () => {
 		}
 		for (const group of RIBBON_GROUPS) {
 			expect(group.label.length).toBeGreaterThan(0);
+			expect(group.controls.length).toBeGreaterThan(0);
 		}
-		// SmartArt Format uses the shared legacy Arrange controls exclusively.
-		expect(
-			RIBBON_GROUPS.filter((group) => group.controls.length === 0).map((group) => group.id),
-		).toStrictEqual(['smartArtFormat.arrange']);
+	});
+
+	it('keeps the SmartArt Arrange strip ids distinct from Home menu rows', () => {
+		expect(RIBBON_CONTROL_IDS).toContain('smartArtFormat.arrange.align');
+		expect(RIBBON_CONTROL_IDS).toContain('home.arrange.align-left');
+		expect(RIBBON_CONTROL_IDS).not.toContain('smartArtFormat.arrange.align-left');
 	});
 });
 

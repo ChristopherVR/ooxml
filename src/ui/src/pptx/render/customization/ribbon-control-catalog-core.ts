@@ -5,6 +5,21 @@
  */
 import type { TabEntry } from './ribbon-control-catalog-types';
 
+export const CONTEXTUAL_ARRANGE_CONTROLS = {
+	bringForward: 'Bring Forward',
+	sendBackward: 'Send Backward',
+	bringToFront: 'Bring to Front',
+	sendToBack: 'Send to Back',
+	flipHorizontal: 'Flip Horizontal',
+	flipVertical: 'Flip Vertical',
+	group: 'Group',
+	ungroup: 'Ungroup',
+	align: 'Align',
+	mergeShapes: 'Merge Shapes',
+	crop: 'Crop',
+	outlineWidth: 'Outline width',
+} as const;
+
 export const RIBBON_CATALOG_CORE_TABS = {
 	home: {
 		clipboard: {
@@ -77,16 +92,9 @@ export const RIBBON_CATALOG_CORE_TABS = {
 		arrange: {
 			label: 'Arrange (legacy group alias)',
 			controls: {
-				bringForward: 'Bring Forward',
-				sendBackward: 'Send Backward',
-				bringToFront: 'Bring to Front',
-				sendToBack: 'Send to Back',
-				flipHorizontal: 'Flip Horizontal',
-				flipVertical: 'Flip Vertical',
+				...CONTEXTUAL_ARRANGE_CONTROLS,
 				duplicate: 'Duplicate',
 				delete: 'Delete',
-				group: 'Group',
-				ungroup: 'Ungroup',
 				align: 'Align and Distribute (alias)',
 				'align-left': 'Align Left',
 				'align-center': 'Align Center',
@@ -96,9 +104,6 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				'align-bottom': 'Align Bottom',
 				'distribute-horizontal': 'Distribute Horizontally',
 				'distribute-vertical': 'Distribute Vertically',
-				mergeShapes: 'Merge Shapes',
-				crop: 'Crop',
-				outlineWidth: 'Outline width',
 			},
 		},
 		editing: {
