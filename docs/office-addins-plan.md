@@ -10,11 +10,11 @@ and a package that can run in this host are three distinct deliverables.
 - [`src/core/ribbon/add-in.ts`](../src/core/ribbon/add-in.ts) defines `RibbonAddInTab`, its
   groups and commands, and `office-ribbon-add-in`. It filters empty, duplicate, and built-in tab
   IDs. Commands can run trusted host callbacks.
-- [`src/ui/src/ribbon/add-in-dialog.ts`](../src/ui/src/ribbon/add-in-dialog.ts) exposes
+- [`src/ui/src/ribbon/add-in-settings.ts`](../src/ui/src/ribbon/add-in-settings.ts) exposes
   `setOfficeAddInCatalog`. The host supplies IDs, labels, and install and optional remove
   callbacks. Admin Managed lists the host catalog, and My Add-ins discovers and activates
-  mounted ribbon tabs. `setOfficeAddInStorefront` controls whether the Store tab shows a
-  Marketplace link or a host-supplied list of offers.
+  mounted ribbon tabs. Hosts can use `setOfficeAddInStorefront` to enable the Store tab
+  with a Marketplace link or a host-supplied list of offers.
   [`add-in-tabs.ts`](../src/ui/src/ribbon/add-in-tabs.ts) renders host tabs in Word and Excel.
   PowerPoint uses [`ribbon-add-ins.ts`](../src/ui/src/pptx/render/ribbon-add-ins.ts) and
   [`ribbon-add-in.ts`](../src/ui/src/pptx/web-components/ribbon-add-in.ts).
@@ -29,7 +29,7 @@ and a package that can run in this host are three distinct deliverables.
   Office.js proxy objects, selection lifetime, and batch contexts are open work.
 
 The checked catalog item in the [parity checklist](parity-checklist.md) covers trusted host tabs
-and external Marketplace browsing. The checked Forms item covers response links in Excel and
+and host-enabled Marketplace browsing. The checked Forms item covers response links in Excel and
 PowerPoint and on-demand loading during a slide show. [`microsoft-forms.ts`](../src/ui/src/form/microsoft-forms.ts)
 validates those links. Native embedding, signed-in management, and live workbook response sync
 remain open. A separate BYO Forms provider can receive responses through a tenant-configured
@@ -279,11 +279,12 @@ from required managed assignments and remove a revoked entitlement along with it
   host and a way to run the acquired package. Exclude scraping, private endpoints, and reuse of
   Microsoft's Office host protocol. [Office Add-in Product Ingestion API](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/product-ingestion-office-add-in).
 
-Get Add-ins opens the Store pivot by default with a **Browse Microsoft Marketplace** link.
-The link opens only on a user's click, without sending a referrer or document data.
-Through `setOfficeAddInStorefront` a host can set `'off'` to open Get Add-ins on My Add-ins,
-override the HTTPS handoff, or supply a bounded list of offers whose file readers run on selection and enter the same
-validation and consent flow as an upload. Admin Managed shows trusted host ribbon entries.
+The Store pivot is off by default. Get Add-ins opens My Add-ins until a host enables a
+storefront through `setOfficeAddInStorefront`. A host can opt into a Marketplace handoff
+or supply a bounded list of offers. The handoff opens only on a user's click, without
+sending a referrer or document data. The dialog calls an offer's file reader on selection
+and uses the same validation and consent flow as an upload. Admin Managed shows trusted
+host ribbon entries.
 Remote discovery, account entitlements, publisher verification and tenant synchronization
 are future work. Visio exposes the same dialog and host ribbon entries while local manifest
 installation remains unavailable.
@@ -293,9 +294,9 @@ installation remains unavailable.
 One `storefront` option on the add-in host decides what Get Add-ins shows. Future options
 include per-listing Office installation links and remote storefront providers.
 
-- **Off.** No storefront, no external links and no catalog requests. Installed and admin-assigned
-  add-ins still work. This is the setting for hosts that must not send anything to Microsoft.
-- **Microsoft handoff (default).** Today's Office-filtered Marketplace link can use a host-supplied
+- **Off (default).** No storefront, no external links and no catalog requests. Installed and
+  admin-assigned add-ins still work.
+- **Microsoft handoff (opt-in).** Today's Office-filtered Marketplace link can use a host-supplied
   label and HTTPS destination. A future per-listing **Open in Microsoft Office** action could
   use a host-supplied URL template (for example a
   tenant's internal app portal that then deploys through Centralized Deployment). The template
@@ -319,7 +320,7 @@ document. Storefront content is untrusted: render descriptions as plain text (or
 sanitised Markdown subset), load screenshots only from the provider's declared origins (or
 provider-supplied bytes), and apply the same request limits as catalogs. Each storefront's
 requests, origins and stored data go into `PRIVACY.md` and the suite CSP when it is enabled.
-Remote providers and execution default to off in the packages.
+Storefronts, remote providers and execution default to off in the packages.
 
 ## Privacy and performance gates
 

@@ -34,7 +34,7 @@ network request must update this file in the same commit.
 | Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in                               | No (host must enable it)                                      | Do not configure it                                                                                                                    |
 | Suite: app updates                                 | The suite's own origin (`sw.js`)                                       | Yes                                                           | Not applicable (same origin)                                                                                                           |
 | Any product: hyperlinks, help links                | The link target, in a new tab                                          | Only when clicked                                             | Not applicable                                                                                                                         |
-| Office Add-ins: Microsoft handoff                  | `marketplace.microsoft.com` or the host's configured HTTPS destination | Only when the user clicks the link, which is shown by default | Set the storefront to `'off'`                                                                                                          |
+| Office Add-ins: Microsoft handoff                  | `marketplace.microsoft.com` or the host's configured HTTPS destination | No. Requires host opt-in and a click on the Marketplace link. | Set the storefront to `'off'`                                                                                                          |
 | Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft`                            | Only when the user opens or loads a form                      | Leave the form unopened or close the response dialog                                                                                   |
 | Excel: `WEBSERVICE` fetch provider                 | Any `http:`/`https:` URL in the formula                                | No (host must opt in via `providers`)                         | Omit `providers.webservice` or restrict `allowedOrigins`                                                                               |
 | Excel: `IMAGE` formula image fetcher               | The formula's `https:` source URL                                      | No (host supplies the fetcher)                                | Omit `imageProvider` on the editor or binding, `providers.image` in core, or the fetcher. Restrict destinations with `allowedOrigins`. |
@@ -122,13 +122,13 @@ the unused media parts when saving an existing file.
 ### Forms and add-in links
 
 Get Add-ins and My Add-ins open Office Add-ins in Word, Excel, PowerPoint and Visio.
-Get Add-ins opens the Store pivot by default with a **Browse Microsoft Marketplace** link.
-A host can specify its own HTTPS link. Clicking the link opens a new tab without an opener
-or referrer. The destination receives the requested URL and normal browser request metadata.
-The editor sends no document data and contacts the destination only when the user clicks.
-Hosts can set
-`setOfficeAddInStorefront(editor, 'off')` to turn it off. Admin Managed and My Add-ins use
-host-supplied entries and local ribbon state. A host can instead supply catalog offers.
+The Store pivot is off by default. A host can use `setOfficeAddInStorefront` to enable
+the Microsoft Marketplace handoff or specify its own HTTPS link. Clicking the link opens
+a new tab without an opener or referrer. The destination receives the requested URL and
+normal browser request metadata. The editor sends no document data and contacts the
+destination only when the user clicks. Hosts can set `setOfficeAddInStorefront(editor, 'off')`
+to turn it off. Admin Managed and My Add-ins use host-supplied entries and local ribbon state.
+A host can instead supply catalog offers.
 Selecting an offer calls the host's package reader, which may contact a destination configured
 by the host to retrieve the selected package. The editor passes only a cancellation signal and
 validates the returned file locally. Search filters in memory without sending a query.

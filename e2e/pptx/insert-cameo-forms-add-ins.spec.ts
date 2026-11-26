@@ -122,11 +122,11 @@ test('inserts a Cameo and response link and opens the add-in dialogs', async ({
 	await reveal('insert.addIns');
 	await command('insert.addIns.getAddIns').click();
 	const addIns = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
-	await expect(addIns.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
+	await expect(addIns.getByRole('tab', { name: 'My Add-ins', exact: true })).toHaveAttribute(
 		'aria-selected',
 		'true',
 	);
-	await expect(addIns.getByRole('link', { name: 'Browse Microsoft Marketplace' })).toBeVisible();
+	await expect(addIns.getByRole('tab', { name: 'Store', exact: true })).toHaveCount(0);
 	await page.keyboard.press('Escape');
 	await reveal('insert.addIns');
 	await command('insert.addIns.myAddIns').click();

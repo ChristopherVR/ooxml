@@ -23,7 +23,6 @@ export type OfficeAddInStorefront =
 const CATALOG = Symbol.for('office-ui.add-in-catalog');
 const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
 const ENTRY_LIMIT = 128;
-const DEFAULT_STOREFRONT: OfficeAddInStorefront = { kind: 'microsoft' };
 
 type HostSettings = AddInDialogHost & {
 	[CATALOG]?: readonly OfficeAddInCatalogEntry[];
@@ -40,7 +39,7 @@ export function setOfficeAddInCatalog(
 	else delete target[CATALOG];
 }
 
-/** Set a storefront for one editor or host container. The default is the Microsoft handoff. */
+/** Enable or disable a storefront for one editor or host container. The default is off. */
 export function setOfficeAddInStorefront(
 	host: AddInDialogHost,
 	storefront: OfficeAddInStorefront,
@@ -61,5 +60,5 @@ export function addInSettings(scopes: readonly AddInDialogHost[]) {
 		storefront ??= settings[STOREFRONT];
 		if (catalog && storefront) break;
 	}
-	return { catalog: catalog ?? [], storefront: storefront ?? DEFAULT_STOREFRONT };
+	return { catalog: catalog ?? [], storefront: storefront ?? 'off' };
 }

@@ -29,7 +29,6 @@ it('opens at the editor root, filters the catalog and restores the opener on Esc
 		.attachShadow({ mode: 'open' });
 	const opener = editor.appendChild(document.createElement('button'));
 	opener.focus();
-	setOfficeAddInStorefront(editor, 'off');
 	setOfficeAddInCatalog(editor, [
 		{ id: 'host', label: 'Host add-in', install: () => {} },
 		{ id: 'other', label: 'Other add-in', install: () => {} },
@@ -72,7 +71,7 @@ it('uses a normalized locale for both labels and catalog search', async () => {
 	expect(dialog?.querySelector('li')?.textContent).toContain('Notes');
 });
 
-it('finds storefront settings on the opener ribbon and falls back to the editor catalog', async () => {
+it('resolves the opener ribbon storefront when the dialog mounts', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
@@ -81,9 +80,10 @@ it('finds storefront settings on the opener ribbon and falls back to the editor 
 	const opener = control.appendChild(document.createElement('button'));
 	setOfficeAddInCatalog(editor, [{ id: 'notes', label: 'Editor Notes', install: () => {} }]);
 	setOfficeAddInStorefront(editor, 'off');
-	setOfficeAddInStorefront(ribbon, { kind: 'microsoft', label: 'Ribbon store' });
 	opener.focus();
-	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	const opening = openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	setOfficeAddInStorefront(ribbon, { kind: 'microsoft', label: 'Ribbon store' });
+	await opening;
 	const dialog = getDialog(editor);
 	expect(dialog?.querySelector('a')?.textContent).toBe('Ribbon store');
 	dialog?.querySelector<HTMLButtonElement>('#pivot-1')?.click();
@@ -91,11 +91,12 @@ it('finds storefront settings on the opener ribbon and falls back to the editor 
 	dialog?.close();
 });
 
-it('defaults to the Microsoft handoff and validates host catalog bytes before installing', async () => {
+it('offers the Microsoft handoff and host catalog only when configured', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
 	const open = () => openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	setOfficeAddInStorefront(editor, { kind: 'microsoft' });
 	await open();
 	expect(getDialog(editor)?.querySelector('[aria-selected="true"]')?.textContent).toBe('Store');
 	const link = getDialog(editor)?.querySelector('a');
@@ -120,6 +121,7 @@ it('defaults to the Microsoft handoff and validates host catalog bytes before in
 	});
 	await open();
 	const dialog = getDialog(editor);
+	expect(dialog?.querySelector('[aria-selected="true"]')?.textContent).toBe('Store');
 	expect(dialog?.querySelector('a')).toBeNull();
 	expect(read).not.toHaveBeenCalled();
 	dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]')?.click();

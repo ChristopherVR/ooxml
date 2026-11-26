@@ -22,10 +22,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await reveal(editor, get);
 		await get.click();
-		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
+		await expect(dialog.getByRole('tab', { name: 'My Add-ins', exact: true })).toHaveAttribute(
 			'aria-selected',
 			'true',
 		);
+		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveCount(0);
 		await page.keyboard.press('Escape');
 		await expect(dialog).toBeHidden();
 		await expect(get).toBeFocused();
@@ -68,10 +69,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	});
 }
 
-test('opens the Marketplace only on click and honors the ribbon’s Store setting', async ({
-	page,
-	context,
-}) => {
+test('opens the Marketplace only after host opt-in and a click', async ({ page, context }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
 	const marketplace: Array<{
 		url: string;
@@ -94,11 +92,18 @@ test('opens the Marketplace only on click and honors the ribbon’s Store settin
 	await newDocument(page);
 	const editor = page.locator('docx-editor');
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await editor.evaluate((element) =>
+		Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), { kind: 'microsoft' }),
+	);
 	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
 	await reveal(editor, get);
 	await get.click();
 	const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 	const link = dialog.getByRole('link', { name: 'Browse Microsoft Marketplace' });
+	await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
+		'aria-selected',
+		'true',
+	);
 	await expect(link).toBeVisible();
 	expect(marketplace).toHaveLength(0);
 	const popup = page.waitForEvent('popup');
