@@ -149,8 +149,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       localized names.
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
-- [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
-      Word Picture Format (Wrap Text, Crop and Format only; Arrange is shared with Shape Format)
+- [x] **P1** Excel Picture Format and Shape Format contextual tabs: styles from the shared
+      DrawingML catalogues (42 theme styles, 35 presets, 28 picture styles), fill, outline,
+      effects, size, Alt Text, Reset and Compress for one or several drawings; Excel 16 reopens
+      them (`xlsx/edit/drawing-format.ts`, 2026-11-26).
+- [ ] **P1** Excel draws Picture Style inner shadows, reflections, soft edges, compound borders
+      and 3-D effects flat in the worksheet (they are saved).
+- [ ] **P1** Picture Format and Shape Format contextual tabs are partial in Word Picture Format (Wrap Text, Crop and Format only; Arrange is shared with Shape Format)
       and in PowerPoint Shape Format (no Arrange, Size or Alt Text).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
@@ -371,7 +376,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format and Chart Format (a pane instead).
+- [ ] **P1** Missing tabs: Draw and Chart Format (a pane instead).
 - [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
       refresh, change source, subtotals, grand totals, report layout, blank rows, the PivotTable
       style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).
@@ -525,7 +530,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       switches to Draft). Open: comments, text boxes inside headers, footers and notes, the Find In
       story picker, navigation pane results, the host Find dialog (body only), Replace All being one
       undo step per story instead of one, and the story order is unconfirmed against Word's dialog.
-- [ ] **P1** Only Draft and Print Layout views: no Read Mode, Web Layout, Outline or Focus.
+- [x] **P1** Read Mode (columns and paging), Web Layout, Outline (levels, collapse, promote and
+      demote with heading styles, branch moves) and Focus, in every binding (`docx/view-modes.ts`,
+      2026-11-26).
+- [ ] **P1** Read Mode has no footnote or endnote navigation, and Outline structural edits are
+      disabled during tracked changes and collaboration.
 - [ ] **P1** Index, citations and bibliography, Table of Authorities.
 - [ ] **P1** Compare is core only (`docx/compare/`, `docs/docx-compare.md`): body text and tables
       become tracked changes at word or character level, matching Word 16's CompareDocuments on 8
@@ -760,8 +769,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       or `.xlsx`, or the host's `mailMergeDataSource`), Edit Recipient List, merge fields and
       Rules, Match Fields, Preview Results, Check for Errors and Finish & Merge to a document or
       print, loaded on demand (`src/ui/src/docx/mailings/`, `e2e/docx`).
-- [ ] **P1** Mailings: Send Email Messages, Envelopes, Labels and Update Labels; native
-      `ADDRESSBLOCK` and `GREETINGLINE` fields; interactive ASK and FILL-IN prompts.
+- [x] **P1** Mailings: Envelopes, Labels and Update Labels, Word's native `ADDRESSBLOCK` and
+      `GREETINGLINE` fields (checked with Word 16 field updates), interactive ASK and FILL-IN
+      prompts, and Send Email Messages through a host `emailProvider` (2026-11-26).
+- [ ] **P2** Labels offer three vendor presets, not Word's label catalogue.
 - [x] **P1** Design: Themes, Colors, Fonts, Paragraph Spacing and Effects galleries (shared
       theme presets in `drawingml/theme-presets.ts`), custom colours, fonts and spacing, and Set
       as Default through the host's preference store, each one undo step and saved
