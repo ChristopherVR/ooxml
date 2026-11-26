@@ -4,6 +4,7 @@ import { maxTimeNodeId } from '../../services/animation-timing-tree';
 import { xmlChild } from '../../utils/xml-access';
 import {
 	getXmlShapeIdFromXml,
+	parseCtnMediaTiming,
 	resolvePlayAcrossSlides,
 } from './PptxHandlerRuntimeMediaParsingUtils';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSavePresPropsAndSignatures';
@@ -65,16 +66,25 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					delete cTn['@_repeatCount'];
 				}
 
-				if (media.autoPlay && !media.startMode) {
+				// Explicit modes are stored in the sequence. Only update the media
+				// node's own delay when changing legacy direct autoplay.
+				const wasDirect = parseCtnMediaTiming(cTn, mediaTag).autoPlay;
+				const useDirect = media.startMode === undefined ? media.autoPlay : false;
+				if (useDirect !== undefined && useDirect !== wasDirect) {
 					delete cTn['@_nodeType'];
-					cTn['p:stCondLst'] = { 'p:cond': { '@_delay': '0' } };
-				} else if (
-					media.startMode !== undefined ||
-					media.autoPlay === false ||
-					['1', '2'].includes(String(cTn['@_nodeType']))
-				) {
-					delete cTn['@_nodeType'];
-					cTn['p:stCondLst'] = { 'p:cond': { '@_delay': 'indefinite' } };
+					const list = xmlChild(cTn, 'p:stCondLst') ?? {};
+					const conditions = this.ensureArray(list['p:cond']) as XmlObject[];
+					const pureDelay = conditions.find(
+						(condition) => Object.keys(condition).length === 1 && '@_delay' in condition,
+					);
+					const delay = useDirect ? '0' : 'indefinite';
+					if (pureDelay) {
+						pureDelay['@_delay'] = delay;
+					} else if (useDirect || conditions.length === 0) {
+						conditions.unshift({ '@_delay': delay });
+						list['p:cond'] = conditions.length === 1 ? conditions[0] : conditions;
+					}
+					cTn['p:stCondLst'] = list;
 				}
 				if (media.rewindAfterPlaying !== undefined) {
 					cTn['@_fill'] = media.rewindAfterPlaying ? 'remove' : 'hold';

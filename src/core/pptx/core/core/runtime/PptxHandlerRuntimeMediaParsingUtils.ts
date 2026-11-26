@@ -184,7 +184,7 @@ export function parseCtnMediaTiming(cTn: XmlObject | undefined, mediaTag: string
 		if (
 			nodeType === '1' ||
 			nodeType === '2' ||
-			(start?.['@_delay'] === '0' && !start['@_evt'] && !start['p:tn'])
+			(start?.['@_delay'] === '0' && Object.keys(start).length === 1)
 		) {
 			autoPlay = true;
 		}

@@ -109,3 +109,23 @@ it('persists first-save media playback and picture edits, then clears an edited 
 	] as const)
 		expect(replaced[key]).toBeUndefined();
 });
+
+it('preserves extra media start conditions on an unedited save', async () => {
+	const { handler, data, createSlide } = await PresentationBuilder.create({ initialSlideCount: 0 });
+	const slide = createSlide('Blank')
+		.addMedia('video', 'data:video/mp4;base64,AAAA', { x: 0, y: 0, width: 100, height: 100 })
+		.build();
+	must(slide.elements.find((element) => element.type === 'media')).startMode = 'sequence';
+	data.slides.push(slide);
+	const path = 'ppt/slides/slide1.xml';
+	const zip = await JSZip.loadAsync(await handler.save(data.slides));
+	const xml = await must(zip.file(path)).async('text');
+	const condition = '<p:cond evt="onBegin" delay="150"><p:tn val="1"/></p:cond>';
+	zip.file(path, xml.replace(/(<p:cMediaNode[^>]*><p:cTn[^>]*><p:stCondLst>)/u, '$1' + condition));
+	const reader = new PptxHandler();
+	const loaded = await reader.load(await zip.generateAsync({ type: 'arraybuffer' }));
+	const clip = must(at(loaded.slides, 0).elements.find((element) => element.type === 'media'));
+	expect(clip.startMode).toBe('sequence');
+	const saved = await JSZip.loadAsync(await reader.save(loaded.slides));
+	expect(await must(saved.file(path)).async('text')).toContain(condition);
+});
