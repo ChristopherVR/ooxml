@@ -95,6 +95,15 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			this.core.requestRender();
 			return;
 		}
+		const firstMount = !this.shell;
+		if (!this.shell) {
+			this.shell = buildShell(this.core);
+			this.chrome = this.shell.chrome;
+			this.openShare = () => this.shell?.share.open();
+			this.closeBackstage = () => this.shell?.backstage.close();
+			if (this.addIns.length) this.shell.ribbon.setAddIns(this.addIns);
+		}
+		this.shell.ribbon.connect();
 		const { ctx } = this.core;
 		this.stopAddIns = watchOfficeAddIns(
 			ctx.root,
@@ -103,17 +112,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			() => ctx.locale(),
 			() => excelAddInSelection(ctx),
 		);
-		if (this.shell) {
-			this.shell.ribbon.connect();
-			return;
-		}
-		this.shell = buildShell(this.core);
-		this.chrome = this.shell.chrome;
-		this.openShare = () => this.shell?.share.open();
-		this.closeBackstage = () => this.shell?.backstage.close();
-		if (this.addIns.length) this.shell.ribbon.setAddIns(this.addIns);
-		this.shell.ribbon.connect();
-		this.core.requestRender();
+		if (firstMount) this.core.requestRender();
 	}
 
 	/**
