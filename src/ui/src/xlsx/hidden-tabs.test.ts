@@ -76,6 +76,7 @@ describe('<xlsx-editor> ribbon.hiddenTabs', () => {
 		expect(await tabIds(element)).toEqual([
 			'home',
 			'insert',
+			'draw',
 			'page-layout',
 			'formulas',
 			'data',
@@ -150,6 +151,7 @@ describe('<xlsx-editor> ribbon.hiddenTabs', () => {
 		const element = mount({ ribbon: { hiddenTabs: ['home', 'formulas'] } });
 		expect(await tabIds(element)).toEqual([
 			'insert',
+			'draw',
 			'page-layout',
 			'data',
 			'review',

@@ -56,6 +56,7 @@ describe('<docx-editor> ribbon.hiddenTabs', () => {
 		expect(await tabIds(editor)).toEqual([
 			'home',
 			'insert',
+			'draw',
 			'design',
 			'layout',
 			'references',
@@ -110,6 +111,7 @@ describe('<docx-editor> ribbon.hiddenTabs', () => {
 		expect(ribbon(editor).noFile).toBe(false);
 		expect(await tabIds(editor)).toEqual([
 			'insert',
+			'draw',
 			'design',
 			'layout',
 			'references',

@@ -131,6 +131,7 @@ export const WORD_RIBBON_TAB_IDS = [
 	'file',
 	'home',
 	'insert',
+	'draw',
 	'design',
 	'layout',
 	'references',

@@ -69,6 +69,7 @@ export const EXCEL_RIBBON_TAB_IDS = [
 	'file',
 	'home',
 	'insert',
+	'draw',
 	'page-layout',
 	'formulas',
 	'data',
