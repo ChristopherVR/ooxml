@@ -198,7 +198,11 @@ export function violatesControlLock(tr: Transaction, state: EditorState, history
 				const innerTo = spanTo - 1;
 				return inserts ? from >= innerFrom && from <= innerTo : from < innerTo && to > innerFrom;
 			}
-			return inserts ? from > spanFrom && from < spanTo : from < spanTo && to > spanFrom;
+			if (!inserts) return from < spanTo && to > spanFrom;
+			// An insertion at a tagged edge is inside when it carries that control's mark.
+			if (span.control.appearance === 'tags' && keeps && (from === spanFrom || from === spanTo))
+				return true;
+			return from > spanFrom && from < spanTo;
 		});
 	});
 }

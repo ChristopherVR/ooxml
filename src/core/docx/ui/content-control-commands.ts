@@ -21,6 +21,7 @@ import {
 } from '../content-control-model';
 import {
 	controlAt,
+	controlOfMark,
 	controlSpans,
 	everyControlSpan,
 	type ControlSpan,
@@ -314,12 +315,32 @@ export function typeOverPlaceholder(
 	text: string,
 	to = from,
 ): Transaction | 'blocked' | undefined {
-	const span = inputControlAt(controlSpans(state.doc), from);
+	const spans = controlSpans(state.doc);
+	// A tagged edge can be on either side of its widget. The caret's marks tell which control
+	// receives typing there, including when two controls have a common boundary.
+	const atEdge = (span: ControlSpan) =>
+		span.level === 'inline' && (span.from === from || span.to === from);
+	const taggedEdge =
+		from === to &&
+		state.selection.empty &&
+		state.selection.from === from &&
+		spans.some((span) => atEdge(span) && span.control.appearance === 'tags');
+	const controlMark = taggedEdge
+		? (state.storedMarks ?? state.selection.$from.marks()).find(
+				(mark) => mark.type.name === 'contentControl',
+			)
+		: undefined;
+	const id = controlOfMark(controlMark)?.id;
+	const span = inputControlAt(
+		taggedEdge ? spans.filter((span) => !atEdge(span) || span.control.id === id) : spans,
+		from,
+	);
 	if (span?.level === 'cell') return typeInCell(state, span, text, to);
 	if (span?.level !== 'inline') return undefined;
 	const { control } = span;
 	if (control.kind === 'checkbox' || control.kind === 'dropDownList') {
-		const inside = (from > span.from && from < span.to) || (from === span.from && to === span.to);
+		const inside =
+			taggedEdge || (from > span.from && from < span.to) || (from === span.from && to === span.to);
 		if (inside || (from === span.from && to > from)) return 'blocked';
 		// Beside the control: the new text must not become part of it.
 		const type = state.schema.marks.contentControl!;

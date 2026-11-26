@@ -17,7 +17,6 @@
 	font-size: 0.75em;
 	line-height: 1;
 	white-space: nowrap;
-	pointer-events: none;
 	user-select: none;
 }
 .dve-sdt-tag::before {

@@ -67,6 +67,7 @@ export * from './zoom-fit';
 export * from './content-control-commands';
 export * from './content-control-guard';
 export { controlOccurrences } from './content-control-occurrences';
+export { changesContentControlTags } from './content-control-tag-changes';
 export * from './content-control-spans';
 export * from './symbol-font';
 export * from './positional-tab-input';
