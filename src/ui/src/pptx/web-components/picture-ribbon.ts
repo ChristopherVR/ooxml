@@ -1,11 +1,14 @@
+import { html } from 'lit';
 import { isDirectPicture, resetPicturePatch } from 'ooxml-core/pptx';
 import type { PptxImageLikeElement } from 'ooxml-core/pptx';
+import { OfficeElement, controlStyles } from '../../base';
 import { defineElement } from '../../registry';
 import { insertDialogText } from '../../dialog/insert-dialog-frame';
 import { canInteractWithElement } from '../render/element-locks';
 import { definePptxRibbonCommand } from './office-aliases';
 import { canEditPicture, canProcessPictureRaster } from './picture-ribbon-state';
 import type { PictureRibbonState, PictureStripGroup } from './picture-ribbon-state';
+import css from './picture-ribbon.css?raw';
 
 const COMMANDS = {
 	'picture-adjust': [
@@ -57,7 +60,13 @@ declare global {
 export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 	if (registry.get('pptx-ui-picture-ribbon')) return;
 	definePptxRibbonCommand(registry);
-	class PictureRibbon extends HTMLElement implements PptxPictureRibbonElement {
+	class PictureRibbon extends OfficeElement implements PptxPictureRibbonElement {
+		static override styles = controlStyles(css);
+		static override properties = {
+			family: { type: String, noAccessor: true },
+			state: { attribute: false, noAccessor: true },
+		};
+
 		private controls = new Map<PictureCommand, HTMLElement>();
 		private group: PictureStripGroup = 'picture-adjust';
 		private model: PictureRibbonState | undefined;
@@ -65,43 +74,42 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 		private focused: HTMLElement | null = null;
 
 		set family(value: PictureStripGroup) {
-			if (this.group === value) return;
-			for (const control of this.controls.values()) control.remove();
-			this.controls.clear();
-			this.group = value;
-			this.sync();
+			const previous = this.group;
+			this.group = Object.hasOwn(COMMANDS, value) ? value : 'picture-adjust';
+			this.requestUpdate('family', previous);
 		}
 		get family() {
 			return this.group;
 		}
 		set state(value: PictureRibbonState | undefined) {
 			if (this.active && !value?.editable) this.active.abort();
+			const previous = this.model;
 			this.model = value;
-			this.sync();
+			this.requestUpdate('state', previous);
 		}
 		get state() {
 			return this.model;
 		}
 
-		connectedCallback() {
-			this.sync();
-		}
-		disconnectedCallback() {
+		override disconnectedCallback() {
+			super.disconnectedCallback();
 			this.active?.abort();
 		}
 
-		private sync(): void {
+		protected override willUpdate(): void {
+			if (this.detachedFirstRender) return;
 			// The ribbon group treats a full-height inline control as a column beside
 			// its stacked dropdown galleries.
-			if (this.group === 'picture-adjust' || this.group === 'picture-styles') {
-				this.setAttribute('mode', 'inline');
-			} else {
-				this.removeAttribute('mode');
+			const mode = this.group === 'picture-adjust' || this.group === 'picture-styles';
+			if (mode && this.getAttribute('mode') !== 'inline') this.setAttribute('mode', 'inline');
+			else if (!mode && this.hasAttribute('mode')) this.removeAttribute('mode');
+			const commands = COMMANDS[this.group];
+			for (const [action, control] of this.controls) {
+				if (commands.some(([, command]) => command === action)) continue;
+				control.remove();
+				this.controls.delete(action);
 			}
-			this.style.display = 'inline-grid';
-			this.style.gridAutoFlow = 'column';
-			this.style.gridTemplateRows = 'repeat(3, auto)';
-			for (const [id, action, label, icon] of COMMANDS[this.group]) {
+			for (const [id, action, label, icon] of commands) {
 				let button = this.controls.get(action);
 				if (!button) {
 					button = this.ownerDocument.createElement('pptx-ui-ribbon-command');
@@ -118,6 +126,11 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 				button.setAttribute('title', reason ?? text);
 				button.toggleAttribute('disabled', Boolean(reason));
 			}
+		}
+
+		protected override render() {
+			// Ribbon visibility rules query the light DOM for command IDs.
+			return html`<slot></slot>`;
 		}
 
 		private label(key: string, fallback: string): string {
@@ -205,14 +218,14 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 				'abort',
 				() => {
 					this.active = undefined;
-					this.sync();
+					this.requestUpdate();
 					const focused = this.focused;
 					queueMicrotask(() => focused?.focus());
 					this.focused = null;
 				},
 				{ once: true },
 			);
-			this.sync();
+			this.requestUpdate();
 			const context: PictureDialogContext = {
 				host: this,
 				picture,

@@ -36,10 +36,24 @@ function mount(family: HTMLElementTagNameMap['pptx-ui-picture-ribbon']['family']
 		if (!button) throw new Error(`Missing command ${id}`);
 		return button;
 	}
-	return { state, command };
+	return { strip, state, command };
 }
 
 describe('picture ribbon', () => {
+	it('keeps commands in the light DOM and updates their state without replacing them', () => {
+		const { strip, state, command } = mount('picture-arrange');
+		const rotate = command('arrange.rotateRight');
+		strip.state = { ...state, editable: false };
+		expect(command('arrange.rotateRight')).toBe(rotate);
+		expect(rotate.disabled).toBe(true);
+		strip.family = 'picture-styles';
+		expect(strip.getAttribute('mode')).toBe('inline');
+		expect(
+			strip.querySelector('[data-ribbon-control="pictureFormat.arrange.rotateRight"]'),
+		).toBeNull();
+		expect(command('pictureStyles.layout').disabled).toBe(true);
+	});
+
 	it('resets picture formatting in one patch and disables raster tools with a reason', () => {
 		const { state, command } = mount('picture-adjust');
 		command('adjust.resetPicture').click();
