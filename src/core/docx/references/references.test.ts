@@ -164,6 +164,17 @@ const bibliography: Bibliography = {
 const selectors = { pages: '12', suppressAuthor: false, suppressTitle: false, suppressYear: false };
 const cite = citationCode('Doe2020', 1033, selectors);
 
+test('uses Word switch quoting and retains support for existing quoted citation tags', () => {
+	expect(index()).toContain('\\z "1053"');
+	expect(cite).toBe('CITATION Doe2020 \\l 1033 \\p "12"');
+	expect(citationEvaluator(bibliography)(cite.replace('Doe2020', '"Doe2020"'))).toBe(
+		'(Doe, 2020, p. 12)',
+	);
+	expect(citationCode('Tag with spaces', 1033, { ...selectors, pages: '' })).toBe(
+		'CITATION "Tag with spaces" \\l 1033',
+	);
+});
+
 test('updates citation results with style and suppression, and keeps locked fields', () => {
 	const evaluate = citationEvaluator(bibliography);
 	expect(evaluate(cite)).toBe('(Doe, 2020, p. 12)');
@@ -175,7 +186,7 @@ test('updates citation results with style and suppression, and keeps locked fiel
 		suppressYear: true,
 	});
 	expect(edited && evaluate(edited)).toBe('(See Field studies, p. 12)');
-	expect(evaluate(citationCode('Later', 1033, selectors))).toBe('([Later])');
+	expect(evaluate(citationCode('Later', 1033, selectors))).toBe('(Later)');
 	const original = paragraph('p', ...referenceFieldRuns(cite, [{ text: 'cached', italic: true }]));
 	expect(refreshCitations(original, evaluate).runs[3]).toMatchObject({
 		italic: true,

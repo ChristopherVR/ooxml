@@ -20,7 +20,7 @@ export function indexCode(options: IndexOptions): string {
 		'INDEX',
 		`\\c "${Math.max(1, Math.min(4, Math.floor(options.columns) || 1))}"`,
 		'\\h "A"',
-		`\\z ${options.lcid}`,
+		`\\z "${options.lcid}"`,
 		options.runIn ? '\\r' : '',
 		options.rightAlign ? `\\e ${quoteReference('\t')}` : '',
 	]

@@ -14,7 +14,7 @@ export interface CitationOptions {
 export function citationCode(tag: string, lcid: number, options: CitationOptions): string {
 	return [
 		'CITATION',
-		quoteReference(tag),
+		/^[^\s"\\]+$/u.test(tag) ? tag : quoteReference(tag),
 		`\\l ${lcid}`,
 		options.pages ? `\\p ${quoteReference(options.pages)}` : '',
 		options.suppressAuthor ? '\\n' : '',
@@ -85,7 +85,7 @@ export function citationEvaluator(
 		if (tags.some((tag) => !sources.has(tag))) return undefined;
 		const parts = tags.map((tag) => {
 			const source = sources.get(tag);
-			if (!source || source.placeholder) return `[${tag}]`;
+			if (!source || source.placeholder) return tag;
 			const author = !citation.suppressAuthor && citationAuthor(source, style);
 			const title = !citation.suppressTitle && source.fields.Title;
 			const year = !citation.suppressYear && (source.fields.Year || 'n.d.');
