@@ -51,7 +51,14 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 		const state = target?.state;
 		void import('./arrange-controller')
 			.then(({ runArrange }) => {
-				if (target && target === core.targetView() && target.state === state)
+				if (
+					target &&
+					state &&
+					target === core.targetView() &&
+					!target.isDestroyed &&
+					target.state.doc === state.doc &&
+					target.state.selection.eq(state.selection)
+				)
 					runArrange(core, target, action);
 			})
 			.catch(core.host.reportError);

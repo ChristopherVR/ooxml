@@ -113,7 +113,7 @@ describe('picture Wrap Text and Crop', () => {
 	});
 
 	it('saves a picture position, transform and alt text from Picture Format', async () => {
-		const { root, select, image, xml } = await openEditor();
+		const { root, view, select, image, xml } = await openEditor();
 		select();
 		const panel = root.querySelector<HTMLElement>('[data-ribbon-tab="picture-format"]')!;
 		const choose = (label: string, value: string) => {
@@ -122,6 +122,8 @@ describe('picture Wrap Text and Crop', () => {
 			control.dispatchEvent(new Event('change'));
 		};
 		choose('Position', 'bottom-right');
+		// A presence-like metadata transaction does not invalidate the pending ribbon command.
+		view.dispatch(view.state.tr.setMeta('test-presence', true));
 		await vi.waitFor(() =>
 			expect(image().placement).toMatchObject({ align: 'right', alignV: 'bottom' }),
 		);
