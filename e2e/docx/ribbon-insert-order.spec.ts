@@ -81,7 +81,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	});
 }
 
-for (const locale of ['en', 'fr', 'de', 'es', 'zh-CN']) {
+for (const [locale, label] of [
+	['en', 'Header & Footer'],
+	['fr', 'En-tête et pied de page'],
+	['de', 'Kopf- und Fußzeile'],
+	['es', 'Encabezado y pie de página'],
+	['zh-CN', '页眉和页脚'],
+] as const) {
 	test(`Header & Footer fits at both ribbon widths in ${locale}`, async ({ page }) => {
 		await page.goto('/');
 		await newDocument(page);
@@ -94,14 +100,21 @@ for (const locale of ['en', 'fr', 'de', 'es', 'zh-CN']) {
 		const header = insert.locator('[data-label="Header & Footer"]');
 		for (const width of [1600, 1280]) {
 			await page.setViewportSize({ width, height: 900 });
-			await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+			await expect(header).toHaveAttribute('data-caption', label);
 			await expect
 				.poll(() =>
-					header.evaluate((group) => {
+					header.evaluate((group, label) => {
 						const caption = group.querySelector('.ribbon-overflow-button > span');
-						if (!(caption instanceof HTMLElement) || !caption.getClientRects().length) return true;
+						if (!(caption instanceof HTMLElement) || !caption.getClientRects().length) {
+							const style = getComputedStyle(group, '::after');
+							const context = document.createElement('canvas').getContext('2d');
+							if (!context || style.content !== JSON.stringify(label)) return false;
+							context.font = `${style.fontSize} ${style.fontFamily}`;
+							return context.measureText(label).width <= group.clientWidth + 1;
+						}
 						const text = caption.firstChild;
-						if (!text?.textContent) return false;
+						if (text?.textContent !== label) return false;
+						const box = caption.getBoundingClientRect();
 						const range = document.createRange();
 						const lines = new Set<number>();
 						for (const word of text.textContent.matchAll(/\S+/g)) {
@@ -109,10 +122,13 @@ for (const locale of ['en', 'fr', 'de', 'es', 'zh-CN']) {
 							range.setEnd(text, word.index + word[0].length);
 							const rects = range.getClientRects();
 							if (rects.length !== 1) return false;
-							for (const rect of rects) lines.add(rect.top);
+							for (const rect of rects) {
+								if (rect.left < box.left - 1 || rect.right > box.right + 1) return false;
+								lines.add(rect.top);
+							}
 						}
-						return lines.size <= 2;
-					}),
+						return lines.size <= 2 && caption.scrollHeight <= caption.clientHeight + 1;
+					}, label),
 				)
 				.toBe(true);
 		}
