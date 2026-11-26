@@ -2,8 +2,8 @@ import { composedWithin } from '../composed';
 import { ensureRibbonTouchStyle, syncScrollMore, type ScrollMoreLabel } from './scroll-more';
 
 /**
- * Ribbon overflow: when a panel is narrower than its groups, collapse groups from the right, each
- * into one dropdown button that shows the group's live controls in a panel under it. The panel
+ * Ribbon overflow: when a panel is narrower than its groups, collapse groups in priority order
+ * into dropdown buttons that show each group's live controls in a panel under it. The panel
  * scrolls only when even that is not enough, as Word and Excel do when a window narrows.
  *
  * A product supplies how its icons are drawn and which command buttons end the dropdown; the
@@ -31,6 +31,8 @@ export interface RibbonOverflowOptions {
 	setCaption?(span: HTMLElement, label: string): void;
 	/** Give the dropdown the group's natural width (for groups whose layout depends on it). */
 	naturalWidth?: boolean;
+	/** Collapse lower priorities first. Equal priorities collapse from right to left. */
+	groupPriority?(group: HTMLElement): number;
 	/** Reserve room for painted (`::after`) group captions so they never run into the next group. */
 	reserveCaptions?: boolean;
 	/** Give these groups the last chance to stay expanded when space runs out. */
@@ -38,7 +40,7 @@ export interface RibbonOverflowOptions {
 }
 
 export interface RibbonOverflow {
-	/** Folds groups of `panel` from the right until it fits its width. */
+	/** Folds groups of `panel` until it fits its width. */
 	fitPanel(panel: HTMLElement): void;
 	/** Keeps each panel of `root` fitted as it resizes. Returns a disposer. */
 	attach(root: HTMLElement): () => void;
@@ -168,11 +170,15 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		if (options.naturalWidth)
 			for (const group of groups) group.dataset.natural = String(Math.ceil(group.offsetWidth));
 		groups.reverse();
+		const priority = options.groupPriority;
 		const preferExpanded = options.preferExpanded;
-		if (preferExpanded)
-			groups.sort((a, b) => Number(preferExpanded(a, panel)) - Number(preferExpanded(b, panel)));
+		// Preferred groups fold last; otherwise lower priorities fold first, right to left.
+		const rank = (group: HTMLElement) =>
+			(preferExpanded?.(group, panel) ? 1e6 : 0) + (priority?.(group) ?? 0);
+		if (priority || preferExpanded) groups.sort((a, b) => rank(a) - rank(b));
 		for (const group of groups) {
-			if (panel.scrollWidth <= panel.clientWidth + 1) break;
+			if (panel.scrollWidth <= panel.clientWidth) break;
+			const width = group.offsetWidth;
 			let button = group.querySelector<HTMLButtonElement>(':scope > .ribbon-overflow-button');
 			if (!button) {
 				button = overflowButton(group);
@@ -185,6 +191,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			button.setAttribute('aria-label', label);
 			button.title = label;
 			group.setAttribute('data-collapsed', '');
+			if (group.offsetWidth >= width) group.removeAttribute('data-collapsed');
 		}
 		syncScrollMore(panel, options.moreLabel);
 	}
@@ -214,7 +221,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 					if (panel.hidden || panel.querySelector('[aria-expanded="true"].ribbon-overflow-button'))
 						continue;
 					const more = panel.querySelector<HTMLElement>(':scope > .ribbon-scroll-more');
-					const clipped = panel.scrollWidth - (more?.offsetWidth ?? 0) > panel.clientWidth + 1;
+					const clipped = panel.scrollWidth - (more?.offsetWidth ?? 0) > panel.clientWidth;
 					const unfolded = panel.querySelector(':scope > .ribbon-group:not([data-collapsed])');
 					if (clipped && unfolded) fitPanel(panel);
 				}

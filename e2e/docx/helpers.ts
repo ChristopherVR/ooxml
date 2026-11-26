@@ -149,7 +149,9 @@ export async function reveal(editor: Locator, target: Locator) {
 		return target.first().isVisible();
 	};
 	if (await stablyVisible()) return;
-	const buttons = editor.locator('.ribbon-panel:not([hidden]) .ribbon-overflow-button');
+	const buttons = editor.locator(
+		'.ribbon-panel:not([hidden]) > .ribbon-group[data-collapsed] > .ribbon-overflow-button',
+	);
 	for (let index = 0; index < (await buttons.count()); index++) {
 		await buttons.nth(index).click();
 		if (await stablyVisible()) return;

@@ -12,7 +12,7 @@ const options = {
 const overflow = createRibbonOverflow(options);
 
 /** jsdom has no layout: a panel that is `room` wide holding groups of 100 that overflow it. */
-function panel(room: number) {
+function panel(room: number, collapsedWidth = 40) {
 	const ribbon = document.createElement('div');
 	ribbon.className = 'ribbon';
 	const el = document.createElement('div');
@@ -28,14 +28,15 @@ function panel(room: number) {
 		const run = document.createElement('button');
 		run.dataset.command = 'x';
 		group.append(run);
-		define(group, { offsetWidth: () => (group.hasAttribute('data-collapsed') ? 40 : 100) });
+		define(group, {
+			offsetWidth: () => (group.hasAttribute('data-collapsed') ? collapsedWidth : 100),
+		});
 		el.append(group);
 		return group;
 	});
 	define(el, {
 		clientWidth: () => room,
-		scrollWidth: () =>
-			groups.reduce((sum, group) => sum + (group.hasAttribute('data-collapsed') ? 40 : 100), 0),
+		scrollWidth: () => groups.reduce((sum, group) => sum + group.offsetWidth, 0),
 	});
 	ribbon.append(el);
 	document.body.append(ribbon);
@@ -78,6 +79,22 @@ describe('ribbon overflow', () => {
 		});
 		preferred.fitPanel(el);
 		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([true, false]);
+	});
+
+	it('folds a lower-priority group first even if overflow is only one pixel', () => {
+		const { el, groups } = panel(199);
+		createRibbonOverflow({
+			...options,
+			groupPriority: (group) => Number(group.dataset.label === 'Styles'),
+		}).fitPanel(el);
+		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([true, false]);
+		expect(el.scrollWidth).toBeLessThanOrEqual(el.clientWidth);
+	});
+
+	it('keeps groups expanded when folding them saves no space', () => {
+		const { el, groups } = panel(150, 100);
+		overflow.fitPanel(el);
+		expect(groups.some((group) => group.hasAttribute('data-collapsed'))).toBe(false);
 	});
 
 	it('consumes Escape while closing a dropdown from outside the ribbon', () => {

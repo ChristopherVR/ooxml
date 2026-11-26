@@ -33,6 +33,11 @@ const GROUP_ICONS: Record<string, RibbonIcon> = {
 	Zoom: 'zoom',
 	Views: 'view',
 	Page: 'pageSize',
+	Table: 'table',
+	Properties: 'table',
+	'Cell Size': 'rowAbove',
+	'Cell Alignment': 'alignCenter',
+	'Table Data': 'table',
 };
 
 /** Detaches whichever collapsed-group panel is open. */
@@ -51,6 +56,13 @@ const overflow = createRibbonOverflow({
 	command: 'button[data-action]',
 	naturalWidth: true,
 	preferExpanded: (group, panel) => panel.clientWidth >= 1600 && group.dataset.label === 'Arrange',
+	groupPriority: (group) => {
+		if (group.parentElement?.dataset.ribbonTab !== 'table-layout') return 0;
+		if (group.dataset.label === 'Cell Size') return 1;
+		if (group.dataset.label === 'Table' && !group.querySelector('[data-table-command="select"]'))
+			return 2;
+		return 0;
+	},
 });
 
 export const fitPanel = overflow.fitPanel;

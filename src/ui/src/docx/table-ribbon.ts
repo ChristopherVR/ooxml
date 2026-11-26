@@ -195,19 +195,22 @@ function layout(panel: HTMLElement) {
 	panel.prepend(
 		group(
 			'Table',
-			menu(
-				'Select Table Parts',
-				'table',
-				[
-					['cell', 'Select Cell'],
-					['column', 'Select Column'],
-					['row', 'Select Row'],
-					['table', 'Select Table'],
-				],
-				(value) => ({ type: 'tableTab', key: 'select', value }),
-				'select',
+			stack(
+				menu(
+					'Select Table Parts',
+					'table',
+					[
+						['cell', 'Select Cell'],
+						['column', 'Select Column'],
+						['row', 'Select Row'],
+						['table', 'Select Table'],
+					],
+					(value) => ({ type: 'tableTab', key: 'select', value }),
+					'select',
+					true,
+				),
+				gridlines,
 			),
-			gridlines,
 		),
 	);
 	panel.append(
