@@ -138,6 +138,7 @@ export function openOfficeAddIns(
 		return button;
 	};
 	let empty: HTMLElement | undefined;
+	let marketplace: HTMLElement | undefined;
 	if (mode === 'getAddIns') {
 		const installed = new Set(tabs.map(({ id }) => id));
 		for (const entry of catalog) {
@@ -152,7 +153,9 @@ export function openOfficeAddIns(
 			'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.',
 		);
 		const url = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
-		dialog.append(note, officeServiceLink(doc, t('Browse Microsoft Marketplace'), url));
+		marketplace = doc.createElement('div');
+		marketplace.append(note, officeServiceLink(doc, t('Browse Microsoft Marketplace'), url));
+		dialog.append(marketplace);
 	} else if (tabs.length) {
 		for (const tab of tabs) {
 			const item = doc.createElement('li');
@@ -179,7 +182,7 @@ export function openOfficeAddIns(
 	void import('./add-in-local-dialog').then(
 		({ mountLocalAddIns }) => {
 			if (dialog.open && dialog.isConnected)
-				mountLocalAddIns(dialog, host, mode, product, locale, t, empty);
+				mountLocalAddIns(dialog, host, mode, product, locale, t, { empty, marketplace });
 		},
 		() => {
 			if (!dialog.open || !dialog.isConnected) return;

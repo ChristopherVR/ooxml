@@ -48,25 +48,102 @@ const messages = new Map<string, readonly [string, string, string, string, strin
 		],
 	],
 	[
-		'Declared origins',
+		'Origins this add-in may load',
 		[
-			'Origines déclarées',
-			'Angegebene Ursprünge',
-			'Orígenes declarados',
-			'声明的来源',
-			'申告されたオリジン',
-			'명시된 원본',
+			'Origines que ce complément peut charger',
+			'Quellen, von denen dieses Add-In Inhalte laden kann',
+			'Orígenes desde los que este complemento puede cargar contenido',
+			'此加载项可能从以下来源加载内容',
+			'このアドインが読み込む可能性のあるオリジン',
+			'이 추가 기능이 콘텐츠를 불러올 수 있는 원본',
 		],
 	],
 	[
-		'Requested permissions',
+		'Review add-in permissions',
 		[
-			'Autorisations demandées',
-			'Angeforderte Berechtigungen',
-			'Permisos solicitados',
-			'请求的权限',
-			'要求された権限',
-			'요청된 권한',
+			'Vérifier les autorisations du complément',
+			'Add-In-Berechtigungen prüfen',
+			'Revisar los permisos del complemento',
+			'审核加载项权限',
+			'アドインのアクセス許可を確認',
+			'추가 기능 권한 검토',
+		],
+	],
+	[
+		'This add-in requests:',
+		[
+			'Ce complément demande les autorisations suivantes :',
+			'Dieses Add-In fordert Folgendes an:',
+			'Este complemento solicita:',
+			'此加载项请求：',
+			'このアドインは次のアクセス許可を要求します。',
+			'이 추가 기능이 다음 권한을 요청합니다.',
+		],
+	],
+	[
+		'Use add-in settings and check the active document view',
+		[
+			'Utiliser les paramètres du complément et consulter l’affichage actif du document',
+			'Add-In-Einstellungen verwenden und die aktive Dokumentansicht prüfen',
+			'Usar la configuración del complemento y consultar la vista activa del documento',
+			'使用加载项设置并查看当前文档视图',
+			'アドインの設定を使用し、文書の現在の表示モードを確認する',
+			'추가 기능 설정을 사용하고 현재 문서 보기를 확인',
+		],
+	],
+	[
+		'Read this document',
+		[
+			'Lire ce document',
+			'Dieses Dokument lesen',
+			'Leer este documento',
+			'读取此文档',
+			'この文書を読み取る',
+			'이 문서 읽기',
+		],
+	],
+	[
+		'Read and obtain a full copy of this document',
+		[
+			'Lire ce document et en obtenir une copie complète',
+			'Dieses Dokument lesen und eine vollständige Kopie abrufen',
+			'Leer y obtener una copia completa de este documento',
+			'读取并获取此文档的完整副本',
+			'この文書を読み取り、完全なコピーを取得する',
+			'이 문서를 읽고 전체 사본 가져오기',
+		],
+	],
+	[
+		'Change the selection in this document',
+		[
+			'Modifier la sélection dans ce document',
+			'Die Auswahl in diesem Dokument ändern',
+			'Modificar la selección de este documento',
+			'更改此文档中选中的内容',
+			'この文書で選択されている内容を書き換える',
+			'이 문서에서 선택한 내용 변경',
+		],
+	],
+	[
+		'Read and change this document',
+		[
+			'Lire et modifier ce document',
+			'Dieses Dokument lesen und ändern',
+			'Leer y modificar este documento',
+			'读取并更改此文档',
+			'この文書を読み取り、変更する',
+			'이 문서 읽기 및 변경',
+		],
+	],
+	[
+		'Request an unsupported permission ({permission})',
+		[
+			'Demander une autorisation non prise en charge ({permission})',
+			'Eine nicht unterstützte Berechtigung anfordern ({permission})',
+			'Solicitar un permiso no compatible ({permission})',
+			'请求不受支持的权限（{permission}）',
+			'未対応のアクセス許可（{permission}）を要求する',
+			'지원되지 않는 권한 요청({permission})',
 		],
 	],
 	[
@@ -198,4 +275,19 @@ export function localAddInText(locale: string, fallback: OfficeServiceText): Off
 	const language = normalizeLocale(locale, locales, 'en');
 	const index = locales.findIndex((candidate) => candidate === language);
 	return (label) => messages.get(label)?.[index] ?? fallback(label);
+}
+
+const permissionLabels = new Map([
+	['Document.Restricted.User', 'Use add-in settings and check the active document view'],
+	['Document.Read.User', 'Read this document'],
+	['Document.ReadAll.User', 'Read and obtain a full copy of this document'],
+	['Document.Write.User', 'Change the selection in this document'],
+	['Document.ReadWrite.User', 'Read and change this document'],
+]);
+
+export function permissionText(permission: string, t: OfficeServiceText): string {
+	const label = permissionLabels.get(permission);
+	return label
+		? t(label)
+		: t('Request an unsupported permission ({permission})').replace('{permission}', permission);
 }

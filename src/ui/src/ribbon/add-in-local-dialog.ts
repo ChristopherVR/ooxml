@@ -10,7 +10,7 @@ import {
 import type { OfficeUiDialog } from '../dialog/dialog';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import type { AddInDialogMode } from './add-in-dialog';
-import { localAddInText } from './add-in-local-strings';
+import { localAddInText, permissionText } from './add-in-local-strings';
 
 const installs = new WeakMap<Node, Map<string, LocalAddIn>>();
 const LIMIT = 32;
@@ -32,7 +32,7 @@ export function mountLocalAddIns(
 	product: OfficeAddInHost,
 	locale: string,
 	translate: OfficeServiceText,
-	empty?: HTMLElement,
+	{ empty, marketplace }: { empty: HTMLElement | undefined; marketplace: HTMLElement | undefined },
 ) {
 	const doc = dialog.ownerDocument;
 	const t = localAddInText(locale, translate);
@@ -109,6 +109,7 @@ export function mountLocalAddIns(
 	input.addEventListener('change', async () => {
 		const token = ++request;
 		preview.replaceChildren();
+		if (marketplace) marketplace.hidden = false;
 		status.textContent = '';
 		const file = input.files?.[0];
 		input.value = '';
@@ -135,15 +136,28 @@ export function mountLocalAddIns(
 			};
 			detail('Declared publisher', manifest.publisher);
 			detail(
-				'Declared origins',
+				'Origins this add-in may load',
 				[...new Set([...manifest.entryOrigins, ...manifest.declaredOrigins])].join(', '),
 			);
-			detail('Requested permissions', manifest.permissions.join(', '));
 			if (previous) detail('Installed version', previous.manifest.version);
-			const consent = doc.createElement('p');
-			consent.textContent = t('Install for this editor session. Add-in code stays inactive.');
-			preview.append(heading, summary, details, consent);
-			appendIssues(preview, manifest);
+			const consent = doc.createElement('section');
+			const title = doc.createElement('h3');
+			title.textContent = t('Review add-in permissions');
+			consent.setAttribute('aria-label', title.textContent);
+			const requests = doc.createElement('p');
+			requests.textContent = t('This add-in requests:');
+			const permissions = doc.createElement('ul');
+			for (const permission of manifest.permissions.length ? manifest.permissions : ['']) {
+				const item = doc.createElement('li');
+				item.textContent = permission ? permissionText(permission, t) : t('None');
+				permissions.append(item);
+			}
+			const notice = doc.createElement('p');
+			notice.textContent = t('Install for this editor session. Add-in code stays inactive.');
+			consent.append(title, requests, permissions, details, notice);
+			preview.append(heading, summary, consent);
+			if (marketplace) marketplace.hidden = true;
+			appendIssues(consent, manifest);
 			if (previous?.digest === digest) {
 				status.textContent = t('This add-in is already installed.');
 				return;
@@ -163,7 +177,7 @@ export function mountLocalAddIns(
 				},
 				manifest.name,
 			);
-			preview.append(confirm);
+			consent.append(confirm);
 			confirm.focus();
 		} catch (error) {
 			if (!alive(token)) return;

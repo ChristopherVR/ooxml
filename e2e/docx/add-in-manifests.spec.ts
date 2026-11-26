@@ -27,6 +27,8 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await get.press('Enter');
 	const preview = editor.locator('office-ui-dialog[open]');
 	const file = preview.getByLabel('Choose a local add-in file');
+	const marketplace = preview.getByRole('link', { name: /Microsoft Marketplace/ });
+	await expect(marketplace).toBeVisible();
 	const source = await readFile(fixture, 'utf8');
 	const select = (xml: string) =>
 		file.setInputFiles({
@@ -35,7 +37,19 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 			buffer: Buffer.from(xml),
 		});
 	await select(source);
-	const install = preview.getByRole('button', { name: 'Install Notes', exact: true });
+	const consent = preview.getByRole('region', { name: 'Review add-in permissions' });
+	await expect(consent.getByRole('heading')).toHaveText('Review add-in permissions');
+	await expect(consent).toContainText('This add-in requests:');
+	await expect(consent).toContainText('Read and change this document');
+	await expect(consent).toContainText('Lab Notes');
+	await expect(consent).toContainText('https://notes.example.test');
+	await expect(consent).toContainText('https://assets.example.test');
+	await expect(consent).not.toContainText('Document.ReadWrite.User');
+	await expect(marketplace).toBeHidden();
+	await expect(
+		preview.getByText('Browse add-ins for Microsoft Office.', { exact: false }),
+	).toBeHidden();
+	const install = consent.getByRole('button', { name: 'Install Notes', exact: true });
 	await expect(install).toBeFocused();
 	await install.press('Enter');
 	await expect(preview).toBeHidden();

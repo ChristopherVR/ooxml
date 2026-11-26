@@ -23,14 +23,24 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 		.file('icons/color.png', new Uint8Array([2]))
 		.file('fr.json', await fixture('fr.json'));
 	const input = dialog.getByLabel('Choose a local add-in file');
+	const marketplace = dialog.getByRole('link', { name: /Microsoft Marketplace/ });
+	await expect(marketplace).toBeVisible();
 	await input.setInputFiles({
 		name: 'notes.zip',
 		mimeType: 'application/zip',
 		buffer: await zip.generateAsync({ type: 'nodebuffer' }),
 	});
-	await expect(dialog).toContainText('Lab Notes');
+	const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
+	await expect(consent.getByRole('heading')).toHaveText('Review add-in permissions');
+	await expect(consent).toContainText('This add-in requests:');
+	await expect(consent).toContainText('Read and change this document');
+	await expect(consent).toContainText('Lab Notes');
+	await expect(consent).toContainText('https://notes.example.test');
+	await expect(consent).toContainText('https://assets.example.test');
+	await expect(consent).not.toContainText('Document.ReadWrite.User');
+	await expect(marketplace).toBeHidden();
 	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
-	await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	await consent.getByRole('button', { name: 'Install Notes', exact: true }).click();
 	await editor.getByRole('button', { name: 'My Add-ins', exact: true }).click();
 	const installed = editor.locator('office-ui-dialog[open]');
 	await expect(installed).toContainText('Running add-ins is unavailable');

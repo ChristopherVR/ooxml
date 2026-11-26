@@ -43,8 +43,13 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	const abandoned = open('getAddIns');
 	await picker(abandoned, xml);
 	await vi.waitFor(() => expect(control(abandoned, 'Install')).toBeDefined());
-	expect(abandoned.textContent).toContain('Document.Read.User');
-	expect(abandoned.textContent).toContain('https://example.test');
+	const consent = abandoned.querySelector('section[aria-label="Review add-in permissions"]');
+	expect(consent?.textContent).toContain('This add-in requests:');
+	expect(consent?.textContent).toContain('Read this document');
+	expect(consent?.textContent).toContain('https://example.test');
+	expect(consent?.textContent).toContain('Lab Notes');
+	expect(consent?.textContent).not.toContain('Document.Read.User');
+	expect(abandoned.querySelector('a')?.parentElement?.hidden).toBe(true);
 	expect(abandoned.querySelector('img, iframe')).toBeNull();
 	abandoned.close();
 	expect(open('myAddIns').textContent).toContain('No add-ins');
