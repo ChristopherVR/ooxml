@@ -83,6 +83,8 @@ export interface EditorProps {
 	 * changes, so keep it stable; `null` or omitted removes the places.
 	 */
 	fileProviders?: readonly CloudFileProvider[] | null | undefined;
+	/** Host names of the video sites Insert > Online Video may embed; the command is hidden without any. */
+	onlineVideoHosts?: readonly string[] | null | undefined;
 	/**
 	 * Host customisation (`WordCustomization`): `capabilities`, `backstage.extraPages` and
 	 * `contextMenu.extraCommands`. Forwarded when the object changes, so keep it stable (memoise
@@ -159,6 +161,7 @@ export const EDITOR_PROP_KEYS = [
 	'collaboration',
 	'storage',
 	'fileProviders',
+	'onlineVideoHosts',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -238,6 +241,11 @@ export const EDITOR_CONTRACT: BindingContract<
 			forward: 'changed',
 			fallback: null,
 			apply: (element, value) => (element.fileProviders = value ?? []),
+		},
+		onlineVideoHosts: {
+			forward: 'changed',
+			fallback: null,
+			apply: (element, value) => (element.onlineVideoHosts = value ?? []),
 		},
 		collaboration: { forward: 'changed', fallback: null, initial: null },
 		documentModel: { forward: 'manual' },

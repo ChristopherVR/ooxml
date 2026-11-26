@@ -125,7 +125,7 @@ describe('collaboration in every binding', () => {
 		// Handlers reach the binding through the contract (`contract-parity.test.ts`).
 		expect(source).toContain('...svelteEditorOptions(value)');
 		expect(source).toMatch(
-			/ribbonAddIns, collaboration, (customization, )?(storage, )?(fileProviders, )?ondocumentchange/,
+			/ribbonAddIns, collaboration, (customization, )?(storage, )?(fileProviders, )?(onlineVideoHosts, )?ondocumentchange/,
 		);
 		expect(source).toContain('onribbonaddin, oncollaborationchange }}');
 	});

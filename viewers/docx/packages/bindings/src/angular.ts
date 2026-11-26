@@ -60,6 +60,7 @@ export class WordEditorComponent implements AfterViewInit, OnChanges, OnDestroy 
 	@Input() collaboration?: DocxCollaborationOptions | null;
 	@Input() storage?: DocumentStorage | null;
 	@Input() fileProviders?: readonly CloudFileProvider[] | null;
+	@Input() onlineVideoHosts?: readonly string[] | null;
 	@Input() customization?: WordCustomization | null;
 	@Output() documentChange = new EventEmitter<DocumentModel>();
 	@Output() documentError = new EventEmitter<Error>();
