@@ -141,8 +141,9 @@ URL and normal request metadata, without a referrer. Answers entered in the fram
 to Microsoft. Closing the dialog removes the frame. Other link actions open the chosen
 destination in a new tab.
 
-Opening Get Add-ins or My Add-ins can load bundled dialog and manifest-reader code from the
-app's origin. The request carries no selected-file or document data. Local installs start
+Opening Get Add-ins or My Add-ins can load bundled dialog code from the app's origin.
+Choosing a file or selecting Install on a host's Store offer can load the bundled manifest
+reader from the same origin. These requests carry no selected-file or document data. Local installs start
 when the user chooses an XML, JSON or ZIP file and confirms the preview. The editor keeps
 the normalized manifest and SHA-256 digest in memory for that editor instance. Removing the
 add-in or closing the editor clears its record. The app saves no install data to device storage

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { setOfficeAddInCatalog } from '../ribbon/add-in-dialog';
+import { setOfficeAddInCatalog } from '../ribbon/add-in-settings';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import type { OfficeUiRibbon } from '../ribbon/ribbon-tabs';
 import { DocxEditorElement, registerDocxEditor } from './index';

@@ -10,14 +10,14 @@ export * from './glyph';
 export * from './icons';
 export * from './embedding/index';
 export * from './ribbon/add-in-tabs';
+export { defineOfficeAddInsDialog } from './ribbon/add-in-dialog';
 export {
-	defineOfficeAddInsDialog,
 	setOfficeAddInCatalog,
 	setOfficeAddInStorefront,
 	type OfficeAddInCatalogEntry,
 	type OfficeAddInOffer,
 	type OfficeAddInStorefront,
-} from './ribbon/add-in-dialog';
+} from './ribbon/add-in-settings';
 export * from './presence';
 export * from './smartart';
 export * from './teams/index';

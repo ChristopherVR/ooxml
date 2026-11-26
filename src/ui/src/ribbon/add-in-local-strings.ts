@@ -284,9 +284,12 @@ const messages = new Map<string, readonly [string, string, string, string, strin
 	],
 ]);
 
+export function addInLocale(locale: string): string {
+	return normalizeLocale(locale, locales, 'en');
+}
+
 export function localAddInText(locale: string, fallback: OfficeServiceText): OfficeServiceText {
-	const language = normalizeLocale(locale, locales, 'en');
-	const index = locales.findIndex((candidate) => candidate === language);
+	const index = locales.findIndex((candidate) => candidate === locale);
 	return (label) => messages.get(label)?.[index] ?? fallback(label);
 }
 

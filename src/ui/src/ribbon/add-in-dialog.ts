@@ -7,33 +7,9 @@ import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/offic
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
 
-/** Trusted host commands for add-ins that are already implemented by the host. */
-export interface OfficeAddInCatalogEntry {
-	id: string;
-	label: string;
-	install: () => void | Promise<void>;
-	remove?: () => void | Promise<void>;
-}
-
-/** An opt-in storefront offer. The dialog validates these bytes before asking for consent. */
-export interface OfficeAddInOffer {
-	id: string;
-	label: string;
-	read(signal: AbortSignal): File | Promise<File>;
-}
-
-export type OfficeAddInStorefront =
-	| 'off'
-	| { kind: 'microsoft'; url?: string; label?: string }
-	| { kind: 'catalog'; entries: readonly OfficeAddInOffer[] };
-
 export type AddInDialogHost = HTMLElement | ShadowRoot;
 
-const CATALOG = Symbol.for('office-ui.add-in-catalog');
-const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
-const ENTRY_LIMIT = 128;
-const DEFAULT_STOREFRONT: OfficeAddInStorefront = { kind: 'microsoft' };
 const LOAD_ERRORS = new Map([
 	['fr', 'Impossible de charger les compléments.'],
 	['de', 'Add-Ins konnten nicht geladen werden.'],
@@ -43,46 +19,19 @@ const LOAD_ERRORS = new Map([
 	['ko', '추가 기능을 불러오지 못했습니다.'],
 ]);
 const LOCALES = [...LOAD_ERRORS.keys()];
-type HostSettings = AddInDialogHost & {
-	[CATALOG]?: readonly OfficeAddInCatalogEntry[];
-	[STOREFRONT]?: OfficeAddInStorefront;
+type PendingHost = AddInDialogHost & {
 	[OPENING]?: boolean;
 };
 
-/** Set or clear the trusted catalog for a single editor or host container. */
-export function setOfficeAddInCatalog(
-	host: AddInDialogHost,
-	entries: readonly OfficeAddInCatalogEntry[],
-): void {
-	const target: HostSettings = host;
-	if (entries.length) target[CATALOG] = entries.slice(0, ENTRY_LIMIT);
-	else delete target[CATALOG];
-}
-
-/** Set a storefront for one editor or host container. The default is the Microsoft handoff. */
-export function setOfficeAddInStorefront(
-	host: AddInDialogHost,
-	storefront: OfficeAddInStorefront,
-): void {
-	const target: HostSettings = host;
-	target[STOREFRONT] =
-		storefront !== 'off' && storefront.kind === 'catalog'
-			? { kind: 'catalog', entries: storefront.entries.slice(0, ENTRY_LIMIT) }
-			: storefront;
-}
-
-function addInSettings(host: AddInDialogHost, opener: Element | null) {
-	let catalog: readonly OfficeAddInCatalogEntry[] | undefined;
-	let storefront: OfficeAddInStorefront | undefined;
+function addInScopes(host: AddInDialogHost, opener: Element | null): AddInDialogHost[] {
+	const scopes: AddInDialogHost[] = [];
 	const start = opener instanceof HTMLElement && composedWithin(opener, host) ? opener : host;
 	for (let current: AddInDialogHost | null = start; current;) {
-		const settings: HostSettings = current;
-		catalog ??= settings[CATALOG];
-		storefront ??= settings[STOREFRONT];
+		scopes.push(current);
 		const parent: Node | null = current instanceof ShadowRoot ? current.host : current.parentNode;
 		current = parent instanceof HTMLElement || parent instanceof ShadowRoot ? parent : null;
 	}
-	return { catalog: catalog ?? [], storefront: storefront ?? DEFAULT_STOREFRONT };
+	return scopes;
 }
 
 /** PowerPoint may render ribbon controls inside a shadow tree or a standalone toolbar. */
@@ -107,9 +56,8 @@ export interface OpenAddInsOptions {
 	mode: AddInDialogMode;
 	t: OfficeServiceText;
 	product: AddInDialogProduct;
-	locale: string;
 	manifestLocale: string;
-	settings: ReturnType<typeof addInSettings>;
+	scopes: readonly AddInDialogHost[];
 }
 
 export async function openOfficeAddIns(
@@ -119,7 +67,7 @@ export async function openOfficeAddIns(
 	product: AddInDialogProduct,
 	locale: string,
 ): Promise<void> {
-	const pending: HostSettings = host;
+	const pending: PendingHost = host;
 	if (
 		pending[OPENING] ||
 		[...host.children].some((child) =>
@@ -128,17 +76,14 @@ export async function openOfficeAddIns(
 	)
 		return;
 	const opener = modalActiveElement(host.ownerDocument);
-	const settings = addInSettings(host, opener);
+	// The command may leave a folded popup before the dialog module finishes loading.
+	const scopes = addInScopes(host, opener);
 	const restore = addInReturnFocus(opener);
-	const language = normalizeLocale(locale, LOCALES, 'en');
 	pending[OPENING] = true;
 	try {
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
 		if (host.isConnected) {
-			mountAddInsDialog(
-				{ host, mode, t, product, locale: language, manifestLocale: locale, settings },
-				restore,
-			);
+			mountAddInsDialog({ host, mode, t, product, manifestLocale: locale, scopes }, restore);
 		}
 	} catch {
 		if (!host.isConnected) return;
@@ -146,6 +91,7 @@ export async function openOfficeAddIns(
 		dialog.setAttribute('data-office-add-ins-fallback', '');
 		const status = host.ownerDocument.createElement('p');
 		status.setAttribute('role', 'status');
+		const language = normalizeLocale(locale, LOCALES, 'en');
 		status.textContent = LOAD_ERRORS.get(language) ?? 'Could not load add-ins.';
 		dialog.append(status);
 		dialog.addEventListener('office-dialog-closed', (event) => {

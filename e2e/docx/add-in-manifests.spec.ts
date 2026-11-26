@@ -129,6 +129,12 @@ test('opens the Marketplace only on click and supports turning off the Store', a
 
 test('loads Office Add-ins on first open and fits the dark editor on a phone', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
+	const manifestCode = '**/assets/add-in-manifest-file-*.js';
+	let requestedManifestCode = false;
+	await page.route(manifestCode, (route) => {
+		requestedManifestCode = true;
+		return route.continue();
+	});
 	let release = () => {};
 	let requested = false;
 	const gate = new Promise<void>((resolve) => {
@@ -153,6 +159,7 @@ test('loads Office Add-ins on first open and fits the dark editor on a phone', a
 		await expect(dialog).toHaveCount(0);
 		release();
 		await expect(dialog).toBeVisible();
+		expect(requestedManifestCode).toBe(false);
 		const background = () => dialog.evaluate((box) => getComputedStyle(box).backgroundColor);
 		const light = await background();
 		await editor.evaluate((element) => element.setAttribute('theme', 'dark'));
@@ -166,6 +173,14 @@ test('loads Office Add-ins on first open and fits the dark editor on a phone', a
 				.locator('office-ui-add-ins-dialog')
 				.getByRole('button', { name: 'Close', exact: true }),
 		).toBeVisible();
+		const validator = page.waitForRequest(manifestCode);
+		await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+			name: 'notes.xml',
+			mimeType: 'application/xml',
+			buffer: await readFile(fixture),
+		});
+		await validator;
+		await expect(dialog.getByRole('region', { name: 'Review add-in permissions' })).toBeVisible();
 	} finally {
 		release();
 	}

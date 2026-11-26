@@ -661,8 +661,8 @@ Pass `'off'` to remove the Store pivot and open Get Add-ins on My Add-ins.
 Word, Excel and PowerPoint accept local task-pane XML manifests and unified JSON or
 ZIP files through Upload My Add-in. Visio supports trusted host entries and displays
 why manifest installation is unavailable. Confirmed manifest installs stay in editor
-memory until removal or editor close. The app loads the dialog and validator on demand
-and makes no requests to manifest origins. My Add-ins reports manifest execution as
+memory until removal or editor close. The app loads the dialog on open and the validator
+when the user selects a package. It makes no requests to manifest origins. My Add-ins reports manifest execution as
 unavailable. Forms in PowerPoint and Excel saves Microsoft Forms response links. The
 PowerPoint presenter can load the linked form in a frame or open it in the browser.
 Cameo requests video access on preview activation and keeps the feed on the device.

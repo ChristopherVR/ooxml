@@ -1,6 +1,6 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { glyph } from '../glyph';
-import type { OfficeAddInOffer } from '../ribbon/add-in-dialog';
+import type { OfficeAddInOffer } from '../ribbon/add-in-settings';
 import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 import type { AddInSession, Pivot } from './add-ins-dialog';
 

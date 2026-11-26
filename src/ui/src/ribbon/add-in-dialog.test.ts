@@ -1,7 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
-import { openOfficeAddIns, setOfficeAddInCatalog, setOfficeAddInStorefront } from './add-in-dialog';
+import { openOfficeAddIns } from './add-in-dialog';
+import { setOfficeAddInCatalog, setOfficeAddInStorefront } from './add-in-settings';
 
 const description = "<img src='https://example.test/description' />";
 const descriptionPrefix = `${description}${'📝'.repeat(249 - description.length)}`;

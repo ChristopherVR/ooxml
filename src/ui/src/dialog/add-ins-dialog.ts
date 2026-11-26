@@ -3,16 +3,12 @@ import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
+import { addInSettings } from '../ribbon/add-in-settings';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
-import {
-	addInError,
-	installAddIn,
-	localAddIns,
-	readAddInFile,
-} from '../ribbon/add-in-local-dialog';
+import { installAddIn, localAddIns } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
 import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
-import { localAddInText } from '../ribbon/add-in-local-strings';
+import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
 
@@ -20,9 +16,10 @@ const PIVOTS = ['My Add-ins', 'Admin Managed', 'Store'] as const;
 export type Pivot = (typeof PIVOTS)[number];
 
 function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
-	const { host, locale, manifestLocale, t, product } = options;
+	const { host, manifestLocale, t, product, scopes } = options;
+	const locale = addInLocale(manifestLocale);
 	return {
-		...options.settings,
+		...addInSettings(scopes),
 		installed: localAddIns(host),
 		tabs: editorAddIns(host),
 		t: localAddInText(locale, t),
@@ -110,15 +107,24 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const pending = (this.#pending = new AbortController());
 		this.#message = session.t('Loading add-ins…');
 		this.requestUpdate();
+		let manifestReader: typeof import('../ribbon/add-in-manifest-file') | undefined;
 		try {
+			manifestReader = await import('../ribbon/add-in-manifest-file');
+			if (pending.signal.aborted || !this.shell?.open) return;
 			const file = await source(pending.signal);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			const addIn = await readAddInFile(file, session.product, session.manifestLocale);
+			const addIn = await manifestReader.readAddInFile(
+				file,
+				session.product,
+				session.manifestLocale,
+			);
 			if (pending.signal.aborted || !this.shell?.open) return;
 			this.#preview = { addIn, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';
 		} catch (error) {
-			this.#message = session.t(addInError(error));
+			this.#message = session.t(
+				manifestReader?.addInError(error) ?? 'Could not update the add-in.',
+			);
 		} finally {
 			this.#pending = undefined;
 			if (this.shell?.open) {
