@@ -71,3 +71,28 @@ test('the caret skips hidden paragraphs and a selected collapsed heading acts on
 	await page.keyboard.press('Control+z');
 	await expect(surface.locator(':scope > p')).toHaveText(['Next', 'Topic', 'Nested', 'Body']);
 });
+
+test('rapid Outline commands undo and redo one level change at a time', async ({ page }) => {
+	const editor = await openOutline(page);
+	const child = editor.getByRole('heading', { name: 'Nested', exact: true });
+	await child.click();
+	const demote = editor.getByRole('button', { name: 'Demote', exact: true });
+	const promote = editor.getByRole('button', { name: 'Promote', exact: true });
+	// Both edits occur inside ProseMirror's normal history grouping window.
+	await demote.evaluate((button) => {
+		if (!(button instanceof HTMLButtonElement)) throw new Error('Expected a demote button');
+		button.click();
+		button.click();
+	});
+	await expect(child).toHaveAttribute('aria-level', '4');
+	await page.keyboard.press('Control+z');
+	await expect(child).toHaveAttribute('aria-level', '3');
+	await page.keyboard.press('Control+z');
+	await expect(child).toHaveAttribute('aria-level', '2');
+	await page.keyboard.press('Control+y');
+	await expect(child).toHaveAttribute('aria-level', '3');
+	await promote.click();
+	await expect(child).toHaveAttribute('aria-level', '2');
+	await page.keyboard.press('Control+z');
+	await expect(child).toHaveAttribute('aria-level', '3');
+});

@@ -1,6 +1,7 @@
 import {
 	canChangeOutlineLevel,
 	changeOutlineLevel,
+	dispatchIsolatedCommand,
 	indexOutline,
 	moveOutline,
 	OUTLINE_BODY,
@@ -9,8 +10,7 @@ import {
 	visibleOutline,
 	type OutlineEntry,
 } from 'ooxml-core/docx/ui';
-import { closeHistory } from 'prosemirror-history';
-import type { EditorState } from 'prosemirror-state';
+import type { EditorState, Transaction } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
 	mountViewStyle,
@@ -96,6 +96,12 @@ export function mountView(host: ViewHost): ViewPresentation {
 		view.dispatch(view.state.tr.setMeta(outlineKey, true));
 	}
 
+	function edit(view: EditorView, transaction: Transaction | undefined) {
+		if (transaction)
+			dispatchIsolatedCommand(view.state, view.dispatch, transaction.scrollIntoView());
+		focusView(view);
+	}
+
 	return {
 		sync,
 		run(action: OutlineAction) {
@@ -131,8 +137,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 				case 'down': {
 					if (!entry || !allowsEdit(view)) return;
 					const tr = moveOutline(state, entries, entry, action.key === 'up' ? -1 : 1);
-					if (tr) view.dispatch(closeHistory(tr.scrollIntoView()));
-					focusView(view);
+					edit(view, tr);
 					break;
 				}
 				case 'promote':
@@ -151,9 +156,8 @@ export function mountView(host: ViewHost): ViewPresentation {
 							level = OUTLINE_BODY;
 							collapsed.clear();
 						}
-						view.dispatch(closeHistory(tr.scrollIntoView()));
 					}
-					focusView(view);
+					edit(view, tr);
 					break;
 				}
 				case 'close':
