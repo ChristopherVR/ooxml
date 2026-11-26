@@ -49,8 +49,8 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 	const index = indexInkMl(data);
 	if (!index || !nsGet(data, 'ink')) return { strokes: [], rawXml: data };
 	const brushes = collectBrushes(index.brushes);
-	const channelOrder = resolveChannelOrder(index.traceFormats[0]);
-	const timingFor = inkMlTiming(index);
+	const timing = inkMlTiming(index);
+	const channelOrders = new Map<XmlObject | undefined, string[]>();
 
 	// Bounds cover the whole part, so normalisation keeps strokes together.
 	let remainingSamples = MAX_INK_PART_SAMPLES;
@@ -63,6 +63,12 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 		const count = Math.max(traceSamples, pathSamples);
 		if (count > remainingSamples) return [];
 		remainingSamples -= count;
+		const format = timing.formatFor(trace);
+		let channelOrder = channelOrders.get(format);
+		if (!channelOrder) {
+			channelOrder = resolveChannelOrder(format);
+			channelOrders.set(format, channelOrder);
+		}
 		const order = authored
 			? [
 					'X',
@@ -106,7 +112,7 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 		const pressures = pointsToPressures(entry.points, entry.order, Boolean(entry.authored));
 		const tilt = pointsToTilt(entry.points, entry.order);
 		const timestamps = entry.untimed ? [] : pointsToTimestamps(entry.points, entry.order);
-		const { pointTimestamps, ...timing } = timingFor(entry.trace, timestamps);
+		const { pointTimestamps, ...strokeTiming } = timing.read(entry.trace, timestamps);
 		strokes.push({
 			...brush,
 			path,
@@ -120,7 +126,7 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 				: tilt
 					? { tiltAngles: tilt.angles, tiltMagnitudes: tilt.magnitudes }
 					: {}),
-			...timing,
+			...strokeTiming,
 			...(pointTimestamps.length > 0 ? { pointTimestamps } : {}),
 		});
 	}

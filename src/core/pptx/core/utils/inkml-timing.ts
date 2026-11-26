@@ -1,5 +1,5 @@
 import type { XmlObject } from '../types';
-import type { InkMlIndex } from './inkml-limits';
+import { countInkTraceSamples, type InkMlIndex } from './inkml-limits';
 import { ensureArray, nsAttr, nsGet } from './inkml-trace-decode';
 
 function numberAttribute(node: XmlObject, key: string): number | undefined {
@@ -47,30 +47,65 @@ export function inkMlTiming(index: InkMlIndex) {
 		clockCache.set(stamp, value);
 		return value;
 	}
-	const format = index.traceFormats[0];
-	const channel =
-		format &&
-		ensureArray(nsGet(format, 'channel')).find(
+	function contextFor(trace: XmlObject | string): XmlObject | undefined {
+		return typeof trace === 'object' ? contexts.get(reference(trace, 'contextRef')) : undefined;
+	}
+	function formatFor(trace: XmlObject | string): XmlObject | undefined {
+		const context = contextFor(trace);
+		const source = context && ensureArray(nsGet(context, 'inkSource'))[0];
+		return (
+			(context && ensureArray(nsGet(context, 'traceFormat'))[0]) ??
+			(source && ensureArray(nsGet(source, 'traceFormat'))[0]) ??
+			index.traceFormats[0]
+		);
+	}
+	const formatClocks = new Map<XmlObject, { channelBase: number | undefined; scale: number }>();
+	function channelClock(format: XmlObject | undefined) {
+		if (!format) return { channelBase: undefined, scale: 1 };
+		const cached = formatClocks.get(format);
+		if (cached) return cached;
+		const channel = ensureArray(nsGet(format, 'channel')).find(
 			(value) => String(nsAttr(value, 'name')).toUpperCase() === 'T',
 		);
-	const unit = channel ? nsAttr(channel, 'units') : undefined;
-	const channelBase = channel ? clock(timestamps.get(reference(channel, 'respectTo'))) : undefined;
-	const scale = unit === 's' ? 1000 : unit === 'us' ? 0.001 : 1;
-	return (trace: XmlObject | string, samples: number[]) => {
-		if (typeof trace !== 'object') return { pointTimestamps: samples };
-		const context = contexts.get(reference(trace, 'contextRef'));
+		const unit = channel ? nsAttr(channel, 'units') : undefined;
+		const result = {
+			channelBase: channel ? clock(timestamps.get(reference(channel, 'respectTo'))) : undefined,
+			scale: unit === 's' ? 1000 : unit === 'us' ? 0.001 : 1,
+		};
+		formatClocks.set(format, result);
+		return result;
+	}
+	function read(trace: XmlObject | string, samples: number[]) {
+		const { channelBase, scale } = channelClock(formatFor(trace));
+		if (typeof trace !== 'object') {
+			return { pointTimestamps: samples.map((sample) => sample * scale + (channelBase ?? 0)) };
+		}
+		const context = contextFor(trace);
 		const contextStamp = context ? ensureArray(nsGet(context, 'timestamp'))[0] : undefined;
 		const base = clock(timestamps.get(reference(trace, 'timestampRef'))) ?? clock(contextStamp);
 		const offset = numberAttribute(trace, 'timeOffset');
 		const startTimestamp =
 			base === undefined && offset === undefined ? undefined : (base ?? 0) + (offset ?? 0);
 		const durationMs = numberAttribute(trace, 'duration');
+		const extension = trace['@_pva:sampleTimes'];
+		let pointTimestamps = samples.map(
+			(sample) => sample * scale + (channelBase ?? startTimestamp ?? 0),
+		);
+		if (
+			typeof extension === 'string' &&
+			base !== undefined &&
+			countInkTraceSamples(extension) !== undefined
+		) {
+			const offsets = extension.split(',').map(Number);
+			if (offsets.every(Number.isSafeInteger)) {
+				pointTimestamps = offsets.map((offset) => offset + base);
+			}
+		}
 		return {
-			pointTimestamps: samples.map(
-				(sample) => sample * scale + (channelBase ?? startTimestamp ?? 0),
-			),
+			pointTimestamps,
 			...(startTimestamp !== undefined ? { startTimestamp } : {}),
 			...(durationMs !== undefined && durationMs > 0 ? { durationMs } : {}),
 		};
-	};
+	}
+	return { formatFor, read };
 }

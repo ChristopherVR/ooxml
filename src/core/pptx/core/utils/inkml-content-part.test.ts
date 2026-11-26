@@ -432,3 +432,25 @@ describe('InkML decode budgets', () => {
 		expect(strokes[0]?.path.match(/[ML]/gu)).toHaveLength(MAX_INK_SAMPLES);
 	});
 });
+
+it('uses integer offsets and a separate context for untimed strokes', () => {
+	const epoch = Date.parse('2026-01-02T03:04:05.678Z');
+	const stroke = { path: 'M 0 0 L 20 10', color: '#000000', width: 2, opacity: 1 };
+	const part = buildInkMlContent([
+		{ ...stroke, startTimestamp: epoch, pointTimestamps: [epoch, epoch + 17.4] },
+		stroke,
+		{ ...stroke, pointTimestamps: [epoch + 230, epoch + 254] },
+	]);
+	const json = JSON.stringify(part);
+	expect(json).toContain('"@_timeString":"2026-01-02T03:04:05.678Z"');
+	expect(json).not.toContain('"@_name":"T"');
+	expect(json).toContain('"@_pva:sampleTimes":"0,17"');
+	expect(json).toContain('"@_pva:sampleTimes":"230,254"');
+	expect(json).toContain('"#text":"0 0 0.5, 20 10 0.5"');
+	expect(json).not.toContain('pva:untimed');
+	expect(parseInkMlContent(part).strokes.map((item) => item.pointTimestamps)).toEqual([
+		[epoch, epoch + 17],
+		undefined,
+		[epoch + 230, epoch + 254],
+	]);
+});

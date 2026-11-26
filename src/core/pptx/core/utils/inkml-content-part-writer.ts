@@ -1,4 +1,5 @@
 import type { ContentPartInkStroke, XmlObject } from '../types';
+import { resolveInkClock, strokeStart, timestampOffset } from './inkml-write-clock';
 
 /**
  * The writer half of `inkml-content-part.ts` (split out to keep both files
@@ -62,8 +63,8 @@ export function buildInkMlContent(
 	// anywhere must serialise byte-identically to before this feature existed:
 	// no extra channels, no extra trailing columns.
 	const tiltMode = resolveTiltMode(strokes);
-	const timed = strokes.some((stroke) => stroke.pointTimestamps?.some(Number.isFinite));
-	const hasClock = timed || strokes.some((stroke) => Number.isFinite(stroke.startTimestamp));
+	const clock = resolveInkClock(strokes);
+	const mixed = clock !== undefined && strokes.some((stroke) => strokeStart(stroke) === undefined);
 	// Verified against real PowerPoint COM behaviour: a plain `<ink:traceFormat>`
 	// / `<ink:brush>` / `id="..."` part (this project's ORIGINAL authored
 	// dialect) passes this project's own lenient reader and internal schema
@@ -84,16 +85,9 @@ export function buildInkMlContent(
 	// values (already this project's own dialect) open fine once the
 	// structural requirements above are met.
 	root['ink:definitions'] = {
-		...(hasClock ? { 'ink:timestamp': { '@_xml:id': 'clock', '@_time': '0' } } : {}),
-		'ink:context': {
-			'@_xml:id': 'ctx0',
-			'ink:inkSource': {
-				'@_xml:id': 'inkSrc0',
-				'ink:traceFormat': {
-					'ink:channel': buildTraceFormatChannels(tiltMode, timed),
-				},
-			},
-		},
+		'ink:context': mixed
+			? [buildContext('ctx0', tiltMode, clock), buildContext('ctx1', tiltMode)]
+			: buildContext('ctx0', tiltMode, clock),
 		'ink:brush': strokes.map((stroke, index) => ({
 			'@_xml:id': `brush${index + 1}`,
 			'ink:brushProperty': [
@@ -103,17 +97,19 @@ export function buildInkMlContent(
 			],
 		})),
 	};
-	root['ink:trace'] = strokes.map((stroke, index) => ({
-		'@_contextRef': '#ctx0',
-		'@_brushRef': `#brush${index + 1}`,
-		'@_pva:path': stroke.path,
-		...(Number.isFinite(stroke.startTimestamp)
-			? { '@_timestampRef': '#clock', '@_timeOffset': String(stroke.startTimestamp) }
-			: {}),
-		...(Number.isFinite(stroke.durationMs) ? { '@_duration': String(stroke.durationMs) } : {}),
-		...(timed && !stroke.pointTimestamps?.length ? { '@_pva:untimed': '1' } : {}),
-		'#text': pathToTrace(stroke, tiltMode, timed),
-	}));
+	root['ink:trace'] = strokes.map((stroke, index) => {
+		const start = strokeStart(stroke);
+		return {
+			'@_contextRef': mixed && start === undefined ? '#ctx1' : '#ctx0',
+			'@_brushRef': `#brush${index + 1}`,
+			'@_pva:path': stroke.path,
+			...(clock && start !== undefined
+				? { '@_timestampRef': '#clock', '@_timeOffset': timestampOffset(start, clock.base) }
+				: {}),
+			...(Number.isFinite(stroke.durationMs) ? { '@_duration': String(stroke.durationMs) } : {}),
+			...pathToTrace(stroke, tiltMode, clock?.base),
+		};
+	});
 	// The rewritten root replaces whatever prefix the source used, and the
 	// source's own definitions/traces must not survive beside it. Also drop a
 	// root-level `ink:traceFormat`/`ink:brush` a PRE-fix version of this writer
@@ -152,8 +148,25 @@ function localNameOf(key: string): string {
 	return colon >= 0 ? key.slice(colon + 1) : key;
 }
 
+function buildContext(
+	id: string,
+	mode: TiltMode,
+	clock?: ReturnType<typeof resolveInkClock>,
+): XmlObject {
+	return {
+		'@_xml:id': id,
+		'ink:inkSource': {
+			'@_xml:id': `inkSrc${id.slice(3)}`,
+			'ink:traceFormat': { 'ink:channel': buildTraceFormatChannels(mode) },
+		},
+		...(clock
+			? { 'ink:timestamp': { '@_xml:id': 'clock', '@_timeString': clock.timeString } }
+			: {}),
+	};
+}
+
 /** The three (no tilt), five (vector), or five (azimuth/altitude) `<ink:channel>` declarations for the shared traceFormat. */
-function buildTraceFormatChannels(mode: TiltMode, timed: boolean): XmlObject[] {
+function buildTraceFormatChannels(mode: TiltMode): XmlObject[] {
 	const channels: XmlObject[] = [
 		{ '@_name': 'X', '@_type': 'decimal' },
 		{ '@_name': 'Y', '@_type': 'decimal' },
@@ -182,9 +195,6 @@ function buildTraceFormatChannels(mode: TiltMode, timed: boolean): XmlObject[] {
 			{ '@_name': 'ALTITUDE', '@_type': 'decimal' },
 		);
 	}
-	if (timed) {
-		channels.push({ '@_name': 'T', '@_type': 'decimal', '@_units': 'ms', '@_respectTo': '#clock' });
-	}
 	return channels;
 }
 
@@ -202,25 +212,37 @@ function tiltOf(stroke: ContentPartInkStroke): TiltChannels | undefined {
 		: undefined;
 }
 
-function pathToTrace(stroke: ContentPartInkStroke, mode: TiltMode, timed: boolean): string {
+function pathToTrace(
+	stroke: ContentPartInkStroke,
+	mode: TiltMode,
+	base: number | undefined,
+): XmlObject {
 	const { path, pressures, pointTimestamps } = stroke;
 	const tilt = tiltOf(stroke);
 	const points = [...path.matchAll(/[ML]\s*(?<x>[\d.eE+-]+)[,\s]+(?<y>[\d.eE+-]+)/giu)];
-	if (points.length === 0) {
-		return path;
-	}
-	return points
+	if (points.length === 0) return { '#text': path };
+
+	// PowerPoint 16 rejects T in the trace format. Keep the same integer
+	// offsets in our metadata and leave the native coordinate channels readable.
+	const offsets: string[] = [];
+	const timed = base !== undefined && pointTimestamps?.some(Number.isFinite);
+	let sample = strokeStart(stroke) ?? base ?? 0;
+	const text = points
 		.map((point, index) => {
-			const pressure = Math.max(0, Math.min(1, pressures?.[index] ?? 0.5));
-			const time = timed ? ` ${pointTimestamps?.[index] ?? pointTimestamps?.at(-1) ?? 0}` : '';
-			if (mode === 'none') {
-				return `${point.groups?.x} ${point.groups?.y} ${pressure}${time}`;
+			if (timed) {
+				const recorded = pointTimestamps?.[index];
+				if (typeof recorded === 'number' && Number.isFinite(recorded)) sample = recorded;
+				offsets.push(timestampOffset(sample, base));
 			}
+			const pressure = Math.max(0, Math.min(1, pressures?.[index] ?? 0.5));
+			const xyf = `${point.groups?.x} ${point.groups?.y} ${pressure}`;
+			if (mode === 'none') return xyf;
 			const { a, b } =
 				mode === 'azimuthAltitude' ? azimuthAltitudeAt(tilt, index) : tiltOffsetAt(tilt, index);
-			return `${point.groups?.x} ${point.groups?.y} ${pressure} ${a} ${b}${time}`;
+			return `${xyf} ${a} ${b}`;
 		})
 		.join(', ');
+	return { '#text': text, ...(offsets.length ? { '@_pva:sampleTimes': offsets.join(',') } : {}) };
 }
 
 /**

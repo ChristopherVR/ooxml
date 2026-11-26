@@ -51,7 +51,9 @@ test('shared Draw choices retain native ink, undo and saved strokes', async ({ p
 	const ink = await zip.file('ppt/ink/ink1.xml')!.async('string');
 	expect(ink).toMatch(/name="width" value="16"/u);
 	expect(ink).toMatch(/name="color" value="#ff0000"/u);
-	expect(ink).toMatch(/<ink:channel[^>]*name="T"[^>]*units="ms"/u);
+	expect(ink).toMatch(/<ink:timestamp[^>]*timeString="[^"]+Z"/u);
+	expect(ink).toMatch(/pva:sampleTimes="0(?:,\d+)+"/u);
+	expect(ink).not.toMatch(/<ink:channel[^>]*name="T"/u);
 	await loadDeck(page, saved);
 	// PowerPoint stores authored strokes as editable InkML content parts.
 	const savedStroke = viewport(page)
