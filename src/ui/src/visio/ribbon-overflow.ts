@@ -15,6 +15,7 @@ export const GROUP_ICONS: Readonly<Record<string, string>> = {
 	Illustrations: 'visioPicture',
 	'Diagram Parts': 'connector',
 	Links: 'visioLink',
+	'Add-ins': 'addIns',
 	Text: 'textBox',
 	'Page Setup': 'fitPage',
 	Themes: 'quickStyles',
