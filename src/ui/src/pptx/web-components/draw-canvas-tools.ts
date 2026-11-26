@@ -4,7 +4,14 @@ import type { InkCoordinate, SlideInkStroke } from 'ooxml-core/pptx/editor/ink';
 
 import { DRAW_STAGE } from '../render/draw-canvas';
 import { setDrawPencil, setDrawRulerProjection } from '../render/ink-drawing';
-import { drawOverlay, inkOverlayPath, paintLasso, stagePoint } from './draw-surface';
+import {
+	captureStagePoint,
+	createLassoGesturePath,
+	drawOverlay,
+	inkOverlayPath,
+	paintLassoSelection,
+	setInkOverlayPoints,
+} from './draw-surface';
 
 export function createCanvasInkTools(
 	root: HTMLElement,
@@ -24,7 +31,15 @@ export function createCanvasInkTools(
 	let pencil = false;
 	let rulerVisible = false;
 	let angle = 0;
-	let gesture: { id: number; points: InkCoordinate[] } | undefined;
+	let gesture:
+		| {
+				id: number;
+				points: InkCoordinate[];
+				project: ReturnType<typeof captureStagePoint>;
+				path: SVGPathElement;
+		  }
+		| undefined;
+	let frame: number | undefined;
 	const all = () => (strokes ??= slide ? collectSlideInk(slide.elements) : []);
 	const removeRuler = () => {
 		if (stage) {
@@ -68,23 +83,32 @@ export function createCanvasInkTools(
 				: point;
 		});
 	};
-	const paint = () => {
-		if (!stage || (!gesture && !selection.length)) {
+	const clearGesture = () => {
+		if (frame !== undefined) win?.cancelAnimationFrame(frame);
+		frame = undefined;
+		gesture?.path.remove();
+		gesture = undefined;
+	};
+	const showLasso = (target: HTMLElement) => {
+		if (!lasso?.isConnected) {
+			lasso = drawOverlay(target);
+			lasso.dataset.pptxDrawLasso = '';
+		}
+		return lasso;
+	};
+	const paintSelection = () => {
+		if (!stage || !selection.length) {
 			lasso?.remove();
 			lasso = undefined;
 			return;
 		}
-		if (!lasso?.isConnected) {
-			lasso = drawOverlay(stage);
-			lasso.dataset.pptxDrawLasso = '';
-		}
-		paintLasso(lasso, gesture?.points ?? [], selection);
+		paintLassoSelection(showLasso(stage), selection);
 	};
 	const cancel = () => {
 		armed = false;
-		gesture = undefined;
+		clearGesture();
 		selection = [];
-		paint();
+		paintSelection();
 	};
 	const onDown = (event: PointerEvent) => {
 		if (
@@ -100,8 +124,15 @@ export function createCanvasInkTools(
 		event.preventDefault();
 		event.stopImmediatePropagation();
 		selection = [];
-		gesture = { id: event.pointerId, points: [stagePoint(stage, event)] };
-		paint();
+		const project = captureStagePoint(stage);
+		const points = [project(event)];
+		paintSelection();
+		gesture = {
+			id: event.pointerId,
+			project,
+			points,
+			path: createLassoGesturePath(showLasso(stage), points),
+		};
 	};
 	const onMove = (event: PointerEvent) => {
 		if (!stage || gesture?.id !== event.pointerId) {
@@ -109,14 +140,17 @@ export function createCanvasInkTools(
 		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		const point = stagePoint(stage, event);
+		const point = gesture.project(event);
 		const last = gesture.points.at(-1);
 		if (last && Math.hypot(last.x - point.x, last.y - point.y) >= 2) {
 			if (gesture.points.length === 255) {
 				gesture.points = gesture.points.filter((_, index) => index % 2 === 0);
 			}
 			gesture.points.push(point);
-			paint();
+			frame ??= win?.requestAnimationFrame(() => {
+				frame = undefined;
+				if (gesture) setInkOverlayPoints(gesture.path, gesture.points);
+			});
 		}
 	};
 	const onUp = (event: PointerEvent) => {
@@ -125,9 +159,9 @@ export function createCanvasInkTools(
 		}
 		event.preventDefault();
 		event.stopImmediatePropagation();
-		selection = lassoSlideInk(all(), [...gesture.points, stagePoint(stage, event)]);
-		gesture = undefined;
-		paint();
+		selection = lassoSlideInk(all(), [...gesture.points, gesture.project(event)]);
+		clearGesture();
+		paintSelection();
 		handlers.onSelection();
 	};
 	root.addEventListener('pointerdown', onDown, capture);
@@ -137,8 +171,8 @@ export function createCanvasInkTools(
 		'pointercancel',
 		(event) => {
 			if (gesture?.id === event.pointerId) {
-				gesture = undefined;
-				paint();
+				clearGesture();
+				paintSelection();
 			}
 		},
 		capture,
@@ -196,16 +230,18 @@ export function createCanvasInkTools(
 							(element.type === 'contentPart' && Boolean(element.inkStrokes?.length)),
 					) ?? false;
 				selection = [];
-				gesture = undefined;
+				clearGesture();
 				armed &&= sameSlide;
 				if (stage !== nextStage) {
+					lasso?.remove();
+					lasso = undefined;
 					if (stage) setDrawPencil(stage, false);
 					removeRuler();
 					stage = nextStage;
 					if (stage) setDrawPencil(stage, pencil);
 					paintRuler();
 				}
-				paint();
+				paintSelection();
 			}
 			slide = next;
 			return changed;

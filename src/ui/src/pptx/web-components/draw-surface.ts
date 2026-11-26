@@ -24,10 +24,7 @@ export function inkOverlayPath(
 	points: readonly InkCoordinate[],
 ): SVGPathElement {
 	const path = svg.ownerDocument.createElementNS(SVG_NS, 'path');
-	path.setAttribute(
-		'd',
-		points.map(({ x, y }, index) => `${index ? 'L' : 'M'}${x} ${y}`).join(' '),
-	);
+	setInkOverlayPoints(path, points);
 	path.setAttribute('fill', 'none');
 	path.setAttribute('stroke-linejoin', 'round');
 	path.setAttribute('stroke-linecap', 'round');
@@ -35,11 +32,14 @@ export function inkOverlayPath(
 	return path;
 }
 
-export function paintLasso(
-	svg: SVGSVGElement,
-	points: readonly InkCoordinate[],
-	selected: readonly SlideInkStroke[],
-) {
+export function setInkOverlayPoints(path: SVGPathElement, points: readonly InkCoordinate[]): void {
+	path.setAttribute(
+		'd',
+		points.map(({ x, y }, index) => `${index ? 'L' : 'M'}${x} ${y}`).join(' '),
+	);
+}
+
+export function paintLassoSelection(svg: SVGSVGElement, selected: readonly SlideInkStroke[]): void {
 	svg.replaceChildren();
 	for (const stroke of selected) {
 		const path = inkOverlayPath(svg, stroke.points);
@@ -47,18 +47,26 @@ export function paintLasso(
 		path.setAttribute('stroke-width', String(Math.min(64, stroke.style.width + 5)));
 		path.setAttribute('stroke-opacity', '0.55');
 	}
-	if (points.length) {
-		const path = inkOverlayPath(svg, points);
-		path.setAttribute('stroke', 'var(--office-color-focus-ring, #0078d4)');
-		path.setAttribute('stroke-width', '2');
-		path.setAttribute('stroke-dasharray', '5 4');
-	}
 }
 
-export function stagePoint(stage: HTMLElement, event: PointerEvent): InkCoordinate {
+export function createLassoGesturePath(
+	svg: SVGSVGElement,
+	points: readonly InkCoordinate[],
+): SVGPathElement {
+	const path = inkOverlayPath(svg, points);
+	path.setAttribute('stroke', 'var(--office-color-focus-ring, #0078d4)');
+	path.setAttribute('stroke-width', '2');
+	path.setAttribute('stroke-dasharray', '5 4');
+	return path;
+}
+
+/** Read layout once at pointerdown for the lifetime of a gesture. */
+export function captureStagePoint(stage: HTMLElement) {
 	const rect = stage.getBoundingClientRect();
-	return {
-		x: ((event.clientX - rect.left) * stage.offsetWidth) / rect.width,
-		y: ((event.clientY - rect.top) * stage.offsetHeight) / rect.height,
-	};
+	const scaleX = stage.offsetWidth / rect.width;
+	const scaleY = stage.offsetHeight / rect.height;
+	return (event: PointerEvent): InkCoordinate => ({
+		x: (event.clientX - rect.left) * scaleX,
+		y: (event.clientY - rect.top) * scaleY,
+	});
 }

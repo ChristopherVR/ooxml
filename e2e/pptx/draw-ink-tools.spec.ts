@@ -130,3 +130,21 @@ test('arrow keys move focus between Draw commands and still adjust sliders', asy
 	await expect(width).toHaveValue(String(before + 1));
 	await expect(width).toBeFocused();
 });
+
+test('updates the lasso path in place during a drag', async ({ page }) => {
+	await page.getByRole('button', { name: 'Lasso Select' }).click();
+	const stage = await canvas(page).boundingBox();
+	if (!stage) throw new Error('Editable slide is missing');
+	const x = stage.x + stage.width * 0.3;
+	const y = stage.y + stage.height * 0.3;
+	await page.mouse.move(x, y);
+	await page.mouse.down();
+	const path = canvas(page).locator('[data-pptx-draw-lasso] path');
+	await path.evaluate((node) => node.setAttribute('data-test-gesture', 'original'));
+	const first = await path.getAttribute('d');
+	await page.mouse.move(x + 50, y + 40, { steps: 10 });
+	await expect(path).not.toHaveAttribute('d', first ?? '');
+	await expect(path).toHaveAttribute('data-test-gesture', 'original');
+	await page.mouse.up();
+	await expect(path).toHaveCount(0);
+});
