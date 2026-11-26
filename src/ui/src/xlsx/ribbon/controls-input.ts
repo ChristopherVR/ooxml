@@ -223,8 +223,25 @@ export function renderGallery(
 		}
 	};
 	button.addEventListener('click', async () => {
-		const list = control.loadItems ? await control.loadItems(ctx) : items();
-		if (control.loadItems && (!button.isConnected || button.disabled)) return;
+		if (button.getAttribute('aria-busy') === 'true') return;
+		if (button.getAttribute('aria-expanded') === 'true') {
+			closeRibbonPopover();
+			return;
+		}
+		let list: ReturnType<GalleryControl['items']>;
+		if (control.loadItems) {
+			button.setAttribute('aria-busy', 'true');
+			try {
+				list = await control.loadItems(ctx);
+			} catch {
+				if (button.isConnected) ctx.toast(ctx.t('Could not load the gallery.'), 'error');
+				return;
+			} finally {
+				button.removeAttribute('aria-busy');
+			}
+			if (!button.isConnected || button.disabled) return;
+		} else list = items();
+		closeRibbonPopover();
 		const pop = el(doc, 'div', 'ribbon-popover ribbon-gallery-menu');
 		pop.setAttribute('role', 'menu');
 		pop.setAttribute('aria-label', label);

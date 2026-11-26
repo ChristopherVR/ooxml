@@ -2,6 +2,12 @@ import type { DRAWING_FORMAT_KEYS } from './drawing-format-keys';
 import type { Translations } from './types';
 
 export const DRAWING_FORMAT_STRINGS = {
+	'Could not load the gallery.': [
+		'Impossible de charger la galerie.',
+		'Der Katalog konnte nicht geladen werden.',
+		'No se pudo cargar la galería.',
+		'无法加载样式库。',
+	],
 	'Picture Format': ['Format de l’image', 'Bildformat', 'Formato de imagen', '图片格式'],
 	'Shape Format': ['Format de la forme', 'Formformat', 'Formato de forma', '形状格式'],
 	'Alt Text': ['Texte de remplacement', 'Alternativtext', 'Texto alternativo', '替换文字'],

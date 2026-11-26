@@ -1,5 +1,6 @@
 export const DRAWING_FORMAT_KEYS = [
 	'Picture Format',
+	'Could not load the gallery.',
 	'Shape Format',
 	'Alt Text',
 	'Description',

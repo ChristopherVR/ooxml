@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Route } from '@playwright/test';
 import {
 	createEditSession,
 	createWorkbook,
@@ -118,5 +118,38 @@ test('formats pictures and shapes through their contextual ribbon tabs', async (
 	expect(reset).not.toHaveProperty('effects');
 	await goToCell(page, 'A1');
 	await expect(shapeTab).toHaveCount(0);
+	expect(errors).toEqual([]);
+});
+
+test('reports a lazy gallery failure and ignores clicks while it loads', async ({ page }) => {
+	const errors = pageErrors(page);
+	const book = createWorkbook();
+	createEditSession(book).addShape(0, pictureAnchorAt({ row: 2, col: 1 }, 120, 60), {
+		kind: 'preset',
+		preset: 'rect',
+		name: 'Box',
+	});
+	let resolveChunk!: (route: Route) => void;
+	const chunk = new Promise<Route>((resolve) => {
+		resolveChunk = resolve;
+	});
+	await page.route('**/drawing-format-styles-*.js', resolveChunk);
+	await page.setViewportSize({ width: 1800, height: 900 });
+	await openLanding(page, 'vanilla');
+	await page.locator('#landing-file').setInputFiles({
+		name: 'drawings.xlsx',
+		mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+		buffer: Buffer.from(await saveXlsx(book)),
+	});
+	const host = editor(page);
+	await host.locator('.xg-shape[aria-label="Box"]').first().click();
+	await host.getByRole('tab', { name: 'Shape Format' }).click();
+	const trigger = host.getByRole('button', { name: 'Shape Styles', exact: true });
+	await trigger.dblclick();
+	await expect(trigger).toHaveAttribute('aria-busy', 'true');
+	await (await chunk).abort();
+	await expect(host.locator('.xve-toast')).toContainText('Could not load the gallery.');
+	await expect(trigger).not.toHaveAttribute('aria-busy', 'true');
+	await expect(host.getByRole('menu', { name: 'Shape Styles' })).toHaveCount(0);
 	expect(errors).toEqual([]);
 });
