@@ -1,6 +1,6 @@
 import type { PptxComment } from 'ooxml-core/pptx';
 import type { CanvasSize } from '../index';
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from '../index';
+import { activateCommentMarker, buildCommentMarkers, COMMENT_MARKER_SIZE } from '../index';
 
 import type { Translator } from '../i18n/translator';
 import { createEl } from './dom';
@@ -66,11 +66,12 @@ export function appendCommentMarkers(
 		});
 		dot.type = 'button';
 		dot.title = marker.title;
+		dot.setAttribute('aria-label', marker.title);
+		dot.dataset.pptxCommentMarker = marker.commentId;
 		dot.textContent = marker.label;
-		dot.addEventListener('click', (event) => {
-			event.stopPropagation();
-			onMarkerClick?.(marker.commentId);
-		});
+		dot.addEventListener('click', (event) =>
+			activateCommentMarker(event, () => onMarkerClick?.(marker.commentId)),
+		);
 		overlay.appendChild(dot);
 	}
 	stage.appendChild(overlay);

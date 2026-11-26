@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { attachCommentsTaskPane } from './comments-task-pane';
+import { activateCommentMarker, attachCommentsTaskPane } from './comments-task-pane';
 
 afterEach(() => {
 	document.body.replaceChildren();
@@ -24,6 +24,47 @@ it('keeps focus on a comment selected just after opening the pane', async () => 
 	await vi.advanceTimersByTimeAsync(30);
 	expect(document.activeElement).toBe(row);
 	detach();
+});
+
+it('opens the thread named by the marker and moves to a second thread in an open pane', async () => {
+	vi.useFakeTimers();
+	const root = document.createElement('div');
+	root.dataset.pptxEditorChrome = '';
+	const pane = document.createElement('aside');
+	const draft = document.createElement('textarea');
+	draft.dataset.pptxCommentDraft = '';
+	pane.append(draft);
+	const thread = (id: string) => {
+		const row = document.createElement('article');
+		row.dataset.commentId = id;
+		pane.append(row);
+		const marker = document.createElement('button');
+		marker.dataset.pptxCommentMarker = id;
+		root.append(marker);
+		return { row, marker };
+	};
+	const first = thread('first');
+	const second = thread('second');
+	document.body.append(root);
+	root.append(pane);
+	let detach: (() => void) | undefined;
+	first.marker.addEventListener('click', (event) =>
+		activateCommentMarker(event, () => {
+			detach = attachCommentsTaskPane(pane, {
+				label: 'Comments',
+				closeLabel: 'Close',
+				close: () => undefined,
+			});
+		}),
+	);
+	second.marker.addEventListener('click', (event) => activateCommentMarker(event, () => {}));
+	first.marker.click();
+	await vi.advanceTimersByTimeAsync(30);
+	expect(document.activeElement).toBe(first.row);
+	second.marker.click();
+	expect(document.activeElement).toBe(second.row);
+	expect(first.row.hasAttribute('data-comment-active')).toBe(false);
+	detach?.();
 });
 
 it('focuses the draft, closes from Escape, and restores the opener inside a shadow root', async () => {

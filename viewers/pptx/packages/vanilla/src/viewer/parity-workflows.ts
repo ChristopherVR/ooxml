@@ -263,8 +263,7 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 		},
 		openComments(toggle) {
 			const root = host.root();
-			const body = root.querySelector<HTMLElement>('.pptxv-body');
-			if (!body) return;
+			const body = root.querySelector<HTMLElement>('.pptxv-body') ?? root;
 			const notify = (open: boolean): void => {
 				root.dispatchEvent(new CustomEvent('pptx-comments-visibility', { detail: open }));
 			};

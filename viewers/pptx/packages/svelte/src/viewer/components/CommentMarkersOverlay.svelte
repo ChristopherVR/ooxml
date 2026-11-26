@@ -11,7 +11,7 @@
 	 */
 	import type { PptxComment } from 'pptx-viewer-core';
 	import type { CanvasSize } from 'ooxml-ui/pptx';
-	import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
+	import { activateCommentMarker, buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../i18n/context';
 
@@ -37,11 +37,6 @@
 	);
 
 	const half = COMMENT_MARKER_SIZE / 2;
-
-	function handleClick(event: MouseEvent, commentId: string): void {
-		event.stopPropagation();
-		onmarkerclick?.(commentId);
-	}
 </script>
 
 <div class="pptx-svelte-comment-markers">
@@ -51,7 +46,9 @@
 			class="pptx-svelte-comment-marker"
 			style={`left:${marker.x - half}px;top:${marker.y - half}px;width:${COMMENT_MARKER_SIZE}px;height:${COMMENT_MARKER_SIZE}px`}
 			title={marker.title}
-			onclick={(event) => handleClick(event, marker.commentId)}
+			aria-label={marker.title}
+			data-pptx-comment-marker={marker.commentId}
+			onclick={(event) => activateCommentMarker(event, () => onmarkerclick?.(marker.commentId))}
 		>{marker.label}</button>
 	{/each}
 </div>

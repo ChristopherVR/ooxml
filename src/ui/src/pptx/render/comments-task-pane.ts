@@ -1,8 +1,41 @@
 import { modalActiveElement } from '../../dialog/focus';
+import { revealComment } from './comment-navigation';
 
+const PANE = '[data-pptx-comments-panel]';
+const MARKER_ID = 'data-pptx-comment-marker';
+const EDITOR = '[data-pptx-editor-chrome]';
 const DRAFT = 'textarea[data-pptx-comment-draft], [data-pptx-comment-draft] textarea';
 const NEW_COMMENT =
 	'[data-ribbon-control="insert.comments.comment"], [data-ribbon-control="review.comments.newComment"]';
+
+/** Route a canvas marker to its thread, including when the task pane is already open. */
+export function activateCommentMarker(
+	event: { currentTarget: EventTarget | null; stopPropagation(): void },
+	open: () => void,
+): void {
+	event.stopPropagation();
+	const marker = event.currentTarget;
+	if (!(marker instanceof HTMLElement)) return;
+	const root = marker.closest(EDITOR) ?? marker.ownerDocument;
+	marker.focus({ preventScroll: true });
+	open();
+	const pane = root.querySelector<HTMLElement>(PANE);
+	const id = marker.getAttribute(MARKER_ID);
+	if (pane && id) revealComment(pane, id);
+}
+
+/** Focus a canvas marker's thread or the draft for a ribbon command. */
+export function focusCommentsTaskPane(
+	pane: HTMLElement,
+	opener = modalActiveElement(pane.ownerDocument),
+): void {
+	const id = opener?.getAttribute(MARKER_ID);
+	if (id && revealComment(pane, id)) return;
+	(
+		pane.querySelector<HTMLElement>(DRAFT) ??
+		pane.querySelector<HTMLElement>('[data-pptx-comment-close]')
+	)?.focus();
+}
 
 /** Adds the shared close control and keyboard behavior to a docked comments surface. */
 export function attachCommentsTaskPane(
@@ -10,7 +43,7 @@ export function attachCommentsTaskPane(
 	{ label, closeLabel, close }: { label: string; closeLabel: string; close: () => void },
 ): () => void {
 	const doc = pane.ownerDocument;
-	const root = pane.closest('[data-pptx-editor-chrome]') ?? doc;
+	const root = pane.closest(EDITOR) ?? doc;
 	const opener = modalActiveElement(doc);
 	pane.dataset.pptxCommentsPanel = 'true';
 	pane.setAttribute('aria-label', label);
@@ -30,7 +63,7 @@ export function attachCommentsTaskPane(
 
 	const focusDraft = () => (pane.querySelector<HTMLElement>(DRAFT) ?? button).focus();
 	const frame = doc.defaultView?.requestAnimationFrame(() => {
-		if (!pane.contains(modalActiveElement(doc))) focusDraft();
+		if (!pane.contains(modalActiveElement(doc))) focusCommentsTaskPane(pane, opener);
 	});
 	const onCommand = (event: Event) => {
 		if (event.composedPath().some((node) => node instanceof Element && node.matches(NEW_COMMENT))) {

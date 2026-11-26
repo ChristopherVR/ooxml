@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
+import { activateCommentMarker, buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 import type { PptxComment } from 'pptx-viewer-core';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -51,7 +51,9 @@ const markers = computed(() =>
 				backgroundColor: 'rgba(255, 165, 0, 0.9)',
 			}"
 			:title="marker.title"
-			@click.stop="emit('marker-click', marker.commentId)"
+			:aria-label="marker.title"
+			:data-pptx-comment-marker="marker.commentId"
+			@click="activateCommentMarker($event, () => emit('marker-click', marker.commentId))"
 		>
 			{{ marker.label }}
 		</button>

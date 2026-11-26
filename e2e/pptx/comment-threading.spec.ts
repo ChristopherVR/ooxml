@@ -100,7 +100,7 @@ test.describe('comment threading', () => {
 		await expect.poll(() => resolvedStateVisible(page)).toBe(true);
 	});
 
-	test('a comment marker is rendered on the slide canvas', async ({ page }, testInfo) => {
+	test('a comment marker opens and focuses its thread', async ({ page }, testInfo) => {
 		const gap = commentMarkerGap(testInfo.project.name);
 		test.skip(gap !== null, gap ?? '');
 
@@ -108,7 +108,15 @@ test.describe('comment threading', () => {
 		await addCommentViaContextMenu(page, shape, MARKED_COMMENT);
 		await ensureCommentsListShowing(page, MARKED_COMMENT);
 
-		// Both marker implementations title the dot "<author>: <text>".
-		await expect(commentMarker(page, MARKED_COMMENT).first()).toBeVisible();
+		const pane = page.locator('[data-pptx-comments-panel]:visible');
+		await pane.getByRole('button', { name: 'Close', exact: true }).click();
+		await expect(pane).toHaveCount(0);
+		const marker = commentMarker(page, MARKED_COMMENT).first();
+		await marker.click();
+		const thread = pane.locator('[data-comment-id]').filter({ hasText: MARKED_COMMENT });
+		await expect(thread).toHaveAttribute('data-comment-active', 'true');
+		await expect(thread).toBeFocused();
+		await marker.click();
+		await expect(thread).toBeFocused();
 	});
 });

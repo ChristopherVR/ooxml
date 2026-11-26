@@ -574,7 +574,10 @@ export function ViewerCanvasArea(props: ViewerCanvasAreaProps) {
 					}
 					comments={activeSlide?.comments}
 					showCommentMarkers={s.sidebarPanelMode === 'comments'}
-					onCommentMarkerClick={() => s.setSidebarPanelMode('comments')}
+					onCommentMarkerClick={() => {
+						s.setSidebarPanelMode('comments');
+						s.setIsInspectorPaneOpen(true);
+					}}
 					onMoveGuide={(guideId, position) => {
 						s.setGuides((prev) =>
 							prev.map((guide) =>

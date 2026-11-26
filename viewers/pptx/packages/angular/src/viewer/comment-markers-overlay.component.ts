@@ -18,7 +18,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import type { CommentMarkerDescriptor } from 'ooxml-ui/pptx';
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
+import { activateCommentMarker, buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 import type { PptxComment } from 'pptx-viewer-core';
 
 @Component({
@@ -35,6 +35,8 @@ import type { PptxComment } from 'pptx-viewer-core';
 				[style.width.px]="size"
 				[style.height.px]="size"
 				[title]="marker.title"
+				[attr.aria-label]="marker.title"
+				[attr.data-pptx-comment-marker]="marker.commentId"
 				(click)="onMarkerClick($event, marker.commentId)"
 			>
 				{{ marker.label }}
@@ -94,7 +96,6 @@ export class CommentMarkersOverlayComponent {
 	);
 
 	protected onMarkerClick(event: MouseEvent, commentId: string): void {
-		event.stopPropagation();
-		this.markerClick.emit(commentId);
+		activateCommentMarker(event, () => this.markerClick.emit(commentId));
 	}
 }

@@ -1,4 +1,4 @@
-import { buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
+import { activateCommentMarker, buildCommentMarkers, COMMENT_MARKER_SIZE } from 'ooxml-ui/pptx';
 /**
  * Comment marker dots rendered on top of the slide canvas.
  *
@@ -42,7 +42,8 @@ export function CommentMarkersOverlay({
 	return (
 		<div className='absolute inset-0 pointer-events-none z-[45]'>
 			{markers.map((marker) => (
-				<div
+				<button
+					type='button'
 					key={marker.commentId}
 					className='absolute pointer-events-auto cursor-pointer'
 					style={{
@@ -51,6 +52,7 @@ export function CommentMarkersOverlay({
 						width: COMMENT_MARKER_SIZE,
 						height: COMMENT_MARKER_SIZE,
 						borderRadius: '50%',
+						padding: 0,
 						backgroundColor: 'rgba(255, 165, 0, 0.9)',
 						border: '2px solid #fff',
 						boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
@@ -63,13 +65,14 @@ export function CommentMarkersOverlay({
 						lineHeight: 1,
 					}}
 					title={marker.title}
-					onClick={(e) => {
-						e.stopPropagation();
-						onCommentMarkerClick?.(marker.commentId);
-					}}
+					aria-label={marker.title}
+					data-pptx-comment-marker={marker.commentId}
+					onClick={(event) =>
+						activateCommentMarker(event, () => onCommentMarkerClick?.(marker.commentId))
+					}
 				>
 					{marker.label}
-				</div>
+				</button>
 			))}
 		</div>
 	);

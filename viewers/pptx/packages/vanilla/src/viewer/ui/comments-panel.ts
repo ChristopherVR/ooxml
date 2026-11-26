@@ -1,4 +1,4 @@
-import { attachCommentsTaskPane } from 'ooxml-ui/pptx';
+import { attachCommentsTaskPane, focusCommentsTaskPane } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 
 import type { CommentsPanelBinding } from '../editor/editor-comment-actions';
@@ -25,12 +25,7 @@ interface DisposablePane extends HTMLElement {
 }
 
 /**
- * The workspace Comments pane. LIVE, not a snapshot: it subscribes to the
- * store (the same pattern the inspector Comments tab rides via its
- * store-driven `update`) and rebuilds its card list whenever the comment
- * model changes, so a resolve/edit/delete re-renders in place and an add
- * appends the new card with the pane still open. The compose draft lives
- * outside the rebuilt card list and survives re-renders.
+ * Close the docked comments pane and release its store subscription.
  */
 export function closeCommentsPanel(host: HTMLElement): boolean {
 	const pane = host.querySelector<DisposablePane>('[data-pptx-comments-panel]');
@@ -51,7 +46,7 @@ export function openCommentsPanel(
 ): void {
 	const existing = host.querySelector<DisposablePane>('[data-pptx-comments-panel]');
 	if (existing) {
-		existing.querySelector<HTMLElement>('[data-pptx-comment-draft]')?.focus();
+		focusCommentsTaskPane(existing);
 		return;
 	}
 
@@ -63,9 +58,6 @@ export function openCommentsPanel(
 	pane.appendChild(header);
 
 	const list = createEl(doc, 'div', 'pptxv-workspace-list');
-	// The SAME threaded view the inspector Comments tab renders, so the pane a
-	// canvas "Add Comment" lands in offers replies too (it used to offer only
-	// save/resolve/delete, leaving no way to reply without closing it).
 	const threads = createCommentThreadView(doc, t, panel, model.getAuthors);
 	const empty = createEl(doc, 'p');
 	empty.textContent = t('pptx.comments.noneOnSlide');
