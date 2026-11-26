@@ -142,7 +142,10 @@ beforeAll(() => {
 		// Already initialised by another spec in this worker.
 	}
 });
-afterEach(() => TestBed.resetTestingModule());
+afterEach(() => {
+	TestBed.resetTestingModule();
+	localStorage.clear();
+});
 
 /** A TestBed injector (effects need its scheduler) with the viewer's two services. */
 function testBedService(): ViewerCustomizationService {

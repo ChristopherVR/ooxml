@@ -297,7 +297,10 @@ Files that need more are found by content, so a new test needs no registration:
 - `vi.mock` / `vi.doMock`, or the comment `@vitest-fresh-modules` (use it when a test depends on
   module state such as an uninitialized i18n or the lazily loaded layout library): the module
   registry is reset before the file loads.
-- `*ssr.test.*` or `TestBed.initTestEnvironment(`: a worker of its own.
+- Angular files that call `TestBed.initTestEnvironment(` use a fresh module registry. The TestBed
+  environment resets after the file finishes so the next file can initialize it. Each file that
+  wires JIT signal inputs gets its own component definitions.
+- Files named `*ssr.test.*` or marked with `@vitest-own-worker` get their own worker.
 
 `scripts/vitest-dom-hygiene.setup.ts` removes the `document`/`window` listeners a file leaves and
 clears the body, because the DOM is shared too. Tests must still clean up what they change (module

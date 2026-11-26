@@ -5,16 +5,8 @@ import { defineConfig } from 'vitest/config';
 import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
-/**
- * Unit tests for the framework-agnostic helpers (element-style, utils), plus
- * `.component.ts` files imported for their co-located pure-logic exports (see
- * `vitest-setup.ts` for why that needs the Angular compiler loaded).
- *
- * Full TestBed rendering (mounting a component into a real DOM) is a bigger
- * follow-up: it needs `@analogjs/vite-plugin-angular` to give `@Component`
- * classes real `ɵcmp` factories, which is a broader change than loading the
- * JIT compiler for these import-time-only tests.
- */
+// TestBed files share workers and native dependencies. The fresh-module project
+// re-evaluates binding components because fixtures alter JIT signal-input metadata.
 export default defineConfig({
 	server: { fs: { allow: [resolve(import.meta.dirname, '../../../..')] } },
 	resolve: {
@@ -31,7 +23,9 @@ export default defineConfig({
 	test: {
 		environment: 'happy-dom',
 		maxWorkers: testWorkers(),
-		projects: isolationProjects('angular', import.meta.dirname, 'happy-dom'),
+		projects: isolationProjects('angular', import.meta.dirname, 'happy-dom', [], {
+			testBedSetup: './vitest-test-bed.setup.ts',
+		}),
 		globals: true,
 		setupFiles: ['./vitest-setup.ts'],
 	},

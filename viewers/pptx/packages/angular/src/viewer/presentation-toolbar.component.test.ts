@@ -144,6 +144,10 @@ describe('show toolbar adapter', () => {
 });
 
 describe('show toolbar auto-hide', () => {
+	afterEach(() => {
+		vi.useRealTimers();
+	});
+
 	it('starts hidden, shows on movement and fades after the shared delay', () => {
 		vi.useFakeTimers();
 		const seen: boolean[] = [];
@@ -159,7 +163,6 @@ describe('show toolbar auto-hide', () => {
 		expect(seen).toStrictEqual([true, false]);
 
 		autoHide.dispose();
-		vi.useRealTimers();
 	});
 
 	it('restarts the countdown on every move, so a moving pointer never loses the bar', () => {
@@ -177,7 +180,6 @@ describe('show toolbar auto-hide', () => {
 		expect(seen.at(-1)).toBeFalsy();
 
 		autoHide.dispose();
-		vi.useRealTimers();
 	});
 
 	it('keeps the bar up while the pointer rests on it', () => {
@@ -195,7 +197,6 @@ describe('show toolbar auto-hide', () => {
 		expect(seen.at(-1)).toBeFalsy();
 
 		autoHide.dispose();
-		vi.useRealTimers();
 	});
 
 	it('drops its pending timer on teardown', () => {
@@ -208,7 +209,6 @@ describe('show toolbar auto-hide', () => {
 		vi.advanceTimersByTime(AUTO_HIDE_DELAY_MS * 2);
 
 		expect(seen).toStrictEqual([true]);
-		vi.useRealTimers();
 	});
 });
 

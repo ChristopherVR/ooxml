@@ -54,6 +54,7 @@ function compareService(loader?: Pick<LoadContentService, 'resolveAllowExternalI
 
 describe('viewerCompareService linked content', () => {
 	afterEach(() => {
+		TestBed.resetTestingModule();
 		vi.restoreAllMocks();
 		localStorage.clear();
 	});
