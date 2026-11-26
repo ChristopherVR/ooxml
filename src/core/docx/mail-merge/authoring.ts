@@ -29,6 +29,7 @@ export const mailMergeAddressFields = [
 	'SpouseMiddleName',
 	'SpouseLastName',
 	'SpouseNickname',
+	'SpouseSuffix',
 	'EmailAddress',
 ] as const;
 type AddressField = (typeof mailMergeAddressFields)[number];
@@ -106,10 +107,15 @@ export function setMailMergeFieldMapping(
 	let explicit = mappings.length - 1;
 	while (explicit >= 0 && mappings[explicit]?.mappedName?.toLowerCase() !== key) explicit--;
 	const position = ODSO_NAMES.findIndex((item) => item === name);
+	// Partner suffix has no positional Word ODSO slot. Store it by name after those slots.
+	if (position < 0 && name !== 'SpouseSuffix') return;
 	const occupied = mappings[position]?.mappedName;
 	const index =
-		explicit >= 0 ? explicit : occupied ? Math.max(mappings.length, ODSO_NAMES.length) : position;
-	if (index < 0) return;
+		explicit >= 0
+			? explicit
+			: position < 0 || occupied
+				? Math.max(mappings.length, ODSO_NAMES.length)
+				: position;
 	while (mappings.length <= index) mappings.push({ type: 'null' });
 	mappings[index] = value
 		? { type: 'dbColumn', name: value, mappedName: name, column: fields.indexOf(value) }

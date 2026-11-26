@@ -12,10 +12,11 @@ const placeholders = [
 	['_LAST0_', '/l0', 'LastName'],
 	['_SUFFIX0_', '/s0', 'Suffix'],
 	['_TITLE1_', '/t1', 'SpouseCourtesyTitle'],
+	['_NICK1_', '/n1', 'SpouseNickname'],
 	['_FIRST1_', '/f1', 'SpouseFirstName'],
 	['_MIDDLE1_', '/m1', 'SpouseMiddleName'],
 	['_LAST1_', '/l1', 'SpouseLastName'],
-	['_SUFFIX1_', '/s1', 'SpouseNickname'],
+	['_SUFFIX1_', '/s1', 'SpouseSuffix'],
 	['_COMPANY_', '/c', 'Company'],
 	['_STREET1_', '/r', 'Address1'],
 	['_STREET2_', '/e', 'Address2'],
@@ -30,7 +31,7 @@ const columns = new Map<string, string>(
 		[alias, column],
 	]),
 );
-const placeholder = /_[A-Z]+\d?_|\/[a-z]\d?/g;
+const placeholder = /_[A-Z]+\d?_|(?<![\p{L}\p{N}_/])\/[a-z]\d?(?![\p{L}\p{N}_/])/gu;
 const addressName = '<<_TITLE0_ >><<_FIRST0_>><< _LAST0_>><< _SUFFIX0_>>';
 const firstLast = '<<_FIRST0_>><< _LAST0_>><< _SUFFIX0_>>';
 const titleLast = '<<_TITLE0_>><< _LAST0_>>';
@@ -149,11 +150,12 @@ export function renderMailingField(
 	const replace = (part: string) => {
 		let empty = false;
 		const value = part.replace(placeholder, (name) => {
-			if (++substitutions > 64) return '';
 			const column = columns.get(name);
+			if (!column && name.startsWith('/')) return name;
+			if (++substitutions > 64) return '';
 			const result = column && (column !== 'CountryorRegion' || addCountry) ? lookup(column) : '';
 			empty ||= !result;
-			missing ||= !result && name !== '_SUFFIX0_';
+			missing ||= !result && column !== 'Suffix';
 			return result.slice(0, 1024);
 		});
 		return empty ? '' : value;

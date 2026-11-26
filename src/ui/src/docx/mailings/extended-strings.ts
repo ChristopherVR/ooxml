@@ -179,6 +179,12 @@ export const extendedMailingsTranslations = {
 		fr: 'Surnom du partenaire',
 		'zh-CN': '伴侣昵称',
 	},
+	'Partner name suffix': {
+		de: 'Namenszusatz des Partners',
+		es: 'Sufijo del nombre de la pareja',
+		fr: 'Suffixe du nom du partenaire',
+		'zh-CN': '伴侣姓名后缀',
+	},
 	'First and last name': {
 		de: 'Vor- und Nachname',
 		es: 'Nombre y apellido',

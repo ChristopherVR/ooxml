@@ -34,6 +34,7 @@ const fieldLabels: Record<(typeof mailMergeAddressFields)[number], MailingsLabel
 	SpouseMiddleName: 'Partner middle name',
 	SpouseLastName: 'Partner last name',
 	SpouseNickname: 'Partner nickname',
+	SpouseSuffix: 'Partner name suffix',
 	EmailAddress: 'Email address column',
 };
 

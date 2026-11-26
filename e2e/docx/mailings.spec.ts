@@ -205,8 +205,16 @@ test('previews the default Word greeting with the recipient title', async ({ pag
 	await modal.locator('input[type=file]').setInputFiles({
 		name: 'greetings.csv',
 		mimeType: 'text/csv',
-		buffer: Buffer.from('CourtesyTitle,FirstName,LastName\nMs.,Ada,Lovelace'),
+		buffer: Buffer.from('CourtesyTitle,FirstName,LastName,Partner,Ending\nMs.,Ada,Lovelace,Al,Jr.'),
 	});
+	await ribbon.getByRole('button', { name: 'Match Fields' }).click();
+	await modal.getByRole('combobox', { name: 'Partner nickname' }).selectOption('Partner');
+	await modal.getByRole('combobox', { name: 'Partner name suffix' }).selectOption('Ending');
+	await modal.getByRole('button', { name: 'OK' }).click();
+	await ribbon.getByRole('button', { name: 'Match Fields' }).click();
+	await expect(modal.getByRole('combobox', { name: 'Partner nickname' })).toHaveValue('Partner');
+	await expect(modal.getByRole('combobox', { name: 'Partner name suffix' })).toHaveValue('Ending');
+	await modal.getByRole('button', { name: 'Cancel' }).click();
 	await ribbon.getByRole('button', { name: 'Greeting Line' }).click();
 	await expect(modal.getByRole('textbox', { name: 'Greeting for missing names' })).toHaveValue(
 		'Dear Sir or Madam,',

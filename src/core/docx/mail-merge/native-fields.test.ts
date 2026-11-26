@@ -3,7 +3,13 @@ import { plainText } from '../document-stats';
 import { createDocument } from '../model';
 import { loadDocx } from '../parse';
 import { saveDocx } from '../save';
-import { mailMergeAddressBlock, mailMergeGreetingLine, previewMailMerge } from './index';
+import {
+	mailMergeAddressBlock,
+	mailMergeGreetingLine,
+	previewMailMerge,
+	setMailMergeFieldMapping,
+	type MailMergeFieldMapping,
+} from './index';
 import { code, complex, paragraph, simple, template } from './test-fixture';
 
 const escapeTemplate = (instruction: string) =>
@@ -102,4 +108,20 @@ it('emits a group only when all of its placeholders have values and adds no spac
 	};
 	expect(plainText(previewMailMerge(model, data, 1).document)).toBe('AdaLovelace');
 	expect(plainText(previewMailMerge(model, data, 2).document)).toBe('Ada( Byron\n II)Lovelace');
+});
+
+it('maps partner nicknames and suffixes separately and preserves literal slashes', async () => {
+	const { model } = await template(
+		paragraph(
+			field(' ADDRESSBLOCK \\f "<<c/o _NICK1_>><<, Attn/Dept _SUFFIX1_>><< /n1>><< /q>>" '),
+		),
+	);
+	const mappings: MailMergeFieldMapping[] = [];
+	setMailMergeFieldMapping(mappings, 'SpouseNickname', ['Partner', 'Ending'], 'Partner');
+	setMailMergeFieldMapping(mappings, 'SpouseSuffix', ['Partner', 'Ending'], 'Ending');
+	model.mailMerge = { fieldMappings: mappings };
+	const saved = await loadDocx(await saveDocx(model));
+	const result = previewMailMerge(saved.model, { records: [{ Partner: 'Al', Ending: 'Jr.' }] }, 1);
+	expect(result.issues).toEqual([]);
+	expect(plainText(result.document)).toBe('c/o Al, Attn/Dept Jr. Al /q');
 });
