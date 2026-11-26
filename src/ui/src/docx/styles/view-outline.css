@@ -51,7 +51,9 @@
 	content: '•';
 }
 [data-outline-first-line] .dve-outline-block[data-outline-body] {
-	max-block-size: 1lh;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 1;
 	overflow: hidden;
 }
 [data-outline-plain]

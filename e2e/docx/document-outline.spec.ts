@@ -57,6 +57,46 @@ test('Outline heading text reaches 4.5:1 contrast in dark theme', async ({ page 
 	expect(contrastRatio(hex(ink), hex(paper))).toBeGreaterThanOrEqual(4.5);
 });
 
+test('Show First Line Only keeps the full height of large inline text', async ({ page }) => {
+	const editor = await openOutline(page);
+	await editor.evaluate((element) => {
+		const host = element as DocxEditorElement;
+		const model = host.documentModel;
+		if (!model) throw new Error('Expected a document');
+		host.documentModel = {
+			...model,
+			blocks: [
+				...model.blocks,
+				{
+					type: 'paragraph',
+					id: 'title',
+					runs: [{ text: 'Document title', fontSize: 36 }],
+				},
+				{
+					type: 'paragraph',
+					id: 'wrapped-title',
+					runs: [{ text: 'Document title '.repeat(20), fontSize: 36 }],
+				},
+			],
+		};
+	});
+	const title = editor.locator('[data-id="title"]');
+	const wrapped = editor.locator('[data-id="wrapped-title"]');
+	const oneLine = await title.evaluate((element) => element.getBoundingClientRect().height);
+	const fullHeight = await wrapped.evaluate((element) => element.getBoundingClientRect().height);
+	expect(fullHeight).toBeGreaterThan(oneLine);
+	const firstLine = editor.getByRole('button', { name: 'Show First Line Only' });
+	await firstLine.click();
+	await expect.poll(() => title.evaluate((el) => el.getBoundingClientRect().height)).toBe(oneLine);
+	await expect
+		.poll(() => wrapped.evaluate((el) => el.getBoundingClientRect().height))
+		.toBe(oneLine);
+	await firstLine.click();
+	await expect
+		.poll(() => wrapped.evaluate((el) => el.getBoundingClientRect().height))
+		.toBe(fullHeight);
+});
+
 test('the caret skips hidden paragraphs and a selected collapsed heading acts on its branch', async ({
 	page,
 }) => {
