@@ -157,9 +157,14 @@ export function mountLocalAddIns(
 			preview.append(heading, summary);
 			if (previous && previous.digest !== digest) {
 				const update = doc.createElement('p');
-				update.textContent = t('Update from {oldVersion} to {newVersion}')
-					.replace('{oldVersion}', previous.manifest.version)
-					.replace('{newVersion}', manifest.version);
+				const oldVersion = previous.manifest.version;
+				const newVersion = manifest.version;
+				update.textContent =
+					oldVersion === newVersion
+						? t('Update this add-in and keep version {version}').replace('{version}', newVersion)
+						: t('Update from {oldVersion} to {newVersion}')
+								.replace('{oldVersion}', oldVersion)
+								.replace('{newVersion}', newVersion);
 				preview.append(update);
 			}
 			preview.append(consent);

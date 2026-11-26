@@ -147,6 +147,17 @@ const messages = new Map<string, readonly [string, string, string, string, strin
 		],
 	],
 	[
+		'Update this add-in and keep version {version}',
+		[
+			'Mettre à jour ce complément en conservant la version {version}',
+			'Dieses Add-In aktualisieren und Version {version} beibehalten',
+			'Actualizar este complemento y mantener la versión {version}',
+			'更新此加载项并保留版本 {version}',
+			'バージョン {version} のままこのアドインを更新',
+			'버전 {version}을 유지하면서 이 추가 기능 업데이트',
+		],
+	],
+	[
 		'Update from {oldVersion} to {newVersion}',
 		[
 			'Mettre à jour de la version {oldVersion} vers la version {newVersion}',

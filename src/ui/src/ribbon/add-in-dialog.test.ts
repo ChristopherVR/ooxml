@@ -106,6 +106,12 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	activeDialog(other)?.close();
 	mine.close();
 
+	const sameVersion = await open('getAddIns');
+	await picker(sameVersion, xml.replace('Lab Notes', 'New Publisher'));
+	await vi.waitFor(() => expect(control(sameVersion, 'Update')).toBeDefined());
+	expect(sameVersion.textContent).toContain('Update this add-in and keep version 1.0.0');
+	control(sameVersion, 'Update')?.click();
+
 	const newer = await open('getAddIns');
 	await picker(newer, xml.replace('1.0.0', '1.0.1'));
 	await vi.waitFor(() => expect(control(newer, 'Update')).toBeDefined());

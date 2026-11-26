@@ -121,6 +121,14 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 
 	await reveal(editor, get);
 	await get.click();
+	await select(source.replace('DefaultValue="Notes"', 'DefaultValue="Revised Notes"'));
+	await expect(
+		preview.getByText('Update this add-in and keep version 1.0.0', { exact: true }),
+	).toBeVisible();
+	await preview.getByRole('button', { name: 'Update Revised Notes', exact: true }).click();
+
+	await reveal(editor, get);
+	await get.click();
 	await select(
 		source
 			.replace('1.0.0', '1.0.1')
