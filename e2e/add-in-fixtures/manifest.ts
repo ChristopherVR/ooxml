@@ -19,8 +19,8 @@ export const xmlManifest = fixture('manifest.xml')
 	.replace('DefaultMinVersion="1.10"', 'DefaultMinVersion="1.1"')
 	.replace('Name="AddinCommands"', 'Name="TextCoercion"')
 	.replace(
-		'<Hosts><Host',
-		'<Requirements><Sets DefaultMinVersion="1.1"><Set Name="TextCoercion" /></Sets></Requirements><Hosts><Host',
+		'</Hosts>',
+		'</Hosts><Requirements><Sets DefaultMinVersion="1.1"><Set Name="TextCoercion" /></Sets></Requirements>',
 	);
 export const jsonManifest = fixture('manifest.json')
 	.replaceAll('https://notes.example.test', paneOrigin)

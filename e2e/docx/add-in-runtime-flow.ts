@@ -102,7 +102,9 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		await openDialog();
 		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveCount(0);
 		await expect(dialog.getByLabel('Add from Marketplace link')).toHaveCount(0);
-		await dialog.getByLabel('Choose a local add-in file').setInputFiles(file);
+		const upload = dialog.getByLabel('Choose a local add-in file');
+		await expect(upload).toBeEnabled();
+		await upload.setInputFiles(file);
 		const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
 		await expect(consent).toContainText('Lab Notes');
 		await expect(consent).toContainText('Word, Excel, PowerPoint');
