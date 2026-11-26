@@ -87,7 +87,11 @@ class OfficeUiAddInPane extends OfficeElement {
 				channel.postMessage({ id: request.id, ...result });
 				if (calls > 256) channel.close();
 			};
-			channel.postMessage({ kind: 'ready', host: HOST_NAMES[options.product] });
+			channel.postMessage({
+				kind: 'ready',
+				host: HOST_NAMES[options.product],
+				hasSelection: Boolean(options.selection),
+			});
 			frame.hidden = false;
 			this.#status = '';
 			this.requestUpdate();

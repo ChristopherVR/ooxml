@@ -5,6 +5,8 @@ import { addInLauncher } from '../ribbon/add-in-launch';
 import { INSTALLED_ADD_IN_LIMIT, localAddIns } from '../ribbon/add-in-local-dialog';
 import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
 import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
+import { addInCapabilities } from '../ribbon/add-in-requirements';
+import { addInRuntime } from '../ribbon/add-in-runtime-settings';
 import { addInPreferences } from '../ribbon/add-in-preferences';
 import { addInSettings } from '../ribbon/add-in-settings';
 
@@ -21,6 +23,14 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 	const t = localAddInText(locale, options.t);
 	const launcher = addInLauncher(options, installed, t);
 	const store = addInPreferences(scopes);
+	const manifestOptions = () => ({
+		locale: manifestLocale,
+		capabilities: addInCapabilities(
+			product === 'word' ||
+				product === 'excel' ||
+				Boolean(addInRuntime(scopes)?.selection ?? options.selection),
+		),
+	});
 	const syncTabs = () => addInManifestTabs(host, installed, launcher, t);
 	const restore =
 		store && product !== 'visio'
@@ -32,7 +42,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 					for (const file of files.slice(0, INSTALLED_ADD_IN_LIMIT)) {
 						if (signal.aborted) return;
 						try {
-							const addIn = await readLocalAddIn(file, { host: product, locale: manifestLocale });
+							const addIn = await readLocalAddIn(file, { ...manifestOptions(), host: product });
 							const prior = installed.get(addIn.manifest.id);
 							restored.set(
 								addIn.manifest.id,
@@ -61,7 +71,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 		t,
 		product,
 		locale,
-		manifestLocale,
+		manifestOptions,
 		restoreFocus,
 		async install({ addIn, bytes, previous }: AddInPreview) {
 			const id = addIn.manifest.id;

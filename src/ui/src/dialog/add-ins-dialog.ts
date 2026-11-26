@@ -127,11 +127,10 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			if (pending.signal.aborted || !this.shell?.open) return;
 			const file = await source(pending.signal);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			const { addIn, bytes } = await manifestReader.readAddInInput(
-				file,
-				session.product,
-				session.manifestLocale,
-			);
+			const { addIn, bytes } = await manifestReader.readAddInInput(file, {
+				...session.manifestOptions(),
+				host: session.product,
+			});
 			if (pending.signal.aborted || !this.shell?.open) return;
 			this.#preview = { addIn, bytes, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';

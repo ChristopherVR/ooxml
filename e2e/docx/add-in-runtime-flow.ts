@@ -33,12 +33,15 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		return route.abort();
 	});
 	await editor.evaluate(
-		(node, origin) =>
+		(node, { origin, selection }) =>
 			Reflect.set(node, Symbol.for('office-ui.add-in-runtime'), {
 				origins: [origin],
 				frameSrcEnforced: true,
+				...(selection && {
+					selection: () => ({ readText: () => 'Slide selection', writeText: () => false }),
+				}),
 			}),
-		paneOrigin,
+		{ origin: paneOrigin, selection: host === 'PowerPoint' },
 	);
 	const zip = new JSZip();
 	for (const [name, contents] of packageFiles) zip.file(name, contents);
@@ -80,7 +83,9 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		}
 		await expect(pane.locator('iframe')).toHaveAttribute('sandbox', 'allow-scripts');
 		await expect(pane.locator('iframe')).toHaveAttribute('referrerpolicy', 'no-referrer');
-		await expect(frame.locator('#ready')).toHaveText(`${host} / ${host}`);
+		await expect(frame.locator('#ready')).toHaveText(
+			`${host} / ${host} / true / true / false / false`,
+		);
 		await expect(frame.locator('#isolated')).toHaveText('Editor DOM is isolated');
 		if (host !== 'PowerPoint') {
 			await frame.getByRole('button', { name: 'Write selection' }).click();
@@ -91,9 +96,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 			);
 		} else {
 			await frame.getByRole('button', { name: 'Read selection' }).click();
-			await expect(frame.locator('#result')).toHaveText(
-				'Text selection is unavailable or exceeds the size limit.',
-			);
+			await expect(frame.locator('#result')).toHaveText('Read: Slide selection');
 		}
 		await pane.getByRole('button', { name: 'Close', exact: true }).click();
 		await openDialog();

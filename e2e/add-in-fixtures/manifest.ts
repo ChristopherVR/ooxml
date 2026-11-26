@@ -32,10 +32,14 @@ const fixture = (name: string) =>
 
 export const xmlManifest = fixture('manifest.xml')
 	.replaceAll('https://notes.example.test', paneOrigin)
-	.replace(/<Requirements><bt:Sets .*?<\/Requirements>/, '');
+	.replace('DefaultMinVersion="1.10"', 'DefaultMinVersion="1.1"')
+	.replace('Name="AddinCommands"', 'Name="TextCoercion"');
 export const jsonManifest = fixture('manifest.json')
 	.replaceAll('https://notes.example.test', paneOrigin)
-	.replace(/^[\t ]*"requirements":\s*\{\s*"capabilities":.+\r?\n/m, '');
+	.replace(
+		'"name": "AddinCommands", "minVersion": "1.10"',
+		'"name": "TextCoercion", "minVersion": "1.1"',
+	);
 
 export const packageFiles = [
 	['manifest.json', jsonManifest],

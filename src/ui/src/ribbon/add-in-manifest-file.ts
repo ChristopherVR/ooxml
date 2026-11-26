@@ -3,15 +3,14 @@ import {
 	MANIFEST_BYTES,
 	PACKAGE_BYTES,
 	readLocalAddIn,
-	type OfficeAddInHost,
+	type AddInReadOptions,
 } from 'ooxml-core/automation/add-ins';
 
 export { readLocalAddIn } from 'ooxml-core/automation/add-ins';
 
 export async function readAddInInput(
 	input: File | Uint8Array | ArrayBuffer,
-	host: OfficeAddInHost,
-	locale: string,
+	options: AddInReadOptions,
 ) {
 	let bytes: Uint8Array;
 	if (input instanceof File) {
@@ -23,7 +22,7 @@ export async function readAddInInput(
 		bytes = new Uint8Array(input);
 		if (input instanceof ArrayBuffer) bytes = bytes.slice();
 	}
-	return { bytes, addIn: await readLocalAddIn(bytes, { host, locale }) };
+	return { bytes, addIn: await readLocalAddIn(bytes, options) };
 }
 
 export function addInError(error: unknown): string {

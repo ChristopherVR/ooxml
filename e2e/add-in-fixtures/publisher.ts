@@ -12,7 +12,9 @@ try {
 	if (isolated) isolated.textContent = 'Editor DOM is isolated';
 }
 void Office.onReady(({ host }) => {
-	if (ready) ready.textContent = `${host} / ${Office.context.host}`;
+	const sets = Office.context.requirements;
+	if (ready)
+		ready.textContent = `${host} / ${Office.context.host} / ${sets.isSetSupported('Selection', '1.1')} / ${sets.isSetSupported('TextCoercion')} / ${sets.isSetSupported('TextCoercion', '1.2')} / ${sets.isSetSupported('WordApi')}`;
 });
 
 document.querySelector('#read')?.addEventListener('click', () => {

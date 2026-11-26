@@ -1,3 +1,4 @@
+import { isAddInSetSupported } from './add-in-requirements';
 import { ADD_IN_PROTOCOL, ADD_IN_TEXT_LIMIT, ADD_IN_TIMEOUT, HOST_NAMES } from './add-in-protocol';
 import type { OfficeHostName } from './add-in-protocol';
 
@@ -31,6 +32,7 @@ export function connectOfficeAddIn(parentOrigin: string) {
 	const waiting = new Map<number, (result: { value: string | null } | { error: string }) => void>();
 	let nextId = 0;
 	let info: Ready | undefined;
+	let hasSelection = false;
 	const ready = new Promise<Ready>((resolve, reject) => {
 		const timer = window.setTimeout(() => {
 			port1.close();
@@ -50,6 +52,7 @@ export function connectOfficeAddIn(parentOrigin: string) {
 				if (!host) return;
 				window.clearTimeout(timer);
 				info = { host, platform: 'OfficeOnline' };
+				hasSelection = 'hasSelection' in data && data.hasSelection === true;
 				resolve(info);
 			}
 			if (!info || !('id' in data) || typeof data.id !== 'number') return;
@@ -167,7 +170,10 @@ export function connectOfficeAddIn(parentOrigin: string) {
 						return info?.platform;
 					},
 					document: selection,
-					requirements: { isSetSupported: () => false },
+					requirements: {
+						isSetSupported: (name: string, minVersion?: string) =>
+							isAddInSetSupported(hasSelection, name, minVersion),
+					},
 				},
 				'Office.context',
 			),
