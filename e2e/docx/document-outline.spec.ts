@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { contrastRatio } from '../../src/core/color/contrast';
 import type { DocxEditorElement } from '../../viewers/docx/packages/web-component/src';
 import { newDocument } from './helpers';
 
@@ -13,7 +14,12 @@ async function openOutline(page: Page) {
 		host.documentModel = {
 			...model,
 			blocks: [
-				{ type: 'paragraph', id: 'topic', style: 'Heading1', runs: [{ text: 'Topic' }] },
+				{
+					type: 'paragraph',
+					id: 'topic',
+					style: 'Heading1',
+					runs: [{ text: 'Topic', color: '#1f3762' }],
+				},
 				{ type: 'paragraph', id: 'child', style: 'Heading2', runs: [{ text: 'Nested' }] },
 				{ type: 'paragraph', id: 'body', runs: [{ text: 'Body' }] },
 				{ type: 'paragraph', id: 'next', style: 'Heading1', runs: [{ text: 'Next' }] },
@@ -25,6 +31,31 @@ async function openOutline(page: Page) {
 	await expect(editor.locator('.dve-canvas')).toHaveAttribute('data-document-view', 'outline');
 	return editor;
 }
+
+test('Outline heading text reaches 4.5:1 contrast in dark theme', async ({ page }) => {
+	await page.emulateMedia({ colorScheme: 'dark' });
+	const editor = await openOutline(page);
+	await expect(editor).toHaveAttribute('theme', 'dark');
+	const heading = editor.getByRole('heading', { name: 'Topic', exact: true });
+	const { ink, paper } = await heading.evaluate((element) => {
+		const text = document.createTreeWalker(element, NodeFilter.SHOW_TEXT).nextNode();
+		const run = text?.parentElement;
+		if (!run) throw new Error('Expected heading text');
+		for (let ancestor: Element | null = run; ancestor; ancestor = ancestor.parentElement) {
+			const background = getComputedStyle(ancestor).backgroundColor;
+			if (background !== 'rgba(0, 0, 0, 0)') {
+				return { ink: getComputedStyle(run).color, paper: background };
+			}
+		}
+		throw new Error('Expected a painted background behind the heading');
+	});
+	const hex = (rgb: string) => {
+		const channels = /^rgb\((\d+), (\d+), (\d+)\)$/.exec(rgb)?.slice(1);
+		if (!channels) throw new Error(`Expected an opaque RGB color, got ${rgb}`);
+		return channels.map((value) => Number(value).toString(16).padStart(2, '0')).join('');
+	};
+	expect(contrastRatio(hex(ink), hex(paper))).toBeGreaterThanOrEqual(4.5);
+});
 
 test('the caret skips hidden paragraphs and a selected collapsed heading acts on its branch', async ({
 	page,

@@ -230,7 +230,7 @@ test('Outlining filters and collapses branches and saves an undoable edit', asyn
 	const child = editor.locator('[data-id="child"]');
 	const paper = editor.locator('.dve-paper');
 	await expect(paper).toHaveCSS('box-shadow', 'none');
-	await expect(paper).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await expect(paper).toHaveCSS('background-color', 'rgb(255, 255, 255)');
 	const group = editor.getByRole('group', { name: 'Outline Tools controls' });
 	await expect(
 		group.getByRole('button', { name: 'Promote', exact: true }).locator('svg'),

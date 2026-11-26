@@ -7,10 +7,7 @@
 	min-height: 0 !important;
 	padding: 0 !important;
 	column-count: auto !important;
-	background: transparent;
 	box-shadow: none;
-	color: var(--ink);
-	color-scheme: inherit;
 }
 [data-document-view='outline'] > :is(.dve-header-footer-slot, .dve-notes-container),
 [data-document-view='outline'] .ProseMirror > .dve-outline-hidden {
@@ -34,7 +31,6 @@
 	box-sizing: border-box;
 	width: 0.85rem;
 	height: 0.85rem;
-	color: var(--ink);
 	font:
 		12px/1 system-ui,
 		sans-serif;
@@ -42,7 +38,7 @@
 	pointer-events: none;
 }
 .dve-outline-marker:not([data-marker='bullet']) {
-	border: 1px solid var(--muted);
+	border: 1px solid currentColor;
 	border-radius: 2px;
 }
 .dve-outline-marker[data-marker='plus']::before {
