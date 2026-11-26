@@ -15,6 +15,22 @@ const builtIn = (bytes: Uint8Array, id: string) => apply(bytes, { type: 'add-bui
 const masters = (bytes: Uint8Array) => readVisioStencil(bytes).then((file) => file.masters);
 
 describe('stencil authoring', () => {
+	it('chooses a name that differs from both local and universal names regardless of case', async () => {
+		let stencil = await createVisioStencil();
+		for (const id of ['triangle', 'ellipse', 'diamond']) stencil = await builtIn(stencil, id);
+		const zip = await JSZip.loadAsync(stencil);
+		const path = 'visio/masters/masters.xml';
+		const xml = await zip.file(path)!.async('string');
+		zip.file(
+			path,
+			xml
+				.replace('Name="Triangle"', 'Name="circle"')
+				.replace('NameU="Ellipse"', 'NameU="CIRCLE.4"')
+				.replace('Name="Diamond"', 'Name="Circle.4.1"'),
+		);
+		const result = await builtIn(await zip.generateAsync({ type: 'uint8array' }), 'circle');
+		expect((await masters(result)).at(-1)?.name).toBe('Circle.4.2');
+	});
 	it('writes every built-in as a ShapeSheet with geometry, protection, points, data and an icon', async () => {
 		for (const stencil of VISIO_BUILT_IN_STENCILS) {
 			let bytes = await createVisioStencil();

@@ -93,9 +93,14 @@ export async function addMasterToDrawing(
 	const id = String(Math.max(1, ...ids.map((value) => value + 1)));
 	// Visio names a copy whose name is taken "Name.ID".
 	const names = new Set(
-		entries.flatMap((entry) => [attribute(entry, 'NameU'), attribute(entry, 'Name')]),
+		entries
+			.flatMap((entry) => [attribute(entry, 'NameU'), attribute(entry, 'Name')])
+			.map((value) => value?.toLowerCase()),
 	);
-	const unique = names.has(name) ? `${name}.${id}` : name;
+	let unique = name;
+	for (let suffix = 0; names.has(unique.toLowerCase()); suffix++) {
+		unique = suffix === 0 ? `${name}.${id}` : `${name}.${id}.${suffix}`;
+	}
 
 	const relsPart = relationshipsPartFor(mastersPart);
 	const rels = parts.has(relsPart)
