@@ -92,12 +92,22 @@
 }
 
 /* A two-line caption plus the caret must still fit the dropdown command's box. */
-.ribbon-menu:not(.ribbon-menu-compact, .ribbon-menu-caret, .ribbon-menu-inline, .dve-table-inline-menu) {
+.ribbon-menu:not(
+	.ribbon-menu-compact,
+	.ribbon-menu-caret,
+	.ribbon-menu-inline,
+	.dve-table-inline-menu
+) {
 	gap: 1px;
 	height: 72px;
 	line-height: 1.1;
 }
-.ribbon-menu:not(.ribbon-menu-compact, .ribbon-menu-caret, .ribbon-menu-inline, .dve-table-inline-menu)
+.ribbon-menu:not(
+		.ribbon-menu-compact,
+		.ribbon-menu-caret,
+		.ribbon-menu-inline,
+		.dve-table-inline-menu
+	)
 	> .ribbon-icon:last-of-type {
 	margin-top: -3px;
 }
