@@ -59,8 +59,16 @@ interface CommandSpec {
 
 const NEEDS_NODE = {
 	key: 'pptx.gallery.smartArtCommand.needsNode',
-	text: 'Select a shape in the SmartArt text pane (Inspector) to use this command',
+	text: 'The SmartArt hierarchy does not allow this command for the current selection.',
 };
+
+/** Gallery-mode commands whose target follows the canvas selection in the contextual strip. */
+export const SMARTART_NODE_COMMANDS = [
+	['promote', 'smartArtPromote'],
+	['demote', 'smartArtDemote'],
+	['moveUp', 'smartArtMoveUp'],
+	['moveDown', 'smartArtMoveDown'],
+] as const;
 
 function topLevelIds(data: PptxSmartArtData): string[] {
 	const ids = new Set(data.nodes.map((node) => node.id));

@@ -30,7 +30,7 @@ export const translations = {
 	'pptx.gallery.smartArtCommand.resetGraphic': '그래픽 원래대로',
 	'pptx.gallery.smartArtCommand.convert': '변환',
 	'pptx.gallery.smartArtCommand.needsNode':
-		'이 명령을 사용하려면 SmartArt 텍스트 창(속성 창)에서 도형을 선택하세요',
+		'SmartArt 계층 구조상 현재 선택 항목에 이 명령을 사용할 수 없습니다.',
 	'pptx.gallery.smartArtCommand.unsupported': '이 뷰어에서는 아직 사용할 수 없습니다',
 	'pptx.gallery.smartArtCommand.textPaneHint':
 		'SmartArt를 선택한 상태에서 속성 창에서 도형을 편집하세요',

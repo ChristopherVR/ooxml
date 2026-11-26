@@ -5,7 +5,8 @@
 				[data-ribbon-group='audioFormat.pictureStyles'],
 				[data-ribbon-group='videoFormat.arrange'],
 				[data-ribbon-group='audioFormat.arrange'],
-				[data-ribbon-group='smartArtFormat.arrange']
+				[data-ribbon-group='smartArtFormat.arrange'],
+				[data-ribbon-group='smartArtDesign.createGraphic']
 			):not([data-collapsed])
 		)
 		.row {
@@ -25,6 +26,10 @@
 			)
 		)
 		::slotted([mode='inline']) {
+		grid-row: span 3;
+	}
+
+	:host([data-ribbon-group='smartArtDesign.createGraphic']) ::slotted(pptx-ui-contextual-ribbon) {
 		grid-row: span 3;
 	}
 }

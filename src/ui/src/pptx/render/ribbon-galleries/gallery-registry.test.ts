@@ -14,6 +14,7 @@ import {
 } from './gallery-placements';
 import { applyRibbonGalleryItem, buildRibbonGallery, RIBBON_GALLERY_IDS } from './gallery-registry';
 import { galleryItemLabel, inlineGalleryItems } from './gallery-view';
+import { SMARTART_NODE_COMMANDS } from './smartart-commands';
 
 const colorMap = { dk1: '#000000', lt1: '#FFFFFF', accent1: '#156082', accent2: '#E97132' };
 
@@ -48,6 +49,7 @@ describe('ribbon gallery registry', () => {
 	it('places every gallery on a tab or in the inspector', () => {
 		const placed = new Set([
 			...INSPECTOR_GALLERIES,
+			...SMARTART_NODE_COMMANDS.map(([, gallery]) => gallery),
 			...FIXED_TAB_GALLERIES.map((p) => p.gallery),
 			...Object.values(CONTEXTUAL_TAB_GROUPS).flatMap((groups) =>
 				groups.flatMap((group) => group.galleries.map((g) => g.gallery)),

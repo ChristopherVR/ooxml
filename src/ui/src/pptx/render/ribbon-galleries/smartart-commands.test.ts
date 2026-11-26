@@ -150,7 +150,16 @@ describe('smartArt Design commands', () => {
 		expect(flatDesc.command?.hintKey).toBe('pptx.gallery.smartArtCommand.needsNode');
 		expect(run('smartArtPromote')).toBeNull();
 
-		const result = run('smartArtPromote', { element: hierarchicalSmartArt });
+		expect(
+			run('smartArtPromote', {
+				element: hierarchicalSmartArt,
+				selectedSmartArtNodeId: 'n1',
+			}),
+		).toBeNull();
+		const result = run('smartArtPromote', {
+			element: hierarchicalSmartArt,
+			selectedSmartArtNodeId: 'n1a',
+		});
 		expect(result?.kind).toBe('element');
 		const data = (result as { patch: { smartArtData: PptxSmartArtData } }).patch.smartArtData;
 		expect(data.nodes.find((node) => node.id === 'n1a')?.parentId).toBeUndefined();

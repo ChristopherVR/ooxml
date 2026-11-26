@@ -172,7 +172,7 @@ describe('shared ribbon gallery command mode', () => {
 		const pick = vi.fn();
 		gallery.addEventListener('gallery-pick', pick);
 		expect(gallery.trigger.disabled).toBeTruthy();
-		expect(gallery.trigger.title).toContain('text pane');
+		expect(gallery.trigger.title).toContain('SmartArt hierarchy');
 		gallery.trigger.click();
 		expect(pick).not.toHaveBeenCalled();
 	});

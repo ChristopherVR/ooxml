@@ -30,7 +30,7 @@ export const translations = {
 	'pptx.gallery.smartArtCommand.resetGraphic': 'グラフィックのリセット',
 	'pptx.gallery.smartArtCommand.convert': '変換',
 	'pptx.gallery.smartArtCommand.needsNode':
-		'このコマンドを使用するには、SmartArt のテキスト ウィンドウ (インスペクター) で図形を選択してください',
+		'現在の選択では、SmartArt の階層上このコマンドを実行できません。',
 	'pptx.gallery.smartArtCommand.unsupported': 'このビューアーではまだ使用できません',
 	'pptx.gallery.smartArtCommand.textPaneHint':
 		'SmartArt を選択した状態で、インスペクターで図形を編集します',

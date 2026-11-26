@@ -321,6 +321,7 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			group: 'smartArtDesign.createGraphic',
 			labelKey: 'pptx.ribbon.groupCreateGraphic',
 			label: 'Create Graphic',
+			contextualStrip: true,
 			galleries: [
 				{
 					gallery: 'smartArtAddShape',
@@ -348,28 +349,8 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 					mode: 'dropdown',
 				},
 				{
-					gallery: 'smartArtPromote',
-					control: 'smartArtDesign.createGraphic.promote',
-					mode: 'dropdown',
-				},
-				{
-					gallery: 'smartArtDemote',
-					control: 'smartArtDesign.createGraphic.demote',
-					mode: 'dropdown',
-				},
-				{
 					gallery: 'smartArtRightToLeft',
 					control: 'smartArtDesign.createGraphic.rightToLeft',
-					mode: 'dropdown',
-				},
-				{
-					gallery: 'smartArtMoveUp',
-					control: 'smartArtDesign.createGraphic.moveUp',
-					mode: 'dropdown',
-				},
-				{
-					gallery: 'smartArtMoveDown',
-					control: 'smartArtDesign.createGraphic.moveDown',
 					mode: 'dropdown',
 				},
 			],

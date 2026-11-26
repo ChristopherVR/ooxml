@@ -31,7 +31,7 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.smartArtCommand.resetGraphic': 'Restablecer gráfico',
 	'pptx.gallery.smartArtCommand.convert': 'Convertir',
 	'pptx.gallery.smartArtCommand.needsNode':
-		'Seleccione una forma en el panel de texto de SmartArt (Inspector) para usar este comando',
+		'La jerarquía de SmartArt no permite este comando para la selección actual.',
 	'pptx.gallery.smartArtCommand.unsupported': 'Aún no disponible en este visor',
 	'pptx.gallery.smartArtCommand.textPaneHint':
 		'Edite las formas en el Inspector mientras el SmartArt está seleccionado',

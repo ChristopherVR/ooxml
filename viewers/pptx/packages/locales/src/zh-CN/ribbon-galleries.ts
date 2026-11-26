@@ -30,8 +30,7 @@ export const translations: Record<string, string> = {
 	'pptx.gallery.smartArtCommand.moveDown': '下移',
 	'pptx.gallery.smartArtCommand.resetGraphic': '重置图形',
 	'pptx.gallery.smartArtCommand.convert': '转换',
-	'pptx.gallery.smartArtCommand.needsNode':
-		'请在 SmartArt 文本窗格（检查器）中选择一个形状以使用此命令',
+	'pptx.gallery.smartArtCommand.needsNode': '当前选择在 SmartArt 层次结构中无法使用此命令。',
 	'pptx.gallery.smartArtCommand.unsupported': '此查看器暂不支持',
 	'pptx.gallery.smartArtCommand.textPaneHint': '选中 SmartArt 时，请在检查器中编辑形状',
 	'pptx.ribbon.groupThemes': '主题',

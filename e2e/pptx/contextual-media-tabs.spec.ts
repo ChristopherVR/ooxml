@@ -231,3 +231,21 @@ test('SmartArt Format applies galleries to the canvas node selection', async ({ 
 	);
 	expect(xml.match(/prst="hexagon"/gu)).toHaveLength(2);
 });
+
+test('SmartArt Design promotes and demotes the selected canvas node', async ({ page }) => {
+	await loadDeck(page, fixture('smartart-build-reveal.pptx'));
+	const node = (name: string) =>
+		page.locator('[data-pptx-viewport] [data-smartart-node-id]').filter({ hasText: name }).first();
+	await selectElement(page, node('Alpha'));
+	await tab(page, 'smartArtDesign').click();
+	const promote = control(page, 'smartArtDesign.createGraphic.promote').getByRole('button');
+	const demote = control(page, 'smartArtDesign.createGraphic.demote').getByRole('button');
+	await expect(demote).toBeDisabled();
+	await selectElement(page, node('Beta'));
+	await expect(promote).toBeDisabled();
+	await expect(demote).toBeEnabled();
+	await demote.click();
+	await expect(promote).toBeEnabled();
+	await promote.click();
+	await expect(promote).toBeDisabled();
+});

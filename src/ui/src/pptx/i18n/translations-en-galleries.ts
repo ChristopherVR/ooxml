@@ -50,7 +50,7 @@ export const galleryTranslationsEn: Record<string, string> = {
 	'pptx.gallery.smartArtCommand.resetGraphic': 'Reset Graphic',
 	'pptx.gallery.smartArtCommand.convert': 'Convert',
 	'pptx.gallery.smartArtCommand.needsNode':
-		'Select a shape in the SmartArt text pane (Inspector) to use this command',
+		'The SmartArt hierarchy does not allow this command for the current selection.',
 	'pptx.gallery.smartArtCommand.unsupported': 'Not available yet in this viewer',
 	'pptx.gallery.smartArtCommand.textPaneHint':
 		'Edit the shapes in the Inspector while the SmartArt is selected',
