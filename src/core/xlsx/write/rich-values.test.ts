@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { encodePng } from '../../drawingml/raster-encode';
 import { getCell } from '../cells';
+import { createCalcEngine } from '../formula/engine';
 import { createEditSession } from '../edit/session';
 import { cellView } from '../layout/cell-view';
 import { loadXlsx } from '../read/load';
@@ -51,6 +52,19 @@ describe('SpreadsheetML rich values', () => {
 		expect(cellView(saved, 0, 0, 0).picture?.altText).toBe('New <alt>');
 		expect(getCell(saved.sheets[0]!, 1, 0)).toEqual({ value: 42 });
 		expect(getCell(saved.sheets[0]!, 0, 1)?.dynamicArray).toBe(true);
+	});
+
+	it('stops showing a metadata picture when its formula recalculates to a scalar', async () => {
+		const session = createEditSession(createWorkbook());
+		session.addCellPicture(0, A1, PNG, 'Cached picture');
+		const book = await loadXlsx(await saveXlsx(session.workbook));
+		const cell = getCell(book.sheets[0]!, 0, 0)!;
+		cell.formula = '1+1';
+		expect(cell.valueMetadata).toBeDefined();
+		expect(cellView(book, 0, 0, 0).picture?.altText).toBe('Cached picture');
+		createCalcEngine(book).recalculateAll();
+		expect(cell.value).toBe(2);
+		expect(cellView(book, 0, 0, 0).picture).toBeUndefined();
 	});
 
 	it('converts a picture in both directions and carries its alt text and media through save', async () => {

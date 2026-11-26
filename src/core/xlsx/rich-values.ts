@@ -1,5 +1,5 @@
 import { inspectRasterImage, type RasterImageInfo } from '../drawingml/raster-image';
-import type { Cell, CellError, ErrorCode, Workbook } from './model';
+import { type Cell, type CellError, type ErrorCode, isCellError, type Workbook } from './model';
 
 export const RICH_NS = 'http://schemas.microsoft.com/office/spreadsheetml/2017/richdata';
 export const RICH_REL_NS = 'http://schemas.microsoft.com/office/spreadsheetml/2022/richvaluerel';
@@ -113,6 +113,7 @@ export function cellPictureInfo(bytes: Uint8Array): RasterImageInfo | undefined 
 
 export function embeddedPicture(workbook: Workbook, cell: Cell): EmbeddedCellPicture | undefined {
 	if (cell.inCellPicture) return cell.inCellPicture;
+	if (!isCellError(cell.value)) return undefined;
 	const store = workbook.richValues;
 	const index =
 		cell.valueMetadata === undefined ? undefined : store?.byMetadata.get(cell.valueMetadata);
