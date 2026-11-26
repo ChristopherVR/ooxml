@@ -113,6 +113,31 @@
 		},
 		{
 			"kind": "javascript-module",
+			"path": "dialog/add-ins-dialog.ts",
+			"declarations": [
+				{
+					"kind": "class",
+					"name": "OfficeUiAddInsDialog",
+					"tagName": "office-ui-add-ins-dialog",
+					"customElement": true,
+					"description": "On-demand Office Add-ins browser with local manifest review and a host-configured storefront.",
+					"attributes": [],
+					"members": [],
+					"events": []
+				}
+			],
+			"exports": [
+				{
+					"kind": "custom-element-definition",
+					"name": "office-ui-add-ins-dialog",
+					"declaration": {
+						"name": "OfficeUiAddInsDialog"
+					}
+				}
+			]
+		},
+		{
+			"kind": "javascript-module",
 			"path": "teams/app-rail.ts",
 			"declarations": [
 				{

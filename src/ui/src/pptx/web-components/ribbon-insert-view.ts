@@ -1,3 +1,4 @@
+import { containsComposed, modalActiveElement } from '../../dialog/focus';
 import {
 	ACTION_BUTTON_PRESETS,
 	actionButtonLabelKey,
@@ -408,7 +409,7 @@ export function createRibbonInsertView(
 	const largeLayout = new Map<string, HTMLElement[]>();
 	const stackKids = new Map<HTMLElement, HTMLElement[]>();
 	const shown = new Map<string, string>();
-	const layoutGroup = (id: string) => {
+	const arrangeGroup = (id: string) => {
 		const el = groups.get(id)!;
 		const scale = scales.get(id) ?? 'large';
 		const items = largeLayout.get(id)!;
@@ -442,6 +443,17 @@ export function createRibbonInsertView(
 		}
 		flush();
 		el.replaceChildren(...columns);
+	};
+	const layoutGroup = (id: string) => {
+		const group = groups.get(id);
+		const active = modalActiveElement(doc);
+		const focused =
+			group && active instanceof HTMLElement && containsComposed(group, active)
+				? active
+				: undefined;
+		arrangeGroup(id);
+		if (focused?.isConnected && modalActiveElement(doc) !== focused)
+			focused.focus({ preventScroll: true });
 	};
 	const root = INSERT_GROUPS.map((spec) => {
 		const children: HTMLElement[] = [];

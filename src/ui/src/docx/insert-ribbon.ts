@@ -88,8 +88,8 @@ export function buildInsertGroups(): HTMLElement[] {
 		),
 		group(
 			'Add-ins',
-			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
-			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
+			tool('Get Add-ins', 'addIns', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
+			tool('My Add-ins', 'addIns', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
 		),
 		group(
 			'Media',

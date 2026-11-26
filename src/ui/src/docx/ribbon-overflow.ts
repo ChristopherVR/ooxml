@@ -12,6 +12,7 @@ const GROUP_ICONS: Record<string, RibbonIcon> = {
 	Tables: 'table',
 	Illustrations: 'picture',
 	Links: 'link',
+	'Add-ins': 'addIns',
 	Pages: 'pageBreak',
 	Breaks: 'sectionNext',
 	Media: 'picture',

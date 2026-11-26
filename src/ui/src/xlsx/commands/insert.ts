@@ -183,21 +183,29 @@ export function insertCommands(): Command[] {
 		{
 			id: 'insert.get-add-ins',
 			label: 'Get Add-ins',
-			icon: icon('link'),
-			run: (ctx) =>
-				openOfficeAddIns(ctx.root, 'getAddIns', (label) => ctx.t(label), 'excel', ctx.locale()),
+			icon: 'addIns',
+			run: (ctx) => {
+				void openOfficeAddIns(
+					ctx.root,
+					'getAddIns',
+					(label) => ctx.t(label),
+					'excel',
+					ctx.locale(),
+				);
+			},
 		},
 		{
 			id: 'insert.my-add-ins',
 			label: 'My Add-ins',
-			icon: icon('link'),
-			run: (ctx) =>
-				openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label), 'excel', ctx.locale()),
+			icon: 'addIns',
+			run: (ctx) => {
+				void openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label), 'excel', ctx.locale());
+			},
 		},
 		editing({
 			id: 'insert.forms',
 			label: 'Forms',
-			icon: icon('link'),
+			icon: 'forms',
 			lock: 'insertHyperlinks',
 			run: async (ctx) => {
 				const current = target(ctx);

@@ -1,5 +1,8 @@
 /** Visio ribbon strings for the zh-CN locale (commands), keyed by the English text. Not reviewed by a native speaker. */
 export const zhCNCommands: Readonly<Record<string, string>> = {
+	'Add-ins': '加载项',
+	'Get Add-ins': '获取加载项',
+	'My Add-ins': '我的加载项',
 	Home: '开始',
 	Insert: '插入',
 	Design: '设计',

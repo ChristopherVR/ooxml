@@ -11,6 +11,9 @@ import {
 	visioRotationShape,
 	visioSelectionIsOnPage,
 } from 'ooxml-core/visio/ui';
+import { openOfficeAddIns } from '../ribbon/add-in-dialog';
+import { ribbonLocale } from './ribbon-localize';
+import { translateRibbonText } from './ribbon-locale';
 import { regionKeyDirection } from '../region-focus';
 import { RIBBON_ACTION_EVENT, type VisioRibbonAction, type CanvasTool } from './ribbon-action';
 import { moveVisioRegion } from './viewer-regions';
@@ -276,6 +279,17 @@ export class ViewerCommands {
 				this.#draw.cancel();
 				this.#connector.cancel();
 				this.#text.cancel();
+			},
+			openAddIns: (mode) => {
+				const ribbon = host.root.querySelector('office-ui-ribbon');
+				const locale = ribbon ? ribbonLocale(ribbon) : 'en';
+				void openOfficeAddIns(
+					host.root,
+					mode,
+					(text) => translateRibbonText(locale, text),
+					'visio',
+					locale,
+				);
 			},
 			insertPage: () => this.#insertPage(),
 			insert: (item) => this.#insert.open(item),

@@ -1,5 +1,8 @@
 /** Visio ribbon strings for the en locale (commands), keyed by the English text. Not reviewed by a native speaker. */
 export const enCommands: Readonly<Record<string, string>> = {
+	'Add-ins': 'Add-ins',
+	'Get Add-ins': 'Get Add-ins',
+	'My Add-ins': 'My Add-ins',
 	Home: 'Home',
 	Insert: 'Insert',
 	Design: 'Design',

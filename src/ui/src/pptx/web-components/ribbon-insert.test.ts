@@ -105,16 +105,39 @@ const button = (host: HTMLElement, id: string) => {
 const calls = (requests: ReturnType<typeof vi.fn>) => requests.mock.calls.map(([detail]) => detail);
 
 describe('shared Insert view', () => {
-	it('opens add-in discovery and management while the slide is read-only', () => {
+	it('mounts the add-in dialog on the editor root and restores its opener on close', async () => {
 		const { host } = mount({ editable: false });
-		button(host, 'insert.addIns.getAddIns').click();
-		const dialog = host.querySelector<OfficeUiDialog>('office-ui-dialog')!;
-		expect(dialog.querySelector('a')?.hostname).toBe('marketplace.microsoft.com');
-		dialog.close();
-		button(host, 'insert.addIns.myAddIns').click();
-		expect([...host.querySelectorAll('office-ui-dialog')].at(-1)?.textContent).toContain(
-			'No add-ins are available in this editor.',
+		const root = document.body.appendChild(document.createElement('div'));
+		root.dataset.pptxEditorChrome = '';
+		root.append(host);
+		const get = button(host, 'insert.addIns.getAddIns');
+		get.focus();
+		get.click();
+		const shell = await vi.waitFor(() => {
+			const dialog = root
+				.querySelector(':scope > office-ui-add-ins-dialog')
+				?.shadowRoot?.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
+			if (!dialog) throw new Error('Missing editor dialog');
+			return dialog;
+		});
+		expect(host.querySelector('office-ui-add-ins-dialog')).toBeNull();
+		expect(shell.heading).toBe('Office Add-ins');
+		shell.close();
+		await vi.waitFor(() => expect(root.querySelector('office-ui-add-ins-dialog')).toBeNull());
+		expect(control(host, 'insert.addIns.getAddIns').shadowRoot?.activeElement).toBe(get);
+	});
+
+	it('keeps the focused Insert control when the group repacks its stacks', () => {
+		const { host } = mount();
+		const get = button(host, 'insert.addIns.getAddIns');
+		const group = host.querySelector<HTMLElement & { setRibbonScale: (size: string) => void }>(
+			'[data-ribbon-group="insert.addIns"]',
 		);
+		get.focus();
+		group?.setRibbonScale('small');
+		expect(control(host, 'insert.addIns.getAddIns').shadowRoot?.activeElement).toBe(get);
+		group?.setRibbonScale('large');
+		expect(control(host, 'insert.addIns.getAddIns').shadowRoot?.activeElement).toBe(get);
 	});
 	it('lists the groups in PowerPoint order with its captions', () => {
 		const { host } = mount();

@@ -848,6 +848,6 @@ choosing the picture for a single level only (the new list uses it on every leve
 
 ## Office add-ins
 
-Get Add-ins validates local task-pane XML and unified JSON or ZIP manifests. Consent adds
+Office Add-ins accepts local task-pane XML and unified JSON or ZIP manifests from both Insert commands. Consent adds
 a session-only record to My Add-ins, where it can be removed. Office.js execution and
 store installation remain open.

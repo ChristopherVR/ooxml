@@ -1,7 +1,10 @@
+import { getIcon } from '../icons';
+
 /** Line icons for ribbon buttons on a 24x24 grid, drawn with `currentColor` so themes apply. */
 const paths = {
 	envelope: 'M3 5h18v14H3z M3 5l9 7 9-7',
 	smartArt: 'M9 3h6v4H9z M3 15h6v4H3z M15 15h6v4h-6z M12 7v4 M6 15v-4h12v4',
+	addIns: getIcon('addIns')?.d ?? '',
 	addShape: 'M4 6h10v8H4z M17 14v6 M14 17h6',
 	promote: 'M10 6H4 M20 12H8 M20 18H8 M4 12l3-3 M4 12l3 3',
 	demote: 'M4 6h16 M10 12h10 M10 18h10 M4 9l3 3-3 3',
@@ -210,8 +213,8 @@ function frameOf(name: RibbonIcon): { viewBox: string; stroke: number } | null {
 /** An `<svg>` for `name`; `size` is its rendered edge in CSS pixels. */
 export function ribbonIcon(name: RibbonIcon, size = 16): SVGSVGElement {
 	const svg = document.createElementNS(NS, 'svg');
-	const frame = size >= FIT_FROM ? frameOf(name) : null;
-	svg.setAttribute('viewBox', frame?.viewBox ?? '0 0 24 24');
+	const frame = name !== 'addIns' && size >= FIT_FROM ? frameOf(name) : null;
+	svg.setAttribute('viewBox', frame?.viewBox ?? (name === 'addIns' ? '0 0 20 20' : '0 0 24 24'));
 	svg.setAttribute('width', String(size));
 	svg.setAttribute('height', String(size));
 	svg.setAttribute('aria-hidden', 'true');

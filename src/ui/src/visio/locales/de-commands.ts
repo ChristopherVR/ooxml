@@ -1,5 +1,8 @@
 /** Visio ribbon strings for the de locale (commands), keyed by the English text. Not reviewed by a native speaker. */
 export const deCommands: Readonly<Record<string, string>> = {
+	'Add-ins': 'Add-Ins',
+	'Get Add-ins': 'Add-Ins abrufen',
+	'My Add-ins': 'Meine Add-Ins',
 	Home: 'Start',
 	Insert: 'Einfügen',
 	Design: 'Entwurf',

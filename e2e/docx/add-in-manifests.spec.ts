@@ -8,41 +8,65 @@ const fixture = new URL(
 	import.meta.url,
 );
 
-test('opens Get Add-ins while the local picker loads', async ({ page }) => {
-	let release = () => {};
-	const gate = new Promise<void>((resolve) => {
-		release = resolve;
-	});
-	await page.route('**/assets/add-in-local-dialog-*.js', async (route) => {
-		await gate;
-		await route.continue();
-	});
-	try {
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`${framework}: reviews, cancels and installs an add-in from My Add-ins`, async ({
+		page,
+	}) => {
 		await page.setViewportSize({ width: 2400, height: 900 });
-		await page.goto('/?framework=vanilla');
+		await page.goto(`/?framework=${framework}`);
 		await newDocument(page);
 		const editor = page.locator('docx-editor');
 		await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+		const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 		const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await reveal(editor, get);
 		await get.press('Enter');
-		const dialog = editor.locator('office-ui-dialog[open]');
-		const loading = dialog.getByRole('status').filter({ hasText: 'Loading add-ins…' });
-		await expect(dialog.getByRole('dialog', { name: 'Get Add-ins' })).toBeVisible();
-		await expect(loading).toBeVisible();
+		await expect(dialog.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
+			'aria-selected',
+			'true',
+		);
 		await page.keyboard.press('Escape');
 		await expect(dialog).toBeHidden();
 		await expect(get).toBeFocused();
-		await get.press('Enter');
-		await expect(loading).toBeVisible();
-		release();
-		await expect(dialog.getByLabel('Choose a local add-in file')).toBeFocused();
-		await expect(loading).toHaveCount(0);
-		await expect(editor.getByLabel('Choose a local add-in file')).toHaveCount(1);
-	} finally {
-		release();
-	}
-});
+		await reveal(editor, mine);
+		await mine.press('Enter');
+		const search = dialog.getByRole('searchbox', { name: 'Search add-ins' });
+		await expect(search).toBeFocused();
+		const initialBox = await dialog.getByRole('dialog', { name: 'Office Add-ins' }).boundingBox();
+		const upload = dialog.getByRole('button', { name: 'Upload My Add-in' });
+		const chooser = page.waitForEvent('filechooser');
+		await upload.click();
+		await (
+			await chooser
+		).setFiles({ name: 'notes.xml', mimeType: 'application/xml', buffer: await readFile(fixture) });
+		const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
+		await expect(consent).toContainText('Read and change this document');
+		expect(await dialog.getByRole('dialog', { name: 'Office Add-ins' }).boundingBox()).toEqual(
+			initialBox,
+		);
+		await consent.getByRole('button', { name: 'Cancel' }).click();
+		await expect(search).toBeFocused();
+		await expect(dialog).toContainText('No add-ins');
+		await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+			name: 'notes.xml',
+			mimeType: 'application/xml',
+			buffer: await readFile(fixture),
+		});
+		await consent.getByRole('button', { name: 'Install Notes' }).click();
+		await expect(dialog).toBeHidden();
+		await expect(mine).toBeFocused();
+		await mine.press('Enter');
+		await expect(dialog).toContainText('Notes (1.0.0)');
+		await search.fill('unmatched');
+		await expect(dialog).toContainText('No matching add-ins.');
+		await search.fill('NOTES');
+		await expect(dialog).toContainText('Notes (1.0.0)');
+		await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+		await expect(dialog).toBeHidden();
+		await expect(mine).toBeFocused();
+	});
+}
 
 test('consents to a local Word add-in and preserves it after an invalid update', async ({
 	page,
@@ -61,11 +85,9 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 	await reveal(editor, get);
 	await get.press('Enter');
-	const preview = editor.locator('office-ui-dialog[open]');
+	const preview = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 	const file = preview.getByLabel('Choose a local add-in file');
-	await expect(file).toBeFocused();
-	const marketplace = preview.getByRole('link', { name: /Microsoft Marketplace/ });
-	await expect(marketplace).toBeVisible();
+	await expect(preview.getByRole('searchbox')).toBeFocused();
 	const source = (await readFile(fixture, 'utf8'))
 		.replace(
 			'<DefaultSettings>',
@@ -92,12 +114,8 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(consent).toContainText('https://notes.example.test');
 	await expect(consent).toContainText('https://assets.example.test');
 	await expect(consent).not.toContainText('Document.ReadWrite.User');
-	await expect(marketplace).toBeHidden();
-	await expect(
-		preview.getByText('Browse add-ins for Microsoft Office.', { exact: false }),
-	).toBeHidden();
 	const install = consent.getByRole('button', { name: 'Install Notes', exact: true });
-	await expect(install).toBeFocused();
+	await expect(consent.getByRole('heading')).toBeFocused();
 	await install.press('Enter');
 	await expect(preview).toBeHidden();
 	if (await get.isVisible()) await expect(get).toBeFocused();
@@ -110,7 +128,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 
 	await reveal(editor, mine);
 	await mine.click();
-	const installed = editor.locator('office-ui-dialog[open]');
+	const installed = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 	await expect(installed).toContainText('Notes (1.0.0)');
 	await expect(installed).toContainText('Running add-ins is unavailable');
 	await expect(installed).toContainText('Unavailable requirement · WordApi 1.1');

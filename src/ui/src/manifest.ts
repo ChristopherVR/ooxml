@@ -55,10 +55,13 @@ function describeClass(text: string, name: string): string {
 		.trim();
 }
 
+/** Tags registered separately so the first paint does not load their modules. */
+export const LAZY_TAGS = ['office-ui-add-ins-dialog'] as const;
+
 export function buildManifest(root: string = SRC) {
 	const files = sources(SRC).map((path) => ({ path, text: readFileSync(path, 'utf8') }));
 	const modules = [];
-	for (const tag of [...OFFICE_UI_TAGS].sort()) {
+	for (const tag of [...OFFICE_UI_TAGS, ...LAZY_TAGS].sort()) {
 		// The formatter may wrap the call, so match across whitespace.
 		const definition = new RegExp(`definer\\(\\s*'${tag}',\\s*\\(\\)\\s*=>\\s*(\\w+)`);
 		const file = files.find(({ text }) => definition.test(text));

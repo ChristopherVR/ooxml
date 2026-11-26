@@ -1,7 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import type { OfficeUiDialog } from '../dialog/dialog';
-import { openOfficeAddIns, setOfficeAddInCatalog } from './add-in-dialog';
-import './add-in-local-dialog';
+import { openOfficeAddIns, setOfficeAddInCatalog, setOfficeAddInStorefront } from './add-in-dialog';
 
 const description = "<img src='https://example.test/description' />";
 const descriptionPrefix = `${description}${'📝'.repeat(249 - description.length)}`;
@@ -17,23 +16,70 @@ const xml = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/
 
 afterEach(() => document.body.replaceChildren());
 
-it('opens while the local picker loads and focuses it ahead of the host catalog', async () => {
+const getDialog = (root: ShadowRoot) =>
+	root
+		.querySelector('office-ui-add-ins-dialog')
+		?.shadowRoot?.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
+
+it('opens at the editor root, filters the catalog and restores the opener on Escape', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
-	setOfficeAddInCatalog(editor, [{ id: 'host', label: 'Host add-in', install: () => {} }]);
-	openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'fr');
-	const dialog = editor.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
-	expect(dialog?.querySelector('[role="status"]')?.textContent).toBe('Chargement des compléments…');
-	await vi.waitFor(() => {
-		const input = dialog?.querySelector<HTMLInputElement>('input[type=file]');
-		expect(input).toBeInstanceOf(HTMLInputElement);
-		expect(editor.activeElement).toBe(input);
-	});
-	expect(dialog?.textContent).not.toContain('Chargement des compléments…');
-	expect(dialog?.querySelector('[aria-label="Install Host add-in"]')).toBeInstanceOf(
-		HTMLButtonElement,
+	const opener = editor.appendChild(document.createElement('button'));
+	opener.focus();
+	setOfficeAddInCatalog(editor, [
+		{ id: 'host', label: 'Host add-in', install: () => {} },
+		{ id: 'other', label: 'Other add-in', install: () => {} },
+	]);
+	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	const dialog = getDialog(editor);
+	expect(dialog?.heading).toBe('Office Add-ins');
+	const search = dialog?.querySelector<HTMLInputElement>('input[type="search"]');
+	if (!search) throw new Error('Missing search field');
+	expect(dialog?.getRootNode()).toBe(editor.querySelector('office-ui-add-ins-dialog')?.shadowRoot);
+	expect(dialog?.querySelector('a')).toBeNull();
+	expect(dialog?.querySelectorAll('li')).toHaveLength(2);
+	search.value = 'HOST';
+	search.dispatchEvent(new Event('input'));
+	expect(dialog?.querySelectorAll('li')).toHaveLength(1);
+	expect(dialog?.querySelector('li')?.textContent).toContain('Host add-in');
+	search.dispatchEvent(
+		new KeyboardEvent('keydown', { key: 'Escape', composed: true, bubbles: true }),
 	);
+	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
+	expect(editor.activeElement).toBe(opener);
+});
+
+it('offers only the configured storefront and validates BYO bytes before installing', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	const open = () => openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	setOfficeAddInStorefront(editor, { kind: 'microsoft', url: 'javascript:alert(1)' });
+	await open();
+	expect(getDialog(editor)?.querySelector('a')).toBeNull();
+	getDialog(editor)?.close();
+	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
+	setOfficeAddInStorefront(editor, { kind: 'microsoft' });
+	await open();
+	const link = getDialog(editor)?.querySelector('a');
+	expect(link?.hostname).toBe('marketplace.microsoft.com');
+	expect(link?.rel).toBe('noopener noreferrer');
+	getDialog(editor)?.close();
+	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
+	const read = vi.fn(() => new File([xml], 'manifest.xml'));
+	setOfficeAddInStorefront(editor, {
+		kind: 'catalog',
+		entries: [{ id: 'notes', label: 'Notes', read }],
+	});
+	await open();
+	const dialog = getDialog(editor);
+	expect(dialog?.querySelector('a')).toBeNull();
+	expect(read).not.toHaveBeenCalled();
+	dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]')?.click();
+	await vi.waitFor(() => expect(dialog?.querySelector('#consent-title')).toBeTruthy());
+	expect(read).toHaveBeenCalledOnce();
+	expect(dialog?.textContent).toContain('Read this document');
 	dialog?.close();
 });
 
@@ -44,13 +90,12 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	const other = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
-	const activeDialog = (root: ShadowRoot) =>
-		root.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
+	const activeDialog = getDialog;
 	const open = async (mode: 'getAddIns' | 'myAddIns', root = editor) => {
-		openOfficeAddIns(root, mode, (text) => text, 'word', 'en');
+		await openOfficeAddIns(root, mode, (text) => text, 'word', 'en');
 		return vi.waitFor(() => {
 			const dialog = activeDialog(root);
-			if (!dialog) throw new Error('Missing dialog');
+			if (!dialog) throw new Error(`Missing ${mode} dialog`);
 			return dialog;
 		});
 	};
@@ -70,17 +115,19 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	const abandoned = await open('getAddIns');
 	await picker(abandoned, xml);
 	await vi.waitFor(() => expect(control(abandoned, 'Install')).toBeDefined());
-	const consent = abandoned.querySelector('section[aria-label="Review add-in permissions"]');
+	const consent = abandoned.querySelector('section[aria-labelledby="consent-title"]');
 	expect(consent?.textContent).toContain('This add-in requests:');
 	expect(consent?.textContent).toContain('Read this document');
 	expect(consent?.textContent).toContain('https://example.test');
 	expect(consent?.textContent).toContain('Lab Notes');
 	expect(consent?.textContent).not.toContain('Document.Read.User');
-	expect(abandoned.querySelector('a')?.parentElement?.hidden).toBe(true);
 	expect([...abandoned.querySelectorAll('p')].map((item) => item.textContent)).toContain(
 		`${descriptionPrefix}…`,
 	);
 	expect(abandoned.querySelector('img, iframe')).toBeNull();
+	control(abandoned, 'Cancel')?.click();
+	expect(abandoned.querySelector('#consent-title')).toBeNull();
+	expect(abandoned.querySelector('#upload')).toHaveProperty('disabled', false);
 	abandoned.close();
 	expect((await open('myAddIns')).textContent).toContain('No add-ins');
 	activeDialog(editor)?.close();
@@ -122,6 +169,7 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	await vi.waitFor(() => expect(updated.textContent).toContain('1.0.1'));
 	expect(updated.textContent).not.toContain('1.0.0');
 	control(updated, 'Remove')?.click();
+	await vi.waitFor(() => expect(activeDialog(editor)).toBeUndefined());
 	expect((await open('myAddIns')).textContent).toContain('No add-ins');
 	activeDialog(editor)?.close();
 });

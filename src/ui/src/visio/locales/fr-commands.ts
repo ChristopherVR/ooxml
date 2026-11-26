@@ -1,5 +1,8 @@
 /** Visio ribbon strings for the fr locale (commands), keyed by the English text. Not reviewed by a native speaker. */
 export const frCommands: Readonly<Record<string, string>> = {
+	'Add-ins': 'Compléments',
+	'Get Add-ins': 'Obtenir des compléments',
+	'My Add-ins': 'Mes compléments',
 	Home: 'Accueil',
 	Insert: 'Insertion',
 	Design: 'Création',

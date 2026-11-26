@@ -138,7 +138,7 @@ export class InsertController {
 			const toolbar = this.host.toolbar();
 			const root = toolbar?.getRootNode();
 			if (toolbar && root?.nodeType === 11) {
-				openOfficeAddIns(
+				void openOfficeAddIns(
 					root as ShadowRoot,
 					action.mode,
 					(label) => translateUiText(toolbar, label),

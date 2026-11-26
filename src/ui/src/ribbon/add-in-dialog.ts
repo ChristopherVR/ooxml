@@ -1,24 +1,11 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
-import { normalizeLocale } from 'ooxml-core/i18n';
-import {
-	officeServiceLink,
-	showOfficeServiceDialog,
-	type OfficeServiceText,
-} from '../dialog/office-service-dialog';
+import { modalActiveElement } from '../dialog/focus';
+import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
+export type AddInDialogProduct = OfficeAddInHost | 'visio';
 
-const englishLoadStatus = ['Loading add-ins…', 'Could not load add-ins.'] as const;
-const addInLoadStatuses = new Map<string, readonly [string, string]>([
-	['fr', ['Chargement des compléments…', 'Impossible de charger les compléments.']],
-	['de', ['Add-Ins werden geladen…', 'Add-Ins konnten nicht geladen werden.']],
-	['es', ['Cargando complementos…', 'No se pudieron cargar los complementos.']],
-	['zh-CN', ['正在加载加载项…', '无法加载加载项。']],
-	['ja', ['アドインを読み込んでいます…', 'アドインを読み込めませんでした。']],
-	['ko', ['추가 기능을 불러오는 중…', '추가 기능을 불러오지 못했습니다.']],
-]);
-
-/** A trusted host supplies the catalog and updates its ribbon tabs after changes. */
+/** Trusted host commands for add-ins that are already implemented by the host. */
 export interface OfficeAddInCatalogEntry {
 	id: string;
 	label: string;
@@ -26,189 +13,143 @@ export interface OfficeAddInCatalogEntry {
 	remove?: () => void | Promise<void>;
 }
 
-// PowerPoint and the general UI entry are built separately and share the host node.
-const ADD_IN_CATALOG = Symbol.for('office-ui.add-in-catalog');
-type CatalogHost = (HTMLElement | ShadowRoot) & {
-	[ADD_IN_CATALOG]?: readonly OfficeAddInCatalogEntry[];
-};
-
-/** Set or clear the locally available add-ins for a single editor or host container. */
-export function setOfficeAddInCatalog(
-	host: HTMLElement | ShadowRoot,
-	entries: readonly OfficeAddInCatalogEntry[],
-): void {
-	const target: CatalogHost = host;
-	if (entries.length) target[ADD_IN_CATALOG] = [...entries];
-	else delete target[ADD_IN_CATALOG];
-}
-
-interface EditorAddIn {
+/** An opt-in storefront offer. The dialog validates these bytes before asking for consent. */
+export interface OfficeAddInOffer {
 	id: string;
 	label: string;
-	open: () => void;
+	read(signal: AbortSignal): File | Promise<File>;
 }
 
-function editorRibbons(scope: ParentNode): EditorAddIn[] {
-	const ribbons = scope.querySelectorAll('office-ui-ribbon, pptx-ui-ribbon-tabs');
-	return [...ribbons].flatMap((ribbon) => {
-		const tabs = () => [
-			...(ribbon.shadowRoot?.querySelectorAll<HTMLButtonElement>('button[role="tab"]') ?? []),
-		];
-		const installed = new Map<string, string>();
-		for (const panel of [...ribbon.children] as HTMLElement[]) {
-			const { ribbonTab, label } = panel.dataset;
-			if (ribbonTab && label && panel.hasAttribute('data-add-in')) installed.set(ribbonTab, label);
-		}
-		for (const tab of tabs()) {
-			const id = tab.dataset.ribbonAddInTab;
-			const label = tab.textContent?.trim();
-			if (id && label) installed.set(id, label);
-		}
-		return [...installed].map(([id, label]): EditorAddIn => ({
-			id,
-			label,
-			open: () => {
-				const tab = tabs().find((button) => button.dataset.tab === id);
-				if (tab?.isConnected) {
-					tab.click();
-					tab.focus();
-				}
-			},
-		}));
-	});
+export type OfficeAddInStorefront =
+	| 'off'
+	| { kind: 'microsoft'; url?: string; label?: string }
+	| { kind: 'catalog'; entries: readonly OfficeAddInOffer[] };
+
+export type AddInDialogHost = HTMLElement | ShadowRoot;
+
+const CATALOG = Symbol.for('office-ui.add-in-catalog');
+const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
+const OPENING = Symbol.for('office-ui.add-ins-opening');
+const ENTRY_LIMIT = 128;
+type HostSettings = AddInDialogHost & {
+	[CATALOG]?: readonly OfficeAddInCatalogEntry[];
+	[STOREFRONT]?: OfficeAddInStorefront;
+	[OPENING]?: boolean;
+};
+
+/** Set or clear the trusted catalog for a single editor or host container. */
+export function setOfficeAddInCatalog(
+	host: AddInDialogHost,
+	entries: readonly OfficeAddInCatalogEntry[],
+): void {
+	const target: HostSettings = host;
+	if (entries.length) target[CATALOG] = entries.slice(0, ENTRY_LIMIT);
+	else delete target[CATALOG];
 }
 
-/** Find the containing editor's ribbon even when the Insert control is in an overlay. */
-function editorAddIns(host: HTMLElement | ShadowRoot): EditorAddIn[] {
-	if (host.nodeType === 11) return editorRibbons(host);
-	for (let scope: HTMLElement | null = host as HTMLElement; scope; scope = scope.parentElement) {
-		if (scope === host.ownerDocument.body) break;
-		const tabs = editorRibbons(scope);
-		if (tabs.length || scope.querySelector('office-ui-ribbon, pptx-ui-ribbon-tabs')) return tabs;
+/** Enable a storefront for one editor or host container. The default is off. */
+export function setOfficeAddInStorefront(
+	host: AddInDialogHost,
+	storefront: OfficeAddInStorefront,
+): void {
+	const target: HostSettings = host;
+	target[STOREFRONT] =
+		storefront !== 'off' && storefront.kind === 'catalog'
+			? { kind: 'catalog', entries: storefront.entries.slice(0, ENTRY_LIMIT) }
+			: storefront;
+}
+
+export function addInSettings(host: AddInDialogHost) {
+	let catalog: readonly OfficeAddInCatalogEntry[] | undefined;
+	let storefront: OfficeAddInStorefront | undefined;
+	for (let current: AddInDialogHost | null = host; current;) {
+		const settings: HostSettings = current;
+		catalog ??= settings[CATALOG];
+		storefront ??= settings[STOREFRONT];
+		const parent: Node | null = current instanceof ShadowRoot ? current.host : current.parentNode;
+		current = parent instanceof HTMLElement || parent instanceof ShadowRoot ? parent : null;
 	}
-	const root = host.getRootNode();
-	return root.nodeType === 11 ? editorRibbons(root as ShadowRoot) : [];
+	return { catalog: catalog ?? [], storefront: storefront ?? 'off' };
 }
 
-function addInCatalog(host: HTMLElement | ShadowRoot): readonly OfficeAddInCatalogEntry[] {
-	for (let scope: HTMLElement | ShadowRoot | null = host; scope;) {
-		const entries = (scope as CatalogHost)[ADD_IN_CATALOG];
-		if (entries) return entries;
-		if (scope instanceof ShadowRoot) {
-			scope = scope.host instanceof HTMLElement ? scope.host : null;
-		} else {
-			const parent: ParentNode | null = scope.parentNode;
-			scope = parent instanceof HTMLElement || parent instanceof ShadowRoot ? parent : null;
-		}
-	}
-	return [];
+/** PowerPoint may render ribbon controls inside a shadow tree or a standalone toolbar. */
+export function officeAddInsMount(control: HTMLElement): AddInDialogHost | null {
+	const editor = control.closest<HTMLElement>('[data-pptx-editor-chrome], [data-pptx-viewer]');
+	if (editor) return editor;
+	const root = control.getRootNode();
+	return root instanceof ShadowRoot ? root : control.parentElement;
 }
 
-export function openOfficeAddIns(
-	host: HTMLElement | ShadowRoot,
+/** Register the on-demand add-in dialog in a browser or custom element registry. */
+export async function defineOfficeAddInsDialog(
+	registry = globalThis.customElements,
+): Promise<void> {
+	if (!registry) return;
+	const { defineAddInsDialog } = await import('../dialog/add-ins-dialog');
+	defineAddInsDialog(registry);
+}
+
+export interface OpenAddInsOptions {
+	host: AddInDialogHost;
+	mode: AddInDialogMode;
+	t: OfficeServiceText;
+	product: AddInDialogProduct;
+	locale: string;
+}
+
+export async function openOfficeAddIns(
+	host: AddInDialogHost,
 	mode: AddInDialogMode,
 	t: OfficeServiceText,
-	product: OfficeAddInHost,
+	product: AddInDialogProduct,
 	locale: string,
-): void {
-	const doc = host.ownerDocument;
-	const tabs = editorAddIns(host);
-	const catalog = addInCatalog(host);
-	const dialog = showOfficeServiceDialog(
-		host,
-		t(mode === 'getAddIns' ? 'Get Add-ins' : 'My Add-ins'),
-		t('Close'),
+): Promise<void> {
+	const pending: HostSettings = host;
+	const hasDialog = () =>
+		[...host.children].some((child) => child.localName === 'office-ui-add-ins-dialog');
+	if (hasDialog()) await Promise.resolve(); // Let a just-closed dialog detach.
+	if (pending[OPENING] || hasDialog()) return;
+	const opener = modalActiveElement(host.ownerDocument);
+	const restore = addInReturnFocus(opener);
+	pending[OPENING] = true;
+	try {
+		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
+		if (host.isConnected) mountAddInsDialog({ host, mode, t, product, locale }, restore);
+	} catch {
+		if (!host.isConnected) return;
+		const dialog = showOfficeServiceDialog(host, t('Office Add-ins'), t('Close'));
+		const status = host.ownerDocument.createElement('p');
+		status.setAttribute('role', 'status');
+		status.textContent = t('Could not load add-ins.');
+		dialog.append(status);
+		dialog.show();
+	} finally {
+		delete pending[OPENING];
+	}
+}
+
+function addInReturnFocus(opener: Element | null): () => void {
+	const root = opener?.getRootNode();
+	const control =
+		root instanceof ShadowRoot && root.host instanceof HTMLElement ? root.host : opener;
+	const group = control?.closest('[data-ribbon-group], .ribbon-group');
+	const pop = control?.closest('.ribbon-overflow-panel');
+	const collapsed = pop?.parentElement?.querySelector<HTMLButtonElement>(
+		'.ribbon-overflow-button[aria-expanded="true"]',
 	);
-	const list = doc.createElement('ul');
-	const status = doc.createElement('p');
-	status.setAttribute('role', 'status');
-	status.hidden = true;
-	let updating = false;
-	const changeButton = (label: string, name: string, change: () => void | Promise<void>) => {
-		const button = doc.createElement('button');
-		button.type = 'button';
-		button.textContent = t(label);
-		button.setAttribute('aria-label', `${t(label)} ${name}`);
-		button.addEventListener('click', async () => {
-			if (updating) return;
-			updating = true;
-			button.disabled = true;
-			status.hidden = true;
-			try {
-				await change();
-				dialog.close();
-			} catch {
-				status.textContent = t('Could not update the add-in.');
-				status.hidden = false;
-				button.disabled = false;
-				button.focus();
-			} finally {
-				updating = false;
-			}
-		});
-		return button;
+	return () => {
+		if (opener instanceof HTMLElement && opener.isConnected) {
+			opener.focus({ preventScroll: true });
+			if (modalActiveElement(opener.ownerDocument) === opener) return;
+		}
+		if (collapsed?.isConnected && collapsed.getClientRects().length) {
+			collapsed.focus({ preventScroll: true });
+			return;
+		}
+		const face =
+			group?.querySelector<HTMLElement>(
+				':scope > .ribbon-overflow-button, :scope > [data-pptx-chrome="ribbon-collapse"]',
+			) ?? group?.shadowRoot?.querySelector<HTMLElement>('button.face');
+		face?.focus({ preventScroll: true });
 	};
-	let empty: HTMLElement | undefined;
-	let marketplace: HTMLElement | undefined;
-	if (mode === 'getAddIns') {
-		const installed = new Set(tabs.map(({ id }) => id));
-		for (const entry of catalog) {
-			if (installed.has(entry.id)) continue;
-			const item = doc.createElement('li');
-			item.append(`${entry.label} `, changeButton('Install', entry.label, entry.install));
-			list.append(item);
-		}
-		if (list.childElementCount) dialog.append(list, status);
-		const note = doc.createElement('p');
-		note.textContent = t(
-			'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.',
-		);
-		const url = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
-		marketplace = doc.createElement('div');
-		marketplace.append(note, officeServiceLink(doc, t('Browse Microsoft Marketplace'), url));
-		dialog.append(marketplace);
-	} else if (tabs.length) {
-		for (const tab of tabs) {
-			const item = doc.createElement('li');
-			const button = doc.createElement('button');
-			button.type = 'button';
-			button.textContent = tab.label;
-			button.addEventListener('click', () => {
-				if (updating) return;
-				dialog.close();
-				tab.open();
-			});
-			item.append(button);
-			const remove = catalog.find(({ id }) => id === tab.id)?.remove;
-			if (remove) item.append(' ', changeButton('Remove', tab.label, remove));
-			list.append(item);
-		}
-		dialog.append(list, status);
-	} else {
-		empty = doc.createElement('p');
-		empty.textContent = t('No add-ins are available in this editor.');
-		dialog.append(empty);
-	}
-	const language = normalizeLocale(locale, [...addInLoadStatuses.keys()], 'en');
-	const [pending, failed] = addInLoadStatuses.get(language) ?? englishLoadStatus;
-	const loadStatus = doc.createElement('p');
-	loadStatus.setAttribute('role', 'status');
-	if (mode === 'getAddIns') {
-		loadStatus.textContent = pending;
-		dialog.prepend(loadStatus);
-	}
-	dialog.show();
-	const available = () => dialog.isConnected && dialog.open;
-	void import('./add-in-local-dialog').then(
-		({ mountLocalAddIns }) => {
-			if (!available()) return;
-			loadStatus.remove();
-			mountLocalAddIns(dialog, host, mode, product, locale, t, { empty, marketplace });
-		},
-		() => {
-			if (!available()) return;
-			if (!loadStatus.isConnected) dialog.prepend(loadStatus);
-			loadStatus.textContent = failed;
-		},
-	);
 }

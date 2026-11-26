@@ -28,6 +28,7 @@ export interface RibbonTargets {
 	arrangeSelection(action: Extract<VisioRibbonAction, { type: 'arrange' }>): void;
 	setTool(tool: CanvasTool): void;
 	cancelDrawing(): void;
+	openAddIns(mode: Extract<VisioRibbonAction, { type: 'office-add-ins' }>['mode']): void;
 	insertPage(): void;
 	insert(item: VisioInsertItem): void;
 	data(command: VisioDataCommand): void;
@@ -128,6 +129,8 @@ export function routeRibbonAction(targets: RibbonTargets, action: VisioRibbonAct
 			return targets.setTool(action.tool);
 		case 'cancel-drawing':
 			return targets.cancelDrawing();
+		case 'office-add-ins':
+			return targets.openAddIns(action.mode);
 		case 'page-insert':
 			return targets.insertPage();
 		case 'insert':

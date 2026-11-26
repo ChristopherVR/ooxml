@@ -288,7 +288,7 @@ line/marker swatches and position-authoring controls remain incomplete.
 
 - Import: `load/detect.ts` identifies XLSB so it can be refused with a message; ODS is not
   supported; legacy `.xls` and CSV load through `xlsx/load`. External connections use cached
-  values and VBA is carried without execution. Get Add-ins validates local XML and unified
+  values and VBA is carried without execution. Office Add-ins validates local XML and unified
   manifests and installs them for the editor session after consent. Office.js execution and
   Power Query remain open.
 - Print: paginated preview and print fields support saved page setup and header/footer fields

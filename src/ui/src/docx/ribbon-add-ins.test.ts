@@ -30,16 +30,25 @@ describe('Word ribbon add-in tabs', () => {
 		const ribbon = root.querySelector<OfficeUiRibbon>('office-ui-ribbon')!;
 		await vi.waitFor(() => expect(ribbon.tabButton('insert')).toBeTruthy());
 		ribbon.tabButton('insert')!.click();
+		const dialog = () => root.querySelector('office-ui-add-ins-dialog')?.shadowRoot;
 		const click = (label: string) =>
 			root.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!.click();
+		const clickDialog = async (label: string) => {
+			const button = await vi.waitFor(() => {
+				const button = dialog()?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
+				if (!button) throw new Error(`Missing ${label}`);
+				return button;
+			});
+			button.click();
+		};
 		click('Get Add-ins');
-		click('Install PDF');
-		await vi.waitFor(() => expect(root.querySelector('office-ui-dialog[open]')).toBeNull());
+		await clickDialog('Install PDF');
+		await vi.waitFor(() => expect(dialog()).toBeUndefined());
 		expect(install).toHaveBeenCalledOnce();
 		expect(ribbon.tabButton('pdf')).toBeTruthy();
 		click('My Add-ins');
-		click('Remove PDF');
-		await vi.waitFor(() => expect(root.querySelector('office-ui-dialog[open]')).toBeNull());
+		await clickDialog('Remove PDF');
+		await vi.waitFor(() => expect(dialog()).toBeUndefined());
 		expect(remove).toHaveBeenCalledOnce();
 		expect(ribbon.tabButton('pdf')).toBeNull();
 	});
@@ -53,9 +62,15 @@ describe('Word ribbon add-in tabs', () => {
 		await vi.waitFor(() => expect(ribbon.tabButton('pdf')).toBeTruthy());
 		ribbon.tabButton('insert')!.click();
 		root.querySelector<HTMLButtonElement>('button[aria-label="My Add-ins"]')!.click();
-		const dialog = root.querySelector('office-ui-dialog[open]')!;
-		dialog.querySelector<HTMLButtonElement>('li button')!.click();
-		expect(ribbon.selected).toBe('pdf');
+		const open = await vi.waitFor(() => {
+			const button = root
+				.querySelector('office-ui-add-ins-dialog')
+				?.shadowRoot?.querySelector<HTMLButtonElement>('[aria-label="Open PDF"]');
+			if (!button) throw new Error('Missing add-in');
+			return button;
+		});
+		open.click();
+		await vi.waitFor(() => expect(ribbon.selected).toBe('pdf'));
 	});
 	it('keeps tabs set before the editor connects and reports their commands', () => {
 		const editor = document.createElement('docx-editor') as DocxEditorElement;

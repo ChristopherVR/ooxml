@@ -1,6 +1,6 @@
 import type { OfficeUiDialog } from '../../dialog/dialog';
 import { defineElement } from '../../registry';
-import { openOfficeAddIns } from '../../ribbon/add-in-dialog';
+import { openOfficeAddIns, officeAddInsMount } from '../../ribbon/add-in-dialog';
 import {
 	INSERT_CHART_TYPES,
 	INSERT_GROUPS,
@@ -140,8 +140,10 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		private request(intent: RibbonInsertAction): void {
 			if (canRequestInsert(this.model, intent)) {
 				if (intent.kind === 'addIns') {
-					openOfficeAddIns(
-						this,
+					const root = officeAddInsMount(this);
+					if (!root) return;
+					void openOfficeAddIns(
+						root,
 						intent.value,
 						(label) => this.text([`pptx.addIns.${label}`, label]),
 						'powerpoint',

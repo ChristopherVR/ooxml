@@ -1,3 +1,4 @@
+import type { AddInDialogMode } from '../ribbon/add-in-dialog';
 import type { VisioThemeColorRef } from 'ooxml-core/visio';
 import type { VisioDataGraphicPosition } from 'ooxml-core/visio/ui';
 import type {
@@ -179,6 +180,7 @@ export type VisioRibbonAction =
 	| { type: 'history'; key: 'undo' | 'redo' }
 	| { type: 'tool'; tool: CanvasTool }
 	| { type: 'cancel-drawing' }
+	| { type: 'office-add-ins'; mode: AddInDialogMode }
 	| { type: 'page-insert' }
 	| { type: 'insert'; item: VisioInsertItem }
 	| { type: 'data'; command: VisioDataCommand }

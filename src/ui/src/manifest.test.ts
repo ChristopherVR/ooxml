@@ -1,14 +1,15 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { OFFICE_UI_TAGS, registerOfficeUi } from './index';
-import { buildManifest } from './manifest';
+import { OFFICE_UI_TAGS, defineOfficeAddInsDialog, registerOfficeUi } from './index';
+import { buildManifest, LAZY_TAGS } from './manifest';
 
 const FILE = resolve(process.cwd(), 'custom-elements.json');
 
 let manifest: ReturnType<typeof buildManifest>;
-beforeAll(() => {
+beforeAll(async () => {
 	registerOfficeUi();
+	await defineOfficeAddInsDialog();
 	manifest = buildManifest();
 });
 
@@ -17,7 +18,7 @@ describe('custom-elements.json', () => {
 		const tags = manifest.modules.flatMap((module) =>
 			module.declarations.map((declaration) => declaration.tagName),
 		);
-		expect(tags.sort()).toEqual([...OFFICE_UI_TAGS].sort());
+		expect(tags.sort()).toEqual([...OFFICE_UI_TAGS, ...LAZY_TAGS].sort());
 		const button = manifest.modules
 			.flatMap((module) => module.declarations)
 			.find((declaration) => declaration.tagName === 'office-ui-button')!;

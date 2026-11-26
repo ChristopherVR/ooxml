@@ -1,3 +1,5 @@
+import { getIcon } from '../../icons';
+
 /** Insert tab artwork on the shared 20px stroke grid. */
 export const RIBBON_INSERT_ICON_PATHS: Readonly<Record<string, string>> = {
 	table: 'M3 4h14v12H3ZM3 8h14M3 12h14M8 4v12M13 4v12',
@@ -18,8 +20,8 @@ export const RIBBON_INSERT_ICON_PATHS: Readonly<Record<string, string>> = {
 	photoAlbum: 'M4 3h12v14H4ZM4 13l4-4 3 3 2-2 3 3M8 6.5a1 1 0 1 0 2 0 1 1 0 1 0-2 0',
 	icons: 'm10 2.500 2.200 4.600 5 .7-3.600 3.500.9 5-4.500-2.400-4.500 2.400.9-5L2.800 7.800l5-.7Z',
 	model3d: 'M10 2 17 6v8l-7 4-7-4V6ZM3 6l7 4 7-4M10 10v8',
-	forms: 'M4 2.500h12v15H4ZM6.500 6.500l1 1 2-2M12 6.500h2M6.500 11.500l1 1 2-2M12 11.500h2',
-	addIns: 'M3 8h4V6a2 2 0 1 1 4 0v2h4v4h-2a2 2 0 1 0 0 4h2v2H3Z',
+	forms: getIcon('forms')?.d ?? '',
+	addIns: getIcon('addIns')?.d ?? '',
 	wordArt: 'M4 16 10 3l6 13M6.500 11.500h7M3 18.500h14',
 	slideNumber: 'M7 3 5.500 17M14.500 3 13 17M3.500 7h13M3 13h13',
 	object: 'M4 3h8l4 4v10H4ZM12 3v4h4',

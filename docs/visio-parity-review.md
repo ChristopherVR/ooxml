@@ -634,3 +634,10 @@ were emitted and the binding checks passed against them.
 All seven tarballs also passed a clean registry-only consumer install, ESM
 imports, NodeNext declarations, Svelte consumer compilation and production parser
 and edit-worker checks after the shared declaration step.
+
+## Office Add-ins
+
+Insert > Add-ins opens the shared Office Add-ins dialog. Admin Managed shows trusted
+host entries, and My Add-ins opens installed ribbon tabs and offers removal when
+the host supplies it. Store follows host configuration. Visio displays an unavailable
+reason for manifest installation.

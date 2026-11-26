@@ -172,7 +172,14 @@ export class OfficeUiDialog extends OfficeElement {
 	protected override render() {
 		return html`
 			<div class="backdrop" @click=${() => this.requestClose('backdrop')}></div>
-			<div class="box" role="dialog" aria-modal="true" aria-labelledby="title" tabindex="-1">
+			<div
+				class="box"
+				part="box"
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="title"
+				tabindex="-1"
+			>
 				<header>
 					<h2 id="title">${this.heading}</h2>
 					<button
@@ -183,7 +190,7 @@ export class OfficeUiDialog extends OfficeElement {
 						>${glyph('close', 'icon')}</button
 					>
 				</header>
-				<div class="body"><slot></slot></div>
+				<div class="body" part="body"><slot></slot></div>
 				<footer ?hidden=${this.querySelector('[slot="footer"]') === null}>
 					<slot name="footer" @slotchange=${() => this.requestUpdate()}></slot>
 				</footer>

@@ -62,7 +62,7 @@ const connectorMenu = (doc: Document, id: string, label: string, scope: 'selecti
 		],
 	});
 
-/** Visio's Insert tab: Pages, Illustrations, Diagram Parts, Links and Text. */
+/** Visio's Insert tab: Pages, Illustrations, Diagram Parts, Add-ins, Links and Text. */
 export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 	panel.append(
 		commandRow(doc, 'Insert commands', [
@@ -107,6 +107,20 @@ export function buildInsertPanel(doc: Document, panel: HTMLElement): void {
 				diagramPartGallery(doc, 'container'),
 				diagramPartGallery(doc, 'callout'),
 				connectorMenu(doc, 'insert-connector', 'Connector', 'tool'),
+			]),
+			group(doc, 'Add-ins', [
+				command(doc, {
+					id: 'get-add-ins',
+					label: 'Get Add-ins',
+					icon: 'addIns',
+					action: { type: 'office-add-ins', mode: 'getAddIns' },
+				}),
+				command(doc, {
+					id: 'my-add-ins',
+					label: 'My Add-ins',
+					icon: 'addIns',
+					action: { type: 'office-add-ins', mode: 'myAddIns' },
+				}),
 			]),
 			group(doc, 'Links', [
 				command(doc, {

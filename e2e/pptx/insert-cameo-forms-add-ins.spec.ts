@@ -10,38 +10,60 @@ import { pressShortcut } from './support/keyboard';
 
 test.use({ viewport: { width: 1920, height: 900 } });
 
-test('installs a local PowerPoint manifest and lists it as inactive', async ({ page }) => {
+test('reviews, cancels, installs and searches local PowerPoint add-ins', async ({ page }) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
 	await loadDeck(page);
 	const insert = ribbonTab(page, 'Insert');
 	await insert.click();
 	const ribbon = page.locator('pptx-ui-ribbon-insert');
 	const group = ribbon.locator('[data-ribbon-group="insert.addIns"]');
-	const open = async (command: string) => {
-		const collapsed = group.locator('.face');
-		if (await collapsed.isVisible()) await collapsed.click();
-		await group.locator(`[data-ribbon-control="insert.addIns.${command}"] button`).click();
-	};
-	await open('getAddIns');
-	const preview = ribbon.locator('office-ui-dialog[open]');
+	const get = group.getByRole('button', { name: 'Get Add-ins' });
+	const mine = group.getByRole('button', { name: 'My Add-ins' });
+	const dialog = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	await get.press('Enter');
+	await expect(dialog).toBeVisible();
+	await expect(ribbon.locator('office-ui-add-ins-dialog')).toHaveCount(0);
+	await page.keyboard.press('Escape');
+	await expect(dialog).toBeHidden();
+	await expect(get).toBeFocused();
+
+	await mine.press('Enter');
+	const search = dialog.getByRole('searchbox');
+	await expect(search).toBeFocused();
+	const upload = dialog.getByRole('button', { name: 'Upload My Add-in' });
 	const buffer = await readFile(
 		new URL('../../src/core/automation/add-ins/__fixtures__/manifest.xml', import.meta.url),
 	);
-	await preview.getByLabel('Choose a local add-in file').setInputFiles({
-		name: 'notes.xml',
-		mimeType: 'application/xml',
-		buffer,
-	});
-	await expect(preview).toContainText('Read and change this document');
-	await preview.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	const payload = { name: 'notes.xml', mimeType: 'application/xml', buffer };
+	const chooser = page.waitForEvent('filechooser');
+	await upload.click();
+	await (await chooser).setFiles(payload);
+	const consent = dialog.getByRole('region', { name: 'Review add-in permissions' });
+	await expect(consent).toContainText('Read and change this document');
+	await consent.getByRole('button', { name: 'Cancel' }).click();
+	await expect(search).toBeFocused();
+	await expect(dialog).toContainText('No add-ins');
+	await dialog.getByLabel('Choose a local add-in file').setInputFiles(payload);
+	await consent.getByRole('button', { name: 'Install Notes' }).click();
+	await expect(dialog).toBeHidden();
+	await expect(mine).toBeFocused();
+
 	await ribbonTab(page, 'Home').click();
 	await insert.click();
-	await open('myAddIns');
-	const installed = ribbon.locator('office-ui-dialog[open]');
-	await expect(installed).toContainText('Notes (1.0.0)');
-	await expect(installed).toContainText('Running add-ins is unavailable');
-	await installed.getByRole('button', { name: 'Remove Notes', exact: true }).click();
-	await open('myAddIns');
-	await expect(installed).toContainText('No add-ins');
+	await mine.press('Enter');
+	await expect(dialog).toContainText('Notes (1.0.0)');
+	await expect(dialog).toContainText('Running add-ins is unavailable');
+	await search.fill('unmatched');
+	await expect(dialog).toContainText('No matching add-ins.');
+	await search.fill('notes');
+	await expect(dialog).toContainText('Notes (1.0.0)');
+	await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(dialog).toBeHidden();
+	await expect(mine).toBeFocused();
+	await mine.press('Enter');
+	await dialog.getByRole('button', { name: 'Remove Notes', exact: true }).click();
+	await mine.press('Enter');
+	await expect(dialog).toContainText('No add-ins');
 });
 
 test('inserts a Cameo and response link and opens the add-in dialogs', async ({
@@ -80,19 +102,20 @@ test('inserts a Cameo and response link and opens the add-in dialogs', async ({
 
 	await reveal('insert.addIns');
 	await command('insert.addIns.getAddIns').click();
-	await expect(page.getByRole('dialog', { name: 'Get Add-ins' })).toBeVisible();
-	const store = ribbon.locator('office-ui-dialog[open]');
-	await expect(store.getByRole('link', { name: 'Browse Microsoft Marketplace' })).toHaveAttribute(
-		'href',
-		'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office',
+	const addIns = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	await expect(addIns.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
+		'aria-selected',
+		'true',
 	);
+	await expect(addIns.getByRole('tab', { name: 'Store' })).toHaveCount(0);
 	await page.keyboard.press('Escape');
 	await reveal('insert.addIns');
 	await command('insert.addIns.myAddIns').click();
-	await expect(page.getByRole('dialog', { name: 'My Add-ins' })).toBeVisible();
-	await expect(ribbon.locator('office-ui-dialog[open]')).toContainText(
-		'No add-ins are available in this editor.',
+	await expect(addIns.getByRole('tab', { name: 'My Add-ins' })).toHaveAttribute(
+		'aria-selected',
+		'true',
 	);
+	await expect(addIns).toContainText('No add-ins are available in this editor.');
 	await page.keyboard.press('Escape');
 
 	const output = testInfo.outputPath('cameo-form.pptx');

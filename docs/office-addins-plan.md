@@ -278,6 +278,14 @@ from required managed assignments and remove a revoked entitlement along with it
   host and a way to run the acquired package. Exclude scraping, private endpoints, and reuse of
   Microsoft's Office host protocol. [Office Add-in Product Ingestion API](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/product-ingestion-office-add-in).
 
+The shared Office Add-ins dialog currently supports a local, static storefront through
+`setOfficeAddInStorefront`. The default is off. A host can opt into an HTTPS handoff,
+or supply a bounded list of offers whose file readers run on selection and enter the same
+validation and consent flow as an upload. Admin Managed shows trusted host ribbon entries.
+Remote discovery, account entitlements, publisher verification and tenant synchronization
+are future work. Visio exposes the same dialog and host ribbon entries while local manifest
+installation remains unavailable.
+
 ### Configurable handoff and bring-your-own storefront
 
 The Marketplace link, the **Open in Microsoft Office** handoff and the storefront itself are host
