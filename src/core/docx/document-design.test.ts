@@ -58,10 +58,28 @@ describe('Word document design', () => {
 				name: label,
 				colors: designColors(preset.colors),
 				fonts: { major: { latin: preset.majorFont }, minor: { latin: preset.minorFont } },
-				formatScheme: { name: preset.formatScheme.name },
+				formatScheme: {
+					name: preset.formatScheme.name,
+					fillStyles: preset.formatScheme.fillStyles.map(({ fill }) => ({ fill })),
+					lineStyles: preset.formatScheme.lineStyles,
+					effectStyles: preset.formatScheme.effectStyles.map(({ effects }) =>
+						effects ? { effects: { effects: effects.effects } } : {},
+					),
+				},
 			});
 		},
 	);
+	it('keeps distinct Word fill, line and effect profiles', () => {
+		const facet = must(DOCUMENT_THEME_CATALOGUE.find((entry) => entry.id === 'facet'));
+		const wisp = must(DOCUMENT_THEME_CATALOGUE.find((entry) => entry.id === 'wisp'));
+		expect(facet.formatScheme.fillStyles[1]?.fill.kind).toBe('gradient');
+		expect(facet.formatScheme.lineStyles.map((line) => line.widthEmu)).not.toEqual(
+			wisp.formatScheme.lineStyles.map((line) => line.widthEmu),
+		);
+		expect(facet.formatScheme.effectStyles[2]?.effects?.effects).not.toEqual(
+			wisp.formatScheme.effectStyles[2]?.effects?.effects,
+		);
+	});
 	it.each(THEME_EFFECT_PRESETS)('round trips the $name effect matrix', async ({ name, styles }) => {
 		const model = await roundTrip({ kind: 'effectStyles', name, styles });
 		expect(model.theme?.formatScheme).toMatchObject({ name, effectStyles: styles });

@@ -1,20 +1,17 @@
-import { themeMatrix } from './theme-matrix';
-import { FEATURED_THEMES } from './theme-gallery-data';
+import { FEATURED_THEMES, OFFICE_2007_THEME } from './theme-gallery-data';
 import { ADDITIONAL_THEMES } from './theme-gallery-legacy';
-import { THEME_EFFECT_PRESETS } from './theme-effect-presets';
-import { findThemePreset } from './theme-presets';
+import { FEATURED_THEME_FORMATS } from './theme-formats-featured';
+import { LEGACY_THEME_FORMATS } from './theme-formats-legacy';
+import { readCapturedFormatScheme } from './theme-format-capture';
 
 export * from './theme-presets';
 export { THEME_EFFECT_PRESETS, sameThemeEffectStyles } from './theme-effect-presets';
 
-const office2007 = findThemePreset('office-2007-2010');
+const formats = { ...FEATURED_THEME_FORMATS, ...LEGACY_THEME_FORMATS };
 
 /** Featured themes followed by alphabetized themes from earlier Word releases. */
 export const DOCUMENT_THEME_CATALOGUE = [
 	...FEATURED_THEMES,
-	...(office2007 ? [office2007] : []),
+	OFFICE_2007_THEME,
 	...ADDITIONAL_THEMES,
-].map((theme) => {
-	const effect = THEME_EFFECT_PRESETS[theme.id === 'office-2007-2010' ? 1 : 0];
-	return { ...theme, formatScheme: themeMatrix(effect?.name, effect?.styles) };
-});
+].map((theme) => ({ ...theme, formatScheme: readCapturedFormatScheme(formats[theme.id]) }));

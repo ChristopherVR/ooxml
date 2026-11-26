@@ -3166,3 +3166,9 @@ used the documented `Document.ApplyDocumentTheme` and `Document.SaveAs2` APIs.
 The tables record the twelve palette values (using `lastClr` for system colors)
 and the two Latin font faces. Theme packages, thumbnails and other artwork are
 excluded.
+
+The matrices in `theme-formats-featured.ts` and `theme-formats-legacy.ts` record
+the four `a:fmtScheme` lists from the same files. Office 2007-2010 uses the
+matrix Word saved after applying the installed Office 2007-2010 `.eftx`.
+Relationship-backed picture fills use a solid `phClr` placeholder in the
+built-in matrices, without copying the source artwork.

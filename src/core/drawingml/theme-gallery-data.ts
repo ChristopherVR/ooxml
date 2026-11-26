@@ -1,12 +1,13 @@
 import type { ThemeColorTuple, ThemePreset } from './theme-presets';
+import { OFFICE_2007_COLORS } from './theme-color-presets';
 
-export function observed(
-	id: string,
+export function observed<Id extends string>(
+	id: Id,
 	label: string,
 	majorFont: string,
 	minorFont: string,
 	colors: ThemeColorTuple,
-): ThemePreset {
+): ThemePreset & { id: Id } {
 	return { id, label, colors, majorFont, minorFont };
 }
 
@@ -168,3 +169,11 @@ export const FEATURED_THEMES = [
 		'954F72',
 	]),
 ];
+
+export const OFFICE_2007_THEME = observed(
+	'office-2007-2010',
+	'Office 2007-2010',
+	'Cambria',
+	'Calibri',
+	OFFICE_2007_COLORS,
+);

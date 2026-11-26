@@ -208,7 +208,9 @@ export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): Docu
 					fontSchemeName: edit.name,
 					colors: designColors(edit.colors),
 					fonts: fonts(edit.majorFont, edit.minorFont),
-					formatScheme: edit.formatScheme ?? designEffects(undefined, 'soft'),
+					formatScheme: edit.formatScheme
+						? structuredClone(edit.formatScheme)
+						: designEffects(undefined, 'soft'),
 				},
 			};
 		case 'importTheme':
