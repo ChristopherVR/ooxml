@@ -238,6 +238,13 @@
 	padding-right: 2px;
 	border: 0;
 }
+/* On a narrow screen Arrange wraps its columns inside the overflow panel. */
+.ribbon-overflow-panel .ribbon-group[data-label='Arrange'] {
+	box-sizing: border-box;
+	max-width: calc(100vw - 28px);
+	height: auto;
+	flex-wrap: wrap;
+}
 .ribbon-group[data-collapsed]::after {
 	display: none;
 }

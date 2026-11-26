@@ -20,6 +20,7 @@ const GROUP_ICONS: Record<string, RibbonIcon> = {
 	'Page numbers': 'pageNumber',
 	'Section breaks': 'sectionNext',
 	Indent: 'indent',
+	Arrange: 'bringForward',
 	Proofing: 'spelling',
 	Tracking: 'track',
 	Changes: 'accept',

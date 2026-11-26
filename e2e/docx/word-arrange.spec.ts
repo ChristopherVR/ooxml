@@ -96,6 +96,46 @@ test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({
 		.toBe(true);
 });
 
+test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.locator('.ProseMirror .dve-shape').first().click();
+	for (const [tab, width] of [
+		['Shape Format', 1800],
+		['Layout', 2600],
+		['Layout', 850],
+	] as const) {
+		await page.setViewportSize({ width, height: 950 });
+		await editor.getByRole('tab', { name: tab, exact: true }).click();
+		await unfoldArrange(editor, tab);
+		const group = editor.locator('.ribbon-group[data-label="Arrange"]:visible').filter({
+			has: editor.getByRole('combobox', { name: 'Position', exact: true }),
+		});
+		await expect(group.locator(':is(button, select)[data-arrange]:visible')).toHaveCount(9);
+		await expect
+			.poll(() =>
+				group.evaluate((element) => {
+					const ribbon = element.closest('.ribbon-panel, .ribbon-overflow-panel')!;
+					const bounds = ribbon.getBoundingClientRect();
+					return [...element.querySelectorAll<HTMLElement>(':is(button, select)[data-arrange]')]
+						.filter((control) => control.getClientRects().length)
+						.filter((control) => {
+							const { left, right, top, bottom } = control.getBoundingClientRect();
+							return (
+								left < bounds.left - 1 ||
+								right > bounds.right + 1 ||
+								top < bounds.top - 1 ||
+								bottom > bounds.bottom + 1
+							);
+						})
+						.map((control) => control.getAttribute('aria-label'));
+				}),
+			)
+			.toEqual([]);
+	}
+});
+
 async function openShapes(page: Page, fixture = new URL('./support/shapes.docx', import.meta.url)) {
 	await page.setViewportSize({ width: 1800, height: 950 });
 	await page.goto('/?framework=vanilla');

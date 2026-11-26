@@ -62,7 +62,7 @@ export const menuSelect = (
 	icon: RibbonIcon,
 	values: Array<[string, string]>,
 	action: (value: string) => RibbonAction,
-	options: { compact?: boolean; momentary?: boolean } = {},
+	options: { compact?: boolean; momentary?: boolean; inline?: boolean } = {},
 ) => menuAround(select(label, values, action), label, icon, options);
 
 /**
@@ -94,13 +94,15 @@ export const menuAround = (
 	control: HTMLSelectElement,
 	label: string,
 	icon: RibbonIcon,
-	options: { compact?: boolean; momentary?: boolean } = {},
+	options: { compact?: boolean; momentary?: boolean; inline?: boolean } = {},
 ) => {
 	const wrap = document.createElement('div');
-	wrap.className = options.compact ? 'ribbon-menu ribbon-menu-compact' : 'ribbon-menu';
+	wrap.className = 'ribbon-menu';
+	if (options.compact) wrap.classList.add('ribbon-menu-compact');
+	if (options.inline) wrap.classList.add('ribbon-menu-inline');
 	control.title = label;
 	control.classList.add('ribbon-menu-input');
-	wrap.append(ribbonIcon(icon, options.compact ? 16 : 28));
+	wrap.append(ribbonIcon(icon, options.compact || options.inline ? 16 : 28));
 	if (!options.compact) {
 		const caption = document.createElement('span');
 		caption.textContent = label;

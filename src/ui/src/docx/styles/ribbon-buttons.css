@@ -158,6 +158,16 @@
 	outline: 2px solid var(--blue);
 	outline-offset: -1px;
 }
+/* Arrange fits three labelled commands in the same height as the large ribbon controls. */
+.ribbon-menu-inline {
+	flex-direction: row;
+	justify-content: flex-start;
+	width: auto;
+	height: 22px;
+	padding: 0 5px;
+	gap: 5px;
+	white-space: nowrap;
+}
 .ribbon-menu > span {
 	max-width: 100%;
 }
@@ -172,7 +182,7 @@
 	justify-content: center;
 	gap: 2px;
 }
-.ribbon-menu-compact > .ribbon-icon:last-of-type {
+.ribbon-menu:is(.ribbon-menu-compact, .ribbon-menu-inline) > .ribbon-icon:last-of-type {
 	margin-top: 0;
 }
 .ribbon-group .ribbon-menu select.ribbon-menu-input {
@@ -189,8 +199,11 @@
 	display: none;
 }
 .ribbon-stack .ribbon-small,
-.ribbon-stack .ribbon-inline {
+.ribbon-group .ribbon-stack button.ribbon-inline {
 	height: 22px;
+}
+.ribbon-group[data-label='Arrange'] .ribbon-stack button.ribbon-inline {
+	min-height: 22px;
 }
 .ribbon-stack .ribbon-inline {
 	justify-content: flex-start;

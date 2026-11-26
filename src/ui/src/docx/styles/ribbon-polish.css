@@ -79,12 +79,13 @@
 }
 
 /* A two-line caption plus the caret must still fit the dropdown command's box. */
-.ribbon-menu:not(.ribbon-menu-compact):not(.ribbon-menu-caret) {
+.ribbon-menu:not(.ribbon-menu-compact, .ribbon-menu-caret, .ribbon-menu-inline) {
 	gap: 1px;
 	height: 72px;
 	line-height: 1.1;
 }
-.ribbon-menu:not(.ribbon-menu-compact):not(.ribbon-menu-caret) > .ribbon-icon:last-of-type {
+.ribbon-menu:not(.ribbon-menu-compact, .ribbon-menu-caret, .ribbon-menu-inline)
+	> .ribbon-icon:last-of-type {
 	margin-top: -3px;
 }
 

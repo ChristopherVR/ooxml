@@ -39,9 +39,11 @@ function menu(
 	icon: RibbonIcon,
 	values: Array<[string, string]>,
 	action: (value: string) => RibbonAction = (value) => ({ type: 'arrange', key, value }),
+	inline = key !== 'wrap' && key !== 'direction',
 ) {
 	const wrapper = menuSelect(label, icon, values, action, {
 		momentary: true,
+		inline,
 	});
 	wrapper.querySelector('select')!.dataset.arrange = key;
 	return wrapper;
@@ -56,7 +58,12 @@ export function textDirectionMenu() {
 }
 
 function arrangeButton(label: string, icon: RibbonIcon, key: 'pane' | 'alt') {
-	const control = tool(label, icon, { type: 'arrange', key, value: '' });
+	const control = tool(
+		label,
+		icon,
+		{ type: 'arrange', key, value: '' },
+		{ inline: key === 'pane', large: key === 'alt' },
+	);
 	control.dataset.arrange = key;
 	return control;
 }
