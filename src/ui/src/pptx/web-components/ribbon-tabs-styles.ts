@@ -6,7 +6,13 @@
  */
 export const RIBBON_TABS_CSS = `
 .file { display: none; }
-.head { min-height: var(--office-ribbon-tab-height); }
+:host { container: pptx-ribbon-tabs / inline-size; }
+.head {
+	flex-wrap: nowrap;
+	min-height: var(--office-ribbon-tab-height);
+	border-bottom: 0;
+	box-shadow: inset 0 calc(-1 * var(--office-border-width)) var(--office-border);
+}
 [role='tab'] { padding: 8px 14px; font-weight: 500; line-height: 18px; white-space: nowrap; }
 [role='tab'][aria-selected='true']:not([data-contextual]) { color: var(--office-foreground); }
 [role='tab'][data-tab='file'] { color: var(--office-accent); }
@@ -14,10 +20,8 @@ export const RIBBON_TABS_CSS = `
 	background: var(--office-accent); color: var(--office-accent-foreground);
 }
 [role='tab'][data-tab='file'][aria-selected='true']::after { content: none; }
-@media (min-width: 768px) and (max-width: 1000px) {
-	.head { flex-wrap: wrap; }
-	[role='tablist'] { flex: 0 0 auto; max-width: 100%; }
-	[role='tab'] { padding-inline: 6px; }
+@container pptx-ribbon-tabs (max-width: 1000px) {
+	[role='tab'] { padding-inline: 5px; }
 }
 @media (forced-colors: active) {
 	[role='tab'][data-tab='file'][aria-selected='true'] {

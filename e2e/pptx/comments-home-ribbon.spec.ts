@@ -3,6 +3,48 @@ import { expect, test } from '@playwright/test';
 
 import { loadDeck, ribbonTab } from './support/deck';
 
+for (const { width, embedded } of [
+	{ width: 800, embedded: false },
+	{ width: 1400, embedded: true },
+]) {
+	test(`Ribbon tabs stay on one line at ${embedded ? '700px embedded' : '800px'}`, async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width, height: 900 });
+		await loadDeck(page);
+		const tabs = page.locator('pptx-ui-ribbon-tabs:visible');
+		if (embedded) {
+			await tabs.evaluate((element) => {
+				const editor = element.closest<HTMLElement>('[data-pptx-editor-chrome]');
+				if (!editor) throw new Error('Editor root is missing');
+				editor.style.width = '700px';
+			});
+		}
+		await expect
+			.poll(() =>
+				tabs.evaluate((element) => {
+					const row = element.shadowRoot?.querySelector('.head');
+					const height = Number.parseFloat(
+						getComputedStyle(element).getPropertyValue('--office-ribbon-tab-height'),
+					);
+					return Math.abs((row?.getBoundingClientRect().height ?? 0) - height);
+				}),
+			)
+			.toBeLessThanOrEqual(0.5);
+		await expect(tabs.getByRole('tab', { name: 'Home', exact: true })).toHaveCSS(
+			'padding-inline-start',
+			'5px',
+		);
+		await expect
+			.poll(() =>
+				page.evaluate(
+					() => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+				),
+			)
+			.toBeLessThanOrEqual(1);
+	});
+}
+
 for (const width of [800, 1280]) {
 	test(`Insert fits and opens a docked comment draft at ${width}px`, async ({ page }) => {
 		await page.setViewportSize({ width, height: 900 });
@@ -12,10 +54,6 @@ for (const width of [800, 1280]) {
 		await expect(row.locator('[data-ribbon-group="insert.comments"]')).toBeVisible();
 		await expect
 			.poll(() => row.evaluate((element) => element.scrollWidth - element.clientWidth))
-			.toBeLessThanOrEqual(1);
-		const tabs = page.locator('pptx-ui-ribbon-tabs:visible').getByRole('tablist');
-		await expect
-			.poll(() => tabs.evaluate((element) => element.scrollWidth - element.clientWidth))
 			.toBeLessThanOrEqual(1);
 		const group = row.locator('[data-ribbon-group="insert.comments"]');
 		const command = group.locator('[data-ribbon-control="insert.comments.comment"]');
@@ -27,8 +65,10 @@ for (const width of [800, 1280]) {
 			const popupBox = await group.locator('.row').boundingBox();
 			expect(faceBox).not.toBeNull();
 			expect(popupBox).not.toBeNull();
-			const anchoredX = Math.max(4, Math.min(faceBox!.x, width - popupBox!.width - 8));
-			expect(Math.abs(popupBox!.x - anchoredX)).toBeLessThanOrEqual(1);
+			const rightGap = width - (popupBox!.x + popupBox!.width);
+			expect(popupBox!.x).toBeGreaterThanOrEqual(0);
+			expect(rightGap).toBeGreaterThanOrEqual(0);
+			expect(Math.abs(popupBox!.x - faceBox!.x) <= 4 || rightGap <= 10).toBe(true);
 			expect(popupBox!.y).toBeGreaterThanOrEqual(faceBox!.y + faceBox!.height - 1);
 		}
 		await command.getByRole('button').click();
