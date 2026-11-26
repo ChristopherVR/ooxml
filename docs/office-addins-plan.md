@@ -12,8 +12,9 @@ and a package that can run in this host are three distinct deliverables.
   IDs. Commands can run trusted host callbacks.
 - [`src/ui/src/ribbon/add-in-dialog.ts`](../src/ui/src/ribbon/add-in-dialog.ts) exposes
   `setOfficeAddInCatalog`. The host supplies IDs, labels, and install and optional remove
-  callbacks. Get Add-ins calls those callbacks and links to Marketplace. My Add-ins discovers
-  mounted ribbon tabs and activates them.
+  callbacks. Admin Managed lists the host catalog, and My Add-ins discovers and activates
+  mounted ribbon tabs. `setOfficeAddInStorefront` controls whether the Store tab shows a
+  Marketplace link or a host-supplied list of offers.
   [`add-in-tabs.ts`](../src/ui/src/ribbon/add-in-tabs.ts) renders host tabs in Word and Excel.
   PowerPoint uses [`ribbon-add-ins.ts`](../src/ui/src/pptx/render/ribbon-add-ins.ts) and
   [`ribbon-add-in.ts`](../src/ui/src/pptx/web-components/ribbon-add-in.ts).
@@ -39,10 +40,10 @@ and service contracts. [Forms connector](https://learn.microsoft.com/en-us/conne
 · [Excel live connections](https://support.microsoft.com/en-us/forms/can-i-get-real-time-updates-in-my-excel-workbook).
 
 - Local install accepts task-pane XML, unified JSON and bounded unified ZIP packages in
-  Word, Excel and PowerPoint. Get Add-ins previews declared publisher, version, origins
-  and permissions before consent. My Add-ins lists and removes the in-memory installs.
-  An invalid replacement leaves the installed version available in the list. Execution,
-  persistent installs and storefront providers remain open.
+  Word, Excel and PowerPoint. Upload is available from every tab of the shared dialog and
+  previews declared publisher, version, origins and permissions before consent. My Add-ins
+  lists and removes the in-memory installs. An invalid replacement leaves the installed version
+  available in the list. Execution, persistent installs and remote storefront providers remain open.
 
 ## Parse two public manifest formats
 

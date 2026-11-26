@@ -20,8 +20,11 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const search = dialog.getByRole('searchbox');
 		await search.fill('notes');
 		await expect(dialog).toContainText('No matching add-ins.');
-		await expect(dialog.getByRole('button', { name: 'Upload My Add-in' })).toBeDisabled();
-		await expect(dialog).toContainText('Local add-in installation is unavailable in Visio.');
+		const upload = dialog.getByRole('button', { name: 'Upload My Add-in' });
+		await expect(upload).toBeDisabled();
+		await expect(upload).toHaveAccessibleDescription(
+			'Local add-in installation is unavailable in Visio.',
+		);
 		await page.keyboard.press('Escape');
 		await expect(dialog).toBeHidden();
 		await expect(get).toBeFocused();

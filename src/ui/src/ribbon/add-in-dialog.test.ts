@@ -50,6 +50,21 @@ it('opens at the editor root, filters the catalog and restores the opener on Esc
 	expect(editor.activeElement).toBe(opener);
 });
 
+it('uses a normalized locale for both labels and catalog search', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	setOfficeAddInCatalog(editor, [{ id: 'notes', label: 'Notes', install: () => {} }]);
+	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'zh_CN');
+	const dialog = getDialog(editor);
+	expect(dialog?.heading).toBe('Office 加载项');
+	const search = dialog?.querySelector<HTMLInputElement>('input[type="search"]');
+	if (!search) throw new Error('Missing search field');
+	search.value = 'NOTES';
+	search.dispatchEvent(new Event('input'));
+	expect(dialog?.querySelector('li')?.textContent).toContain('Notes');
+});
+
 it('offers only the configured storefront and validates BYO bytes before installing', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
@@ -67,7 +82,11 @@ it('offers only the configured storefront and validates BYO bytes before install
 	expect(link?.rel).toBe('noopener noreferrer');
 	getDialog(editor)?.close();
 	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
-	const read = vi.fn(() => new File([xml], 'manifest.xml'));
+	const read = vi.fn(function (this: { id: string }, signal: AbortSignal) {
+		expect(this.id).toBe('notes');
+		expect(signal.aborted).toBe(false);
+		return new File([xml], 'manifest.xml');
+	});
 	setOfficeAddInStorefront(editor, {
 		kind: 'catalog',
 		entries: [{ id: 'notes', label: 'Notes', read }],

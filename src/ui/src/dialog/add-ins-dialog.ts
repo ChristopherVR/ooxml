@@ -228,7 +228,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										class="link"
 										type="button"
 										?disabled=${unsupported || !!this.#pending}
-										title=${unsupported ? reason : t('Choose a local add-in file')}
+										aria-describedby=${unsupported ? 'upload-unavailable' : nothing}
 										@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
 										>${t('Upload My Add-in')}</button
 									>
@@ -241,7 +241,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										@change=${this.upload}
 									/>
 								</div>
-								${unsupported ? html`<p class="empty">${reason}</p>` : nothing}
+								${unsupported ? html`<p class="empty" id="upload-unavailable">${reason}</p>` : nothing}
 								${renderAddInList({
 									session,
 									pivot: this.#pivot,

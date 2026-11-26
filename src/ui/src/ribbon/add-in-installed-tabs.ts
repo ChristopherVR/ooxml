@@ -1,4 +1,4 @@
-interface EditorAddIn {
+export interface EditorAddIn {
 	id: string;
 	label: string;
 	open: () => void;

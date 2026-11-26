@@ -91,10 +91,15 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 			if (storefront.kind === 'catalog') {
 				tiles = storefront.entries
 					.filter(({ label }) => matches(label))
-					.map(({ label, read: source }) =>
+					.map((offer) =>
 						tile(
-							label,
-							action('Install', label, () => read(source), product === 'visio'),
+							offer.label,
+							action(
+								'Install',
+								offer.label,
+								() => read((signal) => offer.read(signal)),
+								product === 'visio',
+							),
 						),
 					);
 				break;

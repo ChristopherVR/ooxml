@@ -1,4 +1,5 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
+import { normalizeLocale } from 'ooxml-core/i18n';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 
@@ -31,6 +32,15 @@ const CATALOG = Symbol.for('office-ui.add-in-catalog');
 const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
 const ENTRY_LIMIT = 128;
+const LOAD_ERRORS = new Map([
+	['fr', 'Impossible de charger les compléments.'],
+	['de', 'Add-Ins konnten nicht geladen werden.'],
+	['es', 'No se pudieron cargar los complementos.'],
+	['zh-CN', '无法加载加载项。'],
+	['ja', 'アドインを読み込めませんでした。'],
+	['ko', '추가 기능을 불러오지 못했습니다.'],
+]);
+const LOCALES = [...LOAD_ERRORS.keys()];
 type HostSettings = AddInDialogHost & {
 	[CATALOG]?: readonly OfficeAddInCatalogEntry[];
 	[STOREFRONT]?: OfficeAddInStorefront;
@@ -106,22 +116,27 @@ export async function openOfficeAddIns(
 ): Promise<void> {
 	const pending: HostSettings = host;
 	const hasDialog = () =>
-		[...host.children].some((child) => child.localName === 'office-ui-add-ins-dialog');
+		[...host.children].some((child) =>
+			child.matches('office-ui-add-ins-dialog, [data-office-add-ins-fallback]'),
+		);
 	if (hasDialog()) await Promise.resolve(); // Let a just-closed dialog detach.
 	if (pending[OPENING] || hasDialog()) return;
 	const opener = modalActiveElement(host.ownerDocument);
 	const restore = addInReturnFocus(opener);
+	const language = normalizeLocale(locale, LOCALES, 'en');
 	pending[OPENING] = true;
 	try {
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
-		if (host.isConnected) mountAddInsDialog({ host, mode, t, product, locale }, restore);
+		if (host.isConnected) mountAddInsDialog({ host, mode, t, product, locale: language }, restore);
 	} catch {
 		if (!host.isConnected) return;
 		const dialog = showOfficeServiceDialog(host, t('Office Add-ins'), t('Close'));
+		dialog.setAttribute('data-office-add-ins-fallback', '');
 		const status = host.ownerDocument.createElement('p');
 		status.setAttribute('role', 'status');
-		status.textContent = t('Could not load add-ins.');
+		status.textContent = LOAD_ERRORS.get(language) ?? 'Could not load add-ins.';
 		dialog.append(status);
+		dialog.addEventListener('office-dialog-close', () => queueMicrotask(restore), { once: true });
 		dialog.show();
 	} finally {
 		delete pending[OPENING];
