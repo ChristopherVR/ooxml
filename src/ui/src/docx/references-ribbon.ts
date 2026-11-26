@@ -1,3 +1,4 @@
+import { setDisabledReason } from './dialog-fields';
 import type { EditorCore } from './editor-core';
 import { translate } from './localization';
 import type { RibbonIcon } from './ribbon-icons';
@@ -19,19 +20,19 @@ export type ReferencesCommand =
 	| 'updateAuthority';
 
 export const REFERENCE_LABELS = {
-	markEntry: 'Mark Entry',
-	insertIndex: 'Insert Index',
-	updateIndex: 'Update Index',
-	sources: 'Manage Sources',
-	citation: 'Insert Citation',
-	editCitation: 'Edit Citation',
-	style: 'Citation Style',
+	markEntry: 'Mark entry',
+	insertIndex: 'Insert index',
+	updateIndex: 'Update index',
+	sources: 'Manage sources',
+	citation: 'Insert citation',
+	editCitation: 'Edit citation',
+	style: 'Citation style',
 	bibliography: 'Bibliography',
-	worksCited: 'Works Cited',
-	updateBibliography: 'Update Bibliography',
-	markAuthority: 'Mark Citation',
-	insertAuthority: 'Insert Table of Authorities',
-	updateAuthority: 'Update Table of Authorities',
+	worksCited: 'Works cited',
+	updateBibliography: 'Update bibliography',
+	markAuthority: 'Mark citation',
+	insertAuthority: 'Insert table of authorities',
+	updateAuthority: 'Update table of authorities',
 } as const satisfies Record<ReferencesCommand, string>;
 
 export function buildReferences(panel: HTMLElement): void {
@@ -128,7 +129,10 @@ export function syncReferencesRibbon(core: EditorCore): void {
 		if (!command) continue;
 		const [key, label] = command;
 		const reason = referencesReason(core, key as ReferencesCommand);
-		button.disabled = Boolean(reason);
-		button.title = translate(core.locale, reason ?? label);
+		setDisabledReason(
+			button,
+			reason ? translate(core.locale, reason) : undefined,
+			translate(core.locale, label),
+		);
 	}
 }

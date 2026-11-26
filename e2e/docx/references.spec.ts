@@ -56,21 +56,28 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await page.keyboard.press('Enter');
 	await page.keyboard.insertText('zebra ZEBRA Zebras');
 	await editor.getByRole('tab', { name: 'References', exact: true }).click();
+	await expect(command('Edit citation')).toBeDisabled();
+	await expect(command('Edit citation')).toHaveAttribute('aria-description', /citation/i);
 	await selectText('Zebra');
-	await reveal(editor, command('Mark Entry'));
-	await command('Mark Entry').focus();
+	await reveal(editor, command('Mark entry'));
+	await command('Mark entry').focus();
 	await page.keyboard.press('Enter');
 	await expect(input('Main entry')).toHaveValue('Zebra');
 	await dialog.getByRole('checkbox', { name: 'Bold page numbers', exact: true }).check();
 	await button('Mark All').click();
-	await expect(command('Mark Entry')).toBeFocused();
+	await expect(command('Mark entry')).toBeFocused();
 
 	await selectText('Doe v. City');
-	await run('Mark Citation');
+	await run('Mark citation');
 	await expect(input('Long citation')).toHaveValue('Doe v. City');
 	await button('Mark').click();
 
-	await run('Manage Sources');
+	await run('Manage sources');
+	await expect(button('Remove Source')).toBeDisabled();
+	await expect(button('Remove Source')).toHaveAttribute(
+		'aria-description',
+		'Select an existing source',
+	);
 	await input('Tag').fill('Doe2020');
 	await input('Title').fill('Field studies');
 	await input('Author').fill('Doe, Jane');
@@ -78,13 +85,14 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await input('Publisher').fill('Example Press');
 	await button('Save Source').click();
 	await expect(dialog).toHaveCount(0);
-	await run('Insert Citation');
+	await run('Insert citation');
 	await input('Pages').fill('12');
 	await button('Insert').click();
 	await expect(surface).toContainText('(Doe, 2020, p. 12)');
 
 	await selectText('Doe, 2020');
-	await run('Edit Citation');
+	await expect(command('Edit citation')).not.toHaveAttribute('aria-description');
+	await run('Edit citation');
 	await input('Pages').fill('13');
 	await button('OK').click();
 	await expect(surface).toContainText('(Doe, 2020, p. 13)');
@@ -95,30 +103,30 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 
 	await surface.press('Control+End');
 	await page.keyboard.press('Enter');
-	await run('Insert Index');
+	await run('Insert index');
 	await dialog.getByRole('spinbutton', { name: 'Columns', exact: true }).fill('2');
 	await button('OK').click();
 	await expect(surface.locator('p').filter({ hasText: /^Zebra\s+1$/ })).toHaveCount(1);
-	await expectStableUpdate('Update Index');
+	await expectStableUpdate('Update index');
 
 	await surface.press('Control+End');
 	await run('Bibliography');
 	await expect(surface).toContainText('Doe, J. (2020). Field studies. Example Press.');
-	await expectStableUpdate('Update Bibliography');
+	await expectStableUpdate('Update bibliography');
 	await surface.press('Control+End');
-	await run('Works Cited');
+	await run('Works cited');
 	await expect(surface.locator('p').filter({ hasText: /^Works Cited$/ })).toHaveCount(1);
-	await expectStableUpdate('Update Bibliography');
+	await expectStableUpdate('Update bibliography');
 	await surface.press('Control+End');
 	await page.keyboard.press('Enter');
-	await run('Insert Table of Authorities');
+	await run('Insert table of authorities');
 	await button('OK').click();
 	await expect(surface.locator('p').filter({ hasText: /^Cases$/ })).toHaveCount(1);
 	await expect(surface.locator('p').filter({ hasText: /^Doe v\. City\s+1$/ })).toHaveCount(1);
-	await expectStableUpdate('Update Table of Authorities');
+	await expectStableUpdate('Update table of authorities');
 
-	await run('Citation Style');
-	await dialog.getByRole('combobox', { name: 'Citation Style' }).selectOption('MLA');
+	await run('Citation style');
+	await dialog.getByRole('combobox', { name: 'Citation style' }).selectOption('MLA');
 	await button('OK').click();
 	await expect(surface).toContainText('(Doe 13)');
 	await surface.press('Control+z');
@@ -146,7 +154,7 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	);
 	await reopenDocument(page, 'word-references.docx', bytes);
 	await expect(surface).toContainText('(Doe, 2020, p. 13)');
-	await run('Manage Sources');
+	await run('Manage sources');
 	await dialog.getByRole('combobox', { name: 'Source', exact: true }).selectOption('Doe2020');
 	await expect(input('Title')).toHaveValue('Field studies');
 });

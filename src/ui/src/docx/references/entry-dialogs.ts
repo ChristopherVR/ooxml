@@ -1,3 +1,4 @@
+import { setDisabledReason } from '../dialog-fields';
 import type {
 	CitationOptions,
 	IndexLeader,
@@ -47,11 +48,14 @@ export function markIndexDialog(
 	const mark = dialog.action('Mark', () => run(false), true);
 	const markAll = dialog.action('Mark All', () => run(true));
 	const sync = () => {
-		mark.disabled = !main.value.trim();
-		markAll.disabled =
-			!selection || mark.disabled || Boolean(bookmark.value() || crossReference.value.trim());
-		mark.title = mark.disabled ? dialog.t('Enter a main entry') : '';
-		markAll.title = markAll.disabled ? dialog.t('Select text to mark all page references') : '';
+		const missingEntry = !main.value.trim();
+		setDisabledReason(mark, missingEntry ? dialog.t('Enter a main entry') : undefined);
+		setDisabledReason(
+			markAll,
+			!selection || missingEntry || bookmark.value() || crossReference.value.trim()
+				? dialog.t('Select text to mark all page references')
+				: undefined,
+		);
 	};
 	dialog.content.addEventListener('input', sync);
 	sync();
@@ -91,8 +95,10 @@ export function insertIndexDialog(
 		locale,
 	);
 	align.addEventListener('change', () => {
-		leader.input.disabled = !align.checked;
-		leader.input.title = align.checked ? '' : dialog.t('Right-align page numbers');
+		setDisabledReason(
+			leader.input,
+			align.checked ? undefined : dialog.t('Right-align page numbers'),
+		);
 	});
 	dialog.show(
 		dialog.action(
@@ -139,8 +145,7 @@ export function markAuthorityDialog(
 		true,
 	);
 	const sync = () => {
-		mark.disabled = !long.value.trim();
-		mark.title = mark.disabled ? dialog.t('Enter a long citation') : '';
+		setDisabledReason(mark, long.value.trim() ? undefined : dialog.t('Enter a long citation'));
 	};
 	long.addEventListener('input', sync);
 	sync();

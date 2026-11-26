@@ -7,13 +7,13 @@ import { referencesText, type ReferencesText } from './strings';
 import { docToModel } from '../model-adapter';
 import { REFERENCE_LABELS, type ReferencesCommand } from '../references-ribbon';
 import { referencesDialog } from './dialog';
+import { refreshCitationResults } from './citation-results';
 import {
 	bibliographyOf,
 	changeReferenceTables,
 	dispatchReference,
 	inlineReference,
 	markEntry,
-	refreshCitationResults,
 	selectedCitation,
 	selectedRunFormat,
 	setBibliography,
@@ -178,7 +178,7 @@ export function runReferences(
 			else if (command === 'bibliography' || command === 'worksCited')
 				table('BIBLIOGRAPHY', {
 					instruction: 'BIBLIOGRAPHY',
-					heading: t(REFERENCE_LABELS[command]),
+					heading: t(command === 'worksCited' ? 'Works Cited' : 'Bibliography'),
 					bibliography,
 				});
 			else if (command === 'updateBibliography') {

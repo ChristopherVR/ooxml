@@ -1,4 +1,3 @@
-import { Fragment, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { closeHistory } from 'prosemirror-history';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -8,7 +7,6 @@ import {
 	type DocumentModel,
 	type TextRun,
 } from 'ooxml-core/docx';
-import { layoutDocumentModel } from 'ooxml-core/docx/layout';
 import {
 	inlineNodeRun,
 	newControlId,
@@ -20,14 +18,13 @@ import {
 	type ReferenceTable,
 	type WordReferences,
 } from 'ooxml-core/docx/ui';
-import { createCanvasMeasurer } from '../canvas-measurer';
 import { withBibliographySources } from '../document-information-attr';
 import { modelToDoc } from '../model-adapter';
-import { pageNumbers } from '../print-header-footer';
 import { schema } from '../schema';
 import { markAllPositions } from './mark-all';
 import type { EditorLocale } from '../localization';
 import { referencesText } from './strings';
+import { referencePages } from './reference-pages';
 
 export function dispatchReference(view: EditorView, tr: Transaction): void {
 	if (view.editable && tr.docChanged) view.dispatch(closeHistory(tr).scrollIntoView());
@@ -77,40 +74,6 @@ export function setBibliography(
 	const xml = references.writeBibliographyXml(data, original?.xml);
 	if (tr.doc.attrs.bibliographySources !== xml) tr.setDocAttribute('bibliographySources', xml);
 	return withBibliographySources(model, xml, original?.part);
-}
-
-type PagePart = { number: string; end: number };
-
-function referencePages(model: DocumentModel): ReferencePage {
-	const { pages } = layoutDocumentModel(model, createCanvasMeasurer());
-	const numbers = pageNumbers(model, pages);
-	const fragments = new Map<string, PagePart[]>();
-	const add = (id: string, number: string, end: number) => {
-		const parts = fragments.get(id) ?? [];
-		parts.push({ number, end });
-		fragments.set(id, parts);
-	};
-	for (const [index, page] of pages.entries()) {
-		const number = numbers[index];
-		if (number === undefined) continue;
-		for (const column of page.columns)
-			for (const block of column.blocks) {
-				if (block.kind === 'paragraph')
-					add(block.blockId, number, block.lines.at(-1)?.sourceEnd ?? Infinity);
-				else
-					for (const row of block.rows) {
-						if (row.repeated) continue;
-						for (const cell of row.cells)
-							for (const box of cell)
-								add(box.blockId, number, box.lines.at(-1)?.sourceEnd ?? Infinity);
-					}
-			}
-	}
-	return (id, offset, end) => {
-		const parts = fragments.get(id);
-		if (end || offset === undefined) return (end ? parts?.at(-1) : parts?.[0])?.number;
-		return (parts?.find((part) => offset < part.end) ?? parts?.at(-1))?.number;
-	};
 }
 
 /** Rebuild each result on demand using the same paginated model as the table of contents. */
@@ -279,52 +242,6 @@ export function selectedCitation(references: WordReferences, view: EditorView) {
 			return { from, to, instruction: field.instr, format: runs[field.runs[0] ?? field.from] };
 	}
 	return undefined;
-}
-
-export function refreshCitationResults(
-	references: WordReferences,
-	tr: Transaction,
-	model: DocumentModel,
-	bibliography: Bibliography,
-) {
-	const evaluate = references.citationEvaluator(bibliography);
-	const paragraphs = new Map<
-		string,
-		Extract<DocumentModel['blocks'][number], { type: 'paragraph' }>
-	>();
-	for (const block of model.blocks) {
-		if (block.type === 'paragraph') paragraphs.set(block.id, block);
-		else
-			for (const row of block.rows)
-				for (const cell of row)
-					for (const paragraph of cell.paragraphs) paragraphs.set(paragraph.id, paragraph);
-	}
-	const changes: { pos: number; node: ProseMirrorNode; next: Fragment }[] = [];
-	tr.doc.descendants((node, pos) => {
-		if (node.type.name !== 'paragraph') return true;
-		const paragraph = paragraphs.get(String(node.attrs.id));
-		if (!paragraph) return false;
-		const updated = references.refreshCitations(paragraph, evaluate);
-		if (updated !== paragraph)
-			changes.push({
-				pos,
-				node,
-				next: Fragment.fromArray(updated.runs.flatMap((run) => runToInlineNodes(run, schema))),
-			});
-		return false;
-	});
-	for (const { pos, node, next } of changes.reverse()) {
-		const first = node.content.findDiffStart(next);
-		const last = node.content.findDiffEnd(next);
-		if (first !== null && last) {
-			const overlap = Math.max(0, first - Math.min(last.a, last.b));
-			tr.replaceWith(
-				pos + 1 + first,
-				pos + 1 + last.a + overlap,
-				next.cut(first, last.b + overlap),
-			);
-		}
-	}
 }
 
 export function selectedRunFormat(

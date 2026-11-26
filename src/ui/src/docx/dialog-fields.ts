@@ -87,3 +87,15 @@ export function setTriState(input: HTMLInputElement, value: boolean | null): voi
 	input.indeterminate = value === null;
 	input.checked = value === true;
 }
+
+/** A disabled control exposes the same reason to assistive technology and in its tooltip. */
+export function setDisabledReason(
+	control: HTMLButtonElement | HTMLInputElement | HTMLSelectElement,
+	reason: string | undefined,
+	title = '',
+): void {
+	control.disabled = reason !== undefined;
+	control.title = reason ?? title;
+	if (reason !== undefined) control.setAttribute('aria-description', reason);
+	else control.removeAttribute('aria-description');
+}

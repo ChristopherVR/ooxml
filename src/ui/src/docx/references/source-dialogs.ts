@@ -1,3 +1,4 @@
+import { setDisabledReason } from '../dialog-fields';
 import type {
 	Bibliography,
 	BibliographyAuthor,
@@ -125,8 +126,7 @@ export function manageSourcesDialog(
 		corporate.checked = source?.author?.kind === 'corporate';
 		author.value = authorText(source?.author);
 		for (const { field, input } of fieldInputs) input.value = source?.fields[field] ?? '';
-		remove.disabled = !source;
-		remove.title = source ? '' : dialog.t('Select an existing source');
+		setDisabledReason(remove, source ? undefined : dialog.t('Select an existing source'));
 	};
 	existing.input.addEventListener('change', sync);
 	sync();
@@ -182,8 +182,10 @@ export function insertCitationDialog(
 	tag.maxLength = 64;
 	const options = citationOptions(dialog);
 	const sync = () => {
-		tag.disabled = Boolean(source.value());
-		tag.title = tag.disabled ? dialog.t('Choose Add placeholder to enter a new tag') : '';
+		setDisabledReason(
+			tag,
+			source.value() ? dialog.t('Choose Add placeholder to enter a new tag') : undefined,
+		);
 	};
 	source.input.addEventListener('change', sync);
 	sync();
@@ -210,7 +212,7 @@ export function styleDialog(
 	apply: (style: BibliographyStyle) => void,
 ) {
 	const style = dialog.select(
-		'Citation Style',
+		'Citation style',
 		[
 			['APA', 'APA'],
 			['MLA', 'MLA'],
