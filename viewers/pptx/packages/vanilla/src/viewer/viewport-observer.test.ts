@@ -12,6 +12,7 @@ afterEach(() => {
 	document.body.replaceChildren();
 	vi.restoreAllMocks();
 	vi.unstubAllGlobals();
+	vi.useRealTimers();
 });
 
 interface Observation {
@@ -71,6 +72,7 @@ describe('vanilla viewport observation', () => {
 	});
 
 	it('refits on a padding-only change, which only the border box shows', () => {
+		vi.useFakeTimers();
 		const observations = stubObservers();
 		// A content-box viewport losing its padding: the client size drops, the content box a
 		// default ResizeObserver watches stays put.
@@ -99,6 +101,7 @@ describe('vanilla viewport observation', () => {
 		client.width = 960;
 		client.height = 540;
 		borderBox!.callback();
+		vi.advanceTimersToNextFrame();
 		expect(stage().style.transform).toBe('scale(1)');
 		viewer.destroy();
 		viewer = undefined;

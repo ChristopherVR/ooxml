@@ -1035,6 +1035,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.pictureFormat.layout': 'Picture Layout',
 	'pptx.pictureFormat.altText': 'Alt Text',
 	'pptx.pictureFormat.rotateRight': 'Rotate Right 90°',
+	'pptx.pictureFormat.rotateLeft': 'Rotate Left 90°',
 	'pptx.pictureFormat.selectionPane': 'Selection Pane',
 	'pptx.pictureFormat.layoutUnavailable': 'Picture layouts cannot be created from a selection yet.',
 	'pptx.pictureFormat.unavailable': 'Select an editable picture.',

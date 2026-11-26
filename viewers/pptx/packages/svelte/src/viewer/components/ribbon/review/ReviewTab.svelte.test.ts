@@ -164,25 +164,25 @@ describe('reviewTab', () => {
 			props: { slides: editor.slides, onnavigate, editor, chromeUi },
 		});
 		cleanup = () => unmount(instance);
-		const named = (label: string) =>
-			allButtons(target).find(
-				(button) => button.textContent?.trim() === label,
-			) as HTMLButtonElement;
-		expect(named('Delete').disabled).toBeTruthy();
-		named('New Comment').click();
+		const command = (id: string) =>
+			target
+				.querySelector(`[data-ribbon-control="review.comments.${id}"]`)
+				?.shadowRoot?.querySelector<HTMLButtonElement>('button');
+		expect(command('delete')?.disabled).toBeTruthy();
+		command('newComment')?.click();
 		flushSync();
-		expect(chromeUi.commentsOpen).toBe(true);
-		expect(named('Show Comments').getAttribute('aria-pressed')).toBe('true');
-		named('Show Comments').click();
+		expect(chromeUi.commentsOpen).toBeTruthy();
+		expect(command('showComments')?.getAttribute('aria-pressed')).toBe('true');
+		command('showComments')?.click();
 		flushSync();
-		expect(chromeUi.commentsOpen).toBe(false);
-		named('Next').click();
+		expect(chromeUi.commentsOpen).toBeFalsy();
+		command('next')?.click();
 		flushSync();
-		named('Next').click();
+		command('next')?.click();
 		flushSync();
 		expect(onnavigate).toHaveBeenCalledExactlyOnceWith(1);
-		expect(named('Delete').disabled).toBeFalsy();
-		named('Delete').click();
+		expect(command('delete')?.disabled).toBeFalsy();
+		command('delete')?.click();
 		flushSync();
 		expect(editor.slides[1]?.comments).toStrictEqual([]);
 	});

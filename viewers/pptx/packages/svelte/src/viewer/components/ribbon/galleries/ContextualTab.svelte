@@ -59,6 +59,8 @@
 				<ChartSelectionStrip {editor} />
 			{/if}
 			{#if group.pictureStrip === 'picture-arrange' || group.arrange}
+				<ArrangeHomeStrip {editor} strip="align" />
+				<ArrangeHomeStrip {editor} strip="flip" />
 				<ArrangeExtras {editor} {hiddenActions} />
 				<ArrangeHomeStrip {editor} strip="order" />
 			{/if}

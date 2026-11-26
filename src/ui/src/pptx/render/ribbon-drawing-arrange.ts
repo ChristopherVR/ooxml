@@ -1,4 +1,7 @@
+import type { PptxElement } from 'ooxml-core/pptx';
+
 import type { AlignEdge } from './element-align';
+import { canInteractWithElement } from './element-locks';
 import type { RibbonHomeItem } from './ribbon-home-spec';
 
 const ALIGN = {
@@ -14,6 +17,12 @@ export interface DrawingArrangeActions {
 	align?: ((edge: AlignEdge) => void) | undefined;
 	distribute?: ((axis: 'horizontal' | 'vertical') => void) | undefined;
 	flip?: ((axis: 'horizontal' | 'vertical') => void) | undefined;
+	rotation?:
+		| (() => {
+				element: PptxElement | null | undefined;
+				patch: (id: string, patch: { rotation: number }) => void;
+		  })
+		| undefined;
 	group?: (() => void) | undefined;
 	ungroup?: (() => void) | undefined;
 	position?: (() => void) | undefined;
@@ -76,12 +85,26 @@ export const HOME_DRAWING_ARRANGE_ITEMS: readonly ArrangeItem[] = [
 		'distribute',
 	),
 	item(
+		'rotate-right',
+		'pptx.pictureFormat.rotateRight',
+		'Rotate Right 90°',
+		'home.drawing.rotateRight',
+		'rotation',
+		true,
+	),
+	item(
+		'rotate-left',
+		'pptx.pictureFormat.rotateLeft',
+		'Rotate Left 90°',
+		'home.drawing.rotateLeft',
+		'rotation',
+	),
+	item(
 		'flip-horizontal',
 		'pptx.arrange.flipHorizontally',
 		'Flip Horizontally',
 		legacy('flipHorizontal'),
 		'flip',
-		true,
 	),
 	item(
 		'flip-vertical',
@@ -110,6 +133,7 @@ export interface DrawingArrangeInput {
 }
 
 export function drawingArrangeItems(input?: DrawingArrangeInput): RibbonHomeItem[] {
+	const rotationTarget = input?.actions.rotation?.().element;
 	return HOME_DRAWING_ARRANGE_ITEMS.filter(
 		({ action }) => !action || Boolean(input?.actions[action]),
 	).map(({ action, ...row }) => {
@@ -123,6 +147,12 @@ export function drawingArrangeItems(input?: DrawingArrangeInput): RibbonHomeItem
 				return { ...row, disabled: !input.canEdit || !input.canDistribute };
 			case 'position':
 				return { ...row, disabled: !input.selected };
+			case 'rotation':
+				return {
+					...row,
+					disabled:
+						!input.canEdit || !rotationTarget || !canInteractWithElement(rotationTarget, 'rotate'),
+				};
 			case 'selectionPane':
 				return row;
 			default:
@@ -149,6 +179,15 @@ export function runDrawingArrange(value: string, actions: DrawingArrangeActions)
 		case 'flip-vertical':
 			actions.flip?.(value === 'flip-horizontal' ? 'horizontal' : 'vertical');
 			return true;
+		case 'rotate-right':
+		case 'rotate-left': {
+			const target = actions.rotation?.();
+			const element = target?.element;
+			if (target && element && canInteractWithElement(element, 'rotate')) {
+				target.patch(element.id, quarterTurnPatch(element, value === 'rotate-right'));
+			}
+			return true;
+		}
 		case 'group':
 			actions.group?.();
 			return true;
@@ -164,4 +203,9 @@ export function runDrawingArrange(value: string, actions: DrawingArrangeActions)
 		default:
 			return false;
 	}
+}
+
+export function quarterTurnPatch(element: PptxElement, clockwise: boolean): { rotation: number } {
+	const delta = clockwise ? 90 : -90;
+	return { rotation: ((((element.rotation ?? 0) + delta) % 360) + 360) % 360 };
 }

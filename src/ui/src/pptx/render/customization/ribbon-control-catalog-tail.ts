@@ -160,7 +160,14 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 			controls: { gallery: 'Shape Styles gallery', shapeEffects: 'Shape Effects gallery' },
 		},
 		wordArtStyles: { label: 'WordArt Styles', controls: { gallery: 'WordArt Styles gallery' } },
-		arrange: { label: 'Arrange', controls: {} },
+		arrange: {
+			label: 'Arrange',
+			controls: {
+				rotateRight: 'Rotate Right 90°',
+				rotateLeft: 'Rotate Left 90°',
+				selectionPane: 'Selection Pane',
+			},
+		},
 	},
 	pictureFormat: {
 		adjust: {
@@ -190,7 +197,11 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 		accessibility: { label: 'Alt Text', controls: { altText: 'Alt Text' } },
 		arrange: {
 			label: 'Arrange',
-			controls: { rotateRight: 'Rotate Right 90°', selectionPane: 'Selection Pane' },
+			controls: {
+				rotateRight: 'Rotate Right 90°',
+				rotateLeft: 'Rotate Left 90°',
+				selectionPane: 'Selection Pane',
+			},
 		},
 	},
 	tableDesign: {

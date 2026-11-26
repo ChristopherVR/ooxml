@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': '画像のレイアウト',
 	'pptx.pictureFormat.altText': '代替テキスト',
 	'pptx.pictureFormat.rotateRight': '右へ 90° 回転',
+	'pptx.pictureFormat.rotateLeft': '左へ 90° 回転',
 	'pptx.pictureFormat.selectionPane': '選択ウィンドウ',
 	'pptx.pictureFormat.layoutUnavailable':
 		'選択した画像からレイアウトを作成する機能はまだ利用できません。',

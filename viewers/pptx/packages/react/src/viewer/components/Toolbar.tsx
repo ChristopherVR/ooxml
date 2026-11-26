@@ -127,6 +127,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	// Full-screen mode keeps the strip in the layout, so a peeked ribbon moves nothing.
 	const showStrip = layout.reveal || effectiveMode === 'fullScreen';
 
+	const picture = p.picture;
 	const arrange = (
 		<ArrangeSection
 			embedded={Boolean(contextual.active)}
@@ -384,6 +385,9 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 										align: (edge) => p.onAlignElements(edge === 'centerH' ? 'center' : edge),
 										distribute: p.onDistributeElements,
 										flip: p.onFlip,
+										rotation: picture
+											? () => ({ element: p.selectedElement, patch: picture.patch })
+											: undefined,
 										group: p.onGroupElements,
 										ungroup: p.onUngroupElement,
 										position: () => formatPane.requestFormatPane('sizePosition', { focus: true }),

@@ -95,18 +95,19 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 	);
 
 describe('ribbon contextual tabs (vanilla)', () => {
-	it('moves the shared Arrange row onto SmartArt Format and back', () => {
+	it('only mounts the shared Arrange row on a contextual Format tab', () => {
 		const ribbon = mount();
 		try {
 			const element: PptxElement = { ...shape(), type: 'smartArt' };
-			const arrange = ribbon.el.querySelector('[data-pptx-chrome="arrange-controls"]');
-			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('home.arrange');
+			const selector = '[data-pptx-chrome="arrange-controls"]';
+			expect(ribbon.el.querySelector(selector)).toBeNull();
 			ribbon.updateSelection(element, selection(element));
 			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="smartArtFormat"]')!.click();
+			const arrange = ribbon.el.querySelector(selector);
 			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('smartArtFormat.arrange');
 			expect(arrange?.closest('[data-pptx-chrome="ribbon-content"]')).toBe(visiblePane(ribbon.el));
 			ribbon.updateSelection(undefined, selection(undefined));
-			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('home.arrange');
+			expect(ribbon.el.querySelector(selector)).toBeNull();
 		} finally {
 			ribbon.destroy();
 			ribbon.el.remove();
@@ -159,7 +160,7 @@ describe('ribbon contextual tabs (vanilla)', () => {
 		}
 	});
 
-	it('mounts the picture commands and shares Home Arrange', () => {
+	it('mounts the picture commands and contextual Arrange', () => {
 		const ribbon = mount();
 		const picture: PptxElement = { id: 'pic', type: 'image', x: 0, y: 0, width: 100, height: 50 };
 		ribbon.updateSelection(picture, selection(picture));
@@ -285,7 +286,6 @@ describe('ribbon customisation (vanilla)', () => {
 			'home.font',
 			'home.paragraph',
 			'home.drawing',
-			'home.arrange',
 			'home.editing',
 		]) {
 			expect(ribbon.el.querySelector(`[data-ribbon-group="${group}"]`)).not.toBeNull();
@@ -294,12 +294,13 @@ describe('ribbon customisation (vanilla)', () => {
 			'home.clipboard.paste',
 			'home.font.bold',
 			'home.paragraph.bullets',
-			'home.arrange.align',
+			'home.drawing.arrange',
 			'home.editing.find',
 			'insert.tables.table',
 			'view.show.ruler',
 		]) {
 			expect(ribbon.el.querySelector(`[data-ribbon-control="${control}"]`)).not.toBeNull();
 		}
+		expect(ribbon.el.querySelector('[data-ribbon-group="home.arrange"]')).toBeNull();
 	});
 });

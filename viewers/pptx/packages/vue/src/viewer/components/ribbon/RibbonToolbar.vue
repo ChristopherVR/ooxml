@@ -64,6 +64,10 @@ interface Props extends RibbonProps {
 
 const props = defineProps<Props>();
 const { t } = useI18n();
+const rotation = computed(() => {
+	const picture = props.picture;
+	return picture && (() => ({ element: props.selectedElement, patch: picture.patch }));
+});
 
 const showRibbon = computed(() => props.mode === 'edit' || props.mode === 'master');
 /**
@@ -373,6 +377,7 @@ onBeforeUnmount(() => detachOverflow?.());
 								align: (edge) => props.onAlignElements(edge === 'centerH' ? 'center' : edge),
 								distribute: props.onDistributeElements,
 								flip: props.onFlip,
+								rotation,
 								group: props.onGroupElements,
 								ungroup: props.onUngroupElement,
 								position: () => formatPane?.requestFormatPane('sizePosition', { focus: true }),
@@ -394,6 +399,7 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-toggle-find-replace="props.onToggleFindReplace"
 						:on-select-all="props.onSelectAll"
 					/>
+					<ArrangeSection v-if="s === 'arrange'" v-bind="arrangeProps" />
 
 					<DrawSection
 						:can-edit="props.canEdit"
@@ -405,8 +411,6 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-set-drawing-color="props.onSetDrawingColor"
 						:on-set-drawing-width="props.onSetDrawingWidth"
 					/>
-
-					<ArrangeSection v-if="s === 'arrange'" v-bind="arrangeProps" />
 
 					<DesignSection
 						v-if="s === 'design'"

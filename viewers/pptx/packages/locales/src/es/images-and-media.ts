@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': 'Diseño de imagen',
 	'pptx.pictureFormat.altText': 'Texto alternativo',
 	'pptx.pictureFormat.rotateRight': 'Girar 90° a la derecha',
+	'pptx.pictureFormat.rotateLeft': 'Girar 90° a la izquierda',
 	'pptx.pictureFormat.selectionPane': 'Panel de selección',
 	'pptx.pictureFormat.layoutUnavailable':
 		'Aún no se pueden crear diseños de imagen a partir de una selección.',

@@ -403,7 +403,11 @@ test.describe('Home drawing and arrange', () => {
 			},
 		};
 		await openHome(page, `/?customization=${encodeURIComponent(JSON.stringify(customization))}`);
-		await expect(control(page, 'home.arrange.align')).toBeHidden();
+		await inner(page, 'home.drawing.arrange').click();
+		await expect(page.getByRole('menuitem', { name: 'Selection Pane' })).toBeVisible();
+		await expect(
+			page.getByRole('menuitem', { name: 'Align Left', includeHidden: true }),
+		).toBeHidden();
 		await expect(control(page, 'home.arrange.delete')).toBeHidden();
 		await expect(control(page, 'home.drawing.shapeFill')).toBeHidden();
 		await expect(page.locator('[data-ribbon-group="home.arrange"]')).toHaveCount(0);
@@ -545,6 +549,7 @@ test.describe('Home drawing popovers and arrange extras', () => {
 		await ribbonTab(page, 'Shape Format').click();
 		const arrange = page.locator('[data-ribbon-group="shapeFormat.arrange"]');
 		await expect(arrange).toBeVisible();
+		await expect(arrange.getByRole('button', { name: 'Rotate Left 90°' })).toBeEnabled();
 		await expect(
 			arrange.locator('[data-ribbon-control="home.arrange.outlineWidth"]'),
 		).toBeVisible();
@@ -571,11 +576,14 @@ test.describe('Home drawing popovers and arrange extras', () => {
 		await ribbonTab(page, 'Home').click();
 		await inner(page, 'home.drawing.arrange').click();
 		await page.getByRole('menuitem', { name: 'Send to Back', exact: true }).click();
+		await inner(page, 'home.drawing.arrange').click();
+		await page.getByRole('menuitem', { name: 'Rotate Right 90°', exact: true }).click();
 		const bytes = await downloadBytes(await savePptxViaBackstage(page));
 		const xml = await (await JSZip.loadAsync(bytes)).file('ppt/slides/slide1.xml')!.async('string');
 		await writeFile(info.outputPath('home-shape.pptx'), bytes);
 		expect(xml.toLowerCase()).toContain(`val="${colour.slice(1)}"`);
 		expect(xml).toContain('w="57150"');
+		expect(xml).toContain('rot="5400000"');
 	});
 
 	test('Merge Shapes and Crop stay gated without two shapes or a picture', async ({ page }) => {

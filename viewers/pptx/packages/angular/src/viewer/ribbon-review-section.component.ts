@@ -6,7 +6,6 @@ import {
 	DestroyRef,
 	inject,
 	Input,
-	input,
 	output,
 	signal,
 } from '@angular/core';
@@ -67,7 +66,7 @@ export class RibbonReviewSectionComponent {
 		const stop = trackActiveComment(document, (id) => this.activeCommentId.set(id));
 		inject(DestroyRef).onDestroy(stop);
 	}
-	private readonly state = signal({ spellCheck: false, editable: false });
+	private readonly state = signal({ spellCheck: false, editable: false, commentsOpen: false });
 	@Input() get spellCheckEnabled(): boolean {
 		return this.state().spellCheck;
 	}
@@ -80,7 +79,12 @@ export class RibbonReviewSectionComponent {
 	set canEdit(value: boolean) {
 		this.state.update((state) => ({ ...state, editable: value }));
 	}
-	readonly commentsOpen = input(false);
+	@Input() get commentsOpen(): boolean {
+		return this.state().commentsOpen;
+	}
+	set commentsOpen(value: boolean) {
+		this.state.update((state) => ({ ...state, commentsOpen: value }));
+	}
 	readonly comments = output<boolean | void>();
 	readonly spellCheckChange = output<boolean>();
 	readonly a11y = output<void>();
@@ -95,7 +99,7 @@ export class RibbonReviewSectionComponent {
 			canLanguage: true,
 			canCompare: true,
 			canComments: true,
-			commentsOpen: this.commentsOpen(),
+			commentsOpen: this.commentsOpen,
 			...this.commentState(),
 		}),
 	);

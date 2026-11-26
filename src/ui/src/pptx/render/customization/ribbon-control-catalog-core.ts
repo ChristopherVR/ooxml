@@ -70,6 +70,8 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				shapeFill: 'Shape Fill',
 				shapeOutline: 'Shape Outline',
 				shapeEffects: 'Shape Effects gallery',
+				rotateRight: 'Rotate Right 90°',
+				rotateLeft: 'Rotate Left 90°',
 			},
 		},
 		arrange: {

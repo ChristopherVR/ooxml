@@ -13,9 +13,13 @@ for (const width of [800, 1280]) {
 		await expect
 			.poll(() => row.evaluate((element) => element.scrollWidth - element.clientWidth))
 			.toBeLessThanOrEqual(1);
+		const tabs = page.locator('pptx-ui-ribbon-tabs:visible').getByRole('tablist');
+		await expect
+			.poll(() => tabs.evaluate((element) => element.scrollWidth - element.clientWidth))
+			.toBeLessThanOrEqual(1);
 		const group = row.locator('[data-ribbon-group="insert.comments"]');
 		const command = group.locator('[data-ribbon-control="insert.comments.comment"]');
-		const face = group.locator('[part="collapse-face"]');
+		const face = group.locator('.face');
 		const opener = (await face.isVisible()) ? face : command.getByRole('button');
 		if (await face.isVisible()) {
 			await face.click();
@@ -23,7 +27,8 @@ for (const width of [800, 1280]) {
 			const popupBox = await group.locator('.row').boundingBox();
 			expect(faceBox).not.toBeNull();
 			expect(popupBox).not.toBeNull();
-			expect(Math.abs(popupBox!.x - faceBox!.x)).toBeLessThanOrEqual(popupBox!.width);
+			const anchoredX = Math.max(4, Math.min(faceBox!.x, width - popupBox!.width - 8));
+			expect(Math.abs(popupBox!.x - anchoredX)).toBeLessThanOrEqual(1);
 			expect(popupBox!.y).toBeGreaterThanOrEqual(faceBox!.y + faceBox!.height - 1);
 		}
 		await command.getByRole('button').click();
@@ -82,4 +87,30 @@ test('Home uses Drawing Arrange and Review shares the Comments task pane', async
 	await pane.getByRole('button', { name: 'Close', exact: true }).click();
 	await expect(showComments).toHaveAttribute('aria-pressed', 'false');
 	await expect(showComments).toBeFocused();
+	await page
+		.locator('[data-ribbon-control="review.comments.newComment"]')
+		.getByRole('button')
+		.click();
+	await expect(
+		pane.locator('textarea[data-pptx-comment-draft], [data-pptx-comment-draft] textarea'),
+	).toBeFocused();
+	await showComments.click();
+	await expect(pane).toHaveCount(0);
+});
+
+test('Insert Illustrations labels Freeform Shape and Curve', async ({ page }) => {
+	await page.setViewportSize({ width: 1920, height: 900 });
+	await loadDeck(page);
+	await ribbonTab(page, 'Insert').click();
+	const illustrations = page.locator('[data-ribbon-group="insert.illustrations"]');
+	for (const [id, label] of [
+		['freeformShape', 'Freeform: Shape'],
+		['curve', 'Curve'],
+	]) {
+		const tool = illustrations.locator(`[data-pptx-drawing-tool="${id}"]`);
+		const button = tool.getByRole('button', { name: label, exact: true });
+		await expect(button).toBeVisible();
+		await expect(button).toHaveText(label);
+		await expect(tool).toHaveAttribute('title', label);
+	}
 });

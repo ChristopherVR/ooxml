@@ -15,14 +15,14 @@
  */
 
 import {
-	afterNextRender,
+	type AfterViewInit,
 	ChangeDetectionStrategy,
 	Component,
 	computed,
-	DestroyRef,
 	ElementRef,
 	inject,
 	input,
+	type OnDestroy,
 	output,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -52,28 +52,28 @@ export interface CommentSubmission {
 	templateUrl: './comments-panel.component.html',
 	styleUrl: './comments-panel.component.css',
 })
-export class CommentsPanelComponent {
+export class CommentsPanelComponent implements AfterViewInit, OnDestroy {
 	/** The active slide's comments (already filtered to the active slide). */
 	readonly comments = input<PptxComment[]>([]);
 
 	private readonly translate = inject(TranslateService);
 	readonly closeable = input(false);
 	readonly closed = output<void>();
+	private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+	private detachTaskPane: (() => void) | undefined;
 
-	constructor() {
-		const host = inject<ElementRef<HTMLElement>>(ElementRef);
-		const destroy = inject(DestroyRef);
-		afterNextRender(() => {
-			if (this.closeable()) {
-				destroy.onDestroy(
-					attachCommentsTaskPane(host.nativeElement, {
-						label: this.translate.instant('pptx.toolbar.comments'),
-						closeLabel: this.translate.instant('pptx.common.close'),
-						close: () => this.closed.emit(),
-					}),
-				);
-			}
-		});
+	ngAfterViewInit(): void {
+		if (this.closeable()) {
+			this.detachTaskPane = attachCommentsTaskPane(this.host.nativeElement, {
+				label: this.translate.instant('pptx.toolbar.comments'),
+				closeLabel: this.translate.instant('pptx.common.close'),
+				close: () => this.closed.emit(),
+			});
+		}
+	}
+
+	ngOnDestroy(): void {
+		this.detachTaskPane?.();
 	}
 
 	/** Display name shown in the compose label ("Commenting as ..."). */

@@ -69,9 +69,6 @@ export const EDITOR_RIBBON_CSS = `
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-content"] {
     min-width: 0; max-width: 100%; min-height: 92px; padding: 2px 4px; gap: 0; box-sizing: border-box;
   }
-  [data-pptx-editor-chrome] pptx-ui-ribbon-group[data-collapsed][data-ribbon-group^="insert."]::part(collapse-face) {
-    width: 56px; min-width: 56px; padding-inline: 2px; white-space: normal; overflow-wrap: anywhere;
-  }
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-group-label"] {
     font-size: 9px; line-height: 9px; font-weight: 400;
     color: var(--pptx-muted-foreground); text-align: center;

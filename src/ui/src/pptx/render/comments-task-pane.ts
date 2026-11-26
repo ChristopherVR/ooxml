@@ -29,7 +29,9 @@ export function attachCommentsTaskPane(
 	pane.prepend(button);
 
 	const focusDraft = () => (pane.querySelector<HTMLElement>(DRAFT) ?? button).focus();
-	const frame = doc.defaultView?.requestAnimationFrame(focusDraft);
+	const frame = doc.defaultView?.requestAnimationFrame(() => {
+		if (!pane.contains(modalActiveElement(doc))) focusDraft();
+	});
 	const onCommand = (event: Event) => {
 		if (event.composedPath().some((node) => node instanceof Element && node.matches(NEW_COMMENT))) {
 			queueMicrotask(focusDraft);

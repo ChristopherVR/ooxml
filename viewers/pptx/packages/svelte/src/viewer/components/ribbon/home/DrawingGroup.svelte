@@ -36,10 +36,11 @@
 		align: (edge) => editor.arrangeOps.alignSelected(edge),
 		distribute: (axis) => editor.arrangeOps.distributeSelected(axis),
 		flip: (axis) => editor.arrangeOps.flipSelected(axis),
+		rotation: () => ({ element: editor.selectedElement, patch: (id, patch) => editor.applyElementPatch(id, patch) }),
 		group: () => editor.arrangeOps.groupSelected(),
 		ungroup: () => editor.arrangeOps.ungroupSelected(),
-		position: () => position?.(),
-		selectionPane: () => selectionPane?.(),
+		get position() { return position; },
+		get selectionPane() { return selectionPane; },
 	};
 	const t = useTranslator();
 	const host = useRibbonGalleryHost();

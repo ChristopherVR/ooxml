@@ -193,26 +193,22 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 	// Wide enough that no Home group has collapsed into a popup.
 	await page.setViewportSize({ width: 1920, height: 1000 });
 	await loadDeck(page);
+	await expect(page.locator('[data-ribbon-group="home.arrange"]:visible')).toHaveCount(0);
+	for (const id of [
+		'home.font.bold',
+		'home.font.increaseFontSize',
+		'home.paragraph.decreaseIndent',
+		'home.paragraph.alignLeft',
+	]) {
+		const action = page.locator(`[data-ribbon-control="${id}"]`).first();
+		await expect(action).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+		await expect(action).toHaveCSS('opacity', '0.4');
+	}
 	for (const fontFamily of ['system-ui', 'Arial, sans-serif']) {
 		const paint = await page.evaluate((family) => {
 			const chrome = document.querySelector<HTMLElement>('[data-pptx-editor-chrome]')!;
 			chrome.style.fontFamily = family;
 			return {
-				backgrounds: [
-					'home.font.bold',
-					'home.font.increaseFontSize',
-					'home.paragraph.decreaseIndent',
-					'home.paragraph.alignLeft',
-				].map((control) => {
-					const button = document.querySelector(`[data-ribbon-control="${control}"]`)!;
-					return {
-						background: getComputedStyle(button).backgroundColor,
-						opacity: getComputedStyle(button).opacity,
-					};
-				}),
-				muted: getComputedStyle(document.querySelector('[data-pptx-editor-chrome]')!)
-					.getPropertyValue('--pptx-muted')
-					.trim(),
 				shapesIconLeft: (() => {
 					const host = document.querySelector('[data-ribbon-control="home.drawing.shapes"]')!;
 					const button = host.matches('button') ? host : host.querySelector('button')!;
@@ -227,7 +223,7 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 					const fill = document.querySelector('[data-ribbon-control="home.drawing.shapeFill"]')!;
 					return fill.getBoundingClientRect().right - group.getBoundingClientRect().right;
 				})(),
-				rows: ['font-controls', 'drawing-controls', 'arrange-controls'].map((role) => {
+				rows: ['font-controls', 'drawing-controls'].map((role) => {
 					const row = document.querySelector(`[data-pptx-chrome="${role}"]`)!;
 					return {
 						height: row.getBoundingClientRect().height,
@@ -237,21 +233,15 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 				}),
 			};
 		}, fontFamily);
-		for (const action of paint.backgrounds) {
-			// Office buttons are flat: no pill behind them, only a dimmed glyph when disabled.
-			expect(action.background).toBe('rgba(0, 0, 0, 0)');
-			expect(action.opacity).toBe('0.4');
-		}
 		// Large Shapes: the glyph is centred over the caption, so it sits well inside the button.
 		expect(paint.shapesIconLeft).toBeGreaterThan(6);
-		const [font, drawing, arrange] = paint.rows;
-		// Font is two rows, Drawing a 66px three-row grid (a column-wrap flex row is one column wide
-		// in Safari and Firefox), Arrange the viewer's single flat row.
+		const [font, drawing] = paint.rows;
+		// Font is two rows. Drawing is a 66px three-row grid because a column-wrap flex row is
+		// one column wide in Safari and Firefox.
 		expect(font.wrap, fontFamily).toBe('wrap');
 		expect(font.height, fontFamily).toBeGreaterThanOrEqual(54);
 		expect(drawing.height, fontFamily).toBe(66);
 		expect(drawing.display).toBe('grid');
 		expect(paint.fillOverhang, fontFamily).toBeLessThanOrEqual(0);
-		expect(arrange.wrap).toBe('nowrap');
 	}
 });

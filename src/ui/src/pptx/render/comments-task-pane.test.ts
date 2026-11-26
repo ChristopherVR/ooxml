@@ -8,6 +8,24 @@ afterEach(() => {
 	vi.useRealTimers();
 });
 
+it('keeps focus on a comment selected just after opening the pane', async () => {
+	vi.useFakeTimers();
+	const pane = document.createElement('aside');
+	const row = document.createElement('div');
+	row.tabIndex = -1;
+	pane.append(row);
+	document.body.append(pane);
+	const detach = attachCommentsTaskPane(pane, {
+		label: 'Comments',
+		closeLabel: 'Close',
+		close: () => undefined,
+	});
+	row.focus();
+	await vi.advanceTimersByTimeAsync(30);
+	expect(document.activeElement).toBe(row);
+	detach();
+});
+
 it('focuses the draft, closes from Escape, and restores the opener inside a shadow root', async () => {
 	vi.useFakeTimers();
 	const host = document.createElement('div');

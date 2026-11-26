@@ -71,6 +71,7 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 		},
 		{
 			group: 'shapeFormat.arrange',
+			contextualStrip: true,
 			labelKey: 'pptx.ribbon.arrange',
 			label: 'Arrange',
 			arrange: true,

@@ -76,12 +76,12 @@ export interface HomeTab {
 }
 
 /**
- * Composes the Home tab's seven groups (each a shared `pptx-ui-ribbon-home-*` strip): Clipboard, Slides, Font, Paragraph,
- * Editing, Drawing, Arrange (React's order).
+ * Composes the Home tab's Clipboard, Slides, Font, Paragraph, Drawing and Editing groups.
  */
 export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): HomeTab {
 	const el = createEl(doc, 'div', 'pptxv-ribbon-tab-content');
 	const { edit } = deps;
+	let arrangeSelection: PptxElement | undefined;
 	const galleryHub =
 		deps.galleryHub ??
 		createRibbonGalleryHub((result) => edit.applyRibbonGalleryResult(result), {
@@ -166,6 +166,11 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 				align: edit.alignElements,
 				distribute: edit.distributeElements,
 				flip: (axis) => (axis === 'horizontal' ? edit.flipHorizontal() : edit.flipVertical()),
+				rotation: () => ({
+					element: arrangeSelection,
+					patch: (elementId, patch) =>
+						edit.applyRibbonGalleryResult({ kind: 'element', elementId, patch }),
+				}),
 				group: edit.groupSelected,
 				ungroup: edit.ungroupSelected,
 				position: deps.openPositionPane,
@@ -202,6 +207,7 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			recentColors,
 			themeColorMap,
 		}) {
+			arrangeSelection = selectedElement;
 			const canFormat = canFormatText(selectedElement);
 			const text = readTextFormatState(selectedElement);
 			const hasSelection = selectedElement !== undefined;

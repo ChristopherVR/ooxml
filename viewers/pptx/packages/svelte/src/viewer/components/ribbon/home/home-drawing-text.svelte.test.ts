@@ -1,7 +1,7 @@
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
 import type { Component } from 'svelte';
 import { flushSync, mount, unmount } from 'svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EditorState } from '../../../editor/editor-state.svelte';
 import DrawingGroup from './DrawingGroup.svelte';
@@ -56,10 +56,14 @@ function makeEditor(withText = false): EditorState {
 /** All three components under test take the same single `editor` prop. */
 type EditorOnly = Component<{ editor: EditorState }>;
 
-function mountComponent(component: EditorOnly, editor: EditorState): HTMLElement {
+function mountComponent(
+	component: EditorOnly,
+	editor: EditorState,
+	options: { selectionPane?: () => void } = {},
+): HTMLElement {
 	const target = document.createElement('div');
 	document.body.appendChild(target);
-	const instance = mount(component, { target, props: { editor } });
+	const instance = mount(component, { target, props: { editor, ...options } });
 	flushSync();
 	cleanup = () => {
 		unmount(instance);
@@ -107,9 +111,12 @@ describe('home drawing group', () => {
 		expect(target.querySelector<HTMLElement>('.popup')?.hidden).toBeTruthy();
 	});
 
-	it('needs a selection before Arrange opens', () => {
-		expect(byText(mountComponent(DrawingGroup, makeEditor()), 'Arrange')?.disabled).toBeTruthy();
-		expect(byText(mountComponent(DrawingGroup, makeEditor(true)), 'Arrange')?.disabled).toBeFalsy();
+	it('opens Selection Pane from Arrange without a selection', () => {
+		const selectionPane = vi.fn();
+		const target = mountComponent(DrawingGroup, makeEditor(), { selectionPane });
+		byText(target, 'Arrange')?.click();
+		byText(target, 'Selection Pane')?.click();
+		expect(selectionPane).toHaveBeenCalledOnce();
 	});
 });
 

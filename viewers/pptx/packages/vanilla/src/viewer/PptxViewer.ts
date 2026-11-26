@@ -1036,7 +1036,7 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 				this.lifecycle.chrome.stageWrap.querySelector<HTMLElement>('.pptxv-stage'),
 			getEditActions: () => this.editor.getEditActions(),
 			selectElement: (id) => this.editor.selectElements([id]),
-			openComments: (toggle) => this.parityWorkflows.openComments(toggle),
+			openComments: () => this.parityWorkflows.openComments(),
 			openHyperlink: () => this.parityWorkflows.openHyperlink(),
 			getAi: () => this.aiFocus,
 			getCustomization: () => this.customization.getResolved(),
@@ -1540,8 +1540,8 @@ export class PptxViewer extends ViewerCustomizationHost implements PptxViewerIns
 		this.parityWorkflows.openOutlineView();
 	}
 
-	openComments(): void {
-		this.parityWorkflows.openComments();
+	openComments(toggle = false): void {
+		this.parityWorkflows.openComments(toggle);
 	}
 
 	openHyperlink(): void {

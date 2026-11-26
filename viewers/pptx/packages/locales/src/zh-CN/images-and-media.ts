@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': '图片版式',
 	'pptx.pictureFormat.altText': '替代文字',
 	'pptx.pictureFormat.rotateRight': '向右旋转 90°',
+	'pptx.pictureFormat.rotateLeft': '向左旋转 90°',
 	'pptx.pictureFormat.selectionPane': '选择窗格',
 	'pptx.pictureFormat.layoutUnavailable': '暂时无法从所选图片创建版式。',
 	'pptx.pictureFormat.unavailable': '请选择可编辑的图片。',

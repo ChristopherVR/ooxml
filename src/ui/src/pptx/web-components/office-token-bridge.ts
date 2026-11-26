@@ -156,7 +156,10 @@ const EXTRAS: Partial<Record<(typeof OFFICE_ALIAS_TAGS)[number], string>> = {
 	--office-ribbon-caption-size: 11px; --office-ribbon-caption-line-height: 16px; --office-ribbon-caption-padding: 0 14px;
 	--office-launcher-inset-end: -2px; --office-launcher-inset-bottom: 1px; --office-launcher-width: 14px;
 	--office-launcher-height: 14px; --office-ribbon-collapse-x: var(--pptx-collapse-x, 8px);
-	--office-ribbon-collapse-y: var(--pptx-collapse-y, 120px); }`,
+	--office-ribbon-collapse-y: var(--pptx-collapse-y, 120px); }
+:host([data-collapsed][data-ribbon-group^="insert."]) .face {
+	width: 50px; min-width: 50px; padding-inline: 2px; white-space: normal; overflow-wrap: anywhere;
+}`,
 	// The tab row's Comments and Share at the pptx tab-row scale (11px labels, 24px controls).
 	'pptx-ui-ribbon-actions': `:host { --office-font-size: 11px; --office-control-height-md: 24px;
 	--office-icon-size-md: 14px; --office-font-size-2xs: 8px; padding-inline-start: 0; }`,

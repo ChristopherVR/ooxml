@@ -6,7 +6,7 @@
  * Pins that drafts are kept per slide, that a submit trims the draft and moves its `@`-mention
  * spans with the trim, that edits save in place, and that a read-only deck offers no edit.
  */
-import { Injector, runInInjectionContext, signal } from '@angular/core';
+import { ElementRef, Injector, runInInjectionContext, signal } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { createCommentsPanelController } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxSlide } from 'pptx-viewer-core';
@@ -48,6 +48,7 @@ function createPanel(canEdit = true) {
 	const panel = runInInjectionContext(
 		Injector.create({
 			providers: [
+				{ provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
 				{ provide: TranslateService, useValue: translate },
 				{ provide: CommentsPanelStateService, useValue: service },
 			],

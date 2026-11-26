@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': 'Bildlayout',
 	'pptx.pictureFormat.altText': 'Alternativtext',
 	'pptx.pictureFormat.rotateRight': 'Rechts um 90° drehen',
+	'pptx.pictureFormat.rotateLeft': 'Links um 90° drehen',
 	'pptx.pictureFormat.selectionPane': 'Auswahlbereich',
 	'pptx.pictureFormat.layoutUnavailable':
 		'Bildlayouts lassen sich noch nicht aus einer Auswahl erstellen.',

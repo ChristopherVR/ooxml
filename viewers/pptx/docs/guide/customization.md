@@ -1079,6 +1079,8 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `home.drawing.shapeFill`                          | Shape Fill                                                                    |
 | `home.drawing.shapeOutline`                       | Shape Outline                                                                 |
 | `home.drawing.shapeEffects`                       | Shape Effects gallery                                                         |
+| `home.drawing.rotateRight`                        | Rotate Right 90°                                                              |
+| `home.drawing.rotateLeft`                         | Rotate Left 90°                                                               |
 | `home.arrange.bringForward`                       | Bring Forward                                                                 |
 | `home.arrange.sendBackward`                       | Send Backward                                                                 |
 | `home.arrange.bringToFront`                       | Bring to Front                                                                |
@@ -1241,6 +1243,9 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `shapeFormat.shapeStyles.gallery`                 | Shape Styles gallery                                                          |
 | `shapeFormat.shapeStyles.shapeEffects`            | Shape Effects gallery                                                         |
 | `shapeFormat.wordArtStyles.gallery`               | WordArt Styles gallery                                                        |
+| `shapeFormat.arrange.rotateRight`                 | Rotate Right 90°                                                              |
+| `shapeFormat.arrange.rotateLeft`                  | Rotate Left 90°                                                               |
+| `shapeFormat.arrange.selectionPane`               | Selection Pane                                                                |
 | `pictureFormat.adjust.corrections`                | Corrections gallery                                                           |
 | `pictureFormat.adjust.color`                      | Color gallery                                                                 |
 | `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
@@ -1258,6 +1263,7 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `pictureFormat.size.cropToShape`                  | Crop to Shape                                                                 |
 | `pictureFormat.accessibility.altText`             | Alt Text                                                                      |
 | `pictureFormat.arrange.rotateRight`               | Rotate Right 90°                                                              |
+| `pictureFormat.arrange.rotateLeft`                | Rotate Left 90°                                                               |
 | `pictureFormat.arrange.selectionPane`             | Selection Pane                                                                |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
 | `tableLayout.table.select`                        | Select                                                                        |

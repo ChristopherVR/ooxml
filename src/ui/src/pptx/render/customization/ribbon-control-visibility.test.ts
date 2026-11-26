@@ -21,9 +21,12 @@ describe('ribbon control catalogue', () => {
 			expect(id).toMatch(/^[a-zA-Z]+\.[a-zA-Z]+\.[a-zA-Z]+$/u);
 		}
 		for (const group of RIBBON_GROUPS) {
-			expect(group.controls.length).toBeGreaterThan(0);
 			expect(group.label.length).toBeGreaterThan(0);
 		}
+		// SmartArt Format uses the shared legacy Arrange controls exclusively.
+		expect(
+			RIBBON_GROUPS.filter((group) => group.controls.length === 0).map((group) => group.id),
+		).toStrictEqual(['smartArtFormat.arrange']);
 	});
 });
 

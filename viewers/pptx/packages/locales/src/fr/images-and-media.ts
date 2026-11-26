@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': 'Disposition de l’image',
 	'pptx.pictureFormat.altText': 'Texte de remplacement',
 	'pptx.pictureFormat.rotateRight': 'Faire pivoter de 90° à droite',
+	'pptx.pictureFormat.rotateLeft': 'Faire pivoter de 90° à gauche',
 	'pptx.pictureFormat.selectionPane': 'Volet de sélection',
 	'pptx.pictureFormat.layoutUnavailable':
 		'La création de dispositions d’image à partir d’une sélection est indisponible.',

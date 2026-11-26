@@ -8,6 +8,7 @@ export const translations = {
 	'pptx.pictureFormat.layout': '그림 레이아웃',
 	'pptx.pictureFormat.altText': '대체 텍스트',
 	'pptx.pictureFormat.rotateRight': '오른쪽으로 90° 회전',
+	'pptx.pictureFormat.rotateLeft': '왼쪽으로 90° 회전',
 	'pptx.pictureFormat.selectionPane': '선택 창',
 	'pptx.pictureFormat.layoutUnavailable':
 		'선택한 그림으로 레이아웃을 만드는 기능은 아직 사용할 수 없습니다.',

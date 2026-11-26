@@ -757,13 +757,22 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	};
 	let resizeObserver: ResizeObserver | null = null;
 	let borderBoxObserver: ResizeObserver | null = null;
-	if (typeof ResizeObserver !== 'undefined') {
-		resizeObserver = new ResizeObserver(refit);
+	let resizeFrame: number | undefined;
+	const view = doc.defaultView;
+	if (view && typeof ResizeObserver !== 'undefined') {
+		const scheduleRefit = () => {
+			resizeFrame ??= view.requestAnimationFrame(() => {
+				resizeFrame = undefined;
+				refit();
+			});
+		};
+		resizeObserver = new ResizeObserver(scheduleRefit);
 		resizeObserver.observe(chrome.viewport);
-		borderBoxObserver = new ResizeObserver(refit);
+		borderBoxObserver = new ResizeObserver(scheduleRefit);
 		borderBoxObserver.observe(chrome.viewport, { box: 'border-box' });
 	}
 	const stopObservingViewport = () => {
+		if (resizeFrame !== undefined) view?.cancelAnimationFrame(resizeFrame);
 		resizeObserver?.disconnect();
 		borderBoxObserver?.disconnect();
 	};

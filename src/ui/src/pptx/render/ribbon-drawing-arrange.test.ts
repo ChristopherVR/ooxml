@@ -27,3 +27,28 @@ it('keeps Selection Pane reachable without a selection and routes the editing ro
 	expect(align).toHaveBeenCalledExactlyOnceWith('centerH');
 	expect(runDrawingArrange('front', actions)).toBe(false);
 });
+
+it('rotates the selected object in either direction and honors its rotation lock', () => {
+	const patch = vi.fn();
+	const element = {
+		id: 'shape',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 30,
+		height: 40,
+		rotation: 45,
+	} as const;
+	const actions = { rotation: () => ({ element, patch }) };
+	runDrawingArrange('rotate-right', actions);
+	runDrawingArrange('rotate-left', actions);
+	expect(patch.mock.calls).toStrictEqual([
+		['shape', { rotation: 135 }],
+		['shape', { rotation: 315 }],
+	]);
+	patch.mockClear();
+	runDrawingArrange('rotate-right', {
+		rotation: () => ({ element: { ...element, locks: { noRotation: true } }, patch }),
+	});
+	expect(patch).not.toHaveBeenCalled();
+});

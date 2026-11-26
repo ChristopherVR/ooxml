@@ -5,6 +5,7 @@ import { OfficeElement, controlStyles } from '../../base';
 import { defineElement } from '../../registry';
 import { insertDialogText } from '../../dialog/insert-dialog-frame';
 import { canInteractWithElement } from '../render/element-locks';
+import { quarterTurnPatch } from '../render/ribbon-drawing-arrange';
 import { definePptxRibbonCommand } from './office-aliases';
 import { canEditPicture, canProcessPictureRaster } from './picture-ribbon-state';
 import type { PictureRibbonState, PictureStripGroup } from './picture-ribbon-state';
@@ -25,6 +26,7 @@ const COMMANDS = {
 	'picture-accessibility': [['accessibility.altText', 'altText', 'Alt Text', 'accessibility']],
 	'picture-arrange': [
 		['arrange.rotateRight', 'rotateRight', 'Rotate Right 90°', 'reset'],
+		['arrange.rotateLeft', 'rotateLeft', 'Rotate Left 90°', 'reset'],
 		['arrange.selectionPane', 'selectionPane', 'Selection Pane', 'list'],
 	],
 } as const;
@@ -165,7 +167,8 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 			}
 			if (this.active) return this.label('pptx.pictureFormat.processing', 'Processing picture…');
 			if (
-				(action === 'rotateRight' && !canInteractWithElement(picture, 'rotate')) ||
+				((action === 'rotateRight' || action === 'rotateLeft') &&
+					!canInteractWithElement(picture, 'rotate')) ||
 				(action === 'resetSize' && !canInteractWithElement(picture, 'resize')) ||
 				((action === 'resetSize' || action === 'resetPicture') &&
 					(!canInteractWithElement(picture, 'crop') ||
@@ -210,8 +213,8 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 				state.selectionPane?.();
 				return;
 			}
-			if (action === 'rotateRight') {
-				state.patch(picture.id, { rotation: ((picture.rotation ?? 0) + 90) % 360 });
+			if (action === 'rotateRight' || action === 'rotateLeft') {
+				state.patch(picture.id, quarterTurnPatch(picture, action === 'rotateRight'));
 				return;
 			}
 			if (action === 'resetPicture' && !picture.imageEffects?.backgroundRemoval) {

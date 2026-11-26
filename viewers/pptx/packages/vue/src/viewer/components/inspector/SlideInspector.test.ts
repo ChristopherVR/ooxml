@@ -7,7 +7,7 @@ import { setControlValue } from './test-control-value';
 
 /**
  * SlideInspector (Vue): the tabbed no-selection inspector mirroring React's
- * `InspectorPane` (Elements | Properties | Comments; Properties active by
+ * `InspectorPane` (Elements | Properties; Properties active by
  * default with React's section order, Background last).
  */
 function slide(elements: PptxElement[] = []): PptxSlide {
@@ -25,12 +25,12 @@ const baseProps = {
 };
 
 describe('slideInspector', () => {
-	it('renders the Elements | Properties | Comments tab strip', () => {
+	it('renders the Elements and Properties tabs', () => {
 		const wrapper = mount(SlideInspector, { props: baseProps });
 		const labels = wrapper.text();
 		expect(labels).toContain('Elements');
 		expect(labels).toContain('Properties');
-		expect(labels).toContain('Comments');
+		expect(labels).not.toContain('Comments');
 	});
 
 	it('shows the Properties tab by default with React section order', () => {
@@ -137,13 +137,11 @@ describe('slideInspector', () => {
 	});
 
 	it('keeps comments out of the format inspector', () => {
-		// The panel's commands are the viewer's shared comments controller (CommentsPanel.test.ts);
-		// mounted on its own, without a viewer, it lists the comments read-only.
 		const wrapper = mount(SlideInspector, { props: { ...baseProps, comments: [] } });
 		const commentsTab = wrapper.findAll('button').find((b) => b.text().includes('Comments'));
 		expect(commentsTab).toBeUndefined();
 		expect(wrapper.find('.pptx-comments-panel').exists()).toBeFalsy();
-		expect(wrapper.get('[data-testid="add-comment"]').attributes('disabled')).toBeDefined();
+		expect(wrapper.find('[data-testid="add-comment"]').exists()).toBeFalsy();
 	});
 
 	it('emits close from the tab strip close button', async () => {

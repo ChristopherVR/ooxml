@@ -116,6 +116,11 @@ export class RibbonDrawingGroupComponent {
 			}
 		},
 		group: () => this.editor.groupSelected(this.slideIndex()),
+		rotation: () => ({
+			element: this.selectedElement(),
+			patch: (id: string, patch: { rotation: number }) =>
+				this.editor.updateElement(this.slideIndex(), id, patch),
+		}),
 		ungroup: () => this.editor.ungroupSelected(this.slideIndex()),
 		position: this.inspector
 			? () => this.inspector?.formatPane.requestFormatPane('sizePosition', { focus: true })
