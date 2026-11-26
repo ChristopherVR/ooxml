@@ -94,7 +94,10 @@ export async function readEmbeddedChartObject(
 		return undefined;
 	}
 	const bytes = await pkg.readBytes(rel.target);
-	const reader = await import('#embedded-workbook-chart').catch(() => undefined);
+	const reader = await import('#embedded-workbook-chart').catch(() => {
+		report('embedded-chart-reader-unavailable', 'The embedded chart reader could not be loaded.');
+		return undefined;
+	});
 	const embedded = await reader?.readEmbeddedChart(bytes);
 	const view = embedded?.view ?? (await readStandaloneChartEx(bytes));
 	if (!view) return undefined;

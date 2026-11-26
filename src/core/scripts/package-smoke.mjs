@@ -4,7 +4,7 @@
 // Then bundles every browser entry for the browser and fails if one reaches a Node-only module.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -136,6 +136,11 @@ for (const load of [(s) => import(s), async (s) => require(s)]) {
 console.log('all entry points import');\n`,
 	);
 	console.log(run('node', ['consumer.mjs'], work).trim());
+	const visioSmoke = 'visio-embedded-chart-smoke.mjs';
+	await copyFile(new URL(visioSmoke, import.meta.url), path.join(work, visioSmoke));
+	run('node', [visioSmoke], work);
+	run('node', [visioSmoke, '--missing-reader'], work);
+	console.log('Visio embedded chart loading and missing-reader diagnostics pass');
 
 	// A web host bundles the package for the browser, with no Node fallbacks: no browser entry may
 	// reach a Node built-in or a Node-only package (the Node-only subpaths are skipped).
