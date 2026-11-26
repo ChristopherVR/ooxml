@@ -24,6 +24,31 @@
 .dve-design-effects span {
 	width: 12px;
 }
+.dve-design-effects .dve-design-reflection {
+	-webkit-box-reflect: below 1px linear-gradient(transparent 55%, #0005);
+}
+.dve-design-group-label {
+	color: var(--muted);
+	font-weight: 600;
+	padding: 6px 10px;
+}
+.dve-design-theme-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	width: min(320px, calc(100vw - 20px));
+}
+.dve-design-theme-grid .dve-design-group-label {
+	grid-column: 1 / -1;
+}
+.dve-design-theme-grid button {
+	flex-direction: column;
+	gap: 3px;
+	text-align: center;
+}
+.dve-design-theme-grid .dve-design-fonts {
+	flex-wrap: wrap;
+	justify-content: center;
+}
 .dve-design-fonts {
 	gap: 5px;
 	font-size: 14px;

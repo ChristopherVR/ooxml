@@ -5,6 +5,7 @@ import { parseDrawingColorIn } from '../drawingml/drawing-color';
 import { patchDrawingColorIn } from '../drawingml/patch-color';
 import { THEME_COLOR_SLOTS } from '../drawingml/theme-model';
 import { drawingThemeXml } from '../drawingml/write-theme';
+import { themeMatrix } from '../drawingml/theme-matrix';
 import type { DrawingColor } from '../drawingml/types';
 import { documentPartPath, parseRelationships } from './package-parts';
 import { applyColorSchemeMapping } from './settings';
@@ -32,45 +33,31 @@ const THEME_FALLBACKS = [
 	'0563C1',
 	'954F72',
 ];
-const SOLID_FILL = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>';
-const DEFAULT_MATRIX =
-	`<a:fmtScheme name="Office"><a:fillStyleLst>${SOLID_FILL.repeat(3)}</a:fillStyleLst>` +
-	`<a:lnStyleLst>${[6350, 12700, 19050].map((width) => `<a:ln w="${width}">${SOLID_FILL}</a:ln>`).join('')}</a:lnStyleLst>` +
-	'<a:effectStyleLst>' +
-	'<a:effectStyle><a:effectLst/></a:effectStyle>'.repeat(3) +
-	'</a:effectStyleLst>' +
-	`<a:bgFillStyleLst>${SOLID_FILL.repeat(3)}</a:bgFillStyleLst></a:fmtScheme>`;
 
 function rgb(hex: string): DrawingColor {
 	if (!/^#?[0-9a-f]{6}$/i.test(hex)) throw new Error('Theme colors must be six-digit RGB values.');
 	return { kind: 'srgb', value: hex.replace(/^#/, ''), transforms: [] };
 }
 
-function newTheme(theme: ThemeCatalog): string {
-	return drawingThemeXml(
-		{
-			name: theme.name ?? 'Office Theme',
-			colorScheme: {
-				...(theme.colorSchemeName !== undefined && { name: theme.colorSchemeName }),
-				colors: Object.fromEntries(
-					THEME_COLOR_SLOTS.map((slot, index) => [
-						slot,
-						rgb(theme.colors[slot] ?? THEME_FALLBACKS[index] ?? '000000'),
-					]),
-				),
-			},
-			fontScheme: {
-				...(theme.fontSchemeName !== undefined && { name: theme.fontSchemeName }),
-				major: { scripts: {}, ...theme.fonts.major },
-				minor: { scripts: {}, ...theme.fonts.minor },
-			},
+export function wordThemeXml(theme: ThemeCatalog): string {
+	return drawingThemeXml({
+		name: theme.name ?? 'Office Theme',
+		colorScheme: {
+			...(theme.colorSchemeName !== undefined && { name: theme.colorSchemeName }),
+			colors: Object.fromEntries(
+				THEME_COLOR_SLOTS.map((slot, index) => [
+					slot,
+					rgb(theme.colors[slot] ?? THEME_FALLBACKS[index] ?? '000000'),
+				]),
+			),
 		},
-		{
-			formatScheme: theme.formatScheme
-				? drawingThemeFormatSchemeXml(theme.formatScheme)
-				: DEFAULT_MATRIX,
+		fontScheme: {
+			...(theme.fontSchemeName !== undefined && { name: theme.fontSchemeName }),
+			major: { scripts: {}, ...theme.fonts.major },
+			minor: { scripts: {}, ...theme.fonts.minor },
 		},
-	);
+		formatScheme: theme.formatScheme ?? themeMatrix(),
+	});
 }
 
 function ensure(parent: XmlElement, local: string, order: string[]): XmlElement {
@@ -105,7 +92,7 @@ function patchFormatScheme(
 	const sourceXml = next?.sourceXml ?? base?.sourceXml;
 	const xml = next
 		? drawingThemeFormatSchemeXml({ ...next, ...(sourceXml && { sourceXml }) })
-		: DEFAULT_MATRIX;
+		: drawingThemeFormatSchemeXml(themeMatrix());
 	const format = parseXml(
 		xml.includes('xmlns:a=') ? xml : xml.replace('<a:fmtScheme', `<a:fmtScheme xmlns:a="${NS.a}"`),
 	).documentElement;
@@ -142,6 +129,19 @@ function patchTheme(xml: string, next: ThemeCatalog, base: ThemeCatalog): string
 		patchDrawingColorIn(entry, { ...color, transforms: source?.transforms ?? [] });
 	}
 	for (const role of FONT_ROLES) {
+		if (JSON.stringify(next.fonts[role].scripts) !== JSON.stringify(base.fonts[role].scripts)) {
+			const scheme = ensure(theme, 'fontScheme', order);
+			const fonts = ensure(scheme, `${role}Font`, ['majorFont', 'minorFont', 'extLst']);
+			const ext = first(fonts, 'extLst', NS.a) ?? null;
+			for (const font of elements(fonts))
+				if (font.localName === 'font' && font.namespaceURI === NS.a) fonts.removeChild(font);
+			for (const [script, face] of Object.entries(next.fonts[role].scripts ?? {})) {
+				const node = doc.createElementNS(NS.a, 'a:font');
+				node.setAttribute('script', script);
+				node.setAttribute('typeface', face);
+				fonts.insertBefore(node, ext);
+			}
+		}
 		for (const [key, local] of FONT_FIELDS) {
 			if (next.fonts[role][key] === base.fonts[role][key]) continue;
 			const scheme = ensure(theme, 'fontScheme', order);
@@ -167,7 +167,7 @@ export async function applyWordTheme(
 	const path = relatedPath || THEME_PATH;
 	const file = zip.file(path);
 	if (!file || !base) {
-		zip.file(path, newTheme(next));
+		zip.file(path, wordThemeXml(next));
 		await ensureContentTypeOverride(
 			zip,
 			path,

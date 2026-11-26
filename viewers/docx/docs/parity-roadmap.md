@@ -86,9 +86,15 @@ detail and limits of each feature already built.
    and framework adapters in the viewer.
 4. **Word authoring breadth.** Word can create and modify styles from the Home ribbon, and
    DOCX export writes style catalogues, latent styles and theme edits. Design offers a shared
-   theme, colour and font catalogue, custom colours and fonts, paragraph spacing presets and a
-   custom dialog, three shadow presets, and host-managed defaults for new documents. The full
-   Word catalogue, theme file import/export, and broader DrawingML effect rendering remain open.
+   catalogue of current and historical theme names, named custom colour and font schemes with
+   host-managed reuse, paragraph spacing controls, and defaults for new blank documents. Browse
+   for Themes imports self-contained `.thmx` palettes, fonts and style matrices. Save Current
+   Theme exports a theme that PowerPoint 16 applied through COM with the expected accent colour.
+   The Effects gallery shows DrawingML effect styles and Word shapes paint ordinary outer and
+   inner shadows, glows and soft edges. Exact historical theme values, theme variants and related
+   assets, and rendering of reflection, effect DAGs and 3D styles remain open. The built-in names
+   follow the [Word Design gallery](https://support.microsoft.com/en-gb/word/training/design-and-edit-in-word)
+   and [documented historical catalogue](https://learn.microsoft.com/en-us/answers/questions/4838663/office-2013-themes-missing).
    Mailings supports letters and directories with local or host recipients, field authoring,
    preview, validation, and DOCX or print output; email delivery and envelope and label layouts
    remain open. Layout, Picture Format and Shape Format offer Arrange commands for pictures and

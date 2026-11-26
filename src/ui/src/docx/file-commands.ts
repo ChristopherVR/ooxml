@@ -46,6 +46,7 @@ const WORD_TYPES: Record<string, string> = {
 	doc: 'application/msword',
 	docx: DOCX_TYPE,
 	pdf: 'application/pdf',
+	thmx: 'application/vnd.ms-officetheme',
 };
 
 /** Wraps saved bytes in a Blob typed from the file name's extension (docx unless `.doc`). */

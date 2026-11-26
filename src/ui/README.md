@@ -594,7 +594,10 @@ decisions that still apply (layout, style rules, the tag aliases and the token m
 
 Word loads bundled Arrange commands on demand from the app's origin. Wrap Text > Set as Default Layout keeps the chosen wrap mode for new pictures or shapes in this browser. Clear the site's data to reset the defaults. The preference contains only the wrap mode.
 
-Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
+Word's optional `wordDesignPreferences` store keeps the default design for blank documents.
+Hosts can provide `wordDesignPreferences.schemes` to keep named colour palettes and font pairs.
+Clear the property to disable persistence. Browsing for or saving a theme uses local files and
+loads the bundled theme codec from the app's origin. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
 
 Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
 asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).

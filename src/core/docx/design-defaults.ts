@@ -11,16 +11,23 @@ import {
 } from './document-design';
 import type { DocumentModel } from './model';
 import type { ThemeCatalog } from './theme-model';
+import { themeMatrix } from '../drawingml/theme-matrix';
+import {
+	THEME_EFFECT_PRESETS,
+	sameThemeEffectStyles,
+	type ThemeEffectPresetName,
+} from '../drawingml/theme-effect-presets';
 
 export interface WordDesignDefaults {
 	theme: Omit<ThemeCatalog, 'formatScheme'>;
 	effect?: DesignEffect;
+	effectName?: ThemeEffectPresetName;
 	spacing: DesignSpacing;
 }
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
+export const isDesignRecord = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
-const boundedText = (value: unknown): string | undefined =>
+export const boundedDesignText = (value: unknown): string | undefined =>
 	typeof value === 'string' && value.length <= 100 && !/[\u0000-\u001f]/u.test(value)
 		? value.trim() || undefined
 		: undefined;
@@ -29,7 +36,7 @@ const spacingValue = (value: unknown, min: number): value is number =>
 	typeof value === 'number' && Number.isInteger(value) && value >= min && value <= 31680;
 
 export function parseDesignSpacing(value: unknown): DesignSpacing | undefined {
-	if (!isRecord(value)) return;
+	if (!isDesignRecord(value)) return;
 	const { before, after, line, rule } = value;
 	if (
 		spacingValue(before, 0) &&
@@ -42,10 +49,10 @@ export function parseDesignSpacing(value: unknown): DesignSpacing | undefined {
 
 /** Host preferences contain bounded, plain values, with no package XML or document content. */
 export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | undefined {
-	if (!isRecord(value) || !isRecord(value.theme)) return;
+	if (!isDesignRecord(value) || !isDesignRecord(value.theme)) return;
 	const { theme } = value;
 	const spacing = parseDesignSpacing(value.spacing);
-	if (!spacing || !isRecord(theme.colors) || !isRecord(theme.fonts)) return;
+	if (!spacing || !isDesignRecord(theme.colors) || !isDesignRecord(theme.fonts)) return;
 	const colors = designColors();
 	for (const slot of DESIGN_COLOR_SLOTS) {
 		const hex = theme.colors[slot];
@@ -53,7 +60,7 @@ export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | un
 			colors[slot] = hex.replace(/^#/, '').toUpperCase();
 	}
 	const colorMapping: ThemeCatalog['colorMapping'] = {};
-	if (isRecord(theme.colorMapping)) {
+	if (isDesignRecord(theme.colorMapping)) {
 		for (const key of ['bg1', 'tx1', 'bg2', 'tx2'] as const) {
 			const candidate = theme.colorMapping[key];
 			const slot = DESIGN_COLOR_SLOTS.find((slot) => slot === candidate);
@@ -61,20 +68,21 @@ export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | un
 		}
 	}
 	const fonts = (source: unknown) => {
-		if (!isRecord(source)) return {};
-		const latin = boundedText(source.latin);
-		const eastAsia = boundedText(source.eastAsia);
-		const complexScript = boundedText(source.complexScript);
+		if (!isDesignRecord(source)) return {};
+		const latin = boundedDesignText(source.latin);
+		const eastAsia = boundedDesignText(source.eastAsia);
+		const complexScript = boundedDesignText(source.complexScript);
 		return {
 			...(latin && { latin }),
 			...(eastAsia && { eastAsia }),
 			...(complexScript && { complexScript }),
 		};
 	};
-	const name = boundedText(theme.name);
-	const colorSchemeName = boundedText(theme.colorSchemeName);
-	const fontSchemeName = boundedText(theme.fontSchemeName);
+	const name = boundedDesignText(theme.name);
+	const colorSchemeName = boundedDesignText(theme.colorSchemeName);
+	const fontSchemeName = boundedDesignText(theme.fontSchemeName);
 	const effect = effectPreset(value.effect);
+	const effectName = THEME_EFFECT_PRESETS.find(({ name }) => name === value.effectName)?.name;
 	return {
 		theme: {
 			colors,
@@ -86,26 +94,38 @@ export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | un
 		},
 		spacing,
 		...(effect && { effect }),
+		...(effectName && { effectName }),
 	};
 }
 
 export function wordDesignDefaults(model: DocumentModel): WordDesignDefaults | undefined {
 	const { formatScheme, ...theme } = designTheme(model.theme);
+	const preset =
+		formatScheme &&
+		THEME_EFFECT_PRESETS.find(
+			({ name, styles }) =>
+				name === formatScheme.name && sameThemeEffectStyles(styles, formatScheme.effectStyles),
+		);
 	return parseWordDesignDefaults({
 		theme,
 		spacing: designSpacing(model),
 		effect: formatScheme?.name,
+		effectName: preset?.name,
 	});
 }
 
 export function withWordDesignDefaults(model: DocumentModel, value: unknown): DocumentModel {
 	const settings = parseWordDesignDefaults(value);
 	if (!settings) return model;
-	const { theme, effect, spacing } = settings;
+	const { theme, effect, effectName, spacing } = settings;
+	const preset = THEME_EFFECT_PRESETS.find(({ name }) => name === effectName);
+	const formatScheme = preset
+		? themeMatrix(preset.name, preset.styles)
+		: effect && designEffects(undefined, effect);
 	return withDesignSpacing(
 		{
 			...model,
-			theme: { ...theme, ...(effect && { formatScheme: designEffects(undefined, effect) }) },
+			theme: { ...theme, ...(formatScheme && { formatScheme }) },
 		},
 		spacing,
 	);

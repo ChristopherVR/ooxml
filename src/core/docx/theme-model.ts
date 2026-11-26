@@ -10,6 +10,7 @@ export interface ThemeFontSet {
 	latin?: string;
 	eastAsia?: string;
 	complexScript?: string;
+	scripts?: Record<string, string>;
 }
 /** Parsed word/theme/theme1.xml plus word/settings.xml clrSchemeMapping; never flattened onto runs. */
 export interface ThemeCatalog {

@@ -1,5 +1,5 @@
 import { DESIGN_COLOR_SLOTS, designColors, designSpacing, designTheme } from 'ooxml-core/docx';
-import type { DesignEdit, DesignSpacing } from 'ooxml-core/docx';
+import type { DesignEdit, DesignSpacing, WordDesignScheme } from 'ooxml-core/docx';
 import type { EditorCore } from './editor-core';
 import { dialogButton, labelled, numberInput, selectOf } from './dialog-fields';
 import {
@@ -44,16 +44,18 @@ function textInput(value: string): HTMLInputElement {
 	return input;
 }
 
-function namedFields(core: EditorCore, kind: 'colors' | 'fonts'): EditFields {
+function namedFields(
+	core: EditorCore,
+	kind: 'colors' | 'fonts',
+	scheme?: WordDesignScheme,
+): EditFields {
 	const theme = designTheme(core.model.theme);
-	const name = textInput(
-		(kind === 'fonts' ? theme.fontSchemeName : theme.colorSchemeName) ??
-			translate(core.locale, 'Custom'),
-	);
+	const name = textInput(scheme?.name ?? translate(core.locale, 'Custom'));
 	const fields: HTMLElement[] = [labelled('design.schemeName', name)];
 	if (kind === 'fonts') {
-		const major = textInput(theme.fonts.major.latin ?? 'Calibri Light');
-		const minor = textInput(theme.fonts.minor.latin ?? 'Calibri');
+		const loaded = scheme?.kind === 'fonts' ? scheme : undefined;
+		const major = textInput(loaded?.majorFont ?? theme.fonts.major.latin ?? 'Calibri Light');
+		const minor = textInput(loaded?.minorFont ?? theme.fonts.minor.latin ?? 'Calibri');
 		fields.push(labelled('design.headingFont', major), labelled('design.bodyFont', minor));
 		return {
 			fields,
@@ -65,7 +67,10 @@ function namedFields(core: EditorCore, kind: 'colors' | 'fonts'): EditFields {
 			},
 		};
 	}
-	const colors = { ...designColors(), ...theme.colors };
+	const colors = {
+		...designColors(),
+		...(scheme?.kind === 'colors' ? scheme.colors : theme.colors),
+	};
 	const controls = DESIGN_COLOR_SLOTS.map((slot) => {
 		const input = document.createElement('input');
 		input.type = 'color';
@@ -149,7 +154,8 @@ export function openDesignDialog(
 	core: EditorCore,
 	anchor: HTMLButtonElement,
 	kind: CustomMenu | 'default',
-	apply: (edit?: DesignEdit) => void,
+	apply: (edit?: DesignEdit) => void | boolean,
+	existing?: { scheme: WordDesignScheme; remove: () => boolean },
 ): void {
 	const root = anchor.getRootNode();
 	if (!(root instanceof ShadowRoot)) return;
@@ -170,7 +176,7 @@ export function openDesignDialog(
 			? undefined
 			: kind === 'spacing'
 				? spacingFields(designSpacing(core.model))
-				: namedFields(core, kind);
+				: namedFields(core, kind, existing?.scheme);
 	if (form) element.append(...form.fields);
 	else {
 		const message = document.createElement('p');
@@ -186,11 +192,18 @@ export function openDesignDialog(
 	ok.addEventListener('click', () => {
 		const value = form?.read();
 		if (!canEditDesign(core) || (form && !value)) return;
-		close();
-		apply(value);
+		if (apply(value) !== false) close();
 	});
 	onDialogDismiss(element, close);
-	element.append(dialogActions(cancel, ok));
+	const actions = dialogActions(cancel, ok);
+	if (existing) {
+		const remove = dialogButton('Delete');
+		remove.addEventListener('click', () => {
+			if (canEditDesign(core) && existing.remove()) close();
+		});
+		actions.prepend(remove);
+	}
+	element.append(actions);
 	localizeDialog(element, core.locale);
 	root.append(element);
 	refresh();

@@ -1,8 +1,11 @@
 import { OFFICE_COLORS } from '../drawingml/office-theme-colors';
 import type { ThemeColorTuple } from '../drawingml/theme-presets';
 import type { ThemeEffectStyle, ThemeFormatScheme } from '../drawingml/format-scheme';
-import type { DrawingColor } from '../drawingml/types';
+import { themeMatrix } from '../drawingml/theme-matrix';
+import { resolveDrawingColor } from '../drawingml/drawing-color';
+import type { DrawingTheme } from '../drawingml/theme-model';
 import type { ThemeCatalog, ThemeColorSlot } from './theme-model';
+import { themeCatalogOf } from './theme';
 import { defaultStyleId } from './style-inheritance';
 import { resolveParagraphFormatting } from './paragraph-styles';
 import type { DocumentModel } from './model';
@@ -99,20 +102,15 @@ export function designEffects(
 	current: ThemeFormatScheme | undefined,
 	preset: DesignEffect,
 ): ThemeFormatScheme {
-	const color: DrawingColor = { kind: 'scheme', value: 'phClr', transforms: [] };
-	const fills = [0, 1, 2].map(() => ({ fill: { kind: 'solid' as const, color } }));
-	return {
-		...(current ?? {
-			fillStyles: fills,
-			lineStyles: [6350, 12700, 19050].map((widthEmu) => ({
-				widthEmu,
-				fill: { kind: 'solid', color },
-			})),
-			backgroundFillStyles: fills,
-		}),
-		name: preset,
-		effectStyles: effectStyles(preset),
-	};
+	return replaceEffectStyles(current, preset, effectStyles(preset));
+}
+
+function replaceEffectStyles(
+	current: ThemeFormatScheme | undefined,
+	name: string,
+	effectStyles: ThemeEffectStyle[],
+): ThemeFormatScheme {
+	return current ? { ...current, name, effectStyles } : themeMatrix(name, effectStyles);
 }
 
 export interface DesignSpacing {
@@ -177,10 +175,19 @@ export function withDesignSpacing(model: DocumentModel, spacing: DesignSpacing):
 }
 
 export type DesignEdit =
-	| { kind: 'theme'; name: string; colors: ThemeColorTuple; majorFont: string; minorFont: string }
+	| {
+			kind: 'theme';
+			name: string;
+			colors: ThemeColorTuple;
+			majorFont: string;
+			minorFont: string;
+			formatScheme?: ThemeFormatScheme;
+	  }
+	| { kind: 'importTheme'; theme: DrawingTheme }
 	| { kind: 'colors'; name: string; colors: ThemeCatalog['colors'] }
 	| { kind: 'fonts'; name: string; majorFont: string; minorFont: string }
 	| { kind: 'effects'; preset: DesignEffect }
+	| { kind: 'effectStyles'; name: string; styles: ThemeEffectStyle[] }
 	| { kind: 'spacing'; spacing: DesignSpacing };
 
 export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): DocumentModel {
@@ -201,7 +208,18 @@ export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): Docu
 					fontSchemeName: edit.name,
 					colors: designColors(edit.colors),
 					fonts: fonts(edit.majorFont, edit.minorFont),
-					formatScheme: designEffects(undefined, 'soft'),
+					formatScheme: edit.formatScheme ?? designEffects(undefined, 'soft'),
+				},
+			};
+		case 'importTheme':
+			return {
+				...model,
+				theme: {
+					...themeCatalogOf(
+						edit.theme,
+						(color) => color && resolveDrawingColor(color)?.hex.slice(1).toUpperCase(),
+					),
+					colorMapping: theme.colorMapping,
 				},
 			};
 		case 'colors':
@@ -226,6 +244,14 @@ export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): Docu
 			return {
 				...model,
 				theme: { ...theme, formatScheme: designEffects(theme.formatScheme, edit.preset) },
+			};
+		case 'effectStyles':
+			return {
+				...model,
+				theme: {
+					...theme,
+					formatScheme: replaceEffectStyles(theme.formatScheme, edit.name, edit.styles),
+				},
 			};
 	}
 }

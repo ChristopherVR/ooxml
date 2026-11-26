@@ -238,8 +238,10 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
 - external workbook links, Visio data record sets and linked chart data are kept but never
   refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
-- workers and application code are loaded from the page's own origin. Opening Word's Design tab
-  loads its gallery code and built-in presets from that origin, with no document data in the request.
+- workers and application code are loaded from the page's own origin. Opening a Word Design
+  gallery loads the gallery code and built-in presets. Browsing for or saving a `.thmx` file
+  loads the theme codec. These requests carry only application asset URLs. Theme files are read
+  and saved locally. The document remains open if a Design asset cannot load offline.
   Opening or inserting a TIFF
   picture in Visio can load its bundled decoder on demand. The request carries no picture bytes
   or filename. If the decoder is unavailable offline, the drawing still opens and the TIFF is
@@ -384,11 +386,14 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
   provides; the server configuration in localStorage. Session tokens are kept in memory only.
 - **Word document design:** Set as Default writes the document theme palette and names, font
   names, a built-in effect choice and paragraph spacing to the host's preference store.
-  Embedders enable this by assigning `wordDesignPreferences` and disable it by clearing that
-  property. The suite stores these values on this device by profile under
-  `ooxml-suite-word-design-<profile id>` in localStorage. Saving requires the explicit command,
-  and Word reads the values when creating a blank document. In suite Settings > General, turn
-  off Remember my default Word design to stop reading and writing this preference. Nothing is sent.
+  Saving or deleting a custom colour or font scheme updates the names, colour values and font
+  names stored through the host's optional `wordDesignPreferences.schemes`. Word reads saved
+  schemes when you open the Colors or Fonts gallery. Embedders enable persistence by assigning
+  `wordDesignPreferences` and disable it by clearing that property. The suite enables it by default
+  and stores values per profile on this device in localStorage under
+  `ooxml-suite-word-design-<profile id>` and `ooxml-suite-word-design-<profile id>-schemes`.
+  Turn off Remember my Word design in suite Settings > General to stop reading and writing both.
+  Nothing is sent.
 - **Word drawing layout:** Wrap Text > Set as Default Layout stores one wrap choice per drawing
   kind under `ooxml-word-drawing-wrap.picture` and `ooxml-word-drawing-wrap.shape` in localStorage.
   Word reads the choice when inserting pictures or drawing shapes. The device stores only the

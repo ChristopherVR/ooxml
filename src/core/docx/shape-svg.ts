@@ -29,6 +29,7 @@ import type { ThemeCatalog } from './theme-model';
 import type { InlineImage } from './inline-model';
 import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
 import { appendSvg, createSvg, setSvgAttributes } from '../drawingml/svg-elements';
+import { appendShapeEffectFilter } from '../drawingml/shape-effect-filter';
 import { buildXml, parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
@@ -203,27 +204,12 @@ function appendShapeContent(
 		(spec.effectRef &&
 			theme?.formatScheme &&
 			resolveThemeEffectStyle(theme.formatScheme, spec.effectRef.index, spec.effectRef.color));
-	const shadow = drawingOuterShadow(effects, theme);
 	const filterId = `${idPrefix}-shadow`;
-	if (shadow) {
-		const filter = appendSvg(defs, 'filter', {
-			id: filterId,
-			x: '-50%',
-			y: '-50%',
-			width: '200%',
-			height: '200%',
-		});
-		appendSvg(filter, 'feDropShadow', {
-			dx: round(shadow.dx),
-			dy: round(shadow.dy),
-			stdDeviation: round(shadow.blur / 2),
-			'flood-color': shadow.color,
-			'flood-opacity': round(shadow.opacity),
-		});
-	}
+	const hasEffects =
+		effects && appendShapeEffectFilter(defs, filterId, effects, diagramColorTheme(theme));
 	const group = appendSvg(parent, 'g', {
 		...(transform ? { transform } : {}),
-		...(shadow ? { filter: `url(#${filterId})` } : {}),
+		...(hasEffects ? { filter: `url(#${filterId})` } : {}),
 	});
 	const look = shapeAppearance(spec, theme);
 	for (const path of geometry.paths) {

@@ -4,17 +4,18 @@ import { settings } from './settings.js';
 export function wordDesignPreferences() {
 	if (!settings().rememberWordDesign) return undefined;
 	const key = `ooxml-suite-word-design-${currentProfile().id}`;
-	return {
+	const store = (name, limit) => ({
 		read() {
 			try {
-				const raw = localStorage.getItem(key);
-				return raw && raw.length <= 8192 ? JSON.parse(raw) : undefined;
+				const raw = localStorage.getItem(name);
+				return raw && raw.length <= limit ? JSON.parse(raw) : undefined;
 			} catch {
 				return undefined;
 			}
 		},
 		write(value) {
-			localStorage.setItem(key, JSON.stringify(value));
+			localStorage.setItem(name, JSON.stringify(value));
 		},
-	};
+	});
+	return { ...store(key, 8192), schemes: store(`${key}-schemes`, 48 * 1024) };
 }

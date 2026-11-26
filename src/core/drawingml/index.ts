@@ -97,4 +97,7 @@ export { isSelfContainedGlb } from './glb-import';
 export * from './shape-palette';
 
 /** Loads the shared gallery data once the host opens document design tools. */
-export const loadThemePresets = () => import('./theme-presets');
+export const loadThemePresets = () => import('./theme-gallery');
+
+/** Loads the OPC reader and writer for standalone Office themes. */
+export const loadThemePackage = () => import('./theme-package');

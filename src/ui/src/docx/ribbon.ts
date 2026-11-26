@@ -12,7 +12,6 @@ import {
 import type { RibbonAction } from './ribbon-action';
 import { buildHomePanel } from './ribbon-home';
 import { buildNativeTabs } from './ribbon-native-tabs';
-import { preloadDesignGallery } from './design-ribbon-controls';
 import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
@@ -103,10 +102,6 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font size"]')!, '11');
 	root.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')!.value = '100';
 	root.querySelector<HTMLSelectElement>('[aria-label="Layout view"]')!.value = 'draft';
-	root.addEventListener('office-ribbon-select', (event) => {
-		if (event instanceof CustomEvent && event.detail?.tab === 'design')
-			void preloadDesignGallery().catch(() => {});
-	});
 	attachRibbonBehavior(root);
 	attachRibbonOverflow(root);
 	root.addEventListener('click', (event) => {

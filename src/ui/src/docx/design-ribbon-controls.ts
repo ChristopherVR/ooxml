@@ -50,10 +50,6 @@ export function syncDesignControls(core: EditorCore, toolbar: HTMLElement): void
 
 const loadDesignGallery = () => Promise.all([import('./design-gallery'), loadThemePresets()]);
 
-export async function preloadDesignGallery(): Promise<void> {
-	await loadDesignGallery();
-}
-
 export async function openDesignMenu(core: EditorCore, menu: DesignMenu): Promise<void> {
 	const toolbar = core.shell.toolbar;
 	const anchor = toolbar?.querySelector<HTMLButtonElement>(`button[data-design="${menu}"]`);

@@ -1,6 +1,10 @@
 // Canonical modern DOCX implementation; legacy CFB codecs live in ole2.
 import { parseTheme as parseDrawingTheme } from '../drawingml/theme';
-import { THEME_COLOR_SLOTS, type ThemeFontCollection } from '../drawingml/theme-model';
+import {
+	THEME_COLOR_SLOTS,
+	type DrawingTheme,
+	type ThemeFontCollection,
+} from '../drawingml/theme-model';
 import { themeSlotHex } from '../drawingml/theme-color';
 import { parseXml, WORD_NS, getW, type XmlElement } from './xml';
 import type { ThemeCatalog, ThemeColorSlot, ThemeFontSet } from './theme-model';
@@ -8,11 +12,12 @@ import { isStWmlColorSchemeIndex, type StWmlColorSchemeIndex } from './generated
 import { enumValue } from './parse-diagnostics';
 
 function fontSetOf(collection: ThemeFontCollection): ThemeFontSet {
-	const { latin, eastAsia, complexScript } = collection;
+	const { latin, eastAsia, complexScript, scripts } = collection;
 	return {
 		...(latin ? { latin } : {}),
 		...(eastAsia ? { eastAsia } : {}),
 		...(complexScript ? { complexScript } : {}),
+		...(Object.keys(scripts).length ? { scripts } : {}),
 	};
 }
 
@@ -22,10 +27,13 @@ function fontSetOf(collection: ThemeFontCollection): ThemeFontSet {
  * `lastClr`; other colour kinds leave the slot empty.
  */
 export function parseTheme(xml: string): ThemeCatalog {
-	const theme = parseDrawingTheme(parseXml(xml));
+	return themeCatalogOf(parseDrawingTheme(parseXml(xml)));
+}
+
+export function themeCatalogOf(theme: DrawingTheme, resolveColor = themeSlotHex): ThemeCatalog {
 	const colors: Partial<Record<ThemeColorSlot, string>> = {};
 	for (const slot of THEME_COLOR_SLOTS) {
-		const value = themeSlotHex(theme.colorScheme.colors[slot]);
+		const value = resolveColor(theme.colorScheme.colors[slot]);
 		if (value) colors[slot] = value;
 	}
 	const { major, minor } = theme.fontScheme;

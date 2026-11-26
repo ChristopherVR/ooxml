@@ -318,4 +318,12 @@ export {
 	type StyleKind,
 } from './edit-styles';
 export * from './document-design';
-export * from './design-defaults';
+export {
+	parseDesignSpacing,
+	parseWordDesignDefaults,
+	withWordDesignDefaults,
+	wordDesignDefaults,
+	type WordDesignDefaults,
+} from './design-defaults';
+export * from './design-schemes';
+export { wordThemeXml } from './theme-save';

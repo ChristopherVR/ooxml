@@ -14,25 +14,25 @@ const toggle = (key, label, info) => ({ kind: 'toggle', key, label, ...(info ? {
 const wordDesignLabels = {
 	en: [
 		'Word',
-		'Remember my default Word design',
-		'Lets Word save your design for new blank documents on this device.',
+		'Remember my Word design',
+		'Keep your default design and custom colour and font schemes on this device.',
 	],
 	de: [
 		'Word',
-		'Mein Word-Standarddesign speichern',
-		'Word speichert Ihr Design für neue leere Dokumente auf diesem Gerät.',
+		'Mein Word-Design speichern',
+		'Das Standarddesign und benutzerdefinierte Farb- und Schriftartenschemas auf diesem Gerät speichern.',
 	],
 	es: [
 		'Word',
-		'Recordar mi diseño predeterminado de Word',
-		'Word guarda el diseño de los nuevos documentos en blanco en este dispositivo.',
+		'Recordar mi diseño de Word',
+		'Guarda el diseño predeterminado y las combinaciones personalizadas de colores y fuentes en este dispositivo.',
 	],
 	fr: [
 		'Word',
-		'Mémoriser ma conception Word par défaut',
-		'Word enregistre sur cet appareil la conception des nouveaux documents vierges.',
+		'Mémoriser ma conception Word',
+		'Conserve la conception par défaut et les jeux personnalisés de couleurs et de polices sur cet appareil.',
 	],
-	'zh-CN': ['Word', '记住我的默认 Word 设计', '让 Word 在此设备上保存新建空白文档的设计。'],
+	'zh-CN': ['Word', '记住我的 Word 设计', '在此设备上保存默认设计和自定义颜色及字体方案。'],
 };
 
 /**

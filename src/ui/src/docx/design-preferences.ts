@@ -2,12 +2,17 @@ import {
 	withWordDesignDefaults,
 	type DocumentModel,
 	type WordDesignDefaults,
+	type WordDesignScheme,
 } from 'ooxml-core/docx';
 
-/** Optional host-owned preferences. Omit this property to disable reading and writing defaults. */
+/** Optional host-owned preferences for defaults and named custom schemes. */
 export interface WordDesignPreferences {
 	read(): unknown;
 	write(value: WordDesignDefaults): void;
+	schemes?: {
+		read(): unknown;
+		write(value: WordDesignScheme[]): void;
+	};
 }
 
 export function applyWordDesignPreferences(

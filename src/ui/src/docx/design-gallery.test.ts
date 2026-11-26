@@ -1,15 +1,20 @@
 // @vitest-environment jsdom
-import { afterEach, expect, it } from 'vitest';
+import { afterEach, beforeAll, expect, it } from 'vitest';
+import { loadThemePresets } from 'ooxml-core/drawingml';
 import {
 	createDocument,
 	designSpacing,
 	loadDocx,
 	newShape,
 	type WordDesignDefaults,
+	type WordDesignScheme,
 } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './component';
 
 registerDocxEditor();
+beforeAll(async () => {
+	await Promise.all([import('./design-gallery'), loadThemePresets()]);
+}, 60_000);
 afterEach(() => document.body.replaceChildren());
 
 function mount() {
@@ -48,7 +53,9 @@ function mount() {
 			(el) => el.getAttribute('aria-label') === name || el.textContent?.trim() === name,
 		);
 	const open = async (label: string) => {
-		button(label)?.click();
+		const control = button(label);
+		expect(control?.disabled).toBe(false);
+		control?.click();
 		await expect.poll(() => root.querySelector('.dve-design-menu')).not.toBeNull();
 	};
 	const pick = async (menu: string, name: string) => {
@@ -82,12 +89,72 @@ it('previews gallery items, changes theme formatting live, and undoes one choice
 	editor.getToolbarProps().onRedo();
 	expect(editor.documentModel?.theme?.name).toBe('Facet');
 	expect((await loadDocx(await editor.saveBytes())).model.theme?.name).toBe('Facet');
-	await pick('Effects', 'No Shadow');
+	await pick('Effects', 'Subtle Solid');
 	expect(root.querySelector('.dve-shape-drawing feDropShadow')).toBeNull();
-	await pick('Effects', 'Strong Shadow');
+	await pick('Effects', 'Top Shadow');
 	expect(root.querySelector('.dve-shape-drawing feDropShadow')).not.toBeNull();
 	editor.getToolbarProps().onUndo();
 	expect(root.querySelector('.dve-shape-drawing feDropShadow')).toBeNull();
+	await pick('Effects', 'Frosted Glass');
+	expect(root.querySelector('.dve-shape-drawing feMorphology')).not.toBeNull();
+});
+
+it('keeps named colour and font schemes across editors and supports rename, reuse and deletion', async () => {
+	let schemes: WordDesignScheme[] = [];
+	const preferences = {
+		read: () => undefined,
+		write: () => {},
+		schemes: {
+			read: () => schemes,
+			write: (value: WordDesignScheme[]) => {
+				schemes = value;
+			},
+		},
+	};
+	const setField = (root: ShadowRoot, label: string, value: string) => {
+		const input = root.querySelector<HTMLInputElement>(
+			`.dve-design-dialog input[aria-label="${label}"]`,
+		);
+		expect(input).not.toBeNull();
+		if (!input) return;
+		input.value = value;
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+	};
+	const save = (root: ShadowRoot) =>
+		root.querySelector<HTMLButtonElement>('.dve-design-dialog .dve-dialog-primary')?.click();
+	const first = mount();
+	first.editor.wordDesignPreferences = preferences;
+	await first.pick('Colors', 'Customize Colors');
+	setField(first.root, 'Name', 'Research colors');
+	setField(first.root, 'Accent 1', '#123456');
+	save(first.root);
+	await first.pick('Fonts', 'Customize Fonts');
+	setField(first.root, 'Name', 'Research faces');
+	setField(first.root, 'Heading font', 'Georgia');
+	setField(first.root, 'Body font', 'Verdana');
+	save(first.root);
+	first.editor.remove();
+
+	const second = mount();
+	second.editor.wordDesignPreferences = preferences;
+	await second.pick('Colors', 'Research colors');
+	expect(second.editor.documentModel?.theme?.colors.accent1).toBe('123456');
+	await second.pick('Fonts', 'Research faces');
+	expect(second.editor.documentModel?.theme?.fonts.major.latin).toBe('Georgia');
+	await second.pick('Fonts', 'Edit Research faces');
+	setField(second.root, 'Name', 'Report faces');
+	setField(second.root, 'Body font', 'Arial');
+	save(second.root);
+	expect(schemes).toMatchObject([
+		{ name: 'Research colors' },
+		{ name: 'Report faces', minorFont: 'Arial' },
+	]);
+	await second.pick('Fonts', 'Edit Report faces');
+	second.button('Delete')?.click();
+	expect(schemes).toMatchObject([{ name: 'Research colors' }]);
+	expect((await loadDocx(await second.editor.saveBytes())).model.theme?.fonts.minor.latin).toBe(
+		'Arial',
+	);
 });
 
 it('provides keyboard gallery navigation, a custom color form and opt-in defaults', async () => {

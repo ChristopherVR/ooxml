@@ -23,6 +23,7 @@
 	"EMU_PER_POINT",
 	"INSPECTION_CATEGORIES",
 	"LIGATURE_VALUES",
+	"MAX_WORD_DESIGN_SCHEMES",
 	"NEW_CHART_SIZE_PX",
 	"PAGE_SIZES",
 	"PAGE_SIZE_OPTIONS",
@@ -415,6 +416,7 @@
 	"parseTwips",
 	"parseUnsignedInteger",
 	"parseWordDesignDefaults",
+	"parseWordDesignSchemes",
 	"pictureBulletSizePt",
 	"pictureCropOf",
 	"pictureWatermarkSizePt",
@@ -458,6 +460,7 @@
 	"roundHalfPoints",
 	"roundSignedTwips",
 	"roundTwips",
+	"sameWordDesignScheme",
 	"saveDocx",
 	"sectionLayoutJson",
 	"sectionsFromLayout",
@@ -537,5 +540,6 @@
 	"withWordDesignDefaults",
 	"wordColorName",
 	"wordDesignDefaults",
-	"wordHighlightColors"
+	"wordHighlightColors",
+	"wordThemeXml"
 ]
