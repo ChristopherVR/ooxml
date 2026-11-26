@@ -14,7 +14,7 @@ export type StencilWorkerRequest =
 export type StencilWorkerResponse =
 	| { type: 'read'; value: VisioStencilFile }
 	| { type: 'create'; value: Uint8Array }
-	| { type: 'edit'; value: VisioStencilSave }
+	| { type: 'edit'; value: VisioStencilSave & { changed: boolean } }
 	| { type: 'error'; message: string };
 
 export async function processStencilRequest(
@@ -25,5 +25,6 @@ export async function processStencilRequest(
 	const editor = await loadVisioStencilEditor();
 	if (request.type === 'create')
 		return { type: 'create', value: await editor.createVisioStencil() };
-	return { type: 'edit', value: await editor.editVisioStencil(request.source, request.edit) };
+	const result = await editor.editVisioStencil(request.source, request.edit);
+	return { type: 'edit', value: { ...result, changed: result.bytes !== request.source } };
 }

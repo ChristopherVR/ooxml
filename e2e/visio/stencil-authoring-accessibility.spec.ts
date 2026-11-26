@@ -61,3 +61,48 @@ test('returns focus to the invoking control after stencil dialogs and save', asy
 	await download;
 	await expect(actions).toBeFocused();
 });
+
+test('confirms deletion and undoes the latest edit through the stencil or master', async ({
+	page,
+}) => {
+	test.setTimeout(60_000);
+	const { viewer, more, menu, dialog, confirm } = await drawingWithShape(page);
+	await more.press('Enter');
+	await menu('more', 'new-stencil').click();
+	await confirm('Stencil name', 'Valves');
+	const section = viewer.getByRole('region', { name: 'Valves' });
+	const actions = section.getByRole('button', { name: 'Stencil actions' });
+	const title = section.getByRole('button', { name: 'Valves', exact: true });
+	const master = section.locator('[data-master]');
+	await actions.press('Enter');
+	await menu('stencil', 'add-selection').click();
+	await confirm('Master name', 'Valve');
+	await expect(master).toHaveText('Valve');
+	await master.press('Shift+F10');
+	await menu('master', 'rename').click();
+	await confirm('Master name', 'Gate valve');
+	await expect(master).toHaveText('Gate valve');
+	await master.press('Control+z');
+	await expect(master).toHaveText('Valve');
+	await expect(master).toBeFocused();
+	await master.press('Shift+F10');
+	await menu('master', 'delete').click();
+	await expect(dialog).toContainText('Delete the master “Valve”?');
+	await dialog.getByRole('button', { name: 'Cancel' }).click();
+	await expect(master).toHaveText('Valve');
+	await master.press('Shift+F10');
+	await menu('master', 'delete').click();
+	await dialog.getByRole('button', { name: 'Delete Master' }).click();
+	await expect(master).toHaveCount(0);
+	await actions.press('Enter');
+	await menu('stencil', 'undo-stencil').click();
+	await expect(master).toHaveText('Valve');
+	await expect(actions).toBeFocused();
+	await master.press('Shift+F10');
+	await menu('master', 'delete').click();
+	await dialog.getByRole('button', { name: 'Delete Master' }).click();
+	await expect(master).toHaveCount(0);
+	await title.press('Control+z');
+	await expect(master).toHaveText('Valve');
+	await expect(title).toBeFocused();
+});

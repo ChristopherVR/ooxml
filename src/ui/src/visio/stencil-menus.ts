@@ -110,8 +110,24 @@ export function bindStencilMenus(
 		if (button && openMasterMenu(button, event.clientX, event.clientY)) event.preventDefault();
 	});
 	pane.addEventListener('keydown', (event) => {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+		if (
+			(event.ctrlKey || event.metaKey) &&
+			!event.shiftKey &&
+			!event.altKey &&
+			event.key.toLowerCase() === 'z'
+		) {
+			const id = target.closest<HTMLElement>('[data-stencil]')?.dataset.stencil;
+			if (id && files.get(id)?.editable) {
+				event.preventDefault();
+				event.stopPropagation();
+				if (files.canUndo(id)) run({ type: 'undo', stencil: id });
+			}
+			return;
+		}
 		if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
-		const button = (event.target as Element).closest?.<HTMLElement>('[data-master]');
+		const button = target.closest<HTMLElement>('[data-master]');
 		if (!button) return;
 		const box = button.getBoundingClientRect();
 		if (openMasterMenu(button, box.left, box.bottom)) event.preventDefault();
@@ -121,6 +137,7 @@ export function bindStencilMenus(
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (!menuSection) return;
 		if (command === 'save-stencil-file') run({ type: 'save', stencil: menuSection });
+		if (command === 'undo-stencil') run({ type: 'undo', stencil: menuSection });
 		if (command === 'edit-stencil') {
 			if (editing.has(menuSection)) editing.delete(menuSection);
 			else editing.add(menuSection);
@@ -179,6 +196,11 @@ export function bindStencilMenus(
 			stencilMenu.replaceChildren(
 				menuItem(doc, 'edit-stencil', t('Edit Stencil'), editing.has(id)),
 				disabled('add-selection', 'Add Selected Shape', reason),
+				disabled(
+					'undo-stencil',
+					'Undo',
+					files.canUndo(id) ? undefined : 'No stencil edit to undo.',
+				),
 				menuItem(doc, 'save-stencil-file', t('Save Stencil')),
 			);
 			const box = button.getBoundingClientRect();

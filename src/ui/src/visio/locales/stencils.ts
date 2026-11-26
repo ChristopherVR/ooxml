@@ -2,6 +2,9 @@ import type { VisioLocale } from '../ribbon-locale';
 
 export const VISIO_STENCIL_STRINGS = {
 	en: {
+		Undo: 'Undo',
+		'No stencil edit to undo.': 'No stencil edit to undo.',
+		'Delete the master “{name}”?': 'Delete the master “{name}”?',
 		OK: 'OK',
 		Cancel: 'Cancel',
 		'Close {name}': 'Close {name}',
@@ -57,6 +60,9 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Another master entry uses this master part.',
 	},
 	de: {
+		Undo: 'Rückgängig',
+		'No stencil edit to undo.': 'Es gibt keine Schablonenänderung zum Rückgängigmachen.',
+		'Delete the master “{name}”?': 'Masterform „{name}“ löschen?',
 		OK: 'Bestätigen',
 		Cancel: 'Abbrechen',
 		'Close {name}': '{name} schließen',
@@ -120,6 +126,9 @@ export const VISIO_STENCIL_STRINGS = {
 			'Ein anderer Mastereintrag verwendet diesen Masterteil.',
 	},
 	es: {
+		Undo: 'Deshacer',
+		'No stencil edit to undo.': 'No hay cambios en la plantilla que deshacer.',
+		'Delete the master “{name}”?': '¿Eliminar la forma maestra «{name}»?',
 		OK: 'Aceptar',
 		Cancel: 'Cancelar',
 		'Close {name}': 'Cerrar {name}',
@@ -180,6 +189,9 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Otra entrada maestra usa esta parte maestra.',
 	},
 	fr: {
+		Undo: 'Annuler la modification',
+		'No stencil edit to undo.': 'Aucune modification du gabarit à annuler.',
+		'Delete the master “{name}”?': 'Supprimer la forme de base « {name} » ?',
 		OK: 'Valider',
 		Cancel: 'Annuler',
 		'Close {name}': 'Fermer {name}',
@@ -243,6 +255,9 @@ export const VISIO_STENCIL_STRINGS = {
 			'Une autre entrée utilise cette partie de forme de base.',
 	},
 	'zh-CN': {
+		Undo: '撤消',
+		'No stencil edit to undo.': '没有可撤消的模具编辑。',
+		'Delete the master “{name}”?': '删除主控形状“{name}”？',
 		OK: '确定',
 		Cancel: '取消',
 		'Close {name}': '关闭{name}',

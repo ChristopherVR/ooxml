@@ -37,6 +37,7 @@ export interface OpenStencil extends Stencil {
 
 export class StencilFiles {
 	readonly #open = new Map<string, OpenStencil>();
+	readonly #previous = new Map<string, Uint8Array>();
 	#next = 1;
 
 	get opened(): readonly OpenStencil[] {
@@ -55,26 +56,64 @@ export class StencilFiles {
 	close(id: string): void {
 		for (const master of this.#open.get(id)?.masters ?? []) this.#masters.delete(master.id);
 		this.#open.delete(id);
+		this.#previous.delete(id);
 	}
 
 	async open(name: string, bytes: Uint8Array): Promise<OpenStencil> {
 		if (/\.vs[st]$/i.test(name))
 			throw new StencilFileError(name, 'Legacy binary stencils (.vss, .vst) are not supported.');
-		return this.replace(
+		const publish = await this.#prepare(
 			`file-${this.#next++}`,
 			name.replace(/\.[^.]*$/, ''),
 			bytes,
 			/\.vss[xm]$/i.test(name),
 		);
+		return publish();
 	}
 
-	/** Publish a replacement only after its bounded parse succeeds. */
-	async replace(
+	canUndo(id: string): boolean {
+		return this.#previous.has(id);
+	}
+
+	async apply({
+		id,
+		name,
+		current,
+		previous,
+		bytes,
+	}: {
+		id: string;
+		name: string;
+		current: OpenStencil | undefined;
+		previous: Uint8Array;
+		bytes: Uint8Array;
+	}): Promise<boolean> {
+		if (this.get(id) !== current) return false;
+		const publish = await this.#prepare(id, name, bytes, true);
+		if (this.get(id) !== current) return false;
+		publish();
+		this.#previous.set(id, previous);
+		return true;
+	}
+
+	async undo(id: string): Promise<boolean> {
+		const current = this.get(id);
+		const bytes = this.#previous.get(id);
+		if (!current || !bytes) return false;
+		const publish = await this.#prepare(id, current.name, bytes, current.editable);
+		if (this.get(id) !== current) return false;
+		publish();
+		this.#previous.delete(id);
+		return true;
+	}
+
+	/** A replacement can be published only after its bounded parse succeeds. */
+	async #prepare(
 		id: string,
 		name: string,
 		bytes: Uint8Array,
-		editable = true,
-	): Promise<OpenStencil> {
+		editable: boolean,
+	): Promise<() => OpenStencil> {
 		const checkCapacity = () => {
 			let size = bytes.length;
 			for (const current of this.#open.values())
@@ -93,24 +132,26 @@ export class StencilFiles {
 		});
 		if (!editable && !file.masters.length)
 			throw new StencilFileError(name, 'This file has no shapes.');
-		checkCapacity();
-		for (const master of this.#open.get(id)?.masters ?? []) this.#masters.delete(master.id);
-		const masters = file.masters.slice(0, MAX_LISTED).map((master): Master => {
-			const unsupported = visioMasterDropRefusal(master);
-			const listed: Master = {
-				id: `file:${id === MY_SHAPES_ID ? id : id.replace('file-', '')}:${master.id}`,
-				name: master.name,
-				path: 'M4 6h16v12H4Z',
-				size: visioMasterDropSize(master),
-				draw: () => masterPreview(master),
-				...(unsupported ? { unsupported } : {}),
-			};
-			this.#masters.set(listed.id, { bytes, master, listed });
-			return listed;
-		});
-		const stencil = { id, name, masters, bytes, editable };
-		this.#open.set(id, stencil);
-		return stencil;
+		return () => {
+			checkCapacity();
+			for (const master of this.#open.get(id)?.masters ?? []) this.#masters.delete(master.id);
+			const masters = file.masters.slice(0, MAX_LISTED).map((master): Master => {
+				const unsupported = visioMasterDropRefusal(master);
+				const listed: Master = {
+					id: `file:${id === MY_SHAPES_ID ? id : id.replace('file-', '')}:${master.id}`,
+					name: master.name,
+					path: 'M4 6h16v12H4Z',
+					size: visioMasterDropSize(master),
+					draw: () => masterPreview(master),
+					...(unsupported ? { unsupported } : {}),
+				};
+				this.#masters.set(listed.id, { bytes, master, listed });
+				return listed;
+			});
+			const stencil = { id, name, masters, bytes, editable };
+			this.#open.set(id, stencil);
+			return stencil;
+		};
 	}
 }
 

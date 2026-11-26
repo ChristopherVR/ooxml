@@ -76,5 +76,9 @@ test('creates, edits, saves and reopens a stencil through the Shapes pane', asyn
 	await menu('stencil', 'edit-stencil').click();
 	await valve.press('Shift+F10');
 	await menu('master', 'delete').click();
+	await viewer
+		.locator('office-ui-dialog.stencil-dialog')
+		.getByRole('button', { name: 'Delete Master' })
+		.click();
 	await expect(valve).toHaveCount(0);
 });

@@ -1,3 +1,4 @@
+import { interpolate } from 'ooxml-core/i18n';
 import type { VisioStencilEdit } from 'ooxml-core/visio';
 import { createStencil, editStencil } from './stencil-client';
 import { ViewerDialog } from './viewer-dialog';
@@ -8,7 +9,8 @@ type Translate = (text: string) => string;
 export type StencilAction =
 	| { type: 'new' }
 	| { type: 'collect'; draft: () => VisioStencilEdit }
-	| { type: 'save' | 'add-selection'; stencil: string; draft?: (name: string) => VisioStencilEdit }
+	| { type: 'save' | 'undo'; stencil: string }
+	| { type: 'add-selection'; stencil: string; draft: (name: string) => VisioStencilEdit }
 	| { type: 'rename' | 'edit' | 'delete'; stencil: string; master: string };
 
 export async function runStencilAction(
@@ -30,8 +32,21 @@ export async function runStencilAction(
 		const existing = files.get(MY_SHAPES_ID);
 		const source = existing?.bytes ?? (await createStencil());
 		const result = await editStencil(source, edit);
-		await files.replace(MY_SHAPES_ID, MY_SHAPES_NAME, result.bytes);
-		update(MY_SHAPES_ID);
+		if (
+			result.changed &&
+			(await files.apply({
+				id: MY_SHAPES_ID,
+				name: MY_SHAPES_NAME,
+				current: existing,
+				previous: source,
+				bytes: result.bytes,
+			}))
+		)
+			update(MY_SHAPES_ID);
+		return;
+	}
+	if (action.type === 'undo') {
+		if (await files.undo(action.stencil)) update(action.stencil);
 		return;
 	}
 	const stencil = files.get(action.stencil);
@@ -44,8 +59,7 @@ export async function runStencilAction(
 	}
 	let edit: VisioStencilEdit | undefined;
 	if (action.type === 'add-selection') {
-		const draft = action.draft?.('');
-		if (!draft) return;
+		const draft = action.draft('');
 		if (draft.type === 'add-shape') {
 			const name = await ask(pane, 'Add Selected Shape', 'Master name', t('New Master'), t);
 			if (name !== undefined) edit = { ...draft, name };
@@ -58,7 +72,8 @@ export async function runStencilAction(
 			const name = await ask(pane, 'Rename Master', 'Master name', master.name, t);
 			if (name !== undefined) edit = { type: 'rename-master', id: master.id, name };
 		} else if (action.type === 'delete') {
-			edit = { type: 'delete-master', id: master.id };
+			if (await confirmDelete(pane, master.name, t))
+				edit = { type: 'delete-master', id: master.id };
 		} else {
 			const shape = master.shapes[0];
 			if (!shape) return;
@@ -69,9 +84,43 @@ export async function runStencilAction(
 	}
 	if (!edit || files.get(stencil.id) !== stencil) return;
 	const result = await editStencil(stencil.bytes, edit);
-	if (files.get(stencil.id) !== stencil) return;
-	await files.replace(stencil.id, stencil.name, result.bytes);
-	update(stencil.id);
+	if (
+		result.changed &&
+		(await files.apply({
+			id: stencil.id,
+			name: stencil.name,
+			current: stencil,
+			previous: stencil.bytes,
+			bytes: result.bytes,
+		}))
+	)
+		update(stencil.id);
+}
+
+function confirmDelete(pane: HTMLElement, name: string, t: Translate): Promise<boolean> {
+	return new Promise((resolve) => {
+		const cancel = t('Cancel');
+		const remove = t('Delete Master');
+		const dialog = new ViewerDialog(pane, 'stencil-dialog', remove, [cancel, remove], (button) => {
+			resolve(button === remove);
+			dialog.close();
+		});
+		dialog.body.textContent = interpolate(t('Delete the master “{name}”?'), { name });
+		showDialog(dialog, t, () => resolve(false));
+	});
+}
+
+function showDialog(dialog: ViewerDialog, t: Translate, dismiss: () => void): void {
+	dialog.dialog.setAttribute('close-label', t('Close'));
+	dialog.dialog.addEventListener(
+		'office-dialog-close',
+		() => {
+			dismiss();
+			queueMicrotask(() => dialog.dialog.remove());
+		},
+		{ once: true },
+	);
+	dialog.show();
 }
 
 function ask(
@@ -116,16 +165,7 @@ function ask(
 		field.textContent = t(label);
 		field.append(input);
 		dialog.body.append(field);
-		dialog.dialog.setAttribute('close-label', t('Close'));
-		dialog.dialog.addEventListener(
-			'office-dialog-close',
-			() => {
-				resolve(undefined);
-				queueMicrotask(() => dialog.dialog.remove());
-			},
-			{ once: true },
-		);
-		dialog.show();
+		showDialog(dialog, t, () => resolve(undefined));
 	});
 }
 
