@@ -50,10 +50,9 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 		if (live.state.doc !== lastDoc) {
 			lastDoc = live.state.doc;
 			drawings = storyDrawings(live);
-			signature = '';
 		}
 		const selected = drawingPositions(live.state);
-		const next = JSON.stringify([core.locale, selected]);
+		const next = JSON.stringify([core.locale, selected, drawings]);
 		if (signature === next) return;
 		signature = next;
 		const title = translate(core.locale, 'Selection Pane');

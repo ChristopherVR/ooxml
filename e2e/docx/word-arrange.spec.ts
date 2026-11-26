@@ -77,6 +77,25 @@ test('ungroup keeps the native children on the canvas in consecutive stacking or
 	expect(heights.slice(1)).toEqual(heights.slice(0, -1).map((height) => height + 1));
 });
 
+test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({ page }) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const row = editor
+		.getByRole('complementary', { name: 'Selection Pane' })
+		.getByRole('listitem')
+		.first();
+	await row.evaluate((element) => element.setAttribute('data-test-original-row', ''));
+	const story = editor.locator('.ProseMirror').first();
+	await story.press('Control+End');
+	await story.press('x');
+	await expect(story).toContainText('x');
+	await expect
+		.poll(() => row.evaluate((element) => element.hasAttribute('data-test-original-row')))
+		.toBe(true);
+});
+
 async function openShapes(page: Page, fixture = new URL('./support/shapes.docx', import.meta.url)) {
 	await page.setViewportSize({ width: 1800, height: 950 });
 	await page.goto('/?framework=vanilla');
