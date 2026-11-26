@@ -650,14 +650,13 @@ trusted commands in Admin Managed. Each entry uses the same `id` as its ribbon t
 supplies an `install` callback and may supply a `remove` callback. The host updates its
 ribbon tabs when either callback runs. My Add-ins lists the installed tabs.
 
-The Store pivot is hidden by default. A host can call
-`setOfficeAddInStorefront(editor, { kind: 'microsoft' })` to enable a Marketplace
-handoff. The host may override its HTTPS URL and label. The browser opens that
-destination only when the user follows the link, without an opener or referrer.
-A host can instead supply `{ kind: 'catalog', entries }`. Each offer has an `id`,
+Get Add-ins opens the Store pivot by default, with a **Browse Microsoft Marketplace**
+link. The browser opens that destination only when the user follows the link, without
+an opener or referrer. A host can call `setOfficeAddInStorefront(editor, { kind: 'microsoft' })`
+with its own HTTPS URL and label, or supply `{ kind: 'catalog', entries }`. Each offer has an `id`,
 `label` and a `read(signal)` function that supplies a manifest or package as a File.
 The dialog calls the reader on selection, validates the file and asks for consent.
-Pass `'off'` to remove the Store pivot.
+Pass `'off'` to remove the Store pivot and open Get Add-ins on My Add-ins.
 
 Word, Excel and PowerPoint accept local task-pane XML manifests and unified JSON or
 ZIP files through Upload My Add-in. Visio supports trusted host entries and displays

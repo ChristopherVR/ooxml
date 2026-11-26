@@ -50,9 +50,8 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 
 	show(options: OpenAddInsOptions, restoreFocus: () => void): void {
 		this.#session = addInSession(options, restoreFocus);
-		if (options.mode === 'getAddIns') {
-			this.#pivot = this.#session.storefront === 'off' ? 'Admin Managed' : 'Store';
-		}
+		this.#pivot =
+			options.mode === 'getAddIns' && this.#session.storefront !== 'off' ? 'Store' : 'My Add-ins';
 		this.requestUpdate();
 		this.shell?.show();
 		this.renderRoot.querySelector<HTMLInputElement>('input[type="search"]')?.focus();

@@ -13,10 +13,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const mine = viewer.getByRole('button', { name: 'My Add-ins', exact: true });
 		const dialog = viewer.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await get.press('Enter');
-		await expect(dialog.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
+		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
 			'aria-selected',
 			'true',
 		);
+		await expect(dialog.getByRole('link', { name: 'Browse Microsoft Marketplace' })).toBeVisible();
+		await dialog.getByRole('tab', { name: 'My Add-ins' }).click();
 		const search = dialog.getByRole('searchbox');
 		await search.fill('notes');
 		await expect(dialog).toContainText('No matching add-ins.');

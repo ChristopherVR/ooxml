@@ -279,9 +279,10 @@ from required managed assignments and remove a revoked entitlement along with it
   host and a way to run the acquired package. Exclude scraping, private endpoints, and reuse of
   Microsoft's Office host protocol. [Office Add-in Product Ingestion API](https://learn.microsoft.com/en-us/partner-center/marketplace-offers/product-ingestion-office-add-in).
 
-The shared Office Add-ins dialog currently supports a local, static storefront through
-`setOfficeAddInStorefront`. The default is off. A host can opt into an HTTPS handoff,
-or supply a bounded list of offers whose file readers run on selection and enter the same
+Get Add-ins opens the Store pivot by default with a **Browse Microsoft Marketplace** link.
+The link opens only on a user's click, without sending a referrer or document data.
+Through `setOfficeAddInStorefront` a host can set `'off'` to open Get Add-ins on My Add-ins,
+override the HTTPS handoff, or supply a bounded list of offers whose file readers run on selection and enter the same
 validation and consent flow as an upload. Admin Managed shows trusted host ribbon entries.
 Remote discovery, account entitlements, publisher verification and tenant synchronization
 are future work. Visio exposes the same dialog and host ribbon entries while local manifest
@@ -289,15 +290,14 @@ installation remains unavailable.
 
 ### Configurable handoff and bring-your-own storefront
 
-The Marketplace link, the **Open in Microsoft Office** handoff and the storefront itself are host
-configuration, never hard-coded behaviour. One `storefront` option on the add-in host decides what
-Get Add-ins shows:
+One `storefront` option on the add-in host decides what Get Add-ins shows. Future options
+include per-listing Office installation links and remote storefront providers.
 
 - **Off.** No storefront, no external links and no catalog requests. Installed and admin-assigned
   add-ins still work. This is the setting for hosts that must not send anything to Microsoft.
-- **Microsoft handoff (opt-in).** Today's Office-filtered Marketplace link and the documented
-  Office installation links, labelled **Open in Microsoft Office**. The host can relabel the
-  action, hide it per product, or point the handoff at its own URL template (for example a
+- **Microsoft handoff (default).** Today's Office-filtered Marketplace link can use a host-supplied
+  label and HTTPS destination. A future per-listing **Open in Microsoft Office** action could
+  use a host-supplied URL template (for example a
   tenant's internal app portal that then deploys through Centralized Deployment). The template
   receives only public listing identifiers, never document, user or tenant data.
 - **Bring-your-own storefront.** The host registers a storefront provider and the suite's store
@@ -318,9 +318,8 @@ A storefront can offer an add-in; it cannot skip those checks, grant permissions
 document. Storefront content is untrusted: render descriptions as plain text (or a small
 sanitised Markdown subset), load screenshots only from the provider's declared origins (or
 provider-supplied bytes), and apply the same request limits as catalogs. Each storefront's
-requests, origins and stored data go into `PRIVACY.md` and the suite CSP when it is enabled,
-and every option defaults to off in the packages; the suite turns on only what its own
-configuration names.
+requests, origins and stored data go into `PRIVACY.md` and the suite CSP when it is enabled.
+Remote providers and execution default to off in the packages.
 
 ## Privacy and performance gates
 

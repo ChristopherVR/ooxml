@@ -105,7 +105,7 @@ for (const framework of FRAMEWORKS) {
 		const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
 		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await get.click();
-		await expect(dialog.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
+		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
 			'aria-selected',
 			'true',
 		);

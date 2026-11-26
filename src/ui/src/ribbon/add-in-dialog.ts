@@ -33,6 +33,7 @@ const CATALOG = Symbol.for('office-ui.add-in-catalog');
 const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
 const ENTRY_LIMIT = 128;
+const DEFAULT_STOREFRONT: OfficeAddInStorefront = { kind: 'microsoft' };
 const LOAD_ERRORS = new Map([
 	['fr', 'Impossible de charger les compléments.'],
 	['de', 'Add-Ins konnten nicht geladen werden.'],
@@ -58,7 +59,7 @@ export function setOfficeAddInCatalog(
 	else delete target[CATALOG];
 }
 
-/** Enable a storefront for one editor or host container. The default is off. */
+/** Set a storefront for one editor or host container. The default is the Microsoft handoff. */
 export function setOfficeAddInStorefront(
 	host: AddInDialogHost,
 	storefront: OfficeAddInStorefront,
@@ -81,7 +82,7 @@ function addInSettings(host: AddInDialogHost, opener: Element | null) {
 		const parent: Node | null = current instanceof ShadowRoot ? current.host : current.parentNode;
 		current = parent instanceof HTMLElement || parent instanceof ShadowRoot ? parent : null;
 	}
-	return { catalog: catalog ?? [], storefront: storefront ?? 'off' };
+	return { catalog: catalog ?? [], storefront: storefront ?? DEFAULT_STOREFRONT };
 }
 
 /** PowerPoint may render ribbon controls inside a shadow tree or a standalone toolbar. */

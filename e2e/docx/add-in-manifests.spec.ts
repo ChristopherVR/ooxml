@@ -22,7 +22,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await reveal(editor, get);
 		await get.click();
-		await expect(dialog.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
+		await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveAttribute(
 			'aria-selected',
 			'true',
 		);
@@ -67,6 +67,65 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(mine).toBeFocused();
 	});
 }
+
+test('opens the Marketplace only on click and supports turning off the Store', async ({
+	page,
+	context,
+}) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	const marketplace: Array<{
+		url: string;
+		method: string;
+		referrer?: string;
+		body: string | null;
+	}> = [];
+	await context.route('https://marketplace.microsoft.com/**', async (route) => {
+		const request = route.request();
+		const referrer = request.headers().referer;
+		marketplace.push({
+			url: request.url(),
+			method: request.method(),
+			body: request.postData(),
+			...(referrer && { referrer }),
+		});
+		await route.fulfill({ body: 'Marketplace' });
+	});
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+	await reveal(editor, get);
+	await get.click();
+	const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	const link = dialog.getByRole('link', { name: 'Browse Microsoft Marketplace' });
+	await expect(link).toBeVisible();
+	expect(marketplace).toHaveLength(0);
+	const popup = page.waitForEvent('popup');
+	await link.click();
+	const tab = await popup;
+	await expect(tab.getByText('Marketplace', { exact: true })).toBeVisible();
+	expect(marketplace).toEqual([
+		{
+			url: 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office',
+			method: 'GET',
+			body: null,
+		},
+	]);
+	await tab.close();
+	await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(dialog).toBeHidden();
+	await editor.evaluate((element) =>
+		Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), 'off'),
+	);
+	await get.click();
+	await expect(dialog.getByRole('tab', { name: 'My Add-ins' })).toHaveAttribute(
+		'aria-selected',
+		'true',
+	);
+	await expect(dialog.getByRole('tab', { name: 'Store', exact: true })).toHaveCount(0);
+	await expect(link).toHaveCount(0);
+});
 
 test('loads Office Add-ins on first open and fits the dark editor on a phone', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });

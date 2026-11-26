@@ -28,6 +28,7 @@ it('opens at the editor root, filters the catalog and restores the opener on Esc
 		.attachShadow({ mode: 'open' });
 	const opener = editor.appendChild(document.createElement('button'));
 	opener.focus();
+	setOfficeAddInStorefront(editor, 'off');
 	setOfficeAddInCatalog(editor, [
 		{ id: 'host', label: 'Host add-in', install: () => {} },
 		{ id: 'other', label: 'Other add-in', install: () => {} },
@@ -35,6 +36,9 @@ it('opens at the editor root, filters the catalog and restores the opener on Esc
 	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
 	const dialog = getDialog(editor);
 	expect(dialog?.heading).toBe('Office Add-ins');
+	expect(dialog?.querySelector('[aria-selected="true"]')?.textContent).toBe('My Add-ins');
+	expect(dialog?.querySelector('#pivot-2')).toBeNull();
+	dialog?.querySelector<HTMLButtonElement>('#pivot-1')?.click();
 	const search = dialog?.querySelector<HTMLInputElement>('input[type="search"]');
 	if (!search) throw new Error('Missing search field');
 	expect(dialog?.getRootNode()).toBe(editor.querySelector('office-ui-add-ins-dialog')?.shadowRoot);
@@ -59,6 +63,7 @@ it('uses a normalized locale for both labels and catalog search', async () => {
 	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'zh_CN');
 	const dialog = getDialog(editor);
 	expect(dialog?.heading).toBe('Office 加载项');
+	dialog?.querySelector<HTMLButtonElement>('#pivot-1')?.click();
 	const search = dialog?.querySelector<HTMLInputElement>('input[type="search"]');
 	if (!search) throw new Error('Missing search field');
 	search.value = 'NOTES';
@@ -85,21 +90,22 @@ it('finds storefront settings on the opener ribbon and falls back to the editor 
 	dialog?.close();
 });
 
-it('offers only the configured storefront and validates BYO bytes before installing', async () => {
+it('defaults to the Microsoft handoff and validates host catalog bytes before installing', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
 	const open = () => openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	await open();
+	expect(getDialog(editor)?.querySelector('[aria-selected="true"]')?.textContent).toBe('Store');
+	const link = getDialog(editor)?.querySelector('a');
+	expect(link?.textContent).toBe('Browse Microsoft Marketplace');
+	expect(link?.hostname).toBe('marketplace.microsoft.com');
+	expect(link?.rel).toBe('noopener noreferrer');
+	getDialog(editor)?.close();
+	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
 	setOfficeAddInStorefront(editor, { kind: 'microsoft', url: 'javascript:alert(1)' });
 	await open();
 	expect(getDialog(editor)?.querySelector('a')).toBeNull();
-	getDialog(editor)?.close();
-	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
-	setOfficeAddInStorefront(editor, { kind: 'microsoft' });
-	await open();
-	const link = getDialog(editor)?.querySelector('a');
-	expect(link?.hostname).toBe('marketplace.microsoft.com');
-	expect(link?.rel).toBe('noopener noreferrer');
 	getDialog(editor)?.close();
 	await vi.waitFor(() => expect(getDialog(editor)).toBeUndefined());
 	const read = vi.fn(function (this: { id: string }, signal: AbortSignal) {
