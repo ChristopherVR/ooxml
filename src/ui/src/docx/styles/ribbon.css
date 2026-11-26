@@ -9,7 +9,8 @@
 /* The tab row is drawn by the shared office-ui-ribbon; these colour and size it. */
 .dve-ribbon {
 	--office-ribbon-tab-height: 39px;
-	--office-ribbon-contextual: #0f7b6c;
+	/* Contextual tab labels stay legible on a dark ribbon. */
+	--office-ribbon-contextual: light-dark(#0f7b6c, #5fd4c4);
 	--office-tab-indicator-width: 3px;
 }
 /* Word's File tab is text, not a filled button. */

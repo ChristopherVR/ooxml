@@ -89,7 +89,8 @@ describe('the equation editor', () => {
 		box.sync(view, pos, true);
 		expect(box.input.placeholder).toBe('Type equation here.');
 		type(box, '(a+b)/c');
-		expect(equations(view)[0]).toContain('<m:f><m:num><m:r><m:t>a</m:t></m:r>');
+		// Runs are written as Word writes them: one run per stretch of text.
+		expect(equations(view)[0]).toContain('<m:f><m:num><m:r><m:t>a+b</m:t></m:r>');
 		const { bytes, xml } = await saved(view, model);
 		expect(xml).toMatch(/<m:oMath [^>]*><m:f><m:num>/);
 		const reopened = await loadDocx(bytes);
@@ -113,16 +114,19 @@ describe('the equation editor', () => {
 		box.sync(view, insertNewEquation(view)!, true);
 		type(box, 'y=');
 		box.insert(structureById('fraction/stacked', 'unicode')!);
-		expect(box.input.value).toBe('y=⬚/⬚');
-		expect([box.input.selectionStart, box.input.selectionEnd]).toEqual([2, 3]);
+		// Each placeholder is grouped, so what is typed in it stays that argument.
+		expect(box.input.value).toBe('y=〖⬚〗/〖⬚〗');
+		expect([box.input.selectionStart, box.input.selectionEnd]).toEqual([3, 4]);
 		// Empty arguments are saved empty, as Word saves a structure waiting for input.
 		expect(equations(view)[0]).toContain('<m:f><m:num/><m:den/></m:f>');
-		type(box, '1');
+		type(box, 'a+b');
 		const tab = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true });
 		box.input.dispatchEvent(tab);
 		type(box, '2');
-		expect(box.input.value).toBe('y=1/2');
-		expect(equations(view)[0]).toContain('<m:den><m:r><m:t>2</m:t></m:r></m:den>');
+		expect(box.input.value).toBe('y=〖a+b〗/〖2〗');
+		expect(equations(view)[0]).toContain(
+			'<m:f><m:num><m:r><m:t>a+b</m:t></m:r></m:num><m:den><m:r><m:t>2</m:t></m:r></m:den></m:f>',
+		);
 	});
 
 	it('puts the selection into the first placeholder of a structure inserted around it', () => {
@@ -131,7 +135,8 @@ describe('the equation editor', () => {
 		type(box, 'x+1');
 		box.input.setSelectionRange(0, 3);
 		box.insert(structureById('radical/squareRoot', 'unicode')!);
-		expect(box.input.value).toBe('√(x+1)');
+		expect(box.input.value).toBe('√〖x+1〗');
+		expect(equations(view)[0]).toContain('<m:e><m:r><m:t>x+1</m:t></m:r></m:e>');
 	});
 
 	it('edits an existing equation from its linear text', () => {
@@ -172,14 +177,72 @@ describe('the equation editor', () => {
 		const pos = insertEquationXml(view, buildUpEquation('a/b', 'unicode', false)!, false)!;
 		box.sync(view, pos, true);
 		box.setLinear(true);
-		expect(equations(view)[0]).toMatch(/<m:oMath [^>]*><m:r><m:t>a\/b<\/m:t><\/m:r><\/m:oMath>$/);
-		expect((await saved(view, model)).xml).toContain('<m:t>a/b</m:t>');
+		// Word's Linear: the text in runs, each build-up operator in a run of its own.
+		expect(equations(view)[0]).toMatch(
+			/<m:oMath [^>]*><m:r><m:t>a<\/m:t><\/m:r><m:r><m:t>\/<\/m:t><\/m:r><m:r><m:t>b<\/m:t><\/m:r><\/m:oMath>$/,
+		);
+		expect((await saved(view, model)).xml).toContain('<m:t>/</m:t>');
 		box.setLinear(false);
 		expect(equations(view)[0]).toContain('<m:f>');
-		convertAllEquations(view, true, 'unicode');
+		convertAllEquations(view, true);
 		expect(equations(view)[0]).not.toContain('<m:f>');
-		convertAllEquations(view, false, 'unicode');
+		// The equation stays selected, so its editor keeps the caret.
+		expect(view.state.selection).toBeInstanceOf(NodeSelection);
+		convertAllEquations(view, false);
 		expect(equations(view)[0]).toContain('<m:f>');
+	});
+
+	it('keeps an equation linear text cannot hold read-only, and Convert leaves it alone', () => {
+		const { view, box } = editor();
+		const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
+		const two = `<m:oMathPara xmlns:m="${M}"><m:oMath><m:r><m:t>a</m:t></m:r></m:oMath><m:oMath><m:r><m:t>b</m:t></m:r></m:oMath></m:oMathPara>`;
+		const pos = insertEquationXml(view, two, true)!;
+		box.sync(view, pos, true);
+		expect(box.input.readOnly).toBe(true);
+		expect(box.editable).toBe(false);
+		expect(box.element.querySelector('[role="status"]')?.textContent).toContain('kept as it is');
+		box.insert('x');
+		convertAllEquations(view, true);
+		expect(equations(view)[0]).toBe(two);
+	});
+
+	it('keeps the editor on the same equation when edits elsewhere move it', () => {
+		const { view, box } = editor('ab');
+		const pos = insertNewEquation(view)!;
+		box.sync(view, pos, true);
+		type(box, 'x+1');
+		box.input.setSelectionRange(1, 2);
+		// A collaborator types before the equation: the selection maps along with it.
+		view.dispatch(view.state.tr.insertText('zz', 1));
+		expect(view.state.selection.from).toBe(pos + 2);
+		box.sync(view, pos + 2, false, true);
+		expect(box.input.value).toBe('x+1');
+		expect([box.input.selectionStart, box.input.selectionEnd]).toEqual([1, 2]);
+	});
+
+	it('ignores Enter and Space while an input method is composing', () => {
+		const { view, box } = editor();
+		box.sync(view, insertNewEquation(view)!, true);
+		type(box, '\\alpha');
+		const space = new KeyboardEvent('keydown', { key: ' ', isComposing: true, cancelable: true });
+		box.input.dispatchEvent(space);
+		expect(space.defaultPrevented).toBe(false);
+		const enter = new KeyboardEvent('keydown', {
+			key: 'Enter',
+			isComposing: true,
+			cancelable: true,
+		});
+		box.input.dispatchEvent(enter);
+		expect(view.state.selection).toBeInstanceOf(NodeSelection);
+	});
+
+	it('does not double the brackets of a Bracket structure around a selection', () => {
+		const { view, box } = editor();
+		box.sync(view, insertNewEquation(view)!, true);
+		type(box, 'a+b');
+		box.input.setSelectionRange(0, 3);
+		box.insert(structureById('bracket/parentheses', 'unicode')!);
+		expect(box.input.value).toBe('(a+b)');
 	});
 
 	it('leaves the equation with the arrow keys and deletes an empty one with Backspace', () => {
@@ -253,12 +316,28 @@ describe('the Equation galleries', () => {
 		document.body.append(toolbar);
 		const anchor = toolbar.querySelector<HTMLElement>('[data-equation-gallery="fraction"]')!;
 		const chosen: unknown[] = [];
-		openEquationGallery(anchor, 'fraction', (action) => chosen.push(action));
+		openEquationGallery(anchor, 'fraction', { choose: (action) => chosen.push(action) });
 		const item = document.querySelector<HTMLButtonElement>(
 			'.dve-equation-gallery [aria-label="Fraction empilée"]',
 		);
 		expect(item?.querySelector('mfrac')).not.toBeNull();
 		item!.click();
 		expect(chosen).toEqual([{ type: 'equation', key: 'structure', value: 'fraction/stacked' }]);
+	});
+});
+
+describe('following the selected equation', () => {
+	it('stays the same equation through edits elsewhere, and not after leaving it', async () => {
+		const { equationTrackPlugin, sameEquation } = await import('./equation-tab');
+		const { view } = editor('ab');
+		view.updateState(
+			view.state.reconfigure({ plugins: [...view.state.plugins, equationTrackPlugin()] }),
+		);
+		insertNewEquation(view);
+		expect(sameEquation(view.state)).toBe(false);
+		view.dispatch(view.state.tr.insertText('zz', 1));
+		expect(sameEquation(view.state)).toBe(true);
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
+		expect(sameEquation(view.state)).toBe(false);
 	});
 });

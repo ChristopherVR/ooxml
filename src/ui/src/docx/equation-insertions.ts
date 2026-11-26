@@ -4,6 +4,7 @@ import { NodeSelection, TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { EQUATION_GALLERY, type EquationInputFormat } from 'ooxml-core/math';
 import { equationKit as kit } from './equation-kit';
+import { groupPlaceholders } from './equation-linear-text';
 import {
 	aloneOnItsLine,
 	equationsIn,
@@ -15,7 +16,8 @@ import {
 export function structureText(latex: string, format: EquationInputFormat): string {
 	if (format === 'latex') return latex;
 	const omml = kit().buildUpEquation(latex, 'latex', false);
-	return omml ? kit().linearizeEquation(omml, 'unicode') : latex;
+	const text = omml && kit().linearizeEquation(omml, 'unicode');
+	return text ? groupPlaceholders(text) : latex;
 }
 
 /** The linear text of structure `group/id`, if there is one. */
@@ -56,26 +58,25 @@ export function insertNewEquation(view: EditorView): number | undefined {
 	return insertEquationXml(view, kit().emptyEquationXml(alone), alone);
 }
 
-/** Convert > All: every equation to Professional or to Linear, as one step. */
-export function convertAllEquations(
-	view: EditorView,
-	linear: boolean,
-	format: EquationInputFormat,
-): void {
+/**
+ * Convert > All: every equation to Professional or to Linear, as one step. An equation whose
+ * linear text cannot hold it exactly is left as it is.
+ */
+export function convertAllEquations(view: EditorView, linear: boolean): void {
 	if (!view.editable) return;
 	let tr = view.state.tr;
 	for (const [pos, omml, display] of equationsIn(view.state)) {
-		const shown = kit().linearDisplayText(omml, format);
-		const next = linear
-			? shown === undefined
-				? kit().linearEquationXml(kit().linearizeEquation(omml, format), display)
-				: omml
-			: shown === undefined
-				? omml
-				: kit().buildUpEquation(shown, format, display);
+		const edit = kit().editableEquation(omml, 'unicode');
+		if (!edit || edit.linear === linear) continue;
+		const next = kit().writeEditedEquation({ ...edit, format: 'unicode', display, linear });
 		const node = tr.doc.nodeAt(pos);
 		if (next && node && next !== omml)
 			tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, omml: next });
 	}
-	if (tr.docChanged) view.dispatch(tr);
+	if (!tr.docChanged) return;
+	// The selected equation stays selected, so its editor and the caret stay in it.
+	const { selection } = view.state;
+	if (selection instanceof NodeSelection && selection.node.type.name === 'equation')
+		tr = tr.setSelection(NodeSelection.create(tr.doc, tr.mapping.map(selection.from)));
+	view.dispatch(tr);
 }

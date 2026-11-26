@@ -5,7 +5,7 @@ import { keymap } from 'prosemirror-keymap';
 import type { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { EquationSession } from './equation-session';
-import { selectedEquationPos } from './equation-tab';
+import { equationTrackPlugin, selectedEquationPos } from './equation-tab';
 import type { RibbonAction } from './ribbon-action';
 import { panelOf, setTabHidden } from './ribbon-tab-api';
 import type { EditorLocale } from './localization';
@@ -48,6 +48,7 @@ export class EquationController {
 	/** Alt+= inserts a new equation, as in Word. */
 	plugins(): Plugin[] {
 		return [
+			equationTrackPlugin(),
 			keymap({
 				'Alt-=': (_state, _dispatch, view) =>
 					Boolean(view?.editable) && this.handle({ type: 'equation', key: 'new' }),
@@ -62,11 +63,11 @@ export class EquationController {
 	}
 
 	/** Shows the Equation tab and the equation editor while an equation is selected. */
-	sync(): void {
-		if (this.session) return this.session.sync();
+	sync(focus = false): void {
+		if (this.session) return this.session.sync(focus);
 		const view = this.host.view();
 		if (view && selectedEquationPos(view.state) !== undefined)
-			void this.load().then((session) => session.sync(), this.fail);
+			void this.load().then((session) => session.sync(focus), this.fail);
 		else {
 			const toolbar = this.host.toolbar();
 			if (toolbar && panelOf(toolbar, 'equation'))

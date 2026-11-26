@@ -1,19 +1,36 @@
 /* Links, pictures and hidden text in the document */
+/* An equation is as tall as its typeset maths, and never shorter than a line of text. */
 .dve-equation {
 	display: inline-block;
 	vertical-align: middle;
 	max-width: 100%;
+	min-height: 1.2em;
+	line-height: normal;
 	font-family: 'Cambria Math', math, serif;
+}
+.dve-equation math {
+	display: inline math;
+	font-size: inherit;
 }
 .dve-equation-display {
 	display: block;
-	margin: 0.5em 0;
+	width: fit-content;
+	min-width: 2em;
+	margin: 0.5em auto;
 	text-align: center;
 }
-/* The equation the equation editor is open on. */
+.dve-equation-display math {
+	display: block math;
+}
+/* The equation the editor is open on: a light band on the page's own colours, in any theme. */
 .dve-paper .dve-equation.ProseMirror-selectednode {
-	outline: 1px dotted var(--blue);
-	background: var(--accent-soft);
+	outline: 1px dotted #2b579a;
+	background: rgb(43 87 154 / 0.1);
+	color: inherit;
+}
+/* Room under it for the editing box, so the box never covers the lines after it. */
+.dve-paper .dve-equation.dve-equation-editing {
+	margin-bottom: calc(var(--dve-equation-editor-height, 36px) + 8px);
 }
 .dve-equation-unavailable {
 	color: var(--muted);

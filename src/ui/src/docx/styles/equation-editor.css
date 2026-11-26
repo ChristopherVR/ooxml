@@ -1,9 +1,23 @@
 /* The Equation tab's galleries and the in-place equation editor, added with them on first use */
 .ribbon-popover.dve-equation-gallery {
-	grid-template-columns: repeat(4, minmax(64px, auto));
-	max-width: min(92vw, 440px);
-	max-height: min(70vh, 480px);
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: min(92vw, 460px);
+	max-height: min(70vh, 520px);
 	overflow-y: auto;
+}
+.dve-equation-gallery-heading {
+	padding: 4px 6px 2px;
+	border-bottom: 1px solid var(--line);
+	color: var(--muted);
+	font-size: 12px;
+	font-weight: 600;
+}
+.dve-equation-gallery-menu {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+	gap: 4px;
 }
 .dve-equation-gallery button {
 	display: flex;
@@ -12,7 +26,7 @@
 	justify-content: center;
 	gap: 4px;
 	min-width: 44px;
-	min-height: 44px;
+	min-height: 56px;
 	padding: 6px;
 	border: 1px solid transparent;
 	border-radius: 3px;
@@ -20,6 +34,7 @@
 	color: var(--ink);
 	font: inherit;
 	font-family: 'Cambria Math', math, serif;
+	font-size: 18px;
 	cursor: pointer;
 }
 .dve-equation-gallery button:hover,
@@ -32,36 +47,43 @@
 	outline: 2px solid var(--blue);
 	outline-offset: 1px;
 }
-.dve-equation-gallery[data-equation-gallery='builtIn'] {
+.dve-equation-gallery[data-equation-gallery='builtIn'] .dve-equation-gallery-menu {
 	grid-template-columns: 1fr;
 }
 .dve-equation-gallery .dve-equation-gallery-wide {
 	align-items: flex-start;
 	font-family: inherit;
+	font-size: 12px;
 }
 .dve-equation-gallery-wide math {
 	font-family: 'Cambria Math', math, serif;
+	font-size: 16px;
 }
-.dve-equation-gallery .dve-equation-gallery-command {
+.dve-equation-gallery .dve-equation-gallery-commands {
+	border-top: 1px solid var(--line);
+	padding-top: 4px;
+}
+.dve-equation-gallery-commands button {
 	min-height: 32px;
-	border-top-color: var(--line);
+	align-items: flex-start;
 	font-family: inherit;
+	font-size: 12px;
 }
-.dve-equation-gallery[data-equation-gallery='symbols'] {
-	display: flex;
-	flex-direction: column;
-	gap: 6px;
+/* Word shows the symbols in a wide grid. */
+.ribbon-popover.dve-equation-gallery[data-equation-gallery='symbols'] {
+	width: min(92vw, 560px);
 }
-.dve-equation-symbol-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+.dve-equation-gallery .dve-equation-symbol-grid {
+	grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
 	gap: 2px;
 }
 .dve-equation-symbol-grid button {
-	min-width: 32px;
-	min-height: 32px;
+	min-width: 34px;
+	min-height: 34px;
 	padding: 2px;
-	font-size: 16px;
+	font-family: 'Cambria Math', 'STIX Two Math', math, serif;
+	font-size: 18px;
+	font-variant-emoji: text;
 }
 .dve-equation-editor {
 	position: fixed;
@@ -89,6 +111,9 @@
 		math,
 		serif;
 }
+.dve-equation-editor-input:read-only {
+	color: var(--muted);
+}
 .dve-equation-editor-input:focus-visible {
 	outline: 2px solid var(--blue);
 	outline-offset: -1px;
@@ -97,6 +122,6 @@
 	display: none;
 }
 .dve-equation-editor-status {
-	color: var(--office-danger, #a4262c);
+	color: var(--ink);
 	font-size: 12px;
 }

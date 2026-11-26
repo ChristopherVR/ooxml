@@ -1,6 +1,6 @@
-import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 import { canCaptureDisplay } from '../form/display-capture';
 import { SYMBOLS } from './insert-text-commands';
+import { equationSplit } from './equation-tab';
 import { menuGallery } from './ribbon-gallery-menu';
 import { group, menuSelect, stack, tool } from './ribbon-parts';
 
@@ -241,22 +241,7 @@ export function buildInsertGroups(): HTMLElement[] {
 		),
 		group(
 			'Symbols',
-			menuSelect(
-				'Equation',
-				'equation',
-				[
-					['new', 'Insert New Equation'],
-					['edit', 'Insert or Edit Equation…'],
-					...EQUATION_GALLERY.map((entry): [string, string] => [entry.id, entry.name]),
-				],
-				(value) =>
-					value === 'new'
-						? { type: 'equation', key: 'new' }
-						: value === 'edit'
-							? { type: 'formatDialog', kind: 'equation' }
-							: { type: 'insertEquation', id: value as 'area' },
-				{ momentary: true },
-			),
+			equationSplit(),
 			menuSelect(
 				'Symbol',
 				'symbol',

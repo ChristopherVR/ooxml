@@ -11,7 +11,6 @@ import { createPictureDialog, type PictureDialog } from './picture-dialog';
 import { NodeSelection } from 'prosemirror-state';
 import { followLinkAt } from './link-commands';
 import { insertContentControl } from 'ooxml-core/docx/ui';
-import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 import { ShapeTool, shapeDrawPlugin } from './shape-draw';
 import {
 	setShapeFill,
@@ -183,20 +182,8 @@ export class InsertController {
 			if (view) switchSelectedChartRowColumn(view);
 			focusView(view);
 		} else if (action.type === 'insertEquation') {
-			const entry = EQUATION_GALLERY.find((item) => item.id === action.id);
-			if (view?.editable && entry) {
-				const selection = view.state.selection;
-				void import('./equation-commands').then(
-					({ insertEquation }) => {
-						if (this.host.view() === view && selection.eq(view.state.selection)) {
-							insertEquation(view, entry.latex);
-							focusView(view);
-						}
-					},
-					(cause: unknown) =>
-						this.host.reportError(cause instanceof Error ? cause : new Error(String(cause))),
-				);
-			}
+			// The same path as the Equation gallery: built up from the catalogue and selected.
+			this.equations.handle({ type: 'equation', key: 'builtIn', value: action.id });
 		} else if (action.type === 'link') {
 			if (editable) this.linkDialog.open();
 		} else if (action.type === 'formatPicture') {

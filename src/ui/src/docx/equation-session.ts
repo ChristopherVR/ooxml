@@ -11,9 +11,16 @@ import {
 	structureById,
 } from './equation-editing';
 import { openEquationGallery } from './equation-galleries';
-import { selectedEquationPos } from './equation-tab';
-import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
+import { sameEquation, selectedEquationPos } from './equation-tab';
+import {
+	isTabHidden,
+	panelOf,
+	selectTab,
+	setTabHidden,
+	type RibbonElement,
+} from './ribbon-tab-api';
 import type { EditorState } from 'prosemirror-state';
+import { emit } from './events';
 import { focusView } from './focus-view';
 import type { RibbonAction } from './ribbon-action';
 import type { EditorLocale } from './localization';
@@ -28,25 +35,33 @@ export interface EquationSessionHost {
 
 /**
  * Shows the tab while an equation is selected (switching to it as the selection enters one),
- * enables its commands when the document can be edited and reflects the input format and
- * whether Normal Text is on.
+ * enables its commands when the document and the equation can be edited and reflects the input
+ * format and whether Normal Text is on.
  */
 export function syncEquationTab(
 	toolbar: HTMLElement,
 	state: EditorState,
 	editable: boolean,
-	status: { format: 'unicode' | 'latex'; normalText: boolean },
+	status: { format: 'unicode' | 'latex'; normalText: boolean; canEdit: boolean },
 ): void {
 	const panel = panelOf(toolbar, 'equation');
 	if (!panel) return;
 	const selected = selectedEquationPos(state) !== undefined;
 	const entering = isTabHidden(panel) && selected;
 	setTabHidden(toolbar, 'equation', 'contextual', !selected);
-	if (entering) selectTab(toolbar, 'equation');
+	if (entering) {
+		selectTab(toolbar, 'equation');
+		// A narrow ribbon scrolls its tab strip so the new tab is in view.
+		(toolbar as RibbonElement)
+			.tabButton('equation')
+			?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+	}
 	for (const control of panel.querySelectorAll<HTMLButtonElement | HTMLSelectElement>(
 		'button:not([data-unavailable]), select',
 	))
-		control.disabled = !selected || !editable;
+		// A read-only equation still takes the gallery and Convert > All, which leave it alone.
+		control.disabled =
+			!selected || !editable || (!status.canEdit && !control.closest('[data-equation-any]'));
 	for (const button of panel.querySelectorAll<HTMLElement>('[data-equation-format]'))
 		button.setAttribute('aria-pressed', String(button.dataset.equationFormat === status.format));
 	panel
@@ -81,8 +96,16 @@ export class EquationSession {
 				.toolbar()
 				?.querySelector<HTMLElement>(`[data-equation-gallery="${value}"]`);
 			if (anchor)
-				openEquationGallery(anchor, value, (chosen) => {
-					if (chosen.type === 'equation') this.handle(chosen);
+				openEquationGallery(anchor, value.replace(/^insert-/, ''), {
+					choose: (chosen) => {
+						const toolbar = this.host.toolbar();
+						if (chosen.type === 'equation') this.handle(chosen);
+						else if (toolbar) emit(toolbar, 'ribbon-action', chosen);
+					},
+					// Escape gives the caret back to the equation being edited, as Word does.
+					dismissed: () => {
+						if (this.box.attachedAt !== undefined) this.box.input.focus({ preventScroll: true });
+					},
 				});
 			return;
 		}
@@ -100,8 +123,10 @@ export class EquationSession {
 			this.sync(true);
 		} else if (key === 'convert') {
 			const linear = value.endsWith('Linear');
-			if (value.startsWith('all')) convertAllEquations(view, linear, this.format);
+			if (value.startsWith('all')) convertAllEquations(view, linear);
 			else if (attached) box.setLinear(linear);
+			// The caret stays in the equation, so undo and typing go on there.
+			if (attached) this.sync(true);
 		} else if (!attached) {
 			return;
 		} else if (key === 'structure') {
@@ -117,9 +142,11 @@ export class EquationSession {
 	sync(focus = false): void {
 		const view = this.host.view();
 		const pos = view ? selectedEquationPos(view.state) : undefined;
-		const entering = pos !== undefined && pos !== this.lastPos;
+		const same =
+			view !== undefined && pos !== undefined && (sameEquation(view.state) || pos === this.lastPos);
 		this.lastPos = pos;
-		if (view && pos !== undefined) this.box.sync(view, pos, focus || (entering && view.hasFocus()));
+		if (view && pos !== undefined)
+			this.box.sync(view, pos, focus || (!same && view.hasFocus()), same);
 		else this.box.detach();
 		this.syncTab();
 	}
@@ -131,6 +158,7 @@ export class EquationSession {
 			syncEquationTab(toolbar, view.state, view.editable, {
 				format: this.format,
 				normalText: this.box.normalText,
+				canEdit: this.box.editable,
 			});
 	}
 

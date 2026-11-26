@@ -11,9 +11,14 @@ test('Insert > Equation inserts a gallery equation, edits it from LaTeX and draw
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror').click();
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	const picker = editor.getByRole('combobox', { name: 'Equation', exact: true });
-	await reveal(editor, picker);
-	await picker.selectOption({ label: 'Quadratic Formula' });
+	// Insert > Equation is a split button; its arrow opens the built-in equations.
+	const more = editor.getByRole('button', { name: 'Built-In Equations', exact: true });
+	await reveal(editor, more);
+	await more.click();
+	await editor
+		.locator('.dve-equation-gallery')
+		.getByRole('menuitem', { name: 'Quadratic Formula', exact: true })
+		.click();
 	const equation = editor.locator('.ProseMirror [data-docx-equation]');
 	await expect(equation).toHaveCount(1);
 	await expect(equation.locator('msqrt')).toHaveCount(1);

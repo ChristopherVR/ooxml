@@ -96,6 +96,13 @@ export function renderDocument(core: EditorCore): void {
 		handleDOMEvents: { mousedown: selectOnDrawingMouseDown },
 		decorations: secondaryDrawingDecorations,
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),
+		// A click on an equation puts the caret in it (its editing box), display or inline.
+		handleClickOn: (view, _pos, node, nodePos, event) => {
+			if (node.type !== schema.nodes.equation || !view.editable || event.detail > 1) return false;
+			view.dispatch(view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos)));
+			core.inserts.equations.sync(true);
+			return true;
+		},
 		handleDoubleClickOn: (view, _pos, node, nodePos) => {
 			if (node.type !== schema.nodes.equation || !view.editable) return false;
 			const { selection } = view.state;

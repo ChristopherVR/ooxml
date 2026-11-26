@@ -35,15 +35,16 @@ for (const framework of FRAMEWORKS) {
 		const gallery = editor.locator('.dve-equation-gallery');
 		await expect(gallery.getByRole('menuitem')).not.toHaveCount(0);
 		await gallery.getByRole('menuitem', { name: 'Stacked Fraction', exact: true }).click();
-		await expect(input).toHaveValue('x=α+⬚/⬚');
+		await expect(input).toHaveValue('x=α+〖⬚〗/〖⬚〗');
 		await input.pressSequentially('1');
 		await input.press('Tab');
 		await input.pressSequentially('2');
-		await expect(input).toHaveValue('x=α+1/2');
+		await expect(input).toHaveValue('x=α+〖1〗/〖2〗');
 		const equation = editor.locator('.ProseMirror [data-docx-equation]');
 		await expect(equation.locator('mfrac')).toHaveCount(1);
 
-		// Symbols insert at the caret, from their category.
+		// Symbols insert at the caret, from their category: here after the fraction.
+		await input.press('End');
 		const symbols = panel.getByRole('button', { name: 'Symbols', exact: true });
 		await reveal(editor, symbols);
 		await symbols.click();
@@ -52,7 +53,7 @@ for (const framework of FRAMEWORKS) {
 			.getByRole('combobox', { name: 'Symbol category' })
 			.selectOption({ label: 'Arrows' });
 		await editor.locator('.dve-equation-gallery').getByRole('menuitem', { name: '⇒' }).click();
-		await expect(input).toHaveValue('x=α+1/2⇒');
+		await expect(input).toHaveValue('x=α+〖1〗/〖2〗⇒');
 
 		const { xml, bytes } = await savedDocument(page, `ui-equation-tab-${framework}.docx`);
 		expect(xml).toContain('<m:oMathPara');
@@ -75,9 +76,14 @@ test('editing an existing equation, Linear and Professional, LaTeX input, Ink Eq
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror').click();
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-	const picker = editor.getByRole('combobox', { name: 'Equation', exact: true });
-	await reveal(editor, picker);
-	await picker.selectOption({ label: 'Pythagorean Theorem' });
+	// Insert > Equation is a split button; its arrow opens the built-in equations.
+	const more = editor.getByRole('button', { name: 'Built-In Equations', exact: true });
+	await reveal(editor, more);
+	await more.click();
+	await editor
+		.locator('.dve-equation-gallery')
+		.getByRole('menuitem', { name: 'Pythagorean Theorem', exact: true })
+		.click();
 	const equation = editor.locator('.ProseMirror [data-docx-equation]');
 	await expect(equation.locator('msup')).toHaveCount(3);
 
@@ -85,11 +91,25 @@ test('editing an existing equation, Linear and Professional, LaTeX input, Ink Eq
 	await equation.click();
 	const input = editor.getByRole('textbox', { name: 'Equation editor', exact: true });
 	await expect(input).toHaveValue('a^2+b^2=c^2');
+	// A display equation takes the caret too.
+	await expect(input).toBeFocused();
 	await input.press('End');
 	await input.pressSequentially('+d_i');
 	await expect(equation.locator('msub')).toHaveCount(1);
+	// Tab with no placeholder left keeps the caret in the equation.
+	await input.press('Tab');
+	await expect(input).toBeFocused();
 
 	const panel = editor.locator('[data-ribbon-tab="equation"]');
+	// Escape from a gallery gives the caret back to the equation.
+	const radical = panel.getByRole('button', { name: 'Radical', exact: true });
+	await reveal(editor, radical);
+	await radical.click();
+	await expect(radical).toHaveAttribute('aria-expanded', 'true');
+	await expect(editor.locator('.dve-equation-gallery [role="menuitem"]').first()).toBeFocused();
+	await page.keyboard.press('Escape');
+	await expect(input).toBeFocused();
+	await expect(radical).toHaveAttribute('aria-expanded', 'false');
 	const ink = panel.getByRole('button', { name: 'Ink Equation', exact: true });
 	await expect(ink).toBeDisabled();
 	await expect(ink).toHaveAttribute('title', /handwriting recognition/);
@@ -99,7 +119,8 @@ test('editing an existing equation, Linear and Professional, LaTeX input, Ink Eq
 	await convert.selectOption({ label: 'Current - Linear' });
 	await expect(equation.locator('msup')).toHaveCount(0);
 	let { xml } = await savedDocument(page, 'ui-equation-linear.docx');
-	expect(xml).toContain('<m:t>a^2+b^2=c^2+d_i</m:t>');
+	// Word's Linear: the text in runs, each build-up operator in a run of its own.
+	expect(xml).toContain('<m:r><m:t>^</m:t></m:r>');
 	await convert.selectOption({ label: 'Current - Professional' });
 	await expect(equation.locator('msup')).toHaveCount(3);
 
