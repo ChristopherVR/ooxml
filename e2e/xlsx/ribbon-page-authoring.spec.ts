@@ -37,7 +37,10 @@ test('edits print settings, worksheet background, note and header from the ribbo
 	await expect(surface).not.toHaveAttribute('data-sheet-background', '');
 
 	await band.getByRole('tab', { name: 'Review', exact: true }).click();
-	await clickRibbonControl(page, band.getByRole('button', { name: 'Notes', exact: true }));
+	await clickRibbonControl(
+		page,
+		band.locator('.ribbon-group[data-label="Notes"] button.ribbon-menu-button'),
+	);
 	await workbook.getByRole('menuitem', { name: 'New Note', exact: true }).click();
 	const note = workbook.locator('[data-dialog="note"]');
 	await note.getByLabel('Note', { exact: true }).fill('Review the assumptions');
