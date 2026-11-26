@@ -33,6 +33,8 @@ export interface RibbonOverflowOptions {
 	naturalWidth?: boolean;
 	/** Reserve room for painted (`::after`) group captions so they never run into the next group. */
 	reserveCaptions?: boolean;
+	/** Give these groups the last chance to stay expanded when space runs out. */
+	preferExpanded?(group: HTMLElement, panel: HTMLElement): boolean;
 }
 
 export interface RibbonOverflow {
@@ -165,8 +167,12 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		);
 		if (options.naturalWidth)
 			for (const group of groups) group.dataset.natural = String(Math.ceil(group.offsetWidth));
-		for (let at = groups.length - 1; at >= 0 && panel.scrollWidth > panel.clientWidth + 1; at--) {
-			const group = groups[at]!;
+		groups.reverse();
+		const preferExpanded = options.preferExpanded;
+		if (preferExpanded)
+			groups.sort((a, b) => Number(preferExpanded(a, panel)) - Number(preferExpanded(b, panel)));
+		for (const group of groups) {
+			if (panel.scrollWidth <= panel.clientWidth + 1) break;
 			let button = group.querySelector<HTMLButtonElement>(':scope > .ribbon-overflow-button');
 			if (!button) {
 				button = overflowButton(group);

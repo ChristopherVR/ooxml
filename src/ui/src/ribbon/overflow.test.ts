@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbonOverflow } from './overflow';
+import { createRibbonOverflow, type RibbonOverflowOptions } from './overflow';
 
-const overflow = createRibbonOverflow({
+const options = {
 	icon: (doc, name) => Object.assign(doc.createElement('i'), { textContent: name }),
 	groupIcons: { Font: 'font' },
 	fallbackIcon: 'more',
 	ribbon: '.ribbon',
 	command: 'button[data-command]',
-});
+} satisfies RibbonOverflowOptions;
+const overflow = createRibbonOverflow(options);
 
 /** jsdom has no layout: a panel that is `room` wide holding groups of 100 that overflow it. */
 function panel(room: number) {
@@ -67,6 +68,16 @@ describe('ribbon overflow', () => {
 		overflow.close();
 		expect(group.contains(run)).toBe(true);
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
+	});
+
+	it('keeps a preferred group expanded while a sibling can fold to make room', () => {
+		const { el, groups } = panel(150);
+		const preferred = createRibbonOverflow({
+			...options,
+			preferExpanded: (group) => group.dataset.label === 'Styles',
+		});
+		preferred.fitPanel(el);
+		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([true, false]);
 	});
 
 	it('consumes Escape while closing a dropdown from outside the ribbon', () => {

@@ -158,12 +158,12 @@
 	outline: 2px solid var(--blue);
 	outline-offset: -1px;
 }
-/* Arrange fits three labelled commands in the same height as the large ribbon controls. */
+/* Each Arrange stack fits three 24px targets above the group caption. */
 .ribbon-menu-inline {
 	flex-direction: row;
 	justify-content: flex-start;
 	width: auto;
-	height: 22px;
+	height: 24px;
 	padding: 0 5px;
 	gap: 5px;
 	white-space: nowrap;
@@ -202,8 +202,16 @@
 .ribbon-group .ribbon-stack button.ribbon-inline {
 	height: 22px;
 }
+.ribbon-group[data-label='Arrange']:not([data-collapsed]) {
+	max-width: none;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+}
+.ribbon-group[data-label='Arrange'] .ribbon-stack {
+	gap: 0;
+}
 .ribbon-group[data-label='Arrange'] .ribbon-stack button.ribbon-inline {
-	min-height: 22px;
+	height: 24px;
 }
 .ribbon-stack .ribbon-inline {
 	justify-content: flex-start;

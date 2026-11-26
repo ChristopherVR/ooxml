@@ -50,6 +50,7 @@ const overflow = createRibbonOverflow({
 	ribbon: '.dve-ribbon',
 	command: 'button[data-action]',
 	naturalWidth: true,
+	preferExpanded: (group, panel) => panel.clientWidth >= 1600 && group.dataset.label === 'Arrange',
 });
 
 export const fitPanel = overflow.fitPanel;

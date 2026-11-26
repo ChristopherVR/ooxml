@@ -103,14 +103,22 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 	const editor = await openShapes(page);
 	await editor.locator('.ProseMirror .dve-shape').first().click();
 	for (const [tab, width] of [
-		['Shape Format', 1800],
-		['Layout', 2600],
+		['Shape Format', 2000],
+		['Shape Format', 1600],
+		['Layout', 2000],
+		['Layout', 1600],
 		['Layout', 850],
 		['Layout', 390],
 	] as const) {
 		await page.setViewportSize({ width, height: 950 });
 		await editor.getByRole('tab', { name: tab, exact: true }).click();
-		await unfoldArrange(editor, tab);
+		if (width >= 1600) {
+			const panel = editor.getByRole('tabpanel', { name: tab, exact: true });
+			await expect(panel.locator('.ribbon-group[data-label="Arrange"]')).not.toHaveAttribute(
+				'data-collapsed',
+				'',
+			);
+		} else await unfoldArrange(editor, tab);
 		const group = editor.locator('.ribbon-group[data-label="Arrange"]:visible').filter({
 			has: page.getByRole('combobox', { name: 'Position', exact: true }),
 		});
@@ -120,6 +128,7 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 				group.evaluate((element) => {
 					const ribbon = element.closest('.ribbon-panel, .ribbon-overflow-panel')!;
 					const bounds = ribbon.getBoundingClientRect();
+					const groupBottom = element.getBoundingClientRect().bottom;
 					return [...element.querySelectorAll<HTMLElement>(':is(button, select)[data-arrange]')]
 						.filter((control) => control.getClientRects().length)
 						.filter((control) => {
@@ -128,7 +137,7 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 								left < bounds.left - 1 ||
 								right > bounds.right + 1 ||
 								top < bounds.top - 1 ||
-								bottom > bounds.bottom + 1
+								bottom > Math.min(bounds.bottom, groupBottom - 16) + 1
 							);
 						})
 						.map((control) => ({

@@ -58,12 +58,7 @@ export function textDirectionMenu() {
 }
 
 function arrangeButton(label: string, icon: RibbonIcon, key: 'pane' | 'alt') {
-	const control = tool(
-		label,
-		icon,
-		{ type: 'arrange', key, value: '' },
-		{ inline: key === 'pane', large: key === 'alt' },
-	);
+	const control = tool(label, icon, { type: 'arrange', key, value: '' }, { inline: true });
 	control.dataset.arrange = key;
 	return control;
 }
@@ -136,7 +131,7 @@ export function buildArrangeGroup(kind?: 'picture' | 'shape') {
 				['more', 'More Rotation Options'],
 			]),
 		),
-		arrangeButton('Alt Text', 'textBox', 'alt'),
+		stack(arrangeButton('Alt Text', 'textBox', 'alt')),
 	);
 }
 
