@@ -1,0 +1,52 @@
+/* Transparent, over the surface it draws on; only takes the pointer while a Draw tool is on. */
+:host {
+	position: absolute;
+	inset: 0;
+	display: none;
+	z-index: 3;
+	cursor: crosshair;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+:host([tool='pen']),
+:host([tool='pencil']),
+:host([tool='highlighter']),
+:host([tool='eraser']),
+:host([tool='lasso']) {
+	display: block;
+}
+/* Fingers scroll unless Draw with Touch is on; a pen or a mouse always draws. */
+:host(:not([touch])) {
+	touch-action: pan-x pan-y pinch-zoom;
+}
+:host([tool='eraser']) {
+	cursor: cell;
+}
+:host([tool='lasso']) {
+	cursor: default;
+}
+svg {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+}
+.live {
+	fill: none;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.lasso {
+	fill: none;
+	stroke: var(--office-accent);
+	stroke-width: 1;
+	stroke-dasharray: 4 3;
+}
+.eraser {
+	fill: none;
+	stroke: var(--office-foreground);
+	stroke-width: 1;
+}

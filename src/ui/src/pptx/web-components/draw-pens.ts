@@ -1,34 +1,14 @@
+import { INK_PEN_KINDS, MAX_INK_PENS, normalizeInkPens } from 'ooxml-core/drawingml';
 import type { DrawPenPreset, PptxDrawHostOptions } from '../render/draw-canvas';
 import type { RibbonDrawIntent, RibbonDrawViewState } from '../render/ribbon-draw-state';
 import { readStoredViewerPrefs, writeStoredViewerPrefs } from '../render/viewer-prefs-storage';
 
-const TYPES = ['pen', 'pencil', 'highlighter', 'actionPen'] satisfies DrawPenPreset['kind'][];
-const MAX_PRESETS = 12;
+const TYPES = INK_PEN_KINDS;
+const MAX_PRESETS = MAX_INK_PENS;
 
+/** The saved pens a deck can use: the shared gallery rules, with PowerPoint's 1 px minimum. */
 export function normalizeDrawPens(value: unknown): DrawPenPreset[] {
-	if (!Array.isArray(value)) {
-		return [];
-	}
-	return value.slice(0, MAX_PRESETS).flatMap((pen: unknown) => {
-		if (
-			!pen ||
-			typeof pen !== 'object' ||
-			!('kind' in pen) ||
-			!('color' in pen) ||
-			!('width' in pen)
-		) {
-			return [];
-		}
-		const kind = TYPES.find((type) => type === pen.kind);
-		return kind &&
-			typeof pen.color === 'string' &&
-			/^#[\da-f]{6}$/iu.test(pen.color) &&
-			typeof pen.width === 'number' &&
-			pen.width >= 1 &&
-			pen.width <= 16
-			? [{ kind, color: pen.color, width: pen.width }]
-			: [];
-	});
+	return normalizeInkPens(value).filter((pen) => pen.width >= 1);
 }
 
 export function createDrawPens(options: {

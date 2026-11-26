@@ -1,0 +1,176 @@
+/* The Draw tab's pen strip: each pen a tall toggle showing its colour and thickness. */
+:host {
+	display: inline-block;
+	vertical-align: top;
+	font: var(--office-font-size-sm) / var(--office-line-height) var(--office-font);
+	color: var(--office-foreground);
+}
+.strip {
+	display: flex;
+	align-items: stretch;
+	gap: 2px;
+	height: var(--office-command-large-height);
+}
+.pen {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	width: 28px;
+	padding: 2px 2px 8px;
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+.pen:hover:not(:disabled) {
+	background: var(--office-selected);
+}
+.pen[aria-pressed='true'] {
+	background: var(--office-command-active);
+	border-color: var(--office-accent);
+}
+.pen:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+	outline-offset: var(--office-focus-offset);
+}
+.pen:disabled {
+	cursor: default;
+	opacity: 0.45;
+}
+.pen svg {
+	display: block;
+	width: 20px;
+	height: 36px;
+	overflow: visible;
+}
+.paper {
+	/* Ink colours read against paper in every theme, as on the page they draw on. */
+	fill: var(--office-paper);
+	stroke: var(--office-control-border);
+	stroke-width: 1;
+}
+.more {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-top: 8px;
+	padding: 4px 2px;
+	cursor: pointer;
+}
+.more input {
+	width: 32px;
+	height: 22px;
+	padding: 0;
+	border: var(--office-border-width) solid var(--office-control-border);
+	background: transparent;
+}
+.pen .caret {
+	position: absolute;
+	left: 50%;
+	bottom: 1px;
+	width: 8px;
+	height: 5px;
+	translate: -50% 0;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.4;
+}
+.menu {
+	position: fixed;
+	z-index: var(--office-z-popover);
+	box-sizing: border-box;
+	width: 228px;
+	max-height: calc(100vh - 16px);
+	overflow: auto;
+	padding: 8px;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius-md);
+	background: var(--office-popover);
+	color: var(--office-popover-foreground);
+	box-shadow: var(--office-shadow-lg);
+}
+.menu[hidden] {
+	display: none;
+}
+.heading {
+	margin: 4px 2px 6px;
+	font-weight: var(--office-font-weight-bold);
+}
+.thicknesses {
+	display: grid;
+	grid-template-columns: repeat(5, 1fr);
+	gap: 4px;
+}
+.thickness,
+.swatch,
+.remove {
+	box-sizing: border-box;
+	border: var(--office-border-width) solid transparent;
+	border-radius: var(--office-radius-sm);
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+}
+.thickness {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 32px;
+}
+.thickness span {
+	display: block;
+	width: 26px;
+	border-radius: var(--office-radius-full);
+	background: currentColor;
+}
+.colors {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 4px;
+}
+.swatch {
+	height: 28px;
+	padding: 3px;
+}
+.swatch span {
+	display: block;
+	height: 100%;
+	border: var(--office-border-width) solid var(--office-control-border);
+	border-radius: var(--office-radius-full);
+}
+.thickness:hover,
+.swatch:hover,
+.remove:hover {
+	background: var(--office-selected);
+}
+.thickness[aria-checked='true'],
+.swatch[aria-checked='true'] {
+	border-color: var(--office-accent);
+}
+.thickness:focus-visible,
+.swatch:focus-visible,
+.remove:focus-visible {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
+.remove {
+	display: block;
+	width: 100%;
+	margin-top: 8px;
+	padding: 6px 8px;
+	text-align: start;
+	border-top-color: var(--office-border);
+}
+.remove:disabled {
+	cursor: default;
+	opacity: 0.45;
+}
+@media (forced-colors: active) {
+	.pen[aria-pressed='true'],
+	.thickness[aria-checked='true'],
+	.swatch[aria-checked='true'] {
+		border-color: Highlight;
+	}
+}

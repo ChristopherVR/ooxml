@@ -1,3 +1,4 @@
+import type { InkPen } from 'ooxml-core/drawingml';
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
 import type { ViewerMode } from '../types';
@@ -50,11 +51,7 @@ export function createDrawCanvasPort(
 	};
 }
 
-export interface DrawPenPreset {
-	kind: 'pencil' | 'pen' | 'highlighter' | 'actionPen';
-	color: string;
-	width: number;
-}
+export type DrawPenPreset = InkPen;
 
 export interface PptxDrawHostOptions {
 	penPreferences?: {
