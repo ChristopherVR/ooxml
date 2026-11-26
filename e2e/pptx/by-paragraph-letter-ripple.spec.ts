@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { waitForShowSettled } from './support/show';
 
 /**
  * A "By paragraph" text build whose effect also animates text "By letter".
@@ -35,7 +36,6 @@ async function loadDeck(page: Page): Promise<void> {
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator('[data-pptx-element="true"], [data-element-id]').first().waitFor();
-	await page.waitForTimeout(600);
 }
 
 async function startShow(page: Page): Promise<void> {
@@ -78,10 +78,14 @@ test.describe('by-paragraph build that ripples by letter (PowerPoint-authored)',
 	}) => {
 		await loadDeck(page);
 		await startShow(page);
-		await page.waitForTimeout(600);
+		await waitForShowSettled(page);
 		// Paragraph 1 is On Click.
 		await page.keyboard.press('ArrowRight');
-		await page.waitForTimeout(300);
+		await expect
+			.poll(async () => delaysFor(await buildPieces(page), 0)[0], {
+				message: 'the click starts the first paragraph',
+			})
+			.toBeDefined();
 
 		const pieces = await buildPieces(page);
 		const charIds = Object.keys(pieces).filter((id) => /::c\d+-\d+$/u.test(id));

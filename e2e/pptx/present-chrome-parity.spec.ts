@@ -29,6 +29,7 @@ import type { Page } from '@playwright/test';
 import { PRESENT_TOOLBAR_ORDER } from '../../src/ui/src/pptx/render/present-chrome';
 import { fixture, loadDeckAt } from './support/deck';
 import { acrossFrameworks, splitReference } from './support/parity';
+import { startPresenting, waitForShowSettled } from './support/show';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -53,16 +54,11 @@ interface ToolbarProbe {
 /** Load the deck, start the show, and wake any auto-hiding chrome. */
 async function startShow(page: Page, origin: string): Promise<void> {
 	await loadDeckAt(page, origin, DECK);
-	await page.waitForTimeout(800);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(1500);
+	await startPresenting(page);
 	// The bar auto-hides until the pointer moves, in every binding that has one.
 	await page.mouse.move(720, 870);
 	await page.mouse.move(721, 868);
-	await page.waitForTimeout(400);
+	await waitForShowSettled(page);
 }
 
 async function probeToolbar(page: Page): Promise<ToolbarProbe> {

@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { startShowOnSlide, waitForShowSettled } from './support/show';
 
 /** Real deck: 1280x720, slides 3-14 each carry a `p159:morph` transition. */
 const deck = resolve(fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)));
@@ -53,35 +53,15 @@ const VIEWPORT = { width: 1920, height: 1080 };
  */
 const BAND = { x: NATIVE_WIDTH + 20, y: 60, width: 560, height: 900 };
 
-/** The 5 MB deck embeds a video; give the parse room on CI. */
-const LOAD_TIMEOUT_MS = 60_000;
-
 test.use({ viewport: VIEWPORT });
 
-async function startShowOnSlide(
+async function startShow(
 	page: Page,
 	slideNumber: number,
 	file = deck,
 	slideCount = 14,
 ): Promise<void> {
-	// Forget any restored session first, or the deck reopens and the landing
-	// dropzone (the only place #file-input exists) never mounts.
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(file);
-	await page
-		.locator(`[aria-label="Go to slide ${slideCount}"]`)
-		.first()
-		.waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
-	await page.locator(`[aria-label="Go to slide ${slideNumber}"]`).first().click();
-	await page.waitForTimeout(900);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	// Fullscreen + the opening build settle before the first sample.
-	await page.waitForTimeout(2000);
+	await startShowOnSlide(page, file, slideNumber, slideCount);
 }
 
 /**
@@ -177,7 +157,7 @@ test('a slide transition animates across the whole display, not just the deck-si
 	page,
 	context,
 }) => {
-	await startShowOnSlide(page, 3);
+	await startShow(page, 3);
 
 	// `animations: 'allow'` is essential: Playwright's default freezes CSS
 	// animations for screenshots, which would make every sample identical and
@@ -190,7 +170,7 @@ test('a slide transition animates across the whole display, not just the deck-si
 	for (let i = 0; i < 8; i++) {
 		burst.push(await shot());
 	}
-	await page.waitForTimeout(2000);
+	await waitForShowSettled(page);
 	const after = await shot();
 
 	const scratch = await context.newPage();
@@ -233,14 +213,16 @@ test('a slide transition animates across the whole display, not just the deck-si
 });
 
 test('the transition layers cover the whole slide stage', async ({ page }) => {
-	await startShowOnSlide(page, 1, classicDeck, 4);
+	await startShow(page, 1, classicDeck, 4);
 
 	// Record the biggest transition-layer box seen while the change plays. The
 	// layers are mounted only for the duration of the transition.
 	await page.evaluate(() => {
-		const store: { layer: number[][]; stage: number[] | null } = { layer: [], stage: null };
+		const store: { layer: number[][]; stage: number[] | null; stop?: boolean } = {
+			layer: [],
+			stage: null,
+		};
 		(window as unknown as { __pptxLayerProbe: typeof store }).__pptxLayerProbe = store;
-		const started = performance.now();
 		const sample = (): void => {
 			for (const node of document.querySelectorAll('[data-pptx-transition-layer]')) {
 				const r = node.getBoundingClientRect();
@@ -252,14 +234,29 @@ test('the transition layers cover the whole slide stage', async ({ page }) => {
 			if (stages && (!store.stage || stages.width > store.stage[0])) {
 				store.stage = [Math.round(stages.width), Math.round(stages.height)];
 			}
-			if (performance.now() - started < 2500) {
+			if (!store.stop) {
 				requestAnimationFrame(sample);
 			}
 		};
 		requestAnimationFrame(sample);
 	});
 	await page.keyboard.press('ArrowRight');
-	await page.waitForTimeout(2800);
+	// Sample until the transition has come and gone, rather than for a fixed time.
+	await expect
+		.poll(
+			() =>
+				page.evaluate(
+					() =>
+						(window as unknown as { __pptxLayerProbe: { layer: unknown[] } }).__pptxLayerProbe.layer
+							.length,
+				),
+			{ message: 'the transition mounts its layers', timeout: 10_000 },
+		)
+		.toBeGreaterThan(0);
+	await waitForShowSettled(page);
+	await page.evaluate(() => {
+		(window as unknown as { __pptxLayerProbe: { stop?: boolean } }).__pptxLayerProbe.stop = true;
+	});
 
 	const probe = await page.evaluate(
 		() =>

@@ -32,58 +32,15 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { goToSlide, openDeckFile, shownSlideNumber, startShowOnSlide } from './support/show';
 
 const fixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)),
 );
 
-/** The deck is 5 MB with a real video; give the initial parse room on CI. */
-const LOAD_TIMEOUT_MS = 60_000;
-
-/**
- * 1-based slide the show is on, read off the `ppt/slides/slideN.xml-…` element
- * ids of the largest painted stage. Slide counters differ per binding; element
- * ids do not.
- */
-async function visibleSlideNumber(page: Page): Promise<number> {
-	return page.evaluate(() => {
-		const stages = [...document.querySelectorAll('[aria-roledescription="slide"]')]
-			.filter((node) => node.getBoundingClientRect().width > 300)
-			.sort((a, b) => b.getBoundingClientRect().width - a.getBoundingClientRect().width);
-		for (const stage of stages) {
-			const tally = new Map<number, number>();
-			for (const node of stage.querySelectorAll('[data-element-id]')) {
-				const match = (node.getAttribute('data-element-id') ?? '').match(/slide(\d+)\.xml/u);
-				if (match) {
-					tally.set(Number(match[1]), (tally.get(Number(match[1])) ?? 0) + 1);
-				}
-			}
-			const top = [...tally.entries()].sort((a, b) => b[1] - a[1])[0];
-			if (top) {
-				return top[0];
-			}
-		}
-		return 0;
-	});
-}
-
 /** Load the deck, park on slide 3 (the first morph slide), start the show. */
 async function startShowOnWheel(page: Page): Promise<void> {
-	// Forget any restored session first, or the deck reopens and the landing
-	// dropzone (the only place #file-input exists) never mounts.
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(fixturePath);
-	await page.locator('[aria-label="Go to slide 14"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
-	await page.locator('[aria-label="Go to slide 3"]').first().click();
-	await page.waitForTimeout(700);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(1600);
+	await startShowOnSlide(page, fixturePath, 3, 14);
 }
 
 /** Click the centre of a rendered element on the topmost (show) stage. */
@@ -96,14 +53,14 @@ async function clickElement(page: Page, elementId: string): Promise<void> {
 test.describe('slide-show action clicks', () => {
 	test('a wheel slice jumps to ITS slide instead of advancing the show', async ({ page }) => {
 		await startShowOnWheel(page);
-		expect(await visibleSlideNumber(page)).toBe(3);
+		expect(await shownSlideNumber(page)).toBe(3);
 
 		// "Free-form: Shape 174" carries `ppaction://hlinksldjump` -> slide9.xml.
 		// Advancing would land on slide 4, which is what every non-React binding
 		// used to do.
 		await clickElement(page, 'ppt/slides/slide3.xml-shape-4');
 		await expect
-			.poll(async () => visibleSlideNumber(page), {
+			.poll(async () => shownSlideNumber(page), {
 				message: 'the slice jumps to its own slide',
 				timeout: 8000,
 			})
@@ -114,12 +71,12 @@ test.describe('slide-show action clicks', () => {
 		await startShowOnWheel(page);
 		// "TextBox 206" -> slide4.xml.
 		await clickElement(page, 'ppt/slides/slide3.xml-shape-20');
-		await expect.poll(async () => visibleSlideNumber(page), { timeout: 8000 }).toBe(4);
+		await expect.poll(async () => shownSlideNumber(page), { timeout: 8000 }).toBe(4);
 
 		await startShowOnWheel(page);
 		// "Rectangle 4" ("Explore solution") -> slide12.xml.
 		await clickElement(page, 'ppt/slides/slide3.xml-shape-26');
-		await expect.poll(async () => visibleSlideNumber(page), { timeout: 8000 }).toBe(12);
+		await expect.poll(async () => shownSlideNumber(page), { timeout: 8000 }).toBe(12);
 	});
 
 	test('the decorative ring over the wheel does not swallow the click', async ({ page }) => {
@@ -171,7 +128,7 @@ test.describe('slide-show action clicks', () => {
 		// A far corner of the stage carries only the background picture.
 		await page.mouse.click(60, 700);
 		await expect
-			.poll(async () => visibleSlideNumber(page), {
+			.poll(async () => shownSlideNumber(page), {
 				message: 'click-to-advance still works on scenery',
 				timeout: 8000,
 			})
@@ -179,18 +136,10 @@ test.describe('slide-show action clicks', () => {
 	});
 
 	test('a slide authored advClick="0" advTm still advances on its timer', async ({ page }) => {
-		// Forget any restored session first, or the deck reopens and the landing
-		// dropzone (the only place #file-input exists) never mounts.
-		await resetTabSession(page);
-		await page.goto('/');
-		await page.locator('#file-input').setInputFiles(fixturePath);
-		await page
-			.locator('[aria-label="Go to slide 14"]')
-			.first()
-			.waitFor({ timeout: LOAD_TIMEOUT_MS });
-		await page.waitForTimeout(1200);
-		await page.locator('[aria-label="Go to slide 1"]').first().click();
-		await page.waitForTimeout(600);
+		await openDeckFile(page, fixturePath, 14);
+		await goToSlide(page, 1);
+		// Not `startPresenting`: the 10 ms timer may advance the slide, transition
+		// and all, before the show has settled on slide 1.
 		await page
 			.getByRole('button', { name: /^present$|slide show/iu })
 			.first()
@@ -199,7 +148,7 @@ test.describe('slide-show action clicks', () => {
 		// Slide 1 is `advClick="0" advTm="10"`: a click must NOT advance it, but
 		// the 10 ms timer must, so the show never sits there unresponsive.
 		await expect
-			.poll(async () => visibleSlideNumber(page), {
+			.poll(async () => shownSlideNumber(page), {
 				message: 'the authored 10 ms timing advances the slide',
 				timeout: 8000,
 			})

@@ -32,12 +32,10 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import { startShowOnSlide } from './support/show';
 
 const deck = resolve(fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)));
-
-/** The 5 MB deck embeds a video; give the parse room on CI. */
-const LOAD_TIMEOUT_MS = 60_000;
 
 /** Wheel slide carrying the "Explore solution" button, and its destination. */
 const WHEEL_SLIDE = 3;
@@ -93,20 +91,7 @@ const SCALE_EPSILON = 0.001;
 const SCALE_TOLERANCE = 0.006;
 
 async function startShowOnWheelSlide(page: Page): Promise<void> {
-	// Forget any restored session first, or the deck reopens and the landing
-	// dropzone (the only place #file-input exists) never mounts.
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(deck);
-	await page.locator('[aria-label="Go to slide 14"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
-	await page.locator(`[aria-label="Go to slide ${WHEEL_SLIDE}"]`).first().click();
-	await page.waitForTimeout(900);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(2000);
+	await startShowOnSlide(page, deck, WHEEL_SLIDE, 14);
 }
 
 /**
@@ -170,7 +155,7 @@ async function scrubTo(page: Page, fraction: number): Promise<void> {
 			animation.currentTime = typeof duration === 'number' ? duration * f : 0;
 		}
 	}, fraction);
-	await page.waitForTimeout(120);
+	await nextPaint(page);
 }
 
 /**
@@ -266,7 +251,7 @@ test.describe('issue #148 - morphing a picture scale', () => {
 				animation.cancel();
 			}
 		});
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 		const settled = await imageScalesOf(page, ARRIVING_BACKDROP);
 
 		expect(animated.length).toBeGreaterThan(0);

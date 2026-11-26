@@ -36,6 +36,8 @@ import {
 } from '../../src/ui/src/pptx/render/presenter-chrome';
 import { fixture, loadDeckAt } from './support/deck';
 import { acrossFrameworks, splitReference } from './support/parity';
+import { nextPaint } from './support/render-ready';
+import { waitForShowSettled } from './support/show';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 // The reference project loads and presents five real decks in one comparison.
@@ -104,12 +106,11 @@ interface ConsoleProbe {
  */
 async function openPresenterView(page: Page, origin: string, deck: string = DECK): Promise<void> {
 	await loadDeckAt(page, origin, deck);
-	await page.waitForTimeout(800);
 	await page
 		.getByRole('button', { name: /^present$|slide show/iu })
 		.first()
 		.click({ force: true });
-	await page.waitForTimeout(1200);
+	await waitForShowSettled(page);
 	// The show bar auto-hides until the pointer moves. Measured off the live
 	// viewport rather than hard-coded: a phone viewport is narrower than the
 	// desktop x the two moves used to use, so the pointer landed outside the
@@ -119,11 +120,14 @@ async function openPresenterView(page: Page, origin: string, deck: string = DECK
 	const revealY = Math.round(view.height - 40);
 	await page.mouse.move(revealX, revealY);
 	await page.mouse.move(revealX + 1, revealY - 2);
-	await page.waitForTimeout(400);
+	// The bar fades in; a forced click on a bar still fading would reach the stage.
+	await page.locator('[data-pptx-present-control="presenter-view"]').first().waitFor();
+	await waitForShowSettled(page);
 	// `force`: the bar sits over the stage, which owns pointer events in some
 	// bindings, and this spec is not measuring hit-testing.
 	await page.locator('[data-pptx-present-control="presenter-view"]').first().click({ force: true });
-	await page.waitForTimeout(1500);
+	await page.locator('[data-pptx-presenter-control]').first().waitFor();
+	await nextPaint(page);
 }
 
 async function probeConsole(page: Page): Promise<ConsoleProbe> {

@@ -31,6 +31,7 @@ import type { Locator, Page } from '@playwright/test';
 import { savePptxViaBackstage } from './save-pptx';
 import { resetTabSession } from './support/deck';
 import { validatePptxIntegrity } from './support/pptx-integrity';
+import { nextPaint, selectRibbonTab } from './support/render-ready';
 
 const gifFixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/test-image.gif', import.meta.url)),
@@ -44,10 +45,22 @@ const outputDir = fileURLToPath(
 
 /** Switch to the Insert ribbon tab. */
 async function switchToInsertTab(page: Page): Promise<void> {
-	const toolbar = page.getByRole('toolbar', { name: 'Presentation toolbar' });
-	const insertTab = toolbar.getByRole('tab', { name: 'Insert', exact: true });
-	await insertTab.click();
-	await page.waitForTimeout(300);
+	await selectRibbonTab(page, 'Insert');
+}
+
+/** Elements on the main canvas, so an insertion can be waited for rather than slept on. */
+function canvasElementCount(page: Page): Promise<number> {
+	return page.locator('[data-pptx-viewport] [data-pptx-element="true"]').count();
+}
+
+/** Run an insertion and wait until the canvas has more elements than before it. */
+async function insertsElement(page: Page, insert: () => Promise<void>): Promise<void> {
+	const before = await canvasElementCount(page);
+	await insert();
+	await expect
+		.poll(() => canvasElementCount(page), { message: 'the insertion adds an element' })
+		.toBeGreaterThan(before);
+	await nextPaint(page);
 }
 
 /** Insert the rectangle exposed by the current shape picker state. */
@@ -59,8 +72,7 @@ async function addRectangleShape(page: Page): Promise<void> {
 		rectangle = page.getByRole('menuitem', { name: /Rectangle/iu }).first();
 	}
 	await expect(rectangle).toBeVisible();
-	await rectangle.click();
-	await page.waitForTimeout(500);
+	await insertsElement(page, () => rectangle.click());
 }
 
 /** Insert a SmartArt via the dialog. Picks the first preset in 'list' category. */
@@ -74,9 +86,11 @@ async function addSmartArt(page: Page): Promise<void> {
 	const presetButton = smartArtDialog.getByRole('option').first();
 	await expect(presetButton).toBeVisible();
 	await presetButton.click();
-	await page.waitForTimeout(200);
-	await smartArtDialog.getByRole('button', { name: /^Insert$/iu }).click();
-	await page.waitForTimeout(500);
+	await nextPaint(page);
+	await insertsElement(page, () =>
+		smartArtDialog.getByRole('button', { name: /^Insert$/iu }).click(),
+	);
+	await expect(dialog).toBeHidden();
 }
 
 /** Insert an image by setting the hidden file input. */
@@ -91,16 +105,16 @@ async function addGifImage(page: Page): Promise<void> {
 		.click();
 	await page.getByRole('menuitem', { name: 'This Device...', exact: true }).click();
 	const chooser = await chooserPromise;
-	await chooser.setFiles(gifFixturePath);
-	await page.waitForTimeout(500);
+	await insertsElement(page, () => chooser.setFiles(gifFixturePath));
 }
 
 /** Click the Table button to insert a default 3x3 table. */
 async function addTable(page: Page): Promise<void> {
 	await switchToInsertTab(page);
 	await page.getByRole('button', { name: /Table/iu }).first().click();
-	await page.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click();
-	await page.waitForTimeout(500);
+	await insertsElement(page, () =>
+		page.getByRole('menuitem', { name: 'Insert Table...', exact: true }).click(),
+	);
 }
 
 /** Double-click a table cell and type text into it. */
@@ -112,7 +126,7 @@ async function editTableCell(page: Page, text: string): Promise<void> {
 		.filter({ has: page.locator('table') });
 	if (await tableElement.isVisible({ timeout: 3000 }).catch(() => false)) {
 		await selectElement(tableElement.first());
-		await page.waitForTimeout(300);
+		await nextPaint(page);
 	}
 
 	// Dispatch directly to the main-canvas cell so overlapping inserted elements
@@ -120,14 +134,14 @@ async function editTableCell(page: Page, text: string): Promise<void> {
 	const cell = page.locator('[data-pptx-viewport] td').first();
 	await cell.waitFor({ timeout: 5000 });
 	await cell.dispatchEvent('dblclick', { button: 0, clientX: 1, clientY: 1 });
-	await page.waitForTimeout(300);
 
 	// Type into the cell input
 	const input = page.locator('[data-pptx-viewport] td [data-table-cell-editor]');
 	await expect(input).toBeVisible({ timeout: 3000 });
 	await input.fill(text);
 	await page.keyboard.press('Escape');
-	await page.waitForTimeout(300);
+	await expect(input).toHaveCount(0);
+	await expect(cell).toContainText(text);
 }
 
 /** Ensure the shared properties inspector is visible. */
@@ -168,17 +182,17 @@ test.describe('save corruption reproduction', () => {
 
 		// Deselect by pressing Escape
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 2. Add first SmartArt
 		await addSmartArt(page);
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 3. Add second SmartArt
 		await addSmartArt(page);
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 4. Edit first SmartArt (select then double-click to inline-edit)
 		// SmartArt elements stack at the same position, so we use force: true
@@ -191,7 +205,7 @@ test.describe('save corruption reproduction', () => {
 		await expect(smartArtElements).toHaveCount(2);
 
 		await selectElement(smartArtElements.first());
-		await page.waitForTimeout(300);
+		await nextPaint(page);
 		const inspector = await openInspector(page);
 		const firstNode = inspector.locator('[data-testid="smartart-node-text"]').first();
 		await expect(firstNode).toBeVisible();
@@ -201,11 +215,11 @@ test.describe('save corruption reproduction', () => {
 
 		// Deselect
 		await canvas.click({ position: { x: 10, y: 10 }, force: true });
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 5. Edit second SmartArt
 		await selectElement(smartArtElements.nth(1));
-		await page.waitForTimeout(300);
+		await nextPaint(page);
 		const secondNode = inspector.locator('[data-testid="smartart-node-text"]').first();
 		await expect(secondNode).toBeVisible();
 		await secondNode.fill('SmartArt Two');
@@ -214,20 +228,18 @@ test.describe('save corruption reproduction', () => {
 
 		// Deselect
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 6. Add a GIF image
 		await addGifImage(page);
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(200);
+		await nextPaint(page);
 
 		// 7. Add a table
 		await addTable(page);
-		await page.waitForTimeout(300);
 
 		// 8. Edit a table cell
 		await editTableCell(page, 'Test Content');
-		await page.waitForTimeout(200);
 
 		// 9. Save the file through the File backstage's sidebar "Save" entry
 		// (shared helper; identical flow in every binding).

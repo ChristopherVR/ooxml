@@ -30,14 +30,12 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import { goToSlide, openDeckFile, startShowOnSlide, waitForShowSettled } from './support/show';
 
 const fixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)),
 );
-
-/** The deck is 5 MB with a real video; give the initial parse room on CI. */
-const LOAD_TIMEOUT_MS = 60_000;
 
 /**
  * The slide-2 overlay rectangle ("Rectangle 49"), keyed by the core-assigned
@@ -50,13 +48,7 @@ const OVERLAY_RGB = [132, 226, 145] as const;
 
 async function loadDeck(page: Page): Promise<void> {
 	await page.setViewportSize({ width: 1600, height: 1000 });
-	// Forget any restored session first, or the deck reopens and the landing
-	// dropzone (the only place #file-input exists) never mounts.
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(fixturePath);
-	await page.locator('[aria-label="Go to slide 14"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
+	await openDeckFile(page, fixturePath, 14);
 }
 
 /**
@@ -123,8 +115,12 @@ async function samplePixels(
 test.describe('solution-explorer.pptx: transparent overlay + timed advance', () => {
 	test('a fully transparent overlay does not paint over the slide', async ({ page }) => {
 		await loadDeck(page);
-		await page.locator('[aria-label="Go to slide 2"]').first().click();
-		await page.waitForTimeout(1500);
+		await goToSlide(page, 2);
+		await page
+			.locator(`[data-pptx-viewport] [data-element-id="${OVERLAY_ID}"]`)
+			.first()
+			.waitFor({ state: 'attached' });
+		await nextPaint(page);
 
 		// DOM truth: `<a:alpha val="0"/>` must survive into the painted colour.
 		const overlayAlpha = await page.evaluate((id) => {
@@ -181,8 +177,15 @@ test.describe('solution-explorer.pptx: transparent overlay + timed advance', () 
 			.getByRole('button', { name: /^present$|slide show/iu })
 			.first()
 			.click();
-		// Slide 1 is `advTm="10"`; allow generously for fullscreen + first paint.
-		await page.waitForTimeout(3000);
+		// Slide 1 is `advTm="10"`: wait for the show to leave it, then for the
+		// transition onto slide 2 to finish.
+		await expect
+			.poll(() => presentedSlideNumber(page), {
+				message: 'the show left slide 1 on its authored timing',
+				timeout: 15_000,
+			})
+			.toBeGreaterThan(1);
+		await waitForShowSettled(page);
 	}
 
 	test('a slide that forbids click-advance still advances on its authored timing', async ({
@@ -213,8 +216,10 @@ test.describe('solution-explorer.pptx: transparent overlay + timed advance', () 
 		// (see `advanceFromClick`'s doc comment: "Keyboard ... never gated"), so
 		// use it to reach a slide with no click-trigger of its own before
 		// asserting on CLICK behaviour specifically.
+		const onTimedSlide = await presentedSlideNumber(page);
 		await page.keyboard.press('ArrowRight');
-		await page.waitForTimeout(1200);
+		await expect.poll(() => presentedSlideNumber(page)).toBeGreaterThan(onTimedSlide);
+		await waitForShowSettled(page);
 		const before = await presentedSlideNumber(page);
 
 		// A click on a slide that DOES allow click-advance must move the show on.
@@ -222,8 +227,14 @@ test.describe('solution-explorer.pptx: transparent overlay + timed advance', () 
 		// animation builds, so allow a few before calling it stuck.
 		for (let attempt = 0; attempt < 4; attempt += 1) {
 			await page.mouse.click(1500, 900);
-			await page.waitForTimeout(1400);
-			if ((await presentedSlideNumber(page)) > before) {
+			const moved = await expect
+				.poll(() => presentedSlideNumber(page), { timeout: 1400 })
+				.toBeGreaterThan(before)
+				.then(
+					() => true,
+					() => false,
+				);
+			if (moved) {
 				break;
 			}
 		}
@@ -251,33 +262,20 @@ test.describe('solution-explorer.pptx: transparent overlay + timed advance', () 
 	 */
 	test('a morph departing layer does not paint a slide background', async ({ page }) => {
 		await page.setViewportSize({ width: 1920, height: 1080 });
-		// Forget any restored session first, or the deck reopens and the landing
-		// dropzone (the only place #file-input exists) never mounts.
-		await resetTabSession(page);
-		await page.goto('/');
-		await page.locator('#file-input').setInputFiles(fixturePath);
-		await page
-			.locator('[aria-label="Go to slide 14"]')
-			.first()
-			.waitFor({ timeout: LOAD_TIMEOUT_MS });
-		await page.waitForTimeout(1200);
 		// Slides 3-14 each carry a `p159:morph`; step 3 -> 4.
-		await page.locator('[aria-label="Go to slide 3"]').first().click();
-		await page.waitForTimeout(900);
-		await page
-			.getByRole('button', { name: /^present$|slide show/iu })
-			.first()
-			.click();
-		await page.waitForTimeout(2500);
+		await startShowOnSlide(page, fixturePath, 3, 14);
 
 		// Arm the in-page sampler, then advance.
 		await page.evaluate(() => {
-			const state: { sawLayer: boolean; opaque: { cls: string; bg: string }[] } = {
+			const state: {
+				sawLayer: boolean;
+				opaque: { cls: string; bg: string }[];
+				stop?: boolean;
+			} = {
 				sawLayer: false,
 				opaque: [],
 			};
 			(window as unknown as { __morphProbe: typeof state }).__morphProbe = state;
-			const deadline = performance.now() + 2500;
 			const sample = (): void => {
 				// Scope strictly to the DEPARTING layer. The overlay also holds an
 				// incoming layer, whose slide background is legitimate (it is the
@@ -308,14 +306,28 @@ test.describe('solution-explorer.pptx: transparent overlay + timed advance', () 
 					};
 					walk(layer);
 				}
-				if (performance.now() < deadline) {
+				if (!state.stop) {
 					requestAnimationFrame(sample);
 				}
 			};
 			requestAnimationFrame(sample);
 		});
 		await page.keyboard.press('ArrowRight');
-		await page.waitForTimeout(2600);
+		// Sample until the morph has come and gone, rather than for a fixed time.
+		await expect
+			.poll(
+				() =>
+					page.evaluate(
+						() =>
+							(window as unknown as { __morphProbe: { sawLayer: boolean } }).__morphProbe.sawLayer,
+					),
+				{ message: 'the morph mounted a transition overlay', timeout: 10_000 },
+			)
+			.toBe(true);
+		await waitForShowSettled(page);
+		await page.evaluate(() => {
+			(window as unknown as { __morphProbe: { stop?: boolean } }).__morphProbe.stop = true;
+		});
 
 		const probe = await page.evaluate(
 			() =>

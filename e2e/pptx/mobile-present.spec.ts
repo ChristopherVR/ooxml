@@ -19,7 +19,6 @@ test('entering presentation mode with a selection does not leak edit chrome', as
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator('[data-pptx-element="true"]').first().waitFor();
-	await page.waitForTimeout(400);
 
 	// Select a shape and verify its shared rotate handle is visible in edit mode.
 	await page.locator('[data-pptx-element="true"]').last().tap();
@@ -34,7 +33,6 @@ test('entering presentation mode with a selection does not leak edit chrome', as
 		.getByRole('button', { name: /present|slide show/iu })
 		.first()
 		.tap();
-	await page.waitForTimeout(700);
 
 	// Presentation controls are up...
 	await expect(page.getByRole('button', { name: /next slide/iu }).first()).toBeVisible();

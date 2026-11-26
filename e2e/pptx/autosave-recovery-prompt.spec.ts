@@ -36,6 +36,7 @@ import {
 	viewport,
 	zoomFitButton,
 } from './support/deck';
+import { nextPaint } from './support/render-ready';
 
 const LONG_FILE_NAME =
 	'Quarterly-review-with-a-deliberately-unbroken-and-very-long-public-document-name-2026.pptx';
@@ -169,16 +170,13 @@ async function countSnapshots(page: Page): Promise<number> {
 
 /** Poll until autosave has written at least one snapshot. */
 async function waitForSnapshot(page: Page): Promise<boolean> {
-	const deadline = Date.now() + SNAPSHOT_TIMEOUT_MS;
-	for (;;) {
-		if ((await countSnapshots(page)) > 0) {
-			return true;
-		}
-		if (Date.now() > deadline) {
-			return false;
-		}
-		await page.waitForTimeout(1_000);
-	}
+	return expect
+		.poll(() => countSnapshots(page), { timeout: SNAPSHOT_TIMEOUT_MS })
+		.toBeGreaterThan(0)
+		.then(
+			() => true,
+			() => false,
+		);
 }
 
 /**
@@ -337,15 +335,18 @@ test.describe('crash-recovery prompt', () => {
  */
 test.describe('a read-only session', () => {
 	test('writes no recovery snapshot until something is actually edited', async ({ page }) => {
+		// A fake clock, running at normal speed, so `settleAutosave` can fire
+		// every timer that is due instead of sleeping through the cadence.
+		await page.clock.install();
 		await loadDeck(page, SAMPLE_DECK);
 		// A load on its own. Two bindings failed here, before any interaction.
-		await page.waitForTimeout(SETTLE_MS);
+		await settleAutosave(page);
 		expect(await countSnapshots(page), 'opening a deck is not editing it').toBe(0);
 
 		// Navigation. The reported symptom: one thumbnail click was enough.
 		await thumbnail(page, 3).click();
 		await thumbnail(page, 1).click();
-		await page.waitForTimeout(SETTLE_MS);
+		await settleAutosave(page);
 		expect(await countSnapshots(page), 'selecting a slide is navigation, not an edit').toBe(0);
 
 		// The neighbours: scrolling, zooming, switching ribbon tabs, selecting an
@@ -360,7 +361,7 @@ test.describe('a read-only session', () => {
 		// real edit and would make the assertions below meaningless.
 		await page.keyboard.press('Escape');
 		await zoomFitButton(page).click();
-		await page.waitForTimeout(SETTLE_MS);
+		await settleAutosave(page);
 		expect(await countSnapshots(page), 'reading the deck is not editing it').toBe(0);
 
 		await page
@@ -370,7 +371,7 @@ test.describe('a read-only session', () => {
 		await page.locator('[data-pptx-presenting]').first().waitFor({ timeout: 30_000 });
 		await page.keyboard.press('ArrowRight');
 		await page.keyboard.press('Escape');
-		await page.waitForTimeout(SETTLE_MS);
+		await settleAutosave(page);
 		expect(await countSnapshots(page), 'presenting a deck is not editing it').toBe(0);
 
 		// And the control: the moment there IS an edit, a snapshot must appear, or
@@ -381,7 +382,25 @@ test.describe('a read-only session', () => {
 });
 
 /**
- * Long enough for a snapshot to land if one was going to. The demos pass a 2s
- * `autosaveIntervalMs`, and the polling engines need a whole tick.
+ * Long enough for a snapshot to land if one was going to: the demos pass a 2s
+ * `autosaveIntervalMs`, and the engine arms one timer at the first unsaved edit.
  */
 const SETTLE_MS = 5_000;
+
+/**
+ * Let any snapshot that was going to land, land, without sleeping for it.
+ *
+ * The fake clock then runs every timer due within {@link SETTLE_MS} at once. An
+ * armed autosave tick sets the engine's status to "saving" in the same
+ * callback that starts the write, so afterwards a write is either still
+ * running (the save indicator reads "Saving…", which this waits out) or done
+ * (the store holds it). Either way the count that follows sees it.
+ */
+async function settleAutosave(page: Page): Promise<void> {
+	// Let the last interaction's render and effects run first: some bindings
+	// arm the timer from an effect that follows the paint.
+	await nextPaint(page);
+	await page.clock.runFor(SETTLE_MS);
+	await nextPaint(page);
+	await expect(page.getByText(/^Saving…/u)).toHaveCount(0, { timeout: SNAPSHOT_TIMEOUT_MS });
+}

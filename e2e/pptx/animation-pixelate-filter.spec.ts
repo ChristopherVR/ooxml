@@ -35,6 +35,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { fixture, loadDeck } from './support/deck';
+import { waitForShowSettled } from './support/show';
 
 const PIXELATE_DECK = fixture('pixelate-filter.pptx');
 
@@ -44,7 +45,7 @@ async function startShow(page: Page): Promise<void> {
 		.getByRole('button', { name: /^present$|slide show/iu })
 		.first()
 		.click();
-	await page.waitForTimeout(600);
+	await waitForShowSettled(page);
 }
 
 /**

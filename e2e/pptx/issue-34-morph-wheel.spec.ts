@@ -24,7 +24,8 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import { goToSlide, openDeckFile, waitForShowSettled } from './support/show';
 
 const deck = resolve(fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)));
 
@@ -58,13 +59,8 @@ interface Centre {
 }
 
 async function startShowOnTopicSlide(page: Page): Promise<void> {
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(deck);
-	await page.locator('[aria-label="Go to slide 14"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
-	await page.locator(`[aria-label="Go to slide ${TOPIC_SLIDE}"]`).first().click();
-	await page.waitForTimeout(900);
+	await openDeckFile(page, deck, 14);
+	await goToSlide(page, TOPIC_SLIDE);
 	await page
 		.getByRole('button', { name: /^present$|slide show/iu })
 		.first()
@@ -81,7 +77,7 @@ async function startShowOnTopicSlide(page: Page): Promise<void> {
 		{ timeout: LOAD_TIMEOUT_MS },
 	);
 	await page.mouse.move(4, 4);
-	await page.waitForTimeout(600);
+	await waitForShowSettled(page);
 }
 
 /** Every wedge's centre on the settled slide, before the morph starts. */
@@ -161,7 +157,7 @@ async function scrubTo(page: Page, fraction: number): Promise<void> {
 			});
 		});
 	}, fraction);
-	await page.waitForTimeout(120);
+	await nextPaint(page);
 }
 
 /**

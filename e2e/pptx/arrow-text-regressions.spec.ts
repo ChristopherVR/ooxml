@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 
 import { generateFixture } from './fixtures/generate-arrow-text-regressions';
 import { resetTabSession, slideStage } from './support/deck';
+import { waitForShowSettled } from './support/show';
 
 test.use({ viewport: { width: 1920, height: 1080 } });
 
@@ -45,7 +46,6 @@ test.beforeEach(async ({ page }) => {
 	await page.locator('#file-input').setInputFiles(fixture);
 	await page.getByRole('button', { name: 'Go to slide 3', exact: true }).first().waitFor();
 	await page.waitForFunction(() => document.fonts.status === 'loaded');
-	await page.waitForTimeout(1200);
 });
 
 test('letter builds keep character positions and wrapping when the outgoing fade begins', async ({
@@ -56,7 +56,8 @@ test('letter builds keep character positions and wrapping when the outgoing fade
 		.first()
 		.click();
 	await page.locator('[data-anim-id*="::c0-"]').first().waitFor({ state: 'attached' });
-	await page.waitForTimeout(3000);
+	// Measure the letters once their build has finished.
+	await waitForShowSettled(page);
 	const texts = [
 		'Testing Anatidae Presentation',
 		'Image By Ams100272 - Own work, CC BY-SA 4.0, https://commons.wikimedia.org/w/index.php?curid=146841823',

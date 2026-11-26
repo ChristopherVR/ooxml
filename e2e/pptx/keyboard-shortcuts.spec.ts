@@ -40,6 +40,7 @@ import {
 	stageScale,
 	topLevelElementCount,
 } from './support/keyboard';
+import { nextPaint } from './support/render-ready';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -58,7 +59,7 @@ async function openSlideSorter(page: Page): Promise<void> {
 		.first()
 		.click();
 	await expect(sorterHeading(page), 'the slide sorter overlay must open').toBeVisible();
-	await page.waitForTimeout(400);
+	await nextPaint(page);
 }
 
 /** Load the two-shape deck and select "SOURCE"; hands back its locator. */
@@ -159,7 +160,6 @@ test.describe('editor keyboard shortcuts', () => {
 		await openWithSelection(page);
 		// Deliberately not `pressShortcut`: no focus repair, exactly what a user does.
 		await page.keyboard.press('Delete');
-		await page.waitForTimeout(800);
 		await expect(
 			slideElements(page),
 			'clicking a shape and pressing a key must reach the editor. A canvas gesture that ' +
@@ -296,7 +296,7 @@ test.describe('editor keyboard shortcuts', () => {
 		const elements = slideElements(page);
 		await selectElement(page, elements.first());
 		await elements.nth(1).click({ modifiers: ['Shift'] });
-		await page.waitForTimeout(300);
+		await nextPaint(page);
 
 		await pressShortcut(page, 'ControlOrMeta+g', 900);
 		await expect
@@ -606,7 +606,9 @@ test.describe('slide-show keyboard shortcuts', () => {
 		// The click itself reveals the auto-hiding show chrome; the bar hides
 		// again three seconds after the last pointer movement, and a keyboard
 		// press does not move the pointer. Waiting past that is what makes
-		// "Ctrl+H revealed it" a measurement rather than a coincidence.
+		// "Ctrl+H revealed it" a measurement rather than a coincidence. A real
+		// product timer: some bindings paint the bar hidden before it fires, so
+		// there is no earlier state to wait for (a fake clock broke Vanilla).
 		await page.waitForTimeout(4000);
 	}
 

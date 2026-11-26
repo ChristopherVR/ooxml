@@ -25,6 +25,8 @@ import {
 	RUN_PROGRAM_SHAPE_ID as ACTION_SHAPE_ID,
 } from './fixtures/run-program-fixture-constants';
 import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import { startPresenting } from './support/show';
 
 const fixturePath = resolve(
 	fileURLToPath(new URL('./fixtures/run-program-action.pptx', import.meta.url)),
@@ -38,12 +40,7 @@ async function startShow(page: Page): Promise<void> {
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(fixturePath);
 	await page.locator(`[data-element-id="${ACTION_SHAPE_ID}"]`).first().waitFor({ timeout: 30_000 });
-	await page.waitForTimeout(600);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(1200);
+	await startPresenting(page);
 }
 
 /** Click the centre of the action shape on the topmost (show) stage. */
@@ -103,7 +100,12 @@ test.describe('slide-show run-program action', () => {
 		});
 
 		await clickActionShape(page);
-		await page.waitForTimeout(1000);
+		// The click's own answer is the in-page notice; a native dialog would have
+		// been raised by the same handler, before it.
+		await expect(page.locator('[data-testid="pptx-run-program-notice"]').last()).toBeVisible({
+			timeout: 8000,
+		});
+		await nextPaint(page);
 
 		expect(dialogSeen, 'no native confirm/alert dialog was opened').toBe(false);
 	});

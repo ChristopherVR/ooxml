@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { advanceShow, waitForShowSettled } from './support/show';
 
 /**
  * Slide-show fidelity against a REAL PowerPoint deck (issue #106).
@@ -47,7 +48,6 @@ async function loadDeck(page: Page): Promise<void> {
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator('[data-pptx-element="true"], [data-element-id]').first().waitFor();
-	await page.waitForTimeout(600);
 }
 
 /** Start the slide show from the demo's Present control. */
@@ -82,6 +82,23 @@ function delayOf(shorthand: string | undefined): number | undefined {
 	return matches && matches.length >= 2 ? Number.parseInt(matches[1], 10) : undefined;
 }
 
+/**
+ * The opening build's pieces, read as soon as they are mounted and scheduled:
+ * inside the title's own 1s delay, which is what "no click needed" looks like.
+ */
+async function openingBuildPieces(page: Page): Promise<Record<string, string>> {
+	await expect
+		.poll(
+			async () => {
+				const pieces = Object.values(await buildPieces(page));
+				return pieces.length > 50 && pieces.every((shorthand) => shorthand.length > 0);
+			},
+			{ message: 'the opening build is mounted and scheduled with no click' },
+		)
+		.toBe(true);
+	return buildPieces(page);
+}
+
 /** Pieces belonging to one shape, in document order. */
 function piecesFor(pieces: Record<string, string>, shapeSuffix: string): string[] {
 	return Object.entries(pieces)
@@ -93,11 +110,8 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 	test('opening builds play on slide entry, with no click', async ({ page }) => {
 		await loadDeck(page);
 		await startShow(page);
-		// Sampled inside the title's own 1s delay: the pieces must already be
-		// mounted and scheduled, which is what "no click needed" looks like.
-		await page.waitForTimeout(400);
 
-		const pieces = await buildPieces(page);
+		const pieces = await openingBuildPieces(page);
 		const ids = Object.keys(pieces);
 		expect(ids.length).toBeGreaterThan(50);
 		expect(ids.every((id) => pieces[id].length > 0)).toBeTruthy();
@@ -106,9 +120,8 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 	test('the two effects keep their authored offsets instead of chaining', async ({ page }) => {
 		await loadDeck(page);
 		await startShow(page);
-		await page.waitForTimeout(400);
 
-		const pieces = await buildPieces(page);
+		const pieces = await openingBuildPieces(page);
 		const delays = Object.values(pieces)
 			.map(delayOf)
 			.filter((value): value is number => value !== undefined)
@@ -126,9 +139,8 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 	test('both shapes reveal letter by letter', async ({ page }) => {
 		await loadDeck(page);
 		await startShow(page);
-		await page.waitForTimeout(400);
 
-		const pieces = await buildPieces(page);
+		const pieces = await openingBuildPieces(page);
 		// Per-character ids are `::c<paragraph>-<index>`.
 		const charIds = Object.keys(pieces).filter((id) => /::c\d+-\d+$/u.test(id));
 		expect(charIds.length).toBeGreaterThan(100);
@@ -146,9 +158,8 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 	test('the letters ripple rather than arriving together', async ({ page }) => {
 		await loadDeck(page);
 		await startShow(page);
-		await page.waitForTimeout(400);
 
-		const pieces = await buildPieces(page);
+		const pieces = await openingBuildPieces(page);
 		const titleDelays = Object.entries(pieces)
 			.filter(([id]) => /::c0-\d+$/u.test(id))
 			.map(([, shorthand]) => delayOf(shorthand))
@@ -181,12 +192,10 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 		await loadDeck(page);
 		await startShow(page);
 		// Let slide 1 finish building before leaving it.
-		await page.waitForTimeout(7000);
+		await waitForShowSettled(page);
 
-		await page.keyboard.press('ArrowRight');
-		await page.waitForTimeout(1200);
-		await page.keyboard.press('ArrowLeft');
-		await page.waitForTimeout(900);
+		await advanceShow(page, 'ArrowRight', 2);
+		await advanceShow(page, 'ArrowLeft', 1);
 
 		const pieces = await buildPieces(page);
 		const shorthands = Object.values(pieces);
@@ -207,17 +216,18 @@ test.describe('anatidae deck: real-PowerPoint slide-show fidelity', () => {
 	test('a further back press replays the slide from the start', async ({ page }) => {
 		await loadDeck(page);
 		await startShow(page);
-		await page.waitForTimeout(7000);
+		await waitForShowSettled(page);
 
-		await page.keyboard.press('ArrowRight');
-		await page.waitForTimeout(1200);
+		await advanceShow(page, 'ArrowRight', 2);
+		await advanceShow(page, 'ArrowLeft', 1);
 		await page.keyboard.press('ArrowLeft');
-		await page.waitForTimeout(900);
-		await page.keyboard.press('ArrowLeft');
-		await page.waitForTimeout(400);
 
-		const pieces = await buildPieces(page);
-		const animating = Object.values(pieces).filter((value) => value.length > 0);
-		expect(animating.length).toBeGreaterThan(50);
+		await expect
+			.poll(
+				async () =>
+					Object.values(await buildPieces(page)).filter((value) => value.length > 0).length,
+				{ message: 'the replayed slide animates its pieces again' },
+			)
+			.toBeGreaterThan(50);
 	});
 });

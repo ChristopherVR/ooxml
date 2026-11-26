@@ -33,6 +33,8 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import { startPresenting, waitForShowSettled } from './support/show';
 
 const deck = resolve(fileURLToPath(new URL('./fixtures/morph-shape-swap.pptx', import.meta.url)));
 
@@ -78,13 +80,9 @@ async function startShowOnFirstSlide(page: Page): Promise<void> {
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator(`[data-element-id="${OUTGOING_SHAPE}"]`).first().waitFor();
-	await page.waitForTimeout(600);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(1500);
+	await startPresenting(page);
 	await page.mouse.move(4, 4);
+	await waitForShowSettled(page);
 }
 
 /**
@@ -137,7 +135,7 @@ async function scrubTo(page: Page, fraction: number): Promise<void> {
 			});
 		});
 	}, fraction);
-	await page.waitForTimeout(120);
+	await nextPaint(page);
 }
 
 /**

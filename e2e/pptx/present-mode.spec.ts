@@ -6,6 +6,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { startPresenting } from './support/show';
 import { presentingStageText } from './support/slide-text';
 
 /**
@@ -33,13 +34,8 @@ async function startShow(page: Page): Promise<void> {
 	await page.goto('/');
 	await page.locator('#file-input').setInputFiles(deck);
 	await page.locator('[data-pptx-element="true"]').first().waitFor();
-	await page.waitForTimeout(600);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
 	// Fullscreen + entrance animations settle before measuring.
-	await page.waitForTimeout(1500);
+	await startPresenting(page);
 }
 
 /**
@@ -131,24 +127,18 @@ test('PowerPoint navigation keys drive the show', async ({ page }) => {
 
 	// N advances (PowerPoint's primary "next"); it must not open presenter view.
 	await page.keyboard.press('n');
-	await page.waitForTimeout(900);
-	const second = await visibleSlideText(page);
-	expect(second).not.toBe(first);
+	await expect.poll(() => visibleSlideText(page)).not.toBe(first);
 
 	// P steps back.
 	await page.keyboard.press('p');
-	await page.waitForTimeout(900);
-	expect(await visibleSlideText(page)).toBe(first);
+	await expect.poll(() => visibleSlideText(page)).toBe(first);
 
 	// End / Home jump to the last and first slides.
 	await page.keyboard.press('End');
-	await page.waitForTimeout(900);
-	const last = await visibleSlideText(page);
-	expect(last).not.toBe(first);
+	await expect.poll(() => visibleSlideText(page)).not.toBe(first);
 
 	await page.keyboard.press('Home');
-	await page.waitForTimeout(900);
-	expect(await visibleSlideText(page)).toBe(first);
+	await expect.poll(() => visibleSlideText(page)).toBe(first);
 });
 
 test('a typed slide number jumps to that slide', async ({ page }) => {
@@ -156,12 +146,10 @@ test('a typed slide number jumps to that slide', async ({ page }) => {
 	const first = await visibleSlideText(page);
 
 	await page.keyboard.press('End');
-	await page.waitForTimeout(900);
-	expect(await visibleSlideText(page)).not.toBe(first);
+	await expect.poll(() => visibleSlideText(page)).not.toBe(first);
 
 	// PowerPoint's "type a slide number, then Enter".
 	await page.keyboard.press('1');
 	await page.keyboard.press('Enter');
-	await page.waitForTimeout(900);
-	expect(await visibleSlideText(page)).toBe(first);
+	await expect.poll(() => visibleSlideText(page)).toBe(first);
 });

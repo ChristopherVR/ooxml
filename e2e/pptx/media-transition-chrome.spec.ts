@@ -29,28 +29,23 @@ import { fileURLToPath } from 'node:url';
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
-import { resetTabSession } from './support/deck';
+import { nextPaint } from './support/render-ready';
+import {
+	SHOW_STAGE,
+	TRANSITION_OVERLAY,
+	goToSlide,
+	openDeckFile,
+	startPresenting,
+	stopPresenting,
+} from './support/show';
 
 const deck = resolve(fileURLToPath(new URL('./fixtures/solution-explorer.pptx', import.meta.url)));
-
-/** The 5 MB deck embeds a video; give the parse room on CI. */
-const LOAD_TIMEOUT_MS = 60_000;
 
 /** The slide whose background is a video, and the morph it leaves on. */
 const VIDEO_SLIDE = 2;
 
 /** The background video itself, addressed by its core element id. */
 const BACKGROUND_VIDEO = 'ppt/slides/slide2.xml-pic-0';
-
-/**
- * The running show's own stage. Scoping to it is not optional: the editor
- * canvas and the slide rail stay mounted behind the show and carry the SAME
- * element ids at their own scale.
- */
-const SHOW_STAGE = '[data-pptx-presenting]';
-
-/** The transition overlay itself. Two bindings mount it OUTSIDE the show stage. */
-const TRANSITION_OVERLAY = '[data-pptx-transition-overlay]';
 
 /** Neutral marker every binding puts on media chrome (shared MEDIA_CHROME_ATTRIBUTE). */
 const MEDIA_CHROME = '[data-pptx-media-chrome]';
@@ -59,13 +54,7 @@ const MEDIA_CHROME = '[data-pptx-media-chrome]';
 const PLAY_BADGE_PATH = 'M5 3 L19 12 L5 21 Z';
 
 async function loadDeck(page: Page): Promise<void> {
-	// Forget any restored session first, or the deck reopens and the landing
-	// dropzone (the only place #file-input exists) never mounts.
-	await resetTabSession(page);
-	await page.goto('/');
-	await page.locator('#file-input').setInputFiles(deck);
-	await page.locator('[aria-label="Go to slide 14"]').first().waitFor({ timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(1200);
+	await openDeckFile(page, deck, 14);
 }
 
 /**
@@ -76,13 +65,8 @@ async function loadDeck(page: Page): Promise<void> {
  * from `dist`) past the 60 s test timeout on CI.
  */
 async function presentVideoSlide(page: Page): Promise<void> {
-	await page.locator(`[aria-label="Go to slide ${VIDEO_SLIDE}"]`).first().click();
-	await page.waitForTimeout(900);
-	await page
-		.getByRole('button', { name: /^present$|slide show/iu })
-		.first()
-		.click();
-	await page.waitForTimeout(2000);
+	await goToSlide(page, VIDEO_SLIDE);
+	await startPresenting(page);
 }
 
 async function startShowOnVideoSlide(page: Page): Promise<void> {
@@ -105,7 +89,13 @@ async function advanceAndFreezeMorph(page: Page, fraction: number): Promise<void
 		) => (typeof timeout === 'number' && timeout >= 900 ? 0 : real(handler, timeout, ...args));
 	});
 	await page.keyboard.press('ArrowRight');
-	await page.waitForTimeout(400);
+	// The morph is up once its overlay is mounted and its keyframes are running.
+	await page.waitForFunction(
+		(overlay) =>
+			document.querySelector(overlay) !== null &&
+			document.getAnimations().some((animation) => animation.playState === 'running'),
+		TRANSITION_OVERLAY,
+	);
 	await page.evaluate((f) => {
 		for (const animation of document.getAnimations()) {
 			animation.pause();
@@ -113,7 +103,7 @@ async function advanceAndFreezeMorph(page: Page, fraction: number): Promise<void
 			animation.currentTime = typeof duration === 'number' ? duration * f : 0;
 		}
 	}, fraction);
-	await page.waitForTimeout(150);
+	await nextPaint(page);
 }
 
 test.describe('issue #147 - media chrome must not ride along in a transition', () => {
@@ -145,8 +135,7 @@ test.describe('issue #147 - media chrome must not ride along in a transition', (
 			// Re-enter the show on the video slide for the next sample. The deck is
 			// already loaded, so only re-present it - re-parsing it each iteration
 			// timed Angular out on CI.
-			await page.keyboard.press('Escape');
-			await page.waitForTimeout(500);
+			await stopPresenting(page);
 			await presentVideoSlide(page);
 		}
 	});

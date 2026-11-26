@@ -37,6 +37,7 @@ import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { resetTabSession } from './support/deck';
+import { waitForShowOn } from './support/show';
 
 const deck = resolve(fileURLToPath(new URL('./fixtures/issue-132-hr-deck.pptx', import.meta.url)));
 
@@ -67,7 +68,6 @@ async function loadDeck(page: Page): Promise<void> {
 		.locator('[data-pptx-element="true"], [data-element-id]')
 		.first()
 		.waitFor({ state: 'attached', timeout: LOAD_TIMEOUT_MS });
-	await page.waitForTimeout(800);
 }
 
 /** Start the slide show from the demo's Present control. */
@@ -76,7 +76,8 @@ async function startShow(page: Page): Promise<void> {
 		.getByRole('button', { name: /^present$|slide show/iu })
 		.first()
 		.click();
-	await page.waitForTimeout(1200);
+	// Not settled: this deck's slides advance on their own timings.
+	await waitForShowOn(page, 1);
 }
 
 /** Jump to a 1-based slide number via the shared "type digits + Enter" keymap. */
@@ -196,7 +197,7 @@ test.describe('slide-entry animation state (issue #132 deck)', () => {
 
 		// Slide 8's four ellipse text boxes fly in with presetSubtype 8 (left).
 		await goToSlide(page, 8);
-		await page.waitForTimeout(600);
+		await waitForShowOn(page, 8);
 		await page.keyboard.press('ArrowRight');
 
 		// The start pose's horizontal offset (px) of a flying ellipse, whether
