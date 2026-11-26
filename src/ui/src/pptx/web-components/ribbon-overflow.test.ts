@@ -104,6 +104,22 @@ describe('ribbon overflow', () => {
 		expect(collapsedIds(row)).toStrictEqual([]);
 	});
 
+	it('moves focus from a command in shadow DOM to the newly folded group', () => {
+		const row = content(900, ['insert.links', 'insert.addIns']);
+		const group = row.querySelector<HTMLElement>('[data-ribbon-group="insert.addIns"]')!;
+		const command = group
+			.appendChild(document.createElement('span'))
+			.attachShadow({ mode: 'open' });
+		command.appendChild(document.createElement('button')).focus();
+		expect(reflowRibbon(row)).toStrictEqual([]);
+		expect(command.activeElement?.localName).toBe('button');
+		Object.defineProperty(row, 'clientWidth', { configurable: true, value: 260 });
+		expect(reflowRibbon(row)).toStrictEqual(['insert.addIns']);
+		expect(document.activeElement).toBe(
+			group.querySelector('[data-pptx-chrome="ribbon-collapse"]'),
+		);
+	});
+
 	it('collapses contextual Adjust and Size before the formatting controls', () => {
 		const row = content(540, [
 			'videoFormat.adjust',

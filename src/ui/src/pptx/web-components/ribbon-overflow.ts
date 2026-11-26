@@ -1,3 +1,4 @@
+import { modalActiveElement } from '../../dialog/focus';
 import { RIBBON_CONTROL_ICONS, createRibbonControlIcon } from '../render';
 import { RIBBON_ICON_PATHS } from './ribbon-icons';
 import { listenForLaunchers, syncLaunchers } from './ribbon-launchers';
@@ -154,6 +155,24 @@ function closeAll(content: HTMLElement): void {
 
 /** Collapse groups from the right until the row fits. Returns the groups left collapsed. */
 export function reflowRibbon(content: HTMLElement): string[] {
+	const active = modalActiveElement(content.ownerDocument);
+	let focusedGroup: HTMLElement | null = null;
+	for (let node: Node | null = active; node && node !== content;) {
+		if (node instanceof HTMLElement && node.hasAttribute('data-ribbon-group')) focusedGroup = node;
+		node = node instanceof ShadowRoot ? node.host : node.parentNode;
+		if (!node) focusedGroup = null;
+	}
+	const collapsed = fitRibbon(content);
+	if (focusedGroup?.matches('[data-collapsed]:not([data-open])')) {
+		const face =
+			focusedGroup.shadowRoot?.querySelector<HTMLElement>('button.face') ??
+			focusedGroup.querySelector<HTMLElement>(`:scope > ${FACE_SELECTOR}`);
+		face?.focus({ preventScroll: true });
+	}
+	return collapsed;
+}
+
+function fitRibbon(content: HTMLElement): string[] {
 	const doc = content.ownerDocument;
 	closeAll(content);
 	for (const collapsed of content.querySelectorAll('[data-ribbon-group][data-collapsed]')) {

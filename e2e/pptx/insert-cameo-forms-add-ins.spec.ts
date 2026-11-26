@@ -10,6 +10,23 @@ import { pressShortcut } from './support/keyboard';
 
 test.use({ viewport: { width: 1920, height: 900 } });
 
+test('keeps focus on Add-ins when the Insert ribbon refits', async ({ page }) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	await loadDeck(page);
+	await ribbonTab(page, 'Insert').click();
+	const group = page.locator('pptx-ui-ribbon-insert [data-ribbon-group="insert.addIns"]');
+	const get = group.getByRole('button', { name: 'Get Add-ins' });
+	await get.click();
+	const dialog = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	await expect(dialog).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(dialog).toBeHidden();
+	await expect(get).toBeFocused();
+	await page.setViewportSize({ width: 800, height: 900 });
+	await expect(group).toHaveAttribute('data-collapsed', '');
+	await expect(group.getByRole('button', { name: 'Add-ins', exact: true })).toBeFocused();
+});
+
 test('reviews, cancels, installs and searches local PowerPoint add-ins', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
 	await loadDeck(page);
