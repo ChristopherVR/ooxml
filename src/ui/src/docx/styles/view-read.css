@@ -7,12 +7,13 @@
 .dve-canvas[data-document-view='read'] {
 	container-type: inline-size;
 	display: flex;
+	justify-content: center;
 	padding: clamp(12px, 3vw, 36px);
 	overflow: hidden;
 }
 [data-document-view='read'] > .dve-paper {
-	flex: 1;
-	width: 0 !important;
+	flex: none;
+	width: min(100%, 72rem) !important;
 	min-width: 0;
 	min-height: 0 !important;
 	padding: 0 !important;
@@ -37,6 +38,7 @@
 @container (min-width: 680px) {
 	[data-document-view='read'] .ProseMirror {
 		column-count: 2;
+		column-fill: balance;
 	}
 }
 [data-document-view='read'] .dve-break-marker,

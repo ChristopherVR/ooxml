@@ -82,6 +82,7 @@ test('Read Mode flows the document across columns and returns to the editing pos
 		};
 	});
 	const canvas = editor.locator('.dve-canvas');
+	const paper = canvas.locator('.dve-paper');
 	const body = canvas.locator('.ProseMirror');
 	await body.press('Control+Home');
 	await canvas.evaluate((element) => (element.scrollTop = 200));
@@ -89,9 +90,13 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	await expect(canvas).toHaveAttribute('data-document-view', 'read');
 	await expect(body).toHaveAttribute('contenteditable', 'false');
 	await expect(body).toHaveCSS('column-count', '2');
+	const [canvasBox, paperBox] = await Promise.all([canvas.boundingBox(), paper.boundingBox()]);
+	if (!canvasBox || !paperBox) throw new Error('Expected a reading viewport');
+	expect(paperBox.width).toBeLessThan(canvasBox.width);
+	expect(paperBox.x + paperBox.width / 2).toBeCloseTo(canvasBox.x + canvasBox.width / 2, 0);
 	const controls = editor.getByRole('group', { name: 'Read Mode' });
 	const status = controls.getByRole('status');
-	await expect(status).toHaveText(/Page 1 of [2-9]/);
+	await expect(status).toHaveText(/^Page 1 of (?:[2-9]|\d{2,})$/);
 	const frame = editor.locator('.dve-frame');
 	await frame.evaluate((element) => {
 		const fields = document.createElement('div');
@@ -126,6 +131,10 @@ test('Read Mode flows the document across columns and returns to the editing pos
 		.toBeGreaterThan(0);
 	await controls.getByRole('button', { name: 'Previous page' }).click();
 	await expect(status).toHaveText(/Page 1 of/);
+	await page.setViewportSize({ width: 600, height: 640 });
+	await expect(body).toHaveCSS('column-count', '1');
+	await expect(status).toHaveText(/^Page 1 of (?:[2-9]|\d{2,})$/);
+	await page.setViewportSize({ width: 1280, height: 640 });
 	await page.keyboard.press('Escape');
 	await expect(canvas).toHaveAttribute('data-document-view', 'draft');
 	await expect.poll(() => canvas.evaluate((el) => el.scrollTop)).toBe(200);
