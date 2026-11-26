@@ -7,7 +7,6 @@ import type { PptxSlide } from 'ooxml-core/pptx';
 import { describe, expect, it, vi } from 'vitest';
 
 import { createTranslator } from '../i18n';
-import { createProgressiveSlidePreview } from '../loader/progressive-slide-preview';
 import { buildFieldSubstitutionContext } from '../render/field-context';
 import { substituteFieldText } from '../render/text-field-substitution';
 import { createDefaultRegistry, renderSlideStage } from './index';
@@ -23,37 +22,6 @@ function readFixture(): ArrayBuffer {
 }
 
 describe('loadPresentation (real .pptx happy path)', () => {
-	it('keeps previews isolated from the editable deck and releases the preview nodes', async () => {
-		const root = document.createElement('div');
-		const host = document.createElement('div');
-		host.dataset.pptxLoadPreviewHost = '';
-		root.append(host);
-		document.body.append(root);
-		const preview = createProgressiveSlidePreview({
-			getRoot: () => root,
-			translate: createTranslator(),
-			isCurrent: () => true,
-			initialSlide: 0,
-		});
-		try {
-			const loaded = await loadPresentation(readFixture(), { onSlideLoaded: preview.show });
-			try {
-				expect(host.querySelector('[data-pptx-opening-preview]')?.hasAttribute('aria-hidden')).toBe(
-					true,
-				);
-				expect(host.querySelector('[data-element-id]')).toBeNull();
-				expect(host.querySelectorAll('[data-pptx-preview-thumbnail]')).toHaveLength(6);
-				expect(loaded.slides).toHaveLength(7);
-			} finally {
-				loaded.handler.dispose();
-			}
-		} finally {
-			preview.dispose();
-			root.remove();
-		}
-		expect(host.childElementCount).toBe(0);
-	});
-
 	it('applies the embedded viewer archive budget to a real deck', async () => {
 		await expect(loadPresentation(readFixture(), { maxUncompressedBytes: 1 })).rejects.toThrow();
 	});

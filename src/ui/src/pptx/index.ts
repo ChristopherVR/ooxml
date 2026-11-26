@@ -19,6 +19,7 @@ import { registerPptxWebControls } from './web-components';
 
 export * from './theme';
 export * from './loader';
+export { createProgressiveSlidePreview } from './loader/progressive-slide-preview';
 export * from './types';
 export * from './constants';
 export * from './render';
