@@ -67,6 +67,7 @@ type ExtensionContext = {
 	icon: (value: unknown) => void;
 	label: (path: string, value: unknown, max?: number) => string;
 	issues: AddInIssue[];
+	requirements: AddInRequirement[];
 };
 
 function readActions(
@@ -74,14 +75,15 @@ function readActions(
 	context: ExtensionContext,
 	inherited: AddInIssue | undefined,
 ) {
-	const { options, declaredOrigins, entryOrigins, issues } = context;
+	const { options, declaredOrigins, entryOrigins, issues, requirements } = context;
 	const actions = new Map<string, Action>();
 	const runtimes = records(extension.runtimes, 'runtimes');
 	unique(runtimes, (runtime) => identifier(runtime.id, 'runtime ID'), 'duplicate runtime ID');
 	const ids = new Set<string>();
 	for (const runtime of runtimes) {
-		const { issues: requirements } = featureRequirements(runtime.requirements, options);
-		issues.push(...requirements);
+		const condition = featureRequirements(runtime.requirements, options);
+		if (condition.hosts.includes(options.host)) requirements.push(...condition.requirements);
+		issues.push(...condition.issues);
 		const type = identifier(runtime.type ?? 'general', 'runtime type');
 		const lifetime = runtime.lifetime ?? 'short';
 		if (lifetime !== 'long' && lifetime !== 'short') invalid('runtime lifetime');
@@ -107,7 +109,7 @@ function readActions(
 			const actionIssue: AddInIssue | undefined =
 				actionType === 'openPage' ? undefined : { kind: 'unsupported', feature: actionType };
 			if (actionIssue) issues.push(actionIssue);
-			const issue = inherited ?? requirements[0] ?? runtimeIssue ?? actionIssue;
+			const issue = inherited ?? condition.issues[0] ?? runtimeIssue ?? actionIssue;
 			if (actionType === 'openPage' && !page) invalid('openPage runtime page');
 			if (issue) {
 				actions.set(id, { kind: 'inactive', issue });
@@ -126,18 +128,19 @@ function readRibbon(
 	context: ExtensionContext,
 	inherited: AddInIssue | undefined,
 ): AddInTab[] {
-	const { icon, label, options, issues } = context;
+	const { icon, label, options, issues, requirements } = context;
 	const contexts = optionalArray(ribbon.contexts, 'ribbon contexts').map((entry) =>
 		identifier(entry, 'ribbon context'),
 	);
-	const { issues: requirements } = featureRequirements(ribbon.requirements, options);
-	issues.push(...requirements);
+	const condition = featureRequirements(ribbon.requirements, options);
+	if (condition.hosts.includes(options.host)) requirements.push(...condition.requirements);
+	issues.push(...condition.issues);
 	const contextIssue: AddInIssue | undefined =
 		contexts.length && !contexts.includes('default')
 			? { kind: 'unsupported', feature: contexts.join(', ') }
 			: undefined;
 	if (contextIssue) issues.push(contextIssue);
-	const inactive = inherited ?? requirements[0] ?? contextIssue;
+	const inactive = inherited ?? condition.issues[0] ?? contextIssue;
 	const icons = (entry: JsonRecord) => {
 		for (const ref of records(entry.icons, 'ribbon icons')) icon(ref.url);
 	};
@@ -202,7 +205,7 @@ function readRibbon(
 	});
 }
 
-export function readExtensions(input: unknown, context: ExtensionContext) {
+export function readExtensions(input: unknown, context: Omit<ExtensionContext, 'requirements'>) {
 	const { options, issues } = context;
 	const hosts = new Set<OfficeAddInHost>();
 	const requirements: AddInRequirement[] = [];
@@ -219,7 +222,11 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 		const condition = featureRequirements(extension.requirements, options);
 		for (const host of condition.hosts) hosts.add(host);
 		const applies = condition.hosts.includes(options.host);
-		const extensionContext = { ...context, issues: condition.issues };
+		const extensionContext = {
+			...context,
+			issues: condition.issues,
+			requirements: [...condition.requirements],
+		};
 		const issue = condition.issues[0];
 		const actions = readActions(extension, extensionContext, issue ?? context.permissionIssue);
 		for (const [key, value] of Object.entries(extension)) {
@@ -240,7 +247,7 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 			if (applies) tabs.push(...entries);
 		}
 		if (applies) {
-			requirements.push(...condition.requirements);
+			requirements.push(...extensionContext.requirements);
 			for (const action of actions.values()) if (action.kind === 'taskPane') panes.push(action.url);
 			issues.push(...extensionContext.issues);
 		}

@@ -20,7 +20,7 @@ import {
 export interface ManifestAssets {
 	has(path: string): boolean;
 	readText(path: string): Promise<string>;
-	icon(path: string): string | undefined;
+	icon(path: string): Promise<string | undefined>;
 }
 
 // Microsoft 365 app manifest releases with the documented Office task-pane extension fields.
@@ -92,15 +92,12 @@ export async function readUnifiedManifest(
 	const release = version(root.version, 'version', /^\d{1,5}(?:\.\d{1,5}){2}$/);
 	const developer = object(root.developer, 'developer');
 	const publisher = text(developer.name, 'developer.name', 32);
-	if (
-		root.accentColor !== undefined &&
-		!/^#[\da-f]{6}$/i.test(text(root.accentColor, 'accentColor'))
-	)
-		invalid('accentColor');
+	if (!/^#[\da-f]{6}$/i.test(text(root.accentColor, 'accentColor', 7))) invalid('accentColor');
 	const description = object(root.description, 'description');
-	if (description.full !== undefined) text(description.full, 'description.full', 4000);
+	text(description.full, 'description.full', 4000);
 	for (const field of ['websiteUrl', 'privacyUrl', 'termsOfUseUrl']) {
-		if (developer[field] !== undefined) url(developer[field], field);
+		if (developer[field] === undefined) invalid(`developer.${field}`);
+		url(developer[field], field);
 	}
 	const declaredOrigins = [
 		...new Set(
@@ -144,16 +141,12 @@ export async function readUnifiedManifest(
 			const path = packagePath(source);
 			if (assets && !assets.has(path)) throw new AddInManifestError('package', 'missing icon');
 			// Only a few bounded thumbnails are needed for consent.
-			if (icons.has(path)) return;
-			const preview = icons.size < 2 ? assets?.icon(path) : undefined;
-			icons.set(path, { kind: 'package', path, ...(preview && { preview }) });
+			icons.set(path, { kind: 'package', path });
 		}
 	};
-	if (root.icons !== undefined) {
-		const appIcons = object(root.icons, 'icons');
-		icon(appIcons.color, true);
-		icon(appIcons.outline, true);
-	}
+	const appIcons = object(root.icons, 'icons');
+	icon(appIcons.color, true);
+	icon(appIcons.outline, true);
 	const identity =
 		root.webApplicationInfo === undefined
 			? null
@@ -187,6 +180,14 @@ export async function readUnifiedManifest(
 			.find((command) => command.kind === 'taskPane')?.url ??
 		(tabs.length ? null : panes[0]) ??
 		null;
+	const iconList = [...icons.values()];
+	if (assets) {
+		for (const [index, entry] of iconList.slice(0, 2).entries()) {
+			if (entry.kind !== 'package') continue;
+			const preview = await assets.icon(entry.path);
+			if (preview) iconList[index] = { ...entry, preview };
+		}
+	}
 	return {
 		format: 'unified',
 		id,
@@ -202,7 +203,7 @@ export async function readUnifiedManifest(
 		pane,
 		tabs,
 		issues,
-		icons: [...icons.values()],
+		icons: iconList,
 		name: label('name.short', object(root.name, 'name').short, 30),
 		description: label('description.short', description.short, 80),
 	};

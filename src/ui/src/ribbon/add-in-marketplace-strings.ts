@@ -1,4 +1,12 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'Content add-ins are unavailable in this editor.': [
+		'Les compléments de contenu sont indisponibles dans cet éditeur.',
+		'Inhalts-Add-Ins sind in diesem Editor nicht verfügbar.',
+		'Los complementos de contenido no están disponibles en este editor.',
+		'此编辑器不支持内容加载项。',
+		'このエディターではコンテンツ アドインを使用できません。',
+		'이 편집기에서는 콘텐츠 추가 기능을 사용할 수 없습니다.',
+	],
 	'Could not load saved add-ins.': [
 		'Impossible de charger les compléments enregistrés.',
 		'Gespeicherte Add-Ins konnten nicht geladen werden.',

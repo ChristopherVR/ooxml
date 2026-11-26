@@ -71,16 +71,18 @@ declared origins, icon references, and authentication metadata separate from gra
   · [App manifest schema](https://learn.microsoft.com/en-us/microsoft-365/extensibility/schema/)
   · [Requirement configuration](https://learn.microsoft.com/en-us/office/dev/add-ins/develop/understand-requirement-configuration).
 
-Validate against pinned public schema versions and enforce a smaller executable subset. Keep
-validation offline and ignore manifest URLs for schema and external entities. Reuse
+The current offline reader applies the public task-pane XML root sequence and the published
+unified metadata requirements, then validates the supported Office extension fields. Full
+XSD and JSON Schema validation for all branches is open. Keep validation offline and ignore
+manifest URLs for schema and external entities. Reuse
 [`src/core/xml`](../src/core/xml/index.ts) and the bounded ZIP reader in
 [`src/core/opc/zip-limits.ts`](../src/core/opc/zip-limits.ts). Initially cap each manifest at 256
 KiB, nesting at 32, and metadata packages at 128 entries and 4 MiB inflated. Reject DTDs, external
 entities, duplicate JSON keys or resource IDs, unsafe or duplicate archive paths, ambiguous
 permission declarations, invalid host mappings, and unresolved required resources. Normalize
 HTTPS URLs and origins without credentials. Reject executable URL schemes. Store a normalized
-manifest without trusting its declarations to authorize fetching. Treat all labels
-as text and defer remote icons. Apply decode and pixel limits if icons are later enabled.
+manifest without trusting its declarations to authorize fetching. Treat all labels as text.
+Show bounded, re-encoded PNG previews for packaged icons and list remote icon references as text.
 
 The first UI projects custom tabs and **Show Task Pane** commands onto the existing ribbon
 contract. Required unsupported features block activation with a reason. Optional unsupported

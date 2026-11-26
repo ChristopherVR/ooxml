@@ -1,5 +1,7 @@
 import JSZip from 'jszip';
 import { AddInManifestError, readLocalAddIn } from '../../../automation/add-ins';
+import { pngPreview } from '../../../automation/add-ins/package-icon';
+import { encodePng } from '../../../drawingml/raster-encode';
 import type { SecurityCase } from '../case';
 
 async function refusal(bytes: Uint8Array, report: 'code' | 'field' = 'code') {
@@ -22,6 +24,12 @@ const unsafePane = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appfor
 </OfficeApp>`;
 
 export const cases: readonly SecurityCase[] = [
+	{
+		name: 'oversized PNG icons stay out of the add-in preview',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () => pngPreview(encodePng(513, 1, new Uint8Array(513 * 3))) ?? 'no preview',
+		expected: 'no preview',
+	},
 	{
 		name: 'executable task pane URLs are rejected',
 		limits: { ms: 2_000, heapMb: 64 },

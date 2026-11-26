@@ -11,6 +11,7 @@ export type AddInErrorCode =
 	| 'url'
 	| 'host'
 	| 'version'
+	| 'content'
 	| 'extension';
 
 export class AddInManifestError extends Error {

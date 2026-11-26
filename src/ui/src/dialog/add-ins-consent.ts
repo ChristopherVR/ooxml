@@ -16,12 +16,14 @@ export function renderAddInDetails(addIn: LocalAddIn, t: OfficeServiceText) {
 			<dt>${t('Requirements')}</dt>
 			<dd
 				>${
-					manifest.requirements
-						.map(
-							({ name, minVersion, maxVersion }) =>
-								`${name} ${minVersion}${maxVersion ? ` - ${maxVersion}` : ''}`,
-						)
-						.join(', ') || t('None')
+					[
+						...new Set(
+							manifest.requirements.map(
+								({ name, minVersion, maxVersion }) =>
+									`${name} ${minVersion}${maxVersion ? ` - ${maxVersion}` : ''}`,
+							),
+						),
+					].join(', ') || t('None')
 				}</dd
 			>
 			<dt>${t('Icons')}</dt>

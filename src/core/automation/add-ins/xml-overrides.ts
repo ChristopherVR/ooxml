@@ -1,5 +1,11 @@
 import { elements, type XmlElement } from '../../xml/xml';
-import type { AddInCommand, AddInIssue, AddInReadOptions, AddInTab } from './model';
+import type {
+	AddInCommand,
+	AddInIssue,
+	AddInReadOptions,
+	AddInRequirement,
+	AddInTab,
+} from './model';
 import { identifier, invalid, missingRequirements, paneUrl, text, unique, url } from './validation';
 import {
 	all,
@@ -19,6 +25,7 @@ export function readXmlOverrides(
 	defaultLocale: string,
 	allowed: ReadonlySet<string>,
 	issues: AddInIssue[],
+	reviewRequirements: AddInRequirement[],
 ): AddInTab[] {
 	if (override.namespaceURI !== OVERRIDE || typeName(override) !== 'VersionOverridesV1_0') {
 		issues.push({ kind: 'unsupported', feature: 'VersionOverrides' });
@@ -155,6 +162,7 @@ export function readXmlOverrides(
 			if (applies) tabs.push(...result);
 		}
 		if (applies) {
+			reviewRequirements.push(...requirements);
 			for (const requirement of missing) issues.push({ kind: 'requirement', requirement });
 			issues.push(...hostIssues);
 		}

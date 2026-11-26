@@ -51,8 +51,9 @@ it('reviews resolved bytes before saving and restores and removes them through h
 	const modal = getDialog(root);
 	const input = modal?.querySelector<HTMLInputElement>('#marketplace-link');
 	if (!input) throw new Error('Missing Marketplace field');
+	await vi.waitFor(() => expect(input.disabled).toBe(false));
 	input.value = 'https://appsource.microsoft.com/en-us/product/office/WA999999999';
-	input.form?.dispatchEvent(new SubmitEvent('submit'));
+	input.closest('form')?.dispatchEvent(new SubmitEvent('submit'));
 	await vi.waitFor(() => expect(modal?.querySelector('#consent-title')).toBeTruthy());
 	expect(resolver).toHaveBeenCalledWith('WA999999999', expect.any(AbortSignal));
 	expect(prefs.write).not.toHaveBeenCalled();
@@ -214,8 +215,15 @@ it('uses a regional host locale for unified manifest translations', async () => 
 		id: '083a367e-842b-4d4f-ab91-cd5de849e495',
 		version: '1.0.0',
 		name: { short: 'Notes' },
-		description: { short: 'Reference notes.' },
-		developer: { name: 'Lab Notes' },
+		description: { short: 'Reference notes.', full: 'Reference notes.' },
+		developer: {
+			name: 'Lab Notes',
+			websiteUrl: 'https://example.test',
+			privacyUrl: 'https://example.test/privacy',
+			termsOfUseUrl: 'https://example.test/terms',
+		},
+		icons: { color: 'color.png', outline: 'outline.png' },
+		accentColor: '#334455',
 		localizationInfo: {
 			defaultLanguageTag: 'en-us',
 			additionalLanguages: [{ languageTag: 'fr-ca', file: 'fr-ca.json' }],
@@ -224,6 +232,8 @@ it('uses a regional host locale for unified manifest translations', async () => 
 	};
 	const zip = await new JSZip()
 		.file('manifest.json', JSON.stringify(manifest))
+		.file('color.png', Uint8Array.of(1))
+		.file('outline.png', Uint8Array.of(1))
 		.file('fr-ca.json', JSON.stringify({ 'name.short': 'Notes du Québec' }))
 		.generateAsync({ type: 'arraybuffer' });
 	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'fr-CA');
@@ -296,6 +306,7 @@ it('requires consent, keeps the prior install through a failed update and isolat
 		return button;
 	});
 	install.click();
+	await vi.waitFor(() => expect(activeDialog(editor)).toBeUndefined());
 
 	const invalid = await open('getAddIns');
 	await picker(invalid, xml.replace('https://example.test/pane', 'javascript:alert(1)'));
@@ -314,12 +325,14 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	await vi.waitFor(() => expect(control(sameVersion, 'Update')).toBeDefined());
 	expect(sameVersion.textContent).toContain('Update this add-in and keep version 1.0.0');
 	control(sameVersion, 'Update')?.click();
+	await vi.waitFor(() => expect(activeDialog(editor)).toBeUndefined());
 
 	const newer = await open('getAddIns');
 	await picker(newer, xml.replace('1.0.0', '1.0.1'));
 	await vi.waitFor(() => expect(control(newer, 'Update')).toBeDefined());
 	expect(newer.textContent).toContain('Update from 1.0.0 to 1.0.1');
 	control(newer, 'Update')?.click();
+	await vi.waitFor(() => expect(activeDialog(editor)).toBeUndefined());
 
 	const updated = await open('myAddIns');
 	await vi.waitFor(() => expect(updated.textContent).toContain('1.0.1'));

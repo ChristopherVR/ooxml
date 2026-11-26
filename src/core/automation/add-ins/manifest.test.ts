@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
+import { encodePng } from '../../drawingml/raster-encode';
 import { MANIFEST_BYTES, PACKAGE_BYTES, readLocalAddIn, type AddInReadOptions } from './index';
 
 const fixture = (name: string) =>
@@ -206,7 +207,7 @@ describe('local Office add-in manifests', () => {
 			'manifest',
 		],
 		['other host', xml.replace('<Host Name="Document" />', ''), 'host'],
-		['content extension', xml.replace('TaskPaneApp', 'ContentApp'), 'extension'],
+		['content extension', xml.replace('TaskPaneApp', 'ContentApp'), 'content'],
 	])('rejects XML with %s', async (_case, input, code) => {
 		await expect(read(input)).rejects.toMatchObject({ code });
 	});
@@ -390,14 +391,36 @@ describe('local Office add-in manifests', () => {
 				word,
 			),
 		).rejects.toMatchObject({ code: 'manifest' });
-		const detached = unified
-			.replace(/"icons": [^\n]+\n/, '')
-			.replace(/"additionalLanguages": \[[^\n]+/, '"additionalLanguages": []');
-		expect((await read(detached)).manifest.format).toBe('unified');
 		const original = (await read(unified, { ...support, locale: 'fr' })).manifest;
 		expect(original.name).toBe('Notes');
 		expect(original.icons).toEqual([
 			{ kind: 'package', path: 'icons/color.png' },
+			{ kind: 'package', path: 'icons/outline.png' },
+		]);
+	});
+
+	it('requires the published unified package metadata even for detached JSON', async () => {
+		await expect(read(unified.replace(/"icons": [^\n]+\n/, ''))).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'icons',
+		});
+		await expect(
+			read(unified.replace('"accentColor": "#334455"', '"accentColor": "red"')),
+		).rejects.toMatchObject({ code: 'manifest', field: 'accentColor' });
+	});
+
+	it('renders a verified PNG preview and leaves an oversized image as a path', async () => {
+		const archive = await pack(unified, (zip) => {
+			zip.file('icons/color.png', encodePng(1, 1, Uint8Array.of(13, 58, 176)));
+			zip.file('icons/outline.png', encodePng(513, 1, new Uint8Array(513 * 3)));
+		});
+		const { manifest } = await readLocalAddIn(archive, support);
+		expect(manifest.icons).toEqual([
+			{
+				kind: 'package',
+				path: 'icons/color.png',
+				preview: expect.stringMatching(/^data:image\/png;base64,/),
+			},
 			{ kind: 'package', path: 'icons/outline.png' },
 		]);
 	});

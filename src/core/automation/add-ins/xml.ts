@@ -74,7 +74,9 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 	}
 	if (root.localName !== 'OfficeApp') return invalid('OfficeApp');
 	if (root.namespaceURI !== BASE) throw new AddInManifestError('version', 'OfficeApp');
-	if (typeName(root) !== 'TaskPaneApp') throw new AddInManifestError('extension', 'OfficeApp');
+	const type = typeName(root);
+	if (type === 'ContentApp') throw new AddInManifestError('content', 'OfficeApp');
+	if (type !== 'TaskPaneApp') throw new AddInManifestError('extension', 'OfficeApp');
 	validateTaskPaneOrder(root);
 	const id = guid(value(root, 'Id'), 'Id');
 	const release = version(value(root, 'Version'), 'Version');
@@ -132,7 +134,10 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 			}
 		: null;
 	if (identity) issues.push({ kind: 'unsupported', feature: 'web application identity' });
-	const tabs = override ? readXmlOverrides(override, options, locale, allowed, issues) : [];
+	const overrideRequirements: typeof requirements = [];
+	const tabs = override
+		? readXmlOverrides(override, options, locale, allowed, issues, overrideRequirements)
+		: [];
 	return {
 		format: 'xml',
 		id,
@@ -143,7 +148,7 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 		permissions: [permission],
 		name: localize(one(root, 'DisplayName'), 'DisplayName'),
 		description: localize(one(root, 'Description'), 'Description'),
-		requirements,
+		requirements: [...requirements, ...overrideRequirements],
 		entryOrigins: [...baseOrigins],
 		declaredOrigins: [...new Set(declaredOrigins)],
 		icons,

@@ -35,6 +35,7 @@ export function addInError(error: unknown): string {
 				url: 'The add-in specifies an unsafe URL or origin.',
 				host: 'The add-in does not support this editor.',
 				version: 'This manifest version is unsupported.',
+				content: 'Content add-ins are unavailable in this editor.',
 				extension: 'This add-in type is unsupported.',
 			}[error.code]
 		: 'Could not update the add-in.';
