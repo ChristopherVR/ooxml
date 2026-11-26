@@ -88,8 +88,9 @@ detail and limits of each feature already built.
    DOCX export writes style catalogues, latent styles and theme edits. Design offers a shared
    catalogue of current and historical theme names, named custom colour and font schemes with
    host-managed reuse, paragraph spacing controls, and defaults for new blank documents. Browse
-   for Themes imports self-contained `.thmx` palettes, fonts and style matrices. Save Current
-   Theme exports a theme that PowerPoint 16 applied through COM with the expected accent colour.
+   for Themes imports self-contained `.thmx` palettes, fonts and style matrices, including files
+   saved by PowerPoint 16. PowerPoint 16 applied a Save Current Theme export through COM and
+   returned the expected accent colour.
    The Effects gallery shows DrawingML effect styles and Word shapes paint ordinary outer and
    inner shadows, glows and soft edges. Exact historical theme values, theme variants and related
    assets, and rendering of reflection, effect DAGs and 3D styles remain open. The built-in names

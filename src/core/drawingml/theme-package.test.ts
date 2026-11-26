@@ -57,6 +57,25 @@ describe('standalone Office themes', () => {
 		);
 	});
 
+	it('accepts a UTF-16 theme part', async () => {
+		const zip = await JSZip.loadAsync(await bytes());
+		const xml = '\uFEFF' + drawingThemeXml(theme).replace('UTF-8', 'UTF-16');
+		const encoded = new Uint8Array(xml.length * 2);
+		const view = new DataView(encoded.buffer);
+		for (let i = 0; i < xml.length; i++) view.setUint16(i * 2, xml.charCodeAt(i), true);
+		zip.file(part, encoded);
+		expect(await readThemePackage(await zip.generateAsync({ type: 'uint8array' }))).toMatchObject(
+			theme,
+		);
+	});
+
+	it('writes UTF-8 bytes even when the source text declares another encoding', async () => {
+		const xml = drawingThemeXml(theme).replace('UTF-8', 'UTF-16');
+		const zip = await JSZip.loadAsync(await writeThemePackage(xml));
+		expect(await zip.file(part)?.async('string')).not.toContain('UTF-16');
+		expect(await readThemePackage(await writeThemePackage(xml))).toMatchObject(theme);
+	});
+
 	it.each([
 		['wrong root', part, () => `<a:themeOverride xmlns:a="${NS.a}"/>`, /expected theme/],
 		['DTD', part, (xml: string) => xml.replace('<a:theme ', '<!DOCTYPE a:theme><a:theme '), /DTD/],
@@ -67,6 +86,12 @@ describe('standalone Office themes', () => {
 			/expected accent1/,
 		],
 		['invalid RGB', part, (xml: string) => xml.replace('123456', 'INVALID'), /incomplete schemes/],
+		[
+			'invalid fill style',
+			part,
+			(xml: string) => xml.replaceAll('a:solidFill', 'a:fakeFill'),
+			/invalid style matrix/,
+		],
 		[
 			'deep XML',
 			part,
@@ -112,6 +137,11 @@ describe('standalone Office themes', () => {
 		).rejects.toMatchObject({ kind: 'maxEntryBytes' });
 		await expect(
 			readThemePackage(await replacePart(part, () => ' '.repeat(512 * 1024 + 1))),
+		).rejects.toThrow(/invalid XML part size/);
+		await expect(
+			readThemePackage(
+				await replacePart(part, (xml) => xml + '<!--' + '界'.repeat(175_000) + '-->'),
+			),
 		).rejects.toThrow(/invalid XML part size/);
 	});
 });

@@ -17,15 +17,15 @@ const FILL_ELEMENTS = new Set([
 	'grpFill',
 ]);
 
+export function isDrawingFillElement(element: XmlElement): boolean {
+	return (
+		FILL_ELEMENTS.has(element.localName) && (!element.namespaceURI || element.namespaceURI === NS.a)
+	);
+}
+
 /** The fill element held directly by a shape-properties or line element, if any. */
 export function fillElementOf(properties: XmlElement | undefined): XmlElement | undefined {
-	return properties
-		? elements(properties).find(
-				(element) =>
-					FILL_ELEMENTS.has(element.localName) &&
-					(!element.namespaceURI || element.namespaceURI === NS.a),
-			)
-		: undefined;
+	return properties ? elements(properties).find(isDrawingFillElement) : undefined;
 }
 
 /** Reads the fill of `a:spPr`/`a:ln`; `undefined` when the element declares none (inherit). */

@@ -7,13 +7,15 @@ import {
 	relationshipsPartFor,
 	resolvePartPath,
 } from '../opc/relationships';
-import { openZip } from '../opc/zip-limits';
-import { NS, elements, named, parseXml, type XmlElement } from '../xml/index';
+import { declaredEntrySize, inflateEntryGuarded, openZip } from '../opc/zip-limits';
+import { NS, decodeXmlBytes, elements, named, parseXml, type XmlElement } from '../xml/index';
 import { resolveDrawingColor } from './drawing-color';
+import { isDrawingFillElement } from './drawing-fill';
 import { parseTheme } from './theme';
 import { THEME_COLOR_SLOTS } from './theme-model';
 
 export const MAX_THEME_PACKAGE_BYTES = 8 * 1024 * 1024;
+const MAX_THEME_XML_BYTES = 512 * 1024;
 const THEME_CT = 'application/vnd.openxmlformats-officedocument.theme+xml';
 const MANAGER_CT = 'application/vnd.openxmlformats-officedocument.themeManager+xml';
 const OFFICE_DOCUMENT_REL = `${NS.r}/officeDocument`;
@@ -43,7 +45,6 @@ function validateReferences(root: XmlElement): void {
 }
 
 function validateTheme(xml: string) {
-	if (xml.length > 512 * 1024) throw new Error('Office theme XML is too large.');
 	const root = parseXml(xml, XML).documentElement;
 	if (!named(root, 'theme', NS.a, false)) throw new Error('Office theme: expected theme.');
 	const [holder] = expectChildren(root, ['themeElements']);
@@ -72,16 +73,18 @@ function validateTheme(xml: string) {
 		if (
 			entries.length < 3 ||
 			entries.length > 32 ||
-			entries.some((item) => item.namespaceURI !== NS.a)
+			entries.some((item) => {
+				if (item.namespaceURI !== NS.a) return true;
+				if (list.localName === 'lnStyleLst') return item.localName !== 'ln';
+				if (list.localName === 'effectStyleLst') return item.localName !== 'effectStyle';
+				return !isDrawingFillElement(item);
+			})
 		)
 			throw new Error('Office theme: invalid style matrix.');
 	}
 	for (const effect of elements(lists[2]!)) {
 		const [entry] = elements(effect);
-		if (
-			!named(effect, 'effectStyle', NS.a, false) ||
-			(!named(entry, 'effectLst', NS.a, false) && !named(entry, 'effectDag', NS.a, false))
-		)
+		if (!named(entry, 'effectLst', NS.a, false) && !named(entry, 'effectDag', NS.a, false))
 			throw new Error('Office theme: invalid effect style.');
 	}
 	validateReferences(root);
@@ -130,10 +133,14 @@ export async function readThemePackage(bytes: Uint8Array | ArrayBuffer) {
 	}
 	const read = async (name: string) => {
 		const item = entries.get(partNameKey(name));
-		if (item === undefined) throw new Error('Office theme: missing required part.');
-		const xml = await zip.file(item)?.async('string');
-		if (!xml || xml.length > 512 * 1024) throw new Error('Office theme: invalid XML part size.');
-		return xml;
+		const entry = item === undefined ? null : zip.file(item);
+		if (!entry) throw new Error('Office theme: missing required part.');
+		const size = declaredEntrySize(entry);
+		if (size === 0 || size > MAX_THEME_XML_BYTES)
+			throw new Error('Office theme: invalid XML part size.');
+		return decodeXmlBytes(
+			await inflateEntryGuarded(entry, 0, { label: XML.label, maxEntryBytes: MAX_THEME_XML_BYTES }),
+		);
 	};
 	const manifest = await read('[Content_Types].xml');
 	const root = parseXml(manifest, XML).documentElement;
@@ -164,6 +171,14 @@ export async function readThemePackage(bytes: Uint8Array | ArrayBuffer) {
 
 /** Packages a self-contained DrawingML theme part in the standalone Office theme envelope. */
 export async function writeThemePackage(themeXml: string): Promise<Uint8Array> {
+	if (themeXml.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
+	// The byte encoding is ours to choose, regardless of the source XML declaration.
+	const xml = themeXml.replace(
+		/^\uFEFF?<\?xml\s[^?]*\?>/u,
+		'<?xml version="1.0" encoding="UTF-8"?>',
+	);
+	const bytes = new TextEncoder().encode(xml);
+	if (bytes.length > MAX_THEME_XML_BYTES) throw new Error('Office theme XML is too large.');
 	validateTheme(themeXml);
 	const zip = new JSZip();
 	const rels = (type: string, target: string) =>
@@ -181,6 +196,6 @@ export async function writeThemePackage(themeXml: string): Promise<Uint8Array> {
 	zip.file('_rels/.rels', rels(OFFICE_DOCUMENT_REL, MANAGER));
 	zip.file(MANAGER, `<a:themeManager xmlns:a="${NS.a}"/>`);
 	zip.file(relationshipsPartFor(MANAGER), rels(THEME_REL, 'theme1.xml'));
-	zip.file(THEME, themeXml);
+	zip.file(THEME, bytes);
 	return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 }
