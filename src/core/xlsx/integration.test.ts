@@ -9,7 +9,7 @@ import { createCalcEngine } from './formula/engine';
 import { isSpilledCell } from './formula/spill';
 import { cellView } from './layout/cell-view';
 import { createConditionalFormatEvaluator } from './layout/cf-evaluator';
-import { chartView, renderChartSvg } from './layout/index';
+import { chartView, renderChartSvg, shapeSvg } from './layout/index';
 import { createRefEvaluator } from './layout/ref-evaluator';
 import { loadWorkbook } from './load/index';
 import type { CellValue, Workbook } from './model';
@@ -51,9 +51,17 @@ function viewEverything(workbook: Workbook): number {
 		});
 		const evaluateRef = createRefEvaluator(workbook, calc, { sheet: s });
 		for (const drawing of sheet.drawings) {
-			if (drawing.kind !== 'chart') continue;
-			const model = chartView(workbook, s, drawing, evaluateRef);
-			expect(renderChartSvg(model, 400, 300)).toContain('<svg');
+			if (drawing.kind === 'chart') {
+				const model = chartView(workbook, s, drawing, evaluateRef);
+				expect(renderChartSvg(model, 400, 300)).toContain('<svg');
+				views++;
+			} else if (drawing.kind === 'unsupported' && drawing.shape?.equationParagraphs) {
+				const equations: NonNullable<NonNullable<Parameters<typeof shapeSvg>[3]>['equations']> = [];
+				const svg = shapeSvg(drawing.shape, 400, 300, { equations });
+				expect(svg).toContain('data-equation-text="0"');
+				expect(equations[0]?.paragraphs).toEqual(drawing.shape.equationParagraphs);
+				views++;
+			}
 		}
 	});
 	return views;
@@ -92,7 +100,7 @@ async function roundTrip(workbook: Workbook): Promise<Workbook> {
 }
 
 describe.each(XLSX)('fixture %s', (name) => {
-	it('views every cell, conditional format and chart without throwing', async () => {
+	it('views cells, conditional formats, charts and equations without throwing', async () => {
 		expect(viewEverything(await loadXlsx(bytes(name)))).toBeGreaterThan(0);
 	});
 	it('edits, saves and reloads to the same cells (and is stable on a second save)', async () => {
