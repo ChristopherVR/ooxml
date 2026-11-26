@@ -33,6 +33,7 @@ export class OfficeUiButton extends OfficeElement {
 	static override watched = [
 		'label',
 		'icon',
+		'icon-image',
 		'command',
 		'badge',
 		'caret',
@@ -87,6 +88,13 @@ export class OfficeUiButton extends OfficeElement {
 
 	protected override render() {
 		const label = this.getAttribute('label') ?? '';
+		const image = this.getAttribute('icon-image');
+		const png =
+			image &&
+			image.length <= 2 * 1024 * 1024 &&
+			/^data:image\/png;base64,[a-z0-9+/]+={0,2}$/i.test(image)
+				? image
+				: undefined;
 		const iconOnly = this.hasAttribute('icon-only');
 		const badge = this.getAttribute('badge') ?? '';
 		const expanded = this.getAttribute('expanded');
@@ -104,7 +112,9 @@ export class OfficeUiButton extends OfficeElement {
 			aria-expanded=${ifDefined(expanded === null ? undefined : String(expanded !== 'false'))}
 			@click=${this.onClick}
 			@keydown=${this.onKeydown}
-			>${glyph(this.iconName())}<span class="label" ?hidden=${iconOnly}
+			>${png ? html`<img class="glyph" src=${png} alt="" />` : glyph(this.iconName())}<span
+				class="label"
+				?hidden=${iconOnly}
 				>${label}${glyph('chevronDown', 'caret', !this.showsCaret())}</span
 			><span class="badge" aria-hidden="true" ?hidden=${!badge}>${badge}</span></button
 		>`;

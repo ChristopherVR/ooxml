@@ -2,12 +2,24 @@ import type { AddInIssue, LocalAddIn } from 'ooxml-core/automation/add-ins';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import { permissionText } from './add-in-local-strings';
 
+const featureLabels = new Map([
+	['executefunction', 'Function commands'],
+	['built-in ribbon tab', 'Built-in ribbon tab placement'],
+	['automatic task pane', 'Automatic task panes'],
+	['web application identity', 'Microsoft sign-in'],
+	['contextmenu', 'Context menus'],
+	['togglebutton', 'Toggle commands'],
+]);
+
+export function addInIssueLabel(issue: AddInIssue, t: OfficeServiceText): string {
+	if (issue.kind === 'requirement')
+		return `${t('Unavailable requirement')} · ${issue.requirement.name} ${issue.requirement.minVersion}`;
+	const feature = featureLabels.get(issue.feature.toLowerCase());
+	return feature ? `${t('Unsupported feature')} · ${t(feature)}` : t('Unsupported feature');
+}
+
 export function addInIssueLabels(manifest: LocalAddIn['manifest'], t: OfficeServiceText): string[] {
-	const format = (issue: AddInIssue) =>
-		issue.kind === 'unsupported'
-			? `${t('Unsupported feature')} · ${issue.feature}`
-			: `${t('Unavailable requirement')} · ${issue.requirement.name} ${issue.requirement.minVersion}`;
-	return [...new Set(manifest.issues.map(format))].slice(0, 12);
+	return [...new Set(manifest.issues.map((issue) => addInIssueLabel(issue, t)))].slice(0, 12);
 }
 
 export function addInConsent(

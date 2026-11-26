@@ -68,7 +68,8 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await expect(consent).toContainText('Word, Excel, PowerPoint');
 		await expect(consent).toContainText('Read and change this document');
 		if (file.name === 'app.zip')
-			await expect(consent.getByRole('img', { name: 'icons/color.png' })).toBeVisible();
+			await expect(consent.getByRole('img', { name: 'Icon preview' }).first()).toBeVisible();
+		else await expect(consent.locator('img')).toHaveCount(0);
 		const install = dialog.getByRole('button', { name: 'Install Notes', exact: true });
 		await expect(install).toHaveAttribute('slot', 'footer');
 		await install.click();
@@ -89,6 +90,8 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 			await editor.getByRole('button', { name: 'Open Notes', exact: true }).click();
 		} else {
 			await openDialog();
+			if (file.name === 'app.zip')
+				await expect(dialog.locator('.tile-icon[src^="data:image/png;base64,"]')).toBeVisible();
 			await dialog.getByText('Add-in details', { exact: true }).click();
 			await expect(
 				dialog.getByRole('button', { name: 'Open Notes', exact: true }),

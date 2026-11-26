@@ -12,6 +12,8 @@ export interface RibbonAddInCommand {
 	label: string;
 	/** A name from the shared icon set (`registerIcon` of `ooxml-ui` adds the host's own). */
 	icon?: string;
+	/** A local PNG data URL for a reviewed add-in icon. */
+	iconImage?: string;
 	/** `large` (the default) stacks the icon over the label; `small` commands fill columns of three. */
 	size?: 'large' | 'small';
 	/** Tooltip; the label when omitted. */

@@ -3,6 +3,8 @@ import type { RibbonAddInTab } from 'ooxml-core/ribbon';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import type { AddInDialogHost } from './add-in-dialog';
 import type { addInLauncher } from './add-in-launch';
+import { addInIcon } from './add-in-icons';
+import { addInIssueLabel } from './add-in-local-dialog';
 import { syncInstalledRibbonTabs } from './add-in-tabs';
 
 export const MANIFEST_TAB_PREFIX = 'installed-add-in.';
@@ -33,16 +35,19 @@ export function addInManifestTabs(
 					label: group.label,
 					commands: group.commands.map((command, index) => {
 						const id = `${group.id}.${index}`;
-						const common = { id, label: command.label, icon: 'addIns' };
+						const iconImage = addInIcon(addIn.manifest);
+						const common = {
+							id,
+							label: command.label,
+							icon: 'addIns',
+							...(iconImage && { iconImage }),
+						};
 						if (command.kind === 'inactive') {
 							const { issue } = command;
 							return {
 								...common,
 								disabled: true,
-								title:
-									issue.kind === 'requirement'
-										? `${t('Unavailable requirement')} · ${issue.requirement.name} ${issue.requirement.minVersion}`
-										: `${t('Unsupported feature')} · ${issue.feature}`,
+								title: addInIssueLabel(issue, t),
 							};
 						}
 						const { reason } = launcher.pane(addIn, command.url);

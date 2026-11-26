@@ -48,6 +48,7 @@ button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+img.glyph,
 svg {
 	width: var(--office-icon-size-ml);
 	height: var(--office-icon-size-ml);
@@ -58,6 +59,9 @@ svg {
 	stroke-width: var(--office-icon-stroke);
 	stroke-linecap: round;
 	stroke-linejoin: round;
+}
+img.glyph {
+	object-fit: contain;
 }
 svg.glyph:not([data-painted]) {
 	display: none;
@@ -101,7 +105,7 @@ svg.glyph:not([data-painted]) {
 	text-align: center;
 	line-height: var(--office-line-height-tight);
 }
-:host([size='large']) svg.glyph {
+:host([size='large']) .glyph {
 	width: var(--office-command-large-icon);
 	height: var(--office-command-large-icon);
 }
@@ -116,7 +120,7 @@ svg.glyph:not([data-painted]) {
 	border: 0;
 	text-align: start;
 }
-:host([size='small']) svg.glyph {
+:host([size='small']) .glyph {
 	width: var(--office-command-small-icon);
 	height: var(--office-command-small-icon);
 }
@@ -149,6 +153,7 @@ svg.glyph:not([data-painted]) {
 		color: ButtonText;
 		background: ButtonFace;
 	}
+	img.glyph,
 	svg {
 		color: ButtonText;
 	}
@@ -169,7 +174,8 @@ svg.glyph:not([data-painted]) {
 	}
 	button[aria-pressed='true'] svg,
 	button[aria-expanded='true'] svg,
-	:host([active]) button svg {
+	:host([active]) button img.glyph,
+	svg {
 		forced-color-adjust: none;
 		color: HighlightText;
 	}

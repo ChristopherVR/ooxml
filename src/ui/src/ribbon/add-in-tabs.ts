@@ -68,6 +68,8 @@ function button(doc: Document, spec: RibbonAddInCommand): HTMLElement {
 	el.setAttribute('label', spec.label);
 	el.setAttribute('title', spec.title ?? spec.label);
 	if (spec.icon) el.setAttribute('icon', spec.icon);
+	if (!menu && spec.iconImage) el.setAttribute('icon-image', spec.iconImage);
+	if (spec.disabled && spec.title) el.setAttribute('aria-description', spec.title);
 	const small = spec.size === 'small';
 	// The shared ribbon sizes: a 32px glyph over the label, or one compact row (three to a column).
 	if (!menu) el.setAttribute('size', small ? 'small' : 'large');

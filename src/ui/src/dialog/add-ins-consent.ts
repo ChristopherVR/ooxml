@@ -1,4 +1,5 @@
 import { html, nothing } from 'lit';
+import { glyph } from '../glyph';
 import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import { addInConsent, addInIssueLabels } from '../ribbon/add-in-local-dialog';
 import type { OfficeServiceText } from './office-service-dialog';
@@ -32,8 +33,16 @@ export function renderAddInDetails(addIn: LocalAddIn, t: OfficeServiceText) {
 					icons.length
 						? icons.map((icon) =>
 								icon.kind === 'package' && icon.preview
-									? html`<img src=${icon.preview} width="32" height="32" alt=${icon.path} />`
-									: html`<div>${icon.kind === 'package' ? icon.path : icon.url}</div>`,
+									? html`<img
+											src=${icon.preview}
+											width="32"
+											height="32"
+											alt=${t('Icon preview')}
+										/>`
+									: html`<span class="icon-placeholder">
+											${glyph('addIns', 'tile-icon')}
+											${icon.kind === 'remote' ? new URL(icon.url).hostname : t('Icon preview unavailable')}
+										</span>`,
 							)
 						: t('None')
 				}</dd

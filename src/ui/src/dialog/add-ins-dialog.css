@@ -106,7 +106,13 @@ button.link {
 	border-radius: var(--office-radius-md);
 	background: var(--office-surface);
 }
+.icon-placeholder {
+	display: flex;
+	align-items: center;
+	gap: var(--office-space-2);
+}
 .tile-icon {
+	object-fit: contain;
 	flex: none;
 	width: var(--office-icon-size-md);
 	height: var(--office-icon-size-md);

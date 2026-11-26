@@ -4,6 +4,7 @@ import type { OfficeAddInOffer } from '../ribbon/add-in-settings';
 import type { Pivot } from './add-ins-dialog';
 import type { AddInSession } from './add-ins-session';
 import { renderAddInDetails } from './add-ins-consent';
+import { addInIcon } from '../ribbon/add-in-icons';
 import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 
 const MARKETPLACE = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
@@ -18,9 +19,11 @@ function handoffUrl(link: string): string | undefined {
 	}
 }
 
-function tile(label: string, actions: unknown, details?: TemplateResult) {
+function tile(label: string, actions: unknown, details?: TemplateResult, icon?: string) {
 	return html`<li class="tile"
-		>${glyph('addIns', 'tile-icon')}<div class="tile-body">
+		>${icon ? html`<img class="tile-icon" src=${icon} alt="" />` : glyph('addIns', 'tile-icon')}<div
+			class="tile-body"
+		>
 			<p class="tile-name">${label}</p>
 			<div class="tile-actions">${actions}</div>${details}
 		</div></li
@@ -87,6 +90,7 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 								><summary>${t('Add-in details')}</summary>
 								${renderAddInDetails(addIn, t)}
 							</details>`,
+						addInIcon(manifest),
 					),
 				);
 			}
