@@ -13,12 +13,13 @@ export function editorAddIns(scope: ParentNode): EditorAddIn[] {
 		const installed = new Map<string, string>();
 		for (const panel of ribbon.querySelectorAll<HTMLElement>(':scope > [data-add-in]')) {
 			const { ribbonTab, label } = panel.dataset;
-			if (ribbonTab && label) installed.set(ribbonTab, label);
+			if (ribbonTab && label && !ribbonTab.startsWith(MANIFEST_TAB_PREFIX))
+				installed.set(ribbonTab, label);
 		}
 		for (const tab of tabs()) {
 			const id = tab.dataset.ribbonAddInTab;
 			const label = tab.textContent?.trim();
-			if (id && label) installed.set(id, label);
+			if (id && label && !id.startsWith(MANIFEST_TAB_PREFIX)) installed.set(id, label);
 		}
 		return [...installed].map(([id, label]) => ({
 			id,
@@ -33,3 +34,4 @@ export function editorAddIns(scope: ParentNode): EditorAddIn[] {
 		}));
 	});
 }
+import { MANIFEST_TAB_PREFIX } from './add-in-manifest-tabs';

@@ -1,5 +1,6 @@
 import { defineElement } from '../../registry';
 import { defineRibbon, type OfficeUiRibbon } from '../../ribbon/ribbon-tabs';
+import type { RibbonAddInTab } from '../../ribbon/add-in-tabs';
 import type { RibbonTabRowState, RibbonTabSelectDetail } from '../render';
 import { RIBBON_ADD_IN_TAB_ATTR, RIBBON_CONTEXTUAL_TAB_ATTR } from '../render';
 import { attachControlStyles } from './control-styles';
@@ -13,6 +14,7 @@ export interface PptxUiRibbonTabsElement extends HTMLElement {
 	state: RibbonTabRowState | undefined;
 	/** The tabs as drawn. */
 	tabButtons(): HTMLButtonElement[];
+	setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void;
 }
 
 /**
@@ -50,6 +52,9 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 	class PptxRibbonTabs extends Base {
 		#model: RibbonTabRowState | undefined;
 		#canvasSelection: AbortController | undefined;
+		#manifestTabs: readonly RibbonAddInTab[] = [];
+		#manifestTab: string | undefined;
+		#syncManifestPanels: typeof import('../../ribbon/add-in-tabs').syncRibbonAddIns | undefined;
 		constructor() {
 			super();
 			this.addEventListener('office-ribbon-select', this.#onSelect);
@@ -79,8 +84,35 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 		set state(value: RibbonTabRowState | undefined) {
 			this.#model = value;
 			this.label = value?.label ?? null;
-			this.items = value?.items ?? [];
-			this.selected = value?.selected ?? '';
+			this.#applyState();
+		}
+		setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void {
+			this.#manifestTabs = tabs;
+			if (this.#syncManifestPanels || !tabs.length) this.#applyState();
+			else
+				void import('../../ribbon/add-in-tabs').then(({ syncRibbonAddIns }) => {
+					if (!this.isConnected) return;
+					this.#syncManifestPanels = syncRibbonAddIns;
+					this.#applyState();
+				});
+		}
+		#applyState(): void {
+			const items = this.#model?.items ?? [];
+			if (!this.#syncManifestPanels) {
+				this.items = items;
+				this.selected = this.#model?.selected ?? '';
+				return;
+			}
+			const ids = new Set(items.map(({ id }) => id));
+			const local = this.#manifestTabs.filter(({ id }) => !ids.has(id));
+			this.#syncManifestPanels(this, local);
+			if (!local.some(({ id }) => id === this.#manifestTab)) this.#manifestTab = undefined;
+			this.items = [...items, ...local];
+			this.selected = this.#manifestTab ?? this.#model?.selected ?? '';
+			for (const panel of this.children) {
+				if (!(panel instanceof HTMLElement) || !panel.hasAttribute('data-add-in')) continue;
+				panel.hidden = panel.dataset.ribbonTab !== this.#manifestTab;
+			}
 		}
 		/** The tabs as drawn, for tests and focus handling. */
 		tabButtons(): HTMLButtonElement[] {
@@ -91,7 +123,16 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			event.preventDefault();
 			const tab = (event as CustomEvent<{ tab: string }>).detail.tab;
 			const kind = this.#model?.items.find((item) => item.id === tab)?.kind;
+			if (!kind && this.#manifestTabs.some(({ id }) => id === tab)) {
+				this.#manifestTab = tab;
+				this.#applyState();
+				return;
+			}
 			if (kind) {
+				if (this.#manifestTab) {
+					this.#manifestTab = undefined;
+					this.#applyState();
+				}
 				this.dispatchEvent(
 					new CustomEvent<RibbonTabSelectDetail>('tab-select', {
 						detail: { tab, kind },

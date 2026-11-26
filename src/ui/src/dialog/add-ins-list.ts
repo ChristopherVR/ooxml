@@ -82,6 +82,7 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 								change(() => {
 									launcher.close(manifest.id);
 									installed.delete(manifest.id);
+									session.syncTabs();
 								}),
 							),
 						],

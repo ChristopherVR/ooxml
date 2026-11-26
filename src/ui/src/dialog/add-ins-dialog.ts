@@ -6,6 +6,7 @@ import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { addInSettings } from '../ribbon/add-in-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { addInLauncher } from '../ribbon/add-in-launch';
+import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import { installAddIn, localAddIns } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
@@ -22,10 +23,12 @@ function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 	const locale = addInLocale(manifestLocale);
 	const installed = localAddIns(host);
 	const translate = localAddInText(locale, t);
+	const launcher = addInLauncher(options, installed, translate);
 	return {
 		...addInSettings(scopes),
 		installed,
-		launcher: addInLauncher(options, installed, translate),
+		launcher,
+		syncTabs: () => addInManifestTabs(host, installed, launcher, translate),
 		tabs: editorAddIns(host),
 		t: translate,
 		product,
@@ -52,6 +55,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 
 	show(options: OpenAddInsOptions, restoreFocus: () => void): void {
 		this.#session = addInSession(options, restoreFocus);
+		this.#session.syncTabs();
 		this.#pivot =
 			options.mode === 'getAddIns' && this.#session.storefront !== 'off' ? 'Store' : 'My Add-ins';
 		this.requestUpdate();
@@ -178,6 +182,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		if (!preview || !session) return;
 		if (installAddIn(session.installed, preview.addIn, preview.previous)) {
 			session.launcher.close(preview.addIn.manifest.id);
+			session.syncTabs();
 			this.shell?.close();
 		} else {
 			this.#message = session.t('Could not update the add-in.');

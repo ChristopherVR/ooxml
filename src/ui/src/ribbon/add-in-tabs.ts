@@ -119,6 +119,18 @@ const ownTabs = (ribbon: HTMLElement): Set<string> =>
 
 /** What a ribbon currently shows: the look of its add-in tabs and the descriptors behind them. */
 const shown = new WeakMap<HTMLElement, { look: string; tabs: Map<string, RibbonAddInTab> }>();
+const MANIFEST_TABS = Symbol.for('office-ui.manifest-ribbon-tabs');
+const TAB_INPUTS = Symbol.for('office-ui.ribbon-add-in-inputs');
+type AddInRibbon = HTMLElement & {
+	[MANIFEST_TABS]?: readonly RibbonAddInTab[];
+	[TAB_INPUTS]?: { tabs: readonly RibbonAddInTab[]; options: RibbonAddInOptions };
+};
+
+export function syncInstalledRibbonTabs(ribbon: AddInRibbon, tabs: readonly RibbonAddInTab[]) {
+	ribbon[MANIFEST_TABS] = tabs;
+	const inputs = ribbon[TAB_INPUTS];
+	if (inputs) syncRibbonAddIns(ribbon, inputs.tabs, inputs.options);
+}
 
 const addInPanels = (ribbon: HTMLElement): HTMLElement[] =>
 	[...ribbon.children].filter(
@@ -136,12 +148,16 @@ const addInPanels = (ribbon: HTMLElement): HTMLElement[] =>
  * drop-down), and a command always runs the callback of the latest descriptor.
  */
 export function syncRibbonAddIns(
-	ribbon: HTMLElement,
+	ribbon: AddInRibbon,
 	tabs: readonly RibbonAddInTab[],
 	options: RibbonAddInOptions = {},
 ): string[] {
 	const doc = ribbon.ownerDocument;
-	const accepted = acceptedRibbonAddIns(tabs, ownTabs(ribbon));
+	ribbon[TAB_INPUTS] = { tabs, options };
+	const accepted = acceptedRibbonAddIns(
+		[...tabs, ...(ribbon[MANIFEST_TABS] ?? [])],
+		ownTabs(ribbon),
+	);
 	if (accepted.length) defineRibbonAddInElements(doc.defaultView?.customElements);
 	const ids = accepted.map((tab) => tab.id);
 	// Callbacks are not part of the look: JSON leaves functions out.

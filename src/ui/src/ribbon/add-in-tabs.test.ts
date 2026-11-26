@@ -3,6 +3,7 @@ import { registerOfficeUi } from '../index';
 import {
 	defineRibbonAddInElements,
 	RIBBON_ADD_IN_EVENT,
+	syncInstalledRibbonTabs,
 	syncRibbonAddIns,
 	type RibbonAddInTab,
 } from './add-in-tabs';
@@ -58,6 +59,16 @@ const click = (el: Element, command: string) =>
 	);
 
 describe('ribbon add-in tabs', () => {
+	it('keeps installed tabs during host refresh and removes only the uninstalled tab', async () => {
+		const ribbon = make();
+		syncRibbonAddIns(ribbon, [pdf()]);
+		syncInstalledRibbonTabs(ribbon, [{ ...pdf(), id: 'installed-add-in.demo', label: 'Local' }]);
+		await vi.waitFor(() => expect(tabs(ribbon)).toEqual(['Home', 'Help', 'PDF', 'Local']));
+		syncRibbonAddIns(ribbon, [{ ...pdf(), label: 'Host PDF' }]);
+		await vi.waitFor(() => expect(tabs(ribbon)).toEqual(['Home', 'Help', 'Host PDF', 'Local']));
+		syncInstalledRibbonTabs(ribbon, []);
+		await vi.waitFor(() => expect(tabs(ribbon)).toEqual(['Home', 'Help', 'Host PDF']));
+	});
 	it('adds a tab after the product tabs, with groups, columns of three and a drop-down', async () => {
 		const ribbon = make();
 		expect(syncRibbonAddIns(ribbon, [pdf()], { panelClass: 'panel' })).toEqual(['pdf']);
