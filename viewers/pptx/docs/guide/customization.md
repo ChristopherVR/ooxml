@@ -1230,6 +1230,7 @@ unit test fails if an id is missing here.
 | `pictureFormat.pictureStyles.border`              | Picture Border                                                                |
 | `pictureFormat.pictureStyles.layout`              | Picture Layout                                                                |
 | `pictureFormat.size.crop`                         | Crop                                                                          |
+| `pictureFormat.size.cropToShape`                 | Crop to Shape                                                                 |
 | `pictureFormat.accessibility.altText`             | Alt Text                                                                      |
 | `pictureFormat.arrange.rotateRight`               | Rotate Right 90°                                                              |
 | `pictureFormat.arrange.selectionPane`             | Selection Pane                                                                |

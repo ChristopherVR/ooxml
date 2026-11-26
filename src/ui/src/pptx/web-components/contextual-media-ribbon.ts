@@ -178,19 +178,7 @@ export function renderMediaControls(
 			${command('reset', text('pptx.mediaRibbon.resetPoster', 'Reset Poster Frame'), () => dialog('reset'), clipRequired)}`;
 		case 'audioFormat.pictureStyles':
 		case 'videoFormat.pictureStyles':
-			return html`${select(
-				'shape',
-				text('pptx.mediaRibbon.changeShape', 'Change Shape'),
-				media.shapeType ?? 'rect',
-				[
-					['rect', text('pptx.ribbon.rectangle', 'Rectangle')],
-					['ellipse', text('pptx.ribbon.ellipse', 'Ellipse')],
-				],
-				(shapeType) => patch({ shapeType }),
-				pictureRequired ??
-					(canInteractWithElement(media, 'changeShapeType') ? undefined : fields.unavailable),
-			)}
-			${color(
+			return html`${color(
 				'border',
 				text('pptx.pictureFormat.border', 'Picture Border'),
 				media.shapeStyle?.strokeColor ?? '#000000',

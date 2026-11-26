@@ -35,6 +35,7 @@ export type RibbonGalleryId =
 	/** The inspector's Quick Styles (shape style presets) picker. */
 	| 'quickStyles'
 	| 'pictureStyles'
+	| 'cropToShape'
 	| 'pictureCorrections'
 	| 'pictureColor'
 	| 'graphicsFill'

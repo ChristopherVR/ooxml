@@ -54,6 +54,8 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	await control(page, 'videoFormat.poster.reset').getByRole('button').click();
 	await expect(video).not.toHaveAttribute('poster', importedPoster ?? '');
 	await expect(page.locator('[data-media-ribbon-dialog="reset"]')).toHaveCount(0);
+	await control(page, 'videoFormat.pictureStyles.shape').getByRole('button').click();
+	await page.locator('[data-ribbon-gallery-popup] [data-gallery-item="hexagon"]:visible').click();
 	await control(page, 'videoFormat.arrange.rotateRight').getByRole('button').click();
 	await control(page, 'videoFormat.size.crop').getByRole('button').click();
 	const crop = page.locator('[data-media-ribbon-dialog="crop"]');
@@ -104,6 +106,7 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 		'ppt/slides/slide1.xml',
 	);
 	expect(xml).toContain('l="16000"');
+	expect(xml).toContain('prst="hexagon"');
 	expect(xml).toContain('rot="5400000"');
 	expect(xml).toContain('<p14:fade in="250"');
 	expect(xml).toContain('<p14:trim st="150" end="1500"');
@@ -147,6 +150,8 @@ test('audio shows its own Format tab and media-specific playback options', async
 	await expect(tab(page, 'videoFormat')).toHaveCount(0);
 	await tab(page, 'audioFormat').click();
 	await expect(control(page, 'audioFormat.size.width').getByRole('spinbutton')).toBeEnabled();
+	await control(page, 'audioFormat.pictureStyles.shape').getByRole('button').click();
+	await page.locator('[data-ribbon-gallery-popup] [data-gallery-item="roundRect"]:visible').click();
 	await tab(page, 'playback').click();
 	const fullScreen = control(page, 'playback.options.fullScreen').getByRole('checkbox');
 	await expect(fullScreen).toBeDisabled();
@@ -170,6 +175,7 @@ test('audio shows its own Format tab and media-specific playback options', async
 		'ppt/slides/slide1.xml',
 	);
 	expect(xml).toContain('numSld="999"');
+	expect(xml).toContain('prst="roundRect"');
 });
 
 test('SmartArt Format edits the node selected in the ribbon', async ({ page }) => {

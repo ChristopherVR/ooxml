@@ -20,6 +20,7 @@ import { PICTURE_ARTISTIC_EFFECTS_GALLERY } from './picture-artistic-gallery';
 import { GRAPHICS_FILL_GALLERY } from './graphics-fill-gallery';
 import { PICTURE_COLOR_GALLERY } from './picture-color-gallery';
 import { PICTURE_CORRECTIONS_GALLERY } from './picture-corrections-gallery';
+import { CROP_TO_SHAPE_GALLERY } from './crop-to-shape-gallery';
 import { PICTURE_STYLES_GALLERY } from './picture-styles-gallery';
 import { QUICK_STYLES_GALLERY } from './quick-styles-gallery';
 import { SHAPE_EFFECTS_GALLERY } from './shape-effects-gallery';
@@ -47,6 +48,7 @@ const MODULES: Record<RibbonGalleryId, RibbonGalleryModule> = {
 	textWarp: TEXT_WARP_GALLERY,
 	quickStyles: QUICK_STYLES_GALLERY,
 	pictureStyles: PICTURE_STYLES_GALLERY,
+	cropToShape: CROP_TO_SHAPE_GALLERY,
 	pictureCorrections: PICTURE_CORRECTIONS_GALLERY,
 	pictureColor: PICTURE_COLOR_GALLERY,
 	graphicsFill: GRAPHICS_FILL_GALLERY,

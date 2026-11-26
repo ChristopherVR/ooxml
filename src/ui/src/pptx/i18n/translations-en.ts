@@ -1147,6 +1147,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.mediaRibbon.currentFrame': 'Current Frame',
 	'pptx.mediaRibbon.fromFile': 'Image from File',
 	'pptx.mediaRibbon.resetPoster': 'Reset Poster Frame',
+	'pptx.mediaRibbon.cropToShape': 'Crop to Shape',
 	'pptx.mediaRibbon.changeShape': 'Change Shape',
 	'pptx.mediaRibbon.sourceUnavailable': 'The media preview or image is unavailable.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': 'The selected node has no editable drawing shape.',

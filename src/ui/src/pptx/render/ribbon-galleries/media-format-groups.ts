@@ -18,6 +18,7 @@ function mediaFormat(tab: 'videoFormat' | 'audioFormat'): RibbonGalleryGroupPlac
 			contextualStrip: true,
 			galleries: [
 				{ gallery: 'pictureStyles', control: `${tab}.pictureStyles.gallery`, mode: 'inline' },
+				{ gallery: 'cropToShape', control: `${tab}.pictureStyles.shape`, mode: 'dropdown' },
 				{ gallery: 'shapeEffects', control: `${tab}.pictureStyles.effects`, mode: 'dropdown' },
 			],
 		},

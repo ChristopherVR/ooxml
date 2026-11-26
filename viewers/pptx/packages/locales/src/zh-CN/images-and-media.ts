@@ -251,6 +251,7 @@ export const translations = {
 	'pptx.mediaRibbon.currentFrame': '当前帧',
 	'pptx.mediaRibbon.fromFile': '从文件选择图片',
 	'pptx.mediaRibbon.resetPoster': '重置海报帧',
+	'pptx.mediaRibbon.cropToShape': '裁剪为形状',
 	'pptx.mediaRibbon.changeShape': '更改形状',
 	'pptx.mediaRibbon.sourceUnavailable': '媒体预览或图片不可用。',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': '所选节点没有可编辑的绘图形状。',

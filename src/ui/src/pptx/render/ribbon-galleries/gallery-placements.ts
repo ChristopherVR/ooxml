@@ -117,7 +117,9 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 			group: 'pictureFormat.size',
 			labelKey: 'pptx.ribbon.groupSize',
 			label: 'Size',
-			galleries: [],
+			galleries: [
+				{ gallery: 'cropToShape', control: 'pictureFormat.size.cropToShape', mode: 'dropdown' },
+			],
 			strip: 'picture-size',
 		},
 		{

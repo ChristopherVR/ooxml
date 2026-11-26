@@ -185,7 +185,7 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 				layout: 'Picture Layout',
 			},
 		},
-		size: { label: 'Size', controls: { crop: 'Crop' } },
+		size: { label: 'Size', controls: { crop: 'Crop', cropToShape: 'Crop to Shape' } },
 		accessibility: { label: 'Alt Text', controls: { altText: 'Alt Text' } },
 		arrange: {
 			label: 'Arrange',

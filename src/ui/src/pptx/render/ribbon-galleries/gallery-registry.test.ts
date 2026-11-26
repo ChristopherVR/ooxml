@@ -174,3 +174,36 @@ describe('contextual tabs', () => {
 		expect(resolveActiveRibbonTab('insert', [], 'home')).toBe('insert');
 	});
 });
+
+it('shares the preset catalogue for picture crop and media shape', () => {
+	const bounds = { id: 'image', x: 0, y: 0, width: 100, height: 50 };
+	const picture = { ...bounds, type: 'picture' } as const;
+	const media = { ...bounds, type: 'media', mediaType: 'video' } as const;
+	const nonPicture = { ...media, rawXml: { 'p:nvGraphicFramePr': {} } };
+
+	const crop = buildRibbonGallery('cropToShape', { element: picture });
+	const change = buildRibbonGallery('cropToShape', { element: media });
+	const tiles = (gallery: typeof change) => gallery.sections.flatMap(({ items }) => items);
+	expect(tiles(change).map(({ id }) => id)).toEqual(tiles(crop).map(({ id }) => id));
+	expect(
+		tiles(change)
+			.filter(({ applied }) => applied)
+			.map(({ id }) => id),
+	).toEqual(['rect']);
+	expect(
+		tiles(crop)
+			.filter(({ applied }) => applied)
+			.map(({ id }) => id),
+	).toEqual(['rect']);
+	expect(change.sections.flatMap(({ items }) => items)).toEqual(
+		expect.arrayContaining([expect.objectContaining({ id: 'hexagon' })]),
+	);
+	for (const element of [picture, media]) {
+		expect(applyRibbonGalleryItem('cropToShape', 'hexagon', { element })).toMatchObject({
+			elementId: bounds.id,
+			patch: { shapeType: 'hexagon' },
+		});
+	}
+	expect(buildRibbonGallery('cropToShape', { element: nonPicture }).disabled).toBe(true);
+	expect(applyRibbonGalleryItem('cropToShape', 'hexagon', { element: nonPicture })).toBeNull();
+});

@@ -263,6 +263,7 @@ export const translations = {
 	'pptx.mediaRibbon.currentFrame': 'Aktueller Frame',
 	'pptx.mediaRibbon.fromFile': 'Bild aus Datei',
 	'pptx.mediaRibbon.resetPoster': 'Posterframe zurücksetzen',
+	'pptx.mediaRibbon.cropToShape': 'Auf Form zuschneiden',
 	'pptx.mediaRibbon.changeShape': 'Form ändern',
 	'pptx.mediaRibbon.sourceUnavailable': 'Die Medienvorschau oder das Bild ist nicht verfügbar.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':

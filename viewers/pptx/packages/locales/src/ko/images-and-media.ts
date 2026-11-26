@@ -257,6 +257,7 @@ export const translations = {
 	'pptx.mediaRibbon.currentFrame': '현재 프레임',
 	'pptx.mediaRibbon.fromFile': '파일에서 그림 선택',
 	'pptx.mediaRibbon.resetPoster': '포스터 프레임 재설정',
+	'pptx.mediaRibbon.cropToShape': '도형에 맞춰 자르기',
 	'pptx.mediaRibbon.changeShape': '도형 변경',
 	'pptx.mediaRibbon.sourceUnavailable': '미디어 미리 보기 또는 그림을 사용할 수 없습니다.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':

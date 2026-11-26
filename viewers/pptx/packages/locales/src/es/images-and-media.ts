@@ -264,6 +264,7 @@ export const translations = {
 	'pptx.mediaRibbon.currentFrame': 'Fotograma actual',
 	'pptx.mediaRibbon.fromFile': 'Imagen desde archivo',
 	'pptx.mediaRibbon.resetPoster': 'Restablecer fotograma de póster',
+	'pptx.mediaRibbon.cropToShape': 'Recortar a la forma',
 	'pptx.mediaRibbon.changeShape': 'Cambiar forma',
 	'pptx.mediaRibbon.sourceUnavailable':
 		'La vista previa del clip o la imagen no están disponibles.',

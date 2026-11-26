@@ -259,6 +259,7 @@ export const translations = {
 	'pptx.mediaRibbon.currentFrame': '現在のフレーム',
 	'pptx.mediaRibbon.fromFile': 'ファイルから画像を選択',
 	'pptx.mediaRibbon.resetPoster': 'ポスターフレームのリセット',
+	'pptx.mediaRibbon.cropToShape': '図形に合わせてトリミング',
 	'pptx.mediaRibbon.changeShape': '図形の変更',
 	'pptx.mediaRibbon.sourceUnavailable': 'メディアのプレビューまたは画像を利用できません。',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': '選択したノードに編集可能な図形がありません。',
