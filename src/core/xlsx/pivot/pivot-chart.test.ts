@@ -166,3 +166,27 @@ it('tracks report and source names and detaches the chart with its cached data o
 	expect(detached.chartSpace?.pivotSource).toBeUndefined();
 	expect(detached.series[0]?.values).toEqual([4, 15]);
 });
+
+it('keeps a loaded PivotChart workbook and sheet prefix when renaming its report', async () => {
+	const { book, edit, name } = setup();
+	edit.renameSheet(1, 'Pivot!Report');
+	const part = 'xl/charts/chart1.xml';
+	const zip = await JSZip.loadAsync(await saveXlsx(book));
+	const xml = await zip.file(part)!.async('string');
+	zip.file(part, xml.replace('[Book.xlsx]', '[RealName.xlsx]'));
+
+	const loaded = await loadXlsx(await zip.generateAsync({ type: 'uint8array' }));
+	const session = createEditSession(loaded);
+	session.updatePivotTable(1, name, { name: 'RenamedPivot' });
+	expect(chartOf(loaded).chartSpace?.pivotSource?.name).toBe(
+		'[RealName.xlsx]Pivot!Report!RenamedPivot',
+	);
+	session.undo();
+	expect(chartOf(loaded).chartSpace?.pivotSource?.name).toBe(`[RealName.xlsx]Pivot!Report!${name}`);
+	session.redo();
+	const reopened = await loadXlsx(await saveXlsx(loaded));
+	expect(chartOf(reopened).chartSpace?.pivotSource?.name).toBe(
+		'[RealName.xlsx]Pivot!Report!RenamedPivot',
+	);
+	expect(pivotChartTable(reopened, chartOf(reopened))?.pivot.name).toBe('RenamedPivot');
+});

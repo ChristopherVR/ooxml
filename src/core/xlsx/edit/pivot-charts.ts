@@ -91,7 +91,14 @@ export function pivotChartUpdates(
 			let next: ChartSpace = {
 				...space,
 				...(space.pivotSource && previousName !== pivot.name
-					? { pivotSource: { ...space.pivotSource, name: `[Book.xlsx]${sheetName}!${pivot.name}` } }
+					? {
+							pivotSource: {
+								...space.pivotSource,
+								name:
+									space.pivotSource.name.slice(0, space.pivotSource.name.lastIndexOf('!') + 1) +
+									pivot.name,
+							},
+						}
 					: {}),
 				plotArea: {
 					...space.plotArea,
