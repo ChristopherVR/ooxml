@@ -121,6 +121,10 @@ test('localizes German stencil labels and exposes menu and input states', async 
 	await viewer.evaluate((node) => node.setAttribute('locale', 'de-DE'));
 	await more.press('Enter');
 	await menu('more', 'new-stencil').getByRole('menuitem', { name: 'Neue Schablone' }).click();
+	await expect(dialog.getByRole('dialog', { name: 'Neue Schablone', exact: true })).toHaveAttribute(
+		'aria-modal',
+		'true',
+	);
 	await expect(dialog.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
 	const confirm = dialog.getByRole('button', { name: 'OK', exact: true });
 	const field = dialog.getByRole('textbox', { name: 'Schablonenname' });
