@@ -2,8 +2,6 @@ import type { VisioLocale } from '../ribbon-locale';
 
 export const VISIO_STENCIL_STRINGS = {
 	en: {
-		Undo: 'Undo',
-		'No stencil edit to undo.': 'No stencil edit to undo.',
 		'Delete the master “{name}”?': 'Delete the master “{name}”?',
 		OK: 'OK',
 		Cancel: 'Cancel',
@@ -13,28 +11,15 @@ export const VISIO_STENCIL_STRINGS = {
 		'This file is too large to open.': 'This file is too large to open.',
 		'Missing ZIP end record': 'Missing ZIP end record',
 		'Another part uses this master part.': 'Another part uses this master part.',
-		'Edit Stencil': 'Edit Stencil',
-		'Turn on Edit Stencil to change its masters.': 'Turn on Edit Stencil to change its masters.',
 		'Enter a name.': 'Enter a name.',
 		'The stencil exceeded the isolated editing time limit.':
 			'The stencil exceeded the isolated editing time limit.',
 		'The Visio stencil worker failed.': 'The Visio stencil worker failed.',
 		'Stencil name': 'Stencil name',
 		'Untitled Stencil': 'Untitled Stencil',
-		'Save Stencil': 'Save Stencil',
-		'Add Selected Shape': 'Add Selected Shape',
 		'Master name': 'Master name',
 		'New Master': 'New Master',
-		'Rename Master': 'Rename Master',
-		'Delete Master': 'Delete Master',
-		'Edit Master': 'Edit Master',
 		'Default shape text': 'Default shape text',
-		'Add to My Shapes': 'Add to My Shapes',
-		'Remove from My Shapes': 'Remove from My Shapes',
-		'Select one editable 2D shape in a drawing.': 'Select one editable 2D shape in a drawing.',
-		'Open the source drawing to copy this master.': 'Open the source drawing to copy this master.',
-		'Select a top-level shape with editable plain text.':
-			'Select a top-level shape with editable plain text.',
 		'Enter a master name between 1 and 255 characters.':
 			'Enter a master name between 1 and 255 characters.',
 		'A master already has that name.': 'A master already has that name.',
@@ -56,8 +41,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Another master entry uses this master part.',
 	},
 	de: {
-		Undo: 'Rückgängig',
-		'No stencil edit to undo.': 'Es gibt keine Schablonenänderung zum Rückgängigmachen.',
 		'Delete the master “{name}”?': 'Masterform „{name}“ löschen?',
 		OK: 'OK',
 		Cancel: 'Abbrechen',
@@ -67,9 +50,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'This file is too large to open.': 'Diese Datei ist zu groß zum Öffnen.',
 		'Missing ZIP end record': 'Der ZIP-Enddatensatz fehlt',
 		'Another part uses this master part.': 'Ein anderer Teil verwendet diesen Masterteil.',
-		'Edit Stencil': 'Schablone bearbeiten',
-		'Turn on Edit Stencil to change its masters.':
-			'Aktivieren Sie die Schablonenbearbeitung, um Masterformen zu ändern.',
 		'Enter a name.': 'Geben Sie einen Namen ein.',
 		'The stencil exceeded the isolated editing time limit.':
 			'Die Schablonenbearbeitung hat das Zeitlimit überschritten.',
@@ -77,22 +57,9 @@ export const VISIO_STENCIL_STRINGS = {
 			'Die Hintergrundverarbeitung der Visio-Schablone ist fehlgeschlagen.',
 		'Stencil name': 'Schablonenname',
 		'Untitled Stencil': 'Unbenannte Schablone',
-		'Save Stencil': 'Schablone speichern',
-		'Add Selected Shape': 'Ausgewählte Form hinzufügen',
 		'Master name': 'Mastername',
 		'New Master': 'Neue Masterform',
-		'Rename Master': 'Masterform umbenennen',
-		'Delete Master': 'Masterform löschen',
-		'Edit Master': 'Masterform bearbeiten',
 		'Default shape text': 'Standardtext der Form',
-		'Add to My Shapes': 'Zu „Meine Shapes“ hinzufügen',
-		'Remove from My Shapes': 'Aus „Meine Shapes“ entfernen',
-		'Select one editable 2D shape in a drawing.':
-			'Wählen Sie eine bearbeitbare 2D-Form in einer Zeichnung aus.',
-		'Open the source drawing to copy this master.':
-			'Öffnen Sie zum Kopieren der Masterform die Quellzeichnung.',
-		'Select a top-level shape with editable plain text.':
-			'Wählen Sie eine Form der obersten Ebene mit bearbeitbarem Klartext.',
 		'Enter a master name between 1 and 255 characters.':
 			'Geben Sie einen Masterformnamen mit 1 bis 255 Zeichen ein.',
 		'A master already has that name.': 'Eine Masterform hat bereits diesen Namen.',
@@ -118,8 +85,6 @@ export const VISIO_STENCIL_STRINGS = {
 			'Ein anderer Mastereintrag verwendet diesen Masterteil.',
 	},
 	es: {
-		Undo: 'Deshacer',
-		'No stencil edit to undo.': 'No hay cambios en la plantilla que deshacer.',
 		'Delete the master “{name}”?': '¿Eliminar la forma maestra «{name}»?',
 		OK: 'Aceptar',
 		Cancel: 'Cancelar',
@@ -129,30 +94,15 @@ export const VISIO_STENCIL_STRINGS = {
 		'This file is too large to open.': 'Este archivo es demasiado grande para abrirlo.',
 		'Missing ZIP end record': 'Falta el registro de fin del ZIP',
 		'Another part uses this master part.': 'Otra parte usa esta parte maestra.',
-		'Edit Stencil': 'Editar plantilla de formas',
-		'Turn on Edit Stencil to change its masters.':
-			'Active la edición de la plantilla para cambiar sus formas maestras.',
 		'Enter a name.': 'Escriba un nombre.',
 		'The stencil exceeded the isolated editing time limit.':
 			'La edición aislada de la plantilla superó el límite de tiempo.',
 		'The Visio stencil worker failed.': 'Error en el proceso de la plantilla de Visio.',
 		'Stencil name': 'Nombre de la plantilla',
 		'Untitled Stencil': 'Plantilla sin título',
-		'Save Stencil': 'Guardar plantilla de formas',
-		'Add Selected Shape': 'Agregar forma seleccionada',
 		'Master name': 'Nombre de la forma maestra',
 		'New Master': 'Nueva forma maestra',
-		'Rename Master': 'Cambiar nombre de forma maestra',
-		'Delete Master': 'Eliminar forma maestra',
-		'Edit Master': 'Editar forma maestra',
 		'Default shape text': 'Texto predeterminado de la forma',
-		'Add to My Shapes': 'Agregar a Mis formas',
-		'Remove from My Shapes': 'Quitar de Mis formas',
-		'Select one editable 2D shape in a drawing.': 'Seleccione una forma 2D editable en un dibujo.',
-		'Open the source drawing to copy this master.':
-			'Abra el dibujo de origen para copiar esta forma maestra.',
-		'Select a top-level shape with editable plain text.':
-			'Seleccione una forma de nivel superior con texto sin formato editable.',
 		'Enter a master name between 1 and 255 characters.':
 			'Escriba un nombre de forma maestra de entre 1 y 255 caracteres.',
 		'A master already has that name.': 'Ya existe una forma maestra con ese nombre.',
@@ -177,8 +127,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Otra entrada maestra usa esta parte maestra.',
 	},
 	fr: {
-		Undo: 'Annuler la modification',
-		'No stencil edit to undo.': 'Aucune modification du gabarit à annuler.',
 		'Delete the master “{name}”?': 'Supprimer la forme de base « {name} » ?',
 		OK: 'Valider',
 		Cancel: 'Annuler',
@@ -189,31 +137,15 @@ export const VISIO_STENCIL_STRINGS = {
 		'Missing ZIP end record': 'L’enregistrement de fin du ZIP est manquant',
 		'Another part uses this master part.':
 			'Une autre partie utilise cette partie de forme de base.',
-		'Edit Stencil': 'Modifier le gabarit',
-		'Turn on Edit Stencil to change its masters.':
-			'Activez la modification du gabarit pour changer ses formes de base.',
 		'Enter a name.': 'Saisissez un nom.',
 		'The stencil exceeded the isolated editing time limit.':
 			'La modification isolée du gabarit a dépassé le délai autorisé.',
 		'The Visio stencil worker failed.': 'Le traitement du gabarit Visio a échoué.',
 		'Stencil name': 'Nom du gabarit',
 		'Untitled Stencil': 'Gabarit sans titre',
-		'Save Stencil': 'Enregistrer le gabarit',
-		'Add Selected Shape': 'Ajouter la forme sélectionnée',
 		'Master name': 'Nom de la forme de base',
 		'New Master': 'Nouvelle forme de base',
-		'Rename Master': 'Renommer la forme de base',
-		'Delete Master': 'Supprimer la forme de base',
-		'Edit Master': 'Modifier la forme de base',
 		'Default shape text': 'Texte par défaut de la forme',
-		'Add to My Shapes': 'Ajouter à Mes formes',
-		'Remove from My Shapes': 'Retirer de Mes formes',
-		'Select one editable 2D shape in a drawing.':
-			'Sélectionnez une forme 2D modifiable dans un dessin.',
-		'Open the source drawing to copy this master.':
-			'Ouvrez le dessin source pour copier cette forme de base.',
-		'Select a top-level shape with editable plain text.':
-			'Sélectionnez une forme de premier niveau avec du texte brut modifiable.',
 		'Enter a master name between 1 and 255 characters.':
 			'Saisissez un nom de forme de base de 1 à 255 caractères.',
 		'A master already has that name.': 'Une forme de base porte déjà ce nom.',
@@ -239,8 +171,6 @@ export const VISIO_STENCIL_STRINGS = {
 			'Une autre entrée utilise cette partie de forme de base.',
 	},
 	'zh-CN': {
-		Undo: '撤消',
-		'No stencil edit to undo.': '没有可撤消的模具编辑。',
 		'Delete the master “{name}”?': '删除主控形状“{name}”？',
 		OK: '确定',
 		Cancel: '取消',
@@ -250,26 +180,14 @@ export const VISIO_STENCIL_STRINGS = {
 		'This file is too large to open.': '此文件过大，无法打开。',
 		'Missing ZIP end record': '缺少 ZIP 结束记录',
 		'Another part uses this master part.': '另一个部件正在使用此主控形状部件。',
-		'Edit Stencil': '编辑模具',
-		'Turn on Edit Stencil to change its masters.': '请开启模具编辑以更改主控形状。',
 		'Enter a name.': '请输入名称。',
 		'The stencil exceeded the isolated editing time limit.': '模具已超过隔离编辑时限。',
 		'The Visio stencil worker failed.': 'Visio 模具后台处理失败。',
 		'Stencil name': '模具名称',
 		'Untitled Stencil': '未命名模具',
-		'Save Stencil': '保存模具',
-		'Add Selected Shape': '添加所选形状',
 		'Master name': '主控形状名称',
 		'New Master': '新建主控形状',
-		'Rename Master': '重命名主控形状',
-		'Delete Master': '删除主控形状',
-		'Edit Master': '编辑主控形状',
 		'Default shape text': '默认形状文本',
-		'Add to My Shapes': '添加到我的形状',
-		'Remove from My Shapes': '从我的形状中移除',
-		'Select one editable 2D shape in a drawing.': '请在绘图中选择一个可编辑的二维形状。',
-		'Open the source drawing to copy this master.': '请打开源绘图以复制此主控形状。',
-		'Select a top-level shape with editable plain text.': '请选择包含可编辑纯文本的顶层形状。',
 		'Enter a master name between 1 and 255 characters.': '请输入 1 到 255 个字符的主控形状名称。',
 		'A master already has that name.': '已有同名主控形状。',
 		'Enter plain text of up to 4096 characters.': '请输入不超过 4096 个字符的纯文本。',

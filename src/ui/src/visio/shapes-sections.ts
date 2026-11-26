@@ -9,11 +9,12 @@ import {
 	type ShapesDocument,
 } from './shapes-document';
 import { loadShapes as load, saveShapes as save } from './shapes-storage';
-import { MY_SHAPES_ID, stencilErrorMessage, stencilFiles } from './stencil-files';
-import { lazyStencilMenus } from './shapes-stencil-menus';
+import { MY_SHAPES_ID, stencilFiles } from './stencil-files';
+import { wireStencilMenus } from './shapes-stencil-menus';
+import type { StencilMenu } from './stencil-menus';
 import { masterList, menuItem } from './shapes-master-list';
 import { stencilFilePicker } from './shapes-files-ui';
-import { loadStencilStrings, translateStencilText } from './stencil-locale';
+import { translateStencilText } from './stencil-locale';
 import type { ViewerController } from './controller';
 export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 
@@ -32,11 +33,6 @@ export interface StencilsView {
 
 /** Visio shows a stencil's first masters as its Quick Shapes until the user changes them. */
 const DEFAULT_QUICK = 4;
-/** Undefined until the shared menu element is registered. */
-type Menu = HTMLElement & {
-	openAt?(x: number, y: number, opener?: HTMLElement): void;
-	close?(): void;
-};
 
 /**
  * The Stencils view below the view tabs: More Shapes (a menu of the built-in stencils), Quick
@@ -86,9 +82,9 @@ export function buildStencilsView(
 		},
 		t,
 	);
-	const moreMenu = doc.createElement('office-ui-context-menu') as Menu;
+	const moreMenu = doc.createElement('office-ui-context-menu') as StencilMenu;
 	moreMenu.dataset.shapesMenu = 'more';
-	const masterMenu = doc.createElement('office-ui-context-menu') as Menu;
+	const masterMenu = doc.createElement('office-ui-context-menu') as StencilMenu;
 	masterMenu.dataset.shapesMenu = 'master';
 	const localize = () => {
 		more.textContent = t('More Shapes');
@@ -117,7 +113,7 @@ export function buildStencilsView(
 		picker.status.textContent = message;
 		picker.status.hidden = !message;
 	};
-	const authoring = lazyStencilMenus(pane, files, masterMenu, {
+	const authoring = wireStencilMenus(pane, files, masterMenu, {
 		controller,
 		quickIds,
 		changeQuick: (stencil, id) => {
@@ -204,15 +200,8 @@ export function buildStencilsView(
 	};
 
 	more.addEventListener('click', () => {
-		void loadStencilStrings().then(
-			() => {
-				if (!more.isConnected) return;
-				const box = more.getBoundingClientRect();
-				renderMenu();
-				moreMenu.openAt?.(box.left, box.bottom, more);
-			},
-			(error: unknown) => showError(stencilErrorMessage(error, t)),
-		);
+		const box = more.getBoundingClientRect();
+		moreMenu.openAt?.(box.left, box.bottom, more);
 	});
 	moreMenu.addEventListener('office-command', (event) => {
 		event.stopPropagation();
@@ -221,7 +210,7 @@ export function buildStencilsView(
 		else if (command === 'open-stencil-file') picker.open();
 		else if (command === 'new-stencil') {
 			moreMenu.close?.();
-			authoring.use((menus) => menus.create());
+			authoring.create();
 		}
 	});
 	quickToggle.addEventListener('click', () => {
@@ -233,12 +222,7 @@ export function buildStencilsView(
 		const target = event.target as Element;
 		const action = target.closest<HTMLElement>('[data-stencil-actions]');
 		const id = action?.dataset.stencilActions;
-		if (action && id) {
-			authoring.use((menus) => {
-				if (action.isConnected) menus.openSection(action, id);
-			});
-			return;
-		}
+		if (action && id) return authoring.openSection(action, id);
 		const close = target.closest<HTMLElement>('[data-close-stencil]');
 		if (close) return toggleStencil(close.dataset.closeStencil!);
 		const title = target.closest<HTMLElement>('.stencil-title');

@@ -114,6 +114,9 @@ Visio opens, renders, edits and saves drawings locally. The browser can load the
 
 In a Vite consumer, set `worker.format` to `'es'` to keep the TIFF decoder in an on-demand worker chunk.
 
+The Shapes pane menus are in the app bundle. Opening a local stencil file or running a stencil
+authoring command can load bundled translations, editing code and a worker from the app's origin.
+
 ## Development
 
 The viewer is part of the `ooxml` monorepo (a Bun workspace). Install once at the repository root, then work from `viewers/visio` with Node.js 22.12 or newer and Bun. `ooxml-core` (`src/core/visio`) and `ooxml-ui` (`src/ui/src/visio`) resolve to the same checkout, so there is nothing to link.

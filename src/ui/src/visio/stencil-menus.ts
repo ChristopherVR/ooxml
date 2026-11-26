@@ -1,17 +1,19 @@
+import type { OfficeUiContextMenu } from '../menu/context-menu';
 import type { StencilAction } from './stencil-authoring';
 import { findMaster, type Stencil } from './stencil-catalog';
 import { stencilDrawing } from './stencil-drawing';
 import { MY_SHAPES_ID, stencilErrorMessage, type StencilFiles } from './stencil-files';
 import { menuItem } from './shapes-master-list';
-import { translateStencilText } from './stencil-locale';
+import { loadStencilStrings, translateStencilText } from './stencil-locale';
 import type { ViewerController } from './controller';
 
-type Menu = HTMLElement & { openAt?(x: number, y: number, opener?: HTMLElement): void };
+export type StencilMenu = HTMLElement &
+	Partial<Pick<OfficeUiContextMenu, 'openAt' | 'open' | 'close'>>;
 
 export function bindStencilMenus(
 	pane: HTMLElement,
 	files: StencilFiles,
-	masterMenu: Menu,
+	masterMenu: StencilMenu,
 	options: {
 		quickIds: (stencil: Stencil) => readonly string[];
 		changeQuick: (stencil: Stencil, id: string) => void;
@@ -34,7 +36,10 @@ export function bindStencilMenus(
 		pending = pending
 			.then(async () => {
 				options.error('');
-				const { runStencilAction } = await import('./stencil-authoring');
+				const [{ runStencilAction }] = await Promise.all([
+					import('./stencil-authoring'),
+					loadStencilStrings(),
+				]);
 				await runStencilAction(pane, files, action, t, (id) => {
 					if (action.type === 'new' || action.type === 'collect') editing.add(id);
 					options.update(id);
@@ -42,7 +47,7 @@ export function bindStencilMenus(
 			})
 			.catch((error: unknown) => options.error(stencilErrorMessage(error, t)));
 	};
-	const stencilMenu = doc.createElement('office-ui-context-menu') as Menu;
+	const stencilMenu = doc.createElement('office-ui-context-menu') as StencilMenu;
 	stencilMenu.dataset.shapesMenu = 'stencil';
 	stencilMenu.setAttribute('label', t('Stencil actions'));
 	const disabled = (command: string, label: string, reason: string | undefined) => {
@@ -56,10 +61,9 @@ export function bindStencilMenus(
 
 	const openMasterMenu = (button: HTMLElement, x: number, y: number) => {
 		const id = button.dataset.master;
-		if (!id) return false;
-		menuMaster = id;
-		menuSection = button.closest<HTMLElement>('[data-stencil]')?.dataset.stencil;
-		const current = menuSection ? files.get(menuSection) : undefined;
+		if (!id || !masterMenu.openAt) return false;
+		const section = button.closest<HTMLElement>('[data-stencil]')?.dataset.stencil;
+		const current = section ? files.get(section) : undefined;
 		const file = files.fileMaster(id);
 		const found = findMaster(id);
 		const source = drawingSource();
@@ -78,7 +82,7 @@ export function bindStencilMenus(
 					),
 				),
 			);
-		if (menuSection !== MY_SHAPES_ID)
+		if (section !== MY_SHAPES_ID)
 			items.push(
 				disabled(
 					'my-shapes',
@@ -103,13 +107,17 @@ export function bindStencilMenus(
 			items.push(
 				disabled(
 					'delete',
-					menuSection === MY_SHAPES_ID ? 'Remove from My Shapes' : 'Delete Master',
+					section === MY_SHAPES_ID ? 'Remove from My Shapes' : 'Delete Master',
 					reason,
 				),
 			);
 		}
+		if (!items.length) return false;
 		masterMenu.replaceChildren(...items);
-		masterMenu.openAt?.(x, y, button);
+		masterMenu.openAt(x, y, button);
+		if (!masterMenu.open) return false;
+		menuMaster = id;
+		menuSection = section;
 		return true;
 	};
 	pane.addEventListener('keydown', (event) => {

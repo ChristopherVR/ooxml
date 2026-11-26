@@ -601,6 +601,10 @@ PowerPoint can load its preview renderer from the app's JavaScript host when ope
 multi-slide presentation. This asset request carries no document data or filename. See
 [PRIVACY.md](../../PRIVACY.md#powerpoint-ooxml-uipptx-and-the-pptx--viewer-packages).
 
+Visio includes Shapes pane menus in the app bundle. Opening a local stencil file or running a
+stencil authoring command can load bundled translations, editing code and a worker from the app's
+origin. Those requests carry only application asset URLs.
+
 Excel loads the selected non-English language, chart insertion and formatting tools, and PivotTable creation and settings dialogs from the app's own origin on demand. English is bundled, and the editor uses it if the selected language cannot load.
 
 Excel loads its bundled XPath code when a workbook contains FILTERXML or the formula is entered. Visio's parse worker loads its metafile decoder when a picture passes the worker's format and size checks. These are same-origin application assets.

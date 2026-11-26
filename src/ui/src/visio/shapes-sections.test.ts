@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
+import { defineContextMenu } from '../menu/context-menu';
+import { defineMenuItem } from '../menu/menu-item';
 import { ViewerController } from './controller';
 import { createShapesWindow, setShapesLocale } from './shapes-window';
 import { SHAPES_STORAGE_KEY } from './shapes-sections';
@@ -8,6 +10,10 @@ import { masterCreation, outlinePreviewPath } from './stencil-catalog';
 import { wireStencil } from './viewer-stencil';
 import type { CancellableEditor } from './worker-editor';
 
+beforeAll(() => {
+	defineContextMenu();
+	defineMenuItem();
+});
 afterEach(() => {
 	document.body.replaceChildren();
 	localStorage.clear();
@@ -97,7 +103,7 @@ describe('More Shapes and Quick Shapes', () => {
 		expect(document.activeElement).toBe(element.querySelector('#shapes-more'));
 	});
 
-	it('shows Quick Shapes and loads the master menu on its first use', async () => {
+	it('shows Quick Shapes and opens the master menu on its first use', () => {
 		const { element, more, quick } = pane();
 		const toggle = element.querySelector<HTMLButtonElement>('#shapes-quick-toggle')!;
 		expect(quick()).toEqual([]);
@@ -122,11 +128,9 @@ describe('More Shapes and Quick Shapes', () => {
 			element
 				.querySelector(`#shapes-sections [data-master="${id}"]`)!
 				.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
-		rightClick('star');
-		await vi.waitFor(() =>
-			expect(masterMenu.querySelector('office-ui-menu-item')?.getAttribute('label')).toBe(
-				'Add to Quick Shapes',
-			),
+		expect(rightClick('star')).toBe(false);
+		expect(masterMenu.querySelector('office-ui-menu-item')?.getAttribute('label')).toBe(
+			'Add to Quick Shapes',
 		);
 		command(masterMenu, 'quick-shapes');
 		rightClick('square');
@@ -141,6 +145,15 @@ describe('More Shapes and Quick Shapes', () => {
 			'circle',
 			'star',
 		]);
+	});
+
+	it('leaves the native context menu available for an unknown master', () => {
+		const { element } = pane();
+		const unknown = element.querySelector<HTMLElement>('[data-master="rectangle"]')!;
+		unknown.dataset.master = 'unknown-master';
+		const trigger = new MouseEvent('contextmenu', { bubbles: true, cancelable: true });
+		expect(unknown.dispatchEvent(trigger)).toBe(true);
+		expect(element.querySelector('[data-shapes-menu="master"]')?.children).toHaveLength(0);
 	});
 
 	it('ignores corrupt storage and unknown stencils', () => {

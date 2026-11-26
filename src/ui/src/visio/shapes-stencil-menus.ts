@@ -1,52 +1,35 @@
-import { loadStencilStrings, translateStencilText } from './stencil-locale';
-import { stencilErrorMessage } from './stencil-files';
-import type { bindStencilMenus } from './stencil-menus';
+import { bindStencilMenus } from './stencil-menus';
 
 type Menus = ReturnType<typeof bindStencilMenus>;
 
-export function lazyStencilMenus(...args: Parameters<typeof bindStencilMenus>) {
-	const [pane, , , options] = args;
-	let pending: Promise<Menus> | undefined;
+export function wireStencilMenus(...args: Parameters<typeof bindStencilMenus>) {
+	const [pane] = args;
 	let loaded: Menus | undefined;
-	const use = (action: (menus: Menus) => void) => {
-		if (loaded) {
-			action(loaded);
-			return;
-		}
-		pending ??= Promise.all([import('./stencil-menus'), loadStencilStrings()])
-			.then(([{ bindStencilMenus }]) => {
-				loaded = bindStencilMenus(...args);
-				pane.append(loaded.menu);
-				return loaded;
-			})
-			.catch((error: unknown) => {
-				pending = undefined;
-				throw error;
-			});
-		void pending.then(action, (error: unknown) =>
-			options.error(stencilErrorMessage(error, (text) => translateStencilText(pane, text))),
-		);
+	const menus = () => {
+		if (loaded) return loaded;
+		loaded = bindStencilMenus(...args);
+		pane.append(loaded.menu);
+		return loaded;
 	};
 	const masterButton = (event: Event) =>
 		event.target instanceof Element ? event.target.closest<HTMLElement>('[data-master]') : null;
-	const openMaster = (button: HTMLElement, x: number, y: number) => {
-		use((menus) => {
-			if (button.isConnected) menus.openMasterMenu(button, x, y);
-		});
-	};
 	pane.addEventListener('contextmenu', (event) => {
+		if (event.defaultPrevented) return;
 		const button = masterButton(event);
-		if (!button) return;
-		event.preventDefault();
-		openMaster(button, event.clientX, event.clientY);
+		if (button?.isConnected && menus().openMasterMenu(button, event.clientX, event.clientY))
+			event.preventDefault();
 	});
 	pane.addEventListener('keydown', (event) => {
+		if (event.defaultPrevented) return;
 		if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
 		const button = masterButton(event);
-		if (!button) return;
-		event.preventDefault();
+		if (!button?.isConnected) return;
 		const box = button.getBoundingClientRect();
-		openMaster(button, box.left, box.bottom);
+		if (menus().openMasterMenu(button, box.left, box.bottom)) event.preventDefault();
 	});
-	return { use, close: (id: string) => loaded?.close(id) };
+	return {
+		create: () => menus().create(),
+		openSection: (button: HTMLElement, id: string) => menus().openSection(button, id),
+		close: (id: string) => loaded?.close(id),
+	};
 }

@@ -192,3 +192,25 @@ test('localizes German stencil labels and exposes menu and input states', async 
 		}),
 	).toBeVisible();
 });
+
+test('consumes right-click only when a master menu opens', async ({ page }) => {
+	const { viewer } = await drawingWithShape(page);
+	const master = viewer.locator('[data-stencil="basic"] [data-master="rectangle"]');
+	const masterMenu = viewer.getByRole('menu', { name: 'Master', exact: true });
+	const fellThrough = await master.evaluate((node) => {
+		const original = node.getAttribute('data-master');
+		node.setAttribute('data-master', 'unknown-master');
+		const accepted = node.dispatchEvent(
+			new MouseEvent('contextmenu', { bubbles: true, cancelable: true }),
+		);
+		if (original) node.setAttribute('data-master', original);
+		return accepted;
+	});
+	expect(fellThrough).toBe(true);
+	await expect(masterMenu).toBeHidden();
+	await master.click({ button: 'right' });
+	await expect(masterMenu).toBeVisible();
+	await expect(viewer.getByRole('menuitem', { name: 'Add to My Shapes' })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(masterMenu).toBeHidden();
+});

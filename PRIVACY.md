@@ -252,8 +252,9 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   formatting rule. These requests send the asset URL and standard browser metadata. Drawings and
   workbooks without those features skip the requests. If the assets are unavailable offline, the
   drawing reports an unsupported preview or the formula returns an error. File contents stay local.
-- Opening or authoring a Visio stencil loads bundled stencil code and its worker from the
-  application's own origin on demand. Those requests carry only the application asset URLs.
+- Selecting a local stencil file or running a Visio stencil authoring command loads its bundled
+  translations, editing code and worker from the application's own origin as needed. Those
+  requests carry only the application asset URLs. The Shapes pane menus are in the app bundle.
   Stencil files and My Shapes stay in session memory. Save Stencil writes a local download.
   Hosts can omit the Shapes pane, and leaving the stencil commands unused makes no stencil
   asset requests. If an asset is unavailable offline, the command reports the failure.
