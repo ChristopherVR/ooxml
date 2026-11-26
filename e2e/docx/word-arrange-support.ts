@@ -10,10 +10,13 @@ export async function choosePosition(editor: Locator, value: string) {
 
 export async function openShapes(
 	page: Page,
-	fixture: URL | Buffer = new URL('./support/shapes.docx', import.meta.url),
+	{
+		fixture = new URL('./support/shapes.docx', import.meta.url),
+		framework = 'vanilla',
+	}: { fixture?: URL | Buffer; framework?: string } = {},
 ) {
 	await page.setViewportSize({ width: 2600, height: 950 });
-	await page.goto('/?framework=vanilla');
+	await page.goto(`/?framework=${framework}`);
 	await (
 		await fileInput(page)
 	).setInputFiles({

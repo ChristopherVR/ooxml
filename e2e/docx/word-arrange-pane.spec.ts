@@ -124,7 +124,9 @@ test('a Selection Pane row reveals its drawing on a virtualized Print Layout pag
 	const filler =
 		'<w:p><w:pPr><w:pageBreakBefore/></w:pPr><w:r><w:t>Filler</w:t></w:r></w:p>'.repeat(13);
 	zip.file(path, xml.replace('<w:body>', `<w:body>${filler}`));
-	const editor = await openShapes(page, await zip.generateAsync({ type: 'nodebuffer' }));
+	const editor = await openShapes(page, {
+		fixture: await zip.generateAsync({ type: 'nodebuffer' }),
+	});
 	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
 	await expect.poll(() => editor.locator('.dve-print-page').count()).toBeGreaterThan(10);
 	await expect(editor.locator('.dve-print-float')).toHaveCount(0);
