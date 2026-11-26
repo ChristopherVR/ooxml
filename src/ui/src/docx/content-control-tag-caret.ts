@@ -24,7 +24,10 @@ export function inlineCaretSide(
 	if (prior?.state.selection instanceof TextSelection && prior.state.selection.empty) {
 		const { $head } = prior.state.selection;
 		const previous = prior.tr.mapping.map($head.pos, -1);
-		if (previous === $pos.pos && prior.inside && has(prior.inside)) return prior.inside;
+		// Text typed at the inside end moves the caret with the end tag: it stays inside.
+		const followed = prior.tr.mapping.map($head.pos, 1);
+		if ((previous === $pos.pos || followed === $pos.pos) && prior.inside && has(prior.inside))
+			return prior.inside;
 		if (previous !== $pos.pos && $pos.sameParent($pos.doc.resolve(previous))) {
 			const edge = previous > $pos.pos ? 'start' : 'end';
 			const approach = markAt($head, opposite(edge));
@@ -32,8 +35,6 @@ export function inlineCaretSide(
 			if (target && has(edge) && approach?.eq(target)) return edge;
 		}
 	}
-	if ($pos.parentOffset === 0 && has('start')) return 'start';
-	if ($pos.parentOffset === $pos.parent.content.size && has('end')) return 'end';
 	return undefined;
 }
 

@@ -288,3 +288,39 @@ it('splits and rejoins tags at an unmarked inline atom between marked runs', asy
 		expect(tags()).toHaveLength(240);
 	});
 });
+
+it('keeps every character typed at the inside end of an inline control inside it', async () => {
+	await withView('issue-349-content-control-tags', (view) => {
+		const span = inlineSpan(view);
+		select(view, span.to - 1);
+		select(view, span.to);
+		for (const char of 'xyz') view.dispatch(view.state.tr.insertText(char));
+		const typed = controlSpans(view.state.doc).find(
+			({ control }) => control.id === span.control.id,
+		);
+		expect(typed && view.state.doc.textBetween(typed.from, typed.to)).toBe('alphaxyz');
+	});
+});
+
+it('types beside a tagged check box at the end of a paragraph', async () => {
+	await withView('issue-349-content-control-tags', (view) => {
+		const { schema } = view.state;
+		const box = {
+			id: '999',
+			level: 'inline',
+			kind: 'checkbox',
+			checked: false,
+			appearance: 'tags',
+		};
+		const mark = schema.marks.contentControl!.create({ data: JSON.stringify(box) });
+		view.dispatch(
+			view.state.tr.insert(view.state.doc.child(0).nodeSize - 1, schema.text('☐', [mark])),
+		);
+		const end = view.state.doc.child(0).nodeSize - 1;
+		select(view, 2);
+		select(view, end);
+		expect(typeOverPlaceholder(view.state, end, 'x')).not.toBe('blocked');
+		const marks = view.state.storedMarks ?? view.state.selection.$from.marks();
+		expect(marks.some((entry) => entry.type.name === 'contentControl')).toBe(false);
+	});
+});
