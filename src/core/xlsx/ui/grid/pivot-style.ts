@@ -11,7 +11,8 @@ export function paintPivotStyle(
 	theme: ThemePalette,
 ): CellView {
 	const style = pivot.display?.style;
-	const match = /^PivotStyle(Light|Medium|Dark)(\d{1,2})$/.exec(style?.name ?? 'PivotStyleLight16');
+	if (!style?.name) return view;
+	const match = /^PivotStyle(Light|Medium|Dark)(\d{1,2})$/.exec(style.name);
 	if (!match) return view;
 	const family = match[1] as 'Light' | 'Medium' | 'Dark';
 	const index = Number(match[2]);
@@ -24,11 +25,11 @@ export function paintPivotStyle(
 	const headers = columns ? columns + 1 + Number(multi) : 1;
 	const labels = pivot.layout === 'compact' ? 1 : pivotRowFields(pivot).length + Number(onRows);
 	const header =
-		(style?.showColHeaders !== false && y < headers) ||
-		(style?.showRowHeaders !== false && x < labels && y >= headers);
+		(style.showColHeaders !== false && y < headers) ||
+		(style.showRowHeaders !== false && x < labels && y >= headers);
 	const band =
-		(style?.showRowStripes && y >= headers && (y - headers) % 2 === 0) ||
-		(style?.showColStripes && x >= labels && (x - labels) % 2 === 0);
+		(style.showRowStripes && y >= headers && (y - headers) % 2 === 0) ||
+		(style.showColStripes && x >= labels && (x - labels) % 2 === 0);
 	if (!header && !band) return view;
 	const color = tableStyleColor({ name: match[0], family, index }, theme);
 	const tint = header ? (family === 'Light' ? '29' : '48') : '20';

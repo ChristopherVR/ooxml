@@ -251,8 +251,9 @@ line/marker swatches and position-authoring controls remain incomplete.
   conditions, other calculated formulas and items, filters on date group items, and mixed or
   custom layouts are preserved read-only with warnings (`pivot/admission.ts`). Native acceptance:
   `scripts/xlsx-pivot-acceptance.ps1`, `scripts/xlsx-pivot-context-acceptance.ps1` and the
-  `xlsx-pivot-*-oracle.ps1` scripts. The contextual acceptance opens and refreshes ten
-  edited reports in Excel, compares their cells before and after refreshing, and exercises
+  `xlsx-pivot-*-oracle.ps1` scripts. PivotTable style gallery thumbnails approximate Excel's built-in
+  styles. The contextual acceptance opens and refreshes edited reports in Excel, compares their
+  cells before and after refreshing, and exercises
   native row layout, field subtotals and style banding before closing without saving.
 - Slicers and timelines: `src/core/xlsx/slicer/` views, `edit/slicers.ts`,
   `scripts/xlsx-slicer-acceptance.ps1`.

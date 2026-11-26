@@ -180,7 +180,7 @@ export function pivotDesignCommands(): Command[] {
 		pivotEdit({
 			id: 'pivot.style',
 			label: 'PivotTable Styles',
-			value: (ctx) => selectedPivot(ctx)?.pivot.display?.style?.name ?? 'PivotStyleLight16',
+			value: (ctx) => selectedPivot(ctx)?.pivot.display?.style?.name ?? '',
 			run: (ctx, name) => {
 				const selected = selectedPivot(ctx);
 				if (selected && typeof name === 'string')

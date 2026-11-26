@@ -1,5 +1,6 @@
 import {
 	createWorkbook,
+	createEditSession,
 	putCell,
 	cellView,
 	createGridMetrics,
@@ -10,8 +11,48 @@ import { describe, expect, it } from 'vitest';
 import { buildItems } from './cell-items';
 import { cssFont, edgeCss, fillPaint, hashes, patternImage } from './cell-paint';
 import { iconSvg } from './icon-sets';
+import { CellViewCache } from './view-cache';
 
 describe('cell paint', () => {
+	it('paints only a named PivotTable style', () => {
+		const workbook = createWorkbook();
+		const sheet = workbook.sheets[0]!;
+		const session = createEditSession(workbook);
+		[
+			['Item', 'Value'],
+			['A', '5'],
+		].forEach((row, r) => row.forEach((value, c) => session.setCellInput(0, r, c, value)));
+		const name = session.createPivotTable(
+			0,
+			{ row: 0, col: 3 },
+			{
+				source: 'A1:B2',
+				rowField: 'Item',
+				valueField: 'Value',
+			},
+		);
+		const views = new CellViewCache({
+			workbook: () => workbook,
+			sheet: () => sheet,
+			sheetIndex: () => 0,
+			session: () => session,
+		});
+		const view = () => {
+			views.clear();
+			return views.get(0, 3);
+		};
+		expect(view()).toMatchObject({ text: 'Item', font: { bold: false } });
+		expect(view()?.fill).toBeUndefined();
+		session.updatePivotTable(0, name, { display: { style: { showRowStripes: true } } });
+		expect(view()?.fill).toBeUndefined();
+		session.updatePivotTable(0, name, { display: { style: { name: 'PivotStyleLight16' } } });
+		expect(view()?.fill).toMatchObject({ background: expect.any(String) });
+		expect(view()?.font.bold).toBe(true);
+		session.updatePivotTable(0, name, { display: { style: { name: '' } } });
+		expect(view()?.fill).toBeUndefined();
+		expect(view()?.font.bold).toBe(false);
+	});
+
 	it('builds font shorthands with fallbacks and zoom', () => {
 		const font = {
 			family: 'Calibri',

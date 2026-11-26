@@ -1,21 +1,30 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
+import JSZip from 'jszip';
 import {
 	clickRibbonControl,
 	editor,
 	formulaBarValue,
 	goToCell,
+	grid,
 	newWorkbook,
 	ribbon,
 	sheetTabs,
 	typeInActiveCell,
 } from './helpers';
 
-async function loadPivotWorkbook(page: Page, suffix = '-rows') {
-	const fixture = readFileSync(
+async function loadPivotWorkbook(page: Page, suffix = '-rows', unstyled = false) {
+	let fixture: Uint8Array = readFileSync(
 		resolve(process.cwd(), `../../src/core/xlsx/__fixtures__/excel-pivot${suffix}.xlsx`),
 	);
+	if (unstyled) {
+		const zip = await JSZip.loadAsync(fixture);
+		const part = 'xl/pivotTables/pivotTable1.xml';
+		const xml = await zip.file(part)!.async('string');
+		zip.file(part, xml.replace(/<pivotTableStyleInfo[^>]*\/>/, ''));
+		fixture = await zip.generateAsync({ type: 'uint8array' });
+	}
 	await editor(page).evaluate(
 		async (node, bytes) =>
 			(node as unknown as { load(data: Uint8Array, name: string): Promise<void> }).load(
@@ -127,4 +136,19 @@ test('shows the requested grand-total row or column', async ({ page }) => {
 	await expect.poll(() => formulaBarValue(page)).toBe('35');
 	await goToCell(page, 'D4');
 	await expect.poll(() => formulaBarValue(page)).toBe('');
+});
+
+test('leaves an imported report unstyled until a gallery style is selected', async ({ page }) => {
+	await loadPivotWorkbook(page, '-rows', true);
+	const heading = grid(page)
+		.locator('.xg-c:visible')
+		.filter({ hasText: /^Category$/ });
+	await expect(heading).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	await goToCell(page, 'A2');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	const gallery = tabs.getByRole('button', { name: 'PivotTable Styles', exact: true });
+	await clickRibbonControl(page, gallery);
+	await editor(page).getByRole('menuitem', { name: 'Medium Style 4', exact: true }).click();
+	await expect(heading).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
