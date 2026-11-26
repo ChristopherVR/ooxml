@@ -1,0 +1,21 @@
+.dve-frame[data-focus-view] {
+	position: fixed;
+	inset: 0;
+	z-index: 2147483647;
+}
+.dve-frame[data-focus-view] > :is(.dve-ribbon, .dve-titlebar, .dve-status, .dve-search-panel) {
+	display: none !important;
+}
+.dve-frame[data-focus-view] > .dve-body > :not(.dve-canvas) {
+	display: none !important;
+}
+.dve-focus-exit {
+	align-self: center;
+	margin: 0.4rem;
+	padding: 0.25rem 0.8rem;
+	font: inherit;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 4px;
+}

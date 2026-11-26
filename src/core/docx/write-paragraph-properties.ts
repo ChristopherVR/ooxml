@@ -161,6 +161,18 @@ export function writeParagraphProperties(
 	paragraph: Paragraph,
 	base?: Paragraph,
 ): void {
+	if (!base || paragraph.outlineLevel !== base.outlineLevel) {
+		for (const element of children(props, 'outlineLvl')) props.removeChild(element);
+		if (paragraph.outlineLevel !== undefined) {
+			const element = makeW(doc, 'outlineLvl');
+			setAttribute(
+				element,
+				'val',
+				String(paragraph.outlineLevel === 0 ? 9 : paragraph.outlineLevel - 1),
+			);
+			props.appendChild(element);
+		}
+	}
 	updatePageBreakBefore(doc, props, paragraph, base);
 	updateKeepOptions(doc, props, paragraph, base);
 	updateDropCap(doc, props, paragraph, base);

@@ -55,6 +55,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Picture Format',
 		'SmartArt Design',
 		'Chart Design',
+		'Outlining',
 	]) {
 		const key =
 			name === 'Header & Footer' ? 'header-footer' : name.toLowerCase().replace(/ /g, '-');
@@ -72,6 +73,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 				'Shape Format',
 				'Picture Format',
 				'Chart Design',
+				'Outlining',
 				'SmartArt Design',
 			].includes(name)
 		)
@@ -91,6 +93,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	for (const panel of panels.values()) root.append(panel);
 	// Table tools are contextual: the tab appears only while the selection is in a table.
 	for (const key of [
+		'outlining',
 		'table',
 		'header-footer',
 		'shape-format',

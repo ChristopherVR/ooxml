@@ -55,6 +55,7 @@ export function refreshEditorControls(
 						'Page thumbnails',
 						'Navigation pane',
 						'Layout view',
+						'Show Level',
 						'Print',
 						'Copy',
 						'Help',

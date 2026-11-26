@@ -1,4 +1,5 @@
 import { frArrange } from './arrange';
+import { viewsStrings } from './document-views';
 import { frDesign } from './design';
 import { frStyleDialog } from './style-dialog';
 import { frSplitCells } from './split-cells';
@@ -28,6 +29,7 @@ import { frRibbonNames } from './ribbon-names';
 
 export const fr: LocaleStrings = {
 	...frArrange,
+	...viewsStrings['fr'],
 	...frDesign,
 	...frStyleDialog,
 	...frOptions,

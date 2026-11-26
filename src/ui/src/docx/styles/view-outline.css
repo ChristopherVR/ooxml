@@ -1,0 +1,30 @@
+[data-document-view='outline'] > .dve-paper {
+	width: min(100%, 65rem) !important;
+	min-height: 0 !important;
+	padding: clamp(0.75rem, 3vw, 2rem) !important;
+	column-count: auto !important;
+}
+[data-document-view='outline'] > :is(.dve-header-footer-slot, .dve-notes-container),
+[data-document-view='outline'] .ProseMirror > .dve-outline-hidden {
+	display: none !important;
+}
+[data-document-view='outline'] .ProseMirror > .dve-outline-block {
+	margin-inline-start: min(var(--dve-outline-indent), 24%) !important;
+	overflow-wrap: anywhere;
+}
+[data-document-view='outline'] .dve-outline-block[role='heading'] {
+	border-inline-start: 2px solid var(--line);
+	padding-inline-start: 0.45rem;
+}
+[data-outline-first-line] .dve-outline-block[data-outline-body] {
+	max-block-size: 1lh;
+	overflow: hidden;
+}
+[data-outline-plain] .ProseMirror :is(.dve-outline-block, .dve-outline-block *) {
+	font: inherit !important;
+	color: inherit !important;
+	text-decoration: none !important;
+	background-color: transparent !important;
+	letter-spacing: normal !important;
+	text-shadow: none !important;
+}

@@ -1,3 +1,4 @@
+import { DOCUMENT_VIEWS, isDocumentView } from './document-views';
 import { canCaptureDisplay } from '../form/display-capture';
 import { createMultilingualControls } from './multilingual-ribbon';
 import { createReviewControls } from './review-ribbon';
@@ -606,11 +607,8 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			menuSelect(
 				'Layout view',
 				'view',
-				[
-					['draft', 'Draft'],
-					['print', 'Print Layout'],
-				],
-				(value) => ({ type: 'view', value: value === 'print' ? 'print' : 'draft' }),
+				DOCUMENT_VIEWS.map(([mode, label]) => [mode, label]),
+				(value) => ({ type: 'view', value: isDocumentView(value) ? value : 'draft' }),
 			),
 			tool('Print', 'print', { type: 'print' }, { large: true }),
 		),

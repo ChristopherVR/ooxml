@@ -82,16 +82,6 @@ export function patchStyleParagraph(
 			after.direction !== before.direction
 		)
 			setStyleValue(pPr, 'jc', paragraphJustification(after));
-		if (after.outlineLevel !== before.outlineLevel)
-			setStyleValue(
-				pPr,
-				'outlineLvl',
-				after.outlineLevel === undefined
-					? undefined
-					: after.outlineLevel === 0
-						? 9
-						: after.outlineLevel - 1,
-			);
 		for (const key of [...EAST_ASIAN_TYPOGRAPHY_KEYS, 'suppressAutoHyphens'] as const)
 			if (after[key] !== before[key]) setToggle(doc, pPr, key, after[key]);
 		writeParagraphProperties(doc, pPr, after, before);

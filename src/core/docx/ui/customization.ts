@@ -144,6 +144,7 @@ export const WORD_RIBBON_TAB_IDS = [
 	'picture-format',
 	'smartart-design',
 	'chart-design',
+	'outlining',
 ] as const;
 
 /** One native Word ribbon tab. */

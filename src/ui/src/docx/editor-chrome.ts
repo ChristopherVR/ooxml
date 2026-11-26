@@ -1,3 +1,4 @@
+import type { DocumentView } from './document-views';
 import type { RibbonElement } from './ribbon-tab-api';
 import type { DocumentModel } from 'ooxml-core/docx';
 import {
@@ -67,7 +68,7 @@ export interface ChromeHost {
 	share(): ShareDialogHost;
 	/** The name the Share dialog suggests (the review author). */
 	userName(): string;
-	setViewMode(mode: 'draft' | 'print'): void;
+	setViewMode(mode: DocumentView): void;
 	setZoom(percent: number): void;
 	reportError(error: Error): void;
 	/** Mirrors the title bar's save state into `element.dirty`. */

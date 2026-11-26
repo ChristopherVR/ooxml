@@ -33,7 +33,7 @@ export function wordNavigationProps(core: EditorCore) {
 			Draft: translate(core.locale, 'Draft'),
 			'Print Layout': translate(core.locale, 'Print Layout'),
 		} as Record<string, string>,
-		viewMode,
+		viewMode: viewMode === 'print' ? ('print' as const) : ('draft' as const),
 		/** False in Draft, where there are no pages to move between. */
 		pagesAvailable: status !== null,
 		page,

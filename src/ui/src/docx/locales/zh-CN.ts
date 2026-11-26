@@ -1,4 +1,5 @@
 import { zhArrange } from './arrange';
+import { viewsStrings } from './document-views';
 import { zhDesign } from './design';
 import { zhCNStyleDialog } from './style-dialog';
 import { zhSplitCells } from './split-cells';
@@ -28,6 +29,7 @@ import { zhCNRibbonNames } from './ribbon-names';
 
 export const zhCN: LocaleStrings = {
 	...zhArrange,
+	...viewsStrings['zh-CN'],
 	...zhDesign,
 	...zhCNStyleDialog,
 	...zhOptions,

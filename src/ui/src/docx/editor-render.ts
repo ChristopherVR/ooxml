@@ -32,7 +32,11 @@ export function renderDocument(core: EditorCore): void {
 				insertNote: (kind) => core.parts.insertNote(kind, canvas, paper),
 				// ProseMirror's Mod-f reaches here before the shortcut registry: honour `find: false`.
 				showSearch: () => {
-					if (!core.viewOptions.customization.shortcuts.has('find')) core.shell.searchPanel?.open();
+					if (
+						!['read', 'focus'].includes(core.pages.views.active) &&
+						!core.viewOptions.customization.shortcuts.has('find')
+					)
+						core.shell.searchPanel?.open();
 				},
 				pasteSpecial: () => core.formatDialogs.open('pasteSpecial'),
 				pasteOptions: {

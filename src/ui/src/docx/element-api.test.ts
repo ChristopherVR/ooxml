@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { mountOutlineRibbon } from './view-outline-ribbon';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDocument, loadDocx, type DocumentModel } from 'ooxml-core/docx';
 import { DocxEditorElement, registerDocxEditor } from './index';
@@ -289,12 +290,14 @@ describe('ribbon action ids', () => {
 
 	it('lists exactly the labelled ribbon controls', () => {
 		const ribbon = createRibbon('en');
+		const outline = mountOutlineRibbon(ribbon, 'en');
 		const ids = new Set<string>();
 		for (const control of ribbon.querySelectorAll<HTMLElement>(
 			'.ribbon-panel button[aria-label], .ribbon-panel select[aria-label], .ribbon-panel input[aria-label]',
 		))
 			ids.add(ribbonControlId(control) ?? `unmapped:${control.getAttribute('aria-label')}`);
 		expect([...ids].sort()).toEqual([...RIBBON_ACTION_IDS].sort());
+		outline?.dispose();
 	});
 });
 

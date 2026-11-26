@@ -1,3 +1,5 @@
+import { ViewModes } from './view-modes';
+import type { DocumentView } from './document-views';
 import type { DocumentModel, SectionProperties } from 'ooxml-core/docx';
 import { closeHistory } from 'prosemirror-history';
 import { applyPageSetup, type PageSetupValues } from 'ooxml-core/docx';
@@ -31,18 +33,27 @@ export interface PageControllerHost extends EditorHost {
 	statusBar(): StatusBar | undefined;
 	printLayout(): PrintLayoutController | undefined;
 	printEditing?(active: boolean): void;
+	beforeViewChange?(): void;
+	configureRibbon?(): void;
+	refreshEditable?(): void;
 	refreshControls(): void;
 }
 
 /** Page setup, section breaks, zoom, Web/Print Layout and printing. */
 export class PageController {
 	zoom = 1;
-	viewMode: 'draft' | 'print' = 'draft';
+	readonly views: ViewModes;
+
+	get viewMode() {
+		return this.views.mode;
+	}
 	/** True once the user picked a zoom; the automatic fit to a narrow viewport then stays out. */
 	private userZoomed = false;
 	private observed?: HTMLElement;
 
-	constructor(private readonly host: PageControllerHost) {}
+	constructor(private readonly host: PageControllerHost) {
+		this.views = new ViewModes(host);
+	}
 
 	/** Page setup applies to the section holding the selection, as in Word, and is undoable. */
 	changePageSetup(key: Extract<RibbonAction, { type: 'page' }>['key'], value: string): void {
@@ -312,7 +323,7 @@ export class PageController {
 	 * 100% when the window grows. Runs on resize and orientation change.
 	 */
 	autoFit(): void {
-		if (this.userZoomed) return;
+		if (this.userZoomed || this.viewMode === 'web' || this.viewMode === 'read') return;
 		const canvas = this.host.paper()?.parentElement;
 		if (!canvas || canvas.hasAttribute('data-multipage')) return;
 		const style = getComputedStyle(canvas);
@@ -379,24 +390,8 @@ export class PageController {
 		this.host.statusBar()?.setZoom(percent);
 	}
 
-	/** Switches between continuous and paginated presentations of the existing editor. */
-	setViewMode(mode: 'draft' | 'print'): void {
-		const wasPrint = this.viewMode === 'print';
-		this.viewMode = mode;
-		const printLayout = this.host.printLayout();
-		printLayout?.setActive(mode === 'print');
-		const paper = this.host.paper();
-		if (paper) paper.hidden = false;
-		this.host.printEditing?.(mode === 'print');
-		// Print Layout shows notes on their pages; the notes editing panel belongs to the editing view.
-		paper?.parentElement?.toggleAttribute('data-print-view', mode === 'print');
-		const toolbar = this.host.toolbar();
-		const select = toolbar && findLocalizedControl<HTMLSelectElement>(toolbar, 'Layout view');
-		if (select) select.value = mode;
-		// Print Layout is kept current while active; relaying it out again would swap the pages twice.
-		if (mode === 'print' && !wasPrint) printLayout?.scheduleRelayout(this.host.model());
-		this.host.statusBar()?.setViewMode(mode);
-		this.host.refreshControls();
+	setViewMode(mode: DocumentView): void {
+		this.views.select(mode);
 	}
 
 	/** Re-lays out Print Layout after a model change (coalesced unless `immediate`, for a swapped document). */

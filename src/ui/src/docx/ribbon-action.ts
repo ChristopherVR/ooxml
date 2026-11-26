@@ -1,3 +1,4 @@
+import type { DocumentView, OutlineAction } from './document-views';
 import type { TableCommand } from './table-commands';
 import type { MultilingualAction } from './multilingual-ribbon';
 import type { ReviewDisplayMode } from './review-display';
@@ -63,7 +64,8 @@ export type RibbonAction =
 				| 'decreaseLevel'
 				| 'remove';
 	  }
-	| { type: 'view'; value: 'draft' | 'print' }
+	| { type: 'view'; value: DocumentView }
+	| OutlineAction
 	| { type: 'print' }
 	| MultilingualAction
 	| { type: 'search'; focus?: 'find' | 'replace' }

@@ -104,11 +104,31 @@ detail and limits of each feature already built.
    Other remaining work includes citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,
    wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly
+   remain open. Other remaining work includes object
+   positioning and wrapping (no Layout > Arrange group, no Picture
+   Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
+   `=`, DOCPROPERTY and INCLUDE fields, wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly
    identified and preserved.
 5. **Production review and integration.** Add proofing services, compare/protection
    and application persistence as explicit contracts. Complete cross-browser,
    keyboard/screen-reader, large-document and concurrent-editing coverage before
    advertising replacement-level reliability.
+
+## Document views
+
+The View tab and status bar offer Draft, Print Layout, Web Layout, Read Mode,
+Outline and Focus. Web Layout flows across the editor width and shows the
+document page colour. Read Mode flows the body into one or two columns per
+screen, with page buttons and keyboard navigation. Escape returns to the
+previous editor view. Focus hides the ribbon and surrounding panels while
+keeping the current layout editable.
+
+Outline shows top-level headings and body blocks. It supports level filtering,
+branch expansion and collapse, text formatting and first-line display, undoable
+outline-level edits, and moving adjacent heading branches within a section.
+Level edits preserve the paragraph's existing style. Outline structure commands
+are unavailable while tracking changes, collaborating or editing a restricted
+document. Read Mode uses browser column layout and displays the main body.
 
 ## Acceptance for Word equivalence
 

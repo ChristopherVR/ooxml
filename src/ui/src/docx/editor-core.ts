@@ -44,7 +44,7 @@ import type { DocxChartFormatPane } from './chart-format-pane';
 import { HEADER_FOOTER_INPUT, locksStories } from 'ooxml-core/docx/ui';
 import { newPicturePartName } from './picture-commands';
 import { stageWatermarkPicture, watermarkPictureSize } from './watermark-picture';
-import { ViewOptions } from './view-options';
+import { applyViewOptions, ViewOptions } from './view-options';
 import { ReadAloudSession } from './read-aloud-session';
 import { DocxWebfonts } from './docx-webfonts';
 import { currentSectionIndex } from './section-commands';
@@ -349,6 +349,13 @@ export class EditorCore {
 			statusBar: () => this.shell.chrome?.statusBar,
 			printLayout: () => this.shell.printLayout,
 			printEditing: (active) => this.shell.printEditing?.setActive(active),
+			beforeViewChange: () => {
+				this.mailings?.stopPreview();
+				if (this.parts.activeView())
+					this.parts.closeHeaderFooter(this.shell.canvas, this.shell.paper);
+			},
+			configureRibbon: () => applyViewOptions(this),
+			refreshEditable: () => this.view?.setProps({ editable: () => this.canEditBody() }),
 			refreshControls: () => this.refreshControls(),
 		});
 	}
@@ -373,7 +380,11 @@ export class EditorCore {
 	}
 
 	canEditBody(): boolean {
-		return !this.readOnly && (!this.collab.yjs || this.collab.yjs.session.canWrite());
+		return (
+			this.pages?.viewMode !== 'read' &&
+			!this.readOnly &&
+			(!this.collab.yjs || this.collab.yjs.session.canWrite())
+		);
 	}
 
 	/** The ribbon acts on an open header/footer/note editor, otherwise on the main text. */
@@ -501,7 +512,7 @@ export class EditorCore {
 			this.collab.active,
 			this.locale,
 			this.element.lang,
-			printLayout?.pageStatus(),
+			this.pages.viewMode === 'print' ? printLayout?.pageStatus() : null,
 			Boolean(review?.commentsOpen),
 			this.canEditBody() && (!this.collab.active || Boolean(this.collab.yjs?.sharedComments)),
 			this.targetView() === this.view &&
@@ -526,6 +537,7 @@ export class EditorCore {
 			chrome?.refresh(status.pageText, status.wordText);
 		}
 		this.pages.syncControls();
+		this.pages.views.sync();
 		if (toolbar)
 			syncHeaderFooterRibbon(
 				toolbar,

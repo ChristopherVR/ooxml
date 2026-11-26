@@ -1,0 +1,16 @@
+.dve-canvas[data-document-view='web'] {
+	padding: 0;
+}
+[data-document-view='web'] > .dve-paper {
+	width: calc(100% / var(--dve-zoom, 1)) !important;
+	min-height: calc(100% / var(--dve-zoom, 1)) !important;
+	padding: 1.5rem clamp(1rem, 4vw, 3rem) !important;
+	column-count: auto !important;
+	box-shadow: none;
+	overflow-wrap: anywhere;
+}
+[data-document-view='web'] .dve-break-marker,
+[data-document-view='web'] .dve-section-end::after,
+[data-document-view='web'] > .dve-header-footer-slot {
+	display: none !important;
+}

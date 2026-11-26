@@ -1,0 +1,70 @@
+.dve-frame:has([data-document-view='read'])
+	> :is(.dve-ribbon, .dve-titlebar, .dve-status, .dve-search-panel),
+.dve-frame:has([data-document-view='read']) > .dve-body > :not(.dve-canvas),
+[data-document-view='read'] > :not(.dve-paper) {
+	display: none !important;
+}
+.dve-canvas[data-document-view='read'] {
+	container-type: inline-size;
+	display: flex;
+	padding: clamp(12px, 3vw, 36px);
+	overflow: hidden;
+}
+[data-document-view='read'] > .dve-paper {
+	flex: 1;
+	width: 0 !important;
+	min-width: 0;
+	min-height: 0 !important;
+	padding: 0 !important;
+	column-count: auto !important;
+	overflow: auto hidden;
+	scrollbar-width: none;
+	zoom: 1;
+	direction: ltr;
+	box-shadow: none;
+}
+[data-document-view='read'] .ProseMirror {
+	box-sizing: border-box;
+	height: 100%;
+	padding-block: 0.75rem;
+	column-count: 1;
+	column-gap: 32px;
+	column-fill: auto;
+	/* The page offsets and column order share a left-to-right scroll coordinate. */
+	direction: ltr;
+	overflow-wrap: anywhere;
+}
+@container (min-width: 680px) {
+	[data-document-view='read'] .ProseMirror {
+		column-count: 2;
+	}
+}
+[data-document-view='read'] .dve-break-marker,
+[data-document-view='read'] .dve-section-end::after {
+	display: none !important;
+}
+.dve-reader-page-extent {
+	position: absolute;
+	inset: 0 auto auto 0;
+	height: 0;
+	pointer-events: none;
+}
+.dve-reader-controls {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+}
+.dve-reader-controls button {
+	padding: 0.25rem 0.6rem;
+	font: inherit;
+	color: var(--ink);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	border-radius: 4px;
+}
+.dve-reader-controls button[aria-disabled='true'] {
+	opacity: 0.65;
+}

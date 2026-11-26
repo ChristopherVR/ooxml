@@ -1,3 +1,4 @@
+import { DOCUMENT_VIEWS, isDocumentView, type DocumentView } from './document-views';
 import { defineStatusBar, defineZoomSlider } from '../controls';
 import type { OfficeStatusBarState } from '../controls';
 import { registerIcon } from '../icons';
@@ -11,7 +12,7 @@ import { AUTO_FIT_MIN } from './auto-fit';
 import { normalizeEditorLocale, translate } from './localization';
 
 export interface StatusBarHandlers {
-	setViewMode(mode: 'draft' | 'print'): void;
+	setViewMode(mode: DocumentView): void;
 	setZoom(percent: number): void;
 	showCompatibilityNotes(): void;
 }
@@ -23,7 +24,7 @@ export interface StatusBar {
 	setNoteCount(count: number): void;
 	/** False while the File tab is hidden: the notes button opens File > Info, so it goes too. */
 	setNotesAvailable(available: boolean): void;
-	setViewMode(mode: 'draft' | 'print'): void;
+	setViewMode(mode: DocumentView): void;
 	setZoom(percent: number): void;
 	/** Redraws every label after the editor locale changed. */
 	relocalize(): void;
@@ -37,8 +38,12 @@ type ZoomSliderElement = HTMLElement & { value: number };
 
 /** Word's layout switches, drawn on the shared 20px grid; product icons stay with the product. */
 const LAYOUT_ICONS = {
-	webLayout: 'M3 5h14v10H3z M3 8h14',
-	printLayout: 'M5 3h10v14H5z M8 7h4 M8 10h4',
+	draft: 'M4 5h12 M4 8h12 M4 11h9 M4 14h10',
+	read: 'M10 6C8 4 5 4 2 5v10c3-1 6-1 8 1 2-2 5-2 8-1V5c-3-1-6-1-8 1z M10 6v10',
+	outline: 'M3 5h2 M7 5h10 M5 9h2 M9 9h8 M5 13h2 M9 13h8',
+	focus: 'M3 8V3h5 M12 3h5v5 M17 12v5h-5 M8 17H3v-5',
+	web: 'M3 5h14v10H3z M3 8h14',
+	print: 'M5 3h10v14H5z M8 7h4 M8 10h4',
 };
 
 /**
@@ -49,7 +54,7 @@ const LAYOUT_ICONS = {
 export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	defineStatusBar();
 	defineZoomSlider();
-	for (const [name, d] of Object.entries(LAYOUT_ICONS)) registerIcon(name, d);
+	for (const [name, d] of Object.entries(LAYOUT_ICONS)) registerIcon(`word-view-${name}`, d);
 
 	const element = document.createElement('office-ui-status-bar') as StatusBarElement;
 	element.className = 'dve-status';
@@ -66,7 +71,7 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 		language: '',
 		notes: 0,
 		notesAvailable: true,
-		mode: 'draft',
+		mode: 'draft' as DocumentView,
 		zoom: 100,
 	};
 	let layout: StatusLayout = statusLayout(0);
@@ -75,9 +80,9 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	const render = () => {
 		const t = locale();
 		const noteKey = model.notes === 1 ? 'status.note' : 'status.notes';
-		const view = (mode: 'draft' | 'print', key: 'Web Layout' | 'Print Layout') => ({
+		const view = ([mode, key]: (typeof DOCUMENT_VIEWS)[number]) => ({
 			id: mode,
-			icon: mode === 'draft' ? 'webLayout' : 'printLayout',
+			icon: `word-view-${mode}`,
 			label: translate(t, key),
 			pressed: model.mode === mode,
 		});
@@ -105,7 +110,7 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 					hidden: model.notes === 0 || !model.notesAvailable,
 				},
 			],
-			views: layout.views ? [view('draft', 'Web Layout'), view('print', 'Print Layout')] : false,
+			views: layout.views ? DOCUMENT_VIEWS.map(view) : false,
 		};
 		slider.setAttribute('out-label', translate(t, 'Zoom out'));
 		slider.setAttribute('in-label', translate(t, 'Zoom in'));
@@ -116,7 +121,7 @@ export function createStatusBar(handlers: StatusBarHandlers): StatusBar {
 	element.addEventListener('office-status-activate', (event) => {
 		const { id } = (event as CustomEvent<{ id: string }>).detail;
 		if (id === 'notes') handlers.showCompatibilityNotes();
-		else if (id === 'draft' || id === 'print') handlers.setViewMode(id);
+		else if (isDocumentView(id)) handlers.setViewMode(id);
 	});
 	slider.addEventListener('input', () => handlers.setZoom(slider.value));
 

@@ -231,6 +231,7 @@ describe('localized rendering', () => {
 				strings[locale]['tab.picture-format'],
 				strings[locale]['tab.smartart-design'],
 				strings[locale]['tab.chart-design'],
+				strings[locale]['tab.outlining'],
 			]);
 		}
 		expect(strings.fr['tab.insert']).toBe('Insertion');

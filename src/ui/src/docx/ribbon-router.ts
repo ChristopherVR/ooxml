@@ -28,6 +28,15 @@ import { mailingsReason } from './mailings-ribbon';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
+	if (action.type === 'view') {
+		core.pages.setViewMode(action.value);
+		return;
+	}
+	if (action.type === 'outline') {
+		core.pages.views.run(action);
+		return;
+	}
+	if (core.pages.viewMode === 'read') return;
 	if (action.type === 'mailings') {
 		if (mailingsReason(core, action.key)) return;
 		const generation = core.loadGeneration;
@@ -210,8 +219,7 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 	else if (action.type === 'list' && target) {
 		runListAction(target, action.key, core.model);
 		focusView(target);
-	} else if (action.type === 'view') pages.setViewMode(action.value);
-	else if (action.type === 'print') pages.print();
+	} else if (action.type === 'print') pages.print();
 	else if (action.type === 'insertNote') parts.insertNote(action.kind, shell.canvas, shell.paper);
 	else if (action.type === 'convertNotes') parts.convertNotes(action.selection);
 	else if (action.type === 'page') pages.changePageSetup(action.key, action.value);

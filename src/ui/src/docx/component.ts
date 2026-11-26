@@ -256,6 +256,7 @@ export class DocxEditorElement extends DocxEditorApi {
 
 	disconnectedCallback() {
 		const { core } = this;
+		core.pages.views.disconnect();
 		core.mailings?.disconnect();
 		// Open popups listen on the document, which would keep this editor alive.
 		closeRibbonPopover(this);

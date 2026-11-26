@@ -33,6 +33,8 @@ interface Layer {
 export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): void {
 	const { element, shell } = core;
 	const activeElement = () => element.shadowRoot?.activeElement ?? null;
+	const presentation = () =>
+		core.pages.views.active === 'read' || core.pages.views.active === 'focus';
 	// A read-only ProseMirror surface cannot take focus, so the canvas stands in for it.
 	shell.canvas!.tabIndex = -1;
 	attachCanvasClick(core);
@@ -49,7 +51,7 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		target: shell.canvas!,
 		view: () => core.targetView(),
 		focusDocument: toDocument,
-		readOnly: () => core.readOnly,
+		readOnly: () => !core.canEditBody(),
 		locale: () => core.locale,
 		run: (action) => routeRibbonAction(core, action),
 		warn: (message) => emit(element, 'document-warning', message),
@@ -135,12 +137,19 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 			selfHandled: false,
 		},
 	];
-	// Snapshot in the capture phase, before a layer's own Escape handler closes it.
+	const openLayer = () =>
+		layers.find(
+			(layer) =>
+				layer.isOpen() &&
+				(!presentation() || !layer.element || layer.element.getClientRects().length > 0),
+		);
+	// Snapshot before a layer's own handler runs. The presentation also needs Escape before
+	// ProseMirror or native fullscreen consumes it.
 	let escapeOwned = false;
 	element.addEventListener(
 		'keydown',
 		(event) => {
-			if (event.key !== 'Escape') return;
+			if (event.key !== 'Escape' || event.isComposing) return;
 			const path = event.composedPath();
 			escapeOwned = layers.some(
 				(layer) =>
@@ -148,21 +157,34 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 					layer.isOpen() &&
 					(layer.element ? path.includes(layer.element) : path.includes(menu.element as Node)),
 			);
+			if (presentation() && !escapeOwned && !openLayer() && core.pages.views.escape()) {
+				event.preventDefault();
+				event.stopPropagation();
+			}
 		},
 		true,
 	);
 
 	const actions: ShortcutActions = {
-		find: () => shell.searchPanel?.open('find'),
-		replace: () => shell.searchPanel?.open('replace'),
+		find: () => {
+			if (!presentation()) shell.searchPanel?.open('find');
+		},
+		replace: () => {
+			if (!presentation()) shell.searchPanel?.open('replace');
+		},
 		save: () => void shell.chrome?.run('save'),
 		print: () => void shell.chrome?.run('print'),
 		moveRegion: (direction) => {
-			const next = (REGIONS.indexOf(currentRegion()) + direction + REGIONS.length) % REGIONS.length;
-			const region = REGIONS[next];
+			const regions = presentation() ? (['document'] as const) : REGIONS;
+			const current = currentRegion();
+			const next =
+				(regions.findIndex((region) => region === current) + direction + regions.length) %
+				regions.length;
+			const region = regions[next];
 			if (region) focusRegion(region);
 		},
 		focusRibbon: () => {
+			if (presentation()) return;
 			focusRegion('ribbon');
 			shell.toolbar?.dispatchEvent(new CustomEvent('dve-keytips'));
 		},
@@ -178,7 +200,7 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 		},
 		escape: () => {
 			if (escapeOwned) return false;
-			const open = layers.find((layer) => layer.isOpen());
+			const open = openLayer();
 			if (open) open.close();
 			else if (currentRegion() === 'document') return false;
 			toDocument();
@@ -188,7 +210,7 @@ export function attachEditorInteractions(core: EditorCore, frame: HTMLElement): 
 	const mac = () => isMacPlatform();
 	const registry = createShortcutRegistry(actions);
 	installKeyboard(element, registry, () => ({
-		readOnly: core.readOnly,
+		readOnly: !core.canEditBody(),
 		mac: mac(),
 		disabled: core.viewOptions.customization.shortcuts,
 	}));

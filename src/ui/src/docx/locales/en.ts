@@ -1,4 +1,5 @@
 import { enArrange } from './arrange';
+import { viewsStrings } from './document-views';
 import { enDesign } from './design';
 import { enStyleDialog } from './style-dialog';
 import { enSplitCells } from './split-cells';
@@ -31,6 +32,7 @@ import { enRibbonNames } from './ribbon-names';
  */
 export const en = {
 	...enArrange,
+	...viewsStrings['en'],
 	...enDesign,
 	...enStyleDialog,
 	...enOptions,

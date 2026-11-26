@@ -89,7 +89,7 @@ export function attachSurfaceNavigation(core: EditorCore): () => void {
 	};
 	const mirror = () => {
 		const view = core.view;
-		if (!view || view.isDestroyed || view.editable) return;
+		if (!view || view.isDestroyed || view.editable || core.pages.viewMode === 'read') return;
 		const found = ends();
 		if (!found?.anchor || !found.focus) return;
 		if (!view.dom.contains(found.anchor) || !view.dom.contains(found.focus)) return;
