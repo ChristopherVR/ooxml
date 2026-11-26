@@ -227,6 +227,7 @@ export function runArrange(
 		core.pages.viewMode !== 'print' &&
 		(key === 'align' ||
 			key === 'group' ||
+			key === 'position' ||
 			(key === 'wrap' && (value === 'move' || value === 'fix')))
 	)
 		return;

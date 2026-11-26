@@ -7,7 +7,8 @@ test('Word arranges a floating shape from its Layout ribbon and saves the edit',
 	page,
 }) => {
 	const editor = await openShapes(page);
-	const shape = editor.locator('.ProseMirror .dve-shape').first();
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const shape = editor.locator('.dve-print-float').first();
 	await expect(shape).toBeVisible();
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	const layout = editor.getByRole('tabpanel', { name: 'Layout', exact: true });
@@ -135,6 +136,45 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 			.toEqual([]);
 	}
 });
+
+test('Position presets place an ellipse at the top, center and bottom of the printed page', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const ellipse = editor.locator('.dve-print-float').nth(2);
+	await expect(ellipse).toBeVisible();
+	await ellipse.click({ force: true });
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	const measure = () =>
+		ellipse.evaluate((element) => {
+			const bounds = element.getBoundingClientRect();
+			const sheet = element.closest('.dve-print-page')!;
+			const margins = sheet.querySelector('.dve-print-column')!.getBoundingClientRect();
+			return {
+				top: bounds.top - margins.top,
+				right: margins.right - bounds.right,
+				bottom: margins.bottom - bounds.bottom,
+				centerX: bounds.left + bounds.width / 2 - margins.left - margins.width / 2,
+				centerY: bounds.top + bounds.height / 2 - margins.top - margins.height / 2,
+			};
+		});
+	for (const [preset, edges] of [
+		['Top Right', ['top', 'right']],
+		['Bottom Right', ['bottom', 'right']],
+		['Middle Center', ['centerX', 'centerY']],
+	] as const) {
+		await choosePosition(editor, preset);
+		for (const edge of edges)
+			await expect.poll(async () => Math.abs((await measure())[edge])).toBeLessThan(1);
+	}
+});
+
+async function choosePosition(editor: Locator, value: string) {
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');
+	await editor.getByRole('menuitemradio', { name: new RegExp(value) }).click();
+}
 
 async function openShapes(page: Page, fixture = new URL('./support/shapes.docx', import.meta.url)) {
 	await page.setViewportSize({ width: 1800, height: 950 });

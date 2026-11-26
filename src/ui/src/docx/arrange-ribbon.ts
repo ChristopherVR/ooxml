@@ -160,10 +160,12 @@ export function syncArrange(
 				? editable && Boolean(node?.attrs.textBoxContent || textDirectionCellAvailable(state))
 				: key === 'align' || key === 'group'
 					? floated && printLayout
-					: drawing;
+					: key === 'position'
+						? drawing && printLayout
+						: drawing;
 		control.disabled = !possible;
 		const unavailable =
-			(key === 'align' || key === 'group') && !printLayout
+			(key === 'align' || key === 'group' || key === 'position') && !printLayout
 				? 'Switch to Print Layout to arrange drawings.'
 				: editable && key === 'direction'
 					? 'Select a text box or editable table cell.'

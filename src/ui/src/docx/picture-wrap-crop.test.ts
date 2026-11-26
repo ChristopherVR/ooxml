@@ -121,6 +121,9 @@ describe('picture Wrap Text and Crop', () => {
 			control.value = value;
 			control.dispatchEvent(new Event('change'));
 		};
+		const mode = root.querySelector<HTMLSelectElement>('select[aria-label="Layout view"]')!;
+		mode.value = 'print';
+		mode.dispatchEvent(new Event('change'));
 		choose('Position', 'bottom-right');
 		// A presence-like metadata transaction does not invalidate the pending ribbon command.
 		view.dispatch(view.state.tr.setMeta('test-presence', true));
