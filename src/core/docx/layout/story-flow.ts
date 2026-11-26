@@ -1,7 +1,7 @@
 import type { Block, DocumentModel, HeaderFooterContent } from '../model';
 import { withComputedFieldRuns } from './computed-field-runs';
 import { adaptDocumentModel } from './adapter';
-import type { LayoutDocumentInput } from './input';
+import type { LayoutDocumentInput, LayoutTextFrame } from './input';
 import type { TextMeasurer } from './measure';
 import {
 	headerFooterForPage,
@@ -13,6 +13,7 @@ import {
 } from './page-fields';
 import { pageStyleRefs } from './page-style-refs';
 import { layoutSections } from './page-flow';
+import { pageFrames, placeInFrames } from './floats';
 import { positionFloats } from './position-floats';
 import { inFlow, type LayoutBlockBox, type LayoutFloatBox, type LayoutPageBox } from './result';
 import type { LayoutReviewOptions } from './review-display';
@@ -64,8 +65,12 @@ export function flowStory(
 	};
 	const result = layoutSections(withComputedFieldRuns(input, doc), measurer);
 	for (const warning of result.approximations) note(warning);
-	const column = result.pages[0]?.columns[0];
+	const storyPage = result.pages[0];
+	const column = storyPage?.columns[0];
 	const boxes = column?.blocks ?? [];
+	const textFrames = new Map<string, LayoutTextFrame>();
+	for (const block of story?.blocks ?? [])
+		if (block.kind === 'paragraph' && block.textFrame) textFrames.set(block.id, block.textFrame);
 	const joins = new Set(
 		story?.blocks.flatMap((block) =>
 			block.kind === 'paragraph' && block.borderJoinNext ? [block.id] : [],
@@ -86,7 +91,30 @@ export function flowStory(
 		(bottom, box) => (inFlow(box) ? Math.max(bottom, box.yPx + box.heightPx) : bottom),
 		0,
 	);
-	return { input, column, boxes, heightPx };
+	return { input, storyPage, column, heightPx, textFrames };
+}
+
+/** Move out-of-flow text frames from the measuring page to the physical page's anchors. */
+function storyColumn(flow: ReturnType<typeof flowStory>, page: LayoutPageBox, storyTopPx: number) {
+	const { column, storyPage, textFrames } = flow;
+	if (!column || !storyPage || !textFrames.size) return column;
+	const before = pageFrames(storyPage, column, { topPx: 0, heightPx: 0 });
+	const after = pageFrames(page, column, { topPx: storyTopPx, heightPx: 0 });
+	const blocks = column.blocks.map((box) => {
+		if (box.kind !== 'paragraph' || !box.floating) return box;
+		const anchor = textFrames.get(box.blockId);
+		if (!anchor) return box;
+		// The frame's own size cancels when taking the difference between aligned positions.
+		const point = { ...anchor, widthPx: 0, heightPx: 0 };
+		const local = placeInFrames(point, before);
+		const physical = placeInFrames(point, after);
+		return {
+			...box,
+			xPx: (box.xPx ?? 0) + physical.xPx - local.xPx - page.marginLeftPx,
+			yPx: box.yPx + physical.yPx - local.yPx - storyTopPx,
+		};
+	});
+	return { ...column, blocks };
 }
 
 export interface PlacedStory {
@@ -201,8 +229,9 @@ export function createPageStories(
 				kind === 'header' ? section?.headerDistanceTwips : section?.footerDistanceTwips;
 			const distancePx = distance === undefined ? DEFAULT_DISTANCE_PX : distance / 15;
 			const y = kind === 'header' ? distancePx : page.heightPx - distancePx - flow.heightPx;
+			const column = storyColumn(flow, page, y);
 			const { floats: _bodyFloats, ...pageFrame } = page;
-			const frame: LayoutPageBox = { ...pageFrame, columns: flow.column ? [flow.column] : [] };
+			const frame: LayoutPageBox = { ...pageFrame, columns: column ? [column] : [] };
 			positionFloats(flow.input, [frame], y);
 			placed.push({
 				kind,
@@ -210,7 +239,7 @@ export function createPageStories(
 				y,
 				widthPx,
 				heightPx: flow.heightPx,
-				blocks: flow.boxes,
+				blocks: column?.blocks ?? [],
 				source,
 				content,
 				floats: frame.floats ?? [],
