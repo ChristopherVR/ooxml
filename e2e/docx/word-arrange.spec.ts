@@ -38,14 +38,29 @@ test('Word arranges a floating shape from its Layout ribbon and saves the edit',
 	expect(xml).toMatch(/<a:xfrm[^>]*rot="5400000"/);
 });
 
-test('page geometry commands explain why they are unavailable in Draft', async ({ page }) => {
+test('Position explains why it is unavailable in Draft and Web Layout', async ({ page }) => {
 	const editor = await openShapes(page);
 	await editor.locator('.ProseMirror .dve-shape').first().click();
-	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	const align = editor.getByRole('combobox', { name: 'Align', exact: true });
+	const position = editor.getByRole('combobox', { name: 'Position', exact: true });
+	const note = editor
+		.getByRole('tabpanel', { name: 'Layout', exact: true })
+		.getByText('Print Layout only', { exact: true });
+	const unavailable = async () => {
+		await expect(align).toBeDisabled();
+		await expect(position).toBeDisabled();
+		await expect(position).toHaveAccessibleDescription(
+			'Switch to Print Layout to arrange drawings.',
+		);
+		await expect(note).toBeVisible();
+	};
 	await unfoldArrange(editor, 'Layout');
-	await expect(align).toBeDisabled();
-	await expect(align).toHaveAccessibleDescription('Switch to Print Layout to arrange drawings.');
+	await unavailable();
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await expect(position).toBeEnabled();
+	await expect(note).toBeHidden();
+	await editor.getByRole('button', { name: 'Web Layout', exact: true }).click();
+	await unavailable();
 });
 
 test('ungroup keeps the native children on the canvas in consecutive stacking order', async ({

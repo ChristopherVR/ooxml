@@ -72,7 +72,12 @@ export function buildArrangeGroup(kind?: 'picture' | 'shape') {
 		(value) => ({ type: 'arrange', key: 'position', value }),
 		{ momentary: true },
 	);
+	position.classList.add('ribbon-position');
 	position.querySelector('select')!.dataset.arrange = 'position';
+	const positionNote = document.createElement('small');
+	positionNote.className = 'ribbon-position-note';
+	positionNote.hidden = true;
+	position.append(positionNote);
 	return group(
 		'Arrange',
 		position,
@@ -197,6 +202,13 @@ export function syncArrange(
 		control.title = description ?? control.getAttribute('aria-label') ?? '';
 		if (description) control.setAttribute('aria-description', description);
 		else control.removeAttribute('aria-description');
+		if (key === 'position') {
+			const note = control.parentElement?.querySelector<HTMLElement>('.ribbon-position-note');
+			if (note) {
+				note.hidden = printLayout;
+				note.textContent = translate(locale, 'Print Layout only');
+			}
+		}
 		const disableOption = (value: string, disabled: boolean, reason?: LocalizationKey) => {
 			const option = [...control.options].find((candidate) => candidate.value === value);
 			if (option) {

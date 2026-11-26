@@ -209,6 +209,13 @@ const entries = [
 		'Cambie a Diseño de impresión para organizar los dibujos.',
 		'切换到页面视图以排列绘图。',
 	],
+	[
+		'Print Layout only',
+		'Mode Page uniquement',
+		'Nur Drucklayout',
+		'Solo en Diseño de impresión',
+		'仅限页面视图',
+	],
 	['Drawing name', 'Nom du dessin', 'Zeichnungsname', 'Nombre del dibujo', '绘图名称'],
 	[
 		'Select two or more floating drawings.',

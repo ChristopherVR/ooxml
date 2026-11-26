@@ -198,6 +198,24 @@
 .ribbon-menu[data-dve-hidden] {
 	display: none;
 }
+.ribbon-position-note {
+	color: var(--muted);
+	font-size: 10px;
+}
+.ribbon-position {
+	width: 84px;
+}
+.ribbon-position:has(> .ribbon-position-note:not([hidden])) {
+	gap: 1px;
+	padding-block: 2px;
+}
+.ribbon-position:has(> .ribbon-position-note:not([hidden])) > svg:first-of-type {
+	width: 20px;
+	height: 20px;
+}
+.ribbon-position:has(> .ribbon-position-note:not([hidden])) > svg:last-of-type {
+	display: none;
+}
 .ribbon-stack .ribbon-small,
 .ribbon-group .ribbon-stack button.ribbon-inline {
 	height: 22px;
