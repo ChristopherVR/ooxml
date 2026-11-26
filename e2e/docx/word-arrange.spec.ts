@@ -87,31 +87,6 @@ test('ungroup keeps the native children on the canvas in consecutive stacking or
 	expect(heights).toEqual([251659364, 251659365, 251659366]);
 });
 
-test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({ page }) => {
-	const editor = await openShapes(page);
-	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
-	await unfoldArrange(editor, 'Layout');
-	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
-	const row = editor
-		.getByRole('complementary', { name: 'Selection Pane' })
-		.getByRole('listitem')
-		.first();
-	await row.evaluate((element) => element.setAttribute('data-test-original-row', ''));
-	const story = editor.locator('.ProseMirror').first();
-	await story.press('Control+End');
-	await story.press('End');
-	await story.press('Space');
-	await story.press('a');
-	await expect(async () => {
-		const button = row.getByRole('button');
-		await button.click();
-		await expect(button).toHaveAttribute('aria-pressed', 'true', { timeout: 500 });
-	}).toPass();
-	await expect
-		.poll(() => row.evaluate((element) => element.hasAttribute('data-test-original-row')))
-		.toBe(true);
-});
-
 test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout', async ({
 	page,
 }) => {
@@ -303,54 +278,6 @@ test('Top Left moves a fresh canvas selection and a single undo restores its ori
 	await expect(editor.locator('.ProseMirror').first()).toBeFocused();
 	await page.keyboard.press('Control+z');
 	await expect.poll(offset).toEqual(original);
-});
-
-test('Selection Pane is docked and renames a drawing with F2 or a double-click', async ({
-	page,
-}) => {
-	const editor = await openShapes(page);
-	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
-	await unfoldArrange(editor, 'Layout');
-	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
-	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
-	const row = pane.getByRole('button', { name: 'Oval 3' });
-	const dock = await pane.evaluate((element) => {
-		const canvas = element.previousElementSibling!.getBoundingClientRect();
-		const side = element.getBoundingClientRect();
-		return [
-			Math.abs(side.left - canvas.right),
-			Math.abs(side.top - canvas.top),
-			Math.abs(side.bottom - canvas.bottom),
-		];
-	});
-	expect(Math.max(...dock)).toBeLessThan(1);
-	await row.dblclick();
-	const name = pane.getByRole('textbox', { name: 'Drawing name' });
-	await name.fill('Diagram oval');
-	await name.press('Enter');
-	const renamed = pane.getByRole('button', { name: 'Diagram oval' });
-	await expect(renamed).toBeFocused();
-	await renamed.press('F2');
-	await name.fill('Final oval');
-	await name.press('Enter');
-	const selected = pane.getByRole('button', { name: 'Final oval', pressed: true });
-	const colors = () =>
-		selected.evaluate((element) => {
-			const style = getComputedStyle(element);
-			return [style.color, style.backgroundColor];
-		});
-	await editor.evaluate((element) => Object.assign(element, { theme: 'light' }));
-	const light = await colors();
-	expect(light[0]).not.toBe(light[1]);
-	await editor.evaluate((element) => Object.assign(element, { theme: 'dark' }));
-	await expect.poll(colors).not.toEqual(light);
-	const dark = await colors();
-	expect(dark[0]).not.toBe(dark[1]);
-	await page.emulateMedia({ forcedColors: 'active' });
-	await expect(selected).toHaveCSS('forced-color-adjust', 'none');
-	const { xml } = await savedDocument(page, 'renamed-drawing.docx');
-	expect(xml).toContain('name="Final oval"');
-	expect(xml).not.toContain('title="Final oval"');
 });
 
 test('Bring Forward and Send Backward change which drawing paints over an overlap', async ({

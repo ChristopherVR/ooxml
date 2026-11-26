@@ -29,15 +29,15 @@ const panes = new WeakMap<EditorCore, (view: EditorView) => void>();
 export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 	const pane = panes.get(core);
 	if (pane) return pane(view);
-	const canvas = core.shell.canvas;
-	if (!canvas) return;
+	const dock = core.shell.canvas?.parentElement;
+	if (!dock) return;
 	let target = view;
-	const frame = selectionPaneFrame(canvas.ownerDocument, () => {
+	const frame = selectionPaneFrame(dock.ownerDocument, () => {
 		if (!target.isDestroyed) focusView(target);
 	});
 	const { element, heading, close, list, hide } = frame;
 	element.className = 'dve-selection-pane';
-	canvas.after(element);
+	dock.append(element);
 	let lastDoc: EditorView['state']['doc'] | undefined;
 	let drawings: ReturnType<typeof storyDrawings> = [];
 	let signature = '';

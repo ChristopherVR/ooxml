@@ -17,6 +17,7 @@ import backstage from './backstage.css?raw';
 import statusDialogs from './status-dialogs.css?raw';
 import documentInspector from './document-inspector.css?raw';
 import chromeDocument from './chrome-document.css?raw';
+import selectionPane from './selection-pane.css?raw';
 import pageNavigator from './page-navigator.css?raw';
 import keyboardMenu from './keyboard-menu.css?raw';
 import smartArt from './smartart.css?raw';
@@ -53,6 +54,7 @@ export const editorStyleText = [
 	statusDialogs,
 	documentInspector,
 	chromeDocument,
+	selectionPane,
 	pageNavigator,
 	keyboardMenu,
 	smartArt,
