@@ -2,7 +2,7 @@ import { html, nothing } from 'lit';
 import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
-import { addInSettings, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
+import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import {
 	addInError,
@@ -22,7 +22,7 @@ export type Pivot = (typeof PIVOTS)[number];
 function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 	const { host, locale, manifestLocale, t, product } = options;
 	return {
-		...addInSettings(host),
+		...options.settings,
 		installed: localAddIns(host),
 		tabs: editorAddIns(host),
 		t: localAddInText(locale, t),

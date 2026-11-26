@@ -1,5 +1,6 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
 import { normalizeLocale } from 'ooxml-core/i18n';
+import { composedWithin } from '../composed';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 
@@ -69,10 +70,11 @@ export function setOfficeAddInStorefront(
 			: storefront;
 }
 
-export function addInSettings(host: AddInDialogHost) {
+function addInSettings(host: AddInDialogHost, opener: Element | null) {
 	let catalog: readonly OfficeAddInCatalogEntry[] | undefined;
 	let storefront: OfficeAddInStorefront | undefined;
-	for (let current: AddInDialogHost | null = host; current;) {
+	const start = opener instanceof HTMLElement && composedWithin(opener, host) ? opener : host;
+	for (let current: AddInDialogHost | null = start; current;) {
 		const settings: HostSettings = current;
 		catalog ??= settings[CATALOG];
 		storefront ??= settings[STOREFRONT];
@@ -106,6 +108,7 @@ export interface OpenAddInsOptions {
 	product: AddInDialogProduct;
 	locale: string;
 	manifestLocale: string;
+	settings: ReturnType<typeof addInSettings>;
 }
 
 export async function openOfficeAddIns(
@@ -124,6 +127,7 @@ export async function openOfficeAddIns(
 	)
 		return;
 	const opener = modalActiveElement(host.ownerDocument);
+	const settings = addInSettings(host, opener);
 	const restore = addInReturnFocus(opener);
 	const language = normalizeLocale(locale, LOCALES, 'en');
 	pending[OPENING] = true;
@@ -131,7 +135,7 @@ export async function openOfficeAddIns(
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
 		if (host.isConnected) {
 			mountAddInsDialog(
-				{ host, mode, t, product, locale: language, manifestLocale: locale },
+				{ host, mode, t, product, locale: language, manifestLocale: locale, settings },
 				restore,
 			);
 		}

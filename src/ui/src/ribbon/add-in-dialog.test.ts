@@ -66,6 +66,25 @@ it('uses a normalized locale for both labels and catalog search', async () => {
 	expect(dialog?.querySelector('li')?.textContent).toContain('Notes');
 });
 
+it('finds storefront settings on the opener ribbon and falls back to the editor catalog', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	const ribbon = editor.appendChild(document.createElement('div'));
+	const control = ribbon.appendChild(document.createElement('div')).attachShadow({ mode: 'open' });
+	const opener = control.appendChild(document.createElement('button'));
+	setOfficeAddInCatalog(editor, [{ id: 'notes', label: 'Editor Notes', install: () => {} }]);
+	setOfficeAddInStorefront(editor, 'off');
+	setOfficeAddInStorefront(ribbon, { kind: 'microsoft', label: 'Ribbon store' });
+	opener.focus();
+	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'en');
+	const dialog = getDialog(editor);
+	expect(dialog?.querySelector('a')?.textContent).toBe('Ribbon store');
+	dialog?.querySelector<HTMLButtonElement>('#pivot-1')?.click();
+	expect(dialog?.querySelector('li')?.textContent).toContain('Editor Notes');
+	dialog?.close();
+});
+
 it('offers only the configured storefront and validates BYO bytes before installing', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))

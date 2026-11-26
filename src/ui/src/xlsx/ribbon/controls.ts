@@ -43,11 +43,15 @@ export function tagCommand(node: HTMLElement, command: Command): void {
 	node.dataset.labelKey = command.label;
 }
 
-function plainButton(scope: RenderScope, className: string): HTMLButtonElement {
+function plainButton(
+	scope: RenderScope,
+	className: string,
+	opensAddIns = false,
+): HTMLButtonElement {
 	const button = el(scope.doc, 'button', className);
 	button.type = 'button';
 	// Keep keyboard focus (and the in-cell editor) where it was, as Office does.
-	button.addEventListener('mousedown', (event) => event.preventDefault());
+	if (!opensAddIns) button.addEventListener('mousedown', (event) => event.preventDefault());
 	return button;
 }
 
@@ -64,7 +68,8 @@ export function commandButton(
 ): HTMLButtonElement {
 	const { ctx, doc } = scope;
 	const large = options.size === 'large';
-	const button = plainButton(scope, large ? 'ribbon-large' : 'ribbon-small');
+	const opensAddIns = command.id === 'insert.get-add-ins' || command.id === 'insert.my-add-ins';
+	const button = plainButton(scope, large ? 'ribbon-large' : 'ribbon-small', opensAddIns);
 	tagCommand(button, command);
 	const label = ctx.t(command.label);
 	button.setAttribute('aria-label', label);

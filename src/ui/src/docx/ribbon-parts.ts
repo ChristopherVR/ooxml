@@ -17,7 +17,9 @@ export const button = (
 	el.type = 'button';
 	el.textContent = text;
 	el.setAttribute('aria-label', label);
-	el.addEventListener('mousedown', (event) => event.preventDefault());
+	if (action?.type !== 'officeAddIns') {
+		el.addEventListener('mousedown', (event) => event.preventDefault());
+	}
 	if (action) el.dataset.action = JSON.stringify(action);
 	else {
 		el.disabled = true;

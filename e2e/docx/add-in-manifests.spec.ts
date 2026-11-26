@@ -21,7 +21,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
 		const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 		await reveal(editor, get);
-		await get.press('Enter');
+		await get.click();
 		await expect(dialog.getByRole('tab', { name: 'Admin Managed' })).toHaveAttribute(
 			'aria-selected',
 			'true',
