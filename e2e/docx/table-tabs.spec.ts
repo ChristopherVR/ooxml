@@ -11,6 +11,21 @@ import {
 	saveButton,
 } from './helpers';
 
+test('contextual table controls follow a locale change after loading', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	await editor.getByRole('tab', { name: 'Table Design', exact: true }).click();
+	await expect(editor.getByRole('button', { name: 'Header Row', exact: true })).toBeVisible();
+	await editor.evaluate((element) => {
+		(element as HTMLElement & { locale: string }).locale = 'fr';
+	});
+	await expect(editor.getByRole('tab', { name: 'Création de tableau', exact: true })).toBeVisible();
+	await expect(editor.getByRole('button', { name: 'Ligne d’en-tête', exact: true })).toBeVisible();
+});
+
 test('a table without tblLook shows the options Word uses on open', async ({ page }) => {
 	await page.goto('/?framework=vanilla');
 	const zip = new JSZip();

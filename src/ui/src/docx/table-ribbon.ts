@@ -5,6 +5,8 @@ import { group, menuSelect, row, spinner, stack, tool } from './ribbon-parts';
 import type { RibbonIcon } from './ribbon-icons';
 import { TABLE_LOOK_OPTIONS } from './table-ribbon-keys';
 
+export { syncTableControls } from './table-ribbon-state';
+
 type SimpleTableKey =
 	| 'styles'
 	| 'shading'

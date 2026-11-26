@@ -1,12 +1,26 @@
 /** Display-language strings for the shared editor UI. This locale never changes DOCX language marks. */
 import { interpolate, normalizeLocale } from 'ooxml-core/i18n';
-import { EDITOR_LOCALES, strings, type LocalizationKey } from './localization-strings';
+import {
+	EDITOR_LOCALES,
+	strings,
+	type LocaleStrings,
+	type LocalizationKey,
+} from './localization-strings';
 
 export type EditorLocale = (typeof EDITOR_LOCALES)[number];
 /** A locale code a host may pass: a canonical code (autocompleted) or any BCP 47 tag such as `de-DE`. */
 export type EditorLocaleInput = EditorLocale | (string & {});
 export { EDITOR_LOCALES };
 export type { LocalizationKey };
+
+let tableTabTranslations:
+	| typeof import('./locales/table-tab-translations').tableTabTranslations
+	| undefined;
+
+/** Table panel labels load together, including when the editor later changes locale. */
+export async function loadTableLocalization(): Promise<void> {
+	tableTabTranslations ??= (await import('./locales/table-tab-translations')).tableTabTranslations;
+}
 
 /**
  * Maps any BCP 47 tag to a supported display locale, falling back to English. Region variants
@@ -17,7 +31,10 @@ export function normalizeEditorLocale(value: string | null | undefined): EditorL
 	return normalizeLocale(value, EDITOR_LOCALES, 'en');
 }
 export function translate(locale: EditorLocale, key: LocalizationKey): string {
-	return strings[locale][key] ?? strings.en[key] ?? key;
+	const base: Partial<LocaleStrings> = strings[locale];
+	const table: Partial<LocaleStrings> | undefined =
+		locale === 'en' ? undefined : tableTabTranslations?.[locale];
+	return base[key] ?? table?.[key] ?? strings.en[key] ?? key;
 }
 /** Translates a `{name}` template key and fills its placeholders. */
 export function translateTemplate(

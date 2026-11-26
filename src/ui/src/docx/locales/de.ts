@@ -1,7 +1,7 @@
 import { deArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { deDesign } from './design';
-import { deTableTab } from './de-table-tab';
+import { tableTabBase } from './table-tab-base';
 import { deStyleDialog } from './style-dialog';
 import { deSplitCells } from './split-cells';
 import { deOptions } from './options';
@@ -22,16 +22,16 @@ import { deObjects } from './objects';
 import { deShapes } from '../../ribbon/shape-names';
 import { deSmartArt } from './smartart';
 import { deCharts } from './charts';
-import type { LocaleStrings } from './en';
+import type { BaseLocaleStrings } from './en';
 import { deApp } from './de-app';
 import { deTableProperties } from './table-properties';
 import { deRibbon } from './de-ribbon';
 import { deRibbonNames } from './ribbon-names';
 
-export const de: LocaleStrings = {
+export const de: BaseLocaleStrings = {
 	...deArrange,
 	...viewsStrings['de'],
-	...deTableTab,
+	...tableTabBase['de'],
 	...deDesign,
 	...deStyleDialog,
 	...deOptions,

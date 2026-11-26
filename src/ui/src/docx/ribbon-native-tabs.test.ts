@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbon, loadTablePanels } from './ribbon';
+import { createRibbon, loadTablePanels, setRibbonLocale } from './ribbon';
 import './component';
 import { findLocalizedControl } from './localization';
 import { must } from './test-support';
@@ -8,7 +8,7 @@ import { must } from './test-support';
 afterEach(() => document.body.replaceChildren());
 
 describe('Word native tab surfaces', () => {
-	it('loads both table panels on demand and names their controls in every locale', async () => {
+	it('loads localized table controls on demand and translates them after a locale change', async () => {
 		const ribbon = createRibbon('fr');
 		expect(ribbon.querySelector('[data-table-command]')).toBeNull();
 		await loadTablePanels(ribbon);
@@ -20,6 +20,10 @@ describe('Word native tab surfaces', () => {
 		);
 		expect(ribbon.querySelector('[data-table-command="formula"]')?.getAttribute('aria-label')).toBe(
 			'Formule',
+		);
+		setRibbonLocale(ribbon, 'de');
+		expect(ribbon.querySelector('[data-table-command="formula"]')?.getAttribute('aria-label')).toBe(
+			'Formel',
 		);
 	});
 

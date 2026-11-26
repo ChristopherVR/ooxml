@@ -4,6 +4,7 @@ import { emit } from './events';
 import { setComboValue, type ComboInput } from './ribbon-combo';
 import {
 	localeOf,
+	loadTableLocalization,
 	localizeElement,
 	normalizeEditorLocale,
 	translate,
@@ -173,25 +174,19 @@ export function setRibbonLocale(root: HTMLElement, value: string): void {
 }
 
 /** Load contextual commands after the selection first enters a table. */
-const tablePanels = new WeakMap<HTMLElement, Promise<void>>();
-export function loadTablePanels(root: HTMLElement): Promise<void> {
-	const pending = tablePanels.get(root);
-	if (pending) return pending;
-	const load = import('./table-ribbon')
-		.then(({ buildTablePanels }) => {
-			const design = panelOf(root, 'table-design');
-			const layout = panelOf(root, 'table-layout');
-			if (!design || !layout) return;
-			buildTablePanels(design, layout);
-			// Word puts Text Direction in Table Layout's Alignment group.
-			layout.append(group('Text', textDirectionMenu()));
-			setRibbonLocale(root, localeOf(root));
-			reapplyRibbonVisibility(root);
-		})
-		.catch((error: unknown) => {
-			tablePanels.delete(root);
-			throw error;
-		});
-	tablePanels.set(root, load);
-	return load;
+export async function loadTablePanels(root: HTMLElement) {
+	const [{ buildTablePanels, syncTableControls }] = await Promise.all([
+		import('./table-ribbon'),
+		loadTableLocalization(),
+	]);
+	const design = panelOf(root, 'table-design');
+	const layout = panelOf(root, 'table-layout');
+	if (design && layout) {
+		buildTablePanels(design, layout);
+		// Word puts Text Direction in Table Layout's Alignment group.
+		layout.append(group('Text', textDirectionMenu()));
+		setRibbonLocale(root, localeOf(root));
+		reapplyRibbonVisibility(root);
+	}
+	return syncTableControls;
 }

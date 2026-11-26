@@ -1,7 +1,7 @@
 import { frArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { frDesign } from './design';
-import { frTableTab } from './fr-table-tab';
+import { tableTabBase } from './table-tab-base';
 import { frStyleDialog } from './style-dialog';
 import { frSplitCells } from './split-cells';
 import { frOptions } from './options';
@@ -22,16 +22,16 @@ import { frObjects } from './objects';
 import { frShapes } from '../../ribbon/shape-names';
 import { frSmartArt } from './smartart';
 import { frCharts } from './charts';
-import type { LocaleStrings } from './en';
+import type { BaseLocaleStrings } from './en';
 import { frApp } from './fr-app';
 import { frTableProperties } from './table-properties';
 import { frRibbon } from './fr-ribbon';
 import { frRibbonNames } from './ribbon-names';
 
-export const fr: LocaleStrings = {
+export const fr: BaseLocaleStrings = {
 	...frArrange,
 	...viewsStrings['fr'],
-	...frTableTab,
+	...tableTabBase['fr'],
 	...frDesign,
 	...frStyleDialog,
 	...frOptions,

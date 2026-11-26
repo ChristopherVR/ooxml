@@ -2,6 +2,7 @@ import { enArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { enDesign } from './design';
 import { enTableTab } from './en-table-tab';
+import { tableTabBase } from './table-tab-base';
 import { enStyleDialog } from './style-dialog';
 import { enSplitCells } from './split-cells';
 import { enObjects } from './objects';
@@ -34,6 +35,7 @@ import { enRibbonNames } from './ribbon-names';
 export const en = {
 	...enArrange,
 	...viewsStrings['en'],
+	...tableTabBase.en,
 	...enTableTab,
 	...enDesign,
 	...enStyleDialog,
@@ -65,5 +67,6 @@ export const en = {
 export type LocalizationKey = keyof typeof en;
 /** A complete locale: adding a key to `en` without translating it is a compile error. */
 export type LocaleStrings = Record<LocalizationKey, string>;
+export type BaseLocaleStrings = Omit<LocaleStrings, keyof typeof enTableTab>;
 export type RibbonStrings = Record<keyof typeof enRibbon, string>;
 export type AppStrings = Record<keyof typeof enApp, string>;

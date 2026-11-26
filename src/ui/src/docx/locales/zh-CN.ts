@@ -1,7 +1,7 @@
 import { zhArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { zhDesign } from './design';
-import { zhCNTableTab } from './zh-CN-table-tab';
+import { tableTabBase } from './table-tab-base';
 import { zhCNStyleDialog } from './style-dialog';
 import { zhSplitCells } from './split-cells';
 import { zhOptions } from './options';
@@ -22,16 +22,16 @@ import { zhObjects } from './objects';
 import { zhShapes } from '../../ribbon/shape-names';
 import { zhSmartArt } from './smartart';
 import { zhCharts } from './charts';
-import type { LocaleStrings } from './en';
+import type { BaseLocaleStrings } from './en';
 import { zhCNApp } from './zh-CN-app';
 import { zhTableProperties } from './table-properties';
 import { zhCNRibbon } from './zh-CN-ribbon';
 import { zhCNRibbonNames } from './ribbon-names';
 
-export const zhCN: LocaleStrings = {
+export const zhCN: BaseLocaleStrings = {
 	...zhArrange,
 	...viewsStrings['zh-CN'],
-	...zhCNTableTab,
+	...tableTabBase['zh-CN'],
 	...zhDesign,
 	...zhCNStyleDialog,
 	...zhOptions,

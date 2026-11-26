@@ -13,12 +13,20 @@ import {
 	type EditorLocale,
 	type LocalizationKey,
 } from './localization';
-import { strings } from './localization-strings';
+import { strings as base, type LocaleStrings } from './localization-strings';
+import { tableTabTranslations } from './locales/table-tab-translations';
 import { RIBBON_ACTION_LABELS } from 'ooxml-core/docx/ui';
 import { createRibbon, setRibbonLocale } from './ribbon';
 
 registerDocxEditor();
 
+const strings: Readonly<Record<EditorLocale, LocaleStrings>> = {
+	en: base.en,
+	de: { ...tableTabTranslations.de, ...base.de },
+	es: { ...tableTabTranslations.es, ...base.es },
+	fr: { ...tableTabTranslations.fr, ...base.fr },
+	'zh-CN': { ...tableTabTranslations['zh-CN'], ...base['zh-CN'] },
+};
 const englishKeys = Object.keys(strings.en) as LocalizationKey[];
 const placeholders = (text: string) => [...text.matchAll(/\{\w+\}/g)].map((m) => m[0]).sort();
 /** Terms that are legitimately identical to English in some locale (loanwords, symbols, units). */

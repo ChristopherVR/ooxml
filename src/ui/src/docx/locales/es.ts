@@ -1,7 +1,7 @@
 import { esArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { esDesign } from './design';
-import { esTableTab } from './es-table-tab';
+import { tableTabBase } from './table-tab-base';
 import { esStyleDialog } from './style-dialog';
 import { esSplitCells } from './split-cells';
 import { esOptions } from './options';
@@ -22,16 +22,16 @@ import { esObjects } from './objects';
 import { esShapes } from '../../ribbon/shape-names';
 import { esSmartArt } from './smartart';
 import { esCharts } from './charts';
-import type { LocaleStrings } from './en';
+import type { BaseLocaleStrings } from './en';
 import { esApp } from './es-app';
 import { esTableProperties } from './table-properties';
 import { esRibbon } from './es-ribbon';
 import { esRibbonNames } from './ribbon-names';
 
-export const es: LocaleStrings = {
+export const es: BaseLocaleStrings = {
 	...esArrange,
 	...viewsStrings['es'],
-	...esTableTab,
+	...tableTabBase['es'],
 	...esDesign,
 	...esStyleDialog,
 	...esOptions,
