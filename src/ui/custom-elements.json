@@ -408,6 +408,9 @@
 							"name": "icon"
 						},
 						{
+							"name": "icon-image"
+						},
+						{
 							"name": "icon-only"
 						},
 						{
