@@ -71,4 +71,7 @@ export default defineConfig({
 	treeshake: true,
 	platform: 'browser',
 	external: [/^ooxml-core(\/|$)/, /^ooxml-ui\/pptx(\/|$)/],
+	esbuildOptions(options) {
+		options.minifySyntax = true;
+	},
 });

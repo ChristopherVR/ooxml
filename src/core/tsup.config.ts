@@ -156,6 +156,9 @@ export default defineConfig([
 				},
 			},
 		],
+		esbuildOptions(options) {
+			options.minifySyntax = true;
+		},
 	},
 	{
 		...shared,
