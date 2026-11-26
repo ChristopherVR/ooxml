@@ -132,6 +132,8 @@ export const enApp = {
 	'Update table of contents': 'Update table of contents',
 	'Update Table': 'Update Table',
 	'Update fields': 'Update fields',
+	'fieldUpdate.changed': 'The document changed. Run Update Fields again.',
+	'fieldUpdate.none': 'No fields needed updating.',
 	'Update Fields': 'Update Fields',
 	'Insert table of figures': 'Insert table of figures',
 	'Table of figures: Figure': 'Table of figures: Figure',

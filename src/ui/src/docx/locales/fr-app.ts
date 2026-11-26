@@ -136,6 +136,8 @@ export const frApp: AppStrings = {
 	'Update table of contents': 'Mettre à jour la table des matières',
 	'Update Table': 'Mettre à jour la table',
 	'Update fields': 'Mettre à jour les champs',
+	'fieldUpdate.changed': 'Le document a changé. Relancez la mise à jour des champs.',
+	'fieldUpdate.none': 'Aucun champ ne nécessitait de mise à jour.',
 	'Update Fields': 'Mettre à jour les champs',
 	'Insert table of figures': 'Insérer une table des illustrations',
 	'Table of figures: Figure': 'Table des illustrations : Figure',

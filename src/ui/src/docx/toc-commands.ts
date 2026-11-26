@@ -15,6 +15,7 @@ import {
 import { layoutDocumentModel, type TextMeasurer } from 'ooxml-core/docx/layout';
 import { createCanvasMeasurer } from './canvas-measurer';
 import { closeHistory } from 'prosemirror-history';
+import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { modelToDoc } from './model-adapter';
 import { pageNumbers } from './print-header-footer';
@@ -72,19 +73,19 @@ function tocParagraphs(
 }
 
 function replaceBlocks(
-	view: EditorView,
+	tr: Transaction,
 	model: DocumentModel,
 	start: number,
 	end: number,
 	{ paragraphs, added }: { paragraphs: Paragraph[]; added: Map<string, string> },
 ) {
-	const { doc } = view.state;
+	const { doc } = tr;
 	let from = 0;
 	for (let index = 0; index < start; index++) from += doc.child(index).nodeSize;
 	let to = from;
 	for (let index = start; index <= end; index++) to += doc.child(index).nodeSize;
 	const content = modelToDoc({ ...model, blocks: paragraphs }).content;
-	const tr = view.state.tr.replaceWith(from, to, content);
+	tr.replaceWith(from, to, content);
 	// Headings get the `_Toc` bookmarks their entries link to, in the same undoable step.
 	tr.doc.descendants((node, pos) => {
 		const name = node.type.name === 'paragraph' ? added.get(String(node.attrs.id)) : undefined;
@@ -95,7 +96,6 @@ function replaceBlocks(
 			});
 		return node.type.name !== 'paragraph';
 	});
-	view.dispatch(closeHistory(tr).scrollIntoView());
 }
 
 /** Selects the table of figures of `label` (case-insensitively), or heading TOCs when absent. */
@@ -121,7 +121,9 @@ export function insertTableOfContents(
 	const instruction = captionLabel
 		? tableOfFiguresInstruction(captionLabel)
 		: ` TOC \\o "1-${depth}" \\h \\z \\u `;
-	replaceBlocks(view, model, index, end, tocParagraphs(model, index, end, instruction, measurer));
+	const tr = view.state.tr;
+	replaceBlocks(tr, model, index, end, tocParagraphs(model, index, end, instruction, measurer));
+	view.dispatch(closeHistory(tr).scrollIntoView());
 }
 
 /**
@@ -134,6 +136,20 @@ export function updateTableOfContents(
 	measurer?: TextMeasurer,
 	captionLabel?: string,
 ): boolean {
+	if (!view.editable) return false;
+	const tr = view.state.tr;
+	if (!refreshTableOfContents(tr, model, measurer, captionLabel)) return false;
+	view.dispatch(closeHistory(tr).scrollIntoView());
+	return true;
+}
+
+/** Adds a TOC or table-of-figures refresh to an in-progress edit. */
+export function refreshTableOfContents(
+	tr: Transaction,
+	model: DocumentModel,
+	measurer?: TextMeasurer,
+	captionLabel?: string,
+): boolean {
 	const found = findTableOfContents(model.blocks, figuresFilter(captionLabel));
 	if (!found) return false;
 	const toc = tocParagraphs(model, found.start, found.end, found.instruction, measurer);
@@ -142,7 +158,7 @@ export function updateTableOfContents(
 	if (!firstParagraph || !lastParagraph) return false;
 	firstParagraph.runs.unshift(...found.before);
 	lastParagraph.runs.push(...found.after);
-	replaceBlocks(view, model, found.start, found.end, toc);
+	replaceBlocks(tr, model, found.start, found.end, toc);
 	return true;
 }
 

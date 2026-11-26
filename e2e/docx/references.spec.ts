@@ -143,3 +143,39 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await dialog.getByRole('combobox', { name: 'Source', exact: true }).selectOption('Doe2020');
 	await expect(input('Title')).toHaveValue('Field studies');
 });
+
+test('Update fields refreshes the index and contents in one undo step', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.goto('/?framework=vanilla');
+	const zip = new JSZip();
+	const field = (instruction: string, result: string) =>
+		'<w:p><w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText>' +
+		instruction +
+		'</w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>' +
+		result +
+		'</w:t></w:r></w:p><w:p><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>';
+	zip.file(
+		'word/document.xml',
+		'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' +
+			'<w:p><w:pPr><w:outlineLvl w:val="0"/></w:pPr><w:r><w:t>Current heading</w:t></w:r></w:p>' +
+			'<w:p><w:r><w:t>Marked term</w:t></w:r><w:r><w:fldChar w:fldCharType="begin"/></w:r>' +
+			'<w:r><w:instrText> XE "Marked term" </w:instrText></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r></w:p>' +
+			field(' TOC \\u ', 'Stale contents') +
+			field(' INDEX ', 'Stale index') +
+			'</w:body></w:document>',
+	);
+	await reopenDocument(page, 'field-cache.docx', await zip.generateAsync({ type: 'uint8array' }));
+	const editor = page.locator('docx-editor');
+	const surface = editor.locator('.ProseMirror');
+	await expect(surface).toContainText('Stale contents');
+	await expect(surface).toContainText('Stale index');
+	await editor.getByRole('tab', { name: 'References', exact: true }).click();
+	await editor.getByRole('button', { name: 'Update fields', exact: true }).click();
+	await expect(surface).not.toContainText('Stale contents');
+	await expect(surface).not.toContainText('Stale index');
+	await expect(surface.locator('p').filter({ hasText: 'Current heading' })).toHaveCount(2);
+	await expect(surface.locator('p').filter({ hasText: 'Marked term' })).toHaveCount(2);
+	await surface.press('Control+z');
+	await expect(surface).toContainText('Stale contents');
+	await expect(surface).toContainText('Stale index');
+});

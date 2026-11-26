@@ -144,6 +144,8 @@ export const esApp: AppStrings = {
 	'Update table of contents': 'Actualizar tabla de contenido',
 	'Update Table': 'Actualizar tabla',
 	'Update fields': 'Actualizar campos',
+	'fieldUpdate.changed': 'El documento ha cambiado. Vuelva a actualizar los campos.',
+	'fieldUpdate.none': 'No había campos que actualizar.',
 	'Update Fields': 'Actualizar campos',
 	'Insert table of figures': 'Insertar tabla de ilustraciones',
 	'Table of figures: Figure': 'Tabla de ilustraciones: Figura',

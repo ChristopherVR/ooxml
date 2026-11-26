@@ -143,6 +143,8 @@ export const deApp: AppStrings = {
 	'Update table of contents': 'Inhaltsverzeichnis aktualisieren',
 	'Update Table': 'Tabelle aktualisieren',
 	'Update fields': 'Felder aktualisieren',
+	'fieldUpdate.changed': 'Das Dokument wurde geändert. Aktualisieren Sie die Felder erneut.',
+	'fieldUpdate.none': 'Es mussten keine Felder aktualisiert werden.',
 	'Update Fields': 'Felder aktualisieren',
 	'Insert table of figures': 'Abbildungsverzeichnis einfügen',
 	'Table of figures: Figure': 'Abbildungsverzeichnis: Abbildung',

@@ -138,6 +138,8 @@ export const zhCNApp: AppStrings = {
 	'Update table of contents': '更新目录',
 	'Update Table': '更新目录',
 	'Update fields': '更新域',
+	'fieldUpdate.changed': '文档已更改。请再次更新域。',
+	'fieldUpdate.none': '没有需要更新的域。',
 	'Update Fields': '更新域',
 	'Insert table of figures': '插入图表目录',
 	'Table of figures: Figure': '图表目录：图',
