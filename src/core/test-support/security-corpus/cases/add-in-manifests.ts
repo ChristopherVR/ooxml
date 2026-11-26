@@ -2,12 +2,12 @@ import JSZip from 'jszip';
 import { AddInManifestError, readLocalAddIn } from '../../../automation/add-ins';
 import type { SecurityCase } from '../case';
 
-async function refusal(bytes: Uint8Array): Promise<string> {
+async function refusal(bytes: Uint8Array, report: 'code' | 'field' = 'code') {
 	try {
 		await readLocalAddIn(bytes, { host: 'word' });
 		return 'accepted';
 	} catch (error) {
-		if (error instanceof AddInManifestError) return error.code;
+		if (error instanceof AddInManifestError) return error[report];
 		throw error;
 	}
 }
@@ -53,8 +53,8 @@ export const cases: readonly SecurityCase[] = [
 		limits: { ms: 2_000, heapMb: 64 },
 		async run() {
 			const zip = new JSZip().file('%2e%2e/manifest.json', '{}', { createFolders: false });
-			return refusal(await zip.generateAsync({ type: 'uint8array' }));
+			return refusal(await zip.generateAsync({ type: 'uint8array' }), 'field');
 		},
-		expected: 'package',
+		expected: 'UNSAFE_PATH',
 	},
 ];
