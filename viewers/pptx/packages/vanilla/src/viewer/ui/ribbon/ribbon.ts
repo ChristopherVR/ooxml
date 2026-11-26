@@ -1,6 +1,6 @@
-import type { FindReplaceMode } from 'ooxml-ui/pptx';
 import type {
 	AccountAuthConfig,
+	FindReplaceMode,
 	PptxUiRibbonAddInElement,
 	RibbonAddInTab,
 	ResolvedCustomization,
@@ -385,7 +385,9 @@ export function createRibbon(
 				translate: t,
 				patch: (elementId, patch) =>
 					handlers.edit.applyRibbonGalleryResult({ kind: 'element', elementId, patch }),
-				altText: () => handlers.nav.requestFormatPane('picture'),
+				altText: handlers.nav.requestFormatPane
+					? () => handlers.nav.requestFormatPane?.('picture')
+					: undefined,
 				selectionPane: handlers.nav.openSelectionPane,
 			};
 		}

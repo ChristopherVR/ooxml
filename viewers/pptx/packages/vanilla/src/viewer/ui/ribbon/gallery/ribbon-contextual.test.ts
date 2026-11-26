@@ -28,6 +28,9 @@ function fakeActions<T extends object>(overrides: Partial<T> = {}): T {
 			if (prop in overrides) {
 				return overrides[prop as keyof T];
 			}
+			if (prop === 'requestFormatPane') {
+				return undefined;
+			}
 			let fn = cache.get(prop);
 			if (!fn) {
 				fn = vi.fn();
@@ -38,9 +41,9 @@ function fakeActions<T extends object>(overrides: Partial<T> = {}): T {
 	});
 }
 
-function handlers(): RibbonHandlers {
+function handlers(nav: Partial<RibbonHandlers['nav']> = {}): RibbonHandlers {
 	return {
-		nav: fakeActions(),
+		nav: fakeActions(nav),
 		primary: fakeActions(),
 		file: fakeActions<RibbonHandlers['file']>({ getRecentPresentationsCount: () => 10 }),
 		slideShow: fakeActions<RibbonHandlers['slideShow']>({ showOptions: () => ({}) }),
@@ -77,8 +80,8 @@ function selection(element: PptxElement | undefined): RibbonSelectionState {
 	return { hasClipboard: false, slideCount: 1, galleryContext };
 }
 
-function mount() {
-	const ribbon = createRibbon(document, createTranslator(), handlers());
+function mount(nav?: Partial<RibbonHandlers['nav']>) {
+	const ribbon = createRibbon(document, createTranslator(), handlers(nav));
 	// In the document, as in a viewer: a gallery builds its tiles once it is shown.
 	document.body.append(ribbon.el);
 	ribbon.setEditState({ editable: true, canUndo: false, canRedo: false });
@@ -92,6 +95,25 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 	);
 
 describe('ribbon contextual tabs (vanilla)', () => {
+	it.each([true, false])('enables picture alt text only with a format pane (%s)', (hasPane) => {
+		const requestFormatPane = vi.fn();
+		const ribbon = mount(hasPane ? { requestFormatPane } : {});
+		try {
+			const picture: PptxElement = { id: 'pic', type: 'image', x: 0, y: 0, width: 100, height: 50 };
+			ribbon.updateSelection(picture, selection(picture));
+			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="pictureFormat"]')!.click();
+			const button = visiblePane(ribbon.el)
+				?.querySelector('[data-ribbon-control="pictureFormat.accessibility.altText"]')
+				?.shadowRoot?.querySelector('button');
+			expect(button?.disabled).toBe(!hasPane);
+			button?.click();
+			expect(requestFormatPane.mock.calls).toStrictEqual(hasPane ? [['picture']] : []);
+		} finally {
+			ribbon.destroy();
+			ribbon.el.remove();
+		}
+	});
+
 	it('mounts the picture commands and shares Home Arrange', () => {
 		const ribbon = mount();
 		const picture: PptxElement = { id: 'pic', type: 'image', x: 0, y: 0, width: 100, height: 50 };
