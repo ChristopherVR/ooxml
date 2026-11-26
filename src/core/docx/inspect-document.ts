@@ -145,7 +145,14 @@ function inspectHiddenText(model: DocumentModel): InspectionFinding[] {
 const INSPECTORS: Record<InspectionCategory, (model: DocumentModel) => InspectionFinding[]> = {
 	comments: inspectComments,
 	properties: inspectProperties,
-	customXml: (model) => finding('customXml', model.packageInformation?.customXmlParts?.length ?? 0),
+	customXml: (model) =>
+		finding(
+			'customXml',
+			(model.packageInformation?.customXmlParts?.length ?? 0) +
+				(model.packageInformation?.bibliography && !model.packageInformation.bibliography.part
+					? 1
+					: 0),
+		),
 	headersFooters: inspectHeadersFooters,
 	hiddenText: inspectHiddenText,
 };

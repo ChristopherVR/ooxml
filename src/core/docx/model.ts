@@ -165,6 +165,8 @@ export interface DocumentModel {
 	 * custom XML data, the attached template, the reviewer list and the privacy settings.
 	 */
 	packageInformation?: import('./package-information').PackageInformation;
+	/** Existing bookmarks crossing paragraphs, as `[name, closingParagraphId]` pairs. */
+	sourceBookmarkEnds?: [string, string][];
 	/** Mail merge template settings and source relationship targets. */
 	mailMerge?: import('./mail-merge/settings').MailMergeSettings;
 	/** Whether `settings.xml` requests separate even-page headers/footers (`w:evenAndOddHeaders`). */

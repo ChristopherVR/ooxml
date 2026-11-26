@@ -12,6 +12,7 @@ import {
 import { children as nsChildren } from '../xml/index';
 import { parseXml, WORD_NS, type XmlElement } from './xml';
 import { W15_NS } from './comment-parts';
+import { readBibliographyPart, type BibliographyPart } from './bibliography-part';
 
 /** Absent fields are unset; read once on load and compared with the loaded value on save. */
 export interface PackageInformation {
@@ -33,6 +34,7 @@ export interface PackageInformation {
 	customProperties?: string[];
 	/** Custom XML data parts (`customXml/item1.xml`...) related to the main document. */
 	customXmlParts?: string[];
+	bibliography?: BibliographyPart;
 	/** `word/people.xml` exists: the identities of the people who reviewed the document. */
 	people?: boolean;
 	/** settings.xml has `w15:docId`, the document's persistent identifier. */
@@ -93,7 +95,11 @@ export async function readPackageInformation(zip: JSZip): Promise<PackageInforma
 		.filter((rel) => rel.type === CUSTOM_XML_TYPE && rel.mode === 'Internal')
 		.map((rel) => resolvePartPath(DOCUMENT_PART, rel.target))
 		.filter((part) => zip.file(part));
-	if (customXml.length) info.customXmlParts = customXml;
+	if (customXml.length) {
+		info.customXmlParts = customXml;
+		const bibliography = await readBibliographyPart(zip, customXml);
+		if (bibliography) info.bibliography = bibliography;
+	}
 	if (zip.file('word/people.xml')) info.people = true;
 	await readSettings(zip, info);
 	return Object.keys(info).length ? info : undefined;

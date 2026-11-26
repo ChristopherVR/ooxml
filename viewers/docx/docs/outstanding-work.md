@@ -434,9 +434,16 @@ Still not at parity:
   simple floating shapes in the same paragraph. Wrap point editing, mixed or formatted groups,
   vertical table cell layout in Print Layout and PDF, and Manual Hyphenation remain open.
   References still lacks Citations, Bibliography, Index and Table of Authorities, and
+- **Layout and References:** Manual Hyphenation and its options, Position
+  and Wrap Text, and
   automatic updating of `REF`, `PAGEREF` and `SEQ` results (Update Fields refreshes them on request; inserting a caption
   also renumbers the label's captions and refreshes `REF` results that quote a caption, in the same undo step; `PAGEREF`, table of contents and
   other results change only through Update Fields).
+- **Index, citations, and authorities:** References can mark and update index and authority
+  entries, manage document sources, insert and edit citations, and generate a bibliography.
+  Print Layout shows continuous index columns. APA, MLA, and Chicago author-date cover common
+  sources. Other citation styles, a shared source library, exact bookmark character ranges,
+  and less common native field switches remain open.
 - **Review and View:** Editor pane, Thesaurus, Translate, Accessibility, Compare (the core `compareDocuments` exists, with no UI), Protect, Ink;
   Read Mode, Web and Outline views, New Window,
   Split and Macros.

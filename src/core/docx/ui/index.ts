@@ -83,3 +83,17 @@ export {
 export * from '../find-format-document';
 export * from './edit-restriction';
 export { EQUATION_GALLERY } from '../../math/equation-gallery';
+export const loadWordReferences = () => import('../references');
+export type WordReferences = Awaited<ReturnType<typeof loadWordReferences>>;
+export type {
+	Bibliography,
+	BibliographyAuthor,
+	BibliographySource,
+	BibliographyStyle,
+	CitationOptions,
+	IndexLeader,
+	IndexOptions,
+	ReferencePage,
+	ReferenceTable,
+	SourceField,
+} from '../references';

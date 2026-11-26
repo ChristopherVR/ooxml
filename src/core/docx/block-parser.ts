@@ -256,7 +256,7 @@ function parseParagraph(node: XmlElement, id: string, fields?: FieldResultMetada
 	if (!runs.length) runs.push({ text: '' });
 	const paragraph: Paragraph = { type: 'paragraph', id, runs };
 	if (props) paragraph.sourceParagraphPropertiesXml = buildXml(props);
-	const bookmarks = paragraphBookmarkNames(node);
+	const bookmarks = paragraphBookmarkNames(node, paragraph);
 	if (bookmarks.length) paragraph.bookmarks = bookmarks;
 	readParagraphPermissionMarkers(node, paragraph);
 	const markRevision = paragraphMarkRevision(props);

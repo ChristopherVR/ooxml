@@ -8,6 +8,7 @@ import { textContent, WORD_NS, type XmlDocument, type XmlElement } from './xml';
 /** WordprocessingML elements the loader looks for anywhere in `document.xml`. */
 const SCANNED = new Set([
 	'body',
+	'bookmarkEnd',
 	'numPr',
 	'altChunk',
 	'fldSimple',

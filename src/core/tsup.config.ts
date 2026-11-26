@@ -95,6 +95,7 @@ const {
 	index,
 	'drawingml/index': drawingml,
 	'docx/mail-merge/index': mailMerge,
+	'docx/ui/index': wordUi,
 	'xlsx/load/index': xlsxLoad,
 	'xlsx/collab/index': xlsxCollab,
 	'visio/index': _visio,
@@ -123,6 +124,15 @@ export default defineConfig([
 		splitting: true,
 		esbuildOptions(options) {
 			options.chunkNames = 'docx/mail-merge/chunks/[name]-[hash]';
+		},
+	},
+	{
+		...shared,
+		entry: { 'docx/ui/index': wordUi },
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'docx/ui/chunks/[name]-[hash]';
 		},
 	},
 	{

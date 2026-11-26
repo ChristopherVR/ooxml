@@ -1,0 +1,19 @@
+.dve-references-content {
+	display: grid;
+	gap: 0.5rem;
+	min-width: min(24rem, 66vw);
+	max-height: min(55vh, 32rem);
+	overflow: auto;
+	padding: 0.125rem;
+}
+
+.dve-references-content label:not(.dve-dialog-check) {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.dve-references-status:empty {
+	display: none;
+}

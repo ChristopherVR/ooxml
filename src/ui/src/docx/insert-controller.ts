@@ -52,7 +52,10 @@ import { pickOfficeIcon } from '../form/icon-picker';
 import { openOfficeAddIns } from '../ribbon/add-in-dialog';
 import { insertTextBox, selectedTextBox, updateTextBox } from './text-box-commands';
 import { focusView } from './focus-view';
-import { updateFields } from './field-update';
+import { refreshFieldResults } from './field-update';
+import { docToModel } from './model-adapter';
+import { closeHistory } from 'prosemirror-history';
+import { loadWordReferences } from 'ooxml-core/docx/ui';
 import {
 	blockPageNumbers,
 	insertTableOfContents,
@@ -241,16 +244,7 @@ export class InsertController {
 					if (!removeTableOfContents(view, this.host.model()))
 						this.host.reportError(new Error('This document has no table of contents to remove.'));
 				} else if (action.key === 'fields') {
-					// Word's Update Field refreshes everything: captions and references first, then
-					// the tables built from them (headings, then each figure label).
-					let changed = updateFields(
-						view,
-						(id) => blockPageNumbers(this.host.model()).get(id),
-						this.host.model(),
-					);
-					for (const label of [undefined, 'Figure', 'Table', 'Equation'])
-						changed = updateTableOfContents(view, this.host.model(), undefined, label) || changed;
-					if (!changed) this.host.reportError(new Error('No fields needed updating.'));
+					void this.updateBodyFields(view);
 				} else if (!updateTableOfContents(view, this.host.model()))
 					this.host.reportError(new Error('This document has no table of contents to update.'));
 			} catch (error) {
@@ -259,6 +253,38 @@ export class InsertController {
 			focusView(view);
 		} else return false;
 		return true;
+	}
+
+	private async updateBodyFields(view: EditorView): Promise<void> {
+		try {
+			const original = view.state.doc;
+			const [{ refreshReferences }, references] = await Promise.all([
+				import('./references/controller'),
+				loadWordReferences(),
+			]);
+			if (this.host.view() !== view || !view.editable || original !== view.state.doc) return;
+			const model = this.host.model();
+			let numbers: ReturnType<typeof blockPageNumbers> | undefined;
+			const tr = refreshFieldResults(
+				view.state.tr,
+				(id) => (numbers ??= blockPageNumbers(model)).get(id),
+				false,
+				model,
+			);
+			refreshReferences(
+				references,
+				tr,
+				tr.docChanged ? docToModel(tr.doc, model, tr.before) : model,
+				this.locale,
+			);
+			let changed = tr.docChanged;
+			if (changed) view.dispatch(closeHistory(tr));
+			for (const label of [undefined, 'Figure', 'Table', 'Equation'])
+				changed = updateTableOfContents(view, this.host.model(), undefined, label) || changed;
+			if (!changed) this.host.reportError(new Error('No fields needed updating.'));
+		} catch (error) {
+			this.host.reportError(error instanceof Error ? error : new Error(String(error)));
+		}
 	}
 
 	/** Ctrl+K opens the link dialog; Ctrl/Cmd+Click follows a link like Word. */

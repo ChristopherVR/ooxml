@@ -51,6 +51,7 @@ import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
 import { syncSmartArtDesign } from './smartart-design-ribbon';
 import { syncMailingsRibbon } from './mailings-ribbon';
+import { syncReferencesRibbon } from './references-ribbon';
 import type { MailingsController } from './mailings/controller';
 import type { MailMergeEmailProvider } from './mailings/email-provider';
 import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
@@ -525,6 +526,7 @@ export class EditorCore {
 		);
 		if (toolbar) syncDesignControls(this, toolbar);
 		syncMailingsRibbon(this);
+		syncReferencesRibbon(this);
 		this.inserts.smartArt.sync();
 		const target = this.targetView();
 		if (toolbar && target)

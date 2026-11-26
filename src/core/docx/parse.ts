@@ -11,6 +11,7 @@ import { parseTwips } from './simple-types';
 import { parseFontTable } from './font-table';
 import { children, first, getW, parseXml, type XmlDocument } from './xml';
 import { remember, saveDocx } from './save';
+import { sourceBookmarkEnds } from './bookmarks';
 import { parseParagraphStyleCatalog } from './paragraph-styles';
 import { parseBlocksFromContainer } from './block-parser';
 import { parseDocumentParts } from './document-parts';
@@ -121,6 +122,10 @@ export async function readPackage(
 		},
 		warnings: warningsFor(scanned),
 	};
+	if (scanned.has('bookmarkEnd')) {
+		const ends = sourceBookmarkEnds(blocks);
+		if (ends.length) model.sourceBookmarkEnds = ends;
+	}
 	if ((await inspectPackageSignatures(zip)).hasSignatures)
 		model.signatures = await verifySignedPackage(zip);
 	const stylesFile = zip.file(documentPartPath(drawings.rels, 'styles', 'word/styles.xml'));

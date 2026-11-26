@@ -39,6 +39,7 @@ function withoutProperties(model: DocumentModel): DocumentModel {
 	const info: PackageInformation = {};
 	// The custom XML parts are another category; the template falls back to Normal as in Word.
 	if (packageInformation?.customXmlParts) info.customXmlParts = packageInformation.customXmlParts;
+	if (packageInformation?.bibliography) info.bibliography = packageInformation.bibliography;
 	if (packageInformation?.template) info.template = DEFAULT_TEMPLATE;
 	info.removePersonalInformation = true;
 	info.removeDateAndTime = true;
@@ -77,8 +78,9 @@ function withoutPersonalProperties(
 }
 
 function withoutCustomXml(model: DocumentModel): DocumentModel {
-	if (!model.packageInformation?.customXmlParts) return model;
-	const { customXmlParts: _parts, ...info } = model.packageInformation;
+	if (!model.packageInformation?.customXmlParts && !model.packageInformation?.bibliography)
+		return model;
+	const { customXmlParts: _parts, bibliography: _bibliography, ...info } = model.packageInformation;
 	const { packageInformation: _info, ...rest } = model;
 	return Object.keys(info).length ? { ...rest, packageInformation: info } : rest;
 }

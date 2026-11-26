@@ -10,6 +10,7 @@ import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { blockCopiesOf } from './block-copies';
 import { stampModified } from './save-modified';
 import { applyDataBindings } from './data-binding';
+import { writeBibliographyPart } from './bibliography-part';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
 import { applyModel } from './write';
@@ -206,6 +207,11 @@ export async function saveDocx(
 		await applyComments(zip, model.comments ?? []);
 	if (binding) await applyDataBindings(zip, model, binding.base, binding.sourceXml);
 	await applyPackageInformation(zip, model.packageInformation, binding?.base.packageInformation);
+	await writeBibliographyPart(
+		zip,
+		model.packageInformation?.bibliography,
+		binding?.base.packageInformation?.bibliography,
+	);
 	await writeMailMergeSettings(zip, model.mailMerge, binding?.base.mailMerge);
 	const privacy = model.packageInformation;
 	if (privacy?.removePersonalInformation)

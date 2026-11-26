@@ -8,6 +8,7 @@ import type { DiagramFormatChange } from 'ooxml-core/diagram';
 export type RibbonAction =
 	| { type: 'documentDesign'; menu: import('./design-ribbon-controls').DesignMenu }
 	| { type: 'mailings'; key: import('./mailings-ribbon').MailingsCommand }
+	| { type: 'references'; key: import('./references-ribbon').ReferencesCommand }
 	| { type: 'smartArtFormat'; change: DiagramFormatChange }
 	| { type: 'help' }
 	| {

@@ -23,7 +23,9 @@ import { toggleFormatPainter } from './format-painter';
 import { withHeaderFooterDistance } from './header-footer-position';
 import { closeHistory } from 'prosemirror-history';
 import { sectionLayoutJson } from 'ooxml-core/docx';
+import { loadWordReferences } from 'ooxml-core/docx/ui';
 import { applyFontFormat } from './font-format';
+import { referencesReason } from './references-ribbon';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
@@ -36,6 +38,26 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 		return;
 	}
 	if (core.pages.viewMode === 'read') return;
+	if (action.type === 'references') {
+		if (referencesReason(core, action.key)) return;
+		core.mailings?.stopPreview();
+		const generation = core.loadGeneration;
+		const view = core.view;
+		const selection = view?.state.selection;
+		void Promise.all([import('./references/controller'), loadWordReferences()])
+			.then(([{ runReferences }, references]) => {
+				if (
+					view &&
+					view === core.view &&
+					generation === core.loadGeneration &&
+					selection?.eq(view.state.selection) &&
+					!referencesReason(core, action.key)
+				)
+					runReferences(references, core, view, action.key);
+			})
+			.catch((error: unknown) => core.host.reportError(error));
+		return;
+	}
 	if (action.type === 'mailings') {
 		if (core.loading || !core.host.canEditOutsideBody()) return;
 		const generation = core.loadGeneration;
