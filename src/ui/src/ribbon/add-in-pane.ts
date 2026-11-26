@@ -1,7 +1,7 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
 import { html, nothing } from 'lit';
 import { controlStyles, OfficeElement } from '../base';
-import { defineTaskPane } from '../chrome/task-pane';
+import { defineTaskPane, type OfficeUiTaskPane } from '../chrome/task-pane';
 import { definer } from '../registry';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import type { AddInDialogHost } from './add-in-dialog';
@@ -160,8 +160,5 @@ export function openAddInPane(host: AddInDialogHost, options: PaneOptions): void
 	pane.dataset.addInId = options.id;
 	host.append(pane);
 	pane.show(options);
-	pane.shadowRoot
-		?.querySelector('office-ui-task-pane')
-		?.shadowRoot?.querySelector('button')
-		?.focus();
+	pane.shadowRoot?.querySelector<OfficeUiTaskPane>('office-ui-task-pane')?.focusHeading();
 }

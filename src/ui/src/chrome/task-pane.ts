@@ -28,6 +28,10 @@ export class OfficeUiTaskPane extends OfficeElement {
 		this.closeLabel = '';
 	}
 
+	focusHeading(): void {
+		this.renderRoot.querySelector<HTMLElement>('.title')?.focus();
+	}
+
 	protected override willUpdate(): void {
 		this.setAttribute('role', 'complementary');
 		this.setAttribute('aria-label', this.label);
@@ -36,7 +40,7 @@ export class OfficeUiTaskPane extends OfficeElement {
 	protected override render() {
 		const close = this.closeLabel || `Close ${this.label}`;
 		return html`<div class="header" part="header"
-				><h2 class="title">${this.label}</h2
+				><h2 class="title" tabindex="-1">${this.label}</h2
 				><button
 					type="button"
 					class="close"

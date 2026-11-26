@@ -89,6 +89,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 			await expect(dialog.getByText('Lab Notes', { exact: true })).toBeVisible();
 			await dialog.getByRole('button', { name: 'Open Notes', exact: true }).click();
 		}
+		await expect(pane.getByRole('heading', { name: addInName })).toBeFocused();
 		await expect(pane.locator('iframe')).toHaveAttribute('sandbox', 'allow-scripts');
 		await expect(pane.locator('iframe')).toHaveAttribute('referrerpolicy', 'no-referrer');
 		await expect(frame.locator('#ready')).toHaveText(
