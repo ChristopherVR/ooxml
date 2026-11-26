@@ -91,6 +91,8 @@ export interface EditorContext {
 	 * snapshot restore as a local edit). Absent means the session's; read it through `historyOf`.
 	 */
 	history?(): EditHistory | undefined;
+	/** Whether the workbook is in a room or joining one. */
+	isCollaborating?(): boolean;
 	/** Collaborators' selections on every sheet; the grid outlines those on the shown sheet. */
 	remoteSelections?(): readonly RemoteRange[];
 	/** Fires when collaborators' selections (or who is in the room) change. */

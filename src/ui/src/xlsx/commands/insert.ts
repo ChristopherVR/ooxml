@@ -10,7 +10,12 @@ import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { icon } from 'ooxml-core/xlsx/ui';
 import { editing, target, sheetLocked, INSERT_CHART_TYPES } from 'ooxml-core/xlsx/ui';
-import { cellPictureCommands, insertCellPicture } from './cell-pictures';
+import {
+	cellPictureCommands,
+	cellPictureEditsAvailable,
+	cellPictureUnavailable,
+	insertCellPicture,
+} from './cell-pictures';
 
 /** Picture types the core stores that a browser can also paint. */
 const PICTURE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/bmp', 'image/webp'].filter(
@@ -238,7 +243,8 @@ export function insertCommands(): Command[] {
 		editing({
 			id: 'insert.picture-in-cell',
 			label: 'Place in Cell',
-			unavailable: 'Select a cell on an editable sheet.',
+			unavailable: cellPictureUnavailable('Select a cell on an editable sheet.'),
+			enabled: cellPictureEditsAvailable,
 			icon: icon('picture'),
 			run: async (ctx) => {
 				const current = target(ctx);

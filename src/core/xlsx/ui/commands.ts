@@ -14,13 +14,20 @@ export interface Command {
 	/** True: disabled in read-only mode. */
 	editing?: boolean;
 	/** English reason shown in the tooltip when the command is not available. */
-	unavailable?: string;
+	unavailable?: string | ((ctx: EditorContext) => string);
 	enabled?(ctx: EditorContext): boolean;
 	/** Toggle state (bold of the active cell, ...). */
 	checked?(ctx: EditorContext): boolean;
 	/** Value for select-like controls (font name, size, number format). */
 	value?(ctx: EditorContext): string;
 	run(ctx: EditorContext, arg?: unknown): void | Promise<void>;
+}
+
+/** Translated reason for a disabled command. */
+export function unavailableReason(ctx: EditorContext, command: Command): string | undefined {
+	const reason =
+		typeof command.unavailable === 'function' ? command.unavailable(ctx) : command.unavailable;
+	return reason ? ctx.t(reason) : undefined;
 }
 
 export interface CommandRegistry {

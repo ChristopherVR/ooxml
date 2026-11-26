@@ -9,6 +9,15 @@ import {
 } from 'ooxml-core/xlsx/ui';
 
 type Target = NonNullable<ReturnType<typeof target>>;
+export const cellPictureEditsAvailable = (ctx: EditorContext): boolean => !ctx.isCollaborating?.();
+
+export function cellPictureUnavailable(other: string): (ctx: EditorContext) => string {
+	return (ctx) =>
+		cellPictureEditsAvailable(ctx)
+			? other
+			: 'In-cell picture editing is unavailable while sharing this workbook.';
+}
+
 const INVALID_PICTURE = 'Use a PNG, JPEG or GIF picture within the size limits.';
 
 export async function insertCellPicture(
@@ -22,6 +31,7 @@ export async function insertCellPicture(
 	}
 	const bytes = new Uint8Array(await file.arrayBuffer());
 	if (
+		!cellPictureEditsAvailable(ctx) ||
 		ctx.readOnly() ||
 		ctx.session() !== current.session ||
 		target(ctx)?.ws !== current.ws ||
@@ -60,9 +70,9 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.place-in-cell',
 			label: 'Convert to In-Cell Picture',
-			unavailable: 'Select a floating picture on an editable sheet.',
+			unavailable: cellPictureUnavailable('Select a floating picture on an editable sheet.'),
 			icon: icon('picture'),
-			enabled: (ctx) => Boolean(selectedDrawingPicture(ctx)),
+			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedDrawingPicture(ctx)),
 			run: (ctx) => {
 				const selected = selectedDrawingPicture(ctx);
 				if (!selected) return;
@@ -81,9 +91,9 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.place-over-cells',
 			label: 'Convert to Floating Picture',
-			unavailable: 'Select an in-cell picture on an editable sheet.',
+			unavailable: cellPictureUnavailable('Select an in-cell picture on an editable sheet.'),
 			icon: icon('picture'),
-			enabled: (ctx) => Boolean(selectedCellPicture(ctx)),
+			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedCellPicture(ctx)),
 			run: (ctx) => {
 				const selected = selectedCellPicture(ctx);
 				if (!selected) return;
@@ -95,8 +105,8 @@ export function cellPictureCommands(): Command[] {
 		editing({
 			id: 'picture.cell-alt-text',
 			label: 'Alt Text',
-			unavailable: 'Select an in-cell picture on an editable sheet.',
-			enabled: (ctx) => Boolean(selectedCellPicture(ctx)),
+			unavailable: cellPictureUnavailable('Select an in-cell picture on an editable sheet.'),
+			enabled: (ctx) => cellPictureEditsAvailable(ctx) && Boolean(selectedCellPicture(ctx)),
 			run: async (ctx) => {
 				const selected = selectedCellPicture(ctx);
 				if (!selected) return;

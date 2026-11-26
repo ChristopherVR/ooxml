@@ -22,6 +22,12 @@ export const NAVIGATION_STRINGS: Translations = {
 		'Selecciona una celda en una hoja editable.',
 		'请在可编辑工作表上选择一个单元格。',
 	],
+	'In-cell picture editing is unavailable while sharing this workbook.': [
+		'La modification des images dans les cellules est indisponible pendant le partage de ce classeur.',
+		'Zellbilder können nicht bearbeitet werden, solange diese Arbeitsmappe freigegeben ist.',
+		'La edición de imágenes en celdas no está disponible mientras se comparte este libro.',
+		'共享此工作簿时无法编辑单元格图片。',
+	],
 	'Place in Cell': [
 		'Placer dans la cellule',
 		'In Zelle platzieren',

@@ -298,7 +298,8 @@ line/marker swatches and position-authoring controls remain incomplete.
   defined names, selections; row and column inserts travel as the resulting cell moves), and
   `<xlsx-editor>` is wired (share dialog, presence). Also shared, as keyed entries per item:
   notes, threaded replies (one entry per reply), hyperlinks, conditional formats, validations,
-  tables and charts (last writer wins per chart). Not shared yet: images and other drawings,
+  tables and charts (last writer wins per chart). Not shared yet: in-cell pictures
+  (including their value metadata and media bytes), floating images and other drawings,
   filters, pivots, freeze panes and views, page setup, protection and document properties. See [collab-area.md](collab-area.md).
 - Clipboard: finite copies keep trailing blanks and tile into compatible selections; directional
   fills translate formulas; Paste Special supports content modes, transpose, Skip Blanks,

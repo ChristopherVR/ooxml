@@ -4,7 +4,7 @@
 // offered).
 import { defineContextMenu } from '../../controls';
 import type { OfficeMenuItem, OfficeMenuState } from '../../controls';
-import type { EditorContext } from 'ooxml-core/xlsx/ui';
+import { unavailableReason, type EditorContext } from 'ooxml-core/xlsx/ui';
 import type { MenuEntry } from 'ooxml-core/xlsx/ui';
 import { visibleMenuEntries } from './hidden';
 import type { ExcelMenuCommand, ExcelMenuContext } from 'ooxml-core/xlsx/ui';
@@ -91,14 +91,20 @@ export function openContextMenu(
 	};
 	const handle: ContextMenuHandle = { close: () => close(false), element };
 
-	const rows: OfficeMenuItem[] = entries.map((entry) => ({
-		id: entry.id,
-		label: ctx.t(entry.label),
-		disabled: entryDisabled(ctx, entry),
-		...(entry.separatorBefore ? { separatorBefore: true } : {}),
-		...(entry.checked === undefined ? {} : { checked: entry.checked }),
-		...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
-	}));
+	const rows: OfficeMenuItem[] = entries.map((entry) => {
+		const disabled = entryDisabled(ctx, entry);
+		const command = disabled && entry.command ? ctx.commands.get(entry.command) : undefined;
+		const title = command && unavailableReason(ctx, command);
+		return {
+			id: entry.id,
+			label: ctx.t(entry.label),
+			disabled,
+			...(title ? { title } : {}),
+			...(entry.separatorBefore ? { separatorBefore: true } : {}),
+			...(entry.checked === undefined ? {} : { checked: entry.checked }),
+			...(entry.shortcut ? { shortcut: entry.shortcut } : {}),
+		};
+	});
 	const extra = hostCommands.length
 		? withHostMenuItems(rows, hostCommands, options.host?.context as ExcelMenuContext)
 		: { items: rows, run: () => false };

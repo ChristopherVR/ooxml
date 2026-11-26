@@ -1,3 +1,4 @@
+import { unavailableReason } from 'ooxml-core/xlsx/ui';
 /**
  * Renders one declarative ribbon control (see parts.ts) into DOM. Every control reads its label,
  * icon, tooltip and state from its command, and registers an `update` hook the ribbon calls on
@@ -80,11 +81,10 @@ export function commandButton(
 	scope.updates.push(() => {
 		button.disabled = !ctx.commands.isEnabled(command.id);
 		// An always-disabled command says why in its tooltip and to assistive technology.
-		if (command.unavailable && button.disabled) {
-			const reason = ctx.t(command.unavailable);
-			button.title = `${label}: ${reason}`;
-			button.setAttribute('aria-description', reason);
-		}
+		const reason = button.disabled ? unavailableReason(ctx, command) : undefined;
+		button.title = reason ? `${label}: ${reason}` : tooltip(ctx, command);
+		if (reason) button.setAttribute('aria-description', reason);
+		else button.removeAttribute('aria-description');
 		if (options.toggle)
 			button.setAttribute('aria-pressed', String(safe(() => command.checked?.(ctx)) ?? false));
 	});
@@ -113,13 +113,14 @@ export function menuEntries(scope: RenderScope, items: RibbonMenuItem[]): MenuEn
 		const icon = item.icon ?? command.icon;
 		const checked = item.arg === undefined ? safe(() => command.checked?.(ctx)) : undefined;
 		const disabled = !ctx.commands.isEnabled(command.id);
+		const reason = disabled ? unavailableReason(ctx, command) : undefined;
 		entries.push({
 			label: ctx.t(item.label ?? command.label),
 			...(icon ? { icon } : {}),
 			...(command.shortcut ? { shortcut: command.shortcut } : {}),
 			...(checked === undefined ? {} : { checked }),
 			disabled,
-			...(disabled && command.unavailable ? { reason: ctx.t(command.unavailable) } : {}),
+			...(reason ? { reason } : {}),
 			run: () => {
 				const origin = ctx.root.activeElement;
 				void Promise.resolve(ctx.commands.run(command.id, item.arg)).then(() => {

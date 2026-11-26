@@ -90,6 +90,26 @@ test('uses the host IMAGE provider on the already open editor', async ({ page })
 	await expect(grid(page).getByText('#BLOCKED!', { exact: true })).toBeVisible();
 });
 
+test('disables in-cell picture editing with a reason while sharing', async ({ page }) => {
+	await openLanding(page);
+	await newWorkbook(page);
+	await editor(page).evaluate(
+		(element, roomId) =>
+			(element as XlsxEditorElement).startCollaboration({ roomId, user: { name: 'Ada' } }),
+		`pictures-${Date.now()}`,
+	);
+	await openPictures(page);
+	const command = editor(page).getByRole('menuitem', { name: 'Place in Cell', exact: true });
+	await expect(command).toBeDisabled();
+	await expect(command).toHaveAccessibleDescription(
+		'In-cell picture editing is unavailable while sharing this workbook.',
+	);
+	await page.keyboard.press('Escape');
+	await editor(page).evaluate((element) => (element as XlsxEditorElement).stopCollaboration());
+	await openPictures(page);
+	await expect(command).toBeEnabled();
+});
+
 test('shows a cached data type icon and opens its card from the keyboard', async ({ page }) => {
 	const { data, structures } = RICH_PARTS;
 	const bytes = await miniPackage({

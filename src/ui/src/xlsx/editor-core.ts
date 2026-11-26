@@ -250,6 +250,7 @@ export class EditorCore {
 			validateReplace: () => core.validateReplace,
 			locale: () => core.locale,
 			history: () => core.collab.history() ?? core.session,
+			isCollaborating: () => core.collab.busy,
 			remoteSelections: () => core.collab.remoteSelections(),
 			onRemoteSelectionsChange: (listener) => core.collab.onRemoteChange(listener),
 		};
