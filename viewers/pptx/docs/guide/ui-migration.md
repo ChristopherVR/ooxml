@@ -173,11 +173,11 @@ now share one control set: Exit Effects carries the catalogue's
 `animations.advancedAnimation.addAnimation` id everywhere, the Animation Pane
 shows its pressed state when the inspector is open, and the Angular Effect
 Options and Trigger commands open the Animation Panel like the other bindings.
-Animation Painter copies editor-authored effects in all five bindings. Click
-once for one target, double-click to paint several, and press Escape to exit.
-The Timing group edits Start, Duration and Delay and reorders the selected
-editor-authored animation via the same operations as the Animation Pane.
-Imported native effects remain read-only in the timeline.
+Animation Painter copies editor-authored effects or the imported effect chosen
+in the Animation Pane. Click once for one target, double-click to paint several,
+and press Escape to exit. The Timing group edits Start, Duration and Delay for
+the chosen imported effect. Imported effects with interactive triggers keep their
+Start mode. Reordering in the Timing group applies to editor-authored entries.
 
 Public customization ids are unchanged. Boundary: the Svelte and Vanilla
 play-order timeline rows and the inspector Animation panel are native and not

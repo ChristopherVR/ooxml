@@ -4,6 +4,7 @@ import {
 	DEFAULT_ANIMATION_TRIGGER,
 	ooxmlToPresetName,
 	type PptxElementAnimation,
+	type PptxNativeAnimation,
 } from 'ooxml-core/pptx';
 
 import { directionForAnimationSubtype } from './animation-direction-options';
@@ -26,13 +27,41 @@ export interface AnimationPaint {
 	effect: Omit<PptxElementAnimation, 'elementId' | 'order'>;
 }
 
+function importedPaintEffect(
+	slide: AnimationEditingSlide,
+	elementId: string | undefined,
+	nodeId: number | undefined,
+): PptxNativeAnimation | undefined {
+	return slide.nativeAnimations?.find(
+		(item) =>
+			item.targetId &&
+			item.presetClass &&
+			item.presetId !== undefined &&
+			(item.presetClass !== 'path' || item.motionPath) &&
+			(nodeId === undefined ? item.targetId === elementId : item.nodeId === nodeId),
+	);
+}
+
+export function canCaptureAnimationPaint(
+	slide: AnimationEditingSlide,
+	elementId: string | undefined,
+	nodeId: number | undefined,
+): boolean {
+	return Boolean(
+		(nodeId === undefined && editableAnimation(slide.animations ?? [], elementId)) ||
+		importedPaintEffect(slide, elementId, nodeId),
+	);
+}
+
 /** Capture a value snapshot and discard source-bound interactive trigger data. */
 export function captureAnimationPaint(
 	slide: AnimationEditingSlide,
 	elementId: string | undefined,
+	nodeId?: number,
 ): AnimationPaint | undefined {
 	const entry =
-		editableAnimation(slide.animations ?? [], elementId) ?? importedPaintEntry(slide, elementId);
+		(nodeId === undefined ? editableAnimation(slide.animations ?? [], elementId) : undefined) ??
+		importedPaintEntry(slide, importedPaintEffect(slide, elementId, nodeId));
 	if (!entry) {
 		return undefined;
 	}
@@ -53,14 +82,10 @@ export function captureAnimationPaint(
 
 function importedPaintEntry(
 	slide: AnimationEditingSlide,
-	elementId: string | undefined,
+	effect: PptxNativeAnimation | undefined,
 ): PptxElementAnimation | undefined {
-	if (!elementId) return undefined;
-	const effect = slide.nativeAnimations?.find(
-		(item) => item.targetId === elementId && item.presetClass && item.presetId !== undefined,
-	);
-	const { presetClass, presetId } = effect ?? {};
-	if (!effect || !presetClass || presetId === undefined) return undefined;
+	const { targetId, presetClass, presetId } = effect ?? {};
+	if (!effect || !targetId || !presetClass || presetId === undefined) return undefined;
 	const slot = { entr: 'entrance', emph: 'emphasis', exit: 'exit', path: 'motionPath' }[
 		presetClass
 	];
@@ -68,7 +93,7 @@ function importedPaintEntry(
 	const value = presetClass === 'path' ? effect.motionPath : token;
 	if (!value) return undefined;
 	return {
-		elementId,
+		elementId: targetId,
 		[slot]: value,
 		nativePaintTemplate:
 			effect.nodeId === undefined || !slide.rawTiming
@@ -76,7 +101,7 @@ function importedPaintEntry(
 				: captureNativeAnimationTemplate(slide.rawTiming, effect.nodeId),
 		durationMs: effect.durationMs,
 		delayMs: effect.delayMs,
-		trigger: effect.trigger,
+		trigger: effect.interactiveSequence ? effect.trigger : (effect.startMode ?? effect.trigger),
 		direction: directionForAnimationSubtype(token, effect.presetSubtype),
 		soundRId: effect.soundRId,
 		soundPath: effect.soundPath,

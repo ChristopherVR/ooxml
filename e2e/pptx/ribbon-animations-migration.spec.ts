@@ -16,7 +16,7 @@ import {
 	selectElement,
 } from './support/deck';
 import { downloadBytes } from './support/exports';
-import { chooseSelectValue } from './support/select-control';
+import { chooseSelectValue, expectSelectValue } from './support/select-control';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -74,13 +74,24 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 	await expect(picker).toBeVisible();
 	await expect(effect.locator('option')).toHaveCount(5);
 	await chooseSelectValue(page, picker, '8');
+	const start = page
+		.locator('[data-ribbon-control="animations.timing.start"]')
+		.getByRole('combobox');
+	await expectSelectValue(start, 'withPrevious');
 	const duration = page.locator('[data-ribbon-control="animations.timing.duration"]');
 	await expect(duration).toHaveValue('1');
 	await duration.fill('1.75');
 	await duration.press('Tab');
 	await expect(duration).toHaveValue('1.75');
+	const delay = page.locator('[data-ribbon-control="animations.timing.delay"]');
+	await delay.fill('0.35');
+	await delay.press('Tab');
+	await expect(delay).toHaveValue('0.35');
+	await expectSelectValue(start, 'withPrevious');
 	const { xml } = await savedSlideXml(page);
-	expect(xml).toMatch(/<p:cTn\b(?=[^>]*id="8")(?=[^>]*dur="1750")[^>]*>/u);
+	expect(xml).toMatch(
+		/<p:cTn\b(?=[^>]*id="8")(?=[^>]*dur="1750")(?=[^>]*nodeType="withEffect")[^>]*><p:stCondLst><p:cond delay="350"/u,
+	);
 	expect(xml).not.toMatch(/<p:cTn\b(?=[^>]*id="5")(?=[^>]*dur="1750")[^>]*>/u);
 });
 

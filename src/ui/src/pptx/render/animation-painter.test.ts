@@ -1,4 +1,4 @@
-import type { PptxElementAnimation } from 'ooxml-core/pptx';
+import type { PptxElementAnimation, PptxNativeAnimation } from 'ooxml-core/pptx';
 import { expect, it, vi } from 'vitest';
 
 import { applyAnimationPaint, captureAnimationPaint } from './animation-painter';
@@ -97,6 +97,37 @@ it('uses one commit per application and keeps the armed source in locked mode un
 	controller.apply(withoutSelection, 'fourth');
 	expect(commit).toHaveBeenCalledTimes(3);
 	expect(commit.mock.calls[2]?.[0][1]).toMatchObject({ elementId: 'third', entrance: 'flyIn' });
+});
+
+it('paints the selected imported effect with its own duration and embedded sound', () => {
+	const controller = createAnimationPainterController();
+	const commit = vi.fn();
+	const slide = {
+		id: 'slide',
+		animations: [source],
+		nativeAnimations: [
+			{ nodeId: 5, targetId: 'source', presetClass: 'entr', presetId: 10, durationMs: 500 },
+			{
+				nodeId: 8,
+				targetId: 'source',
+				presetClass: 'exit',
+				presetId: 10,
+				durationMs: 1750,
+				soundRId: 'rId5',
+				soundPath: 'ppt/media/sound.wav',
+			},
+		] satisfies PptxNativeAnimation[],
+	};
+	controller.arm({ slide, elementId: 'source', commit, nativeEffectId: 8 }, 'once');
+	controller.apply({ slide: { id: 'next' }, elementId: 'target', commit }, 'target');
+	const painted = commit.mock.calls[0]?.[0][0];
+	expect(painted).toMatchObject({
+		elementId: 'target',
+		exit: 'fadeOut',
+		durationMs: 1750,
+		soundPath: 'ppt/media/sound.wav',
+	});
+	expect(painted.soundRId).toBeUndefined();
 });
 
 it('edits timing through the pane setters and skips no-ops', () => {

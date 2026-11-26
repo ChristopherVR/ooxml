@@ -25,7 +25,11 @@ export function createAnimationPainterController() {
 				return;
 			}
 			if (editing?.commit && editing.slide) {
-				const paint = captureAnimationPaint(editing.slide, editing.elementId);
+				const paint = captureAnimationPaint(
+					editing.slide,
+					editing.elementId,
+					editing.nativeEffectId,
+				);
 				if (paint) {
 					store.set({ mode, paint });
 				}

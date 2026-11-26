@@ -243,6 +243,8 @@ export interface PptxNativeAnimation {
 	target?: PptxAnimationTarget;
 	/** Trigger type. */
 	trigger?: PptxAnimationTrigger | undefined;
+	/** Start choice stored by PowerPoint independently of a numeric delay. */
+	startMode?: 'onClick' | 'withPrevious' | 'afterPrevious' | undefined;
 	/**
 	 * Shape ID that triggers this animation: the clicked shape of an
 	 * interactive sequence, or the media element of an `onMediaBookmark` one.

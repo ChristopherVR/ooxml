@@ -71,7 +71,9 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 	const native =
 		!entry || editing.nativeEffectId !== undefined ? nativeRibbonTimingTarget(editing) : undefined;
 	if (native) {
-		const start = native.trigger ?? DEFAULT_ANIMATION_TRIGGER;
+		const start =
+			(native.interactiveSequence ? native.trigger : (native.startMode ?? native.trigger)) ??
+			DEFAULT_ANIMATION_TRIGGER;
 		return {
 			start: start === 'afterDelay' ? 'afterPrevious' : start,
 			durationMs: native.durationMs ?? DEFAULT_ANIMATION_DURATION_MS,

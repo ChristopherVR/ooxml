@@ -39,6 +39,62 @@ describe('imported animation edits', () => {
 		expect(edited.nativeAnimations[1]?.behaviors).toEqual(parse(saved)[1]?.behaviors);
 	});
 
+	it.each([
+		['splitIn', 'horizontalOut', 42, 'barn(outHorizontal)'],
+		['blindsIn', 'vertical', 5, 'blinds(vertical)'],
+		['boxIn', 'out', 32, 'box(out)'],
+		['zoomIn', 'inFromScreenCenter', 528, undefined],
+	] as const)(
+		'keeps the edited %s direction and behaviours through save',
+		(preset, direction, subtype, filter) => {
+			const source = must(writer.buildTimingXml([{ elementId: '7', entrance: preset }], undefined));
+			writeOwnedEffectKeys(source, new Set());
+			const animations = parse(source);
+			const edited = must(
+				editNativeEffectTiming(source, animations, must(animations[0]?.nodeId), {
+					field: 'direction',
+					value: direction,
+				}),
+			);
+			const loaded = must(parse(must(writer.buildTimingXml([], edited.rawTiming)))[0]);
+			expect(loaded.presetSubtype).toBe(subtype);
+			if (filter) expect(loaded.effectFilter?.raw).toBe(filter);
+			else expect(loaded.behaviors?.filter((behavior) => behavior.kind === 'anim')).toHaveLength(4);
+		},
+	);
+
+	it('moves a native click effect to the preceding group and saves its new delay', () => {
+		const source = must(
+			writer.buildTimingXml(
+				[
+					{ elementId: '7', entrance: 'fadeIn' },
+					{ elementId: '8', entrance: 'appear' },
+				],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(source, new Set());
+		const animations = parse(source);
+		const second = must(animations.find(({ targetId }) => targetId === '8'));
+		const nodeId = must(second.nodeId);
+		const moved = must(
+			editNativeEffectTiming(source, animations, nodeId, {
+				field: 'start',
+				value: 'withPrevious',
+			}),
+		);
+		const delayed = must(
+			editNativeEffectTiming(moved.rawTiming, moved.nativeAnimations, nodeId, {
+				field: 'delay',
+				value: 360,
+			}),
+		);
+		const [first, next] = parse(must(writer.buildTimingXml([], delayed.rawTiming)));
+		expect(first).toMatchObject({ targetId: '7', trigger: 'onClick' });
+		expect(next).toMatchObject({ targetId: '8', startMode: 'withPrevious', delayMs: 360 });
+		expect(next?.parGroupIndex).toBe(first?.parGroupIndex);
+	});
+
 	it('paints an authored rotation with new timing and target IDs', () => {
 		const source = must(
 			writer.buildTimingXml([{ elementId: '7', emphasis: 'spin', durationMs: 800 }], undefined),

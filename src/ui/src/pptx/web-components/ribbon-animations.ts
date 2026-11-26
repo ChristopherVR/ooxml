@@ -1,5 +1,5 @@
 import { defineElement } from '../../registry';
-import { captureAnimationPaint } from '../render/animation-painter';
+import { canCaptureAnimationPaint } from '../render/animation-painter';
 import { canRequestAnimations } from '../render';
 import type { RibbonAnimationsIntent, RibbonAnimationsViewState } from '../render';
 import { createAnimationPainterController } from '../render/controller/animation-painter-controller';
@@ -122,7 +122,11 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 						this.model.editable &&
 						this.model.editing?.commit &&
 						this.model.editing.slide &&
-						captureAnimationPaint(this.model.editing.slide, this.model.editing.elementId),
+						canCaptureAnimationPaint(
+							this.model.editing.slide,
+							this.model.editing.elementId,
+							this.selectedEffect,
+						),
 					),
 			);
 			this.mountEffectPicker();

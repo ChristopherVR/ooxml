@@ -46,6 +46,22 @@ import {
 } from './native-animation-visibility-timing';
 import { extractSetAnimations } from './native-animation-set-components';
 
+function authoredStartMode(nodeType: unknown): PptxNativeAnimation['startMode'] {
+	switch (nodeType) {
+		case 'clickEffect':
+			return 'onClick';
+		case 'withEffect':
+		case 'withPrevious':
+			return 'withPrevious';
+		case 'afterEffect':
+		case 'afterPrevious':
+		case 'afterPrev':
+			return 'afterPrevious';
+		default:
+			return undefined;
+	}
+}
+
 /**
  * Determine this node's trigger from its `@_nodeType` attribute, falling
  * back to the inherited trigger, then refine it against `p:stCondLst`
@@ -57,14 +73,8 @@ export function resolveNodeTrigger(
 	currentTrigger: PptxAnimationTrigger,
 ): PptxAnimationTrigger {
 	const nodeType = String(cTn['@_nodeType'] || '');
-	let trigger = currentTrigger;
-	if (nodeType === 'afterEffect' || nodeType === 'afterPrevious' || nodeType === 'afterPrev') {
-		trigger = 'afterPrevious';
-	} else if (nodeType === 'withPrevious' || nodeType === 'withEffect') {
-		trigger = 'withPrevious';
-	} else if (nodeType === 'clickEffect') {
-		trigger = 'onClick';
-	} else if (nodeType === 'mouseOver' || nodeType === 'onMouseOver' || nodeType === 'hoverEffect') {
+	let trigger = authoredStartMode(nodeType) ?? currentTrigger;
+	if (nodeType === 'mouseOver' || nodeType === 'onMouseOver' || nodeType === 'hoverEffect') {
 		trigger = 'onHover';
 	}
 
@@ -216,6 +226,7 @@ export function buildTimingNodeAnimation(
 		calcMode,
 		...cBhvrAttrs,
 		trigger,
+		startMode: authoredStartMode(cTn['@_nodeType']),
 		presetClass: validPresetClass,
 		presetId,
 		presetSubtype,

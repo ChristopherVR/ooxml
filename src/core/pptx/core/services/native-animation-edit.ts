@@ -70,11 +70,12 @@ export function editNativeEffectTiming(
 	} else if (edit.field === 'start') {
 		if (
 			animation.interactiveSequence ||
-			animation.trigger === edit.value ||
+			(animation.startMode ?? animation.trigger) === edit.value ||
 			!changeNativeAnimationStart(timing, ref, animations, edit.value)
 		)
 			return undefined;
 		cTn['@_nodeType'] = triggerToNodeType(edit.value);
+		next.startMode = edit.value;
 		next.trigger = edit.value;
 	} else {
 		if (!Number.isFinite(edit.value)) return undefined;

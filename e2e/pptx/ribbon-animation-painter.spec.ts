@@ -3,10 +3,46 @@ import { expect, test } from '@playwright/test';
 import JSZip from 'jszip';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { elementWithText, loadDeck, openRibbonTab, selectElement, viewport } from './support/deck';
+import {
+	elementWithText,
+	fixture,
+	loadDeck,
+	openRibbonTab,
+	selectElement,
+	thumbnail,
+	viewport,
+} from './support/deck';
 import { downloadBytes } from './support/exports';
 
 test.use({ viewport: { width: 1440, height: 900 } });
+
+test('painting a native effect across slides copies its embedded sound', async ({ page }) => {
+	await loadDeck(page, fixture('native-animation-painter.pptx'));
+	await selectElement(page, elementWithText(page, 'Native animation timing'));
+	await openRibbonTab(page, 'Animations');
+	const painter = page.getByRole('button', { name: 'Animation Painter', exact: true });
+	await painter.click();
+	await expect(painter).toHaveAttribute('aria-pressed', 'true');
+	await thumbnail(page, 2).click();
+	await selectElement(page, elementWithText(page, 'Native animation target'));
+	await expect(painter).toHaveAttribute('aria-pressed', 'false');
+
+	const bytes = await downloadBytes(await savePptxViaBackstage(page));
+	const zip = await JSZip.loadAsync(bytes);
+	const slide = await zip.file('ppt/slides/slide2.xml')?.async('string');
+	const rels = await zip.file('ppt/slides/_rels/slide2.xml.rels')?.async('string');
+	expect(slide).toMatch(/<p:cTn\b(?=[^>]*presetID="1")(?=[^>]*presetClass="entr")[^>]*>/u);
+	const id = /<p:sndTgt\b[^>]*r:embed="(rId\d+)"/u.exec(slide ?? '')?.[1];
+	const audioRel = rels
+		?.match(/<Relationship\b[^>]*\/audio"[^>]*>/gu)
+		?.find((entry) => entry.includes(`Id="${id}"`));
+	const target = /Target="\.\.\/media\/([^"]+)"/u.exec(audioRel ?? '')?.[1];
+	expect(target).toBeDefined();
+	expect(target).not.toBe('audio1.wav');
+	const original = await zip.file('ppt/media/audio1.wav')?.async('uint8array');
+	expect(original?.byteLength).toBeGreaterThan(44);
+	expect(await zip.file(`ppt/media/${target}`)?.async('uint8array')).toEqual(original);
+});
 
 test('paints animation timing, undoing each application independently', async ({ page }) => {
 	await loadDeck(page);
