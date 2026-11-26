@@ -68,6 +68,50 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	});
 }
 
+test('loads Office Add-ins on first open and fits the dark editor on a phone', async ({ page }) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	let release = () => {};
+	let requested = false;
+	const gate = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await page.route('**/assets/add-ins-dialog-*.js', async (route) => {
+		requested = true;
+		await gate;
+		await route.continue();
+	});
+	try {
+		await page.goto('/?framework=vanilla');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+		const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+		await reveal(editor, get);
+		expect(requested).toBe(false);
+		await get.press('Enter');
+		await expect.poll(() => requested).toBe(true);
+		const dialog = editor.getByRole('dialog', { name: 'Office Add-ins' });
+		await expect(dialog).toHaveCount(0);
+		release();
+		await expect(dialog).toBeVisible();
+		const background = () => dialog.evaluate((box) => getComputedStyle(box).backgroundColor);
+		const light = await background();
+		await editor.evaluate((element) => element.setAttribute('theme', 'dark'));
+		await expect.poll(background).not.toBe(light);
+		await page.setViewportSize({ width: 390, height: 460 });
+		const box = await dialog.boundingBox();
+		expect(box?.width).toBeLessThan(390);
+		expect(box?.height).toBeLessThan(460);
+		await expect(
+			editor
+				.locator('office-ui-add-ins-dialog')
+				.getByRole('button', { name: 'Close', exact: true }),
+		).toBeVisible();
+	} finally {
+		release();
+	}
+});
+
 test('consents to a local Word add-in and preserves it after an invalid update', async ({
 	page,
 }) => {

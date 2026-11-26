@@ -63,12 +63,15 @@ describe('ribbon overflow', () => {
 		const { el, groups } = panel(150);
 		overflow.fitPanel(el);
 		const group = groups[1]!;
-		const run = group.querySelector('[data-command]')!;
-		group.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!.click();
+		const run = group.querySelector<HTMLButtonElement>('[data-command]')!;
+		const toggle = group.querySelector<HTMLButtonElement>('.ribbon-overflow-button')!;
+		toggle.click();
 		const pop = document.querySelector('.ribbon-overflow-panel')!;
 		expect(pop.contains(run)).toBe(true);
+		run.focus();
 		overflow.close();
 		expect(group.contains(run)).toBe(true);
+		expect(document.activeElement).toBe(toggle);
 		expect(document.querySelector('.ribbon-overflow-panel')).toBeNull();
 	});
 

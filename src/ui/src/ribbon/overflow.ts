@@ -1,4 +1,5 @@
 import { composedWithin } from '../composed';
+import { modalActiveElement } from '../dialog/focus';
 import { ensureRibbonTouchStyle, syncScrollMore, type ScrollMoreLabel } from './scroll-more';
 
 /**
@@ -133,8 +134,11 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		closeOpen = () => {
 			doc.removeEventListener('pointerdown', outside, true);
 			doc.removeEventListener('keydown', escape, true);
+			const focused = modalActiveElement(doc);
+			const usedCommand = composedWithin(focused ?? undefined, pop);
 			group.prepend(...moved);
 			pop.remove();
+			if (usedCommand) button.focus({ preventScroll: true });
 			button.removeAttribute('aria-expanded');
 			closeOpen = open = undefined;
 		};

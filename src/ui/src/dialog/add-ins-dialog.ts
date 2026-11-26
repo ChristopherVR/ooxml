@@ -1,35 +1,23 @@
 import { html, nothing } from 'lit';
 import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import { OfficeElement, controlStyles } from '../base';
-import { glyph } from '../glyph';
 import { definer } from '../registry';
 import { addInSettings, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import {
 	addInError,
-	addInIssueLabels,
 	installAddIn,
 	localAddIns,
 	readAddInFile,
 } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
+import { renderAddInList } from './add-ins-list';
 import { localAddInText } from '../ribbon/add-in-local-strings';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
 
 const PIVOTS = ['My Add-ins', 'Admin Managed', 'Store'] as const;
-type Pivot = (typeof PIVOTS)[number];
-
-const MARKETPLACE = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
-
-function handoffUrl(link: string): string | undefined {
-	try {
-		const url = new URL(link);
-		if (url.protocol === 'https:' && !url.username && !url.password) return url.href;
-	} catch {
-		// An invalid host configuration has no handoff.
-	}
-}
+export type Pivot = (typeof PIVOTS)[number];
 
 function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 	const { host, locale, t, product } = options;
@@ -44,7 +32,7 @@ function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 	};
 }
 
-type AddInSession = ReturnType<typeof addInSession>;
+export type AddInSession = ReturnType<typeof addInSession>;
 type AddInPreview = { addIn: LocalAddIn; previous: LocalAddIn | undefined };
 
 /** On-demand Office Add-ins browser with local manifest review and a host-configured storefront. */
@@ -178,103 +166,6 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		}
 	}
 
-	private tile(label: string, actions: unknown, details?: unknown) {
-		return html`<li class="tile"
-			>${glyph('addIns', 'tile-icon')}<div class="tile-body">
-				<p class="tile-name">${label}</p>${details}
-				<div class="tile-actions">${actions}</div>
-			</div></li
-		>`;
-	}
-
-	private list(session: AddInSession) {
-		const { installed, tabs, catalog, storefront, t, locale, product } = session;
-		const query = this.#query.trim().toLocaleLowerCase(locale);
-		const matches = (label: string) => label.toLocaleLowerCase(locale).includes(query);
-		const action = (label: string, name: string, run: () => void, disabled = false) =>
-			html`<button
-				type="button"
-				aria-label=${`${t(label)} ${name}`}
-				?disabled=${!!this.#pending || disabled}
-				@click=${run}
-				>${t(label)}</button
-			>`;
-		const installedIds = new Set(tabs.map(({ id }) => id));
-		const offers =
-			this.#pivot === 'Store' && storefront !== 'off' && storefront.kind === 'catalog'
-				? storefront.entries
-				: [];
-		const tiles =
-			this.#pivot === 'My Add-ins'
-				? [
-						...tabs
-							.filter(({ label }) => matches(label))
-							.map(({ id, label, open }) => {
-								const remove = catalog.find((entry) => entry.id === id)?.remove;
-								return this.tile(label, [
-									action('Open', label, () => {
-										this.#afterClose = open;
-										this.shell?.close();
-									}),
-									remove ? action('Remove', label, () => void this.change(remove)) : nothing,
-								]);
-							}),
-						...[...installed.values()]
-							.filter(({ manifest }) => matches(manifest.name))
-							.map(({ manifest }) =>
-								this.tile(
-									`${manifest.name} (${manifest.version})`,
-									action(
-										'Remove',
-										manifest.name,
-										() =>
-											void this.change(() => {
-												installed.delete(manifest.id);
-											}),
-									),
-									html`<p>${t('Installed for this editor. Running add-ins is unavailable.')}</p>
-										${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}`,
-								),
-							),
-					]
-				: this.#pivot === 'Admin Managed'
-					? catalog
-							.filter(({ id, label }) => !installedIds.has(id) && matches(label))
-							.map(({ label, install }) =>
-								this.tile(
-									label,
-									action('Install', label, () => void this.change(install)),
-								),
-							)
-					: offers
-							.filter(({ label }) => matches(label))
-							.map(({ label, read }) =>
-								this.tile(
-									label,
-									action('Install', label, () => void this.read(read), product === 'visio'),
-								),
-							);
-		const handoff =
-			this.#pivot === 'Store' && storefront !== 'off' && storefront.kind === 'microsoft'
-				? handoffUrl(storefront.url ?? MARKETPLACE)
-				: undefined;
-		if (handoff && storefront !== 'off' && storefront.kind === 'microsoft') {
-			return html`<p
-					>${t('Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.')}</p
-				>
-				<a href=${handoff} target="_blank" rel="noopener noreferrer"
-					>${storefront.label ?? t('Browse Microsoft Marketplace')}</a
-				>`;
-		}
-		return tiles.length
-			? html`<ul class="tiles"
-					>${tiles}</ul
-				>`
-			: html`<p class="empty"
-					>${t(query ? 'No matching add-ins.' : 'No add-ins are available in this editor.')}</p
-				>`;
-	}
-
 	protected override render() {
 		const session = this.#session;
 		if (!session) return nothing;
@@ -351,7 +242,18 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 									/>
 								</div>
 								${unsupported ? html`<p class="empty">${reason}</p>` : nothing}
-								${this.list(session)}
+								${renderAddInList({
+									session,
+									pivot: this.#pivot,
+									query: this.#query,
+									busy: Boolean(this.#pending),
+									open: (tab) => {
+										this.#afterClose = tab;
+										this.shell?.close();
+									},
+									change: (change) => void this.change(change),
+									read: (read) => void this.read(read),
+								})}
 							</div>`
 			}
 			<p class="status" role="status">${this.#message}</p>
