@@ -75,3 +75,41 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		).toHaveCount(1);
 	});
 }
+
+for (const locale of ['en', 'fr', 'de', 'es', 'zh-CN']) {
+	test(`Header & Footer fits at both ribbon widths in ${locale}`, async ({ page }) => {
+		await page.goto('/');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await editor.evaluate((element, locale) => {
+			if ('locale' in element) element.locale = locale;
+		}, locale);
+		await editor.locator('[role="tab"][data-tab="insert"]').click();
+		const insert = editor.locator('.ribbon-panel[data-panel="Insert"]');
+		const header = insert.locator('[data-label="Header & Footer"]');
+		for (const width of [1600, 1280]) {
+			await page.setViewportSize({ width, height: 900 });
+			await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+			await expect
+				.poll(() =>
+					header.evaluate((group) => {
+						const caption = group.querySelector('.ribbon-overflow-button > span');
+						if (!(caption instanceof HTMLElement) || !caption.getClientRects().length) return true;
+						const text = caption.firstChild;
+						if (!text?.textContent) return false;
+						const range = document.createRange();
+						const lines = new Set<number>();
+						for (const word of text.textContent.matchAll(/\S+/g)) {
+							range.setStart(text, word.index);
+							range.setEnd(text, word.index + word[0].length);
+							const rects = range.getClientRects();
+							if (rects.length !== 1) return false;
+							for (const rect of rects) lines.add(rect.top);
+						}
+						return lines.size <= 2;
+					}),
+				)
+				.toBe(true);
+		}
+	});
+}

@@ -227,9 +227,21 @@
 	gap: 1px;
 	padding-block: 2px;
 }
+.ribbon-group[data-collapsed] > button.ribbon-overflow-button {
+	width: auto;
+	min-width: 70px;
+}
 .ribbon-overflow-button > span {
 	flex: none;
-	overflow-wrap: anywhere;
+	min-width: min-content;
+	max-width: 66px;
+	max-height: 2lh;
+	text-wrap: balance;
+	overflow-wrap: normal;
+	word-break: keep-all;
+}
+.ribbon-group[data-label='Header & Footer'] .ribbon-overflow-button > span {
+	max-width: 88px;
 }
 .ribbon-group button.ribbon-overflow-button[aria-expanded='true'] {
 	border-color: var(--line);
