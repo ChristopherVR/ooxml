@@ -2251,6 +2251,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.draw.seek': 'Replay position',
 	'pptx.draw.closeReplay': 'Close replay',
 	'pptx.draw.readOnly': 'Editing is unavailable.',
+	'pptx.draw.missingCommit': 'This viewer cannot save Draw changes.',
 	'pptx.draw.noSlide': 'Open an editable slide.',
 	'pptx.draw.noSelection': 'Select ink with the lasso.',
 	'pptx.draw.noInk': 'There is no ink on this slide.',

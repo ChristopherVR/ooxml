@@ -850,7 +850,13 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setHeaderFooter: state.setHeaderFooter,
 		});
 
-		const drawRead = useRef({ slides, index: activeSlideIndex, editable: false });
+		const drawRead = useRef({
+			slides,
+			index: activeSlideIndex,
+			mode,
+			canEdit: false,
+			editingTemplate: false,
+		});
 		const drawCommit = useRef(history.commitSlides);
 		const { setSelectedElementId: selectDrawElement, setSelectedElementIds: selectDrawElements } =
 			state;
@@ -860,7 +866,9 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			drawRead.current = {
 				slides,
 				index: activeSlideIndex,
-				editable: canEdit && mode === 'edit' && !state.editTemplateMode,
+				mode,
+				canEdit,
+				editingTemplate: state.editTemplateMode,
 			};
 			drawCommit.current = history.commitSlides;
 			notifyDrawCanvas(root);
@@ -880,7 +888,7 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 				root,
 				createDrawCanvasPort(
 					() => drawRead.current,
-					(next, selectedId) => {
+					() => (next, selectedId) => {
 						drawCommit.current(next);
 						selectDrawElement(selectedId);
 						selectDrawElements(selectedId ? [selectedId] : []);

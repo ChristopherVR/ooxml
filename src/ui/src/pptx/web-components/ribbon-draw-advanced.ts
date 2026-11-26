@@ -82,7 +82,13 @@ export function mountRibbonDrawAdvanced(
 		return control;
 	};
 	const unavailable = () =>
-		!state().editable ? 'pptx.draw.readOnly' : !canvas?.stage ? 'pptx.draw.noSlide' : '';
+		!state().editable
+			? 'pptx.draw.readOnly'
+			: port()?.missingCommit
+				? 'pptx.draw.missingCommit'
+				: !canvas?.stage
+					? 'pptx.draw.noSlide'
+					: '';
 	const selectionReason = () =>
 		unavailable() || (!canvas?.selection.length ? 'pptx.draw.noSelection' : '');
 	const select = group('selection', 'pptx.ribbon.tool.select');

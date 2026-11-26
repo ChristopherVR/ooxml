@@ -629,15 +629,23 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			return {
 				slides: state.slides,
 				index: state.currentSlide,
-				editable: state.editable && !state.presenting && !state.editTemplateMode,
+				mode: state.presenting ? 'present' : state.masterViewTarget ? 'master' : 'edit',
+				canEdit: state.editable,
+				editingTemplate: state.editTemplateMode,
 			};
 		},
-		(next, selectedId) => {
-			deps.commitSlides?.(next);
-			store.set({
-				selectedElementId: selectedId,
-				selectedElementIds: selectedId ? [selectedId] : [],
-			});
+		() => {
+			const commitDraw = deps.commitSlides;
+			if (!commitDraw) {
+				return undefined;
+			}
+			return (next, selectedId) => {
+				commitDraw(next);
+				store.set({
+					selectedElementId: selectedId,
+					selectedElementIds: selectedId ? [selectedId] : [],
+				});
+			};
 		},
 	);
 	const detachDrawCanvas = attachDrawCanvas(chrome.root, drawCanvas);
@@ -1154,7 +1162,10 @@ export function buildMountChromeDeps(host: ChromeHost): MountChromeDeps {
 		getFileName: () => (host.getFileName ? host.getFileName() : host.options.fileName),
 		importSlides: host.importSlides,
 		getEditActions: () => host.editor.getEditActions(),
-		commitSlides: (slides) => host.editor.commitSlides?.(slides),
+		get commitSlides() {
+			const editor = host.editor;
+			return editor?.commitSlides?.bind(editor);
+		},
 		getFindReplaceActions: () => host.editor.getFindReplaceActions(),
 		applyPresentationTheme: (presetId) => host.applyPresentationTheme(presetId),
 		setDrawTool: (tool) => host.editor.setDrawTool(tool),

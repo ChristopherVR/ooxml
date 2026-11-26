@@ -75,6 +75,7 @@ export const translations = {
 	'pptx.draw.seek': 'Posición de reproducción',
 	'pptx.draw.closeReplay': 'Cerrar reproducción',
 	'pptx.draw.readOnly': 'La edición no está disponible.',
+	'pptx.draw.missingCommit': 'Este visor no puede guardar los cambios de dibujo.',
 	'pptx.draw.noSlide': 'Abre una diapositiva editable.',
 	'pptx.draw.noSelection': 'Selecciona trazos con el lazo.',
 	'pptx.draw.noInk': 'Esta diapositiva no contiene trazos.',

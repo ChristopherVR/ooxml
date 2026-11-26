@@ -1,27 +1,48 @@
 import type { PptxElement, PptxSlide } from 'ooxml-core/pptx';
 
+import type { ViewerMode } from '../types';
+
 export const DRAW_CANVAS_SCOPE = '[data-pptx-theme-root]';
 export const DRAW_CANVAS_CHANGE = 'pptx-draw-canvas-change';
 export const DRAW_STAGE = '[data-pptx-viewport] [aria-roledescription="slide"]';
 
+interface DrawCanvasState {
+	slides: readonly PptxSlide[];
+	index: number;
+	mode: ViewerMode;
+	canEdit: boolean;
+	editingTemplate?: boolean;
+}
+
+function canEditDraw({ mode, canEdit, editingTemplate }: DrawCanvasState): boolean {
+	return canEdit && mode === 'edit' && !editingTemplate;
+}
+
 export interface DrawCanvasPort {
+	readonly missingCommit?: boolean;
 	getSlide(): PptxSlide | undefined;
 	replaceElements(slide: PptxSlide, elements: PptxElement[], selectedId: string | null): void;
 }
 
 export function createDrawCanvasPort(
-	read: () => { slides: readonly PptxSlide[]; index: number; editable: boolean },
-	commit: (slides: PptxSlide[], selectedId: string | null) => void,
+	read: () => DrawCanvasState,
+	getCommit?: () => ((slides: PptxSlide[], selectedId: string | null) => void) | undefined,
 ): DrawCanvasPort {
 	return {
+		get missingCommit() {
+			return !getCommit?.();
+		},
 		getSlide() {
-			const { slides, index, editable } = read();
-			return editable ? slides[index] : undefined;
+			const state = read();
+			return canEditDraw(state) && getCommit?.() ? state.slides[state.index] : undefined;
 		},
 		replaceElements(slide, elements, selectedId) {
-			const { slides, index, editable } = read();
+			const state = read();
+			const commit = getCommit?.();
+			if (!commit || !canEditDraw(state)) return;
+			const { slides, index } = state;
 			const current = slides[index];
-			if (!editable || current?.id !== slide.id || current.elements !== slide.elements) return;
+			if (current?.id !== slide.id || current.elements !== slide.elements) return;
 			const next = [...slides];
 			next[index] = { ...current, elements };
 			commit(next, selectedId);

@@ -2127,9 +2127,11 @@ export class PowerPointViewerComponent
 		() => ({
 			slides: this.editor.slides(),
 			index: this.activeSlideIndex(),
-			editable: this.canEdit() && this.getMode() === 'edit' && !this.editor.editTemplateMode(),
+			mode: this.getMode(),
+			canEdit: this.canEdit(),
+			editingTemplate: this.editor.editTemplateMode(),
 		}),
-		(next, selectedId) => {
+		() => (next, selectedId) => {
 			this.editor.applyReplacement(next);
 			this.editor.select(selectedId ? [selectedId] : []);
 		},

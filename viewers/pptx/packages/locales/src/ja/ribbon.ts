@@ -75,6 +75,7 @@ export const translations = {
 	'pptx.draw.seek': '再生位置',
 	'pptx.draw.closeReplay': '再生を閉じる',
 	'pptx.draw.readOnly': '編集できません。',
+	'pptx.draw.missingCommit': 'このビューアーでは描画の変更を保存できません。',
 	'pptx.draw.noSlide': '編集可能なスライドを開いてください。',
 	'pptx.draw.noSelection': 'なげなわでインクを選択してください。',
 	'pptx.draw.noInk': 'このスライドにはインクがありません。',

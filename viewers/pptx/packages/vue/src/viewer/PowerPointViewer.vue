@@ -1583,13 +1583,15 @@ const drawCanvasPort = createDrawCanvasPort(
 	() => ({
 		slides: slides.value,
 		index: activeSlideIndex.value,
-		editable:
-			canEditEffective.value &&
-			!presentation.presenting.value &&
-			!editTemplateMode.value &&
-			!masterView.showMasterView.value,
+		mode: presentation.presenting.value
+			? 'present'
+			: masterView.showMasterView.value
+				? 'master'
+				: 'edit',
+		canEdit: canEditEffective.value,
+		editingTemplate: editTemplateMode.value,
 	}),
-	(next, selectedId) => {
+	() => (next, selectedId) => {
 		history.pushHistory();
 		slides.value = next;
 		selectedElementIds.value = selectedId ? [selectedId] : [];

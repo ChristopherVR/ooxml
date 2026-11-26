@@ -75,6 +75,7 @@ export const translations = {
 	'pptx.draw.seek': 'Wiedergabeposition',
 	'pptx.draw.closeReplay': 'Wiedergabe schließen',
 	'pptx.draw.readOnly': 'Bearbeitung ist nicht verfügbar.',
+	'pptx.draw.missingCommit': 'Dieser Viewer kann Änderungen der Zeichenwerkzeuge nicht speichern.',
 	'pptx.draw.noSlide': 'Öffnen Sie eine bearbeitbare Folie.',
 	'pptx.draw.noSelection': 'Wählen Sie Freihandstriche mit dem Lasso aus.',
 	'pptx.draw.noInk': 'Diese Folie enthält keine Freihandstriche.',

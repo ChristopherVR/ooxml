@@ -13,8 +13,8 @@ describe('shared Draw canvas integration', () => {
 		let index = 0;
 		const commit = vi.fn();
 		const port = createDrawCanvasPort(
-			() => ({ slides: [first, other], index, editable: true }),
-			commit,
+			() => ({ slides: [first, other], index, mode: 'edit', canEdit: true }),
+			() => commit,
 		);
 		const elements = [{ id: 'shape', type: 'shape' as const, x: 0, y: 0, width: 40, height: 20 }];
 		port.replaceElements(first, elements, 'shape');
@@ -53,4 +53,44 @@ describe('shared Draw canvas integration', () => {
 		).toStrictEqual([pencil]);
 		expect(normalizeDrawPens(Array.from({ length: 100 }, () => pencil))).toHaveLength(12);
 	});
+});
+
+it.each(['preview', 'master', 'present'] as const)('disallows Draw edits in %s mode', (mode) => {
+	const slide: PptxSlide = { id: 'a', rId: 'rId1', slideNumber: 1, elements: [] };
+	const commit = vi.fn();
+	const port = createDrawCanvasPort(
+		() => ({ slides: [slide], index: 0, mode, canEdit: true }),
+		() => commit,
+	);
+	expect(port.getSlide()).toBeUndefined();
+	port.replaceElements(slide, [], null);
+	expect(commit).not.toHaveBeenCalled();
+});
+
+it('disallows template edits and exposes a missing commit dependency', () => {
+	const slide: PptxSlide = { id: 'a', rId: 'rId1', slideNumber: 1, elements: [] };
+	let editingTemplate = true;
+	const read = () => ({
+		slides: [slide],
+		index: 0,
+		mode: 'edit' as const,
+		canEdit: true,
+		editingTemplate,
+	});
+	const commit = vi.fn();
+	const port = createDrawCanvasPort(read, () => commit);
+	expect(port.getSlide()).toBeUndefined();
+	port.replaceElements(slide, [], null);
+	expect(commit).not.toHaveBeenCalled();
+	editingTemplate = false;
+	expect(port.getSlide()).toBe(slide);
+	let lateCommit: typeof commit | undefined;
+	const detached = createDrawCanvasPort(read, () => lateCommit);
+	expect(detached.missingCommit).toBe(true);
+	expect(detached.getSlide()).toBeUndefined();
+	lateCommit = commit;
+	expect(detached.missingCommit).toBe(false);
+	expect(detached.getSlide()).toBe(slide);
+	detached.replaceElements(slide, [], null);
+	expect(commit).toHaveBeenCalledOnce();
 });

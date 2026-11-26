@@ -148,3 +148,24 @@ test('updates the lasso path in place during a drag', async ({ page }) => {
 	await page.mouse.up();
 	await expect(path).toHaveCount(0);
 });
+
+test('cancels an armed Draw gesture when entering Slide Master', async ({ page }) => {
+	const lasso = page.getByRole('button', { name: 'Lasso Select' });
+	await lasso.click();
+	await expect(lasso).toHaveAttribute('aria-pressed', 'true');
+	await openRibbonTab(page, 'View');
+	await page.getByRole('button', { name: 'Slide Master', exact: true }).click();
+	const masterTabs = page
+		.getByRole('tablist')
+		.filter({
+			has: page.getByRole('tab', { name: 'Handout', exact: true }),
+		})
+		.first();
+	await expect(masterTabs).toBeVisible();
+	await expect(lasso).toBeHidden();
+	await masterTabs.locator('..').getByRole('button').first().click();
+	await expect(masterTabs).toHaveCount(0);
+	await openRibbonTab(page, 'Draw');
+	await expect(lasso).toHaveAttribute('aria-pressed', 'false');
+	await expect(lasso).toBeEnabled();
+});

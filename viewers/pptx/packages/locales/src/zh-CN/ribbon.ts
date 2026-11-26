@@ -75,6 +75,7 @@ export const translations = {
 	'pptx.draw.seek': '重播位置',
 	'pptx.draw.closeReplay': '关闭重播',
 	'pptx.draw.readOnly': '无法编辑。',
+	'pptx.draw.missingCommit': '此查看器无法保存绘图更改。',
 	'pptx.draw.noSlide': '请打开可编辑的幻灯片。',
 	'pptx.draw.noSelection': '使用套索选择墨迹。',
 	'pptx.draw.noInk': '此幻灯片上没有墨迹。',

@@ -146,8 +146,14 @@
 	);
 	onDestroy(() => vm.destroy());
 	const drawCanvasPort = createDrawCanvasPort(
-		() => ({ slides: vm.editor.slides, index: vm.editor.currentSlideIndex, editable: vm.editingActive && vm.viewerMode === 'edit' && !vm.editor.editTemplateMode }),
-		(next, selectedId) => {
+		() => ({
+			slides: vm.editor.slides,
+			index: vm.editor.currentSlideIndex,
+			mode: vm.viewerMode,
+			canEdit: vm.editingActive,
+			editingTemplate: vm.editor.editTemplateMode,
+		}),
+		() => (next, selectedId) => {
 			vm.editor.commitSlides(next);
 			vm.editor.select(selectedId);
 		},

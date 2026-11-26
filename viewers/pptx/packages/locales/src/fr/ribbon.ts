@@ -75,6 +75,8 @@ export const translations = {
 	'pptx.draw.seek': 'Position de lecture',
 	'pptx.draw.closeReplay': 'Fermer la relecture',
 	'pptx.draw.readOnly': 'La modification est indisponible.',
+	'pptx.draw.missingCommit':
+		'Cette visionneuse ne peut pas enregistrer les modifications de dessin.',
 	'pptx.draw.noSlide': 'Ouvrez une diapositive modifiable.',
 	'pptx.draw.noSelection': 'Sélectionnez des traits au lasso.',
 	'pptx.draw.noInk': 'Cette diapositive ne contient pas d’encre.',
