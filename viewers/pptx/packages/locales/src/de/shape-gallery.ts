@@ -20,7 +20,7 @@ const NAMES: ReadonlyArray<readonly [string, string]> = [
 	['round1Rect', 'Rechteck: Eine Ecke abgerundet'],
 	['round2SameRect', 'Rechteck: Obere Ecken abgerundet'],
 	['round2DiagRect', 'Rechteck: Diagonale Ecken abgerundet'],
-	['ellipse', 'Oval'],
+	['ellipse', 'Ellipse'],
 	['triangle', 'Gleichschenkliges Dreieck'],
 	['rtTriangle', 'Rechtwinkliges Dreieck'],
 	['parallelogram', 'Parallelogramm'],

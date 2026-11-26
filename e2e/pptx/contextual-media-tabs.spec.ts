@@ -12,6 +12,15 @@ test.use({ viewport: { width: 2048, height: 1080 } });
 const control = (page: Page, id: string) => page.locator(`[data-ribbon-control="${id}"]:visible`);
 const tab = (page: Page, id: string) => page.locator(`[data-ribbon-contextual-tab="${id}"]`);
 
+test('the video shape gallery uses localized shape names', async ({ page }) => {
+	await loadDeck(page, fixture('media-bookmark-trigger-editable.pptx'), '/?locale=de');
+	await selectElement(page, elementsOfType(page, 'media player').first());
+	await tab(page, 'videoFormat').click();
+	await control(page, 'videoFormat.pictureStyles.shape').getByRole('button').click();
+	const popup = page.locator('[data-ribbon-gallery-popup="cropToShape"]');
+	await expect(popup.locator('[data-gallery-item="ellipse"]')).toHaveAccessibleName('Ellipse');
+});
+
 test('the media inspector displays bookmark times to hundredths', async ({ page }) => {
 	await loadDeck(page, fixture('media-bookmark-trigger-editable.pptx'));
 	await selectElement(page, elementsOfType(page, 'media player').first());

@@ -61,7 +61,7 @@ const table = {
 function elementFor(id: RibbonGalleryId): PptxElement | null {
 	if (id === 'graphicsFill')
 		return { ...picture, type: 'picture', svgData: 'data:image/svg+xml;base64,' };
-	if (id.startsWith('picture')) return picture as unknown as PptxElement;
+	if (id.startsWith('picture') || id === 'cropToShape') return picture as unknown as PptxElement;
 	if (id.startsWith('chart')) return chart as unknown as PptxElement;
 	if (id.startsWith('smartArt')) return smartArt as unknown as PptxElement;
 	if (id.startsWith('table')) return table as unknown as PptxElement;
@@ -90,6 +90,14 @@ function translatorFor(dictionary: Record<string, string>) {
 const SAME_SPELLING =
 	/^(Office|Venn|Matrix|Chevron|Monochrome|Pastel|Perspective|Corrections|Color|Sepia|Horizontal|Parallel|Oblique|Angle|Layouts?|Orange|Median|Marquee|Slipstream|Violet|Violet II|Aspect|Style|Triangle)(?![A-Za-z])/u;
 
+// These French shape names match English, but must still be present in the dictionary.
+const FRENCH_SHARED_SHAPE_NAMES: ReadonlySet<string> = new Set([
+	'pptx.shapes.name.rect',
+	'pptx.shapes.name.plaque',
+	'pptx.shapes.name.cube',
+	'pptx.shapes.name.arc',
+]);
+
 async function build(id: RibbonGalleryId): Promise<RibbonGalleryDescriptor> {
 	const context = {
 		element: elementFor(id),
@@ -112,6 +120,10 @@ describe('ribbon gallery catalogue names in every locale', () => {
 					for (const item of section.items) {
 						const shown = galleryItemLabel(item, translate);
 						const base = galleryItemLabel(item, english);
+						if (locale === 'fr' && FRENCH_SHARED_SHAPE_NAMES.has(item.labelKey)) {
+							expect(dictionary[item.labelKey]).toBe(base);
+							continue;
+						}
 						if (shown === base && /[A-Za-z]{3}/u.test(base) && !SAME_SPELLING.test(base)) {
 							untranslated.push(`${id}: ${base}`);
 						}
