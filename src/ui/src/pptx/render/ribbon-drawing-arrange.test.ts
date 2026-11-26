@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest';
 
-import { runDrawingArrange } from './ribbon-drawing-arrange';
+import { drawingArrangeItems, runDrawingArrange } from './ribbon-drawing-arrange';
 import { drawingHomeControls } from './ribbon-home-state-objects';
 
 it('keeps Selection Pane reachable without a selection and routes the editing rows', () => {
@@ -10,10 +10,9 @@ it('keeps Selection Pane reachable without a selection and routes the editing ro
 	const arrange = {
 		actions,
 		canEdit: true,
-		selected: false,
+		selectedCount: 0,
+		selectedElement: null,
 		canGroup: false,
-		canUngroup: false,
-		canDistribute: false,
 	};
 	const menu = drawingHomeControls({ editable: true, hasSelection: false, arrange })[
 		'home.drawing.arrange'
@@ -26,6 +25,41 @@ it('keeps Selection Pane reachable without a selection and routes the editing ro
 	expect(runDrawingArrange('centerH', actions)).toBe(true);
 	expect(align).toHaveBeenCalledExactlyOnceWith('centerH');
 	expect(runDrawingArrange('front', actions)).toBe(false);
+});
+
+it('reports the selection, edit mode and lock that disable each command', () => {
+	const selectedElement = {
+		id: 'shape',
+		type: 'shape',
+		x: 0,
+		y: 0,
+		width: 30,
+		height: 40,
+		locks: { noRotation: true },
+	} as const;
+	const input = {
+		actions: {
+			group: vi.fn(),
+			ungroup: vi.fn(),
+			distribute: vi.fn(),
+			rotation: () => ({ element: selectedElement, patch: vi.fn() }),
+		},
+		selectedElement,
+		canEdit: true,
+		selectedCount: 1,
+		canGroup: false,
+	};
+	const reason = (value: string, changes: Partial<typeof input> = {}) =>
+		drawingArrangeItems({ ...input, ...changes }).find((row) => row.value === value)
+			?.descriptionKey;
+
+	expect(reason('group')).toBe('pptx.arrange.needsGroupSelection');
+	expect(reason('group', { selectedCount: 2 })).toBe('pptx.arrange.objectLocked');
+	expect(reason('ungroup')).toBe('pptx.arrange.needsUngroupSelection');
+	expect(reason('distribute-horizontal')).toBe('pptx.arrange.needsDistributeSelection');
+	expect(reason('rotate-right')).toBe('pptx.arrange.objectLocked');
+	expect(reason('front', { canEdit: false })).toBe('pptx.draw.readOnly');
+	expect(reason('distribute-horizontal', { selectedCount: 3 })).toBeUndefined();
 });
 
 it('rotates the selected object in either direction and honors its rotation lock', () => {

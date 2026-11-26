@@ -1126,6 +1126,11 @@ export const translationsEn: Record<string, string> = {
 	'pptx.arrange.rotation': 'Rotation',
 	'pptx.arrange.distributeHorizontal': 'Distribute horizontal',
 	'pptx.arrange.distributeVertical': 'Distribute vertical',
+	'pptx.arrange.needsGroupSelection': 'Select two or more objects to group.',
+	'pptx.arrange.needsUngroupSelection': 'Select a grouped object to ungroup.',
+	'pptx.arrange.needsDistributeSelection': 'Select three or more objects to distribute.',
+	'pptx.arrange.needsRotateSelection': 'Select an object to rotate.',
+	'pptx.arrange.objectLocked': 'A selected object is locked.',
 
 	// Media properties
 	'pptx.ribbon.tab.videoFormat': 'Video Format',

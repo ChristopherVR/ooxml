@@ -233,9 +233,9 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			drawing.update({
 				editable,
 				hasSelection,
+				selectedCount,
+				selectedElement,
 				canGroup: selectedCount > 1 && selectionGroupable,
-				canUngroup: selectedElement?.type === 'group',
-				canDistribute: selectedCount >= 3,
 				recentColors,
 				themeColorMap,
 				fillColor: shapeStyle?.fillColor,

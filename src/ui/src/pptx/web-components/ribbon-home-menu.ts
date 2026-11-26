@@ -89,6 +89,7 @@ export function paintHomeMenu(
 		}
 		if (row.disabled && (row.descriptionKey || row.description)) {
 			button.title = homeLabel(state, row.descriptionKey ?? '', row.description ?? '');
+			button.setAttribute('aria-description', button.title);
 		}
 		if (grid && row.thumb) {
 			// A gallery cell: the name is its ScreenTip and accessible name, not visible text.

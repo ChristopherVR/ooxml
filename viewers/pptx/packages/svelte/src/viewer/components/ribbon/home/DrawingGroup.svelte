@@ -9,7 +9,6 @@
 	import { hasShapeProperties } from 'pptx-viewer-core';
 	import {
 		canInteractWithElement,
-		canUngroupSelection,
 		drawingHomeControls,
 		runDrawingArrange,
 		fillColorOf,
@@ -59,10 +58,9 @@
 			arrange: {
 				actions: arrangeActions,
 				canEdit: editor.editable,
-				selected: Boolean(editor.selectedElementId),
+				selectedCount: editor.selectedElements.length,
+				selectedElement: el,
 				canGroup: editor.selectedElements.length > 1 && editor.selectedElements.every((element) => canInteractWithElement(element, 'group')),
-				canUngroup: canUngroupSelection(editor.editable, el ?? null),
-				canDistribute: editor.selectedElements.length >= 3,
 			},
 			fill: {
 				value: el && hasShape ? hex(fillColorOf(el), '#ffffff') : '#ffffff',

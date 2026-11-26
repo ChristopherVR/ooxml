@@ -139,13 +139,12 @@ export class RibbonDrawingGroupComponent {
 				? {
 						actions: this.arrangeActions,
 						canEdit: this.canEdit(),
-						selected: this.editor.hasSelection(),
+						selectedCount: this.editor.selectedIds().length,
+						selectedElement: this.selectedElement(),
 						canGroup: canGroupSelected(
 							this.editor.slides()[this.slideIndex()]?.elements ?? [],
 							this.editor.selectedIds(),
 						),
-						canUngroup: this.selectedElement()?.type === 'group',
-						canDistribute: this.editor.selectedIds().length >= 3,
 					}
 				: undefined,
 			fill: { value: this.fillColor(), ref: this.fillColorRef(), themeColors, recent },

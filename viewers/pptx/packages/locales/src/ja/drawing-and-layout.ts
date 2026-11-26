@@ -54,6 +54,12 @@ export const translations = {
 	'pptx.arrange.rotation': '回転',
 	'pptx.arrange.distributeHorizontal': '左右に整列',
 	'pptx.arrange.distributeVertical': '上下に整列',
+	'pptx.arrange.needsGroupSelection': 'グループ化するオブジェクトを 2 つ以上選択してください。',
+	'pptx.arrange.needsUngroupSelection': 'グループ解除するオブジェクト グループを選択してください。',
+	'pptx.arrange.needsDistributeSelection':
+		'均等に配置するオブジェクトを 3 つ以上選択してください。',
+	'pptx.arrange.needsRotateSelection': '回転するオブジェクトを選択してください。',
+	'pptx.arrange.objectLocked': '選択したオブジェクトがロックされています。',
 	'pptx.shape.quickStyles': 'クイック スタイル',
 	'pptx.shape.quickStyleAccent': 'アクセント',
 	'pptx.shape.quickStyleSubtle': '控えめ',

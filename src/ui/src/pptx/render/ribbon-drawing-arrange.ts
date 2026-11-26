@@ -49,8 +49,6 @@ const item = (
 	...(action && { action }),
 	separator,
 	attrs: { 'data-ribbon-control': control },
-	descriptionKey: 'pptx.insert.needsSelection',
-	description: 'Select an object first.',
 });
 const legacy = <Name extends string>(name: Name): `home.arrange.${Name}` => `home.arrange.${name}`;
 
@@ -128,10 +126,43 @@ export const HOME_DRAWING_ARRANGE_ITEMS: readonly ArrangeItem[] = [
 export interface DrawingArrangeInput {
 	actions: DrawingArrangeActions;
 	canEdit: boolean;
-	selected: boolean;
+	selectedCount: number;
+	selectedElement: PptxElement | null | undefined;
 	canGroup: boolean;
-	canDistribute: boolean;
-	canUngroup: boolean;
+}
+
+const NEEDS_OBJECT = ['pptx.insert.needsSelection', 'Select an object first.'] as const;
+const LOCKED = ['pptx.arrange.objectLocked', 'A selected object is locked.'] as const;
+
+function disabledReason(
+	action: ArrangeItem['action'],
+	input: DrawingArrangeInput,
+	rotationTarget: PptxElement | null | undefined,
+): readonly [key: string, text: string] | undefined {
+	if (action === 'selectionPane') return;
+	if (action === 'position') return input.selectedCount === 0 ? NEEDS_OBJECT : undefined;
+	if (!input.canEdit) return ['pptx.draw.readOnly', 'Editing is unavailable.'];
+
+	switch (action) {
+		case 'group':
+			if (input.selectedCount < 2)
+				return ['pptx.arrange.needsGroupSelection', 'Select two or more objects to group.'];
+			return input.canGroup ? undefined : LOCKED;
+		case 'ungroup':
+			if (input.selectedCount !== 1 || input.selectedElement?.type !== 'group')
+				return ['pptx.arrange.needsUngroupSelection', 'Select a grouped object to ungroup.'];
+			return canInteractWithElement(input.selectedElement, 'group') ? undefined : LOCKED;
+		case 'distribute':
+			return input.selectedCount < 3
+				? ['pptx.arrange.needsDistributeSelection', 'Select three or more objects to distribute.']
+				: undefined;
+		case 'rotation':
+			if (!rotationTarget)
+				return ['pptx.arrange.needsRotateSelection', 'Select an object to rotate.'];
+			return canInteractWithElement(rotationTarget, 'rotate') ? undefined : LOCKED;
+		default:
+			return input.selectedCount === 0 ? NEEDS_OBJECT : undefined;
+	}
 }
 
 export function drawingArrangeItems(input?: DrawingArrangeInput): RibbonHomeItem[] {
@@ -140,26 +171,10 @@ export function drawingArrangeItems(input?: DrawingArrangeInput): RibbonHomeItem
 		({ action }) => !action || Boolean(input?.actions[action]),
 	).map(({ action, ...row }) => {
 		if (!input) return row;
-		switch (action) {
-			case 'group':
-				return { ...row, disabled: !input.canEdit || !input.canGroup };
-			case 'ungroup':
-				return { ...row, disabled: !input.canEdit || !input.canUngroup };
-			case 'distribute':
-				return { ...row, disabled: !input.canEdit || !input.canDistribute };
-			case 'position':
-				return { ...row, disabled: !input.selected };
-			case 'rotation':
-				return {
-					...row,
-					disabled:
-						!input.canEdit || !rotationTarget || !canInteractWithElement(rotationTarget, 'rotate'),
-				};
-			case 'selectionPane':
-				return row;
-			default:
-				return { ...row, disabled: !input.canEdit || !input.selected };
-		}
+		const reason = disabledReason(action, input, rotationTarget);
+		return reason
+			? { ...row, disabled: true, descriptionKey: reason[0], description: reason[1] }
+			: row;
 	});
 }
 

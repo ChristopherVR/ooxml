@@ -361,6 +361,12 @@ test.describe('Home drawing and arrange', () => {
 		await page.keyboard.press('Escape');
 		await selectSubtitle(page);
 		await arrange.click();
+		await expect(
+			page.getByRole('menuitem', { name: 'Group', exact: true }),
+		).toHaveAccessibleDescription('Select two or more objects to group.');
+		await expect(
+			page.getByRole('menuitem', { name: 'Distribute horizontal', exact: true }),
+		).toHaveAccessibleDescription('Select three or more objects to distribute.');
 		await page.getByRole('menuitem', { name: 'Bring to Front' }).click();
 		await expect
 			.poll(async () => (await slideElements(page).last().textContent()) ?? '')

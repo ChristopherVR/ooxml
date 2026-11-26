@@ -383,11 +383,10 @@ onBeforeUnmount(() => detachOverflow?.());
 								position: () => formatPane?.requestFormatPane('sizePosition', { focus: true }),
 								selectionPane: props.onToggleSelectionPane,
 							},
-							selected: Boolean(props.selectedElement),
+							selectedCount: props.selectedCount,
+							selectedElement: props.selectedElement,
 							canEdit: props.canEdit,
 							canGroup: props.selectedCount > 1 && props.selectionGroupable,
-							canUngroup: props.selectedElement?.type === 'group',
-							canDistribute: props.canDistribute,
 						}"
 						:on-move-layer="props.onMoveLayer"
 						:on-move-layer-to-edge="props.onMoveLayerToEdge"

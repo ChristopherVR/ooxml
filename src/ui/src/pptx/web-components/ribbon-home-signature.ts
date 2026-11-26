@@ -17,6 +17,7 @@ export function popupSignature(
 		row.groupKey ? homeLabel(state, row.groupKey, row.group ?? '') : row.group,
 		row.checked,
 		row.disabled,
+		row.disabled ? homeLabel(state, row.descriptionKey ?? '', row.description ?? '') : undefined,
 	]);
 	const previews = current?.layouts?.previews;
 	const previewPaths = previews instanceof Map ? [...previews.keys()] : Object.keys(previews ?? {});

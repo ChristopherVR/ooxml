@@ -54,6 +54,12 @@ export const translations = {
 	'pptx.arrange.rotation': 'Drehung',
 	'pptx.arrange.distributeHorizontal': 'Horizontal verteilen',
 	'pptx.arrange.distributeVertical': 'Vertikal verteilen',
+	'pptx.arrange.needsGroupSelection': 'Wählen Sie mindestens zwei Objekte zum Gruppieren aus.',
+	'pptx.arrange.needsUngroupSelection':
+		'Wählen Sie ein gruppiertes Objekt aus, um die Gruppierung aufzuheben.',
+	'pptx.arrange.needsDistributeSelection': 'Wählen Sie mindestens drei Objekte zum Verteilen aus.',
+	'pptx.arrange.needsRotateSelection': 'Wählen Sie ein Objekt zum Drehen aus.',
+	'pptx.arrange.objectLocked': 'Ein ausgewähltes Objekt ist gesperrt.',
 	'pptx.shape.quickStyles': 'Schnelle Stile',
 	'pptx.shape.quickStyleAccent': 'Akzent',
 	'pptx.shape.quickStyleSubtle': 'Dezent',

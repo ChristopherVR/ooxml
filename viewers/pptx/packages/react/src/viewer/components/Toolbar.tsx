@@ -393,11 +393,10 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 										position: () => formatPane.requestFormatPane('sizePosition', { focus: true }),
 										selectionPane: p.onToggleSelectionPane,
 									},
-									selected: Boolean(p.selectedElement),
+									selectedCount: p.selectedCount,
+									selectedElement: p.selectedElement,
 									canEdit: p.canEdit,
 									canGroup: p.selectedCount > 1 && p.selectionGroupable,
-									canUngroup: p.selectedElement?.type === 'group',
-									canDistribute: p.canDistribute,
 								}}
 								onMoveLayer={p.onMoveLayer}
 								onMoveLayerToEdge={p.onMoveLayerToEdge}

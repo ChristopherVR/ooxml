@@ -5,7 +5,7 @@ import {
 	runDrawingArrange,
 	withHomeGalleries,
 } from 'ooxml-ui/pptx';
-import type { PptxThemeColorRef } from 'pptx-viewer-core';
+import type { PptxElement, PptxThemeColorRef } from 'pptx-viewer-core';
 
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
@@ -29,9 +29,9 @@ export interface DrawingGroupHandlers {
 export interface DrawingGroupState {
 	editable: boolean;
 	hasSelection: boolean;
+	selectedCount?: number;
+	selectedElement?: PptxElement | null | undefined;
 	canGroup?: boolean;
-	canUngroup?: boolean;
-	canDistribute?: boolean;
 	/** The deck's `p:clrMru`, most-recent-first. */
 	recentColors?: readonly string[];
 	/** The deck's resolved theme colour map, feeding the fill/outline "Theme Colors" grids. */
@@ -116,10 +116,9 @@ export function createDrawingGroup(
 						? {
 								actions: handlers.arrange,
 								canEdit: last.editable,
-								selected: last.hasSelection,
+								selectedCount: last.selectedCount ?? Number(last.hasSelection),
+								selectedElement: last.selectedElement,
 								canGroup: last.canGroup ?? false,
-								canUngroup: last.canUngroup ?? false,
-								canDistribute: last.canDistribute ?? false,
 							}
 						: undefined,
 					hasSelection: last.hasSelection,
