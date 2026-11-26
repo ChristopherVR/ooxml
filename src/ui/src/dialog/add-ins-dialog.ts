@@ -4,7 +4,7 @@ import { definer } from '../registry';
 import { mountedAddInRestore, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { ADD_IN_RUNTIME_CHANGED } from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
-import { renderAddInConsent } from './add-ins-consent';
+import { renderAddInConsent, renderAddInConsentActions } from './add-ins-consent';
 import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
 import { addInSession, type AddInSession, type AddInPreview } from './add-ins-session';
 import { defineDialog, type OfficeUiDialog } from './dialog';
@@ -238,11 +238,8 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 							this.#preview.previous,
 							t,
 							{
-								cancel: () => this.cancel(),
-								confirm: () => this.confirm(),
 								persistent: Boolean(session.restore),
 								reason: session.launcher.pane(this.#preview.addIn).reason,
-								busy: Boolean(this.#pending),
 							},
 						)}`
 					: html` <div
@@ -319,7 +316,17 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 							</div>`
 			}
 			<p class="status" role="status">${this.#message}</p>
-			<button type="button" slot="footer" @click=${() => this.shell?.close()}>${t('Close')}</button>
+			${
+				this.#preview
+					? renderAddInConsentActions(this.#preview.addIn, this.#preview.previous, t, {
+							cancel: () => this.cancel(),
+							confirm: () => this.confirm(),
+							busy: Boolean(this.#pending),
+						})
+					: html`<button type="button" slot="footer" @click=${() => this.shell?.close()}
+							>${t('Close')}</button
+						>`
+			}
 		</office-ui-dialog>`;
 	}
 }

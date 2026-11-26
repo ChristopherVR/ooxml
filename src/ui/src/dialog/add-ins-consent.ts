@@ -50,40 +50,41 @@ export function renderAddInConsent(
 	addIn: LocalAddIn,
 	previous: LocalAddIn | undefined,
 	t: OfficeServiceText,
-	actions: {
-		confirm: () => void;
-		cancel: () => void;
-		persistent: boolean;
-		reason: string | undefined;
-		busy: boolean;
-	},
+	options: { persistent: boolean; reason: string | undefined },
 ) {
 	const { manifest } = addIn;
 	const { description, update } = addInConsent(addIn, previous, t);
 	const already = previous?.digest === addIn.digest;
-	const label = t(previous ? 'Update' : 'Install');
 	return html`<section aria-labelledby="consent-title" class="consent">
 		<h3 id="consent-title" tabindex="-1">${t('Review add-in permissions')}</h3>
 		<p class="tile-name">${manifest.name} (${manifest.version})</p><p>${description}</p>
 		${update ? html`<p>${update}</p>` : nothing} ${renderAddInDetails(addIn, t)}
 		<p
-			>${t(actions.persistent ? 'Save this add-in in host preferences.' : 'Install for this editor session.')}</p
+			>${t(options.persistent ? 'Save this add-in in host preferences.' : 'Install for this editor session.')}</p
 		>
-		<p>${actions.reason ?? t('This add-in runs only when opened.')}</p>
+		<p>${options.reason ?? t('This add-in runs only when opened.')}</p>
 		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
 		${already ? html`<p>${t('This add-in is already installed.')}</p>` : nothing}
-		<div class="consent-actions">
-			<button
-				type="button"
-				class="primary"
-				aria-label=${`${label} ${manifest.name}`}
-				?disabled=${already || actions.busy}
-				@click=${actions.confirm}
-				>${label}</button
-			>
-			<button type="button" ?disabled=${actions.busy} @click=${actions.cancel}
-				>${t('Cancel')}</button
-			>
-		</div>
 	</section>`;
+}
+
+export function renderAddInConsentActions(
+	addIn: LocalAddIn,
+	previous: LocalAddIn | undefined,
+	t: OfficeServiceText,
+	actions: { confirm: () => void; cancel: () => void; busy: boolean },
+) {
+	const label = t(previous ? 'Update' : 'Install');
+	const already = previous?.digest === addIn.digest;
+	return html`<button type="button" slot="footer" ?disabled=${actions.busy} @click=${actions.cancel}
+			>${t('Cancel')}</button
+		><button
+			type="button"
+			slot="footer"
+			class="primary"
+			aria-label=${`${label} ${addIn.manifest.name}`}
+			?disabled=${already || actions.busy}
+			@click=${actions.confirm}
+			>${label}</button
+		>`;
 }

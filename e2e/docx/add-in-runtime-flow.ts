@@ -69,7 +69,9 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await expect(consent).toContainText('Read and change this document');
 		if (file.name === 'app.zip')
 			await expect(consent.getByRole('img', { name: 'icons/color.png' })).toBeVisible();
-		await consent.getByRole('button', { name: 'Install Notes', exact: true }).click();
+		const install = dialog.getByRole('button', { name: 'Install Notes', exact: true });
+		await expect(install).toHaveAttribute('slot', 'footer');
+		await install.click();
 		await expect(dialog).toBeHidden();
 
 		if (file.name === 'manifest.json') {
