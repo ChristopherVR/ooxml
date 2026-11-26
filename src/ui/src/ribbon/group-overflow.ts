@@ -156,6 +156,9 @@ export function attachRibbonGroupOverflow(
 	const escape = (event: KeyboardEvent) => {
 		const open = openGroup();
 		if (event.key !== 'Escape' || !open || nested(open)) return;
+		// Escape inside a modal dialog belongs to the dialog, not to the popup behind it.
+		if (event.composedPath().some((node) => (node as HTMLElement).localName === 'office-ui-dialog'))
+			return;
 		event.stopPropagation();
 		close();
 		faceOf(open)?.focus();
@@ -184,6 +187,8 @@ export function attachRibbonGroupOverflow(
 	ribbon.addEventListener(TOGGLE, toggle);
 	// Capture: a product may stop a command at its own element.
 	ribbon.addEventListener('office-command', command, true);
+	// A choice made in a native select command (Quick Parts, say) ends the popup too.
+	ribbon.addEventListener('change', command, true);
 	ribbon.addEventListener('office-ribbon-select', onSelect);
 	doc.addEventListener('pointerdown', outside, true);
 	doc.addEventListener('keydown', escape, true);
@@ -198,6 +203,7 @@ export function attachRibbonGroupOverflow(
 			mutation?.disconnect();
 			ribbon.removeEventListener(TOGGLE, toggle);
 			ribbon.removeEventListener('office-command', command, true);
+			ribbon.removeEventListener('change', command, true);
 			ribbon.removeEventListener('office-ribbon-select', onSelect);
 			doc.removeEventListener('pointerdown', outside, true);
 			doc.removeEventListener('keydown', escape, true);

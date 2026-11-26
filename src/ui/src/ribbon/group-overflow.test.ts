@@ -159,3 +159,30 @@ describe('attachRibbonGroupOverflow', () => {
 		overflow.destroy();
 	});
 });
+
+describe('closing a popup', () => {
+	it('closes when a select command in it changes, and leaves Escape to a dialog', async () => {
+		const { ribbon, home } = make(800);
+		const overflow = attachRibbonGroupOverflow(ribbon);
+		await frame();
+		const editing = group(home.el, 'Editing');
+		const select = document.createElement('select');
+		editing.append(select);
+		press(editing);
+		expect(editing.hasAttribute('data-open')).toBe(true);
+		select.dispatchEvent(new Event('change', { bubbles: true }));
+		await Promise.resolve();
+		expect(editing.hasAttribute('data-open')).toBe(false);
+
+		press(editing);
+		const dialog = document.createElement('office-ui-dialog');
+		document.body.append(dialog);
+		const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, composed: true });
+		dialog.dispatchEvent(event);
+		// The popup is not handled by a press that happened inside the dialog.
+		expect(editing.hasAttribute('data-open')).toBe(true);
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(editing.hasAttribute('data-open')).toBe(false);
+		overflow.destroy();
+	});
+});
