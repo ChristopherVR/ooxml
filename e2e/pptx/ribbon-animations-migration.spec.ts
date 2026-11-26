@@ -90,12 +90,21 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 	await expect(duration).toHaveValue('1');
 	await duration.fill('1.75');
 	await duration.press('Tab');
+	await expect(effect).toHaveAttribute('aria-pressed', 'false');
+	await effect.click();
 	await expect(duration).toHaveValue('1.75');
 	const delay = page.locator('[data-ribbon-control="animations.timing.delay"]');
 	await delay.fill('0.35');
 	await delay.press('Tab');
+	await expect(effect).toHaveAttribute('aria-pressed', 'false');
+	await effect.click();
 	await expect(delay).toHaveValue('0.35');
 	await expectSelectValue(start, 'withPrevious');
+	await page.getByRole('button', { name: 'Undo', exact: true }).first().click();
+	await expect(effect).toHaveAttribute('aria-pressed', 'false');
+	await effect.click();
+	await expect(delay).toHaveValue('0.2');
+	await page.getByRole('button', { name: 'Redo', exact: true }).first().click();
 	const { xml } = await savedSlideXml(page);
 	expect(xml).toMatch(
 		/<p:cTn\b(?=[^>]*id="8")(?=[^>]*dur="1750")(?=[^>]*nodeType="withEffect")[^>]*><p:stCondLst><p:cond delay="350"/u,

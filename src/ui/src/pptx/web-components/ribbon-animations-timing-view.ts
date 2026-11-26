@@ -61,6 +61,7 @@ export function createAnimationsTimingView(
 		let modelValue = '';
 		let modelElementId: string | undefined;
 		let modelSlideId: string | undefined;
+		let modelNativeEffectId: number | undefined;
 		input.id = `pptx-animations-${name}-${instance}`;
 		caption.htmlFor = input.id;
 		input.type = 'number';
@@ -88,12 +89,19 @@ export function createAnimationsTimingView(
 				enabled: boolean,
 				elementId: string | undefined,
 				slideId: string | undefined,
+				nativeEffectId: number | undefined,
 			) {
 				input.disabled = !enabled;
-				if (value !== modelValue || elementId !== modelElementId || slideId !== modelSlideId) {
+				if (
+					value !== modelValue ||
+					elementId !== modelElementId ||
+					slideId !== modelSlideId ||
+					nativeEffectId !== modelNativeEffectId
+				) {
 					modelValue = value;
 					modelElementId = elementId;
 					modelSlideId = slideId;
+					modelNativeEffectId = nativeEffectId;
 					input.value = value;
 				}
 			},
@@ -186,14 +194,21 @@ export function createAnimationsTimingView(
 		start.setAttribute('aria-label', label.textContent);
 		duration.caption.textContent = text('pptx.animations.duration', 'Duration');
 		delay.caption.textContent = text('pptx.animations.delay', 'Delay');
-		const { elementId, slide } = state.editing ?? {};
+		const { elementId, slide, nativeEffectId } = state.editing ?? {};
 		duration.sync(
 			timing ? String(timing.durationMs / 1000) : '0.5',
 			Boolean(timing),
 			elementId,
 			slide?.id,
+			nativeEffectId,
 		);
-		delay.sync(timing ? String(timing.delayMs / 1000) : '0', Boolean(timing), elementId, slide?.id);
+		delay.sync(
+			timing ? String(timing.delayMs / 1000) : '0',
+			Boolean(timing),
+			elementId,
+			slide?.id,
+			nativeEffectId,
+		);
 		earlier.textContent = text('pptx.animations.moveEarlier', 'Move earlier');
 		later.textContent = text('pptx.animations.moveLater', 'Move later');
 		earlier.disabled = !timing?.earlier;

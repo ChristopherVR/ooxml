@@ -46,7 +46,15 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 			},
 			editTiming: (edit) => {
 				if (this.model.editable) {
-					editRibbonAnimationTiming(this.effectiveModel.editing, edit);
+					if (editRibbonAnimationTiming(this.effectiveModel.editing, edit) === 'stale') {
+						this.animationPane?.select(undefined);
+						if (this.model.editing?.nativeEffectId !== undefined) {
+							this.state = {
+								...this.model,
+								editing: { ...this.model.editing, nativeEffectId: undefined },
+							};
+						}
+					}
 					this.render();
 				}
 			},

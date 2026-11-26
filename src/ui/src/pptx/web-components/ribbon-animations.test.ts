@@ -10,6 +10,10 @@ import {
 	MOTION_PATH_PRESETS,
 } from '../render';
 import { registerPptxWebControls } from './index';
+import {
+	editRibbonAnimationTiming,
+	ribbonAnimationTiming,
+} from '../render/ribbon-animation-editing';
 
 beforeAll(registerPptxWebControls);
 afterEach(() => document.body.replaceChildren());
@@ -215,6 +219,27 @@ describe('shared Animations timing', () => {
 			host.querySelector<HTMLInputElement>('[data-ribbon-control="animations.timing.duration"]')!
 				.value,
 		).toBe('1');
+		host.state = {
+			...host.state,
+			editing: {
+				...host.state.editing!,
+				slide: { ...host.state.editing!.slide, nativeAnimations: [...nativeAnimations] },
+			},
+		};
+		expect(effect.getAttribute('aria-pressed')).toBe('false');
+	});
+
+	it('does not edit an authored animation for a stale native selection', () => {
+		const commit = vi.fn();
+		const editing = {
+			slide: { animations: [{ elementId: '2', entrance: 'fadeIn' as const }] },
+			elementId: '2',
+			nativeEffectId: 27,
+			commit,
+		};
+		expect(ribbonAnimationTiming(editing)).toBeUndefined();
+		expect(editRibbonAnimationTiming(editing, { field: 'duration', value: 800 })).toBe('stale');
+		expect(commit).not.toHaveBeenCalled();
 	});
 	it('associates accessible labels with the timing controls', () => {
 		const host = mount();

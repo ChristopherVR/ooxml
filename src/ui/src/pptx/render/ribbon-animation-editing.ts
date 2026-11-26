@@ -57,6 +57,7 @@ export function nativeRibbonTimingTarget(
 	return slide.nativeAnimations?.find(
 		(effect) =>
 			effect.nodeId !== undefined &&
+			effect.targetId &&
 			effect.presetClass &&
 			(editing.nativeEffectId !== undefined
 				? effect.nodeId === editing.nativeEffectId
@@ -73,6 +74,7 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 	}
 	const native =
 		!entry || editing.nativeEffectId !== undefined ? nativeRibbonTimingTarget(editing) : undefined;
+	if (editing.nativeEffectId !== undefined && !native) return undefined;
 	if (native?.nodeId !== undefined && editing.slide?.rawTiming && editing.slide.nativeAnimations) {
 		const start =
 			(native.interactiveSequence ? native.trigger : (native.startMode ?? native.trigger)) ??
@@ -108,7 +110,8 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 export function editRibbonAnimationTiming(
 	editing: RibbonAnimationEditing | undefined,
 	edit: RibbonAnimationTimingEdit,
-): void {
+): 'stale' | void {
+	if (editing?.nativeEffectId !== undefined && !nativeRibbonTimingTarget(editing)) return 'stale';
 	const timing = ribbonAnimationTiming(editing);
 	const slide = editing?.slide;
 	const animations = slide?.animations ?? [];

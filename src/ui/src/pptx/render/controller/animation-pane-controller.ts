@@ -6,6 +6,7 @@ import {
 } from 'ooxml-core/pptx';
 
 import { animationCatalogPresetLabelKey } from '../animation-preset-labels';
+import type { AnimationEditingSlide } from '../ribbon-animation-editing';
 import { animationsLabel, type RibbonAnimationsViewState } from '../ribbon-animations-state';
 import { createControllerStore } from './controller';
 
@@ -18,6 +19,7 @@ interface AnimationPaneRow {
 interface AnimationPaneSnapshot {
 	nodeId?: number | undefined;
 	context?: RibbonAnimationsViewState | undefined;
+	nativeAnimations?: AnimationEditingSlide['nativeAnimations'];
 	rows: readonly AnimationPaneRow[];
 }
 
@@ -65,19 +67,23 @@ export function createAnimationPaneController() {
 		subscribe: store.subscribe,
 		sync(context: RibbonAnimationsViewState) {
 			const previous = store.getSnapshot();
-			if (previous.context === context) return;
+			const nativeAnimations = context.editing?.slide?.nativeAnimations;
+			const sameEffects = previous.nativeAnimations === nativeAnimations;
+			if (previous.context === context && sameEffects) return;
 			const nodeId =
 				context.paneOpen &&
+				sameEffects &&
 				context.editing?.slide?.id === previous.context?.editing?.slide?.id &&
 				context.editing?.elementId === previous.context?.editing?.elementId
 					? previous.nodeId
 					: undefined;
 			const rows =
+				sameEffects &&
 				previous.context?.editing?.slide === context.editing?.slide &&
 				previous.context?.translate === context.translate
 					? previous.rows
 					: buildNativeRows(context);
-			store.set({ nodeId, context, rows });
+			store.set({ nodeId, context, nativeAnimations, rows });
 		},
 		select(nodeId: number | undefined) {
 			const previous = store.getSnapshot();
