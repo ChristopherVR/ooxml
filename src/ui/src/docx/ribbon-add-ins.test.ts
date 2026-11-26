@@ -24,15 +24,18 @@ describe('Word ribbon add-in tabs', () => {
 		const remove = vi.fn(() => {
 			editor.ribbonAddIns = [];
 		});
-		setOfficeAddInCatalog(editor, [{ id: pdf.id, label: pdf.label, install, remove }]);
 		document.body.append(editor);
 		const root = editor.shadowRoot!;
 		const ribbon = root.querySelector<OfficeUiRibbon>('office-ui-ribbon')!;
+		setOfficeAddInCatalog(ribbon, [{ id: pdf.id, label: pdf.label, install, remove }]);
 		await vi.waitFor(() => expect(ribbon.tabButton('insert')).toBeTruthy());
 		ribbon.tabButton('insert')!.click();
 		const dialog = () => root.querySelector('office-ui-add-ins-dialog')?.shadowRoot;
-		const click = (label: string) =>
-			root.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!.click();
+		const click = (label: string) => {
+			const button = root.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+			button.focus();
+			button.click();
+		};
 		const clickDialog = async (label: string) => {
 			const button = await vi.waitFor(() => {
 				const button = dialog()?.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
@@ -42,6 +45,13 @@ describe('Word ribbon add-in tabs', () => {
 			button.click();
 		};
 		click('Get Add-ins');
+		const admin = await vi.waitFor(() => {
+			const pivot = dialog()?.querySelector<HTMLButtonElement>('#pivot-1');
+			if (!pivot) throw new Error('Missing Admin Managed');
+			return pivot;
+		});
+		expect(admin.textContent).toBe('Admin Managed');
+		admin.click();
 		await clickDialog('Install PDF');
 		await vi.waitFor(() => expect(dialog()).toBeUndefined());
 		expect(install).toHaveBeenCalledOnce();
