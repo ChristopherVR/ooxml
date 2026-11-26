@@ -85,11 +85,24 @@ class SlideHasher {
 
 	public h2 = SEED2;
 
-	public update(text: string): void {
+	public update(text: string, stride = 1): void {
 		let h1 = this.h1;
 		let h2 = this.h2;
-		for (let index = 0; index < text.length; index += 1) {
+		for (let index = 0; index < text.length; index += stride) {
 			const code = text.charCodeAt(index);
+			h1 = Math.imul(h1 ^ code, 2654435761);
+			h2 = Math.imul(h2 ^ code, 1597334677);
+		}
+		this.h1 = h1;
+		this.h2 = h2;
+	}
+
+	/** Hashes byte codes directly, without constructing a temporary string. */
+	public updateBytes(bytes: Uint8Array, stride: number): void {
+		let h1 = this.h1;
+		let h2 = this.h2;
+		for (let index = 0; index < bytes.length; index += stride) {
+			const code = bytes[index] ?? 0;
 			h1 = Math.imul(h1 ^ code, 2654435761);
 			h2 = Math.imul(h2 ^ code, 1597334677);
 		}
@@ -141,11 +154,7 @@ function hashString(hasher: SlideHasher, text: string): void {
 	hasher.update(text.slice(0, window));
 	hasher.update(text.slice(text.length - window));
 	const stride = Math.ceil(text.length / (SAMPLE_BUDGET >> 1));
-	let sampled = '';
-	for (let index = 0; index < text.length; index += stride) {
-		sampled += text[index];
-	}
-	hasher.update(sampled);
+	hasher.update(text, stride);
 }
 
 function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visit>): void {
@@ -223,18 +232,11 @@ function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Vi
 		);
 		hasher.update(`v${bytes.length}:`);
 		const stride = bytes.length > FULL_HASH_LIMIT ? Math.ceil(bytes.length / SAMPLE_BUDGET) : 1;
-		let chunk = '';
-		for (let index = 0; index < bytes.length; index += stride) {
-			chunk += String.fromCharCode(bytes[index] ?? 0);
-			if (chunk.length >= 4096) {
-				hasher.update(chunk);
-				chunk = '';
-			}
-		}
-		hasher.update(chunk);
+		hasher.updateBytes(bytes, stride);
 	} else {
 		const record = object as Record<string, unknown>;
-		const keys = Object.keys(record).sort();
+		const keys = Object.keys(record);
+		if (keys.length > 1) keys.sort();
 		hasher.update('o{');
 		for (const key of keys) {
 			const entry = record[key];
