@@ -198,10 +198,12 @@ Hosts can provide `wordDesignPreferences.schemes` to keep named colour palettes 
 Clear the property to disable persistence. Browsing for or saving a theme uses local files and
 loads the bundled theme codec from the app's origin. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
 
-Word's email merge uses the host's optional `emailProvider` after user confirmation. With the
-default setting, the user can open a small plain-text merge as drafts in their local mail app.
-Set `emailProvider` to `false` to disable both paths.
-See [the Word mail merge API](../../docs/docx-mail-merge.md#email-output).
+Set `mailMergeDataSource` and `emailProvider` as properties on the `<docx-editor>` element.
+Framework bindings expose it as `element` on the editor handle. `mailMergeDataSource.read()`
+supplies data when the user chooses **Use host recipients**. The optional `emailProvider`
+handles delivery after user confirmation. By default, the user can open a small plain-text
+merge as drafts in their local mail app. Set `emailProvider` to `false` to disable email merge.
+See [the Word mail merge API](../../docs/docx-mail-merge.md).
 
 Rendering or editing an equation can load bundled equation code from the app's origin.
 The asset request carries no document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).

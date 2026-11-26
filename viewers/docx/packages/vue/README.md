@@ -71,6 +71,11 @@ async function save() {
 
 `load` accepts `.docx` and legacy Word 97-2003 `.doc` bytes and detects the format from the content, never the file name. `save()` resolves to a `Blob` and leaves the document dirty until you call `markClean()`, because only your application knows when the bytes are stored; `download(fileName?)` saves, downloads and marks it clean. A password-protected `.docx` opens through `loadDocument(bytes, { password })`, which the package re-exports; pass the result to `setLoadedDocument` on the handle's `element`. To route File > Save and File > Open to your own storage instead of downloads and file pickers, set `storage`.
 
+## Mail merge providers
+
+Set `mailMergeDataSource` and `emailProvider` as properties on the underlying `<docx-editor>`.
+Use the editor handle's `element` when mounting through the package. `mailMergeDataSource.read()` supplies recipients when the user chooses **Use host recipients**. The optional `emailProvider.send()` handles delivery after user confirmation. Set `emailProvider` to `false` to disable email merge.
+
 ## What you get
 
 - **Word-style editing.** The ribbon (Home, Insert, Design, Layout, References, Mailings, Review, View and the contextual tabs), a title bar with Tell me, the File backstage, a status bar, context menus, undo and redo, find and replace, zoom, and Editing and Viewing modes, all in one element.
