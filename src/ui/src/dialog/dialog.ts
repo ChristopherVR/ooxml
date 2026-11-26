@@ -17,8 +17,9 @@ const openDialogs: OfficeUiDialog[] = [];
  * `dismissible="false"` to ignore Escape and backdrop). Default slot is the body, `slot="footer"`
  * holds actions. `role="dialog"`, `aria-modal`, labelled by the heading. Escape, the close button
  * and the backdrop emit a cancelable `office-dialog-close` and close unless prevented. Focus moves
- * in on open and returns to the previously focused element on close. While open, Tab and Shift+Tab
- * stay inside and Escape works wherever focus has ended up; a nested dialog takes both over.
+ * in on open and returns to the previously focused element before `office-dialog-closed` fires.
+ * While open, Tab and Shift+Tab stay inside and Escape works wherever focus has ended up; a nested
+ * dialog takes both over.
  */
 export class OfficeUiDialog extends OfficeElement {
 	static override styles = controlStyles(css);
@@ -88,6 +89,7 @@ export class OfficeUiDialog extends OfficeElement {
 		const target = this.returnFocus;
 		this.returnFocus = null;
 		if (target?.isConnected) target.focus();
+		this.fire('office-dialog-closed', undefined);
 	}
 
 	private register(): void {

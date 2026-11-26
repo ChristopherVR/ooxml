@@ -60,8 +60,14 @@ describe('office-ui-dialog', () => {
 	});
 
 	it('Escape emits a cancelable office-dialog-close and closes unless prevented', () => {
-		const { dialog } = mount('open');
+		const { dialog, opener } = mount();
+		dialog.show();
 		const reasons: string[] = [];
+		const closed = vi.fn(() => {
+			expect(dialog.hasAttribute('open')).toBe(false);
+			expect(document.activeElement).toBe(opener);
+		});
+		dialog.addEventListener('office-dialog-closed', closed);
 		let prevent = true;
 		dialog.addEventListener('office-dialog-close', (e) => {
 			reasons.push((e as CustomEvent).detail.reason);
@@ -69,10 +75,12 @@ describe('office-ui-dialog', () => {
 		});
 		key(dialog.querySelector('#field')!, 'Escape');
 		expect(dialog.open).toBe(true);
+		expect(closed).not.toHaveBeenCalled();
 		prevent = false;
 		key(dialog.querySelector('#field')!, 'Escape');
 		expect(dialog.open).toBe(false);
 		expect(reasons).toEqual(['escape', 'escape']);
+		expect(closed).toHaveBeenCalledOnce();
 	});
 
 	it('close button and backdrop request closing; dismissible=false ignores Escape and backdrop', () => {

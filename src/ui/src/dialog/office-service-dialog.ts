@@ -13,8 +13,8 @@ export function showOfficeServiceDialog(
 	dialog.heading = heading;
 	dialog.closeLabel = closeLabel;
 	dialog.style.setProperty('z-index', '1201');
-	dialog.addEventListener('office-dialog-close', () => queueMicrotask(() => dialog.remove()), {
-		once: true,
+	dialog.addEventListener('office-dialog-closed', (event) => {
+		if (event.target === dialog) dialog.remove();
 	});
 	host.append(dialog);
 	return dialog;

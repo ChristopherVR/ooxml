@@ -67,12 +67,9 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	}
 
 	private close(): void {
-		queueMicrotask(() => {
-			if (this.shell?.open) return;
-			this.remove();
-			if (this.#afterClose) this.#afterClose();
-			else this.#session?.restoreFocus();
-		});
+		this.remove();
+		if (this.#afterClose) this.#afterClose();
+		else this.#session?.restoreFocus();
 	}
 
 	private pivot(pivot: Pivot): void {
@@ -177,7 +174,9 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		return html`<office-ui-dialog
 			.heading=${t('Office Add-ins')}
 			.closeLabel=${t('Close dialog')}
-			@office-dialog-close=${() => this.close()}
+			@office-dialog-closed=${(event: Event) => {
+				if (event.target === event.currentTarget) this.close();
+			}}
 		>
 			${
 				this.#preview

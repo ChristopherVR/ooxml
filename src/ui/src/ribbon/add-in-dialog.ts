@@ -115,12 +115,13 @@ export async function openOfficeAddIns(
 	locale: string,
 ): Promise<void> {
 	const pending: HostSettings = host;
-	const hasDialog = () =>
+	if (
+		pending[OPENING] ||
 		[...host.children].some((child) =>
 			child.matches('office-ui-add-ins-dialog, [data-office-add-ins-fallback]'),
-		);
-	if (hasDialog()) await Promise.resolve(); // Let a just-closed dialog detach.
-	if (pending[OPENING] || hasDialog()) return;
+		)
+	)
+		return;
 	const opener = modalActiveElement(host.ownerDocument);
 	const restore = addInReturnFocus(opener);
 	const language = normalizeLocale(locale, LOCALES, 'en');
@@ -136,7 +137,9 @@ export async function openOfficeAddIns(
 		status.setAttribute('role', 'status');
 		status.textContent = LOAD_ERRORS.get(language) ?? 'Could not load add-ins.';
 		dialog.append(status);
-		dialog.addEventListener('office-dialog-close', () => queueMicrotask(restore), { once: true });
+		dialog.addEventListener('office-dialog-closed', (event) => {
+			if (event.target === dialog) restore();
+		});
 		dialog.show();
 	} finally {
 		delete pending[OPENING];
