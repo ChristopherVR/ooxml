@@ -43,6 +43,18 @@
 	"main": "./dist/index.cjs",
 	"module": "./dist/index.mjs",
 	"types": "./dist/index.d.ts",
+	"imports": {
+		"#embedded-workbook-chart": {
+			"types": "./dist/xlsx/ui/dialogs/embedded-chart-entry.d.ts",
+			"import": "./dist/xlsx/embedded-chart.mjs",
+			"require": "./dist/xlsx/embedded-chart.cjs"
+		},
+		"#xpath-runtime": {
+			"types": "./dist/xml/xpath-runtime.d.ts",
+			"import": "./dist/xml/xpath-runtime.mjs",
+			"require": "./dist/xml/xpath-runtime.cjs"
+		}
+	},
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
@@ -125,7 +137,7 @@
 			"require": "./dist/crypto/index.cjs"
 		},
 		"./xml": {
-			"types": "./dist/xml/index.d.ts",
+			"types": "./dist/xml/public.d.ts",
 			"import": "./dist/xml/index.mjs",
 			"require": "./dist/xml/index.cjs"
 		},

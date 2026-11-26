@@ -1,5 +1,12 @@
 # Provenance
 
+## Shared number format sections
+
+Source repository: ChristopherVR/ooxml, commit `15f649139`.
+The tokenizer and its token types from `src/core/xlsx/numfmt/` moved to
+`src/core/text/number-format/`. Section selection moved out of the Excel formatter so Visio
+can recognize date formats without importing the spreadsheet engine.
+
 ## Shared equation editor fields (2026-11-26)
 
 Source repository: ChristopherVR/ooxml, commit `96421e1ec`.

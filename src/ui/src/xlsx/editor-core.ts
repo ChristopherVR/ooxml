@@ -11,6 +11,8 @@ import {
 	createEditSession,
 	type EditSession,
 	type FontView,
+	needsCalculationOnOpen,
+	prepareWorkbookFormulas,
 	type Workbook,
 	type Worksheet,
 	workbookFontFamily,
@@ -296,16 +298,24 @@ export class EditorCore {
 		this.stopSession?.();
 		this.stopSession = undefined;
 		this.workbook = workbook;
-		if (workbook && calculate) {
-			try {
-				calculateOnOpen(workbook);
-			} catch (error) {
-				console.error(error);
-			}
-		}
+		const pending =
+			workbook && calculate && needsCalculationOnOpen(workbook)
+				? prepareWorkbookFormulas(workbook)
+				: undefined;
+		if (workbook && calculate && !pending) this.calculateInitialWorkbook(workbook);
 		this.session = workbook ? this.createSession(workbook) : undefined;
 		this.stopSession = this.session?.onChange((change) => this.onSessionChange(change));
-		this.calcPreparation.start(this.session);
+		this.calcPreparation.start(pending ? undefined : this.session);
+		if (pending && workbook) {
+			const session = this.session;
+			void pending.then(() => {
+				if (this.workbook !== workbook || this.session !== session) return;
+				if (this.dirty.dirty && session) session.calculateNow({ full: true });
+				else this.calculateInitialWorkbook(workbook);
+				this.calcPreparation.start(session);
+				this.notifyModel({ kind: 'load' });
+			});
+		}
 		const sheets = workbook?.sheets.length ?? 0;
 		const preferred = workbook?.activeSheet ?? 0;
 		this.activeSheet = Math.min(Math.max(0, preferred), Math.max(0, sheets - 1));
@@ -320,6 +330,14 @@ export class EditorCore {
 		this.notifyModel({ kind: 'load' });
 		this.webfonts.shown(workbook);
 		this.collab.resume();
+	}
+
+	private calculateInitialWorkbook(workbook: Workbook): void {
+		try {
+			calculateOnOpen(workbook);
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	private createSession(workbook: Workbook): EditSession | undefined {

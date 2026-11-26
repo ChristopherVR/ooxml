@@ -1,7 +1,12 @@
 // A text field that colours the references of a formula, used by the in-cell editor and the
 // formula bar. A transparent <textarea> (which owns the caret, IME and native undo) sits over a
 // backdrop that paints the same text with coloured reference spans.
-import { coloredReferences, isFormulaText, type ColoredReference } from 'ooxml-core/xlsx';
+import {
+	coloredReferences,
+	isFormulaText,
+	prepareFormula,
+	type ColoredReference,
+} from 'ooxml-core/xlsx';
 import { h } from './dom';
 
 export interface FormulaField {
@@ -51,7 +56,10 @@ export function createFormulaField(doc: Document, className: string, label: stri
 		backdrop.scrollLeft = input.scrollLeft;
 		return refs;
 	};
-	input.addEventListener('input', () => refresh());
+	input.addEventListener('input', () => {
+		if (isFormulaText(input.value)) void prepareFormula(input.value);
+		refresh();
+	});
 	input.addEventListener('scroll', () => {
 		backdrop.scrollTop = input.scrollTop;
 		backdrop.scrollLeft = input.scrollLeft;

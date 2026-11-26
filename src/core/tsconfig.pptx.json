@@ -5,6 +5,8 @@
 	"compilerOptions": {
 		// Core's own editor modules must resolve the model before dist exists.
 		"paths": {
+			"#embedded-workbook-chart": ["./xlsx/ui/dialogs/embedded-chart-entry.ts"],
+			"#xpath-runtime": ["./xml/xpath-runtime.ts"],
 			"ooxml-core/pptx": ["./pptx/index.ts"]
 		},
 		"exactOptionalPropertyTypes": false,

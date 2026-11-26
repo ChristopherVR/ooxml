@@ -1,5 +1,5 @@
 import type { Workbook } from '../../xlsx/model';
-import { isDateFormat } from '../../xlsx/numfmt/index';
+import { numberFormatSections } from '../../text/number-format/sections';
 import { VISIO_DATA_LIMITS, type VisioDataColumn, type VisioDataColumnType } from '../index';
 
 /** A table ready for the import-data-recordset edit: typed columns and canonical row text. */
@@ -128,6 +128,15 @@ export function visioWorkbookGrid(
 	const area = range ?? { top: 0, left: 0, bottom, right };
 	const last = Math.min(area.bottom, area.top + VISIO_DATA_LIMITS.maxRows);
 	const grid: VisioDataCell[][] = [];
+	const dateStyles = new Map<number, boolean>();
+	const hasDateStyle = (styleId: number): boolean => {
+		const known = dateStyles.get(styleId);
+		if (known !== undefined) return known;
+		const { numeric } = numberFormatSections(workbook.styles[styleId]?.numFmt ?? 'General');
+		const date = numeric.some((section) => section.kind === 'date');
+		dateStyles.set(styleId, date);
+		return date;
+	};
 	for (let row = area.top; row <= last; row++) {
 		const cells = sheet.rows.get(row);
 		const values: VisioDataCell[] = [];
@@ -139,10 +148,7 @@ export function visioWorkbookGrid(
 			const cell = cells?.get(column);
 			const value = cell?.value ?? null;
 			if (value !== null && typeof value === 'object') values.push(`#${value.error}`);
-			else if (
-				typeof value === 'number' &&
-				isDateFormat(workbook.styles[cell?.styleId ?? 0]?.numFmt ?? 'General')
-			)
+			else if (typeof value === 'number' && hasDateStyle(cell?.styleId ?? 0))
 				values.push({ date: excelSerialToIso(value, workbook.date1904) });
 			else values.push(value);
 		}

@@ -46,6 +46,16 @@ const common = {
 	resolve: {
 		alias: [
 			{
+				find: /^#xpath-runtime$/,
+				replacement: fileURLToPath(new URL('./xml/xpath-runtime.ts', import.meta.url)),
+			},
+			{
+				find: /^#embedded-workbook-chart$/,
+				replacement: fileURLToPath(
+					new URL('./xlsx/ui/dialogs/embedded-chart-entry.ts', import.meta.url),
+				),
+			},
+			{
 				find: /^ooxml-core\/math$/,
 				replacement: fileURLToPath(new URL('./math/index.ts', import.meta.url)),
 			},

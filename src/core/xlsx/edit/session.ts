@@ -82,7 +82,19 @@ export function createEditSession(
 	workbook: Workbook,
 	options: EditSessionOptions = {},
 ): EditSession {
-	const calc = createCalcEngine(workbook);
+	let waitingForFunction: Promise<void> | undefined;
+	const calc = createCalcEngine(workbook, {
+		waitForFunction(ready) {
+			if (waitingForFunction === ready) return;
+			waitingForFunction = ready;
+			void ready.then(() => {
+				waitingForFunction = undefined;
+				calculator.finishDeferredCalculation();
+				refreshTables();
+				emit({ kind: 'cells', label: 'Calculate now', structural: false });
+			});
+		},
+	});
 	const autoRecalc = options.recalc ?? true;
 	const history = new History(options.historyLimit ?? 100);
 	const listeners = new Set<(change: WorkbookChange) => void>();

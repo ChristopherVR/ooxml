@@ -1,4 +1,5 @@
-import { parseXml, selectXmlNodes, type XmlElement, type XmlNode } from '../../../xml/index';
+import { loadedXPath, prepareXPath } from '#xpath-runtime';
+import { parseXml, type XmlElement, type XmlNode } from '../../../xml/index';
 import { parseNumberText } from '../text-number';
 import { chargeArrayCells, ERR, Matrix, type Scalar } from '../values';
 import { spec, str } from './helpers';
@@ -68,14 +69,21 @@ export const FILTERXML = spec(
 	'Returns XML element or attribute values selected by XPath, as a column.',
 	2,
 	2,
-	(args) => {
+	(args, ctx) => {
 		const xml = str(args[0]);
 		const expression = str(args[1]);
 		if (xml.length > 32_767 || expression.length > 32_767) return ERR.VALUE;
+		const select = loadedXPath();
+		if (!select) {
+			const ready = prepareXPath(ctx.workbook);
+			if (!ready) return ERR.VALUE;
+			ctx.frame.host.waitForFunction?.(ready);
+			return ERR.BUSY;
+		}
 		let nodes: XmlNode[];
 		try {
 			const doc = parseXml(xml, { warningsAsErrors: true, label: 'FILTERXML' });
-			nodes = selectXmlNodes(expression, doc, {
+			nodes = select(expression, doc, {
 				namespaces: prepare(doc.documentElement),
 				matchDefaultNamespace: true,
 			});

@@ -61,6 +61,11 @@ save workflow in `e2e/xlsx/filterxml.spec.ts`. Excel reopened 35-sheet generated
 the 1900 and 1904 date systems without repair, with no value mismatches after recalculation.
 DTD/entity declarations are refused, and XML and XPath inputs are limited to 32,767 characters.
 This is local evaluation; web, OLAP, market-data and AI formula services remain unsupported.
+Browser builds load XPath when a workbook contains FILTERXML or the formula is entered.
+Calculation stays synchronous. An edit that reaches FILTERXML while the module loads returns
+`#BUSY!` and recalculates when the module is ready. Browser callers evaluating their own ad hoc
+formulas can await `prepareFormula(formula)` before evaluating, or
+`prepareWorkbookFormulas(workbook)` when supplying a workbook model.
 
 2026-10-31: The existing comment dialog now edits imported threaded replies as well as the root.
 Edits keep authors, timestamps, message identities, person accounts, imported mentions and unknown

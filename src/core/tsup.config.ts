@@ -10,6 +10,11 @@ const pdfEntries = {
 const xlsxEntries = {
 	'xlsx/index': 'xlsx/index.ts',
 	'xlsx/ui/index': 'xlsx/ui/index.ts',
+	'xlsx/embedded-chart': 'xlsx/ui/dialogs/embedded-chart-entry.ts',
+};
+const visioEntries = {
+	'visio/index': 'visio/index.ts',
+	'visio/ui/index': 'visio/ui/index.ts',
 };
 const xlsxLocaleEntries = Object.fromEntries(
 	['fr', 'de', 'es', 'zh-CN'].map((locale) => {
@@ -34,7 +39,8 @@ const shared = {
 		'embedding/index': 'embedding/index.ts',
 		'embedding/onedrive/index': 'embedding/onedrive/index.ts',
 		'geometry/index': 'geometry/index.ts',
-		'xml/index': 'xml/index.ts',
+		'xml/index': 'xml/public.ts',
+		'xml/xpath-runtime': 'xml/xpath-runtime.ts',
 		'opc/index': 'opc/index.ts',
 		'drawingml/index': 'drawingml/index.ts',
 		'diagram/index': 'diagram/index.ts',
@@ -50,8 +56,7 @@ const shared = {
 		'docx/ui/index': 'docx/ui/index.ts',
 		'collab/index': 'collab/index.ts',
 		'teams/index': 'teams/index.ts',
-		'visio/index': 'visio/index.ts',
-		'visio/ui/index': 'visio/ui/index.ts',
+		...visioEntries,
 		'visio/collab/index': 'visio/collab/index.ts',
 		'xlsx/load/index': 'xlsx/load/index.ts',
 		'xlsx/collab/index': 'xlsx/collab/index.ts',
@@ -65,7 +70,16 @@ const shared = {
 	sourcemap: false,
 	// dist also holds the declarations and the pptx bundle: never clean it here.
 	clean: false,
-	external: ['jszip', '@xmldom/xmldom', 'yjs', 'y-protocols', 'lib0', 'ooxml-core/math'],
+	external: [
+		'jszip',
+		'@xmldom/xmldom',
+		'yjs',
+		'y-protocols',
+		'lib0',
+		'ooxml-core/math',
+		'#embedded-workbook-chart',
+		'#xpath-runtime',
+	],
 	treeshake: true,
 	platform: 'neutral',
 	// The legacy .doc and .xls loaders and the package encryption (its CFB container) inline the
@@ -76,7 +90,12 @@ const shared = {
 // The PDF reader and its converters split their ESM build, so the decoders a PDF rarely needs
 // (JBIG2, JPEG 2000, the security handler) are chunks loaded on first use and the three entries
 // share one copy of the reader. The CJS build keeps one self-contained file per entry.
-const { 'drawingml/index': drawingml, ...eagerEntries } = shared.entry;
+const {
+	'drawingml/index': drawingml,
+	'visio/index': _visio,
+	'visio/ui/index': _visioUi,
+	...eagerEntries
+} = shared.entry;
 
 export default defineConfig([
 	{ ...shared, entry: eagerEntries, format: ['esm'], splitting: false },
@@ -88,6 +107,16 @@ export default defineConfig([
 		splitting: true,
 		esbuildOptions(options) {
 			options.chunkNames = 'drawingml/chunks/[name]-[hash]';
+		},
+	},
+	// The viewer and parser share the Visio model in the browser.
+	{
+		...shared,
+		entry: visioEntries,
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'visio/chunks/[name]-[hash]';
 		},
 	},
 	// Share the workbook code between Excel's model and UI entries and keep

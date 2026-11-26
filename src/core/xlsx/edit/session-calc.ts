@@ -107,6 +107,11 @@ export class SessionCalculator {
 		}
 	}
 
+	/** Resume a calculation that encountered a function while its code was loading. */
+	finishDeferredCalculation(): void {
+		this.guard(() => this.full());
+	}
+
 	/** Builds the dependency graph ahead of the first edit (see `EditSession.prepareCalculation`). */
 	prepare(timeRemaining?: () => number): boolean {
 		if (!this.enabled || calcModeOf(this.workbook) === 'manual' || this.staleGraph) return true;

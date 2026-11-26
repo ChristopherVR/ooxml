@@ -2,6 +2,7 @@ import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { detectDigitalSignatures, verifySignedPackage } from '../../opc/signature/index';
 import { parseRange } from '../address';
 import { readFilteredRows } from '../filter-rows';
+import { prepareWorkbookFormulas } from '../formula/prepare-filterxml';
 import type { Workbook, WorkbookProperties, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
 import { readPivotTables } from '../pivot/read';
@@ -145,6 +146,8 @@ export async function loadXlsx(
 	const slicerRefs = readSlicers(workbook, source);
 	readPivotTables(workbook, source, warn, slicerRefs);
 	settleSlicers(workbook, warn);
+	const prepared = prepareWorkbookFormulas(workbook);
+	if (prepared) await prepared;
 	return workbook;
 }
 

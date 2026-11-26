@@ -19,6 +19,20 @@ const range = (r1: number, c1: number, r2: number, c2: number) => ({
 	end: { row: r2, col: c2 },
 });
 
+it('calculates FILTERXML when a host supplies a workbook model', () => {
+	const { core } = fixture();
+	const workbook = createWorkbook();
+	workbook.fullCalcOnLoad = true;
+	const sheet = workbook.sheets[0]!;
+	sheet.rows.set(
+		0,
+		new Map([[0, { value: null, formula: '=FILTERXML("<r><a>9</a></r>","//a")' }]]),
+	);
+	core.setWorkbook(workbook);
+	expect(sheet.rows.get(0)?.get(0)?.value).toBe(9);
+	expect(core.dirty.dirty).toBe(false);
+});
+
 describe('per-sheet selection memory', () => {
 	it('persists cursor movement, each sheet selection and the active tab without adding undo or dirty state', async () => {
 		const { core } = fixture();

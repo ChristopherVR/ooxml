@@ -50,6 +50,7 @@ export interface EvalHost {
 	random(): number;
 	/** Host-supplied external function providers, if configured on `CalcEngineOptions`. */
 	readonly providers?: CalcExternalProviders | undefined;
+	waitForFunction?(ready: Promise<void>): void;
 }
 
 /** Work shared by every frame of one formula evaluation (names are evaluated once per caller). */

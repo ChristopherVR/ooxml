@@ -9,7 +9,6 @@ import {
 } from '../chart/index';
 import { parseThemeXml } from '../drawingml/theme';
 import { NS } from '../xml/index';
-import { readEmbeddedChart } from '../xlsx/ui/dialogs/grid-chart';
 import { VISIO_CHART_OBJECT_MAX_BYTES } from './edit-chart-object-commands';
 import type { VisioEmbeddedObject } from './model';
 import type { VisioPackage } from './package';
@@ -95,7 +94,8 @@ export async function readEmbeddedChartObject(
 		return undefined;
 	}
 	const bytes = await pkg.readBytes(rel.target);
-	const embedded = await readEmbeddedChart(bytes);
+	const reader = await import('#embedded-workbook-chart').catch(() => undefined);
+	const embedded = await reader?.readEmbeddedChart(bytes);
 	const view = embedded?.view ?? (await readStandaloneChartEx(bytes));
 	if (!view) return undefined;
 	const chartEx =

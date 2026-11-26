@@ -94,6 +94,8 @@ export interface CalcEngine {
 export type CalculationStop = 'time' | 'work' | 'resources';
 
 export interface CalcEngineOptions {
+	/** Called if recalculation encounters browser function code still loading. */
+	waitForFunction?: (ready: Promise<void>) => void;
 	/** Clock for NOW and TODAY (tests). */
 	now?: () => Date;
 	/** Random source for RAND, RANDBETWEEN and RANDARRAY (tests). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseXml, selectXmlNodes } from './index';
+import { parseXml, selectXmlNodes } from './public';
 
 describe('XPath node selection', () => {
 	it('selects namespaced nodes with predicates and axes', () => {

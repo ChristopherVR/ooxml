@@ -339,6 +339,8 @@
 	"pixelsToPoints",
 	"planBreakDrag",
 	"pointsToPixels",
+	"prepareFormula",
+	"prepareWorkbookFormulas",
 	"presetEdges",
 	"previewScenario",
 	"printFormula",

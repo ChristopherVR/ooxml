@@ -1,6 +1,6 @@
 import { compileFraction, type FractionPlan, fractionSlash } from './fraction';
 import { compileNumber, type NumberPlan } from './number';
-import { splitSections, tokenizeSection } from './tokenizer';
+import { numberFormatSections } from '../../text/number-format/sections';
 import type { Condition, Section } from './types';
 
 export interface CompiledSection extends Section {
@@ -20,15 +20,7 @@ export interface Compiled {
 const CACHE_LIMIT = 2000;
 const cache = new Map<string, Compiled>();
 
-/** `[$-F800]` / `[$-x-sysdate]` and `[$-F400]` / `[$-x-systime]` mean the system long date / time. */
-function systemFormat(src: string): string {
-	if (/\[\$-(?:F800|x-sysdate)\]/i.test(src)) return 'dddd, mmmm d, yyyy';
-	if (/\[\$-(?:F400|x-systime)\]/i.test(src)) return 'h:mm:ss AM/PM';
-	return src;
-}
-
-function compileSection(src: string): CompiledSection {
-	const section: CompiledSection = tokenizeSection(systemFormat(src));
+function compileSection(section: CompiledSection): CompiledSection {
 	if (section.kind === 'number') {
 		const slash = fractionSlash(section.tokens);
 		if (slash >= 0) section.fraction = compileFraction(section.tokens, slash);
@@ -43,19 +35,9 @@ const generalSection = (): CompiledSection => ({ tokens: [{ t: 'general' }], kin
 export function compileFormat(format: string): Compiled {
 	const hit = cache.get(format);
 	if (hit) return hit;
-	const code = format.trim() === '' ? 'General' : format;
-	const sections = splitSections(code).slice(0, 4).map(compileSection);
-	let numeric: CompiledSection[];
-	let text: CompiledSection | undefined;
-	const last = sections[sections.length - 1];
-	if (sections.length === 4) {
-		numeric = sections.slice(0, 3);
-		text = sections[3];
-	} else if (last && last.kind === 'text') {
-		numeric = sections.slice(0, -1);
-		text = last;
-	} else numeric = sections;
-	if (numeric.length === 0) numeric = [generalSection()];
+	const sections = numberFormatSections(format);
+	const numeric = sections.numeric.map(compileSection);
+	if (numeric.length === 0) numeric.push(generalSection());
 	const conditional = numeric.some((s) => s.condition !== undefined);
 	if (conditional && numeric.length === 1) numeric.push(generalSection());
 	const compiled: Compiled = {
@@ -63,7 +45,7 @@ export function compileFormat(format: string): Compiled {
 		conditional,
 		isDate: numeric.some((s) => s.kind === 'date'),
 	};
-	if (text) compiled.text = text;
+	if (sections.text) compiled.text = compileSection(sections.text);
 	if (cache.size >= CACHE_LIMIT) cache.clear();
 	cache.set(format, compiled);
 	return compiled;

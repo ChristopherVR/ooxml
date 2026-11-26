@@ -1,7 +1,7 @@
 // Excel's Increase Decimal / Decrease Decimal commands on a number format code.
 import type { CellValue } from '../model';
 import { formatGeneral } from './general';
-import { splitSections, tokenizeSection } from './tokenizer';
+import { splitSections, tokenizeSection } from '../../text/number-format/tokenizer';
 
 /** The fixed format Excel switches a General cell to, sized from what it shows now. */
 function fromGeneral(delta: 1 | -1, sample: CellValue | undefined): string {

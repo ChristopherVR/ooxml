@@ -17,6 +17,7 @@ import { csvToWorkbook, sheetNameFromFileName, sheetToCsv } from './csv';
 import type { CsvImportOptions } from './csv-import';
 import { xlsbUnsupported } from './errors';
 import { loadLegacyXls } from './legacy-xls';
+import { prepareWorkbookFormulas } from '../formula/prepare-filterxml';
 import { decodeSpreadsheetText } from './text-decode';
 
 /**
@@ -158,14 +159,20 @@ export async function loadWorkbook(
 		format = detectWorkbookFormat(bytes, options.fileName);
 	}
 	if (format === 'xlsb') throw xlsbUnsupported();
-	if (format === 'xls') return loadLegacyXls(bytes);
+	if (format === 'xls') {
+		const workbook = await loadLegacyXls(bytes);
+		await prepareWorkbookFormulas(workbook);
+		return workbook;
+	}
 	if (format === 'csv') {
-		return csvToWorkbook(decodeText(bytes), {
+		const workbook = csvToWorkbook(decodeText(bytes), {
 			...options.csv,
 			sheetName: sheetNameFromFileName(options.fileName),
 			...(options.delimiter === undefined ? {} : { delimiter: options.delimiter }),
 			...(options.formulas === undefined ? {} : { formulas: options.formulas }),
 		});
+		if (options.formulas) await prepareWorkbookFormulas(workbook);
+		return workbook;
 	}
 	const workbook = await loadXlsx(bytes, limits ? { limits } : {});
 	if (format === 'xlsm' && workbook.format === 'xlsx') workbook.format = 'xlsm';

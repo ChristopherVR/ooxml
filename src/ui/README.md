@@ -599,6 +599,8 @@ asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVAC
 
 Excel loads the selected non-English language, chart insertion and formatting tools, and PivotTable creation and settings dialogs from the app's own origin on demand. English is bundled, and the editor uses it if the selected language cannot load.
 
+Excel loads its bundled XPath code when a workbook contains FILTERXML or the formula is entered. Visio's parse worker loads its metafile decoder when a picture passes the worker's format and size checks. These are same-origin application assets.
+
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
 Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.

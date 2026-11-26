@@ -9,6 +9,7 @@ export {
 	type StructuredSpecial,
 } from './ast';
 export { parseFormula } from './parser';
+export { prepareFormula, prepareWorkbookFormulas } from './prepare-filterxml';
 export { tokenize, type Token, type TokenKind } from './tokenizer';
 export {
 	CIRCULAR_REFERENCE_WARNING,

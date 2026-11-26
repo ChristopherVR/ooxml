@@ -1,3 +1,4 @@
+import { pendingXPath } from '#xpath-runtime';
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { DIGITAL_SIGNATURE_ORIGIN_REL_TYPE, isSignaturePart } from '../../opc/signature/index';
 import type { Workbook } from '../model';
@@ -51,6 +52,8 @@ const ROOT_REGENERATED = new Set<string>([
  * other part of the source package that is still referenced is copied unchanged.
  */
 export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
+	const xpath = pendingXPath(workbook);
+	if (xpath) await xpath;
 	if (!workbook.sheets.length) throw new Error('A workbook needs at least one sheet');
 	const source = workbook.source ? new SourceIndex(workbook.source.parts) : undefined;
 	const writer = new PackageWriter(source);

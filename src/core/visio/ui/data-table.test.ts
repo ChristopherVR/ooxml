@@ -51,25 +51,29 @@ describe('external data tables', () => {
 			new Map([
 				[0, { value: 'Server' }],
 				[1, { value: 'Load' }],
-				[2, { value: 'x' }],
+				[2, { value: 'Due' }],
+				[3, { value: 'outside' }],
 			]),
 		);
+		const dateStyle = workbook.styles.push({ ...workbook.styles[0]!, numFmt: '[$-x-sysdate]' }) - 1;
 		sheet.rows.set(
 			1,
 			new Map([
 				[0, { value: 'Web' }],
 				[1, { value: 42 }],
+				[2, { value: 45296, styleId: dateStyle }],
 			]),
 		);
 		sheet.rows.set(5, new Map([[0, { value: 'outside' }]]));
 		const loaded = await loadWorkbook(await saveXlsx(workbook));
-		const table = visioDataTable(visioWorkbookGrid(loaded, 0, visioParseRange('A1:B2')));
+		const table = visioDataTable(visioWorkbookGrid(loaded, 0, visioParseRange('A1:C2')));
 		expect(table).toEqual({
 			columns: [
 				{ name: 'Server', label: 'Server', type: 'string' },
 				{ name: 'Load', label: 'Load', type: 'number' },
+				{ name: 'Due', label: 'Due', type: 'date' },
 			],
-			rows: [['Web', '42']],
+			rows: [['Web', '42', '2024-01-05T00:00:00']],
 		});
 	});
 });

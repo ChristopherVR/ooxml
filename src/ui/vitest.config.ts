@@ -60,6 +60,12 @@ const AREAS = {
 				// PowerPoint modules import core files by deep path, which the element conformance suite
 				// loads from this area too.
 				{ find: /^ooxml-core\/pptx\/(.+)$/, replacement: `${coreSource}/pptx/$1` },
+				{ find: /^ooxml-core\/xml$/, replacement: `${coreSource}/xml/public.ts` },
+				{ find: /^#xpath-runtime$/, replacement: `${coreSource}/xml/xpath-runtime.ts` },
+				{
+					find: /^#embedded-workbook-chart$/,
+					replacement: `${coreSource}/xlsx/ui/dialogs/embedded-chart-entry.ts`,
+				},
 				{ find: /^ooxml-core\/(.+)$/, replacement: `${coreSource}/$1/index.ts` },
 				// The package imports its own subpaths by name; resolve them to source, not to dist.
 				{ find: /^ooxml-ui\/pptx\/dom$/, replacement: `${uiSource}/pptx/dom/index.ts` },

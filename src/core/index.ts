@@ -15,5 +15,5 @@ export * as digest from './digest/index';
 export * as geometry from './geometry/index';
 export * as opc from './opc/index';
 export * as units from './units/index';
-export * as xml from './xml/index';
+export * as xml from './xml/public';
 export * as math from './math/index';
