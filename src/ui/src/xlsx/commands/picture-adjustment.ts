@@ -1,4 +1,4 @@
-import { inspectRasterImage, RASTER_IMAGE_LIMITS } from 'ooxml-core/drawingml';
+import { RASTER_IMAGE_LIMITS } from 'ooxml-core/drawingml';
 import { anchorToPixelBox, createGridMetrics } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, numberInput } from '../dialogs/fields';
@@ -115,39 +115,28 @@ export async function runPictureAdjustment(
 			});
 			if (ppi === undefined || !live() || drawing.partName !== part) return;
 			try {
-				const info = inspectRasterImage(bytes);
-				if (info.mimeType === 'image/gif') return;
-				const { openRaster, compressRaster } = await import('../../form/picture-compression');
+				const { compressPicture } = await import('../picture-compress');
 				if (!live()) return;
-				const blob = new Blob([new Uint8Array(bytes)], { type: info.mimeType });
-				const picture = await openRaster(blob, {
-					width: info.pixelWidth,
-					height: info.pixelHeight,
+				const box = anchorToPixelBox(ws, drawing.anchor, createGridMetrics(ws, { zoom: 100 }));
+				const crop = drawing.crop;
+				const image = await compressPicture(bytes, {
+					width: box.w,
+					height: box.h,
+					ppi,
+					deleteCrop: false,
+					crop: [
+						crop?.cropLeft ?? 0,
+						crop?.cropTop ?? 0,
+						crop?.cropRight ?? 0,
+						crop?.cropBottom ?? 0,
+					],
 				});
-				try {
-					const box = anchorToPixelBox(ws, drawing.anchor, createGridMetrics(ws, { zoom: 100 }));
-					const crop = drawing.crop;
-					const result = await compressRaster(picture, {
-						width: box.w,
-						height: box.h,
-						ppi,
-						deleteCrop: false,
-						crop: [
-							crop?.cropLeft ?? 0,
-							crop?.cropTop ?? 0,
-							crop?.cropRight ?? 0,
-							crop?.cropBottom ?? 0,
-						],
-					});
-					if (!live() || drawing.partName !== part) return;
-					if (result.image.size < bytes.length) {
-						const compressed = new Uint8Array(await result.image.arrayBuffer());
-						if (drawing.partName === part) apply({ kind: 'compressPicture', bytes: compressed });
-					} else {
-						ctx.toast(ctx.t('The picture is already smaller than the compressed result.'), 'info');
-					}
-				} finally {
-					picture.bitmap.close();
+				if (!live() || drawing.partName !== part) return;
+				if (image) {
+					const compressed = new Uint8Array(await image.arrayBuffer());
+					if (drawing.partName === part) apply({ kind: 'compressPicture', bytes: compressed });
+				} else {
+					ctx.toast(ctx.t('The picture is already smaller than the compressed result.'), 'info');
 				}
 			} catch {
 				ctx.toast(

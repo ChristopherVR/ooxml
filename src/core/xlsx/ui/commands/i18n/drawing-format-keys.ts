@@ -50,7 +50,7 @@ export const DRAWING_FORMAT_KEYS = [
 	'Select a picture with unambiguous adjustment settings.',
 	'Select a picture or shape with editable frame effects.',
 	'Artistic effects require a baked image cache.',
-	'Select a PNG or JPEG picture and use a browser with OffscreenCanvas.',
+	'Select a PNG or JPEG picture and use a browser with workers and OffscreenCanvas.',
 	'Select a picture with a standard stretch layout.',
 	'Select one object with another object in that direction.',
 	'Select at least two objects to align.',

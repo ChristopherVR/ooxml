@@ -28,6 +28,12 @@ worksheet background for the grid. Sheet backgrounds are excluded from printed p
 can reorder and align drawings, select them from a pane, group standalone shapes, and rotate
 shapes and pictures. These workbook edits can be undone.
 
+Picture Format offers brightness and contrast, grayscale, local replacement, PNG and JPEG
+compression, reset, crop, frame styles, solid borders, drop shadow, alt text and size.
+Shape Format offers preset geometry, text boxes, theme-accent styles, solid fills and outlines,
+drop shadow, alt text and size. Text fill, outline and shadow apply to supported WordArt text boxes.
+Both tabs include Arrange. Artistic effects and background removal authoring remain open.
+
 ## Grid and formatting
 
 - Cell values, shared strings with rich text runs, booleans, errors and dates (1900 and 1904 date systems).

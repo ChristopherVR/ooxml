@@ -128,11 +128,11 @@ export const DRAWING_FORMAT_STRINGS = {
 		'Los efectos artísticos requieren una imagen prerenderizada en caché.',
 		'艺术效果需要预渲染的图像缓存。',
 	],
-	'Select a PNG or JPEG picture and use a browser with OffscreenCanvas.': [
-		'Sélectionnez une image PNG ou JPEG et utilisez un navigateur compatible avec OffscreenCanvas.',
-		'Wählen Sie ein PNG- oder JPEG-Bild aus und verwenden Sie einen Browser mit OffscreenCanvas.',
-		'Selecciona una imagen PNG o JPEG y usa un navegador con OffscreenCanvas.',
-		'请选择 PNG 或 JPEG 图片，并使用支持 OffscreenCanvas 的浏览器。',
+	'Select a PNG or JPEG picture and use a browser with workers and OffscreenCanvas.': [
+		'Sélectionnez une image PNG ou JPEG et utilisez un navigateur compatible avec les workers et OffscreenCanvas.',
+		'Wählen Sie ein PNG- oder JPEG-Bild und verwenden Sie einen Browser mit Web Workern und OffscreenCanvas.',
+		'Selecciona una imagen PNG o JPEG y usa un navegador con workers y OffscreenCanvas.',
+		'请选择 PNG 或 JPEG 图片，并使用支持 Web Worker 和 OffscreenCanvas 的浏览器。',
 	],
 	'Select a picture with a standard stretch layout.': [
 		'Sélectionnez une image avec un étirement standard.',

@@ -6,6 +6,7 @@ import {
 	pictureAnchorAt,
 	saveXlsx,
 } from 'ooxml-core/xlsx';
+import { inspectRasterImage } from 'ooxml-core/drawingml';
 import { encodePng } from '../../src/core/drawingml/raster-encode';
 import { editor, goToCell, openLanding, pageErrors } from './helpers';
 
@@ -13,9 +14,9 @@ test('formats pictures and shapes through their contextual ribbon tabs', async (
 	const errors = pageErrors(page);
 	const book = createWorkbook();
 	const edit = createEditSession(book);
-	edit.addImage(
+	const original = edit.addImage(
 		0,
-		encodePng(1, 1, Uint8Array.of(180, 60, 0)),
+		encodePng(480, 240, new Uint8Array(480 * 240 * 3).fill(180)),
 		'image/png',
 		pictureAnchorAt({ row: 1, col: 1 }, 120, 60),
 		'Logo',
@@ -49,6 +50,15 @@ test('formats pictures and shapes through their contextual ribbon tabs', async (
 	const artistic = host.getByRole('button', { name: 'Artistic Effects' });
 	await expect(artistic).toBeDisabled();
 	await expect(artistic).toHaveAttribute('aria-description', /baked image cache/);
+	const logo = host.locator('img[alt="Logo"]').first();
+	await expect(logo).toHaveJSProperty('naturalWidth', 480);
+	await host.getByRole('button', { name: 'Compress Pictures', exact: true }).click();
+	await host.locator('[data-dialog=picture-compress]').getByRole('button', { name: 'OK' }).click();
+	await expect(logo).toHaveJSProperty('naturalWidth', 120);
+	await host.getByRole('button', { name: 'Undo', exact: true }).click();
+	await expect(logo).toHaveJSProperty('naturalWidth', 480);
+	await host.getByRole('button', { name: 'Redo', exact: true }).click();
+	await expect(logo).toHaveJSProperty('naturalWidth', 120);
 	await host.getByRole('button', { name: 'Corrections', exact: true }).click();
 	const corrections = host.locator('[data-dialog=picture-corrections]');
 	await corrections.getByRole('spinbutton', { name: 'Brightness (%)' }).fill('20');
@@ -87,6 +97,11 @@ test('formats pictures and shapes through their contextual ribbon tabs', async (
 			},
 		},
 	]);
+	const compressed = loaded.sheets[0]?.drawings[0];
+	const bytes = compressed?.kind === 'image' && loaded.source?.parts.get(compressed.partName);
+	if (!bytes) throw new Error('Compressed picture media is missing');
+	expect(inspectRasterImage(bytes)).toMatchObject({ pixelWidth: 120, pixelHeight: 60 });
+	expect(loaded.source?.parts.has(original.partName)).toBe(false);
 	await goToCell(page, 'A1');
 	await expect(shapeTab).toHaveCount(0);
 	expect(errors).toEqual([]);

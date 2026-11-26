@@ -286,6 +286,11 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   code from that origin when the associated controls are used. These requests send only the
   asset URL and standard browser request metadata. Keep `locale` at `en` to skip language
   requests, and leave a dialog or pane unopened to skip its request.
+- Excel's Picture Format and Shape Format load bundled editing code and galleries from the app's
+  own origin as the controls are used. Confirming Compress Pictures also loads a same-origin
+  worker and sends the picture bytes to that worker on the device. The requests carry only asset
+  URLs and standard browser metadata. Hosts can hide the ribbon actions or disable editing.
+  If the worker cannot load offline or the host blocks it, compression leaves the picture intact.
 
 **Fonts, when the host or the reader turns them on.** `<docx-editor>`, `<xlsx-editor>` and
 `<visio-viewer>` take the same `googleFonts` value as PowerPoint, but unset leaves it to the

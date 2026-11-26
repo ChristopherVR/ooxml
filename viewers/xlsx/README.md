@@ -182,6 +182,9 @@ Screenshot and Screen Clipping use the browser’s surface picker and embed the 
 
 Excel opens, renders, edits and saves workbooks locally by default. Workers, bundled equation code, the selected non-English language and chart or PivotTable tools load from the page's own origin on demand; English is bundled and is used if the selected language cannot load. Linked pictures are not fetched, external workbook links and linked data are not refreshed, `WEBSERVICE` is not evaluated, and fonts come from the device and the file unless the reader turns on the Trust Center font download (off by default) or the host sets `googleFonts`. Hyperlinks open only when the reader follows them, collaboration talks only to the server the host configures, and OneDrive only when the host connects it. Nothing collects analytics or telemetry. See [PRIVACY.md](../../PRIVACY.md).
 
+Picture Format and Shape Format load bundled editing code and galleries on demand. Compress
+Pictures loads a worker from the app's origin and processes the image bytes on the device.
+
 ## OneDrive and your own storage
 
 `storage` sends File > Save and Open to your own backend, and `fileProviders` adds OneDrive (through `ooxml-core/embedding/onedrive` and a Microsoft sign-in your host supplies) or your own cloud places to File > Open. See the [integration reference](../../docs/onedrive-integration.md#excel-xlsx) for the load and save API, sharing permissions and conflict recovery, and the [testing guide](../../docs/onedrive-testing.md). OneDrive storage does not provide Microsoft Office coauthoring or automatic merging of documents.

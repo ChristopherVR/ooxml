@@ -48,7 +48,7 @@ export const drawingFormatActions = {
 	'picture.artistic-effects': ['Artistic Effects', 'Artistic effects require a baked image cache.'],
 	'picture.compress': [
 		'Compress Pictures',
-		'Select a PNG or JPEG picture and use a browser with OffscreenCanvas.',
+		'Select a PNG or JPEG picture and use a browser with workers and OffscreenCanvas.',
 	],
 	'picture.change': ['Change Picture', raster],
 	'picture.reset': ['Reset Picture', shadow],
@@ -93,6 +93,7 @@ function canFormat(id: DrawingFormatAction, selected: FormatSelection): boolean 
 			return (
 				!hasArtistic &&
 				['image/png', 'image/jpeg'].includes(image.contentType) &&
+				typeof Worker !== 'undefined' &&
 				typeof OffscreenCanvas !== 'undefined' &&
 				typeof createImageBitmap === 'function'
 			);

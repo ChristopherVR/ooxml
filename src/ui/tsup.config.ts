@@ -56,6 +56,7 @@ export default defineConfig({
 		'clipboard-worker': 'src/visio/clipboard-worker.ts',
 		'stencil-worker': 'src/visio/stencil-worker.ts',
 		'xlsx-open-worker': 'src/xlsx/xlsx-open-worker.ts',
+		'xlsx-picture-compress-worker': 'src/xlsx/xlsx-picture-compress-worker.ts',
 		'mailings-recipient-worker': 'src/docx/mailings/mailings-recipient-worker.ts',
 	},
 	outDir: 'dist',

@@ -427,7 +427,8 @@ line/marker swatches and position-authoring controls remain incomplete.
     accessibility checks, and the Review Notes menu remain open.
     flipping, and visibility controls for shapes and pictures. Picture Format appears for raster
     pictures and offers brightness and contrast, grayscale, local replacement, PNG and JPEG
-    compression, reset, frame styles, solid borders, drop shadow, alt text, crop, and size.
+    compression in a browser worker, reset, frame styles, solid borders, drop shadow, alt text,
+    crop, and size.
     Shape Format offers the preset Shapes gallery, Change Shape, Text Box, theme-accent styles,
     solid fill and outline, drop shadow, alt text, and size. Its WordArt controls edit supported
     WordArt text boxes. Both tabs reuse Arrange. Artistic effects and background removal authoring,
