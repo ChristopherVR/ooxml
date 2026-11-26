@@ -1,16 +1,21 @@
 import { html } from 'lit';
 import { repeat } from 'lit/directives/repeat.js';
 
-import { controlStyles, OfficeElement } from '../../base';
-import { definer } from '../../registry';
+import { controlStyles, flag, OfficeElement } from '../../base';
+import { definer, present } from '../../registry';
 import { animationsLabel } from '../render/ribbon-animations-state';
 import { animationPaneFor } from './animation-pane-scope';
 import css from './animation-effect-rows.css?raw';
 
 /** Individual selectable effects inside a click-group row in the pane. */
 class AnimationEffectRows extends OfficeElement {
-	static override watched = ['group-order', 'all'];
+	static override properties = {
+		groupOrder: { type: Number, attribute: 'group-order', reflect: true },
+		all: flag,
+	};
 	static override styles = controlStyles(css);
+	declare groupOrder: number | null | undefined;
+	declare all: boolean | '' | undefined;
 
 	private controller: ReturnType<typeof animationPaneFor>;
 	private unsubscribe?: () => void;
@@ -30,9 +35,8 @@ class AnimationEffectRows extends OfficeElement {
 
 	override render() {
 		const snapshot = this.controller?.getSnapshot();
-		const order = this.getAttribute('group-order');
-		const clickOrder = order === null ? undefined : Number(order);
-		const all = this.hasAttribute('all');
+		const clickOrder = this.groupOrder ?? undefined;
+		const all = present(this.all);
 		if (!snapshot || (all && (!snapshot.context?.paneOpen || snapshot.context.hasSelection))) {
 			return html`<slot></slot>`;
 		}
