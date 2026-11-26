@@ -56,7 +56,11 @@ export function readXmlOverrides(
 		if (!resource || resource.kind !== kind) return invalid(`unresolved ${field}`);
 		return resource.value;
 	};
-	const readCommand = (control: XmlElement, inherited?: AddInIssue): AddInCommand => {
+	const readCommand = (
+		control: XmlElement,
+		issues: AddInIssue[],
+		inherited?: AddInIssue,
+	): AddInCommand => {
 		const id = identifier(control.getAttribute('id'), 'control ID');
 		const label = resolve(one(control, 'Label'), 'ShortStrings', 'control label');
 		const tip = one(control, 'Supertip');
@@ -85,7 +89,7 @@ export function readXmlOverrides(
 		issues.push(issue);
 		return { id, label, kind: 'inactive', issue };
 	};
-	const readTab = (tab: XmlElement, inherited?: AddInIssue): AddInTab => {
+	const readTab = (tab: XmlElement, issues: AddInIssue[], inherited?: AddInIssue): AddInTab => {
 		const id = identifier(tab.getAttribute('id'), 'tab ID');
 		const builtIn = tab.localName === 'OfficeTab';
 		const builtInIssue: AddInIssue | undefined = builtIn
@@ -96,10 +100,10 @@ export function readXmlOverrides(
 		const groups = all(tab, 'Group').map((group) => {
 			const commands = all(group, 'Control').flatMap((control) => {
 				const type = typeName(control);
-				if (type === 'Button') return [readCommand(control, issue)];
+				if (type === 'Button') return [readCommand(control, issues, issue)];
 				if (type === 'Menu') {
 					resolve(one(control, 'Label'), 'ShortStrings', 'menu label');
-					return all(one(control, 'Items'), 'Item').map((item) => readCommand(item, issue));
+					return all(one(control, 'Items'), 'Item').map((item) => readCommand(item, issues, issue));
 				}
 				issues.push({ kind: 'unsupported', feature: type });
 				return [];
@@ -125,31 +129,34 @@ export function readXmlOverrides(
 		if (product === undefined) return invalid('override host type');
 		return product === null ? [] : [{ host, product }];
 	});
-	if (editorHosts.length) {
-		for (const requirement of missing) issues.push({ kind: 'requirement', requirement });
-	}
+	const requirement = missing[0];
+	const inactive = requirement ? ({ kind: 'requirement', requirement } as const) : undefined;
 	const tabs: AddInTab[] = [];
 	for (const { host, product } of editorHosts) {
+		const applies = product === options.host;
+		const hostIssues: AddInIssue[] = [];
 		const desktop = one(host, 'DesktopFormFactor');
 		const functionFile = one(desktop, 'FunctionFile');
 		if (functionFile) resolve(functionFile, 'Urls', 'function file');
 		for (const point of all(desktop, 'ExtensionPoint')) {
 			const type = typeName(point);
 			if (type !== 'PrimaryCommandSurface') {
-				issues.push({ kind: 'unsupported', feature: type });
+				hostIssues.push({ kind: 'unsupported', feature: type });
 				continue;
 			}
-			const requirement = missing[0];
-			const inactive = requirement ? ({ kind: 'requirement', requirement } as const) : undefined;
 			const result = elements(point)
 				.filter(
 					(tab) =>
 						tab.namespaceURI === OVERRIDE && ['CustomTab', 'OfficeTab'].includes(tab.localName),
 				)
-				.map((tab) => readTab(tab, inactive));
+				.map((tab) => readTab(tab, hostIssues, inactive));
 			if (!result.length || result.some((tab) => !tab.groups.length))
 				invalid('ribbon tabs and groups');
-			if (product === options.host) tabs.push(...result);
+			if (applies) tabs.push(...result);
+		}
+		if (applies) {
+			for (const requirement of missing) issues.push({ kind: 'requirement', requirement });
+			issues.push(...hostIssues);
 		}
 	}
 	unique(tabs, (tab) => tab.id, 'duplicate tab ID');

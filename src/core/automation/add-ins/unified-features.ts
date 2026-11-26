@@ -218,23 +218,29 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 		const condition = featureRequirements(extension.requirements, options);
 		for (const host of condition.hosts) hosts.add(host);
 		const applies = condition.hosts.includes(options.host);
-		if (applies) requirements.push(...condition.requirements);
-		issues.push(...condition.issues);
+		const extensionContext = { ...context, issues: condition.issues };
 		const issue = condition.issues[0];
-		const actions = readActions(extension, context, issue ?? context.permissionIssue);
+		const actions = readActions(extension, extensionContext, issue ?? context.permissionIssue);
 		for (const [key, value] of Object.entries(extension)) {
 			if (!extensionKeys.has(key) && value !== undefined)
-				issues.push({ kind: 'unsupported', feature: identifier(key, 'extension feature') });
+				extensionContext.issues.push({
+					kind: 'unsupported',
+					feature: identifier(key, 'extension feature'),
+				});
 		}
 		for (const [ribbonIndex, ribbon] of records(extension.ribbons, 'ribbons').entries()) {
 			const entries = readRibbon(
 				ribbon,
 				`extensions[${index}].ribbons[${ribbonIndex}]`,
 				actions,
-				context,
+				extensionContext,
 				issue,
 			);
 			if (applies) tabs.push(...entries);
+		}
+		if (applies) {
+			requirements.push(...condition.requirements);
+			issues.push(...extensionContext.issues);
 		}
 	}
 	return { hosts: [...hosts], requirements, tabs };

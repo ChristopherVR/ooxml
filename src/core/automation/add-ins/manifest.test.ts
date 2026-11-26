@@ -128,20 +128,42 @@ describe('local Office add-in manifests', () => {
 		});
 	});
 
-	it.each(['excel', 'powerpoint'] as const)(
-		'reviews declared XML command compatibility in %s',
-		async (host) => {
-			const { manifest } = await read(xml, { host });
-			expect(manifest.tabs).toEqual([]);
-			expect(manifest.issues).toEqual([
-				{
-					kind: 'requirement',
-					requirement: { kind: 'set', name: 'AddinCommands', minVersion: '1.10' },
-				},
-				{ kind: 'unsupported', feature: 'ExecuteFunction' },
-			]);
-		},
-	);
+	it('reports XML override issues for the selected host', async () => {
+		const excelHost = `<Host xsi:type="Workbook"><DesktopFormFactor>
+			<ExtensionPoint xsi:type="ContextMenu" />
+			<ExtensionPoint xsi:type="PrimaryCommandSurface"><OfficeTab id="TabHome">
+				<Group id="NotesGroup"><Label resid="Notes.Group" />
+					<Control xsi:type="Button" id="OpenNotes"><Label resid="Notes.Open" />
+						<Action xsi:type="ShowTaskpane">
+							<TaskpaneId>Office.AutoShowTaskpaneWithDocument</TaskpaneId>
+							<SourceLocation resid="Notes.Pane" />
+						</Action>
+					</Control>
+					<Control xsi:type="ToggleButton" id="ToggleNotes" />
+				</Group>
+			</OfficeTab></ExtensionPoint>
+		</DesktopFormFactor></Host>`;
+		const source = xml.replace('</Host>', `</Host>${excelHost}`);
+		const { manifest: wordManifest } = await read(source, support);
+		expect(wordManifest.issues).toEqual([{ kind: 'unsupported', feature: 'ExecuteFunction' }]);
+		const { manifest: excel } = await read(source, { host: 'excel' });
+		expect(excel.issues).toEqual([
+			{
+				kind: 'requirement',
+				requirement: { kind: 'set', name: 'AddinCommands', minVersion: '1.10' },
+			},
+			...['ContextMenu', 'built-in ribbon tab', 'automatic task pane', 'ToggleButton'].map(
+				(feature) => ({ kind: 'unsupported', feature }),
+			),
+		]);
+		const { manifest: powerpoint } = await read(source, { host: 'powerpoint' });
+		expect(powerpoint.tabs).toEqual([]);
+		expect(powerpoint.issues).toEqual([]);
+		await expect(read(source.replace('id="TabHome"', 'id=""'), support)).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'tab ID',
+		});
+	});
 
 	it.each([
 		['broken markup', xml.replace('</OfficeApp>', '</Office>'), 'manifest'],
@@ -201,7 +223,7 @@ describe('local Office add-in manifests', () => {
 			);
 		const denied = await readLocalAddIn(await pack(source), support);
 		expect(denied.manifest.issues).toContainEqual({ kind: 'unsupported', feature: 'bots' });
-		expect(denied.manifest.issues).toContainEqual({ kind: 'unsupported', feature: 'mail' });
+		expect(denied.manifest.issues).not.toContainEqual({ kind: 'unsupported', feature: 'mail' });
 		expect(firstCommand(denied.manifest)).toMatchObject({
 			kind: 'inactive',
 			issue: { requirement: { name: 'WordApi' } },
@@ -228,6 +250,41 @@ describe('local Office add-in manifests', () => {
 		expect(firstCommand((await readLocalAddIn(await pack(), word)).manifest)?.kind).toBe(
 			'inactive',
 		);
+	});
+
+	it('reports unified runtime and ribbon issues for the selected host', async () => {
+		const excelExtension = {
+			requirements: { scopes: ['workbook'] },
+			runtimes: [
+				{
+					id: 'ExcelRuntime',
+					type: 'general',
+					lifetime: 'long',
+					code: { page: 'https://notes.example.test/excel' },
+					actions: [{ id: 'Execute', type: 'executeFunction' }],
+				},
+			],
+			ribbons: [{ contexts: ['contextMenu'] }],
+		};
+		const source = unified
+			.replace('"document", "workbook", "presentation"', '"document"')
+			.replace('"extensions": [', `"extensions": [${JSON.stringify(excelExtension)},`);
+		const archive = await pack(source);
+		const { manifest: wordManifest } = await readLocalAddIn(archive, support);
+		expect(wordManifest.issues).toEqual([]);
+		expect(firstCommand(wordManifest)?.kind).toBe('taskPane');
+		const { manifest: excel } = await readLocalAddIn(archive, { host: 'excel' });
+		expect(excel.issues).toEqual(
+			['shared runtime', 'executeFunction', 'contextMenu'].map((feature) => ({
+				kind: 'unsupported',
+				feature,
+			})),
+		);
+		const invalidExcel = await pack(source.replace('"lifetime":"long"', '"lifetime":"invalid"'));
+		await expect(readLocalAddIn(invalidExcel, support)).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'runtime lifetime',
+		});
 	});
 
 	it.each(['word', 'excel', 'powerpoint'] as const)(

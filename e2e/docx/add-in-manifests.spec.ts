@@ -30,10 +30,17 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(file).toBeFocused();
 	const marketplace = preview.getByRole('link', { name: /Microsoft Marketplace/ });
 	await expect(marketplace).toBeVisible();
-	const source = (await readFile(fixture, 'utf8')).replace(
-		'<DefaultSettings>',
-		'<Requirements><Sets><Set Name="WordApi" MinVersion="1.1" /></Sets></Requirements><DefaultSettings>',
-	);
+	const source = (await readFile(fixture, 'utf8'))
+		.replace(
+			'<DefaultSettings>',
+			'<Requirements><Sets><Set Name="WordApi" MinVersion="1.1" /></Sets></Requirements><DefaultSettings>',
+		)
+		.replace(
+			'</Host>',
+			`</Host><Host xsi:type="Workbook"><DesktopFormFactor>
+				<ExtensionPoint xsi:type="ContextMenu" />
+			</DesktopFormFactor></Host>`,
+		);
 	const select = (xml: string) =>
 		file.setInputFiles({
 			name: 'notes.xml',
@@ -73,6 +80,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(installed).toContainText('Unavailable requirement · WordApi 1.1');
 	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
 	await expect(installed).toContainText('Unsupported feature · ExecuteFunction');
+	await expect(installed).not.toContainText('ContextMenu');
 	await page.keyboard.press('Escape');
 
 	await reveal(editor, get);
