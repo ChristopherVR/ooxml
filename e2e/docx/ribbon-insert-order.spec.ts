@@ -13,6 +13,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const insert = editor.locator('.ribbon-panel[data-panel="Insert"]');
 		const group = (name: string) => insert.locator(`.ribbon-group[data-label="${name}"]`);
 		await expect(insert.locator(':scope > .ribbon-group')).toHaveCount(10);
+		await expect(insert.locator(':scope > .ribbon-group[data-collapsed]')).toHaveCount(0);
 		expect(
 			await insert
 				.locator(':scope > .ribbon-group')
@@ -33,6 +34,21 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+		const folded = insert.locator(':scope > .ribbon-group[data-collapsed]');
+		await expect(folded.first()).toBeVisible();
+		expect(
+			await folded.evaluateAll((groups) =>
+				groups
+					.filter((group) => {
+						const caption = group.querySelector('.ribbon-overflow-button > span');
+						return (
+							!caption?.textContent?.trim() ||
+							caption.textContent !== group.getAttribute('data-caption')
+						);
+					})
+					.map((group) => group.getAttribute('data-label')),
+			),
+		).toEqual([]);
 		await expect(
 			insert.locator('[aria-label="Link to Previous"], [aria-label="Insert column break"]'),
 		).toHaveCount(0);

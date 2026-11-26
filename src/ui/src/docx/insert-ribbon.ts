@@ -2,7 +2,7 @@ import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 import { canCaptureDisplay } from '../form/display-capture';
 import { SYMBOLS } from './insert-text-commands';
 import { menuGallery } from './ribbon-gallery-menu';
-import { group, menuSelect, tool } from './ribbon-parts';
+import { group, menuSelect, stack, tool } from './ribbon-parts';
 
 const PAGE_NUMBER_OPTIONS: Array<[string, string]> = [
 	['top:left', 'Top left'],
@@ -67,23 +67,25 @@ export function buildInsertGroups(): HTMLElement[] {
 				{ large: true },
 			),
 			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
-			tool(
-				'Insert chart',
-				'chart',
-				{ type: 'formatDialog', kind: 'insertChart' },
-				{ large: true, caption: 'Chart' },
-			),
-			tool(
-				'Insert SmartArt',
-				'smartArt',
-				{ type: 'insertSmartArt' },
-				{ large: true, caption: 'SmartArt' },
-			),
-			tool(
-				'Format picture',
-				'formatPicture',
-				{ type: 'formatPicture' },
-				{ large: true, caption: 'Format', name: 'ribbon.name.formatPicture' },
+			stack(
+				tool(
+					'Insert chart',
+					'chart',
+					{ type: 'formatDialog', kind: 'insertChart' },
+					{ inline: true, caption: 'Chart' },
+				),
+				tool(
+					'Insert SmartArt',
+					'smartArt',
+					{ type: 'insertSmartArt' },
+					{ inline: true, caption: 'SmartArt' },
+				),
+				tool(
+					'Format picture',
+					'formatPicture',
+					{ type: 'formatPicture' },
+					{ inline: true, caption: 'Format', name: 'ribbon.name.formatPicture' },
+				),
 			),
 		),
 		group(
@@ -169,68 +171,72 @@ export function buildInsertGroups(): HTMLElement[] {
 		),
 		group(
 			'Text',
-			tool(
-				'Object',
-				'insertObject',
-				{ type: 'insertLocalDrawing', kind: 'object' },
-				{ inline: true },
+			stack(
+				tool(
+					'Object',
+					'insertObject',
+					{ type: 'insertLocalDrawing', kind: 'object' },
+					{ inline: true },
+				),
+				tool(
+					'WordArt',
+					'insertWordArt',
+					{ type: 'insertWordArt' },
+					{ inline: true, caption: 'WordArt' },
+				),
+				tool(
+					'Text box',
+					'textBox',
+					{ type: 'formatDialog', kind: 'textBox' },
+					{ inline: true, caption: 'Text Box' },
+				),
 			),
-			tool(
-				'WordArt',
-				'insertWordArt',
-				{ type: 'insertWordArt' },
-				{ inline: true, caption: 'WordArt' },
-			),
-			tool(
-				'Text box',
-				'textBox',
-				{ type: 'formatDialog', kind: 'textBox' },
-				{ inline: true, caption: 'Text Box' },
-			),
-			menuSelect(
-				'Drop cap',
-				'dropCap',
-				[
-					['none', 'None'],
-					['drop', 'Dropped'],
-					['margin', 'In margin'],
-					['options', 'Drop Cap Options…'],
-				],
-				(value) =>
-					value === 'options'
-						? { type: 'formatDialog', kind: 'dropCap' }
-						: { type: 'dropCap', value: value as 'none' },
-				{ momentary: true },
-			),
-			menuSelect(
-				'Content control',
-				'contentControl',
-				[
-					['richText', 'Rich text'],
-					['text', 'Plain text'],
-					['checkbox', 'Check box'],
-					['dropDownList', 'Drop-down list'],
-					['comboBox', 'Combo box'],
-					['date', 'Date picker'],
-					['properties', 'Properties…'],
-				],
-				(value) =>
-					value === 'properties'
-						? { type: 'formatDialog', kind: 'contentControl' }
-						: { type: 'insertContentControl', value: value as 'richText' },
-				{ momentary: true },
-			),
-			menuSelect(
-				'Date and time',
-				'dateTime',
-				[
-					['long', 'long'],
-					['short', 'short'],
-					['time', 'time'],
-					['datetime', 'datetime'],
-				],
-				(value) => ({ type: 'insertDateTime', value: value as 'long' }),
-				{ momentary: true },
+			stack(
+				menuSelect(
+					'Drop cap',
+					'dropCap',
+					[
+						['none', 'None'],
+						['drop', 'Dropped'],
+						['margin', 'In margin'],
+						['options', 'Drop Cap Options…'],
+					],
+					(value) =>
+						value === 'options'
+							? { type: 'formatDialog', kind: 'dropCap' }
+							: { type: 'dropCap', value: value as 'none' },
+					{ momentary: true, inline: true },
+				),
+				menuSelect(
+					'Content control',
+					'contentControl',
+					[
+						['richText', 'Rich text'],
+						['text', 'Plain text'],
+						['checkbox', 'Check box'],
+						['dropDownList', 'Drop-down list'],
+						['comboBox', 'Combo box'],
+						['date', 'Date picker'],
+						['properties', 'Properties…'],
+					],
+					(value) =>
+						value === 'properties'
+							? { type: 'formatDialog', kind: 'contentControl' }
+							: { type: 'insertContentControl', value: value as 'richText' },
+					{ momentary: true, inline: true },
+				),
+				menuSelect(
+					'Date and time',
+					'dateTime',
+					[
+						['long', 'long'],
+						['short', 'short'],
+						['time', 'time'],
+						['datetime', 'datetime'],
+					],
+					(value) => ({ type: 'insertDateTime', value: value as 'long' }),
+					{ momentary: true, inline: true },
+				),
 			),
 		),
 		group(

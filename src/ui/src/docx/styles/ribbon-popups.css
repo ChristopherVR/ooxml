@@ -236,9 +236,13 @@
 	min-width: min-content;
 	max-width: 66px;
 	max-height: 2lh;
+	white-space: normal;
 	text-wrap: balance;
 	overflow-wrap: normal;
 	word-break: keep-all;
+}
+.ribbon-overflow-button > svg {
+	flex: none;
 }
 .ribbon-group[data-label='Header & Footer'] .ribbon-overflow-button > span {
 	max-width: 88px;

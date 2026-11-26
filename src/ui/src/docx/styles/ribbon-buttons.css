@@ -128,6 +128,17 @@
 .ribbon-group button.ribbon-large {
 	width: 70px;
 }
+.ribbon-panel[data-panel='Insert'] .ribbon-group button.ribbon-large:not(.ribbon-overflow-button) {
+	width: 56px;
+}
+.ribbon-group:is([data-label='Illustrations'], [data-label='Text']) .ribbon-stack {
+	align-items: stretch;
+}
+.ribbon-group:is([data-label='Illustrations'], [data-label='Text'])
+	.ribbon-stack
+	> button.ribbon-inline {
+	height: 24px;
+}
 .ribbon-panel[data-panel='Table'] .ribbon-group button.ribbon-large {
 	width: 80px;
 }
