@@ -581,6 +581,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				}),
 			),
 		);
+		if (timingToWrite && slide.animations?.some((animation) => animation.nativePaintTemplate)) {
+			// The written tree now owns the painted behaviours and their new IDs.
+			slide.rawTiming = timingToWrite;
+			for (const animation of slide.animations) delete animation.nativePaintTemplate;
+		}
 		// The archive now holds THIS model. Fingerprinting here rather than at
 		// the end of `save()` keeps the baseline pinned to the state that
 		// actually produced the bytes: anything mutated afterwards is a genuine

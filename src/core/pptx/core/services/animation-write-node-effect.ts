@@ -91,11 +91,24 @@ export function buildSingleEffectNode(
 
 	const effectId = allocateId();
 	const shapeId = anim.elementId;
+	const painted = buildPaintedAnimationChildren(
+		anim.nativePaintTemplate,
+		{
+			presetClass,
+			presetId: mapping.presetId,
+			requestedSubtype: anim.direction === undefined ? undefined : subtype,
+			shapeId,
+			durationMs: duration,
+		},
+		allocateId,
+	);
 
 	let childElements: XmlObject[] = [];
 	let presetIterate: { type: string; tmPct?: number } | undefined;
 
-	if (presetClass === 'emph') {
+	if (painted) {
+		subtype = anim.nativePaintTemplate?.presetSubtype ?? subtype;
+	} else if (presetClass === 'emph') {
 		childElements = buildEmphasisBehaviorNodes(
 			shapeId,
 			duration,
@@ -147,9 +160,7 @@ export function buildSingleEffectNode(
 		effectCTn['@_decel'] = String(decel);
 	}
 
-	effectCTn['p:childTnLst'] =
-		buildPaintedAnimationChildren(anim.nativePaintTemplate, presetClass, shapeId, allocateId) ??
-		groupBehaviorChildren(childElements);
+	effectCTn['p:childTnLst'] = painted ?? groupBehaviorChildren(childElements);
 
 	// "After animation" describes what happens once an entrance/emphasis
 	// effect finishes; an exit effect already ends by hiding, so it never

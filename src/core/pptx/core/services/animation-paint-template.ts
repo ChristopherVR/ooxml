@@ -1,6 +1,11 @@
 import type { PptxElementAnimation, XmlObject } from '../types';
+import { rescaleBehaviors } from './animation-timing-surgical-behaviors';
 import { indexEffectNodes } from './animation-timing-tree';
-import { isXmlObject } from './native-animation-helpers';
+import {
+	extractChildBehaviourDurationMs,
+	readTimingAttr,
+} from './native-animation-extended-helpers';
+import { ensureArray, isXmlObject } from './native-animation-helpers';
 
 /** Capture an imported effect's local behaviours, excluding slide-bound triggers and sounds. */
 export function captureNativeAnimationTemplate(
@@ -12,17 +17,37 @@ export function captureNativeAnimationTemplate(
 	if (matches.length !== 1 || !ref?.spid) return undefined;
 	const children = ref.cTn['p:childTnLst'];
 	if (!isXmlObject(children)) return undefined;
-	return { sourceShapeId: ref.spid, children, presetClass: ref.presetClass };
+	return {
+		sourceShapeId: ref.spid,
+		children,
+		presetClass: ref.presetClass,
+		presetId: readTimingAttr(ref.cTn['@_presetID']),
+		presetSubtype: readTimingAttr(ref.cTn['@_presetSubtype']),
+		durationMs:
+			readTimingAttr(ref.cTn['@_dur']) ?? extractChildBehaviourDurationMs(ref.cTn, ensureArray),
+	};
 }
 
 /** Clone and rebind a local behaviour tree to the destination shape and timing ID space. */
 export function buildPaintedAnimationChildren(
 	template: PptxElementAnimation['nativePaintTemplate'],
-	presetClass: string,
-	shapeId: string,
+	options: {
+		presetClass: string;
+		presetId: number;
+		requestedSubtype?: number | undefined;
+		shapeId: string;
+		durationMs: number;
+	},
 	allocateId: () => number,
 ): XmlObject | undefined {
-	if (template?.presetClass !== presetClass) return undefined;
+	if (
+		template?.presetClass !== options.presetClass ||
+		(template.presetId !== undefined && template.presetId !== options.presetId) ||
+		(template.presetSubtype !== undefined &&
+			options.requestedSubtype !== undefined &&
+			template.presetSubtype !== options.requestedSubtype)
+	)
+		return undefined;
 	const children = structuredClone(template.children);
 	const queue: Array<readonly [string, unknown]> = Object.entries(children);
 	for (let i = 0; i < queue.length; i++) {
@@ -41,9 +66,12 @@ export function buildPaintedAnimationChildren(
 		if (key === 'p:cTn') node['@_id'] = String(allocateId());
 		if (key === 'p:spTgt') {
 			if (String(node['@_spid']) !== template.sourceShapeId) return undefined;
-			node['@_spid'] = shapeId;
+			node['@_spid'] = options.shapeId;
 		}
 		for (const child of Object.entries(node)) queue.push(child);
+	}
+	if (template.durationMs && template.durationMs !== options.durationMs) {
+		rescaleBehaviors(children, template.durationMs, options.durationMs);
 	}
 	return children;
 }

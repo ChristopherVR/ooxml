@@ -25,6 +25,8 @@ import {
 	assertAfterAnimationClearSupported,
 } from './animation-after-effect-write';
 import { getCapturedPreset } from './animation-behavior-captured';
+import { resolveDirectionSubtype } from './animation-direction-subtype';
+import { DEFAULT_ANIMATION_DURATION_MS } from './editor-animation-entry';
 import { reconcileBuildList } from './animation-timing-build-surgical';
 import {
 	effectOwnershipKey,
@@ -138,11 +140,24 @@ function updateEffectNodeAttributes(
 		refreshEffectBehaviors(cTn, anim, presetName, mapping, shapeId, allocateId);
 		const painted = buildPaintedAnimationChildren(
 			anim.nativePaintTemplate,
-			presetClass,
-			shapeId,
+			{
+				presetClass,
+				presetId: mapping.presetId,
+				requestedSubtype:
+					anim.direction === undefined
+						? undefined
+						: resolveDirectionSubtype(mapping, anim.direction),
+				shapeId,
+				durationMs: anim.durationMs ?? DEFAULT_ANIMATION_DURATION_MS,
+			},
 			allocateId,
 		);
-		if (painted) cTn['p:childTnLst'] = painted;
+		if (painted) {
+			cTn['p:childTnLst'] = painted;
+			if (anim.nativePaintTemplate?.presetSubtype !== undefined) {
+				cTn['@_presetSubtype'] = String(anim.nativePaintTemplate.presetSubtype);
+			}
+		}
 		cTn['@_presetID'] = String(mapping.presetId);
 		cTn['@_presetClass'] = mapping.presetClass;
 	}

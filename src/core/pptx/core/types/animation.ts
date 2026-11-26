@@ -1005,7 +1005,14 @@ export interface PptxElementAnimation {
 	elementId: string;
 	/** Local behaviour XML staged by Animation Painter for a new destination effect. */
 	nativePaintTemplate?:
-		| { sourceShapeId: string; children: XmlObject; presetClass: string }
+		| {
+				sourceShapeId: string;
+				children: XmlObject;
+				presetClass: string;
+				presetId?: number | undefined;
+				presetSubtype?: number | undefined;
+				durationMs?: number | undefined;
+		  }
 		| undefined;
 	entrance?: PptxAnimationPreset | undefined;
 	exit?: PptxAnimationPreset | undefined;
