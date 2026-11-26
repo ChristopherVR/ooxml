@@ -35,7 +35,10 @@ test('returns focus to the invoking control after stencil dialogs and save', asy
 	await expect(more).toBeFocused();
 	await more.press('Enter');
 	await menu('more', 'new-stencil').click();
-	await confirm('Stencil name', 'Valves');
+	const name = dialog.getByRole('textbox', { name: 'Stencil name' });
+	await name.fill('Valves');
+	await expect(name).toBeFocused();
+	await page.keyboard.press('Enter');
 	const section = viewer.getByRole('region', { name: 'Valves' });
 	const actions = section.getByRole('button', { name: 'Stencil actions' });
 	await expect(section).toBeVisible();

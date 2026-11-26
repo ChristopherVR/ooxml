@@ -6,7 +6,7 @@
 	max-height: min(60vh, 520px);
 	overflow: auto;
 }
-.viewer-dialog-body > label {
+:is(.viewer-dialog-body, .stencil-dialog form) > label {
 	display: grid;
 	gap: 4px;
 }

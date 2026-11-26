@@ -134,9 +134,11 @@ function ask(
 	return new Promise((resolve) => {
 		const ok = t('OK');
 		const isText = heading === 'Edit Master';
+		const form = pane.ownerDocument.createElement('form');
 		const field = pane.ownerDocument.createElement('label');
 		const input = pane.ownerDocument.createElement(isText ? 'textarea' : 'input');
-		const submit = () => {
+		form.addEventListener('submit', (event) => {
+			event.preventDefault();
 			if (!isText && !input.value.trim()) {
 				input.setAttribute('aria-invalid', 'true');
 				input.setAttribute('aria-describedby', dialog.error.id);
@@ -146,14 +148,14 @@ function ask(
 			}
 			resolve(input.value);
 			dialog.close();
-		};
+		});
 		const dialog = new ViewerDialog(
 			pane,
 			'stencil-dialog',
 			t(heading),
 			[ok, t('Cancel')],
 			(button) => {
-				if (button === ok) submit();
+				if (button === ok) form.requestSubmit();
 				else dialog.close();
 			},
 		);
@@ -161,12 +163,6 @@ function ask(
 		input.maxLength = isText ? 4096 : 255;
 		input.value = initial;
 		input.setAttribute('aria-label', t(label));
-		input.addEventListener('keydown', (event) => {
-			if (!isText && 'key' in event && event.key === 'Enter') {
-				event.preventDefault();
-				submit();
-			}
-		});
 		input.addEventListener('input', () => {
 			if (!input.value.trim() || !input.hasAttribute('aria-invalid')) return;
 			input.removeAttribute('aria-invalid');
@@ -175,7 +171,8 @@ function ask(
 		});
 		field.textContent = t(label);
 		field.append(input);
-		dialog.body.append(field);
+		form.append(field);
+		dialog.body.append(form);
 		showDialog(dialog, t, () => resolve(undefined));
 	});
 }
