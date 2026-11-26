@@ -174,13 +174,14 @@ test('loads Office Add-ins on first open and fits the dark editor on a phone', a
 				.getByRole('button', { name: 'Close', exact: true }),
 		).toBeVisible();
 		const validator = page.waitForRequest(manifestCode);
-		await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+		const shell = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+		await shell.getByLabel('Choose a local add-in file').setInputFiles({
 			name: 'notes.xml',
 			mimeType: 'application/xml',
 			buffer: await readFile(fixture),
 		});
 		await validator;
-		await expect(dialog.getByRole('region', { name: 'Review add-in permissions' })).toBeVisible();
+		await expect(shell.getByRole('region', { name: 'Review add-in permissions' })).toBeVisible();
 	} finally {
 		release();
 	}
