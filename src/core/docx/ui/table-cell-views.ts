@@ -4,6 +4,7 @@
 // footer and note renderers share it, so a story table draws its borders like a body table.
 import type { Table, TableCell, TableStyleCatalog } from '../index';
 import { resolveCellVisuals } from '../index';
+import type { ThemeCatalog } from '../theme-model';
 import { continuationsOf, rowSpanOf, tableGrid } from '../table-grid';
 
 /** One cell an HTML table shows (vertical merge continuations are covered by `rowspan`). */
@@ -45,7 +46,11 @@ export function tableViewAttrs(block: Table): {
 }
 
 /** The cells of each row an HTML table shows, with their resolved visuals. */
-export function tableCellViews(block: Table, tableStyles?: TableStyleCatalog): TableCellView[][] {
+export function tableCellViews(
+	block: Table,
+	tableStyles?: TableStyleCatalog,
+	theme?: ThemeCatalog,
+): TableCellView[][] {
 	const columnCount = Math.max(
 		1,
 		...block.rows.map((row) => row.reduce((sum, cell) => sum + (cell.gridSpan ?? 1), 0)),
@@ -82,6 +87,7 @@ export function tableCellViews(block: Table, tableStyles?: TableStyleCatalog): T
 					columnCount,
 				},
 				tableStyles,
+				theme,
 			);
 			views.push({
 				cell,

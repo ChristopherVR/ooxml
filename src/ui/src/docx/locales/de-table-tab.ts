@@ -89,6 +89,11 @@ export const deTableTab = {
 	'New Table Style': 'Neue Tabellenformatvorlage',
 	'Modify Table Style': 'Tabellenformatvorlage ändern',
 	'Clear Table Style': 'Tabellenformatvorlage löschen',
+	'Plain Table 1': 'Einfache Tabelle 1',
+	'Plain Table 2': 'Einfache Tabelle 2',
+	'Grid Table 4 - Accent 2': 'Tabellenraster 4 - Akzent 2',
+	'List Table 4 - Accent 1': 'Tabellenliste 4 - Akzent 1',
+	'List Table 4 - Accent 2': 'Tabellenliste 4 - Akzent 2',
 	'tableTab.selectCell': 'Wählen Sie eine Tabellenzelle aus.',
 	'tableTab.tracking': 'Dieser Befehl ist bei aktivierter Änderungsverfolgung nicht verfügbar.',
 	'tableTab.rectangular':

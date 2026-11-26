@@ -83,6 +83,7 @@ export function modelToDoc(model: DocumentModel) {
 			block,
 			(paragraph) => paragraphNode(paragraph, labels, noteNumber),
 			model.tableStyles,
+			model.theme,
 		);
 	});
 	return schema.node(

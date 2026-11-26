@@ -6,6 +6,7 @@ import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { cellSourceBlocks, removedByEdit, resolveTableCellMargins, twips } from 'ooxml-core/docx';
 import type {
 	ContentControl,
+	DocumentModel,
 	Paragraph,
 	Table,
 	TableCell,
@@ -25,16 +26,17 @@ export function tableNode(
 	block: Table,
 	paragraphNode: (paragraph: Paragraph) => ProseMirrorNode,
 	tableStyles?: TableStyleCatalog,
+	theme?: DocumentModel['theme'],
 	nested = false,
 ): ProseMirrorNode {
 	const layout = tableGrid(block);
-	const rows = tableCellViews(block, tableStyles).map((views, rowIndex) => {
+	const rows = tableCellViews(block, tableStyles, theme).map((views, rowIndex) => {
 		const cells = views.map(({ cell, rowspan, continues, attrs }) => {
 			const children = cell.sourceBlocks
 				? cellSourceBlocks(cell).map((child) =>
 						child.type === 'paragraph'
 							? paragraphNode(child)
-							: tableNode(child, paragraphNode, tableStyles, true),
+							: tableNode(child, paragraphNode, tableStyles, theme, true),
 					)
 				: [
 						...cell.paragraphs.map(paragraphNode),

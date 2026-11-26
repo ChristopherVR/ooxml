@@ -4,6 +4,8 @@ import { percentageShadingColor } from './percentage-shading';
 import type { Table } from './model';
 import { resolveTableStyleFormatting } from './resolve-table';
 import type { TableBorderSide, TableBorders, TableStyleCatalog } from './table-model';
+import { resolveThemeColorReference } from './theme-color';
+import type { ThemeCatalog } from './theme-model';
 
 type Side = 'top' | 'bottom' | 'left' | 'right';
 const NONE: TableBorderSide = { style: 'none' };
@@ -34,6 +36,7 @@ export function resolveCellVisuals(
 	cell: Table['rows'][number][number],
 	placement: CellPlacement,
 	styles: TableStyleCatalog | undefined,
+	theme?: ThemeCatalog,
 ): { borders?: Record<Side, TableBorderSide>; shadingFill?: string } {
 	const styled = table.style
 		? resolveTableStyleFormatting(
@@ -47,9 +50,12 @@ export function resolveCellVisuals(
 			)
 		: {};
 	const hasBorderInfo = Boolean(styled.borders || table.borders || cell.borders);
+	const fill = cell.shadingFill || cell.shadingThemeFill || cell.percentageShading ? cell : styled;
+	const themedFill =
+		theme && fill.shadingThemeFill && resolveThemeColorReference(fill.shadingThemeFill, theme);
 	const shadingFill = percentageShadingColor(
-		cell.shadingFill ?? styled.shadingFill,
-		cell.percentageShading ?? (cell.shadingFill ? undefined : styled.percentageShading),
+		themedFill ?? fill.shadingFill,
+		fill.percentageShading,
 	);
 	if (!hasBorderInfo) return shadingFill ? { shadingFill } : {};
 	const boundary: Record<Side, boolean> = {
@@ -59,11 +65,15 @@ export function resolveCellVisuals(
 		right: placement.lastColumn === placement.columnCount - 1,
 	};
 	const borders = {} as Record<Side, TableBorderSide>;
-	for (const side of ['top', 'bottom', 'left', 'right'] as const)
-		borders[side] =
+	for (const side of ['top', 'bottom', 'left', 'right'] as const) {
+		const border =
 			cell.borders?.[side] ??
 			edgeFrom(table.borders, side, boundary[side]) ??
 			edgeFrom(styled.borders, side, boundary[side]) ??
 			NONE;
+		const color =
+			theme && border.themeColor && resolveThemeColorReference({ token: border.themeColor }, theme);
+		borders[side] = color ? { ...border, color } : border;
+	}
 	return { borders, ...(shadingFill ? { shadingFill } : {}) };
 }

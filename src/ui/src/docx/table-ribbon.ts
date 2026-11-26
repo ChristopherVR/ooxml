@@ -32,6 +32,7 @@ export type TableTabAction = { type: 'tableTab' } & (
 const command = (label: string, icon: RibbonIcon, key: SimpleTableKey) => {
 	const button = tool(label, icon, { type: 'tableTab', key }, { inline: true });
 	button.dataset.tableCommand = key;
+	if (key === 'styles') button.setAttribute('aria-haspopup', 'listbox');
 	return button;
 };
 

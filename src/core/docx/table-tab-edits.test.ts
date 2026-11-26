@@ -14,6 +14,7 @@ import {
 } from './table-data-edit';
 import { TABLE_STYLE_PRESETS, installTableStylePreset } from './table-style-presets';
 import { expectTable } from './test-support/access';
+import { tableCellViews } from './ui/table-cell-views';
 
 function makeTable(): Table {
 	return {
@@ -76,6 +77,14 @@ describe('Word table contextual operations', () => {
 		table.rows[0]![0]!.verticalAlign = 'bottom';
 		model.blocks = [table];
 		model.tableStyles = installTableStylePreset(undefined, preset);
+		model.theme = {
+			colors: { accent1: '#AA245B' },
+			colorMapping: {},
+			fonts: { major: {}, minor: {} },
+		};
+		const preview = tableCellViews(table, model.tableStyles, model.theme)[0]?.[0];
+		expect(preview?.attrs.shadingFill).toBe('#AA245B');
+		expect(JSON.parse(String(preview?.attrs.borders)).top.color).toBe('#AA245B');
 		const reopened = await loadDocx(await saveDocx(model));
 		const loaded = expectTable(reopened.model.blocks[0]);
 		expect(loaded.style).toBe(preset.id);
@@ -85,6 +94,10 @@ describe('Word table contextual operations', () => {
 		expect(reopened.model.tableStyles?.styles[preset.id]?.conditional.firstRow?.shadingFill).toBe(
 			'#4472C4',
 		);
+		expect(
+			reopened.model.tableStyles?.styles[preset.id]?.conditional.firstRow?.shadingThemeFill,
+		).toEqual({ token: 'accent1' });
+		expect(reopened.model.tableStyles?.styles[preset.id]?.borders?.top?.themeColor).toBe('accent1');
 		expect(repeatTableRows(makeTable(), 1, 1).rowProperties).toBeUndefined();
 		expect(repeatTableRows(loaded, 0, 0).rowProperties?.map((row) => row.header)).toEqual([
 			false,

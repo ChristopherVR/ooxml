@@ -103,7 +103,14 @@ export function runTableTabAction(core: EditorCore, action: TableTabAction): voi
 		view.state.selection.eq(selection) &&
 		!tableTabReason(core, action.key, tableTabContext(view.state));
 	const apply = (updated: Table) => {
-		const tr = patchTableNode(view.state.tr, pos, node, updated, core.model.tableStyles);
+		const tr = patchTableNode(
+			view.state.tr,
+			pos,
+			node,
+			updated,
+			core.model.tableStyles,
+			core.model.theme,
+		);
 		if (tr.docChanged) view.dispatch(closeHistory(tr));
 	};
 	switch (action.key) {

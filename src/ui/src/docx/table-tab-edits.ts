@@ -26,6 +26,7 @@ export function patchTableNode(
 	node: Node,
 	table: Table,
 	styles?: TableStyleCatalog,
+	theme?: DocumentModel['theme'],
 ): Transaction {
 	const assign = (at: number, previous: Node, attrs: Record<string, unknown>) => {
 		for (const [key, value] of Object.entries(attrs))
@@ -43,7 +44,7 @@ export function patchTableNode(
 			resolveTableCellMargins(table.style ? { style: table.style } : {}, styles),
 		),
 	});
-	const views = tableCellViews(table, styles);
+	const views = tableCellViews(table, styles, theme);
 	node.forEach((row, rowOffset, rowIndex) => {
 		const rowPos = pos + 1 + rowOffset;
 		const properties = table.rowProperties?.[rowIndex] ?? null;

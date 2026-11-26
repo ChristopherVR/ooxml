@@ -142,6 +142,7 @@ export function adaptTable(
 						columnCount,
 					},
 					model.tableStyles,
+					model.theme,
 				);
 				const borders: LayoutCellBorders = {};
 				for (const side of ['top', 'right', 'bottom', 'left'] as const) {

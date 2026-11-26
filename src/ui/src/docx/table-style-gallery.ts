@@ -5,6 +5,7 @@ import {
 	type Table,
 	type TableStyleCatalog,
 	type TableStyleDefinition,
+	type DocumentModel,
 } from 'ooxml-core/docx';
 import {
 	cssBorderSide,
@@ -26,6 +27,7 @@ function stylePreview(
 	style: TableStyleDefinition,
 	look: Table['look'],
 	catalog: TableStyleCatalog,
+	theme?: DocumentModel['theme'],
 ) {
 	const table = document.createElement('span');
 	table.className = 'dve-table-style-preview';
@@ -52,6 +54,7 @@ function stylePreview(
 					columnCount: 3,
 				},
 				catalog,
+				theme,
 			);
 			if (visuals.shadingFill) cell.style.backgroundColor = visuals.shadingFill;
 			for (const side of ['top', 'bottom', 'left', 'right'] as const)
@@ -76,7 +79,36 @@ export function openTableStyles(
 	pop.className = 'ribbon-popover dve-table-style-gallery';
 	pop.setAttribute('role', 'group');
 	pop.setAttribute('aria-label', translate(core.locale, 'Table Styles'));
-	anchor.setAttribute('aria-haspopup', 'true');
+	const list = document.createElement('div');
+	list.className = 'dve-table-style-list';
+	list.setAttribute('role', 'listbox');
+	list.setAttribute('aria-label', translate(core.locale, 'Table Styles'));
+	pop.append(list);
+	const options: HTMLButtonElement[] = [];
+	const focusOption = (index: number) => {
+		const next = options[index];
+		if (!next) return;
+		for (const option of options) option.tabIndex = option === next ? 0 : -1;
+		next.focus();
+	};
+	list.addEventListener('keydown', (event) => {
+		const index = options.findIndex((option) => option === event.target);
+		if (index < 0) return;
+		const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -3, ArrowDown: 3 };
+		const step = offset[event.key as keyof typeof offset];
+		const next =
+			event.key === 'Home'
+				? 0
+				: event.key === 'End'
+					? options.length - 1
+					: step
+						? index + step
+						: index;
+		if (step === undefined && event.key !== 'Home' && event.key !== 'End') return;
+		event.preventDefault();
+		event.stopPropagation();
+		focusOption(Math.max(0, Math.min(options.length - 1, next)));
+	});
 	const catalog = core.model.tableStyles;
 	const documentStyles = Object.values(catalog?.styles ?? {});
 	const contextNow = () => {
@@ -109,6 +141,7 @@ export function openTableStyles(
 				...(style && { style: style.id, look: current.look ?? DEFAULT_TABLE_LOOK }),
 			},
 			styles,
+			core.model.theme,
 		);
 		if (style && active.node.attrs.starterGrid)
 			tr.setNodeAttribute(active.pos, 'starterGrid', false);
@@ -117,7 +150,12 @@ export function openTableStyles(
 	const add = (label: string, action: () => void, selected?: boolean, preview?: HTMLElement) => {
 		const button = document.createElement('button');
 		button.type = 'button';
-		if (selected !== undefined) button.setAttribute('aria-pressed', String(selected));
+		if (selected !== undefined) {
+			button.setAttribute('role', 'option');
+			button.setAttribute('aria-selected', String(selected));
+			button.tabIndex = -1;
+			options.push(button);
+		}
 		if (preview) button.append(preview);
 		button.append(label);
 		button.addEventListener('mousedown', (event) => event.preventDefault());
@@ -126,7 +164,7 @@ export function openTableStyles(
 			anchor.focus();
 			action();
 		});
-		pop.append(button);
+		(selected === undefined ? pop : list).append(button);
 		return button;
 	};
 	for (const preset of TABLE_STYLE_PRESETS) {
@@ -136,7 +174,7 @@ export function openTableStyles(
 			own?.name ?? translate(core.locale, (preset.name ?? preset.id) as LocalizationKey),
 			() => apply(style),
 			table.style === style.id,
-			stylePreview(style, table.look, installTableStylePreset(catalog, style)),
+			stylePreview(style, table.look, installTableStylePreset(catalog, style), core.model.theme),
 		);
 	}
 	const builtins = new Set(TABLE_STYLE_PRESETS.map(({ id }) => id));
@@ -146,7 +184,7 @@ export function openTableStyles(
 				style.name ?? style.id,
 				() => apply(style),
 				table.style === style.id,
-				stylePreview(style, table.look, installTableStylePreset(catalog, style)),
+				stylePreview(style, table.look, installTableStylePreset(catalog, style), core.model.theme),
 			);
 	const edit = (modify: boolean) => {
 		const active = contextNow();
@@ -171,6 +209,7 @@ export function openTableStyles(
 						now.node,
 						{ ...current, style: result.id },
 						result.catalogs.tableStyles,
+						core.model.theme,
 					);
 				else {
 					const models = new Map(
@@ -181,7 +220,8 @@ export function openTableStyles(
 					view.state.doc.forEach((node, pos) => {
 						if (node.type.name !== 'table' || node.attrs.structureEditable === false) return;
 						const model = models.get(String(node.attrs.id));
-						if (model) patchTableNode(tr, pos, node, model, result.catalogs.tableStyles);
+						if (model)
+							patchTableNode(tr, pos, node, model, result.catalogs.tableStyles, core.model.theme);
 					});
 				}
 				view.dispatch(closeHistory(tr));
@@ -198,5 +238,11 @@ export function openTableStyles(
 	modify.disabled = !documentStyles.length;
 	if (modify.disabled) modify.title = translate(core.locale, 'tableTab.noStyle');
 	add(translate(core.locale, 'Clear Table Style'), () => apply());
-	if (mountPopover(anchor, pop, anchor)) pop.querySelector('button')?.focus();
+	if (mountPopover(anchor, pop, anchor))
+		focusOption(
+			Math.max(
+				0,
+				options.findIndex((option) => option.getAttribute('aria-selected') === 'true'),
+			),
+		);
 }

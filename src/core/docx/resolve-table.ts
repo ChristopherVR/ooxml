@@ -87,6 +87,7 @@ function mergeFormatting(
 	if (level.percentageShading) next.percentageShading = level.percentageShading;
 	else if (level.shadingFill) delete next.percentageShading;
 	if (level.shadingThemeFill) next.shadingThemeFill = level.shadingThemeFill;
+	else if (level.shadingFill) delete next.shadingThemeFill;
 	if (level.run) next.run = { ...result.run, ...level.run };
 	return next;
 }

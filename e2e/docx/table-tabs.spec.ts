@@ -70,7 +70,19 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	await cells.first().click();
 	await design.click();
 	await editor.getByRole('button', { name: 'Table Styles', exact: true }).click();
-	await editor.getByRole('button', { name: 'Grid Table 4 - Accent 1', exact: true }).click();
+	const stylesList = editor.getByRole('listbox', { name: 'Table Styles', exact: true });
+	await expect(stylesList.getByRole('option', { name: 'Normal Table', exact: true })).toBeFocused();
+	await page.keyboard.press('ArrowRight');
+	await expect(
+		stylesList.getByRole('option', { name: 'Plain Table 1', exact: true }),
+	).toBeFocused();
+	await expect(stylesList.locator('[tabindex="0"]')).toHaveCount(1);
+	await page.keyboard.press('ArrowDown');
+	await page.keyboard.press('ArrowDown');
+	await expect(
+		stylesList.getByRole('option', { name: 'Grid Table 4 - Accent 1', exact: true }),
+	).toBeFocused();
+	await page.keyboard.press('Enter');
 	await expect(cells.first()).toHaveCSS('background-color', 'rgb(68, 114, 196)');
 	const headerStyle = editor.getByRole('button', { name: 'Header Row', exact: true });
 	await headerStyle.click();
@@ -103,6 +115,8 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	expect(xml).toContain('<w:vAlign w:val="bottom"');
 	expect(xml).toContain('<w:tblLayout w:type="autofit"');
 	expect(styles).toContain('w:styleId="GridTable4-Accent1"');
+	expect(styles).toContain('w:themeFill="accent1"');
+	expect(styles).toContain('w:themeColor="accent1"');
 });
 
 test('table commands without revision support are disabled during Track Changes', async ({

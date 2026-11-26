@@ -103,11 +103,15 @@
 }
 .dve-table-style-gallery {
 	display: grid;
-	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 4px;
 	max-width: min(420px, calc(100vw - 16px));
 	max-height: 60vh;
 	overflow: auto;
+}
+.dve-table-style-list {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 4px;
 }
 .dve-table-style-gallery button {
 	display: grid;
@@ -116,7 +120,7 @@
 	padding: 4px;
 	white-space: normal;
 }
-.dve-table-style-gallery button[aria-pressed='true'] {
+.dve-table-style-gallery button[aria-selected='true'] {
 	outline: 2px solid var(--blue);
 	outline-offset: -2px;
 }
