@@ -270,3 +270,31 @@ test('table layout measures automatic row height and column width in inches', as
 	await expect(width).toHaveValue(String(Number(size.width.toFixed(2))));
 	await expect(height).toHaveValue(String(Number(size.height.toFixed(2))));
 });
+
+test('typing in the same cell leaves table ribbon state alone', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	const cells = editor.locator('.ProseMirror td');
+	await cells.first().click();
+	const repeat = editor.locator('[data-table-command="repeat"]');
+	await expect(repeat).toHaveAttribute('aria-pressed', 'false');
+	await repeat.evaluate((control) => {
+		control.setAttribute('data-pressed-writes', '0');
+		new MutationObserver((records) => {
+			const count = Number(control.getAttribute('data-pressed-writes'));
+			control.setAttribute('data-pressed-writes', String(count + records.length));
+		}).observe(control, { attributes: true, attributeFilter: ['aria-pressed'] });
+	});
+	await page.keyboard.type('Several keystrokes');
+	await expect(cells.first()).toHaveText('Several keystrokes');
+	await expect(repeat).toHaveAttribute('data-pressed-writes', '0');
+	await cells.nth(2).click();
+	await expect(repeat).toBeDisabled();
+	await expect(repeat).toHaveAttribute('data-pressed-writes', '1');
+	await page.keyboard.type('In the second row');
+	await expect(cells.nth(2)).toHaveText('In the second row');
+	await expect(repeat).toBeDisabled();
+	await expect(repeat).toHaveAttribute('data-pressed-writes', '1');
+});

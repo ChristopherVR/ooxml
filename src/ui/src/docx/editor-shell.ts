@@ -21,6 +21,7 @@ import { ReviewController } from './review-controller';
 import { EditorChrome } from './editor-chrome';
 import { dispatchDocumentError } from './editor-host';
 import { routeRibbonAction } from './ribbon-router';
+import { syncTableTab } from './table-tab-context';
 import { attachSurfaceNavigation } from './surface-navigation';
 import { documentWordCount } from 'ooxml-core/docx/ui';
 import { PageNavigator } from './page-navigator';
@@ -159,6 +160,10 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 				event.target instanceof HTMLElement ? event.target : undefined,
 			),
 		);
+	toolbar?.addEventListener('office-ribbon-select', (event) => {
+		if (event instanceof CustomEvent && event.detail?.tab === 'table-layout')
+			syncTableTab(core, true);
+	});
 	const canvas = document.createElement('main');
 	canvas.className = 'dve-canvas';
 	const paper = document.createElement('div');

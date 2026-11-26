@@ -41,7 +41,7 @@ export function refreshEditorControls(
 ): { pageText: string; wordText: string } | undefined {
 	toolbar
 		?.querySelectorAll<HTMLButtonElement | HTMLSelectElement | HTMLInputElement>(
-			'.ribbon-group button, .ribbon-group input, .ribbon-group select',
+			'.ribbon-group :is(button, input, select):not([data-table-command])',
 		)
 		.forEach((control) => {
 			const label = control.dataset.localearialabel ?? control.getAttribute('aria-label');
