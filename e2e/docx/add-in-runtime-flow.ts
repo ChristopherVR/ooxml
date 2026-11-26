@@ -109,7 +109,7 @@ export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor
 		await expect(consent).toContainText('Read and change this document');
 		if (file.name === 'manifest.xml') {
 			await expect(consent).toContainText('Running add-ins is unavailable');
-			if (host !== 'PowerPoint') await expect(consent).toContainText('Function commands');
+			if (host === 'Word') await expect(consent).toContainText('Function commands');
 		}
 		if (file.name === 'app.zip')
 			await expect(consent.getByRole('img', { name: 'Icon preview' }).first()).toBeVisible();

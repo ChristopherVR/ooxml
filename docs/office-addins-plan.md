@@ -133,8 +133,9 @@ require Microsoft's CDN library and host protocol have no supported launch path 
 ### Start with published sample workflows
 
 For the compatible Common API client, a host can call
-`setOfficeAddInRuntime(root, { origins: ['https://approved-add-ins.example'] })`.
-Allow the same execution origin in the embedding site's `frame-src` and provision
+`setOfficeAddInRuntime(root, { origins: ['https://approved-add-ins.example'], frameSrcEnforced: true })`.
+Enforce that execution origin in the embedding site's CSP `frame-src` before setting the
+assertion and provision
 publisher-controlled pages without redirects or credentials. The library checks the approved
 origin before opening. The opaque sandbox verifies a handshake from the exact frame window
 and accepts one private message port. A second frame load closes that port. The parent cannot

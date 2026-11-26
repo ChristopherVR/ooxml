@@ -52,7 +52,7 @@ export function wireRibbonTabCue(ribbon: HTMLElement, label: () => string): () =
 		if (!strip) return;
 		const end = strip.scrollWidth - strip.clientWidth - 2;
 		const left = strip.scrollLeft >= end ? 0 : strip.scrollLeft + strip.clientWidth * 0.8;
-		strip.scrollTo({ left, behavior: 'auto' });
+		strip.scrollTo({ left, behavior: 'smooth' });
 	});
 	const ready = (ribbon as HTMLElement & { updateComplete?: Promise<unknown> }).updateComplete;
 	let disposed = false;

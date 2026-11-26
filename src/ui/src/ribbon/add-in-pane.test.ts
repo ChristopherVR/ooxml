@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest';
 import { openAddInPane } from './add-in-pane';
 import { ADD_IN_PROTOCOL, ADD_IN_TIMEOUT } from './add-in-protocol';

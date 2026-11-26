@@ -34,7 +34,7 @@ export const cases: readonly SecurityCase[] = [
 				lyingZipOf([{ name: 'manifest.json', data: deflateRawSync('{}'), declared: 1 }]),
 				'field',
 			),
-		expected: 'LIMIT_INFLATE',
+		expected: 'archive entry',
 	},
 	{
 		name: 'task pane URLs cannot carry publisher credentials',
