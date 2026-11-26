@@ -13,6 +13,8 @@
 }
 [data-document-view='read'] > .dve-paper {
 	flex: none;
+	/* Keep the column flow bounded by the viewport, including on narrow screens. */
+	align-self: stretch;
 	width: min(100%, 72rem) !important;
 	min-width: 0;
 	min-height: 0 !important;

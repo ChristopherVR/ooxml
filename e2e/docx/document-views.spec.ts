@@ -97,6 +97,8 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	const controls = editor.getByRole('group', { name: 'Read Mode' });
 	const status = controls.getByRole('status');
 	await expect(status).toHaveText(/^Page 1 of (?:[2-9]|\d{2,})$/);
+	const pageCount = async () => Number((await status.innerText()).split(' of ')[1]);
+	const widePageCount = await pageCount();
 	const frame = editor.locator('.dve-frame');
 	await frame.evaluate((element) => {
 		const fields = document.createElement('div');
@@ -152,8 +154,18 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	await expect(status).toHaveText(/Page 1 of/);
 	await page.setViewportSize({ width: 600, height: 640 });
 	await expect(body).toHaveCSS('column-count', '1');
+	await expect.poll(pageCount).toBeGreaterThan(widePageCount);
 	await expect(status).toHaveText(/^Page 1 of (?:[2-9]|\d{2,})$/);
+	const narrowPageCount = await pageCount();
+	await page.setViewportSize({ width: 600, height: 480 });
+	await expect.poll(pageCount).toBeGreaterThan(narrowPageCount);
+	await next.click();
+	await expect(status).toHaveText(/Page 2 of/);
+	await previous.click();
+	await expect(status).toHaveText(/Page 1 of/);
 	await page.setViewportSize({ width: 1280, height: 640 });
+	await expect(body).toHaveCSS('column-count', '2');
+	await expect(status).toHaveText(`Page 1 of ${widePageCount}`);
 	await page.keyboard.press('Escape');
 	await expect(canvas).toHaveAttribute('data-document-view', 'draft');
 	await expect.poll(() => canvas.evaluate((el) => el.scrollTop)).toBe(200);

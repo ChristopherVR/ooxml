@@ -188,6 +188,12 @@ it('pages by one spread and gap, tolerates rounding and clamps after resize', as
 		next.click();
 		expect(paper.scrollLeft).toBe(1264);
 		expect(next.getAttribute('aria-disabled')).toBe('true');
+		// A shorter viewport can add columns even when the paper width is unchanged.
+		flowWidth = 2497;
+		resize();
+		await new Promise(requestAnimationFrame);
+		expect(status?.textContent).toBe('Page 3 of 4');
+		expect(next.getAttribute('aria-disabled')).toBe('false');
 		width = flowWidth = 500;
 		resize();
 		await new Promise(requestAnimationFrame);
