@@ -67,6 +67,9 @@ test('shows configured Visio storefronts and explains unavailable installation',
 			kind: 'catalog',
 			entries: [{ id: 'notes', label: 'Notes', read: () => new File([], 'notes.xml') }],
 		});
+		Reflect.set(element, Symbol.for('office-ui.add-in-marketplace-resolver'), async () => {
+			throw new Error('Visio must not call the resolver');
+		});
 	});
 	await get.click();
 	const install = dialog.getByRole('button', { name: 'Install Notes' });
@@ -74,6 +77,8 @@ test('shows configured Visio storefronts and explains unavailable installation',
 	await expect(install).toHaveAccessibleDescription(
 		'Local add-in installation is unavailable in Visio.',
 	);
+	await dialog.getByRole('tab', { name: 'My Add-ins', exact: true }).click();
+	await expect(dialog.getByLabel('Add from Marketplace link')).toHaveCount(0);
 });
 
 test('draws the add-ins glyph on the folded Visio group', async ({ page }) => {
