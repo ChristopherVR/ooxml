@@ -1,0 +1,8 @@
+{
+	"name.short": "Notes de labo",
+	"description.short": "Vérifier les notes dans un document.",
+	"description.full": "Vérifier les notes dans un document.",
+	"localizationKeys": {
+		"extensions[0].ribbons[0].tabs[0].groups[0].controls[0].label": "Ouvrir les notes"
+	}
+}

@@ -159,6 +159,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.chart':
 		'Fügt ein Diagramm ein, um Daten zu veranschaulichen und zu vergleichen.',
 	'pptx.addIns.Get Add-ins': 'Add-Ins abrufen',
+	'pptx.addIns.manifestLocale': 'de',
 	'pptx.addIns.My Add-ins': 'Meine Add-Ins',
 	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
 		'Durchsuchen Sie die Add-Ins für Microsoft Office. Dieser Editor führt die vom Host bereitgestellten Add-Ins aus.',

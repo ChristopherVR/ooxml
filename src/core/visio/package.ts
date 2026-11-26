@@ -13,7 +13,7 @@ import {
 	type VisioPackageLimits,
 	type VisioPackageRelationship,
 } from './package-common';
-import { inspectZip } from './zip-validation';
+import { inspectZipHeaders } from '../opc/zip-headers';
 import { inspectXml, inspectNamespaces } from './xml-validation';
 import { operationMemory, type VisioMemoryBudget } from './memory-budget';
 export {
@@ -90,7 +90,7 @@ export class VisioPackage {
 		// Own the bytes so the caller cannot mutate names or sizes after validation.
 		const bytes = new Uint8Array(source);
 		try {
-			const entries = inspectZip(bytes, limits, check);
+			const entries = inspectZipHeaders(bytes, limits, fail, check);
 			const zip = await openZip(bytes, visioZipLimits(limits));
 			check();
 			if (

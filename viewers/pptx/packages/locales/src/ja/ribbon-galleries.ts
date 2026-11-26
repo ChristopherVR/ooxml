@@ -155,6 +155,7 @@ export const translations = {
 	'pptx.insert.tip.smartArt': 'SmartArt グラフィックを挿入して、情報を視覚的に伝えます。',
 	'pptx.insert.tip.chart': 'グラフを挿入して、データを図示および比較します。',
 	'pptx.addIns.Get Add-ins': 'アドインを入手',
+	'pptx.addIns.manifestLocale': 'ja',
 	'pptx.addIns.My Add-ins': '個人用アドイン',
 	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
 		'Microsoft Office のアドインを参照できます。このエディターはホストが提供するアドインを実行します。',

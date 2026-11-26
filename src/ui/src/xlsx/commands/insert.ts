@@ -175,13 +175,15 @@ export function insertCommands(): Command[] {
 			id: 'insert.get-add-ins',
 			label: 'Get Add-ins',
 			icon: icon('link'),
-			run: (ctx) => openOfficeAddIns(ctx.root, 'getAddIns', (label) => ctx.t(label)),
+			run: (ctx) =>
+				openOfficeAddIns(ctx.root, 'getAddIns', (label) => ctx.t(label), 'excel', ctx.locale()),
 		},
 		{
 			id: 'insert.my-add-ins',
 			label: 'My Add-ins',
 			icon: icon('link'),
-			run: (ctx) => openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label)),
+			run: (ctx) =>
+				openOfficeAddIns(ctx.root, 'myAddIns', (label) => ctx.t(label), 'excel', ctx.locale()),
 		},
 		editing({
 			id: 'insert.forms',

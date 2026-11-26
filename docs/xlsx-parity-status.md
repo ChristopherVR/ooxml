@@ -281,7 +281,9 @@ line/marker swatches and position-authoring controls remain incomplete.
 
 - Import: `load/detect.ts` identifies XLSB so it can be refused with a message; ODS is not
   supported; legacy `.xls` and CSV load through `xlsx/load`. External connections use cached
-  values; VBA is carried but never executed; add-ins and Power Query are not implemented.
+  values and VBA is carried without execution. Get Add-ins validates local XML and unified
+  manifests and installs them for the editor session after consent. Office.js execution and
+  Power Query remain open.
 - Print: paginated preview and print fields support saved page setup and header/footer fields
   with font family/size, RGB and theme colour (`&KTT+SSS`, resolved against the workbook theme),
   bold, italic, underline, double underline, strike, super/subscript, page-number offsets
@@ -325,7 +327,7 @@ line/marker swatches and position-authoring controls remain incomplete.
    group items, report captions in other languages), sparkline style galleries and
    individual source-range editing, data connections, and the sheet parts the collaboration
    mapping does not share yet (see "Import, print and collaboration").
-7. Wider formula and clipboard differential coverage. VBA execution, add-ins,
+7. Wider formula and clipboard differential coverage. VBA execution, Office.js add-in runtime,
    Power Query and unsupported file formats also prevent whole-product parity.
 8. Filter and sort. The sheet AutoFilter header cells have a drop-down (`grid/filter-buttons.ts`,
    `grid/filter-menu.ts`): Sort, Clear Filter From, Filter by Color (cell fill and font),

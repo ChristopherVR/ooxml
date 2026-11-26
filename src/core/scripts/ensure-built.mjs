@@ -9,6 +9,7 @@ const needed = [
 	'dist/pptx/index.mjs',
 	'dist/pptx/index.d.ts',
 	'dist/automation/index.mjs',
+	'dist/automation/add-ins/index.mjs',
 	'dist/automation/node.mjs',
 	'dist/pptx/automation/index.mjs',
 ];

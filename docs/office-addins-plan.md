@@ -20,7 +20,7 @@ and a package that can run in this host are three distinct deliverables.
 - [`apps/office-suite/src/editors.js`](../apps/office-suite/src/editors.js) mounts the editors.
   [`session.js`](../apps/office-suite/src/session.js) owns document sessions, revisions, save, and
   preview state. [`ai-operations.js`](../apps/office-suite/src/ai-operations.js) lazy-loads core
-  automation for the assistant. Manifest installation and third-party task panes are open work.
+  automation for the assistant. Third-party task panes are open work.
 - [`src/core/automation/index.ts`](../src/core/automation/index.ts) exposes byte-oriented Word
   and Excel operations and shared tool definitions. [`live.ts`](../src/core/automation/live.ts)
   serializes tools per registered editor and checks for changes before loading edited bytes.
@@ -37,6 +37,12 @@ responses and get their details. Native management and workbook sync still need 
 and service contracts. [Forms connector](https://learn.microsoft.com/en-us/connectors/microsoftforms/)
 · [PowerPoint embedding](https://support.microsoft.com/en-gb/forms/insert-a-form-or-quiz-into-powerpoint)
 · [Excel live connections](https://support.microsoft.com/en-us/forms/can-i-get-real-time-updates-in-my-excel-workbook).
+
+- Local install accepts task-pane XML, unified JSON and bounded unified ZIP packages in
+  Word, Excel and PowerPoint. Get Add-ins previews declared publisher, version, origins
+  and permissions before consent. My Add-ins lists and removes the in-memory installs.
+  An invalid replacement leaves the installed version available in the list. Execution,
+  persistent installs and storefront providers remain open.
 
 ## Parse two public manifest formats
 

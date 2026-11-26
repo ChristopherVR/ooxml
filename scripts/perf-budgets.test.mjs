@@ -71,3 +71,10 @@ test('every suite route has a committed budget', () => {
 		assert.ok(limits[`suite/route/${route}`] > 0, route);
 	assert.ok(limits['suite/all javascript'] > 0);
 });
+
+test('the add-in reader has an independent gzip budget', () => {
+	const entry = 'package/ooxml-core/automation/add-ins';
+	const limit = readLimits()[entry];
+	assert.ok(limit > 0 && limit < 20 * 1024);
+	assert.match(problems({ [entry]: limit + 1 }, { [entry]: limit })[0], /over its budget/);
+});

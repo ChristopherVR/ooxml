@@ -2816,6 +2816,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.insert.tip.smartArt': 'Insert a SmartArt graphic to visually communicate information.',
 	'pptx.insert.tip.chart': 'Insert a chart to illustrate and compare data.',
 	'pptx.addIns.Get Add-ins': 'Get Add-ins',
+	'pptx.addIns.manifestLocale': 'en',
 	'pptx.addIns.My Add-ins': 'My Add-ins',
 	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
 		'Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.',

@@ -35,8 +35,15 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 		private readonly view = createRibbonInsertView(this.ownerDocument, (intent) => {
 			if (canRequestInsert(this.model, intent)) {
 				if (intent.kind === 'addIns') {
-					openOfficeAddIns(this, intent.value, (label) =>
-						insertLabel(this.model, [`pptx.addIns.${label}`, label]),
+					openOfficeAddIns(
+						this,
+						intent.value,
+						(label) => insertLabel(this.model, [`pptx.addIns.${label}`, label]),
+						'powerpoint',
+						((pair: [string, string]) => insertLabel(this.model, pair))([
+							'pptx.addIns.manifestLocale',
+							'en',
+						]),
 					);
 					return;
 				}

@@ -61,6 +61,7 @@ const shared = {
 		'xlsx/load/index': 'xlsx/load/index.ts',
 		'xlsx/collab/index': 'xlsx/collab/index.ts',
 		'automation/index': 'automation/index.ts',
+		'automation/add-ins/index': 'automation/add-ins/index.ts',
 		'automation/node': 'automation/node.ts',
 	},
 	outDir: 'dist',

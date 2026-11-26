@@ -7,6 +7,15 @@ The tokenizer and its token types from `src/core/xlsx/numfmt/` moved to
 `src/core/text/number-format/`. Section selection moved out of the Excel formatter so Visio
 can recognize date formats without importing the spreadsheet engine.
 
+## Shared ZIP header validation (2026-11-26)
+
+Source repository: ChristopherVR/ooxml, commit `15f649139`. The central and local ZIP
+header scanner from `src/core/visio/zip-validation.ts` and the path validation from
+`src/core/visio/package-common.ts` moved to `src/core/opc/zip-headers.ts`. Visio supplies
+its existing error, compression-ratio and deadline policies. The add-in package reader
+supplies its metadata limits and refuses case and Unicode-normalization aliases.
+The add-in manifest fixtures are original and use reserved example domains.
+
 ## Shared equation editor fields (2026-11-26)
 
 Source repository: ChristopherVR/ooxml, commit `96421e1ec`.

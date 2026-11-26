@@ -840,3 +840,9 @@ their media parts are written from pending media, and `word/_rels/numbering.xml.
 image relationships; existing entries and relationships are untouched, and editing or removing an
 existing entry is rejected. Not done: changing the picture of an existing bullet, SVG pictures, and
 choosing the picture for a single level only (the new list uses it on every level).
+
+## Office add-ins
+
+Get Add-ins validates local task-pane XML and unified JSON or ZIP manifests. Consent adds
+a session-only record to My Add-ins, where it can be removed. Office.js execution and
+store installation remain open.

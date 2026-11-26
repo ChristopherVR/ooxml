@@ -615,7 +615,11 @@ the presenter can load the linked form in a frame or open it in the browser. Hos
 `setOfficeAddInCatalog(editor, entries)` to expose local add-ins for installation in Get Add-ins.
 Each entry uses the same `id` as its ribbon tab and supplies an `install` callback and optional
 `remove` callback. The host updates its ribbon add-in list when those callbacks run. My Add-ins
-then lists installed tabs and offers removal for entries that supply it. Cameo requests video
+then lists installed tabs and offers removal for entries that supply it. Word, Excel and
+PowerPoint also accept local task-pane XML manifests and unified JSON or ZIP files in Get
+Add-ins. After confirmation, the install stays in editor memory until removal or editor
+close. The app loads the bundled reader on demand and makes no requests to manifest origins.
+My Add-ins reports local manifests as installed with execution unavailable. Cameo requests video
 access when the user activates the preview and keeps the feed on the device.
 
 The elements render and edit locally. Visio can load its bundled TIFF decoder from the app's origin on demand. The PowerPoint elements (`ooxml-ui/pptx`) download fonts that are neither installed nor embedded from Google Fonts by default, fetch a deck's linked pictures and media only after the reader chooses Enable Content on its security bar (as Microsoft PowerPoint does), and use public signaling and STUN servers for serverless Share; each has a host option (`googleFonts`, `allowExternalContent`, `signaling`), described in [font loading](https://github.com/ChristopherVR/ooxml/blob/main/docs/font-loading.md). The Word, Excel and Visio elements request fonts externally if the host sets their `googleFonts` property or the reader enables File > Options > Trust Center > "Download fonts that are not installed or embedded" (off by default). Teams talks only to the servers you configure (plus Google's public STUN server for calls unless `iceServers` is set). Nothing collects analytics or telemetry. See [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).

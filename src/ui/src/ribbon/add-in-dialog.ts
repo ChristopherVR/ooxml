@@ -1,3 +1,4 @@
+import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
 import {
 	officeServiceLink,
 	showOfficeServiceDialog,
@@ -96,6 +97,8 @@ export function openOfficeAddIns(
 	host: HTMLElement | ShadowRoot,
 	mode: AddInDialogMode,
 	t: OfficeServiceText,
+	product: OfficeAddInHost,
+	locale: string,
 ): void {
 	const doc = host.ownerDocument;
 	const tabs = editorAddIns(host);
@@ -134,6 +137,7 @@ export function openOfficeAddIns(
 		});
 		return button;
 	};
+	let empty: HTMLElement | undefined;
 	if (mode === 'getAddIns') {
 		const installed = new Set(tabs.map(({ id }) => id));
 		for (const entry of catalog) {
@@ -167,9 +171,21 @@ export function openOfficeAddIns(
 		}
 		dialog.append(list, status);
 	} else {
-		const empty = doc.createElement('p');
+		empty = doc.createElement('p');
 		empty.textContent = t('No add-ins are available in this editor.');
 		dialog.append(empty);
 	}
 	dialog.show();
+	void import('./add-in-local-dialog').then(
+		({ mountLocalAddIns }) => {
+			if (dialog.open && dialog.isConnected)
+				mountLocalAddIns(dialog, host, mode, product, locale, t, empty);
+		},
+		() => {
+			if (!dialog.open || !dialog.isConnected) return;
+			status.textContent = t('Could not update the add-in.');
+			status.hidden = false;
+			dialog.append(status);
+		},
+	);
 }

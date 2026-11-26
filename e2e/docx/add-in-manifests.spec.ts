@@ -1,0 +1,60 @@
+/* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
+import { readFile } from 'node:fs/promises';
+import { expect, test } from '@playwright/test';
+import { newDocument, reveal } from './helpers';
+
+const fixture = new URL(
+	'../../src/core/automation/add-ins/__fixtures__/manifest.xml',
+	import.meta.url,
+);
+
+test('consents to a local Word add-in and preserves it after an invalid update', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	const requests: string[] = [];
+	await page.route('https://*.example.test/**', async (route) => {
+		requests.push(route.request().url());
+		await route.abort();
+	});
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+	const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
+	await reveal(editor, get);
+	await get.press('Enter');
+	const preview = editor.locator('office-ui-dialog[open]');
+	const file = preview.getByLabel('Choose a local add-in file');
+	const source = await readFile(fixture, 'utf8');
+	const select = (xml: string) =>
+		file.setInputFiles({
+			name: 'notes.xml',
+			mimeType: 'application/xml',
+			buffer: Buffer.from(xml),
+		});
+	await select(source);
+	const install = preview.getByRole('button', { name: 'Install Notes', exact: true });
+	await expect(install).toBeFocused();
+	await install.press('Enter');
+	await expect(preview).toBeHidden();
+	if (await get.isVisible()) await expect(get).toBeFocused();
+
+	await reveal(editor, get);
+	await get.click();
+	await select(source.replace('https://notes.example.test/pane', 'javascript:alert(1)'));
+	await expect(preview.getByRole('status')).toContainText('unsafe URL');
+	await page.keyboard.press('Escape');
+
+	await reveal(editor, mine);
+	await mine.click();
+	const installed = editor.locator('office-ui-dialog[open]');
+	await expect(installed).toContainText('Notes (1.0.0)');
+	await expect(installed).toContainText('Running add-ins is unavailable');
+	await installed.getByRole('button', { name: 'Remove Notes', exact: true }).click();
+	await reveal(editor, mine);
+	await mine.click();
+	await expect(installed).toContainText('No add-ins');
+	expect(requests).toEqual([]);
+});

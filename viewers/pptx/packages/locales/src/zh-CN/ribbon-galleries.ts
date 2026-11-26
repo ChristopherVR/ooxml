@@ -155,6 +155,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.smartArt': '插入 SmartArt 图形，直观地传达信息。',
 	'pptx.insert.tip.chart': '插入图表，以说明和比较数据。',
 	'pptx.addIns.Get Add-ins': '获取加载项',
+	'pptx.addIns.manifestLocale': 'zh-CN',
 	'pptx.addIns.My Add-ins': '我的加载项',
 	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
 		'浏览 Microsoft Office 加载项。此编辑器运行宿主应用提供的加载项。',

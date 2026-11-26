@@ -261,6 +261,11 @@
 			"import": "./dist/automation/index.mjs",
 			"require": "./dist/automation/index.cjs"
 		},
+		"./automation/add-ins": {
+			"types": "./dist/automation/add-ins/index.d.ts",
+			"import": "./dist/automation/add-ins/index.mjs",
+			"require": "./dist/automation/add-ins/index.cjs"
+		},
 		"./automation/node": {
 			"types": "./dist/automation/node.d.ts",
 			"import": "./dist/automation/node.mjs",

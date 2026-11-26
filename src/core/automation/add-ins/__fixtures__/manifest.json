@@ -1,0 +1,61 @@
+{
+	"$schema": "https://developer.microsoft.com/json-schemas/teams/v1.25/MicrosoftTeams.schema.json",
+	"manifestVersion": "1.25",
+	"version": "1.0.0",
+	"id": "083a367e-842b-4d4f-ab91-cd5de849e495",
+	"name": { "short": "Notes" },
+	"description": { "short": "Review notes in a document.", "full": "Review notes in a document." },
+	"developer": {
+		"name": "Lab Notes",
+		"websiteUrl": "https://notes.example.test",
+		"privacyUrl": "https://notes.example.test/privacy",
+		"termsOfUseUrl": "https://notes.example.test/terms"
+	},
+	"icons": { "outline": "icons/outline.png", "color": "icons/color.png" },
+	"accentColor": "#334455",
+	"localizationInfo": {
+		"defaultLanguageTag": "en-us",
+		"additionalLanguages": [{ "languageTag": "fr", "file": "fr.json" }]
+	},
+	"validDomains": ["assets.example.test"],
+	"authorization": {
+		"permissions": {
+			"resourceSpecific": [{ "name": "Document.ReadWrite.User", "type": "Delegated" }]
+		}
+	},
+	"extensions": [
+		{
+			"requirements": { "scopes": ["document", "workbook", "presentation"] },
+			"runtimes": [
+				{
+					"requirements": { "capabilities": [{ "name": "AddinCommands", "minVersion": "1.10" }] },
+					"id": "NotesRuntime",
+					"type": "general",
+					"code": { "page": "https://notes.example.test/pane" },
+					"lifetime": "short",
+					"actions": [{ "id": "OpenNotes", "type": "openPage", "view": "notes" }]
+				}
+			],
+			"ribbons": [
+				{
+					"contexts": ["default"],
+					"tabs": [
+						{
+							"id": "NotesTab",
+							"label": "Notes",
+							"groups": [
+								{
+									"id": "NotesGroup",
+									"label": "Review",
+									"controls": [
+										{ "id": "OpenNotes", "type": "button", "label": "Open Notes", "actionId": "OpenNotes" }
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	]
+}

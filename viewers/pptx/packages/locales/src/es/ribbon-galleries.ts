@@ -157,6 +157,7 @@ export const translations: Record<string, string> = {
 	'pptx.insert.tip.smartArt': 'Inserta un gráfico SmartArt para comunicar información visualmente.',
 	'pptx.insert.tip.chart': 'Inserta un gráfico para ilustrar y comparar datos.',
 	'pptx.addIns.Get Add-ins': 'Obtener complementos',
+	'pptx.addIns.manifestLocale': 'es',
 	'pptx.addIns.My Add-ins': 'Mis complementos',
 	'pptx.addIns.Browse add-ins for Microsoft Office. This editor runs add-ins supplied by its host.':
 		'Explore los complementos para Microsoft Office. Este editor ejecuta los complementos proporcionados por su aplicación anfitriona.',

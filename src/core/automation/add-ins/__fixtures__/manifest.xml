@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+	xsi:type="TaskPaneApp">
+	<Id>083a367e-842b-4d4f-ab91-cd5de849e495</Id>
+	<Version>1.0.0</Version>
+	<ProviderName>Lab Notes</ProviderName>
+	<DefaultLocale>en-US</DefaultLocale>
+	<DisplayName DefaultValue="Notes">
+		<Override Locale="fr" Value="Notes de labo" />
+		<Override Locale="fr-CA" Value="Carnet de labo" />
+	</DisplayName>
+	<Description DefaultValue="Review notes in a document." />
+	<IconUrl DefaultValue="https://assets.example.test/icon.png" />
+	<AppDomains><AppDomain>https://assets.example.test</AppDomain></AppDomains>
+	<Hosts><Host Name="Document" /><Host Name="Workbook" /><Host Name="Presentation" /></Hosts>
+	<DefaultSettings>
+		<SourceLocation DefaultValue="https://notes.example.test/pane">
+			<Override Locale="fr" Value="https://notes.example.test/fr/pane" />
+		</SourceLocation>
+	</DefaultSettings>
+	<Permissions>ReadWriteDocument</Permissions>
+	<VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+		<Requirements><bt:Sets DefaultMinVersion="1.10"><bt:Set Name="AddinCommands" /></bt:Sets></Requirements>
+		<Hosts>
+			<Host xsi:type="Document">
+				<DesktopFormFactor>
+					<FunctionFile resid="Notes.Pane" />
+					<ExtensionPoint xsi:type="PrimaryCommandSurface">
+						<CustomTab id="NotesTab">
+							<Group id="NotesGroup">
+								<Label resid="Notes.Group" />
+								<Control xsi:type="Button" id="OpenNotes">
+									<Label resid="Notes.Open" />
+									<Action xsi:type="ShowTaskpane"><SourceLocation resid="Notes.Pane" /></Action>
+								</Control>
+								<Control xsi:type="Button" id="RunFunction">
+									<Label resid="Notes.Function" />
+									<Action xsi:type="ExecuteFunction"><FunctionName>checkNotes</FunctionName></Action>
+								</Control>
+							</Group>
+							<Label resid="Notes.Tab" />
+						</CustomTab>
+					</ExtensionPoint>
+				</DesktopFormFactor>
+			</Host>
+		</Hosts>
+		<Resources>
+			<bt:Urls>
+				<bt:Url id="Notes.Pane" DefaultValue="https://notes.example.test/pane">
+					<bt:Override Locale="fr" Value="https://notes.example.test/fr/pane" />
+				</bt:Url>
+			</bt:Urls>
+			<bt:ShortStrings>
+				<bt:String id="Notes.Tab" DefaultValue="Notes" />
+				<bt:String id="Notes.Group" DefaultValue="Review" />
+				<bt:String id="Notes.Open" DefaultValue="Open Notes" />
+				<bt:String id="Notes.Function" DefaultValue="Check Notes" />
+			</bt:ShortStrings>
+		</Resources>
+	</VersionOverrides>
+</OfficeApp>

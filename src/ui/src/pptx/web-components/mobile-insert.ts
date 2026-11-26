@@ -140,8 +140,12 @@ export function definePptxMobileInsert(registry: CustomElementRegistry): void {
 		private request(intent: RibbonInsertAction): void {
 			if (canRequestInsert(this.model, intent)) {
 				if (intent.kind === 'addIns') {
-					openOfficeAddIns(this, intent.value, (label) =>
-						this.text([`pptx.addIns.${label}`, label]),
+					openOfficeAddIns(
+						this,
+						intent.value,
+						(label) => this.text([`pptx.addIns.${label}`, label]),
+						'powerpoint',
+						this.text(['pptx.addIns.manifestLocale', 'en']),
 					);
 					return;
 				}

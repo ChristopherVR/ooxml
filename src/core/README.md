@@ -189,6 +189,10 @@ CSV import (`csvToWorkbook`, or `loadWorkbook(bytes, { csv })`) types fields the
 
 ## Privacy and network use
 
+The optional `ooxml-core/automation/add-ins` reader validates local XML and unified
+manifests and ZIP packages offline. It returns metadata and a SHA-256 digest without
+fetching URLs, decoding icons or storing data.
+
 Excel's UI dictionaries load from the app's own origin when a non-English language is selected. English is bundled and stays available offline. Hosts that use the core translator directly can await `loadEditorStrings(locale)` before translating.
 
 Browser builds load the bundled XPath code for FILTERXML and the embedded workbook chart reader for Visio from the app's own origin when needed. These asset requests carry no document data.

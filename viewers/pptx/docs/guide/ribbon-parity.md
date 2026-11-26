@@ -98,6 +98,10 @@ Severity: H = obvious at a glance, M = noticeable, L = detail.
 | Labels: Pictures, Link, Video and Audio                     | L   | Fixed   | Pictures, Table, Video and Audio open dropdowns like Office (This Device works; stock and online sources are disabled)                                                                                                                                                                                               |
 | Freeform: Shape and Curve stack (not in Office)             | L   | Kept    | Viewer-specific                                                                                                                                                                                                                                                                                                      |
 
+Get Add-ins also accepts local task-pane XML manifests and unified JSON or ZIP files.
+Confirmed installs stay in the editor session and appear in My Add-ins with execution
+unavailable. My Add-ins can remove the local record.
+
 ### Draw
 
 | Gap vs PowerPoint                                                | Sev | Status    | Notes / next step                                                          |

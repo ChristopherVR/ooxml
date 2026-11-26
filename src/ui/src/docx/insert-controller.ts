@@ -139,8 +139,12 @@ export class InsertController {
 			const toolbar = this.host.toolbar();
 			const root = toolbar?.getRootNode();
 			if (toolbar && root?.nodeType === 11) {
-				openOfficeAddIns(root as ShadowRoot, action.mode, (label) =>
-					translateUiText(toolbar, label),
+				openOfficeAddIns(
+					root as ShadowRoot,
+					action.mode,
+					(label) => translateUiText(toolbar, label),
+					'word',
+					this.locale,
 				);
 			}
 		} else if (action.type === 'insertIcon') {

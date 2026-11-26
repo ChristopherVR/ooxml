@@ -1,18 +1,47 @@
-import {
-	fail,
-	utf8,
-	safePath,
-	decodePath,
-	type Entry,
-	type VisioPackageLimits,
-} from './package-common';
+import type { ZipLimits } from './zip-limits';
+
+type ZipFailure = (code: string, message: string) => never;
+type HeaderLimits = Required<Pick<ZipLimits, 'maxEntries' | 'maxEntryBytes' | 'maxTotalBytes'>> & {
+	maxCompressionRatio?: number;
+};
+
+const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+
+export function decodeZipPath(path: string, fail: ZipFailure): string {
+	try {
+		return decodeURIComponent(path);
+	} catch {
+		return fail('UNSAFE_PATH', 'Invalid percent encoding in package path');
+	}
+}
+/** Do not let ZIP name normalization or URI decoding turn an unsafe name into a safe one. */
+export function safeZipPath(path: string, directory: boolean, fail: ZipFailure): string {
+	const decoded = decodeZipPath(path, fail);
+	if (/%(?:2f|5c)/i.test(path)) fail('UNSAFE_PATH', 'Encoded path separators are unsupported');
+	if (/[\\:#?\u0000-\u001f\u007f]/.test(path) || /[\\:#?%\u0000-\u001f\u007f]/.test(decoded))
+		fail('UNSAFE_PATH', `Unsafe package path: ${path}`);
+	for (const candidate of [path, decoded]) {
+		const name = directory && candidate.endsWith('/') ? candidate.slice(0, -1) : candidate;
+		if (!name || name.split('/').some((part) => !part || part === '.' || part === '..'))
+			fail('UNSAFE_PATH', `Unsafe package path: ${path}`);
+	}
+	return path;
+}
+export interface ZipEntryHeader {
+	name: string;
+	compressed: number;
+	size: number;
+	crc: number;
+	directory: boolean;
+}
 
 /** Inspect central AND local headers before JSZip can sanitize names or inflate anything. */
-export function inspectZip(
+export function inspectZipHeaders(
 	bytes: Uint8Array,
-	limits: VisioPackageLimits,
-	check: () => void,
-): Map<string, Entry> {
+	limits: HeaderLimits,
+	fail: ZipFailure,
+	check?: () => void,
+): Map<string, ZipEntryHeader> {
 	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const bounds = (start: number, length: number) => {
 		if (start < 0 || length < 0 || start + length > bytes.length)
@@ -48,7 +77,7 @@ export function inspectZip(
 		fail('UNSUPPORTED_ZIP', 'ZIP64 and multidisk packages are unsupported');
 	if (count > limits.maxEntries) fail('LIMIT_ENTRIES', 'Too many ZIP entries');
 	if (centralStart + centralSize !== end) fail('INVALID_ZIP', 'Invalid central directory bounds');
-	const entries = new Map<string, Entry>(),
+	const entries = new Map<string, ZipEntryHeader>(),
 		canonical = new Set<string>();
 	const spans: { start: number; end: number }[] = [];
 	let offset = centralStart,
@@ -74,7 +103,7 @@ export function inspectZip(
 		}
 	};
 	for (let i = 0; i < count; i++) {
-		check();
+		check?.();
 		bounds(offset, 46);
 		if (u32(offset) !== 0x02014b50) fail('INVALID_ZIP', 'Invalid central directory entry');
 		const flags = u16(offset + 8),
@@ -93,8 +122,8 @@ export function inspectZip(
 		bounds(offset + 46, nameLength + extraLength + commentLength);
 		const name = utf8.decode(bytes.subarray(offset + 46, offset + 46 + nameLength));
 		const directory = name.endsWith('/');
-		safePath(name, directory);
-		const key = decodePath(name).replace(/\/$/, '');
+		safeZipPath(name, directory, fail);
+		const key = decodeZipPath(name, fail).replace(/\/$/, '');
 		if (entries.has(name) || canonical.has(key))
 			fail('DUPLICATE_ENTRY', `Duplicate ZIP path: ${name}`);
 		canonical.add(key);
@@ -102,7 +131,7 @@ export function inspectZip(
 		if (size > limits.maxEntryBytes) fail('LIMIT_ENTRY', `ZIP entry is too large: ${name}`);
 		total += size;
 		if (total > limits.maxTotalBytes) fail('LIMIT_TOTAL', 'Inflated ZIP total exceeds limit');
-		if (size > Math.max(1, compressed) * limits.maxCompressionRatio)
+		if (size > Math.max(1, compressed) * (limits.maxCompressionRatio ?? Infinity))
 			fail('LIMIT_RATIO', `ZIP compression ratio exceeds limit: ${name}`);
 		if ((method === 0 && compressed !== size) || (directory && (compressed || size)))
 			fail('ZIP_MISMATCH', 'Invalid stored entry size');

@@ -10,6 +10,40 @@ import { pressShortcut } from './support/keyboard';
 
 test.use({ viewport: { width: 1920, height: 900 } });
 
+test('installs a local PowerPoint manifest and lists it as inactive', async ({ page }) => {
+	await loadDeck(page);
+	const insert = ribbonTab(page, 'Insert');
+	await insert.click();
+	const ribbon = page.locator('pptx-ui-ribbon-insert');
+	const group = ribbon.locator('[data-ribbon-group="insert.addIns"]');
+	const open = async (command: string) => {
+		const collapsed = group.locator('.face');
+		if (await collapsed.isVisible()) await collapsed.click();
+		await group.locator(`[data-ribbon-control="insert.addIns.${command}"] button`).click();
+	};
+	await open('getAddIns');
+	const preview = ribbon.locator('office-ui-dialog[open]');
+	const buffer = await readFile(
+		new URL('../../src/core/automation/add-ins/__fixtures__/manifest.xml', import.meta.url),
+	);
+	await preview.getByLabel('Choose a local add-in file').setInputFiles({
+		name: 'notes.xml',
+		mimeType: 'application/xml',
+		buffer,
+	});
+	await expect(preview).toContainText('Document.ReadWrite.User');
+	await preview.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	await ribbonTab(page, 'Home').click();
+	await insert.click();
+	await open('myAddIns');
+	const installed = ribbon.locator('office-ui-dialog[open]');
+	await expect(installed).toContainText('Notes (1.0.0)');
+	await expect(installed).toContainText('Running add-ins is unavailable');
+	await installed.getByRole('button', { name: 'Remove Notes', exact: true }).click();
+	await open('myAddIns');
+	await expect(installed).toContainText('No add-ins');
+});
+
 test('inserts a Cameo and response link and opens the add-in dialogs', async ({
 	page,
 }, testInfo) => {

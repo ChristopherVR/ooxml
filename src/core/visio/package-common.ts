@@ -1,5 +1,8 @@
+import { decodeZipPath, safeZipPath } from '../opc/zip-headers';
 import type { ZipLimitKind, ZipLimits } from '../opc/zip-limits';
 import { defaultXmlHeapBytes } from './heap-limit';
+
+export type { ZipEntryHeader as Entry } from '../opc/zip-headers';
 
 /** Limits apply to declared ZIP sizes and actual streamed output, independently. */
 export interface VisioPackageLimits {
@@ -93,30 +96,6 @@ export function visioZipLimits(limits: VisioPackageLimits): ZipLimits {
 }
 export const utf8 = new TextDecoder('utf-8', { fatal: true });
 export { crc32 } from '../digest/crc32';
-export function decodePath(path: string): string {
-	try {
-		return decodeURIComponent(path);
-	} catch {
-		return fail('UNSAFE_PATH', 'Invalid percent encoding in package path');
-	}
-}
-/** Do not let ZIP name normalization or URI decoding turn an unsafe name into a safe one. */
-export function safePath(path: string, directory = false): string {
-	const decoded = decodePath(path);
-	if (/%(?:2f|5c)/i.test(path)) fail('UNSAFE_PATH', 'Encoded path separators are unsupported');
-	if (/[\\:#?\u0000-\u001f\u007f]/.test(path) || /[\\:#?%\u0000-\u001f\u007f]/.test(decoded))
-		fail('UNSAFE_PATH', `Unsafe package path: ${path}`);
-	for (const candidate of [path, decoded]) {
-		const name = directory && candidate.endsWith('/') ? candidate.slice(0, -1) : candidate;
-		if (!name || name.split('/').some((part) => !part || part === '.' || part === '..'))
-			fail('UNSAFE_PATH', `Unsafe package path: ${path}`);
-	}
-	return path;
-}
-export interface Entry {
-	name: string;
-	compressed: number;
-	size: number;
-	crc: number;
-	directory: boolean;
-}
+export const decodePath = (path: string): string => decodeZipPath(path, fail);
+export const safePath = (path: string, directory = false): string =>
+	safeZipPath(path, directory, fail);
