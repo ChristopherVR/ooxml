@@ -227,6 +227,42 @@ test('pane and Shift-click selections align and distribute three drawings on the
 	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(2);
 });
 
+test('Selection Pane is docked and renames a drawing with F2 or a double-click', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	const row = pane.getByRole('button', { name: 'Oval 3' });
+	const dock = await pane.evaluate((element) => {
+		const canvas = element.previousElementSibling!.getBoundingClientRect();
+		const side = element.getBoundingClientRect();
+		return [
+			Math.abs(side.left - canvas.right),
+			Math.abs(side.top - canvas.top),
+			Math.abs(side.bottom - canvas.bottom),
+		];
+	});
+	expect(Math.max(...dock)).toBeLessThan(1);
+	await row.dblclick();
+	const name = pane.getByRole('textbox', { name: 'Drawing name' });
+	await name.fill('Diagram oval');
+	await name.press('Enter');
+	const renamed = pane.getByRole('button', { name: 'Diagram oval' });
+	await expect(renamed).toBeFocused();
+	await renamed.press('F2');
+	await name.fill('Final oval');
+	await name.press('Enter');
+	await page.emulateMedia({ forcedColors: 'active' });
+	const selected = pane.getByRole('button', { name: 'Final oval', pressed: true });
+	await expect(selected).toHaveCSS('forced-color-adjust', 'none');
+	const { xml } = await savedDocument(page, 'renamed-drawing.docx');
+	expect(xml).toContain('name="Final oval"');
+	expect(xml).not.toContain('title="Final oval"');
+});
+
 async function choosePosition(editor: Locator, value: string) {
 	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');

@@ -45,6 +45,7 @@ export function updateDocPr(
 	drawing: XmlElement,
 	altText: string | undefined,
 	title: string | undefined,
+	drawingName?: string,
 ): void {
 	// The holder's docPr precedes the graphic and any drawings in its text box story.
 	const node = drawing.getElementsByTagNameNS(WP_NS, 'docPr')[0];
@@ -53,6 +54,7 @@ export function updateDocPr(
 	else node.removeAttribute('descr');
 	if (title) node.setAttribute('title', title);
 	else node.removeAttribute('title');
+	if (drawingName) node.setAttribute('name', drawingName);
 }
 
 /** Rewrites one `wp:positionH` or `wp:positionV` from the model's alignment or offset. */

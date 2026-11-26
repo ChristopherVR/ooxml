@@ -209,6 +209,7 @@ const entries = [
 		'Cambie a Diseño de impresión para organizar los dibujos.',
 		'切换到页面视图以排列绘图。',
 	],
+	['Drawing name', 'Nom du dessin', 'Zeichnungsname', 'Nombre del dibujo', '绘图名称'],
 ] as const;
 
 type Key = (typeof entries)[number][0];

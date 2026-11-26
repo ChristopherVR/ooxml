@@ -1,3 +1,5 @@
+import { closeHistory } from 'prosemirror-history';
+import { wordYjsPluginKey } from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
 import { selectionPaneFrame } from '../chrome/selection-pane';
 import { drawingPositions, isArrangeDrawing, selectDrawing } from './arrange-selection';
@@ -13,7 +15,7 @@ export function storyDrawings(view: EditorView) {
 		const placement = parsePlacement(node.attrs.placement);
 		drawings.push({
 			pos,
-			title: String(node.attrs.title || node.attrs.altText || ''),
+			title: String(node.attrs.drawingName || node.attrs.title || node.attrs.altText || ''),
 			height: placement?.relativeHeight ?? 251658240 + drawings.length,
 			behind: Boolean(placement?.behindText),
 		});
@@ -35,7 +37,7 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 	});
 	const { element, heading, close, list, hide } = frame;
 	element.className = 'dve-selection-pane';
-	canvas.append(element);
+	canvas.after(element);
 	let lastDoc: EditorView['state']['doc'] | undefined;
 	let drawings: ReturnType<typeof storyDrawings> = [];
 	let signature = '';
@@ -51,16 +53,24 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 			drawings = storyDrawings(live);
 		}
 		const selected = drawingPositions(live.state);
-		const next = JSON.stringify([core.locale, selected, drawings]);
-		if (signature === next) return;
+		const next = JSON.stringify([core.locale, drawings]);
+		if (signature === next) {
+			for (const button of list.querySelectorAll<HTMLButtonElement>(
+				'button[data-drawing-position]',
+			))
+				button.setAttribute(
+					'aria-pressed',
+					String(selected.includes(Number(button.dataset.drawingPosition))),
+				);
+			return;
+		}
 		signature = next;
 		const title = translate(core.locale, 'Selection Pane');
 		heading.textContent = title;
 		element.setAttribute('aria-label', title);
 		close.setAttribute('aria-label', translate(core.locale, 'Close'));
 		const focused = core.element.shadowRoot?.activeElement;
-		const active =
-			focused instanceof HTMLButtonElement ? focused.dataset.drawingPosition : undefined;
+		const active = focused instanceof HTMLElement ? focused.dataset.drawingPosition : undefined;
 		list.replaceChildren(
 			...drawings
 				.slice(0, 1000)
@@ -81,6 +91,60 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 						const multiple = event.ctrlKey || event.metaKey || event.shiftKey;
 						selectDrawing(live, pos, multiple);
 						refresh();
+					});
+					const rename = () => {
+						if (live !== core.targetView() || !live.editable || core.readOnly) return;
+						const node = live.state.doc.nodeAt(pos);
+						if (!isArrangeDrawing(node) || !button.isConnected) return;
+						const input = element.ownerDocument.createElement('input');
+						input.type = 'text';
+						input.dataset.drawingPosition = String(pos);
+						input.setAttribute('aria-label', translate(core.locale, 'Drawing name'));
+						input.value = button.textContent ?? '';
+						input.maxLength = 255;
+						let editing = true;
+						const finish = (save: boolean, returnFocus: boolean) => {
+							if (!editing || !input.isConnected) return;
+							editing = false;
+							button.hidden = false;
+							if (returnFocus) button.focus({ preventScroll: true });
+							input.remove();
+							const name = input.value.trim();
+							if (
+								save &&
+								name &&
+								name !== button.textContent &&
+								live === core.targetView() &&
+								live.editable &&
+								!core.readOnly &&
+								live.state.doc.nodeAt(pos) === node
+							) {
+								const history = wordYjsPluginKey.getState(live.state);
+								history?.stopCapturing();
+								live.dispatch(
+									closeHistory(live.state.tr.setNodeAttribute(pos, 'drawingName', name)),
+								);
+								history?.stopCapturing();
+								refresh();
+							}
+						};
+						input.addEventListener('blur', () => finish(true, false));
+						input.addEventListener('keydown', (event) => {
+							if (event.key !== 'Enter' && event.key !== 'Escape') return;
+							event.preventDefault();
+							event.stopPropagation();
+							finish(event.key === 'Enter', true);
+						});
+						button.after(input);
+						button.hidden = true;
+						input.focus();
+						input.select();
+					};
+					button.addEventListener('dblclick', rename);
+					button.addEventListener('keydown', (event) => {
+						if (event.key !== 'F2') return;
+						event.preventDefault();
+						rename();
 					});
 					row.append(button);
 					return row;

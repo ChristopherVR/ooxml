@@ -122,7 +122,7 @@ function buildInlineDrawing(
 	for (const side of ['l', 't', 'r', 'b']) effectExtent.setAttribute(side, '0');
 	const docPr = el(doc, WP_NS, 'wp:docPr');
 	docPr.setAttribute('id', docPrId);
-	docPr.setAttribute('name', `Picture ${docPrId}`);
+	docPr.setAttribute('name', image.drawingName ?? `Picture ${docPrId}`);
 	if (image.altText) docPr.setAttribute('descr', image.altText);
 	if (image.title) docPr.setAttribute('title', image.title);
 	const frameLocks = el(doc, WP_NS, 'wp:cNvGraphicFramePr');
@@ -181,8 +181,12 @@ function patchArrangement(
 	image: InlineImage,
 	base?: InlineImage,
 ): void {
-	if (image.altText !== base?.altText || image.title !== base?.title)
-		updateDocPr(drawing, image.altText, image.title);
+	if (
+		image.altText !== base?.altText ||
+		image.title !== base?.title ||
+		image.drawingName !== base?.drawingName
+	)
+		updateDocPr(drawing, image.altText, image.title, image.drawingName);
 	patchDrawingWrap(drawing, doc, image, base);
 	if (
 		image.anchored &&
@@ -289,8 +293,12 @@ export function createImageRun(
 	}
 	if (base && oldDrawing && image.shape?.editable && base.shape?.editable) {
 		const next = rebuildShapeDrawing(doc, image, oldDrawing);
-		if (image.altText !== base.altText || image.title !== base.title)
-			updateDocPr(next, image.altText, image.title);
+		if (
+			image.altText !== base.altText ||
+			image.title !== base.title ||
+			image.drawingName !== base.drawingName
+		)
+			updateDocPr(next, image.altText, image.title, image.drawingName);
 		if (image.textBoxContent?.vertical !== base.textBoxContent?.vertical)
 			updateTextBoxDirection(next, image.textBoxContent?.vertical);
 		const choice = oldDrawing.parentNode as XmlElement | null;
