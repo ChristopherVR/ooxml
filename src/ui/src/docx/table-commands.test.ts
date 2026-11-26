@@ -221,11 +221,32 @@ describe('table structural commands', () => {
 		const { view } = setup();
 		const before = view.state.doc.toJSON();
 		expect(run(view, 'rowAfter')).toBe(true);
-		expect(view.state.selection.ranges.map(({ $from }) => $from.index(1))).toEqual([1, 1]);
+		expect(view.state.selection.empty).toBe(true);
+		expect(view.state.selection.$head.parent.attrs.id).toBe('cell-0-0');
 		expect(undo(view.state, (transaction) => view.dispatch(transaction))).toBe(true);
 		expect(view.state.doc.toJSON()).toEqual(before);
 		view.destroy();
 	});
+
+	it.each(['rowBefore', 'rowAfter', 'columnBefore', 'columnAfter'] as const)(
+		'keeps the original caret after %s and undoes subsequent typing separately',
+		(action) => {
+			const { view } = setup(makeTable(), 'cell-1-1');
+			const { doc, selection } = view.state;
+			view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from + 2)));
+			expect(run(view, action)).toBe(true);
+			expect(view.state.selection.$head.parent.attrs.id).toBe('cell-1-1');
+			expect(view.state.selection.$head.parentOffset).toBe(2);
+			const edited = view.state.doc;
+			view.dispatch(view.state.tr.insertText('!'));
+			expect(view.state.selection.$head.parent.textContent).toBe('r1!c1');
+			expect(undo(view.state, view.dispatch)).toBe(true);
+			expect(view.state.doc.eq(edited)).toBe(true);
+			expect(undo(view.state, view.dispatch)).toBe(true);
+			expect(view.state.doc.eq(doc)).toBe(true);
+			view.destroy();
+		},
+	);
 
 	it('keeps consecutive structural commands in separate undo steps', () => {
 		const { view } = setup();

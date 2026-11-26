@@ -7,13 +7,13 @@ import {
 	type TableStyleDefinition,
 	type DocumentModel,
 } from 'ooxml-core/docx';
+import { dispatchTableEdit } from './table-edit-transaction';
 import {
 	cssBorderSide,
 	DEFAULT_TABLE_LOOK,
 	installTableStylePreset,
 	TABLE_STYLE_PRESETS,
 } from 'ooxml-core/docx/ui';
-import { closeHistory } from 'prosemirror-history';
 import type { EditorView } from 'prosemirror-view';
 import type { EditorCore } from './editor-core';
 import { translate, type LocalizationKey } from './localization';
@@ -179,7 +179,7 @@ export function openTableStyles(
 		);
 		if (style && active.node.attrs.starterGrid)
 			tr.setNodeAttribute(active.pos, 'starterGrid', false);
-		if (tr.docChanged) view.dispatch(closeHistory(tr));
+		dispatchTableEdit(view, tr);
 	};
 	const add = (
 		label: string,
@@ -284,7 +284,7 @@ export function openTableStyles(
 							patchTableNode(tr, pos, node, model, result.catalogs.tableStyles, core.model.theme);
 					});
 				}
-				view.dispatch(closeHistory(tr));
+				dispatchTableEdit(view, tr);
 				return true;
 			},
 		});

@@ -125,8 +125,9 @@ describe('Table Properties', () => {
 		executeTableCommand(view, 'columnAfter');
 		expect(read().rowProperties![2]).toMatchObject({ cantSplit: true, heightTwips: 720 });
 		const { doc, selection } = view.state;
-		expect(selection.ranges).toHaveLength(3);
-		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from)));
+		expect(selection.$head.parent.attrs.id).toBe('p0');
+		// Select the first paragraph in the inserted row before deleting that row.
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, 4)));
 		executeTableCommand(view, 'deleteRow');
 		expect(read().rowProperties![0]).toMatchObject({ header: true, heightRule: 'exact' });
 	});

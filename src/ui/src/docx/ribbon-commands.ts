@@ -1,4 +1,5 @@
 import type { DocumentModel } from 'ooxml-core/docx';
+import { dispatchTableEdit } from './table-edit-transaction';
 import type { EditorView } from 'prosemirror-view';
 import { closeHistory } from 'prosemirror-history';
 import { DEFAULT_TABLE_BORDERS } from 'ooxml-core/docx';
@@ -68,7 +69,7 @@ export function insertTable(
 			),
 		),
 	);
-	view.dispatch(closeHistory(view.state.tr.replaceSelectionWith(table)).scrollIntoView());
+	dispatchTableEdit(view, view.state.tr.replaceSelectionWith(table).scrollIntoView());
 }
 
 export function updateParagraphs(

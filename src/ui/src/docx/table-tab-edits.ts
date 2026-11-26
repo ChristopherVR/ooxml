@@ -1,7 +1,7 @@
 import type { DocumentModel, Table, TableStyleCatalog } from 'ooxml-core/docx';
+import { dispatchTableEdit } from './table-edit-transaction';
 import { resolveTableCellMargins } from 'ooxml-core/docx';
 import { paragraphAttrs, tableCellViews, tableViewAttrs } from 'ooxml-core/docx/ui';
-import { closeHistory } from 'prosemirror-history';
 import type { Node } from 'prosemirror-model';
 import { Selection, SelectionRange, TextSelection, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -113,7 +113,7 @@ export function alignTableCells(
 			tr.setNodeAttribute(cell.pos + 1 + offset, 'justification', action.horizontal);
 		});
 	}
-	if (tr.docChanged) view.dispatch(closeHistory(tr));
+	dispatchTableEdit(view, tr);
 }
 
 export function replaceTableWithText(
@@ -132,7 +132,7 @@ export function replaceTableWithText(
 	});
 	const tr = view.state.tr.replaceWith(context.pos, context.pos + context.node.nodeSize, nodes);
 	tr.setSelection(Selection.near(tr.doc.resolve(context.pos), 1));
-	view.dispatch(closeHistory(tr).scrollIntoView());
+	dispatchTableEdit(view, tr.scrollIntoView());
 }
 
 export function reorderTableRows(
@@ -157,5 +157,5 @@ export function reorderTableRows(
 		rows,
 	);
 	tr.setSelection(Selection.near(tr.doc.resolve(context.pos + 1), 1));
-	view.dispatch(closeHistory(tr).scrollIntoView());
+	dispatchTableEdit(view, tr.scrollIntoView());
 }

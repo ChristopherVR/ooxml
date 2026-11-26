@@ -1,5 +1,5 @@
 import { applyCellFill } from './table-shading';
-import { closeHistory } from 'prosemirror-history';
+import { dispatchTableEdit } from './table-edit-transaction';
 import type { EditorState } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
@@ -188,7 +188,7 @@ function applyEdits(
 	});
 	if (shading) applyCellFill(tr, ctx, shading.scope, shading.fill);
 	if (!tr.docChanged) return false;
-	view.dispatch(closeHistory(tr));
+	dispatchTableEdit(view, tr);
 	return true;
 }
 

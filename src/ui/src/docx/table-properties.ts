@@ -1,5 +1,5 @@
 import { signedTwips, type Table, type TableCell, type TableCellMargins } from 'ooxml-core/docx';
-import { closeHistory } from 'prosemirror-history';
+import { dispatchTableEdit } from './table-edit-transaction';
 import type { EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 
@@ -100,7 +100,7 @@ export function applyTableProperties(
 		cellAlignment === undefined
 	)
 		return true;
-	const tr = closeHistory(view.state.tr);
+	const tr = view.state.tr;
 	for (const row of context.rows) {
 		const properties = { ...row.properties, ...rowPatch };
 		for (const key of Object.keys(properties) as Array<keyof TableRowProperties>)
@@ -129,6 +129,6 @@ export function applyTableProperties(
 			if (cellAlignment !== undefined)
 				tr.setNodeAttribute(cell.pos, 'verticalAlign', cellAlignment);
 		}
-	view.dispatch(tr);
+	dispatchTableEdit(view, tr);
 	return true;
 }

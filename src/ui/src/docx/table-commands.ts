@@ -1,10 +1,9 @@
 import { expectDefined } from 'ooxml-core/docx/ui';
 import { Fragment, type Node as ProseMirrorNode } from 'prosemirror-model';
-import { closeHistory } from 'prosemirror-history';
 import { Selection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
-import { selectCellNodes } from './table-cell-selection';
+import { dispatchTableEdit, tableCaret } from './table-edit-transaction';
 import {
 	canRestructure,
 	executeRestructure,
@@ -79,26 +78,27 @@ function replacedTable(
 	view: EditorView,
 	ctx: Context,
 	rows: ProseMirrorNode[],
-	target: { row: number } | { column: number } | { caret: [number, number] },
+	caret?: [row: number, column: number],
 ): void {
 	const next = ctx.table.copy(Fragment.fromArray(rows));
-	const transaction = closeHistory(
-		view.state.tr.replaceWith(ctx.tablePos, ctx.tablePos + ctx.table.nodeSize, next),
+	const transaction = view.state.tr.replaceWith(
+		ctx.tablePos,
+		ctx.tablePos + ctx.table.nodeSize,
+		next,
 	);
-	if ('caret' in target) {
-		const [row, column] = target.caret;
+	if (caret) {
+		const [row, column] = caret;
 		const pos =
 			row >= rows.length
 				? ctx.tablePos + next.nodeSize
 				: ctx.tablePos + 2 + cellOffset(next, row, column);
 		transaction.setSelection(Selection.near(transaction.doc.resolve(pos), 1));
 	} else {
-		const cells = new Set<ProseMirrorNode>();
-		if ('row' in target) next.child(target.row).forEach((cell) => cells.add(cell));
-		else next.forEach((row) => cells.add(row.child(target.column)));
-		transaction.setSelection(selectCellNodes(transaction.doc, next, ctx.tablePos, cells));
+		transaction.setSelection(
+			tableCaret(transaction, next, ctx.tablePos, view.state.selection.$head),
+		);
 	}
-	view.dispatch(transaction.scrollIntoView());
+	dispatchTableEdit(view, transaction.scrollIntoView());
 }
 
 function cellOffset(table: ProseMirrorNode, row: number, column: number): number {
@@ -137,11 +137,13 @@ function selectedBounds(view: EditorView, ctx: Context) {
 function replaceWithParagraph(view: EditorView, ctx: Context): void {
 	const nextId = paragraphIdFactory(view);
 	const paragraph = schema.nodes.paragraph.create({ id: nextId() });
-	const transaction = closeHistory(
-		view.state.tr.replaceWith(ctx.tablePos, ctx.tablePos + ctx.table.nodeSize, paragraph),
+	const transaction = view.state.tr.replaceWith(
+		ctx.tablePos,
+		ctx.tablePos + ctx.table.nodeSize,
+		paragraph,
 	);
 	transaction.setSelection(Selection.near(transaction.doc.resolve(ctx.tablePos + 1)));
-	view.dispatch(transaction.scrollIntoView());
+	dispatchTableEdit(view, transaction.scrollIntoView());
 }
 
 /** Reports whether the current selection can receive the requested table edit. */
@@ -220,7 +222,7 @@ export function executeTableCommand(
 				view,
 				ctx,
 				rows.filter((_, index) => index < firstRow || index > lastRow),
-				{ caret: [firstRow, 0] },
+				[firstRow, 0],
 			);
 		return true;
 	}
@@ -231,7 +233,7 @@ export function executeTableCommand(
 			Array.from({ length: width }, () => emptyCell(nextId)),
 		);
 		rows.splice(at, 0, added);
-		replacedTable(view, ctx, rows, { row: at });
+		replacedTable(view, ctx, rows);
 		return true;
 	}
 
@@ -250,7 +252,7 @@ export function executeTableCommand(
 						),
 					),
 				),
-				{ caret: [0, Math.min(firstCol, width - (lastCol - firstCol + 1) - 1)] },
+				[0, Math.min(firstCol, width - (lastCol - firstCol + 1) - 1)],
 			);
 		return true;
 	}
@@ -265,7 +267,6 @@ export function executeTableCommand(
 			cells.splice(at, 0, emptyCell(nextId));
 			return row.copy(Fragment.fromArray(cells));
 		}),
-		{ column: at },
 	);
 	return true;
 }

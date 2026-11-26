@@ -1,4 +1,5 @@
 import { setTableLook, type Table } from 'ooxml-core/docx';
+import { dispatchTableEdit } from './table-edit-transaction';
 import {
 	autoFitTable,
 	DEFAULT_TABLE_LOOK,
@@ -10,7 +11,6 @@ import {
 	tableToText,
 } from 'ooxml-core/docx/ui';
 import { twipsFromPixels } from 'ooxml-core/units';
-import { closeHistory } from 'prosemirror-history';
 import type { EditorCore } from './editor-core';
 import { focusView } from './focus-view';
 import { openColorGridPopover } from './ribbon-color-grid';
@@ -116,7 +116,7 @@ export function runTableTabAction(
 			core.model.tableStyles,
 			core.model.theme,
 		);
-		if (tr.docChanged) view.dispatch(closeHistory(tr));
+		dispatchTableEdit(view, tr);
 	};
 	switch (action.key) {
 		case 'styles':
@@ -134,7 +134,7 @@ export function runTableTabAction(
 					if (!current || !valid()) return;
 					const tr = view.state.tr;
 					applyCellFill(tr, current, 'cell', value === 'none' ? null : value);
-					if (tr.docChanged) view.dispatch(closeHistory(tr));
+					dispatchTableEdit(view, tr);
 				},
 				{ noneLabel: 'No color' },
 			);
@@ -181,7 +181,7 @@ export function runTableTabAction(
 				if (!runs) return false;
 				const nodes = runs.flatMap((run) => runToInlineNodes(run));
 				const { from, to } = view.state.selection;
-				view.dispatch(closeHistory(view.state.tr.replaceWith(from, to, nodes)).scrollIntoView());
+				dispatchTableEdit(view, view.state.tr.replaceWith(from, to, nodes).scrollIntoView());
 				return true;
 			});
 			break;

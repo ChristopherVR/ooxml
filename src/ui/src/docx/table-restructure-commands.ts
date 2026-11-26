@@ -16,12 +16,12 @@ import {
 	type IdFactory,
 } from 'ooxml-core/docx/ui';
 import type { Table } from 'ooxml-core/docx';
-import { closeHistory } from 'prosemirror-history';
 import { Selection, TextSelection, type Transaction } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
 import { selectCellNodes } from './table-cell-selection';
+import { dispatchTableEdit, tableCaret } from './table-edit-transaction';
 import { nodeFromResult, skeletonOf, slotsOf, type Slot } from './table-restructure';
 
 export type RestructureCommand =
@@ -172,13 +172,20 @@ function selectionAfterRestructure(
 	action: RestructureCommand,
 	table: ProseMirrorNode,
 	outcome: Table,
+	caret: EditorView['state']['selection']['$head'],
 	split?: Split,
 ): Selection {
 	const { tablePos, rect, selected } = ctx;
+	if (
+		action === 'rowBefore' ||
+		action === 'rowAfter' ||
+		action === 'columnBefore' ||
+		action === 'columnAfter'
+	)
+		return tableCaret(tr, table, tablePos, caret);
 	const slots = slotsOf(table);
 	const cellAt = (row: number, column: number) =>
 		slots[row]?.find((slot) => slot.col <= column && column < slot.col + slot.span)?.cell;
-	const columnAfter = (selected.length === 1 ? rect.firstCol : rect.lastCol) + 1;
 	if (action === 'deleteRow' && rect.firstRow >= table.childCount)
 		return Selection.near(tr.doc.resolve(tablePos + table.nodeSize), 1);
 	if (action === 'deleteRow' || action === 'deleteColumn') {
@@ -198,13 +205,7 @@ function selectionAfterRestructure(
 	const add = (cell: ProseMirrorNode | undefined) => {
 		if (cell) cells.add(cell);
 	};
-	if (action === 'rowBefore' || action === 'rowAfter') {
-		for (const slot of slots[action === 'rowBefore' ? rect.firstRow : rect.lastRow + 1] ?? [])
-			if (!slot.offset) add(slot.cell);
-	} else if (action === 'columnBefore' || action === 'columnAfter') {
-		for (let row = 0; row < slots.length; row++)
-			add(cellAt(row, action === 'columnBefore' ? rect.firstCol : columnAfter));
-	} else if (action === 'mergeCells') {
+	if (action === 'mergeCells') {
 		const closed = closeRect(ctx.skeleton, ctx.mergeRect);
 		if (closed) add(cellAt(closed.firstRow, closed.firstCol));
 	} else {
@@ -260,9 +261,7 @@ export function executeRestructure(
 	if (outcome === 'table') replacement = schema.nodes.paragraph.create({ id: newId() });
 	else replacement = nodeFromResult(table, outcome);
 	if (!replacement) return false;
-	const transaction = closeHistory(
-		view.state.tr.replaceWith(tablePos, tablePos + table.nodeSize, replacement),
-	);
+	const transaction = view.state.tr.replaceWith(tablePos, tablePos + table.nodeSize, replacement);
 	transaction.setMeta(RESTRUCTURE_TABLE_META, true);
 	transaction.setSelection(
 		outcome === 'table'
@@ -273,9 +272,10 @@ export function executeRestructure(
 					action,
 					replacement,
 					outcome,
+					view.state.selection.$head,
 					split ?? (action === 'splitCell' ? splitDimensions(ctx) : undefined),
 				),
 	);
-	view.dispatch(transaction.scrollIntoView());
+	dispatchTableEdit(view, transaction.scrollIntoView());
 	return true;
 }

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import {
+	clickInEditor,
 	dialogByHeading,
 	insertTableOfSize,
 	newDocument,
@@ -35,26 +36,38 @@ test('a table without tblLook shows the options Word uses on open', async ({ pag
 		);
 });
 
-test('typing after Insert Row Below stays in the inserted row', async ({ page }) => {
+test('inserting rows and columns keeps the caret and separates typing from table undo', async ({
+	page,
+}) => {
+	await page.setViewportSize({ width: 1700, height: 960 });
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	await insertTableOfSize(page);
 	const editor = page.locator('docx-editor');
 	const rows = editor.locator('.ProseMirror tr');
-	await rows.nth(0).locator('td').first().click();
-	await page.keyboard.type('Heading');
-	await rows.nth(1).locator('td').first().click();
+	const original = rows.first().locator('td').nth(1);
+	await clickInEditor(original);
 	await page.keyboard.type('Original');
-	await rows.nth(0).locator('td').last().click();
 	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 	await editor.getByRole('button', { name: 'Insert row below', exact: true }).click();
-	await page.keyboard.type('Inserted');
+	await page.keyboard.type('Row');
 	await expect(rows).toHaveCount(3);
-	await expect(rows.nth(1).locator('td').first()).toHaveText('Inserted');
-	await editor.getByRole('button', { name: 'Delete row', exact: true }).click();
-	await expect(rows).toHaveCount(2);
-	await expect(rows.nth(0)).toHaveText('Heading');
-	await expect(rows.nth(1)).toHaveText('Original');
+	await expect(original).toHaveText('OriginalRow');
+	await expect(rows.nth(1)).toHaveText('');
+	await page.keyboard.press('Control+z');
+	await expect(original).toHaveText('Original');
+	await expect(rows).toHaveCount(3);
+
+	await editor.getByRole('button', { name: 'Insert column left', exact: true }).click();
+	await page.keyboard.type('Column');
+	const moved = rows.first().locator('td').nth(2);
+	await expect(moved).toHaveText('OriginalColumn');
+	await page.keyboard.press('Control+z');
+	await expect(moved).toHaveText('Original');
+	await expect(rows.first().locator('td')).toHaveCount(3);
+	await page.keyboard.press('Control+z');
+	await expect(rows.first().locator('td')).toHaveCount(2);
+	await expect(original).toHaveText('Original');
 });
 
 test('Table Design and Layout edit a table and save the Word properties', async ({ page }) => {

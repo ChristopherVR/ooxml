@@ -204,7 +204,9 @@ describe('table commands on a nested table', () => {
 	it('edits the inner table and leaves the outer table untouched', async () => {
 		const ctx = await setup(INNER_OUTER(INNER), 'i1');
 		expect(executeTableCommand(ctx.view, 'columnAfter')).toBe(true);
+		expect(ctx.view.state.selection.$head.parent.textContent).toBe('i1');
 		expect(executeTableCommand(ctx.view, 'rowAfter')).toBe(true);
+		expect(ctx.view.state.selection.$head.parent.textContent).toBe('i1');
 		const { saved } = await roundTrip(ctx);
 		expect(saved.rows.map((row) => row.length)).toEqual([2]);
 		expect(saved.grid).toEqual([4000, 4000]);
