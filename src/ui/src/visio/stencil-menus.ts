@@ -1,7 +1,7 @@
 import type { StencilAction } from './stencil-authoring';
 import { findMaster, type Stencil } from './stencil-catalog';
 import { stencilDrawing } from './stencil-drawing';
-import { MY_SHAPES_ID, type StencilFiles } from './stencil-files';
+import { MY_SHAPES_ID, stencilErrorMessage, type StencilFiles } from './stencil-files';
 import { menuItem } from './shapes-master-list';
 import { ribbonLocale } from './ribbon-localize';
 import { translateRibbonText } from './ribbon-locale';
@@ -35,9 +35,7 @@ export function bindStencilMenus(
 					options.update(id);
 				});
 			})
-			.catch((error: unknown) =>
-				options.error(t(error instanceof Error ? error.message : String(error))),
-			);
+			.catch((error: unknown) => options.error(stencilErrorMessage(error, t)));
 	};
 	const stencilMenu = doc.createElement('office-ui-context-menu') as Menu;
 	stencilMenu.dataset.shapesMenu = 'stencil';
@@ -166,7 +164,6 @@ export function bindStencilMenus(
 	});
 
 	return {
-		t,
 		menu: stencilMenu,
 		create: () => run({ type: 'new' }),
 		close: (id: string) => editing.delete(id),

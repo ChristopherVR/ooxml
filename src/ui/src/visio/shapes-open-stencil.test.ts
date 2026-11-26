@@ -128,8 +128,11 @@ it('says why a legacy .vss or a damaged file is not opened', async () => {
 	const status = ui.pane.querySelector<HTMLElement>('[data-stencil-status]')!;
 	await vi.waitFor(() => expect(status.hidden).toBe(false));
 	expect(status.textContent).toContain('not supported');
-	await ui.choose('Broken.vssx', new Uint8Array([1, 2, 3]));
-	await vi.waitFor(() => expect(status.textContent).toContain('Broken.vssx'));
+	ui.pane.dataset.visioLocale = 'de';
+	await ui.choose('Broken: Valves.vssx', new Uint8Array([1, 2, 3]));
+	await vi.waitFor(() =>
+		expect(status.textContent).toBe('Broken: Valves: Der ZIP-Enddatensatz fehlt'),
+	);
 	expect(ui.pane.querySelector('[data-stencil^="file-"]')).toBeNull();
 	ui.dispose();
 });

@@ -2,6 +2,15 @@ import type { VisioLocale } from '../ribbon-locale';
 
 export const VISIO_STENCIL_STRINGS = {
 	en: {
+		OK: 'OK',
+		Cancel: 'Cancel',
+		'Close {name}': 'Close {name}',
+		'Legacy binary stencils (.vss, .vst) are not supported.':
+			'Legacy binary stencils (.vss, .vst) are not supported.',
+		'This file has no shapes.': 'This file has no shapes.',
+		'This file is too large to open.': 'This file is too large to open.',
+		'Missing ZIP end record': 'Missing ZIP end record',
+		'Another part uses this master part.': 'Another part uses this master part.',
 		'Edit Stencil': 'Edit Stencil',
 		'Turn on Edit Stencil to change its masters.': 'Turn on Edit Stencil to change its masters.',
 		'Enter a name.': 'Enter a name.',
@@ -48,6 +57,15 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Another master entry uses this master part.',
 	},
 	de: {
+		OK: 'Bestätigen',
+		Cancel: 'Abbrechen',
+		'Close {name}': '{name} schließen',
+		'Legacy binary stencils (.vss, .vst) are not supported.':
+			'Ältere binäre Schablonen (.vss, .vst) werden nicht unterstützt.',
+		'This file has no shapes.': 'Diese Datei enthält keine Shapes.',
+		'This file is too large to open.': 'Diese Datei ist zu groß zum Öffnen.',
+		'Missing ZIP end record': 'Der ZIP-Enddatensatz fehlt',
+		'Another part uses this master part.': 'Ein anderer Teil verwendet diesen Masterteil.',
 		'Edit Stencil': 'Schablone bearbeiten',
 		'Turn on Edit Stencil to change its masters.':
 			'Aktivieren Sie die Schablonenbearbeitung, um Masterformen zu ändern.',
@@ -102,6 +120,15 @@ export const VISIO_STENCIL_STRINGS = {
 			'Ein anderer Mastereintrag verwendet diesen Masterteil.',
 	},
 	es: {
+		OK: 'Aceptar',
+		Cancel: 'Cancelar',
+		'Close {name}': 'Cerrar {name}',
+		'Legacy binary stencils (.vss, .vst) are not supported.':
+			'No se admiten las plantillas binarias antiguas (.vss, .vst).',
+		'This file has no shapes.': 'Este archivo no tiene formas.',
+		'This file is too large to open.': 'Este archivo es demasiado grande para abrirlo.',
+		'Missing ZIP end record': 'Falta el registro de fin del ZIP',
+		'Another part uses this master part.': 'Otra parte usa esta parte maestra.',
 		'Edit Stencil': 'Editar plantilla de formas',
 		'Turn on Edit Stencil to change its masters.':
 			'Active la edición de la plantilla para cambiar sus formas maestras.',
@@ -153,6 +180,16 @@ export const VISIO_STENCIL_STRINGS = {
 		'Another master entry uses this master part.': 'Otra entrada maestra usa esta parte maestra.',
 	},
 	fr: {
+		OK: 'Valider',
+		Cancel: 'Annuler',
+		'Close {name}': 'Fermer {name}',
+		'Legacy binary stencils (.vss, .vst) are not supported.':
+			'Les anciens gabarits binaires (.vss, .vst) ne sont pas pris en charge.',
+		'This file has no shapes.': 'Ce fichier ne contient aucune forme.',
+		'This file is too large to open.': 'Ce fichier est trop volumineux pour être ouvert.',
+		'Missing ZIP end record': 'L’enregistrement de fin du ZIP est manquant',
+		'Another part uses this master part.':
+			'Une autre partie utilise cette partie de forme de base.',
 		'Edit Stencil': 'Modifier le gabarit',
 		'Turn on Edit Stencil to change its masters.':
 			'Activez la modification du gabarit pour changer ses formes de base.',
@@ -206,6 +243,15 @@ export const VISIO_STENCIL_STRINGS = {
 			'Une autre entrée utilise cette partie de forme de base.',
 	},
 	'zh-CN': {
+		OK: '确定',
+		Cancel: '取消',
+		'Close {name}': '关闭{name}',
+		'Legacy binary stencils (.vss, .vst) are not supported.':
+			'不支持旧版二进制模具（.vss、.vst）。',
+		'This file has no shapes.': '此文件不包含任何形状。',
+		'This file is too large to open.': '此文件过大，无法打开。',
+		'Missing ZIP end record': '缺少 ZIP 结束记录',
+		'Another part uses this master part.': '另一个部件正在使用此主控形状部件。',
 		'Edit Stencil': '编辑模具',
 		'Turn on Edit Stencil to change its masters.': '请开启模具编辑以更改主控形状。',
 		'Enter a name.': '请输入名称。',

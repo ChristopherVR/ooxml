@@ -1,3 +1,4 @@
+import { interpolate } from 'ooxml-core/i18n';
 import { BASIC_STENCIL_ID, STENCILS, findMaster, type Stencil } from './stencil-catalog';
 import {
 	DOCUMENT_MASTER_LIMIT,
@@ -13,6 +14,8 @@ import { bindStencilMenus } from './stencil-menus';
 import { masterList, menuItem } from './shapes-master-list';
 export { masterButton, masterList } from './shapes-master-list';
 import { stencilFilePicker } from './shapes-files-ui';
+import { ribbonLocale } from './ribbon-localize';
+import { translateRibbonText } from './ribbon-locale';
 export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 
 /** The Stencils view of one Shapes window. */
@@ -72,10 +75,16 @@ export function buildStencilsView(
 	const sections = doc.createElement('div');
 	sections.id = 'shapes-sections';
 
-	const picker = stencilFilePicker(doc, files, (stencil) => {
-		collapsed.delete(stencil.id);
-		render();
-	});
+	const t = (text: string) => translateRibbonText(ribbonLocale(pane), text);
+	const picker = stencilFilePicker(
+		doc,
+		files,
+		(stencil) => {
+			collapsed.delete(stencil.id);
+			render();
+		},
+		t,
+	);
 	const moreMenu = doc.createElement('office-ui-context-menu') as Menu;
 	moreMenu.dataset.shapesMenu = 'more';
 	moreMenu.setAttribute('label', 'More Shapes');
@@ -118,7 +127,6 @@ export function buildStencilsView(
 				?.focus();
 		},
 	});
-	const { t } = authoring;
 
 	const renderQuick = () => {
 		if (quick.hidden) return quick.replaceChildren();
@@ -172,8 +180,9 @@ export function buildStencilsView(
 					close.type = 'button';
 					close.className = 'stencil-close';
 					close.dataset.closeStencil = id;
-					close.setAttribute('aria-label', `Close ${stencil.name}`);
-					close.title = `Close ${stencil.name}`;
+					const closeLabel = interpolate(t('Close {name}'), { name });
+					close.setAttribute('aria-label', closeLabel);
+					close.title = closeLabel;
 					close.textContent = '×';
 					header.append(close);
 				}

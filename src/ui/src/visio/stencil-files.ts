@@ -10,6 +10,20 @@ const MAX_OPEN_BYTES = 64 * 1024 * 1024;
 const MAX_OPEN = 16;
 const MAX_LISTED = 500;
 
+export class StencilFileError extends Error {
+	constructor(
+		readonly fileName: string,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
+export function stencilErrorMessage(error: unknown, t: (text: string) => string): string {
+	const message = t(error instanceof Error ? error.message : String(error));
+	return error instanceof StencilFileError ? `${error.fileName}: ${message}` : message;
+}
+
 export interface FileMaster {
 	bytes: Uint8Array;
 	master: VisioMaster;
@@ -45,7 +59,7 @@ export class StencilFiles {
 
 	async open(name: string, bytes: Uint8Array): Promise<OpenStencil> {
 		if (/\.vs[st]$/i.test(name))
-			throw new Error(`${name}: legacy binary stencils (.vss, .vst) are not supported.`);
+			throw new StencilFileError(name, 'Legacy binary stencils (.vss, .vst) are not supported.');
 		return this.replace(
 			`file-${this.#next++}`,
 			name.replace(/\.[^.]*$/, ''),
@@ -75,9 +89,10 @@ export class StencilFiles {
 		checkCapacity();
 		const { readStencil } = await import('./stencil-client');
 		const file = await readStencil(bytes).catch((error: unknown) => {
-			throw new Error(`${name}: ${error instanceof Error ? error.message : String(error)}`);
+			throw new StencilFileError(name, error instanceof Error ? error.message : String(error));
 		});
-		if (!editable && !file.masters.length) throw new Error(`${name} has no shapes.`);
+		if (!editable && !file.masters.length)
+			throw new StencilFileError(name, 'This file has no shapes.');
 		checkCapacity();
 		for (const master of this.#open.get(id)?.masters ?? []) this.#masters.delete(master.id);
 		const masters = file.masters.slice(0, MAX_LISTED).map((master): Master => {

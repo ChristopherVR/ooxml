@@ -1,5 +1,10 @@
 import type { Stencil } from './stencil-catalog';
-import { MAX_STENCIL_BYTES, type StencilFiles } from './stencil-files';
+import {
+	MAX_STENCIL_BYTES,
+	StencilFileError,
+	stencilErrorMessage,
+	type StencilFiles,
+} from './stencil-files';
 
 /** What a stencil file picker offers; Visio's own stencils are .vssx, and the rest is refused by name. */
 export const STENCIL_FILE_ACCEPT = '.vssx,.vssm,.vstx,.vstm,.vsdx,.vsdm,.vss,.vst';
@@ -12,6 +17,7 @@ export function stencilFilePicker(
 	doc: Document,
 	files: StencilFiles,
 	opened: (stencil: Stencil) => void,
+	t: (text: string) => string,
 ) {
 	const input = doc.createElement('input');
 	input.type = 'file';
@@ -31,10 +37,11 @@ export function stencilFilePicker(
 		status.hidden = true;
 		for (const file of picked) {
 			try {
-				if (file.size > MAX_STENCIL_BYTES) throw new Error(`${file.name} is too large to open.`);
+				if (file.size > MAX_STENCIL_BYTES)
+					throw new StencilFileError(file.name, 'This file is too large to open.');
 				opened(await files.open(file.name, new Uint8Array(await file.arrayBuffer())));
 			} catch (error) {
-				status.textContent = error instanceof Error ? error.message : String(error);
+				status.textContent = stencilErrorMessage(error, t);
 				status.hidden = false;
 			}
 		}
