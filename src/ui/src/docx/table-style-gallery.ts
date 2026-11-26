@@ -8,12 +8,7 @@ import {
 	type DocumentModel,
 } from 'ooxml-core/docx';
 import { dispatchTableEdit } from './table-edit-transaction';
-import {
-	cssBorderSide,
-	DEFAULT_TABLE_LOOK,
-	installTableStylePreset,
-	TABLE_STYLE_PRESETS,
-} from 'ooxml-core/docx/ui';
+import { cssBorderSide, DEFAULT_TABLE_LOOK, type WordTableTools } from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
 import type { EditorCore } from './editor-core';
 import { translate, type LocalizationKey } from './localization';
@@ -93,6 +88,7 @@ export function openTableStyles(
 	view: EditorView,
 	context: TableContext,
 	table: Table,
+	{ installTableStylePreset, TABLE_STYLE_PRESETS }: WordTableTools,
 ): void {
 	const anchor = core.shell.toolbar?.querySelector<HTMLButtonElement>(
 		'[data-table-command="styles"]',

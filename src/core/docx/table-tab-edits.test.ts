@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createDocument, loadDocx, saveDocx, twips, type Table } from './index';
-import {
-	autoFitTable,
-	repeatTableRows,
-	resizeTableColumns,
-	resizeTableRows,
-} from './table-layout-edit';
+import { repeatTableRows, resizeTableColumns } from './table-layout-edit';
 import {
 	evaluateTableFormula,
 	sortTableRows,
@@ -16,6 +11,7 @@ import { TABLE_STYLE_PRESETS, installTableStylePreset } from './table-style-pres
 import { expectTable } from './test-support/access';
 import { adaptDocumentModel } from './layout/adapter';
 import { tableCellViews } from './ui/table-cell-views';
+import { loadWordTableTools } from './ui';
 
 function makeTable(): Table {
 	return {
@@ -39,6 +35,7 @@ function makeTable(): Table {
 
 describe('Word table contextual operations', () => {
 	it('round trips sizing and each AutoFit mode through new and existing package writes', async () => {
+		const { autoFitTable, resizeTableColumns, resizeTableRows } = await loadWordTableTools();
 		const model = createDocument();
 		const resized = resizeTableColumns(makeTable(), 0, 1, 8400);
 		model.blocks = [resizeTableRows(resized, 0, 1, [250, 370, 200])];

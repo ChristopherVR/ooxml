@@ -23,7 +23,7 @@ import { toggleFormatPainter } from './format-painter';
 import { withHeaderFooterDistance } from './header-footer-position';
 import { closeHistory } from 'prosemirror-history';
 import { sectionLayoutJson } from 'ooxml-core/docx';
-import { loadWordReferences } from 'ooxml-core/docx/ui';
+import { loadWordReferences, loadWordTableTools } from 'ooxml-core/docx/ui';
 import { applyFontFormat } from './font-format';
 import { referencesReason } from './references-ribbon';
 import { closeRibbonOverflow } from './ribbon-overflow';
@@ -78,14 +78,14 @@ export function routeRibbonAction(
 		const generation = core.loadGeneration;
 		const view = core.targetView();
 		const selection = view?.state.selection;
-		void import('./table-tab-actions')
-			.then(({ runTableTabAction }) => {
+		void Promise.all([import('./table-tab-actions'), loadWordTableTools()])
+			.then(([{ runTableTabAction }, tools]) => {
 				if (
 					generation === core.loadGeneration &&
 					view === core.targetView() &&
 					view?.state.selection === selection
 				)
-					runTableTabAction(core, action, opener);
+					runTableTabAction(core, action, tools, opener);
 			})
 			.catch((error: unknown) => core.host.reportError(error));
 		return;

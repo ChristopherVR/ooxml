@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it } from 'vitest';
 import { createDocument, loadDocx, saveDocx, type Table } from 'ooxml-core/docx';
-import { autoFitTable } from 'ooxml-core/docx/ui';
+import { loadWordTableTools } from 'ooxml-core/docx/ui';
 import { history, undo } from 'prosemirror-history';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -77,6 +77,7 @@ it('aligns the two cells of a selected column as a single undo step', async () =
 });
 
 it('paints the shared edge, applies AutoFit and keeps both changes after reopening', async () => {
+	const { autoFitTable } = await loadWordTableTools();
 	const { editor, doc, model, table } = setup();
 	const context = tableTabContext(editor.state)!;
 	paintCellBorder(editor, context.pos, 0, 0, 'right', {

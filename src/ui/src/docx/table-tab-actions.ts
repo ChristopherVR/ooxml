@@ -1,15 +1,6 @@
 import { setTableLook, type Table } from 'ooxml-core/docx';
 import { dispatchTableEdit } from './table-edit-transaction';
-import {
-	autoFitTable,
-	DEFAULT_TABLE_LOOK,
-	repeatTableRows,
-	resizeTableColumns,
-	resizeTableRows,
-	sortTableRows,
-	tableFormulaRuns,
-	tableToText,
-} from 'ooxml-core/docx/ui';
+import { DEFAULT_TABLE_LOOK, type WordTableTools } from 'ooxml-core/docx/ui';
 import { twipsFromPixels } from 'ooxml-core/units';
 import type { EditorCore } from './editor-core';
 import { focusView } from './focus-view';
@@ -63,6 +54,7 @@ function setPen(
 export function runTableTabAction(
 	core: EditorCore,
 	action: TableTabAction,
+	tools: WordTableTools,
 	opener?: HTMLElement,
 ): void {
 	const view = core.targetView();
@@ -120,7 +112,7 @@ export function runTableTabAction(
 	};
 	switch (action.key) {
 		case 'styles':
-			openTableStyles(core, view, context, table);
+			openTableStyles(core, view, context, table, tools);
 			break;
 		case 'shading': {
 			const anchor = core.shell.toolbar?.querySelector<HTMLElement>(
@@ -146,10 +138,10 @@ export function runTableTabAction(
 			break;
 		}
 		case 'autoFit':
-			apply(autoFitTable(table, action.value));
+			apply(tools.autoFitTable(table, action.value));
 			break;
 		case 'repeat':
-			apply(repeatTableRows(table, top, bottom));
+			apply(tools.repeatTableRows(table, top, bottom));
 			break;
 		case 'size':
 		case 'distributeColumns':
@@ -160,7 +152,7 @@ export function runTableTabAction(
 				action.key === 'distributeColumns' ||
 				(action.key === 'size' && action.dimension === 'width')
 			) {
-				apply(resizeTableColumns(table, minimumColumn, maximumColumn, width, value));
+				apply(tools.resizeTableColumns(table, minimumColumn, maximumColumn, width, value));
 			} else {
 				const tableDOM = view.nodeDOM(pos);
 				const rows = tableDOM instanceof HTMLTableElement ? tableDOM.rows : null;
@@ -169,7 +161,7 @@ export function runTableTabAction(
 						table.rowProperties?.[index]?.heightTwips ??
 						Math.max(1, Math.round((rows?.[index]?.offsetHeight || 20) * 15)),
 				);
-				apply(resizeTableRows(table, top, bottom, measured, value));
+				apply(tools.resizeTableRows(table, top, bottom, measured, value));
 			}
 			break;
 		}
@@ -177,7 +169,7 @@ export function runTableTabAction(
 			openTableFormula(core, top > 0 || firstColumn === 0, (instruction) => {
 				if (!valid()) return false;
 				const active = currentTable(core.model, context);
-				const runs = active && tableFormulaRuns(active, top, firstColumn, instruction);
+				const runs = active && tools.tableFormulaRuns(active, top, firstColumn, instruction);
 				if (!runs) return false;
 				const nodes = runs.flatMap((run) => runToInlineNodes(run));
 				const { from, to } = view.state.selection;
@@ -188,7 +180,7 @@ export function runTableTabAction(
 		case 'convert':
 			openTableConvert(core, (separator) => {
 				if (!valid()) return false;
-				replaceTableWithText(view, context, tableToText(table, separator));
+				replaceTableWithText(view, context, tools.tableToText(table, separator));
 				return true;
 			});
 			break;
@@ -197,7 +189,7 @@ export function runTableTabAction(
 			const count = table.rowProperties?.findIndex((row) => !row.header) ?? 0;
 			openTableSort(core, width, firstColumn, count < 0 ? table.rows.length : count, (settings) => {
 				if (!valid()) return false;
-				reorderTableRows(view, context, table, sortTableRows(table, settings));
+				reorderTableRows(view, context, table, tools.sortTableRows(table, settings));
 				return true;
 			});
 			break;

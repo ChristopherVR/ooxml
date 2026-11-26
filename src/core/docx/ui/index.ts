@@ -17,9 +17,6 @@ export * from './field-guard';
 export * from './table-structure-guard';
 export * from '../table-grid';
 export * from '../table-structure';
-export * from '../table-data-edit';
-export * from '../table-layout-edit';
-export * from '../table-style-presets';
 export { DEFAULT_TABLE_LOOK } from '../table-defaults';
 export * from '../table-structure-merge';
 export type { IdFactory } from '../table-structure-cells';
@@ -87,6 +84,10 @@ export {
 export * from '../find-format-document';
 export * from './edit-restriction';
 export { EQUATION_GALLERY } from '../../math/equation-gallery';
+/** Load table editing tools and gallery presets when a table command needs them. */
+export const loadWordTableTools = () => import('./table-tools');
+export type WordTableTools = Awaited<ReturnType<typeof loadWordTableTools>>;
+export type { TableAutoFit, TableSort, TableTextSeparator } from './table-tools';
 export const loadWordReferences = () => import('../references');
 export type WordReferences = Awaited<ReturnType<typeof loadWordReferences>>;
 export type {

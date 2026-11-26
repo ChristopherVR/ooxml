@@ -104,7 +104,16 @@ const {
 } = shared.entry;
 
 export default defineConfig([
-	{ ...shared, entry: eagerEntries, format: ['esm'], splitting: false },
+	{
+		...shared,
+		entry: {
+			...eagerEntries,
+			'docx/ui/references': 'docx/references/index.ts',
+			'docx/ui/table-tools': 'docx/ui/table-tools.ts',
+		},
+		format: ['esm'],
+		splitting: false,
+	},
 	{ ...shared, format: ['cjs'], splitting: false },
 	{
 		...shared,
@@ -130,10 +139,23 @@ export default defineConfig([
 		...shared,
 		entry: { 'docx/ui/index': wordUi },
 		format: ['esm'],
-		splitting: true,
-		esbuildOptions(options) {
-			options.chunkNames = 'docx/ui/chunks/[name]-[hash]';
-		},
+		splitting: false,
+		// Keep optional tools independently downloadable. Shared code can stay together in
+		// the initial bundle instead of being split across several separately gzipped files.
+		esbuildPlugins: [
+			{
+				name: 'word-ui-lazy-tools',
+				setup(build) {
+					build.onResolve({ filter: /^(?:\.\.\/references|\.\/table-tools)$/ }, (args) => {
+						if (args.kind !== 'dynamic-import') return;
+						return {
+							path: args.path === '../references' ? './references.mjs' : './table-tools.mjs',
+							external: true,
+						};
+					});
+				},
+			},
+		],
 	},
 	{
 		...shared,
