@@ -442,12 +442,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       unknown markup kept (`style-catalog-save.test.ts`, `theme-save.test.ts`,
       `src/ui/src/docx/style-commands.test.ts`). Desktop Word 16 opens a saved file without repair
       and lists all four new styles with their base styles and the edited theme colour and font.
-- [ ] **P2** A table style's paragraph formatting (`w:pPr`, including conditional regions) is
+- [x] **P2** A table style's paragraph formatting (`w:pPr`, including conditional regions) is
       applied in the editor, Print Layout and PDF between the document defaults and the paragraph
-      style, with Word's left-justification exception for the default paragraph style (#353,
-      `docx/paragraph-styles.ts`). Open: the other half of
-      `overrideTableStyleFontSizeAndJustification` ([MS-DOCX]), where an 11 or 12 pt default
-      paragraph style size does not override the table style's font size (`run-formatting.ts`).
+      style, with both halves of `overrideTableStyleFontSizeAndJustification` ([MS-DOCX]): the
+      default paragraph style's left justification and its 11 or 12 pt size (`w:sz` and
+      `w:szCs` independently) do not override the table style's (#353,
+      `docx/paragraph-styles.ts`, `docx/run-formatting.ts`,
+      `layout/table-style-font-size.test.ts`).
 - [x] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)
       are editable in core with both fresh and source-preserving save/reload round-trip support
       (`docx/table-properties-edit.ts`, `write-table-level-properties.ts`; verified in
