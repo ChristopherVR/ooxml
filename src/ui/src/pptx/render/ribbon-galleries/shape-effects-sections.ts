@@ -18,7 +18,7 @@ import {
 	SHADOW_OUTER_PRESETS,
 	SHADOW_PERSPECTIVE_PRESETS,
 	SOFT_EDGE_SIZES_PT,
-} from './shape-effects-catalog';
+} from 'ooxml-core/drawingml';
 import {
 	accentHex,
 	EFFECT_TILE,

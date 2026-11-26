@@ -171,7 +171,7 @@ export {
 	collectWorkbookWebfontRuns,
 	type WorkbookWebfontRunOptions,
 } from './webfont-runs';
-export { shapeColor } from './shape-paint';
+export { shapeColor, shapeShadow, shapeStroke } from './shape-paint';
 export { formControlSvg, type FormControlViewOptions } from './form-control-view';
 export {
 	applyControlAction,
@@ -191,3 +191,5 @@ export {
 	controlStateIn,
 	type ControlCell,
 } from './form-control-link';
+
+export { pictureFramePath } from './picture-frame';

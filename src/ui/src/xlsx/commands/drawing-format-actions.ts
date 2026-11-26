@@ -1,9 +1,13 @@
-import { WORD_ART_STYLES, wordArtRgb } from 'ooxml-core/drawingml';
+import {
+	PICTURE_STYLES,
+	parseShapeStylePick,
+	WORD_ART_STYLES,
+	wordArtRgb,
+} from 'ooxml-core/drawingml';
 import { anchorToPixelBox, createGridMetrics, shapeColor } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, numberInput, textArea } from '../dialogs/fields';
 import { showDialog } from '../dialogs/frame';
-import { shapeFormatStyles, pictureFormatStyles } from './drawing-format-styles';
 import type { DrawingFormatAction, FormatApply, FormatSelection } from './drawing-format';
 
 export type FormatGuard = () => boolean;
@@ -85,13 +89,13 @@ export async function runDrawingFormat(
 			return;
 		}
 		case 'drawing.shape-style': {
-			const style = shapeFormatStyles[presetIndex(arg)];
-			if (style) apply({ kind: 'shapeStyle', color: style.color, outlined: style.outlined });
+			const pick = typeof arg === 'string' ? parseShapeStylePick(arg) : undefined;
+			if (pick) apply({ kind: 'shapeStyle', ...pick });
 			return;
 		}
 		case 'picture.style': {
-			const style = pictureFormatStyles[presetIndex(arg)];
-			if (style) apply({ kind: 'pictureStyle', border: style.border, shadow: style.shadow });
+			if (typeof arg === 'string' && PICTURE_STYLES.some(({ key }) => key === arg))
+				apply({ kind: 'pictureStyle', style: arg });
 			return;
 		}
 		case 'drawing.edit-shape':

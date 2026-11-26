@@ -21,7 +21,6 @@
  *   presets PowerPoint's gallery groups under Parallel / Perspective / Oblique
  *   is transcribed from the menu, not from an API.
  *
- * @module render/ribbon-galleries/shape-effects-catalog
  */
 
 type Align = 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
@@ -44,15 +43,31 @@ export interface ShadowPresetSpec {
 }
 
 function outer(key: string, label: string, dir: number, algn?: Align): ShadowPresetSpec {
-	return { key, label, kind: 'outer', blurEmu: 50800, distEmu: 38100, dir, alpha: 40000, algn };
+	return {
+		key,
+		label,
+		kind: 'outer',
+		blurEmu: 50800,
+		distEmu: 38100,
+		dir,
+		alpha: 40000,
+		...(algn ? { algn } : {}),
+	};
 }
 
 function inner(key: string, label: string, dir: number): ShadowPresetSpec {
 	return { key, label, kind: 'inner', blurEmu: 63500, distEmu: 50800, dir, alpha: 50000 };
 }
 
+export const DEFAULT_OUTER_SHADOW_PRESET = outer(
+	'offsetBottomRight',
+	'Offset: Bottom Right',
+	2700000,
+	'tl',
+);
+
 export const SHADOW_OUTER_PRESETS: readonly ShadowPresetSpec[] = [
-	outer('offsetBottomRight', 'Offset: Bottom Right', 2700000, 'tl'),
+	DEFAULT_OUTER_SHADOW_PRESET,
 	outer('offsetBottom', 'Offset: Bottom', 5400000, 't'),
 	outer('offsetBottomLeft', 'Offset: Bottom Left', 8100000, 'tr'),
 	outer('offsetRight', 'Offset: Right', 0, 'l'),
@@ -93,7 +108,7 @@ export const SHADOW_INNER_PRESETS: readonly ShadowPresetSpec[] = [
 	inner('insideBottomRight', 'Inside: Bottom Right', 2700000),
 ];
 
-/** Perspective shadows: `[blur, dist, dir, alpha, sx, sy, kx, algn]`. */
+/** Perspective shadows: `[blur, dist, dir, alpha, ...(sx === undefined ? {} : { sx }), sy, ...(kx === undefined ? {} : { kx }), ...(algn ? { algn } : {})]`. */
 function perspective(
 	key: string,
 	label: string,
@@ -108,7 +123,19 @@ function perspective(
 		Align | undefined,
 	],
 ): ShadowPresetSpec {
-	return { key, label, kind: 'outer', blurEmu, distEmu, dir, alpha, sx, sy, kx, algn };
+	return {
+		key,
+		label,
+		kind: 'outer',
+		blurEmu,
+		distEmu,
+		dir,
+		alpha,
+		...(sx === undefined ? {} : { sx }),
+		sy,
+		...(kx === undefined ? {} : { kx }),
+		...(algn ? { algn } : {}),
+	};
 }
 
 export const SHADOW_PERSPECTIVE_PRESETS: readonly ShadowPresetSpec[] = [

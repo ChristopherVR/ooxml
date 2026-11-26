@@ -2,7 +2,7 @@ import { needsPicturePixels } from '../../picture-pixels';
 import { pictureSvg } from '../../picture-view';
 import { drawingHidden } from 'ooxml-core/xlsx/ui';
 import { selectedDrawings, selectDrawing } from '../drawing-selection';
-import { imageContentType, resolveDrawingOuterShadow } from 'ooxml-core/drawingml';
+import { imageContentType } from 'ooxml-core/drawingml';
 import { pictureUrl } from 'ooxml-core/opc';
 import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
@@ -17,10 +17,8 @@ import {
 	chartDataDescription,
 	chartView,
 	createRefEvaluator,
-	drawingSchemeColors,
 	pixelBoxToAnchor,
 	renderChartSvg,
-	shapeColor,
 	CHART_FILL_PARTS,
 	type ChartFillPart,
 	type ChartObject,
@@ -36,6 +34,7 @@ import { paintFormControl, paintShape, pressFormControl } from './shapes';
 import { selectionOfPeriods } from 'ooxml-core/xlsx';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
+import { paintPictureFrame } from './picture-frame';
 import { paintPivotChartButtons } from './pivot-chart-buttons';
 
 interface ObjectNode extends HTMLDivElement {
@@ -198,6 +197,7 @@ export class DrawingLayer {
 		node.replaceChildren();
 		node.className = 'xg-obj';
 		node.style.boxShadow = '';
+		node.style.filter = '';
 		node.style.overflow = '';
 		// Its description target went with the children; a kind that has none must not keep it.
 		node.removeAttribute('aria-describedby');
@@ -206,30 +206,10 @@ export class DrawingLayer {
 		// A picture is one image, named by its alt text, else its name.
 		const alt =
 			(drawing.kind === 'image' && (drawing.description || drawing.name)) || view.ctx.t('Picture');
-		if (drawing.kind === 'image') {
-			const theme = view.workbook()?.theme;
-			const scale = view.zoom() / 100;
-			const scheme = drawing.shadow && drawingSchemeColors(theme);
-			const shadow =
-				drawing.shadow &&
-				resolveDrawingOuterShadow(drawing.shadow, { scheme: (name) => scheme?.[name] });
-			if (shadow)
-				node.style.boxShadow = `${shadow.dx * scale}px ${shadow.dy * scale}px ${shadow.blur * scale}px color-mix(in srgb, ${shadow.color} ${shadow.opacity * 100}%, transparent)`;
-			if (drawing.line?.fill?.kind === 'solid') {
-				const color = shapeColor(drawing.line.fill.color, theme);
-				if (color) {
-					const border = h(doc, 'span', '', { 'aria-hidden': 'true' });
-					Object.assign(border.style, {
-						position: 'absolute',
-						inset: '0',
-						pointerEvents: 'none',
-						zIndex: '1',
-						boxShadow: `inset 0 0 0 ${((drawing.line.widthEmu ?? 12700) / 9525) * scale}px ${color}`,
-					});
-					node.append(border);
-				}
-			}
-		}
+		const surface =
+			drawing.kind === 'image'
+				? paintPictureFrame(node, drawing, box, view.zoom() / 100, view.workbook()?.theme)
+				: node;
 		if (
 			drawing.kind === 'image' &&
 			(needsPicturePixels(drawing.effects ?? []) ||
@@ -253,7 +233,7 @@ export class DrawingLayer {
 					box.h,
 				);
 				svg.setAttribute('aria-hidden', 'true');
-				node.append(svg);
+				surface.append(svg);
 			}
 			node.setAttribute('role', 'img');
 			node.setAttribute('aria-label', alt);
@@ -268,7 +248,6 @@ export class DrawingLayer {
 				{ x: 0, y: 0, width: box.w, height: box.h },
 				{ cropLeft: 0, cropTop: 0, cropRight: 0, cropBottom: 0, ...drawing.crop },
 			);
-			node.style.overflow = 'hidden';
 			Object.assign(img.style, {
 				position: 'absolute',
 				left: `${rect.x}px`,
@@ -287,9 +266,9 @@ export class DrawingLayer {
 				const effects = pictureEffectFilter(doc, defs, drawing.effects);
 				if (effects.filter) img.style.filter = effects.filter;
 				node.dataset.unappliedPictureEffects = effects.unapplied.join(', ');
-				node.append(svg);
+				surface.append(svg);
 			}
-			node.append(img);
+			surface.append(img);
 		} else if (drawing.kind === 'model3d' || drawing.kind === 'embeddedObject') {
 			const img = h(doc, 'img', '', {
 				alt:

@@ -3185,3 +3185,18 @@ Source: ChristopherVR/ooxml, commit `15f649139`,
 Raster opening and compression now live in `src/ui/src/form/picture-compression.ts`.
 The PowerPoint worker calls the shared implementation, and Excel loads it on demand with its
 bounded raster inspector. Background-removal output remains specific to PowerPoint.
+
+## Shared shape, picture and effect galleries
+
+Source: ChristopherVR/ooxml, commit `20ca799cd`,
+`src/ui/src/pptx/render/ribbon-galleries/`. The Shape Styles table in
+`shape-style-catalog.ts`, the full `picture-styles-catalog.ts` and
+`picture-styles-catalog-tail.ts` tables, `picture-styles-spec.ts` and
+`shape-effects-catalog.ts` move to `src/core/drawingml/`. Theme references use
+the neutral DrawingML color model. The scene mapping and reflection constants
+from `picture-styles-patch.ts` and the compact color reader from
+`gallery-color-spec.ts` move to `picture-style-format.ts` in the same area.
+The PowerPoint element adapter keeps its existing object-tree representation.
+`picture-style-tile-svg.ts` moves to `src/ui/src/ribbon/` so both editors use
+the same previews. Excel's default style matrix comes from the theme part of
+a fresh workbook saved by Excel through COM.

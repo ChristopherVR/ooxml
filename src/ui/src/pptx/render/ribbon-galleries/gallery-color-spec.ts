@@ -8,20 +8,18 @@
  * @module render/ribbon-galleries/gallery-color-spec
  */
 import type { PptxThemeColorRef, XmlObject } from 'ooxml-core/pptx';
+import { galleryDrawingColor } from 'ooxml-core/drawingml';
 import { themeColorRefFromColorChoice } from 'ooxml-core/pptx';
 
 import { parseDrawingColorChoice } from '../drawing-color';
 
 /** The colour-choice node (`{ 'a:schemeClr': {...} }` / `{ 'a:srgbClr': {...} }`). */
 export function colorSpecXml(spec: string): XmlObject {
-	const [base, ...transforms] = spec.trim().split(/\s+/u);
-	const node: XmlObject = { '@_val': base.startsWith('#') ? base.slice(1).toUpperCase() : base };
-	for (const transform of transforms) {
-		const [name, value] = transform.split(':');
-		node[`a:${name}`] = { '@_val': value };
-	}
+	const { kind, value, transforms } = galleryDrawingColor(spec);
+	const node: XmlObject = { '@_val': value };
+	for (const transform of transforms) node[`a:${transform.name}`] = { '@_val': transform.value };
 	const wrapper: XmlObject = {};
-	wrapper[base.startsWith('#') ? 'a:srgbClr' : 'a:schemeClr'] = node;
+	wrapper[kind === 'srgb' ? 'a:srgbClr' : 'a:schemeClr'] = node;
 	return wrapper;
 }
 

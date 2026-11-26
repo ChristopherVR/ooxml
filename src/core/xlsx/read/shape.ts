@@ -1,7 +1,7 @@
 // Reads the DrawingML shapes of a worksheet drawing (`xdr:sp`, `xdr:cxnSp`, `xdr:grpSp`) into the
 // model the painter draws, through the shared drawingml readers. The XML itself is kept verbatim
 // by the drawing reader, so nothing here is written back.
-import { parseDrawingColorIn } from '../../drawingml/drawing-color';
+import { parseDrawingShapeStyle } from '../../drawingml/shape-style-refs';
 import { parseDrawingFill, parseDrawingLine } from '../../drawingml/drawing-fill';
 import { parseDrawingGeometry, parseTransform } from '../../drawingml/drawing-geometry';
 import { parseDrawingTextBody } from '../../drawingml/drawing-text';
@@ -13,26 +13,6 @@ import { att, boolAttr } from './xml-util';
 import { readDrawingShadow } from './drawing-format';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
-
-function styleRef(style: XmlElement | undefined, name: string) {
-	const ref = first(style, name, NS.a);
-	if (!ref) return undefined;
-	const idx = Number(att(ref, 'idx') ?? 0);
-	const color = parseDrawingColorIn(ref);
-	return { idx: Number.isFinite(idx) ? idx : 0, ...(color ? { color } : {}) };
-}
-
-function readStyle(style: XmlElement | undefined): ShapeNode['style'] | undefined {
-	if (!style) return undefined;
-	const fill = styleRef(style, 'fillRef');
-	const line = styleRef(style, 'lnRef');
-	const fontColor = parseDrawingColorIn(first(style, 'fontRef', NS.a));
-	return {
-		...(fill ? { fill } : {}),
-		...(line ? { line } : {}),
-		...(fontColor ? { font: { color: fontColor } } : {}),
-	};
-}
 
 /** Reads one shape, connector or group; children of a group are read recursively. */
 export function readShapeNode(element: XmlElement): ShapeNode | undefined {
@@ -71,7 +51,8 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 		const shadow = readDrawingShadow(spPr);
 		if (shadow) node.shadow = shadow;
 		if (first(spPr, 'effectDag', NS.a)) node.effectDag = true;
-		const style = readStyle(xdr(element, 'style'));
+		if (node.effectDag || first(spPr, 'effectLst', NS.a)) node.hasExplicitEffects = true;
+		const style = parseDrawingShapeStyle(xdr(element, 'style'));
 		if (style) node.style = style;
 		const body = xdr(element, 'txBody');
 		const text = parseDrawingTextBody(body);

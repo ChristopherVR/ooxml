@@ -1,7 +1,6 @@
 // Worksheet shapes and form controls. Both are kept verbatim for saving (`sourceXml`); the
 // types here are what the painter and the form-control interactions read.
 import type {
-	DrawingColor,
 	DrawingFill,
 	DrawingFrame,
 	DrawingLine,
@@ -34,12 +33,8 @@ export interface ShapeNode {
 	line?: DrawingLine;
 	shadow?: import('../drawingml/effect-model').DrawingOuterShadow;
 	effectDag?: true;
-	/** `xdr:style` colours: `fillRef`, `lnRef` and `fontRef`. */
-	style?: {
-		fill?: { idx: number; color?: DrawingColor };
-		line?: { idx: number; color?: DrawingColor };
-		font?: { color?: DrawingColor };
-	};
+	hasExplicitEffects?: true;
+	style?: import('../drawingml/shape-style-refs').DrawingShapeStyleRefs;
 	text?: DrawingTextBody;
 	equationParagraphs?: import('./shape-equations').EquationParagraphs;
 	wordArt?: import('../drawingml/word-art').WordArtStyle;

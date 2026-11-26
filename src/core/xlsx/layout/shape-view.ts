@@ -10,7 +10,7 @@ import type { ThemePalette } from '../model';
 import type { ShapeNode } from '../model-shapes';
 import { drawingSchemeColors } from '../drawing-theme';
 import { resolveThemeTypeface, workbookFontFamily } from './font-stack';
-import { EMU_PER_PX, shapeColor, shapeFill, shapeStroke } from './shape-paint';
+import { EMU_PER_PX, shapeColor, shapeFill, shapeShadow, shapeStroke } from './shape-paint';
 
 interface Box {
 	x: number;
@@ -123,7 +123,8 @@ function textSvg(node: ShapeNode, rect: Box, ctx: Context): string {
 			'#000000';
 		// A shape without a typeface draws in the theme's minor font (Excel's `fontRef` default).
 		const family = workbookFontFamily(
-			resolveThemeTypeface(info.typeface, ctx.theme) ?? ctx.theme?.minorFont,
+			resolveThemeTypeface(info.typeface, ctx.theme) ??
+				(node.style?.font?.idx === 'major' ? ctx.theme?.majorFont : ctx.theme?.minorFont),
 		);
 		for (const text of wrapShapeLine(info.text, innerW, fontPx))
 			lines.push({
@@ -260,9 +261,9 @@ function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
 				h: textRect.b - textRect.t,
 			}
 		: box;
-	const scheme = node.shadow && drawingSchemeColors(ctx.theme);
-	const shadow =
-		node.shadow && resolveDrawingOuterShadow(node.shadow, { scheme: (name) => scheme?.[name] });
+	const outer = shapeShadow(node, ctx.theme);
+	const scheme = outer && drawingSchemeColors(ctx.theme);
+	const shadow = outer && resolveDrawingOuterShadow(outer, { scheme: (name) => scheme?.[name] });
 	const filter = shadow ? `${id}shadow` : undefined;
 	if (filter && shadow)
 		ctx.defs.push(

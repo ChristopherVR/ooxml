@@ -1,5 +1,7 @@
 import { NS, buildXml, elements, first, parseXml } from '../../xml/index';
 import type { ThemePalette } from '../model';
+import { drawingThemeFormatSchemeXml } from '../../drawingml/format-scheme';
+import { OFFICE_FORMAT_SCHEME_XML } from '../office-format-scheme';
 import { THEME_COLOR_SLOTS } from '../../drawingml/theme-model';
 import { PALETTE_SLOTS, parseTheme } from '../read/theme';
 import { XML_HEADER, escapeAttr } from './xml-out';
@@ -16,18 +18,13 @@ export function defaultThemeXml(theme: ThemePalette): string {
 	).join('');
 	const font = (kind: string, face: string) =>
 		`<a:${kind}><a:latin typeface="${escapeAttr(face)}"/><a:ea typeface=""/><a:cs typeface=""/></a:${kind}>`;
-	const solid = '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>';
-	const line = (w: number) =>
-		`<a:ln w="${w}" cap="flat" cmpd="sng" algn="ctr">${solid}<a:prstDash val="solid"/><a:miter lim="800000"/></a:ln>`;
-	const effect = '<a:effectStyle><a:effectLst/></a:effectStyle>';
 	return (
 		`${XML_HEADER}<a:theme xmlns:a="${NS.a}" name="Office Theme"><a:themeElements>` +
 		`<a:clrScheme name="Office">${scheme}</a:clrScheme>` +
 		`<a:fontScheme name="Office">${font('majorFont', theme.majorFont)}${font('minorFont', theme.minorFont)}</a:fontScheme>` +
-		`<a:fmtScheme name="Office"><a:fillStyleLst>${solid}${solid}${solid}</a:fillStyleLst>` +
-		`<a:lnStyleLst>${line(6350)}${line(12700)}${line(19050)}</a:lnStyleLst>` +
-		`<a:effectStyleLst>${effect}${effect}${effect}</a:effectStyleLst>` +
-		`<a:bgFillStyleLst>${solid}${solid}${solid}</a:bgFillStyleLst></a:fmtScheme>` +
+		(theme.formatScheme
+			? drawingThemeFormatSchemeXml(theme.formatScheme)
+			: OFFICE_FORMAT_SCHEME_XML) +
 		'</a:themeElements><a:objectDefaults/><a:extraClrSchemeLst/></a:theme>'
 	);
 }

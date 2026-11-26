@@ -6,8 +6,8 @@
  *
  * @module render/ribbon-galleries/picture-style-tile-svg
  */
-import { safeColor, svgId, svgTile } from './gallery-preview-svg';
-import type { PictureStyleSpec } from './picture-styles-spec';
+import { safeColor, svgTile } from './svg-preview';
+import type { PictureStyleSpec } from 'ooxml-core/drawingml';
 
 export const PICTURE_STYLE_TILE = { width: 64, height: 52 };
 
@@ -70,7 +70,7 @@ function tiltTransform(spec: PictureStyleSpec, cx: number, cy: number): string {
 
 /** The tile for one picture style. */
 export function pictureStyleTileSvg(spec: PictureStyleSpec): string {
-	const id = svgId(`gps-${spec.key}`);
+	const id = `gps-${spec.key.replace(/[^\w-]/gu, '_')}`;
 	const { width, height } = PICTURE_STYLE_TILE;
 	const reflect = spec.reflection !== undefined;
 	const pad = 9;

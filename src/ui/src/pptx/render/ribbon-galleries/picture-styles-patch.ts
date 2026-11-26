@@ -9,21 +9,21 @@
  */
 import type { PptxElement, ShapeStyle } from 'ooxml-core/pptx';
 import { cropShapeForPresetGeometry } from 'ooxml-core/pptx';
+import {
+	PICTURE_REFLECTION_BLUR_EMU,
+	PICTURE_REFLECTION_DISTANCE_EMU,
+	pictureStyleScene3D,
+} from 'ooxml-core/drawingml';
 
 import { colorSpecXml, resolveColorSpec } from './gallery-color-spec';
 import { shapeStyleWithoutFormatting } from './gallery-element-patch';
 import type {
 	PictureStyleOuterShadow,
-	PictureStyleScene,
 	PictureStyleShape3d,
 	PictureStyleSpec,
-} from './picture-styles-spec';
+} from 'ooxml-core/drawingml';
 
 const EMU_PER_PX = 9525;
-/** `a:reflection` constants every reflected picture style shares. */
-const REFLECTION_BLUR_EMU = 12700;
-const REFLECTION_DIST_EMU = 5000;
-
 function round2(value: number): number {
 	return Math.round(value * 100) / 100;
 }
@@ -54,25 +54,6 @@ function outerShadowStyle(spec: PictureStyleOuterShadow): ShapeStyle {
 	out.shadowOffsetX = round2(Math.cos(rad) * dist);
 	out.shadowOffsetY = round2(Math.sin(rad) * dist);
 	return out;
-}
-
-function sceneStyle(scene: PictureStyleScene): NonNullable<ShapeStyle['scene3d']> {
-	return {
-		cameraPreset: scene.camera,
-		...(scene.fov !== undefined && { cameraFieldOfView: scene.fov }),
-		...(scene.rot && {
-			cameraRotX: scene.rot[0],
-			cameraRotY: scene.rot[1],
-			cameraRotZ: scene.rot[2],
-		}),
-		lightRigType: scene.rig,
-		lightRigDirection: 't',
-		...(scene.rigRev !== undefined && {
-			lightRigRotX: 0,
-			lightRigRotY: 0,
-			lightRigRotZ: scene.rigRev,
-		}),
-	};
 }
 
 function shape3dStyle(sp3d: PictureStyleShape3d): NonNullable<ShapeStyle['shape3d']> {
@@ -132,11 +113,11 @@ export function pictureStyleShapeStyle(spec: PictureStyleSpec, element: PptxElem
 	}
 	if (spec.reflection) {
 		Object.assign(style, {
-			reflectionBlurRadius: REFLECTION_BLUR_EMU / EMU_PER_PX,
+			reflectionBlurRadius: PICTURE_REFLECTION_BLUR_EMU / EMU_PER_PX,
 			reflectionStartOpacity: spec.reflection.stA / 100000,
 			reflectionEndPosition: spec.reflection.endPos / 100000,
 			reflectionDirection: 90,
-			reflectionDistance: REFLECTION_DIST_EMU / EMU_PER_PX,
+			reflectionDistance: PICTURE_REFLECTION_DISTANCE_EMU / EMU_PER_PX,
 			reflectionScaleY: -100000,
 			reflectionAlignment: 'bl',
 			reflectionRotateWithShape: false,
@@ -146,7 +127,7 @@ export function pictureStyleShapeStyle(spec: PictureStyleSpec, element: PptxElem
 		style.softEdgeRadius = spec.softEdge / EMU_PER_PX;
 	}
 	if (spec.scene) {
-		style.scene3d = sceneStyle(spec.scene);
+		style.scene3d = pictureStyleScene3D(spec.scene);
 	}
 	if (spec.sp3d) {
 		style.shape3d = shape3dStyle(spec.sp3d);

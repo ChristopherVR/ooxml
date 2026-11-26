@@ -14,8 +14,8 @@
  */
 import type { ShapeStyle, XmlObject } from 'ooxml-core/pptx';
 
-import type { ReflectionPresetSpec, ShadowPresetSpec } from './shape-effects-catalog';
-import { DEFAULT_SCENE_LIGHT_RIG, GLOW_ALPHA, REFLECTION_BLUR_EMU } from './shape-effects-catalog';
+import type { ReflectionPresetSpec, ShadowPresetSpec } from 'ooxml-core/drawingml';
+import { DEFAULT_SCENE_LIGHT_RIG, GLOW_ALPHA, REFLECTION_BLUR_EMU } from 'ooxml-core/drawingml';
 
 export const EMU_PER_PX = 9525;
 export const EMU_PER_PT = 12700;

@@ -11,7 +11,7 @@ it('formats a native shape and keeps its formatting through edits, grouping and 
 	const edit = createEditSession(book);
 	const index = edit.addShape(0, position, { kind: 'preset', preset: 'rect', name: 'Box' });
 	expect(edit.formatDrawing(0, index, { kind: 'geometry', preset: 'hexagon' })).toBe(true);
-	edit.formatDrawing(0, index, { kind: 'shapeStyle', color: { accent: 2 }, outlined: false });
+	edit.formatDrawing(0, index, { kind: 'shapeStyle', block: 'theme', row: 1, column: 'accent2' });
 	edit.formatDrawing(0, index, { kind: 'fill', color: 'FF0000' });
 	edit.formatDrawing(0, index, { kind: 'outline', color: '0000FF' });
 	edit.formatDrawing(0, index, { kind: 'shadow', enabled: true });
@@ -85,7 +85,7 @@ it('round-trips picture formatting, resets it and restores it with undo', async 
 	edit.addImage(0, bytes, 'image/png', position, 'Logo');
 	edit.editPictureEffects(0, 0, { brightness: 0.25, contrast: -0.15, grayscale: true });
 	edit.setPictureCrop(0, 0, { cropLeft: 0.1 });
-	edit.formatDrawing(0, 0, { kind: 'pictureStyle', border: 'FFFFFF', shadow: true });
+	edit.formatDrawing(0, 0, { kind: 'pictureStyle', style: 'simpleFrameWhite' });
 	edit.formatDrawing(0, 0, { kind: 'altText', text: 'Picture <logo>' });
 	edit.formatDrawing(0, 0, { kind: 'size', width: 90, height: 72 });
 	const loaded = await reopen(book);

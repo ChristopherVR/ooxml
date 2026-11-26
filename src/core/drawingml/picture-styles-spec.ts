@@ -4,9 +4,7 @@
  * of a degree, 1000ths of a percent) so a catalogue line reads exactly like
  * the XML PowerPoint writes.
  *
- * @module render/ribbon-galleries/picture-styles-spec
  */
-import type { ShapeStyle } from 'ooxml-core/pptx';
 
 /** `a:ln`: width (EMU), cap, compound type, colour spec, prstDash solid, miter join. */
 export interface PictureStyleLine {
@@ -27,7 +25,7 @@ export interface PictureStyleOuterShadow {
 	sy?: number;
 	kx?: number;
 	ky?: number;
-	algn?: NonNullable<ShapeStyle['shadowAlignment']>;
+	algn?: 'tl' | 't' | 'tr' | 'l' | 'ctr' | 'r' | 'bl' | 'b' | 'br';
 	color: string;
 }
 
@@ -72,6 +70,9 @@ export interface PictureStyleSpec {
 	scene?: PictureStyleScene;
 	sp3d?: PictureStyleShape3d;
 }
+
+export const PICTURE_REFLECTION_BLUR_EMU = 12700;
+export const PICTURE_REFLECTION_DISTANCE_EMU = 5000;
 
 export const WHITE_MAT = '#FFFFFF shade:85000';
 export const BLACK_40 = '#000000 alpha:40000';

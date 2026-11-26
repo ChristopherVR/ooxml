@@ -34,9 +34,10 @@ import {
 	SHAPE_PRESET_STYLE_ROWS,
 	SHAPE_STYLE_COLUMNS,
 	SHAPE_THEME_STYLE_ROWS,
-	themeShapeStyleXml,
-} from './shape-style-catalog';
-import type { ShapePresetStyleSpec, ShapeStyleColumn } from './shape-style-catalog';
+	parseShapeStylePick,
+} from 'ooxml-core/drawingml';
+import type { ShapePresetStyleSpec, ShapeStyleColumn } from 'ooxml-core/drawingml';
+import { themeShapeStyleXml } from './shape-style-xml';
 import { fallbackResolveStyleMatrix } from './style-matrix-fallback';
 
 const TILE = { width: 44, height: 32 };
@@ -58,21 +59,6 @@ const COLUMN_LABELS: Record<ShapeStyleColumn, string> = {
 	accent5: 'Accent 5',
 	accent6: 'Accent 6',
 };
-
-/** Gallery item id -> (block, row, column). `theme-<row>-<col>` / `preset-<row>-<col>`. */
-function parseItemId(
-	id: string,
-): { block: 'theme' | 'preset'; row: number; column: ShapeStyleColumn } | null {
-	const match = /^(theme|preset)-(\d)-(\d)$/u.exec(id);
-	if (!match) {
-		return null;
-	}
-	const block = match[1] as 'theme' | 'preset';
-	const row = Number(match[2]);
-	const column = SHAPE_STYLE_COLUMNS[Number(match[3])];
-	const rows = block === 'theme' ? SHAPE_THEME_STYLE_ROWS.length : SHAPE_PRESET_ROWS.length;
-	return column && row < rows ? { block, row, column } : null;
-}
 
 function resolveTheme(xml: XmlObject, ctx: RibbonGalleryContext): ResolvedStyleMatrix {
 	return ctx.resolveStyleMatrix?.(xml) ?? fallbackResolveStyleMatrix(xml, ctx.themeColorMap);
@@ -160,7 +146,7 @@ interface ResolvedItem {
 }
 
 function resolveItem(id: string, ctx: RibbonGalleryContext): ResolvedItem | null {
-	const parsed = parseItemId(id);
+	const parsed = parseShapeStylePick(id);
 	if (!parsed) {
 		return null;
 	}

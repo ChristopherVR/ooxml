@@ -1,7 +1,9 @@
 import type { DRAWING_FORMAT_KEYS } from './drawing-format-keys';
+import { DRAWING_STYLE_STRINGS } from './drawing-styles';
 import type { Translations } from './types';
 
 export const DRAWING_FORMAT_STRINGS = {
+	...DRAWING_STYLE_STRINGS,
 	'Could not load the gallery.': [
 		'Impossible de charger la galerie.',
 		'Der Katalog konnte nicht geladen werden.',
@@ -59,12 +61,6 @@ export const DRAWING_FORMAT_STRINGS = {
 		'简单边框，黑色',
 	],
 	'Accent {n}': ['Accentuation {n}', 'Akzent {n}', 'Énfasis {n}', '强调色 {n}'],
-	'Accent {n} Outline': [
-		'Contour accentuation {n}',
-		'Kontur Akzent {n}',
-		'Contorno de énfasis {n}',
-		'强调色 {n} 轮廓',
-	],
 	'Width (px)': ['Largeur (px)', 'Breite (px)', 'Ancho (px)', '宽度（像素）'],
 	'Height (px)': ['Hauteur (px)', 'Höhe (px)', 'Alto (px)', '高度（像素）'],
 	'Brightness (%)': ['Luminosité (%)', 'Helligkeit (%)', 'Brillo (%)', '亮度（%）'],

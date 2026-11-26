@@ -1,4 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { PICTURE_STYLES } from '../../drawingml/picture-styles-catalog';
+import {
+	SHAPE_PRESET_STYLE_ROWS,
+	SHAPE_THEME_STYLE_ROWS,
+} from '../../drawingml/shape-style-catalog';
 import { mergeMessageModules, normalizeLocale } from '../../i18n/index';
 import { FUNCTION_CATALOG } from '../formula/functions/registry';
 import { COMMAND_TABLES } from './commands/i18n/index';
@@ -50,6 +55,15 @@ describe('xlsx localization over the shared i18n area', () => {
 				if (key.includes('\u2014')) problems.push(`${key} em-dash`);
 			}
 		expect(problems).toEqual([]);
+	});
+	it('localizes every picture style and shape style row', () => {
+		const labels = [
+			...PICTURE_STYLES.map(({ label }) => label),
+			...SHAPE_PRESET_STYLE_ROWS.map(({ label }) => label),
+			...SHAPE_THEME_STYLE_ROWS.map(({ label }) => label),
+		];
+		for (const label of labels)
+			expect(Object.hasOwn(DRAWING_FORMAT_STRINGS, label), label).toBe(true);
 	});
 	it('provides non-empty translations for all FUNCTION_CATALOG descriptions across all locales without em-dashes', async () => {
 		const nonEnglishLocales = EDITOR_LOCALES.filter((loc) => loc !== 'en');

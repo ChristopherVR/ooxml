@@ -1,6 +1,14 @@
 import { lookupPresetShape } from '../../geometry/preset-shape-evaluator';
 import { inspectRasterImage } from '../../drawingml/raster-image';
 import type { DrawingColor, DrawingFill, DrawingLine } from '../../drawingml/types';
+import { PICTURE_STYLES } from '../../drawingml/picture-styles-catalog';
+import { pictureStyleFormat } from '../../drawingml/picture-style-format';
+import { DEFAULT_OUTER_SHADOW_PRESET } from '../../drawingml/shape-effects-catalog';
+import {
+	presetShapeStyle,
+	themeShapeStyle,
+	type ShapeStylePick,
+} from '../../drawingml/shape-style-catalog';
 import type { DrawingOuterShadow } from '../../drawingml/effect-model';
 import { wordArtRgb } from '../../drawingml/word-art';
 import { NS, buildXml, elements, parseXml } from '../../xml/index';
@@ -26,8 +34,8 @@ export type DrawingFormatIntent =
 	| { kind: 'geometry'; preset: string }
 	| { kind: 'fill' | 'outline'; color: Ink | null }
 	| { kind: 'shadow'; enabled: boolean }
-	| { kind: 'shapeStyle'; color: Ink; outlined: boolean }
-	| { kind: 'pictureStyle'; border: Ink | null; shadow: boolean }
+	| ({ kind: 'shapeStyle' } & ShapeStylePick)
+	| { kind: 'pictureStyle'; style: string }
 	| { kind: 'resetPicture' }
 	| { kind: 'replacePicture' | 'compressPicture'; bytes: Uint8Array };
 
@@ -41,18 +49,26 @@ function color(ink: Ink): DrawingColor {
 
 const fill = (ink: Ink | null): DrawingFill =>
 	ink === null ? { kind: 'none' } : { kind: 'solid', color: color(ink) };
-const line = (before: DrawingLine | undefined, ink: Ink | null, width = 12700): DrawingLine => ({
+const line = (before: DrawingLine | undefined, ink: Ink | null): DrawingLine => ({
 	...before,
-	widthEmu: before?.widthEmu || width,
+	widthEmu: before?.widthEmu || 12700,
 	fill: fill(ink),
 });
-const shadow = (): DrawingOuterShadow => ({
-	kind: 'outerShadow',
-	distanceEmu: 38100,
-	directionAngle: 2700000,
-	blurRadiusEmu: 50800,
-	color: { kind: 'srgb', value: '000000', transforms: [{ name: 'alpha', value: '40000' }] },
-});
+function shadow(): DrawingOuterShadow {
+	const { distEmu, dir, blurEmu, alpha, algn } = DEFAULT_OUTER_SHADOW_PRESET;
+	return {
+		kind: 'outerShadow',
+		distanceEmu: distEmu,
+		directionAngle: dir,
+		blurRadiusEmu: blurEmu,
+		...(algn ? { alignment: algn } : {}),
+		color: {
+			kind: 'srgb',
+			value: '000000',
+			transforms: alpha === undefined ? [] : [{ name: 'alpha', value: String(alpha) }],
+		},
+	};
+}
 
 function frameFormat(
 	intent: DrawingFormatIntent,
@@ -68,30 +84,59 @@ function frameFormat(
 			return { line: line(outline, intent.color) };
 		case 'shadow':
 			return { shadow: intent.enabled ? shadow() : null };
-		case 'shapeStyle':
-			return {
-				fill: fill(intent.outlined ? null : intent.color),
-				line: line(undefined, intent.color),
-			};
-		case 'pictureStyle':
-			return {
-				line: line(undefined, intent.border, 28575),
-				shadow: intent.shadow ? shadow() : null,
-			};
+		case 'shapeStyle': {
+			const { block, row, column } = intent;
+			const themed = block === 'theme' ? themeShapeStyle(row, column) : undefined;
+			const preset = block === 'preset' ? presetShapeStyle(row, column) : undefined;
+			const base = { effects: null, scene3d: null, shape3d: null };
+			if (themed) return { ...base, style: themed, fill: null, line: null };
+			if (preset) return { ...base, ...preset };
+			throw new RangeError('Unknown shape style');
+		}
+		case 'pictureStyle': {
+			const style = PICTURE_STYLES.find(({ key }) => key === intent.style);
+			if (!style) throw new RangeError('Unknown picture style');
+			return pictureStyleFormat(style);
+		}
 		case 'resetPicture':
-			return { line: null, clearEffects: true, shadow: null };
+			return { line: null, fill: null, effects: null, scene3d: null, shape3d: null };
 		default:
 			return undefined;
 	}
 }
 
+function updateFrameEffects(
+	model: Pick<ImageObject, 'effectDag' | 'shadow' | 'hasExplicitEffects'>,
+	format: DrawingFrameFormat,
+): void {
+	if (format.effects !== undefined) {
+		delete model.effectDag;
+		const outer = format.effects?.effects.find((effect) => effect.kind === 'outerShadow');
+		if (outer) model.shadow = outer;
+		else delete model.shadow;
+		if (format.effects === null) delete model.hasExplicitEffects;
+		else model.hasExplicitEffects = true;
+	}
+	if (format.shadow !== undefined) {
+		model.hasExplicitEffects = true;
+		if (format.shadow) model.shadow = format.shadow;
+		else delete model.shadow;
+	}
+}
+
 function applyImageFormat(image: ImageObject, format: DrawingFrameFormat): void {
-	image.frameFormat = { ...image.frameFormat, ...format };
+	const merged = { ...image.frameFormat, ...format };
+	image.frameFormat = merged;
+	if (format.geometry !== undefined) {
+		image.geometry = format.geometry;
+		delete merged.adjustments;
+		delete image.adjustments;
+		if (format.adjustments) image.adjustments = merged.adjustments = format.adjustments;
+	}
 	if (format.line) image.line = format.line;
 	else if (format.line === null) delete image.line;
-	if (format.clearEffects) delete image.effectDag;
-	if (format.shadow) image.shadow = format.shadow;
-	else if (format.shadow === null) delete image.shadow;
+	if (format.effects !== undefined) delete merged.shadow;
+	updateFrameEffects(image, format);
 }
 
 export function formatDrawing(
@@ -145,7 +190,7 @@ export function formatDrawing(
 			intent.kind === 'geometry' ||
 			intent.kind === 'fill' ||
 			intent.kind === 'shapeStyle' ||
-			(image.effectDag && !format?.clearEffects && format?.shadow !== undefined)
+			(image.effectDag && format?.shadow !== undefined)
 		)
 			return false;
 		return editDrawings(ctx, sheet, 'Format picture', () => {
@@ -195,9 +240,11 @@ export function formatDrawing(
 			delete shape.adjustments;
 		}
 		if (format?.line) shape.line = format.line;
+		else if (format?.line === null) delete shape.line;
 		if (format?.fill) shape.fill = format.fill;
-		if (format?.shadow) shape.shadow = format.shadow;
-		else if (format?.shadow === null) delete shape.shadow;
+		else if (format?.fill === null) delete shape.fill;
+		if (format?.style) shape.style = format.style;
+		if (format) updateFrameEffects(shape, format);
 		return true;
 	});
 }

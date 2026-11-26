@@ -11,7 +11,7 @@ import { parseDrawingColorChoice } from '../drawing-color';
 import { shapeTileSvg } from './gallery-preview-svg';
 import type { TileEffects } from './gallery-preview-svg';
 import type { RibbonGalleryContext } from './gallery-types';
-import type { ReflectionPresetSpec, ShadowPresetSpec } from './shape-effects-catalog';
+import type { ReflectionPresetSpec, ShadowPresetSpec } from 'ooxml-core/drawingml';
 import {
 	EMU_PER_PT,
 	EMU_PER_PX,

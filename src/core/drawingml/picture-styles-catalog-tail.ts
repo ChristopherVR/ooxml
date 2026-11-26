@@ -2,7 +2,6 @@
  * Picture Styles 17-28 of `PICTURE_STYLES` (split only to keep files short).
  * COM-verified like the head of the list; see `picture-styles-catalog.ts`.
  *
- * @module render/ribbon-galleries/picture-styles-catalog-tail
  */
 import type { PictureStyleSpec } from './picture-styles-spec';
 import {

@@ -71,10 +71,21 @@
 }
 .ribbon-popover.ribbon-gallery-menu {
 	display: grid;
-	grid-template-columns: repeat(4, 96px);
+	grid-template-columns: repeat(var(--gallery-columns, 4), 96px);
 	gap: 4px;
 	max-height: min(70vh, 420px);
 	overflow-y: auto;
+}
+.ribbon-popover.ribbon-gallery-compact {
+	grid-template-columns: repeat(var(--gallery-columns), minmax(56px, 72px));
+}
+.ribbon-gallery-section {
+	display: contents;
+}
+.ribbon-gallery-heading {
+	grid-column: 1 / -1;
+	font-weight: 600;
+	padding: 4px;
 }
 .ribbon-gallery-menu button {
 	padding: 4px;

@@ -10,7 +10,6 @@
  *
  * The first 16 entries are here, the rest in `picture-styles-catalog-tail.ts`.
  *
- * @module render/ribbon-galleries/picture-styles-catalog
  */
 import { PICTURE_STYLES_TAIL } from './picture-styles-catalog-tail';
 import type { PictureStyleSpec } from './picture-styles-spec';

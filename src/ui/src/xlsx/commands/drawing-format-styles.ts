@@ -1,38 +1,54 @@
-import { WORD_ART_STYLES } from 'ooxml-core/drawingml';
-import { drawingSchemeColors, type Workbook } from 'ooxml-core/xlsx';
+import {
+	PICTURE_STYLES,
+	SHAPE_STYLE_COLUMNS,
+	SHAPE_THEME_STYLE_ROWS,
+	SHAPE_PRESET_STYLE_ROWS,
+	themeShapeStyle,
+	presetShapeStyle,
+	WORD_ART_STYLES,
+} from 'ooxml-core/drawingml';
+import { shapeSvg, type Workbook } from 'ooxml-core/xlsx';
+import { pictureStyleTileSvg } from '../../ribbon/picture-style-tile-svg';
 
-const accents = [1, 2, 3, 4, 5, 6] as const;
 const svg = '<svg xmlns="http://www.w3.org/2000/svg"';
-const defaultAccents = ['#4472C4', '#ED7D31', '#A5A5A5', '#FFC000', '#5B9BD5', '#70AD47'];
-export const shapeFormatStyles = accents.flatMap((accent) => [
-	{ color: { accent }, outlined: false, label: 'Accent {n}' },
-	{ color: { accent }, outlined: true, label: 'Accent {n} Outline' },
-]);
-export const pictureFormatStyles = [
-	{ label: 'Simple Frame, White', border: 'FFFFFF', shadow: false },
-	{ label: 'Simple Frame, Black', border: '000000', shadow: false },
-	{ label: 'Drop Shadow', border: null, shadow: true },
-];
 
 export function shapeStyleTiles(
 	workbook: Workbook | undefined,
-	translate: (key: string, vars: { n: number }) => string,
+	translate: (key: string, vars?: { n: number }) => string,
 ) {
-	const theme = drawingSchemeColors(workbook?.theme);
-	return shapeFormatStyles.map(({ color: { accent }, outlined, label }, index) => {
-		const ink = theme['accent' + accent] ?? defaultAccents[accent - 1];
-		return {
-			id: String(index),
-			label: translate(label, { n: accent }),
-			preview: `${svg} width="48" height="28" viewBox="0 0 48 28"><rect x="4" y="4" width="40" height="20" rx="2" fill="${outlined ? 'none' : ink}" stroke="${ink}" stroke-width="2"/></svg>`,
-		};
-	});
+	const tiles = (block: 'theme' | 'preset', rows: readonly { label: string }[], section: string) =>
+		rows.flatMap(({ label }, row) =>
+			SHAPE_STYLE_COLUMNS.map((column, index) => {
+				const id = `${block}-${row}-${index}`;
+				const style =
+					block === 'theme'
+						? { style: themeShapeStyle(row, column)! }
+						: presetShapeStyle(row, column);
+				const preview = shapeSvg(
+					{
+						kind: 'shape',
+						geometry: 'rect',
+						frame: { x: 0, y: 0, width: 0, height: 0 },
+						...style,
+					},
+					44,
+					26,
+					{ theme: workbook?.theme, idPrefix: `xlsx-style-${id}-` },
+				);
+				const color = index === 0 ? translate('Dark 1') : translate('Accent {n}', { n: index });
+				return { id, section, label: `${translate(label)} - ${color}`, preview };
+			}),
+		);
+	return [
+		...tiles('theme', SHAPE_THEME_STYLE_ROWS, 'Theme Styles'),
+		...tiles('preset', SHAPE_PRESET_STYLE_ROWS, 'Presets'),
+	];
 }
 
-export const pictureStyleTiles = pictureFormatStyles.map(({ label, border, shadow }, index) => ({
-	id: String(index),
-	label,
-	preview: `${svg} width="48" height="28" viewBox="0 0 48 28">${shadow ? '<rect x="10" y="6" width="32" height="21" fill="#666"/>' : ''}<rect x="7" y="3" width="32" height="21" fill="#748FAD" stroke="${border ? '#' + border : 'none'}" stroke-width="2"/><path d="M9 21 17 12 22 17 28 10 37 21Z" fill="#E4F1F8"/></svg>`,
+export const pictureStyleTiles = PICTURE_STYLES.map((spec) => ({
+	id: spec.key,
+	label: spec.label,
+	preview: pictureStyleTileSvg(spec),
 }));
 
 export const wordArtStyleTiles = (translate: (key: string, vars: { n: number }) => string) =>

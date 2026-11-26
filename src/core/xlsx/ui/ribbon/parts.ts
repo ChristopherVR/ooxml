@@ -21,6 +21,13 @@ export interface RibbonOption {
 	label: string;
 }
 
+export interface RibbonGalleryItem {
+	id: string;
+	label: string;
+	preview?: string;
+	section?: string;
+}
+
 export type RibbonControl =
 	| { kind: 'button'; command: string; size?: 'large' | 'small'; showLabel?: boolean }
 	| { kind: 'toggle'; command: string; size?: 'large' | 'small'; showLabel?: boolean }
@@ -51,10 +58,9 @@ export type RibbonControl =
 	| {
 			kind: 'gallery';
 			command: string;
-			items: (ctx: EditorContext) => { id: string; label: string; preview?: string }[];
-			loadItems?: (
-				ctx: EditorContext,
-			) => Promise<{ id: string; label: string; preview?: string }[]>;
+			items: (ctx: EditorContext) => RibbonGalleryItem[];
+			loadItems?: (ctx: EditorContext) => Promise<RibbonGalleryItem[]>;
+			columns?: number;
 			/** Sectioned dropdown rendered through the shared Office gallery. */
 			sections?: (ctx: EditorContext) => {
 				title?: string;

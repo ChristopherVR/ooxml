@@ -101,3 +101,10 @@ export const loadThemePresets = () => import('./theme-gallery');
 
 /** Loads the OPC reader and writer for standalone Office themes. */
 export const loadThemePackage = () => import('./theme-package');
+
+export * from './shape-style-refs';
+export * from './shape-style-catalog';
+export * from './shape-effects-catalog';
+export * from './picture-styles-catalog';
+export * from './picture-styles-spec';
+export * from './picture-style-format';

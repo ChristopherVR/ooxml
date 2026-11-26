@@ -15,10 +15,10 @@ import type {
 	RibbonGalleryContext,
 	RibbonGalleryDescriptor,
 } from './gallery-types';
-import { PICTURE_STYLE_TILE, pictureStyleTileSvg } from './picture-style-tile-svg';
-import { PICTURE_STYLES } from './picture-styles-catalog';
+import { PICTURE_STYLE_TILE, pictureStyleTileSvg } from '../../../ribbon/picture-style-tile-svg';
+import { PICTURE_STYLES } from 'ooxml-core/drawingml';
 import { pictureStylePatch } from './picture-styles-patch';
-import type { PictureStyleSpec } from './picture-styles-spec';
+import type { PictureStyleSpec } from 'ooxml-core/drawingml';
 
 const KEY = 'pptx.gallery.pictureStyles';
 const EMU_PER_PX = 9525;

@@ -1,4 +1,5 @@
-import { parseTransform } from '../../drawingml/drawing-geometry';
+import { parseDrawingShapeStyle } from '../../drawingml/shape-style-refs';
+import { parseDrawingGeometry, parseTransform } from '../../drawingml/drawing-geometry';
 import { parseDrawingLine } from '../../drawingml/drawing-fill';
 import { svgPictureRelationship } from '../../drawingml/svg-picture';
 import { parsePictureLayout } from '../../drawingml/picture-layout';
@@ -145,6 +146,13 @@ export function parseDrawing(
 			if (line) image.line = line;
 			if (shadow) image.shadow = shadow;
 			if (first(properties, 'effectDag', NS.a)) image.effectDag = true;
+			if (image.effectDag || first(properties, 'effectLst', NS.a)) image.hasExplicitEffects = true;
+			const style = parseDrawingShapeStyle(xdr(content, 'style'));
+			if (style) image.style = style;
+			const geometry = parseDrawingGeometry(properties);
+			image.geometry = geometry.geometry;
+			if ('adjustments' in geometry && geometry.adjustments)
+				image.adjustments = geometry.adjustments;
 			const transform = parseTransform(first(properties, 'xfrm', NS.a));
 			if (transform?.rotation) image.rotation = transform.rotation;
 			if (transform?.flipHorizontal) image.flipH = true;

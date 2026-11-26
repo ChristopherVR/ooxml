@@ -1,9 +1,14 @@
-import { drawingEffectXml } from '../../drawingml/drawing-effects';
-import type { DrawingOuterShadow } from '../../drawingml/effect-model';
+import { drawingEffectXml, drawingEffectsXml } from '../../drawingml/drawing-effects';
+import type { DrawingEffectList, DrawingOuterShadow } from '../../drawingml/effect-model';
 import type { DrawingFill, DrawingLine } from '../../drawingml/types';
 import { drawingFillXml } from '../../drawingml/write-fill';
 import { drawingLineXml } from '../../drawingml/write-line';
-import { NS, elements, first, parseXml, type XmlElement } from '../../xml/index';
+import { drawingShapeStyleRefsXml, type CompleteStyleRefs } from '../../drawingml/shape-style-refs';
+import type { DrawingTextScene3D, DrawingTextShape3D } from '../../drawingml/text-3d-model';
+import { writeDrawingTextScene3D, writeDrawingTextShape3D } from '../../drawingml/write-text-3d';
+import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../../xml/index';
+
+import { escapeAttr } from './xml-out';
 
 const geometry = ['prstGeom', 'custGeom'];
 const fills = ['noFill', 'solidFill', 'gradFill', 'pattFill', 'blipFill', 'grpFill'];
@@ -22,10 +27,14 @@ const effectOrder = [
 
 export interface DrawingFrameFormat {
 	geometry?: string;
-	fill?: DrawingFill;
+	adjustments?: Readonly<Record<string, number>>;
+	fill?: DrawingFill | null;
 	line?: DrawingLine | null;
-	clearEffects?: true;
+	effects?: DrawingEffectList | null;
 	shadow?: DrawingOuterShadow | null;
+	scene3d?: DrawingTextScene3D | null;
+	shape3d?: DrawingTextShape3D | null;
+	style?: CompleteStyleRefs;
 }
 
 function replace(
@@ -52,15 +61,48 @@ function replace(
 export function applyDrawingFrameFormat(node: XmlElement, format: DrawingFrameFormat): void {
 	const props = first(node, 'spPr', NS.xdr);
 	if (!props) return;
-	if (format.geometry !== undefined)
-		replace(props, geometry, `<a:prstGeom prst="${format.geometry}"><a:avLst/></a:prstGeom>`);
-	if (format.fill) replace(props, fills, drawingFillXml(format.fill));
+	if (format.geometry !== undefined) {
+		const guides = Object.entries(format.adjustments ?? {})
+			.map(([name, value]) => `<a:gd name="${escapeAttr(name)}" fmla="val ${value}"/>`)
+			.join('');
+		replace(
+			props,
+			geometry,
+			`<a:prstGeom prst="${escapeAttr(format.geometry)}"><a:avLst>${guides}</a:avLst></a:prstGeom>`,
+		);
+	}
+	if (format.fill !== undefined)
+		replace(props, fills, format.fill ? drawingFillXml(format.fill) : undefined);
 	if (format.line !== undefined)
 		replace(props, ['ln'], format.line ? drawingLineXml(format.line) : undefined);
-	if (format.clearEffects) replace(props, effects, undefined);
+	if (format.effects !== undefined)
+		replace(props, effects, format.effects ? drawingEffectsXml(format.effects) : undefined);
+	const doc = node.ownerDocument;
+	if (format.scene3d !== undefined)
+		replace(
+			props,
+			['scene3d'],
+			format.scene3d ? buildXml(writeDrawingTextScene3D(doc, format.scene3d)) : undefined,
+		);
+	if (format.shape3d !== undefined)
+		replace(
+			props,
+			['sp3d'],
+			format.shape3d ? buildXml(writeDrawingTextShape3D(doc, format.shape3d)) : undefined,
+		);
+	if (format.style) {
+		const old = first(node, 'style', NS.xdr);
+		const refs = drawingShapeStyleRefsXml(format.style);
+		const next = parseXml(
+			`<xdr:style xmlns:xdr="${NS.xdr}" xmlns:a="${NS.a}">${refs}</xdr:style>`,
+		).documentElement;
+		const style = doc.importNode(next, true);
+		if (old) node.replaceChild(style, old);
+		else node.insertBefore(style, props.nextSibling);
+	}
 	if (format.shadow === undefined) return;
 	let list = first(props, 'effectLst', NS.a);
-	if (!list && format.shadow) {
+	if (!list) {
 		replace(props, effects, '<a:effectLst/>');
 		list = first(props, 'effectLst', NS.a);
 	}

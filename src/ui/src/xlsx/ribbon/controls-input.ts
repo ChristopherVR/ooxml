@@ -245,7 +245,17 @@ export function renderGallery(
 		const pop = el(doc, 'div', 'ribbon-popover ribbon-gallery-menu');
 		pop.setAttribute('role', 'menu');
 		pop.setAttribute('aria-label', label);
+		if (control.columns) {
+			pop.classList.add('ribbon-gallery-compact');
+			pop.style.setProperty('--gallery-columns', String(control.columns));
+		}
+		let group: HTMLElement = pop;
+		let section: string | undefined;
 		for (const item of list) {
+			if (item.section !== section) {
+				section = item.section;
+				group = section ? galleryGroup(doc, pop, ctx.t(section)) : pop;
+			}
 			const tile = el(doc, 'button', 'ribbon-gallery-item');
 			tile.type = 'button';
 			tile.setAttribute('role', 'menuitem');
@@ -253,6 +263,7 @@ export function renderGallery(
 			tile.setAttribute('aria-label', name);
 			tile.title = name;
 			const preview = el(doc, 'span', 'ribbon-gallery-preview');
+			preview.setAttribute('aria-hidden', 'true');
 			applyPreview(preview, item.preview, name);
 			tile.append(preview);
 			tile.addEventListener('mousedown', (event) => event.preventDefault());
@@ -260,7 +271,7 @@ export function renderGallery(
 				closeRibbonPopover();
 				void ctx.commands.run(command.id, item.id);
 			});
-			pop.append(tile);
+			group.append(tile);
 		}
 		arrowNavigation(pop, '[role="menuitem"]');
 		if (mountPopover(button, pop)) pop.querySelector<HTMLElement>('[role="menuitem"]')?.focus();
@@ -274,4 +285,16 @@ export function renderGallery(
 		);
 	});
 	return button;
+}
+
+function galleryGroup(doc: Document, pop: HTMLElement, label: string): HTMLElement {
+	const group = el(doc, 'div', 'ribbon-gallery-section');
+	group.setAttribute('role', 'group');
+	group.setAttribute('aria-label', label);
+	const heading = el(doc, 'div', 'ribbon-gallery-heading');
+	heading.setAttribute('aria-hidden', 'true');
+	heading.textContent = label;
+	group.append(heading);
+	pop.append(group);
+	return group;
 }

@@ -5,7 +5,15 @@ export * from './gallery-placements';
 export * from './gallery-view';
 export * from './gallery-preview-svg';
 export * from './gallery-element-patch';
-export * from './shape-style-catalog';
+export {
+	SHAPE_PRESET_ROWS,
+	SHAPE_PRESET_STYLE_ROWS,
+	SHAPE_STYLE_COLUMNS,
+	SHAPE_THEME_STYLE_ROWS,
+	type ShapePresetStyleSpec,
+	type ShapeStyleColumn,
+} from 'ooxml-core/drawingml';
+export { themeShapeStyleXml } from './shape-style-xml';
 export * from './picture-adjust-catalog';
 export * from './picture-adjust-gallery';
 export * from './picture-adjust-tile-svg';

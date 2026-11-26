@@ -66,11 +66,11 @@ it('formats two selected shapes in one undo step for each command', async () => 
 		const second = session.addShape(0, anchor, { kind: 'preset', preset: 'ellipse', name: 'Oval' });
 		ctx.selection.set({ drawing: second, drawings: [first, second] });
 		expect(ctx.commands.isEnabled('drawing.alt-text')).toBe(false);
-		expect(await ctx.commands.run('drawing.shape-style', '2')).toBe(true);
+		expect(await ctx.commands.run('drawing.shape-style', 'theme-1-2')).toBe(true);
 		const drawings = () => session.workbook.sheets[0]?.drawings;
 		expect(drawings()).toMatchObject([
-			{ shape: { fill: { color: { value: 'accent2' } } } },
-			{ shape: { fill: { color: { value: 'accent2' } } } },
+			{ shape: { style: { fill: { color: { value: 'accent2' } } } } },
+			{ shape: { style: { fill: { color: { value: 'accent2' } } } } },
 		]);
 		expect(await ctx.commands.run('drawing.shape-effects', true)).toBe(true);
 		expect(drawings()).toMatchObject([
@@ -87,8 +87,8 @@ it('formats two selected shapes in one undo step for each command', async () => 
 		]);
 		expect(session.redo()).toBe(true);
 		expect(drawings()).toMatchObject([
-			{ shape: { fill: { color: { value: 'accent2' } } } },
-			{ shape: { fill: { color: { value: 'accent2' } } } },
+			{ shape: { style: { fill: { color: { value: 'accent2' } } } } },
+			{ shape: { style: { fill: { color: { value: 'accent2' } } } } },
 		]);
 	} finally {
 		ctx.host.remove();

@@ -54,6 +54,7 @@ export function pictureFormatTab(): RibbonTab {
 					{
 						kind: 'gallery',
 						command: 'picture.style',
+						columns: 7,
 						items: () => [],
 						loadItems: async () =>
 							(await import('../../commands/drawing-format-styles')).pictureStyleTiles,
@@ -92,6 +93,7 @@ export function shapeFormatTab(): RibbonTab {
 					{
 						kind: 'gallery',
 						command: 'drawing.shape-style',
+						columns: 7,
 						items: () => [],
 						loadItems: async (ctx) =>
 							(await import('../../commands/drawing-format-styles')).shapeStyleTiles(

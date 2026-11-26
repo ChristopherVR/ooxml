@@ -635,6 +635,10 @@ export interface ImageObject {
 	line?: import('../drawingml/types').DrawingLine;
 	shadow?: import('../drawingml/effect-model').DrawingOuterShadow;
 	effectDag?: true;
+	hasExplicitEffects?: true;
+	style?: import('../drawingml/shape-style-refs').DrawingShapeStyleRefs;
+	geometry?: string;
+	adjustments?: Readonly<Record<string, number>>;
 	/** Only the authored frame fields are applied over the original picture XML. */
 	frameFormat?: import('./write/drawing-format').DrawingFrameFormat;
 	resized?: { cx: number; cy: number };
