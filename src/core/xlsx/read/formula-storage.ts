@@ -30,14 +30,29 @@ function matching(list: readonly Token[], open: number): number {
 	return -1;
 }
 
-/** `A1#` -> `ANCHORARRAY(A1)`, `@x` -> `SINGLE(x)`; anything else is unchanged. */
+function storeField(reference: Token, field: Token): void {
+	const source = reference.spill ? `ANCHORARRAY(${reference.text.slice(0, -1)})` : reference.text;
+	const name = String(field.value).replaceAll('"', '""');
+	reference.text = `_FV(${source},"${name}")`;
+	if (reference.spill) reference.spill = false;
+	field.text = '';
+	field.kind = 'ws';
+}
+
+/** Writes reference operators in SpreadsheetML syntax, including `A1.Field` as `_FV`. */
 export function toStoredSyntax(formula: string): string {
-	if (!formula.includes('#') && !formula.includes('@')) return formula;
+	if (!/[#@.]/.test(formula)) return formula;
 	const list = tokens(formula);
 	if (!list) return formula;
 	let changed = false;
 	for (let i = 0; i < list.length; i++) {
 		const token = list[i] as Token;
+		const field = list[i + 1];
+		if (field?.kind === 'field') {
+			storeField(token, field);
+			changed = true;
+			continue;
+		}
 		if (token.kind === 'ref' && token.spill) {
 			token.text = `ANCHORARRAY(${token.text.slice(0, -1)})`;
 			changed = true;
@@ -47,6 +62,8 @@ export function toStoredSyntax(formula: string): string {
 		const j = nextIndex(list, i + 1);
 		const target = list[j];
 		if (!target) continue;
+		const targetField = list[j + 1];
+		if (targetField?.kind === 'field') storeField(target, targetField);
 		let end = j;
 		if (target.kind === 'func') {
 			end = matching(list, nextIndex(list, j + 1));

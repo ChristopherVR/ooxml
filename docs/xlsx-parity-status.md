@@ -380,7 +380,8 @@ line/marker swatches and position-authoring controls remain incomplete.
     insertion, conversion to and from floating pictures, and alt text. IMAGE() displays raster
     results through an opt-in host HTTPS fetcher and returns `#BLOCKED!` without one, following
     [Excel's documented response to blocked images](https://support.microsoft.com/en-us/excel/functions/image-function).
-    Cached linked entities have an icon and a read-only card for scalar fields. Gaps include linked-data refresh,
+    Cached linked entities have an icon and a read-only card for scalar fields. `FIELDVALUE` and dot
+    access can read these fields from a single linked data cell. Gaps include linked-data refresh,
     nested card layouts and fields, and additional raster formats. Calculated IMAGE() pictures survive
     local undo. Saving or sharing the workbook carries the formula and its scalar fallback. Peers
     and reopened workbooks need a provider to recalculate the picture.

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { encodePng } from '../../drawingml/raster-encode';
 import { getCell } from '../cells';
 import { createCalcEngine } from '../formula/engine';
+import { translateFormula } from '../formula/transform';
 import { createEditSession } from '../edit/session';
 import { cellView } from '../layout/cell-view';
 import { loadXlsx } from '../read/load';
@@ -117,7 +118,28 @@ describe('SpreadsheetML rich values', () => {
 				],
 			},
 		});
-		const saved = await JSZip.loadAsync(await saveXlsx(book));
+		const edit = createEditSession(book);
+		edit.setCellInput(0, 0, 1, '=A1.[人口]+1');
+		edit.setCellInput(0, 0, 2, `=FIELDVALUE('Data'!$A$1,"state")`);
+		edit.setCellInput(0, 0, 3, '=_FV(A1,"Missing")');
+		edit.setCellInput(0, 0, 4, '=FIELDVALUE(A1,"Internal")');
+		expect(translateFormula('A1.State', 1, 0)).toBe('A2.State');
+		const sheet = book.sheets[0]!;
+		expect(getCell(sheet, 0, 1)?.value).toBe(755079);
+		expect(getCell(sheet, 0, 2)?.value).toBe('WA');
+		expect(getCell(sheet, 0, 3)?.value).toEqual({ error: '#FIELD!' });
+		expect(getCell(sheet, 0, 4)?.value).toEqual({ error: '#FIELD!' });
+		const bytes = await saveXlsx(book);
+		const reopened = await loadXlsx(bytes);
+		const reopenedSheet = reopened.sheets[0]!;
+		expect(getCell(reopenedSheet, 0, 1)?.formula).toBe('_FV(A1,"人口")+1');
+		const reopenedEdit = createEditSession(reopened);
+		reopenedEdit.calculateNow({ full: true });
+		expect(getCell(reopenedSheet, 0, 1)?.value).toBe(755079);
+		reopenedEdit.setCellValue(0, 0, 0, 'ordinary text');
+		expect(getCell(reopenedSheet, 0, 1)?.value).toEqual({ error: '#FIELD!' });
+		expect(getCell(reopenedSheet, 0, 2)?.value).toEqual({ error: '#FIELD!' });
+		const saved = await JSZip.loadAsync(bytes);
 		for (const [name, xml] of Object.entries(parts))
 			expect(await saved.file(name)?.async('uint8array'), name).toEqual(
 				new TextEncoder().encode(xml),

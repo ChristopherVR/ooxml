@@ -76,6 +76,7 @@ export interface RichValueStore {
 	readonly byMetadata: ReadonlyMap<number, number>;
 	/** Keys suppressed by the global and per-type ShowInCardView flags. */
 	readonly hiddenCardFields: ReadonlyMap<string, ReadonlySet<string>>;
+	readonly hiddenFormulaFields?: ReadonlyMap<string, ReadonlySet<string>>;
 }
 
 export function richError(store: RichValueStore | undefined, vm: number): ErrorCode | undefined {
@@ -141,41 +142,84 @@ export function richIndex(text: string | undefined): number | undefined {
 	return index <= 0xffffffff ? index : undefined;
 }
 
-const cards = new WeakMap<RichValueRecord, LinkedDataCard | undefined>();
-export function linkedDataCard(workbook: Workbook, cell: Cell): LinkedDataCard | undefined {
+function linkedDataRecord(workbook: Workbook, cell: Cell) {
 	const store = workbook.richValues;
 	const index =
 		cell.valueMetadata === undefined ? undefined : store?.byMetadata.get(cell.valueMetadata);
 	if (!store || index === undefined || cell.inCellPicture) return undefined;
 	const record = store.records[index];
 	if (!record || !/^_(?:entity|linkedentity2?)$/.test(record.type)) return undefined;
+	const core = record.fields.find(({ name, type }) => name === '%cvi' && type === 'r');
+	const coreIndex = richIndex(core?.value);
+	const nested =
+		coreIndex !== undefined && coreIndex < index ? store.records[coreIndex] : undefined;
+	const body = nested && /^_linkedentity2?core$/.test(nested.type) ? nested : record;
+	return { store, record, body };
+}
+
+const CARD_FIELD_TYPES = new Set(['s', 'i', 'd', 'b', 'e']);
+function isCardField(
+	{ name, type }: RichValueField,
+	hidden: ReadonlyMap<string, ReadonlySet<string>>,
+	body: string,
+): boolean {
+	return (
+		Boolean(name) &&
+		!name.startsWith('_') &&
+		!name.startsWith('%') &&
+		!hidden.get('')?.has(name) &&
+		!hidden.get(body)?.has(name) &&
+		CARD_FIELD_TYPES.has(type)
+	);
+}
+
+const formulaFields = new WeakMap<RichValueRecord, ReadonlyMap<string, RichValueField>>();
+
+/** Full scalar values for accessible fields from the linked data card. */
+export function linkedDataField(
+	workbook: Workbook,
+	cell: Cell,
+	name: string,
+): RichValueField | undefined {
+	if (!isCellError(cell.value)) return undefined;
+	const linked = linkedDataRecord(workbook, cell);
+	if (!linked) return undefined;
+	const { store, body } = linked;
+	let fields = formulaFields.get(body);
+	if (!fields) {
+		const visible = new Map<string, RichValueField>();
+		for (const field of body.fields) {
+			if (
+				!isCardField(field, store.hiddenCardFields, body.type) ||
+				store.hiddenFormulaFields?.get('')?.has(field.name) ||
+				store.hiddenFormulaFields?.get(body.type)?.has(field.name)
+			)
+				continue;
+			const key = field.name.toLowerCase();
+			if (!visible.has(key)) visible.set(key, field);
+		}
+		formulaFields.set(body, (fields = visible));
+	}
+	return fields.get(name.toLowerCase());
+}
+
+const cards = new WeakMap<RichValueRecord, LinkedDataCard | undefined>();
+export function linkedDataCard(workbook: Workbook, cell: Cell): LinkedDataCard | undefined {
+	const linked = linkedDataRecord(workbook, cell);
+	if (!linked) return undefined;
+	const { store, record, body } = linked;
 	if (!cards.has(record)) {
-		const core = record.fields.find(({ name, type }) => name === '%cvi' && type === 'r');
-		const coreIndex = richIndex(core?.value);
-		const nested =
-			coreIndex !== undefined && coreIndex < index ? store.records[coreIndex] : undefined;
-		const body = nested && /^_linkedentity2?core$/.test(nested.type) ? nested : record;
 		const label = (fields: readonly RichValueField[]) =>
 			fields.find(({ name, type }) => name === '_DisplayString' && type === 's')?.value;
 		const text = label(record.fields) ?? label(body.fields);
-		const hidden = store.hiddenCardFields;
 		if (text === undefined) {
 			cards.set(record, undefined);
 			return undefined;
 		}
 		const fields: RichValueField[] = [];
-		const globalHidden = hidden.get('');
-		const typeHidden = hidden.get(body.type);
-		for (const { name, type, value } of body.fields) {
-			if (
-				!name ||
-				name.startsWith('_') ||
-				name.startsWith('%') ||
-				globalHidden?.has(name) ||
-				typeHidden?.has(name) ||
-				!['s', 'i', 'd', 'b', 'e'].includes(type)
-			)
-				continue;
+		for (const field of body.fields) {
+			if (!isCardField(field, store.hiddenCardFields, body.type)) continue;
+			const { name, type, value } = field;
 			fields.push({ name: name.slice(0, 256), type, value: value.slice(0, 1024) });
 			if (fields.length === 100) break;
 		}

@@ -18,6 +18,7 @@ import { MODERN_FUNCTIONS } from './modern';
 import { TEXT_EXTRA_FUNCTIONS } from './text-extra';
 import { TEXT_EAST_ASIAN_FUNCTIONS } from './text-east-asian';
 import { EUROCONVERT } from './euroconvert';
+import { FIELDVALUE } from './fieldvalue';
 import { FILTERXML } from './filterxml';
 import { CUBE_FUNCTIONS } from './cube';
 import { INTEGRATION_FUNCTIONS } from './integrations';
@@ -35,6 +36,7 @@ const ALL: readonly FunctionSpec[] = [
 	FILTERXML,
 	BAHTTEXT,
 	GETPIVOTDATA,
+	FIELDVALUE,
 	...GROUPBY_FUNCTIONS,
 	...MODERN_FUNCTIONS,
 	...DATETIME_FUNCTIONS,

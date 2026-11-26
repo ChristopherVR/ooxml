@@ -1,6 +1,12 @@
 import type { Translations } from '../types';
 
 export const FUNCTION_LOOKUP_STRINGS: Translations = {
+	'Returns a cached field from a linked data type.': [
+		'Renvoie un champ mis en cache d’un type de données lié.',
+		'Gibt ein zwischengespeichertes Feld eines verknüpften Datentyps zurück.',
+		'Devuelve un campo en caché de un tipo de datos vinculado.',
+		'返回链接数据类型中的缓存字段。',
+	],
 	'A cell address as text.': [
 		'Une adresse de cellule sous forme de texte.',
 		'Eine Zelladresse als Text.',

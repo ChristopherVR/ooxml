@@ -99,6 +99,16 @@ function parseExpression(c: Cursor, minPrec: number, inParens: boolean): Formula
 /** Operators after a prefix; left-associative chains (1+2+3+...) loop rather than recurse. */
 function parseOperators(c: Cursor, minPrec: number, inParens: boolean): FormulaAst {
 	let left = parsePrefix(c, inParens);
+	const field = peek(c);
+	if (field?.kind === 'field' && typeof field.value === 'string' && !c.wsBefore[c.pos]) {
+		c.pos++;
+		left = {
+			type: 'call',
+			name: 'FIELDVALUE',
+			rawName: '_FV',
+			args: [left, { type: 'string', value: field.value }],
+		};
+	}
 	for (;;) {
 		const token = peek(c);
 		if (!token) return left;

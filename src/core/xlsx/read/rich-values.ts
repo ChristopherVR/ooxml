@@ -61,7 +61,7 @@ function fieldsFromMetadata(root: XmlElement): Map<number, number> {
 	return indices;
 }
 
-function hiddenFields(root: XmlElement | undefined): Map<string, Set<string>> {
+function hiddenFields(root: XmlElement | undefined, flagName: string): Map<string, Set<string>> {
 	const hidden = new Map<string, Set<string>>();
 	if (!root) return hidden;
 	const ns = RICH_PARTS.types.ns;
@@ -77,8 +77,7 @@ function hiddenFields(root: XmlElement | undefined): Map<string, Set<string>> {
 				name &&
 				children(key, 'flag', ns).some(
 					(flag) =>
-						att(flag, 'name') === 'ShowInCardView' &&
-						['0', 'false'].includes(att(flag, 'value') ?? ''),
+						att(flag, 'name') === flagName && ['0', 'false'].includes(att(flag, 'value') ?? ''),
 				)
 			)
 				names.add(name);
@@ -156,11 +155,11 @@ export function readRichValues(
 		}
 		return { type: structure.type, fields, ...(picture ? { picture } : {}) };
 	});
+	const types = read(partName(RICH_PARTS.types), 'rvTypesInfo', RICH_PARTS.types.ns);
 	return {
 		records,
 		byMetadata: fieldsFromMetadata(metadataRoot),
-		hiddenCardFields: hiddenFields(
-			read(partName(RICH_PARTS.types), 'rvTypesInfo', RICH_PARTS.types.ns),
-		),
+		hiddenCardFields: hiddenFields(types, 'ShowInCardView'),
+		hiddenFormulaFields: hiddenFields(types, 'ShowInDotNotation'),
 	};
 }

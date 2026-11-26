@@ -109,6 +109,7 @@ export const boundary = (source: string, end: number): boolean => {
 export function readReference(
 	source: string,
 	at: number,
+	allowField = false,
 ): { ref: RefSpec; length: number } | undefined {
 	const cell = matchAt(CELL_AT, source, at);
 	if (cell) {
@@ -125,7 +126,12 @@ export function readReference(
 					}
 				}
 			}
-			if (boundary(source, at + length))
+			if (
+				boundary(source, at + length) ||
+				(allowField &&
+					source[at + length] === '.' &&
+					(source[at + length + 1] === '[' || isNameStartCode(source.charCodeAt(at + length + 1))))
+			)
 				return { ref: { kind: 'cell', start, end: start }, length };
 		}
 		length = 0;

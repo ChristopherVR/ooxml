@@ -104,7 +104,8 @@ export type ArrayConstant = number | string | boolean | { error: ErrorCode };
 
 /** Strips the storage prefixes Excel writes for newer functions (`_xlfn.`, `_xlws.`, `_xludf.`). */
 export function normalizeFunctionName(name: string): string {
-	return name.replace(/^(?:_xlfn\.|_xlws\.|_xludf\.)+/i, '').toUpperCase();
+	const plain = name.replace(/^(?:_xlfn\.|_xlws\.|_xludf\.)+/i, '').toUpperCase();
+	return plain === '_FV' ? 'FIELDVALUE' : plain;
 }
 
 /** Strips the `_xlpm.` prefix Excel writes for LET and LAMBDA parameter names. */

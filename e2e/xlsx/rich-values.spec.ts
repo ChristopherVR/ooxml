@@ -141,4 +141,8 @@ test('shows a cached data type icon and opens its card from the keyboard', async
 	const card = editor(page).locator('[data-dialog="linked-data-card"]');
 	await expect(card.getByText('Washington', { exact: true })).toBeVisible();
 	await expect(card.getByText('Refresh is unavailable.', { exact: false })).toBeVisible();
+	await page.keyboard.press('Escape');
+	await goToCell(page, 'B1');
+	await typeInActiveCell(page, '=A1.State');
+	await expect(grid(page).getByText('Washington', { exact: true })).toBeVisible();
 });

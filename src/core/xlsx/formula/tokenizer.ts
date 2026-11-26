@@ -23,6 +23,7 @@ export type TokenKind =
 	| 'name'
 	| 'func'
 	| 'structured'
+	| 'field'
 	| 'op'
 	| 'open'
 	| 'close'
@@ -117,6 +118,14 @@ export function tokenize(formula: string): Token[] {
 			push({ kind: 'structured', text: source.slice(i, i + length), start, value: '' });
 			continue;
 		}
+		const previous = tokens[tokens.length - 1];
+		if (ch === '.' && (previous?.kind === 'ref' || previous?.kind === 'structured')) {
+			const field = readField(source, start);
+			if (field) {
+				push(field);
+				continue;
+			}
+		}
 		const nameStart = isNameStartCode(code);
 		const prefixed = ch === "'" || ch === '[' || nameStart || isDigit(code);
 		if (prefixed) {
@@ -129,7 +138,7 @@ export function tokenize(formula: string): Token[] {
 		}
 		const numeric = isDigit(code) || ch === '.';
 		if (numeric || ch === '$' || nameStart) {
-			const ref = readReference(source, i);
+			const ref = readReference(source, i, true);
 			if (ref) {
 				push(refToken(source, start, i + ref.length, ref.ref, undefined));
 				continue;
@@ -155,6 +164,18 @@ export function tokenize(formula: string): Token[] {
 	return tokens;
 }
 
+function readField(source: string, start: number): Token | undefined {
+	const at = start + 1;
+	if (source[at] === '[') {
+		const end = at + readBrackets(source, at);
+		const value = source.slice(at + 1, end - 1).replace(/'(['\[\]#@])/g, '$1');
+		return { kind: 'field', text: source.slice(start, end), start, value };
+	}
+	const name = matchAt(NAME_AT, source, at)?.[0];
+	if (name) return { kind: 'field', text: `.${name}`, start, value: name };
+	return undefined;
+}
+
 function refToken(
 	source: string,
 	start: number,
@@ -178,7 +199,7 @@ function readAfterPrefix(source: string, at: number, start: number, prefix: Shee
 	if (source.slice(at, at + 5).toUpperCase() === '#REF!') {
 		return { kind: 'ref', text: source.slice(start, at + 5), start, prefix };
 	}
-	const ref = readReference(source, at);
+	const ref = readReference(source, at, true);
 	if (ref) return refToken(source, start, at + ref.length, ref.ref, prefix);
 	if (at < source.length && isNameStartCode(source.charCodeAt(at)))
 		return readName(source, at, start, prefix);
