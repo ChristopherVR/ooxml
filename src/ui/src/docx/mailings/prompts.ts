@@ -13,7 +13,7 @@ export function askMergePrompt(
 	return new Promise((resolve) => {
 		show((dialog) => {
 			const position = document.createElement('p');
-			position.textContent = `${dialog.t('Record')} ${request.recordNumber} · ${request.kind}`;
+			position.textContent = `${dialog.t('Record')} ${request.recordNumber}`;
 			const input = textInput();
 			input.maxLength = 1024;
 			input.value = request.defaultAnswer.slice(0, input.maxLength);

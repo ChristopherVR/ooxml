@@ -250,6 +250,7 @@ test('prepares a mailto draft with a live prompt answer', async ({ page }) => {
 	await button('Send Email Messages').click();
 	await modal.getByRole('textbox', { name: 'Subject' }).fill('Update & news');
 	await button('Prepare email drafts').click();
+	await expect(modal.getByText('Record 1', { exact: true })).toBeVisible();
 	const answer = modal.getByRole('textbox', { name: 'What should we say?' });
 	await expect(answer).toBeFocused();
 	await expect(answer).toHaveValue('Default');

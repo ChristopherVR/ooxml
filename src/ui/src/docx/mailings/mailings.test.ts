@@ -288,6 +288,7 @@ it('cancels a prompt safely and sends escaped personalized HTML only after provi
 	await vi.waitFor(() => expect(ribbon('Finish & Merge').disabled).toBe(false));
 	expect(send).not.toHaveBeenCalled();
 	const prompt = await prepare();
+	expect(prompt.querySelector('.dve-mailings-content p')?.textContent).toBe('Record 1');
 	const answer = must(prompt.querySelector<HTMLInputElement>('[aria-label="Which line?"]'));
 	expect(answer.value).toBe('Default');
 	answer.value = '<img onload="test">';
