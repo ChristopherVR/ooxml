@@ -2730,13 +2730,16 @@
 					"name": "OfficeUiMenuItem",
 					"tagName": "office-ui-menu-item",
 					"customElement": true,
-					"description": "One menu entry: `command`, `label`, `icon`, `disabled`, `checked` (renders a `menuitemcheckbox`), `title`. Activation emits `office-command` `{ command }`.",
+					"description": "One menu entry: `command`, `label`, `icon`, `disabled`, `checked` (renders a `menuitemcheckbox`), `description`, `title`. Activation emits `office-command` `{ command }`.",
 					"attributes": [
 						{
 							"name": "checked"
 						},
 						{
 							"name": "command"
+						},
+						{
+							"name": "description"
 						},
 						{
 							"name": "disabled"
@@ -2762,6 +2765,13 @@
 						{
 							"kind": "field",
 							"name": "command",
+							"type": {
+								"text": "string"
+							}
+						},
+						{
+							"kind": "field",
+							"name": "description",
 							"type": {
 								"text": "string"
 							}
