@@ -22,6 +22,7 @@ try {
 		$ink.Copy()
 		$book = $excel.Workbooks.Add()
 		$sheet = $book.Worksheets.Item(1)
+		$sheet.Range('A1').Value2 = 'Ink'
 		$sheet.Range('B2').Select() | Out-Null
 		$sheet.Paste()
 		$book.SaveAs((Join-Path $here '../../../xlsx/__fixtures__/excel-ink-fallback.xlsx'), 51)

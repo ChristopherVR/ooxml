@@ -1,4 +1,4 @@
-import { html, nothing, svg } from 'lit';
+import { html, nothing } from 'lit';
 import { INK_PEN_THICKNESSES_MM, inkThicknessPx, type InkPen } from 'ooxml-core/drawingml';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { definer, emit } from '../registry';
