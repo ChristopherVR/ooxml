@@ -83,6 +83,8 @@ export interface RibbonTab {
 	groups: RibbonGroup[];
 	/** Contextual tabs (Table Design, Chart Design) show only while this returns true. */
 	contextual?: (ctx: EditorContext) => boolean;
+	/** Delay building the controls until the tab first applies to the selection. */
+	deferControls?: boolean;
 }
 
 const registered: RibbonTab[] = [];

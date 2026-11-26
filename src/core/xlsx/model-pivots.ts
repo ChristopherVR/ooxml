@@ -130,6 +130,7 @@ export interface PivotDateFilter {
 }
 
 export interface PivotStyleOptions {
+	/** An empty string clears the style. */
 	name?: string;
 	showRowHeaders?: boolean;
 	showColHeaders?: boolean;

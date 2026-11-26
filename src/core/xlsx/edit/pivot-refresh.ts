@@ -59,9 +59,8 @@ export function refreshPivotTable(
 		const { style, ...display } = patch.display;
 		if (
 			style?.name !== undefined &&
-			!/^PivotStyle(?:Light(?:[1-9]|1\d|2[0-8])|Medium(?:[1-9]|1[0-4])|Dark(?:[1-9]|1[01]))$/.test(
-				style.name,
-			)
+			style.name !== '' &&
+			!/^PivotStyle(?:Light|Medium|Dark)(?:[1-9]|1\d|2[0-8])$/.test(style.name)
 		)
 			throw new Error('Choose a built-in PivotTable style.');
 		next.display = {

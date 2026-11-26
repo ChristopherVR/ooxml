@@ -33,14 +33,12 @@ export function readPivotDisplay(
 	for (const [flag, attr] of tableFlags) if (pivotFlag(root, attr) === false) display[flag] = false;
 	const styleNode = first(root, 'pivotTableStyleInfo', NS.x);
 	if (styleNode) {
-		const style: PivotStyleOptions = {};
-		const name = styleNode.getAttribute('name');
-		if (name) style.name = name;
+		const style: PivotStyleOptions = { name: styleNode.getAttribute('name') ?? '' };
 		for (const flag of styleFlags) {
 			const value = pivotFlag(styleNode, flag);
 			if (value !== undefined) style[flag] = value;
 		}
-		if (Object.keys(style).length) display.style = style;
+		display.style = style;
 	}
 	const blank = fields.filter((field) => pivotFlag(field, 'insertBlankRow'));
 	if (blank.length) {
@@ -84,7 +82,8 @@ export function writePivotDisplay(root: XmlElement, display: PivotDisplayOptions
 		style = root.ownerDocument!.createElementNS(NS.x, 'pivotTableStyleInfo');
 		root.insertBefore(style, first(root, 'extLst', NS.x) ?? null);
 	}
-	if (display.style.name !== undefined) style.setAttribute('name', display.style.name);
+	if (display.style.name === '') style.removeAttribute('name');
+	else if (display.style.name !== undefined) style.setAttribute('name', display.style.name);
 	for (const flag of styleFlags) {
 		const value = display.style[flag];
 		if (value !== undefined) style.setAttribute(flag, value ? '1' : '0');

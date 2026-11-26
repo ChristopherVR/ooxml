@@ -9,6 +9,8 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 	await newWorkbook(page);
 	const book = editor(page);
 	const tabs = ribbon(page);
+	const renameControl = tabs.locator('[data-tab="pivot-analyze"] [data-command="pivot.name"]');
+	await expect(renameControl).toHaveCount(0);
 	const fixture = readFileSync(
 		resolve(process.cwd(), '../../src/core/xlsx/__fixtures__/excel-pivot-rows.xlsx'),
 	);
@@ -39,6 +41,12 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 	await stripes.focus();
 	await stripes.press('Space');
 	await expect(stripes).toHaveAttribute('aria-pressed', 'true');
+	const gallery = tabs.getByRole('button', { name: 'PivotTable Styles', exact: true });
+	await gallery.press('Enter');
+	await expect(
+		book.getByRole('menu', { name: 'PivotTable Styles', exact: true }).getByRole('menuitem'),
+	).toHaveCount(85);
+	await book.getByRole('menuitem', { name: 'Medium Style 28', exact: true }).press('Enter');
 	const result = await book.evaluate(async (node) => {
 		const control = node as unknown as {
 			save(): Promise<Blob>;
@@ -51,6 +59,6 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 	expect(result).toMatchObject({
 		name: 'NewSales',
 		layout: 'outline',
-		display: { style: { showRowStripes: true } },
+		display: { style: { name: 'PivotStyleMedium28', showRowStripes: true } },
 	});
 });

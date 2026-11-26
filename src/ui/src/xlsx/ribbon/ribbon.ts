@@ -154,6 +154,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	root.setAttribute('file-expanded', 'false');
 	root.toggleAttribute('collapsible', true);
 	let scope: RenderScope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
+	const deferred = new Map<HTMLElement, RenderScope>();
 	let tabs: RibbonTab[] = [];
 	let stopListening: (() => void) | undefined;
 	let stopOverflow = () => {};
@@ -182,10 +183,18 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 	root.addEventListener('office-ribbon-collapse', refit);
 	root.addEventListener('office-ribbon-file', () => handlers.openBackstage());
 
+	const renderGroups = (panel: HTMLElement, tab: RibbonTab, tabScope: RenderScope) => {
+		for (const group of tab.groups) {
+			const node = renderGroup(tabScope, group);
+			if (node) panel.append(node);
+		}
+	};
+
 	const build = () => {
 		unobserve();
 		closeRibbonPopover();
 		scope = { ctx, doc, updates: [], isHidden: handlers.isHidden };
+		deferred.clear();
 		tabs = [...ribbonTabs()];
 		// The overflow chevron reads its label from here, so a locale change reaches it on rebuild.
 		root.dataset.editorLocale = normalizeEditorLocale(ctx.locale());
@@ -201,10 +210,7 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 			panel.dataset.ribbonTab = tab.id;
 			panel.dataset.label = ctx.t(tab.label);
 			if (tab.contextual) panel.dataset.contextual = '';
-			for (const group of tab.groups) {
-				const node = renderGroup(scope, group);
-				if (node) panel.append(node);
-			}
+			if (!tab.deferControls) renderGroups(panel, tab, scope);
 			root.append(panel);
 		}
 		syncAddIns();
@@ -233,6 +239,18 @@ export function createRibbon(ctx: EditorContext, handlers: RibbonHandlers): Ribb
 				show = tab.contextual ? tab.contextual(ctx) : true;
 			} catch {
 				show = false;
+			}
+			if (show && tab.deferControls) {
+				const panel = panelFor(tab.id);
+				if (panel) {
+					let tabScope = deferred.get(panel);
+					if (!tabScope) {
+						tabScope = { ...scope, updates: [] };
+						renderGroups(panel, tab, tabScope);
+						deferred.set(panel, tabScope);
+					}
+					for (const update of tabScope.updates) update();
+				}
 			}
 			setTabHidden(root, tab.id, 'contextual', !show);
 		}

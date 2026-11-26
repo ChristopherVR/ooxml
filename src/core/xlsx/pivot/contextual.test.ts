@@ -75,6 +75,20 @@ it('collapses and expands outer labels, and applies row and column grand totals 
 	expect(pivotGrid(await cols.reopen()).values.at(-1)).toEqual(['Veg', 5, 15, 20]);
 });
 
+it('round trips all three built-in style families and Excel’s clear style option', async () => {
+	const { edit, patch, read, reopen } = await report();
+	for (const name of ['PivotStyleLight28', 'PivotStyleMedium28', 'PivotStyleDark28']) {
+		patch({ display: { style: { name } } });
+		expect((await reopen()).display?.style?.name).toBe(name);
+	}
+	patch({ display: { style: { name: '' } } });
+	const cleared = await reopen();
+	expect(cleared.display?.style?.name).toBe('');
+	expect(cleared.sourceXml).toMatch(/<pivotTableStyleInfo(?![^>]*\bname=)[^>]*\/>/);
+	edit.undo();
+	expect(read().display?.style?.name).toBe('PivotStyleDark28');
+});
+
 it('edits caption and value conditions without filtering the backing cache', async () => {
 	const { edit, patch, reopen, read } = await report();
 	patch({ condition: { kind: 'captionEqual', value: 'Veg' } });
@@ -82,12 +96,19 @@ it('edits caption and value conditions without filtering the backing cache', asy
 	expect(reopened.condition).toEqual({ kind: 'captionEqual', value: 'Veg' });
 	expect(pivotGrid(reopened).values.at(-1)).toEqual(['Grand Total', null, 20]);
 	expect(reopened.records).toHaveLength(5);
+	patch({ condition: { kind: 'captionEqual', value: 'Missing' } });
+	reopened = await reopen();
+	expect(pivotGrid(reopened).values.at(-1)).toEqual(['Grand Total', null, null]);
 	patch({ condition: { kind: 'valueGreaterThan', measure: 0, value: 20 } });
 	reopened = await reopen();
 	expect(reopened.condition).toEqual({ kind: 'valueGreaterThan', measure: 0, value: 20 });
 	expect(pivotGrid(reopened).values.at(-1)).toEqual(['Grand Total', null, 37]);
 	edit.undo();
-	expect(read().condition?.kind).toBe('captionEqual');
+	expect(read().condition).toEqual({ kind: 'captionEqual', value: 'Missing' });
+	patch({ condition: { kind: 'valueLessThan', measure: 0, value: 30 } });
+	reopened = await reopen();
+	expect(reopened.condition).toEqual({ kind: 'valueLessThan', measure: 0, value: 30 });
+	expect(pivotGrid(reopened).values.at(-1)).toEqual(['Grand Total', null, 20]);
 	patch({ condition: null });
 	expect(pivotGrid(await reopen()).values.at(-1)).toEqual(['Grand Total', null, 57]);
 });

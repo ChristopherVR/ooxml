@@ -24,6 +24,7 @@ export function pivotAnalyzeTab(): RibbonTab {
 		id: 'pivot-analyze',
 		label: 'PivotTable Analyze',
 		contextual,
+		deferControls: true,
 		groups: [
 			{
 				id: 'pivot-table',
@@ -107,17 +108,20 @@ export function pivotAnalyzeTab(): RibbonTab {
 const styleGallery = (ctx: EditorContext) => {
 	if (!selectedPivot(ctx)) return [];
 	const theme = ctx.workbook()?.theme ?? DEFAULT_THEME;
-	return (['Light', 'Medium', 'Dark'] as const).flatMap((family) =>
-		Array.from({ length: family === 'Light' ? 28 : family === 'Medium' ? 14 : 11 }, (_, at) => {
-			const index = at + 1;
-			const name = `PivotStyle${family}${index}`;
-			return {
-				id: name,
-				label: ctx.t('{family} Style {n}', { family: ctx.t(family), n: index }),
-				preview: tableStylePreview({ name, family, index }, theme),
-			};
-		}),
-	);
+	return [
+		{ id: '', label: 'None' },
+		...(['Light', 'Medium', 'Dark'] as const).flatMap((family) =>
+			Array.from({ length: 28 }, (_, at) => {
+				const index = at + 1;
+				const name = `PivotStyle${family}${index}`;
+				return {
+					id: name,
+					label: ctx.t('{family} Style {n}', { family: ctx.t(family), n: index }),
+					preview: tableStylePreview({ name, family, index }, theme),
+				};
+			}),
+		),
+	];
 };
 
 export function pivotDesignTab(): RibbonTab {
@@ -125,6 +129,7 @@ export function pivotDesignTab(): RibbonTab {
 		id: 'pivot-design',
 		label: 'PivotTable Design',
 		contextual,
+		deferControls: true,
 		groups: [
 			{
 				id: 'layout',
