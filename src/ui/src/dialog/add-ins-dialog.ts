@@ -11,7 +11,7 @@ import {
 	readAddInFile,
 } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
-import { renderAddInList } from './add-ins-list';
+import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
 import { localAddInText } from '../ribbon/add-in-local-strings';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
@@ -228,7 +228,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										class="link"
 										type="button"
 										?disabled=${unsupported || !!this.#pending}
-										aria-describedby=${unsupported ? 'upload-unavailable' : nothing}
+										aria-describedby=${unsupported ? LOCAL_INSTALL_REASON_ID : nothing}
 										@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
 										>${t('Upload My Add-in')}</button
 									>
@@ -241,7 +241,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										@change=${this.upload}
 									/>
 								</div>
-								${unsupported ? html`<p class="empty" id="upload-unavailable">${reason}</p>` : nothing}
+								${unsupported ? html`<p class="empty" id=${LOCAL_INSTALL_REASON_ID}>${reason}</p>` : nothing}
 								${renderAddInList({
 									session,
 									pivot: this.#pivot,

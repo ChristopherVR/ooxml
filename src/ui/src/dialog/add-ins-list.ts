@@ -5,6 +5,7 @@ import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 import type { AddInSession, Pivot } from './add-ins-dialog';
 
 const MARKETPLACE = 'https://marketplace.microsoft.com/en-us/marketplace/apps?product=office';
+export const LOCAL_INSTALL_REASON_ID = 'upload-unavailable';
 
 function handoffUrl(link: string): string | undefined {
 	try {
@@ -38,11 +39,12 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 	const { installed, tabs, catalog, storefront, t, locale, product } = session;
 	const filter = query.trim().toLocaleLowerCase(locale);
 	const matches = (label: string) => label.toLocaleLowerCase(locale).includes(filter);
-	const action = (label: string, name: string, run: () => void, disabled = false) =>
+	const action = (label: string, name: string, run: () => void, disabledReason?: string) =>
 		html`<button
 			type="button"
 			aria-label=${`${t(label)} ${name}`}
-			?disabled=${busy || disabled}
+			?disabled=${busy || Boolean(disabledReason)}
+			aria-describedby=${disabledReason ?? nothing}
 			@click=${run}
 			>${t(label)}</button
 		>`;
@@ -98,7 +100,7 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 								'Install',
 								offer.label,
 								() => read((signal) => offer.read(signal)),
-								product === 'visio',
+								product === 'visio' ? LOCAL_INSTALL_REASON_ID : undefined,
 							),
 						),
 					);

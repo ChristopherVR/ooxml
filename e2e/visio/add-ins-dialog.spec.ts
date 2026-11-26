@@ -39,3 +39,22 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(mine).toBeFocused();
 	});
 }
+
+test('explains unavailable installation for a Visio Store offer', async ({ page }) => {
+	await page.setViewportSize({ width: 2400, height: 900 });
+	await openDemo(page, '/demo-vanilla/?sample=1');
+	const viewer = page.locator('visio-viewer');
+	await viewer.evaluate((element) => {
+		Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), {
+			kind: 'catalog',
+			entries: [{ id: 'notes', label: 'Notes', read: () => new File([], 'notes.xml') }],
+		});
+	});
+	await viewer.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await viewer.getByRole('button', { name: 'Get Add-ins', exact: true }).click();
+	const install = viewer.getByRole('button', { name: 'Install Notes' });
+	await expect(install).toBeDisabled();
+	await expect(install).toHaveAccessibleDescription(
+		'Local add-in installation is unavailable in Visio.',
+	);
+});

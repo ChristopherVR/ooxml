@@ -122,6 +122,30 @@ it('offers only the configured storefront and validates BYO bytes before install
 	dialog?.close();
 });
 
+it('explains why Visio cannot install an add-in from the Store', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	const read = vi.fn(() => new File([xml], 'manifest.xml'));
+	setOfficeAddInStorefront(editor, {
+		kind: 'catalog',
+		entries: [{ id: 'notes', label: 'Notes', read }],
+	});
+	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'visio', 'en');
+	const dialog = getDialog(editor);
+	const install = dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]');
+	const upload = dialog?.querySelector('#upload');
+	const reason = upload?.getAttribute('aria-describedby');
+	expect(install?.disabled).toBe(true);
+	expect(install?.getAttribute('aria-describedby')).toBe(reason);
+	expect(dialog?.querySelector(`[id="${reason}"]`)?.textContent).toBe(
+		'Local add-in installation is unavailable in Visio.',
+	);
+	install?.click();
+	expect(read).not.toHaveBeenCalled();
+	dialog?.close();
+});
+
 it('uses a regional host locale for unified manifest translations', async () => {
 	const editor = document.body
 		.appendChild(document.createElement('div'))
