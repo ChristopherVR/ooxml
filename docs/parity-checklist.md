@@ -535,7 +535,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       2026-11-26).
 - [ ] **P1** Read Mode has no footnote or endnote navigation, and Outline structural edits are
       disabled during tracked changes and collaboration.
-- [ ] **P1** Index, citations and bibliography, Table of Authorities.
+- [x] **P1** Index (Mark Entry, Insert and Update Index), citations and bibliography (Manage
+      Sources in `b:Sources`, APA, MLA and Chicago), and Table of Authorities (2026-11-27).
+- [ ] **P2** The Index's section layout, the native Index and TOA styles and tab stops, and the
+      Bibliography gallery's nested content control differ from Word.
 - [ ] **P1** Compare is core only (`docx/compare/`, `docs/docx-compare.md`): body text and tables
       become tracked changes at word or character level, matching Word 16's CompareDocuments on 8
       fixture pairs. Not compared: moves, headers and footers, notes, comments, text boxes,
@@ -783,9 +786,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Design: nine legacy Word themes are omitted until their values are verified, and
       theme picture fills (Grunge Texture, Wood Type) are replaced with solid fills on import and
       not rendered, with 3-D styles.
-- [ ] **P1** Table tab (Table Design and Layout merged) lacks table styles and style options, Cell
-      Size and AutoFit, cell alignment and margins, Repeat Header Rows, Formula, Convert to Text,
-      Select and Draw Borders.
+- [x] **P1** Table Design and Layout tabs: table styles and style options, Cell Size and AutoFit,
+      cell alignment and margins, Repeat Header Rows, Formula, Convert to Text, Select and Draw
+      Borders (2026-11-27).
+- [ ] **P2** Word tables: freeform Draw Table and the structural Eraser (merging cells), and
+      splitting merged cells into arbitrary counts when the grid must be rebuilt.
 - [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
 - [x] **P1** Layout and Shape Format: the Arrange group (Position, Wrap Text, Bring Forward, Send
       Backward, Selection Pane with rename, Align, Group, Rotate) and Text Direction, with canvas
@@ -1018,18 +1023,21 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Cameo or inserting a live placeholder when the slide lacks one.
 - [ ] **P1** Slide-show narration, recording directly into a styled Cameo, native PowerPoint
       recording interoperability and Insert > Record Audio remain open.
-- [ ] **P1** Animation: Split, Zoom, Blinds and the shape reveals keep their default direction;
-      Color Typewriter plays a substitute without a warning; emphasis effects use preset
-      keyframes; Blink is approximate.
+- [x] **P1** Animation: Effect Options directions for Split, Zoom, Blinds and the shape reveals,
+      Color Typewriter, emphasis effects from the file's own behaviours, and Blink timing
+      (2026-11-27).
 - [x] **P1** Animation Painter (single use, locked with a double-click, Esc, one undo step per
       apply) and the ribbon's Start, Duration, Delay and Move Earlier/Later work in all five
       bindings through the shared controller (`render/controller/animation-painter-controller.ts`,
       `e2e/pptx/ribbon-animation-painter.spec.ts`).
-- [ ] **P1** Animation Painter and the ribbon's Timing fields do not edit imported native
-      effects, timing applies to the selected object's first effect rather than a chosen one, and
-      painting across slides drops a sound embedded in the source slide.
-- [ ] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay (Pen,
-      Highlighter, Eraser and Freeform work).
+- [x] **P1** Animation Painter and the Timing fields edit imported native effects, the Animation
+      Pane chooses the effect Timing edits, and painting across slides keeps an embedded sound
+      (2026-11-27).
+- [ ] **P2** Changing Start on an imported effect that would split or merge a complex click group
+      or event-driven timing is not supported.
+- [x] **P1** Ink: Lasso, pen presets, Ink to Shape, Ink to Math, Ruler and Ink Replay
+      (2026-11-27).
+- [ ] **P2** Ink Replay's per-point timing is lost after PowerPoint desktop saves the file again.
 - [x] **P1** Custom shows have editing operations (`editor/render/custom-show-operations`), the
       `manage_custom_shows` MCP and assistant tool, valid unsigned-int ids on save (with `p:showPr`
       and `ppaction://customshow` references remapped) and the Custom Shows dialog (New, Copy,
@@ -1195,7 +1203,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Office.js runtime, manifest ribbon commands and store installation for Word, Excel
       and PowerPoint; the plan, including a configurable storefront (off, Microsoft handoff,
       bring-your-own), is `docs/office-addins-plan.md`.
-- [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
+- [x] **P1** Video Format, Audio Format, Playback and SmartArt Format tabs (2026-11-27).
+- [ ] **P2** SmartArt Format's shape and style galleries are disabled, with a reason, for diagrams
+      without editable drawing shapes.
 - [ ] **P1** Picture Format: Compress, Change Picture, Reset Picture (and size), Picture Border,
       Alt Text and Arrange work in all five bindings (`e2e/pptx/picture-format-commands.spec.ts`);
       open: Picture Layout (disabled with a reason) and formats other than PNG and JPEG for
