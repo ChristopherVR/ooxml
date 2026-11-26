@@ -35,6 +35,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		const search = dialog.getByRole('searchbox', { name: 'Search add-ins' });
 		await expect(search).toBeFocused();
 		const initialBox = await dialog.getByRole('dialog', { name: 'Office Add-ins' }).boundingBox();
+		expect(initialBox?.width).toBe(760);
 		const upload = dialog.getByRole('button', { name: 'Upload My Add-in' });
 		const chooser = page.waitForEvent('filechooser');
 		await upload.click();

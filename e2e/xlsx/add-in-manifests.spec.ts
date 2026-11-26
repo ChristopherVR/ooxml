@@ -36,6 +36,7 @@ test('lists only Excel compatibility details for a Word command manifest', async
 	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
 	await addInsCommand(editor, 'Get Add-ins');
 	const dialog = editor.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+	expect((await dialog.getByRole('dialog').boundingBox())?.width).toBe(760);
 	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
 		name: 'notes.xml',
 		mimeType: 'application/xml',

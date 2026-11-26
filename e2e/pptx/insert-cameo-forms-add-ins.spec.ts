@@ -19,6 +19,7 @@ test('keeps focus on Add-ins when the Insert ribbon refits', async ({ page }) =>
 	await get.click();
 	const dialog = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
 	await expect(dialog).toBeVisible();
+	expect((await dialog.getByRole('dialog').boundingBox())?.width).toBe(760);
 	await page.keyboard.press('Escape');
 	await expect(dialog).toBeHidden();
 	await expect(get).toBeFocused();
