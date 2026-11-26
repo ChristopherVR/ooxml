@@ -126,26 +126,31 @@ for (const size of [PPTX_OPEN_SMALL, PPTX_OPEN_LARGE]) {
 }
 
 test('shows the opening slide before the editable deck and fills thumbnails', async ({ page }) => {
-	await page.addInitScript(() => {
-		const idle = window.requestIdleCallback.bind(window);
-		let delayed = false;
-		window.requestIdleCallback = (callback, options) => {
-			if (!delayed && document.querySelector('[data-pptx-opening-preview]')) {
-				delayed = true;
-				return window.setTimeout(() => callback({ didTimeout: true, timeRemaining: () => 0 }), 120);
-			}
-			return idle(callback, options);
-		};
-	});
-	await page.goto('/');
-	await upload(page, PPTX_OPEN_LARGE);
-	const preview = page.locator(PREVIEW);
-	await expect(preview.getByText('Deck slide 1 shape 1', { exact: true }).first()).toBeVisible();
-	await expect(preview.locator('[data-pptx-preview-thumbnail="1"]')).toContainText(
-		'Deck slide 2 shape 1',
+	// Observe the transient nodes in the page, even on a small deck that finishes
+	// before a Playwright poll could see both stages of the opening view.
+	await page.addInitScript(
+		({ preview, editable }) => {
+			const observer = new MutationObserver(() => {
+				const opening = document.querySelector(preview);
+				if (!opening?.getClientRects().length || document.querySelector(editable)) return;
+				const thumb = opening.querySelector('[data-pptx-preview-thumbnail="1"]');
+				if (
+					opening.textContent?.includes('Deck slide 1 shape 1') &&
+					thumb?.textContent?.includes('Deck slide 2 shape 1')
+				) {
+					document.documentElement.dataset.pptxObservedOpening = 'true';
+					observer.disconnect();
+				}
+			});
+			observer.observe(document, { childList: true, subtree: true });
+		},
+		{ preview: PREVIEW, editable: CANVAS_ELEMENT },
 	);
-	await expect(preview).toBeHidden({ timeout: 60_000 });
+	await page.goto('/');
+	await upload(page, PPTX_OPEN_SMALL);
 	await expect(
 		page.locator(CANVAS_ELEMENT).getByText('Deck slide 1 shape 1', { exact: true }).first(),
 	).toBeVisible();
+	await expect(page.locator('html')).toHaveAttribute('data-pptx-observed-opening', 'true');
+	await expect(page.locator(PREVIEW)).toBeHidden();
 });
