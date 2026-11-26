@@ -1,6 +1,8 @@
+// @vitest-environment jsdom
 import type { PptxElement, ResolvedStyleMatrix, XmlObject } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
+import { parseSvgPreview } from '../../../ribbon/safe-svg';
 import { resolveCustomization } from '../customization/customization-resolve';
 import {
 	CONTEXTUAL_TAB_GROUPS,
@@ -199,6 +201,15 @@ it('shares the preset catalogue for picture crop and media shape', () => {
 		expect.arrayContaining([expect.objectContaining({ id: 'hexagon' })]),
 	);
 	for (const element of [picture, media]) {
+		const gallery = buildRibbonGallery('cropToShape', { element });
+		for (const { previewSvg } of tiles(gallery)) {
+			const svg = parseSvgPreview(document, previewSvg ?? '');
+			const path = svg?.querySelector('path');
+			expect(svg?.namespaceURI).toBe('http://www.w3.org/2000/svg');
+			expect(path?.namespaceURI).toBe(svg?.namespaceURI);
+			expect(path?.getAttribute('d')).toBeTruthy();
+			expect(path?.getAttribute('stroke')).toBe('currentColor');
+		}
 		expect(applyRibbonGalleryItem('cropToShape', 'hexagon', { element })).toMatchObject({
 			elementId: bounds.id,
 			patch: { shapeType: 'hexagon' },

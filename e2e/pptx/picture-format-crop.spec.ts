@@ -53,6 +53,17 @@ test('picture Format > Size > Crop starts and ends crop mode', async ({ page }) 
 	await expect(cropOverlay(page)).toHaveCount(0);
 });
 
+test('picture Crop to Shape paints its Ellipse preview', async ({ page }) => {
+	await openPictureFormat(page);
+	await sizeGroup(page)
+		.locator('[data-ribbon-control="pictureFormat.size.cropToShape"]')
+		.getByRole('button')
+		.click();
+	const path = page.locator('[data-ribbon-gallery-popup] [data-gallery-item="ellipse"] svg path');
+	await expect(path).toBeVisible();
+	expect(await path.evaluate((node) => node.namespaceURI)).toBe('http://www.w3.org/2000/svg');
+});
+
 test('picture Format > Size > Crop to Aspect Ratio 1:1 squares the picture', async ({ page }) => {
 	await openPictureFormat(page);
 	await sizeCrop(page, 'crop-menu').click();

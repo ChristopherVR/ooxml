@@ -1,4 +1,4 @@
-import { getImageFitStyle } from 'ooxml-ui/pptx';
+import { getImageFitStyle, mediaArtworkClipPath } from 'ooxml-ui/pptx';
 import type { MediaPptxElement, MediaCaptionTrack, MediaMetadata } from 'pptx-viewer-core';
 import React, { useEffect, useState } from 'react';
 
@@ -140,7 +140,11 @@ export function VideoWithMetadata({
 		<video
 			ref={mediaRef as React.RefObject<HTMLVideoElement>}
 			className='w-full h-full pointer-events-auto'
-			style={isFullScreen ? { objectFit: 'cover' } : getImageFitStyle(element)}
+			style={
+				isFullScreen
+					? { objectFit: 'cover' }
+					: { ...getImageFitStyle(element), clipPath: mediaArtworkClipPath(element) }
+			}
 			controls={showTransport}
 			preload='metadata'
 			playsInline

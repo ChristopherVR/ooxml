@@ -33,6 +33,7 @@
 		ONLINE_VIDEO_IFRAME_SANDBOX,
 		applyMediaPlaybackAttributes,
 		isMediaFullscreenActive,
+		mediaArtworkClipPath,
 		mediaFallbackIcon,
 		mediaFallbackLabelKey,
 		mediaFallbackVisual,
@@ -85,6 +86,7 @@
 		playing: isPlaying,
 	});
 	const fullscreenActive = $derived(isMediaFullscreenActive(fullscreenInput));
+	const artworkClipPath = $derived(mediaArtworkClipPath(element, fullscreenActive));
 	const showFullscreenStop = $derived(shouldShowMediaFullscreenStopButton(fullscreenInput));
 
 	const containerStyle = $derived(
@@ -255,6 +257,7 @@
 			     provider's own iframe embed instead. -->
 			<iframe
 				class="pptx-svelte-media-video pptx-svelte-media-iframe"
+				style:clip-path={artworkClipPath}
 				src={view.onlineVideoEmbedUrl}
 				title={t('pptx.media.onlineVideoTitle')}
 				allow={ONLINE_VIDEO_IFRAME_ALLOW}
@@ -266,6 +269,7 @@
 			<video
 				bind:this={mediaEl}
 				class="pptx-svelte-media-video"
+				style:clip-path={artworkClipPath}
 				src={view.mediaSrc}
 				poster={view.posterSrc}
 				controls={showControls}
@@ -284,6 +288,7 @@
 		{:else if fallback.poster && view.posterSrc}
 			<img
 				class="pptx-svelte-media-poster"
+				style:clip-path={artworkClipPath}
 				class:pptx-svelte-media-dim={fallback.dimPoster}
 				src={view.posterSrc}
 				alt=""

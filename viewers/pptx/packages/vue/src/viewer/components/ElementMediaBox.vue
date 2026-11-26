@@ -12,6 +12,7 @@ import {
 	ONLINE_VIDEO_IFRAME_SANDBOX,
 	applyMediaPlaybackAttributes,
 	getOnlineVideoEmbed,
+	mediaArtworkClipPath,
 	mediaFallbackIcon,
 	mediaFallbackLabelKey,
 	mediaFallbackVisual,
@@ -149,6 +150,9 @@ const fullscreen = useMediaFullscreen(
 	() => props.element,
 	() => mediaEl.value,
 	() => props.presenting === true,
+);
+const artworkClipPath = computed(() =>
+	mediaArtworkClipPath(props.element, fullscreen.active.value),
 );
 
 const containerStyle = computed<CSSProperties>(() => ({
@@ -323,6 +327,7 @@ const hitTargetStyle = useElementHitTargetStyle(
 				width: '100%',
 				height: '100%',
 				border: 0,
+				clipPath: artworkClipPath,
 				display: 'block',
 				pointerEvents: interactive ? 'none' : 'auto',
 			}"
@@ -342,6 +347,7 @@ const hitTargetStyle = useElementHitTargetStyle(
 				width: '100%',
 				height: '100%',
 				objectFit: 'contain',
+				clipPath: artworkClipPath,
 				display: 'block',
 				pointerEvents: interactive ? 'none' : 'auto',
 			}"
@@ -364,6 +370,7 @@ const hitTargetStyle = useElementHitTargetStyle(
 					width: '100%',
 					height: '100%',
 					objectFit: 'contain',
+					clipPath: artworkClipPath,
 					display: 'block',
 					opacity: fallback.dimPoster ? 0.5 : undefined,
 				}"

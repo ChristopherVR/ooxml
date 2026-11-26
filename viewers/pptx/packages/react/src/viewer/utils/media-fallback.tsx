@@ -1,6 +1,7 @@
 import {
 	MEDIA_CHROME_ATTRIBUTE,
 	getImageFitStyle,
+	mediaArtworkClipPath,
 	mediaFallbackIcon,
 	mediaFallbackLabelKey,
 	mediaFallbackVisual,
@@ -163,7 +164,7 @@ export function renderMediaFallback({
 							: translationsEn['pptx.media.videoPosterAlt']
 					}
 					className={`w-full h-full${visual.dimPoster ? ' opacity-50' : ''}`}
-					style={getImageFitStyle(element)}
+					style={{ ...getImageFitStyle(element), clipPath: mediaArtworkClipPath(element) }}
 					draggable={false}
 				/>
 				<Badge visual={visual} element={element} />

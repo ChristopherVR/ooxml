@@ -22,7 +22,7 @@ export function presetShapeSections(current?: string): RibbonGallerySection[] {
 				id,
 				labelKey,
 				label: fallback,
-				previewSvg: `<svg viewBox="${SHAPE_THUMB_VIEW_BOX}" width="26" height="26"><path d="${path}" fill="none" stroke="currentColor"/></svg>`,
+				previewSvg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${SHAPE_THUMB_VIEW_BOX}" width="26" height="26"><path d="${path}" fill="none" stroke="currentColor"/></svg>`,
 				applied: id === selected,
 			})),
 	}));

@@ -2,6 +2,7 @@ import type { MediaPptxElement } from 'ooxml-core/pptx';
 import {
 	MEDIA_FULLSCREEN_OVERLAY_STYLE,
 	isMediaFullscreenActive,
+	mediaArtworkClipPath,
 	shouldShowMediaFullscreenStopButton,
 } from '../../index';
 import type { CssStyleMap } from '../../index';
@@ -99,6 +100,9 @@ export function wireMediaFullscreenOverlay(
 	const update = (playing: boolean): void => {
 		const input = { fullScreen: element.fullScreen, presenting: context.presenting, playing };
 		const active = isMediaFullscreenActive(input);
+		if (element.mediaType === 'video') {
+			mediaNode.style.clipPath = mediaArtworkClipPath(element, active) ?? '';
+		}
 		applyStyleMap(
 			container,
 			active ? MEDIA_FULLSCREEN_OVERLAY_STYLE : mediaFullscreenResetStyle(baseStyle),

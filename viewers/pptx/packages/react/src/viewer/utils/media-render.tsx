@@ -2,6 +2,7 @@ import {
 	ONLINE_VIDEO_IFRAME_ALLOW,
 	ONLINE_VIDEO_IFRAME_SANDBOX,
 	getOnlineVideoEmbed,
+	mediaArtworkClipPath,
 	mediaPlaybackAttributes,
 } from 'ooxml-ui/pptx';
 import type { MediaSurface } from 'ooxml-ui/pptx';
@@ -116,6 +117,7 @@ export function renderMediaElement(
 				<iframe
 					src={onlineVideo.embedUrl}
 					title={translationsEn['pptx.media.onlineVideoTitle']}
+					style={{ clipPath: mediaArtworkClipPath(element) }}
 					className='w-full h-full border-0 pointer-events-auto'
 					allow={ONLINE_VIDEO_IFRAME_ALLOW}
 					allowFullScreen

@@ -48,7 +48,11 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	await expect(video).not.toHaveAttribute('poster', importedPoster ?? '');
 	await expect(page.locator('[data-media-ribbon-dialog="reset"]')).toHaveCount(0);
 	await control(page, 'videoFormat.pictureStyles.shape').getByRole('button').click();
-	await page.locator('[data-ribbon-gallery-popup] [data-gallery-item="hexagon"]:visible').click();
+	const ellipse = page.locator('[data-ribbon-gallery-popup] [data-gallery-item="ellipse"]:visible');
+	await expect(ellipse.locator('svg path')).toBeVisible();
+	expect(await video.evaluate((clip) => getComputedStyle(clip).clipPath)).toBe('none');
+	await ellipse.click();
+	await expect(video).toHaveCSS('clip-path', /^ellipse\(/u);
 	await control(page, 'videoFormat.arrange.rotateRight').getByRole('button').click();
 	await control(page, 'videoFormat.size.crop').getByRole('button').click();
 	const crop = page.locator('[data-media-ribbon-dialog="crop"]');
@@ -99,7 +103,7 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 		'ppt/slides/slide1.xml',
 	);
 	expect(xml).toContain('l="16000"');
-	expect(xml).toContain('prst="hexagon"');
+	expect(xml).toContain('prst="ellipse"');
 	expect(xml).toContain('rot="5400000"');
 	expect(xml).toContain('<p14:fade in="250"');
 	expect(xml).toContain('<p14:trim st="150" end="1500"');

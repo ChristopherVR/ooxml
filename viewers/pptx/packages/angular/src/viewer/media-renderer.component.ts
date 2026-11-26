@@ -20,6 +20,7 @@ import {
 	elementHitTargetStyle,
 	getOnlineVideoEmbed,
 	isMediaFullscreenActive,
+	mediaArtworkClipPath,
 	mediaFallbackIcon,
 	mediaFallbackLabelKey,
 	mediaTransportVisible,
@@ -106,6 +107,7 @@ import type { ResolvedCaptionTrack } from './media-renderer-helpers';
 					class="pptx-ng-media-el pptx-ng-media-video"
 					[class.pptx-ng-media-inert]="interactive()"
 					[src]="embedUrl"
+					[style.clip-path]="artworkClipPath()"
 					[title]="onlineVideoTitle()"
 					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
 					sandbox="allow-scripts allow-same-origin allow-popups allow-presentation"
@@ -127,6 +129,7 @@ import type { ResolvedCaptionTrack } from './media-renderer-helpers';
 					<video
 						#mediaEl
 						class="pptx-ng-media-el pptx-ng-media-video"
+						[style.clip-path]="artworkClipPath()"
 						[class.pptx-ng-media-inert]="interactive()"
 						[src]="src + trimFragment()"
 						[poster]="poster() ?? null"
@@ -170,6 +173,7 @@ import type { ResolvedCaptionTrack } from './media-renderer-helpers';
 						[src]="posterSrc"
 						[clrChange]="cc"
 						alt=""
+						[imgStyle]="artworkImageStyle()"
 						[imgClass]="fallback().dimPoster ? 'pptx-ng-img pptx-ng-media-dim' : 'pptx-ng-img'"
 					/>
 				} @else {
@@ -177,6 +181,7 @@ import type { ResolvedCaptionTrack } from './media-renderer-helpers';
 						[src]="posterSrc"
 						alt=""
 						class="pptx-ng-img"
+						[style.clip-path]="artworkClipPath()"
 						draggable="false"
 						[class.pptx-ng-media-dim]="fallback().dimPoster"
 					/>
@@ -465,6 +470,10 @@ export class MediaRendererComponent {
 			playing: this.isPlaying(),
 		}),
 	);
+	readonly artworkClipPath = computed(() =>
+		mediaArtworkClipPath(this.element(), this.fullscreenActive()),
+	);
+	readonly artworkImageStyle = computed(() => ({ clipPath: this.artworkClipPath() ?? '' }));
 
 	/** Aria label for the full-slide overlay's stop/close button. */
 	readonly stopFullscreenAria = computed<string>(() =>

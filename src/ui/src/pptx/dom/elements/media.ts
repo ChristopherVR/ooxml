@@ -7,6 +7,7 @@ import {
 	getImageSrc,
 	getOnlineVideoEmbed,
 	mediaFallbackIcon,
+	mediaArtworkClipPath,
 	mediaFallbackLabelKey,
 	mediaFallbackVisual,
 	mediaPlaybackAttributes,
@@ -120,6 +121,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 		element.mediaData ??
 		(element.mediaPath ? context.mediaDataUrls.get(element.mediaPath) : undefined);
 	const posterSrc = getImageSrc(element, new Map(context.mediaDataUrls));
+	const clipPath = mediaArtworkClipPath(element) ?? '';
 
 	// A linked YouTube/Vimeo URL is a web page, not a media stream: `<video
 	// src>` cannot decode it and shows nothing. Render the provider's own
@@ -128,6 +130,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 	const onlineVideoEmbedUrl = getOnlineVideoEmbed(element)?.embedUrl;
 	if (onlineVideoEmbedUrl && element.mediaType === 'video') {
 		const iframe = createEl(doc, 'iframe', 'pptxv-media-video pptxv-media-iframe', {
+			clipPath,
 			width: '100%',
 			height: '100%',
 			border: '0',
@@ -144,6 +147,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 
 	if (mediaSrc && element.mediaType === 'video') {
 		const video = createEl(doc, 'video', 'pptxv-media-video', {
+			clipPath,
 			width: '100%',
 			height: '100%',
 			objectFit: 'contain',
@@ -199,6 +203,7 @@ export const renderMediaElement: ElementRenderer = (element, zIndex, context) =>
 
 	if (fallback.poster && posterSrc) {
 		const img = createEl(doc, 'img', 'pptxv-media-poster', {
+			clipPath,
 			width: '100%',
 			height: '100%',
 			objectFit: 'contain',
