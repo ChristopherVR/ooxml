@@ -23,7 +23,7 @@ function shapeNode(
 		...node.attrs,
 		widthPx: box.width,
 		heightPx: box.height,
-		placement: JSON.stringify(placeDrawingBox(placement, box)),
+		placement: JSON.stringify(placement),
 		shape: JSON.stringify(shape),
 		unsupported: 'Shape',
 	});
@@ -51,7 +51,11 @@ export function groupSelectedShapes(
 		tr.replaceWith(
 			pos,
 			pos + current.nodeSize,
-			Fragment.fromArray(parts.map(({ box, shape }) => shapeNode(current, placement, box, shape))),
+			Fragment.fromArray(
+				parts.map(({ box, shape }) =>
+					shapeNode(current, placeDrawingBox(placement, box, geometry.origins), box, shape),
+				),
+			),
 		);
 		tr.setSelection(NodeSelection.create(tr.doc, pos));
 		return;
@@ -91,9 +95,20 @@ export function groupSelectedShapes(
 	if (members.length !== positions.length) return;
 	const group = groupDrawingShapes(members.sort((a, b) => a.height - b.height));
 	if (!group) return;
-	const first = Math.min(...positions);
+	const origins = {
+		...(group.box.x !== geometry.box.x || group.box.width !== geometry.box.width
+			? { x: geometry.origins.x }
+			: {}),
+		...(group.box.y !== geometry.box.y || group.box.height !== geometry.box.height
+			? { y: geometry.origins.y }
+			: {}),
+	};
 	for (const member of members.sort((a, b) => b.pos - a.pos))
 		tr.delete(member.pos, member.pos + member.size);
-	tr.insert(first, shapeNode(current, placement, group.box, group.shape));
-	tr.setSelection(NodeSelection.create(tr.doc, first));
+	const anchor = tr.mapping.map(pos);
+	tr.insert(
+		anchor,
+		shapeNode(current, placeDrawingBox(placement, group.box, origins), group.box, group.shape),
+	);
+	tr.setSelection(NodeSelection.create(tr.doc, anchor));
 }

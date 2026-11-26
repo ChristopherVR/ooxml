@@ -133,7 +133,17 @@ function align(
 				: [];
 	next.forEach((box, i) => {
 		const item = items[i];
-		if (item) applyPlacement(tr, item.pos, placeDrawingBox(item.placement, box));
+		if (!item) return;
+		const axis =
+			value === 'x' || value === 'left' || value === 'center' || value === 'right' ? 'x' : 'y';
+		if (box[axis] !== item.box[axis])
+			applyPlacement(
+				tr,
+				item.pos,
+				placeDrawingBox(item.placement, box, {
+					[axis]: item.origins[axis],
+				}),
+			);
 	});
 }
 

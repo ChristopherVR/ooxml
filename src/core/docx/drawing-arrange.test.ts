@@ -21,6 +21,7 @@ import {
 	type DrawingPosition,
 	type InlineImage,
 	type Paragraph,
+	type PicturePlacement,
 } from './index';
 
 const rect = (x: number, y: number, width = 64, height = 43) => ({ x, y, width, height });
@@ -169,6 +170,37 @@ describe('Word drawing arrangement', () => {
 		const reopened = (await loadDocx(ungrouped)).model.blocks[0];
 		if (reopened?.type !== 'paragraph') throw new Error('Missing paragraph');
 		expect(images(reopened).map((drawing) => drawing.shape?.preset)).toEqual(['rect', 'ellipse']);
+	});
+
+	it('places only the requested axes in the existing drawing frames', () => {
+		const placement: PicturePlacement = {
+			wrap: 'none',
+			relativeFrom: 'column',
+			align: 'center',
+			relativeFromV: 'paragraph',
+			alignV: 'bottom',
+		};
+		expect(placeDrawingBox(placement, rect(140, 205), { x: 96 })).toEqual({
+			wrap: 'none',
+			relativeFrom: 'column',
+			offsetXPx: 44,
+			relativeFromV: 'paragraph',
+			alignV: 'bottom',
+		});
+		expect(placeDrawingBox(placement, rect(140, 205), { y: 220 })).toEqual({
+			wrap: 'none',
+			relativeFrom: 'column',
+			align: 'center',
+			relativeFromV: 'paragraph',
+			offsetYPx: -15,
+		});
+		expect(placeDrawingBox(placement, rect(140, 205), { x: 96, y: 180 })).toEqual({
+			wrap: 'none',
+			relativeFrom: 'column',
+			offsetXPx: 44,
+			relativeFromV: 'paragraph',
+			offsetYPx: 25,
+		});
 	});
 
 	it('aligns and distributes unequal boxes and keeps a stable stack', () => {

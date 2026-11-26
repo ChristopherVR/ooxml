@@ -117,15 +117,23 @@ export function distributeDrawingBoxes(
 	return result;
 }
 
-export function placeDrawingBox(placement: PicturePlacement, box: DrawingBox): PicturePlacement {
-	const { align: _h, alignV: _v, ...rest } = placement;
-	return {
-		...rest,
-		relativeFrom: 'page',
-		relativeFromV: 'page',
-		offsetXPx: box.x,
-		offsetYPx: box.y,
-	};
+export function placeDrawingBox(
+	placement: PicturePlacement,
+	box: DrawingBox,
+	origins?: Partial<Pick<DrawingBox, 'x' | 'y'>>,
+): PicturePlacement {
+	const next = { ...placement };
+	if (!origins || origins.x !== undefined) {
+		delete next.align;
+		if (!origins) next.relativeFrom = 'page';
+		next.offsetXPx = box.x - (origins?.x ?? 0);
+	}
+	if (!origins || origins.y !== undefined) {
+		delete next.alignV;
+		if (!origins) next.relativeFromV = 'page';
+		next.offsetYPx = box.y - (origins?.y ?? 0);
+	}
+	return next;
 }
 
 export function groupDrawingShapes(

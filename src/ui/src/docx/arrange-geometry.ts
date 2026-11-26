@@ -44,7 +44,8 @@ export function drawingGeometry(
 		const paragraphY = line
 			? (line.getBoundingClientRect().top - sheet.getBoundingClientRect().top) / scale
 			: Number(rendered.dataset.originY);
-		return { box: boxOf(rendered), paragraphY, margins, pageBox, sheet };
+		const origins = { x: Number(rendered.dataset.originX), y: Number(rendered.dataset.originY) };
+		return { box: boxOf(rendered), origins, paragraphY, margins, pageBox, sheet };
 	}
 	if (view !== core.view || !(paragraph instanceof HTMLElement) || !paper) return;
 	const scale = paper.offsetHeight
@@ -80,6 +81,7 @@ export function drawingGeometry(
 	);
 	return {
 		box: { x, y, width: widthPx, height: heightPx },
+		origins: { x: 0, y: 0 },
 		paragraphY,
 		margins,
 		pageBox,
