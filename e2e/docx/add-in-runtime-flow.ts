@@ -76,6 +76,8 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 
 		if (file.name === 'manifest.json') {
 			await editor.getByRole('tab', { name: addInName, exact: true }).click();
+			if (host === 'PowerPoint')
+				await expect(editor.locator('[data-pptx-chrome="ribbon-content"]:visible')).toHaveCount(0);
 			await editor.getByRole('button', { name: 'Open Notes', exact: true }).click();
 		} else {
 			await openDialog();

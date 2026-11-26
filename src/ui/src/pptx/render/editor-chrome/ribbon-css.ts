@@ -5,6 +5,10 @@ const FORMAT_ARRANGE = `[data-pptx-editor-chrome] :is(
 )`;
 
 export const EDITOR_RIBBON_CSS = `
+[data-pptx-chrome="ribbon"]:has(pptx-ui-ribbon-tabs[data-manifest-tab-active])
+  :is([data-pptx-chrome="ribbon-content"], [data-pptx-chrome="ribbon-primary"]) {
+  display: none !important;
+}
 [data-pptx-editor-chrome] .contextual-fields > pptx-ui-ribbon-gallery[mode="inline"] {
   grid-row: span 3;
 }

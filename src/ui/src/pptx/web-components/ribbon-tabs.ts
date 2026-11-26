@@ -124,6 +124,7 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			if (!local.some(({ id }) => id === this.#manifestTab)) this.#manifestTab = undefined;
 			this.items = [...items, ...local];
 			this.selected = this.#manifestTab ?? this.#model?.selected ?? '';
+			this.toggleAttribute('data-manifest-tab-active', Boolean(this.#manifestTab));
 			for (const panel of this.children) {
 				if (!(panel instanceof HTMLElement) || !panel.hasAttribute('data-add-in')) continue;
 				panel.hidden = panel.dataset.ribbonTab !== this.#manifestTab;

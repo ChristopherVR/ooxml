@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildRibbonTabRow } from '../render';
 import type { RibbonTabRowInput, RibbonTabRowState, RibbonTabSelectDetail } from '../render';
@@ -13,7 +13,11 @@ const input: RibbonTabRowInput = {
 	active: 'home',
 };
 
-type TabRow = HTMLElement & { state: RibbonTabRowState; tabButtons(): HTMLButtonElement[] };
+type TabRow = HTMLElement & {
+	state: RibbonTabRowState;
+	tabButtons(): HTMLButtonElement[];
+	setInstalledAddInTabs(tabs: readonly { id: string; label: string; groups: [] }[]): void;
+};
 
 function mount(overrides: Partial<RibbonTabRowInput> = {}): TabRow {
 	const host = document.createElement('pptx-ui-ribbon-tabs') as TabRow;
@@ -102,6 +106,26 @@ describe('pptx-ui-ribbon-tabs', () => {
 			{ tab: 'file', kind: 'file' },
 		]);
 		expect(byId('home').getAttribute('aria-selected')).toBe('true');
+	});
+
+	it('marks the installed panel as the sole active ribbon panel across bindings', async () => {
+		const host = mount();
+		host.setInstalledAddInTabs([{ id: 'installed-add-in.notes', label: 'Notes', groups: [] }]);
+		const tab = await vi.waitFor(() => {
+			const notes = host.tabButtons().find((button) => button.textContent === 'Notes');
+			if (!notes) throw new Error('Missing installed tab');
+			return notes;
+		});
+		tab.click();
+		expect(host).toHaveProperty('selected', 'installed-add-in.notes');
+		expect(host.hasAttribute('data-manifest-tab-active')).toBe(true);
+		expect(host.querySelector('[data-add-in]')).toHaveProperty('hidden', false);
+		host
+			.tabButtons()
+			.find((button) => button.dataset.tab === 'home')
+			?.click();
+		expect(host.hasAttribute('data-manifest-tab-active')).toBe(false);
+		expect(host.querySelector('[data-add-in]')).toHaveProperty('hidden', true);
 	});
 
 	it('asks to collapse on a double click on a tab other than File', () => {
