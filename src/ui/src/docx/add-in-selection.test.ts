@@ -12,9 +12,6 @@ it('reads a read-only selection and writes multiline plain text as paragraphs wh
 	view = new EditorView(document.body, {
 		state: EditorState.create({ doc, selection: TextSelection.create(doc, 1, 9) }),
 		editable: () => false,
-		dispatchTransaction(transaction) {
-			this.updateState(this.state.apply(transaction));
-		},
 	});
 	const selection = wordAddInSelection(() => view);
 	expect(selection.readText()).toBe('original');

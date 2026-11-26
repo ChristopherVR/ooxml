@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { expect, it } from 'vitest';
 import { addInLauncher } from './add-in-launch';
 import { readLocalAddIn } from './add-in-manifest-file';

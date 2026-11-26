@@ -39,29 +39,31 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 		store && product !== 'visio'
 			? async (signal: AbortSignal) => {
 					const files = await store.read(product);
-					if (signal.aborted || (!files.length && !installed.size)) return;
-					const { readLocalAddIn } = await import('../ribbon/add-in-manifest-file');
+					if (signal.aborted) return;
 					const restored = new Map<string, LocalAddIn>();
-					const selection = hasSelection();
-					for (const file of files.slice(0, INSTALLED_ADD_IN_LIMIT)) {
-						if (signal.aborted) return;
-						try {
-							const addIn = await readLocalAddIn(file, {
-								...manifestOptions(selection),
-								host: product,
-							});
-							const prior = installed.get(addIn.manifest.id);
-							const entry =
-								prior?.digest === addIn.digest &&
-								prior.manifest.name === addIn.manifest.name &&
-								validatedWithSelection.get(prior) === selection
-									? prior
-									: addIn;
-							sourceBytes.set(entry, file);
-							validatedWithSelection.set(entry, selection);
-							restored.set(addIn.manifest.id, entry);
-						} catch {
-							// A stale or corrupt record cannot grant access or hide other installs.
+					if (files.length) {
+						const { readLocalAddIn } = await import('../ribbon/add-in-manifest-file');
+						const selection = hasSelection();
+						for (const file of files.slice(0, INSTALLED_ADD_IN_LIMIT)) {
+							if (signal.aborted) return;
+							try {
+								const addIn = await readLocalAddIn(file, {
+									...manifestOptions(selection),
+									host: product,
+								});
+								const prior = installed.get(addIn.manifest.id);
+								const entry =
+									prior?.digest === addIn.digest &&
+									prior.manifest.name === addIn.manifest.name &&
+									validatedWithSelection.get(prior) === selection
+										? prior
+										: addIn;
+								sourceBytes.set(entry, file);
+								validatedWithSelection.set(entry, selection);
+								restored.set(addIn.manifest.id, entry);
+							} catch {
+								// A stale or corrupt record cannot grant access or hide other installs.
+							}
 						}
 					}
 					if (signal.aborted) return;
