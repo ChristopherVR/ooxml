@@ -10,7 +10,7 @@ import type { ShapeNode } from '../model-shapes';
 import { readWordArtShape } from '../word-art';
 import { equationShapeBranches, readEquationParagraphs } from '../shape-equations';
 import { att, boolAttr } from './xml-util';
-import { readDrawingShadow } from '../write/drawing-format';
+import { readDrawingShadow } from './drawing-format';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
 

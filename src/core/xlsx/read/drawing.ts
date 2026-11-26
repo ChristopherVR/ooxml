@@ -15,7 +15,7 @@ import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
 import { readFormControlFrame } from './form-control';
 import { embeddedPicture, readModel3D, type EmbeddedObjectDeclarations } from './local-object';
 import { readShapeNode } from './shape';
-import { readDrawingShadow } from '../write/drawing-format';
+import { readDrawingShadow } from './drawing-format';
 import { att, boolAttr, selfContainedXml } from './xml-util';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);

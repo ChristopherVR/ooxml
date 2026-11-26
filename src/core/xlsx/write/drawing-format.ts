@@ -1,4 +1,4 @@
-import { drawingEffectXml, parseDrawingEffects } from '../../drawingml/drawing-effects';
+import { drawingEffectXml } from '../../drawingml/drawing-effects';
 import type { DrawingOuterShadow } from '../../drawingml/effect-model';
 import type { DrawingFill, DrawingLine } from '../../drawingml/types';
 import { drawingFillXml } from '../../drawingml/write-fill';
@@ -25,12 +25,6 @@ export interface DrawingFrameFormat {
 	fill?: DrawingFill;
 	line?: DrawingLine;
 	shadow?: DrawingOuterShadow | null;
-}
-
-export function readDrawingShadow(props: XmlElement | undefined): DrawingOuterShadow | undefined {
-	return parseDrawingEffects(first(props, 'effectLst', NS.a))?.effects.find(
-		(effect) => effect.kind === 'outerShadow',
-	);
 }
 
 function replace(
