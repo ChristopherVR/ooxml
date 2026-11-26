@@ -163,6 +163,7 @@ export function changeReferenceTables(
 		ordered.map((item) => {
 			const paragraphs = references.buildReferenceTable(model, item.instruction, {
 				empty,
+				blockIndex: item.start,
 				...(page ? { page } : {}),
 				...(bibliography ? { bibliography } : {}),
 				...(item.leader ? { leader: item.leader } : {}),

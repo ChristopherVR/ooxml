@@ -116,8 +116,11 @@ detail and limits of each feature already built.
    Mailings supports letters and directories with local or host recipients, field authoring,
    preview, validation, and DOCX or print output; email delivery and envelope and label layouts
    remain open. References can generate an index, citations, a bibliography, and a table of
-   authorities from Word fields and document sources. Broader bibliography formats, shared
-   sources, and less common field switches remain open. Other remaining work includes object
+   authorities from Word fields and document sources. The References browser fixture reopens in
+   Word 16 and retains the same visible result text after `Fields.Update`. Word adds paragraph
+   and section delimiters when regenerating the block fields. Broader bibliography formats,
+   shared sources, exact bookmark endpoints, mixed authority formatting, and less common field
+   switches remain open. Other remaining work includes object
    positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly

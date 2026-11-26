@@ -8,6 +8,8 @@ import {
 	type Paragraph,
 	type TextRun,
 } from '../index';
+import { sectionsOf } from '../section-layout';
+import { twips } from '../units';
 import {
 	authorityCode,
 	authorityEntryCode,
@@ -70,6 +72,57 @@ test('builds indented and run-in indexes with localized grouping, range, and pag
 	});
 	expect(indented[2]).toMatchObject({ tabStops: [{ align: 'right', leader: 'hyphen' }] });
 	expect(text(buildReferenceTable(model, index(true), options))).toContain('Zebra: A:B 2');
+});
+
+test('uses the index section width and inserts one column inside a two-column section', async () => {
+	const initial = createDocument();
+	const section = sectionsOf(initial)[0]!;
+	const model: DocumentModel = {
+		...initial,
+		blocks: [
+			paragraph('first', { text: 'Before the two-column section' }),
+			paragraph('entry', ...mark('Zebra')),
+			paragraph('insert'),
+			paragraph('after', { text: 'Stay in two columns' }),
+		],
+		sections: [
+			{ ...section, endsAtBlockId: 'first' },
+			{
+				...section,
+				endsAtBlockId: 'after',
+				pageWidthTwips: twips(14_400),
+				marginLeftTwips: twips(1_000),
+				marginRightTwips: twips(2_000),
+				columns: { count: 2, equalWidth: true },
+			},
+		],
+	};
+	const instruction = indexCode({
+		columns: 1,
+		runIn: false,
+		rightAlign: true,
+		leader: 'dot',
+		lcid: 1033,
+	});
+	const options = { empty: 'None', page: () => '2', blockIndex: 2 };
+	const output = buildReferenceTable(model, instruction, options).map((p, i) => ({
+		...p,
+		id: `index-${i}`,
+	}));
+	const edit = indexSection(model, 2, 2, output, 1, () => 'new-section');
+	expect(edit?.sections.map((item) => item.columns.count)).toEqual([1, 2, 1, 2]);
+	const saved = await saveDocx({
+		...model,
+		blocks: [model.blocks[0]!, model.blocks[1]!, ...output, model.blocks[3]!],
+		sections: edit!.sections,
+	});
+	const reopened = (await loadDocx(saved)).model;
+	expect(reopened.sections?.map((item) => item.columns.count)).toEqual([1, 2, 1, 2]);
+	const [location] = findReferenceTables(reopened.blocks, 'INDEX');
+	expect(location?.start).toBe(2);
+	const updated = buildReferenceTable(reopened, location!.instruction, options);
+	expect(updated[1]?.tabStops).toEqual([{ posTwips: 11_400, align: 'right', leader: 'dot' }]);
+	expect(text(updated)).toEqual(['Z', 'Zebra\t2']);
 });
 
 test('filters authorities by category, joins short citations, and applies passim and original formatting', () => {

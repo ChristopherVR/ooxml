@@ -1,11 +1,12 @@
 import { isFieldLocked } from '../field-lock';
 import { fieldName } from '../field-runs';
 import type { Block, DocumentModel, Paragraph, TextRun } from '../model';
-import { twipsFromPixels } from '../units';
+import { twips, twipsFromPixels } from '../units';
 import { authorityParagraphs } from './authorities';
 import { bibliographyEntry } from './citations';
 import { referenceEntries, type ReferencePage } from './entries';
 import { indexParagraphs, INDEX_LEADERS, type IndexLeader } from './index-entries';
+import { referenceSectionAt } from './index-section';
 import { referenceFieldRuns, referenceInstruction } from './instructions';
 import type { Bibliography } from './source-model';
 
@@ -77,14 +78,23 @@ export function buildReferenceTable(
 	options: {
 		page?: ReferencePage;
 		bibliography?: Bibliography;
+		blockIndex?: number;
 		leader?: IndexLeader;
 		empty: string;
 	},
 ): Paragraph[] {
 	const code = referenceInstruction(instruction);
 	const page = options.page ?? (() => undefined);
-	const width = twipsFromPixels(model.page.width - model.page.marginLeft - model.page.marginRight);
 	let paragraphs: Paragraph[] = [];
+	const section =
+		code?.name === 'INDEX' || code?.name === 'TOA'
+			? referenceSectionAt(model, options.blockIndex ?? 0)
+			: undefined;
+	const width = section
+		? twips(
+				Math.max(1, section.pageWidthTwips - section.marginLeftTwips - section.marginRightTwips),
+			)
+		: twipsFromPixels(model.page.width - model.page.marginLeft - model.page.marginRight);
 	if (code?.name === 'INDEX')
 		paragraphs = indexParagraphs(
 			referenceEntries(model),

@@ -441,9 +441,11 @@ Still not at parity:
   other results change only through Update Fields).
 - **Index, citations, and authorities:** References can mark and update index and authority
   entries, manage document sources, insert and edit citations, and generate a bibliography.
-  Print Layout shows continuous index columns. APA, MLA, and Chicago author-date cover common
-  sources. Other citation styles, a shared source library, exact bookmark character ranges,
-  and less common native field switches remain open.
+  Print Layout shows continuous index columns, including a one-column index in a multicolumn
+  document section. APA, MLA, and Chicago author-date cover common sources. The authority table
+  can retain bold, italic, and underline from the first run of a marked citation. Other citation
+  styles, a shared source library, exact bookmark character ranges, mixed formatting within a
+  marked authority, and less common native field switches remain open.
 - **Review and View:** Editor pane, Thesaurus, Translate, Accessibility, Compare (the core `compareDocuments` exists, with no UI), Protect, Ink;
   Read Mode, Web and Outline views, New Window,
   Split and Macros.

@@ -3,6 +3,29 @@ import { sectionsOf } from '../section-layout';
 import type { SectionProperties } from '../section-model';
 import { twips } from '../units';
 
+export const INDEX_COLUMN_GAP = twips(360);
+
+function sectionIndexAt(
+	sections: SectionProperties[],
+	positions: Map<string, number>,
+	blockIndex: number,
+): number {
+	return sections.findIndex(
+		(section, index) =>
+			index === sections.length - 1 || (positions.get(section.endsAtBlockId) ?? -1) >= blockIndex,
+	);
+}
+
+export function referenceSectionAt(
+	model: DocumentModel,
+	blockIndex: number,
+): SectionProperties | undefined {
+	const sections = sectionsOf(model);
+	if (sections.length === 1) return sections[0];
+	const positions = new Map(model.blocks.map(({ id }, index) => [id, index]));
+	return sections[sectionIndexAt(sections, positions, blockIndex)];
+}
+
 /** Columns belong to a continuous section so Word and Print Layout use the same flow. */
 export function indexSection(
 	model: DocumentModel,
@@ -12,15 +35,12 @@ export function indexSection(
 	columns: number,
 	newId: () => string,
 ): { paragraphs: Paragraph[]; sections: SectionProperties[] } | undefined {
-	if (columns < 2 || !output.length) return undefined;
+	if (!output.length) return undefined;
 	const sections = sectionsOf(model);
 	const positions = new Map(model.blocks.map(({ id }, index) => [id, index]));
-	const current = sections.findIndex(
-		(section, index) =>
-			index === sections.length - 1 || (positions.get(section.endsAtBlockId) ?? -1) >= start,
-	);
+	const current = sectionIndexAt(sections, positions, start);
 	const section = sections[current];
-	if (!section) return undefined;
+	if (!section || (columns === 1 && section.columns.count === 1)) return undefined;
 	const first = current ? (positions.get(sections[current - 1]?.endsAtBlockId ?? '') ?? -1) + 1 : 0;
 	const last =
 		current === sections.length - 1
@@ -38,7 +58,7 @@ export function indexSection(
 	const index: SectionProperties = {
 		...(!previous ? section : continuation),
 		endsAtBlockId: result.id,
-		columns: { count: columns, spacingTwips: twips(360), equalWidth: true },
+		columns: { count: columns, spacingTwips: INDEX_COLUMN_GAP, equalWidth: true },
 	};
 	const next = [...sections];
 	next.splice(

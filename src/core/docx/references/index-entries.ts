@@ -1,6 +1,7 @@
 import type { Paragraph, TextRun } from '../model';
 import { signedTwips, twips, type Twips } from '../units';
 import { addPage, entryPage, pageRuns, type referenceEntries, type ReferencePage } from './entries';
+import { INDEX_COLUMN_GAP } from './index-section';
 import { quoteReference, REFERENCE_LCID, type referenceInstruction } from './instructions';
 
 export const INDEX_LEADERS = ['none', 'dot', 'hyphen', 'underscore'] as const;
@@ -61,7 +62,7 @@ export function indexParagraphs(
 		(lang) => REFERENCE_LCID[lang] === Number(code.value('z')),
 	);
 	const collator = new Intl.Collator(locale, { sensitivity: 'base' });
-	const columns = Math.min(4, Math.max(1, Number(code.value('c')) || 1));
+	const columns = Math.min(4, Math.max(1, Math.floor(Number(code.value('c'))) || 1));
 	const separator = code.value('e') ?? ', ';
 	const paragraphs: Paragraph[] = [];
 	const root = branch();
@@ -107,7 +108,9 @@ export function indexParagraphs(
 				? {
 						tabStops: [
 							{
-								posTwips: twips(Math.max(1, Math.round((width - (columns - 1) * 360) / columns))),
+								posTwips: twips(
+									Math.max(1, Math.round((width - (columns - 1) * INDEX_COLUMN_GAP) / columns)),
+								),
 								align: 'right',
 								leader,
 							},
