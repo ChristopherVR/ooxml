@@ -1,7 +1,12 @@
 import type { ActivityItem } from './activity';
 import { createTeamsClient, type TeamsClient } from './store';
 
-const tick = (ms = 0): Promise<void> => new Promise((r) => setTimeout(r, ms));
+const waitFor = (assertion: () => void) => vi.waitFor(assertion, { interval: 5, timeout: 5_000 });
+const ready = (client: TeamsClient) =>
+	waitFor(() => {
+		expect(client.workspace.session.canWrite()).toBe(true);
+		expect(client.getState().selectedChannelId).toBe('general');
+	});
 const clients: TeamsClient[] = [];
 const make = (name: string, workspaceId: string, extra = {}): TeamsClient => {
 	const c = createTeamsClient({ workspaceId, user: { id: name, name }, ...extra });
@@ -18,9 +23,9 @@ const ada = { kind: 'user', id: 'ada', name: 'ada' } as const;
 async function pair(room: string, adaExtra = {}) {
 	const a = make('ada', room, adaExtra);
 	const b = make('bob', room);
-	await tick(150);
+	await Promise.all([ready(a), ready(b)]);
 	await a.send({ text: 'first post' });
-	await tick(150);
+	await waitFor(() => expect(b.getState().messages[0]?.text).toBe('first post'));
 	const heard: ActivityItem[] = [];
 	a.on('notification', (item) => heard.push(item));
 	return { a, b, heard };
@@ -35,7 +40,7 @@ describe('activity through the client', () => {
 		await b.send({ text: 'a reply' });
 		b.toggleReaction(mine.id, '👍');
 		b.pinMessage(mine.id);
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(4));
 		const state = a.getState();
 		expect(state.activity.map((i) => i.kind).sort()).toEqual([
 			'mention',
@@ -57,38 +62,35 @@ describe('activity through the client', () => {
 		const { a, b } = await pair('activity-read', { storage });
 		await b.send({ text: 'one @ada', mentions: [ada] });
 		await b.send({ text: 'two @ada', mentions: [ada] });
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(2));
 		const [newest, older] = a.getState().activity;
 		expect(a.getState().activityUnread).toBe(2);
 		expect(a.markActivityRead(newest!.id)).toBe(true);
-		await tick(20);
-		expect(a.getState().activityUnread).toBe(1);
+		await waitFor(() => expect(a.getState().activityUnread).toBe(1));
 		expect(a.markActivityRead(newest!.id, false)).toBe(true);
 		expect(a.markAllActivityRead()).toBe(true);
-		await tick(20);
-		expect(a.getState().activityUnread).toBe(0);
+		await waitFor(() => expect(a.getState().activityUnread).toBe(0));
 		expect(a.getState().activity.every((i) => i.read)).toBe(true);
 		expect(older?.read).toBe(false);
 		a.destroy();
 		const again = make('ada', 'activity-read', { storage });
-		await tick(100);
+		await ready(again);
+		await waitFor(() => expect(again.getState().activity).toHaveLength(2));
 		expect(again.getState().activityUnread).toBe(0);
-		expect(again.getState().activity).toHaveLength(2);
 	});
 
 	it('suppresses notifications during Do not disturb but still lists the activity', async () => {
 		const { a, b, heard } = await pair('activity-dnd');
 		a.setAvailability('dnd');
-		await tick(50);
+		await waitFor(() => expect(a.getState().availability).toBe('dnd'));
 		await b.send({ text: 'urgent @ada', mentions: [ada] });
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(1));
 		expect(heard).toEqual([]);
-		expect(a.getState().activity).toHaveLength(1);
 		expect(a.getState().activityUnread).toBe(1);
 		a.setAvailability('available');
-		await tick(50);
+		await waitFor(() => expect(a.getState().availability).toBe('available'));
 		await b.send({ text: 'again @ada', mentions: [ada] });
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(2));
 		expect(heard).toHaveLength(1);
 	});
 
@@ -96,30 +98,32 @@ describe('activity through the client', () => {
 		const { a, b, heard } = await pair('activity-levels');
 		const mine = a.getState().messages[0]!;
 		a.setNotificationSettings({ level: 'mentions', sound: false });
-		await tick(20);
-		expect(a.getState().notificationSettings).toEqual({ level: 'mentions', sound: false });
+		await waitFor(() =>
+			expect(a.getState().notificationSettings).toEqual({ level: 'mentions', sound: false }),
+		);
 		b.toggleReaction(mine.id, '👍');
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(1));
 		expect(heard).toEqual([]);
 		await b.send({ text: 'hey @ada', mentions: [ada] });
-		await tick(200);
+		await waitFor(() => expect(a.getState().activity).toHaveLength(2));
 		expect(heard.map((i) => i.kind)).toEqual(['mention']);
 		a.setNotificationSettings({ level: 'off' });
 		await b.send({ text: 'more @ada', mentions: [ada] });
-		await tick(200);
+		await waitFor(() => expect(a.getState().activityUnread).toBe(3));
 		expect(heard).toHaveLength(1);
-		expect(a.getState().activityUnread).toBe(3);
 	});
 
 	it('does not announce history that was there before the client started', async () => {
 		const b = make('bob', 'activity-history');
-		await tick(150);
+		const seed = make('seed', 'activity-history');
+		await Promise.all([ready(b), ready(seed)]);
+		seed.destroy();
 		await b.send({ text: 'old @ada', mentions: [ada] });
-		await tick(100);
+		await waitFor(() => expect(b.getState().messages[0]?.text).toBe('old @ada'));
 		const a = make('ada', 'activity-history');
 		const heard: ActivityItem[] = [];
 		a.on('notification', (item) => heard.push(item));
-		await tick(250);
+		await waitFor(() => expect(a.getState().messages[0]?.text).toBe('old @ada'));
 		expect(heard).toEqual([]);
 		expect(a.getState().activityUnread).toBe(0);
 	});
