@@ -156,7 +156,7 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Excel draws Picture Style inner shadows, reflections, soft edges, compound borders
       and 3-D effects flat in the worksheet (they are saved).
 - [ ] **P1** Picture Format and Shape Format contextual tabs are partial in Word Picture Format (Wrap Text, Crop and Format only; Arrange is shared with Shape Format)
-      and in PowerPoint Shape Format (no Arrange, Size or Alt Text).
+      and in PowerPoint Shape Format (Arrange is done; Size and Alt Text are open).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
       Excel reads its workbook, Word and Visio only cells the chart caches). Stacked groups move
@@ -394,6 +394,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       save and reopen, and the embedded Office file can be downloaded from its icon.
 - [ ] **P1** Insert still needs stock models, other model formats, interactive 3D controls,
       desktop OLE activation, Create New and link-to-file.
+- [x] **P1** Insert places Add-ins after Illustrations and fits at 1600px and 1280px; PivotTable
+      and Sparkline editing live on their contextual tabs. Review > Notes > New Note creates legacy
+      notes, and the header Comments button toggles the threaded comments pane with New Comment
+      and focus return on Escape, in six bindings (`e2e/xlsx/ribbon-insert-order.spec.ts`,
+      `e2e/xlsx/comments-list.spec.ts`, 2026-11-27).
 - [x] **P1** WordArt inserts and edits native worksheet shapes with fill, outline and shadow
       presets and DrawingML text transforms.
 - [x] **P1** Insert Symbol replaces the editing selection or inserts at the cell's text caret.
@@ -808,7 +813,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       survive native DOCX and XLSX saves. The editors preview the gradient and text path.
 - [ ] **P2** Word and Excel WordArt still need multi-stop and themed gradient editing, 3-D effects,
       direct adjustment handles and glyph-envelope rendering for deformation presets.
-- [ ] **P1** Insert: Quick Parts, Signature Line and Video. Header and Footer offer blank designs only.
+- [ ] **P1** Insert: Quick Parts, Signature Line and Online Video (shown as unavailable with a
+      reason). Header and Footer offer blank designs only.
+- [x] **P1** Insert group order, command placement and label fit at 1600px and 1280px match Word
+      in all six bindings (`e2e/docx/ribbon-insert-order.spec.ts`, 2026-11-27).
 - [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG fallback at the caret.
       Insert > Object embeds an existing DOCX, XLSX or PPTX as a native inline file icon.
       The original bytes and preview survive save and reopen.
@@ -1200,9 +1208,15 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `.zip` packages, with size, ratio and path limits) and install them for the session after
       a consent dialog that lists the requested permissions (`src/core/automation/add-ins/`,
       2026-11-26).
-- [ ] **P1** Office.js runtime, manifest ribbon commands and store installation for Word, Excel
-      and PowerPoint; the plan, including a configurable storefront (off, Microsoft handoff,
-      bring-your-own), is `docs/office-addins-plan.md`.
+- [x] **P1** Home: the header Comments button toggles a docked Comments task pane (the slide
+      keeps at least 320px), Drawing > Arrange is a vertical menu with Order, Group, Position, Align
+      and Rotate, and the Selection Pane docks as a task pane, in all five bindings (2026-11-27).
+- [x] **P1** Get Add-ins opens the shared Office Add-ins dialog in Word, Excel, PowerPoint and
+      Visio: My Add-ins, admin-managed entries and Upload My Add-in with a consent step. The Store
+      pivot appears only when the host links a marketplace (2026-11-27).
+- [ ] **P1** Office.js runtime, manifest-defined ribbon commands and Microsoft Marketplace
+      installation for Word, Excel and PowerPoint; the plan, including a configurable storefront
+      (off, Microsoft handoff, bring-your-own), is `docs/office-addins-plan.md`.
 - [x] **P1** Video Format, Audio Format, Playback and SmartArt Format tabs (2026-11-27).
 - [ ] **P2** SmartArt Format's shape and style galleries are disabled, with a reason, for diagrams
       without editable drawing shapes.
@@ -1517,6 +1531,9 @@ installed Visio 16 build is used to check that saved files open without repair.
       unverified. Themed arrowheads are read from the connector line style (Visio 16's own themes
       carry none). Visio's own schemes other than our six built-in themes cannot be picked; Visio
       does not name our scheme IDs.
+- [x] **P1** Insert > Get Add-ins opens the shared Office Add-ins dialog; the Marketplace handoff
+      is available when the host enables it (2026-11-27).
+- [ ] **P1** Local add-in manifests cannot be installed in Visio; the controls say why.
 - [ ] **P2** Disabled: CAD Drawing, Object, Thesaurus, Ink, Import Rules From,
       SharePoint Workflow, the Window group, Macros and Add-Ons.
 
