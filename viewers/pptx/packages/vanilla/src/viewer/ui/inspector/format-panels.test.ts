@@ -224,7 +224,7 @@ describe('media section trim timeline wiring', () => {
 		expect(section.el.querySelector('.pptxv-media-timeline')).not.toBeNull();
 	});
 
-	it('draws the shared playback options and writes a media patch', async () => {
+	it('offers audio playback across slides without changing the start mode', async () => {
 		const { createMediaSection } = await import('./media-section');
 		const setMediaProperties = vi.fn();
 		const section = createMediaSection(document, createTranslator(), sectionFactory(), {
@@ -242,7 +242,15 @@ describe('media section trim timeline wiring', () => {
 		)!;
 		across.checked = true;
 		across.dispatchEvent(new Event('change'));
-		expect(setMediaProperties).toHaveBeenCalledWith({ playAcrossSlides: true, autoPlay: true });
+		expect(setMediaProperties).toHaveBeenCalledExactlyOnceWith({ playAcrossSlides: true });
+		section.update(
+			state({
+				isMedia: true,
+				media: { type: 'media', id: 'm2', mediaType: 'video' } as MediaPptxElement,
+			}),
+		);
+		expect(section.el.querySelector('[data-testid="media-playAcrossSlides"]')).toBeNull();
+		expect(section.el.querySelector('[data-testid="media-fullScreen"]')).not.toBeNull();
 	});
 
 	/**

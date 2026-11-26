@@ -6,7 +6,7 @@ import { savePptxViaBackstage } from './save-pptx';
 import { elementsOfType, fixture, inspector, loadDeck, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
 import { readZipPartText } from './support/pptx-xml';
-import { chooseSelectValue } from './support/select-control';
+import { chooseSelectValue, expectSelectValue } from './support/select-control';
 
 test.use({ viewport: { width: 2048, height: 1080 } });
 const control = (page: Page, id: string) => page.locator(`[data-ribbon-control="${id}"]:visible`);
@@ -188,17 +188,13 @@ test('audio shows its own Format tab and media-specific playback options', async
 	await expect(fullScreen).toHaveAccessibleDescription('This command is for video.');
 	const across = control(page, 'playback.options.across').getByRole('checkbox');
 	await expect(across).toBeEnabled();
-	if (!(await across.isChecked())) await across.click();
-	await chooseSelectValue(
-		page,
-		control(page, 'playback.options.start').getByRole('combobox'),
-		'auto',
-	);
-	await chooseSelectValue(
-		page,
-		control(page, 'playback.options.start').getByRole('combobox'),
-		'click',
-	);
+	const start = control(page, 'playback.options.start').getByRole('combobox');
+	await chooseSelectValue(page, start, 'click');
+	if (await across.isChecked()) await across.click();
+	await across.click();
+	await expectSelectValue(start, 'click');
+	await chooseSelectValue(page, start, 'auto');
+	await chooseSelectValue(page, start, 'click');
 	await expect(across).toBeChecked();
 	const xml = await readZipPartText(
 		await downloadBytes(await savePptxViaBackstage(page)),
