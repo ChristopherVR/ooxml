@@ -41,10 +41,28 @@ function mount(inputs: Record<string, unknown>) {
 	const inputsOf = () => [
 		...pane.shadowRoot!.querySelectorAll<HTMLInputElement>('[data-testid="smartart-node-text"]'),
 	];
-	return { pane, inputs: inputsOf, emitted };
+	return { pane, inputs: inputsOf, emitted, fixture };
 }
 
 describe('smartArtPropertiesComponent (angular)', () => {
+	it('shows the active ribbon colour definition in the inspector', () => {
+		const { fixture } = mount({
+			smartArtData: {
+				...smartArtData,
+				colorTransform: {
+					uniqueId: 'urn:test/colors/accent4_2',
+					fillColors: ['#7030a0'],
+					lineColors: [],
+				},
+			},
+			canEdit: true,
+		});
+		const select = (fixture.nativeElement as HTMLElement).querySelector(
+			'pptx-ui-select[data-testid="smartart-color-scheme"]',
+		);
+		expect(select?.value).toBe('accent4_2');
+	});
+
 	it('feeds the shared text pane and emits the edits it makes', () => {
 		const { inputs, emitted } = mount({ smartArtData, canEdit: true });
 		expect(inputs().map((input) => input.value)).toEqual(['Alpha', 'Bravo']);

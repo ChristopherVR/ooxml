@@ -174,6 +174,7 @@ export * from './chart-ex-insert-defaults';
 // Wire-token -> i18n key lookups, so a control can spell an OOXML enum without
 // its option set being dictated by a shared catalogue.
 export * from './schema-label-keys';
+export * from './smartart-inspector-colors';
 export * from './chart-schema-label-keys';
 export * from './fill-pattern-label-keys';
 export * from './slide-transition-label-keys';

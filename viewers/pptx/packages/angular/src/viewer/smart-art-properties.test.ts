@@ -1,3 +1,4 @@
+import { smartArtInspectorColors } from 'ooxml-ui/pptx';
 import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 /**
  * Tests for the Angular SmartArt inspector logic.
@@ -24,22 +25,15 @@ import {
 	SWITCHABLE_LAYOUT_TYPES,
 	updateSmartArtNodeText,
 } from './editor-insert';
+import { smartArtLayoutLabelKey, smartArtStyleLabelKey } from './schema-token-labels';
 import {
-	smartArtColorSchemeLabelKey,
-	smartArtLayoutLabelKey,
-	smartArtStyleLabelKey,
-} from './schema-token-labels';
-import {
-	currentColorScheme,
 	currentLayout,
 	currentStyle,
-	DEFAULT_COLOR_SCHEME,
 	DEFAULT_LAYOUT,
 	DEFAULT_STYLE,
 	setColorScheme,
 	setLayout,
 	setStyle,
-	SMART_ART_COLOR_SCHEMES,
 	SMART_ART_STYLE_OPTIONS,
 } from './smart-art-properties-helpers';
 
@@ -85,11 +79,6 @@ describe('editor-insert SmartArt re-exports', () => {
 // ── Option constants ──────────────────────────────────────────────────────────
 
 describe('option constants', () => {
-	it('exposes five colour schemes including colorful1', () => {
-		expect(SMART_ART_COLOR_SCHEMES).toContain('colorful1');
-		expect(SMART_ART_COLOR_SCHEMES).toHaveLength(5);
-	});
-
 	it('exposes the three style intensities', () => {
 		expect([...SMART_ART_STYLE_OPTIONS]).toStrictEqual(['flat', 'moderate', 'intense']);
 	});
@@ -100,7 +89,7 @@ describe('option constants', () => {
 describe('read helpers', () => {
 	it('falls back to defaults when scheme/style/layout are unset', () => {
 		const bare: PptxSmartArtData = { nodes: [] };
-		expect(currentColorScheme(bare)).toBe(DEFAULT_COLOR_SCHEME);
+		expect(smartArtInspectorColors(bare, (key) => key).value).toBe('colorful1');
 		expect(currentStyle(bare)).toBe(DEFAULT_STYLE);
 		expect(currentLayout(bare)).toBe(DEFAULT_LAYOUT);
 	});
@@ -112,7 +101,7 @@ describe('read helpers', () => {
 			style: 'intense',
 			resolvedLayoutType: 'cycle',
 		};
-		expect(currentColorScheme(data)).toBe('colorful3');
+		expect(smartArtInspectorColors(data, (key) => key).value).toBe('colorful3');
 		expect(currentStyle(data)).toBe('intense');
 		expect(currentLayout(data)).toBe('cycle');
 	});
@@ -174,18 +163,14 @@ describe('option spelling', () => {
 	}
 
 	it('still offers the same five colour variations', () => {
-		expect([...SMART_ART_COLOR_SCHEMES]).toStrictEqual([
-			'colorful1',
-			'colorful2',
-			'colorful3',
-			'monochromatic1',
-			'monochromatic2',
-		]);
+		expect(
+			smartArtInspectorColors(flatData(), renderedLabel).options.map(({ value }) => value),
+		).toStrictEqual(['colorful1', 'colorful2', 'colorful3', 'monochromatic1', 'monochromatic2']);
 	});
 
 	it('spells each colour variation', () => {
 		expect(
-			SMART_ART_COLOR_SCHEMES.map((s) => renderedLabel(smartArtColorSchemeLabelKey(s))),
+			smartArtInspectorColors(flatData(), renderedLabel).options.map(({ label }) => label),
 		).toStrictEqual([
 			'Colourful 1',
 			'Colourful 2',

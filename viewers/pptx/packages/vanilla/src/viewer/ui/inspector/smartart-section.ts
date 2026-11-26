@@ -1,25 +1,17 @@
 import {
 	registerPptxWebControls,
 	schemaLabel,
-	SMARTART_COLOR_SCHEME_LABEL_KEYS,
 	SMARTART_LAYOUT_LABEL_KEYS,
+	smartArtInspectorColors,
 } from 'ooxml-ui/pptx';
 import type { PptxUiSmartArtTextPaneElement, SmartArtTextPaneChangeEvent } from 'ooxml-ui/pptx';
-import type { SmartArtColorScheme, SmartArtLayoutType } from 'pptx-viewer-core';
+import type { SmartArtLayoutType } from 'pptx-viewer-core';
 import { SWITCHABLE_LAYOUT_TYPES } from 'pptx-viewer-core';
 
 import type { Translator } from '../../i18n';
 import { createEl } from '../../render';
 import { makeSelectField } from './controls-extra';
 import type { InspectorHandlers, InspectorState } from './types';
-
-const COLOR_SCHEMES: readonly SmartArtColorScheme[] = [
-	'colorful1',
-	'colorful2',
-	'colorful3',
-	'monochromatic1',
-	'monochromatic2',
-];
 
 export interface SmartArtSection {
 	el: HTMLElement;
@@ -60,13 +52,7 @@ export function createSmartArtSection(
 
 	const colorScheme = makeSelectField(doc, {
 		label: t('pptx.smartart.colorScheme'),
-		// The `dgm:colorsDef` family name is what core stores, so it stays the
-		// option value; the caption is spelled from the shared map instead of
-		// showing the user `monochromatic2`.
-		options: COLOR_SCHEMES.map((scheme) => ({
-			value: scheme,
-			label: schemaLabel(SMARTART_COLOR_SCHEME_LABEL_KEYS, scheme, t),
-		})),
+		options: [],
 		onChange: handlers.setSmartArtColorScheme,
 	});
 	const select = colorScheme.el.querySelector<HTMLElement>('pptx-ui-select');
@@ -97,7 +83,9 @@ export function createSmartArtSection(
 				button.classList.toggle('is-active', layout === current);
 				button.setAttribute('aria-pressed', String(layout === current));
 			}
-			colorScheme.setValue(state.smartArtData?.colorScheme ?? 'colorful1');
+			const colors = smartArtInspectorColors(state.smartArtData, t);
+			colorScheme.setOptions(colors.options);
+			colorScheme.setValue(colors.value);
 			colorScheme.setDisabled(!state.isSmartArt);
 			pane.state = {
 				smartArtData: state.isSmartArt ? state.smartArtData : undefined,

@@ -1,8 +1,10 @@
 import type { PptxSmartArtData } from 'ooxml-core/pptx';
 import { describe, expect, it } from 'vitest';
 
+import { setSmartArtInspectorColor, smartArtInspectorColors } from '../smartart-inspector-colors';
 import { buildRibbonGallery } from './gallery-registry';
 import { smartArtColorPatch } from './smartart-color-patch';
+import { SMARTART_COLORS_GALLERY } from './smartart-colors-gallery';
 
 describe('smartArt gallery color edits', () => {
 	it('updates node lists and cached colors while preserving connector colors and geometry', () => {
@@ -91,5 +93,36 @@ describe('smartArt gallery color edits', () => {
 		expect(
 			descriptor.sections.flatMap(({ items }) => items).find(({ applied }) => applied)?.id,
 		).toBe('accent2_2');
+	});
+
+	it('shares the Accent 4 definition with the inspector before the XML is loaded', () => {
+		const result = SMARTART_COLORS_GALLERY.apply('accent4_2', {
+			element: {
+				id: 'sa',
+				type: 'smartArt',
+				x: 0,
+				y: 0,
+				width: 100,
+				height: 100,
+				smartArtData: { nodes: [{ id: 'n1', text: 'One' }] },
+			},
+		});
+		if (
+			result?.kind !== 'element' ||
+			!('smartArtData' in result.patch) ||
+			!result.patch.smartArtData
+		)
+			throw new Error('Missing SmartArt patch');
+		const data = result.patch.smartArtData;
+		const t = (key: string, params?: Record<string, string | number>) =>
+			`${key} ${params?.accent ?? ''}`;
+		const colors = smartArtInspectorColors({ ...data, builtinColorsXml: undefined }, t);
+		expect(colors.value).toBe('accent4_2');
+		expect(colors.options.find(({ value }) => value === colors.value)?.label).toBe(
+			'pptx.gallery.smartArtColors.coloredFill 4',
+		);
+		const next = setSmartArtInspectorColor(data, 'monochromatic1');
+		expect(smartArtInspectorColors(next, t).value).toBe('monochromatic1');
+		expect(next.colorTransform?.fillColors).not.toEqual(data.colorTransform?.fillColors);
 	});
 });

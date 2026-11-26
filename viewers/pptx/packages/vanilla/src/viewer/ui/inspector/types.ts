@@ -31,7 +31,6 @@ import type {
 	ElementAction,
 	OleObjectType,
 	OlePptxElement,
-	SmartArtColorScheme,
 	SmartArtLayoutType,
 	TextStyle,
 	ShapeStyle,
@@ -237,7 +236,7 @@ export interface InspectorHandlers {
 	 */
 	replaceSmartArtData(data: PptxSmartArtData): void;
 	setSmartArtLayout(layout: SmartArtLayoutType): void;
-	setSmartArtColorScheme(scheme: SmartArtColorScheme): void;
+	setSmartArtColorScheme(scheme: string): void;
 }
 
 /** Selection-derived state the inspector reflects, computed by `buildInspectorState`. */

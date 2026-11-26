@@ -1,5 +1,5 @@
 import { schemaLabel, SMARTART_LAYOUT_LABEL_KEYS } from 'ooxml-ui/pptx';
-import type { SmartArtColorScheme, SmartArtLayoutType, SmartArtStyle } from 'pptx-viewer-core';
+import type { SmartArtLayoutType, SmartArtStyle } from 'pptx-viewer-core';
 
 /**
  * Static option lists and layout-label helper for the SmartArt inspector.
@@ -10,14 +10,6 @@ import type { SmartArtColorScheme, SmartArtLayoutType, SmartArtStyle } from 'ppt
  *
  * @module smartart-editing-constants
  */
-
-export const SMARTART_COLOR_SCHEMES: readonly SmartArtColorScheme[] = [
-	'colorful1',
-	'colorful2',
-	'colorful3',
-	'monochromatic1',
-	'monochromatic2',
-];
 
 export const SMARTART_STYLE_OPTIONS: readonly SmartArtStyle[] = ['flat', 'moderate', 'intense'];
 

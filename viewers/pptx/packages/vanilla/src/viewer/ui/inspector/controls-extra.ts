@@ -37,6 +37,7 @@ export interface SelectFieldOptions<T extends string> {
 
 export interface SelectFieldHandle<T extends string> {
 	el: HTMLElement;
+	setOptions(options: ReadonlyArray<SelectFieldOption<T>>): void;
 	setValue(value: T): void;
 	setDisabled(disabled: boolean): void;
 }
@@ -54,17 +55,33 @@ export function makeSelectField<T extends string>(
 	const select = createInspectorSelect(doc);
 	select.className = 'pptxv-field-select-input';
 	select.setAttribute('aria-label', options.label);
-	for (const opt of options.options) {
-		const optionEl = doc.createElement('option');
-		optionEl.value = opt.value;
-		optionEl.textContent = opt.label;
-		select.appendChild(optionEl);
-	}
+	const setOptions = (choices: ReadonlyArray<SelectFieldOption<T>>) => {
+		const current = [...select.querySelectorAll('option')];
+		if (
+			current.length === choices.length &&
+			current.every((option, index) => {
+				const choice = choices[index];
+				return choice && option.value === choice.value && option.textContent === choice.label;
+			})
+		) {
+			return;
+		}
+		select.replaceChildren(
+			...choices.map(({ value, label }) => {
+				const option = doc.createElement('option');
+				option.value = value;
+				option.textContent = label;
+				return option;
+			}),
+		);
+	};
+	setOptions(options.options);
 	select.addEventListener('change', () => options.onChange(select.value as T));
 	el.appendChild(select);
 
 	return {
 		el,
+		setOptions,
 		setValue(value) {
 			select.value = value;
 		},

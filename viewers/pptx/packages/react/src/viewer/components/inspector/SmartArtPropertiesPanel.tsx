@@ -1,15 +1,14 @@
-import { rebuildDrawingShapesIfCleared } from 'ooxml-ui/pptx';
+import {
+	rebuildDrawingShapesIfCleared,
+	setSmartArtInspectorColor,
+	smartArtInspectorColors,
+} from 'ooxml-ui/pptx';
 import type {
 	BoundingBox,
 	PptxUiSmartArtTextPaneElement,
 	SmartArtTextPaneChangeEvent,
 } from 'ooxml-ui/pptx';
-import type {
-	PptxElement,
-	PptxSmartArtData,
-	SmartArtColorScheme,
-	SmartArtStyle,
-} from 'pptx-viewer-core';
+import type { PptxElement, PptxSmartArtData, SmartArtStyle } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -32,14 +31,6 @@ interface SmartArtPropertiesPanelProps {
 }
 
 // --- Constants -------------------------------------------------------------
-
-const COLOR_SCHEMES: SmartArtColorScheme[] = [
-	'colorful1',
-	'colorful2',
-	'colorful3',
-	'monochromatic1',
-	'monochromatic2',
-];
 
 const STYLE_OPTIONS: SmartArtStyle[] = ['flat', 'moderate', 'intense'];
 
@@ -121,12 +112,16 @@ export function SmartArtPropertiesPanel({
 				/>
 
 				<SmartArtStyleControls
-					colorSchemes={COLOR_SCHEMES}
+					colors={smartArtInspectorColors(smartArtData, (key, params) => t(key, params))}
 					styleOptions={STYLE_OPTIONS}
-					colorScheme={smartArtData.colorScheme ?? 'colorful1'}
 					style={smartArtData.style ?? 'flat'}
 					canEdit={canEdit}
-					onChangeColorScheme={(colorScheme) => updateSmartArt({ colorScheme })}
+					onChangeColorScheme={(value) => {
+						const next = setSmartArtInspectorColor(smartArtData, value);
+						if (next !== smartArtData) {
+							applySmartArtData(next);
+						}
+					}}
 					onChangeStyle={(style) => updateSmartArt({ style })}
 				/>
 

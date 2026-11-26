@@ -7,6 +7,7 @@ import { flattenNodes } from '../smartart-layout-helpers';
 export function smartArtColorPatch(
 	data: PptxSmartArtData,
 	fillColors: string[],
+	uniqueId?: string,
 ): Partial<PptxSmartArtData> {
 	const original = data.colorTransform;
 	const roles =
@@ -29,6 +30,7 @@ export function smartArtColorPatch(
 		colorTransformDirty: true,
 		colorTransform: {
 			...original,
+			uniqueId,
 			fillColors: [...fillColors],
 			lineColors: original?.lineColors ?? [],
 			roleColors,

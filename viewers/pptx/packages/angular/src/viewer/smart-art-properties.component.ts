@@ -39,31 +39,21 @@ import {
 	CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { smartArtInspectorColors } from 'ooxml-ui/pptx';
 import type { SmartArtTextPaneChangeEvent, SmartArtTextPaneViewState } from 'ooxml-ui/pptx';
-import type {
-	PptxSmartArtData,
-	SmartArtColorScheme,
-	SmartArtLayoutType,
-	SmartArtStyle,
-} from 'pptx-viewer-core';
+import type { PptxSmartArtData, SmartArtLayoutType, SmartArtStyle } from 'pptx-viewer-core';
 
 import { isSelectControl } from './control-event-targets';
 import { SWITCHABLE_LAYOUT_TYPES } from './editor-insert';
 import { RecentColorsService } from './recent-colors.service';
 import { homeLanguage, ngxTranslate } from './ribbon-home-lang';
+import { smartArtLayoutLabelKey, smartArtStyleLabelKey } from './schema-token-labels';
 import {
-	smartArtColorSchemeLabelKey,
-	smartArtLayoutLabelKey,
-	smartArtStyleLabelKey,
-} from './schema-token-labels';
-import {
-	currentColorScheme,
 	currentLayout,
 	currentStyle,
 	setColorScheme,
 	setLayout,
 	setStyle,
-	SMART_ART_COLOR_SCHEMES,
 	SMART_ART_STYLE_OPTIONS,
 } from './smart-art-properties-helpers';
 
@@ -109,12 +99,12 @@ import {
 					data-testid="smartart-color-scheme"
 					[attr.aria-label]="'pptx.smartart.colorScheme' | translate"
 					[disabled]="!canEdit()"
-					[value]="activeColorScheme()"
+					[value]="colors().value"
 					(change)="onColorScheme($event)"
 				>
-					@for (scheme of colorSchemes; track scheme) {
-						<option [value]="scheme" [selected]="scheme === activeColorScheme()">
-							{{ colorSchemeLabelKey(scheme) | translate }}
+					@for (option of colors().options; track option.value) {
+						<option [value]="option.value">
+							{{ option.label }}
 						</option>
 					}
 				</pptx-ui-select>
@@ -250,12 +240,14 @@ export class SmartArtPropertiesComponent {
 
 	// ── Static option lists (template-bound) ─────────────────────────────────
 	protected readonly layoutTypes: readonly SmartArtLayoutType[] = SWITCHABLE_LAYOUT_TYPES;
-	protected readonly colorSchemes = SMART_ART_COLOR_SCHEMES;
 	protected readonly styleOptions = SMART_ART_STYLE_OPTIONS;
 
 	// ── Derived state ─────────────────────────────────────────────────────────
 	protected readonly activeLayout = computed(() => currentLayout(this.smartArtData()));
-	protected readonly activeColorScheme = computed(() => currentColorScheme(this.smartArtData()));
+	protected readonly colors = computed(() => {
+		this.language();
+		return smartArtInspectorColors(this.smartArtData(), ngxTranslate(this.translate));
+	});
 	protected readonly activeStyle = computed(() => currentStyle(this.smartArtData()));
 
 	/** What the shared text pane shows. */
@@ -272,7 +264,6 @@ export class SmartArtPropertiesComponent {
 	// These three controls used to print the `dgm:` schema token itself, so the
 	// picker offered "colorful1" and "bending" as if they were English words.
 	protected layoutLabelKey = smartArtLayoutLabelKey;
-	protected colorSchemeLabelKey = smartArtColorSchemeLabelKey;
 	protected styleLabelKey = smartArtStyleLabelKey;
 
 	// ── Event handlers (each emits a fresh data model) ───────────────────────
@@ -285,7 +276,7 @@ export class SmartArtPropertiesComponent {
 		if (value === null) {
 			return;
 		}
-		this.commit(setColorScheme(this.smartArtData(), value as SmartArtColorScheme));
+		this.commit(setColorScheme(this.smartArtData(), value));
 	}
 
 	protected onStyle(style: SmartArtStyle): void {

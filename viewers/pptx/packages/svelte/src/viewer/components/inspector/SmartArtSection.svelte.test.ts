@@ -46,8 +46,7 @@ function smartArt(): PptxElement {
 	} as PptxElement;
 }
 
-function render(): { editor: EditorState; target: HTMLElement } {
-	const element = smartArt();
+function render(element = smartArt()): { editor: EditorState; target: HTMLElement } {
 	const editor = new EditorState({ getCurrent: () => 0, getHandler: () => null });
 	editor.editable = true;
 	editor.setSlides([{ id: 's1', rId: 'rId1', slideNumber: 1, elements: [element] }]);
@@ -115,6 +114,21 @@ describe('smartArtSection structural reflow', () => {
 });
 
 describe('smartArtSection shared text pane', () => {
+	it('shows the active ribbon colour definition in the inspector', () => {
+		const element = smartArt();
+		if (element.type !== 'smartArt' || !element.smartArtData) {
+			throw new Error('Missing diagram');
+		}
+		element.smartArtData.colorTransform = {
+			uniqueId: 'urn:test/colors/accent4_2',
+			fillColors: ['#7030a0'],
+			lineColors: [],
+		};
+		const { target } = render(element);
+		const select = target.querySelector('pptx-ui-select[data-testid="smartart-color-scheme"]');
+		expect(select?.value).toBe('accent4_2');
+	});
+
 	it('feeds the pane the nodes', () => {
 		const { target } = render();
 		expect(nodeInputs(target).map((input) => input.value)).toStrictEqual(['One', 'Two']);

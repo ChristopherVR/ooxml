@@ -106,6 +106,26 @@ describe('smartArtPropertiesPanel', () => {
 		expect(next.colorScheme).toBe('monochromatic1');
 	});
 
+	it('refreshes the selected colour definition when the diagram changes', async () => {
+		const wrapper = mount(SmartArtPropertiesPanel, { props: { element: smartArtElement() } });
+		await wrapper.setProps({
+			element: smartArtElement(
+				smartArtData({
+					colorTransform: {
+						uniqueId: 'urn:test/colors/accent4_2',
+						fillColors: ['#7030a0'],
+						lineColors: [],
+					},
+				}),
+			),
+		});
+		const select = wrapper.get<HTMLElementTagNameMap['pptx-ui-select']>(
+			'[data-testid="smartart-color-scheme"]',
+		);
+		expect(select.element.value).toBe('accent4_2');
+		expect(select.get('option[value="accent4_2"]').text()).toContain('Accent 4');
+	});
+
 	it('toggling the style emits smartArtData with the new style', async () => {
 		const wrapper = mount(SmartArtPropertiesPanel, { props: { element: smartArtElement() } });
 		await wrapper.get('[data-testid="smartart-style-intense"]').trigger('click');

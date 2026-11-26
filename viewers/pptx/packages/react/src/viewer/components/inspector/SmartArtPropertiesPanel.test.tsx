@@ -62,7 +62,7 @@ function mount(data: PptxSmartArtData, canEdit = true) {
 	const inputs = () => [
 		...pane.shadowRoot!.querySelectorAll<HTMLInputElement>('[data-testid="smartart-node-text"]'),
 	];
-	return { onUpdateElement, pane, inputs };
+	return { onUpdateElement, pane, inputs, target };
 }
 
 describe('smartArtPropertiesPanel - shared text pane', () => {
@@ -97,6 +97,22 @@ describe('smartArtPropertiesPanel - shared text pane', () => {
  * bindings and would write a different `dgm:` family into the deck.
  */
 describe('smartArtPropertiesPanel - schema tokens are spelled, values are not', () => {
+	it('shows the active ribbon colour definition in the inspector', () => {
+		const { target } = mount({
+			...listData(1),
+			colorTransform: {
+				uniqueId: 'urn:test/colors/accent4_2',
+				fillColors: ['#7030a0'],
+				lineColors: [],
+			},
+		});
+		const select = target.querySelector('pptx-ui-select[data-testid="smartart-color-scheme"]');
+		expect(select?.value).toBe('accent4_2');
+		expect(select?.querySelector('option[value="accent4_2"]')?.textContent).toBe(
+			'pptx.gallery.smartArtColors.coloredFill',
+		);
+	});
+
 	it('labels the colour-scheme options without changing their values', () => {
 		const html = render(
 			<SmartArtPropertiesPanel smartArtData={listData(1)} canEdit onUpdateElement={vi.fn()} />,

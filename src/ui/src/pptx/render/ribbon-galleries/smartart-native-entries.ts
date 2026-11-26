@@ -90,14 +90,12 @@ const uniqueIdOf = (xml: string | undefined): string | undefined =>
 
 /** The built-in colour entry a diagram carries: a pick, its loaded part, or its model scheme. */
 export function appliedSmartArtColor(data: PptxSmartArtData): string | undefined {
+	const modelId = data.colorScheme && DIAGRAM_NATIVE_COLOR_FOR_SCHEME[data.colorScheme];
 	return (
 		appliedDiagramNativeId('colors', uniqueIdOf(data.builtinColorsXml)) ??
-		// A pick can recolour the diagram before its lazy definition is available. The source
-		// part's id still describes the old colours in that case.
-		(data.colorTransformDirty
-			? undefined
-			: appliedDiagramNativeId('colors', data.colorTransform?.uniqueId)) ??
-		(data.colorScheme ? DIAGRAM_NATIVE_COLOR_FOR_SCHEME[data.colorScheme] : undefined)
+		(data.colorTransformDirty ? modelId : undefined) ??
+		appliedDiagramNativeId('colors', data.colorTransform?.uniqueId) ??
+		modelId
 	);
 }
 

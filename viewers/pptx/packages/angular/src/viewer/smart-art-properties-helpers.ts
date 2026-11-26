@@ -14,24 +14,10 @@
  * @module angular-viewer/smart-art-properties-helpers
  */
 
-import { switchSmartArtLayoutData } from 'ooxml-ui/pptx';
-import type {
-	PptxSmartArtData,
-	SmartArtColorScheme,
-	SmartArtLayoutType,
-	SmartArtStyle,
-} from 'pptx-viewer-core';
+import { setSmartArtInspectorColor, switchSmartArtLayoutData } from 'ooxml-ui/pptx';
+import type { PptxSmartArtData, SmartArtLayoutType, SmartArtStyle } from 'pptx-viewer-core';
 
 // ── Option constants (mirror the React panel) ───────────────────────────────
-
-/** Selectable colour schemes, in display order. */
-export const SMART_ART_COLOR_SCHEMES: readonly SmartArtColorScheme[] = [
-	'colorful1',
-	'colorful2',
-	'colorful3',
-	'monochromatic1',
-	'monochromatic2',
-] as const;
 
 /** Selectable style intensities, in display order. */
 export const SMART_ART_STYLE_OPTIONS: readonly SmartArtStyle[] = [
@@ -40,9 +26,6 @@ export const SMART_ART_STYLE_OPTIONS: readonly SmartArtStyle[] = [
 	'intense',
 ] as const;
 
-/** Default colour scheme used when the data has none set. */
-export const DEFAULT_COLOR_SCHEME: SmartArtColorScheme = 'colorful1';
-
 /** Default style used when the data has none set. */
 export const DEFAULT_STYLE: SmartArtStyle = 'flat';
 
@@ -50,11 +33,6 @@ export const DEFAULT_STYLE: SmartArtStyle = 'flat';
 export const DEFAULT_LAYOUT: SmartArtLayoutType = 'list';
 
 // ── Read helpers ─────────────────────────────────────────────────────────────
-
-/** Current colour scheme, falling back to the default. */
-export function currentColorScheme(data: PptxSmartArtData): SmartArtColorScheme {
-	return data.colorScheme ?? DEFAULT_COLOR_SCHEME;
-}
 
 /** Current style intensity, falling back to the default. */
 export function currentStyle(data: PptxSmartArtData): SmartArtStyle {
@@ -68,13 +46,7 @@ export function currentLayout(data: PptxSmartArtData): SmartArtLayoutType {
 
 // ── Mutation helpers (all return new immutable PptxSmartArtData) ──────────────
 
-/** Apply a new colour scheme; clears stale drawing shapes for reflow. */
-export function setColorScheme(
-	data: PptxSmartArtData,
-	scheme: SmartArtColorScheme,
-): PptxSmartArtData {
-	return { ...data, colorScheme: scheme, drawingShapes: undefined };
-}
+export { setSmartArtInspectorColor as setColorScheme };
 
 /** Apply a new style intensity; clears stale drawing shapes for reflow. */
 export function setStyle(data: PptxSmartArtData, style: SmartArtStyle): PptxSmartArtData {

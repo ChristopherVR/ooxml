@@ -77,4 +77,22 @@ describe('pptx-ui-smartart-text-pane', () => {
 		pane.shadowRoot!.querySelector<HTMLButtonElement>('.append')!.click();
 		expect(seen).toEqual([]);
 	});
+
+	it('refreshes inherited fills when direct node formatting is removed', () => {
+		const colorTransform = { fillColors: ['#7030a0', '#ed7d31'], lineColors: [] };
+		const before = {
+			...smartArtData,
+			colorTransform,
+			nodes: smartArtData.nodes.map((node) => ({ ...node, style: { fillColor: '#ff0000' } })),
+		};
+		const { pane, seen } = mount({ smartArtData: before });
+		const values = () =>
+			[...pane.shadowRoot!.querySelectorAll<HTMLInputElement>('.fill input')].map(
+				(input) => input.value,
+			);
+		expect(values()).toEqual(['#ff0000', '#ff0000']);
+		pane.state = { ...pane.state, smartArtData: { ...smartArtData, colorTransform } };
+		expect(values()).toEqual(colorTransform.fillColors);
+		expect(seen).toEqual([]);
+	});
 });

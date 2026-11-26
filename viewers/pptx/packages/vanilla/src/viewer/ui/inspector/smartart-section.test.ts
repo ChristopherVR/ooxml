@@ -98,6 +98,23 @@ describe('smartArtSection shared text pane', () => {
 });
 
 describe('smartart colour scheme picker', () => {
+	it('refreshes the selected colour definition when the diagram changes', () => {
+		const { section, scheme } = mount();
+		const smartArtData: PptxSmartArtData = {
+			nodes: [],
+			colorTransform: {
+				uniqueId: 'urn:test/colors/accent4_2',
+				fillColors: ['#7030a0'],
+				lineColors: [],
+			},
+		};
+		section.update({ isSmartArt: true, smartArtData } as InspectorState);
+		expect(scheme.value).toBe('accent4_2');
+		expect(scheme.querySelector('option[value="accent4_2"]')?.textContent).toBe(
+			'pptx.gallery.smartArtColors.coloredFill',
+		);
+	});
+
 	it('keeps the five `dgm:colorsDef` families as the option values', () => {
 		const { scheme } = mount();
 

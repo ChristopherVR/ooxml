@@ -27,6 +27,8 @@ export interface OfficeSmartArtTextNode {
 	label?: string;
 	/** The node's own look, shown and edited by the style tools. */
 	style?: OfficeSmartArtNodeStyle;
+	/** Display fill inherited from the diagram when the node has no direct override. */
+	inheritedFillColor?: string;
 	/** Tool availability; each defaults to allowed. `canRemove` also gates Backspace and Delete. */
 	canMoveUp?: boolean;
 	canMoveDown?: boolean;

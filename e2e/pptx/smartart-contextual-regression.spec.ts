@@ -102,10 +102,21 @@ test('Reset Graphic clears node formatting and keeps the chosen color scheme', a
 	await tab('smartArtDesign').click();
 	const colors = page.locator('[data-ribbon-gallery="smartArtColors"]').first();
 	const scheme = page.locator(
-		'[data-ribbon-gallery-popup="smartArtColors"] [data-gallery-item="accent2_2"]',
+		'[data-ribbon-gallery-popup="smartArtColors"] [data-gallery-item="accent4_2"]',
 	);
+	const inspector = page.locator('[data-pptx-inspector]:visible').first();
+	if (!(await inspector.isVisible())) {
+		await page.getByRole('button', { name: 'Toggle inspector panel', exact: true }).click();
+	}
+	const selectedColor = inspector.getByTestId('smartart-color-scheme').getByRole('combobox');
+	const fill = inspector.getByTestId('smartart-text-pane').locator('input[type="color"]').first();
+	await expect(fill).toBeVisible();
+	const originalFill = await fill.inputValue();
 	await colors.click();
 	await scheme.click();
+	await expect(selectedColor).toContainText('Accent 4');
+	await expect(fill).not.toHaveValue(originalFill);
+	const inheritedFill = await fill.inputValue();
 	await colors.click();
 	await expect(scheme).toHaveAttribute('aria-pressed', 'true');
 	await page.keyboard.press('Escape');
@@ -116,8 +127,12 @@ test('Reset Graphic clears node formatting and keeps the chosen color scheme', a
 		.getByRole('checkbox');
 	await bold.click();
 	await expect(bold).toBeChecked();
+	await fill.fill('#ff0000');
+	await expect(fill).toHaveValue('#ff0000');
 	await tab('smartArtDesign').click();
 	await page.getByRole('button', { name: 'Reset Graphic', exact: true }).click();
+	await expect(selectedColor).toContainText('Accent 4');
+	await expect(fill).toHaveValue(inheritedFill);
 	await colors.click();
 	await expect(scheme).toHaveAttribute('aria-pressed', 'true');
 	await page.keyboard.press('Escape');

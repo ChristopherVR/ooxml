@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type {
-		SmartArtColorScheme,
 		SmartArtLayoutType,
 		SmartArtStyle,
 		SmartArtPptxElement,
@@ -9,8 +8,9 @@
 	import {
 		reflowSmartArtData,
 		schemaLabel,
-		SMARTART_COLOR_SCHEME_LABEL_KEYS,
 		SMARTART_STYLE_LABEL_KEYS,
+		setSmartArtInspectorColor,
+		smartArtInspectorColors,
 		switchSmartArtLayoutData,
 	} from 'ooxml-ui/pptx';
 	import type { SmartArtTextPaneChangeEvent, SmartArtTextPaneViewState } from 'ooxml-ui/pptx';
@@ -22,16 +22,7 @@
 	const t = useTranslator();
 	const data = $derived(el.smartArtData);
 
-	// `dgm:colorsDef` / `dgm:styleDef` family tokens. Both lists stay explicit so
-	// spelling them out through the shared tables cannot change which variations
-	// the editor offers.
-	const colorSchemes: readonly SmartArtColorScheme[] = [
-		'colorful1',
-		'colorful2',
-		'colorful3',
-		'monochromatic1',
-		'monochromatic2',
-	];
+	const colors = $derived(smartArtInspectorColors(data, t));
 	const diagramStyles: readonly SmartArtStyle[] = ['flat', 'moderate', 'intense'];
 
 	// The text pane is the shared `pptx-ui-smartart-text-pane` element (outline with levels,
@@ -49,9 +40,12 @@
 		}
 	}
 
-	function setColorScheme(scheme: SmartArtColorScheme): void {
+	function setColorScheme(scheme: string): void {
 		if (data) {
-			applyData({ ...data, colorScheme: scheme });
+			const next = setSmartArtInspectorColor(data, scheme);
+			if (next !== data) {
+				applyData(next);
+			}
 		}
 	}
 	/**
@@ -100,11 +94,11 @@
 		<pptx-ui-select
 			aria-label={t('pptx.smartart.colorScheme')}
 			data-testid="smartart-color-scheme"
-			value={data.colorScheme ?? 'colorful1'}
-			onchange={(event) => setColorScheme(event.currentTarget.value as SmartArtColorScheme)}
+			value={colors.value}
+			onchange={(event) => setColorScheme(event.currentTarget.value)}
 		>
-			{#each colorSchemes as scheme}
-				<option value={scheme}>{schemaLabel(SMARTART_COLOR_SCHEME_LABEL_KEYS, scheme, t)}</option>
+			{#each colors.options as option (option.value)}
+				<option value={option.value}>{option.label}</option>
 			{/each}
 		</pptx-ui-select>
 	</label>

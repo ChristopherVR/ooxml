@@ -90,7 +90,7 @@ export const SMARTART_COLORS_GALLERY: RibbonGalleryModule = {
 		const xml = builtinDefinitionXml('colors', entry.uniqueId);
 		const patch = smartArtElementPatch(ctx.element, {
 			colorScheme: modelColorScheme(entry),
-			...smartArtColorPatch(data, fills),
+			...smartArtColorPatch(data, fills, entry.uniqueId),
 			// Until the SmartArt library has loaded, save merges the fills into the existing part.
 			builtinColorsXml: xml,
 		});

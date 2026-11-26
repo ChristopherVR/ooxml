@@ -1,13 +1,13 @@
 import {
 	rebuildDrawingShapesIfCleared,
 	resolvePalette,
+	setSmartArtInspectorColor,
 	smartArtLayoutSwitchPatch,
 } from 'ooxml-ui/pptx';
 import type { BoundingBox } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSmartArtData,
-	SmartArtColorScheme,
 	SmartArtLayoutType,
 	SmartArtStyle,
 } from 'pptx-viewer-core';
@@ -26,11 +26,7 @@ import type { ComputedRef } from 'vue';
 
 // Re-export the static option lists + layout-label helper from their dedicated
 // module so existing callers can keep importing them from this barrel.
-export {
-	SMARTART_COLOR_SCHEMES,
-	SMARTART_STYLE_OPTIONS,
-	smartArtLayoutLabel,
-} from './smartart-editing-constants';
+export { SMARTART_STYLE_OPTIONS, smartArtLayoutLabel } from './smartart-editing-constants';
 
 export interface UseSmartArtEditingInput {
 	/** Current SmartArt data for the selected element. */
@@ -47,12 +43,11 @@ export interface UseSmartArtEditingInput {
 }
 
 export interface SmartArtEditingApi {
-	colorScheme: ComputedRef<SmartArtColorScheme>;
 	style: ComputedRef<SmartArtStyle>;
 	currentLayout: ComputedRef<SmartArtLayoutType>;
 	/** Commit a whole new SmartArt data object (e.g. a text pane edit). */
 	commit: (next: PptxSmartArtData) => void;
-	setColorScheme: (scheme: SmartArtColorScheme) => void;
+	setColorScheme: (scheme: string) => void;
 	setStyle: (style: SmartArtStyle) => void;
 	switchLayout: (layout: SmartArtLayoutType) => void;
 }
@@ -60,9 +55,6 @@ export interface SmartArtEditingApi {
 export function useSmartArtEditing(input: UseSmartArtEditingInput): SmartArtEditingApi {
 	const { smartArtData, apply } = input;
 
-	const colorScheme = computed<SmartArtColorScheme>(
-		() => smartArtData.value.colorScheme ?? 'colorful1',
-	);
 	const style = computed<SmartArtStyle>(() => smartArtData.value.style ?? 'flat');
 	const currentLayout = computed<SmartArtLayoutType>(
 		() => smartArtData.value.resolvedLayoutType ?? 'list',
@@ -94,11 +86,12 @@ export function useSmartArtEditing(input: UseSmartArtEditingInput): SmartArtEdit
 		commit({ ...smartArtData.value, ...patch });
 	}
 
-	function setColorScheme(scheme: SmartArtColorScheme): void {
-		if (scheme === colorScheme.value) {
-			return;
+	function setColorScheme(scheme: string): void {
+		const data = smartArtData.value;
+		const next = setSmartArtInspectorColor(data, scheme);
+		if (next !== data) {
+			commit(next);
 		}
-		patchData({ colorScheme: scheme });
 	}
 
 	function setStyle(next: SmartArtStyle): void {
@@ -118,7 +111,6 @@ export function useSmartArtEditing(input: UseSmartArtEditingInput): SmartArtEdit
 	}
 
 	return {
-		colorScheme,
 		style,
 		currentLayout,
 		commit,

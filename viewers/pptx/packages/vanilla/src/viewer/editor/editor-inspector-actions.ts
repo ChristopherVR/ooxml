@@ -11,6 +11,7 @@ import {
 	textWrapPatch,
 	vAlignPatch,
 	switchSmartArtLayoutData,
+	setSmartArtInspectorColor,
 	withCellStyle,
 } from 'ooxml-ui/pptx';
 import type { InlineTextSelection, TextAdvancedChanges } from 'ooxml-ui/pptx';
@@ -23,7 +24,6 @@ import type {
 	MediaPptxElement,
 	OlePptxElement,
 	ElementAction,
-	SmartArtColorScheme,
 	SmartArtLayoutType,
 	TextStyle,
 	PptxElement,
@@ -88,7 +88,7 @@ export interface InspectorActions {
 
 	replaceSmartArtData(data: PptxSmartArtData): void;
 	setSmartArtLayout(layout: SmartArtLayoutType): void;
-	setSmartArtColorScheme(scheme: SmartArtColorScheme): void;
+	setSmartArtColorScheme(scheme: string): void;
 }
 
 export function createInspectorActions(applyToSelected: ApplyToSelected): InspectorActions {
@@ -239,7 +239,7 @@ export function createInspectorActions(applyToSelected: ApplyToSelected): Inspec
 		setSmartArtLayout: (layout) =>
 			applyToSelected((el) => smartArtPatch(el, (data) => switchSmartArtLayoutData(data, layout))),
 		setSmartArtColorScheme: (scheme) =>
-			applyToSelected((el) => smartArtPatch(el, (data) => ({ ...data, colorScheme: scheme }))),
+			applyToSelected((el) => smartArtPatch(el, (data) => setSmartArtInspectorColor(data, scheme))),
 	};
 }
 

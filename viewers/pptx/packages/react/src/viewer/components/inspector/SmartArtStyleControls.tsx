@@ -1,9 +1,6 @@
-import {
-	schemaLabel,
-	SMARTART_COLOR_SCHEME_LABEL_KEYS,
-	SMARTART_STYLE_LABEL_KEYS,
-} from 'ooxml-ui/pptx';
-import type { SmartArtColorScheme, SmartArtStyle } from 'pptx-viewer-core';
+import { schemaLabel, SMARTART_STYLE_LABEL_KEYS } from 'ooxml-ui/pptx';
+import type { smartArtInspectorColors } from 'ooxml-ui/pptx';
+import type { SmartArtStyle } from 'pptx-viewer-core';
 import React from 'react';
 
 import { useTranslation } from '../../i18n/use-translation';
@@ -17,26 +14,19 @@ import { INPUT } from './inspector-pane-constants';
  * Lifted out of `SmartArtPropertiesPanel` purely to keep that file inside the
  * per-file line budget; the markup, testids and accessible names are unchanged.
  *
- * Both controls render OOXML wire tokens (`dgm:colorsDef` families such as
- * `colorful1`, `dgm:styleDef` intensities such as `flat`). Only their visible
- * text is spelled via the shared catalogues: the option VALUES and the button
- * payloads stay the raw tokens, so the deck still receives exactly what it did
- * before and the control stays in parity with the other bindings.
  */
 export interface SmartArtStyleControlsProps {
-	colorSchemes: readonly SmartArtColorScheme[];
+	colors: ReturnType<typeof smartArtInspectorColors>;
 	styleOptions: readonly SmartArtStyle[];
-	colorScheme: SmartArtColorScheme;
 	style: SmartArtStyle;
 	canEdit: boolean;
-	onChangeColorScheme: (scheme: SmartArtColorScheme) => void;
+	onChangeColorScheme: (scheme: string) => void;
 	onChangeStyle: (style: SmartArtStyle) => void;
 }
 
 export function SmartArtStyleControls({
-	colorSchemes,
+	colors,
 	styleOptions,
-	colorScheme,
 	style,
 	canEdit,
 	onChangeColorScheme,
@@ -56,12 +46,12 @@ export function SmartArtStyleControls({
 					data-testid='smartart-color-scheme'
 					aria-label={t('pptx.smartart.colorScheme')}
 					className={cn(INPUT, 'w-full')}
-					value={colorScheme}
-					onChange={(e) => onChangeColorScheme(e.target.value as SmartArtColorScheme)}
+					value={colors.value}
+					onChange={(e) => onChangeColorScheme(e.target.value)}
 				>
-					{colorSchemes.map((cs) => (
-						<option key={cs} value={cs}>
-							{schemaLabel(SMARTART_COLOR_SCHEME_LABEL_KEYS, cs, translate)}
+					{colors.options.map(({ value, label }) => (
+						<option key={value} value={value}>
+							{label}
 						</option>
 					))}
 				</WebSelect>

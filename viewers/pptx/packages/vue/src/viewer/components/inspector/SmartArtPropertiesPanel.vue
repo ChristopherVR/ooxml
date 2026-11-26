@@ -1,14 +1,9 @@
 <script setup lang="ts">
-import {
-	schemaLabel,
-	SMARTART_COLOR_SCHEME_LABEL_KEYS,
-	SMARTART_STYLE_LABEL_KEYS,
-} from 'ooxml-ui/pptx';
+import { schemaLabel, SMARTART_STYLE_LABEL_KEYS, smartArtInspectorColors } from 'ooxml-ui/pptx';
 import type { SmartArtTextPaneChangeEvent, SmartArtTextPaneViewState } from 'ooxml-ui/pptx';
 import type {
 	PptxElement,
 	PptxSmartArtData,
-	SmartArtColorScheme,
 	SmartArtLayoutType,
 	SmartArtStyle,
 } from 'pptx-viewer-core';
@@ -16,11 +11,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { injectRecentColors } from '../../composables/recent-colors-context';
-import {
-	SMARTART_COLOR_SCHEMES,
-	SMARTART_STYLE_OPTIONS,
-	useSmartArtEditing,
-} from '../../composables/useSmartArtEditing';
+import { SMARTART_STYLE_OPTIONS, useSmartArtEditing } from '../../composables/useSmartArtEditing';
 import SmartArtLayoutSwitcher from './SmartArtLayoutSwitcher.vue';
 
 /**
@@ -72,19 +63,12 @@ const editing = useSmartArtEditing({
 	box,
 });
 
-const colorSchemes = SMARTART_COLOR_SCHEMES;
+const colors = computed(() =>
+	smartArtInspectorColors(smartArtData.value, (key, params) =>
+		params ? t(key, { ...params }) : t(key),
+	),
+);
 const styleOptions = SMARTART_STYLE_OPTIONS;
-
-/**
- * Spell the `dgm:colorsDef` / `dgm:styleDef` families for display.
- *
- * Both controls keep their existing value sets and still emit the raw wire
- * tokens; only the visible text changes, so nothing is added or dropped.
- * `t` is an overloaded generic, hence the narrowing lambda.
- */
-function colorSchemeLabel(scheme: SmartArtColorScheme): string {
-	return schemaLabel(SMARTART_COLOR_SCHEME_LABEL_KEYS, scheme, (key: string) => t(key));
-}
 
 function styleLabel(style: SmartArtStyle): string {
 	return schemaLabel(SMARTART_STYLE_LABEL_KEYS, style, (key: string) => t(key));
@@ -105,7 +89,7 @@ function onPaneChange(event: Event): void {
 }
 
 function onColorSchemeChange(event: Event): void {
-	editing.setColorScheme((event.target as HTMLSelectElement).value as SmartArtColorScheme);
+	editing.setColorScheme((event.target as HTMLSelectElement).value);
 }
 
 function onSwitchLayout(layout: SmartArtLayoutType): void {
@@ -142,11 +126,11 @@ function onSetStyle(value: SmartArtStyle): void {
 					data-testid="smartart-color-scheme"
 					:aria-label="t('pptx.smartart.colorScheme')"
 					:disabled="!editable"
-					:value="editing.colorScheme.value"
+					:value="colors.value"
 					@change="onColorSchemeChange"
 				>
-					<option v-for="cs in colorSchemes" :key="cs" :value="cs">
-						{{ colorSchemeLabel(cs) }}
+					<option v-for="option in colors.options" :key="option.value" :value="option.value">
+						{{ option.label }}
 					</option>
 				</pptx-ui-select>
 			</label>

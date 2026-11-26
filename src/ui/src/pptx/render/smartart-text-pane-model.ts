@@ -19,6 +19,8 @@ import {
 	canRemoveTopLevelNode,
 	describeSmartArtBounds,
 } from './smartart-node-limits';
+import { resolvePalette, paletteColour } from './smartart-drawing';
+import { resolveDrawingShapeNodeId } from './smartart-inline-edit';
 import {
 	addSiblingAfter,
 	classifyExtraConnections,
@@ -39,6 +41,7 @@ export interface SmartArtTextPaneLine {
 	marker: string;
 	label: string;
 	style?: PptxSmartArtNodeStyle;
+	inheritedFillColor: string;
 	canMoveUp: boolean;
 	canMoveDown: boolean;
 	canRemove: boolean;
@@ -82,6 +85,14 @@ export function smartArtTextPaneView(data: PptxSmartArtData, t: Translate): Smar
 	const tops = topLevelCount(levels);
 	const layout = data.resolvedLayoutType;
 	const canRemoveTop = canRemoveTopLevelNode(layout, tops);
+	const palette = resolvePalette(data);
+	const shapes = data.drawingShapes ?? [];
+	const fills = new Map<string, string>();
+	for (const [index, shape] of shapes.entries()) {
+		const id = resolveDrawingShapeNodeId(shape, index, shapes, nodes);
+		const fill = shape.fillColor ?? shape.fillGradientStops?.[0]?.color;
+		if (id && fill && !fills.has(id)) fills.set(id, fill);
+	}
 	let number = 0;
 	const lines = nodes.map((node, index): SmartArtTextPaneLine => {
 		const level = levels[index] ?? 0;
@@ -101,6 +112,7 @@ export function smartArtTextPaneView(data: PptxSmartArtData, t: Translate): Smar
 					? t('pptx.smartArt.itemLabel', { index: number, text })
 					: t('pptx.smartArt.subItemLabel', { text }),
 			...(node.style ? { style: node.style } : {}),
+			inheritedFillColor: fills.get(node.id) ?? paletteColour(index, palette),
 			canMoveUp: position > 0,
 			canMoveDown: position >= 0 && position < siblings.length - 1,
 			canRemove: nodes.length > 1 && (level > 0 || canRemoveTop),

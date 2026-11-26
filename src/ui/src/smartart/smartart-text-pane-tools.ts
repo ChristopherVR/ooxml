@@ -42,6 +42,7 @@ export interface OfficeSmartArtToolNode {
 	text: string;
 	label?: string;
 	style?: OfficeSmartArtNodeStyle;
+	inheritedFillColor?: string;
 	canMoveUp?: boolean;
 	canMoveDown?: boolean;
 	canRemove?: boolean;
@@ -140,7 +141,7 @@ export function renderLineStyle(
 			>${glyph}</button
 		>`;
 	return html`<span class="styles" role="group" aria-label=${name}
-		>${swatch('fill', text.fill, style.fillColor ?? DEFAULT_FILL, 'fillColor')}${swatch(
+		>${swatch('fill', text.fill, style.fillColor ?? node.inheritedFillColor ?? DEFAULT_FILL, 'fillColor')}${swatch(
 			'font',
 			text.fontColor,
 			style.fontColor ?? DEFAULT_FONT,
