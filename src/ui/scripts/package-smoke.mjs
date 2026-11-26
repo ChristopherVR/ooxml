@@ -92,8 +92,10 @@ try {
 		.flatMap((entry) => {
 			if (!entry.includes('*')) return [entry];
 			const [prefix, suffix] = manifest.exports[entry].import.slice(2).split('*');
+			// Worker scripts sit next to the modules that spawn them but are not module APIs.
 			return [...files]
 				.filter((file) => file.startsWith(prefix) && file.endsWith(suffix))
+				.filter((file) => !/-worker\.[cm]?js$/.test(file))
 				.map((file) => entry.replaceAll('*', file.slice(prefix.length, -suffix.length)));
 		});
 	const specifiers = entries.map((entry) =>
