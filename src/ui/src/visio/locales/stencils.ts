@@ -62,7 +62,7 @@ export const VISIO_STENCIL_STRINGS = {
 		Undo: 'Rückgängig',
 		'No stencil edit to undo.': 'Es gibt keine Schablonenänderung zum Rückgängigmachen.',
 		'Delete the master “{name}”?': 'Masterform „{name}“ löschen?',
-		OK: 'Bestätigen',
+		OK: 'OK',
 		Cancel: 'Abbrechen',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'Ältere binäre Schablonen (.vss, .vst) werden nicht unterstützt.',

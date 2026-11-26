@@ -114,7 +114,7 @@ test('localizes German stencil labels and exposes menu and input states', async 
 	await more.press('Enter');
 	await menu('more', 'new-stencil').getByRole('menuitem', { name: 'Neue Schablone' }).click();
 	await expect(dialog.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
-	const confirm = dialog.getByRole('button', { name: 'Bestätigen' });
+	const confirm = dialog.getByRole('button', { name: 'OK', exact: true });
 	const field = dialog.getByRole('textbox', { name: 'Schablonenname' });
 	await field.fill('   ');
 	await confirm.click();
