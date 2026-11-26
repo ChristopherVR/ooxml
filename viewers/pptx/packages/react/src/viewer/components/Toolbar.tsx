@@ -37,6 +37,7 @@ import { TitleBarElement } from './toolbar/TitleBarElement';
 import type { ToolbarProps } from './toolbar/toolbar-types';
 import { ToolbarPrimaryRow } from './toolbar/ToolbarPrimaryRow';
 import { useContextualRibbonTab } from './toolbar/useContextualRibbonTab';
+import { useDrawingArrange } from './toolbar/useDrawingArrange';
 import { ToolbarLateTabs } from './ToolbarLateTabs';
 import { useViewerCustomizationContext } from './viewer-customization-context';
 import { useViewerOptionsContext } from './viewer-options-context';
@@ -70,6 +71,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const detachOverflow = useRef<(() => void) | null>(null);
 	// Font, Paragraph and Drawing launchers open the Properties pane (there are no modal dialogs).
 	const formatPane = useFormatPane();
+	const drawingArrange = useDrawingArrange(p, formatPane);
 	const inspector = useRef({ open: p.isInspectorPaneOpen, toggle: p.onToggleInspector });
 	inspector.current = { open: p.isInspectorPaneOpen, toggle: p.onToggleInspector };
 	const launchers = useMemo(
@@ -127,7 +129,6 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	// Full-screen mode keeps the strip in the layout, so a peeked ribbon moves nothing.
 	const showStrip = layout.reveal || effectiveMode === 'fullScreen';
 
-	const patchElement = p.onPatchElement;
 	const arrange = (
 		<ArrangeSection
 			embedded={Boolean(contextual.active)}
@@ -380,24 +381,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 								newShapeType={p.newShapeType}
 								onSetNewShapeType={p.onSetNewShapeType}
 								onAddShape={p.onAddShape}
-								arrange={{
-									actions: {
-										align: (edge) => p.onAlignElements(edge === 'centerH' ? 'center' : edge),
-										distribute: p.onDistributeElements,
-										flip: p.onFlip,
-										rotation: patchElement
-											? () => ({ element: p.selectedElement, patch: patchElement })
-											: undefined,
-										group: p.onGroupElements,
-										ungroup: p.onUngroupElement,
-										position: () => formatPane.requestFormatPane('sizePosition', { focus: true }),
-										selectionPane: p.onToggleSelectionPane,
-									},
-									selectedCount: p.selectedCount,
-									selectedElement: p.selectedElement,
-									canEdit: p.canEdit,
-									canGroup: p.selectedCount > 1 && p.selectionGroupable,
-								}}
+								arrange={drawingArrange}
 								onMoveLayer={p.onMoveLayer}
 								onMoveLayerToEdge={p.onMoveLayerToEdge}
 								onUpdateElementStyle={p.onUpdateElementStyle}
