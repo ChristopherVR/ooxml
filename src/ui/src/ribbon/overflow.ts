@@ -169,15 +169,14 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		);
 		if (options.naturalWidth)
 			for (const group of groups) group.dataset.natural = String(Math.ceil(group.offsetWidth));
-		groups.reverse();
+		const foldOrder = [...groups].reverse();
 		const priority = options.groupPriority;
 		const preferExpanded = options.preferExpanded;
 		// Preferred groups fold last; otherwise lower priorities fold first, right to left.
 		const rank = (group: HTMLElement) =>
 			(preferExpanded?.(group, panel) ? 1e6 : 0) + (priority?.(group) ?? 0);
-		if (priority || preferExpanded) groups.sort((a, b) => rank(a) - rank(b));
-		const folded: HTMLElement[] = [];
-		for (const group of groups) {
+		if (priority || preferExpanded) foldOrder.sort((a, b) => rank(a) - rank(b));
+		for (const group of foldOrder) {
 			if (panel.scrollWidth <= panel.clientWidth) break;
 			const width = group.offsetWidth;
 			let button = group.querySelector<HTMLButtonElement>(':scope > .ribbon-overflow-button');
@@ -192,15 +191,13 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			button.setAttribute('aria-label', label);
 			button.title = label;
 			group.setAttribute('data-collapsed', '');
-			if (group.offsetWidth >= width) {
-				group.removeAttribute('data-collapsed');
-				continue;
-			}
-			folded.push(group);
+			// Folding a group that is already as narrow as its button saves nothing.
+			if (group.offsetWidth >= width) group.removeAttribute('data-collapsed');
 		}
-		// Folding a wide group can free enough space to restore an earlier, narrower group.
+		// Restore groups from the left, even when a product prefers to fold them in another order.
 		if (panel.scrollWidth <= panel.clientWidth) {
-			for (const group of folded.reverse()) {
+			for (const group of groups) {
+				if (!group.hasAttribute('data-collapsed')) continue;
 				group.removeAttribute('data-collapsed');
 				if (panel.scrollWidth > panel.clientWidth) group.setAttribute('data-collapsed', '');
 			}

@@ -20,7 +20,8 @@ function panel(room: number, collapsedWidth = 40, widths = [100, 100]) {
 	const define = (node: HTMLElement, props: Record<string, () => number>) => {
 		for (const [key, get] of Object.entries(props)) Object.defineProperty(node, key, { get });
 	};
-	const groups = ['Font', 'Styles'].map((label, index) => {
+	const groups = widths.map((width, index) => {
+		const label = ['Font', 'Styles', 'Editing', 'View'][index] ?? String(index);
 		const group = document.createElement('div');
 		group.className = 'ribbon-group';
 		group.dataset.label = label;
@@ -29,7 +30,7 @@ function panel(room: number, collapsedWidth = 40, widths = [100, 100]) {
 		run.dataset.command = 'x';
 		group.append(run);
 		define(group, {
-			offsetWidth: () => (group.hasAttribute('data-collapsed') ? collapsedWidth : widths[index]!),
+			offsetWidth: () => (group.hasAttribute('data-collapsed') ? collapsedWidth : width),
 		});
 		el.append(group);
 		return group;
@@ -101,6 +102,21 @@ describe('ribbon overflow', () => {
 		const { el, groups } = panel(170, 40, [160, 70]);
 		overflow.fitPanel(el);
 		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([true, false]);
+	});
+
+	it('restores a wider left group before a narrower group preferred during folding', () => {
+		const { el, groups } = panel(250, 40, [120, 160, 70, 70]);
+		const preferred = createRibbonOverflow({
+			...options,
+			preferExpanded: (group) => ['Styles', 'Editing'].includes(group.dataset.label ?? ''),
+		});
+		preferred.fitPanel(el);
+		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([
+			false,
+			true,
+			true,
+			true,
+		]);
 	});
 
 	it('consumes Escape while closing a dropdown from outside the ribbon', () => {
