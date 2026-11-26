@@ -3,7 +3,7 @@ import type { Block, DocumentModel, Paragraph, SectionProperties } from './model
 import { copySourceBlock, type BlockCopies } from './block-copies';
 import { cellSourceBlocks } from './cell-blocks';
 import { flatBlocks } from './parse-content-control';
-import { placeBlocksById } from './write-block-placement';
+import { placeBlocksById, wrapNewBlockControls } from './write-block-placement';
 import { replaceSlots } from './write-slots';
 import { children, first, makeW, type XmlDocument, type XmlElement, WORD_NS } from './xml';
 import { commentContinuations } from './comment-spans';
@@ -155,8 +155,9 @@ export function applyBlocks(
 			);
 	}
 	const nested = flat.some((entry) => entry.sdt) || blocks.some((block) => block.contentControl);
-	if (nested && placeBlocksById(doc, container, flat, blocks, output, anchor)) return;
-	replaceSlots(container, oldNodes, output, anchor);
+	if (!nested || !placeBlocksById(doc, container, flat, blocks, output, anchor))
+		replaceSlots(container, oldNodes, output, anchor);
+	if (nested) wrapNewBlockControls(doc, blocks, output);
 }
 
 export interface ApplyModelResult {

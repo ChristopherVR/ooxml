@@ -3,6 +3,7 @@ import { fieldName } from '../field-runs';
 import type { Block, DocumentModel, Paragraph, TextRun } from '../model';
 import { twips, twipsFromPixels } from '../units';
 import { authorityParagraphs, type AuthorityCategory } from './authorities';
+import { bibliographyStyleId } from './bibliography-gallery';
 import { bibliographyEntry } from './citations';
 import { referenceEntries, type ReferencePage } from './entries';
 import { indexParagraphs, INDEX_LEADERS, type IndexLeader } from './index-entries';
@@ -129,7 +130,12 @@ export function buildReferenceTable(
 						: b.author?.people[0]?.last || b.fields.Title || b.tag,
 				),
 			)
-			.map((source) => ({ type: 'paragraph', id: '', runs: bibliographyEntry(source, style) }));
+			.map((source) => ({
+				type: 'paragraph',
+				id: '',
+				style: bibliographyStyleId(model),
+				runs: bibliographyEntry(source, style),
+			}));
 	}
 	if (!paragraphs.length)
 		paragraphs.push({ type: 'paragraph', id: '', runs: [{ text: options.empty }] });

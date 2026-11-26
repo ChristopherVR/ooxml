@@ -43,6 +43,7 @@ export const DEFAULT_STYLES_XML =
 	toc(1) +
 	toc(2) +
 	toc(3) +
+	'<w:style w:type="paragraph" w:styleId="Bibliography"><w:name w:val="Bibliography"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:uiPriority w:val="37"/><w:unhideWhenUsed/></w:style>' +
 	noteStyles('Footnote', 'footnote') +
 	noteStyles('Endnote', 'endnote') +
 	'<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/><w:basedOn w:val="DefaultParagraphFont"/><w:uiPriority w:val="99"/><w:unhideWhenUsed/><w:rPr><w:color w:val="0563C1" w:themeColor="hyperlink"/><w:u w:val="single"/></w:rPr></w:style>' +

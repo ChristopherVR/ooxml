@@ -106,6 +106,10 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await expect(surface).toContainText('Doe, J. (2020). Field studies. Example Press.');
 	await expectStableUpdate('Update Bibliography');
 	await surface.press('Control+End');
+	await run('Works Cited');
+	await expect(surface.locator('p').filter({ hasText: /^Works Cited$/ })).toHaveCount(1);
+	await expectStableUpdate('Update Bibliography');
+	await surface.press('Control+End');
 	await page.keyboard.press('Enter');
 	await run('Insert Table of Authorities');
 	await button('OK').click();
@@ -130,7 +134,10 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	expect(xml?.match(/ XE /g)).toHaveLength(1);
 	expect(xml).toContain(' INDEX ');
 	expect(xml).toContain(' CITATION ');
-	expect(xml).toContain(' BIBLIOGRAPHY ');
+	expect(xml?.match(/<w:docPartGallery w:val="Bibliographies"\/>/g)).toHaveLength(2);
+	expect(xml?.match(/<w:pStyle w:val="Bibliography"\/>/g)).toHaveLength(2);
+	expect(xml?.match(/<w:pStyle w:val="Heading1"\/>/g)).toHaveLength(2);
+	expect(xml?.match(/ BIBLIOGRAPHY /g)).toHaveLength(2);
 	expect(xml).toContain(' TOA ');
 	expect(xml).toContain(' TA ');
 	expect(xml).toMatch(/<w:cols[^>]*w:num="2"/);

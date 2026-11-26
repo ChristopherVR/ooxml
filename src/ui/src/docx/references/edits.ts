@@ -2,10 +2,16 @@ import { Fragment, type Node as ProseMirrorNode } from 'prosemirror-model';
 import { closeHistory } from 'prosemirror-history';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { sectionLayoutJson, type DocumentModel, type TextRun } from 'ooxml-core/docx';
+import {
+	sectionLayoutJson,
+	styleCatalogsOf,
+	type DocumentModel,
+	type TextRun,
+} from 'ooxml-core/docx';
 import { layoutDocumentModel } from 'ooxml-core/docx/layout';
 import {
 	inlineNodeRun,
+	newControlId,
 	runToInlineNodes,
 	sectionPartsJson,
 	type Bibliography,
@@ -140,6 +146,13 @@ export function changeReferenceTables(
 			]
 		: references.findReferenceTables(model.blocks, kind);
 	if (!edit.length) return false;
+	const galleryHeading = instruction && kind === 'BIBLIOGRAPHY' ? options.heading : undefined;
+	const galleryStyles = galleryHeading ? references.bibliographyGalleryStyles(model) : undefined;
+	if (galleryStyles && galleryStyles !== model.paragraphStyles) {
+		model = { ...model, paragraphStyles: galleryStyles };
+		tr.setDocAttribute('styleCatalogs', styleCatalogsOf(model));
+	}
+	const galleryId = galleryHeading ? newControlId(tr.doc) : undefined;
 	const newId = () => `ref-${references.createOfficeGuid()}`;
 	const ordered = [...edit].sort((a, b) => b.start - a.start);
 	const build = (page?: ReferencePage) =>
@@ -155,12 +168,11 @@ export function changeReferenceTables(
 			});
 			paragraphs[0]?.runs.unshift(...item.before);
 			paragraphs.at(-1)?.runs.push(...item.after);
-			if (instruction && options.heading)
-				paragraphs.unshift({
-					type: 'paragraph',
-					id: '',
-					runs: [{ text: options.heading, bold: true }],
-				});
+			if (galleryId && galleryHeading) {
+				references.bibliographyGallery(model, galleryId, galleryHeading, paragraphs);
+				if (item.end >= model.blocks.length - 1)
+					paragraphs.push({ type: 'paragraph', id: '', runs: [] });
+			}
 			const first = paragraphs[0];
 			const last = paragraphs.at(-1);
 			// Keep the block identity used by a section boundary and any bookmarks outside the field.
@@ -178,6 +190,13 @@ export function changeReferenceTables(
 				if (before?.type === 'paragraph' && first !== last) {
 					first.id = before.id;
 					if (before.bookmarks) first.bookmarks = before.bookmarks;
+					if (before.contentControl) {
+						// The last paragraph may belong to a different control or be outside it.
+						for (const paragraph of paragraphs.slice(0, -1))
+							paragraph.contentControl = before.contentControl;
+						if (after?.type === 'paragraph' && after.contentControl)
+							last.contentControl = after.contentControl;
+					}
 				}
 				if (after?.type === 'paragraph') {
 					// A separate end paragraph can carry a section break and following body text.

@@ -3,9 +3,13 @@
 // block keeps its own `w:sdt` wrapper, and new blocks join the control of the block before them.
 import type { Block } from './model';
 import { isSdt, sdtContent } from './content-control';
-import { patchContentControl, unwrapContentControl } from './write-content-control';
+import {
+	createContentControl,
+	patchContentControl,
+	unwrapContentControl,
+} from './write-content-control';
 import type { FlatBlock } from './parse-content-control';
-import type { XmlDocument, XmlElement } from './xml';
+import { isElement, type XmlDocument, type XmlElement } from './xml';
 
 /** The ancestor of the node that is a direct child of the container, or the node itself. */
 function topLevel(node: XmlElement, container: XmlElement): XmlElement {
@@ -106,4 +110,27 @@ export function syncBlockControls(
 	});
 	for (const [sdt, block] of bySdt) patchContentControl(doc, sdt, block.contentControl!);
 	for (const [sdt, gone] of dropped) if (gone) unwrapContentControl(sdt);
+}
+
+/** Wrap consecutive authored blocks, retaining the source wrappers that already hold blocks. */
+export function wrapNewBlockControls(
+	doc: XmlDocument,
+	blocks: readonly Block[],
+	nodes: readonly XmlElement[],
+): void {
+	let active: (ReturnType<typeof createContentControl> & { id: string }) | undefined;
+	for (const [index, node] of nodes.entries()) {
+		const control = blocks[index]?.contentControl;
+		const parent = node.parentNode;
+		const enclosing = parent?.parentNode;
+		if (!control || !parent || (enclosing && isElement(enclosing) && isSdt(enclosing))) {
+			active = undefined;
+			continue;
+		}
+		if (active?.id !== control.id || active.sdt.nextSibling !== node) {
+			active = { ...createContentControl(doc, control), id: control.id };
+			parent.insertBefore(active.sdt, node);
+		}
+		active.content.appendChild(node);
+	}
 }

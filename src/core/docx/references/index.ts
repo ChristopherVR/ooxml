@@ -19,5 +19,6 @@ export {
 	refreshCitations,
 	type CitationOptions,
 } from './citations';
+export { bibliographyGallery, bibliographyGalleryStyles } from './bibliography-gallery';
 export { readBibliographyXml, writeBibliographyXml } from './source-xml';
 export * from './source-model';
