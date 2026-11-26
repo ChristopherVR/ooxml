@@ -51,6 +51,7 @@ it('reviews resolved bytes before saving and restores and removes them through h
 		openOfficeAddIns(target, 'myAddIns', (label) => label, 'word', 'en');
 	await open(root);
 	const modal = getDialog(root);
+	expect(modal?.querySelector('#pivot-2')).toBeNull();
 	const input = modal?.querySelector<HTMLInputElement>('#marketplace-link');
 	if (!input) throw new Error('Missing Marketplace field');
 	await vi.waitFor(() => expect(input.disabled).toBe(false));
@@ -369,7 +370,7 @@ it('restores the saved commands on editor mount without opening the dialog', asy
 	Object.defineProperty(ribbon, 'setInstalledAddInTabs', { value: sync });
 	const bytes = new TextEncoder().encode(xml);
 	setOfficeAddInPreferences(host, {
-		read: async () => [bytes],
+		read: async () => [new TextEncoder().encode('corrupt saved bytes'), bytes],
 		write: async () => {},
 	});
 	const stop = watchOfficeAddIns(
