@@ -2,7 +2,7 @@ import { XmlObject } from '../../types';
 import type { PptxThemePartSchemes } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemeRefResolution';
 import { parseTheme } from '../../../../drawingml/theme';
-import { NS, parseXml } from '../../../../xml/index';
+import { NS, parseXml, type XmlElement } from '../../../../xml/index';
 import type { DrawingTheme } from '../../../../drawingml/theme-model';
 import {
 	colorSchemeFromMap,
@@ -26,15 +26,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * schemes are read by the shared DrawingML reader (`parseTheme`); the subtrees the save
 	 * re-emits verbatim come from the object tree.
 	 */
-	protected parseThemePartXml(themeXml: string): ThemePartModel {
-		const themeData = this.parser.parse(themeXml) as XmlObject;
+	protected parseThemePartXml(
+		themeXml: string,
+		themeData = this.parser.parse(themeXml) as XmlObject,
+		drawingRoot: XmlElement | null = this.readDrawingThemeRoot(themeXml) ?? null,
+	): ThemePartModel {
 		const themeRoot = themeData['a:theme'] as XmlObject | undefined;
 		const themeElements = themeRoot?.['a:themeElements'] as XmlObject | undefined;
 		const fmtScheme = themeElements?.['a:fmtScheme'] as XmlObject | undefined;
 		// Aliases (`tx1`/`bg1`/`tx2`/`bg2`) are not baked into the colour map: they resolve LAZILY
 		// through the active master's `<p:clrMap>` at colour-lookup time (see `resolveThemeColor`),
 		// since a master may remap them (dark themes that swap `bg1` and `tx1`).
-		const drawingTheme = this.readDrawingTheme(themeXml);
+		const drawingTheme = this.readDrawingTheme(drawingRoot);
 		const schemes = themeSchemesFromDrawingTheme(drawingTheme, this.getDefaultSchemeColorMap());
 
 		const objectDefaultsNode = themeRoot?.['a:objectDefaults'] as XmlObject | undefined;
@@ -101,10 +104,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * parser rejects (not namespace well-formed), reads as an empty theme, so its slots keep the
 	 * schema defaults.
 	 */
-	private readDrawingTheme(themeXml: string): DrawingTheme {
+	protected readDrawingThemeRoot(themeXml: string): XmlElement | undefined {
 		try {
 			const root = parseXml(themeXml, { label: 'PPTX theme' }).documentElement;
-			if (root.localName === 'theme' && root.namespaceURI === NS.a) return parseTheme(root);
+			if (root.localName === 'theme' && root.namespaceURI === NS.a) return root;
+		} catch {
+			// Fall through to the empty theme.
+		}
+		return undefined;
+	}
+
+	private readDrawingTheme(root: XmlElement | null): DrawingTheme {
+		try {
+			if (root) return parseTheme(root);
 		} catch {
 			// Fall through to the empty theme.
 		}

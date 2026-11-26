@@ -1,3 +1,4 @@
+import { copyParsedXmlWithOrder, deriveForLoad } from './load-part-reader';
 import { XmlObject } from '../../types';
 import type { PptxTheme, PptxThemeFormatScheme, PptxThemeOption } from '../../types';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeThemePartModel';
@@ -5,6 +6,14 @@ import { colorSchemeFromMap, fontSchemeFromMap } from './theme-part-model';
 import { parseThemeColorMap } from '../../../../drawingml/theme';
 import { NS, first, parseXml, type XmlElement } from '../../../../xml/index';
 import { at } from '../../../../geometry/indexed';
+
+interface ThemeXmlRead {
+	parser: { parse(xml: string): unknown };
+	source: string;
+	tree: XmlObject;
+	drawingRoot?: XmlElement | null;
+	claimed: boolean;
+}
 
 export function isPresentationThemePartPath(path: string): boolean {
 	return /^ppt\/theme\/(?!themeOverride)[^/]+\.xml$/iu.test(path);
@@ -75,7 +84,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		for (const file of themeFiles) {
 			try {
 				const xml = (await this.readPartText(file.name)) ?? '';
-				const data = this.parser.parse(xml) as XmlObject;
+				const data = (await this.readThemeObject(file.name, xml)).tree;
 				const root = data['a:theme'] as XmlObject | undefined;
 				const name = String(root?.['@_name'] || '').trim();
 				options.push({
@@ -180,9 +189,27 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return null;
 		}
 		const themeXml = (await this.readPartText(themePath)) ?? '';
-		const model = this.parseThemePartXml(themeXml);
+		const cached = await this.readThemeObject(themePath, themeXml);
+		const tree = cached.claimed ? copyParsedXmlWithOrder(cached.tree, themeXml) : cached.tree;
+		cached.claimed = true;
+		if (cached.drawingRoot === undefined)
+			cached.drawingRoot = this.readDrawingThemeRoot(themeXml) ?? null;
+		const model = this.parseThemePartXml(themeXml, tree, cached.drawingRoot);
 		this.cacheThemePartModel(themePath, themeXml, model);
 		return { colorMap: model.colorMap, fontMap: model.fontMap, formatScheme: model.formatScheme };
+	}
+
+	/** Cache the XML reads, while each caller resolves styles in its own colour context. */
+	private async readThemeObject(path: string, source: string) {
+		const parser = this.parser;
+		const parse = (): ThemeXmlRead => ({
+			parser,
+			source,
+			tree: parser.parse(source) as XmlObject,
+			claimed: false,
+		});
+		const cached = await deriveForLoad(this.zip, `theme-xml:${path}`, async () => parse());
+		return cached.parser === parser && cached.source === source ? cached : parse();
 	}
 
 	/**

@@ -117,10 +117,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		const cuts = this.chartPointBudget.cuts;
 		try {
-			const { chartSpace: neutral, repairIssue } = readChartPartModel(
-				chartPart.text,
-				this.chartPointBudget,
-			);
+			const {
+				chartSpace: neutral,
+				repairIssue,
+				originalRoot,
+			} = readChartPartModel(chartPart.text, this.chartPointBudget);
 			if (repairIssue) {
 				this.compatibilityService.reportWarning({
 					code: repairIssue.code,
@@ -139,7 +140,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartRoot,
 					chartPart.partPath,
 					chartRelationshipId,
-					chartPart.text,
+					originalRoot ?? chartPart.text,
 				);
 			}
 			const chart = await this.buildClassicChart(

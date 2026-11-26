@@ -8,6 +8,7 @@
  *
  * @module chart-part-repair
  */
+import { parseXml, type XmlElement } from '../../../xml/index';
 import {
 	parseChartSpace,
 	type ChartParseIssue,
@@ -78,14 +79,16 @@ export function repairChartPartPrefixes(text: string): ChartPartRepair | undefin
 
 /** What {@link readChartPartModel} returns. */
 export interface ChartPartModel {
+	/** The original DOM root, shared with the ChartEx reader when it takes over. */
+	originalRoot?: XmlElement;
 	/** The neutral model; undefined for ChartEx and unreadable parts. */
 	chartSpace?: ChartSpace | undefined;
 	/** `CHART_PREFIX_REPAIRED` when the part only parsed after the repair. */
 	repairIssue?: ChartParseIssue;
 }
 
-function parseClassic(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
-	const { chartSpace, issues } = parseChartSpace(text, pointBudget ? { pointBudget } : {});
+function parseClassic(root: XmlElement, pointBudget?: ChartPointBudget): ChartPartModel {
+	const { chartSpace, issues } = parseChartSpace(root, pointBudget ? { pointBudget } : {});
 	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? {} : { chartSpace };
 }
 
@@ -96,12 +99,17 @@ function parseClassic(text: string, pointBudget?: ChartPointBudget): ChartPartMo
  */
 export function readChartPartModel(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
 	try {
-		return parseClassic(text, pointBudget);
+		const originalRoot = parseXml(text, { label: 'Chart part' }).documentElement;
+		const classic = parseClassic(originalRoot, pointBudget);
+		return classic.chartSpace?.plotArea.groups.length ? classic : { ...classic, originalRoot };
 	} catch {
 		const repair = repairChartPartPrefixes(text);
 		if (!repair) return {};
 		try {
-			const parsed = parseClassic(repair.text, pointBudget);
+			const parsed = parseClassic(
+				parseXml(repair.text, { label: 'Chart part' }).documentElement,
+				pointBudget,
+			);
 			const what = [
 				...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
 				...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),

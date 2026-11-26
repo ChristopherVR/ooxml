@@ -9,6 +9,7 @@
  *   `PptxHandlerRuntimeChartColorStyle` -> **this** -> `PptxHandlerRuntimeChartParsing`
  */
 
+import type { XmlElement } from '../../../../xml/index';
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
 import { parseChartExSpace } from '../../../../chart';
@@ -124,7 +125,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartRoot: XmlObject | undefined,
 		chartPartPath: string,
 		chartRelationshipId: string,
-		sourceXml?: string,
+		sourceXml?: string | XmlElement,
 	): Promise<PptxChartData | undefined> {
 		let model;
 		try {

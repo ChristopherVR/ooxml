@@ -160,7 +160,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			for (const file of masterFiles) {
 				const path = file.name;
 				const xml = (await this.readPartText(path)) ?? '';
-				const data = this.parser.parse(xml) as XmlObject;
+				const data = this.parseTemplateMetadata(path, xml);
 				const sldMaster = data?.['p:sldMaster'] as XmlObject | undefined;
 				if (!sldMaster) {
 					continue;
@@ -210,11 +210,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					'ppt/slideMasters/_rels/$1.xml.rels',
 				);
 				const relsFile = this.zip.file(relsPath);
+				const relsData = relsFile ? await this.readPartXml(relsPath) : undefined;
+				const rels = this.ensureArray(
+					xmlChild(relsData, 'Relationships')?.['Relationship'],
+				) as XmlObject[];
 				if (relsFile) {
-					const relsData = await this.readPartXml(relsPath);
-					const rels = this.ensureArray(
-						xmlChild(relsData, 'Relationships')?.['Relationship'],
-					) as XmlObject[];
 					for (const rel of rels) {
 						const relType = String(rel['@_Type'] || '');
 						if (relType.includes('/theme')) {
@@ -227,10 +227,6 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// Layouts associated with this master
 				const layoutPaths: string[] = [];
 				if (relsFile) {
-					const relsData = await this.readPartXml(relsPath);
-					const rels = this.ensureArray(
-						xmlChild(relsData, 'Relationships')?.['Relationship'],
-					) as XmlObject[];
 					// Follow the master's own <p:sldLayoutIdLst> rather than the
 					// unordered .rels bag, so the gallery lists layouts in the
 					// order PowerPoint shows them.
@@ -278,7 +274,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			const path = at(files, 0).name;
 			const xml = (await this.readPartText(path)) ?? '';
-			const data = this.parser.parse(xml) as XmlObject;
+			const data = this.parseTemplateMetadata(path, xml);
 			const master = data?.['p:handoutMaster'] as XmlObject | undefined;
 			if (!master) {
 				return undefined;
@@ -315,7 +311,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			const path = at(files, 0).name;
 			const xml = (await this.readPartText(path)) ?? '';
-			const data = this.parser.parse(xml) as XmlObject;
+			const data = this.parseTemplateMetadata(path, xml);
 			const master = data?.['p:notesMaster'] as XmlObject | undefined;
 			if (!master) {
 				return undefined;
@@ -340,6 +336,13 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 	}
 
+	/** Keep a separate tree for the gallery before inherited artwork starts mutating this one. */
+	private parseTemplateMetadata(path: string, xml: string): XmlObject {
+		const parsed = this.parser.parse(xml) as XmlObject;
+		this.loadPartReader?.rememberGalleryTree(path, this.parser, xml, parsed);
+		return parsed;
+	}
+
 	/**
 	 * Parse attributes and metadata from a single slide layout XML file.
 	 */
@@ -352,7 +355,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				return undefined;
 			}
 			const xml = (await this.readPartText(layoutPath)) ?? '';
-			const data = this.parser.parse(xml) as XmlObject;
+			const data = this.layoutXmlMap.get(layoutPath) ?? this.parseTemplateMetadata(layoutPath, xml);
 			const sldLayout = data?.['p:sldLayout'] as XmlObject | undefined;
 			if (!sldLayout) {
 				return undefined;

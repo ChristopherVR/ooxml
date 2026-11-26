@@ -312,11 +312,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 */
 	/** The element formats the original chart part authors (see `chart-element-format-read-xml`). */
 	private readAuthoredChartElementFormats(
-		chartXmlStr: string,
+		original: XmlObject,
 		chartData: PptxChartData,
 	): PptxChartData['elementFormats'] {
 		const localName = (key: string) => this.compatibilityService.getXmlLocalName(key);
-		const original = this.parser.parse(chartXmlStr) as XmlObject;
 		const chartSpace = this.xmlLookupService.getChildByLocalName(original, 'chartSpace');
 		const plotArea = this.xmlLookupService.getChildByLocalName(
 			this.xmlLookupService.getChildByLocalName(chartSpace, 'chart'),
@@ -445,10 +444,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (source === null) delete chartData.structureEdits;
 				const chartXmlStr = source ?? (await chartFile.async('string'));
 				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
-				// What the part authored for each element, read off a pristine copy, so only
+				// Read the original part before mutating its tree, so only
 				// format sections the user changed are written back.
 				const authoredFormats = chartData.elementFormats
-					? this.readAuthoredChartElementFormats(chartXmlStr, chartData)
+					? this.readAuthoredChartElementFormats(chartXmlData, chartData)
 					: undefined;
 				const chartSpace = this.xmlLookupService.getChildByLocalName(chartXmlData, 'chartSpace');
 				if (!chartSpace) {

@@ -67,7 +67,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		if (!xml) {
 			return;
 		}
-		const data = this.parser.parse(xml) as XmlObject;
+		const data =
+			this.loadPartReader?.takeGalleryTree(partPath, this.parser, xml) ??
+			(this.parser.parse(xml) as XmlObject);
 		const root = data[rootTag] as XmlObject | undefined;
 
 		// The notes master's own text-list-style defaults (P-H4): reuse the

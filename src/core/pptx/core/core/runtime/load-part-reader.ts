@@ -11,7 +11,7 @@
  * shared text promise per part and {@link readPartXml} parses each
  * relationship part once per parser. Callers receive a fresh deep copy of a
  * relationship tree, so a caller that mutates it cannot affect another.
- * Other XML is parsed per call, exactly as before.
+ * Templates and themes opt in to sharing a parse, with independent trees for mutable models.
  *
  * The cache is scoped to one load: the runtime opens a reader after the
  * package is opened and closes it when the load settles or the handler is
@@ -21,6 +21,9 @@
  *
  * @module load-part-reader
  */
+import { annotateCustomGeometryCommandOrder } from '../../geometry/custom-geometry-command-order';
+import { annotateParagraphSiblingOrder } from './paragraph-sibling-order';
+import { annotateSmartArtTextOrder } from './smartart-text-order';
 import { canonicalRelationshipsXml } from '../../../../opc/relationships';
 import { decodeXmlBytes } from '../../../../xml/index';
 import type { XmlObject } from '../../types';
@@ -48,7 +51,14 @@ interface PartParser {
 	parse(xml: string): unknown;
 }
 
+interface GalleryTree {
+	parser: PartParser;
+	source: string;
+	xml: XmlObject;
+}
+
 interface PartEntry {
+	galleryTree?: GalleryTree;
 	file: TextPartFile;
 	text: Promise<string>;
 	relationships: Map<PartParser, Promise<XmlObject | undefined>>;
@@ -120,6 +130,21 @@ export class LoadPartReader {
 		return this.entry(path)?.text ?? Promise.resolve(undefined);
 	}
 
+	/** Snapshot a template's source tree for the independent gallery model. */
+	rememberGalleryTree(path: string, parser: PartParser, source: string, xml: XmlObject): void {
+		const entry = this.parts.get(path);
+		if (!entry || entry.file !== this.zip.file(path)) return;
+		entry.galleryTree = { parser, source, xml: copyParsedXmlWithOrder(xml, source) };
+	}
+
+	takeGalleryTree(path: string, parser: PartParser, source: string): XmlObject | undefined {
+		const entry = this.parts.get(path);
+		const gallery = entry?.galleryTree;
+		if (!entry || !gallery || entry.file !== this.zip.file(path)) return undefined;
+		delete entry.galleryTree;
+		return gallery.parser === parser && gallery.source === source ? gallery.xml : undefined;
+	}
+
 	async readXml(parser: PartParser, path: string): Promise<XmlObject | undefined> {
 		const entry = this.entry(path);
 		if (!entry) {
@@ -160,6 +185,17 @@ export class LoadPartReader {
 		this.parts.clear();
 		this.derived.clear();
 	}
+}
+
+/** Copies a tree and restores the sibling-order annotations stored outside the tree. */
+export function copyParsedXmlWithOrder(tree: XmlObject, source: string): XmlObject {
+	const copy = structuredClone(tree);
+	// The OMML order markers are own properties and are already present.
+	if (source.includes('custGeom')) annotateCustomGeometryCommandOrder(source, copy);
+	if (source.includes('dataModel') || source.includes('txBody'))
+		annotateSmartArtTextOrder(source, copy);
+	if (source.includes('<a:p')) annotateParagraphSiblingOrder(source, copy);
+	return copy;
 }
 
 function parseText(parser: PartParser, text: string): XmlObject | undefined {
