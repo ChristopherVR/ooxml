@@ -25,6 +25,16 @@ async function draw(variant: VisioVisualizerVariant, data = rows, base?: Uint8Ar
 	return bytes;
 }
 
+const fixtures = new Map<VisioVisualizerVariant, Promise<Uint8Array>>();
+function fixture(variant: VisioVisualizerVariant): Promise<Uint8Array> {
+	let bytes = fixtures.get(variant);
+	if (!bytes) {
+		bytes = draw(variant);
+		fixtures.set(variant, bytes);
+	}
+	return bytes;
+}
+
 describe('Data Visualizer', () => {
 	it('reads steps, links, labels, types and lanes', () => {
 		const { steps } = parse(rows);
@@ -45,7 +55,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('draws a basic flowchart with glued connectors, labels and Shape Data', async () => {
-		const page = await first(await draw('basic'));
+		const page = await first(await fixture('basic'));
 		const made = visioVisualizerShapes(page);
 		expect(made.steps.size).toBe(5);
 		// Five connectors; the two labels are the connectors' own text, not extra shapes.
@@ -59,7 +69,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('draws swimlanes from the Function column', async () => {
-		const page = await first(await draw('cross-functional'));
+		const page = await first(await fixture('cross-functional'));
 		const lanes = page.shapes.filter(
 			(shape) => shape.structure?.type === 'container' && shape.structure.swimlane?.role === 'lane',
 		);
@@ -67,7 +77,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('refreshes from an edited table keeping the positions of steps that remain', async () => {
-		const bytes = await draw('basic');
+		const bytes = await fixture('basic');
 		const before = await first(bytes);
 		const ids = visioVisualizerShapes(before).steps;
 		const edited = rows.map((row) => (row[0] === '3' ? ['3', 'Dispatch', '5', '', '', ''] : row));
@@ -93,7 +103,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('keeps shape and connector IDs where the row key matches and follows connector labels', async () => {
-		const bytes = await draw('basic');
+		const bytes = await fixture('basic');
 		const before = await first(bytes);
 		const was = visioVisualizerShapes(before);
 		const edited = rows.map((row) => [...row]);
@@ -117,7 +127,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('removes the shapes and connectors of rows that left the table', async () => {
-		const bytes = await draw('basic');
+		const bytes = await fixture('basic');
 		const slim = [
 			rows[0]!,
 			['2', 'Check stock', '3', 'Yes', 'Decision', 'Warehouse'],
@@ -132,7 +142,7 @@ describe('Data Visualizer', () => {
 	});
 
 	it('refreshes a cross-functional flowchart into its existing lanes', async () => {
-		const bytes = await draw('cross-functional');
+		const bytes = await fixture('cross-functional');
 		const edited = rows.map((row) =>
 			row[0] === '4' ? ['4', 'Back order', '5', '', '', 'Warehouse'] : row,
 		);

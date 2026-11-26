@@ -68,6 +68,7 @@ export function inspectXml(
 		if (heap && (used += cost * copies) > heap.limit) heap.refuse();
 	};
 	const text = (value: string) => {
+		if (!value.includes('&')) return;
 		if (/&(?!(?:amp|lt|gt|apos|quot|#\d+|#x[\da-fA-F]+);)/.test(value))
 			fail('INVALID_XML', 'Invalid XML entity reference');
 		for (const match of value.matchAll(/&#(x[\da-fA-F]+|\d+);/g)) {
@@ -225,11 +226,15 @@ export function inspectNamespaces(root: Element, check: () => void): void {
 		check();
 		const element = pending.pop();
 		if (!element) break;
-		const seen = new Set<string>();
-		for (const attr of Array.from(element.attributes)) {
-			const key = `${attr.namespaceURI ?? ''}\u0000${attr.localName}`;
-			if (seen.has(key)) fail('INVALID_XML', 'Duplicate expanded XML attribute name');
-			seen.add(key);
+		const attrs = element.attributes;
+		const seen = attrs.length > 1 ? new Set<string>() : undefined;
+		for (let index = 0; index < attrs.length; index++) {
+			const attr = attrs.item(index)!;
+			if (seen) {
+				const key = `${attr.namespaceURI ?? ''}\u0000${attr.localName}`;
+				if (seen.has(key)) fail('INVALID_XML', 'Duplicate expanded XML attribute name');
+				seen.add(key);
+			}
 			if (
 				attr.namespaceURI === xmlns &&
 				(attr.name === 'xmlns:xmlns' ||
@@ -239,7 +244,7 @@ export function inspectNamespaces(root: Element, check: () => void): void {
 			)
 				fail('INVALID_XML', 'Invalid reserved XML namespace binding');
 		}
-		for (const child of Array.from(element.childNodes))
+		for (let child = element.firstChild; child; child = child.nextSibling)
 			if (child.nodeType === 1) pending.push(child as Element);
 	}
 }

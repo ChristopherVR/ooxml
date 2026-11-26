@@ -21,8 +21,9 @@ const shapeBox = (shape: VisioPage['shapes'][number]) => {
 const find = (p: VisioPage, id: string) => p.shapes.find((shape) => shape.id === id)!;
 
 /** The template's process shapes are stencil instances, so the planner must move them itself. */
-async function template() {
-	return createTemplateVsdx('cross-functional-flowchart');
+let templateBytes: Promise<Uint8Array> | undefined;
+function template() {
+	return (templateBytes ??= createTemplateVsdx('cross-functional-flowchart'));
 }
 async function apply(
 	bytes: Uint8Array,

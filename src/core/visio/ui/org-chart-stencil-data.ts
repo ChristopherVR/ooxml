@@ -260,6 +260,9 @@ const PARTS = [
 	'AAAdAAAAAAAAAAAAAAAAAPuKAAB2aXNpby9fcmVscy9kb2N1bWVudC54bWwucmVsc1BLAQIUAAoAAAAIAM5eXl26yIPlsAAAABYBAAALAAAAAAAAAAAAAAAAAOWLAABfcmVscy8ucmVsc1BLAQIUAAoAAAAIAM5eXl19j7XHFAEAAA4EAAATAAAAAAAAAAAAAAAAAL6M',
 	'AABbQ29udGVudF9UeXBlc10ueG1sUEsFBgAAAAAQABAAjgQAAAOOAAAAAA==',
 ];
-/** The stencil package bytes (a .vssx holding the org chart masters). */
-export const orgStencilBytes = (): Uint8Array =>
-	Uint8Array.from(atob(PARTS.join('')), (char) => char.charCodeAt(0));
+let stencil: Uint8Array | undefined;
+/** An independent copy of the stencil package holding the org chart masters. */
+export function orgStencilBytes(): Uint8Array {
+	stencil ??= Uint8Array.from(atob(PARTS.join('')), (char) => char.charCodeAt(0));
+	return stencil.slice();
+}

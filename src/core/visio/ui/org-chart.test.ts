@@ -15,10 +15,16 @@ import {
 	visioOrgHierarchy,
 	visioOrgText,
 } from './org-chart';
-import { visioOrgAddPosition, visioOrgDeletePosition } from './org-chart-edit';
+import {
+	visioOrgAddPosition,
+	visioOrgDeletePosition,
+	visioOrgDropPosition,
+} from './org-chart-edit';
 import { visioOrgImportEdits, visioOrgPeople, type VisioOrgPerson } from './org-chart-import';
 import { planOrgLayout, visioOrgReLayout } from './org-chart-layout';
 import { createTemplateVsdx } from './templates';
+let templateBytes: Promise<Uint8Array> | undefined;
+const template = () => (templateBytes ??= createTemplateVsdx('organization-chart'));
 
 const docOf = (bytes: Uint8Array): Promise<VisioDocument> => parseVsdx(bytes);
 const pageOf = async (bytes: Uint8Array): Promise<VisioPage> => (await docOf(bytes)).pages[0]!;
@@ -37,8 +43,20 @@ const byName = (page: VisioPage, name: RegExp) => page.shapes.filter((s) => name
 const T = (index: number) => String(1 + index * 16);
 
 describe('org chart', () => {
+	it('gives each planned drop its own copy of the stencil bytes', () => {
+		const stencil = () => {
+			const drop = visioOrgDropPosition('0', '1', 'Executive Belt', { x: 5.5, y: 7 });
+			if (drop.type !== 'drop-stencil-master' || !drop.stencil)
+				throw new Error('Expected a stencil drop');
+			return drop.stencil;
+		};
+		const first = stencil();
+		first[0] = 0;
+		expect(Array.from(stencil().subarray(0, 4))).toEqual([0x50, 0x4b, 3, 4]);
+	});
+
 	it('writes the template as instances of Visio org chart masters with their Shape Data', async () => {
-		const doc = await docOf(await createTemplateVsdx('organization-chart'));
+		const doc = await docOf(await template());
 		const page = doc.pages[0]!;
 		expect(doc.masters?.map((m) => m.name)).toEqual([
 			'Executive Belt',
@@ -73,7 +91,7 @@ describe('org chart', () => {
 	});
 
 	it('keeps the masters identity so Visio recognises the positions', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const { default: JSZip } = await import('jszip');
 		const zip = await JSZip.loadAsync(bytes);
 		const masters = await zip.file('visio/masters/masters.xml')!.async('string');
@@ -88,7 +106,7 @@ describe('org chart', () => {
 	});
 
 	it('adds a subordinate with data and a glued connector in one batch', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const plan = visioOrgAddPosition(await pageOf(bytes), T(2), 'subordinate')!;
 		const page = await pageOf(await apply(bytes, plan.edits));
 		const hierarchy = visioOrgHierarchy(page);
@@ -108,7 +126,7 @@ describe('org chart', () => {
 	});
 
 	it('adds a coworker under the same manager and refuses one for the top position', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const before = await pageOf(bytes);
 		expect(visioOrgAddPosition(before, T(0), 'peer')).toBeUndefined();
 		const plan = visioOrgAddPosition(before, T(4), 'peer')!;
@@ -117,7 +135,7 @@ describe('org chart', () => {
 	});
 
 	it('places an assistant beside its manager line, between the manager and its subordinates', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const plan = visioOrgAddPosition(await pageOf(bytes), T(1), 'assistant')!;
 		const page = await pageOf(await apply(bytes, plan.edits));
 		const assistant = page.shapes.find((shape) => shape.id === plan.newId)!;
@@ -137,7 +155,7 @@ describe('org chart', () => {
 	});
 
 	it('deletes a position with its connectors and reattaches its subordinates in one batch', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const edits = visioOrgDeletePosition(await pageOf(bytes), T(1))!;
 		const page = await pageOf(await apply(bytes, edits));
 		const hierarchy = visioOrgHierarchy(page);
@@ -149,7 +167,7 @@ describe('org chart', () => {
 	});
 
 	it('lays a scattered tree out again', async () => {
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const moved = await apply(bytes, [
 			{ type: 'move-shape', pageId: '0', shapeId: T(4), x: 9, y: 1 },
 		]);
@@ -165,7 +183,7 @@ describe('org chart', () => {
 			'Ada Lovelace\nEngineer',
 		);
 		expect(visioOrgText({ Name: '', Title: 'Engineer' })).toBe('Engineer');
-		const bytes = await createTemplateVsdx('organization-chart');
+		const bytes = await template();
 		const page = await pageOf(bytes);
 		const set = (row: string, value: string, shapeId = T(4)): VisioEdit => ({
 			type: 'set-shape-data',
