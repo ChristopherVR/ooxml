@@ -2,7 +2,7 @@ import type { EditorView } from 'prosemirror-view';
 import { NodeSelection } from 'prosemirror-state';
 import type { DocumentModel } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
-import { findLocalizedControl, formatPageStatus, formatWordCount } from './localization';
+import { findLocalizedControl, formatPageStatus, formatWordCount, translate } from './localization';
 import { syncParagraphControls, syncFormatControls } from './ribbon-controls';
 import { syncFontControls } from './font-sync';
 import { syncMultilingualControls } from './multilingual-ribbon';
@@ -81,9 +81,15 @@ export function refreshEditorControls(
 		syncFormatControls(toolbar, state);
 		for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-action]')) {
 			const action = JSON.parse(button.dataset.action!) as RibbonAction;
-			if (action.type === 'tableEdit')
+			if (action.type === 'tableEdit') {
 				button.disabled =
 					readOnly || Boolean(collaboration) || !canExecuteTableCommand(view, action.key);
+				if (action.key === 'mergeCells') {
+					if (button.disabled)
+						button.setAttribute('aria-description', translate(locale, 'tableTab.mergeSelection'));
+					else button.removeAttribute('aria-description');
+				}
+			}
 			if (action.type === 'formatDialog' && action.kind === 'tableProperties')
 				button.disabled = readOnly || !tablePropertiesContext(state);
 			if (action.type === 'formatDialog' && action.kind === 'splitCells')

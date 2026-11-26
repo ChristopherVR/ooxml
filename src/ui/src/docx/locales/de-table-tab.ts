@@ -97,6 +97,9 @@ export const deTableTab = {
 	'Grid Table 4 - Accent 2': 'Tabellenraster 4 - Akzent 2',
 	'List Table 4 - Accent 1': 'Tabellenliste 4 - Akzent 1',
 	'List Table 4 - Accent 2': 'Tabellenliste 4 - Akzent 2',
+	'tableTab.mergeSelection': 'Wählen Sie mindestens zwei Zellen aus, die verbunden werden können.',
+	'tableTab.splitDimensions':
+		'Die ausgewählte Zelle kann nicht in diese Anzahl von Zeilen und Spalten geteilt werden.',
 	'tableTab.selectCell': 'Wählen Sie eine Tabellenzelle aus.',
 	'tableTab.tracking': 'Dieser Befehl ist bei aktivierter Änderungsverfolgung nicht verfügbar.',
 	'tableTab.rectangular':

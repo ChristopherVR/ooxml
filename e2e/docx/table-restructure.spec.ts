@@ -249,14 +249,14 @@ for (const framework of FRAMEWORKS) {
 
 		test('merge a block of cells across two rows', async ({ page }) => {
 			const editor = await open(page, framework);
-			// A text selection from B3 to C3 covers the cells between them in document order too.
+			// The selection endpoints share a column, so cells outside it stay separate.
 			await selectCells(editor, 'B3', 'C3');
 			await checkEdit(
 				page,
 				editor,
 				() => topTable(page, 0),
 				MERGED,
-				[MERGED[0]!, ['B1|r2', 'B2 B3 B4 C2 C3 C4|c3|r2'], []],
+				[MERGED[0]!, ['B1|r2', 'B2', 'B3 C3|r2', 'B4'], ['C2', 'C4']],
 				() => run(editor, 'Merge cells'),
 				`${framework}-merge-down.docx`,
 			);

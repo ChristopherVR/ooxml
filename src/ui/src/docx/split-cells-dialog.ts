@@ -10,8 +10,8 @@ import {
 	setDialogOpen,
 } from './dialog-shell';
 import type { FormatDialog } from './font-dialog';
-import type { EditorLocale } from './localization';
-import { executeTableCommand } from './table-commands';
+import { translate, type EditorLocale } from './localization';
+import { canExecuteTableCommand, executeTableCommand } from './table-commands';
 import { splitTarget } from './table-restructure-commands';
 
 /** The Split Cells dialog; OK splits the cell around the selection into the chosen grid. */
@@ -21,6 +21,9 @@ export function createSplitCellsDialog(viewOf: () => EditorView | undefined): Fo
 	const rows = numberInput(1, 63, 1);
 	const note = document.createElement('p');
 	note.textContent = 'Split the cell into this many columns and rows.';
+	const error = document.createElement('p');
+	error.setAttribute('role', 'alert');
+	error.hidden = true;
 	const cancel = dialogButton('Cancel');
 	const ok = dialogButton('OK', true);
 	const content = [
@@ -29,14 +32,24 @@ export function createSplitCellsDialog(viewOf: () => EditorView | undefined): Fo
 			row(labelled('Number of columns', columns), labelled('Number of rows', rows)),
 		),
 		note,
+		error,
 		dialogActions(cancel, ok),
 	];
 	let locale: EditorLocale = 'en';
 	const valid = () =>
 		[columns, rows].every(
-			(input) => Number.isInteger(Number(input.value)) && Number(input.value) >= 1,
+			(input) => input.checkValidity() && Number.isInteger(input.valueAsNumber),
 		);
-	const validate = () => (ok.disabled = !valid());
+	const dimensions = () => ({ rows: rows.valueAsNumber, columns: columns.valueAsNumber });
+	const validate = () => {
+		const view = viewOf();
+		const sizeValid = valid();
+		const supported = view && sizeValid && canExecuteTableCommand(view, 'splitCell', dimensions());
+		error.hidden = !sizeValid || Boolean(supported);
+		ok.disabled = !supported;
+		if (error.hidden) ok.removeAttribute('aria-description');
+		else ok.setAttribute('aria-description', error.textContent ?? '');
+	};
 	const hide = () => {
 		setDialogOpen(element, false);
 		element.replaceChildren();
@@ -45,9 +58,8 @@ export function createSplitCellsDialog(viewOf: () => EditorView | undefined): Fo
 	const submit = () => {
 		const view = viewOf();
 		if (!view || !valid()) return;
-		const split = { rows: Number(rows.value), columns: Number(columns.value) };
-		hide();
-		executeTableCommand(view, 'splitCell', split);
+		if (executeTableCommand(view, 'splitCell', dimensions())) hide();
+		else validate();
 	};
 	columns.addEventListener('input', validate);
 	rows.addEventListener('input', validate);
@@ -75,8 +87,9 @@ export function createSplitCellsDialog(viewOf: () => EditorView | undefined): Fo
 			if (!view?.editable || !target) return;
 			element.replaceChildren(...content);
 			localizeDialog(element, locale);
-			columns.value = '2';
-			rows.value = '1';
+			error.textContent = translate(locale, 'tableTab.splitDimensions');
+			columns.value = String(target.columns);
+			rows.value = String(target.rows);
 			validate();
 			setDialogOpen(element, true);
 			columns.focus();

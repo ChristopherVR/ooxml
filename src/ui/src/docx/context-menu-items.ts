@@ -20,7 +20,7 @@ export interface MenuItem {
 	label: LocalizationKey;
 	command: MenuCommand;
 	disabled: boolean;
-	/** Set when disabled because of the platform, so the UI can say why. */
+	/** Reason shown when the command is disabled. */
 	reason?: LocalizationKey;
 	/** Starts a new group; rendered as a separator. */
 	separatorBefore: boolean;
@@ -145,15 +145,21 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 		);
 	if (state.inTable)
 		groups.push(
-			TABLE_ITEMS.map(([key, label]) => ({
-				id: `table-${key}`,
-				label,
-				command:
-					key === 'splitCell'
-						? ({ kind: 'ribbon', action: { type: 'formatDialog', kind: 'splitCells' } } as const)
-						: ({ kind: 'ribbon', action: { type: 'tableEdit', key } } as const),
-				disabled: state.readOnly || !state.canTable(key),
-			})),
+			TABLE_ITEMS.map(([key, label]) => {
+				const disabled = state.readOnly || !state.canTable(key);
+				return {
+					id: `table-${key}`,
+					label,
+					command:
+						key === 'splitCell'
+							? ({ kind: 'ribbon', action: { type: 'formatDialog', kind: 'splitCells' } } as const)
+							: ({ kind: 'ribbon', action: { type: 'tableEdit', key } } as const),
+					disabled,
+					...(disabled && key === 'mergeCells'
+						? { reason: 'tableTab.mergeSelection' as const }
+						: {}),
+				};
+			}),
 		);
 	return groups.flatMap((group, index) =>
 		group.map((item, position) => ({ ...item, separatorBefore: index > 0 && position === 0 })),

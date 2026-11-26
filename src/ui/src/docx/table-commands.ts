@@ -10,7 +10,6 @@ import {
 	executeRestructure,
 	restructureContext,
 	usesRestructure,
-	type RestructureCommand,
 	type Split,
 } from './table-restructure-commands';
 
@@ -146,11 +145,16 @@ function replaceWithParagraph(view: EditorView, ctx: Context): void {
 }
 
 /** Reports whether the current selection can receive the requested table edit. */
-export function canExecuteTableCommand(view: EditorView, action: TableCommand): boolean {
+export function canExecuteTableCommand(
+	view: EditorView,
+	action: TableCommand,
+	split?: Split,
+): boolean {
 	if (action === 'deleteTable') return canDeleteTable(view);
-	const merged = restructureContext(view);
-	if (usesRestructure(merged, action))
-		return Boolean(view.editable && merged && canRestructure(merged, action as RestructureCommand));
+	const needsGrid = action === 'mergeCells' || action === 'splitCell';
+	const merged = restructureContext(view, needsGrid);
+	if (needsGrid || usesRestructure(merged))
+		return Boolean(view.editable && merged && canRestructure(merged, action, split));
 	const ctx = context(view);
 	// A nested table keeps the grid it was authored with; only its text is editable.
 	const nested =
@@ -191,10 +195,13 @@ export function executeTableCommand(
 	action: TableCommand,
 	split?: Split,
 ): boolean {
-	if (!canExecuteTableCommand(view, action)) return false;
-	const merged = restructureContext(view);
-	if (action !== 'deleteTable' && usesRestructure(merged, action))
-		return executeRestructure(view, action as RestructureCommand, paragraphIdFactory(view), split);
+	if (!canExecuteTableCommand(view, action, split)) return false;
+	if (
+		action === 'mergeCells' ||
+		action === 'splitCell' ||
+		(action !== 'deleteTable' && usesRestructure(restructureContext(view)))
+	)
+		return executeRestructure(view, action, paragraphIdFactory(view), split);
 	const ctx = context(view) ?? tableAround(view);
 	if (!ctx) return false;
 	if (action === 'deleteTable') {
@@ -248,6 +255,7 @@ export function executeTableCommand(
 		return true;
 	}
 
+	if (action !== 'columnBefore' && action !== 'columnAfter') return false;
 	const at = action === 'columnAfter' ? lastCol + 1 : firstCol;
 	replacedTable(
 		view,

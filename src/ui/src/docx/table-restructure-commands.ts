@@ -17,7 +17,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import type { Table } from 'ooxml-core/docx';
 import { closeHistory } from 'prosemirror-history';
-import { Selection, type Transaction } from 'prosemirror-state';
+import { Selection, TextSelection, type Transaction } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
@@ -42,16 +42,20 @@ interface Context {
 	/** The cells the selection touches, with their row and position in the row. */
 	selected: { slot: Slot; index: number }[];
 	rect: GridRect;
+	mergeRect: GridRect;
 }
 
 /** The innermost table around the selection, when the structure commands can edit it. */
-export function restructureContext(view: EditorView): Context | undefined {
+export function restructureContext(view: EditorView, includePlain = false): Context | undefined {
 	const { $from, ranges } = view.state.selection;
 	let depth = $from.depth;
 	while (depth > 0 && $from.node(depth).type !== schema.nodes.table) depth--;
 	if (depth <= 0 || $from.depth < depth + 2) return undefined;
 	const table = $from.node(depth);
-	if (!table.attrs.restructurable) return undefined;
+	if (!table.attrs.restructurable && (!includePlain || table.attrs.structureEditable === false))
+		return undefined;
+	const last = ranges.at(-1)?.$to;
+	if (!last || last.depth < depth + 2 || last.node(depth) !== table) return undefined;
 	const tablePos = $from.before(depth);
 	const skeleton = skeletonOf(table);
 	if (!tableGrid(skeleton)) return undefined;
@@ -71,14 +75,10 @@ export function restructureContext(view: EditorView): Context | undefined {
 				selected.push({ slot, index });
 		}),
 	);
-	if (!selected.length) return undefined;
-	const rect: GridRect = { firstRow: Infinity, lastRow: -1, firstCol: Infinity, lastCol: -1 };
-	for (const { slot } of selected) {
-		rect.firstRow = Math.min(rect.firstRow, slot.row);
-		rect.lastRow = Math.max(rect.lastRow, slot.row + (Number(slot.cell.attrs.rowspan) || 1) - 1);
-		rect.firstCol = Math.min(rect.firstCol, slot.col);
-		rect.lastCol = Math.max(rect.lastCol, slot.col + slot.span - 1);
-	}
+	const first = selected[0];
+	const final = selected.at(-1);
+	if (!first || !final) return undefined;
+	const rect = boundsOf(selected);
 	return {
 		table,
 		tablePos,
@@ -86,18 +86,25 @@ export function restructureContext(view: EditorView): Context | undefined {
 		skeleton,
 		selected,
 		rect,
+		// A drag or Shift+Arrow range defines the corners of the chosen rectangle.
+		mergeRect: view.state.selection instanceof TextSelection ? boundsOf([first, final]) : rect,
 	};
 }
 
+function boundsOf(selected: Context['selected']): GridRect {
+	const rect: GridRect = { firstRow: Infinity, lastRow: -1, firstCol: Infinity, lastCol: -1 };
+	for (const { slot } of selected) {
+		rect.firstRow = Math.min(rect.firstRow, slot.row);
+		rect.lastRow = Math.max(rect.lastRow, slot.row + (Number(slot.cell.attrs.rowspan) || 1) - 1);
+		rect.firstCol = Math.min(rect.firstCol, slot.col);
+		rect.lastCol = Math.max(rect.lastCol, slot.col + slot.span - 1);
+	}
+	return rect;
+}
+
 /** Whether the merged-table commands (not the rectangular-table ones) own this table. */
-export function usesRestructure(ctx: Context | undefined, action: string): boolean {
-	if (!ctx) return false;
-	return (
-		action === 'mergeCells' ||
-		action === 'splitCell' ||
-		ctx.nested ||
-		ctx.table.attrs.structureEditable === false
-	);
+export function usesRestructure(ctx: Context | undefined): boolean {
+	return Boolean(ctx && (ctx.nested || ctx.table.attrs.structureEditable === false));
 }
 
 type Outcome = Table | 'table' | undefined;
@@ -139,19 +146,16 @@ function compute(
 				? 'table'
 				: deleteColumns(skeleton, rect.firstCol, rect.lastCol);
 		case 'mergeCells': {
-			const closed = closeRect(skeleton, rect);
+			if (ctx.selected.length < 2) return undefined;
+			const closed = closeRect(skeleton, ctx.mergeRect);
 			return closed && mergeCells(skeleton, closed, newId);
 		}
 		case 'splitCell': {
 			const target = ctx.selected[0];
 			if (!target || ctx.selected.length !== 1) return undefined;
-			return splitCell(
-				skeleton,
-				target.slot.row,
-				target.index,
-				split?.rows ?? 1,
-				split?.columns ?? 2,
-				newId,
+			const size = split ?? splitDimensions(ctx);
+			return (
+				size && splitCell(skeleton, target.slot.row, target.index, size.rows, size.columns, newId)
 			);
 		}
 	}
@@ -201,7 +205,7 @@ function selectionAfterRestructure(
 		for (let row = 0; row < slots.length; row++)
 			add(cellAt(row, action === 'columnBefore' ? rect.firstCol : columnAfter));
 	} else if (action === 'mergeCells') {
-		const closed = closeRect(ctx.skeleton, rect);
+		const closed = closeRect(ctx.skeleton, ctx.mergeRect);
 		if (closed) add(cellAt(closed.firstRow, closed.firstCol));
 	} else {
 		const target = selected[0];
@@ -213,24 +217,31 @@ function selectionAfterRestructure(
 					if (slot.col >= first.col && slot.col <= (last?.col ?? first.col)) add(slot.cell);
 		}
 	}
-	return selectCellNodes(tr.doc, table, tablePos, cells);
+	const selection = selectCellNodes(tr.doc, table, tablePos, cells);
+	return action === 'mergeCells' ? Selection.near(selection.$from) : selection;
 }
 
 /** Whether `action` applies to the table around the selection (a dry run of the edit). */
-export function canRestructure(ctx: Context, action: RestructureCommand): boolean {
+export function canRestructure(ctx: Context, action: RestructureCommand, split?: Split): boolean {
 	let serial = 0;
-	const outcome = compute(ctx, action, () => `probe-${++serial}`);
+	const outcome = compute(ctx, action, () => `probe-${++serial}`, split);
 	return outcome !== undefined;
 }
 
 /** The size of the cell the Split Cells dialog starts from, or undefined when none can be split. */
-export function splitTarget(view: EditorView): { rows: number; span: number } | undefined {
-	const ctx = restructureContext(view);
-	const only = ctx?.selected.length === 1 ? ctx.selected[0] : undefined;
-	if (!ctx || !only) return undefined;
+export function splitTarget(view: EditorView): Split | undefined {
+	const ctx = restructureContext(view, true);
+	return ctx && splitDimensions(ctx);
+}
+
+function splitDimensions(ctx: Context): Split | undefined {
+	const only = ctx.selected.length === 1 ? ctx.selected[0] : undefined;
+	if (!only) return;
 	const grid = tableGrid(ctx.skeleton);
 	const entry = grid?.rows[only.slot.row]?.[only.index];
-	return grid && entry ? { rows: rowSpanOf(grid, entry), span: entry.span } : undefined;
+	if (!grid || !entry) return;
+	const rows = rowSpanOf(grid, entry);
+	return { rows, columns: entry.span > 1 || rows > 1 ? entry.span : 2 };
 }
 
 /** Applies `action` to the table around the selection; false when it cannot be applied. */
@@ -240,7 +251,7 @@ export function executeRestructure(
 	newId: IdFactory,
 	split?: Split,
 ): boolean {
-	const ctx = restructureContext(view);
+	const ctx = restructureContext(view, action === 'mergeCells' || action === 'splitCell');
 	if (!ctx || !view.editable) return false;
 	const outcome = compute(ctx, action, newId, split);
 	if (!outcome) return false;
@@ -256,7 +267,14 @@ export function executeRestructure(
 	transaction.setSelection(
 		outcome === 'table'
 			? Selection.near(transaction.doc.resolve(tablePos + 1))
-			: selectionAfterRestructure(transaction, ctx, action, replacement, outcome, split),
+			: selectionAfterRestructure(
+					transaction,
+					ctx,
+					action,
+					replacement,
+					outcome,
+					split ?? (action === 'splitCell' ? splitDimensions(ctx) : undefined),
+				),
 	);
 	view.dispatch(transaction.scrollIntoView());
 	return true;

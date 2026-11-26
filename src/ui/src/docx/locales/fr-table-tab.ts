@@ -97,6 +97,9 @@ export const frTableTab = {
 	'Grid Table 4 - Accent 2': 'Tableau grille 4 - Accentuation 2',
 	'List Table 4 - Accent 1': 'Tableau liste 4 - Accentuation 1',
 	'List Table 4 - Accent 2': 'Tableau liste 4 - Accentuation 2',
+	'tableTab.mergeSelection': 'Sélectionnez au moins deux cellules pouvant être fusionnées.',
+	'tableTab.splitDimensions':
+		'La cellule sélectionnée ne peut pas être fractionnée selon ces dimensions.',
 	'tableTab.selectCell': 'Sélectionnez une cellule du tableau.',
 	'tableTab.tracking':
 		'Cette commande est indisponible lorsque le suivi des modifications est activé.',

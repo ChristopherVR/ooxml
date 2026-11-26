@@ -94,6 +94,8 @@ export const enTableTab = {
 	'Grid Table 4 - Accent 2': 'Grid Table 4 - Accent 2',
 	'List Table 4 - Accent 1': 'List Table 4 - Accent 1',
 	'List Table 4 - Accent 2': 'List Table 4 - Accent 2',
+	'tableTab.mergeSelection': 'Select two or more cells that can be merged.',
+	'tableTab.splitDimensions': 'These dimensions cannot split the selected cell.',
 	'tableTab.selectCell': 'Select a table cell.',
 	'tableTab.tracking': 'This command is unavailable while Track Changes is on.',
 	'tableTab.rectangular': 'This command requires a rectangular table without merged cells.',

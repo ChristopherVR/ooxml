@@ -96,6 +96,8 @@ export const zhCNTableTab = {
 	'Grid Table 4 - Accent 2': '网格表 4 - 强调色 2',
 	'List Table 4 - Accent 1': '列表型表格 4 - 强调色 1',
 	'List Table 4 - Accent 2': '列表型表格 4 - 强调色 2',
+	'tableTab.mergeSelection': '请选择两个或更多可以合并的单元格。',
+	'tableTab.splitDimensions': '无法按指定的行数和列数拆分所选单元格。',
 	'tableTab.selectCell': '请选择一个表格单元格。',
 	'tableTab.tracking': '启用修订时无法使用此命令。',
 	'tableTab.rectangular': '此命令需要没有合并单元格的矩形表格。',

@@ -97,6 +97,8 @@ export const esTableTab = {
 	'Grid Table 4 - Accent 2': 'Tabla de cuadrícula 4 - Énfasis 2',
 	'List Table 4 - Accent 1': 'Tabla de lista 4 - Énfasis 1',
 	'List Table 4 - Accent 2': 'Tabla de lista 4 - Énfasis 2',
+	'tableTab.mergeSelection': 'Selecciona dos o más celdas que se puedan combinar.',
+	'tableTab.splitDimensions': 'La celda seleccionada no se puede dividir con estas dimensiones.',
 	'tableTab.selectCell': 'Seleccione una celda de la tabla.',
 	'tableTab.tracking': 'Este comando no está disponible con Control de cambios activado.',
 	'tableTab.rectangular': 'Este comando requiere una tabla rectangular sin celdas combinadas.',

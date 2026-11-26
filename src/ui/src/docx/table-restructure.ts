@@ -61,7 +61,7 @@ export function slotsOf(table: ProseMirrorNode): Slot[][] {
 			const cell = cells[next++];
 			if (!cell) break;
 			const span = Number(cell.attrs.colspan) || 1;
-			const key = String(cell.attrs.sourceCellKey || '');
+			const key = String(cell.attrs.sourceCellKey || cell.firstChild?.attrs.id || '');
 			slots.push({ row: r, col, span, cell, offset: 0, key });
 			const rowspan = Number(cell.attrs.rowspan) || 1;
 			const names = keysOf(cell);
@@ -103,13 +103,15 @@ export function skeletonOf(table: ProseMirrorNode): Table {
 			}
 			if (Number(cell.attrs.rowspan) > 1) base.verticalMerge = 'restart';
 			cell.forEach((child) => {
-				if (child.type.name === 'paragraph')
+				if (child.type.name === 'paragraph') {
+					// Inline atoms can have no text. Mark their paragraph as occupied in the skeleton.
+					const text = child.textContent || (child.childCount ? '\uFFFC' : '');
 					base.paragraphs.push({
 						type: 'paragraph',
 						id: String(child.attrs.id),
-						runs: [{ text: child.textContent }],
+						runs: [{ text }],
 					});
-				else if (child.type.name === 'table')
+				} else if (child.type.name === 'table')
 					(base.sourceBlocks ??= []).push({ type: 'table', id: String(child.attrs.id), rows: [] });
 				else (base.nestedTables ??= []).push({ rows: [] });
 			});
@@ -188,6 +190,9 @@ export function nodeFromResult(old: ProseMirrorNode, result: Table): ProseMirror
 			const source = ids.map((id) => cellOf.get(id)).find(Boolean);
 			const attrs: Record<string, unknown> = {
 				...(source?.attrs ?? {}),
+				sourceCellKey: ids.includes(String(source?.firstChild?.attrs.id))
+					? source?.attrs.sourceCellKey || ids[0] || ''
+					: ids[0] || '',
 				colspan: entry.span,
 				rowspan,
 				widthTwips: model.widthTwips ?? null,
@@ -195,7 +200,6 @@ export function nodeFromResult(old: ProseMirrorNode, result: Table): ProseMirror
 			};
 			if (!source) {
 				Object.assign(attrs, {
-					sourceCellKey: ids[0] ?? '',
 					verticalAlign: model.verticalAlign ?? null,
 					shadingFill: model.shadingFill ?? null,
 					directShadingFill: model.shadingFill ?? null,

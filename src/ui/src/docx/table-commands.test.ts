@@ -124,6 +124,45 @@ describe('table structural commands', () => {
 		view.destroy();
 	});
 
+	it('merges a text range in a new table and splits the merged paragraphs', () => {
+		const { view } = setup();
+		const { doc, selection } = view.state;
+		expect(run(view, 'mergeCells')).toBe(false);
+		let end = 0;
+		doc.descendants((node, pos) => {
+			if (node.attrs.id === 'cell-0-1') end = pos + 1 + node.content.size;
+		});
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from, end)));
+		expect(run(view, 'mergeCells')).toBe(true);
+		const merged = view.state.doc.child(1).child(0).child(0);
+		expect(merged.attrs.colspan).toBe(2);
+		expect(merged.children.map((paragraph) => paragraph.textContent)).toEqual(['r0c0', 'r0c1']);
+		expect(run(view, 'splitCell')).toBe(true);
+		expect(grid(view)).toEqual([
+			['r0c0', 'r0c1'],
+			['r1c0', 'r1c1'],
+		]);
+		view.destroy();
+	});
+
+	it('keeps an image-only paragraph when absorbing its cell in a merge', () => {
+		const { view } = setup();
+		const { doc, selection } = view.state;
+		let paragraph = 0;
+		doc.descendants((node, pos) => {
+			if (node.attrs.id === 'cell-0-1') paragraph = pos;
+		});
+		const source = doc.nodeAt(paragraph)!;
+		const image = schema.nodes.image.create({ altText: 'An inline image' });
+		const tr = view.state.tr.replaceWith(paragraph + 1, paragraph + source.nodeSize - 1, image);
+		tr.setSelection(TextSelection.create(tr.doc, selection.from, paragraph + 2));
+		view.dispatch(tr);
+		expect(run(view, 'mergeCells')).toBe(true);
+		const merged = view.state.doc.child(1).child(0).child(0);
+		expect(merged.child(1).firstChild).toBe(image);
+		view.destroy();
+	});
+
 	it('deletes the selected row or column and preserves remaining cells', () => {
 		let fixture = setup();
 		expect(run(fixture.view, 'deleteRow')).toBe(true);
