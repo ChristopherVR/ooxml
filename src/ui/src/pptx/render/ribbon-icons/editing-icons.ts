@@ -5,8 +5,8 @@ const addIns = getIcon('addIns');
 
 export const EDITING_ICONS: Record<string, RibbonIconArtwork> = {
 	'home.editing.addIns': {
-		attrs: { stroke: 'currentColor', fill: 'none', viewBox: addIns?.viewBox ?? '0 0 20 20' },
-		children: [{ tag: 'path', attrs: { d: addIns?.d ?? '' } }],
+		attrs: { stroke: 'currentColor', fill: 'none', viewBox: '0 0 24 24' },
+		children: [{ tag: 'path', attrs: { d: addIns?.d ?? '', transform: 'scale(1.2)' } }],
 	},
 	'home.editing.find': {
 		attrs: {

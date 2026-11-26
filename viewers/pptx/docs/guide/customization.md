@@ -1110,6 +1110,7 @@ Format Painter uses `home.clipboard.formatPainter`. SmartArt Format retains
 | `home.editing.find`                               | Find                                                                          |
 | `home.editing.replace`                            | Replace                                                                       |
 | `home.editing.select`                             | Select                                                                        |
+| `home.editing.addIns`                             | Add-ins                                                                       |
 | `insert.slides.newSlide`                          | New Slide                                                                     |
 | `insert.slides.reuseSlides`                       | Reuse Slides                                                                  |
 | `insert.tables.table`                             | Table                                                                         |
