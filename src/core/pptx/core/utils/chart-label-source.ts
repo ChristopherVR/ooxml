@@ -15,10 +15,12 @@ const relationshipParser = new XMLParser({ ignoreAttributes: false, attributeNam
 function formulaCount(value: unknown): number {
 	if (!value || typeof value !== 'object') return 0;
 	if (Array.isArray(value)) return value.reduce((total, item) => total + formulaCount(item), 0);
-	return Object.entries(value).reduce(
-		(total, [key, child]) => total + (key === 'f' || key.endsWith(':f') ? 1 : formulaCount(child)),
-		0,
-	);
+	const node = value as XmlObject;
+	let total = 0;
+	for (const key of Object.keys(node)) {
+		total += key === 'f' || key.endsWith(':f') ? 1 : formulaCount(node[key]);
+	}
+	return total;
 }
 
 /** How many internal relationships, in any part, target each part of the package. */
@@ -63,8 +65,8 @@ export async function chartLabelsHaveEditableSources(
 		return false;
 	// Other formula consumers (title, error bars, extension caches) need independent
 	// reconciliation. Do not modify their source workbook through this workflow.
-	if (formulaCount(chartSpace) !== seriesNodes.reduce((sum, node) => sum + formulaCount(node), 0))
-		return false;
+	const formulaTotal = formulaCount(chartSpace);
+	if (formulaTotal !== seriesNodes.reduce((sum, node) => sum + formulaCount(node), 0)) return false;
 	const writes = [];
 	const labelOwners = new Map<string, string>();
 	for (const [index, node] of seriesNodes.entries()) {
@@ -99,7 +101,7 @@ export async function chartLabelsHaveEditableSources(
 				return false;
 		}
 	}
-	if (formulaCount(chartSpace) !== writes.length) return false;
+	if (formulaTotal !== writes.length) return false;
 	if (!external) return writes.length === 0;
 	if (!external.targetPath || !external.embeddedWorkbookData) return false;
 	const target = resolve(chartPartPath, external.targetPath);

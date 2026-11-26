@@ -16,6 +16,7 @@ import {
 	PptxTemplateBackgroundService,
 	PptxXmlLookupService,
 } from '../../services';
+import { registerChartCompatibilityParser } from '../../utils/chart-compat-tree';
 import type {
 	IPptxCompatibilityService,
 	IPptxEditorAnimationService,
@@ -213,6 +214,7 @@ export class PptxRuntimeDependencyFactory implements IPptxRuntimeDependencyFacto
 			}
 			return parsed;
 		}) as typeof parser.parse;
+		registerChartCompatibilityParser(parser, MAX_XML_NESTING_DEPTH);
 		return parser;
 	}
 

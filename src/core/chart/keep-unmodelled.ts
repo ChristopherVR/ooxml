@@ -72,9 +72,10 @@ export function withUnmodelledChartChildren(
 	written: string,
 	omitProtection = false,
 	omitPivotSource = false,
+	sourceRoot?: XmlElement,
 ): string {
 	if (!/<(?:\w+:)?(?:pivotSource|protection)\b/.test(source)) return written;
-	const from = parseXml(source, { label: 'Chart part' }).documentElement;
+	const from = sourceRoot ?? parseXml(source, { label: 'Chart part' }).documentElement;
 	const doc = parseXml(written, { label: 'Chart part' });
 	const to = doc.documentElement;
 	let changed = graft(

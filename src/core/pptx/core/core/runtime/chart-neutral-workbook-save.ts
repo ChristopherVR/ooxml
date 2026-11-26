@@ -6,13 +6,13 @@ import {
 	chartSeriesEntries,
 	chartSpaceRangeConflicts,
 	openEmbeddedPackage,
-	parseChartSpace,
 	rebaseChartData,
 	worksheetPathsByName,
-	writeChartSpaceOverSource,
 	type ChartSpace,
 } from '../../../../chart';
-import type { PptxChartData } from '../../types';
+import { readChartSpaceSource, writeParsedChartSpace } from '../../../../chart/keep-source';
+import { chartSpaceWorkbookWrites } from '../../../../chart/workbook/space-writes';
+import type { PptxChartData, XmlObject } from '../../types';
 import type { NeutralChartSave } from '../../utils/chart-neutral-save';
 import {
 	chartPartSheets,
@@ -21,6 +21,31 @@ import {
 } from '../../utils/chart-workbook-sheets';
 
 type ResolvePath = (base: string, target: string) => string;
+export type ReadChartSource = typeof readChartSpaceSource;
+export interface ChartRefreshSource {
+	readSource: ReadChartSource;
+	readTree?: () => XmlObject;
+}
+
+/** A chart save can see the same source as the edit baseline and again at workbook write-back. */
+export function chartSourcesForSave(): ReadChartSource {
+	const sources = new Map<string, ReturnType<ReadChartSource>>();
+	return (text) => {
+		const previous = sources.get(text);
+		if (previous) return previous;
+		const source = readChartSpaceSource(text);
+		sources.set(text, source);
+		return source;
+	};
+}
+
+export function workbookWritesForChart(readSource: ReadChartSource, before: string, after: string) {
+	try {
+		return chartSpaceWorkbookWrites(readSource(after).chartSpace, readSource(before).chartSpace);
+	} catch {
+		return [];
+	}
+}
 
 /**
  * Stage both parts before changing the package. Unsupported workbook sources fail atomically.
@@ -32,6 +57,7 @@ async function prepareWorkbook(
 	saved: NeutralChartSave,
 	resolve: ResolvePath,
 	sheets: ChartDataSheets,
+	readSource: ReadChartSource = readChartSpaceSource,
 ): Promise<NeutralChartSave> {
 	if (!saved.workbookModel) return saved;
 	const syncIds = () =>
@@ -60,7 +86,7 @@ async function prepareWorkbook(
 		},
 		place.options,
 	);
-	const xml = writeChartSpaceOverSource(saved.xml, model!);
+	const xml = writeParsedChartSpace(readSource(saved.xml), model!);
 	zip.file(path, written.bytes);
 	place.written(written.sheetName);
 	syncIds();
@@ -118,21 +144,30 @@ export async function rebaseConflictingChartRanges(
 	inStep: string | undefined,
 	resolve: ResolvePath,
 	sheets: ChartDataSheets,
+	readSource: ReadChartSource,
 ): Promise<string | undefined> {
 	if (!chart.externalData || chart.externalData.isExternal) return undefined;
 	try {
-		const { chartSpace, issues } = parseChartSpace(xml);
+		const { chartSpace, issues } = readSource(xml);
 		if (chartIssuesLostOnWrite(issues).length > 0) return undefined;
 		const before = [from, inStep].flatMap((part) =>
-			part === undefined ? [] : [parseChartSpace(part).chartSpace],
+			part === undefined ? [] : [readSource(part).chartSpace],
 		);
 		if (
 			chartSpaceRangeConflicts(chartSpace, ...before).length === 0 &&
 			!(await namesRemovedSheet(zip, chart, xml, inStep, resolve))
 		)
 			return undefined;
-		return (await prepareWorkbook(zip, chart, { xml, workbookModel: chartSpace }, resolve, sheets))
-			.xml;
+		return (
+			await prepareWorkbook(
+				zip,
+				chart,
+				{ xml, workbookModel: chartSpace },
+				resolve,
+				sheets,
+				readSource,
+			)
+		).xml;
 	} catch {
 		return undefined;
 	}

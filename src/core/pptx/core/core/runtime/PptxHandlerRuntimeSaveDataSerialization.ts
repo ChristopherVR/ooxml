@@ -107,7 +107,6 @@ import { applyChartTitleStyleToXml } from '../../utils/chart-title-style-seriali
 import { applySeriesTrendlinesToXml } from '../../utils/chart-trendline-serializer';
 import { applyChartUpDownBars } from '../../utils/chart-up-down-bars';
 import { chartCacheOverView } from '../../../../chart/point-limit';
-import { chartPartWorkbookWrites } from '../../../../chart/workbook/space-writes';
 import {
 	ChartExSaveRefusedError,
 	saveChartExPackageThroughNeutral,
@@ -118,10 +117,15 @@ import {
 } from '../../utils/chart-neutral-save';
 import { encodeNeutralChartElements } from '../../utils/chart-neutral-package-elements';
 import {
+	chartSourcesForSave,
 	prepareNeutralChartWorkbook,
 	rebaseConflictingChartRanges,
 	NeutralChartSaveRefusedError,
+	workbookWritesForChart,
+	type ChartRefreshSource,
+	type ReadChartSource,
 } from './chart-neutral-workbook-save';
+import { copyParsedXmlWithOrder } from './load-part-reader';
 import { xmlChild, xmlPath } from '../../utils/xml-access';
 import { applyChartExUpdate, chartExLayoutChanged } from './chart-cx-update';
 import {
@@ -166,6 +170,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		_xml: string,
 		_previous: PptxChartData,
 		_slidePath?: string,
+		_source?: ChartRefreshSource,
 	): Promise<PptxChartData | undefined> {
 		throw new Error('refreshClassicChartFromPart not yet initialised');
 	}
@@ -433,17 +438,26 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			try {
 				// Data that undo or redo brought back saves from the part it was edited from, against
 				// the data that part describes.
-				let source = this.chartPartRevisions.source(chartPartPath, chartData);
-				const sourceData = source
-					? await this.refreshClassicChartFromPart(source, chartData, slidePath)
+				const readSource = chartSourcesForSave();
+				const revision = this.chartPartRevisions.source(chartPartPath, chartData);
+				let revisionTree: XmlObject | undefined;
+				const sourceData = revision
+					? await this.refreshClassicChartFromPart(revision, chartData, slidePath, {
+							readSource,
+							readTree: () => {
+								revisionTree = this.parser.parse(revision) as XmlObject;
+								return copyParsedXmlWithOrder(revisionTree, revision);
+							},
+						})
 					: undefined;
-				if (source && !sourceData) source = null;
+				const source = revision && !sourceData ? null : revision;
 				// That state was released (see `chart-part-revisions`): the data is saved as edited
 				// directly from the part as it is now, so its recorded row and series edits, which
 				// index the released state, are dropped.
 				if (source === null) delete chartData.structureEdits;
 				const chartXmlStr = source ?? (await chartFile.async('string'));
-				const chartXmlData = this.parser.parse(chartXmlStr) as XmlObject;
+				const chartXmlData =
+					(source ? revisionTree : undefined) ?? (this.parser.parse(chartXmlStr) as XmlObject);
 				// Read the original part before mutating its tree, so only
 				// format sections the user changed are written back.
 				const authoredFormats = chartData.elementFormats
@@ -496,6 +510,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				const neutralSave = baselineData
 					? saveChartPartThroughNeutral(chartXmlStr, baselineData, chartData, {
 							elements: packageElements,
+							readSource,
 						})
 					: undefined;
 				if (neutralSave) {
@@ -505,6 +520,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						neutralSave,
 						(base, target) => this.resolveImagePath(base, target),
 						this.chartDataSheetsOfSession(),
+						readSource,
 					);
 					await this.commitChartPart(
 						chartPartPath,
@@ -512,6 +528,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						chartData,
 						prepared.xml,
 						chartXmlStr,
+						readSource,
 						prepared.workbookRebased,
 					);
 					continue;
@@ -1360,6 +1377,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					chartData,
 					this.builder.build(chartXmlData),
 					chartXmlStr,
+					readSource,
 				);
 			} catch (e) {
 				if (
@@ -1395,6 +1413,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		chartData: PptxChartData,
 		xml: string,
 		from: string,
+		readSource: ReadChartSource,
 		workbookRebased = false,
 	): Promise<void> {
 		// Degrades to a compatibility warning, never throws; see
@@ -1425,6 +1444,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						inStep,
 						(base, target) => this.resolveImagePath(base, target),
 						this.chartDataSheetsOfSession(),
+						readSource,
 					);
 		if (rebased !== undefined) {
 			xml = rebased;
@@ -1440,7 +1460,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				chartPartPath,
 				slidePath,
 				chartData.externalData,
-				workbookRebased || inStep === undefined ? [] : chartPartWorkbookWrites(inStep, xml),
+				workbookRebased || inStep === undefined
+					? []
+					: workbookWritesForChart(readSource, inStep, xml),
 				chartData.dataLabelTextOnly ?? false,
 			);
 			this.chartWorkbookDataBaselines.set(chartPartPath, {
@@ -1452,7 +1474,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 		this.zip.file(chartPartPath, xml);
 		if (!this.chartWorkbookDataBaselines.get(chartPartPath)?.retry) {
-			const refreshed = await this.refreshClassicChartFromPart(xml, chartData, slidePath);
+			const refreshed = await this.refreshClassicChartFromPart(xml, chartData, slidePath, {
+				readSource,
+			});
 			if (refreshed) {
 				for (const key of Object.keys(chartData))
 					delete (chartData as unknown as Record<string, unknown>)[key];

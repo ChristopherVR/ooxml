@@ -6,7 +6,7 @@
 // formula by formula, the way the DOM patch path always did; any other edit must be refused by the
 // caller.
 import { NS, buildXml, elements, first, parseXml, type XmlElement } from '../xml/index';
-import type { ChartSpace } from './model';
+import type { ChartSpace, ChartSpaceParseResult } from './model';
 import { parseChartSpace } from './parse-space';
 import { writeChartSpace, type WriteChartSpaceOptions } from './write-space';
 import { withUnmodelledChartChildren } from './keep-unmodelled';
@@ -126,6 +126,30 @@ export function patchChartFormulas(
 const elementsNamed = (parent: XmlElement, local: string) =>
 	elements(parent).filter((node) => node.namespaceURI === NS.c && node.localName === local);
 
+export interface ChartXmlSource {
+	text: string;
+	root: XmlElement;
+	hadWarnings: boolean;
+}
+
+export function readChartXmlSource(text: string): ChartXmlSource {
+	let hadWarnings = false;
+	const root = parseXml(text, {
+		label: 'Chart part',
+		onWarning: () => {
+			hadWarnings = true;
+		},
+	}).documentElement;
+	return { text, root, hadWarnings };
+}
+
+export interface ChartSpaceSource extends ChartXmlSource, ChartSpaceParseResult {}
+
+export function readChartSpaceSource(text: string): ChartSpaceSource {
+	const source = readChartXmlSource(text);
+	return { ...source, ...parseChartSpace(source.root) };
+}
+
 /**
  * Writes an edited source-backed chart only when the parser can preserve every reported
  * element. Unchanged models return the original XML, including its lexical formatting.
@@ -136,14 +160,23 @@ export function writeChartSpaceOverSource(
 	space: ChartSpace,
 	options?: WriteChartSpaceOptions,
 ): string {
-	const parsed = parseChartSpace(source);
-	if (sameChartModel(parsed.chartSpace, space)) return source;
+	return writeParsedChartSpace(readChartSpaceSource(source), space, options);
+}
+
+/** Write using the source already read by the edit planner. */
+export function writeParsedChartSpace(
+	parsed: ChartSpaceSource,
+	space: ChartSpace,
+	options?: WriteChartSpaceOptions,
+): string {
+	if (sameChartModel(parsed.chartSpace, space)) return parsed.text;
 	if (chartIssuesLostOnWrite(parsed.issues).length)
 		throw new Error('This chart has content that cannot be preserved through an edit.');
 	return withUnmodelledChartChildren(
-		source,
+		parsed.text,
 		writeChartSpace(space, options),
 		space.protection === null,
 		!!parsed.chartSpace.pivotSource && !space.pivotSource,
+		parsed.root,
 	);
 }

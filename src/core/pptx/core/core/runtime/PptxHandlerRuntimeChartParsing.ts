@@ -10,14 +10,16 @@ import { chartLabelsHaveEditableSources } from '../../utils/chart-label-source';
  * `utils/chart-from-neutral*.ts` (docs/agnostic-core-plan.md, steps 5 and 6). What the neutral
  * model does not carry (resolved colours and fonts, complex text and effects, picture fills, c15/c16 extensions, layouts, the colour-style, chart-style, workbook and user-shape
  * parts, `c:clrMapOvr`, pivot source and formats, print settings, protection) is still read from
- * the part's `fast-xml-parser` tree by the existing object-tree readers. ChartEx parts stay on the
- * object tree entirely (`PptxHandlerRuntimeChartExParsing`).
+ * the compatibility tree by the existing object-tree readers. Ordinary classic parts share the
+ * neutral parser's DOM. The legacy object parser handles constructs the projection cannot match.
+ * ChartEx has a separate reader (`PptxHandlerRuntimeChartExParsing`).
  *
  * Mixin chain position:
  *   `PptxHandlerRuntimeChartExParsing` -> **this** -> `PptxHandlerRuntimePresentationStructure`
  */
 
 import type { ChartSpace } from '../../../../chart/index';
+import { readChartSpaceSource, type ChartSpaceSource } from '../../../../chart/keep-source';
 import { XmlObject } from '../../types';
 import type { PptxChartData } from '../../types';
 import { chartLineFromNeutral, chartShapeFromNeutral } from '../../utils/chart-from-neutral-paint';
@@ -45,6 +47,7 @@ import {
 	type ChartTreeReader,
 } from '../../utils/chart-from-neutral';
 import { readChartPartModel } from '../../utils/chart-part-repair';
+import { projectChartCompatibilityTree } from '../../utils/chart-compat-tree';
 import {
 	CHART_POINTS_LIMITED,
 	chartPointBudget,
@@ -54,6 +57,8 @@ import { parseChartTitleRuns } from '../../utils/chart-title-runs-parser';
 
 import { resolveDataPointPictureImages } from './chart-datapoint-picture-resolver';
 import { resolveChartElementPictures } from './chart-element-pictures';
+import { readChartXml } from './load-part-reader';
+import type { ChartRefreshSource } from './chart-neutral-workbook-save';
 import {
 	applyEmbeddedWorkbookFallback,
 	hasUncachedCategoryReference,
@@ -94,12 +99,18 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			return undefined;
 		}
 
-		const chartPart = await this.readXmlPartByRelationshipId(slidePath, chartRelationshipId);
+		const target = this.slideRelsMap.get(slidePath)?.get(chartRelationshipId);
+		if (!target) return undefined;
+		const partPath = this.resolveImagePath(slidePath, target);
+		const chartPart = await readChartXml(this.zip, this.parser, partPath);
 		if (!chartPart) {
 			return undefined;
 		}
 
-		const chartSpace = this.xmlLookupService.getChildByLocalName(chartPart.xml, 'chartSpace');
+		const chartSpace = this.xmlLookupService.getChildByLocalName(
+			chartPart.compatibility(),
+			'chartSpace',
+		);
 		const chartRoot = this.xmlLookupService.getChildByLocalName(chartSpace, 'chart');
 		const plotArea = this.xmlLookupService.getChildByLocalName(chartRoot, 'plotArea');
 		if (!plotArea) {
@@ -121,14 +132,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				chartSpace: neutral,
 				repairIssue,
 				originalRoot,
-			} = readChartPartModel(chartPart.text, this.chartPointBudget);
+			} = readChartPartModel(chartPart.text, this.chartPointBudget, chartPart.original ?? null);
 			if (repairIssue) {
 				this.compatibilityService.reportWarning({
 					code: repairIssue.code,
 					message: repairIssue.message,
 					severity: 'info',
 					scope: 'element',
-					xmlPath: chartPart.partPath,
+					xmlPath: partPath,
 				});
 			}
 			// ChartEx (Office 2016+) parts use plotAreaRegion instead of chart groups.
@@ -138,15 +149,15 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					this.detectChartType(plotArea),
 					chartSpace,
 					chartRoot,
-					chartPart.partPath,
+					partPath,
 					chartRelationshipId,
-					originalRoot ?? chartPart.text,
+					originalRoot ?? chartPart.original?.root,
 				);
 			}
 			const chart = await this.buildClassicChart(
 				neutral,
 				{ chartSpace, chartRoot, plotArea },
-				chartPart.partPath,
+				partPath,
 				chartRelationshipId,
 				this.chartPointBudget,
 			);
@@ -160,7 +171,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						'The chart declares more blank points than are shown. Its points and counts are kept when it is saved.',
 					severity: 'warning',
 					scope: 'element',
-					xmlPath: chartPart.partPath,
+					xmlPath: partPath,
 				});
 			}
 		}
@@ -171,11 +182,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		xml: string,
 		previous: PptxChartData,
 		slidePath?: string,
+		source?: ChartRefreshSource,
 	): Promise<PptxChartData | undefined> {
 		if (!previous.chartPartPath || !previous.chartRelationshipId) return undefined;
-		const { chartSpace: neutral } = readChartPartModel(xml);
+		let original: ChartSpaceSource | undefined;
+		try {
+			original = (source?.readSource ?? readChartSpaceSource)(xml);
+		} catch {
+			// Legacy parts may need their missing namespace declarations repaired.
+		}
+		const neutral = original?.chartSpace ?? readChartPartModel(xml, undefined, null).chartSpace;
 		if (!neutral?.plotArea.groups.length) return undefined;
-		const root = this.parser.parse(xml) as XmlObject;
+		const root =
+			source?.readTree?.() ??
+			projectChartCompatibilityTree(this.parser, xml, original) ??
+			(this.parser.parse(xml) as XmlObject);
 		const chartSpace = this.xmlLookupService.getChildByLocalName(root, 'chartSpace');
 		const chartRoot = this.xmlLookupService.getChildByLocalName(chartSpace, 'chart');
 		const plotArea = this.xmlLookupService.getChildByLocalName(chartRoot, 'plotArea');
@@ -388,7 +409,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			reader.xml,
 			colorAdapter,
 		);
-		const style = chartStyleFromNeutral(neutral, this.extractChartStyle(chartSpace, chartRoot));
+		const style = chartStyleFromNeutral(
+			neutral,
+			this.extractChartStyle(chartSpace, chartRoot, neutral),
+		);
 		const titleTx = reader.xml.getChildByLocalName(
 			reader.xml.getChildByLocalName(chartRoot, 'title'),
 			'tx',

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { guardZip, ZipLimitError } from '../../../../opc/zip-limits';
 import type { XmlObject } from '../../types';
-import { LoadPartReader, readPartText, readPartXml } from './load-part-reader';
+import { LoadPartReader, readChartXml, readPartText, readPartXml } from './load-part-reader';
 
 const relsPath = 'ppt/slides/_rels/slide1.xml.rels';
 const relsXml =
@@ -105,6 +105,33 @@ describe('load part reader', () => {
 		const second = await readPartXml(zip, parser, 'other.xml');
 		expect((second!.root as XmlObject)['@_value']).toBe('old');
 		expect(reads).toHaveBeenCalledTimes(1);
+		expect(parses).toHaveBeenCalledTimes(2);
+		reader.close();
+	});
+
+	it('shares chart parses while the part exists and gives each model its own tree', async () => {
+		const { zip, parser, parses, reader } = setup();
+		const path = 'ppt/charts/chart1.xml';
+		const part = '<chartSpace><chart><legend pos="b"/></chart></chartSpace>';
+		zip.file(path, part);
+		const [first, second] = await Promise.all([
+			readChartXml(zip, parser, path),
+			readChartXml(zip, parser, path),
+		]);
+		expect(first?.original).toBeDefined();
+		expect(first?.original?.root).toBe(second?.original?.root);
+		const initial = first?.compatibility();
+		const other = second?.compatibility();
+		expect(initial).toEqual(other);
+		expect(initial?.chartSpace).not.toBe(other?.chartSpace);
+		expect(parses).toHaveBeenCalledTimes(1);
+
+		zip.file(path, part.replace('pos="b"', 'pos="t"'));
+		const replaced = await readChartXml(zip, parser, path);
+		expect(replaced?.compatibility()).toEqual({
+			chartSpace: { chart: { legend: { '@_pos': 't' } } },
+		});
+		expect(replaced?.original?.root).not.toBe(first?.original?.root);
 		expect(parses).toHaveBeenCalledTimes(2);
 		reader.close();
 	});

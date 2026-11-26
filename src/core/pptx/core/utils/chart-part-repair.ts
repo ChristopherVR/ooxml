@@ -15,6 +15,7 @@ import {
 	type ChartPointBudget,
 	type ChartSpace,
 } from '../../../chart/index';
+import { readChartXmlSource, type ChartXmlSource } from '../../../chart/keep-source';
 
 /** The standard namespaces of the Office chart prefixes the repair may declare. */
 export const OFFICE_CHART_PREFIXES: Readonly<Record<string, string>> = {
@@ -87,6 +88,14 @@ export interface ChartPartModel {
 	repairIssue?: ChartParseIssue;
 }
 
+export function readOriginalChartPart(text: string): ChartXmlSource | undefined {
+	try {
+		return readChartXmlSource(text);
+	} catch {
+		return undefined;
+	}
+}
+
 function parseClassic(root: XmlElement, pointBudget?: ChartPointBudget): ChartPartModel {
 	const { chartSpace, issues } = parseChartSpace(root, pointBudget ? { pointBudget } : {});
 	return issues.some((issue) => issue.code === 'CHART_ROOT_UNEXPECTED') ? {} : { chartSpace };
@@ -97,32 +106,40 @@ function parseClassic(root: XmlElement, pointBudget?: ChartPointBudget): ChartPa
  * fails, repaired once ({@link repairChartPartPrefixes}) and parsed again. A part still malformed
  * after the repair is unreadable.
  */
-export function readChartPartModel(text: string, pointBudget?: ChartPointBudget): ChartPartModel {
+export function readChartPartModel(
+	text: string,
+	pointBudget?: ChartPointBudget,
+	original = readOriginalChartPart(text) ?? null,
+): ChartPartModel {
 	try {
-		const originalRoot = parseXml(text, { label: 'Chart part' }).documentElement;
-		const classic = parseClassic(originalRoot, pointBudget);
-		return classic.chartSpace?.plotArea.groups.length ? classic : { ...classic, originalRoot };
-	} catch {
-		const repair = repairChartPartPrefixes(text);
-		if (!repair) return {};
-		try {
-			const parsed = parseClassic(
-				parseXml(repair.text, { label: 'Chart part' }).documentElement,
-				pointBudget,
-			);
-			const what = [
-				...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
-				...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),
-			].join('; ');
-			return {
-				...parsed,
-				repairIssue: {
-					code: 'CHART_PREFIX_REPAIRED',
-					message: `The chart part was not namespace well-formed and was repaired to load (${what}).`,
-				},
-			};
-		} catch {
-			return {};
+		if (original) {
+			const classic = parseClassic(original.root, pointBudget);
+			return classic.chartSpace?.plotArea.groups.length
+				? classic
+				: { ...classic, originalRoot: original.root };
 		}
+	} catch {
+		// A parser failure can still be one of the old writer's namespace mistakes.
+	}
+	const repair = repairChartPartPrefixes(text);
+	if (!repair) return {};
+	try {
+		const parsed = parseClassic(
+			parseXml(repair.text, { label: 'Chart part' }).documentElement,
+			pointBudget,
+		);
+		const what = [
+			...(repair.declared.length ? [`declared ${repair.declared.join(', ')}`] : []),
+			...(repair.rewroteOwnOutput ? ['rewrote xmlns elements and c15:v'] : []),
+		].join('; ');
+		return {
+			...parsed,
+			repairIssue: {
+				code: 'CHART_PREFIX_REPAIRED',
+				message: `The chart part was not namespace well-formed and was repaired to load (${what}).`,
+			},
+		};
+	} catch {
+		return {};
 	}
 }

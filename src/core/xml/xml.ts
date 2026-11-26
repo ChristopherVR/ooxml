@@ -20,6 +20,8 @@ export interface ParseOptions {
 	limits?: XmlParseLimits;
 	/** Reject recoverable parser warnings as well as errors (for user-supplied XML formulas). */
 	warningsAsErrors?: boolean;
+	/** Observe recoverable warnings from the DOM parser. */
+	onWarning?: (message: string) => void;
 }
 
 /** Defaults far above any real OOXML part, low enough to stop stack and memory exhaustion. */
@@ -127,6 +129,7 @@ export function parseXml(source: string, options: ParseOptions = {}): XmlDocumen
 	try {
 		parsed = new DOMParser({
 			onError: (level, message) => {
+				if (level === 'warning') options.onWarning?.(message);
 				if (level !== 'warning' || options.warningsAsErrors) parseError = message;
 			},
 		}).parseFromString(xml, 'application/xml') as unknown as XmlDocument;

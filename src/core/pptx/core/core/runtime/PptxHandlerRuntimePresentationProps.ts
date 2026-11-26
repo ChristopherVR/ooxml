@@ -1,5 +1,6 @@
 import { XmlObject } from '../../types';
 import type { PptxPresentationProperties, PptxChartStyle, PptxViewProperties } from '../../types';
+import type { ChartSpace } from '../../../../chart/index';
 import type { ChartAreaFormat } from '../../utils/chart-area-format';
 import { parseChartAreaFormat } from '../../utils/chart-area-format';
 import { parseChartDataLabelOptions } from '../../utils/chart-data-label-parser';
@@ -181,6 +182,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	protected extractChartStyle(
 		chartSpace: XmlObject | undefined,
 		chartRoot: XmlObject | undefined,
+		classic?: ChartSpace,
 	): PptxChartStyle | undefined {
 		if (!chartSpace && !chartRoot) {
 			return undefined;
@@ -191,19 +193,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// Style ID from c:style. Office writes it inside `mc:AlternateContent` (`c14:style` under
 		// `mc:Choice`, `c:style` under `mc:Fallback`); a consumer that does not model `c14:style`
 		// takes the fallback (ECMA-376 Part 3, markup compatibility), as `parseChartSpace` does.
-		const styleNode =
-			this.xmlLookupService.getChildByLocalName(chartSpace, 'style') ??
-			this.xmlLookupService
-				.getChildrenArrayByLocalName(chartSpace, 'AlternateContent')
-				.map((alternate) =>
-					this.xmlLookupService.getChildByLocalName(
-						this.xmlLookupService.getChildByLocalName(alternate, 'Fallback'),
-						'style',
-					),
-				)
-				.find((node) => node?.['@_val'] !== undefined);
-		if (styleNode?.['@_val']) {
-			style.styleId = parseInt(String(styleNode['@_val']));
+		const styleId = classic ? classic.style : this.readChartStyleId(chartSpace);
+		if (styleId !== undefined) {
+			style.styleId = styleId;
 			hasStyle = true;
 		}
 
@@ -254,12 +246,16 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// (`cx:legend/@pos`). Fall back to the attribute when the child lookup
 				// misses so a `cx:legend pos="t"` isn't silently ignored (it used to
 				// always fall through to renderers' `?? 'b'` default).
-				const legendPos = this.xmlLookupService.getChildByLocalName(legend, 'legendPos');
-				const legendPosVal = legendPos?.['@_val'] ?? legend['@_pos'];
+				const legendPosVal = classic
+					? classic.legend?.position
+					: (this.xmlLookupService.getChildByLocalName(legend, 'legendPos')?.['@_val'] ??
+						legend['@_pos']);
 				if (legendPosVal) {
 					style.legendPosition = String(legendPosVal);
 				}
-				const legendOverlay = this.resolveLegendOverlay(chartSpace, legend);
+				const legendOverlay = classic?.legend
+					? (classic.legend.overlay ?? true)
+					: this.resolveLegendOverlay(chartSpace, legend);
 				if (legendOverlay !== undefined) {
 					style.legendOverlay = legendOverlay;
 				}
@@ -388,6 +384,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		return hasStyle ? style : undefined;
+	}
+
+	private readChartStyleId(chartSpace: XmlObject | undefined): number | undefined {
+		const style =
+			this.xmlLookupService.getChildByLocalName(chartSpace, 'style') ??
+			this.xmlLookupService
+				.getChildrenArrayByLocalName(chartSpace, 'AlternateContent')
+				.map((alternate) =>
+					this.xmlLookupService.getChildByLocalName(
+						this.xmlLookupService.getChildByLocalName(alternate, 'Fallback'),
+						'style',
+					),
+				)
+				.find((node) => node?.['@_val'] !== undefined);
+		return style?.['@_val'] ? parseInt(style['@_val']) : undefined;
 	}
 
 	protected toPresentationTarget(slidePath: string): string {

@@ -11,6 +11,7 @@
  * shared text promise per part and {@link readPartXml} parses each
  * relationship part once per parser. Callers receive a fresh deep copy of a
  * relationship tree, so a caller that mutates it cannot affect another.
+ * Chart readers share the input DOM and keep each model's compatibility tree independent.
  * Templates and themes opt in to sharing a parse, with independent trees for mutable models.
  *
  * The cache is scoped to one load: the runtime opens a reader after the
@@ -21,12 +22,15 @@
  *
  * @module load-part-reader
  */
+import type { ChartXmlSource } from '../../../../chart/keep-source';
 import { annotateCustomGeometryCommandOrder } from '../../geometry/custom-geometry-command-order';
 import { annotateParagraphSiblingOrder } from './paragraph-sibling-order';
 import { annotateSmartArtTextOrder } from './smartart-text-order';
 import { canonicalRelationshipsXml } from '../../../../opc/relationships';
 import { decodeXmlBytes } from '../../../../xml/index';
 import type { XmlObject } from '../../types';
+import { readOriginalChartPart } from '../../utils/chart-part-repair';
+import { projectChartCompatibilityTree } from '../../utils/chart-compat-tree';
 
 interface TextPartFile {
 	async(kind: 'string'): Promise<string>;
@@ -62,11 +66,37 @@ interface PartEntry {
 	file: TextPartFile;
 	text: Promise<string>;
 	relationships: Map<PartParser, Promise<XmlObject | undefined>>;
+	chartXml?: { parser: PartParser; parsed: Promise<ChartPartXml | undefined> };
+}
+
+interface ChartPartXml {
+	text: string;
+	original: ChartXmlSource | undefined;
+	compatibility(): XmlObject;
+}
+
+function parseChartXml(parser: PartParser, text: string): ChartPartXml | undefined {
+	if (!text) return undefined;
+	const original = readOriginalChartPart(text);
+	let fallback: XmlObject | undefined;
+	return {
+		text,
+		original,
+		compatibility() {
+			const projected = projectChartCompatibilityTree(parser, text, original);
+			if (projected) return projected;
+			// The chart readers only inspect the tree. Cloning on a second reference keeps
+			// any raw nodes retained by the resulting models independent.
+			if (fallback) return copyParsedXmlWithOrder(fallback, text);
+			fallback = parser.parse(text) as XmlObject;
+			return fallback;
+		},
+	};
 }
 
 const openReaders = new WeakMap<object, LoadPartReader>();
 
-/** Owns package text and relationship reads for one load, never for editing or save. */
+/** Owns package reads for one load, never for editing or save. */
 export class LoadPartReader {
 	private readonly parts = new Map<string, PartEntry>();
 	private readonly derived = new Map<string, Promise<unknown>>();
@@ -128,6 +158,15 @@ export class LoadPartReader {
 
 	readText(path: string): Promise<string | undefined> {
 		return this.entry(path)?.text ?? Promise.resolve(undefined);
+	}
+
+	readChartXml(parser: PartParser, path: string): Promise<ChartPartXml | undefined> {
+		const entry = this.entry(path);
+		if (!entry) return Promise.resolve(undefined);
+		if (entry.chartXml?.parser === parser) return entry.chartXml.parsed;
+		const parsed = entry.text.then((text) => parseChartXml(parser, text));
+		entry.chartXml = { parser, parsed };
+		return parsed;
 	}
 
 	/** Snapshot a template's source tree for the independent gallery model. */
@@ -213,6 +252,18 @@ export function readPartText(zip: TextPartStore, path: string): Promise<string |
 	}
 	const file = zip.file(path);
 	return file ? textOf(file) : Promise.resolve(undefined);
+}
+
+/** Share chart XML input within a load. Every chart model gets its own compatibility tree. */
+export async function readChartXml(
+	zip: TextPartStore,
+	parser: PartParser,
+	path: string,
+): Promise<ChartPartXml | undefined> {
+	const reader = openReaders.get(zip);
+	if (reader) return reader.readChartXml(parser, path);
+	const file = zip.file(path);
+	return file ? parseChartXml(parser, await textOf(file)) : undefined;
 }
 
 /**

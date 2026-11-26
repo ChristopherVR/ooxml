@@ -13,13 +13,16 @@
 
 import {
 	chartIssuesLostOnWrite,
-	parseChartSpace,
 	setChartPivotFormatsXml,
 	setChartPrintSettingsXml,
 	setChartUserShapesReference,
-	writeChartSpaceOverSource,
 	type ChartSpace,
 } from '../../../chart/index';
+import {
+	readChartSpaceSource,
+	writeParsedChartSpace,
+	type ChartSpaceSource,
+} from '../../../chart/keep-source';
 import type { PptxChartData } from '../types';
 import { planNeutralChartSave } from './chart-neutral-save-plan';
 
@@ -50,7 +53,10 @@ export function saveChartPartThroughNeutral(
 	xml: string,
 	before: PptxChartData,
 	after: PptxChartData,
-	options: { elements?: NeutralChartPackageElements | undefined } = {},
+	options: {
+		elements?: NeutralChartPackageElements | undefined;
+		readSource?: ((xml: string) => ChartSpaceSource) | undefined;
+	} = {},
 ): NeutralChartSave | undefined {
 	const plan = planNeutralChartSave(before, after);
 	if (!plan) return undefined;
@@ -60,7 +66,7 @@ export function saveChartPartThroughNeutral(
 	let space: ChartSpace;
 	let written: string;
 	try {
-		const parsed = parseChartSpace(xml);
+		const parsed = (options.readSource ?? readChartSpaceSource)(xml);
 		if (chartIssuesLostOnWrite(parsed.issues).length > 0) return undefined;
 		space = parsed.chartSpace;
 		for (const edit of plan.edits) space = edit(space);
@@ -71,7 +77,7 @@ export function saveChartPartThroughNeutral(
 			if (name === 'userShapes' && elements.userShapes !== undefined)
 				space = setChartUserShapesReference(space, elements.userShapes);
 		}
-		written = writeChartSpaceOverSource(xml, space);
+		written = writeParsedChartSpace(parsed, space);
 	} catch {
 		// An edit the shared operation rejects (an axis bound past the other, a missing axis), or a
 		// model the shared writer refuses to write, is left to the object-tree writers, which report
