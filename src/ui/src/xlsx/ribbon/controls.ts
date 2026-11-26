@@ -112,12 +112,14 @@ export function menuEntries(scope: RenderScope, items: RibbonMenuItem[]): MenuEn
 		if (!command || scope.isHidden(command.id)) continue;
 		const icon = item.icon ?? command.icon;
 		const checked = item.arg === undefined ? safe(() => command.checked?.(ctx)) : undefined;
+		const disabled = !ctx.commands.isEnabled(command.id);
 		entries.push({
 			label: ctx.t(item.label ?? command.label),
 			...(icon ? { icon } : {}),
 			...(command.shortcut ? { shortcut: command.shortcut } : {}),
 			...(checked === undefined ? {} : { checked }),
-			disabled: !ctx.commands.isEnabled(command.id),
+			disabled,
+			...(disabled && command.unavailable ? { reason: ctx.t(command.unavailable) } : {}),
 			run: () => {
 				const origin = ctx.root.activeElement;
 				void Promise.resolve(ctx.commands.run(command.id, item.arg)).then(() => {

@@ -1,11 +1,11 @@
 // Host-backed external/integration functions: COPILOT, STOCKHISTORY, TRANSLATE,
 // DETECTLANGUAGE, IMAGE, RTD and WEBSERVICE.
+import { cellPictureInfo, pictureResult } from '../../rich-values';
 import type { CallContext } from '../context';
 import type {
 	CalcExternalProviders,
 	CopilotPromptPart,
 	ImageRequest,
-	ImageSizing,
 	StockHistoryBar,
 	StockHistoryInterval,
 	StockHistoryProperty,
@@ -120,22 +120,29 @@ function evalStockHistory(args: Value[], ctx: CallContext): Value {
 
 function evalImage(args: Value[], ctx: CallContext): Value {
 	const provider = ctx.frame.host.providers?.image;
-	if (!provider) fail(ERR.NAME);
-	const source = parseHttpUrl(str(args[0]), () => fail(ERR.BLOCKED));
-	const altText = omitted(args, 1) ? '' : str(args[1]);
-	const sizingRaw = omitted(args, 2) ? 0 : int(args[2]);
-	if (sizingRaw < 0 || sizingRaw > 3) fail(ERR.VALUE);
-	const sizing = sizingRaw as ImageSizing;
+	const raw = args[0];
+	if (isError(raw)) return raw;
+	if (typeof raw !== 'string') fail(ERR.VALUE);
+	const source = parseHttpUrl(raw, () => fail(ERR.BLOCKED));
+	const url = new URL(source);
+	if (url.protocol !== 'https:' || url.username || url.password || source.length > 32_767)
+		fail(ERR.BLOCKED);
+	const altText = omitted(args, 1) ? '' : args[1];
+	if (isError(altText)) return altText;
+	if (typeof altText !== 'string') fail(ERR.VALUE);
+	const sizing = omitted(args, 2) ? 0 : int(args[2]);
+	if (sizing !== 0 && sizing !== 1 && sizing !== 2 && sizing !== 3) fail(ERR.VALUE);
 	const hasHeight = !omitted(args, 3);
 	const hasWidth = !omitted(args, 4);
 	let height: number | undefined;
 	let width: number | undefined;
 	if (sizing === 3) {
-		if (!hasHeight || !hasWidth) fail(ERR.VALUE);
-		height = num(args[3]);
-		width = num(args[4]);
-		if (!Number.isFinite(height) || !Number.isFinite(width) || height <= 0 || width <= 0)
-			fail(ERR.VALUE);
+		if (!hasHeight && !hasWidth) fail(ERR.VALUE);
+		if (hasHeight) height = num(args[3]);
+		if (hasWidth) width = num(args[4]);
+		const invalid = (n: number | undefined) =>
+			n !== undefined && (!Number.isFinite(n) || n < 1 || n > 16384);
+		if (invalid(height) || invalid(width)) fail(ERR.VALUE);
 	} else if (hasHeight || hasWidth) {
 		fail(ERR.VALUE);
 	}
@@ -146,7 +153,13 @@ function evalImage(args: Value[], ctx: CallContext): Value {
 		...(height !== undefined ? { height } : {}),
 		...(width !== undefined ? { width } : {}),
 	};
-	return provider.resolve(req);
+	if (!provider) return ERR.BLOCKED;
+	const result = provider.resolve(req);
+	if (isError(result) || !provider.getImage) return result;
+	const image = provider.getImage(source);
+	if (!image) return result;
+	const info = cellPictureInfo(image.bytes);
+	return info ? pictureResult({ ...info, bytes: image.bytes, ...req }) : ERR.VALUE;
 }
 
 export const INTEGRATION_FUNCTIONS: FunctionSpec[] = [
@@ -226,8 +239,7 @@ export const INTEGRATION_FUNCTIONS: FunctionSpec[] = [
 			return provider.detectLanguage(str(args[0]));
 		},
 	),
-	integrationSpec(
-		'image',
+	spec(
 		'IMAGE',
 		'Lookup & Reference',
 		'IMAGE(source, [alt_text], [sizing], [height], [width])',

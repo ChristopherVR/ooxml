@@ -111,6 +111,7 @@ export function writeWorksheet(
 				formulas,
 				...(ctx.dynamicArrays ? { dynamicArrays: ctx.dynamicArrays } : {}),
 				...(ctx.metadata ? { metadata: ctx.metadata } : {}),
+				...(ctx.richValues ? { richValues: ctx.richValues } : {}),
 			},
 			sheet,
 		),

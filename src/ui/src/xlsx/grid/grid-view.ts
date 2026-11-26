@@ -521,6 +521,7 @@ export class GridView {
 		this.#offAudit?.();
 		this.#offAudit = undefined;
 		this.root.remove();
+		for (const q of QUADRANTS) this.quads[q].cells.clear();
 		this.hooks.clear();
 	}
 }

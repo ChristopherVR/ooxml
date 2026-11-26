@@ -70,6 +70,8 @@ export interface IconView {
 }
 
 export interface CellView {
+	picture?: import('../rich-values').CellPicture;
+	linkedData?: import('../rich-values').LinkedDataCard;
 	/** Display text (number formats applied; empty when a CF rule hides the value). */
 	text: string;
 	/** Tooltip: the hyperlink's tooltip or target. */

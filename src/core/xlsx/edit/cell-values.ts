@@ -157,6 +157,8 @@ export function clearContents(cell: Cell): void {
 	delete cell.richText;
 	// The guide reads the text it was stored with; a typed value has none.
 	delete cell.phonetic;
+	delete cell.valueMetadata;
+	delete cell.inCellPicture;
 	delete cell.arrayRange;
 	delete cell.dynamicArray;
 	delete cell.legacyFormula;

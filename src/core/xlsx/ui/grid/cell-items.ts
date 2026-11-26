@@ -65,6 +65,8 @@ export function isBlankView(view: CellView): boolean {
 		!view.dataBar &&
 		!view.icon &&
 		!view.sparkline &&
+		!view.picture &&
+		!view.linkedData &&
 		!view.hasComment
 	);
 }
@@ -108,9 +110,11 @@ function makeItem(
 		overflowing: false,
 		fontScale: 1,
 		merged: Boolean(merge),
-		errorMark: input.hasErrorMark
-			? input.hasErrorMark(row, col)
-			: view.isError && input.hasFormula(row, col),
+		errorMark:
+			!view.picture &&
+			(input.hasErrorMark
+				? input.hasErrorMark(row, col)
+				: view.isError && input.hasFormula(row, col)),
 	};
 	if (!view.text || view.wrap || view.verticalText || view.rotation) return item;
 	const inner = w - 2 * PADDING - view.indentPx * (input.zoom / 100);

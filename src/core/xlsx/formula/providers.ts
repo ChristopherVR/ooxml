@@ -155,6 +155,8 @@ export interface ImageRequest {
 /** Host provider backing `IMAGE`. */
 export interface ImageProvider {
 	resolve(request: ImageRequest): Scalar;
+	/** Image bytes for a successfully resolved source. The engine validates them before display. */
+	getImage?(source: string): { readonly bytes: Uint8Array } | undefined;
 }
 
 /** Host provider backing `RTD` (volatile when configured). */

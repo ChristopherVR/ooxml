@@ -2,6 +2,7 @@
 // a node is only rewritten when its paint signature changed, so scrolling touches the rows and
 // columns that came into view and an edit touches the cells whose view changed.
 import type { CellView } from 'ooxml-core/xlsx';
+import { pictureUrl } from 'ooxml-core/opc';
 import {
 	alignItems,
 	cssFont,
@@ -23,10 +24,35 @@ interface CellNode extends HTMLDivElement {
 }
 
 const viewKeys = new WeakMap<CellView, string>();
+const contentKeys = new WeakMap<object, number>();
+const pictureUrls = new WeakMap<HTMLElement, { bytes: Uint8Array; url: string }>();
+let nextContent = 0;
+
+function contentKey(content: object): number {
+	let id = contentKeys.get(content);
+	if (id === undefined) {
+		id = nextContent++;
+		contentKeys.set(content, id);
+	}
+	return id;
+}
+
+function releasePicture(node: HTMLElement): void {
+	const entry = pictureUrls.get(node);
+	if (!entry) return;
+	node.ownerDocument.defaultView?.URL.revokeObjectURL(entry.url);
+	pictureUrls.delete(node);
+}
+
 const viewKey = (view: CellView): string => {
 	let key = viewKeys.get(view);
 	if (key === undefined) {
-		key = JSON.stringify(view);
+		const { picture, linkedData, ...plain } = view;
+		if (picture) {
+			const { bytes, ...layout } = picture;
+			key = JSON.stringify([plain, contentKey(bytes), layout]);
+		} else if (linkedData) key = JSON.stringify([plain, contentKey(linkedData)]);
+		else key = JSON.stringify(view);
 		viewKeys.set(view, key);
 	}
 	return key;
@@ -73,6 +99,7 @@ export class CellLayer {
 		for (const [key, node] of this.#nodes) {
 			if (keep.has(key)) continue;
 			this.#nodes.delete(key);
+			releasePicture(node);
 			node.hidden = true;
 			node.xgSig = undefined;
 			if (this.#pool.length < 400) this.#pool.push(node);
@@ -159,7 +186,39 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 		fill?.background ?? (item.merged ? 'var(--xve-sheet-bg, var(--office-paper, #fff))' : '');
 	style.backgroundImage = fill?.image ?? '';
 	node.className = `xg-c${item.overflowing ? ' xg-c-over' : ''}${view.hasHyperlink ? ' xg-link' : ''}${item.merged ? ' xg-merged' : ''}`;
+	const picture = view.picture;
+	const previousPicture = pictureUrls.get(node);
+	if (previousPicture?.bytes !== picture?.bytes) releasePicture(node);
 	node.replaceChildren();
+	const urlApi = doc.defaultView?.URL;
+	if (picture && urlApi?.createObjectURL) {
+		const url =
+			previousPicture?.bytes === picture.bytes
+				? previousPicture.url
+				: pictureUrl(picture.bytes, picture.mimeType, (blob) => urlApi.createObjectURL(blob));
+		if (url) {
+			pictureUrls.set(node, { bytes: picture.bytes, url });
+			const image = doc.createElement('img');
+			image.alt = picture.altText;
+			image.src = url;
+			image.decoding = 'async';
+			image.draggable = false;
+			image.style.cssText =
+				'position:absolute;inset:0;pointer-events:none;width:100%;height:100%;object-fit:contain';
+			if (picture.sizing === 1) image.style.objectFit = 'fill';
+			if (picture.sizing >= 2) {
+				const scale = zoom / 100;
+				const ratio = picture.pixelWidth / picture.pixelHeight;
+				const width =
+					picture.width ?? (picture.height ? picture.height * ratio : picture.pixelWidth);
+				const height =
+					picture.height ?? (picture.width ? picture.width / ratio : picture.pixelHeight);
+				image.style.width = `${width * scale}px`;
+				image.style.height = `${height * scale}px`;
+			}
+			node.append(image);
+		}
+	}
 	// A sparkline is drawn first, behind the cell's bars, icons, text and borders.
 	if (view.sparkline) node.append(sparklineSvg(doc, view.sparkline, item.w, item.h, zoom));
 	if (view.dataBar) {
@@ -199,10 +258,17 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 		icon.setAttribute('class', 'xg-ic');
 		node.append(icon);
 	}
+	if (view.linkedData) {
+		const badge = h(doc, 'span', 'xg-ic');
+		badge.textContent = '▤';
+		badge.setAttribute('aria-hidden', 'true');
+		node.append(badge);
+	}
 	if (item.text) {
 		const box = h(doc, 'div', 'xg-t');
 		paintText(doc, box, item, zoom);
 		if (view.icon && view.hAlign !== 'right') box.style.paddingLeft = `${20 * (zoom / 100)}px`;
+		if (view.linkedData) box.style.paddingLeft = `${20 * (zoom / 100)}px`;
 		node.append(box);
 	}
 	paintBorders(doc, node, item);

@@ -66,6 +66,15 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 	const personsSource = sourcePart(RELATIONSHIP_TYPES.person);
 	const metadataSource = sourcePart(RELATIONSHIP_TYPES.sheetMetadata);
 	const metadata = new MetadataPlan(metadataSource ? source?.text(metadataSource) : undefined);
+	const { RichValueWritePlan } = await import('./rich-values');
+	const richValues = new RichValueWritePlan(
+		writer,
+		source,
+		bookPart,
+		metadataSource,
+		metadata,
+		reserved,
+	);
 	const ctx: SaveContext = {
 		writer,
 		workbook,
@@ -81,6 +90,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		threaded: { used: false },
 		dynamicArrays: { used: false },
 		metadata,
+		richValues,
 	};
 	const rels = new RelationshipSet();
 	let keptVba = false;
@@ -175,6 +185,7 @@ export async function saveXlsx(workbook: Workbook): Promise<Uint8Array> {
 		metadataSource,
 		reserved,
 	);
+	richValues.write(rels);
 
 	const sourceXml = sourceBook ? source?.text(sourceBook) : undefined;
 	writer.add(

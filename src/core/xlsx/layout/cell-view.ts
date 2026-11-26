@@ -3,6 +3,7 @@ import { getCell } from '../cells';
 import type { Alignment, CellStyle, CellValue, Workbook, Worksheet } from '../model';
 import { isCellError } from '../model';
 import { formatValue } from '../numfmt/index';
+import { linkedDataCard, pictureView } from '../rich-values';
 import { styleAt } from '../styles';
 import { bordersView, cellFont, fillView, fontView, mergeBorder, mergeFont } from './style-view';
 import type { CellView, ConditionalFormatEvaluator, HAlignView } from './types';
@@ -143,6 +144,17 @@ export function cellView(
 		),
 		isError: isCellError(value) && formulaText === undefined,
 	};
+	if (cell && formulaText === undefined && !conditional?.hideValue) {
+		const picture = pictureView(workbook, cell);
+		const linkedData = linkedDataCard(workbook, cell);
+		if (picture || linkedData) {
+			view.text = linkedData?.text ?? '';
+			view.isError = false;
+			view.overflow = false;
+		}
+		if (picture) view.picture = picture;
+		if (linkedData) view.linkedData = linkedData;
+	}
 	if (vertical) view.verticalText = true;
 	if (fill) view.fill = fill;
 	if (conditional?.dataBar) view.dataBar = conditional.dataBar;

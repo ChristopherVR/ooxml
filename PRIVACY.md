@@ -17,31 +17,41 @@ network request must update this file in the same commit.
 
 ## Summary
 
-| What                                               | Goes to                                     | On by default                            | Turn it off or redirect it                                         |
-| -------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
-| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                                      | `googleFonts` option; File > Options > Trust Center; suite setting |
-| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)                    | `googleFonts` property; Trust Center (off by default); suite       |
-| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content            | `allowExternalContent` option; Trust Center; suite setting         |
-| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it             | Configure a signaling server or `serverUrl`                        |
-| PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it             | Do not start a session                                             |
-| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies          | `checkRevocation: false` (see below)                               |
-| PowerPoint: AI assistant                           | The connection the host configures          | No (host must enable it)                 | Do not pass `ai`                                                   |
-| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured         | Local mode                                                         |
-| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts                  | `iceServers` (your own STUN/TURN, or `[]`)                         |
-| Teams: website tabs                                | The URL a member added                      | When the tab is opened                   | Do not add or open website tabs                                    |
-| Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)                  | `ai-config.json`                                                   |
-| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl` | No (host must configure it)              | Leave `collaboration.credentialsUrl` empty                         |
-| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)                 | Do not configure it                                                |
-| Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                                      | Not applicable (same origin)                                       |
-| Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                        | Not applicable                                                     |
-| Word, Excel, PowerPoint: Get Add-ins               | `marketplace.microsoft.com`                 | Only when its link is clicked            | Leave the catalog link unopened                                    |
-| Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft` | Only when the user opens or loads a form | Leave the form unopened or close the response dialog               |
-| Excel: `WEBSERVICE` and `IMAGE` fetch providers    | Any `http:`/`https:` URL in the formula     | No (host must opt in via `providers`)    | Omit `providers.webservice`/`image` or restrict `allowedOrigins`   |
-| Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one            | Pass bytes instead                                                 |
+| What                                               | Goes to                                     | On by default                            | Turn it off or redirect it                                          |
+| -------------------------------------------------- | ------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------- |
+| PowerPoint: fonts not installed or embedded        | `fonts.googleapis.com`, `fonts.gstatic.com` | Yes                                      | `googleFonts` option; File > Options > Trust Center; suite setting  |
+| Word, Excel, Visio: fonts not installed            | `fonts.googleapis.com`, `fonts.gstatic.com` | No (yes in the suite)                    | `googleFonts` property; Trust Center (off by default); suite        |
+| PowerPoint: linked pictures, media, sounds, embeds | Any URL the deck links to                   | No: only after Enable Content            | `allowExternalContent` option; Trust Center; suite setting          |
+| PowerPoint: Share / Broadcast without a server     | `wss://y-webrtc-eu.fly.dev`, public STUN    | Only when the user starts it             | Configure a signaling server or `serverUrl`                         |
+| PowerPoint: Share / Broadcast with a server        | The host's or user's server                 | Only when the user starts it             | Do not start a session                                              |
+| PowerPoint (Node): signature inspection            | The OCSP responder named in the certificate | When a signature value verifies          | `checkRevocation: false` (see below)                                |
+| PowerPoint: AI assistant                           | The connection the host configures          | No (host must enable it)                 | Do not pass `ai`                                                    |
+| Teams: sync and signaling                          | The configured `syncUrl` and `signalingUrl` | Only when a server is configured         | Local mode                                                          |
+| Teams: calls                                       | `stun:stun.l.google.com:19302`, then peers  | Yes, when a call starts                  | `iceServers` (your own STUN/TURN, or `[]`)                          |
+| Teams: website tabs                                | The URL a member added                      | When the tab is opened                   | Do not add or open website tabs                                     |
+| Suite: AI assistant                                | The provider the user or policy selects     | No (offline by default)                  | `ai-config.json`                                                    |
+| Suite: shared AI chat credentials                  | The policy's `collaboration.credentialsUrl` | No (host must configure it)              | Leave `collaboration.credentialsUrl` empty                          |
+| Suite: OneDrive                                    | `graph.microsoft.com`, Microsoft sign-in    | No (host must enable it)                 | Do not configure it                                                 |
+| Suite: app updates                                 | The suite's own origin (`sw.js`)            | Yes                                      | Not applicable (same origin)                                        |
+| Any product: hyperlinks, help links                | The link target, in a new tab               | Only when clicked                        | Not applicable                                                      |
+| Word, Excel, PowerPoint: Get Add-ins               | `marketplace.microsoft.com`                 | Only when its link is clicked            | Leave the catalog link unopened                                     |
+| Excel, PowerPoint: Forms                           | `forms.office.com`, `forms.cloud.microsoft` | Only when the user opens or loads a form | Leave the form unopened or close the response dialog                |
+| Excel: `WEBSERVICE` fetch provider                 | Any `http:`/`https:` URL in the formula     | No (host must opt in via `providers`)    | Omit `providers.webservice` or restrict `allowedOrigins`            |
+| Excel: `IMAGE` formula image fetcher               | The formula's `https:` source URL           | No (host supplies the fetcher)           | Omit `providers.image` or the fetcher, or restrict `allowedOrigins` |
+| Host-supplied document URLs                        | The URL the host passes                     | Only when the host passes one            | Pass bytes instead                                                  |
 
 Every request also sends what any browser request sends: the reader's IP address, the browser's
 user agent and, for some requests, a `Referer`. That is the main privacy cost of each third-party
 destination above, even when no document content is sent.
+
+## Excel in-cell images and linked data
+
+Recalculating an `IMAGE` formula can hand its HTTPS source URL, including its path and query, to
+an explicitly provided host fetcher. The built-in cache requests no credentials, referrer or
+redirects. It bounds response bytes and raster dimensions before display. Missing fetchers give
+`#BLOCKED!` and network failures give `#CONNECT!`. The image cache lives in memory. Cached linked
+data cards and package-local pictures require no network access. `LinkedDataTypeProvider` is a
+reserved host interface. No refresh operation calls it or contacts a data service.
 
 ## Screenshots and screen recordings
 

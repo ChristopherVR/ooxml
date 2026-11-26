@@ -4,6 +4,7 @@ import { NS, buildXml, elements, parseXml, type XmlElement } from '../../xml/ind
 import { RELATIONSHIP_TYPES } from '../../opc/index';
 import { DYNAMIC_ARRAY_TYPE, parseDynamicArrayMetadata } from '../read/metadata';
 import { CONTENT_TYPES } from '../read/package';
+import { RICH_METADATA, RICH_METADATA_EXT, RICH_NS } from '../rich-values';
 import { relativeTarget } from './drawing';
 import { DYNAMIC_ARRAY_METADATA_XML } from './dynamic-array';
 import type { PackageWriter, RelationshipSet } from './package-writer';
@@ -36,6 +37,60 @@ function child(doc: Document, root: XmlElement, local: string): XmlElement {
 
 const setCount = (node: XmlElement, local: string) =>
 	node.setAttribute('count', String(kids(node, local).length));
+
+function appendRichMetadata(xml: string, indices: readonly number[]): string {
+	const doc = parseXml(xml, { label: 'XLSX metadata' });
+	const root = doc.documentElement;
+	const types = child(doc, root, 'metadataTypes');
+	const typeList = kids(types, 'metadataType');
+	let typeIndex = typeList.findIndex((node) => node.getAttribute('name') === RICH_METADATA);
+	if (typeIndex < 0) {
+		typeIndex = typeList.length;
+		const type = doc.createElementNS(NS.x, 'metadataType');
+		type.setAttribute('name', RICH_METADATA);
+		type.setAttribute('minSupportedVersion', '120000');
+		for (const flag of 'copy pasteAll pasteValues merge splitFirst rowColShift clearFormats clearComments assign coerce'.split(
+			' ',
+		))
+			type.setAttribute(flag, '1');
+		types.appendChild(type);
+	}
+	setCount(types, 'metadataType');
+	let future = kids(root, 'futureMetadata').find(
+		(node) => node.getAttribute('name') === RICH_METADATA,
+	);
+	if (!future) {
+		future = doc.createElementNS(NS.x, 'futureMetadata');
+		future.setAttribute('name', RICH_METADATA);
+		const next = elements(root).find(
+			(node) => ORDER.indexOf(node.localName) > ORDER.indexOf('futureMetadata'),
+		);
+		root.insertBefore(future, next ?? null);
+	}
+	const values = child(doc, root, 'valueMetadata');
+	const offset = kids(future, 'bk').length;
+	indices.forEach((richIndex, index) => {
+		const bk = doc.createElementNS(NS.x, 'bk');
+		const extList = doc.createElementNS(NS.x, 'extLst');
+		const ext = doc.createElementNS(NS.x, 'ext');
+		ext.setAttribute('uri', RICH_METADATA_EXT);
+		const rvb = doc.createElementNS(RICH_NS, 'xlrd:rvb');
+		rvb.setAttribute('i', String(richIndex));
+		ext.appendChild(rvb);
+		extList.appendChild(ext);
+		bk.appendChild(extList);
+		future.appendChild(bk);
+		const value = doc.createElementNS(NS.x, 'bk');
+		const rc = doc.createElementNS(NS.x, 'rc');
+		rc.setAttribute('t', String(typeIndex + 1));
+		rc.setAttribute('v', String(offset + index));
+		value.appendChild(rc);
+		values.appendChild(value);
+	});
+	setCount(future, 'bk');
+	setCount(values, 'bk');
+	return buildXml(doc);
+}
 
 /**
  * Adds an XLDAPR metadata type, future-metadata block and cell-metadata block to a source
@@ -113,6 +168,8 @@ export class MetadataPlan {
 	/** Whether source `vm`/`cm` indices may be written (the source part is kept). */
 	readonly keepsSource: boolean;
 	private readonly merged: string | undefined;
+	private readonly richIndices: number[] = [];
+	private sourceValueCount: number | undefined;
 
 	constructor(private readonly sourceXml: string | undefined) {
 		const existing = [...parseDynamicArrayMetadata(sourceXml)][0];
@@ -124,9 +181,26 @@ export class MetadataPlan {
 
 	/** The metadata part to write, or `undefined` when none is needed. */
 	xml(dynamicArraysUsed: boolean): string | undefined {
-		if (this.keepsSource)
-			return dynamicArraysUsed ? (this.merged ?? this.sourceXml) : this.sourceXml;
-		return dynamicArraysUsed ? DYNAMIC_ARRAY_METADATA_XML : undefined;
+		const xml = this.keepsSource
+			? dynamicArraysUsed
+				? (this.merged ?? this.sourceXml)
+				: this.sourceXml
+			: dynamicArraysUsed
+				? DYNAMIC_ARRAY_METADATA_XML
+				: undefined;
+		return this.richIndices.length
+			? appendRichMetadata(xml ?? `<metadata xmlns="${NS.x}"/>`, this.richIndices)
+			: xml;
+	}
+
+	addRichValue(index: number): number {
+		if (this.sourceValueCount === undefined) {
+			const root =
+				this.keepsSource && this.sourceXml ? parseXml(this.sourceXml).documentElement : undefined;
+			const values = root && kids(root, 'valueMetadata')[0];
+			this.sourceValueCount = values ? kids(values, 'bk').length : 0;
+		}
+		return this.sourceValueCount + this.richIndices.push(index);
 	}
 }
 
@@ -152,6 +226,8 @@ export function writeMetadataPart(
 					(n) => (n === 1 ? 'xl/metadata.xml' : `xl/metadata${n}.xml`),
 					new Set([...reserved].filter((p) => p !== sourcePart)),
 				);
-	writer.add(part, xml, CONTENT_TYPES.sheetMetadata);
+	if (sourcePart === part) writer.carry(part);
+	if (!writer.has(part)) writer.add(part, xml, CONTENT_TYPES.sheetMetadata);
+	else if (xml !== writer.source?.text(part)) writer.replace(part, xml);
 	rels.add(RELATIONSHIP_TYPES.sheetMetadata, relativeTarget(bookPart, part));
 }

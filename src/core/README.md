@@ -193,6 +193,11 @@ The optional `ooxml-core/automation/add-ins` reader validates local XML and unif
 manifests and ZIP packages offline. It returns metadata and a SHA-256 digest without
 fetching URLs, decoding icons or storing data.
 
+Excel `IMAGE` formulas fetch only through a host-supplied fetcher. Hosts can pass
+`createFetchImageProvider({ fetch, allowedOrigins, onUpdate })` as `providers.image` to the
+calculation engine or as `calcOptions.providers.image` on an edit session. Recalculate after
+`onUpdate` to display a settled image. Cached linked data cards are available offline.
+
 Excel's UI dictionaries load from the app's own origin when a non-English language is selected. English is bundled and stays available offline. Hosts that use the core translator directly can await `loadEditorStrings(locale)` before translating.
 
 Browser builds load the bundled XPath code for FILTERXML and the embedded workbook chart reader for Visio from the app's own origin when needed. These asset requests carry no document data.

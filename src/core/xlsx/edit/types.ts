@@ -149,6 +149,8 @@ export interface ValidationFailure {
 export type ValidationResult = { ok: true } | ValidationFailure;
 
 export interface EditSessionOptions {
+	/** Calculation options, including opt-in formula providers. */
+	calcOptions?: import('../formula/index').CalcEngineOptions;
 	/** Recalculate formulas after every edit (default true). */
 	recalc?: boolean;
 	/** Undo depth (default 100). */
@@ -166,6 +168,10 @@ export interface EditSessionOptions {
 
 /** The editing API every UI drives. Each method is one undo step; `batch` groups several. */
 export interface EditSession {
+	addCellPicture(sheet: number, at: CellAddress, bytes: Uint8Array, altText?: string): boolean;
+	placePictureInCell(sheet: number, index: number): CellAddress | undefined;
+	placePictureOverCells(sheet: number, at: CellAddress): number | undefined;
+	setCellPictureAltText(sheet: number, at: CellAddress, text: string): boolean;
 	readonly workbook: Workbook;
 	readonly calc: CalcEngine;
 	setCellInput(sheet: number, row: number, col: number, text: string): void;

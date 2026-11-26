@@ -5,6 +5,7 @@ import * as annotations from './annotations';
 import * as borders from './borders';
 import * as cellShift from './cell-shift';
 import * as values from './cell-values';
+import * as pictures from './cell-pictures';
 import * as clipboard from './clipboard';
 import { copyAreas } from './clipboard-areas';
 import { pasteSelection } from './paste-selection';
@@ -104,6 +105,7 @@ export function createEditSession(
 		});
 	};
 	const calc = createCalcEngine(workbook, {
+		...options.calcOptions,
 		waitForFunction: (ready) => waitForFunction(ready, true),
 		waitForAdHocFunction: (ready) => waitForFunction(ready, false),
 	});
@@ -386,6 +388,10 @@ export function createEditSession(
 		addChartEx: (s, chart) => chartEx.addChartEx(ctx, s, chart),
 		addImage: (s, bytes, type, anchor, name, svg) =>
 			charts.addImage(ctx, s, bytes, type, anchor, name, svg),
+		addCellPicture: (s, at, bytes, text) => pictures.addCellPicture(ctx, s, at, bytes, text),
+		placePictureInCell: (s, index) => pictures.placePictureInCell(ctx, s, index),
+		placePictureOverCells: (s, at) => pictures.placePictureOverCells(ctx, s, at),
+		setCellPictureAltText: (s, at, text) => pictures.setCellPictureAltText(ctx, s, at, text),
 		replaceConditionalFormat: (s, index, cf) => {
 			cfEdits.replaceConditionalFormat(ctx, s, index, cf);
 			prepareConditionalFormat(cf);

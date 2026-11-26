@@ -1,9 +1,18 @@
 import { formatAddress, formatRange } from '../address';
-import { isCellError, type Cell, type DataTable, type RowInfo, type Worksheet } from '../model';
+import {
+	isCellError,
+	type Cell,
+	type DataTable,
+	type ErrorCode,
+	type RowInfo,
+	type Worksheet,
+} from '../model';
+import { RICH_ERRORS } from '../rich-values';
 import { isSpilledCell } from '../formula/spill';
 import { addFuturePrefixes } from '../read/formula-text';
 import { SpillPlan } from './dynamic-array';
 import type { SharedStringTable } from './shared-strings';
+import type { RichValueWritePlan } from './rich-values';
 import { attrs, encodeEscapes, escapeText, num } from './xml-out';
 
 /** Excel's longest cell text. */
@@ -23,6 +32,7 @@ export interface CellWriteContext {
 	 * `metadata.xml` is not kept, so `vm` and source `cm` indices are not written.
 	 */
 	metadata?: { readonly dynamicCm: number; readonly keepsSource: boolean };
+	richValues?: RichValueWritePlan;
 }
 
 /** The `cm` value of the XLDAPR dynamic-array cell metadata block the writer emits. */
@@ -94,7 +104,12 @@ function cellXml(
 	const keeps = ctx.metadata?.keepsSource === true;
 	if (cm === undefined && keeps) cm = cell.cellMetadata;
 	// Rich values are stored on error cells (`#VALUE!`); a typed value no longer refers to one.
-	const vm = keeps && isCellError(value) ? cell.valueMetadata : undefined;
+	const errorId = isCellError(value) ? RICH_ERRORS.get(value.error) : undefined;
+	const sourceVm = keeps && isCellError(value) ? cell.valueMetadata : undefined;
+	const vm =
+		cell.inCellPicture && ctx.richValues
+			? ctx.richValues.add({ kind: 'picture', picture: cell.inCellPicture })
+			: (sourceVm ?? (errorId ? ctx.richValues?.add({ kind: 'error', id: errorId }) : undefined));
 	return `<c${attrs({ r, s, t, cm, vm })}>${f}${t === 'str' || v ? `<v>${v}</v>` : ''}</c>`;
 }
 
@@ -103,8 +118,8 @@ function cellXml(
  * value metadata and refuses a cell holding them as text; the cached value is only a placeholder
  * (the workbook is saved with full recalculation on load).
  */
-const storedError = (code: string): string =>
-	code === '#SPILL!' || code === '#CALC!' ? '#VALUE!' : code;
+const storedError = (code: ErrorCode): string =>
+	code === '#SPILL!' || code === '#CALC!' || RICH_ERRORS.has(code) ? '#VALUE!' : code;
 
 function rowAttrs(ctx: CellWriteContext, row: number, info: RowInfo | undefined): string {
 	const s = styleAttr(ctx, info?.styleId);

@@ -23,8 +23,11 @@ export function parseDynamicArrayMetadata(xml: string | undefined): Set<number> 
 	}
 	if (!root) return out;
 	const top = new Map<string, XmlElement[]>();
-	for (const child of elements(root))
-		top.set(child.localName, [...(top.get(child.localName) ?? []), child]);
+	for (const child of elements(root)) {
+		const group = top.get(child.localName);
+		if (group) group.push(child);
+		else top.set(child.localName, [child]);
+	}
 	const types = childrenNamed(top.get('metadataTypes')?.[0], 'metadataType').map(
 		(t) => att(t, 'name') ?? '',
 	);

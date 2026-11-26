@@ -17,12 +17,16 @@ const UNCONFIGURED_CASES: readonly [string, string][] = [
 	['STOCKHISTORY', 'STOCKHISTORY("MSFT",45292,45295)'],
 	['TRANSLATE', 'TRANSLATE("hello","en","fr")'],
 	['DETECTLANGUAGE', 'DETECTLANGUAGE("bonjour")'],
-	['IMAGE', 'IMAGE("https://example.test/logo.png","Logo")'],
 	['RTD', 'RTD("my.rtd","","MSFT","LAST")'],
 	['WEBSERVICE', 'WEBSERVICE("https://example.test/data")'],
 ];
 
 describe('external integration functions without providers', () => {
+	it('shows #BLOCKED! for IMAGE without starting a fetch', () => {
+		const wb = book({ A1: '=IMAGE("https://example.test/logo.png","Logo")' });
+		createCalcEngine(wb).recalculateAll();
+		expect(get(wb, 'A1')).toEqual(ERR.BLOCKED);
+	});
 	it.each(UNCONFIGURED_CASES)('%s returns #NAME? when newly entered', (_name, formula) => {
 		const wb = book({ A1: 1, A2: 2 });
 		const calc = createCalcEngine(wb);
@@ -219,7 +223,7 @@ describe('COPILOT, STOCKHISTORY, TRANSLATE, DETECTLANGUAGE, IMAGE, RTD and WEBSE
 			A2: '=IMAGE("https://example.test/b.png","Custom",3,120,240)',
 			A3: '=IMAGE("javascript:alert(1)")',
 			A4: '=IMAGE("file:///etc/passwd")',
-			A5: '=IMAGE("https://example.test/c.png","Bad",3,120)',
+			A5: '=IMAGE("https://example.test/c.png","Bad",3)',
 			A6: '=IMAGE("https://example.test/d.png","Bad",0,120,240)',
 			A7: '=IMAGE("https://example.test/e.png","Bad",3,-1,10)',
 		});

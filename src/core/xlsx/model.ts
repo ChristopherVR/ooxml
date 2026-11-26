@@ -260,6 +260,8 @@ export interface Cell {
 	 * part is kept; a typed value drops it.
 	 */
 	valueMetadata?: number;
+	/** A newly inserted or edited in-cell picture. Parsed pictures use valueMetadata. */
+	inCellPicture?: import('./rich-values').EmbeddedCellPicture;
 	/** One-based `cm` index of source cell metadata other than the dynamic-array marker. */
 	cellMetadata?: number;
 }
@@ -1028,6 +1030,8 @@ export interface IgnoredError {
 }
 
 export interface Workbook {
+	/** Cached rich data indexed by worksheet value metadata. */
+	richValues?: import('./rich-values').RichValueStore;
 	sheets: Worksheet[];
 	/** Resolved cell formats; index 0 is the default. */
 	styles: CellStyle[];

@@ -10,6 +10,7 @@ import {
 	type Worksheet,
 } from '../model';
 import { elements, type XmlElement } from '../../xml/index';
+import { richError, type RichValueStore } from '../rich-values';
 import { isoToSerial } from './dates';
 import { stripFuturePrefixes } from './formula-text';
 import { parseRichString, type SharedString } from './shared-strings';
@@ -22,6 +23,7 @@ export interface CellContext {
 	palette: readonly string[] | undefined;
 	/** One-based `cm` values that mark dynamic-array formulas (from `xl/metadata.xml`). */
 	dynamicCells?: ReadonlySet<number>;
+	richValues?: RichValueStore;
 	warn(message: string): void;
 }
 
@@ -218,7 +220,11 @@ export function sheetDataReader(ctx: CellContext, sheet: Worksheet) {
 			const dynamic = cm !== undefined && (ctx.dynamicCells?.has(cm) ?? false);
 			if (cm !== undefined && !dynamic) cell.cellMetadata = cm;
 			const vm = numAttr(c, 'vm');
-			if (vm !== undefined) cell.valueMetadata = vm;
+			if (vm !== undefined) {
+				cell.valueMetadata = vm;
+				const error = richError(ctx.richValues, vm);
+				if (error) cell.value = cellError(error);
+			}
 			if (f) readFormula(ctx, f, row, colIndex, cell, masters, dynamic, anchors, sheet);
 			if (cell.formula === undefined) {
 				delete cell.legacyFormula;

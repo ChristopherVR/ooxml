@@ -94,6 +94,8 @@ const shared = {
 const {
 	index,
 	'drawingml/index': drawingml,
+	'xlsx/load/index': xlsxLoad,
+	'xlsx/collab/index': xlsxCollab,
 	'visio/index': _visio,
 	'visio/ui/index': _visioUi,
 	...eagerEntries
@@ -130,6 +132,16 @@ export default defineConfig([
 		splitting: true,
 		esbuildOptions(options) {
 			options.chunkNames = 'visio/chunks/[name]-[hash]';
+		},
+	},
+	// Keep the rich-data codecs on demand in both the loader and collaboration entries.
+	{
+		...shared,
+		entry: { 'xlsx/load/index': xlsxLoad, 'xlsx/collab/index': xlsxCollab },
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'xlsx/loader-chunks/[name]-[hash]';
 		},
 	},
 	// Share the workbook code between Excel's model and UI entries and keep

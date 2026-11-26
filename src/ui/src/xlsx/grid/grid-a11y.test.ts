@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // What a screen reader gets from the grid: rows of cells it can explore as a table, the active
 // cell as the sink's active descendant, and a label that names the cell's context and content.
-import { createWorkbook, putCell, type Workbook } from 'ooxml-core/xlsx';
+import { createEditSession, createWorkbook, putCell, type Workbook } from 'ooxml-core/xlsx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mountGrid } from './index';
 import { createTestContext } from './test-context';
@@ -47,6 +47,20 @@ async function setup(workbook = salesBook()) {
 }
 
 describe('the accessible grid', () => {
+	it('exposes the in-cell picture alt text through the active grid cell', async () => {
+		const workbook = createWorkbook();
+		const png = Uint8Array.from(
+			atob(
+				'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNoTgkFAAKqAT2gS4eLAAAAAElFTkSuQmCC',
+			),
+			(char) => char.charCodeAt(0),
+		);
+		createEditSession(workbook).addCellPicture(0, { row: 0, col: 0 }, png, 'Logo');
+		const { activeCell, sink } = await setup(workbook);
+		expect(activeCell()?.textContent).toBe('Logo');
+		expect(sink.getAttribute('aria-label')).toBe('A1, Logo');
+	});
+
 	it('exposes the shown cells as grid cells in rows, with sheet positions', async () => {
 		const { ctx, grid, cell } = await setup();
 		expect(grid.getAttribute('aria-label')).toBe('Spreadsheet grid');

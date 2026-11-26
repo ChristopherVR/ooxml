@@ -11,6 +11,7 @@ import { parsePersons } from './comments';
 import { resolveLoadLimits, type XlsxLoadLimits } from './limits';
 import { CONTENT_TYPES, SourceIndex, readZipParts } from './package';
 import { parseDynamicArrayMetadata } from './metadata';
+import { RICH_PARTS } from '../rich-values';
 import { parseSharedStrings } from './shared-strings';
 import { parseStyles } from './styles';
 import { parseTheme } from './theme';
@@ -70,8 +71,21 @@ export async function loadXlsx(
 	const stringsPart = partOf(RELATIONSHIP_TYPES.sharedStrings);
 	const personsPart = partOf(RELATIONSHIP_TYPES.person);
 	const metadataPart = partOf(RELATIONSHIP_TYPES.sheetMetadata);
+	const richDataPart =
+		metadataPart &&
+		(partOf(RICH_PARTS.data.rel) ?? source.targetOfType(metadataPart, RICH_PARTS.data.rel));
+	const richValues = richDataPart
+		? (await import('./rich-values')).readRichValues(
+				source,
+				workbookPart,
+				metadataPart,
+				limits.maxXmlElements,
+				warn,
+			)
+		: undefined;
 	const ctx: SheetContext = {
 		source,
+		...(richValues ? { richValues } : {}),
 		sharedStrings: parseSharedStrings(
 			stringsPart ? source.text(stringsPart) : undefined,
 			styles.palette,
@@ -131,6 +145,7 @@ export async function loadXlsx(
 		warnings,
 	};
 	if (book.fullCalcOnLoad) workbook.fullCalcOnLoad = true;
+	if (richValues) workbook.richValues = richValues;
 	if (book.structureLocked) workbook.structureLocked = true;
 	if (book.workbookPasswordHash) workbook.workbookPasswordHash = book.workbookPasswordHash;
 	if (book.workbookModernHash) workbook.workbookModernHash = book.workbookModernHash;

@@ -18,6 +18,12 @@ import { h } from './dom';
 import type { GridView } from './grid-view';
 import { selectionCellCount, selectionRef } from 'ooxml-core/xlsx/ui';
 
+function accessibleCellText(view: GridView, row: number, col: number): string {
+	const cell = view.cellViewAt(row, col);
+	if (cell?.picture) return cell.picture.altText || view.ctx.t('Picture');
+	return cell?.text ?? '';
+}
+
 /** What the active cell announces: column context, reference, value, formula, comment, range. */
 export function describeSelection(view: GridView, selection: Selection): string {
 	const t = view.ctx.t;
@@ -25,7 +31,7 @@ export function describeSelection(view: GridView, selection: Selection): string 
 	const sheet = view.sheet();
 	const about = sheet ? describeCell(sheet, selection.active) : undefined;
 	const ref = about?.ref ?? formatAddress(selection.active);
-	const text = view.cellViewAt(row, col)?.text ?? '';
+	const text = accessibleCellText(view, row, col);
 	let cell = text ? t('{ref}, {value}', { ref, value: text }) : t('{ref}, blank', { ref });
 	if (about?.header) cell = t('{header}, {cell}', { header: about.header, cell });
 	const parts = [cell];
@@ -160,7 +166,7 @@ export class GridA11y {
 					cells.push({
 						col,
 						selected: inRanges(ranges, row, col),
-						text: view.cellViewAt(row, col)?.text ?? '',
+						text: accessibleCellText(view, row, col),
 					});
 			const sig = cells.map((c) => `${c.col}${c.selected ? '+' : '-'}${c.text}`).join('\u0000');
 			if (node.xgSig !== sig) {

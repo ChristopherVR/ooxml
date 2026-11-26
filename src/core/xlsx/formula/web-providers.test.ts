@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { encodePng } from '../../drawingml/raster-encode';
+import { cellView } from '../layout/cell-view';
 import { createCalcEngine } from './engine';
 import { book, get } from './test-helpers';
 import {
@@ -50,16 +52,19 @@ describe('createFetchWebserviceProvider', () => {
 });
 
 describe('createFetchImageProvider', () => {
-	it('returns #BUSY! while fetching an image, caches bytes, and resolves alt text', async () => {
+	it('returns #BUSY! while fetching and exposes picture bytes and per-cell alt text', async () => {
 		const updates: string[] = [];
-		const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+		const png = encodePng(2, 1, new Uint8Array(6));
 		const fetcher: FetchLike = async () =>
-			new Response(png, { status: 200, headers: { 'content-type': 'image/png' } });
+			new Response(new Uint8Array(png), { status: 200, headers: { 'content-type': 'image/png' } });
 		const image = createFetchImageProvider({
 			fetch: fetcher,
 			onUpdate: (url) => updates.push(url),
 		});
-		const wb = book({ A1: '=IMAGE("https://example.com/logo.png","Logo")' });
+		const wb = book({
+			A1: '=IMAGE("https://example.com/logo.png","Logo")',
+			A2: '=IMAGE("https://example.com/logo.png","Different",3,12)',
+		});
 		const engine = createCalcEngine(wb, { providers: { image } });
 		engine.recalculateAll();
 		expect(get(wb, 'A1')).toEqual({ error: '#BUSY!' });
@@ -67,7 +72,16 @@ describe('createFetchImageProvider', () => {
 		await flush();
 		expect(updates).toEqual(['https://example.com/logo.png']);
 		engine.recalculateAll();
-		expect(get(wb, 'A1')).toBe('Logo');
+		expect(cellView(wb, 0, 0, 0).picture).toMatchObject({
+			altText: 'Logo',
+			sizing: 0,
+			pixelWidth: 2,
+		});
+		expect(cellView(wb, 0, 1, 0).picture).toMatchObject({
+			altText: 'Different',
+			sizing: 3,
+			height: 12,
+		});
 		expect(image.getImage('https://example.com/logo.png')?.mimeType).toBe('image/png');
 		expect(image.getImage('https://example.com/logo.png')?.bytes).toEqual(png);
 	});
@@ -89,5 +103,34 @@ describe('createFetchImageProvider', () => {
 		expect(image.resolve({ source: 'https://cdn.example/page', altText: '', sizing: 0 })).toEqual({
 			error: '#VALUE!',
 		});
+	});
+
+	it('requires an explicit fetcher and cancels an oversized streamed response', async () => {
+		const request = { source: 'https://cdn.example/picture', altText: '', sizing: 0 } as const;
+		expect(createFetchImageProvider().resolve(request)).toEqual({ error: '#BLOCKED!' });
+		let cancelled = false;
+		const image = createFetchImageProvider({
+			maxBytes: 4,
+			fetch: async (url, init) => {
+				expect(url).toBe(request.source);
+				expect(init).toMatchObject({
+					credentials: 'omit',
+					redirect: 'error',
+					referrerPolicy: 'no-referrer',
+				});
+				return new Response(
+					new ReadableStream({
+						pull: (controller) => controller.enqueue(new Uint8Array(3)),
+						cancel: () => {
+							cancelled = true;
+						},
+					}),
+				);
+			},
+		});
+		expect(image.resolve(request)).toEqual({ error: '#BUSY!' });
+		await flush();
+		expect(cancelled).toBe(true);
+		expect(image.resolve(request)).toEqual({ error: '#BLOCKED!' });
 	});
 });

@@ -47,7 +47,17 @@ export function insertTab(): RibbonTab {
 				id: 'illustrations',
 				label: 'Illustrations',
 				controls: [
-					{ kind: 'button', command: 'insert.pictures', size: 'large' },
+					{
+						kind: 'menu',
+						label: 'Pictures',
+						items: [
+							{ command: 'insert.picture-in-cell' },
+							{ command: 'insert.pictures' },
+							{ command: 'picture.place-in-cell' },
+							{ command: 'picture.place-over-cells' },
+							{ command: 'picture.cell-alt-text' },
+						],
+					},
 					{ kind: 'gallery', command: 'insert.shapes', items: () => [], sections: shapeSections },
 					{
 						kind: 'menu',

@@ -598,6 +598,10 @@ Word's optional `wordDesignPreferences` store keeps the default design for blank
 Hosts can provide `wordDesignPreferences.schemes` to keep named colour palettes and font pairs.
 Clear the property to disable persistence. Browsing for or saving a theme uses local files and
 loads the bundled theme codec from the app's origin. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
+Excel shows embedded in-cell pictures and cached linked data locally. The default editor blocks
+external `IMAGE` sources. An edit session supplied by a host can opt in to an HTTPS image fetcher.
+
+Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 
 Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
 asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).

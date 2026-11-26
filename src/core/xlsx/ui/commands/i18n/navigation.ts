@@ -3,6 +3,86 @@
 import type { Translations } from './types';
 
 export const NAVIGATION_STRINGS: Translations = {
+	Picture: ['Image', 'Bild', 'Imagen', '图片'],
+	'Select a floating picture on an editable sheet.': [
+		'Sélectionnez une image flottante sur une feuille modifiable.',
+		'Wählen Sie ein schwebendes Bild auf einem bearbeitbaren Blatt aus.',
+		'Selecciona una imagen flotante en una hoja editable.',
+		'请在可编辑工作表上选择浮动图片。',
+	],
+	'Select an in-cell picture on an editable sheet.': [
+		'Sélectionnez une image dans une cellule sur une feuille modifiable.',
+		'Wählen Sie ein Zellbild auf einem bearbeitbaren Blatt aus.',
+		'Selecciona una imagen de celda en una hoja editable.',
+		'请在可编辑工作表上选择单元格图片。',
+	],
+	'Select a cell on an editable sheet.': [
+		'Sélectionnez une cellule sur une feuille modifiable.',
+		'Wählen Sie eine Zelle auf einem bearbeitbaren Blatt aus.',
+		'Selecciona una celda en una hoja editable.',
+		'请在可编辑工作表上选择一个单元格。',
+	],
+	'Place in Cell': [
+		'Placer dans la cellule',
+		'In Zelle platzieren',
+		'Colocar en la celda',
+		'置于单元格中',
+	],
+	'Place over Cells': [
+		'Placer sur les cellules',
+		'Über Zellen platzieren',
+		'Colocar sobre las celdas',
+		'置于单元格上方',
+	],
+	'Convert to In-Cell Picture': [
+		'Convertir en image dans la cellule',
+		'In Zellbild konvertieren',
+		'Convertir en imagen de celda',
+		'转换为单元格图片',
+	],
+	'Convert to Floating Picture': [
+		'Convertir en image flottante',
+		'In schwebendes Bild konvertieren',
+		'Convertir en imagen flotante',
+		'转换为浮动图片',
+	],
+	'Alt Text': ['Texte de remplacement', 'Alternativtext', 'Texto alternativo', '替代文本'],
+	'Show Data Type Card': [
+		'Afficher la fiche du type de données',
+		'Datentypkarte anzeigen',
+		'Mostrar tarjeta del tipo de datos',
+		'显示数据类型卡片',
+	],
+	'Linked Data Type': [
+		'Type de données lié',
+		'Verknüpfter Datentyp',
+		'Tipo de datos vinculado',
+		'链接数据类型',
+	],
+	'Refresh is unavailable. This workbook shows cached linked data.': [
+		'L’actualisation est indisponible. Ce classeur affiche les données liées mises en cache.',
+		'Die Aktualisierung ist nicht verfügbar. Diese Arbeitsmappe zeigt zwischengespeicherte verknüpfte Daten.',
+		'La actualización no está disponible. Este libro muestra los datos vinculados almacenados en caché.',
+		'无法刷新。此工作簿显示缓存的链接数据。',
+	],
+	'Use a PNG, JPEG or GIF picture within the size limits.': [
+		'Utilisez une image PNG, JPEG ou GIF respectant les limites de taille.',
+		'Verwenden Sie ein PNG-, JPEG- oder GIF-Bild innerhalb der Größenbeschränkungen.',
+		'Usa una imagen PNG, JPEG o GIF dentro de los límites de tamaño.',
+		'请使用符合大小限制的 PNG、JPEG 或 GIF 图片。',
+	],
+	'In-cell pictures and cached linked data cards': [
+		'Images dans les cellules et fiches de données liées en cache',
+		'Zellbilder und zwischengespeicherte Karten für verknüpfte Daten',
+		'Imágenes en celdas y tarjetas de datos vinculados en caché',
+		'单元格图片和缓存的链接数据卡片',
+	],
+	'IMAGE requires a host image fetcher. Linked data refresh is unavailable.': [
+		'IMAGE nécessite un service de récupération d’images de l’hôte. Les données liées ne peuvent pas être actualisées.',
+		'IMAGE benötigt einen Bildabruf durch den Host. Verknüpfte Daten können nicht aktualisiert werden.',
+		'IMAGE requiere un servicio de obtención de imágenes del host. Los datos vinculados no se pueden actualizar.',
+		'IMAGE 需要宿主提供图片获取功能。链接数据无法刷新。',
+	],
 	Cube: ['Cube', 'Cube', 'Cubo', '多维数据集'],
 	Web: ['Web', 'Web', 'Web', '网络'],
 	'Returns XML element or attribute values selected by XPath, as a column.': [

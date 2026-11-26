@@ -1,6 +1,6 @@
 // The host-facing side of the context menus: the entries of each menu as plain data with an
 // execute operation, and the hook a host uses to replace the native menu.
-import { rangeContains, validationAt } from 'ooxml-core/xlsx';
+import { cellView, rangeContains, validationAt } from 'ooxml-core/xlsx';
 import type { EditorContext, MenuEntry } from 'ooxml-core/xlsx/ui';
 import {
 	activeRef,
@@ -105,7 +105,7 @@ export function menuEntries(ctx: EditorContext, input: MenuInputs): MenuEntry[] 
 	const sheet = workbook?.sheets[ctx.activeSheet()];
 	const at = ctx.selection.get().active;
 	const rule = workbook ? validationAt(workbook, ctx.activeSheet(), at.row, at.col) : undefined;
-	return cellMenu({
+	const entries = cellMenu({
 		readOnly,
 		hasComment: Boolean(
 			sheet?.comments.some((c) => c.address.row === at.row && c.address.col === at.col),
@@ -113,6 +113,29 @@ export function menuEntries(ctx: EditorContext, input: MenuInputs): MenuEntry[] 
 		hasLink: Boolean(sheet?.hyperlinks.some((l) => rangeContains(l.range, at))),
 		hasList: rule?.type === 'list',
 	});
+	if (!workbook || !sheet) return entries;
+	const view = cellView(workbook, ctx.activeSheet(), at.row, at.col);
+	if (view.linkedData) {
+		const card = view.linkedData;
+		entries.unshift({
+			id: 'linked-data-card',
+			label: 'Show Data Type Card',
+			action: async () => {
+				const { showLinkedData } = await import('../dialogs/rich-values');
+				await showLinkedData(ctx, card);
+			},
+		});
+	} else if (view.picture) {
+		entries.unshift(
+			{
+				id: 'picture.place-over-cells',
+				command: 'picture.place-over-cells',
+				label: 'Place over Cells',
+			},
+			{ id: 'picture.cell-alt-text', command: 'picture.cell-alt-text', label: 'Alt Text' },
+		);
+	}
+	return entries;
 }
 
 /** Whether an entry can run now in this editor (a command that is not registered cannot). */

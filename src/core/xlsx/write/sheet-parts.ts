@@ -50,6 +50,7 @@ export interface SaveContext {
 	 * `xl/metadata.xml` is kept and cells write their `vm` and source `cm` indices.
 	 */
 	metadata?: MetadataPlan;
+	richValues?: import('./rich-values').RichValueWritePlan;
 }
 
 export function sourceRelIds(

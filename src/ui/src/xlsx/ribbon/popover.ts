@@ -102,6 +102,7 @@ export type MenuEntry =
 			icon?: string;
 			shortcut?: string;
 			disabled?: boolean;
+			reason?: string;
 			checked?: boolean;
 			run(): void;
 	  }
@@ -130,6 +131,10 @@ export function openMenu(
 		item.setAttribute('role', entry.checked === undefined ? 'menuitem' : 'menuitemcheckbox');
 		if (entry.checked !== undefined) item.setAttribute('aria-checked', String(entry.checked));
 		item.disabled = entry.disabled ?? false;
+		if (entry.reason) {
+			item.title = entry.reason;
+			item.setAttribute('aria-description', entry.reason);
+		}
 		const icon = doc.createElement('span');
 		icon.className = 'ribbon-menu-icon';
 		if (entry.icon) icon.append(ribbonIcon(doc, entry.icon, 16));
