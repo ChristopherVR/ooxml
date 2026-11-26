@@ -1,6 +1,8 @@
 import type { enTableTab } from './en-table-tab';
 
 export const zhCNTableTab = {
+	'tableTab.drawUnavailable': '暂不支持手绘表格。',
+	'tableTab.eraseUnavailable': '暂不支持使用橡皮擦删除单元格边界。',
 	'tab.table-design': '表格设计',
 	'tab.table-layout': '表格布局',
 	'Table Style Options': '表格样式选项',

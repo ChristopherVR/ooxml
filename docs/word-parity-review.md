@@ -60,11 +60,11 @@ cases do not establish pixel-equivalent output across arbitrary Word documents.
   gap and non-solid backgrounds remain open. `e2e/docx/page-color.spec.ts` covers paint, text
   edits, source preservation and explicit colour replacement in all six bindings.
 
-- Table Design applies six built-in table styles or a document style and edits the six
+- Table Design applies built-in table styles or a document style and edits the six
   table look flags. Table Layout edits sizes, AutoFit, cell alignment and repeated
   headers, and offers positional formulas, sort and conversion to text. The new
-  editing controls target rectangular body tables. The style catalogue and drawing
-  gestures cover a subset of Word's.
+  editing controls target rectangular body tables. Border Painter applies the selected
+  pen to an existing edge. Freeform Draw Table and the Eraser are unavailable.
 - Table pagination repeats only the contiguous header group at the start of a
   table. A later isolated `tblHeader` flag is ignored, including its implied
   non-splitting treatment; explicit `cantSplit` remains effective. This follows

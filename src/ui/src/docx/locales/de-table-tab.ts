@@ -1,6 +1,9 @@
 import type { enTableTab } from './en-table-tab';
 
 export const deTableTab = {
+	'tableTab.drawUnavailable': 'Freihandzeichnen von Tabellen ist nicht verfügbar.',
+	'tableTab.eraseUnavailable':
+		'Das Entfernen von Zellgrenzen mit dem Radierer ist nicht verfügbar.',
 	'tab.table-design': 'Tabellenentwurf',
 	'tab.table-layout': 'Tabellenlayout',
 	'Table Style Options': 'Tabellenformatoptionen',

@@ -1,6 +1,9 @@
 import type { enTableTab } from './en-table-tab';
 
 export const frTableTab = {
+	'tableTab.drawUnavailable': 'Le dessin de tableaux à main levée est indisponible.',
+	'tableTab.eraseUnavailable':
+		'La suppression des séparations de cellules avec la gomme est indisponible.',
 	'tab.table-design': 'Création de tableau',
 	'tab.table-layout': 'Disposition du tableau',
 	'Table Style Options': 'Options de style de tableau',

@@ -25,7 +25,7 @@ export type TableTabAction = { type: 'tableTab' } & (
 	| { key: 'align'; vertical: 'top' | 'center' | 'bottom'; horizontal: 'left' | 'center' | 'right' }
 	| { key: 'pen'; property: keyof BorderPen; value: string }
 	| { key: 'borders'; value: TableBorderPreset }
-	| { key: 'draw'; value: 'paint' | 'draw' | 'erase' }
+	| { key: 'draw'; value: 'paint' }
 	| { key: SimpleTableKey }
 );
 
@@ -96,7 +96,7 @@ function design(panel: HTMLElement) {
 		const control = tool(
 			label,
 			'formatPainter',
-			{ type: 'tableTab', key: 'draw', value },
+			value === 'paint' ? { type: 'tableTab', key: 'draw', value } : null,
 			{ inline: true },
 		);
 		control.dataset.tableCommand = 'draw';

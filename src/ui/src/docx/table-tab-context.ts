@@ -166,7 +166,12 @@ export function syncTableTab(core: EditorCore, measure = false): void {
 		HTMLButtonElement | HTMLSelectElement | HTMLInputElement
 	>('[data-table-command]')) {
 		const key = control.dataset.tableCommand as TableTabAction['key'];
-		const reason = tableTabReason(core, key, context);
+		const reason =
+			control.dataset.drawMode === 'draw'
+				? 'tableTab.drawUnavailable'
+				: control.dataset.drawMode === 'erase'
+					? 'tableTab.eraseUnavailable'
+					: tableTabReason(core, key, context);
 		control.disabled = Boolean(reason);
 		if (reason) {
 			control.title = translate(core.locale, reason);

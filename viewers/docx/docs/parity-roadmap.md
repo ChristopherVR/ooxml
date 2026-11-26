@@ -54,11 +54,12 @@ are read-only on pages, and caret placement at line
 and page boundaries is heuristic. Pagination is approximate.
 
 Table Design and Table Layout appear when the selection enters a table. On rectangular
-body tables, the tabs offer six built-in styles, document styles, style look options,
+body tables, the tabs offer built-in styles, document styles, style look options,
 cell shading and borders, row and column sizing, AutoFit, cell alignment, margins,
 repeat headers, positional formulas, text and numeric sort, and conversion to text.
-The style previews approximate Word's gallery. Drawing handles individual edges and
-one-cell splits. Formula results are cached on insertion. See `table-tabs.spec.ts`,
+The style previews approximate Word's gallery. Border Painter applies the pen to
+existing edges. Freeform Draw Table and the Eraser are unavailable. Formula results
+are cached on insertion. See `table-tabs.spec.ts`,
 `table-cell-alignment.spec.ts`, and the core table edit tests.
 
 Toolbar/context-menu clipboard commands retain

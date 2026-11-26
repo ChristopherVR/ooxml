@@ -298,3 +298,23 @@ test('typing in the same cell leaves table ribbon state alone', async ({ page })
 	await expect(repeat).toBeDisabled();
 	await expect(repeat).toHaveAttribute('data-pressed-writes', '1');
 });
+
+test('freeform table drawing and erasing have accessible unavailable reasons', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	await editor.getByRole('tab', { name: 'Table Design', exact: true }).click();
+	const painter = editor.getByRole('button', { name: 'Border Painter', exact: true });
+	await reveal(editor, painter);
+	await expect(painter).toBeEnabled();
+	for (const [name, reason] of [
+		['Draw Table', 'Freeform table drawing is unavailable.'],
+		['Eraser', 'Removing cell boundaries with the Eraser is unavailable.'],
+	] as const) {
+		const control = editor.getByRole('button', { name, exact: true });
+		await expect(control).toBeDisabled();
+		await expect(control).toHaveAccessibleDescription(reason);
+	}
+});

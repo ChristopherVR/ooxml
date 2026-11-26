@@ -1,4 +1,6 @@
 export const enTableTab = {
+	'tableTab.drawUnavailable': 'Freeform table drawing is unavailable.',
+	'tableTab.eraseUnavailable': 'Removing cell boundaries with the Eraser is unavailable.',
 	'tab.table-design': 'Table Design',
 	'tab.table-layout': 'Table Layout',
 	'Table Style Options': 'Table Style Options',

@@ -1,6 +1,4 @@
-import { Selection } from 'prosemirror-state';
 import type { EditorCore } from './editor-core';
-import { executeTableCommand } from './table-commands';
 import { paintCellBorder, type BorderPen, type CellSide } from './table-border-commands';
 import { tableCells, tableTabContext, tableTabReason } from './table-tab-context';
 import type { TableTabAction } from './table-ribbon';
@@ -23,7 +21,7 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 	drawing.set(canvas, controller);
 	canvas.dataset.tableDraw = mode;
 	const { signal } = controller;
-	let start: { cell: Element; x: number; y: number } | undefined;
+	let start: Element | null = null;
 	const finish = () => {
 		controller.abort();
 		delete canvas.dataset.tableDraw;
@@ -37,8 +35,8 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 		(event) => {
 			if (event.button !== 0) return;
 			const cell = cellOf(event);
-			if (!cell) return finish();
-			start = { cell, x: event.clientX, y: event.clientY };
+			if (!cell || tableTabReason(core, 'draw', tableTabContext(view.state))) return finish();
+			start = cell;
 			event.preventDefault();
 			event.stopImmediatePropagation();
 		},
@@ -47,7 +45,7 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 	canvas.addEventListener(
 		'pointercancel',
 		() => {
-			start = undefined;
+			start = null;
 		},
 		{ signal },
 	);
@@ -55,11 +53,10 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 		'pointerup',
 		(event) => {
 			const anchor = start;
-			start = undefined;
+			start = null;
 			const cell = cellOf(event);
 			const context = tableTabContext(view.state);
-			if (!anchor || cell !== anchor.cell || !context || tableTabReason(core, 'draw', context))
-				return;
+			if (!anchor || cell !== anchor || !context || tableTabReason(core, 'draw', context)) return;
 			const cells = tableCells(context.node, context.pos);
 			const target =
 				cell instanceof HTMLTableCellElement
@@ -73,27 +70,6 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 			event.preventDefault();
 			event.stopImmediatePropagation();
 			const rect = cell.getBoundingClientRect();
-			const dx = Math.abs(event.clientX - anchor.x);
-			const dy = Math.abs(event.clientY - anchor.y);
-			if (mode === 'draw' && (dx > rect.width / 2 || dy > rect.height / 2)) {
-				const horizontal = dx >= dy;
-				const center = horizontal ? (event.clientY + anchor.y) / 2 : (event.clientX + anchor.x) / 2;
-				const offset = horizontal
-					? (center - rect.top) / rect.height
-					: (center - rect.left) / rect.width;
-				if (offset >= 0.2 && offset <= 0.8) {
-					view.dispatch(
-						view.state.tr
-							.setSelection(Selection.near(view.state.doc.resolve(target.pos + 1)))
-							.setMeta('addToHistory', false),
-					);
-					executeTableCommand(view, 'splitCell', {
-						rows: horizontal ? 2 : 1,
-						columns: horizontal ? 1 : 2,
-					});
-					return finish();
-				}
-			}
 			const nearest = [
 				['top', Math.abs(rect.top - event.clientY)],
 				['bottom', Math.abs(rect.bottom - event.clientY)],
@@ -102,15 +78,7 @@ export function toggleTableDraw(core: EditorCore, mode: Mode, pen: BorderPen): v
 			] as [CellSide, number][];
 			nearest.sort((a, b) => a[1] - b[1]);
 			const side = nearest[0]?.[0];
-			if (side)
-				paintCellBorder(
-					view,
-					context.pos,
-					target.row,
-					target.column,
-					side,
-					mode === 'erase' ? null : pen,
-				);
+			if (side) paintCellBorder(view, context.pos, target.row, target.column, side, pen);
 		},
 		{ capture: true, signal },
 	);

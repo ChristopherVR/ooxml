@@ -1,6 +1,9 @@
 import type { enTableTab } from './en-table-tab';
 
 export const esTableTab = {
+	'tableTab.drawUnavailable': 'El dibujo de tablas a mano alzada no está disponible.',
+	'tableTab.eraseUnavailable':
+		'La eliminación de límites de celda con el borrador no está disponible.',
 	'tab.table-design': 'Diseño de tabla',
 	'tab.table-layout': 'Presentación de tabla',
 	'Table Style Options': 'Opciones de estilo de tabla',
