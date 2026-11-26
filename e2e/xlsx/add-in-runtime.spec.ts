@@ -1,30 +1,30 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { test } from '@playwright/test';
-import { enforcePublisherFramePolicy } from '../add-in-fixtures/manifest';
 import { editor as excel, newWorkbook } from './helpers';
-import { checkAddInRuntime } from '../docx/add-in-runtime-flow';
+import {
+	addInReviewScenarios,
+	checkAddInRuntime,
+	prepareAddInDemo,
+} from '../docx/add-in-runtime-flow';
 
-test('installs, runs, and removes XML, JSON and ZIP task panes in Excel', async ({ page }) => {
-	await enforcePublisherFramePolicy(page);
-	await page.setViewportSize({ width: 2400, height: 900 });
-	await newWorkbook(page);
-	const editor = excel(page);
-	await checkAddInRuntime({
-		page,
-		editor,
-		host: 'Excel',
-		async openDialog() {
-			await editor.getByRole('tab', { name: 'Home', exact: true }).click();
-			const homeAddIns = editor.getByRole('button', { name: 'Add-ins', exact: true });
-			if ((await homeAddIns.count()) === 1 && (await homeAddIns.isVisible())) {
-				await homeAddIns.click();
-				if (await editor.locator('office-ui-add-ins-dialog').count()) return;
-			}
-			await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-			const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
-			if (!(await mine.isVisible()))
-				await editor.getByRole('button', { name: 'Add-ins', exact: true }).click();
-			await mine.click();
-		},
+for (const scenario of addInReviewScenarios) {
+	test(`Excel add-ins at ${scenario.width}px in ${scenario.scheme} mode`, async ({ page }) => {
+		test.setTimeout(75_000);
+		await prepareAddInDemo(page, scenario);
+		await newWorkbook(page);
+		const editor = excel(page);
+		await checkAddInRuntime({
+			page,
+			editor,
+			host: 'Excel',
+			reloadEditor: () => newWorkbook(page),
+			async openDialog() {
+				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
+				const home = editor.locator('button[data-command="home.add-ins"]');
+				if (!(await home.isVisible()))
+					await editor.getByRole('button', { name: 'Add-ins', exact: true }).click();
+				await home.click();
+			},
+		});
 	});
-});
+}

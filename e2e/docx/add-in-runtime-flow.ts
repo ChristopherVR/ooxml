@@ -11,14 +11,51 @@ import {
 	xmlManifest,
 } from '../add-in-fixtures/manifest';
 
+export async function enforcePublisherFramePolicy(page: Page) {
+	await page.route('**/*', async (route) => {
+		if (!route.request().isNavigationRequest() || route.request().frame() !== page.mainFrame())
+			return route.fallback();
+		const response = await route.fetch();
+		return route.fulfill({
+			response,
+			headers: {
+				...response.headers(),
+				'content-security-policy': `frame-src ${paneOrigin}`,
+			},
+		});
+	});
+}
+
+export const addInReviewScenarios = [1280, 800].flatMap((width) =>
+	(['light', 'dark'] as const).map((scheme) => ({
+		width,
+		height: width === 1280 ? 800 : 700,
+		scheme,
+	})),
+);
+
+export async function prepareAddInDemo(
+	page: Page,
+	{ width, height, scheme }: (typeof addInReviewScenarios)[number],
+) {
+	await enforcePublisherFramePolicy(page);
+	await page.emulateMedia({ colorScheme: scheme });
+	await page.setViewportSize({ width, height });
+	await page.addInitScript((color) => {
+		localStorage.setItem('vitepress-theme-appearance', color);
+		localStorage.setItem('pptx-demo-theme', color === 'dark' ? 'vermilionDark' : 'vermilionLight');
+	}, scheme);
+}
+
 interface Flow {
 	page: Page;
 	editor: Locator;
 	openDialog: () => Promise<void>;
+	reloadEditor: () => Promise<void>;
 	host: 'Word' | 'Excel' | 'PowerPoint';
 }
 
-export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow) {
+export async function checkAddInRuntime({ page, editor, openDialog, reloadEditor, host }: Flow) {
 	const parentOrigin = new URL(page.url()).origin;
 	await page.route(`${paneOrigin}/**`, (route) => {
 		const path = new URL(route.request().url()).pathname;
@@ -32,17 +69,20 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 			});
 		return route.abort();
 	});
-	await editor.evaluate(
-		(node, { origin, selection }) =>
-			Reflect.set(node, Symbol.for('office-ui.add-in-runtime'), {
-				origins: [origin],
-				frameSrcEnforced: true,
-				...(selection && {
-					selection: () => ({ readText: () => 'Slide selection', writeText: () => false }),
-				}),
-			}),
-		{ origin: paneOrigin, selection: host === 'PowerPoint' },
-	);
+	const enableRuntime = () =>
+		editor.evaluate(
+			(node, { origin, selection }) => {
+				Reflect.set(node, Symbol.for('office-ui.add-in-runtime'), {
+					origins: [origin],
+					frameSrcEnforced: true,
+					...(selection && {
+						selection: () => ({ readText: () => 'Slide selection', writeText: () => false }),
+					}),
+				});
+				node.dispatchEvent(new Event('office-add-in-runtime-changed'));
+			},
+			{ origin: paneOrigin, selection: host === 'PowerPoint' },
+		);
 	const zip = new JSZip();
 	for (const [name, contents] of packageFiles) zip.file(name, contents);
 	const uploads = [
@@ -67,6 +107,10 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await expect(consent).toContainText('Lab Notes');
 		await expect(consent).toContainText('Word, Excel, PowerPoint');
 		await expect(consent).toContainText('Read and change this document');
+		if (file.name === 'manifest.xml') {
+			await expect(consent).toContainText('Running add-ins is unavailable');
+			if (host !== 'PowerPoint') await expect(consent).toContainText('Function commands');
+		}
 		if (file.name === 'app.zip')
 			await expect(consent.getByRole('img', { name: 'Icon preview' }).first()).toBeVisible();
 		else await expect(consent.locator('img')).toHaveCount(0);
@@ -88,10 +132,17 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 				await more.press('Enter');
 				await expect(tab).toBeInViewport();
 			}
+			await page.reload();
+			await reloadEditor();
+			await expect(tab).toBeAttached();
 			await tab.click();
+			const command = editor.getByRole('button', { name: 'Open Notes', exact: true });
+			await expect(command).toBeDisabled();
+			await enableRuntime();
+			await expect(command).toBeEnabled();
 			if (host === 'PowerPoint')
 				await expect(editor.locator('[data-pptx-chrome="ribbon-content"]:visible')).toHaveCount(0);
-			await editor.getByRole('button', { name: 'Open Notes', exact: true }).click();
+			await command.click();
 		} else {
 			await openDialog();
 			if (file.name === 'app.zip')
@@ -104,7 +155,13 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 				dialog.getByRole('button', { name: 'Remove Notes', exact: true }),
 			).toBeInViewport();
 			await expect(dialog.getByText('Lab Notes', { exact: true })).toBeVisible();
-			await dialog.getByRole('button', { name: 'Open Notes', exact: true }).click();
+			const open = dialog.getByRole('button', { name: 'Open Notes', exact: true });
+			if (file.name === 'manifest.xml') {
+				await expect(open).toBeDisabled();
+				await expect(dialog).toContainText('Running add-ins is unavailable');
+				await enableRuntime();
+			}
+			await open.click();
 		}
 		await expect(pane.getByRole('heading', { name: addInName })).toBeFocused();
 		const separator = editor.getByRole('separator', { name: 'Resize add-in pane' });
@@ -113,6 +170,18 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await separator.press('ArrowLeft');
 		await expect(separator).toHaveAttribute('aria-valuenow', '336');
 		const bounds = await pane.boundingBox();
+		const viewport = editor
+			.locator(
+				host === 'Word'
+					? '.dve-canvas'
+					: host === 'Excel'
+						? '.xve-workspace'
+						: '[data-pptx-viewport]',
+			)
+			.first();
+		const document = await viewport.boundingBox();
+		expect(bounds?.height).toBeGreaterThan(300);
+		expect((document?.x ?? 0) + (document?.width ?? 0)).toBeLessThanOrEqual((bounds?.x ?? 0) + 1);
 		expect(bounds?.x).toBeGreaterThan(320);
 		expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(
 			page.viewportSize()?.width ?? 0,

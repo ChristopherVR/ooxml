@@ -1,29 +1,37 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-import { enforcePublisherFramePolicy } from '../add-in-fixtures/manifest';
-import { checkAddInRuntime } from '../docx/add-in-runtime-flow';
+import {
+	addInReviewScenarios,
+	checkAddInRuntime,
+	prepareAddInDemo,
+} from '../docx/add-in-runtime-flow';
 import { loadDeck, ribbonTab } from './support/deck';
 
-test('installs, runs, and removes XML, JSON and ZIP task panes in PowerPoint', async ({ page }) => {
-	await enforcePublisherFramePolicy(page);
-	await page.setViewportSize({ width: 2400, height: 900 });
-	await loadDeck(page);
-	await checkAddInRuntime({
-		page,
-		editor: page.locator('body'),
-		host: 'PowerPoint',
-		async openDialog() {
-			const home = ribbonTab(page, 'Home');
-			await home.click();
-			const homeAddIns = page.getByRole('button', { name: 'Add-ins', exact: true });
-			if (await homeAddIns.isVisible()) {
-				await homeAddIns.click();
-				return;
-			}
+for (const scenario of addInReviewScenarios) {
+	test(`PowerPoint add-ins at ${scenario.width}px in ${scenario.scheme} mode`, async ({ page }) => {
+		test.setTimeout(90_000);
+		await prepareAddInDemo(page, scenario);
+		await loadDeck(page);
+		const editor = page.locator('body');
+		if (scenario.width === 1280) {
 			await ribbonTab(page, 'Insert').click();
 			const group = page.locator('pptx-ui-ribbon-insert [data-ribbon-group="insert.addIns"]');
-			await group.getByRole('button', { name: 'My Add-ins', exact: true }).click();
-		},
+			await expect(group.getByText('Get Add-ins', { exact: true })).toBeVisible();
+			await expect(group.getByText('My Add-ins', { exact: true })).toBeVisible();
+		}
+		await checkAddInRuntime({
+			page,
+			editor,
+			host: 'PowerPoint',
+			reloadEditor: () => loadDeck(page),
+			async openDialog() {
+				await ribbonTab(page, 'Home').click();
+				const home = page.locator('button[data-ribbon-control="home.editing.addIns"]');
+				if (!(await home.isVisible()))
+					await page.getByRole('button', { name: 'Editing', exact: true }).click();
+				await home.click();
+			},
+		});
 	});
-});
+}

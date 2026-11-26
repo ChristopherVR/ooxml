@@ -1,33 +1,36 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { expect, test } from '@playwright/test';
-import { enforcePublisherFramePolicy, xmlManifest } from '../add-in-fixtures/manifest';
+import { xmlManifest } from '../add-in-fixtures/manifest';
 import { newDocument, reveal } from './helpers';
-import { checkAddInRuntime } from './add-in-runtime-flow';
+import {
+	addInReviewScenarios,
+	checkAddInRuntime,
+	enforcePublisherFramePolicy,
+	prepareAddInDemo,
+} from './add-in-runtime-flow';
 
-test('installs, runs, and removes XML, JSON and ZIP task panes in Word', async ({ page }) => {
-	await page.setViewportSize({ width: 2400, height: 900 });
-	await enforcePublisherFramePolicy(page);
-	await page.goto('/?framework=vanilla');
-	await newDocument(page);
-	const editor = page.locator('docx-editor');
-	await checkAddInRuntime({
-		page,
-		editor,
-		host: 'Word',
-		async openDialog() {
-			await editor.getByRole('tab', { name: 'Home', exact: true }).click();
-			const homeAddIns = editor.getByRole('button', { name: 'Add-ins', exact: true });
-			if ((await homeAddIns.count()) === 1 && (await homeAddIns.isVisible())) {
-				await homeAddIns.click();
-				if (await editor.locator('office-ui-add-ins-dialog').count()) return;
-			}
-			await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
-			const mine = editor.getByRole('button', { name: 'My Add-ins', exact: true });
-			await reveal(editor, mine);
-			await mine.click();
-		},
+for (const scenario of addInReviewScenarios) {
+	test(`Word add-ins at ${scenario.width}px in ${scenario.scheme} mode`, async ({ page }) => {
+		test.setTimeout(75_000);
+		await prepareAddInDemo(page, scenario);
+		await page.goto('/?framework=vanilla');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await checkAddInRuntime({
+			page,
+			editor,
+			host: 'Word',
+			reloadEditor: () => newDocument(page),
+			async openDialog() {
+				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
+				const home = editor.getByRole('button', { name: 'Add-ins', exact: true });
+				const button = home.and(editor.locator('button[data-action]'));
+				await reveal(editor, button);
+				await button.click();
+			},
+		});
 	});
-});
+}
 
 test('reviews a Marketplace listing through the configured resolver without enabling Store', async ({
 	page,
