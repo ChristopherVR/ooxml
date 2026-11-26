@@ -165,21 +165,19 @@ describe('ribbon group / control customisation', () => {
 
 	it('tags every Home group and the paragraph list controls', async () => {
 		const { target } = await mountViewer();
-		for (const group of [
-			'clipboard',
-			'slides',
-			'font',
-			'paragraph',
-			'drawing',
-			'arrange',
-			'editing',
-		]) {
+		for (const group of ['clipboard', 'slides', 'font', 'paragraph', 'drawing', 'editing']) {
 			expect(
 				target
 					.querySelector(`[data-ribbon-group="home.${group}"]`)
 					?.getAttribute('data-ribbon-group'),
 			).toBe(`home.${group}`);
 		}
+		expect(target.querySelector('[data-ribbon-group="home.arrange"]')).toBeNull();
+		expect(
+			target.querySelector(
+				'[data-ribbon-group="home.drawing"] [data-ribbon-control="home.drawing.arrange"] button',
+			),
+		).not.toBeNull();
 		const bullets = target.querySelector('[data-ribbon-control="home.paragraph.bullets"]');
 		expect(bullets?.querySelector('[data-ribbon-gallery="bullets"]')).not.toBeNull();
 		expect(
@@ -268,8 +266,8 @@ describe('powerPointViewer host ribbon tabs', () => {
 		const selected = () =>
 			// The ribbon's own tab row: the viewer has other tab lists (inspector).
 			[
-				...ribbonTabButtons(target).filter((tab) =>
-					tab.matches('[role="tab"][aria-selected="true"]'),
+				...ribbonTabButtons(target).filter((button) =>
+					button.matches('[role="tab"][aria-selected="true"]'),
 				),
 			].map((item) => item.textContent?.trim());
 		expect(tabLabels(target).at(-1)).toBe('Reports');
