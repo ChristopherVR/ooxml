@@ -110,6 +110,30 @@ describe('control descriptors', () => {
 			session.destroy();
 		}
 	});
+
+	it('offers every document view and reflects the active projection', async () => {
+		const session = engine();
+		try {
+			const control = byId(navigationControls(session.state.navigationProps!), 'viewMode');
+			if (control?.kind !== 'select') throw new Error('Expected the layout selector');
+			expect(control.options.map(({ value }) => value)).toEqual([
+				'draft',
+				'print',
+				'web',
+				'read',
+				'outline',
+				'focus',
+			]);
+			for (const { value } of control.options) {
+				control.change(value);
+				await vi.waitFor(() => expect(session.state.navigationProps?.viewMode).toBe(value));
+			}
+			control.change('invalid');
+			expect(session.state.navigationProps?.viewMode).toBe('focus');
+		} finally {
+			session.destroy();
+		}
+	});
 });
 
 describe('DOM controls view', () => {

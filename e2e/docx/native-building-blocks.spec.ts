@@ -11,6 +11,24 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(
 			page.locator('office-ui-ribbon, office-ui-title-bar, office-ui-backstage'),
 		).toHaveCount(0);
+		const layouts = page.getByRole('combobox', { name: 'Layout view' });
+		await expect(layouts.locator('option')).toHaveText([
+			'Draft',
+			'Print Layout',
+			'Web Layout',
+			'Read Mode',
+			'Outline',
+			'Focus',
+		]);
+		const currentView = () =>
+			page.evaluate(() => window.nativeWord?.handle.element.getNavigationProps().viewMode);
+		for (const mode of ['print', 'web', 'read', 'outline', 'draft', 'focus']) {
+			await layouts.selectOption(mode);
+			await expect.poll(currentView).toBe(mode);
+			await expect(layouts).toHaveValue(mode);
+		}
+		await page.getByRole('button', { name: 'Exit Focus', exact: true }).click();
+		await expect(layouts).toHaveValue('draft');
 		const editor = page.locator('.ProseMirror');
 		await clickInEditor(editor);
 		await page.keyboard.press('End');

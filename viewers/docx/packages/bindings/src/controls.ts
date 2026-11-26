@@ -1,4 +1,5 @@
 import type { WordNavigationProps, WordStatusProps, WordToolbarProps } from 'docx-web-component';
+import { DOCUMENT_VIEWS, isDocumentView } from 'docx-web-component';
 
 /** One option of a select control. */
 export interface ControlOption {
@@ -199,11 +200,10 @@ export function navigationControls(props: WordNavigationProps): ControlGroup[] {
 				label: label(labels, 'Layout view'),
 				disabled: false,
 				value: props.viewMode,
-				options: [
-					{ value: 'draft', label: label(labels, 'Draft') },
-					{ value: 'print', label: label(labels, 'Print Layout') },
-				],
-				change: (value) => void props.onViewModeChange(value === 'print' ? 'print' : 'draft'),
+				options: DOCUMENT_VIEWS.map(([value, key]) => ({ value, label: label(labels, key) })),
+				change: (value) => {
+					if (isDocumentView(value)) props.onViewModeChange(value);
+				},
 			},
 		],
 	];

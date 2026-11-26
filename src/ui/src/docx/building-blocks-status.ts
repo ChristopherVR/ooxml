@@ -2,6 +2,7 @@ import type { EditorCore } from './editor-core';
 import { documentWordCount } from 'ooxml-core/docx/ui';
 import { formatPageStatus, formatWordCount, translate } from './localization';
 import { ZOOM_MAX, ZOOM_MIN } from './status-bar';
+import { DOCUMENT_VIEWS, isDocumentView, type DocumentView } from './document-views';
 
 const ZOOM_STEP = 10;
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high);
@@ -12,8 +13,7 @@ const clamp = (value: number, low: number, high: number) => Math.min(Math.max(va
  */
 export function wordNavigationProps(core: EditorCore) {
 	const { printLayout } = core.shell;
-	const viewMode = core.pages.viewMode;
-	const status = viewMode === 'print' ? (printLayout?.pageStatus() ?? null) : null;
+	const status = core.pages.viewMode === 'print' ? (printLayout?.pageStatus() ?? null) : null;
 	const page = status?.current ?? 1;
 	const pageCount = status?.total ?? 1;
 	const live = () =>
@@ -30,10 +30,9 @@ export function wordNavigationProps(core: EditorCore) {
 			'Previous page': translate(core.locale, 'Previous page'),
 			'Next page': translate(core.locale, 'Next page'),
 			'Layout view': translate(core.locale, 'Layout view'),
-			Draft: translate(core.locale, 'Draft'),
-			'Print Layout': translate(core.locale, 'Print Layout'),
+			...Object.fromEntries(DOCUMENT_VIEWS.map(([, key]) => [key, translate(core.locale, key)])),
 		} as Record<string, string>,
-		viewMode: viewMode === 'print' ? ('print' as const) : ('draft' as const),
+		viewMode: core.pages.views.active,
 		/** False in Draft, where there are no pages to move between. */
 		pagesAvailable: status !== null,
 		page,
@@ -50,8 +49,8 @@ export function wordNavigationProps(core: EditorCore) {
 			const now = live();
 			return Boolean(now && now.current < now.total) && goTo((now?.current ?? 1) + 1);
 		},
-		onViewModeChange: (mode: 'draft' | 'print'): boolean => {
-			if (mode !== 'draft' && mode !== 'print') return false;
+		onViewModeChange: (mode: DocumentView): boolean => {
+			if (!isDocumentView(mode)) return false;
 			core.pages.setViewMode(mode);
 			return true;
 		},
