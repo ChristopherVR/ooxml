@@ -112,6 +112,7 @@ describe('SpreadsheetML rich values', () => {
 			text: 'Seattle',
 			isError: false,
 			linkedData: {
+				kind: 'generic',
 				fields: [
 					{ name: 'State', type: 's', value: 'WA' },
 					{ name: '人口', type: 'i', value: '755078' },

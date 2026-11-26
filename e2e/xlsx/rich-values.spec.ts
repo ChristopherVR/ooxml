@@ -114,13 +114,22 @@ test('shows a cached data type icon and opens its card from the keyboard', async
 	const { data, structures } = RICH_PARTS;
 	const bytes = await miniPackage({
 		sheets: [
-			{ name: 'Cities', xml: ws('<row r="1"><c r="A1" vm="1" t="e"><v>#VALUE!</v></c></row>') },
+			{
+				name: 'Cities',
+				xml: ws(
+					'<row r="1"><c r="A1" vm="1" t="e"><v>#VALUE!</v></c></row>' +
+						'<row r="2"><c r="A2" vm="2"><v>42</v></c></row>' +
+						'<row r="3"><c r="A3" vm="3" t="e"><v>#VALUE!</v></c></row>',
+					'',
+					'<conditionalFormatting sqref="A2"><cfRule type="iconSet" priority="1"><iconSet iconSet="3Arrows"><cfvo type="num" val="0"/><cfvo type="num" val="10"/><cfvo type="num" val="20"/></iconSet></cfRule></conditionalFormatting>',
+				),
+			},
 		],
 		workbookRels: `<Relationship Id="meta" Type="${R}/sheetMetadata" Target="metadata.xml"/><Relationship Id="data" Type="${data.rel}" Target="richData/${data.file}"/><Relationship Id="structures" Type="${structures.rel}" Target="richData/${structures.file}"/>`,
 		parts: {
-			'xl/metadata.xml': `<metadata xmlns="${X}" xmlns:r="${RICH_NS}"><metadataTypes count="1"><metadataType name="XLRICHVALUE" minSupportedVersion="120000"/></metadataTypes><futureMetadata name="XLRICHVALUE" count="1"><bk><extLst><ext uri="${RICH_METADATA_EXT}"><r:rvb i="0"/></ext></extLst></bk></futureMetadata><valueMetadata count="1"><bk><rc t="1" v="0"/></bk></valueMetadata></metadata>`,
-			[`xl/richData/${data.file}`]: `<rvData xmlns="${RICH_NS}" count="1"><rv s="0"><v>Seattle</v><v>Washington</v></rv></rvData>`,
-			[`xl/richData/${structures.file}`]: `<rvStructures xmlns="${RICH_NS}" count="1"><s t="_entity"><k n="_DisplayString" t="s"/><k n="State" t="s"/></s></rvStructures>`,
+			'xl/metadata.xml': `<metadata xmlns="${X}" xmlns:r="${RICH_NS}"><metadataTypes count="1"><metadataType name="XLRICHVALUE" minSupportedVersion="120000"/></metadataTypes><futureMetadata name="XLRICHVALUE" count="3">${[0, 1, 2].map((i) => `<bk><extLst><ext uri="${RICH_METADATA_EXT}"><r:rvb i="${i}"/></ext></extLst></bk>`).join('')}</futureMetadata><valueMetadata count="3">${[0, 1, 2].map((i) => `<bk><rc t="1" v="${i}"/></bk>`).join('')}</valueMetadata></metadata>`,
+			[`xl/richData/${data.file}`]: `<rvData xmlns="${RICH_NS}" count="3"><rv s="0"><v>Seattle</v><v>Washington</v><v>780000</v></rv><rv s="1"><v>Example Inc</v><v>EXM</v><v>42</v></rv><rv s="2"><v>Generic record</v></rv></rvData>`,
+			[`xl/richData/${structures.file}`]: `<rvStructures xmlns="${RICH_NS}" count="3"><s t="_entity"><k n="_DisplayString" t="s"/><k n="State" t="s"/><k n="Population" t="i"/></s><s t="_entity"><k n="_DisplayString" t="s"/><k n="Ticker symbol" t="s"/><k n="Price" t="d"/></s><s t="_entity"><k n="_DisplayString" t="s"/></s></rvStructures>`,
 		},
 	});
 	await openLanding(page);
@@ -131,9 +140,18 @@ test('shows a cached data type icon and opens its card from the keyboard', async
 		mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 		buffer: Buffer.from(bytes),
 	});
-	await expect(
-		grid(page).locator('.xg-c').filter({ hasText: 'Seattle' }).locator('.xg-ic'),
-	).toBeVisible();
+	const badge = (kind: string) => grid(page).locator(`.xg-data-badge[data-kind="${kind}"]`);
+	const paths = new Set<string | null>();
+	for (const kind of ['geography', 'stocks', 'generic']) {
+		await expect(badge(kind)).toBeVisible();
+		paths.add(await badge(kind).locator('path').getAttribute('d'));
+	}
+	expect(paths.size).toBe(3);
+	const icon = grid(page).locator('.xg-ic');
+	await expect(icon).toBeVisible();
+	const conditionalBox = await icon.boundingBox();
+	const stocksBox = await badge('stocks').boundingBox();
+	expect(stocksBox!.x).toBeGreaterThanOrEqual(conditionalBox!.x + conditionalBox!.width);
 	await grid(page).focus();
 	await grid(page).press('Shift+F10');
 	await editor(page).getByRole('menuitem', { name: 'Show Data Type Card' }).press('Enter');
@@ -144,5 +162,5 @@ test('shows a cached data type icon and opens its card from the keyboard', async
 	await page.keyboard.press('Escape');
 	await goToCell(page, 'B1');
 	await typeInActiveCell(page, '=A1.State');
-	await expect(grid(page).getByText('Washington', { exact: true })).toBeVisible();
+	await expect(grid(page).getByRole('gridcell', { name: 'Washington', exact: true })).toBeVisible();
 });

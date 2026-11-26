@@ -3,6 +3,7 @@
 // columns that came into view and an edit touches the cells whose view changed.
 import type { CellView } from 'ooxml-core/xlsx';
 import { pictureUrl } from 'ooxml-core/opc';
+import { createIconSvg } from '../../icons';
 import {
 	alignItems,
 	cssFont,
@@ -11,6 +12,7 @@ import {
 	fillPaint,
 	hasBorders,
 	justify,
+	SHEET_ICONS,
 	textAlign,
 	textDecoration,
 } from 'ooxml-core/xlsx/ui';
@@ -22,6 +24,12 @@ import { sparklineSvg } from './sparkline';
 interface CellNode extends HTMLDivElement {
 	xgSig?: string | undefined;
 }
+
+const LINKED_DATA_PATHS = {
+	stocks: SHEET_ICONS.chartLine,
+	geography: SHEET_ICONS.linkedGeography,
+	generic: SHEET_ICONS.evaluateFormula,
+};
 
 const viewKeys = new WeakMap<CellView, string>();
 const contentKeys = new WeakMap<object, number>();
@@ -258,17 +266,29 @@ export function paintCell(doc: Document, node: HTMLElement, item: CellItem, zoom
 		icon.setAttribute('class', 'xg-ic');
 		node.append(icon);
 	}
+	const scale = zoom / 100;
 	if (view.linkedData) {
-		const badge = h(doc, 'span', 'xg-ic');
-		badge.textContent = '▤';
-		badge.setAttribute('aria-hidden', 'true');
+		const kind = view.linkedData.kind ?? 'generic';
+		const size = String(Math.round(16 * scale));
+		const badge = createIconSvg(doc);
+		badge.classList.add('xg-data-badge');
+		badge.dataset.kind = kind;
+		badge.setAttribute('width', size);
+		badge.setAttribute('height', size);
+		badge.setAttribute('viewBox', '0 0 20 20');
+		if (view.icon) badge.style.left = `${2 + 20 * scale}px`;
+		const path = doc.createElementNS(badge.namespaceURI, 'path');
+		path.setAttribute('d', LINKED_DATA_PATHS[kind] ?? '');
+		badge.append(path);
 		node.append(badge);
 	}
 	if (item.text) {
 		const box = h(doc, 'div', 'xg-t');
 		paintText(doc, box, item, zoom);
-		if (view.icon && view.hAlign !== 'right') box.style.paddingLeft = `${20 * (zoom / 100)}px`;
-		if (view.linkedData) box.style.paddingLeft = `${20 * (zoom / 100)}px`;
+		const slots =
+			Number(Boolean(view.linkedData)) +
+			Number(Boolean(view.icon && (view.linkedData || view.hAlign !== 'right')));
+		if (slots) box.style.paddingLeft = `${slots * 20 * scale}px`;
 		node.append(box);
 	}
 	paintBorders(doc, node, item);

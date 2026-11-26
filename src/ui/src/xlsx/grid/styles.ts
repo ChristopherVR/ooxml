@@ -30,7 +30,8 @@ export const GRID_CSS = `
 .xg-diag{position:absolute;left:0;top:0;pointer-events:none}
 .xg-spark{position:absolute;left:0;top:0;pointer-events:none;overflow:hidden}
 .xg-db{position:absolute;left:2px;top:2px;bottom:2px;border:1px solid;box-sizing:border-box}
-.xg-ic{position:absolute;left:2px;top:50%;transform:translateY(-50%)}
+.xg-ic,.xg-data-badge{position:absolute;left:2px;top:50%;transform:translateY(-50%)}
+.xg-data-badge{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .xg-cm{position:absolute;right:0;top:0;width:0;height:0;border-left:6px solid transparent;border-top:6px solid #d13438;z-index:2}
 .xg-er{position:absolute;left:0;top:0;width:0;height:0;border-right:6px solid transparent;border-top:6px solid #107c41;z-index:2}
 .xg-overlay{pointer-events:none;z-index:3}

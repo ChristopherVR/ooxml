@@ -77,6 +77,8 @@ export const SHEET_ICONS: Readonly<Record<string, string>> = {
 	chartColumn: 'M3 17h14M5 17V9M9 17V5M13 17v-6M17 17V7',
 	chartBar: 'M3 3v14M3 5h8M3 9h12M3 13h6',
 	chartLine: 'M3 17h14M3 14l4-5 4 3 6-7',
+	linkedGeography:
+		'M10 18s6-5.5 6-10a6 6 0 1 0-12 0c0 4.5 6 10 6 10zM10 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z',
 	chartPie: 'M10 3a7 7 0 1 0 7 7h-7zM12 1.5a7 7 0 0 1 6.5 6.5H12z',
 	chartArea: 'M3 17h14M3 16l4-6 4 3 6-7v10z',
 	chartScatter: 'M3 3v14h14M6 13h.1M8 9h.1M11 11h.1M13 6h.1M15 8h.1',

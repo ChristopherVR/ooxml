@@ -91,6 +91,7 @@ export function richError(store: RichValueStore | undefined, vm: number): ErrorC
 }
 
 export interface LinkedDataCard {
+	readonly kind?: 'stocks' | 'geography' | 'generic';
 	readonly text: string;
 	readonly fields: readonly RichValueField[];
 }
@@ -203,6 +204,29 @@ export function linkedDataField(
 	return fields.get(name.toLowerCase());
 }
 
+function linkedDataKind(
+	record: RichValueRecord,
+	body: RichValueRecord,
+): NonNullable<LinkedDataCard['kind']> {
+	const icon = (value: RichValueRecord) =>
+		value.fields.find((field) => field.name === '_Icon')?.value.toLowerCase();
+	const hint = icon(record) ?? icon(body);
+	if (hint === 'stock' || hint === 'stocks') return 'stocks';
+	if (hint === 'geography') return 'geography';
+
+	// The rich-value spec does not enumerate icon values. Use recognizable field combinations
+	// for financial and geographic records and show the generic glyph when the type is unclear.
+	const keys = new Set(body.fields.map((field) => field.name.toLowerCase()));
+	if (keys.has('ticker symbol') && (keys.has('price') || keys.has('exchange'))) return 'stocks';
+	if (
+		(keys.has('latitude') && keys.has('longitude')) ||
+		(keys.has('population') &&
+			['state', 'capital', 'country/region', 'time zone', 'area'].some((key) => keys.has(key)))
+	)
+		return 'geography';
+	return 'generic';
+}
+
 const cards = new WeakMap<RichValueRecord, LinkedDataCard | undefined>();
 export function linkedDataCard(workbook: Workbook, cell: Cell): LinkedDataCard | undefined {
 	const linked = linkedDataRecord(workbook, cell);
@@ -223,7 +247,7 @@ export function linkedDataCard(workbook: Workbook, cell: Cell): LinkedDataCard |
 			fields.push({ name: name.slice(0, 256), type, value: value.slice(0, 1024) });
 			if (fields.length === 100) break;
 		}
-		cards.set(record, { text: text.slice(0, 1024), fields });
+		cards.set(record, { kind: linkedDataKind(record, body), text: text.slice(0, 1024), fields });
 	}
 	return cards.get(record);
 }
