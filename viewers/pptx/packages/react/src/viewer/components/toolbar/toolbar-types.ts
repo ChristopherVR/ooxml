@@ -63,6 +63,7 @@ export interface ToolbarProps {
 	redoLabel: string | undefined;
 	findReplaceOpen: boolean;
 	selectedElement: PptxElement | null;
+	onPatchElement?: (id: string, patch: Partial<PptxElement>) => void;
 	tableEditorState?: TableCellEditorState | null;
 	editTemplateMode: boolean;
 	newShapeType: SupportedShapeType;

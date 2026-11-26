@@ -148,6 +148,7 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 	const selectionSize = selectedElement === null ? 0 : 1;
 
 	return {
+		onPatchElement: ops.updateElementById,
 		picture: {
 			element: selectedElement,
 			editable: canEdit,

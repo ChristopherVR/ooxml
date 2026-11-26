@@ -2192,6 +2192,7 @@ const viewZoom = {
 const ribbonProps = computed(() => ({
 	...customizedRibbonProps.value,
 	viewZoom,
+	onPatchElement: ops.updateElement,
 	picture: {
 		element: selectedElements.value[0] ?? null,
 		editable: canEditEffective.value,

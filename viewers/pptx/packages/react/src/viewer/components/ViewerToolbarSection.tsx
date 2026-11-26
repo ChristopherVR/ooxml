@@ -600,6 +600,7 @@ export function ViewerToolbarSection(props: ViewerToolbarSectionProps) {
 					/>
 				)}
 			<Toolbar
+				onPatchElement={ops.updateElementById}
 				picture={{
 					element: selectedElement,
 					editable: canEdit,

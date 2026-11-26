@@ -27,6 +27,7 @@ import type {
 	RibbonDisplayController,
 	RibbonDisplayState,
 } from 'ooxml-ui/pptx';
+import type { PptxElement } from 'pptx-viewer-core';
 import { computed, inject, onBeforeUnmount, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -56,6 +57,7 @@ import TransitionsSection from './TransitionsSection.vue';
 
 interface Props extends RibbonProps {
 	picture?: Omit<PictureRibbonState, 'translate'>;
+	onPatchElement?: (id: string, patch: Partial<PptxElement>) => void;
 	/** Ribbon Display Options state; absent, the ribbon docks as in `always` mode. */
 	ribbonDisplay?: RibbonDisplayState;
 	/** The viewer's Ribbon Display Options controller (menu, tab clicks, double clicks). */
@@ -65,8 +67,8 @@ interface Props extends RibbonProps {
 const props = defineProps<Props>();
 const { t } = useI18n();
 const rotation = computed(() => {
-	const picture = props.picture;
-	return picture && (() => ({ element: props.selectedElement, patch: picture.patch }));
+	const patch = props.onPatchElement;
+	return patch && (() => ({ element: props.selectedElement, patch }));
 });
 
 const showRibbon = computed(() => props.mode === 'edit' || props.mode === 'master');
@@ -74,7 +76,7 @@ const showRibbon = computed(() => props.mode === 'edit' || props.mode === 'maste
  * Pass only the common ribbon contract to sections that take the whole contract with `v-bind`.
  */
 const sharedProps = computed(() => {
-	const { ribbonDisplay, ribbonDisplayController, picture, ...rest } = props;
+	const { ribbonDisplay, ribbonDisplayController, picture, onPatchElement, ...rest } = props;
 	return rest;
 });
 const displayLayout = computed(
