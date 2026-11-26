@@ -78,6 +78,7 @@ export const translations = {
 	'pptx.draw.closeReplay': '재생 닫기',
 	'pptx.draw.readOnly': '편집할 수 없습니다.',
 	'pptx.draw.missingCommit': '이 뷰어에서는 그리기 변경 사항을 저장할 수 없습니다.',
+	'pptx.draw.loadFailed': '고급 그리기 도구를 불러올 수 없습니다.',
 	'pptx.draw.noSlide': '편집 가능한 슬라이드를 여세요.',
 	'pptx.draw.noSelection': '올가미로 잉크를 선택하세요.',
 	'pptx.draw.replayUnavailable':

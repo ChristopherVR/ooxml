@@ -1,5 +1,6 @@
 import { MAX_LATEX_LENGTH } from 'ooxml-core/math';
 
+import { createInsertDialogFrame, type InsertDialogFrame } from '../../dialog/insert-dialog-frame';
 import { createEquationFields } from '../../math/equation-fields';
 import { convertLatexToOmml } from '../render/latex-to-omml';
 import type { PptxDrawHostOptions } from '../render/draw-canvas';
@@ -40,31 +41,22 @@ export function openDrawEquation(options: {
 		return false;
 	}
 	const doc = root.ownerDocument;
-	const previousFocus = doc.activeElement;
-	const dialog = doc.createElement('dialog');
-	dialog.setAttribute('aria-label', t('pptx.draw.inkToMath'));
-	Object.assign(dialog.style, {
-		width: 'min(32rem, 90vw)',
-		background: 'var(--office-surface, Canvas)',
-		color: 'var(--office-text, CanvasText)',
-		border: '1px solid var(--office-border, GrayText)',
-	});
-	const title = doc.createElement('h2');
-	title.textContent = t('pptx.draw.inkToMath');
-	const confirm = doc.createElement('button');
-	confirm.type = 'button';
-	confirm.textContent = t('pptx.equation.insert');
-	const cancel = doc.createElement('button');
-	cancel.type = 'button';
-	cancel.textContent = t('pptx.equation.cancel');
+	let frame: InsertDialogFrame | undefined;
+	const close = () => frame?.dialog.close();
 	const accept = () => {
 		const draft = fields.draft;
-		if (!draft || signal.aborted) {
-			return;
-		}
+		if (!draft || signal.aborted) return;
 		insert(convertLatexToOmml(draft.latex));
-		dialog.close();
+		close();
 	};
+	const sync = (canInsert: boolean) =>
+		frame?.sync(
+			t('pptx.draw.inkToMath'),
+			t('pptx.common.close'),
+			t('pptx.equation.cancel'),
+			t('pptx.equation.insert'),
+			canInsert,
+		);
 	const fields = createEquationFields(doc, {
 		labels: {
 			equation: t('pptx.equation.insertTitle'),
@@ -77,29 +69,15 @@ export function openDrawEquation(options: {
 		latex,
 		display: true,
 		accept,
-		onChange: (draft) => {
-			confirm.disabled = !draft;
-		},
+		onChange: (draft) => sync(Boolean(draft)),
 	});
-	confirm.addEventListener('click', accept);
-	cancel.addEventListener('click', () => dialog.close());
-	const close = () => dialog.close();
+	frame = createInsertDialogFrame(root, fields.element, accept, () => {
+		signal.removeEventListener('abort', close);
+		frame?.dialog.remove();
+	});
+	frame.dialog.style.setProperty('--office-dialog-width', 'min(32rem, calc(100vw - 32px))');
 	signal.addEventListener('abort', close, { once: true });
-	dialog.addEventListener(
-		'close',
-		() => {
-			signal.removeEventListener('abort', close);
-			dialog.remove();
-			if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
-				previousFocus.focus();
-			}
-		},
-		{ once: true },
-	);
-	dialog.addEventListener('keydown', (event) => event.stopPropagation());
-	dialog.append(title, fields.element, cancel, confirm);
-	root.append(dialog);
-	dialog.showModal();
-	fields.source.focus();
+	sync(Boolean(fields.draft));
+	frame.dialog.show();
 	return true;
 }

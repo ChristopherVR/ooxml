@@ -66,7 +66,7 @@ it('prefills the shared equation fields only on an explicit recognition request'
 		expect(math?.getAttribute('aria-disabled')).toBe('false');
 		math?.click();
 		await vi.waitFor(() =>
-			expect(root.querySelector('dialog textarea')?.value).toBe(String.raw`\frac{1}{2}`),
+			expect(root.querySelector('office-ui-dialog textarea')?.value).toBe(String.raw`\frac{1}{2}`),
 		);
 		expect(recognizeMath).toHaveBeenCalledExactlyOnceWith(
 			[
@@ -77,9 +77,13 @@ it('prefills the shared equation fields only on an explicit recognition request'
 			],
 			expect.any(AbortSignal),
 		);
-		const insert = [...root.querySelectorAll<HTMLButtonElement>('dialog button')].find(
-			(button) => button.textContent === 'Insert',
+		const dialog = root.querySelector('office-ui-dialog');
+		expect(dialog?.hasAttribute('open')).toBe(true);
+		const footer = dialog?.querySelector('office-ui-dialog-footer');
+		const insert = [...(footer?.shadowRoot?.querySelectorAll('button') ?? [])].find(
+			(button) => button.textContent?.trim() === 'Insert',
 		);
+		expect(insert).toBeDefined();
 		insert?.click();
 		expect(replaceElements).toHaveBeenCalledExactlyOnceWith(
 			slide,

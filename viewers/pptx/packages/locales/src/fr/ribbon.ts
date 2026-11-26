@@ -79,6 +79,7 @@ export const translations = {
 	'pptx.draw.readOnly': 'La modification est indisponible.',
 	'pptx.draw.missingCommit':
 		'Cette visionneuse ne peut pas enregistrer les modifications de dessin.',
+	'pptx.draw.loadFailed': 'Les outils de dessin avancés n’ont pas pu être chargés.',
 	'pptx.draw.noSlide': 'Ouvrez une diapositive modifiable.',
 	'pptx.draw.noSelection': 'Sélectionnez des traits au lasso.',
 	'pptx.draw.replayUnavailable':

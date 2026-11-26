@@ -4,6 +4,7 @@ import type { InkCoordinate, SlideInkStroke } from 'ooxml-core/pptx/editor/ink';
 
 import { DRAW_STAGE } from '../render/draw-canvas';
 import { setDrawPencil } from '../render/ink-drawing';
+import { isInsideModal } from '../render/slide-keyboard-focus';
 import {
 	captureStagePoint,
 	createLassoGesturePath,
@@ -135,6 +136,7 @@ export function createCanvasInkTools(
 	root.addEventListener(
 		'keydown',
 		(event) => {
+			if (isInsideModal(event)) return;
 			if (event.key === 'Escape' && (armed || selection.length)) {
 				event.preventDefault();
 				event.stopImmediatePropagation();

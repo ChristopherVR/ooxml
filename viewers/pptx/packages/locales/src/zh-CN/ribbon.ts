@@ -77,6 +77,7 @@ export const translations = {
 	'pptx.draw.closeReplay': '关闭重播',
 	'pptx.draw.readOnly': '无法编辑。',
 	'pptx.draw.missingCommit': '此查看器无法保存绘图更改。',
+	'pptx.draw.loadFailed': '无法加载高级绘图工具。',
 	'pptx.draw.noSlide': '请打开可编辑的幻灯片。',
 	'pptx.draw.noSelection': '使用套索选择墨迹。',
 	'pptx.draw.replayUnavailable': '此幻灯片上的墨迹超出重播限制或使用了不受支持的路径。',

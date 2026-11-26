@@ -13,6 +13,7 @@ import type { RibbonDrawIntent, RibbonDrawViewState } from '../render/ribbon-dra
 import { createCanvasInkTools } from './draw-canvas-tools';
 import { createDrawPens } from './draw-pens';
 import { createDrawReplay } from './draw-replay';
+import { createDrawRibbonControls } from './draw-ribbon-controls';
 import { drawRulerFor } from './draw-ruler';
 
 export function mountRibbonDrawAdvanced(
@@ -52,37 +53,8 @@ export function mountRibbonDrawAdvanced(
 	let replay: ReturnType<typeof createDrawReplay>;
 	let mathRequest: AbortController | undefined;
 	let pending = false;
-	const groups: HTMLElement[] = [];
-	const commands: Array<{ control: HTMLButtonElement; key: string; reason: () => string }> = [];
-	const labelGroups: Array<{ group: HTMLElement; key: string }> = [];
-	const group = (id: string, key: string) => {
-		const element = doc.createElement('pptx-ui-ribbon-group');
-		element.dataset.ribbonGroup = `draw.${id}`;
-		const row = doc.createElement('div');
-		row.className = 'advanced-row';
-		element.append(row);
-		groups.push(element);
-		labelGroups.push({ group: element, key });
-		return row;
-	};
-	const button = (
-		parent: HTMLElement,
-		id: string,
-		key: string,
-		reason: () => string,
-		action: () => void,
-	) => {
-		const control = doc.createElement('button');
-		control.type = 'button';
-		control.dataset.ribbonControl = `draw.${id}`;
-		control.dataset.pptxCompact = '';
-		control.addEventListener('click', () => {
-			if (!reason()) action();
-		});
-		commands.push({ control, key, reason });
-		parent.append(control);
-		return control;
-	};
+	const controls = createDrawRibbonControls(doc, t);
+	const { groups, group, button } = controls;
 	const unavailable = () =>
 		!state().editable
 			? 'pptx.draw.readOnly'
@@ -281,21 +253,14 @@ export function mountRibbonDrawAdvanced(
 			announce('');
 		}
 		pens.sync();
-		for (const { group: element, key } of labelGroups) element.setAttribute('label', t(key));
-		for (const { control, key, reason } of commands) {
-			const why = reason();
-			if (control !== play || !replay) control.textContent = t(key);
-			control.setAttribute('aria-disabled', String(Boolean(why)));
-			control.title = t(why || key);
-			control.setAttribute('aria-description', why ? t(why) : '');
-		}
+		controls.sync(replay ? play : undefined);
 		lasso.setAttribute('aria-pressed', String(Boolean(canvas?.armed)));
 		ruler.setAttribute('aria-pressed', String(Boolean(rulerModel?.visible)));
 		angle.hidden = !rulerModel?.visible || !canvas?.stage;
 		angle.value = String(rulerModel?.angle ?? 0);
 		rulerModel?.setLabels(t('pptx.draw.ruler'), t('pptx.draw.rulerKeys'));
 		angle.setAttribute('aria-label', t('pptx.draw.rulerAngle'));
-		angle.setAttribute('aria-valuetext', `${angle.value}Ã‚Â°`);
+		angle.setAttribute('aria-valuetext', `${angle.value}Ãƒâ€šÃ‚Â°`);
 		seek.setAttribute('aria-label', t('pptx.draw.seek'));
 		play.hidden = close.hidden = seek.hidden = !replay;
 		launch.hidden = Boolean(replay);

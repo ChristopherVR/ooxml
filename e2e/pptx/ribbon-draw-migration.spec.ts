@@ -103,3 +103,14 @@ test.describe('touch Draw controls', () => {
 		await expect(draw.locator('details')).not.toHaveAttribute('open');
 	});
 });
+
+test('announces a failed Draw tools chunk without disabling the basic pen', async ({ page }) => {
+	await page.route(/ribbon-draw-advanced[^/]*\.(?:ts|mjs)(?:\?|$)/u, (route) => route.abort());
+	await loadDeck(page);
+	await ribbonTab(page, 'Draw').click();
+	const draw = page.locator('pptx-ui-ribbon-draw');
+	await expect(draw.getByRole('status')).toHaveText('Advanced Draw tools could not load.');
+	const pen = draw.getByRole('button', { name: 'Pen', exact: true });
+	await pen.click();
+	await expect(pen).toHaveAttribute('aria-pressed', 'true');
+});

@@ -78,6 +78,7 @@ export const translations = {
 	'pptx.draw.closeReplay': 'Wiedergabe schließen',
 	'pptx.draw.readOnly': 'Bearbeitung ist nicht verfügbar.',
 	'pptx.draw.missingCommit': 'Dieser Viewer kann Änderungen der Zeichenwerkzeuge nicht speichern.',
+	'pptx.draw.loadFailed': 'Die erweiterten Zeichenwerkzeuge konnten nicht geladen werden.',
 	'pptx.draw.noSlide': 'Öffnen Sie eine bearbeitbare Folie.',
 	'pptx.draw.noSelection': 'Wählen Sie Freihandstriche mit dem Lasso aus.',
 	'pptx.draw.replayUnavailable':

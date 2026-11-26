@@ -1,5 +1,5 @@
 import { defineElement } from '../../registry';
-import { canRequestDraw } from '../render';
+import { canRequestDraw, drawLabel } from '../render';
 import type { RibbonDrawIntent, RibbonDrawViewState } from '../render';
 import { handleDrawKey } from './ribbon-draw-keyboard';
 import { attachRibbonDrawStyles } from './ribbon-draw-styles';
@@ -26,6 +26,7 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 			| ReturnType<(typeof import('./ribbon-draw-advanced'))['mountRibbonDrawAdvanced']>
 			| undefined;
 		private loading = false;
+		private readonly loadStatus = this.ownerDocument.createElement('span');
 		private model: RibbonDrawViewState = {
 			tool: 'select',
 			color: '#000000',
@@ -58,6 +59,9 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 		};
 		constructor() {
 			super();
+			this.loadStatus.className = 'advanced-status';
+			this.loadStatus.setAttribute('role', 'status');
+			this.loadStatus.hidden = true;
 			this.view.trigger.addEventListener('click', (event) => {
 				if (!this.model.editable) {
 					event.preventDefault();
@@ -107,19 +111,36 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 			void import('./ribbon-draw-advanced')
 				.then(({ mountRibbonDrawAdvanced }) => {
 					if (this.isConnected && !this.hidden) {
+						this.loadStatus.hidden = true;
+						this.loadStatus.textContent = '';
 						this.advanced = mountRibbonDrawAdvanced(this, () => this.model, this.request);
 					}
 				})
-				.catch(() => {})
+				.catch(() => {
+					if (this.isConnected && !this.hidden) {
+						this.loadStatus.hidden = false;
+						this.renderLoadStatus();
+					}
+				})
 				.finally(() => {
 					this.loading = false;
 				});
 		}
+		private renderLoadStatus(): void {
+			if (!this.loadStatus.hidden) {
+				this.loadStatus.textContent = drawLabel(
+					this.model,
+					'pptx.draw.loadFailed',
+					'Advanced Draw tools could not load.',
+				);
+			}
+		}
 		private render(): void {
 			if (!this.contains(this.view.group)) {
-				this.append(this.view.group);
+				this.append(this.view.group, this.loadStatus);
 			}
 			this.view.sync(this.model);
+			this.renderLoadStatus();
 			this.advanced?.sync();
 		}
 	}
