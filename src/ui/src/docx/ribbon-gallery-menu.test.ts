@@ -9,6 +9,15 @@ describe('layout galleries', () => {
 		expect(galleryLook('size', 'letter').detail).toBe('8.5" x 11"');
 	});
 
+	it('shows each position thumbnail at its named corner', () => {
+		const mark = (value: string) =>
+			galleryLook('drawingPosition', value).thumb.querySelector('rect.thumb-edge-on');
+		expect(mark('top-left')?.getAttribute('x')).toBe('5');
+		expect(mark('top-left')?.getAttribute('y')).toBe('5');
+		expect(mark('bottom-right')?.getAttribute('x')).toBe('21');
+		expect(mark('bottom-right')?.getAttribute('y')).toBe('28');
+	});
+
 	it('opens thumbnails, then drives the real select and its change event', () => {
 		const host = document.createElement('div');
 		document.body.append(host);

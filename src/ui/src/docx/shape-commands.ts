@@ -1,6 +1,6 @@
+// Drawing shapes in the editor: placing a drawn shape, and changing the selected one.
 import { nextFloatHeight } from './print-float-locate';
 import { defaultDrawingWrap } from './drawing-layout-default';
-// Drawing shapes in the editor: placing a drawn shape, and changing the selected one.
 import { closeHistory } from 'prosemirror-history';
 import { NodeSelection, type EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';

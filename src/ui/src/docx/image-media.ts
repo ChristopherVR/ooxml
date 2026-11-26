@@ -9,6 +9,7 @@ import { schema } from './schema';
 import { chartNodeSpec, placementClass } from 'ooxml-core/docx/ui';
 import { parseDiagram, smartArtNodeView } from './smartart-node-view';
 import { shapeNodeView } from './shape-node-view';
+import { pictureTransformCss } from './picture-transform';
 import { paintPicture } from './picture-paint';
 import type { DocumentModel, ThemeCatalog } from 'ooxml-core/docx';
 import type { EditorLocale } from './localization';
@@ -244,4 +245,3 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		};
 	};
 }
-import { pictureTransformCss } from './picture-transform';
