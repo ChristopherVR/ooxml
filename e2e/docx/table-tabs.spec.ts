@@ -139,3 +139,29 @@ test('Table Layout selects a column, evaluates a formula and converts with undo'
 	await page.keyboard.press('Control+z');
 	await expect(cells).toHaveCount(4);
 });
+
+test('Home bold and alignment apply to all and only the selected column', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	const cells = editor.locator('.ProseMirror td');
+	for (const [index, text] of ['First', 'Neighbor', 'Second', 'Other'].entries()) {
+		await cells.nth(index).click();
+		await page.keyboard.type(text);
+	}
+	await cells.first().click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	await editor.getByRole('combobox', { name: 'Select Table Parts' }).selectOption('column');
+	await editor.getByRole('tab', { name: 'Home', exact: true }).click();
+	await editor.getByRole('button', { name: 'Bold', exact: true }).click();
+	await editor.getByRole('button', { name: 'Align right', exact: true }).click();
+	for (const index of [0, 2]) {
+		await expect(cells.nth(index).locator('strong')).toBeVisible();
+		await expect(cells.nth(index).locator('p')).toHaveCSS('text-align', 'right');
+	}
+	for (const index of [1, 3]) {
+		await expect(cells.nth(index).locator('strong')).toHaveCount(0);
+		await expect(cells.nth(index).locator('p')).not.toHaveCSS('text-align', 'right');
+	}
+});

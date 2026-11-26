@@ -21,17 +21,19 @@ interface Piece {
 
 function selectedInline(state: EditorState): Piece[] {
 	const pieces: Piece[] = [];
-	const { from, to } = state.selection;
-	state.doc.nodesBetween(from, to, (node, pos, parent) => {
-		if (!node.isInline || node.type.name === 'equation') return true;
-		pieces.push({
-			from: Math.max(pos, from),
-			to: Math.min(pos + node.nodeSize, to),
-			node,
-			...(parent?.attrs.style ? { paragraphStyle: String(parent.attrs.style) } : {}),
+	for (const { $from, $to } of state.selection.ranges) {
+		if ($from.pos === $to.pos) continue;
+		state.doc.nodesBetween($from.pos, $to.pos, (node, pos, parent) => {
+			if (!node.isInline || node.type.name === 'equation') return true;
+			pieces.push({
+				from: Math.max(pos, $from.pos),
+				to: Math.min(pos + node.nodeSize, $to.pos),
+				node,
+				...(parent?.attrs.style ? { paragraphStyle: String(parent.attrs.style) } : {}),
+			});
+			return false;
 		});
-		return false;
-	});
+	}
 	return pieces;
 }
 

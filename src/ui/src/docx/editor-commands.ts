@@ -20,6 +20,7 @@ import { applyMultilingualAction } from './multilingual-ribbon';
 import { stepFontSize } from './font-step';
 import { changeCase } from './change-case';
 import { setIndent } from './indent-commands';
+import { applyParagraphFormat } from './paragraph-format';
 import { sortParagraphs } from './sort-commands';
 import { setBorders, setShading } from './paragraph-decoration';
 import { formatDateTime, insertPlainText } from './insert-text-commands';
@@ -137,15 +138,7 @@ export function runRibbonCommand(
 			toggleVerticalAlign(view, action.key);
 		else marks[action.key](view.state, view.dispatch, view);
 	} else if (action.type === 'align') {
-		let transaction = view.state.tr;
-		view.state.doc.nodesBetween(view.state.selection.from, view.state.selection.to, (node, pos) => {
-			if (node.type.name === 'paragraph')
-				transaction = transaction.setNodeMarkup(pos, undefined, {
-					...node.attrs,
-					align: action.value,
-				});
-		});
-		if (transaction.docChanged) view.dispatch(transaction);
+		applyParagraphFormat(view, { align: action.value });
 	} else if (action.type === 'history')
 		(action.key === 'undo' ? editorUndo : editorRedo)(view.state, view.dispatch, view);
 	else if (action.type === 'font') {

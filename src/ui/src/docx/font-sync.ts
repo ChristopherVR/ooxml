@@ -50,11 +50,12 @@ export function syncFontControls(toolbar: HTMLElement, state: EditorState): void
 		add(schema.text('x', marks), selection.$from.parent);
 	} else {
 		let found = false;
-		doc.nodesBetween(selection.from, selection.to, (node, _pos, parent) => {
-			if (!node.isInline || node.type.name === 'equation' || !parent) return;
-			found = true;
-			add(node, parent);
-		});
+		for (const { $from, $to } of selection.ranges)
+			doc.nodesBetween($from.pos, $to.pos, (node, _pos, parent) => {
+				if (!node.isInline || node.type.name === 'equation' || !parent) return;
+				found = true;
+				add(node, parent);
+			});
 		if (!found) add(schema.text('x', selection.$from.marks()), selection.$from.parent);
 	}
 	const family = findLocalizedControl<ComboInput>(toolbar, 'Font family');

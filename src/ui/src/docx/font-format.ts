@@ -132,10 +132,11 @@ function formatsOf(state: EditorState): FontFormat[] {
 		const marks = state.storedMarks ?? selection.$from.marks();
 		formats.push(formatOf(state, schema.text('x', marks), selection.$from.parent));
 	} else {
-		doc.nodesBetween(selection.from, selection.to, (node, _pos, parent) => {
-			if (node.isInline && node.type.name !== 'equation' && parent)
-				formats.push(formatOf(state, node, parent));
-		});
+		for (const { $from, $to } of selection.ranges)
+			doc.nodesBetween($from.pos, $to.pos, (node, _pos, parent) => {
+				if (node.isInline && node.type.name !== 'equation' && parent)
+					formats.push(formatOf(state, node, parent));
+			});
 		if (!formats.length)
 			formats.push(
 				formatOf(state, schema.text('x', selection.$from.marks()), selection.$from.parent),

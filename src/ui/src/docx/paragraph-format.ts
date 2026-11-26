@@ -115,16 +115,14 @@ function formatOf(attrs: Attrs): ParagraphFormat {
 	};
 }
 
-function selectedParagraphs(state: EditorState): Array<{ node: ProseMirrorNode; pos: number }> {
-	const found: Array<{ node: ProseMirrorNode; pos: number }> = [];
-	state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos) => {
-		if (node.type.name === 'paragraph') found.push({ node, pos });
-	});
-	if (!found.length && state.selection.$from.parent.type.name === 'paragraph')
-		found.push({
-			node: state.selection.$from.parent,
-			pos: state.selection.$from.before(),
+function selectedParagraphs(state: EditorState): Map<number, ProseMirrorNode> {
+	const found = new Map<number, ProseMirrorNode>();
+	for (const { $from, $to } of state.selection.ranges) {
+		if ($from.parent.type.name === 'paragraph') found.set($from.before(), $from.parent);
+		state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
+			if (node.type.name === 'paragraph') found.set(pos, node);
 		});
+	}
 	return found;
 }
 
@@ -133,7 +131,7 @@ export function readParagraphFormat(
 	state: EditorState,
 	model: DocumentModel | undefined,
 ): ParagraphFormatState {
-	const formats = selectedParagraphs(state).map(({ node }) =>
+	const formats = [...selectedParagraphs(state).values()].map((node) =>
 		formatOf(resolvedAttrs(node.attrs, model)),
 	);
 	const result = {} as Record<string, unknown>;
@@ -149,7 +147,7 @@ const twips = (value: number, perUnit: number) => Math.max(0, Math.round(value *
 /** Attribute changes for one paragraph. The indent side follows the paragraph's logical/physical attribute. */
 function attrChanges(node: ProseMirrorNode, changes: Partial<ParagraphFormat>): Attrs {
 	const out: Attrs = {};
-	if (changes.align !== undefined) out.align = changes.align;
+	if (changes.align !== undefined) out.align = out.justification = changes.align;
 	if (changes.leftInches !== undefined)
 		out[node.attrs.indentStartTwips != null ? 'indentStartTwips' : 'indentLeftTwips'] = twips(
 			changes.leftInches,
@@ -202,10 +200,9 @@ function attrChanges(node: ProseMirrorNode, changes: Partial<ParagraphFormat>): 
 export function applyParagraphFormat(view: EditorView, changes: Partial<ParagraphFormat>): boolean {
 	if (!view.editable) return false;
 	let tr = view.state.tr;
-	for (const { pos } of selectedParagraphs(view.state)) {
-		const node = tr.doc.nodeAt(pos);
-		if (node)
-			tr = tr.setNodeMarkup(pos, undefined, { ...node.attrs, ...attrChanges(node, changes) });
+	for (const [pos, node] of selectedParagraphs(view.state)) {
+		for (const [attr, value] of Object.entries(attrChanges(node, changes)))
+			if (node.attrs[attr] !== value) tr = tr.setNodeAttribute(pos, attr, value);
 	}
 	if (!tr.docChanged) return false;
 	view.dispatch(closeHistory(tr).scrollIntoView());

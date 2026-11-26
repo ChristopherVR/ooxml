@@ -10,6 +10,7 @@ import { tableCellSelectionPlugin } from './table-cell-selection';
 import { paintCellBorder } from './table-border-commands';
 import { tableTabContext } from './table-tab-context';
 import { alignTableCells, patchTableNode, selectTableParts } from './table-tab-edits';
+import { runRibbonCommand } from './editor-commands';
 
 let view: EditorView | undefined;
 afterEach(() => {
@@ -99,4 +100,27 @@ it('paints the shared edge, applies AutoFit and keeps both changes after reopeni
 	expect(saved.rows[0]?.[0]?.borders?.right).toEqual(saved.rows[0]?.[1]?.borders?.left);
 	expect(saved.rows[0]?.[0]?.borders?.right?.style).toBe('double');
 	expect(table.rows[0]?.[0]?.borders).toBeUndefined();
+});
+
+it('formats and copies every selected cell without including neighboring cells', () => {
+	const { editor, model } = setup();
+	selectTableParts(editor, tableTabContext(editor.state)!, 'column');
+	runRibbonCommand(editor, { type: 'format', key: 'bold' });
+	runRibbonCommand(editor, { type: 'font', key: 'size', value: '22' });
+	runRibbonCommand(editor, { type: 'align', value: 'right' });
+	const table = docToModel(editor.state.doc, model).blocks[0];
+	if (table?.type !== 'table') throw new Error('Expected a table');
+	const paragraphs = table.rows.flatMap((row) => row.flatMap((cell) => cell.paragraphs));
+	expect(paragraphs.map((p) => [p.align, p.runs[0]?.bold, p.runs[0]?.fontSize])).toEqual([
+		['right', true, 22],
+		[undefined, undefined, undefined],
+		['right', true, 22],
+		[undefined, undefined, undefined],
+	]);
+	const clipboard = editor.serializeForClipboard(editor.state.selection.content());
+	expect(clipboard.text.trim().split(/\s+/)).toEqual(['a', 'c']);
+	expect([...clipboard.dom.querySelectorAll('td')].map((cell) => cell.textContent)).toEqual([
+		'a',
+		'c',
+	]);
 });

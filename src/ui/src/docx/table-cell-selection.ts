@@ -1,7 +1,30 @@
-import type { Node, ResolvedPos } from 'prosemirror-model';
-import { Plugin, Selection, SelectionRange } from 'prosemirror-state';
+import { Fragment, Slice, type Node, type ResolvedPos } from 'prosemirror-model';
+import { Plugin, Selection, SelectionRange, type SelectionBookmark } from 'prosemirror-state';
 import type { Mappable } from 'prosemirror-transform';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+
+function cellBookmark(ranges: { from: number; to: number }[], anchor: number): SelectionBookmark {
+	return {
+		map(mapping) {
+			const mapped = ranges.flatMap((range) => {
+				const from = mapping.mapResult(range.from, 1);
+				const to = mapping.mapResult(range.to, -1);
+				return from.deletedAcross || to.deletedAcross || from.pos > to.pos
+					? []
+					: [{ from: from.pos, to: to.pos }];
+			});
+			return cellBookmark(mapped, mapping.map(anchor));
+		},
+		resolve(doc) {
+			return ranges.length
+				? fromRanges(
+						ranges.map(({ from, to }) => new SelectionRange(doc.resolve(from), doc.resolve(to))),
+						doc,
+					)
+				: Selection.near(doc.resolve(anchor));
+		},
+	};
+}
 
 /** A column is a disjoint selection. Keep each range limited to one cell. */
 export class TableCellSelection extends Selection {
@@ -24,16 +47,45 @@ export class TableCellSelection extends Selection {
 	}
 
 	override map(doc: Node, mapping: Mappable): Selection {
-		const ranges = this.ranges.flatMap((range) => {
-			const from = mapping.mapResult(range.$from.pos, 1);
-			const to = mapping.mapResult(range.$to.pos, -1);
-			return from.deletedAcross || to.deletedAcross || from.pos > to.pos
-				? []
-				: [new SelectionRange(doc.resolve(from.pos), doc.resolve(to.pos))];
-		});
-		return ranges.length
-			? fromRanges(ranges, doc)
-			: Selection.near(doc.resolve(mapping.map(this.anchor)));
+		return this.getBookmark().map(mapping).resolve(doc);
+	}
+
+	override getBookmark(): SelectionBookmark {
+		return cellBookmark(
+			this.ranges.map(({ $from, $to }) => ({ from: $from.pos, to: $to.pos })),
+			this.anchor,
+		);
+	}
+
+	override content(): Slice {
+		const rows = new Map<number, { node: Node; cells: Node[] }>();
+		let table: Node | undefined;
+		for (const { $from } of this.ranges) {
+			let depth = $from.depth;
+			while (depth > 2 && $from.node(depth).type.name !== 'tableCell') depth--;
+			if ($from.node(depth).type.name !== 'tableCell') return super.content();
+			table ??= $from.node(depth - 2);
+			if ($from.node(depth - 2) !== table) return super.content();
+			const pos = $from.before(depth - 1);
+			let row = rows.get(pos);
+			if (!row) rows.set(pos, (row = { node: $from.node(depth - 1), cells: [] }));
+			const cell = $from.node(depth);
+			row.cells.push(
+				cell.type.create(
+					{ ...cell.attrs, colspan: 1, rowspan: 1, continueKeys: null },
+					cell.content,
+				),
+			);
+		}
+		if (!table) return Slice.empty;
+		const content = [...rows.values()].map(({ node, cells }) =>
+			node.copy(Fragment.fromArray(cells)),
+		);
+		return new Slice(
+			Fragment.from(table.type.create({ ...table.attrs, grid: null }, content)),
+			0,
+			0,
+		);
 	}
 
 	override toJSON() {

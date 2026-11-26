@@ -18,11 +18,14 @@ export function syncFormatControls(toolbar: HTMLElement, state: EditorState) {
 	if (state.selection.empty) addMarks(state.storedMarks || state.selection.$from.marks());
 	else {
 		let found = false;
-		state.doc.nodesBetween(state.selection.from, state.selection.to, (node) => {
-			if (!node.isText) return;
-			found = true;
-			addMarks(node.marks);
-		});
+		for (const { $from, $to } of state.selection.ranges) {
+			if ($from.pos === $to.pos) continue;
+			state.doc.nodesBetween($from.pos, $to.pos, (node) => {
+				if (!node.isText) return;
+				found = true;
+				addMarks(node.marks);
+			});
+		}
 		if (!found) addMarks(state.selection.$from.marks());
 	}
 	const labels: Record<string, string> = {

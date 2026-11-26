@@ -47,20 +47,23 @@ export function applyRunFormattingPatch(patch: RunFormattingPatch): Command {
 			);
 			return true;
 		}
-		state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
-			if (!node.isInline || node.type.name === 'equation') return;
-			const run = patchedRun(node, patch);
-			if (!run) return;
-			if (hasInlineRunAttributes(node)) {
-				setInlineRunFormatting(tr, pos, run);
-				return;
-			}
-			const from = Math.max(pos, selection.from);
-			const to = Math.min(pos + node.nodeSize, selection.to);
-			for (const mark of node.marks)
-				if (RUN_FORMAT_MARKS.has(mark.type.name)) tr.removeMark(from, to, mark);
-			for (const mark of formattingMarks(node, run)) tr.addMark(from, to, mark);
-		});
+		for (const { $from, $to } of selection.ranges) {
+			if ($from.pos === $to.pos) continue;
+			state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
+				if (!node.isInline || node.type.name === 'equation') return;
+				const run = patchedRun(node, patch);
+				if (!run) return;
+				if (hasInlineRunAttributes(node)) {
+					setInlineRunFormatting(tr, pos, run);
+					return;
+				}
+				const from = Math.max(pos, $from.pos);
+				const to = Math.min(pos + node.nodeSize, $to.pos);
+				for (const mark of node.marks)
+					if (RUN_FORMAT_MARKS.has(mark.type.name)) tr.removeMark(from, to, mark);
+				for (const mark of formattingMarks(node, run)) tr.addMark(from, to, mark);
+			});
+		}
 		if (tr.docChanged) dispatch(tr);
 		return true;
 	};
