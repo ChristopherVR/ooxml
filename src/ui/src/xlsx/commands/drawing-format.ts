@@ -98,6 +98,7 @@ function canFormat(id: DrawingFormatAction, selected: FormatSelection): boolean 
 				typeof createImageBitmap === 'function'
 			);
 		case 'picture.reset':
+			return true;
 		case 'picture.style':
 		case 'picture.effects':
 			return !image.effectDag;

@@ -79,7 +79,7 @@ function frameFormat(
 				shadow: intent.shadow ? shadow() : null,
 			};
 		case 'resetPicture':
-			return { geometry: 'rect', line: line(undefined, null), shadow: null };
+			return { line: null, clearEffects: true, shadow: null };
 		default:
 			return undefined;
 	}
@@ -88,6 +88,8 @@ function frameFormat(
 function applyImageFormat(image: ImageObject, format: DrawingFrameFormat): void {
 	image.frameFormat = { ...image.frameFormat, ...format };
 	if (format.line) image.line = format.line;
+	else if (format.line === null) delete image.line;
+	if (format.clearEffects) delete image.effectDag;
 	if (format.shadow) image.shadow = format.shadow;
 	else if (format.shadow === null) delete image.shadow;
 }
@@ -143,7 +145,7 @@ export function formatDrawing(
 			intent.kind === 'geometry' ||
 			intent.kind === 'fill' ||
 			intent.kind === 'shapeStyle' ||
-			(image.effectDag && format?.shadow !== undefined)
+			(image.effectDag && !format?.clearEffects && format?.shadow !== undefined)
 		)
 			return false;
 		return editDrawings(ctx, sheet, 'Format picture', () => {

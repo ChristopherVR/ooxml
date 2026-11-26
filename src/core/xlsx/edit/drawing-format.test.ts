@@ -99,16 +99,37 @@ it('round-trips picture formatting, resets it and restores it with undo', async 
 		line: { fill: { color: { value: 'FFFFFF' } } },
 		shadow: { kind: 'outerShadow' },
 	});
+	const authored = picture();
+	if (authored?.kind !== 'image' || !authored.sourceXml) throw new Error('Missing picture source');
+	authored.sourceXml = authored.sourceXml
+		.replace('prst="rect"', 'prst="ellipse"')
+		.replace(
+			'</xdr:spPr>',
+			'</xdr:spPr><xdr:style xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:lnRef idx="1"><a:schemeClr val="accent1"/></a:lnRef><a:fillRef idx="0"><a:schemeClr val="accent1"/></a:fillRef><a:effectRef idx="0"><a:schemeClr val="accent1"/></a:effectRef><a:fontRef idx="minor"><a:schemeClr val="dk1"/></a:fontRef></xdr:style>',
+		)
+		.replace('</a:effectLst>', '<a:reflection/></a:effectLst>');
 	const change = createEditSession(loaded);
 	expect(change.formatDrawing(0, 0, { kind: 'resetPicture' })).toBe(true);
 	const reset = await reopen(loaded);
 	expect(reset.sheets[0]?.drawings[0]).toMatchObject({
-		line: { fill: { kind: 'none' } },
 		description: 'Picture <logo>',
 	});
 	expect(reset.sheets[0]?.drawings[0]).toHaveProperty('crop', {});
 	expect(reset.sheets[0]?.drawings[0]).not.toHaveProperty('effects');
 	expect(reset.sheets[0]?.drawings[0]).not.toHaveProperty('shadow');
+	expect(reset.sheets[0]?.drawings[0]).not.toHaveProperty('line');
+	expect(reset.sheets[0]?.drawings[0]).toHaveProperty(
+		'sourceXml',
+		expect.stringContaining('prst="ellipse"'),
+	);
+	expect(reset.sheets[0]?.drawings[0]).toHaveProperty(
+		'sourceXml',
+		expect.stringContaining('<a:lnRef idx="1">'),
+	);
+	expect(reset.sheets[0]?.drawings[0]).toHaveProperty(
+		'sourceXml',
+		expect.not.stringContaining('<a:effectLst'),
+	);
 	expect(change.undo()).toBe(true);
 	expect(picture()).toHaveProperty('crop.cropLeft', 0.1);
 

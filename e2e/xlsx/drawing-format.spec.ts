@@ -102,6 +102,20 @@ test('formats pictures and shapes through their contextual ribbon tabs', async (
 	if (!bytes) throw new Error('Compressed picture media is missing');
 	expect(inspectRasterImage(bytes)).toMatchObject({ pixelWidth: 120, pixelHeight: 60 });
 	expect(loaded.source?.parts.has(original.partName)).toBe(false);
+	await host
+		.locator('.xg-obj')
+		.filter({ has: page.getByRole('img', { name: 'Logo', exact: true }) })
+		.first()
+		.click();
+	await pictureTab.click();
+	await host.getByRole('button', { name: 'Reset Picture', exact: true }).click();
+	const resetBytes = await host.evaluate(async (element) => {
+		const blob = await (element as unknown as { save(): Promise<Blob> }).save();
+		return Array.from(new Uint8Array(await blob.arrayBuffer()));
+	});
+	const reset = (await loadXlsx(Buffer.from(resetBytes))).sheets[0]?.drawings[0];
+	expect(reset).not.toHaveProperty('line');
+	expect(reset).not.toHaveProperty('effects');
 	await goToCell(page, 'A1');
 	await expect(shapeTab).toHaveCount(0);
 	expect(errors).toEqual([]);

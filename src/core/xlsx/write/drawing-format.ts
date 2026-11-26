@@ -23,7 +23,8 @@ const effectOrder = [
 export interface DrawingFrameFormat {
 	geometry?: string;
 	fill?: DrawingFill;
-	line?: DrawingLine;
+	line?: DrawingLine | null;
+	clearEffects?: true;
 	shadow?: DrawingOuterShadow | null;
 }
 
@@ -54,7 +55,9 @@ export function applyDrawingFrameFormat(node: XmlElement, format: DrawingFrameFo
 	if (format.geometry !== undefined)
 		replace(props, geometry, `<a:prstGeom prst="${format.geometry}"><a:avLst/></a:prstGeom>`);
 	if (format.fill) replace(props, fills, drawingFillXml(format.fill));
-	if (format.line) replace(props, ['ln'], drawingLineXml(format.line));
+	if (format.line !== undefined)
+		replace(props, ['ln'], format.line ? drawingLineXml(format.line) : undefined);
+	if (format.clearEffects) replace(props, effects, undefined);
 	if (format.shadow === undefined) return;
 	let list = first(props, 'effectLst', NS.a);
 	if (!list && format.shadow) {
