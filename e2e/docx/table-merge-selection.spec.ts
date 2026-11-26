@@ -74,6 +74,9 @@ for (const gesture of ['drag', 'Shift+Arrow'] as const) {
 		await expect(cells).toHaveCount(4);
 		await expect(cells.first()).toHaveText(across ? 'First' : 'FirstSecond');
 		if (across) await expect(cells.nth(1)).toHaveText('Second');
+		await expect(editor.locator('.ProseMirror')).toBeFocused();
+		await page.keyboard.type('New ');
+		await expect(cells.first().locator('p').first()).toHaveText('New First');
 		const width = editor.getByRole('spinbutton', { name: 'Column Width (inches)' });
 		const height = editor.getByRole('spinbutton', { name: 'Row Height (inches)' });
 		await expect(width).toBeEnabled();

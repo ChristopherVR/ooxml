@@ -166,6 +166,21 @@ export interface Split {
 	columns: number;
 }
 
+function cellCaret(
+	tr: Transaction,
+	table: ProseMirrorNode,
+	tablePos: number,
+	cell: ProseMirrorNode | undefined,
+): Selection {
+	let pos = tablePos + 2;
+	table.forEach((row, rowOffset) =>
+		row.forEach((node, offset) => {
+			if (node === cell) pos = tablePos + rowOffset + offset + 2;
+		}),
+	);
+	return Selection.near(tr.doc.resolve(pos + 1), 1);
+}
+
 function selectionAfterRestructure(
 	tr: Transaction,
 	ctx: Context,
@@ -173,9 +188,8 @@ function selectionAfterRestructure(
 	table: ProseMirrorNode,
 	outcome: Table,
 	caret: EditorView['state']['selection']['$head'],
-	split?: Split,
 ): Selection {
-	const { tablePos, rect, selected } = ctx;
+	const { tablePos, rect } = ctx;
 	if (
 		action === 'rowBefore' ||
 		action === 'rowAfter' ||
@@ -193,33 +207,14 @@ function selectionAfterRestructure(
 			action === 'deleteRow'
 				? cellAt(rect.firstRow, 0)
 				: cellAt(0, Math.min(rect.firstCol, (outcome.grid?.length ?? 1) - 1));
-		let pos = tablePos + 2;
-		table.forEach((row, rowOffset) =>
-			row.forEach((node, offset) => {
-				if (node === cell) pos = tablePos + rowOffset + offset + 2;
-			}),
-		);
-		return Selection.near(tr.doc.resolve(pos + 1), 1);
+		return cellCaret(tr, table, tablePos, cell);
 	}
-	const cells = new Set<ProseMirrorNode>();
-	const add = (cell: ProseMirrorNode | undefined) => {
-		if (cell) cells.add(cell);
-	};
-	if (action === 'mergeCells') {
-		const closed = closeRect(ctx.skeleton, ctx.mergeRect);
-		if (closed) add(cellAt(closed.firstRow, closed.firstCol));
-	} else {
-		const target = selected[0];
-		const first = target && slots[rect.firstRow]?.[target.index];
-		if (first) {
-			const last = slots[first.row]?.[target.index + (split?.columns ?? 2) - 1];
-			for (let r = first.row; r < first.row + (split?.rows ?? 1); r++)
-				for (const slot of slots[r] ?? [])
-					if (slot.col >= first.col && slot.col <= (last?.col ?? first.col)) add(slot.cell);
-		}
-	}
-	const selection = selectCellNodes(tr.doc, table, tablePos, cells);
-	return action === 'mergeCells' ? Selection.near(selection.$from) : selection;
+	if (action === 'splitCell')
+		return cellCaret(tr, table, tablePos, cellAt(rect.firstRow, rect.firstCol));
+	const closed = closeRect(ctx.skeleton, ctx.mergeRect);
+	const cell = closed && cellAt(closed.firstRow, closed.firstCol);
+	const selection = selectCellNodes(tr.doc, table, tablePos, new Set(cell ? [cell] : []));
+	return Selection.near(selection.$from);
 }
 
 /** Whether `action` applies to the table around the selection (a dry run of the edit). */
@@ -273,7 +268,6 @@ export function executeRestructure(
 					replacement,
 					outcome,
 					view.state.selection.$head,
-					split ?? (action === 'splitCell' ? splitDimensions(ctx) : undefined),
 				),
 	);
 	dispatchTableEdit(view, transaction.scrollIntoView());

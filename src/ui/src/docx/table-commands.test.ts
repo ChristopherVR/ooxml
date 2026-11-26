@@ -142,6 +142,10 @@ describe('table structural commands', () => {
 			['r0c0', 'r0c1'],
 			['r1c0', 'r1c1'],
 		]);
+		expect(view.state.selection).toBeInstanceOf(TextSelection);
+		expect(view.state.selection.empty).toBe(true);
+		expect(view.state.selection.$from.parent.attrs.id).toBe('cell-0-0');
+		expect(view.state.selection.$from.parentOffset).toBe(0);
 		view.destroy();
 	});
 
