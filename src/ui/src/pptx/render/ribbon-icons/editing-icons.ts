@@ -1,6 +1,13 @@
+import { getIcon } from '../../../icons';
 import type { RibbonIconArtwork } from './types';
 
+const addIns = getIcon('addIns');
+
 export const EDITING_ICONS: Record<string, RibbonIconArtwork> = {
+	'home.editing.addIns': {
+		attrs: { stroke: 'currentColor', fill: 'none', viewBox: addIns?.viewBox ?? '0 0 20 20' },
+		children: [{ tag: 'path', attrs: { d: addIns?.d ?? '' } }],
+	},
 	'home.editing.find': {
 		attrs: {
 			stroke: 'currentColor',

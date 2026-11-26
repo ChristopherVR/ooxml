@@ -141,7 +141,7 @@ export const RIBBON_HOME_FAMILIES: Readonly<Record<RibbonHomeFamily, RibbonHomeF
 				control('home.editing.replace', 'pptx.ribbon.replace', 'Replace', undefined, {
 					text: text('pptx.ribbon.replace', 'Replace'),
 				}),
-				control('home.editing.addIns', 'pptx.insert.groupAddIns', 'Add-ins', 'addIns', {
+				control('home.editing.addIns', 'pptx.insert.groupAddIns', 'Add-ins', undefined, {
 					text: text('pptx.insert.groupAddIns', 'Add-ins'),
 				}),
 			),

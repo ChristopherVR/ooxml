@@ -25,6 +25,18 @@ const button = (host: HTMLElement, id: string) =>
 	host.querySelector<HTMLButtonElement>(`[data-ribbon-control="${id}"]`)!;
 
 describe('shared Home controls', () => {
+	it('opens Office Add-ins from the editing controls', async () => {
+		const host = mount('editing');
+		const addIns = button(host, 'home.editing.addIns');
+		expect(addIns.textContent).toBe('Add-ins');
+		expect(addIns.querySelector('svg path')).toBeTruthy();
+		addIns.focus();
+		addIns.click();
+		await vi.waitFor(() =>
+			expect(document.body.querySelector('office-ui-add-ins-dialog')).toBeTruthy(),
+		);
+	});
+
 	it('renders the clipboard group with public ids and one typed intent per click', () => {
 		const host = mount('clipboard', clipboardHomeControls(clipboard));
 		const request = vi.fn();
