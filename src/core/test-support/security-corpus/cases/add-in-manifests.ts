@@ -57,4 +57,14 @@ export const cases: readonly SecurityCase[] = [
 		},
 		expected: 'UNSAFE_PATH',
 	},
+	{
+		name: 'archive entries must stay within the compression ratio limit',
+		limits: { ms: 2_000, heapMb: 64 },
+		async run() {
+			const zip = new JSZip().file('manifest.json', '{}').file('padding', new Uint8Array(16_384));
+			const data = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+			return refusal(data, 'field');
+		},
+		expected: 'LIMIT_RATIO',
+	},
 ];

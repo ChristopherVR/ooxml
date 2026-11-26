@@ -8,6 +8,7 @@ const limits = {
 	maxEntries: 128,
 	maxEntryBytes: PACKAGE_BYTES,
 	maxTotalBytes: PACKAGE_BYTES,
+	maxCompressionRatio: 100,
 };
 const utf8 = new TextDecoder('utf-8', { fatal: true });
 
