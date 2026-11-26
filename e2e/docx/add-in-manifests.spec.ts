@@ -68,7 +68,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 	});
 }
 
-test('opens the Marketplace only on click and supports turning off the Store', async ({
+test('opens the Marketplace only on click and honors the ribbon’s Store setting', async ({
 	page,
 	context,
 }) => {
@@ -115,9 +115,9 @@ test('opens the Marketplace only on click and supports turning off the Store', a
 	await tab.close();
 	await dialog.getByRole('button', { name: 'Close', exact: true }).click();
 	await expect(dialog).toBeHidden();
-	await editor.evaluate((element) =>
-		Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), 'off'),
-	);
+	await editor
+		.locator('office-ui-ribbon')
+		.evaluate((element) => Reflect.set(element, Symbol.for('office-ui.add-in-storefront'), 'off'));
 	await get.click();
 	await expect(dialog.getByRole('tab', { name: 'My Add-ins' })).toHaveAttribute(
 		'aria-selected',
