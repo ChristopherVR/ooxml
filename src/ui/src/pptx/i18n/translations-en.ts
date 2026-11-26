@@ -2246,6 +2246,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.draw.inkToMath': 'Ink to Math',
 	'pptx.draw.guides': 'Guides',
 	'pptx.draw.ruler': 'Ruler',
+	'pptx.draw.rulerKeys':
+		'Drag or use the arrow keys to move. Hold Shift and press an arrow key to rotate.',
 	'pptx.draw.rulerAngle': 'Ruler angle',
 	'pptx.draw.replay': 'Ink Replay',
 	'pptx.draw.seek': 'Replay position',

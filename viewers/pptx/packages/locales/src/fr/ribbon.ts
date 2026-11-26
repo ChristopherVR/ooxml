@@ -70,6 +70,8 @@ export const translations = {
 	'pptx.draw.inkToMath': 'Encre en équation',
 	'pptx.draw.guides': 'Repères',
 	'pptx.draw.ruler': 'Règle',
+	'pptx.draw.rulerKeys':
+		'Faites glisser ou utilisez les flèches pour déplacer. Maintenez Maj et appuyez sur une flèche pour faire pivoter.',
 	'pptx.draw.rulerAngle': 'Angle de la règle',
 	'pptx.draw.replay': 'Relecture de l’encre',
 	'pptx.draw.seek': 'Position de lecture',

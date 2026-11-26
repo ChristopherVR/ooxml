@@ -70,6 +70,8 @@ export const translations = {
 	'pptx.draw.inkToMath': 'インクを数式に変換',
 	'pptx.draw.guides': 'ガイド',
 	'pptx.draw.ruler': 'ルーラー',
+	'pptx.draw.rulerKeys':
+		'ドラッグまたは矢印キーで移動します。Shift キーを押しながら矢印キーを押すと回転します。',
 	'pptx.draw.rulerAngle': 'ルーラーの角度',
 	'pptx.draw.replay': 'インクの再生',
 	'pptx.draw.seek': '再生位置',

@@ -13,6 +13,7 @@ import type { RibbonDrawIntent, RibbonDrawViewState } from '../render/ribbon-dra
 import { createCanvasInkTools } from './draw-canvas-tools';
 import { createDrawPens } from './draw-pens';
 import { createDrawReplay } from './draw-replay';
+import { drawRulerFor } from './draw-ruler';
 
 export function mountRibbonDrawAdvanced(
 	host: HTMLElement,
@@ -38,6 +39,7 @@ export function mountRibbonDrawAdvanced(
 				},
 			})
 		: undefined;
+	const rulerModel = root && drawRulerFor(root);
 	const port = () => (root ? drawCanvasPort(root) : undefined);
 	const settings = () => (root ? drawHostOptions(root) : undefined);
 	const listeners = new AbortController();
@@ -128,8 +130,7 @@ export function mountRibbonDrawAdvanced(
 	});
 	const guides = group('guides', 'pptx.draw.guides');
 	const ruler = button(guides, 'guides.ruler', 'pptx.draw.ruler', unavailable, () => {
-		canvas?.ruler(!canvas.rulerVisible, Number(angle.value));
-		sync();
+		rulerModel?.set(!rulerModel.visible, Number(angle.value));
 	});
 	const angle = doc.createElement('input');
 	angle.type = 'range';
@@ -140,8 +141,7 @@ export function mountRibbonDrawAdvanced(
 	angle.dataset.ribbonControl = 'draw.guides.angle';
 	angle.dataset.pptxCompact = '';
 	angle.addEventListener('input', () => {
-		canvas?.ruler(true, Number(angle.value));
-		sync();
+		rulerModel?.set(true, Number(angle.value));
 	});
 	guides.append(angle);
 	const playback = group('replay', 'pptx.draw.replay');
@@ -290,15 +290,18 @@ export function mountRibbonDrawAdvanced(
 			control.setAttribute('aria-description', why ? t(why) : '');
 		}
 		lasso.setAttribute('aria-pressed', String(Boolean(canvas?.armed)));
-		ruler.setAttribute('aria-pressed', String(Boolean(canvas?.rulerVisible)));
-		angle.hidden = !canvas?.rulerVisible || !canvas.stage;
+		ruler.setAttribute('aria-pressed', String(Boolean(rulerModel?.visible)));
+		angle.hidden = !rulerModel?.visible || !canvas?.stage;
+		angle.value = String(rulerModel?.angle ?? 0);
+		rulerModel?.setLabels(t('pptx.draw.ruler'), t('pptx.draw.rulerKeys'));
 		angle.setAttribute('aria-label', t('pptx.draw.rulerAngle'));
-		angle.setAttribute('aria-valuetext', `${angle.value}Â°`);
+		angle.setAttribute('aria-valuetext', `${angle.value}Ã‚Â°`);
 		seek.setAttribute('aria-label', t('pptx.draw.seek'));
 		play.hidden = close.hidden = seek.hidden = !replay;
 		launch.hidden = Boolean(replay);
 	}
 	host.append(...groups);
+	const unsubscribeRuler = rulerModel?.subscribe(sync);
 	root?.addEventListener(DRAW_CANVAS_CHANGE, sync, { signal: listeners.signal });
 	if (viewport) observer?.observe(viewport, { childList: true, subtree: true });
 	sync();
@@ -313,6 +316,7 @@ export function mountRibbonDrawAdvanced(
 		},
 		dispose() {
 			observer?.disconnect();
+			unsubscribeRuler?.();
 			listeners.abort();
 			canvas?.dispose();
 			stopReplay();

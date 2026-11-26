@@ -1,14 +1,13 @@
 import type { PptxSlide } from 'ooxml-core/pptx';
-import { collectSlideInk, lassoSlideInk, projectInkPoint } from 'ooxml-core/pptx/editor/ink';
+import { collectSlideInk, lassoSlideInk } from 'ooxml-core/pptx/editor/ink';
 import type { InkCoordinate, SlideInkStroke } from 'ooxml-core/pptx/editor/ink';
 
 import { DRAW_STAGE } from '../render/draw-canvas';
-import { setDrawPencil, setDrawRulerProjection } from '../render/ink-drawing';
+import { setDrawPencil } from '../render/ink-drawing';
 import {
 	captureStagePoint,
 	createLassoGesturePath,
 	drawOverlay,
-	inkOverlayPath,
 	paintLassoSelection,
 	setInkOverlayPoints,
 } from './draw-surface';
@@ -26,11 +25,8 @@ export function createCanvasInkTools(
 	let hasInk = false;
 	let selection: SlideInkStroke[] = [];
 	let lasso: SVGSVGElement | undefined;
-	let ruler: SVGSVGElement | undefined;
 	let armed = false;
 	let pencil = false;
-	let rulerVisible = false;
-	let angle = 0;
 	let gesture:
 		| {
 				id: number;
@@ -41,48 +37,6 @@ export function createCanvasInkTools(
 		| undefined;
 	let frame: number | undefined;
 	const all = () => (strokes ??= slide ? collectSlideInk(slide.elements) : []);
-	const removeRuler = () => {
-		if (stage) {
-			setDrawRulerProjection(stage);
-		}
-		ruler?.remove();
-		ruler = undefined;
-	};
-	const paintRuler = () => {
-		removeRuler();
-		if (!stage || !rulerVisible) {
-			return;
-		}
-		const x = stage.offsetWidth / 2;
-		const y = stage.offsetHeight / 2;
-		const length = Math.min(stage.offsetWidth, stage.offsetHeight) * 0.43;
-		const radians = (angle * Math.PI) / 180;
-		const dx = length * Math.cos(radians);
-		const dy = length * Math.sin(radians);
-		const a = { x: x - dx, y: y - dy };
-		const b = { x: x + dx, y: y + dy };
-		ruler = drawOverlay(stage);
-		ruler.dataset.pptxDrawRuler = '';
-		const edge = inkOverlayPath(ruler, [a, b]);
-		edge.setAttribute('stroke', '#416685');
-		edge.setAttribute('stroke-width', '3');
-		const ticks = inkOverlayPath(ruler, [a, b]);
-		ticks.setAttribute('stroke', '#d5e8fb');
-		ticks.setAttribute('stroke-width', '14');
-		ticks.setAttribute('stroke-dasharray', '2 10');
-		ticks.setAttribute(
-			'transform',
-			`translate(${-Math.sin(radians) * 8} ${Math.cos(radians) * 8})`,
-		);
-		setDrawRulerProjection(stage, (point) => {
-			const projection = projectInkPoint(point, a, b);
-			return projection.offset >= 0 &&
-				projection.offset <= 1 &&
-				Math.hypot(point.x - projection.point.x, point.y - projection.point.y) <= 16
-				? projection.point
-				: point;
-		});
-	};
 	const clearGesture = () => {
 		if (frame !== undefined) win?.cancelAnimationFrame(frame);
 		frame = undefined;
@@ -117,7 +71,8 @@ export function createCanvasInkTools(
 			gesture ||
 			event.button !== 0 ||
 			!(event.target instanceof Node) ||
-			!stage.contains(event.target)
+			!stage.contains(event.target) ||
+			(event.target instanceof Element && event.target.closest('[data-pptx-draw-ruler]'))
 		) {
 			return;
 		}
@@ -208,9 +163,6 @@ export function createCanvasInkTools(
 		get armed() {
 			return armed;
 		},
-		get rulerVisible() {
-			return rulerVisible;
-		},
 		get hasInk() {
 			return hasInk;
 		},
@@ -236,10 +188,8 @@ export function createCanvasInkTools(
 					lasso?.remove();
 					lasso = undefined;
 					if (stage) setDrawPencil(stage, false);
-					removeRuler();
 					stage = nextStage;
 					if (stage) setDrawPencil(stage, pencil);
-					paintRuler();
 				}
 				paintSelection();
 			}
@@ -254,16 +204,10 @@ export function createCanvasInkTools(
 			pencil = active;
 			if (stage) setDrawPencil(stage, active);
 		},
-		ruler(visible: boolean, degrees: number) {
-			rulerVisible = visible;
-			angle = degrees;
-			paintRuler();
-		},
 		dispose() {
 			listeners.abort();
 			cancel();
 			if (stage) setDrawPencil(stage, false);
-			removeRuler();
 		},
 	};
 }

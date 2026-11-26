@@ -70,6 +70,8 @@ export const translations = {
 	'pptx.draw.inkToMath': 'Entrada manuscrita a matemáticas',
 	'pptx.draw.guides': 'Guías',
 	'pptx.draw.ruler': 'Regla',
+	'pptx.draw.rulerKeys':
+		'Arrastra o usa las teclas de flecha para mover. Mantén pulsada Mayús y pulsa una flecha para girar.',
 	'pptx.draw.rulerAngle': 'Ángulo de la regla',
 	'pptx.draw.replay': 'Reproducción de entrada manuscrita',
 	'pptx.draw.seek': 'Posición de reproducción',

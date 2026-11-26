@@ -70,6 +70,8 @@ export const translations = {
 	'pptx.draw.inkToMath': 'Freihand in Formel',
 	'pptx.draw.guides': 'Hilfslinien',
 	'pptx.draw.ruler': 'Lineal',
+	'pptx.draw.rulerKeys':
+		'Ziehen oder die Pfeiltasten zum Verschieben verwenden. Zum Drehen die Umschalttaste und eine Pfeiltaste drücken.',
 	'pptx.draw.rulerAngle': 'Linealwinkel',
 	'pptx.draw.replay': 'Freihandwiedergabe',
 	'pptx.draw.seek': 'Wiedergabeposition',

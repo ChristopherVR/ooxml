@@ -70,6 +70,7 @@ export const translations = {
 	'pptx.draw.inkToMath': '墨迹转换为数学公式',
 	'pptx.draw.guides': '参考线',
 	'pptx.draw.ruler': '标尺',
+	'pptx.draw.rulerKeys': '拖动或使用方向键移动。按住 Shift 并按方向键可旋转。',
 	'pptx.draw.rulerAngle': '标尺角度',
 	'pptx.draw.replay': '墨迹重播',
 	'pptx.draw.seek': '重播位置',

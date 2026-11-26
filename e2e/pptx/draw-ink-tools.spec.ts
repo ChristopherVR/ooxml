@@ -98,9 +98,9 @@ test('keeps a pen preset and exposes keyboard ruler and replay controls', async 
 	await expect(angle).toHaveValue('1');
 	await expect(canvas(page).locator('[data-pptx-draw-ruler]')).toBeVisible();
 	await draw(page, [
-		[0.39, 0.5],
-		[0.48, 0.52],
-		[0.59, 0.5],
+		[0.39, 0.44],
+		[0.48, 0.45],
+		[0.59, 0.44],
 	]);
 	await page.getByRole('button', { name: 'Ink Replay', exact: true }).click();
 	const playOrPause = page.getByRole('button', { name: /^(pause|play)$/iu });
@@ -168,4 +168,41 @@ test('cancels an armed Draw gesture when entering Slide Master', async ({ page }
 	await openRibbonTab(page, 'Draw');
 	await expect(lasso).toHaveAttribute('aria-pressed', 'false');
 	await expect(lasso).toBeEnabled();
+});
+
+test('moves and rotates the ruler and keeps it on the canvas when changing tabs', async ({
+	page,
+}) => {
+	await page.getByRole('button', { name: 'Ruler', exact: true }).click();
+	const ruler = canvas(page).locator('[data-pptx-draw-ruler]');
+	const body = ruler.locator('path').first();
+	await expect(ruler).toBeVisible();
+	const start = await body.getAttribute('d');
+	await ruler.focus();
+	await page.keyboard.press('ArrowRight');
+	await expect(body).not.toHaveAttribute('d', start ?? '');
+	await page.keyboard.press('Shift+ArrowRight');
+	await expect(page.getByRole('slider', { name: 'Ruler angle' })).toHaveValue('1');
+	await page.keyboard.press('Shift+ArrowLeft');
+	const extent = await ruler.boundingBox();
+	if (!extent) throw new Error('Ruler is missing');
+	const centerX = extent.x + extent.width / 2;
+	const viewBox = (await ruler.getAttribute('viewBox'))?.split(' ').map(Number);
+	const modelHeight = viewBox?.[3] ?? extent.height;
+	const centerY = extent.y + extent.height / 2 + (14 * extent.height) / modelHeight;
+	const beforeDrag = await body.getAttribute('d');
+	await page.mouse.move(centerX, centerY);
+	await page.mouse.down();
+	await page.mouse.move(centerX + 70, centerY + 40, { steps: 5 });
+	await page.mouse.up();
+	await expect(body).not.toHaveAttribute('d', beforeDrag ?? '');
+	const afterDrag = await body.getAttribute('d');
+	await openRibbonTab(page, 'Home');
+	await expect(ruler).toBeVisible();
+	await expect(body).toHaveAttribute('d', afterDrag ?? '');
+	await openRibbonTab(page, 'Draw');
+	await expect(page.getByRole('button', { name: 'Ruler', exact: true })).toHaveAttribute(
+		'aria-pressed',
+		'true',
+	);
 });

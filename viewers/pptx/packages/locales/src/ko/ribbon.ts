@@ -70,6 +70,8 @@ export const translations = {
 	'pptx.draw.inkToMath': '잉크를 수식으로 변환',
 	'pptx.draw.guides': '안내선',
 	'pptx.draw.ruler': '눈금자',
+	'pptx.draw.rulerKeys':
+		'끌거나 화살표 키로 이동합니다. Shift 키를 누른 채 화살표 키를 눌러 회전합니다.',
 	'pptx.draw.rulerAngle': '눈금자 각도',
 	'pptx.draw.replay': '잉크 재생',
 	'pptx.draw.seek': '재생 위치',
