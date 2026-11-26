@@ -111,3 +111,22 @@ test('keeps a pen preset and exposes keyboard ruler and replay controls', async 
 	await page.getByRole('button', { name: 'Close replay' }).click();
 	await expect(canvas(page).locator('[data-pptx-draw-replay]')).toHaveCount(0);
 });
+
+test('arrow keys move focus between Draw commands and still adjust sliders', async ({ page }) => {
+	const draw = page.locator('pptx-ui-ribbon-draw');
+	const select = draw.getByRole('button', { name: 'Select', exact: true });
+	const pen = draw.getByRole('button', { name: 'Pen', exact: true });
+	await select.focus();
+	await page.keyboard.press('ArrowRight');
+	await expect(pen).toBeFocused();
+	await page.keyboard.press('Enter');
+	await expect(pen).toHaveAttribute('aria-pressed', 'true');
+	await page.keyboard.press('Home');
+	await expect(select).toBeFocused();
+	const width = draw.getByRole('slider', { name: 'Width', exact: true });
+	await width.focus();
+	const before = Number(await width.inputValue());
+	await page.keyboard.press('ArrowRight');
+	await expect(width).toHaveValue(String(before + 1));
+	await expect(width).toBeFocused();
+});

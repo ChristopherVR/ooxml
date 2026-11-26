@@ -1,6 +1,7 @@
 import { defineElement } from '../../registry';
 import { canRequestDraw } from '../render';
 import type { RibbonDrawIntent, RibbonDrawViewState } from '../render';
+import { handleDrawKey } from './ribbon-draw-keyboard';
 import { attachRibbonDrawStyles } from './ribbon-draw-styles';
 import { createRibbonDrawView } from './ribbon-draw-view';
 
@@ -62,30 +63,9 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 					event.preventDefault();
 				}
 			});
-			this.view.group.addEventListener('keydown', (event) => {
-				if (event.key === 'Escape') {
-					this.escape(event);
-				}
-				if ([' ', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
-					event.stopPropagation();
-				}
-			});
 			this.addEventListener('keydown', (event) => {
-				if (
-					[
-						' ',
-						'Enter',
-						'ArrowLeft',
-						'ArrowRight',
-						'ArrowUp',
-						'ArrowDown',
-						'Home',
-						'End',
-						'PageUp',
-						'PageDown',
-					].includes(event.key)
-				)
-					event.stopPropagation();
+				this.escape(event);
+				handleDrawKey(this, event);
 			});
 		}
 		get state() {
