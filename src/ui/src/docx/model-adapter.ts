@@ -43,8 +43,7 @@ import {
 	readDocumentInformation,
 	withBibliographySources,
 } from './document-information-attr';
-import { gridOf } from './table-restructure';
-import { signedTwips, twips } from 'ooxml-core/units';
+import { signedTwips } from 'ooxml-core/units';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -296,7 +295,6 @@ export function docToModel(
 				} = prior ?? {};
 				const style =
 					typeof node.attrs.tableStyleId === 'string' ? node.attrs.tableStyleId : priorStyle;
-				const grid = prior ? undefined : gridOf(node);
 				blocks.push({
 					...(prior
 						? {
@@ -305,24 +303,13 @@ export function docToModel(
 								contentControl: undefined,
 							}
 						: {
-								...tableBordersFromNode(node.attrs.borders),
-								...(grid?.every((width) => Number.isSafeInteger(width) && width > 0) && {
-									grid: grid.map(twips),
-								}),
-								...(typeof node.attrs.widthTwips === 'number' &&
-									Number.isSafeInteger(node.attrs.widthTwips) &&
-									node.attrs.widthTwips >= 0 && {
-										widthTwips: twips(node.attrs.widthTwips),
-									}),
+								// Indent and alignment have no table-tab control; read them from the node.
 								...(typeof node.attrs.indentTwips === 'number' &&
 									Number.isSafeInteger(node.attrs.indentTwips) && {
 										indentTwips: signedTwips(node.attrs.indentTwips),
 									}),
 								...(['left', 'center', 'right'].includes(node.attrs.alignment) && {
 									alignment: node.attrs.alignment,
-								}),
-								...((node.attrs.layout === 'fixed' || node.attrs.layout === 'autofit') && {
-									layout: node.attrs.layout,
 								}),
 							}),
 					type: 'table',

@@ -13,7 +13,6 @@ import type {
 	TableStyleCatalog,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
-import { twips } from 'ooxml-core/units';
 import { parseBordersJson, tableCellViews, tableGrid, tableViewAttrs } from 'ooxml-core/docx/ui';
 import { convertRestructuredTable, structureChanged } from './table-restructure-convert';
 import { gridOf } from './table-restructure';
