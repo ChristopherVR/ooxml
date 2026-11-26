@@ -491,7 +491,7 @@
     },
     "src/core": {
       "name": "ooxml-core",
-      "version": "2.1.2",
+      "version": "2.2.0",
       "bin": {
         "pptx": "./dist/pptx/cli/index.mjs",
       },
@@ -547,7 +547,7 @@
     },
     "src/ui": {
       "name": "ooxml-ui",
-      "version": "2.1.2",
+      "version": "2.2.0",
       "dependencies": {
         "dompurify": "^3.4.18",
         "emf-converter": "5.0.0",
@@ -660,7 +660,7 @@
     },
     "viewers/docx/packages/angular": {
       "name": "docx-angular-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -711,7 +711,7 @@
     },
     "viewers/docx/packages/react": {
       "name": "docx-react-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -728,7 +728,7 @@
     },
     "viewers/docx/packages/solid": {
       "name": "docx-solid-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -740,7 +740,7 @@
     },
     "viewers/docx/packages/svelte": {
       "name": "docx-svelte-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -752,7 +752,7 @@
     },
     "viewers/docx/packages/vanilla": {
       "name": "docx-vanilla-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -761,7 +761,7 @@
     },
     "viewers/docx/packages/vue": {
       "name": "docx-vue-viewer",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "dependencies": {
         "docx-core": "^2.0.0",
         "ooxml-core": "*",
@@ -844,7 +844,7 @@
     },
     "viewers/pptx/packages/angular": {
       "name": "pptx-angular-viewer",
-      "version": "5.1.2",
+      "version": "5.2.0",
       "dependencies": {
         "@lucide/angular": "^1.77.0",
         "dompurify": "^3.4.18",
@@ -852,7 +852,7 @@
         "html2canvas-pro": "^2.6.4",
         "jspdf": "^4.2.1",
         "jszip": "^3.10.2",
-        "ooxml-ui": "^2.1.2",
+        "ooxml-ui": "^2.2.0",
         "opentype.js": "^2.0.0",
         "pptx-viewer-core": "workspace:*",
         "tslib": "^2.9.1",
@@ -999,7 +999,7 @@
     },
     "viewers/pptx/packages/react": {
       "name": "pptx-react-viewer",
-      "version": "5.1.2",
+      "version": "5.2.0",
       "dependencies": {
         "clsx": "^2.1.1",
         "dompurify": "^3.4.18",
@@ -1086,7 +1086,7 @@
     },
     "viewers/pptx/packages/svelte": {
       "name": "pptx-svelte-viewer",
-      "version": "5.1.2",
+      "version": "5.2.0",
       "dependencies": {
         "@lucide/svelte": "^1.77.0",
         "fast-xml-parser": "^5.12.1",
@@ -1165,7 +1165,7 @@
     },
     "viewers/pptx/packages/vanilla": {
       "name": "pptx-vanilla-viewer",
-      "version": "4.1.2",
+      "version": "4.2.0",
       "dependencies": {
         "dompurify": "^3.4.18",
         "fast-xml-parser": "^5.12.1",
@@ -1205,7 +1205,7 @@
     },
     "viewers/pptx/packages/vue": {
       "name": "pptx-vue-viewer",
-      "version": "5.1.2",
+      "version": "5.2.0",
       "dependencies": {
         "@lucide/vue": "^1.77.0",
         "clsx": "^2.1.1",

@@ -3,6 +3,12 @@
 All notable changes to this package, newest first. Major releases are written by hand; the other
 entries are generated from [Conventional Commits](https://www.conventionalcommits.org).
 
+## [2.1.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-svelte-viewer@2.1.0) - 2026-11-26
+
+### Features
+
+- **docx:** Enable the mailings ribbon workflow ([d471275](https://github.com/ChristopherVR/ooxml/commit/d471275f03cdb4c76101d9757efc75bfc1e1dda6))
+
 ## [2.0.0](https://github.com/ChristopherVR/ooxml/releases/tag/docx-svelte-viewer@2.0.0) - 2026-11-21
 
 <!-- release-notes: 2.0 -->
