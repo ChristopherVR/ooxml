@@ -9,12 +9,43 @@
  *   `PptxHandlerRuntimeChartExternalData` → **this** → `PptxHandlerRuntimeChartParsing`
  */
 
-import { XmlObject } from '../../types';
+import type { XMLParser } from 'fast-xml-parser';
+import type JSZip from 'jszip';
+import type { ChartStyleDefinition } from '../../../../chart/style-definition';
+import type { XmlObject } from '../../types';
 import type { PptxChartData, PptxChartStyleDefinition } from '../../types';
-import { parseChartStyleDefinition } from '../../utils/chart-style-definition-parser';
+import {
+	readPptxChartStyleDefinition,
+	resolvePptxChartStyleDefinition,
+} from '../../utils/chart-style-definition-parser';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeChartExternalData';
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
+	private readonly chartStylesByPackage = new WeakMap<
+		JSZip,
+		{ parser: XMLParser; definitions: Map<string, ChartStyleDefinition | undefined> }
+	>();
+
+	private readChartStyleDefinition(styleXml: string): ChartStyleDefinition | undefined {
+		let styles = this.chartStylesByPackage.get(this.zip);
+		if (styles?.parser !== this.parser) {
+			styles = { parser: this.parser, definitions: new Map() };
+			this.chartStylesByPackage.set(this.zip, styles);
+		}
+		const { definitions } = styles;
+		if (definitions.has(styleXml)) return definitions.get(styleXml);
+
+		const parsed = this.parser.parse(styleXml) as XmlObject;
+		const root = this.xmlLookupService.getChildByLocalName(parsed, 'chartStyle') ?? parsed;
+		const definition = readPptxChartStyleDefinition(root, this.xmlLookupService);
+		// Office often stores the same built-in style at several paths. Cache its XML so a
+		// part rewrite cannot reuse a stale parse. Keep theme resolution in the caller.
+		if (definitions.size < 16 && styleXml.length <= 64 * 1024) {
+			definitions.set(styleXml, definition);
+		}
+		return definition;
+	}
+
 	/**
 	 * Parse the Office 2013+ chart-style part (`ppt/charts/style#.xml`)
 	 * referenced from the chart's relationships, sibling to
@@ -42,11 +73,10 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (!styleXml) {
 				return undefined;
 			}
-			const parsed = this.parser.parse(styleXml) as XmlObject;
-			const styleRoot = this.xmlLookupService.getChildByLocalName(parsed, 'chartStyle') ?? parsed;
-			return parseChartStyleDefinition(
-				styleRoot,
-				this.xmlLookupService,
+			const style = this.readChartStyleDefinition(styleXml);
+			if (!style) return undefined;
+			return resolvePptxChartStyleDefinition(
+				style,
 				// Through the full colour parser so a `cs:fontRef` colour keeps its
 				// transforms: every built-in style's title/axis/legend text is
 				// `tx1` with `lumMod 65000 lumOff 35000` (#595959 on a white-text

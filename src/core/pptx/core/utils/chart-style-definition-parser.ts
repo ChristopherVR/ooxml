@@ -2,7 +2,11 @@
 import { XMLBuilder } from 'fast-xml-parser';
 import { CHART_COLOR_STYLE_NS } from '../../../chart/color-style';
 import { readChartStyle } from '../../../chart/read-style';
-import { CHART_STYLE_PARTS, resolveChartStyleDefinition } from '../../../chart/style-definition';
+import {
+	CHART_STYLE_PARTS,
+	resolveChartStyleDefinition,
+	type ChartStyleDefinition,
+} from '../../../chart/style-definition';
 import { drawingColorXml } from '../../../drawingml/write-color';
 import { NS, elements, parseXml } from '../../../xml/index';
 import type { PptxChartStyleDefinition, XmlObject } from '../types';
@@ -14,6 +18,7 @@ type ResolveSchemeColor = (schemeClrNode: unknown) => string | undefined;
 type ParseColor = (fillNode: XmlObject | undefined) => string | undefined;
 
 const CS_CHILDREN = new Set(['defRPr', 'lnRef', 'fillRef', 'effectRef', 'fontRef', 'spPr']);
+const styleBuilder = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: '@_' });
 function normalize(value: unknown): unknown {
 	if (Array.isArray(value)) return value.map(normalize);
 	if (!value || typeof value !== 'object') return value;
@@ -26,22 +31,23 @@ function normalize(value: unknown): unknown {
 	);
 }
 
-export function parseChartStyleDefinition(
+export function readPptxChartStyleDefinition(
 	styleRoot: XmlObject,
 	xmlLookup: XmlLookupLike,
-	resolveSchemeColor: ResolveSchemeColor,
-	parseColor: ParseColor,
-): PptxChartStyleDefinition | undefined {
+): ChartStyleDefinition | undefined {
 	const parts: Record<string, unknown> = { '@_xmlns:cs': CHART_COLOR_STYLE_NS, '@_xmlns:a': NS.a };
 	for (const name of CHART_STYLE_PARTS) {
 		const node = xmlLookup.getChildByLocalName(styleRoot, name);
 		if (node) parts[`cs:${name}`] = normalize(node);
 	}
-	const xml = new XMLBuilder({ ignoreAttributes: false, attributeNamePrefix: '@_' }).build({
-		'cs:chartStyle': parts,
-	});
-	const style = readChartStyle(xml);
-	if (!style) return undefined;
+	return readChartStyle(styleBuilder.build({ 'cs:chartStyle': parts }));
+}
+
+export function resolvePptxChartStyleDefinition(
+	style: ChartStyleDefinition,
+	resolveSchemeColor: ResolveSchemeColor,
+	parseColor: ParseColor,
+): PptxChartStyleDefinition | undefined {
 	return resolveChartStyleDefinition(style, (color) => {
 		const element = parseXml(drawingColorXml(color)).documentElement;
 		const raw: XmlObject = {};

@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
 
 import type { XmlObject } from '../types';
-import { parseChartStyleDefinition } from './chart-style-definition-parser';
+import {
+	readPptxChartStyleDefinition,
+	resolvePptxChartStyleDefinition,
+} from './chart-style-definition-parser';
+
+function parseChartStyleDefinition(
+	root: XmlObject,
+	lookup: Parameters<typeof readPptxChartStyleDefinition>[1],
+	resolveScheme: Parameters<typeof resolvePptxChartStyleDefinition>[1],
+	parseFill: Parameters<typeof resolvePptxChartStyleDefinition>[2],
+) {
+	const style = readPptxChartStyleDefinition(root, lookup);
+	return style && resolvePptxChartStyleDefinition(style, resolveScheme, parseFill);
+}
 
 const xmlLookup = {
 	getChildByLocalName(parent: XmlObject | undefined, name: string): XmlObject | undefined {
@@ -51,6 +64,20 @@ describe('parseChartStyleDefinition', () => {
 		};
 		const result = parseChartStyleDefinition(styleRoot, xmlLookup, resolveSchemeColor, parseColor);
 		expect(result?.axisTitle).toStrictEqual({ fontSize: 11.97, color: '#tx1' });
+	});
+
+	it('resolves one parsed style against each chart theme', () => {
+		const style = readPptxChartStyleDefinition(
+			{ 'cs:title': { 'cs:fontRef': { '@_idx': 'minor', 'a:schemeClr': { '@_val': 'tx1' } } } },
+			xmlLookup,
+		);
+		if (!style) throw new Error('Expected a chart style');
+		expect(resolvePptxChartStyleDefinition(style, () => '#112233', parseColor)).toStrictEqual({
+			title: { color: '#112233' },
+		});
+		expect(resolvePptxChartStyleDefinition(style, () => '#445566', parseColor)).toStrictEqual({
+			title: { color: '#445566' },
+		});
 	});
 
 	it('resolves cs:lnRef and cs:fillRef scheme colours', () => {
