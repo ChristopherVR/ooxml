@@ -3,12 +3,14 @@ import type { OfficeUiDialog } from '../dialog/dialog';
 import { openOfficeAddIns } from './add-in-dialog';
 import './add-in-local-dialog';
 
+const description = "<img src='https://example.test/description' />";
+const descriptionPrefix = `${description}${'📝'.repeat(249 - description.length)}`;
 const xml = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="TaskPaneApp">
 	<Id>083a367e-842b-4d4f-ab91-cd5de849e495</Id><Version>1.0.0</Version>
 	<ProviderName>Lab Notes</ProviderName><DefaultLocale>en</DefaultLocale>
 	<DisplayName DefaultValue="&lt;img src='https://example.test/untrusted' /&gt;"/>
-	<Description DefaultValue="Review notes."/>
+	<Description DefaultValue="${descriptionPrefix.replace('<', '&lt;')}Reference notes."/>
 	<DefaultSettings><SourceLocation DefaultValue="https://example.test/pane"/></DefaultSettings>
 	<Permissions>ReadDocument</Permissions>
 </OfficeApp>`;
@@ -56,6 +58,9 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	expect(consent?.textContent).toContain('Lab Notes');
 	expect(consent?.textContent).not.toContain('Document.Read.User');
 	expect(abandoned.querySelector('a')?.parentElement?.hidden).toBe(true);
+	expect([...abandoned.querySelectorAll('p')].map((item) => item.textContent)).toContain(
+		`${descriptionPrefix}…`,
+	);
 	expect(abandoned.querySelector('img, iframe')).toBeNull();
 	abandoned.close();
 	expect((await open('myAddIns')).textContent).toContain('No add-ins');

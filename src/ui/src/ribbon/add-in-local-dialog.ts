@@ -14,6 +14,7 @@ import { localAddInText, permissionText } from './add-in-local-strings';
 
 const installs = new WeakMap<Node, Map<string, LocalAddIn>>();
 const LIMIT = 32;
+const DESCRIPTION_LIMIT = 250;
 
 function installationScope(host: HTMLElement | ShadowRoot): Node {
 	if (host instanceof ShadowRoot) return host.host;
@@ -120,7 +121,11 @@ export function mountLocalAddIns(
 			const heading = doc.createElement('p');
 			heading.textContent = `${manifest.name} (${manifest.version})`;
 			const summary = doc.createElement('p');
-			summary.textContent = manifest.description;
+			const characters = Array.from(manifest.description);
+			summary.textContent =
+				characters.length > DESCRIPTION_LIMIT
+					? `${characters.slice(0, DESCRIPTION_LIMIT - 1).join('')}…`
+					: manifest.description;
 			const details = doc.createElement('dl');
 			const detail = (label: string, value: string) => {
 				const term = doc.createElement('dt');
