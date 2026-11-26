@@ -145,3 +145,16 @@ it('round-trips PowerPoint-authored play and toggle triggers', async () => {
 	const reopened = await new PptxHandler().load(saved.slice().buffer);
 	expect(starts(reopened.slides)).toEqual(expected);
 });
+
+it('reads and writes mute independently of the saved volume', async () => {
+	const fixture = await readFile(new URL('../fixtures/media-start-modes.pptx', import.meta.url));
+	const handler = new PptxHandler();
+	const loaded = await handler.load(Uint8Array.from(fixture).buffer);
+	const clip = must(at(loaded.slides, 3).elements.find((element) => element.type === 'media'));
+	expect(clip).toMatchObject({ volume: 0.8, muted: true });
+	clip.muted = false;
+	const zip = await JSZip.loadAsync(await handler.save(loaded.slides));
+	const xml = await must(zip.file('ppt/slides/slide4.xml')).async('text');
+	expect(xml).toContain('vol="80000"');
+	expect(xml).not.toContain('mute="1"');
+});

@@ -246,6 +246,10 @@ export const translations = {
 	'pptx.ribbon.tab.videoFormat': 'Formato de vídeo',
 	'pptx.ribbon.tab.audioFormat': 'Formato de audio',
 	'pptx.ribbon.tab.smartArtFormat': 'Formato de SmartArt',
+	'pptx.mediaRibbon.volumeLow': 'Bajo',
+	'pptx.mediaRibbon.volumeMedium': 'Medio',
+	'pptx.mediaRibbon.volumeHigh': 'Alto',
+	'pptx.mediaRibbon.volumeMute': 'Silencio',
 	'pptx.mediaRibbon.unavailable': 'Seleccione un objeto editable.',
 	'pptx.mediaRibbon.unsupported':
 		'Este comando requiere contenido multimedia incrustado en una imagen.',

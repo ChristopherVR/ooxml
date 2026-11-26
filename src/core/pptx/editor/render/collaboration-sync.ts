@@ -185,6 +185,7 @@ export const SCALAR_ELEMENT_KEYS: ReadonlySet<string> = new Set([
 	'fadeInDuration',
 	'fadeOutDuration',
 	'volume',
+	'muted',
 	'autoPlay',
 	'startMode',
 	'playAcrossSlides',

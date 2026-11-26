@@ -17,6 +17,7 @@ export interface MediaTimingData {
 	rewindAfterPlaying?: boolean | undefined;
 	posterFramePath?: string | undefined;
 	volume?: number | undefined;
+	muted?: boolean | undefined;
 	fadeInDuration?: number | undefined;
 	fadeOutDuration?: number | undefined;
 	autoPlay?: boolean | undefined;

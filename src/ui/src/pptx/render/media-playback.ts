@@ -34,6 +34,7 @@ export interface MediaPlaybackSource {
 	loop?: boolean;
 	/** Authored volume, already normalised to 0..1 by the parse layer. */
 	volume?: number;
+	muted?: boolean;
 	/** Authored playback rate multiplier. */
 	playbackSpeed?: number;
 }
@@ -59,7 +60,7 @@ export interface MediaPlaybackAttributes {
 export function mediaPlaybackAttributes(source: MediaPlaybackSource): MediaPlaybackAttributes {
 	return {
 		loop: source.loop === true,
-		volume: Math.max(0, Math.min(1, source.volume ?? 1)),
+		volume: source.muted ? 0 : Math.max(0, Math.min(1, source.volume ?? 1)),
 		playbackRate: Math.max(0.25, Math.min(4, source.playbackSpeed ?? 1)),
 	};
 }

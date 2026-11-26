@@ -478,6 +478,8 @@ export interface MediaPptxElement extends PptxElementBase {
 	fadeOutDuration?: number | undefined;
 	/** Playback volume (0 to 1). */
 	volume?: number | undefined;
+	/** The authored mute flag, independent of the clip's saved volume. */
+	muted?: boolean | undefined;
 	/** Whether media auto-plays on slide entry. */
 	autoPlay?: boolean | undefined;
 	/** Where a clip starts in the slide-show timeline. */

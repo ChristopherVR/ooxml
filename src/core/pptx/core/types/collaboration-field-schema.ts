@@ -183,6 +183,7 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	fadeInDuration: 'scalar',
 	fadeOutDuration: 'scalar',
 	volume: 'scalar',
+	muted: 'scalar',
 	autoPlay: 'scalar',
 	startMode: 'scalar',
 	playAcrossSlides: 'scalar',

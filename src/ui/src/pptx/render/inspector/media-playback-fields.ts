@@ -30,6 +30,7 @@ const MAX_FADE_SECONDS = 59;
 
 const START_OPTIONS: readonly InspectorFieldOption[] = [
 	{ value: 'onClick', labelKey: 'pptx.media.startOnClick' },
+	{ value: 'sequence', labelKey: 'pptx.mediaRibbon.inSequence' },
 	{ value: 'auto', labelKey: 'pptx.media.startAutomatically' },
 ];
 
@@ -56,8 +57,6 @@ function flag(
 		write: (element, value) =>
 			mediaPatch(element, {
 				[id]: value === true || undefined,
-				// PowerPoint's "Play Across Slides" also starts the clip automatically.
-				...(id === 'playAcrossSlides' && value === true ? { autoPlay: true } : {}),
 			}),
 	};
 	if (visibleWhen) {
@@ -93,8 +92,12 @@ export const MEDIA_PLAYBACK_SECTION: MediaPlaybackSection = {
 			decimals: 0,
 			wide: true,
 			testId: 'media-volume',
-			read: (element) => (mediaOf(element)?.volume ?? 1) * 100,
-			write: (element, value) => mediaPatch(element, { volume: Number(value) / 100 }),
+			read: (element) => (mediaOf(element)?.muted ? 0 : (mediaOf(element)?.volume ?? 1)) * 100,
+			write: (element, value) =>
+				mediaPatch(element, {
+					volume: Number(value) / 100,
+					...(mediaOf(element)?.muted && { muted: false }),
+				}),
 		},
 		{
 			id: 'start',
@@ -103,8 +106,17 @@ export const MEDIA_PLAYBACK_SECTION: MediaPlaybackSection = {
 			options: START_OPTIONS,
 			wide: true,
 			testId: 'media-start',
-			read: (element) => (mediaOf(element)?.autoPlay ? 'auto' : 'onClick'),
-			write: (element, value) => mediaPatch(element, { autoPlay: value === 'auto' || undefined }),
+			read: (element) =>
+				mediaOf(element)?.startMode === 'sequence'
+					? 'sequence'
+					: mediaOf(element)?.autoPlay
+						? 'auto'
+						: 'onClick',
+			write: (element, value) =>
+				mediaPatch(element, {
+					startMode: value === 'auto' || value === 'sequence' ? value : 'click',
+					autoPlay: value === 'auto',
+				}),
 		},
 		flag(
 			'playAcrossSlides',

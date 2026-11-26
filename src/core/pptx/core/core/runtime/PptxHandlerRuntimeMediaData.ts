@@ -213,6 +213,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			if (timing.volume !== undefined) {
 				el.volume = timing.volume;
 			}
+			if (timing.muted !== undefined) el.muted = timing.muted;
 			if (timing.rewindAfterPlaying !== undefined) {
 				el.rewindAfterPlaying = timing.rewindAfterPlaying;
 			}

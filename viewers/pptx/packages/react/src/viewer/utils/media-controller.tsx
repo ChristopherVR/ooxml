@@ -68,11 +68,7 @@ export function PresentationMediaController({
 	// shared, so all five bindings agree on what `vol="0"` or a 10x rate means.
 	// `loop` is declarative here (the <video>/<audio> `loop` prop, from
 	// `element.loop`), so only the two IDL-only properties are applied by hand.
-	const { volume: playbackVolume, playbackRate } = mediaPlaybackAttributes({
-		loop: element.loop,
-		volume: element.volume,
-		playbackSpeed: element.playbackSpeed,
-	});
+	const { volume: playbackVolume, playbackRate } = mediaPlaybackAttributes(element);
 
 	// Apply volume
 	useEffect(() => {

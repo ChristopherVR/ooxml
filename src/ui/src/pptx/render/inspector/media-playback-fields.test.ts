@@ -35,10 +35,9 @@ describe('media playback fields', () => {
 		expect(view!.fields.find((f) => f.id === 'volume')?.value).toBe(50);
 		expect(view!.fields.find((f) => f.id === 'start')?.value).toBe('onClick');
 		expect(patch(media(), 'volume', '80')).toStrictEqual({ volume: 0.8 });
-		expect(patch(media(), 'start', 'auto')).toStrictEqual({ autoPlay: true });
+		expect(patch(media(), 'start', 'auto')).toStrictEqual({ autoPlay: true, startMode: 'auto' });
 		expect(patch(media({ mediaType: 'audio' }), 'playAcrossSlides', true)).toStrictEqual({
 			playAcrossSlides: true,
-			autoPlay: true,
 		});
 	});
 

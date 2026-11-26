@@ -26,15 +26,21 @@ it('edits the selected clip and gates unsupported options', async () => {
 	strip.state = { element: video, editable: true, translate: (key) => key, patch };
 	document.body.append(strip);
 	const volume = await vi.waitFor(() => {
-		const input = strip.querySelector<HTMLInputElement>(
-			'[data-ribbon-control="playback.options.volume"] input',
+		const input = strip.querySelector<HTMLElementTagNameMap['pptx-ui-select']>(
+			'[data-ribbon-control="playback.options.volume"] pptx-ui-select',
 		);
-		expect(input?.value).toBe('80');
+		expect(input?.value).toBe('high');
 		return input!;
 	});
-	volume.value = '50';
+	volume.value = 'medium';
 	volume.dispatchEvent(new Event('change'));
-	expect(patch).toHaveBeenCalledWith('video', { volume: 0.5 });
+	expect(patch).toHaveBeenCalledWith('video', { volume: 0.5, muted: false });
+	volume.value = 'low';
+	volume.dispatchEvent(new Event('change'));
+	expect(patch).toHaveBeenCalledWith('video', { volume: 0.33, muted: false });
+	volume.value = 'mute';
+	volume.dispatchEvent(new Event('change'));
+	expect(patch).toHaveBeenCalledWith('video', { muted: true });
 	expect(
 		strip
 			.querySelector('[data-ribbon-control="playback.options.across"]')
@@ -48,7 +54,6 @@ it('edits the selected clip and gates unsupported options', async () => {
 	expect(patch).toHaveBeenCalledWith('video', {
 		startMode: 'sequence',
 		autoPlay: false,
-		playAcrossSlides: false,
 	});
 	strip.state = { ...strip.state, editable: false };
 	expect(volume.disabled).toBe(true);
@@ -95,4 +100,33 @@ it('shows disabled shape commands when the SmartArt data part is missing', async
 		expect(larger?.hasAttribute('disabled')).toBe(true);
 		expect(larger?.getAttribute('title')).toBe('The selected node has no editable drawing shape.');
 	});
+});
+
+it('adds a bookmark when randomUUID is unavailable', async () => {
+	const strip = document.createElement('pptx-ui-contextual-ribbon');
+	const patch = vi.fn();
+	strip.group = 'playback.bookmarks';
+	strip.state = { element: video, editable: true, translate: (key) => key, patch };
+	const player = document.createElement('video');
+	player.dataset.elementId = video.id;
+	player.dataset.pptxElement = 'true';
+	player.currentTime = 1.25;
+	document.body.append(strip, player);
+	const command = await vi.waitFor(() => {
+		const button = strip.querySelector('[data-ribbon-control="playback.bookmarks.add"]');
+		expect(button).not.toBeNull();
+		return button!;
+	});
+	const randomUUID = vi.spyOn(crypto, 'randomUUID').mockImplementation(() => {
+		throw new Error('randomUUID is unavailable');
+	});
+	try {
+		command.dispatchEvent(new CustomEvent('command-request'));
+		expect(randomUUID).not.toHaveBeenCalled();
+		expect(patch).toHaveBeenCalledWith('video', {
+			bookmarks: [{ id: expect.any(String), time: 1.25, label: 'Bookmark 1' }],
+		});
+	} finally {
+		randomUUID.mockRestore();
+	}
 });

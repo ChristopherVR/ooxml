@@ -87,8 +87,10 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	const fade = control(page, 'playback.editing.fadeIn').getByRole('spinbutton');
 	await fade.fill('0.25');
 	await fade.press('Tab');
-	await control(page, 'playback.options.volume').getByRole('spinbutton').fill('50');
-	await control(page, 'playback.options.volume').getByRole('spinbutton').press('Tab');
+	const volume = control(page, 'playback.options.volume').getByRole('combobox');
+	await chooseSelectValue(page, volume, 'medium');
+	await chooseSelectValue(page, volume, 'mute');
+	await expect(video).toHaveJSProperty('volume', 0);
 	const loop = control(page, 'playback.options.loop').getByRole('checkbox');
 	await loop.click();
 	await expect(loop).toBeChecked();
@@ -109,6 +111,7 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	expect(xml).toContain('<p14:bmk name="BM2"');
 	expect(xml).toMatch(/<p14:bmk name="Bookmark \d+" time="\d+"/u);
 	expect(xml).toContain('vol="50000"');
+	expect(xml).toContain('mute="1"');
 	expect(xml).toContain('repeatCount="indefinite"');
 	expect(xml).toContain('cmd="playFrom(0.0)"');
 });
@@ -150,7 +153,17 @@ test('audio shows its own Format tab and media-specific playback options', async
 	await expect(fullScreen).toHaveAccessibleDescription('This command is for video.');
 	const across = control(page, 'playback.options.across').getByRole('checkbox');
 	await expect(across).toBeEnabled();
-	await across.click();
+	if (!(await across.isChecked())) await across.click();
+	await chooseSelectValue(
+		page,
+		control(page, 'playback.options.start').getByRole('combobox'),
+		'auto',
+	);
+	await chooseSelectValue(
+		page,
+		control(page, 'playback.options.start').getByRole('combobox'),
+		'click',
+	);
 	await expect(across).toBeChecked();
 	const xml = await readZipPartText(
 		await downloadBytes(await savePptxViaBackstage(page)),

@@ -123,6 +123,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					cMediaNode['@_vol'] = String(Math.round(Math.min(1, Math.max(0, media.volume)) * 100000));
 				}
 
+				if (media.muted === true) cMediaNode['@_mute'] = '1';
+				if (media.muted === false) delete cMediaNode['@_mute'];
+
 				// Hide when not playing → showWhenStopped="0"
 				if (media.hideWhenNotPlaying) {
 					cMediaNode['@_showWhenStopped'] = '0';
@@ -181,6 +184,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					media.autoPlay,
 					media.startMode,
 					media.volume,
+					media.muted,
 					media.loop,
 					media.fullScreen,
 					media.hideWhenNotPlaying,

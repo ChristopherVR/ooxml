@@ -102,6 +102,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 					...(cTn?.['@_fill'] === 'remove' && { rewindAfterPlaying: true }),
 					...(posterFramePath !== undefined && { posterFramePath }),
 					...(volume !== undefined && { volume }),
+					...(['1', 'true'].includes(String(cMediaNode['@_mute'])) && { muted: true }),
 					...(timing.autoPlay && { autoPlay: true }),
 					...(!timing.autoPlay &&
 						start?.['@_delay'] === 'indefinite' &&

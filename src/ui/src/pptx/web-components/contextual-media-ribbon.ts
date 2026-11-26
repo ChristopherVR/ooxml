@@ -1,5 +1,6 @@
 import { html, nothing } from 'lit';
 import type { MediaPptxElement } from 'ooxml-core/pptx';
+import { generateElementId } from '../render/element-clipboard';
 import { canInteractWithElement } from '../render/element-locks';
 import { MEDIA_PLAYBACK_SECTION } from '../render/inspector/media-playback-fields';
 import type { ContextualControls, ContextualFields } from './contextual-ribbon-fields';
@@ -24,6 +25,21 @@ export function renderMediaControls(
 ) {
 	const { text, patch, number, toggle, select, color, command } = fields;
 	const options = MEDIA_PLAYBACK_SECTION.fields;
+	const volumeChoices = [
+		['low', text('pptx.mediaRibbon.volumeLow', 'Low'), 0.33],
+		['medium', text('pptx.mediaRibbon.volumeMedium', 'Medium'), 0.5],
+		['high', text('pptx.mediaRibbon.volumeHigh', 'High'), 0.8],
+		['mute', text('pptx.mediaRibbon.volumeMute', 'Mute'), 0],
+	] as const;
+	const volume = media.volume ?? 1;
+	const volumeChoice =
+		media.muted || volume === 0
+			? 'mute'
+			: volume < 0.415
+				? 'low'
+				: volume < 0.65
+					? 'medium'
+					: 'high';
 	const fieldLabel = (id: string, fallback: string) =>
 		text(options.find((field) => field.id === id)?.labelKey ?? '', fallback);
 	const local =
@@ -60,11 +76,7 @@ export function renderMediaControls(
 			control,
 			label,
 			media[key] === true,
-			(enabled) =>
-				patch({
-					[key]: enabled,
-					...(key === 'playAcrossSlides' && enabled && { autoPlay: true, startMode: 'auto' }),
-				}),
+			(enabled) => patch({ [key]: enabled }),
 			reason ?? pictureRequired,
 		);
 	switch (ctx.group) {
@@ -91,7 +103,7 @@ export function renderMediaControls(
 					patch({
 						bookmarks: [
 							...bookmarks,
-							{ id: crypto.randomUUID(), time, label: `${label} ${index}` },
+							{ id: generateElementId(), time, label: `${label} ${index}` },
 						],
 					});
 				},
@@ -111,7 +123,18 @@ export function renderMediaControls(
 			${number('fadeIn', fieldLabel('fadeInDuration', 'Fade In (s)'), media.fadeInDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeInDuration: value || undefined }), clipRequired)}
 			${number('fadeOut', fieldLabel('fadeOutDuration', 'Fade Out (s)'), media.fadeOutDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeOutDuration: value || undefined }), clipRequired)}`;
 		case 'playback.options':
-			return html`${number('volume', `${fieldLabel('volume', 'Volume')} %`, (media.volume ?? 1) * 100, 0, 100, 1, (value) => patch({ volume: value / 100 }), pictureRequired)}
+			return html`${select(
+				'volume',
+				fieldLabel('volume', 'Volume'),
+				volumeChoice,
+				volumeChoices.map(([id, label]) => [id, label]),
+				(value) => {
+					const choice = volumeChoices.find(([id]) => id === value);
+					if (choice)
+						patch(value === 'mute' ? { muted: true } : { volume: choice[2], muted: false });
+				},
+				pictureRequired,
+			)}
 			${select(
 				'start',
 				fieldLabel('start', 'Start'),
@@ -126,7 +149,6 @@ export function renderMediaControls(
 					patch({
 						startMode: value,
 						autoPlay: value === 'auto',
-						...(value !== 'auto' && { playAcrossSlides: false }),
 					});
 				},
 				pictureRequired,
