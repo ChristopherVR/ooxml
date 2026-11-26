@@ -4,6 +4,22 @@
 import type { TextRun } from './model';
 import { getW, isElement, named, textContent, type XmlElement } from './xml';
 import { parseFieldFlags } from './field-flags';
+import { isCachedPageBreak } from './breaks';
+
+const isInstruction = (element: XmlElement) =>
+	named(element, 'instrText') || named(element, 'delInstrText');
+
+/** Word can pair a carriage return with instruction text in the same run. */
+export function runFieldInstruction(content: readonly XmlElement[]): string | undefined {
+	if (!content.some(isInstruction)) return undefined;
+	let instruction = '';
+	for (const child of content) {
+		if (isInstruction(child)) instruction += textContent(child);
+		else if (named(child, 'cr')) instruction += '\r';
+		else if (!named(child, 'rPr') && !isCachedPageBreak(child)) return undefined;
+	}
+	return instruction;
+}
 
 /** The field code's name (first word, upper case), e.g. `PAGE` for ` PAGE \* MERGEFORMAT `. */
 export function fieldName(instr: string): string {
@@ -17,10 +33,18 @@ export function fieldName(instr: string): string {
 export function createFieldTracker() {
 	const stack: { instr: string; inResult: boolean; locked?: boolean }[] = [];
 	return (element: XmlElement, run: TextRun): TextRun => {
+		const children = Array.from(element.childNodes).filter(isElement);
+		const open = stack.at(-1);
+		if (open && !open.inResult) {
+			const instruction = run.fieldCode ?? runFieldInstruction(children);
+			if (instruction !== undefined) {
+				open.instr += instruction;
+				return run;
+			}
+		}
 		let resultInstr: string | undefined;
 		let resultLocked: boolean | undefined;
-		for (const child of Array.from(element.childNodes)) {
-			if (!isElement(child)) continue;
+		for (const child of children) {
 			if (named(child, 'fldChar')) {
 				const type = getW(child, 'fldCharType');
 				if (type === 'begin') {
@@ -32,8 +56,7 @@ export function createFieldTracker() {
 				} else if (type === 'end') stack.pop();
 			} else {
 				const top = stack.at(-1);
-				if ((named(child, 'instrText') || named(child, 'delInstrText')) && top && !top.inResult)
-					top.instr += textContent(child);
+				if (isInstruction(child) && top && !top.inResult) top.instr += textContent(child);
 				else if ((named(child, 't') || named(child, 'delText')) && top?.inResult) {
 					resultInstr = top.instr.trim();
 					resultLocked = top.locked;

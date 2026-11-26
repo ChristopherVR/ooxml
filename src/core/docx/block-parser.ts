@@ -2,7 +2,7 @@
 // Paragraph/table/run parsing shared by the main document body, headers, footers, footnotes and
 // endnotes (moved out of parse.ts so every container can reuse the identical parser).
 import type { Block, Paragraph, Revision, Table, TextRun } from './model';
-import { first, getW, isElement, named, textContent, buildXml, type XmlElement } from './xml';
+import { first, getW, isElement, named, buildXml, type XmlElement } from './xml';
 import { runPropertiesHaveUnknownContent } from './write-run-validation';
 import { classifyBreak, isCachedPageBreak } from './breaks';
 import { parseDirectRunProperties } from './run-properties';
@@ -12,7 +12,12 @@ import { parseDrawing, type DrawingContext } from './drawing';
 import { resolveHyperlink, parseSimpleHyperlinkField } from './hyperlink';
 import { paragraphBookmarkNames } from './bookmarks';
 import { readParagraphPermissionMarkers, resolvePermissions } from './permissions';
-import { createFieldTracker, storyFieldResults, type FieldResultMetadata } from './field-runs';
+import {
+	createFieldTracker,
+	runFieldInstruction,
+	storyFieldResults,
+	type FieldResultMetadata,
+} from './field-runs';
 import { parseEquation } from './equation';
 import { parseInlineControl, flatBlocks } from './parse-content-control';
 import { parseFieldFlags } from './field-flags';
@@ -91,11 +96,7 @@ function parseRun(node: XmlElement, revision?: Revision): TextRun {
 	let noteMark: TextRun['noteMark'];
 	let noteSeparator: TextRun['noteSeparator'];
 	let fieldChar: TextRun['fieldChar'];
-	const fieldCode =
-		content.length > 0 &&
-		content.every((child) => named(child, 'instrText') || named(child, 'delInstrText'))
-			? content.map((child) => textContent(child)).join('')
-			: undefined;
+	const fieldCode = runFieldInstruction(content);
 	const only = content.length === 1 ? content[0] : undefined;
 	if (only) {
 		if (named(only, 'br')) {

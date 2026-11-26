@@ -31,10 +31,10 @@ const columns = new Map<string, string>(
 	]),
 );
 const placeholder = /_[A-Z]+\d?_|\/[a-z]\d?/g;
-const addressName = '<<_FIRST0_>><<_LAST0_>>';
+const addressName = '<<_FIRST0_>><< _LAST0_>>';
 const greetingName = addressName;
-const internationalLocality = '<<_POSTAL_>><<_CITY_>><<_STATE_>>';
-const domesticLocality = '<<_CITY_>><<, _STATE_>><<_POSTAL_>>';
+const internationalLocality = '<<_POSTAL_ >><<_CITY_>><< _STATE_>>';
+const domesticLocality = '<<_CITY_>><<, _STATE_>><< _POSTAL_>>';
 const postalCountry =
 	/^(de(?:utschland)?|germany|fr(?:ance)?|es(?:paña)?|spain|it(?:alia|aly)?|nl|netherlands|be(?:lgium)?|at|austria|ch|switzerland)$/i;
 const postalLanguage =
@@ -54,18 +54,17 @@ export function addressTemplate(options: AddressBlockOptions = {}): string {
 	const name = {
 		full: addressName,
 		first: '<<_FIRST0_>>',
-		last: '<<_TITLE0_>><<_LAST0_>>',
+		last: '<<_TITLE0_ >><<_LAST0_>>',
 		none: '',
 	};
 	return [
 		name[options.name ?? 'full'],
-		options.company !== false ? '<<_COMPANY_>>' : '',
-		...(options.street !== false
-			? ['<<_STREET1_>>', '<<_STREET2_>>', domesticLocality, '<<_COUNTRY_>>']
-			: []),
-	]
-		.filter(Boolean)
-		.join('\n');
+		'\n',
+		options.company !== false ? '<<_COMPANY_\n>>' : '',
+		options.street !== false
+			? `<<_STREET1_\n>><<_STREET2_\n>>${domesticLocality}<<\n_COUNTRY_>>`
+			: '',
+	].join('');
 }
 
 export interface GreetingLineOptions {
@@ -77,7 +76,7 @@ export interface GreetingLineOptions {
 }
 
 export function greetingTemplate(options: GreetingLineOptions = {}): string {
-	const name = { full: greetingName, first: '<<_FIRST0_>>', last: '<<_TITLE0_>><<_LAST0_>>' };
+	const name = { full: greetingName, first: '<<_FIRST0_>>', last: '<<_TITLE0_>><< _LAST0_>>' };
 	return `<<_BEFORE_ ${(options.before ?? 'Dear').replace(/[<>]/g, '')}>>${name[options.name ?? 'full']}<<_AFTER_ ${(options.after ?? ',').replace(/[<>]/g, '')}>>`;
 }
 
@@ -110,6 +109,7 @@ export function renderMailingField(
 	const addCountry = countryMode !== '0' && !excluded.includes(country.toLowerCase());
 	let template = arg('f') ?? (greeting ? greetingTemplate() : addressTemplate());
 	if (template.length > 4096) return undefined;
+	template = template.replace(/\r\n?/g, '\n');
 	if (
 		!greeting &&
 		(field.switches.has('d') && country
@@ -133,33 +133,22 @@ export function renderMailingField(
 		missing ||= empty;
 		return empty ? '' : value;
 	};
-	const lines = template
-		.split(/\r\n?|\n/)
-		.map((line) => {
-			const pieces: string[] = [];
-			let cursor = 0;
-			for (const group of line.matchAll(/<<([^<>]*)>>/g)) {
-				pieces.push(replace(line.slice(cursor, group.index)));
-				const item = group[1] ?? '';
-				if (greeting && /^(?:_BEFORE_|\/g)(?: |$)/.test(item))
-					before = item.replace(/^(?:_BEFORE_|\/g) ?/, '');
-				else if (greeting && /^(?:_AFTER_|\/x)(?: |$)/.test(item))
-					after = item.replace(/^(?:_AFTER_|\/x) ?/, '');
-				else {
-					const value = replace(item);
-					if (value && pieces.some((piece) => piece.trim()) && !/^[\s,.;:]/.test(value))
-						pieces.push(' ');
-					pieces.push(value);
-				}
-				cursor = group.index + group[0].length;
-			}
-			pieces.push(replace(line.slice(cursor)));
-			return pieces.join('').trim();
-		})
-		.filter(Boolean);
-	const text = lines.join('\n');
+	const pieces: string[] = [];
+	let cursor = 0;
+	for (const group of template.matchAll(/<<([^<>]*)>>/g)) {
+		pieces.push(replace(template.slice(cursor, group.index)));
+		const item = group[1] ?? '';
+		if (greeting && /^(?:_BEFORE_|\/g)(?: |$)/.test(item))
+			before = item.replace(/^(?:_BEFORE_|\/g) ?/, '');
+		else if (greeting && /^(?:_AFTER_|\/x)(?: |$)/.test(item))
+			after = item.replace(/^(?:_AFTER_|\/x) ?/, '');
+		else pieces.push(replace(item));
+		cursor = group.index + group[0].length;
+	}
+	pieces.push(replace(template.slice(cursor)));
+	const text = pieces.join('').trim();
 	if (substitutions > 64) return undefined;
 	if (!greeting) return text;
 	if (!text || missing) return arg('e') ?? '';
-	return `${before ? `${before} ` : ''}${text}${after}`;
+	return `${before && !/\s$/.test(before) ? `${before} ` : before}${text}${after}`;
 }
