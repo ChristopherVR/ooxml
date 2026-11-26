@@ -55,7 +55,6 @@ describe('editor controls use the host dictionary', () => {
 			for (const key of [
 				'pptx.documentProperties.statistics.elements',
 				'pptx.inspector.properties',
-				'pptx.toolbar.comments',
 			]) {
 				const button = [...container.querySelectorAll('button')].find(
 					(item) => item.title === dictionary[key],

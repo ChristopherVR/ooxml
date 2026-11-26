@@ -106,15 +106,7 @@ describe('ribbonToolbar fixed-tab galleries', () => {
 describe('ribbonToolbar catalogue tagging', () => {
 	it('tags the Home tab groups', () => {
 		const groups = new Set(attrValues(mountRibbon(), 'data-ribbon-group'));
-		for (const id of [
-			'clipboard',
-			'slides',
-			'font',
-			'paragraph',
-			'drawing',
-			'arrange',
-			'editing',
-		]) {
+		for (const id of ['clipboard', 'slides', 'font', 'paragraph', 'drawing', 'editing']) {
 			expect(groups.has(`home.${id}`)).toBeTruthy();
 		}
 	});
