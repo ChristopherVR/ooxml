@@ -443,6 +443,7 @@ export const deRibbon: RibbonStrings = {
 	Comment: 'Kommentar',
 	Media: 'Medien',
 	'Online Video': 'Onlinevideo',
+	'Inserting online video is not supported': 'Das Einfügen von Onlinevideos wird nicht unterstützt',
 	'Add comment': 'Kommentar hinzufügen',
 	Reply: 'Antworten',
 	Resolve: 'Lösen',

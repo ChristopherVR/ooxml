@@ -436,6 +436,8 @@ export const frRibbon: RibbonStrings = {
 	Comment: 'Commentaire',
 	Media: 'Média',
 	'Online Video': 'Vidéo en ligne',
+	'Inserting online video is not supported':
+		'L’insertion de vidéos en ligne n’est pas prise en charge',
 	'Add comment': 'Ajouter un commentaire',
 	Reply: 'Répondre',
 	Resolve: 'Résoudre',

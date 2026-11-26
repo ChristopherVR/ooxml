@@ -37,7 +37,12 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			insert.locator('[aria-label="Link to Previous"], [aria-label="Insert column break"]'),
 		).toHaveCount(0);
 		await expect(group('Symbols').locator('select[aria-label="Symbol"]')).toHaveCount(1);
-		await expect(group('Media').locator('button[aria-label="Online Video"]')).toBeDisabled();
+		const video = group('Media').locator('button[aria-label="Online Video"]');
+		await expect(video).toBeDisabled();
+		await expect(video).toHaveAttribute(
+			'aria-description',
+			'Inserting online video is not supported',
+		);
 
 		await editor.locator('.ProseMirror').click();
 		await page.keyboard.type('Review me');

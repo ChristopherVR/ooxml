@@ -443,6 +443,7 @@ export const esRibbon: RibbonStrings = {
 	Comment: 'Comentario',
 	Media: 'Multimedia',
 	'Online Video': 'Vídeo en línea',
+	'Inserting online video is not supported': 'No se admite la inserción de vídeos en línea',
 	'Add comment': 'Agregar comentario',
 	Reply: 'Responder',
 	Resolve: 'Resolver',

@@ -440,6 +440,7 @@ export const zhCNRibbon: RibbonStrings = {
 	Comment: '批注',
 	Media: '媒体',
 	'Online Video': '联机视频',
+	'Inserting online video is not supported': '不支持插入联机视频',
 	'Add comment': '添加批注',
 	Reply: '回复',
 	Resolve: '解决',

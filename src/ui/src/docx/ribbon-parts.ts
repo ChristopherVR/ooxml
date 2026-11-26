@@ -178,6 +178,7 @@ export const tool = (
 		caption?: string;
 		name?: LocalizationKey;
 		className?: string;
+		unavailableReason?: LocalizationKey;
 	} = {},
 ) => {
 	const el = button(options.name ? strings.en[options.name] : label, '', action, options.className);
@@ -185,7 +186,9 @@ export const tool = (
 		el.dataset.localearialabel = label;
 		el.dataset.localename = options.name;
 	}
-	el.title = action ? label : 'Not available in this editor';
+	el.title = action ? label : (options.unavailableReason ?? 'Not available in this editor');
+	if (!action && options.unavailableReason)
+		el.dataset.localeariadescription = options.unavailableReason;
 	el.classList.add(
 		options.large ? 'ribbon-large' : options.inline ? 'ribbon-inline' : 'ribbon-small',
 	);

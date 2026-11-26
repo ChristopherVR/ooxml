@@ -434,6 +434,7 @@ export const enRibbon = {
 	Comment: 'Comment',
 	Media: 'Media',
 	'Online Video': 'Online Video',
+	'Inserting online video is not supported': 'Inserting online video is not supported',
 	'Add comment': 'Add comment',
 	Reply: 'Reply',
 	Resolve: 'Resolve',

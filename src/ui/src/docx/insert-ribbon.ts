@@ -91,7 +91,13 @@ export function buildInsertGroups(): HTMLElement[] {
 			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
 			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
 		),
-		group('Media', tool('Online Video', 'picture', null, { large: true })),
+		group(
+			'Media',
+			tool('Online Video', 'picture', null, {
+				large: true,
+				unavailableReason: 'Inserting online video is not supported',
+			}),
+		),
 		group(
 			'Links',
 			tool('Insert link', 'link', { type: 'link' }, { large: true, caption: 'Link' }),

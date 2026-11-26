@@ -131,6 +131,9 @@ export function localizeElement(root: HTMLElement, locale: EditorLocale): void {
 				element.dataset.englishName,
 			);
 		}
+		const description = element.dataset.localeariadescription;
+		if (description)
+			element.setAttribute('aria-description', translate(locale, description as LocalizationKey));
 		for (const attribute of ['aria-label', 'title', 'placeholder']) {
 			const property = `locale${attribute.replace(/[^a-z]/gi, '')}`;
 			const value = element.dataset[property] ?? element.getAttribute(attribute);
