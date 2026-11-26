@@ -79,7 +79,9 @@ function cellControlAttributes(control: ContentControl): Record<string, string> 
 		'data-sdt': JSON.stringify(control),
 		'data-sdt-cell': String(control.id ?? ''),
 		'data-sdt-kind': String(control.kind ?? 'richText'),
-		...(control.alias ? { 'data-sdt-title': String(control.alias) } : {}),
+		...(control.alias && control.appearance !== 'tags'
+			? { 'data-sdt-title': String(control.alias) }
+			: {}),
 		...(control.showingPlaceholder ? { 'data-sdt-placeholder': '1' } : {}),
 		...(control.lock ? { 'data-sdt-lock': String(control.lock) } : {}),
 	};
@@ -250,7 +252,8 @@ export const schema = new Schema({
 						? {
 								'data-sdt-block': String(node.attrs.contentControl.id ?? ''),
 								'data-sdt-kind': String(node.attrs.contentControl.kind ?? 'richText'),
-								...(node.attrs.contentControl.alias
+								...(node.attrs.contentControl.alias &&
+								node.attrs.contentControl.appearance !== 'tags'
 									? { 'data-sdt-title': String(node.attrs.contentControl.alias) }
 									: {}),
 								...(node.attrs.contentControl.lock

@@ -39,4 +39,9 @@ unspaced en or em dash, preserved leading spaces after explicit breaks, and used
 remaining width for a long word that spans two formatting runs. In mode 15, the amount a
 justified line could give up depended on the spaces available and the width of the next word.
 
+The synthetic #349 follow-up `block-content-control-tags.docx` covers a control spanning three
+paragraphs and a control spanning two table rows, nested with a control spanning two cells.
+The reporter's samples contain inline controls only. Regenerate the follow-up with
+`python src/core/docx/layout/fixtures/word-layout-reports/generate-block-content-control-tags.py`.
+
 Run the Word export again with `pwsh -File src/core/scripts/docx-layout-reports-word.ps1`.

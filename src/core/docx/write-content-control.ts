@@ -6,7 +6,7 @@ import type {
 	ContentControlGlyph,
 	ContentControlListItem,
 } from './content-control-model';
-import { first as nsFirst } from '../xml/index';
+import { children as nsChildren } from '../xml/index';
 import { parseContentControl, sdtContent, typeElements, WORD_2012_NS } from './content-control';
 import {
 	NAMED_TYPES,
@@ -27,7 +27,7 @@ import {
 	type XmlElement,
 } from './xml';
 
-/** `CT_SdtPr` child order; the type element (and everything unknown) follows these. */
+/** `CT_SdtPr` base child order; the type element (and unknown extensions) follows these. */
 const PROPERTY_ORDER = [
 	'rPr',
 	'alias',
@@ -200,13 +200,16 @@ export function patchContentControl(doc: XmlDocument, sdt: XmlElement, control: 
 	}
 	if (control.alias !== current.alias) setValued(doc, sdtPr, 'alias', control.alias);
 	if (control.tag !== current.tag) setValued(doc, sdtPr, 'tag', control.tag);
-	if (control.appearance && control.appearance !== current.appearance) {
-		const previous = nsFirst(sdtPr, 'appearance', WORD_2012_NS, false);
-		if (previous) sdtPr.removeChild(previous);
-		const prefix = declareIgnorableExtension(doc, WORD_2012_NS, 'w15');
-		const appearance = doc.createElementNS(WORD_2012_NS, `${prefix}:appearance`);
-		appearance.setAttributeNS(WORD_2012_NS, `${prefix}:val`, control.appearance);
-		sdtPr.appendChild(appearance);
+	if (control.appearance !== current.appearance) {
+		const [previous, ...duplicates] = nsChildren(sdtPr, 'appearance', WORD_2012_NS, false);
+		if (control.appearance !== undefined) {
+			const prefix = declareIgnorableExtension(doc, WORD_2012_NS, 'w15');
+			const appearance = previous ?? doc.createElementNS(WORD_2012_NS, `${prefix}:appearance`);
+			appearance.setAttributeNS(WORD_2012_NS, `${prefix}:val`, control.appearance);
+			// MS-DOCX 2.2.3 defines this as an ignorable extension without a fixed position.
+			if (!previous) sdtPr.appendChild(appearance);
+		} else if (previous) sdtPr.removeChild(previous);
+		for (const element of duplicates) sdtPr.removeChild(element);
 	}
 	const lock = validLock(control.lock);
 	if (lock !== current.lock) setValued(doc, sdtPr, 'lock', lock);

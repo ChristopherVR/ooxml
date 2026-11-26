@@ -50,6 +50,25 @@ function sampleResult(): LayoutResult {
 }
 
 describe('renderPrintLayout', () => {
+	it('paints block, row and cell tags in the laid out paragraphs', async () => {
+		const file = join(
+			import.meta.dirname,
+			'../../../core/docx/layout/fixtures/word-layout-reports/block-content-control-tags.docx',
+		);
+		const { model } = await loadDocx(new Uint8Array(await readFile(file)));
+		const { element } = renderPrintLayout(layoutDocumentModel(model, createFakeMeasurer()));
+		const tags = [...element.querySelectorAll<HTMLElement>('.dve-print-content-control-tag')];
+		expect(tags.map((tag) => [tag.dataset.tagEdge, tag.textContent])).toEqual([
+			['start', 'Block'],
+			['end', ''],
+			['start', 'Rows'],
+			['start', 'Cells'],
+			['end', ''],
+			['end', ''],
+		]);
+		expect(tags.every((tag) => Number.parseFloat(tag.style.width) > 0)).toBe(true);
+	});
+
 	it('paints the title and a closing tag in their reserved widths', () => {
 		const result = sampleResult();
 		const block = at(at(at(result.pages, 0).columns, 0).blocks, 0);

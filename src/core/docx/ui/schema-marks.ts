@@ -65,7 +65,9 @@ function contentControlDom(data: string): DOMOutputSpec {
 			'data-sdt': data,
 			'data-sdt-id': String(control.id ?? ''),
 			'data-sdt-kind': String(control.kind ?? 'richText'),
-			...(control.alias ? { 'data-sdt-title': String(control.alias) } : {}),
+			...(control.alias && control.appearance !== 'tags'
+				? { 'data-sdt-title': String(control.alias) }
+				: {}),
 			...(control.showingPlaceholder ? { 'data-sdt-placeholder': '1' } : {}),
 			...(control.lock ? { 'data-sdt-lock': String(control.lock) } : {}),
 		},

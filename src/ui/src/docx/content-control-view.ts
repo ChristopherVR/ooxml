@@ -11,6 +11,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { canEditControlContent, controlDate, type ContentControl } from 'ooxml-core/docx';
 import { openCalendarPopover } from './content-control-calendar';
+import { contentControlTagWidgets } from './content-control-tag-widgets';
 import { openListPopover } from './ribbon-popover';
 
 /** The control a click landed on, read back from the span the mark drew. */
@@ -82,17 +83,22 @@ function operate(
 }
 
 export function contentControlViewPlugin(): Plugin {
-	return new Plugin({
+	const plugin: Plugin<DecorationSet> = new Plugin({
+		state: {
+			init: (_config, state) => contentControlTagWidgets(state.doc),
+			apply: (tr, tags) => (tr.docChanged ? contentControlTagWidgets(tr.doc) : tags),
+		},
 		props: {
 			decorations(state) {
+				const tags = plugin.getState(state) ?? DecorationSet.empty;
 				const active = controlAtSelection(state);
-				if (!active) return null;
+				if (!active) return tags;
 				if (active.level === 'inline')
-					return DecorationSet.create(state.doc, [
+					return tags.add(state.doc, [
 						Decoration.inline(active.from, active.to, { class: 'dve-sdt-active' }),
 					]);
 				if (active.level === 'cell')
-					return DecorationSet.create(state.doc, [
+					return tags.add(state.doc, [
 						Decoration.node(active.from, active.to, { class: 'dve-sdt-active' }),
 					]);
 				const decorations: Decoration[] = [];
@@ -103,7 +109,7 @@ export function contentControlViewPlugin(): Plugin {
 						);
 					return node.type.name !== 'paragraph';
 				});
-				return DecorationSet.create(state.doc, decorations);
+				return tags.add(state.doc, decorations);
 			},
 			handleClick(view, _pos, event) {
 				if (!view.editable) return false;
@@ -112,4 +118,5 @@ export function contentControlViewPlugin(): Plugin {
 			},
 		},
 	});
+	return plugin;
 }

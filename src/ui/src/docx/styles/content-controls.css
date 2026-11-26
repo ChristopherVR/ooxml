@@ -4,6 +4,29 @@
 	box-decoration-break: clone;
 	-webkit-box-decoration-break: clone;
 }
+.dve-sdt-tag {
+	display: inline-block;
+	min-inline-size: 0.8em;
+	min-block-size: 1em;
+	padding-inline: 0.4em;
+	box-sizing: border-box;
+	border: 1px solid var(--office-border, #9cb4c9);
+	border-radius: 4px 0 0 4px;
+	background: var(--office-selected, #e8f0f8);
+	color: var(--office-foreground, #192a39);
+	font-size: 0.75em;
+	line-height: 1;
+	white-space: nowrap;
+	pointer-events: none;
+	user-select: none;
+}
+.dve-sdt-tag::before {
+	content: attr(data-tag-title);
+}
+.dve-sdt-tag[data-tag-edge='end'] {
+	border-radius: 0 4px 4px 0;
+	vertical-align: -0.12em;
+}
 .dve-sdt[data-sdt-placeholder],
 p[data-sdt-block] .dve-sdt[data-sdt-placeholder],
 td[data-sdt-cell][data-sdt-placeholder] {

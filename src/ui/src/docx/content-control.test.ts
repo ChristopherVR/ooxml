@@ -15,14 +15,18 @@ import {
 import { contentControlViewPlugin } from './content-control-view';
 import { parseListEntries } from './content-control-dialog';
 import { docToModel, modelToDoc } from './model-adapter';
+import contentControlStyles from './styles/content-controls.css?raw';
 
 // Vitest runs from src/ui; the Word-authored fixture lives with the core tests.
 const fixture = resolve(
 	process.cwd(),
 	'../core/docx/__fixtures__/content-controls/content-controls.docx',
 );
-async function open() {
-	const loaded = await loadDocx(new Uint8Array(await readFile(fixture)));
+const layoutFixture = (name: string) =>
+	resolve(process.cwd(), '../core/docx/layout/fixtures/word-layout-reports', name);
+
+async function open(path = fixture) {
+	const loaded = await loadDocx(new Uint8Array(await readFile(path)));
 	const doc = modelToDoc(loaded.model);
 	const host = document.createElement('div');
 	document.body.append(host);
@@ -48,6 +52,66 @@ const click = (view: EditorView, element: Element) =>
 	);
 
 describe('content controls in the editor', () => {
+	it('decorates each inline occurrence without adding text or changing selection positions', async () => {
+		const { view, host, loaded } = await open(layoutFixture('issue-349-content-control-tags.docx'));
+		try {
+			const first = host.querySelector('p');
+			const tags = [...(first?.querySelectorAll<HTMLElement>('.dve-sdt-tag') ?? [])];
+			expect(tags.map((tag) => [tag.dataset.tagEdge, tag.dataset.tagTitle])).toEqual([
+				['start', 'Condition'],
+				['end', ''],
+				['start', 'Then'],
+				['end', ''],
+				['start', 'Else'],
+				['end', ''],
+			]);
+			expect(host.querySelectorAll('.dve-sdt-tag')).toHaveLength(240);
+			const span = controlSpans(view.state.doc)[0];
+			if (!span) throw new Error('Expected an inline control');
+			expect(tags.slice(0, 2).map((tag) => view.posAtDOM(tag, 0))).toEqual([span.from, span.to]);
+			expect(
+				tags.every(
+					(tag) => tag.contentEditable === 'false' && tag.getAttribute('aria-hidden') === 'true',
+				),
+			).toBe(true);
+			view.dispatch(
+				view.state.tr.setSelection(TextSelection.create(view.state.doc, span.from + 1)),
+			);
+			expect(view.state.selection.from).toBe(span.from + 1);
+			expect(host.textContent).toBe(view.state.doc.textContent);
+			expect(first?.querySelector('.dve-sdt[data-sdt-title]')).toBeNull();
+			const control = { ...span.control };
+			delete control.appearance;
+			view.dispatch(updateControlProperties(view.state, span, control));
+			expect(host.querySelectorAll('.dve-sdt-tag')).toHaveLength(238);
+			expect(view.state.selection.from).toBe(span.from + 1);
+			expect(await savedXml(loaded, view)).not.toContain('dve-sdt-tag');
+		} finally {
+			view.destroy();
+			host.remove();
+		}
+	});
+
+	it('puts block, row and cell tags inside the first and last paragraphs they enclose', async () => {
+		const { view, host } = await open(layoutFixture('block-content-control-tags.docx'));
+		try {
+			expect(
+				[...host.querySelectorAll('p')].map((p) =>
+					[...p.querySelectorAll<HTMLElement>('.dve-sdt-tag')].map((tag) => tag.dataset.tagTitle),
+				),
+			).toEqual([['Block'], [], [''], ['Rows', 'Cells'], [''], [], [''], []]);
+		} finally {
+			view.destroy();
+			host.remove();
+		}
+	});
+
+	it('uses themed chrome and draws the label as generated content', () => {
+		expect(contentControlStyles).toContain('content: attr(data-tag-title)');
+		expect(contentControlStyles).toContain('var(--office-selected, #e8f0f8)');
+		expect(contentControlStyles).toContain('var(--office-foreground, #192a39)');
+	});
+
 	it('draws every control with its kind, title and placeholder state', async () => {
 		const { view, host } = await open();
 		const spans = [...host.querySelectorAll<HTMLElement>('.dve-sdt')];

@@ -57,6 +57,20 @@ const paragraph = (text: string, props = '') =>
 	`<w:p><w:r>${props ? `<w:rPr>${props}</w:rPr>` : ''}<w:t xml:space="preserve">${text}</w:t></w:r></w:p>`;
 
 describe('exportDocxPdf', () => {
+	it('paints the six block, row and cell tags in the paper palette', async () => {
+		const file = join(
+			import.meta.dirname,
+			'../../../../core/docx/layout/fixtures/word-layout-reports/block-content-control-tags.docx',
+		);
+		const { model } = await loadDocx(new Uint8Array(await readFile(file)));
+		const { bytes } = await exportDocxPdf(model, { measurer });
+		const pdf = inspect(bytes);
+		expect(pdf.text).toContain('BlockLorem ipsum');
+		expect(pdf.text).toContain('RowsCellsConsectetur');
+		expect(pdf.content.match(/0\.909804 0\.941176 0\.972549 rg/g)).toHaveLength(6);
+		expect(pdf.content.match(/0\.098039 0\.164706 0\.223529 rg/g)).toHaveLength(3);
+	});
+
 	it('writes real text with no images for a text-only document', async () => {
 		const { model } = await docx(paragraph('Hello PDF') + paragraph('Second (line)', '<w:b/>'));
 		const { bytes, blob, report } = await exportDocxPdf(model, { measurer });

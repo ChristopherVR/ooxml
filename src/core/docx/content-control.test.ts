@@ -539,6 +539,7 @@ describe('content controls in tables and with unmodeled properties', () => {
 					'<w15:appearance w15:val="hidden"/></w:sdtPr>',
 			),
 			alias: 'Kept',
+			appearance: 'hidden',
 		};
 		expect(await documentXml(await loaded.save(loaded.model))).toMatch(
 			/<w:sdt><w:sdtPr[^>]*><w:rPr><w:rStyle w:val="Strong"\/><w14:ligatures w14:val="standard"\/><\/w:rPr><w:alias w:val="Kept"\/><w:id w:val="4243"\/><w:lock w:val="unlocked"\/><w:placeholder><w:docPart w:val="DefaultPlaceholder_1"\/><\/w:placeholder><w15:appearance w15:val="hidden"\/><\/w:sdtPr><w:sdtContent>/,
@@ -706,6 +707,7 @@ describe('content controls in tables and with unmodeled properties', () => {
 			level: 'inline',
 			kind: 'checkbox',
 			checked: false,
+			appearance: 'hidden',
 			sourceXml: sdtPr(
 				'<w14:checkbox><w14:checked w14:val="0"/></w14:checkbox><w15:appearance w15:val="hidden"/>',
 			),

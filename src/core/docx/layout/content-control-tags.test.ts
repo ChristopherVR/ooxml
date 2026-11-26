@@ -8,6 +8,128 @@ import { layoutParagraph } from './paragraph-layout';
 import { at } from './test-helpers';
 
 const measurer = createFakeMeasurer();
+const fixtures = './fixtures/word-layout-reports/';
+
+it('lays out one pair of tags for each paragraph, row and cell group', async () => {
+	const { model } = await loadDocx(
+		await readFile(new URL(fixtures + 'block-content-control-tags.docx', import.meta.url)),
+	);
+	const { pages } = layoutDocumentModel(model, measurer);
+	const paragraphs = pages.flatMap((page) =>
+		page.columns.flatMap((column) =>
+			column.blocks.flatMap((block) =>
+				block.kind === 'paragraph' ? [block] : block.rows.flatMap((row) => row.cells.flat()),
+			),
+		),
+	);
+	expect(
+		paragraphs.map((paragraph) =>
+			paragraph.lines.flatMap((line) =>
+				line.fragments
+					.filter((fragment) => fragment.contentControlTag)
+					.map((tag) => [
+						tag.contentControlTag,
+						tag.text,
+						tag.sourceStart,
+						tag.sourceEnd,
+						tag.widthPx > 0,
+					]),
+			),
+		),
+	).toEqual([
+		[['start', 'Block', 0, 0, true]],
+		[],
+		[['end', '', 4, 4, true]],
+		[
+			['start', 'Rows', 0, 0, true],
+			['start', 'Cells', 0, 0, true],
+		],
+		[['end', '', 10, 10, true]],
+		[],
+		[['end', '', 7, 7, true]],
+		[],
+	]);
+});
+
+it('wraps the block title with its first word and keeps the closing tag with the last word', () => {
+	const contentControl: ContentControl = {
+		id: '8',
+		level: 'block',
+		kind: 'richText',
+		alias: 'A label',
+		appearance: 'tags',
+	};
+	const document = {
+		...createDocument(),
+		blocks: [{ type: 'paragraph' as const, id: 'p', runs: [{ text: 'Lorem ipsum' }] }],
+	};
+	const linesFor = (paragraph: Paragraph) => {
+		const section = at(adaptDocumentModel({ ...document, blocks: [paragraph] }).sections, 0);
+		const block = at(section.blocks, 0);
+		if (block.kind !== 'paragraph') throw new Error('Expected a paragraph');
+		return layoutParagraph(block, 115, measurer, () => {}).lines.map((line) =>
+			line.fragments.map((fragment) => fragment.contentControlTag ?? fragment.text).join(''),
+		);
+	};
+	const paragraph = at(document.blocks, 0);
+	expect(linesFor(paragraph)).toEqual(['Lorem ipsum']);
+	expect(linesFor({ ...paragraph, contentControl })).toEqual(['startLorem', 'ipsumend']);
+});
+
+it('clears a tagged appearance on save and preserves the remaining properties', async () => {
+	const { model, save } = await loadDocx(
+		await readFile(new URL(fixtures + 'issue-349-content-control-tags.docx', import.meta.url)),
+	);
+	const first = at(model.blocks, 0);
+	if (first.type !== 'paragraph') throw new Error('Expected a paragraph');
+	const run = first.runs.find((item) => item.text === 'alpha');
+	expect(run?.contentControl?.appearance).toBe('tags');
+	if (!run?.contentControl) throw new Error('Expected an inline control');
+	run.text = 'updated';
+	delete run.contentControl.appearance;
+	const reopened = await loadDocx(await save(model));
+	const paragraph = at(reopened.model.blocks, 0);
+	if (paragraph.type !== 'paragraph') throw new Error('Expected a paragraph');
+	const control = paragraph.runs.find((item) => item.text === 'updated')?.contentControl;
+	expect(control).toMatchObject({ alias: 'Condition', tag: 'Condition' });
+	expect(control?.appearance).toBeUndefined();
+	expect(control?.sourceXml).not.toContain('appearance');
+	expect(paragraph.runs.find((item) => item.text === 'beta')?.contentControl?.appearance).toBe(
+		'tags',
+	);
+});
+
+it('saves appearance edits on a paragraph group, a row group and a cell group', async () => {
+	const { model, save } = await loadDocx(
+		await readFile(new URL(fixtures + 'block-content-control-tags.docx', import.meta.url)),
+	);
+	for (const block of model.blocks) {
+		if (block.contentControl) block.contentControl.appearance = 'hidden';
+		if (block.type !== 'table') continue;
+		for (const row of block.rowProperties ?? []) {
+			if (row.contentControl) delete row.contentControl.appearance;
+		}
+		for (const cell of block.rows.flat()) {
+			if (cell.contentControl) delete cell.contentControl.appearance;
+		}
+	}
+	const { model: reopened } = await loadDocx(await save(model));
+	const paragraph = at(reopened.blocks, 0);
+	expect(paragraph.contentControl?.appearance).toBe('hidden');
+	expect(paragraph.contentControl?.sourceXml).toMatch(/appearance[^>]*\/><w:id/);
+	const table = reopened.blocks.find((block) => block.type === 'table');
+	if (!table) throw new Error('Expected a table');
+	const rows = table.rowProperties?.map((row) => row.contentControl);
+	const cells = at(table.rows, 0).map((cell) => cell.contentControl);
+	expect(rows?.map((control) => [control?.alias, control?.appearance])).toEqual([
+		['Rows', undefined],
+		['Rows', undefined],
+	]);
+	expect(cells.map((control) => [control?.alias, control?.appearance])).toEqual([
+		['Cells', undefined],
+		['Cells', undefined],
+	]);
+});
 
 it('reserves line space for each tagged control in the Word fixture (#349)', async () => {
 	const layout = async (name: string) => {

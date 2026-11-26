@@ -89,10 +89,11 @@ export class DocxPdfText {
 	): void {
 		const font = this.#font(fragment);
 		const baseline = this.baseline(fragment, line, lineTop);
-		if (fragment.background && fragment.widthPx > 0) {
+		const background = fragment.contentControlTag ? '#e8f0f8' : fragment.background;
+		if (background && fragment.widthPx > 0) {
 			const top = fragment.topPx !== undefined ? lineTop + fragment.topPx : lineTop;
 			const height = fragment.boxHeightPx ?? line.heightPx;
-			if (fillWith(page, fragment.background, 'transparent')) {
+			if (fillWith(page, background, 'transparent')) {
 				page.rect(x, top, fragment.widthPx, height);
 				page.op('f');
 			}
@@ -109,7 +110,7 @@ export class DocxPdfText {
 				fragment.leader === 'heavy' ? 2 : 1,
 			);
 		} else if (text.trim()) {
-			fillWith(page, fragment.color);
+			fillWith(page, fragment.contentControlTag ? '#192a39' : fragment.color);
 			if (fragment.contentControlTag) {
 				const widthPx = Math.min(fragment.widthPx, this.measurer.widthOf(text, font));
 				this.#text(

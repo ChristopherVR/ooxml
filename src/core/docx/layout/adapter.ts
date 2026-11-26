@@ -41,7 +41,11 @@ import { first, parseXml } from '../xml';
 import { parseDirectRunProperties } from '../run-properties';
 import { fontOf } from './paragraph-tokens';
 import { adaptTable } from './adapt-table';
-import { adaptContentControlTags } from './adapt-content-control-tags';
+import {
+	adaptBlockContentControlTags,
+	adaptContentControlTags,
+} from './adapt-content-control-tags';
+import { blockContentControlTags } from './block-content-control-tags';
 import type { TableStyleConditionalFormatting } from '../table-model';
 import {
 	addsParagraphSpacing,
@@ -137,6 +141,12 @@ export function adaptDocumentModel(
 ): LayoutDocumentInput {
 	const reviewMode = options.reviewDisplayMode ?? 'all';
 	const visibleModel = visibleReviewModel(model, reviewMode);
+	const blockTags = blockContentControlTags([
+		model.blocks,
+		...(visibleModel.footnotes ?? []).map((note) => note.blocks),
+		...(visibleModel.endnotes ?? []).map((note) => note.blocks),
+		...Object.values(model.footnoteSeparators ?? {}).map((note) => note.blocks),
+	]);
 	const catalog =
 		model.paragraphStyles ?? (model.usesImplicitNormalStyle ? implicitParagraphStyles : undefined);
 	const runCatalog =
@@ -422,11 +432,13 @@ export function adaptDocumentModel(
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
 		const footnotes = paragraphFootnotes(visible, visibleModel, noteLabel, adaptParagraph);
 		const { betweenBorder, ...box } = paragraphBox(resolved, model.theme);
+		const edges = blockTags.get(paragraph);
+		const taggedRuns = edges ? adaptBlockContentControlTags(runs, edges) : runs;
 		const adapted: LayoutParagraph = {
 			kind: 'paragraph',
 			id: paragraph.id,
 			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
-			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...runs] : runs).map(
+			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...taggedRuns] : taggedRuns).map(
 				withFontFallback,
 			),
 			...(footnotes.length ? { footnotes } : {}),
@@ -667,7 +679,9 @@ export function adaptDocumentModel(
 					block.kind === 'paragraph' &&
 					!block.footnotes?.length &&
 					!block.floats?.length &&
-					block.runs.every((run) => !run.text && !run.object && !run.breakAfter);
+					block.runs.every(
+						(run) => !run.text && !run.object && !run.breakAfter && !run.contentControlTag,
+					);
 				if (!marker) return [block];
 				return slice[offset - 1]?.kind === 'table'
 					? [{ ...block, afterTableSectionBreak: true }]
