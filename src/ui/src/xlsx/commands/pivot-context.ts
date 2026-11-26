@@ -106,7 +106,7 @@ export function pivotDesignCommands(): Command[] {
 									field,
 									functions: [],
 								}))
-							: [],
+							: (pivot.fieldSubtotals ?? []).filter(({ functions }) => functions.length),
 					...(position === 'none'
 						? {}
 						: {

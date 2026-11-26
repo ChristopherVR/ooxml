@@ -152,3 +152,33 @@ test('leaves an imported report unstyled until a gallery style is selected', asy
 	await editor(page).getByRole('menuitem', { name: 'Medium Style 4', exact: true }).click();
 	await expect(heading).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
 });
+
+test('keeps custom subtotals when moving them to the top and bottom', async ({ page }) => {
+	await loadPivotWorkbook(page);
+	await goToCell(page, 'A2');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
+	await clickRibbonControl(page, tabs.locator('[data-command="pivot.field-settings"]'));
+	const dialog = editor(page).locator('[data-dialog="pivot-field-settings"]');
+	await dialog.locator('input[type=radio][value=custom]').check();
+	await dialog.getByLabel('Average', { exact: true }).check();
+	await dialog.getByLabel('Count', { exact: true }).check();
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	for (const position of ['Top', 'Bottom']) {
+		await clickRibbonControl(page, tabs.getByRole('button', { name: 'Subtotals', exact: true }));
+		await editor(page)
+			.getByRole('menuitem', { name: `Show All Subtotals at ${position}` })
+			.click();
+		await expect(
+			grid(page)
+				.locator('.xg-c:visible')
+				.filter({ hasText: /^Fruit Average$/ }),
+		).toBeVisible();
+		await expect(
+			grid(page)
+				.locator('.xg-c:visible')
+				.filter({ hasText: /^Fruit Count$/ }),
+		).toBeVisible();
+	}
+});

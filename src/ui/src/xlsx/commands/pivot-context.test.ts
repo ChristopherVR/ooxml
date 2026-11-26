@@ -4,6 +4,44 @@ import { clickButton, createTestContext, inputByLabel, waitForDialog } from './t
 
 afterEach(() => document.body.replaceChildren());
 
+it('preserves custom subtotal functions when switching positions', async () => {
+	const ctx = createTestContext();
+	const stop = installCommands(ctx);
+	try {
+		const session = ctx.session()!;
+		[
+			['Group', 'Item', 'Amount'],
+			['North', 'A', '10'],
+			['North', 'B', '3'],
+		].forEach((row, r) => row.forEach((cell, c) => session.setCellInput(0, r, c, cell)));
+		const custom = { field: 'Group', functions: ['count', 'average'] } as const;
+		session.createPivotTable(
+			0,
+			{ row: 0, col: 4 },
+			{
+				source: 'A1:C3',
+				rowField: 'Group',
+				secondRowField: 'Item',
+				valueField: 'Amount',
+				fieldSubtotals: [
+					{ ...custom, functions: [...custom.functions] },
+					{ field: 'Item', functions: [] },
+				],
+			},
+		);
+		ctx.select('E2');
+		for (const position of ['top', 'bottom']) {
+			expect(await ctx.commands.run(`pivot.subtotal-${position}`)).toBe(true);
+			expect(session.workbook.sheets[0]?.pivotTables?.[0]).toMatchObject({
+				subtotalPosition: position,
+				fieldSubtotals: [custom],
+			});
+		}
+	} finally {
+		stop();
+	}
+});
+
 it('shows both contextual tabs for a PivotTable cell and drives undoable ribbon commands', async () => {
 	const ctx = createTestContext();
 	const stop = installCommands(ctx);
