@@ -37,6 +37,10 @@ export function floatExclusion(
 	};
 }
 
+export function floatExclusions(floats: readonly LayoutFloatBox[]): Exclusion[] {
+	return floats.filter((float) => wrapsText(float) && !float.inCell).map(floatExclusion);
+}
+
 /**
  * Areas that wrapped floating pictures and floating tables take from the text, per page index.
  * An object laid out in a table cell wraps only that cell's text (`cell-floats.ts`).
@@ -44,9 +48,7 @@ export function floatExclusion(
 export function wrapExclusions(pages: LayoutPageBox[]): Map<number, Exclusion[]> {
 	const exclusions = new Map<number, Exclusion[]>();
 	for (const page of pages) {
-		const list = (page.floats ?? [])
-			.filter((float) => wrapsText(float) && !float.inCell)
-			.map(floatExclusion);
+		const list = floatExclusions(page.floats ?? []);
 		// Floating tables (`w:tblpPr`) and text frames (`w:framePr`): text wraps around their boxes.
 		for (const column of page.columns)
 			for (const block of column.blocks) {

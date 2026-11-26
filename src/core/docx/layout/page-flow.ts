@@ -2,7 +2,7 @@ import { SectionFlow } from './section-flow';
 import { FOOTNOTE_SEPARATOR_PX } from './page-cursor';
 import { balanceColumns, canBalanceBlock } from './balance-columns';
 import type { TextMeasurer } from './measure';
-import type { LayoutDocumentInput, LayoutSection, StoryMargins } from './input';
+import type { LayoutDocumentInput, LayoutSection, StoryExclusions, StoryMargins } from './input';
 import type { LayoutPageBox, LayoutResult } from './result';
 import { inFlow } from './result';
 import type { Exclusion } from './wrap';
@@ -84,10 +84,20 @@ export function layoutSections(
 	input: LayoutDocumentInput,
 	measurer: TextMeasurer,
 	exclusions?: ReadonlyMap<number, Exclusion[]>,
+	storyExclusions?: StoryExclusions,
 ): LayoutResult {
 	const approximations = new Set<string>();
 	const note = (message: string) => approximations.add(message);
 	const pages: LayoutPageBox[] = [];
+	const exclusionsFor = (pagination: LayoutPageBox[]) =>
+		exclusions || storyExclusions
+			? (index: number) => {
+					const body = exclusions?.get(index);
+					const page = pagination[index];
+					const story = page && storyExclusions?.(pagination, page);
+					return story?.length ? (body?.length ? [...body, ...story] : story) : body;
+				}
+			: undefined;
 	let previousFlow: SectionFlow | undefined;
 	input.sections.forEach((section, index) => {
 		const previous = input.sections[index - 1];
@@ -131,7 +141,7 @@ export function layoutSections(
 			measurer,
 			note,
 			index,
-			exclusions,
+			exclusionsFor(pages),
 			continueAt,
 			undefined,
 			undefined,
@@ -154,7 +164,7 @@ export function layoutSections(
 						measurer,
 						(message) => trialNotes.push(message),
 						index,
-						exclusions,
+						exclusionsFor(trialPages),
 						continueAt,
 						{ pageIndex: last.index, heightPx },
 						undefined,

@@ -396,6 +396,8 @@ export interface LayoutDocumentInput {
 	sections: LayoutSection[];
 	/** Expands the vertical body margins to clear the page's in-flow header and footer. */
 	storyMargins?: StoryMargins;
+	/** Resolves header and footer wrap geometry during pagination, using the previous pass for fields. */
+	storyWrap?: (previousPages: import('./result').LayoutPageBox[]) => StoryExclusions;
 	/** How to paginate a `w:cantSplit` row taller than an empty page/column (`'split'` by default). */
 	oversizedCantSplitRow?: OversizedCantSplitRow;
 }
@@ -403,3 +405,8 @@ export interface LayoutDocumentInput {
 export type StoryMargins = (
 	pages: import('./result').LayoutPageBox[],
 ) => Pick<LayoutPageGeometry, 'marginTopPx' | 'marginBottomPx'>;
+
+export type StoryExclusions = (
+	pages: import('./result').LayoutPageBox[],
+	page: import('./result').LayoutPageBox,
+) => readonly import('./wrap').Exclusion[];

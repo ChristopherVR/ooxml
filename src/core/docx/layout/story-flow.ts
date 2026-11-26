@@ -5,12 +5,12 @@ import type { LayoutDocumentInput, LayoutTextFrame } from './input';
 import type { TextMeasurer } from './measure';
 import {
 	headerFooterForPage,
-	pageNumbers,
 	pageNumberValues,
 	fieldDisplayText,
 	sectionPageCounts,
 	type PageFieldContext,
 } from './page-fields';
+import { formatNoteNumber } from '../notes';
 import { pageStyleRefs } from './page-style-refs';
 import { layoutSections } from './page-flow';
 import { pageFrames, placeInFrames } from './floats';
@@ -197,25 +197,27 @@ export function createPageStories(
 	now = new Date(),
 ) {
 	const model = refreshComputedFields(document);
-	const labels = pageNumbers(model, pages);
 	const numbers = pageNumberValues(model, pages);
 	const counts = sectionPageCounts(pages);
 	const styleRefs = pageStyleRefs(model, pages);
 	const cache = new WeakMap<Block[], Map<number, ReturnType<typeof flowStory>>>();
-	return (index: number): PlacedStory[] => {
-		const page = pages[index];
+	return (
+		index: number,
+		page = pages[index],
+		pageNumber = numbers[index] ?? index + 1,
+	): PlacedStory[] => {
 		if (!page) return [];
 		const section = model.sections?.[page.sectionIndex];
 		const widthPx = Math.max(1, page.widthPx - page.marginLeftPx - page.marginRightPx);
 		const values = {
-			page: labels[index] ?? String(index + 1),
+			page: formatNoteNumber(pageNumber, section?.pageNumbering?.format ?? 'decimal'),
 			numPages: String(pages.length),
 			sectionPages: String(counts.get(page.sectionIndex) ?? 1),
 			now,
 		};
 		const placed: PlacedStory[] = [];
 		for (const kind of ['header', 'footer'] as const) {
-			const content = headerFooterForPage(model, page, numbers[index] ?? index + 1, `${kind}s`);
+			const content = headerFooterForPage(model, page, pageNumber, `${kind}s`);
 			if (!content) continue;
 			const source = fillFields(styleRefs.content(content, index).blocks, values);
 			let widths = cache.get(source);

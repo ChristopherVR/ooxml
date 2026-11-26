@@ -49,7 +49,7 @@ export class SectionFlow {
 		measurer: TextMeasurer,
 		note: (m: string) => void,
 		sectionIndex = 0,
-		private readonly exclusions?: ReadonlyMap<number, Exclusion[]>,
+		private readonly exclusions?: (pageIndex: number) => readonly Exclusion[] | undefined,
 		continueAt?: number,
 		private readonly balance?: { pageIndex: number; heightPx: number },
 		private readonly resume?: SectionFlowResume,
@@ -298,7 +298,7 @@ export class SectionFlow {
 		start: TokenPosition = 0,
 	): ParagraphLayoutResult {
 		const page = this.cursor.page;
-		const exclusions = this.exclusions?.get(page.index);
+		const exclusions = this.exclusions?.(page.index);
 		const block = this.blocks[index] as Extract<LayoutBlock, { kind: 'paragraph' }>;
 		const width = this.cursor.columnWidthPx;
 		const plain = start
@@ -387,7 +387,7 @@ export class SectionFlow {
 					requiredTogetherPx,
 					reflow: (token, before) => this.layoutAtCursor(index, before, token),
 					...(this.exclusions
-						? { hasExclusions: (pageIndex) => this.exclusions!.has(pageIndex) }
+						? { hasExclusions: (pageIndex) => Boolean(this.exclusions?.(pageIndex)?.length) }
 						: {}),
 				},
 				this.note,
