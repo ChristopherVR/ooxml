@@ -100,9 +100,12 @@ describe('office-ui-dialog', () => {
 	// Tab order only exists in a real browser: e2e/a11y/dialog.spec.ts and e2e/docx/dialog-focus.spec.ts.
 	it('closes on Escape when focus has ended up outside', () => {
 		const { dialog, opener } = mount('open');
+		const editorShortcut = vi.fn((event: KeyboardEvent) => event.stopPropagation());
+		opener.addEventListener('keydown', editorShortcut);
 		opener.focus();
 		key(opener, 'Escape');
 		expect(dialog.open).toBe(false);
+		expect(editorShortcut).not.toHaveBeenCalled();
 	});
 
 	it('gives the keyboard to the newest of two open dialogs', () => {

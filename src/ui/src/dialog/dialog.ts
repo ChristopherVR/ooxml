@@ -97,6 +97,7 @@ export class OfficeUiDialog extends OfficeElement {
 		openDialogs.push(this);
 		const doc = this.ownerDocument;
 		doc.addEventListener('keydown', this.onDocumentKey);
+		doc.addEventListener('keydown', this.onOutsideEscape, true);
 		doc.addEventListener('keyup', this.onDocumentKeyUp, true);
 		doc.addEventListener('focusin', this.onDocumentFocus, true);
 	}
@@ -107,12 +108,18 @@ export class OfficeUiDialog extends OfficeElement {
 		this.tabbing = null;
 		const doc = this.ownerDocument;
 		doc.removeEventListener('keydown', this.onDocumentKey);
+		doc.removeEventListener('keydown', this.onOutsideEscape, true);
 		doc.removeEventListener('keyup', this.onDocumentKeyUp, true);
 		doc.removeEventListener('focusin', this.onDocumentFocus, true);
 	}
 
 	/** Keys pressed with focus outside the dialog reach it here. */
 	private readonly onDocumentKey = (event: KeyboardEvent): void => this.onKey(event);
+
+	/** A resize can move focus onto editor chrome with its own Escape shortcut. */
+	private readonly onOutsideEscape = (event: KeyboardEvent): void => {
+		if (event.key === 'Escape' && !event.composedPath().includes(this)) this.onKey(event);
+	};
 
 	private readonly onDocumentKeyUp = (): void => {
 		this.tabbing = null;

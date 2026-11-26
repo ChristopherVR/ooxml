@@ -28,6 +28,43 @@ test('keeps focus on Add-ins when the Insert ribbon refits', async ({ page }) =>
 	await expect(group.getByRole('button', { name: 'Add-ins', exact: true })).toBeFocused();
 });
 
+for (const width of [800, 1280]) {
+	test(`one Escape closes Office Add-ins after resizing from ${width}px`, async ({ page }) => {
+		await page.setViewportSize({ width, height: 700 });
+		await loadDeck(page);
+		await ribbonTab(page, 'Insert').click();
+		const group = page.locator('pptx-ui-ribbon-insert [data-ribbon-group="insert.addIns"]');
+		const settleRibbon = () =>
+			page.evaluate(
+				() =>
+					new Promise((done) =>
+						requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(done))),
+					),
+			);
+		await expect(group).toBeVisible();
+		await settleRibbon();
+		// At this width the Shapes menu can still be open when Add-ins takes focus.
+		const shapes = page
+			.locator('[data-ribbon-group="insert.illustrations"]')
+			.getByRole('button', { name: 'Shapes', exact: true });
+		if (width === 1280) {
+			await shapes.click();
+			await expect(shapes).toHaveAttribute('aria-expanded', 'true');
+		}
+		const face = group.getByRole('button', { name: 'Add-ins', exact: true });
+		if (await face.isVisible()) await face.click();
+		await group.getByRole('button', { name: 'Get Add-ins' }).click();
+		const dialog = page.locator('office-ui-add-ins-dialog office-ui-dialog[open]');
+		const search = dialog.getByRole('searchbox');
+		await expect(search).toBeFocused();
+		if (width === 1280) await expect(shapes).toHaveAttribute('aria-expanded', 'false');
+		await page.setViewportSize({ width: 900, height: 700 });
+		await settleRibbon();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+	});
+}
+
 test('reviews, cancels, installs and searches local PowerPoint add-ins', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
 	await loadDeck(page);

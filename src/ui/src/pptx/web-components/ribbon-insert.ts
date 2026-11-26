@@ -37,6 +37,7 @@ export function definePptxRibbonInsert(registry: CustomElementRegistry): void {
 				if (intent.kind === 'addIns') {
 					const root = officeAddInsMount(this);
 					if (!root) return;
+					this.closeMenus();
 					void openOfficeAddIns(
 						root,
 						intent.value,
