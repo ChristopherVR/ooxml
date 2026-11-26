@@ -13,6 +13,43 @@ import { drawingGeometry } from './arrange-geometry';
 import type { EditorCore } from './editor-core';
 import { parsePlacement, shapeSpecOf } from './print-float-locate';
 
+/** Makes room for the child stack at the group's place in its text layer. */
+function expandStack(
+	tr: Transaction,
+	pos: number,
+	placement: PicturePlacement,
+	count: number,
+): number {
+	const layer: { pos: number; placement: PicturePlacement }[] = [];
+	tr.doc.descendants((node, at) => {
+		if (node.type.name !== 'image') return true;
+		const anchor = parsePlacement(node.attrs.placement);
+		if (
+			node.attrs.anchored &&
+			anchor &&
+			Boolean(anchor.behindText) === Boolean(placement.behindText)
+		)
+			layer.push({ pos: at, placement: anchor });
+		return false;
+	});
+	layer.sort((a, b) => (a.placement.relativeHeight ?? 0) - (b.placement.relativeHeight ?? 0));
+	let height = 251658240;
+	let first = height;
+	for (const item of layer) {
+		if (item.pos === pos) {
+			first = height;
+			height += count;
+		} else {
+			tr.setNodeAttribute(
+				item.pos,
+				'placement',
+				JSON.stringify({ ...item.placement, relativeHeight: height++ }),
+			);
+		}
+	}
+	return first;
+}
+
 function shapeNode(
 	node: ProseMirrorNode,
 	placement: PicturePlacement,
@@ -51,14 +88,18 @@ export function groupSelectedShapes(
 	if (action === 'ungroup') {
 		const parts = ungroupDrawingShapes(geometry.box, shape);
 		if (!parts.length) return;
+		const firstHeight = expandStack(tr, pos, placement, parts.length);
 		tr.replaceWith(
 			pos,
 			pos + current.nodeSize,
 			Fragment.fromArray(
-				parts.map(({ box, shape, identity }) =>
+				parts.map(({ box, shape, identity }, index) =>
 					shapeNode(
 						current,
-						placeDrawingBox(placement, box, geometry.origins),
+						{
+							...placeDrawingBox(placement, box, geometry.origins),
+							relativeHeight: firstHeight + index,
+						},
 						box,
 						shape,
 						identity,

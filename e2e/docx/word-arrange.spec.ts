@@ -52,7 +52,32 @@ test('page geometry commands explain why they are unavailable in Draft', async (
 	await expect(align).toHaveAccessibleDescription('Switch to Print Layout to arrange drawings.');
 });
 
-async function openShapes(page: Page) {
+test('ungroup keeps the native children on the canvas in consecutive stacking order', async ({
+	page,
+}) => {
+	const fixture = new URL(
+		'../../src/core/docx/__fixtures__/shapes/arrange-group.docx',
+		import.meta.url,
+	);
+	const editor = await openShapes(page, fixture);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const floats = editor.locator('.dve-print-float');
+	await expect(floats).toHaveCount(1);
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	await pane.getByRole('listitem').getByRole('button').click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('combobox', { name: 'Group', exact: true }).selectOption('ungroup');
+	await expect(floats).toHaveCount(3);
+	const { xml } = await savedDocument(page, 'ungrouped.docx');
+	const heights = [...xml.matchAll(/relativeHeight="(\d+)"/g)].map((match) => Number(match[1]));
+	expect(heights).toHaveLength(3);
+	expect(heights.slice(1)).toEqual(heights.slice(0, -1).map((height) => height + 1));
+});
+
+async function openShapes(page: Page, fixture = new URL('./support/shapes.docx', import.meta.url)) {
 	await page.setViewportSize({ width: 1800, height: 950 });
 	await page.goto('/?framework=vanilla');
 	await (
@@ -60,7 +85,7 @@ async function openShapes(page: Page) {
 	).setInputFiles({
 		name: 'shapes.docx',
 		mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		buffer: await readFile(new URL('./support/shapes.docx', import.meta.url)),
+		buffer: await readFile(fixture),
 	});
 	const editor = page.locator('docx-editor');
 	return editor;
