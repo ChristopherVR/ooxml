@@ -1,33 +1,87 @@
+.dve-canvas[data-document-view='outline'] {
+	background: var(--surface);
+	padding: clamp(0.75rem, 3vw, 2rem);
+}
 [data-document-view='outline'] > .dve-paper {
-	width: min(100%, 65rem) !important;
+	width: calc(100% / var(--dve-zoom, 1)) !important;
 	min-height: 0 !important;
-	padding: clamp(0.75rem, 3vw, 2rem) !important;
+	padding: 0 !important;
 	column-count: auto !important;
+	background: transparent;
+	box-shadow: none;
+	color: var(--ink);
+	color-scheme: inherit;
 }
 [data-document-view='outline'] > :is(.dve-header-footer-slot, .dve-notes-container),
 [data-document-view='outline'] .ProseMirror > .dve-outline-hidden {
 	display: none !important;
 }
 [data-document-view='outline'] .ProseMirror > p.dve-outline-block {
+	position: relative;
 	margin-inline-start: min(var(--dve-outline-indent), 24%) !important;
+	padding-inline-start: 1.25rem;
 	overflow-wrap: anywhere;
 }
 [data-document-view='outline'] .ProseMirror > table.dve-outline-block {
 	max-inline-size: 100%;
 }
-[data-document-view='outline'] .dve-outline-block[role='heading'] {
-	border-inline-start: 2px solid var(--line);
-	padding-inline-start: 0.45rem;
+.dve-outline-marker {
+	position: absolute;
+	inset-block-start: 0.12em;
+	inset-inline-start: 0;
+	display: grid;
+	place-items: center;
+	box-sizing: border-box;
+	width: 0.85rem;
+	height: 0.85rem;
+	color: var(--ink);
+	font:
+		12px/1 system-ui,
+		sans-serif;
+	text-indent: 0;
+	pointer-events: none;
+}
+.dve-outline-marker:not([data-marker='bullet']) {
+	border: 1px solid var(--muted);
+	border-radius: 2px;
+}
+.dve-outline-marker[data-marker='plus']::before {
+	content: '+';
+}
+.dve-outline-marker[data-marker='minus']::before {
+	content: '−';
+}
+.dve-outline-marker[data-marker='bullet']::before {
+	content: '•';
 }
 [data-outline-first-line] .dve-outline-block[data-outline-body] {
 	max-block-size: 1lh;
 	overflow: hidden;
 }
-[data-outline-plain] .ProseMirror :is(.dve-outline-block, .dve-outline-block *) {
+[data-outline-plain]
+	.ProseMirror
+	:is(.dve-outline-block, .dve-outline-block :not(.dve-outline-marker)) {
 	font: inherit !important;
 	color: inherit !important;
 	text-decoration: none !important;
 	background-color: transparent !important;
 	letter-spacing: normal !important;
 	text-shadow: none !important;
+}
+.ribbon-group[data-label='Outline Tools'] {
+	flex-wrap: nowrap;
+	max-width: none;
+}
+.ribbon-group[data-label='Outline Tools'] .ribbon-row {
+	flex: none;
+}
+.ribbon-group[data-label='Outline Tools'] :is(select, button.ribbon-inline) {
+	height: 24px;
+}
+.dve-outline-filter {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding-inline: 6px;
+	white-space: nowrap;
 }

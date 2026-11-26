@@ -17,7 +17,7 @@ export function isDocumentView(value: string): value is DocumentView {
 }
 
 export type OutlineAction =
-	| { type: 'outline'; key: 'level'; value: number }
+	| { type: 'outline'; key: 'level' | 'paragraphLevel'; value: number }
 	| {
 			type: 'outline';
 			key:

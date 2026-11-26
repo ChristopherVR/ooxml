@@ -228,9 +228,27 @@ test('Outlining filters and collapses branches and saves an undoable edit', asyn
 	);
 	const first = editor.getByRole('heading', { name: 'First branch' });
 	const child = editor.locator('[data-id="child"]');
+	const paper = editor.locator('.dve-paper');
+	await expect(paper).toHaveCSS('box-shadow', 'none');
+	await expect(paper).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+	const group = editor.getByRole('group', { name: 'Outline Tools controls' });
+	await expect(
+		group.getByRole('button', { name: 'Promote', exact: true }).locator('svg'),
+	).toBeVisible();
+	await expect(
+		editor
+			.getByRole('group', { name: 'Close controls' })
+			.getByRole('button', { name: 'Close Outline View' }),
+	).toHaveClass(/ribbon-large/);
+	await expect(first.locator('.dve-outline-marker')).toHaveAttribute('data-marker', 'minus');
+	await expect(editor.locator('[data-id="body"] .dve-outline-marker')).toHaveAttribute(
+		'data-marker',
+		'bullet',
+	);
 	await first.click();
 	await editor.getByRole('button', { name: 'Collapse', exact: true }).click();
 	await expect(child).toBeHidden();
+	await expect(first.locator('.dve-outline-marker')).toHaveAttribute('data-marker', 'plus');
 	await editor.getByRole('button', { name: 'Expand', exact: true }).click();
 	await expect(child).toBeVisible();
 	const level = editor.getByRole('combobox', { name: 'Show Level' });
@@ -238,6 +256,12 @@ test('Outlining filters and collapses branches and saves an undoable edit', asyn
 	await expect(child).toBeHidden();
 	await level.selectOption('10');
 	await expect(child).toBeVisible();
+	await child.click();
+	const paragraphLevel = group.getByRole('combobox', { name: 'Outline Level', exact: true });
+	await expect(paragraphLevel).toHaveValue('2');
+	await paragraphLevel.selectOption('3');
+	await expect(child).toHaveAttribute('aria-level', '3');
+	await paragraphLevel.selectOption('2');
 	await editor.getByRole('button', { name: 'Show First Line Only' }).click();
 	await expect(editor.locator('.dve-canvas')).toHaveAttribute('data-outline-first-line', '');
 	await editor.getByRole('button', { name: 'Show Text Formatting' }).click();

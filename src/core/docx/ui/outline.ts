@@ -165,14 +165,35 @@ export function changeOutlineLevel(
 	paragraphs: readonly OutlineEntry[],
 	direction: -1 | 1,
 ): Transaction | undefined {
+	return applyOutlineLevels(state, model, paragraphs, (entry) =>
+		canChangeOutlineLevel(entry, direction) ? entry.level + direction : entry.level,
+	);
+}
+
+export function setOutlineLevel(
+	state: EditorState,
+	model: DocumentModel,
+	paragraphs: readonly OutlineEntry[],
+	level: number,
+): Transaction | undefined {
+	if (!Number.isInteger(level) || level < 1 || level > OUTLINE_BODY) return undefined;
+	return applyOutlineLevels(state, model, paragraphs, () => level);
+}
+
+function applyOutlineLevels(
+	state: EditorState,
+	model: DocumentModel,
+	paragraphs: readonly OutlineEntry[],
+	levelFor: (entry: OutlineEntry) => number,
+): Transaction | undefined {
 	const tr = state.tr;
 	const catalogs = styleCatalogsOf(model);
 	const catalog = catalogs.paragraphStyles ?? { styles: {}, warnings: [], docDefaults: {} };
 	const styles = { ...catalog.styles };
 	let stylesChanged = false;
 	for (const entry of paragraphs) {
-		if (!canChangeOutlineLevel(entry, direction)) continue;
-		const level = entry.level + direction;
+		const level = levelFor(entry);
+		if (level === entry.level) continue;
 		const styleId = typeof entry.node.attrs.style === 'string' ? entry.node.attrs.style : '';
 		const name = styles[styleId]?.name ?? styleId;
 		const defaultBody =
