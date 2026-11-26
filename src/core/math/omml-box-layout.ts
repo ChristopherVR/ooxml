@@ -16,8 +16,6 @@ import { child, ensureArray, readText, val } from './omml-mathml-helpers';
 import type { OmmlNode } from './omml-node';
 import { stripXmlOrderSuffix } from './omml-node';
 
-const isOn = (value: string) => value === '1' || value === 'on' || value === 'true';
-
 /** Whether a sign after `ch` is a prefix sign: it follows an operator, a relation or an opening bracket. */
 const isUnaryContext = (ch: string): boolean =>
 	isRelation(ch) || isBinary(ch) || /[([{,;:]/.test(ch);
@@ -34,7 +32,10 @@ function layoutRun(node: OmmlNode, style: MathStyle, atStart: boolean): Box {
 	if (!text) return emptyBox();
 	const rPr = child(node, 'm:rPr');
 	const sty = val(child(rPr, 'm:sty'));
-	const plain = style.plain || isOn(val(child(rPr, 'm:nor'))) || sty === 'p' || sty === 'b';
+	// `<m:nor/>` without a value is on, as Word writes it.
+	const nor =
+		rPr['m:nor'] !== undefined && !['0', 'off', 'false'].includes(val(child(rPr, 'm:nor')));
+	const plain = style.plain || nor || sty === 'p' || sty === 'b';
 	const bold = Boolean(style.bold) || sty === 'b' || sty === 'bi';
 	const boxes: Box[] = [];
 	let index = 0;

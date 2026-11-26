@@ -10,8 +10,11 @@ import {
 	buildUpEquation,
 	EQUATION_GALLERY,
 	EQUATION_STRUCTURES,
+	editableEquation,
 	linearEquationXml,
+	writeEditedEquation,
 } from '../math/equation-tools';
+import wordEquations from '../math/__fixtures__/word-equations.json';
 
 const out = process.argv[2];
 if (!out) throw new Error('usage: bun scripts/docx-word-equation-build.ts <output folder>');
@@ -60,6 +63,18 @@ await write(
 		(text) => built(text, true, 'unicode'),
 	),
 );
+// Equations Word wrote, edited as linear text: their run fonts and paragraph properties are kept.
+const NS =
+	' xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math" xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"';
+const edited = wordEquations.flatMap(({ omml }) => {
+	const source = omml.replace(/^<(m:oMath(?:Para)?)/, `<$1${NS}`);
+	const edit = editableEquation(source, 'unicode');
+	const out =
+		edit &&
+		writeEditedEquation({ ...edit, text: `${edit.text}+1`, format: 'unicode', display: true });
+	return out ? [{ omml: out, display: true }] : [];
+});
+await write('edited-word.docx', edited);
 // Word opens an empty equation without repair and drops it while loading.
 await write('empty.docx', [built('', true), built('', false)], 0);
 writeFileSync(join(out, 'manifest.json'), JSON.stringify(manifest, null, '\t'));

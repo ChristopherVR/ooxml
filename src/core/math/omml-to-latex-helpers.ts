@@ -57,6 +57,17 @@ export function isOn(node: XmlRecord | undefined): boolean {
 	return v === '1' || v === 'on' || v === 'true';
 }
 
+/**
+ * An on/off property of `parent` (`m:nor`, `m:degHide`...): on when present without `m:val`, as
+ * Word writes it, or with `1`, `on` or `true`.
+ */
+export function flagOn(parent: XmlRecord | undefined, key: string): boolean {
+	const value = parent?.[key];
+	if (value === undefined || value === null) return false;
+	const node = ensureArr(value)[0] ?? {};
+	return !hasAttr(node) || isOn(node);
+}
+
 /** Read an `m:t` value (string / number / `{ '#text' }` object) as a string. */
 export function readRunText(run: XmlRecord): string {
 	const t = run['m:t'];
@@ -153,7 +164,7 @@ export function isSingleAtom(container: XmlRecord | undefined): boolean {
 		return true;
 	}
 	const text = readRunText(sole.node);
-	if (isOn(childNode(childNode(sole.node, 'm:rPr'), 'm:nor'))) {
+	if (flagOn(childNode(sole.node, 'm:rPr'), 'm:nor')) {
 		return true;
 	}
 	return Array.from(text).length === 1;

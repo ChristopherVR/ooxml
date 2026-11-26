@@ -23,7 +23,7 @@ describe('format-neutral OMML DOM input', () => {
 			`<m:oMath xmlns:m="${ns}"><m:r><m:rPr><m:nor m:val="1"/></m:rPr><m:t>A &amp; B</m:t></m:r><m:r><m:t>&lt;x&gt;</m:t></m:r></m:oMath>`,
 		);
 		expect(convertOmmlToMathMl(adapted)).toContain('<mi mathvariant="normal">A &amp; B</mi>');
-		expect(convertOmmlToMathMl(adapted)).toContain('&lt;x&gt;');
+		expect(convertOmmlToMathMl(adapted)).toContain('<mo>&lt;</mo><mi>x</mi><mo>&gt;</mo>');
 	});
 	it('rejects malformed XML and DTD input using the shared parser', () => {
 		expect(() => parseOmml('<m:oMath>')).toThrow();

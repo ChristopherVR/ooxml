@@ -56,4 +56,4 @@ if ($failures.Count) {
 	$failures | ForEach-Object { Write-Host "FAIL $_" }
 	exit 1
 }
-Write-Host "All $($manifest.PSObject.Properties.Count) documents open in Word without repair."
+Write-Host "All $(@($manifest.PSObject.Properties).Count) documents open in Word without repair."

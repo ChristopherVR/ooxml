@@ -3,21 +3,21 @@
  * equation editor lets the user edit in the Unicode input format. The spelling is the one
  * `unicode-math.ts` builds up again, so a structure survives Linear and back to Professional.
  */
-import { stripXmlOrderSuffix } from './omml-node';
-import { ACCENT_ALIASES } from './latex-omml-symbols';
-import type { XmlRecord } from './omml-to-latex-helpers';
+import { stripXmlOrderSuffix } from './index';
+import { ACCENT_ALIASES } from './index';
+import type { XmlRecord } from './index';
 import {
 	attrVal,
 	childNode,
 	collectText,
 	contentKeys,
 	ensureArr,
+	flagOn,
 	hasAttr,
-	isOn,
 	readRunText,
 	soleChild,
-} from './omml-to-latex-helpers';
-import { BRACKETS, isOperandChar, LINEAR } from './unicode-math-symbols';
+} from './index';
+import { BRACKETS, isCombining, isOperandChar, LINEAR, NARY_CHARS } from './unicode-math-symbols';
 
 function children(node: XmlRecord | undefined): string {
 	if (!node || typeof node !== 'object') return '';
@@ -53,9 +53,18 @@ function isBracketed(text: string): boolean {
 	return chars[chars.length - 1] === BRACKETS[open];
 }
 
+/** Characters that would build up or group if typed: a run's text keeps them with `\`. */
+const SPECIAL = new Set([
+	...'/∕¦┬┴^_▒&@"\\√∛∜■█□¯▁⏞⏟├┤〖〗│()[]{}⟨⟩⌊⌋⌈⌉|‖\' \u2061',
+	...Object.keys(NARY_CHARS),
+]);
+
 function run(node: XmlRecord): string {
 	const text = readRunText(node);
-	return isOn(childNode(childNode(node, 'm:rPr'), 'm:nor')) ? `"${text}"` : text;
+	if (flagOn(childNode(node, 'm:rPr'), 'm:nor')) return `"${text.replace(/"/g, '\\"')}"`;
+	return Array.from(text, (char) =>
+		SPECIAL.has(char) || isCombining(char) ? `\\${char}` : char,
+	).join('');
 }
 
 function scripts(node: XmlRecord): string {
@@ -73,7 +82,7 @@ function fraction(node: XmlRecord): string {
 
 function radical(node: XmlRecord): string {
 	const base = arg(node, 'm:e');
-	const degree = isOn(childNode(childNode(node, 'm:radPr'), 'm:degHide')) ? '' : arg(node, 'm:deg');
+	const degree = flagOn(childNode(node, 'm:radPr'), 'm:degHide') ? '' : arg(node, 'm:deg');
 	if (degree === '3') return `∛${operand(base)}`;
 	if (degree === '4') return `∜${operand(base)}`;
 	return degree ? `√(${degree}&${base})` : `√${operand(base)}`;
@@ -82,8 +91,8 @@ function radical(node: XmlRecord): string {
 function nary(node: XmlRecord): string {
 	const pr = childNode(node, 'm:naryPr');
 	const chr = attrVal(childNode(pr, 'm:chr')) || '∫';
-	const sub = isOn(childNode(pr, 'm:subHide')) ? '' : arg(node, 'm:sub');
-	const sup = isOn(childNode(pr, 'm:supHide')) ? '' : arg(node, 'm:sup');
+	const sub = flagOn(pr, 'm:subHide') ? '' : arg(node, 'm:sub');
+	const sup = flagOn(pr, 'm:supHide') ? '' : arg(node, 'm:sup');
 	const limits = `${sub ? `_${operand(sub)}` : ''}${sup ? `^${operand(sup)}` : ''}`;
 	return `${chr}${limits}${LINEAR.naryand}${grouped(arg(node, 'm:e'))}`;
 }
@@ -95,7 +104,8 @@ function delimiter(node: XmlRecord): string {
 	const open = hasAttr(beg) ? attrVal(beg) || LINEAR.invisibleOpen : '(';
 	const close = hasAttr(end) ? attrVal(end) || LINEAR.invisibleClose : ')';
 	const sep = childNode(pr, 'm:sepChr');
-	const separator = hasAttr(sep) ? attrVal(sep) : '│';
+	// `│` is the default separator; another one cannot be typed and is written as it is.
+	const separator = hasAttr(sep) && attrVal(sep) !== '|' ? attrVal(sep) : '│';
 	const inner = ensureArr(node['m:e'])
 		.map((e) => children(e))
 		.join(separator);

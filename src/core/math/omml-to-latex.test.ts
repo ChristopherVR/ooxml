@@ -221,9 +221,17 @@ describe('convertOmmlToLatex: constructs the forward renderer supports', () => {
 		expect(expectOmmlRoundTrip(open)).toBe('\\left.x\\right|');
 	});
 
-	it('delimiters: several m:e arguments are joined with the separator', () => {
+	it('delimiters: several m:e arguments are separated with \\middle, which reads back', () => {
 		const pair = { 'm:d': { 'm:dPr': { 'm:sepChr': v(',') }, 'm:e': [r('a'), r('b')] } };
-		expect(convertOmmlToLatex(oMath(pair))).toBe('\\left(a,b\\right)');
+		const latex = convertOmmlToLatex(oMath(pair));
+		expect(latex).toBe('\\left(a\\middle,b\\right)');
+		const back = convertLatexToOmml(latex)['m:oMathPara'] as Record<
+			string,
+			Record<string, unknown>
+		>;
+		const d = back['m:oMath']!['m:d'] as Record<string, unknown>;
+		expect(d['m:e']).toHaveLength(2);
+		expect(d['m:dPr']).toEqual({ 'm:sepChr': { '@_val': ',' } });
 	});
 
 	it('nary: limLoc undOvr survives as \\limits', () => {

@@ -14,7 +14,7 @@ export interface LatexParserContext {
 	parseSingleOrGroup: () => OmmlNode[];
 	parseAtom: () => OmmlNode | null;
 	wrapE: (nodes: OmmlNode[]) => OmmlNode;
-	makeRun: (text: string, normal?: boolean) => OmmlNode;
+	makeRun: (text: string, normal?: boolean | 'upright') => OmmlNode;
 }
 
 export interface ScriptArgs {
@@ -132,19 +132,27 @@ function readDelimiterChar(tok: Token | undefined, fallback: string): string {
 	return tok.value;
 }
 
-/** Parse a \left...\right delimiter pair. */
+/** Parse a \left...\right delimiter pair; each `\middle` starts another element. */
 export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 	const openChar = readDelimiterChar(ctx.next(), '(');
 
-	const inner: OmmlNode[] = [];
+	const elements: OmmlNode[][] = [[]];
+	let separator = '|';
 	while (ctx.peek()) {
-		if (ctx.peek()!.type === 'command' && ctx.peek()!.value === '\\right') {
+		const tok = ctx.peek()!;
+		if (tok.type === 'command' && tok.value === '\\right') {
 			ctx.next();
 			break;
 		}
+		if (tok.type === 'command' && tok.value === '\\middle') {
+			ctx.next();
+			separator = readDelimiterChar(ctx.next(), '|');
+			elements.push([]);
+			continue;
+		}
 		const node = ctx.parseAtom();
 		if (node) {
-			inner.push(node);
+			elements[elements.length - 1]!.push(node);
 		}
 	}
 
@@ -154,6 +162,9 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 	if (openChar !== '(') {
 		dPr['m:begChr'] = { '@_val': openChar } as unknown as OmmlNode;
 	}
+	if (separator !== '|') {
+		dPr['m:sepChr'] = { '@_val': separator } as unknown as OmmlNode;
+	}
 	if (closeChar !== ')') {
 		dPr['m:endChr'] = { '@_val': closeChar } as unknown as OmmlNode;
 	}
@@ -161,7 +172,7 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
 	return {
 		'm:d': {
 			'm:dPr': Object.keys(dPr).length > 0 ? dPr : undefined,
-			'm:e': ctx.wrapE(inner),
+			'm:e': elements.length === 1 ? ctx.wrapE(elements[0]!) : elements.map((e) => ctx.wrapE(e)),
 		} as unknown as OmmlNode,
 	};
 }
@@ -172,7 +183,7 @@ export function parseDelimiter(ctx: LatexParserContext): OmmlNode {
  * name (`m:limLow`), matching PowerPoint's own structure for a limit.
  */
 export function parseFuncApplication(ctx: LatexParserContext, name: string): OmmlNode {
-	const fNameNode = ctx.makeRun(name, true);
+	const fNameNode = ctx.makeRun(name, 'upright');
 	const args = parseScriptArgs(ctx);
 	let withScripts: OmmlNode;
 	if (LIMIT_FUNC_NAMES.has(name) && args.hasSub !== args.hasSup) {

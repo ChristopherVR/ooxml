@@ -1,4 +1,5 @@
 import { convertLatexToOmml, parseOmml } from '../../../math/index';
+import { buildUpEquation, unicodeMathToLatex } from '../../../math/equation-tools';
 import type { SecurityCase } from '../case';
 
 export const cases: readonly SecurityCase[] = [
@@ -28,5 +29,19 @@ export const cases: readonly SecurityCase[] = [
 			}
 		},
 		expected: 'OMML exceeds the size limit',
+	},
+	{
+		name: 'deeply nested linear format input is refused instead of exhausting the stack',
+		limits: { ms: 1500, heapMb: 128 },
+		run: () => {
+			const text = '('.repeat(16_000) + '〖'.repeat(16_000) + '√∑'.repeat(8_000);
+			const built = buildUpEquation(text, 'unicode', false);
+			try {
+				unicodeMathToLatex(text);
+			} catch (error) {
+				return `${built === undefined}: ${error instanceof Error ? error.constructor.name : 'unknown'}`;
+			}
+		},
+		expected: 'true: Error',
 	},
 ];

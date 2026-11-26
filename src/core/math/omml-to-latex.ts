@@ -17,9 +17,9 @@ import {
 	collectText,
 	contentKeys,
 	ensureArr,
+	flagOn,
 	escapeMathText,
 	escapeTextArgument,
-	isOn,
 	isSingleAtom,
 	readRunText,
 	soleChild,
@@ -60,7 +60,7 @@ function runToLatex(node: XmlRecord): string {
 	if (text.length === 0) {
 		return '';
 	}
-	if (isOn(childNode(childNode(node, 'm:rPr'), 'm:nor'))) {
+	if (flagOn(childNode(node, 'm:rPr'), 'm:nor')) {
 		return `\\text{${escapeTextArgument(text)}}`;
 	}
 	return escapeMathText(text);
@@ -81,7 +81,7 @@ function fractionToLatex(node: XmlRecord): string {
 
 function radicalToLatex(node: XmlRecord): string {
 	const base = arg(node, 'm:e');
-	if (isOn(childNode(childNode(node, 'm:radPr'), 'm:degHide'))) {
+	if (flagOn(childNode(node, 'm:radPr'), 'm:degHide')) {
 		return `\\sqrt{${base}}`;
 	}
 	const deg = arg(node, 'm:deg');
@@ -152,10 +152,10 @@ function limitToLatex(node: XmlRecord, tag: 'm:limLow' | 'm:limUpp'): string {
 function phantomToLatex(node: XmlRecord): string {
 	const phantPr = childNode(node, 'm:phantPr');
 	const base = arg(node, 'm:e');
-	if (isOn(childNode(phantPr, 'm:zeroWid'))) {
+	if (flagOn(phantPr, 'm:zeroWid')) {
 		return `\\vphantom{${base}}`;
 	}
-	if (isOn(childNode(phantPr, 'm:zeroAsc')) || isOn(childNode(phantPr, 'm:zeroDesc'))) {
+	if (flagOn(phantPr, 'm:zeroAsc') || flagOn(phantPr, 'm:zeroDesc')) {
 		return `\\hphantom{${base}}`;
 	}
 	return `\\phantom{${base}}`;

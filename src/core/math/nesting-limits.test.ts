@@ -37,3 +37,13 @@ describe('OMML limits', () => {
 		expect(() => ommlFromElement(element)).toThrow(/OMML nesting exceeds 512/);
 	});
 });
+
+describe('linear format nesting limit', () => {
+	it('rejects 16,000 nested brackets with a clear error instead of overflowing the stack', async () => {
+		const { unicodeMathToLatex, MAX_LINEAR_NESTING } = await import('./unicode-math');
+		for (const open of ['(', '〖', '√', '∑'])
+			expect(() => unicodeMathToLatex(open.repeat(16_000))).toThrow(
+				`Linear format nesting exceeds ${MAX_LINEAR_NESTING} levels`,
+			);
+	});
+});

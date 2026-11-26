@@ -66,6 +66,34 @@ const ROWS = [
 		'Categoría de símbolos',
 		'符号类别',
 	],
+	[
+		'This equation has content its linear text cannot hold, so it is kept as it is.',
+		'Cette équation contient des éléments que son texte linéaire ne peut pas représenter ; elle est conservée telle quelle.',
+		'Diese Formel enthält Inhalte, die ihr linearer Text nicht darstellen kann; sie bleibt unverändert.',
+		'Esta ecuación tiene contenido que su texto lineal no puede representar, por lo que se conserva tal cual.',
+		'此公式包含其线性文本无法表示的内容，因此保持原样。',
+	],
+	[
+		'This equation is nested too deeply to build up.',
+		'Cette équation est trop imbriquée pour être convertie.',
+		'Diese Formel ist zu tief verschachtelt, um sie aufzubauen.',
+		'Esta ecuación está demasiado anidada para convertirla.',
+		'此公式嵌套过深，无法转换。',
+	],
+	[
+		'Common Structures',
+		'Structures courantes',
+		'Häufige Strukturen',
+		'Estructuras comunes',
+		'常用结构',
+	],
+	[
+		'Built-In Equations',
+		'Équations prédéfinies',
+		'Integrierte Formeln',
+		'Ecuaciones integradas',
+		'内置公式',
+	],
 	// Built-in equations (the four first ones are the Insert menu's own strings).
 	[
 		'Expansion of a Sum',

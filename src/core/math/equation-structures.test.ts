@@ -40,7 +40,7 @@ describe('equation structures', () => {
 		const shown = ommlToXml(fillPlaceholders(parseOmml(xml!)));
 		expect(drawEquation(shown, 16)?.widthPx).toBeGreaterThan(4);
 		for (const format of ['unicode', 'latex'] as const) {
-			const linear = linearizeEquation(xml!, format);
+			const linear = linearizeEquation(xml!, format)!;
 			expect(linear.length).toBeGreaterThan(0);
 			// Linear text builds up into the same structure again.
 			expect(buildUpEquation(linear, format, false)).toBe(xml);

@@ -1,4 +1,5 @@
 import type { OmmlNode } from './omml-node';
+import { FUNC_NAMES } from './latex-omml-symbols';
 import {
 	child,
 	val,
@@ -25,11 +26,25 @@ export function convertRun(node: OmmlNode): string {
 	// A hyphen-minus in math is the minus sign; MathML spaces it as a binary or prefix operator.
 	const escaped = escapeXml(text === '-' ? '\u2212' : text);
 	const rPr = child(node, 'm:rPr');
+	// `<m:nor/>` without a value is on, as Word writes it.
 	const norVal = val(child(rPr, 'm:nor'));
-	const isNormal = norVal === '1' || norVal === 'on' || norVal === 'true';
+	const isNormal = rPr['m:nor'] !== undefined && !['0', 'off', 'false'].includes(norVal);
 
 	if (isNumeric(text)) {
 		return `<mn>${escaped}</mn>`;
+	}
+	// Word keeps a stretch of maths in one run (`a+b`): it is drawn token by token, each letter a
+	// variable, each number a number and the rest operators. A styled run (a function name) stays whole.
+	if (
+		!isNormal &&
+		rPr['m:sty'] === undefined &&
+		Array.from(text).length > 1 &&
+		!isOperator(text) &&
+		!FUNC_NAMES.has(text)
+	) {
+		return (text.match(/\d+(?:\.\d+)?|\p{L}\p{M}*|\s+|[^\p{L}\d\s]/gu) ?? [])
+			.map((token) => convertRun({ ...node, 'm:t': token }))
+			.join('');
 	}
 	if (isOperator(text)) {
 		return `<mo>${escaped}</mo>`;

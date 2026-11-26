@@ -27,6 +27,10 @@ function schemaOrder(keys: string[]): string[] {
 		.map((entry) => entry.key);
 }
 
+/** Attributes take their element's namespace: `w:` on WordprocessingML run properties. */
+const attributePrefix = (tag: string) => (tag.startsWith('w:') ? 'w:' : tag === 'm:t' ? '' : 'm:');
+const WORD_NAMESPACE = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+
 function element(tag: string, value: unknown): string {
 	if (value === undefined || value === null) return '';
 	if (Array.isArray(value)) return value.map((item) => element(tag, item)).join('');
@@ -39,13 +43,15 @@ function element(tag: string, value: unknown): string {
 	let attributes = '';
 	let content = '';
 	for (const key of schemaOrder(Object.keys(node))) {
-		if (key.startsWith('@_')) {
-			attributes += ` ${tag === 'm:t' ? '' : 'm:'}${key.slice(2)}="${escapeAttribute(String(node[key]))}"`;
+		if (key === '@_space' && tag === 'm:t') {
+			continue;
+		} else if (key.startsWith('@_')) {
+			attributes += ` ${attributePrefix(tag)}${key.slice(2)}="${escapeAttribute(String(node[key]))}"`;
 		} else if (key === '#text') {
 			content += escapeXml(String(node[key]));
 		} else content += element(stripXmlOrderSuffix(key), node[key]);
 	}
-	if (tag === 'm:t' && /^\s|\s$/.test(content) && !attributes) attributes = ' xml:space="preserve"';
+	if (tag === 'm:t' && /^\s|\s$/.test(content)) attributes += ' xml:space="preserve"';
 	// An empty property list says nothing; it is left out.
 	if (!content && !attributes && tag.endsWith('Pr')) return '';
 	return content ? `<${tag}${attributes}>${content}</${tag}>` : `<${tag}${attributes}/>`;
@@ -56,7 +62,8 @@ export function ommlToXml(tree: OmmlNode): string {
 	const markup = Object.keys(tree)
 		.map((key) => element(stripXmlOrderSuffix(key), tree[key]))
 		.join('');
-	return markup.replace(/^<([\w:]+)/, `<$1 xmlns:m="${OMML_NAMESPACE}"`);
+	const w = markup.includes('<w:') ? ` xmlns:w="${WORD_NAMESPACE}"` : '';
+	return markup.replace(/^<([\w:]+)/, `<$1 xmlns:m="${OMML_NAMESPACE}"${w}`);
 }
 
 /**

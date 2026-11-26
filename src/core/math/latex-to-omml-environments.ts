@@ -87,8 +87,17 @@ function parseEnvBody(ctx: LatexParserContext): OmmlNode[][][] {
 }
 
 function buildMatrix(ctx: LatexParserContext, rows: OmmlNode[][][]): OmmlNode {
+	// Word writes its column spec on every matrix: one group of centred columns.
+	const count = Math.max(1, ...rows.map((cells) => cells.length));
 	return {
 		'm:m': {
+			'm:mPr': {
+				'm:mcs': {
+					'm:mc': {
+						'm:mcPr': { 'm:count': { '@_val': String(count) }, 'm:mcJc': { '@_val': 'center' } },
+					},
+				},
+			},
 			'm:mr': rows.map((cells) => ({
 				'm:e': cells.map((cell) => ctx.wrapE(cell)),
 			})),

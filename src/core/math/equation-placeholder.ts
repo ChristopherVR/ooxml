@@ -5,16 +5,15 @@
  */
 import type { OmmlNode } from './omml-node';
 import { stripXmlOrderSuffix } from './omml-node';
-import { attrVal, childNode, contentKeys, readRunText } from './omml-to-latex-helpers';
+import { childNode, contentKeys, flagOn, readRunText } from './omml-to-latex-helpers';
 
 export const EQUATION_PLACEHOLDER = '⬚';
 
 /** Arguments that show a placeholder when they hold nothing. */
 const ARGUMENTS = new Set(['m:e', 'm:num', 'm:den', 'm:sub', 'm:sup', 'm:deg', 'm:lim', 'm:fName']);
-const ON = new Set(['1', 'on', 'true']);
 
 function hidden(tag: string, node: OmmlNode, arg: string): boolean {
-	const on = (pr: string, flag: string) => ON.has(attrVal(childNode(childNode(node, pr), flag)));
+	const on = (pr: string, flag: string) => flagOn(childNode(node, pr), flag);
 	if (tag === 'm:rad' && arg === 'm:deg') return on('m:radPr', 'm:degHide');
 	if (tag === 'm:nary' && arg === 'm:sub') return on('m:naryPr', 'm:subHide');
 	if (tag === 'm:nary' && arg === 'm:sup') return on('m:naryPr', 'm:supHide');

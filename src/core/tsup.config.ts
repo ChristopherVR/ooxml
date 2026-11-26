@@ -111,7 +111,6 @@ export default defineConfig([
 			...eagerEntries,
 			'docx/ui/references': 'docx/references/index.ts',
 			'docx/ui/table-tools': 'docx/ui/table-tools.ts',
-			'math/equation-tools': 'math/equation-tools.ts',
 		},
 		format: ['esm'],
 		splitting: false,
@@ -137,12 +136,13 @@ export default defineConfig([
 			options.chunkNames = 'docx/mail-merge/chunks/[name]-[hash]';
 		},
 	},
+	// The equation editor's tools (`loadEquationTools`) download on first use. They import the
+	// converters through the math entry (`./index`), so they share its copy instead of a second one.
 	{
 		...shared,
 		entry: { 'math/index': math },
 		format: ['esm'],
 		splitting: false,
-		// The equation editor's tools (`loadEquationTools`) download on first use.
 		esbuildPlugins: [
 			{
 				name: 'math-lazy-equation-tools',
@@ -150,6 +150,24 @@ export default defineConfig([
 					build.onResolve({ filter: /^\.\/equation-tools$/ }, (args) =>
 						args.kind === 'dynamic-import'
 							? { path: './equation-tools.mjs', external: true }
+							: undefined,
+					);
+				},
+			},
+		],
+	},
+	{
+		...shared,
+		entry: { 'math/equation-tools': 'math/equation-tools.ts' },
+		format: ['esm'],
+		splitting: false,
+		esbuildPlugins: [
+			{
+				name: 'math-tools-use-math-entry',
+				setup(build) {
+					build.onResolve({ filter: /^\.\/index$/ }, (args) =>
+						/[\\/]math[\\/][^\\/]+$/.test(args.importer)
+							? { path: './index.mjs', external: true }
 							: undefined,
 					);
 				},

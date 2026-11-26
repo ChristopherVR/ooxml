@@ -10,9 +10,9 @@ import {
 	attrVal,
 	childNode,
 	ensureArr,
+	flagOn,
 	escapeMathText,
 	hasAttr,
-	isOn,
 	soleChild,
 } from './omml-to-latex-helpers';
 
@@ -37,10 +37,10 @@ export function naryToLatex(emit: LatexEmitter, node: XmlRecord): string {
 	}
 	const sub = emit.arg(node, 'm:sub');
 	const sup = emit.arg(node, 'm:sup');
-	if (sub && !isOn(childNode(naryPr, 'm:subHide'))) {
+	if (sub && !flagOn(naryPr, 'm:subHide')) {
 		result += `_{${sub}}`;
 	}
-	if (sup && !isOn(childNode(naryPr, 'm:supHide'))) {
+	if (sup && !flagOn(naryPr, 'm:supHide')) {
 		result += `^{${sup}}`;
 	}
 	return `${result}{${emit.arg(node, 'm:e')}}`;
@@ -117,6 +117,6 @@ export function delimiterToLatex(emit: LatexEmitter, node: XmlRecord): string {
 
 	const sepNode = childNode(dPr, 'm:sepChr');
 	const separator = hasAttr(sepNode) ? attrVal(sepNode) : '|';
-	const inner = elements.map((e) => emit.children(e)).join(escapeMathText(separator));
+	const inner = elements.map((e) => emit.children(e)).join(`\\middle${delimToLatex(separator)}`);
 	return `\\left${delimToLatex(open)}${inner}\\right${delimToLatex(close)}`;
 }

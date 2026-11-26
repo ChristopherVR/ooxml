@@ -19,6 +19,10 @@ export { EQUATION_GALLERY_STRINGS, type EquationGalleryStrings } from './equatio
 export {
 	applyControlWords,
 	buildUpEquation,
+	editableEquation,
+	writeEditedEquation,
+	type EditableEquation,
+	type EquationFrame,
 	emptyEquationXml,
 	linearDisplayText,
 	linearEquationXml,
@@ -26,8 +30,9 @@ export {
 	mathAutoCorrect,
 	type EquationInputFormat,
 } from './linear-format';
-export { unicodeMathToLatex } from './unicode-math';
+export { MAX_LINEAR_NESTING, unicodeMathToLatex } from './unicode-math';
+export { canonicalMath, coalesceRuns } from './equation-canonical';
 export { convertOmmlToUnicodeMath } from './omml-to-unicode-math';
 export { MATH_AUTOCORRECT } from './unicode-math-symbols';
-export { EQUATION_GALLERY } from './equation-gallery';
-export { EQUATION_PLACEHOLDER } from './equation-placeholder';
+export { EQUATION_GALLERY } from './index';
+export { EQUATION_PLACEHOLDER } from './index';

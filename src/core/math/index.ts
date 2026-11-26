@@ -1,4 +1,5 @@
 export type { OmmlNode } from './omml-node';
+export { stripXmlOrderSuffix } from './omml-node';
 export { convertLatexToOmml } from './latex-to-omml';
 export { OMML_NAMESPACE, latexToOmmlXml, ommlToXml } from './omml-to-xml';
 export { drawEquation, drawOmmlTree, type EquationDrawing } from './omml-svg';
@@ -20,5 +21,5 @@ export { EQUATION_PLACEHOLDER, fillPlaceholders, stripPlaceholders } from './equ
 /** The equation editor's galleries, linear format and math AutoCorrect, loaded on first use. */
 export const loadEquationTools = () => import('./equation-tools');
 export type EquationTools = Awaited<ReturnType<typeof loadEquationTools>>;
-export type { EquationInputFormat } from './linear-format';
+export type { EditableEquation, EquationFrame, EquationInputFormat } from './linear-format';
 export type { EquationStructure, EquationStructureGroup } from './equation-structures';

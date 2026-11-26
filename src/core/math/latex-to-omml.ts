@@ -144,9 +144,12 @@ class LatexParser implements LatexParserContext {
 		return mergeSiblings(nodes);
 	}
 
-	public makeRun(text: string, normal = false): OmmlNode {
+	/** A math run; `normal` text, or `'upright'` for a function name (`m:sty p`, as Word writes it). */
+	public makeRun(text: string, normal: boolean | 'upright' = false): OmmlNode {
 		const run: OmmlNode = { 'm:t': text };
-		if (normal) {
+		if (normal === 'upright') {
+			run['m:rPr'] = { 'm:sty': { '@_val': 'p' } } as unknown as OmmlNode;
+		} else if (normal) {
 			run['m:rPr'] = { 'm:nor': { '@_val': '1' } } as unknown as OmmlNode;
 		}
 		return { 'm:r': run };

@@ -10,6 +10,7 @@ import {
 import { unicodeMathToLatex } from './unicode-math';
 
 const strip = (xml: string | undefined) => xml?.replace(/ xmlns:m="[^"]*"/, '');
+const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
 
 describe('unicodeMathToLatex', () => {
 	it.each([
@@ -101,7 +102,7 @@ describe('linearizeEquation', () => {
 		'log_2⁡x',
 	])('round-trips %s through Office Math', (linear) => {
 		const xml = buildUpEquation(linear, 'unicode', false)!;
-		const back = linearizeEquation(xml, 'unicode');
+		const back = linearizeEquation(xml, 'unicode')!;
 		expect(buildUpEquation(back, 'unicode', false)).toBe(xml);
 	});
 
@@ -113,12 +114,41 @@ describe('linearizeEquation', () => {
 });
 
 describe('Linear display', () => {
-	it('saves linear text as one run and recognises it as Linear', () => {
-		const xml = linearEquationXml('a/b', false);
-		expect(strip(xml)).toBe('<m:oMath><m:r><m:t>a/b</m:t></m:r></m:oMath>');
-		expect(linearDisplayText(xml, 'unicode')).toBe('a/b');
-		expect(linearDisplayText(buildUpEquation('a/b', 'unicode', false)!, 'unicode')).toBeUndefined();
-		expect(linearDisplayText(linearEquationXml('x+1', false), 'unicode')).toBeUndefined();
+	it('saves linear text with each operator in its own run, as Word does, and recognises it', () => {
+		const xml = linearEquationXml('a/b+x^2', false);
+		expect(strip(xml)).toBe(
+			'<m:oMath><m:r><m:t>a</m:t></m:r><m:r><m:t>/</m:t></m:r><m:r><m:t>b+x</m:t></m:r><m:r><m:t>^</m:t></m:r><m:r><m:t>2</m:t></m:r></m:oMath>',
+		);
+		expect(linearDisplayText(xml)).toBe('a/b+x^2');
+		expect(linearDisplayText(buildUpEquation('a/b', 'unicode', false)!)).toBeUndefined();
+		expect(linearDisplayText(linearEquationXml('x+1', false))).toBeUndefined();
+	});
+
+	it('keeps a Professional run holding an operator character (km/h) as text', () => {
+		const xml = `<m:oMath xmlns:m="${M}"><m:r><m:t>km/h</m:t></m:r></m:oMath>`;
+		expect(linearDisplayText(xml)).toBeUndefined();
+		const linear = linearizeEquation(xml, 'unicode')!;
+		expect(linear).toBe('km\\/h');
+		expect(buildUpEquation(linear, 'unicode', false)).not.toContain('<m:f>');
+	});
+});
+
+describe('linear format details', () => {
+	it('nests repeated scripts to the right, as Word builds them up', () => {
+		expect(unicodeMathToLatex('x^2^3')).toBe('x^{2^{3}}');
+		expect(unicodeMathToLatex('a_b_c')).toBe('a_{b_{c}}');
+		expect(buildUpEquation('x^2^3', 'unicode', false)).not.toContain('m:sPre');
+	});
+
+	it('reads escaped quotes inside normal text and │ as a bracket separator', () => {
+		expect(unicodeMathToLatex('"say \\"hi\\""')).toBe(String.raw`\text{say "hi"}`);
+		const xml = buildUpEquation('(a│b)', 'unicode', false)!;
+		expect(xml.match(/<m:e>/g)).toHaveLength(2);
+		expect(linearizeEquation(xml, 'unicode')).toBe('(a│b)');
+	});
+
+	it('returns undefined for markup it cannot read', () => {
+		expect(linearizeEquation('<broken', 'unicode')).toBeUndefined();
 	});
 });
 

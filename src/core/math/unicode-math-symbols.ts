@@ -3,7 +3,7 @@
  * AutoCorrect list that turns a control word such as `\alpha` into its character when a space
  * follows it, as Word's equation editor does.
  */
-import { GREEK_MAP, NARY_MAP, OPERATOR_MAP } from './latex-omml-symbols';
+import { GREEK_MAP, NARY_MAP, OPERATOR_MAP } from './index';
 
 /** Build-up operators and the characters that structure linear text. */
 export const LINEAR = {

@@ -125,6 +125,10 @@ for (const load of [(s) => import(s), async (s) => require(s)]) {
  assert.equal(runs[4].fieldChar, 'end');
  const tableTools = await ui.loadWordTableTools();
  assert.ok(tableTools.TABLE_STYLE_PRESETS.some(({ id }) => id === 'GridTable4-Accent1'));
+ const math = await load('${manifest.name}/math');
+ const equations = await math.loadEquationTools();
+ assert.match(equations.buildUpEquation('a/b', 'unicode', false), /<m:f>/);
+ assert.equal(equations.EQUATION_STRUCTURES.length, 11);
 }
 const Y = await import('yjs');
 for (const load of [(s) => import(s), async (s) => require(s)]) {

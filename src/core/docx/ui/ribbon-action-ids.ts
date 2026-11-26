@@ -312,6 +312,7 @@ export const RIBBON_ACTION_IDS = [
 	'equation-limit-log',
 	'equation-operator',
 	'equation-matrix',
+	'equation-built-in',
 ] as const;
 
 export type RibbonActionId = (typeof RIBBON_ACTION_IDS)[number];
@@ -622,6 +623,7 @@ export const RIBBON_ACTION_LABELS: Readonly<Record<RibbonActionId, string>> = {
 	'equation-limit-log': 'Limit and Log',
 	'equation-operator': 'Operator',
 	'equation-matrix': 'Matrix',
+	'equation-built-in': 'Built-In Equations',
 };
 
 export type { LegacyRibbonLabel };
