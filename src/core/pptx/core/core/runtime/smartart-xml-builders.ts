@@ -10,7 +10,11 @@ import {
 	applySmartArtConnectionAttributes,
 	applySmartArtPointAttributes,
 } from '../../utils/smartart-data-model-attributes';
-import { applySmartArtNodeStyleToPoint } from './smartart-style-xml';
+import {
+	applySmartArtNodeStyleToPoint,
+	clearSmartArtPointFormatting,
+	clearSmartArtPointTransform,
+} from './smartart-style-xml';
 import { buildSmartArtTextParagraph, smartArtParagraphsText } from './smartart-text-paragraphs';
 import { reconcileSmartArtTextParagraphs } from './smartart-text-reconciliation';
 
@@ -306,6 +310,7 @@ export function buildSmartArtPointXml(nodes: PptxSmartArtNode[]): XmlObject[] {
 export function mergeSmartArtPointXml(
 	existingPts: XmlObject[],
 	nodes: PptxSmartArtNode[],
+	clearDirectFormatting = false,
 ): XmlObject[] {
 	const desiredById = new Map<string, PptxSmartArtNode>();
 	for (const node of nodes) {
@@ -323,7 +328,7 @@ export function mergeSmartArtPointXml(
 			continue;
 		}
 		if (!isContentPoint(pt)) {
-			// Preserve doc / pres / parTrans / sibTrans verbatim.
+			if (clearDirectFormatting && pointType(pt) === 'pres') clearSmartArtPointTransform(pt);
 			merged.push(pt);
 			continue;
 		}
@@ -339,6 +344,7 @@ export function mergeSmartArtPointXml(
 		// preserving per-run formatting when the node was not text-edited.
 		applyTextToExistingPoint(pt, desired);
 		applySmartArtPointAttributes(pt, desired);
+		if (clearDirectFormatting) clearSmartArtPointFormatting(pt);
 		// Write any per-node colour / emphasis override so it round-trips.
 		applySmartArtNodeStyleToPoint(pt, desired.style);
 		seenContentIds.add(modelId);

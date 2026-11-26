@@ -5,6 +5,7 @@ import {
 	measureSvgViewportRect,
 	findSmartArtNodeText,
 	resolvePalette,
+	smartArtNodeSwatches,
 	SMARTART_3D_EDIT_LAYER_ATTRIBUTE,
 } from '../../index';
 
@@ -143,7 +144,7 @@ export function enableSmartArtEditing(
 		});
 		swatches.setAttribute('role', 'group');
 		swatches.setAttribute('aria-label', context.t('pptx.smartArt.fillColor'));
-		for (const color of resolvePalette(data).slice(0, 6)) {
+		for (const color of smartArtNodeSwatches(resolvePalette(data))) {
 			const button = createEl(chrome.ownerDocument, 'button', '', {
 				width: '18px',
 				height: '18px',

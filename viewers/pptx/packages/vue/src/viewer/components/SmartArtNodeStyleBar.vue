@@ -5,7 +5,7 @@
 		@click.stop
 	>
 		<button
-			v-for="color in palette.slice(0, 6)"
+			v-for="color in smartArtNodeSwatches(palette)"
 			:key="color"
 			type="button"
 			:aria-label="t('pptx.smartArt.setFill', { color })"
@@ -18,6 +18,7 @@
 </template>
 
 <script setup lang="ts">
+import { smartArtNodeSwatches } from 'ooxml-ui/pptx';
 import { useI18n } from 'vue-i18n';
 
 defineProps<{ palette: string[] }>();

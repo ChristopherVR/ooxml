@@ -651,6 +651,7 @@ export {
 } from './animation-preset-catalog';
 
 export { regenerateSmartArtDrawingShapes, relayoutSmartArt } from './smartart-relayout';
+export { resetSmartArtFormatting } from './smartart-reset-formatting';
 export { reflowSmartArtPictures } from './smartart-picture-reflow';
 export {
 	applySmartArtQuickStyle3d,

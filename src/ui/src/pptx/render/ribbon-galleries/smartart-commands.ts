@@ -16,7 +16,7 @@
  *   is valid) and disable themselves when no valid edit exists.
  * - Right to Left toggles `presLayoutVars.direction` (`'rev'` <-> `'norm'`) and
  *   rebuilds drawing shapes so the layout flips direction.
- * - Reset Graphic restores the default colours and style (content and layout stay).
+ * - Reset Graphic clears direct node formatting while retaining diagram choices.
  * - Convert decomposes the SmartArt into standard `PptxElement[]` shapes via
  *   `decomposeSmartArt` and returns a `replaceElement` result.
  *
@@ -32,6 +32,7 @@ import {
 	demoteSmartArtNode,
 	promoteSmartArtNode,
 	reorderSmartArtNode,
+	resetSmartArtFormatting,
 } from 'ooxml-core/pptx';
 
 import type { RibbonGalleryModule } from './gallery-module';
@@ -40,9 +41,7 @@ import type {
 	RibbonGalleryContext,
 	RibbonGalleryId,
 } from './gallery-types';
-import { SMARTART_COLORS_GALLERY } from './smartart-colors-gallery';
 import { smartArtElementPatch } from './smartart-gallery-patch';
-import { SMARTART_STYLES_GALLERY } from './smartart-styles-gallery';
 
 interface CommandSpec {
 	id: RibbonGalleryId;
@@ -266,20 +265,15 @@ const SPECS: readonly CommandSpec[] = [
 		iconPath: 'M4 10a6 6 0 1 0 2-4.5M4 3.5V7h3.5',
 		large: true,
 		run: (data, ctx) => {
-			// Default colours first, then the default style, on the already-recoloured element.
 			const element = ctx.element;
-			const colors = SMARTART_COLORS_GALLERY.apply('colorful1', ctx);
-			if (colors?.kind !== 'element' || element?.type !== 'smartArt') {
-				return null;
-			}
-			const recoloured = {
-				...element,
-				...colors.patch,
-			} as PptxElement;
-			return (
-				SMARTART_STYLES_GALLERY.apply('flat', { ...ctx, element: recoloured }) ??
-				viaData(element, (colors.patch as { smartArtData?: PptxSmartArtData }).smartArtData, data)
-			);
+			if (element?.type !== 'smartArt') return null;
+			return {
+				kind: 'element',
+				elementId: element.id,
+				patch: {
+					smartArtData: resetSmartArtFormatting(data, element, ctx.themeColorMap),
+				},
+			};
 		},
 	},
 	{

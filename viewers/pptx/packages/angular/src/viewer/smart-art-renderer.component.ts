@@ -25,6 +25,7 @@ import {
 	resolveRevealedDrawingShapeNodeIds,
 	resolveRevealedDrawingShapes,
 	resolveRevealedSmartArtNodes,
+	smartArtNodeSwatches,
 } from 'ooxml-ui/pptx';
 import type {
 	ElementAnimationState,
@@ -186,6 +187,7 @@ export class SmartArtRendererComponent {
 	readonly chromeStyle = computed<StyleMap>(() => buildChromeStyle(this.smartArtData()?.chrome));
 
 	readonly palette = computed<string[]>(() => resolvePalette(this.smartArtData()));
+	protected readonly swatches = computed(() => smartArtNodeSwatches(this.palette()));
 
 	readonly artStyle = computed(() => this.smartArtData()?.style ?? 'flat');
 

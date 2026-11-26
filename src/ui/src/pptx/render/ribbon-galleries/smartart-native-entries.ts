@@ -92,7 +92,11 @@ const uniqueIdOf = (xml: string | undefined): string | undefined =>
 export function appliedSmartArtColor(data: PptxSmartArtData): string | undefined {
 	return (
 		appliedDiagramNativeId('colors', uniqueIdOf(data.builtinColorsXml)) ??
-		appliedDiagramNativeId('colors', data.colorTransform?.uniqueId) ??
+		// A pick can recolour the diagram before its lazy definition is available. The source
+		// part's id still describes the old colours in that case.
+		(data.colorTransformDirty
+			? undefined
+			: appliedDiagramNativeId('colors', data.colorTransform?.uniqueId)) ??
 		(data.colorScheme ? DIAGRAM_NATIVE_COLOR_FOR_SCHEME[data.colorScheme] : undefined)
 	);
 }

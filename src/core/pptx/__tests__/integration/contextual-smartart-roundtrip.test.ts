@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import JSZip from 'jszip';
+import { XMLParser } from 'fast-xml-parser';
 import {
 	findDiagramShapeIndex,
 	patchDiagramShape,
@@ -8,6 +9,7 @@ import {
 } from '../../../diagram/edit';
 import { PptxHandler } from '../../core/PptxHandler';
 import { must } from '../../test-support/access';
+import { resetSmartArtFormatting } from '../../core/utils/smartart-reset-formatting';
 
 it('persists style, position, size and geometry on the chosen SmartArt node', async () => {
 	const fixture = new URL('../fixtures/e2e/smartart-build-reveal.pptx', import.meta.url);
@@ -64,4 +66,46 @@ it('persists style, position, size and geometry on the chosen SmartArt node', as
 	expect(updated.fillGradientStops?.map((stop) => stop.position)).toEqual([0, 100]);
 	expect(updated.x).toBeCloseTo(shape.x + 8);
 	expect(updated.width).toBeCloseTo(shape.width + 12);
+});
+
+it('resets the loaded node formatting and keeps the diagram definitions on save', async () => {
+	const fixture = new URL('../fixtures/e2e/smartart-build-reveal.pptx', import.meta.url);
+	const zip = await JSZip.loadAsync(await readFile(fixture));
+	const prefix = 'ppt/diagrams/';
+	const source = await must(zip.file(`${prefix}data1.xml`)).async('text');
+	zip.file(
+		`${prefix}data1.xml`,
+		source.replace(
+			'<dgm:spPr/><dgm:t><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US"/><a:t>Alpha',
+			'<dgm:spPr><a:solidFill><a:srgbClr val="BB3355"/></a:solidFill></dgm:spPr><dgm:t><a:bodyPr/><a:lstStyle/><a:p><a:r><a:rPr lang="en-US" b="1"/><a:t>Alpha',
+		),
+	);
+	const handler = new PptxHandler();
+	const { slides } = await handler.load(await zip.generateAsync({ type: 'arraybuffer' }));
+	const frame = must(
+		slides.flatMap(({ elements }) => elements).find(({ type }) => type === 'smartArt'),
+	);
+	const data = must(frame.smartArtData);
+	expect(data.nodes[0]?.style).toMatchObject({ bold: true, fillColor: '#BB3355' });
+	const originalFills = data.drawingShapes?.map((shape) => shape.fillColor);
+	frame.smartArtData = resetSmartArtFormatting(data, frame);
+	expect(frame.smartArtData.nodes.map(({ text }) => text)).toEqual(['Alpha', 'Beta', 'Gamma']);
+	expect(frame.smartArtData.drawingShapes?.map((shape) => shape.fillColor)).toEqual(originalFills);
+	const saved = await handler.save(slides);
+	const archive = await JSZip.loadAsync(saved);
+	const parser = new XMLParser({ ignoreAttributes: false });
+	for (const part of ['colors1.xml', 'layout1.xml', 'quickStyle1.xml']) {
+		expect(parser.parse(await must(archive.file(prefix + part)).async('text'))).toEqual(
+			parser.parse(await must(zip.file(prefix + part)).async('text')),
+		);
+	}
+	const reloaded = await new PptxHandler().load(saved.slice().buffer);
+	const next = must(
+		reloaded.slides.flatMap(({ elements }) => elements).find(({ type }) => type === 'smartArt')
+			?.smartArtData,
+	);
+	expect(next.nodes[0]?.style).toBeUndefined();
+	expect(next.nodes[0]?.paragraphs?.[0]?.items[0]).toMatchObject({
+		run: { rPr: { '@_lang': 'en-US' } },
+	});
 });

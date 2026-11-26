@@ -8,7 +8,12 @@ import {
 	computeInlineEditorRect,
 	measureSvgViewportRect,
 	projectSmartArtViewBoxRect,
+	smartArtNodeSwatches,
 } from './smartart-inline-edit';
+
+it('offers one swatch per distinct palette colour', () => {
+	expect(smartArtNodeSwatches(['#ed7d31', '#ed7d31', '#4472c4'])).toEqual(['#ed7d31', '#4472c4']);
+});
 
 function node(id: string, text: string): PptxSmartArtNode {
 	return { id, text };

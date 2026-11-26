@@ -1,3 +1,4 @@
+import { smartArtNodeSwatches } from 'ooxml-ui/pptx';
 import React from 'react';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export function SmartArtNodeStyleBar({
 			onMouseDown={(e) => e.stopPropagation()}
 			onClick={(e) => e.stopPropagation()}
 		>
-			{palette.slice(0, 6).map((color) => (
+			{smartArtNodeSwatches(palette).map((color) => (
 				<button
 					key={color}
 					type='button'

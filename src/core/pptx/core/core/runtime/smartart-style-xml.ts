@@ -16,6 +16,7 @@
 
 import type { XmlObject } from '../../types';
 import type { PptxSmartArtNodeStyle } from '../../types/smart-art';
+import { isSmartArtRunMetadata } from '../../utils/smartart-reset-formatting';
 
 /** Strip a namespace prefix from an XML key (e.g. `dgm:t` -> `t`). */
 function localName(key: string): string {
@@ -26,6 +27,68 @@ function localName(key: string): string {
 /** Find the existing key (any prefix) whose local name matches, else undefined. */
 function findKey(obj: XmlObject, local: string): string | undefined {
 	return Object.keys(obj).find((k) => localName(k) === local);
+}
+
+function objectChild(parent: XmlObject, name: string): XmlObject | undefined {
+	const key = findKey(parent, name);
+	const child = key ? parent[key] : undefined;
+	return child && typeof child === 'object' && !Array.isArray(child) ? child : undefined;
+}
+
+export function clearSmartArtPointTransform(point: XmlObject): void {
+	const properties = objectChild(point, 'prSet');
+	if (!properties) return;
+	for (const key of Object.keys(properties)) {
+		if (key.startsWith('@_cust') || key === '@_coherent3DOff') delete properties[key];
+	}
+}
+
+const DIRECT_SHAPE_FORMATTING = new Set([
+	'xfrm',
+	'prstGeom',
+	'custGeom',
+	'noFill',
+	'solidFill',
+	'gradFill',
+	'pattFill',
+	'grpFill',
+	'ln',
+	'effectLst',
+	'effectDag',
+	'scene3d',
+	'sp3d',
+]);
+const RUN_PROPERTIES = new Set(['rPr', 'defRPr', 'endParaRPr']);
+const TEXT_CONTAINERS = new Set(['p', 'pPr', 'lstStyle', 'r', 'fld', 'br']);
+
+function clearRunFormatting(xml: XmlObject): void {
+	for (const [key, value] of Object.entries(xml)) {
+		const name = localName(key);
+		if (!RUN_PROPERTIES.has(name) && !TEXT_CONTAINERS.has(name)) continue;
+		if (!value || typeof value !== 'object') continue;
+		if (RUN_PROPERTIES.has(name) && !Array.isArray(value)) {
+			for (const property of Object.keys(value)) {
+				if (!isSmartArtRunMetadata(property)) delete value[property];
+			}
+		} else {
+			for (const child of Array.isArray(value) ? value : [value]) {
+				if (child && typeof child === 'object' && !Array.isArray(child)) clearRunFormatting(child);
+			}
+		}
+	}
+}
+
+/** Clear direct node overrides from the old point while retaining content and picture fills. */
+export function clearSmartArtPointFormatting(point: XmlObject): void {
+	clearSmartArtPointTransform(point);
+	const shape = objectChild(point, 'spPr');
+	if (shape) {
+		for (const key of Object.keys(shape)) {
+			if (DIRECT_SHAPE_FORMATTING.has(localName(key))) delete shape[key];
+		}
+	}
+	const text = objectChild(point, 't');
+	if (text) clearRunFormatting(text);
 }
 
 /** Read or create a child object under `obj` for local name `local`. */

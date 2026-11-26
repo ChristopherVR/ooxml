@@ -176,7 +176,11 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				// presentation points (type="pres"), the doc point, and every
 				// point's prSet / spPr / extLst survive the round-trip.
 				if (ptKey && ptList) {
-					ptList[ptKey] = mergeSmartArtPointXml(existingPts, smartArtData.nodes);
+					ptList[ptKey] = mergeSmartArtPointXml(
+						existingPts,
+						smartArtData.nodes,
+						smartArtData.clearDirectNodeFormatting,
+					);
 					// Write an edited connector label back onto its linked
 					// parTrans/sibTrans point (preserved verbatim otherwise).
 					if (desiredConnections && desiredConnections.length > 0) {

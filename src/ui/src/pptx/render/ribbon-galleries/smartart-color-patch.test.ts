@@ -66,4 +66,30 @@ describe('smartArt gallery color edits', () => {
 				.map((item) => item.id),
 		).toStrictEqual(['accent2_2']);
 	});
+
+	it('recognizes a chosen palette while its definition is still loading', () => {
+		const descriptor = buildRibbonGallery('smartArtColors', {
+			element: {
+				id: 'sa',
+				type: 'smartArt',
+				x: 0,
+				y: 0,
+				width: 100,
+				height: 100,
+				smartArtData: {
+					nodes: [],
+					colorScheme: 'monochromatic2',
+					colorTransformDirty: true,
+					colorTransform: {
+						uniqueId: 'urn:pptx-viewer/colors/colorful1',
+						fillColors: ['#E97132'],
+						lineColors: [],
+					},
+				},
+			},
+		});
+		expect(
+			descriptor.sections.flatMap(({ items }) => items).find(({ applied }) => applied)?.id,
+		).toBe('accent2_2');
+	});
 });

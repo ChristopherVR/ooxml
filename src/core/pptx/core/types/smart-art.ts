@@ -202,4 +202,6 @@ export interface PptxSmartArtData extends DiagramData {
 	colorTransformDirty?: boolean | undefined;
 	/** Internal save hint: cached drawing geometry or text changed in the editor. */
 	drawingDirty?: boolean | undefined;
+	/** Reset Graphic removes direct formatting from the preserved node XML on save. */
+	clearDirectNodeFormatting?: boolean | undefined;
 }

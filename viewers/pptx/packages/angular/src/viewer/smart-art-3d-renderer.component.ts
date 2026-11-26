@@ -18,6 +18,7 @@ import {
 	elementHitTargetStyle,
 	measureSvgViewportRect,
 	resolvePalette,
+	smartArtNodeSwatches,
 	resolveSmartArtThreeViewSpec,
 	shouldRenderHitTarget,
 	smartArtNodeAtPoint,
@@ -140,7 +141,9 @@ export class SmartArt3DRendererComponent {
 	private readonly smartArtData = computed(() => getSmartArtData(this.element()));
 
 	/** Resolved palette for the hover swatch bar, as on the 2D diagram. */
-	protected readonly palette = computed<string[]>(() => resolvePalette(this.smartArtData()));
+	protected readonly swatches = computed(() =>
+		smartArtNodeSwatches(resolvePalette(this.smartArtData())),
+	);
 
 	protected readonly hoveredNodeId = signal<string | null>(null);
 	private readonly hoveredNodeRect = signal<InlineEditRect | null>(null);

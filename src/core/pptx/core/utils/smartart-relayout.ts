@@ -42,18 +42,18 @@ export function relayoutSmartArt(
 	smartArtData: PptxSmartArtData,
 	containerWidth: number,
 	containerHeight: number,
+	themeColorMap?: Record<string, string>,
 ): PptxSmartArtDrawingShape[] {
 	const pictures = reflowSmartArtPictures(smartArtData, containerWidth, containerHeight);
 	if (pictures) return applySmartArtQuickStyle3d(pictures, smartArtData);
 	if (!smartArtData.nodes || smartArtData.nodes.length === 0) {
 		return [];
 	}
-	const elements = computeSmartArtElementsWithoutCache(smartArtData, {
-		x: 0,
-		y: 0,
-		width: containerWidth,
-		height: containerHeight,
-	});
+	const elements = computeSmartArtElementsWithoutCache(
+		smartArtData,
+		{ x: 0, y: 0, width: containerWidth, height: containerHeight },
+		themeColorMap,
+	);
 	if (!elements || elements.length === 0) {
 		return smartArtData.drawingShapes ?? [];
 	}

@@ -92,3 +92,36 @@ test('deselecting the SmartArt removes its contextual tab', async ({ page }) => 
 	await page.keyboard.press('Escape');
 	await expect(page.locator('[data-ribbon-contextual-tab="smartArtDesign"]')).toHaveCount(0);
 });
+
+test('Reset Graphic clears node formatting and keeps the chosen color scheme', async ({ page }) => {
+	await page.setViewportSize({ width: 2048, height: 1080 });
+	await loadDeck(page, DECK);
+	const point = await hittableNodePoint(page);
+	await page.mouse.click(point.x, point.y);
+	const tab = (id: string) => page.locator(`[data-ribbon-contextual-tab="${id}"]`);
+	await tab('smartArtDesign').click();
+	const colors = page.locator('[data-ribbon-gallery="smartArtColors"]').first();
+	const scheme = page.locator(
+		'[data-ribbon-gallery-popup="smartArtColors"] [data-gallery-item="accent2_2"]',
+	);
+	await colors.click();
+	await scheme.click();
+	await colors.click();
+	await expect(scheme).toHaveAttribute('aria-pressed', 'true');
+	await page.keyboard.press('Escape');
+
+	await tab('smartArtFormat').click();
+	const bold = page
+		.locator('[data-ribbon-control="smartArtFormat.wordArtStyles.bold"]')
+		.getByRole('checkbox');
+	await bold.click();
+	await expect(bold).toBeChecked();
+	await tab('smartArtDesign').click();
+	await page.getByRole('button', { name: 'Reset Graphic', exact: true }).click();
+	await colors.click();
+	await expect(scheme).toHaveAttribute('aria-pressed', 'true');
+	await page.keyboard.press('Escape');
+	await tab('smartArtFormat').click();
+	await expect(bold).toBeEnabled();
+	await expect(bold).not.toBeChecked();
+});

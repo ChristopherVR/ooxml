@@ -16,6 +16,11 @@
 
 import type { PptxSmartArtData, PptxSmartArtDrawingShape, PptxSmartArtNode } from 'ooxml-core/pptx';
 
+/** Offer each fill choice once, even when the diagram cycles a single colour across its nodes. */
+export function smartArtNodeSwatches(palette: readonly string[]): string[] {
+	return [...new Set(palette)].slice(0, 6);
+}
+
 /** A minimal rectangle (DOMRect-compatible) used for overlay positioning. */
 export interface InlineEditRect {
 	left: number;

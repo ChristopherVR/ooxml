@@ -49,7 +49,7 @@
 					(click)="$event.stopPropagation()"
 					(mouseleave)="onHoverLeave($event)"
 				>
-					@for (color of palette().slice(0, 6); track color) {
+					@for (color of swatches(); track color) {
 						<button
 							type="button"
 							class="pptx-ng-smartart-3d-swatch"
