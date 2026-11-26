@@ -189,6 +189,9 @@ export const translations = {
 	'pptx.shapePresets.diamond': 'Diamante',
 	'pptx.shapePresets.downArrow': 'Flecha hacia abajo',
 	'pptx.shapePresets.freeformShape': 'Forma libre: forma',
+	'pptx.insert.freeformShapeTip':
+		'Dibuja una forma personalizada con segmentos rectos o líneas a mano alzada.',
+	'pptx.insert.curveTip': 'Dibuja una curva suave colocando puntos en la diapositiva.',
 	'pptx.shapePresets.heart': 'Corazón',
 	'pptx.shapePresets.hexagon': 'Hexágono',
 	'pptx.shapePresets.leftArrow': 'Flecha izquierda',

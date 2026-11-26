@@ -192,6 +192,8 @@ export const translations = {
 	'pptx.shapePresets.diamond': 'ひし形',
 	'pptx.shapePresets.downArrow': '下矢印',
 	'pptx.shapePresets.freeformShape': 'フリーフォーム: 図形',
+	'pptx.insert.freeformShapeTip': '直線やフリーハンドの線で独自の図形を描きます。',
+	'pptx.insert.curveTip': 'スライド上に点を配置して滑らかな曲線を描きます。',
 	'pptx.shapePresets.heart': 'ハート',
 	'pptx.shapePresets.hexagon': '六角形',
 	'pptx.shapePresets.leftArrow': '左矢印',

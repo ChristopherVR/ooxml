@@ -40,6 +40,13 @@ const FREEFORM_FALLBACKS: Record<string, string> = {
 	freeformShape: 'Freeform: Shape',
 	curve: 'Curve',
 };
+const FREEFORM_TIPS = {
+	freeformShape: [
+		'pptx.insert.freeformShapeTip',
+		'Draw a custom shape with straight segments or freehand lines.',
+	],
+	curve: ['pptx.insert.curveTip', 'Draw a smooth curve by placing points on the slide.'],
+} as const satisfies Record<(typeof FREEFORM_TOOL_IDS)[number], InsertLabel>;
 const UNSUPPORTED: InsertLabel = ['pptx.insert.unavailable', 'Not available in this viewer yet.'];
 const NEEDS_SELECTION: InsertLabel = ['pptx.insert.needsSelection', 'Select an object first.'];
 
@@ -522,7 +529,7 @@ export function createRibbonInsertView(
 		for (const { tool, el } of freeform) {
 			const label = text([FREEFORM_TOOL_LABEL_KEYS[tool], FREEFORM_FALLBACKS[tool]]);
 			el.setAttribute('label', label);
-			el.setAttribute('title', label);
+			el.setAttribute('title', `${label}\n${text(FREEFORM_TIPS[tool])}`);
 			el.hidden = !visible.includes(tool);
 			el.setAttribute('pressed', String(armed === tool));
 			el.toggleAttribute('active', armed === tool);

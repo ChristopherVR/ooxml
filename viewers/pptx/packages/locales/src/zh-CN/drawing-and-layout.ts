@@ -191,6 +191,8 @@ export const translations = {
 	'pptx.shapePresets.diamond': '菱形',
 	'pptx.shapePresets.downArrow': '向下箭头',
 	'pptx.shapePresets.freeformShape': '任意多边形: 形状',
+	'pptx.insert.freeformShapeTip': '使用直线段或手绘线条绘制自定义形状。',
+	'pptx.insert.curveTip': '在幻灯片上放置多个点来绘制平滑曲线。',
 	'pptx.shapePresets.heart': '心形',
 	'pptx.shapePresets.hexagon': '六边形',
 	'pptx.shapePresets.leftArrow': '向左箭头',

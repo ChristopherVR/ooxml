@@ -153,15 +153,19 @@ test('Insert Illustrations labels Freeform Shape and Curve', async ({ page }) =>
 	await loadDeck(page);
 	await ribbonTab(page, 'Insert').click();
 	const illustrations = page.locator('[data-ribbon-group="insert.illustrations"]');
-	for (const [id, label] of [
-		['freeformShape', 'Freeform: Shape'],
-		['curve', 'Curve'],
+	for (const [id, label, tip] of [
+		[
+			'freeformShape',
+			'Freeform: Shape',
+			'Draw a custom shape with straight segments or freehand lines.',
+		],
+		['curve', 'Curve', 'Draw a smooth curve by placing points on the slide.'],
 	]) {
 		const tool = illustrations.locator(`[data-pptx-drawing-tool="${id}"]`);
 		const button = tool.getByRole('button', { name: label, exact: true });
 		await expect(button).toBeVisible();
 		await expect(button).toHaveText(label);
-		await expect(tool).toHaveAttribute('title', label);
+		await expect(tool).toHaveAttribute('title', `${label}\n${tip}`);
 	}
 });
 

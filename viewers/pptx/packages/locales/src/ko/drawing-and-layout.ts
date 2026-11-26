@@ -191,6 +191,8 @@ export const translations = {
 	'pptx.shapePresets.diamond': '다이아몬드',
 	'pptx.shapePresets.downArrow': '아래쪽 화살표',
 	'pptx.shapePresets.freeformShape': '자유형: 도형',
+	'pptx.insert.freeformShapeTip': '직선 구간이나 자유롭게 그린 선으로 사용자 지정 도형을 그립니다.',
+	'pptx.insert.curveTip': '슬라이드에 점을 배치해 부드러운 곡선을 그립니다.',
 	'pptx.shapePresets.heart': '하트',
 	'pptx.shapePresets.hexagon': '육각형',
 	'pptx.shapePresets.leftArrow': '왼쪽 화살표',

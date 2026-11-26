@@ -192,6 +192,10 @@ export const translations = {
 	'pptx.shapePresets.diamond': 'Diamant',
 	'pptx.shapePresets.downArrow': 'Pfeil nach unten',
 	'pptx.shapePresets.freeformShape': 'Freihandform: Form',
+	'pptx.insert.freeformShapeTip':
+		'Zeichnen Sie eine eigene Form aus geraden Segmenten oder Freihandlinien.',
+	'pptx.insert.curveTip':
+		'Zeichnen Sie eine glatte Kurve, indem Sie Punkte auf der Folie platzieren.',
 	'pptx.shapePresets.heart': 'Herz',
 	'pptx.shapePresets.hexagon': 'Hexagon',
 	'pptx.shapePresets.leftArrow': 'Pfeil nach links',

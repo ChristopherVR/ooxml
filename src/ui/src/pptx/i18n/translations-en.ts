@@ -3401,6 +3401,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.shapePresets.diamond': 'Diamond',
 	'pptx.shapePresets.downArrow': 'Down Arrow',
 	'pptx.shapePresets.freeformShape': 'Freeform: Shape',
+	'pptx.insert.freeformShapeTip': 'Draw a custom shape with straight segments or freehand lines.',
+	'pptx.insert.curveTip': 'Draw a smooth curve by placing points on the slide.',
 	'pptx.shapePresets.heart': 'Heart',
 	'pptx.shapePresets.hexagon': 'Hexagon',
 	'pptx.shapePresets.leftArrow': 'Left Arrow',
