@@ -41,6 +41,8 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 /** An error cell value (`#DIV/0!`, `#N/A`, ...). */
 export interface CellError {
 	readonly error: ErrorCode;
+	/** In-memory IMAGE result, with the error code as its scalar and file fallback. */
+	readonly picture?: import('./rich-values').CellPicture;
 }
 
 export const isErrorCode = (value: string): value is ErrorCode =>

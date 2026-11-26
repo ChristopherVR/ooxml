@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { encodePng } from '../../drawingml/raster-encode';
+import { createEditSession } from '../edit/session';
 import { cellView } from '../layout/cell-view';
 import { createCalcEngine } from './engine';
 import { book, get } from './test-helpers';
@@ -84,6 +85,22 @@ describe('createFetchImageProvider', () => {
 		});
 		expect(image.getImage('https://example.com/logo.png')?.mimeType).toBe('image/png');
 		expect(image.getImage('https://example.com/logo.png')?.bytes).toEqual(png);
+	});
+
+	it('restores the resolved image from the undo snapshot without recalculating', () => {
+		const source = 'https://cdn.example/logo.png';
+		const bytes = encodePng(2, 1, new Uint8Array(6));
+		const image = createFetchImageProvider();
+		image.seed(source, { url: source, bytes, mimeType: 'image/png', altText: '', sizing: 0 });
+		const wb = book({ A1: `=IMAGE("${source}","Undo logo")` });
+		createCalcEngine(wb, { providers: { image } }).recalculateAll();
+		expect(cellView(wb, 0, 0, 0).picture?.altText).toBe('Undo logo');
+
+		const session = createEditSession(wb, { recalc: false });
+		session.setCellValue(0, 0, 0, 42);
+		expect(cellView(wb, 0, 0, 0).picture).toBeUndefined();
+		session.undo();
+		expect(cellView(wb, 0, 0, 0).picture).toMatchObject({ altText: 'Undo logo', bytes });
 	});
 
 	it('rejects non-image responses and disallowed origins', async () => {

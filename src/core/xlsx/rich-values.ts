@@ -120,20 +120,13 @@ export function embeddedPicture(workbook: Workbook, cell: Cell): EmbeddedCellPic
 	return index === undefined ? undefined : store?.records[index]?.picture;
 }
 
-const formulaPictures = new WeakMap<CellError, CellPicture>();
-
 /** Formula results carry an Excel-compatible fallback for consumers that only handle scalar values. */
 export function pictureResult(picture: CellPicture): CellError {
-	const placeholder: CellError = { error: '#VALUE!' };
-	formulaPictures.set(placeholder, picture);
-	return placeholder;
+	return { error: '#VALUE!', picture };
 }
 
 export function pictureView(workbook: Workbook, cell: Cell): CellPicture | undefined {
-	if (cell.value && typeof cell.value === 'object') {
-		const formula = formulaPictures.get(cell.value);
-		if (formula) return formula;
-	}
+	if (isCellError(cell.value) && cell.value.picture) return cell.value.picture;
 	const picture = embeddedPicture(workbook, cell);
 	const bytes = picture && workbook.source?.parts.get(picture.partName);
 	const info = bytes && cellPictureInfo(bytes);

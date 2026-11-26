@@ -159,7 +159,16 @@ function evalImage(args: Value[], ctx: CallContext): Value {
 	const image = provider.getImage(source);
 	if (!image) return result;
 	const info = cellPictureInfo(image.bytes);
-	return info ? pictureResult({ ...info, bytes: image.bytes, ...req }) : ERR.VALUE;
+	return info
+		? pictureResult({
+				...info,
+				bytes: image.bytes,
+				altText,
+				sizing,
+				...(height !== undefined ? { height } : {}),
+				...(width !== undefined ? { width } : {}),
+			})
+		: ERR.VALUE;
 }
 
 export const INTEGRATION_FUNCTIONS: FunctionSpec[] = [

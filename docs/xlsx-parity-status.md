@@ -380,7 +380,9 @@ line/marker swatches and position-authoring controls remain incomplete.
     results through an opt-in host HTTPS fetcher and returns `#BLOCKED!` without one, following
     [Excel's documented response to blocked images](https://support.microsoft.com/en-us/excel/functions/image-function).
     Cached linked entities have an icon and a read-only card for scalar fields. Gaps include linked-data refresh,
-    nested card layouts and fields, additional raster formats and persisted IMAGE() results.
+    nested card layouts and fields, and additional raster formats. Calculated IMAGE() pictures survive
+    local undo. Saving or sharing the workbook carries the formula and its scalar fallback. Peers
+    and reopened workbooks need a provider to recalculate the picture.
     Phonetic guides (`rPh`) are read and written with their string
     but not displayed, edited or copied,
     connections and query tables are only carried verbatim, and named sheet views and
