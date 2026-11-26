@@ -4,6 +4,7 @@ import JSZip from 'jszip';
 import {
 	insertTableOfSize,
 	newDocument,
+	reveal,
 	saveButton,
 	setReadOnly,
 	dialogByHeading,
@@ -74,13 +75,17 @@ test('Table Properties stays usable on a narrow ribbon and localizes the dialog'
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror td').first().click();
 	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
-	await editor.getByRole('button', { name: 'Table properties', exact: true }).click();
+	const properties = editor.getByRole('button', { name: 'Table properties', exact: true });
+	await reveal(editor, properties);
+	await properties.click();
 	await expect(dialogByHeading(editor, 'Table properties')).toBeVisible();
 	await page.keyboard.press('Escape');
 	await editor.evaluate((element) => {
 		element.setAttribute('locale', 'de');
 	});
-	await editor.getByRole('button', { name: 'Eigenschaften der Tabelle', exact: true }).click();
+	const localized = editor.getByRole('button', { name: 'Eigenschaften der Tabelle', exact: true });
+	await reveal(editor, localized);
+	await localized.click();
 	await expect(dialogByHeading(editor, 'Tabelleneigenschaften')).toBeVisible();
 	await expect(editor.getByRole('checkbox', { name: 'Höhe angeben' })).toBeVisible();
 });
