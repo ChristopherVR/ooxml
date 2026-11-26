@@ -112,7 +112,10 @@ export function runToInlineNodes(
 			),
 		];
 	}
-	if (!run.text) return [];
+	if (!run.text) {
+		const point = schema.nodes.commentPoint;
+		return point ? (run.commentIds ?? []).map((id) => point.create({ id })) : [];
+	}
 	const marks = marksForRun(run, schema);
 	const { text: _text, ...format } = run;
 	const hardBreak = schema.nodes.hardBreak;
@@ -150,6 +153,11 @@ export function inlineNodeRun(child: ProseMirrorNode): TextRun | undefined {
 }
 
 export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void {
+	if (child.type.name === 'commentPoint') {
+		const commentIds = commentIdsFromNode(child);
+		if (commentIds.length) runs.push({ text: '', commentIds });
+		return;
+	}
 	if (child.type.name === 'equation') {
 		const run: TextRun = {
 			text: '',
@@ -273,7 +281,7 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 		JSON.stringify(previous && extraRunProperties(previous)) ===
 		JSON.stringify(extraRunProperties(run));
 	if (
-		previous &&
+		previous?.text &&
 		!previous.break &&
 		!previous.image &&
 		!previous.equation &&

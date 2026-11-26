@@ -5,6 +5,7 @@ import {
 	pageBreakNodeSpec,
 	hardBreakNodeSpec,
 	commentHistoryAttributes,
+	commentPointNodeSpec,
 } from 'ooxml-core/docx/ui';
 import { paragraphBoxCss, tableGridColumns, tableStyle, tableCellStyle } from 'ooxml-core/docx/ui';
 import { imageNodeSpec } from 'ooxml-core/docx/ui';
@@ -269,6 +270,7 @@ export const schema = new Schema({
 		pageBreak: pageBreakNodeSpec,
 		noteReference: noteReferenceNodeSpec,
 		fieldMarker: fieldMarkerNodeSpec,
+		commentPoint: commentPointNodeSpec,
 		image: imageNodeSpec,
 		equation: equationNodeSpec,
 		table: {

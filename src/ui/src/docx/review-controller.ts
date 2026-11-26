@@ -52,7 +52,7 @@ export class ReviewController {
 			canEdit: () => host.canEditComments(),
 			canAdd: () => {
 				const view = host.getView();
-				return Boolean(host.canEditComments() && view && !view.state.selection.empty);
+				return host.canEditComments() && view?.editable === true;
 			},
 			activeId: () => {
 				const view = host.getView();

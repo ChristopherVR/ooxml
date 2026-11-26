@@ -82,12 +82,13 @@ export function refreshEditorControls(
 		for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-action]')) {
 			const action = JSON.parse(button.dataset.action!) as RibbonAction;
 			if (action.type === 'comments' && action.key === 'add') {
-				button.disabled = readOnly || !canEditComments || state.selection.empty;
-				if (button.disabled) {
-					const reason =
-						canEditComments && !readOnly ? 'Select text first' : 'Not available in this editor';
-					button.setAttribute('aria-description', translate(locale, reason));
-				} else button.removeAttribute('aria-description');
+				button.disabled = readOnly || !canEditComments || !view.editable;
+				if (button.disabled)
+					button.setAttribute(
+						'aria-description',
+						translate(locale, 'Not available in this editor'),
+					);
+				else button.removeAttribute('aria-description');
 			}
 			if (action.type === 'tableEdit') {
 				button.disabled =

@@ -46,7 +46,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 
 		await editor.locator('.ProseMirror').click();
 		await page.keyboard.type('Review me');
-		await page.keyboard.press('Shift+Home');
+		await page.keyboard.press('Home');
+		await page.keyboard.press('ArrowRight');
 		const comment = editor.locator('button[aria-label="Add comment"]').filter({ visible: true });
 		const foldedComments = group('Comments').locator('.ribbon-overflow-button');
 		if (await foldedComments.isVisible()) await foldedComments.click();
@@ -56,6 +57,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await pane.getByRole('textbox', { name: 'New comment' }).fill('Inserted from the ribbon');
 		await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
 		await expect(pane.locator('.dve-comment-thread')).toContainText('Inserted from the ribbon');
+		await expect(editor.locator('.ProseMirror .dve-comment-range')).toHaveText('Review');
 		await pane.getByRole('button', { name: 'Close comments' }).click();
 
 		await tab('Layout').click();
@@ -134,3 +136,25 @@ for (const [locale, label] of [
 		}
 	});
 }
+
+test('Review adds an empty comment anchor between words', async ({ page }) => {
+	await page.goto('/');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const body = editor.locator('.ProseMirror');
+	await body.click();
+	await page.keyboard.type('Alpha  beta');
+	await page.keyboard.press('Home');
+	for (let offset = 0; offset < 6; offset++) await page.keyboard.press('ArrowRight');
+	await editor.getByRole('tab', { name: 'Review', exact: true }).click();
+	const comment = editor.getByRole('button', { name: 'Add comment', exact: true });
+	await reveal(editor, comment);
+	await comment.click();
+	const pane = editor.locator('.dve-comments-panel');
+	await pane.getByRole('textbox', { name: 'New comment' }).fill('Empty anchor');
+	await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
+	await expect(pane.locator('.dve-comment-thread')).toContainText('Empty anchor');
+	await expect(body.locator('[data-docx-comment-point]')).toHaveCount(1);
+	await expect(body.locator('.dve-comment-range')).toHaveCount(0);
+	expect(await body.textContent()).toBe('Alpha  beta');
+});

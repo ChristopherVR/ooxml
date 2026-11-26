@@ -67,12 +67,7 @@ export class WordYjsComments {
 		text: string,
 		idGenerator: (kind: string) => string,
 	): Comment | null {
-		if (
-			!view.editable ||
-			view.state.selection.empty ||
-			ySyncPluginKey.getState(view.state)?.type !== this.fragment
-		)
-			return null;
+		if (!view.editable || ySyncPluginKey.getState(view.state)?.type !== this.fragment) return null;
 		const id = idGenerator('comment');
 		if (!id || this.records.has(id)) return null;
 		let added: Comment | null = null;
@@ -122,9 +117,12 @@ export class WordYjsComments {
 /** Format only this anchor's Yjs attribute. Replacing a PM mark set also
  * reasserts the remaining anchors, which can revive a concurrent deletion. */
 function removeSharedAnchor(fragment: Y.XmlFragment, id: string): void {
-	for (const child of fragment.toArray()) {
-		if (child instanceof Y.XmlElement) removeSharedAnchor(child, id);
-		else if (child instanceof Y.XmlText) {
+	for (const [index, child] of [...fragment.toArray().entries()].reverse()) {
+		if (child instanceof Y.XmlElement) {
+			if (child.nodeName === 'commentPoint' && child.getAttribute('id') === id)
+				fragment.delete(index, 1);
+			else removeSharedAnchor(child, id);
+		} else if (child instanceof Y.XmlText) {
 			let offset = 0;
 			for (const part of child.toDelta()) {
 				const length = typeof part.insert === 'string' ? part.insert.length : 1;

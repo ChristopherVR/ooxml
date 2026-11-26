@@ -20,7 +20,8 @@ import {
 } from './break-note-schema';
 import { markSpecs } from './schema-marks';
 import { runToInlineNodes, inlineNodeRun } from './run-adapter';
-import { commentIdsAtSelection } from './comment-commands';
+import { commentAnchors, commentIdsAtSelection } from './comment-commands';
+import { commentPointNodeSpec } from './comment-point';
 
 const schema = new Schema({
 	nodes: {
@@ -32,6 +33,7 @@ const schema = new Schema({
 		pageBreak: pageBreakNodeSpec,
 		noteReference: noteReferenceNodeSpec,
 		fieldMarker: fieldMarkerNodeSpec,
+		commentPoint: commentPointNodeSpec,
 	},
 	marks: markSpecs,
 });
@@ -164,3 +166,40 @@ for (const atom of [
 		expect(a!.state.doc.eq(b!.state.doc)).toBe(true);
 		expect(commentIdsAtSelection(b!)).toEqual([]);
 	});
+
+it('shares and removes a textless comment point without editing either peer’s text', () => {
+	const hub = createMemoryHub();
+	const doc = schema.node('doc', null, schema.node('paragraph', null, schema.text('A  B')));
+	const peers = [0, 1].map((index) =>
+		createCollabSession({
+			roomId: 'point-comments',
+			provider: transportProvider({ transport: hub.createTransport('point-comments') }),
+			user: { name: String(index) },
+			heartbeatMs: 0,
+			teardown: false,
+		}),
+	);
+	sessions.push(...peers);
+	for (const [index, session] of peers.entries()) {
+		const binding = new WordYjsCollaboration(session, doc, {
+			documentId: 'source',
+			initializeIfEmpty: index === 0,
+		});
+		bindings.push(binding);
+		views.push(
+			new EditorView(document.createElement('div'), {
+				state: EditorState.create(binding.state(schema)),
+			}),
+		);
+	}
+	const [a, b] = views;
+	a!.dispatch(a!.state.tr.setSelection(TextSelection.create(a!.state.doc, 3)));
+	expect(bindings[0]!.comments.add(a!, 'Ada', 'At the caret', () => 'point')?.id).toBe('point');
+	expect(commentAnchors(b!)).toEqual([{ id: 'point', from: 3 }]);
+	expect(b!.state.doc.textContent).toBe('A  B');
+	expect(bindings[1]!.comments.all().map((comment) => comment.id)).toEqual(['point']);
+	expect(bindings[1]!.comments.delete(b!, 'point')).toBe(true);
+	expect(commentAnchors(a!)).toEqual([]);
+	expect(a!.state.doc.textContent).toBe('A  B');
+	expect(bindings[0]!.comments.all()).toEqual([]);
+});

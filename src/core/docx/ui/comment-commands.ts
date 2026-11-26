@@ -5,7 +5,7 @@ import { TextSelection, type Transaction } from 'prosemirror-state';
 import { commentIdsFromNode } from './comment-anchors';
 import { hasInlineRunAttributes, setInlineRunFormatting } from './inline-formatting';
 import { inlineNodeRun } from './run-adapter';
-import { commentSelectionRange } from './comment-selection';
+import { commentTargetRange } from './comment-selection';
 import { commentThreadsFromDoc, setCommentThreads } from './comment-history';
 
 let commentSerial = 0;
@@ -15,7 +15,7 @@ function nextCommentId(idGenerator?: (kind: string) => string): string {
 		: `dve-comment-${Date.now().toString(36)}-${++commentSerial}`;
 }
 
-/** Anchors a new comment to selected text or canonical inline run properties. */
+/** Anchors a new comment to a selection, the word at the caret, or a textless point. */
 export function addComment(
 	view: EditorView,
 	author: string,
@@ -24,15 +24,16 @@ export function addComment(
 	inlineElements = true,
 ): Comment | null {
 	if (!view.editable || !view.state.schema.marks.comment) return null;
-	const { from, to } = commentSelectionRange(
-		view.state.doc,
-		view.state.selection.from,
-		view.state.selection.to,
-	);
-	if (from === to) return null;
+	const { doc, selection, schema } = view.state;
+	const { from, to } = commentTargetRange(doc, selection);
 	const id = nextCommentId(idGenerator);
 	let tr = view.state.tr;
-	view.state.doc.nodesBetween(from, to, (node, pos) => {
+	if (from === to) {
+		const point = schema.nodes.commentPoint;
+		if (!point || !selection.$from.parent.isTextblock) return null;
+		tr.insert(from, point.create({ id }));
+	}
+	doc.nodesBetween(from, to, (node, pos) => {
 		if (!inlineElements && !node.isText) return;
 		if (hasInlineRunAttributes(node)) {
 			if (!inlineElements) return;
@@ -79,22 +80,27 @@ export function removeCommentThread(view: EditorView, id: string): boolean {
 function commentAnchorTransaction(view: EditorView, id: string): Transaction {
 	let tr = view.state.tr;
 	view.state.doc.descendants((node, pos) => {
+		const start = tr.mapping.map(pos);
+		if (node.type.name === 'commentPoint') {
+			if (node.attrs.id === id) tr.delete(start, start + node.nodeSize);
+			return;
+		}
 		if (hasInlineRunAttributes(node)) {
 			const run = inlineNodeRun(node);
 			if (run?.commentIds?.includes(id)) {
 				const remaining = run.commentIds.filter((existing) => existing !== id);
 				delete run.commentIds;
 				if (remaining.length) run.commentIds = remaining;
-				setInlineRunFormatting(tr, pos, run);
+				setInlineRunFormatting(tr, start, run);
 			}
 		}
 		if (!node.isInline) return;
 		for (const mark of node.marks) {
 			if (mark.type.name !== 'comment' || !(mark.attrs.ids as string[]).includes(id)) continue;
 			const remaining = (mark.attrs.ids as string[]).filter((existing) => existing !== id);
-			tr = tr.removeMark(pos, pos + node.nodeSize, mark);
+			tr = tr.removeMark(start, start + node.nodeSize, mark);
 			if (remaining.length)
-				tr = tr.addMark(pos, pos + node.nodeSize, mark.type.create({ ids: remaining }));
+				tr = tr.addMark(start, start + node.nodeSize, mark.type.create({ ids: remaining }));
 		}
 	});
 	return tr;
@@ -123,7 +129,7 @@ export function commentIdsAtSelection(view: EditorView): string[] {
 	const ids: string[] = [];
 	view.state.doc.nodesBetween(
 		empty ? Math.max(0, from - 1) : from,
-		empty ? from + 1 : to,
+		empty ? Math.min(view.state.doc.content.size, from + 1) : to,
 		(node) => {
 			for (const id of commentIdsFromNode(node)) if (!ids.includes(id)) ids.push(id);
 		},

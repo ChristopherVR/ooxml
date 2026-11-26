@@ -73,50 +73,73 @@ describe('review editing end to end', () => {
 		expect(editor.documentModel!.trackChanges).toBe(false);
 	});
 
-	it.each(['Insert', 'Review'])('adds an anchored comment from %s and saves it', async (tab) => {
-		const editor = mount(withText('Review me'));
-		const pm = view(editor);
-		pm.dispatch(pm.state.tr.setSelection(TextSelection.create(pm.state.doc, 1, 7)));
-		must(
-			editor.shadowRoot?.querySelector<HTMLButtonElement>(
-				`.ribbon-panel[data-panel="${tab}"] button[aria-label="Add comment"]`,
-			),
-		).click();
-		const pane = editor.shadowRoot!.querySelector('.dve-comments-panel')!.shadowRoot!;
-		const input = pane.querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!;
-		expect(input).toBeTruthy();
-		input.value = 'Please check';
-		input.dispatchEvent(new Event('input'));
-		const submit = [...pane.querySelectorAll<HTMLButtonElement>('button')].find(
-			(button) => button.textContent === 'Add comment',
-		);
-		submit?.click();
-		const comments = editor.documentModel!.comments ?? [];
-		expect(comments).toHaveLength(1);
-		const [comment] = comments;
-		expect(must(comment).text).toBe('Please check');
-		const anchored = firstParagraph(editor).runs.find((run) =>
-			run.commentIds?.includes(must(comment).id),
-		);
-		expect(anchored?.text).toBe('Review');
+	it.each([
+		{ tab: 'Insert', from: 1, to: 7, text: 'Review' },
+		{ tab: 'Insert', from: 4, to: 4, text: 'Review' },
+		{ tab: 'Review', from: 7, to: 7, text: '' },
+	])(
+		'adds an anchored comment from $tab at $from-$to and saves it',
+		async ({ tab, from, to, text }) => {
+			const editor = mount(withText('Review me'));
+			const pm = view(editor);
+			pm.dispatch(pm.state.tr.setSelection(TextSelection.create(pm.state.doc, from, to)));
+			must(
+				editor.shadowRoot?.querySelector<HTMLButtonElement>(
+					`.ribbon-panel[data-panel="${tab}"] button[aria-label="Add comment"]`,
+				),
+			).click();
+			const pane = editor.shadowRoot!.querySelector('.dve-comments-panel')!.shadowRoot!;
+			const input = pane.querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!;
+			expect(input).toBeTruthy();
+			input.value = 'Please check';
+			input.dispatchEvent(new Event('input'));
+			const submit = [...pane.querySelectorAll<HTMLButtonElement>('button')].find(
+				(button) => button.textContent === 'Add comment',
+			);
+			submit?.click();
+			const comments = editor.documentModel!.comments ?? [];
+			expect(comments).toHaveLength(1);
+			const [comment] = comments;
+			expect(must(comment).text).toBe('Please check');
+			const anchored = firstParagraph(editor).runs.find((run) =>
+				run.commentIds?.includes(must(comment).id),
+			);
+			expect(anchored?.text).toBe(text);
+			expect(pm.state.doc.textContent).toBe('Review me');
+			expect(
+				firstParagraph(editor)
+					.runs.map((run) => run.text)
+					.join(''),
+			).toBe('Review me');
 
-		const blob = await editor.save();
-		const bytes = await new Promise<Uint8Array>((resolve, reject) => {
-			const reader = new FileReader();
-			reader.onload = () => {
-				if (reader.result instanceof ArrayBuffer) resolve(new Uint8Array(reader.result));
-				else reject(new Error('Expected DOCX bytes'));
-			};
-			reader.onerror = () => reject(reader.error);
-			reader.readAsArrayBuffer(blob);
-		});
-		const { model } = await loadDocx(bytes);
-		const savedComment = must(model.comments?.[0]);
-		const paragraph = model.blocks[0];
-		expect(savedComment.text).toBe('Please check');
-		expect(
-			paragraph?.type === 'paragraph' &&
-				paragraph.runs.find((run) => run.commentIds?.includes(savedComment.id))?.text,
-		).toBe('Review');
-	});
+			const blob = await editor.save();
+			const bytes = await new Promise<Uint8Array>((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => {
+					if (reader.result instanceof ArrayBuffer) resolve(new Uint8Array(reader.result));
+					else reject(new Error('Expected DOCX bytes'));
+				};
+				reader.onerror = () => reject(reader.error);
+				reader.readAsArrayBuffer(blob);
+			});
+			const { model } = await loadDocx(bytes);
+			const savedComment = must(model.comments?.[0]);
+			const paragraph = model.blocks[0];
+			expect(savedComment.text).toBe('Please check');
+			expect(
+				paragraph?.type === 'paragraph' &&
+					paragraph.runs.find((run) => run.commentIds?.includes(savedComment.id))?.text,
+			).toBe(text);
+			if (text === '') {
+				expect(paragraph?.type === 'paragraph' && paragraph.runs.map((run) => run.text)).toEqual([
+					'Review',
+					'',
+					' me',
+				]);
+				click(editor, 'Delete comment');
+				expect(editor.documentModel!.comments ?? []).toEqual([]);
+				expect(firstParagraph(editor).runs).toEqual([{ text: 'Review me' }]);
+			}
+		},
+	);
 });

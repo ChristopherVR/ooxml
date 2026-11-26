@@ -5,6 +5,7 @@ export * from './collaboration-identity';
 export * from './collaboration-protocol';
 export * from './collaboration';
 export * from './comment-commands';
+export { commentPointNodeSpec } from './comment-point';
 export * from './comment-anchors';
 export * from './comment-history';
 export * from './yjs-collaboration';
