@@ -14,39 +14,34 @@ import type { EditorCore } from './editor-core';
 import { parsePlacement, shapeSpecOf } from './print-float-locate';
 
 /** Makes room for the child stack at the group's place in its text layer. */
-function expandStack(
+export function expandStack(
 	tr: Transaction,
 	pos: number,
 	placement: PicturePlacement,
 	count: number,
 ): number {
-	const layer: { pos: number; placement: PicturePlacement }[] = [];
+	const first = placement.relativeHeight ?? 0;
+	const shift = count - 1;
+	if (shift <= 0) return first;
 	tr.doc.descendants((node, at) => {
 		if (node.type.name !== 'image') return true;
 		const anchor = parsePlacement(node.attrs.placement);
+		const height = anchor?.relativeHeight ?? 0;
 		if (
 			node.attrs.anchored &&
 			anchor &&
-			Boolean(anchor.behindText) === Boolean(placement.behindText)
-		)
-			layer.push({ pos: at, placement: anchor });
-		return false;
-	});
-	layer.sort((a, b) => (a.placement.relativeHeight ?? 0) - (b.placement.relativeHeight ?? 0));
-	let height = 251658240;
-	let first = height;
-	for (const item of layer) {
-		if (item.pos === pos) {
-			first = height;
-			height += count;
-		} else {
+			Boolean(anchor.behindText) === Boolean(placement.behindText) &&
+			// Equal heights paint in document order.
+			(height > first || (height === first && at > pos))
+		) {
 			tr.setNodeAttribute(
-				item.pos,
+				at,
 				'placement',
-				JSON.stringify({ ...item.placement, relativeHeight: height++ }),
+				JSON.stringify({ ...anchor, relativeHeight: height + shift }),
 			);
 		}
-	}
+		return false;
+	});
 	return first;
 }
 

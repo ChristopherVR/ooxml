@@ -69,8 +69,7 @@ test('ungroup keeps the native children on the canvas in consecutive stacking or
 	await expect(floats).toHaveCount(3);
 	const { xml } = await savedDocument(page, 'ungrouped.docx');
 	const heights = [...xml.matchAll(/relativeHeight="(\d+)"/g)].map((match) => Number(match[1]));
-	expect(heights).toHaveLength(3);
-	expect(heights.slice(1)).toEqual(heights.slice(0, -1).map((height) => height + 1));
+	expect(heights).toEqual([251659364, 251659365, 251659366]);
 });
 
 test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({ page }) => {
