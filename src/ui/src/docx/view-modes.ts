@@ -21,6 +21,7 @@ export class ViewModes {
 	private pending: DocumentView = 'draft';
 	private sequence = 0;
 	private readFrom: Exclude<LayoutMode, 'read'> = 'draft';
+	private outlineFrom: Exclude<LayoutMode, 'outline'> = 'draft';
 	private readonly scroll = new Map<LayoutMode, { top: number; left: number }>();
 
 	constructor(private readonly host: PageControllerHost) {}
@@ -30,17 +31,21 @@ export class ViewModes {
 	}
 
 	select(mode: DocumentView): void {
+		this.request(mode, false);
+	}
+
+	private request(mode: DocumentView, restoring: boolean): void {
 		if (mode === this.pending) return;
 		this.pending = mode;
 		const sequence = ++this.sequence;
 		if (mode === this.mode || mode === 'draft' || mode === 'print') {
-			this.apply(mode);
+			this.apply(mode, undefined, restoring);
 			return;
 		}
 		void loadView[mode]()
 			.then((module) => {
 				if (sequence !== this.sequence || !this.host.element.isConnected) return;
-				this.apply(mode, module.mountView);
+				this.apply(mode, module.mountView, restoring);
 			})
 			.catch((error: unknown) => {
 				if (sequence !== this.sequence) return;
@@ -52,14 +57,14 @@ export class ViewModes {
 
 	escape(): boolean {
 		if (this.active === 'focus') this.select(this.mode);
-		else if (this.mode === 'read') this.select(this.readFrom);
+		else if (this.mode === 'read') this.request(this.readFrom, true);
 		else return false;
 		return true;
 	}
 
 	run(action: OutlineAction): void {
 		if (this.mode !== 'outline') return;
-		if (action.key === 'close') this.select('draft');
+		if (action.key === 'close') this.request(this.outlineFrom, true);
 		else this.presentation?.run?.(action);
 	}
 
@@ -78,7 +83,11 @@ export class ViewModes {
 		}
 	}
 
-	private apply(mode: DocumentView, mount?: (typeof import('./view-web'))['mountView']): void {
+	private apply(
+		mode: DocumentView,
+		mount?: (typeof import('./view-web'))['mountView'],
+		restoring = false,
+	): void {
 		const { host } = this;
 		const paper = host.paper();
 		const canvas = paper?.parentElement;
@@ -109,7 +118,10 @@ export class ViewModes {
 			this.scroll.set(previous, scrollBefore);
 			this.presentation?.dispose();
 			this.presentation = undefined;
-			if (mode === 'read' && previous !== 'read') this.readFrom = previous;
+			if (!restoring) {
+				if (mode === 'read' && previous !== 'read') this.readFrom = previous;
+				if (mode === 'outline' && previous !== 'outline') this.outlineFrom = previous;
+			}
 			this.mode = mode;
 			canvas.dataset.documentView = mode;
 			canvas.toggleAttribute('data-print-view', mode === 'print');

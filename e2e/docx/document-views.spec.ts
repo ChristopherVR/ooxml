@@ -109,6 +109,18 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	await expect(body.locator('p').first()).toContainText('Start. Paragraph 1.');
 });
 
+test('closing Outline restores Print Layout', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const canvas = editor.locator('.dve-canvas');
+	await setView(editor, 'print');
+	await expect(canvas).toHaveAttribute('data-document-view', 'print');
+	await setView(editor, 'outline');
+	await editor.getByRole('button', { name: 'Close Outline View', exact: true }).click();
+	await expect(canvas).toHaveAttribute('data-document-view', 'print');
+});
+
 test('Outlining filters and collapses branches and saves an undoable edit', async ({ page }) => {
 	await page.setViewportSize({ width: 1280, height: 800 });
 	await page.goto('/?framework=vanilla');
