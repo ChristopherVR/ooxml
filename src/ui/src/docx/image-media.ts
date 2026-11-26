@@ -210,7 +210,12 @@ export function imageNodeView(cache: ImageMediaCache, options: ImageNodeViewOpti
 		dom.append(content);
 		if (painted) dom.append(painted);
 		dom.addEventListener('click', (event) => {
-			if (event.target === handle || event.shiftKey) return;
+			if (
+				event.target === handle ||
+				event.shiftKey ||
+				(node.attrs.anchored && (event.ctrlKey || event.metaKey))
+			)
+				return;
 			const pos = getPos();
 			const { selection } = view.state;
 			if (pos === undefined || (selection instanceof NodeSelection && selection.from === pos))

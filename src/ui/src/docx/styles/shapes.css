@@ -54,7 +54,8 @@
 .dve-shape-floating.dve-shape-behind {
 	z-index: 0;
 }
-.dve-shape-selected {
+.dve-shape-selected,
+.dve-paper .dve-drawing-secondary {
 	outline: 2px solid var(--blue, #2b579a);
 	outline-offset: 2px;
 }

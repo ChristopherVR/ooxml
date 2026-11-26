@@ -1,6 +1,6 @@
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import { NodeSelection, type EditorState, type Selection } from 'prosemirror-state';
-import type { EditorView } from 'prosemirror-view';
+import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import { isPictureNode } from './picture-format-commands';
 
 export function isArrangeDrawing(
@@ -64,4 +64,41 @@ export function selectDrawing(view: EditorView, pos: number, extend: boolean): v
 	const selection =
 		next.length > 1 ? new DrawingSelection(doc, next, primary) : NodeSelection.create(doc, primary);
 	view.dispatch(view.state.tr.setSelection(selection));
+}
+
+export function extendsDrawingSelection(event: MouseEvent): boolean {
+	return event.ctrlKey || event.metaKey || event.shiftKey;
+}
+
+export function selectOnDrawingMouseDown(view: EditorView, event: MouseEvent): boolean {
+	if (
+		event.button !== 0 ||
+		!extendsDrawingSelection(event) ||
+		view.dom.classList.contains('dve-drawing-shape') ||
+		!(event.target instanceof Element)
+	)
+		return false;
+	const drawing = event.target.closest('.dve-shape, .dve-picture');
+	if (!drawing || !view.dom.contains(drawing)) return false;
+	const pos = view.posAtDOM(drawing, 0);
+	const node = view.state.doc.nodeAt(pos);
+	if (!isArrangeDrawing(node) || !node.attrs.anchored) return false;
+	// Handle the press before ProseMirror replaces the existing selection.
+	event.preventDefault();
+	selectDrawing(view, pos, true);
+	view.focus();
+	return true;
+}
+
+export function secondaryDrawingDecorations(state: EditorState): DecorationSet {
+	if (!(state.selection instanceof DrawingSelection)) return DecorationSet.empty;
+	return DecorationSet.create(
+		state.doc,
+		state.selection.positions.flatMap((pos) => {
+			const node = state.doc.nodeAt(pos);
+			return node && pos !== state.selection.from
+				? [Decoration.node(pos, pos + node.nodeSize, { class: 'dve-drawing-secondary' })]
+				: [];
+		}),
+	);
 }

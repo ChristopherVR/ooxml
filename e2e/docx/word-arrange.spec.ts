@@ -258,6 +258,29 @@ test('pane and Shift-click selections align and distribute three drawings on the
 	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(2);
 });
 
+test('Ctrl and Shift-click extend canvas selection in Draft and Print Layout', async ({ page }) => {
+	const editor = await openShapes(page);
+	const selectThree = async (drawings: ReturnType<typeof editor.locator>) => {
+		await drawings.nth(0).click();
+		await drawings.nth(1).click({ modifiers: ['Control'] });
+		await drawings.nth(2).click({ modifiers: ['Shift'] });
+	};
+	await selectThree(editor.locator('.ProseMirror .dve-shape-floating'));
+	await expect(editor.locator('.ProseMirror .dve-drawing-secondary')).toHaveCount(2);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	const floats = editor.locator('.dve-print-float');
+	const align = editor.getByRole('combobox', { name: 'Align', exact: true });
+	await floats.nth(0).click();
+	await floats.nth(1).click({ modifiers: ['Control'] });
+	await expect(align.locator('option[value="selected"]')).toBeEnabled();
+	await expect(align.locator('option[value="x"]')).toBeDisabled();
+	await floats.nth(2).click({ modifiers: ['Shift'] });
+	await expect(align.locator('option[value="x"]')).toBeEnabled();
+	await expect(align.locator('option[value="y"]')).toBeEnabled();
+	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(3);
+});
+
 test('Top Left moves a fresh canvas selection and a single undo restores its original bounds', async ({
 	page,
 }) => {

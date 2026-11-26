@@ -6,7 +6,7 @@ import { modelToDoc, docToModel } from './model-adapter';
 import { schema } from './schema';
 import { bodyPlugins } from './editor-plugins';
 import { resetStylePicker } from './paragraph-styles';
-import { isArrangeDrawing, selectDrawing } from './arrange-selection';
+import { secondaryDrawingDecorations, selectOnDrawingMouseDown } from './arrange-selection';
 import { bodyImageNodeViews } from './body-image-node-views';
 import { yjsPresence } from './yjs-presence';
 
@@ -89,11 +89,8 @@ export function renderDocument(core: EditorCore): void {
 			core.applyTransaction(transaction);
 		},
 		nodeViews: bodyImageNodeViews(core),
-		handleClickOn: (view, _pos, node, nodePos, event, direct) => {
-			if (!direct || !event.shiftKey || !isArrangeDrawing(node)) return false;
-			selectDrawing(view, nodePos, true);
-			return true;
-		},
+		handleDOMEvents: { mousedown: selectOnDrawingMouseDown },
+		decorations: secondaryDrawingDecorations,
 		handleClick: (view, pos, event) => core.inserts.handleClick(view, pos, event),
 		handleDoubleClickOn: (view, _pos, node, nodePos) => {
 			if (node.type !== schema.nodes.equation || !view.editable) return false;

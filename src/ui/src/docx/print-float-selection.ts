@@ -13,7 +13,12 @@ import {
 	shapeSpecOf,
 	type Located,
 } from './print-float-locate';
-import { drawingPositions, isArrangeDrawing, selectDrawing } from './arrange-selection';
+import {
+	drawingPositions,
+	extendsDrawingSelection,
+	isArrangeDrawing,
+	selectDrawing,
+} from './arrange-selection';
 import { editShapeText } from './print-float-text';
 import {
 	FLOAT_HANDLES,
@@ -264,7 +269,7 @@ export function attachPrintFloatSelection(host: PrintFloatHost): PrintFloats {
 			closeText?.();
 			const view = host.view();
 			const before = view && selectedFloat(view.state);
-			const extend = !grip && (event.shiftKey || event.ctrlKey || event.metaKey);
+			const extend = !grip && extendsDrawingSelection(event);
 			const located = select(element, extend);
 			if (!located) return;
 			event.preventDefault();
