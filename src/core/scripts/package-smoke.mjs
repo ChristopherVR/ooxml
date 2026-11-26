@@ -116,6 +116,14 @@ try {
 	await writeFile(
 		path.join(work, 'consumer.mjs'),
 		`import assert from 'node:assert/strict';\nimport { createRequire } from 'node:module';\nconst require = createRequire(import.meta.url);\n${checks}\n
+// A packed consumer must be able to load the lazy Word References chunk in both formats.
+for (const load of [(s) => import(s), async (s) => require(s)]) {
+ const ui = await load('${manifest.name}/docx/ui');
+ const references = await ui.loadWordReferences();
+ const runs = references.referenceFieldRuns('BIBLIOGRAPHY', [{ text: 'Example' }]);
+ assert.equal(runs[3].text, 'Example');
+ assert.equal(runs[4].fieldChar, 'end');
+}
 const Y = await import('yjs');
 for (const load of [(s) => import(s), async (s) => require(s)]) {
  const sync = await load('${manifest.name}/pptx/editor/render/collaboration-sync');
