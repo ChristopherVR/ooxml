@@ -6,7 +6,7 @@ import { INSTALLED_ADD_IN_LIMIT, localAddIns } from '../ribbon/add-in-installati
 import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
 import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
 import { addInCapabilities, isSelectionSet } from '../ribbon/add-in-requirements';
-import { addInRuntime } from '../ribbon/add-in-runtime-settings';
+import { ADD_IN_RUNTIME_REFRESHED, addInRuntime } from '../ribbon/add-in-runtime-settings';
 import { addInPreferences } from '../ribbon/add-in-preferences';
 import { addInSettings } from '../ribbon/add-in-settings';
 
@@ -19,7 +19,7 @@ export interface AddInPreview {
 	previous: LocalAddIn | undefined;
 }
 
-export function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
+export function addInSession(options: OpenAddInsOptions, restoreFocus = () => {}) {
 	const { host, manifestLocale, product, scopes } = options;
 	const locale = addInLocale(manifestLocale);
 	const installed = localAddIns(host);
@@ -137,3 +137,22 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 }
 
 export type AddInSession = ReturnType<typeof addInSession>;
+
+export async function restoreMountedAddIns(
+	options: OpenAddInsOptions,
+	signal: AbortSignal,
+	files: readonly Uint8Array[],
+	clearTabs: boolean,
+) {
+	if (signal.aborted || !options.host.isConnected) return;
+	const session = addInSession(options);
+	if (clearTabs) await session.syncTabs();
+	await session.restore?.(signal, files);
+	if (!signal.aborted && options.host.isConnected) await session.syncTabs();
+}
+
+export async function refreshMountedAddIns(options: OpenAddInsOptions, signal: AbortSignal) {
+	if (signal.aborted || !options.host.isConnected) return;
+	await addInSession(options).refreshRuntime(signal);
+	if (!signal.aborted) options.host.dispatchEvent(new Event(ADD_IN_RUNTIME_REFRESHED));
+}

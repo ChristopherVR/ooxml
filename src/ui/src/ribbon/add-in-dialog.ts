@@ -5,11 +5,7 @@ import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 import { localAddIns } from './add-in-installations';
 import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
-import {
-	ADD_IN_RUNTIME_CHANGED,
-	ADD_IN_RUNTIME_REFRESHED,
-	type OfficeAddInSelection,
-} from './add-in-runtime-settings';
+import { ADD_IN_RUNTIME_CHANGED, type OfficeAddInSelection } from './add-in-runtime-settings';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
@@ -18,15 +14,16 @@ export type AddInDialogHost = HTMLElement | ShadowRoot;
 
 const RESTORE = Symbol.for('office-ui.mounted-add-in-restore');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
-const LOAD_ERRORS = new Map([
-	['fr', 'Impossible de charger les compléments.'],
-	['de', 'Add-Ins konnten nicht geladen werden.'],
-	['es', 'No se pudieron cargar los complementos.'],
-	['zh-CN', '无法加载加载项。'],
-	['ja', 'アドインを読み込めませんでした。'],
-	['ko', '추가 기능을 불러오지 못했습니다.'],
-]);
-const LOCALES = [...LOAD_ERRORS.keys()];
+const LOAD_ERRORS = {
+	en: 'Could not load add-ins.',
+	fr: 'Impossible de charger les compléments.',
+	de: 'Add-Ins konnten nicht geladen werden.',
+	es: 'No se pudieron cargar los complementos.',
+	'zh-CN': '无法加载加载项。',
+	ja: 'アドインを読み込めませんでした。',
+	ko: '추가 기능을 불러오지 못했습니다.',
+};
+const LOCALES = Object.keys(LOAD_ERRORS) as (keyof typeof LOAD_ERRORS)[];
 type PendingHost = AddInDialogHost & {
 	[OPENING]?: boolean;
 	[RESTORE]?: Promise<void>;
@@ -87,21 +84,15 @@ export function watchOfficeAddIns(
 	let activeStore = addInPreferences(scopes);
 	let runtimeRefresh: AbortController | undefined;
 
-	const sessionForEditor = async () => {
-		const { addInSession } = await import('../dialog/add-ins-session');
-		return addInSession(
-			{
-				host,
-				mode: 'myAddIns',
-				t,
-				product,
-				manifestLocale: locale(),
-				scopes,
-				...(selection && { selection }),
-			},
-			() => {},
-		);
-	};
+	const options = (): OpenAddInsOptions => ({
+		host,
+		mode: 'myAddIns',
+		t,
+		product,
+		manifestLocale: locale(),
+		scopes,
+		...(selection && { selection }),
+	});
 
 	const restore = () => {
 		pending?.abort();
@@ -119,13 +110,9 @@ export function watchOfficeAddIns(
 		const { signal } = (pending = new AbortController());
 		host[RESTORE] = (async () => {
 			const files = store ? await store.read(product) : [];
-			if (signal.aborted || !host.isConnected) return;
-			if (!changed && !files.length && !localAddIns(host).size) return;
-			const session = await sessionForEditor();
-			if (signal.aborted || !host.isConnected) return;
-			if (changed) await session.syncTabs();
-			await session.restore?.(signal, files);
-			if (!signal.aborted && host.isConnected) await session.syncTabs();
+			if (signal.aborted || (!changed && !files.length && !localAddIns(host).size)) return;
+			const { restoreMountedAddIns } = await import('../dialog/add-ins-session');
+			await restoreMountedAddIns(options(), signal, files, changed);
 		})();
 		// The dialog can report a preference read error if the user opens it.
 		void host[RESTORE].catch(() => {});
@@ -136,11 +123,9 @@ export function watchOfficeAddIns(
 		const { signal } = (runtimeRefresh = new AbortController());
 		void (async () => {
 			await host[RESTORE];
-			if (signal.aborted || !host.isConnected) return;
-			const session = await sessionForEditor();
 			if (signal.aborted) return;
-			await session.refreshRuntime(signal);
-			if (!signal.aborted) host.dispatchEvent(new Event(ADD_IN_RUNTIME_REFRESHED));
+			const { refreshMountedAddIns } = await import('../dialog/add-ins-session');
+			await refreshMountedAddIns(options(), signal);
 		})().catch(() => {});
 	};
 	for (const scope of scopes) {
@@ -192,7 +177,7 @@ export async function openOfficeAddIns(
 		const status = host.ownerDocument.createElement('p');
 		status.setAttribute('role', 'status');
 		const language = normalizeLocale(locale, LOCALES, 'en');
-		status.textContent = LOAD_ERRORS.get(language) ?? 'Could not load add-ins.';
+		status.textContent = LOAD_ERRORS[language];
 		dialog.append(status);
 		dialog.addEventListener('office-dialog-closed', (event) => {
 			if (event.target === dialog) restore();
