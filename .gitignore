@@ -57,3 +57,4 @@ desktop/src-tauri/gen/
 .suite-preview-onedrive/
 scripts/ooxml-validate/bin/
 scripts/ooxml-validate/obj/
+test-timings/

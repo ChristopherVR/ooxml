@@ -183,8 +183,16 @@ jobs:
           elif [ "$mode" = "changed" ] && [ -n "$base" ]; then
             bun run test --changed="$base" $shard --passWithNoTests
           else
-            bun run test $shard
+            # A full run records each file's duration; `scripts/test-timings.mjs` refreshes
+            # src/core/vitest.timings.json from these reports, so shards balance on Linux timings.
+            bun run test $shard --reporter=default --reporter=json               --outputFile.json="$GITHUB_WORKSPACE/test-timings/core-$SHARD.json"
           fi
+      - if: success() && hashFiles('test-timings/*.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: test-timings-core-${{ matrix.shard }}
+          path: test-timings
+          retention-days: 7
 
   # Build once; the package checks and the viewer checks below reuse the output.
   build:
@@ -229,7 +237,14 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - run: bun run --cwd src/ui test --shard=${{ matrix.shard }}/3
+      - run: >-
+          bun run --cwd src/ui test --shard=${{ matrix.shard }}/3 --reporter=default --reporter=json
+          --outputFile.json="$GITHUB_WORKSPACE/test-timings/ui-${{ matrix.shard }}.json"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: test-timings-ui-${{ matrix.shard }}
+          path: test-timings
+          retention-days: 7
 
   # ooxml-ui's package checks. The package is packed from the build job's core and ui output
   # (`dist`), the same build the viewers run on; it does not wait for the tests.

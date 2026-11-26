@@ -35,8 +35,19 @@ with a maximum of eight workers. Set `OOXML_TEST_WORKERS` to change the limit, o
 
 ### Refresh the unit test timing tables
 
-Refresh the tables when you split a slow test file or when shard durations drift. From the
-repository root, run the full suite with the JSON reporter, then update its table.
+Refresh the tables when you split a slow test file or when shard durations drift. CI's shards run
+on Linux, so prefer the timings of a full CI run: each core and UI test shard of a full run uploads
+its JSON report as a `test-timings-*` artifact. Download every shard's artifact of one run and pass
+all of its reports at once, since an update replaces the whole table:
+
+```bash
+gh run download <run-id> --pattern 'test-timings-*' --dir test-timings
+node scripts/test-timings.mjs update test-timings/*/core-*.json core
+node scripts/test-timings.mjs update test-timings/*/ui-*.json ui
+```
+
+To measure locally instead, run the full suite with the JSON reporter from the repository root,
+then update its table.
 
 ```bash
 bun run test --reporter=json --outputFile=core-report.json
