@@ -5,6 +5,15 @@ import { pivotItemLabeler } from './item-labels';
 import { pivotMeasureNumber, pivotMeasures } from './measures';
 import { attrs, encodeEscapes } from '../write/xml-out';
 import { decodeEscapes } from '../read/xml-util';
+import { compileWildcard } from '../formula/functions/wildcard';
+
+function captionCriterion(pattern: string): { wildcard: boolean; value: string } {
+	// Excel stores escaped literals in a checklist and uses a custom filter for wildcards.
+	if (!/[*?]/.test(pattern)) return { wildcard: false, value: pattern };
+	const tokens = pattern.match(/~[\s\S]|[*?]/g) ?? [];
+	if (tokens.some((token) => token.length === 1)) return { wildcard: true, value: pattern };
+	return { wildcard: false, value: pattern.replace(/~([\s\S]|$)/g, '$1') };
+}
 
 export function supportsPivotCondition(pivot: PivotTable): boolean {
 	return !(
@@ -29,12 +38,15 @@ export function applyPivotCondition(pivot: PivotTable): PivotTable {
 	if (condition.kind === 'captionEqual') {
 		if (typeof condition.value !== 'string' || condition.value.length > 255)
 			throw new Error('Enter a caption of at most 255 characters.');
-		const value = condition.value.toLowerCase();
+		const criterion = captionCriterion(condition.value);
+		const matcher = criterion.wildcard ? compileWildcard(criterion.value) : undefined;
+		const literal = criterion.value.toLowerCase();
 		return {
 			...pivot,
-			records: pivot.records.filter(
-				(record) => String(label(pivot.rowField, record[field] ?? null)).toLowerCase() === value,
-			),
+			records: pivot.records.filter((record) => {
+				const caption = String(label(pivot.rowField, record[field] ?? null));
+				return matcher ? matcher.test(caption) : caption.toLowerCase() === literal;
+			}),
 		};
 	}
 	const measure = pivotMeasures(pivot)[condition.measure];
@@ -78,11 +90,17 @@ export function pivotConditionXml(pivot: PivotTable, condition: PivotCondition):
 		id: 1,
 	};
 	const caption = condition.kind === 'captionEqual';
-	const value = caption ? encodeEscapes(condition.value) : condition.value;
-	const field = caption ? { stringValue1: value } : { iMeasureFld: condition.measure };
-	const criteria = caption
-		? `<filters><filter${attrs({ val: value })}/></filters>`
-		: `<customFilters><customFilter${attrs({ operator: operator(condition), val: value })}/></customFilters>`;
+	const field = caption
+		? { stringValue1: encodeEscapes(condition.value) }
+		: { iMeasureFld: condition.measure };
+	const criterion = caption ? captionCriterion(condition.value) : undefined;
+	const criteria =
+		criterion && !criterion.wildcard
+			? `<filters><filter${attrs({ val: encodeEscapes(criterion.value) })}/></filters>`
+			: `<customFilters><customFilter${attrs({
+					operator: caption ? undefined : operator(condition),
+					val: caption ? encodeEscapes(condition.value) : condition.value,
+				})}/></customFilters>`;
 	return `<filters count="1"><filter${attrs({ ...common, ...field })}><autoFilter ref="A1"><filterColumn colId="0">${criteria}</filterColumn></autoFilter></filter></filters>`;
 }
 
@@ -93,8 +111,11 @@ export function readPivotCondition(root: XmlElement, row: number): PivotConditio
 	if (kind !== 'captionEqual' && kind !== 'valueGreaterThan' && kind !== 'valueLessThan') return;
 	const auto = first(filter, 'autoFilter', NS.x);
 	const column = first(auto, 'filterColumn', NS.x);
-	const criteria = first(column, kind === 'captionEqual' ? 'filters' : 'customFilters', NS.x);
-	const criterion = first(criteria, kind === 'captionEqual' ? 'filter' : 'customFilter', NS.x);
+	const pattern = kind === 'captionEqual' ? filter?.getAttribute('stringValue1') : undefined;
+	const caption = pattern != null ? captionCriterion(decodeEscapes(pattern)) : undefined;
+	const custom = !caption || caption.wildcard;
+	const criteria = first(column, custom ? 'customFilters' : 'filters', NS.x);
+	const criterion = first(criteria, custom ? 'customFilter' : 'filter', NS.x);
 	const value = criterion?.getAttribute('val');
 	if (
 		filters?.getAttribute('count') !== '1' ||
@@ -112,10 +133,15 @@ export function readPivotCondition(root: XmlElement, row: number): PivotConditio
 		throw new Error('Unsupported PivotTable condition.');
 	if (
 		kind === 'captionEqual' &&
-		filter?.getAttribute('stringValue1') === value &&
-		!filter.hasAttribute('iMeasureFld')
+		pattern != null &&
+		caption &&
+		decodeEscapes(value) === caption.value &&
+		(!custom ||
+			!criterion.hasAttribute('operator') ||
+			criterion.getAttribute('operator') === 'equal') &&
+		!filter?.hasAttribute('iMeasureFld')
 	)
-		return { kind, value: decodeEscapes(value) };
+		return { kind, value: decodeEscapes(pattern) };
 	const index = filter?.getAttribute('iMeasureFld') ?? '';
 	if (
 		kind !== 'captionEqual' &&

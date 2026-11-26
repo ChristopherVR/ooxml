@@ -150,6 +150,18 @@ it('evaluates a calculated measure from aggregate source values and round trips 
 	expect(pivotGrid(await reopen()).values.at(-1)).toEqual(['Grand Total', null, 57]);
 });
 
+it('matches caption wildcards and escaped wildcards across save and reopen', async () => {
+	const { edit, patch, reopen } = await report();
+	patch({ condition: { kind: 'captionEqual', value: 'f?u*' } });
+	expect(pivotGrid(await reopen()).values.at(-1)).toEqual(['Grand Total', null, 37]);
+
+	edit.setCellInput(1, 1, 0, '~*?');
+	patch({ condition: { kind: 'captionEqual', value: '~~~*~?' } });
+	const reopened = await reopen();
+	expect(reopened.condition).toEqual({ kind: 'captionEqual', value: '~~~*~?' });
+	expect(pivotGrid(reopened).values.at(-1)).toEqual(['Grand Total', null, 10]);
+});
+
 it('renames, moves and redirects a report and rolls back Refresh All if a report fails', async () => {
 	const { workbook, edit, ws, patch, read, reopen } = await report();
 	const original = read().name;

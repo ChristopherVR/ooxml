@@ -51,6 +51,8 @@ const cases = {
 	unstyled: { display: { style: { name: '' } } },
 	collapsed: { display: { collapsed: true } },
 	caption: { condition: { kind: 'captionEqual', value: 'Veg' } },
+	'caption-pattern': { condition: { kind: 'captionEqual', value: 'f?u*' } },
+	'caption-escape': { condition: { kind: 'captionEqual', value: '~~~*~?' } },
 	empty: { condition: { kind: 'captionEqual', value: 'Missing' } },
 	greater: { condition: { kind: 'valueGreaterThan', measure: 0, value: 20 } },
 	less: { condition: { kind: 'valueLessThan', measure: 0, value: 30 } },
@@ -61,7 +63,9 @@ const cases = {
 const fixture = readFileSync(join(import.meta.dir, '../../../src/core/xlsx/__fixtures__/excel-pivot-rows.xlsx'));
 for (const [name, patch] of Object.entries(cases)) {
 	const workbook = await loadXlsx(fixture);
-	createEditSession(workbook).refreshPivotTable(0, 'SalesPivot', patch);
+	const edit = createEditSession(workbook);
+	if (name === 'caption-escape') edit.setCellInput(1, 1, 0, '~*?');
+	edit.refreshPivotTable(0, 'SalesPivot', patch);
 	const pivot = workbook.sheets[0]!.pivotTables![0]!;
 	writeFileSync(join(import.meta.dir, name + '.xlsx'), await saveXlsx(workbook));
 	writeFileSync(join(import.meta.dir, name + '.json'), JSON.stringify(pivotGrid(pivot).values));
@@ -80,7 +84,7 @@ for (const [name, patch] of Object.entries(cases)) {
 	$excel.DisplayAlerts = $false
 	$excel.AutomationSecurity = 3
 	Write-Output ("Excel " + $excel.Version + " build " + $excel.Build)
-	$expectedFilters = @{ caption = 15; empty = 15; greater = 9; less = 11 }
+	$expectedFilters = @{ caption = 15; 'caption-pattern' = 15; 'caption-escape' = 15; empty = 15; greater = 9; less = 11 }
 	foreach ($file in Get-ChildItem -LiteralPath $output -Filter '*.xlsx') {
 		$case = $file.BaseName
 		$expected = Get-Content -LiteralPath (Join-Path $output ($case + '.json')) -Raw | ConvertFrom-Json

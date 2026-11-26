@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import {
+	clickRibbonControl,
 	editor,
 	formulaBarValue,
 	goToCell,
@@ -90,4 +91,18 @@ test('keeps cached totals when styling a report and updates them on Refresh', as
 	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
 	await tabs.getByRole('button', { name: 'Refresh PivotTable', exact: true }).click();
 	await expect.poll(() => formulaBarValue(page)).toBe('77');
+});
+
+test('applies a wildcard through the Label Equals filter', async ({ page }) => {
+	await loadPivotWorkbook(page);
+	await goToCell(page, 'A2');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
+	await clickRibbonControl(page, tabs.locator('[data-command="pivot.condition"]'));
+	const dialog = editor(page).locator('[data-dialog="pivot-condition"]');
+	await dialog.getByLabel('Filter:', { exact: true }).selectOption('captionEqual');
+	await dialog.getByLabel('Value:', { exact: true }).fill('f?u*');
+	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
+	await goToCell(page, 'C5');
+	await expect.poll(() => formulaBarValue(page)).toBe('37');
 });
