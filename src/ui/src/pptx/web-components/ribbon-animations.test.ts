@@ -210,11 +210,10 @@ describe('shared Animations timing', () => {
 		rows.setAttribute('group-order', '2');
 		viewer.append(host, rows);
 		document.body.append(viewer);
-		if (group === 'ungrouped') rows.removeAttribute('group-order');
-
 		expect(rows.shadowRoot?.querySelector('button')).toBeNull();
 		Object.assign(rows, { groupOrder: 1 });
 		expect(rows.getAttribute('group-order')).toBe('1');
+		if (group === 'ungrouped') rows.removeAttribute('group-order');
 		expect(rows.shadowRoot!.querySelectorAll('button')).toHaveLength(1);
 		const effect = rows.shadowRoot!.querySelector('button')!;
 		expect(effect.textContent).toContain('Logo · Fade');
