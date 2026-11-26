@@ -30,6 +30,13 @@ for (const framework of FRAMEWORKS) {
 			'Symbols',
 		]);
 		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+		const art = insert.locator('.ribbon-group[data-label="Illustrations"]');
+		for (const name of ['Pictures', 'Shapes', 'Icons', '3D Models', 'Screenshot']) {
+			const button = art.getByRole('button', { name, exact: true });
+			await expect(button).toBeVisible();
+			await expect(button.locator('svg path').first()).toHaveAttribute('d', /\S/u);
+			expect((await button.boundingBox())?.height).toBe(76);
+		}
 		await page.setViewportSize({ width: 1280, height: 900 });
 		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
 		await expect(

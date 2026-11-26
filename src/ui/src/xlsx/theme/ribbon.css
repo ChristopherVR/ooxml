@@ -1,9 +1,12 @@
 /* Ribbon: tabs, panels, groups and controls. Mirrors docx-viewer's styles/ribbon*.css. */
 .xve-ribbon-gallery[data-office-gallery] .trigger {
 	flex-direction: column;
-	justify-content: center;
-	min-width: 56px;
-	height: 78px;
+	justify-content: flex-start;
+	gap: 2px;
+	height: 76px;
+	padding: 3px 3px 2px;
+	font-size: 11px;
+	line-height: 1.15;
 	white-space: normal;
 	text-align: center;
 }
@@ -13,6 +16,15 @@
 }
 .xve-ribbon-gallery[data-office-gallery] .trigger > span:not([aria-hidden]) {
 	max-width: 56px;
+}
+.xve-ribbon-gallery[data-office-gallery] .trigger > span[aria-hidden] {
+	line-height: 12px;
+}
+.ribbon-group[data-label='Illustrations'] :is(button.ribbon-large, .xve-ribbon-gallery .trigger) {
+	min-width: 58px;
+}
+.ribbon-group[data-label='Illustrations'] button.ribbon-menu-button > .ribbon-icon:last-child {
+	margin-top: 0;
 }
 .xve-ribbon {
 	position: relative;

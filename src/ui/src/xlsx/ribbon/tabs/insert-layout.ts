@@ -4,6 +4,7 @@ import { arrangeGroup } from './arrange';
 import { shapeSections } from '../../commands/insert-shapes';
 import { CHART_TYPES } from '../../commands/insert';
 import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
+import { icon } from 'ooxml-core/xlsx/ui';
 import { themeFontItems, themePaletteItems, themePresetItems } from 'ooxml-core/xlsx/ui';
 
 const sep: RibbonMenuItem = { separator: true };
@@ -36,6 +37,8 @@ export function insertTab(): RibbonTab {
 					{
 						kind: 'menu',
 						label: 'Pictures',
+						icon: icon('picture'),
+						size: 'large',
 						items: [
 							{ command: 'insert.picture-in-cell' },
 							{ command: 'insert.pictures' },
@@ -45,14 +48,16 @@ export function insertTab(): RibbonTab {
 						],
 					},
 					{ kind: 'gallery', command: 'insert.shapes', items: () => [], sections: shapeSections },
-					{
-						kind: 'menu',
-						label: 'Screenshot',
-						items: [{ command: 'insert.screenshot' }, { command: 'insert.screen-clipping' }],
-					},
 					{ kind: 'button', command: 'insert.icons', size: 'large' },
 					{ kind: 'button', command: 'insert.3d-models', size: 'large' },
 					{ kind: 'button', command: 'insert.smartart', size: 'large' },
+					{
+						kind: 'menu',
+						label: 'Screenshot',
+						icon: 'fullscreen',
+						size: 'large',
+						items: [{ command: 'insert.screenshot' }, { command: 'insert.screen-clipping' }],
+					},
 				],
 			},
 			{
