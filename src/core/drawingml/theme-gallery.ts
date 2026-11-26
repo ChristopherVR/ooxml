@@ -5,7 +5,7 @@ import { LEGACY_THEME_FORMATS } from './theme-formats-legacy';
 import { readCapturedFormatScheme } from './theme-format-capture';
 
 export * from './theme-presets';
-export { THEME_EFFECT_PRESETS, sameThemeEffectStyles } from './theme-effect-presets';
+export { THEME_EFFECT_PRESETS, sameThemeFormatScheme } from './theme-effect-presets';
 
 const formats = { ...FEATURED_THEME_FORMATS, ...LEGACY_THEME_FORMATS };
 

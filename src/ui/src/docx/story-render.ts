@@ -243,6 +243,8 @@ function absolute(placement: PicturePlacement | undefined): placement is Picture
  * Draws a shape node into its frame (`dom`) and drawing holder: wrapping classes, offsets, size, the
  * geometry as SVG and, for a text box, its paragraphs over it.
  */
+let shapeSequence = 0;
+
 export function paintShape(
 	dom: HTMLElement,
 	holder: HTMLElement,
@@ -282,6 +284,8 @@ export function paintShape(
 					...(content ? { textBoxContent: content } : {}),
 				},
 				theme,
+				undefined,
+				`dve-shape-${++shapeSequence}`,
 			)
 		: {};
 	const svg = paint.chart?.svg;

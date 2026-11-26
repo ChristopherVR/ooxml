@@ -188,6 +188,7 @@ export type DesignEdit =
 	| { kind: 'fonts'; name: string; majorFont: string; minorFont: string }
 	| { kind: 'effects'; preset: DesignEffect }
 	| { kind: 'effectStyles'; name: string; styles: ThemeEffectStyle[] }
+	| { kind: 'formatScheme'; formatScheme: ThemeFormatScheme }
 	| { kind: 'spacing'; spacing: DesignSpacing };
 
 export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): DocumentModel {
@@ -255,5 +256,7 @@ export function editDocumentDesign(model: DocumentModel, edit: DesignEdit): Docu
 					formatScheme: replaceEffectStyles(theme.formatScheme, edit.name, edit.styles),
 				},
 			};
+		case 'formatScheme':
+			return { ...model, theme: { ...theme, formatScheme: structuredClone(edit.formatScheme) } };
 	}
 }

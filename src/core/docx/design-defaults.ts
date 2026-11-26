@@ -11,10 +11,9 @@ import {
 } from './document-design';
 import type { DocumentModel } from './model';
 import type { ThemeCatalog } from './theme-model';
-import { themeMatrix } from '../drawingml/theme-matrix';
 import {
 	THEME_EFFECT_PRESETS,
-	sameThemeEffectStyles,
+	sameThemeFormatScheme,
 	type ThemeEffectPresetName,
 } from '../drawingml/theme-effect-presets';
 
@@ -102,9 +101,8 @@ export function wordDesignDefaults(model: DocumentModel): WordDesignDefaults | u
 	const { formatScheme, ...theme } = designTheme(model.theme);
 	const preset =
 		formatScheme &&
-		THEME_EFFECT_PRESETS.find(
-			({ name, styles }) =>
-				name === formatScheme.name && sameThemeEffectStyles(styles, formatScheme.effectStyles),
+		THEME_EFFECT_PRESETS.find(({ formatScheme: preset }) =>
+			sameThemeFormatScheme(preset, formatScheme),
 		);
 	return parseWordDesignDefaults({
 		theme,
@@ -120,7 +118,7 @@ export function withWordDesignDefaults(model: DocumentModel, value: unknown): Do
 	const { theme, effect, effectName, spacing } = settings;
 	const preset = THEME_EFFECT_PRESETS.find(({ name }) => name === effectName);
 	const formatScheme = preset
-		? themeMatrix(preset.name, preset.styles)
+		? structuredClone(preset.formatScheme)
 		: effect && designEffects(undefined, effect);
 	return withDesignSpacing(
 		{

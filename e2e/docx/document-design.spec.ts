@@ -74,6 +74,44 @@ test('Word exports an edited theme and imports it into a new document', async ({
 	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
 	await button('Themes').click();
 	await editor.getByRole('menuitemradio', { name: 'Wisp', exact: true }).click();
+	await editor.evaluate((element) => {
+		if (
+			!('documentModel' in element) ||
+			!element.documentModel ||
+			typeof element.documentModel !== 'object'
+		)
+			throw new Error('Missing Word document model');
+		element.documentModel = {
+			...element.documentModel,
+			blocks: [
+				{
+					type: 'paragraph',
+					id: 'reflection',
+					runs: [
+						{
+							text: '',
+							image: {
+								relId: '',
+								partName: '',
+								contentType: 'application/octet-stream',
+								widthPx: 120,
+								heightPx: 60,
+								shape: { preset: 'rect', effectRef: { index: 3 } },
+							},
+						},
+					],
+				},
+			],
+		};
+	});
+	await button('Effects').click();
+	const texture = editor.getByRole('menuitemradio', { name: 'Grunge Texture', exact: true });
+	await expect(texture).toBeDisabled();
+	await expect(texture).toHaveAccessibleDescription(
+		'This effect requires picture fills for shapes.',
+	);
+	await editor.getByRole('menuitemradio', { name: 'Reflection', exact: true }).click();
+	await expect(editor.locator('.dve-shape-drawing svg g[mask] path')).toBeVisible();
 	await button('Effects').click();
 	await editor.getByRole('menuitemradio', { name: 'Glow Edge', exact: true }).click();
 	await button('Themes').click();
@@ -90,7 +128,8 @@ test('Word exports an edited theme and imports it into a new document', async ({
 	const zip = await JSZip.loadAsync(bytes);
 	const part = await zip.file('theme/theme/theme1.xml')?.async('string');
 	expect(part).toContain('name="Glow Edge"');
-	expect(part).toContain('<a:glow');
+	expect(part).toContain('<a:gradFill');
+	expect(part).toContain('<a:lnStyleLst');
 	await newDocument(page);
 	await editor
 		.locator('office-ui-message-dialog')

@@ -3172,3 +3172,8 @@ the four `a:fmtScheme` lists from the same files. Office 2007-2010 uses the
 matrix Word saved after applying the installed Office 2007-2010 `.eftx`.
 Relationship-backed picture fills use a solid `phClr` placeholder in the
 built-in matrices, without copying the source artwork.
+
+`theme-effect-formats.ts` uses the same Word build and capture procedure with
+the installed `Theme Effects` packages. Grunge Texture is disabled because
+its characteristic shape fills are images. Pictures in the available
+format schemes' background slots use the same solid placeholder.

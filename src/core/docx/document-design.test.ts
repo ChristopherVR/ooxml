@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { THEME_COLOR_PRESETS, THEME_FONT_PRESETS, THEME_PRESETS } from '../drawingml/theme-presets';
-import { DOCUMENT_THEME_CATALOGUE, THEME_EFFECT_PRESETS } from '../drawingml/theme-gallery';
+import {
+	DOCUMENT_THEME_CATALOGUE,
+	THEME_EFFECT_PRESETS,
+	sameThemeFormatScheme,
+} from '../drawingml/theme-gallery';
 import { readThemePackage, writeThemePackage } from '../drawingml/theme-package';
 import {
 	createDocument,
@@ -80,35 +84,37 @@ describe('Word document design', () => {
 			wisp.formatScheme.effectStyles[2]?.effects?.effects,
 		);
 	});
-	it.each(THEME_EFFECT_PRESETS)('round trips the $name effect matrix', async ({ name, styles }) => {
-		const model = await roundTrip({ kind: 'effectStyles', name, styles });
-		expect(model.theme?.formatScheme).toMatchObject({ name, effectStyles: styles });
-		const defaults = wordDesignDefaults(model);
-		expect(defaults?.effectName).toBe(name);
-		expect(withWordDesignDefaults(createDocument(), defaults).theme?.formatScheme).toMatchObject({
-			name,
-			effectStyles: styles,
-		});
-	});
-	it('paints inner shadow, glow and soft edges from the effect reference', async () => {
-		const styles = THEME_EFFECT_PRESETS.find(({ name }) => name === 'Frosted Glass');
-		const model = await roundTrip({ kind: 'effectStyles', ...must(styles) });
-		const svg = shapeSvg(
-			{
-				preset: 'rect',
-				effectRef: { index: 2, color: { kind: 'srgb', value: '158515', transforms: [] } },
-			},
-			120,
-			60,
-			model.theme,
-		);
-		expect(svg).toContain('feMorphology');
-		expect(svg).toContain('flood-color="#158515"');
-		const inset = THEME_EFFECT_PRESETS.find(({ name }) => name === 'Inset');
-		const insetModel = await roundTrip({ kind: 'effectStyles', ...must(inset) });
-		expect(
-			shapeSvg({ preset: 'rect', effectRef: { index: 2 } }, 120, 60, insetModel.theme),
-		).toContain('operator="atop"');
+	it.each(THEME_EFFECT_PRESETS)(
+		'round trips the $name effect matrix',
+		async ({ name, formatScheme }) => {
+			const initial = editDocumentDesign(createDocument(), {
+				kind: 'theme',
+				name: 'Before',
+				...must(DOCUMENT_THEME_CATALOGUE.find(({ id }) => id === 'wisp')),
+			});
+			const updated = editDocumentDesign(initial, { kind: 'formatScheme', formatScheme });
+			expect(updated.theme?.colors).toBe(initial.theme?.colors);
+			expect(updated.theme?.fonts).toBe(initial.theme?.fonts);
+			const loaded = await loadDocx(await saveDocx(initial));
+			const model = (await loadDocx(await loaded.save(updated))).model;
+			const reopened = must(model.theme?.formatScheme);
+			expect(sameThemeFormatScheme(reopened, formatScheme)).toBe(true);
+			const defaults = wordDesignDefaults(model);
+			expect(defaults?.effectName).toBe(name);
+			expect(withWordDesignDefaults(createDocument(), defaults).theme?.formatScheme).toEqual(
+				formatScheme,
+			);
+		},
+	);
+	it('paints a faded reflection from the real Word effect reference', async () => {
+		const reflection = must(THEME_EFFECT_PRESETS.find(({ name }) => name === 'Reflection'));
+		const model = await roundTrip({ kind: 'formatScheme', formatScheme: reflection.formatScheme });
+		const svg = shapeSvg({ preset: 'rect', effectRef: { index: 3 } }, 120, 60, model.theme);
+		expect(svg).toContain('mask="url(#shape-reflection-mask)"');
+		expect(svg).toContain('stop-opacity="0.32"');
+		expect(svg).toContain('offset="0.28"');
+		expect(svg).toContain('scale(1 -1)');
+		expect(svg?.match(/<path /g)).toHaveLength(2);
 	});
 	it('replaces the font collections and effect matrix when applying a standalone theme to a DOCX', async () => {
 		const initial = editDocumentDesign(createDocument(), {
@@ -120,7 +126,10 @@ describe('Word document design', () => {
 		});
 		const loaded = await loadDocx(await saveDocx(initial));
 		const styles = must(THEME_EFFECT_PRESETS.find((preset) => preset.name === 'Glow Edge'));
-		const designed = editDocumentDesign(initial, { kind: 'effectStyles', ...styles });
+		const designed = editDocumentDesign(initial, {
+			kind: 'formatScheme',
+			formatScheme: styles.formatScheme,
+		});
 		const theme = must(designed.theme);
 		theme.name = 'Research';
 		theme.fonts.major = { latin: 'Georgia', scripts: { Jpan: 'Yu Mincho' } };
@@ -132,8 +141,10 @@ describe('Word document design', () => {
 			name: 'Research',
 			colors: { accent1: '123456' },
 			fonts: { major: { latin: 'Georgia', scripts: { Jpan: 'Yu Mincho' } } },
-			formatScheme: { name: 'Glow Edge', effectStyles: styles.styles },
 		});
+		expect(sameThemeFormatScheme(must(reopened.theme?.formatScheme), styles.formatScheme)).toBe(
+			true,
+		);
 	});
 	it('bounds saved schemes and accepts only complete palettes and font pairs', () => {
 		const good = { kind: 'fonts', name: 'Reading', majorFont: 'Georgia', minorFont: 'Arial' };

@@ -30,6 +30,7 @@ import type { InlineImage } from './inline-model';
 import { capCompensatedDashArray, dashPatternUnits } from '../drawingml/dash-pattern';
 import { appendSvg, createSvg, setSvgAttributes } from '../drawingml/svg-elements';
 import { appendShapeEffectFilter } from '../drawingml/shape-effect-filter';
+import { appendShapeReflection } from '../drawingml/shape-reflection';
 import { buildXml, parseXml } from '../xml/index';
 import { EMU_PER_PIXEL } from './units';
 
@@ -207,10 +208,8 @@ function appendShapeContent(
 	const filterId = `${idPrefix}-shadow`;
 	const hasEffects =
 		effects && appendShapeEffectFilter(defs, filterId, effects, diagramColorTheme(theme));
-	const group = appendSvg(parent, 'g', {
-		...(transform ? { transform } : {}),
-		...(hasEffects ? { filter: `url(#${filterId})` } : {}),
-	});
+	const placement = transform ? appendSvg(parent, 'g', { transform }) : parent;
+	const group = appendSvg(placement, 'g', hasEffects ? { filter: `url(#${filterId})` } : {});
 	const look = shapeAppearance(spec, theme);
 	for (const path of geometry.paths) {
 		appendSvg(group, 'path', {
@@ -244,6 +243,8 @@ function appendShapeContent(
 			}).textContent = line;
 		});
 	}
+	const reflection = effects?.effects.find((effect) => effect.kind === 'reflection');
+	if (reflection) appendShapeReflection(defs, group, `${idPrefix}-reflection`, w, h, reflection);
 	return true;
 }
 
@@ -253,6 +254,7 @@ export function shapeSvg(
 	widthPx: number,
 	heightPx: number,
 	theme?: ThemeCatalog,
+	idPrefix = 'shape',
 ): string | undefined {
 	const w = Math.max(1, widthPx);
 	const h = Math.max(1, heightPx);
@@ -270,7 +272,7 @@ export function shapeSvg(
 				: 'Shape',
 	});
 	const defs = appendSvg(svg, 'defs');
-	if (!appendShapeContent(svg, spec, w, h, theme, defs, 'shape')) return undefined;
+	if (!appendShapeContent(svg, spec, w, h, theme, defs, idPrefix)) return undefined;
 	if (!defs.childNodes.length) svg.removeChild(defs);
 	return buildXml(svg);
 }
@@ -282,6 +284,7 @@ export function shapeSvg(
 export function drawingShapeSvg(
 	image: Pick<InlineImage, 'shape' | 'textBoxContent' | 'widthPx' | 'heightPx'>,
 	theme?: ThemeCatalog,
+	idPrefix?: string,
 ): string | undefined {
 	if (!image.shape) return undefined;
 	const { text: _text, ...geometry } = image.shape;
@@ -290,5 +293,6 @@ export function drawingShapeSvg(
 		image.widthPx,
 		image.heightPx,
 		theme,
+		idPrefix,
 	);
 }

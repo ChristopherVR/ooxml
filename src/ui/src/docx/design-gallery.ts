@@ -28,6 +28,11 @@ function appendItem(menu: HTMLElement, label: string, choose: () => void, entry?
 	item.setAttribute('role', entry ? 'menuitemradio' : 'menuitem');
 	if (entry) {
 		item.setAttribute('aria-checked', String(entry.active));
+		if (entry.unavailable) {
+			item.setAttribute('aria-disabled', 'true');
+			item.setAttribute('aria-description', entry.unavailable);
+			item.title = entry.unavailable;
+		}
 		entry.preview.setAttribute('aria-hidden', 'true');
 		item.append(entry.preview);
 	} else item.className = 'gallery-command';
@@ -35,7 +40,7 @@ function appendItem(menu: HTMLElement, label: string, choose: () => void, entry?
 	text.className = 'gallery-name';
 	text.textContent = label;
 	item.append(text);
-	item.addEventListener('click', choose);
+	if (!entry?.unavailable) item.addEventListener('click', choose);
 	menu.append(item);
 	return item;
 }
@@ -80,7 +85,15 @@ export function openDocumentDesign(
 	const items: HTMLButtonElement[] = [];
 	const pickEntry = (group: HTMLElement, entry: Entry) =>
 		items.push(
-			appendItem(group, entry.label, () => pick(() => applyDesignEdit(core, entry.edit)), entry),
+			appendItem(
+				group,
+				entry.label,
+				() => {
+					const { edit } = entry;
+					if (edit) pick(() => applyDesignEdit(core, edit));
+				},
+				entry,
+			),
 		);
 	if (kind === 'colors' || kind === 'fonts') {
 		const saved = readDesignSchemes(core).filter((scheme) => scheme.kind === kind);

@@ -40,7 +40,7 @@ function mount() {
 					contentType: 'application/octet-stream',
 					widthPx: 120,
 					heightPx: 60,
-					shape: newShape('rect'),
+					shape: { ...newShape('rect'), effectRef: { index: 3 } },
 				},
 			},
 		],
@@ -89,14 +89,14 @@ it('previews gallery items, changes theme formatting live, and undoes one choice
 	editor.getToolbarProps().onRedo();
 	expect(editor.documentModel?.theme?.name).toBe('Facet');
 	expect((await loadDocx(await editor.saveBytes())).model.theme?.name).toBe('Facet');
-	await pick('Effects', 'Subtle Solid');
-	expect(root.querySelector('.dve-shape-drawing feDropShadow')).toBeNull();
+	await pick('Effects', 'Reflection');
+	expect(root.querySelector('.dve-shape-drawing mask')).not.toBeNull();
 	await pick('Effects', 'Top Shadow');
 	expect(root.querySelector('.dve-shape-drawing feDropShadow')).not.toBeNull();
 	editor.getToolbarProps().onUndo();
-	expect(root.querySelector('.dve-shape-drawing feDropShadow')).toBeNull();
+	expect(root.querySelector('.dve-shape-drawing mask')).not.toBeNull();
 	await pick('Effects', 'Frosted Glass');
-	expect(root.querySelector('.dve-shape-drawing feMorphology')).not.toBeNull();
+	expect(root.querySelector('.dve-shape-drawing feDropShadow')).not.toBeNull();
 });
 
 it('keeps named colour and font schemes across editors and supports rename, reuse and deletion', async () => {

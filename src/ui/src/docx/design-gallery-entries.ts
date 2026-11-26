@@ -25,12 +25,11 @@ const spacingLabels = {
 } satisfies Record<keyof typeof DESIGN_SPACING, LocalizationKey>;
 export type Presets = Awaited<ReturnType<typeof loadThemePresets>>;
 
-export interface Entry {
+export type Entry = {
 	label: string;
-	edit: DesignEdit;
 	preview: HTMLElement;
 	active: boolean;
-}
+} & ({ edit: DesignEdit; unavailable?: never } | { edit?: never; unavailable: string });
 
 function swatches(colors: readonly string[]): HTMLElement {
 	const strip = document.createElement('span');
@@ -77,7 +76,7 @@ export function designEntries(
 		THEME_COLOR_PRESETS,
 		THEME_FONT_PRESETS,
 		THEME_EFFECT_PRESETS,
-		sameThemeEffectStyles,
+		sameThemeFormatScheme,
 	}: Presets,
 ): Entry[] {
 	const theme = designTheme(core.model.theme);
@@ -129,20 +128,22 @@ export function designEntries(
 			const raw = theme.colors.accent1 ?? '';
 			const accent = /^#?[0-9a-f]{6}$/i.test(raw) ? `#${raw.replace(/^#/, '')}` : '#4472C4';
 			const current = theme.formatScheme;
-			const choices = THEME_EFFECT_PRESETS.map(({ name, styles }): Entry => ({
+			const choices = THEME_EFFECT_PRESETS.map(({ name, formatScheme }): Entry => ({
 				label: say(`design.effect.${name}`),
-				edit: { kind: 'effectStyles', name, styles },
-				preview: effectsSample(styles, accent),
-				active: current?.name === name && sameThemeEffectStyles(current.effectStyles, styles),
+				edit: { kind: 'formatScheme', formatScheme },
+				preview: effectsSample(formatScheme.effectStyles, accent),
+				active: Boolean(current && sameThemeFormatScheme(current, formatScheme)),
 			}));
+			choices.push({
+				label: say('design.effect.Grunge Texture'),
+				preview: document.createElement('span'),
+				active: false,
+				unavailable: say('design.grungeUnavailable'),
+			});
 			if (current && !choices.some((entry) => entry.active)) {
 				choices.unshift({
 					label: say('design.currentEffects'),
-					edit: {
-						kind: 'effectStyles',
-						name: current.name ?? 'Custom',
-						styles: current.effectStyles,
-					},
+					edit: { kind: 'formatScheme', formatScheme: current },
 					preview: effectsSample(current.effectStyles, accent),
 					active: true,
 				});

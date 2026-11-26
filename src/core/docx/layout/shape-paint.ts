@@ -15,11 +15,12 @@ export function shapePaint(
 	image: Pick<InlineImage, 'shape' | 'textBoxContent' | 'widthPx' | 'heightPx'>,
 	theme?: ThemeCatalog,
 	textBoxes?: TextBoxLayouts,
+	idPrefix?: string,
 ): Pick<LayoutObject, 'chart' | 'textBox' | 'textBoxLayout'> &
 	Partial<Pick<LayoutObject, 'widthPx' | 'heightPx'>> {
 	const layout = image.shape && image.textBoxContent ? textBoxes?.layout(image) : undefined;
 	const size = layout ? { widthPx: layout.widthPx, heightPx: layout.heightPx } : {};
-	const svg = drawingShapeSvg({ ...image, ...size }, theme);
+	const svg = drawingShapeSvg({ ...image, ...size }, theme, idPrefix);
 	if (!svg || !image.shape) return {};
 	if (!image.textBoxContent) return { chart: { svg, label: 'Shape', shape: true } };
 	const textColor = shapeDefaultTextColor(image.shape, theme);
