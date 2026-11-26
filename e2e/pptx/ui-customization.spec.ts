@@ -20,7 +20,14 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { openMenuOn, stageElements } from './support/context-menu';
-import { loadDeck, ribbonTab, SAMPLE_DECK } from './support/deck';
+import {
+	elementsOfType,
+	fixture,
+	loadDeck,
+	ribbonTab,
+	SAMPLE_DECK,
+	selectElement,
+} from './support/deck';
 import { openOptionsDialog, optionsCategory } from './support/settings-dialog';
 
 test.use({ viewport: { width: 1440, height: 900 } });
@@ -118,6 +125,24 @@ test.describe('UI customization', () => {
 		await expect(ribbonTab(page, 'Insert')).toHaveCount(0);
 		await callCustomization(page, 'showRibbonTab', 'insert');
 		await expect(ribbonTab(page, 'Insert')).toBeVisible();
+	});
+
+	test('SmartArt Arrange controls can be hidden independently of Home', async ({ page }) => {
+		await page.setViewportSize({ width: 2048, height: 1080 });
+		await loadDeck(page, fixture('smartart-build-reveal.pptx'));
+		await selectElement(page, elementsOfType(page, 'diagram').first());
+		await page.locator('[data-ribbon-contextual-tab="smartArtFormat"]').click();
+		const bringForward = '[data-ribbon-control="home.arrange.bringForward"]';
+		const contextual = page
+			.locator('[data-ribbon-group="smartArtFormat.arrange"]')
+			.locator(bringForward);
+		await expect(contextual).toBeVisible();
+		await callCustomization(page, 'hideRibbonControl', 'smartArtFormat.arrange.bringForward');
+		await expect(contextual).toBeHidden();
+		await ribbonTab(page, 'Home').click();
+		await expect(
+			page.locator('[data-ribbon-group="home.arrange"]').locator(bringForward),
+		).toBeVisible();
 	});
 
 	test('File > Options drops a hidden page and renders a locked setting read-only', async ({

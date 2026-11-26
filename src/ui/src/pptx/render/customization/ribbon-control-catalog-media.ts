@@ -1,3 +1,11 @@
+import { RIBBON_CATALOG_CORE_TABS } from './ribbon-control-catalog-core';
+
+const {
+	duplicate: _duplicate,
+	delete: _delete,
+	...smartArtArrangeControls
+} = RIBBON_CATALOG_CORE_TABS.home.arrange.controls;
+
 /** Contextual groups and the host customization IDs for their controls. */
 export const RIBBON_CATALOG_MEDIA_TABS = {
 	videoFormat: {
@@ -68,7 +76,7 @@ export const RIBBON_CATALOG_MEDIA_TABS = {
 			label: 'WordArt Styles',
 			controls: { gallery: 'WordArt Styles', color: 'Text Fill', bold: 'Bold', italic: 'Italic' },
 		},
-		arrange: { label: 'Arrange', controls: {} },
+		arrange: { label: 'Arrange', controls: smartArtArrangeControls },
 		size: { label: 'Size', controls: { width: 'Width', height: 'Height' } },
 	},
 } as const;

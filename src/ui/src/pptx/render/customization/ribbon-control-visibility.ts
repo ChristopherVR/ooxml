@@ -37,6 +37,7 @@ export const RIBBON_SCOPE_ATTR = 'data-pptx-ribbon-scope';
 
 const GROUP_ID_SET: ReadonlySet<string> = new Set(RIBBON_GROUP_IDS);
 const CONTROL_ID_SET: ReadonlySet<string> = new Set(RIBBON_CONTROL_IDS);
+const SMART_ART_ARRANGE_GROUP = 'smartArtFormat.arrange';
 
 /** True when `id` names a catalogued ribbon group. */
 export function isRibbonGroupId(id: string): id is RibbonGroupId {
@@ -123,6 +124,12 @@ export function ribbonCustomizationCss(resolved: ResolvedCustomization, scope?: 
 	for (const id of resolved.hiddenRibbonControls) {
 		if (isRibbonControlId(id)) {
 			selectors.push(attrSelector(safeScope, RIBBON_CONTROL_ATTR, id));
+			if (id.startsWith(`${SMART_ART_ARRANGE_GROUP}.`)) {
+				// The embedded Arrange strip keeps its Home IDs in every binding.
+				const group = attrSelector(safeScope, RIBBON_GROUP_ATTR, SMART_ART_ARRANGE_GROUP);
+				const homeId = `home.arrange${id.slice(SMART_ART_ARRANGE_GROUP.length)}`;
+				selectors.push(`${group} ${attrSelector(undefined, RIBBON_CONTROL_ATTR, homeId)}`);
+			}
 			for (const covered of RIBBON_CONTROL_ALIASES[id] ?? []) {
 				selectors.push(attrSelector(safeScope, RIBBON_CONTROL_ATTR, covered));
 			}

@@ -55,6 +55,18 @@ describe('ribbon group / control customisation', () => {
 		expect(resolved.hiddenActions.has('crop')).toBeTruthy();
 	});
 
+	it('scopes a SmartArt Arrange customization to the reused controls in that group', () => {
+		const resolved = resolveCustomization({
+			ribbon: { hiddenButtons: ['smartArtFormat.arrange.bringForward'] },
+		});
+		expect(isRibbonControlVisible(resolved, 'home.arrange.bringForward')).toBeTruthy();
+		expect(isRibbonControlVisible(resolved, 'smartArtFormat.arrange.bringForward')).toBeFalsy();
+		const css = ribbonCustomizationCss(resolved, 'viewer');
+		expect(css).toContain(
+			`[${RIBBON_SCOPE_ATTR}="viewer"] [data-ribbon-group="smartArtFormat.arrange"] [data-ribbon-control="home.arrange.bringForward"]`,
+		);
+	});
+
 	it('builds one scoped stylesheet, and nothing when nothing is hidden', () => {
 		expect(ribbonCustomizationCss(resolveCustomization(undefined), 'v1')).toBe('');
 		const css = ribbonCustomizationCss(
