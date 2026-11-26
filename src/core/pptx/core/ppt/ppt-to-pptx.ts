@@ -12,9 +12,6 @@
 import { EncryptedFileError } from '../utils/encryption-detection';
 import type { Ole2File } from '../utils/ole2-parser';
 import { parseCurrentUserAtom } from './current-user';
-import { parseDeck } from './document-parser';
-import { decryptLegacyPpt } from './ppt-encryption';
-import { buildPptxPackage } from './pptx/package-writer';
 import { PptParseError } from './record-stream';
 
 /** Stream name of the main PowerPoint document stream. */
@@ -86,6 +83,7 @@ export async function convertPptToPptx(ole: Ole2File, password?: string): Promis
 				'This is a password-protected PowerPoint 97-2003 (.ppt) file. Provide a password via options.password to open it.',
 			);
 		}
+		const { decryptLegacyPpt } = await import('./ppt-encryption');
 		const result = await decryptLegacyPpt(
 			documentStream,
 			picturesStream,
@@ -97,6 +95,10 @@ export async function convertPptToPptx(ole: Ole2File, password?: string): Promis
 		decrypted = true;
 	}
 
+	const [{ parseDeck }, { buildPptxPackage }] = await Promise.all([
+		import('./document-parser'),
+		import('./pptx/package-writer'),
+	]);
 	const deck = await parseDeck({
 		powerPointDocument: documentStream,
 		pictures: picturesStream,
