@@ -2,10 +2,26 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { registerPptxWebControls } from './index';
-import { attachRibbonOverflow, reflowRibbon } from './ribbon-overflow';
+import { RIBBON_CONTROL_ICONS } from '../render';
+import {
+	CONTROL_FACE,
+	PATH_FACE,
+	attachRibbonOverflow,
+	faceIcon,
+	reflowRibbon,
+} from './ribbon-overflow';
 
 beforeAll(registerPptxWebControls);
 afterEach(() => document.body.replaceChildren());
+
+it.each(Object.entries({ ...CONTROL_FACE, ...PATH_FACE }))(
+	'draws a path for the folded %s group (%s)',
+	(group, icon) => {
+		if (Object.hasOwn(CONTROL_FACE, group)) expect(RIBBON_CONTROL_ICONS[icon]).toBeDefined();
+		const paths = [...faceIcon(document, group).querySelectorAll('path')];
+		expect(paths.some((path) => /\S/u.test(path.getAttribute('d') ?? ''))).toBe(true);
+	},
+);
 
 const EXPANDED = 200;
 const COLLAPSED = 60;

@@ -3,7 +3,7 @@ import { ribbonLocale } from './ribbon-localize';
 import { translateRibbonText } from './ribbon-locale';
 
 /** The icon on a collapsed group's button, by the group's name. */
-const GROUP_ICONS: Readonly<Record<string, string>> = {
+export const GROUP_ICONS: Readonly<Record<string, string>> = {
 	Clipboard: 'paste',
 	Font: 'fontColor',
 	Paragraph: 'alignLeft',

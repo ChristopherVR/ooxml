@@ -12,7 +12,7 @@ const localeOf = (panel: Element) =>
 	normalizeEditorLocale(panel.closest<HTMLElement>('[data-editor-locale]')?.dataset.editorLocale);
 
 /** Icon on a collapsed group's button, by the group's English label. */
-const GROUP_ICONS: Record<string, string> = {
+export const GROUP_ICONS: Readonly<Record<string, string>> = {
 	Clipboard: 'paste',
 	Font: 'fontColor',
 	Alignment: 'alignCenter',
@@ -25,7 +25,7 @@ const GROUP_ICONS: Record<string, string> = {
 	Charts: 'chart',
 	Links: 'link',
 	'Add-ins': 'addIns',
-	Sparklines: 'chartLine',
+	Sparklines: 'xl-chartLine',
 	Forms: 'forms',
 	Filters: 'filter',
 	Comments: 'comment',

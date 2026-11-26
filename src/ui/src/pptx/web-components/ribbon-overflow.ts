@@ -17,7 +17,7 @@ const DESKTOP_MIN_WIDTH = 768;
 const EDITOR_CHROME_ROOT = '[data-pptx-editor-chrome]';
 
 /** Control artwork (24px grid) that stands for each Home group when it is collapsed. */
-const CONTROL_FACE: Readonly<Record<string, string>> = {
+export const CONTROL_FACE: Readonly<Record<string, string>> = {
 	'home.clipboard': 'home.clipboard.paste',
 	'home.slides': 'home.slides.newSlide',
 	'home.font': 'home.font.bold',
@@ -27,7 +27,7 @@ const CONTROL_FACE: Readonly<Record<string, string>> = {
 	'home.arrange': 'home.drawing.arrange',
 };
 /** Shared 20px artwork for the other tabs' groups. */
-const PATH_FACE: Readonly<Record<string, string>> = {
+export const PATH_FACE: Readonly<Record<string, string>> = {
 	'insert.slides': 'newSlide',
 	'insert.tables': 'table',
 	'insert.images': 'image',
@@ -84,7 +84,7 @@ function captionOf(group: HTMLElement): string {
 	).trim();
 }
 
-function faceIcon(doc: Document, id: string): SVGSVGElement {
+export function faceIcon(doc: Document, id: string): SVGSVGElement {
 	const control = CONTROL_FACE[id];
 	if (control && RIBBON_CONTROL_ICONS[control]) {
 		return createRibbonControlIcon(doc, control);
