@@ -167,7 +167,7 @@ describe('shared Animations view', () => {
 });
 
 describe('shared Animations timing', () => {
-	it('selects the exact effect from its click group and labels it with the shape name', () => {
+	it.each(['grouped', 'ungrouped'])('selects the exact %s effect by shape name', (group) => {
 		const rawTiming = new PptxAnimationWriteService().buildTimingXml(
 			[
 				{ elementId: '2', entrance: 'fadeIn', durationMs: 500 },
@@ -210,10 +210,12 @@ describe('shared Animations timing', () => {
 		rows.setAttribute('group-order', '2');
 		viewer.append(host, rows);
 		document.body.append(viewer);
+		if (group === 'ungrouped') rows.removeAttribute('group-order');
 
 		expect(rows.shadowRoot?.querySelector('button')).toBeNull();
 		Object.assign(rows, { groupOrder: 1 });
 		expect(rows.getAttribute('group-order')).toBe('1');
+		expect(rows.shadowRoot!.querySelectorAll('button')).toHaveLength(1);
 		const effect = rows.shadowRoot!.querySelector('button')!;
 		expect(effect.textContent).toContain('Logo · Fade');
 		effect.click();
@@ -221,7 +223,7 @@ describe('shared Animations timing', () => {
 		expect(
 			host.querySelector<HTMLInputElement>('[data-ribbon-control="animations.timing.duration"]')!
 				.value,
-		).toBe('1');
+		).toBe(group === 'grouped' ? '1' : '0.5');
 		host.state = {
 			...host.state,
 			editing: {
