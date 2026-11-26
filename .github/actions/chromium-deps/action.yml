@@ -1,0 +1,46 @@
+name: Install Chromium's system packages
+description: >-
+  Installs the system packages Playwright's Chromium needs that the runner image lacks (today only
+  fonts). Their .deb files are cached per runner image and Playwright version, so a cache hit
+  installs them with dpkg and no network: the Ubuntu mirror sometimes serves them at about 50 kB/s,
+  which cost up to six minutes per browser job.
+inputs:
+  working-directory:
+    description: A folder whose package declares Playwright.
+    required: true
+runs:
+  using: composite
+  steps:
+    - id: key
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        version=$(bun x playwright --version | tr -cd '0-9.')
+        echo "key=chromium-debs-${ImageOS:-unknown}-${ImageVersion:-unknown}-${version}" >> "$GITHUB_OUTPUT"
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      with:
+        path: ~/.cache/chromium-debs
+        key: ${{ steps.key.outputs.key }}
+    - shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        dir="$HOME/.cache/chromium-debs"
+        missing() { bun x playwright install-deps --dry-run chromium > "$RUNNER_TEMP/chromium-deps.txt" 2>&1; }
+        if compgen -G "$dir/*.deb" > /dev/null; then
+          sudo dpkg -i "$dir"/*.deb > /dev/null || echo "::warning::Cached Chromium packages did not install; fetching them"
+        fi
+        if missing; then
+          echo "Chromium's system packages are installed."
+          exit 0
+        fi
+        packages=$(sed -n 's/^  \([^ ]*\)$/\1/p' "$RUNNER_TEMP/chromium-deps.txt")
+        if [ -n "$packages" ]; then
+          echo "Fetching:" $packages
+          sudo mkdir -p "$dir/partial"
+          sudo apt-get update -o Acquire::Retries=3
+          sudo apt-get install -y --no-install-recommends -o Dir::Cache::archives="$dir" $packages
+          sudo rm -rf "$dir/partial" "$dir/lock"
+          sudo chown -R "$(id -u):$(id -g)" "$dir"
+        fi
+        # Anything still missing (or a check that could not run) takes Playwright's own installer.
+        missing || bun x playwright install-deps chromium

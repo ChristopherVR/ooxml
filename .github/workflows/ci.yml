@@ -332,11 +332,12 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: e2e/a11y
-        run: bun x playwright install --with-deps chromium
-      - name: Install Chromium system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: e2e/a11y
-        run: bun x playwright install-deps chromium
+        run: bun x playwright install chromium
+      # The system packages are cached apart from the browsers (see the action).
+      - name: Install Chromium system packages
+        uses: ./.github/actions/chromium-deps
+        with:
+          working-directory: e2e/a11y
       - run: node scripts/perf-budgets.mjs check
 
   # Release machinery: planner, publish guards, commit and changelog checks, the launcher and CI planner.
@@ -467,12 +468,12 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: ${{ matrix.dir }}
-        run: bun x playwright install --with-deps chromium
-      # The cached browsers skip the download; the system libraries still need installing.
-      - name: Install Chromium system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: ${{ matrix.dir }}
-        run: bun x playwright install-deps chromium
+        run: bun x playwright install chromium
+      # The system packages are cached apart from the browsers (see the action).
+      - name: Install Chromium system packages
+        uses: ./.github/actions/chromium-deps
+        with:
+          working-directory: ${{ matrix.dir }}
       - name: Run the browser suite
         working-directory: ${{ matrix.dir }}
         env:
@@ -636,11 +637,12 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: e2e/a11y
-        run: bun x playwright install --with-deps chromium
-      - name: Install Chromium system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: e2e/a11y
-        run: bun x playwright install-deps chromium
+        run: bun x playwright install chromium
+      # The system packages are cached apart from the browsers (see the action).
+      - name: Install Chromium system packages
+        uses: ./.github/actions/chromium-deps
+        with:
+          working-directory: e2e/a11y
       - name: Run the gates
         working-directory: e2e/a11y
         env:
@@ -797,12 +799,12 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
-        run: bun x playwright install --with-deps chromium
-      # The cached browsers skip the download; the system libraries still need installing.
-      - name: Install Chromium system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: viewers/pptx
-        run: bun x playwright install-deps chromium
+        run: bun x playwright install chromium
+      # The system packages are cached apart from the browsers (see the action).
+      - name: Install Chromium system packages
+        uses: ./.github/actions/chromium-deps
+        with:
+          working-directory: viewers/pptx
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: pptx-demo-dist
@@ -916,12 +918,12 @@ jobs:
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: viewers/pptx
-        run: bun x playwright install --with-deps chromium
-      # The cached browsers skip the download; the system libraries still need installing.
-      - name: Install Chromium system libraries
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: viewers/pptx
-        run: bun x playwright install-deps chromium
+        run: bun x playwright install chromium
+      # The system packages are cached apart from the browsers (see the action).
+      - name: Install Chromium system packages
+        uses: ./.github/actions/chromium-deps
+        with:
+          working-directory: viewers/pptx
       - name: Run the packaged-build smoke
         working-directory: viewers/pptx
         run: bun run e2e:packaged -- --workers=2 --reporter=list,html,github
