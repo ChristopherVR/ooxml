@@ -104,7 +104,6 @@ async function makePreview(host: HTMLElement, t: Translator, progress: SlideProg
 	const [{ createDefaultRegistry }, { renderSlideStage }] = await Promise.all([
 		import('../dom/elements'),
 		import('../dom/slide-stage'),
-		import('../dom/load-presentation'),
 	]);
 	const doc = host.ownerDocument;
 	const root = doc.createElement('div');

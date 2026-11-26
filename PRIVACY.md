@@ -69,6 +69,11 @@ room or omit the collaboration configuration to keep insertions local.
 
 ## PowerPoint (`ooxml-ui/pptx` and the `pptx-*-viewer` packages)
 
+Opening a multi-slide presentation can load the preview renderer from the origin that serves
+the application's JavaScript. The request carries the asset URL and standard browser request
+metadata, with no document data or filename. Hosts can bundle the renderer with their app to
+avoid a separate request.
+
 Picture Format reads the selected local PNG or JPEG, or an embedded picture's
 local object URL, when a picture editing command is invoked. The browser loads
 the picture worker from the application and processes the bytes on the device.
