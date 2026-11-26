@@ -183,8 +183,9 @@ overflow is the viewer's own mobile sheet and is out of scope here.
    `pptx-ui-ribbon-gallery` now supports (`descriptor.command`) or the Home arrange strips;
    the per-binding work is wiring the existing z-order and size actions into the gallery
    context.
-2. SmartArt Format and media playback (High): expand SmartArt node selection and formatting,
-   and verify the full desktop playback options on saved media.
+2. SmartArt Format and media playback (High): expand SmartArt node selection and the Shape Styles
+   and WordArt Styles galleries. PowerPoint 16 reads trim, fades, bookmarks, volume and play flags
+   from saved clips. Verify all three Start modes and the full-screen transition during slide shows.
 3. SmartArt nodes (Medium): reconcile ribbon selected-node wiring with the inspector/text-pane
    node commands already available. The audit's disabled ribbon controls are not evidence that
    node editing or formatting is absent. Convert and Right to Left need their own admission review.

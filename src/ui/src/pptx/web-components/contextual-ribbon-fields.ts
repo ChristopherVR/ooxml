@@ -45,9 +45,9 @@ export function ribbonFields(context: ContextualControls) {
 		max: number,
 		step: number | 'any',
 		write: (number: number) => void,
-		enabled = true,
+		reason?: string,
 	) =>
-		html`<label data-ribbon-control=${id(name)} title=${available && enabled ? label : unavailable}
+		html`<label data-ribbon-control=${id(name)} title=${reason ?? (available ? label : unavailable)}
 			>${label}
 			<input
 				aria-label=${label}
@@ -56,10 +56,10 @@ export function ribbonFields(context: ContextualControls) {
 				max=${max}
 				step=${step}
 				.value=${String(Number.isFinite(value) ? Number(value.toFixed(3)) : 0)}
-				?disabled=${!available || !enabled}
+				?disabled=${!available || Boolean(reason)}
 				@change=${(event: Event) => {
 					const input = event.currentTarget as HTMLInputElement;
-					if (available && enabled && input.validity.valid && Number.isFinite(input.valueAsNumber))
+					if (available && !reason && input.validity.valid && Number.isFinite(input.valueAsNumber))
 						write(input.valueAsNumber);
 				}}
 			/>
@@ -87,16 +87,16 @@ export function ribbonFields(context: ContextualControls) {
 		value: string,
 		options: readonly (readonly [string, string])[],
 		write: (selected: string) => void,
-		enabled = true,
+		reason?: string,
 	) =>
-		html`<label data-ribbon-control=${id(name)} title=${available && enabled ? label : unavailable}
+		html`<label data-ribbon-control=${id(name)} title=${reason ?? (available ? label : unavailable)}
 			>${label}
 			<pptx-ui-select
 				aria-label=${label}
 				.value=${value}
-				.disabled=${!available || !enabled}
+				.disabled=${!available || Boolean(reason)}
 				@change=${(event: Event) => {
-					if (available && enabled) write((event.currentTarget as PptxUiSelectElement).value);
+					if (available && !reason) write((event.currentTarget as PptxUiSelectElement).value);
 				}}
 			>
 				${options.map(([key, option]) => html`<option value=${key}>${option}</option>`)}
@@ -107,17 +107,17 @@ export function ribbonFields(context: ContextualControls) {
 		label: string,
 		value: string,
 		write: (hex: string) => void,
-		enabled = true,
+		reason?: string,
 	) =>
-		html`<label data-ribbon-control=${id(name)} title=${available && enabled ? label : unavailable}
+		html`<label data-ribbon-control=${id(name)} title=${reason ?? (available ? label : unavailable)}
 			>${label}
 			<input
 				type="color"
 				aria-label=${label}
 				.value=${/^#[0-9a-f]{6}$/iu.test(value) ? value : '#000000'}
-				?disabled=${!available || !enabled}
+				?disabled=${!available || Boolean(reason)}
 				@change=${(event: Event) => {
-					if (available && enabled) write((event.currentTarget as HTMLInputElement).value);
+					if (available && !reason) write((event.currentTarget as HTMLInputElement).value);
 				}}
 			/>
 		</label>`;

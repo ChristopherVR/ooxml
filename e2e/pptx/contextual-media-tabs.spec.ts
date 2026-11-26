@@ -24,6 +24,14 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	await selectElement(page, elementsOfType(page, 'media player').first());
 	await expect(tab(page, 'videoFormat')).toBeVisible();
 	await tab(page, 'videoFormat').click();
+	const video = page.locator('[data-pptx-viewport] video').first();
+	await expect
+		.poll(() => video.evaluate((clip: HTMLVideoElement) => clip.videoWidth))
+		.toBeGreaterThan(0);
+	const originalPoster = await video.getAttribute('poster');
+	await control(page, 'videoFormat.poster.current').getByRole('button').click();
+	await expect(video).not.toHaveAttribute('poster', originalPoster ?? '');
+	await expect(page.locator('[data-media-ribbon-dialog="current"]')).toHaveCount(0);
 	await control(page, 'videoFormat.poster.file').getByRole('button').click();
 	const poster = page.locator('[data-media-ribbon-dialog="poster"]');
 	const png = await page.evaluate(() => {
@@ -42,6 +50,10 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	});
 	await poster.getByRole('button', { name: 'Apply' }).click();
 	await expect(poster).toHaveCount(0);
+	const importedPoster = await video.getAttribute('poster');
+	await control(page, 'videoFormat.poster.reset').getByRole('button').click();
+	await expect(video).not.toHaveAttribute('poster', importedPoster ?? '');
+	await expect(page.locator('[data-media-ribbon-dialog="reset"]')).toHaveCount(0);
 	await control(page, 'videoFormat.arrange.rotateRight').getByRole('button').click();
 	await control(page, 'videoFormat.size.crop').getByRole('button').click();
 	const crop = page.locator('[data-media-ribbon-dialog="crop"]');
@@ -56,6 +68,18 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	await expect(dialog.locator('pptx-ui-select option')).toHaveCount(2);
 	await dialog.getByRole('button', { name: 'Apply' }).click();
 	await expect(dialog).toHaveCount(0);
+	await control(page, 'playback.bookmarks.add').getByRole('button').click();
+
+	await control(page, 'playback.editing.trim').getByRole('button').click();
+	const trim = page.locator('[data-media-ribbon-dialog="trim"]');
+	await trim.getByLabel('Trim Start (s)').fill('0.15');
+	const trimEnd = trim.getByLabel('Trim End (s)');
+	await trimEnd.fill('0.1');
+	const applyTrim = trim.getByRole('button', { name: 'Apply' });
+	await expect(applyTrim).toBeDisabled();
+	await trimEnd.fill('1.5');
+	await applyTrim.click();
+	await expect(trim).toHaveCount(0);
 
 	const fade = control(page, 'playback.editing.fadeIn').getByRole('spinbutton');
 	await fade.fill('0.25');
@@ -77,8 +101,10 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	expect(xml).toContain('l="16000"');
 	expect(xml).toContain('rot="5400000"');
 	expect(xml).toContain('<p14:fade in="250"');
+	expect(xml).toContain('<p14:trim st="150" end="1500"');
 	expect(xml).not.toContain('<p14:bmk name="BM1"');
 	expect(xml).toContain('<p14:bmk name="BM2"');
+	expect(xml).toMatch(/<p14:bmk name="Bookmark \d+" time="\d+"/u);
 	expect(xml).toContain('vol="50000"');
 	expect(xml).toContain('repeatCount="indefinite"');
 	expect(xml).toContain('cmd="playFrom(0.0)"');
@@ -93,7 +119,15 @@ test('audio shows its own Format tab and media-specific playback options', async
 	await expect(control(page, 'audioFormat.size.width').getByRole('spinbutton')).toBeEnabled();
 	await tab(page, 'playback').click();
 	await expect(control(page, 'playback.options.fullScreen').getByRole('checkbox')).toBeDisabled();
-	await expect(control(page, 'playback.options.across').getByRole('checkbox')).toBeEnabled();
+	const across = control(page, 'playback.options.across').getByRole('checkbox');
+	await expect(across).toBeEnabled();
+	await across.click();
+	await expect(across).toBeChecked();
+	const xml = await readZipPartText(
+		await downloadBytes(await savePptxViaBackstage(page)),
+		'ppt/slides/slide1.xml',
+	);
+	expect(xml).toContain('numSld="999"');
 });
 
 test('SmartArt Format edits the node selected in the ribbon', async ({ page }) => {

@@ -37,6 +37,8 @@ export function renderMediaControls(
 		'pptx.mediaRibbon.localRequired',
 		'This command requires an embedded media clip.',
 	);
+	const pictureRequired = writable ? undefined : unsupported;
+	const clipRequired = pictureRequired ?? (local ? undefined : sourceRequired);
 	const dialog = (kind: 'trim' | 'remove' | 'poster' | 'current' | 'reset' | 'crop') => {
 		const signal = ctx.begin();
 		void import('./contextual-media-dialogs').then(
@@ -63,7 +65,7 @@ export function renderMediaControls(
 					[key]: enabled,
 					...(key === 'playAcrossSlides' && enabled && { autoPlay: true, startMode: 'auto' }),
 				}),
-			reason ?? (writable ? undefined : unsupported),
+			reason ?? pictureRequired,
 		);
 	switch (ctx.group) {
 		case 'playback.bookmarks':
@@ -93,22 +95,23 @@ export function renderMediaControls(
 						],
 					});
 				},
-				local && writable ? undefined : sourceRequired,
+				clipRequired,
 			)}
 			${command(
 				'remove',
 				text('pptx.mediaRibbon.removeBookmark', 'Remove Bookmark'),
 				() => dialog('remove'),
-				media.bookmarks?.length
-					? undefined
-					: text('pptx.mediaRibbon.noBookmarks', 'This clip has no bookmarks.'),
+				pictureRequired ??
+					(media.bookmarks?.length
+						? undefined
+						: text('pptx.mediaRibbon.noBookmarks', 'This clip has no bookmarks.')),
 			)}`;
 		case 'playback.editing':
-			return html`${command('trim', text('pptx.media.trim', 'Trim'), () => dialog('trim'), local ? undefined : sourceRequired)}
-			${number('fadeIn', fieldLabel('fadeInDuration', 'Fade In (s)'), media.fadeInDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeInDuration: value || undefined }), local)}
-			${number('fadeOut', fieldLabel('fadeOutDuration', 'Fade Out (s)'), media.fadeOutDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeOutDuration: value || undefined }), local)}`;
+			return html`${command('trim', text('pptx.media.trim', 'Trim'), () => dialog('trim'), clipRequired)}
+			${number('fadeIn', fieldLabel('fadeInDuration', 'Fade In (s)'), media.fadeInDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeInDuration: value || undefined }), clipRequired)}
+			${number('fadeOut', fieldLabel('fadeOutDuration', 'Fade Out (s)'), media.fadeOutDuration ?? 0, 0, 59, 0.001, (value) => patch({ fadeOutDuration: value || undefined }), clipRequired)}`;
 		case 'playback.options':
-			return html`${number('volume', `${fieldLabel('volume', 'Volume')} %`, (media.volume ?? 1) * 100, 0, 100, 1, (value) => patch({ volume: value / 100 }), writable)}
+			return html`${number('volume', `${fieldLabel('volume', 'Volume')} %`, (media.volume ?? 1) * 100, 0, 100, 1, (value) => patch({ volume: value / 100 }), pictureRequired)}
 			${select(
 				'start',
 				fieldLabel('start', 'Start'),
@@ -126,7 +129,7 @@ export function renderMediaControls(
 						...(value !== 'auto' && { playAcrossSlides: false }),
 					});
 				},
-				writable,
+				pictureRequired,
 			)}
 			${mediaFlag(
 				'fullScreen',
@@ -148,9 +151,9 @@ export function renderMediaControls(
 					: undefined,
 			)}`;
 		case 'videoFormat.poster':
-			return html`${command('current', text('pptx.mediaRibbon.currentFrame', 'Current Frame'), () => dialog('current'), local && writable ? undefined : sourceRequired)}
-			${command('file', text('pptx.mediaRibbon.fromFile', 'Image from File'), () => dialog('poster'), writable ? undefined : unsupported)}
-			${command('reset', text('pptx.mediaRibbon.resetPoster', 'Reset Poster Frame'), () => dialog('reset'), local && writable ? undefined : sourceRequired)}`;
+			return html`${command('current', text('pptx.mediaRibbon.currentFrame', 'Current Frame'), () => dialog('current'), clipRequired)}
+			${command('file', text('pptx.mediaRibbon.fromFile', 'Image from File'), () => dialog('poster'), pictureRequired)}
+			${command('reset', text('pptx.mediaRibbon.resetPoster', 'Reset Poster Frame'), () => dialog('reset'), clipRequired)}`;
 		case 'audioFormat.pictureStyles':
 		case 'videoFormat.pictureStyles':
 			return html`${select(
@@ -162,7 +165,8 @@ export function renderMediaControls(
 					['ellipse', text('pptx.ribbon.ellipse', 'Ellipse')],
 				],
 				(shapeType) => patch({ shapeType }),
-				writable && canInteractWithElement(media, 'changeShapeType'),
+				pictureRequired ??
+					(canInteractWithElement(media, 'changeShapeType') ? undefined : fields.unavailable),
 			)}
 			${color(
 				'border',
@@ -178,7 +182,7 @@ export function renderMediaControls(
 							strokeWidth: media.shapeStyle?.strokeWidth || 1,
 						},
 					}),
-				writable,
+				pictureRequired,
 			)}`;
 		case 'audioFormat.arrange':
 		case 'videoFormat.arrange':
@@ -190,7 +194,7 @@ export function renderMediaControls(
 			);
 		case 'audioFormat.size':
 		case 'videoFormat.size': {
-			const resize = canInteractWithElement(media, 'resize');
+			const resize = canInteractWithElement(media, 'resize') ? undefined : fields.unavailable;
 			return html`${number('width', text('pptx.arrange.width', 'Width'), media.width, 1, 9600, 'any', (width) => patch({ width }), resize)}
 			${number('height', text('pptx.arrange.height', 'Height'), media.height, 1, 9600, 'any', (height) => patch({ height }), resize)}
 			${
@@ -199,7 +203,8 @@ export function renderMediaControls(
 							'crop',
 							text('pptx.image.crop', 'Crop'),
 							() => dialog('crop'),
-							writable && canInteractWithElement(media, 'crop') ? undefined : unsupported,
+							pictureRequired ??
+								(canInteractWithElement(media, 'crop') ? undefined : fields.unavailable),
 						)
 					: nothing
 			}`;

@@ -236,15 +236,25 @@ async function captureFrame(
 	const height = Math.max(1, Math.round(video.videoHeight * ratio));
 	const position = video.currentTime;
 	const seek = reset && position !== 0;
+	const preload = video.preload;
+	const finished = new AbortController();
+	const deadline = AbortSignal.any([signal, finished.signal, AbortSignal.timeout(4000)]);
+	const waitFor = (event: 'seeked' | 'loadeddata') =>
+		new Promise<void>((resolve, reject) => {
+			deadline.throwIfAborted();
+			video.addEventListener(event, () => resolve(), { once: true, signal: deadline });
+			deadline.addEventListener('abort', () => reject(deadline.reason), { once: true });
+		});
 	try {
 		if (seek) {
-			const deadline = AbortSignal.any([signal, AbortSignal.timeout(4000)]);
-			await new Promise<void>((resolve, reject) => {
-				deadline.throwIfAborted();
-				video.addEventListener('seeked', () => resolve(), { once: true, signal: deadline });
-				deadline.addEventListener('abort', () => reject(deadline.reason), { once: true });
-				video.currentTime = 0;
-			});
+			const ready = waitFor('seeked');
+			video.currentTime = 0;
+			await ready;
+		}
+		if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+			const ready = waitFor('loadeddata');
+			video.preload = 'auto';
+			await ready;
 		}
 		signal.throwIfAborted();
 		const canvas = new OffscreenCanvas(width, height);
@@ -253,6 +263,8 @@ async function captureFrame(
 		context.drawImage(video, 0, 0, width, height);
 		return pictureDataUrl(await canvas.convertToBlob({ type: 'image/png' }));
 	} finally {
+		finished.abort();
+		video.preload = preload;
 		if (seek) video.currentTime = position;
 	}
 }

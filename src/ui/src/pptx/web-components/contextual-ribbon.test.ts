@@ -53,3 +53,42 @@ it('edits the selected clip and gates unsupported options', async () => {
 	strip.state = { ...strip.state, editable: false };
 	expect(volume.disabled).toBe(true);
 });
+
+it('explains why trim and fade are unavailable for media outside a picture', async () => {
+	const strip = document.createElement('pptx-ui-contextual-ribbon');
+	strip.group = 'playback.editing';
+	strip.state = {
+		element: { ...video, rawXml: { 'p:nvGraphicFramePr': {} } },
+		editable: true,
+		translate: (key) => key,
+		patch: vi.fn(),
+	};
+	document.body.append(strip);
+	await vi.waitFor(() => {
+		const trim = strip.querySelector('[data-ribbon-control="playback.editing.trim"]');
+		const fade = strip.querySelector<HTMLInputElement>(
+			'[data-ribbon-control="playback.editing.fadeIn"] input',
+		);
+		expect(trim?.hasAttribute('disabled')).toBe(true);
+		expect(fade?.disabled).toBe(true);
+		expect(trim?.getAttribute('title')).toBe('This command requires embedded media in a picture.');
+		expect(fade?.parentElement?.title).toBe(trim?.getAttribute('title'));
+	});
+});
+
+it('shows disabled shape commands when the SmartArt data part is missing', async () => {
+	const strip = document.createElement('pptx-ui-contextual-ribbon');
+	strip.group = 'smartArtFormat.shapes';
+	strip.state = {
+		element: { id: 'diagram', type: 'smartArt', x: 0, y: 0, width: 160, height: 90 },
+		editable: true,
+		translate: (key) => key,
+		patch: vi.fn(),
+	};
+	document.body.append(strip);
+	await vi.waitFor(() => {
+		const larger = strip.querySelector('[data-ribbon-control="smartArtFormat.shapes.larger"]');
+		expect(larger?.hasAttribute('disabled')).toBe(true);
+		expect(larger?.getAttribute('title')).toBe('The selected node has no editable drawing shape.');
+	});
+});
