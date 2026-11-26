@@ -18,6 +18,7 @@ export const tableTabBase = {
 		'Modify Table Style': 'Modify Table Style',
 		'tableTab.mergeSelection': 'Select two or more cells that can be merged.',
 		'tableTab.splitDimensions': 'These dimensions cannot split the selected cell.',
+		'tableTab.insertColumnLeft': 'Select a cell where the table grid allows a column on the left.',
 	},
 	de: {
 		'tab.table-design': 'Tabellenentwurf',
@@ -39,6 +40,8 @@ export const tableTabBase = {
 			'Wählen Sie mindestens zwei Zellen aus, die verbunden werden können.',
 		'tableTab.splitDimensions':
 			'Die ausgewählte Zelle kann nicht in diese Anzahl von Zeilen und Spalten geteilt werden.',
+		'tableTab.insertColumnLeft':
+			'Wählen Sie eine Zelle aus, an der das Tabellenraster links eine Spalte zulässt.',
 	},
 	es: {
 		'tab.table-design': 'Diseño de tabla',
@@ -58,6 +61,8 @@ export const tableTabBase = {
 		'Modify Table Style': 'Modificar estilo de tabla',
 		'tableTab.mergeSelection': 'Selecciona dos o más celdas que se puedan combinar.',
 		'tableTab.splitDimensions': 'La celda seleccionada no se puede dividir con estas dimensiones.',
+		'tableTab.insertColumnLeft':
+			'Selecciona una celda en la que la cuadrícula de la tabla permita insertar una columna a la izquierda.',
 	},
 	fr: {
 		'tab.table-design': 'Création de tableau',
@@ -78,6 +83,8 @@ export const tableTabBase = {
 		'tableTab.mergeSelection': 'Sélectionnez au moins deux cellules pouvant être fusionnées.',
 		'tableTab.splitDimensions':
 			'La cellule sélectionnée ne peut pas être fractionnée selon ces dimensions.',
+		'tableTab.insertColumnLeft':
+			'Sélectionnez une cellule où la grille du tableau permet d’insérer une colonne à gauche.',
 	},
 	'zh-CN': {
 		'tab.table-design': '表格设计',
@@ -97,5 +104,6 @@ export const tableTabBase = {
 		'Modify Table Style': '修改表格样式',
 		'tableTab.mergeSelection': '请选择两个或更多可以合并的单元格。',
 		'tableTab.splitDimensions': '无法按指定的行数和列数拆分所选单元格。',
+		'tableTab.insertColumnLeft': '请选择一个表格网格允许在左侧插入列的单元格。',
 	},
 } as const;

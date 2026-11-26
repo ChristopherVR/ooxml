@@ -249,6 +249,23 @@ describe('merge and split on a plain table', () => {
 describe('table commands on a nested table', () => {
 	const INNER = `<w:tbl><w:tblPr/>${grid([2000, 2000])}<w:tr>${tc('i1', w(2000))}${tc('i2', w(2000))}</w:tr></w:tbl>`;
 
+	it('puts the merge caret in the outer cell when it starts with a nested table', async () => {
+		const outer = INNER_OUTER(INNER).replace(p('outer') + INNER, INNER + p('outer'));
+		const { view } = await setup(outer, 'outer');
+		const { doc, selection } = view.state;
+		let to = -1;
+		doc.descendants((node, pos) => {
+			if (node.type === schema.nodes.paragraph && node.textContent === 'B') to = pos + 1;
+			return to < 0;
+		});
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from, to)));
+		expect(executeTableCommand(view, 'mergeCells')).toBe(true);
+		expect(view.state.selection).toBeInstanceOf(TextSelection);
+		expect(view.state.selection.empty).toBe(true);
+		expect(view.state.selection.$from.parent.textContent).toBe('outer');
+		expect(view.state.selection.$from.parentOffset).toBe(0);
+	});
+
 	it('edits the inner table and leaves the outer table untouched', async () => {
 		const ctx = await setup(INNER_OUTER(INNER), 'i1');
 		expect(executeTableCommand(ctx.view, 'columnAfter')).toBe(true);

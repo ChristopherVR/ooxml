@@ -23,6 +23,11 @@ export type TableCommand =
 	| 'splitCell'
 	| 'deleteTable';
 
+export function tableCommandUnavailableReason(action: TableCommand) {
+	if (action === 'mergeCells') return 'tableTab.mergeSelection';
+	if (action === 'columnBefore') return 'tableTab.insertColumnLeft';
+}
+
 type Context = {
 	table: ProseMirrorNode;
 	tablePos: number;

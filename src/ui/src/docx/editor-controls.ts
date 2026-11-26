@@ -8,7 +8,7 @@ import { syncFontControls } from './font-sync';
 import { syncMultilingualControls } from './multilingual-ribbon';
 import { syncStylePicker } from './paragraph-styles';
 import { syncCharacterStylePicker } from './character-style-picker';
-import { canExecuteTableCommand } from './table-commands';
+import { canExecuteTableCommand, tableCommandUnavailableReason } from './table-commands';
 import type { RibbonAction } from './ribbon';
 import { documentWordCount, forcesTrackChanges } from 'ooxml-core/docx/ui';
 import { syncSpellingButton } from './spelling';
@@ -84,11 +84,9 @@ export function refreshEditorControls(
 			if (action.type === 'tableEdit') {
 				button.disabled =
 					readOnly || Boolean(collaboration) || !canExecuteTableCommand(view, action.key);
-				if (action.key === 'mergeCells') {
-					if (button.disabled)
-						button.setAttribute('aria-description', translate(locale, 'tableTab.mergeSelection'));
-					else button.removeAttribute('aria-description');
-				}
+				const reason = button.disabled && tableCommandUnavailableReason(action.key);
+				if (reason) button.setAttribute('aria-description', translate(locale, reason));
+				else button.removeAttribute('aria-description');
 			}
 			if (action.type === 'formatDialog' && action.kind === 'tableProperties')
 				button.disabled = readOnly || !tablePropertiesContext(state);

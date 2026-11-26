@@ -44,6 +44,18 @@ for (const gesture of ['drag', 'Shift+Arrow'] as const) {
 		await expect(cells.first()).toHaveAttribute(across ? 'colspan' : 'rowspan', '2');
 		await expect(cells.first().locator('p')).toHaveText(['First', 'Second']);
 		await expect(merge).toBeDisabled();
+		const insertLeft = editor.getByRole('button', { name: 'Insert column left' });
+		if (across) {
+			await expect(insertLeft).toBeDisabled();
+			await expect(insertLeft).toHaveAccessibleDescription(
+				'Select a cell where the table grid allows a column on the left.',
+			);
+		} else await expect(insertLeft).toBeEnabled();
+		await expect(editor.locator('.ProseMirror')).toBeFocused();
+		await page.keyboard.type('New ');
+		await expect(cells.first().locator('p')).toHaveText(['New First', 'Second']);
+		await page.keyboard.press('Control+z');
+		await expect(cells.first().locator('p')).toHaveText(['First', 'Second']);
 		const { xml } = await savedDocument(page, 'merged-new-table.docx');
 		await expect(cells).toHaveCount(3);
 		if (across) expect(xml).toContain('<w:gridSpan w:val="2"');

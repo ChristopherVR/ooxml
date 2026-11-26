@@ -20,7 +20,6 @@ import { Selection, TextSelection, type Transaction } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
-import { selectCellNodes } from './table-cell-selection';
 import { dispatchTableEdit, tableCaret } from './table-edit-transaction';
 import { nodeFromResult, skeletonOf, slotsOf, type Slot } from './table-restructure';
 
@@ -178,7 +177,13 @@ function cellCaret(
 			if (node === cell) pos = tablePos + rowOffset + offset + 2;
 		}),
 	);
-	return Selection.near(tr.doc.resolve(pos + 1), 1);
+	let textStart: number | undefined;
+	cell?.forEach((block, offset) => {
+		if (block.isTextblock) textStart ??= pos + offset + 2;
+	});
+	return textStart === undefined
+		? Selection.near(tr.doc.resolve(pos + 1), 1)
+		: TextSelection.create(tr.doc, textStart);
 }
 
 function selectionAfterRestructure(
@@ -212,9 +217,7 @@ function selectionAfterRestructure(
 	if (action === 'splitCell')
 		return cellCaret(tr, table, tablePos, cellAt(rect.firstRow, rect.firstCol));
 	const closed = closeRect(ctx.skeleton, ctx.mergeRect);
-	const cell = closed && cellAt(closed.firstRow, closed.firstCol);
-	const selection = selectCellNodes(tr.doc, table, tablePos, new Set(cell ? [cell] : []));
-	return Selection.near(selection.$from);
+	return cellCaret(tr, table, tablePos, closed && cellAt(closed.firstRow, closed.firstCol));
 }
 
 /** Whether `action` applies to the table around the selection (a dry run of the edit). */

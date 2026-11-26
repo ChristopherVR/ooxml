@@ -8,7 +8,11 @@ import { noteReferenceAtSelection, type NoteKind } from './note-commands';
 import type { LocalizationKey } from './localization';
 import type { RibbonAction } from './ribbon-action';
 import { schema } from './schema';
-import { canExecuteTableCommand, type TableCommand } from './table-commands';
+import {
+	canExecuteTableCommand,
+	tableCommandUnavailableReason,
+	type TableCommand,
+} from './table-commands';
 
 export type MenuCommand =
 	| { kind: 'clipboard'; op: 'cut' | 'copy' | 'paste' }
@@ -147,6 +151,7 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 		groups.push(
 			TABLE_ITEMS.map(([key, label]) => {
 				const disabled = state.readOnly || !state.canTable(key);
+				const reason = disabled && tableCommandUnavailableReason(key);
 				return {
 					id: `table-${key}`,
 					label,
@@ -155,9 +160,7 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 							? ({ kind: 'ribbon', action: { type: 'formatDialog', kind: 'splitCells' } } as const)
 							: ({ kind: 'ribbon', action: { type: 'tableEdit', key } } as const),
 					disabled,
-					...(disabled && key === 'mergeCells'
-						? { reason: 'tableTab.mergeSelection' as const }
-						: {}),
+					...(reason ? { reason } : {}),
 				};
 			}),
 		);
