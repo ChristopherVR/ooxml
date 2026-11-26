@@ -443,8 +443,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `src/ui/src/docx/style-commands.test.ts`). Desktop Word 16 opens a saved file without repair
       and lists all four new styles with their base styles and the edited theme colour and font.
 - [ ] **P2** A table style's paragraph formatting (`w:pPr`, including conditional regions) is
-      applied in Print Layout and PDF between the document defaults and the paragraph style (#353),
-      but the editing surface still resolves table paragraphs without it.
+      applied in the editor, Print Layout and PDF between the document defaults and the paragraph
+      style, with Word's left-justification exception for the default paragraph style (#353,
+      `docx/paragraph-styles.ts`). Open: the other half of
+      `overrideTableStyleFontSizeAndJustification` ([MS-DOCX]), where an 11 or 12 pt default
+      paragraph style size does not override the table style's font size (`run-formatting.ts`).
 - [x] **P1** Table-level properties (width, alignment, indent, borders, style, look, grid widths)
       are editable in core with both fresh and source-preserving save/reload round-trip support
       (`docx/table-properties-edit.ts`, `write-table-level-properties.ts`; verified in
@@ -563,8 +566,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       pasting picture files at the pointer (`docx/picture-crop-edit.ts`, `docx/drawing-wrap.ts`,
       `e2e/docx/picture-drop-wrap.spec.ts`). Open: crop handles and crop by length, wrap polygon
       editing (Tight and Through use a rectangle), text distances, wrap and crop for header, footer,
-      note and VML pictures (absolute VML pictures float and are drawn since #345, but moving or
-      resizing one is not saved), and the right-click menu on Print Layout pages.
+      note and VML pictures (absolute VML pictures float and save size, position, wrap and
+      stacking edits since #345; crop, inline conversion, rotation, flips and alt text are disabled
+      for them with a reason), and the right-click menu on Print Layout pages.
 - [x] **P2** Footnotes and endnotes convert like Word's Convert Notes (all to endnotes, all to
       footnotes, swap) and Convert to Endnote/Footnote on a note reference, swapping the note styles
       when defined (`docx/note-convert.ts`, `e2e/docx/convert-notes.spec.ts`); picture watermarks
@@ -583,9 +587,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P2** Content controls: picture, building-block gallery and repeating-section controls are
       kept but cannot be inserted, and repeating items cannot be added or removed
       (`docx/content-control-model.ts`).
-- [ ] **P2** Content controls shown as tags (`w15:appearance="tags"`) draw their start and end tags
-      for inline controls in Print Layout and PDF (#349); block-level controls and the editing view
-      do not, and the tag size is fitted to Word's output rather than measured from it.
+- [ ] **P2** Content controls shown as tags (`w15:appearance="tags"`) draw start and end tags for
+      inline, paragraph, row and cell controls in the editor, Print Layout and PDF (#349). Open: the
+      tag size is fitted to Word's output rather than measured from it, and the caret at the start
+      of a block control sits before its tag where Word puts it after.
 - [x] **P2** Hyperlinks to http, https, mailto, tel and ftp targets open on Ctrl+click, as in Word;
       script and disguised schemes are refused (`docx/hyperlink.test.ts`).
 - [x] **P1** AutoCorrect and AutoFormat as you type: smart quotes, automatic bulleted and numbered

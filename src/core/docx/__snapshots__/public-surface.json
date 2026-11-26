@@ -214,6 +214,7 @@
 	"editDocxChartEx",
 	"editDocxDiagram",
 	"editStyleCatalogs",
+	"effectiveTextScalePercent",
 	"eighthPoints",
 	"eighthPointsFromPoints",
 	"eighthPointsToPoints",
