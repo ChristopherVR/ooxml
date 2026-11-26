@@ -1,5 +1,7 @@
 import { Fragment, type Node } from 'prosemirror-model';
 import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
+import { defaultStyleCatalogs } from '../default-styles';
+import { paragraphStyleId, styleCatalogsOf, type StyleCatalogs } from '../edit-styles';
 import type { DocumentModel, Paragraph, ParagraphStyleCatalog } from '../model';
 import { resolveParagraphFormatting } from '../paragraph-styles';
 import { headingLevel } from '../table-of-contents';
@@ -36,12 +38,14 @@ function levelOf(node: Node, catalog: ParagraphStyleCatalog | undefined): number
 
 /** Indexes top-level paragraphs and heading subtrees. Tables and other body blocks stay atomic. */
 export function indexOutline(doc: Node, model: DocumentModel): OutlineEntry[] {
+	const catalogs: StyleCatalogs | null | undefined = doc.attrs.styleCatalogs;
+	const paragraphStyles = catalogs?.paragraphStyles ?? model.paragraphStyles;
 	const entries: OutlineEntry[] = [];
 	const parents: OutlineEntry[] = [];
 	const ends = new Set(model.sections?.slice(0, -1).map((section) => section.endsAtBlockId));
 	let section = 0;
 	doc.forEach((node, pos, index) => {
-		const level = levelOf(node, model.paragraphStyles);
+		const level = levelOf(node, paragraphStyles);
 		let closed: OutlineEntry | undefined;
 		while (parents.length && (parents.at(-1)?.level ?? 0) >= level) {
 			closed = parents.pop();
@@ -142,17 +146,72 @@ export function canChangeOutlineLevel(entry: OutlineEntry, direction: -1 | 1): b
 	return direction === 1 ? entry.level < OUTLINE_BODY : entry.level > 1;
 }
 
-/** Set an explicit OOXML outline level, including the body-text override for level 9 demotion. */
+function outlineStyle(level: number) {
+	return level === OUTLINE_BODY
+		? { id: 'BodyText', name: 'Body Text' }
+		: { id: `Heading${level}`, name: `heading ${level}` };
+}
+
+function hasOutlineStyle(name: string, level: number): boolean {
+	const style = outlineStyle(level);
+	const key = name.toLowerCase();
+	return key === style.name.toLowerCase() || key === style.id.toLowerCase();
+}
+
+/** Use Word's built-in styles for built-in headings and default body paragraphs. */
 export function changeOutlineLevel(
 	state: EditorState,
+	model: DocumentModel,
 	paragraphs: readonly OutlineEntry[],
 	direction: -1 | 1,
 ): Transaction | undefined {
 	const tr = state.tr;
+	const catalogs = styleCatalogsOf(model);
+	const catalog = catalogs.paragraphStyles ?? { styles: {}, warnings: [], docDefaults: {} };
+	const styles = { ...catalog.styles };
+	let stylesChanged = false;
 	for (const entry of paragraphs) {
 		if (!canChangeOutlineLevel(entry, direction)) continue;
 		const level = entry.level + direction;
-		tr.setNodeAttribute(entry.pos, 'outlineLevel', level === OUTLINE_BODY ? 0 : level);
+		const styleId = typeof entry.node.attrs.style === 'string' ? entry.node.attrs.style : '';
+		const name = styles[styleId]?.name ?? styleId;
+		const defaultBody =
+			entry.level === OUTLINE_BODY &&
+			(!styleId || styleId === paragraphStyleId(catalogs, undefined));
+		if (
+			entry.node.attrs.outlineLevel != null ||
+			(!defaultBody && !hasOutlineStyle(name, entry.level))
+		) {
+			tr.setNodeAttribute(entry.pos, 'outlineLevel', level === OUTLINE_BODY ? 0 : level);
+			continue;
+		}
+		const existing = Object.values(styles).find((style) =>
+			hasOutlineStyle(style.name ?? style.id, level),
+		);
+		if (existing) {
+			tr.setNodeAttribute(entry.pos, 'style', existing.id);
+			continue;
+		}
+		const target = outlineStyle(level);
+		let id = target.id;
+		for (
+			let suffix = 2;
+			Object.hasOwn(styles, id) || Object.hasOwn(catalogs.characterStyles?.styles ?? {}, id);
+			suffix++
+		)
+			id = target.id + suffix;
+		const template = defaultStyleCatalogs().paragraphStyles.styles[target.id];
+		const base = paragraphStyleId(catalogs, undefined);
+		styles[id] = {
+			id,
+			name: target.name,
+			...(base && { basedOn: base, next: base }),
+			formatting: { ...template?.formatting, outlineLevel: level === OUTLINE_BODY ? 0 : level },
+		};
+		stylesChanged = true;
+		tr.setNodeAttribute(entry.pos, 'style', id);
 	}
+	if (stylesChanged)
+		tr.setDocAttribute('styleCatalogs', { ...catalogs, paragraphStyles: { ...catalog, styles } });
 	return tr.docChanged ? tr : undefined;
 }

@@ -226,7 +226,7 @@ test('Outlining filters and collapses branches and saves an undoable edit', asyn
 		'aria-selected',
 		'true',
 	);
-	const first = editor.getByRole('heading', { level: 1, name: 'First branch' });
+	const first = editor.getByRole('heading', { name: 'First branch' });
 	const child = editor.locator('[data-id="child"]');
 	await first.click();
 	await editor.getByRole('button', { name: 'Collapse', exact: true }).click();
@@ -250,9 +250,14 @@ test('Outlining filters and collapses branches and saves an undoable edit', asyn
 	await child.click();
 	await editor.getByRole('button', { name: 'Promote', exact: true }).click();
 	await expect(child).toHaveAttribute('aria-level', '1');
+	await first.click();
+	await editor.getByRole('button', { name: 'Demote', exact: true }).click();
+	await expect(first).toHaveAttribute('aria-level', '2');
 	const saved = await editor.evaluate(async (element) => [
 		...(await (element as DocxEditorElement).saveBytes()),
 	]);
 	const reopened = (await loadDocx(Uint8Array.from(saved))).model;
+	expect(reopened.blocks[0]).toMatchObject({ type: 'paragraph', style: 'Heading2' });
+	expect(reopened.blocks[0]).not.toHaveProperty('outlineLevel');
 	expect(reopened.blocks[1]).toMatchObject({ type: 'paragraph', outlineLevel: 1 });
 });

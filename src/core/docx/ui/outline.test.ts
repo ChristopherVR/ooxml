@@ -14,7 +14,7 @@ import {
 
 const schema = new Schema({
 	nodes: {
-		doc: { content: 'paragraph+' },
+		doc: { content: 'paragraph+', attrs: { styleCatalogs: { default: null } } },
 		paragraph: {
 			content: 'text*',
 			attrs: { id: { default: null }, style: { default: '' }, outlineLevel: { default: null } },
@@ -87,7 +87,7 @@ it('persists promoted levels and the explicit body-text override through save an
 	const handle = await loadDocx(await saveDocx(model));
 	const base = handle.model;
 	const entries = indexOutline(initial.doc, model);
-	const promoted = initial.apply(changeOutlineLevel(initial, [entries[1]!], -1)!);
+	const promoted = initial.apply(changeOutlineLevel(initial, model, [entries[1]!], -1)!);
 	const selected = promoted.apply(promoted.tr.setSelection(TextSelection.create(promoted.doc, 1)));
 	expect(selected.doc.child(1).attrs.outlineLevel).toBe(1);
 	const blocks = base.blocks.map((block, index) => {
@@ -102,4 +102,42 @@ it('persists promoted levels and the explicit body-text override through save an
 	const saved = await loadDocx(await handle.save({ ...base, blocks }));
 	expect(saved.model.blocks[0]).toMatchObject({ outlineLevel: 0 });
 	expect(saved.model.blocks[1]).toMatchObject({ outlineLevel: 1 });
+});
+
+it('switches built-in styles in both directions and creates missing body and heading styles', async () => {
+	let state = stateFrom(model);
+	const applyLevel = (index: number, direction: -1 | 1) => {
+		const entries = indexOutline(state.doc, model);
+		state = state.apply(
+			changeOutlineLevel(
+				state,
+				{
+					...model,
+					...state.doc.attrs.styleCatalogs,
+				},
+				[entries[index]!],
+				direction,
+			)!,
+		);
+	};
+	applyLevel(0, 1);
+	expect(state.doc.child(0).attrs).toMatchObject({ style: 'Heading2', outlineLevel: null });
+	applyLevel(0, -1);
+	expect(state.doc.child(0).attrs).toMatchObject({ style: 'Heading1', outlineLevel: null });
+	applyLevel(2, -1);
+	expect(state.doc.child(2).attrs).toMatchObject({ style: 'Heading9', outlineLevel: null });
+	expect(indexOutline(state.doc, model)[2]?.level).toBe(9);
+	applyLevel(2, 1);
+	expect(state.doc.child(2).attrs).toMatchObject({ style: 'BodyText', outlineLevel: null });
+	const blocks = model.blocks.map((block, index) =>
+		block.type === 'paragraph'
+			? paragraphFromAttrs(state.doc.child(index).attrs, block.id, block.runs)
+			: block,
+	);
+	const saved = await loadDocx(
+		await saveDocx({ ...model, ...state.doc.attrs.styleCatalogs, blocks }),
+	);
+	expect(saved.model.blocks[2]).toMatchObject({ style: 'BodyText' });
+	expect(saved.model.paragraphStyles?.styles.BodyText?.formatting.outlineLevel).toBe(0);
+	expect(saved.model.paragraphStyles?.styles.Heading9?.formatting.outlineLevel).toBe(9);
 });

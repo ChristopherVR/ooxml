@@ -181,6 +181,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 					if (!allowsEdit(view)) return;
 					const tr = changeOutlineLevel(
 						state,
+						host.model(),
 						outlineParagraphs(state, entries),
 						action.key === 'promote' ? -1 : 1,
 					);
