@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import type { OfficeUiDialog } from '../dialog/dialog';
-import { openOfficeAddIns } from './add-in-dialog';
+import { openOfficeAddIns, setOfficeAddInCatalog } from './add-in-dialog';
 import './add-in-local-dialog';
 
 const description = "<img src='https://example.test/description' />";
@@ -16,6 +16,26 @@ const xml = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/
 </OfficeApp>`;
 
 afterEach(() => document.body.replaceChildren());
+
+it('opens while the local picker loads and focuses it ahead of the host catalog', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	setOfficeAddInCatalog(editor, [{ id: 'host', label: 'Host add-in', install: () => {} }]);
+	openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'fr');
+	const dialog = editor.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
+	expect(dialog?.querySelector('[role="status"]')?.textContent).toBe('Chargement des compléments…');
+	await vi.waitFor(() => {
+		const input = dialog?.querySelector<HTMLInputElement>('input[type=file]');
+		expect(input).toBeInstanceOf(HTMLInputElement);
+		expect(editor.activeElement).toBe(input);
+	});
+	expect(dialog?.textContent).not.toContain('Chargement des compléments…');
+	expect(dialog?.querySelector('[aria-label="Install Host add-in"]')).toBeInstanceOf(
+		HTMLButtonElement,
+	);
+	dialog?.close();
+});
 
 it('requires consent, keeps the prior install through a failed update and isolates editors', async () => {
 	const editor = document.body
@@ -48,7 +68,6 @@ it('requires consent, keeps the prior install through a failed update and isolat
 		[...root.querySelectorAll('button')].find((button) => button.textContent === label);
 
 	const abandoned = await open('getAddIns');
-	expect(editor.activeElement).toBe(abandoned.querySelector('input[type=file]'));
 	await picker(abandoned, xml);
 	await vi.waitFor(() => expect(control(abandoned, 'Install')).toBeDefined());
 	const consent = abandoned.querySelector('section[aria-label="Review add-in permissions"]');

@@ -205,4 +205,5 @@ export function mountLocalAddIns(
 			if (alive(token)) input.disabled = false;
 		}
 	});
+	input.focus();
 }

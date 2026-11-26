@@ -8,6 +8,42 @@ const fixture = new URL(
 	import.meta.url,
 );
 
+test('opens Get Add-ins while the local picker loads', async ({ page }) => {
+	let release = () => {};
+	const gate = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await page.route('**/assets/add-in-local-dialog-*.js', async (route) => {
+		await gate;
+		await route.continue();
+	});
+	try {
+		await page.setViewportSize({ width: 2400, height: 900 });
+		await page.goto('/?framework=vanilla');
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+		const get = editor.getByRole('button', { name: 'Get Add-ins', exact: true });
+		await reveal(editor, get);
+		await get.press('Enter');
+		const dialog = editor.locator('office-ui-dialog[open]');
+		const loading = dialog.getByRole('status').filter({ hasText: 'Loading add-ins…' });
+		await expect(dialog.getByRole('dialog', { name: 'Get Add-ins' })).toBeVisible();
+		await expect(loading).toBeVisible();
+		await page.keyboard.press('Escape');
+		await expect(dialog).toBeHidden();
+		await expect(get).toBeFocused();
+		await get.press('Enter');
+		await expect(loading).toBeVisible();
+		release();
+		await expect(dialog.getByLabel('Choose a local add-in file')).toBeFocused();
+		await expect(loading).toHaveCount(0);
+		await expect(editor.getByLabel('Choose a local add-in file')).toHaveCount(1);
+	} finally {
+		release();
+	}
+});
+
 test('consents to a local Word add-in and preserves it after an invalid update', async ({
 	page,
 }) => {

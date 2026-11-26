@@ -1,4 +1,5 @@
 import type { OfficeAddInHost } from 'ooxml-core/automation/add-ins';
+import { normalizeLocale } from 'ooxml-core/i18n';
 import {
 	officeServiceLink,
 	showOfficeServiceDialog,
@@ -6,6 +7,16 @@ import {
 } from '../dialog/office-service-dialog';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
+
+const englishLoadStatus = ['Loading add-ins…', 'Could not load add-ins.'] as const;
+const addInLoadStatuses = new Map<string, readonly [string, string]>([
+	['fr', ['Chargement des compléments…', 'Impossible de charger les compléments.']],
+	['de', ['Add-Ins werden geladen…', 'Add-Ins konnten nicht geladen werden.']],
+	['es', ['Cargando complementos…', 'No se pudieron cargar los complementos.']],
+	['zh-CN', ['正在加载加载项…', '无法加载加载项。']],
+	['ja', ['アドインを読み込んでいます…', 'アドインを読み込めませんでした。']],
+	['ko', ['추가 기능을 불러오는 중…', '추가 기능을 불러오지 못했습니다.']],
+]);
 
 /** A trusted host supplies the catalog and updates its ribbon tabs after changes. */
 export interface OfficeAddInCatalogEntry {
@@ -178,20 +189,26 @@ export function openOfficeAddIns(
 		empty.textContent = t('No add-ins are available in this editor.');
 		dialog.append(empty);
 	}
-	if (mode === 'myAddIns') dialog.show();
-	const available = () => dialog.isConnected && (mode === 'getAddIns' || dialog.open);
+	const language = normalizeLocale(locale, [...addInLoadStatuses.keys()], 'en');
+	const [pending, failed] = addInLoadStatuses.get(language) ?? englishLoadStatus;
+	const loadStatus = doc.createElement('p');
+	loadStatus.setAttribute('role', 'status');
+	if (mode === 'getAddIns') {
+		loadStatus.textContent = pending;
+		dialog.prepend(loadStatus);
+	}
+	dialog.show();
+	const available = () => dialog.isConnected && dialog.open;
 	void import('./add-in-local-dialog').then(
 		({ mountLocalAddIns }) => {
 			if (!available()) return;
+			loadStatus.remove();
 			mountLocalAddIns(dialog, host, mode, product, locale, t, { empty, marketplace });
-			if (mode === 'getAddIns') dialog.show();
 		},
 		() => {
 			if (!available()) return;
-			status.textContent = t('Could not update the add-in.');
-			status.hidden = false;
-			dialog.append(status);
-			if (mode === 'getAddIns') dialog.show();
+			if (!loadStatus.isConnected) dialog.prepend(loadStatus);
+			loadStatus.textContent = failed;
 		},
 	);
 }
