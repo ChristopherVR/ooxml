@@ -602,7 +602,8 @@ Excel shows embedded in-cell pictures and cached linked data locally. The defaul
 external `IMAGE` sources. A host can set `imageProvider` on `<xlsx-editor>` or pass it as an Excel binding prop. Supply an
 `ImageProvider` such as `createFetchImageProvider({ fetch, allowedOrigins, onUpdate })`. Call
 `editor.calculateNow()` from `onUpdate` to show the settled result. Remove the provider to block
-subsequent image fetches.
+subsequent image fetches. With a provider installed, calculation requested by a file on open runs
+on the page within the normal page calculation budget, so it can call host code.
 
 Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 

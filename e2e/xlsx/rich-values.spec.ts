@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createWorkbook, putCell, saveXlsx } from 'ooxml-core/xlsx';
 import type { XlsxEditorElement } from '../../src/ui/src/xlsx/component';
 import { RICH_METADATA_EXT, RICH_NS, RICH_PARTS } from '../../src/core/xlsx/rich-values';
 import { miniPackage, R, ws, X } from '../../src/core/xlsx/write/mini-package-fixtures';
 import {
+	FRAMEWORKS,
 	editor,
 	goToCell,
 	grid,
@@ -66,28 +68,64 @@ test('inserts and converts a cell picture and blocks IMAGE without a host fetche
 	).toBeVisible();
 });
 
-test('uses the host IMAGE provider on the already open editor', async ({ page }) => {
-	await openLanding(page);
-	await newWorkbook(page);
-	await editor(page).evaluate(
-		(element, bytes) => {
+for (const framework of FRAMEWORKS) {
+	test(`${framework} uses the host IMAGE provider on an open workbook`, async ({ page }) => {
+		await openLanding(page, framework);
+		await newWorkbook(page);
+		await editor(page).evaluate(
+			(element, bytes) => {
+				const xlsx = element as XlsxEditorElement;
+				xlsx.imageProvider = {
+					resolve: () => true,
+					getImage: () => ({ bytes: Uint8Array.from(bytes) }),
+				};
+			},
+			[...PNG],
+		);
+		await typeInActiveCell(page, '=IMAGE("https://example.test/picture.png","Host image")');
+		const picture = grid(page).locator('.xg-c:not([hidden]) > img[alt="Host image"]');
+		await expect(picture).toBeVisible();
+		await expect(grid(page).getByRole('gridcell', { name: 'Host image' })).toBeVisible();
+		await editor(page).evaluate((element) => {
 			const xlsx = element as XlsxEditorElement;
-			xlsx.imageProvider = {
-				resolve: () => true,
-				getImage: () => ({ bytes: Uint8Array.from(bytes) }),
-			};
-		},
-		[...PNG],
-	);
-	await typeInActiveCell(page, '=IMAGE("https://example.test/picture.png","Host image")');
-	await expect(grid(page).getByRole('img', { name: 'Host image' })).toBeVisible();
-	await editor(page).evaluate((element) => {
-		const xlsx = element as XlsxEditorElement;
-		xlsx.imageProvider = undefined;
-		xlsx.calculateNow();
+			xlsx.imageProvider = undefined;
+			xlsx.calculateNow();
+		});
+		await expect(picture).toHaveCount(0);
+		await expect(
+			grid(page).getByRole('gridcell', { name: '#BLOCKED!', exact: true }),
+		).toBeVisible();
 	});
-	await expect(grid(page).getByRole('img', { name: 'Host image' })).toHaveCount(0);
-	await expect(grid(page).getByText('#BLOCKED!', { exact: true })).toBeVisible();
+}
+
+test('uses the host IMAGE provider when a file requests calculation on open', async ({ page }) => {
+	await newWorkbook(page);
+	const workbook = createWorkbook();
+	workbook.fullCalcOnLoad = true;
+	putCell(workbook.sheets[0]!, 0, 0, {
+		value: { error: '#VALUE!' },
+		formula: 'IMAGE("https://example.test/picture.png","On-open image")',
+	});
+	await editor(page).evaluate(
+		async (element, { file, png }) => {
+			const xlsx = element as XlsxEditorElement;
+			let ready = false;
+			xlsx.imageProvider = {
+				resolve: () => {
+					if (ready) return true;
+					queueMicrotask(() => {
+						ready = true;
+						xlsx.calculateNow();
+					});
+					return { error: '#BUSY!' };
+				},
+				getImage: () => ({ bytes: Uint8Array.from(png) }),
+			};
+			await xlsx.load(Uint8Array.from(file), 'image-on-open.xlsx');
+		},
+		{ file: [...(await saveXlsx(workbook))], png: [...PNG] },
+	);
+	await expect(grid(page).locator('.xg-c:not([hidden]) > img[alt="On-open image"]')).toBeVisible();
 });
 
 test('disables in-cell picture editing with a reason while sharing', async ({ page }) => {

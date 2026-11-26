@@ -59,12 +59,13 @@ export function showWorkbook(
 	fileName: string,
 	chrome?: FileChrome,
 	calculate = true,
-): void {
-	core.setWorkbook(workbook, { calculate });
+): boolean {
+	const calculationStopped = core.setWorkbook(workbook, { calculate });
 	core.fileName = fileName;
 	chrome?.fileNameChanged();
 	chrome?.setSaveState('saved');
 	emit(core.host, 'workbook-change', { workbook });
+	return calculationStopped;
 }
 
 export async function loadInto(
@@ -84,9 +85,12 @@ export async function loadInto(
 		let password: string | undefined;
 		let workbook: Workbook;
 		let calculationStopped = false;
+		// Host callbacks live on the page. Wait until the opened workbook is ready to show.
+		const deferCalculation = core.imageProvider !== undefined;
 		for (;;) {
 			try {
 				({ workbook, calculationStopped } = await openWorkbook(bytes, {
+					deferCalculation,
 					...(fileName ? { fileName } : {}),
 					...(password === undefined ? {} : { password }),
 				}));
@@ -106,8 +110,14 @@ export async function loadInto(
 		// is first shown with its faces; `loading` stays true meanwhile.
 		await core.webfonts.prepare(workbook);
 		if (generation !== core.loadGeneration) return;
-		showWorkbook(core, workbook, fileName || core.fileName || DEFAULT_FILE_NAME, chrome, false);
-		if (calculationStopped)
+		const stoppedOnPage = showWorkbook(
+			core,
+			workbook,
+			fileName || core.fileName || DEFAULT_FILE_NAME,
+			chrome,
+			deferCalculation,
+		);
+		if (calculationStopped || stoppedOnPage)
 			core.shell?.toast(
 				core.ctx.t(
 					'Formulas were not all recalculated on open because it took too long or needed too much memory. Some values shown are the saved ones; press F9 to recalculate.',

@@ -42,6 +42,8 @@ export type CalculateResponse =
 export interface OpenOptions {
 	fileName?: string;
 	password?: string;
+	/** The editor will calculate after preparing the workbook, with host providers on the page. */
+	deferCalculation?: boolean;
 }
 
 export interface OpenedWorkbook {
@@ -254,7 +256,7 @@ export function createWorkbookOpener(
 		const { loadWorkbook } = await import('ooxml-core/xlsx/load');
 		const started = performance.now();
 		const workbook = await loadWorkbook(bytes, loadOptions(options));
-		if (!needsCalculationOnOpen(workbook))
+		if (options.deferCalculation || !needsCalculationOnOpen(workbook))
 			return { workbook, calculated: false, calculationStopped: false };
 		if (!pool) return calculateOnPage(workbook, whole);
 		const first = calculateOnPage(workbook, {

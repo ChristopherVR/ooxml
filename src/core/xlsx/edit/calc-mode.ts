@@ -1,4 +1,5 @@
 import { type CalculationStop, createCalcEngine } from './deps';
+import type { CalcExternalProviders } from '../formula/providers';
 import type { Workbook } from '../model';
 import type { EditContext } from './context';
 
@@ -29,6 +30,8 @@ export interface OpenCalculationLimits {
 	timeLimitMs?: number;
 	/** The most work one formula may need before the calculation stops. */
 	workCap?: number;
+	/** Host providers available to this calculation. */
+	providers?: CalcExternalProviders;
 }
 
 /**
@@ -41,10 +44,7 @@ export function calculateOnOpen(
 	limits: OpenCalculationLimits = {},
 ): OpenCalculation {
 	if (!needsCalculationOnOpen(workbook)) return { ran: false };
-	const engine = createCalcEngine(workbook, {
-		...(limits.timeLimitMs === undefined ? {} : { timeLimitMs: limits.timeLimitMs }),
-		...(limits.workCap === undefined ? {} : { workCap: limits.workCap }),
-	});
+	const engine = createCalcEngine(workbook, limits);
 	engine.recalculateAll();
 	return engine.stopped ? { ran: true, stopped: engine.stopped } : { ran: true };
 }

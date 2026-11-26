@@ -8,6 +8,7 @@ import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	approximateMeasure,
 	calculateOnOpen,
+	type CalcExternalProviders,
 	createEditSession,
 	type EditSession,
 	type FontView,
@@ -49,6 +50,7 @@ import {
 import type { CalculationMode } from './backstage';
 import type { SurfaceHostActions } from './surface-actions';
 import { CalcPreparation } from './calc-preparation';
+import { DEFAULT_OPEN_LIMITS } from './workbook-opener';
 import { savedErrorRules } from './error-rules';
 import { XlsxWebfonts } from './webfonts';
 import { collaborationFor, type XlsxCollaboration } from './collaboration';
@@ -113,6 +115,13 @@ export class EditorCore {
 	/** Cloud places File > Open offers next to "This device" (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
 	imageProvider: ImageProvider | undefined;
+	private readonly calculationProviders: CalcExternalProviders = {
+		image: {
+			resolve: (request) =>
+				this.imageProvider ? this.imageProvider.resolve(request) : cellError('#BLOCKED!'),
+			getImage: (source) => this.imageProvider?.getImage?.(source),
+		},
+	};
 	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
 	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();
@@ -291,7 +300,7 @@ export class EditorCore {
 	setWorkbook(
 		workbook: Workbook | undefined,
 		{ calculate = true }: { calculate?: boolean } = {},
-	): void {
+	): boolean {
 		this.loading = false;
 		// The room is bound to the old edit session: leave it, and rejoin below only when the host
 		// asked for sharing declaratively (the `collaboration` property).
@@ -307,7 +316,9 @@ export class EditorCore {
 			workbook && calculate && needsCalculationOnOpen(workbook)
 				? prepareWorkbookFormulas(workbook)
 				: undefined;
-		if (workbook && calculate && !pending) this.calculateInitialWorkbook(workbook);
+		let calculationStopped = false;
+		if (workbook && calculate && !pending)
+			calculationStopped = this.calculateInitialWorkbook(workbook);
 		this.session = workbook ? this.createSession(workbook) : undefined;
 		this.stopSession = this.session?.onChange((change) => this.onSessionChange(change));
 		this.calcPreparation.start(pending ? undefined : this.session);
@@ -335,13 +346,26 @@ export class EditorCore {
 		this.notifyModel({ kind: 'load' });
 		this.webfonts.shown(workbook);
 		this.collab.resume();
+		return calculationStopped;
 	}
 
-	private calculateInitialWorkbook(workbook: Workbook): void {
+	/** Calculates a freshly opened workbook; true when the time or work limit stopped it. */
+	private calculateInitialWorkbook(workbook: Workbook): boolean {
 		try {
-			calculateOnOpen(workbook);
+			const result = calculateOnOpen(
+				workbook,
+				this.imageProvider
+					? {
+							providers: this.calculationProviders,
+							timeLimitMs: DEFAULT_OPEN_LIMITS.pageMs,
+							workCap: DEFAULT_OPEN_LIMITS.pageWorkCap,
+						}
+					: {},
+			);
+			return result.stopped !== undefined;
 		} catch (error) {
 			console.error(error);
+			return false;
 		}
 	}
 
@@ -350,15 +374,7 @@ export class EditorCore {
 			return createEditSession(workbook, {
 				defaultSheetBase: sheetBaseName(this.ctx.t),
 				autoRowHeight: true,
-				calcOptions: {
-					providers: {
-						image: {
-							resolve: (request) =>
-								this.imageProvider ? this.imageProvider.resolve(request) : cellError('#BLOCKED!'),
-							getImage: (source) => this.imageProvider?.getImage?.(source),
-						},
-					},
-				},
+				calcOptions: { providers: this.calculationProviders },
 				measureText: (text, font) => this.measureText(text, font),
 			});
 		} catch (error) {

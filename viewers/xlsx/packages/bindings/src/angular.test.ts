@@ -21,6 +21,8 @@ describe('Angular editor adapter', () => {
 		ref.setInput('locale', 'zh-Hans');
 		ref.setInput('authorName', 'Grace');
 		ref.setInput('validateReplace', true);
+		const imageProvider = { resolve: () => true };
+		ref.setInput('imageProvider', imageProvider);
 		const onChange = vi.fn();
 		const onDirty = vi.fn();
 		ref.instance.workbookChange.subscribe(onChange);
@@ -32,6 +34,7 @@ describe('Angular editor adapter', () => {
 		expect(editor.locale).toBe('zh-CN');
 		expect(editor.authorName).toBe('Grace');
 		expect(editor.validateReplace).toBe(true);
+		expect(editor.imageProvider).toBe(imageProvider);
 		expect(ref.instance.element).toBe(editor);
 		ref.setInput('readOnly', true);
 		ref.changeDetectorRef.detectChanges();
