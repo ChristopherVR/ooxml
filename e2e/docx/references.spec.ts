@@ -53,6 +53,8 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 
 	await surface.click();
 	await page.keyboard.insertText('Zebra meets Zebra and Doe v. City.');
+	await page.keyboard.press('Enter');
+	await page.keyboard.insertText('zebra ZEBRA Zebras');
 	await editor.getByRole('tab', { name: 'References', exact: true }).click();
 	await selectText('Zebra');
 	await reveal(editor, command('Mark Entry'));
@@ -124,7 +126,7 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	const bytes = await readFile(testInfo.outputPath('word-references.docx'));
 	const zip = await JSZip.loadAsync(bytes);
 	const xml = await zip.file('word/document.xml')?.async('string');
-	expect(xml?.match(/ XE /g)).toHaveLength(2);
+	expect(xml?.match(/ XE /g)).toHaveLength(1);
 	expect(xml).toContain(' INDEX ');
 	expect(xml).toContain(' CITATION ');
 	expect(xml).toContain(' BIBLIOGRAPHY ');

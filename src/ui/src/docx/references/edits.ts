@@ -19,6 +19,7 @@ import { documentInformationJson } from '../document-information-attr';
 import { modelToDoc } from '../model-adapter';
 import { pageNumbers } from '../print-header-footer';
 import { schema } from '../schema';
+import { markAllPositions } from './mark-all';
 
 export function dispatchReference(view: EditorView, tr: Transaction): void {
 	if (view.editable && tr.docChanged) view.dispatch(closeHistory(tr).scrollIntoView());
@@ -44,22 +45,7 @@ export function markEntry(
 		.referenceFieldRuns(code)
 		.map((run) => (run.fieldCode ? { ...run, ...format } : run));
 	if (!all) inlineReference(tr, tr.selection.to, tr.selection.to, runs);
-	else {
-		const pattern = all.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-		const word = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}_])${pattern}(?![\\p{L}\\p{M}\\p{N}_])`, 'giu');
-		const positions: number[] = [];
-		tr.doc.descendants((node, pos) => {
-			if (positions.length >= 10_000) return false;
-			if (node.type.name !== 'paragraph') return true;
-			const text = node.textBetween(0, node.content.size, '', '\0');
-			for (const match of text.matchAll(word)) {
-				positions.push(pos + 1 + match.index + match[0].length);
-				if (positions.length >= 10_000) break;
-			}
-			return false;
-		});
-		for (const at of positions.reverse()) inlineReference(tr, at, at, runs);
-	}
+	else for (const at of markAllPositions(tr.doc, all).reverse()) inlineReference(tr, at, at, runs);
 	dispatchReference(view, tr);
 }
 
