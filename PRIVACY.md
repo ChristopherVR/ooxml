@@ -131,9 +131,11 @@ makes no request itself. Resolution is off by default and hosts can pass `null` 
 
 Compatible task panes are off by default. When a host approves a separate HTTPS execution
 origin and a user opens an installed add-in, the sandboxed frame requests the chosen pane URL.
-The destination receives network metadata without a referrer. Its page can request its own
-assets or services. The bridge returns only bounded selected text when the manifest permission,
-the install review, and the live editor allow it. A publisher can transmit data it receives
+The destination receives network metadata without a referrer. Chromium implements the
+frame's credentialless setting. Other browsers may send the publisher's cookies according
+to their cookie policy. The publisher page can request its own assets or services. When the
+manifest permission, install review, and live editor allow it, the bridge can read bounded
+selected text and replace the selection with bounded plain text. A publisher can transmit data it receives
 using network access allowed by its deployment. The host must enforce CSP `frame-src` for
 all pane navigations, including redirects, and assert it with `frameSrcEnforced: true` in the
 runtime settings. Passing `null` to `setOfficeAddInRuntime` disables execution in that scope.
