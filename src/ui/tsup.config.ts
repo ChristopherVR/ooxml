@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Options } from 'tsup';
+import { defineConfig } from 'tsup';
 
 const PACKAGE = dirname(fileURLToPath(import.meta.url));
 
@@ -33,7 +33,7 @@ export const rawCss = {
 
 // ESM only: custom elements need a browser (or a DOM) anyway. Declarations come from tsc
 // (tsconfig.build.json). The core package stays external: it is a real dependency.
-const browser = {
+export default defineConfig({
 	entry: {
 		index: 'src/index.ts',
 		theme: 'src/theme.ts',
@@ -47,6 +47,7 @@ const browser = {
 		'bindings/react': 'src/bindings/react.ts',
 		'bindings/vue': 'src/bindings/vue.ts',
 		'bindings/solid': 'src/bindings/solid.ts',
+		suite: 'src/suite/index.ts',
 		xlsx: 'src/xlsx/index.ts',
 		docx: 'src/docx/index.ts',
 		visio: 'src/visio/index.ts',
@@ -70,20 +71,4 @@ const browser = {
 	treeshake: true,
 	platform: 'browser',
 	external: [/^ooxml-core(\/|$)/, /^ooxml-ui\/pptx(\/|$)/],
-} satisfies Options;
-
-export default defineConfig([
-	{
-		...browser,
-		// Reduce shipped syntax while keeping stable names and readable bundle formatting.
-		esbuildOptions(options) {
-			options.minifySyntax = true;
-		},
-	},
-	{
-		// This DOM-free entry shares no modules with the browser bundles.
-		...browser,
-		entry: { suite: 'src/suite/index.ts' },
-		splitting: false,
-	},
-]);
+});
