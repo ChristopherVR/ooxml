@@ -150,9 +150,8 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [ ] **P1** Proofing is the browser's `spellcheck` attribute everywhere: no grammar, thesaurus,
       custom dictionary, ignore list or proofing-language engine.
 - [ ] **P1** Picture Format and Shape Format contextual tabs: missing in Excel (both); partial in
-      Word Picture Format (Wrap Text, Crop and Format only), in Word Shape Format (Wrap Text and
-      Size; no position, order, align, group or rotate, and no Alt Text), and in PowerPoint Shape
-      Format (no Arrange, Size or Alt Text).
+      Word Picture Format (Wrap Text, Crop and Format only; Arrange is shared with Shape Format)
+      and in PowerPoint Shape Format (no Arrange, Size or Alt Text).
 - [x] **P1** Shared chart Format pane analysis: several trendlines per series (a section each, Add
       trendline) and custom error-bar sources as values or a range (`chart/edit/error-bar-source.ts`;
       Excel reads its workbook, Word and Visio only cells the chart caches). Stacked groups move
@@ -195,8 +194,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       unknown rule markup and collection settings are retained. Evidence: the Excel-authored
       `excel-x14-validation.xlsx`, `xlsx/write/validation-extensions.test.ts`, and all six bindings
       in `e2e/xlsx/x14-validation.spec.ts`. Excel 16 reopened edited, cleared and newly authored rules.
-- [ ] **P1** Rich values and in-cell pictures (`xl/richData`, IMAGE() results, Place in Cell,
-      linked data types) have no model.
+- [x] **P1** Rich values and in-cell pictures (`xl/richData`, Place in Cell, linked data type
+      cards, FIELDVALUE and dot access on cached fields, and IMAGE() through an opt-in host
+      fetcher) are modelled, drawn and saved; Excel 16 reopens them (`xlsx/rich-values.ts`,
+      2026-11-26).
+- [ ] **P1** In-cell pictures, value metadata and their media are not shared in collaboration
+      (Place in Cell is disabled while sharing), and resolved IMAGE() pictures are not saved.
 - [ ] **P1** Connections, query tables and Power Query are carried verbatim only; external links
       use cached values and cannot be refreshed or edited.
 - [x] **P1** Threaded comment edits preserve person records, message identities, resolved state,
@@ -368,8 +371,12 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format, Chart Format (a pane instead),
-      PivotTable Analyze and PivotTable Design (pivot commands sit in Insert > PivotTable).
+- [ ] **P1** Missing tabs: Draw, Picture Format, Shape Format and Chart Format (a pane instead).
+- [x] **P1** PivotTable Analyze and PivotTable Design contextual tabs: options, field settings,
+      refresh, change source, subtotals, grand totals, report layout, blank rows, the PivotTable
+      style gallery and style options; Excel 16 reopens and refreshes the results (2026-11-26).
+- [ ] **P1** PivotTable definitions and caches are not mapped to Yjs, so pivot editing is disabled
+      while a collaboration session is bound; the Field List is the settings dialog, not a pane.
 - [x] **P1** Insert: Shapes (the shared preset gallery), Text Box, New Note (a legacy note) and
       Header & Footer (edited in Page Layout view), with undo and save round trips
       (`xlsx/edit/page-authoring.test.ts`, `src/ui/src/xlsx/commands/ribbon-authoring.test.ts`,
@@ -759,14 +766,21 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       theme presets in `drawingml/theme-presets.ts`), custom colours, fonts and spacing, and Set
       as Default through the host's preference store, each one undo step and saved
       (`docx/document-design.ts`, `e2e/docx/document-design.spec.ts`).
-- [ ] **P1** Design: the full Word theme catalogue, saving and reusing custom schemes, `.thmx`
-      import and export, and Effects beyond three shadow presets.
+- [x] **P1** Design: the Word theme gallery with each theme's measured palette, fonts and format
+      scheme, custom colour and font schemes, `.thmx` import and export, and the Effects gallery
+      applying whole format schemes (`drawingml/theme-gallery.ts`, 2026-11-26).
+- [ ] **P1** Design: nine legacy Word themes are omitted until their values are verified, and
+      theme picture fills (Grunge Texture, Wood Type) are replaced with solid fills on import and
+      not rendered, with 3-D styles.
 - [ ] **P1** Table tab (Table Design and Layout merged) lacks table styles and style options, Cell
       Size and AutoFit, cell alignment and margins, Repeat Header Rows, Formula, Convert to Text,
       Select and Draw Borders.
 - [ ] **P1** Missing tabs: Draw and Equation; Picture Format has only Wrap Text, Crop and Format.
-- [ ] **P1** Layout: the Arrange group (Position, Wrap Text, order, Selection Pane, Align, Group,
-      Rotate) and Text Direction.
+- [x] **P1** Layout and Shape Format: the Arrange group (Position, Wrap Text, Bring Forward, Send
+      Backward, Selection Pane with rename, Align, Group, Rotate) and Text Direction, with canvas
+      multi-selection (`docx/arrange-controller.ts`, 2026-11-26).
+- [ ] **P1** Draft and Web Layout draw floating objects with centred or bottom `wp:positionV`
+      at the anchor paragraph top, so Position presets require Print Layout.
 - [x] **P1** Insert WordArt creates editable OOXML text boxes with fill, outline and shadow
       presets and DrawingML text transforms.
 - [x] **P1** Wide folded ribbon groups scroll within the phone screen. Save, Undo and Redo
