@@ -5,6 +5,7 @@
  * @module render/ribbon-galleries/effect-tile-svg
  */
 import { safeColor, svgId, svgTile } from './gallery-preview-svg';
+import { cachedTileSvg } from './tile-svg-cache';
 
 function num(value: number): string {
 	return String(Math.round(value * 100) / 100);
@@ -28,6 +29,17 @@ const BEVEL_PROFILES: Record<string, { rim: number; inverted?: boolean; double?:
 
 /** A square in `color` with a lit top-left rim and a shaded bottom-right rim. */
 export function bevelTileSvg(
+	id: string,
+	preset: string,
+	color: string,
+	size: { width: number; height: number },
+): string {
+	return cachedTileSvg(`bevel:${id}|${preset}|${color}|${size.width}x${size.height}`, () =>
+		paintBevelTile(id, preset, color, size),
+	);
+}
+
+function paintBevelTile(
 	id: string,
 	preset: string,
 	color: string,
@@ -76,6 +88,16 @@ function cameraMatrix(preset: string): [number, number, number, number] {
 
 /** A square in `color` as the camera preset sees it. */
 export function rotationTileSvg(
+	preset: string,
+	color: string,
+	size: { width: number; height: number },
+): string {
+	return cachedTileSvg(`rotation:${preset}|${color}|${size.width}x${size.height}`, () =>
+		paintRotationTile(preset, color, size),
+	);
+}
+
+function paintRotationTile(
 	preset: string,
 	color: string,
 	size: { width: number; height: number },

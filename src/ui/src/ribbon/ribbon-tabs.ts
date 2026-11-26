@@ -316,6 +316,9 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.watcher = undefined;
 	}
 
+	/** The selection and tab row the active tab was last scrolled into view for. */
+	private revealed: { selected: string | undefined; tabs: RibbonTab[] } | undefined;
+
 	/** Exactly one panel shows. */
 	protected override updated(): void {
 		const selected = this.selected;
@@ -323,7 +326,10 @@ export class OfficeUiRibbon extends OfficeElement {
 		if (!this.items)
 			for (const panel of this.panels())
 				panel.hidden = hideAll || panel.dataset.ribbonTab !== selected;
-		// Keep the active tab inside the scrolling tab strip.
+		// Keep the active tab inside the scrolling tab strip. Measuring forces a layout, so it runs
+		// only when the selection or the tab row changed, not on every update while a deck opens.
+		if (this.revealed?.selected === selected && this.revealed.tabs === this.tabs) return;
+		this.revealed = { selected, tabs: this.tabs };
 		const active = this.tabButton(selected);
 		const list = active?.parentElement;
 		if (active && list && list.scrollWidth > list.clientWidth) {

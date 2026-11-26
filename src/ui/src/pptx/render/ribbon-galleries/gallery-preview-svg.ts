@@ -1,4 +1,5 @@
 import { escapeSvgText, safeColor, svgTile } from '../../../ribbon/svg-preview';
+import { cachedTileSvg } from './tile-svg-cache';
 export { escapeSvgText, safeColor, svgTile } from '../../../ribbon/svg-preview';
 /**
  * SVG builders for gallery tiles. Every tile is one self-contained `<svg>`
@@ -127,6 +128,10 @@ export interface ShapeTileSpec {
 
 /** A shape tile: the preview for shape, picture and effect presets. */
 export function shapeTileSvg(spec: ShapeTileSpec): string {
+	return cachedTileSvg(`shape:${JSON.stringify(spec)}`, () => paintShapeTile(spec));
+}
+
+function paintShapeTile(spec: ShapeTileSpec): string {
 	const id = svgId(spec.id);
 	const inset = spec.inset ?? 6;
 	const w = spec.width - inset * 2;
