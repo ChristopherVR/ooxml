@@ -1151,7 +1151,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.mediaRibbon.changeShape': 'Change Shape',
 	'pptx.mediaRibbon.sourceUnavailable': 'The media preview or image is unavailable.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': 'The selected node has no editable drawing shape.',
-	'pptx.mediaRibbon.node': 'SmartArt Node',
+	'pptx.mediaRibbon.node': 'Select a SmartArt node on the slide.',
 	'pptx.mediaRibbon.larger': 'Larger',
 	'pptx.mediaRibbon.smaller': 'Smaller',
 	'pptx.mediaRibbon.x': 'Horizontal Position',

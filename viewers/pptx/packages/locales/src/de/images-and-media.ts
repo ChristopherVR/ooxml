@@ -268,7 +268,7 @@ export const translations = {
 	'pptx.mediaRibbon.sourceUnavailable': 'Die Medienvorschau oder das Bild ist nicht verfügbar.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':
 		'Der ausgewählte Knoten hat keine bearbeitbare Zeichnungsform.',
-	'pptx.mediaRibbon.node': 'SmartArt-Knoten',
+	'pptx.mediaRibbon.node': 'Wählen Sie einen SmartArt-Knoten auf der Folie aus.',
 	'pptx.mediaRibbon.larger': 'Größer',
 	'pptx.mediaRibbon.smaller': 'Kleiner',
 	'pptx.mediaRibbon.x': 'Horizontale Position',

@@ -263,7 +263,7 @@ export const translations = {
 	'pptx.mediaRibbon.changeShape': '図形の変更',
 	'pptx.mediaRibbon.sourceUnavailable': 'メディアのプレビューまたは画像を利用できません。',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': '選択したノードに編集可能な図形がありません。',
-	'pptx.mediaRibbon.node': 'SmartArt ノード',
+	'pptx.mediaRibbon.node': 'スライド上の SmartArt ノードを選択してください。',
 	'pptx.mediaRibbon.larger': '拡大',
 	'pptx.mediaRibbon.smaller': '縮小',
 	'pptx.mediaRibbon.x': '横位置',

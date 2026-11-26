@@ -54,6 +54,7 @@ export interface OfficeGalleryState {
 	/** Trigger name in the inline strip; defaults to "More <label>". */
 	moreLabel?: string | undefined;
 	disabled?: boolean | undefined;
+	disabledReason?: string | undefined;
 	command?: { icon: string; large?: boolean | undefined; hint?: string | undefined } | undefined;
 	sections: readonly OfficeGallerySection[];
 	/** Tiles shown inline (`mode="inline"`); defaults to the first section's items. */
@@ -603,6 +604,7 @@ export class OfficeUiGallery extends OfficeElement {
 			${unsafeStatic(statics.triggerAttribute)}=${ifDefined(state?.id)}
 			title=${triggerTitle}
 			aria-label=${command ? title : triggerTitle}
+			aria-description=${ifDefined(state?.disabledReason)}
 			aria-haspopup=${ifDefined(command ? undefined : 'dialog')}
 			aria-expanded=${ifDefined(command || !state ? undefined : String(this.opened))}
 			?disabled=${!state || disabled}

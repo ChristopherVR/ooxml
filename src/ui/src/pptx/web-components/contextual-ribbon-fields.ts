@@ -10,8 +10,7 @@ export interface ContextualControls {
 	host: HTMLElement;
 	group: RibbonGroupId;
 	state: PictureRibbonState;
-	nodeId: string;
-	selectNode: (id: string) => void;
+	nodeIds: readonly string[];
 	begin: () => AbortSignal;
 	close: () => void;
 }

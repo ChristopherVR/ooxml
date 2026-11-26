@@ -3,14 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import {
-	elementsOfType,
-	elementWithText,
-	fixture,
-	loadDeck,
-	openRibbonTab,
-	selectElement,
-} from './support/deck';
+import { elementsOfType, fixture, loadDeck, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
 import { readZipPartText } from './support/pptx-xml';
 import { chooseSelectValue } from './support/select-control';
@@ -178,24 +171,35 @@ test('audio shows its own Format tab and media-specific playback options', async
 	expect(xml).toContain('prst="roundRect"');
 });
 
-test('SmartArt Format edits the node selected in the ribbon', async ({ page }) => {
+test('SmartArt Format applies galleries to the canvas node selection', async ({ page }) => {
 	await loadDeck(page, fixture('smartart-build-reveal.pptx'));
-	await selectElement(page, elementWithText(page, 'Alpha'));
+	const node = (name: string) =>
+		page.locator('[data-pptx-viewport] [data-smartart-node-id]').filter({ hasText: name }).first();
+	const alpha = node('Alpha');
+	const beta = node('Beta');
+	await selectElement(page, alpha);
 	await expect(tab(page, 'smartArtDesign')).toBeVisible();
 	await tab(page, 'smartArtFormat').click();
-	const nodes = control(page, 'smartArtFormat.shapes.node').getByRole('combobox');
-	const chooseNode = async (label: string) => {
-		await nodes.click();
-		await page.getByRole('option', { name: label, exact: true }).click();
-	};
-	await chooseNode('Beta');
+	await beta.click({ modifiers: ['Control'] });
+	await expect(page.locator('[data-pptx-viewport] [data-pptx-smartart-selected]')).toHaveCount(2);
 	const bold = control(page, 'smartArtFormat.wordArtStyles.bold').getByRole('checkbox');
 	await bold.click();
 	await expect(bold).toBeChecked();
-	await chooseNode('Alpha');
-	await expect(bold).not.toBeChecked();
-	await chooseNode('Beta');
-	await expect(bold).toBeChecked();
-	await openRibbonTab(page, 'Home');
-	await expect(nodes).not.toBeVisible();
+	const wordArt = control(page, 'smartArtFormat.wordArtStyles.gallery');
+	await wordArt.locator('[data-gallery-item="wordArt-1"]').first().click();
+	const shapeStyles = control(page, 'smartArtFormat.shapeStyles.gallery');
+	await shapeStyles.locator('[data-gallery-item="theme-0-1"]').first().click();
+	await control(page, 'smartArtFormat.shapes.shape').getByRole('button').click();
+	await page.locator('[data-ribbon-gallery-popup] [data-gallery-item="hexagon"]:visible').click();
+	await expect(
+		page
+			.locator('[data-ribbon-group="smartArtFormat.arrange"]')
+			.getByRole('button', { name: /^bring forward$/iu })
+			.first(),
+	).toBeVisible();
+	const xml = await readZipPartText(
+		await downloadBytes(await savePptxViaBackstage(page)),
+		'ppt/diagrams/drawing1.xml',
+	);
+	expect(xml.match(/prst="hexagon"/gu)).toHaveLength(2);
 });

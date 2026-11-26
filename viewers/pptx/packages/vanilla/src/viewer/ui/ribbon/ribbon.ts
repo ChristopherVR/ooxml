@@ -9,6 +9,7 @@ import type {
 } from 'ooxml-ui/pptx';
 import {
 	attachRibbonOverflow,
+	CONTEXTUAL_TAB_GROUPS,
 	createRibbonDisplayController,
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	HOME_LAUNCHER_SECTIONS,
@@ -295,13 +296,16 @@ export function createRibbon(
 	});
 	const picturePane = contextualPanes.get('pictureFormat');
 	const pictureStrips = picturePane?.querySelectorAll('pptx-ui-picture-ribbon') ?? [];
-	const pictureArrange = picturePane?.querySelector('[data-ribbon-group="pictureFormat.arrange"]');
-	const mediaArranges = new Map(
-		(['videoFormat', 'audioFormat'] as const).map((tab) => [
-			tab,
-			contextualPanes.get(tab)?.querySelector(`[data-ribbon-group="${tab}.arrange"]`),
-		]),
-	);
+	const contextualArranges = new Map<string, Element>();
+	for (const [tab, pane] of contextualPanes) {
+		const placement = CONTEXTUAL_TAB_GROUPS[tab].find(
+			(group) => group.arrange || group.pictureStrip === 'picture-arrange',
+		);
+		const group = placement && pane.querySelector(`[data-ribbon-group="${placement.group}"]`);
+		if (group) {
+			contextualArranges.set(tab, group);
+		}
+	}
 	const homeArrange = homeTab?.el.querySelector('[data-ribbon-group="home.arrange"]');
 	const homeArrangeRow = homeArrange?.querySelector('[data-pptx-chrome="arrange-controls"]');
 	for (const [id, pane] of contextualPanes) {
@@ -323,13 +327,8 @@ export function createRibbon(
 			galleryHub.closeAll();
 		}
 		activeTab = tab;
-		if (homeArrange && homeArrangeRow && pictureArrange) {
-			const group =
-				tab === 'pictureFormat'
-					? pictureArrange
-					: tab === 'videoFormat' || tab === 'audioFormat'
-						? (mediaArranges.get(tab) ?? homeArrange)
-						: homeArrange;
+		if (homeArrange && homeArrangeRow) {
+			const group = contextualArranges.get(tab) ?? homeArrange;
 			if (homeArrangeRow.parentElement !== group) {
 				group.prepend(homeArrangeRow);
 			}

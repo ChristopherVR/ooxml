@@ -95,6 +95,23 @@ const visiblePane = (root: HTMLElement): HTMLElement | undefined =>
 	);
 
 describe('ribbon contextual tabs (vanilla)', () => {
+	it('moves the shared Arrange row onto SmartArt Format and back', () => {
+		const ribbon = mount();
+		try {
+			const element: PptxElement = { ...shape(), type: 'smartArt' };
+			const arrange = ribbon.el.querySelector('[data-pptx-chrome="arrange-controls"]');
+			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('home.arrange');
+			ribbon.updateSelection(element, selection(element));
+			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="smartArtFormat"]')!.click();
+			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('smartArtFormat.arrange');
+			ribbon.updateSelection(undefined, selection(undefined));
+			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('home.arrange');
+		} finally {
+			ribbon.destroy();
+			ribbon.el.remove();
+		}
+	});
+
 	it('passes the selected video to the shared Playback strip', () => {
 		const ribbon = mount();
 		try {
@@ -121,6 +138,7 @@ describe('ribbon contextual tabs (vanilla)', () => {
 			ribbon.el.remove();
 		}
 	});
+
 	it.each([true, false])('enables picture alt text only with a format pane (%s)', (hasPane) => {
 		const requestFormatPane = vi.fn();
 		const ribbon = mount(hasPane ? { requestFormatPane } : {});

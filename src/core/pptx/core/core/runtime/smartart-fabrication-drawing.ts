@@ -1,7 +1,6 @@
 import { XMLBuilder } from 'fast-xml-parser';
 import { diagramShapePropertiesXml } from '../../../../diagram/write/drawing';
 import { normalizeStShapeType } from '../../../../geometry/preset-geometry-names';
-import type { DrawingColor } from '../../../../drawingml/types';
 import { drawingFillXml } from '../../../../drawingml/write-fill';
 
 /**
@@ -31,6 +30,8 @@ import type {
 import { smartArtElementStyleLabel } from '../../utils/smartart-element-style-label';
 import { drawingShape3dXml } from './smartart-fabrication-3d';
 import { XML_PROLOG, avLstXml, xmlEscape } from './smartart-fabrication-data';
+import { smartArtDrawingFill, smartArtDrawingLine } from './smartart-fabrication-paint';
+import type { SmartArtRunWriter } from './smartart-fabrication-text';
 import { drawingTextBodyXml } from './smartart-fabrication-text';
 
 /** Content type for the cached diagram drawing part. */
@@ -58,15 +59,6 @@ const geometryBuilder = new XMLBuilder({
 /** Round a pixel measurement to whole EMU. */
 function toEmu(px: number): number {
 	return Math.round(px * EMU_PER_PX);
-}
-
-/** Normalise a hex colour to a bare 6-digit `RRGGBB` string, or `undefined`. */
-function normalizeHex(color: string | undefined): string | undefined {
-	if (!color) {
-		return undefined;
-	}
-	const hex = color.replace(/^#/u, '').trim();
-	return /^[0-9A-Fa-f]{6}$/u.test(hex) ? hex.toUpperCase() : undefined;
 }
 
 /**
@@ -132,6 +124,9 @@ function styleXml(index: number): string {
 }
 
 function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
+	const fill = smartArtDrawingFill(shape);
+	const line = smartArtDrawingLine(shape);
+	const paint = { ...(fill && { fill }), ...(line && { line }) };
 	if (
 		!shape.customGeometryPaths?.length &&
 		!shape.scene3d &&
@@ -140,16 +135,6 @@ function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
 		shape.skewY === undefined &&
 		normalizeStShapeType(shape.shapeType ?? 'rect')
 	) {
-		const fillHex = normalizeHex(shape.fillColor);
-		const strokeHex = normalizeHex(shape.strokeColor);
-		const color = (value: string, opacity = 1): DrawingColor => ({
-			kind: 'srgb',
-			value,
-			transforms:
-				opacity < 1
-					? [{ name: 'alpha', value: String(Math.round(Math.max(0, opacity) * 100000)) }]
-					: [],
-		});
 		return diagramShapePropertiesXml({
 			modelId: shape.id,
 			has3d: false,
@@ -162,21 +147,7 @@ function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
 			},
 			...(shape.rotation ? { rotation: shape.rotation } : {}),
 			...(shape.shapeAdjustments ? { adjustments: shape.shapeAdjustments } : {}),
-			...(shape.pictureFill
-				? { fill: shape.pictureFill }
-				: fillHex
-					? { fill: { kind: 'solid', color: color(fillHex, shape.fillOpacity) } as const }
-					: {}),
-			...(strokeHex
-				? {
-						line: {
-							...(shape.strokeWidth && shape.strokeWidth > 0
-								? { widthEmu: Math.round(shape.strokeWidth * 12700) }
-								: {}),
-							fill: { kind: 'solid', color: color(strokeHex) },
-						} as const,
-					}
-				: {}),
+			...paint,
 		});
 	}
 	const rot = shape.rotation ? ` rot="${Math.round(shape.rotation * 60000)}"` : '';
@@ -205,27 +176,10 @@ function shapePropsXml(shape: PptxSmartArtDrawingShape): string {
 					}),
 				)
 			: `<a:prstGeom prst="${xmlEscape(prst)}">${avLstXml(shape.shapeAdjustments)}</a:prstGeom>`;
-	const fillHex = normalizeHex(shape.fillColor);
-	const fillAlpha =
-		shape.fillOpacity !== undefined && shape.fillOpacity < 1
-			? `<a:alpha val="${Math.round(Math.max(0, shape.fillOpacity) * 100000)}"/>`
-			: '';
-	const fill = shape.pictureFill
-		? drawingFillXml(shape.pictureFill)
-		: fillHex
-			? fillAlpha
-				? `<a:solidFill><a:srgbClr val="${fillHex}">${fillAlpha}</a:srgbClr></a:solidFill>`
-				: `<a:solidFill><a:srgbClr val="${fillHex}"/></a:solidFill>`
-			: '';
-	const strokeHex = normalizeHex(shape.strokeColor);
-	const strokeW =
-		shape.strokeWidth && shape.strokeWidth > 0
-			? ` w="${Math.round(shape.strokeWidth * 12700)}"`
-			: '';
-	const ln = strokeHex
-		? `<a:ln${strokeW}><a:solidFill><a:srgbClr val="${strokeHex}"/></a:solidFill></a:ln>`
-		: '';
-	return `<dsp:spPr>${xfrm}${geom}${fill}${ln}${drawingShape3dXml(shape)}</dsp:spPr>`;
+	const fillXml = fill ? drawingFillXml(fill) : '';
+	const lineWidth = line?.widthEmu ? ` w="${line.widthEmu}"` : '';
+	const lineXml = line?.fill ? `<a:ln${lineWidth}>${drawingFillXml(line.fill)}</a:ln>` : '';
+	return `<dsp:spPr>${xfrm}${geom}${fillXml}${lineXml}${drawingShape3dXml(shape)}</dsp:spPr>`;
 }
 
 function shapeXml(
@@ -233,6 +187,7 @@ function shapeXml(
 	index: number,
 	nodes: PptxSmartArtNode[],
 	presentationGuidByNodeId: Map<string, string>,
+	writeRun?: SmartArtRunWriter,
 ): string {
 	const modelId = resolveShapeModelId(shape, index, nodes, presentationGuidByNodeId);
 	if (!modelId) {
@@ -241,7 +196,7 @@ function shapeXml(
 	return (
 		`<dsp:sp modelId="${modelId}">` +
 		`<dsp:nvSpPr><dsp:cNvPr id="0" name=""/><dsp:cNvSpPr/></dsp:nvSpPr>` +
-		`${shapePropsXml(shape)}${styleXml(index)}${drawingTextBodyXml(shape)}${textTransformXml(shape)}</dsp:sp>`
+		`${shapePropsXml(shape)}${styleXml(index)}${drawingTextBodyXml(shape, writeRun)}${textTransformXml(shape)}</dsp:sp>`
 	);
 }
 
@@ -255,12 +210,13 @@ export function buildFabricatedDrawingXml(
 	shapes: PptxSmartArtDrawingShape[] | undefined,
 	nodes: PptxSmartArtNode[],
 	presentationGuidByNodeId: Map<string, string>,
+	writeRun?: SmartArtRunWriter,
 ): string | undefined {
 	if (!shapes || shapes.length === 0) {
 		return undefined;
 	}
 	const body = shapes
-		.map((shape, index) => shapeXml(shape, index, nodes, presentationGuidByNodeId))
+		.map((shape, index) => shapeXml(shape, index, nodes, presentationGuidByNodeId, writeRun))
 		.join('');
 	if (!body) {
 		return undefined;

@@ -5,6 +5,7 @@ import { RIBBON_ADD_IN_TAB_ATTR, RIBBON_CONTEXTUAL_TAB_ATTR } from '../render';
 import { attachControlStyles } from './control-styles';
 import { bridgeCss } from './office-token-bridge';
 import { RIBBON_TABS_CSS } from './ribbon-tabs-styles';
+import { trackSmartArtCanvasSelection } from './smartart-canvas-selection';
 import { preserveInlineSymbolCaret } from '../render/inline-symbol';
 
 /** The `pptx-ui-ribbon-tabs` element as a binding sees it. */
@@ -48,6 +49,7 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 	const Base = registry.get('office-ui-ribbon') as unknown as typeof OfficeUiRibbon;
 	class PptxRibbonTabs extends Base {
 		#model: RibbonTabRowState | undefined;
+		#canvasSelection: AbortController | undefined;
 		constructor() {
 			super();
 			this.addEventListener('office-ribbon-select', this.#onSelect);
@@ -61,6 +63,15 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 				this.shadowRoot.addEventListener('dblclick', this.#onDoubleClick);
 				attachControlStyles(this.shadowRoot, bridgeCss('pptx-ui-ribbon-tabs') + RIBBON_TABS_CSS);
 			}
+		}
+		override connectedCallback(): void {
+			super.connectedCallback();
+			this.#canvasSelection = new AbortController();
+			trackSmartArtCanvasSelection(this, this.#canvasSelection.signal);
+		}
+		override disconnectedCallback(): void {
+			this.#canvasSelection?.abort();
+			super.disconnectedCallback();
 		}
 		get state(): RibbonTabRowState | undefined {
 			return this.#model;

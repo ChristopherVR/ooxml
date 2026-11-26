@@ -270,7 +270,7 @@ export const translations = {
 		'La vista previa del clip o la imagen no están disponibles.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':
 		'El nodo seleccionado no tiene una forma de dibujo editable.',
-	'pptx.mediaRibbon.node': 'Nodo de SmartArt',
+	'pptx.mediaRibbon.node': 'Selecciona un nodo SmartArt en la diapositiva.',
 	'pptx.mediaRibbon.larger': 'Más grande',
 	'pptx.mediaRibbon.smaller': 'Más pequeño',
 	'pptx.mediaRibbon.x': 'Posición horizontal',

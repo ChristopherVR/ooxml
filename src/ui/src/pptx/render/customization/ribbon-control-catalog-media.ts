@@ -55,7 +55,6 @@ export const RIBBON_CATALOG_MEDIA_TABS = {
 		shapes: {
 			label: 'Shapes',
 			controls: {
-				node: 'SmartArt Node',
 				shape: 'Change Shape',
 				larger: 'Larger',
 				smaller: 'Smaller',
@@ -63,13 +62,13 @@ export const RIBBON_CATALOG_MEDIA_TABS = {
 		},
 		shapeStyles: {
 			label: 'Shape Styles',
-			controls: { fill: 'Shape Fill', border: 'Shape Outline' },
+			controls: { gallery: 'Shape Styles', fill: 'Shape Fill', border: 'Shape Outline' },
 		},
 		wordArtStyles: {
 			label: 'WordArt Styles',
-			controls: { color: 'Text Fill', bold: 'Bold', italic: 'Italic' },
+			controls: { gallery: 'WordArt Styles', color: 'Text Fill', bold: 'Bold', italic: 'Italic' },
 		},
-		arrange: { label: 'Arrange', controls: { x: 'Horizontal Position', y: 'Vertical Position' } },
+		arrange: { label: 'Arrange', controls: {} },
 		size: { label: 'Size', controls: { width: 'Width', height: 'Height' } },
 	},
 } as const;

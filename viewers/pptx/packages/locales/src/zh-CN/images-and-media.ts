@@ -255,7 +255,7 @@ export const translations = {
 	'pptx.mediaRibbon.changeShape': '更改形状',
 	'pptx.mediaRibbon.sourceUnavailable': '媒体预览或图片不可用。',
 	'pptx.mediaRibbon.nodeGeometryUnavailable': '所选节点没有可编辑的绘图形状。',
-	'pptx.mediaRibbon.node': 'SmartArt 节点',
+	'pptx.mediaRibbon.node': '请选择幻灯片上的 SmartArt 节点。',
 	'pptx.mediaRibbon.larger': '增大',
 	'pptx.mediaRibbon.smaller': '缩小',
 	'pptx.mediaRibbon.x': '水平位置',

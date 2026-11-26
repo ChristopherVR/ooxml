@@ -267,7 +267,7 @@ export const translations = {
 	'pptx.mediaRibbon.sourceUnavailable': 'L’aperçu du média ou l’image est indisponible.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':
 		'Le nœud sélectionné ne contient aucune forme modifiable.',
-	'pptx.mediaRibbon.node': 'Nœud SmartArt',
+	'pptx.mediaRibbon.node': 'Sélectionnez un nœud SmartArt sur la diapositive.',
 	'pptx.mediaRibbon.larger': 'Agrandir',
 	'pptx.mediaRibbon.smaller': 'Réduire',
 	'pptx.mediaRibbon.x': 'Position horizontale',

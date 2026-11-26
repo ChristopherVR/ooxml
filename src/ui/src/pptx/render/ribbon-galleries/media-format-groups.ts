@@ -101,7 +101,7 @@ export const MEDIA_FORMAT_GROUPS = {
 			group: 'smartArtFormat.arrange',
 			labelKey: 'pptx.ribbon.arrange',
 			label: 'Arrange',
-			contextualStrip: true,
+			arrange: true,
 			galleries: [],
 		},
 		{

@@ -17,7 +17,13 @@ function normalizeHex(color: string | undefined): string | undefined {
 	return hex && /^[0-9A-Fa-f]{6}$/u.test(hex) ? hex.toUpperCase() : undefined;
 }
 
-function runProperties(style: TextStyle): XmlObject {
+export type SmartArtRunWriter = (style: TextStyle) => XmlObject | undefined;
+
+function runProperties(style: TextStyle, writeRun?: SmartArtRunWriter): XmlObject {
+	// WordArt picks replace the raw run properties and set the fill choice explicitly.
+	const authored =
+		!style.runPropertiesXml && style.textFillNone !== undefined ? writeRun?.(style) : undefined;
+	if (authored) return authored;
 	const rPr: XmlObject = style.runPropertiesXml
 		? (JSON.parse(JSON.stringify(style.runPropertiesXml)) as XmlObject)
 		: { '@_lang': style.language ?? 'en-US' };
@@ -94,7 +100,7 @@ function append(target: XmlObject, name: string, value: XmlObject, order: number
 	target[repeated ? orderedXmlKey(name, order) : name] = value;
 }
 
-function paragraphXml(segments: TextSegment[]): XmlObject {
+function paragraphXml(segments: TextSegment[], writeRun?: SmartArtRunWriter): XmlObject {
 	const paragraph: XmlObject = { 'a:pPr': paragraphProperties(segments[0]) };
 	let order = 0;
 	for (const segment of segments) {
@@ -104,7 +110,8 @@ function paragraphXml(segments: TextSegment[]): XmlObject {
 				'a:br',
 				{
 					'a:rPr':
-						(segment.breakRunProperties as XmlObject | undefined) ?? runProperties(segment.style),
+						(segment.breakRunProperties as XmlObject | undefined) ??
+						runProperties(segment.style, writeRun),
 				},
 				order++,
 			);
@@ -117,7 +124,7 @@ function paragraphXml(segments: TextSegment[]): XmlObject {
 				{
 					...(segment.fieldGuid ? { '@_id': segment.fieldGuid } : {}),
 					'@_type': segment.fieldType,
-					'a:rPr': runProperties(segment.style),
+					'a:rPr': runProperties(segment.style, writeRun),
 					...(segment.fieldParagraphPropertiesXml
 						? { 'a:pPr': segment.fieldParagraphPropertiesXml as XmlObject }
 						: {}),
@@ -130,7 +137,7 @@ function paragraphXml(segments: TextSegment[]): XmlObject {
 				paragraph,
 				'a:r',
 				{
-					'a:rPr': runProperties(segment.style),
+					'a:rPr': runProperties(segment.style, writeRun),
 					'a:t': segment.text,
 				},
 				order++,
@@ -231,7 +238,10 @@ function reconcileFlatText(segments: TextSegment[], desired: string): TextSegmen
 }
 
 /** Build a cached `dsp:txBody` from standard shape text segments. */
-export function drawingTextBodyXml(shape: PptxSmartArtDrawingShape): string {
+export function drawingTextBodyXml(
+	shape: PptxSmartArtDrawingShape,
+	writeRun?: SmartArtRunWriter,
+): string {
 	const fallbackStyle: TextStyle = {
 		fontSize: shape.fontSize,
 		color: shape.fontColor,
@@ -242,7 +252,7 @@ export function drawingTextBodyXml(shape: PptxSmartArtDrawingShape): string {
 		: [{ text: shape.text ?? '', style: fallbackStyle }];
 	const segments = reconcileFlatText(sourceSegments, shape.text ?? segmentText(sourceSegments));
 	const paragraphs = splitParagraphs(segments).map((items) =>
-		paragraphXml(items.length > 0 ? items : [{ text: '', style: fallbackStyle }]),
+		paragraphXml(items.length > 0 ? items : [{ text: '', style: fallbackStyle }], writeRun),
 	);
 	const bodyPr: XmlObject = { '@_anchor': 'ctr' };
 	applyTextBodySp3d(bodyPr, { text3d: shape.text3d });

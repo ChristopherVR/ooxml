@@ -246,6 +246,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 						drawingShapes,
 						smartArtData.nodes,
 						presentationIds,
+						(style) => this.createRunPropertiesFromTextStyle(style),
 					);
 					if (drawingTarget && drawingXml) {
 						const drawingPath = this.resolveImagePath(slidePath, drawingTarget);

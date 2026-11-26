@@ -81,6 +81,7 @@ export function officeGalleryState(
 		label,
 		moreLabel: more === 'pptx.gallery.more' ? `More ${label}` : more,
 		disabled: descriptor.disabled,
+		disabledReason: descriptor.disabledReason,
 		command: command
 			? {
 					icon: `pptx:gallery-${descriptor.id}`,

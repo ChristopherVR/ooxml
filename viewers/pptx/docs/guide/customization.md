@@ -1312,17 +1312,16 @@ unit test fails if an id is missing here.
 | `playback.options.loop`                           | Loop until Stopped                                                            |
 | `playback.options.rewind`                         | Rewind after Playing                                                          |
 | `playback.options.across`                         | Play Across Slides                                                            |
-| `smartArtFormat.shapes.node`                      | SmartArt Node                                                                 |
 | `smartArtFormat.shapes.shape`                     | Change Shape                                                                  |
 | `smartArtFormat.shapes.larger`                    | Larger                                                                        |
 | `smartArtFormat.shapes.smaller`                   | Smaller                                                                       |
+| `smartArtFormat.shapeStyles.gallery`             | Shape Styles gallery                                                          |
 | `smartArtFormat.shapeStyles.fill`                 | Shape Fill                                                                    |
 | `smartArtFormat.shapeStyles.border`               | Shape Outline                                                                 |
+| `smartArtFormat.wordArtStyles.gallery`           | WordArt Styles gallery                                                        |
 | `smartArtFormat.wordArtStyles.color`              | Text Fill                                                                     |
 | `smartArtFormat.wordArtStyles.bold`               | Bold                                                                          |
 | `smartArtFormat.wordArtStyles.italic`             | Italic                                                                        |
-| `smartArtFormat.arrange.x`                        | Horizontal Position                                                           |
-| `smartArtFormat.arrange.y`                        | Vertical Position                                                             |
 | `smartArtFormat.size.width`                       | Width                                                                         |
 | `smartArtFormat.size.height`                      | Height                                                                        |
 

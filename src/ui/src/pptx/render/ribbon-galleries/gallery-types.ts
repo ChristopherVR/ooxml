@@ -171,6 +171,7 @@ export interface RibbonGalleryDescriptor {
 	footer?: RibbonGalleryAction[];
 	/** True when the selection cannot take this gallery (trigger disabled). */
 	disabled: boolean;
+	disabledReason?: string | undefined;
 	/**
 	 * Set when the entry is a one-button command (PowerPoint's Add Shape, Reset
 	 * Graphic, ...) rather than a gallery: the element draws a plain command, a

@@ -124,6 +124,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			drawingShapes,
 			data.nodes,
 			presentationGuidByNodeId,
+			(style) => this.createRunPropertiesFromTextStyle(style),
 		);
 		const drawingRelId = drawingXml
 			? ctx.slideRelationshipRegistry.nextRelationshipId()

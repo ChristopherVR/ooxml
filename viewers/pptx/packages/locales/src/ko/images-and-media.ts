@@ -262,7 +262,7 @@ export const translations = {
 	'pptx.mediaRibbon.sourceUnavailable': '미디어 미리 보기 또는 그림을 사용할 수 없습니다.',
 	'pptx.mediaRibbon.nodeGeometryUnavailable':
 		'선택한 노드에 편집할 수 있는 그리기 도형이 없습니다.',
-	'pptx.mediaRibbon.node': 'SmartArt 노드',
+	'pptx.mediaRibbon.node': '슬라이드에서 SmartArt 노드를 선택하세요.',
 	'pptx.mediaRibbon.larger': '크게',
 	'pptx.mediaRibbon.smaller': '작게',
 	'pptx.mediaRibbon.x': '가로 위치',
