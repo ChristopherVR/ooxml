@@ -4,6 +4,7 @@ import type {
 	RibbonAnimationsViewState,
 } from 'ooxml-ui/pptx';
 import {
+	ANIMATION_DIRECTION_LABEL_KEYS,
 	buildAnimationTimelineRows,
 	directionValuesFor,
 	effectiveDirection,
@@ -11,7 +12,6 @@ import {
 	registerPptxWebControls,
 } from 'ooxml-ui/pptx';
 import type {
-	PptxAnimationDirection,
 	PptxAnimationPreset,
 	PptxAnimationRepeatMode,
 	PptxAnimationSequence,
@@ -137,12 +137,12 @@ export function createAnimationsTab(
 	}
 	const duration = timingField(doc, t('pptx.animation.duration'), 500);
 	const delay = timingField(doc, t('pptx.animation.delay'), 0);
-	const direction = optionSelect(doc, t, 'pptx.animation.direction', [
-		'fromTop',
-		'fromBottom',
-		'fromLeft',
-		'fromRight',
-	]);
+	const direction = optionSelect(
+		doc,
+		t,
+		'pptx.animation.direction',
+		Object.keys(ANIMATION_DIRECTION_LABEL_KEYS),
+	);
 	const sequence = optionSelect(doc, t, 'pptx.animation.sequence', [
 		'asOne',
 		'byParagraph',
@@ -183,11 +183,15 @@ export function createAnimationsTab(
 		if (!selectedAnimation) {
 			return;
 		}
+		const selectedDirection = directionValuesFor(
+			[selectedAnimation],
+			selectedAnimation.elementId,
+		).find((value) => value === direction.select.value);
 		handlers.setAnimationTiming(selectedAnimation.elementId, {
 			trigger: trigger.value as PptxAnimationTrigger,
 			durationMs: duration.input.valueAsNumber,
 			delayMs: delay.input.valueAsNumber,
-			direction: direction.select.value as PptxAnimationDirection,
+			...(selectedDirection !== undefined && { direction: selectedDirection }),
 			sequence: sequence.select.value as PptxAnimationSequence,
 			timingCurve: easing.select.value as PptxAnimationTimingCurve,
 			repeatCount: repeatCount.input.valueAsNumber,
@@ -279,9 +283,9 @@ export function createAnimationsTab(
 				: [];
 			direction.label.hidden = directions.length === 0;
 			for (const option of direction.select.options) {
-				option.hidden = !directions.includes(option.value as PptxAnimationDirection);
+				option.hidden = !directions.some((value) => value === option.value);
 			}
-			direction.select.value = effectiveDirection(selectedAnimation, directions) ?? 'fromBottom';
+			direction.select.value = effectiveDirection(selectedAnimation, directions) ?? '';
 			sequence.select.value = selectedAnimation?.sequence ?? 'asOne';
 			easing.select.value = effectiveTimingCurve(selectedAnimation?.timingCurve);
 			repeatMode.select.value = selectedAnimation?.repeatMode ?? 'none';

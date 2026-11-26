@@ -12,6 +12,7 @@ import {
 	fixture,
 	inspector,
 	loadDeck,
+	ribbon,
 	ribbonTab,
 	SAMPLE_DECK,
 	selectElement,
@@ -220,6 +221,17 @@ test('adding an effect from the gallery reaches the deck and the Animation Pane'
 	expect(xml).toContain('<p:timing');
 	expect(xml).toMatch(/presetClass="entr"/u);
 	expect(xml).toMatch(/presetID="2"/u);
+});
+
+test('the selected Fade effect has timing controls and no Direction picker', async ({ page }) => {
+	const animations = await openAnimations(page, true);
+	await animations.getByRole('button', { name: 'Fade In', exact: true }).click();
+	await expect(
+		animations.locator('[data-ribbon-control="animations.timing.duration"]'),
+	).toBeEnabled();
+	await expect(ribbon(page).getByRole('combobox', { name: 'Direction', exact: true })).toHaveCount(
+		0,
+	);
 });
 
 test('undo removes the added effect from the saved deck', async ({ page }) => {

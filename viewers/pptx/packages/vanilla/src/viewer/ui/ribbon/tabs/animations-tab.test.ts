@@ -257,21 +257,46 @@ describe('createAnimationsTab', () => {
 
 	it('offers a direction only when PowerPoint has variants for the preset', () => {
 		const t = createTranslator();
-		const tab = createAnimationsTab(document, t, handlers(), vi.fn());
-		const state = (entrance: 'wipeIn' | 'fadeIn') => ({
+		const actions = handlers();
+		const tab = createAnimationsTab(document, t, actions, vi.fn());
+		const state = (entrance: 'wipeIn' | 'flyIn' | 'fadeIn') => ({
 			editable: true,
 			hasSelection: true,
 			selectedElementId: 'el1',
 			animations: [{ elementId: 'el1', entrance, order: 0 }],
 		});
-		const direction = control(tab, t('pptx.animation.direction')) as HTMLSelectElement;
+		const direction = tab.el.querySelector<HTMLElementTagNameMap['pptx-ui-select']>(
+			`.pptxv-animation-timing-controls pptx-ui-select[aria-label="${t('pptx.animation.direction')}"]`,
+		)!;
+		const choices = () =>
+			direction.options.filter(({ hidden }) => !hidden).map(({ value }) => value);
 
 		tab.update(state('wipeIn'));
-		expect(direction.closest('label')?.hidden).toBeFalsy();
+		expect(direction.closest('label')).toHaveProperty('hidden', false);
+		expect(choices()).toStrictEqual(['fromTop', 'fromBottom', 'fromLeft', 'fromRight']);
 		expect(direction.value).toBe('fromBottom');
 
+		tab.update(state('flyIn'));
+		expect(choices()).toStrictEqual([
+			'fromTop',
+			'fromBottom',
+			'fromLeft',
+			'fromRight',
+			'fromTopLeft',
+			'fromTopRight',
+			'fromBottomLeft',
+			'fromBottomRight',
+		]);
+		direction.value = 'fromTopLeft';
+		direction.dispatchEvent(new Event('change'));
+		expect(actions.setAnimationTiming).toHaveBeenLastCalledWith(
+			'el1',
+			expect.objectContaining({ direction: 'fromTopLeft' }),
+		);
+
 		tab.update(state('fadeIn'));
-		expect(direction.closest('label')?.hidden).toBeTruthy();
+		expect(direction.closest('label')).toHaveProperty('hidden', true);
+		expect(choices()).toHaveLength(0);
 	});
 
 	it('applies the motion path its gallery button names', () => {

@@ -5,7 +5,6 @@ import type { AnimationActions } from '../../../editor/editor-animation-actions'
 import type { Translator } from '../../../i18n';
 import { createEl } from '../../../render';
 import { makeButton } from '../../controls';
-import { createInspectorSelect } from '../../inspector/controls-extra';
 
 export function timingField(doc: Document, text: string, value: number) {
 	const label = doc.createElement('label');
@@ -28,7 +27,7 @@ export function optionSelect(
 ) {
 	const label = doc.createElement('label');
 	label.textContent = t(labelText);
-	const select = createInspectorSelect(doc);
+	const select = doc.createElement('pptx-ui-select');
 	// Named explicitly: the wrapping `<label>` would otherwise lend the select
 	// its whole text content, which includes every option.
 	select.setAttribute('aria-label', t(labelText));

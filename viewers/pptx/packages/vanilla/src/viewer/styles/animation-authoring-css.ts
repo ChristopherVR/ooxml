@@ -15,7 +15,7 @@ export const ANIMATION_AUTHORING_CSS = `
    handle takes pointers so the slide underneath stays clickable. */
 svg[data-pptx-motion-path-overlay] { pointer-events: none; }
 svg[data-pptx-motion-path-overlay] [data-pptx-motion-path-handle] { pointer-events: auto; }
-.pptxv-animation-timeline {
+.pptxv-animation-timeline:not([hidden]) {
 	display: grid;
 	gap: 6px;
 	min-width: 220px;
@@ -35,8 +35,8 @@ svg[data-pptx-motion-path-overlay] [data-pptx-motion-path-handle] { pointer-even
 .pptxv-animation-timeline-row.is-selected { outline: 1px solid var(--pptx-ring); }
 .pptxv-animation-timeline-row.is-native { font-style: italic; opacity: 0.7; grid-template-columns: minmax(0, 1fr); }
 .pptxv-animation-timeline-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pptxv-animation-timing-controls { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
-.pptxv-animation-timing-controls label { display: grid; gap: 2px; font-size: 11px; }
+.pptxv-animation-timing-controls:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+.pptxv-animation-timing-controls label:not([hidden]) { display: grid; gap: 2px; font-size: 11px; }
 .pptxv-animation-timing-controls :is(select, input) {
 	min-width: 0;
 	width: 100%;
