@@ -23,7 +23,6 @@ import type {
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import type { UseCommentsWiringResult } from '../composables/useCommentsWiring';
 import type { UseInspectorDeckActionsResult } from '../composables/useInspectorDeckActions';
 import type { UseLoadContentResult } from '../composables/useLoadContent';
 import { useRegion } from '../composables/useViewerRegions';
@@ -41,9 +40,7 @@ const props = defineProps<{
 	canEdit: boolean;
 	editTemplateMode?: boolean;
 	slideCount: number;
-	authorName: string;
 	deckActions: UseInspectorDeckActionsResult;
-	comments: UseCommentsWiringResult;
 	onUpdate: (patch: Partial<PptxElement>) => void;
 	onUpdateSlideAnimations: (animations: PptxSlide['animations']) => void;
 	/** Commit a full replacement table style map (see `TableStyleEditor.vue`'s docblock). */
@@ -62,8 +59,6 @@ const { t } = useI18n();
 // column width and border (and the mobile sheet its frame).
 const region = useRegion('inspector');
 const regionContext = computed(() => region.context(props.onClose));
-
-/** Commit a comments mutation through the history-aware wiring. */
 </script>
 
 <template>
@@ -96,7 +91,7 @@ const regionContext = computed(() => region.context(props.onClose));
 	/>
 
 	<!-- Slide-level inspector (no element selected): tabbed
-	     Elements / Properties / Comments pane, mirroring React. -->
+	     Elements and Properties pane, mirroring React. -->
 	<SlideInspector
 		v-else-if="slideCount > 0"
 		:mobile="mobile"
@@ -116,9 +111,6 @@ const regionContext = computed(() => region.context(props.onClose));
 		:app-properties="deck.appProperties.value"
 		:custom-properties="deck.customProperties.value"
 		:tag-collections="deck.tagCollections.value"
-		:comments="comments.activeComments.value"
-		:author-name="authorName"
-		:modern-comment-authors="deck.modernCommentAuthors.value"
 		@slide-update="onSlideUpdate"
 		@presentation-update="onPresentationUpdate"
 		@apply-theme="deckActions.applyThemeByPath"

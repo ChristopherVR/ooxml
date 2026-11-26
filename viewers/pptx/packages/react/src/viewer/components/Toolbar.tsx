@@ -116,7 +116,6 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const sHome = section === 'home';
 	const sIns = section === 'insert';
 	const sTxt = sHome || section === 'text';
-	const sArr = section === 'arrange';
 	const sDrw = section === 'draw';
 	const sDes = section === 'design';
 
@@ -131,7 +130,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 
 	const arrange = (
 		<ArrangeSection
-			embedded={Boolean(contextual.active)}
+			embedded
 			canEdit={p.canEdit}
 			selectedElement={p.selectedElement}
 			selectedCount={p.selectedCount}
@@ -406,8 +405,6 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 								onSetDrawingWidth={p.onSetDrawingWidth}
 							/>
 						)}
-
-						{sArr && arrange}
 
 						{sDes && (
 							<DesignSection

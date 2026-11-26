@@ -10,4 +10,4 @@ export const INPUT = 'flex-1 bg-muted border border-border rounded px-1.5 py-0.5
 export const BTN = 'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-colors';
 
 /** The three inspector tabs, matching React's `InspectorTab`. */
-export type InspectorTab = 'elements' | 'properties' | 'comments';
+export type InspectorTab = 'elements' | 'properties';

@@ -37,7 +37,6 @@ import type {
 import type { PptxElement } from 'pptx-viewer-core';
 
 import { EditorStateService } from './editor-state.service';
-import { RibbonArrangeSectionComponent } from './ribbon-arrange-section.component';
 import { RibbonDrawingGroupComponent } from './ribbon-drawing-group.component';
 import { RibbonEditingSectionComponent } from './ribbon-editing-section.component';
 import { RibbonFileSectionComponent } from './ribbon-file-section.component';
@@ -58,7 +57,6 @@ import type { RibbonTab } from './ribbon-types';
 		RibbonInsertSectionComponent,
 		RibbonFontControlsComponent,
 		RibbonParagraphControlsComponent,
-		RibbonArrangeSectionComponent,
 		RibbonDrawingGroupComponent,
 		RibbonEditingSectionComponent,
 		TranslatePipe,
@@ -154,17 +152,6 @@ import type { RibbonTab } from './ribbon-types';
 					[canEdit]="canEdit()"
 					[slideIndex]="slideIndex()"
 					[selectedElement]="selectedElement()"
-				/>
-			}
-			@case ('arrange') {
-				<pptx-ribbon-arrange-section
-					[hiddenActions]="hiddenActions()"
-					[slideIndex]="slideIndex()"
-					[selectedElement]="selectedElement()"
-					[canEdit]="canEdit()"
-					[formatPainterActive]="formatPainterActive()"
-					[canActivateFormatPainter]="canActivateFormatPainter()"
-					(toggleFormatPainter)="toggleFormatPainter.emit()"
 				/>
 			}
 		}

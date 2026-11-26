@@ -118,7 +118,6 @@
 	<div class="pptx-svelte-inspector-body" data-pptx-chrome="inspector-body">
 			{#if activeTab === 'elements'}
 				<ElementsListSection {editor} />
-
 			{:else if el}
 				<ElementFormatSections {editor} {el} {pane} {deck} {mediaDataUrls} />
 			{:else}

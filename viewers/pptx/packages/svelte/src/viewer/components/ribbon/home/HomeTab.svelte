@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * HomeTab: composes the Home tab's ribbon groups (Clipboard, Slides,
-	 * Font, Paragraph, Drawing, Arrange, Editing) into React's layout: one horizontal
+	 * Font, Paragraph, Drawing, Editing) into React's layout: one horizontal
 	 * non-wrapping row of group columns, each with its controls on top and a
 	 * tiny muted label below, separated by thin vertical rules, scrolling
 	 * horizontally when the viewport is narrow. Every group is thin
@@ -60,7 +60,6 @@
 	</div>
 	<span class="pptx-svelte-hometab-sep" aria-hidden="true"></span>
 	<EditingGroup {editor} {findReplace} />
-
 </div>
 
 <style>

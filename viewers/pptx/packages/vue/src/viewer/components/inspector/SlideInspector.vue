@@ -3,7 +3,7 @@ import type { SlideSizeEmu } from 'ooxml-ui/pptx';
 /**
  * SlideInspector: the right inspector shown when no element is selected,
  * mirroring React's `InspectorPane.tsx` no-selection state: an
- * [Elements | Properties | Comments] tab strip (Properties active by default),
+ * [Elements | Properties] tab strip (Properties active by default),
  * with the Properties tab hosting `PresentationPropertiesPanel` (PRESENTATION,
  * THEME, THEME OVERRIDE, SLIDE SIZE, NOTES & HANDOUT, DOCUMENT) followed by the
  * Background card (`SlideBackgroundPanel`), matching React's section order.
@@ -16,12 +16,10 @@ import type { SlideSizeEmu } from 'ooxml-ui/pptx';
  */
 import type {
 	PptxAppProperties,
-	PptxComment,
 	PptxCoreProperties,
 	PptxCustomProperty,
 	PptxElement,
 	PptxHandoutMaster,
-	PptxModernCommentAuthor,
 	PptxNotesMaster,
 	PptxPresentationProperties,
 	PptxSlide,
@@ -36,7 +34,6 @@ import { useI18n } from 'vue-i18n';
 import { injectFormatPane } from '../../composables/format-pane-context';
 import { useController } from '../../composables/useController';
 import type { CanvasSize } from '../../types';
-import CommentsPanel from '../CommentsPanel.vue';
 import FormatSections from './FormatSections.vue';
 import type { InspectorTab } from './inspector-cards';
 import InspectorElementsTab from './InspectorElementsTab.vue';
@@ -64,14 +61,10 @@ const props = withDefaults(
 		appProperties?: PptxAppProperties;
 		customProperties?: PptxCustomProperty[];
 		tagCollections?: PptxTagCollection[];
-		comments?: PptxComment[];
-		authorName?: string;
-		/** Modern comment authors (`ppt/commentAuthors.xml`), for the `@`-mention typeahead. */
-		modernCommentAuthors?: PptxModernCommentAuthor[];
 		/** Read a layout/master's current background colour (template-edit mode). */
 		getTemplateBackgroundColor?: (path: string) => string | undefined;
 	}>(),
-	{ canEdit: true, authorName: 'You' },
+	{ canEdit: true },
 );
 
 const emit = defineEmits<{
@@ -130,7 +123,7 @@ watch(
 			/>
 
 			<!-- Properties (no selection): presentation-level cards + background -->
-			<FormatSections v-else-if="activeTab === 'properties'" :elements="NO_SELECTION">
+			<FormatSections v-else :elements="NO_SELECTION">
 				<PresentationPropertiesPanel
 					:slide="slide"
 					:theme="theme"
@@ -169,15 +162,6 @@ watch(
 					@set-template-background="(path, color) => emit('set-template-background', path, color)"
 				/>
 			</FormatSections>
-
-			<!-- Comments -->
-			<CommentsPanel
-				v-else
-				class="!border-l-0"
-				:comments="comments ?? []"
-				:author-name="authorName"
-				:modern-comment-authors="modernCommentAuthors ?? []"
-			/>
 		</div>
 		<pptx-ui-animation-effect-rows all />
 	</aside>

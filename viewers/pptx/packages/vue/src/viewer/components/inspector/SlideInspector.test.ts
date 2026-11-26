@@ -137,7 +137,7 @@ describe('slideInspector', () => {
 	});
 
 	it('keeps comments out of the format inspector', () => {
-		const wrapper = mount(SlideInspector, { props: { ...baseProps, comments: [] } });
+		const wrapper = mount(SlideInspector, { props: baseProps });
 		const commentsTab = wrapper.findAll('button').find((b) => b.text().includes('Comments'));
 		expect(commentsTab).toBeUndefined();
 		expect(wrapper.find('.pptx-comments-panel').exists()).toBeFalsy();

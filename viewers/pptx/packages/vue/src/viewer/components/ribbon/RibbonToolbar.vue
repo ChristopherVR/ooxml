@@ -400,7 +400,6 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-toggle-find-replace="props.onToggleFindReplace"
 						:on-select-all="props.onSelectAll"
 					/>
-					<ArrangeSection v-if="s === 'arrange'" v-bind="arrangeProps" />
 
 					<DrawSection
 						:can-edit="props.canEdit"
