@@ -248,6 +248,7 @@
 	background: var(--accent-soft);
 }
 .ribbon-popover.ribbon-overflow-panel {
+	grid-template-columns: minmax(0, 1fr);
 	padding: 6px 8px 2px;
 }
 .ribbon-overflow-panel .ribbon-group {
@@ -256,8 +257,12 @@
 	padding-right: 2px;
 	border: 0;
 }
-/* On a narrow screen Arrange wraps its columns inside the overflow panel. */
-.ribbon-overflow-panel .ribbon-group[data-label='Arrange'] {
+.ribbon-group[data-label='Breaks']:not([data-collapsed]) {
+	max-width: none;
+	flex-wrap: nowrap;
+}
+/* The overflow panel grows to fit its rows when the viewport requires wrapping. */
+.ribbon-overflow-panel .ribbon-group:is([data-label='Arrange'], [data-label='Breaks']) {
 	box-sizing: border-box;
 	max-width: calc(100vw - 28px);
 	height: auto;

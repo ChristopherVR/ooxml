@@ -160,3 +160,17 @@ test('Review adds an empty comment anchor between words', async ({ page }) => {
 	await expect(body.locator('.dve-comment-range')).toHaveCount(0);
 	expect(await body.textContent()).toBe('Alpha  beta');
 });
+
+test('Layout Breaks fits its command row and caption', async ({ page }) => {
+	await page.setViewportSize({ width: 800, height: 700 });
+	await page.goto('/');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	const breaks = editor.getByRole('button', { name: 'Insert column break', exact: true });
+	await reveal(editor, breaks);
+	const popup = editor.locator('.ribbon-overflow-content[data-label="Breaks"]');
+	await expect(popup).toBeVisible();
+	const [panel, command] = await Promise.all([popup.boundingBox(), breaks.boundingBox()]);
+	expect(panel!.height - command!.height).toBeLessThanOrEqual(24);
+});
