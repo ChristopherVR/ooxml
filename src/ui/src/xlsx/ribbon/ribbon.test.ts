@@ -345,9 +345,11 @@ describe('KeyTips and Tell me', () => {
 		expect(opened()).toBe(true);
 	});
 
-	it('searches enabled, visible commands by translated or English label', () => {
+	it('searches enabled, visible commands by translated or English label', async () => {
 		const { core } = setup();
 		core.setLocale('de');
+		await loadEditorStrings('de');
+		expect(searchCommands(core.ctx, 'fett', () => false).map((c) => c.id)).toContain('home.bold');
 		expect(searchCommands(core.ctx, 'bold', () => false).map((c) => c.id)).toContain('home.bold');
 		expect(searchCommands(core.ctx, 'bold', (id) => id === 'home.bold')).toEqual([]);
 		expect(searchCommands(core.ctx, '   ', () => false)).toEqual([]);

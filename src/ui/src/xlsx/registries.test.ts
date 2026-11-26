@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { loadEditorStrings } from 'ooxml-core/xlsx/ui';
 import { describe, expect, it } from 'vitest';
 import { flush, shellFixture, spyCommand } from './test-support/shell';
 import { dialogHost } from './dialogs/host';
@@ -119,9 +120,10 @@ describe('editor context', () => {
 		expect(seen).toHaveLength(1);
 	});
 
-	it('translates through the locale', () => {
+	it('translates through the locale', async () => {
 		const { core } = shellFixture();
 		core.setLocale('de-DE');
+		await loadEditorStrings('de');
 		expect(core.ctx.t('Save')).toBe('Speichern');
 		expect(core.ctx.t('{count} compatibility notes', { count: 3 })).toBe(
 			'3 Kompatibilitätshinweise',
