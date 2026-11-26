@@ -41,6 +41,12 @@ function fraction(value: string | null): number | undefined {
 	return /f$/i.test(text) ? number / 65536 : number;
 }
 
+export function isVmlPictureWashout(data: XmlElement): boolean {
+	const gain = fraction(data.getAttribute('gain'));
+	const black = fraction(data.getAttribute('blacklevel'));
+	return gain !== undefined && gain < 1 && black !== undefined && black > 0;
+}
+
 /**
  * The picture watermark a `v:shape` describes, or undefined when it is not one. `resolve` maps the
  * `v:imagedata` relationship to the header part's picture.
@@ -58,8 +64,6 @@ export function parsePictureWatermarkShape(
 	const style = shape.getAttribute('style') ?? '';
 	const width = Number(/width:\s*([\d.]+)pt/i.exec(style)?.[1] ?? 0);
 	const height = Number(/height:\s*([\d.]+)pt/i.exec(style)?.[1] ?? 0);
-	const gain = fraction(data.getAttribute('gain'));
-	const black = fraction(data.getAttribute('blacklevel'));
 	const title = data.getAttributeNS(OFFICE_NS, 'title');
 	const spec: PictureWatermarkSpec = {
 		kind: 'picture',
@@ -67,7 +71,7 @@ export function parsePictureWatermarkShape(
 		contentType: picture.contentType,
 		widthPt: width,
 		heightPt: height,
-		washout: gain !== undefined && gain < 1 && black !== undefined && black > 0,
+		washout: isVmlPictureWashout(data),
 		...(title ? { title } : {}),
 	};
 	// The run itself takes no room: the spec's size is where the picture is drawn behind the text.

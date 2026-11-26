@@ -18,6 +18,7 @@ import {
 import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
+import { vmlFloat } from './vml-placement';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
 import { readWordArtStyle } from './word-art';
 import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
@@ -337,13 +338,15 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 		resolvePicture(relId, context),
 	);
 	if (pictureWatermark) return pictureWatermark;
+	const relId = (imagedata && getR(imagedata, 'id')) || undefined;
+	const picture = relId ? resolvePicture(relId, context) : undefined;
+	const floating = picture && shape && imagedata && vmlFloat(shape, imagedata);
+	if (picture && floating) return { ...picture, ...floating };
 	const style = shape?.getAttribute('style') ?? '';
 	const width = /width:\s*([\d.]+)pt/i.exec(style);
 	const height = /height:\s*([\d.]+)pt/i.exec(style);
 	const widthPx = width ? Math.round(Number(width[1]) * (96 / 72)) : 0;
 	const heightPx = height ? Math.round(Number(height[1]) * (96 / 72)) : 0;
-	const relId = (imagedata && getR(imagedata, 'id')) || undefined;
-	const picture = relId ? resolvePicture(relId, context) : undefined;
 	if (picture) return { ...picture, widthPx, heightPx };
 	return {
 		relId: relId ?? '',

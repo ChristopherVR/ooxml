@@ -362,6 +362,10 @@ export function createImageRun(
 		return node;
 	}
 	if (base && oldDrawing && sameUnderlyingImage(base, image)) {
+		if (named(oldDrawing, 'pict')) {
+			clearNonProperties(node, oldContainer);
+			return node;
+		}
 		if (
 			image.pictureFill &&
 			JSON.stringify(image.pictureFill) !== JSON.stringify(base.pictureFill)
