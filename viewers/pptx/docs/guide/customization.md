@@ -1246,7 +1246,7 @@ unit test fails if an id is missing here.
 | `pictureFormat.pictureStyles.border`              | Picture Border                                                                |
 | `pictureFormat.pictureStyles.layout`              | Picture Layout                                                                |
 | `pictureFormat.size.crop`                         | Crop                                                                          |
-| `pictureFormat.size.cropToShape`                 | Crop to Shape                                                                 |
+| `pictureFormat.size.cropToShape`                  | Crop to Shape                                                                 |
 | `pictureFormat.accessibility.altText`             | Alt Text                                                                      |
 | `pictureFormat.arrange.rotateRight`               | Rotate Right 90°                                                              |
 | `pictureFormat.arrange.selectionPane`             | Selection Pane                                                                |
@@ -1331,10 +1331,10 @@ unit test fails if an id is missing here.
 | `smartArtFormat.shapes.shape`                     | Change Shape                                                                  |
 | `smartArtFormat.shapes.larger`                    | Larger                                                                        |
 | `smartArtFormat.shapes.smaller`                   | Smaller                                                                       |
-| `smartArtFormat.shapeStyles.gallery`             | Shape Styles gallery                                                          |
+| `smartArtFormat.shapeStyles.gallery`              | Shape Styles gallery                                                          |
 | `smartArtFormat.shapeStyles.fill`                 | Shape Fill                                                                    |
 | `smartArtFormat.shapeStyles.border`               | Shape Outline                                                                 |
-| `smartArtFormat.wordArtStyles.gallery`           | WordArt Styles gallery                                                        |
+| `smartArtFormat.wordArtStyles.gallery`            | WordArt Styles gallery                                                        |
 | `smartArtFormat.wordArtStyles.color`              | Text Fill                                                                     |
 | `smartArtFormat.wordArtStyles.bold`               | Bold                                                                          |
 | `smartArtFormat.wordArtStyles.italic`             | Italic                                                                        |
