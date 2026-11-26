@@ -69,6 +69,23 @@ export function fromRanges(ranges: SelectionRange[], doc: Node): Selection {
 	return first ? new TableCellSelection(ranges, first.$from, first.$to) : Selection.atStart(doc);
 }
 
+export function selectCellNodes(doc: Node, table: Node, tablePos: number, cells: Set<Node>) {
+	const ranges: SelectionRange[] = [];
+	table.forEach((row, rowOffset) => {
+		row.forEach((cell, cellOffset) => {
+			if (!cells.has(cell)) return;
+			const pos = tablePos + rowOffset + cellOffset + 2;
+			ranges.push(
+				new SelectionRange(
+					Selection.near(doc.resolve(pos + 1), 1).$from,
+					Selection.near(doc.resolve(pos + cell.nodeSize - 1), -1).$to,
+				),
+			);
+		});
+	});
+	return ranges.length ? fromRanges(ranges, doc) : Selection.near(doc.resolve(tablePos + 2));
+}
+
 export function tableCellSelectionPlugin(): Plugin {
 	return new Plugin({
 		props: {

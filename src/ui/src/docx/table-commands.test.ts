@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { EditorState, TextSelection } from 'prosemirror-state';
+import { EditorState, SelectionRange, TextSelection } from 'prosemirror-state';
 import { history, undo } from 'prosemirror-history';
 import { EditorView } from 'prosemirror-view';
 import { executeTableCommand, type TableCommand } from './table-commands';
 import { schema } from './schema';
+import { fromRanges } from './table-cell-selection';
 
 function makeTable(rows = 2, columns = 2) {
 	return schema.nodes.table.create(
@@ -147,6 +148,21 @@ describe('table structural commands', () => {
 		fixture.view.destroy();
 	});
 
+	it('deletes all rows touched by a column selection', () => {
+		const { view } = setup(makeTable(3, 3));
+		const { doc } = view.state;
+		const ranges: SelectionRange[] = [];
+		doc.descendants((node, pos) => {
+			if (node.type === schema.nodes.paragraph && /^cell-[12]-1$/.test(node.attrs.id))
+				ranges.push(new SelectionRange(doc.resolve(pos + 1), doc.resolve(pos + 5)));
+		});
+		view.dispatch(view.state.tr.setSelection(fromRanges(ranges, doc)));
+		expect(run(view, 'deleteRow')).toBe(true);
+		expect(grid(view)).toEqual([['r0c0', 'r0c1', 'r0c2']]);
+		expect(view.state.selection.$from.parent.attrs.id).toBe('after');
+		view.destroy();
+	});
+
 	it('replaces a final row, final column, or deleted table with a valid paragraph', () => {
 		for (const [table, action] of [
 			[makeTable(1, 2), 'deleteRow'],
@@ -166,7 +182,7 @@ describe('table structural commands', () => {
 		const { view } = setup();
 		const before = view.state.doc.toJSON();
 		expect(run(view, 'rowAfter')).toBe(true);
-		expect(view.state.selection.$from.parent.type).toBe(schema.nodes.paragraph);
+		expect(view.state.selection.ranges.map(({ $from }) => $from.index(1))).toEqual([1, 1]);
 		expect(undo(view.state, (transaction) => view.dispatch(transaction))).toBe(true);
 		expect(view.state.doc.toJSON()).toEqual(before);
 		view.destroy();

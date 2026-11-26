@@ -17,10 +17,11 @@ import {
 } from 'ooxml-core/docx/ui';
 import type { Table } from 'ooxml-core/docx';
 import { closeHistory } from 'prosemirror-history';
-import { Selection } from 'prosemirror-state';
+import { Selection, type Transaction } from 'prosemirror-state';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
+import { selectCellNodes } from './table-cell-selection';
 import { nodeFromResult, skeletonOf, slotsOf, type Slot } from './table-restructure';
 
 export type RestructureCommand =
@@ -45,7 +46,7 @@ interface Context {
 
 /** The innermost table around the selection, when the structure commands can edit it. */
 export function restructureContext(view: EditorView): Context | undefined {
-	const { $from, from, to } = view.state.selection;
+	const { $from, ranges } = view.state.selection;
 	let depth = $from.depth;
 	while (depth > 0 && $from.node(depth).type !== schema.nodes.table) depth--;
 	if (depth <= 0 || $from.depth < depth + 2) return undefined;
@@ -66,7 +67,7 @@ export function restructureContext(view: EditorView): Context | undefined {
 		row.forEach((slot, index) => {
 			const pos = positions.get(slot.cell);
 			if (slot.offset || pos === undefined) return;
-			if (Math.max(from, pos + 1) <= Math.min(to, pos + slot.cell.nodeSize - 1))
+			if (ranges.some(({ $from, $to }) => $from.pos < pos + slot.cell.nodeSize && $to.pos > pos))
 				selected.push({ slot, index });
 		}),
 	);
@@ -161,6 +162,60 @@ export interface Split {
 	columns: number;
 }
 
+function selectionAfterRestructure(
+	tr: Transaction,
+	ctx: Context,
+	action: RestructureCommand,
+	table: ProseMirrorNode,
+	outcome: Table,
+	split?: Split,
+): Selection {
+	const { tablePos, rect, selected } = ctx;
+	const slots = slotsOf(table);
+	const cellAt = (row: number, column: number) =>
+		slots[row]?.find((slot) => slot.col <= column && column < slot.col + slot.span)?.cell;
+	const columnAfter = (selected.length === 1 ? rect.firstCol : rect.lastCol) + 1;
+	if (action === 'deleteRow' && rect.firstRow >= table.childCount)
+		return Selection.near(tr.doc.resolve(tablePos + table.nodeSize), 1);
+	if (action === 'deleteRow' || action === 'deleteColumn') {
+		const cell =
+			action === 'deleteRow'
+				? cellAt(rect.firstRow, 0)
+				: cellAt(0, Math.min(rect.firstCol, (outcome.grid?.length ?? 1) - 1));
+		let pos = tablePos + 2;
+		table.forEach((row, rowOffset) =>
+			row.forEach((node, offset) => {
+				if (node === cell) pos = tablePos + rowOffset + offset + 2;
+			}),
+		);
+		return Selection.near(tr.doc.resolve(pos + 1), 1);
+	}
+	const cells = new Set<ProseMirrorNode>();
+	const add = (cell: ProseMirrorNode | undefined) => {
+		if (cell) cells.add(cell);
+	};
+	if (action === 'rowBefore' || action === 'rowAfter') {
+		for (const slot of slots[action === 'rowBefore' ? rect.firstRow : rect.lastRow + 1] ?? [])
+			if (!slot.offset) add(slot.cell);
+	} else if (action === 'columnBefore' || action === 'columnAfter') {
+		for (let row = 0; row < slots.length; row++)
+			add(cellAt(row, action === 'columnBefore' ? rect.firstCol : columnAfter));
+	} else if (action === 'mergeCells') {
+		const closed = closeRect(ctx.skeleton, rect);
+		if (closed) add(cellAt(closed.firstRow, closed.firstCol));
+	} else {
+		const target = selected[0];
+		const first = target && slots[rect.firstRow]?.[target.index];
+		if (first) {
+			const last = slots[first.row]?.[target.index + (split?.columns ?? 2) - 1];
+			for (let r = first.row; r < first.row + (split?.rows ?? 1); r++)
+				for (const slot of slots[r] ?? [])
+					if (slot.col >= first.col && slot.col <= (last?.col ?? first.col)) add(slot.cell);
+		}
+	}
+	return selectCellNodes(tr.doc, table, tablePos, cells);
+}
+
 /** Whether `action` applies to the table around the selection (a dry run of the edit). */
 export function canRestructure(ctx: Context, action: RestructureCommand): boolean {
 	let serial = 0;
@@ -199,7 +254,9 @@ export function executeRestructure(
 	);
 	transaction.setMeta(RESTRUCTURE_TABLE_META, true);
 	transaction.setSelection(
-		Selection.near(transaction.doc.resolve(tablePos + (outcome === 'table' ? 1 : 2))),
+		outcome === 'table'
+			? Selection.near(transaction.doc.resolve(tablePos + 1))
+			: selectionAfterRestructure(transaction, ctx, action, replacement, outcome, split),
 	);
 	view.dispatch(transaction.scrollIntoView());
 	return true;

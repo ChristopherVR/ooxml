@@ -124,6 +124,9 @@ describe('Table Properties', () => {
 		]);
 		executeTableCommand(view, 'columnAfter');
 		expect(read().rowProperties![2]).toMatchObject({ cantSplit: true, heightTwips: 720 });
+		const { doc, selection } = view.state;
+		expect(selection.ranges).toHaveLength(3);
+		view.dispatch(view.state.tr.setSelection(TextSelection.create(doc, selection.from)));
 		executeTableCommand(view, 'deleteRow');
 		expect(read().rowProperties![0]).toMatchObject({ header: true, heightRule: 'exact' });
 	});

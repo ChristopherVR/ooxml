@@ -3,6 +3,28 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { dialogByHeading, insertTableOfSize, newDocument, reveal, saveButton } from './helpers';
 
+test('typing after Insert Row Below stays in the inserted row', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	const rows = editor.locator('.ProseMirror tr');
+	await rows.nth(0).locator('td').first().click();
+	await page.keyboard.type('Heading');
+	await rows.nth(1).locator('td').first().click();
+	await page.keyboard.type('Original');
+	await rows.nth(0).locator('td').last().click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	await editor.getByRole('button', { name: 'Insert row below', exact: true }).click();
+	await page.keyboard.type('Inserted');
+	await expect(rows).toHaveCount(3);
+	await expect(rows.nth(1).locator('td').first()).toHaveText('Inserted');
+	await editor.getByRole('button', { name: 'Delete row', exact: true }).click();
+	await expect(rows).toHaveCount(2);
+	await expect(rows.nth(0)).toHaveText('Heading');
+	await expect(rows.nth(1)).toHaveText('Original');
+});
+
 test('Table Design and Layout edit a table and save the Word properties', async ({ page }) => {
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);

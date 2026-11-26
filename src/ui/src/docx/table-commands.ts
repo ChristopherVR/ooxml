@@ -4,6 +4,7 @@ import { closeHistory } from 'prosemirror-history';
 import { Selection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { schema } from './schema';
+import { selectCellNodes } from './table-cell-selection';
 import {
 	canRestructure,
 	executeRestructure,
@@ -75,13 +76,63 @@ function emptyCell(nextId: () => string): ProseMirrorNode {
 	return schema.nodes.tableCell.create(null, schema.nodes.paragraph.create({ id: nextId() }));
 }
 
-function replacedTable(view: EditorView, ctx: Context, rows: ProseMirrorNode[]): void {
+function replacedTable(
+	view: EditorView,
+	ctx: Context,
+	rows: ProseMirrorNode[],
+	target: { row: number } | { column: number } | { caret: [number, number] },
+): void {
 	const next = ctx.table.copy(Fragment.fromArray(rows));
 	const transaction = closeHistory(
 		view.state.tr.replaceWith(ctx.tablePos, ctx.tablePos + ctx.table.nodeSize, next),
 	);
-	transaction.setSelection(Selection.near(transaction.doc.resolve(ctx.tablePos + 2)));
+	if ('caret' in target) {
+		const [row, column] = target.caret;
+		const pos =
+			row >= rows.length
+				? ctx.tablePos + next.nodeSize
+				: ctx.tablePos + 2 + cellOffset(next, row, column);
+		transaction.setSelection(Selection.near(transaction.doc.resolve(pos), 1));
+	} else {
+		const cells = new Set<ProseMirrorNode>();
+		if ('row' in target) next.child(target.row).forEach((cell) => cells.add(cell));
+		else next.forEach((row) => cells.add(row.child(target.column)));
+		transaction.setSelection(selectCellNodes(transaction.doc, next, ctx.tablePos, cells));
+	}
 	view.dispatch(transaction.scrollIntoView());
+}
+
+function cellOffset(table: ProseMirrorNode, row: number, column: number): number {
+	let offset = 0;
+	for (let r = 0; r < row; r++) offset += table.child(r).nodeSize;
+	for (let c = 0; c < column; c++) offset += table.child(row).child(c).nodeSize;
+	return offset;
+}
+
+function selectedBounds(view: EditorView, ctx: Context) {
+	const { table, tablePos, rowIndex, columnIndex } = ctx;
+	const bounds = {
+		firstRow: rowIndex,
+		lastRow: rowIndex,
+		firstCol: columnIndex,
+		lastCol: columnIndex,
+	};
+	table.forEach((row, rowOffset, r) =>
+		row.forEach((cell, cellOffset, c) => {
+			const pos = tablePos + rowOffset + cellOffset + 2;
+			if (
+				!view.state.selection.ranges.some(
+					({ $from, $to }) => $from.pos < pos + cell.nodeSize && $to.pos > pos,
+				)
+			)
+				return;
+			bounds.firstRow = Math.min(bounds.firstRow, r);
+			bounds.lastRow = Math.max(bounds.lastRow, r);
+			bounds.firstCol = Math.min(bounds.firstCol, c);
+			bounds.lastCol = Math.max(bounds.lastCol, c);
+		}),
+	);
+	return bounds;
 }
 
 function replaceWithParagraph(view: EditorView, ctx: Context): void {
@@ -152,32 +203,33 @@ export function executeTableCommand(
 	}
 
 	const rows = Array.from({ length: ctx.table.childCount }, (_, index) => ctx.table.child(index));
+	const { firstRow, lastRow, firstCol, lastCol } = selectedBounds(view, ctx);
+	const width = expectDefined(rows[0], 'first table row').childCount;
 	const nextId = paragraphIdFactory(view);
 	if (action === 'deleteRow') {
-		if (rows.length === 1) replaceWithParagraph(view, ctx);
+		if (lastRow - firstRow + 1 === rows.length) replaceWithParagraph(view, ctx);
 		else
 			replacedTable(
 				view,
 				ctx,
-				rows.filter((_, index) => index !== ctx.rowIndex),
+				rows.filter((_, index) => index < firstRow || index > lastRow),
+				{ caret: [firstRow, 0] },
 			);
 		return true;
 	}
 	if (action === 'rowBefore' || action === 'rowAfter') {
-		const at = ctx.rowIndex + (action === 'rowAfter' ? 1 : 0);
+		const at = action === 'rowAfter' ? lastRow + 1 : firstRow;
 		const added = schema.nodes.tableRow.create(
 			null,
-			Array.from({ length: expectDefined(rows[0], 'first table row').childCount }, () =>
-				emptyCell(nextId),
-			),
+			Array.from({ length: width }, () => emptyCell(nextId)),
 		);
 		rows.splice(at, 0, added);
-		replacedTable(view, ctx, rows);
+		replacedTable(view, ctx, rows, { row: at });
 		return true;
 	}
 
 	if (action === 'deleteColumn') {
-		if (expectDefined(rows[0], 'first table row').childCount === 1) replaceWithParagraph(view, ctx);
+		if (lastCol - firstCol + 1 === width) replaceWithParagraph(view, ctx);
 		else
 			replacedTable(
 				view,
@@ -186,16 +238,17 @@ export function executeTableCommand(
 					row.copy(
 						Fragment.fromArray(
 							Array.from({ length: row.childCount }, (_, index) => row.child(index)).filter(
-								(_, index) => index !== ctx.columnIndex,
+								(_, index) => index < firstCol || index > lastCol,
 							),
 						),
 					),
 				),
+				{ caret: [0, Math.min(firstCol, width - (lastCol - firstCol + 1) - 1)] },
 			);
 		return true;
 	}
 
-	const at = ctx.columnIndex + (action === 'columnAfter' ? 1 : 0);
+	const at = action === 'columnAfter' ? lastCol + 1 : firstCol;
 	replacedTable(
 		view,
 		ctx,
@@ -204,6 +257,7 @@ export function executeTableCommand(
 			cells.splice(at, 0, emptyCell(nextId));
 			return row.copy(Fragment.fromArray(cells));
 		}),
+		{ column: at },
 	);
 	return true;
 }

@@ -60,11 +60,11 @@ async function selectCells(editor: Locator, from: string, to = from) {
 				if (node.textContent === b && end < 0) end = pos + 1 + node.content.size;
 			});
 			if (start < 0 || end < 0) throw new Error(`cells ${a} / ${b} not found`);
-			const Selection = view.state.selection.constructor as any;
+			const Selection = Object.getPrototypeOf(view.state.selection.constructor);
 			view.focus();
 			view.dispatch(
 				view.state.tr.setSelection(
-					Selection.between(view.state.doc.resolve(start), view.state.doc.resolve(end)),
+					Selection.fromJSON(view.state.doc, { type: 'text', anchor: start, head: end }),
 				),
 			);
 		},
