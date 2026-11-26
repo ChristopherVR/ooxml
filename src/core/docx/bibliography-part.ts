@@ -1,4 +1,5 @@
 import type JSZip from 'jszip';
+import { createOfficeGuid } from '../crypto/uuid';
 import {
 	declaredEntrySize,
 	ensureContentTypeOverride,
@@ -60,11 +61,11 @@ export async function writeBibliographyPart(
 		number++;
 	const item = `customXml/item${number}.xml`;
 	const props = `itemProps${number}.xml`;
-	const id = globalThis.crypto.randomUUID().toUpperCase();
+	const id = createOfficeGuid();
 	zip.file(item, part.xml);
 	zip.file(
 		`customXml/${props}`,
-		`<?xml version="1.0" encoding="UTF-8"?><ds:datastoreItem xmlns:ds="${CUSTOM_XML}" ds:itemID="{${id}}"><ds:schemaRefs><ds:schemaRef ds:uri="${BIBLIOGRAPHY_NS}"/></ds:schemaRefs></ds:datastoreItem>`,
+		`<?xml version="1.0" encoding="UTF-8"?><ds:datastoreItem xmlns:ds="${CUSTOM_XML}" ds:itemID="${id}"><ds:schemaRefs><ds:schemaRef ds:uri="${BIBLIOGRAPHY_NS}"/></ds:schemaRefs></ds:datastoreItem>`,
 	);
 	await ensureRelationship(zip, 'word/_rels/document.xml.rels', `${REL}/customXml`, `../${item}`);
 	await ensureRelationship(zip, relationshipsPartFor(item), `${REL}/customXmlProps`, props);

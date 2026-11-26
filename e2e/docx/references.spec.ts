@@ -9,6 +9,7 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	page,
 }, testInfo) => {
 	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.addInitScript(() => Object.defineProperty(crypto, 'randomUUID', { value: undefined }));
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = page.locator('docx-editor');

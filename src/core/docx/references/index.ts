@@ -4,6 +4,7 @@ export {
 	indexEntryCode,
 	referenceFieldRuns,
 } from './instructions';
+export { createOfficeGuid } from '../../crypto/uuid';
 export { authorityCode } from './authorities';
 export { indexCode, INDEX_LEADERS, type IndexLeader, type IndexOptions } from './index-entries';
 export { indexSection } from './index-section';

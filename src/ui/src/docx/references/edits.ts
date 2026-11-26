@@ -157,7 +157,7 @@ export function changeReferenceTables(
 			]
 		: references.findReferenceTables(model.blocks, kind);
 	if (!edit.length) return false;
-	const newId = () => `ref-${globalThis.crypto.randomUUID()}`;
+	const newId = () => `ref-${references.createOfficeGuid()}`;
 	const ordered = [...edit].sort((a, b) => b.start - a.start);
 	const build = (page?: ReferencePage) =>
 		ordered.map((item) => {
