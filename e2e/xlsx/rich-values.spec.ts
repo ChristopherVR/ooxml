@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createWorkbook, putCell, saveXlsx } from 'ooxml-core/xlsx';
-import type { XlsxEditorElement } from '../../src/ui/src/xlsx/component';
+import type { XlsxEditorElement } from '../../viewers/xlsx/packages/web-component/src/index';
 import { RICH_METADATA_EXT, RICH_NS, RICH_PARTS } from '../../src/core/xlsx/rich-values';
 import { miniPackage, R, ws, X } from '../../src/core/xlsx/write/mini-package-fixtures';
 import {
