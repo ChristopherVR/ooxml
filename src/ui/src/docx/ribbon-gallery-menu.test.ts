@@ -46,6 +46,35 @@ describe('layout galleries', () => {
 		host.remove();
 	});
 
+	it('focuses a momentary gallery and returns focus to its control on Escape', () => {
+		const gallery = menuGallery(
+			'Position',
+			'pageNumber',
+			'drawingPosition',
+			[
+				['top-left', 'Top Left'],
+				['bottom-right', 'Bottom Right'],
+			],
+			(value) => ({ type: 'arrange', key: 'position', value }),
+			{ momentary: true },
+		);
+		document.body.append(gallery);
+		try {
+			const control = gallery.querySelector('select')!;
+			gallery.click();
+			const [first, second] = document.querySelectorAll<HTMLButtonElement>(
+				'.ribbon-gallery-menu button',
+			);
+			expect(document.activeElement).toBe(first);
+			first!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+			expect(document.activeElement).toBe(second);
+			second!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			expect(document.activeElement).toBe(control);
+		} finally {
+			gallery.remove();
+		}
+	});
+
 	it('draws border and line-spacing thumbnails and runs a trailing command', () => {
 		const solid = (value: string) =>
 			galleryLook('borders', value).thumb.querySelectorAll('.thumb-edge-on').length;

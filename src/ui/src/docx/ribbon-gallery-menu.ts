@@ -31,14 +31,17 @@ export function menuGallery(
 	const wrap = menuSelect(label, icon, values, action, options);
 	wrap.classList.add('ribbon-menu-gallery');
 	const control = wrap.querySelector('select')!;
-	const open = () => openGallery(wrap, control, kind, options.commands ?? []);
+	control.setAttribute('aria-haspopup', 'menu');
+	const open = () => {
+		if (!control.disabled) openGallery(wrap, control, kind, options.commands ?? []);
+	};
 	wrap.addEventListener('click', (event) => {
 		if (control.disabled) return;
 		event.preventDefault();
 		open();
 	});
 	control.addEventListener('keydown', (event) => {
-		if (event.key === 'Enter' || event.key === ' ' || (event.altKey && event.key === 'ArrowDown')) {
+		if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
 			event.preventDefault();
 			open();
 		}
@@ -65,6 +68,7 @@ function openGallery(
 		item.setAttribute('role', 'menuitemradio');
 		item.setAttribute('aria-checked', String(option.value === control.value));
 		item.dataset.value = option.value;
+		item.disabled = option.disabled;
 		const name = document.createElement('span');
 		name.className = 'gallery-name';
 		name.textContent = option.textContent;
@@ -81,6 +85,7 @@ function openGallery(
 		item.addEventListener('mousedown', (event) => event.preventDefault());
 		item.addEventListener('click', () => {
 			closeRibbonPopover();
+			control.focus({ preventScroll: true });
 			control.value = option.value;
 			control.dispatchEvent(new Event('change', { bubbles: true }));
 		});
@@ -95,10 +100,43 @@ function openGallery(
 		item.addEventListener('mousedown', (event) => event.preventDefault());
 		item.addEventListener('click', () => {
 			closeRibbonPopover();
+			control.focus({ preventScroll: true });
 			emit(anchor, 'ribbon-action', command.action);
 		});
 		pop.append(item);
 	}
-	mountPopover(anchor, pop, anchor);
-	pop.querySelector<HTMLElement>('[aria-checked="true"]')?.focus({ preventScroll: true });
+	if (!mountPopover(anchor, pop, control)) return;
+	const items = [...pop.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
+	const focus = (index: number) => {
+		items.forEach((item, i) => (item.tabIndex = i === index ? 0 : -1));
+		items[index]?.focus();
+	};
+	focus(
+		Math.max(
+			0,
+			items.findIndex((item) => item.getAttribute('aria-checked') === 'true'),
+		),
+	);
+	pop.addEventListener('keydown', (event) => {
+		if (event.key === 'Tab') {
+			closeRibbonPopover();
+			control.focus({ preventScroll: true });
+			return;
+		}
+		const current = items.findIndex((item) => item === event.target);
+		const last = items.length - 1;
+		const next =
+			event.key === 'Home'
+				? 0
+				: event.key === 'End'
+					? last
+					: event.key === 'ArrowDown'
+						? (current + 1) % items.length
+						: event.key === 'ArrowUp'
+							? (current + last) % items.length
+							: undefined;
+		if (next === undefined) return;
+		event.preventDefault();
+		focus(next);
+	});
 }

@@ -46,7 +46,11 @@ export function mountPopover(
 	const escape = (event: KeyboardEvent) => {
 		if (event.key !== 'Escape') return;
 		close?.();
-		if (anchor instanceof HTMLButtonElement) anchor.focus();
+		if (expanded instanceof HTMLSelectElement) {
+			event.preventDefault();
+			event.stopPropagation();
+			expanded.focus({ preventScroll: true });
+		} else if (anchor instanceof HTMLButtonElement) anchor.focus();
 		else anchor.querySelector('input')?.focus();
 	};
 	document.addEventListener('pointerdown', outside, true);
