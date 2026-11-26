@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { loadInkTools } from './index';
 import { recognizeInkShape } from './ink-recognition';
 import { inkReplayProgress, slideInkReplayTimeline } from './ink-replay';
 
 const points = (...coordinates: [number, number][]) => coordinates.map(([x, y]) => ({ x, y }));
 
 describe('ink shape recognition', () => {
-	it('classifies a rectangle, ellipse and triangle as DrawingML presets', () => {
+	it('loads recognition and classifies rectangle, ellipse and triangle strokes', async () => {
+		const { recognizeInkShape } = await loadInkTools();
 		const rect = points([0, 0], [80, 1], [80, 40], [0, 40], [1, 1]);
 		const ellipse = Array.from({ length: 41 }, (_, i) => ({
 			x: 40 * Math.cos((i * Math.PI) / 20),

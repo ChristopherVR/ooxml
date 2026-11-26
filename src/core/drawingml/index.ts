@@ -108,6 +108,6 @@ export * from './shape-effects-catalog';
 export * from './picture-styles-catalog';
 export * from './picture-styles-spec';
 export * from './picture-style-format';
-export * from './ink-geometry';
-export * from './ink-recognition';
-export * from './ink-replay';
+/** Load geometry, recognition and playback helpers when working with ink strokes. */
+export const loadInkTools = () => import('./ink');
+export type { InkCoordinate } from './ink-geometry';
