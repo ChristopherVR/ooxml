@@ -21,6 +21,15 @@ const newHost = () => {
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('prop forwarding', () => {
+	it('forwards and removes the host image provider on the mounted element', () => {
+		const imageProvider = { resolve: () => true };
+		const binding = mountEditor(newHost(), { imageProvider });
+		expect(binding.element.imageProvider).toBe(imageProvider);
+		binding.update({});
+		expect(binding.element.imageProvider).toBeUndefined();
+		binding.destroy();
+	});
+
 	it('keeps changes the user made inside the editor across unrelated re-renders', () => {
 		const props = (): EditorOptions => ({
 			readOnly: false,

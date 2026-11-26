@@ -9,7 +9,7 @@ import {
 	type OnChanges,
 	type OnDestroy,
 } from '@angular/core';
-import type { Workbook } from '@christophervr/xlsx-core';
+import type { ImageProvider, Workbook } from '@christophervr/xlsx-core';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
 import type {
 	EditorThemeMode,
@@ -59,6 +59,7 @@ export class SpreadsheetEditorComponent implements AfterViewInit, OnChanges, OnD
 	@Input() themeColors?: XlsxThemeColors;
 	@Input() collaboration?: XlsxCollaborationOptions | null;
 	@Input() storage?: DocumentStorage | null;
+	@Input() imageProvider?: ImageProvider;
 	@Input() fileProviders?: readonly CloudFileProvider[] | null;
 	@Input() customization?: ExcelCustomization | null;
 	@Output() workbookChange = new EventEmitter<Workbook>();

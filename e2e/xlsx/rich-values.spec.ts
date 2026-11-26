@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import type { XlsxEditorElement } from '../../src/ui/src/xlsx/component';
 import { RICH_METADATA_EXT, RICH_NS, RICH_PARTS } from '../../src/core/xlsx/rich-values';
 import { miniPackage, R, ws, X } from '../../src/core/xlsx/write/mini-package-fixtures';
 import {
@@ -63,6 +64,30 @@ test('inserts and converts a cell picture and blocks IMAGE without a host fetche
 			.locator('.xg-tx')
 			.filter({ hasText: /^#BLOCKED!$/ }),
 	).toBeVisible();
+});
+
+test('uses the host IMAGE provider on the already open editor', async ({ page }) => {
+	await openLanding(page);
+	await newWorkbook(page);
+	await editor(page).evaluate(
+		(element, bytes) => {
+			const xlsx = element as XlsxEditorElement;
+			xlsx.imageProvider = {
+				resolve: () => true,
+				getImage: () => ({ bytes: Uint8Array.from(bytes) }),
+			};
+		},
+		[...PNG],
+	);
+	await typeInActiveCell(page, '=IMAGE("https://example.test/picture.png","Host image")');
+	await expect(grid(page).getByRole('img', { name: 'Host image' })).toBeVisible();
+	await editor(page).evaluate((element) => {
+		const xlsx = element as XlsxEditorElement;
+		xlsx.imageProvider = undefined;
+		xlsx.calculateNow();
+	});
+	await expect(grid(page).getByRole('img', { name: 'Host image' })).toHaveCount(0);
+	await expect(grid(page).getByText('#BLOCKED!', { exact: true })).toBeVisible();
 });
 
 test('shows a cached data type icon and opens its card from the keyboard', async ({ page }) => {

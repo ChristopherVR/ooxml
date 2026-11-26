@@ -112,6 +112,11 @@ export class XlsxEditorApi extends HTMLElementBase {
 		await openCloudFile(this.core, file, this.chrome, () => this.closeBackstage?.());
 	}
 
+	/** Recalculates the workbook, for example after a host image provider finishes loading. */
+	calculateNow(): void {
+		this.core.session?.calculateNow({ full: true });
+	}
+
 	/** Starts a blank workbook named Book1.xlsx. */
 	newWorkbook(): void {
 		newInto(this.core, this.chrome);

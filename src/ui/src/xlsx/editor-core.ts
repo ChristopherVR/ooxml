@@ -11,6 +11,8 @@ import {
 	createEditSession,
 	type EditSession,
 	type FontView,
+	type ImageProvider,
+	cellError,
 	needsCalculationOnOpen,
 	prepareWorkbookFormulas,
 	type Workbook,
@@ -110,6 +112,7 @@ export class EditorCore {
 	fileStorage: DocumentStorage | undefined = undefined;
 	/** Cloud places File > Open offers next to "This device" (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
+	imageProvider: ImageProvider | undefined;
 	/** The validation failure of the cell edit in progress; cleared once the draft changes or ends. */
 	editError: { message: string; text: string } | null = null;
 	readonly selection: SelectionModel = createSelectionModel();
@@ -346,6 +349,15 @@ export class EditorCore {
 			return createEditSession(workbook, {
 				defaultSheetBase: sheetBaseName(this.ctx.t),
 				autoRowHeight: true,
+				calcOptions: {
+					providers: {
+						image: {
+							resolve: (request) =>
+								this.imageProvider ? this.imageProvider.resolve(request) : cellError('#BLOCKED!'),
+							getImage: (source) => this.imageProvider?.getImage?.(source),
+						},
+					},
+				},
 				measureText: (text, font) => this.measureText(text, font),
 			});
 		} catch (error) {

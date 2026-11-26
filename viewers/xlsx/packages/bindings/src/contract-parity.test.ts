@@ -40,6 +40,7 @@ afterEach(() => {
 const sorted = (values: Iterable<string>) => [...values].sort();
 const missing = (target: object) => EDITOR_HANDLE_KEYS.filter((key) => !(key in target));
 const newHost = () => document.body.appendChild(document.createElement('div'));
+const imageProvider = { resolve: () => true };
 const OPTIONS = [...optionNames(EDITOR_CONTRACT), ...EDITOR_CALLBACKS];
 const spies = (nameOf: (option: string) => string = (option) => option) =>
 	Object.fromEntries(OPTIONS.map((option) => [nameOf(option), vi.fn()]));
@@ -83,9 +84,9 @@ describe('every framework adapter matches the contract', () => {
 		const root = createRoot(newHost());
 		const handle = createRef<EditorHandle>();
 		const handlers = spies();
-		act(() => root.render(createElement(ReactEditor, { ref: handle, ...handlers })));
+		act(() => root.render(createElement(ReactEditor, { ref: handle, imageProvider, ...handlers })));
 		expect(missing(handle.current!)).toEqual([]);
-		expect(handle.current!.element.localName).toBe('xlsx-editor');
+		expect(handle.current!.element.imageProvider).toBe(imageProvider);
 		expect(sorted(fireAll(handlers))).toEqual(sorted(OPTIONS));
 		act(() => root.unmount());
 	});
@@ -93,10 +94,10 @@ describe('every framework adapter matches the contract', () => {
 		expect(sorted(Object.keys(VueEditor.props))).toEqual(sorted(EDITOR_PROP_KEYS));
 		expect(VueEditor.emits).toEqual(vueEmits(EDITOR_CONTRACT, { ready: 'onReady' }));
 		const editor = ref<EditorHandle>();
-		const app = createApp({ render: () => h(VueEditor, { ref: editor }) });
+		const app = createApp({ render: () => h(VueEditor, { ref: editor, imageProvider }) });
 		app.mount(newHost());
 		expect(missing(editor.value!)).toEqual([]);
-		expect(editor.value!.element.localName).toBe('xlsx-editor');
+		expect(editor.value!.element.imageProvider).toBe(imageProvider);
 		app.unmount();
 	});
 	it('Solid: every event and onReady reach their handler props; editorRef gets the handle', () => {
@@ -105,10 +106,13 @@ describe('every framework adapter matches the contract', () => {
 		let dispose!: () => void;
 		createSolidRoot((stop) => {
 			dispose = stop;
-			render(() => SolidEditor({ ...handlers, editorRef: (value) => (handle = value) }), newHost());
+			render(
+				() => SolidEditor({ ...handlers, imageProvider, editorRef: (value) => (handle = value) }),
+				newHost(),
+			);
 		});
 		expect(missing(handle!)).toEqual([]);
-		expect(handle!.element.localName).toBe('xlsx-editor');
+		expect(handle!.element.imageProvider).toBe(imageProvider);
 		expect(sorted(fireAll(handlers))).toEqual(sorted(OPTIONS));
 		dispose();
 	});
@@ -124,10 +128,10 @@ describe('every framework adapter matches the contract', () => {
 	it('Svelte: every event and onready reach their lower-case props; exports the handle', () => {
 		const target = newHost();
 		const handlers = spies(svelteHandlerName);
-		const component = mount(XlsxEditor, { target, props: handlers });
+		const component = mount(XlsxEditor, { target, props: { ...handlers, imageProvider } });
 		flushSync();
 		expect(missing(component)).toEqual([]);
-		expect(component.element).toBe(target.querySelector('xlsx-editor'));
+		expect(component.element?.imageProvider).toBe(imageProvider);
 		expect(component.dirty).toBe(false);
 		expect(sorted(fireAll(handlers))).toEqual(sorted(OPTIONS.map(svelteHandlerName)));
 		// The deprecated aliases keep working.

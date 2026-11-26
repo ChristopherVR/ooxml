@@ -15,7 +15,7 @@ import type {
 	XlsxThemeColors,
 	ExcelCustomization,
 } from 'xlsx-web-component';
-import type { Workbook } from '@christophervr/xlsx-core';
+import type { ImageProvider, Workbook } from '@christophervr/xlsx-core';
 import type { CloudFileProvider, CloudOpenedFile, DocumentStorage } from 'ooxml-core/embedding';
 import {
 	contractOptions,
@@ -78,6 +78,8 @@ export interface EditorProps {
 	 * device". A workbook opened from one saves back to that file; empty or omitted keeps Open as it
 	 * was. Forwarded when the array changes, so keep it stable.
 	 */
+	/** Host opt-in for IMAGE formulas. */
+	imageProvider?: ImageProvider | undefined;
 	fileProviders?: readonly CloudFileProvider[] | null | undefined;
 	/**
 	 * Host customisation (`ExcelCustomization`): `capabilities`, `backstage.extraPages` and
@@ -145,6 +147,7 @@ export const EDITOR_PROP_KEYS = [
 	'collaboration',
 	'storage',
 	'fileProviders',
+	'imageProvider',
 	'customization',
 ] as const satisfies readonly (keyof EditorProps)[];
 export type EditorPropKey = (typeof EDITOR_PROP_KEYS)[number];
@@ -248,6 +251,7 @@ export const EDITOR_CONTRACT: BindingContract<
 			forward: 'changed',
 			apply: (element, value) => (element.storage = value ?? undefined),
 		},
+		imageProvider: { forward: 'changed' },
 		fileProviders: {
 			forward: 'changed',
 			apply: (element, value) => (element.fileProviders = value ?? []),

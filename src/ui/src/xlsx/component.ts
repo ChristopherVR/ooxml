@@ -5,7 +5,7 @@ import { installOfficeUiThemeFor } from '../theme';
  * `<xlsx-editor>`: the properties, attributes and lifecycle. Methods are in element-api.ts, state
  * in editor-core.ts and the DOM in editor-shell.ts.
  */
-import type { Workbook } from 'ooxml-core/xlsx';
+import type { ImageProvider, Workbook } from 'ooxml-core/xlsx';
 import {
 	DEFAULT_AUTHOR_NAME,
 	DEFAULT_FILE_NAME,
@@ -174,6 +174,14 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	set fileProviders(value: readonly CloudFileProvider[] | null | undefined) {
 		this.core.fileProviders = value ?? [];
 		this.shell?.backstage.applyCustomization();
+	}
+
+	/** Host provider for IMAGE formulas. Unset by default. Changes apply on the next calculation. */
+	get imageProvider(): ImageProvider | undefined {
+		return this.core.imageProvider;
+	}
+	set imageProvider(value: ImageProvider | undefined) {
+		this.core.imageProvider = value;
 	}
 
 	/** Shown in the title bar and used by Save and Download. Default `Book1.xlsx`. */
