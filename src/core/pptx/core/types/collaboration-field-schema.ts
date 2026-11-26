@@ -151,6 +151,7 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	isLinked: 'scalar',
 	externalPath: 'scalar',
 	previewImage: 'scalar',
+	previewImagePath: 'scalar',
 	previewImageData: 'asset',
 	oleShowAsIcon: 'scalar',
 	oleImgW: 'scalar',

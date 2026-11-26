@@ -199,6 +199,7 @@ export const SCALAR_ELEMENT_KEYS: ReadonlySet<string> = new Set([
 	'fileName',
 	'externalPath',
 	'previewImage',
+	'previewImagePath',
 	'oleShowAsIcon',
 	'oleImgW',
 	'oleImgH',

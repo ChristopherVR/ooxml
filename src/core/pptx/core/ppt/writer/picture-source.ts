@@ -39,7 +39,9 @@ export function pictureSourceOf(el: PptxElement): PictureSource | undefined {
 			const preview = el.previewImage;
 			return {
 				inline: el.previewImageData ?? (isInlineUrl(preview) ? preview : undefined),
-				partPath: preview && !isInlineUrl(preview) ? preview : undefined,
+				// `previewImage` is the relationship target, relative to the slide; the resolved
+				// archive path is what the part reader can open.
+				partPath: el.previewImagePath ?? (preview && !isInlineUrl(preview) ? preview : undefined),
 			};
 		}
 		case 'model3d':

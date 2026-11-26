@@ -342,6 +342,12 @@ export interface OlePptxElement extends PptxElementBase {
 	externalPath?: string | undefined;
 	/** Data-URL or path for the OLE preview image. */
 	previewImage?: string | undefined;
+	/**
+	 * Archive path of the preview picture, resolved against the slide on load. With
+	 * `eagerDecodeImages: false` (the default) the preview is not decoded during load; a host
+	 * resolves `previewImageData` from this path, as it does a picture's `imagePath`.
+	 */
+	previewImagePath?: string | undefined;
 	/** Decoded preview image as a data-URL. */
 	previewImageData?: string | undefined;
 	/** Whether the OLE object is shown as an icon (`p:oleObj/@showAsIcon`). */

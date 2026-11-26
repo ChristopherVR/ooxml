@@ -416,14 +416,20 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				continue;
 			}
 			// Resolve the authored preview image (the picture the OLE object
-			// shows in the deck) into a data-URL the renderers can use as an
-			// <img src>. Independent of the embedded-payload recovery below, so
-			// linked objects still get their preview.
+			// shows in the deck) to its archive path, and decode it into a URL
+			// the renderers can use as an <img src> when images are decoded
+			// eagerly. Otherwise the host resolves it like a picture
+			// (`collectImagePaths`), so a headless load never converts an EMF
+			// preview it does not draw. Independent of the embedded-payload
+			// recovery below, so linked objects still get their preview.
 			if (el.previewImage && !el.previewImageData) {
 				try {
 					const previewPath = this.resolveImagePath(slidePath, el.previewImage);
 					if (previewPath) {
-						const previewData = await this.getImageData(previewPath);
+						el.previewImagePath = previewPath;
+						const previewData = this.eagerDecodeImages
+							? await this.getImageData(previewPath)
+							: undefined;
 						if (previewData) {
 							el.previewImageData = previewData;
 						}

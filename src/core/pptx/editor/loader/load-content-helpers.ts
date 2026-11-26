@@ -27,7 +27,15 @@ export interface GuideEntry {
 
 /** An element that may carry an image path needing Blob URL resolution. */
 export type ImagePathElement = { element: PptxElement; path: string } & (
-	| { field: 'imageData' | 'svgData' | 'posterFrameData' | 'modelData' | 'posterImage' }
+	| {
+			field:
+				| 'imageData'
+				| 'svgData'
+				| 'posterFrameData'
+				| 'modelData'
+				| 'posterImage'
+				| 'previewImageData';
+	  }
 	| { field: 'summaryTarget'; index: number }
 );
 
@@ -94,6 +102,7 @@ export function collectAnimationSoundPaths(slides: readonly PptxSlide[]): string
  * - Picture elements (`imageData`, `svgData`)
  * - Zoom and Summary Zoom preview images
  * - Media poster frames (`posterFrameData`)
+ * - OLE object previews (`previewImageData`)
  *
  * Returns the set of unique archive paths, plus a list of element/field
  * references that need to be updated once each path resolves.
@@ -144,6 +153,15 @@ export function collectImagePaths(slides: PptxSlide[]): {
 						path: media.posterFramePath,
 					});
 				}
+			}
+			if (
+				el.type === 'ole' &&
+				el.previewImagePath &&
+				!el.previewImageData &&
+				!isExternalUrl(el.previewImagePath)
+			) {
+				paths.add(el.previewImagePath);
+				refs.push({ element: el, field: 'previewImageData', path: el.previewImagePath });
 			}
 			if (el.type === 'model3d') {
 				const model = el as Model3DPptxElement;
