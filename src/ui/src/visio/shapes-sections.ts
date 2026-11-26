@@ -1,5 +1,5 @@
 import { interpolate } from 'ooxml-core/i18n';
-import { modalActiveElement } from '../dialog/focus';
+import { rememberQuickFocus, rememberSectionFocus } from './shapes-focus';
 import { BASIC_STENCIL_ID, STENCILS, findMaster, type Stencil } from './stencil-catalog';
 import {
 	DOCUMENT_MASTER_LIMIT,
@@ -36,16 +36,6 @@ export interface StencilsView {
 const DEFAULT_QUICK = 4;
 /** Undefined until the shared menu element is registered. */
 type Menu = HTMLElement & { openAt?(x: number, y: number, opener?: HTMLElement): void };
-
-function findByAttribute(
-	root: HTMLElement,
-	attribute: string,
-	value: string,
-): HTMLElement | undefined {
-	return [...root.querySelectorAll<HTMLElement>(`[${attribute}]`)].find(
-		(element) => element.getAttribute(attribute) === value,
-	);
-}
 
 /**
  * The Stencils view below the view tabs: More Shapes (a menu of the built-in stencils), Quick
@@ -142,8 +132,7 @@ export function buildStencilsView(
 
 	const renderQuick = () => {
 		if (quick.hidden) return quick.replaceChildren();
-		const active = modalActiveElement(doc);
-		const focusedMaster = quick.contains(active) ? active?.getAttribute('data-master') : undefined;
+		const restoreFocus = rememberQuickFocus(quick, quickToggle);
 		const masters = [
 			// The drawing's own masters lead, as its Document Stencil leads the stencils.
 			...drawing.masters.filter((master) => !master.unsupported).slice(0, DEFAULT_QUICK),
@@ -155,16 +144,10 @@ export function buildStencilsView(
 		empty.className = 'shapes-empty';
 		empty.textContent = 'No Quick Shapes. Right-click a master to add it.';
 		quick.replaceChildren(masters.length ? masterList(doc, masters) : empty);
-		if (focusedMaster)
-			(findByAttribute(quick, 'data-master', focusedMaster) ?? quickToggle).focus({
-				preventScroll: true,
-			});
+		restoreFocus?.();
 	};
 	const renderSections = () => {
-		const active = modalActiveElement(doc);
-		const focusedSection = sections.contains(active)
-			? active?.closest<HTMLElement>('[data-stencil]')?.dataset.stencil
-			: undefined;
+		const restoreFocus = rememberSectionFocus(sections, more);
 		sections.replaceChildren(
 			...sectionIds().map((id) => {
 				const stencil = sectionStencil(id);
@@ -221,22 +204,7 @@ export function buildStencilsView(
 			// Stencil files this viewer cannot open are still named, as Visio lists them.
 			...drawing.unavailable.map((file) => unavailableStencil(doc, file)),
 		);
-		if (!focusedSection) return;
-		const section = findByAttribute(sections, 'data-stencil', focusedSection);
-		const master = active?.getAttribute('data-master');
-		let next: HTMLElement | null | undefined;
-		if (section) {
-			if (master)
-				next =
-					findByAttribute(section, 'data-master', master) ??
-					section.querySelector<HTMLElement>('[data-stencil-actions]');
-			else if (active?.hasAttribute('data-stencil-actions'))
-				next = section.querySelector<HTMLElement>('[data-stencil-actions]');
-			else if (active?.hasAttribute('data-close-stencil'))
-				next = section.querySelector<HTMLElement>('[data-close-stencil]');
-			next ??= section.querySelector<HTMLElement>('.stencil-title');
-		}
-		(next ?? more).focus({ preventScroll: true });
+		restoreFocus?.();
 	};
 	const renderMenu = () =>
 		moreMenu.replaceChildren(

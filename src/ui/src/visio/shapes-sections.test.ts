@@ -80,8 +80,11 @@ describe('More Shapes and Quick Shapes', () => {
 		// The open stencil persists for this viewer.
 		expect(JSON.parse(localStorage.getItem(SHAPES_STORAGE_KEY)!).open).toEqual(['basic-flowchart']);
 		expect(pane().sections()).toEqual(['basic', 'basic-flowchart']);
-		flowchart.querySelector<HTMLButtonElement>('[data-close-stencil]')!.click();
+		const close = flowchart.querySelector<HTMLButtonElement>('[data-close-stencil]')!;
+		close.focus();
+		close.click();
 		expect(sections()).toEqual(['basic']);
+		expect(document.activeElement).toBe(element.querySelector('#shapes-more'));
 	});
 
 	it('shows Quick Shapes and loads the master menu on its first use', async () => {
