@@ -1,6 +1,6 @@
-import { expect, test, type Locator, type Page } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
-import { dialogByHeading, fileInput } from './helpers';
+import { expect, test } from '@playwright/test';
+import { dialogByHeading } from './helpers';
+import { choosePosition, openShapes, unfoldArrange } from './word-arrange-support';
 import { savedDocument } from './saved-document';
 
 test('Word arranges a floating shape from its Layout ribbon and saves the edit', async ({
@@ -11,13 +11,8 @@ test('Word arranges a floating shape from its Layout ribbon and saves the edit',
 	const shape = editor.locator('.dve-print-float').first();
 	await expect(shape).toBeVisible();
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
-	const layout = editor.getByRole('tabpanel', { name: 'Layout', exact: true });
 	const altText = editor.getByRole('button', { name: 'Alt Text', exact: true });
-	const unfoldArrange = async () => {
-		const folded = layout.getByRole('button', { name: 'Arrange', exact: true });
-		if ((await folded.isVisible()) && !(await altText.isVisible())) await folded.click();
-	};
-	await unfoldArrange();
+	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
 	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
 	await expect(pane.getByRole('listitem')).toHaveCount(4);
@@ -25,13 +20,13 @@ test('Word arranges a floating shape from its Layout ribbon and saves the edit',
 	await expect(pane.getByRole('button', { pressed: true })).toHaveCount(1);
 	await pane.getByRole('button', { name: 'Close', exact: true }).click();
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
-	await unfoldArrange();
+	await unfoldArrange(editor, 'Layout');
 	const position = editor.getByRole('combobox', { name: 'Position', exact: true });
 	await position.press('Enter');
 	await editor.getByRole('menuitemradio', { name: /Bottom Right/ }).click();
-	await unfoldArrange();
+	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('combobox', { name: 'Rotate', exact: true }).selectOption('right');
-	await unfoldArrange();
+	await unfoldArrange(editor, 'Layout');
 	await altText.click();
 	const alt = dialogByHeading(editor, 'Alt Text');
 	await alt.getByRole('textbox', { name: 'Description', exact: true }).fill('Arrangement sample');
@@ -90,8 +85,14 @@ test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({
 	await row.evaluate((element) => element.setAttribute('data-test-original-row', ''));
 	const story = editor.locator('.ProseMirror').first();
 	await story.press('Control+End');
-	await story.press('x');
-	await expect(story).toContainText('x');
+	await story.press('End');
+	await story.press('Space');
+	await story.press('a');
+	await expect(async () => {
+		const button = row.getByRole('button');
+		await button.click();
+		await expect(button).toHaveAttribute('aria-pressed', 'true', { timeout: 500 });
+	}).toPass();
 	await expect
 		.poll(() => row.evaluate((element) => element.hasAttribute('data-test-original-row')))
 		.toBe(true);
@@ -106,12 +107,13 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 		['Shape Format', 1800],
 		['Layout', 2600],
 		['Layout', 850],
+		['Layout', 390],
 	] as const) {
 		await page.setViewportSize({ width, height: 950 });
 		await editor.getByRole('tab', { name: tab, exact: true }).click();
 		await unfoldArrange(editor, tab);
 		const group = editor.locator('.ribbon-group[data-label="Arrange"]:visible').filter({
-			has: editor.getByRole('combobox', { name: 'Position', exact: true }),
+			has: page.getByRole('combobox', { name: 'Position', exact: true }),
 		});
 		await expect(group.locator(':is(button, select)[data-arrange]:visible')).toHaveCount(9);
 		await expect
@@ -130,7 +132,13 @@ test('Arrange controls fit the ribbon or its overflow in Shape Format and Layout
 								bottom > bounds.bottom + 1
 							);
 						})
-						.map((control) => control.getAttribute('aria-label'));
+						.map((control) => ({
+							label: control.getAttribute('aria-label'),
+							control: control.getBoundingClientRect().toJSON(),
+							wrapper: control.parentElement!.getBoundingClientRect().toJSON(),
+							group: element.getBoundingClientRect().toJSON(),
+							ribbon: bounds.toJSON(),
+						}));
 				}),
 			)
 			.toEqual([]);
@@ -279,12 +287,82 @@ test('Selection Pane is docked and renames a drawing with F2 or a double-click',
 	await renamed.press('F2');
 	await name.fill('Final oval');
 	await name.press('Enter');
-	await page.emulateMedia({ forcedColors: 'active' });
 	const selected = pane.getByRole('button', { name: 'Final oval', pressed: true });
+	const colors = () =>
+		selected.evaluate((element) => {
+			const style = getComputedStyle(element);
+			return [style.color, style.backgroundColor];
+		});
+	await editor.evaluate((element) => Object.assign(element, { theme: 'light' }));
+	const light = await colors();
+	expect(light[0]).not.toBe(light[1]);
+	await editor.evaluate((element) => Object.assign(element, { theme: 'dark' }));
+	await expect.poll(colors).not.toEqual(light);
+	const dark = await colors();
+	expect(dark[0]).not.toBe(dark[1]);
+	await page.emulateMedia({ forcedColors: 'active' });
 	await expect(selected).toHaveCSS('forced-color-adjust', 'none');
 	const { xml } = await savedDocument(page, 'renamed-drawing.docx');
 	expect(xml).toContain('name="Final oval"');
 	expect(xml).not.toContain('title="Final oval"');
+});
+
+test('Bring Forward and Send Backward change which drawing paints over an overlap', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const floats = editor.locator('.dve-print-float');
+	await expect(floats).toHaveCount(4);
+	const key = (i: number) =>
+		floats.nth(i).evaluate((element) => {
+			const { blockId, floatIndex } = (element as HTMLElement).dataset;
+			return `[data-block-id="${blockId}"][data-float-index="${floatIndex}"]`;
+		});
+	const rectangle = await key(0);
+	const arrow = await key(1);
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	for (const name of ['Arrow: Right 2', 'Rectangle 1']) {
+		await pane.getByRole('button', { name, exact: true }).click();
+		await choosePosition(editor, 'Top Left');
+	}
+	const arrowFloat = floats.and(editor.locator(arrow));
+	const top = () =>
+		editor.evaluate(
+			(host, { rectangle, arrow }) => {
+				const root = host.shadowRoot!;
+				const a = root.querySelector(`.dve-print-float${rectangle}`)?.getBoundingClientRect();
+				const b = root.querySelector(`.dve-print-float${arrow}`)?.getBoundingClientRect();
+				if (!a || !b) return undefined;
+				const left = Math.max(a.left, b.left);
+				const right = Math.min(a.right, b.right);
+				const top = Math.max(a.top, b.top);
+				const bottom = Math.min(a.bottom, b.bottom);
+				if (left >= right || top >= bottom) return undefined;
+				const hit = root
+					.elementFromPoint((left + right) / 2, (top + bottom) / 2)
+					?.closest('.dve-print-float');
+				if (hit?.matches(arrow)) return 'arrow';
+				if (hit?.matches(rectangle)) return 'rectangle';
+				return undefined;
+			},
+			{ rectangle, arrow },
+		);
+	await expect(arrowFloat).toBeVisible();
+	await expect.poll(top).toBe('arrow');
+	await unfoldArrange(editor, 'Layout');
+	await editor
+		.getByRole('combobox', { name: 'Bring Forward', exact: true })
+		.selectOption('forward');
+	await expect.poll(top).toBe('rectangle');
+	await unfoldArrange(editor, 'Layout');
+	await editor
+		.getByRole('combobox', { name: 'Send Backward', exact: true })
+		.selectOption('backward');
+	await expect.poll(top).toBe('arrow');
 });
 
 test('one floating shape disables Align and Group with accessible reasons', async ({ page }) => {
@@ -325,32 +403,3 @@ test('the print selection frame rotates around the shape center', async ({ page 
 		})
 		.toBeLessThan(1);
 });
-
-async function choosePosition(editor: Locator, value: string) {
-	await unfoldArrange(editor, 'Layout');
-	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');
-	await editor.getByRole('menuitemradio', { name: new RegExp(value) }).click();
-}
-
-async function openShapes(page: Page, fixture = new URL('./support/shapes.docx', import.meta.url)) {
-	await page.setViewportSize({ width: 1800, height: 950 });
-	await page.goto('/?framework=vanilla');
-	await (
-		await fileInput(page)
-	).setInputFiles({
-		name: 'shapes.docx',
-		mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-		buffer: await readFile(fixture),
-	});
-	const editor = page.locator('docx-editor');
-	return editor;
-}
-
-async function unfoldArrange(editor: Locator, tab: string) {
-	const panel = editor.getByRole('tabpanel', { name: tab, exact: true });
-	const collapsed = panel.getByRole('button', { name: 'Arrange', exact: true });
-	if (await collapsed.isVisible()) {
-		const alt = editor.getByRole('button', { name: 'Alt Text', exact: true });
-		if (!(await alt.isVisible())) await collapsed.click();
-	}
-}
