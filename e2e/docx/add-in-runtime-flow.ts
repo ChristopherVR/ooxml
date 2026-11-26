@@ -80,6 +80,12 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		} else {
 			await openDialog();
 			await dialog.getByText('Add-in details', { exact: true }).click();
+			await expect(
+				dialog.getByRole('button', { name: 'Open Notes', exact: true }),
+			).toBeInViewport();
+			await expect(
+				dialog.getByRole('button', { name: 'Remove Notes', exact: true }),
+			).toBeInViewport();
 			await expect(dialog.getByText('Lab Notes', { exact: true })).toBeVisible();
 			await dialog.getByRole('button', { name: 'Open Notes', exact: true }).click();
 		}

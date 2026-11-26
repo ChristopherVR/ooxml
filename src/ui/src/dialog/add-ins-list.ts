@@ -21,8 +21,8 @@ function handoffUrl(link: string): string | undefined {
 function tile(label: string, actions: unknown, details?: TemplateResult) {
 	return html`<li class="tile"
 		>${glyph('addIns', 'tile-icon')}<div class="tile-body">
-			<p class="tile-name">${label}</p>${details}
-			<div class="tile-actions">${actions}</div>
+			<p class="tile-name">${label}</p>
+			<div class="tile-actions">${actions}</div>${details}
 		</div></li
 	>`;
 }
@@ -83,7 +83,7 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 						],
 						html`${reason ? html`<p id=${reasonId}>${reason}</p>` : nothing}
 							${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
-							<details
+							<details class="tile-details"
 								><summary>${t('Add-in details')}</summary>
 								${renderAddInDetails(addIn, t)}
 							</details>`,

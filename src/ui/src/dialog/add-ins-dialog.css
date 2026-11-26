@@ -121,8 +121,15 @@ dt {
 .tile-name {
 	margin: 0;
 }
-.tile-actions {
+.tile-actions,
+.tile-details {
 	margin-top: var(--office-space-3);
+}
+.tile-details summary {
+	cursor: pointer;
+}
+.tile-details[open] > :not(summary) {
+	margin-inline-start: var(--office-space-4);
 }
 .empty,
 .status {
