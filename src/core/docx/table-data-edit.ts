@@ -26,8 +26,10 @@ function cellText(cell: TableCell | undefined): string {
 	return text.trim();
 }
 
+const accountingText = (text: string): boolean => text.startsWith('(') && text.endsWith(')');
+
 function parseTableNumber(text: string): number {
-	const accounting = text.startsWith('(') && text.endsWith(')');
+	const accounting = accountingText(text);
 	const match = NUMBER.exec(accounting ? text.slice(1, -1).trim() : text);
 	if (!match?.[2] || (accounting && match[1])) return NaN;
 	const value = Number(`${match[1]}${match[2].replaceAll(',', '')}${match[3] ?? ''}`);
@@ -50,19 +52,31 @@ export function evaluateTableFormula(
 	const width = table.rows[row]?.length ?? 0;
 	if (column < 0 || column >= width || table.rows.length * width > MAX_FORMULA_CELLS) return;
 	const values: number[] = [];
+	let firstValueText: string | undefined;
 	const directions = new Set(match[2].toUpperCase().split(/\s*[,;]\s*/));
 	for (const direction of directions) {
 		const delta = DIRECTIONS.get(direction);
 		const [dy, dx] = delta ?? [];
 		if (dy === undefined || dx === undefined) return;
+		let plainRun = false;
 		for (
 			let y = row + dy, x = column + dx;
 			y >= 0 && y < table.rows.length && x >= 0 && x < width;
 			y += dy, x += dx
 		) {
 			if (table.rowProperties?.[y]?.header) continue;
-			const number = parseTableNumber(cellText(table.rows[y]?.[x]));
-			if (Number.isFinite(number)) values.push(number);
+			const text = cellText(table.rows[y]?.[x]);
+			const inner = accountingText(text) ? text.slice(1, -1).trim() : '';
+			const signed = /^[+-]/.test(inner);
+			const accounting = Boolean(inner) && !signed;
+			const number = parseTableNumber(signed ? inner : text);
+			// Word skips leading labels to locate the plain numeric range. Accounting values
+			// before that range contribute, but an accounting value after it marks its end.
+			if (plainRun && (accounting || !Number.isFinite(number))) break;
+			if (!Number.isFinite(number)) continue;
+			firstValueText ??= text;
+			values.push(number);
+			plainRun ||= !accounting;
 		}
 	}
 	const sum = () => values.reduce((total, value) => total + value, 0);
@@ -85,7 +99,25 @@ export function evaluateTableFormula(
 							: values.length
 								? Math.max(...values)
 								: 0;
-	return Number.isFinite(result) ? String(Number(result.toPrecision(15))) : undefined;
+	if (!Number.isFinite(result)) return undefined;
+	const rounded = Number(result.toPrecision(15));
+	if (
+		operation !== 'COUNT' &&
+		firstValueText &&
+		accountingText(firstValueText) &&
+		!/^\(\s*[+-]/.test(firstValueText)
+	) {
+		const currency = firstValueText.match(/\p{Sc}/u)?.[0];
+		const magnitude = currency
+			? currency +
+				Math.abs(rounded).toLocaleString('en-US', {
+					minimumFractionDigits: 2,
+					maximumFractionDigits: 2,
+				})
+			: String(Math.abs(rounded));
+		return rounded < 0 ? `(${magnitude})` : magnitude;
+	}
+	return String(rounded);
 }
 
 /** A complex Word field with a cached result that Word can update. */

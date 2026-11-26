@@ -165,14 +165,32 @@ describe('Word table contextual operations', () => {
 		['1,234', '1234'],
 		['$1,200.00', '1200'],
 		['12%', '0.12'],
-		['(5)', '-5'],
-		['($15.25)', '-15.25'],
+		['(5)', '(5)'],
+		['($15.25)', '($15.25)'],
 		['12,34', '0'],
-		['(-5)', '0'],
+		['(-5)', '-5'],
 	])('uses the numeric value of table cell %s', (text, expected) => {
 		const table = makeTable();
 		table.rows[0]![1]!.paragraphs[0]!.runs = [{ text }];
 		expect(evaluateTableFormula(table, 1, 1, '=SUM(ABOVE)')).toBe(expected);
+	});
+
+	// Word 16.0.20625, Fields.Add with =SUM(ABOVE), then Field.Update.
+	it.each([
+		[['(5)', '9'], '9'],
+		[['9', '(5)'], '4'],
+		[['9', '(5)', '3'], '3'],
+		[['(5)', '3', '(2)'], '1'],
+		[['(5)', '(2)'], '(7)'],
+		[['9', 'label', '3'], '3'],
+	])('matches the Word positional range for %j', (values, expected) => {
+		const table = makeTable();
+		table.rows = [...values, ''].map((text, index) => [
+			{
+				paragraphs: [{ type: 'paragraph', id: `formula-${index}`, runs: [{ text }] }],
+			},
+		]);
+		expect(evaluateTableFormula(table, values.length, 0, '=SUM(ABOVE)')).toBe(expected);
 	});
 
 	it('bounds formulas by total table cells', () => {
