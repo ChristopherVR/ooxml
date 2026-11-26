@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { createMetafileFixture } from '../../../e2e/visio/metafile-fixture.mjs';
 import { createVsdxFixture } from '../../../e2e/visio/fixture.mjs';
 
+const registryRuntime = process.argv.includes('--registry-runtime');
 const assetDirectory = resolvePath(process.argv[2] ?? 'site-dist/assets');
 const assets = await readdir(assetDirectory);
 const name = assets.find((file) => /^parse-worker-.*\.js$/.test(file));
@@ -77,7 +78,8 @@ try {
 		if (unsupported) {
 			assert.equal(emf.foreignVector, undefined);
 			assert.ok(metafileResult.document.diagnostics.some((note) => note.code === 'emf-emf-plus'));
-		} else {
+		} else if (!registryRuntime || emf.foreignVector) {
+			// The registry compatibility gate can consume a runtime predating balanced DC state.
 			assert.ok(emf.foreignVector.vector.items.length > 0);
 			assert.equal(emf.foreignVector.vector.width, 100);
 			assert.ok(
@@ -163,14 +165,16 @@ try {
 		vectorEdit.document.pages[0].shapes.find((shape) => shape.id === '1').text.plainText,
 		'Edited alongside EMF',
 	);
-	assert.ok(
-		vectorEdit.document.pages[0].shapes.find((shape) => shape.id === 'emf').foreignVector.vector
-			.items.length > 0,
-	);
-	assert.ok(vectorEdit.document.diagnostics.some((note) => note.code === 'emf-limited-rendering'));
+	const editedEmf = vectorEdit.document.pages[0].shapes.find((shape) => shape.id === 'emf');
+	if (!registryRuntime || editedEmf.foreignVector) {
+		assert.ok(editedEmf.foreignVector.vector.items.length > 0);
+		assert.ok(
+			vectorEdit.document.diagnostics.some((note) => note.code === 'emf-limited-rendering'),
+		);
+	}
 	const clipboardName = assets.find((file) => /^clipboard-worker-.*\.js$/.test(file));
 	// The separate registry compatibility gate can consume a runtime predating clipboard support.
-	if (!process.argv.includes('--registry-runtime') || clipboardName) {
+	if (!registryRuntime || clipboardName) {
 		assert.ok(clipboardName, 'Production clipboard capture worker must exist');
 		const clipboardUrl = pathToFileURL(resolvePath(assetDirectory, clipboardName)).href;
 		const clipboardWorker = new Worker(
