@@ -4,7 +4,7 @@ import { BrowserTestingModule, platformBrowserTesting } from '@angular/platform-
 import { provideTranslateService, TranslateService } from '@ngx-translate/core';
 import { ribbonTab, ribbonTabButtons } from 'ooxml-ui/pptx';
 import type { RibbonAddInTab } from 'ooxml-ui/pptx';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, test, vi } from 'vitest';
 
 import { translationsEn } from '../../../../../../src/ui/src/pptx/i18n/translations-en';
 import { registerPptxWebControls } from '../../../../../../src/ui/src/pptx/web-components';
@@ -44,12 +44,34 @@ function configure(): RibbonAddInsService {
 	});
 	// This JIT runner has no signal-input transform: declare the inputs and pass signals.
 	TestBed.overrideComponent(RibbonTabListComponent, {
-		add: { inputs: ['activeTab', 'addInTabs', 'activeAddIn'] },
+		add: { inputs: ['activeTab', 'addInTabs', 'activeAddIn', 'commentsOpen'] },
 	});
 	TestBed.inject(TranslateService).setTranslation('en', translationsEn);
 	TestBed.inject(TranslateService).use('en');
 	return TestBed.inject(RibbonAddInsService);
 }
+
+test('reflects the Comments pane state on the header button and emits its toggle', () => {
+	configure();
+	const fixture = TestBed.createComponent(RibbonTabListComponent);
+	const open = signal(false);
+	fixture.componentRef.setInput('activeTab', signal('home'));
+	fixture.componentRef.setInput('commentsOpen', open);
+	fixture.componentInstance.toggleComments.subscribe(() => open.set(!open()));
+	fixture.detectChanges();
+	const root: HTMLElement = fixture.nativeElement;
+	const opener = root
+		.querySelector('pptx-ui-ribbon-actions')
+		?.shadowRoot?.querySelector<HTMLButtonElement>('[part~="comments"]');
+	expect(opener?.getAttribute('aria-pressed')).toBe('false');
+	opener?.click();
+	fixture.detectChanges();
+	expect(opener?.getAttribute('aria-pressed')).toBe('true');
+	opener?.click();
+	fixture.detectChanges();
+	expect(opener?.getAttribute('aria-pressed')).toBe('false');
+	fixture.destroy();
+});
 
 describe('host ribbon tabs', () => {
 	it('lists the host tabs after the fixed tabs and never one that takes a built-in id', () => {

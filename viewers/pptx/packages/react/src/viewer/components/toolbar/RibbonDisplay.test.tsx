@@ -13,7 +13,7 @@ import type { RibbonDisplayMode } from 'ooxml-ui/pptx';
 import React, { act, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 import { useRibbonDisplayController } from '../../hooks/useRibbonDisplayController';
 import { Toolbar } from '../Toolbar';
@@ -167,6 +167,23 @@ function menuItem(mode: RibbonDisplayMode): HTMLElement {
 	}
 	return item;
 }
+
+test('routes Drawing Arrange to the shape editor without Picture Format props', () => {
+	const patch = vi.fn();
+	act(() => {
+		root.render(
+			<Toolbar
+				{...toolbarProps()}
+				selectedElement={{ id: 'shape', type: 'shape', x: 0, y: 0, width: 10, height: 10 }}
+				selectedCount={1}
+				onPatchElement={patch}
+			/>,
+		);
+	});
+	click(container.querySelector('[data-ribbon-control="home.drawing.arrange"] button')!);
+	click(container.querySelector('[data-ribbon-control="home.drawing.rotateRight"]')!);
+	expect(patch).toHaveBeenCalledExactlyOnceWith('shape', { rotation: 90 });
+});
 
 describe('ribbon display options in the Toolbar', () => {
 	it('lists the three modes in PowerPoint order with the current one checked', () => {

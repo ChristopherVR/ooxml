@@ -298,18 +298,14 @@ describe('inspectorPanel', () => {
 		expect(target.querySelector('.pptx-svelte-inspector-body')).not.toBeNull();
 	});
 
-	it('renders the [Elements | Properties | Comments] tab strip with Properties active by default', () => {
+	it('renders the Elements and Properties tabs with Properties active by default', () => {
 		const editor = makeEditor([shapeEl()]);
 		const { target } = mountInspector(editor);
 
 		const tabs = Array.from(
 			target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-inspector-tabs [role="tab"]'),
 		);
-		expect(tabs.map((tab) => tab.textContent?.trim())).toStrictEqual([
-			'Elements',
-			'Properties',
-			'Comments',
-		]);
+		expect(tabs.map((tab) => tab.textContent?.trim())).toStrictEqual(['Elements', 'Properties']);
 		expect(tabs[1].getAttribute('aria-selected')).toBe('true');
 	});
 

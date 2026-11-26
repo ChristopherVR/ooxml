@@ -136,6 +136,16 @@ test('Home uses Drawing Arrange and Review shares the Comments task pane', async
 	).toBeFocused();
 	await showComments.click();
 	await expect(pane).toHaveCount(0);
+
+	const header = page
+		.locator('pptx-ui-ribbon-actions')
+		.getByRole('button', { name: 'Comments', exact: true });
+	await expect(header).toHaveAttribute('aria-pressed', 'false');
+	await header.click();
+	await expect(header).toHaveAttribute('aria-pressed', 'true');
+	await pane.getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(header).toHaveAttribute('aria-pressed', 'false');
+	await expect(header).toBeFocused();
 });
 
 test('Insert Illustrations labels Freeform Shape and Curve', async ({ page }) => {

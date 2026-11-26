@@ -83,6 +83,20 @@ describe('createDrawingGroup', () => {
 		expect(actions.sendToBack).toHaveBeenCalledOnce();
 	});
 
+	it('routes Drawing Arrange to the shared commands, including Selection Pane without a selection', () => {
+		const selectionPane = vi.fn();
+		const group = createDrawingGroup(document, createTranslator(), {
+			...handlers(),
+			arrange: { selectionPane },
+		});
+		group.update({ editable: true, hasSelection: false });
+		trigger(group, 'arrange').click();
+		slot(group, 'arrange')
+			.querySelector<HTMLButtonElement>('[data-value="selectionPane"]')
+			?.click();
+		expect(selectionPane).toHaveBeenCalledOnce();
+	});
+
 	it('reflects the open menu as expanded', () => {
 		const group = createDrawingGroup(document, createTranslator(), handlers());
 		group.update({ editable: true, hasSelection: true });

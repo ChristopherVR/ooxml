@@ -10,12 +10,12 @@ import { ElementRef, Injector, runInInjectionContext, signal } from '@angular/co
 import { TranslateService } from '@ngx-translate/core';
 import { createCommentsPanelController } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxSlide } from 'pptx-viewer-core';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, test, vi } from 'vitest';
 
 import { CommentsPanelStateService } from './comments-panel-state.service';
 import { CommentsPanelComponent } from './comments-panel.component';
 
-function createPanel(canEdit = true) {
+function createPanel(canEdit = true, host = document.createElement('div')) {
 	let slides: PptxSlide[] = [
 		{
 			id: 's1',
@@ -48,7 +48,7 @@ function createPanel(canEdit = true) {
 	const panel = runInInjectionContext(
 		Injector.create({
 			providers: [
-				{ provide: ElementRef, useValue: new ElementRef(document.createElement('div')) },
+				{ provide: ElementRef, useValue: new ElementRef(host) },
 				{ provide: TranslateService, useValue: translate },
 				{ provide: CommentsPanelStateService, useValue: service },
 			],
@@ -80,6 +80,32 @@ const alice = (startIndex: number): PptxCommentMention => ({
 });
 const covered = ({ text, mentions }: PptxComment) =>
 	(mentions ?? []).map((m) => text!.slice(m.startIndex, m.startIndex + m.length));
+
+test('emits close and returns focus to the button that opened the task pane', async () => {
+	const opener = document.createElement('button');
+	const host = document.createElement('div');
+	const { panel } = createPanel(true, host);
+	Object.defineProperty(panel, 'closeable', { value: () => true });
+	document.body.append(opener, host);
+	opener.focus();
+	panel.ngAfterViewInit();
+	try {
+		const onClose = vi.fn(() => {
+			panel.ngOnDestroy();
+			host.remove();
+		});
+		panel.closed.subscribe(onClose);
+		const close = host.querySelector<HTMLButtonElement>('[data-pptx-comment-close]');
+		expect(close).not.toBeNull();
+		close?.focus();
+		close?.click();
+		expect(onClose).toHaveBeenCalledOnce();
+		await vi.waitFor(() => expect(document.activeElement).toBe(opener));
+	} finally {
+		opener.remove();
+		host.remove();
+	}
+});
 
 describe('comments panel', () => {
 	it('keeps the draft per slide and moves the mentions with the trimmed text', () => {

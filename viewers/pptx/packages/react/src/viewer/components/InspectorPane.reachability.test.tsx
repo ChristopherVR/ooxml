@@ -10,13 +10,14 @@
  * Every assertion here therefore starts from `InspectorPane` and walks down.
  */
 import type { PptxElement, PptxSlide, ShapeStyle, TextStyle } from 'pptx-viewer-core';
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
 
 import type { InspectorPaneProps } from './inspector/inspector-pane-types';
 import { InspectorPane } from './InspectorPane';
+import { TabRowActions } from './toolbar/TabRowActions';
 
 vi.mock(import('../i18n/use-translation'), () => ({
 	useTranslation: () => ({
@@ -129,6 +130,34 @@ function render(
 		root.render(<InspectorPane {...props(selectedElement, handlers)} {...overrides} />);
 	});
 }
+
+test('keeps the header Comments button pressed while its pane is open and returns focus on close', async () => {
+	const paneProps = props(null, noopHandlers());
+	function Harness(): React.ReactElement {
+		const [open, setOpen] = useState(false);
+		return (
+			<div data-pptx-editor-chrome=''>
+				<TabRowActions isCommentsPanelOpen={open} onToggleComments={() => setOpen(!open)} />
+				{open && (
+					<InspectorPane {...paneProps} activeTab='comments' onClose={() => setOpen(false)} />
+				)}
+			</div>
+		);
+	}
+	act(() => root.render(<Harness />));
+	const actions = container.querySelector('pptx-ui-ribbon-actions')?.shadowRoot;
+	const opener = actions?.querySelector<HTMLButtonElement>('[part~="comments"]');
+	expect(opener?.getAttribute('aria-pressed')).toBe('false');
+	opener?.focus();
+	act(() => opener?.click());
+	expect(opener?.getAttribute('aria-pressed')).toBe('true');
+	const close = container.querySelector<HTMLButtonElement>('[data-pptx-comment-close]');
+	expect(close).not.toBeNull();
+	close?.focus();
+	act(() => close?.click());
+	expect(opener?.getAttribute('aria-pressed')).toBe('false');
+	await vi.waitFor(() => expect(actions?.activeElement).toBe(opener));
+});
 
 /**
  * React tracks the DOM value of a controlled input, so a plain assignment is

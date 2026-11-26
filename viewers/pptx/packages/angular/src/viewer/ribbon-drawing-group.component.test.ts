@@ -147,6 +147,18 @@ describe('ribbonDrawingGroupComponent arrange wiring', () => {
 		return editor;
 	}
 
+	it('routes Drawing Arrange flip through the native editor selection', () => {
+		const editor = editorWithThree();
+		const group = createGroup(editor);
+		editor.select(['a', 'c']);
+		handlers(group).onRequest(intent({ id: 'home.drawing.arrange', value: 'flip-horizontal' }));
+		expect(editor.slides()[0]?.elements.map((element) => element.flipHorizontal)).toStrictEqual([
+			true,
+			undefined,
+			true,
+		]);
+	});
+
 	it('routes the arrange dropdown to the shared layer operations', () => {
 		const editor = editorWithThree();
 		const group = createGroup(editor);
