@@ -14,6 +14,7 @@ import {
 	needsCalculationOnOpen,
 	prepareWorkbookFormulas,
 	type Workbook,
+	type WorkbookChange,
 	type Worksheet,
 	workbookFontFamily,
 } from 'ooxml-core/xlsx';
@@ -354,7 +355,11 @@ export class EditorCore {
 		}
 	}
 
-	private onSessionChange(change: unknown): void {
+	private onSessionChange(change: WorkbookChange): void {
+		if (change.viewOnly) {
+			this.notifyModel(change);
+			return;
+		}
 		const workbook = this.workbook;
 		if (workbook) this.followShownSheet(workbook);
 		this.dirty.set(true);

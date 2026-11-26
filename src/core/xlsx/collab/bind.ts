@@ -168,7 +168,7 @@ export function bindWorkbookSession(
 	doc.on('afterTransaction', afterTransaction);
 
 	const stopEdits = edit.onChange((change) => {
-		if (disposed || change.external || !settled) return;
+		if (disposed || change.external || change.viewOnly || !settled) return;
 		if (change.deferredCalculation) {
 			if (host.canWrite()) publishCalculation();
 			else unsentCalculation = true;

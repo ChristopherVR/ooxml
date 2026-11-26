@@ -1,5 +1,5 @@
 import { prepareXPath } from '#xpath-runtime';
-import type { CfvoThreshold, ConditionalRule, Workbook } from '../model';
+import type { CfvoThreshold, ConditionalFormat, ConditionalRule, Workbook } from '../model';
 import { normalizeFunctionName } from './ast';
 import { tokenize } from './tokenizer';
 
@@ -40,13 +40,24 @@ function ruleUsesFilterXml(rule: ConditionalRule): boolean {
 	}
 }
 
+const conditionalFormatUsesFilterXml = (format: ConditionalFormat): boolean =>
+	format.rules.some(ruleUsesFilterXml);
+
+/** Start loading function code for a rule added or replaced in an open workbook. */
+export function prepareConditionalFormatFormulas(
+	workbook: Workbook,
+	format: ConditionalFormat,
+): Promise<void> | undefined {
+	if (conditionalFormatUsesFilterXml(format)) return prepareXPath(workbook);
+}
+
 /** Check the formulas once at workbook open, before any synchronous calculation. */
 export function prepareWorkbookFormulas(workbook: Workbook): Promise<void> | undefined {
 	if (workbook.definedNames.some(({ formula }) => usesFilterXml(formula)))
 		return prepareXPath(workbook);
 	for (const sheet of workbook.sheets) {
 		if (
-			sheet.conditionalFormats.some(({ rules }) => rules.some(ruleUsesFilterXml)) ||
+			sheet.conditionalFormats.some(conditionalFormatUsesFilterXml) ||
 			sheet.dataValidations.some(
 				({ formula1, formula2 }) => usesFilterXml(formula1) || usesFilterXml(formula2),
 			)

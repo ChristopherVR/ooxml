@@ -1,5 +1,6 @@
 import type { CellRange } from '../address';
-import type { Workbook } from '../model';
+import { prepareConditionalFormatFormulas } from '../formula/prepare-filterxml';
+import type { ConditionalFormat, Workbook } from '../model';
 import * as annotations from './annotations';
 import * as borders from './borders';
 import * as cellShift from './cell-shift';
@@ -82,23 +83,29 @@ export function createEditSession(
 	workbook: Workbook,
 	options: EditSessionOptions = {},
 ): EditSession {
-	let waitingForFunction: Promise<void> | undefined;
-	const calc = createCalcEngine(workbook, {
-		waitForFunction(ready) {
-			if (waitingForFunction === ready) return;
-			waitingForFunction = ready;
-			void ready.then(() => {
-				waitingForFunction = undefined;
+	const waitingForFunctions = new Map<Promise<void>, boolean>();
+	const waitForFunction = (ready: Promise<void>, recalculate: boolean): void => {
+		const alreadyWaiting = waitingForFunctions.has(ready);
+		if (recalculate || !alreadyWaiting) waitingForFunctions.set(ready, recalculate);
+		if (alreadyWaiting) return;
+		void ready.then(() => {
+			const recalculate = waitingForFunctions.get(ready);
+			waitingForFunctions.delete(ready);
+			if (recalculate) {
 				calculator.finishDeferredCalculation();
 				refreshTables();
-				emit({
-					kind: 'cells',
-					label: 'Calculate now',
-					structural: false,
-					deferredCalculation: true,
-				});
+			}
+			emit({
+				kind: recalculate ? 'cells' : 'view',
+				label: 'Calculate now',
+				structural: false,
+				...(recalculate ? { deferredCalculation: true } : { viewOnly: true }),
 			});
-		},
+		});
+	};
+	const calc = createCalcEngine(workbook, {
+		waitForFunction: (ready) => waitForFunction(ready, true),
+		waitForAdHocFunction: (ready) => waitForFunction(ready, false),
 	});
 	const autoRecalc = options.recalc ?? true;
 	const history = new History(options.historyLimit ?? 100);
@@ -224,6 +231,10 @@ export function createEditSession(
 
 	const ctx: EditContext = { workbook, calc, run };
 	if (options.defaultSheetBase) ctx.defaultSheetBase = options.defaultSheetBase;
+	const prepareConditionalFormat = (format: ConditionalFormat): void => {
+		const ready = prepareConditionalFormatFormulas(workbook, format);
+		if (ready) waitForFunction(ready, false);
+	};
 
 	// Excel re-fits rows without a custom height when their text or format changes. Runs while
 	// the step is still open and after its own entries, so undo restores heights first.
@@ -300,7 +311,10 @@ export function createEditSession(
 		setCommentReply: (s, at, index, text) => annotations.setCommentReply(ctx, s, at, index, text),
 		setCommentResolved: (s, at, resolved) => annotations.setCommentResolved(ctx, s, at, resolved),
 		setHyperlink: (s, range, link) => annotations.setHyperlink(ctx, s, range, link),
-		addConditionalFormat: (s, cf) => annotations.addConditionalFormat(ctx, s, cf),
+		addConditionalFormat: (s, cf) => {
+			annotations.addConditionalFormat(ctx, s, cf);
+			if (cf.ranges.length) prepareConditionalFormat(cf);
+		},
 		clearConditionalFormats: (s, range) => annotations.clearConditionalFormats(ctx, s, range),
 		setDataValidation: (s, dv, range) => annotations.setDataValidation(ctx, s, dv, range),
 		setAutoFilter: (s, range) => filter.setAutoFilter(ctx, s, range),
@@ -372,7 +386,10 @@ export function createEditSession(
 		addChartEx: (s, chart) => chartEx.addChartEx(ctx, s, chart),
 		addImage: (s, bytes, type, anchor, name, svg) =>
 			charts.addImage(ctx, s, bytes, type, anchor, name, svg),
-		replaceConditionalFormat: (s, index, cf) => cfEdits.replaceConditionalFormat(ctx, s, index, cf),
+		replaceConditionalFormat: (s, index, cf) => {
+			cfEdits.replaceConditionalFormat(ctx, s, index, cf);
+			prepareConditionalFormat(cf);
+		},
 		removeConditionalFormat: (s, index) => cfEdits.removeConditionalFormat(ctx, s, index),
 		setConditionalRulePriority: (s, f, r, priority) =>
 			cfEdits.setConditionalRulePriority(ctx, s, f, r, priority),

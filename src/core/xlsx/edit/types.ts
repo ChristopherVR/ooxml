@@ -135,6 +135,8 @@ export interface WorkbookChange {
 	external?: true;
 	/** Cached formula results refreshed after their implementation finished loading. */
 	deferredCalculation?: true;
+	/** Ad hoc formulas can now be evaluated again. Workbook data did not change. */
+	viewOnly?: true;
 }
 
 export interface ValidationFailure {

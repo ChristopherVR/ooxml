@@ -202,6 +202,7 @@ export abstract class EngineHost implements EvalHost {
 
 	waitForFunction(ready: Promise<void>): void {
 		if (this.pending) this.options.waitForFunction?.(ready);
+		else this.options.waitForAdHocFunction?.(ready);
 	}
 
 	// ---- graph ----
