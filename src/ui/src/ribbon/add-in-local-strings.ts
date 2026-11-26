@@ -1,10 +1,12 @@
 import { normalizeLocale } from 'ooxml-core/i18n';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import { ADD_IN_DIALOG_STRINGS } from './add-in-dialog-strings';
+import { ADD_IN_MARKETPLACE_STRINGS } from './add-in-marketplace-strings';
 
 const locales = ['fr', 'de', 'es', 'zh-CN', 'ja', 'ko'] as const;
 const messages = new Map<string, readonly [string, string, string, string, string, string]>([
 	...Object.entries(ADD_IN_DIALOG_STRINGS),
+	...Object.entries(ADD_IN_MARKETPLACE_STRINGS),
 	[
 		'Choose a local add-in file',
 		[

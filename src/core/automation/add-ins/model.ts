@@ -31,7 +31,7 @@ export interface AddInTab {
 }
 
 export type AddInIcon =
-	| { readonly kind: 'package'; readonly path: string }
+	| { readonly kind: 'package'; readonly path: string; readonly preview?: string }
 	| { readonly kind: 'remote'; readonly url: string };
 
 export interface AddInManifest {

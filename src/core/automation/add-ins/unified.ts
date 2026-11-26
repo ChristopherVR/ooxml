@@ -20,6 +20,7 @@ import {
 export interface ManifestAssets {
 	has(path: string): boolean;
 	readText(path: string): Promise<string>;
+	icon(path: string): string | undefined;
 }
 
 // Microsoft 365 app manifest releases with the documented Office task-pane extension fields.
@@ -37,15 +38,22 @@ const INACTIVE_APP_FEATURES = [
 	'dashboardCards',
 ];
 
-async function loadTranslations(raw: unknown, assets: ManifestAssets, options: AddInReadOptions) {
+async function loadTranslations(
+	raw: unknown,
+	assets: ManifestAssets | undefined,
+	options: AddInReadOptions,
+) {
 	const info = optionalObject(raw, 'localizationInfo');
 	const locale =
 		info.defaultLanguageTag === undefined ? 'en-us' : localeTag(info.defaultLanguageTag);
 	const translations = new Map<string, ReturnType<typeof object>>();
+	const tags = new Set([locale]);
 	for (const entry of records(info.additionalLanguages, 'additionalLanguages')) {
 		const tag = localeTag(entry.languageTag);
-		if (translations.has(tag) || tag === locale) invalid('duplicate locale');
+		if (tags.has(tag)) invalid('duplicate locale');
+		tags.add(tag);
 		const path = packagePath(entry.file);
+		if (!assets) continue;
 		const data = object(parseManifestJson(await assets.readText(path)), 'locale file');
 		translations.set(tag, {
 			...optionalObject(data.localizationKeys, 'localizationKeys'),
@@ -74,7 +82,7 @@ function packagePath(value: unknown): string {
 
 export async function readUnifiedManifest(
 	source: string,
-	assets: ManifestAssets,
+	assets: ManifestAssets | undefined,
 	options: AddInReadOptions,
 ): Promise<AddInManifest> {
 	const root = object(parseManifestJson(source), 'manifest');
@@ -83,7 +91,14 @@ export async function readUnifiedManifest(
 	const id = guid(root.id, 'id');
 	const release = version(root.version, 'version', /^\d{1,5}(?:\.\d{1,5}){2}$/);
 	const developer = object(root.developer, 'developer');
-	const publisher = text(developer.name, 'developer.name', 256);
+	const publisher = text(developer.name, 'developer.name', 32);
+	if (
+		root.accentColor !== undefined &&
+		!/^#[\da-f]{6}$/i.test(text(root.accentColor, 'accentColor'))
+	)
+		invalid('accentColor');
+	const description = object(root.description, 'description');
+	if (description.full !== undefined) text(description.full, 'description.full', 4000);
 	for (const field of ['websiteUrl', 'privacyUrl', 'termsOfUseUrl']) {
 		if (developer[field] !== undefined) url(developer[field], field);
 	}
@@ -127,8 +142,11 @@ export async function readUnifiedManifest(
 			icons.set(target, { kind: 'remote', url: target });
 		} else {
 			const path = packagePath(source);
-			if (!assets.has(path)) throw new AddInManifestError('package', 'missing icon');
-			icons.set(path, { kind: 'package', path });
+			if (assets && !assets.has(path)) throw new AddInManifestError('package', 'missing icon');
+			// Only a few bounded thumbnails are needed for consent.
+			if (icons.has(path)) return;
+			const preview = icons.size < 2 ? assets?.icon(path) : undefined;
+			icons.set(path, { kind: 'package', path, ...(preview && { preview }) });
 		}
 	};
 	if (root.icons !== undefined) {
@@ -152,7 +170,7 @@ export async function readUnifiedManifest(
 			issues.push({ kind: 'unsupported', feature });
 	}
 	const entryOrigins = new Set<string>();
-	const { hosts, requirements, tabs } = readExtensions(root.extensions, {
+	const { hosts, requirements, tabs, panes } = readExtensions(root.extensions, {
 		options,
 		declaredOrigins,
 		entryOrigins,
@@ -166,7 +184,9 @@ export async function readUnifiedManifest(
 	const pane =
 		tabs
 			.flatMap((tab) => tab.groups.flatMap((group) => group.commands))
-			.find((command) => command.kind === 'taskPane')?.url ?? null;
+			.find((command) => command.kind === 'taskPane')?.url ??
+		(tabs.length ? null : panes[0]) ??
+		null;
 	return {
 		format: 'unified',
 		id,
@@ -184,6 +204,6 @@ export async function readUnifiedManifest(
 		issues,
 		icons: [...icons.values()],
 		name: label('name.short', object(root.name, 'name').short, 30),
-		description: label('description.short', object(root.description, 'description').short, 80),
+		description: label('description.short', description.short, 80),
 	};
 }

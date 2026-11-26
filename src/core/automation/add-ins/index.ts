@@ -47,11 +47,5 @@ export async function readLocalAddIn(
 		}
 		return { digest, manifest: readXmlManifest(source, options) };
 	}
-	const assets = {
-		has: () => false,
-		readText: (): never => {
-			throw new AddInManifestError('package', 'missing locale file');
-		},
-	};
-	return { digest, manifest: await readUnifiedManifest(decodeManifest(owned), assets, options) };
+	return { digest, manifest: await readUnifiedManifest(decodeManifest(owned), undefined, options) };
 }

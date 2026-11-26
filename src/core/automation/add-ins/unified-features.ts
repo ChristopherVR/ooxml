@@ -82,7 +82,7 @@ function readActions(
 	for (const runtime of runtimes) {
 		const { issues: requirements } = featureRequirements(runtime.requirements, options);
 		issues.push(...requirements);
-		const type = identifier(runtime.type, 'runtime type');
+		const type = identifier(runtime.type ?? 'general', 'runtime type');
 		const lifetime = runtime.lifetime ?? 'short';
 		if (lifetime !== 'long' && lifetime !== 'short') invalid('runtime lifetime');
 		const code = object(runtime.code, 'runtime code');
@@ -207,6 +207,7 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 	const hosts = new Set<OfficeAddInHost>();
 	const requirements: AddInRequirement[] = [];
 	const tabs: AddInTab[] = [];
+	const panes: string[] = [];
 	const extensionKeys = new Set([
 		'requirements',
 		'runtimes',
@@ -240,8 +241,9 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 		}
 		if (applies) {
 			requirements.push(...condition.requirements);
+			for (const action of actions.values()) if (action.kind === 'taskPane') panes.push(action.url);
 			issues.push(...extensionContext.issues);
 		}
 	}
-	return { hosts: [...hosts], requirements, tabs };
+	return { hosts: [...hosts], requirements, tabs, panes };
 }

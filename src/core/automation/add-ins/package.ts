@@ -1,6 +1,6 @@
 import { crc32 } from '../../digest/crc32';
 import { decodeZipPath, inspectZipHeaders } from '../../opc/zip-headers';
-import { openZip } from '../../opc/zip-limits';
+import { openZip, ZipLimitError } from '../../opc/zip-limits';
 import { AddInManifestError, MANIFEST_BYTES, PACKAGE_BYTES } from './validation';
 
 const limits = {
@@ -57,9 +57,30 @@ export async function openManifestPackage(bytes: Uint8Array) {
 			if (!has(path) || !data) return fail('MISSING_ENTRY', 'manifest or locale file');
 			return decodeManifest(data);
 		};
-		return { has, readText };
+		return { has, readText, icon: (path: string) => pngPreview(files.get(path)) };
 	} catch (error) {
 		if (error instanceof AddInManifestError) throw error;
+		if (error instanceof ZipLimitError && error.kind !== 'partName')
+			return fail('LIMIT_INFLATE', 'archive entry');
 		return fail('INVALID_ZIP', 'archive');
 	}
+}
+
+function pngPreview(bytes: Uint8Array | undefined): string | undefined {
+	if (!bytes || bytes.length < 33 || bytes.length > MANIFEST_BYTES) return;
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+	if (
+		view.getUint32(0) !== 0x89504e47 ||
+		view.getUint32(4) !== 0x0d0a1a0a ||
+		view.getUint32(8) !== 13 ||
+		view.getUint32(12) !== 0x49484452
+	)
+		return;
+	const width = view.getUint32(16);
+	const height = view.getUint32(20);
+	if (!width || !height || width > 512 || height > 512) return;
+	let binary = '';
+	for (let offset = 0; offset < bytes.length; offset += 8192)
+		binary += String.fromCharCode(...bytes.subarray(offset, offset + 8192));
+	return `data:image/png;base64,${btoa(binary)}`;
 }

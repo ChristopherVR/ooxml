@@ -19,6 +19,7 @@ import {
 import {
 	all,
 	BASE,
+	OVERRIDE,
 	one,
 	typeName,
 	value,
@@ -27,6 +28,38 @@ import {
 	xmlRequirements,
 } from './xml-fields';
 import { readXmlOverrides } from './xml-overrides';
+
+// TaskPaneApp sequence from the public Office Add-in manifest XSD.
+const taskPaneOrder = [
+	'Id',
+	'AlternateId',
+	'Version',
+	'ProviderName',
+	'DefaultLocale',
+	'DisplayName',
+	'Description',
+	'IconUrl',
+	'HighResolutionIconUrl',
+	'SupportUrl',
+	'AppDomains',
+	'Hosts',
+	'Requirements',
+	'DefaultSettings',
+	'Permissions',
+	'Dictionary',
+	'VersionOverrides',
+	'ExtendedOverrides',
+];
+
+function validateTaskPaneOrder(root: Element): void {
+	let previous = -1;
+	for (const child of elements(root)) {
+		const namespace = child.localName === 'VersionOverrides' ? OVERRIDE : BASE;
+		const index = taskPaneOrder.indexOf(child.localName);
+		if (index <= previous || child.namespaceURI !== namespace) invalid(child.localName);
+		previous = index;
+	}
+}
 
 export function readXmlManifest(source: string, options: AddInReadOptions): AddInManifest {
 	let root: Element;
@@ -42,6 +75,7 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 	if (root.localName !== 'OfficeApp') return invalid('OfficeApp');
 	if (root.namespaceURI !== BASE) throw new AddInManifestError('version', 'OfficeApp');
 	if (typeName(root) !== 'TaskPaneApp') throw new AddInManifestError('extension', 'OfficeApp');
+	validateTaskPaneOrder(root);
 	const id = guid(value(root, 'Id'), 'Id');
 	const release = version(value(root, 'Version'), 'Version');
 	const publisher = text(value(root, 'ProviderName'), 'ProviderName', 256);
@@ -52,6 +86,8 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 	};
 	const hostsNode = one(root, 'Hosts');
 	const names = all(hostsNode, 'Host').map((host) => host.getAttribute('Name') ?? '');
+	if (hostsNode && (names.length === 0 || names.length !== elements(hostsNode).length))
+		invalid('Hosts');
 	unique(names, (name) => name, 'duplicate host');
 	const hosts = hostsNode
 		? names.flatMap((name) => {

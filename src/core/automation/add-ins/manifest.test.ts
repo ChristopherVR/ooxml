@@ -394,5 +394,21 @@ describe('local Office add-in manifests', () => {
 			.replace(/"icons": [^\n]+\n/, '')
 			.replace(/"additionalLanguages": \[[^\n]+/, '"additionalLanguages": []');
 		expect((await read(detached)).manifest.format).toBe('unified');
+		const original = (await read(unified, { ...support, locale: 'fr' })).manifest;
+		expect(original.name).toBe('Notes');
+		expect(original.icons).toEqual([
+			{ kind: 'package', path: 'icons/color.png' },
+			{ kind: 'package', path: 'icons/outline.png' },
+		]);
+	});
+
+	it('rejects top-level XML elements in the wrong order or namespace', async () => {
+		await expect(
+			read(xml.replace(/(<Version>.*?<\/Version>)\s*(<ProviderName>.*?<\/ProviderName>)/, '$2$1')),
+		).rejects.toMatchObject({ code: 'manifest', field: 'Version' });
+		await expect(read(xml.replace('<Hosts>', '<Hosts xmlns="urn:fake">'))).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'Hosts',
+		});
 	});
 });

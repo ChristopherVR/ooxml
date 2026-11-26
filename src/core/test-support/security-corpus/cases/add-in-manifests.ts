@@ -12,7 +12,34 @@ async function refusal(bytes: Uint8Array, report: 'code' | 'field' = 'code') {
 	}
 }
 
+const unsafePane = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="TaskPaneApp">
+	<Id>083a367e-842b-4d4f-ab91-cd5de849e495</Id><Version>1.0.0</Version>
+	<ProviderName>Fixture</ProviderName><DefaultLocale>en-US</DefaultLocale>
+	<DisplayName DefaultValue="Example"/><Description DefaultValue="Example"/>
+	<Hosts><Host Name="Document"/></Hosts>
+	<DefaultSettings><SourceLocation DefaultValue="javascript:void(0)"/></DefaultSettings>
+</OfficeApp>`;
+
 export const cases: readonly SecurityCase[] = [
+	{
+		name: 'executable task pane URLs are rejected',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () => refusal(new TextEncoder().encode(unsafePane)),
+		expected: 'url',
+	},
+	{
+		name: 'oversized detached manifests are rejected',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () => refusal(new Uint8Array(256 * 1024 + 1).fill(0x20)),
+		expected: 'limit',
+	},
+	{
+		name: 'a truncated manifest archive is rejected',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () => refusal(new Uint8Array([0x50, 0x4b, 3, 4])),
+		expected: 'package',
+	},
 	{
 		name: 'external entity declarations are rejected offline',
 		limits: { ms: 2_000, heapMb: 64 },

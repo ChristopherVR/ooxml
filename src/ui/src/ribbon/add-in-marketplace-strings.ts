@@ -1,0 +1,43 @@
+export const ADD_IN_MARKETPLACE_STRINGS = {
+	'Supported hosts': [
+		'Hôtes pris en charge',
+		'Unterstützte Hosts',
+		'Aplicaciones compatibles',
+		'支持的主机',
+		'対応ホスト',
+		'지원 호스트',
+	],
+	Requirements: [
+		'Configuration requise',
+		'Anforderungen',
+		'Requisitos',
+		'要求',
+		'要件',
+		'요구 사항',
+	],
+	Icons: ['Icônes', 'Symbole', 'Iconos', '图标', 'アイコン', '아이콘'],
+	'Add from Marketplace link': [
+		'Ajouter depuis un lien Marketplace',
+		'Über Marketplace-Link hinzufügen',
+		'Agregar desde un vínculo de Marketplace',
+		'通过 Marketplace 链接添加',
+		'Marketplace のリンクから追加',
+		'Marketplace 링크에서 추가',
+	],
+	'Review add-in': [
+		'Examiner le complément',
+		'Add-In prüfen',
+		'Revisar el complemento',
+		'查看加载项',
+		'アドインを確認',
+		'추가 기능 검토',
+	],
+	'Enter a Microsoft Marketplace link or asset ID.': [
+		'Saisissez un lien Microsoft Marketplace ou un ID de ressource.',
+		'Geben Sie einen Microsoft Marketplace-Link oder eine Asset-ID ein.',
+		'Escribe un vínculo de Microsoft Marketplace o un identificador de recurso.',
+		'请输入 Microsoft Marketplace 链接或资产 ID。',
+		'Microsoft Marketplace のリンクまたはアセット ID を入力してください。',
+		'Microsoft Marketplace 링크 또는 자산 ID를 입력하세요.',
+	],
+} as const;
