@@ -122,18 +122,27 @@ describe('native mail merge fields and prompts', () => {
 		const source = documentWith([
 			...mailMergeAddressBlock({ country: '2', excludeCountry: 'France', formatByCountry: true }),
 			{ text: '\n\n' },
-			...mailMergeGreetingLine({ before: 'Hello', after: '!', fallback: 'Hello there!' }),
+			...mailMergeGreetingLine({
+				name: 'full',
+				before: 'Hello',
+				after: '!',
+				fallback: 'Hello there!',
+			}),
 		]);
 		source.mailMerge = { fieldMappings: [{ mappedName: 'FirstName', name: 'Given' }] };
 		const loaded = await loadDocx(await saveDocx(source));
-		expect(
-			documentParagraphs(loaded.model.blocks)[0]?.runs.flatMap((run) => run.fieldCode ?? []),
-		).toEqual([expect.stringContaining('ADDRESSBLOCK'), expect.stringContaining('GREETINGLINE')]);
+		const fields = documentParagraphs(loaded.model.blocks)[0]?.runs.flatMap(
+			(run) => run.field?.instr ?? [],
+		);
+		expect(fields).toEqual([
+			expect.stringContaining('ADDRESSBLOCK'),
+			expect.stringContaining('GREETINGLINE'),
+		]);
 		expect(plainText(previewMailMerge(loaded.model, records, 1).document)).toBe(
 			'Ada Lovelace\n75001 Paris\n\nHello Ada Lovelace!',
 		);
 		expect(plainText(previewMailMerge(loaded.model, records, 2).document)).toBe(
-			'Bea\nBoston, MA 02110\nUSA\n\nHello there!',
+			'Bea\nBoston, MA 02110\nUSA\n\nHello Bea!',
 		);
 	});
 

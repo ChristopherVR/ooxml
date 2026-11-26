@@ -203,7 +203,7 @@ export const extendedMailingsTranslations = {
 		fr: 'Nom du destinataire',
 		'zh-CN': '收件人姓名',
 	},
-	'To whom it may concern,': {
+	'Dear Sir or Madam,': {
 		de: 'Sehr geehrte Damen und Herren,',
 		es: 'A quien corresponda:',
 		fr: 'Madame, Monsieur,',

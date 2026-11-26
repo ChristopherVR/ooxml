@@ -327,10 +327,14 @@ export function createRun(
 		return node;
 	}
 	if (run.fieldCode !== undefined) {
-		const code = makeW(doc, 'instrText');
-		code.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-		code.appendChild(doc.createTextNode(run.fieldCode));
-		node.appendChild(code);
+		for (const [index, part] of run.fieldCode.split('\r').entries()) {
+			if (index) node.appendChild(makeW(doc, 'cr'));
+			if (index === 0 && !part && run.fieldCode) continue;
+			const code = makeW(doc, 'instrText');
+			code.setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
+			code.appendChild(doc.createTextNode(part));
+			node.appendChild(code);
+		}
 		return node;
 	}
 	if (run.noteSeparator) {

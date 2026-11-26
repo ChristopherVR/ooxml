@@ -2,7 +2,9 @@ import type { TextRun } from '../model';
 import type { MailMergeFieldMapping } from './settings';
 import {
 	addressTemplate,
+	defaultGreetingFallback,
 	greetingTemplate,
+	mailingLanguageId,
 	type AddressBlockOptions,
 	type GreetingLineOptions,
 } from './native-fields';
@@ -194,27 +196,15 @@ function complex(instruction: TextRun[], label: string): TextRun[] {
 export function mailMergeAddressBlock(options: AddressBlockOptions = {}): TextRun[] {
 	const exclude = options.excludeCountry ? ` \\e ${quote(options.excludeCountry)}` : '';
 	const formatByCountry = options.formatByCountry ? ' \\d' : '';
-	const language = options.language ? ` \\l ${quote(options.language)}` : '';
-	return complex(
-		[
-			code(
-				` ADDRESSBLOCK \\f ${quote(addressTemplate(options))} \\c ${options.country ?? '1'}${exclude}${formatByCountry}${language} `,
-			),
-		],
-		'AddressBlock',
-	);
+	const language = mailingLanguageId(options.language);
+	const instruction = ` ADDRESSBLOCK \\f ${quote(addressTemplate(options))} \\l ${language} \\c ${options.country ?? '1'}${exclude}${formatByCountry} `;
+	return complex(instruction.split(/(?=\r)/).map(code), 'AddressBlock');
 }
 
 export function mailMergeGreetingLine(options: GreetingLineOptions = {}): TextRun[] {
-	const language = options.language ? ` \\l ${quote(options.language)}` : '';
-	return complex(
-		[
-			code(
-				` GREETINGLINE \\f ${quote(greetingTemplate(options))} \\e ${quote(options.fallback ?? '')}${language} `,
-			),
-		],
-		'GreetingLine',
-	);
+	const language = mailingLanguageId(options.language);
+	const instr = `GREETINGLINE \\f ${quote(greetingTemplate(options))} \\l ${language} \\e ${quote(options.fallback ?? defaultGreetingFallback)}`;
+	return [{ text: '«GreetingLine»', field: { simple: true, instr } }];
 }
 
 export function mailMergeField(

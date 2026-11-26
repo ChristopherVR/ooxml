@@ -93,6 +93,7 @@ export function nativeFieldDialog(
 		...(kind === 'address' ? ([['none', t('Omit name')]] as const) : []),
 	]);
 	if (!matchMailMergeField('LastName', fields, mappings)) name.value = 'first';
+	else if (kind === 'greeting') name.value = 'last';
 	dialog.content.append(labelled(t('Recipient name'), name));
 	const nameValue = () => (name.value === 'first' || name.value === 'last' ? name.value : 'full');
 	let runs: () => TextRun[];
@@ -104,7 +105,7 @@ export function nativeFieldDialog(
 		punctuation.maxLength = 8;
 		greeting.value = t('Dear');
 		punctuation.value = ',';
-		fallback.value = t('To whom it may concern,');
+		fallback.value = t('Dear Sir or Madam,');
 		dialog.content.append(
 			labelled(t('Greeting'), greeting),
 			labelled(t('Punctuation'), punctuation),
@@ -116,6 +117,7 @@ export function nativeFieldDialog(
 				before: greeting.value,
 				after: punctuation.value,
 				fallback: fallback.value,
+				language: locale,
 			});
 	} else {
 		const company = checkbox(t('Include company'));
@@ -145,6 +147,7 @@ export function nativeFieldDialog(
 				company: company.input.checked,
 				street: street.input.checked,
 				formatByCountry: order.input.checked,
+				language: locale,
 				country: country.value === '0' || country.value === '2' ? country.value : '1',
 				...(country.value === '2' && { excludeCountry: exclude.value }),
 			});

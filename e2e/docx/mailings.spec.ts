@@ -193,6 +193,29 @@ test('adds a Word envelope from the keyboard', async ({ page }) => {
 	await expect(editor.locator('.ProseMirror')).toContainText('Ada');
 });
 
+test('previews the default Word greeting with the recipient title', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const ribbon = editor.locator('office-ui-ribbon');
+	const modal = editor.locator('.dve-mailings-dialog');
+	await ribbon.getByRole('tab', { name: 'Mailings' }).click();
+	await ribbon.getByRole('button', { name: 'Select Recipients' }).click();
+	await modal.locator('input[type=file]').setInputFiles({
+		name: 'greetings.csv',
+		mimeType: 'text/csv',
+		buffer: Buffer.from('CourtesyTitle,FirstName,LastName\nMs.,Ada,Lovelace'),
+	});
+	await ribbon.getByRole('button', { name: 'Greeting Line' }).click();
+	await expect(modal.getByRole('textbox', { name: 'Greeting for missing names' })).toHaveValue(
+		'Dear Sir or Madam,',
+	);
+	await modal.getByRole('button', { name: 'OK' }).click();
+	await ribbon.getByRole('button', { name: 'Preview Results' }).click();
+	await expect(editor.locator('[data-merge-projection]')).toContainText('Dear Ms. Lovelace,');
+});
+
 test('prepares a mailto draft with a live prompt answer', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 900 });
 	await page.goto('/?framework=vanilla');
