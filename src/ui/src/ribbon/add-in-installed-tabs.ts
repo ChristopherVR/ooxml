@@ -1,3 +1,5 @@
+import { MANIFEST_TAB_PREFIX } from './add-in-manifest-tabs';
+
 export interface EditorAddIn {
 	id: string;
 	label: string;
@@ -34,4 +36,3 @@ export function editorAddIns(scope: ParentNode): EditorAddIn[] {
 		}));
 	});
 }
-import { MANIFEST_TAB_PREFIX } from './add-in-manifest-tabs';
