@@ -149,10 +149,8 @@ jobs:
           path: src/core/dist
       - run: bun run --cwd src/ui typecheck
 
-  # The unit suite is ~1,200 files and most of its time is spent importing the pptx area into each
-  # file, so it is split across parallel runners by file (`vitest --shard`). The planner sizes the
-  # matrix: one runner per ~60 affected test files on a change, six for a full run. The floor is the
-  # slowest single file (the salt-less WHIRLPOOL modifyVerifier fixture, ~80s), not the shard count.
+  # Vitest balances `--shard` by measured file duration. The planner uses one runner per ~60
+  # affected test files on a change, up to six, and six runners for a full run.
   test:
     name: test (shard ${{ matrix.shard }}/${{ strategy.job-total }})
     needs: plan
@@ -166,7 +164,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ needs.plan.outputs.ref }}
-          fetch-depth: 0
+          # A full run and `vitest related` only need the checked-out tree.
+          fetch-depth: ${{ fromJSON(needs.plan.outputs.plan).test.mode == 'changed' && '0' || '1' }}
       - uses: ./.github/actions/setup
       - name: Run the affected tests
         env:
@@ -215,11 +214,10 @@ jobs:
           path: src/ui/dist
           retention-days: 1
 
-  # ooxml-ui's unit tests, in three shards (the suite took about nine minutes on one runner; Vitest
-  # shards the files of all its projects together).
+  # Vitest balances the three shards by file duration. The UI test config resolves core from source.
   ui-test:
     name: ui test (${{ matrix.shard }}/3)
-    needs: [plan, build]
+    needs: plan
     if: fromJSON(needs.plan.outputs.plan).checks.ui
     runs-on: ubuntu-latest
     strategy:
@@ -231,10 +229,6 @@ jobs:
         with:
           ref: ${{ needs.plan.outputs.ref }}
       - uses: ./.github/actions/setup
-      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
-        with:
-          name: core-dist
-          path: src/core/dist
       - run: bun run --cwd src/ui test --shard=${{ matrix.shard }}/3
 
   # ooxml-ui's package checks. The package is packed from the build job's core and ui output
