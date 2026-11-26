@@ -7,6 +7,7 @@ import { EDITOR_INSPECTOR_CSS } from './inspector-css';
 import { EDITOR_LAYOUT_CSS } from './layout-css';
 import { EDITOR_COLLAPSE_CSS } from './ribbon-collapse-css';
 import { EDITOR_RIBBON_CSS } from './ribbon-css';
+import { EDITOR_TASK_PANE_CSS } from './task-pane-css';
 import { EDITOR_THUMBNAIL_CSS } from './thumbnail-css';
 
 export { EDITOR_CARDS_CSS, EDITOR_CARDS_ROOT } from './cards-css';
@@ -24,4 +25,5 @@ export const EDITOR_CHROME_CSS =
 	EDITOR_CLUSTER_CSS +
 	EDITOR_COLLAPSE_CSS +
 	// Last: the opt-in cards look overrides the default look at equal weight.
-	EDITOR_CARDS_CSS;
+	EDITOR_CARDS_CSS +
+	EDITOR_TASK_PANE_CSS;

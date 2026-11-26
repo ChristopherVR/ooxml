@@ -10,7 +10,7 @@ for (const { width, embedded } of [
 	test(`Ribbon tabs stay on one line at ${embedded ? '700px embedded' : '800px'}`, async ({
 		page,
 	}) => {
-		await page.setViewportSize({ width, height: 900 });
+		await page.setViewportSize({ width, height: 700 });
 		await loadDeck(page);
 		const tabs = page.locator('pptx-ui-ribbon-tabs:visible');
 		if (embedded) {
@@ -82,6 +82,11 @@ for (const width of [800, 1280]) {
 		const ribbon = page.locator('[data-pptx-chrome="ribbon"]:visible').first();
 		const status = page.locator('pptx-ui-status-bar:visible').first();
 		const paneBox = await pane.boundingBox();
+		const canvas = page.locator('[data-pptx-viewport]:visible').first();
+		await expect
+			.poll(async () => (await canvas.boundingBox())?.width ?? 0)
+			.toBeGreaterThanOrEqual(320);
+		expect(paneBox!.x).toBeGreaterThanOrEqual((await canvas.boundingBox())!.x + 320);
 		const ribbonBox = await ribbon.boundingBox();
 		expect(paneBox!.y).toBeGreaterThanOrEqual(ribbonBox!.y + ribbonBox!.height - 1);
 		if (await status.isVisible())
