@@ -14,6 +14,7 @@ import {
 } from './table-data-edit';
 import { TABLE_STYLE_PRESETS, installTableStylePreset } from './table-style-presets';
 import { expectTable } from './test-support/access';
+import { adaptDocumentModel } from './layout/adapter';
 import { tableCellViews } from './ui/table-cell-views';
 
 function makeTable(): Table {
@@ -89,6 +90,7 @@ describe('Word table contextual operations', () => {
 			noVBand: true,
 		};
 		table.rows[0]![0]!.verticalAlign = 'bottom';
+		delete table.rows[0]![0]!.paragraphs[0]!.runs[0]!.bold;
 		model.blocks = [table];
 		model.tableStyles = installTableStylePreset(undefined, preset);
 		model.theme = {
@@ -112,6 +114,18 @@ describe('Word table contextual operations', () => {
 			reopened.model.tableStyles?.styles[preset.id]?.conditional.firstRow?.shadingThemeFill,
 		).toEqual({ token: 'accent1' });
 		expect(reopened.model.tableStyles?.styles[preset.id]?.borders?.top?.themeColor).toBe('accent1');
+		expect(reopened.model.tableStyles?.styles[preset.id]?.conditional.firstRow?.run).toMatchObject({
+			bold: true,
+			color: '#FFFFFF',
+			colorTheme: { token: 'background1' },
+		});
+		const printed = adaptDocumentModel(reopened.model).sections[0]?.blocks[0];
+		if (printed?.kind !== 'table') throw new Error('Expected a layout table');
+		expect(printed.rows[0]?.cells[0]?.paragraphs[0]?.runs[0]).toMatchObject({
+			color: '#FFFFFF',
+			bold: true,
+		});
+		expect(printed.rows[1]?.cells[0]?.paragraphs[0]?.runs[0]?.bold).toBeUndefined();
 		expect(repeatTableRows(makeTable(), 1, 1).rowProperties).toBeUndefined();
 		expect(repeatTableRows(loaded, 0, 0).rowProperties?.map((row) => row.header)).toEqual([
 			false,

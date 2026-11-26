@@ -1,10 +1,12 @@
 import { rowSpanOf, tableGrid } from '../table-grid';
 import {
 	resolveCellVisuals,
+	resolveTableStyleFormatting,
 	resolveThemeColorReference,
 	twipsToPixels,
 	type DocumentModel,
 	type Paragraph,
+	type RunFormatting,
 	type Table,
 	type TableBorderSide,
 } from '../index';
@@ -80,11 +82,20 @@ function rowLayout(
 export function adaptTable(
 	table: Table,
 	model: DocumentModel,
-	adaptParagraph: (paragraph: Paragraph) => LayoutParagraph,
+	adaptParagraph: (
+		paragraph: Paragraph,
+		markLabel?: string,
+		tableStyleRun?: RunFormatting,
+	) => LayoutParagraph,
 	_nested = false,
 ): LayoutTable {
 	const grid = table.grid?.map(twipsToPx);
-	const columnCount = grid?.length ?? Math.max(1, ...table.rows.map((row) => row.length));
+	const columnCount =
+		grid?.length ??
+		Math.max(
+			1,
+			...table.rows.map((row) => row.reduce((width, cell) => width + (cell.gridSpan ?? 1), 0)),
+		);
 	const gridWidth = (start: number, span: number) =>
 		grid ? grid.slice(start, start + span).reduce((sum, width) => sum + width, 0) : undefined;
 	// Grid column of each cell, so vertical merges line up across rows with different spans.
@@ -166,8 +177,17 @@ export function adaptTable(
 				const rowSpan = merges && entry ? rowSpanOf(merges, entry) : 1;
 				const blocks = cellSourceBlocks(cell);
 				const last = blocks.at(-1);
+				const tableStyleRun = resolveTableStyleFormatting(
+					table.style,
+					model.tableStyles,
+					table.look,
+					rowIndex,
+					table.rows.length,
+					start,
+					columnCount,
+				).run;
 				const adaptCellParagraph = (paragraph: Paragraph): LayoutParagraph => {
-					const adapted = adaptParagraph(paragraph);
+					const adapted = adaptParagraph(paragraph, undefined, tableStyleRun);
 					return cell.hideMark && last?.id === paragraph.id
 						? { ...adapted, hideCellEndMark: true }
 						: adapted;

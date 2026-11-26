@@ -68,6 +68,7 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	await insertTableOfSize(page);
 	const cells = editor.locator('.ProseMirror td');
 	await cells.first().click();
+	await page.keyboard.type('StyledHeader');
 	await design.click();
 	await editor.getByRole('button', { name: 'Table Styles', exact: true }).click();
 	const stylesList = editor.getByRole('listbox', { name: 'Table Styles', exact: true });
@@ -84,6 +85,9 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	).toBeFocused();
 	await page.keyboard.press('Enter');
 	await expect(cells.first()).toHaveCSS('background-color', 'rgb(68, 114, 196)');
+	const headerText = cells.first().getByText('StyledHeader', { exact: true });
+	await expect(headerText).toHaveCSS('color', 'rgb(255, 255, 255)');
+	await expect(headerText).toHaveCSS('font-weight', '700');
 	const headerStyle = editor.getByRole('button', { name: 'Header Row', exact: true });
 	await headerStyle.click();
 	await expect(headerStyle).toHaveAttribute('aria-pressed', 'false');
@@ -117,6 +121,13 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	expect(styles).toContain('w:styleId="GridTable4-Accent1"');
 	expect(styles).toContain('w:themeFill="accent1"');
 	expect(styles).toContain('w:themeColor="accent1"');
+	expect(styles).toMatch(
+		/<w:tblStylePr w:type="firstRow"><w:rPr><w:b\/><w:color [^>]*w:themeColor="background1"/,
+	);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const printed = editor.locator('.dve-print-cell').getByText('StyledHeader', { exact: true });
+	await expect(printed).toHaveCSS('color', 'rgb(255, 255, 255)');
+	await expect(printed).toHaveCSS('font-weight', '700');
 });
 
 test('table commands without revision support are disabled during Track Changes', async ({

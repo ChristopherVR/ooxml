@@ -1,5 +1,13 @@
 import { scriptLayoutRuns } from './script-fonts';
-import type { Block, DocumentModel, Paragraph, SectionProperties, TextRun, Twips } from '../index';
+import type {
+	Block,
+	DocumentModel,
+	Paragraph,
+	RunFormatting,
+	SectionProperties,
+	TextRun,
+	Twips,
+} from '../index';
 import {
 	computeListLabels,
 	dateFieldResult,
@@ -147,11 +155,16 @@ export function adaptDocumentModel(
 	const now = new Date();
 	const theme = model.theme;
 	/** Effective run formatting: document defaults, paragraph and character styles, theme fonts. */
-	function effective(run: TextRun, paragraphStyleId: string | undefined) {
+	function effective(
+		run: TextRun,
+		paragraphStyleId: string | undefined,
+		tableStyleRun?: RunFormatting,
+	) {
 		const formatting = resolveRunFormatting(run, {
 			runCatalog,
 			paragraphCatalog: catalog,
 			paragraphStyleId,
+			...(tableStyleRun && { tableStyleRun }),
 		});
 		const role = formatting.fontTheme?.ascii ?? formatting.fontTheme?.hAnsi;
 		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.
@@ -169,10 +182,11 @@ export function adaptDocumentModel(
 		run: TextRun,
 		paragraphStyleId: string | undefined,
 		markLabel?: string,
+		tableStyleRun?: RunFormatting,
 	): LayoutRun {
 		if (isRunHiddenForReview(run, reviewMode))
 			return { text: run.text, hidden: true, sourceLength: reviewSourceLength(run) };
-		const { formatting, family, color } = effective(run, paragraphStyleId);
+		const { formatting, family, color } = effective(run, paragraphStyleId, tableStyleRun);
 		const equation = run.equation
 			? equationObject(
 					run.equation.omml,
@@ -307,8 +321,17 @@ export function adaptDocumentModel(
 	}
 	const labels = computeListLabels(model);
 	/** The list label run (number or bullet plus its suffix), formatted like the paragraph's text. */
-	function labelRun(paragraph: Paragraph, label: ParagraphListLabel): LayoutRun {
-		const first = adaptRun(paragraph.runs[0] ?? { text: '' }, paragraph.style);
+	function labelRun(
+		paragraph: Paragraph,
+		label: ParagraphListLabel,
+		tableStyleRun?: RunFormatting,
+	): LayoutRun {
+		const first = adaptRun(
+			paragraph.runs[0] ?? { text: '' },
+			paragraph.style,
+			undefined,
+			tableStyleRun,
+		);
 		const marker = label.markerFormat;
 		const suffix = label.suffix === 'tab' ? '\t' : label.suffix === 'space' ? ' ' : '';
 		const pictureWidthPx = label.picture
@@ -339,8 +362,12 @@ export function adaptDocumentModel(
 		};
 	}
 	const betweenBorders = new Map<LayoutParagraph, LayoutParagraphBorders['top']>();
-	function adaptParagraph(paragraph: Paragraph, markLabel?: string): LayoutParagraph {
-		const adapted = adaptParagraphOnly(paragraph, markLabel);
+	function adaptParagraph(
+		paragraph: Paragraph,
+		markLabel?: string,
+		tableStyleRun?: RunFormatting,
+	): LayoutParagraph {
+		const adapted = adaptParagraphOnly(paragraph, markLabel, tableStyleRun);
 		const between = paragraphBox(
 			catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph,
 			model.theme,
@@ -349,19 +376,30 @@ export function adaptDocumentModel(
 		return adapted;
 	}
 	/** The saved paragraph mark supplies the font for a line with no visible runs. */
-	function emptyLineFont(paragraph: Paragraph, runs: LayoutRun[]) {
+	function emptyLineFont(paragraph: Paragraph, runs: LayoutRun[], tableStyleRun?: RunFormatting) {
 		if (runs.some((run) => !run.hidden && (run.text || run.object))) return undefined;
 		const source = paragraph.sourceParagraphPropertiesXml;
 		const props = source ? first(parseXml(source).documentElement, 'rPr') : undefined;
 		return fontOf(
-			withFontFallback(adaptRun({ text: '', ...parseDirectRunProperties(props) }, paragraph.style)),
+			withFontFallback(
+				adaptRun(
+					{ text: '', ...parseDirectRunProperties(props) },
+					paragraph.style,
+					undefined,
+					tableStyleRun,
+				),
+			),
 		);
 	}
 	function withFontFallback(run: LayoutRun): LayoutRun {
 		const fallback = run.fontFamily && model.fontFallbacks?.get(run.fontFamily.toLowerCase());
 		return fallback ? { ...run, fontFallback: fallback } : run;
 	}
-	function adaptParagraphOnly(paragraph: Paragraph, markLabel?: string): LayoutParagraph {
+	function adaptParagraphOnly(
+		paragraph: Paragraph,
+		markLabel?: string,
+		tableStyleRun?: RunFormatting,
+	): LayoutParagraph {
 		const resolved = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
 		const label = labels.get(paragraph.id);
 		// Numbering level indents apply unless the paragraph or its style sets its own. A paragraph
@@ -374,11 +412,15 @@ export function adaptDocumentModel(
 		// A symbol that shares its run with text is drawn in its own font, the text in the run's.
 		const runs = paragraph.runs.flatMap((run) =>
 			symbolSegments(run).flatMap((segment) => {
-				const adapted = adaptRun(segment, paragraph.style, markLabel);
+				const adapted = adaptRun(segment, paragraph.style, markLabel, tableStyleRun);
 				// Fields, note markers and symbol codes have their own display/source rules.
 				if (segment.field || segment.noteReference || segment.noteMark || symbolOnly(segment))
 					return [adapted];
-				return scriptLayoutRuns(adapted, effective(segment, paragraph.style).formatting, theme);
+				return scriptLayoutRuns(
+					adapted,
+					effective(segment, paragraph.style, tableStyleRun).formatting,
+					theme,
+				);
 			}),
 		);
 		const visible = visibleReviewParagraph(paragraph, reviewMode);
@@ -388,7 +430,9 @@ export function adaptDocumentModel(
 			kind: 'paragraph',
 			id: paragraph.id,
 			...(!squeeze ? { squeezeJustifiedSpaces: false as const } : {}),
-			runs: (label ? [labelRun(paragraph, label), ...runs] : runs).map(withFontFallback),
+			runs: (label ? [labelRun(paragraph, label, tableStyleRun), ...runs] : runs).map(
+				withFontFallback,
+			),
 			...(footnotes.length ? { footnotes } : {}),
 			...box,
 			...(paragraph.tabStops?.length || label?.tabStopTwips !== undefined
@@ -413,7 +457,7 @@ export function adaptDocumentModel(
 				defaultTabStopPx: model.defaultTabStopTwips
 					? twipsToPx(model.defaultTabStopTwips)
 					: undefined,
-				emptyLineFont: label ? undefined : emptyLineFont(paragraph, runs),
+				emptyLineFont: label ? undefined : emptyLineFont(paragraph, runs, tableStyleRun),
 				align: resolved.align ?? (isDisplayEquationParagraph(paragraph) ? 'center' : undefined),
 				direction: resolved.direction,
 				spacingBeforeTwips: autoSpaced(resolved.spacingBeforeAuto, resolved.spacingBeforeTwips),
