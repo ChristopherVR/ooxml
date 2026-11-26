@@ -97,17 +97,18 @@ class CanvasHostComponent {
 type CanvasFlags = Partial<Record<'interactive' | 'presenting' | 'preserveElementIds', boolean>>;
 
 beforeAll(async () => {
-	for (const component of [
-		CanvasHostComponent,
-		SlideThumbnailComponent,
-		SlideTemplatePreviewComponent,
-		PresenterViewComponent,
-		MobilePresenterViewComponent,
-		ReadingViewOverlayComponent,
-		MorphExtraLayersComponent,
-	]) {
-		declareSignalFields(component, import.meta.dirname);
-	}
+	declareSignalFields(
+		[
+			CanvasHostComponent,
+			SlideThumbnailComponent,
+			SlideTemplatePreviewComponent,
+			PresenterViewComponent,
+			MobilePresenterViewComponent,
+			ReadingViewOverlayComponent,
+			MorphExtraLayersComponent,
+		],
+		import.meta.dirname,
+	);
 	TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 	await resolveViewerComponentResources();
 });

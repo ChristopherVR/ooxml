@@ -86,8 +86,7 @@ class RailHostComponent {
 class ViewerRailComponent {}
 
 beforeAll(async () => {
-	declareSignalFields(RailHostComponent, import.meta.dirname);
-	declareSignalFields(ViewerRailComponent, import.meta.dirname);
+	declareSignalFields([RailHostComponent, ViewerRailComponent], import.meta.dirname);
 	TestBed.initTestEnvironment(BrowserTestingModule, platformBrowserTesting());
 	await resolveViewerComponentResources();
 });

@@ -77,10 +77,13 @@ function importsOf(type: Type<unknown>): unknown[] {
 }
 
 /**
- * Add JIT signal input/output metadata to `root` and every component it
- * imports (transitively). `dir` is the directory whose sources declare them.
+ * Add JIT signal input/output metadata to the roots and their transitive
+ * imports. Scan their source directory once.
  */
-export function declareSignalFields(root: Type<unknown>, dir: string): void {
+export function declareSignalFields(
+	roots: Type<unknown> | readonly Type<unknown>[],
+	dir: string,
+): void {
 	const byClass = signalFieldsByClass(dir);
 	const visit = (type: unknown): void => {
 		if (typeof type !== 'function' || declared.has(type)) {
@@ -99,5 +102,7 @@ export function declareSignalFields(root: Type<unknown>, dir: string): void {
 		}
 		importsOf(type as Type<unknown>).forEach(visit);
 	};
-	visit(root);
+	for (const root of typeof roots === 'function' ? [roots] : roots) {
+		visit(root);
+	}
 }
