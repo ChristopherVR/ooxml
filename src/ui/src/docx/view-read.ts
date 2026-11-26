@@ -137,12 +137,12 @@ export function mountView(host: ViewHost): ViewPresentation {
 			previous.textContent = translate(host.locale(), 'Previous page');
 			next.textContent = translate(host.locale(), 'Next page');
 			exit.textContent = translate(host.locale(), 'Exit Read Mode');
-			paint();
 			if (view !== lastView || view?.state.doc !== lastDoc) {
 				lastView = view;
 				lastDoc = view?.state.doc;
 				measure();
 			}
+			paint();
 		},
 		dispose() {
 			observer?.disconnect();
