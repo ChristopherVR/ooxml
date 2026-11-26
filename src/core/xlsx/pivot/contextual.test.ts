@@ -89,9 +89,20 @@ it('collapses and expands outer labels, and applies row and column grand totals 
 	expect(pivotGrid(read()).values).toHaveLength(8);
 	const cols = await report('');
 	cols.patch({ display: { rowGrandTotals: false } });
-	expect(pivotGrid(await cols.reopen()).values.at(-1)).toEqual(['Grand Total', 22, 35]);
+	expect(pivotGrid(await cols.reopen()).values).toEqual([
+		['Sum of Amount', 'Region', null],
+		['Category', 'East', 'West'],
+		['Fruit', 17, 20],
+		['Veg', 5, 15],
+		['Grand Total', 22, 35],
+	]);
 	cols.patch({ display: { rowGrandTotals: true, colGrandTotals: false } });
-	expect(pivotGrid(await cols.reopen()).values.at(-1)).toEqual(['Veg', 5, 15, 20]);
+	expect(pivotGrid(await cols.reopen()).values).toEqual([
+		['Sum of Amount', 'Region', null, null],
+		['Category', 'East', 'West', 'Grand Total'],
+		['Fruit', 17, 20, 37],
+		['Veg', 5, 15, 20],
+	]);
 });
 
 it('round trips all three built-in style families and Excel’s clear style option', async () => {

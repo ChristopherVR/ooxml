@@ -58,10 +58,13 @@ const cases = {
 	less: { condition: { kind: 'valueLessThan', measure: 0, value: 30 } },
 	calculated: { calculatedField: { name: 'DoubleAmount', field: 'Amount', factor: 2 } },
 	moved: { name: 'NewSales', destination: { row: 3, col: 5 }, source: 'Data!A1:C5' },
+	'totals-rows': { display: { rowGrandTotals: true, colGrandTotals: false } },
+	'totals-columns': { display: { rowGrandTotals: false, colGrandTotals: true } },
 } satisfies Record<string, PivotTablePatch>;
 
-const fixture = readFileSync(join(import.meta.dir, '../../../src/core/xlsx/__fixtures__/excel-pivot-rows.xlsx'));
 for (const [name, patch] of Object.entries(cases)) {
+	const suffix = name.startsWith('totals-') ? '' : '-rows';
+	const fixture = readFileSync(join(import.meta.dir, '../../../src/core/xlsx/__fixtures__/excel-pivot' + suffix + '.xlsx'));
 	const workbook = await loadXlsx(fixture);
 	const edit = createEditSession(workbook);
 	if (name === 'caption-escape') edit.setCellInput(1, 1, 0, '~*?');
@@ -93,6 +96,12 @@ for (const [name, patch] of Object.entries(cases)) {
 			$pivot = $book.Worksheets.Item('Summary').PivotTables().Item(1)
 			$field = $pivot.PivotFields('Category')
 			Assert-ReportCells $pivot $expected
+			if ($case -like 'totals-*' -and (
+				$pivot.RowGrand -ne ($case -eq 'totals-rows') -or
+				$pivot.ColumnGrand -ne ($case -eq 'totals-columns')
+			)) {
+				throw 'Excel did not read the saved grand-total settings.'
+			}
 			if ($case -eq 'design') {
 				if ($pivot.Name -ne 'NewSales' -or $pivot.TableStyle2.Name -ne 'PivotStyleMedium4' -or
 					!$pivot.ShowTableStyleRowStripes -or !$pivot.ShowTableStyleColumnStripes -or

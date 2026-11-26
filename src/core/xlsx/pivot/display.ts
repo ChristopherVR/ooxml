@@ -7,7 +7,8 @@ const styleFlags = [
 	'showRowStripes',
 	'showColStripes',
 ] as const;
-// A row's total is displayed in the grand-total column, and vice versa.
+// Excel's RowGrand controls the grand-total column (XML colGrandTotals).
+// ColumnGrand controls the grand-total row (XML rowGrandTotals).
 const tableFlags = [
 	['rowGrandTotals', 'colGrandTotals'],
 	['colGrandTotals', 'rowGrandTotals'],

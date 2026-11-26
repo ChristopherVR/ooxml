@@ -12,9 +12,9 @@ import {
 	typeInActiveCell,
 } from './helpers';
 
-async function loadPivotWorkbook(page: Page) {
+async function loadPivotWorkbook(page: Page, suffix = '-rows') {
 	const fixture = readFileSync(
-		resolve(process.cwd(), '../../src/core/xlsx/__fixtures__/excel-pivot-rows.xlsx'),
+		resolve(process.cwd(), `../../src/core/xlsx/__fixtures__/excel-pivot${suffix}.xlsx`),
 	);
 	await editor(page).evaluate(
 		async (node, bytes) =>
@@ -105,4 +105,26 @@ test('applies a wildcard through the Label Equals filter', async ({ page }) => {
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 	await goToCell(page, 'C5');
 	await expect.poll(() => formulaBarValue(page)).toBe('37');
+});
+
+test('shows the requested grand-total row or column', async ({ page }) => {
+	await loadPivotWorkbook(page, '');
+	await goToCell(page, 'A2');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	const totals = tabs.getByRole('button', { name: 'Grand Totals', exact: true });
+	await clickRibbonControl(page, totals);
+	await editor(page).getByRole('menuitemcheckbox', { name: 'On for Rows Only' }).click();
+	await goToCell(page, 'D4');
+	await expect.poll(() => formulaBarValue(page)).toBe('20');
+	await goToCell(page, 'A5');
+	await expect.poll(() => formulaBarValue(page)).toBe('');
+	await goToCell(page, 'A2');
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	await clickRibbonControl(page, totals);
+	await editor(page).getByRole('menuitemcheckbox', { name: 'On for Columns Only' }).click();
+	await goToCell(page, 'C5');
+	await expect.poll(() => formulaBarValue(page)).toBe('35');
+	await goToCell(page, 'D4');
+	await expect.poll(() => formulaBarValue(page)).toBe('');
 });
