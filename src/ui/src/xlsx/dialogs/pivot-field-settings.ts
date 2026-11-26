@@ -9,6 +9,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, fieldset, radios, select } from './fields';
 import { showDialog } from './frame';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 
 /** What the dialog calls each function (Excel names Count Numbers in full, not as "Count"). */
 const FUNCTION_LABELS: Record<PivotAggregate, string> = {
@@ -80,6 +81,7 @@ export function openPivotFieldSettings(ctx: EditorContext): Promise<boolean | un
 		body: [field(ctx, 'Field:', chosen), mode.element, list],
 		opened: () => chosen.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const functions = boxes.filter((entry) => entry.box.input.checked).map((entry) => entry.fn);
 			if (mode.get() === 'custom' && !functions.length)
 				throw new Error('Choose at least one function.');

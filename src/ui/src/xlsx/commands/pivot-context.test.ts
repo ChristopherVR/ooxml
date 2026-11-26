@@ -88,6 +88,15 @@ it('shows both contextual tabs for a PivotTable cell and drives undoable ribbon 
 		expect(report().display?.collapsed).toBe(true);
 		await ctx.commands.run('pivot.expand-field');
 		expect(report().display?.collapsed).toBe(false);
+
+		ctx.collaborationActive = () => true;
+		expect(await ctx.commands.run('pivot.showRowStripes')).toBe(false);
+		expect(await ctx.commands.run('pivot.refresh')).toBe(false);
+		expect(await ctx.commands.run('pivot.select')).toBe(true);
+		expect(report().display?.style?.showRowStripes).toBeUndefined();
+		ctx.collaborationActive = () => false;
+		expect(await ctx.commands.run('pivot.showRowStripes')).toBe(true);
+		expect(report().display?.style?.showRowStripes).toBe(true);
 	} finally {
 		stop();
 	}

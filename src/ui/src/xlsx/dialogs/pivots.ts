@@ -16,6 +16,7 @@ import {
 	type CellAddress,
 } from 'ooxml-core/xlsx';
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 import { checkbox, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 import { pivotPageControls } from './pivot-page-filter';
@@ -311,6 +312,7 @@ export function openPivotTable(
 			focus.focus();
 		},
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const pageFilter = page.read();
 			const options = {
 				...(pageFilter ? { pageFilter } : {}),

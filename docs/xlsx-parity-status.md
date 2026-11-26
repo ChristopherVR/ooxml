@@ -308,6 +308,10 @@ line/marker swatches and position-authoring controls remain incomplete.
   tables and charts (last writer wins per chart). Not shared yet: in-cell pictures
   (including their value metadata and media bytes), floating images and other drawings,
   filters, pivots, freeze panes and views, page setup, protection and document properties. See [collab-area.md](collab-area.md).
+  tables and charts (last writer wins per chart). Not shared yet: images and other drawings,
+  filters, pivots, freeze panes and views, page setup, protection and document properties.
+  PivotTable editing commands are disabled while the edit session is bound to collaboration.
+  See [collab-area.md](collab-area.md).
 - Clipboard: finite copies keep trailing blanks and tile into compatible selections; directional
   fills translate formulas; Paste Special supports content modes, transpose, Skip Blanks,
   arithmetic, All Except Borders and column widths; notes, validation, hyperlinks and supported

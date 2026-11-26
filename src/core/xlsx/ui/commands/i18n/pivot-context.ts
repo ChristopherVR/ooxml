@@ -1,6 +1,12 @@
 import type { Translations } from './types';
 
 export const PIVOT_CONTEXT_STRINGS: Translations = {
+	'PivotTable edits are unavailable during collaboration.': [
+		'La modification des tableaux croisés dynamiques est indisponible pendant la collaboration.',
+		'PivotTables können während der Zusammenarbeit nicht bearbeitet werden.',
+		'No se pueden editar tablas dinámicas durante la colaboración.',
+		'协作期间无法编辑数据透视表。',
+	],
 	Actions: ['Actions', 'Aktionen', 'Acciones', '操作'],
 	Calculations: ['Calculs', 'Berechnungen', 'Cálculos', '计算'],
 	Layout: ['Disposition', 'Layout', 'Diseño', '布局'],

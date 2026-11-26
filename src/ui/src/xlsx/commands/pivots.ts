@@ -15,6 +15,7 @@ import {
 	type Command,
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
+import { pivotEditing } from './pivot-availability';
 
 export function selectedPivot(ctx: EditorContext) {
 	if (ctx.selection.get().drawing !== undefined) return;
@@ -27,14 +28,14 @@ const selected = selectedPivot;
 
 export function pivotCommands(): Command[] {
 	return [
-		editing({
+		pivotEditing({
 			id: 'insert.pivot-table',
 			label: 'PivotTable',
 			icon: icon('table'),
 			lock: 'objects',
 			run: (ctx) => void ctx.dialogs.open('create-pivot-table'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'insert.pivot-chart',
 			label: 'PivotChart',
 			icon: icon('chartType'),
@@ -44,7 +45,7 @@ export function pivotCommands(): Command[] {
 				!!selected(ctx) || (!structureLocked(ctx) && target(ctx)?.ranges.length === 1),
 			run: async (ctx) => (await import('../dialogs/pivot-charts')).insertPivotChart(ctx),
 		}),
-		editing({
+		pivotEditing({
 			id: 'insert.recommended-pivot-tables',
 			label: 'Recommended PivotTables',
 			icon: icon('table'),
@@ -80,7 +81,7 @@ export function pivotCommands(): Command[] {
 					);
 			},
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.filter-field',
 			label: 'Filter PivotTable Field',
 			icon: icon('filter'),
@@ -89,7 +90,7 @@ export function pivotCommands(): Command[] {
 			enabled: (ctx) => !!selected(ctx),
 			run: (ctx) => void ctx.dialogs.open('pivot-field-filter'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.settings',
 			label: 'PivotTable Settings',
 			icon: icon('table'),
@@ -97,7 +98,7 @@ export function pivotCommands(): Command[] {
 			enabled: (ctx) => !!selected(ctx),
 			run: (ctx) => void ctx.dialogs.open('pivot-settings'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.refresh',
 			label: 'Refresh PivotTable',
 			icon: icon('table'),
@@ -109,7 +110,7 @@ export function pivotCommands(): Command[] {
 					selection.t.session.refreshPivotTable(selection.t.sheet, selection.pivot.name);
 			},
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.group',
 			label: 'Group Field',
 			icon: icon('table'),
@@ -120,7 +121,7 @@ export function pivotCommands(): Command[] {
 			},
 			run: (ctx) => void ctx.dialogs.open('pivot-group'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.group-selection',
 			label: 'Group Selection',
 			icon: icon('table'),
@@ -137,7 +138,7 @@ export function pivotCommands(): Command[] {
 			},
 			run: (ctx) => void ctx.dialogs.open('pivot-group-dates'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.ungroup',
 			label: 'Ungroup',
 			icon: icon('table'),
@@ -155,7 +156,7 @@ export function pivotCommands(): Command[] {
 					});
 			},
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.field-settings',
 			label: 'Field Settings',
 			icon: icon('table'),
@@ -166,7 +167,7 @@ export function pivotCommands(): Command[] {
 			},
 			run: (ctx) => void ctx.dialogs.open('pivot-field-settings'),
 		}),
-		editing({
+		pivotEditing({
 			id: 'pivot.delete',
 			label: 'Delete PivotTable',
 			icon: icon('clear'),

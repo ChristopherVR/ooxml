@@ -258,6 +258,7 @@ export class EditorCore {
 			authorName: () => core.authorName,
 			validateReplace: () => core.validateReplace,
 			locale: () => core.locale,
+			collaborationActive: () => core.collab.active,
 			history: () => core.collab.history() ?? core.session,
 			isCollaborating: () => core.collab.busy,
 			remoteSelections: () => core.collab.remoteSelections(),

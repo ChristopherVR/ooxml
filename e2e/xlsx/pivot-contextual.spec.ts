@@ -182,3 +182,42 @@ test('keeps custom subtotals when moving them to the top and bottom', async ({ p
 		).toBeVisible();
 	}
 });
+
+test('explains disabled pivot edits while the workbook is shared', async ({ page }) => {
+	await loadPivotWorkbook(page);
+	await goToCell(page, 'A2');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
+	const rename = tabs.locator('[data-command="pivot.name"]');
+	await expect(rename).toBeEnabled();
+	await editor(page).evaluate(async (node) => {
+		const control = node as unknown as {
+			startCollaboration(options: { roomId: string; user: { name: string } }): Promise<void>;
+		};
+		await control.startCollaboration({
+			roomId: `pivot-${crypto.randomUUID()}`,
+			user: { name: 'Ada' },
+		});
+	});
+	const reason = 'PivotTable edits are unavailable during collaboration.';
+	await expect(rename).toBeDisabled();
+	await expect(rename).toHaveAccessibleDescription(reason);
+	await expect(tabs.locator('[data-command="pivot.refresh"]')).toBeDisabled();
+	await clickRibbonControl(page, tabs.locator('[data-label-key="Select"]'));
+	await expect(editor(page).getByRole('menuitem', { name: 'Entire PivotTable' })).toBeEnabled();
+	await page.keyboard.press('Escape');
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	const gallery = tabs.locator('[data-command="pivot.style"]');
+	const totals = tabs.locator('[data-label-key="Grand Totals"]');
+	for (const control of [gallery, totals]) {
+		await expect(control).toBeDisabled();
+		await expect(control).toHaveAccessibleDescription(reason);
+	}
+	await editor(page).evaluate((node) =>
+		(node as unknown as { stopCollaboration(): void }).stopCollaboration(),
+	);
+	for (const control of [gallery, totals]) {
+		await expect(control).toBeEnabled();
+		await expect(control).not.toHaveAttribute('aria-description');
+	}
+});

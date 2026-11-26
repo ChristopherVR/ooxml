@@ -6,6 +6,7 @@ import {
 } from 'ooxml-core/xlsx';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { selectedPivot } from '../commands/pivots';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 import { el, field, select, text, textInput } from './fields';
 import { showDialog } from './frame';
 
@@ -33,6 +34,7 @@ export async function openPivotInput(
 			input.select();
 		},
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const value = input.value.trim();
 			if (value === original) return true;
 			if (kind === 'source') {
@@ -100,6 +102,7 @@ export async function openPivotCondition(ctx: EditorContext): Promise<void> {
 		body: [title, field(ctx, 'Filter:', kind), measureField, valueField],
 		opened: () => kind.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			let condition: PivotCondition | null = null;
 			if (kind.value === 'captionEqual') condition = { kind: kind.value, value: value.value };
 			else if (kind.value === 'valueGreaterThan' || kind.value === 'valueLessThan') {
@@ -181,6 +184,7 @@ export async function openCalculatedField(ctx: EditorContext): Promise<void> {
 		],
 		opened: () => name.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const label = name.value.trim();
 			const number = Number(factor.value);
 			if ((!label && !current) || (label && (!factor.value.trim() || !Number.isFinite(number))))

@@ -7,6 +7,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { field, numberInput, select } from './fields';
 import { showDialog } from './frame';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 
 /** Group Field: group a numeric row or column field by ranges (starting at, ending at, by). */
 export function openPivotGroup(ctx: EditorContext): Promise<boolean | undefined> {
@@ -43,6 +44,7 @@ export function openPivotGroup(ctx: EditorContext): Promise<boolean | undefined>
 		],
 		opened: () => start.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const group: PivotFieldGroup = {
 				field: chosen.value,
 				start: Number(start.value),

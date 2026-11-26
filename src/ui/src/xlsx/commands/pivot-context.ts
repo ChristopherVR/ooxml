@@ -9,8 +9,9 @@ import {
 	type PivotTable,
 	type PivotTablePatch,
 } from 'ooxml-core/xlsx';
-import { editing, icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
+import { icon, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { selectedPivot } from './pivots';
+import { pivotEditing } from './pivot-availability';
 
 const selectedReason = 'Select an editable PivotTable.';
 export const pivotConnection = (ctx: EditorContext) => {
@@ -20,8 +21,10 @@ export const pivotConnection = (ctx: EditorContext) => {
 	);
 };
 
-const pivotEdit = (command: Omit<Command, 'editing'>): Command =>
-	editing({
+const pivotEdit = (
+	command: Omit<Command, 'editing' | 'unavailable'> & { unavailable?: string },
+): Command =>
+	pivotEditing({
 		icon: icon('table'),
 		lock: 'objects',
 		unavailable: selectedReason,
@@ -33,7 +36,7 @@ function patchCommand(
 	id: string,
 	label: string,
 	patch: (pivot: PivotTable) => Omit<PivotTablePatch, 'source'>,
-	options: Pick<Command, 'checked' | 'enabled' | 'unavailable'> = {},
+	options: Pick<Command, 'checked' | 'enabled'> & { unavailable?: string } = {},
 ): Command {
 	return pivotEdit({
 		id: `pivot.${id}`,

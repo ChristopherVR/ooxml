@@ -68,6 +68,8 @@ export interface EditorContext {
 	setActiveSheet(index: number): void;
 	readonly selection: SelectionModel;
 	readOnly(): boolean;
+	/** Whether the current edit session is bound to a shared workbook. */
+	collaborationActive?(): boolean;
 	/** English text is the key, like the Word editor. */
 	t(key: string, vars?: Record<string, string | number>): string;
 	readonly commands: CommandRegistry;

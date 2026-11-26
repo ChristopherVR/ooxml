@@ -13,8 +13,8 @@ export interface Command {
 	shortcut?: string;
 	/** True: disabled in read-only mode. */
 	editing?: boolean;
-	/** English reason shown in the tooltip when the command is not available. */
-	unavailable?: string | ((ctx: EditorContext) => string);
+	/** English reason shown when the command is disabled. */
+	unavailable?: string | ((ctx: EditorContext) => string | undefined);
 	enabled?(ctx: EditorContext): boolean;
 	/** Toggle state (bold of the active cell, ...). */
 	checked?(ctx: EditorContext): boolean;

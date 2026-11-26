@@ -14,6 +14,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, field, select } from './fields';
 import { showDialog } from './frame';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 import { openPivotTable } from './pivots';
 
 export interface PivotChartFieldProps {
@@ -86,6 +87,7 @@ function openItems(ctx: EditorContext, sheet: number, pivot: PivotTable, initial
 		body: [field(ctx, 'Field:', choice), list],
 		opened: () => choice.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			if (!items.length) return true;
 			const hidden = items.filter(({ input }) => !input.checked).map(({ value }) => value);
 			const filters = (pivot.itemFilters ?? []).filter((entry) => entry.field !== choice.value);

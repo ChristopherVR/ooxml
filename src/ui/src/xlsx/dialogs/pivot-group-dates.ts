@@ -12,6 +12,7 @@ import {
 import { target, type EditorContext } from 'ooxml-core/xlsx/ui';
 import { checkbox, field, fieldset, numberInput, row, select, textInput } from './fields';
 import { showDialog } from './frame';
+import { assertPivotEditingAvailable } from '../commands/pivot-availability';
 
 const UNIT_LABELS: Record<PivotDateUnit, string> = {
 	seconds: 'Seconds',
@@ -105,6 +106,7 @@ export function openPivotGroupDates(ctx: EditorContext): Promise<boolean | undef
 		],
 		opened: () => chosen.focus(),
 		submit: () => {
+			assertPivotEditingAvailable(ctx);
 			const by = selected();
 			if (!by.length) throw new Error('Choose at least one group.');
 			const group: PivotDateGroup = {

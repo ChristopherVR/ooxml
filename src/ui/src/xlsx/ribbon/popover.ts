@@ -131,7 +131,7 @@ export function openMenu(
 		item.setAttribute('role', entry.checked === undefined ? 'menuitem' : 'menuitemcheckbox');
 		if (entry.checked !== undefined) item.setAttribute('aria-checked', String(entry.checked));
 		item.disabled = entry.disabled ?? false;
-		if (entry.reason) {
+		if (item.disabled && entry.reason) {
 			item.title = entry.reason;
 			item.setAttribute('aria-description', entry.reason);
 		}

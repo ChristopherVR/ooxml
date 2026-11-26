@@ -1,4 +1,3 @@
-import { unavailableReason } from 'ooxml-core/xlsx/ui';
 /**
  * Renders one declarative ribbon control (see parts.ts) into DOM. Every control reads its label,
  * icon, tooltip and state from its command, and registers an `update` hook the ribbon calls on
@@ -13,6 +12,7 @@ import { renderSelect, renderGallery } from './controls-input';
 import { ribbonIcon } from './icons';
 import { isMenuSeparator, type RibbonControl, type RibbonMenuItem } from 'ooxml-core/xlsx/ui';
 import { openMenu, type MenuEntry } from './popover';
+import { describeDisabled, disabledReason, updateMenuAvailability } from './disabled-reason';
 
 export interface RenderScope {
 	ctx: EditorContext;
@@ -80,11 +80,11 @@ export function commandButton(
 	button.addEventListener('click', () => void ctx.commands.run(command.id));
 	scope.updates.push(() => {
 		button.disabled = !ctx.commands.isEnabled(command.id);
-		// An always-disabled command says why in its tooltip and to assistive technology.
-		const reason = button.disabled ? unavailableReason(ctx, command) : undefined;
-		button.title = reason ? `${label}: ${reason}` : tooltip(ctx, command);
-		if (reason) button.setAttribute('aria-description', reason);
-		else button.removeAttribute('aria-description');
+		describeDisabled(
+			button,
+			tooltip(ctx, command),
+			button.disabled ? disabledReason(ctx, command) : undefined,
+		);
 		if (options.toggle)
 			button.setAttribute('aria-pressed', String(safe(() => command.checked?.(ctx)) ?? false));
 	});
@@ -113,7 +113,7 @@ export function menuEntries(scope: RenderScope, items: RibbonMenuItem[]): MenuEn
 		const icon = item.icon ?? command.icon;
 		const checked = item.arg === undefined ? safe(() => command.checked?.(ctx)) : undefined;
 		const disabled = !ctx.commands.isEnabled(command.id);
-		const reason = disabled ? unavailableReason(ctx, command) : undefined;
+		const reason = disabled ? disabledReason(ctx, command) : undefined;
 		entries.push({
 			label: ctx.t(item.label ?? command.label),
 			...(icon ? { icon } : {}),
@@ -173,9 +173,12 @@ function renderSplit(
 	}
 	caret.addEventListener('click', () => openMenu(caret, menuEntries(scope, control.menu), label));
 	scope.updates.push(() => {
-		caret.disabled =
-			main.disabled &&
-			menuEntries(scope, control.menu).every((e) => 'separator' in e || e.disabled);
+		const title = caret.getAttribute('aria-label') ?? label;
+		if (main.disabled) updateMenuAvailability(caret, title, menuEntries(scope, control.menu));
+		else {
+			caret.disabled = false;
+			describeDisabled(caret, title);
+		}
 	});
 	wrap.append(main, caret);
 	return wrap;
@@ -206,9 +209,7 @@ function renderMenu(scope: RenderScope, control: Extract<RibbonControl, { kind: 
 		openMenu(button, menuEntries(scope, control.items), label),
 	);
 	scope.updates.push(() => {
-		button.disabled = menuEntries(scope, control.items).every(
-			(e) => 'separator' in e || e.disabled,
-		);
+		updateMenuAvailability(button, label, menuEntries(scope, control.items));
 	});
 	return button;
 }

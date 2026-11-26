@@ -3,6 +3,7 @@ import { setLargeCaption } from './caption';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { el, tagCommand, tooltip, type RenderScope } from './controls';
+import { describeDisabled, disabledReason } from './disabled-reason';
 import { ribbonIcon } from './icons';
 import type { RibbonControl, RibbonOption } from 'ooxml-core/xlsx/ui';
 import { arrowNavigation, closeRibbonPopover, mountPopover, openList } from './popover';
@@ -247,6 +248,11 @@ export function renderGallery(
 	});
 	scope.updates.push(() => {
 		button.disabled = !ctx.commands.isEnabled(command.id);
+		describeDisabled(
+			button,
+			tooltip(ctx, command),
+			button.disabled ? disabledReason(ctx, command) : undefined,
+		);
 	});
 	return button;
 }
