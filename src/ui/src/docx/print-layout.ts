@@ -3,6 +3,7 @@ import {
 	cssFontStack,
 	ligatureCss,
 	paragraphBorderBands,
+	paragraphFrameBounds,
 	DEFAULT_FONT_SIZE_PT,
 	type LayoutBlockBox,
 	type LayoutLine,
@@ -167,11 +168,13 @@ function renderLine(
 }
 
 /** A paragraph's borders and shading, drawn behind its text across the box's height. */
-function paragraphFrame(frame: LayoutParagraphFrame, heightPx: number): HTMLElement {
+function paragraphFrame(frame: LayoutParagraphFrame, boxHeightPx: number): HTMLElement {
 	const el = document.createElement('div');
 	el.className = 'dve-print-paragraph-frame';
+	const { topPx, heightPx } = paragraphFrameBounds(frame, boxHeightPx);
 	Object.assign(el.style, {
 		left: `${frame.leftPx}px`,
+		...(topPx ? { top: `${topPx}px` } : {}),
 		width: `${frame.widthPx}px`,
 		height: `${heightPx}px`,
 	});
@@ -229,7 +232,7 @@ function renderBlock(
 			el.dataset.readOnly = 'true';
 			el.title = 'Read-only content';
 		}
-		if (box.frame) el.append(paragraphFrame(box.frame, box.frame.heightPx ?? box.heightPx));
+		if (box.frame) el.append(paragraphFrame(box.frame, box.heightPx));
 		for (const line of box.lines) el.append(renderLine(line, box.blockId, hitboxes, media));
 		return el;
 	}

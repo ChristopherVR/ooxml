@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { LayoutResult } from 'ooxml-core/docx/layout';
+import { loadDocx } from 'ooxml-core/docx';
+import { createFakeMeasurer, layoutDocumentModel, type LayoutResult } from 'ooxml-core/docx/layout';
 import { renderPrintLayout } from './print-layout';
 import { at } from './test-support';
 
@@ -158,6 +161,23 @@ describe('renderPrintLayout', () => {
 });
 
 describe('Print Layout pictures', () => {
+	it('draws the shaded border below a top-and-bottom picture', async () => {
+		const fixture = join(
+			import.meta.dirname,
+			'../../../core/docx/layout/fixtures/float-in-bordered-paragraph/issue-352-picture-in-bordered-paragraph.docx',
+		);
+		const { model } = await loadDocx(await readFile(fixture));
+		const layout = layoutDocumentModel(model, createFakeMeasurer());
+		const { element } = renderPrintLayout(layout, () => 'blob:picture');
+		const frame = element.querySelector<HTMLElement>('.dve-print-paragraph-frame')!;
+		const picture = element.querySelector<HTMLElement>('.dve-print-float-behind')!;
+		expect(picture).toBeTruthy();
+		expect(Number.parseFloat(frame.style.top)).toBeCloseTo(186);
+		expect(Number.parseFloat(frame.style.height)).toBeCloseTo(56.95, 1);
+		expect(frame.style.borderTopStyle).toBe('solid');
+		expect(frame.style.backgroundColor).toBe('rgb(224, 224, 224)');
+	});
+
 	const picture = {
 		partName: 'word/media/a.png',
 		contentType: 'image/png',

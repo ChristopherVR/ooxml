@@ -76,7 +76,7 @@ export interface LayoutParagraphBox {
 	readOnly?: boolean;
 	/** The paragraph sits in a table nested inside a cell. */
 	nested?: boolean;
-	/** Paragraph borders and shading, spanning the box's height at these horizontal bounds. */
+	/** Paragraph borders and shading within the box. */
 	frame?: LayoutParagraphFrame;
 	/** Nested frame edges required again at physical continuation cuts. */
 	tableFrameInsets?: { top: number; bottom: number };
@@ -103,11 +103,27 @@ export interface LayoutCellFloat {
 
 export interface LayoutParagraphFrame {
 	leftPx: number;
-	/** Paint through the gap to the next paragraph of the same border group. */
+	/** Top edge relative to the paragraph box, below a leading wrap gap. */
+	topPx?: number;
+	/** Paint height from the frame's top, including a gap to the next joined paragraph if needed. */
 	heightPx?: number;
 	widthPx: number;
 	borders?: import('./input').LayoutParagraphBorders;
 	shading?: string;
+}
+
+/** Attach a leading wrap gap without changing the frame shared by cached paragraph layouts. */
+export function offsetParagraphFrame(
+	frame: LayoutParagraphFrame | undefined,
+	topPx = 0,
+): LayoutParagraphFrame | undefined {
+	return frame && topPx > 0 ? { ...frame, topPx } : frame;
+}
+
+/** Vertical paint bounds of paragraph borders and shading, in paragraph coordinates. */
+export function paragraphFrameBounds(frame: LayoutParagraphFrame, boxHeightPx: number) {
+	const topPx = frame.topPx ?? 0;
+	return { topPx, heightPx: frame.heightPx ?? Math.max(0, boxHeightPx - topPx) };
 }
 
 /** Where a cell sits in its row and how it is drawn (borders, shading, padding). */

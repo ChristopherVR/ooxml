@@ -112,6 +112,20 @@ const omittedKinds = (report: { omitted: { kind: string }[] }) => report.omitted
 afterEach(() => vi.unstubAllGlobals());
 
 describe('exportDocxPdf graphics', () => {
+	it('paints the bordered paragraph below its top-and-bottom picture', async () => {
+		const fixture = join(
+			import.meta.dirname,
+			'../../../../core/docx/layout/fixtures/float-in-bordered-paragraph/issue-352-picture-in-bordered-paragraph.docx',
+		);
+		const { model, media } = await loadDocx(readFileSync(fixture));
+		const { bytes } = await exportDocxPdf(model, { measurer, ...(media ? { media } : {}) });
+		const { content } = inspect(bytes);
+		expect(content).toMatch(/\/Im\d+ Do/);
+		const shading = /([\d.]+) ([\d.]+) 616\.8 ([\d.]+) re\nf/.exec(content);
+		expect(Number(shading?.[2])).toBeCloseTo(296.47, 1);
+		expect(Number(shading?.[3])).toBeCloseTo(56.95, 1);
+	});
+
 	it('writes a chart as vector paths with real text, never as a picture', async () => {
 		const { model } = await loadDocx(new Uint8Array(readFileSync(join(FIXTURES, 'chart.docx'))));
 		const { bytes, report } = await exportDocxPdf(model, { measurer });

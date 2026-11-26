@@ -85,7 +85,10 @@ export function flowStory(
 			box.frame.leftPx === next.frame.leftPx &&
 			box.frame.widthPx === next.frame.widthPx
 		)
-			box.frame = { ...box.frame, heightPx: Math.max(box.heightPx, next.yPx - box.yPx) };
+			box.frame = {
+				...box.frame,
+				heightPx: Math.max(box.heightPx, next.yPx - box.yPx) - (box.frame.topPx ?? 0),
+			};
 	}
 	const heightPx = boxes.reduce(
 		(bottom, box) => (inFlow(box) ? Math.max(bottom, box.yPx + box.heightPx) : bottom),

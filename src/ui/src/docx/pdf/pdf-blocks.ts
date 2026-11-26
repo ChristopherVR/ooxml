@@ -4,9 +4,10 @@
  * borders inside each cell's box, cell content inset by its border and padding and aligned
  * vertically, clipped to the cell. Coordinates are CSS pixels, y down. DOM-free.
  */
-import { paragraphBorderBands } from 'ooxml-core/docx/layout';
 import {
 	cellVerticalOffset,
+	paragraphBorderBands,
+	paragraphFrameBounds,
 	type LayoutBlockBox,
 	type LayoutBorder,
 	type LayoutParagraphBox,
@@ -121,7 +122,8 @@ export function paintParagraph(
 	// Objects floating in table cells (`box.floats`) are on the page's floats, drawn with them.
 	if (box.frame) {
 		hooks?.decoration();
-		paragraphFrame(page, box.frame, x, y, box.frame.heightPx ?? box.heightPx);
+		const { topPx, heightPx } = paragraphFrameBounds(box.frame, box.heightPx);
+		paragraphFrame(page, box.frame, x, y + topPx, heightPx);
 	}
 	hooks?.beginParagraph(box, x, y);
 	for (const line of box.lines) {

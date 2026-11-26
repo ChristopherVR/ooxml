@@ -57,6 +57,7 @@ function splitCellAtHeight(
 				yPx: box.yPx + shift,
 				heightPx: afterLines.at(-1)!.yPx + afterLines.at(-1)!.heightPx - shift,
 				lines: afterLines.map((line) => ({ ...line, yPx: line.yPx - shift })),
+				...(box.frame?.topPx ? { frame: { ...box.frame, topPx: 0 } } : {}),
 			});
 		}
 	}

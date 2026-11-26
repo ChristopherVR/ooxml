@@ -14,6 +14,7 @@ import type { LayoutFloat, LayoutParagraph } from './input';
 import type { TextMeasurer } from './measure';
 import { layoutParagraph, type ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutCellFloat, LayoutParagraphBox } from './result';
+import { offsetParagraphFrame } from './result';
 import { floatExclusion, lineBoxesFor, wrapsText, type Exclusion } from './wrap';
 
 /** The cell margins beside a cell's text area, for the frames that reach past it. */
@@ -148,13 +149,14 @@ export function stackFloatingCell(
 			bottom = Math.max(bottom, placed.yPx + float.heightPx);
 		}
 		if (wraps && overlaps(exclusions, top, layout.contentHeightPx)) layout = wrapped();
+		const paragraphFrame = offsetParagraphFrame(layout.frame, layout.lines[0]?.gapBeforePx);
 		boxes.push({
 			kind: 'paragraph',
 			blockId: paragraph.id,
 			yPx: top,
 			heightPx: layout.contentHeightPx,
 			lines: layout.lines.map((line) => ({ ...line })),
-			...(layout.frame ? { frame: layout.frame } : {}),
+			...(paragraphFrame ? { frame: paragraphFrame } : {}),
 			...(floats.length ? { floats } : {}),
 		});
 		y += layout.contentHeightPx + layout.spacingAfterPx;

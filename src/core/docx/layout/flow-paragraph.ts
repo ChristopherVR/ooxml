@@ -4,6 +4,7 @@ import { floatCrossesBottomMargin } from './floats';
 import type { ParagraphLayoutResult } from './paragraph-layout';
 import type { LayoutParagraph } from './input';
 import type { LayoutColumnBox, LayoutFootnoteBox, LayoutLine, LayoutParagraphBox } from './result';
+import { offsetParagraphFrame } from './result';
 import { tokenPosition, type TokenPosition } from './text-breaks';
 import { expectDefined } from '../expect-defined';
 
@@ -220,10 +221,8 @@ export function placeParagraph(
 			cumulative + (firstSegment ? spacingBeforePx : 0),
 		);
 		const first = expectDefined(layout.lines[lineCursor], 'first line of paragraph segment');
-		const origin =
-			first.yPx -
-			(keepLeadingGap ? (first.gapBeforePx ?? 0) : 0) -
-			(firstSegment ? layout.insetTopPx : 0);
+		const leadingGapPx = keepLeadingGap ? (first.gapBeforePx ?? 0) : 0;
+		const origin = first.yPx - leadingGapPx - (firstSegment ? layout.insetTopPx : 0);
 		const segmentLines = layout.lines
 			.slice(lineCursor, lineCursor + placedCount)
 			.map((line, index) => ({
@@ -238,13 +237,14 @@ export function placeParagraph(
 		const segmentHeight =
 			(lastLine ? lastLine.yPx + lastLine.heightPx : 0) +
 			(isLastSegment ? layout.insetBottomPx : 0);
+		const frame = offsetParagraphFrame(layout.frame, leadingGapPx);
 		const box: LayoutParagraphBox = {
 			kind: 'paragraph',
 			blockId: paragraph.id,
 			yPx: 0,
 			heightPx: segmentHeight,
 			lines: segmentLines,
-			...(layout.frame ? { frame: layout.frame } : {}),
+			...(frame ? { frame } : {}),
 		};
 		const advance =
 			(firstSegment ? spacingBeforePx : 0) + segmentHeight + (isFinal ? spacingAfterPx : 0);
