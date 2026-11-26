@@ -9,23 +9,42 @@ import { dialogChoice, dialogMessage, dialogSubmit, type MailingsDialog } from '
 import { recipientMatches } from './recipient-data';
 import type { MailingsLabel } from './strings';
 
+export type MergeType = 'formLetters' | 'catalog' | 'envelopes' | 'mailingLabels';
+
 export function startDialog(
 	dialog: MailingsDialog,
 	locale: EditorLocale,
 	current: string | undefined,
-	apply: (type: 'formLetters' | 'catalog' | undefined) => void,
+	blank: boolean,
+	apply: (type: MergeType | undefined) => void,
 ): void {
 	const select = selectOf([
 		['formLetters', dialog.t('Letters')],
 		['catalog', dialog.t('Directory')],
+		['envelopes', dialog.t('Envelopes')],
+		['mailingLabels', dialog.t('Labels')],
 		['', dialog.t('Normal Word Document')],
 	]);
-	select.value = current === 'catalog' || current === 'formLetters' ? current : '';
+	if (!blank) {
+		for (const option of select.options)
+			if (option.value === 'envelopes' || option.value === 'mailingLabels')
+				option.disabled = option.value !== current;
+		dialogMessage(dialog, 'Start with an empty document to set up envelopes or labels.');
+	}
+	select.value = current ?? '';
+	if (select.selectedIndex < 0) select.value = '';
 	dialog.content.append(labelled(dialog.element.dataset.title ?? '', select));
 	dialogSubmit(dialog, locale, () => {
 		const type = select.value;
 		dialog.close();
-		apply(type === 'catalog' || type === 'formLetters' ? type : undefined);
+		apply(
+			type === 'catalog' ||
+				type === 'formLetters' ||
+				type === 'envelopes' ||
+				type === 'mailingLabels'
+				? type
+				: undefined,
+		);
 	});
 }
 
@@ -131,20 +150,21 @@ export function checkDialog(dialog: MailingsDialog, issues: readonly MailMergeIs
 	dialog.actions();
 }
 
-export function finishDialog(dialog: MailingsDialog, finish: (print: boolean) => void): void {
-	const choose = (print: boolean) => () => {
+export type MergeDestination = 'document' | 'print' | 'email';
+
+export function finishDialog(
+	dialog: MailingsDialog,
+	finish: (destination: MergeDestination) => void,
+	emailReason: MailingsLabel | undefined,
+): void {
+	const choose = (destination: MergeDestination) => () => {
 		dialog.close();
-		finish(print);
+		finish(destination);
 	};
 	dialog.content.append(
-		dialogChoice(dialog, 'Edit Individual Documents', choose(false)),
-		dialogChoice(dialog, 'Print Documents', choose(true)),
-		dialogChoice(
-			dialog,
-			'Send Email Messages',
-			() => {},
-			'This editor has no mail delivery service.',
-		),
+		dialogChoice(dialog, 'Edit Individual Documents', choose('document')),
+		dialogChoice(dialog, 'Print Documents', choose('print')),
+		dialogChoice(dialog, 'Send Email Messages', choose('email'), emailReason),
 	);
 	dialog.actions();
 }

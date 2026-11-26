@@ -12,6 +12,7 @@ import type {
 	TableStyleCatalog,
 } from 'ooxml-core/docx';
 import { schema } from './schema';
+import { twips } from 'ooxml-core/units';
 import { tableCellViews, tableGrid, tableViewAttrs } from 'ooxml-core/docx/ui';
 import { convertRestructuredTable, structureChanged } from './table-restructure-convert';
 
@@ -81,6 +82,7 @@ export function tableNode(
 			restructurable:
 				block.restructurable === true || (block.structureEditable !== false && Boolean(layout)),
 			grid: block.grid ? JSON.stringify(block.grid) : null,
+			layout: block.layout ?? null,
 			...tableViewAttrs(block),
 			inheritedCellMargins: JSON.stringify(
 				resolveTableCellMargins(block.style ? { style: block.style } : {}, tableStyles),
@@ -158,6 +160,12 @@ export function convertSimpleTable(
 			const direct = typeof cell.attrs.directBorders === 'string' ? cell.attrs.directBorders : null;
 			cells.push({
 				...structuredClone(properties),
+				...(!source &&
+					typeof cell.attrs.widthTwips === 'number' &&
+					Number.isSafeInteger(cell.attrs.widthTwips) &&
+					cell.attrs.widthTwips >= 0 && {
+						widthTwips: twips(cell.attrs.widthTwips),
+					}),
 				...(direct ? { borders: JSON.parse(direct) as NonNullable<TableCell['borders']> } : {}),
 				...(/^(lrTb|tbRl|btLr|tb|rl|lr|tbV|rlV|lrV|lrTbV|tbLrV|tbRlV)$/.test(
 					String(cell.attrs.textDirection),

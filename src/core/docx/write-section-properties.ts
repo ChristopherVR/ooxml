@@ -111,6 +111,18 @@ export function writeSectionProperties(
 		setW(margins, 'footer', String(section.footerDistanceTwips ?? 720));
 		setW(margins, 'gutter', String(section.gutterTwips ?? 0));
 	}
+	if (changed('paperSource')) {
+		if (section.paperSource) {
+			const source = child(doc, sectPr, 'paperSrc', ['pgBorders', ...AFTER_PGBORDERS]);
+			for (const key of ['first', 'other'] as const) {
+				const tray = section.paperSource[key];
+				if (tray !== undefined) setW(source, key, String(tray));
+				else source.removeAttributeNS(WORD_NS, key);
+			}
+		} else if (base?.paperSource) {
+			for (const source of children(sectPr, 'paperSrc')) sectPr.removeChild(source);
+		}
+	}
 	if (changed('columns')) writeColumns(doc, sectPr, section);
 	if (changed('verticalAlign')) {
 		if (section.verticalAlign && section.verticalAlign !== 'top')

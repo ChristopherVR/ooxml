@@ -49,6 +49,7 @@ export function paragraphFromAttrs(attrs: Attrs, id: string, runs: TextRun[]): P
 				.map((key) => [key, Boolean(attrs[key])]),
 		),
 		...(attrs.dropCap ? { dropCap: { ...attrs.dropCap } } : {}),
+		...(attrs.frame ? { frame: { ...attrs.frame } } : {}),
 		...(attrs.borders ? { borders: structuredClone(attrs.borders) } : {}),
 		...(attrs.percentageShading
 			? { percentageShading: structuredClone(attrs.percentageShading) }
@@ -97,6 +98,7 @@ export function paragraphAttrs(paragraph: Paragraph): Attrs {
 		autoSpaceDN: paragraph.autoSpaceDN ?? null,
 		overflowPunct: paragraph.overflowPunct ?? null,
 		dropCap: paragraph.dropCap ?? null,
+		frame: paragraph.frame ?? null,
 		borders: paragraph.borders ?? null,
 		shadingFill: paragraph.shadingFill ?? null,
 		percentageShading: paragraph.percentageShading ?? null,

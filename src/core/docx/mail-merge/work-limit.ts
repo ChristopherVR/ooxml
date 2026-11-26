@@ -7,6 +7,8 @@ export function mailMergeWithinWorkLimit(model: DocumentModel, data: MailMergeDa
 	const WORK_LIMIT = 2_000_000;
 	let work = 0;
 	let fields = 0;
+	let nativeFields = 0;
+	let promptResults = 0;
 	const visit = (blocks: readonly Block[], depth = 0): boolean => {
 		if (depth > 32) return false;
 		for (const block of blocks) {
@@ -15,6 +17,11 @@ export function mailMergeWithinWorkLimit(model: DocumentModel, data: MailMergeDa
 				for (const run of block.runs) {
 					work += 16 + run.text.length + (run.fieldCode?.length ?? 0) + (run.image ? 4096 : 0);
 					if (run.field?.simple || run.fieldChar === 'begin') fields++;
+					const instruction = run.field?.simple ? run.field.instr : run.fieldCode;
+					if (instruction) {
+						if (/^\s*(?:ADDRESSBLOCK|GREETINGLINE)\b/i.test(instruction)) nativeFields++;
+						if (/^\s*(?:FILLIN|REF)\b/i.test(instruction)) promptResults++;
+					}
 					if (work * data.records.length > WORK_LIMIT) return false;
 				}
 			} else {
@@ -36,12 +43,12 @@ export function mailMergeWithinWorkLimit(model: DocumentModel, data: MailMergeDa
 	for (const note of [...(model.footnotes ?? []), ...(model.endnotes ?? [])])
 		if (!visit(note.blocks)) return false;
 	// A field may repeat a record's longest value. Count those characters before allocating copies.
-	let output = work * data.records.length;
+	let output = (work + promptResults * 1024) * data.records.length;
 	for (const record of data.records) {
 		let longest = 0;
 		for (const value of Object.values(record))
 			if (typeof value === 'string') longest = Math.max(longest, value.length);
-		output += longest * fields;
+		output += longest * fields + Math.min(longest, 1024) * nativeFields * 64;
 		if (output > WORK_LIMIT) return false;
 	}
 	return true;

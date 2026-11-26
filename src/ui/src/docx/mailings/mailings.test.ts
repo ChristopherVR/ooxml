@@ -1,11 +1,20 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, expect, it, vi } from 'vitest';
 import { createDocument, loadDocx, type DocumentModel } from 'ooxml-core/docx';
+import { loadMailMergeStationery, resolveMailMergePrompts } from 'ooxml-core/docx/mail-merge';
 import '../component';
 import { findLocalizedControl } from '../localization';
-import { must, paragraphAt } from '../test-support';
+import { must, paragraphAt, ribbonTab } from '../test-support';
+import type { MailMergeEmailMessage } from './email-provider';
 
 const execCommand = Object.getOwnPropertyDescriptor(document, 'execCommand');
+beforeAll(async () => {
+	await Promise.all([
+		import('./controller'),
+		loadMailMergeStationery(),
+		resolveMailMergePrompts(createDocument(), { records: [] }, async () => undefined),
+	]);
+}, 120_000);
 beforeEach(() => {
 	Object.defineProperty(document, 'execCommand', { configurable: true, value: () => false });
 });
@@ -16,17 +25,22 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
-function mount(model = createDocument()) {
+async function mount(model = createDocument()) {
 	const editor = document.createElement('docx-editor');
 	editor.documentModel = model;
 	document.body.append(editor);
 	const root = must(editor.shadowRoot);
 	const panel = must(root.querySelector('[data-panel="Mailings"]'));
+	expect(panel.childElementCount).toBe(0);
+	(await ribbonTab(root, 'mailings')).click();
+	await vi.waitFor(() => expect(panel.childElementCount).toBeGreaterThan(0), { timeout: 10_000 });
 	const errors: Error[] = [];
 	editor.addEventListener('document-error', (event) => errors.push(event.detail));
 	const ribbon = (label: string) => must(findLocalizedControl<HTMLButtonElement>(panel, label));
 	const dialog = async () => {
-		await vi.waitFor(() => expect(root.querySelector('.dve-mailings-dialog')).not.toBeNull());
+		await vi.waitFor(() => expect(root.querySelector('.dve-mailings-dialog')).not.toBeNull(), {
+			timeout: 10_000,
+		});
 		return must(root.querySelector('.dve-mailings-dialog'));
 	};
 	const button = (scope: ParentNode, label: string) =>
@@ -47,7 +61,7 @@ const content = (model: DocumentModel) =>
 	);
 
 it('round-trips an edited template and emits a separate finished document after preview', async () => {
-	const { editor, ribbon, dialog, button, root, previewContains } = mount();
+	const { editor, ribbon, dialog, button, root, previewContains } = await mount();
 	const read = vi.fn(() => ({
 		fields: ['Name'],
 		records: [{ Name: 'Ada' }, { Name: '<b>Bea</b>' }],
@@ -101,7 +115,7 @@ it('round-trips an edited template and emits a separate finished document after 
 });
 
 it('cancels selection edits, then applies filtering, sorting and stable record exclusions', async () => {
-	const { editor, dialog, button, ribbon, previewContains } = mount();
+	const { editor, dialog, button, ribbon, previewContains } = await mount();
 	ribbon('Select Recipients').click();
 	const unavailable = button(await dialog(), 'Use host recipients');
 	expect(unavailable.disabled).toBe(true);
@@ -157,7 +171,7 @@ it('cancels selection edits, then applies filtering, sorting and stable record e
 });
 
 it('reports missing recipients and refuses a provider response after replacing the template', async () => {
-	const { editor, dialog, button, ribbon } = mount();
+	const { editor, dialog, button, ribbon } = await mount();
 	ribbon('Check for Errors').click();
 	expect((await dialog()).textContent).toContain('No recipients are included.');
 	button(await dialog(), 'Close').click();
@@ -175,7 +189,7 @@ it('reports missing recipients and refuses a provider response after replacing t
 });
 
 it('inserts mapped address and greeting fields and authors IF through the Rules dialog', async () => {
-	const { editor, dialog, button, ribbon, previewContains } = mount();
+	const { editor, dialog, button, ribbon, previewContains } = await mount();
 	editor.mailMergeDataSource = { read: () => ({ records: [{ Given: 'Ada', City: 'London' }] }) };
 	ribbon('Select Recipients').click();
 	button(await dialog(), 'Use host recipients').click();
@@ -203,4 +217,92 @@ it('inserts mapped address and greeting fields and authors IF through the Rules 
 	button(await dialog(), 'OK').click();
 	expect(must(editor.documentModel).mailMerge).toBeUndefined();
 	expect(ribbon('Preview Results').disabled).toBe(true);
+});
+
+it('persists and propagates the label layout through ribbon edits', async () => {
+	const { editor, ribbon, dialog, button } = await mount();
+	expect(ribbon('Update Labels').disabled).toBe(true);
+	ribbon('Start Mail Merge').click();
+	must((await dialog()).querySelector('select')).value = 'mailingLabels';
+	button(await dialog(), 'OK').click();
+	button(await dialog(), 'Create merge template').click();
+	expect(editor.documentModel?.mailMerge?.mainDocumentType).toBe('mailingLabels');
+	editor.mailMergeDataSource = {
+		read: () => ({ records: [{ FirstName: 'Ada' }, { FirstName: 'Bea' }] }),
+	};
+	ribbon('Select Recipients').click();
+	button(await dialog(), 'Use host recipients').click();
+	await vi.waitFor(() => expect(ribbon('Insert Merge Field').disabled).toBe(false));
+	ribbon('Insert Merge Field').click();
+	button(await dialog(), 'OK').click();
+	ribbon('Update Labels').click();
+	await vi.waitFor(() =>
+		expect(editor.shadowRoot?.querySelectorAll('.ProseMirror td')[2]?.textContent).toContain(
+			'«NEXT»',
+		),
+	);
+	const { model } = await loadDocx(await editor.saveBytes());
+	expect(model.blocks[0]).toMatchObject({
+		type: 'table',
+		layout: 'fixed',
+		grid: [3780, 180, 3780, 180, 3780],
+	});
+	const table = model.blocks[0];
+	if (table?.type !== 'table') throw new Error('Missing label table');
+	expect(
+		table.rows[0]?.[2]?.paragraphs[0]?.runs.some(({ fieldCode }) => fieldCode?.trim() === 'NEXT'),
+	).toBe(true);
+});
+
+it('cancels a prompt safely and sends escaped personalized HTML only after provider confirmation', async () => {
+	const model = createDocument();
+	const { mailMergeRule } = await import('ooxml-core/docx/mail-merge');
+	model.blocks[0] = {
+		type: 'paragraph',
+		id: 'p1',
+		runs: mailMergeRule({
+			kind: 'FILLIN',
+			bookmark: '',
+			prompt: 'Which line?',
+			answer: 'Default',
+			once: true,
+		}),
+	};
+	const { editor, ribbon, dialog, button } = await mount(model);
+	const send = vi.fn<(message: MailMergeEmailMessage) => void>();
+	editor.emailProvider = { send };
+	editor.mailMergeDataSource = {
+		read: () => ({ records: [{ Email: 'ada@example.test' }, { Email: 'bea@example.test' }] }),
+	};
+	ribbon('Select Recipients').click();
+	button(await dialog(), 'Use host recipients').click();
+	await vi.waitFor(() => expect(ribbon('Finish & Merge').disabled).toBe(false));
+	const prepare = async () => {
+		ribbon('Finish & Merge').click();
+		button(await dialog(), 'Send Email Messages').click();
+		const email = await dialog();
+		must(email.querySelector<HTMLInputElement>('[aria-label="Subject"]')).value = 'A subject';
+		must(email.querySelector<HTMLSelectElement>('[aria-label="Email format"]')).value = 'html';
+		button(email, 'Review email merge').click();
+		return dialog();
+	};
+	button(await prepare(), 'Cancel').click();
+	await vi.waitFor(() => expect(ribbon('Finish & Merge').disabled).toBe(false));
+	expect(send).not.toHaveBeenCalled();
+	const prompt = await prepare();
+	const answer = must(prompt.querySelector<HTMLInputElement>('[aria-label="Which line?"]'));
+	expect(answer.value).toBe('Default');
+	answer.value = '<img onload="test">';
+	button(prompt, 'OK').click();
+	const review = await dialog();
+	expect(send).not.toHaveBeenCalled();
+	button(review, 'Send messages').click();
+	await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(2));
+	expect(send.mock.calls[0]?.[0]).toEqual({
+		recipients: ['ada@example.test'],
+		subject: 'A subject',
+		html: '<p>&lt;img onload=&quot;test&quot;&gt;</p>',
+		attachments: [],
+	});
+	expect(send.mock.calls[1]?.[0]).toMatchObject({ recipients: ['bea@example.test'] });
 });

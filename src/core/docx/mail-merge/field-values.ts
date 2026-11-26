@@ -6,6 +6,7 @@ import type { MailMergeData, MailMergeValue } from './data-source';
 import { formatMergeNumber } from './number-picture';
 import type { MailMergeFieldMapping } from './settings';
 import { mailMergeFieldMap } from './authoring';
+import { addressSwitches, greetingSwitches, renderMailingField } from './native-fields';
 
 const MERGE_SWITCHES = { b: 'arg', f: 'arg', m: 'flag', v: 'flag' } as const;
 const PROMPT_SWITCHES = { d: 'arg', o: 'flag' } as const;
@@ -18,8 +19,10 @@ const MERGE_FIELDS = new Set([
 	'MERGESEQ',
 	'ASK',
 	'FILLIN',
+	'ADDRESSBLOCK',
+	'GREETINGLINE',
 ]);
-const UNSUPPORTED_FIELDS = new Set(['ADDRESSBLOCK', 'GREETINGLINE', 'MERGEBARCODE']);
+const UNSUPPORTED_FIELDS = new Set(['MERGEBARCODE']);
 
 export type MailMergeIssueCode =
 	| 'no-recipients'
@@ -44,6 +47,18 @@ export interface MailMergeOptions {
 	locale?: string;
 	/** Overrides the mappings read from the template. */
 	fieldMappings?: readonly MailMergeFieldMapping[];
+	/** Uses the field's default when the callback is absent or returns undefined. */
+	answerPrompt?: (request: MailMergePrompt) => string | undefined;
+}
+
+export interface MailMergePrompt {
+	/** Identifies a prompt instance across deterministic runs of the same template and recipient list. */
+	id: string;
+	kind: 'ASK' | 'FILLIN';
+	recordNumber: number;
+	text: string;
+	defaultAnswer: string;
+	once: boolean;
 }
 
 interface FieldResult {
@@ -130,12 +145,17 @@ export class MergeFields {
 		return undefined;
 	}
 
+	get exhausted(): boolean {
+		return this.index >= this.data.records.length;
+	}
+
 	evaluate(input: {
 		instruction: string;
 		blockId: string;
 		cached: string;
 		allowRecordRules: boolean;
 		nestedMerge: boolean;
+		position: string;
 		resolve: (arg: string) => string;
 	}): FieldResult | undefined {
 		const { instruction, blockId, cached, allowRecordRules, nestedMerge, resolve } = input;
@@ -146,7 +166,17 @@ export class MergeFields {
 		const isPrompt = name === 'ASK' || name === 'FILLIN';
 		const isRef = name === 'REF';
 		if (!MERGE_FIELDS.has(name) && !isRef && !(name === 'IF' && nestedMerge)) return undefined;
-		const own = name === 'MERGEFIELD' ? MERGE_SWITCHES : isPrompt ? PROMPT_SWITCHES : {};
+		const native = name === 'ADDRESSBLOCK' || name === 'GREETINGLINE';
+		const own =
+			name === 'MERGEFIELD'
+				? MERGE_SWITCHES
+				: isPrompt
+					? PROMPT_SWITCHES
+					: name === 'ADDRESSBLOCK'
+						? addressSwitches
+						: name === 'GREETINGLINE'
+							? greetingSwitches
+							: {};
 		const field = parseFieldInstruction(instruction, own, { numberPictures: true });
 		if (!field) return isRef ? undefined : issue('invalid-instruction');
 		const [first, second, third] = field.args;
@@ -156,6 +186,22 @@ export class MergeFields {
 			text,
 			...(field.format.charFormat && { charFormat: true }),
 		});
+		if (native) {
+			const record = this.data.records[this.index];
+			if (!record) return result('');
+			const text = renderMailingField(
+				field,
+				instruction,
+				(name) => {
+					const column = this.mappings.get(name.toLowerCase());
+					return column && Object.hasOwn(record, column)
+						? textOf(record[column] ?? null).trim()
+						: '';
+				},
+				resolve,
+			);
+			return text === undefined ? issue('invalid-instruction') : result(format(text));
+		}
 		if (name === 'MERGEFIELD') {
 			const before = field.switches.get('b');
 			const after = field.switches.get('f');
@@ -182,7 +228,19 @@ export class MergeFields {
 				fallback === true
 			)
 				return issue('invalid-instruction');
-			const answer = fallback === undefined ? cached : resolve(fallback);
+			if (!this.data.records[this.index]) return result('');
+			const defaultAnswer = fallback === undefined ? cached : resolve(fallback);
+			const once = field.switches.has('o');
+			const recordNumber = this.index + 1;
+			const answer =
+				this.options.answerPrompt?.({
+					id: JSON.stringify([input.position, blockId, once ? 0 : recordNumber]),
+					kind: name,
+					recordNumber,
+					text: resolve(name === 'ASK' ? (second ?? '') : first),
+					defaultAnswer,
+					once,
+				}) ?? defaultAnswer;
 			if (name === 'FILLIN') return result(format(answer));
 			this.answers.set(resolve(first).toLowerCase(), answer);
 			return result('');

@@ -280,6 +280,14 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   calls a host's `mailMergeDataSource.read()` only after **Use host recipients**, and the host controls any
   requests it makes. In the Office suite, **Edit Individual Documents** creates a new local
   profile document containing the merged text. It uses the suite's existing document storage.
+  **Labels > New Document** uses the same local document flow. Mail merge prompt answers stay in
+  memory until the merge ends. **Send Email Messages** sends no network requests from the editor.
+  When the user confirms **Send messages**, an optional `emailProvider.send()` receives each
+  recipient address, subject, text or HTML body, and any selected DOCX attachment bytes. The host
+  chooses the provider's destination and controls its requests. Provider errors stop delivery.
+  Without a provider, each draft link hands its recipient, subject and plain-text body to the local
+  mail app when explicitly opened. The mail app controls whether and where the draft is sent.
+  Set `emailProvider` to `false` to disable both delivery and drafts.
 - Excel requests the selected non-English language file from the app's own origin when the
   user or host selects that display language. English is built in and is used until the file
   loads, or whenever it is unavailable. Excel also loads bundled chart and PivotTable dialog

@@ -2,18 +2,52 @@
 
 `ooxml-core/docx/mail-merge` exposes mail merge for hosts that work with a `DocumentModel`. The host
 loads recipients, selects records, previews a record, and saves the merged document models.
-The Word editor's Mailings tab supports letters and directories, local CSV/TSV and first-sheet
+The Word editor's Mailings tab supports letters, directories, envelopes and labels, local CSV/TSV and first-sheet
 XLSX files, recipient filtering and sorting, field insertion and matching, record preview,
 validation, and combined DOCX and browser print output. A host can set
 `docxEditor.mailMergeDataSource` to offer its own provider. The cancelable `file-command` event
 with `command: 'openMergedDocument'`, `fileName` and `bytes` lets a host open the output as a
 separate session. Without a handler the editor downloads it. The editor keeps recipient data in
 memory and accepts up to 1,000 records, 64 fields and 5 MiB per local file. Large merges may need
-a smaller selection. Email, envelopes and labels remain unavailable.
+a smaller selection.
 
-The Address Block and Greeting Line commands insert standard merge fields using the selected
-matches. ASK and FILL-IN use the defaults entered in the Rules dialog. Field insertion targets a
-paragraph in the document body, and the Mailings controls require an editable, unshared document.
+Address Block and Greeting Line insert native fields using the selected matches. Finish & Merge
+asks for ASK and FILL-IN answers and can cancel the entire merge from a prompt. Preview and
+Check for Errors use the saved defaults. Field insertion targets a paragraph in the document
+body, and the Mailings controls require an editable, unshared document.
+
+## Envelopes and labels
+
+Headless hosts can call `await loadMailMergeStationery()` for the same presets and document
+operations.
+
+Use Envelopes to add an opening envelope section to an existing document. The section records
+the page size, address positions, and optional first-page printer tray. The print driver resolves
+the tray number and physical feed settings. Labels opens a separate document using the selected
+vendor and product. Use the full sheet or select a row and column for a single label.
+
+From an empty document, Start Mail Merge can create an envelope template or a sheet of labels.
+In a label template, insert content in the first label and choose Update Labels. It copies the
+first label into the remaining label cells with a native NEXT field at the start of each copy.
+Finish & Merge fills the sheet in row order and leaves unused labels blank. The preset catalog
+covers Avery US Letter 5160 and 5163 and HERMA A4 4464.
+See [HERMA's label dimensions](https://www.herma.com/office-home/labels/self-adhesive-labels/).
+
+## Email output
+
+Finish & Merge > Send Email Messages asks for the recipient column, subject and output format.
+The browser fallback supports up to five recipients from a plain-text template and limits each
+`mailto:` URL to 1,800 characters. The user opens each draft individually in their local mail
+app and sends it there.
+
+Hosts can assign `editor.emailProvider` to an object with `send(message)`. Word calls it only
+after the user reviews the recipient addresses and confirms Send messages. The method receives
+`{ recipients, subject, text, attachments }` for text or
+`{ recipients, subject, html, attachments }` for HTML. HTML includes escaped text, basic
+emphasis and tables. DOCX attachments carry `fileName`, `contentType` and `bytes` as a
+`Uint8Array`. The attachment mode supports up to ten recipients and email output is limited to
+16 MiB per batch. The host owns transport and credentials. If delivery fails, Word stops and
+reports the number accepted by the provider. Set `editor.emailProvider = false` to disable email.
 
 ## Recipient data
 
@@ -88,14 +122,21 @@ still report errors from the DOCX writer.
 
 ## Fields and settings
 
-| Field                  | Evaluation                                                                                                                                                                        |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `MERGEFIELD`           | Looks up the named column. `\b` and `\f` add text to a nonempty value. `\m` uses the ODSO mapping. `\v` converts ASCII letters, digits, and hyphens for vertical East Asian text. |
-| `IF`                   | Evaluates nested merge fields in the comparison and the chosen branch.                                                                                                            |
-| `NEXT`, `NEXTIF`       | Advance the current recipient inside the same output copy. If the list ends, later merge values are blank.                                                                        |
-| `SKIPIF`               | Discards the current output copy when the comparison is true. The next copy starts after the last record consumed.                                                                |
-| `MERGEREC`, `MERGESEQ` | Show the current record position and the current output copy's sequence number, respectively.                                                                                     |
-| `ASK`, `FILLIN`, `REF` | `ASK` assigns the `\d` default to a bookmark name for later `REF` fields. `FILLIN` displays the default. A missing default uses the cached result.                                |
+| Field                  | Evaluation                                                                                                                                                                                              |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `MERGEFIELD`           | Looks up the named column. `\b` and `\f` add text to a nonempty value. `\m` uses the ODSO mapping. `\v` converts ASCII letters, digits, and hyphens for vertical East Asian text.                       |
+| `IF`                   | Evaluates nested merge fields in the comparison and the chosen branch.                                                                                                                                  |
+| `NEXT`, `NEXTIF`       | Advance the current recipient inside the same output copy. If the list ends, later merge values are blank.                                                                                              |
+| `SKIPIF`               | Discards the current output copy when the comparison is true. The next copy starts after the last record consumed.                                                                                      |
+| `MERGEREC`, `MERGESEQ` | Show the current record position and the current output copy's sequence number, respectively.                                                                                                           |
+| `ADDRESSBLOCK`         | Substitutes mapped address placeholders from `\f`. Supports country inclusion and exclusion with `\c` and repeated `\e` switches and selected locality orders with `\d` or `\l`.                        |
+| `GREETINGLINE`         | Substitutes mapped name placeholders from `\f` and uses the `\e` fallback for missing names.                                                                                                            |
+| `ASK`, `FILLIN`, `REF` | `ASK` assigns an answer to a bookmark name for later `REF` fields. `FILLIN` displays the answer. The `\d` switch supplies a default, or the cached result is used. The `\o` switch asks once per merge. |
+
+Headless callers can supply `options.answerPrompt(request)` to either Finish API. Return a
+string to use that answer or return `undefined` to use the saved default. For an asynchronous
+prompt handler, use `resolveMailMergePrompts(model, data, ask)` first and pass its returned
+options to Finish. An `undefined` answer from the asynchronous handler cancels the merge.
 
 General `\*` switches reuse the Word field code's case and number formats. Merge results
 take the cached result run's formatting, or the instruction run's formatting for `CHARFORMAT`.
@@ -113,6 +154,6 @@ for a merge. [Open XML mail merge settings](https://learn.microsoft.com/en-us/do
 
 The engine covers body paragraphs, table cells, headers, footers, footnotes, and endnotes.
 Record rules run at the top level of the body. Locked fields and cross-paragraph fields keep
-their source results. Desktop Word compatibility remains open for address and greeting
-blocks, barcodes, interactive prompts, text boxes, caption picture tokens, and the full range
-of locale-specific formatting and template objects.
+their source results. Desktop Word compatibility remains open for the full set of regional
+address and greeting formats, printer-specific envelope settings, custom label sizes,
+barcodes, text boxes, caption picture tokens and the full range of template objects.

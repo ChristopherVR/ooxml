@@ -492,8 +492,7 @@ export const frRibbon: RibbonStrings = {
 	'Previous recipient': 'Destinataire précédent',
 	'Next recipient': 'Destinataire suivant',
 	'Last recipient': 'Dernier destinataire',
-	'mailings.envelopesUnavailable':
-		'Les mises en page des enveloppes et étiquettes sont indisponibles dans cet éditeur',
+	'mailings.selectLabelTemplate': 'Commencez par une fusion d’étiquettes avec une grille',
 	'mailings.busy': 'Attendez la fin de l’opération en cours',
 	'mailings.editUnavailable': 'Le publipostage nécessite un document modifiable hors collaboration',
 	'mailings.exitPreview': 'Fermez l’aperçu pour modifier le modèle',

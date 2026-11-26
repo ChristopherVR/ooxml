@@ -1,6 +1,8 @@
 import type { EditorLocale } from '../localization';
+import { extendedMailingsTranslations } from './extended-strings';
 
 const translations = {
+	...extendedMailingsTranslations,
 	Letters: { de: 'Briefe', es: 'Cartas', fr: 'Lettres', 'zh-CN': '信函' },
 	Directory: { de: 'Verzeichnis', es: 'Directorio', fr: 'Répertoire', 'zh-CN': '目录' },
 	'Normal Word Document': {

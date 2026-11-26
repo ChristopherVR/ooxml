@@ -1,4 +1,5 @@
 export { DocxEditorElement, registerDocxEditor } from './component';
+export type { MailMergeEmailMessage, MailMergeEmailProvider } from './mailings/email-provider';
 export type {
 	WordAlignment,
 	WordListChoice,

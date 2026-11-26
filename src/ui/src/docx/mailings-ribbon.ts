@@ -5,6 +5,9 @@ import type { RibbonIcon } from './ribbon-icons';
 
 export type MailingsCommand =
 	| 'start'
+	| 'envelopes'
+	| 'labels'
+	| 'updateLabels'
 	| 'source'
 	| 'recipients'
 	| 'highlight'
@@ -33,16 +36,15 @@ export function buildMailings(panel: HTMLElement): void {
 		);
 		button.dataset.mailings = key;
 		if (key === 'preview' || key === 'highlight') button.setAttribute('aria-pressed', 'false');
-		else if (!navigation) button.setAttribute('aria-haspopup', 'dialog');
-		return button;
-	};
-	const unavailable = (label: string, icon: RibbonIcon, inline = false) => {
-		const button = tool(label, icon, null, { large: !inline, inline });
-		button.dataset.localetitle = 'mailings.envelopesUnavailable';
+		else if (!navigation && key !== 'updateLabels') button.setAttribute('aria-haspopup', 'dialog');
 		return button;
 	};
 	panel.append(
-		group('Create', unavailable('Envelopes', 'envelope'), unavailable('Labels', 'table')),
+		group(
+			'Create',
+			command('envelopes', 'Envelopes', 'envelope'),
+			command('labels', 'Labels', 'table'),
+		),
 		group(
 			'Start Mail Merge',
 			command('start', 'Start Mail Merge', 'envelope'),
@@ -58,7 +60,7 @@ export function buildMailings(panel: HTMLElement): void {
 			stack(
 				command('rules', 'Rules', 'field', true),
 				command('match', 'Match Fields', 'field', true),
-				unavailable('Update Labels', 'updateTable', true),
+				command('updateLabels', 'Update Labels', 'updateTable', true),
 			),
 		),
 		group(
@@ -96,8 +98,27 @@ export function mailingsReason(
 ): LocalizationKey | undefined {
 	if (core.loading || state?.busy) return 'mailings.busy';
 	if (!core.view || !core.host.canEditOutsideBody()) return 'mailings.editUnavailable';
-	if (state?.preview && ['start', 'address', 'greeting', 'field', 'rules', 'match'].includes(key))
+	if (
+		state?.preview &&
+		[
+			'start',
+			'envelopes',
+			'labels',
+			'updateLabels',
+			'address',
+			'greeting',
+			'field',
+			'rules',
+			'match',
+		].includes(key)
+	)
 		return 'mailings.exitPreview';
+	if (
+		key === 'updateLabels' &&
+		(core.model.mailMerge?.mainDocumentType !== 'mailingLabels' ||
+			core.model.blocks[0]?.type !== 'table')
+	)
+		return 'mailings.selectLabelTemplate';
 	if (['address', 'greeting', 'field', 'rules'].includes(key)) {
 		const { $from, $to } = core.view.state.selection;
 		if (core.targetView() !== core.view || !$from.sameParent($to) || !$from.parent.inlineContent)

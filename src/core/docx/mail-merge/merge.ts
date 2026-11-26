@@ -76,7 +76,19 @@ export function previewMailMerge(
 
 function* projectRecipients(model: DocumentModel, data: MailMergeData, options: MailMergeOptions) {
 	const prepared = selectMailMergeRecipients(data);
-	const resolved = optionsFor(model, options);
+	const resolved = { ...optionsFor(model, options) };
+	const answerPrompt = resolved.answerPrompt;
+	if (answerPrompt) {
+		const once = new Map<string, string>();
+		resolved.answerPrompt = (request) => {
+			if (!request.once) return answerPrompt(request);
+			const existing = once.get(request.id);
+			if (existing !== undefined) return existing;
+			const answer = answerPrompt(request) ?? request.defaultAnswer;
+			once.set(request.id, answer);
+			return answer;
+		};
+	}
 	let sequence = 1;
 	for (let index = 0; index < prepared.records.length;) {
 		const project = projectMerge(model, prepared, index, sequence, resolved);

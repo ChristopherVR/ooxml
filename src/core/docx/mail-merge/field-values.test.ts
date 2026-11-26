@@ -69,7 +69,7 @@ describe('Word mail merge field evaluation', () => {
 			text: 'saved',
 			issues: [{ code: 'invalid-instruction' }],
 		});
-		expect(preview('ADDRESSBLOCK', null)).toMatchObject({
+		expect(preview('MERGEBARCODE', null)).toMatchObject({
 			text: 'saved',
 			issues: [{ code: 'unsupported-field' }],
 		});

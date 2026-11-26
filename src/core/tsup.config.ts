@@ -94,6 +94,7 @@ const shared = {
 const {
 	index,
 	'drawingml/index': drawingml,
+	'docx/mail-merge/index': mailMerge,
 	'xlsx/load/index': xlsxLoad,
 	'xlsx/collab/index': xlsxCollab,
 	'visio/index': _visio,
@@ -114,6 +115,14 @@ export default defineConfig([
 		esbuildOptions(options) {
 			options.chunkNames = 'chunks/root/[name]-[hash]';
 		},
+	},
+	{
+		...shared,
+		entry: { 'docx/mail-merge/index': mailMerge },
+		format: ['esm'],
+		splitting: false,
+		minifyWhitespace: true,
+		minifySyntax: true,
 	},
 	{
 		...shared,

@@ -150,7 +150,17 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	style.textContent = editorStyleText;
 	const frame = document.createElement('section');
 	frame.className = 'dve-frame';
-	const toolbar = core.surfaceOnly ? undefined : createRibbon(core.locale);
+	const toolbar: HTMLElement | undefined = core.surfaceOnly
+		? undefined
+		: createRibbon(core.locale, {
+				ready: (sync) => {
+					if (core.shell.toolbar !== toolbar) return;
+					core.syncMailings = () => sync(core);
+					applyViewOptions(core);
+					core.syncMailings();
+				},
+				error: core.host.reportError,
+			});
 	if (toolbar) on(toolbar, 'ribbon-action', (event) => routeRibbonAction(core, event.detail));
 	const canvas = document.createElement('main');
 	canvas.className = 'dve-canvas';

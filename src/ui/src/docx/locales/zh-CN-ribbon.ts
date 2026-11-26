@@ -496,7 +496,7 @@ export const zhCNRibbon: RibbonStrings = {
 	'Previous recipient': '上一位收件人',
 	'Next recipient': '下一位收件人',
 	'Last recipient': '最后一位收件人',
-	'mailings.envelopesUnavailable': '此编辑器不支持信封和标签布局',
+	'mailings.selectLabelTemplate': '请先创建包含标签网格的标签合并',
 	'mailings.busy': '请等待当前操作完成',
 	'mailings.editUnavailable': '邮件合并需要可编辑且未处于协作状态的文档',
 	'mailings.exitPreview': '请关闭结果预览以编辑模板',

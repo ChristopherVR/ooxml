@@ -1,5 +1,5 @@
 import { showCommandTips } from './ribbon-keytips';
-import { fileButton, panelOf, tabButtons } from './ribbon-tab-api';
+import { fileButton, panelOf, selectedTab, tabButtons } from './ribbon-tab-api';
 
 /** Word's tab KeyTips (Alt, then a letter), by tab key. File is `F`. */
 const KEY_TIPS: Record<string, string> = {
@@ -28,7 +28,10 @@ const BADGE_STYLE =
  * letter opens that tab (`F` opens File); the tab's commands then show their own tips (see
  * ribbon-keytips.ts).
  */
-export function attachRibbonBehavior(root: HTMLElement): void {
+export function attachRibbonBehavior(
+	root: HTMLElement,
+	loadTab: (key: string) => Promise<void> | undefined,
+): void {
 	root.toggleAttribute('collapsible', true);
 	let hideTips: (() => void) | undefined;
 	root.addEventListener('dve-keytips', () => {
@@ -70,7 +73,15 @@ export function attachRibbonBehavior(root: HTMLElement): void {
 			match.tab.focus();
 			// Word's second level: the tab's commands get their own tips.
 			const panel = match.panel ? panelOf(root, match.panel) : null;
-			if (panel) showCommandTips(root, panel, () => match.tab.focus());
+			if (!panel || !match.panel) return;
+			const show = () => showCommandTips(root, panel, () => match.tab.focus());
+			const loading = loadTab(match.panel);
+			if (loading)
+				void loading.then(() => {
+					if (selectedTab(root) === match.panel && root.shadowRoot?.activeElement === match.tab)
+						show();
+				});
+			else show();
 		};
 		const onFocusOut = (event: FocusEvent) => {
 			if (!event.relatedTarget || !root.contains(event.relatedTarget as Node)) stop();

@@ -157,6 +157,11 @@ export function buildNewTableProperties(
 	}
 	const borders = table.borders && buildBorders(doc, table.borders, 'tblBorders');
 	if (borders?.childNodes.length) tblPr.appendChild(borders);
+	if (table.layout) {
+		const layout = makeW(doc, 'tblLayout');
+		setW(layout, 'type', table.layout);
+		tblPr.appendChild(layout);
+	}
 	const margins = table.cellMargins && buildMargins(doc, table.cellMargins, 'tblCellMar');
 	if (margins) tblPr.appendChild(margins);
 	const hasLook = table.look && TABLE_LOOK_FLAGS.some(([name]) => table.look?.[name] !== undefined);

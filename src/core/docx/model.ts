@@ -100,7 +100,7 @@ export interface Table {
 	widthPercent?: number;
 	/**
 	 * `w:tblLayout`: `fixed` keeps the grid, `autofit` (the default when the element is absent)
-	 * sizes the columns from their content. Set by the parser; tables the editor creates have none.
+	 * sizes the columns from their content. Writable for newly created tables.
 	 */
 	layout?: 'fixed' | 'autofit';
 	/** `w:tblpPr`: the table floats at this position and text wraps around it (read-only). */

@@ -9,6 +9,7 @@ export interface MailingsDialog {
 	content: HTMLElement;
 	t: (label: MailingsLabel) => string;
 	close(): void;
+	onClose(callback: () => void): void;
 	actions(...buttons: HTMLElement[]): void;
 	show(): void;
 }
@@ -25,9 +26,12 @@ export function createMailingsDialog(
 	const content = document.createElement('div');
 	content.className = 'dve-mailings-content';
 	element.append(style, content);
+	const closeCallbacks = new Set<() => void>();
 	const close = () => {
 		setDialogOpen(element, false);
 		element.remove();
+		for (const callback of closeCallbacks) callback();
+		closeCallbacks.clear();
 	};
 	onDialogDismiss(element, close);
 	return {
@@ -35,6 +39,9 @@ export function createMailingsDialog(
 		content,
 		t: (label) => mailingsText(locale, label),
 		close,
+		onClose(callback) {
+			closeCallbacks.add(callback);
+		},
 		actions(...buttons) {
 			const dismiss = dialogButton(translate(locale, buttons.length ? 'Cancel' : 'Close'));
 			dismiss.addEventListener('click', close);

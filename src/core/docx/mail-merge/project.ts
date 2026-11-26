@@ -68,7 +68,7 @@ function projectParagraph(
 	fields: MergeFields,
 	computed: ReturnType<typeof computedFields>,
 	body: boolean,
-	story: { openFields: number },
+	story: { openFields: number; index: number },
 ): Paragraph {
 	if (fields.skipped) return paragraph;
 	const runs = paragraph.runs;
@@ -115,6 +115,7 @@ function projectParagraph(
 			cached: cachedText(runs, span),
 			allowRecordRules: body && !nested,
 			nestedMerge: codeChildren.some((child) => child.containsMerge),
+			position: `${story.index}:${span.from}`,
 			resolve: (arg) =>
 				arg.replace(/\uE000(\d+)\uE001/g, (placeholder: string, index: string) => {
 					const id = Number(index);
@@ -173,11 +174,22 @@ export function projectMerge(
 ) {
 	const fields = new MergeFields(data, start, sequence, options);
 	const computed = computedFields(model);
+	let storyIndex = 0;
 	const project = (blocks: Block[], body: boolean) => {
-		const story = { openFields: 0 };
-		return mapStoryBlocks(blocks, (paragraph) =>
-			projectParagraph(paragraph, fields, computed, body, story),
+		const story = { openFields: 0, index: storyIndex++ };
+		const paragraph = (value: Paragraph) => projectParagraph(value, fields, computed, body, story);
+		const table = blocks[0];
+		if (!body || model.mailMerge?.mainDocumentType !== 'mailingLabels' || table?.type !== 'table')
+			return mapStoryBlocks(blocks, paragraph);
+		const rows = table.rows.map((row) =>
+			row.map((cell) => {
+				if (cell.sourceBlocks) return cell;
+				const paragraphs = cell.paragraphs.map(paragraph);
+				if (!fields.exhausted) return { ...cell, paragraphs };
+				return { ...cell, paragraphs: paragraphs.map((p) => ({ ...p, runs: [{ text: '' }] })) };
+			}),
 		);
+		return [{ ...table, rows }, ...mapStoryBlocks(blocks.slice(1), paragraph)];
 	};
 	const blocks = project(model.blocks, true);
 	const nextIndex = fields.index + 1;

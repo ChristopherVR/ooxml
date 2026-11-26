@@ -16,7 +16,7 @@ test('merge a local CSV through the ribbon, preview and print it, and reopen the
 	const button = (name: string) => modal.getByRole('button', { name, exact: true });
 	await ribbon.getByRole('tab', { name: 'Mailings' }).click();
 	await expect(command('Preview Results')).toBeDisabled();
-	await expect(command('Envelopes')).toBeDisabled();
+	await expect(command('Envelopes')).toBeEnabled();
 	await command('Start Mail Merge').focus();
 	await page.keyboard.press('Enter');
 	await modal.getByRole('combobox', { name: 'Start Mail Merge' }).selectOption('formLetters');
@@ -133,4 +133,99 @@ test('reads the first XLSX sheet and uses cached values without calculating form
 	await dialog.getByRole('button', { name: 'OK' }).click();
 	await ribbon.getByRole('button', { name: 'Preview Results' }).click();
 	await expect(editor.locator('[data-merge-projection]')).toContainText('71');
+});
+
+test('creates labels, propagates NEXT and opens the finished label document', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const ribbon = editor.locator('office-ui-ribbon');
+	const command = (name: string) => ribbon.getByRole('button', { name, exact: true });
+	const modal = editor.locator('.dve-mailings-dialog');
+	const button = (name: string) => modal.getByRole('button', { name, exact: true });
+	await ribbon.getByRole('tab', { name: 'Mailings' }).click();
+	await expect(command('Update Labels')).toBeDisabled();
+	await command('Start Mail Merge').click();
+	await modal.getByRole('combobox', { name: 'Start Mail Merge' }).selectOption('mailingLabels');
+	await button('OK').click();
+	await modal.getByRole('combobox', { name: 'Product number' }).selectOption('5163');
+	await button('Create merge template').click();
+	await expect(command('Update Labels')).toBeEnabled();
+	await command('Select Recipients').click();
+	await modal.locator('input[type=file]').setInputFiles({
+		name: 'labels.csv',
+		mimeType: 'text/csv',
+		buffer: Buffer.from('FirstName,LastName\nAda,Lovelace\nBea,Brown'),
+	});
+	await command('Address Block').click();
+	await button('OK').click();
+	await command('Update Labels').click();
+	await expect(editor.locator('.ProseMirror td').nth(2)).toContainText('«NEXT»«AddressBlock»');
+	await command('Finish & Merge').click();
+	const download = page.waitForEvent('download');
+	await button('Edit Individual Documents').click();
+	const file = await download;
+	const path = await file.path();
+	if (!path) throw new Error('The label merge did not download a DOCX.');
+	await reopenDocument(page, file.suggestedFilename(), await readFile(path));
+	await expect(editor.locator('.ProseMirror table')).toHaveCount(1);
+	await expect(editor.locator('.ProseMirror td').first()).toContainText('Ada Lovelace');
+	await expect(editor.locator('.ProseMirror td').nth(2)).toContainText('Bea Brown');
+});
+
+test('adds a Word envelope from the keyboard', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const ribbon = editor.locator('office-ui-ribbon');
+	const command = (name: string) => ribbon.getByRole('button', { name, exact: true });
+	const modal = editor.locator('.dve-mailings-dialog');
+	const button = (name: string) => modal.getByRole('button', { name, exact: true });
+	await ribbon.getByRole('tab', { name: 'Mailings' }).click();
+	await command('Envelopes').focus();
+	await page.keyboard.press('Enter');
+	await modal.getByRole('textbox', { name: 'Delivery address' }).fill('Ada\nLondon');
+	await modal.getByRole('textbox', { name: 'Return address' }).fill('Sender');
+	await button('OK').click();
+	await expect(editor.locator('.ProseMirror')).toContainText('Sender');
+	await expect(editor.locator('.ProseMirror')).toContainText('Ada');
+});
+
+test('prepares a mailto draft with a live prompt answer', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	const editor = page.locator('docx-editor');
+	const ribbon = editor.locator('office-ui-ribbon');
+	const command = (name: string) => ribbon.getByRole('button', { name, exact: true });
+	const modal = editor.locator('.dve-mailings-dialog');
+	const button = (name: string) => modal.getByRole('button', { name, exact: true });
+	await ribbon.getByRole('tab', { name: 'Mailings' }).click();
+	await command('Select Recipients').click();
+	await modal.locator('input[type=file]').setInputFiles({
+		name: 'email.csv',
+		mimeType: 'text/csv',
+		buffer: Buffer.from('Email\nada@example.test'),
+	});
+	await expect(command('Finish & Merge')).toBeEnabled();
+	await command('Rules').click();
+	await modal.getByRole('combobox', { name: 'Rule' }).selectOption('FILLIN');
+	await modal.getByRole('textbox', { name: 'Prompt' }).fill('What should we say?');
+	await modal.getByRole('textbox', { name: 'Default answer' }).fill('Default');
+	await button('OK').click();
+	await command('Finish & Merge').click();
+	await button('Send Email Messages').click();
+	await modal.getByRole('textbox', { name: 'Subject' }).fill('Update & news');
+	await button('Prepare email drafts').click();
+	const answer = modal.getByRole('textbox', { name: 'What should we say?' });
+	await expect(answer).toBeFocused();
+	await expect(answer).toHaveValue('Default');
+	await answer.fill('Hi Ada!');
+	await answer.press('Enter');
+	await expect(modal.getByRole('link', { name: 'ada@example.test' })).toHaveAttribute(
+		'href',
+		'mailto:ada@example.test?subject=Update%20%26%20news&body=Hi%20Ada!',
+	);
 });

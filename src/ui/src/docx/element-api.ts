@@ -36,6 +36,7 @@ import type { GoogleFontsOption } from 'ooxml-core/text';
 import { refreshDocxWebfonts } from './docx-webfonts';
 import type { ReadAloudOptions } from './read-aloud-session';
 import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
+import type { MailMergeEmailProvider } from './mailings/email-provider';
 
 const HTMLElementBase: typeof HTMLElement =
 	typeof HTMLElement === 'undefined' ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -51,6 +52,13 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	}
 	set mailMergeDataSource(source: MailMergeDataSource | undefined) {
 		this.core.mailMergeDataSource = source;
+	}
+	/** Delivers a confirmed email merge. Set false to disable both delivery and local drafts. */
+	get emailProvider(): MailMergeEmailProvider | false | undefined {
+		return this.core.emailProvider;
+	}
+	set emailProvider(provider: MailMergeEmailProvider | false | undefined) {
+		this.core.emailProvider = provider;
 	}
 	/** Choose before connecting. This mode mounts only the document and its editing surface. */
 	get surfaceOnly(): boolean {

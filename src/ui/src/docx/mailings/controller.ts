@@ -1,7 +1,6 @@
 import type { TextRun } from 'ooxml-core/docx';
 import {
 	checkMailMerge,
-	finishMailMerge,
 	mailMergeWithinWorkLimit,
 	previewMailMerge,
 	type MailMergeData,
@@ -10,8 +9,6 @@ import {
 import { Fragment, Slice } from 'prosemirror-model';
 import { closeHistory } from 'prosemirror-history';
 import type { EditorCore } from '../editor-core';
-import { saveEditorModel } from '../editor-save';
-import { openMergedDocument } from '../file-commands';
 import { focusView } from '../focus-view';
 import type { LocalizationKey } from '../localization';
 import {
@@ -22,7 +19,7 @@ import {
 } from '../mailings-ribbon';
 import { runToInlineNodes } from '../run-adapter';
 import { createMailingsDialog, dialogMessage, type MailingsDialog } from './dialog';
-import { composedFieldDialog, fieldDialog, matchFieldsDialog, rulesDialog } from './field-dialog';
+import { nativeFieldDialog, fieldDialog, matchFieldsDialog, rulesDialog } from './field-dialog';
 import { MailingsProjection } from './projection';
 import {
 	allRecipients,
@@ -37,9 +34,22 @@ import {
 	finishDialog,
 	sourceDialog,
 	startDialog,
+	type MergeType,
 } from './workflow-dialogs';
 import type { MailingsLabel } from './strings';
 import { readLocalRecipients } from './recipient-file';
+import { emailUnavailable } from './email';
+import { finishWorkflow } from './finish';
+import {
+	applyDocument,
+	emptyBody,
+	envelopeDialog,
+	labelsDialog,
+	labelUpdateIssue,
+	openLabels,
+	startLabels,
+	withStationery,
+} from './stationery';
 
 export class MailingsController {
 	private source: MailMergeData | undefined;
@@ -107,15 +117,27 @@ export class MailingsController {
 		switch (key) {
 			case 'start':
 				this.show('Start Mail Merge', (dialog) =>
-					startDialog(dialog, locale, core.model.mailMerge?.mainDocumentType, (type) => {
-						if (mailingsReason(core, key)) return;
-						if (!type) {
-							if (core.model.mailMerge) this.applySettings(undefined);
-							this.source = undefined;
-							this.select(allRecipients());
-						} else this.applySettings({ ...core.model.mailMerge, mainDocumentType: type });
-					}),
+					startDialog(
+						dialog,
+						locale,
+						core.model.mailMerge?.mainDocumentType,
+						emptyBody(core),
+						(type) => this.start(type),
+					),
 				);
+				break;
+			case 'envelopes':
+				this.openEnvelope(false);
+				break;
+			case 'labels':
+				this.openLabelSheet(false);
+				break;
+			case 'updateLabels':
+				void withStationery(core, key, ({ updateLabels }) => {
+					const next = updateLabels(core.model);
+					if (next === core.model) this.show('Update Labels', labelUpdateIssue);
+					else applyDocument(core, next);
+				});
 				break;
 			case 'source':
 				this.show('Select Recipients', (dialog) =>
@@ -167,7 +189,7 @@ export class MailingsController {
 			case 'address':
 			case 'greeting':
 				this.show(key === 'address' ? 'Address Block' : 'Greeting Line', (dialog) =>
-					composedFieldDialog(dialog, locale, key, fields, mappings, insert),
+					nativeFieldDialog(dialog, locale, key, fields, mappings, insert),
 				);
 				break;
 			case 'rules':
@@ -204,12 +226,77 @@ export class MailingsController {
 				break;
 			case 'finish':
 				this.show('Finish & Merge', (dialog) =>
-					finishDialog(dialog, (print) => {
-						if (!mailingsReason(core, key)) void this.finish(print);
-					}),
+					finishDialog(
+						dialog,
+						(destination) => {
+							if (mailingsReason(core, key) || !this.withinLimit('Finish & Merge')) return;
+							void this.operation(
+								'Finish & Merge',
+								'The merge could not be completed.',
+								(current) =>
+									finishWorkflow(
+										core,
+										this.recipients,
+										destination,
+										(title, build) => this.show(title, build),
+										current,
+										(model) => this.projection.print(model),
+									),
+							);
+						},
+						emailUnavailable(core, this.recipients),
+					),
 				);
 		}
 		syncMailingsRibbon(core);
+	}
+
+	private openEnvelope(merge: boolean): void {
+		const { core } = this;
+		const key = merge ? 'start' : 'envelopes';
+		void withStationery(core, key, ({ addEnvelope, envelopeSizes }) => {
+			this.show('Envelopes', (dialog) =>
+				envelopeDialog(dialog, core.locale, envelopeSizes, (options) => {
+					if (mailingsReason(core, key) || (merge && !emptyBody(core))) return;
+					applyDocument(core, addEnvelope(core.model, options, merge ? 'merge' : 'prepend'), merge);
+				}),
+			);
+		});
+	}
+
+	private openLabelSheet(merge: boolean): void {
+		const { core } = this;
+		const key = merge ? 'start' : 'labels';
+		void withStationery(core, key, ({ createLabels, labelPresets }) => {
+			this.show('Labels', (dialog) =>
+				labelsDialog(dialog, labelPresets, merge, (options) => {
+					if (mailingsReason(core, key) || (merge && !emptyBody(core))) return;
+					const sheet = createLabels(options);
+					if (merge) startLabels(core, sheet);
+					else
+						void this.operation('Labels', 'The label document could not be created.', (current) =>
+							openLabels(core, sheet, current),
+						);
+				}),
+			);
+		});
+	}
+
+	private start(type: MergeType | undefined): void {
+		const { core } = this;
+		if (mailingsReason(core, 'start') || (type && type === core.model.mailMerge?.mainDocumentType))
+			return;
+		if (!type) {
+			this.applySettings(undefined);
+			this.source = undefined;
+			this.select(allRecipients());
+		} else if (type === 'envelopes' && emptyBody(core)) {
+			this.openEnvelope(true);
+		} else if (type === 'mailingLabels' && emptyBody(core)) {
+			this.openLabelSheet(true);
+		} else if (type === 'formLetters' || type === 'catalog') {
+			this.applySettings({ ...core.model.mailMerge, mainDocumentType: type });
+		}
 	}
 
 	private select(settings: RecipientSelection): void {
@@ -223,9 +310,9 @@ export class MailingsController {
 	}
 
 	private applySettings(mailMerge: MailMergeSettings | undefined): void {
-		const { mailMerge: _previous, ...model } = this.core.model;
-		this.core.model = mailMerge ? { ...model, mailMerge } : model;
-		this.core.markEditedOutsideBody();
+		const view = this.core.view;
+		if (view?.editable)
+			view.dispatch(closeHistory(view.state.tr).setDocAttribute('mailMerge', mailMerge ?? null));
 	}
 
 	private showRecord(record: number): void {
@@ -239,31 +326,6 @@ export class MailingsController {
 		syncMailingsRibbon(core);
 		if (!core.shell.toolbar?.contains(core.element.shadowRoot?.activeElement ?? null))
 			core.shell.toolbar?.querySelector<HTMLElement>('[data-mailings="preview"]')?.focus();
-	}
-
-	private async finish(print: boolean): Promise<void> {
-		if (!this.withinLimit('Finish & Merge')) return;
-		const { core } = this;
-		await this.operation('Finish & Merge', 'The merge could not be completed.', async (current) => {
-			const result = finishMailMerge(core.model, this.recipients, { locale: core.locale });
-			if (result.issues.length) {
-				this.show('Check for Errors', (dialog) => checkDialog(dialog, result.issues));
-				return;
-			}
-			if (!result.document) {
-				this.message(
-					'Finish & Merge',
-					'No output was produced because the rules skipped every recipient.',
-				);
-				return;
-			}
-			if (print) this.projection.print(result.document);
-			else {
-				const name = (core.shell.chrome?.fileName ?? 'Document').replace(/\.[^./\\]+$/, '');
-				const bytes = await saveEditorModel(core, result.document);
-				if (current()) openMergedDocument(core.element, bytes, `${name}-merged.docx`);
-			}
-		});
 	}
 
 	private withinLimit(title: LocalizationKey): boolean {

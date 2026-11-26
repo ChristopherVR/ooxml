@@ -8,6 +8,32 @@ import { insertHardBreak } from './hard-break-command';
 import { schema } from './schema';
 import { inlineNodeRun } from 'ooxml-core/docx/ui';
 
+it('ignores invalid layout attributes when converting an inserted table', () => {
+	const model = createDocument();
+	const doc = modelToDoc(model);
+	const table = schema.node(
+		'table',
+		{
+			id: 'inserted',
+			grid: 'null',
+			widthTwips: Infinity,
+			layout: 'invalid',
+		},
+		[
+			schema.node('tableRow', null, [
+				schema.node('tableCell', { widthTwips: -10 }, [schema.node('paragraph', { id: 'cell' })]),
+			]),
+		],
+	);
+	const next = docToModel(doc.type.create(doc.attrs, table), model, doc);
+	const inserted = next.blocks[0];
+	if (inserted?.type !== 'table') throw new Error('Expected an inserted table');
+	expect(inserted.grid).toBeUndefined();
+	expect(inserted.widthTwips).toBeUndefined();
+	expect(inserted.layout).toBeUndefined();
+	expect(inserted.rows[0]?.[0]?.widthTwips).toBeUndefined();
+});
+
 describe('paragraph line breaks and spacing adapter', () => {
 	it('distinguishes an inherited page break from a direct off override through edits and DOM conversion', () => {
 		const model = createDocument();

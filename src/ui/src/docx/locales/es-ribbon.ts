@@ -499,8 +499,7 @@ export const esRibbon: RibbonStrings = {
 	'Previous recipient': 'Destinatario anterior',
 	'Next recipient': 'Siguiente destinatario',
 	'Last recipient': 'Último destinatario',
-	'mailings.envelopesUnavailable':
-		'Los diseños de sobres y etiquetas no están disponibles en este editor',
+	'mailings.selectLabelTemplate': 'Inicia primero una combinación de etiquetas con una cuadrícula',
 	'mailings.busy': 'Espera a que termine la operación actual',
 	'mailings.editUnavailable':
 		'La combinación requiere un documento editable fuera de la colaboración',

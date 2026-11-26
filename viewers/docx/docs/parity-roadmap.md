@@ -105,6 +105,14 @@ detail and limits of each feature already built.
    `=`, DOCPROPERTY and INCLUDE fields, Read Mode, Web Layout and Outline views,
    wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly
    remain open. Other remaining work includes object
+   theme, colour and font catalogue, custom colours and fonts, paragraph spacing presets and a
+   custom dialog, three shadow presets, and host-managed defaults for new documents. The full
+   Word catalogue, theme file import/export, and broader DrawingML effect rendering remain open.
+   Mailings supports letters, directories, envelopes and preset label sheets, local or host
+   recipients, native address and greeting fields, interactive merge prompts, DOCX and print
+   output, and email drafts or host-provided delivery. Custom label stock, printer-specific
+   envelope feed settings and full regional address and greeting formats remain open.
+   Other remaining work includes object
    positioning and wrapping (no Layout > Arrange group, no Picture
    Format tab), citations/bibliography/index/Table of Authorities, recalculating IF,
    `=`, DOCPROPERTY and INCLUDE fields, wildcard and formatting Find & Replace, and accessibility inspection. Unsupported imported content must remain visible or explicitly

@@ -122,6 +122,7 @@ export const schema = new Schema({
 				noteParts: { default: null },
 				/** Document properties and package information as JSON (`document-information-attr.ts`). */
 				documentInformation: { default: null },
+				mailMerge: { default: null },
 				styleCatalogs: { default: null },
 				documentTheme: { default: null },
 				...commentHistoryAttributes,
@@ -172,6 +173,7 @@ export const schema = new Schema({
 				overflowPunct: { default: null },
 				/** `w:framePr` drop cap: `{ style, lines }` on the frame paragraph holding the initial. */
 				dropCap: { default: null },
+				frame: { default: null },
 				/** `w:pBdr` (object) and shading fill; read-only, drawn around the paragraph. */
 				borders: { default: null },
 				shadingFill: { default: null },
@@ -279,6 +281,7 @@ export const schema = new Schema({
 				restructurable: { default: false },
 				/** The table's `w:tblGrid` widths as JSON, kept so column edits reach the model. */
 				grid: { default: null },
+				layout: { default: null },
 				widthTwips: { default: null },
 				alignment: { default: null },
 				indentTwips: { default: null },

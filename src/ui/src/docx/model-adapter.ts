@@ -39,6 +39,8 @@ import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
 import { commentThreadsFromDoc } from 'ooxml-core/docx/ui';
 import { documentInformationJson, readDocumentInformation } from './document-information-attr';
+import { gridOf } from './table-restructure';
+import { signedTwips, twips } from 'ooxml-core/units';
 
 type ListLabels = ReturnType<typeof computeListLabels>;
 
@@ -93,6 +95,7 @@ export function modelToDoc(model: DocumentModel) {
 			noteParts: notePartsJson(model),
 			commentThreads: JSON.stringify(model.comments ?? []),
 			documentInformation: documentInformationJson(model),
+			mailMerge: model.mailMerge ?? null,
 			styleCatalogs: styleCatalogsOf(model),
 			documentTheme: model.theme ?? null,
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
@@ -248,6 +251,7 @@ export function docToModel(
 				(key) => (previous[key] ?? null) === (node.attrs[key] ?? null),
 			) &&
 			sameJson(previous.dropCap ?? null, node.attrs.dropCap ?? null) &&
+			sameJson(previous.frame ?? null, node.attrs.frame ?? null) &&
 			sameJson(previous.borders ?? null, node.attrs.borders ?? null) &&
 			JSON.stringify(previous.percentageShading ?? null) ===
 				JSON.stringify(node.attrs.percentageShading ?? null) &&
@@ -282,6 +286,7 @@ export function docToModel(
 				const { style: priorStyle, ...descriptors } = prior ?? {};
 				const style =
 					typeof node.attrs.tableStyleId === 'string' ? node.attrs.tableStyleId : priorStyle;
+				const grid = prior ? undefined : gridOf(node);
 				blocks.push({
 					// Table-level properties (grid, width, borders, style, look) have no editor node;
 					// carry them over from the prior model so editing cell text never drops them.
@@ -291,7 +296,27 @@ export function docToModel(
 								structureEditable: undefined,
 								contentControl: undefined,
 							}
-						: tableBordersFromNode(node.attrs.borders)),
+						: {
+								...tableBordersFromNode(node.attrs.borders),
+								...(grid?.every((width) => Number.isSafeInteger(width) && width > 0) && {
+									grid: grid.map(twips),
+								}),
+								...(typeof node.attrs.widthTwips === 'number' &&
+									Number.isSafeInteger(node.attrs.widthTwips) &&
+									node.attrs.widthTwips >= 0 && {
+										widthTwips: twips(node.attrs.widthTwips),
+									}),
+								...(typeof node.attrs.indentTwips === 'number' &&
+									Number.isSafeInteger(node.attrs.indentTwips) && {
+										indentTwips: signedTwips(node.attrs.indentTwips),
+									}),
+								...(['left', 'center', 'right'].includes(node.attrs.alignment) && {
+									alignment: node.attrs.alignment,
+								}),
+								...((node.attrs.layout === 'fixed' || node.attrs.layout === 'autofit') && {
+									layout: node.attrs.layout,
+								}),
+							}),
 					type: 'table',
 					id,
 					...(style && { style }),
@@ -315,6 +340,7 @@ export function docToModel(
 		trackMoves: _trackMoves,
 		pageColor: _pageColor,
 		autoHyphenation: _hyphenation,
+		mailMerge: priorMailMerge,
 		...kept
 	} = prior;
 	const rest = previousDoc
@@ -333,6 +359,9 @@ export function docToModel(
 			? restoreSectionParts(sectionLayout, doc.attrs.sectionParts, blocks)
 			: sectionLayout;
 	const threads = commentThreadsFromDoc(doc);
+	const mailMerge: DocumentModel['mailMerge'] = previousDoc
+		? (doc.attrs.mailMerge ?? undefined)
+		: priorMailMerge;
 	return {
 		...(previousDoc && previousDoc.attrs.styleCatalogs !== doc.attrs.styleCatalogs
 			? withStyleCatalogs(rest, doc)
@@ -349,6 +378,7 @@ export function docToModel(
 			...(priorEndnotes ? { endnotes: priorEndnotes } : {}),
 		}),
 		blocks,
+		...(mailMerge && { mailMerge }),
 		...(doc.attrs.evenAndOddHeaders ? { evenAndOddHeaders: true } : {}),
 		trackChanges: Boolean(doc.attrs.trackChanges),
 		trackFormatting: doc.attrs.trackFormatting !== false,

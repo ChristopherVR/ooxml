@@ -1,15 +1,16 @@
 import {
-	composeMailMergeFields,
+	mailMergeAddressBlock,
 	mailMergeAddressFields,
 	mailMergeComparisons,
 	mailMergeField,
+	mailMergeGreetingLine,
 	mailMergeRule,
 	matchMailMergeField,
 	setMailMergeFieldMapping,
 	type MailMergeFieldMapping,
 } from 'ooxml-core/docx/mail-merge';
 import type { TextRun } from 'ooxml-core/docx';
-import { labelled, row, selectOf, textInput } from '../dialog-fields';
+import { checkbox, labelled, row, selectOf, textInput } from '../dialog-fields';
 import type { EditorLocale } from '../localization';
 import { dialogMessage, dialogSubmit, type MailingsDialog } from './dialog';
 import type { MailingsLabel } from './strings';
@@ -24,6 +25,16 @@ const fieldLabels: Record<(typeof mailMergeAddressFields)[number], MailingsLabel
 	State: 'State or province',
 	PostalCode: 'Postal code',
 	CountryorRegion: 'Country or region',
+	CourtesyTitle: 'Courtesy title',
+	MiddleName: 'Middle name',
+	Suffix: 'Name suffix',
+	Nickname: 'Nickname',
+	SpouseCourtesyTitle: 'Partner courtesy title',
+	SpouseFirstName: 'Partner first name',
+	SpouseMiddleName: 'Partner middle name',
+	SpouseLastName: 'Partner last name',
+	SpouseNickname: 'Partner nickname',
+	EmailAddress: 'Email address column',
 };
 
 export function fieldDialog(
@@ -66,7 +77,7 @@ export function matchFieldsDialog(
 	});
 }
 
-export function composedFieldDialog(
+export function nativeFieldDialog(
 	dialog: MailingsDialog,
 	locale: EditorLocale,
 	kind: 'address' | 'greeting',
@@ -74,27 +85,70 @@ export function composedFieldDialog(
 	mappings: readonly MailMergeFieldMapping[],
 	insert: (runs: TextRun[]) => void,
 ): void {
-	const greeting = textInput();
-	greeting.maxLength = 128;
-	greeting.value = dialog.t('Dear');
-	const runs = () => composeMailMergeFields(kind, fields, mappings, greeting.value);
-	const example = document.createElement('p');
-	example.className = 'dve-mailings-example';
-	const update = () =>
-		(example.textContent = runs()
-			.map((run) => run.text)
-			.join(''));
-	update();
-	if (!example.textContent) {
-		dialogMessage(dialog, 'Match a name or address column first.');
-		dialog.actions();
-		return;
-	}
+	const { t } = dialog;
+	const name = selectOf([
+		['full', t('First and last name')],
+		['first', t('First name')],
+		['last', t('Title and last name')],
+		...(kind === 'address' ? ([['none', t('Omit name')]] as const) : []),
+	]);
+	if (!matchMailMergeField('LastName', fields, mappings)) name.value = 'first';
+	dialog.content.append(labelled(t('Recipient name'), name));
+	const nameValue = () => (name.value === 'first' || name.value === 'last' ? name.value : 'full');
+	let runs: () => TextRun[];
 	if (kind === 'greeting') {
-		dialog.content.append(labelled(dialog.t('Greeting'), greeting));
-		greeting.addEventListener('input', update);
+		const greeting = textInput();
+		const punctuation = textInput();
+		const fallback = textInput();
+		greeting.maxLength = fallback.maxLength = 128;
+		punctuation.maxLength = 8;
+		greeting.value = t('Dear');
+		punctuation.value = ',';
+		fallback.value = t('To whom it may concern,');
+		dialog.content.append(
+			labelled(t('Greeting'), greeting),
+			labelled(t('Punctuation'), punctuation),
+			labelled(t('Greeting for missing names'), fallback),
+		);
+		runs = () =>
+			mailMergeGreetingLine({
+				name: nameValue(),
+				before: greeting.value,
+				after: punctuation.value,
+				fallback: fallback.value,
+			});
+	} else {
+		const company = checkbox(t('Include company'));
+		const street = checkbox(t('Include postal address'));
+		const order = checkbox(t('Format address for recipient country'));
+		company.input.checked = street.input.checked = order.input.checked = true;
+		const country = selectOf([
+			['1', t('Always include country')],
+			['0', t('Omit country')],
+			['2', t('Exclude named country')],
+		]);
+		const exclude = textInput();
+		exclude.maxLength = 128;
+		const exclusion = labelled(t('Country or region'), exclude);
+		exclusion.hidden = true;
+		country.addEventListener('change', () => (exclusion.hidden = country.value !== '2'));
+		dialog.content.append(
+			company.wrapper,
+			street.wrapper,
+			order.wrapper,
+			labelled(t('Country or region'), country),
+			exclusion,
+		);
+		runs = () =>
+			mailMergeAddressBlock({
+				name: name.value === 'none' ? name.value : nameValue(),
+				company: company.input.checked,
+				street: street.input.checked,
+				formatByCountry: order.input.checked,
+				country: country.value === '0' || country.value === '2' ? country.value : '1',
+				...(country.value === '2' && { excludeCountry: exclude.value }),
+			});
 	}
-	dialog.content.append(example);
 	dialogSubmit(dialog, locale, () => {
 		dialog.close();
 		insert(runs());
@@ -128,6 +182,7 @@ export function rulesDialog(
 	const bookmark = textInput();
 	const prompt = textInput();
 	const answer = textInput();
+	const once = checkbox(t('Ask once for this merge'));
 	for (const input of [value, yes, no, prompt, answer]) input.maxLength = 1024;
 	bookmark.maxLength = 40;
 	const condition = row(
@@ -138,9 +193,15 @@ export function rulesDialog(
 	const branches = row(labelled(t('Then insert'), yes), labelled(t('Otherwise insert'), no));
 	const bookmarkRow = labelled(t('Bookmark'), bookmark);
 	const prompts = row(labelled(t('Prompt'), prompt), labelled(t('Default answer'), answer));
-	dialog.content.append(labelled(t('Rule'), kind), condition, branches, bookmarkRow, prompts);
+	dialog.content.append(
+		labelled(t('Rule'), kind),
+		condition,
+		branches,
+		bookmarkRow,
+		prompts,
+		once.wrapper,
+	);
 	const missing = dialogMessage(dialog, 'Select recipients before adding a comparison rule.');
-	const defaultNote = dialogMessage(dialog, 'Rule prompts use the default answer during merge.');
 	const ok = dialogSubmit(dialog, locale, () => {
 		const op = mailMergeComparisons.find((item) => item === comparison.value);
 		let runs: TextRun[];
@@ -165,6 +226,7 @@ export function rulesDialog(
 					bookmark: bookmark.value,
 					prompt: prompt.value,
 					answer: answer.value,
+					once: once.input.checked,
 				});
 				break;
 			case 'REF':
@@ -190,7 +252,7 @@ export function rulesDialog(
 		bookmarkRow.hidden = !named;
 		prompts.hidden = !usesPrompt;
 		missing.hidden = !conditional || Boolean(field.value);
-		defaultNote.hidden = !usesPrompt;
+		once.wrapper.hidden = !usesPrompt;
 		ok.disabled =
 			!missing.hidden || (named && !/^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(bookmark.value));
 	};

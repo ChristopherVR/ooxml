@@ -130,6 +130,9 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 	const headerDistance = twipInt(getW(margins, 'header'));
 	const footerDistance = twipInt(getW(margins, 'footer'));
 	const gutter = twipInt(getW(margins, 'gutter'));
+	const paperSource = first(section, 'paperSrc');
+	const firstTray = parseUnsignedInteger(getW(paperSource, 'first'));
+	const otherTray = parseUnsignedInteger(getW(paperSource, 'other'));
 	const pageNumberingStart = parseUnsignedInteger(getW(pgNum, 'start'));
 	const pageNumberingFormat = enumValue(isStNumberFormat, getW(pgNum, 'fmt'), 'w:pgNumType/@w:fmt');
 	const formatRevision = sectionFormatRevision(section);
@@ -146,6 +149,14 @@ function parseOneSection(section: XmlElement, endsAtBlockId: string): RawSection
 		...(headerDistance !== undefined ? { headerDistanceTwips: headerDistance } : {}),
 		...(footerDistance !== undefined ? { footerDistanceTwips: footerDistance } : {}),
 		...(gutter !== undefined ? { gutterTwips: gutter } : {}),
+		...(firstTray !== undefined || otherTray !== undefined
+			? {
+					paperSource: {
+						...(firstTray !== undefined && { first: firstTray }),
+						...(otherTray !== undefined && { other: otherTray }),
+					},
+				}
+			: {}),
 		columns: parseColumns(section),
 		...(footnoteColumns !== undefined ? { footnoteColumns } : {}),
 		...(onOffElement(first(section, 'titlePg')) === true ? { titlePage: true } : {}),

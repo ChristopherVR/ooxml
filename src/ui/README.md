@@ -607,6 +607,11 @@ on the page within the normal page calculation budget, so it can call host code.
 
 Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 
+Word's email merge passes confirmed recipients, subjects, message bodies and selected attachments
+to the optional host `emailProvider`, which controls delivery. Without one, each draft opens in the
+user's local email app when selected. Set `emailProvider` to `false` to disable both paths.
+See [the Word mail merge API](../../docs/docx-mail-merge.md#email-output).
+
 Word, Excel and Visio can load bundled equation code from the app's origin when needed. Those
 asset requests carry no equation or document data. See [PRIVACY.md](../../PRIVACY.md#word-excel-and-visio).
 

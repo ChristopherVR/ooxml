@@ -490,7 +490,7 @@ export const enRibbon = {
 	'Previous recipient': 'Previous recipient',
 	'Next recipient': 'Next recipient',
 	'Last recipient': 'Last recipient',
-	'mailings.envelopesUnavailable': 'Envelope and label layouts are unavailable in this editor',
+	'mailings.selectLabelTemplate': 'Start a labels merge with a label grid first',
 	'mailings.busy': 'Wait for the current operation to finish',
 	'mailings.editUnavailable': 'Mail merge requires an editable document outside collaboration',
 	'mailings.exitPreview': 'Close Preview Results to edit the template',

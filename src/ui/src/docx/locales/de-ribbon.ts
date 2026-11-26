@@ -499,8 +499,8 @@ export const deRibbon: RibbonStrings = {
 	'Previous recipient': 'Vorheriger Empfänger',
 	'Next recipient': 'Nächster Empfänger',
 	'Last recipient': 'Letzter Empfänger',
-	'mailings.envelopesUnavailable':
-		'Umschlag- und Etikettenlayouts sind in diesem Editor nicht verfügbar',
+	'mailings.selectLabelTemplate':
+		'Starten Sie zuerst einen Etiketten-Seriendruck mit einem Etikettenraster',
 	'mailings.busy': 'Warten Sie, bis der aktuelle Vorgang abgeschlossen ist',
 	'mailings.editUnavailable':
 		'Seriendruck erfordert ein bearbeitbares Dokument ohne Zusammenarbeit',

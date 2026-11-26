@@ -9,6 +9,7 @@ import { ySyncPluginKey } from 'y-prosemirror';
 export const LOCAL_DOCUMENT_ATTRIBUTES: ReadonlySet<string> = new Set([
 	'commentThreads',
 	'documentInformation',
+	'mailMerge',
 	'styleCatalogs',
 ]);
 

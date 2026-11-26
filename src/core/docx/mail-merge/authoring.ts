@@ -1,5 +1,11 @@
 import type { TextRun } from '../model';
 import type { MailMergeFieldMapping } from './settings';
+import {
+	addressTemplate,
+	greetingTemplate,
+	type AddressBlockOptions,
+	type GreetingLineOptions,
+} from './native-fields';
 
 /** The address columns offered by Match Fields and the composed field commands. */
 export const mailMergeAddressFields = [
@@ -12,6 +18,16 @@ export const mailMergeAddressFields = [
 	'State',
 	'PostalCode',
 	'CountryorRegion',
+	'CourtesyTitle',
+	'MiddleName',
+	'Suffix',
+	'Nickname',
+	'SpouseCourtesyTitle',
+	'SpouseFirstName',
+	'SpouseMiddleName',
+	'SpouseLastName',
+	'SpouseNickname',
+	'EmailAddress',
 ] as const;
 type AddressField = (typeof mailMergeAddressFields)[number];
 
@@ -150,7 +166,7 @@ export type MailMergeRule =
 			yes: string;
 			no: string;
 	  }
-	| { kind: 'ASK' | 'FILLIN'; bookmark: string; prompt: string; answer: string }
+	| { kind: 'ASK' | 'FILLIN'; bookmark: string; prompt: string; answer: string; once?: boolean }
 	| { kind: 'REF'; bookmark: string };
 
 // The field parser unescapes these two characters inside quoted arguments.
@@ -173,6 +189,32 @@ function complex(instruction: TextRun[], label: string): TextRun[] {
 		},
 		{ text: '', fieldChar: 'end' },
 	];
+}
+
+export function mailMergeAddressBlock(options: AddressBlockOptions = {}): TextRun[] {
+	const exclude = options.excludeCountry ? ` \\e ${quote(options.excludeCountry)}` : '';
+	const formatByCountry = options.formatByCountry ? ' \\d' : '';
+	const language = options.language ? ` \\l ${quote(options.language)}` : '';
+	return complex(
+		[
+			code(
+				` ADDRESSBLOCK \\f ${quote(addressTemplate(options))} \\c ${options.country ?? '1'}${exclude}${formatByCountry}${language} `,
+			),
+		],
+		'AddressBlock',
+	);
+}
+
+export function mailMergeGreetingLine(options: GreetingLineOptions = {}): TextRun[] {
+	const language = options.language ? ` \\l ${quote(options.language)}` : '';
+	return complex(
+		[
+			code(
+				` GREETINGLINE \\f ${quote(greetingTemplate(options))} \\e ${quote(options.fallback ?? '')}${language} `,
+			),
+		],
+		'GreetingLine',
+	);
 }
 
 export function mailMergeField(
@@ -206,7 +248,7 @@ export function mailMergeRule(rule: MailMergeRule): TextRun[] {
 	}
 	let args = '';
 	if (kind === 'ASK' || kind === 'FILLIN')
-		args = ` ${kind === 'ASK' ? `${quote(rule.bookmark)} ` : ''}${quote(rule.prompt)} \\d ${quote(rule.answer)}`;
+		args = ` ${kind === 'ASK' ? `${quote(rule.bookmark)} ` : ''}${quote(rule.prompt)} \\d ${quote(rule.answer)}${rule.once ? ' \\o' : ''}`;
 	if (kind === 'REF') args = ` ${quote(rule.bookmark)}`;
 	return complex([code(` ${kind}${args} `)], kind);
 }

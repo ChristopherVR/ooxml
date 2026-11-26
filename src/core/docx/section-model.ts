@@ -78,6 +78,8 @@ export interface SectionProperties {
 	headerDistanceTwips?: Twips;
 	footerDistanceTwips?: Twips;
 	gutterTwips?: Twips;
+	/** Printer-specific tray numbers from w:paperSrc. */
+	paperSource?: { first?: number; other?: number };
 	columns: SectionColumns;
 	/** w15:footnoteColumns; zero or absent matches the section columns. */
 	footnoteColumns?: number;
