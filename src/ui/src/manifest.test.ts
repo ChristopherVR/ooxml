@@ -6,11 +6,14 @@ import { buildManifest } from './manifest';
 
 const FILE = resolve(process.cwd(), 'custom-elements.json');
 
-beforeAll(() => registerOfficeUi());
+let manifest: ReturnType<typeof buildManifest>;
+beforeAll(() => {
+	registerOfficeUi();
+	manifest = buildManifest();
+});
 
 describe('custom-elements.json', () => {
 	it('lists every element once, with its attributes, properties and events', () => {
-		const manifest = buildManifest();
 		const tags = manifest.modules.flatMap((module) =>
 			module.declarations.map((declaration) => declaration.tagName),
 		);
@@ -25,8 +28,8 @@ describe('custom-elements.json', () => {
 	});
 
 	it('documents the select reapply opt-in as an attribute without losing its class description', () => {
-		const select = buildManifest()
-			.modules.flatMap((module) => module.declarations)
+		const select = manifest.modules
+			.flatMap((module) => module.declarations)
 			.find((declaration) => declaration.tagName === 'office-ui-select')!;
 		expect(select.attributes.map((attribute) => attribute.name)).toContain('commit-on-reselect');
 		expect(select.attributes.find((attribute) => attribute.name === 'commit-on-reselect')).toEqual({
@@ -39,7 +42,7 @@ describe('custom-elements.json', () => {
 
 	// Run `bun run gen:manifest` after changing an element; the file ships with the package.
 	it('is up to date', () => {
-		const next = `${JSON.stringify(buildManifest(), null, '\t')}\n`;
+		const next = `${JSON.stringify(manifest, null, '\t')}\n`;
 		if (process.env.UPDATE_MANIFEST) writeFileSync(FILE, next);
 		expect(readFileSync(FILE, 'utf8').replaceAll('\r\n', '\n')).toBe(next);
 	});
