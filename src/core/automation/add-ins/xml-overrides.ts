@@ -119,14 +119,15 @@ export function readXmlOverrides(
 	for (const host of hosts) {
 		const hostType = typeName(host);
 		const product = XML_HOSTS.get(hostType);
-		if (!product) invalid('override host type');
+		if (product === undefined) invalid('override host type');
+		if (product !== options.host) continue;
 		const desktop = one(host, 'DesktopFormFactor');
 		const functionFile = one(desktop, 'FunctionFile');
 		if (functionFile) resolve(functionFile, 'Urls', 'function file');
 		for (const point of all(desktop, 'ExtensionPoint')) {
 			const type = typeName(point);
 			if (type !== 'PrimaryCommandSurface') {
-				if (product === options.host) issues.push({ kind: 'unsupported', feature: type });
+				issues.push({ kind: 'unsupported', feature: type });
 				continue;
 			}
 			const requirement = missing[0];
@@ -139,7 +140,7 @@ export function readXmlOverrides(
 				.map((tab) => readTab(tab, inactive));
 			if (!result.length || result.some((tab) => !tab.groups.length))
 				invalid('ribbon tabs and groups');
-			if (product === options.host) tabs.push(...result);
+			tabs.push(...result);
 		}
 	}
 	unique(tabs, (tab) => tab.id, 'duplicate tab ID');

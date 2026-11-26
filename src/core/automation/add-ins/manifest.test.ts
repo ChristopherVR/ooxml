@@ -94,6 +94,36 @@ describe('local Office add-in manifests', () => {
 		});
 	});
 
+	it('accepts schema hosts outside the editor targets and ignores their overrides', async () => {
+		const extra = ['Project', 'Notebook', 'Database', 'Mailbox']
+			.map((name) => `<Host Name="${name}" />`)
+			.join('');
+		const source = xml
+			.replace('<Hosts><Host Name="Document" />', `<Hosts>${extra}<Host Name="Document" />`)
+			.replace(
+				'<Host xsi:type="Document">',
+				'<Host xsi:type="Notebook" /><Host xsi:type="Document">',
+			);
+		const { manifest } = await read(source, support);
+		expect(manifest.hosts).toEqual(['word', 'excel', 'powerpoint']);
+		expect(manifest.tabs).toHaveLength(1);
+		await expect(
+			read(xml.replace(/<Hosts>.*?<\/Hosts>/, `<Hosts>${extra}</Hosts>`)),
+		).rejects.toMatchObject({
+			code: 'host',
+		});
+		await expect(read(source.replace('Name="Project"', 'Name="Unknown"'))).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'host name',
+		});
+		await expect(
+			read(source.replace('xsi:type="Notebook"', 'xsi:type="Project"')),
+		).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'override host type',
+		});
+	});
+
 	it.each([
 		['broken markup', xml.replace('</OfficeApp>', '</Office>'), 'manifest'],
 		[

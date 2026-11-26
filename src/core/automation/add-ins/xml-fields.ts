@@ -15,10 +15,18 @@ export const BASE = 'http://schemas.microsoft.com/office/appforoffice/1.1';
 export const OVERRIDE = 'http://schemas.microsoft.com/office/taskpaneappversionoverrides';
 export const TYPES = 'http://schemas.microsoft.com/office/officeappbasictypes/1.0';
 
-export const XML_HOSTS = new Map<string, OfficeAddInHost>([
+export const XML_HOSTS = new Map<string, OfficeAddInHost | null>([
 	['Document', 'word'],
 	['Workbook', 'excel'],
 	['Presentation', 'powerpoint'],
+	['Notebook', null],
+]);
+
+export const XML_BASE_HOSTS = new Map<string, OfficeAddInHost | null>([
+	...XML_HOSTS,
+	['Project', null],
+	['Database', null],
+	['Mailbox', null],
 ]);
 
 export function all(

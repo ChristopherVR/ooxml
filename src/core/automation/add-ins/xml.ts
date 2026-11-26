@@ -23,7 +23,7 @@ import {
 	typeName,
 	value,
 	variants,
-	XML_HOSTS,
+	XML_BASE_HOSTS,
 	xmlRequirements,
 } from './xml-fields';
 import { readXmlOverrides } from './xml-overrides';
@@ -51,13 +51,15 @@ export function readXmlManifest(source: string, options: AddInReadOptions): AddI
 		return variants(node, convert)(options.locale, locale);
 	};
 	const hostsNode = one(root, 'Hosts');
+	const names = all(hostsNode, 'Host').map((host) => host.getAttribute('Name') ?? '');
+	unique(names, (name) => name, 'duplicate host');
 	const hosts = hostsNode
-		? all(hostsNode, 'Host').map((host) => {
-				const product = XML_HOSTS.get(host.getAttribute('Name') ?? '');
-				return product ?? invalid('host name');
+		? names.flatMap((name) => {
+				const product = XML_BASE_HOSTS.get(name);
+				if (product === undefined) return invalid('host name');
+				return product === null ? [] : [product];
 			})
 		: OFFICE_ADD_IN_HOSTS;
-	unique(hosts, (host) => host, 'duplicate host');
 	if (!hosts.includes(options.host)) throw new AddInManifestError('host');
 	const permission = PERMISSIONS.get(value(root, 'Permissions') ?? 'Restricted');
 	if (!permission) return invalid('Permissions');
