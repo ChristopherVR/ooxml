@@ -42,8 +42,10 @@ and service contracts. [Forms connector](https://learn.microsoft.com/en-us/conne
 - Local install accepts task-pane XML, unified JSON and bounded unified ZIP packages in
   Word, Excel and PowerPoint. Upload is available from every tab of the shared dialog and
   previews declared publisher, version, origins and permissions before consent. My Add-ins
-  lists and removes the in-memory installs. An invalid replacement leaves the installed version
-  available in the list. Execution, persistent installs and remote storefront providers remain open.
+  lists installed items, reviews their details and removes them. An invalid replacement leaves
+  the installed version available. The suite saves packages in profile-scoped preferences.
+  Library consumers can register their own store through `setOfficeAddInPreferences` or use
+  session memory. Restored bytes are validated again before an add-in can open.
 
 ## Parse two public manifest formats
 

@@ -1,45 +1,16 @@
 import { html, nothing } from 'lit';
-import type { LocalAddIn } from 'ooxml-core/automation/add-ins';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
-import { addInSettings } from '../ribbon/add-in-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
-import { addInLauncher } from '../ribbon/add-in-launch';
-import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
-import { editorAddIns } from '../ribbon/add-in-installed-tabs';
-import { installAddIn, localAddIns } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
 import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
-import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
+import { addInSession, type AddInSession, type AddInPreview } from './add-ins-session';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
 
 const PIVOTS = ['My Add-ins', 'Admin Managed', 'Store'] as const;
 export type Pivot = (typeof PIVOTS)[number];
-
-function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
-	const { host, manifestLocale, t, product, scopes } = options;
-	const locale = addInLocale(manifestLocale);
-	const installed = localAddIns(host);
-	const translate = localAddInText(locale, t);
-	const launcher = addInLauncher(options, installed, translate);
-	return {
-		...addInSettings(scopes),
-		installed,
-		launcher,
-		syncTabs: () => addInManifestTabs(host, installed, launcher, translate),
-		tabs: editorAddIns(host),
-		t: translate,
-		product,
-		locale,
-		manifestLocale,
-		restoreFocus,
-	};
-}
-
-export type AddInSession = ReturnType<typeof addInSession>;
-type AddInPreview = { addIn: LocalAddIn; previous: LocalAddIn | undefined };
 
 /** On-demand Office Add-ins browser with local manifest review and a host-configured storefront. */
 export class OfficeUiAddInsDialog extends OfficeElement {
@@ -61,6 +32,21 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		this.requestUpdate();
 		this.shell?.show();
 		this.renderRoot.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+		if (this.#session.restore) void this.restore(this.#session, this.#session.restore);
+	}
+
+	private async restore(session: AddInSession, restore: NonNullable<AddInSession['restore']>) {
+		const pending = (this.#pending = new AbortController());
+		this.requestUpdate();
+		try {
+			await restore(pending.signal);
+			if (!pending.signal.aborted) session.syncTabs();
+		} catch {
+			this.#message = session.t('Could not load saved add-ins.');
+		} finally {
+			this.#pending = undefined;
+			if (!pending.signal.aborted) this.requestUpdate();
+		}
 	}
 
 	private get shell(): OfficeUiDialog | null {
@@ -141,15 +127,13 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			if (pending.signal.aborted || !this.shell?.open) return;
 			const file = await source(pending.signal);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			const addIn =
-				file instanceof File
-					? await manifestReader.readAddInFile(file, session.product, session.manifestLocale)
-					: await manifestReader.readLocalAddIn(file, {
-							host: session.product,
-							locale: session.manifestLocale,
-						});
+			const { addIn, bytes } = await manifestReader.readAddInInput(
+				file,
+				session.product,
+				session.manifestLocale,
+			);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			this.#preview = { addIn, previous: session.installed.get(addIn.manifest.id) };
+			this.#preview = { addIn, bytes, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';
 		} catch (error) {
 			this.#message = session.t(
@@ -180,14 +164,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const preview = this.#preview;
 		const session = this.#session;
 		if (!preview || !session) return;
-		if (installAddIn(session.installed, preview.addIn, preview.previous)) {
-			session.launcher.close(preview.addIn.manifest.id);
-			session.syncTabs();
-			this.shell?.close();
-		} else {
-			this.#message = session.t('Could not update the add-in.');
-			this.requestUpdate();
-		}
+		void this.change(() => session.install(preview));
 	}
 
 	private cancel(): void {
@@ -233,6 +210,8 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 					? renderAddInConsent(this.#preview.addIn, this.#preview.previous, t, {
 							cancel: () => this.cancel(),
 							confirm: () => this.confirm(),
+							persistent: Boolean(session.restore),
+							busy: Boolean(this.#pending),
 						})
 					: html` <div
 								class="pivots"

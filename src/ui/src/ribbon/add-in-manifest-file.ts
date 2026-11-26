@@ -8,10 +8,22 @@ import {
 
 export { readLocalAddIn } from 'ooxml-core/automation/add-ins';
 
-export async function readAddInFile(file: File, host: OfficeAddInHost, locale: string) {
-	const limit = /\.zip$/i.test(file.name) ? PACKAGE_BYTES : MANIFEST_BYTES;
-	if (file.size > limit) throw new AddInManifestError('limit');
-	return readLocalAddIn(await file.arrayBuffer(), { host, locale });
+export async function readAddInInput(
+	input: File | Uint8Array | ArrayBuffer,
+	host: OfficeAddInHost,
+	locale: string,
+) {
+	let bytes: Uint8Array;
+	if (input instanceof File) {
+		const limit = /\.zip$/i.test(input.name) ? PACKAGE_BYTES : MANIFEST_BYTES;
+		if (input.size > limit) throw new AddInManifestError('limit');
+		bytes = new Uint8Array(await input.arrayBuffer());
+	} else {
+		if (input.byteLength > PACKAGE_BYTES) throw new AddInManifestError('limit');
+		bytes = new Uint8Array(input);
+		if (input instanceof ArrayBuffer) bytes = bytes.slice();
+	}
+	return { bytes, addIn: await readLocalAddIn(bytes, { host, locale }) };
 }
 
 export function addInError(error: unknown): string {

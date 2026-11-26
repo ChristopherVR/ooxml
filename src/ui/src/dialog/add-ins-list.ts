@@ -1,7 +1,8 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { glyph } from '../glyph';
 import type { OfficeAddInOffer } from '../ribbon/add-in-settings';
-import type { AddInSession, Pivot } from './add-ins-dialog';
+import type { Pivot } from './add-ins-dialog';
+import type { AddInSession } from './add-ins-session';
 import { renderAddInDetails } from './add-ins-consent';
 import { addInIssueLabels } from '../ribbon/add-in-local-dialog';
 
@@ -78,13 +79,7 @@ export function renderAddInList({ session, pivot, query, busy, open, change, rea
 								() => open(() => void launcher.open(addIn, undefined, session.restoreFocus)),
 								reason ? reasonId : undefined,
 							),
-							action('Remove', manifest.name, () =>
-								change(() => {
-									launcher.close(manifest.id);
-									installed.delete(manifest.id);
-									session.syncTabs();
-								}),
-							),
+							action('Remove', manifest.name, () => change(() => session.remove(manifest.id))),
 						],
 						html`${reason ? html`<p id=${reasonId}>${reason}</p>` : nothing}
 							${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}

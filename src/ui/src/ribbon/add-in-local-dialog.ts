@@ -3,23 +3,12 @@ import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import { permissionText } from './add-in-local-strings';
 
 const installs = new WeakMap<Node, Map<string, LocalAddIn>>();
-const LIMIT = 32;
+export const INSTALLED_ADD_IN_LIMIT = 32;
 
 export function localAddIns(scope: Node): Map<string, LocalAddIn> {
 	const installed = installs.get(scope) ?? new Map<string, LocalAddIn>();
 	installs.set(scope, installed);
 	return installed;
-}
-
-export function installAddIn(
-	installed: Map<string, LocalAddIn>,
-	preview: LocalAddIn,
-	previous: LocalAddIn | undefined,
-): boolean {
-	const { id } = preview.manifest;
-	if (installed.get(id) !== previous || (!previous && installed.size >= LIMIT)) return false;
-	installed.set(id, preview);
-	return true;
 }
 
 export function addInIssueLabels(manifest: LocalAddIn['manifest'], t: OfficeServiceText): string[] {

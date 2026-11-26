@@ -1,4 +1,20 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'Could not load saved add-ins.': [
+		'Impossible de charger les compléments enregistrés.',
+		'Gespeicherte Add-Ins konnten nicht geladen werden.',
+		'No se pudieron cargar los complementos guardados.',
+		'无法加载已保存的加载项。',
+		'保存済みのアドインを読み込めませんでした。',
+		'저장된 추가 기능을 불러오지 못했습니다.',
+	],
+	'Save this add-in in host preferences. It runs only when opened.': [
+		'Enregistrez ce complément dans les préférences de l’hôte. Il s’exécute à l’ouverture.',
+		'Dieses Add-In in den Host-Einstellungen speichern. Es wird beim Öffnen ausgeführt.',
+		'Guarda este complemento en las preferencias del anfitrión. Solo se ejecuta al abrirlo.',
+		'将此加载项保存到宿主首选项。仅在打开时运行。',
+		'このアドインをホストの設定に保存します。開いたときにだけ実行されます。',
+		'이 추가 기능을 호스트 기본 설정에 저장합니다. 열 때만 실행됩니다.',
+	],
 	'Add-in details': [
 		'Détails du complément',
 		'Add-In-Details',

@@ -2,7 +2,12 @@ import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
 import { openOfficeAddIns } from './add-in-dialog';
-import { setOfficeAddInCatalog, setOfficeAddInStorefront } from './add-in-settings';
+import {
+	setOfficeAddInCatalog,
+	setOfficeAddInMarketplaceResolver,
+	setOfficeAddInStorefront,
+} from './add-in-settings';
+import { setOfficeAddInPreferences, type OfficeAddInPreferences } from './add-in-preferences';
 
 const description = "<img src='https://example.test/description' />";
 const descriptionPrefix = `${description}${'📝'.repeat(249 - description.length)}`;
@@ -22,6 +27,51 @@ const getDialog = (root: ShadowRoot) =>
 	root
 		.querySelector('office-ui-add-ins-dialog')
 		?.shadowRoot?.querySelector<OfficeUiDialog>('office-ui-dialog[open]');
+
+it('reviews resolved bytes before saving and restores and removes them through host preferences', async () => {
+	const saved = new Map<string, Uint8Array>();
+	const prefs = {
+		read: async () => [...saved.values()],
+		write: vi.fn<OfficeAddInPreferences['write']>(async (_host, id, bytes) => {
+			if (bytes) saved.set(id, bytes);
+			else saved.delete(id);
+		}),
+	};
+	const make = () => {
+		const host = document.body.appendChild(document.createElement('div'));
+		setOfficeAddInPreferences(host, prefs);
+		return host.attachShadow({ mode: 'open' });
+	};
+	const root = make();
+	const resolver = vi.fn(async () => new TextEncoder().encode(xml));
+	setOfficeAddInMarketplaceResolver(root, resolver);
+	const open = (target: ShadowRoot) =>
+		openOfficeAddIns(target, 'myAddIns', (label) => label, 'word', 'en');
+	await open(root);
+	const modal = getDialog(root);
+	const input = modal?.querySelector<HTMLInputElement>('#marketplace-link');
+	if (!input) throw new Error('Missing Marketplace field');
+	input.value = 'https://appsource.microsoft.com/en-us/product/office/WA999999999';
+	input.form?.dispatchEvent(new SubmitEvent('submit'));
+	await vi.waitFor(() => expect(modal?.querySelector('#consent-title')).toBeTruthy());
+	expect(resolver).toHaveBeenCalledWith('WA999999999', expect.any(AbortSignal));
+	expect(prefs.write).not.toHaveBeenCalled();
+	expect(modal?.querySelector('#pivot-2')).toBeNull();
+	modal?.querySelector<HTMLButtonElement>('button.primary')?.click();
+	await vi.waitFor(() => expect(getDialog(root)).toBeUndefined());
+	expect(saved.size).toBe(1);
+	root.host.remove();
+
+	const reopened = make();
+	await open(reopened);
+	const mine = getDialog(reopened);
+	await vi.waitFor(() =>
+		expect(mine?.querySelector('summary')?.textContent).toBe('Add-in details'),
+	);
+	expect(mine?.querySelector('details')?.textContent).toContain('Lab Notes');
+	mine?.querySelector<HTMLButtonElement>('button[aria-label^="Remove"]')?.click();
+	await vi.waitFor(() => expect(saved.size).toBe(0));
+});
 
 it('opens at the editor root, filters the catalog and restores the opener on Escape', async () => {
 	const editor = document.body

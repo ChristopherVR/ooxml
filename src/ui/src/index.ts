@@ -18,6 +18,10 @@ export {
 } from './ribbon/add-in-runtime-settings';
 export { connectOfficeAddIn, type OfficeAddInResult } from './ribbon/add-in-client';
 export {
+	setOfficeAddInPreferences,
+	type OfficeAddInPreferences,
+} from './ribbon/add-in-preferences';
+export {
 	setOfficeAddInCatalog,
 	setOfficeAddInMarketplaceResolver,
 	setOfficeAddInStorefront,

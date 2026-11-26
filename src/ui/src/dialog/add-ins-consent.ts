@@ -48,7 +48,7 @@ export function renderAddInConsent(
 	addIn: LocalAddIn,
 	previous: LocalAddIn | undefined,
 	t: OfficeServiceText,
-	actions: { confirm: () => void; cancel: () => void },
+	actions: { confirm: () => void; cancel: () => void; persistent: boolean; busy: boolean },
 ) {
 	const { manifest } = addIn;
 	const { description, update } = addInConsent(addIn, previous, t);
@@ -58,7 +58,13 @@ export function renderAddInConsent(
 		<h3 id="consent-title" tabindex="-1">${t('Review add-in permissions')}</h3>
 		<p class="tile-name">${manifest.name} (${manifest.version})</p><p>${description}</p>
 		${update ? html`<p>${update}</p>` : nothing} ${renderAddInDetails(addIn, t)}
-		<p>${t('Install for this editor session. Add-in code stays inactive.')}</p>
+		<p
+			>${t(
+				actions.persistent
+					? 'Save this add-in in host preferences. It runs only when opened.'
+					: 'Install for this editor session. Add-in code stays inactive.',
+			)}</p
+		>
 		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
 		${already ? html`<p>${t('This add-in is already installed.')}</p>` : nothing}
 		<div class="consent-actions">
@@ -66,11 +72,13 @@ export function renderAddInConsent(
 				type="button"
 				class="primary"
 				aria-label=${`${label} ${manifest.name}`}
-				?disabled=${already}
+				?disabled=${already || actions.busy}
 				@click=${actions.confirm}
 				>${label}</button
 			>
-			<button type="button" @click=${actions.cancel}>${t('Cancel')}</button>
+			<button type="button" ?disabled=${actions.busy} @click=${actions.cancel}
+				>${t('Cancel')}</button
+			>
 		</div>
 	</section>`;
 }

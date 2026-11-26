@@ -17,6 +17,8 @@ import {
 } from './settings.js';
 import { currentProfile } from './profile-state.js';
 import { wordDesignPreferences } from './word-design-preferences.js';
+import { setOfficeAddInPreferences } from 'ooxml-ui';
+import { officeAddInPreferences } from './office-add-in-preferences.js';
 
 /** PowerPoint's dictionary for `locale` (English is built in). */
 async function pptxMessages(locale) {
@@ -105,6 +107,8 @@ export const previewRefusal = (name) =>
  */
 export async function mountEditor(host, doc, changed, command, moved = () => {}) {
 	let accessReadOnly = cloudReadOnly(doc);
+	if (doc.kind !== 'vsdx')
+		setOfficeAddInPreferences(host, officeAddInPreferences(currentProfile().id));
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
 		// True while the deck shows the assistant's suggestions (`hold`).

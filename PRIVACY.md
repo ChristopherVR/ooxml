@@ -137,6 +137,14 @@ the install review, and the live editor allow it. A publisher can transmit data 
 using network access allowed by its deployment. Hosts control `frame-src`, their execution
 service's policy, and `setOfficeAddInRuntime`. Passing `null` disables execution in that scope.
 
+In the suite, My Add-ins reads a profile-scoped IndexedDB preference store. Confirming
+installation or an update saves the original manifest or ZIP there, keyed by product and
+manifest ID. Removing an add-in deletes that record. The records contain publisher-supplied
+manifest and package data. They stay on this device and contain no document selections or
+access tokens. Standalone library consumers default to session memory. A host can pass
+`null` to `setOfficeAddInPreferences` to turn persistence off in its editor scope. Clearing
+this site's browser data removes stored add-ins.
+
 Get Add-ins and My Add-ins open Office Add-ins in Word, Excel, PowerPoint and Visio.
 The Store pivot is off by default. A host can use `setOfficeAddInStorefront` to enable
 the Microsoft Marketplace handoff or specify its own HTTPS link. Clicking the link opens
@@ -159,12 +167,10 @@ destination in a new tab.
 
 Opening Get Add-ins or My Add-ins can load bundled dialog code from the app's origin.
 Choosing a file or selecting Install on a host's Store offer can load the bundled manifest
-reader from the same origin. These requests carry no selected-file or document data. Local installs start
-when the user chooses an XML, JSON or ZIP file and confirms the preview. The editor keeps
-the normalized manifest and SHA-256 digest in memory for that editor instance. Removing the
-add-in or closing the editor clears its record. The app saves no install data to device storage
-or the document and makes no requests to the publishers, asset origins or schema URLs in the
-manifest. Local installs grant no document access.
+reader from the same origin. These requests carry no selected-file or document data. Local
+installation starts when the user chooses an XML, JSON or ZIP file and confirms the preview.
+The editor keeps the normalized manifest and SHA-256 digest in memory. Installation makes
+no requests to publishers, remote icons, or schema URLs, and keeps the Office file unchanged.
 
 ### Fonts that are neither installed nor embedded
 
