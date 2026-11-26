@@ -61,7 +61,6 @@ test('inserts worksheet shapes and text and groups drawings from the Selection P
 	await newWorkbook(page);
 	const workbook = editor(page);
 	const band = ribbon(page);
-	const control = (id: string) => band.locator('button[data-command="' + id + '"]');
 	await band.getByRole('tab', { name: 'Insert', exact: true }).click();
 	const shapes = band.getByRole('button', { name: 'Shapes', exact: true });
 	await clickRibbonControl(page, shapes);
