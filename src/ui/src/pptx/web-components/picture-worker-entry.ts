@@ -28,6 +28,8 @@ export function runPictureWorker(): void {
 	// Importing the worker script outside a worker (server rendering, a bundler scan) does nothing.
 	if (typeof globalThis.addEventListener !== 'function') return;
 	globalThis.addEventListener('message', (event: MessageEvent<PictureWorkerRequest>) => {
+		// Only the page that created this worker may send it pictures.
+		if (event.origin && event.origin !== globalThis.location?.origin) return;
 		void respond(event.data).then(
 			(result) => globalThis.postMessage(result),
 			() => globalThis.postMessage({ kind: 'error' }),
