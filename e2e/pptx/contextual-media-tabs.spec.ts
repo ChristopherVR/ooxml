@@ -66,6 +66,9 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	await remove.click();
 	const dialog = page.locator('[data-media-ribbon-dialog="remove"]');
 	await expect(dialog.locator('pptx-ui-select option')).toHaveCount(2);
+	await expect(dialog.locator('pptx-ui-select option').first()).toHaveText(
+		/^BM1 \(\d+:\d{2}\.\d\)$/u,
+	);
 	await dialog.getByRole('button', { name: 'Apply' }).click();
 	await expect(dialog).toHaveCount(0);
 	await control(page, 'playback.bookmarks.add').getByRole('button').click();

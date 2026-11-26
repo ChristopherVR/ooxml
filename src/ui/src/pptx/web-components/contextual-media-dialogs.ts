@@ -2,6 +2,7 @@ import { MAX_PICTURE_EDIT_BYTES, readPictureRasterHeader } from 'ooxml-core/pptx
 import type { MediaPptxElement } from 'ooxml-core/pptx';
 import { modalActiveElement } from '../../dialog/focus';
 import { createInsertDialogFrame } from '../../dialog/insert-dialog-frame';
+import { formatMediaTime } from '../render/media-trim-timeline';
 import { mediaTrimEndAbsoluteMs, mediaTrimEndMsFromAbsoluteMs } from '../render/media-trim-range';
 import { ribbonMediaNode } from './contextual-media-ribbon';
 import type { ContextualControls, ContextualFields } from './contextual-ribbon-fields';
@@ -128,7 +129,7 @@ export function runMediaRibbonCommand(
 			for (const mark of bookmarks) {
 				const option = doc.createElement('option');
 				option.value = mark.id;
-				option.textContent = `${mark.label} (${mark.time}s)`;
+				option.textContent = `${mark.label} (${formatMediaTime(mark.time)})`;
 				input.append(option);
 			}
 			field(label, input);
