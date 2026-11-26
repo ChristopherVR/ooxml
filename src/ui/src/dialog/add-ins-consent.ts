@@ -10,6 +10,17 @@ export function renderAddInDetails(addIn: LocalAddIn, t: OfficeServiceText) {
 	const { manifest } = addIn;
 	const { permissions, origins } = addInConsent(addIn, undefined, t);
 	const icons = manifest.icons.slice(0, 8);
+	const unplaced = manifest.tabs.flatMap(({ groups }) =>
+		groups.flatMap(({ commands }) =>
+			commands.filter(
+				(command) =>
+					command.kind === 'inactive' &&
+					command.issue.kind === 'unsupported' &&
+					command.issue.feature === 'built-in ribbon tab',
+			),
+		),
+	);
+	const placementReason = `unplaced-${manifest.id}`;
 	return html`<dl>
 			<dt>${t('Declared publisher')}</dt><dd>${manifest.publisher}</dd>
 			<dt>${t('Supported hosts')}</dt
@@ -49,6 +60,24 @@ export function renderAddInDetails(addIn: LocalAddIn, t: OfficeServiceText) {
 			>
 			<dt>${t('Origins this add-in may load')}</dt><dd>${origins || t('None')}</dd>
 		</dl>
+		${
+			unplaced.length
+				? html` <p id=${placementReason}
+							>${t('This editor cannot add commands to built-in ribbon tabs.')}</p
+						>
+						<ul
+							>${unplaced.map(
+								(command) => html`
+									<li
+										><button type="button" disabled aria-describedby=${placementReason}
+											>${command.label}</button
+										></li
+									>
+								`,
+							)}</ul
+						>`
+				: nothing
+		}
 		<p>${t('This add-in requests:')}</p>
 		<ul
 			>${permissions.map((permission) => html`<li>${permission}</li>`)}</ul

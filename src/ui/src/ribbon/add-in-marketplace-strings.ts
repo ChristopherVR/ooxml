@@ -1,4 +1,12 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'This editor cannot add commands to built-in ribbon tabs.': [
+		'Cet éditeur ne peut pas ajouter de commandes aux onglets intégrés du ruban.',
+		'Dieser Editor kann integrierten Menübandregisterkarten keine Befehle hinzufügen.',
+		'Este editor no puede agregar comandos a las pestañas integradas de la cinta.',
+		'此编辑器无法将命令添加到内置功能区选项卡。',
+		'このエディターでは組み込みのリボン タブにコマンドを追加できません。',
+		'이 편집기는 기본 리본 탭에 명령을 추가할 수 없습니다.',
+	],
 	'Function commands': [
 		'Commandes de fonction',
 		'Funktionsbefehle',
