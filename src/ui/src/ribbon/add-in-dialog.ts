@@ -5,7 +5,7 @@ import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 import { localAddIns } from './add-in-installations';
 import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
-import type { OfficeAddInSelection } from './add-in-runtime-settings';
+import { ADD_IN_RUNTIME_CHANGED, type OfficeAddInSelection } from './add-in-runtime-settings';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
@@ -81,6 +81,23 @@ export function watchOfficeAddIns(
 	const listeners = new AbortController();
 	let pending: AbortController | undefined;
 	let activeStore = addInPreferences(scopes);
+	let runtimeRefresh: AbortController | undefined;
+
+	const sessionForEditor = async () => {
+		const { addInSession } = await import('../dialog/add-ins-session');
+		return addInSession(
+			{
+				host,
+				mode: 'myAddIns',
+				t,
+				product,
+				manifestLocale: locale(),
+				scopes,
+				...(selection && { selection }),
+			},
+			() => {},
+		);
+	};
 
 	const restore = () => {
 		pending?.abort();
@@ -94,33 +111,37 @@ export function watchOfficeAddIns(
 			host.querySelector('office-ui-add-ins-dialog')?.remove();
 		}
 		if (!store && !changed) return;
+		runtimeRefresh?.abort();
 		const { signal } = (pending = new AbortController());
-		host[RESTORE] = import('../dialog/add-ins-session').then(async ({ addInSession }) => {
+		host[RESTORE] = (async () => {
+			const session = await sessionForEditor();
 			if (signal.aborted || !host.isConnected) return;
-			const session = addInSession(
-				{
-					host,
-					mode: 'myAddIns',
-					t,
-					product,
-					manifestLocale: locale(),
-					scopes,
-					...(selection && { selection }),
-				},
-				() => {},
-			);
 			if (changed) session.syncTabs();
 			await session.restore?.(signal);
 			if (!signal.aborted && host.isConnected) session.syncTabs();
-		});
+		})();
 		// The dialog can report a preference read error if the user opens it.
 		void host[RESTORE].catch(() => {});
 	};
-	for (const scope of scopes)
+	const refreshRuntime = () => {
+		runtimeRefresh?.abort();
+		if (!localAddIns(host).size && !host[RESTORE]) return;
+		const { signal } = (runtimeRefresh = new AbortController());
+		void (async () => {
+			await host[RESTORE];
+			if (signal.aborted || !host.isConnected) return;
+			const session = await sessionForEditor();
+			if (!signal.aborted) await session.refreshRuntime(signal);
+		})().catch(() => {});
+	};
+	for (const scope of scopes) {
 		scope.addEventListener(ADD_IN_PREFERENCES_CHANGED, restore, { signal: listeners.signal });
+		scope.addEventListener(ADD_IN_RUNTIME_CHANGED, refreshRuntime, { signal: listeners.signal });
+	}
 	restore();
 	return () => {
 		listeners.abort();
+		runtimeRefresh?.abort();
 		pending?.abort();
 		delete host[RESTORE];
 	};

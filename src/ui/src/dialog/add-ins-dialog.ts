@@ -2,6 +2,7 @@ import { html, nothing } from 'lit';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import { mountedAddInRestore, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
+import { ADD_IN_RUNTIME_CHANGED } from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent } from './add-ins-consent';
 import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
@@ -23,10 +24,15 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	#preview: AddInPreview | undefined;
 	#pending: AbortController | undefined;
 	#afterClose?: () => void;
+	#settingsEvents = new AbortController();
 
 	show(options: OpenAddInsOptions, restoreFocus: () => void): void {
 		this.#session = addInSession(options, restoreFocus);
 		this.#session.syncTabs();
+		for (const scope of options.scopes)
+			scope.addEventListener(ADD_IN_RUNTIME_CHANGED, () => this.requestUpdate(), {
+				signal: this.#settingsEvents.signal,
+			});
 		this.#pivot =
 			options.mode === 'getAddIns' && this.#session.storefront !== 'off' ? 'Store' : 'My Add-ins';
 		this.requestUpdate();
@@ -58,6 +64,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	override disconnectedCallback(): void {
 		super.disconnectedCallback();
 		this.#pending?.abort();
+		this.#settingsEvents.abort();
 	}
 
 	private close(): void {
@@ -212,7 +219,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 							cancel: () => this.cancel(),
 							confirm: () => this.confirm(),
 							persistent: Boolean(session.restore),
-							runnable: Boolean(session.launcher.pane(this.#preview.addIn).url),
+							reason: session.launcher.pane(this.#preview.addIn).reason,
 							busy: Boolean(this.#pending),
 						})
 					: html` <div

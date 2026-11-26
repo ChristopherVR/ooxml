@@ -54,7 +54,7 @@ export function renderAddInConsent(
 		confirm: () => void;
 		cancel: () => void;
 		persistent: boolean;
-		runnable: boolean;
+		reason: string | undefined;
 		busy: boolean;
 	},
 ) {
@@ -69,9 +69,7 @@ export function renderAddInConsent(
 		<p
 			>${t(actions.persistent ? 'Save this add-in in host preferences.' : 'Install for this editor session.')}</p
 		>
-		<p
-			>${t(actions.runnable ? 'This add-in runs only when opened.' : 'Running add-ins is unavailable.')}</p
-		>
+		<p>${actions.reason ?? t('This add-in runs only when opened.')}</p>
 		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
 		${already ? html`<p>${t('This add-in is already installed.')}</p>` : nothing}
 		<div class="consent-actions">

@@ -31,14 +31,6 @@ export const ADD_IN_MARKETPLACE_STRINGS = {
 		'このアドインは開いたときにだけ実行されます。',
 		'이 추가 기능은 열 때만 실행됩니다.',
 	],
-	'Running add-ins is unavailable.': [
-		'L’exécution des compléments est indisponible.',
-		'Add-Ins können derzeit nicht ausgeführt werden.',
-		'No se pueden ejecutar complementos.',
-		'暂时无法运行加载项。',
-		'アドインは実行できません。',
-		'추가 기능을 실행할 수 없습니다.',
-	],
 	'Content add-ins are unavailable in this editor.': [
 		'Les compléments de contenu sont indisponibles dans cet éditeur.',
 		'Inhalts-Add-Ins sind in diesem Editor nicht verfügbar.',

@@ -10,6 +10,9 @@ import { addInRuntime } from '../ribbon/add-in-runtime-settings';
 import { addInPreferences } from '../ribbon/add-in-preferences';
 import { addInSettings } from '../ribbon/add-in-settings';
 
+const sourceBytes = new WeakMap<LocalAddIn, Uint8Array>();
+const validatedWithSelection = new WeakMap<LocalAddIn, boolean>();
+
 export interface AddInPreview {
 	addIn: LocalAddIn;
 	bytes: Uint8Array;
@@ -23,13 +26,13 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 	const t = localAddInText(locale, options.t);
 	const launcher = addInLauncher(options, installed, t);
 	const store = addInPreferences(scopes);
-	const manifestOptions = () => ({
+	const hasSelection = () =>
+		product === 'word' ||
+		product === 'excel' ||
+		Boolean((addInRuntime(scopes)?.selection ?? options.selection)?.());
+	const manifestOptions = (selection = hasSelection()) => ({
 		locale: manifestLocale,
-		capabilities: addInCapabilities(
-			product === 'word' ||
-				product === 'excel' ||
-				Boolean(addInRuntime(scopes)?.selection ?? options.selection),
-		),
+		capabilities: addInCapabilities(selection),
 	});
 	const syncTabs = () => addInManifestTabs(host, installed, launcher, t);
 	const restore =
@@ -39,17 +42,24 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 					if (signal.aborted || (!files.length && !installed.size)) return;
 					const { readLocalAddIn } = await import('../ribbon/add-in-manifest-file');
 					const restored = new Map<string, LocalAddIn>();
+					const selection = hasSelection();
 					for (const file of files.slice(0, INSTALLED_ADD_IN_LIMIT)) {
 						if (signal.aborted) return;
 						try {
-							const addIn = await readLocalAddIn(file, { ...manifestOptions(), host: product });
+							const addIn = await readLocalAddIn(file, {
+								...manifestOptions(selection),
+								host: product,
+							});
 							const prior = installed.get(addIn.manifest.id);
-							restored.set(
-								addIn.manifest.id,
-								prior?.digest === addIn.digest && prior.manifest.name === addIn.manifest.name
+							const entry =
+								prior?.digest === addIn.digest &&
+								prior.manifest.name === addIn.manifest.name &&
+								validatedWithSelection.get(prior) === selection
 									? prior
-									: addIn,
-							);
+									: addIn;
+							sourceBytes.set(entry, file);
+							validatedWithSelection.set(entry, selection);
+							restored.set(addIn.manifest.id, entry);
 						} catch {
 							// A stale or corrupt record cannot grant access or hide other installs.
 						}
@@ -72,6 +82,27 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 		product,
 		locale,
 		manifestOptions,
+		async refreshRuntime(signal: AbortSignal) {
+			if (product === 'powerpoint') {
+				const selection = hasSelection();
+				for (const [id, entry] of installed) {
+					const bytes = sourceBytes.get(entry);
+					if (!bytes || validatedWithSelection.get(entry) === selection) continue;
+					const { readLocalAddIn } = await import('../ribbon/add-in-manifest-file');
+					const refreshed = await readLocalAddIn(bytes, {
+						...manifestOptions(selection),
+						host: product,
+					});
+					if (signal.aborted) return;
+					if (installed.get(id) !== entry) continue;
+					launcher.close(id);
+					sourceBytes.set(refreshed, bytes);
+					validatedWithSelection.set(refreshed, selection);
+					installed.set(id, refreshed);
+				}
+			}
+			if (!signal.aborted) syncTabs();
+		},
 		restoreFocus,
 		async install({ addIn, bytes, previous }: AddInPreview) {
 			const id = addIn.manifest.id;
@@ -80,6 +111,8 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 			if (store && product !== 'visio') await store.write(product, id, bytes);
 			if (addInPreferences(scopes) !== store) return;
 			launcher.close(id);
+			sourceBytes.set(addIn, bytes);
+			validatedWithSelection.set(addIn, hasSelection());
 			installed.set(id, addIn);
 			syncTabs();
 		},
