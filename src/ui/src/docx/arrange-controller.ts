@@ -64,8 +64,12 @@ export function drawingImage(node: ProseMirrorNode | null): InlineImage | undefi
 }
 
 function applyPlacement(tr: Transaction, pos: number, placement: PicturePlacement | undefined) {
-	tr.setNodeAttribute(pos, 'anchored', Boolean(placement));
-	tr.setNodeAttribute(pos, 'placement', placement ? JSON.stringify(placement) : null);
+	const node = tr.doc.nodeAt(pos);
+	if (!node) return;
+	const anchored = Boolean(placement);
+	const serialized = placement ? JSON.stringify(placement) : null;
+	if (Boolean(node.attrs.anchored) !== anchored) tr.setNodeAttribute(pos, 'anchored', anchored);
+	if (node.attrs.placement !== serialized) tr.setNodeAttribute(pos, 'placement', serialized);
 }
 
 function commit(view: EditorView, tr: Transaction) {

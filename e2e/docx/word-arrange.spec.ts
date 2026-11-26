@@ -227,6 +227,30 @@ test('pane and Shift-click selections align and distribute three drawings on the
 	await expect(editor.locator('.dve-print-float-frame')).toHaveCount(2);
 });
 
+test('Top Left moves a fresh canvas selection and a single undo restores its original bounds', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	const ellipse = editor.locator('.dve-print-float').nth(2);
+	await expect(ellipse).toBeVisible();
+	const offset = () =>
+		ellipse.evaluate((element) => {
+			const bounds = element.getBoundingClientRect();
+			const sheet = element.closest('.dve-print-page')!.getBoundingClientRect();
+			return { x: bounds.left - sheet.left, y: bounds.top - sheet.top };
+		});
+	const original = await offset();
+	await ellipse.click({ force: true });
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await choosePosition(editor, 'Top Left');
+	await expect.poll(offset).not.toEqual(original);
+	await choosePosition(editor, 'Top Left');
+	await expect(editor.locator('.ProseMirror').first()).toBeFocused();
+	await page.keyboard.press('Control+z');
+	await expect.poll(offset).toEqual(original);
+});
+
 test('Selection Pane is docked and renames a drawing with F2 or a double-click', async ({
 	page,
 }) => {
