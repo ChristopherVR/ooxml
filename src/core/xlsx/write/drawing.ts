@@ -184,6 +184,7 @@ export function editedChartPart(source: string, chart: ChartObject): string | un
 		source,
 		writeChartSpace(chart.chartSpace, { declarationBreak }),
 		chart.chartSpace.protection === null,
+		!!loaded.pivotSource && !chart.chartSpace.pivotSource,
 	);
 }
 
