@@ -18,6 +18,17 @@ const fixture = (name: string) =>
 		'utf8',
 	);
 
+test('draws an icon on the folded Sparklines group', async ({ page }) => {
+	await page.setViewportSize({ width: 480, height: 800 });
+	await newWorkbook(page);
+	const editor = excel(page);
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const group = editor.locator('.ribbon-group[data-label="Sparklines"][data-collapsed]');
+	const face = group.getByRole('button', { name: 'Sparklines', exact: true });
+	await expect(face).toBeVisible();
+	await expect(face.locator('svg[data-icon="xl-chartLine"] path')).toHaveAttribute('d', /\S/u);
+});
+
 test('lists only Excel compatibility details for a Word command manifest', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 900 });
 	await newWorkbook(page);

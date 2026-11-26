@@ -60,3 +60,15 @@ test('explains unavailable installation for a Visio Store offer', async ({ page 
 		'Local add-in installation is unavailable in Visio.',
 	);
 });
+
+test('draws the add-ins glyph on the folded Visio group', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 812 });
+	await openDemo(page, '/demo-vanilla/?sample=1');
+	const viewer = page.locator('visio-viewer');
+	await viewer.getByRole('tab', { name: 'Insert', exact: true }).click();
+	const group = viewer.locator('office-ui-ribbon-group[label="Add-ins"][data-collapsed]');
+	await expect(group).toHaveAttribute('icon', 'addIns');
+	const face = group.getByRole('button', { name: 'Add-ins', exact: true });
+	await expect(face).toBeVisible();
+	await expect(face.locator('.face-icon path')).toHaveAttribute('d', /\S/u);
+});
