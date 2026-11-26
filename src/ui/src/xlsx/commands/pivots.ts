@@ -149,7 +149,7 @@ export function pivotCommands(): Command[] {
 			run: (ctx) => {
 				const selection = selected(ctx);
 				if (selection)
-					selection.t.session.refreshPivotTable(selection.t.sheet, selection.pivot.name, {
+					selection.t.session.updatePivotTable(selection.t.sheet, selection.pivot.name, {
 						fieldGroups: [],
 						dateGroups: [],
 					});

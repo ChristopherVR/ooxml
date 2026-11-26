@@ -1,20 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { expect, test } from '@playwright/test';
-import { editor, goToCell, newWorkbook, ribbon } from './helpers';
+import { expect, test, type Page } from '@playwright/test';
+import {
+	editor,
+	formulaBarValue,
+	goToCell,
+	newWorkbook,
+	ribbon,
+	sheetTabs,
+	typeInActiveCell,
+} from './helpers';
 
-test('opens PivotTable contextual controls and reopens a report changed through the ribbon', async ({
-	page,
-}) => {
-	await newWorkbook(page);
-	const book = editor(page);
-	const tabs = ribbon(page);
-	const renameControl = tabs.locator('[data-tab="pivot-analyze"] [data-command="pivot.name"]');
-	await expect(renameControl).toHaveCount(0);
+async function loadPivotWorkbook(page: Page) {
 	const fixture = readFileSync(
 		resolve(process.cwd(), '../../src/core/xlsx/__fixtures__/excel-pivot-rows.xlsx'),
 	);
-	await book.evaluate(
+	await editor(page).evaluate(
 		async (node, bytes) =>
 			(node as unknown as { load(data: Uint8Array, name: string): Promise<void> }).load(
 				new Uint8Array(bytes),
@@ -22,6 +23,18 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 			),
 		[...fixture],
 	);
+}
+
+test.beforeEach(async ({ page }) => newWorkbook(page));
+
+test('opens PivotTable contextual controls and reopens a report changed through the ribbon', async ({
+	page,
+}) => {
+	const book = editor(page);
+	const tabs = ribbon(page);
+	const renameControl = tabs.locator('[data-tab="pivot-analyze"] [data-command="pivot.name"]');
+	await expect(renameControl).toHaveCount(0);
+	await loadPivotWorkbook(page);
 	const analyze = tabs.getByRole('tab', { name: 'PivotTable Analyze' });
 	const design = tabs.getByRole('tab', { name: 'PivotTable Design' });
 	await goToCell(page, 'J12');
@@ -61,4 +74,20 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 		layout: 'outline',
 		display: { style: { name: 'PivotStyleMedium28', showRowStripes: true } },
 	});
+});
+
+test('keeps cached totals when styling a report and updates them on Refresh', async ({ page }) => {
+	await loadPivotWorkbook(page);
+	await sheetTabs(page).getByRole('tab', { name: 'Data', exact: true }).click();
+	await goToCell(page, 'C2');
+	await typeInActiveCell(page, '30');
+	await sheetTabs(page).getByRole('tab', { name: 'Summary', exact: true }).click();
+	await goToCell(page, 'C8');
+	const tabs = ribbon(page);
+	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
+	await tabs.getByRole('button', { name: 'Banded Rows', exact: true }).click();
+	await expect.poll(() => formulaBarValue(page)).toBe('57');
+	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
+	await tabs.getByRole('button', { name: 'Refresh PivotTable', exact: true }).click();
+	await expect.poll(() => formulaBarValue(page)).toBe('77');
 });

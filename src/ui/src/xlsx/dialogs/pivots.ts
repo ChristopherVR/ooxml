@@ -349,7 +349,7 @@ export function openPivotTable(
 					pivot.aggregate !== options.aggregate ||
 					JSON.stringify(pivot.additionalValues ?? []) !== JSON.stringify(options.additionalValues)
 				)
-					t.session.refreshPivotTable(sheet, pivot.name, { ...options, pageFilter });
+					t.session.updatePivotTable(sheet, pivot.name, { ...options, pageFilter });
 			} else {
 				const at = parseAddress(destination.value.trim().replaceAll('$', ''));
 				if (!at) throw new Error('The reference is not valid.');

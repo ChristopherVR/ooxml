@@ -42,7 +42,7 @@ import * as drawings from './drawings';
 import { insertLocalObject } from './local-object';
 import * as sparklines from './sparklines';
 import * as pivots from './pivots';
-import { refreshAllPivotTables, refreshPivotTable } from './pivot-refresh';
+import { refreshAllPivotTables, refreshPivotTable, updatePivotTable } from './pivot-refresh';
 import * as pivotCharts from './pivot-charts';
 import * as slicers from './slicers';
 import * as timelines from './timelines';
@@ -350,6 +350,7 @@ export function createEditSession(
 		createPivotTable: (s, destination, options) =>
 			pivots.createPivotTable(ctx, s, destination, options),
 		refreshPivotTable: (s, name, patch) => refreshPivotTable(ctx, s, name, patch),
+		updatePivotTable: (s, name, patch) => updatePivotTable(ctx, s, name, patch),
 		refreshAllPivotTables: () =>
 			session.batch('Refresh All PivotTables', () => refreshAllPivotTables(ctx)),
 		addPivotChart: (s, pivotSheet, name, anchor) =>

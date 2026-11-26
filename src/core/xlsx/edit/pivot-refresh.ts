@@ -7,7 +7,12 @@ import {
 	validatePivotFields,
 } from '../pivot/data';
 import { normalizedPivotMeasures } from '../pivot/measures';
-import { pivotDateFieldsOf, roundDateRecords } from '../pivot/dates';
+import {
+	pivotDateFieldExclusions,
+	pivotDateFieldsOf,
+	pivotGroupableDateFields,
+	roundDateRecords,
+} from '../pivot/dates';
 import { reconcileDateAxes } from '../pivot/date-axes';
 import { normalizedFieldSubtotals } from '../pivot/subtotals';
 import { pruneItemFilters } from '../pivot/item-filters';
@@ -21,6 +26,25 @@ export function refreshPivotTable(
 	name: string,
 	patch: PivotTablePatch = {},
 ): void {
+	rebuildPivotTable(ctx, s, name, patch, 'source');
+}
+
+export function updatePivotTable(
+	ctx: EditContext,
+	s: number,
+	name: string,
+	patch: Omit<PivotTablePatch, 'source'>,
+): void {
+	rebuildPivotTable(ctx, s, name, patch, 'cache');
+}
+
+function rebuildPivotTable(
+	ctx: EditContext,
+	s: number,
+	name: string,
+	patch: PivotTablePatch,
+	data: 'source' | 'cache',
+): void {
 	const old = pivotAt(ctx, s, name);
 	const sheetId = sheetAt(ctx.workbook, s).sheetId;
 	const connected = pivotHasSlicers(ctx.workbook, sheetId, old.name);
@@ -33,7 +57,7 @@ export function refreshPivotTable(
 	const valueField = patch.valueField ?? old.valueField;
 	const next: PivotTable = {
 		...old,
-		...pivotSourceData(ctx.workbook, s, patch.source ?? old.source),
+		...(data === 'source' ? pivotSourceData(ctx.workbook, s, patch.source ?? old.source) : {}),
 		name: patch.name ?? old.name,
 		location: patch.destination
 			? { start: { ...patch.destination }, end: { ...patch.destination } }
@@ -129,10 +153,26 @@ export function refreshPivotTable(
 				caption: pivotCaption('sum', patch.calculatedField.name, next),
 			};
 	}
-	const dates = pivotDateFieldsOf(ctx.workbook, s, next);
+	const dateExclusions =
+		data === 'cache' && next.dateFields ? pivotDateFieldExclusions(next) : undefined;
+	const dates =
+		data === 'source'
+			? pivotDateFieldsOf(ctx.workbook, s, next)
+			: (next.dateFields?.filter((field) => !dateExclusions?.has(field)) ?? []);
+	if (data === 'cache' && patch.dateGroups?.length) {
+		const added = patch.dateGroups
+			.map(({ field }) => field)
+			.filter((field) => !dates.includes(field));
+		if (added.length) {
+			const groupable = pivotGroupableDateFields(ctx.workbook, s, next);
+			const newlyTyped = added.filter((field) => groupable.includes(field));
+			dates.push(...newlyTyped);
+			roundDateRecords(next, newlyTyped, ctx.workbook.date1904);
+		}
+	}
 	if (dates.length) next.dateFields = dates;
 	else delete next.dateFields;
-	roundDateRecords(next, dates, ctx.workbook.date1904);
+	if (data === 'source') roundDateRecords(next, dates, ctx.workbook.date1904);
 	if (next.dateFilter && !dates.includes(next.dateFilter.field)) delete next.dateFilter;
 	if (patch.fieldSubtotals === undefined && next.fieldSubtotals) {
 		// Moving a field off the axes drops the subtotal setting it had.
@@ -150,7 +190,15 @@ export function refreshPivotTable(
 			next.display = { ...next.display, blankRows: false, collapsed: false };
 	}
 	validatePivotFields(next);
-	writePivot(ctx, s, next, old, undefined, connected ? () => markDirty(ctx.workbook) : undefined);
+	writePivot(
+		ctx,
+		s,
+		next,
+		old,
+		data === 'cache' ? 'PivotTable Settings' : undefined,
+		connected ? () => markDirty(ctx.workbook) : undefined,
+		data === 'cache',
+	);
 }
 
 export function refreshAllPivotTables(ctx: EditContext): void {

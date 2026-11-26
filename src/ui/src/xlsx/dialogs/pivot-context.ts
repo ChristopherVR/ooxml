@@ -35,13 +35,17 @@ export async function openPivotInput(
 		submit: () => {
 			const value = input.value.trim();
 			if (value === original) return true;
-			let patch: PivotTablePatch;
+			if (kind === 'source') {
+				t.session.refreshPivotTable(t.sheet, pivot.name, { source: value });
+				return true;
+			}
+			let patch: Omit<PivotTablePatch, 'source'>;
 			if (kind === 'move') {
 				const destination = parseAddress(value.replaceAll('$', ''));
 				if (!destination) throw new Error('The reference is not valid.');
 				patch = { destination };
 			} else patch = { [kind]: value };
-			t.session.refreshPivotTable(t.sheet, pivot.name, patch);
+			t.session.updatePivotTable(t.sheet, pivot.name, patch);
 			if (patch.destination)
 				ctx.selection.set({
 					active: patch.destination,
@@ -104,7 +108,7 @@ export async function openPivotCondition(ctx: EditorContext): Promise<void> {
 					throw new Error('Choose a measure and enter a finite filter value.');
 				condition = { kind: kind.value, measure: Number(measure.value), value: number };
 			}
-			t.session.refreshPivotTable(t.sheet, pivot.name, { condition });
+			t.session.updatePivotTable(t.sheet, pivot.name, { condition });
 			return true;
 		},
 	});
@@ -183,7 +187,7 @@ export async function openCalculatedField(ctx: EditorContext): Promise<void> {
 				throw new Error(
 					'Choose a unique calculated field name, a source field and a finite multiplier.',
 				);
-			t.session.refreshPivotTable(t.sheet, pivot.name, {
+			t.session.updatePivotTable(t.sheet, pivot.name, {
 				calculatedField: label ? { name: label, field: source.value, factor: number } : null,
 			});
 			return true;

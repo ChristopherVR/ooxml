@@ -90,7 +90,7 @@ export function openPivotFieldSettings(ctx: EditorContext): Promise<boolean | un
 				mode.get() === 'auto'
 					? others
 					: [...others, { field: chosen.value, functions: mode.get() === 'none' ? [] : functions }];
-			t.session.refreshPivotTable(t.sheet, pivot.name, {
+			t.session.updatePivotTable(t.sheet, pivot.name, {
 				fieldSubtotals: next,
 				// The outer field's old on/off switch must not contradict the choice made here.
 				...(chosen.value === pivot.rowField ? { subtotals: true } : {}),

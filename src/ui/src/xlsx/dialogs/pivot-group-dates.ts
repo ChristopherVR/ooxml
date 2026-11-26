@@ -115,7 +115,7 @@ export function openPivotGroupDates(ctx: EditorContext): Promise<boolean | undef
 				...(by.join() === 'days' && Number(days.value) > 1 ? { days: Number(days.value) } : {}),
 			};
 			const others = (pivot.dateGroups ?? []).filter((entry) => entry.field !== group.field);
-			t.session.refreshPivotTable(t.sheet, pivot.name, { dateGroups: [...others, group] });
+			t.session.updatePivotTable(t.sheet, pivot.name, { dateGroups: [...others, group] });
 			return true;
 		},
 	});

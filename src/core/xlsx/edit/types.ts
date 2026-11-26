@@ -336,6 +336,8 @@ export interface EditSession {
 	createPivotTable(sheet: number, destination: CellAddress, options: PivotTableOptions): string;
 	/** Refreshes cached records and output; an optional patch reconfigures fields. */
 	refreshPivotTable(sheet: number, name: string, patch?: PivotTablePatch): void;
+	/** Rebuilds the report from its existing cache without reading its source cells. */
+	updatePivotTable(sheet: number, name: string, patch: Omit<PivotTablePatch, 'source'>): void;
 	/** Refreshes editable PivotTables together in one undo step. */
 	refreshAllPivotTables(): void;
 	/** Inserts a clustered column chart linked to a worksheet PivotTable. */

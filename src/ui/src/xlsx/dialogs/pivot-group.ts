@@ -50,7 +50,7 @@ export function openPivotGroup(ctx: EditorContext): Promise<boolean | undefined>
 				by: Number(by.value),
 			};
 			const others = (pivot.fieldGroups ?? []).filter((entry) => entry.field !== group.field);
-			t.session.refreshPivotTable(t.sheet, pivot.name, { fieldGroups: [...others, group] });
+			t.session.updatePivotTable(t.sheet, pivot.name, { fieldGroups: [...others, group] });
 			return true;
 		},
 	});

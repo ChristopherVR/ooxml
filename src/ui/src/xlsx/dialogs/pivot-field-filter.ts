@@ -90,7 +90,7 @@ function openItems(ctx: EditorContext, sheet: number, pivot: PivotTable, initial
 			const hidden = items.filter(({ input }) => !input.checked).map(({ value }) => value);
 			const filters = (pivot.itemFilters ?? []).filter((entry) => entry.field !== choice.value);
 			if (hidden.length) filters.push({ field: choice.value, hidden });
-			t.session.refreshPivotTable(sheet, pivot.name, { itemFilters: filters });
+			t.session.updatePivotTable(sheet, pivot.name, { itemFilters: filters });
 			return true;
 		},
 	});

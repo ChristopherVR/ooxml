@@ -32,7 +32,7 @@ const pivotEdit = (command: Omit<Command, 'editing'>): Command =>
 function patchCommand(
 	id: string,
 	label: string,
-	patch: (pivot: PivotTable) => PivotTablePatch,
+	patch: (pivot: PivotTable) => Omit<PivotTablePatch, 'source'>,
 	options: Pick<Command, 'checked' | 'enabled' | 'unavailable'> = {},
 ): Command {
 	return pivotEdit({
@@ -42,7 +42,7 @@ function patchCommand(
 		run: (ctx) => {
 			const selected = selectedPivot(ctx);
 			if (selected)
-				selected.t.session.refreshPivotTable(
+				selected.t.session.updatePivotTable(
 					selected.t.sheet,
 					selected.pivot.name,
 					patch(selected.pivot),
@@ -184,7 +184,7 @@ export function pivotDesignCommands(): Command[] {
 			run: (ctx, name) => {
 				const selected = selectedPivot(ctx);
 				if (selected && typeof name === 'string')
-					selected.t.session.refreshPivotTable(selected.t.sheet, selected.pivot.name, {
+					selected.t.session.updatePivotTable(selected.t.sheet, selected.pivot.name, {
 						display: { style: { name } },
 					});
 			},

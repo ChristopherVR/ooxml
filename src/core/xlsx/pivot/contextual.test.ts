@@ -20,6 +20,25 @@ async function report(suffix = '-rows') {
 	return { workbook, edit, ws, read, patch, reopen };
 }
 
+it('rebuilds output from the saved cache until explicitly refreshed', async () => {
+	const { edit, read, reopen, ws } = await report();
+	const { fields, records, name } = read();
+	edit.setCellInput(1, 1, 2, '30');
+	edit.updatePivotTable(0, name, { display: { style: { showRowStripes: true } } });
+	expect(read().fields).toBe(fields);
+	expect(read().records).toBe(records);
+	expect(getCell(ws, 7, 2)?.value).toBe(57);
+	expect((await reopen()).records).toEqual(records);
+
+	edit.refreshPivotTable(0, name);
+	expect(getCell(ws, 7, 2)?.value).toBe(77);
+	read().source = 'Missing!A1:C6';
+	edit.updatePivotTable(0, name, { display: { style: { name: 'PivotStyleDark2' } } });
+	expect(read().display?.style?.name).toBe('PivotStyleDark2');
+	expect(getCell(ws, 7, 2)?.value).toBe(77);
+	expect(() => edit.refreshPivotTable(0, name)).toThrow();
+});
+
 it('rebuilds native layouts, headers, blank rows, totals and styles in one undoable edit', async () => {
 	const { edit, patch, read, reopen } = await report();
 	const before = pivotGrid(read()).values;

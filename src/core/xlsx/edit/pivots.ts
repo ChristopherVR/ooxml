@@ -62,7 +62,30 @@ export function checkName(ctx: EditContext, name: string, previous?: string): vo
 		throw new Error('A PivotTable name must be unique and cannot look like a cell reference.');
 }
 
-function plan(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable) {
+function overlapsSource(
+	ctx: EditContext,
+	s: number,
+	pivot: PivotTable,
+	location: CellRange,
+	fromCache: boolean,
+) {
+	let source: ReturnType<typeof pivotSourceRange>;
+	try {
+		source = pivotSourceRange(ctx.workbook, s, pivot.source);
+	} catch (error) {
+		if (!fromCache) throw error;
+		return false;
+	}
+	return source.sheet === s && rangesIntersect(source.range, location);
+}
+
+function plan(
+	ctx: EditContext,
+	s: number,
+	pivot: PivotTable,
+	old: PivotTable | undefined,
+	fromCache: boolean,
+) {
 	const sheet = sheetAt(ctx.workbook, s);
 	const grid = pivotGrid(pivot);
 	const start = pivot.location.start;
@@ -81,9 +104,8 @@ function plan(ctx: EditContext, s: number, pivot: PivotTable, old?: PivotTable) 
 		location.end.col > MAX_COL
 	)
 		throw new Error('The PivotTable result does not fit on the worksheet.');
-	const source = pivotSourceRange(ctx.workbook, s, pivot.source);
 	if (
-		(source.sheet === s && rangesIntersect(source.range, location)) ||
+		overlapsSource(ctx, s, pivot, location, fromCache) ||
 		sheet.merges.some((range) => rangesIntersect(range, location)) ||
 		sheet.tables.some((table) => rangesIntersect(table.range, location)) ||
 		sheet.pivotTables?.some((other) => other !== old && rangesIntersect(other.location, location))
@@ -108,9 +130,10 @@ export function writePivot(
 	old?: PivotTable,
 	label?: string,
 	inside?: () => void,
+	fromCache = false,
 ): void {
 	const sheet = sheetAt(ctx.workbook, s);
-	const { grid, location } = plan(ctx, s, pivot, old);
+	const { grid, location } = plan(ctx, s, pivot, old, fromCache);
 	const next = { ...pivot, location, dirty: true };
 	const charts = old
 		? pivotChartUpdates(ctx.workbook, sheet.name, next, grid, old.name)

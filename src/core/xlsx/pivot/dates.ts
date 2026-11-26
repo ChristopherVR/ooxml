@@ -39,24 +39,27 @@ export function pivotDateColumns(
 	source: string,
 	fields: readonly string[],
 	skip: ReadonlySet<string>,
+	records?: PivotTable['records'],
 ): string[] {
 	const data = pivotSourceRange(workbook, sheet, source);
 	const ws = workbook.sheets[data.sheet]!;
 	const { start, end } = data.range;
+	const sourceRows = end.row - start.row;
+	if (records && records.length > sourceRows) return [];
+	const rows = records?.length ?? sourceRows;
 	const dates: string[] = [];
 	fields.forEach((name, index) => {
 		if (skip.has(name)) return;
 		const col = start.col + index;
-		let rows = 0;
-		for (let row = start.row + 1; row <= end.row; row++) {
-			const cell = getCell(ws, row, col);
+		for (let at = 0; at < rows; at++) {
+			const cell = getCell(ws, start.row + 1 + at, col);
+			const value = records ? records[at]?.[index] : cell?.value;
 			if (
-				typeof cell?.value !== 'number' ||
-				cell.value < 1 ||
-				!isDateFormat(styleAt(workbook, cell.styleId).numFmt ?? 'General')
+				typeof value !== 'number' ||
+				value < 1 ||
+				!isDateFormat(styleAt(workbook, cell?.styleId).numFmt ?? 'General')
 			)
 				return;
-			rows++;
 		}
 		if (rows) dates.push(name);
 	});
@@ -64,13 +67,9 @@ export function pivotDateColumns(
 }
 
 /** The date fields a PivotTable keeps as dates: date-only source columns on no axis or measure. */
-export function pivotDateFieldsOf(
-	workbook: Workbook,
-	sheet: number,
+export function pivotDateFieldExclusions(
 	pivot: Pick<
 		PivotTable,
-		| 'source'
-		| 'fields'
 		| 'rowField'
 		| 'secondRowField'
 		| 'moreRowFields'
@@ -80,8 +79,8 @@ export function pivotDateFieldsOf(
 		| 'valueField'
 		| 'additionalValues'
 	>,
-): string[] {
-	const used = new Set<string>(
+): Set<string> {
+	return new Set<string>(
 		[
 			pivot.rowField,
 			pivot.secondRowField,
@@ -93,7 +92,20 @@ export function pivotDateFieldsOf(
 			...(pivot.additionalValues ?? []).map((measure) => measure.field),
 		].filter((name): name is string => !!name),
 	);
-	return pivotDateColumns(workbook, sheet, pivot.source, pivot.fields, used);
+}
+
+export function pivotDateFieldsOf(
+	workbook: Workbook,
+	sheet: number,
+	pivot: Parameters<typeof pivotDateFieldExclusions>[0] & Pick<PivotTable, 'source' | 'fields'>,
+): string[] {
+	return pivotDateColumns(
+		workbook,
+		sheet,
+		pivot.source,
+		pivot.fields,
+		pivotDateFieldExclusions(pivot),
+	);
 }
 
 /** The dates of the given fields rounded to the second, which is all the pivot cache keeps. */
@@ -115,11 +127,12 @@ export function roundDateRecords(
 	});
 }
 
-/** Date columns of the source that a date group can use: every date field but the measures. */
+/** Date columns for grouping, using cached values and the source column's cell formats. */
 export function pivotGroupableDateFields(
 	workbook: Workbook,
 	sheet: number,
-	pivot: Pick<PivotTable, 'source' | 'fields' | 'pageFilter' | 'valueField' | 'additionalValues'>,
+	pivot: Pick<PivotTable, 'source' | 'fields' | 'pageFilter' | 'valueField' | 'additionalValues'> &
+		Partial<Pick<PivotTable, 'records'>>,
 ): string[] {
 	const skip = new Set<string>(
 		[
@@ -128,5 +141,5 @@ export function pivotGroupableDateFields(
 			...(pivot.additionalValues ?? []).map((measure) => measure.field),
 		].filter((name): name is string => !!name),
 	);
-	return pivotDateColumns(workbook, sheet, pivot.source, pivot.fields, skip);
+	return pivotDateColumns(workbook, sheet, pivot.source, pivot.fields, skip, pivot.records);
 }

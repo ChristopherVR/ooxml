@@ -58,6 +58,8 @@ const toggle = (input: HTMLInputElement, checked: boolean) => {
 describe('Group Selection on a date field', () => {
 	it('groups by months and years, replaces the date on the rows and undoes', async () => {
 		const { ctx, edit, pivot } = setup();
+		edit.setCellInput(0, 1, 0, 'changed source');
+		edit.setCellInput(0, 1, 3, '100');
 		expect(command('pivot.group-selection').enabled?.(ctx)).toBe(true);
 		const done = ctx.dialogs.open('pivot-group-dates');
 		const dialog = dialogEl(ctx, 'pivot-group-dates');
@@ -80,6 +82,7 @@ describe('Group Selection on a date field', () => {
 			'Dec',
 			'Grand Total',
 		]);
+		expect(pivotGrid(pivot()).values.at(-1)?.at(-1)).toBe(50);
 		edit.undo();
 		expect(pivot().rowField).toBe('Date');
 		expect(pivot().dateGroups).toBeUndefined();
