@@ -25,9 +25,8 @@ const master = (
 ): VisioStencilMaster => ({ id, name, shape, size: dimensions });
 
 /**
- * Built-in stencils More Shapes can open, in Visio's order. They are data over core outlines, not
- * stencil (.vssx) files: Visio's master shapesheets, connection points and Shape Data are not
- * reproduced, and stencil files cannot be opened. Basic Shapes lives with the Shapes window.
+ * Built-in stencils More Shapes can open, in Visio's order. The catalogue supplies geometry
+ * and drop sizes for original master ShapeSheets. Basic Shapes lives with the Shapes window.
  * Basic Flowchart Shapes has Visio's fourteen masters, names and drop sizes; a master whose
  * outline another stencil also uses has its own id.
  */

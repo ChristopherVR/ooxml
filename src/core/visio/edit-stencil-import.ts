@@ -1,5 +1,6 @@
 import { NS } from '../xml/index';
 import { VisioPackage } from './package';
+import { STENCIL_MAIN_TYPES } from './package-kind';
 import { fail, type VisioPackageLimits } from './package-common';
 import { indexedPart, related, visioXml } from './parts';
 import { attribute, child, children } from './sheet';
@@ -7,17 +8,12 @@ import { addMasterToDrawing, copy, type EnsuredStencilMaster } from './edit-mast
 
 const STYLE_ATTRIBUTES = ['LineStyle', 'FillStyle', 'TextStyle'] as const;
 const MAX_STYLE_DEPTH = 8;
-const STENCIL_TYPES = [
-	'application/vnd.ms-visio.stencil.main+xml',
-	'application/vnd.ms-visio.template.main+xml',
-	'application/vnd.ms-visio.drawing.main+xml',
-];
 
 /**
  * Brings the style sheets a stencil master uses into the drawing. A style the drawing has by name
  * is reused; any other is copied with a new ID, with the styles it is based on. Style 0 stays 0.
  */
-function styleMapper(stencilDocument: Element, document: Element, touch: () => void) {
+export function mapStencilStyles(stencilDocument: Element, document: Element, touch: () => void) {
 	const sheets = (root: Element) => children(child(root, 'StyleSheets'), 'StyleSheet');
 	const source = new Map(sheets(stencilDocument).map((sheet) => [attribute(sheet, 'ID'), sheet]));
 	const nameOf = (sheet: Element) => attribute(sheet, 'NameU') ?? attribute(sheet, 'Name');
@@ -91,6 +87,7 @@ export async function importStencilMaster(
 	maxOutput: number,
 	deadline: number,
 	check: () => void,
+	options?: { stencil: true; icon: (entry: Element) => void },
 ): Promise<EnsuredStencilMaster> {
 	const pkg = await VisioPackage.open(stencil, limits);
 	const types = await pkg.readXml('[Content_Types].xml', 'Types');
@@ -100,7 +97,7 @@ export async function importStencilMaster(
 				(node) => node.getAttribute('PartName') === `/${documentPart}`,
 			)
 		: undefined;
-	if (!documentPart || !STENCIL_TYPES.includes(override?.getAttribute('ContentType') ?? ''))
+	if (!documentPart || !STENCIL_MAIN_TYPES.has(override?.getAttribute('ContentType') ?? ''))
 		fail('UNSUPPORTED_FORMAT', 'The stencil is not a Visio stencil package.');
 	const stencilDocument = await visioXml(pkg, documentPart, 'VisioDocument');
 	const mastersPart = await related(pkg, documentPart, 'masters', false);
@@ -112,6 +109,16 @@ export async function importStencilMaster(
 	const part = await indexedPart(pkg, mastersPart, entry, 'master');
 	const media = await masterPictures(pkg, part);
 	const contents = await visioXml(pkg, part, 'MasterContents');
+	if (
+		options?.stencil &&
+		Array.from(contents.getElementsByTagNameNS(contents.namespaceURI, 'Shape')).some((node) =>
+			node.hasAttribute('Master'),
+		)
+	)
+		fail(
+			'UNSUPPORTED_EDIT_PACKAGE',
+			'This master depends on another master in its original stencil.',
+		);
 	const name = attribute(entry, 'NameU') ?? attribute(entry, 'Name') ?? `Master ${stencilMasterId}`;
 	return addMasterToDrawing(
 		source,
@@ -132,11 +139,12 @@ export async function importStencilMaster(
 					for (const style of STYLE_ATTRIBUTES)
 						if (sheet.hasAttribute(style)) sheet.setAttribute(style, '0');
 				for (const rel of children(node, 'Rel')) rel.setAttributeNS(NS.r, 'r:id', relationshipId);
+				options?.icon(node);
 				masters.appendChild(node);
 			},
 			media,
 			contents(document, touch) {
-				const map = styleMapper(stencilDocument, document, touch);
+				const map = mapStencilStyles(stencilDocument, document, touch);
 				const root = copy(contents);
 				if (root.namespaceURI !== document.namespaceURI)
 					fail('UNSUPPORTED_EDIT_PACKAGE', 'The stencil uses another Visio namespace.');
@@ -149,5 +157,6 @@ export async function importStencilMaster(
 		maxOutput,
 		deadline,
 		check,
+		options?.stencil,
 	);
 }

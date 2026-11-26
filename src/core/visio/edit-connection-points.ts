@@ -71,13 +71,29 @@ export function addConnectionPoint(root: Element, edit: AddPoint): readonly stri
 		shape.insertBefore(section, geometry ?? null);
 	}
 	const used = children(section, 'Row').map((row) => Number(attribute(row, 'IX') ?? '0'));
-	const row = doc.createElementNS(root.namespaceURI, 'Row');
-	row.setAttribute('IX', String(used.length ? Math.max(...used) + 1 : 0));
-	setCell(row, 'X', width * x, `Width*${x}`);
-	setCell(row, 'Y', height * y, `Height*${y}`);
+	appendRelativeConnectionPoint(
+		section,
+		used.length ? Math.max(...used) + 1 : 0,
+		{ width, height },
+		{ x, y },
+	);
+	return [edit.pageId];
+}
+
+export function appendRelativeConnectionPoint(
+	section: Element,
+	index: number,
+	size: { width: number; height: number },
+	point: { x: number; y: number },
+): void {
+	const row = section.ownerDocument!.createElementNS(section.namespaceURI, 'Row');
+	row.setAttribute('IX', String(index));
+	const x = round(point.x),
+		y = round(point.y);
+	setCell(row, 'X', size.width * x, `Width*${x}`);
+	setCell(row, 'Y', size.height * y, `Height*${y}`);
 	for (const name of ['DirX', 'DirY', 'Type', 'AutoGen']) setCell(row, name, 0);
 	section.appendChild(row);
-	return [edit.pageId];
 }
 
 /** Formulas other than native glue that read a shape's Connections cells cannot be renumbered. */

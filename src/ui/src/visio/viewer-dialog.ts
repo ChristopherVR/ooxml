@@ -11,7 +11,7 @@ export class ViewerDialog {
 	readonly error: HTMLElement;
 	readonly buttons = new Map<string, Button>();
 	constructor(
-		root: ShadowRoot,
+		root: ShadowRoot | HTMLElement,
 		className: string,
 		heading: string,
 		buttons: readonly string[],

@@ -109,6 +109,9 @@ it('collects masters into My Shapes for the session', async () => {
 		.dispatchEvent(
 			new CustomEvent('office-command', { detail: { command: 'my-shapes' }, bubbles: true }),
 		);
+	await vi.waitFor(() =>
+		expect(ui.pane.querySelector('[data-stencil="my-shapes"]')).not.toBeNull(),
+	);
 	const mine = ui.pane.querySelector<HTMLElement>('[data-stencil="my-shapes"]')!;
 	expect(mine.querySelector('.stencil-title')!.textContent).toBe('My Shapes');
 	expect(mine.querySelectorAll('[data-master]')).toHaveLength(1);

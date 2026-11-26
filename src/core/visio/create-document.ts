@@ -5,6 +5,7 @@ import { VISIO_NS } from './sheet';
 import { setCell } from './edit-geometry-cells';
 import { DEFAULTS, fail } from './package-common';
 import { writeEditedPackage } from './edit-package';
+import { DRAWING_MAIN, STENCIL_MAIN } from './package-kind';
 import { VISIO_STENCIL_FILES, type VisioBuiltInStencilId } from './stencil-windows';
 
 export interface CreateVsdxOptions {
@@ -105,6 +106,13 @@ function documentPart(): Element {
 
 /** Create an editable single-page VSDX using shared XML/OPC writers and bounded ZIP output. */
 export async function createVsdx(options: CreateVsdxOptions = {}): Promise<Uint8Array> {
+	return createVisioPackage(options, false);
+}
+
+export async function createVisioPackage(
+	options: CreateVsdxOptions,
+	stencil: boolean,
+): Promise<Uint8Array> {
 	const width = options.width ?? 8.5,
 		height = options.height ?? 11;
 	if (
@@ -143,9 +151,11 @@ export async function createVsdx(options: CreateVsdxOptions = {}): Promise<Uint8
 				['xml', 'application/xml'],
 			]),
 			overrides: new Map([
-				['/visio/document.xml', 'application/vnd.ms-visio.drawing.main+xml'],
+				['/visio/document.xml', stencil ? STENCIL_MAIN : DRAWING_MAIN],
 				['/visio/pages/pages.xml', 'application/vnd.ms-visio.pages+xml'],
-				['/visio/pages/page1.xml', 'application/vnd.ms-visio.page+xml'],
+				...(stencil
+					? [['/visio/masters/masters.xml', 'application/vnd.ms-visio.masters+xml'] as const]
+					: [['/visio/pages/page1.xml', 'application/vnd.ms-visio.page+xml'] as const]),
 				['/visio/windows.xml', 'application/vnd.ms-visio.windows+xml'],
 			]),
 		}),
@@ -156,24 +166,28 @@ export async function createVsdx(options: CreateVsdxOptions = {}): Promise<Uint8
 		relationships([
 			['pages', 'pages/pages.xml'],
 			['windows', 'windows.xml'],
+			...(stencil ? [['masters', 'masters/masters.xml'] as const] : []),
 		]),
 	);
-	put('visio/pages/_rels/pages.xml.rels', relationships([['page', 'page1.xml']]));
+	if (stencil) put('visio/masters/masters.xml', buildXml(root('Masters')));
+	else put('visio/pages/_rels/pages.xml.rels', relationships([['page', 'page1.xml']]));
 	put('visio/document.xml', buildXml(documentPart()));
 	const pages = root('Pages');
-	const page = element(pages, 'Page', { ID: '0', Name: 'Page-1', NameU: 'Page-1' });
-	const sheet = element(page, 'PageSheet', { LineStyle: '0', FillStyle: '0', TextStyle: '0' });
-	cells(sheet, {
-		PageWidth: width,
-		PageHeight: height,
-		PageScale: 1,
-		DrawingScale: 1,
-		DrawingScaleType: 0,
-		DrawingSizeType: 0,
-	});
-	element(page, 'Rel').setAttributeNS(NS.r, 'r:id', 'rId1');
+	if (!stencil) {
+		const page = element(pages, 'Page', { ID: '0', Name: 'Page-1', NameU: 'Page-1' });
+		const sheet = element(page, 'PageSheet', { LineStyle: '0', FillStyle: '0', TextStyle: '0' });
+		cells(sheet, {
+			PageWidth: width,
+			PageHeight: height,
+			PageScale: 1,
+			DrawingScale: 1,
+			DrawingScaleType: 0,
+			DrawingSizeType: 0,
+		});
+		element(page, 'Rel').setAttributeNS(NS.r, 'r:id', 'rId1');
+		put('visio/pages/page1.xml', buildXml(root('PageContents')));
+	}
 	put('visio/pages/pages.xml', buildXml(pages));
-	put('visio/pages/page1.xml', buildXml(root('PageContents')));
 	// Native Visio requires its windows part even when the page has no shapes.
 	const windows = root('Windows');
 	element(windows, 'Window', {

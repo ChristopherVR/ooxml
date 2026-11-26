@@ -1,4 +1,5 @@
-import { VISIO_DATA_LIMITS, type VisioDocument } from '../index';
+import { VISIO_DATA_LIMITS } from '../data-recordsets';
+import type { VisioDocument } from '../model';
 
 const invalid = () => new Error('The scene has invalid external data.');
 const text = (value: unknown, limit: number): number => {

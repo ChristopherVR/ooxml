@@ -54,6 +54,7 @@ export default defineConfig({
 		'edit-worker': 'src/visio/edit-worker.ts',
 		'parse-worker': 'src/visio/parse-worker.ts',
 		'clipboard-worker': 'src/visio/clipboard-worker.ts',
+		'stencil-worker': 'src/visio/stencil-worker.ts',
 		'xlsx-open-worker': 'src/xlsx/xlsx-open-worker.ts',
 		'mailings-recipient-worker': 'src/docx/mailings/mailings-recipient-worker.ts',
 	},

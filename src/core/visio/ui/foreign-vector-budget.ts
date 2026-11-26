@@ -1,10 +1,10 @@
-import {
-	validateVisioForeignVector,
-	type VisioForeignVector,
-	type VisioForeignVectorClip,
-	type VisioForeignVectorClipPath,
-	type VisioForeignVectorNode,
-} from '../index';
+import { validateVisioForeignVector } from '../foreign-vector-validation';
+import type {
+	VisioForeignVector,
+	VisioForeignVectorClip,
+	VisioForeignVectorClipPath,
+	VisioForeignVectorNode,
+} from '../foreign-vector';
 
 /** UI allocation limits, charged for every instance, including repeated shared resources. */
 export const FOREIGN_VECTOR_SCENE_LIMITS = Object.freeze({

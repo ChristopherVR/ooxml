@@ -60,8 +60,9 @@ export async function addMasterToDrawing(
 	maxOutput: number,
 	deadline: number,
 	check: () => void,
+	stencil = false,
 ): Promise<EnsuredStencilMaster> {
-	const { pkg, parts } = await openEditablePackage(source, limits, check);
+	const { pkg, parts } = await openEditablePackage(source, limits, check, stencil);
 	const documentPart = (await related(pkg, '', 'document'))!;
 	const document = await visioXml(pkg, documentPart, 'VisioDocument');
 	const existingPart = await related(pkg, documentPart, 'masters', false);
@@ -190,6 +191,7 @@ export async function addMasterToDrawing(
 		bytes,
 		{ ...limits, maxInputBytes: maxOutput, maxRuntimeMs: Math.max(1, deadline - Date.now()) },
 		check,
+		stencil,
 	);
 	await visioXml(verified.pkg, masterPart, 'MasterContents');
 	check();

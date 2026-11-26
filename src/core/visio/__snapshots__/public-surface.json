@@ -114,6 +114,7 @@
 	"isVisioThemeColorRef",
 	"layoutVisioFilledArrowLine",
 	"loadVisio",
+	"loadVisioStencilEditor",
 	"matchRefreshedRows",
 	"mergeVisioPages",
 	"normalBevelLighting",

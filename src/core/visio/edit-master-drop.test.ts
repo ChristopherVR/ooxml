@@ -73,6 +73,9 @@ describe('dropping a built-in stencil master', () => {
 		expect(dropped).toMatchObject({ id: '1', masterId: '1', width: 1, height: 0.75 });
 		expect(dropped.rotation).toMatchObject({ pinX: 2, pinY: 3 });
 		expect(dropped.geometry.length).toBeGreaterThan(0);
+		expect(dropped.connectionPoints).toHaveLength(4);
+		expect(dropped.connectionPoints?.every((point) => point.inherited)).toBe(true);
+		expect(dropped.shapeData?.[0]?.value).toBe('Process');
 		// Visio's flowchart masters sit on the Flowchart layer; the page gets it and the shape joins.
 		expect(model.pages[0]!.layers!.map((layer) => layer.name)).toEqual(['Flowchart']);
 		expect(dropped.layerIds).toEqual(['0']);
@@ -168,7 +171,7 @@ describe('dropping a built-in stencil master', () => {
 			{ type: 'format-text', ...target, bold: true },
 			{ type: 'format-shape', ...target, fillColor: '#00ff00' },
 			{ type: 'format-shape', ...target, quickStyle: { color: 100, matrix: 4 } },
-			{ type: 'resize-shape', pageId: '0', shapeId: '2', width: 2, height: 1 },
+			{ type: 'resize-shape', pageId: '0', shapeId: '2', width: 2, height: 2 },
 		] as VisioEdit[])
 			expect((await editVsdx(dropped.bytes, [edit])).changedParts, edit.type).toContain(
 				'visio/pages/page1.xml',

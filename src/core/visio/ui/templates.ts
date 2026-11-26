@@ -1,4 +1,5 @@
-import { createVsdx, editVsdx, type VisioEdit } from '../index';
+import { createVsdx } from '../create-document';
+import { editVsdx, type VisioEdit } from '../edit';
 import { createOrgChartTemplate } from './org-chart-template';
 import { shapeEdits, type SampleBox, type SampleLink, type SamplePage } from './sample-drawing';
 

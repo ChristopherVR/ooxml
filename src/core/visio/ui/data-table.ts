@@ -1,6 +1,10 @@
 import type { Workbook } from '../../xlsx/model';
 import { numberFormatSections } from '../../text/number-format/sections';
-import { VISIO_DATA_LIMITS, type VisioDataColumn, type VisioDataColumnType } from '../index';
+import {
+	VISIO_DATA_LIMITS,
+	type VisioDataColumn,
+	type VisioDataColumnType,
+} from '../data-recordsets';
 
 /** A table ready for the import-data-recordset edit: typed columns and canonical row text. */
 export interface VisioDataTable {

@@ -1,4 +1,5 @@
-import { createVsdx, editVsdx, type VisioEdit } from '../index';
+import { createVsdx } from '../create-document';
+import { editVsdx, type VisioEdit } from '../edit';
 import { visioOrgDropPosition, visioOrgReportingLine, type VisioOrgMaster } from './org-chart-edit';
 import { visioOrgDataEdits, visioOrgText } from './org-chart';
 

@@ -21,6 +21,7 @@ import { frBackstage } from './locales/fr-backstage';
 import { zhCNCommands } from './locales/zh-CN-commands';
 import { zhCNText } from './locales/zh-CN-text';
 import { zhCNBackstage } from './locales/zh-CN-backstage';
+import { VISIO_STENCIL_STRINGS } from './locales/stencils';
 import { VISIO_TRUST_STRINGS } from './locales/trust-center';
 
 export const VISIO_LOCALES = ['en', 'de', 'es', 'fr', 'zh-CN'] as const;
@@ -29,11 +30,41 @@ export type VisioLocale = (typeof VISIO_LOCALES)[number];
 /** Every dictionary, English first: its keys are the contract the other locales must meet. */
 export const VISIO_RIBBON_STRINGS: Readonly<Record<VisioLocale, Readonly<Record<string, string>>>> =
 	{
-		en: { ...enCommands, ...enText, ...enBackstage, ...VISIO_TRUST_STRINGS.en },
-		de: { ...deCommands, ...deText, ...deBackstage, ...VISIO_TRUST_STRINGS.de },
-		es: { ...esCommands, ...esText, ...esBackstage, ...VISIO_TRUST_STRINGS.es },
-		fr: { ...frCommands, ...frText, ...frBackstage, ...VISIO_TRUST_STRINGS.fr },
-		'zh-CN': { ...zhCNCommands, ...zhCNText, ...zhCNBackstage, ...VISIO_TRUST_STRINGS['zh-CN'] },
+		en: {
+			...enCommands,
+			...enText,
+			...enBackstage,
+			...VISIO_TRUST_STRINGS.en,
+			...VISIO_STENCIL_STRINGS.en,
+		},
+		de: {
+			...deCommands,
+			...deText,
+			...deBackstage,
+			...VISIO_TRUST_STRINGS.de,
+			...VISIO_STENCIL_STRINGS.de,
+		},
+		es: {
+			...esCommands,
+			...esText,
+			...esBackstage,
+			...VISIO_TRUST_STRINGS.es,
+			...VISIO_STENCIL_STRINGS.es,
+		},
+		fr: {
+			...frCommands,
+			...frText,
+			...frBackstage,
+			...VISIO_TRUST_STRINGS.fr,
+			...VISIO_STENCIL_STRINGS.fr,
+		},
+		'zh-CN': {
+			...zhCNCommands,
+			...zhCNText,
+			...zhCNBackstage,
+			...VISIO_TRUST_STRINGS['zh-CN'],
+			...VISIO_STENCIL_STRINGS['zh-CN'],
+		},
 	};
 
 /** Maps any BCP 47 tag to a supported locale (`de-AT` is German, `zh-Hans` Chinese), else English. */

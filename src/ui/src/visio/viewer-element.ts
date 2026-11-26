@@ -989,6 +989,8 @@ export class VisioViewerElement extends BaseElement {
 		// Translation rewrites tooltips from their full text, so the style is applied afterwards.
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
+		const shapes = this.#root.querySelector<HTMLElement>('#shapes-pane');
+		if (shapes) shapes.dataset.visioLocale = this.#locale();
 		this.#backstage?.localize();
 		this.#signatures.update(this.controller.state.document?.signatures, this.#locale());
 		this.#syncTrust();

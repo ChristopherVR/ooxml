@@ -59,7 +59,7 @@ export interface VisioBuiltInMaster {
  * Visio rewrites the last two groups of a master's UniqueID to its own constant when it saves, so
  * `visioTail` writes that form from the start and the identity survives a save by Visio.
  */
-function guid(name: string, visioTail = false): string {
+export function stencilMasterGuid(name: string, visioTail = false): string {
 	const hash = sha1(new TextEncoder().encode(`ooxml-core/visio/master:${name}`));
 	const hex = Array.from(hash.slice(0, 16), (byte, index) => {
 		// RFC 4122 name-based (version 5) layout.
@@ -84,8 +84,8 @@ export function visioBuiltInMaster(id: string): VisioBuiltInMaster | undefined {
 			master,
 			stencil,
 			...(layer ? { layer } : {}),
-			uniqueId: guid(`unique:${id}`, true),
-			baseId: guid(`base:${id}`),
+			uniqueId: stencilMasterGuid(`unique:${id}`, true),
+			baseId: stencilMasterGuid(`base:${id}`),
 		};
 	}
 	return undefined;

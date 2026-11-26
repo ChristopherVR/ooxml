@@ -3,6 +3,8 @@ import { setCell } from './edit-geometry-cells';
 import { appendEllipseGeometry } from './edit-ellipse-geometry';
 import { applyShapeCreationStyles, outlineGeometrySections } from './edit-shape-create';
 import { visioOutlineShape } from './stencil-shapes';
+import { appendRelativeConnectionPoint } from './edit-connection-points';
+import { writePropertyRow } from './edit-shape-data';
 import type { VisioBuiltInMaster } from './stencil-masters';
 
 /** The one shape of a built-in master; instances name it through their `Master` attribute. */
@@ -36,7 +38,9 @@ function textCell(owner: Element, name: string, value: string): void {
  */
 export function stencilMasterEntry(
 	masters: Element,
-	builtIn: VisioBuiltInMaster,
+	builtIn: Pick<VisioBuiltInMaster, 'uniqueId' | 'baseId' | 'layer'> & {
+		master: Pick<VisioBuiltInMaster['master'], 'size'>;
+	},
 	id: string,
 	name: string,
 	relationshipId: string,
@@ -132,18 +136,60 @@ export function stencilMasterContents(
 		['FlipX', 0],
 		['FlipY', 0],
 		['ResizeMode', 0],
+		['ObjType', 1],
 	] as const)
 		setCell(shape, name, value, formula);
-	// Explicit, inactive protection: an edit of an instance can prove nothing locks it without
-	// relying on what the drawing's style sheets happen to say.
-	for (const name of PROTECTION) setCell(shape, name, 0);
+	// Lock the aspect of the equal-sided shapes, and write the remaining protection explicitly.
+	for (const name of PROTECTION)
+		setCell(
+			shape,
+			name,
+			Number(name === 'LockAspect' && ['square', 'circle'].includes(builtIn.master.id)),
+		);
 	if (builtIn.layer) textCell(shape, 'LayerMember', '0');
-	if (builtIn.master.shape === 'ellipse') appendEllipseGeometry(shape, width, height);
+	const outline =
+		builtIn.master.shape === 'ellipse' ? undefined : visioOutlineShape(builtIn.master.shape);
+	const connection = doc.createElementNS(namespace, 'Section');
+	connection.setAttribute('N', 'Connection');
+	shape.appendChild(connection);
+	for (const [index, point] of cardinalPoints(outline?.paths[0]).entries())
+		appendRelativeConnectionPoint(connection, index, builtIn.master.size, point);
+	writePropertyRow(shape, 'ShapeKind', {
+		label: 'Shape type',
+		prompt: '',
+		type: 'string',
+		format: '',
+		value: builtIn.master.name,
+	});
+	if (!outline) appendEllipseGeometry(shape, width, height);
 	else {
-		const outline = visioOutlineShape(builtIn.master.shape);
 		// A fixed corner radius, as a drawn rounded rectangle keeps when it is resized.
 		if (outline.rounding) setCell(shape, 'Rounding', outline.rounding * Math.min(width, height));
 		for (const section of outlineGeometrySections(shape, outline)) shape.appendChild(section);
 	}
 	return root;
+}
+
+/** Farthest intersections with the outline at its horizontal and vertical midlines. */
+function cardinalPoints(path: readonly (readonly [number, number])[] | undefined) {
+	const extent = (axis: 0 | 1, high: boolean) => {
+		const other = axis === 0 ? 1 : 0;
+		let edge = high ? -Infinity : Infinity;
+		let previous = path?.at(-1);
+		for (const point of path ?? []) {
+			if (previous && previous[other] > 0.5 !== point[other] > 0.5) {
+				const fraction = (0.5 - previous[other]) / (point[other] - previous[other]);
+				const at = previous[axis] + fraction * (point[axis] - previous[axis]);
+				edge = high ? Math.max(edge, at) : Math.min(edge, at);
+			}
+			previous = point;
+		}
+		return Number.isFinite(edge) ? edge : Number(high);
+	};
+	return [
+		{ x: extent(0, false), y: 0.5 },
+		{ x: extent(0, true), y: 0.5 },
+		{ x: 0.5, y: extent(1, false) },
+		{ x: 0.5, y: extent(1, true) },
+	];
 }

@@ -1,14 +1,7 @@
 import { assertVisioFillGradient } from './gradient-details';
-import {
-	inspectVisioRasterImage,
-	inspectVisioPicture,
-	VISIO_RASTER_IMAGE_LIMITS,
-	VISIO_COMMENT_LIMIT,
-	VISIO_COMMENT_TEXT_LIMIT,
-	type VisioDocument,
-	type VisioShape,
-	type VisioImage,
-} from '../index';
+import { inspectVisioRasterImage, inspectVisioPicture, VISIO_RASTER_IMAGE_LIMITS } from '../media';
+import { VISIO_COMMENT_LIMIT, VISIO_COMMENT_TEXT_LIMIT } from '../comments';
+import type { VisioDocument, VisioShape, VisioImage } from '../model';
 import { assertShapeDetails } from './scene-details';
 import { assertSceneDataRecordsets } from './scene-data';
 import { ForeignVectorBudget } from './foreign-vector-budget';

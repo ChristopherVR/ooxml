@@ -9,6 +9,7 @@ import {
 } from './shapes-document';
 import { loadShapes as load, saveShapes as save } from './shapes-storage';
 import { MY_SHAPES_ID, stencilFiles } from './stencil-files';
+import { bindStencilMenus } from './stencil-menus';
 import { masterList, menuItem } from './shapes-master-list';
 export { masterButton, masterList } from './shapes-master-list';
 import { stencilFilePicker } from './shapes-files-ui';
@@ -81,13 +82,9 @@ export function buildStencilsView(
 	const masterMenu = doc.createElement('office-ui-context-menu') as Menu;
 	masterMenu.dataset.shapesMenu = 'master';
 	masterMenu.setAttribute('label', 'Master');
-	let menuMaster: string | undefined;
 
 	const openIds = () => [...new Set([...docked, BASIC_STENCIL_ID, ...saved.open])];
-	const fileSections = () => [
-		...files.opened.map((stencil) => stencil.id),
-		...(files.myShapes ? [MY_SHAPES_ID] : []),
-	];
+	const fileSections = () => files.opened.map((stencil) => stencil.id);
 	const sectionIds = () => [
 		...(drawing.masters.length ? [DOCUMENT_STENCIL_ID] : []),
 		...openIds(),
@@ -96,12 +93,33 @@ export function buildStencilsView(
 	const sectionStencil = (id: string): Stencil =>
 		id === DOCUMENT_STENCIL_ID
 			? { id, name: DOCUMENT_STENCIL_NAME, masters: drawing.masters }
-			: id === MY_SHAPES_ID
-				? files.myShapes!
-				: (files.opened.find((candidate) => candidate.id === id) ??
-					STENCILS.find((candidate) => candidate.id === id)!);
+			: (files.get(id) ?? STENCILS.find((candidate) => candidate.id === id)!);
 	const quickIds = (stencil: Stencil) =>
 		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
+	const authoring = bindStencilMenus(pane, files, masterMenu, {
+		quickIds,
+		changeQuick: (stencil, id) => {
+			const ids = quickIds(stencil);
+			saved.quick[stencil.id] = ids.includes(id)
+				? ids.filter((candidate) => candidate !== id)
+				: [...ids, id];
+			save(doc, saved);
+			renderQuick();
+		},
+		error(message) {
+			picker.status.textContent = message;
+			picker.status.hidden = !message;
+		},
+		update(id) {
+			collapsed.delete(id);
+			render();
+			Array.from(sections.querySelectorAll<HTMLButtonElement>('[data-stencil-actions]'))
+				.find((button) => button.dataset.stencilActions === id)
+				?.focus();
+		},
+	});
+	const { t } = authoring;
+
 	const renderQuick = () => {
 		if (quick.hidden) return quick.replaceChildren();
 		const masters = [
@@ -122,13 +140,14 @@ export function buildStencilsView(
 				const stencil = sectionStencil(id);
 				const section = doc.createElement('section');
 				section.dataset.stencil = id;
-				section.setAttribute('aria-label', stencil.name);
+				const name = id === MY_SHAPES_ID ? t(stencil.name) : stencil.name;
+				section.setAttribute('aria-label', name);
 				const header = doc.createElement('div');
 				header.className = 'stencil-header';
 				const title = doc.createElement('button');
 				title.type = 'button';
 				title.className = 'stencil-title';
-				title.textContent = stencil.name;
+				title.textContent = name;
 				const list = masterList(doc, stencil.masters);
 				list.id = `stencil-${id}-masters`;
 				title.setAttribute('aria-controls', list.id);
@@ -137,7 +156,18 @@ export function buildStencilsView(
 				list.hidden = !open;
 				if (!open) section.dataset.collapsed = '';
 				header.append(title);
-				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID && id !== MY_SHAPES_ID) {
+				if (files.get(id)?.editable) {
+					const actions = doc.createElement('button');
+					actions.className = 'stencil-close';
+					actions.type = 'button';
+					actions.textContent = '⋯';
+					actions.setAttribute('aria-haspopup', 'menu');
+					actions.setAttribute('aria-label', t('Stencil actions'));
+					actions.title = t('Stencil actions');
+					actions.dataset.stencilActions = id;
+					header.append(actions);
+				}
+				if (id !== BASIC_STENCIL_ID && id !== DOCUMENT_STENCIL_ID) {
 					const close = doc.createElement('button');
 					close.type = 'button';
 					close.className = 'stencil-close';
@@ -167,6 +197,7 @@ export function buildStencilsView(
 				menuItem(doc, `stencil:${stencil.id}`, stencil.name, openIds().includes(stencil.id)),
 			),
 			doc.createElement('office-ui-menu-separator'),
+			menuItem(doc, 'new-stencil', t('New Stencil')),
 			Object.assign(menuItem(doc, 'open-stencil-file', 'Open Stencil...'), {
 				title: 'Open Stencil: a .vssx stencil file. Legacy .vss files are not supported.',
 			}),
@@ -179,6 +210,7 @@ export function buildStencilsView(
 	const toggleStencil = (id: string) => {
 		if (files.opened.some((stencil) => stencil.id === id)) {
 			files.close(id);
+			authoring.close(id);
 			collapsed.delete(id);
 			return render();
 		}
@@ -193,6 +225,7 @@ export function buildStencilsView(
 
 	more.addEventListener('click', () => {
 		const box = more.getBoundingClientRect();
+		renderMenu();
 		moreMenu.openAt?.(box.left, box.bottom);
 	});
 	moreMenu.addEventListener('office-command', (event) => {
@@ -200,6 +233,7 @@ export function buildStencilsView(
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (command.startsWith('stencil:')) toggleStencil(command.slice('stencil:'.length));
 		else if (command === 'open-stencil-file') picker.open();
+		else if (command === 'new-stencil') authoring.create();
 	});
 	quickToggle.addEventListener('click', () => {
 		quick.hidden = !quick.hidden;
@@ -208,6 +242,11 @@ export function buildStencilsView(
 	});
 	sections.addEventListener('click', (event) => {
 		const target = event.target as Element;
+		const action = target.closest<HTMLElement>('[data-stencil-actions]');
+		if (action?.dataset.stencilActions) {
+			authoring.openSection(action, action.dataset.stencilActions);
+			return;
+		}
 		const close = target.closest<HTMLElement>('[data-close-stencil]');
 		if (close) return toggleStencil(close.dataset.closeStencil!);
 		const title = target.closest<HTMLElement>('.stencil-title');
@@ -222,53 +261,12 @@ export function buildStencilsView(
 		if (open) collapsed.delete(section.dataset.stencil!);
 		else collapsed.add(section.dataset.stencil!);
 	});
-	pane.addEventListener('contextmenu', (event) => {
-		const button = (event.target as Element).closest?.<HTMLElement>('[data-master]');
-		const mine = button && files.fileMaster(button.dataset.master!);
-		if (button && mine) {
-			// A master of an opened stencil file can be collected into My Shapes.
-			event.preventDefault();
-			menuMaster = button.dataset.master;
-			masterMenu.replaceChildren(
-				menuItem(
-					doc,
-					'my-shapes',
-					files.inMyShapes(menuMaster!) ? 'Remove from My Shapes' : 'Add to My Shapes',
-				),
-			);
-			masterMenu.openAt?.(event.clientX, event.clientY);
-			return;
-		}
-		const found = button && findMaster(button.dataset.master!);
-		if (!found) return;
-		event.preventDefault();
-		menuMaster = found.master.id;
-		const added = quickIds(found.stencil).includes(menuMaster);
-		masterMenu.replaceChildren(
-			menuItem(doc, 'quick-shapes', added ? 'Remove from Quick Shapes' : 'Add to Quick Shapes'),
-		);
-		masterMenu.openAt?.(event.clientX, event.clientY);
-	});
-	masterMenu.addEventListener('office-command', (event) => {
-		event.stopPropagation();
-		if (menuMaster && files.fileMaster(menuMaster)) {
-			files.toggleMine(menuMaster);
-			return render();
-		}
-		const found = menuMaster && findMaster(menuMaster);
-		if (!found) return;
-		const ids = quickIds(found.stencil);
-		saved.quick[found.stencil.id] = ids.includes(found.master.id)
-			? ids.filter((id) => id !== found.master.id)
-			: [...ids, found.master.id];
-		save(doc, saved);
-		renderQuick();
-	});
+
 	render();
 	panel.append(more, quickToggle, quick, picker.status, sections, picker.input);
 	return {
 		// The caller puts the menus on the pane, so they open from the Search view too.
-		menus: [moreMenu, masterMenu],
+		menus: [moreMenu, masterMenu, authoring.menu],
 		setDocument(next, opened = true) {
 			// An opened drawing always starts from its own stencils, even when it lists what the
 			// last one did (two drawings without masters or docked stencils).

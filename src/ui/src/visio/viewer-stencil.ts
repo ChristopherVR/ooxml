@@ -7,6 +7,7 @@ import {
 	visioMasterDropRefusal,
 	visioStencilDropCommand,
 } from 'ooxml-core/visio/ui';
+import { bindStencilDrawing } from './stencil-drawing';
 import { stencilFiles } from './stencil-files';
 import { MASTER_MIME, findMaster, masterCreation, setShapesDocument } from './shapes-window';
 import {
@@ -87,6 +88,7 @@ export function wireStencilPane(
 		setShapesDocument(pane, next, opened);
 	};
 	follow(controller.state.document);
+	bindStencilDrawing(pane, controller);
 	const unfollow = controller.subscribe((state) => follow(state.document));
 	// Drops are added one at a time, in the order they were made, each where it was released.
 	let queue = Promise.resolve();
@@ -226,6 +228,7 @@ export function wireStencilPane(
 		},
 		dispose() {
 			unfollow();
+			bindStencilDrawing(pane);
 			events.abort();
 		},
 	};

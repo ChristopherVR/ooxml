@@ -1,4 +1,5 @@
-import { createVsdx, editVsdx, type VisioEdit } from '../index';
+import { createVsdx } from '../create-document';
+import { editVsdx, type VisioEdit } from '../edit';
 
 export interface SampleBox {
 	id: string;

@@ -2,7 +2,12 @@ import JSZip from 'jszip';
 import { elements } from '../xml/index';
 import { VisioPackage } from './package';
 import { fail, decodePath, type VisioPackageLimits } from './package-common';
-import { DRAWING_MACRO_MAIN, EDITABLE_MAIN_TYPES } from './package-kind';
+import {
+	DRAWING_MACRO_MAIN,
+	EDITABLE_MAIN_TYPES,
+	STENCIL_MAIN,
+	STENCIL_MACRO_MAIN,
+} from './package-kind';
 import { isSignaturePart } from '../opc/signature/index';
 import { related, indexedPart, visioXml } from './parts';
 import { attribute, children } from './sheet';
@@ -11,7 +16,13 @@ export async function openEditablePackage(
 	bytes: Uint8Array,
 	limits: VisioPackageLimits,
 	check: () => void,
-): Promise<{ pkg: VisioPackage; parts: Map<string, Uint8Array>; pages: Map<string, string> }> {
+	stencil = false,
+): Promise<{
+	pkg: VisioPackage;
+	parts: Map<string, Uint8Array>;
+	pages: Map<string, string>;
+	mainType: string;
+}> {
 	// An edit copies the parts it changes, so each part it reads is charged twice.
 	const pkg = await VisioPackage.open(bytes, limits, 2);
 	const types = await pkg.readXml('[Content_Types].xml', 'Types');
@@ -28,14 +39,22 @@ export async function openEditablePackage(
 	const overrides = elements(types).filter(
 		(node) => node.localName === 'Override' && attribute(node, 'PartName') === `/${documentPart}`,
 	);
+	const mainType = overrides[0]?.getAttribute('ContentType') ?? '';
 	if (
 		overrides.length !== 1 ||
-		!EDITABLE_MAIN_TYPES.has(overrides[0]?.getAttribute('ContentType') ?? '')
+		(stencil
+			? mainType !== STENCIL_MAIN && mainType !== STENCIL_MACRO_MAIN
+			: !EDITABLE_MAIN_TYPES.has(mainType))
 	)
-		fail('UNSUPPORTED_FORMAT', 'Editing supports only VSDX and VSDM drawing packages.');
+		fail(
+			'UNSUPPORTED_FORMAT',
+			stencil
+				? 'Editing requires a .vssx or .vssm stencil.'
+				: 'Editing supports only VSDX and VSDM drawing packages.',
+		);
 	// Signatures and macros are opaque parts: signatures are dropped before an edit
 	// (prepareVisioPackageForEdit) and the VBA project is carried byte for byte, never run.
-	const macroEnabled = overrides[0]?.getAttribute('ContentType') === DRAWING_MACRO_MAIN;
+	const macroEnabled = mainType === DRAWING_MACRO_MAIN || mainType === STENCIL_MACRO_MAIN;
 	const parts = new Map<string, Uint8Array>();
 	for (const path of pkg.paths()) {
 		check();
@@ -63,9 +82,10 @@ export async function openEditablePackage(
 		parts.set(path, new Uint8Array(await pkg.readBytes(path)));
 	}
 	await visioXml(pkg, documentPart, 'VisioDocument');
-	const pagesPart = await related(pkg, documentPart, 'pages');
-	if (!pagesPart) fail('INVALID_DOCUMENT', 'Missing pages part.');
+	const pagesPart = await related(pkg, documentPart, 'pages', !stencil);
 	const pages = new Map<string, string>();
+	if (stencil) return { pkg, parts, pages, mainType };
+	if (!pagesPart) fail('INVALID_DOCUMENT', 'Missing pages part.');
 	const paths = new Set<string>();
 	for (const page of children(await visioXml(pkg, pagesPart, 'Pages'), 'Page')) {
 		check();
@@ -85,7 +105,7 @@ export async function openEditablePackage(
 		paths.add(path);
 		pages.set(id, path);
 	}
-	return { pkg, parts, pages };
+	return { pkg, parts, pages, mainType };
 }
 
 /** Bounded emitted output. ZIP metadata/compressed representation is not preserved. */
