@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { clippedRibbonLabels } from '../ribbon-labels';
+import { expectContextualTabContrast } from './contextual-tab-contrast';
 import { openFixture } from './fixture-files';
 import { clickRibbonControl, editor, FRAMEWORKS, goToCell, ribbon } from './helpers';
 
@@ -50,6 +51,8 @@ for (const framework of FRAMEWORKS) {
 		).toHaveCount(0);
 
 		await goToCell(page, 'A2');
+		await expectContextualTabContrast(tab('PivotTable Analyze'));
+		await expectContextualTabContrast(tab('PivotTable Design'));
 		await tab('PivotTable Analyze').click();
 		const analyze = panel('pivot-analyze');
 		for (const id of [

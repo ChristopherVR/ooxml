@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { expectContextualTabContrast } from './contextual-tab-contrast';
 import {
 	clickRibbonControl,
 	editor,
@@ -22,7 +23,9 @@ test('create, format, clear and undo sparklines through the ribbon', async ({ pa
 	await create.getByRole('button', { name: 'OK', exact: true }).click();
 	const spark = grid(page).locator('.xg-c:not([hidden]) .xg-spark');
 	await expect(spark).toHaveCount(1);
-	await ribbon(page).getByRole('tab', { name: 'Sparkline', exact: true }).click();
+	const tab = ribbon(page).getByRole('tab', { name: 'Sparkline', exact: true });
+	await tab.click();
+	await expectContextualTabContrast(tab);
 	await clickRibbonControl(
 		page,
 		ribbon(page).locator('[data-command="sparkline.settings"]').first(),

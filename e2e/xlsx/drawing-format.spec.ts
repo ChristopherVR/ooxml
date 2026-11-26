@@ -8,6 +8,7 @@ import {
 } from 'ooxml-core/xlsx';
 import { inspectRasterImage } from 'ooxml-core/drawingml';
 import { encodePng } from '../../src/core/drawingml/raster-encode';
+import { expectContextualTabContrast } from './contextual-tab-contrast';
 import { editor, FRAMEWORKS, goToCell, openLanding, pageErrors } from './helpers';
 
 for (const framework of FRAMEWORKS) {
@@ -50,6 +51,7 @@ for (const framework of FRAMEWORKS) {
 			.click();
 		await pictureTab.focus();
 		await pictureTab.press('Enter');
+		await expectContextualTabContrast(pictureTab);
 		const artistic = host.getByRole('button', { name: 'Artistic Effects' });
 		await expect(artistic).toBeDisabled();
 		await expect(artistic).toHaveAttribute('aria-description', /baked image cache/);
@@ -80,6 +82,7 @@ for (const framework of FRAMEWORKS) {
 		await host.locator('.xg-shape[aria-label="Box"]').first().click();
 		await expect(pictureTab).toHaveCount(0);
 		await shapeTab.click();
+		await expectContextualTabContrast(shapeTab);
 		await host.getByRole('button', { name: 'Shape Styles', exact: true }).click();
 		await expect(
 			host.getByRole('group', { name: 'Theme Styles' }).getByRole('menuitem'),

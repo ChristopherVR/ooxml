@@ -37,7 +37,7 @@
 }
 /* The tab row, File button and collapse button are the shared office-ui-ribbon; these colour it. */
 .xve-ribbon {
-	--office-ribbon-contextual: #0f7b6c;
+	--office-ribbon-contextual: var(--office-accent-ink);
 }
 .xve-ribbon::part(file) {
 	font-weight: 600;
