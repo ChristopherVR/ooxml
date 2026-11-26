@@ -62,6 +62,8 @@ test('reviews, cancels, installs and searches local PowerPoint add-ins', async (
 	await expect(mine).toBeFocused();
 	await mine.press('Enter');
 	await dialog.getByRole('button', { name: 'Remove Notes', exact: true }).click();
+	await expect(dialog).toBeHidden();
+	await expect(mine).toBeFocused();
 	await mine.press('Enter');
 	await expect(dialog).toContainText('No add-ins');
 });
