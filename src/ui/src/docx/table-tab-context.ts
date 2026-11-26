@@ -1,5 +1,6 @@
 import type { Node } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
 import { DEFAULT_TABLE_LOOK, forcesTrackChanges } from 'ooxml-core/docx/ui';
 import type { Table } from 'ooxml-core/docx';
 import type { EditorCore } from './editor-core';
@@ -59,6 +60,26 @@ export function tableTabReason(core: EditorCore, key: TableTabAction['key'], con
 		(context.top !== context.bottom || context.firstColumn !== context.lastColumn)
 	)
 		return 'tableTab.selectCell';
+}
+
+function selectedCellSize(core: EditorCore, view: EditorView, context: Context, height: boolean) {
+	const row = context.node.maybeChild(context.top);
+	const cell = row?.maybeChild(context.firstColumn);
+	const explicit = height ? row?.attrs.properties?.heightTwips : cell?.attrs.widthTwips;
+	if (typeof explicit === 'number' && explicit > 0) return explicit / 1440;
+	const table = view.nodeDOM(context.pos);
+	const draftRow = table instanceof HTMLTableElement ? table.rows[context.top] : undefined;
+	const paragraph = cell?.firstChild?.attrs.id;
+	const printed =
+		core.pages.viewMode === 'print' && typeof paragraph === 'string'
+			? core.shell.canvas?.querySelector<HTMLElement>(
+					`[data-table-cell-paragraph="${CSS.escape(paragraph)}"]`,
+				)
+			: undefined;
+	const measured = height
+		? printed?.offsetHeight || draftRow?.offsetHeight
+		: printed?.offsetWidth || draftRow?.cells[context.firstColumn]?.offsetWidth;
+	return measured ? measured / 96 : undefined;
 }
 
 export function syncTableTab(core: EditorCore): void {
@@ -126,12 +147,9 @@ export function syncTableTab(core: EditorCore): void {
 			control instanceof HTMLInputElement &&
 			!control.matches(':focus')
 		) {
-			const row = context?.node.maybeChild(context.top);
 			const value =
-				control.dataset.dimension === 'height'
-					? row?.attrs.properties?.heightTwips
-					: row?.maybeChild(context?.firstColumn ?? 0)?.attrs.widthTwips;
-			control.value = typeof value === 'number' ? String(Number((value / 1440).toFixed(2))) : '';
+				context && selectedCellSize(core, view, context, control.dataset.dimension === 'height');
+			control.value = value === undefined ? '' : String(Number(value.toFixed(2)));
 		}
 	}
 }

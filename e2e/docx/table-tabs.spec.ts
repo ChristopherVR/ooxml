@@ -249,3 +249,24 @@ test('table ribbon group labels have their own space at 1700 pixels', async ({ p
 		await expect(button).toHaveAttribute('title', name!);
 	}
 });
+
+test('table layout measures automatic row height and column width in inches', async ({ page }) => {
+	await page.setViewportSize({ width: 1700, height: 960 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	const cell = editor.locator('.ProseMirror td').first();
+	await cell.click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	const width = editor.getByRole('spinbutton', { name: 'Column Width (inches)', exact: true });
+	const height = editor.getByRole('spinbutton', { name: 'Row Height (inches)', exact: true });
+	const size = await cell.evaluate((el) => ({
+		width: (el as HTMLElement).offsetWidth / 96,
+		height: (el.parentElement?.offsetHeight ?? 0) / 96,
+	}));
+	expect(size.width).toBeGreaterThan(0);
+	expect(size.height).toBeGreaterThan(0);
+	await expect(width).toHaveValue(String(Number(size.width.toFixed(2))));
+	await expect(height).toHaveValue(String(Number(size.height.toFixed(2))));
+});
