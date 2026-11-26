@@ -48,7 +48,15 @@ export function syncDesignControls(core: EditorCore, toolbar: HTMLElement): void
 	}
 }
 
-const loadDesignGallery = () => Promise.all([import('./design-gallery'), loadThemePresets()]);
+export function loadDesignGallery(): Promise<
+	[typeof import('./design-gallery'), Awaited<ReturnType<typeof loadThemePresets>>]
+> {
+	return Promise.all([import('./design-gallery'), loadThemePresets()]);
+}
+
+export function preloadDesignGallery(): void {
+	void loadDesignGallery().catch(() => {});
+}
 
 export async function openDesignMenu(core: EditorCore, menu: DesignMenu): Promise<void> {
 	const toolbar = core.shell.toolbar;

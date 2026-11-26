@@ -238,8 +238,9 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
 - external workbook links, Visio data record sets and linked chart data are kept but never
   refreshed; Excel web queries and `WEBSERVICE` are not evaluated;
 - fonts come from the device and the file only, unless the host sets `googleFonts` (below);
-- workers and application code are loaded from the page's own origin. Opening a Word Design
-  gallery loads the gallery code and built-in presets. Browsing for or saving a `.thmx` file
+- workers and application code are loaded from the page's own origin. Selecting Word's Design
+  tab loads the gallery code and built-in presets. Creating a Word document can also load those
+  assets if the host has supplied a saved built-in effect preference. Browsing for or saving a `.thmx` file
   loads the theme codec. These requests carry only application asset URLs. Theme files are read
   and saved locally. The document remains open if a Design asset cannot load offline.
   Opening or inserting a TIFF

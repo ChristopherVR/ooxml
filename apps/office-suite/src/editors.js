@@ -450,8 +450,18 @@ function editorView(element, kind) {
 /** A new empty file, made with the format's own area, which its editor loads anyway. */
 export async function blankDocument(kind) {
 	if (kind === 'docx') {
-		const { createDocument, saveDocx, withWordDesignDefaults } = await import('ooxml-core/docx');
-		return saveDocx(withWordDesignDefaults(createDocument(), wordDesignPreferences()?.read()));
+		const { createDocument, parseWordDesignDefaults, saveDocx, withWordDesignDefaults } =
+			await import('ooxml-core/docx');
+		const settings = parseWordDesignDefaults(wordDesignPreferences()?.read());
+		const preset = settings?.effectName
+			? await import('ooxml-core/drawingml')
+					.then(({ loadThemePresets }) => loadThemePresets())
+					.then(({ THEME_EFFECT_PRESETS }) =>
+						THEME_EFFECT_PRESETS.find(({ name }) => name === settings.effectName),
+					)
+					.catch(() => undefined)
+			: undefined;
+		return saveDocx(withWordDesignDefaults(createDocument(), settings, preset));
 	}
 	if (kind === 'xlsx') {
 		const { createWorkbook, saveXlsx } = await import('ooxml-core/xlsx');

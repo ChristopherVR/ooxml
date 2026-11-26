@@ -6,7 +6,11 @@ import { EditorState } from 'prosemirror-state';
 import { refreshWordYjsPresence } from 'ooxml-core/docx/ui';
 import type { DocumentModel } from 'ooxml-core/docx';
 import { createDocument } from 'ooxml-core/docx';
-import { applyWordDesignPreferences, type WordDesignPreferences } from './design-preferences';
+import {
+	restoreWordDesignEffect,
+	wordDesignSeed,
+	type WordDesignPreferences,
+} from './design-preferences';
 import { loadDocument } from 'ooxml-core/docx/load';
 import { isPdfBytes } from './file-commands';
 import { setRibbonLocale } from './ribbon';
@@ -197,11 +201,13 @@ export class DocxEditorElement extends DocxEditorApi {
 	}
 	set documentModel(value: DocumentModel | null) {
 		this.assertDocumentReplaceable();
-		this.replaceDocument(
-			value ?? applyWordDesignPreferences(createDocument(), this.core.wordDesignPreferences),
-		);
+		const seed = value
+			? { model: value, effectName: undefined }
+			: wordDesignSeed(createDocument(), this.core.wordDesignPreferences);
+		this.replaceDocument(seed.model);
 		this.core.shell.chrome?.setSaveState('saved');
 		if (this.isConnected) renderDocument(this.core);
+		restoreWordDesignEffect(this.core, seed.effectName);
 		void refreshDocxWebfonts(this.core);
 		this.core.room.resume();
 	}
@@ -238,11 +244,11 @@ export class DocxEditorElement extends DocxEditorApi {
 		clearTimeout(this.leaving);
 		this.leaving = undefined;
 		installOfficeUiThemeFor(this);
-		if (!this.core.shell.paper && !this.core.loadGeneration && this.core.wordDesignPreferences)
-			this.core.model = applyWordDesignPreferences(
-				this.core.model,
-				this.core.wordDesignPreferences,
-			);
+		if (!this.core.shell.paper && !this.core.loadGeneration && this.core.wordDesignPreferences) {
+			const seed = wordDesignSeed(this.core.model, this.core.wordDesignPreferences);
+			this.core.model = seed.model;
+			restoreWordDesignEffect(this.core, seed.effectName);
+		}
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
 		this.core.room.resume();
@@ -378,6 +384,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.detachedState = undefined;
 		if (bumpGeneration) core.loadGeneration++;
 		if (bumpGeneration) core.loading = false;
+		core.pendingWordDesign = undefined;
 		core.loaded = session;
 		core.model = model;
 		core.endCloudFile();

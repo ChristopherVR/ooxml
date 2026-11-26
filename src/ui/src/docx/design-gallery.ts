@@ -1,4 +1,9 @@
-import { wordDesignDefaults, type DesignEdit, type WordDesignScheme } from 'ooxml-core/docx';
+import {
+	wordDesignDefaults,
+	type DesignEdit,
+	type ThemeCatalog,
+	type WordDesignScheme,
+} from 'ooxml-core/docx';
 import type { EditorCore } from './editor-core';
 import { closeRibbonPopover, mountPopover } from './ribbon-popover';
 import { applyDesignEdit } from './design-commands';
@@ -8,14 +13,37 @@ import { canEditDesign, type DesignMenu } from './design-ribbon-controls';
 import { changeDesignScheme, readDesignSchemes } from './design-scheme-store';
 import { browseTheme, saveTheme } from './design-theme-files';
 import { customEntry, designEntries, type Entry, type Presets } from './design-gallery-entries';
+import { WORD_DESIGN_DEFAULT } from './design-preferences';
 import styles from './design-gallery.css?raw';
 
 const themeColumns = 3;
 
-function saveDefault(core: EditorCore): void {
+export function applySavedDesignEffect(core: EditorCore, theme: ThemeCatalog): void {
+	const view = core.view;
+	if (view) {
+		view.dispatch(
+			view.state.tr
+				.setDocAttribute('documentTheme', theme)
+				.setMeta('addToHistory', false)
+				.setMeta(WORD_DESIGN_DEFAULT, true),
+		);
+		return;
+	}
+	core.model = { ...core.model, theme };
+	const state = core.detachedState;
+	if (state) core.detachedState = state.apply(state.tr.setDocAttribute('documentTheme', theme));
+}
+
+function saveDefault(core: EditorCore, presets: Presets): void {
 	if (!core.wordDesignPreferences || !canEditDesign(core)) return;
-	const defaults = wordDesignDefaults(core.model);
 	try {
+		const current = core.model.theme?.formatScheme;
+		const preset =
+			current &&
+			presets.THEME_EFFECT_PRESETS.find(({ formatScheme }) =>
+				presets.sameThemeFormatScheme(formatScheme, current),
+			);
+		const defaults = wordDesignDefaults(core.model, preset?.name);
 		if (!defaults) throw new Error(translate(core.locale, 'design.defaultError'));
 		core.wordDesignPreferences.write(defaults);
 	} catch {
@@ -68,7 +96,7 @@ export function openDocumentDesign(
 ): void {
 	if (!canEditDesign(core)) return;
 	if (kind === 'default') {
-		openDesignDialog(core, anchor, kind, () => saveDefault(core));
+		openDesignDialog(core, anchor, kind, () => saveDefault(core, presets));
 		return;
 	}
 	const menu = document.createElement('div');

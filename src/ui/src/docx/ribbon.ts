@@ -24,6 +24,7 @@ import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
 import { syncSmartArtFormatGalleries } from './smartart-format-galleries';
 import { buildChartDesignPanel } from './chart-design-ribbon';
 import { panelsOf, setTabHidden } from './ribbon-tab-api';
+import { preloadDesignGallery } from './design-ribbon-controls';
 
 export type { RibbonAction } from './ribbon-action';
 
@@ -104,6 +105,9 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	root.querySelector<HTMLSelectElement>('[aria-label="Layout view"]')!.value = 'draft';
 	attachRibbonBehavior(root);
 	attachRibbonOverflow(root);
+	root.addEventListener('office-ribbon-select', (event) => {
+		if (event instanceof CustomEvent && event.detail?.tab === 'design') preloadDesignGallery();
+	});
 	root.addEventListener('click', (event) => {
 		const target = (event.target as HTMLElement).closest<HTMLButtonElement>('button[data-action]');
 		if (!target) return;

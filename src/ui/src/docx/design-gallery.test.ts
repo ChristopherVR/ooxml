@@ -40,7 +40,13 @@ function mount() {
 					contentType: 'application/octet-stream',
 					widthPx: 120,
 					heightPx: 60,
-					shape: { ...newShape('rect'), effectRef: { index: 3 } },
+					shape: {
+						...newShape('rect'),
+						effectRef: {
+							index: 3,
+							color: { kind: 'scheme', value: 'accent1', transforms: [] },
+						},
+					},
 				},
 			},
 		],
@@ -169,22 +175,23 @@ it('keeps named colour and font schemes across editors and supports rename, reus
 	const confirmation = second.root.querySelector('[data-title="design.deleteSchemeTitle"]');
 	expect(confirmation?.textContent).toContain('Report faces');
 	expect(schemes).toHaveLength(2);
-	confirmation?.querySelector<HTMLButtonElement>('[aria-label="Cancel"]')?.click();
+	const confirmButton = (panel: Element | null, label: string) =>
+		[...(panel?.querySelectorAll('button') ?? [])].find((button) => button.textContent === label);
+	confirmButton(confirmation, 'Cancel')?.click();
 	expect(schemes).toHaveLength(2);
 	second.button('Delete')?.click();
-	second.root
-		.querySelector<HTMLButtonElement>(
-			'[data-title="design.deleteSchemeTitle"] [aria-label="Delete"]',
-		)
-		?.click();
+	confirmButton(
+		second.root.querySelector('[data-title="design.deleteSchemeTitle"]'),
+		'Delete',
+	)?.click();
 	expect(schemes).toMatchObject([{ name: 'Research colors' }]);
 	expect((await loadDocx(await second.editor.saveBytes())).model.theme?.fonts.minor.latin).toBe(
 		'Arial',
 	);
 });
 
-it('provides keyboard gallery navigation, a custom color form and opt-in defaults', async () => {
-	const { editor, root, button, open } = mount();
+it('provides keyboard navigation, custom colors and opt-in design defaults', async () => {
+	const { editor, root, button, open, pick } = mount();
 	expect(button('Set as Default')?.disabled).toBe(true);
 	await open('Colors');
 	const current = root.querySelector('[role="menuitemradio"][aria-checked="true"]');
@@ -197,6 +204,7 @@ it('provides keyboard gallery navigation, a custom color form and opt-in default
 	if (accent) accent.value = '#112233';
 	root.querySelector<HTMLButtonElement>('.dve-design-dialog .dve-dialog-primary')?.click();
 	expect(editor.documentModel?.theme?.colors.accent1).toBe('112233');
+	await pick('Effects', 'Reflection');
 	let stored: WordDesignDefaults | undefined;
 	editor.wordDesignPreferences = {
 		read: () => stored,
@@ -208,11 +216,23 @@ it('provides keyboard gallery navigation, a custom color form and opt-in default
 	await expect.poll(() => root.querySelector('.dve-design-dialog')).not.toBeNull();
 	root.querySelector<HTMLButtonElement>('.dve-design-dialog .dve-dialog-primary')?.click();
 	expect(stored?.theme.colors.accent1).toBe('112233');
+	expect(stored?.effectName).toBe('Reflection');
 	const blank = new DocxEditorElement();
 	blank.wordDesignPreferences = editor.wordDesignPreferences;
 	document.body.append(blank);
 	expect(blank.documentModel?.theme?.colors.accent1).toBe('112233');
 	expect(blank.documentModel?.blocks).toEqual(createDocument().blocks);
+	expect((await loadDocx(await blank.saveBytes())).model.theme?.formatScheme?.name).toBe(
+		'Reflection',
+	);
+	expect(blank.dirty).toBe(false);
+	blank.documentModel = null;
+	expect((await loadDocx(await blank.saveBytes())).model.theme?.formatScheme?.name).toBe(
+		'Reflection',
+	);
+	blank.documentModel = null;
+	blank.documentModel = createDocument();
+	expect((await loadDocx(await blank.saveBytes())).model.theme?.formatScheme).toBeUndefined();
 	editor.wordDesignPreferences = undefined;
 	expect(button('Set as Default')?.disabled).toBe(true);
 });

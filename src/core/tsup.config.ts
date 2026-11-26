@@ -92,6 +92,7 @@ const shared = {
 // (JBIG2, JPEG 2000, the security handler) are chunks loaded on first use and the three entries
 // share one copy of the reader. The CJS build keeps one self-contained file per entry.
 const {
+	index,
 	'drawingml/index': drawingml,
 	'visio/index': _visio,
 	'visio/ui/index': _visioUi,
@@ -101,6 +102,17 @@ const {
 export default defineConfig([
 	{ ...shared, entry: eagerEntries, format: ['esm'], splitting: false },
 	{ ...shared, format: ['cjs'], splitting: false },
+	{
+		...shared,
+		// The root re-exports DrawingML. Keep its gallery assets lazy without pulling root
+		// namespace dependencies into consumers of the DrawingML subpath.
+		entry: { index },
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'chunks/root/[name]-[hash]';
+		},
+	},
 	{
 		...shared,
 		entry: { 'drawingml/index': drawingml },

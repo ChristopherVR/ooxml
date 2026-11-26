@@ -11,11 +11,8 @@ import {
 } from './document-design';
 import type { DocumentModel } from './model';
 import type { ThemeCatalog } from './theme-model';
-import {
-	THEME_EFFECT_PRESETS,
-	sameThemeFormatScheme,
-	type ThemeEffectPresetName,
-} from '../drawingml/theme-effect-presets';
+import type { ThemeFormatScheme } from '../drawingml/format-scheme';
+import { THEME_EFFECT_NAMES, type ThemeEffectPresetName } from '../drawingml/theme-effect-names';
 
 export interface WordDesignDefaults {
 	theme: Omit<ThemeCatalog, 'formatScheme'>;
@@ -81,7 +78,9 @@ export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | un
 	const colorSchemeName = boundedDesignText(theme.colorSchemeName);
 	const fontSchemeName = boundedDesignText(theme.fontSchemeName);
 	const effect = effectPreset(value.effect);
-	const effectName = THEME_EFFECT_PRESETS.find(({ name }) => name === value.effectName)?.name;
+	const effectName = THEME_EFFECT_NAMES.find(
+		(name) => name === (value.effectName === 'Subtle Solid' ? 'Subtle Solids' : value.effectName),
+	);
 	return {
 		theme: {
 			colors,
@@ -97,29 +96,31 @@ export function parseWordDesignDefaults(value: unknown): WordDesignDefaults | un
 	};
 }
 
-export function wordDesignDefaults(model: DocumentModel): WordDesignDefaults | undefined {
+export function wordDesignDefaults(
+	model: DocumentModel,
+	effectName?: ThemeEffectPresetName,
+): WordDesignDefaults | undefined {
 	const { formatScheme, ...theme } = designTheme(model.theme);
-	const preset =
-		formatScheme &&
-		THEME_EFFECT_PRESETS.find(({ formatScheme: preset }) =>
-			sameThemeFormatScheme(preset, formatScheme),
-		);
 	return parseWordDesignDefaults({
 		theme,
 		spacing: designSpacing(model),
 		effect: formatScheme?.name,
-		effectName: preset?.name,
+		effectName,
 	});
 }
 
-export function withWordDesignDefaults(model: DocumentModel, value: unknown): DocumentModel {
+export function withWordDesignDefaults(
+	model: DocumentModel,
+	value: unknown,
+	preset?: { name: ThemeEffectPresetName; formatScheme: ThemeFormatScheme },
+): DocumentModel {
 	const settings = parseWordDesignDefaults(value);
 	if (!settings) return model;
 	const { theme, effect, effectName, spacing } = settings;
-	const preset = THEME_EFFECT_PRESETS.find(({ name }) => name === effectName);
-	const formatScheme = preset
-		? structuredClone(preset.formatScheme)
-		: effect && designEffects(undefined, effect);
+	const formatScheme =
+		preset && preset.name === effectName
+			? structuredClone(preset.formatScheme)
+			: effect && designEffects(undefined, effect);
 	return withDesignSpacing(
 		{
 			...model,

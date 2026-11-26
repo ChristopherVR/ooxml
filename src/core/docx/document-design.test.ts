@@ -52,7 +52,7 @@ describe('Word document design', () => {
 			folHlink: '6C606A',
 		});
 		expect(woodType.majorFont).toBe('Rockwell Condensed');
-		expect(DOCUMENT_THEME_CATALOGUE.some((entry) => entry.id === 'atlas')).toBe(false);
+		expect(DOCUMENT_THEME_CATALOGUE.map((entry) => entry.id)).not.toContain('atlas');
 	});
 	it.each(DOCUMENT_THEME_CATALOGUE)(
 		'round trips the $label catalogue entry',
@@ -99,11 +99,12 @@ describe('Word document design', () => {
 			const model = (await loadDocx(await loaded.save(updated))).model;
 			const reopened = must(model.theme?.formatScheme);
 			expect(sameThemeFormatScheme(reopened, formatScheme)).toBe(true);
-			const defaults = wordDesignDefaults(model);
+			const defaults = wordDesignDefaults(model, name);
 			expect(defaults?.effectName).toBe(name);
-			expect(withWordDesignDefaults(createDocument(), defaults).theme?.formatScheme).toEqual(
-				formatScheme,
-			);
+			expect(
+				withWordDesignDefaults(createDocument(), defaults, { name, formatScheme }).theme
+					?.formatScheme,
+			).toEqual(formatScheme);
 		},
 	);
 	it('paints a faded reflection from the real Word effect reference', async () => {

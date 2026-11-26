@@ -1,7 +1,32 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { demoReady, newDocument, reopenDocument, saveButton } from './helpers';
+import { demoReady, dialogByHeading, newDocument, reopenDocument, saveButton } from './helpers';
+
+test.describe.configure({ mode: 'parallel' });
+
+const requestedDesignAssets = (page: Page) =>
+	page.evaluate(() => {
+		const files = performance.getEntriesByType('resource').map(({ name }) => name);
+		return {
+			gallery: files.some((name) => /design-gallery-/.test(name)),
+			presets: files.some((name) => /theme-gallery-/.test(name)),
+		};
+	});
+
+for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`Word Design preloads in the ${framework} demo on tab selection`, async ({ page }) => {
+		await page.goto(`/?framework=${framework}`);
+		await demoReady(page);
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		expect(await requestedDesignAssets(page)).toEqual({ gallery: false, presets: false });
+		await editor.getByRole('tab', { name: 'Design', exact: true }).click();
+		await expect.poll(() => requestedDesignAssets(page)).toEqual({ gallery: true, presets: true });
+		await editor.getByRole('button', { name: 'Themes', exact: true }).click();
+		await expect(editor.getByRole('menuitemradio', { name: 'Banded', exact: true })).toBeVisible();
+	});
+}
 
 test('Word Design previews, applies, undoes and reopens design choices', async ({ page }) => {
 	await page.goto('/?framework=vanilla');
@@ -10,13 +35,9 @@ test('Word Design previews, applies, undoes and reopens design choices', async (
 	const editor = page.locator('docx-editor');
 	const surface = editor.locator('.ProseMirror').first();
 	await surface.fill('Theme sample');
-	const requestsDesign = () =>
-		page.evaluate(() =>
-			performance.getEntriesByType('resource').some((entry) => /design-gallery-/.test(entry.name)),
-		);
-	expect(await requestsDesign()).toBe(false);
+	expect(await requestedDesignAssets(page)).toEqual({ gallery: false, presets: false });
 	await editor.getByRole('tab', { name: 'Design', exact: true }).click();
-	expect(await requestsDesign()).toBe(false);
+	await expect.poll(() => requestedDesignAssets(page)).toEqual({ gallery: true, presets: true });
 	await expect(editor.getByRole('button', { name: 'Set as Default', exact: true })).toBeDisabled();
 
 	const choose = async (name: string, choice: string) => {
@@ -25,7 +46,6 @@ test('Word Design previews, applies, undoes and reopens design choices', async (
 		await menu.getByRole('menuitemradio', { name: choice, exact: true }).click();
 	};
 	await choose('Themes', 'Facet');
-	await expect.poll(requestsDesign).toBe(true);
 	await choose('Fonts', 'Georgia');
 	await expect(surface.locator('p')).toHaveCSS('font-family', /Georgia/);
 	await choose('Colors', 'Grayscale');
@@ -106,9 +126,10 @@ test('Word navigates theme rows and confirms deletion of custom schemes', async 
 		.getByRole('group', { name: 'Manage custom schemes' })
 		.getByRole('menuitem', { name: 'Edit Reading' })
 		.click();
-	const edit = editor.getByRole('dialog', { name: 'Customize Fonts', exact: true });
+	const edit = dialogByHeading(editor, 'Customize Fonts');
+	await expect(edit.getByText('Heading font', { exact: true })).toBeVisible();
 	await edit.getByRole('button', { name: 'Delete', exact: true }).click();
-	const confirm = editor.getByRole('dialog', { name: 'Delete custom scheme', exact: true });
+	const confirm = dialogByHeading(editor, 'Delete custom scheme');
 	await expect(confirm).toContainText('Reading');
 	await confirm.getByRole('button', { name: 'Cancel', exact: true }).click();
 	await expect(edit.getByRole('button', { name: 'Delete', exact: true })).toBeFocused();

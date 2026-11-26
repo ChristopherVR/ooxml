@@ -8,6 +8,7 @@ import type { DocxCollaborationState } from './collaboration-types';
 import { yjsPresenceProfile } from './yjs-presence';
 import { saveEditorModel } from './editor-save';
 import type { EditorCore } from './editor-core';
+import { saveDocx } from 'ooxml-core/docx';
 import { currentModel } from './current-model';
 import type { EditorPdfOptions } from './pdf/editor-pdf';
 import type { DocxPdfResult } from './pdf/export-pdf';
@@ -303,6 +304,14 @@ export abstract class DocxEditorApi extends HTMLElementBase {
 	/** Serialized document bytes: the loaded package's own writer, else a fresh DOCX from the model. */
 	async saveBytes(): Promise<Uint8Array> {
 		const { core } = this;
+		const pending = core.pendingWordDesign;
+		if (pending) {
+			const model = currentModel(core);
+			const loaded = core.loaded;
+			const generation = core.loadGeneration;
+			await pending;
+			if (generation !== core.loadGeneration) return loaded ? loaded.save(model) : saveDocx(model);
+		}
 		return saveEditorModel(core, currentModel(core));
 	}
 

@@ -3,8 +3,6 @@ import { refitRibbon } from './ribbon-overflow';
 import { applyShellLabels } from './shell-labels';
 import type { CollaborativeEditor } from 'ooxml-core/collab';
 import type { DocumentModel } from 'ooxml-core/docx';
-import { createDocument } from 'ooxml-core/docx';
-import { applyWordDesignPreferences } from './design-preferences';
 import type { EditorCore } from './editor-core';
 import { emit, on } from './events';
 import { createRibbon } from './ribbon';
@@ -39,7 +37,7 @@ import { editorPdfContext } from './pdf/pdf-context';
 /** Element-level operations the chrome needs; they stay on the element because they are public API. */
 export interface ShellApi {
 	setReadOnly(readOnly: boolean): void;
-	setDocumentModel(model: DocumentModel): void;
+	setDocumentModel(model: DocumentModel | null): void;
 	load(bytes: Uint8Array | ArrayBuffer): Promise<void>;
 	saveBytes(): Promise<Uint8Array>;
 	exportPdf(options?: EditorPdfOptions): Promise<{ bytes: Uint8Array }>;
@@ -61,10 +59,7 @@ function createChrome(core: EditorCore, api: ShellApi): EditorChrome {
 		setReadOnly: (readOnly) => {
 			core.reportReadOnly(() => api.setReadOnly(readOnly));
 		},
-		newDocument: () =>
-			api.setDocumentModel(
-				applyWordDesignPreferences(createDocument(), core.wordDesignPreferences),
-			),
+		newDocument: () => api.setDocumentModel(null),
 		load: (bytes) => api.load(bytes),
 		save: () => api.saveBytes(),
 		exportPdf: (options) => api.exportPdf(options),

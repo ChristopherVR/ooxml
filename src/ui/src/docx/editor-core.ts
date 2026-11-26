@@ -1,6 +1,6 @@
 import { syncDesignControls } from './design-ribbon-controls';
 import { bodyImageNodeViews } from './body-image-node-views';
-import type { WordDesignPreferences } from './design-preferences';
+import { WORD_DESIGN_DEFAULT, type WordDesignPreferences } from './design-preferences';
 import { withStyleCatalogs } from './style-catalog-state';
 import type { ContextMenu } from './context-menu';
 import type { CloudFileProvider, DocumentStorage } from 'ooxml-core/embedding';
@@ -161,6 +161,7 @@ export class EditorCore {
 	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
 	storage: DocumentStorage | undefined = undefined;
 	wordDesignPreferences: WordDesignPreferences | undefined;
+	pendingWordDesign: Promise<void> | undefined;
 	/** Cloud places File > Open offers next to this device (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
 	/**
@@ -455,8 +456,10 @@ export class EditorCore {
 			this.pages.refreshPageStyles();
 			this.pages.relayout();
 			if (stylesChanged || themeChanged) this.parts.refreshReviewDisplay();
-			this.shell.chrome?.setSaveState('dirty');
-			this.notifyChange();
+			if (!transaction.getMeta(WORD_DESIGN_DEFAULT)) {
+				this.shell.chrome?.setSaveState('dirty');
+				this.notifyChange();
+			}
 			if (
 				(previousParts !== view.state.doc.attrs.sectionParts ||
 					previousNotes !== view.state.doc.attrs.noteParts) &&
