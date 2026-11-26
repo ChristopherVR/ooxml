@@ -43,7 +43,7 @@ export function groupSelectedShapes(
 	const placement = parsePlacement(current.attrs.placement);
 	const shape = shapeSpecOf(current);
 	if (!placement || !shape) return;
-	const geometry = drawingGeometry(core, view, pos, placement);
+	const geometry = drawingGeometry(core, view, pos);
 	if (!geometry) return;
 	if (action === 'ungroup') {
 		const parts = ungroupDrawingShapes(geometry.box, shape);
@@ -79,7 +79,7 @@ export function groupSelectedShapes(
 			doc.resolve(at).parent !== parent
 		)
 			return [];
-		const located = drawingGeometry(core, view, at, prior);
+		const located = drawingGeometry(core, view, at);
 		return located?.sheet === geometry.sheet
 			? [
 					{

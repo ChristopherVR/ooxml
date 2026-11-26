@@ -109,7 +109,7 @@ function align(
 		return;
 	}
 	const items = drawings.flatMap(({ pos, placement }) => {
-		const geometry = placement && drawingGeometry(core, view, pos, placement);
+		const geometry = placement && drawingGeometry(core, view, pos);
 		return placement && geometry ? [{ pos, placement, ...geometry }] : [];
 	});
 	const first = items[0];
@@ -223,6 +223,13 @@ export function runArrange(
 	const { key, value } = action;
 	if (key === 'pane') return toggleArrangePane(core, view);
 	if (!view.editable || core.readOnly) return;
+	if (
+		core.pages.viewMode !== 'print' &&
+		(key === 'align' ||
+			key === 'group' ||
+			(key === 'wrap' && (value === 'move' || value === 'fix')))
+	)
+		return;
 	const { selection, doc } = view.state;
 	const positions = drawingPositions(view.state);
 	const pos = selection.from;
@@ -266,7 +273,7 @@ export function runArrange(
 			drawingWrapOf(image.anchored, placement),
 		);
 	} else if (key === 'wrap' && placement && (value === 'move' || value === 'fix')) {
-		const geometry = drawingGeometry(core, view, pos, placement);
+		const geometry = drawingGeometry(core, view, pos);
 		if (geometry)
 			applyPlacement(
 				tr,

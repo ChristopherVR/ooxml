@@ -138,6 +138,7 @@ export function syncArrange(
 	state: EditorState,
 	editable: boolean,
 	locale: EditorLocale,
+	printLayout: boolean,
 ) {
 	const positions = drawingPositions(state);
 	const node = positions.length ? state.doc.nodeAt(state.selection.from) : null;
@@ -151,18 +152,22 @@ export function syncArrange(
 			key === 'direction'
 				? editable && Boolean(node?.attrs.textBoxContent || textDirectionCellAvailable(state))
 				: key === 'align' || key === 'group'
-					? floated
+					? floated && printLayout
 					: drawing;
 		control.disabled = !possible;
 		const unavailable =
-			editable && key === 'direction'
-				? 'Select a text box or editable table cell.'
-				: editable && drawing && !floated
-					? 'Select a floating drawing.'
-					: reason;
+			(key === 'align' || key === 'group') && !printLayout
+				? 'Switch to Print Layout to arrange drawings.'
+				: editable && key === 'direction'
+					? 'Select a text box or editable table cell.'
+					: editable && drawing && !floated
+						? 'Select a floating drawing.'
+						: reason;
 		control.title = possible
 			? (control.getAttribute('aria-label') ?? '')
 			: translate(locale, unavailable);
+		if (possible) control.removeAttribute('aria-description');
+		else control.setAttribute('aria-description', translate(locale, unavailable));
 		const disableOption = (value: string, disabled: boolean, reason?: LocalizationKey) => {
 			const option = [...control.options].find((candidate) => candidate.value === value);
 			if (option) {
@@ -174,8 +179,11 @@ export function syncArrange(
 			control.value = node
 				? drawingWrapOf(Boolean(node.attrs.anchored), parsePlacement(node.attrs.placement))
 				: '';
-			disableOption('move', !floated, 'Select a floating drawing.');
-			disableOption('fix', !floated, 'Select a floating drawing.');
+			const reason = printLayout
+				? 'Select a floating drawing.'
+				: 'Switch to Print Layout to arrange drawings.';
+			disableOption('move', !floated || !printLayout, reason);
+			disableOption('fix', !floated || !printLayout, reason);
 			disableOption('points', true, 'Wrap point editing is unavailable.');
 		}
 		if (key === 'order')

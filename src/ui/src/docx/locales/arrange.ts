@@ -202,6 +202,13 @@ const entries = [
 		'No se pueden editar los puntos de ajuste.',
 		'无法编辑环绕顶点。',
 	],
+	[
+		'Switch to Print Layout to arrange drawings.',
+		'Passez en mode Page pour organiser les dessins.',
+		'Wechseln Sie zum Drucklayout, um Zeichnungen anzuordnen.',
+		'Cambie a Diseño de impresión para organizar los dibujos.',
+		'切换到页面视图以排列绘图。',
+	],
 ] as const;
 
 type Key = (typeof entries)[number][0];

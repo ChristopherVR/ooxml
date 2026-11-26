@@ -37,6 +37,7 @@ export function refreshEditorControls(
 	commentsOpen = false,
 	canEditComments = !readOnly && !collaboration,
 	canAuthorStyles = !readOnly && !collaboration && !model.protection?.enforced,
+	printLayout = false,
 ): { pageText: string; wordText: string } | undefined {
 	toolbar
 		?.querySelectorAll<HTMLButtonElement | HTMLSelectElement | HTMLInputElement>(
@@ -96,7 +97,7 @@ export function refreshEditorControls(
 		syncContextualTabs(toolbar, state);
 		syncShapeFormat(toolbar, state, view.editable && !readOnly);
 		syncPictureFormat(toolbar, state, view.editable && !readOnly);
-		syncArrange(toolbar, state, view.editable && !readOnly, locale);
+		syncArrange(toolbar, state, view.editable && !readOnly, locale, printLayout);
 		syncChartDesign(toolbar, state, view.editable && !readOnly);
 		syncRuler(toolbar, view, model);
 		const trackButton = findLocalizedControl<HTMLButtonElement>(toolbar, 'Track changes');

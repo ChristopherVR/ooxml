@@ -505,6 +505,7 @@ export class EditorCore {
 				this.canEditBody() &&
 				!this.collab.active &&
 				!this.model.protection?.enforced,
+			this.pages.viewMode === 'print',
 		);
 		if (toolbar) syncDesignControls(this, toolbar);
 		syncMailingsRibbon(this);
