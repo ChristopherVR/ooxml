@@ -5,7 +5,7 @@ import { defineTaskPane } from '../chrome/task-pane';
 import { definer } from '../registry';
 import type { OfficeServiceText } from '../dialog/office-service-dialog';
 import type { AddInDialogHost } from './add-in-dialog';
-import type { OfficeAddInSelection } from './add-in-runtime-settings';
+import { ADD_IN_RUNTIME_CHANGED, type OfficeAddInSelection } from './add-in-runtime-settings';
 import {
 	ADD_IN_TIMEOUT,
 	HOST_NAMES,
@@ -24,6 +24,7 @@ interface PaneOptions {
 	permissions: readonly string[];
 	selection: OfficeAddInSelection | undefined;
 	active: () => boolean;
+	scopes: readonly AddInDialogHost[];
 	t: OfficeServiceText;
 	restoreFocus: () => void;
 }
@@ -91,8 +92,15 @@ class OfficeUiAddInPane extends OfficeElement {
 			this.#status = '';
 			this.requestUpdate();
 		};
+		const revoke = () => {
+			if (options.active()) return;
+			this.remove();
+			options.restoreFocus();
+		};
+		for (const scope of options.scopes) scope.addEventListener(ADD_IN_RUNTIME_CHANGED, revoke);
 		this.#stop = () => {
 			detach();
+			for (const scope of options.scopes) scope.removeEventListener(ADD_IN_RUNTIME_CHANGED, revoke);
 			window.clearTimeout(timer);
 			port?.close();
 			frame.remove();

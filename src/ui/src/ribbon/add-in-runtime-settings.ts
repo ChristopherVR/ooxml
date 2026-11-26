@@ -14,12 +14,14 @@ export interface OfficeAddInRuntime {
 }
 
 const RUNTIME = Symbol.for('office-ui.add-in-runtime');
+export const ADD_IN_RUNTIME_CHANGED = 'office-add-in-runtime-changed';
 type Settings = AddInDialogHost & { [RUNTIME]?: OfficeAddInRuntime | null };
 
 /** Opt into compatible task panes in this scope. Passing null disables inherited access. */
 export function setOfficeAddInRuntime(host: AddInDialogHost, runtime: OfficeAddInRuntime | null) {
 	const target: Settings = host;
 	target[RUNTIME] = runtime;
+	target.dispatchEvent(new Event(ADD_IN_RUNTIME_CHANGED));
 }
 
 export function addInRuntime(scopes: readonly AddInDialogHost[]) {

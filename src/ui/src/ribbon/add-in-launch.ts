@@ -48,6 +48,7 @@ export function addInLauncher(
 			permissions: manifest.permissions,
 			selection: access,
 			active,
+			scopes,
 			t,
 			restoreFocus:
 				restoreFocus ??

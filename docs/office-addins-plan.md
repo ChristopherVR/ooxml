@@ -353,6 +353,20 @@ publisher-authorized files, and serve only the registered file after applying th
 access policy and size limit. Return 404 for unregistered IDs. The asset ID is a lookup key.
 The backend needs no URL fetching or Microsoft credentials to implement this reference flow.
 
+For a demo-only resolver, use a URL flag and a generated fixture kept with the demo:
+
+```js
+if (new URLSearchParams(location.search).get('demoMarketplace') === '1') {
+	setOfficeAddInMarketplaceResolver(root, async (id) => {
+		if (id !== 'WA999999999') throw new Error('Unknown demo add-in');
+		return new TextEncoder().encode(generatedDemoManifest);
+	});
+}
+```
+
+The flag enables the field for that demo page. This resolver uses bundled bytes and sends
+no request. Use synthetic IDs and manifests and keep this setup out of production.
+
 One `storefront` option on the add-in host decides what Get Add-ins shows. Future options
 include per-listing Office installation links and remote storefront providers.
 
