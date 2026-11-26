@@ -57,11 +57,23 @@ export function renderContextualTabs(toolbar: HTMLElement, state: ViewerState): 
 	ribbon.setTabHidden?.('org-chart', 'contextual', orgChartSelection(state) === undefined);
 	const panel = active && toolbar.querySelector<HTMLElement>(`[data-ribbon-tab="${active}"]`);
 	if (!panel) return;
-	for (const twin of panel.querySelectorAll<HTMLElement>('[command], [data-menu]')) {
-		const id = twin.getAttribute('command') ?? twin.dataset.menu!;
-		const source = [
-			...toolbar.querySelectorAll<HTMLElement>(`[command="${id}"], [data-menu="${id}"]`),
-		].find((item) => !item.closest('[data-contextual]') && item.localName === twin.localName);
+	const selector = '[command], [data-menu]';
+	const twins = [...panel.querySelectorAll<HTMLElement>(selector)].map((control) => ({
+		control,
+		id: control.getAttribute('command') ?? control.getAttribute('data-menu'),
+	}));
+	const ids = new Set(twins.map(({ id }) => id));
+	const sources = new Map<string, Map<string, HTMLElement>>();
+	for (const control of toolbar.querySelectorAll<HTMLElement>(selector)) {
+		for (const id of [control.getAttribute('command'), control.getAttribute('data-menu')]) {
+			if (id === null || !ids.has(id) || control.closest('[data-contextual]')) continue;
+			const byTag = sources.get(id) ?? new Map<string, HTMLElement>();
+			if (!byTag.has(control.localName)) byTag.set(control.localName, control);
+			sources.set(id, byTag);
+		}
+	}
+	for (const { control: twin, id } of twins) {
+		const source = id === null ? undefined : sources.get(id)?.get(twin.localName);
 		if (!source) continue;
 		for (const name of MIRRORED) {
 			const value = source.getAttribute(name);
