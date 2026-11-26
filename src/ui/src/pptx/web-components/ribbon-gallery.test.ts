@@ -165,7 +165,7 @@ describe('shared ribbon gallery command mode', () => {
 		expect(gallery.open).toBeFalsy();
 	});
 
-	it('shows an unavailable command disabled, with its reason as the tooltip', () => {
+	it('exposes the reason for a disabled command in its tooltip and accessible description', () => {
 		const gallery = document.createElement('pptx-ui-ribbon-gallery');
 		gallery.descriptor = buildRibbonGallery('smartArtPromote', { element });
 		document.body.append(gallery);
@@ -173,6 +173,7 @@ describe('shared ribbon gallery command mode', () => {
 		gallery.addEventListener('gallery-pick', pick);
 		expect(gallery.trigger.disabled).toBeTruthy();
 		expect(gallery.trigger.title).toContain('SmartArt hierarchy');
+		expect(gallery.trigger.getAttribute('aria-description')).toBe(gallery.trigger.title);
 		gallery.trigger.click();
 		expect(pick).not.toHaveBeenCalled();
 	});

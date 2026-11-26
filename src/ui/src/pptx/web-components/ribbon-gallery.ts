@@ -73,6 +73,9 @@ export function officeGalleryState(
 		}),
 	});
 	const command = descriptor.command;
+	const commandHint = command?.hintKey
+		? caption(t, command.hintKey, command.hint ?? label)
+		: undefined;
 	if (command) {
 		registerIcon(`pptx:gallery-${descriptor.id}`, command.iconPath);
 	}
@@ -81,12 +84,12 @@ export function officeGalleryState(
 		label,
 		moreLabel: more === 'pptx.gallery.more' ? `More ${label}` : more,
 		disabled: descriptor.disabled,
-		disabledReason: descriptor.disabledReason,
+		disabledReason: descriptor.disabledReason ?? (descriptor.disabled ? commandHint : undefined),
 		command: command
 			? {
 					icon: `pptx:gallery-${descriptor.id}`,
 					large: command.large,
-					hint: command.hintKey ? caption(t, command.hintKey, command.hint ?? label) : label,
+					hint: commandHint ?? label,
 				}
 			: undefined,
 		sections: descriptor.sections.map((section) => ({

@@ -243,9 +243,11 @@ test('SmartArt Design promotes and demotes the selected canvas node', async ({ p
 	await expect(demote).toBeDisabled();
 	await selectElement(page, node('Beta'));
 	await expect(promote).toBeDisabled();
+	await expect(promote).toHaveAccessibleDescription(/SmartArt hierarchy/u);
 	await expect(demote).toBeEnabled();
 	await demote.click();
 	await expect(promote).toBeEnabled();
+	await expect(promote).not.toHaveAttribute('aria-description');
 	await promote.click();
 	await expect(promote).toBeDisabled();
 });

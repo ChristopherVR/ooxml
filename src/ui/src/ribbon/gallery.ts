@@ -602,9 +602,9 @@ export class OfficeUiGallery extends OfficeElement {
 			class="trigger${command ? ' command' : ''}${command?.large ? ' command-large' : ''}"
 			${unsafeStatic(statics.compactAttribute ?? '')}
 			${unsafeStatic(statics.triggerAttribute)}=${ifDefined(state?.id)}
-			title=${triggerTitle}
+			title=${disabled ? (state?.disabledReason ?? triggerTitle) : triggerTitle}
 			aria-label=${command ? title : triggerTitle}
-			aria-description=${ifDefined(state?.disabledReason)}
+			aria-description=${ifDefined(disabled ? state?.disabledReason : undefined)}
 			aria-haspopup=${ifDefined(command ? undefined : 'dialog')}
 			aria-expanded=${ifDefined(command || !state ? undefined : String(this.opened))}
 			?disabled=${!state || disabled}
