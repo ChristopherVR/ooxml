@@ -33,6 +33,7 @@ import {
 } from './support/deck';
 import {
 	dragBy,
+	expectCountHolds,
 	pressShortcut,
 	shortcutReference,
 	slideLeftOf,
@@ -87,11 +88,15 @@ async function openForDrag(page: Page): Promise<{ source: Locator; scale: number
 }
 
 /** Assert a slide-space x position, allowing a pixel of measurement noise. */
-function expectSlideX(actual: number, expected: number, what: string): void {
-	expect(
-		Math.abs(actual - expected),
-		`${what} (measured ${actual.toFixed(1)} slide px)`,
-	).toBeLessThan(1.5);
+async function expectSlideX(
+	source: Locator,
+	scale: number,
+	expected: number,
+	what: string,
+): Promise<void> {
+	await expect
+		.poll(async () => Math.abs((await slideLeftOf(source, scale)) - expected), { message: what })
+		.toBeLessThan(1.5);
 }
 
 test.describe('editor keyboard shortcuts', () => {
@@ -170,9 +175,9 @@ test.describe('editor keyboard shortcuts', () => {
 
 	test('Ctrl+C then Ctrl+V pastes exactly one copy', async ({ page }) => {
 		await openWithSelection(page);
-		await pressShortcut(page, 'ControlOrMeta+c', 300);
-		await pressShortcut(page, 'ControlOrMeta+v', 800);
-		await expect(slideElements(page), 'one copy pasted onto a two-shape slide').toHaveCount(3);
+		await pressShortcut(page, 'ControlOrMeta+c');
+		await pressShortcut(page, 'ControlOrMeta+v');
+		await expectCountHolds(page, slideElements(page), 3, 'one copy pasted onto a two-shape slide');
 	});
 
 	test('paste yields an empty clipboard shortcut and claims a populated internal clipboard', async ({
@@ -199,34 +204,35 @@ test.describe('editor keyboard shortcuts', () => {
 				true,
 			);
 		});
+		// Nothing to wait for: an empty clipboard must add nothing, so give a late paste time to land.
 		await pressShortcut(page, 'ControlOrMeta+v', 300);
 		await expect(page.locator('body')).toHaveAttribute('data-paste-key-prevented', 'false');
 		await expect(slideElements(page)).toHaveCount(2);
 
-		await pressShortcut(page, 'ControlOrMeta+c', 300);
-		await pressShortcut(page, 'ControlOrMeta+v', 800);
+		await pressShortcut(page, 'ControlOrMeta+c');
+		await pressShortcut(page, 'ControlOrMeta+v');
 		await expect(page.locator('body')).toHaveAttribute('data-paste-key-prevented', 'true');
-		await expect(slideElements(page)).toHaveCount(3);
+		await expectCountHolds(page, slideElements(page), 3);
 	});
 
 	test('Ctrl+X removes the selected element and Ctrl+V puts it back', async ({ page }) => {
 		await openWithSelection(page);
-		await pressShortcut(page, 'ControlOrMeta+x', 700);
+		await pressShortcut(page, 'ControlOrMeta+x');
 		await expect(slideElements(page), 'Ctrl+X must remove the cut element').toHaveCount(1);
-		await pressShortcut(page, 'ControlOrMeta+v', 800);
-		await expect(slideElements(page), 'Ctrl+V must restore exactly one element').toHaveCount(2);
+		await pressShortcut(page, 'ControlOrMeta+v');
+		await expectCountHolds(page, slideElements(page), 2, 'Ctrl+V must restore exactly one element');
 	});
 
 	test('Ctrl+D duplicates the selection exactly once', async ({ page }) => {
 		await openWithSelection(page);
-		await pressShortcut(page, 'ControlOrMeta+d', 800);
-		await expect(slideElements(page), 'one duplicate, not zero and not two').toHaveCount(3);
+		await pressShortcut(page, 'ControlOrMeta+d');
+		await expectCountHolds(page, slideElements(page), 3, 'one duplicate, not zero and not two');
 	});
 
 	test('Ctrl+A selects every element on the slide', async ({ page }) => {
 		await openWithSelection(page);
-		await pressShortcut(page, 'ControlOrMeta+a', 400);
-		await pressShortcut(page, 'Delete', 800);
+		await pressShortcut(page, 'ControlOrMeta+a');
+		await pressShortcut(page, 'Delete');
 		await expect(
 			slideElements(page),
 			'Ctrl+A must extend the selection to every element, so the Delete that follows empties the slide',
@@ -240,10 +246,10 @@ test.describe('editor keyboard shortcuts', () => {
 		const moved = await slideLeftOf(source, scale);
 		expect(moved, 'the drag itself must move the element').toBeGreaterThan(start + 40);
 
-		await pressShortcut(page, 'ControlOrMeta+z', 700);
-		expectSlideX(await slideLeftOf(source, scale), start, 'Ctrl+Z must undo the move');
-		await pressShortcut(page, 'ControlOrMeta+y', 700);
-		expectSlideX(await slideLeftOf(source, scale), moved, 'Ctrl+Y must redo the move');
+		await pressShortcut(page, 'ControlOrMeta+z');
+		await expectSlideX(source, scale, start, 'Ctrl+Z must undo the move');
+		await pressShortcut(page, 'ControlOrMeta+y');
+		await expectSlideX(source, scale, moved, 'Ctrl+Y must redo the move');
 	});
 
 	test('Ctrl+Shift+Z redoes an undone move', async ({ page }) => {
@@ -251,17 +257,17 @@ test.describe('editor keyboard shortcuts', () => {
 
 		await dragBy(page, source, 90);
 		const moved = await slideLeftOf(source, scale);
-		await pressShortcut(page, 'ControlOrMeta+z', 700);
-		expectSlideX(await slideLeftOf(source, scale), start, 'Ctrl+Z must undo the move');
+		await pressShortcut(page, 'ControlOrMeta+z');
+		await expectSlideX(source, scale, start, 'Ctrl+Z must undo the move');
 
-		await pressShortcut(page, 'ControlOrMeta+Shift+z', 700);
-		expectSlideX(await slideLeftOf(source, scale), moved, 'Ctrl+Shift+Z must redo the move');
+		await pressShortcut(page, 'ControlOrMeta+Shift+z');
+		await expectSlideX(source, scale, moved, 'Ctrl+Shift+Z must redo the move');
 	});
 
 	for (const key of ['Delete', 'Backspace'] as const) {
 		test(`${key} removes the selected element`, async ({ page }) => {
 			await openWithSelection(page);
-			await pressShortcut(page, key, 800);
+			await pressShortcut(page, key);
 			await expect(slideElements(page), `${key} must delete the selection`).toHaveCount(1);
 		});
 	}
@@ -271,24 +277,34 @@ test.describe('editor keyboard shortcuts', () => {
 		const scale = await stageScale(page);
 		const start = await slideLeftOf(source, scale);
 
-		await pressShortcut(page, 'ArrowRight', 400);
-		const nudged = await slideLeftOf(source, scale);
-		expect(nudged - start, 'a bare arrow key nudges one slide pixel').toBeCloseTo(1, 1);
+		await pressShortcut(page, 'ArrowRight');
+		await expect
+			.poll(async () => (await slideLeftOf(source, scale)) - start, {
+				message: 'a bare arrow key nudges one slide pixel',
+			})
+			.toBeCloseTo(1, 1);
 
-		await pressShortcut(page, 'Shift+ArrowRight', 400);
-		const shifted = await slideLeftOf(source, scale);
-		expect(shifted - nudged, 'Shift+arrow nudges ten slide pixels').toBeCloseTo(10, 1);
+		await pressShortcut(page, 'Shift+ArrowRight');
+		await expect
+			.poll(async () => (await slideLeftOf(source, scale)) - start, {
+				message: 'Shift+arrow nudges ten slide pixels',
+			})
+			.toBeCloseTo(11, 1);
 	});
 
 	test('arrow left/right change slide when nothing is selected', async ({ page }) => {
 		await loadDeck(page, SAMPLE_DECK);
 		expect(await slidePosition(page)).toBe('Slide 1 of 7');
 
-		await pressShortcut(page, 'ArrowRight', 800);
-		expect(await slidePosition(page), 'ArrowRight advances exactly one slide').toBe('Slide 2 of 7');
+		await pressShortcut(page, 'ArrowRight');
+		await expect
+			.poll(() => slidePosition(page), { message: 'ArrowRight advances exactly one slide' })
+			.toBe('Slide 2 of 7');
 
-		await pressShortcut(page, 'ArrowLeft', 800);
-		expect(await slidePosition(page), 'ArrowLeft goes back exactly one slide').toBe('Slide 1 of 7');
+		await pressShortcut(page, 'ArrowLeft');
+		await expect
+			.poll(() => slidePosition(page), { message: 'ArrowLeft goes back exactly one slide' })
+			.toBe('Slide 1 of 7');
 	});
 
 	test('Ctrl+G groups the selection and Ctrl+Shift+G ungroups it', async ({ page }) => {
@@ -298,14 +314,14 @@ test.describe('editor keyboard shortcuts', () => {
 		await elements.nth(1).click({ modifiers: ['Shift'] });
 		await nextPaint(page);
 
-		await pressShortcut(page, 'ControlOrMeta+g', 900);
+		await pressShortcut(page, 'ControlOrMeta+g');
 		await expect
 			.poll(() => topLevelElementCount(page), {
 				message: 'Ctrl+G must replace the two shift-selected shapes with one group element',
 			})
 			.toBe(1);
 
-		await pressShortcut(page, 'ControlOrMeta+Shift+g', 900);
+		await pressShortcut(page, 'ControlOrMeta+Shift+g');
 		await expect
 			.poll(() => topLevelElementCount(page), {
 				message: 'Ctrl+Shift+G must ungroup back into two top-level elements',
@@ -315,10 +331,10 @@ test.describe('editor keyboard shortcuts', () => {
 
 	test('? opens the keyboard-shortcut reference and Escape closes it', async ({ page }) => {
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, '?', 700);
+		await pressShortcut(page, '?');
 		await expect(shortcutReference(page), '"?" must open the shortcut reference').toBeVisible();
 
-		await pressShortcut(page, 'Escape', 600);
+		await pressShortcut(page, 'Escape');
 		await expect(shortcutReference(page), 'Escape must close the shortcut reference').toBeHidden();
 	});
 
@@ -328,13 +344,13 @@ test.describe('editor keyboard shortcuts', () => {
 		// by hand, above its shortcut registry; it is a shared-keymap action now
 		// and the other four have to answer it too.
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'ControlOrMeta+/', 700);
+		await pressShortcut(page, 'ControlOrMeta+/');
 		await expect(
 			shortcutReference(page),
 			'Ctrl+/ must open the shortcut reference, the same panel "?" opens',
 		).toBeVisible();
 
-		await pressShortcut(page, 'Escape', 600);
+		await pressShortcut(page, 'Escape');
 		await expect(shortcutReference(page), 'Escape must close it again').toBeHidden();
 	});
 
@@ -345,7 +361,7 @@ test.describe('editor keyboard shortcuts', () => {
 		// Vue writes the command key for the platform (⌘ on macOS, Ctrl elsewhere), so the chords
 		// are matched without it.
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, '?', 700);
+		await pressShortcut(page, '?');
 		const reference = shortcutReference(page);
 		await expect(reference, '"?" must open the shortcut reference').toBeVisible();
 		for (const entry of [
@@ -379,7 +395,7 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		const text = textNodeOf(source, 'SOURCE');
 		await expect(text).toHaveCSS('text-align', 'left');
 
-		await pressShortcut(page, 'ControlOrMeta+e', 500);
+		await pressShortcut(page, 'ControlOrMeta+e');
 
 		await expect(
 			text,
@@ -391,13 +407,13 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		const source = await openWithSelection(page);
 		const text = textNodeOf(source, 'SOURCE');
 
-		await pressShortcut(page, 'ControlOrMeta+r', 500);
+		await pressShortcut(page, 'ControlOrMeta+r');
 		await expect(text).toHaveCSS('text-align', 'right');
 
-		await pressShortcut(page, 'ControlOrMeta+j', 500);
+		await pressShortcut(page, 'ControlOrMeta+j');
 		await expect(text).toHaveCSS('text-align', 'justify');
 
-		await pressShortcut(page, 'ControlOrMeta+l', 500);
+		await pressShortcut(page, 'ControlOrMeta+l');
 		await expect(text).toHaveCSS('text-align', 'left');
 	});
 
@@ -416,14 +432,14 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		const start = await fontSizePx(text);
 		expect(start).toBeCloseTo(28, 1);
 
-		await pressShortcut(page, 'ControlOrMeta+]', 500);
+		await pressShortcut(page, 'ControlOrMeta+]');
 		await expect
 			.poll(() => fontSizePx(text), {
 				message: 'Ctrl+] must step up to the next size on the ladder, not by a flat delta',
 			})
 			.toBeCloseTo(32, 1);
 
-		await pressShortcut(page, 'ControlOrMeta+[', 500);
+		await pressShortcut(page, 'ControlOrMeta+[');
 		// Down from 32px (24pt), the next rung below is 20pt = 26.667px: the
 		// ladder does not remember 28px was never a rung to begin with.
 		await expect.poll(() => fontSizePx(text)).toBeCloseTo(26.667, 1);
@@ -435,10 +451,10 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		const source = await openWithSelection(page);
 		const text = textNodeOf(source, 'SOURCE');
 
-		await pressShortcut(page, 'ControlOrMeta+Shift+>', 500);
+		await pressShortcut(page, 'ControlOrMeta+Shift+>');
 		await expect.poll(() => fontSizePx(text)).toBeCloseTo(32, 1);
 
-		await pressShortcut(page, 'ControlOrMeta+Shift+<', 500);
+		await pressShortcut(page, 'ControlOrMeta+Shift+<');
 		await expect.poll(() => fontSizePx(text)).toBeCloseTo(26.667, 1);
 	});
 
@@ -452,9 +468,9 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		await expect(target).not.toHaveCSS('background-color', 'rgb(255, 0, 0)');
 
 		await selectElement(page, source);
-		await pressShortcut(page, 'ControlOrMeta+Shift+c', 400);
+		await pressShortcut(page, 'ControlOrMeta+Shift+c');
 		await selectElement(page, target);
-		await pressShortcut(page, 'ControlOrMeta+Shift+v', 600);
+		await pressShortcut(page, 'ControlOrMeta+Shift+v');
 
 		await expect(
 			target,
@@ -468,7 +484,7 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		expect(await slidePosition(page)).toBe('Slide 1 of 7');
 		await expect(thumbnail(page, 8), 'the seven-slide deck starts with no slide 8').toHaveCount(0);
 
-		await pressShortcut(page, 'ControlOrMeta+m', 700);
+		await pressShortcut(page, 'ControlOrMeta+m');
 
 		await expect(
 			thumbnail(page, 8),
@@ -481,17 +497,18 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 		// a selection happened without depending on which of the two the binding
 		// treats as "first" in tab order.
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Enter', 400);
-		await pressShortcut(page, 'Delete', 600);
+		await pressShortcut(page, 'Enter');
+		await pressShortcut(page, 'Delete');
 		await expect(slideElements(page), 'one Tab press must select exactly one element').toHaveCount(
 			1,
 		);
 		const survivorOfOneTab = await slideElements(page).first().textContent();
 
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Enter', 400);
-		await pressShortcut(page, 'Tab', 400);
-		await pressShortcut(page, 'Delete', 600);
+		await pressShortcut(page, 'Enter');
+		await pressShortcut(page, 'Tab');
+		await pressShortcut(page, 'Delete');
+		await expect(slideElements(page)).toHaveCount(1);
 		const survivorOfTwoTabs = await slideElements(page).first().textContent();
 
 		expect(
@@ -503,14 +520,16 @@ test.describe('PowerPoint 365 editing shortcuts (alignment, font size, format pa
 
 	test('Shift+Tab cycles the selection backward', async ({ page }) => {
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Enter', 400);
-		await pressShortcut(page, 'Delete', 600);
+		await pressShortcut(page, 'Enter');
+		await pressShortcut(page, 'Delete');
+		await expect(slideElements(page)).toHaveCount(1);
 		const survivorOfFirst = await slideElements(page).first().textContent();
 
 		await loadDeck(page, TWO_SHAPES);
-		await pressShortcut(page, 'Enter', 400);
-		await pressShortcut(page, 'Shift+Tab', 400);
-		await pressShortcut(page, 'Delete', 600);
+		await pressShortcut(page, 'Enter');
+		await pressShortcut(page, 'Shift+Tab');
+		await pressShortcut(page, 'Delete');
+		await expect(slideElements(page)).toHaveCount(1);
 		const survivorOfTabBackward = await slideElements(page).first().textContent();
 
 		expect(
@@ -554,7 +573,7 @@ test.describe('slide-sorter keyboard shortcuts', () => {
 		await loadDeck(page, SAMPLE_DECK);
 		await openSlideSorter(page);
 
-		await pressShortcut(page, 'Escape', 700);
+		await pressShortcut(page, 'Escape');
 		await expect(
 			sorterHeading(page),
 			'Escape must dismiss the slide sorter. Two bindings shipped it with no keyboard at all, ' +
@@ -568,8 +587,8 @@ test.describe('slide-sorter keyboard shortcuts', () => {
 		await expect(thumbnail(page, 8), 'the seven-slide deck starts with no slide 8').toHaveCount(0);
 		await openSlideSorter(page);
 
-		await pressShortcut(page, 'ControlOrMeta+d', 900);
-		await pressShortcut(page, 'Escape', 700);
+		await pressShortcut(page, 'ControlOrMeta+d');
+		await pressShortcut(page, 'Escape');
 
 		// Asserted on the deck through the slides rail, not on the key handler: a
 		// shortcut can be bound, enabled and still reach a callback that does
@@ -640,13 +659,15 @@ test.describe('slide-show keyboard shortcuts', () => {
 			'the show toolbar must exist and be faded out before the shortcut is measured',
 		).toBeLessThan(0.5);
 
-		await pressShortcut(page, 'ControlOrMeta+h', 700);
+		await pressShortcut(page, 'ControlOrMeta+h');
 
-		expect(
-			await chromeOpacity(page),
-			'Ctrl+H must flip the show chrome. Three bindings resolved the action and dropped it, ' +
-				'so the key was swallowed and nothing on screen changed',
-		).toBeGreaterThan(0.5);
+		await expect
+			.poll(() => chromeOpacity(page), {
+				message:
+					'Ctrl+H must flip the show chrome. Three bindings resolved the action and dropped it, ' +
+					'so the key was swallowed and nothing on screen changed',
+			})
+			.toBeGreaterThan(0.5);
 	});
 
 	test('Ctrl+S opens the See All Slides navigator', async ({ page }) => {
@@ -654,7 +675,7 @@ test.describe('slide-show keyboard shortcuts', () => {
 		const navigator = page.getByRole('heading', { name: /see all slides/iu }).first();
 		await expect(navigator, 'the navigator must not already be up').toBeHidden();
 
-		await pressShortcut(page, 'ControlOrMeta+s', 900);
+		await pressShortcut(page, 'ControlOrMeta+s');
 
 		await expect(
 			navigator,

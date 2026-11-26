@@ -13,7 +13,7 @@
  * Run: bunx playwright test paste-special
  */
 import { expect, test } from '@playwright/test';
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { report, stageElements } from './support/context-menu';
 import {
@@ -26,6 +26,7 @@ import {
 import { pressShortcut } from './support/keyboard';
 import { byBinding } from './support/menu-report';
 import { acrossFrameworks } from './support/parity';
+import { nextPaint } from './support/render-ready';
 
 const VIEWPORT = { width: 1440, height: 900 };
 test.use({ viewport: VIEWPORT });
@@ -36,7 +37,19 @@ const SHAPE_TEXT = 'Product Overview';
 async function openDeck(page: Page, origin: string): Promise<void> {
 	await loadDeckAt(page, origin, SAMPLE_DECK);
 	await slideStage(page).waitFor();
-	await page.waitForTimeout(400);
+	await nextPaint(page);
+}
+
+/**
+ * Whether `locator` becomes visible within a few seconds. The probes report a
+ * missing control per binding instead of failing on the first, so they need a
+ * yes or no rather than an assertion.
+ */
+async function visibleSoon(locator: Locator): Promise<boolean> {
+	return locator.waitFor({ state: 'visible', timeout: 5_000 }).then(
+		() => true,
+		() => false,
+	);
 }
 
 /** Select the sample shape and copy it, ready for a Paste Special test. */
@@ -66,7 +79,7 @@ test.describe('cross-binding Paste Special', () => {
 					await selectAndCopy(page);
 					await pressShortcut(page, 'Control+Alt+v');
 					const dialog = pasteSpecialDialog(page);
-					const present = await dialog.isVisible().catch(() => false);
+					const present = await visibleSoon(dialog);
 					const optionCount = present ? await dialog.getByRole('radio').count() : 0;
 					return { present, optionCount };
 				},
@@ -95,7 +108,8 @@ test.describe('cross-binding Paste Special', () => {
 				testInfo,
 				async (page, origin) => {
 					await openDeck(page, origin);
-					await pressShortcut(page, 'Control+Alt+v');
+					// Nothing to wait for when the dialog correctly stays shut.
+					await pressShortcut(page, 'Control+Alt+v', 500);
 					return {
 						present: await pasteSpecialDialog(page)
 							.isVisible()
@@ -130,7 +144,12 @@ test.describe('cross-binding Paste Special', () => {
 					const dialog = pasteSpecialDialog(page);
 					await dialog.getByRole('radio', { name: /keep text only/iu }).check();
 					await dialog.getByRole('button', { name: /^ok$/iu }).click();
-					await page.waitForTimeout(500);
+					await dialog.waitFor({ state: 'hidden' });
+					await expect
+						.poll(() => stageElements(page).count())
+						.not.toBe(before)
+						.catch(() => undefined);
+					await nextPaint(page);
 					return { delta: (await stageElements(page).count()) - before };
 				},
 				{ viewport: VIEWPORT },
@@ -158,7 +177,7 @@ test.describe('cross-binding Paste Special', () => {
 					await selectAndCopy(page);
 					await pressShortcut(page, 'Control+v');
 					const toolbar = page.locator('[data-pptx-paste-options]').first();
-					return { present: await toolbar.isVisible().catch(() => false) };
+					return { present: await visibleSoon(toolbar) };
 				},
 				{ viewport: VIEWPORT },
 			);

@@ -23,7 +23,7 @@ const TWO_SHAPES = fixture('format-painter.pptx');
 test('toggling AutoSave keeps an unsaved edit on the canvas', async ({ page }) => {
 	await loadDeck(page, TWO_SHAPES);
 	await selectElement(page, elementWithText(page, 'SOURCE'));
-	await pressShortcut(page, 'Delete', 800);
+	await pressShortcut(page, 'Delete');
 	await expect(slideElements(page), 'the deletion landed').toHaveCount(1);
 
 	const toggle = page.locator('[role="switch"]').first();

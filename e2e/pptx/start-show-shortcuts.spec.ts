@@ -27,8 +27,9 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 
-import { fixture, loadDeck, thumbnail } from './support/deck';
+import { fixture, loadDeck } from './support/deck';
 import { pressShortcut } from './support/keyboard';
+import { goToSlide, waitForShowSettled } from './support/show';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -59,9 +60,10 @@ async function titleVisible(page: Page, title: string): Promise<boolean> {
  */
 async function openOnGamma(page: Page): Promise<void> {
 	await loadDeck(page, DECK);
-	await thumbnail(page, 3).first().click();
-	await page.waitForTimeout(600);
-	expect(await titleVisible(page, TITLES[2]), 'the editor must be parked on Gamma').toBe(true);
+	await goToSlide(page, 3);
+	await expect
+		.poll(() => titleVisible(page, TITLES[2]), { message: 'the editor must be parked on Gamma' })
+		.toBe(true);
 	// Registered on `window` in the bubble phase AFTER the viewer mounted, so it
 	// runs behind every binding's own listener (root or window) and sees what
 	// they left of the event.
@@ -94,7 +96,8 @@ test.describe('start-show keyboard shortcuts', () => {
 		// DOM and hides it until a show starts.
 		await expect(showToolbar(page), 'no show must be running yet').toBeHidden();
 
-		await pressShortcut(page, 'F5', 900);
+		await pressShortcut(page, 'F5');
+		await waitForShowSettled(page);
 
 		await expectReloadPrevented(page, 'F5');
 		await expect(showToolbar(page), 'F5 must start a slide show').toBeVisible();
@@ -107,7 +110,8 @@ test.describe('start-show keyboard shortcuts', () => {
 	test('Shift+F5 starts the show from the current slide', async ({ page }) => {
 		await openOnGamma(page);
 
-		await pressShortcut(page, 'Shift+F5', 900);
+		await pressShortcut(page, 'Shift+F5');
+		await waitForShowSettled(page);
 
 		await expectReloadPrevented(page, 'Shift+F5');
 		await expect(showToolbar(page), 'Shift+F5 must start a slide show').toBeVisible();
@@ -120,10 +124,12 @@ test.describe('start-show keyboard shortcuts', () => {
 
 	test('F5 during a running show does not restart it', async ({ page }) => {
 		await openOnGamma(page);
-		await pressShortcut(page, 'Shift+F5', 900);
+		await pressShortcut(page, 'Shift+F5');
+		await waitForShowSettled(page);
 		await expect(showToolbar(page)).toBeVisible();
 
-		await pressShortcut(page, 'F5', 900);
+		await pressShortcut(page, 'F5');
+		await waitForShowSettled(page);
 
 		await expect(showToolbar(page), 'the show must still be running').toBeVisible();
 		expect(

@@ -15,6 +15,8 @@ import type { Page } from '@playwright/test';
 
 import { elementWithText, fixture, loadDeck, selectElement, slideStage } from './support/deck';
 import { pressShortcut } from './support/keyboard';
+import { nextPaint } from './support/render-ready';
+import { waitForShowSettled } from './support/show';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -102,7 +104,7 @@ test.describe('paste options strip', () => {
 	test('shows after a paste, applies a format, and goes away', async ({ page }, info) => {
 		await loadDeck(page);
 		await slideStage(page).waitFor();
-		await page.waitForTimeout(400);
+		await nextPaint(page);
 		await copyShape(page);
 		const before = await page.locator('[data-pptx-viewport] [data-element-id]').count();
 		await pressShortcut(page, 'Control+v');
@@ -131,7 +133,7 @@ test.describe('paste options strip', () => {
 	test('is dismissed by the next keystroke', async ({ page }) => {
 		await loadDeck(page);
 		await slideStage(page).waitFor();
-		await page.waitForTimeout(400);
+		await nextPaint(page);
 		await copyShape(page);
 		await pressShortcut(page, 'Control+v');
 		await expect(page.locator('pptx-ui-paste-options')).toHaveCount(1);
@@ -144,7 +146,7 @@ test.describe('dialog footer', () => {
 	async function openPasteSpecial(page: Page) {
 		await loadDeck(page);
 		await slideStage(page).waitFor();
-		await page.waitForTimeout(400);
+		await nextPaint(page);
 		await copyShape(page);
 		await pressShortcut(page, 'Control+Alt+v');
 		const dialog = page
@@ -227,7 +229,7 @@ test.describe('mobile bars', () => {
 		page,
 	}, info) => {
 		await loadDeck(page);
-		await page.waitForTimeout(500);
+		await nextPaint(page);
 		const bar = page.locator('pptx-ui-mobile-bar');
 		const toolbar = page.locator('pptx-ui-mobile-toolbar');
 		await expect(bar).toHaveCount(1);
@@ -255,7 +257,7 @@ test.describe('mobile bars', () => {
 
 	test('tapping Notes toggles the drawer and the pressed state', async ({ page }) => {
 		await loadDeck(page);
-		await page.waitForTimeout(500);
+		await nextPaint(page);
 		const notes = page
 			.getByRole('navigation', { name: 'Editor actions' })
 			.getByRole('button', { name: 'Toggle notes', exact: true });
@@ -266,7 +268,7 @@ test.describe('mobile bars', () => {
 
 	test('use inherited theme tokens and forced colors', async ({ page }) => {
 		await loadDeck(page);
-		await page.waitForTimeout(500);
+		await nextPaint(page);
 		const bar = page.locator('pptx-ui-mobile-bar');
 		await bar.evaluate((host) => host.style.setProperty('--pptx-primary', 'rgb(18, 52, 86)'));
 		const slides = bar.getByRole('button', { name: 'Slides', exact: true });
@@ -285,11 +287,11 @@ test.describe('slide show toolbar', () => {
 			.getByRole('button', { name: /^present$|slide show/iu })
 			.first()
 			.click();
-		await page.waitForTimeout(1500);
+		await waitForShowSettled(page);
 		// The bar auto-hides until the pointer moves.
 		await page.mouse.move(720, 870);
 		await page.mouse.move(721, 868);
-		await page.waitForTimeout(400);
+		await nextPaint(page);
 		return page.locator('pptx-ui-present-toolbar');
 	}
 

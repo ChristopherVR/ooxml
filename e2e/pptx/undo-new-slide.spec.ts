@@ -69,7 +69,7 @@ test.describe('New Slide', () => {
 					.first()
 					.click();
 			} else {
-				await pressShortcut(page, 'ControlOrMeta+m', 700);
+				await pressShortcut(page, 'ControlOrMeta+m');
 			}
 
 			await expect.poll(() => slideCount(page)).toBe(before + 1);

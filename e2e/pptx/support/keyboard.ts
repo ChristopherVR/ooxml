@@ -13,9 +13,10 @@
  *
  * @module e2e/support/keyboard
  */
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import { slideStage } from './deck';
+import { nextPaint } from './render-ready';
 
 /**
  * Layout width, in slide pixels, of the 16:9 fixture decks (13.333in at 96 dpi).
@@ -60,11 +61,34 @@ export async function armKeyboard(page: Page): Promise<FocusState> {
 	});
 }
 
-/** Press one shortcut at the viewer and let the resulting edit settle. */
-export async function pressShortcut(page: Page, key: string, settleMs = 500): Promise<void> {
+/**
+ * Press one shortcut at the viewer and wait for the next paint, so the edit it
+ * made has been rendered. Callers assert the outcome with a retrying
+ * expectation. `settleMs` adds a wall-clock wait, and is only for a check that
+ * something did NOT happen, where there is no state to wait for.
+ */
+export async function pressShortcut(page: Page, key: string, settleMs = 0): Promise<void> {
 	await armKeyboard(page);
 	await page.keyboard.press(key);
-	await page.waitForTimeout(settleMs);
+	await nextPaint(page);
+	if (settleMs > 0) {
+		await page.waitForTimeout(settleMs);
+	}
+}
+
+/**
+ * Expect `locator` to reach `count` matches and still have it a paint later, so
+ * an "exactly one" check also fails when a second, late copy arrives.
+ */
+export async function expectCountHolds(
+	page: Page,
+	locator: Locator,
+	count: number,
+	message?: string,
+): Promise<void> {
+	await expect(locator, message).toHaveCount(count);
+	await nextPaint(page);
+	expect(await locator.count(), message).toBe(count);
 }
 
 /**
