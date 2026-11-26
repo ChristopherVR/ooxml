@@ -37,6 +37,7 @@ import {
 	updateOleIconSize,
 } from './write-drawing-payload';
 import { isElement, makeNS, makeW, named, REL_NS, type XmlDocument, type XmlElement } from './xml';
+import { patchVmlFloat } from './vml-placement';
 
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
@@ -363,6 +364,7 @@ export function createImageRun(
 	}
 	if (base && oldDrawing && sameUnderlyingImage(base, image)) {
 		if (named(oldDrawing, 'pict')) {
+			if (base.vmlFloat) patchVmlFloat(oldDrawing, image, base);
 			clearNonProperties(node, oldContainer);
 			return node;
 		}

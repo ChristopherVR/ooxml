@@ -91,6 +91,7 @@ export function runToInlineNodes(
 					svgPartName: run.image.svgPartName ?? null,
 					transform: run.image.transform ? JSON.stringify(run.image.transform) : null,
 					pictureFill: run.image.pictureFill ? JSON.stringify(run.image.pictureFill) : null,
+					vmlFloat: run.image.vmlFloat === true,
 					unsupported: run.image.unsupported ?? null,
 					textBoxText: run.image.textBoxText ? JSON.stringify(run.image.textBoxText) : null,
 					textBoxEditable: run.image.textBoxEditable ?? null,
@@ -209,6 +210,7 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 				...(child.attrs.drawingId ? { drawingId: child.attrs.drawingId } : {}),
 				...(child.attrs.drawingName ? { drawingName: child.attrs.drawingName } : {}),
 				...(child.attrs.anchored ? { anchored: true } : {}),
+				...(child.attrs.vmlFloat === true ? { vmlFloat: true } : {}),
 				...(child.attrs.svgPartName ? { svgPartName: child.attrs.svgPartName } : {}),
 				...(typeof child.attrs.transform === 'string'
 					? { transform: JSON.parse(child.attrs.transform) }

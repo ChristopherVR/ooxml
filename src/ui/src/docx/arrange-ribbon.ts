@@ -9,6 +9,7 @@ import { menuGallery } from './ribbon-gallery-menu';
 import type { RibbonIcon } from './ribbon-icons';
 import { group, menuSelect, stack, tool } from './ribbon-parts';
 import { textDirectionCellAvailable } from './table-properties';
+import { VML_EDIT_REASON } from './picture-format-commands';
 
 export const WRAPS: Array<[string, string]> = [
 	['inline', 'In Line with Text'],
@@ -151,6 +152,7 @@ export function syncArrange(
 	const node = positions.length ? state.doc.nodeAt(state.selection.from) : null;
 	const drawing = editable && Boolean(node);
 	const floated = drawing && Boolean(node?.attrs.anchored);
+	const vml = node?.attrs.vmlFloat === true;
 	const spec = node ? shapeSpecOf(node) : undefined;
 	const reason: LocalizationKey = editable ? 'Select a drawing first.' : 'Editing is unavailable.';
 	const parent = node && state.doc.resolve(state.selection.from).parent;
@@ -193,6 +195,7 @@ export function syncArrange(
 		} else if ((key === 'align' || key === 'group' || key === 'position') && !printLayout)
 			unavailable = 'Switch to Print Layout to arrange drawings.';
 		else if (!drawing) unavailable = reason;
+		else if (key === 'rotate' && vml) unavailable = VML_EDIT_REASON;
 		else if (key === 'align' && !alignable) unavailable = 'Select a floating drawing.';
 		else if (key === 'group' && !(floated && (groupable || ungroupable)))
 			unavailable = 'Select two or more floating shapes in one paragraph.';
@@ -214,6 +217,8 @@ export function syncArrange(
 			if (option) {
 				option.disabled = disabled;
 				option.title = disabled && reason ? translate(locale, reason) : '';
+				if (option.title) option.setAttribute('aria-description', option.title);
+				else option.removeAttribute('aria-description');
 			}
 		};
 		if (key === 'wrap') {
@@ -227,6 +232,7 @@ export function syncArrange(
 			disableOption('fix', !floated || !printLayout, reason);
 			disableOption('points', true, 'Wrap point editing is unavailable.');
 		}
+		if (key === 'wrap' || key === 'position') disableOption('inline', vml, VML_EDIT_REASON);
 		if (key === 'order')
 			for (const value of ['forward', 'first', 'backward', 'last']) disableOption(value, !floated);
 		if (key === 'align')
@@ -246,8 +252,14 @@ export function syncArrange(
 		}
 	}
 	for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-arrange="alt"]')) {
-		button.disabled = !drawing;
-		button.title = drawing ? (button.getAttribute('aria-label') ?? '') : translate(locale, reason);
+		button.disabled = !drawing || vml;
+		button.title = vml
+			? translate(locale, VML_EDIT_REASON)
+			: drawing
+				? (button.getAttribute('aria-label') ?? '')
+				: translate(locale, reason);
+		if (vml) button.setAttribute('aria-description', button.title);
+		else button.removeAttribute('aria-description');
 	}
 	for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-arrange="pane"]'))
 		button.disabled = false;

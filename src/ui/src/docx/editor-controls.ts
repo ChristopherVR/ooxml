@@ -110,7 +110,7 @@ export function refreshEditorControls(
 		syncParagraphToggles(toolbar, view, model);
 		syncContextualTabs(toolbar, state);
 		syncShapeFormat(toolbar, state, view.editable && !readOnly);
-		syncPictureFormat(toolbar, state, view.editable && !readOnly);
+		syncPictureFormat(toolbar, state, view.editable && !readOnly, locale);
 		syncArrange(toolbar, state, view.editable && !readOnly, locale, printLayout);
 		syncChartDesign(toolbar, state, view.editable && !readOnly);
 		syncRuler(toolbar, view, model);

@@ -3,7 +3,8 @@
 import type { EditorState } from 'prosemirror-state';
 import { group, tool } from './ribbon-parts';
 import { isTabHidden, panelOf, selectTab, setTabHidden } from './ribbon-tab-api';
-import { pictureWrapOf, selectedPicturePos } from './picture-format-commands';
+import { pictureWrapOf, selectedPicturePos, VML_CROP_REASON } from './picture-format-commands';
+import { translate, type EditorLocale } from './localization';
 import { buildArrangeGroup } from './arrange-ribbon';
 
 export function buildPictureFormatPanel(panel: HTMLElement): void {
@@ -14,12 +15,14 @@ export function buildPictureFormatPanel(panel: HTMLElement): void {
 		{ large: true },
 	);
 	graphicsFill.dataset.graphicsFill = '';
+	const crop = tool('Crop', 'formatPicture', { type: 'picture', key: 'crop' }, { large: true });
+	crop.dataset.pictureCrop = '';
 	panel.append(
 		group('Graphics Styles', graphicsFill),
 		buildArrangeGroup('picture'),
 		group(
 			'Size',
-			tool('Crop', 'formatPicture', { type: 'picture', key: 'crop' }, { large: true }),
+			crop,
 			tool(
 				'Format picture',
 				'formatPicture',
@@ -35,6 +38,7 @@ export function syncPictureFormat(
 	toolbar: HTMLElement,
 	state: EditorState,
 	editable: boolean,
+	locale: EditorLocale = 'en',
 ): void {
 	const panel = panelOf(toolbar, 'picture-format');
 	if (!panel) return;
@@ -47,6 +51,18 @@ export function syncPictureFormat(
 	))
 		control.disabled = !editable || pos === undefined;
 	const node = pos === undefined ? null : state.doc.nodeAt(pos);
+	const crop = panel.querySelector<HTMLButtonElement>('[data-picture-crop]');
+	if (crop) {
+		if (node?.attrs.vmlFloat) {
+			const reason = translate(locale, VML_CROP_REASON);
+			crop.disabled = true;
+			crop.title = reason;
+			crop.setAttribute('aria-description', reason);
+		} else {
+			crop.title = crop.getAttribute('aria-label') ?? '';
+			crop.removeAttribute('aria-description');
+		}
+	}
 	const wrap = panel.querySelector<HTMLSelectElement>(
 		'[data-localearialabel="Wrap text"], [aria-label="Wrap text"]',
 	);

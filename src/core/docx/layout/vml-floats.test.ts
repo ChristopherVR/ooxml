@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
 import { expect, it } from 'vitest';
 import { loadDocx } from '../index';
+import type { DocumentModel } from '../model';
 import { createFakeMeasurer, createPageStories, layoutDocumentModel } from './index';
 import { at } from './test-helpers';
 
@@ -61,9 +62,7 @@ it('keeps the picture watermark control on its dedicated path', async () => {
 	});
 });
 
-it('preserves source VML when the header paragraph is edited', async () => {
-	const { loaded, bytes } = await load('vml-absolute-picture-offset');
-	const model = structuredClone(loaded.model);
+function headerPicture(model: DocumentModel) {
 	const header = model.sections?.[0]?.headers?.default;
 	const paragraph = at(
 		header?.blocks
@@ -71,20 +70,68 @@ it('preserves source VML when the header paragraph is edited', async () => {
 			.filter((block) => block.runs.some((run) => run.image)),
 		0,
 	);
-	paragraph.runs.push({ text: 'New header text' });
-	const headerXml = async (doc: Uint8Array) =>
-		(await JSZip.loadAsync(doc)).file('word/header1.xml')?.async('string');
-	const source = await headerXml(bytes);
-	const saved = await headerXml(await loaded.save(model));
-	expect(saved).toContain('New header text');
-	const shape = (xml: string | undefined) => xml?.match(/<v:shape\b[^]*?<\/v:shape>/)?.[0];
-	expect(shape(source)).toBeDefined();
-	expect(shape(saved)).toBe(shape(source));
 	const run = at(
-		paragraph.runs.filter((run) => run.image),
+		paragraph.runs.filter((candidate) => candidate.image),
 		0,
 	);
 	if (!run.image?.placement) throw new Error('Expected a VML float');
-	run.image.placement = { ...run.image.placement, offsetXPx: 200, wrap: 'square' };
-	expect(shape(await headerXml(await loaded.save(model)))).toBe(shape(source));
+	return { paragraph, image: run.image, placement: run.image.placement };
+}
+
+const headerXml = async (doc: Uint8Array) =>
+	(await JSZip.loadAsync(doc)).file('word/header1.xml')?.async('string');
+const shape = (xml: string | undefined) => xml?.match(/<v:shape\b[^]*?<\/v:shape>/)?.[0];
+
+it('preserves the unedited header part and keeps the VML verbatim during a text edit', async () => {
+	const { loaded, bytes } = await load('vml-absolute-picture-offset');
+	const model = structuredClone(loaded.model);
+	const { paragraph } = headerPicture(model);
+	const source = await headerXml(bytes);
+	expect(source).toBeDefined();
+	expect(await headerXml(await loaded.save(model))).toBe(source);
+	paragraph.runs.push({ text: 'New header text' });
+	const saved = await headerXml(await loaded.save(model));
+	expect(saved).toContain('New header text');
+	expect(shape(source)).toBeDefined();
+	expect(shape(saved)).toBe(shape(source));
 });
+
+it.each(['vml-absolute-picture-in-header', 'vml-absolute-picture-offset'])(
+	'saves edited VML placement and size in %s',
+	async (name) => {
+		const { loaded, bytes } = await load(name);
+		const model = structuredClone(loaded.model);
+		const { image, placement } = headerPicture(model);
+		const { align: _align, alignV: _alignV, behindText: _behind, ...kept } = placement;
+		image.widthPx = 320;
+		image.heightPx = 240;
+		image.placement = {
+			...kept,
+			offsetXPx: -24,
+			offsetYPx: 140,
+			relativeFrom: 'page',
+			relativeFromV: 'line',
+			wrap: 'square',
+			wrapText: 'right',
+			relativeHeight: 12345,
+		};
+		const saved = await loaded.save(model);
+		const roundTrip = headerPicture((await loadDocx(saved)).model);
+		expect(roundTrip.image).toMatchObject({ widthPx: 320, heightPx: 240, anchored: true });
+		expect(roundTrip.placement.offsetYPx).toBeCloseTo(140);
+		expect(roundTrip.placement).toEqual({
+			...image.placement,
+			offsetYPx: roundTrip.placement.offsetYPx,
+		});
+		const unrelated = (xml: string | undefined) =>
+			shape(xml)
+				?.replace(/\bstyle="[^"]*"/, '')
+				.replace(/<w10:wrap[^>]*\/>/, '');
+		expect(unrelated(await headerXml(saved))).toBe(unrelated(await headerXml(bytes)));
+		const savedShape = shape(await headerXml(saved));
+		if (placement.align) expect(savedShape).toContain('mso-position-horizontal:absolute');
+		if (placement.alignV) expect(savedShape).toContain('mso-position-vertical:absolute');
+		expect(savedShape).toContain('z-index:12345');
+		expect(savedShape).toMatch(/<w10:wrap\b(?=[^>]*anchorx="page")(?=[^>]*anchory="line")/);
+	},
+);

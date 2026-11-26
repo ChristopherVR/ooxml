@@ -254,6 +254,7 @@ export function runArrange(
 	}
 	const image = drawingImage(node);
 	if (!node || !image) return;
+	if (node.attrs.vmlFloat && (key === 'alt' || key === 'rotate' || value === 'inline')) return;
 	const placement = image.placement;
 	if (key === 'alt') {
 		arrangementDialog(core, view, pos, 'alt', String(node.attrs.altText ?? ''), (text) =>

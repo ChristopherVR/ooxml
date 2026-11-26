@@ -3,7 +3,7 @@ import type { EditorView } from 'prosemirror-view';
 import { selectedChart } from 'ooxml-core/docx/ui';
 import type { DrawingWrap } from 'ooxml-core/docx';
 import { linkAtSelection } from './link-commands';
-import { pictureWrapOf, selectedPicturePos } from './picture-format-commands';
+import { pictureWrapOf, selectedPicturePos, VML_EDIT_REASON } from './picture-format-commands';
 import { noteReferenceAtSelection, type NoteKind } from './note-commands';
 import type { LocalizationKey } from './localization';
 import type { RibbonAction } from './ribbon-action';
@@ -43,6 +43,7 @@ export interface MenuState {
 	onChart?: boolean;
 	/** The Wrap Text choice of the selected picture; set only while a picture is selected. */
 	pictureWrap?: DrawingWrap;
+	vmlFloat?: true;
 	/** The caret touches a note reference: Convert to Endnote/Footnote appears. */
 	onNote?: { kind: NoteKind; id: string } | undefined;
 	/** The browser exposes an async clipboard read API. */
@@ -136,7 +137,8 @@ export function computeMenuItems(state: MenuState): MenuItem[] {
 				id: `picture-wrap-${wrap}`,
 				label,
 				command: { kind: 'ribbon', action: { type: 'picture', key: 'wrap', value: wrap } } as const,
-				disabled: state.readOnly,
+				disabled: state.readOnly || (state.vmlFloat === true && wrap === 'inline'),
+				...(state.vmlFloat && wrap === 'inline' ? { reason: VML_EDIT_REASON } : {}),
 				checked: state.pictureWrap === wrap,
 				...(index === 0 ? { heading: 'Wrap text' as const } : {}),
 			})),
@@ -176,10 +178,12 @@ function selectionInTable(view: EditorView): boolean {
 	return false;
 }
 
-function pictureWrapState(view: EditorView): Pick<MenuState, 'pictureWrap'> {
+function pictureWrapState(view: EditorView): Pick<MenuState, 'pictureWrap' | 'vmlFloat'> {
 	const pos = selectedPicturePos(view.state);
 	const node = pos === undefined ? null : view.state.doc.nodeAt(pos);
-	return node ? { pictureWrap: pictureWrapOf(node) } : {};
+	return node
+		? { pictureWrap: pictureWrapOf(node), ...(node.attrs.vmlFloat ? { vmlFloat: true } : {}) }
+		: {};
 }
 
 export function menuStateFromView(view: EditorView, readOnly: boolean): MenuState {

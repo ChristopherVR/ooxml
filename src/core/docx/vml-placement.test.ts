@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import { parseDrawing, type DrawingContext } from './drawing';
-import { parseXml, REL_NS, WORD_NS } from './xml';
+import { buildXml, parseXml, REL_NS, WORD_NS } from './xml';
+import { patchVmlFloat, vmlFloat, VML_NS } from './vml-placement';
 
 const context: DrawingContext = {
 	rels: new Map([
@@ -74,5 +75,54 @@ it('keeps relative positioning inline and unresolved pictures as placeholders', 
 	expect(picture('position:relative').anchored).toBeUndefined();
 	expect(picture('position:absolute', '', '', 'missing')).toMatchObject({
 		unsupported: 'Legacy VML drawing',
+	});
+});
+
+const WORD10_NS = 'urn:schemas-microsoft-com:office:word';
+
+it('patches only edited VML style declarations and adds missing wrapping', () => {
+	const doc = parseXml(
+		`<pict xmlns:v="${VML_NS}"><v:shape id="picture" style="position:absolute; WIDTH : 2in;custom: keep;z-index:-12;"><v:imagedata gain="19661f"/></v:shape></pict>`,
+	);
+	const pict = doc.documentElement;
+	const shape = pict?.getElementsByTagNameNS(VML_NS, 'shape')[0];
+	const data = shape?.getElementsByTagNameNS(VML_NS, 'imagedata')[0];
+	if (!pict || !shape || !data) throw new Error('Expected a VML picture');
+	const parsed = vmlFloat(shape, data);
+	if (!parsed?.placement) throw new Error('Expected a VML float');
+	const base = {
+		relId: 'img1',
+		partName: 'word/media/img.png',
+		contentType: 'image/png',
+		...parsed,
+	};
+	const before = buildXml(pict);
+	patchVmlFloat(pict, structuredClone(base), base);
+	expect(buildXml(pict)).toBe(before);
+
+	patchVmlFloat(
+		pict,
+		{
+			...base,
+			widthPx: 0,
+			placement: {
+				...parsed.placement,
+				wrap: 'tight',
+				wrapText: 'bothSides',
+				relativeHeight: 2 ** 31 - 7,
+			},
+		},
+		base,
+	);
+	expect(shape.getAttribute('style')).toBe(
+		'position:absolute; WIDTH :0pt;custom: keep;z-index:-7;',
+	);
+	expect(buildXml(shape)).toContain('<v:imagedata gain="19661f"/>');
+	const wrap = shape.getElementsByTagNameNS(WORD10_NS, 'wrap')[0];
+	expect(wrap?.getAttribute('type')).toBe('tight');
+	expect(wrap?.getAttribute('side')).toBe('both');
+	expect(vmlFloat(shape, data)?.placement).toMatchObject({
+		relativeHeight: 2 ** 31 - 7,
+		behindText: true,
 	});
 });

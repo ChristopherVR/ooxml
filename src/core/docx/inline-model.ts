@@ -64,6 +64,8 @@ export interface InlineImage {
 	title?: string;
 	/** Whether the drawing has a `wp:anchor` and participates in page float layout. */
 	anchored?: boolean;
+	/** An absolute legacy VML picture with source-backed placement. */
+	vmlFloat?: true;
 	/** Floating wrapping, position and stacking order. */
 	placement?: PicturePlacement;
 	/** Set for non-picture drawings (chart, SmartArt, shape, unresolved legacy VML): rendered as a labeled placeholder with no editable bytes. */

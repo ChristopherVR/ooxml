@@ -1,15 +1,20 @@
 // @vitest-environment jsdom
+import { readFile } from 'node:fs/promises';
+import { loadDocx } from 'ooxml-core/docx';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
-import { NodeSelection } from 'prosemirror-state';
+import { EditorState, NodeSelection } from 'prosemirror-state';
 import { undo } from 'prosemirror-history';
-import type { EditorView } from 'prosemirror-view';
+import { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
 import { at, paragraphAt } from './test-support';
 import { computeMenuItems } from './context-menu-items';
-import { buildPictureFormatPanel } from './picture-format-ribbon';
+import { buildPictureFormatPanel, syncPictureFormat } from './picture-format-ribbon';
 import { strings } from './localization-strings';
-import { isPictureNode } from './picture-format-commands';
+import { isPictureNode, setPictureCropAt, setPictureWrap } from './picture-format-commands';
+import { createPictureDialog } from './picture-dialog';
+import { docToModel, modelToDoc } from './model-adapter';
+import { defineRibbon } from '../ribbon/ribbon-tabs';
 import { schema } from './schema';
 
 registerDocxEditor();
@@ -199,12 +204,71 @@ describe('picture Wrap Text and Crop', () => {
 		expect(items.find((item) => item.id === 'picture-format')).toBeDefined();
 	});
 
-	it('leaves legacy VML pictures out, since they have no DrawingML wrap or crop to write', () => {
+	it('offers Picture Format for VML floats even without a modeled picture fill', () => {
 		const image = (attrs: Record<string, unknown>) =>
 			schema.nodes.image!.create({ partName: 'word/media/a.png', ...attrs });
 		expect(isPictureNode(image({ relId: 'rId1' }))).toBe(false);
+		expect(isPictureNode(image({ relId: 'rId1', vmlFloat: true, anchored: true }))).toBe(true);
 		expect(isPictureNode(image({ relId: 'rId1', pictureFill: '{"kind":"picture"}' }))).toBe(true);
 		expect(isPictureNode(image({ relId: '' }))).toBe(true);
+	});
+
+	it('allows wrapping a VML float and explains why Crop is disabled', async () => {
+		const path =
+			'../core/docx/layout/fixtures/vml-floats/issue-345-vml-absolute-picture-offset.docx';
+		const loaded = await loadDocx(await readFile(path));
+		const model = structuredClone(loaded.model);
+		const header = model.sections?.[0]?.headers?.default;
+		if (!header) throw new Error('Expected a default header');
+		const story = { ...model, blocks: header.blocks };
+		const doc = modelToDoc(story);
+		let pos = -1;
+		doc.descendants((node, at) => {
+			if (node.type.name === 'image') pos = at;
+		});
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({ doc, selection: NodeSelection.create(doc, pos) }),
+		});
+		try {
+			defineRibbon();
+			const toolbar = document.createElement('office-ui-ribbon');
+			toolbar.innerHTML = '<div data-ribbon-tab="picture-format"></div>';
+			buildPictureFormatPanel(toolbar.firstElementChild as HTMLElement);
+			syncPictureFormat(toolbar, view.state, true);
+			const crop = toolbar.querySelector<HTMLButtonElement>('[aria-label="Crop"]');
+			expect(crop?.disabled).toBe(true);
+			expect(crop?.getAttribute('aria-description')).toMatch(/VML/i);
+			const dialog = createPictureDialog(() => view);
+			dialog.open(pos);
+			expect(dialog.element.querySelector<HTMLFieldSetElement>('.dve-picture-crop')?.disabled).toBe(
+				true,
+			);
+			expect(dialog.element.textContent).toContain(crop?.getAttribute('aria-description'));
+			expect(
+				setPictureCropAt(view, pos, { cropLeft: 0.1, cropTop: 0, cropRight: 0, cropBottom: 0 }),
+			).toBe(false);
+			const width = dialog.element.querySelector<HTMLInputElement>('[aria-label="Width"]');
+			if (!width) throw new Error('Expected a width field');
+			width.value = '320';
+			width.dispatchEvent(new Event('input'));
+			dialog.element.querySelector<HTMLButtonElement>('.dve-dialog-primary')?.click();
+			expect(setPictureWrap(view, 'square', pos)).toBe(true);
+			expect(setPictureWrap(view, 'inline', pos)).toBe(false);
+			header.blocks = docToModel(view.state.doc, story).blocks;
+			const saved = await loadDocx(await loaded.save(model));
+			const images = saved.model.sections?.[0]?.headers?.default?.blocks.flatMap((block) =>
+				block.type === 'paragraph' ? block.runs.flatMap((run) => run.image ?? []) : [],
+			);
+			expect(images).toEqual([
+				expect.objectContaining({
+					vmlFloat: true,
+					widthPx: 320,
+					placement: expect.objectContaining({ wrap: 'square' }),
+				}),
+			]);
+		} finally {
+			view.destroy();
+		}
 	});
 
 	it('translates every label of the Picture Format tab', () => {

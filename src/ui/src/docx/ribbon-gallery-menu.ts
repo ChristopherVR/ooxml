@@ -69,6 +69,11 @@ function openGallery(
 		item.setAttribute('aria-checked', String(option.value === control.value));
 		item.dataset.value = option.value;
 		item.disabled = option.disabled;
+		const reason = option.getAttribute('aria-description');
+		if (item.disabled && reason) {
+			item.title = reason;
+			item.setAttribute('aria-description', reason);
+		}
 		const name = document.createElement('span');
 		name.className = 'gallery-name';
 		name.textContent = option.textContent;

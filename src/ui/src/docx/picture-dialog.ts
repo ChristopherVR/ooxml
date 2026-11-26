@@ -8,8 +8,13 @@ import {
 import type { CropInsets } from 'ooxml-core/geometry';
 import { focusView } from './focus-view';
 import { fieldset, labelled, numberInput, row } from './dialog-fields';
-import { localizeElement, type EditorLocale } from './localization';
-import { isPictureNode, pictureOf } from './picture-format-commands';
+import { localizeElement, translate, type EditorLocale } from './localization';
+import {
+	isPictureNode,
+	pictureOf,
+	VML_CROP_REASON,
+	VML_EDIT_REASON,
+} from './picture-format-commands';
 import { schema } from './schema';
 import {
 	createDialogShell,
@@ -89,9 +94,18 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 	};
 	const cropChanged = (crop: CropInsets) =>
 		CROP_SIDES.some(([side]) => Math.abs(crop[side] - initialCrop[side]) > 1e-6);
+	const updateLegacyDescriptions = () => {
+		if (cropSet.disabled) {
+			cropSet.setAttribute('aria-description', translate(locale, VML_CROP_REASON));
+			alt.setAttribute('aria-description', translate(locale, VML_EDIT_REASON));
+		} else {
+			cropSet.removeAttribute('aria-description');
+			alt.removeAttribute('aria-description');
+		}
+	};
 	const validate = () => {
-		const valid = Boolean(readCrop());
-		message.textContent = valid ? '' : CROP_ERROR;
+		const valid = cropSet.disabled || Boolean(readCrop());
+		message.textContent = cropSet.disabled ? VML_CROP_REASON : valid ? '' : CROP_ERROR;
 		localizeElement(message, locale);
 		apply.disabled = !valid;
 		return valid;
@@ -107,6 +121,7 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 	// Cropping keeps the picture's scale, so the shown size follows the crop as Word's does.
 	for (const input of crops.values())
 		input.addEventListener('input', () => {
+			if (cropSet.disabled) return;
 			const crop = validate() && readCrop();
 			if (!crop) return;
 			const shownWidth = whole.widthPx * (1 - crop.cropLeft - crop.cropRight);
@@ -123,18 +138,22 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 		const view = getView();
 		const node = view?.state.doc.nodeAt(position);
 		if (!view || !node || node.type !== schema.nodes.image) return close();
-		const crop = readCrop();
-		if (!crop) return void validate();
+		const crop = node.attrs.vmlFloat ? undefined : readCrop();
+		if (!node.attrs.vmlFloat && !crop) return void validate();
 		const cropped =
-			isPictureNode(node) && cropChanged(crop) ? setPictureCrop(pictureOf(node), crop) : undefined;
-		const nextWidth = Math.max(16, Math.round(Number(width.value) || node.attrs.widthPx));
-		const nextHeight = Math.max(16, Math.round(Number(height.value) || node.attrs.heightPx));
+			crop && isPictureNode(node) && cropChanged(crop)
+				? setPictureCrop(pictureOf(node), crop)
+				: undefined;
+		const size = (input: HTMLInputElement, current: number) =>
+			node.attrs.vmlFloat && input.value === String(Math.round(current))
+				? current
+				: Math.max(16, Math.round(Number(input.value) || current));
 		view.dispatch(
 			view.state.tr.setNodeMarkup(position, undefined, {
 				...node.attrs,
-				altText: alt.value.trim() || null,
-				widthPx: nextWidth,
-				heightPx: nextHeight,
+				...(node.attrs.vmlFloat ? {} : { altText: alt.value.trim() || null }),
+				widthPx: size(width, node.attrs.widthPx),
+				heightPx: size(height, node.attrs.heightPx),
 				...(cropped ? { pictureFill: JSON.stringify(cropped.pictureFill) } : {}),
 			}),
 		);
@@ -161,18 +180,26 @@ export function createPictureDialog(getView: () => EditorView | undefined): Pict
 			height.value = String(Math.round(node.attrs.heightPx));
 			// Only a real picture has a source rectangle to crop.
 			cropSet.hidden = !isPictureNode(node);
+			cropSet.disabled = alt.disabled = node.attrs.vmlFloat === true;
+			updateLegacyDescriptions();
 			const picture = pictureOf(node);
 			initialCrop = pictureCropOf(picture);
 			whole = uncroppedPictureSize(picture);
 			for (const [side] of CROP_SIDES) crops.get(side)!.value = percent(initialCrop[side]);
 			validate();
 			setDialogOpen(element, true);
-			(focus === 'crop' && !cropSet.hidden ? crops.get('cropLeft')! : alt).focus();
+			const initial = cropSet.disabled
+				? width
+				: focus === 'crop' && !cropSet.hidden
+					? crops.get('cropLeft')
+					: alt;
+			initial?.focus();
 		},
 		close,
 		setLocale(next) {
 			locale = next;
 			localizeDialog(element, next);
+			updateLegacyDescriptions();
 		},
 		get isOpen() {
 			return isDialogOpen(element);

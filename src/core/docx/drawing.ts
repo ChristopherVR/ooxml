@@ -18,7 +18,7 @@ import {
 import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
-import { vmlFloat } from './vml-placement';
+import { vmlFloat, vmlPictureShape, VML_NS } from './vml-placement';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
 import { readWordArtStyle } from './word-art';
 import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
@@ -33,7 +33,6 @@ import { isOleDrawing, model3dDrawing, parseOleDrawing } from './drawing-payload
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
-const VML_NS = 'urn:schemas-microsoft-com:vml';
 const WPS_NS = 'http://schemas.microsoft.com/office/word/2010/wordprocessingShape';
 const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const PICTURE_GRAPHIC_URI = 'http://schemas.openxmlformats.org/drawingml/2006/picture';
@@ -330,8 +329,9 @@ function parsePlacement(anchor: XmlElement): PicturePlacement {
 
 /** Best-effort parse of a legacy VML `w:pict` picture (`v:shape/v:imagedata`). */
 function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage {
-	const imagedata = descendantNS(node, VML_NS, 'imagedata');
-	const shape = descendantNS(node, VML_NS, 'shape');
+	const shape = vmlPictureShape(node);
+	const shapeImage = firstNS(shape, VML_NS, 'imagedata');
+	const imagedata = shapeImage ?? descendantNS(node, VML_NS, 'imagedata');
 	const watermark = parseWatermarkShape(shape ?? undefined);
 	if (watermark) return watermark;
 	const pictureWatermark = parsePictureWatermarkShape(shape ?? undefined, (relId) =>
@@ -340,7 +340,7 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 	if (pictureWatermark) return pictureWatermark;
 	const relId = (imagedata && getR(imagedata, 'id')) || undefined;
 	const picture = relId ? resolvePicture(relId, context) : undefined;
-	const floating = picture && shape && imagedata && vmlFloat(shape, imagedata);
+	const floating = picture && shape && shapeImage && vmlFloat(shape, shapeImage);
 	if (picture && floating) return { ...picture, ...floating };
 	const style = shape?.getAttribute('style') ?? '';
 	const width = /width:\s*([\d.]+)pt/i.exec(style);

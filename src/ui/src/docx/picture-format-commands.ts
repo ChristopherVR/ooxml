@@ -19,6 +19,9 @@ import { wordYjsPluginKey } from 'ooxml-core/docx/ui';
 import { schema } from './schema';
 import { patchPictureEffects, type PictureEffectPatch } from 'ooxml-core/drawingml';
 
+export const VML_CROP_REASON = 'Cropping is unavailable for legacy VML pictures.';
+export const VML_EDIT_REASON = 'This edit is unavailable for legacy VML pictures.';
+
 const parse = <T>(value: unknown): T | undefined => {
 	if (typeof value !== 'string') return undefined;
 	try {
@@ -40,9 +43,7 @@ export function isPictureNode(node: ProseMirrorNode | null | undefined): node is
 		!node.attrs.diagram &&
 		!node.attrs.payload &&
 		!node.attrs.textBoxEditable &&
-		// A legacy VML picture (`w:pict`) has no DrawingML fill or wrap to write; one inserted in
-		// this session has no relationship yet and is written as DrawingML.
-		(node.attrs.pictureFill || !node.attrs.relId),
+		(node.attrs.vmlFloat || node.attrs.pictureFill || !node.attrs.relId),
 	);
 }
 
@@ -68,6 +69,7 @@ export function pictureOf(node: ProseMirrorNode): InlineImage {
 			kind: 'picture',
 		},
 		...(node.attrs.anchored ? { anchored: true } : {}),
+		...(node.attrs.vmlFloat === true ? { vmlFloat: true } : {}),
 		...(placement ? { placement } : {}),
 	};
 }
@@ -117,6 +119,7 @@ export function setPictureWrap(view: EditorView, wrap: DrawingWrap, at?: number)
 	const pos = at ?? selectedPicturePos(view.state);
 	const node = pos === undefined ? undefined : view.state.doc.nodeAt(pos);
 	if (pos === undefined || !isPictureNode(node) || pictureWrapOf(node) === wrap) return false;
+	if (node.attrs.vmlFloat && wrap === 'inline') return false;
 	const origin = node.attrs.anchored ? undefined : floatOrigin(view, pos);
 	return applyPicture(view, pos, setDrawingWrap(pictureOf(node), wrap, origin));
 }
@@ -132,7 +135,7 @@ export function setPictureCropAt(
 	size?: { widthPx: number; heightPx: number },
 ): boolean {
 	const node = view.state.doc.nodeAt(pos);
-	if (!isPictureNode(node)) return false;
+	if (!isPictureNode(node) || node.attrs.vmlFloat) return false;
 	const cropped = setPictureCrop(pictureOf(node), crop);
 	return applyPicture(view, pos, size ? { ...cropped, ...size } : cropped);
 }

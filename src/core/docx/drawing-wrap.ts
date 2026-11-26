@@ -69,6 +69,8 @@ export function setDrawingWrap(
 	wrap: DrawingWrap,
 	origin?: FloatOrigin,
 ): InlineImage {
+	if (image.vmlFloat && wrap === 'inline')
+		throw new Error('Inline conversion is unavailable for legacy VML pictures.');
 	const { placement, anchored: _anchored, ...rest } = image;
 	if (wrap === 'inline') return rest;
 	return {

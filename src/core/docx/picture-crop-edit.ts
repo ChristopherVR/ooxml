@@ -40,6 +40,7 @@ export function isValidPictureCrop(crop: CropInsets): boolean {
  * all leaves `crop` empty so the writer clears `a:srcRect`. Throws when nothing would show.
  */
 export function setPictureCrop(image: InlineImage, crop: CropInsets): InlineImage {
+	if (image.vmlFloat) throw new Error('Cropping is unavailable for legacy VML pictures.');
 	if (!image.pictureFill) throw new Error('Only a picture can be cropped.');
 	if (!isValidPictureCrop(crop))
 		throw new RangeError('The crop must leave part of the picture showing.');
