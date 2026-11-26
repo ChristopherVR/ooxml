@@ -32,6 +32,15 @@ button[aria-pressed='true'] {
 	border-color: var(--office-accent);
 }
 
+@media (forced-colors: active) {
+	button[aria-pressed='true'] {
+		forced-color-adjust: none;
+		background: Highlight;
+		border-color: Highlight;
+		color: HighlightText;
+	}
+}
+
 :host([all]) {
 	flex: none;
 	max-height: 180px;

@@ -77,6 +77,9 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 	await expect(effect).toHaveAccessibleName(/Rectangle 1.*Fade/u);
 	await effect.press('Enter');
 	await expect(effect).toHaveAttribute('aria-pressed', 'true');
+	await page.emulateMedia({ forcedColors: 'active' });
+	await expect(effect).toHaveCSS('forced-color-adjust', 'none');
+	await page.emulateMedia({ forcedColors: 'none' });
 	const start = page
 		.locator('[data-ribbon-control="animations.timing.start"]')
 		.getByRole('combobox');
