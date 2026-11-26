@@ -136,7 +136,7 @@ describe('clipboard buttons', () => {
 describe('other tabs', () => {
 	it('draw every button with an icon and keep text captions to real words', () => {
 		const ribbon = createRibbon();
-		for (const panel of ['Insert', 'Layout', 'References', 'Review', 'View', 'Table']) {
+		for (const panel of ['Insert', 'Layout', 'References', 'Review', 'View', 'Table Layout']) {
 			const buttons = ribbon.querySelectorAll(`[data-panel="${panel}"] button[aria-label]`);
 			expect(buttons.length).toBeGreaterThan(0);
 			for (const button of buttons) {

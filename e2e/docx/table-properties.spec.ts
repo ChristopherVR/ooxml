@@ -18,7 +18,7 @@ test('Table Properties edits, undoes, validates and exports Word row settings', 
 	const editor = page.locator('docx-editor');
 	const cell = editor.locator('.ProseMirror td').first();
 	await cell.click();
-	await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 	const properties = editor.getByRole('button', { name: 'Table properties', exact: true });
 	await properties.click();
 	const dialog = dialogByHeading(editor, 'Table properties');
@@ -73,7 +73,7 @@ test('Table Properties stays usable on a narrow ribbon and localizes the dialog'
 	await insertTableOfSize(page);
 	const editor = page.locator('docx-editor');
 	await editor.locator('.ProseMirror td').first().click();
-	await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 	await editor.getByRole('button', { name: 'Table properties', exact: true }).click();
 	await expect(dialogByHeading(editor, 'Table properties')).toBeVisible();
 	await page.keyboard.press('Escape');

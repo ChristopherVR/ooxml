@@ -200,7 +200,7 @@ export function writeTable(
 			)
 				throw new Error('Moving paragraphs between table cells is not supported.');
 			const tc = source?.cell ?? makeW(doc, 'tc');
-			if (source) patchCellWidth(doc, tc, cell.widthTwips, source.model.widthTwips);
+			if (source) patchCellWidth(doc, tc, cell, source.model);
 			patchCellBorders(doc, tc, cell.borders, source?.model.borders);
 			patchCellShading(doc, tc, cell, source?.model);
 			patchCellMargins(doc, tc, cell.margins, source?.model.margins);

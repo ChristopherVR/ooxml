@@ -150,7 +150,7 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 		),
 	);
 	panels
-		.get('Table')!
+		.get('Table Layout')!
 		.append(
 			group(
 				'Properties',

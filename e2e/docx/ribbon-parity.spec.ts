@@ -197,13 +197,17 @@ test.describe('Word-style ribbon', () => {
 		await expect(surface.locator('p').first()).toHaveCSS('text-align', 'justify');
 	});
 
-	test('the Table tab is contextual', async ({ page }) => {
+	test('Table Design and Table Layout are contextual', async ({ page }) => {
 		const editor = page.locator('docx-editor');
+		const design = editor.locator('[role="tab"][data-tab="table-design"]');
+		const layout = editor.locator('[role="tab"][data-tab="table-layout"]');
 		await editor.locator('.ProseMirror').first().click();
-		await expect(editor.locator('[role="tab"][data-tab="table"]')).toBeHidden();
+		await expect(design).toBeHidden();
+		await expect(layout).toBeHidden();
 		await insertTableOfSize(page);
 		await editor.locator('.ProseMirror td').first().click();
-		await expect(editor.locator('[role="tab"][data-tab="table"]')).toBeVisible();
+		await expect(design).toBeVisible();
+		await expect(layout).toBeVisible();
 		await editor.locator('.ProseMirror').first().locator('p').first().click();
 	});
 

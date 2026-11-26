@@ -288,7 +288,16 @@ export function docToModel(
 			)
 				blocks.push(convertStructuredTable(node, prior, asParagraph));
 			else {
-				const { style: priorStyle, ...descriptors } = prior ?? {};
+				const {
+					style: priorStyle,
+					look: _look,
+					layout: _layout,
+					grid: _grid,
+					widthTwips: _width,
+					widthPercent: _percent,
+					borders: _borders,
+					...descriptors
+				} = prior ?? {};
 				const style =
 					typeof node.attrs.tableStyleId === 'string' ? node.attrs.tableStyleId : priorStyle;
 				const grid = prior ? undefined : gridOf(node);
@@ -325,6 +334,12 @@ export function docToModel(
 					type: 'table',
 					id,
 					...(style && { style }),
+					...(node.attrs.tableLook && { look: node.attrs.tableLook }),
+					...(node.attrs.tableLayout && { layout: node.attrs.tableLayout }),
+					...(node.attrs.grid && { grid: JSON.parse(node.attrs.grid) }),
+					...(node.attrs.widthTwips !== null && { widthTwips: node.attrs.widthTwips }),
+					...(node.attrs.widthPercent !== null && { widthPercent: node.attrs.widthPercent }),
+					...tableBordersFromNode(node.attrs.borders),
 					rows: convertSimpleTable(node, asParagraph, prior),
 					...tableFormattingFromNode(node),
 					...(node.attrs.structureEditable === false ? { structureEditable: false } : {}),

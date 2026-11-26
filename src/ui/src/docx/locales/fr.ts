@@ -1,6 +1,7 @@
 import { frArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { frDesign } from './design';
+import { frTableTab } from './fr-table-tab';
 import { frStyleDialog } from './style-dialog';
 import { frSplitCells } from './split-cells';
 import { frOptions } from './options';
@@ -30,6 +31,7 @@ import { frRibbonNames } from './ribbon-names';
 export const fr: LocaleStrings = {
 	...frArrange,
 	...viewsStrings['fr'],
+	...frTableTab,
 	...frDesign,
 	...frStyleDialog,
 	...frOptions,

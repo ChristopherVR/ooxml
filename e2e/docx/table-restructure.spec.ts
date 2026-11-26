@@ -74,7 +74,7 @@ async function selectCells(editor: Locator, from: string, to = from) {
 }
 
 async function run(editor: Locator, name: string) {
-	await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 	const button = editor.getByRole('button', { name, exact: true });
 	await expect(button).toBeEnabled();
 	await button.click();
@@ -316,7 +316,7 @@ for (const framework of FRAMEWORKS) {
 			const editor = await open(page, framework);
 			expect(await shapeOf(topTable(page, 0))).toEqual(MERGED);
 			const enabled = async (names: string[]) => {
-				await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+				await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 				for (const name of names)
 					await expect(editor.getByRole('button', { name, exact: true })).toBeEnabled();
 			};

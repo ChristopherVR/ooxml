@@ -57,6 +57,7 @@ export function renderTable(
 			const geometry = geometryOf(row, cellIndex, columnWidthPx);
 			const cell = document.createElement('div');
 			cell.className = 'dve-print-cell';
+			if (paragraphs[0]) cell.dataset.tableCellParagraph = paragraphs[0].blockId;
 			cell.setAttribute('role', 'cell');
 			Object.assign(cell.style, {
 				left: `${geometry.xPx}px`,

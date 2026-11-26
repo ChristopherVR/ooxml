@@ -53,20 +53,28 @@ type StyleDialogOptions = {
 	selection: ReturnType<typeof selectionStyle>;
 	locale: EditorLocale;
 	modify: boolean;
+	tableOnly?: boolean;
 	submit(edit: StyleEdit): boolean;
 };
 
 export function createStyleDialog(options: StyleDialogOptions) {
-	const { model, selection, locale, modify, submit } = options;
+	const { model, selection, locale, modify, submit, tableOnly } = options;
 	const dialog = createDialogShell(
-		modify ? 'Modify Style' : 'Create a Style',
+		tableOnly
+			? modify
+				? 'Modify Table Style'
+				: 'New Table Style'
+			: modify
+				? 'Modify Style'
+				: 'Create a Style',
 		'dve-format-dialog dve-style-dialog',
 	);
 	const chosen = selectOf([]);
 	const name = textInput();
 	name.maxLength = 253;
 	const type = selectOf(KINDS);
-	type.disabled = modify;
+	type.disabled = modify || Boolean(tableOnly);
+	if (tableOnly) type.value = 'table';
 	const basedOn = selectOf([]);
 	const following = selectOf([]);
 	const family = textInput();
@@ -112,7 +120,7 @@ export function createStyleDialog(options: StyleDialogOptions) {
 		...(['character', 'table'] as const).flatMap((kind) =>
 			Object.values(stylesOf(model, kind)).map((style) => ({ kind, style })),
 		),
-	];
+	].filter(({ kind }) => !tableOnly || kind === 'table');
 	for (const { style, kind } of choices)
 		chosen.add(new Option(style.name ?? style.id, kind + ':' + style.id));
 	if (modify) {

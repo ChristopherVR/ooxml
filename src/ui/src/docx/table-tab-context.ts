@@ -1,0 +1,127 @@
+import type { Node } from 'prosemirror-model';
+import type { EditorState } from 'prosemirror-state';
+import { DEFAULT_TABLE_LOOK } from 'ooxml-core/docx/ui';
+import type { EditorCore } from './editor-core';
+import { translate } from './localization';
+import type { TableTabAction } from './table-ribbon';
+import { TABLE_LOOK_OPTIONS } from './table-ribbon-keys';
+import { loadTablePanels } from './ribbon';
+
+export function tableTabContext(state: EditorState) {
+	const { $from } = state.selection;
+	const $to = state.selection.ranges.at(-1)?.$to ?? state.selection.$to;
+	for (let depth = $from.depth - 2; depth >= 1; depth--) {
+		const node = $from.node(depth);
+		if (node.type.name !== 'table') continue;
+		if ($to.depth < depth + 2 || $to.node(depth) !== node) return;
+		return {
+			node,
+			pos: $from.before(depth),
+			top: $from.index(depth),
+			bottom: $to.index(depth),
+			firstColumn: $from.index(depth + 1),
+			lastColumn: $to.index(depth + 1),
+			plain: node.attrs.structureEditable !== false,
+		};
+	}
+}
+
+type Context = NonNullable<ReturnType<typeof tableTabContext>>;
+export function canRepeatAt(context: Context): boolean {
+	for (let row = 0; row < context.top; row++)
+		if (!context.node.child(row).attrs.properties?.header) return false;
+	return true;
+}
+
+export function tableTabReason(core: EditorCore, key: TableTabAction['key'], context?: Context) {
+	if (!context) return 'tableTab.selectCell';
+	if (key === 'gridlines') return;
+	if (!context.plain) return 'tableTab.rectangular';
+	if (key === 'select') return;
+	if (
+		!core.view?.editable ||
+		!core.canEditBody() ||
+		core.targetView() !== core.view ||
+		core.collab.active ||
+		core.model.protection?.enforced
+	)
+		return 'tableTab.editable';
+	if (key === 'repeat' && !canRepeatAt(context)) return 'tableTab.headerStart';
+	if (
+		key === 'formula' &&
+		(context.top !== context.bottom || context.firstColumn !== context.lastColumn)
+	)
+		return 'tableTab.selectCell';
+}
+
+export function syncTableTab(core: EditorCore): void {
+	const { toolbar, canvas } = core.shell;
+	const view = core.targetView();
+	if (!toolbar || !view) return;
+	const context = tableTabContext(view.state);
+	if (context && !toolbar.dataset.tablePanels) {
+		toolbar.dataset.tablePanels = 'loading';
+		void loadTablePanels(toolbar)
+			.then(() => {
+				toolbar.dataset.tablePanels = 'ready';
+				if (core.shell.toolbar === toolbar) syncTableTab(core);
+			})
+			.catch((error: unknown) => {
+				delete toolbar.dataset.tablePanels;
+				core.host.reportError(error);
+			});
+	}
+	for (const control of toolbar.querySelectorAll<
+		HTMLButtonElement | HTMLSelectElement | HTMLInputElement
+	>('[data-table-command]')) {
+		const key = control.dataset.tableCommand as TableTabAction['key'];
+		const reason = tableTabReason(core, key, context);
+		control.disabled = Boolean(reason);
+		if (reason) control.title = translate(core.locale, reason);
+		else control.title = control.getAttribute('aria-label') ?? '';
+		if (key === 'look') {
+			const option = TABLE_LOOK_OPTIONS.find(([flag]) => flag === control.dataset.lookFlag);
+			if (option) {
+				const [flag, , inverse] = option;
+				const look = context?.node.attrs.tableLook ?? DEFAULT_TABLE_LOOK;
+				control.setAttribute('aria-pressed', String(Boolean(look[flag]) !== inverse));
+			}
+		} else if (key === 'repeat') {
+			control.setAttribute(
+				'aria-pressed',
+				String(Boolean(context?.node.child(context.top).attrs.properties?.header)),
+			);
+		} else if (key === 'gridlines') {
+			control.setAttribute(
+				'aria-pressed',
+				String(Boolean(canvas?.hasAttribute('data-table-gridlines'))),
+			);
+		} else if (key === 'draw') {
+			control.setAttribute(
+				'aria-pressed',
+				String(canvas?.dataset.tableDraw === control.dataset.drawMode),
+			);
+		} else if (
+			key === 'size' &&
+			control instanceof HTMLInputElement &&
+			!control.matches(':focus')
+		) {
+			const row = context?.node.maybeChild(context.top);
+			const value =
+				control.dataset.dimension === 'height'
+					? row?.attrs.properties?.heightTwips
+					: row?.maybeChild(context?.firstColumn ?? 0)?.attrs.widthTwips;
+			control.value = typeof value === 'number' ? String(Number((value / 1440).toFixed(2))) : '';
+		}
+	}
+}
+
+export function tableCells(node: Node, tablePos: number) {
+	const cells: { row: number; column: number; node: Node; pos: number }[] = [];
+	node.forEach((row, rowOffset, rowIndex) =>
+		row.forEach((cell, offset, column) =>
+			cells.push({ row: rowIndex, column, node: cell, pos: tablePos + rowOffset + offset + 2 }),
+		),
+	);
+	return cells;
+}

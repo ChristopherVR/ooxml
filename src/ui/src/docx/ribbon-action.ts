@@ -1,5 +1,6 @@
 import type { DocumentView, OutlineAction } from './document-views';
 import type { TableCommand } from './table-commands';
+import type { TableTabAction } from './table-ribbon';
 import type { MultilingualAction } from './multilingual-ribbon';
 import type { ReviewDisplayMode } from './review-display';
 import type { DiagramFormatChange } from 'ooxml-core/diagram';
@@ -26,6 +27,7 @@ export type RibbonAction =
 	| { type: 'fontStep'; direction: 'grow' | 'shrink' }
 	| { type: 'insertBreak'; kind: 'page' | 'column' }
 	| { type: 'tableEdit'; key: TableCommand }
+	| TableTabAction
 	| {
 			type: 'page';
 			key:

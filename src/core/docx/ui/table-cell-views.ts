@@ -28,6 +28,7 @@ export interface TableCellView {
 /** `tableStyle` input for a table: its width, alignment, indent, borders and cell margins. */
 export function tableViewAttrs(block: Table): {
 	widthTwips: number | null;
+	widthPercent: number | null;
 	alignment: string | null;
 	indentTwips: number | null;
 	borders: string | null;
@@ -35,6 +36,7 @@ export function tableViewAttrs(block: Table): {
 } {
 	return {
 		widthTwips: block.widthTwips ?? null,
+		widthPercent: block.widthPercent ?? null,
 		alignment: block.alignment ?? null,
 		indentTwips: block.indentTwips ?? null,
 		borders: block.borders ? JSON.stringify(block.borders) : null,

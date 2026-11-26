@@ -1,5 +1,6 @@
 import { panelOf, setTabHidden } from './ribbon-tab-api';
 import type { EditorState } from 'prosemirror-state';
+import { TABLE_TABS } from './table-ribbon-keys';
 
 /** Whether the selection sits inside a table cell. */
 export function selectionInTable(state: EditorState): boolean {
@@ -14,7 +15,7 @@ export function selectionInTable(state: EditorState): boolean {
  * when the selection enters a table and removed (falling back to Home) when it leaves.
  */
 export function syncContextualTabs(toolbar: HTMLElement, state: EditorState): void {
-	const panel = panelOf(toolbar, 'table');
-	if (!panel) return;
-	setTabHidden(toolbar, 'table', 'contextual', !selectionInTable(state));
+	const hidden = !selectionInTable(state);
+	for (const tab of TABLE_TABS)
+		if (panelOf(toolbar, tab)) setTabHidden(toolbar, tab, 'contextual', hidden);
 }

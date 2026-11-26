@@ -271,7 +271,7 @@ export function runStylesPlugin(
 								? resolveTableStyleFormatting(
 										styleId,
 										model.tableStyles,
-										table?.look,
+										block.attrs.tableLook ?? table?.look,
 										rowIndex,
 										block.childCount,
 										column,

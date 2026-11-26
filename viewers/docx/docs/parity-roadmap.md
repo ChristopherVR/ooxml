@@ -53,8 +53,15 @@ and floating pictures are selectable there (see `outstanding-work.md`). Merged t
 are read-only on pages, and caret placement at line
 and page boundaries is heuristic. Pagination is approximate.
 
-Selected-cell vertical alignment is editable with save/reopen and undo coverage
-(`table-cell-alignment.spec.ts`). Toolbar/context-menu clipboard commands retain
+Table Design and Table Layout appear when the selection enters a table. On rectangular
+body tables, the tabs offer six built-in styles, document styles, style look options,
+cell shading and borders, row and column sizing, AutoFit, cell alignment, margins,
+repeat headers, positional formulas, text and numeric sort, and conversion to text.
+The style previews approximate Word's gallery. Drawing handles individual edges and
+one-cell splits. Formula results are cached on insertion. See `table-tabs.spec.ts`,
+`table-cell-alignment.spec.ts`, and the core table edit tests.
+
+Toolbar/context-menu clipboard commands retain
 supported HTML formatting and tables in the body and stories (`formatted-clipboard.spec.ts`);
 plain-text-only browser APIs still work. External HTML does not guarantee preservation
 of unsupported OOXML properties or objects.
@@ -71,8 +78,8 @@ detail and limits of each feature already built.
    text-box layout, vertical and East Asian text, complex scripts and font substitution
    against Word-rendered references.
 2. **Document preservation under richer edits.** Merge and split cells and row and
-   column commands exist. Next are table-level properties (width, alignment, indent,
-   borders, style, look), modelled table-structure revisions (`cellIns`, `cellDel`,
+   column commands exist. Work remains on table justification and indentation controls,
+   contextual formatting for merged or nested tables, and modelled table-structure revisions (`cellIns`, `cellDel`,
    `cellMerge`, `tblPrChange`, `trPrChange`, `tcPrChange`), the tables that stay
    refused (`gridBefore`/`gridAfter`, `hMerge`, row SDTs, inline markup in cells),
    identity-aware undo and save/reopen tests, and formatted clipboard coverage across

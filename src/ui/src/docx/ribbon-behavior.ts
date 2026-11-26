@@ -12,7 +12,8 @@ const KEY_TIPS: Record<string, string> = {
 	review: 'R',
 	view: 'W',
 	help: 'Y',
-	table: 'T',
+	'table-design': 'T',
+	'table-layout': 'L',
 	'header-footer': 'J',
 };
 

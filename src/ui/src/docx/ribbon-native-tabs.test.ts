@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createRibbon } from './ribbon';
+import { createRibbon, loadTablePanels } from './ribbon';
 import './component';
 import { findLocalizedControl } from './localization';
 import { must } from './test-support';
@@ -8,6 +8,21 @@ import { must } from './test-support';
 afterEach(() => document.body.replaceChildren());
 
 describe('Word native tab surfaces', () => {
+	it('loads both table panels on demand and names their controls in every locale', async () => {
+		const ribbon = createRibbon('fr');
+		expect(ribbon.querySelector('[data-table-command]')).toBeNull();
+		await loadTablePanels(ribbon);
+		expect(
+			ribbon.querySelector('[data-ribbon-tab="table-design"]')?.getAttribute('data-label'),
+		).toBe('Création de tableau');
+		expect(ribbon.querySelector('[data-look-flag="firstRow"]')?.getAttribute('aria-label')).toBe(
+			'Ligne d’en-tête',
+		);
+		expect(ribbon.querySelector('[data-table-command="formula"]')?.getAttribute('aria-label')).toBe(
+			'Formule',
+		);
+	});
+
 	it('places the existing page background commands on Design', () => {
 		const ribbon = createRibbon();
 		expect(ribbon.querySelector('[data-panel="Design"] [aria-label="Watermark"]')).not.toBeNull();

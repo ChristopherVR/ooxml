@@ -24,8 +24,10 @@ import { buildPictureFormatPanel } from './picture-format-ribbon';
 import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
 import { syncSmartArtFormatGalleries } from './smartart-format-galleries';
 import { buildChartDesignPanel } from './chart-design-ribbon';
-import { panelsOf, setTabHidden } from './ribbon-tab-api';
+import { panelOf, panelsOf, setTabHidden } from './ribbon-tab-api';
 import { preloadDesignGallery } from './design-ribbon-controls';
+import { TABLE_TABS } from './table-ribbon-keys';
+import { reapplyRibbonVisibility } from './ribbon-visibility';
 
 export type { RibbonAction } from './ribbon-action';
 
@@ -50,7 +52,8 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Review',
 		'View',
 		'Help',
-		'Table',
+		'Table Design',
+		'Table Layout',
 		'Header & Footer',
 		'Shape Format',
 		'Picture Format',
@@ -69,7 +72,8 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		panel.tabIndex = 0;
 		if (
 			[
-				'Table',
+				'Table Design',
+				'Table Layout',
 				'Header & Footer',
 				'Shape Format',
 				'Picture Format',
@@ -85,7 +89,6 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	buildOtherPanels(panels);
 	buildNativeTabs(panels);
 	panels.get('Layout')!.append(buildArrangeGroup(), group('Text', textDirectionMenu()));
-	panels.get('Table')!.append(group('Text', textDirectionMenu()));
 	// Customize Ribbon and Tell me discover the controls before their workflow is loaded.
 	buildMailings(panels.get('Mailings')!);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
@@ -97,7 +100,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	// Table tools are contextual: the tab appears only while the selection is in a table.
 	for (const key of [
 		'outlining',
-		'table',
+		...TABLE_TABS,
 		'header-footer',
 		'shape-format',
 		'picture-format',
@@ -167,4 +170,28 @@ export function setRibbonLocale(root: HTMLElement, value: string): void {
 	syncSelectTitles(root);
 	syncButtonTitles(root);
 	refitRibbon(root);
+}
+
+/** Load contextual commands after the selection first enters a table. */
+const tablePanels = new WeakMap<HTMLElement, Promise<void>>();
+export function loadTablePanels(root: HTMLElement): Promise<void> {
+	const pending = tablePanels.get(root);
+	if (pending) return pending;
+	const load = import('./table-ribbon')
+		.then(({ buildTablePanels }) => {
+			const design = panelOf(root, 'table-design');
+			const layout = panelOf(root, 'table-layout');
+			if (!design || !layout) return;
+			buildTablePanels(design, layout);
+			// Word puts Text Direction in Table Layout's Alignment group.
+			layout.append(group('Text', textDirectionMenu()));
+			setRibbonLocale(root, localeOf(root));
+			reapplyRibbonVisibility(root);
+		})
+		.catch((error: unknown) => {
+			tablePanels.delete(root);
+			throw error;
+		});
+	tablePanels.set(root, load);
+	return load;
 }

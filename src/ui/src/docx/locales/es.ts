@@ -1,6 +1,7 @@
 import { esArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { esDesign } from './design';
+import { esTableTab } from './es-table-tab';
 import { esStyleDialog } from './style-dialog';
 import { esSplitCells } from './split-cells';
 import { esOptions } from './options';
@@ -30,6 +31,7 @@ import { esRibbonNames } from './ribbon-names';
 export const es: LocaleStrings = {
 	...esArrange,
 	...viewsStrings['es'],
+	...esTableTab,
 	...esDesign,
 	...esStyleDialog,
 	...esOptions,

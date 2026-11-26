@@ -178,7 +178,8 @@ describe('localized rendering', () => {
 				'Review',
 				'View',
 				'Help',
-				'Table',
+				'Table Design',
+				'Table Layout',
 			],
 			fr: [
 				'Accueil',
@@ -190,7 +191,8 @@ describe('localized rendering', () => {
 				'Révision',
 				'Affichage',
 				'Aide',
-				'Tableau',
+				'Création de tableau',
+				'Disposition du tableau',
 			],
 			de: [
 				'Start',
@@ -202,7 +204,8 @@ describe('localized rendering', () => {
 				'Überprüfen',
 				'Ansicht',
 				'Hilfe',
-				'Tabelle',
+				'Tabellenentwurf',
+				'Tabellenlayout',
 			],
 			es: [
 				'Inicio',
@@ -214,9 +217,22 @@ describe('localized rendering', () => {
 				'Revisar',
 				'Vista',
 				'Ayuda',
-				'Tabla',
+				'Diseño de tabla',
+				'Presentación de tabla',
 			],
-			'zh-CN': ['开始', '插入', '设计', '布局', '引用', '邮件', '审阅', '视图', '帮助', '表格'],
+			'zh-CN': [
+				'开始',
+				'插入',
+				'设计',
+				'布局',
+				'引用',
+				'邮件',
+				'审阅',
+				'视图',
+				'帮助',
+				'表格设计',
+				'表格布局',
+			],
 		} as const;
 		for (const locale of EDITOR_LOCALES) {
 			const ribbon = createRibbon(locale);

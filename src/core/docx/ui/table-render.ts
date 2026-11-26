@@ -51,6 +51,15 @@ export function tableStyle(attrs: Record<string, unknown>): string {
 	const declarations = [
 		'border-collapse:collapse',
 		twipsPx(attrs.widthTwips) && `width:${twipsPx(attrs.widthTwips)}`,
+		typeof attrs.widthPercent === 'number' &&
+			Number.isFinite(attrs.widthPercent) &&
+			`width:${attrs.widthPercent * 100}%`,
+		attrs.tableLayout === 'fixed' && 'table-layout:fixed',
+		attrs.tableLayout === 'autofit' && 'table-layout:auto',
+		attrs.tableLayout === 'autofit' &&
+			attrs.widthPercent === null &&
+			attrs.widthTwips === null &&
+			'width:max-content;max-width:100%',
 		attrs.alignment === 'center' && 'margin-left:auto;margin-right:auto',
 		attrs.alignment === 'right' && 'margin-left:auto',
 		twipsPx(attrs.indentTwips) &&

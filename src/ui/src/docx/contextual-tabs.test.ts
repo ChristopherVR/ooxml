@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { selectionInTable, syncContextualTabs } from './contextual-tabs';
 import { createRibbon } from './ribbon';
 import { schema } from './schema';
+import { TABLE_TABS } from './table-ribbon-keys';
 import { ribbonTab, ribbonTabs } from './test-support';
 
 function tableState() {
@@ -41,42 +42,45 @@ const outside = (state: EditorState) =>
 
 afterEach(() => (document.body.innerHTML = ''));
 
-describe('contextual Table tab', () => {
-	it('has no tab in a new ribbon, and is tinted as a contextual tab once shown', async () => {
+describe('contextual table tabs', () => {
+	it('hides both tabs initially and marks each contextual once shown', async () => {
 		const ribbon = mount();
-		expect(await keys(ribbon)).not.toContain('table');
+		const initial = await keys(ribbon);
+		for (const tab of TABLE_TABS) expect(initial).not.toContain(tab);
 		syncContextualTabs(ribbon, inTable(tableState()));
-		expect(await keys(ribbon)).toContain('table');
-		expect((await ribbonTab(ribbon, 'table')).hasAttribute('data-contextual')).toBe(true);
+		expect(await keys(ribbon)).toEqual(expect.arrayContaining([...TABLE_TABS]));
+		for (const tab of TABLE_TABS)
+			expect((await ribbonTab(ribbon, tab)).hasAttribute('data-contextual')).toBe(true);
 	});
 
-	it('appears while the selection is in a table and leaves when it moves out', async () => {
+	it('shows both tabs while the selection is in a table and hides them when it moves out', async () => {
 		const ribbon = mount();
 		let state = inTable(tableState());
 		expect(selectionInTable(state)).toBe(true);
 		syncContextualTabs(ribbon, state);
-		expect(await keys(ribbon)).toContain('table');
+		expect(await keys(ribbon)).toEqual(expect.arrayContaining([...TABLE_TABS]));
 		state = outside(state);
 		syncContextualTabs(ribbon, state);
-		expect(await keys(ribbon)).not.toContain('table');
+		const after = await keys(ribbon);
+		for (const tab of TABLE_TABS) expect(after).not.toContain(tab);
 	});
 
-	it('returns to Home when the table tab was open as the selection leaves', async () => {
+	it.each(TABLE_TABS)('returns to Home when the selection leaves %s', async (tab) => {
 		const ribbon = mount();
 		let state = inTable(tableState());
 		syncContextualTabs(ribbon, state);
 		await settle(ribbon);
-		(await ribbonTab(ribbon, 'table')).click();
+		(await ribbonTab(ribbon, tab)).click();
 		await settle(ribbon);
-		expect(ribbon.querySelector('#dve-panel-table')!.hasAttribute('hidden')).toBe(false);
+		expect(ribbon.querySelector(`#dve-panel-${tab}`)!.hasAttribute('hidden')).toBe(false);
 		state = outside(state);
 		syncContextualTabs(ribbon, state);
 		await settle(ribbon);
 		expect((await ribbonTab(ribbon, 'home')).getAttribute('aria-selected')).toBe('true');
-		expect(ribbon.querySelector('#dve-panel-table')!.hasAttribute('hidden')).toBe(true);
+		expect(ribbon.querySelector(`#dve-panel-${tab}`)!.hasAttribute('hidden')).toBe(true);
 	});
 
-	it('skips the hidden tab when arrowing through the tab strip', async () => {
+	it('skips the hidden tabs when arrowing through the tab strip', async () => {
 		const ribbon = mount();
 		const help = await ribbonTab(ribbon, 'help');
 		help.focus();

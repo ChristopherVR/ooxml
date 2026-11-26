@@ -61,7 +61,7 @@ export type WordCustomization = EditorCustomization<
 	WordCapabilityId,
 	WordRegionRenderer,
 	WordMenuContext,
-	WordRibbonTabId
+	WordRibbonTabId | 'table'
 >;
 
 /** A customisation resolved into what each render site asks. */
@@ -92,7 +92,10 @@ export function resolveWordCustomization(
 	const capabilities = customization?.capabilities;
 	const set = <T extends string>(map: CapabilityActionMap<WordCapabilityId, T>) =>
 		new Set(capabilityHiddenActions(capabilities, map));
-	const hiddenTabs: ReadonlySet<string> = hiddenRibbonTabs(customization?.ribbon);
+	const configuredTabs = hiddenRibbonTabs(customization?.ribbon);
+	const hiddenTabs: ReadonlySet<string> = configuredTabs.has('table')
+		? new Set([...configuredTabs, 'table-design', 'table-layout'])
+		: configuredTabs;
 	return {
 		canEdit: isCapabilityEnabled(capabilities, 'edit'),
 		hiddenActions: capabilityHiddenActions(capabilities, WORD_CAPABILITY_ACTIONS),

@@ -101,3 +101,33 @@
 		color: HighlightText;
 	}
 }
+.dve-table-style-gallery {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 4px;
+	max-width: min(420px, calc(100vw - 16px));
+	max-height: 60vh;
+	overflow: auto;
+}
+.dve-table-style-gallery button {
+	display: grid;
+	justify-items: center;
+	gap: 3px;
+	padding: 4px;
+	white-space: normal;
+}
+.dve-table-style-gallery button[aria-pressed='true'] {
+	outline: 2px solid var(--blue);
+	outline-offset: -2px;
+}
+.dve-table-style-preview {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	width: 72px;
+	font-size: 8px;
+	color: #252423;
+	background-color: #fff;
+}
+.dve-table-style-preview > span {
+	text-align: center;
+}

@@ -277,6 +277,9 @@ export const schema = new Schema({
 			attrs: {
 				id: { default: '' },
 				tableStyleId: { default: null },
+				tableLook: { default: null },
+				tableLayout: { default: null },
+				starterGrid: { default: false },
 				structureEditable: { default: true },
 				/** Merged or nested table whose rows, columns and cells the structure commands can edit. */
 				restructurable: { default: false },
@@ -284,6 +287,7 @@ export const schema = new Schema({
 				grid: { default: null },
 				layout: { default: null },
 				widthTwips: { default: null },
+				widthPercent: { default: null },
 				alignment: { default: null },
 				indentTwips: { default: null },
 				borders: { default: null },
@@ -302,7 +306,8 @@ export const schema = new Schema({
 				// Columns come from the table grid, as in Word and Print Layout, not from cell widths.
 				let columns = 0;
 				node.firstChild?.forEach((cell) => (columns += Number(cell.attrs.colspan) || 1));
-				const grid = tableGridColumns(node.attrs, columns);
+				const grid =
+					node.attrs.tableLayout === 'autofit' ? null : tableGridColumns(node.attrs, columns);
 				const colgroup: DOMOutputSpec[] = grid
 					? [['colgroup', ...grid.map((width) => ['col', { style: `width:${width}px` }])]]
 					: [];
@@ -331,6 +336,7 @@ export const schema = new Schema({
 				/** First-paragraph ids (JSON) of the continuation cells a vertical merge has below this cell. */
 				continueKeys: { default: null },
 				widthTwips: { default: null },
+				widthPercent: { default: null },
 				verticalAlign: { default: null },
 				textDirection: { default: null },
 				shadingFill: { default: null },

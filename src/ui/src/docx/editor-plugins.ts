@@ -28,6 +28,7 @@ import { wordPastePlugin } from './word-paste';
 import { autoCorrectPlugin } from './autocorrect-plugin';
 import { PasteController, pasteOptionsPlugin } from './paste-options';
 import { pasteOptionsButtonPlugin, type PasteOptionsButtonHost } from './paste-options-button';
+import { tableCellSelectionPlugin } from './table-cell-selection';
 
 /** Word's paste: its HTML read as Word means it, Paste Options after it, Paste Special. */
 function pastePlugins(host: BodyPluginHost): Plugin[] {
@@ -74,6 +75,7 @@ export function bodyPlugins(host: BodyPluginHost): Plugin[] {
 		sectionBreaksPlugin(),
 		fieldGuardPlugin(),
 		tableStructureGuardPlugin(),
+		tableCellSelectionPlugin(),
 		contentControlPlugin(),
 		contentControlViewPlugin(),
 		formFieldGuardPlugin(() => host.model().protection),

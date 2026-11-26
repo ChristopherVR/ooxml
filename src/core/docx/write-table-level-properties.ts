@@ -76,13 +76,15 @@ export function patchTableProperties(
 		(side) => JSON.stringify(table.borders?.[side]) !== JSON.stringify(base?.borders?.[side]),
 	);
 	const lookChanged = JSON.stringify(table.look) !== JSON.stringify(base?.look);
+	const layoutChanged = table.layout !== base?.layout;
 	if (
 		!styleChanged &&
 		!widthChanged &&
 		!jcChanged &&
 		!indentChanged &&
 		!bordersChanged.length &&
-		!lookChanged
+		!lookChanged &&
+		!layoutChanged
 	)
 		return;
 	let props = first(node, 'tblPr');
@@ -124,6 +126,11 @@ export function patchTableProperties(
 		replaceChild(props, 'tblInd', indent);
 	}
 	if (bordersChanged.length) patchTableBorders(doc, props, table.borders, bordersChanged);
+	if (layoutChanged) {
+		const layout = table.layout ? makeW(doc, 'tblLayout') : undefined;
+		if (layout && table.layout) setW(layout, 'type', table.layout);
+		replaceChild(props, 'tblLayout', layout);
+	}
 	if (lookChanged) {
 		const hasLook =
 			table.look && TABLE_LOOK_FLAGS.some(([name]) => table.look?.[name] !== undefined);
@@ -166,22 +173,23 @@ export function patchTableGrid(
 export function patchCellWidth(
 	doc: XmlDocument,
 	tc: XmlElement,
-	next: TableCell['widthTwips'],
-	base: TableCell['widthTwips'],
+	next: TableCell,
+	base: TableCell,
 ): void {
-	if (next === base) return;
+	if (next.widthTwips === base.widthTwips && next.widthPercent === base.widthPercent) return;
+	const width = next.widthTwips ?? next.widthPercent;
 	let props = first(tc, 'tcPr');
 	if (!props) {
-		if (next === undefined) return;
+		if (width === undefined) return;
 		props = makeW(doc, 'tcPr');
 		tc.insertBefore(props, tc.firstChild);
 	}
-	if (next === undefined) replaceChild(props, 'tcW', undefined);
+	if (width === undefined) replaceChild(props, 'tcW', undefined);
 	else {
 		const old = first(props, 'tcW');
 		const element = old ?? makeW(doc, 'tcW');
-		setW(element, 'w', String(next));
-		setW(element, 'type', 'dxa');
+		setW(element, 'w', String(next.widthTwips === undefined ? Math.round(width * 5000) : width));
+		setW(element, 'type', next.widthTwips === undefined ? 'pct' : 'dxa');
 		if (!old) props.appendChild(element);
 	}
 	orderChildren(props, CELL_ORDER);

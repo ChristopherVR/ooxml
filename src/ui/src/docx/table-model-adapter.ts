@@ -3,7 +3,7 @@
 // id, because vertical-merge continuation cells and nested-table previews have no 1:1 visible
 // ProseMirror node to rebuild from; simple tables keep the existing rebuild-from-doc path.
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
-import { cellSourceBlocks, removedByEdit, resolveTableCellMargins } from 'ooxml-core/docx';
+import { cellSourceBlocks, removedByEdit, resolveTableCellMargins, twips } from 'ooxml-core/docx';
 import type {
 	ContentControl,
 	Paragraph,
@@ -49,6 +49,7 @@ export function tableNode(
 					rowspan,
 					continueKeys: continues.length ? JSON.stringify(continues.map(cellKey)) : null,
 					widthTwips: attrs.widthTwips,
+					widthPercent: cell.widthPercent ?? null,
 					verticalAlign: attrs.verticalAlign,
 					textDirection: cell.textDirection ?? null,
 					shadingFill: attrs.shadingFill,
@@ -76,6 +77,8 @@ export function tableNode(
 		{
 			id: block.id,
 			tableStyleId: block.style ?? '',
+			tableLook: block.look ?? null,
+			tableLayout: block.layout ?? null,
 			// Nested tables edit their text on the page; their grid and merges stay as authored.
 			structureEditable: !nested && block.structureEditable !== false,
 			// Merge and split work on any table whose cells tile its grid.
@@ -154,6 +157,8 @@ export function convertSimpleTable(
 				margins: _margins,
 				verticalAlign: _verticalAlign,
 				textDirection: _textDirection,
+				widthTwips: _widthTwips,
+				widthPercent: _widthPercent,
 				contentControl: _control,
 				...properties
 			} = source ?? { paragraphs: [] };
@@ -166,6 +171,12 @@ export function convertSimpleTable(
 					cell.attrs.widthTwips >= 0 && {
 						widthTwips: twips(cell.attrs.widthTwips),
 					}),
+				...(typeof cell.attrs.widthTwips === 'number' && {
+					widthTwips: twips(cell.attrs.widthTwips),
+				}),
+				...(typeof cell.attrs.widthPercent === 'number' && {
+					widthPercent: cell.attrs.widthPercent,
+				}),
 				...(direct ? { borders: JSON.parse(direct) as NonNullable<TableCell['borders']> } : {}),
 				...(/^(lrTb|tbRl|btLr|tb|rl|lr|tbV|rlV|lrV|lrTbV|tbLrV|tbRlV)$/.test(
 					String(cell.attrs.textDirection),

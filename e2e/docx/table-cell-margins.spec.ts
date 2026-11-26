@@ -34,7 +34,7 @@ for (const framework of ['react', 'vue', 'angular', 'svelte', 'solid', 'vanilla'
 		await expect(cells.nth(1)).toHaveCSS('padding-left', '0px');
 		const open = async () => {
 			await cells.first().click();
-			await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+			await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 			await editor.getByRole('button', { name: 'Table properties', exact: true }).click();
 			return dialogByHeading(editor, 'Table properties');
 		};

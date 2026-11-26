@@ -63,13 +63,13 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await newDocument(page);
 		await surface.click();
 		// Table tools are contextual: no Table tab until the caret is in a table.
-		await expect(editor.getByRole('tab', { name: 'Table', exact: true })).toHaveCount(0);
+		await expect(editor.getByRole('tab', { name: 'Table Layout', exact: true })).toHaveCount(0);
 		await insertTableOfSize(page);
 		const table = surface.locator('table');
 		await expect(table.locator('tr')).toHaveCount(2);
 		await expect(table.locator('tr').first().locator('td')).toHaveCount(2);
 		await table.locator('tr').nth(1).locator('td').nth(1).click();
-		await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+		await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 		await editor.getByRole('button', { name: 'Insert row below', exact: true }).click();
 		await expect(table.locator('tr')).toHaveCount(3);
 		await editor.getByRole('tab', { name: 'Home', exact: true }).click();
@@ -79,7 +79,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await expect(table.locator('tr')).toHaveCount(3);
 
 		await table.locator('tr').nth(1).locator('td').nth(1).click();
-		await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+		await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 		await editor.getByRole('button', { name: 'Insert column right', exact: true }).click();
 		for (const row of await table.locator('tr').all())
 			await expect(row.locator('td')).toHaveCount(3);
@@ -92,7 +92,7 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 			await expect(row.locator('td')).toHaveCount(3);
 
 		await table.locator('tr').first().locator('td').nth(1).click();
-		await editor.getByRole('tab', { name: 'Table', exact: true }).click();
+		await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
 		await editor.getByRole('button', { name: 'Delete column', exact: true }).click();
 		await expect(table.locator('tr').first().locator('td')).toHaveCount(2);
 		await table.locator('tr').nth(2).locator('td').first().click();

@@ -55,7 +55,7 @@ const visible = (side: StoredSide | undefined) =>
 
 /** The table and the cells the selection touches, or null outside a simple table. */
 export function tableBorderContext(state: EditorState): TableBorderContext | null {
-	const { $from, from, to } = state.selection;
+	const { $from, ranges } = state.selection;
 	for (let depth = $from.depth; depth > 0; depth--) {
 		const table = $from.node(depth);
 		if (table.type.name !== 'table') continue;
@@ -65,7 +65,12 @@ export function tableBorderContext(state: EditorState): TableBorderContext | nul
 		table.forEach((row, rowOffset, rowIndex) => {
 			row.forEach((cell, cellOffset, column) => {
 				const pos = tablePos + 1 + rowOffset + 1 + cellOffset;
-				if (Math.max(from, pos + 1) <= Math.min(to, pos + cell.nodeSize - 1))
+				if (
+					ranges.some(
+						({ $from, $to }) =>
+							Math.max($from.pos, pos + 1) <= Math.min($to.pos, pos + cell.nodeSize - 1),
+					)
+				)
 					cells.push({ pos, row: rowIndex, column, node: cell });
 			});
 		});
@@ -209,6 +214,33 @@ export function setCellBorders(
 		ctx,
 		edges.map((edge) => ({ ...edge, pen: preset === 'none' || allHave ? null : pen })),
 	);
+}
+
+/** Paint a single edge, including the neighbor's side of that edge. */
+export function paintCellBorder(
+	view: EditorView,
+	tablePos: number,
+	row: number,
+	column: number,
+	side: CellSide,
+	pen: BorderPen | null,
+): boolean {
+	const table = view.state.doc.nodeAt(tablePos);
+	if (
+		!view.editable ||
+		table?.type.name !== 'table' ||
+		table.attrs.structureEditable === false ||
+		!table.maybeChild(row)?.maybeChild(column)
+	)
+		return false;
+	const ctx = {
+		tablePos,
+		rows: table.childCount,
+		columns: table.firstChild?.childCount ?? 0,
+		rect: { top: row, bottom: row, left: column, right: column },
+		cells: [],
+	};
+	return applyEdits(view, ctx, [{ row, column, side, pen }]);
 }
 
 export interface CellBorderSettings {

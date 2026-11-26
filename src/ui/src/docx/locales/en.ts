@@ -1,6 +1,7 @@
 import { enArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { enDesign } from './design';
+import { enTableTab } from './en-table-tab';
 import { enStyleDialog } from './style-dialog';
 import { enSplitCells } from './split-cells';
 import { enObjects } from './objects';
@@ -33,6 +34,7 @@ import { enRibbonNames } from './ribbon-names';
 export const en = {
 	...enArrange,
 	...viewsStrings['en'],
+	...enTableTab,
 	...enDesign,
 	...enStyleDialog,
 	...enOptions,

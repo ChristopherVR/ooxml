@@ -99,7 +99,7 @@ denied write or a changed selection never deletes content. Plain-text-only APIs
 remain supported. External HTML is not an OOXML preservation format, and unsupported
 styles, drawings and equation metadata are not promised to survive clipboard transfer.
 
-Table > Properties edits selected cells' vertical alignment (Top, Center or Bottom),
+Table Layout > Properties edits selected cells' vertical alignment (Top, Center or Bottom),
 with mixed selections left unchanged and a default option that removes direct overrides.
 Alignment applies with the other properties as one undoable edit. Save/reopen keeps
 unrelated imported cell XML. Merged and complex tables remain protected.
@@ -142,7 +142,7 @@ Still missing:
 - Pictures and links in headers, footers and notes are resolved, shown and saved with each part's own
   relationships; while a header, footer or note is being edited, the ribbon (formatting, Insert
   Picture, Link) targets it.
-- Tables: default cell margins (`tblCellMar`) and row properties (height with its rule, keep-together, repeat-as-header) are modeled and render in both views; Print Layout clips exact-height rows and repeats header rows. Table > Properties now edits these settings for rectangular tables, with mixed selected rows, validation and one-step undo. Row properties follow surviving rows during structural edits. Opened DOCX packages save changes to these fields while preserving unrelated table XML. Merged and nested tables take Insert/Delete row and column, Merge cells and Split cells (Word's results recorded in `src/core/docx/__fixtures__/word-table-structure.json`); edits Word turns into non-grid tables (column insert left of or through a merged cell, partial column delete through a merge) are refused. Tables with row offsets, tracked row/cell changes or inline markup in cells remain protected. Table > Properties also edits selected-cell
+- Tables: default cell margins (`tblCellMar`) and row properties (height with its rule, keep-together, repeat-as-header) are modeled and render in both views; Print Layout clips exact-height rows and repeats header rows. Table Layout > Properties now edits these settings for rectangular tables, with mixed selected rows, validation and one-step undo. Row properties follow surviving rows during structural edits. Opened DOCX packages save changes to these fields while preserving unrelated table XML. Merged and nested tables take Insert/Delete row and column, Merge cells and Split cells (Word's results recorded in `src/core/docx/__fixtures__/word-table-structure.json`); edits Word turns into non-grid tables (column insert left of or through a merged cell, partial column delete through a merge) are refused. Tables with row offsets, tracked row/cell changes or inline markup in cells remain protected. Table Layout > Properties also edits selected-cell
   margin overrides, with mixed values left blank and only changed sides applied. Use table
   defaults removes the selected cells’ direct overrides. Row settings, table defaults and
   cell overrides apply together as one undoable edit; imported widths, borders, shading
@@ -153,7 +153,7 @@ Still missing:
   Cell or Table draw per-cell edges (`w:tcBorders`): the selected cells' rectangle, one pen, the shared edge on the
   neighbouring cell updated too, one undo step. Existing cell XML keeps its other sides, untouched shading and
   width; only changed sides are rewritten. Merged/nested/complex tables stay protected; table-level
-  `w:tblBorders` and table styles are not edited (cells override them), pen per side, diagonal
+  `w:tblBorders` is inherited beneath these cell overrides. Diagonal
   borders and a preview are not offered. Cell and Table scope now offer a solid fill or
   No Color, applied together with borders in one undo step. Mixed fills are left untouched
   unless changed; No Color explicitly overrides inherited table-style fills. Imported

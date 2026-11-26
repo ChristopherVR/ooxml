@@ -16,7 +16,7 @@ export const TABLE_LOOK_FLAGS = [
 	['noVBand', 0x0400],
 ] as const;
 
-const DEFAULT_TABLE_LOOK: TableLook = {
+export const DEFAULT_TABLE_LOOK: TableLook = {
 	firstRow: true,
 	lastRow: false,
 	firstColumn: true,

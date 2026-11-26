@@ -50,7 +50,7 @@ export function insertTable(
 	};
 	const paragraph = () => schema.nodes.paragraph.create({ id: nextId('cell') });
 	const table = schema.nodes.table.create(
-		{ id: nextId('table'), borders: JSON.stringify(DEFAULT_TABLE_BORDERS) },
+		{ id: nextId('table'), borders: JSON.stringify(DEFAULT_TABLE_BORDERS), starterGrid: true },
 		Array.from({ length: rowCount }, () =>
 			schema.nodes.tableRow.create(
 				null,

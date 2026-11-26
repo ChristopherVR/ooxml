@@ -9,7 +9,7 @@ import {
 	ribbonActionIdForLabel,
 	type LegacyRibbonLabel,
 } from 'ooxml-core/docx/ui';
-import { createRibbon } from './ribbon';
+import { createRibbon, loadTablePanels } from './ribbon';
 import { ribbonControlId } from './ribbon-visibility';
 import { must, paragraphAt, quickAccessButton } from './test-support';
 
@@ -289,9 +289,10 @@ describe('ribbon action ids', () => {
 		expect(ribbonActionIdForLabel(legacy)).toBe('insert-table');
 	});
 
-	it('lists exactly the labelled ribbon controls before selecting any tab', () => {
+	it('lists exactly the labelled ribbon controls before selecting any tab', async () => {
 		const ribbon = createRibbon('en');
 		const outline = mountOutlineRibbon(ribbon, 'en');
+		await loadTablePanels(ribbon);
 		const ids = new Set<string>();
 		for (const control of ribbon.querySelectorAll<HTMLElement>(
 			'.ribbon-panel button[aria-label], .ribbon-panel select[aria-label], .ribbon-panel input[aria-label]',

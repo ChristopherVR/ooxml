@@ -58,6 +58,22 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 			.catch((error: unknown) => core.host.reportError(error));
 		return;
 	}
+	if (action.type === 'tableTab') {
+		const generation = core.loadGeneration;
+		const view = core.targetView();
+		const selection = view?.state.selection;
+		void import('./table-tab-actions')
+			.then(({ runTableTabAction }) => {
+				if (
+					generation === core.loadGeneration &&
+					view === core.targetView() &&
+					view?.state.selection === selection
+				)
+					runTableTabAction(core, action);
+			})
+			.catch((error: unknown) => core.host.reportError(error));
+		return;
+	}
 	if (action.type === 'mailings') {
 		if (core.loading || !core.host.canEditOutsideBody()) return;
 		const generation = core.loadGeneration;
