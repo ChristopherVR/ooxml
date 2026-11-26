@@ -21,6 +21,7 @@ const common = {
 		'lib0',
 		'#embedded-workbook-chart',
 		'#xpath-runtime',
+		'#inkml-runtime',
 	],
 	treeshake: true,
 	platform: 'neutral' as const,

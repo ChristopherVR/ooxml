@@ -1,5 +1,5 @@
-import { at } from '../../../geometry/indexed';
-import { isFiniteNumber } from '../../../units/finite';
+import { at } from '../../geometry/indexed';
+import { isFiniteNumber } from '../../units/finite';
 import type { ChannelOrder } from './inkml-trace-decode';
 
 /**

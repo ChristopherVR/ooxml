@@ -20,7 +20,7 @@ assign(['presentation:element:contentPart'], {
 			'round-trips contentPart as a direct child of spTree (not inside p:sp)',
 		]),
 		testEvidence(
-			'src/core/utils/inkml-content-part.test.ts',
+			'../drawingml/inkml/inkml-content-part.test.ts',
 			['decodes a raw traceFormat/trace part into an SVG M..L.. path'],
 			['parse'],
 		),

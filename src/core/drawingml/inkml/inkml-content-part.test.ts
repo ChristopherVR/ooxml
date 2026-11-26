@@ -1,11 +1,13 @@
-import { MAX_INK_SAMPLES } from '../../../drawingml/ink-geometry';
+import { MAX_INK_SAMPLES } from '../ink-geometry';
 import { MAX_INK_PART_CHARS, MAX_INK_TRACES, MAX_INK_TRACE_CHARS } from './inkml-limits';
 import { XMLParser } from 'fast-xml-parser';
 import { describe, expect, it } from 'vitest';
 
-import type { ContentPartInkStroke, XmlObject } from '../types';
+import type { InkStroke, InkXmlObject } from './types';
 import { buildInkMlContent, parseInkMlContent } from './inkml-content-part';
-import { at } from '../../test-support/access';
+import { at } from '../../geometry/indexed';
+
+const fixture = (value: unknown): InkXmlObject => value as InkXmlObject;
 
 // Mirror the loader's parser options (see PptxRuntimeDependencyFactory): keep
 // attribute prefixes and preserve element text verbatim so trace strings such
@@ -18,8 +20,8 @@ const parser = new XMLParser({
 	trimValues: false,
 });
 
-function parse(xml: string): XmlObject {
-	return parser.parse(xml) as XmlObject;
+function parse(xml: string): InkXmlObject {
+	return parser.parse(xml) as InkXmlObject;
 }
 
 describe('parseInkMlContent - real PowerPoint InkML', () => {
@@ -41,7 +43,7 @@ describe('parseInkMlContent - real PowerPoint InkML', () => {
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
 		expect(strokes).toHaveLength(1);
-		const [stroke] = strokes;
+		const stroke = at(strokes, 0);
 		expect(stroke.path).toBe('M 128 240 L 130 242 L 133 245');
 		// The path must be usable SVG (starts with a moveto, only M/L/number).
 		expect(stroke.path).toMatch(/^M[\s\d.-]+(?:L[\s\d.-]+)+$/);
@@ -138,7 +140,7 @@ describe('parseInkMlContent - pen tilt channels', () => {
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
 		expect(strokes).toHaveLength(1);
-		const [stroke] = strokes;
+		const stroke = at(strokes, 0);
 		expect(stroke.tiltAngles).toBeDefined();
 		expect(stroke.tiltAngles).toHaveLength(3);
 		// Point 0 leans purely along +X (OTx=10, OTy=0) => angle 0.
@@ -167,7 +169,7 @@ describe('parseInkMlContent - pen tilt channels', () => {
   <inkml:trace>0 0 90 45, 10 0 180 90</inkml:trace>
 </inkml:ink>`;
 		const { strokes } = parseInkMlContent(parse(xml));
-		const [stroke] = strokes;
+		const stroke = at(strokes, 0);
 		expect(stroke.tiltAngles).toHaveLength(2);
 		// 90 degrees azimuth => pi/2 radians.
 		expect(stroke.tiltAngles?.[0]).toBeCloseTo(Math.PI / 2, 5);
@@ -232,26 +234,26 @@ describe('parseInkMlContent - authored (own) format', () => {
 
 describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 	it('serialises byte-identically to before this feature when no stroke has tilt', () => {
-		const strokes: ContentPartInkStroke[] = [
+		const strokes: InkStroke[] = [
 			{ path: 'M 1 2 L 3 4', color: '#000000', width: 2, opacity: 1, pressures: [0.2, 0.9] },
 		];
 		const built = buildInkMlContent(strokes);
-		const root = built['ink:ink'] as XmlObject;
+		const root = built['ink:ink'] as InkXmlObject;
 		const channels = (
 			(
-				((root['ink:definitions'] as XmlObject)['ink:context'] as XmlObject)[
+				((root['ink:definitions'] as InkXmlObject)['ink:context'] as InkXmlObject)[
 					'ink:inkSource'
-				] as XmlObject
-			)['ink:traceFormat'] as XmlObject
-		)['ink:channel'] as XmlObject[];
+				] as InkXmlObject
+			)['ink:traceFormat'] as InkXmlObject
+		)['ink:channel'] as InkXmlObject[];
 		expect(channels).toHaveLength(3);
 		expect(channels.map((c) => c['@_name'])).toStrictEqual(['X', 'Y', 'F']);
-		const trace = at(root['ink:trace'] as XmlObject[], 0);
+		const trace = at(root['ink:trace'] as InkXmlObject[], 0);
 		expect(trace['#text']).toBe('1 2 0.2, 3 4 0.9');
 	});
 
 	it('declares OTx/OTy and authors per-point values when a stroke has tilt', () => {
-		const strokes: ContentPartInkStroke[] = [
+		const strokes: InkStroke[] = [
 			{
 				path: 'M 0 0 L 10 0 L 20 0',
 				color: '#000000',
@@ -262,14 +264,14 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 			},
 		];
 		const built = buildInkMlContent(strokes);
-		const root = built['ink:ink'] as XmlObject;
+		const root = built['ink:ink'] as InkXmlObject;
 		const channels = (
 			(
-				((root['ink:definitions'] as XmlObject)['ink:context'] as XmlObject)[
+				((root['ink:definitions'] as InkXmlObject)['ink:context'] as InkXmlObject)[
 					'ink:inkSource'
-				] as XmlObject
-			)['ink:traceFormat'] as XmlObject
-		)['ink:channel'] as XmlObject[];
+				] as InkXmlObject
+			)['ink:traceFormat'] as InkXmlObject
+		)['ink:channel'] as InkXmlObject[];
 		expect(channels.map((c) => c['@_name'])).toStrictEqual(['X', 'Y', 'F', 'OTx', 'OTy']);
 
 		// Round-trip through the reader: the same inverse mapping this project's
@@ -284,7 +286,7 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 	});
 
 	it('a stroke with no tilt in a tilt-bearing document authors "0 0" (no visible lean)', () => {
-		const strokes: ContentPartInkStroke[] = [
+		const strokes: InkStroke[] = [
 			{
 				path: 'M 0 0 L 10 0',
 				color: '#000000',
@@ -296,15 +298,15 @@ describe('buildInkMlContent - OTx/OTy tilt authoring', () => {
 			{ path: 'M 5 5 L 6 6', color: '#111111', width: 1, opacity: 1 },
 		];
 		const built = buildInkMlContent(strokes);
-		const root = built['ink:ink'] as XmlObject;
-		const plainTrace = at(root['ink:trace'] as XmlObject[], 1);
+		const root = built['ink:ink'] as InkXmlObject;
+		const plainTrace = at(root['ink:trace'] as InkXmlObject[], 1);
 		expect(plainTrace['#text']).toBe('5 5 0.5 0 0, 6 6 0.5 0 0');
 	});
 });
 
 describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 	it('re-declares AZIMUTH/ALTITUDE (not OTx/OTy) when every tilt-carrying stroke was decoded from that pair', () => {
-		const strokes: ContentPartInkStroke[] = [
+		const strokes: InkStroke[] = [
 			{
 				path: 'M 0 0 L 10 0 L 20 0',
 				color: '#000000',
@@ -316,13 +318,13 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 			},
 		];
 		const built = buildInkMlContent(strokes);
-		const root = built['ink:ink'] as XmlObject;
+		const root = built['ink:ink'] as InkXmlObject;
 		const channels = (
-			((root['ink:definitions'] as XmlObject)['ink:context'] as XmlObject)[
+			((root['ink:definitions'] as InkXmlObject)['ink:context'] as InkXmlObject)[
 				'ink:inkSource'
-			] as XmlObject
-		)['ink:traceFormat'] as XmlObject;
-		const channelNames = (channels['ink:channel'] as XmlObject[]).map((c) => c['@_name']);
+			] as InkXmlObject
+		)['ink:traceFormat'] as InkXmlObject;
+		const channelNames = (channels['ink:channel'] as InkXmlObject[]).map((c) => c['@_name']);
 		expect(channelNames).toStrictEqual(['X', 'Y', 'F', 'AZIMUTH', 'ALTITUDE']);
 		expect(channelNames).not.toContain('OTx');
 	});
@@ -344,14 +346,14 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 		// decoded strokes; the rebuilt part must keep declaring AZIMUTH/ALTITUDE,
 		// not silently convert to OTx/OTy.
 		const rebuilt = buildInkMlContent(loaded.strokes);
-		const root = rebuilt['ink:ink'] as XmlObject;
+		const root = rebuilt['ink:ink'] as InkXmlObject;
 		const channelNames = (
 			(
-				((root['ink:definitions'] as XmlObject)['ink:context'] as XmlObject)[
+				((root['ink:definitions'] as InkXmlObject)['ink:context'] as InkXmlObject)[
 					'ink:inkSource'
-				] as XmlObject
-			)['ink:traceFormat'] as XmlObject
-		)['ink:channel'] as XmlObject[];
+				] as InkXmlObject
+			)['ink:traceFormat'] as InkXmlObject
+		)['ink:channel'] as InkXmlObject[];
 		expect(channelNames.map((c) => c['@_name'])).toStrictEqual([
 			'X',
 			'Y',
@@ -381,7 +383,7 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 	});
 
 	it('falls back to OTx/OTy when strokes mix AZIMUTH/ALTITUDE with vector (or captured) tilt', () => {
-		const strokes: ContentPartInkStroke[] = [
+		const strokes: InkStroke[] = [
 			{
 				path: 'M 0 0 L 10 0',
 				color: '#000000',
@@ -402,14 +404,14 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 			},
 		];
 		const built = buildInkMlContent(strokes);
-		const root = built['ink:ink'] as XmlObject;
+		const root = built['ink:ink'] as InkXmlObject;
 		const channelNames = (
 			(
-				((root['ink:definitions'] as XmlObject)['ink:context'] as XmlObject)[
+				((root['ink:definitions'] as InkXmlObject)['ink:context'] as InkXmlObject)[
 					'ink:inkSource'
-				] as XmlObject
-			)['ink:traceFormat'] as XmlObject
-		)['ink:channel'] as XmlObject[];
+				] as InkXmlObject
+			)['ink:traceFormat'] as InkXmlObject
+		)['ink:channel'] as InkXmlObject[];
 		expect(channelNames.map((c) => c['@_name'])).toStrictEqual(['X', 'Y', 'F', 'OTx', 'OTy']);
 	});
 });
@@ -419,7 +421,7 @@ describe('InkML decode budgets', () => {
 		const oversized = { ink: { annotation: ' '.repeat(MAX_INK_PART_CHARS), trace: '1 2,3 4' } };
 		const crowded = { ink: { trace: Array.from({ length: MAX_INK_TRACES + 1 }, () => '1 2,3 4') } };
 		expect(parseInkMlContent(oversized).strokes).toEqual([]);
-		expect(parseInkMlContent(crowded).strokes).toEqual([]);
+		expect(parseInkMlContent(fixture(crowded)).strokes).toEqual([]);
 	});
 
 	it('omits oversized traces before decoding and keeps valid siblings', () => {
@@ -427,7 +429,7 @@ describe('InkML decode budgets', () => {
 		const trace = '1 2,'.repeat(MAX_INK_SAMPLES - 1) + '3 4';
 		const oversizedPath = { '@_pva:path': 'M 1 2' + ' L 3 4'.repeat(MAX_INK_SAMPLES) };
 		const part = { ink: { trace: [oversizedText, oversizedPath, trace + ',3 4', trace] } };
-		const { strokes } = parseInkMlContent(part);
+		const { strokes } = parseInkMlContent(fixture(part));
 		expect(strokes).toHaveLength(1);
 		expect(strokes[0]?.path.match(/[ML]/gu)).toHaveLength(MAX_INK_SAMPLES);
 	});
@@ -448,7 +450,7 @@ it('uses integer offsets and a separate context for untimed strokes', () => {
 	expect(json).toContain('"@_pva:sampleTimes":"230,254"');
 	expect(json).toContain('"#text":"0 0 0.5, 20 10 0.5"');
 	expect(json).not.toContain('pva:untimed');
-	expect(parseInkMlContent(part).strokes.map((item) => item.pointTimestamps)).toEqual([
+	expect(parseInkMlContent(fixture(part)).strokes.map((item) => item.pointTimestamps)).toEqual([
 		[epoch, epoch + 17],
 		undefined,
 		[epoch + 230, epoch + 254],

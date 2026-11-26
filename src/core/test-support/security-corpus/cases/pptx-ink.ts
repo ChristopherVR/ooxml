@@ -1,4 +1,4 @@
-import { parseInkMlContent } from '../../../pptx/core/utils/inkml-content-part';
+import { parseInkMlContent } from '../../../drawingml/inkml/inkml-content-part';
 import type { SecurityCase } from '../case';
 
 export const cases: readonly SecurityCase[] = [

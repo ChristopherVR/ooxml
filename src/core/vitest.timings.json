@@ -1774,7 +1774,7 @@
 	"pptx/core/utils/image-first-pixel-jpeg.test.ts": 0.01,
 	"pptx/core/utils/image-first-pixel-png.test.ts": 0.02,
 	"pptx/core/utils/inflate.test.ts": 0.01,
-	"pptx/core/utils/inkml-content-part.test.ts": 0.03,
+	"drawingml/inkml/inkml-content-part.test.ts": 0.03,
 	"pptx/core/utils/layout-display-name.test.ts": 0.01,
 	"pptx/core/utils/legacy-comment-threading.test.ts": 0.01,
 	"pptx/core/utils/linked-text-box-utils.test.ts": 0.01,

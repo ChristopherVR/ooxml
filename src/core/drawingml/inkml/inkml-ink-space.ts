@@ -1,4 +1,4 @@
-import { isFiniteNumber } from '../../../units/finite';
+import { isFiniteNumber } from '../../units/finite';
 /**
  * The bridge between an InkML part's own coordinate system and the box the
  * `p:contentPart` occupies on the slide.

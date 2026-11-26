@@ -108,6 +108,15 @@ export * from './shape-effects-catalog';
 export * from './picture-styles-catalog';
 export * from './picture-styles-spec';
 export * from './picture-style-format';
-/** Load geometry, recognition and playback helpers when working with ink strokes. */
+/** Load ink geometry, recognition, playback and the InkML part reader and writer on first use. */
 export const loadInkTools = () => import('./ink');
 export type { InkCoordinate } from './ink-geometry';
+export * from './ink-pens';
+export type { InkStroke, InkXmlObject } from './inkml/types';
+export type { InkSample, InkBox } from './inkml/edit';
+export type { RecognizedInkShape } from './ink-recognition';
+export type { InkReplayEntry, InkReplayTiming } from './ink-replay';
+
+/** What `loadInkTools` resolves to. */
+export type InkTools = Awaited<ReturnType<typeof loadInkTools>>;
+export type { InkShape } from './inkml/to-shape';

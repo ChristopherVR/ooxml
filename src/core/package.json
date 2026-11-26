@@ -49,6 +49,11 @@
 			"import": "./dist/xlsx/embedded-chart.mjs",
 			"require": "./dist/xlsx/embedded-chart.cjs"
 		},
+		"#inkml-runtime": {
+			"types": "./dist/drawingml/inkml/runtime.d.ts",
+			"import": "./dist/drawingml/inkml-runtime.mjs",
+			"require": "./dist/drawingml/inkml-runtime.cjs"
+		},
 		"#xpath-runtime": {
 			"types": "./dist/xml/xpath-runtime.d.ts",
 			"import": "./dist/xml/xpath-runtime.mjs",

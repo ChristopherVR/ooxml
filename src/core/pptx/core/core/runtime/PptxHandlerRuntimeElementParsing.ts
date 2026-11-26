@@ -9,7 +9,7 @@ import type {
 	PptxTableData,
 } from '../../types';
 import { parseInkMlContent, parseModel3DScene } from '../../utils';
-import { MAX_INK_PART_CHARS } from '../../utils/inkml-limits';
+import { MAX_INK_PART_CHARS } from '../../../../drawingml/inkml/inkml-limits';
 import { normalizePlaceholderIndex } from '../../utils/placeholder-index';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSavePipeline';
 import type { PlaceholderInfo } from './PptxHandlerRuntimeTypes';

@@ -1,4 +1,4 @@
-import type { ContentPartInkStroke, XmlObject } from '../types';
+import type { InkStroke, InkXmlObject } from './types';
 import {
 	countAuthoredInkPathSamples,
 	countInkTraceSamples,
@@ -19,7 +19,7 @@ import {
 	pointsToTimestamps,
 	resolveChannelOrder,
 } from './inkml-trace-decode';
-import { isFiniteNumber } from '../../../units/finite';
+import { isFiniteNumber } from '../../units/finite';
 
 // Re-exported for the existing import sites (and colocated tests): the
 // writer half of this module was split out to `inkml-content-part-writer.ts`
@@ -27,11 +27,11 @@ import { isFiniteNumber } from '../../../units/finite';
 export { buildInkMlContent } from './inkml-content-part-writer';
 
 export interface ParsedInkMlContent {
-	strokes: ContentPartInkStroke[];
-	rawXml: XmlObject;
+	strokes: InkStroke[];
+	rawXml: InkXmlObject;
 }
 
-type BrushStyle = Pick<ContentPartInkStroke, 'color' | 'width' | 'opacity'>;
+type BrushStyle = Pick<InkStroke, 'color' | 'width' | 'opacity'>;
 
 const DEFAULT_BRUSH: BrushStyle = { color: '#000000', width: 1, opacity: 1 };
 
@@ -45,12 +45,12 @@ const DEFAULT_BRUSH: BrushStyle = { color: '#000000', width: 1, opacity: 1 };
  * carrying the library's own authored `@pva:path` are already in element space
  * and pass through untouched.
  */
-export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedInkMlContent {
+export function parseInkMlContent(data: InkXmlObject, box?: InkTargetBox): ParsedInkMlContent {
 	const index = indexInkMl(data);
 	if (!index || !nsGet(data, 'ink')) return { strokes: [], rawXml: data };
 	const brushes = collectBrushes(index.brushes);
 	const timing = inkMlTiming(index);
-	const channelOrders = new Map<XmlObject | undefined, string[]>();
+	const channelOrders = new Map<InkXmlObject | undefined, string[]>();
 
 	// Bounds cover the whole part, so normalisation keeps strokes together.
 	let remainingSamples = MAX_INK_PART_SAMPLES;
@@ -100,7 +100,7 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 		: undefined;
 	const mapPoint = bounds && box ? inkPointMapper(bounds, box) : undefined;
 
-	const strokes: ContentPartInkStroke[] = [];
+	const strokes: InkStroke[] = [];
 	for (const entry of decoded) {
 		const points =
 			mapPoint && !entry.authored
@@ -154,7 +154,7 @@ function mapDecodedPoints(
  * writes `units="cm"`), so a raw `Number(value)` would have produced a 0.05 px
  * stroke even once the brush was found.
  */
-function collectBrushes(nodes: readonly XmlObject[]): Map<string, BrushStyle> {
+function collectBrushes(nodes: readonly InkXmlObject[]): Map<string, BrushStyle> {
 	const brushes = new Map<string, BrushStyle>();
 	for (const brush of nodes) {
 		if (typeof brush === 'string') {
@@ -174,7 +174,9 @@ function collectBrushes(nodes: readonly XmlObject[]): Map<string, BrushStyle> {
 		const id = String(nsAttr(brush, 'id') ?? '');
 		brushes.set(id, {
 			color: String(properties.get('color')?.value ?? DEFAULT_BRUSH.color),
-			width: isFiniteNumber(width) && width > 0 ? width : DEFAULT_BRUSH.width,
+			// Rounded, so a width this library wrote in centimetres reads back as the same pixels.
+			width:
+				isFiniteNumber(width) && width > 0 ? Math.round(width * 1e6) / 1e6 : DEFAULT_BRUSH.width,
 			opacity: brushOpacity(properties),
 		});
 	}

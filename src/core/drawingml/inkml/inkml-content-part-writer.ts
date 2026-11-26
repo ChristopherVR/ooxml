@@ -1,4 +1,4 @@
-import type { ContentPartInkStroke, XmlObject } from '../types';
+import type { InkStroke, InkXmlObject } from './types';
 import { resolveInkClock, strokeStart, timestampOffset } from './inkml-write-clock';
 
 /**
@@ -23,7 +23,7 @@ interface TiltChannels {
  * Which tilt channel pair (if any) the whole part's shared `traceFormat`
  * declares. `'azimuthAltitude'` is used only when EVERY tilt-carrying stroke
  * was itself decoded from `AZIMUTH`/`ALTITUDE` (see
- * {@link ContentPartInkStroke.tiltEncoding}); a mixed part (or one containing
+ * {@link InkStroke.tiltEncoding}); a mixed part (or one containing
  * any stroke whose tilt has no recorded encoding, i.e. this library's own
  * `OTx`/`OTy`-equivalent capture) falls back to `'vector'`, since a single
  * `traceFormat` cannot declare two competing tilt encodings for different
@@ -33,7 +33,7 @@ interface TiltChannels {
 type TiltMode = 'none' | 'vector' | 'azimuthAltitude';
 
 /** Decide the whole part's tilt channel declaration from its strokes. */
-function resolveTiltMode(strokes: readonly ContentPartInkStroke[]): TiltMode {
+function resolveTiltMode(strokes: readonly InkStroke[]): TiltMode {
 	const tiltStrokes = strokes.filter(hasStrokeTilt);
 	if (tiltStrokes.length === 0) {
 		return 'none';
@@ -45,16 +45,16 @@ function resolveTiltMode(strokes: readonly ContentPartInkStroke[]): TiltMode {
 
 /** Build schema-shaped InkML while retaining unknown nodes from a loaded part. */
 export function buildInkMlContent(
-	strokes: readonly ContentPartInkStroke[],
-	rawXml?: XmlObject,
-): XmlObject {
+	strokes: readonly InkStroke[],
+	rawXml?: InkXmlObject,
+): InkXmlObject {
 	const data = rawXml ? { ...rawXml } : {};
 	// A loaded PowerPoint part is keyed `inkml:ink`, not `ink:ink`. Missing that
 	// wrote a SECOND root element beside PowerPoint's, producing an XML part with
 	// two roots that no consumer can read.
 	const existingKey = Object.keys(data).find((key) => localNameOf(key) === 'ink');
-	const existingRoot = existingKey ? (data[existingKey] as XmlObject | undefined) : undefined;
-	const root: XmlObject = existingRoot ? { ...existingRoot } : {};
+	const existingRoot = existingKey ? (data[existingKey] as InkXmlObject | undefined) : undefined;
+	const root: InkXmlObject = existingRoot ? { ...existingRoot } : {};
 	deleteStaleInkChildren(root);
 	root['@_xmlns:ink'] = INKML_NAMESPACE;
 	root['@_xmlns:pva'] = METADATA_NAMESPACE;
@@ -90,11 +90,7 @@ export function buildInkMlContent(
 			: buildContext('ctx0', tiltMode, clock),
 		'ink:brush': strokes.map((stroke, index) => ({
 			'@_xml:id': `brush${index + 1}`,
-			'ink:brushProperty': [
-				{ '@_name': 'color', '@_value': stroke.color },
-				{ '@_name': 'width', '@_value': String(stroke.width) },
-				{ '@_name': 'opacity', '@_value': String(stroke.opacity) },
-			],
+			'ink:brushProperty': brushProperties(stroke),
 		})),
 	};
 	root['ink:trace'] = strokes.map((stroke, index) => {
@@ -124,8 +120,29 @@ export function buildInkMlContent(
 	return data;
 }
 
+/**
+ * A brush as Word, Excel and PowerPoint 16 read it, checked by opening saved files in each: the
+ * size as `width` and `height` in centimetres (Word draws a unitless width as a grey
+ * hairline, ignoring the colour too), the colour, and InkML `transparency` (0 opaque to 255
+ * invisible), which the applications honour; `opacity` keeps the exact value for this library's
+ * own reader.
+ */
+function brushProperties(stroke: InkStroke): InkXmlObject[] {
+	const size = String((stroke.width * 2.54) / 96);
+	const opacity = Math.max(0, Math.min(1, stroke.opacity));
+	return [
+		{ '@_name': 'width', '@_value': size, '@_units': 'cm' },
+		{ '@_name': 'height', '@_value': size, '@_units': 'cm' },
+		{ '@_name': 'color', '@_value': stroke.color },
+		...(opacity < 1
+			? [{ '@_name': 'transparency', '@_value': String(Math.round((1 - opacity) * 255)) }]
+			: []),
+		{ '@_name': 'opacity', '@_value': String(stroke.opacity) },
+	];
+}
+
 /** Drop the source part's own trace/brush/definition nodes after a rewrite. */
-function deleteStaleInkChildren(root: XmlObject): void {
+function deleteStaleInkChildren(root: InkXmlObject): void {
 	for (const key of Object.keys(root)) {
 		if (key.startsWith('@_') || key === '#text') {
 			continue;
@@ -152,7 +169,7 @@ function buildContext(
 	id: string,
 	mode: TiltMode,
 	clock?: ReturnType<typeof resolveInkClock>,
-): XmlObject {
+): InkXmlObject {
 	return {
 		'@_xml:id': id,
 		'ink:inkSource': {
@@ -166,8 +183,8 @@ function buildContext(
 }
 
 /** The three (no tilt), five (vector), or five (azimuth/altitude) `<ink:channel>` declarations for the shared traceFormat. */
-function buildTraceFormatChannels(mode: TiltMode): XmlObject[] {
-	const channels: XmlObject[] = [
+function buildTraceFormatChannels(mode: TiltMode): InkXmlObject[] {
+	const channels: InkXmlObject[] = [
 		{ '@_name': 'X', '@_type': 'decimal' },
 		{ '@_name': 'Y', '@_type': 'decimal' },
 		{ '@_name': 'F', '@_type': 'decimal', '@_min': '0', '@_max': '1' },
@@ -199,24 +216,20 @@ function buildTraceFormatChannels(mode: TiltMode): XmlObject[] {
 }
 
 /** True when a stroke carries tilt data with any point genuinely leaned (non-zero magnitude). */
-function hasStrokeTilt(stroke: ContentPartInkStroke): boolean {
+function hasStrokeTilt(stroke: InkStroke): boolean {
 	return Boolean(
 		stroke.tiltAngles?.length && stroke.tiltMagnitudes?.some((magnitude) => magnitude > 1e-4),
 	);
 }
 
 /** Bundle a stroke's tilt arrays for {@link pathToTrace}, or `undefined` when it has none. */
-function tiltOf(stroke: ContentPartInkStroke): TiltChannels | undefined {
+function tiltOf(stroke: InkStroke): TiltChannels | undefined {
 	return stroke.tiltAngles && stroke.tiltMagnitudes
 		? { angles: stroke.tiltAngles, magnitudes: stroke.tiltMagnitudes }
 		: undefined;
 }
 
-function pathToTrace(
-	stroke: ContentPartInkStroke,
-	mode: TiltMode,
-	base: number | undefined,
-): XmlObject {
+function pathToTrace(stroke: InkStroke, mode: TiltMode, base: number | undefined): InkXmlObject {
 	const { path, pressures, pointTimestamps } = stroke;
 	const tilt = tiltOf(stroke);
 	const points = [...path.matchAll(/[ML]\s*(?<x>[\d.eE+-]+)[,\s]+(?<y>[\d.eE+-]+)/giu)];

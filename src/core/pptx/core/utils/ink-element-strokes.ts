@@ -9,7 +9,7 @@
  */
 
 import type { ContentPartInkStroke, InkPptxElement } from '../types';
-import { tiltChannelsFromXY } from './inkml-trace-decode';
+import { tiltChannelsFromXY } from '../../../drawingml/inkml/inkml-trace-decode';
 
 /**
  * Convert one path's raw per-point `tiltX`/`tiltY` (degrees, from

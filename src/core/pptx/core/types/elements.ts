@@ -18,6 +18,7 @@
 
 import type { PptxChartData } from './chart';
 import type { XmlObject } from './common';
+import type { InkStroke } from '../../../drawingml/inkml/types';
 import type { PptxElementBase, PptxTextProperties, PptxShapeProperties } from './element-base';
 import type { PptxCustomPathProperties } from './geometry';
 import type { PptxImageEffects, PptxImageProperties } from './image';
@@ -632,68 +633,8 @@ export interface InkPptxElement extends PptxElementBase {
 	extensionXml?: PptxGraphicFrameExtension[] | undefined;
 }
 
-/**
- * A single ink stroke within a {@link ContentPartPptxElement}.
- */
-export interface ContentPartInkStroke {
-	path: string;
-	color: string;
-	width: number;
-	opacity: number;
-	/** Start and duration from InkML trace metadata, in milliseconds. */
-	startTimestamp?: number;
-	durationMs?: number;
-	/**
-	 * Per-point pressure values (0-1) for this stroke.
-	 *
-	 * When present, the renderer uses these values to produce
-	 * variable-width strokes that reflect stylus/pen pressure.
-	 */
-	pressures?: number[] | undefined;
-	/**
-	 * Per-point pen-tilt lean direction (radians), decoded from the source
-	 * InkML's `OTx`/`OTy` tilt-offset channels or its `AZIMUTH` channel.
-	 *
-	 * When present (paired with {@link tiltMagnitudes}), the renderer widens
-	 * each point perpendicular to the lean direction, approximating a
-	 * calligraphic (chisel-tip) nib. Absent when the source declared no tilt
-	 * channel, in which case rendering is unaffected.
-	 */
-	tiltAngles?: number[] | undefined;
-	/**
-	 * Per-point pen-tilt strength (0 upright, 1 maximally leaned), paired with
-	 * {@link tiltAngles}.
-	 */
-	tiltMagnitudes?: number[] | undefined;
-	/**
-	 * Which InkML channel pair {@link tiltAngles}/{@link tiltMagnitudes} were
-	 * decoded from: `'azimuthAltitude'` when the source declared `AZIMUTH`
-	 * (optionally paired with `ALTITUDE`); omitted (implying `OTx`/`OTy`, i.e.
-	 * `'vector'`) otherwise, including for tilt this library itself captured
-	 * from the Draw tool's `PointerEvent.tiltX`/`tiltY`.
-	 *
-	 * A save that has to rewrite this content part's InkML (see
-	 * `inkml-content-part-writer.ts`) uses this to re-declare the SAME channel
-	 * pair the file already used, rather than always converting to `OTx`/`OTy`;
-	 * the rendered lean is identical either way; only the written channel
-	 * NAMES differ.
-	 */
-	tiltEncoding?: 'vector' | 'azimuthAltitude' | undefined;
-	/**
-	 * Per-point timestamps (milliseconds), decoded from the source InkML
-	 * trace's `T` channel when it declared one.
-	 *
-	 * Absent for the overwhelming majority of real decks: PowerPoint's own
-	 * SaveAs output declares only `X`/`Y` and has no per-point time channel at
-	 * all (see `contentpart-real-ink-roundtrip.test.ts`'s fixture), so this is
-	 * populated only for InkML sources that genuinely author one (a captured
-	 * digitizer session, OneNote, a Surface Hub export). When present, ink
-	 * replay ("watch the ink get drawn") uses each stroke's own first/last
-	 * timestamp to time its reveal instead of the fixed per-stroke cascade; see
-	 * `pptx-viewer-shared`'s `render/ink-replay-timeline.ts`.
-	 */
-	pointTimestamps?: number[] | undefined;
-}
+/** A single ink stroke within a {@link ContentPartPptxElement} (the shared InkML stroke model). */
+export type ContentPartInkStroke = InkStroke;
 
 /**
  * A content-part element wrapped in `mc:AlternateContent`.

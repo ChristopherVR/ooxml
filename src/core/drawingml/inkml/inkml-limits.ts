@@ -1,5 +1,5 @@
-import { MAX_INK_SAMPLES } from '../../../drawingml/ink-geometry';
-import type { XmlObject } from '../types';
+import { MAX_INK_SAMPLES } from '../ink-geometry';
+import type { InkXmlObject } from './types';
 import { ensureArray, localNameOf } from './inkml-trace-decode';
 
 export const MAX_INK_PART_CHARS = 8 * 1024 * 1024;
@@ -10,15 +10,15 @@ const MAX_INK_XML_DEPTH = 64;
 const MAX_INK_CHANNELS = 32;
 
 export interface InkMlIndex {
-	traces: XmlObject[];
-	brushes: XmlObject[];
-	contexts: XmlObject[];
-	timestamps: XmlObject[];
-	traceFormats: XmlObject[];
+	traces: InkXmlObject[];
+	brushes: InkXmlObject[];
+	contexts: InkXmlObject[];
+	timestamps: InkXmlObject[];
+	traceFormats: InkXmlObject[];
 }
 
 /** Index the XML once, including a budget for callers that already hold a parsed tree. */
-export function indexInkMl(data: XmlObject): InkMlIndex | undefined {
+export function indexInkMl(data: InkXmlObject): InkMlIndex | undefined {
 	const index: InkMlIndex = {
 		traces: [],
 		brushes: [],
@@ -39,7 +39,7 @@ export function indexInkMl(data: XmlObject): InkMlIndex | undefined {
 			}
 			return true;
 		}
-		const object = node as XmlObject;
+		const object = node as InkXmlObject;
 		for (const key in object) {
 			if (!Object.hasOwn(object, key)) continue;
 			remaining -= key.length + 1;

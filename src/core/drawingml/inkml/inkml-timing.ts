@@ -1,23 +1,23 @@
-import type { XmlObject } from '../types';
+import type { InkXmlObject } from './types';
 import { countInkTraceSamples, type InkMlIndex } from './inkml-limits';
 import { ensureArray, nsAttr, nsGet } from './inkml-trace-decode';
 
-function numberAttribute(node: XmlObject, key: string): number | undefined {
+function numberAttribute(node: InkXmlObject, key: string): number | undefined {
 	const value = nsAttr(node, key);
 	if (typeof value !== 'number' && (typeof value !== 'string' || !value.trim())) return undefined;
 	const number = Number(value);
 	return Number.isFinite(number) ? number : undefined;
 }
 
-function reference(node: XmlObject, key: string): string {
+function reference(node: InkXmlObject, key: string): string {
 	const value = nsAttr(node, key);
 	return typeof value === 'string' && value.startsWith('#') ? value.slice(1) : '';
 }
 
 /** Decode trace and context clocks from InkML 4.4 (https://www.w3.org/TR/InkML/#timestamps). */
 export function inkMlTiming(index: InkMlIndex) {
-	const timestamps = new Map<string, XmlObject>();
-	const contexts = new Map<string, XmlObject>();
+	const timestamps = new Map<string, InkXmlObject>();
+	const contexts = new Map<string, InkXmlObject>();
 	for (const stamp of index.timestamps) {
 		if (typeof stamp !== 'object') continue;
 		const id = nsAttr(stamp, 'id');
@@ -28,8 +28,8 @@ export function inkMlTiming(index: InkMlIndex) {
 		const id = nsAttr(context, 'id');
 		if (typeof id === 'string') contexts.set(id, context);
 	}
-	const clockCache = new Map<XmlObject, number | undefined>();
-	function clock(stamp: XmlObject | undefined, remaining = 16): number | undefined {
+	const clockCache = new Map<InkXmlObject, number | undefined>();
+	function clock(stamp: InkXmlObject | undefined, remaining = 16): number | undefined {
 		if (!stamp || remaining === 0) return undefined;
 		if (clockCache.has(stamp)) return clockCache.get(stamp);
 		const text = nsAttr(stamp, 'timeString');
@@ -47,10 +47,10 @@ export function inkMlTiming(index: InkMlIndex) {
 		clockCache.set(stamp, value);
 		return value;
 	}
-	function contextFor(trace: XmlObject | string): XmlObject | undefined {
+	function contextFor(trace: InkXmlObject | string): InkXmlObject | undefined {
 		return typeof trace === 'object' ? contexts.get(reference(trace, 'contextRef')) : undefined;
 	}
-	function formatFor(trace: XmlObject | string): XmlObject | undefined {
+	function formatFor(trace: InkXmlObject | string): InkXmlObject | undefined {
 		const context = contextFor(trace);
 		const source = context && ensureArray(nsGet(context, 'inkSource'))[0];
 		return (
@@ -59,8 +59,8 @@ export function inkMlTiming(index: InkMlIndex) {
 			index.traceFormats[0]
 		);
 	}
-	const formatClocks = new Map<XmlObject, { channelBase: number | undefined; scale: number }>();
-	function channelClock(format: XmlObject | undefined) {
+	const formatClocks = new Map<InkXmlObject, { channelBase: number | undefined; scale: number }>();
+	function channelClock(format: InkXmlObject | undefined) {
 		if (!format) return { channelBase: undefined, scale: 1 };
 		const cached = formatClocks.get(format);
 		if (cached) return cached;
@@ -75,7 +75,7 @@ export function inkMlTiming(index: InkMlIndex) {
 		formatClocks.set(format, result);
 		return result;
 	}
-	function read(trace: XmlObject | string, samples: number[]) {
+	function read(trace: InkXmlObject | string, samples: number[]) {
 		const { channelBase, scale } = channelClock(formatFor(trace));
 		if (typeof trace !== 'object') {
 			return { pointTimestamps: samples.map((sample) => sample * scale + (channelBase ?? 0)) };

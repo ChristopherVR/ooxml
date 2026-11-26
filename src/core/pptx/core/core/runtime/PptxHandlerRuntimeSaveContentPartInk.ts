@@ -1,15 +1,10 @@
-import type {
-	ContentPartInkStroke,
-	ContentPartPptxElement,
-	InkPptxElement,
-	XmlObject,
-} from '../../types';
+import type { ContentPartPptxElement, InkPptxElement, XmlObject } from '../../types';
 import { buildInkMlContent, inkElementToStrokes, parseInkMlContent } from '../../utils';
 import { resolveXfrmEmu } from '../../utils/xfrm-emu-resolution';
 import { ensureXmlChildOrCreate } from '../../utils/xml-access';
 import type { SaveSlideContext } from './PptxHandlerRuntimeSaveElementEmbedding';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSaveModel3D';
-import { at } from '../../../../geometry/indexed';
+import { inkStrokesEqual } from '../../../../drawingml/inkml/equal';
 
 const CUSTOM_XML_RELATIONSHIP_TYPE =
 	'http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml';
@@ -25,32 +20,6 @@ const CUSTOM_XML_RELATIONSHIP_TYPE =
 // exactly the gap real PowerPoint's stricter schema validation does not share.
 const P14_NAMESPACE = 'http://schemas.microsoft.com/office/powerpoint/2010/main';
 const MC_NAMESPACE = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
-
-/** Structural comparison of two decoded stroke lists (paths, colour, geometry). */
-function strokeListsEqual(
-	left: readonly ContentPartInkStroke[],
-	right: readonly ContentPartInkStroke[],
-): boolean {
-	if (left.length !== right.length) {
-		return false;
-	}
-	return left.every((stroke, index) => {
-		// Same length as `left` (checked above).
-		const other = at(right, index);
-		return (
-			stroke.path === other.path &&
-			stroke.color === other.color &&
-			stroke.width === other.width &&
-			stroke.opacity === other.opacity &&
-			stroke.startTimestamp === other.startTimestamp &&
-			stroke.durationMs === other.durationMs &&
-			(stroke.pressures ?? []).length === (other.pressures ?? []).length &&
-			(stroke.tiltAngles ?? []).length === (other.tiltAngles ?? []).length &&
-			(stroke.pointTimestamps ?? []).length === (other.pointTimestamps ?? []).length &&
-			(stroke.pointTimestamps ?? []).every((time, i) => time === other.pointTimestamps?.[i])
-		);
-	});
-}
 
 export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	private readonly newContentPartFallbackByXml = new Map<XmlObject, XmlObject>();
@@ -187,7 +156,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			width: el.width,
 			height: el.height,
 		}).strokes;
-		return strokeListsEqual(decoded, el.inkStrokes);
+		return inkStrokesEqual(decoded, el.inkStrokes);
 	}
 
 	private inkPathForRelationship(

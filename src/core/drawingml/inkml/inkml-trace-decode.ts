@@ -1,5 +1,5 @@
-import type { XmlObject } from '../types';
-import { isFiniteNumber } from '../../../units/finite';
+import type { InkXmlObject } from './types';
+import { isFiniteNumber } from '../../units/finite';
 export { decodeTracePoints } from './inkml-trace-points';
 
 /** Channel names in trace-column order (upper-cased), e.g. ["X", "Y", "F"]. */
@@ -9,7 +9,7 @@ export type ChannelOrder = string[];
  * Read the selected trace format. InkML defaults to X and Y
  * when no channel order is declared.
  */
-export function resolveChannelOrder(traceFormat: XmlObject | undefined): ChannelOrder {
+export function resolveChannelOrder(traceFormat: InkXmlObject | undefined): ChannelOrder {
 	if (!traceFormat) {
 		return ['X', 'Y'];
 	}
@@ -241,7 +241,7 @@ function tiltFromAzimuthAltitude(
 }
 
 /** Read a child value by local element name, ignoring any XML namespace prefix. */
-export function nsGet(obj: XmlObject, localName: string): unknown {
+export function nsGet(obj: InkXmlObject, localName: string): unknown {
 	if (localName in obj) {
 		return obj[localName];
 	}
@@ -254,7 +254,7 @@ export function nsGet(obj: XmlObject, localName: string): unknown {
 }
 
 /** Read an attribute value by local name, ignoring the `@_` prefix and any ns. */
-export function nsAttr(obj: XmlObject, localName: string): unknown {
+export function nsAttr(obj: InkXmlObject, localName: string): unknown {
 	const direct = obj[`@_${localName}`];
 	if (direct !== undefined) {
 		return direct;
@@ -274,9 +274,9 @@ export function localNameOf(key: string): string {
 }
 
 /** Coerce a possibly-single XML node (or absent value) into an array. */
-export function ensureArray(value: unknown): XmlObject[] {
+export function ensureArray(value: unknown): InkXmlObject[] {
 	if (value === undefined || value === null) {
 		return [];
 	}
-	return (Array.isArray(value) ? value : [value]) as XmlObject[];
+	return (Array.isArray(value) ? value : [value]) as InkXmlObject[];
 }

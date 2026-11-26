@@ -63,6 +63,10 @@ const AREAS = {
 				{ find: /^ooxml-core\/xml$/, replacement: `${coreSource}/xml/public.ts` },
 				{ find: /^#xpath-runtime$/, replacement: `${coreSource}/xml/xpath-runtime.ts` },
 				{
+					find: /^#inkml-runtime$/,
+					replacement: `${coreSource}/drawingml/inkml/runtime.ts`,
+				},
+				{
 					find: /^#embedded-workbook-chart$/,
 					replacement: `${coreSource}/xlsx/ui/dialogs/embedded-chart-entry.ts`,
 				},

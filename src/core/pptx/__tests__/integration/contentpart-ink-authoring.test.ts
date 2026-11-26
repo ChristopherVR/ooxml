@@ -75,7 +75,8 @@ describe('authored contentPart InkML integration', () => {
 		expect(inkXml).toContain('<ink:brush xml:id="brush1">');
 		expect(inkXml).toContain('contextRef="#ctx0"');
 		expect(inkXml).toContain('value="#336699"');
-		expect(inkXml).toContain('value="4.5"');
+		// 4.5 px as Office reads a brush: centimetres, with a height.
+		expect(inkXml).toContain('name="width" value="0.1190625" units="cm"');
 		expect(inkXml).toContain('value="0.65"');
 		expect(inkXml).toContain('0 0 0.2, 50 25 0.7, 100 60 1');
 
@@ -127,7 +128,7 @@ describe('authored contentPart InkML integration', () => {
 		expect(savedInk).toContain('type="urn:vendor"');
 		expect(savedInk).toContain('keep-me');
 		expect(savedInk).toContain('value="#00AA44"');
-		expect(savedInk).toContain('value="7"');
+		expect(savedInk).toContain('name="width" value="0.18520833333333334" units="cm"');
 		expect(savedInk).toContain('0 0 1, 50 25 0.5, 100 60 0.1');
 		expect(savedSlide.match(/x="2095500"/gu)).toHaveLength(2);
 
