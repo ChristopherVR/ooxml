@@ -51,6 +51,7 @@ export function refreshReferences(
 		const checkpoint = tr.doc;
 		changeReferenceTables(references, tr, current, {
 			kind,
+			locale,
 			empty: referencesText(locale, EMPTY[kind]),
 			...(bibliography ? { bibliography } : {}),
 		});
@@ -89,7 +90,14 @@ export function runReferences(
 		options: Partial<Parameters<typeof changeReferenceTables>[3]> = {},
 	) => {
 		const tr = view.state.tr;
-		if (!changeReferenceTables(references, tr, model, { ...options, kind, empty: t(EMPTY[kind]) }))
+		if (
+			!changeReferenceTables(references, tr, model, {
+				...options,
+				kind,
+				locale,
+				empty: t(EMPTY[kind]),
+			})
+		)
 			core.host.reportError(new Error(t(MISSING[kind])));
 		dispatchReference(view, tr);
 	};
@@ -113,7 +121,7 @@ export function runReferences(
 		}
 		case 'markAuthority':
 			if (!singleParagraph) break;
-			markAuthorityDialog(open(), text.slice(0, 512), (long, short, category) =>
+			markAuthorityDialog(references, open(), text.slice(0, 512), (long, short, category) =>
 				markEntry(
 					references,
 					view,
@@ -133,7 +141,7 @@ export function runReferences(
 			);
 			return;
 		case 'insertAuthority':
-			authorityDialog(open(), (category, passim, keep) =>
+			authorityDialog(references, open(), (category, passim, keep) =>
 				table('TOA', { instruction: authorityCode(category, passim, keep) }),
 			);
 			return;
@@ -154,6 +162,7 @@ export function runReferences(
 				const next = setBibliography(references, tr, core.model, data);
 				changeReferenceTables(references, tr, next, {
 					kind: 'BIBLIOGRAPHY',
+					locale,
 					empty: t(EMPTY.BIBLIOGRAPHY),
 					bibliography: data,
 				});
@@ -176,6 +185,7 @@ export function runReferences(
 				const tr = view.state.tr;
 				const found = changeReferenceTables(references, tr, model, {
 					kind: 'BIBLIOGRAPHY',
+					locale,
 					empty: t(EMPTY.BIBLIOGRAPHY),
 					bibliography,
 				});

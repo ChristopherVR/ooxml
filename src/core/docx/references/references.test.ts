@@ -148,12 +148,13 @@ test('filters authorities by category, joins short citations, and applies passim
 		),
 	};
 	const options = { empty: 'None', page: (id: string) => String(Number(id) + 1) };
+	expect(authorityCode(1, true, true)).toBe('TOA \\h \\c "1" \\p');
 	const kept = buildReferenceTable(model, authorityCode(1, true, true), options);
-	expect(text(kept)).toEqual([`${long}\tpassim`, '']);
-	expect(kept[0]?.runs.find((run) => run.text === long)).toMatchObject({ italic: true });
+	expect(text(kept)).toEqual(['Cases', `${long}\tpassim`, '']);
+	expect(kept[1]?.runs.find((run) => run.text === long)).toMatchObject({ italic: true });
 	const plain = buildReferenceTable(model, authorityCode(1, false, false), options);
-	expect(text(plain)).toEqual([`${long}\t1, 2, 3, 4, 5`, '']);
-	expect(plain[0]?.runs.find((run) => run.text === long)?.italic).toBeUndefined();
+	expect(text(plain)).toEqual(['Cases', `${long}\t1, 2, 3, 4, 5`, '']);
+	expect(plain[1]?.runs.find((run) => run.text === long)?.italic).toBeUndefined();
 	expect(text(buildReferenceTable(model, authorityCode(2, true, true), options))).toEqual([
 		'None',
 		'',

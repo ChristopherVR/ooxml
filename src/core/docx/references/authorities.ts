@@ -8,10 +8,22 @@ import {
 	type ReferenceEntry,
 	type ReferencePage,
 } from './entries';
-import type { referenceInstruction } from './instructions';
+import { referenceCollation, type referenceInstruction } from './instructions';
+
+export const AUTHORITY_CATEGORIES = [
+	'Cases',
+	'Statutes',
+	'Other Authorities',
+	'Rules',
+	'Treatises',
+	'Regulations',
+	'Constitutional Provisions',
+] as const;
+
+export type AuthorityCategory = (typeof AUTHORITY_CATEGORIES)[number];
 
 export function authorityCode(category: number, passim: boolean, keepFormatting: boolean): string {
-	return `TOA \\c "${category}"${passim ? ' \\p' : ''}${keepFormatting ? '' : ' \\f'}`;
+	return `TOA \\h \\c "${category}"${passim ? ' \\p' : ''}${keepFormatting ? '' : ' \\f'}`;
 }
 
 export function authorityParagraphs(
@@ -19,10 +31,12 @@ export function authorityParagraphs(
 	code: NonNullable<ReturnType<typeof referenceInstruction>>,
 	page: ReferencePage,
 	width: Twips,
+	locale?: string,
+	translateCategory?: (name: AuthorityCategory) => string,
 ): Paragraph[] {
+	const category = code.value('c') ?? '1';
 	const matching = collected.entries.filter(
-		({ code: entry }) =>
-			entry.name === 'TA' && (entry.value('c') ?? '1') === (code.value('c') ?? '1'),
+		({ code: entry }) => entry.name === 'TA' && (entry.value('c') ?? '1') === category,
 	);
 	const longByShort = new Map<string, string>();
 	const groups = new Map<
@@ -51,9 +65,10 @@ export function authorityParagraphs(
 			);
 	}
 	const separator = code.value('e') ?? '\t';
-	return [...groups]
-		.sort(([a], [b]) => a.localeCompare(b))
-		.map(([text, { pages, format }]) => ({
+	const { collator } = referenceCollation(code.value('z'), locale);
+	const paragraphs = [...groups]
+		.sort(([a], [b]) => collator.compare(a, b))
+		.map<Paragraph>(([text, { pages, format }]) => ({
 			type: 'paragraph',
 			id: '',
 			runs: [
@@ -71,4 +86,14 @@ export function authorityParagraphs(
 				? { tabStops: [{ posTwips: width, align: 'right', leader: 'dot' }] }
 				: {}),
 		}));
+	if (paragraphs.length && code.has('h')) {
+		const name = AUTHORITY_CATEGORIES[Number(category) - 1];
+		const heading: Paragraph = {
+			type: 'paragraph',
+			id: '',
+			runs: [{ text: name ? (translateCategory?.(name) ?? name) : category, bold: true }],
+		};
+		return [heading, ...paragraphs];
+	}
+	return paragraphs;
 }

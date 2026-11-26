@@ -113,34 +113,25 @@ export function insertIndexDialog(
 	);
 }
 
-const CATEGORIES = [
-	'Cases',
-	'Statutes',
-	'Other Authorities',
-	'Rules',
-	'Treatises',
-	'Regulations',
-	'Constitutional Provisions',
-] as const;
-
-function authorityCategory(dialog: ReferencesDialog) {
+function authorityCategory(references: WordReferences, dialog: ReferencesDialog) {
 	return dialog.select(
 		'Category',
 		Array.from({ length: 16 }, (_, index) => {
-			const label = CATEGORIES[index];
+			const label = references.AUTHORITY_CATEGORIES[index];
 			return [String(index + 1), label ? dialog.t(label) : String(index + 1)] as const;
 		}),
 	);
 }
 
 export function markAuthorityDialog(
+	references: WordReferences,
 	dialog: ReferencesDialog,
 	selection: string,
 	apply: (long: string, short: string, category: number) => void,
 ) {
 	const long = dialog.text('Long citation', selection);
 	const short = dialog.text('Short citation', selection);
-	const category = authorityCategory(dialog);
+	const category = authorityCategory(references, dialog);
 	const mark = dialog.action(
 		'Mark',
 		() =>
@@ -157,11 +148,12 @@ export function markAuthorityDialog(
 }
 
 export function authorityDialog(
+	references: WordReferences,
 	dialog: ReferencesDialog,
 	apply: (category: number, passim: boolean, keep: boolean) => void,
 ) {
-	const category = authorityCategory(dialog);
-	const passim = dialog.check('Use passim');
+	const category = authorityCategory(references, dialog);
+	const passim = dialog.check('Use passim', true);
 	const keep = dialog.check('Keep original formatting', true);
 	dialog.show(
 		dialog.action('OK', () => apply(Number(category.value()), passim.checked, keep.checked), true),

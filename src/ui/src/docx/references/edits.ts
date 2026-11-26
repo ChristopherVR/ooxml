@@ -20,6 +20,8 @@ import { modelToDoc } from '../model-adapter';
 import { pageNumbers } from '../print-header-footer';
 import { schema } from '../schema';
 import { markAllPositions } from './mark-all';
+import type { EditorLocale } from '../localization';
+import { referencesText } from './strings';
 
 export function dispatchReference(view: EditorView, tr: Transaction): void {
 	if (view.editable && tr.docChanged) view.dispatch(closeHistory(tr).scrollIntoView());
@@ -118,6 +120,7 @@ export function changeReferenceTables(
 		bibliography?: Bibliography;
 		heading?: string;
 		empty: string;
+		locale: EditorLocale;
 	},
 ): boolean {
 	const { kind, instruction, empty, bibliography } = options;
@@ -143,6 +146,8 @@ export function changeReferenceTables(
 		ordered.map((item) => {
 			const paragraphs = references.buildReferenceTable(model, item.instruction, {
 				empty,
+				locale: options.locale,
+				translateCategory: (name) => referencesText(options.locale, name),
 				blockIndex: item.start,
 				...(page ? { page } : {}),
 				...(bibliography ? { bibliography } : {}),

@@ -10,6 +10,12 @@ export const REFERENCE_LCID: Readonly<Record<string, number>> = {
 	sv: 1053,
 };
 
+export function referenceCollation(lcid: string | undefined, fallback?: string) {
+	const locale =
+		Object.keys(REFERENCE_LCID).find((lang) => REFERENCE_LCID[lang] === Number(lcid)) ?? fallback;
+	return { locale, collator: new Intl.Collator(locale, { sensitivity: 'base' }) };
+}
+
 export function quoteReference(text: string): string {
 	return '"' + text.replace(/[\\"]/g, '\\$&') + '"';
 }

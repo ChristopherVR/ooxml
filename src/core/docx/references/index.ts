@@ -5,7 +5,7 @@ export {
 	referenceFieldRuns,
 } from './instructions';
 export { createOfficeGuid } from '../../crypto/uuid';
-export { authorityCode } from './authorities';
+export { authorityCode, AUTHORITY_CATEGORIES, type AuthorityCategory } from './authorities';
 export { indexCode, INDEX_LEADERS, type IndexLeader, type IndexOptions } from './index-entries';
 export { indexSection } from './index-section';
 export { type ReferencePage } from './entries';

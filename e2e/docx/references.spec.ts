@@ -109,6 +109,7 @@ test('authors and reopens index, citation, bibliography and authority fields fro
 	await page.keyboard.press('Enter');
 	await run('Insert Table of Authorities');
 	await button('OK').click();
+	await expect(surface.locator('p').filter({ hasText: /^Cases$/ })).toHaveCount(1);
 	await expect(surface.locator('p').filter({ hasText: /^Doe v\. City\s+1$/ })).toHaveCount(1);
 	await expectStableUpdate('Update Table of Authorities');
 

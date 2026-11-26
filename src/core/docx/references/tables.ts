@@ -2,7 +2,7 @@ import { isFieldLocked } from '../field-lock';
 import { fieldName } from '../field-runs';
 import type { Block, DocumentModel, Paragraph, TextRun } from '../model';
 import { twips, twipsFromPixels } from '../units';
-import { authorityParagraphs } from './authorities';
+import { authorityParagraphs, type AuthorityCategory } from './authorities';
 import { bibliographyEntry } from './citations';
 import { referenceEntries, type ReferencePage } from './entries';
 import { indexParagraphs, INDEX_LEADERS, type IndexLeader } from './index-entries';
@@ -81,6 +81,8 @@ export function buildReferenceTable(
 		blockIndex?: number;
 		leader?: IndexLeader;
 		empty: string;
+		locale?: string;
+		translateCategory?: (name: AuthorityCategory) => string;
 	},
 ): Paragraph[] {
 	const code = referenceInstruction(instruction);
@@ -104,7 +106,14 @@ export function buildReferenceTable(
 			options.leader ?? 'dot',
 		);
 	else if (code?.name === 'TOA')
-		paragraphs = authorityParagraphs(referenceEntries(model), code, page, width);
+		paragraphs = authorityParagraphs(
+			referenceEntries(model),
+			code,
+			page,
+			width,
+			options.locale,
+			options.translateCategory,
+		);
 	else if (code?.name === 'BIBLIOGRAPHY' && options.bibliography) {
 		const { style = 'APA', sources } = options.bibliography;
 		const tags = new Set(code.values('m'));
