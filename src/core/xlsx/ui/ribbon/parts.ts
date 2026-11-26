@@ -34,6 +34,8 @@ export type RibbonControl =
 	| {
 			kind: 'split';
 			command: string;
+			/** Ribbon caption and accessible name when they differ from the command label. */
+			label?: string;
 			menu: RibbonMenuItem[];
 			size?: 'large' | 'small';
 			showLabel?: boolean;

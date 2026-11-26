@@ -65,8 +65,12 @@ export function pivotAnalyzeTab(): RibbonTab {
 					{
 						kind: 'split',
 						command: 'pivot.refresh',
+						label: 'Refresh',
 						size: 'large',
-						menu: [{ command: 'pivot.refresh' }, { command: 'pivot.refresh-all' }],
+						menu: [
+							{ command: 'pivot.refresh', label: 'Refresh' },
+							{ command: 'pivot.refresh-all', label: 'Refresh All' },
+						],
 					},
 					button('pivot.source'),
 				],

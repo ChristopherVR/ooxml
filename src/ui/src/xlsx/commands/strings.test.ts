@@ -20,8 +20,10 @@ function ribbonKeys(): string[] {
 			if (control.kind === 'menu') {
 				keys.add(control.label);
 				menu(control.items);
-			} else if (control.kind === 'split') menu(control.menu);
-			else if (control.kind === 'color') keys.add(control.label);
+			} else if (control.kind === 'split') {
+				if (control.label) keys.add(control.label);
+				menu(control.menu);
+			} else if (control.kind === 'color') keys.add(control.label);
 			else if (control.kind === 'stack') walk(control.controls);
 		}
 	};
@@ -46,5 +48,16 @@ describe('command strings', () => {
 		expect((await loadEditorStrings('fr')).Bold).toBe('Gras');
 		expect((await loadEditorStrings('de'))['Merge & Center']).toBe('Verbinden und zentrieren');
 		expect((await loadEditorStrings('zh-CN')).Paste).toBe('粘贴');
+	});
+
+	it.each([
+		['fr', 'Actualiser', 'Actualiser tout'],
+		['de', 'Aktualisieren', 'Alle aktualisieren'],
+		['es', 'Actualizar', 'Actualizar todo'],
+		['zh-CN', '刷新', '全部刷新'],
+	] as const)('localizes the PivotTable Refresh actions in %s', async (locale, refresh, all) => {
+		const strings = await loadEditorStrings(locale);
+		expect(strings.Refresh).toBe(refresh);
+		expect(strings['Refresh All']).toBe(all);
 	});
 });

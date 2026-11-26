@@ -99,8 +99,21 @@ test('keeps cached totals when styling a report and updates them on Refresh', as
 	await tabs.getByRole('tab', { name: 'PivotTable Design' }).click();
 	await tabs.getByRole('button', { name: 'Banded Rows', exact: true }).click();
 	await expect.poll(() => formulaBarValue(page)).toBe('57');
+
+	await page.setViewportSize({ width: 2048, height: 720 });
 	await tabs.getByRole('tab', { name: 'PivotTable Analyze' }).click();
-	await tabs.getByRole('button', { name: 'Refresh PivotTable', exact: true }).click();
+	const data = tabs.getByRole('group', { name: 'Data', exact: true });
+	const refresh = data.getByRole('button', { name: 'Refresh', exact: true });
+	await expect(refresh).toBeVisible();
+	await data.getByRole('button', { name: 'Refresh options', exact: true }).click();
+	const menu = editor(page).getByRole('menu', { name: 'Refresh', exact: true });
+	await expect(menu.getByRole('menuitem', { name: 'Refresh', exact: true })).toBeEnabled();
+	await expect(menu.getByRole('menuitem', { name: 'Refresh All', exact: true })).toBeEnabled();
+	await page.keyboard.press('Escape');
+
+	await page.setViewportSize({ width: 760, height: 720 });
+	await data.getByRole('button', { name: 'Data', exact: true }).click();
+	await refresh.click();
 	await expect.poll(() => formulaBarValue(page)).toBe('77');
 });
 

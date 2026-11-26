@@ -23,6 +23,8 @@ export const PIVOT_CONTEXT_STRINGS: Translations = {
 		'Nombre de tabla dinámica',
 		'数据透视表名称',
 	],
+	Refresh: ['Actualiser', 'Aktualisieren', 'Actualizar', '刷新'],
+	'Refresh All': ['Actualiser tout', 'Alle aktualisieren', 'Actualizar todo', '全部刷新'],
 	'Refresh All PivotTables': [
 		'Actualiser tous les tableaux croisés dynamiques',
 		'Alle PivotTables aktualisieren',
