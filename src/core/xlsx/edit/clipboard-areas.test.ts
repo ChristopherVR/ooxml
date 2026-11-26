@@ -101,6 +101,24 @@ describe('multi-area paste, cut and annotations', () => {
 });
 
 describe('large selections', () => {
+	it('tiles a copied style onto independent, undoable cells', () => {
+		const { wb, s } = sheetWith();
+		const sheet = wb.sheets[0]!;
+		s.applyStyle(0, [R('A1')], { numFmt: '0.00' });
+		const source = getCell(sheet, 0, 0);
+		s.paste(0, R('A6:B7'), s.copy(0, R('A1')));
+		const a = getCell(sheet, 5, 0);
+		const b = getCell(sheet, 6, 1);
+		expect(a).toEqual(source);
+		expect(b).toEqual(source);
+		expect(a).not.toBe(b);
+		s.undo();
+		expect(getCell(sheet, 5, 0)).toBeUndefined();
+		expect(getCell(sheet, 6, 1)).toBeUndefined();
+		s.redo();
+		expect(getCell(sheet, 6, 1)).toEqual(source);
+	});
+
 	it('tiles a copied cell over a million-cell selection', () => {
 		const { s, at } = sheetWith();
 		const payload = s.copy(0, R('A1'));

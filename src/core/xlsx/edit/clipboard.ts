@@ -128,7 +128,7 @@ export function cellsFromText(workbook: Workbook, text: string): ClipboardCells 
  * formats; `values` the results only; `formulas` formulas without formats; `formats` formats only;
  * `widths` column dimensions only;
  * `transpose` everything with rows and columns swapped. A cut payload clears its source on the
- * first paste and keeps formulas unchanged. Returns the pasted range.
+ * first paste and keeps formulas unchanged. A repeat range tiles the source in one undo step.
  */
 export function pasteAt(
 	ctx: EditContext,
@@ -136,6 +136,7 @@ export function pasteAt(
 	at: CellAddress,
 	payload: ClipboardPayload | string,
 	request: PasteRequest,
+	repeat?: CellRange,
 ): CellRange {
 	const { workbook } = ctx;
 	const sheet = sheetAt(workbook, s);
@@ -155,9 +156,10 @@ export function pasteAt(
 	const height = transpose ? cells.cols : cells.rows;
 	const width = transpose ? cells.rows : cells.cols;
 	if (!height || !width) return { start: at, end: at };
-	if (at.row + height - 1 > MAX_ROW || at.col + width - 1 > MAX_COL)
+	const end = { row: at.row + height - 1, col: at.col + width - 1 };
+	if (!repeat && (end.row > MAX_ROW || end.col > MAX_COL))
 		throw new RangeError('The paste area extends beyond the sheet.');
-	const dest: CellRange = { start: at, end: { row: at.row + height - 1, col: at.col + width - 1 } };
+	const dest = repeat ?? { start: at, end };
 	const cut = typeof payload !== 'string' && payload.cut && cells.source ? cells.source : undefined;
 	if (cut && skipBlanks) throw new RangeError('Skip blanks is not available for cut cells.');
 	if (cut && (mode === 'noBorders' || mode === 'mergeFormats'))
@@ -202,35 +204,17 @@ export function pasteAt(
 				clearAnnotations(from, cut.range);
 				clearHyperlinks(from, cut.range);
 			}
-			pasteAnnotations(
-				sheet,
-				dest,
-				cells,
-				mode,
-				transpose,
-				skipBlanks,
-				move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
-			);
-			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders')
-				pasteHyperlinks(
-					sheet,
-					dest,
-					cells,
-					transpose,
-					skipBlanks,
-					move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
-				);
-			const styleIds = new Map<object, number>();
-			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'formats')
-				pasteConditionalFormats(
-					sheet,
-					dest,
-					cells,
-					transpose,
-					skipBlanks,
-					move ? (f) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet) : undefined,
-					mode === 'mergeFormats',
-				);
+			const cutFormula = move
+				? (f: string) => moveReferencesInFormula(f, move.fromSheet, move, move.toSheet)
+				: undefined;
+			const carriesLinks = mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders';
+			const carriesFormats = carriesLinks || mode === 'formats';
+			const hasAnnotations =
+				(cells.comments && (cells.comments.length || sheet.comments.length)) ||
+				(cells.dataValidations && (cells.dataValidations.length || sheet.dataValidations.length));
+			const hasLinks =
+				carriesLinks && cells.hyperlinks && (cells.hyperlinks.length || sheet.hyperlinks.length);
+			const styleIds = new Map<CellStyle, number>();
 			const styleOf = (clip: ClipboardCell): number | undefined => {
 				if (!clip.style) return undefined;
 				let id = styleIds.get(clip.style);
@@ -240,47 +224,87 @@ export function pasteAt(
 				}
 				return id;
 			};
-			for (let r = 0; r < cells.rows; r++)
-				for (let c = 0; c < cells.cols; c++) {
-					const copied = cells.data[r]?.[c] ?? null;
-					// A formula returning empty text is content; a formatted empty cell is blank.
-					if (skipBlanks && (!copied || (copied.value === null && copied.formula === undefined)))
-						continue;
-					// A spilled result is recreated by its pasted anchor; only `values` writes it.
-					const clip =
-						copied?.spilled && mode !== 'values' && mode !== 'formats'
-							? { ...copied, value: null, text: '' }
-							: copied;
-					const row = at.row + (transpose ? c : r);
-					const col = at.col + (transpose ? r : c);
-					const origin = cells.source?.range.start;
-					const formula =
-						clip?.formula === undefined
-							? undefined
-							: move
-								? moveReferencesInFormula(clip.formula, move.fromSheet, move, move.toSheet)
-								: !origin
-									? clip.formula
-									: moveFormula(clip.formula, at.row - origin.row, at.col - origin.col);
-					writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
-					if (mode !== 'formats' && mode !== 'comments' && mode !== 'validation')
-						syncTableHeader(ctx, sheet, row, col);
+			const origin = cells.source?.range.start;
+			const syncHeaders =
+				sheet.tables.length > 0 &&
+				mode !== 'formats' &&
+				mode !== 'comments' &&
+				mode !== 'validation';
+			const last = repeat?.end ?? at;
+			for (let top = at.row; top <= last.row; top += height)
+				for (let left = at.col; left <= last.col; left += width) {
+					// A repeated selection is one undo step. Validate each tile so an out-of-bounds
+					// tile takes the same rollback path as other failures partway through the paste.
+					const bottom = top + height - 1;
+					const right = left + width - 1;
+					if (bottom > MAX_ROW || right > MAX_COL)
+						throw new RangeError('The paste area extends beyond the sheet.');
+					const movesMerges = carriesFormats && (sheet.merges.length || cells.merges.length);
+					const tile =
+						hasAnnotations || hasLinks || movesMerges
+							? { start: { row: top, col: left }, end: { row: bottom, col: right } }
+							: undefined;
+					if (tile && hasAnnotations)
+						pasteAnnotations(sheet, tile, cells, mode, transpose, skipBlanks, cutFormula);
+					if (tile && hasLinks)
+						pasteHyperlinks(sheet, tile, cells, transpose, skipBlanks, cutFormula);
+					if (!repeat && carriesFormats)
+						pasteConditionalFormats(
+							sheet,
+							dest,
+							cells,
+							transpose,
+							skipBlanks,
+							cutFormula,
+							mode === 'mergeFormats',
+						);
+					for (let r = 0; r < cells.rows; r++)
+						for (let c = 0; c < cells.cols; c++) {
+							const copied = cells.data[r]?.[c] ?? null;
+							// A formula returning empty text is content; a formatted empty cell is blank.
+							if (
+								skipBlanks &&
+								(!copied || (copied.value === null && copied.formula === undefined))
+							)
+								continue;
+							// A spilled result is recreated by its pasted anchor; only values writes it.
+							const clip =
+								copied?.spilled && mode !== 'values' && mode !== 'formats'
+									? { ...copied, value: null, text: '' }
+									: copied;
+							const row = top + (transpose ? c : r);
+							const col = left + (transpose ? r : c);
+							const formula =
+								clip?.formula === undefined
+									? undefined
+									: cutFormula
+										? cutFormula(clip.formula)
+										: origin
+											? moveFormula(clip.formula, top - origin.row, left - origin.col)
+											: clip.formula;
+							writeClip(workbook, sheet, row, col, clip, mode, formula, styleOf, operation);
+							if (syncHeaders) syncTableHeader(ctx, sheet, row, col);
+						}
+					if (tile && movesMerges) {
+						sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, tile));
+						const point = (cell: CellAddress): CellAddress => ({
+							row: top + (transpose ? cell.col : cell.row),
+							col: left + (transpose ? cell.row : cell.col),
+						});
+						for (const m of cells.merges)
+							sheet.merges.push({ start: point(m.start), end: point(m.end) });
+					}
 				}
-			if (mode === 'all' || mode === 'mergeFormats' || mode === 'noBorders' || mode === 'formats') {
-				sheet.merges = sheet.merges.filter((m) => !rangesIntersect(m, dest));
-				for (const m of cells.merges)
-					sheet.merges.push(
-						transpose
-							? {
-									start: { row: at.row + m.start.col, col: at.col + m.start.row },
-									end: { row: at.row + m.end.col, col: at.col + m.end.row },
-								}
-							: {
-									start: { row: at.row + m.start.row, col: at.col + m.start.col },
-									end: { row: at.row + m.end.row, col: at.col + m.end.col },
-								},
-					);
-			}
+			if (repeat && carriesFormats)
+				pasteConditionalFormats(
+					sheet,
+					dest,
+					cells,
+					transpose,
+					skipBlanks,
+					undefined,
+					mode === 'mergeFormats',
+				);
 			if (cut && typeof payload !== 'string') payload.cut = false;
 		},
 		{ sheet: s, ranges: [dest], ...(cut ? { structural: true } : {}) },

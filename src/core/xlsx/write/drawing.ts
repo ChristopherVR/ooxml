@@ -23,13 +23,13 @@ import { chartXml } from './chart';
 import { writeChartColorStyle } from './chart-colors';
 import { parseChartSpace } from '../../chart/parse-space';
 import { writeChartSpace } from '../../chart/write-space';
+import { withUnmodelledChartChildren } from '../../chart/keep-unmodelled';
 import { CHART_MEDIA_FOLDERS, embedChartPartPictures } from '../../chart/picture-parts';
 import { isPendingChartPicture } from '../../chart/edit/picture';
 import {
 	chartIssuesLostOnWrite,
 	patchChartFormulas,
 	sameChartModel,
-	writeChartSpaceOverSource,
 } from '../../chart/keep-source';
 import { sameModel } from './snapshot';
 import { RelationshipSet, type PackageWriter } from './package-writer';
@@ -180,7 +180,11 @@ export function editedChartPart(source: string, chart: ChartObject): string | un
 		| ''
 		| '\n'
 		| '\r\n';
-	return writeChartSpaceOverSource(source, chart.chartSpace, { declarationBreak });
+	return withUnmodelledChartChildren(
+		source,
+		writeChartSpace(chart.chartSpace, { declarationBreak }),
+		chart.chartSpace.protection === null,
+	);
 }
 
 /** Writes (or keeps) the chart part behind a chart object and returns its part name. */
