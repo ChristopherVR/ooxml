@@ -3,17 +3,18 @@ import { afterEach, expect, it } from 'vitest';
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { reviewCommands } from './commands/review';
 import { createTestContext } from './commands/test-support';
-import { createCommentsPane } from './comments-pane';
+import { createCommentsPaneSlot } from './comments-pane-slot';
 
 afterEach(() => document.body.replaceChildren());
 
 it('keeps threaded comments current and returns focus when closed by Escape', async () => {
 	const ctx = createTestContext(createWorkbook({ sheets: ['Sheet1', 'Sheet2'] }));
 	ctx.commands.registerAll(reviewCommands());
-	const pane = createCommentsPane(ctx);
+	const pane = createCommentsPaneSlot(ctx);
 	const opener = document.createElement('button');
 	ctx.root.append(opener, pane.element);
 	opener.focus();
+	expect(pane.element.childElementCount).toBe(0);
 	await ctx.commands.run('review.show-comments');
 	expect(pane.element.hidden).toBe(false);
 	expect(ctx.commands.get('review.show-comments')?.checked?.(ctx)).toBe(true);

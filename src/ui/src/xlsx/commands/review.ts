@@ -1,6 +1,6 @@
 // Review tab: Workbook Statistics, comments (new / edit, delete, previous, next, show all) and
 // Protect Sheet / Protect Workbook.
-import { commentsPaneOpen, toggleCommentsPane } from '../comments-pane';
+import { commentsPaneOpen, toggleCommentsPane } from '../comments-pane-slot';
 import { allNotesShown, isNote, showNavigatedNote, toggleAllNotes } from '../grid/note-popups';
 import type { Comment } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';

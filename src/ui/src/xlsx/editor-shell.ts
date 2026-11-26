@@ -27,7 +27,7 @@ import {
 	mountSheetTabs,
 } from './modules';
 import { createRibbon, type Ribbon } from './ribbon/ribbon';
-import { createCommentsPane } from './comments-pane';
+import { createCommentsPaneSlot } from './comments-pane-slot';
 import { createRibbonActions } from './ribbon-actions';
 import { el } from './ribbon/controls';
 import { hideKeyTips } from './ribbon/keytips';
@@ -232,7 +232,7 @@ export function buildShell(core: EditorCore): Shell {
 
 	const workspace = el(doc, 'div', 'xve-workspace');
 	const selectionPane = createSelectionPane(ctx);
-	const commentsPane = createCommentsPane(ctx);
+	const commentsPane = createCommentsPaneSlot(ctx);
 	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
