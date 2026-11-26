@@ -180,6 +180,16 @@ describe('UI customisation', () => {
 		).toBe(true);
 	});
 
+	it('hides Mailings navigation by action id after changing the display language', () => {
+		const editor = mount();
+		editor.locale = 'fr';
+		editor.hiddenActions = ['first-recipient', 'last-recipient'];
+		const control = (label: string) => shell(editor).querySelector(`[aria-label="${label}"]`)!;
+		expect(control('Premier destinataire').hasAttribute('data-dve-hidden')).toBe(true);
+		expect(control('Dernier destinataire').hasAttribute('data-dve-hidden')).toBe(true);
+		expect(control('Destinataire suivant').hasAttribute('data-dve-hidden')).toBe(false);
+	});
+
 	it('showToolbar and show-toolbar hide the ribbon and stay in sync', () => {
 		const editor = mount();
 		const ribbon = () => shell(editor).querySelector('.dve-ribbon')!;
