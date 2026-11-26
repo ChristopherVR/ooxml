@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import vue from '@vitejs/plugin-vue';
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 /** Package version, baked into the bundle as `__PPTX_PACKAGE_VERSION__` (see `src/version.ts`). */
@@ -80,7 +81,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'happy-dom',
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('vue', __dirname, 'happy-dom'),
 		setupFiles: ['./src/test-setup.ts'],
 	},

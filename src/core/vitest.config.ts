@@ -1,7 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { availableParallelism } from 'node:os';
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BaseSequencer } from 'vitest/node';
+import { durationSequencer } from '../../scripts/test-sequencer.mjs';
+import { testWorkers } from '../../scripts/test-workers.mjs';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 
@@ -78,8 +80,13 @@ const project = (
 
 export default {
 	test: {
-		// Never more than the cores: a 4-core CI runner timed out the heavy imports with more.
-		maxWorkers: Math.min(4, availableParallelism()),
+		maxWorkers: testWorkers(),
+		sequence: {
+			sequencer: durationSequencer(
+				BaseSequencer,
+				new URL('./vitest.timings.json', import.meta.url),
+			),
+		},
 		projects: [
 			project('core', ['**/*.test.ts'], [...needsIsolation, ...otherEnvironments], false),
 			...[...byEnvironment].map(([environment, files]) =>

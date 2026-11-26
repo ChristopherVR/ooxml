@@ -1,7 +1,9 @@
 import { readFileSync, readdirSync } from 'node:fs';
-import { availableParallelism } from 'node:os';
 import { sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { BaseSequencer } from 'vitest/node';
+import { durationSequencer } from '../../scripts/test-sequencer.mjs';
+import { testWorkers } from '../../scripts/test-workers.mjs';
 
 // Development resolves the core package from the repository root source, so UI tests never need
 // a build of the core. Published consumers get the real dependency.
@@ -160,9 +162,13 @@ for (const area of ['ui', 'pptx'] as const) {
 // together. \`--project ui*\` or \`--project pptx*\` runs one family.
 export default {
 	test: {
-		// Uncapped, every core runs a worker and the heaviest imports (manifest, SSR) time out; more
-		// workers than cores only makes them compete (a 4-core CI runner timed out the SSR files).
-		maxWorkers: Math.min(8, availableParallelism()),
+		maxWorkers: testWorkers(),
+		sequence: {
+			sequencer: durationSequencer(
+				BaseSequencer,
+				new URL('./vitest.timings.json', import.meta.url),
+			),
+		},
 		projects,
 	},
 };

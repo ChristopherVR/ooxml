@@ -385,6 +385,10 @@ test('helpers', () => {
 		'src/core/test-support/security-corpus/cases/teams.ts',
 		'src/core/pptx/test-support/signature-package.ts',
 		'src/core/xlsx/__fixtures__/build.ts',
+		'src/core/vitest.config.ts',
+		'src/ui/vitest.timings.json',
+		'viewers/pptx/packages/react/vitest.react18.config.ts',
+		'viewers/pptx/packages/shared/vitest.config.mts',
 	])
 		assert.equal(isPublishedFile(helper), false, helper);
 });

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 export default defineConfig({
@@ -68,7 +69,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'happy-dom',
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('svelte', __dirname, 'happy-dom'),
 		setupFiles: ['./src/web-controls.test-setup.ts'],
 	},

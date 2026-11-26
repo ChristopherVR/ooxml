@@ -2,6 +2,7 @@ import path from 'path';
 
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 export default defineConfig({
@@ -30,7 +31,7 @@ export default defineConfig({
 	},
 	test: {
 		globals: true,
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('react', __dirname, 'node'),
 		setupFiles: ['./web-controls.test-setup.ts'],
 	},

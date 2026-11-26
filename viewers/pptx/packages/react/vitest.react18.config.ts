@@ -24,6 +24,7 @@ import path from 'path';
 
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 /** Resolve React 18 entry points from the react-compat workspace package. */
@@ -102,7 +103,7 @@ export default defineConfig({
 		// Shared workers and fresh-module projects, the same split as the default run (see
 		// scripts/vitest-isolation.mjs). Each project extends this config, so the aliases above,
 		// the setup file and `env` apply to every project.
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('react', import.meta.dirname, 'node'),
 		// Same shared web controls (`pptx-ui-checkbox`, ...) as the default run.
 		setupFiles: ['./web-controls.test-setup.ts'],

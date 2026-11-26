@@ -152,6 +152,7 @@ export function presentPackages(root, table) {
 /** Files that ship in a published artifact (exclude tests and what only tests import). */
 export function isPublishedFile(path) {
 	if (/\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(path)) return false;
+	if (/(?:^|\/)vitest\.(?:timings\.json|(?:[^/]+\.)?config\.[cm]?[jt]s)$/u.test(path)) return false;
 	return !/\/(?:__tests__|__fixtures__|test-support|e2e)\//u.test(path);
 }
 

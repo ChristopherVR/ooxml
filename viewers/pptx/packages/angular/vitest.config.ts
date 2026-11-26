@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 /**
@@ -29,7 +30,7 @@ export default defineConfig({
 	},
 	test: {
 		environment: 'happy-dom',
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('angular', import.meta.dirname, 'happy-dom'),
 		globals: true,
 		setupFiles: ['./vitest-setup.ts'],

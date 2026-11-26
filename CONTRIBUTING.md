@@ -28,6 +28,27 @@ bun run test:package   # packs the build and imports every entry point from a cl
 
 The pptx tests read real decks from `src/core/pptx/__tests__/fixtures`, including a committed snapshot of the PowerPoint end-to-end decks (`e2e/pptx/fixtures`) under `fixtures/e2e`; everything needed is in this repository.
 
+Core, UI, and the PowerPoint binding unit tests use up to half the available logical cores locally,
+with a maximum of eight workers. Set `OOXML_TEST_WORKERS` to change the limit, or pass
+`--maxWorkers` to Vitest for a single run. The default on CI is up to four workers. Local
+`bun run verify` shares half the available logical cores across its concurrent Vitest steps.
+
+### Refresh the unit test timing tables
+
+Refresh the tables when you split a slow test file or when shard durations drift. From the
+repository root, run the full suite with the JSON reporter, then update its table.
+
+```bash
+bun run test --reporter=json --outputFile=core-report.json
+node scripts/test-timings.mjs update src/core/core-report.json core
+bun run --cwd src/ui test --reporter=json --outputFile=ui-report.json
+node scripts/test-timings.mjs update src/ui/ui-report.json ui
+```
+
+Commit the updated `vitest.timings.json` files. On a `--shard` run, Vitest assigns each selected
+file to the shard with the lowest estimated duration, starting with the longest file. A file with
+no timing has an estimated duration of five seconds.
+
 ## Code rules
 
 - TypeScript is **strict**, including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`. The `src/core/pptx` area is compiled with relaxed flags while it is tightened; new code anywhere else must pass the strict project.

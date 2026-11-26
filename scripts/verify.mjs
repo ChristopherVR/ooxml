@@ -12,7 +12,7 @@
  * Every step runs with CI=1, so Vitest fails on a missing snapshot instead of writing it.
  *
  * Independent steps run in parallel (scripts/verify-runner.mjs): `--jobs N` sets how many, the
- * default is a quarter of the cores because vitest and tsc are multi-threaded themselves, and
+ * default is a quarter of the cores. Vitest divides half the cores across those slots, and
  * `--serial` runs them one by one in plan order. Each step's output is buffered and printed whole
  * when it finishes. After a failure nothing new starts, running steps finish, and the failed
  * step's output is printed last.
@@ -33,6 +33,7 @@ import { fileURLToPath } from 'node:url';
 import { PLAYWRIGHT_INSTALL, changedSince, plan } from './ci-plan.mjs';
 import { argumentBatches, FORMATTER_CHECK } from './verify-arguments.mjs';
 import { browserPerformance, pptxBrowserCommand } from './browser-performance.mjs';
+import { testWorkers } from './test-workers.mjs';
 import { verificationShell } from './verify-shell.mjs';
 import {
 	clearStamp,
@@ -270,6 +271,15 @@ if (p.budgets && browser) {
 // ---- Running. -------------------------------------------------------------------------------
 // Commands are written for bash (the planner's commands use bash syntax, as in CI).
 const shell = verificationShell();
+const cpus = availableParallelism();
+const serial = flag('--serial');
+const jobs = serial ? 1 : Number(value('--jobs', defaultJobs(cpus)));
+if (!Number.isInteger(jobs) || jobs < 1) fail('--jobs takes a positive integer.');
+// The Vitest-wide setting also caps viewer suites that use Vitest's default configuration.
+const workers = testWorkers(
+	{ OOXML_TEST_WORKERS: process.env.OOXML_TEST_WORKERS },
+	Math.floor(cpus / jobs),
+);
 // Git hands a hook the repository it runs for (GIT_DIR, GIT_INDEX_FILE and so on). The steps must
 // not inherit it: the release planner's tests build throwaway repositories with `git init`,
 // `commit`, `tag` and `config`, which would otherwise land in this repository and its shared
@@ -281,6 +291,7 @@ const env = Object.fromEntries(
 		...process.env,
 		CI: '1',
 		OOXML_LOCAL_VERIFY: '1',
+		VITEST_MAX_WORKERS: String(workers),
 		OOXML_E2E_WORKERS: String(
 			browserPerformance({ ...process.env, OOXML_LOCAL_VERIFY: '1' }).workers,
 		),
@@ -288,9 +299,6 @@ const env = Object.fromEntries(
 	}).filter(([name]) => !REPOSITORY_ENV.test(name)),
 );
 
-const serial = flag('--serial');
-const jobs = serial ? 1 : Number(value('--jobs', defaultJobs(availableParallelism())));
-if (!Number.isInteger(jobs) || jobs < 1) fail('--jobs takes a positive integer.');
 if (serial) {
 	// Plan order, one at a time: the order the steps were added in already respects `needs`.
 	for (const step of steps) step.needs = [];

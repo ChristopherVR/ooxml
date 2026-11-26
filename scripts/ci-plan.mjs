@@ -166,7 +166,7 @@ const ALL_VIEWERS = Object.keys(VIEWERS);
 
 /** Files whose change can affect everything: dependencies, compiler and test configuration, CI. */
 const EVERYTHING =
-	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests|graph|lockfile)\.(mjs|test\.mjs)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
+	/^(package\.json|bun\.lockb?|\.oxfmtrc\.json|\.github\/workflows\/ci\.yml|scripts\/ci-(plan|base|manifests|graph|lockfile)\.(mjs|test\.mjs)|scripts\/test-(workers|sequencer)\.(mjs|d\.mts)|src\/core\/(package\.json|tsconfig[^/]*\.json|vitest\.[^/]+|tsup[^/]*\.ts|tsdown[^/]*\.ts))$/;
 /** Files that change nothing CI checks. */
 const INERT = /^(docs\/|[^/]+\.md$|LICENSE|NOTICE|\.gitignore|\.gitattributes|\.claude\/|memory\/)/;
 /** Changelogs, which the release flow writes: only the changelog check in the `scripts` job reads them. */

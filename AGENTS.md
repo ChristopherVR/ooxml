@@ -35,6 +35,7 @@ file and never fork the two (the viewer repositories drifted that way once).
 - `apps/office-suite/` is the private `ooxml-office` application package: document sessions, shared profile/theme, Teams integration and assistant wiring. It consumes existing core and UI packages, never duplicates Office parsing or editing logic. `site/` supplies its HTML/CSS shell. `scripts/build-suite.mjs` bundles `suite-dist/` with suite and standalone PWA entry points; desktop consumes the same output. GitHub Pages also includes the viewers' independent docs and demos.
 - Bun, TypeScript strict (including `exactOptionalPropertyTypes` and `noUncheckedIndexedAccess`), Vitest with tests next to the code, ESM output (add CJS when a consumer needs it).
 - Vitest shares workers across test files (`isolate: false` in `src/core`, `src/ui` and the `viewers/pptx` binding packages, see its `AGENTS.md`), which is most of the speed. Files that call `vi.mock` or are named `*ssr.test.ts` are found by content and run in their own `*-isolated` project, so they need no registration. Tests must clean up what they change: never leave global or prototype mutations behind (unstub globals, restore spies), since the next file in the worker sees them.
+  These suites use half the available logical cores locally, rounded down and capped at eight with a minimum of one, and up to four on CI. Set `OOXML_TEST_WORKERS` for a different limit or pass `--maxWorkers` to Vitest for one run. `bun run verify` divides its local worker budget across concurrent steps. Core and UI `--shard` runs balance by file duration from their `vitest.timings.json` tables.
 - Keep source modules under 300 lines where practical. Add regression tests for parsing, preservation, round-trip and editing behaviour; move tests with the code they cover.
 - Byte and work budgets (`docs/performance-budgets.md`) fail CI when a package entry point or a suite screen downloads more, or an engine does more work, than allowed. Change `scripts/perf-budgets.json` only through `node scripts/perf-budgets.mjs update`, and say in the commit which budgets moved and why.
 - A security fix also adds a case to the security regression corpus (`src/core/test-support/security-corpus/`, see its README): the smallest generated input that shows the defect class, run with time and heap limits and no network. Only fixed defects go there.
@@ -164,7 +165,8 @@ Commits to another repository follow that repository's own `AGENTS.md`.
 ```bash
 bun install
 bun run typecheck      # strict project and the relaxed pptx project
-bun run test           # vitest (CI splits it: bun run test --shard=1/6; add --maxWorkers=8 on a big machine)
+bun run test           # core Vitest suite (CI splits it with --shard=1/6, etc.)
+bun run --cwd src/ui test # UI Vitest suite (CI splits it with --shard=1/3, etc.)
 bun run build          # declarations, tsup bundles, tsdown declarations
 bun run test:package   # pack and import every entry point from a clean install
 bun run test:scripts   # release planner, publish guards, commit checks

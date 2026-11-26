@@ -1,8 +1,8 @@
-import { defineConfig } from 'vitest/config';
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 
-export default defineConfig({
+export default {
 	test: {
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		testTimeout: 30_000,
 	},
-});
+};

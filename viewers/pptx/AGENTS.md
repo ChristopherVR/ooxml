@@ -285,6 +285,10 @@ smoke.
 
 ### Running the tests quickly
 
+The binding packages use up to half the available logical cores locally, capped at eight workers,
+and up to four workers on CI. Set `OOXML_TEST_WORKERS` to change the limit or pass `--maxWorkers`
+to a package's Vitest command for one run.
+
 **Unit tests share workers.** Each binding package's `vitest.config.ts` builds its `projects` from
 `scripts/vitest-isolation.mjs` and runs with `isolate: false`, which is most of the speed (react
 489s to about 150s, vue 294s to 40s, angular 281s to 50s, svelte 281s to 45s, vanilla 221s to 50s).

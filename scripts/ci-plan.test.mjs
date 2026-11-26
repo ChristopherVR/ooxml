@@ -184,6 +184,9 @@ test('dependency, compiler and CI configuration runs everything', () => {
 		'src/core/tsconfig.json',
 		'.github/workflows/ci.yml',
 		'src/core/vitest.config.ts',
+		'src/core/vitest.timings.json',
+		'scripts/test-workers.mjs',
+		'scripts/test-sequencer.mjs',
 	]) {
 		const result = plan([file]);
 		assert.equal(result.full, true, file);

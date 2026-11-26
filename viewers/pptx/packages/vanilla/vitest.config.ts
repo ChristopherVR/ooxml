@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 
 import { defineConfig } from 'vitest/config';
 
+import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
 
 export default defineConfig({
@@ -69,7 +70,7 @@ export default defineConfig({
 	test: {
 		globals: true,
 		environment: 'happy-dom',
-		maxWorkers: 4,
+		maxWorkers: testWorkers(),
 		projects: isolationProjects('vanilla', __dirname, 'happy-dom', [
 			'../../../../demos/pptx/demo-vanilla/src/collab.test.ts',
 			'../../../../demos/pptx/demo-vanilla/src/host-owned-inline-editor.test.ts',
