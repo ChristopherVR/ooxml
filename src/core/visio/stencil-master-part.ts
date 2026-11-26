@@ -4,7 +4,6 @@ import { appendEllipseGeometry } from './edit-ellipse-geometry';
 import { applyShapeCreationStyles, outlineGeometrySections } from './edit-shape-create';
 import { visioOutlineShape } from './stencil-shapes';
 import { appendRelativeConnectionPoint } from './edit-connection-points';
-import { writePropertyRow } from './edit-shape-data';
 import type { VisioBuiltInMaster } from './stencil-masters';
 
 /** The one shape of a built-in master; instances name it through their `Master` attribute. */
@@ -154,13 +153,6 @@ export function stencilMasterContents(
 	shape.appendChild(connection);
 	for (const [index, point] of cardinalPoints(outline?.paths[0]).entries())
 		appendRelativeConnectionPoint(connection, index, builtIn.master.size, point);
-	writePropertyRow(shape, 'ShapeKind', {
-		label: 'Shape type',
-		prompt: '',
-		type: 'string',
-		format: '',
-		value: builtIn.master.name,
-	});
 	if (!outline) appendEllipseGeometry(shape, width, height);
 	else {
 		// A fixed corner radius, as a drawn rounded rectangle keeps when it is resized.

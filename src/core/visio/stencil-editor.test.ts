@@ -53,9 +53,10 @@ describe('stencil authoring', () => {
 				expect(master.shapes[0]).toMatchObject({
 					...item.size,
 					placeable: true,
-					shapeData: [{ name: 'ShapeKind', label: 'Shape type', value: item.name }],
 				});
 				expect(master.shapes[0]?.connectionPoints).toHaveLength(4);
+				// Built-in Basic Shapes masters carry no Shape Data in Visio.
+				expect(master.shapes[0]?.shapeData ?? []).toEqual([]);
 				expect(master.shapes[0]?.geometry.length).toBeGreaterThan(0);
 			}
 			const zip = await JSZip.loadAsync(bytes);

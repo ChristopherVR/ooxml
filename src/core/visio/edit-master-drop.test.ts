@@ -75,7 +75,6 @@ describe('dropping a built-in stencil master', () => {
 		expect(dropped.geometry.length).toBeGreaterThan(0);
 		expect(dropped.connectionPoints).toHaveLength(4);
 		expect(dropped.connectionPoints?.every((point) => point.inherited)).toBe(true);
-		expect(dropped.shapeData?.[0]?.value).toBe('Process');
 		// Visio's flowchart masters sit on the Flowchart layer; the page gets it and the shape joins.
 		expect(model.pages[0]!.layers!.map((layer) => layer.name)).toEqual(['Flowchart']);
 		expect(dropped.layerIds).toEqual(['0']);
