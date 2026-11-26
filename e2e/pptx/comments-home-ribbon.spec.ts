@@ -92,6 +92,12 @@ for (const width of [800, 1280]) {
 		if (await status.isVisible())
 			expect(paneBox!.y + paneBox!.height).toBeLessThanOrEqual((await status.boundingBox())!.y + 1);
 		await draft.fill('Draft stays with the slide');
+		const post = pane.locator('button[data-pptx-comment-post]');
+		await expect(post).toBeEnabled();
+		await expect(post).not.toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+		const close = pane.getByRole('button', { name: 'Close', exact: true });
+		await expect(close.locator('svg[aria-hidden="true"] path')).toHaveAttribute('d', /\S/u);
+		await expect(close.locator('svg')).toHaveCSS('width', '16px');
 		await draft.press('Escape');
 		await expect(pane).toHaveCount(0);
 		await expect(opener).toBeFocused();

@@ -6,10 +6,10 @@ import type {
 	PptxSlide,
 } from 'pptx-viewer-core';
 import React from 'react';
-import { LuMessageSquare, LuType } from 'react-icons/lu';
+import { LuType } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
-import { cn, getElementLabel } from '../../utils';
+import { getElementLabel } from '../../utils';
 import { CommentMentionTextarea } from './CommentMentionTextarea';
 import { InspectorCommentRow } from './InspectorCommentRow';
 
@@ -152,14 +152,8 @@ export function InspectorCommentsSection({
 						type='button'
 						onClick={onAddComment}
 						disabled={!commentDraft.trim()}
-						className={cn(
-							'w-full inline-flex items-center justify-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-colors max-md:min-h-[44px]!',
-							commentDraft.trim()
-								? 'bg-primary hover:bg-primary/80 text-white'
-								: 'bg-muted text-muted-foreground cursor-not-allowed',
-						)}
+						data-pptx-comment-post
 					>
-						<LuMessageSquare className='w-3.5 h-3.5' />
 						{t('pptx.comments.addComment')}
 					</button>
 				</div>

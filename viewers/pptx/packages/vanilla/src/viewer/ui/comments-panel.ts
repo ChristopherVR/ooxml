@@ -72,7 +72,12 @@ export function openCommentsPanel(
 	// The new-comment draft is the slide's, kept by the shared controller.
 	const draft = createEl(doc, 'textarea');
 	draft.dataset.pptxCommentDraft = '';
+	draft.setAttribute('aria-label', t('pptx.comments.addComment'));
 	draft.placeholder = t('pptx.comments.addPlaceholder');
+	const add = createEl(doc, 'button');
+	add.type = 'button';
+	add.dataset.pptxCommentPost = '';
+	add.textContent = t('pptx.comments.addComment');
 	const draftMentions = (): PptxCommentMention[] => [
 		...(panel.controller.getSnapshot().draftMentionsBySlideId[panel.slideId()] ?? []),
 	];
@@ -80,8 +85,12 @@ export function openCommentsPanel(
 	const showDraft = (): void => {
 		draftSlideId = panel.slideId();
 		draft.value = panel.controller.getSnapshot().draftBySlideId[draftSlideId] ?? '';
+		add.disabled = !draft.value.trim();
 	};
-	draft.addEventListener('input', () => panel.controller.setDraft(panel.slideId(), draft.value));
+	draft.addEventListener('input', () => {
+		panel.controller.setDraft(panel.slideId(), draft.value);
+		add.disabled = !draft.value.trim();
+	});
 	const draftMentionTypeahead = attachCommentMentionTypeahead({
 		doc,
 		t,
@@ -91,11 +100,9 @@ export function openCommentsPanel(
 		onChange: (next) => {
 			draft.value = next.text;
 			panel.controller.setDraft(panel.slideId(), next.text, next.mentions);
+			add.disabled = !draft.value.trim();
 		},
 	});
-	const add = createEl(doc, 'button');
-	add.type = 'button';
-	add.textContent = t('pptx.comments.addComment');
 	add.addEventListener('click', () => {
 		if (panel.controller.add(panel.slideIndex())) {
 			// The subscription re-renders the card list; the pane stays open.

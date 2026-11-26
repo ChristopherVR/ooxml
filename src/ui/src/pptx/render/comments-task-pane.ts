@@ -1,4 +1,5 @@
 import { modalActiveElement } from '../../dialog/focus';
+import { createIconSvg, paintIcon } from '../../icons';
 import { revealComment } from './comment-navigation';
 
 const PANE = '[data-pptx-comments-panel]';
@@ -52,12 +53,8 @@ export function attachCommentsTaskPane(
 	button.dataset.pptxCommentClose = '';
 	button.setAttribute('aria-label', closeLabel);
 	button.title = closeLabel;
-	const svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-	svg.setAttribute('viewBox', '0 0 16 16');
-	svg.setAttribute('aria-hidden', 'true');
-	const path = doc.createElementNS(svg.namespaceURI, 'path');
-	path.setAttribute('d', 'm4 4 8 8m0-8-8 8');
-	svg.append(path);
+	const svg = createIconSvg(doc);
+	paintIcon(svg, 'close');
 	button.append(svg);
 	pane.prepend(button);
 

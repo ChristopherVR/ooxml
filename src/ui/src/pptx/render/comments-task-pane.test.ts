@@ -89,6 +89,7 @@ it('focuses the draft, closes from Escape, and restores the opener inside a shad
 	await vi.advanceTimersByTimeAsync(30);
 	expect(document.activeElement).toBe(draft);
 	expect(pane.querySelector('button')?.getAttribute('aria-label')).toBe('Close');
+	expect(pane.querySelector('button svg[aria-hidden="true"] path')?.getAttribute('d')).toBeTruthy();
 	draft.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 	await vi.advanceTimersByTimeAsync(0);
 	expect(pane.isConnected).toBe(false);

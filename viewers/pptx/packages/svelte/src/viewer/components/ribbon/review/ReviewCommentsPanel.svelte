@@ -186,7 +186,7 @@
 				onselect={(author) => compose.accept(author)}
 			/>
 		</div>
-		<button type="button" disabled={!editor.editable || !compose.text.trim()} onclick={addComment}>{t('pptx.comments.addComment')}</button>
+		<button type="button" data-pptx-comment-post disabled={!editor.editable || !compose.text.trim()} onclick={addComment}>{t('pptx.comments.addComment')}</button>
 	</div>
 
 	{#if comments.length === 0}

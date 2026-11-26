@@ -305,6 +305,7 @@ onBeforeUnmount(() => detachTaskPane?.());
 				class="pptx-comments-panel__submit cursor-pointer self-end rounded-md border-none bg-primary px-3.5 py-1.5 text-[13px] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-[44px]!"
 				:disabled="!canAdd"
 				data-testid="add-comment"
+				data-pptx-comment-post
 			>
 				{{ t('pptx.comments.addComment') }}
 			</button>
