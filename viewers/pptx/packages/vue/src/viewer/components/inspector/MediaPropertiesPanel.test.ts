@@ -25,7 +25,10 @@ describe('media properties panel', () => {
 		});
 		expect(wrapper.find('[data-testid="media-playAcrossSlides"]').exists()).toBeFalsy();
 		await setControlValue(wrapper.get('[data-testid="media-start"]'), 'auto');
-		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({ autoPlay: true });
+		expect(wrapper.emitted('update')?.at(-1)?.[0]).toStrictEqual({
+			startMode: 'auto',
+			autoPlay: true,
+		});
 	});
 
 	it('previews relationship-backed media through the viewer URL map', () => {
