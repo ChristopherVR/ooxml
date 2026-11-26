@@ -24,6 +24,7 @@
 	import ViewerRegion from './ViewerRegion.svelte';
 	import { useNotesBarHeightSink } from '../state/notes-bar-height.svelte';
 	import { useViewerCustomization } from '../state/viewer-customization.svelte';
+	import SelectionPane from './SelectionPane.svelte';
 	import type { ViewerBodyProps } from './viewer-body-props';
 	import ViewerStage from './ViewerStage.svelte';
 
@@ -278,6 +279,10 @@
 	</div>
 	{#if editingActive && chromeVisible && displaySlides.length > 0 && chromeUi?.inspectorOpen !== false && customization.isPanelVisible('inspector')}
 		<InspectorPanel {editor} {handler} {presentationTheme} {onthemechange} {mediaDataUrls} ui={chromeUi} {canvasSize} />
+	{/if}
+	{#if chromeVisible && parityUi?.selectionPaneOpen && customization.isPanelVisible('selectionPane')}
+		{@const selectionUi = parityUi}
+		<SelectionPane {editor} onclose={() => (selectionUi.selectionPaneOpen = false)} />
 	{/if}
 </div>
 		{#if showNotes && chromeVisible && displaySlides.length > 0 && customization.isPanelVisible('notes')}

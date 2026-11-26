@@ -10,7 +10,7 @@ for (const { width, embedded } of [
 	test(`Ribbon tabs stay on one line at ${embedded ? '700px embedded' : '800px'}`, async ({
 		page,
 	}) => {
-		await page.setViewportSize({ width, height: 700 });
+		await page.setViewportSize({ width, height: 900 });
 		await loadDeck(page);
 		const tabs = page.locator('pptx-ui-ribbon-tabs:visible');
 		if (embedded) {
@@ -47,7 +47,7 @@ for (const { width, embedded } of [
 
 for (const width of [800, 1280]) {
 	test(`Insert fits and opens a docked comment draft at ${width}px`, async ({ page }) => {
-		await page.setViewportSize({ width, height: 900 });
+		await page.setViewportSize({ width, height: 700 });
 		await loadDeck(page);
 		await ribbonTab(page, 'Insert').click();
 		const row = page.locator('[data-pptx-chrome="ribbon-content"]:visible').first();
@@ -109,6 +109,39 @@ for (const width of [800, 1280]) {
 		await expect(header).toHaveAttribute('aria-pressed', 'false');
 	});
 }
+
+test('Selection Pane docks beside the canvas and above the status bar', async ({ page }) => {
+	await page.setViewportSize({ width: 800, height: 700 });
+	await loadDeck(page);
+	await ribbonTab(page, 'Home').click();
+	const drawing = page.locator('[data-ribbon-group="home.drawing"]:visible');
+	const arrange = drawing.getByRole('button', { name: 'Arrange', exact: true });
+	if (!(await arrange.isVisible()))
+		await drawing.getByRole('button', { name: 'Drawing', exact: true }).click();
+	await arrange.click();
+	await drawing.getByRole('menuitem', { name: 'Selection Pane' }).click();
+	const body = page.locator('[data-pptx-chrome="body"]:visible');
+	const pane = body.locator('[data-pptx-selection-pane]');
+	const canvas = body.locator('[data-pptx-viewport]:visible');
+	const status = page.locator('pptx-ui-status-bar:visible').first();
+	await expect(pane).toBeVisible();
+	for (const width of [800, 1600]) {
+		await page.setViewportSize({ width, height: 700 });
+		await expect
+			.poll(async () => (await canvas.boundingBox())?.width ?? 0)
+			.toBeGreaterThanOrEqual(320);
+		const [paneBox, canvasBox, statusBox, bodyBox] = await Promise.all([
+			pane.boundingBox(),
+			canvas.boundingBox(),
+			status.boundingBox(),
+			body.boundingBox(),
+		]);
+		expect(paneBox!.x).toBeGreaterThanOrEqual(canvasBox!.x + canvasBox!.width - 1);
+		expect(paneBox!.y).toBeGreaterThanOrEqual(bodyBox!.y - 1);
+		expect(paneBox!.y + paneBox!.height).toBeLessThanOrEqual(statusBox!.y + 1);
+		expect(statusBox!.y + statusBox!.height).toBeGreaterThanOrEqual(695);
+	}
+});
 
 test('Home uses Drawing Arrange and Review shares the Comments task pane', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 900 });

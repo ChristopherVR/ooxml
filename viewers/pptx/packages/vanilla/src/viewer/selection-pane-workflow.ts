@@ -56,7 +56,9 @@ export function createSelectionPaneWorkflow(
 	return {
 		open() {
 			close();
-			pane = openSelectionPane(host.doc, host.root(), host.t, {
+			const root = host.root();
+			const body = root.querySelector<HTMLElement>('[data-pptx-chrome="body"]') ?? root;
+			pane = openSelectionPane(host.doc, body, host.t, {
 				elements: activeSlide()?.elements ?? [],
 				selectedIds: host.store.get().selectedElementIds,
 				canEdit: () => host.store.get().editable,

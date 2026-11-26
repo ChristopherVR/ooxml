@@ -206,7 +206,7 @@ export function ViewerSidePanels(props: ViewerSidePanelsProps) {
 				(mode === 'edit' || mode === 'master') && (
 					<MobileDismissSheet
 						onClose={() => s.setIsSelectionPaneOpen(false)}
-						className='absolute right-0 top-0 z-30 h-full max-md:inset-x-0 max-md:bottom-0 max-md:top-auto max-md:h-auto max-md:max-h-[50vh] max-md:rounded-t-xl max-md:border-t max-md:border-border max-md:shadow-2xl max-md:bg-background'
+						className='h-full max-md:absolute max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:h-auto max-md:max-h-[50vh] max-md:rounded-t-xl max-md:border-t max-md:border-border max-md:shadow-2xl max-md:bg-background'
 					>
 						<SelectionPane
 							slides={slides}

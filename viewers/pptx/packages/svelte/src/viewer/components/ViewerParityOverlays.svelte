@@ -23,7 +23,6 @@
 	import PrintDialog from './PrintDialog.svelte';
 	import ReadingViewOverlay from './ReadingViewOverlay.svelte';
 	import RehearseTimings from './RehearseTimings.svelte';
-	import SelectionPane from './SelectionPane.svelte';
 	import SetUpSlideShowDialog from './SetUpSlideShowDialog.svelte';
 	import SettingsDialog from './SettingsDialog.svelte';
 	import ShortcutPanel from './ShortcutPanel.svelte';
@@ -125,7 +124,6 @@
 <RehearseTimings rehearse={ui.rehearse} onsave={() => ui.rehearse.save(editor)} ondiscard={() => ui.rehearse.discard()} />
 {#if ui.customShowsOpen}<CustomShowsDialog shows={editor.customShows} slides={editor.slides} activeShowId={ui.activeCustomShowId} onclose={() => (ui.customShowsOpen = false)} onsave={(shows, cleared) => { editor.presentationMetadata.updateCustomShows(shows); if (cleared) editor.commitSlides(cleared); }} onsetactive={(id) => (ui.activeCustomShowId = id)} onrun={() => onrunshow?.()} />{/if}
 {#if !fullscreen}<ChartFormatPanel {editor} />{/if}
-{#if ui.selectionPaneOpen && customization.isPanelVisible('selectionPane')}<SelectionPane {editor} onclose={() => (ui.selectionPaneOpen = false)} />{/if}
 {#if ui.slideSorterOpen}<SlideSorterOverlay {slides} clipboardSourceSlides={editor.slides} clipboardTemplates={editor.templateElementsBySlideId} {canvasSize} {mediaDataUrls} {current} canEdit={editor.editable} onselect={onselectslide} onmove={onmoveslide} ondelete={(index) => navigateAfterSlideOp(editor.slidesOps.deleteSlideAtIndex(index))} onduplicate={(index) => navigateAfterSlideOp(editor.slidesOps.duplicateSlideAtIndex(index))} oncopysystem={(indexes) => slidePackageClipboard.copy(indexes)} onpastesystem={(insertAt) => slidePackageClipboard.paste(insertAt)} onpaste={(request) => navigateAfterSlideOp(editor.slidesOps.pasteSlides(request))} ontogglehidden={(index) => editor.slidesOps.toggleSlideHidden(index)} onclose={() => (ui.slideSorterOpen = false)} />{/if}
 {#if ui.outlineViewOpen}<OutlineViewOverlay slides={editor.slides} {canvasSize} canEdit={editor.editable} oncommit={(next) => editor.commitSlides(next)} onactiveslide={onselectslide} onclose={() => (ui.outlineViewOpen = false)} />{/if}
 {#if ui.readingViewOpen}<ReadingViewOverlay {slides} {canvasSize} {mediaDataUrls} activeSlideIndex={current} onexit={(index) => { ui.readingViewOpen = false; onselectslide(index); }} />{/if}
