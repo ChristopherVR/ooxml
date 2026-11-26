@@ -1,8 +1,10 @@
+import { bootstrapApplication } from '@angular/platform-browser';
+
 import '../../shared/zod-jitless';
 import 'zone.js';
-import { bootstrapApplication } from '@angular/platform-browser';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
+import { enableDemoAddInPreferences } from '../../shared/demo-add-ins';
 // Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
 import '../../shared/element-render-fault';
 import { externalSessionRequested } from '../../shared/host-owned-collaboration';
@@ -16,6 +18,7 @@ import { SameBrowserDemoComponent } from './same-browser-demo.component';
 import '../../shared/dropzone.css';
 
 if (!completeDemoSignInPopup()) {
+	enableDemoAddInPreferences(document.body);
 	bootstrapApplication(
 		new URLSearchParams(location.search).get('blocks') === '1'
 			? BuildingBlocksDemoComponent

@@ -1,9 +1,10 @@
-import '../shared/zod-jitless';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
+
+import '../shared/zod-jitless';
+import type { PowerPointViewerHandle, ViewerCustomization } from 'pptx-react-viewer';
 
 // Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
 import '../shared/element-render-fault';
-import type { PowerPointViewerHandle, ViewerCustomization } from 'pptx-react-viewer';
 /* oxlint-disable eslint/one-var -- pervasive pre-existing pattern in this file
    (many independent short-lived `const`s per hook/handler, several separated
    by comments or guard clauses); merging them isn't a style choice here. */
@@ -45,6 +46,7 @@ import {
 import type { CollaborationConfig } from '../../../viewers/pptx/packages/react/src/viewer';
 import { installDevViewerHandle } from '../dev-viewer-handle';
 import { invitationFromPage, showSessionInAddressBar } from '../shared/collaboration-link';
+import { enableDemoAddInPreferences } from '../shared/demo-add-ins';
 import { currentDemoCustomization } from '../shared/demo-customization';
 import { demoFileProviders } from '../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../shared/demo-root-options';
@@ -1036,6 +1038,7 @@ function App() {
 // The MSAL sign-in popup loads this page too: hand the response back and do not boot the app.
 const rootEl = completeDemoSignInPopup() ? null : document.getElementById('app-root');
 if (rootEl) {
+	enableDemoAddInPreferences(rootEl);
 	// HMR guard: this module mixes the `App` component with this top-level
 	// mount call, so `@vitejs/plugin-react`'s Fast Refresh can never treat it
 	// as a clean self-accepting boundary (any edit to this file, or a chain of

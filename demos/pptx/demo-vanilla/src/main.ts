@@ -1,14 +1,15 @@
-import '../../shared/zod-jitless';
 import { completeDemoSignInPopup } from 'ooxml-demo-onedrive';
 
-// Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
-import '../../shared/element-render-fault';
+import '../../shared/zod-jitless';
 import type {
 	CollaborationConfig,
 	PptxViewerInstance,
 	PptxViewerSource,
 	ViewerCustomization,
 } from 'pptx-vanilla-viewer';
+
+// Test-only: `?elementRenderFault=<id>` makes that element's renderer throw (e2e).
+import '../../shared/element-render-fault';
 import {
 	createPptxViewer,
 	forgetSessionDeck,
@@ -22,6 +23,7 @@ import { PptxHandler } from 'pptx-viewer-core';
 
 import { installDevViewerHandle } from '../../dev-viewer-handle';
 import { showSessionInAddressBar } from '../../shared/collaboration-link';
+import { enableDemoAddInPreferences } from '../../shared/demo-add-ins';
 import { currentDemoCustomization } from '../../shared/demo-customization';
 import { demoFileProviders } from '../../shared/demo-file-providers';
 import { currentDemoRootOptions } from '../../shared/demo-root-options';
@@ -159,6 +161,7 @@ function openViewer(
 	app.replaceChildren();
 
 	const shell = document.createElement('main');
+	enableDemoAddInPreferences(shell);
 	shell.className = 'demo-shell';
 	shell.dataset.pptxViewer = '';
 	app.append(shell);

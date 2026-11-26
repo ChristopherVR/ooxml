@@ -1,3 +1,5 @@
+import { setOfficeAddInPreferences } from 'ooxml-ui/suite';
+import { demoAddInPreferences } from '../../add-in-preferences';
 import { initTheme } from './theme';
 import './style.css';
 import { normalizeEditorLocale, type XlsxEditorElement } from 'xlsx-web-component';
@@ -9,6 +11,7 @@ import { mountFramework } from './framework';
 const get = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const params = new URLSearchParams(location.search);
 initTheme();
+setOfficeAddInPreferences(get('editor'), demoAddInPreferences());
 
 const framework = params.get('framework') || import.meta.env.VITE_DEMO_FRAMEWORK || 'vanilla';
 get('build-stamp').textContent = `xlsx-viewer demo · ${framework}`;

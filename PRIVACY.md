@@ -150,6 +150,13 @@ access tokens. Standalone library consumers default to session memory. A host ca
 `null` to `setOfficeAddInPreferences` to turn persistence off in its editor scope. Clearing
 this site's browser data removes stored add-ins.
 
+The Word, Excel and PowerPoint demos use a separate local IndexedDB database
+(`ooxml-demo-add-ins`) to keep confirmed add-ins across demo reloads, with up to
+16 MiB per product. If IndexedDB is unavailable, the demo keeps records in page
+memory. Remove an add-in in My Add-ins to delete it, clear the site's browser data,
+or open the demo with `?addInsStorage=off` to use session-only installation.
+Publisher code still requires explicit host opt-in.
+
 Get Add-ins and My Add-ins open Office Add-ins in Word, Excel, PowerPoint and Visio.
 The Store pivot is off by default. A host can use `setOfficeAddInStorefront` to enable
 the Microsoft Marketplace handoff or specify its own HTTPS link. Clicking the link opens
