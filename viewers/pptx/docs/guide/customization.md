@@ -1331,13 +1331,25 @@ unit test fails if an id is missing here.
 | `smartArtFormat.shapes.shape`                     | Change Shape                                                                  |
 | `smartArtFormat.shapes.larger`                    | Larger                                                                        |
 | `smartArtFormat.shapes.smaller`                   | Smaller                                                                       |
-| `smartArtFormat.shapeStyles.gallery`              | Shape Styles gallery                                                          |
+| `smartArtFormat.shapeStyles.gallery`              | Shape Styles                                                                  |
 | `smartArtFormat.shapeStyles.fill`                 | Shape Fill                                                                    |
 | `smartArtFormat.shapeStyles.border`               | Shape Outline                                                                 |
-| `smartArtFormat.wordArtStyles.gallery`            | WordArt Styles gallery                                                        |
+| `smartArtFormat.wordArtStyles.gallery`            | WordArt Styles                                                                |
 | `smartArtFormat.wordArtStyles.color`              | Text Fill                                                                     |
 | `smartArtFormat.wordArtStyles.bold`               | Bold                                                                          |
 | `smartArtFormat.wordArtStyles.italic`             | Italic                                                                        |
+| `smartArtFormat.arrange.bringForward`             | Bring Forward                                                                 |
+| `smartArtFormat.arrange.sendBackward`             | Send Backward                                                                 |
+| `smartArtFormat.arrange.bringToFront`             | Bring to Front                                                                |
+| `smartArtFormat.arrange.sendToBack`               | Send to Back                                                                  |
+| `smartArtFormat.arrange.flipHorizontal`           | Flip Horizontal                                                               |
+| `smartArtFormat.arrange.flipVertical`             | Flip Vertical                                                                 |
+| `smartArtFormat.arrange.group`                    | Group                                                                         |
+| `smartArtFormat.arrange.ungroup`                  | Ungroup                                                                       |
+| `smartArtFormat.arrange.align`                    | Align                                                                         |
+| `smartArtFormat.arrange.mergeShapes`              | Merge Shapes                                                                  |
+| `smartArtFormat.arrange.crop`                     | Crop                                                                          |
+| `smartArtFormat.arrange.outlineWidth`             | Outline width                                                                 |
 | `smartArtFormat.size.width`                       | Width                                                                         |
 | `smartArtFormat.size.height`                      | Height                                                                        |
 
