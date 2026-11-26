@@ -35,7 +35,10 @@ export interface StencilsView {
 /** Visio shows a stencil's first masters as its Quick Shapes until the user changes them. */
 const DEFAULT_QUICK = 4;
 /** Undefined until the shared menu element is registered. */
-type Menu = HTMLElement & { openAt?(x: number, y: number, opener?: HTMLElement): void };
+type Menu = HTMLElement & {
+	openAt?(x: number, y: number, opener?: HTMLElement): void;
+	close?(): void;
+};
 
 /**
  * The Stencils view below the view tabs: More Shapes (a menu of the built-in stencils), Quick
@@ -254,7 +257,10 @@ export function buildStencilsView(
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (command.startsWith('stencil:')) toggleStencil(command.slice('stencil:'.length));
 		else if (command === 'open-stencil-file') picker.open();
-		else if (command === 'new-stencil') authoring.use((menus) => menus.create());
+		else if (command === 'new-stencil') {
+			moreMenu.close?.();
+			authoring.use((menus) => menus.create());
+		}
 	});
 	quickToggle.addEventListener('click', () => {
 		quick.hidden = !quick.hidden;

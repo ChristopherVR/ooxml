@@ -29,12 +29,17 @@ async function drawingWithShape(page: Page) {
 test('returns focus to the invoking control after stencil dialogs and save', async ({ page }) => {
 	test.setTimeout(60_000);
 	const { viewer, more, menu, dialog, confirm } = await drawingWithShape(page);
+	const moreMenu = viewer.getByRole('menu', { name: 'More Shapes' });
 	await more.press('Enter');
 	await menu('more', 'new-stencil').click();
+	await expect(dialog).toBeVisible();
+	await expect(moreMenu).toBeHidden();
 	await dialog.getByRole('textbox', { name: 'Stencil name' }).press('Escape');
 	await expect(more).toBeFocused();
 	await more.press('Enter');
-	await menu('more', 'new-stencil').click();
+	await menu('more', 'new-stencil').getByRole('menuitem').press('Enter');
+	await expect(dialog).toBeVisible();
+	await expect(moreMenu).toBeHidden();
 	const name = dialog.getByRole('textbox', { name: 'Stencil name' });
 	await name.fill('Valves');
 	await expect(name).toBeFocused();
