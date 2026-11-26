@@ -108,7 +108,7 @@ export const RIBBON_CATALOG_CORE_TABS = {
 		},
 		editing: {
 			label: 'Editing',
-			controls: { find: 'Find', replace: 'Replace', select: 'Select' },
+			controls: { find: 'Find', replace: 'Replace', select: 'Select', addIns: 'Add-ins' },
 		},
 	},
 	insert: {
