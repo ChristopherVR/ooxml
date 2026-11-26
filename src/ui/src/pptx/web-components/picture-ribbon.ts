@@ -74,18 +74,16 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 		private focused: HTMLElement | null = null;
 
 		set family(value: PictureStripGroup) {
-			const previous = this.group;
 			this.group = Object.hasOwn(COMMANDS, value) ? value : 'picture-adjust';
-			this.requestUpdate('family', previous);
+			this.updateControls();
 		}
 		get family() {
 			return this.group;
 		}
 		set state(value: PictureRibbonState | undefined) {
 			if (this.active && !value?.editable) this.active.abort();
-			const previous = this.model;
 			this.model = value;
-			this.requestUpdate('state', previous);
+			this.updateControls();
 		}
 		get state() {
 			return this.model;
@@ -97,7 +95,16 @@ export function definePptxPictureRibbon(registry: CustomElementRegistry): void {
 		}
 
 		protected override willUpdate(): void {
-			if (this.detachedFirstRender) return;
+			if (!this.detachedFirstRender) this.syncControls();
+		}
+
+		private updateControls(): void {
+			// A binding can populate the light DOM before it connects the ribbon.
+			if (this.hasUpdated) this.requestUpdate();
+			else this.syncControls();
+		}
+
+		private syncControls(): void {
 			// The ribbon group treats a full-height inline control as a column beside
 			// its stacked dropdown galleries.
 			const mode = this.group === 'picture-adjust' || this.group === 'picture-styles';

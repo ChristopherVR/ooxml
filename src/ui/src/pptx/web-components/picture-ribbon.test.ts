@@ -40,6 +40,17 @@ function mount(family: HTMLElementTagNameMap['pptx-ui-picture-ribbon']['family']
 }
 
 describe('picture ribbon', () => {
+	it('creates light DOM commands when a binding sets props before connecting', () => {
+		const strip = document.createElement('pptx-ui-picture-ribbon');
+		strip.family = 'picture-adjust';
+		strip.state = undefined;
+		const changePicture = strip.querySelector(
+			'[data-ribbon-control="pictureFormat.adjust.changePicture"]',
+		);
+		expect(changePicture?.getAttribute('label')).toBe('Change Picture');
+		expect(changePicture?.hasAttribute('disabled')).toBe(true);
+	});
+
 	it('keeps commands in the light DOM and updates their state without replacing them', () => {
 		const { strip, state, command } = mount('picture-arrange');
 		const rotate = command('arrange.rotateRight');
