@@ -1,7 +1,6 @@
 // Registers the navigation, names and information dialogs.
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
 import { openErrorChecking, openEvaluateFormula } from './audit-dialogs';
-import { openCommentsList } from './comments-list';
 import { openCreateNames } from './create-names';
 import { type DefineNameProps, openDefineName } from './define-name';
 import { type FindReplaceProps, openFindReplace } from './find-replace';
@@ -26,7 +25,6 @@ export function registerNavigationDialogs(ctx: EditorContext): void {
 	d.register('define-name', (c, p) => openDefineName(c, obj<DefineNameProps>(p)));
 	d.register('create-names', (c) => openCreateNames(c));
 	d.register('workbook-statistics', (c) => openStatistics(c));
-	d.register('comments-list', (c) => openCommentsList(c));
 	d.register('shortcut-help', (c) => openShortcutHelp(c));
 	d.register('feature-status', (c) => openFeatureStatus(c));
 }

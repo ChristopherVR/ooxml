@@ -14,6 +14,7 @@ import { homeTab } from './home';
 import { pictureFormatTab, shapeFormatTab } from './drawing-format';
 import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
+import { sparklineTab } from './sparkline';
 import { pivotAnalyzeTab, pivotDesignTab } from './pivot';
 
 export function commandTabs(): RibbonTab[] {
@@ -35,6 +36,7 @@ export function commandTabs(): RibbonTab[] {
 		smartArtDesignTab(),
 		slicerTab(),
 		timelineTab(),
+		sparklineTab(),
 		pivotAnalyzeTab(),
 		pivotDesignTab(),
 	];

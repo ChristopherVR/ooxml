@@ -224,6 +224,12 @@
 }
 .ribbon-group[data-collapsed] > .ribbon-overflow-button {
 	display: flex !important;
+	gap: 1px;
+	padding-block: 2px;
+}
+.ribbon-overflow-button > span {
+	flex: none;
+	overflow-wrap: anywhere;
 }
 .ribbon-group button.ribbon-overflow-button[aria-expanded='true'] {
 	border-color: var(--line);

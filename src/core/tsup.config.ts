@@ -164,6 +164,7 @@ export default defineConfig([
 		splitting: true,
 		esbuildOptions(options) {
 			options.chunkNames = 'drawingml/chunks/[name]-[hash]';
+			options.minifySyntax = true;
 		},
 	},
 	// The viewer and parser share the Visio model in the browser.

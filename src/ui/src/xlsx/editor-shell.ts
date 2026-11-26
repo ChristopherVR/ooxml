@@ -27,6 +27,7 @@ import {
 	mountSheetTabs,
 } from './modules';
 import { createRibbon, type Ribbon } from './ribbon/ribbon';
+import { createCommentsPane } from './comments-pane';
 import { createRibbonActions } from './ribbon-actions';
 import { el } from './ribbon/controls';
 import { hideKeyTips } from './ribbon/keytips';
@@ -231,6 +232,7 @@ export function buildShell(core: EditorCore): Shell {
 
 	const workspace = el(doc, 'div', 'xve-workspace');
 	const selectionPane = createSelectionPane(ctx);
+	const commentsPane = createCommentsPane(ctx);
 	const smartArt = createSmartArtController(ctx);
 	const canvasRow = el(doc, 'div', 'xve-canvas-row');
 	const formulaRow = el(doc, 'div', 'xve-formula-row');
@@ -240,7 +242,7 @@ export function buildShell(core: EditorCore): Shell {
 	const emptyText = el(doc, 'p');
 	empty.append(emptyText);
 	workspace.append(formulaRow, gridHost, tabsRow, empty);
-	canvasRow.append(workspace, smartArt.element, selectionPane.element);
+	canvasRow.append(workspace, smartArt.element, selectionPane.element, commentsPane.element);
 	const chartPanes = registerChartPanes(ctx, workspace, smartArt.element);
 	frame.append(
 		titleBar.element,
@@ -278,6 +280,7 @@ export function buildShell(core: EditorCore): Shell {
 			...chartPanes.elements(),
 			smartArt.element,
 			selectionPane.element,
+			commentsPane.element,
 			statusBar.element,
 		].filter((region) => region.getClientRects().length);
 	const focusRegion = (region: HTMLElement) => {
@@ -350,6 +353,7 @@ export function buildShell(core: EditorCore): Shell {
 			chartPanes.refresh();
 			smartArt.refresh();
 			selectionPane.refresh();
+			commentsPane.refresh();
 			titleBar.setFileName(core.fileName);
 			if (core.dirty.dirty && saveState !== 'dirty' && saveState !== 'saving')
 				chrome.setSaveState('dirty');

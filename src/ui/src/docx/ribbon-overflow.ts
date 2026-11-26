@@ -12,13 +12,14 @@ const GROUP_ICONS: Record<string, RibbonIcon> = {
 	Tables: 'table',
 	Illustrations: 'picture',
 	Links: 'link',
-	Breaks: 'pageBreak',
+	Pages: 'pageBreak',
+	Breaks: 'sectionNext',
+	Media: 'picture',
 	'Header & Footer': 'header',
 	Text: 'dateTime',
 	Symbols: 'symbol',
 	'Page setup': 'margins',
 	'Page numbers': 'pageNumber',
-	'Section breaks': 'sectionNext',
 	Indent: 'indent',
 	Arrange: 'bringForward',
 	Proofing: 'spelling',
@@ -55,7 +56,9 @@ const overflow = createRibbonOverflow({
 	ribbon: '.dve-ribbon',
 	command: 'button[data-action]',
 	naturalWidth: true,
-	preferExpanded: (group, panel) => panel.clientWidth >= 1600 && group.dataset.label === 'Arrange',
+	preferExpanded: (group, panel) =>
+		(group.dataset.label === 'Add-ins' && panel.dataset.panel === 'Insert') ||
+		(panel.clientWidth >= 1600 && group.dataset.label === 'Arrange'),
 	groupPriority: (group) => {
 		if (group.parentElement?.dataset.ribbonTab !== 'table-layout') return 0;
 		if (group.dataset.label === 'Cell Size') return 1;

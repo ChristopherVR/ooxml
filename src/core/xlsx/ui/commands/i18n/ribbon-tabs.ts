@@ -398,6 +398,12 @@ export const RIBBON_TAB_STRINGS: Translations = {
 		'Estadísticas del libro',
 		'工作簿统计信息',
 	],
+	'Editing comments is unavailable.': [
+		'La modification des commentaires est indisponible.',
+		'Kommentare können nicht bearbeitet werden.',
+		'No se pueden editar los comentarios.',
+		'无法编辑批注。',
+	],
 	'New Comment': ['Nouveau commentaire', 'Neuer Kommentar', 'Nuevo comentario', '新建批注'],
 	'Delete Comment': [
 		'Supprimer le commentaire',

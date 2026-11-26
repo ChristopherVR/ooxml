@@ -1,4 +1,5 @@
 // Review, View and Help tabs.
+import { icon } from '../../commands/icons';
 import type { RibbonTab } from '../parts';
 
 export function reviewTab(): RibbonTab {
@@ -25,6 +26,19 @@ export function reviewTab(): RibbonTab {
 						],
 					},
 					{ kind: 'button', command: 'review.show-comments', size: 'large' },
+				],
+			},
+			{
+				id: 'notes',
+				label: 'Notes',
+				controls: [
+					{
+						kind: 'menu',
+						label: 'Notes',
+						icon: icon('commentNew'),
+						size: 'large',
+						items: [{ command: 'insert.note' }],
+					},
 				],
 			},
 			{

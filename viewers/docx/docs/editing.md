@@ -1,5 +1,10 @@
 # Editing text
 
+Insert > Pages offers Cover Page, Blank Page and Page Break. Column Break is under Layout > Breaks.
+Insert > Comment opens the same anchored comment editor as Review > Add comment. Open a
+header or footer to use Link to Previous on its contextual tab. Insert > Symbols contains Equation
+and Symbol. Insert > Media shows Online Video as unavailable.
+
 Every framework mounts the same web-component editor. Commands, keyboard
 shortcuts, search, language metadata and document conversion have one implementation.
 

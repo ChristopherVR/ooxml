@@ -27,20 +27,6 @@ export function insertTab(): RibbonTab {
 					{ kind: 'button', command: 'insert.table', size: 'large' },
 					{ kind: 'button', command: 'insert.pivot-table', size: 'large' },
 					{ kind: 'button', command: 'insert.recommended-pivot-tables', size: 'large' },
-					{
-						kind: 'menu',
-						label: 'PivotTable',
-						items: [
-							{ command: 'pivot.settings' },
-							{ command: 'pivot.filter-field' },
-							{ command: 'pivot.refresh' },
-							{ command: 'pivot.group' },
-							{ command: 'pivot.group-selection' },
-							{ command: 'pivot.ungroup' },
-							{ command: 'pivot.field-settings' },
-							{ command: 'pivot.delete' },
-						],
-					},
 				],
 			},
 			{
@@ -70,6 +56,14 @@ export function insertTab(): RibbonTab {
 				],
 			},
 			{
+				id: 'add-ins',
+				label: 'Add-ins',
+				controls: [
+					{ kind: 'button', command: 'insert.get-add-ins', size: 'large' },
+					{ kind: 'button', command: 'insert.my-add-ins', size: 'large' },
+				],
+			},
+			{
 				id: 'charts',
 				label: 'Charts',
 				launcher: 'insert.chart',
@@ -93,6 +87,15 @@ export function insertTab(): RibbonTab {
 				],
 			},
 			{
+				id: 'sparklines',
+				label: 'Sparklines',
+				controls: [
+					{ kind: 'button', command: 'insert.sparkline-line', size: 'large' },
+					{ kind: 'button', command: 'insert.sparkline-column', size: 'large' },
+					{ kind: 'button', command: 'insert.sparkline-stacked', size: 'large' },
+				],
+			},
+			{
 				id: 'filters',
 				label: 'Filters',
 				controls: [
@@ -111,46 +114,9 @@ export function insertTab(): RibbonTab {
 				controls: [{ kind: 'button', command: 'insert.forms', size: 'large' }],
 			},
 			{
-				id: 'add-ins',
-				label: 'Add-ins',
-				controls: [
-					{ kind: 'button', command: 'insert.get-add-ins', size: 'large' },
-					{ kind: 'button', command: 'insert.my-add-ins', size: 'large' },
-				],
-			},
-			{
-				id: 'sparklines',
-				label: 'Sparklines',
-				launcher: 'sparkline.settings',
-				controls: [
-					{ kind: 'button', command: 'insert.sparkline-line', size: 'large' },
-					{ kind: 'button', command: 'insert.sparkline-column', size: 'large' },
-					{ kind: 'button', command: 'insert.sparkline-stacked', size: 'large' },
-					{
-						kind: 'stack',
-						controls: [
-							{ kind: 'button', command: 'sparkline.settings' },
-							{ kind: 'button', command: 'sparkline.group' },
-							{ kind: 'button', command: 'sparkline.ungroup' },
-							{
-								kind: 'menu',
-								label: 'Clear Sparklines',
-								items: [
-									{ command: 'sparkline.clear-selected' },
-									{ command: 'sparkline.clear-groups' },
-								],
-							},
-						],
-					},
-				],
-			},
-			{
 				id: 'comments',
 				label: 'Comments',
-				controls: [
-					{ kind: 'button', command: 'insert.comment', size: 'large' },
-					{ kind: 'button', command: 'insert.note', size: 'large' },
-				],
+				controls: [{ kind: 'button', command: 'insert.comment', size: 'large' }],
 			},
 			{
 				id: 'text',

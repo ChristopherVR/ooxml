@@ -103,6 +103,7 @@
 	border-top: 1px solid var(--line);
 	background: var(--chrome);
 }
+.xve-comments-pane,
 .xve-selection-pane {
 	flex: none;
 	width: 230px;
@@ -112,6 +113,21 @@
 	padding: 10px;
 	border-left: 1px solid var(--line);
 	background: var(--surface);
+}
+.xve-comments-pane {
+	width: 300px;
+}
+.xve-comments-pane header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.xve-comments-pane h2 {
+	margin: 0;
+	font-size: 14px;
+}
+.xve-comments-new {
+	margin-block: 8px;
 }
 .xve-selection-pane header {
 	display: flex;

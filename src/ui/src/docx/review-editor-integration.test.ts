@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDocument, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
+import { createDocument, loadDocx, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
 import { TextSelection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { DocxEditorElement, registerDocxEditor } from './index';
@@ -73,11 +73,15 @@ describe('review editing end to end', () => {
 		expect(editor.documentModel!.trackChanges).toBe(false);
 	});
 
-	it('adds a comment anchored to the selection from the comments pane', () => {
+	it.each(['Insert', 'Review'])('adds an anchored comment from %s and saves it', async (tab) => {
 		const editor = mount(withText('Review me'));
 		const pm = view(editor);
 		pm.dispatch(pm.state.tr.setSelection(TextSelection.create(pm.state.doc, 1, 7)));
-		click(editor, 'Add comment');
+		must(
+			editor.shadowRoot?.querySelector<HTMLButtonElement>(
+				`.ribbon-panel[data-panel="${tab}"] button[aria-label="Add comment"]`,
+			),
+		).click();
 		const pane = editor.shadowRoot!.querySelector('.dve-comments-panel')!.shadowRoot!;
 		const input = pane.querySelector<HTMLTextAreaElement>('[aria-label="New comment"]')!;
 		expect(input).toBeTruthy();
@@ -95,5 +99,24 @@ describe('review editing end to end', () => {
 			run.commentIds?.includes(must(comment).id),
 		);
 		expect(anchored?.text).toBe('Review');
+
+		const blob = await editor.save();
+		const bytes = await new Promise<Uint8Array>((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => {
+				if (reader.result instanceof ArrayBuffer) resolve(new Uint8Array(reader.result));
+				else reject(new Error('Expected DOCX bytes'));
+			};
+			reader.onerror = () => reject(reader.error);
+			reader.readAsArrayBuffer(blob);
+		});
+		const { model } = await loadDocx(bytes);
+		const savedComment = must(model.comments?.[0]);
+		const paragraph = model.blocks[0];
+		expect(savedComment.text).toBe('Please check');
+		expect(
+			paragraph?.type === 'paragraph' &&
+				paragraph.runs.find((run) => run.commentIds?.includes(savedComment.id))?.text,
+		).toBe('Review');
 	});
 });

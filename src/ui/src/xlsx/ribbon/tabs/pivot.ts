@@ -55,7 +55,7 @@ export function pivotAnalyzeTab(): RibbonTab {
 				label: 'Filter',
 				controls: [
 					stack(button('insert.slicer'), button('insert.timeline'), button('pivot.connections')),
-					button('pivot.condition'),
+					stack(button('pivot.condition'), button('pivot.filter-field')),
 				],
 			},
 			{

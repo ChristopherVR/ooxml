@@ -17,7 +17,7 @@ const kinds = (page: Page): Promise<string[]> =>
 	});
 
 async function command(page: Page, id: string) {
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
+	await ribbon(page).getByRole('tab', { name: 'Sparkline', exact: true }).click();
 	await clickRibbonControl(page, ribbon(page).locator(`[data-command="${id}"]`).first());
 }
 
@@ -42,8 +42,9 @@ for (const framework of FRAMEWORKS)
 		await setType(page, 'F1', 'line');
 		await expect.poll(() => kinds(page)).toEqual(['line', 'column', 'column', 'line']);
 
-		// Grouped: F2 follows F1.
-		await goToCell(page, 'F1');
+		// Grouped: F2 follows F1, even when the selection starts in a cell without a sparkline.
+		await goToCell(page, 'E1');
+		await page.keyboard.press('Shift+ArrowRight');
 		await page.keyboard.press('Shift+ArrowDown');
 		await command(page, 'sparkline.group');
 		await setType(page, 'F1', 'line');

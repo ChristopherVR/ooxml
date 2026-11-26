@@ -1,5 +1,6 @@
 // Review tab: Workbook Statistics, comments (new / edit, delete, previous, next, show all) and
 // Protect Sheet / Protect Workbook.
+import { commentsPaneOpen, toggleCommentsPane } from '../comments-pane';
 import type { Comment } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
@@ -107,7 +108,9 @@ export function reviewCommands(): Command[] {
 			id: 'review.show-comments',
 			label: 'Show Comments',
 			icon: icon('commentShow'),
-			run: (ctx) => void ctx.dialogs.open('comments-list'),
+			checked: commentsPaneOpen,
+			run: (ctx, opener) =>
+				toggleCommentsPane(ctx, opener instanceof HTMLElement ? opener : undefined),
 		}),
 		editing({
 			id: 'review.protect-sheet',

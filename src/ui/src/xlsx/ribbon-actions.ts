@@ -35,7 +35,7 @@ export function createRibbonActions(
 		handlers.setReadOnly((event as CustomEvent<{ mode: string }>).detail.mode === 'viewing'),
 	);
 	element.addEventListener('office-ribbon-comments', () => {
-		void ctx.commands.run('review.show-comments');
+		void ctx.commands.run('review.show-comments', element.control('comments'));
 	});
 	element.addEventListener('office-ribbon-share', () => void ctx.commands.run('file.share'));
 
@@ -56,7 +56,7 @@ export function createRibbonActions(
 		element.noShare = !ctx.commands.get('file.share') || handlers.isHidden('file.share');
 		element.sharePressed = Boolean(handlers.collaboration?.().active);
 		const showComments = ctx.commands.get('review.show-comments');
-		element.noComments = !showComments;
+		element.noComments = !showComments || handlers.isHidden('review.show-comments');
 		if (!showComments) return;
 		let pressed = false;
 		try {

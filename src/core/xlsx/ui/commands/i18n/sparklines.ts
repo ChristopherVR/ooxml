@@ -44,6 +44,7 @@ export const SPARKLINE_STRINGS: Translations = {
 			'图表和迷你图支持编辑；数据透视表、宏和其他不支持的部分保存在文件中，但不显示。',
 		],
 	Sparklines: ['Graphiques sparkline', 'Sparklines', 'Minigráficos', '迷你图'],
+	Sparkline: ['Graphique sparkline', 'Sparkline', 'Minigráfico', '迷你图'],
 	'Line Sparkline': [
 		'Sparkline en courbe',
 		'Linien-Sparkline',

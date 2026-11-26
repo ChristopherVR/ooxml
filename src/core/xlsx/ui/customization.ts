@@ -84,6 +84,7 @@ export const EXCEL_RIBBON_TAB_IDS = [
 	'smartart-design',
 	'slicer',
 	'timeline',
+	'sparkline',
 	'pivot-analyze',
 	'pivot-design',
 ] as const;

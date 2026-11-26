@@ -81,6 +81,14 @@ export function refreshEditorControls(
 		syncFormatControls(toolbar, state);
 		for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-action]')) {
 			const action = JSON.parse(button.dataset.action!) as RibbonAction;
+			if (action.type === 'comments' && action.key === 'add') {
+				button.disabled = readOnly || !canEditComments || state.selection.empty;
+				if (button.disabled) {
+					const reason =
+						canEditComments && !readOnly ? 'Select text first' : 'Not available in this editor';
+					button.setAttribute('aria-description', translate(locale, reason));
+				} else button.removeAttribute('aria-description');
+			}
 			if (action.type === 'tableEdit') {
 				button.disabled =
 					readOnly || Boolean(collaboration) || !canExecuteTableCommand(view, action.key);
@@ -118,7 +126,6 @@ export function refreshEditorControls(
 			['Reject all', anyChange],
 			['Previous change', anyChange],
 			['Next change', anyChange],
-			['Add comment', canEditComments && !state.selection.empty],
 			['Delete comment', canEditComments && commentIdsAtSelection(view).length > 0],
 			['Previous comment', commentAnchors(view).length > 0],
 			['Next comment', commentAnchors(view).length > 0],

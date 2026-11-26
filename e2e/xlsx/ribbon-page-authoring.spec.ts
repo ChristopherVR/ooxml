@@ -36,12 +36,14 @@ test('edits print settings, worksheet background, note and header from the ribbo
 	await clickRibbonControl(page, control('page.background-delete'));
 	await expect(surface).not.toHaveAttribute('data-sheet-background', '');
 
-	await band.getByRole('tab', { name: 'Insert', exact: true }).click();
-	await clickRibbonControl(page, control('insert.note'));
+	await band.getByRole('tab', { name: 'Review', exact: true }).click();
+	await clickRibbonControl(page, band.getByRole('button', { name: 'Notes', exact: true }));
+	await workbook.getByRole('menuitem', { name: 'New Note', exact: true }).click();
 	const note = workbook.locator('[data-dialog="note"]');
 	await note.getByLabel('Note', { exact: true }).fill('Review the assumptions');
 	await note.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(note).toBeHidden();
+	await band.getByRole('tab', { name: 'Insert', exact: true }).click();
 	await clickRibbonControl(page, control('insert.header-footer'));
 	await expect(statusBar(page).locator('[data-id="pageLayout"]')).toHaveAttribute(
 		'aria-pressed',

@@ -527,5 +527,5 @@ Still not at parity:
 
 ### Engineering follow-ups
 
-- Modules over the 300-line guideline (non-test, non-data): `src/ui/src/docx/ribbon-tabs.ts` (~560, the tab definitions), `ribbon-home.ts` (~370), `model-adapter.ts` (~350) and a few files just over 300; the locale tables and generated schema types are data.
+- Modules over the 300-line guideline (non-test, non-data): `src/ui/src/docx/ribbon-tabs.ts` (Layout, References, Review and View tab definitions), `ribbon-home.ts` (~370), `model-adapter.ts` (~350) and a few files just over 300; the locale tables and generated schema types are data.
 - `ssr.test.ts` can time out (5 s) when the whole suite runs under load; it passes alone.

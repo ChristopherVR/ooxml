@@ -12,7 +12,7 @@ const options = {
 const overflow = createRibbonOverflow(options);
 
 /** jsdom has no layout: a panel that is `room` wide holding groups of 100 that overflow it. */
-function panel(room: number, collapsedWidth = 40) {
+function panel(room: number, collapsedWidth = 40, widths = [100, 100]) {
 	const ribbon = document.createElement('div');
 	ribbon.className = 'ribbon';
 	const el = document.createElement('div');
@@ -20,7 +20,7 @@ function panel(room: number, collapsedWidth = 40) {
 	const define = (node: HTMLElement, props: Record<string, () => number>) => {
 		for (const [key, get] of Object.entries(props)) Object.defineProperty(node, key, { get });
 	};
-	const groups = ['Font', 'Styles'].map((label) => {
+	const groups = ['Font', 'Styles'].map((label, index) => {
 		const group = document.createElement('div');
 		group.className = 'ribbon-group';
 		group.dataset.label = label;
@@ -29,7 +29,7 @@ function panel(room: number, collapsedWidth = 40) {
 		run.dataset.command = 'x';
 		group.append(run);
 		define(group, {
-			offsetWidth: () => (group.hasAttribute('data-collapsed') ? collapsedWidth : 100),
+			offsetWidth: () => (group.hasAttribute('data-collapsed') ? collapsedWidth : widths[index]!),
 		});
 		el.append(group);
 		return group;
@@ -95,6 +95,12 @@ describe('ribbon overflow', () => {
 		const { el, groups } = panel(150, 100);
 		overflow.fitPanel(el);
 		expect(groups.some((group) => group.hasAttribute('data-collapsed'))).toBe(false);
+	});
+
+	it('restores a narrow group when folding a wide group frees enough room', () => {
+		const { el, groups } = panel(170, 40, [160, 70]);
+		overflow.fitPanel(el);
+		expect(groups.map((group) => group.hasAttribute('data-collapsed'))).toEqual([true, false]);
 	});
 
 	it('consumes Escape while closing a dropdown from outside the ribbon', () => {

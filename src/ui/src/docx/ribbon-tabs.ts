@@ -1,11 +1,9 @@
 import { DOCUMENT_VIEWS, isDocumentView } from './document-views';
-import { canCaptureDisplay } from '../form/display-capture';
+import { buildInsertGroups } from './insert-ribbon';
 import { createMultilingualControls } from './multilingual-ribbon';
 import { createReviewControls } from './review-ribbon';
 import { buildParagraphSpacing } from './ribbon-home';
-import { SYMBOLS } from './insert-text-commands';
 import { PAGE_SIZE_OPTIONS } from 'ooxml-core/docx';
-import { EQUATION_GALLERY } from 'ooxml-core/docx/ui';
 
 const TOC_OPTIONS: Array<[string, string]> = [
 	['3', 'Table of contents, levels 1 to 3'],
@@ -24,20 +22,6 @@ const ADD_TEXT_OPTIONS: Array<[string, string]> = [
 	['2', 'Level 2'],
 	['3', 'Level 3'],
 	['0', 'Do not show in table of contents'],
-];
-const PAGE_NUMBER_OPTIONS: Array<[string, string]> = [
-	['top:left', 'Top left'],
-	['top:center', 'Top center'],
-	['top:right', 'Top right'],
-	['bottom:left', 'Bottom left'],
-	['bottom:center', 'Bottom center'],
-	['bottom:right', 'Bottom right'],
-	['top:left:pageOfTotal', 'Top left — Page X of Y'],
-	['top:center:pageOfTotal', 'Top center — Page X of Y'],
-	['top:right:pageOfTotal', 'Top right — Page X of Y'],
-	['bottom:left:pageOfTotal', 'Bottom left — Page X of Y'],
-	['bottom:center:pageOfTotal', 'Bottom center — Page X of Y'],
-	['bottom:right:pageOfTotal', 'Bottom right — Page X of Y'],
 ];
 import { menuGallery } from './ribbon-gallery-menu';
 import { colorSplit, group, launcher, menuSelect, stack, tool } from './ribbon-parts';
@@ -60,233 +44,7 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			...createReviewControls(),
 			languageControls,
 		);
-	const screenshot = menuSelect(
-		'Screenshot',
-		'picture',
-		[
-			['full', 'Screenshot'],
-			['clip', 'Screen Clipping'],
-		],
-		(value) => ({ type: 'insertScreenshot', clip: value === 'clip' }),
-		{ momentary: true },
-	);
-	const captureSelect = screenshot.querySelector('select');
-	if (captureSelect && !canCaptureDisplay()) {
-		captureSelect.disabled = true;
-		captureSelect.dataset.unavailable = '';
-	}
-	panels.get('Insert')!.append(
-		group(
-			'Tables',
-			tool('Insert table', 'table', { type: 'tablePicker' }, { large: true, caption: 'Table' }),
-		),
-		group(
-			'Illustrations',
-			tool(
-				'Insert picture',
-				'picture',
-				{ type: 'insertPicture' },
-				{ large: true, caption: 'Pictures', name: 'ribbon.name.insertPictures' },
-			),
-			screenshot,
-			tool('Icons', 'insertIcon', { type: 'insertIcon' }, { large: true }),
-			tool(
-				'3D Models',
-				'insertModel3d',
-				{ type: 'insertLocalDrawing', kind: 'model3d' },
-				{ large: true },
-			),
-			tool('Shapes', 'shapes', { type: 'shapePicker' }, { large: true }),
-			tool(
-				'Insert chart',
-				'chart',
-				{ type: 'formatDialog', kind: 'insertChart' },
-				{ large: true, caption: 'Chart' },
-			),
-			tool(
-				'Insert SmartArt',
-				'smartArt',
-				{ type: 'insertSmartArt' },
-				{ large: true, caption: 'SmartArt' },
-			),
-			tool(
-				'Format picture',
-				'formatPicture',
-				{ type: 'formatPicture' },
-				{ large: true, caption: 'Format', name: 'ribbon.name.formatPicture' },
-			),
-		),
-		group(
-			'Links',
-			tool('Insert link', 'link', { type: 'link' }, { large: true, caption: 'Link' }),
-			tool('Bookmark', 'bookmark', { type: 'formatDialog', kind: 'bookmark' }, { large: true }),
-		),
-		group(
-			'Breaks',
-			tool('Cover page', 'coverPage', { type: 'coverPage' }, { large: true }),
-			tool('Blank page', 'blankPage', { type: 'blankPage' }, { large: true }),
-			tool(
-				'Insert page break',
-				'pageBreak',
-				{ type: 'insertBreak', kind: 'page' },
-				{ large: true, caption: 'Page break' },
-			),
-			tool(
-				'Insert column break',
-				'columnBreak',
-				{ type: 'insertBreak', kind: 'column' },
-				{ large: true, caption: 'Column break' },
-			),
-		),
-		group(
-			'Header & Footer',
-			tool('Link to Previous', 'link', { type: 'headerFooterLink' }),
-			menuSelect(
-				'Header',
-				'header',
-				[
-					['blank', 'Blank'],
-					['first', 'Blank first page'],
-					['even', 'Blank even pages'],
-				],
-				(value) => ({
-					type: 'headerFooter',
-					kind: 'header',
-					slot: value === 'blank' ? 'default' : (value as 'first' | 'even'),
-				}),
-				{
-					momentary: true,
-				},
-			),
-			menuSelect(
-				'Footer',
-				'footer',
-				[
-					['blank', 'Blank'],
-					['first', 'Blank first page'],
-					['even', 'Blank even pages'],
-				],
-				(value) => ({
-					type: 'headerFooter',
-					kind: 'footer',
-					slot: value === 'blank' ? 'default' : (value as 'first' | 'even'),
-				}),
-				{
-					momentary: true,
-				},
-			),
-			menuGallery(
-				'Page number',
-				'pageNumberIcon',
-				'pageNumber',
-				PAGE_NUMBER_OPTIONS,
-				(value) => {
-					const [position, align, style = 'plain'] = value.split(':') as [
-						'top' | 'bottom',
-						'left' | 'center' | 'right',
-						('plain' | 'pageOfTotal')?,
-					];
-					return { type: 'pageNumber', position, align, style };
-				},
-				{ momentary: true },
-			),
-		),
-		group(
-			'Text',
-			tool(
-				'Object',
-				'insertObject',
-				{ type: 'insertLocalDrawing', kind: 'object' },
-				{ inline: true },
-			),
-			tool(
-				'WordArt',
-				'insertWordArt',
-				{ type: 'insertWordArt' },
-				{ inline: true, caption: 'WordArt' },
-			),
-			tool(
-				'Text box',
-				'textBox',
-				{ type: 'formatDialog', kind: 'textBox' },
-				{ inline: true, caption: 'Text Box' },
-			),
-			menuSelect(
-				'Drop cap',
-				'dropCap',
-				[
-					['none', 'None'],
-					['drop', 'Dropped'],
-					['margin', 'In margin'],
-					['options', 'Drop Cap Options…'],
-				],
-				(value) =>
-					value === 'options'
-						? { type: 'formatDialog', kind: 'dropCap' }
-						: { type: 'dropCap', value: value as 'none' },
-				{ momentary: true },
-			),
-			menuSelect(
-				'Content control',
-				'contentControl',
-				[
-					['richText', 'Rich text'],
-					['text', 'Plain text'],
-					['checkbox', 'Check box'],
-					['dropDownList', 'Drop-down list'],
-					['comboBox', 'Combo box'],
-					['date', 'Date picker'],
-					['properties', 'Properties…'],
-				],
-				(value) =>
-					value === 'properties'
-						? { type: 'formatDialog', kind: 'contentControl' }
-						: { type: 'insertContentControl', value: value as 'richText' },
-				{ momentary: true },
-			),
-			menuSelect(
-				'Date and time',
-				'dateTime',
-				[
-					['long', 'long'],
-					['short', 'short'],
-					['time', 'time'],
-					['datetime', 'datetime'],
-				],
-				(value) => ({ type: 'insertDateTime', value: value as 'long' }),
-				{ momentary: true },
-			),
-		),
-		group(
-			'Symbols',
-			menuSelect(
-				'Equation',
-				'equation',
-				[
-					['edit', 'Insert or Edit Equation…'],
-					...EQUATION_GALLERY.map((entry): [string, string] => [entry.id, entry.name]),
-				],
-				(value) =>
-					value === 'edit'
-						? { type: 'formatDialog', kind: 'equation' }
-						: { type: 'insertEquation', id: value as 'area' },
-				{ momentary: true },
-			),
-			menuSelect(
-				'Symbol',
-				'symbol',
-				[...SYMBOLS.map((symbol): [string, string] => [symbol, symbol]), ['more', 'More Symbols…']],
-				(value) =>
-					value === 'more' ? { type: 'openSymbolGallery' } : { type: 'insertSymbol', value },
-				{ momentary: true },
-			),
-		),
-		group(
-			'Add-ins',
-			tool('Get Add-ins', 'addShape', { type: 'officeAddIns', mode: 'getAddIns' }, { large: true }),
-			tool('My Add-ins', 'addShape', { type: 'officeAddIns', mode: 'myAddIns' }, { large: true }),
-		),
-	);
+	panels.get('Insert')!.append(...buildInsertGroups());
 	panels.get('References')!.append(
 		group(
 			'Table of Contents',
@@ -496,7 +254,13 @@ export function buildOtherPanels(panels: Map<string, HTMLElement>): void {
 			),
 		),
 		group(
-			'Section breaks',
+			'Breaks',
+			tool(
+				'Insert column break',
+				'columnBreak',
+				{ type: 'insertBreak', kind: 'column' },
+				{ inline: true, caption: 'Column break' },
+			),
 			tool(
 				'Next page section break',
 				'sectionNext',

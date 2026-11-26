@@ -1,9 +1,30 @@
-import { selectedSparklineGroups } from 'ooxml-core/xlsx';
+import {
+	hasSparklineAt,
+	selectedSparklineGroups,
+	sheetSparklineGroups,
+	type CellRange,
+	type SparklineGroup,
+} from 'ooxml-core/xlsx';
 import { editing, icon, target, type Command, type EditorContext } from 'ooxml-core/xlsx/ui';
 
-function hasSparklines(ctx: EditorContext): boolean {
-	const t = target(ctx);
-	return !!t && selectedSparklineGroups(t.ws, t.ranges).length > 0;
+const selectedGroups = new WeakMap<
+	readonly CellRange[],
+	{ source: readonly SparklineGroup[]; hasSparklines: boolean }
+>();
+
+export function hasSparklines(ctx: EditorContext): boolean {
+	const sheet = ctx.workbook()?.sheets[ctx.activeSheet()];
+	if (!sheet) return false;
+	const { active, ranges } = ctx.selection.get();
+	const first = ranges[0] ?? { start: active, end: active };
+	if (ranges.length <= 1 && first.start.row === first.end.row && first.start.col === first.end.col)
+		return hasSparklineAt(sheet, first.start.row, first.start.col);
+	const source = sheetSparklineGroups(sheet);
+	const hit = selectedGroups.get(ranges);
+	if (hit?.source === source) return hit.hasSparklines;
+	const hasSparklines = selectedSparklineGroups(sheet, ranges).length > 0;
+	selectedGroups.set(ranges, { source, hasSparklines });
+	return hasSparklines;
 }
 
 export function sparklineCommands(): Command[] {

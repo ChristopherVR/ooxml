@@ -176,6 +176,7 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 		const rank = (group: HTMLElement) =>
 			(preferExpanded?.(group, panel) ? 1e6 : 0) + (priority?.(group) ?? 0);
 		if (priority || preferExpanded) groups.sort((a, b) => rank(a) - rank(b));
+		const folded: HTMLElement[] = [];
 		for (const group of groups) {
 			if (panel.scrollWidth <= panel.clientWidth) break;
 			const width = group.offsetWidth;
@@ -191,7 +192,18 @@ export function createRibbonOverflow(options: RibbonOverflowOptions): RibbonOver
 			button.setAttribute('aria-label', label);
 			button.title = label;
 			group.setAttribute('data-collapsed', '');
-			if (group.offsetWidth >= width) group.removeAttribute('data-collapsed');
+			if (group.offsetWidth >= width) {
+				group.removeAttribute('data-collapsed');
+				continue;
+			}
+			folded.push(group);
+		}
+		// Folding a wide group can free enough space to restore an earlier, narrower group.
+		if (panel.scrollWidth <= panel.clientWidth) {
+			for (const group of folded.reverse()) {
+				group.removeAttribute('data-collapsed');
+				if (panel.scrollWidth > panel.clientWidth) group.setAttribute('data-collapsed', '');
+			}
 		}
 		syncScrollMore(panel, options.moreLabel);
 	}

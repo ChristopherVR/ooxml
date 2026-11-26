@@ -289,6 +289,24 @@ describe('ribbon action ids', () => {
 		expect(ribbonActionIdForLabel(legacy)).toBe('insert-table');
 	});
 
+	it('keeps the Insert and Review comment controls under the same action id', () => {
+		const editor = mount();
+		const controls = [
+			...shell(editor).querySelectorAll<HTMLElement>(
+				'.ribbon-panel button[aria-label="Add comment"]',
+			),
+		];
+		expect(controls.map((control) => ribbonControlId(control))).toEqual([
+			'add-comment',
+			'add-comment',
+		]);
+		editor.hiddenActions = ['add-comment', 'online-video'];
+		expect(controls.every((control) => control.hasAttribute('data-dve-hidden'))).toBe(true);
+		expect(
+			shell(editor).querySelector('[data-label="Media"]')?.hasAttribute('data-dve-hidden'),
+		).toBe(true);
+	});
+
 	it('lists exactly the labelled ribbon controls before selecting any tab', async () => {
 		const ribbon = createRibbon('en');
 		const outline = mountOutlineRibbon(ribbon, 'en');

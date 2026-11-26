@@ -17,7 +17,6 @@ const DIALOGS: ReadonlyArray<readonly [string, unknown?]> = [
 	['define-name'],
 	['create-names'],
 	['workbook-statistics'],
-	['comments-list'],
 	['shortcut-help'],
 	['feature-status'],
 ];

@@ -1,0 +1,77 @@
+import { expect, test } from '@playwright/test';
+import { clippedRibbonLabels } from '../ribbon-labels';
+import { newDocument, reveal } from './helpers';
+
+for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid']) {
+	test(`${framework}: Insert groups fit and commands use the correct tabs`, async ({ page }) => {
+		await page.setViewportSize({ width: 1600, height: 900 });
+		await page.goto(`/?framework=${framework}`);
+		await newDocument(page);
+		const editor = page.locator('docx-editor');
+		const tab = (name: string) => editor.getByRole('tab', { name, exact: true });
+		await tab('Insert').click();
+		const insert = editor.locator('.ribbon-panel[data-panel="Insert"]');
+		const group = (name: string) => insert.locator(`.ribbon-group[data-label="${name}"]`);
+		await expect(insert.locator(':scope > .ribbon-group')).toHaveCount(10);
+		expect(
+			await insert
+				.locator(':scope > .ribbon-group')
+				.evaluateAll((groups) => groups.map((group) => group.getAttribute('data-label'))),
+		).toEqual([
+			'Pages',
+			'Tables',
+			'Illustrations',
+			'Add-ins',
+			'Media',
+			'Links',
+			'Comments',
+			'Header & Footer',
+			'Text',
+			'Symbols',
+		]);
+		await expect(group('Add-ins').getByRole('button', { name: 'Get Add-ins' })).toBeVisible();
+		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+		await page.setViewportSize({ width: 1280, height: 900 });
+		await expect.poll(() => insert.evaluate(clippedRibbonLabels)).toEqual([]);
+		await expect(
+			insert.locator('[aria-label="Link to Previous"], [aria-label="Insert column break"]'),
+		).toHaveCount(0);
+		await expect(group('Symbols').locator('select[aria-label="Symbol"]')).toHaveCount(1);
+		await expect(group('Media').locator('button[aria-label="Online Video"]')).toBeDisabled();
+
+		await editor.locator('.ProseMirror').click();
+		await page.keyboard.type('Review me');
+		await page.keyboard.press('Shift+Home');
+		const comment = editor.locator('button[aria-label="Add comment"]').filter({ visible: true });
+		const foldedComments = group('Comments').locator('.ribbon-overflow-button');
+		if (await foldedComments.isVisible()) await foldedComments.click();
+		await comment.click();
+		const pane = editor.locator('.dve-comments-panel');
+		await expect(pane).toBeVisible();
+		await pane.getByRole('textbox', { name: 'New comment' }).fill('Inserted from the ribbon');
+		await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
+		await expect(pane.locator('.dve-comment-thread')).toContainText('Inserted from the ribbon');
+		await pane.getByRole('button', { name: 'Close comments' }).click();
+
+		await tab('Layout').click();
+		const column = editor.getByRole('button', { name: 'Insert column break', exact: true });
+		await expect(
+			editor.locator(
+				'.ribbon-panel[data-panel="Layout"] .ribbon-group[data-label="Breaks"] button[aria-label="Insert column break"]',
+			),
+		).toHaveCount(1);
+		await reveal(editor, column);
+		await column.click();
+		await expect(editor.locator('.ProseMirror [data-docx-break="column"]')).toHaveCount(1);
+
+		await tab('Insert').click();
+		const foldedHeader = group('Header & Footer').locator('.ribbon-overflow-button');
+		if (await foldedHeader.isVisible()) await foldedHeader.click();
+		await editor.getByRole('combobox', { name: 'Header', exact: true }).selectOption('blank');
+		await editor.locator('.dve-header [data-slot="default"]').dblclick();
+		await expect(tab('Header & Footer')).toHaveAttribute('aria-selected', 'true');
+		await expect(
+			editor.locator('.ribbon-panel[data-panel="Header & Footer"] [aria-label="Link to Previous"]'),
+		).toHaveCount(1);
+	});
+}

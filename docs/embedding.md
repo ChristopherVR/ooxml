@@ -116,6 +116,17 @@ editor.customization = { ribbon: { hiddenTabs: ['file'] } } satisfies WordCustom
 PowerPoint's `ribbon` section also takes `hiddenGroups` and `hiddenButtons`; Word, Excel and
 Visio hide individual controls through `hiddenActions`.
 
+### Ribbon command IDs
+
+Word's `hiddenActions: ['add-comment']` hides both Insert > Comment and Review > Add comment.
+Use `insert-column-break` for Layout > Breaks and `link-to-previous` for the Header & Footer
+contextual tab. Use `online-video` to hide the disabled Word Insert > Media command.
+
+Excel retains `insert.note` for Review > Notes > New Note. Use `sparkline` in `ribbon.hiddenTabs`
+to hide the new Sparkline contextual tab. The existing `sparkline.*` and
+`pivot.*` commands are available from their contextual tabs. `review.show-comments` controls
+the Comments pane and can hide both the Review command and the header toggle.
+
 ## Host File tab pages
 
 `backstage.extraPages` adds pages to the File tab, after the built-in pages of their group. A page is
