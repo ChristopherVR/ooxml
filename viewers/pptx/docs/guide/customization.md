@@ -898,7 +898,8 @@ individual rows. The older `home.arrange.align` ID hides all eight rows in Drawi
 alignment control in contextual tabs. Use `shapeFormat.arrange` or `pictureFormat.arrange` to
 hide a contextual group.
 Duplicate and Delete are available from the context menu and their keyboard shortcuts.
-Format Painter uses `home.clipboard.formatPainter`.
+Format Painter uses `home.clipboard.formatPainter`. SmartArt Format retains
+`smartArtFormat.arrange.align` for its Align menu and its existing Arrange control IDs.
 
 <!-- customization-reference:start -->
 
@@ -1090,11 +1091,14 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `home.arrange.sendToBack`                         | Send to Back                                                                  |
 | `home.arrange.flipHorizontal`                     | Flip Horizontal                                                               |
 | `home.arrange.flipVertical`                       | Flip Vertical                                                                 |
-| `home.arrange.duplicate`                          | Duplicate                                                                     |
-| `home.arrange.delete`                             | Delete                                                                        |
 | `home.arrange.group`                              | Group                                                                         |
 | `home.arrange.ungroup`                            | Ungroup                                                                       |
 | `home.arrange.align`                              | Align and Distribute (alias)                                                  |
+| `home.arrange.mergeShapes`                        | Merge Shapes                                                                  |
+| `home.arrange.crop`                               | Crop                                                                          |
+| `home.arrange.outlineWidth`                       | Outline width                                                                 |
+| `home.arrange.duplicate`                          | Duplicate                                                                     |
+| `home.arrange.delete`                             | Delete                                                                        |
 | `home.arrange.align-left`                         | Align Left                                                                    |
 | `home.arrange.align-center`                       | Align Center                                                                  |
 | `home.arrange.align-right`                        | Align Right                                                                   |
@@ -1103,9 +1107,6 @@ Format Painter uses `home.clipboard.formatPainter`.
 | `home.arrange.align-bottom`                       | Align Bottom                                                                  |
 | `home.arrange.distribute-horizontal`              | Distribute Horizontally                                                       |
 | `home.arrange.distribute-vertical`                | Distribute Vertically                                                         |
-| `home.arrange.mergeShapes`                        | Merge Shapes                                                                  |
-| `home.arrange.crop`                               | Crop                                                                          |
-| `home.arrange.outlineWidth`                       | Outline width                                                                 |
 | `home.editing.find`                               | Find                                                                          |
 | `home.editing.replace`                            | Replace                                                                       |
 | `home.editing.select`                             | Select                                                                        |
