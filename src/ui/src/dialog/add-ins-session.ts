@@ -73,6 +73,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 
 	return {
 		...addInSettings(scopes),
+		host,
 		installed,
 		launcher,
 		syncTabs,
@@ -114,7 +115,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 			sourceBytes.set(addIn, bytes);
 			validatedWithSelection.set(addIn, hasSelection());
 			installed.set(id, addIn);
-			syncTabs();
+			await syncTabs();
 		},
 		async remove(id: string) {
 			if (store && product !== 'visio') await store.write(product, id, undefined);

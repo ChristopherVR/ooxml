@@ -64,6 +64,6 @@ export function addInManifestTabs(
 	const ribbon = host.querySelector<HTMLElement>('office-ui-ribbon, pptx-ui-ribbon-tabs');
 	if (!ribbon) return;
 	if ('setInstalledAddInTabs' in ribbon && typeof ribbon.setInstalledAddInTabs === 'function')
-		ribbon.setInstalledAddInTabs(tabs);
-	else syncInstalledRibbonTabs(ribbon, tabs);
+		return ribbon.setInstalledAddInTabs(tabs);
+	syncInstalledRibbonTabs(ribbon, tabs);
 }

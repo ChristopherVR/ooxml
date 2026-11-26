@@ -2,6 +2,7 @@ import { html, nothing } from 'lit';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import { mountedAddInRestore, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
+import { addInInstallFeedback } from '../ribbon/add-in-install-feedback';
 import { ADD_IN_RUNTIME_CHANGED } from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent, renderAddInConsentActions } from './add-ins-consent';
@@ -176,7 +177,12 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const preview = this.#preview;
 		const session = this.#session;
 		if (!preview || !session) return;
-		void this.change(() => session.install(preview));
+		void this.change(async () => {
+			await session.install(preview);
+			this.#afterClose = () => {
+				if (!addInInstallFeedback(session.host, preview.addIn, session.t)) session.restoreFocus();
+			};
+		});
 	}
 
 	private cancel(): void {

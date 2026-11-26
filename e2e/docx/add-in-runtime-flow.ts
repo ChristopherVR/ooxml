@@ -74,10 +74,14 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await expect(install).toHaveAttribute('slot', 'footer');
 		await install.click();
 		await expect(dialog).toBeHidden();
+		await expect(editor.locator('[data-office-add-in-status]')).toHaveText('Notes installed.');
+		if (file.name !== 'manifest.xml')
+			await expect(editor.getByRole('tab', { name: addInName, exact: true })).toBeFocused();
 
 		if (file.name === 'manifest.json') {
 			const tab = editor.getByRole('tab', { name: addInName, exact: true });
 			if (host !== 'PowerPoint' && (page.viewportSize()?.width ?? 0) === 800) {
+				await editor.getByRole('tab', { name: 'Home', exact: true }).click();
 				const more = editor.getByRole('button', { name: 'More tabs', exact: true });
 				await expect(more).toBeVisible();
 				await more.focus();

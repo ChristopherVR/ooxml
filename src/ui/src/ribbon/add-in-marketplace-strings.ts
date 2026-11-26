@@ -1,4 +1,12 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'{name} installed.': [
+		'{name} a été installé.',
+		'{name} wurde installiert.',
+		'{name} se ha instalado.',
+		'已安装 {name}。',
+		'{name} をインストールしました。',
+		'{name} 설치를 완료했습니다.',
+	],
 	'This editor cannot add commands to built-in ribbon tabs.': [
 		'Cet éditeur ne peut pas ajouter de commandes aux onglets intégrés du ruban.',
 		'Dieser Editor kann integrierten Menübandregisterkarten keine Befehle hinzufügen.',

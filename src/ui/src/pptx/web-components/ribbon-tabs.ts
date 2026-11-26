@@ -15,7 +15,7 @@ export interface PptxUiRibbonTabsElement extends HTMLElement {
 	state: RibbonTabRowState | undefined;
 	/** The tabs as drawn. */
 	tabButtons(): HTMLButtonElement[];
-	setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void;
+	setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void | Promise<void>;
 }
 
 /**
@@ -101,11 +101,11 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			this.label = value?.label ?? null;
 			this.#applyState();
 		}
-		setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void {
+		setInstalledAddInTabs(tabs: readonly RibbonAddInTab[]): void | Promise<void> {
 			this.#manifestTabs = tabs;
 			if (this.#syncManifestPanels || !tabs.length) this.#applyState();
 			else
-				void import('../../ribbon/add-in-tabs').then(({ syncRibbonAddIns }) => {
+				return import('../../ribbon/add-in-tabs').then(({ syncRibbonAddIns }) => {
 					if (!this.isConnected) return;
 					this.#syncManifestPanels = syncRibbonAddIns;
 					this.#applyState();
