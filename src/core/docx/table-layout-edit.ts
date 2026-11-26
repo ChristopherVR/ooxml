@@ -30,14 +30,15 @@ export function resizeTableColumns(
 	contentWidthTwips: number,
 	width?: number,
 ): Table {
-	const grid = newTableGridWidths(table, contentWidthTwips);
+	const fallback = table.widthTwips ?? contentWidthTwips * (table.widthPercent ?? 1);
+	const grid = [...newTableGridWidths(table, fallback)];
 	const selected = grid.slice(first, last + 1);
 	if (first < 0 || last >= grid.length || !selected.length) return table;
 	const total = selected.reduce((sum, value) => sum + value, 0);
 	const even = Math.floor(total / selected.length);
 	for (let col = first; col <= last; col++)
 		grid[col] = width ?? Math.max(1, even + Number(col - first < total % selected.length));
-	const next = setTableGridWidths(table, grid);
+	const next = setTableGridWidths(table, grid, { first, last });
 	next.widthTwips = twips(grid.reduce((sum, value) => sum + value, 0));
 	delete next.widthPercent;
 	next.layout = 'fixed';

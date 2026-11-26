@@ -9,6 +9,7 @@ import {
 	tableFormulaRuns,
 	tableToText,
 } from 'ooxml-core/docx/ui';
+import { twipsFromPixels } from 'ooxml-core/units';
 import { closeHistory } from 'prosemirror-history';
 import type { EditorCore } from './editor-core';
 import { focusView } from './focus-view';
@@ -153,7 +154,7 @@ export function runTableTabAction(
 		case 'size':
 		case 'distributeColumns':
 		case 'distributeRows': {
-			const width = core.contentWidth();
+			const width = twipsFromPixels(core.contentWidth());
 			const value = action.key === 'size' ? Math.round(action.value * 1440) : undefined;
 			if (
 				action.key === 'distributeColumns' ||

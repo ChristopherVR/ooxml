@@ -45,7 +45,8 @@ describe('Word table contextual operations', () => {
 		let table = expectTable(document.model.blocks[0]);
 		expect(table.layout).toBe('fixed');
 		expect(table.grid).toEqual([2250, 2250, 3900]);
-		expect(table.rows[1]?.map((cell) => cell.widthTwips)).toEqual(table.grid);
+		expect(table.rows[1]?.map((cell) => cell.widthTwips)).toEqual([2250, 2250, undefined]);
+		expect(table.rows[1]?.[2]?.widthPercent).toBeCloseTo(1 / 3);
 		expect(table.rowProperties?.map((row) => row.heightTwips)).toEqual([310, 310, undefined]);
 		for (const mode of ['window', 'contents', 'fixed'] as const) {
 			document.model.blocks[0] = autoFitTable(table, mode);
@@ -58,6 +59,19 @@ describe('Word table contextual operations', () => {
 					(cell) => cell.widthTwips === undefined && cell.widthPercent === undefined,
 				),
 			).toBe(true);
+		}
+	});
+
+	it('resizes one grid column without mutating its source or the other cell widths', () => {
+		const table = makeTable();
+		const resized = resizeTableColumns(table, 1, 1, 8400, 1440);
+		expect(table.grid).toEqual([1800, 2700, 3900]);
+		expect(resized.grid).toEqual([1800, 1440, 3900]);
+		expect(resized.widthTwips).toBe(7140);
+		for (let row = 0; row < table.rows.length; row++) {
+			expect(resized.rows[row]?.[0]).toEqual(table.rows[row]?.[0]);
+			expect(resized.rows[row]?.[1]?.widthTwips).toBe(1440);
+			expect(resized.rows[row]?.[2]).toEqual(table.rows[row]?.[2]);
 		}
 	});
 

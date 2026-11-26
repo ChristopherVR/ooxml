@@ -150,10 +150,13 @@ export function setTableLook(table: Table, look: TableLookPatch | undefined): Ta
 }
 
 /**
- * Updates `w:tblGrid` column widths in twips and keeps every cell's `widthTwips` consistent with
- * the sum of the grid columns it spans (`gridSpan`).
+ * Updates the grid and the preferred widths of cells that intersect the edited columns.
  */
-export function setTableGridWidths(table: Table, widths: readonly number[]): Table {
+export function setTableGridWidths(
+	table: Table,
+	widths: readonly number[],
+	edited = { first: 0, last: widths.length - 1 },
+): Table {
 	const expectedColumns = tableGrid(table)?.columns ?? tableColumnCount(table);
 	if (!widths.length || widths.length !== expectedColumns)
 		throw new RangeError(
@@ -166,28 +169,18 @@ export function setTableGridWidths(table: Table, widths: readonly number[]): Tab
 	});
 	const next = structuredClone(table);
 	next.grid = normalized;
-	const grid = tableGrid(next);
-	if (grid) {
-		for (const row of grid.rows)
-			for (const entry of row) {
-				const sum = normalized
-					.slice(entry.col, entry.col + entry.span)
-					.reduce((total, w) => total + w, 0);
-				entry.cell.widthTwips = twips(sum);
-				delete entry.cell.widthPercent;
-			}
-	} else {
-		for (const row of next.rows) {
-			let col = 0;
-			for (const cell of row) {
-				const span = spanOf(cell);
-				const sum = normalized.slice(col, col + span).reduce((total, w) => total + w, 0);
+	for (const row of next.rows) {
+		let col = 0;
+		for (const cell of row) {
+			const end = col + spanOf(cell);
+			if (col <= edited.last && end > edited.first) {
+				const sum = normalized.slice(col, end).reduce((total, w) => total + w, 0);
 				if (sum > 0) {
 					cell.widthTwips = twips(sum);
 					delete cell.widthPercent;
 				}
-				col += span;
 			}
+			col = end;
 		}
 	}
 	return next;
