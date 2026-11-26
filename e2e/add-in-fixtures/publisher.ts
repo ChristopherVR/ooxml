@@ -16,7 +16,7 @@ void Office.onReady(({ host }) => {
 });
 
 document.querySelector('#read')?.addEventListener('click', () => {
-	void Office.context.document.getSelectedDataAsync('text', (result) => {
+	void Office.context.document.getSelectedDataAsync('text', null, (result) => {
 		if (status)
 			status.textContent =
 				result.status === 'succeeded' ? `Read: ${result.value || '(empty)'}` : result.error.message;
@@ -24,7 +24,7 @@ document.querySelector('#read')?.addEventListener('click', () => {
 });
 
 document.querySelector('#write')?.addEventListener('click', () => {
-	void Office.context.document.setSelectedDataAsync('Updated by add-in', (result) => {
+	void Office.context.document.setSelectedDataAsync('Updated by add-in', null, (result) => {
 		if (status)
 			status.textContent = result.status === 'succeeded' ? 'Wrote text' : result.error.message;
 	});

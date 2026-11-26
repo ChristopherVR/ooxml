@@ -68,13 +68,13 @@ export function connectOfficeAddIn(parentOrigin: string) {
 	async function call<T>(
 		method: string,
 		value: string | undefined,
-		options: CallOptions | Callback<T>,
+		options: CallOptions | null | Callback<T>,
 		callback: Callback<T> | undefined,
 		localError: string | undefined,
 		convert: (value: string | null) => T,
 	) {
 		const handler = typeof options === 'function' ? options : callback;
-		const asyncContext = typeof options === 'object' ? options.asyncContext : undefined;
+		const asyncContext = typeof options === 'function' ? undefined : options?.asyncContext;
 		const failure = (message: string): OfficeAddInResult<T> => ({
 			status: 'failed',
 			asyncContext,
@@ -115,7 +115,7 @@ export function connectOfficeAddIn(parentOrigin: string) {
 		{
 			getSelectedDataAsync(
 				coercionType: string,
-				options: CallOptions | Callback<string>,
+				options: CallOptions | null | Callback<string>,
 				callback?: Callback<string>,
 			) {
 				return call(
@@ -129,7 +129,7 @@ export function connectOfficeAddIn(parentOrigin: string) {
 			},
 			setSelectedDataAsync(
 				text: string,
-				options: CallOptions | Callback<undefined>,
+				options: CallOptions | null | Callback<undefined>,
 				callback?: Callback<undefined>,
 			) {
 				return call(
@@ -139,7 +139,9 @@ export function connectOfficeAddIn(parentOrigin: string) {
 					callback,
 					typeof text !== 'string' ||
 						text.length > ADD_IN_TEXT_LIMIT ||
-						(typeof options === 'object' && options.coercionType && options.coercionType !== 'text')
+						(typeof options !== 'function' &&
+							options?.coercionType &&
+							options.coercionType !== 'text')
 						? 'Only bounded plain text is supported.'
 						: undefined,
 					() => undefined,
