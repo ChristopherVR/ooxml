@@ -91,6 +91,8 @@ export const OFFICE_UI_TAGS = [
  * Install the theme tokens and define every element. Idempotent and safe to call from every
  * viewer binding; a no-op where there is no DOM (SSR).
  */
+export { registerInkElements } from './ink/register';
+
 export function registerOfficeUi(options: { theme?: boolean } = {}): void {
 	if (typeof window === 'undefined' || !window.customElements) return;
 	if (options.theme !== false) installOfficeUiTheme();

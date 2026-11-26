@@ -3,6 +3,7 @@
 // Convert (Ink to Shape, Ink to Math) and Replay. The state is
 // the shared `DrawState`; drawing on the pages is `draw-controller.ts`.
 import { inkPensLabels, type DrawState } from '../ink/draw-state';
+import { registerInkElements } from '../ink/register';
 import type { InkPenChangeDetail, InkPenSelectDetail, OfficeUiInkPens } from '../ink/ink-pens';
 import { emit } from './events';
 import { translate, type EditorLocale, type LocalizationKey } from './localization';
@@ -32,7 +33,7 @@ const marker = (element: HTMLElement, key: string) => {
 
 /** The pen strip's element loads with the Draw tab: an editor that never draws never downloads it. */
 export function defineDrawElements(): void {
-	void import('../ink/ink-pens').then(({ defineInkPens }) => defineInkPens());
+	void registerInkElements();
 }
 
 export function buildDrawPanel(panel: HTMLElement): void {

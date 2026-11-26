@@ -1,6 +1,4 @@
 import { releaseDetachedStyles } from '../detached-styles';
-import { defineInkCanvas } from '../ink/ink-canvas';
-import { defineInkPens } from '../ink/ink-pens';
 import { definer } from '../registry';
 import { installOfficeUiThemeFor } from '../theme';
 /**
@@ -326,8 +324,4 @@ declare global {
 }
 
 /** Registers `<xlsx-editor>` once; a no-op without a DOM (server rendering). */
-export const defineXlsxEditor = definer('xlsx-editor', () => XlsxEditorElement, [
-	// The Draw tab's pen strip and drawing surface.
-	defineInkPens,
-	defineInkCanvas,
-]);
+export const defineXlsxEditor = definer('xlsx-editor', () => XlsxEditorElement);

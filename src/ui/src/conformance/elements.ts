@@ -22,7 +22,10 @@ export interface DefinedElement {
 
 /** The public register functions, by the module that exports them (paths under `src/`). */
 export const ENTRIES: readonly { module: string; register: readonly string[] }[] = [
-	{ module: 'index.ts', register: ['registerOfficeUi', 'defineOfficeAddInsDialog'] },
+	{
+		module: 'index.ts',
+		register: ['registerOfficeUi', 'defineOfficeAddInsDialog', 'registerInkElements'],
+	},
 	{
 		module: 'teams/index.ts',
 		register: [

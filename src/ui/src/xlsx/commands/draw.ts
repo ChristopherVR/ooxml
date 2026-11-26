@@ -12,12 +12,8 @@ import {
 	type EditorContext,
 } from 'ooxml-core/xlsx/ui';
 import { DrawState, inkPensLabels } from '../../ink/draw-state';
-import {
-	defineInkPens,
-	type InkPenChangeDetail,
-	type InkPenSelectDetail,
-	type OfficeUiInkPens,
-} from '../../ink/ink-pens';
+import type { InkPenChangeDetail, InkPenSelectDetail, OfficeUiInkPens } from '../../ink/ink-pens';
+import { registerInkElements } from '../../ink/register';
 
 const states = new WeakMap<EditorContext, DrawState>();
 
@@ -192,7 +188,6 @@ export function renderPenStrip(
 	update: (refresh: () => void) => void,
 ): HTMLElement {
 	const doc = ctx.root.ownerDocument;
-	defineInkPens(doc.defaultView?.customElements);
 	const strip = doc.createElement('office-ui-ink-pens') as OfficeUiInkPens;
 	strip.addEventListener('office-ink-pen-select', (event) => {
 		void ctx.commands.run(
@@ -210,7 +205,20 @@ export function renderPenStrip(
 		const { color, width } = (event as CustomEvent<InkPenChangeDetail>).detail;
 		void ctx.commands.run('draw.pen', { ...(color ? { color } : {}), ...(width ? { width } : {}) });
 	});
+	// The strip's element loads when the Draw tab is first shown, as Word's does.
+	let defined = false;
+	const define = () => {
+		const ribbon = strip.closest<HTMLElement & { selected?: string }>('office-ui-ribbon');
+		if (defined || !strip.isConnected || ribbon?.selected !== 'draw') return;
+		defined = true;
+		shown?.disconnect();
+		void registerInkElements(doc.defaultView?.customElements);
+	};
+	const Observer = doc.defaultView?.IntersectionObserver;
+	const shown = Observer ? new Observer(define) : undefined;
+	shown?.observe(strip);
 	update(() => {
+		define();
 		const snapshot = drawState(ctx).snapshot;
 		const command = ctx.commands.get('draw.pens');
 		const enabled = ctx.commands.isEnabled('draw.pens');
