@@ -949,8 +949,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       (`table-style.ts`), Home-tab highlight, character spacing, text shadow and change case apply
       to selected table cells (`table-cells-format.ts`, `table-cells-format.test.ts`), and `Esc`
       restores cell selection in Vanilla and Svelte as well as React, Vue and Angular.
-- [ ] **P1** Opening a deck parses every slide before the first paints (no progressive open, no
-      time-to-first-slide or interaction-latency benchmarks in `e2e/pptx`).
+- [x] **P1** Opening a deck paints a read-only preview of the opening slide before the rest
+      parse, then fills thumbnails progressively (`progressive-slide-preview.ts`); browser timing
+      benchmarks (`e2e/pptx/progressive-open.spec.ts`) and a large-deck work budget guard it
+      (2026-11-26).
+- [ ] **P1** Editing, search, save, undo, collaboration and slide show wait for the whole deck
+      to parse after a progressive open.
+- [ ] **P2** The File page footer always names "Untitled Presentation.pptx", and the status bar
+      reports an AutoRecover snapshot as "Saved" while the presentation has unsaved edits.
 - [ ] **P1** Headless SVG export (`pptx/converter/SvgExporter.ts`, the CLI `export-svg` and the
       `export_slide_svg` tool) uses a simplified renderer that trails the editor (plain `<text>`,
       no warp, fewer effects); server output does not share the editor's paint.
@@ -1157,9 +1163,13 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** In Word, Excel and PowerPoint, Get Add-ins installs from the host catalog and opens
       Microsoft Marketplace for browsing. My Add-ins opens installed tabs and removes catalog
       add-ins when enabled by the host.
-- [ ] **P1** Store add-in installation and Office.js runtime for Word, Excel and PowerPoint;
-      the plan, including a configurable storefront (off, Microsoft handoff, bring-your-own), is
-      `docs/office-addins-plan.md`.
+- [x] **P1** Word, Excel and PowerPoint validate local XML and unified add-in manifests (and
+      `.zip` packages, with size, ratio and path limits) and install them for the session after
+      a consent dialog that lists the requested permissions (`src/core/automation/add-ins/`,
+      2026-11-26).
+- [ ] **P1** Office.js runtime, manifest ribbon commands and store installation for Word, Excel
+      and PowerPoint; the plan, including a configurable storefront (off, Microsoft handoff,
+      bring-your-own), is `docs/office-addins-plan.md`.
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
 - [ ] **P1** Picture Format: Compress, Change Picture, Reset Picture (and size), Picture Border,
       Alt Text and Arrange work in all five bindings (`e2e/pptx/picture-format-commands.spec.ts`);
@@ -1222,8 +1232,12 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [ ] **P1** Legacy `.vsd` is preview only (no groups, masters, styles, connections, layers or
       text formats; no conversion or editing); `.vdx` is not supported; `.vss` and `.vst` are
       refused.
-- [ ] **P1** No `.vssx` stencil writer; built-in stencils are outlines without master
-      ShapeSheets, connection points or Shape Data.
+- [x] **P1** New Stencil, Add to My Shapes, Edit Stencil (add, rename, delete with confirmation,
+      undo) and Save Stencil write `.vssx` packages with master ShapeSheets, connection points
+      and icons that Visio 16 opens for editing (`src/core/visio/stencil-editor.ts`, 2026-11-26).
+- [ ] **P1** Stencil master editing is limited to default plain text, adding a selected instance
+      as a master drops its local overrides, and built-in masters lack the native ShapeSheet
+      behaviours (smart tags, actions, formulas) of Visio's own stencils.
 - [x] **P1** Controls, Actions, User-defined and Scratch cells and tab stops are in the model
       (`controls`, `actions`, `userCells`, `scratch`, paragraph `tabs`). Control handles are drawn
       yellow on a selected shape and dragging one writes `Controls.Row_N.X/Y` as Visio does and
