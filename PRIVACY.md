@@ -140,7 +140,8 @@ using network access allowed by its deployment. The host must enforce CSP `frame
 all pane navigations, including redirects, and assert it with `frameSrcEnforced: true` in the
 runtime settings. Passing `null` to `setOfficeAddInRuntime` disables execution in that scope.
 
-In the suite, My Add-ins reads a profile-scoped IndexedDB preference store. Confirming
+The suite reads installed add-ins from a profile-scoped IndexedDB preference store.
+When IndexedDB is unavailable, the suite keeps installs in memory for this page session. Confirming
 installation or an update saves the original manifest or ZIP there, keyed by product and
 manifest ID. Removing an add-in deletes that record. The records contain publisher-supplied
 manifest and package data. They stay on this device and contain no document selections or
