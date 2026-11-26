@@ -1,9 +1,14 @@
 import type { ContentPartInkStroke, XmlObject } from '../types';
+import {
+	countAuthoredInkPathSamples,
+	countInkTraceSamples,
+	indexInkMl,
+	MAX_INK_PART_SAMPLES,
+} from './inkml-limits';
 import type { InkTargetBox } from './inkml-ink-space';
 import { inkBounds, inkLengthToPx, inkPointMapper } from './inkml-ink-space';
 import { inkMlTiming } from './inkml-timing';
 import {
-	collectByLocalName,
 	decodeTracePoints,
 	ensureArray,
 	nsAttr,
@@ -13,9 +18,7 @@ import {
 	pointsToTilt,
 	pointsToTimestamps,
 	resolveChannelOrder,
-	tiltChannelsFromXY,
 } from './inkml-trace-decode';
-import type { TiltChannels } from './inkml-trace-decode';
 import { isFiniteNumber } from '../../../units/finite';
 
 // Re-exported for the existing import sites (and colocated tests): the
@@ -43,69 +46,66 @@ const DEFAULT_BRUSH: BrushStyle = { color: '#000000', width: 1, opacity: 1 };
  * and pass through untouched.
  */
 export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedInkMlContent {
-	const root = (nsGet(data, 'ink') ?? data['ink']) as XmlObject | undefined;
-	if (!root) {
-		return { strokes: [], rawXml: data };
-	}
-	const brushes = collectBrushes(root);
-	const channelOrder = resolveChannelOrder(root);
-	const timingFor = inkMlTiming(root);
+	const index = indexInkMl(data);
+	if (!index || !nsGet(data, 'ink')) return { strokes: [], rawXml: data };
+	const brushes = collectBrushes(index.brushes);
+	const channelOrder = resolveChannelOrder(index.traceFormats[0]);
+	const timingFor = inkMlTiming(index);
 
-	// Two passes: decode every trace first so the normalisation bounds cover the
-	// whole part, then emit paths. A per-stroke bound would rescale each stroke
-	// independently and pull the drawing apart.
-	const decoded = collectByLocalName(root, 'trace').map((trace) => {
-		const text = typeof trace === 'string' ? String(trace) : String(trace['#text'] ?? '').trim();
-		// The library's own authored format stamps a ready-made SVG `@pva:path`
-		// on each trace. A real PowerPoint InkML part has none: its trace text
-		// is channel data (e.g. "100 200,'40'46") that must be decoded into
-		// `M x y L x y ...` before it can drive an SVG `<path d>`.
-		const authored = typeof trace === 'string' ? '' : String(nsAttr(trace, 'path') ?? '').trim();
-		return {
-			trace,
-			authored,
-			text,
-			points: authored ? [] : decodeTracePoints(text, channelOrder),
-			untimed: typeof trace !== 'string' && nsAttr(trace, 'untimed') !== undefined,
-			brushRef:
-				typeof trace === 'string' ? '' : String(nsAttr(trace, 'brushRef') ?? '').replace('#', ''),
-		};
+	// Bounds cover the whole part, so normalisation keeps strokes together.
+	let remainingSamples = MAX_INK_PART_SAMPLES;
+	const decoded = index.traces.flatMap((trace) => {
+		const text = typeof trace === 'object' ? String(trace['#text'] ?? '') : String(trace);
+		const authored = typeof trace === 'object' ? String(nsAttr(trace, 'path') ?? '') : '';
+		const traceSamples = countInkTraceSamples(text);
+		const pathSamples = countAuthoredInkPathSamples(authored);
+		if (traceSamples === undefined || pathSamples === undefined) return [];
+		const count = Math.max(traceSamples, pathSamples);
+		if (count > remainingSamples) return [];
+		remainingSamples -= count;
+		const order = authored
+			? [
+					'X',
+					'Y',
+					'F',
+					...(channelOrder.includes('AZIMUTH') ? ['AZIMUTH', 'ALTITUDE'] : ['OTX', 'OTY']),
+					...(channelOrder.includes('T') ? ['T'] : []),
+				]
+			: channelOrder;
+		// With T but without a tilt pair, time occupies the fourth column.
+		if (authored && channelOrder.includes('T') && channelOrder.indexOf('T') === 3) {
+			order.splice(3, 2);
+		}
+		return [
+			{
+				trace,
+				authored: authored.trim(),
+				order,
+				points: decodeTracePoints(text, order),
+				untimed: typeof trace === 'object' && nsAttr(trace, 'untimed') !== undefined,
+				brushRef:
+					typeof trace === 'object' ? String(nsAttr(trace, 'brushRef') ?? '').replace('#', '') : '',
+			},
+		];
 	});
 
-	const bounds = box ? inkBounds(decoded.map((entry) => entry.points)) : undefined;
+	const bounds = box
+		? inkBounds(decoded.filter((entry) => !entry.authored).map((entry) => entry.points))
+		: undefined;
 	const mapPoint = bounds && box ? inkPointMapper(bounds, box) : undefined;
 
 	const strokes: ContentPartInkStroke[] = [];
 	for (const entry of decoded) {
-		const points = mapPoint ? mapDecodedPoints(entry.points, channelOrder, mapPoint) : entry.points;
-		const path = entry.authored || pointsToSvgPath(points, mapPoint ? ['X', 'Y'] : channelOrder);
-		if (!path) {
-			continue;
-		}
+		const points =
+			mapPoint && !entry.authored
+				? mapDecodedPoints(entry.points, entry.order, mapPoint)
+				: entry.points;
+		const path = entry.authored || pointsToSvgPath(points, mapPoint ? ['X', 'Y'] : entry.order);
+		if (!path) continue;
 		const brush = brushes.get(entry.brushRef) ?? DEFAULT_BRUSH;
-		const pressures = entry.authored
-			? tracePressures(entry.text)
-			: pointsToPressures(entry.points, channelOrder);
-		// The library's own authored format encodes tilt (when the stroke has
-		// any) as two trailing columns after the pressure value: `x y f <a> <b>`.
-		// That is always positional (distinct from a foreign trace's declared
-		// `channelOrder`-driven decode), but WHICH pair those two trailing
-		// columns are (the `OTx`/`OTy` vector, or `AZIMUTH`/`ALTITUDE` degrees)
-		// still has to follow the part's own declared channel names: this
-		// writer's `buildInkMlContent` stamps `pva:path` on every trace
-		// regardless of tilt mode, so an authored AZIMUTH/ALTITUDE part is
-		// indistinguishable from a vector one by shape alone.
-		const azimuthEncoded = channelOrder.includes('AZIMUTH');
-		const tilt = entry.authored
-			? traceTilt(entry.text, azimuthEncoded)
-			: pointsToTilt(entry.points, channelOrder);
-		const timestamps =
-			entry.untimed || !channelOrder.includes('T')
-				? []
-				: pointsToTimestamps(
-						entry.authored ? decodeTracePoints(entry.text, channelOrder) : entry.points,
-						channelOrder,
-					);
+		const pressures = pointsToPressures(entry.points, entry.order, Boolean(entry.authored));
+		const tilt = pointsToTilt(entry.points, entry.order);
+		const timestamps = entry.untimed ? [] : pointsToTimestamps(entry.points, entry.order);
 		const { pointTimestamps, ...timing } = timingFor(entry.trace, timestamps);
 		strokes.push({
 			...brush,
@@ -148,9 +148,9 @@ function mapDecodedPoints(
  * writes `units="cm"`), so a raw `Number(value)` would have produced a 0.05 px
  * stroke even once the brush was found.
  */
-function collectBrushes(root: XmlObject): Map<string, BrushStyle> {
+function collectBrushes(nodes: readonly XmlObject[]): Map<string, BrushStyle> {
 	const brushes = new Map<string, BrushStyle>();
-	for (const brush of collectByLocalName(root, 'brush')) {
+	for (const brush of nodes) {
 		if (typeof brush === 'string') {
 			continue;
 		}
@@ -190,60 +190,4 @@ function brushOpacity(properties: Map<string, { value: unknown; units: unknown }
 		return 1 - Math.min(255, Math.max(0, transparency)) / 255;
 	}
 	return DEFAULT_BRUSH.opacity;
-}
-
-function tracePressures(text: string): number[] {
-	const pressures: number[] = [];
-	for (const point of text.split(',')) {
-		const values = point.trim().split(/[\s]+/u).map(Number);
-		if (values.length >= 3 && isFiniteNumber(values[2])) {
-			pressures.push(Math.max(0, Math.min(1, values[2])));
-		}
-	}
-	return pressures;
-}
-
-/**
- * Extract tilt data from this project's own authored trace text
- * (`x y pressure <a> <b>`, see the writer's `pathToTrace` in
- * `inkml-content-part-writer.ts`). Distinct from `pointsToTilt`, which
- * decodes a foreign trace via its declared `channelOrder`; the authored
- * format is always positional, so a point missing the trailing pair is
- * simply skipped.
- *
- * `azimuthEncoded` selects which pair the two trailing columns are: this
- * writer stamps its own ready-made `pva:path` on EVERY trace regardless of
- * tilt mode (see `buildInkMlContent`), so an authored part cannot be told
- * apart from its `channelOrder` shape alone; the caller passes whether the
- * part's own declared `traceFormat` includes `AZIMUTH`.
- */
-function traceTilt(text: string, azimuthEncoded: boolean): TiltChannels | undefined {
-	const as: number[] = [];
-	const bs: number[] = [];
-	for (const point of text.split(',')) {
-		const values = point.trim().split(/[\s]+/u).map(Number);
-		if (values.length >= 5 && isFiniteNumber(values[3]) && isFiniteNumber(values[4])) {
-			as.push(values[3]);
-			bs.push(values[4]);
-		}
-	}
-	if (as.length === 0) {
-		return undefined;
-	}
-	return azimuthEncoded ? azimuthAltitudeFromDegrees(as, bs) : tiltChannelsFromXY(as, bs);
-}
-
-/**
- * Authored-dialect counterpart of `inkml-trace-decode.ts`'s
- * `tiltFromAzimuthAltitude`, for the positionally-parsed `azimuths`/
- * `altitudes` pair `traceTilt` already extracted (rather than a raw
- * `channelOrder`-indexed point array).
- */
-function azimuthAltitudeFromDegrees(
-	azimuths: readonly number[],
-	altitudes: readonly number[],
-): TiltChannels {
-	const angles = azimuths.map((azimuth) => (azimuth * Math.PI) / 180);
-	const magnitudes = altitudes.map((altitude) => Math.max(0, Math.min(1, 1 - altitude / 90)));
-	return { angles, magnitudes, encoding: 'azimuthAltitude' };
 }

@@ -1,5 +1,6 @@
 import type { XmlObject } from '../types';
-import { collectByLocalName, ensureArray, nsAttr, nsGet } from './inkml-trace-decode';
+import type { InkMlIndex } from './inkml-limits';
+import { ensureArray, nsAttr, nsGet } from './inkml-trace-decode';
 
 function numberAttribute(node: XmlObject, key: string): number | undefined {
 	const value = nsAttr(node, key);
@@ -14,15 +15,15 @@ function reference(node: XmlObject, key: string): string {
 }
 
 /** Decode trace and context clocks from InkML 4.4 (https://www.w3.org/TR/InkML/#timestamps). */
-export function inkMlTiming(root: XmlObject) {
+export function inkMlTiming(index: InkMlIndex) {
 	const timestamps = new Map<string, XmlObject>();
 	const contexts = new Map<string, XmlObject>();
-	for (const stamp of collectByLocalName(root, 'timestamp')) {
+	for (const stamp of index.timestamps) {
 		if (typeof stamp !== 'object') continue;
 		const id = nsAttr(stamp, 'id');
 		if (typeof id === 'string') timestamps.set(id, stamp);
 	}
-	for (const context of collectByLocalName(root, 'context')) {
+	for (const context of index.contexts) {
 		if (typeof context !== 'object') continue;
 		const id = nsAttr(context, 'id');
 		if (typeof id === 'string') contexts.set(id, context);
@@ -46,7 +47,7 @@ export function inkMlTiming(root: XmlObject) {
 		clockCache.set(stamp, value);
 		return value;
 	}
-	const format = collectByLocalName(root, 'traceFormat')[0];
+	const format = index.traceFormats[0];
 	const channel =
 		format &&
 		ensureArray(nsGet(format, 'channel')).find(

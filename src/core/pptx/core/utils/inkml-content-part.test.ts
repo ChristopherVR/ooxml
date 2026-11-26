@@ -1,3 +1,5 @@
+import { MAX_INK_SAMPLES } from '../../../drawingml/ink-geometry';
+import { MAX_INK_PART_CHARS, MAX_INK_TRACES, MAX_INK_TRACE_CHARS } from './inkml-limits';
 import { XMLParser } from 'fast-xml-parser';
 import { describe, expect, it } from 'vitest';
 
@@ -409,5 +411,24 @@ describe('buildInkMlContent - AZIMUTH/ALTITUDE channel preservation', () => {
 			)['ink:traceFormat'] as XmlObject
 		)['ink:channel'] as XmlObject[];
 		expect(channelNames.map((c) => c['@_name'])).toStrictEqual(['X', 'Y', 'F', 'OTx', 'OTy']);
+	});
+});
+
+describe('InkML decode budgets', () => {
+	it('rejects an oversized part and a part with too many traces', () => {
+		const oversized = { ink: { annotation: ' '.repeat(MAX_INK_PART_CHARS), trace: '1 2,3 4' } };
+		const crowded = { ink: { trace: Array.from({ length: MAX_INK_TRACES + 1 }, () => '1 2,3 4') } };
+		expect(parseInkMlContent(oversized).strokes).toEqual([]);
+		expect(parseInkMlContent(crowded).strokes).toEqual([]);
+	});
+
+	it('omits oversized traces before decoding and keeps valid siblings', () => {
+		const oversizedText = { '#text': ' '.repeat(MAX_INK_TRACE_CHARS + 1), '@_pva:path': 'M 1 2' };
+		const trace = '1 2,'.repeat(MAX_INK_SAMPLES - 1) + '3 4';
+		const oversizedPath = { '@_pva:path': 'M 1 2' + ' L 3 4'.repeat(MAX_INK_SAMPLES) };
+		const part = { ink: { trace: [oversizedText, oversizedPath, trace + ',3 4', trace] } };
+		const { strokes } = parseInkMlContent(part);
+		expect(strokes).toHaveLength(1);
+		expect(strokes[0]?.path.match(/[ML]/gu)).toHaveLength(MAX_INK_SAMPLES);
 	});
 });

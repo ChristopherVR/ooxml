@@ -9,6 +9,7 @@ import type {
 	PptxTableData,
 } from '../../types';
 import { parseInkMlContent, parseModel3DScene } from '../../utils';
+import { MAX_INK_PART_CHARS } from '../../utils/inkml-limits';
 import { normalizePlaceholderIndex } from '../../utils/placeholder-index';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimeSavePipeline';
 import type { PlaceholderInfo } from './PptxHandlerRuntimeTypes';
@@ -38,7 +39,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 	/**
 	 * Resolve the table-cell-context default font size (points) from the
-	 * slide's master `p:otherStyle` (ECMA-376 §19.3.1.42/§19.3.1.52). A table
+	 * slide's master `p:otherStyle` (ECMA-376 Â§19.3.1.42/Â§19.3.1.52). A table
 	 * cell isn't a `title`/`body` placeholder, so its unstyled text defaults
 	 * off `otherStyle` rather than `titleStyle`/`bodyStyle` - the same rung
 	 * {@link lookupPlaceholderDefaults} already uses for non-title/body
@@ -159,7 +160,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 				if (inkTarget) {
 					inkPartPath = this.resolveImagePath(slidePath, inkTarget);
 					const inkXml = await this.zip.file(inkPartPath)?.async('string');
-					if (inkXml) {
+					if (inkXml && inkXml.length <= MAX_INK_PART_CHARS) {
 						const inkData = this.parser.parse(inkXml) as XmlObject;
 						const parsed = parseInkMlContent(inkData, { width, height });
 						inkStrokes = parsed.strokes;
