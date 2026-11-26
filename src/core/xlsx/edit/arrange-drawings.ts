@@ -89,15 +89,17 @@ export function flipDrawing(
 	axis: 'horizontal' | 'vertical',
 ): void {
 	const drawing = sheetAt(ctx.workbook, s).drawings[index];
-	const field = axis === 'horizontal' ? 'flipH' : 'flipV';
+	const horizontal = axis === 'horizontal';
 	if (isWorksheetShape(drawing)) {
 		editDrawings(ctx, s, 'Flip object', () => {
-			drawing.shape[field] = !drawing.shape[field];
+			if (horizontal) drawing.shape.flipH = !drawing.shape.flipH;
+			else drawing.shape.flipV = !drawing.shape.flipV;
 			if (drawing.sourceXml) drawing.shapeEdit = { ...drawing.shapeEdit, transform: true };
 		});
 	} else if (drawing?.kind === 'image') {
 		editDrawings(ctx, s, 'Flip object', () => {
-			drawing[field] = !drawing[field];
+			if (horizontal) drawing.flipH = !drawing.flipH;
+			else drawing.flipV = !drawing.flipV;
 		});
 	}
 }
