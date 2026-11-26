@@ -92,6 +92,31 @@ test('Read Mode flows the document across columns and returns to the editing pos
 	const controls = editor.getByRole('group', { name: 'Read Mode' });
 	const status = controls.getByRole('status');
 	await expect(status).toHaveText(/Page 1 of [2-9]/);
+	const frame = editor.locator('.dve-frame');
+	await frame.evaluate((element) => {
+		const fields = document.createElement('div');
+		fields.dataset.readerTestFields = '';
+		fields.innerHTML = `<input value="Ab"><textarea>Ab</textarea>
+			<select><option>One</option><option>Two</option></select>
+			<div contenteditable="true">Ab</div><div role="dialog" tabindex="0">Dialog</div>`;
+		element.append(fields);
+	});
+	const fields = frame.locator('[data-reader-test-fields]');
+	for (const selector of ['input', 'textarea', '[contenteditable]']) {
+		const field = fields.locator(selector);
+		await field.press('End');
+		await field.press('ArrowLeft');
+		await field.press('Backspace');
+		await field.press('Space');
+		if (selector === '[contenteditable]') await expect(field).toHaveText('b');
+		else await expect(field).toHaveValue(' b');
+	}
+	await fields.locator('select').press('End');
+	await expect(fields.locator('select')).toHaveValue('Two');
+	await fields.getByRole('dialog').press('ArrowRight');
+	await expect(status).toHaveText(/Page 1 of/);
+	await fields.evaluate((element) => element.remove());
+	await canvas.focus();
 	await page.keyboard.type('EditingBlocked');
 	await expect(body).not.toContainText('EditingBlocked');
 	await page.keyboard.press('ArrowRight');

@@ -86,6 +86,19 @@ export function mountView(host: ViewHost): ViewPresentation {
 	};
 	const keys = (event: KeyboardEvent) => {
 		if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+		if (
+			event
+				.composedPath()
+				.some(
+					(target) =>
+						target instanceof HTMLElement &&
+						(target.isContentEditable ||
+							target.matches(
+								'input, textarea, select, button, dialog, [role="dialog"], office-ui-dialog',
+							)),
+				)
+		)
+			return;
 		switch (event.key) {
 			case 'ArrowLeft':
 				turn(-1);
@@ -101,7 +114,6 @@ export function mountView(host: ViewHost): ViewPresentation {
 				turn(1);
 				break;
 			case ' ':
-				if (event.target instanceof HTMLButtonElement) return;
 				turn(event.shiftKey ? -1 : 1);
 				break;
 			case 'Home':
