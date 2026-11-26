@@ -35,6 +35,7 @@ import { registerSmartArt } from './smartart-node-view';
 import { DocxEditorApi } from './element-api';
 import { refreshDocxWebfonts } from './docx-webfonts';
 import { emit, type DocxEditorEventMap } from './events';
+import { drawTab } from './draw-loader';
 import {
 	DEFAULT_FILE_NAME,
 	DEFAULT_REVIEW_AUTHOR,
@@ -279,6 +280,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.shell.printNoteEditing?.();
 		core.shell.printFloats?.destroy();
 		delete core.shell.printFloats;
+		drawTab()?.destroyDraw(core);
 		core.shell.printEditing?.destroy();
 		delete core.shell.printEditing;
 		core.shell.printLayout?.disconnect();
@@ -399,6 +401,7 @@ export class DocxEditorElement extends DocxEditorApi {
 		core.model = model;
 		core.endCloudFile();
 		core.inserts.reset();
+		drawTab()?.resetDraw(core);
 		core.formatDialogs.closeAll();
 		core.dirtyState.set(false);
 	}

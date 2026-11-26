@@ -93,6 +93,8 @@ export interface InlineImage {
 	webVideo?: import('./web-video').WebVideoSpec;
 	/** A native 3D model or OLE package. The picture fields name its poster or icon. */
 	payload?: InlineDrawingPayload;
+	/** Ink (`unsupported: "Ink"`): its strokes and InkML part; drawn and edited on the Draw tab. */
+	ink?: import('./ink').DocxInk;
 }
 /** A Word text watermark (`PowerPlusWaterMarkObject`), carried by an inline object run in a header. */
 export interface WatermarkSpec {

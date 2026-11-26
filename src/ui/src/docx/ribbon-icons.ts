@@ -164,7 +164,20 @@ const paths = {
 	...EQUATION_ICON_PATHS,
 } as const;
 
-export type RibbonIcon = keyof typeof paths;
+/** The Draw tab's icons, which its module adds to `ribbonIconPaths` when it loads. */
+export type DrawIcon =
+	| 'lasso'
+	| 'eraser'
+	| 'addPen'
+	| 'drawTouch'
+	| 'inkToShape'
+	| 'inkToMath'
+	| 'inkReplay';
+
+/** Every icon's path by name; a lazily loaded tab adds its own. */
+export const ribbonIconPaths: Record<string, string> = paths;
+
+export type RibbonIcon = keyof typeof paths | DrawIcon;
 
 export function isRibbonIcon(name: string): name is RibbonIcon {
 	return name in paths;
@@ -191,7 +204,7 @@ function frameOf(name: RibbonIcon): { viewBox: string; stroke: number } | null {
 		probe.setAttribute('viewBox', '0 0 24 24');
 		probe.style.cssText = 'position:absolute;visibility:hidden;width:24px;height:24px';
 		const path = document.createElementNS(NS, 'path');
-		path.setAttribute('d', paths[name]);
+		path.setAttribute('d', ribbonIconPaths[name] ?? '');
 		probe.append(path);
 		document.body.append(probe);
 		const box = path.getBBox();
@@ -224,7 +237,7 @@ export function ribbonIcon(name: RibbonIcon, size = 16): SVGSVGElement {
 	svg.classList.add('ribbon-icon');
 	svg.dataset.icon = name;
 	const path = document.createElementNS(NS, 'path');
-	path.setAttribute('d', paths[name]);
+	path.setAttribute('d', ribbonIconPaths[name] ?? '');
 	path.setAttribute('fill', 'none');
 	path.setAttribute('stroke', 'currentColor');
 	path.setAttribute('stroke-width', String(frame?.stroke ?? STROKE));

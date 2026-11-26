@@ -18,6 +18,16 @@ export function inlineSourceLookup(
 					source.equation?.omml === run.equation?.omml &&
 					source.equation?.display === run.equation?.display,
 			);
+		// Ink has no media: it is matched by its part's relationship, so a drawing inserted before
+		// it (a new stroke, Ink to Shape) never takes its markup, and new ink takes none.
+		const ink = run.image?.ink;
+		if (ink) {
+			const at = ink.relId
+				? (base ?? []).findIndex((source) => source.image?.ink?.relId === ink.relId)
+				: -1;
+			return at < 0 ? undefined : at;
+		}
+		if (base?.[index]?.image?.ink) return undefined;
 		if (!run.image?.partName) return index;
 		const candidates = (base ?? []).flatMap((source, at) =>
 			samePictureSource(source.image, run.image) ? [at] : [],

@@ -44,6 +44,7 @@ import {
 } from './parse-warnings';
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
+import { resolveDocumentInk } from './ink';
 import { readPlaceholderTexts } from './glossary';
 import { readGlossaryEntries } from './glossary-document';
 import { readPackageProperties } from './package-properties';
@@ -288,6 +289,7 @@ export async function readPackage(
 		async (partName) => zip.file(partName)?.async('string'),
 		async (partName) => zip.file(partName)?.async('uint8array'),
 	);
+	await resolveDocumentInk(pictureBlocks, async (partName) => zip.file(partName)?.async('string'));
 	model.warnings.push(...imageAndBookmarkWarnings(blocks), ...diagramWarnings(pictureBlocks));
 	for (const warning of schemaWarnings)
 		if (!model.warnings.includes(warning)) model.warnings.push(warning);

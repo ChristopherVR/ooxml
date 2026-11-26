@@ -1,4 +1,5 @@
 import { syncRibbonAddIns } from '../ribbon/add-in-tabs';
+import { loadDrawTab } from './draw-loader';
 import { refitRibbon } from './ribbon-overflow';
 import { applyShellLabels } from './shell-labels';
 import type { CollaborativeEditor } from 'ooxml-core/collab';
@@ -163,6 +164,7 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	toolbar?.addEventListener('office-ribbon-select', (event) => {
 		if (event instanceof CustomEvent && event.detail?.tab === 'table-layout')
 			syncTableTab(core, true);
+		if (event instanceof CustomEvent && event.detail?.tab === 'draw') void loadDrawTab(core);
 	});
 	const canvas = document.createElement('main');
 	canvas.className = 'dve-canvas';

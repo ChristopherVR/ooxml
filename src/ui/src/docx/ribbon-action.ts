@@ -171,6 +171,13 @@ export type RibbonAction =
 				| 'changeLayout';
 	  }
 	| { type: 'drawShape'; preset: string }
+	/** The Draw tab: tools, the pen gallery, Draw with Touch, Ink to Shape and Math, Ink Replay. */
+	| { type: 'draw'; key: 'tool'; value: 'select' | 'lasso' | 'eraser' }
+	| { type: 'draw'; key: 'pen' | 'removePen'; index: number }
+	| { type: 'draw'; key: 'addPen'; value: 'pen' | 'pencil' | 'highlighter' }
+	| { type: 'draw'; key: 'penColor'; value: string }
+	| { type: 'draw'; key: 'thickness'; value: number }
+	| { type: 'draw'; key: 'touch' | 'inkToShape' | 'inkToMath' | 'replay' }
 	| {
 			type: 'shape';
 			key: 'fill' | 'outline' | 'weight' | 'width' | 'height' | 'wrap';

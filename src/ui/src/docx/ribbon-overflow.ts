@@ -5,6 +5,10 @@ import { ribbonIcon, type RibbonIcon } from './ribbon-icons';
 /** The icon shown on a collapsed group's button, by the group's English name. */
 export const GROUP_ICONS: Readonly<Record<string, RibbonIcon>> = {
 	Clipboard: 'paste',
+	'Drawing Tools': 'addPen',
+	Stencils: 'ruler',
+	Convert: 'inkToShape',
+	Replay: 'inkReplay',
 	Font: 'changeCase',
 	Paragraph: 'alignLeft',
 	Styles: 'moreStyles',

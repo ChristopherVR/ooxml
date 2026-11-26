@@ -90,6 +90,8 @@ export const imageNodeSpec: NodeSpec = {
 		payload: { default: null },
 		/** A drawing shape (`ShapeSpec`) as JSON; drawn as SVG by the shape node view. */
 		shape: { default: null },
+		/** Ink (`DocxInk`) as JSON; drawn as SVG and edited on the Draw tab. */
+		ink: { default: null },
 		/** A header watermark (`WatermarkSpec` or `PictureWatermarkSpec`) as JSON, kept through edits. */
 		watermark: { default: null },
 		pictureWatermark: { default: null },

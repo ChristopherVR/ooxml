@@ -27,6 +27,7 @@ import { shapePaint } from './shape-paint';
 import type { TextBoxLayouts } from './text-box-layout';
 import { DEFAULT_FONT_SIZE_PT, ptToPx } from './units';
 import { docxChartPaint } from '../chart-paint';
+import { inkPaint } from './ink-paint';
 import { drawingOuterShadow } from '../shape-svg';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
@@ -288,6 +289,7 @@ export function adaptDocumentModel(
 									}
 								: {}),
 							...(image.shape ? shapePaint(image, theme, textBoxes) : {}),
+							...inkPaint(image),
 						}
 					: undefined);
 		return {

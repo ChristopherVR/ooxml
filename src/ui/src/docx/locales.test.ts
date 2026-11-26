@@ -185,6 +185,7 @@ describe('localized rendering', () => {
 			en: [
 				'Home',
 				'Insert',
+				'Draw',
 				'Design',
 				'Layout',
 				'References',
@@ -198,6 +199,7 @@ describe('localized rendering', () => {
 			fr: [
 				'Accueil',
 				'Insertion',
+				'Dessin',
 				'Création',
 				'Disposition',
 				'Références',
@@ -211,6 +213,7 @@ describe('localized rendering', () => {
 			de: [
 				'Start',
 				'Einfügen',
+				'Zeichnen',
 				'Entwurf',
 				'Layout',
 				'Verweise',
@@ -224,6 +227,7 @@ describe('localized rendering', () => {
 			es: [
 				'Inicio',
 				'Insertar',
+				'Dibujar',
 				'Diseño',
 				'Disposición',
 				'Referencias',
@@ -237,6 +241,7 @@ describe('localized rendering', () => {
 			'zh-CN': [
 				'开始',
 				'插入',
+				'绘图',
 				'设计',
 				'布局',
 				'引用',

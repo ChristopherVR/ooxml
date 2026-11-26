@@ -254,6 +254,7 @@ export const enRibbon = {
 	'Ribbon tabs': 'Ribbon tabs',
 	'tab.home': 'Home',
 	'tab.insert': 'Insert',
+	'tab.draw': 'Draw',
 	'tab.references': 'References',
 	'tab.layout': 'Layout',
 	'tab.review': 'Review',

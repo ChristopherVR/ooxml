@@ -260,6 +260,7 @@ export const zhCNRibbon: RibbonStrings = {
 	'Ribbon tabs': '功能区选项卡',
 	'tab.home': '开始',
 	'tab.insert': '插入',
+	'tab.draw': '绘图',
 	'tab.references': '引用',
 	'tab.layout': '布局',
 	'tab.review': '审阅',

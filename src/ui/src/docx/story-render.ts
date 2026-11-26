@@ -24,6 +24,7 @@ import { schema } from './schema';
 import { runToInlineNodes } from './run-adapter';
 import { stylePreviewRuns } from './preview-run-styles';
 import { paintPicture, type PictureSource } from './picture-paint';
+import { paintInk } from './ink-node-view';
 
 /** How story blocks are rendered. */
 export interface StoryRenderOptions {
@@ -84,6 +85,11 @@ function storySerializer(
 			return omitted;
 		}
 		if (node.attrs.shape) return shapeElement(node, model, options.pictureUrl);
+		if (node.attrs.ink) {
+			const ink = document.createElement('span');
+			paintInk(ink, node);
+			return ink;
+		}
 		const content = DOMSerializer.renderSpec(document, image(node)).dom as HTMLElement;
 		if (content.tagName !== 'IMG' || !options.pictureUrl) return content;
 		const frame = document.createElement('span');

@@ -55,6 +55,7 @@ import { syncReferencesRibbon } from './references-ribbon';
 import { syncTableTab } from './table-tab-context';
 import type { MailingsController } from './mailings/controller';
 import type { MailMergeEmailProvider } from './mailings/email-provider';
+import { drawTab } from './draw-loader';
 import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
 
 export type LoadedDocument = Awaited<ReturnType<typeof loadDocument>>;
@@ -536,6 +537,7 @@ export class EditorCore {
 			void import('./insert-parts-ribbon').then((m) =>
 				m.syncInsertParts(toolbar, this.model.glossary, this.onlineVideoHosts),
 			);
+		drawTab()?.syncDraw(this);
 		syncMailingsRibbon(this);
 		syncReferencesRibbon(this);
 		syncTableTab(this);

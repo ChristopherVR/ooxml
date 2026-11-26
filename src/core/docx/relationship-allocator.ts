@@ -3,6 +3,7 @@
 // newly inserted picture, and records what save.ts must add to word/_rels/document.xml.rels.
 import { RELATIONSHIP_TYPES, isSafeHyperlinkHref, nextRelationshipId } from '../opc/index';
 import type { ChartExSpace, ChartSpace } from '../chart/index';
+import { INK_RELATIONSHIP, type DocxInk } from './ink';
 import { DocPrIdAllocator } from './docpr-ids';
 import { isWordNavigableHref } from './hyperlink';
 import { isElement, REL_NS, type XmlDocument } from './xml';
@@ -30,6 +31,8 @@ export interface NewRelationship {
 	chart?: ChartSpace;
 	/** An extended chart inserted in this session, written the same way as {@link chart}. */
 	chartEx?: ChartExSpace;
+	/** Ink drawn in this session: its InkML part (`word/ink/inkN.xml`) is written and named on save. */
+	ink?: { ink: DocxInk; widthPx: number; heightPx: number };
 }
 
 /** A part a new diagram adds: its relationship type and, for the data part, its text. */
@@ -147,6 +150,19 @@ export class RelationshipAllocator {
 			target: '',
 			mode: 'Internal',
 			chartEx: space,
+		});
+		return id;
+	}
+
+	/** Registers ink drawn in this session; its InkML part is named and written on save. */
+	addInk(ink: DocxInk, widthPx: number, heightPx: number): string {
+		const id = this.nextId();
+		this.created.push({
+			id,
+			type: INK_RELATIONSHIP,
+			target: '',
+			mode: 'Internal',
+			ink: { ink, widthPx, heightPx },
 		});
 		return id;
 	}

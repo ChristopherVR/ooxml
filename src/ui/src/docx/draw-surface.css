@@ -1,0 +1,27 @@
+/* The Draw tab's pointer surface over the pages, the lasso's selection and Ink Replay. */
+.dve-ink-surface {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+.dve-ink-lasso-box {
+	position: absolute;
+	box-sizing: border-box;
+	border: 1px dashed var(--blue, #2b579a);
+	pointer-events: none;
+	z-index: 4;
+}
+.dve-ink-replay {
+	position: absolute;
+	left: 0;
+	top: 0;
+	pointer-events: none;
+	overflow: visible;
+	z-index: 5;
+}
+.dve-ink-replaying .dve-print-float[data-ink] {
+	visibility: hidden;
+}
+.dve-canvas.dve-inking {
+	position: relative;
+}

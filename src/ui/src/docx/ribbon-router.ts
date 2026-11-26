@@ -27,6 +27,7 @@ import { loadWordReferences, loadWordTableTools } from 'ooxml-core/docx/ui';
 import { applyFontFormat } from './font-format';
 import { referencesReason } from './references-ribbon';
 import { closeRibbonOverflow } from './ribbon-overflow';
+import { loadDrawTab } from './draw-loader';
 
 /** Routes a ribbon action to the controller that owns it. */
 export function routeRibbonAction(
@@ -136,6 +137,10 @@ export function routeRibbonAction(
 	}
 	if (action.type === 'chart' && action.key === 'format') {
 		shell.chartFormat?.open(action.target);
+		return;
+	}
+	if (action.type === 'draw') {
+		void loadDrawTab(core).then((draw) => draw.handleDrawAction(core, action));
 		return;
 	}
 	if (inserts.handle(action)) return;

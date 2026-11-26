@@ -36,3 +36,4 @@ export { createPageStories, type PlacedStory } from './story-flow';
 export { collectDocxWebfontRuns } from './webfont-runs';
 export { placeTab, type TabPlacement } from './tab-stops';
 export { createLayoutSession, type LayoutSessionOptions } from './layout-session';
+export { inkPaint } from './ink-paint';

@@ -13,7 +13,10 @@ export interface Located {
 /** A float as the layout counts them (`paragraphFloats`): anchored with media bytes, a shape or a chart. */
 const countsAsFloat = (node: ProseMirrorNode): boolean =>
 	node.type.name === 'image' &&
-	Boolean(node.attrs.anchored && (node.attrs.partName || node.attrs.shape || node.attrs.chart));
+	Boolean(
+		node.attrs.anchored &&
+		(node.attrs.partName || node.attrs.shape || node.attrs.chart || node.attrs.ink),
+	);
 
 /** A float the page can select: an anchored picture with media bytes, a shape or a chart. */
 export const isFloat = (node: ProseMirrorNode): boolean => countsAsFloat(node);

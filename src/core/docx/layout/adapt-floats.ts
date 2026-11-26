@@ -1,5 +1,6 @@
 import type { Paragraph, TextRun, ThemeCatalog } from '../index';
 import { docxChartPaint } from '../chart-paint';
+import { inkPaint } from './ink-paint';
 import { drawingOuterShadow } from '../shape-svg';
 import { shapePaint } from './shape-paint';
 import type { LayoutFloat } from './input';
@@ -32,7 +33,7 @@ export function paragraphFloats(
 			!image?.anchored ||
 			image.watermark ||
 			image.pictureWatermark ||
-			(!image.partName && !image.shape && !image.chart)
+			(!image.partName && !image.shape && !image.chart && !image.ink)
 		)
 			continue;
 		const placement = image.placement;
@@ -57,6 +58,7 @@ export function paragraphFloats(
 			widthPx: image.widthPx,
 			heightPx: image.heightPx,
 			...shapePaint(image, theme, textBoxes),
+			...inkPaint(image),
 			...(placement?.relativeFrom ? { relativeFromH: placement.relativeFrom } : {}),
 			...(placement?.align ? { alignH: placement.align } : {}),
 			...(placement?.offsetXPx !== undefined ? { offsetXPx: placement.offsetXPx } : {}),

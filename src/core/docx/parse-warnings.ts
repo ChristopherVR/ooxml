@@ -141,7 +141,8 @@ export function imageAndBookmarkWarnings(blocks: Block[]): string[] {
 			hasOfficeObject ||= run.image.payload?.kind === 'officePackage';
 			if (run.image.unsupported) {
 				// A SmartArt shown from its cached drawing gets its own, more precise warning.
-				if (run.image.diagram?.rendering !== 'cached-drawing')
+				// Ink is drawn and edited on the Draw tab, so it is not a placeholder.
+				if (run.image.diagram?.rendering !== 'cached-drawing' && !run.image.ink)
 					unsupportedKinds.add(run.image.unsupported);
 			} else if (!run.image.payload) hasPicture = true;
 			if (run.image.anchored) hasAnchored = true;

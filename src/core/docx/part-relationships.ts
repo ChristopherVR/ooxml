@@ -17,6 +17,7 @@ import type { DocPrIdAllocator } from './docpr-ids';
 import { ensureContentTypeOverride } from './zip-parts';
 import type { XmlDocument } from './xml';
 import { writeNewChartExPart, writeNewChartPart } from './chart-save';
+import { writeNewInkPart } from './ink-save';
 
 const CONTENT_TYPES_PART = '[Content_Types].xml';
 const extensionOf = (partName: string): string => partName.split('.').pop()?.toLowerCase() ?? '';
@@ -73,6 +74,11 @@ export async function writeNewRelationships(
 			chartTargets.set(
 				relationship.id,
 				relativeTarget(partName, await writeNewChartExPart(zip, relationship.chartEx)),
+			);
+		else if (relationship.ink)
+			chartTargets.set(
+				relationship.id,
+				relativeTarget(partName, await writeNewInkPart(zip, relationship.ink)),
 			);
 	let contentTypesXml = await zip.file(CONTENT_TYPES_PART)?.async('string');
 	const overrides: NewRelationship[] = [];

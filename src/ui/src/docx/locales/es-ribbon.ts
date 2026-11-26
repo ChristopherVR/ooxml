@@ -263,6 +263,7 @@ export const esRibbon: RibbonStrings = {
 	'Ribbon tabs': 'Pestañas de la cinta de opciones',
 	'tab.home': 'Inicio',
 	'tab.insert': 'Insertar',
+	'tab.draw': 'Dibujar',
 	'tab.references': 'Referencias',
 	'tab.layout': 'Disposición',
 	'tab.review': 'Revisar',

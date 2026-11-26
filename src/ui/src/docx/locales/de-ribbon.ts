@@ -263,6 +263,7 @@ export const deRibbon: RibbonStrings = {
 	'Ribbon tabs': 'Registerkarten des Menübands',
 	'tab.home': 'Start',
 	'tab.insert': 'Einfügen',
+	'tab.draw': 'Zeichnen',
 	'tab.references': 'Verweise',
 	'tab.layout': 'Layout',
 	'tab.review': 'Überprüfen',

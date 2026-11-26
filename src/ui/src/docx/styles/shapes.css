@@ -2,13 +2,15 @@
 .ProseMirror p {
 	position: relative;
 }
-.dve-shape {
+.dve-shape,
+.dve-ink {
 	display: inline-block;
 	position: relative;
 	vertical-align: bottom;
 	line-height: 0;
 }
-.dve-shape svg {
+.dve-shape svg,
+.dve-ink svg {
 	display: block;
 }
 /* A text box's own paragraphs over its shape (editing surface, story previews and Print Layout),
@@ -47,7 +49,8 @@
 	border-collapse: collapse;
 	flex: none;
 }
-.dve-shape-floating {
+.dve-shape-floating,
+.dve-ink-floating {
 	position: absolute;
 	z-index: 2;
 }
@@ -55,6 +58,7 @@
 	z-index: 0;
 }
 .dve-shape-selected,
+.dve-ink-selected,
 .dve-paper .dve-drawing-secondary {
 	outline: 2px solid var(--blue, #2b579a);
 	outline-offset: 2px;
@@ -116,4 +120,8 @@
 .shape-picker-grid button:focus-visible {
 	border-color: var(--blue, #2b579a);
 	background: var(--accent-soft);
+}
+/* Ink (the Draw tab) draws past its box, as its strokes are as wide as the pen. */
+.dve-ink svg {
+	overflow: visible;
 }

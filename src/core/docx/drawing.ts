@@ -32,6 +32,7 @@ import { DIAGRAM_GRAPHIC_URI, parseDiagramGraphic } from './diagram';
 import { CHART_GRAPHIC_URI, CHARTEX_GRAPHIC_URI, parseChartGraphic } from './chart';
 import { MODEL3D_URI } from '../drawingml/model3d';
 import { isOleDrawing, model3dDrawing, parseOleDrawing } from './drawing-payload';
+import { parseInkGraphic, WORD_INK_GRAPHIC_URI } from './ink';
 
 const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
 const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -220,6 +221,18 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...(placement ? { placement } : {}),
 		};
 	}
+	if (graphicData && uri === WORD_INK_GRAPHIC_URI)
+		return {
+			relId: '',
+			partName: '',
+			contentType: 'application/octet-stream',
+			widthPx,
+			heightPx,
+			...definedProps({ altText, title, drawingName, anchored }),
+			unsupported: 'Ink',
+			...(placement ? { placement } : {}),
+			ink: parseInkGraphic(graphicData, context.rels, widthPx, heightPx),
+		};
 	const diagram =
 		uri === DIAGRAM_GRAPHIC_URI && graphicData
 			? parseDiagramGraphic(graphicData, extent, docPr, context.rels, Boolean(anchored))

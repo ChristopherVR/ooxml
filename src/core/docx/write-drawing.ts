@@ -16,6 +16,7 @@ import { applyWebVideo } from './web-video';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
+import { buildInkDrawing, patchInkXfrm } from './write-ink-drawing';
 import {
 	clearNonProperties,
 	updateDocPr,
@@ -241,6 +242,23 @@ export function createImageRun(
 	if (diagram) return diagram;
 	const chart = chartRun(doc, node, image, base, oldDrawing, oldContainer, allocator);
 	if (chart) return chart;
+	// Kept ink keeps its drawing (its part is saved by ink-save.ts); new ink gets a part on save.
+	if (base?.ink && oldDrawing && image.ink?.relId && image.ink.relId === base.ink.relId) {
+		if (image.widthPx !== base.widthPx || image.heightPx !== base.heightPx) {
+			updateExtent(oldDrawing, image.widthPx, image.heightPx);
+			patchInkXfrm(oldDrawing, image.widthPx, image.heightPx);
+		}
+		patchArrangement(doc, oldDrawing, image, base);
+		clearNonProperties(node, oldContainer);
+		return node;
+	}
+	if (!base && image.ink && !image.ink.relId) {
+		if (!allocator) throw new Error('Cannot insert ink without a relationship allocator.');
+		const relId = allocator.addInk(image.ink, image.widthPx, image.heightPx);
+		clearNonProperties(node);
+		node.appendChild(buildInkDrawing(doc, image, relId, allocator.docPrIds.next(image.drawingId)));
+		return node;
+	}
 	if (image.payload && !base) {
 		if (!allocator)
 			throw new Error('Cannot insert a native object without a relationship allocator.');

@@ -256,6 +256,7 @@ export const frRibbon: RibbonStrings = {
 	'Ribbon tabs': 'Onglets du ruban',
 	'tab.home': 'Accueil',
 	'tab.insert': 'Insertion',
+	'tab.draw': 'Dessin',
 	'tab.references': 'Références',
 	'tab.layout': 'Disposition',
 	'tab.review': 'Révision',

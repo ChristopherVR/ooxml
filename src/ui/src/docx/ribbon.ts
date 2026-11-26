@@ -47,6 +47,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	for (const name of [
 		'Home',
 		'Insert',
+		'Draw',
 		'Design',
 		'Layout',
 		'References',

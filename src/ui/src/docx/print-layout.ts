@@ -425,6 +425,8 @@ export function renderPrintLayout(
 				picture.dataset.originX = String(float.originXPx);
 				picture.dataset.originY = String(float.originYPx);
 				if (float.behindText) picture.classList.add('dve-print-float-behind');
+				// Ink, which the Draw tab's eraser, lasso and Ink Replay work on.
+				if (float.chart?.label === 'Ink') picture.dataset.ink = '';
 				picture.style.left = `${float.xPx}px`;
 				picture.style.top = `${float.yPx}px`;
 				sheet.append(picture);
