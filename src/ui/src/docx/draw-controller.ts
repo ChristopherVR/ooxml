@@ -2,7 +2,7 @@
 // floating ink (strokes drawn one after another join the same drawing, as in Word), the eraser
 // removes the strokes it touches, the lasso selects strokes for Delete or Ink to Shape, and Ink
 // Replay redraws the ink on the pages in the order it was drawn.
-import type { InkCoordinate, InkStroke } from 'ooxml-core/drawingml';
+import type { InkCoordinate } from 'ooxml-core/drawingml';
 import { inkTools } from '../ink/tools';
 import type { DocxInk } from 'ooxml-core/docx';
 import { NodeSelection } from 'prosemirror-state';
