@@ -980,6 +980,8 @@ unit test fails if an id is missing here.
 | `pictureFormat.adjust`              | Adjust                   |
 | `pictureFormat.pictureStyles`       | Picture Styles           |
 | `pictureFormat.size`                | Size                     |
+| `pictureFormat.accessibility`       | Alt Text                 |
+| `pictureFormat.arrange`             | Arrange                  |
 | `tableDesign.tableStyles`           | Table Styles             |
 | `tableLayout.table`                 | Table                    |
 | `tableLayout.rowsColumns`           | Rows & Columns           |
@@ -1196,10 +1198,20 @@ unit test fails if an id is missing here.
 | `pictureFormat.adjust.corrections`                | Corrections gallery                                                           |
 | `pictureFormat.adjust.color`                      | Color gallery                                                                 |
 | `pictureFormat.adjust.artisticEffects`            | Artistic Effects gallery                                                      |
+| `pictureFormat.adjust.removeBackground`           | Remove Background                                                             |
+| `pictureFormat.adjust.compress`                   | Compress Pictures                                                             |
+| `pictureFormat.adjust.changePicture`              | Change Picture                                                                |
+| `pictureFormat.adjust.resetPicture`               | Reset Picture                                                                 |
+| `pictureFormat.adjust.resetSize`                  | Reset Picture & Size                                                          |
 | `pictureFormat.pictureStyles.gallery`             | Picture Styles gallery                                                        |
 | `pictureFormat.pictureStyles.pictureEffects`      | Picture Effects gallery                                                       |
 | `pictureFormat.pictureStyles.graphicsFill`        | Graphics Fill gallery                                                         |
+| `pictureFormat.pictureStyles.border`              | Picture Border                                                                |
+| `pictureFormat.pictureStyles.layout`              | Picture Layout                                                                |
 | `pictureFormat.size.crop`                         | Crop                                                                          |
+| `pictureFormat.accessibility.altText`             | Alt Text                                                                      |
+| `pictureFormat.arrange.rotateRight`               | Rotate Right 90°                                                              |
+| `pictureFormat.arrange.selectionPane`             | Selection Pane                                                                |
 | `tableDesign.tableStyles.gallery`                 | Table Styles gallery                                                          |
 | `tableLayout.table.select`                        | Select                                                                        |
 | `tableLayout.table.viewGridlines`                 | View Gridlines                                                                |
