@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { editor, goToCell, newWorkbook, ribbon } from './helpers';
+import { editor, goToCell, newWorkbook } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 const fixture = (name: string) => [
 	...readFileSync(
@@ -42,9 +43,8 @@ const block = (page: Page, row: number, col: number, rows: number, cols: number)
 
 const fieldSettings = async (page: Page, cell: string) => {
 	await goToCell(page, cell);
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await editor(page).getByRole('menuitem', { name: 'Field Settings', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'field-settings');
 	return editor(page).locator('[data-dialog="pivot-field-settings"]');
 };
 const reopen = async (page: Page) => {
@@ -140,9 +140,8 @@ test('sets custom subtotals on a row field of a Values-on-rows report', async ({
 test('moves the Values among three row fields in the PivotTable settings', async ({ page }) => {
 	await open(page, 'rv3-last-compact-top');
 	await goToCell(page, 'A5');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'settings');
 	const dialog = editor(page).locator('[data-dialog="pivot-settings"]');
 	const placement = dialog.getByLabel('Values Placement:', { exact: true });
 	await expect(placement.locator('option')).toHaveText([

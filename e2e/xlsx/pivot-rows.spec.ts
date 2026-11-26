@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens saved layout', async ({
 	page,
@@ -38,10 +39,7 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	await create.getByRole('button', { name: 'OK', exact: true }).click();
 	await goToCell(page, 'G4');
 	await expect.poll(() => formulaBarValue(page)).toBe('37');
-	const menu = () =>
-		ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'settings');
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	await settings.getByLabel('Show subtotals', { exact: true }).uncheck();
 	await settings.getByLabel('Repeat row labels', { exact: true }).check();
@@ -56,8 +54,7 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	await goToCell(page, 'C2');
 	await typeInActiveCell(page, '100');
 	await goToCell(page, 'E1');
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'refresh');
 	await goToCell(page, 'G6');
 	await expect.poll(() => formulaBarValue(page)).toBe('147');
 	const bytes = await editor(page).evaluate(async (node) => [
@@ -75,9 +72,8 @@ test('authors hierarchical PivotTables, toggles subtotals, refreshes and reopens
 	);
 	await goToCell(page, 'G6');
 	await expect.poll(() => formulaBarValue(page)).toBe('147');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'settings');
 	await expect(settings.getByLabel('Second Row Field:', { exact: true })).toHaveValue('Region');
 	await expect(settings.getByLabel('Show subtotals', { exact: true })).not.toBeChecked();
 	await expect(settings.getByLabel('Repeat row labels', { exact: true })).toBeChecked();

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
-import { editor, goToCell, newWorkbook, ribbon } from './helpers';
+import { editor, goToCell, newWorkbook } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 const fixture = (name: string) => [
 	...readFileSync(
@@ -32,9 +33,6 @@ const column = (page: Page, count: number) =>
 		return Array.from({ length: rows }, (_v, row) => sheet.rows.get(row)?.get(0)?.value ?? null);
 	}, count);
 
-const menu = (page: Page) =>
-	ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-
 test('regroups the dates of a report that has a report filter, then saves and reopens it', async ({
 	page,
 }) => {
@@ -53,9 +51,8 @@ test('regroups the dates of a report that has a report filter, then saves and re
 		null,
 	]);
 	await goToCell(page, 'A4');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await menu(page);
-	await editor(page).getByRole('menuitem', { name: 'Group Selection', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'group-selection');
 	const dialog = editor(page).locator('[data-dialog="pivot-group-dates"]');
 	await expect(dialog.getByLabel('Months', { exact: true })).toBeChecked();
 	await expect(dialog.getByLabel('Years', { exact: true })).toBeChecked();
@@ -96,8 +93,7 @@ test('regroups the dates of a report that has a report filter, then saves and re
 	expect(await column(page, grouped.length)).toEqual(grouped);
 	// The report filter survives: only the West rows are listed and the filter cell is intact.
 	await goToCell(page, 'B1');
-	await menu(page);
-	await editor(page).getByRole('menuitem', { name: 'Ungroup', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'ungroup');
 	const ungrouped = await column(page, 4);
 	expect(ungrouped.slice(0, 3)).toEqual(['Region', null, 'Row Labels']);
 	expect(typeof ungrouped[3]).toBe('number');
@@ -116,9 +112,8 @@ test('keeps a timeline range when the dates are grouped differently', async ({ p
 		'Grand Total',
 	]);
 	await goToCell(page, 'A4');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await menu(page);
-	await editor(page).getByRole('menuitem', { name: 'Group Selection', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'group-selection');
 	const dialog = editor(page).locator('[data-dialog="pivot-group-dates"]');
 	await dialog.getByLabel('Months', { exact: true }).uncheck();
 	await dialog.getByLabel('Quarters', { exact: true }).check();

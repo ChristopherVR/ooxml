@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 test('create, configure, refresh, delete and undo PivotTables through the ribbon', async ({
 	page,
@@ -39,14 +40,10 @@ test('create, configure, refresh, delete and undo PivotTables through the ribbon
 	await goToCell(page, 'B2');
 	await typeInActiveCell(page, '100');
 	await goToCell(page, 'D1');
-	const menu = () =>
-		ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'refresh');
 	await goToCell(page, 'E4');
 	await expect.poll(() => formulaBarValue(page)).toBe('125');
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'settings');
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	await settings.getByLabel('Summarize Values By:', { exact: true }).selectOption('count');
 	await settings.getByRole('button', { name: 'OK', exact: true }).click();
@@ -67,9 +64,8 @@ test('create, configure, refresh, delete and undo PivotTables through the ribbon
 	);
 	await goToCell(page, 'E4');
 	await expect.poll(() => formulaBarValue(page)).toBe('3');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'Delete PivotTable', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'delete');
 	await expect.poll(() => formulaBarValue(page)).toBe('');
 	await page.keyboard.press('Control+Z');
 	await expect.poll(() => formulaBarValue(page)).toBe('3');

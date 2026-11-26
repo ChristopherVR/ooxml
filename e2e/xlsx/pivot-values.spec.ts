@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 test('authors three pivot measures with nested rows, refreshes, undoes and reopens saved settings', async ({
 	page,
@@ -55,10 +56,7 @@ test('authors three pivot measures with nested rows, refreshes, undoes and reope
 	await goToCell(page, 'C2');
 	await typeInActiveCell(page, '100');
 	await goToCell(page, 'G1');
-	const menu = () =>
-		ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'refresh');
 	await goToCell(page, 'O10');
 	await expect.poll(() => formulaBarValue(page)).toBe('147');
 	await page.keyboard.press('Control+Z');
@@ -80,9 +78,8 @@ test('authors three pivot measures with nested rows, refreshes, undoes and reope
 	);
 	await goToCell(page, 'Q10');
 	await expect.poll(() => formulaBarValue(page)).toBe('29.4');
-	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+	await clickPivotAnalyzeCommand(page, 'settings');
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	await expect(settings.locator('[data-pivot-value]')).toHaveCount(2);
 	await expect(

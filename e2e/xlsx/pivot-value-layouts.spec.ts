@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { resolve } from 'node:path';
 import { demoReady, editor, formulaBarValue, goToCell, ribbon } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 test('switches native multiple measures across compact, outline and tabular layouts, undoes and reopens', async ({
 	page,
@@ -20,8 +21,7 @@ test('switches native multiple measures across compact, outline and tabular layo
 	await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	const open = async () => {
-		await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+		await clickPivotAnalyzeCommand(page, 'settings');
 	};
 	await open();
 	await expect(settings.getByLabel('Report Layout:', { exact: true })).toHaveValue('compact');

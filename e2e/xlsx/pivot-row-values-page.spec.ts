@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 /** The text of a cell, read through the formula bar. */
 async function cellText(page: Parameters<typeof newWorkbook>[0], ref: string): Promise<string> {
@@ -68,10 +69,7 @@ test('authors Values on rows under a report filter, refreshes, undoes and switch
 	await goToCell(page, 'B2');
 	await typeInActiveCell(page, '100');
 	await goToCell(page, 'F3');
-	const menu = () =>
-		ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'refresh');
 	await goToCell(page, 'G10');
 	await expect.poll(() => formulaBarValue(page)).toBe('105');
 	await page.keyboard.press('Control+Z');
@@ -81,8 +79,7 @@ test('authors Values on rows under a report filter, refreshes, undoes and switch
 
 	// Moving the values to the columns keeps the report filter.
 	await goToCell(page, 'F3');
-	await menu();
-	await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+	await clickPivotAnalyzeCommand(page, 'settings');
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	await expect(settings.getByLabel('Report Filter Field:', { exact: true })).toHaveValue('Year');
 	await settings.getByLabel('Values Axis:', { exact: true }).selectOption('columns');

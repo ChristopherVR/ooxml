@@ -9,6 +9,7 @@ import {
 	typeInActiveCell,
 	formulaBarValue,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 for (const layout of ['tabular', 'compact', 'outline'])
 	for (const columns of [false, true])
@@ -63,10 +64,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			await goToCell(page, 'E3');
 			await typeInActiveCell(page, '100');
 			await goToCell(page, 'H1');
-			const menu = () =>
-				ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-			await menu();
-			await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+			await clickPivotAnalyzeCommand(page, 'refresh');
 			await goToCell(page, total);
 			await expect.poll(() => formulaBarValue(page)).toBe('100');
 			await page.keyboard.press('Control+Z');
@@ -89,11 +87,8 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			await goToCell(page, total);
 			await expect.poll(() => formulaBarValue(page)).toBe('100');
 			await goToCell(page, 'H1');
-			await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-			await menu();
-			await editor(page)
-				.getByRole('menuitem', { name: 'PivotTable Settings', exact: true })
-				.click();
+
+			await clickPivotAnalyzeCommand(page, 'settings');
 			const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 			await expect(settings.getByLabel('Second Row Field:', { exact: true })).toHaveValue('Region');
 			await expect(settings.getByLabel('Report Filter Field:', { exact: true })).toHaveValue(
@@ -131,9 +126,8 @@ for (const profile of [
 			[...source],
 		);
 		await goToCell(page, 'A1');
-		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+		await clickPivotAnalyzeCommand(page, 'settings');
 		const dialog = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(dialog.getByLabel('Second Row Field:', { exact: true })).toHaveValue('Region');
 		await expect(dialog.getByLabel('Report Filter Field:', { exact: true })).toHaveValue('Market');

@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 for (const placement of ['last', 'between', 'first'])
 	for (const layout of ['tabular', 'compact', 'outline'])
@@ -60,12 +61,7 @@ for (const placement of ['last', 'between', 'first'])
 				await goToCell(page, 'C2');
 				await typeInActiveCell(page, '100');
 				await goToCell(page, 'G1');
-				const menu = () =>
-					ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-				await menu();
-				await editor(page)
-					.getByRole('menuitem', { name: 'Refresh PivotTable', exact: true })
-					.click();
+				await clickPivotAnalyzeCommand(page, 'refresh');
 				await goToCell(page, total);
 				await expect.poll(() => formulaBarValue(page)).toBe('125');
 				await page.keyboard.press('Control+Z');
@@ -87,11 +83,8 @@ for (const placement of ['last', 'between', 'first'])
 				);
 				await goToCell(page, total);
 				await expect.poll(() => formulaBarValue(page)).toBe('125');
-				await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-				await menu();
-				await editor(page)
-					.getByRole('menuitem', { name: 'PivotTable Settings', exact: true })
-					.click();
+
+				await clickPivotAnalyzeCommand(page, 'settings');
 				const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 				await expect(settings.getByLabel('Second Row Field:', { exact: true })).toHaveValue(
 					'Region',

@@ -7,6 +7,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 test('authors compact reports, switches outline subtotals and reopens saved settings', async ({
 	page,
@@ -39,8 +40,7 @@ test('authors compact reports, switches outline subtotals and reopens saved sett
 	await expect.poll(() => formulaBarValue(page)).toBe('37');
 	const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 	const openSettings = async () => {
-		await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+		await clickPivotAnalyzeCommand(page, 'settings');
 	};
 	await openSettings();
 	await settings.getByLabel('Report Layout:', { exact: true }).selectOption('outline');

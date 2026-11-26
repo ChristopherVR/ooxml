@@ -9,6 +9,7 @@ import {
 	typeInActiveCell,
 	formulaBarValue,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 for (const layout of ['tabular', 'compact', 'outline'])
 	for (const columns of [false, true])
 		test(`authors ${layout} report filter with columns ${columns}, selection, refresh, history and export`, async ({
@@ -54,10 +55,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			await goToCell(page, 'C3');
 			await typeInActiveCell(page, '100');
 			await goToCell(page, 'G1');
-			const menu = () =>
-				ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-			await menu();
-			await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+			await clickPivotAnalyzeCommand(page, 'refresh');
 			await goToCell(page, total);
 			await expect.poll(() => formulaBarValue(page)).toBe('100');
 			await page.keyboard.press('Control+Z');
@@ -80,11 +78,8 @@ for (const layout of ['tabular', 'compact', 'outline'])
 			await goToCell(page, total);
 			await expect.poll(() => formulaBarValue(page)).toBe('100');
 			await goToCell(page, 'G1');
-			await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-			await menu();
-			await editor(page)
-				.getByRole('menuitem', { name: 'PivotTable Settings', exact: true })
-				.click();
+
+			await clickPivotAnalyzeCommand(page, 'settings');
 			const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 			await expect(settings.getByLabel('Report Filter Field:', { exact: true })).toHaveValue(
 				'Region',
@@ -143,11 +138,8 @@ for (const profile of [
 		await expect.poll(() => formulaBarValue(page)).toBe(caption);
 		const open = async () => {
 			await goToCell(page, 'A1');
-			await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-			await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-			await editor(page)
-				.getByRole('menuitem', { name: 'PivotTable Settings', exact: true })
-				.click();
+
+			await clickPivotAnalyzeCommand(page, 'settings');
 			return editor(page).locator('[data-dialog="pivot-settings"]');
 		};
 		let settings = await open();

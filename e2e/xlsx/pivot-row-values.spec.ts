@@ -9,6 +9,7 @@ import {
 	ribbon,
 	typeInActiveCell,
 } from './helpers';
+import { clickPivotAnalyzeCommand } from './pivot-commands';
 
 for (const layout of ['tabular', 'compact', 'outline'])
 	test(`authors ${layout} Values on rows, refreshes, undoes and reopens axis settings`, async ({
@@ -54,10 +55,7 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		await goToCell(page, 'B2');
 		await typeInActiveCell(page, '100');
 		await goToCell(page, 'F1');
-		const menu = () =>
-			ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-		await menu();
-		await editor(page).getByRole('menuitem', { name: 'Refresh PivotTable', exact: true }).click();
+		await clickPivotAnalyzeCommand(page, 'refresh');
 		await goToCell(page, `${totalColumn}${totalRow}`);
 		await expect.poll(() => formulaBarValue(page)).toBe('125');
 		await page.keyboard.press('Control+Z');
@@ -79,9 +77,8 @@ for (const layout of ['tabular', 'compact', 'outline'])
 		);
 		await goToCell(page, `${totalColumn}${totalRow}`);
 		await expect.poll(() => formulaBarValue(page)).toBe('125');
-		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await menu();
-		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+		await clickPivotAnalyzeCommand(page, 'settings');
 		const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
 		await expect(settings.getByLabel('Values Placement:', { exact: true })).toHaveValue('last');
@@ -171,9 +168,8 @@ for (const profile of [
 								: 'E11',
 		);
 		await expect.poll(() => formulaBarValue(page)).toBe('57');
-		await ribbon(page).getByRole('tab', { name: 'Insert', exact: true }).click();
-		await ribbon(page).getByRole('button', { name: 'PivotTable', exact: true }).last().click();
-		await editor(page).getByRole('menuitem', { name: 'PivotTable Settings', exact: true }).click();
+
+		await clickPivotAnalyzeCommand(page, 'settings');
 		const settings = editor(page).locator('[data-dialog="pivot-settings"]');
 		await expect(settings.getByLabel('Values Axis:', { exact: true })).toHaveValue('rows');
 		await expect(settings.getByLabel('Values Placement:', { exact: true })).toHaveValue(
