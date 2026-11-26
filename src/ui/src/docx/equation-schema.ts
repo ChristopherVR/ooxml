@@ -1,11 +1,14 @@
 import type { NodeSpec } from 'prosemirror-model';
-/** Read-only native MathML display. The source OMML stays in the atom for saving. */
+/**
+ * Native MathML display, empty arguments shown as placeholders. The OMML stays in the atom for
+ * saving; selecting the equation opens the equation editor (`equation-editing.ts`).
+ */
 export function equationDom(omml: string, display: boolean): HTMLElement {
 	const span = document.createElement('span');
 	span.dataset.docxEquation = '1';
 	span.className = display ? 'dve-equation dve-equation-display' : 'dve-equation';
 	span.contentEditable = 'false';
-	span.title = 'Equation preview (display only; Word layout may differ)';
+	span.title = 'Equation (Word layout may differ)';
 	const unavailable = () => {
 		span.classList.add('dve-equation-unavailable');
 		span.setAttribute('role', 'math');
@@ -13,7 +16,7 @@ export function equationDom(omml: string, display: boolean): HTMLElement {
 		span.textContent = 'Equation preview unavailable';
 	};
 	void import('../math/equation-render').then(({ equationPreview, renderEquation }) => {
-		const preview = equationPreview(omml);
+		const preview = equationPreview(omml, true);
 		const math = preview && renderEquation(span.ownerDocument, preview, display, 'Equation');
 		if (math) span.append(math);
 		else unavailable();

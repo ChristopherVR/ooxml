@@ -540,6 +540,7 @@ export class EditorCore {
 		syncReferencesRibbon(this);
 		syncTableTab(this);
 		this.inserts.smartArt.sync();
+		this.inserts.equations.sync();
 		const target = this.targetView();
 		if (toolbar && target)
 			syncSmartArtDesign(

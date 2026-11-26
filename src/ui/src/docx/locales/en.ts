@@ -1,3 +1,4 @@
+import { enEquations } from './equations';
 import { enArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { enDesign } from './design';
@@ -33,6 +34,7 @@ import { enRibbonNames } from './ribbon-names';
  * localizer looks up (or dotted ids for templates); every other locale must define every key.
  */
 export const en = {
+	...enEquations,
 	...enArrange,
 	...viewsStrings['en'],
 	...tableTabBase.en,

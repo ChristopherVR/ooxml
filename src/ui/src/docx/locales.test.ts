@@ -250,9 +250,9 @@ describe('localized rendering', () => {
 		} as const;
 		for (const locale of EDITOR_LOCALES) {
 			const ribbon = createRibbon(locale);
-			// Header & Footer, Shape Format, Picture Format, Chart Design and SmartArt Design are
-			// contextual: they show only inside a header or footer, on a shape, on a picture, on a chart
-			// or on a SmartArt.
+			// Header & Footer, Shape Format, Picture Format, Chart Design, SmartArt Design and Equation
+			// are contextual: they show only inside a header or footer, on a shape, on a picture, on a
+			// chart, on a SmartArt or in an equation.
 			const names = panelsOf(ribbon).map((panel) => panel.dataset.label);
 			expect(names, locale).toEqual([
 				...expected[locale],
@@ -261,6 +261,7 @@ describe('localized rendering', () => {
 				strings[locale]['tab.picture-format'],
 				strings[locale]['tab.smartart-design'],
 				strings[locale]['tab.chart-design'],
+				strings[locale]['tab.equation'],
 				strings[locale]['tab.outlining'],
 			]);
 		}

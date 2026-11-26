@@ -54,10 +54,12 @@ function mount() {
 	editor.documentModel = model;
 	document.body.append(editor);
 	const root = editor.shadowRoot!;
+	// An open Design menu is searched first: the Equation tab has an Integral button too.
 	const button = (name: string) =>
-		[...root.querySelectorAll('button')].find(
-			(el) => el.getAttribute('aria-label') === name || el.textContent?.trim() === name,
-		);
+		[
+			...root.querySelectorAll<HTMLButtonElement>('.dve-design-menu button'),
+			...root.querySelectorAll('button'),
+		].find((el) => el.getAttribute('aria-label') === name || el.textContent?.trim() === name);
 	const open = async (label: string) => {
 		const control = button(label);
 		expect(control?.disabled).toBe(false);

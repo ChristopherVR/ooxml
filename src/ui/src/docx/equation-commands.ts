@@ -67,3 +67,41 @@ export function updateEquation(
 	view.dispatch(closeHistory(tr.setSelection(NodeSelection.create(tr.doc, pos))));
 	return 'done';
 }
+
+/**
+ * Inserts an equation from its markup at the selection and selects it, so the equation editor
+ * opens on it (Insert New Equation, Alt+=). Returns its position.
+ */
+export function insertEquationXml(
+	view: EditorView,
+	omml: string,
+	display = aloneOnItsLine(view.state),
+): number | undefined {
+	if (!view.editable) return undefined;
+	const node = schema.nodes.equation!.create({ omml, display });
+	const tr = closeHistory(view.state.tr.replaceSelectionWith(node, false));
+	const pos = tr.selection.from - node.nodeSize;
+	if (tr.doc.nodeAt(pos)?.type !== schema.nodes.equation) return undefined;
+	view.dispatch(tr.setSelection(NodeSelection.create(tr.doc, pos)).scrollIntoView());
+	return pos;
+}
+
+/** Sets the markup of the equation at `pos`, keeping it selected; false when none is there. */
+export function setEquationXml(view: EditorView, pos: number, omml: string): boolean {
+	const node = view.state.doc.nodeAt(pos);
+	if (!view.editable || node?.type !== schema.nodes.equation) return false;
+	if (node.attrs.omml === omml) return true;
+	const tr = view.state.tr.setNodeMarkup(pos, undefined, { ...node.attrs, omml });
+	view.dispatch(tr.setSelection(NodeSelection.create(tr.doc, pos)));
+	return true;
+}
+
+/** Every equation in the document, as `[position, markup, display]`. */
+export function equationsIn(state: EditorState): Array<[number, string, boolean]> {
+	const found: Array<[number, string, boolean]> = [];
+	state.doc.descendants((node, pos) => {
+		if (node.type === schema.nodes.equation)
+			found.push([pos, String(node.attrs.omml), Boolean(node.attrs.display)]);
+	});
+	return found;
+}

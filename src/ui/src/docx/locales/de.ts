@@ -1,3 +1,4 @@
+import { deEquations } from './equations';
 import { deArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { deDesign } from './design';
@@ -29,6 +30,7 @@ import { deRibbon } from './de-ribbon';
 import { deRibbonNames } from './ribbon-names';
 
 export const de: BaseLocaleStrings = {
+	...deEquations,
 	...deArrange,
 	...viewsStrings['de'],
 	...tableTabBase['de'],

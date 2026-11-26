@@ -181,7 +181,9 @@ export type RibbonAction =
 	| { type: 'chart'; key: 'switchRowColumn' }
 	/** Format Selection: the docked chart Format pane, on `target` (`chartArea` by default). */
 	| { type: 'chart'; key: 'format'; target?: string }
-	| { type: 'insertEquation'; id: 'area' | 'quadratic' | 'pythagorean' | 'binomial' }
+	| { type: 'insertEquation'; id: import('ooxml-core/docx/ui').GalleryEquation['id'] }
+	/** The Equation tab and Insert > Equation > Insert New Equation (Alt+=). */
+	| { type: 'equation'; key: import('./equation-tab').EquationCommand; value?: string }
 	| {
 			type: 'insertContentControl';
 			value: 'richText' | 'text' | 'checkbox' | 'dropDownList' | 'comboBox' | 'date';

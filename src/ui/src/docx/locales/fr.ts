@@ -1,3 +1,4 @@
+import { frEquations } from './equations';
 import { frArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { frDesign } from './design';
@@ -29,6 +30,7 @@ import { frRibbon } from './fr-ribbon';
 import { frRibbonNames } from './ribbon-names';
 
 export const fr: BaseLocaleStrings = {
+	...frEquations,
 	...frArrange,
 	...viewsStrings['fr'],
 	...tableTabBase['fr'],

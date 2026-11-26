@@ -245,13 +245,16 @@ export function buildInsertGroups(): HTMLElement[] {
 				'Equation',
 				'equation',
 				[
+					['new', 'Insert New Equation'],
 					['edit', 'Insert or Edit Equation…'],
 					...EQUATION_GALLERY.map((entry): [string, string] => [entry.id, entry.name]),
 				],
 				(value) =>
-					value === 'edit'
-						? { type: 'formatDialog', kind: 'equation' }
-						: { type: 'insertEquation', id: value as 'area' },
+					value === 'new'
+						? { type: 'equation', key: 'new' }
+						: value === 'edit'
+							? { type: 'formatDialog', kind: 'equation' }
+							: { type: 'insertEquation', id: value as 'area' },
 				{ momentary: true },
 			),
 			menuSelect(

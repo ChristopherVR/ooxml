@@ -36,6 +36,16 @@ describe('read-only Word equations', () => {
 		},
 	);
 
+	it('shows empty arguments and a new, empty equation as placeholders', async () => {
+		const empty = equationDom(`<m:oMathPara xmlns:m="${M}"><m:oMath/></m:oMathPara>`, true);
+		await vi.waitFor(() => expect(empty.textContent).toBe('⬚'));
+		const fraction = equationDom(
+			`<m:oMath xmlns:m="${M}"><m:f><m:num/><m:den><m:r><m:t>2</m:t></m:r></m:den></m:f></m:oMath>`,
+			false,
+		);
+		await vi.waitFor(() => expect(fraction.querySelector('mfrac')?.textContent).toBe('⬚2'));
+	});
+
 	it('keeps equation characters as text rather than HTML', async () => {
 		const dom = equationDom(
 			`<m:oMath xmlns:m="${M}"><m:r><m:t>&lt;img src=x onerror=alert(1)&gt;</m:t></m:r></m:oMath>`,

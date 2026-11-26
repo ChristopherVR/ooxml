@@ -37,6 +37,7 @@ import {
 } from './picture-format-commands';
 import { pictureClipboardPlugin } from './picture-drop';
 import { SmartArtController } from './smartart-controller';
+import { EquationController } from './equation-controller';
 import {
 	setSelectedChartLegend,
 	switchSelectedChartRowColumn,
@@ -87,6 +88,8 @@ export class InsertController {
 	readonly shapeTool = new ShapeTool();
 	/** Insert > SmartArt, SmartArt Design and the SmartArt text pane. */
 	readonly smartArt: SmartArtController;
+	/** Insert New Equation (Alt+=), the Equation tab and the in-place equation editor. */
+	readonly equations: EquationController;
 	private locale: EditorLocale = 'en';
 	private showHidden = false;
 	private showMarks = false;
@@ -111,6 +114,11 @@ export class InsertController {
 		this.bulletInput.hidden = true;
 		this.bulletInput.className = 'dve-picture-bullet-input';
 		this.bulletInput.addEventListener('change', () => void this.applySelectedPictureBullet());
+		this.equations = new EquationController({
+			view: () => host.view(),
+			toolbar: () => host.toolbar(),
+			reportError: (error) => host.reportError(error),
+		});
 		this.smartArt = new SmartArtController({
 			view: () => host.view(),
 			contentWidth: () => host.contentWidth(),
@@ -128,6 +136,7 @@ export class InsertController {
 		const view = this.host.view();
 		const editable = Boolean(view?.editable);
 		if (this.smartArt.handle(action)) return true;
+		if (this.equations.handle(action)) return true;
 		if (action.type === 'insertPicture') {
 			if (editable) this.pictureInput.click();
 		} else if (action.type === 'insertScreenshot') {
@@ -255,6 +264,7 @@ export class InsertController {
 	plugins(): Plugin[] {
 		return [
 			shapeDrawPlugin(this.shapeTool),
+			...this.equations.plugins(),
 			pictureClipboardPlugin(
 				(view) => view === this.host.view(),
 				(file) => this.insertPictureFile(file),
@@ -291,6 +301,7 @@ export class InsertController {
 		this.shapeTool.disarm();
 		this.pendingMedia.clear();
 		this.smartArt.reset();
+		this.equations.reset();
 		if (this.linkDialog.isOpen) this.linkDialog.close();
 		if (this.pictureDialog.isOpen) this.pictureDialog.close();
 	}
@@ -300,6 +311,7 @@ export class InsertController {
 		this.linkDialog.setLocale(locale);
 		this.pictureDialog.setLocale(locale);
 		this.smartArt.setLocale(locale);
+		this.equations.setLocale(locale);
 		this.pictureInput.setAttribute('aria-label', translate(locale, 'Insert picture'));
 		this.bulletInput.setAttribute('aria-label', translate(locale, 'Picture bullet...'));
 	}

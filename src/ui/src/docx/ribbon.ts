@@ -25,6 +25,7 @@ import { buildPictureFormatPanel } from './picture-format-ribbon';
 import { buildSmartArtDesignPanel } from './smartart-design-ribbon';
 import { syncSmartArtFormatGalleries } from './smartart-format-galleries';
 import { buildChartDesignPanel } from './chart-design-ribbon';
+import { buildEquationPanel } from './equation-tab';
 import { panelOf, panelsOf, setTabHidden } from './ribbon-tab-api';
 import { preloadDesignGallery } from './design-ribbon-controls';
 import { TABLE_TABS } from './table-ribbon-keys';
@@ -60,6 +61,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'Picture Format',
 		'SmartArt Design',
 		'Chart Design',
+		'Equation',
 		'Outlining',
 	]) {
 		const key =
@@ -81,6 +83,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 				'Chart Design',
 				'Outlining',
 				'SmartArt Design',
+				'Equation',
 			].includes(name)
 		)
 			panel.dataset.contextual = '';
@@ -97,6 +100,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 	buildPictureFormatPanel(panels.get('Picture Format')!);
 	buildSmartArtDesignPanel(panels.get('SmartArt Design')!);
 	buildChartDesignPanel(panels.get('Chart Design')!);
+	buildEquationPanel(panels.get('Equation')!);
 	for (const panel of panels.values()) root.append(panel);
 	// Table tools are contextual: the tab appears only while the selection is in a table.
 	for (const key of [
@@ -107,6 +111,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 		'picture-format',
 		'chart-design',
 		'smartart-design',
+		'equation',
 	])
 		setTabHidden(root, key, 'contextual', true);
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font family"]')!, 'Calibri');

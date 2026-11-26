@@ -1,3 +1,4 @@
+import { esEquations } from './equations';
 import { esArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { esDesign } from './design';
@@ -29,6 +30,7 @@ import { esRibbon } from './es-ribbon';
 import { esRibbonNames } from './ribbon-names';
 
 export const es: BaseLocaleStrings = {
+	...esEquations,
 	...esArrange,
 	...viewsStrings['es'],
 	...tableTabBase['es'],

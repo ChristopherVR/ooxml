@@ -1,13 +1,29 @@
-import { convertOmmlToLatex, convertOmmlToMathMl, parseOmml } from 'ooxml-core/math';
+import {
+	convertOmmlToLatex,
+	convertOmmlToMathMl,
+	EQUATION_PLACEHOLDER,
+	fillPlaceholders,
+	parseOmml,
+} from 'ooxml-core/math';
 
 export interface EquationPreview {
 	latex: string;
 	markup: string;
 }
 
-export function equationPreview(omml: string): EquationPreview | undefined {
+const PLACEHOLDER_ONLY = { 'm:oMath': { 'm:r': { 'm:t': EQUATION_PLACEHOLDER } } };
+const EMPTY =
+	/^(?:<m:oMathPara\b[^>]*>)?<m:oMath\b[^>]*(?:\/>|>\s*<\/m:oMath>)(?:<\/m:oMathPara>)?$/;
+
+/**
+ * MathML (and LaTeX) for an equation's markup. With `placeholders`, empty arguments and an empty
+ * equation show the dotted box an editor shows while they wait for input.
+ */
+export function equationPreview(omml: string, placeholders = false): EquationPreview | undefined {
 	try {
-		const tree = parseOmml(omml);
+		let tree = parseOmml(omml);
+		// A new equation holds nothing yet: it shows one placeholder until something is typed.
+		if (placeholders) tree = EMPTY.test(omml) ? PLACEHOLDER_ONLY : fillPlaceholders(tree);
 		const latex = convertOmmlToLatex(tree);
 		const markup = convertOmmlToMathMl(tree);
 		return { latex, markup };

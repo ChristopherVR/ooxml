@@ -1,3 +1,4 @@
+import { zhEquations } from './equations';
 import { zhArrange } from './arrange';
 import { viewsStrings } from './document-views';
 import { zhDesign } from './design';
@@ -29,6 +30,7 @@ import { zhCNRibbon } from './zh-CN-ribbon';
 import { zhCNRibbonNames } from './ribbon-names';
 
 export const zhCN: BaseLocaleStrings = {
+	...zhEquations,
 	...zhArrange,
 	...viewsStrings['zh-CN'],
 	...tableTabBase['zh-CN'],

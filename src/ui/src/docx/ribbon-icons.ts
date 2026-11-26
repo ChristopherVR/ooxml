@@ -1,6 +1,8 @@
 import { getIcon } from '../icons';
 
 /** Line icons for ribbon buttons on a 24x24 grid, drawn with `currentColor` so themes apply. */
+import { EQUATION_ICON_PATHS } from './equation-ribbon-icons';
+
 const paths = {
 	envelope: 'M3 5h18v14H3z M3 5l9 7 9-7',
 	smartArt: 'M9 3h6v4H9z M3 15h6v4H3z M15 15h6v4h-6z M12 7v4 M6 15v-4h12v4',
@@ -159,6 +161,7 @@ const paths = {
 	formatSelection: 'M4 4h11v11H4z M7 8h5 M7 11h3 M15 13l5 5-2 2-5-5z',
 	legend: 'M4 6h3v3H4z M10 7.5h10 M4 11h3v3H4z M10 12.5h10 M4 16h3v3H4z M10 17.5h10',
 	caret: 'M7 10l5 5 5-5',
+	...EQUATION_ICON_PATHS,
 } as const;
 
 export type RibbonIcon = keyof typeof paths;

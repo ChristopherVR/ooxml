@@ -10,6 +10,11 @@
 	margin: 0.5em 0;
 	text-align: center;
 }
+/* The equation the equation editor is open on. */
+.dve-paper .dve-equation.ProseMirror-selectednode {
+	outline: 1px dotted var(--blue);
+	background: var(--accent-soft);
+}
 .dve-equation-unavailable {
 	color: var(--muted);
 	font-size: 0.85em;
