@@ -4,6 +4,7 @@ import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { addInSettings } from '../ribbon/add-in-settings';
+import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { editorAddIns } from '../ribbon/add-in-installed-tabs';
 import { installAddIn, localAddIns } from '../ribbon/add-in-local-dialog';
 import { renderAddInConsent } from './add-ins-consent';
@@ -101,7 +102,26 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		if (file) void this.read(() => file);
 	};
 
-	private async read(source: (signal: AbortSignal) => File | Promise<File>): Promise<void> {
+	private resolve = (event: SubmitEvent): void => {
+		event.preventDefault();
+		const session = this.#session;
+		if (!session?.resolver || this.#pending) return;
+		const input = this.renderRoot.querySelector<HTMLInputElement>('#marketplace-link');
+		const assetId = marketplaceAssetId(input?.value ?? '');
+		if (!assetId) {
+			this.#message = session.t('Enter a Microsoft Marketplace link or asset ID.');
+			this.requestUpdate();
+			input?.focus();
+			return;
+		}
+		const resolver = session.resolver;
+		void this.read((signal) => resolver(assetId, signal), '#marketplace-link');
+	};
+
+	private async read(
+		source: (signal: AbortSignal) => File | Promise<File | Uint8Array | ArrayBuffer>,
+		returnFocus = '#upload',
+	): Promise<void> {
 		const session = this.#session;
 		if (!session || session.product === 'visio' || this.#pending) return;
 		const pending = (this.#pending = new AbortController());
@@ -113,11 +133,13 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			if (pending.signal.aborted || !this.shell?.open) return;
 			const file = await source(pending.signal);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			const addIn = await manifestReader.readAddInFile(
-				file,
-				session.product,
-				session.manifestLocale,
-			);
+			const addIn =
+				file instanceof File
+					? await manifestReader.readAddInFile(file, session.product, session.manifestLocale)
+					: await manifestReader.readLocalAddIn(file, {
+							host: session.product,
+							locale: session.manifestLocale,
+						});
 			if (pending.signal.aborted || !this.shell?.open) return;
 			this.#preview = { addIn, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';
@@ -129,10 +151,21 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			this.#pending = undefined;
 			if (this.shell?.open) {
 				this.requestUpdate();
-				const focus = this.#preview ? '#consent-title' : '#upload';
+				const focus = this.#preview ? '#consent-title' : returnFocus;
 				this.renderRoot.querySelector<HTMLElement>(focus)?.focus();
 			}
 		}
+	}
+
+	private renderMarketplace(session: AddInSession) {
+		if (this.#pivot !== 'My Add-ins' || !session.resolver || session.product === 'visio')
+			return nothing;
+		const label = session.t('Add from Marketplace link');
+		return html`<form class="tools" @submit=${this.resolve}>
+			<label for="marketplace-link">${label}</label>
+			<input id="marketplace-link" type="text" maxlength="2048" ?disabled=${!!this.#pending} />
+			<button type="submit" ?disabled=${!!this.#pending}>${session.t('Review add-in')}</button>
+		</form>`;
 	}
 
 	private confirm(): void {
@@ -247,6 +280,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 									/>
 								</div>
 								${unsupported ? html`<p class="empty" id=${LOCAL_INSTALL_REASON_ID}>${reason}</p>` : nothing}
+								${this.renderMarketplace(session)}
 								${renderAddInList({
 									session,
 									pivot: this.#pivot,

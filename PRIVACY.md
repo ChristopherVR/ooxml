@@ -122,6 +122,13 @@ the unused media parts when saving an existing file.
 
 ### Forms and add-in links
 
+With a host-registered Marketplace resolver, selecting **Review add-in** sends only the
+normalized public WA asset ID to that callback. The reference resolver requests
+`/office-add-ins/<asset-id>` on the host's HTTPS backend, without credentials, redirects,
+referrer, or document data. The endpoint receives normal request metadata. The library
+makes no request itself. Resolution is off by default and hosts can pass `null` to
+`setOfficeAddInMarketplaceResolver` to disable it.
+
 Get Add-ins and My Add-ins open Office Add-ins in Word, Excel, PowerPoint and Visio.
 The Store pivot is off by default. A host can use `setOfficeAddInStorefront` to enable
 the Microsoft Marketplace handoff or specify its own HTTPS link. Clicking the link opens

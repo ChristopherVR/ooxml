@@ -20,13 +20,21 @@ export type OfficeAddInStorefront =
 	| { kind: 'microsoft'; url?: string; label?: string }
 	| { kind: 'catalog'; entries: readonly OfficeAddInOffer[] };
 
+/** The callback receives only a normalized Marketplace asset ID. */
+export type OfficeAddInMarketplaceResolver = (
+	assetId: string,
+	signal: AbortSignal,
+) => Promise<Uint8Array | ArrayBuffer>;
+
 const CATALOG = Symbol.for('office-ui.add-in-catalog');
 const STOREFRONT = Symbol.for('office-ui.add-in-storefront');
+const RESOLVER = Symbol.for('office-ui.add-in-marketplace-resolver');
 const ENTRY_LIMIT = 128;
 
 type HostSettings = AddInDialogHost & {
 	[CATALOG]?: readonly OfficeAddInCatalogEntry[];
 	[STOREFRONT]?: OfficeAddInStorefront;
+	[RESOLVER]?: OfficeAddInMarketplaceResolver | null;
 };
 
 /** Set or clear the trusted catalog for a single editor or host container. */
@@ -51,14 +59,24 @@ export function setOfficeAddInStorefront(
 			: storefront;
 }
 
+/** Register a resolver, or pass null to turn resolution off inside this scope. */
+export function setOfficeAddInMarketplaceResolver(
+	host: AddInDialogHost,
+	resolver: OfficeAddInMarketplaceResolver | null,
+): void {
+	const target: HostSettings = host;
+	target[RESOLVER] = resolver;
+}
+
 export function addInSettings(scopes: readonly AddInDialogHost[]) {
 	let catalog: readonly OfficeAddInCatalogEntry[] | undefined;
 	let storefront: OfficeAddInStorefront | undefined;
+	let resolver: OfficeAddInMarketplaceResolver | null | undefined;
 	for (const current of scopes) {
 		const settings: HostSettings = current;
 		catalog ??= settings[CATALOG];
 		storefront ??= settings[STOREFRONT];
-		if (catalog && storefront) break;
+		if (resolver === undefined) resolver = settings[RESOLVER];
 	}
-	return { catalog: catalog ?? [], storefront: storefront ?? 'off' };
+	return { catalog: catalog ?? [], storefront: storefront ?? 'off', resolver };
 }

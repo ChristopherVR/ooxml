@@ -13,8 +13,10 @@ export * from './ribbon/add-in-tabs';
 export { defineOfficeAddInsDialog } from './ribbon/add-in-dialog';
 export {
 	setOfficeAddInCatalog,
+	setOfficeAddInMarketplaceResolver,
 	setOfficeAddInStorefront,
 	type OfficeAddInCatalogEntry,
+	type OfficeAddInMarketplaceResolver,
 	type OfficeAddInOffer,
 	type OfficeAddInStorefront,
 } from './ribbon/add-in-settings';

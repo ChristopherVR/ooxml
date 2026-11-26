@@ -6,6 +6,8 @@ import {
 	type OfficeAddInHost,
 } from 'ooxml-core/automation/add-ins';
 
+export { readLocalAddIn } from 'ooxml-core/automation/add-ins';
+
 export async function readAddInFile(file: File, host: OfficeAddInHost, locale: string) {
 	const limit = /\.zip$/i.test(file.name) ? PACKAGE_BYTES : MANIFEST_BYTES;
 	if (file.size > limit) throw new AddInManifestError('limit');

@@ -291,6 +291,44 @@ installation remains unavailable.
 
 ### Configurable handoff and bring-your-own storefront
 
+A host can register `setOfficeAddInMarketplaceResolver(root, resolver)` independently of
+Store. The My Add-ins field accepts an Office listing URL or a WA asset ID. The callback
+receives only the normalized asset ID and an abort signal. Pass `null` to disable it.
+For example, a host that serves publisher-authorized packages from its own HTTPS backend can
+register this resolver:
+
+```js
+setOfficeAddInMarketplaceResolver(root, async (assetId, signal) => {
+	const response = await fetch(`/office-add-ins/${assetId}`, {
+		signal,
+		credentials: 'omit',
+		redirect: 'error',
+		referrerPolicy: 'no-referrer',
+	});
+	if (!response.ok) throw new Error('Add-in package unavailable');
+	const reader = response.body?.getReader();
+	if (!reader) throw new Error('Missing package body');
+	const result = new Uint8Array(4 * 1024 * 1024);
+	let length = 0;
+	try {
+		for (;;) {
+			const { done, value } = await reader.read();
+			if (done) return result.slice(0, length);
+			if (length + value.byteLength > result.byteLength) throw new Error('Package too large');
+			result.set(value, length);
+			length += value.byteLength;
+		}
+	} finally {
+		await reader.cancel();
+	}
+});
+```
+
+On the backend, match `/^WA\d{1,16}$/`, look up that exact ID in a fixed registry of
+publisher-authorized files, and serve only the registered file after applying the host's
+access policy and size limit. Return 404 for unregistered IDs. The asset ID is a lookup key.
+The backend needs no URL fetching or Microsoft credentials to implement this reference flow.
+
 One `storefront` option on the add-in host decides what Get Add-ins shows. Future options
 include per-listing Office installation links and remote storefront providers.
 
