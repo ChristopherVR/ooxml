@@ -21,6 +21,16 @@ function cellKey(cell: TableCell): string {
 	return cell.paragraphs[0]?.id ?? '';
 }
 
+function readWidthTwips(value: unknown): TableCell['widthTwips'] {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0
+		? twips(value)
+		: undefined;
+}
+
+function readWidthPercent(value: unknown): number | undefined {
+	return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : undefined;
+}
+
 export function tableNode(
 	block: Table,
 	paragraphNode: (paragraph: Paragraph) => ProseMirrorNode,
@@ -104,10 +114,13 @@ export function tablePropertiesFromNode(node: ProseMirrorNode, prior?: Table): P
 	const { attrs } = node;
 	const fallback = attrs.tablePropertiesKnown ? undefined : prior;
 	const look = attrs.tableLook ?? fallback?.look;
-	const layout = attrs.tableLayout ?? fallback?.layout;
+	const layout =
+		attrs.tableLayout === 'fixed' || attrs.tableLayout === 'autofit'
+			? attrs.tableLayout
+			: fallback?.layout;
 	const grid = gridOf(node)?.map(twips) ?? fallback?.grid;
-	const widthTwips = attrs.widthTwips ?? fallback?.widthTwips;
-	const widthPercent = attrs.widthPercent ?? fallback?.widthPercent;
+	const widthTwips = readWidthTwips(attrs.widthTwips) ?? fallback?.widthTwips;
+	const widthPercent = readWidthPercent(attrs.widthPercent) ?? fallback?.widthPercent;
 	const borders = parseBordersJson(attrs.borders) ?? fallback?.borders;
 	return {
 		...(look && { look }),
@@ -165,6 +178,7 @@ export function convertSimpleTable(
 	// node attributes so editing text never flattens inherited table-style formatting.
 	const priorCells = new Map<string, TableCell>();
 	for (const row of prior?.rows ?? []) for (const cell of row) priorCells.set(cellKey(cell), cell);
+	const legacy = !node.attrs.tablePropertiesKnown;
 	const rows: Table['rows'] = [];
 	node.forEach((row) => {
 		const cells: Table['rows'][number] = [];
@@ -186,20 +200,13 @@ export function convertSimpleTable(
 				...properties
 			} = source ?? { paragraphs: [] };
 			const direct = typeof cell.attrs.directBorders === 'string' ? cell.attrs.directBorders : null;
+			const widthTwips = readWidthTwips(cell.attrs.widthTwips);
+			const widthPercent =
+				readWidthPercent(cell.attrs.widthPercent) ?? (legacy ? source?.widthPercent : undefined);
 			cells.push({
 				...structuredClone(properties),
-				...(!source &&
-					typeof cell.attrs.widthTwips === 'number' &&
-					Number.isSafeInteger(cell.attrs.widthTwips) &&
-					cell.attrs.widthTwips >= 0 && {
-						widthTwips: twips(cell.attrs.widthTwips),
-					}),
-				...(typeof cell.attrs.widthTwips === 'number' && {
-					widthTwips: twips(cell.attrs.widthTwips),
-				}),
-				...(typeof cell.attrs.widthPercent === 'number' && {
-					widthPercent: cell.attrs.widthPercent,
-				}),
+				...(widthTwips !== undefined && { widthTwips }),
+				...(widthPercent !== undefined && { widthPercent }),
 				...(direct ? { borders: JSON.parse(direct) as NonNullable<TableCell['borders']> } : {}),
 				...(/^(lrTb|tbRl|btLr|tb|rl|lr|tbV|rlV|lrV|lrTbV|tbLrV|tbRlV)$/.test(
 					String(cell.attrs.textDirection),

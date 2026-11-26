@@ -8,20 +8,23 @@ import { insertHardBreak } from './hard-break-command';
 import { schema } from './schema';
 import { inlineNodeRun } from 'ooxml-core/docx/ui';
 
-it('ignores invalid layout attributes when converting an inserted table', () => {
+it.each(['null', '[-10]'])('ignores invalid layout attributes with grid %s', (grid) => {
 	const model = createDocument();
 	const doc = modelToDoc(model);
 	const table = schema.node(
 		'table',
 		{
 			id: 'inserted',
-			grid: 'null',
+			grid,
 			widthTwips: Infinity,
-			layout: 'invalid',
+			widthPercent: -1,
+			tableLayout: 'invalid',
 		},
 		[
 			schema.node('tableRow', null, [
-				schema.node('tableCell', { widthTwips: -10 }, [schema.node('paragraph', { id: 'cell' })]),
+				schema.node('tableCell', { widthTwips: -10, widthPercent: Infinity }, [
+					schema.node('paragraph', { id: 'cell' }),
+				]),
 			]),
 		],
 	);
@@ -30,8 +33,10 @@ it('ignores invalid layout attributes when converting an inserted table', () => 
 	if (inserted?.type !== 'table') throw new Error('Expected an inserted table');
 	expect(inserted.grid).toBeUndefined();
 	expect(inserted.widthTwips).toBeUndefined();
+	expect(inserted.widthPercent).toBeUndefined();
 	expect(inserted.layout).toBeUndefined();
 	expect(inserted.rows[0]?.[0]?.widthTwips).toBeUndefined();
+	expect(inserted.rows[0]?.[0]?.widthPercent).toBeUndefined();
 });
 
 describe('paragraph line breaks and spacing adapter', () => {

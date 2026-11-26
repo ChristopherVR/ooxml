@@ -28,16 +28,27 @@ it('keeps authored table properties when an older collaboration client omits the
 			id: 'legacy',
 			...properties,
 			grid: [...properties.grid],
-			rows: [[{ paragraphs: [{ type: 'paragraph', id: 'cell', runs: [{ text: 'Cell' }] }] }]],
+			rows: [
+				[
+					{
+						widthPercent: 0.5,
+						paragraphs: [{ type: 'paragraph', id: 'cell', runs: [{ text: 'Cell' }] }],
+					},
+				],
+			],
 		},
 	];
 	const doc = modelToDoc(model);
 	const source = doc.firstChild!;
-	const legacy = doc.type.create(doc.attrs, [source.type.create({ id: 'legacy' }, source.content)]);
+	const absentCellWidth = EditorState.create({ doc }).tr.setNodeAttribute(2, 'widthPercent', null);
+	const legacy = doc.type.create(doc.attrs, [
+		source.type.create({ id: 'legacy' }, absentCellWidth.doc.firstChild!.content),
+	]);
 	const loaded = await loadDocx(await saveDocx(docToModel(legacy, model)));
 	expect(loaded.model.blocks[0]).toMatchObject({
 		...properties,
 		borders: { top: expect.objectContaining(properties.borders.top) },
+		rows: [[expect.objectContaining({ widthPercent: 0.5 })]],
 	});
 	const current = EditorState.create({ doc })
 		.tr.setNodeAttribute(0, 'widthTwips', null)

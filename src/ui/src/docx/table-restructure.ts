@@ -33,7 +33,9 @@ export const keysOf = (cell: ProseMirrorNode): string[] => {
 export const gridOf = (table: ProseMirrorNode): number[] | undefined => {
 	try {
 		const parsed: unknown = table.attrs.grid ? JSON.parse(String(table.attrs.grid)) : undefined;
-		return Array.isArray(parsed) ? parsed.map(Number) : undefined;
+		if (!Array.isArray(parsed)) return;
+		const widths = parsed.map(Number);
+		return widths.every((width) => Number.isSafeInteger(width) && width >= 0) ? widths : undefined;
 	} catch {
 		return undefined;
 	}
