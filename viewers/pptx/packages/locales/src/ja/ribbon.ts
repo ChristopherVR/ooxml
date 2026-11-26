@@ -78,6 +78,8 @@ export const translations = {
 	'pptx.draw.missingCommit': 'このビューアーでは描画の変更を保存できません。',
 	'pptx.draw.noSlide': '編集可能なスライドを開いてください。',
 	'pptx.draw.noSelection': 'なげなわでインクを選択してください。',
+	'pptx.draw.replayUnavailable':
+		'このスライドのインクは再生の上限を超えているか、対応していないパスを使っています。',
 	'pptx.draw.noInk': 'このスライドにはインクがありません。',
 	'pptx.draw.mathUnavailable': '手書き認識が設定されていません。',
 	'pptx.draw.unrecognizedShape': '選択したインクは対応する図形に一致しませんでした。',

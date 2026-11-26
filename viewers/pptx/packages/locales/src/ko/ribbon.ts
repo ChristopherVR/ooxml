@@ -78,6 +78,8 @@ export const translations = {
 	'pptx.draw.missingCommit': '이 뷰어에서는 그리기 변경 사항을 저장할 수 없습니다.',
 	'pptx.draw.noSlide': '편집 가능한 슬라이드를 여세요.',
 	'pptx.draw.noSelection': '올가미로 잉크를 선택하세요.',
+	'pptx.draw.replayUnavailable':
+		'이 슬라이드의 잉크가 재생 한도를 초과하거나 지원되지 않는 경로를 사용합니다.',
 	'pptx.draw.noInk': '이 슬라이드에 잉크가 없습니다.',
 	'pptx.draw.mathUnavailable': '필기 인식기가 구성되지 않았습니다.',
 	'pptx.draw.unrecognizedShape': '선택한 잉크가 지원되는 도형과 일치하지 않습니다.',

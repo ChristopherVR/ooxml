@@ -78,6 +78,7 @@ export const translations = {
 	'pptx.draw.missingCommit': '此查看器无法保存绘图更改。',
 	'pptx.draw.noSlide': '请打开可编辑的幻灯片。',
 	'pptx.draw.noSelection': '使用套索选择墨迹。',
+	'pptx.draw.replayUnavailable': '此幻灯片上的墨迹超出重播限制或使用了不受支持的路径。',
 	'pptx.draw.noInk': '此幻灯片上没有墨迹。',
 	'pptx.draw.mathUnavailable': '未配置手写识别器。',
 	'pptx.draw.unrecognizedShape': '选定墨迹与任何受支持的形状均不匹配。',

@@ -158,7 +158,7 @@ export function mountRibbonDrawAdvanced(
 			play.textContent = t(playing ? 'pptx.animations.pause' : 'pptx.animations.play');
 		});
 		if (!replay) {
-			announce('pptx.draw.noInk');
+			announce('pptx.draw.replayUnavailable');
 			return;
 		}
 		replay.toggle();
@@ -293,7 +293,7 @@ export function mountRibbonDrawAdvanced(
 		ruler.setAttribute('aria-pressed', String(Boolean(canvas?.rulerVisible)));
 		angle.hidden = !canvas?.rulerVisible || !canvas.stage;
 		angle.setAttribute('aria-label', t('pptx.draw.rulerAngle'));
-		angle.setAttribute('aria-valuetext', `${angle.value}°`);
+		angle.setAttribute('aria-valuetext', `${angle.value}Â°`);
 		seek.setAttribute('aria-label', t('pptx.draw.seek'));
 		play.hidden = close.hidden = seek.hidden = !replay;
 		launch.hidden = Boolean(replay);

@@ -79,6 +79,8 @@ export const translations = {
 		'Cette visionneuse ne peut pas enregistrer les modifications de dessin.',
 	'pptx.draw.noSlide': 'Ouvrez une diapositive modifiable.',
 	'pptx.draw.noSelection': 'Sélectionnez des traits au lasso.',
+	'pptx.draw.replayUnavailable':
+		'L’encre de cette diapositive dépasse les limites de lecture ou utilise des tracés non pris en charge.',
 	'pptx.draw.noInk': 'Cette diapositive ne contient pas d’encre.',
 	'pptx.draw.mathUnavailable': 'La reconnaissance de l’écriture n’est pas configurée.',
 	'pptx.draw.unrecognizedShape':

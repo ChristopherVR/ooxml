@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-import type { PptxSlide } from 'ooxml-core/pptx';
+import type { PptxSlide, InkPptxElement } from 'ooxml-core/pptx';
+import { collectSlideInk } from 'ooxml-core/pptx/editor/ink';
 import { expect, it, vi } from 'vitest';
 
 import { attachDrawCanvas, configurePptxDraw } from '../render/draw-canvas';
@@ -110,7 +111,7 @@ it('seeks backward across strokes and restores the canvas when replay closes', (
 		y: 0,
 		width: 100,
 		height: 20,
-		inkPaths: [],
+		inkPaths: ['M 0 0 L 100 0', 'M 0 0 L 100 0'],
 	};
 	const replay = createDrawReplay(
 		stage,
@@ -144,4 +145,38 @@ it('seeks backward across strokes and restores the canvas when replay closes', (
 	}
 	expect(stage.querySelector('svg')).toBeNull();
 	expect(original.style.visibility).toBe('');
+});
+
+it('leaves an owner visible when the collection budget cuts through its strokes', () => {
+	const stage = document.createElement('div');
+	const firstNode = document.createElement('div');
+	firstNode.dataset.elementId = 'complete';
+	const secondNode = document.createElement('div');
+	secondNode.dataset.elementId = 'partial';
+	stage.append(firstNode, secondNode);
+	const first: InkPptxElement = {
+		id: 'complete',
+		type: 'ink',
+		x: 0,
+		y: 0,
+		width: 20,
+		height: 20,
+		inkPaths: ['M 0 0 L 20 20'],
+	};
+	const second: InkPptxElement = {
+		...first,
+		id: 'partial',
+		inkPaths: Array.from({ length: 1000 }, () => 'M 0 0 L 20 20'),
+	};
+	const collected = collectSlideInk([first, second]);
+	expect(collected).toHaveLength(1000);
+	const replay = createDrawReplay(stage, collected, () => {});
+	try {
+		expect(firstNode.style.visibility).toBe('hidden');
+		expect(secondNode.style.visibility).toBe('');
+		expect(stage.querySelectorAll('[data-pptx-draw-replay] path')).toHaveLength(1);
+	} finally {
+		replay?.dispose();
+	}
+	expect(firstNode.style.visibility).toBe('');
 });

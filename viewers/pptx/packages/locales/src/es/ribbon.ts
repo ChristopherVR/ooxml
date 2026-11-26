@@ -78,6 +78,8 @@ export const translations = {
 	'pptx.draw.missingCommit': 'Este visor no puede guardar los cambios de dibujo.',
 	'pptx.draw.noSlide': 'Abre una diapositiva editable.',
 	'pptx.draw.noSelection': 'Selecciona trazos con el lazo.',
+	'pptx.draw.replayUnavailable':
+		'La tinta de esta diapositiva supera los límites de reproducción o usa trazados incompatibles.',
 	'pptx.draw.noInk': 'Esta diapositiva no contiene trazos.',
 	'pptx.draw.mathUnavailable': 'No se ha configurado el reconocimiento de escritura.',
 	'pptx.draw.unrecognizedShape': 'Los trazos seleccionados no coinciden con una forma compatible.',

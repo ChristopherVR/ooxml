@@ -78,6 +78,8 @@ export const translations = {
 	'pptx.draw.missingCommit': 'Dieser Viewer kann Änderungen der Zeichenwerkzeuge nicht speichern.',
 	'pptx.draw.noSlide': 'Öffnen Sie eine bearbeitbare Folie.',
 	'pptx.draw.noSelection': 'Wählen Sie Freihandstriche mit dem Lasso aus.',
+	'pptx.draw.replayUnavailable':
+		'Die Freihandstriche auf dieser Folie überschreiten die Wiedergabegrenzen oder verwenden nicht unterstützte Pfade.',
 	'pptx.draw.noInk': 'Diese Folie enthält keine Freihandstriche.',
 	'pptx.draw.mathUnavailable': 'Es wurde keine Handschrifterkennung eingerichtet.',
 	'pptx.draw.unrecognizedShape': 'Die Auswahl entspricht keiner unterstützten Form.',

@@ -2254,6 +2254,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.draw.missingCommit': 'This viewer cannot save Draw changes.',
 	'pptx.draw.noSlide': 'Open an editable slide.',
 	'pptx.draw.noSelection': 'Select ink with the lasso.',
+	'pptx.draw.replayUnavailable':
+		'The ink on this slide exceeds replay limits or uses unsupported paths.',
 	'pptx.draw.noInk': 'There is no ink on this slide.',
 	'pptx.draw.mathUnavailable': 'No handwriting recognizer is configured.',
 	'pptx.draw.unrecognizedShape': 'The selected ink did not match a supported shape.',

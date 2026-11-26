@@ -3,12 +3,28 @@ import { inkReplayProgress, slideInkReplayTimeline } from 'ooxml-core/pptx/edito
 
 import { drawOverlay, inkOverlayPath } from './draw-surface';
 
+/** Replay complete owners only, so budget or path limits never hide remaining ink. */
+function completeReplayStrokes(collected: readonly SlideInkStroke[]): SlideInkStroke[] {
+	const counts = new Map<SlideInkStroke['owner'], number>();
+	for (const { owner } of collected) counts.set(owner, (counts.get(owner) ?? 0) + 1);
+	return collected.filter(({ owner }) => {
+		const count =
+			owner.type === 'ink'
+				? owner.inkPaths.length
+				: owner.type === 'contentPart'
+					? owner.inkStrokes?.length
+					: undefined;
+		return count === counts.get(owner);
+	});
+}
+
 export function createDrawReplay(
 	stage: HTMLElement,
-	strokes: readonly SlideInkStroke[],
+	collected: readonly SlideInkStroke[],
 	onUpdate: (time: number, duration: number, playing: boolean) => void,
 ) {
 	const win = stage.ownerDocument.defaultView;
+	const strokes = completeReplayStrokes(collected);
 	if (!win || !strokes.length) {
 		return undefined;
 	}
