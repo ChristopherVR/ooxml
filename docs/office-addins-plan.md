@@ -21,7 +21,8 @@ and a package that can run in this host are three distinct deliverables.
 - [`apps/office-suite/src/editors.js`](../apps/office-suite/src/editors.js) mounts the editors.
   [`session.js`](../apps/office-suite/src/session.js) owns document sessions, revisions, save, and
   preview state. [`ai-operations.js`](../apps/office-suite/src/ai-operations.js) lazy-loads core
-  automation for the assistant. Third-party task panes are open work.
+  automation for the assistant. Compatible third-party task panes require an approved
+  publisher origin and explicit host opt-in.
 - [`src/core/automation/index.ts`](../src/core/automation/index.ts) exposes byte-oriented Word
   and Excel operations and shared tool definitions. [`live.ts`](../src/core/automation/live.ts)
   serializes tools per registered editor and checks for changes before loading edited bytes.
@@ -45,7 +46,8 @@ and service contracts. [Forms connector](https://learn.microsoft.com/en-us/conne
   lists installed items, reviews their details and removes them. An invalid replacement leaves
   the installed version available. The suite saves packages in profile-scoped preferences.
   Library consumers can register their own store through `setOfficeAddInPreferences` or use
-  session memory. Restored bytes are validated again before an add-in can open.
+  session memory. Each editor revalidates its saved add-ins and restores their custom ribbon
+  tabs when it mounts or switches profiles.
 
 ## Parse two public manifest formats
 
@@ -135,8 +137,7 @@ require Microsoft's CDN library and host protocol have no supported launch path 
 For the compatible Common API client, a host can call
 `setOfficeAddInRuntime(root, { origins: ['https://approved-add-ins.example'], frameSrcEnforced: true })`.
 Enforce that execution origin in the embedding site's CSP `frame-src` before setting the
-assertion and provision
-publisher-controlled pages without redirects or credentials. The library checks the approved
+assertion. Provision publisher-controlled pages without redirects or credentials. The library checks the approved
 origin before opening. The opaque sandbox verifies a handshake from the exact frame window
 and accepts one private message port. A second frame load closes that port. The parent cannot
 authenticate the HTTP origin of an opaque document, so the execution service and CSP must
@@ -148,7 +149,8 @@ Bundle the client into a classic script on the execution origin. The client expo
 `Office.onReady`, `Office.context.host`, and the document's text
 `getSelectedDataAsync` and `setSelectedDataAsync` callbacks. Word uses the live text
 selection. Excel supports one selected cell. PowerPoint requires a host selection adapter
-for the document methods. Other coercions, requirement sets, batch APIs, custom functions,
+for the document methods. With an adapter, the client reports Selection 1.1 and TextCoercion
+1.1. Other coercions, requirement sets, batch APIs, custom functions,
 content add-ins, Microsoft identity and the CDN Office.js host protocol are unsupported.
 Client API errors identify unavailable operations and denied permissions. Use
 `setOfficeAddInRuntime(root, null)` to disable execution.
