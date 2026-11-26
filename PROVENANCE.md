@@ -2459,9 +2459,9 @@ adapter from its own comment records to `OfficeCommentThread`.
   pane's shadow root, where the Playwright selectors still find it). Choosing a thread
   moves the caret to its anchor, and the open pane highlights the thread at the caret.
   The `Resolved` badge label was added to every Word locale.
-- Excel: the Show Comments dialog (`xlsx/dialogs/comments-list.ts`) lists the sheet's
-  notes and threaded replies through the pane in `list-only` mode instead of a list box
-  of `A1  Author: text` rows.
+- Excel: Review > Show Comments opens the shared pane through
+  `src/ui/src/xlsx/comments-pane.ts`. It lists threaded comments and their replies on the
+  active sheet in `list-only` mode, and selecting a thread navigates to its cell.
 - PowerPoint: not ported. `pptx/render/comments-list.ts` holds only the pure comment-array
   transforms; each framework binding draws its own comments panel, so adopting the pane
   is a per-binding change in `viewers/pptx`.
