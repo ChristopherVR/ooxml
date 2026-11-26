@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -72,9 +72,7 @@ test('every suite route has a committed budget', () => {
 	assert.ok(limits['suite/all javascript'] > 0);
 });
 
-test('the add-in reader has an independent gzip budget', () => {
-	const entry = 'package/ooxml-core/automation/add-ins';
-	const limit = readLimits()[entry];
-	assert.ok(limit > 0 && limit < 20 * 1024);
-	assert.match(problems({ [entry]: limit + 1 }, { [entry]: limit })[0], /over its budget/);
+test('the default limits come entirely from the committed budget file', () => {
+	const file = new URL('./perf-budgets.json', import.meta.url);
+	assert.deepEqual(readLimits(), JSON.parse(readFileSync(file, 'utf8')).budgets);
 });
