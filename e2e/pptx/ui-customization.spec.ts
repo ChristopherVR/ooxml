@@ -128,7 +128,7 @@ test.describe('UI customization', () => {
 	});
 
 	test('SmartArt Arrange controls can be hidden independently of Home', async ({ page }) => {
-		await page.setViewportSize({ width: 2048, height: 1080 });
+		await page.setViewportSize({ width: 2600, height: 1080 });
 		await loadDeck(page, fixture('smartart-build-reveal.pptx'));
 		await selectElement(page, elementsOfType(page, 'diagram').first());
 		await page.locator('[data-ribbon-contextual-tab="smartArtFormat"]').click();
