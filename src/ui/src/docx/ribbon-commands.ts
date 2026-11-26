@@ -7,7 +7,11 @@ import { themeFontOf } from './run-styles';
 import { schema } from './schema';
 import { parseLineSpacingValue } from 'ooxml-core/docx';
 import { twipsAttr } from 'ooxml-core/docx';
-import { applyRunFormattingPatch, clearDirectRunFormatting } from 'ooxml-core/docx/ui';
+import {
+	applyRunFormattingPatch,
+	clearDirectRunFormatting,
+	DEFAULT_TABLE_LOOK,
+} from 'ooxml-core/docx/ui';
 
 export function applyFont(view: EditorView, key: 'family' | 'size' | 'color', value: string) {
 	const patch =
@@ -50,7 +54,13 @@ export function insertTable(
 	};
 	const paragraph = () => schema.nodes.paragraph.create({ id: nextId('cell') });
 	const table = schema.nodes.table.create(
-		{ id: nextId('table'), borders: JSON.stringify(DEFAULT_TABLE_BORDERS), starterGrid: true },
+		{
+			id: nextId('table'),
+			borders: JSON.stringify(DEFAULT_TABLE_BORDERS),
+			starterGrid: true,
+			tablePropertiesKnown: true,
+			tableLook: DEFAULT_TABLE_LOOK,
+		},
 		Array.from({ length: rowCount }, () =>
 			schema.nodes.tableRow.create(
 				null,

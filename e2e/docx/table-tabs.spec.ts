@@ -1,7 +1,39 @@
 import { expect, test } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import JSZip from 'jszip';
-import { dialogByHeading, insertTableOfSize, newDocument, reveal, saveButton } from './helpers';
+import {
+	dialogByHeading,
+	insertTableOfSize,
+	newDocument,
+	reopenDocument,
+	reveal,
+	saveButton,
+} from './helpers';
+
+test('a table without tblLook shows the options Word uses on open', async ({ page }) => {
+	await page.goto('/?framework=vanilla');
+	const zip = new JSZip();
+	zip.file(
+		'word/document.xml',
+		`<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>
+		<w:tbl><w:tblPr/><w:tblGrid><w:gridCol w:w="2000"/></w:tblGrid><w:tr><w:tc><w:p><w:r><w:t>Imported</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:p/>
+		</w:body></w:document>`,
+	);
+	await reopenDocument(page, 'no-table-look.docx', await zip.generateAsync({ type: 'nodebuffer' }));
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	await editor.getByRole('tab', { name: 'Table Design', exact: true }).click();
+	for (const name of ['Header Row', 'First Column', 'Banded Rows'])
+		await expect(editor.getByRole('button', { name, exact: true })).toHaveAttribute(
+			'aria-pressed',
+			'true',
+		);
+	for (const name of ['Total Row', 'Last Column', 'Banded Columns'])
+		await expect(editor.getByRole('button', { name, exact: true })).toHaveAttribute(
+			'aria-pressed',
+			'false',
+		);
+});
 
 test('typing after Insert Row Below stays in the inserted row', async ({ page }) => {
 	await page.goto('/?framework=vanilla');

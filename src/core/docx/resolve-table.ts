@@ -6,6 +6,7 @@ import type {
 	TableStyleConditionalFormatting,
 } from './table-model';
 import { chainResolver } from './style-inheritance';
+import { DEFAULT_TABLE_LOOK } from './table-defaults';
 
 /** Which conditional regions apply to a cell, in increasing precedence (last wins), per `tblLook`. */
 function applicableRegions(
@@ -40,7 +41,13 @@ export function resolveTableStyleFormatting(
 	colCount: number,
 ): TableStyleConditionalFormatting {
 	if (!tableStyleId || !catalog) return {};
-	const regions = applicableRegions(look, rowIndex, rowCount, colIndex, colCount);
+	const regions = applicableRegions(
+		look ?? DEFAULT_TABLE_LOOK,
+		rowIndex,
+		rowCount,
+		colIndex,
+		colCount,
+	);
 	let byRegions = resolvers.get(catalog.styles);
 	if (!byRegions) {
 		byRegions = new Map();

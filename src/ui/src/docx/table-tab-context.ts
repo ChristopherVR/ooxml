@@ -1,6 +1,7 @@
 import type { Node } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
 import { DEFAULT_TABLE_LOOK, forcesTrackChanges } from 'ooxml-core/docx/ui';
+import type { Table } from 'ooxml-core/docx';
 import type { EditorCore } from './editor-core';
 import { translate } from './localization';
 import type { TableTabAction } from './table-ribbon';
@@ -94,7 +95,15 @@ export function syncTableTab(core: EditorCore): void {
 			const option = TABLE_LOOK_OPTIONS.find(([flag]) => flag === control.dataset.lookFlag);
 			if (option) {
 				const [flag, , inverse] = option;
-				const look = context?.node.attrs.tableLook ?? DEFAULT_TABLE_LOOK;
+				const look =
+					context?.node.attrs.tableLook ??
+					(context && !context.node.attrs.tablePropertiesKnown
+						? core.model.blocks.find(
+								(block): block is Table =>
+									block.type === 'table' && block.id === context.node.attrs.id,
+							)?.look
+						: undefined) ??
+					DEFAULT_TABLE_LOOK;
 				control.setAttribute('aria-pressed', String(Boolean(look[flag]) !== inverse));
 			}
 		} else if (key === 'repeat') {

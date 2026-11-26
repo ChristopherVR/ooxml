@@ -58,6 +58,15 @@ it('does not use packed flags to repair an invalid but present named flag', () =
 	expect(parse('w:val="07E0" w:firstRow="invalid"').look).toBeUndefined();
 });
 
+it('applies Word’s heading and horizontal banding when tblLook is absent', () => {
+	expect(resolveTableStyleFormatting('Audit', catalog, undefined, 0, 3, 0, 2)).toEqual({
+		shadingFill: '#FF0000',
+	});
+	expect(resolveTableStyleFormatting('Audit', catalog, undefined, 2, 3, 0, 2)).toEqual({
+		shadingFill: '#0000FF',
+	});
+});
+
 it.each(['bad', 'xyz0', '0x20', '00200', '-020'])(
 	'does not accept malformed short hex %s',
 	(val) => {
