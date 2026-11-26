@@ -125,32 +125,41 @@ for (const size of [PPTX_OPEN_SMALL, PPTX_OPEN_LARGE]) {
 	});
 }
 
-test('shows the opening slide before the editable deck and fills thumbnails', async ({ page }) => {
-	// Observe the transient nodes in the page, even on a small deck that finishes
-	// before a Playwright poll could see both stages of the opening view.
-	await page.addInitScript(
-		({ preview, editable }) => {
-			const observer = new MutationObserver(() => {
-				const opening = document.querySelector(preview);
-				if (!opening?.getClientRects().length || document.querySelector(editable)) return;
-				const thumb = opening.querySelector('[data-pptx-preview-thumbnail="1"]');
-				if (
-					opening.textContent?.includes('Deck slide 1 shape 1') &&
-					thumb?.textContent?.includes('Deck slide 2 shape 1')
-				) {
-					document.documentElement.dataset.pptxObservedOpening = 'true';
-					observer.disconnect();
-				}
-			});
-			observer.observe(document, { childList: true, subtree: true });
-		},
-		{ preview: PREVIEW, editable: CANVAS_ELEMENT },
-	);
-	await page.goto('/');
-	await upload(page, PPTX_OPEN_SMALL);
-	await expect(
-		page.locator(CANVAS_ELEMENT).getByText('Deck slide 1 shape 1', { exact: true }).first(),
-	).toBeVisible();
-	await expect(page.locator('html')).toHaveAttribute('data-pptx-observed-opening', 'true');
-	await expect(page.locator(PREVIEW)).toBeHidden();
-});
+for (const initialSlide of [0, 3]) {
+	test(`shows opening slide ${initialSlide + 1} before the editable deck and fills thumbnails`, async ({
+		page,
+	}) => {
+		const title = `Deck slide ${initialSlide + 1} shape 1`;
+		// Observe the transient nodes in the page before the editable deck replaces them.
+		await page.addInitScript(
+			({ preview, editable, title, slideCount }) => {
+				const observer = new MutationObserver(() => {
+					const opening = document.querySelector(preview);
+					if (!opening?.getClientRects().length || document.querySelector(editable)) return;
+					const thumbnails = opening.querySelectorAll<HTMLElement>('[data-pptx-preview-thumbnail]');
+					if (
+						opening.firstElementChild?.textContent?.includes(title) &&
+						thumbnails.length === slideCount &&
+						Array.from(thumbnails).every(
+							(thumb, index) =>
+								thumb.dataset.pptxPreviewThumbnail === String(index) &&
+								thumb.textContent?.includes(`Deck slide ${index + 1} shape 1`),
+						)
+					) {
+						document.documentElement.dataset.pptxObservedOpening = 'true';
+						observer.disconnect();
+					}
+				});
+				observer.observe(document, { childList: true, subtree: true });
+			},
+			{ preview: PREVIEW, editable: CANVAS_ELEMENT, title, slideCount: PPTX_OPEN_SMALL },
+		);
+		await page.goto(`/?initialSlide=${initialSlide}`);
+		await upload(page, PPTX_OPEN_SMALL);
+		await expect(
+			page.locator(CANVAS_ELEMENT).getByText(title, { exact: true }).first(),
+		).toBeVisible();
+		await expect(page.locator('html')).toHaveAttribute('data-pptx-observed-opening', 'true');
+		await expect(page.locator(PREVIEW)).toBeHidden();
+	});
+}

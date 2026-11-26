@@ -19,6 +19,7 @@ interface PreviewOptions {
 
 /** Keep the opening view separate from the editable model until the entire load succeeds. */
 export function createProgressiveSlidePreview(options: PreviewOptions) {
+	const pendingThumbnails: SlideProgress[] = [];
 	let preview: Awaited<ReturnType<typeof makePreview>> | undefined;
 	let sliceStart = 0;
 
@@ -32,19 +33,31 @@ export function createProgressiveSlidePreview(options: PreviewOptions) {
 		async show(handler: PptxHandler, progress: SlideProgress): Promise<void> {
 			checkCurrent();
 			const { index, total } = progress;
-			const host = options.getRoot()?.querySelector<HTMLElement>('[data-pptx-load-preview-host]');
-			const view = host?.ownerDocument.defaultView;
-			if (!host || !view || total < 2) {
+			if (total < 2) {
 				return;
 			}
-			const target = resolveInitialSlideIndex(options.initialSlide, total);
-			if (!preview && index >= target) {
+			if (!preview && index < resolveInitialSlideIndex(options.initialSlide, total)) {
+				if (index < THUMBNAIL_COUNT) {
+					pendingThumbnails.push(progress);
+				}
+				return;
+			}
+			const host = options.getRoot()?.querySelector<HTMLElement>('[data-pptx-load-preview-host]');
+			const view = host?.ownerDocument.defaultView;
+			if (!host || !view) {
+				return;
+			}
+			if (!preview) {
 				preview = await makePreview(host, options.translate, progress);
 				checkCurrent();
 				await preview.addSlide(handler, progress, true, checkCurrent);
+				for (const thumbnail of pendingThumbnails) {
+					await preview.addSlide(handler, thumbnail, false, checkCurrent);
+				}
+				pendingThumbnails.length = 0;
 				await afterPaint(view);
 				sliceStart = view.performance.now();
-			} else if (preview) {
+			} else {
 				await preview.addSlide(handler, progress, false, checkCurrent);
 				if (index + 1 < total && view.performance.now() - sliceStart >= SLICE_MS) {
 					await idleTurn(view);
@@ -54,6 +67,7 @@ export function createProgressiveSlidePreview(options: PreviewOptions) {
 			checkCurrent();
 		},
 		dispose(): void {
+			pendingThumbnails.length = 0;
 			preview?.dispose();
 		},
 	};

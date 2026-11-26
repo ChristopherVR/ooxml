@@ -9,35 +9,45 @@ import { createProgressiveSlidePreview } from './progressive-slide-preview';
 
 const SAMPLE_DECK = resolve(__dirname, '../../../../../e2e/pptx/fixtures/sample-deck.pptx');
 
-it('keeps previews isolated from the editable deck and releases the preview nodes', async () => {
-	const root = document.createElement('div');
-	const host = document.createElement('div');
-	host.dataset.pptxLoadPreviewHost = '';
-	root.append(host);
-	document.body.append(root);
-	const preview = createProgressiveSlidePreview({
-		getRoot: () => root,
-		translate: createTranslator(),
-		isCurrent: () => true,
-		initialSlide: 0,
-	});
-	try {
-		const loaded = await loadPresentation(Uint8Array.from(readFileSync(SAMPLE_DECK)).buffer, {
-			onSlideLoaded: preview.show,
+it.each([0, 3, 6])(
+	'keeps the preview rail populated and isolated for initial slide %i',
+	async (initialSlide) => {
+		const root = document.createElement('div');
+		const host = document.createElement('div');
+		host.dataset.pptxLoadPreviewHost = '';
+		document.body.append(root);
+		const preview = createProgressiveSlidePreview({
+			getRoot: () => root,
+			translate: createTranslator(),
+			isCurrent: () => true,
+			initialSlide,
 		});
 		try {
-			expect(host.querySelector('[data-pptx-opening-preview]')?.hasAttribute('aria-hidden')).toBe(
-				true,
-			);
-			expect(host.querySelector('[data-element-id]')).toBeNull();
-			expect(host.querySelectorAll('[data-pptx-preview-thumbnail]')).toHaveLength(6);
-			expect(loaded.slides).toHaveLength(7);
+			const loaded = await loadPresentation(Uint8Array.from(readFileSync(SAMPLE_DECK)).buffer, {
+				onSlideLoaded(handler, progress) {
+					if (progress.index === initialSlide) root.append(host);
+					return preview.show(handler, progress);
+				},
+			});
+			try {
+				expect(host.querySelector('[data-pptx-opening-preview]')?.hasAttribute('aria-hidden')).toBe(
+					true,
+				);
+				expect(host.querySelector('[data-element-id]')).toBeNull();
+				expect(
+					Array.from(
+						host.querySelectorAll<HTMLElement>('[data-pptx-preview-thumbnail]'),
+						(thumb) => thumb.dataset.pptxPreviewThumbnail,
+					),
+				).toEqual(['0', '1', '2', '3', '4', '5']);
+				expect(loaded.slides).toHaveLength(7);
+			} finally {
+				loaded.handler.dispose();
+			}
 		} finally {
-			loaded.handler.dispose();
+			preview.dispose();
+			root.remove();
 		}
-	} finally {
-		preview.dispose();
-		root.remove();
-	}
-	expect(host.childElementCount).toBe(0);
-});
+		expect(host.childElementCount).toBe(0);
+	},
+);
