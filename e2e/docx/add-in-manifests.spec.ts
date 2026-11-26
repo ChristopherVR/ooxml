@@ -27,6 +27,7 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await get.press('Enter');
 	const preview = editor.locator('office-ui-dialog[open]');
 	const file = preview.getByLabel('Choose a local add-in file');
+	await expect(file).toBeFocused();
 	const marketplace = preview.getByRole('link', { name: /Microsoft Marketplace/ });
 	await expect(marketplace).toBeVisible();
 	const source = await readFile(fixture, 'utf8');

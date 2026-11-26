@@ -23,6 +23,7 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 		.file('icons/color.png', new Uint8Array([2]))
 		.file('fr.json', await fixture('fr.json'));
 	const input = dialog.getByLabel('Choose a local add-in file');
+	await expect(input).toBeFocused();
 	const marketplace = dialog.getByRole('link', { name: /Microsoft Marketplace/ });
 	await expect(marketplace).toBeVisible();
 	await input.setInputFiles({

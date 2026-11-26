@@ -178,17 +178,20 @@ export function openOfficeAddIns(
 		empty.textContent = t('No add-ins are available in this editor.');
 		dialog.append(empty);
 	}
-	dialog.show();
+	if (mode === 'myAddIns') dialog.show();
+	const available = () => dialog.isConnected && (mode === 'getAddIns' || dialog.open);
 	void import('./add-in-local-dialog').then(
 		({ mountLocalAddIns }) => {
-			if (dialog.open && dialog.isConnected)
-				mountLocalAddIns(dialog, host, mode, product, locale, t, { empty, marketplace });
+			if (!available()) return;
+			mountLocalAddIns(dialog, host, mode, product, locale, t, { empty, marketplace });
+			if (mode === 'getAddIns') dialog.show();
 		},
 		() => {
-			if (!dialog.open || !dialog.isConnected) return;
+			if (!available()) return;
 			status.textContent = t('Could not update the add-in.');
 			status.hidden = false;
 			dialog.append(status);
+			if (mode === 'getAddIns') dialog.show();
 		},
 	);
 }
