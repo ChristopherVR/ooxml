@@ -6,12 +6,13 @@
 import type { PptxAnimationPreset, PptxElementAnimation, XmlObject } from '../types';
 import { applyAfterAnimationBehavior } from './animation-after-effect-write';
 import { getCapturedPreset } from './animation-behavior-captured';
+import { buildPaintedAnimationChildren } from './animation-paint-template';
+import { resolveDirectionSubtype } from './animation-direction-subtype';
 import { getAnimationBehaviorNodes } from './animation-behavior-table';
 import { groupBehaviorChildren } from './animation-write-child-groups';
 import { applyEffectCTnExtras, buildRepeatAttrs } from './animation-write-effect-extras';
 import {
 	resolveOoxmlPresetMapping,
-	DIRECTION_TO_SUBTYPE,
 	triggerToNodeType,
 	timingCurveToAccelDecel,
 } from './animation-write-mappings';
@@ -86,9 +87,7 @@ export function buildSingleEffectNode(
 	const trigger = anim.trigger ?? 'onClick';
 	const nodeType = triggerToNodeType(trigger);
 	let { accel, decel } = timingCurveToAccelDecel(anim.timingCurve);
-	let subtype = anim.direction
-		? (DIRECTION_TO_SUBTYPE[anim.direction] ?? mapping.defaultSubtype)
-		: mapping.defaultSubtype;
+	let subtype = resolveDirectionSubtype(mapping, anim.direction);
 
 	const effectId = allocateId();
 	const shapeId = anim.elementId;
@@ -148,7 +147,9 @@ export function buildSingleEffectNode(
 		effectCTn['@_decel'] = String(decel);
 	}
 
-	effectCTn['p:childTnLst'] = groupBehaviorChildren(childElements);
+	effectCTn['p:childTnLst'] =
+		buildPaintedAnimationChildren(anim.nativePaintTemplate, presetClass, shapeId, allocateId) ??
+		groupBehaviorChildren(childElements);
 
 	// "After animation" describes what happens once an entrance/emphasis
 	// effect finishes; an exit effect already ends by hiding, so it never

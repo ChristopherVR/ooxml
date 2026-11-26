@@ -208,6 +208,8 @@ export const translations = {
 		'このプレゼンテーションにはデジタル署名がありましたが、ファイルを編集して保存すると削除されます。',
 	'pptx.compatibility.saveGroupChildSkipped':
 		'グループ内の 1 つの図形を保存できなかったため、スキップしました。',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'カラー タイプライターの再生では、文字と色のタイミングが元の効果と異なる場合があります。',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		'1 つのアニメーションのサウンドを保存できなかったため、スキップしました。',
 	'pptx.compatibility.saveBackgroundImageUnsupported':

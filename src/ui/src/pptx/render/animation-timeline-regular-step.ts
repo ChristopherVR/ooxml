@@ -188,7 +188,10 @@ export function processRegularAnimation(
 		);
 		const triggerDelay = 0;
 		const presetClass = isCommand ? 'emph' : (singleAnim.presetClass ?? 'entr');
-		const fill = fillModeForClass(singleAnim.presetClass);
+		const fill =
+			singleAnim.presetClass === 'emph' && singleAnim.presetId === 35
+				? 'forwards'
+				: fillModeForClass(singleAnim.presetClass);
 
 		// Apply `@spd` / `@repeatDur` / `@fill` (animation-fill-repeat), then
 		// compute direction. A command step carries no timing of its own.

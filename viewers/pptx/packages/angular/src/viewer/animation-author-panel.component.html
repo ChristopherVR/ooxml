@@ -1,4 +1,5 @@
 <aside class="pptx-ng-anim" [attr.aria-label]="'pptx.animations.propertiesLabel' | translate">
+	<div data-pptx-effect-picker></div>
 	<!-- ── Header ───────────────────────────────────────────────────── -->
 	<div class="pptx-ng-anim__header">
 		<span class="pptx-ng-anim__title">{{ 'pptx.animations.animation' | translate }}</span>
@@ -119,7 +120,7 @@
 							[title]="opt.labelKey | translate"
 							(click)="onDirectionChange(opt.value)"
 						>
-							{{ opt.arrow }}
+							{{ opt.arrow || (opt.labelKey | translate) }}
 						</button>
 					}
 				</div>

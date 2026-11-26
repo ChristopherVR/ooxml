@@ -9,29 +9,10 @@ import {
 	buildClickGroupNode,
 	buildInteractiveSequences,
 	buildMainSequenceNode,
+	markGroupAutoStart,
 } from './animation-write-sequence-builders';
 
 export type { IPptxAnimationWriteService } from './animation-write-mappings';
-
-/**
- * Add the condition PowerPoint writes for a click step that begins with the
- * slide instead of waiting for a click: the indefinite gate stays (a click may
- * still start it early) and an `onBegin` tie to the main sequence makes it fire
- * as soon as the show reaches this slide. See `animation-group-context` for the
- * reading side.
- */
-function markGroupAutoStart(groupNode: XmlObject | undefined, mainSeqId: number): void {
-	const cTn = groupNode?.['p:cTn'] as XmlObject | undefined;
-	if (!cTn) {
-		return;
-	}
-	cTn['p:stCondLst'] = {
-		'p:cond': [
-			{ '@_delay': 'indefinite' },
-			{ '@_evt': 'onBegin', '@_delay': '0', 'p:tn': { '@_val': String(mainSeqId) } },
-		],
-	};
-}
 
 /**
  * Service that serializes `PptxElementAnimation[]` into valid OOXML

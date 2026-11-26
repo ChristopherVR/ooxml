@@ -218,7 +218,15 @@ export function directionPickerState(
 ): { options: typeof DIRECTION_OPTIONS; active: PptxAnimationDirection | undefined } {
 	const values = directionValuesFor(animations, elementId);
 	return {
-		options: DIRECTION_OPTIONS.filter((option) => values.includes(option.value)),
+		options: values.map(
+			(value) =>
+				DIRECTION_OPTIONS.find((option) => option.value === value) ?? {
+					value,
+					label: value,
+					labelKey: ANIMATION_DIRECTION_LABEL_KEYS[value],
+					arrow: '',
+				},
+		),
 		active: effectiveDirection(animationFor(animations, elementId), values),
 	};
 }

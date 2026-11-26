@@ -37,6 +37,8 @@ export interface AnimBehaviorTiming {
 export interface AnimNodeSpec extends AnimBehaviorTiming {
 	kind: 'anim';
 	attrName: string;
+	calcMode?: 'lin' | 'discrete';
+	valueType?: 'num' | 'str';
 	tav?: AnimBehaviorTav[];
 	from?: string;
 	to?: string;

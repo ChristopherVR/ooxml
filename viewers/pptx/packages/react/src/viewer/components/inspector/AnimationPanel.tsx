@@ -1,4 +1,5 @@
 import {
+	ANIMATION_DIRECTION_LABEL_KEYS,
 	getAfterAnimationState,
 	effectiveDirection,
 	effectiveTimingCurve,
@@ -115,6 +116,7 @@ export function AnimationPanel({
 
 	return (
 		<div className='rounded border border-border bg-card p-2 space-y-2'>
+			<div data-pptx-effect-picker />
 			<div className='flex items-center justify-between'>
 				<div className='text-[11px] uppercase tracking-wide text-muted-foreground'>
 					{t('pptx.animation.title')}
@@ -209,32 +211,32 @@ export function AnimationPanel({
 							<span className='text-muted-foreground text-[11px] block mb-1'>
 								{t('pptx.animation.direction')}
 							</span>
-							<div className='flex gap-1'>
-								{DIRECTION_OPTIONS.filter((opt) => directionValues.includes(opt.value)).map(
-									(opt) => {
-										const Icon = opt.icon;
-										const isActive =
-											effectiveDirection(selectedElementAnimation, directionValues) === opt.value;
-										return (
-											<button
-												key={opt.value}
-												type='button'
-												disabled={!canEdit}
-												style={{ minWidth: directionBtnPx, minHeight: directionBtnPx }}
-												className={cn(
-													'flex items-center justify-center rounded border transition-colors',
-													isActive
-														? 'border-primary bg-primary/20 text-primary'
-														: 'border-border bg-muted text-muted-foreground hover:bg-accent',
-												)}
-												onClick={() => handleDirectionChange(opt.value)}
-												title={t(opt.labelKey)}
-											>
-												<Icon className='w-3.5 h-3.5' />
-											</button>
-										);
-									},
-								)}
+							<div className='flex flex-wrap gap-1'>
+								{directionValues.map((value) => {
+									const Icon = DIRECTION_OPTIONS.find((opt) => opt.value === value)?.icon;
+									const label = t(ANIMATION_DIRECTION_LABEL_KEYS[value]);
+									const isActive =
+										effectiveDirection(selectedElementAnimation, directionValues) === value;
+									return (
+										<button
+											key={value}
+											type='button'
+											disabled={!canEdit}
+											style={{ minWidth: directionBtnPx, minHeight: directionBtnPx }}
+											className={cn(
+												'flex items-center justify-center rounded border transition-colors',
+												isActive
+													? 'border-primary bg-primary/20 text-primary'
+													: 'border-border bg-muted text-muted-foreground hover:bg-accent',
+											)}
+											onClick={() => handleDirectionChange(value)}
+											title={label}
+											aria-label={label}
+										>
+											{Icon ? <Icon className='w-3.5 h-3.5' /> : label}
+										</button>
+									);
+								})}
 							</div>
 						</div>
 					)}

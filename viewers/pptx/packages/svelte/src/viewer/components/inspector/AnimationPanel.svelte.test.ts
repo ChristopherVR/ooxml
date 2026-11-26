@@ -72,6 +72,19 @@ function setInput(target: HTMLElement, selector: string, value: string): void {
 }
 
 describe('animationPanel', () => {
+	it('writes the screen-center Zoom direction', () => {
+		const editor = makeEditor([shapeEl('a')], [{ elementId: 'a', entrance: 'zoomIn' }]);
+		editor.select('a');
+		const { target } = mountPanel(editor);
+		const choice = [...target.querySelectorAll('button')].find(
+			(button) => button.getAttribute('aria-label') === 'In from Screen Center',
+		);
+		expect(choice).toBeDefined();
+		choice?.click();
+		flushSync();
+		expect(editor.slides[0].animations?.[0]?.direction).toBe('inFromScreenCenter');
+	});
+
 	it('renders nothing when no element is selected', () => {
 		const editor = makeEditor([shapeEl('a')]);
 		const { target } = mountPanel(editor);
@@ -140,11 +153,13 @@ describe('animationPanel', () => {
 		editor.select('a');
 		const { target } = mountPanel(editor);
 
-		const buttons = target.querySelectorAll<HTMLButtonElement>(
-			'.pptx-svelte-animp-direction-row button',
-		);
-		expect(buttons).toHaveLength(4);
-		buttons[2].click(); // fromLeft
+		const buttons = [
+			...target.querySelectorAll<HTMLButtonElement>('.pptx-svelte-animp-direction-row button'),
+		];
+		expect(buttons).toHaveLength(8);
+		const fromLeft = buttons.find((button) => button.getAttribute('aria-label') === 'From Left');
+		expect(fromLeft).toBeDefined();
+		fromLeft?.click();
 		flushSync();
 		expect(editor.slides[0].animations?.[0].direction).toBe('fromLeft');
 	});

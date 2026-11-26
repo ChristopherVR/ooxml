@@ -15,7 +15,11 @@ import type {
 	XmlObject,
 } from '../types';
 import { normalizeCalcMode } from './native-animation-cbhvr-attrs';
-import { extractStartConditionDelayMs, readTimingAttr } from './native-animation-extended-helpers';
+import {
+	extractSingleColorAnimation,
+	extractStartConditionDelayMs,
+	readTimingAttr,
+} from './native-animation-extended-helpers';
 import {
 	decodeKeyframeValue,
 	ensureArray,
@@ -31,6 +35,7 @@ const BEHAVIOR_TAGS = [
 	'p:animScale',
 	'p:animRot',
 	'p:animMotion',
+	'p:animClr',
 ] as const;
 
 function attrText(raw: unknown): string | undefined {
@@ -152,6 +157,8 @@ function parseBehavior(
 		...(cBhvr?.['@_additive'] !== undefined ? { additive: String(cBhvr['@_additive']) } : {}),
 	};
 	switch (tag) {
+		case 'p:animClr':
+			return { kind: 'animClr', ...base, color: extractSingleColorAnimation(node) };
 		case 'p:set': {
 			const toNode = node['p:to'] as XmlObject | undefined;
 			const decoded = toNode ? decodeKeyframeValue(toNode) : null;

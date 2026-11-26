@@ -1,3 +1,4 @@
+import { ANIMATION_DIRECTION_LABEL_KEYS } from 'ooxml-ui/pptx';
 import type {
 	PptxAnimationDirection,
 	PptxAnimationRepeatMode,
@@ -8,12 +9,7 @@ import { createEl } from '../../render';
 import { createInspectorSelect } from './controls-extra';
 
 /** Direction options surfaced in the panel (React's four-arrow picker). */
-export const DIRECTIONS: readonly PptxAnimationDirection[] = [
-	'fromTop',
-	'fromBottom',
-	'fromLeft',
-	'fromRight',
-];
+export const DIRECTIONS = Object.keys(ANIMATION_DIRECTION_LABEL_KEYS) as PptxAnimationDirection[];
 
 /** Timing-curve options with their (camel-cased) dictionary label keys. */
 export const CURVES: readonly { value: PptxAnimationTimingCurve; labelKey: string }[] = [

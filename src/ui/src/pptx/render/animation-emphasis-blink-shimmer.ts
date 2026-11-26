@@ -29,9 +29,8 @@ export type BlinkShimmerEffectName = 'blink' | 'shimmer';
  */
 export const BLINK_SHIMMER_KEYFRAME_DEFINITIONS: Record<BlinkShimmerEffectName, string> = {
 	blink: `@keyframes pptx-blink {
-	0%, 49% { visibility: visible; opacity: 1; }
-	50%, 99% { visibility: hidden; opacity: 0; }
-	100% { visibility: visible; opacity: 1; }
+	0% { opacity: 0; animation-timing-function: steps(1, end); }
+	50%, 100% { opacity: 1; }
 }`,
 	shimmer: `@keyframes pptx-shimmer {
 	0% { transform: translateX(0) scaleX(1); }

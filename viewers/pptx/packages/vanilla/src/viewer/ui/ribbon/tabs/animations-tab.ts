@@ -1,4 +1,8 @@
-import type { RibbonAnimationsRequestEvent, RibbonAnimationsViewState } from 'ooxml-ui/pptx';
+import type {
+	AnimationEditingSlide,
+	RibbonAnimationsRequestEvent,
+	RibbonAnimationsViewState,
+} from 'ooxml-ui/pptx';
 import {
 	buildAnimationTimelineRows,
 	directionValuesFor,
@@ -36,6 +40,7 @@ export interface AnimationsTabState {
 	hasSelection: boolean;
 	selectedElementId?: string;
 	animationSlideId?: string | undefined;
+	animationSlide?: AnimationEditingSlide | undefined;
 	animations: readonly PptxElementAnimation[];
 	/** Whether the inspector is open (the Animation Pane command's pressed state). */
 	paneOpen?: boolean;
@@ -213,6 +218,7 @@ export function createAnimationsTab(
 			hasSelection,
 			selectedElementId,
 			animationSlideId,
+			animationSlide,
 			animations,
 			animationTimelineAnchors,
 			paneOpen,
@@ -223,9 +229,10 @@ export function createAnimationsTab(
 				hasSelection,
 				paneOpen,
 				editing: {
-					slide: { id: animationSlideId, animations, animationTimelineAnchors },
+					slide: animationSlide ?? { id: animationSlideId, animations, animationTimelineAnchors },
 					elementId: selectedElementId,
-					commit: (next) => handlers.updateActiveSlide({ animations: next }),
+					commit: (next, nativeTiming) =>
+						handlers.updateActiveSlide({ animations: next, ...nativeTiming }),
 				},
 			};
 			syncShell();

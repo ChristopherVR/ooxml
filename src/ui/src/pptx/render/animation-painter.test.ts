@@ -68,7 +68,12 @@ it('keeps embedded sound on the source slide and clears its relationship on anot
 	const paint = captureAnimationPaint(slide, 'source')!;
 	expect(applyAnimationPaint(paint, slide, 'new')?.[1]).toMatchObject(sound);
 	const [copy] = applyAnimationPaint(paint, { id: 'other-slide' }, 'source')!;
-	expect(copy).toMatchObject({ elementId: 'source', entrance: 'flyIn' });
+	expect(copy).toMatchObject({
+		elementId: 'source',
+		entrance: 'flyIn',
+		soundPath: sound.soundPath,
+		soundName: sound.soundName,
+	});
 	expect(copy.soundRId).toBeUndefined();
 });
 

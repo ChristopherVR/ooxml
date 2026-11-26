@@ -1,5 +1,6 @@
-import type { RibbonViewZoom } from 'ooxml-ui/pptx';
 import type {
+	AnimationEditingSlide,
+	RibbonViewZoom,
 	PictureRibbonState,
 	CloudFileProvider,
 	CloudOpenedFile,
@@ -317,6 +318,7 @@ export interface RibbonSelectionState {
 	formatPainterActive?: boolean;
 	selectedElementId?: string;
 	animationSlideId?: string | undefined;
+	animationSlide?: AnimationEditingSlide | undefined;
 	animations?: readonly PptxElementAnimation[];
 	/** Read-only anchors for the active slide's deck-native effect groups. */
 	animationTimelineAnchors?: readonly PptxAnimationTimelineAnchor[];

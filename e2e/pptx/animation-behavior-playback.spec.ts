@@ -102,3 +102,18 @@ test.describe('entrance effects play the deck behaviour tree', () => {
 		expect(sample.opacities).toStrictEqual([1, 1, 1]);
 	});
 });
+
+test('PowerPoint Blink hides for the first half of its authored duration', async ({ page }) => {
+	await loadDeck(page, fixture('native-animation-blink.pptx'));
+	await startShow(page);
+	await page.keyboard.press('ArrowRight');
+	await expect
+		.poll(
+			async () => {
+				const sample = await sampleFly(page, [0.1, 0.499, 0.5, 0.9]);
+				return sample?.opacities;
+			},
+			{ timeout: 8000, intervals: [50] },
+		)
+		.toEqual([0, 0, 1, 1]);
+});

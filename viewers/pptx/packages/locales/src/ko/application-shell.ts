@@ -206,6 +206,8 @@ export const translations = {
 		'이 프레젠테이션에는 디지털 서명이 있었으며, 파일을 편집하고 저장하면 서명이 제거됩니다.',
 	'pptx.compatibility.saveGroupChildSkipped':
 		'그룹 안의 도형 하나를 저장할 수 없어 건너뛰었습니다.',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'컬러 타자기 재생 시 글자와 색상의 타이밍이 원본 효과와 다를 수 있습니다.',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		'애니메이션 소리 하나를 저장할 수 없어 건너뛰었습니다.',
 	'pptx.compatibility.saveBackgroundImageUnsupported':

@@ -296,6 +296,38 @@ function relativeHslColor(
 	return `hsl(from ${baseColorForProperty(property)} calc(h + ${hue}) calc(s + ${saturation}) calc(l + ${lightness}) / alpha)`;
 }
 
+/** Sample one authored colour component on its own behaviour clock. */
+export function timedColorDeclarations(
+	component: PptxColorAnimation,
+	progress: number | undefined,
+	themeColorMap: Readonly<Record<string, string>> | undefined,
+): string {
+	const from = resolveComponentColorHex(component.fromColor, component.fromColorRef, themeColorMap);
+	const to = resolveComponentColorHex(component.toColor, component.toColorRef, themeColorMap);
+	return resolveCssProperties(component.targetAttribute)
+		.map((property) => {
+			const base = baseColorForProperty(property);
+			let color: string | undefined;
+			if (progress === undefined) {
+				color = base;
+			} else if (component.hslDelta) {
+				color = from
+					? applyHslDelta(from, component.hslDelta, progress)
+					: relativeHslColor(property, component.hslDelta, progress);
+			} else if (to && !component.fromColor) {
+				const space =
+					component.colorSpace === 'hsl'
+						? `hsl ${component.direction === 'ccw' ? 'decreasing' : 'increasing'} hue`
+						: 'srgb';
+				color = `color-mix(in ${space}, ${base}, #${to.replace(/^#/u, '')} ${cssNumber(progress * 100)}%)`;
+			} else {
+				color = absoluteComponentColor(component, progress, themeColorMap);
+			}
+			return color ? `${property}: ${color};` : '';
+		})
+		.join(' ');
+}
+
 /**
  * Resolve one `p:animClr` colour value to a real `#rrggbb` hex: `raw` already
  * IS one for an `a:srgbClr` stop, but for an `a:schemeClr` stop (e.g.

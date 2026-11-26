@@ -35,6 +35,18 @@ function makeState(overrides: Partial<AnimationPanelState> = {}): AnimationPanel
 const t = createTranslator();
 
 describe('inspector animation panel', () => {
+	it('dispatches the Out variant of a shape reveal', () => {
+		const handlers = makeHandlers();
+		const panel = createAnimationPanel(document, t, handlers);
+		panel.update(makeState({ animations: [{ elementId: 'el1', entrance: 'boxIn' }] }));
+		const out = [...panel.el.querySelectorAll<HTMLButtonElement>('.pptxv-anim-direction-btn')].find(
+			(button) => !button.hidden && button.textContent === t('pptx.animation.direction.out'),
+		);
+		expect(out).toBeDefined();
+		out?.click();
+		expect(handlers.setAnimationTiming).toHaveBeenCalledWith('el1', { direction: 'out' });
+	});
+
 	it('is hidden without a selection and shown for the selected element', () => {
 		const panel = createAnimationPanel(document, t, makeHandlers());
 		panel.update(makeState({ selectedElementId: undefined }));

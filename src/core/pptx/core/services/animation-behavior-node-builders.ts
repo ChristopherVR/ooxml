@@ -103,8 +103,8 @@ export function buildBehaviorNode(
 			const id = allocateId();
 			const node: XmlObject = {
 				_type: 'anim',
-				'@_calcmode': 'lin',
-				'@_valueType': 'num',
+				'@_calcmode': spec.calcMode ?? 'lin',
+				'@_valueType': spec.valueType ?? 'num',
 				'p:cBhvr': {
 					...(spec.additive ? { '@_additive': spec.additive } : {}),
 					'p:cTn': cTnWithDelay(spec, id),

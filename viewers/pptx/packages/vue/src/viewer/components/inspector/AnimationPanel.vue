@@ -156,6 +156,7 @@ function changeMotionPath(pathPresetId: string): void {
 
 <template>
 	<div class="flex flex-col gap-2 rounded-md border border-border bg-card p-2 text-xs">
+		<div data-pptx-effect-picker />
 		<div class="text-[11px] uppercase tracking-wide text-muted-foreground">
 			{{ t('pptx.animation.title') }}
 		</div>

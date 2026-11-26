@@ -189,7 +189,14 @@ const FROM_CENTER_REVEAL: Partial<Record<EffectName, { family: string; variant: 
 export function redirectMaskEffectByFilterSubtype(
 	effect: EffectName | undefined,
 	filter: { family: string; subtype?: string } | undefined,
+	presetSubtype?: number,
 ): EffectName | undefined {
+	if (effect && !filter) {
+		const shape = FROM_CENTER_REVEAL[effect];
+		if (shape && presetSubtype === 32) return shape.variant;
+		if (effect === 'blindsIn' && presetSubtype === 5) return 'blindsInVertical';
+		if (effect === 'blindsIn' && presetSubtype === 10) return 'blindsInHorizontal';
+	}
 	if (!effect || !filter) {
 		return effect;
 	}

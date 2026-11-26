@@ -324,6 +324,8 @@ export const translations = {
 		'Esta presentación tenía firmas digitales, que se eliminan al editar y guardar el archivo.',
 	'pptx.compatibility.saveGroupChildSkipped':
 		'No se pudo guardar una forma dentro de un grupo y se omitió.',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'La reproducción de Máquina de escribir en color aproxima los tiempos de las letras y los colores.',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		'No se pudo guardar un sonido de animación y se omitió.',
 	'pptx.compatibility.saveBackgroundImageUnsupported':

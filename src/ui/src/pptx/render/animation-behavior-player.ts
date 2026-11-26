@@ -81,6 +81,15 @@ function isTransformBehavior(behavior: PptxAnimationBehavior): boolean {
 	}
 }
 
+function hasEmphasisBehavior(behavior: PptxAnimationBehavior): boolean {
+	return (
+		behavior.kind === 'animClr' ||
+		isTransformBehavior(behavior) ||
+		((behavior.kind === 'anim' || behavior.kind === 'set') &&
+			behavior.attrNames.some((name) => name === 'style.visibility' || name === 'style.opacity'))
+	);
+}
+
 function isSupported(behavior: PptxAnimationBehavior, vars: PptFormulaVars): boolean {
 	switch (behavior.kind) {
 		case 'anim':
@@ -144,17 +153,37 @@ export function createBehaviorPlayer(
 	box: AnimationElementBox | undefined,
 ): BehaviorPlayer | undefined {
 	const behaviors = anim.behaviors;
-	if (!behaviors || !box || (anim.presetClass !== 'entr' && anim.presetClass !== 'exit')) {
+	const emphasis = anim.presetClass === 'emph';
+	if (
+		!behaviors ||
+		(!emphasis && (!box || (anim.presetClass !== 'entr' && anim.presetClass !== 'exit')))
+	) {
 		return undefined;
 	}
+	if (
+		!box &&
+		behaviors.some(
+			(behavior) =>
+				behavior.kind === 'anim' &&
+				(behavior.attrNames.some((name) => GEOMETRY.has(name)) ||
+					behavior.keyframes.some(
+						({ value, fmla }) => fmla || (typeof value === 'string' && value.includes('ppt_')),
+					)),
+		)
+	)
+		return undefined;
 	const base: BehaviorBase = {
-		ppt_x: box.x + box.width / 2,
-		ppt_y: box.y + box.height / 2,
-		ppt_w: box.width,
-		ppt_h: box.height,
+		ppt_x: box ? box.x + box.width / 2 : 0,
+		ppt_y: box ? box.y + box.height / 2 : 0,
+		ppt_w: box?.width ?? 1,
+		ppt_h: box?.height ?? 1,
 	};
 	const vars = formulaVars(base, { ...base });
-	if (!behaviors.some(isTransformBehavior) || !behaviors.every((b) => isSupported(b, vars))) {
+	if (
+		behaviors.length > 128 ||
+		!behaviors.some(emphasis ? hasEmphasisBehavior : isTransformBehavior) ||
+		!behaviors.every((b) => isSupported(b, vars))
+	) {
 		return undefined;
 	}
 	const effectMs = Math.max(1, anim.durationMs ?? 500);
@@ -171,7 +200,7 @@ export function createBehaviorPlayer(
 			breakpoints.add(Math.max(0, Math.min(effectMs, point)));
 		}
 	}
-	const accumulate = createAccumulator(entries, base, box.slideAspect);
+	const accumulate = createAccumulator(entries, base, box?.slideAspect);
 	const safeW = base.ppt_w > 0 ? base.ppt_w : 1;
 	const safeH = base.ppt_h > 0 ? base.ppt_h : 1;
 

@@ -28,7 +28,7 @@
 			(animation) => animation.elementId === editor.selectedElementId,
 		),
 	);
-	const commit: CommitRibbonAnimations = (animations) => editor.animationOps.commitAnimations(animations);
+	const commit: CommitRibbonAnimations = (animations, timing) => editor.animationOps.commitAnimations(animations, timing);
 	const state = $derived({
 		editable: editor.editable,
 		hasSelection: Boolean(editor.selectedElementId),

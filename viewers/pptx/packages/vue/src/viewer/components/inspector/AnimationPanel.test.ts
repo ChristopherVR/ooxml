@@ -40,6 +40,15 @@ function lastUpdatePatch(wrapper: ReturnType<typeof mount>): Partial<AnimatableE
 }
 
 describe('animationPanel', () => {
+	it('offers the vertical Blinds variant in the effect editor', () => {
+		const wrapper = mount(AnimationPanel, {
+			props: {
+				element: makeElement([{ elementId: 'sp1', entrance: 'blindsIn', direction: 'vertical' }]),
+			},
+		});
+		expect(wrapper.find('option[value="vertical"]').exists()).toBeTruthy();
+	});
+
 	it('lists the element current animations with preset name and trigger', () => {
 		const wrapper = mount(AnimationPanel, {
 			props: {

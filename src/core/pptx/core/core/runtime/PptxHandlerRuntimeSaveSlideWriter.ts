@@ -131,19 +131,21 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	 * `p:audio/p:cMediaNode/p:sndTgt` sound node PowerPoint recognises back. A
 	 * no-op for every entry that has no pending sound.
 	 */
-	protected embedPendingAnimationSounds(
+	protected async embedPendingAnimationSounds(
 		animations: PptxElementAnimation[],
 		ctx: {
 			saveSession: PptxSaveState;
 			slideRelationshipRegistry: IPptxSlideRelationshipRegistry;
 			slideAudioRelationshipType: string;
 		},
-	): void {
+	): Promise<void> {
 		for (const anim of animations) {
-			if (typeof anim.soundData !== 'string' || anim.soundData.length === 0) {
+			if (!anim.soundData && (anim.soundRId || !anim.soundPath)) {
 				continue;
 			}
-			const parsedSound = this.parseDataUrlToBytes(anim.soundData);
+			const parsedSound = anim.soundData
+				? this.parseDataUrlToBytes(anim.soundData)
+				: await this.copyAnimationSound(anim.soundPath);
 			delete anim.soundData;
 			if (!parsedSound) {
 				this.compatibilityService.reportWarning({
@@ -169,6 +171,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			anim.soundRId = relationshipId;
 			anim.soundPath = targetPath;
 		}
+	}
+
+	private async copyAnimationSound(path: string | undefined) {
+		const media = path && /^ppt\/media\/[^/\\]+\.([a-z0-9]+)$/iu.exec(path);
+		const extension = media ? media[1]?.toLowerCase() : undefined;
+		const source = path && extension ? this.zip.file(path) : undefined;
+		if (!source || !extension) return undefined;
+		return { bytes: await source.async('uint8array'), extension };
 	}
 
 	/**
@@ -290,7 +300,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			// (`soundData`), same convention as pending image/media bytes. Embed it
 			// into the package and mint its relationship before anything below
 			// reads `soundRId` to write `p:stSnd`.
-			this.embedPendingAnimationSounds(shapeIdAnimations, {
+			await this.embedPendingAnimationSounds(shapeIdAnimations, {
 				saveSession,
 				slideRelationshipRegistry,
 				slideAudioRelationshipType: constants.slideAudioRelationshipType,

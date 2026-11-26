@@ -16,6 +16,7 @@ import {
 	selectElement,
 } from './support/deck';
 import { downloadBytes } from './support/exports';
+import { chooseSelectValue } from './support/select-control';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -57,6 +58,31 @@ async function savedSlideXml(page: Page): Promise<{ path: string; xml: string }>
 	const xml = await zip.file('ppt/slides/slide1.xml')!.async('string');
 	return { path: 'ppt/slides/slide1.xml', xml };
 }
+
+test('the Animation Pane selects which imported effect receives a Timing edit', async ({
+	page,
+}) => {
+	await loadDeck(page, fixture('native-animation-timing.pptx'));
+	await selectElement(page, elementWithText(page, 'Native animation timing'));
+	await ribbonTab(page, 'Animations').click();
+	const animationPane = page.locator(
+		'[data-ribbon-control="animations.advancedAnimation.animationPane"] button',
+	);
+	const effect = inspector(page).locator('[data-pptx-timing-effect]');
+	const picker = effect.getByRole('combobox', { name: 'Effect to edit' });
+	if (!(await picker.isVisible())) await animationPane.click();
+	await expect(picker).toBeVisible();
+	await expect(effect.locator('option')).toHaveCount(5);
+	await chooseSelectValue(page, picker, '8');
+	const duration = page.locator('[data-ribbon-control="animations.timing.duration"]');
+	await expect(duration).toHaveValue('1');
+	await duration.fill('1.75');
+	await duration.press('Tab');
+	await expect(duration).toHaveValue('1.75');
+	const { xml } = await savedSlideXml(page);
+	expect(xml).toMatch(/<p:cTn\b(?=[^>]*id="8")(?=[^>]*dur="1750")[^>]*>/u);
+	expect(xml).not.toMatch(/<p:cTn\b(?=[^>]*id="5")(?=[^>]*dur="1750")[^>]*>/u);
+});
 
 test('shared Animations ribbon exposes every canonical group and control id once', async ({
 	page,

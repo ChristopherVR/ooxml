@@ -153,17 +153,23 @@ const WAVE: AnimationBehaviorTemplate = {
 	baselineDurationMs: WAVE_BASELINE,
 };
 
-/** Blink: NOT COM-verified (ribbon-only, no reachable `MsoAnimEffect`); a discrete toggle approximation. */
-const BLINK_BASELINE = 1000;
+/** Blink from PowerPoint 16's More Emphasis Effects gallery and saved timing XML. */
 const BLINK: AnimationBehaviorTemplate = {
-	nodes: [0, 0.25, 0.5, 0.75].map((fraction, i): AnimBehaviorNodeSpec => ({
-		kind: 'set',
-		attrName: 'style.visibility',
-		to: i % 2 === 0 ? 'hidden' : 'visible',
-		durMs: 1 / BLINK_BASELINE,
-		delayMs: fraction,
-	})),
-	baselineDurationMs: BLINK_BASELINE,
+	nodes: [
+		{
+			kind: 'anim',
+			attrName: 'style.visibility',
+			calcMode: 'discrete',
+			valueType: 'str',
+			durMs: 1,
+			fill: 'hold',
+			tav: [
+				{ tm: 0, val: 'hidden' },
+				{ tm: 50000, val: 'visible' },
+			],
+		},
+	],
+	baselineDurationMs: 1000,
 };
 
 /** Look up the Desaturate (25), Pulse (26), Color Pulse (27), Teeter (32), Wave (34) or Blink (35) template. */

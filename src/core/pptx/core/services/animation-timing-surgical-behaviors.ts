@@ -18,10 +18,10 @@
  * @module services/animation-timing-surgical-behaviors
  */
 import type { PptxAnimationPreset, PptxElementAnimation, XmlObject } from '../types';
-import { getCapturedTree } from './animation-behavior-captured';
+import { resolveDirectionSubtype } from './animation-direction-subtype';
 import { groupBehaviorChildren } from './animation-write-child-groups';
 import type { OoxmlPresetMapping } from './animation-write-mappings';
-import { DIRECTION_TO_SUBTYPE, timingCurveToAccelDecel } from './animation-write-mappings';
+import { timingCurveToAccelDecel } from './animation-write-mappings';
 import { buildEmphasisBehaviorNodes } from './animation-write-node-effect';
 import { buildEntranceExitChildren } from './animation-write-node-entr-exit';
 import {
@@ -47,19 +47,7 @@ const BEHAVIOUR_TAGS = [
  * editor's direction when the preset has that variant, else the preset's
  * default (never a code PowerPoint would not write, like a diagonal Wipe).
  */
-export function resolveDirectionSubtype(
-	mapping: OoxmlPresetMapping,
-	direction: PptxElementAnimation['direction'],
-): number {
-	const requested = direction ? DIRECTION_TO_SUBTYPE[direction] : undefined;
-	if (mapping.presetClass === 'entr' || mapping.presetClass === 'exit') {
-		const captured = getCapturedTree(mapping.presetClass, mapping.presetId, requested);
-		if (captured) {
-			return captured.subtype;
-		}
-	}
-	return requested ?? mapping.defaultSubtype;
-}
+export { resolveDirectionSubtype } from './animation-direction-subtype';
 
 function readInt(raw: unknown): number | undefined {
 	const parsed = Number.parseInt(String(raw ?? ''), 10);
@@ -76,7 +64,7 @@ function currentDurationMs(cTn: XmlObject): number | undefined {
  * keep their length, and one that closes the effect (an exit's final
  * visibility `p:set`) keeps closing it.
  */
-function rescaleBehaviors(childTnLst: XmlObject, fromMs: number, toMs: number): void {
+export function rescaleBehaviors(childTnLst: XmlObject, fromMs: number, toMs: number): void {
 	const ratio = toMs / fromMs;
 	for (const tag of BEHAVIOUR_TAGS) {
 		for (const behaviour of ensureArray(childTnLst[tag])) {
@@ -93,7 +81,7 @@ function rescaleBehaviors(childTnLst: XmlObject, fromMs: number, toMs: number): 
 			if (delay === undefined) {
 				continue;
 			}
-			const scaled = closesEffect ? toMs - (dur ?? 0) : Math.round(delay * ratio);
+			const scaled = closesEffect && dur === 1 ? toMs - 1 : Math.round(delay * ratio);
 			const stCondLst = inner['p:stCondLst'];
 			if (isXmlObject(stCondLst)) {
 				for (const cond of ensureArray(stCondLst['p:cond'])) {
@@ -132,9 +120,12 @@ export function refreshEffectBehaviors(
 	shapeId: string,
 	allocateId: () => number,
 ): void {
-	const subtype = resolveDirectionSubtype(mapping, anim.direction);
 	const oldId = readInt(cTn['@_presetID']);
 	const oldSubtype = readInt(cTn['@_presetSubtype']);
+	const subtype =
+		anim.direction === undefined && oldId === mapping.presetId && oldSubtype !== undefined
+			? oldSubtype
+			: resolveDirectionSubtype(mapping, anim.direction);
 	const oldDuration = currentDurationMs(cTn);
 	const duration = anim.durationMs ?? oldDuration ?? 500;
 	const presetChanged = oldId !== mapping.presetId;

@@ -36,7 +36,7 @@ export function extractColorAnimation(
 }
 
 /** Parse one `p:animClr` behaviour while keeping the public aggregate flat. */
-function extractSingleColorAnimation(node: XmlObject): PptxColorAnimation {
+export function extractSingleColorAnimation(node: XmlObject): PptxColorAnimation {
 	const clrSpc = String(node['@_clrSpc'] || 'rgb').toLowerCase();
 	const colorSpace: 'hsl' | 'rgb' = clrSpc === 'hsl' ? 'hsl' : 'rgb';
 	const dir = String(node['@_dir'] || '').toLowerCase();

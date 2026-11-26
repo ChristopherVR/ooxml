@@ -54,6 +54,14 @@ function renderWith(animation: Omit<PptxElementAnimation, 'elementId'>): HTMLBut
 }
 
 describe('animationPanel direction picker', () => {
+	it('offers the four Split variants and reflects a saved variant', () => {
+		const buttons = renderWith({ entrance: 'splitIn', direction: 'horizontalOut' });
+		expect(buttons).toHaveLength(4);
+		expect(buttons.find((button) => button.className.includes('border-primary'))?.title).toBe(
+			'pptx.animation.direction.horizontalOut',
+		);
+	});
+
 	it("offers a Wipe's four edges and marks PowerPoint's default From Bottom active", () => {
 		const buttons = renderWith({ entrance: 'wipeIn' });
 		expect(buttons.map((button) => button.title)).toStrictEqual([

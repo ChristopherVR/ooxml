@@ -276,6 +276,14 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 			this.resolveThemeColor(token),
 		);
 		for (const anim of animations) {
+			if ((anim.presetClass === 'entr' || anim.presetClass === 'exit') && anim.presetId === 27) {
+				this.compatibilityService.reportWarning({
+					code: 'ANIMATION_COLOR_TYPEWRITER_APPROXIMATED',
+					message: 'Color Typewriter playback approximates the original letter and color timing.',
+					scope: 'slide',
+					slideId: slidePath,
+				});
+			}
 			if (anim.soundRId) {
 				anim.soundPath = this.resolveRelationshipTarget(slidePath, anim.soundRId);
 			}

@@ -21,7 +21,7 @@
  * @module render/animation-directional
  */
 
-import { maskEdgeDecl, maskShapeDecl } from './animation-mask-reveal';
+import { blindsDecl, maskEdgeDecl, maskShapeDecl } from './animation-mask-reveal';
 import type { RevealEdge } from './animation-mask-reveal';
 import {
 	FLY_SUBTYPE_TO_EDGE,
@@ -30,6 +30,7 @@ import {
 } from './animation-presets';
 import type { SplitVariant } from './animation-presets';
 import type { EffectName } from './animation-timeline-types';
+import { sampledMaskKeyframes } from './animation-sampled-mask-keyframes';
 
 /** Effects whose subtype is a WIPE travel-direction code. */
 const WIPE_ENCODED: ReadonlySet<EffectName> = new Set<EffectName>(['wipeIn', 'wipeOut']);
@@ -57,8 +58,10 @@ function maskHideCss(name: string, edge: RevealEdge): string {
 }
 
 /** Build a split (barn-door) reveal keyframe for the given variant. */
-function splitRevealCss(name: string, variant: SplitVariant): string {
-	return `@keyframes ${name} {\n\tfrom { ${maskShapeDecl(variant, 'hidden')} opacity: 1; }\n\tto { ${maskShapeDecl(variant, 'shown')} opacity: 1; }\n}`;
+function splitRevealCss(name: string, variant: SplitVariant, exit: boolean): string {
+	const from = maskShapeDecl(variant, exit ? 'shown' : 'hidden');
+	const to = maskShapeDecl(variant, exit ? 'hidden' : 'shown');
+	return `@keyframes ${name} {\n\tfrom { ${from} opacity: 1; }\n\tto { ${to} opacity: 1; }\n}`;
 }
 
 /**
@@ -71,17 +74,21 @@ export function buildDirectionalKeyframe(
 	subtype: number | undefined,
 	uid: number,
 ): { keyframeName: string; css: string } | undefined {
+	const name = `pptx-tl-dir-${uid}`;
+	if (effect === 'blindsOut') {
+		const axis = subtype === 5 ? 'vertical' : 'horizontal';
+		return { keyframeName: name, css: sampledMaskKeyframes(name, (f) => blindsDecl(axis, 1 - f)) };
+	}
 	if (subtype === undefined) {
 		return undefined;
 	}
-	const name = `pptx-tl-dir-${uid}`;
 
-	if (effect === 'splitIn') {
+	if (effect === 'splitIn' || effect === 'splitOut') {
 		const variant = SPLIT_SUBTYPE_TO_VARIANT[subtype];
 		if (!variant) {
 			return undefined;
 		}
-		return { keyframeName: name, css: splitRevealCss(name, variant) };
+		return { keyframeName: name, css: splitRevealCss(name, variant, effect === 'splitOut') };
 	}
 	if (WIPE_ENCODED.has(effect)) {
 		const edge = WIPE_SUBTYPE_TO_EDGE[subtype];

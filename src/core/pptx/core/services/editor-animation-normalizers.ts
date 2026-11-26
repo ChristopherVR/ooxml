@@ -130,6 +130,21 @@ export function normalizeDirection(value: unknown): PptxAnimationDirection | und
 		fromTopRight: 'fromTopRight',
 		fromBottomLeft: 'fromBottomLeft',
 		fromBottomRight: 'fromBottomRight',
+		horizontal: 'horizontal',
+		vertical: 'vertical',
+		horizontalIn: 'horizontalIn',
+		horizontalOut: 'horizontalOut',
+		verticalIn: 'verticalIn',
+		verticalOut: 'verticalOut',
+		in: 'in',
+		out: 'out',
+		objectCenter: 'objectCenter',
+		inSlightly: 'inSlightly',
+		outSlightly: 'outSlightly',
+		inFromScreenCenter: 'inFromScreenCenter',
+		outFromScreenCenter: 'outFromScreenCenter',
+		outFromScreenBottom: 'outFromScreenBottom',
+		inToScreenBottom: 'inToScreenBottom',
 	};
 	return map[token];
 }

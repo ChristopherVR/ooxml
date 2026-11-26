@@ -23,6 +23,7 @@
 		PptxElementAnimation,
 	} from 'pptx-viewer-core';
 	import {
+		ANIMATION_DIRECTION_LABEL_KEYS,
 	getAfterAnimationState,
 		animationFor,
 		applyMotionPathPreset,
@@ -79,7 +80,11 @@
 	const showDirection = $derived(el ? showDirectionPicker(anims, el.id) : false);
 	// Only the directions PowerPoint has a variant for (shared catalogue).
 	const directionValues = $derived(el ? directionValuesFor(anims, el.id) : []);
-	const directionOptions = $derived(PANEL_DIRECTION_OPTIONS.filter((option) => directionValues.includes(option.value)));
+	const directionOptions = $derived(directionValues.map((value) => ({
+		value,
+		labelKey: ANIMATION_DIRECTION_LABEL_KEYS[value],
+		glyph: PANEL_DIRECTION_OPTIONS.find((option) => option.value === value)?.glyph,
+	})));
 	const activeDirection = $derived(effectiveDirection(anim, directionValues));
 	const canEdit = $derived(editor.editable);
 	const soundState = $derived(el ? getEffectSoundState(anims, el.id) : { hasSound: false });
@@ -158,6 +163,7 @@
 
 {#if el && slide}
 	<div class="pptx-svelte-animp" data-pptx-animation-panel>
+		<div data-pptx-effect-picker></div>
 		<div class="pptx-svelte-animp-header">
 			<span class="pptx-svelte-animp-title">{t('pptx.animation.title')}</span>
 			{#if hasAnim}
@@ -214,7 +220,7 @@
 								title={t(option.labelKey)}
 								aria-label={t(option.labelKey)}
 								onclick={() => el && commit(setDirection(anims, el.id, option.value as PptxAnimationDirection))}
-							>{option.glyph}</button>
+							>{option.glyph ?? t(option.labelKey)}</button>
 						{/each}
 					</div>
 				</div>

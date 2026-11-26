@@ -124,7 +124,10 @@ export function buildSequenceGroups(
 			const animDelay = Math.max(anim.delayMs ?? 0, anim.triggerDelayMs ?? 0);
 			const triggerDelay = 0;
 			const presetClass = isCommand ? 'emph' : (anim.presetClass ?? 'entr');
-			const fill = fillModeForClass(anim.presetClass);
+			const fill =
+				anim.presetClass === 'emph' && anim.presetId === 35
+					? 'forwards'
+					: fillModeForClass(anim.presetClass);
 			const timing = isCommand
 				? { durationMs: 0, iterationCount: 1, activeDurationMs: 0, holdEndState: false }
 				: resolveEffectTiming(anim, baseDuration);

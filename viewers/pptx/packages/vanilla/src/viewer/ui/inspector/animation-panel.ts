@@ -88,6 +88,9 @@ export function createAnimationPanel(
 ): AnimationPanel {
 	const el = createEl(doc, 'div', 'pptxv-inspector-animation');
 	el.setAttribute('data-pptx-animation-panel', '');
+	const effectPicker = createEl(doc, 'div');
+	effectPicker.dataset.pptxEffectPicker = '';
+	el.append(effectPicker);
 
 	let current: AnimationPanelState = {
 		editable: false,

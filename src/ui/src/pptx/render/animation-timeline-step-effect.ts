@@ -145,7 +145,9 @@ export function resolveStepEffect(
 	// PowerPoint's own behaviour tree wins over any preset approximation when
 	// it carries a transform the player can resolve (Fly from the slide edge,
 	// Swish's three legs, Bounce's decaying hops...).
-	const played = buildBehaviorKeyframes(singleAnim, dynamicUid, box);
+	const played = buildBehaviorKeyframes(singleAnim, dynamicUid, box, {
+		themeColorMap: renderContext?.themeColorMap,
+	});
 	if (played) {
 		return {
 			effect: undefined,

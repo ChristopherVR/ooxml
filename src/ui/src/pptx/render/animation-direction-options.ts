@@ -13,7 +13,13 @@
  *
  * @module render/animation-direction-options
  */
-import type { PptxAnimationDirection, PptxElementAnimation } from 'ooxml-core/pptx';
+import {
+	getCapturedPreset,
+	resolveDirectionSubtype,
+	resolveOoxmlPresetMapping,
+	type PptxAnimationDirection,
+	type PptxElementAnimation,
+} from 'ooxml-core/pptx';
 
 /** Every direction value, edges first then corners. */
 export const DIRECTION_VALUES: readonly PptxAnimationDirection[] = [
@@ -40,6 +46,21 @@ export const ANIMATION_DIRECTION_LABEL_KEYS: Readonly<Record<PptxAnimationDirect
 	fromTopRight: 'pptx.animation.direction.fromTopRight',
 	fromBottomLeft: 'pptx.animation.direction.fromBottomLeft',
 	fromBottomRight: 'pptx.animation.direction.fromBottomRight',
+	horizontal: 'pptx.animation.direction.horizontal',
+	vertical: 'pptx.animation.direction.vertical',
+	horizontalIn: 'pptx.animation.direction.horizontalIn',
+	horizontalOut: 'pptx.animation.direction.horizontalOut',
+	verticalIn: 'pptx.animation.direction.verticalIn',
+	verticalOut: 'pptx.animation.direction.verticalOut',
+	in: 'pptx.animation.direction.in',
+	out: 'pptx.animation.direction.out',
+	objectCenter: 'pptx.animation.direction.objectCenter',
+	inSlightly: 'pptx.animation.direction.inSlightly',
+	outSlightly: 'pptx.animation.direction.outSlightly',
+	inFromScreenCenter: 'pptx.animation.direction.inFromScreenCenter',
+	outFromScreenCenter: 'pptx.animation.direction.outFromScreenCenter',
+	outFromScreenBottom: 'pptx.animation.direction.outFromScreenBottom',
+	inToScreenBottom: 'pptx.animation.direction.inToScreenBottom',
 };
 
 const EDGES: readonly PptxAnimationDirection[] = DIRECTION_VALUES.slice(0, 4);
@@ -63,7 +84,51 @@ export const DIRECTIONAL_PRESETS: ReadonlySet<string> = new Set(Object.keys(PRES
 export function directionValuesForPreset(
 	preset: string | undefined,
 ): readonly PptxAnimationDirection[] {
-	return (preset && PRESET_DIRECTIONS[preset]) || [];
+	if (!preset) return [];
+	const edges = PRESET_DIRECTIONS[preset];
+	if (edges) return edges;
+	const mapping = resolveOoxmlPresetMapping(preset);
+	if (!mapping || (mapping.presetClass !== 'entr' && mapping.presetClass !== 'exit')) return [];
+	switch (mapping.presetId) {
+		case 2:
+		case 7:
+			return DIRECTION_VALUES;
+		case 12:
+		case 17:
+		case 22:
+			return EDGES;
+		case 3:
+			return ['horizontal', 'vertical'];
+		case 4:
+		case 6:
+		case 8:
+		case 13:
+			return ['in', 'out'];
+		case 16:
+			return ['verticalIn', 'horizontalIn', 'verticalOut', 'horizontalOut'];
+		case 23:
+			return mapping.presetClass === 'entr'
+				? ['in', 'inSlightly', 'out', 'outSlightly', 'inFromScreenCenter', 'outFromScreenBottom']
+				: ['in', 'inSlightly', 'out', 'outSlightly', 'outFromScreenCenter', 'inToScreenBottom'];
+		default:
+			return [];
+	}
+}
+
+/** Read a native direction by comparing its subtype to the choices the writer emits. */
+export function directionForAnimationSubtype(
+	preset: string,
+	subtype: number | undefined,
+): PptxAnimationDirection | undefined {
+	const mapping = resolveOoxmlPresetMapping(
+		preset,
+		(cls, id) => getCapturedPreset(cls, id)?.defaultSubtype,
+	);
+	return mapping && subtype !== undefined
+		? directionValuesForPreset(preset).find(
+				(value) => resolveDirectionSubtype(mapping, value) === subtype,
+			)
+		: undefined;
 }
 
 /**

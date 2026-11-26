@@ -322,6 +322,8 @@ export const translations = {
 		'Diese Präsentation enthielt digitale Signaturen, die beim Bearbeiten und Speichern der Datei entfernt werden.',
 	'pptx.compatibility.saveGroupChildSkipped':
 		'Eine Form innerhalb einer Gruppe konnte nicht gespeichert werden und wurde übersprungen.',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'Bei der Wiedergabe der Farbschreibmaschine können Buchstaben- und Farbwechsel zeitlich abweichen.',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		'Ein Animationston konnte nicht gespeichert werden und wurde übersprungen.',
 	'pptx.compatibility.saveBackgroundImageUnsupported':

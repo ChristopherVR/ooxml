@@ -413,6 +413,7 @@ export function createRibbon(
 			hasSelection: latestSelected !== undefined,
 			selectedElementId: latestExtra.selectedElementId,
 			animationSlideId: latestExtra.animationSlideId,
+			animationSlide: latestExtra.animationSlide,
 			animations: latestExtra.animations ?? [],
 			animationTimelineAnchors: latestExtra.animationTimelineAnchors ?? [],
 			paneOpen: inspectorOpen,

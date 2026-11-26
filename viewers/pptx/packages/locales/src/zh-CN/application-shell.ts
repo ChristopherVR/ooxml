@@ -195,6 +195,8 @@ export const translations = {
 	'pptx.compatibility.saveSignaturesStripped':
 		'该演示文稿具有数字签名，一旦编辑并保存文件，这些数字签名就会被删除。',
 	'pptx.compatibility.saveGroupChildSkipped': '组内的一个形状无法保存并被跳过。',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'彩色打字机效果的播放近似呈现原始文字和颜色的时间。',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported': '无法保存一个动画声音并被跳过。',
 	'pptx.compatibility.saveBackgroundImageUnsupported': '一张幻灯片背景图像无法保存并被跳过。',
 	'pptx.compatibility.shapeIdDeduplicated': '两个形状共享相同的内部 ID；一个被自动重新分配。',

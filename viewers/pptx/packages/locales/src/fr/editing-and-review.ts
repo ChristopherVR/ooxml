@@ -325,6 +325,8 @@ export const translations = {
 		"Cette présentation comportait des signatures numériques, qui sont supprimées lors de la modification et de l'enregistrement du fichier.",
 	'pptx.compatibility.saveGroupChildSkipped':
 		"Une forme à l'intérieur d'un groupe n'a pas pu être enregistrée et a été ignorée.",
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'La lecture de Machine à écrire couleur reproduit approximativement le rythme des lettres et des couleurs.',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		"Un son d'animation n'a pas pu être enregistré et a été ignoré.",
 	'pptx.compatibility.saveBackgroundImageUnsupported':

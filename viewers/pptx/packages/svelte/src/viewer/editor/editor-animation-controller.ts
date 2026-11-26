@@ -7,7 +7,7 @@ import {
 	setMotionPath,
 	updateSlide,
 } from 'ooxml-ui/pptx';
-import type { PptxAnimationPreset, PptxElementAnimation } from 'pptx-viewer-core';
+import type { PptxAnimationPreset, PptxElementAnimation, PptxSlide } from 'pptx-viewer-core';
 
 import type { EditorState } from './editor-state.svelte';
 
@@ -33,10 +33,15 @@ export class EditorAnimationController {
 		this.#editor = editor;
 	}
 
-	commitAnimations(animations: PptxElementAnimation[]): void {
+	commitAnimations(
+		animations: PptxElementAnimation[],
+		timing?: Pick<PptxSlide, 'rawTiming' | 'nativeAnimations'>,
+	): void {
 		const current = this.#editor.currentSlideIndex;
 		if (this.#editor.editable && this.#editor.slides[current]) {
-			this.#editor.commitSlides(updateSlide(this.#editor.slides, current, { animations }));
+			this.#editor.commitSlides(
+				updateSlide(this.#editor.slides, current, { animations, ...timing }),
+			);
 		}
 	}
 

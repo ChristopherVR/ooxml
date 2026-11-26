@@ -190,7 +190,8 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		},
 		onAddAnimation: handleAddAnimation,
 		onRemoveAnimation: handleRemoveAnimation,
-		onCommitAnimations: (animations) => propertyHandlers.handleUpdateSlide({ animations }),
+		onCommitAnimations: (animations, timing) =>
+			propertyHandlers.handleUpdateSlide({ animations, ...timing }),
 		onToggleCompactToolbar: () => s.setIsCompactToolbarOpen((p) => !p),
 		onSetToolbarSection: s.setToolbarSection,
 		onZoomIn: zoom.handleZoomIn,

@@ -103,7 +103,10 @@ export function useSlideMutations(input: UseSlideMutationsInput) {
 	}
 
 	/** Replace the active slide's animation list (history-aware). */
-	function writeActiveSlideAnimations(animations: PptxElementAnimation[]): void {
+	function writeActiveSlideAnimations(
+		animations: PptxElementAnimation[],
+		timing?: Pick<PptxSlide, 'rawTiming' | 'nativeAnimations'>,
+	): void {
 		const index = activeSlideIndex.value;
 		const slide = slides.value[index];
 		if (!slide) {
@@ -111,7 +114,7 @@ export function useSlideMutations(input: UseSlideMutationsInput) {
 		}
 		pushHistory();
 		const nextSlides = slides.value.slice();
-		nextSlides[index] = { ...slide, animations };
+		nextSlides[index] = { ...slide, animations, ...timing };
 		slides.value = nextSlides;
 	}
 

@@ -944,7 +944,7 @@ export interface PptxAnimationIterate {
 /** Build type for text build (paragraph/word/letter) animations from `p:bldP/@build`. */
 export type PptxTextBuildType = 'allAtOnce' | 'byParagraph' | 'byWord' | 'byChar';
 
-/** Direction for fly-in / fly-out / wipe effects. */
+/** Direction or variant of an entrance or exit effect. */
 export type PptxAnimationDirection =
 	| 'fromLeft'
 	| 'fromRight'
@@ -953,7 +953,22 @@ export type PptxAnimationDirection =
 	| 'fromTopLeft'
 	| 'fromTopRight'
 	| 'fromBottomLeft'
-	| 'fromBottomRight';
+	| 'fromBottomRight'
+	| 'horizontal'
+	| 'vertical'
+	| 'horizontalIn'
+	| 'horizontalOut'
+	| 'verticalIn'
+	| 'verticalOut'
+	| 'in'
+	| 'out'
+	| 'objectCenter'
+	| 'inSlightly'
+	| 'outSlightly'
+	| 'inFromScreenCenter'
+	| 'outFromScreenCenter'
+	| 'outFromScreenBottom'
+	| 'inToScreenBottom';
 
 /** Sequence mode for paragraph-level animations. */
 export type PptxAnimationSequence = 'asOne' | 'byParagraph' | 'byWord' | 'byLetter';
@@ -986,6 +1001,10 @@ export type PptxAfterAnimationAction =
  */
 export interface PptxElementAnimation {
 	elementId: string;
+	/** Local behaviour XML staged by Animation Painter for a new destination effect. */
+	nativePaintTemplate?:
+		| { sourceShapeId: string; children: XmlObject; presetClass: string }
+		| undefined;
 	entrance?: PptxAnimationPreset | undefined;
 	exit?: PptxAnimationPreset | undefined;
 	emphasis?: PptxAnimationPreset | undefined;

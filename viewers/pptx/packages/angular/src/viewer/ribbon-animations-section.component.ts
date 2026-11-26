@@ -84,8 +84,10 @@ export class RibbonAnimationsSectionComponent {
 			editing: {
 				slide: this.editor.slides()[this.slideIndex()],
 				elementId: this.selectedElement()?.id,
-				commit: (animations: PptxElementAnimation[]) =>
-					this.editor.updateSlide(this.slideIndex(), { animations }),
+				commit: (
+					animations: PptxElementAnimation[],
+					timing?: Pick<PptxSlide, 'rawTiming' | 'nativeAnimations'>,
+				) => this.editor.updateSlide(this.slideIndex(), { animations, ...timing }),
 			},
 			translate: (key: string) => this.translation?.instant(key) ?? key,
 		};

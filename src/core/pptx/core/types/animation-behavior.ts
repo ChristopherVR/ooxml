@@ -12,7 +12,7 @@
  *
  * @module types/animation-behavior
  */
-import type { PptxAnimationKeyframe } from './animation';
+import type { PptxAnimationKeyframe, PptxColorAnimation } from './animation';
 
 /** Timing of one behaviour, from its own `p:cBhvr/p:cTn`. */
 export interface PptxAnimationBehaviorTiming {
@@ -108,4 +108,5 @@ export type PptxAnimationBehavior =
 	| PptxAnimEffectBehavior
 	| PptxAnimScaleBehavior
 	| PptxAnimRotBehavior
-	| PptxAnimMotionBehavior;
+	| PptxAnimMotionBehavior
+	| (BehaviorBase & { kind: 'animClr'; color: PptxColorAnimation });

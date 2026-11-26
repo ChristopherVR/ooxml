@@ -62,6 +62,8 @@ export {
 	timingCurveToAccelDecel,
 } from './animation-write-mappings';
 export { resolveDirectionSubtype } from './animation-timing-surgical-behaviors';
+export { editNativeEffectTiming } from './native-animation-edit';
+export { captureNativeAnimationTemplate } from './animation-paint-template';
 export {
 	capturedPresetIds,
 	capturedSubtypes,

@@ -1,9 +1,12 @@
 import {
 	animationFor,
+	captureNativeAnimationTemplate,
 	DEFAULT_ANIMATION_TRIGGER,
+	ooxmlToPresetName,
 	type PptxElementAnimation,
 } from 'ooxml-core/pptx';
 
+import { directionForAnimationSubtype } from './animation-direction-options';
 import type { AnimationEditingSlide } from './ribbon-animation-editing';
 
 export function editableAnimation(
@@ -28,7 +31,8 @@ export function captureAnimationPaint(
 	slide: AnimationEditingSlide,
 	elementId: string | undefined,
 ): AnimationPaint | undefined {
-	const entry = editableAnimation(slide.animations ?? [], elementId);
+	const entry =
+		editableAnimation(slide.animations ?? [], elementId) ?? importedPaintEntry(slide, elementId);
 	if (!entry) {
 		return undefined;
 	}
@@ -45,6 +49,40 @@ export function captureAnimationPaint(
 		effect.trigger = DEFAULT_ANIMATION_TRIGGER;
 	}
 	return { source: { slideId: slide.id, elementId: sourceElementId }, effect };
+}
+
+function importedPaintEntry(
+	slide: AnimationEditingSlide,
+	elementId: string | undefined,
+): PptxElementAnimation | undefined {
+	if (!elementId) return undefined;
+	const effect = slide.nativeAnimations?.find(
+		(item) => item.targetId === elementId && item.presetClass && item.presetId !== undefined,
+	);
+	const { presetClass, presetId } = effect ?? {};
+	if (!effect || !presetClass || presetId === undefined) return undefined;
+	const slot = { entr: 'entrance', emph: 'emphasis', exit: 'exit', path: 'motionPath' }[
+		presetClass
+	];
+	const token = ooxmlToPresetName({ presetClass, presetId }) ?? `${presetClass}.${presetId}`;
+	const value = presetClass === 'path' ? effect.motionPath : token;
+	if (!value) return undefined;
+	return {
+		elementId,
+		[slot]: value,
+		nativePaintTemplate:
+			effect.nodeId === undefined || !slide.rawTiming
+				? undefined
+				: captureNativeAnimationTemplate(slide.rawTiming, effect.nodeId),
+		durationMs: effect.durationMs,
+		delayMs: effect.delayMs,
+		trigger: effect.trigger,
+		direction: directionForAnimationSubtype(token, effect.presetSubtype),
+		soundRId: effect.soundRId,
+		soundPath: effect.soundPath,
+		soundName: effect.soundName,
+		stopSound: effect.stopSound,
+	};
 }
 
 /** Replace the target's editor effects in place, or append after the full timeline. */
@@ -68,10 +106,9 @@ export function applyAnimationPaint(
 			) + 1;
 	const effect = { ...paint.effect };
 	if (!sameSlide && effect.soundRId) {
-		// Embedded sound relationships belong to a single slide part.
+		// The saver copies the embedded part and creates a relationship for the destination slide.
 		delete effect.soundRId;
-		delete effect.soundPath;
-		delete effect.soundName;
+		if (!effect.soundPath) delete effect.soundName;
 	}
 	const next = { ...effect, elementId, order };
 	return existing

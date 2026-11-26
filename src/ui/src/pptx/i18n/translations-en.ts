@@ -2542,6 +2542,22 @@ export const translationsEn: Record<string, string> = {
 	'pptx.animation.direction.fromTopLeft': 'From Top Left',
 	'pptx.animation.direction.fromTopRight': 'From Top Right',
 	'pptx.animation.direction.fromBottomLeft': 'From Bottom Left',
+	'pptx.animation.direction.horizontal': 'Horizontal',
+	'pptx.animation.direction.vertical': 'Vertical',
+	'pptx.animation.direction.horizontalIn': 'Horizontal In',
+	'pptx.animation.direction.horizontalOut': 'Horizontal Out',
+	'pptx.animation.direction.verticalIn': 'Vertical In',
+	'pptx.animation.direction.verticalOut': 'Vertical Out',
+	'pptx.animation.direction.in': 'In',
+	'pptx.animation.direction.out': 'Out',
+	'pptx.animation.direction.objectCenter': 'Object Center',
+	'pptx.animation.direction.inSlightly': 'In Slightly',
+	'pptx.animation.direction.outSlightly': 'Out Slightly',
+	'pptx.animation.direction.inFromScreenCenter': 'In from Screen Center',
+	'pptx.animation.direction.outFromScreenBottom': 'Out from Screen Bottom',
+	'pptx.animation.direction.inToScreenBottom': 'In to Screen Bottom',
+	'pptx.animation.direction.outFromScreenCenter': 'Out to Screen Center',
+	'pptx.animations.editTimingEffect': 'Effect to edit',
 	'pptx.animation.direction.fromBottomRight': 'From Bottom Right',
 	'pptx.animation.sequence.asOne': 'As One Object',
 	'pptx.animation.sequence.byParagraph': 'By Paragraph',
@@ -4314,6 +4330,8 @@ export const translationsEn: Record<string, string> = {
 		'This presentation had digital signatures, which are removed once the file is edited and saved.',
 	'pptx.compatibility.saveGroupChildSkipped':
 		'One shape inside a group could not be saved and was skipped.',
+	'pptx.compatibility.animationColorTypewriterApproximated':
+		'Color Typewriter playback approximates the original letter and color timing.',
 	'pptx.compatibility.saveAnimationSoundPayloadUnsupported':
 		'One animation sound could not be saved and was skipped.',
 	'pptx.compatibility.saveBackgroundImageUnsupported':

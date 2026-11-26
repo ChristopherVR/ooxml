@@ -72,7 +72,7 @@ export function resolveEffect(
 			// PowerPoint always pairs their presetId with the same literal
 			// `p:animEffect/@filter` subtype token this redirect reads.
 			const effect = redirectStripsEffect(
-				redirectMaskEffectByFilterSubtype(flyEffect, anim.effectFilter),
+				redirectMaskEffectByFilterSubtype(flyEffect, anim.effectFilter, anim.presetSubtype),
 				anim.effectFilter,
 				anim.presetSubtype,
 			);

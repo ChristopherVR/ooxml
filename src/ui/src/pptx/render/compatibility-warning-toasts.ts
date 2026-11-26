@@ -70,6 +70,8 @@ export interface ToastMessagePart {
  * of being silently dropped.
  */
 const CODE_MESSAGE_KEYS: Readonly<Record<string, string>> = {
+	ANIMATION_COLOR_TYPEWRITER_APPROXIMATED:
+		'pptx.compatibility.animationColorTypewriterApproximated',
 	UNMODELLED_PRESENTATION_MARKUP: 'pptx.compatibility.unmodelledPresentationMarkup',
 	UNMODELLED_SLIDE_MARKUP: 'pptx.compatibility.unmodelledSlideMarkup',
 	UNMODELLED_SHAPE_PROPERTY: 'pptx.compatibility.unmodelledShapeProperty',

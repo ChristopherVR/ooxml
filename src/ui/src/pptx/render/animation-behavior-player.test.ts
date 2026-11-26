@@ -69,6 +69,46 @@ const flyInFromLeft = (ms: number): PptxAnimationBehavior[] => [
 	ramp('ppt_y', '#ppt_y', '#ppt_y', { durationMs: ms }),
 ];
 
+it('combines the file’s own emphasis rotation, scale and delayed visibility', () => {
+	const player = createBehaviorPlayer(
+		{
+			presetClass: 'emph',
+			durationMs: 800,
+			behaviors: [
+				{ kind: 'animRot', attrNames: ['r'], from: 0, to: 60, timing: { durationMs: 600 } },
+				{ kind: 'animScale', attrNames: [], to: { x: 2, y: 3 }, timing: { durationMs: 400 } },
+				visibility('hidden', { delayMs: 700, durationMs: 1 }),
+			],
+		},
+		BOX,
+	);
+	expect(player?.frameAt(200)).toMatchObject({ rotation: 20, scaleX: 1.5, scaleY: 2, opacity: 1 });
+	expect(player?.frameAt(700).opacity).toBe(0);
+});
+
+it('uses the captured Blink stops and leaves the object visible during the delay', () => {
+	const blink: PptxNativeAnimation = {
+		presetClass: 'emph',
+		presetId: 35,
+		targetId: 'shape-1',
+		durationMs: 1000,
+		delayMs: 1000,
+		behaviors: [
+			{
+				kind: 'anim',
+				attrNames: ['style.visibility'],
+				calcMode: 'discrete',
+				keyframes: [tav(0, 'hidden'), tav(50000, 'visible')],
+				timing: { durationMs: 1000 },
+			},
+		],
+	};
+	const player = createBehaviorPlayer(blink, undefined);
+	expect([0, 499, 500, 999].map((time) => player?.frameAt(time).opacity)).toEqual([0, 0, 1, 1]);
+	const timeline = buildTimeline([blink]);
+	expect(JSON.stringify(timeline)).toContain('"fillMode":"forwards"');
+});
+
 describe('createBehaviorPlayer: Fly', () => {
 	it('starts a Fly In just off the slide edge, so the distance depends on position', () => {
 		// CreateVideo: a 200 px square at x = 380 enters at x = -200 and

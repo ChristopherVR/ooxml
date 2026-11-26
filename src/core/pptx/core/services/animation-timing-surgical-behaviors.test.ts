@@ -8,6 +8,8 @@ import {
 } from './animation-timing-surgical-behaviors';
 import { PRESET_TO_OOXML } from './animation-write-mappings';
 import { buildSingleEffectNode } from './animation-write-node-builders';
+import { PptxAnimationWriteService } from './PptxAnimationWriteService';
+import { PptxNativeAnimationService } from './PptxNativeAnimationService';
 
 function ids(): () => number {
 	let id = 100;
@@ -52,6 +54,25 @@ function behaviourTimings(
 }
 
 describe('resolveDirectionSubtype', () => {
+	it.each([
+		['splitIn', 'horizontalOut', '42', 'barn(outHorizontal)'],
+		['blindsIn', 'vertical', '5', 'blinds(vertical)'],
+		['boxIn', 'out', '32', 'box(out)'],
+		['zoomIn', 'inFromScreenCenter', '528', undefined],
+	] as const)('writes %s %s as a native variant', (entrance, direction, subtype, filter) => {
+		const node = writtenEffect({ elementId: '5', entrance, direction });
+		expect(node['@_presetSubtype']).toBe(subtype);
+		if (filter) expect(filters(node)).toStrictEqual([filter]);
+		const timing = new PptxAnimationWriteService().buildTimingXml(
+			[{ elementId: '5', entrance, direction }],
+			undefined,
+		);
+		const parsed = new PptxNativeAnimationService().parseNativeAnimations({
+			'p:sld': { 'p:timing': timing },
+		});
+		expect(parsed?.[0]?.presetSubtype).toBe(Number(subtype));
+	});
+
 	it('maps the editor direction onto the codes PowerPoint writes', () => {
 		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.wipeIn), 'fromLeft')).toBe(8);
 		expect(resolveDirectionSubtype(must(PRESET_TO_OOXML.peekIn), 'fromTop')).toBe(1);

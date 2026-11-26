@@ -15,6 +15,8 @@ import type { PptxNativeAnimation } from 'ooxml-core/pptx';
 
 import type { BehaviorFrame } from './animation-behavior-player';
 import { createBehaviorPlayer } from './animation-behavior-player';
+import { behaviorClock, behaviorPhaseAt } from './animation-behavior-timing';
+import { timedColorDeclarations } from './animation-color';
 import type { RevealEdge } from './animation-mask-reveal';
 import { maskEdgePartialDecl } from './animation-mask-reveal';
 import type { AnimationElementBox } from './animation-render-context';
@@ -78,6 +80,7 @@ export interface BehaviorKeyframesOptions {
 	 * preview measures its own stage).
 	 */
 	slidePx?: { width: number; height: number };
+	themeColorMap?: Readonly<Record<string, string>> | undefined;
 }
 
 /**
@@ -97,9 +100,17 @@ export function buildBehaviorKeyframes(
 	const duration = player.durationMs;
 	// The effect's accel/decel already lives in each behaviour's clock (see
 	// `behaviorClock`), so the step itself must play linearly.
-	const eased = Boolean(anim.accel || anim.decel);
+	const colors =
+		anim.presetClass === 'emph'
+			? (anim.behaviors ?? []).flatMap((behavior) =>
+					behavior.kind === 'animClr'
+						? [{ behavior, clock: behaviorClock(behavior.timing, duration, anim) }]
+						: [],
+				)
+			: [];
+	const eased = Boolean(anim.accel || anim.decel) || colors.length > 0;
 	const offsets = new Set<number>([0, 1]);
-	if (!player.piecewiseLinear) {
+	if (!player.piecewiseLinear || colors.length > 0) {
 		for (let i = 1; i < DENSE_SAMPLES; i++) {
 			offsets.add(i / DENSE_SAMPLES);
 		}
@@ -127,9 +138,21 @@ export function buildBehaviorKeyframes(
 		wipeEdge: frames.find(({ frame }) => frame.wipe)?.frame.wipe?.edge,
 	};
 	const name = `${options.prefix ?? 'pptx-tl-bhvr'}-${uid}`;
-	const lines = frames.map(
-		({ offset, frame }) => `\t${fmt(offset * 100, 3)}% { ${declarations(frame, usage)} }`,
-	);
+	const lines = frames.map(({ offset, frame }) => {
+		const time = offset * duration;
+		const color = colors
+			.map(({ behavior, clock }) => {
+				const phase = behaviorPhaseAt(clock, time);
+				const progress =
+					phase.state === 'active' &&
+					(behavior.timing.fill !== 'remove' || time < clock.startMs + clock.activeMs)
+						? phase.progress
+						: undefined;
+				return timedColorDeclarations(behavior.color, progress, options.themeColorMap);
+			})
+			.join(' ');
+		return `\t${fmt(offset * 100, 3)}% { ${declarations(frame, usage)}${color ? ` ${color}` : ''} }`;
+	});
 	if (anim.presetClass === 'entr') {
 		// Hidden until the effect starts: PowerPoint's visibility `p:set`
 		// fires at the effect's first instant, so the shape must not show its

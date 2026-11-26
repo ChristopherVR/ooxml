@@ -2,6 +2,19 @@ import type { PptxElementAnimation, XmlObject } from '../types';
 import { serializeBldPTemplates } from './animation-timing-templates';
 import { EDITOR_BUILD_GROUP_ID } from './animation-write-effect-extras';
 import { buildSingleEffectNode, buildMotionPathNode } from './animation-write-node-builders';
+import { isXmlObject } from './native-animation-helpers';
+
+/** Let the first group start when the main sequence begins, without removing its click gate. */
+export function markGroupAutoStart(groupNode: XmlObject | undefined, mainSeqId: number): void {
+	const cTn = groupNode?.['p:cTn'];
+	if (!isXmlObject(cTn)) return;
+	cTn['p:stCondLst'] = {
+		'p:cond': [
+			{ '@_delay': 'indefinite' },
+			{ '@_evt': 'onBegin', '@_delay': '0', 'p:tn': { '@_val': String(mainSeqId) } },
+		],
+	};
+}
 
 /**
  * Build effect nodes for a single animation entry.

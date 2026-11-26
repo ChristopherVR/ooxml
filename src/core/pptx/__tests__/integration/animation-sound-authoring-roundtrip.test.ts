@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 
 import { PresentationBuilder } from '../../core/builders/sdk/PresentationBuilder';
 import { PptxHandler } from '../../core/PptxHandler';
+import { must } from '../../test-support/access';
 import type { PptxData } from '../../index';
 
 /**
@@ -33,6 +34,34 @@ const TINY_AUDIO_BYTES = new Uint8Array([
 const TINY_AUDIO_DATA_URL = `data:audio/mpeg;base64,${Buffer.from(TINY_AUDIO_BYTES).toString('base64')}`;
 
 describe('animation effect sound authoring round-trip', () => {
+	it('copies an embedded source sound to a different slide and relationship', async () => {
+		const { handler, data, createSlide } = await PresentationBuilder.create();
+		for (const title of ['Source', 'Target']) {
+			const builder = createSlide('Blank').addText(title, { x: 10, y: 10, width: 200, height: 40 });
+			const element = must(builder.getLastElement());
+			if (title === 'Source') builder.addAnimation(element.id, { preset: 'fadeIn' });
+			data.slides.push(builder.build());
+		}
+		const first = must(must(data.slides[0]).animations?.[0]);
+		first.soundData = TINY_AUDIO_DATA_URL;
+		const initial = await handler.save(data.slides);
+		const editingHandler = new PptxHandler();
+		const editing = await editingHandler.load(initial.buffer as ArrayBuffer);
+		const source = must(editing.slides[0]?.nativeAnimations?.find((effect) => effect.soundPath));
+		const target = must(editing.slides[1]);
+		target.animations = [
+			{ elementId: must(target.elements[0]).id, entrance: 'fadeIn', soundPath: source.soundPath },
+		];
+		const saved = await editingHandler.save(editing.slides);
+		const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
+		const copied = must(reloaded.slides[1]?.nativeAnimations?.find((effect) => effect.soundPath));
+		expect(copied.soundPath).not.toBe(source.soundPath);
+		const zip = await JSZip.loadAsync(saved);
+		expect(await must(zip.file(must(copied.soundPath))).async('uint8array')).toEqual(
+			TINY_AUDIO_BYTES,
+		);
+	});
+
 	it('embeds a newly-picked sound, mints its relationship, and writes the modern p:audio/p:sndTgt sound node', async () => {
 		const { handler, data, createSlide } = await PresentationBuilder.create();
 		const slideBuilder = createSlide('Blank').addText('Hello', {

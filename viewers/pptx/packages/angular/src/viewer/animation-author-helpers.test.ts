@@ -343,6 +343,15 @@ describe('setTimingCurve', () => {
 // ==========================================================================
 
 describe('setDirection', () => {
+	it('reflects the Out variant of a diamond reveal in the direction picker', () => {
+		const choice = directionPickerState(
+			[{ elementId: 'el-1', entrance: 'entr.8', direction: 'out' }],
+			'el-1',
+		);
+		expect(choice.options.map(({ value }) => value)).toStrictEqual(['in', 'out']);
+		expect(choice.active).toBe('out');
+	});
+
 	it('sets the direction', () => {
 		const result = setDirection(ANIMS, 'el-1', 'fromLeft');
 		expect(animationFor(result, 'el-1')?.direction).toBe('fromLeft');

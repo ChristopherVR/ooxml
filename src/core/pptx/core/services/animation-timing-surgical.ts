@@ -18,6 +18,7 @@
  * @module services/animation-timing-surgical
  */
 import type { PptxAnimationPreset, PptxElementAnimation, XmlObject } from '../types';
+import { buildPaintedAnimationChildren } from './animation-paint-template';
 import { hasAuthoredAnimationEffect } from './editor-animation-entry';
 import {
 	applyAfterAnimationBehavior,
@@ -135,6 +136,13 @@ function updateEffectNodeAttributes(
 		// Rebuild/retime the behaviours first: it reads the node's current
 		// preset, subtype and duration, and writes the subtype it settles on.
 		refreshEffectBehaviors(cTn, anim, presetName, mapping, shapeId, allocateId);
+		const painted = buildPaintedAnimationChildren(
+			anim.nativePaintTemplate,
+			presetClass,
+			shapeId,
+			allocateId,
+		);
+		if (painted) cTn['p:childTnLst'] = painted;
 		cTn['@_presetID'] = String(mapping.presetId);
 		cTn['@_presetClass'] = mapping.presetClass;
 	}
