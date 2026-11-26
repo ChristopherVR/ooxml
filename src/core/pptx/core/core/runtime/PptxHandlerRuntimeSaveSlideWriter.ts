@@ -291,20 +291,19 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		// and the `pptx:editorMeta` extension reference a shape id real
 		// PowerPoint can bind, and so `reconcileAnimationTargets` can map them
 		// back on the next load. Shapes are stamped with the same id below.
+		if (slide.animations !== undefined) {
+			// Resolve pending sounds on the model before remapping makes copies.
+			await this.embedPendingAnimationSounds(slide.animations, {
+				saveSession,
+				slideRelationshipRegistry,
+				slideAudioRelationshipType: constants.slideAudioRelationshipType,
+			});
+		}
 		const shapeIdAnimations =
 			slide.animations !== undefined
 				? remapEditorAnimationsToShapeIds(slide.elements, slide.animations, this.maxCnvPrId(spTree))
 				: undefined;
 		if (shapeIdAnimations !== undefined) {
-			// A newly-chosen effect sound arrives as a pending `data:` URL
-			// (`soundData`), same convention as pending image/media bytes. Embed it
-			// into the package and mint its relationship before anything below
-			// reads `soundRId` to write `p:stSnd`.
-			await this.embedPendingAnimationSounds(shapeIdAnimations, {
-				saveSession,
-				slideRelationshipRegistry,
-				slideAudioRelationshipType: constants.slideAudioRelationshipType,
-			});
 			this.applyEditorAnimations(slideNode, shapeIdAnimations);
 		}
 		// An EMPTY list must still reach the writer: it is how "the user deleted

@@ -60,6 +60,16 @@ describe('animation effect sound authoring round-trip', () => {
 		expect(await must(zip.file(must(copied.soundPath))).async('uint8array')).toEqual(
 			TINY_AUDIO_BYTES,
 		);
+		// Force the slide through the writer again, even if its fingerprint matches.
+		target.isDirty = true;
+		const savedAgain = await editingHandler.save(editing.slides);
+		const secondZip = await JSZip.loadAsync(savedAgain);
+		const audioParts = (archive: JSZip) =>
+			Object.keys(archive.files).filter((path) => /^ppt\/media\/audio\d+\.mp3$/u.test(path));
+		expect(audioParts(zip)).toHaveLength(2);
+		expect(audioParts(secondZip)).toEqual(audioParts(zip));
+		const rels = 'ppt/slides/_rels/slide2.xml.rels';
+		expect(await secondZip.file(rels)?.async('string')).toBe(await zip.file(rels)?.async('string'));
 	});
 
 	it('embeds a newly-picked sound, mints its relationship, and writes the modern p:audio/p:sndTgt sound node', async () => {
