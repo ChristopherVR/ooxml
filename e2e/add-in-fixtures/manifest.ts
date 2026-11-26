@@ -1,8 +1,24 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { buildSync } from 'esbuild';
+import type { Page } from '@playwright/test';
 
 export const paneOrigin = 'https://publisher.office-add-in.test';
+export async function enforcePublisherFramePolicy(page: Page) {
+	await page.route('**/*', async (route) => {
+		if (!route.request().isNavigationRequest() || route.request().frame() !== page.mainFrame())
+			return route.fallback();
+		const response = await route.fetch();
+		return route.fulfill({
+			response,
+			headers: {
+				...response.headers(),
+				'content-security-policy': `frame-src ${paneOrigin}`,
+			},
+		});
+	});
+}
+
 export const addInName = 'Notes';
 const singlePixelPng = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGPitdoAAAFXAPqIZaQSAAAAAElFTkSuQmCC',

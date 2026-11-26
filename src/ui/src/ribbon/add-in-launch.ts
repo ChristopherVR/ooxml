@@ -16,6 +16,8 @@ export function addInLauncher(
 			return { reason: t('Microsoft sign-in and access tokens are unavailable.') };
 		if (!runtime)
 			return { reason: t('Installed for this editor. Running add-ins is unavailable.') };
+		if (runtime.frameSrcEnforced !== true)
+			return { reason: t('The host must enforce a frame policy to run add-ins.') };
 		if (!source) return { reason: t('This add-in has no compatible task pane.') };
 		const url = allowedPaneUrl(source, runtime);
 		if (!url || url.origin === host.ownerDocument.location?.origin)

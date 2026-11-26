@@ -134,8 +134,9 @@ origin and a user opens an installed add-in, the sandboxed frame requests the ch
 The destination receives network metadata without a referrer. Its page can request its own
 assets or services. The bridge returns only bounded selected text when the manifest permission,
 the install review, and the live editor allow it. A publisher can transmit data it receives
-using network access allowed by its deployment. Hosts control `frame-src`, their execution
-service's policy, and `setOfficeAddInRuntime`. Passing `null` disables execution in that scope.
+using network access allowed by its deployment. The host must enforce CSP `frame-src` for
+all pane navigations, including redirects, and assert it with `frameSrcEnforced: true` in the
+runtime settings. Passing `null` to `setOfficeAddInRuntime` disables execution in that scope.
 
 In the suite, My Add-ins reads a profile-scoped IndexedDB preference store. Confirming
 installation or an update saves the original manifest or ZIP there, keyed by product and

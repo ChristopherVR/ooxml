@@ -1,4 +1,12 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'The host must enforce a frame policy to run add-ins.': [
+		'L’hôte doit appliquer une politique de cadres pour exécuter les compléments.',
+		'Der Host muss zum Ausführen von Add-Ins eine Frame-Richtlinie durchsetzen.',
+		'El anfitrión debe aplicar una política de marcos para ejecutar complementos.',
+		'宿主必须强制实施框架策略才能运行加载项。',
+		'アドインを実行するには、ホストがフレーム ポリシーを適用する必要があります。',
+		'추가 기능을 실행하려면 호스트가 프레임 정책을 적용해야 합니다.',
+	],
 	'Save this add-in in host preferences.': [
 		'Enregistrer ce complément dans les préférences de l’hôte.',
 		'Dieses Add-In in den Host-Einstellungen speichern.',

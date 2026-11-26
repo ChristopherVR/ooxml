@@ -7,8 +7,14 @@ export interface OfficeAddInSelection {
 }
 
 export interface OfficeAddInRuntime {
-	/** Approved publisher-controlled HTTPS origins. The host must also configure frame-src. */
+	/** Approved publisher-controlled HTTPS origins. */
 	origins: readonly string[];
+	/**
+	 * The embedding page enforces a Content Security Policy whose frame-src restricts
+	 * frame navigations, including redirects, to the approved publisher origins.
+	 * Set this only after applying that policy. The runtime blocks panes without it.
+	 */
+	frameSrcEnforced: true;
 	/** Optional adapter for a host with its own live document integration. */
 	selection?: () => OfficeAddInSelection | undefined;
 }
@@ -38,7 +44,8 @@ export function allowedPaneUrl(source: string, runtime: OfficeAddInRuntime | nul
 			url.protocol === 'https:' &&
 			!url.username &&
 			!url.password &&
-			runtime?.origins.includes(url.origin)
+			runtime?.frameSrcEnforced === true &&
+			runtime.origins.includes(url.origin)
 		)
 			return url;
 	} catch {

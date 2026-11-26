@@ -223,7 +223,9 @@ origins. Serve approved static publisher assets and the client from a host-contr
 that sets the frame's CSP. Start with an opaque-origin iframe using `sandbox="allow-scripts"`.
 Omit the flags for same-origin, forms, popups, downloads, and top navigation. Add an iframe
 Permissions Policy denying sensors, clipboard, camera, and microphone. Set `referrerpolicy`
-to `no-referrer`. Restrict the suite's `frame-src` to configured execution origins. On the
+to `no-referrer`. Restrict the embedding page's CSP `frame-src` to the configured execution origins for all
+frame navigations, including redirects. Set `frameSrcEnforced: true` in `OfficeAddInRuntime`
+only once that policy is enforced. The bridge refuses to open panes without the assertion. On the
 execution origin, start with `default-src 'none'`, `connect-src 'none'`, `object-src 'none'`,
 `base-uri 'none'`, `form-action 'none'`, and `frame-src 'none'`. Allow pinned assets through
 explicit CSP directives. Keep inline scripts and eval disabled. Set `frame-ancestors` to the

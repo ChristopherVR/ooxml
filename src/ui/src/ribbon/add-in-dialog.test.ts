@@ -348,7 +348,7 @@ it('describes a runnable install without a preference store', async () => {
 	const root = document.body
 		.appendChild(document.createElement('div'))
 		.attachShadow({ mode: 'open' });
-	setOfficeAddInRuntime(root, { origins: ['https://example.test'] });
+	setOfficeAddInRuntime(root, { origins: ['https://example.test'], frameSrcEnforced: true });
 	setOfficeAddInStorefront(root, {
 		kind: 'catalog',
 		entries: [{ id: 'notes', label: 'Notes', read: () => new File([xml], 'manifest.xml') }],

@@ -34,7 +34,10 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 	});
 	await editor.evaluate(
 		(node, origin) =>
-			Reflect.set(node, Symbol.for('office-ui.add-in-runtime'), { origins: [origin] }),
+			Reflect.set(node, Symbol.for('office-ui.add-in-runtime'), {
+				origins: [origin],
+				frameSrcEnforced: true,
+			}),
 		paneOrigin,
 	);
 	const zip = new JSZip();

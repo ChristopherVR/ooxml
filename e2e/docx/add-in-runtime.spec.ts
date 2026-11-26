@@ -1,11 +1,12 @@
 /* oxlint-disable vitest/prefer-importing-vitest-globals -- Playwright API */
 import { expect, test } from '@playwright/test';
-import { xmlManifest } from '../add-in-fixtures/manifest';
+import { enforcePublisherFramePolicy, xmlManifest } from '../add-in-fixtures/manifest';
 import { newDocument, reveal } from './helpers';
 import { checkAddInRuntime } from './add-in-runtime-flow';
 
 test('installs, runs, and removes XML, JSON and ZIP task panes in Word', async ({ page }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
+	await enforcePublisherFramePolicy(page);
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = page.locator('docx-editor');
@@ -26,6 +27,7 @@ test('reviews a Marketplace listing through the configured resolver without enab
 	page,
 }) => {
 	await page.setViewportSize({ width: 2400, height: 900 });
+	await enforcePublisherFramePolicy(page);
 	await page.goto('/?framework=vanilla');
 	await newDocument(page);
 	const editor = page.locator('docx-editor');
