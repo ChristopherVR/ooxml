@@ -50,7 +50,13 @@ export function renderAddInConsent(
 	addIn: LocalAddIn,
 	previous: LocalAddIn | undefined,
 	t: OfficeServiceText,
-	actions: { confirm: () => void; cancel: () => void; persistent: boolean; busy: boolean },
+	actions: {
+		confirm: () => void;
+		cancel: () => void;
+		persistent: boolean;
+		runnable: boolean;
+		busy: boolean;
+	},
 ) {
 	const { manifest } = addIn;
 	const { description, update } = addInConsent(addIn, previous, t);
@@ -61,11 +67,10 @@ export function renderAddInConsent(
 		<p class="tile-name">${manifest.name} (${manifest.version})</p><p>${description}</p>
 		${update ? html`<p>${update}</p>` : nothing} ${renderAddInDetails(addIn, t)}
 		<p
-			>${t(
-				actions.persistent
-					? 'Save this add-in in host preferences. It runs only when opened.'
-					: 'Install for this editor session. Add-in code stays inactive.',
-			)}</p
+			>${t(actions.persistent ? 'Save this add-in in host preferences.' : 'Install for this editor session.')}</p
+		>
+		<p
+			>${t(actions.runnable ? 'This add-in runs only when opened.' : 'Running add-ins is unavailable.')}</p
 		>
 		${addInIssueLabels(manifest, t).map((line) => html`<p>${line}</p>`)}
 		${already ? html`<p>${t('This add-in is already installed.')}</p>` : nothing}

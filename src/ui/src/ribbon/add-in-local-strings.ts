@@ -30,17 +30,6 @@ const messages = new Map<string, readonly [string, string, string, string, strin
 		],
 	],
 	[
-		'Install for this editor session. Add-in code stays inactive.',
-		[
-			'Installer pour cette session. Le code du complément reste inactif.',
-			'Für diese Editorsitzung installieren. Der Add-In-Code bleibt inaktiv.',
-			'Instalar para esta sesión. El código del complemento seguirá inactivo.',
-			'为此编辑器会话安装。加载项代码保持停用。',
-			'このセッションにインストールします。アドイン コードは実行されません。',
-			'이 편집기 세션에 설치합니다. 추가 기능 코드는 비활성 상태로 유지됩니다.',
-		],
-	],
-	[
 		'Declared publisher',
 		[
 			'Éditeur déclaré',

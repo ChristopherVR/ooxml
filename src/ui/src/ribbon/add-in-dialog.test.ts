@@ -2,6 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
 import { openOfficeAddIns } from './add-in-dialog';
+import { setOfficeAddInRuntime } from './add-in-runtime-settings';
 import {
 	setOfficeAddInCatalog,
 	setOfficeAddInMarketplaceResolver,
@@ -341,4 +342,20 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	await vi.waitFor(() => expect(activeDialog(editor)).toBeUndefined());
 	expect((await open('myAddIns')).textContent).toContain('No add-ins');
 	activeDialog(editor)?.close();
+});
+
+it('describes a runnable install without a preference store', async () => {
+	const root = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	setOfficeAddInRuntime(root, { origins: ['https://example.test'] });
+	setOfficeAddInStorefront(root, {
+		kind: 'catalog',
+		entries: [{ id: 'notes', label: 'Notes', read: () => new File([xml], 'manifest.xml') }],
+	});
+	await openOfficeAddIns(root, 'getAddIns', (text) => text, 'word', 'en');
+	const dialog = getDialog(root);
+	dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]')?.click();
+	await vi.waitFor(() => expect(dialog?.textContent).toContain('Install for this editor session.'));
+	expect(dialog?.textContent).toContain('This add-in runs only when opened.');
 });

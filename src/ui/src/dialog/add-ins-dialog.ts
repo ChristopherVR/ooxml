@@ -211,6 +211,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 							cancel: () => this.cancel(),
 							confirm: () => this.confirm(),
 							persistent: Boolean(session.restore),
+							runnable: Boolean(session.launcher.pane(this.#preview.addIn).url),
 							busy: Boolean(this.#pending),
 						})
 					: html` <div

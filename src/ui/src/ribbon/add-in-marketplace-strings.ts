@@ -1,4 +1,36 @@
 export const ADD_IN_MARKETPLACE_STRINGS = {
+	'Save this add-in in host preferences.': [
+		'Enregistrer ce complément dans les préférences de l’hôte.',
+		'Dieses Add-In in den Host-Einstellungen speichern.',
+		'Guardar este complemento en las preferencias del anfitrión.',
+		'将此加载项保存到宿主首选项。',
+		'このアドインをホストの設定に保存します。',
+		'이 추가 기능을 호스트 기본 설정에 저장합니다.',
+	],
+	'Install for this editor session.': [
+		'Installer pour cette session.',
+		'Für diese Editorsitzung installieren.',
+		'Instalar para esta sesión.',
+		'为此编辑器会话安装。',
+		'このセッションにインストールします。',
+		'이 편집기 세션에 설치합니다.',
+	],
+	'This add-in runs only when opened.': [
+		'Ce complément s’exécute à l’ouverture.',
+		'Dieses Add-In wird erst beim Öffnen ausgeführt.',
+		'Este complemento solo se ejecuta al abrirlo.',
+		'此加载项仅在打开时运行。',
+		'このアドインは開いたときにだけ実行されます。',
+		'이 추가 기능은 열 때만 실행됩니다.',
+	],
+	'Running add-ins is unavailable.': [
+		'L’exécution des compléments est indisponible.',
+		'Add-Ins können derzeit nicht ausgeführt werden.',
+		'No se pueden ejecutar complementos.',
+		'暂时无法运行加载项。',
+		'アドインは実行できません。',
+		'추가 기능을 실행할 수 없습니다.',
+	],
 	'Content add-ins are unavailable in this editor.': [
 		'Les compléments de contenu sont indisponibles dans cet éditeur.',
 		'Inhalts-Add-Ins sind in diesem Editor nicht verfügbar.',
@@ -14,14 +46,6 @@ export const ADD_IN_MARKETPLACE_STRINGS = {
 		'无法加载已保存的加载项。',
 		'保存済みのアドインを読み込めませんでした。',
 		'저장된 추가 기능을 불러오지 못했습니다.',
-	],
-	'Save this add-in in host preferences. It runs only when opened.': [
-		'Enregistrez ce complément dans les préférences de l’hôte. Il s’exécute à l’ouverture.',
-		'Dieses Add-In in den Host-Einstellungen speichern. Es wird beim Öffnen ausgeführt.',
-		'Guarda este complemento en las preferencias del anfitrión. Solo se ejecuta al abrirlo.',
-		'将此加载项保存到宿主首选项。仅在打开时运行。',
-		'このアドインをホストの設定に保存します。開いたときにだけ実行されます。',
-		'이 추가 기능을 호스트 기본 설정에 저장합니다. 열 때만 실행됩니다.',
 	],
 	'Add-in details': [
 		'Détails du complément',
