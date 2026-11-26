@@ -1,0 +1,38 @@
+import { expect, it, vi } from 'vitest';
+import { createWorkbook, formatAddress } from 'ooxml-core/xlsx';
+import { reviewCommands } from './review';
+import { createTestContext } from './test-support';
+
+it('wraps note navigation, skips threads, and keeps Show All Notes per sheet', async () => {
+	const workbook = createWorkbook({ sheets: ['Sheet1', 'Sheet2'] });
+	const scrollTo = vi.fn();
+	const ctx = createTestContext(workbook, { grid: { scrollTo } });
+	ctx.commands.registerAll(reviewCommands());
+	const previous = 'review.previous-note';
+	const next = 'review.next-note';
+	const show = 'review.show-all-notes';
+	const checked = () => ctx.commands.get(show)?.checked?.(ctx);
+	const selected = () => formatAddress(ctx.selection.get().active);
+	const session = ctx.session()!;
+	session.setComment(0, { row: 2, col: 1 }, 'Thread', 'Ana', true);
+	expect(ctx.commands.isEnabled(next)).toBe(false);
+	expect(ctx.commands.isEnabled(show)).toBe(false);
+	session.setComment(0, { row: 1, col: 1 }, 'First note', 'Ben');
+	session.setComment(0, { row: 5, col: 3 }, 'Last note', 'Ben');
+	await ctx.commands.run(previous);
+	expect(selected()).toBe('D6');
+	expect(scrollTo).toHaveBeenLastCalledWith({ row: 5, col: 3 });
+	await ctx.commands.run(next);
+	expect(selected()).toBe('B2');
+	await ctx.commands.run(next);
+	expect(selected()).toBe('D6');
+	await ctx.commands.run(show);
+	expect(checked()).toBe(true);
+	ctx.setActiveSheet(1);
+	expect(checked()).toBe(false);
+	expect(ctx.commands.isEnabled(previous)).toBe(false);
+	ctx.setActiveSheet(0);
+	expect(checked()).toBe(true);
+	await ctx.commands.run(show);
+	expect(checked()).toBe(false);
+});

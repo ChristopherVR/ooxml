@@ -1,6 +1,7 @@
 // Review tab: Workbook Statistics, comments (new / edit, delete, previous, next, show all) and
 // Protect Sheet / Protect Workbook.
 import { commentsPaneOpen, toggleCommentsPane } from '../comments-pane';
+import { allNotesShown, isNote, showNavigatedNote, toggleAllNotes } from '../grid/note-popups';
 import type { Comment } from 'ooxml-core/xlsx';
 import type { Command } from 'ooxml-core/xlsx/ui';
 import type { EditorContext } from 'ooxml-core/xlsx/ui';
@@ -15,26 +16,25 @@ const commentAt = (ctx: EditorContext): Comment | undefined => {
 	);
 };
 
-const ordered = (ctx: EditorContext): Comment[] =>
-	[...(target(ctx)?.ws.comments ?? [])].sort(
-		(a, b) => a.address.row - b.address.row || a.address.col - b.address.col,
-	);
+const compareAddress = (a: Comment['address'], b: Comment['address']) =>
+	a.row - b.row || a.col - b.col;
 
-function step(ctx: EditorContext, delta: 1 | -1): void {
+function step(ctx: EditorContext, delta: 1 | -1, notesOnly = false): void {
 	const t = target(ctx);
-	const list = ordered(ctx);
-	if (!t || !list.length) return;
-	const key = (c: Comment) => c.address.row * 20000 + c.address.col;
-	const here = t.active.row * 20000 + t.active.col;
+	if (!t) return;
+	const list = t.ws.comments
+		.filter((comment) => !notesOnly || isNote(comment))
+		.sort((a, b) => delta * compareAddress(a.address, b.address));
 	const next =
-		delta > 0
-			? (list.find((c) => key(c) > here) ?? list[0])
-			: ([...list].reverse().find((c) => key(c) < here) ?? list[list.length - 1]);
+		list.find((comment) => delta * compareAddress(comment.address, t.active) > 0) ?? list[0];
 	if (!next) return;
 	const at = { ...next.address };
 	ctx.selection.set({ active: at, anchor: at, ranges: [{ start: at, end: at }] });
 	ctx.grid()?.scrollTo(at);
+	if (notesOnly) showNavigatedNote(ctx, t.ws, at);
 }
+
+const hasNotes = (ctx: EditorContext) => target(ctx)?.ws.comments.some(isNote) ?? false;
 
 export function reviewCommands(): Command[] {
 	return [
@@ -94,14 +94,14 @@ export function reviewCommands(): Command[] {
 			id: 'review.previous-comment',
 			label: 'Previous Comment',
 			icon: icon('previous'),
-			enabled: (ctx) => ordered(ctx).length > 0,
+			enabled: (ctx) => !!target(ctx)?.ws.comments.length,
 			run: (ctx) => step(ctx, -1),
 		}),
 		viewing({
 			id: 'review.next-comment',
 			label: 'Next Comment',
 			icon: icon('next'),
-			enabled: (ctx) => ordered(ctx).length > 0,
+			enabled: (ctx) => !!target(ctx)?.ws.comments.length,
 			run: (ctx) => step(ctx, 1),
 		}),
 		viewing({
@@ -111,6 +111,28 @@ export function reviewCommands(): Command[] {
 			checked: commentsPaneOpen,
 			run: (ctx, opener) =>
 				toggleCommentsPane(ctx, opener instanceof HTMLElement ? opener : undefined),
+		}),
+		viewing({
+			id: 'review.previous-note',
+			label: 'Previous Note',
+			icon: icon('previous'),
+			enabled: hasNotes,
+			run: (ctx) => step(ctx, -1, true),
+		}),
+		viewing({
+			id: 'review.next-note',
+			label: 'Next Note',
+			icon: icon('next'),
+			enabled: hasNotes,
+			run: (ctx) => step(ctx, 1, true),
+		}),
+		viewing({
+			id: 'review.show-all-notes',
+			label: 'Show All Notes',
+			icon: icon('commentShow'),
+			enabled: (ctx) => allNotesShown(ctx) || hasNotes(ctx),
+			checked: allNotesShown,
+			run: toggleAllNotes,
 		}),
 		editing({
 			id: 'review.protect-sheet',

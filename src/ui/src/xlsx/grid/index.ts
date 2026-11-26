@@ -16,6 +16,7 @@ import { wirePointer } from './grid-pointer';
 import { GridSelection } from './grid-selection';
 import { GridView } from './grid-view';
 import { followLink, wireTooltips } from './indicators';
+import { installNotePopups } from './note-popups';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 import { GRID_CSS } from './styles';
 import { installSplitBars } from './split-bars';
@@ -120,6 +121,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			},
 		}),
 		wireTooltips(view),
+		installNotePopups(view),
 		wireMenus(view, () => editor.focus()),
 	];
 	view.corner.addEventListener('pointerdown', (event) => {

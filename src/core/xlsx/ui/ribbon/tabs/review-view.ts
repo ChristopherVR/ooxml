@@ -37,7 +37,12 @@ export function reviewTab(): RibbonTab {
 						label: 'Notes',
 						icon: icon('commentNew'),
 						size: 'large',
-						items: [{ command: 'insert.note' }],
+						items: [
+							{ command: 'insert.note' },
+							{ command: 'review.previous-note' },
+							{ command: 'review.next-note' },
+							{ command: 'review.show-all-notes' },
+						],
 					},
 				],
 			},

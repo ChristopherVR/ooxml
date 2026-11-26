@@ -9,6 +9,7 @@ import { h, viewOf } from './dom';
 import { referenceTarget } from 'ooxml-core/xlsx';
 import type { GridSelection } from './grid-selection';
 import type { GridView } from './grid-view';
+import { placeAnnotationPopup, renderAnnotation } from './note-popups';
 import { selectCell } from 'ooxml-core/xlsx/ui';
 
 const HOVER_MS = 350;
@@ -35,23 +36,15 @@ export function wireTooltips(view: GridView): () => void {
 		if (!comment && !link) return hide();
 		tip.replaceChildren();
 		if (comment) {
-			const author = h(view.doc, 'b');
-			author.textContent = `${comment.author}:`;
-			tip.append(author, view.doc.createTextNode(comment.text));
-			for (const reply of comment.replies ?? []) {
-				const who = h(view.doc, 'b');
-				who.textContent = `${reply.author}:`;
-				tip.append(who, view.doc.createTextNode(reply.text));
-			}
+			if (view.view.querySelector(`[data-note="${at.row}:${at.col}"]`)) return hide();
+			renderAnnotation(tip, comment);
 		} else if (link) {
 			const target = link.target ?? link.location ?? '';
 			tip.textContent = `${link.tooltip ?? target}\n${view.ctx.t('Ctrl+click to follow the link.')}`;
 		}
-		const g = view.geometry;
-		const box = g.rangeBox({ start: at, end: at });
-		tip.style.left = `${Math.min(box.x + box.w + 6, g.width - 200)}px`;
-		tip.style.top = `${box.y}px`;
 		tip.hidden = false;
+		const g = view.geometry;
+		placeAnnotationPopup(tip, g.rangeBox({ start: at, end: at }), g.width, g.height);
 	};
 	const onMove = (event: PointerEvent) => {
 		if (event.buttons) return hide();

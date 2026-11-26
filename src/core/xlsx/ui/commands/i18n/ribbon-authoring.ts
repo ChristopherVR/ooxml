@@ -126,6 +126,14 @@ export const RIBBON_AUTHORING_STRINGS: Translations = {
 		'删除背景',
 	],
 	'New Note': ['Nouvelle note', 'Neue Notiz', 'Nueva nota', '新建批注'],
+	'Previous Note': ['Note précédente', 'Vorherige Notiz', 'Nota anterior', '上一条批注'],
+	'Next Note': ['Note suivante', 'Nächste Notiz', 'Nota siguiente', '下一条批注'],
+	'Show All Notes': [
+		'Afficher toutes les notes',
+		'Alle Notizen anzeigen',
+		'Mostrar todas las notas',
+		'显示所有批注',
+	],
 	'Edit Note': ['Modifier la note', 'Notiz bearbeiten', 'Editar nota', '编辑批注'],
 	Note: ['Note', 'Notiz', 'Nota', '批注'],
 	'Type a note first.': [
