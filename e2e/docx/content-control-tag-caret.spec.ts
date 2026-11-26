@@ -13,8 +13,11 @@ async function openDraft(page: Page, name: string) {
 	await reopenDocument(page, name + '.docx', await readFile(fixture));
 	const editor = page.locator('docx-editor');
 	await editor.getByRole('tab', { name: 'View', exact: true }).click();
-	await editor.getByRole('combobox', { name: 'Layout view', exact: true }).selectOption('draft');
-	await expect(editor.locator('.dve-canvas')).toHaveAttribute('data-document-view', 'draft');
+	const view = editor.getByRole('combobox', { name: 'Layout view', exact: true });
+	await view.selectOption('draft');
+	// Draft is the default view, so the canvas carries no data-document-view until another is chosen.
+	await expect(view).toHaveValue('draft');
+	await expect(editor.locator('.dve-canvas')).not.toHaveAttribute('data-document-view', /./);
 	return editor;
 }
 
@@ -113,34 +116,40 @@ test('arrow keys and tag clicks put typed text inside an inline control', async 
 	const content = first.locator('.dve-sdt').first();
 	const open = startTag(editor, 'Condition');
 	const close = endTag(first).first();
-	const position = (tag: Locator) =>
-		tag.evaluate((tag) => {
-			const root = tag.getRootNode() as ShadowRoot;
+	// Tag widgets are re-created when the selection moves, so look the tag up inside one evaluation
+	// instead of holding a locator that can resolve to a node replaced before it is read.
+	const position = (selector: string) =>
+		first.evaluate((paragraph, selector) => {
+			const root = paragraph.getRootNode() as ShadowRoot;
 			const { view } = root.host as unknown as { view: EditorView };
+			const tag = paragraph.querySelector(selector);
+			if (!tag) throw new Error('Missing tag ' + selector);
 			return { caret: view.state.selection.head, tag: view.posAtDOM(tag, 0) };
-		});
+		}, selector);
+	const openSelector = '.dve-sdt-tag[data-tag-title="Condition"]';
+	const closeSelector = '.dve-sdt-tag[data-tag-edge="end"]';
 
 	await clickInEditor(content);
-	const start = await position(open);
+	const start = await position(openSelector);
 	expect(start.caret).toBeGreaterThan(start.tag);
 	for (let pos = start.caret; pos > start.tag; pos--) {
 		await page.keyboard.press('ArrowLeft');
-		await expect.poll(async () => (await position(open)).caret).toBe(pos - 1);
+		await expect.poll(async () => (await position(openSelector)).caret).toBe(pos - 1);
 	}
 	await expectCaretOnContentSide(open);
 	await page.keyboard.type('Lorem ');
 	await expect(content).toHaveText('Lorem alpha');
 
 	await clickInEditor(content);
-	const end = await position(close);
+	const end = await position(closeSelector);
 	expect(end.caret).toBeLessThan(end.tag);
 	for (let pos = end.caret; pos < end.tag; pos++) {
 		await page.keyboard.press('ArrowRight');
-		await expect.poll(async () => (await position(close)).caret).toBe(pos + 1);
+		await expect.poll(async () => (await position(closeSelector)).caret).toBe(pos + 1);
 	}
 	await expectCaretOnContentSide(close);
 	await page.keyboard.press('ArrowRight');
-	await expect.poll(async () => (await position(close)).caret).toBe(end.tag + 1);
+	await expect.poll(async () => (await position(closeSelector)).caret).toBe(end.tag + 1);
 	await close.click();
 	await expectCaretOnContentSide(close);
 	await page.keyboard.type(' ipsum');
