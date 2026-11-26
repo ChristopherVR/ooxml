@@ -20,7 +20,7 @@ export interface CommentsPanelOptions {
 }
 export interface CommentsPanelHandle {
 	element: HTMLElement;
-	open(): void;
+	open(compose?: boolean): void;
 	close(): void;
 	refresh(): void;
 	setLocale(locale: string): void;
@@ -115,10 +115,11 @@ export function createCommentsPanel(options: CommentsPanelOptions): CommentsPane
 		get isOpen() {
 			return isOpen;
 		},
-		open() {
+		open(compose) {
 			isOpen = true;
 			panel.hidden = false;
 			refresh();
+			if (compose) panel.focusComposer();
 		},
 		close,
 		refresh,

@@ -137,6 +137,20 @@ describe('dirty tracking and save API', () => {
 describe('UI customisation', () => {
 	afterEach(() => document.body.replaceChildren());
 
+	it.each(['Insert', 'Review'])('focuses the draft from %s > Add comment', (tab) => {
+		const editor = mount(paragraphs(1));
+		const root = shell(editor);
+		root
+			.querySelector<HTMLButtonElement>(
+				`.ribbon-panel[data-panel="${tab}"] [aria-label="Add comment"]`,
+			)!
+			.click();
+		const pane = root.querySelector<HTMLElement>('office-ui-comments-pane')!;
+		expect(pane.hidden).toBe(false);
+		expect(pane.shadowRoot?.activeElement).toBe(pane.shadowRoot?.querySelector('textarea.new'));
+		expect(must(editor.documentModel).comments ?? []).toHaveLength(0);
+	});
+
 	it('hiddenActions hides the named ribbon controls, empty groups and tabs', () => {
 		const editor = mount();
 		editor.hiddenActions = [

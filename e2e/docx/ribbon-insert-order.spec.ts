@@ -54,7 +54,8 @@ for (const framework of ['vanilla', 'react', 'vue', 'angular', 'svelte', 'solid'
 		await comment.click();
 		const pane = editor.locator('.dve-comments-panel');
 		await expect(pane).toBeVisible();
-		await pane.getByRole('textbox', { name: 'New comment' }).fill('Inserted from the ribbon');
+		await expect(pane.getByRole('textbox', { name: 'New comment' })).toBeFocused();
+		await page.keyboard.type('Inserted from the ribbon');
 		await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
 		await expect(pane.locator('.dve-comment-thread')).toContainText('Inserted from the ribbon');
 		await expect(editor.locator('.ProseMirror .dve-comment-range')).toHaveText('Review');
@@ -151,7 +152,8 @@ test('Review adds an empty comment anchor between words', async ({ page }) => {
 	await reveal(editor, comment);
 	await comment.click();
 	const pane = editor.locator('.dve-comments-panel');
-	await pane.getByRole('textbox', { name: 'New comment' }).fill('Empty anchor');
+	await expect(pane.getByRole('textbox', { name: 'New comment' })).toBeFocused();
+	await page.keyboard.type('Empty anchor');
 	await pane.getByRole('button', { name: 'Add comment', exact: true }).click();
 	await expect(pane.locator('.dve-comment-thread')).toContainText('Empty anchor');
 	await expect(body.locator('[data-docx-comment-point]')).toHaveCount(1);

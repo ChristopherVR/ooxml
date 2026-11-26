@@ -106,6 +106,11 @@ export class OfficeUiCommentsPane extends OfficeElement {
 		else super.focus(options);
 	}
 
+	/** Start composing even when the pane already has a selected thread. */
+	focusComposer(): void {
+		this.renderRoot.querySelector<HTMLTextAreaElement>('textarea.new')?.focus();
+	}
+
 	private submitNew(): void {
 		const box = this.renderRoot.querySelector<HTMLTextAreaElement>('textarea.new');
 		const text = box?.value.trim();

@@ -187,7 +187,9 @@ export class ReviewController {
 		if (key === 'toggle') {
 			if (this.commentsPanel.isOpen) this.commentsPanel.close();
 			else this.commentsPanel.open();
-		} else this.commentsPanel.open();
+		} else if (view?.editable && this.host.canEditComments()) {
+			this.commentsPanel.open(true);
+		}
 		this.host.refresh();
 	}
 }
