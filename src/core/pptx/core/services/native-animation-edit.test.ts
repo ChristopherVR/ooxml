@@ -64,6 +64,34 @@ describe('imported animation edits', () => {
 		},
 	);
 
+	it.each([
+		['entrance', 'entr.53', 16, 528],
+		['exit', 'exit.53', 32, 544],
+	] as const)('round-trips both Faded Zoom centers for %s', (slot, preset, object, slide) => {
+		const original = must(
+			writer.buildTimingXml(
+				[{ elementId: '7', [slot]: preset, direction: 'objectCenter' }],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(original, new Set());
+		const animations = parse(original);
+		expect(animations[0]?.presetSubtype).toBe(object);
+		const edited = must(
+			editNativeEffectTiming(original, animations, must(animations[0]?.nodeId), {
+				field: 'direction',
+				value: 'slideCenter',
+			}),
+		);
+		const saved = must(parse(must(writer.buildTimingXml([], edited.rawTiming)))[0]);
+		expect(saved.presetSubtype).toBe(slide);
+		expect(
+			saved.behaviors?.some(
+				({ kind, attrNames }) => kind === 'anim' && attrNames.includes('ppt_x'),
+			),
+		).toBe(true);
+	});
+
 	it('moves a native click effect to the preceding group and saves its new delay', () => {
 		const source = must(
 			writer.buildTimingXml(

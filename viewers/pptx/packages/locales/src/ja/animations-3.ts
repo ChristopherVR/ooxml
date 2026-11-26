@@ -28,6 +28,7 @@ export const translations = {
 	'pptx.animation.direction.in': '内側',
 	'pptx.animation.direction.out': '外側',
 	'pptx.animation.direction.objectCenter': 'オブジェクトの中心',
+	'pptx.animation.direction.slideCenter': 'スライドの中心',
 	'pptx.animation.direction.inSlightly': '少し拡大',
 	'pptx.animation.direction.outSlightly': '少し縮小',
 	'pptx.animation.direction.inFromScreenCenter': '画面中央から',

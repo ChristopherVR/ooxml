@@ -138,6 +138,7 @@ export const translations = {
 	'pptx.animation.direction.in': 'Hacia dentro',
 	'pptx.animation.direction.out': 'Hacia fuera',
 	'pptx.animation.direction.objectCenter': 'Centro del objeto',
+	'pptx.animation.direction.slideCenter': 'Centro de la diapositiva',
 	'pptx.animation.direction.inSlightly': 'Acercar ligeramente',
 	'pptx.animation.direction.outSlightly': 'Alejar ligeramente',
 	'pptx.animation.direction.inFromScreenCenter': 'Desde el centro de la pantalla',

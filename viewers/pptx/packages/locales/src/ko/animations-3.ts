@@ -28,6 +28,7 @@ export const translations = {
 	'pptx.animation.direction.in': '안쪽',
 	'pptx.animation.direction.out': '바깥쪽',
 	'pptx.animation.direction.objectCenter': '개체 중심',
+	'pptx.animation.direction.slideCenter': '슬라이드 가운데',
 	'pptx.animation.direction.inSlightly': '약간 확대',
 	'pptx.animation.direction.outSlightly': '약간 축소',
 	'pptx.animation.direction.inFromScreenCenter': '화면 가운데에서',

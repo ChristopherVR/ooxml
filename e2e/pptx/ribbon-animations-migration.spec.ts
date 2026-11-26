@@ -4,6 +4,7 @@ import { writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import JSZip from 'jszip';
+import { PptxAnimationWriteService, PresentationBuilder } from 'pptx-viewer-core';
 
 import { savePptxViaBackstage } from './save-pptx';
 import {
@@ -16,7 +17,7 @@ import {
 	selectElement,
 } from './support/deck';
 import { downloadBytes } from './support/exports';
-import { expectSelectValue } from './support/select-control';
+import { chooseSelectValue, expectSelectValue } from './support/select-control';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -125,6 +126,36 @@ test('the Animation Pane offers imported effects without a canvas selection', as
 	await expect(
 		animations.locator('[data-ribbon-control="animations.timing.duration"]'),
 	).toHaveValue('1');
+});
+
+test('Faded Zoom offers the two centers and saves the selected subtype', async ({ page }, info) => {
+	const { createSlide, data, handler } = await PresentationBuilder.create();
+	const slide = createSlide('Blank')
+		.addText('Zoom target', { x: 50, y: 50, width: 200, height: 40 })
+		.build();
+	slide.elements[0]!.shapeId = '2';
+	slide.rawTiming = new PptxAnimationWriteService().buildTimingXml(
+		[{ elementId: '2', entrance: 'entr.53', direction: 'objectCenter' }],
+		undefined,
+	);
+	delete slide.rawTiming?.['p:extLst'];
+	data.slides.push(slide);
+	const path = info.outputPath('faded-zoom.pptx');
+	await writeFile(path, await handler.save(data.slides));
+	await openAnimations(page, false, path);
+	const row = inspector(page).getByRole('button', { name: /Faded Zoom/u });
+	if (!(await row.isVisible())) {
+		await page
+			.locator('[data-ribbon-control="animations.advancedAnimation.animationPane"] button')
+			.click();
+	}
+	await row.click();
+	const direction = page.getByRole('combobox', { name: 'Direction', exact: true });
+	await expect(direction).toContainText('Object Center');
+	await chooseSelectValue(page, direction, 'slideCenter');
+	expect((await savedSlideXml(page)).xml).toMatch(
+		/presetID="53" presetClass="entr" presetSubtype="528"/u,
+	);
 });
 
 test('shared Animations ribbon exposes every canonical group and control id once', async ({

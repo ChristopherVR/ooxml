@@ -55,6 +55,7 @@ export const ANIMATION_DIRECTION_LABEL_KEYS: Readonly<Record<PptxAnimationDirect
 	in: 'pptx.animation.direction.in',
 	out: 'pptx.animation.direction.out',
 	objectCenter: 'pptx.animation.direction.objectCenter',
+	slideCenter: 'pptx.animation.direction.slideCenter',
 	inSlightly: 'pptx.animation.direction.inSlightly',
 	outSlightly: 'pptx.animation.direction.outSlightly',
 	inFromScreenCenter: 'pptx.animation.direction.inFromScreenCenter',
@@ -110,6 +111,8 @@ export function directionValuesForPreset(
 			return mapping.presetClass === 'entr'
 				? ['in', 'inSlightly', 'out', 'outSlightly', 'inFromScreenCenter', 'outFromScreenBottom']
 				: ['in', 'inSlightly', 'out', 'outSlightly', 'outFromScreenCenter', 'inToScreenBottom'];
+		case 53:
+			return ['objectCenter', 'slideCenter'];
 		default:
 			return [];
 	}

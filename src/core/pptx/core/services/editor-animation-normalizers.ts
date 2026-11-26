@@ -139,6 +139,7 @@ export function normalizeDirection(value: unknown): PptxAnimationDirection | und
 		in: 'in',
 		out: 'out',
 		objectCenter: 'objectCenter',
+		slideCenter: 'slideCenter',
 		inSlightly: 'inSlightly',
 		outSlightly: 'outSlightly',
 		inFromScreenCenter: 'inFromScreenCenter',

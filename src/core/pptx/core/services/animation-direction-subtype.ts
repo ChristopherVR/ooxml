@@ -38,6 +38,12 @@ export function resolveDirectionSubtype(
 ): number {
 	const { presetClass, presetId, defaultSubtype } = mapping;
 	if (presetClass === 'entr' || presetClass === 'exit') {
+		if (presetId === 53) {
+			// PowerPoint COM writes the same center subtypes as Zoom.
+			if (direction === 'objectCenter') return presetClass === 'entr' ? 16 : 32;
+			if (direction === 'slideCenter') return presetClass === 'entr' ? 528 : 544;
+			return defaultSubtype;
+		}
 		const variants =
 			presetId === 23 ? (presetClass === 'entr' ? ZOOM_IN : ZOOM_OUT) : VARIANTS[presetId];
 		const requested = direction

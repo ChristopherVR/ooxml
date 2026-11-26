@@ -2551,6 +2551,7 @@ export const translationsEn: Record<string, string> = {
 	'pptx.animation.direction.in': 'In',
 	'pptx.animation.direction.out': 'Out',
 	'pptx.animation.direction.objectCenter': 'Object Center',
+	'pptx.animation.direction.slideCenter': 'Slide Center',
 	'pptx.animation.direction.inSlightly': 'In Slightly',
 	'pptx.animation.direction.outSlightly': 'Out Slightly',
 	'pptx.animation.direction.inFromScreenCenter': 'In from Screen Center',

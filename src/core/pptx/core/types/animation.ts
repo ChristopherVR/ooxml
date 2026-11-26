@@ -965,6 +965,7 @@ export type PptxAnimationDirection =
 	| 'in'
 	| 'out'
 	| 'objectCenter'
+	| 'slideCenter'
 	| 'inSlightly'
 	| 'outSlightly'
 	| 'inFromScreenCenter'

@@ -28,6 +28,7 @@ export const translations = {
 	'pptx.animation.direction.in': '向内',
 	'pptx.animation.direction.out': '向外',
 	'pptx.animation.direction.objectCenter': '对象中心',
+	'pptx.animation.direction.slideCenter': '幻灯片中心',
 	'pptx.animation.direction.inSlightly': '略微放大',
 	'pptx.animation.direction.outSlightly': '略微缩小',
 	'pptx.animation.direction.inFromScreenCenter': '从屏幕中心',
