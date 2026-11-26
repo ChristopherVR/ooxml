@@ -475,7 +475,7 @@ const noopClose = (): void => undefined;
 						[slideIndex]="activeSlideIndex()"
 						[slideCount]="slideCount()"
 						[canEdit]="canEdit()"
-						[selectedElement]="selectedElement()"
+						[selectedElement]="primarySelectedElement()"
 						[hiddenActions]="effectiveHiddenActions()"
 						[zoomPercent]="zoomSvc.zoomPercent()"
 						[displayState]="ribbonDisplayState()"
@@ -2566,13 +2566,12 @@ export class PowerPointViewerComponent
 	protected readonly templateScheme = computed<Record<string, string>>(() =>
 		templateSchemeFromTheme(this.loader.theme()?.colorScheme),
 	);
-	/** The single selected element on the active slide (for the inspector). */
-	protected readonly selectedElement = computed<PptxElement | null>(() => {
-		const ids = this.editor.selectedIds();
-		if (ids.length !== 1) {
+	/** The ribbon follows the primary element even when more than one is selected. */
+	protected readonly primarySelectedElement = computed<PptxElement | null>(() => {
+		const [id] = this.editor.selectedIds();
+		if (id === undefined) {
 			return null;
 		}
-		const id = ids[0];
 		// A selected element may be a normal slide element or, in editTemplateMode,
 		// an inherited template element living in the separate template store.
 		// A group member (selected by drilling into its group) resolves in slide
@@ -2584,6 +2583,10 @@ export class PowerPointViewerComponent
 			null
 		);
 	});
+	/** The inspector's element fields edit a single selection. */
+	protected readonly selectedElement = computed(() =>
+		this.editor.selectedIds().length === 1 ? this.primarySelectedElement() : null,
+	);
 
 	/** Whether the AI assistant pane is open (toggled from the ribbon Sparkles). */
 	protected readonly aiPanelOpen = signal(false);
@@ -2966,7 +2969,7 @@ export class PowerPointViewerComponent
 		});
 
 		// Selecting an element re-opens the inspector if a prior swipe had hidden
-		// it on mobile — tapping a shape to edit it should surface its properties.
+		// it on mobile, where tapping a shape to edit it should surface its properties.
 		effect(() => {
 			if (this.selectedElement()) {
 				this.inspectorPanel.mobileInspectorHidden.set(false);
