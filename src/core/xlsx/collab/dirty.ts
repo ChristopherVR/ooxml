@@ -1,6 +1,7 @@
 // Collects what a remote transaction touched from Yjs deep events, so applying it to the model
 // visits only the changed cells, rows and sheets. Events must be read inside the observer.
 import type * as Y from 'yjs';
+import { cacheAddress } from './cached-cell';
 import type { ListPart } from './schema';
 
 export interface SheetDirty {
@@ -88,7 +89,8 @@ export function collectDirty(
 		const entry = sheetDirty(dirty, String(key));
 		if (part === undefined || path.length > 2) entry.full = true;
 		else if (part === 'props') dirty.list = true;
-		else if (part === 'cells') for (const k of changedKeys(event)) entry.cells.add(k);
+		else if (part === 'cells')
+			for (const k of changedKeys(event)) entry.cells.add(cacheAddress(k) ?? k);
 		else if (part === 'rows') for (const k of changedKeys(event)) entry.rows.add(k);
 		else if (part === 'cols') entry.cols = true;
 		else if (part === 'merges') entry.merges = true;

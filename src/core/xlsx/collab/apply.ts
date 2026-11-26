@@ -8,6 +8,7 @@ import { isSpilledCell } from '../formula/spill';
 import type { Workbook, Worksheet } from '../model';
 import { createWorksheet } from '../workbook';
 import { decodeCell, encodeCell } from './codec';
+import { readSharedCell } from './cached-cell';
 import type { Dirty } from './dirty';
 import { applyColumns, applyMerges, applyRows } from './lines';
 import { readNames } from './names';
@@ -84,7 +85,7 @@ export function applyShared(
 		const put = (address: string): void => {
 			const at = parseAddress(address);
 			if (!at) return;
-			const raw = cells.get(address);
+			const raw = readSharedCell(cells, address);
 			const local = getCell(sheet, at.row, at.col);
 			if (local && jsonEqual(encodeCell(local, styles.keyOf), raw)) return;
 			const cell = raw === undefined ? undefined : decodeCell(raw, styles.idOf);

@@ -13,6 +13,7 @@ import {
 import { forEachCell, forEachCellInRange, getCell } from '../cells';
 import type { Workbook, Worksheet } from '../model';
 import { encodeCell } from './codec';
+import { cacheAddress, cacheKey, readSharedCell, writeSettledCell } from './cached-cell';
 import { writeLines } from './lines';
 import { writeNames } from './names';
 import {
@@ -20,6 +21,7 @@ import {
 	SCHEMA_VERSION,
 	type SharedWorkbook,
 	childMap,
+	jsonEqual,
 	newSheetMap,
 	setIfChanged,
 	sheetPart,
@@ -44,6 +46,30 @@ export const partHost = (
 
 /** What a write covers: the whole workbook, or one sheet (optionally only some cell ranges). */
 export type WriteScope = { kind: 'all' } | { kind: 'sheet'; sheet: number; ranges?: CellRange[] };
+
+export function writeDeferredCalculation(
+	shared: SharedWorkbook,
+	keys: SheetKeys,
+	workbook: Workbook,
+): void {
+	const entries = sheetEntries(shared.sheets);
+	const styles = new StyleBridge(
+		workbook,
+		shared.styles,
+		String(shared.meta.get('defaultStyle') ?? ''),
+		false,
+	);
+	for (const sheet of workbook.sheets) {
+		const key = keys.find(sheet, entries);
+		const map = key === undefined ? undefined : childMap(shared.sheets, key);
+		const cells = map && childMap(map, 'cells');
+		if (!cells) continue;
+		forEachCell(sheet, (cell, row, col) => {
+			const entry = encodeCell(cell, styles.keyOf);
+			if (entry) writeSettledCell(cells, formatAddress({ row, col }), entry);
+		});
+	}
+}
 
 /** Positions a range covers are probed one by one up to this size; larger ranges scan. */
 const PROBE_LIMIT = 4096;
@@ -144,13 +170,17 @@ function writeCells(
 	const write = (row: number, col: number): string => {
 		const key = formatAddress({ row, col });
 		const cell = getCell(sheet, row, col);
-		setIfChanged(cells, key, cell && encodeCell(cell, keyOf));
+		const value = cell && encodeCell(cell, keyOf);
+		if (!jsonEqual(value, readSharedCell(cells, key))) {
+			setIfChanged(cells, key, value);
+			cells.delete(cacheKey(key));
+		}
 		return key;
 	};
 	if (!ranges) {
 		const live = new Set<string>();
 		forEachCell(sheet, (_cell, row, col) => live.add(write(row, col)));
-		for (const key of [...cells.keys()]) if (!live.has(key)) cells.delete(key);
+		for (const key of [...cells.keys()]) if (!live.has(cacheAddress(key) ?? key)) cells.delete(key);
 		return;
 	}
 	for (const raw of ranges) {
@@ -165,7 +195,10 @@ function writeCells(
 		forEachCellInRange(sheet, range, (_cell, row, col) => live.add(write(row, col)));
 		for (const key of [...cells.keys()]) {
 			const at = parseAddress(key);
-			if (!live.has(key) && at && rangeContains(range, at)) cells.delete(key);
+			if (!live.has(key) && at && rangeContains(range, at)) {
+				cells.delete(key);
+				cells.delete(cacheKey(key));
+			}
 		}
 	}
 }

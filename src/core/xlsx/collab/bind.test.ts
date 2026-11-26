@@ -1,12 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import * as Y from 'yjs';
-import { getCell } from '../cells';
+import { pendingXPath } from '#xpath-runtime';
+import { getCell, putCell } from '../cells';
 import { createEditSession } from '../edit/session';
 import type { EditSession, WorkbookChange } from '../edit/types';
 import type { Workbook } from '../model';
 import { createWorkbook } from '../workbook';
 import { type WorkbookBinding, type WorkbookCollabHost, bindWorkbookSession } from './bind';
 import type { XlsxPresence } from './presence';
+
+vi.mock('xpath', (importOriginal) => importOriginal());
 
 interface Peer {
 	doc: Y.Doc;
@@ -19,7 +22,7 @@ interface Peer {
 }
 
 /** A peer on a fake session: writable at once (the room creator) or after `open()`. */
-function peer(workbook: Workbook = createWorkbook(), writable = true): Peer {
+function peer(workbook: Workbook = createWorkbook(), writable = true, recalc = true): Peer {
 	const doc = new Y.Doc();
 	const ready = new Set<(value: undefined) => void>();
 	const state = { writable, presence: {} as XlsxPresence };
@@ -35,7 +38,7 @@ function peer(workbook: Workbook = createWorkbook(), writable = true): Peer {
 		updatePresence: (patch: XlsxPresence) => Object.assign(state.presence, patch),
 		peers: () => [],
 	} as unknown as WorkbookCollabHost;
-	const edit = createEditSession(workbook);
+	const edit = createEditSession(workbook, { recalc });
 	const changes: WorkbookChange[] = [];
 	edit.onChange((change) => changes.push(change));
 	const binding = bindWorkbookSession(host, edit);
@@ -143,6 +146,43 @@ describe('bindWorkbookSession', () => {
 		expect(b.binding.undo()).toBe(false);
 		expect(value(b, 'B2')).toBe(null);
 		expect(value(b, 'A1')).toBe('mine');
+	});
+
+	it('shares settled FILTERXML values without introducing an undo step', async () => {
+		const node = vi.spyOn(process, 'getBuiltinModule').mockReturnValue(undefined);
+		try {
+			const workbook = createWorkbook();
+			const sheet = workbook.sheets[0]!;
+			putCell(sheet, 0, 0, { value: '<root><item>7</item></root>' });
+			putCell(sheet, 0, 1, { value: 'before' });
+			const a = peer(workbook);
+			const b = peer(createWorkbook(), false, false);
+			sync(a, b);
+			b.open();
+
+			a.edit.setCellInput(0, 0, 1, '=FILTERXML(A1,"//item")');
+			expect(value(a, 'B1')).toEqual({ error: '#BUSY!' });
+			const ready = pendingXPath(workbook);
+			expect(ready).toBeDefined();
+			a.edit.setCellInput(0, 0, 2, 'later edit');
+			await ready;
+			sync(a, b);
+			expect(value(b, 'B1')).toBe(7);
+
+			expect(a.binding.undo()).toBe(true);
+			sync(a, b);
+			expect(value(b, 'C1')).toBeNull();
+			expect(value(b, 'B1')).toBe(7);
+			expect(a.binding.undo()).toBe(true);
+			sync(a, b);
+			expect(value(b, 'B1')).toBe('before');
+			expect(a.binding.canUndo()).toBe(false);
+			expect(a.binding.redo()).toBe(true);
+			sync(a, b);
+			expect(value(b, 'B1')).toBe(7);
+		} finally {
+			node.mockRestore();
+		}
 	});
 
 	it('syncs sheet add, rename, move and delete', () => {

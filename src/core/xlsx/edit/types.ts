@@ -133,6 +133,8 @@ export interface WorkbookChange {
 	structural: boolean;
 	/** Applied through `applyExternal` (a collaborator or a shared undo), not recorded in history. */
 	external?: true;
+	/** Cached formula results refreshed after their implementation finished loading. */
+	deferredCalculation?: true;
 }
 
 export interface ValidationFailure {

@@ -13,7 +13,7 @@ import { type XlsxPresence, type RemoteSelection, resolveSelections } from './pr
 import { formatRange } from '../address';
 import { LIST_PARTS, sharedTypes, sharedWorkbook } from './schema';
 import { SheetKeys, sheetEntries } from './sheets';
-import { type WriteScope, writeWorkbook } from './write';
+import { type WriteScope, writeDeferredCalculation, writeWorkbook } from './write';
 
 /** Origin of the binding's per-edit transactions (the ones its undo manager tracks). */
 export const XLSX_EDIT_ORIGIN: unique symbol = Symbol('ooxml-core:xlsx:edit');
@@ -81,6 +81,7 @@ export function bindWorkbookSession(
 	let settled = false;
 	/** Local edits made while writes were blocked; published in full once they are allowed. */
 	let unsent = false;
+	let unsentCalculation = false;
 	let replaying: 'undo' | 'redo' | undefined;
 	let dirty = emptyDirty();
 	/** The room was empty but an earlier writer is present: wait for its workbook, then adopt. */
@@ -101,6 +102,10 @@ export function bindWorkbookSession(
 	const write = (scope: WriteScope, origin: symbol): void => {
 		doc.transact(() => writeWorkbook(shared, keys, workbook, scope), origin);
 		undoManager.stopCapturing();
+	};
+	const publishCalculation = (): void => {
+		doc.transact(() => writeDeferredCalculation(shared, keys, workbook), XLSX_SYNC_ORIGIN);
+		unsentCalculation = false;
 	};
 	const apply = (all: boolean, kind: 'remote' | 'undo' | 'redo' = 'remote'): void => {
 		const pending = all ? emptyDirty(true) : dirty;
@@ -134,6 +139,7 @@ export function bindWorkbookSession(
 		settled = true;
 		waiting = false;
 		unsent = false;
+		if (unsentCalculation && host.canWrite()) publishCalculation();
 	};
 
 	const observers = types.map((type, i) => {
@@ -163,6 +169,11 @@ export function bindWorkbookSession(
 
 	const stopEdits = edit.onChange((change) => {
 		if (disposed || change.external || !settled) return;
+		if (change.deferredCalculation) {
+			if (host.canWrite()) publishCalculation();
+			else unsentCalculation = true;
+			return;
+		}
 		if (!host.canWrite()) {
 			unsent = true;
 			return;

@@ -91,7 +91,12 @@ export function createEditSession(
 				waitingForFunction = undefined;
 				calculator.finishDeferredCalculation();
 				refreshTables();
-				emit({ kind: 'cells', label: 'Calculate now', structural: false });
+				emit({
+					kind: 'cells',
+					label: 'Calculate now',
+					structural: false,
+					deferredCalculation: true,
+				});
 			});
 		},
 	});

@@ -10,6 +10,7 @@
 // Inside a sheet: `props` (Y.Map: name, sheetId, order, state, tab, rh, cw), `cells` (`A1` ->
 // CellEntry), `rows` (1-based row number -> RowEntry), `cols` (`C:E` span -> ColEntry) and
 // `merges` (`A1:B2` -> true). Entries are plain JSON, so a cell is replaced atomically.
+// A `cache:A1` entry in `cells` can overlay a settled calculation on a matching base cell.
 import * as Y from 'yjs';
 
 export const SCHEMA_VERSION = 1;
