@@ -24,7 +24,7 @@ test('shared Draw choices retain native ink, undo and saved strokes', async ({ p
 	await draw.getByRole('button', { name: 'Red', exact: true }).click();
 	await expect(draw.locator('details')).not.toHaveAttribute('open');
 	await chooseSelectValue(page, draw.getByRole('combobox', { name: 'Width', exact: true }), '16');
-	await expect(draw.locator('input[type=range]')).toHaveValue('16');
+	await expect(draw.getByRole('slider', { name: 'Width', exact: true })).toHaveValue('16');
 	await page.screenshot({ path: info.outputPath('draw.png') });
 	const canvas = await viewport(page).boundingBox();
 	const x = canvas!.x + canvas!.width / 2,
@@ -51,6 +51,7 @@ test('shared Draw choices retain native ink, undo and saved strokes', async ({ p
 	const ink = await zip.file('ppt/ink/ink1.xml')!.async('string');
 	expect(ink).toMatch(/name="width" value="16"/u);
 	expect(ink).toMatch(/name="color" value="#ff0000"/u);
+	expect(ink).toMatch(/<ink:channel[^>]*name="T"[^>]*units="ms"/u);
 	await loadDeck(page, saved);
 	// PowerPoint stores authored strokes as editable InkML content parts.
 	const savedStroke = viewport(page)

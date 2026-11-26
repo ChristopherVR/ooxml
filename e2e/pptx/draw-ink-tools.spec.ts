@@ -63,7 +63,13 @@ test('draws a rectangle and lasso-converts it to an editable shape', async ({ pa
 	await expect(convert).toBeEnabled();
 	await convert.click();
 	await expect(ink).toHaveCount(0);
-	await expect(canvas(page).locator('[data-element-id^="ink-conversion-"]')).toHaveCount(1);
+	const shape = canvas(page).locator('[data-element-id^="ink-conversion-"]');
+	await expect(shape).toHaveCount(1);
+	await page.keyboard.press('Control+z');
+	await expect(shape).toHaveCount(0);
+	await expect(ink).toHaveCount(1);
+	await page.keyboard.press('Control+y');
+	await expect(shape).toHaveCount(1);
 });
 
 test('keeps a pen preset and exposes keyboard ruler and replay controls', async ({ page }) => {
