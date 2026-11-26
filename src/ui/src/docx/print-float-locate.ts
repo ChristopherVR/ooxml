@@ -93,6 +93,18 @@ export function place(element: HTMLElement, box: FloatBox): void {
 	});
 }
 
+/** The next stacking height in this story, including anchors without an explicit height. */
+export function nextFloatHeight(doc: ProseMirrorNode): number {
+	let highest = 0;
+	doc.descendants((node) => {
+		if (node.type.name !== 'image') return true;
+		if (node.attrs.anchored)
+			highest = Math.max(highest, parsePlacement(node.attrs.placement)?.relativeHeight ?? 0);
+		return false;
+	});
+	return highest + 1;
+}
+
 export const CURSORS: Record<FloatHandle, string> = {
 	nw: 'nwse-resize',
 	se: 'nwse-resize',

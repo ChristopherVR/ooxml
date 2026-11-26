@@ -1,3 +1,4 @@
+import { nextFloatHeight } from './print-float-locate';
 import { defaultDrawingWrap } from './drawing-layout-default';
 import { setDrawingWrap } from 'ooxml-core/docx';
 import { Fragment, Slice } from 'prosemirror-model';
@@ -149,8 +150,12 @@ export function insertPictures(view: EditorView, images: readonly InlineImage[])
 	const history = wordYjsPluginKey.getState(view.state);
 	history?.stopCapturing();
 	const defaultWrap = defaultDrawingWrap(view.dom.ownerDocument, 'picture');
+	let height = nextFloatHeight(view.state.doc);
 	const nodes = images.map((source) => {
 		const image = defaultWrap && !source.payload ? setDrawingWrap(source, defaultWrap) : source;
+		const placement = image.anchored
+			? { ...(image.placement ?? { wrap: 'none' }), relativeHeight: height++ }
+			: image.placement;
 		return schema.nodes.image.create({
 			relId: image.relId,
 			partName: image.partName,
@@ -160,7 +165,7 @@ export function insertPictures(view: EditorView, images: readonly InlineImage[])
 			altText: image.altText ?? null,
 			title: image.title ?? null,
 			anchored: Boolean(image.anchored),
-			placement: image.placement ? JSON.stringify(image.placement) : null,
+			placement: placement ? JSON.stringify(placement) : null,
 			transform: image.transform ? JSON.stringify(image.transform) : null,
 			unsupported: null,
 			svgPartName: image.svgPartName ?? null,

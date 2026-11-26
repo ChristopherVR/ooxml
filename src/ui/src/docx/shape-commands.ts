@@ -1,3 +1,4 @@
+import { nextFloatHeight } from './print-float-locate';
 import { defaultDrawingWrap } from './drawing-layout-default';
 // Drawing shapes in the editor: placing a drawn shape, and changing the selected one.
 import { closeHistory } from 'prosemirror-history';
@@ -212,7 +213,9 @@ export function insertDrawnShape(
 		widthPx,
 		heightPx,
 		anchored: Boolean(placement),
-		placement: placement ? JSON.stringify(placement) : null,
+		placement: placement
+			? JSON.stringify({ ...placement, relativeHeight: nextFloatHeight(view.state.doc) })
+			: null,
 		shape: JSON.stringify(spec),
 	});
 	const tr = view.state.tr.insert(insertAt, node);

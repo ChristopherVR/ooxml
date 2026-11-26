@@ -5,6 +5,7 @@ import { history, undo } from 'prosemirror-history';
 import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { SHAPE_PALETTE, createDocument, loadDocx, saveDocx, type Paragraph } from 'ooxml-core/docx';
+import { insertPictures } from './picture-commands';
 import { docToModel, modelToDoc } from './model-adapter';
 import { shapeNodeView } from './shape-node-view';
 import { openShapePicker } from './shape-picker';
@@ -90,6 +91,39 @@ describe('drawing a shape', () => {
 			flipH: true,
 			flipV: true,
 		});
+	});
+
+	it('stacks inserted shapes and pictures above existing floats in insertion order', () => {
+		const { view, model } = editor();
+		insertDrawnShape(view, 'rect', 2, { x: 10, y: 5 });
+		const figure = selectedShape(view.state)!;
+		view.dispatch(
+			view.state.tr.setNodeAttribute(
+				figure.pos,
+				'placement',
+				JSON.stringify({ ...figure.placement, relativeHeight: 500 }),
+			),
+		);
+		insertDrawnShape(view, 'ellipse', 2, { x: 10, y: 5 });
+		expect(selectedShape(view.state)?.placement?.relativeHeight).toBe(501);
+		view.dispatch(view.state.tr.setSelection(TextSelection.atEnd(view.state.doc)));
+		const picture = {
+			relId: '',
+			partName: 'word/media/icon.png',
+			contentType: 'image/png',
+			widthPx: 40,
+			heightPx: 30,
+			anchored: true,
+		};
+		insertPictures(view, [picture, picture]);
+		const paragraph = docToModel(view.state.doc, model).blocks[0];
+		if (paragraph?.type !== 'paragraph') throw new Error('Missing paragraph');
+		expect(
+			paragraph.runs.flatMap(({ image }) =>
+				image?.partName ? [image.placement?.relativeHeight] : [],
+			),
+		).toEqual([502, 503]);
+		view.destroy();
 	});
 
 	it('arms from the gallery, marks the page for drawing and disarms', () => {
