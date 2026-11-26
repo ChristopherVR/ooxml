@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
 import { savePptxViaBackstage } from './save-pptx';
-import { elementsOfType, fixture, loadDeck, selectElement } from './support/deck';
+import { elementsOfType, fixture, inspector, loadDeck, selectElement } from './support/deck';
 import { downloadBytes } from './support/exports';
 import { readZipPartText } from './support/pptx-xml';
 import { chooseSelectValue } from './support/select-control';
@@ -11,6 +11,30 @@ import { chooseSelectValue } from './support/select-control';
 test.use({ viewport: { width: 2048, height: 1080 } });
 const control = (page: Page, id: string) => page.locator(`[data-ribbon-control="${id}"]:visible`);
 const tab = (page: Page, id: string) => page.locator(`[data-ribbon-contextual-tab="${id}"]`);
+
+test('the media inspector displays bookmark times to hundredths', async ({ page }) => {
+	await loadDeck(page, fixture('media-bookmark-trigger-editable.pptx'));
+	await selectElement(page, elementsOfType(page, 'media player').first());
+	const panel = inspector(page);
+	if (!(await panel.isVisible())) {
+		await page.getByRole('button', { name: 'Toggle inspector panel', exact: true }).click();
+	}
+	const clock = /\b\d+:\d{2}\.\d{2}\b/u;
+	await expect
+		.poll(async () => {
+			const inputs = await panel
+				.locator('input:visible, textarea:visible')
+				.evaluateAll((fields) =>
+					fields.flatMap((field) =>
+						field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement
+							? [field.value]
+							: [],
+					),
+				);
+			return clock.test([await panel.innerText(), ...inputs].join('\n'));
+		})
+		.toBe(true);
+});
 
 test('video poster, crop and playback edits save to the slide', async ({ page }) => {
 	await loadDeck(page, fixture('media-bookmark-trigger-editable.pptx'));
@@ -66,7 +90,7 @@ test('video poster, crop and playback edits save to the slide', async ({ page })
 	const dialog = page.locator('[data-media-ribbon-dialog="remove"]');
 	await expect(dialog.locator('pptx-ui-select option')).toHaveCount(2);
 	await expect(dialog.locator('pptx-ui-select option').first()).toHaveText(
-		/^BM1 \(\d+:\d{2}\.\d\)$/u,
+		/^BM1 \(\d+:\d{2}\.\d{2}\)$/u,
 	);
 	await dialog.getByRole('button', { name: 'Apply' }).click();
 	await expect(dialog).toHaveCount(0);

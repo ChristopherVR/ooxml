@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
 	formatMediaTime,
+	formatMediaBookmarkTime,
+	parseMediaBookmarkTime,
 	mediaTimelineGeometry,
 	mediaTimeFromPointer,
 	mediaTrimEndMsFromSeconds,
@@ -23,6 +25,15 @@ describe('media trim timeline', () => {
 		expect(formatMediaTime(65.24)).toBe('1:05.2');
 		expect(formatMediaTime(59.99)).toBe('1:00.0');
 		expect(formatMediaTime(Number.NaN)).toBe('0:00.0');
+	});
+
+	it('displays bookmark hundredths and preserves unchanged millisecond times', () => {
+		expect(formatMediaBookmarkTime(3.461)).toBe('0:03.46');
+		expect(formatMediaBookmarkTime(59.999)).toBe('1:00.00');
+		expect(parseMediaBookmarkTime('0:03.46', 3.461)).toBe(3.461);
+		expect(parseMediaBookmarkTime('1:03.46')).toBe(63.46);
+		expect(parseMediaBookmarkTime('12.5')).toBe(12.5);
+		expect(parseMediaBookmarkTime('0:60.26')).toBeUndefined();
 	});
 
 	it('maps and clamps a pointer to clip time', () => {

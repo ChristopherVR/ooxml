@@ -32,13 +32,29 @@ function clamp(value: number, minimum: number, maximum: number): number {
 	return Math.min(maximum, Math.max(minimum, value));
 }
 
-export function formatMediaTime(seconds: number): string {
+export function formatMediaTime(seconds: number, fractionDigits: 1 | 2 = 1): string {
 	const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
-	const totalTenths = Math.round(safeSeconds * 10);
-	const minutes = Math.floor(totalTenths / 600);
-	const wholeSeconds = Math.floor((totalTenths % 600) / 10);
-	const tenths = totalTenths % 10;
-	return `${minutes}:${String(wholeSeconds).padStart(2, '0')}.${tenths}`;
+	const scale = 10 ** fractionDigits;
+	const total = Math.round(safeSeconds * scale);
+	const minutes = Math.floor(total / (60 * scale));
+	const wholeSeconds = Math.floor(total / scale) % 60;
+	const fraction = String(total % scale).padStart(fractionDigits, '0');
+	return `${minutes}:${String(wholeSeconds).padStart(2, '0')}.${fraction}`;
+}
+
+export function formatMediaBookmarkTime(seconds: number): string {
+	return formatMediaTime(seconds, 2);
+}
+
+/** Accept the displayed clock or seconds, keeping the stored precision for unchanged text. */
+export function parseMediaBookmarkTime(value: string, previous?: number): number | undefined {
+	const text = value.trim();
+	if (previous !== undefined && text === formatMediaBookmarkTime(previous)) return previous;
+	const match = /^(?:(\d+):([0-5]\d(?:\.\d+)?)|(\d+(?:\.\d+)?))$/u.exec(text);
+	if (!match) return undefined;
+	const seconds =
+		match[3] === undefined ? Number(match[1]) * 60 + Number(match[2]) : Number(match[3]);
+	return Number.isFinite(seconds) ? seconds : undefined;
 }
 
 /**

@@ -1,11 +1,13 @@
 <script lang="ts">
-	import type { MediaCaptionTrack, MediaPptxElement, PptxElement } from 'pptx-viewer-core';
+	import type { MediaBookmark, MediaCaptionTrack, MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 	import {
 		MEDIA_TRIM_SECTIONS,
 		mediaTrimResetPatch,
 		mediaTrimResetState,
 		MEDIA_PLAYBACK_SECTIONS,
 		linkedContentUrl,
+		formatMediaBookmarkTime,
+		parseMediaBookmarkTime,
 	} from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../i18n/context';
 
@@ -33,7 +35,7 @@
 	let playing = $state(false);
 	let bookmarkLabel = $state('');
 	// eslint-disable-next-line prefer-const
-	let bookmarkTime = $state(0);
+	let bookmarkTime = $state(formatMediaBookmarkTime(0));
 	// The trim fields (`MEDIA_TRIM_SECTIONS`) are bounded by the live duration.
 	const durationMs = $derived(duration * 1000);
 
@@ -43,12 +45,20 @@
 		}
 	}
 	function addBookmark(): void {
-		if (!media) {
+		const time = parseMediaBookmarkTime(bookmarkTime);
+		if (!media || time === undefined) {
 			return;
 		}
 		const label = bookmarkLabel.trim() || `${t('pptx.media.bookmark')} ${(media.bookmarks?.length ?? 0) + 1}`;
-		patch({ bookmarks: [...(media.bookmarks ?? []), { id: `bookmark-${Date.now()}`, label, time: bookmarkTime }] });
+		patch({ bookmarks: [...(media.bookmarks ?? []), { id: `bookmark-${Date.now()}`, label, time }] });
 		bookmarkLabel = '';
+	}
+	function updateBookmarkTime(bookmark: MediaBookmark, input: HTMLInputElement): void {
+		const time = parseMediaBookmarkTime(input.value, bookmark.time) ?? bookmark.time;
+		input.value = formatMediaBookmarkTime(time);
+		if (time !== bookmark.time) {
+			patch({ bookmarks: (media?.bookmarks ?? []).map((item) => item.id === bookmark.id ? { ...item, time } : item) });
+		}
 	}
 	function addTrack(): void {
 		if (!media) {
@@ -85,7 +95,7 @@
 	<InspectorFields sections={MEDIA_PLAYBACK_SECTIONS} target={media as PptxElement} disabled={!editor.editable} onpatch={(next) => patch(next as Partial<MediaPptxElement>)} />
 	<InspectorFields sections={MEDIA_TRIM_SECTIONS} target={{ media, durationMs }} disabled={!editor.editable} onpatch={(next) => patch(next as Partial<MediaPptxElement>)} />
 	{#if resetTrimState.visible}<button type="button" class="reset-trim" onclick={() => patch(mediaTrimResetPatch() as Partial<MediaPptxElement>)}>{t('pptx.media.resetTrim')}</button>{/if}
-	<details open><summary>{t('pptx.media.bookmarks')}</summary>{#each [...(media.bookmarks ?? [])].sort((a,b)=>a.time-b.time) as bookmark}<div class="row"><input value={bookmark.label} onchange={(event) => patch({bookmarks:(media.bookmarks??[]).map((item)=>item.id===bookmark.id?{...item,label:event.currentTarget.value}:item)})} /><input type="number" min="0" step="0.1" value={bookmark.time} onchange={(event) => patch({bookmarks:(media.bookmarks??[]).map((item)=>item.id===bookmark.id?{...item,time:Number(event.currentTarget.value)}:item)})} /><button aria-label={t('pptx.media.removeBookmark')} onclick={() => patch({bookmarks:(media.bookmarks??[]).filter((item)=>item.id!==bookmark.id)})}>×</button></div>{/each}<div class="row"><input placeholder={t('pptx.media.bookmarkLabel')} bind:value={bookmarkLabel} /><input type="number" min="0" step="0.1" bind:value={bookmarkTime} /><button aria-label={t('pptx.media.addBookmark')} onclick={addBookmark}>+</button></div></details>
+	<details open><summary>{t('pptx.media.bookmarks')}</summary>{#each [...(media.bookmarks ?? [])].sort((a,b)=>a.time-b.time) as bookmark}<div class="row"><input value={bookmark.label} onchange={(event) => patch({bookmarks:(media.bookmarks??[]).map((item)=>item.id===bookmark.id?{...item,label:event.currentTarget.value}:item)})} /><input type="text" value={formatMediaBookmarkTime(bookmark.time)} onchange={(event) => updateBookmarkTime(bookmark, event.currentTarget)} /><button aria-label={t('pptx.media.removeBookmark')} onclick={() => patch({bookmarks:(media.bookmarks??[]).filter((item)=>item.id!==bookmark.id)})}>×</button></div>{/each}<div class="row"><input placeholder={t('pptx.media.bookmarkLabel')} bind:value={bookmarkLabel} /><input type="text" bind:value={bookmarkTime} /><button aria-label={t('pptx.media.addBookmark')} onclick={addBookmark}>+</button></div></details>
 	<details open><summary>{t('pptx.media.captionTracks')}</summary>{#each media.captionTracks ?? [] as track, index}<fieldset><div class="grid"><label>{t('pptx.media.trackLabel')}<input value={track.label} onchange={(event)=>trackPatch(index,{label:event.currentTarget.value})} /></label><label>{t('pptx.media.trackLanguage')}<input value={track.language} onchange={(event)=>trackPatch(index,{language:event.currentTarget.value})} /></label><label>{t('pptx.media.trackKind')}<pptx-ui-select aria-label={t('pptx.media.trackKind')} value={track.kind} onchange={(event)=>trackPatch(index,{kind:event.currentTarget.value as MediaCaptionTrack['kind']})}><option value="subtitles">{t('pptx.media.trackKind.subtitles')}</option><option value="captions">{t('pptx.media.captions')}</option><option value="descriptions">{t('pptx.media.trackKind.descriptions')}</option></pptx-ui-select></label><label class="inline"><pptx-ui-checkbox checked={track.isDefault ?? false} onchange={(event)=>patch({captionTracks:(media.captionTracks??[]).map((item,i)=>({...item,isDefault:event.currentTarget.checked?i===index:(i===index?false:item.isDefault)}))})} ></pptx-ui-checkbox>{t('pptx.media.trackDefault')}</label></div><label>{t('pptx.media.trackSource')}<input value={track.src ?? ''} placeholder={t('pptx.media.trackSourcePlaceholder')} onchange={(event)=>trackPatch(index,{src:event.currentTarget.value||undefined})} /></label><label>{t('pptx.media.trackInlineWebVtt')}<textarea rows="4" value={track.content ?? ''} onchange={(event)=>trackPatch(index,{content:event.currentTarget.value||undefined})}></textarea></label><button onclick={() => patch({captionTracks:(media.captionTracks??[]).filter((_item,i)=>i!==index)})}>{t('pptx.media.removeTrack')}</button></fieldset>{/each}<button onclick={addTrack}>{t('pptx.media.addCaptionTrack')}</button></details>
 </div>{/if}
 

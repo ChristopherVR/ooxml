@@ -9,11 +9,12 @@
  * bookmark row is clicked.
  */
 import { Plus, Trash2 } from '@lucide/vue';
+import { formatMediaBookmarkTime } from 'ooxml-ui/pptx';
 import type { MediaBookmark, PptxElement } from 'pptx-viewer-core';
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-import { formatTime, generateBookmarkId, sortBookmarks } from '../../composables/useMediaEditing';
+import { generateBookmarkId, sortBookmarks } from '../../composables/useMediaEditing';
 
 const props = defineProps<{
 	bookmarks: MediaBookmark[];
@@ -77,7 +78,7 @@ const BTN = 'rounded bg-muted hover:bg-accent px-2 py-1 text-[11px] transition-c
 					{{ bmk.label }}
 				</button>
 				<span class="text-muted-foreground tabular-nums text-[10px]">
-					{{ formatTime(bmk.time) }}
+					{{ formatMediaBookmarkTime(bmk.time) }}
 				</span>
 				<button
 					v-if="canEdit"

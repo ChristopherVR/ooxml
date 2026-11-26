@@ -13,8 +13,10 @@ import {
 	mediaTrimResetPatch,
 	mediaTrimResetState,
 	MEDIA_PLAYBACK_SECTIONS,
+	formatMediaBookmarkTime,
+	parseMediaBookmarkTime,
 } from 'ooxml-ui/pptx';
-import type { MediaBookmark, MediaPptxElement, PptxElement } from 'pptx-viewer-core';
+import type { MediaPptxElement, PptxElement } from 'pptx-viewer-core';
 
 import { InspectorFieldsComponent } from './inspector-fields.component';
 import { LoadContentService } from './load-content.service';
@@ -65,10 +67,8 @@ import { appendMediaBookmark } from './media-properties-helpers';
 							(change)="updateBookmark($index, 'label', $event)"
 						/>
 						<input
-							type="number"
-							min="0"
-							step="0.1"
-							[value]="bookmark.time"
+							type="text"
+							[value]="bookmarkTime(bookmark.time)"
 							(change)="updateBookmark($index, 'time', $event)"
 						/>
 						<button type="button" (click)="removeBookmark($index)">×</button>
@@ -156,6 +156,7 @@ export class MediaPropertiesPanelComponent {
 		mediaTrimResetState(this.media(), this.canEdit()),
 	);
 	protected readonly trimResetPatch = mediaTrimResetPatch;
+	protected readonly bookmarkTime = formatMediaBookmarkTime;
 	readonly patch = output<Partial<PptxElement>>();
 
 	private readonly loader = inject(LoadContentService, { optional: true });
@@ -185,13 +186,20 @@ export class MediaPropertiesPanelComponent {
 		} as Partial<PptxElement>);
 	}
 
-	protected updateBookmark(index: number, key: keyof MediaBookmark, event: Event): void {
-		const target = event.target as HTMLInputElement;
-		const bookmarks = (this.media().bookmarks ?? []).map((bookmark, i) =>
-			i === index
-				? { ...bookmark, [key]: key === 'time' ? Number(target.value) : target.value }
-				: bookmark,
-		);
-		this.patch.emit({ bookmarks } as Partial<PptxElement>);
+	protected updateBookmark(index: number, key: 'label' | 'time', event: Event): void {
+		const target = event.target;
+		const bookmarks = this.media().bookmarks ?? [];
+		const bookmark = bookmarks[index];
+		if (!(target instanceof HTMLInputElement) || !bookmark) {
+			return;
+		}
+		const next = { ...bookmark };
+		if (key === 'time') {
+			next.time = parseMediaBookmarkTime(target.value, bookmark.time) ?? bookmark.time;
+			target.value = formatMediaBookmarkTime(next.time);
+		} else {
+			next.label = target.value;
+		}
+		this.patch.emit({ bookmarks: bookmarks.map((item, i) => (i === index ? next : item)) });
 	}
 }

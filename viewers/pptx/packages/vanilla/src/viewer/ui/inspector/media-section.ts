@@ -3,6 +3,8 @@ import {
 	mediaTrimResetPatch,
 	mediaTrimResetState,
 	MEDIA_PLAYBACK_SECTIONS,
+	formatMediaBookmarkTime,
+	parseMediaBookmarkTime,
 } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../i18n';
@@ -75,15 +77,18 @@ export function createMediaSection(
 		),
 	);
 	const bookmarks = textArea(doc, t('pptx.media.bookmarks'));
-	bookmarks.control.placeholder = '12.5 | Intro';
+	bookmarks.control.placeholder = formatMediaBookmarkTime(0);
 	bookmarks.control.addEventListener('change', () =>
 		handlers.setMediaProperties({
-			bookmarks: rows(bookmarks.control.value)
-				.map((row, index) => {
-					const [time, label = ''] = row.split('|').map((value) => value.trim());
-					return { id: `bookmark-${index + 1}`, time: Number(time), label };
-				})
-				.filter(({ time }) => Number.isFinite(time)),
+			bookmarks: rows(bookmarks.control.value).flatMap((row, index) => {
+				const [clock = '', ...labelParts] = row.split('|');
+				const label = labelParts.join('|').trim();
+				const previous = currentMedia?.bookmarks?.[index];
+				const time = parseMediaBookmarkTime(clock, previous?.time);
+				return time === undefined
+					? []
+					: [{ id: previous?.id ?? `bookmark-${index + 1}`, time, label }];
+			}),
 		}),
 	);
 	const captions = textArea(doc, t('pptx.media.captions'));
@@ -166,7 +171,7 @@ export function createMediaSection(
 			}
 			paintTrim();
 			bookmarks.control.value = (media?.bookmarks ?? [])
-				.map(({ time, label }) => `${time} | ${label}`)
+				.map(({ time, label }) => `${formatMediaBookmarkTime(time)} | ${label}`)
 				.join('\n');
 			captions.control.value = (media?.captionTracks ?? [])
 				.map(({ language, label, kind, src }) => `${language} | ${label} | ${kind} | ${src ?? ''}`)

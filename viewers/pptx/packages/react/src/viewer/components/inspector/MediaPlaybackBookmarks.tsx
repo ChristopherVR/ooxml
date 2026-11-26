@@ -1,11 +1,11 @@
-import { MEDIA_PLAYBACK_SECTIONS } from 'ooxml-ui/pptx';
+import { formatMediaBookmarkTime, MEDIA_PLAYBACK_SECTIONS } from 'ooxml-ui/pptx';
 import type { MediaPptxElement, MediaBookmark, PptxElement } from 'pptx-viewer-core';
 import React, { useState, useCallback } from 'react';
 import { LuPlus, LuTrash2, LuBookmark } from 'react-icons/lu';
 
 import { useTranslation } from '../../i18n/use-translation';
 import { InspectorFields } from './InspectorFields';
-import { CARD, HEADING, INPUT, BTN, formatTime, generateBookmarkId } from './TrimTimeline';
+import { CARD, HEADING, INPUT, BTN, generateBookmarkId } from './TrimTimeline';
 
 // ==========================================================================
 // Props
@@ -97,7 +97,7 @@ export function MediaPlaybackBookmarks({
 										{bmk.label}
 									</button>
 									<span className='text-muted-foreground tabular-nums text-[10px]'>
-										{formatTime(bmk.time)}
+										{formatMediaBookmarkTime(bmk.time)}
 									</span>
 									{canEdit && (
 										<button

@@ -52,17 +52,22 @@ describe('advanced inspector sections', () => {
 			width: 100,
 			height: 100,
 			mediaType: 'video',
+			bookmarks: [{ id: 'bmk-intro', time: 3.461, label: 'Cue' }],
 		} as MediaPptxElement;
 		section.update({ isMedia: true, media } as InspectorState);
 		const textareas = section.el.querySelectorAll<HTMLTextAreaElement>('textarea');
 
-		textareas[0].value = '12.5 | Intro';
+		expect(textareas[0].value).toBe('0:03.46 | Cue');
+		textareas[0].value = '0:03.46 | Cue\n0:12.50 | Intro';
 		textareas[0].dispatchEvent(new Event('change'));
 		textareas[1].value = 'en | English | captions | captions.vtt';
 		textareas[1].dispatchEvent(new Event('change'));
 
 		expect(setMediaProperties).toHaveBeenCalledWith({
-			bookmarks: [{ id: 'bookmark-1', time: 12.5, label: 'Intro' }],
+			bookmarks: [
+				{ id: 'bmk-intro', time: 3.461, label: 'Cue' },
+				{ id: 'bookmark-2', time: 12.5, label: 'Intro' },
+			],
 		});
 		expect(setMediaProperties).toHaveBeenCalledWith({
 			captionTracks: [
