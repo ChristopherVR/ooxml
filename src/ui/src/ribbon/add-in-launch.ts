@@ -30,21 +30,34 @@ export function addInLauncher(
 		if (product === 'visio') return;
 		const { manifest } = addIn;
 		const opener = modalActiveElement(host.ownerDocument);
-		const live = pane(addIn, source);
-		if (!live.url) return;
-		const access = (live.runtime.selection ?? selection)?.();
+		const currentPane = () => {
+			const current = installed.get(manifest.id);
+			if (
+				!host.isConnected ||
+				current?.digest !== addIn.digest ||
+				addInPreferences(scopes) !== store
+			)
+				return;
+			if (
+				source !== undefined &&
+				!current.manifest.tabs.some(({ groups }) =>
+					groups.some(({ commands }) =>
+						commands.some((command) => command.kind === 'taskPane' && command.url === source),
+					),
+				)
+			)
+				return;
+			return pane(current, source);
+		};
+		const live = currentPane();
+		if (!live?.url) return;
 		const { openAddInPane } = await import('./add-in-pane');
 		const active = () => {
-			const current = pane(addIn, source);
-			return (
-				host.isConnected &&
-				installed.get(manifest.id) === addIn &&
-				addInPreferences(scopes) === store &&
-				current.url?.href === live.url.href &&
-				current.runtime === live.runtime
-			);
+			const current = currentPane();
+			return current?.url?.href === live.url.href && current.runtime === live.runtime;
 		};
 		if (!active()) return;
+		const access = (live.runtime.selection ?? selection)?.();
 		openAddInPane(host, {
 			id: manifest.id,
 			url: live.url,

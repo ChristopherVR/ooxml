@@ -5,7 +5,7 @@ import { addInLauncher } from '../ribbon/add-in-launch';
 import { INSTALLED_ADD_IN_LIMIT, localAddIns } from '../ribbon/add-in-installations';
 import { addInLocale, localAddInText } from '../ribbon/add-in-local-strings';
 import { addInManifestTabs } from '../ribbon/add-in-manifest-tabs';
-import { addInCapabilities } from '../ribbon/add-in-requirements';
+import { addInCapabilities, isSelectionSet } from '../ribbon/add-in-requirements';
 import { addInRuntime } from '../ribbon/add-in-runtime-settings';
 import { addInPreferences } from '../ribbon/add-in-preferences';
 import { addInSettings } from '../ribbon/add-in-settings';
@@ -47,7 +47,8 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 						for (const file of files.slice(0, INSTALLED_ADD_IN_LIMIT)) {
 							if (signal.aborted) return;
 							try {
-								const addIn = await readLocalAddIn(file, {
+								const bytes = new Uint8Array(file);
+								const addIn = await readLocalAddIn(bytes, {
 									...manifestOptions(selection),
 									host: product,
 								});
@@ -58,7 +59,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 									validatedWithSelection.get(prior) === selection
 										? prior
 										: addIn;
-								sourceBytes.set(entry, file);
+								sourceBytes.set(entry, bytes);
 								validatedWithSelection.set(entry, selection);
 								restored.set(addIn.manifest.id, entry);
 							} catch {
@@ -91,14 +92,19 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 				for (const [id, entry] of installed) {
 					const bytes = sourceBytes.get(entry);
 					if (!bytes || validatedWithSelection.get(entry) === selection) continue;
+					if (
+						!entry.manifest.requirements.some(
+							({ kind, name }) => kind === 'set' && isSelectionSet(name),
+						)
+					)
+						continue;
 					const { readLocalAddIn } = await import('../ribbon/add-in-manifest-file');
 					const refreshed = await readLocalAddIn(bytes, {
 						...manifestOptions(selection),
 						host: product,
 					});
 					if (signal.aborted) return;
-					if (installed.get(id) !== entry) continue;
-					launcher.close(id);
+					if (installed.get(id) !== entry || refreshed.digest !== entry.digest) continue;
 					sourceBytes.set(refreshed, bytes);
 					validatedWithSelection.set(refreshed, selection);
 					installed.set(id, refreshed);
@@ -111,10 +117,11 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 			const id = addIn.manifest.id;
 			if (installed.get(id) !== previous || (!previous && installed.size >= INSTALLED_ADD_IN_LIMIT))
 				throw new Error('Add-in installation changed or reached its limit.');
+			const owned = new Uint8Array(bytes);
 			if (store && product !== 'visio') await store.write(product, id, bytes);
 			if (addInPreferences(scopes) !== store) return;
 			launcher.close(id);
-			sourceBytes.set(addIn, bytes);
+			sourceBytes.set(addIn, owned);
 			validatedWithSelection.set(addIn, hasSelection());
 			installed.set(id, addIn);
 			await syncTabs();
