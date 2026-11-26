@@ -95,6 +95,7 @@ const shared = {
 // share one copy of the reader. The CJS build keeps one self-contained file per entry.
 const {
 	index,
+	'automation/add-ins/index': addIns,
 	'drawingml/index': drawingml,
 	'docx/mail-merge/index': mailMerge,
 	'docx/ui/index': wordUi,
@@ -118,6 +119,15 @@ export default defineConfig([
 		splitting: false,
 	},
 	{ ...shared, format: ['cjs'], splitting: false },
+	{
+		...shared,
+		entry: { 'automation/add-ins/index': addIns },
+		format: ['esm'],
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'automation/add-ins/chunks/[name]-[hash]';
+		},
+	},
 	{
 		...shared,
 		// The root re-exports DrawingML. Keep its gallery assets lazy without pulling root
