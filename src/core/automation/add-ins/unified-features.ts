@@ -26,7 +26,7 @@ const SCOPES = new Map<string, OfficeAddInHost>([
 	['presentation', 'powerpoint'],
 ]);
 
-export function featureRequirements(input: unknown, options: AddInReadOptions) {
+function featureRequirements(input: unknown, options: AddInReadOptions) {
 	const entry = optionalObject(input, 'requirements');
 	const scopes = optionalArray(entry.scopes, 'requirements.scopes').map((scope) => {
 		const name = text(scope, 'scope');
@@ -44,13 +44,16 @@ export function featureRequirements(input: unknown, options: AddInReadOptions) {
 	const hosts = scopes.length
 		? OFFICE_ADD_IN_HOSTS.filter((host) => scopes.some((scope) => SCOPES.get(scope) === host))
 		: OFFICE_ADD_IN_HOSTS;
-	const missing = missingRequirements(requirements, options)[0];
-	let issue: AddInIssue | undefined;
-	if (!hosts.includes(options.host)) issue = { kind: 'unsupported', feature: scopes.join(', ') };
-	else if (factors.length && !factors.includes('desktop'))
-		issue = { kind: 'unsupported', feature: 'mobile form factor' };
-	else if (missing) issue = { kind: 'requirement', requirement: missing };
-	return { hosts, requirements, issue };
+	const issues: AddInIssue[] = [];
+	if (!hosts.includes(options.host)) {
+		issues.push({ kind: 'unsupported', feature: scopes.join(', ') });
+	} else {
+		if (factors.length && !factors.includes('desktop'))
+			issues.push({ kind: 'unsupported', feature: 'mobile form factor' });
+		for (const requirement of missingRequirements(requirements, options))
+			issues.push({ kind: 'requirement', requirement });
+	}
+	return { hosts, requirements, issues };
 }
 
 type Action = { kind: 'taskPane'; url: string } | { kind: 'inactive'; issue: AddInIssue };
@@ -77,7 +80,8 @@ function readActions(
 	unique(runtimes, (runtime) => identifier(runtime.id, 'runtime ID'), 'duplicate runtime ID');
 	const ids = new Set<string>();
 	for (const runtime of runtimes) {
-		const { issue: requirements } = featureRequirements(runtime.requirements, options);
+		const { issues: requirements } = featureRequirements(runtime.requirements, options);
+		issues.push(...requirements);
 		const type = identifier(runtime.type, 'runtime type');
 		const lifetime = runtime.lifetime ?? 'short';
 		if (lifetime !== 'long' && lifetime !== 'short') invalid('runtime lifetime');
@@ -91,20 +95,21 @@ function readActions(
 		}
 		const unsupported =
 			type !== 'general' ? type : lifetime === 'long' ? 'shared runtime' : undefined;
+		const runtimeIssue: AddInIssue | undefined = unsupported
+			? { kind: 'unsupported', feature: unsupported }
+			: undefined;
+		if (runtimeIssue) issues.push(runtimeIssue);
 		for (const action of records(runtime.actions, 'runtime actions')) {
 			const id = identifier(action.id, 'action ID');
 			if (ids.has(id.toLowerCase())) invalid('duplicate action ID');
 			ids.add(id.toLowerCase());
 			const actionType = identifier(action.type, 'action type');
-			const issue =
-				inherited ??
-				requirements ??
-				(unsupported || actionType !== 'openPage'
-					? ({ kind: 'unsupported', feature: unsupported ?? actionType } as const)
-					: undefined);
+			const actionIssue: AddInIssue | undefined =
+				actionType === 'openPage' ? undefined : { kind: 'unsupported', feature: actionType };
+			if (actionIssue) issues.push(actionIssue);
+			const issue = inherited ?? requirements[0] ?? runtimeIssue ?? actionIssue;
 			if (actionType === 'openPage' && !page) invalid('openPage runtime page');
 			if (issue) {
-				issues.push(issue);
 				actions.set(id, { kind: 'inactive', issue });
 			} else if (page) {
 				actions.set(id, { kind: 'taskPane', url: page });
@@ -125,14 +130,14 @@ function readRibbon(
 	const contexts = optionalArray(ribbon.contexts, 'ribbon contexts').map((entry) =>
 		identifier(entry, 'ribbon context'),
 	);
-	const requirements = featureRequirements(ribbon.requirements, options);
-	const inactive =
-		inherited ??
-		requirements.issue ??
-		(contexts.length && !contexts.includes('default')
-			? ({ kind: 'unsupported', feature: contexts.join(', ') } as const)
-			: undefined);
-	if (inactive) issues.push(inactive);
+	const { issues: requirements } = featureRequirements(ribbon.requirements, options);
+	issues.push(...requirements);
+	const contextIssue: AddInIssue | undefined =
+		contexts.length && !contexts.includes('default')
+			? { kind: 'unsupported', feature: contexts.join(', ') }
+			: undefined;
+	if (contextIssue) issues.push(contextIssue);
+	const inactive = inherited ?? requirements[0] ?? contextIssue;
 	const icons = (entry: JsonRecord) => {
 		for (const ref of records(entry.icons, 'ribbon icons')) icon(ref.url);
 	};
@@ -147,15 +152,19 @@ function readRibbon(
 				return readControl(item, `${field}.items[${index}]`, issue);
 			});
 		}
-		if (type !== 'button' && type !== 'menuItem')
-			return [{ id, label: name, kind: 'inactive', issue: { kind: 'unsupported', feature: type } }];
+		if (type !== 'button' && type !== 'menuItem') {
+			const unsupported: AddInIssue = { kind: 'unsupported', feature: type };
+			issues.push(unsupported);
+			return [{ id, label: name, kind: 'inactive', issue: unsupported }];
+		}
 		const action = actions.get(identifier(control.actionId, 'action reference'));
 		if (!action) return invalid('unresolved ribbon action');
-		const unavailable =
-			issue ??
-			(control.enabled === false || control.overriddenByRibbonApi === true
-				? ({ kind: 'unsupported', feature: 'dynamic ribbon command' } as const)
-				: undefined);
+		const dynamic: AddInIssue | undefined =
+			control.enabled === false || control.overriddenByRibbonApi === true
+				? { kind: 'unsupported', feature: 'dynamic ribbon command' }
+				: undefined;
+		if (dynamic) issues.push(dynamic);
+		const unavailable = issue ?? dynamic;
 		return [
 			{
 				id,
@@ -210,8 +219,9 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 		for (const host of condition.hosts) hosts.add(host);
 		const applies = condition.hosts.includes(options.host);
 		if (applies) requirements.push(...condition.requirements);
-		if (condition.issue) issues.push(condition.issue);
-		const actions = readActions(extension, context, condition.issue ?? context.permissionIssue);
+		issues.push(...condition.issues);
+		const issue = condition.issues[0];
+		const actions = readActions(extension, context, issue ?? context.permissionIssue);
 		for (const [key, value] of Object.entries(extension)) {
 			if (!extensionKeys.has(key) && value !== undefined)
 				issues.push({ kind: 'unsupported', feature: identifier(key, 'extension feature') });
@@ -222,7 +232,7 @@ export function readExtensions(input: unknown, context: ExtensionContext) {
 				`extensions[${index}].ribbons[${ribbonIndex}]`,
 				actions,
 				context,
-				condition.issue,
+				issue,
 			);
 			if (applies) tabs.push(...entries);
 		}

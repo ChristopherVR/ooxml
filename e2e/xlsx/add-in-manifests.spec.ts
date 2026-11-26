@@ -10,6 +10,24 @@ const fixture = (name: string) =>
 		'utf8',
 	);
 
+test('keeps the XML manifest compatibility details in Excel My Add-ins', async ({ page }) => {
+	await page.setViewportSize({ width: 1600, height: 900 });
+	await newWorkbook(page);
+	const editor = excel(page);
+	await editor.getByRole('tab', { name: 'Insert', exact: true }).click();
+	await editor.getByRole('button', { name: 'Get Add-ins', exact: true }).click();
+	const dialog = editor.locator('office-ui-dialog[open]');
+	await dialog.getByLabel('Choose a local add-in file').setInputFiles({
+		name: 'notes.xml',
+		mimeType: 'application/xml',
+		buffer: Buffer.from(await fixture('manifest.xml')),
+	});
+	await dialog.getByRole('button', { name: 'Install Notes', exact: true }).click();
+	await editor.getByRole('button', { name: 'My Add-ins', exact: true }).click();
+	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
+	await expect(dialog).toContainText('Unsupported feature · ExecuteFunction');
+});
+
 test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await page.setViewportSize({ width: 1600, height: 900 });
 	await newWorkbook(page);
@@ -18,7 +36,10 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await editor.getByRole('button', { name: 'Get Add-ins', exact: true }).click();
 	const dialog = editor.locator('office-ui-dialog[open]');
 	const zip = new JSZip()
-		.file('manifest.json', await fixture('manifest.json'))
+		.file(
+			'manifest.json',
+			(await fixture('manifest.json')).replace('"lifetime": "short"', '"lifetime": "long"'),
+		)
 		.file('icons/outline.png', new Uint8Array([1]))
 		.file('icons/color.png', new Uint8Array([2]))
 		.file('fr.json', await fixture('fr.json'));
@@ -41,9 +62,12 @@ test('reviews and installs a unified package in Excel', async ({ page }) => {
 	await expect(consent).not.toContainText('Document.ReadWrite.User');
 	await expect(marketplace).toBeHidden();
 	await expect(dialog).toContainText('Unavailable requirement · AddinCommands 1.10');
+	await expect(dialog).toContainText('Unsupported feature · shared runtime');
 	await consent.getByRole('button', { name: 'Install Notes', exact: true }).click();
 	await editor.getByRole('button', { name: 'My Add-ins', exact: true }).click();
 	const installed = editor.locator('office-ui-dialog[open]');
 	await expect(installed).toContainText('Running add-ins is unavailable');
+	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
+	await expect(installed).toContainText('Unsupported feature · shared runtime');
 	await installed.getByRole('button', { name: 'Remove Notes', exact: true }).click();
 });

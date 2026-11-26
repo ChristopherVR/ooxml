@@ -71,23 +71,28 @@ export function readXmlOverrides(
 		const type = typeName(action);
 		if (type === 'ShowTaskpane') {
 			const pane = resolve(one(action, 'SourceLocation'), 'Urls', 'task pane URL');
-			const issue =
-				inherited ??
-				(value(action, 'TaskpaneId') === 'Office.AutoShowTaskpaneWithDocument'
-					? ({ kind: 'unsupported', feature: 'automatic task pane' } as const)
-					: undefined);
+			const automatic: AddInIssue | undefined =
+				value(action, 'TaskpaneId') === 'Office.AutoShowTaskpaneWithDocument'
+					? { kind: 'unsupported', feature: 'automatic task pane' }
+					: undefined;
+			if (automatic) issues.push(automatic);
+			const issue = inherited ?? automatic;
 			return issue
 				? { id, label, kind: 'inactive', issue }
 				: { id, label, kind: 'taskPane', url: pane };
 		}
-		return { id, label, kind: 'inactive', issue: { kind: 'unsupported', feature: type } };
+		const issue: AddInIssue = { kind: 'unsupported', feature: type };
+		issues.push(issue);
+		return { id, label, kind: 'inactive', issue };
 	};
 	const readTab = (tab: XmlElement, inherited?: AddInIssue): AddInTab => {
 		const id = identifier(tab.getAttribute('id'), 'tab ID');
 		const builtIn = tab.localName === 'OfficeTab';
-		const issue =
-			inherited ??
-			(builtIn ? ({ kind: 'unsupported', feature: 'built-in ribbon tab' } as const) : undefined);
+		const builtInIssue: AddInIssue | undefined = builtIn
+			? { kind: 'unsupported', feature: 'built-in ribbon tab' }
+			: undefined;
+		if (builtInIssue) issues.push(builtInIssue);
+		const issue = inherited ?? builtInIssue;
 		const groups = all(tab, 'Group').map((group) => {
 			const commands = all(group, 'Control').flatMap((control) => {
 				const type = typeName(control);
@@ -115,12 +120,16 @@ export function readXmlOverrides(
 	};
 	const hosts = all(one(override, 'Hosts'), 'Host');
 	unique(hosts, typeName, 'duplicate override host');
+	const editorHosts = hosts.flatMap((host) => {
+		const product = XML_HOSTS.get(typeName(host));
+		if (product === undefined) return invalid('override host type');
+		return product === null ? [] : [{ host, product }];
+	});
+	if (editorHosts.length) {
+		for (const requirement of missing) issues.push({ kind: 'requirement', requirement });
+	}
 	const tabs: AddInTab[] = [];
-	for (const host of hosts) {
-		const hostType = typeName(host);
-		const product = XML_HOSTS.get(hostType);
-		if (product === undefined) invalid('override host type');
-		if (product !== options.host) continue;
+	for (const { host, product } of editorHosts) {
 		const desktop = one(host, 'DesktopFormFactor');
 		const functionFile = one(desktop, 'FunctionFile');
 		if (functionFile) resolve(functionFile, 'Urls', 'function file');
@@ -140,7 +149,7 @@ export function readXmlOverrides(
 				.map((tab) => readTab(tab, inactive));
 			if (!result.length || result.some((tab) => !tab.groups.length))
 				invalid('ribbon tabs and groups');
-			tabs.push(...result);
+			if (product === options.host) tabs.push(...result);
 		}
 	}
 	unique(tabs, (tab) => tab.id, 'duplicate tab ID');

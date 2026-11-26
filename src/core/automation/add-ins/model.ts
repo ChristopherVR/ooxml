@@ -51,6 +51,7 @@ export interface AddInManifest {
 	readonly identity: { readonly id: string; readonly resource?: string } | null;
 	readonly pane: string | null;
 	readonly tabs: readonly AddInTab[];
+	/** Compatibility details for review, including features omitted from the command model. */
 	readonly issues: readonly AddInIssue[];
 }
 

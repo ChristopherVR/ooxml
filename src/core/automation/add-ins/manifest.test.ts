@@ -85,13 +85,17 @@ describe('local Office add-in manifests', () => {
 			'<DefaultSettings>',
 			'<Requirements><Sets><Set Name="WordApi" MinVersion="1.1" /></Sets></Requirements><DefaultSettings>',
 		);
-		const unsupported = await read(base, support);
+		const unsupported = await read(base);
 		expect(unsupported.manifest.pane).toBeNull();
 		expect(unsupported.manifest.tabs).toEqual([]);
-		expect(unsupported.manifest.issues).toContainEqual({
-			kind: 'requirement',
-			requirement: { kind: 'set', name: 'WordApi', minVersion: '1.1' },
-		});
+		expect(unsupported.manifest.issues).toEqual([
+			{ kind: 'requirement', requirement: { kind: 'set', name: 'WordApi', minVersion: '1.1' } },
+			{
+				kind: 'requirement',
+				requirement: { kind: 'set', name: 'AddinCommands', minVersion: '1.10' },
+			},
+			{ kind: 'unsupported', feature: 'ExecuteFunction' },
+		]);
 	});
 
 	it('accepts schema hosts outside the editor targets and ignores their overrides', async () => {
@@ -123,6 +127,21 @@ describe('local Office add-in manifests', () => {
 			field: 'override host type',
 		});
 	});
+
+	it.each(['excel', 'powerpoint'] as const)(
+		'reviews declared XML command compatibility in %s',
+		async (host) => {
+			const { manifest } = await read(xml, { host });
+			expect(manifest.tabs).toEqual([]);
+			expect(manifest.issues).toEqual([
+				{
+					kind: 'requirement',
+					requirement: { kind: 'set', name: 'AddinCommands', minVersion: '1.10' },
+				},
+				{ kind: 'unsupported', feature: 'ExecuteFunction' },
+			]);
+		},
+	);
 
 	it.each([
 		['broken markup', xml.replace('</OfficeApp>', '</Office>'), 'manifest'],
@@ -210,6 +229,30 @@ describe('local Office add-in manifests', () => {
 			'inactive',
 		);
 	});
+
+	it.each(['word', 'excel', 'powerpoint'] as const)(
+		'reports all applicable runtime issues in %s',
+		async (host) => {
+			const source = unified
+				.replace('"lifetime": "short"', '"lifetime": "long"')
+				.replace(
+					'"minVersion": "1.10" }',
+					'"minVersion": "1.10" }, { "name": "SharedRuntime", "minVersion": "1.1" }',
+				);
+			const { manifest } = await readLocalAddIn(await pack(source), { host });
+			expect(manifest.issues).toEqual([
+				{
+					kind: 'requirement',
+					requirement: { kind: 'set', name: 'AddinCommands', minVersion: '1.10' },
+				},
+				{
+					kind: 'requirement',
+					requirement: { kind: 'set', name: 'SharedRuntime', minVersion: '1.1' },
+				},
+				{ kind: 'unsupported', feature: 'shared runtime' },
+			]);
+		},
+	);
 
 	it.each([
 		[

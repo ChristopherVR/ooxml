@@ -54,12 +54,7 @@ export function mountLocalAddIns(
 			issue.kind === 'unsupported'
 				? `${t('Unsupported feature')} · ${issue.feature}`
 				: `${t('Unavailable requirement')} · ${issue.requirement.name} ${issue.requirement.minVersion}`;
-		const inactive = manifest.tabs.flatMap((tab) =>
-			tab.groups.flatMap((group) =>
-				group.commands.flatMap((command) => (command.kind === 'inactive' ? [command.issue] : [])),
-			),
-		);
-		for (const line of [...new Set([...manifest.issues, ...inactive].map(format))].slice(0, 12)) {
+		for (const line of [...new Set(manifest.issues.map(format))].slice(0, 12)) {
 			const item = doc.createElement('p');
 			item.textContent = line;
 			parent.append(item);
