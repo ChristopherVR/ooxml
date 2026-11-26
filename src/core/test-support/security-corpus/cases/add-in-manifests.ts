@@ -1,4 +1,6 @@
+import { deflateRawSync } from 'node:zlib';
 import JSZip from 'jszip';
+import { lyingZipOf } from '../../../opc/__fixtures__/lying-zip';
 import { AddInManifestError, readLocalAddIn } from '../../../automation/add-ins';
 import { pngPreview } from '../../../automation/add-ins/package-icon';
 import { encodePng } from '../../../drawingml/raster-encode';
@@ -24,6 +26,38 @@ const unsafePane = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appfor
 </OfficeApp>`;
 
 export const cases: readonly SecurityCase[] = [
+	{
+		name: 'a manifest entry cannot inflate past its declared length',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () =>
+			refusal(
+				lyingZipOf([{ name: 'manifest.json', data: deflateRawSync('{}'), declared: 1 }]),
+				'field',
+			),
+		expected: 'LIMIT_INFLATE',
+	},
+	{
+		name: 'task pane URLs cannot carry publisher credentials',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () =>
+			refusal(
+				new TextEncoder().encode(
+					unsafePane.replace('javascript:void(0)', 'https://test:sample@publisher.example.test'),
+				),
+			),
+		expected: 'url',
+	},
+	{
+		name: 'task pane URL authorities reject empty user information',
+		limits: { ms: 2_000, heapMb: 64 },
+		run: () =>
+			refusal(
+				new TextEncoder().encode(
+					unsafePane.replace('javascript:void(0)', 'https://@publisher.example.test'),
+				),
+			),
+		expected: 'url',
+	},
 	{
 		name: 'oversized PNG icons stay out of the add-in preview',
 		limits: { ms: 2_000, heapMb: 64 },
