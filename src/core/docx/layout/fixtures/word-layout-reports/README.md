@@ -25,8 +25,11 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 `issue-353-table-style-precedence.docx` is a synthetic Lorem ipsum document without personal
 metadata. Normal sets 12 pt after and left justification, while the table style sets zero after
 and center justification. Its first-row condition adds 4 pt before. The cell covers implicit and
-explicit Normal, a named style and direct formatting. The expected justification follows
-MS-DOCX 2.3.1. Regenerate it with
+explicit Normal, a named style and direct formatting. Normal sets 11 pt for non-complex text and
+12 pt for complex text. The table style sets 16 pt and 18 pt respectively. The named style inherits
+Normal's non-complex size and sets its own 10 pt complex size. The last paragraph sets a direct
+9 pt non-complex size. Tests save and reload the 10 pt Normal and compatibility-setting variants.
+The expected precedence follows MS-DOCX 2.3.1. Regenerate it with
 `bun src/core/docx/layout/fixtures/word-layout-reports/generate-table-style-precedence.mjs`.
 
 For #330, Word moved all three lines of a paragraph together when widow and orphan control

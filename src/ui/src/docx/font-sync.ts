@@ -5,15 +5,17 @@ import { findLocalizedControl } from './localization';
 import { setComboValue, type ComboInput } from './ribbon-combo';
 import { runOf, styleModelOf, themeFontOf } from './run-styles';
 import { schema } from './schema';
+import { tableStyleAt } from './styled-paragraphs';
 
 const DEFAULT_FAMILY = 'Calibri';
 const DEFAULT_SIZE = 11;
 
-/** The family and size text shows in the editor: direct marks, then character/paragraph style and theme. */
+/** The effective font family and size at a text position in the editing view. */
 export function effectiveFont(
 	state: EditorState,
 	text: ProseMirrorNode,
 	paragraph: ProseMirrorNode,
+	pos: number,
 ): { family: string; size: number } {
 	const model = styleModelOf(state);
 	const run = runOf(text);
@@ -24,10 +26,13 @@ export function effectiveFont(
 			size: Number(run?.fontSize ?? font?.attrs.size ?? DEFAULT_SIZE),
 		};
 	}
+	const tableStyleRun = tableStyleAt(state.doc, pos, model)?.run;
 	const resolved = resolveRunFormatting(run, {
 		runCatalog: model.characterStyles,
 		paragraphCatalog: model.paragraphStyles,
 		paragraphStyleId: paragraph.attrs.style || undefined,
+		...(tableStyleRun && { tableStyleRun }),
+		overrideTableStyleFontSizeAndJustification: model.overrideTableStyleFontSizeAndJustification,
 	});
 	return {
 		family: themeFontOf(resolved, model.theme) ?? resolved.fontFamily ?? DEFAULT_FAMILY,
@@ -39,24 +44,25 @@ export function effectiveFont(
 export function syncFontControls(toolbar: HTMLElement, state: EditorState): void {
 	const families = new Set<string>();
 	const sizes = new Set<number>();
-	const add = (text: ProseMirrorNode, paragraph: ProseMirrorNode) => {
-		const { family, size } = effectiveFont(state, text, paragraph);
+	const add = (text: ProseMirrorNode, paragraph: ProseMirrorNode, pos: number) => {
+		const { family, size } = effectiveFont(state, text, paragraph, pos);
 		families.add(family);
 		sizes.add(size);
 	};
 	const { selection, doc } = state;
 	if (selection.empty) {
 		const marks = state.storedMarks ?? selection.$from.marks();
-		add(schema.text('x', marks), selection.$from.parent);
+		add(schema.text('x', marks), selection.$from.parent, selection.$from.pos);
 	} else {
 		let found = false;
 		for (const { $from, $to } of selection.ranges)
-			doc.nodesBetween($from.pos, $to.pos, (node, _pos, parent) => {
+			doc.nodesBetween($from.pos, $to.pos, (node, pos, parent) => {
 				if (!node.isInline || node.type.name === 'equation' || !parent) return;
 				found = true;
-				add(node, parent);
+				add(node, parent, pos);
 			});
-		if (!found) add(schema.text('x', selection.$from.marks()), selection.$from.parent);
+		if (!found)
+			add(schema.text('x', selection.$from.marks()), selection.$from.parent, selection.$from.pos);
 	}
 	const family = findLocalizedControl<ComboInput>(toolbar, 'Font family');
 	const size = findLocalizedControl<ComboInput>(toolbar, 'Font size');

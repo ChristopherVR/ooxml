@@ -1,4 +1,4 @@
-import { segmentByFont } from '../../text/script-fonts';
+import { resolveFontForScript, segmentByScript } from '../../text/unicode-script-detection';
 import type { RunFormatting } from '../run-style-model';
 import type { ThemeCatalog } from '../theme-model';
 import type { LayoutRun } from './input';
@@ -30,14 +30,31 @@ export function scriptLayoutRuns(
 			latin,
 		symbol: latin,
 	};
-	const pieces = segmentByFont(run.text, fonts);
-	if (pieces.length === 1 && pieces[0]?.fontFamily === latin) return [run];
+	const complexSize = formatting.fontSizeComplexScript ?? run.fontSizePt;
+	if (fonts.eastAsia === latin && fonts.complexScript === latin && complexSize === run.fontSizePt)
+		return [run];
 	const { breakAfter, ...style } = run;
-	return pieces.map((piece, index) => ({
-		...style,
-		text: piece.text,
-		fontFamily: piece.fontFamily,
-		sourceLength: piece.text.length,
-		...(breakAfter && index === pieces.length - 1 ? { breakAfter } : {}),
-	}));
+	const pieces: LayoutRun[] = [];
+	for (const piece of segmentByScript(run.text)) {
+		const fontFamily = resolveFontForScript(piece.script, fonts) ?? latin;
+		const fontSizePt = piece.script === 'complexScript' ? complexSize : run.fontSizePt;
+		const previous = pieces.at(-1);
+		if (previous && previous.fontFamily === fontFamily && previous.fontSizePt === fontSizePt) {
+			previous.text += piece.text;
+			previous.sourceLength = previous.text.length;
+		} else {
+			pieces.push({
+				...style,
+				text: piece.text,
+				fontFamily,
+				sourceLength: piece.text.length,
+				...(fontSizePt !== undefined && { fontSizePt }),
+			});
+		}
+	}
+	const last = pieces.at(-1);
+	if (pieces.length === 1 && last?.fontFamily === latin && last.fontSizePt === run.fontSizePt)
+		return [run];
+	if (last && breakAfter) last.breakAfter = breakAfter;
+	return pieces;
 }

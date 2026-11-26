@@ -30,7 +30,8 @@ export function readDropCap(
 		style: cap?.style ?? 'none',
 		lines: cap?.lines ?? LINES,
 		distanceTwips: cap?.distanceTwips ?? 0,
-		fontFamily: effectiveFont(view.state, text, frame ?? body).family,
+		fontFamily: effectiveFont(view.state, text, frame ?? body, (pair.framePos ?? pair.bodyPos) + 1)
+			.family,
 	};
 }
 
@@ -122,7 +123,12 @@ export function setDropCap(
 		...(options?.distanceTwips !== undefined ? { distanceTwips: options.distanceTwips } : {}),
 	};
 	const bodyText = body.firstChild;
-	const base = effectiveFont(view.state, bodyText?.isText ? bodyText : schema.text('x'), body).size;
+	const base = effectiveFont(
+		view.state,
+		bodyText?.isText ? bodyText : schema.text('x'),
+		body,
+		pair.bodyPos + 1,
+	).size;
 	if (frame) {
 		tr = tr.setNodeMarkup(pair.framePos!, undefined, {
 			...frame.attrs,

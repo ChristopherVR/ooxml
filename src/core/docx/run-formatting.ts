@@ -6,7 +6,7 @@ import { cachedResolver, chainResolver, defaultStyleId, mergeDefined } from './s
 /**
  * Word "toggle" run properties (ECMA-376 17.7.3): each level in the formatting
  * hierarchy that specifies the property flips its effective state, regardless
- * of the level's own boolean value — so two ancestor levels that both turn
+ * of the level's own boolean value, so two ancestor levels that both turn
  * bold "on" cancel back out to "off" (Word's documented double-toggle quirk).
  */
 const TOGGLE_KEYS = [
@@ -20,17 +20,16 @@ const TOGGLE_KEYS = [
 	'doubleStrike',
 	'vanish',
 ] as const satisfies readonly (keyof RunFormatting)[];
+const FONT_SIZE_KEYS = ['fontSize', 'fontSizeComplexScript'] as const;
 const OVERRIDE_KEYS = [
 	'underline',
 	'underlineStyle',
 	'underlineColor',
 	'highlight',
 	'verticalAlign',
-	'fontSize',
 	'fontFamily',
 	'fontFamilyEastAsia',
 	'fontFamilyComplexScript',
-	'fontSizeComplexScript',
 	'fontTheme',
 	'color',
 	'colorTheme',
@@ -47,6 +46,7 @@ const OVERRIDE_KEYS = [
 export const DIRECT_RUN_PROPERTY_KEYS = [
 	...TOGGLE_KEYS,
 	...OVERRIDE_KEYS,
+	...FONT_SIZE_KEYS,
 	'language',
 	'eastAsiaLanguage',
 	'bidiLanguage',
@@ -75,7 +75,12 @@ function replaceThemeFallbacks(result: RunFormatting, next: RunFormatting): void
 }
 
 type Resolver = (id: string | undefined) => RunFormatting | undefined;
-const paragraphRunResolvers = new WeakMap<object, WeakMap<RunStyleCatalog, Resolver>>();
+interface ParagraphStyleRun {
+	formatting: RunFormatting;
+	fontSizeFromDefault: Partial<Record<(typeof FONT_SIZE_KEYS)[number], boolean>>;
+}
+type ParagraphRunResolver = (id: string | undefined) => ParagraphStyleRun | undefined;
+const paragraphRunResolvers = new WeakMap<object, WeakMap<RunStyleCatalog, ParagraphRunResolver>>();
 const characterResolvers = new WeakMap<object, Resolver>();
 
 /** The run formatting the paragraph style chain gives (each style's `w:rPr`, nearest defined). */
@@ -83,8 +88,9 @@ function paragraphStyleRun(
 	styleId: string | undefined,
 	paragraphCatalog: ParagraphStyleCatalog | undefined,
 	runCatalog: RunStyleCatalog | undefined,
-): RunFormatting {
-	if (!paragraphCatalog || !runCatalog) return {};
+): ParagraphStyleRun | undefined {
+	if (!paragraphCatalog || !runCatalog) return undefined;
+	const defaultId = defaultStyleId(paragraphCatalog.styles);
 	let byRunCatalog = paragraphRunResolvers.get(paragraphCatalog.styles);
 	if (!byRunCatalog) {
 		byRunCatalog = new WeakMap();
@@ -94,13 +100,23 @@ function paragraphStyleRun(
 	if (!resolve) {
 		resolve = chainResolver(
 			paragraphCatalog.styles,
-			(_style, id) => runCatalog.styles[id]?.formatting,
-			mergeRunStyle,
-			{},
+			(_style, id): ParagraphStyleRun | undefined => {
+				const formatting = runCatalog.styles[id]?.formatting;
+				if (!formatting) return undefined;
+				const fontSizeFromDefault: ParagraphStyleRun['fontSizeFromDefault'] = {};
+				for (const key of FONT_SIZE_KEYS)
+					if (formatting[key] !== undefined) fontSizeFromDefault[key] = id === defaultId;
+				return { formatting, fontSizeFromDefault };
+			},
+			(prior, next) => ({
+				formatting: mergeRunStyle(prior.formatting, next.formatting),
+				fontSizeFromDefault: { ...prior.fontSizeFromDefault, ...next.fontSizeFromDefault },
+			}),
+			{ formatting: {}, fontSizeFromDefault: {} },
 		);
 		byRunCatalog.set(runCatalog, resolve);
 	}
-	return resolve(styleId || defaultStyleId(paragraphCatalog.styles)) ?? {};
+	return resolve(styleId || defaultId);
 }
 
 /** The run formatting a character style chain gives, nearest defined. */
@@ -122,6 +138,8 @@ export interface RunFormattingContext {
 	runCatalog?: RunStyleCatalog | undefined;
 	/** Simple table style run formatting for the cell/region containing this run, if any. */
 	tableStyleRun?: RunFormatting;
+	/** True disables the default paragraph style's table font-size exception. */
+	overrideTableStyleFontSizeAndJustification?: boolean | undefined;
 }
 
 /**
@@ -134,11 +152,12 @@ export function resolveRunFormatting(
 	context: RunFormattingContext = {},
 ): RunFormatting {
 	const docDefaults = context.runCatalog?.docDefaults ?? {};
-	const paragraphStyle = paragraphStyleRun(
+	const paragraph = paragraphStyleRun(
 		context.paragraphStyleId,
 		context.paragraphCatalog,
 		context.runCatalog,
 	);
+	const paragraphStyle = paragraph?.formatting ?? {};
 	const characterStyle = characterStyleRun(run.style, context.runCatalog);
 	const tableStyle = context.tableStyleRun ?? {};
 	const levels: RunFormatting[] = [docDefaults, paragraphStyle, tableStyle, characterStyle, run];
@@ -165,6 +184,22 @@ export function resolveRunFormatting(
 			if (value !== undefined) (result as Record<string, unknown>)[key] = value;
 		}
 		replaceThemeFallbacks(result, level);
+	}
+	// MS-DOCX 2.3.1 says "specifies a font size" without distinguishing w:sz and w:szCs.
+	// Apply it to each size independently when the winning paragraph declaration comes from the
+	// default style, including when inherited by a child. A declaration in its base or child keeps
+	// normal precedence, even if it has the same value.
+	for (const key of FONT_SIZE_KEYS) {
+		const paragraphSize = paragraphStyle[key];
+		const tableSize = tableStyle[key];
+		const useTableSize =
+			tableSize !== undefined &&
+			!context.overrideTableStyleFontSizeAndJustification &&
+			paragraph?.fontSizeFromDefault[key] &&
+			(paragraphSize === 11 || paragraphSize === 12);
+		const styleSize = useTableSize ? tableSize : (paragraphSize ?? tableSize);
+		const size = run[key] ?? characterStyle[key] ?? styleSize ?? docDefaults[key];
+		if (size !== undefined) result[key] = size;
 	}
 	return result;
 }

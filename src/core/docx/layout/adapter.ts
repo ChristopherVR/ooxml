@@ -179,6 +179,7 @@ export function adaptDocumentModel(
 			paragraphCatalog: catalog,
 			paragraphStyleId,
 			...(tableStyleRun && { tableStyleRun }),
+			overrideTableStyleFontSizeAndJustification: model.overrideTableStyleFontSizeAndJustification,
 		});
 		const role = formatting.fontTheme?.ascii ?? formatting.fontTheme?.hAnsi;
 		// Word draws a symbol (`w:sym`) in its own font, whatever the run's font is.

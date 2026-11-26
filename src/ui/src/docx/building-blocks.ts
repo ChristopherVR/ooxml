@@ -64,13 +64,14 @@ export function wordToolbarProps(core: EditorCore) {
 		const sample = (
 			text: import('prosemirror-model').Node,
 			paragraph: import('prosemirror-model').Node,
+			pos: number,
 		) => {
 			for (const key of ['bold', 'italic', 'underline'])
 				add(
 					key,
 					text.marks.some((mark) => mark.type.name === key),
 				);
-			const font = effectiveFont(state, text, paragraph);
+			const font = effectiveFont(state, text, paragraph, pos);
 			add('fontFamily', font.family);
 			add('fontSize', font.size);
 			add('alignment', ALIGNMENTS[String(paragraph.attrs.align ?? 'left')] ?? 'left');
@@ -79,10 +80,11 @@ export function wordToolbarProps(core: EditorCore) {
 			sample(
 				schema.text('x', state.storedMarks ?? state.selection.$from.marks()),
 				state.selection.$from.parent,
+				state.selection.$from.pos,
 			);
 		else
-			state.doc.nodesBetween(state.selection.from, state.selection.to, (node, _pos, parent) => {
-				if (node.isText && parent) sample(node, parent);
+			state.doc.nodesBetween(state.selection.from, state.selection.to, (node, pos, parent) => {
+				if (node.isText && parent) sample(node, parent, pos);
 			});
 	}
 	const value = <T extends string | number | boolean>(key: string, fallback: T): T | null => {

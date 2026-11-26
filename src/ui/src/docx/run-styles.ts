@@ -12,6 +12,7 @@ import {
 import { appendInlineNode } from './run-adapter';
 import { ligatureStyle } from 'ooxml-core/docx/ui';
 import { cssFontStack } from 'ooxml-core/docx/layout';
+import { segmentByScript } from 'ooxml-core/text';
 import { scaledSegments, scaleMeasurer } from './run-scale';
 import { scaledParagraphBreaks } from './scaled-paragraph-breaks';
 import type { ReviewDisplayMode } from './review-display';
@@ -100,6 +101,22 @@ export function runOf(node: ProseMirrorNode): TextRun | undefined {
 	return runs[0];
 }
 
+/** Keep adjacent text with the same size together, even when its scripts differ. */
+function sizedText(text: string, resolved: RunFormatting) {
+	const complexSize = resolved.fontSizeComplexScript;
+	if (complexSize === undefined || complexSize === resolved.fontSize)
+		return [{ text, startIndex: 0, formatting: resolved }];
+	const complex = { ...resolved, fontSize: complexSize };
+	const pieces: { text: string; startIndex: number; formatting: RunFormatting }[] = [];
+	for (const { text: part, startIndex, script } of segmentByScript(text)) {
+		const formatting = script === 'complexScript' ? complex : resolved;
+		const previous = pieces.at(-1);
+		if (previous?.formatting === formatting) previous.text += part;
+		else pieces.push({ text: part, startIndex, formatting });
+	}
+	return pieces;
+}
+
 /**
  * Renders formatting a run inherits from document defaults, its paragraph style, its table's style
  * (e.g. a bold header row), its character style and the theme. It is display-only: decorations
@@ -145,7 +162,7 @@ export function runStylesPlugin(
 					model.theme,
 					model.fontFallbacks,
 					model.tableStyles,
-					model.fontFallbacks,
+					model.overrideTableStyleFontSizeAndJustification,
 					mode,
 				];
 				const cached = cache.get(state.doc, inputs);
@@ -161,6 +178,7 @@ export function runStylesPlugin(
 						model.paragraphStyles,
 						model.theme,
 						model.fontFallbacks,
+						model.overrideTableStyleFontSizeAndJustification,
 						mode,
 						measurer,
 						JSON.stringify(tableStyleRun),
@@ -187,11 +205,9 @@ export function runStylesPlugin(
 							paragraphCatalog: model.paragraphStyles,
 							paragraphStyleId,
 							...(tableStyleRun ? { tableStyleRun } : {}),
+							overrideTableStyleFontSizeAndJustification:
+								model.overrideTableStyleFontSizeAndJustification,
 						});
-						const style =
-							mode === 'original'
-								? `${runFormattingCss(resolved, model.theme, undefined, model.fontFallbacks)};${reviewRunCss(resolved)}`
-								: runFormattingCss(resolved, model.theme, run, model.fontFallbacks);
 						const originalAttrs =
 							mode === 'original'
 								? {
@@ -213,37 +229,43 @@ export function runStylesPlugin(
 							);
 							return;
 						}
-						const segments = scaledSegments(
-							child.text!,
-							resolved,
-							themeFontOf(resolved, model.theme) ?? resolved.fontFamily,
-							measurer,
-						);
-						if (segments.length) {
-							hasScale = true;
-							for (const segment of segments)
-								localDecorations.push(
-									builder.inline(
-										start + offset + segment.from,
-										start + offset + segment.to,
-										{
-											style: `${style};${segment.css}`,
-											...originalAttrs,
-											class: `dve-scaled-text${hidden ? ' dve-hidden-text' : ''}`,
-										},
-										{ segment: segment.from },
-									),
-								);
-							return;
-						}
-						if (style || hidden)
-							localDecorations.push(
-								builder.inline(start + offset, start + offset + child.nodeSize, {
-									...originalAttrs,
-									...(style ? { style } : {}),
-									...(hidden ? { class: 'dve-hidden-text' } : {}),
-								}),
+						for (const { text, startIndex, formatting } of sizedText(child.text ?? '', resolved)) {
+							const style =
+								mode === 'original'
+									? `${runFormattingCss(formatting, model.theme, undefined, model.fontFallbacks)};${reviewRunCss(formatting)}`
+									: runFormattingCss(formatting, model.theme, run, model.fontFallbacks);
+							const from = start + offset + startIndex;
+							const segments = scaledSegments(
+								text,
+								formatting,
+								themeFontOf(formatting, model.theme) ?? formatting.fontFamily,
+								measurer,
 							);
+							if (segments.length) {
+								hasScale = true;
+								for (const segment of segments)
+									localDecorations.push(
+										builder.inline(
+											from + segment.from,
+											from + segment.to,
+											{
+												style: `${style};${segment.css}`,
+												...originalAttrs,
+												class: `dve-scaled-text${hidden ? ' dve-hidden-text' : ''}`,
+											},
+											{ segment: startIndex + segment.from },
+										),
+									);
+							} else if (style || hidden) {
+								localDecorations.push(
+									builder.inline(from, from + text.length, {
+										...originalAttrs,
+										...(style ? { style } : {}),
+										...(hidden ? { class: 'dve-hidden-text' } : {}),
+									}),
+								);
+							}
+						}
 					});
 					if (hasScale) decorations.push(...scaledParagraphBreaks(paragraph, position));
 					const value = paragraphs.set(paragraph, inputs, builder, hasScale);

@@ -4,12 +4,17 @@ import { describe, expect, it } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type { DocumentModel, ParagraphStyleCatalog } from 'ooxml-core/docx';
-import { loadDocx } from 'ooxml-core/docx';
+import { editStyleCatalogs, loadDocx } from 'ooxml-core/docx';
+import { readFontFormat } from './font-format';
 import { modelToDoc } from './model-adapter';
 import { readParagraphFormat } from './paragraph-format';
 import { syncStylePicker, paragraphStylesPlugin } from './paragraph-styles';
+import { runStylesPlugin } from './run-styles';
 import { schema } from './schema';
-import { paragraphAt } from './test-support';
+import { must, paragraphAt } from './test-support';
+
+const tableStyleFixture =
+	'../core/docx/layout/fixtures/word-layout-reports/issue-353-table-style-precedence.docx';
 
 const catalog: ParagraphStyleCatalog = {
 	docDefaults: {},
@@ -79,9 +84,7 @@ describe('paragraph style editor integration', () => {
 	});
 
 	it('updates a conditional paragraph style when the editing view changes the table look', async () => {
-		const path =
-			'../core/docx/layout/fixtures/word-layout-reports/issue-353-table-style-precedence.docx';
-		const { model } = await loadDocx(await readFile(path));
+		const { model } = await loadDocx(await readFile(tableStyleFixture));
 		const doc = modelToDoc(model);
 		const view = new EditorView(document.createElement('div'), {
 			state: EditorState.create({ doc, plugins: [paragraphStylesPlugin(() => model)] }),
@@ -95,6 +98,71 @@ describe('paragraph style editor integration', () => {
 			view.dispatch(view.state.tr.setNodeAttribute(tablePos, 'tableLook', { firstRow: false }));
 			expect(paragraph()?.style.marginTop).toBe('');
 			expect(paragraph()?.style.marginBottom).toBe('16px');
+		} finally {
+			view.destroy();
+		}
+	});
+
+	it('renders table font sizes and refreshes them when the compatibility setting changes (#353)', async () => {
+		const loaded = await loadDocx(await readFile(tableStyleFixture));
+		let { model } = loaded;
+		const doc = modelToDoc(model);
+		let cellPos = 0;
+		doc.descendants((node, pos, parent) => {
+			if (cellPos === 0 && node.type.name === 'paragraph' && parent?.type.name === 'tableCell')
+				cellPos = pos + 2;
+		});
+		const view = new EditorView(document.createElement('div'), {
+			state: EditorState.create({
+				doc,
+				selection: TextSelection.create(doc, cellPos),
+				plugins: [runStylesPlugin(() => model)],
+			}),
+		});
+		try {
+			const readSizes = () =>
+				Array.from(view.dom.querySelectorAll('td p'), (p) => {
+					const spans = Array.from(
+						p.querySelectorAll<HTMLElement>('span[style*="font-size"]'),
+					).filter((span) => span.childElementCount === 0);
+					return ['Lorem', 'لوريم'].map(
+						(text) => spans.find((span) => span.textContent?.includes(text))?.style.fontSize,
+					);
+				});
+			expect.soft(readSizes()).toEqual([
+				['16pt', '18pt'],
+				['16pt', '18pt'],
+				['16pt', '10pt'],
+				['9pt', '18pt'],
+			]);
+			expect.soft(readFontFormat(view.state).size).toBe(16);
+			model = { ...model, overrideTableStyleFontSizeAndJustification: true };
+			view.updateState(view.state.apply(view.state.tr));
+			expect.soft(readSizes()).toEqual([
+				['11pt', '12pt'],
+				['11pt', '12pt'],
+				['11pt', '10pt'],
+				['9pt', '12pt'],
+			]);
+			expect.soft(readFontFormat(view.state).size).toBe(11);
+			const edit = must(
+				editStyleCatalogs(model, {
+					kind: 'paragraph',
+					id: 'Normal',
+					name: 'Normal',
+					paragraphFormatting: {},
+					runFormatting: { fontSize: 10, fontSizeComplexScript: 12 },
+				}),
+			);
+			model = { ...model, ...edit.catalogs, overrideTableStyleFontSizeAndJustification: false };
+			view.updateState(view.state.apply(view.state.tr));
+			expect.soft(readSizes()).toEqual([
+				['10pt', '18pt'],
+				['10pt', '18pt'],
+				['10pt', '10pt'],
+				['9pt', '18pt'],
+			]);
+			expect(readFontFormat(view.state).size).toBe(10);
 		} finally {
 			view.destroy();
 		}

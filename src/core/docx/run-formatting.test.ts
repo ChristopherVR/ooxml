@@ -83,6 +83,38 @@ describe('character style catalog and run formatting resolution', () => {
 		expect(bold({ text: 'x', bold: false }, 'Heading')).toBeUndefined();
 	});
 
+	it('applies the table size exception to sizes declared by the default style only', () => {
+		const styles = `<w:styles xmlns:w="${ns}">
+<w:style w:type="paragraph" w:styleId="Base"><w:rPr><w:sz w:val="20"/><w:szCs w:val="22"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Default" w:default="1"><w:basedOn w:val="Base"/><w:rPr><w:sz w:val="24"/></w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Child"><w:basedOn w:val="Default"/></w:style>
+<w:style w:type="paragraph" w:styleId="Restated"><w:basedOn w:val="Default"/><w:rPr><w:sz w:val="24"/></w:rPr></w:style>
+<w:style w:type="character" w:styleId="Emphasis"><w:rPr><w:sz w:val="22"/><w:szCs w:val="20"/></w:rPr></w:style>
+</w:styles>`;
+		const context = {
+			paragraphCatalog: parseParagraphStyleCatalog(styles),
+			runCatalog: parseRunStyleCatalog(styles),
+			tableStyleRun: { fontSize: 16, fontSizeComplexScript: 18 },
+		};
+		const run = { text: 'Lorem ipsum' };
+		expect.soft(resolveRunFormatting(run, context)).toMatchObject({
+			fontSize: 16,
+			fontSizeComplexScript: 11,
+		});
+		expect(resolveRunFormatting(run, { ...context, paragraphStyleId: 'Child' }).fontSize).toBe(16);
+		expect
+			.soft(resolveRunFormatting(run, { ...context, paragraphStyleId: 'Restated' }).fontSize)
+			.toBe(12);
+		expect(resolveRunFormatting(run, { ...context, tableStyleRun: {} }).fontSize).toBe(12);
+		expect(resolveRunFormatting({ ...run, style: 'Emphasis' }, context)).toMatchObject({
+			fontSize: 11,
+			fontSizeComplexScript: 10,
+		});
+		expect(
+			resolveRunFormatting({ ...run, style: 'Emphasis', fontSize: 12 }, context).fontSize,
+		).toBe(12);
+	});
+
 	it('detects character style inheritance cycles without recursing forever', () => {
 		const cat = parseRunStyleCatalog(
 			`<w:styles xmlns:w="${ns}"><w:style w:type="character" w:styleId="A"><w:basedOn w:val="B"/><w:rPr><w:b/></w:rPr></w:style><w:style w:type="character" w:styleId="B"><w:basedOn w:val="A"/><w:rPr><w:i/></w:rPr></w:style></w:styles>`,

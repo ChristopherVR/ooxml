@@ -72,6 +72,7 @@ export function collectDocxWebfontRuns(model: DocumentModel): WebfontRun[] {
 			paragraphCatalog: model.paragraphStyles,
 			paragraphStyleId: paragraph.style,
 			...(tableStyleRun ? { tableStyleRun } : {}),
+			overrideTableStyleFontSizeAndJustification: model.overrideTableStyleFontSizeAndJustification,
 		};
 		const label = labels.get(paragraph.id);
 		const firstFormatting = resolveRunFormatting(paragraph.runs[0] ?? { text: '' }, context);

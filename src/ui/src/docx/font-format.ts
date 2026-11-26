@@ -85,6 +85,7 @@ function formatOf(
 	state: EditorState,
 	text: ProseMirrorNode,
 	paragraph: ProseMirrorNode,
+	pos: number,
 ): FontFormat {
 	const model = styleModelOf(state);
 	const run = runOf(text);
@@ -96,7 +97,7 @@ function formatOf(
 					paragraphStyleId: paragraph.attrs.style || undefined,
 				})
 			: (run ?? {});
-	const { family, size } = effectiveFont(state, text, paragraph);
+	const { family, size } = effectiveFont(state, text, paragraph, pos);
 	return {
 		family,
 		size,
@@ -131,16 +132,23 @@ function formatsOf(state: EditorState): FontFormat[] {
 	const formats: FontFormat[] = [];
 	if (selection.empty) {
 		const marks = state.storedMarks ?? selection.$from.marks();
-		formats.push(formatOf(state, schema.text('x', marks), selection.$from.parent));
+		formats.push(
+			formatOf(state, schema.text('x', marks), selection.$from.parent, selection.$from.pos),
+		);
 	} else {
 		for (const { $from, $to } of selection.ranges)
-			doc.nodesBetween($from.pos, $to.pos, (node, _pos, parent) => {
+			doc.nodesBetween($from.pos, $to.pos, (node, pos, parent) => {
 				if (node.isInline && node.type.name !== 'equation' && parent)
-					formats.push(formatOf(state, node, parent));
+					formats.push(formatOf(state, node, parent, pos));
 			});
 		if (!formats.length)
 			formats.push(
-				formatOf(state, schema.text('x', selection.$from.marks()), selection.$from.parent),
+				formatOf(
+					state,
+					schema.text('x', selection.$from.marks()),
+					selection.$from.parent,
+					selection.$from.pos,
+				),
 			);
 	}
 	return formats;
