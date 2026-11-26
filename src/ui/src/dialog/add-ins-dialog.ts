@@ -3,7 +3,10 @@ import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
 import { mountedAddInRestore, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { addInInstallFeedback } from '../ribbon/add-in-install-feedback';
-import { ADD_IN_RUNTIME_CHANGED } from '../ribbon/add-in-runtime-settings';
+import {
+	ADD_IN_RUNTIME_CHANGED,
+	ADD_IN_RUNTIME_REFRESHED,
+} from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent, renderAddInConsentActions } from './add-ins-consent';
 import { renderAddInBrowser, type Pivot } from './add-ins-browser';
@@ -28,6 +31,9 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	show(options: OpenAddInsOptions, restoreFocus: () => void): void {
 		this.#session = addInSession(options, restoreFocus);
 		this.#session.syncTabs();
+		options.host.addEventListener(ADD_IN_RUNTIME_REFRESHED, () => this.requestUpdate(), {
+			signal: this.#settingsEvents.signal,
+		});
 		for (const scope of options.scopes)
 			scope.addEventListener(ADD_IN_RUNTIME_CHANGED, () => this.requestUpdate(), {
 				signal: this.#settingsEvents.signal,

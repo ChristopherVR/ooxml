@@ -29,7 +29,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 	const hasSelection = () =>
 		product === 'word' ||
 		product === 'excel' ||
-		Boolean((addInRuntime(scopes)?.selection ?? options.selection)?.());
+		Boolean(addInRuntime(scopes)?.selection ?? options.selection);
 	const manifestOptions = (selection = hasSelection()) => ({
 		locale: manifestLocale,
 		capabilities: addInCapabilities(selection),
@@ -110,7 +110,7 @@ export function addInSession(options: OpenAddInsOptions, restoreFocus: () => voi
 					installed.set(id, refreshed);
 				}
 			}
-			if (!signal.aborted) syncTabs();
+			if (!signal.aborted) await syncTabs();
 		},
 		restoreFocus,
 		async install({ addIn, bytes, previous }: AddInPreview) {

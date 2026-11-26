@@ -17,7 +17,11 @@ const fixture = (name: string) =>
 export const xmlManifest = fixture('manifest.xml')
 	.replaceAll('https://notes.example.test', paneOrigin)
 	.replace('DefaultMinVersion="1.10"', 'DefaultMinVersion="1.1"')
-	.replace('Name="AddinCommands"', 'Name="TextCoercion"');
+	.replace('Name="AddinCommands"', 'Name="TextCoercion"')
+	.replace(
+		'<Hosts><Host',
+		'<Requirements><Sets DefaultMinVersion="1.1"><Set Name="TextCoercion" /></Sets></Requirements><Hosts><Host',
+	);
 export const jsonManifest = fixture('manifest.json')
 	.replaceAll('https://notes.example.test', paneOrigin)
 	.replace(

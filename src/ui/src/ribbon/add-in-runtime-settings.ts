@@ -21,6 +21,7 @@ export interface OfficeAddInRuntime {
 
 const RUNTIME = Symbol.for('office-ui.add-in-runtime');
 export const ADD_IN_RUNTIME_CHANGED = 'office-add-in-runtime-changed';
+export const ADD_IN_RUNTIME_REFRESHED = 'office-add-in-runtime-refreshed';
 type Settings = AddInDialogHost & { [RUNTIME]?: OfficeAddInRuntime | null };
 
 /** Opt into compatible task panes in this scope. Passing null disables inherited access. */

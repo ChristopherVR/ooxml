@@ -6,7 +6,7 @@ import {
 	checkAddInRuntime,
 	prepareAddInDemo,
 } from '../docx/add-in-runtime-flow';
-import { loadDeck, ribbonTab } from './support/deck';
+import { loadDeck, ribbonTab, SAMPLE_DECK, slideStage } from './support/deck';
 
 for (const scenario of addInReviewScenarios) {
 	test(`PowerPoint add-ins at ${scenario.width}px in ${scenario.scheme} mode`, async ({ page }) => {
@@ -24,7 +24,13 @@ for (const scenario of addInReviewScenarios) {
 			page,
 			editor,
 			host: 'PowerPoint',
-			reloadEditor: () => loadDeck(page),
+			async reloadEditor() {
+				const upload = page.locator('#file-input');
+				const stage = slideStage(page);
+				await expect(stage.or(upload).first()).toBeAttached();
+				if (await upload.count()) await upload.setInputFiles(SAMPLE_DECK);
+				await expect(stage).toBeVisible();
+			},
 			async openDialog() {
 				const homeTab = ribbonTab(page, 'Home');
 				if ((await homeTab.getAttribute('aria-selected')) !== 'true') await homeTab.click();

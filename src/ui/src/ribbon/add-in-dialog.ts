@@ -5,7 +5,11 @@ import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
 import { localAddIns } from './add-in-installations';
 import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
-import { ADD_IN_RUNTIME_CHANGED, type OfficeAddInSelection } from './add-in-runtime-settings';
+import {
+	ADD_IN_RUNTIME_CHANGED,
+	ADD_IN_RUNTIME_REFRESHED,
+	type OfficeAddInSelection,
+} from './add-in-runtime-settings';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
 export type AddInDialogProduct = OfficeAddInHost | 'visio';
@@ -77,7 +81,7 @@ export function watchOfficeAddIns(
 	locale: () => string,
 	selection?: OpenAddInsOptions['selection'],
 ): () => void {
-	const scopes = addInScopes(host, null);
+	const scopes = addInScopes(host, host.querySelector('office-ui-ribbon, pptx-ui-ribbon-tabs'));
 	const listeners = new AbortController();
 	let pending: AbortController | undefined;
 	let activeStore = addInPreferences(scopes);
@@ -131,7 +135,9 @@ export function watchOfficeAddIns(
 			await host[RESTORE];
 			if (signal.aborted || !host.isConnected) return;
 			const session = await sessionForEditor();
-			if (!signal.aborted) await session.refreshRuntime(signal);
+			if (signal.aborted) return;
+			await session.refreshRuntime(signal);
+			if (!signal.aborted) host.dispatchEvent(new Event(ADD_IN_RUNTIME_REFRESHED));
 		})().catch(() => {});
 	};
 	for (const scope of scopes) {
