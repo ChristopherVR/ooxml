@@ -19,18 +19,32 @@ const shapeNames: Record<string, Readonly<Record<string, string>>> = {
 const translateShape = (ctx: EditorContext, name: string) =>
 	shapeNames[ctx.locale().split('-')[0] ?? 'en']?.[name] ?? name;
 
-export function shapeSections(ctx: EditorContext) {
+function buildSections(names: Readonly<Record<string, string>>) {
 	return SHAPE_PALETTE.map((group) => ({
-		title: translateShape(ctx, group.name),
+		title: names[group.name] ?? group.name,
 		columns: 8,
 		tileWidth: 26,
 		tileHeight: 26,
 		items: group.shapes.map(({ preset: id, name }) => ({
 			id,
-			label: translateShape(ctx, name),
+			label: names[name] ?? name,
 			preview: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="${SHAPE_THUMB_VIEW_BOX}"><path d="${shapeThumbnailPath(id)}" fill="none" stroke="currentColor"/></svg>`,
 		})),
 	}));
+}
+
+const sectionsByLanguage = new Map<
+	Readonly<Record<string, string>>,
+	ReturnType<typeof buildSections>
+>();
+
+export function shapeSections(ctx: EditorContext) {
+	const names = shapeNames[ctx.locale().split('-')[0] ?? 'en'] ?? enShapes;
+	const saved = sectionsByLanguage.get(names);
+	if (saved) return saved;
+	const sections = buildSections(names);
+	sectionsByLanguage.set(names, sections);
+	return sections;
 }
 
 function textBox(ctx: EditorContext, edit: boolean) {

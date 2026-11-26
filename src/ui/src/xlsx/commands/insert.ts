@@ -38,11 +38,14 @@ export const CHART_TYPES: ReadonlyArray<readonly [type: ChartType, label: string
 	INSERT_CHART_TYPES.map(([type, label]) => [type, label, CHART_GLYPHS[type] ?? 'chartColumn']);
 
 /** Picks an image file with a native file input. Resolves undefined when cancelled. */
-export function pickImage(ctx: EditorContext): Promise<File | undefined> {
+export function pickImage(
+	ctx: EditorContext,
+	accept = PICTURE_TYPES.join(','),
+): Promise<File | undefined> {
 	return new Promise((resolve) => {
 		const input = ctx.host.ownerDocument.createElement('input');
 		input.type = 'file';
-		input.accept = PICTURE_TYPES.join(',');
+		input.accept = accept;
 		input.hidden = true;
 		input.addEventListener('change', () => {
 			resolve(input.files?.[0] ?? undefined);

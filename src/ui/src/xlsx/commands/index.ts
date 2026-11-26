@@ -15,6 +15,7 @@ import { fontCommands } from 'ooxml-core/xlsx/ui';
 import { formulaCommands } from 'ooxml-core/xlsx/ui';
 import { registerSheetIcons } from './register-icons';
 import { arrangeCommands } from './arrange';
+import { drawingFormatCommands } from './drawing-format';
 import { insertShapeCommands } from './insert-shapes';
 import { insertCommands } from './insert';
 import { insertAnnotationCommands } from './insert-annotations';
@@ -48,6 +49,7 @@ export function allCommands(): Command[] {
 		...insertCommands(),
 		...insertShapeCommands(),
 		...arrangeCommands(),
+		...drawingFormatCommands(),
 		...insertAnnotationCommands(),
 		...sheetPictureCommands(),
 		...localObjectCommands(),

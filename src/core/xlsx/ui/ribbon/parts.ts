@@ -52,6 +52,9 @@ export type RibbonControl =
 			kind: 'gallery';
 			command: string;
 			items: (ctx: EditorContext) => { id: string; label: string; preview?: string }[];
+			loadItems?: (
+				ctx: EditorContext,
+			) => Promise<{ id: string; label: string; preview?: string }[]>;
 			/** Sectioned dropdown rendered through the shared Office gallery. */
 			sections?: (ctx: EditorContext) => {
 				title?: string;

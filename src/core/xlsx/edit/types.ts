@@ -311,6 +311,12 @@ export interface EditSession {
 	setDrawingHidden(sheet: number, index: number, hidden: boolean): void;
 	rotateDrawing(sheet: number, index: number, degrees: number): void;
 	setDrawingAnchor(sheet: number, index: number, anchor: DrawingAnchor): void;
+	/** Formats a worksheet picture or shape in one undo step. */
+	formatDrawing(
+		sheet: number,
+		index: number,
+		intent: import('./drawing-format').DrawingFormatIntent,
+	): boolean;
 	/** Deletes the picture, chart or shape at `index` of the sheet's drawings. */
 	deleteDrawing(sheet: number, index: number): void;
 	/** Insert a local 3D model or Office document; returns its drawing index. */

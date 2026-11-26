@@ -3177,3 +3177,11 @@ built-in matrices, without copying the source artwork.
 the installed `Theme Effects` packages. Grunge Texture is disabled because
 its characteristic shape fills are images. Pictures in the available
 format schemes' background slots use the same solid placeholder.
+
+## Shared picture compression
+
+Source: ChristopherVR/ooxml, commit `15f649139`,
+`src/ui/src/pptx/web-components/picture-raster.ts` and `picture-worker-protocol.ts`.
+Raster opening and compression now live in `src/ui/src/form/picture-compression.ts`.
+The PowerPoint worker calls the shared implementation, and Excel loads it on demand with its
+bounded raster inspector. Background-removal output remains specific to PowerPoint.

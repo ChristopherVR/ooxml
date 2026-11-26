@@ -1,13 +1,8 @@
 import type { PictureRasterHeader, PptxBackgroundRemoval } from 'ooxml-core/pptx';
 import type { PictureMarks } from './picture-segmentation';
 
-export interface PictureCompression {
-	width: number;
-	height: number;
-	ppi: number;
-	crop: readonly [left: number, top: number, right: number, bottom: number];
-	deleteCrop: boolean;
-}
+import type { PictureCompression } from '../../form/picture-compression';
+export type { PictureCompression } from '../../form/picture-compression';
 
 export type PictureWorkerRequest =
 	| { kind: 'open'; source: Blob; header: PictureRasterHeader }

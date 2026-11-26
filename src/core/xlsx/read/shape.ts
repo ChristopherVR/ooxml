@@ -10,6 +10,7 @@ import type { ShapeNode } from '../model-shapes';
 import { readWordArtShape } from '../word-art';
 import { equationShapeBranches, readEquationParagraphs } from '../shape-equations';
 import { att, boolAttr } from './xml-util';
+import { readDrawingShadow } from '../write/drawing-format';
 
 const xdr = (parent: XmlElement | undefined, local: string) => first(parent, local, NS.xdr);
 
@@ -53,6 +54,8 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 	};
 	const name = att(cNvPr, 'name');
 	if (name) node.name = name;
+	const description = att(cNvPr, 'descr');
+	if (description) node.description = description;
 	if (boolAttr(cNvPr, 'hidden')) node.hidden = true;
 	if (att(xdr(nv, 'cNvSpPr'), 'txBox') === '1') node.textBox = true;
 	if (transform?.rotation) node.rotation = transform.rotation;
@@ -65,6 +68,9 @@ export function readShapeNode(element: XmlElement): ShapeNode | undefined {
 		if (fill) node.fill = fill;
 		const line = parseDrawingLine(first(spPr, 'ln', NS.a));
 		if (line) node.line = line;
+		const shadow = readDrawingShadow(spPr);
+		if (shadow) node.shadow = shadow;
+		if (first(spPr, 'effectDag', NS.a)) node.effectDag = true;
 		const style = readStyle(xdr(element, 'style'));
 		if (style) node.style = style;
 		const body = xdr(element, 'txBody');

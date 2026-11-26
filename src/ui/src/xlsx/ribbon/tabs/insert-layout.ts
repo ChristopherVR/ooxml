@@ -1,6 +1,6 @@
 // Insert and Page Layout tabs.
 import type { RibbonMenuItem, RibbonTab } from 'ooxml-core/xlsx/ui';
-import { ALIGNMENTS } from '../../commands/arrange';
+import { arrangeGroup } from './arrange';
 import { shapeSections } from '../../commands/insert-shapes';
 import { CHART_TYPES } from '../../commands/insert';
 import { MARGIN_PRESETS, PAPER_SIZES } from 'ooxml-core/xlsx/ui';
@@ -276,40 +276,7 @@ export function pageLayoutTab(): RibbonTab {
 					},
 				],
 			},
-			{
-				id: 'arrange',
-				label: 'Arrange',
-				controls: [
-					{ kind: 'button', command: 'arrange.forward', size: 'large' },
-					{ kind: 'button', command: 'arrange.backward', size: 'large' },
-					{ kind: 'button', command: 'arrange.selection-pane', size: 'large' },
-					{
-						kind: 'stack',
-						controls: [
-							{
-								kind: 'menu',
-								label: 'Align',
-								items: ALIGNMENTS.map(([id]) => ({ command: 'arrange.align-' + id })),
-							},
-							{
-								kind: 'menu',
-								label: 'Group',
-								items: [{ command: 'arrange.group' }, { command: 'arrange.ungroup' }],
-							},
-							{
-								kind: 'menu',
-								label: 'Rotate',
-								items: [
-									{ command: 'arrange.rotate-right' },
-									{ command: 'arrange.rotate-left' },
-									{ command: 'arrange.flip-horizontal' },
-									{ command: 'arrange.flip-vertical' },
-								],
-							},
-						],
-					},
-				],
-			},
+			arrangeGroup(),
 			{
 				id: 'sheet-options',
 				label: 'Sheet Options',

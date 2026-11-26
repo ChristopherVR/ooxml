@@ -41,6 +41,7 @@ import {
 } from './local-object';
 import { XML_HEADER, escapeAttr } from './xml-out';
 import { nativeShapeXml, patchNativeShape } from './native-shape';
+import { applyDrawingExtent, applyDrawingFrameFormat } from './drawing-format';
 import { patchWordArtShape } from '../word-art';
 import {
 	droppedSmartArtDrawings,
@@ -455,6 +456,9 @@ export function writeDrawing(
 				}
 			}
 			const properties = picture.getElementsByTagNameNS(NS.xdr, 'spPr')[0];
+			const node = picture.getElementsByTagNameNS(NS.xdr, 'pic')[0];
+			if (node && object.frameFormat) applyDrawingFrameFormat(node, object.frameFormat);
+			if (node && object.resized) applyDrawingExtent(node, object.resized.cx, object.resized.cy);
 			const transform = first(properties, 'xfrm', NS.a);
 			if (transform && object.rotation !== undefined) {
 				if (object.rotation)

@@ -14,6 +14,7 @@ import type { DrawingAnchor } from './model';
 export interface ShapeNode {
 	kind: 'shape' | 'connector' | 'group';
 	name?: string;
+	description?: string;
 	hidden?: boolean;
 	/** `txBox="1"`: a text box (no style-derived fill or line). */
 	textBox?: boolean;
@@ -31,6 +32,8 @@ export interface ShapeNode {
 	paths?: DrawingPath[];
 	fill?: DrawingFill;
 	line?: DrawingLine;
+	shadow?: import('../drawingml/effect-model').DrawingOuterShadow;
+	effectDag?: true;
 	/** `xdr:style` colours: `fillRef`, `lnRef` and `fontRef`. */
 	style?: {
 		fill?: { idx: number; color?: DrawingColor };

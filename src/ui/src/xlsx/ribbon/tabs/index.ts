@@ -11,6 +11,7 @@ import {
 } from './contextual';
 import { dataTab, formulasTab } from './formulas-data';
 import { homeTab } from './home';
+import { pictureFormatTab, shapeFormatTab } from './drawing-format';
 import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
 import { pivotAnalyzeTab, pivotDesignTab } from './pivot';
@@ -27,6 +28,8 @@ export function commandTabs(): RibbonTab[] {
 		helpTab(),
 		tableDesignTab(),
 		chartDesignTab(),
+		pictureFormatTab(),
+		shapeFormatTab(),
 		graphicsFormatTab(),
 		embeddedObjectTab(),
 		smartArtDesignTab(),

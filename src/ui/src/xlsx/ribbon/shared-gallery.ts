@@ -6,6 +6,7 @@ import {
 	type OfficeGallerySection,
 } from '../../ribbon/gallery';
 import { tagCommand, type RenderScope } from './controls';
+import { describeDisabled, disabledReason } from './disabled-reason';
 
 /** Adapt the immutable shared state to the older mutable Excel ribbon contract. */
 export function gallerySections(sections: readonly OfficeGallerySection[]) {
@@ -48,7 +49,14 @@ export function renderSharedGallery(
 		};
 		tagCommand(gallery, command);
 		const trigger = gallery.querySelector<HTMLButtonElement>('.trigger');
-		if (trigger) tagCommand(trigger, command);
+		if (trigger) {
+			tagCommand(trigger, command);
+			describeDisabled(
+				trigger,
+				ctx.t(command.label),
+				trigger.disabled ? disabledReason(ctx, command) : undefined,
+			);
+		}
 	});
 	return gallery;
 }

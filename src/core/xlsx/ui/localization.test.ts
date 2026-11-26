@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mergeMessageModules, normalizeLocale } from '../../i18n/index';
 import { FUNCTION_CATALOG } from '../formula/functions/registry';
 import { COMMAND_TABLES } from './commands/i18n/index';
+import { DRAWING_FORMAT_STRINGS } from './commands/i18n/drawing-format';
 import {
 	EDITOR_LOCALES,
 	STRINGS,
@@ -37,7 +38,7 @@ describe('xlsx localization over the shared i18n area', () => {
 	it('has four non-empty translations per command row, keeping placeholders and no em-dash', () => {
 		const problems: string[] = [];
 		const placeholders = (text: string) => (text.match(/\{\w+\}/g) ?? []).sort().join();
-		for (const table of COMMAND_TABLES)
+		for (const table of [...COMMAND_TABLES, DRAWING_FORMAT_STRINGS])
 			for (const [key, texts] of Object.entries(table)) {
 				if (texts.length !== 4) problems.push(`${key} needs four translations`);
 				for (const [index, text] of texts.entries()) {

@@ -2,11 +2,13 @@
 // (`geometry/preset-shape-evaluator`), the shared custom-geometry path data and the DrawingML
 // fill, outline and text body. The Excel UI only paints this string (docs/xlsx-parity-status.md).
 import { drawingPathData } from '../../drawingml/path-data';
+import { resolveDrawingOuterShadow, svgDropShadowElement } from '../../drawingml/drawing-shadow';
 import { renderWordArtSvg } from '../../drawingml/word-art-svg';
 import type { DrawingTextBody, DrawingTextParagraph } from '../../drawingml/types';
 import { evaluatePresetShape, lookupPresetShape } from '../../geometry/preset-shape-evaluator';
 import type { ThemePalette } from '../model';
 import type { ShapeNode } from '../model-shapes';
+import { drawingSchemeColors } from '../drawing-theme';
 import { resolveThemeTypeface, workbookFontFamily } from './font-stack';
 import { EMU_PER_PX, shapeColor, shapeFill, shapeStroke } from './shape-paint';
 
@@ -258,7 +260,24 @@ function drawNode(node: ShapeNode, box: Box, ctx: Context): string {
 				h: textRect.b - textRect.t,
 			}
 		: box;
-	return `${open}${body}${textSvg(node, rect, ctx)}</g>`;
+	const scheme = node.shadow && drawingSchemeColors(ctx.theme);
+	const shadow =
+		node.shadow && resolveDrawingOuterShadow(node.shadow, { scheme: (name) => scheme?.[name] });
+	const filter = shadow ? `${id}shadow` : undefined;
+	if (filter && shadow)
+		ctx.defs.push(
+			`<filter id="${filter}" x="-100%" y="-100%" width="300%" height="300%">${svgDropShadowElement(
+				{
+					...shadow,
+					dx: shadow.dx * ctx.scale,
+					dy: shadow.dy * ctx.scale,
+					blur: shadow.blur * ctx.scale,
+				},
+				{ number: (n) => String(round(n)), color: escapeXml },
+			)}</filter>`,
+		);
+	const content = body + textSvg(node, rect, ctx);
+	return `${open}${filter ? `<g filter="url(#${filter})">${content}</g>` : content}</g>`;
 }
 
 /**
@@ -289,5 +308,5 @@ export function shapeSvg(
 	};
 	const body = drawNode({ ...node, rotation: node.rotation ?? 0 }, { x: 0, y: 0, w, h }, ctx);
 	const defs = ctx.defs.length ? `<defs>${ctx.defs.join('')}</defs>` : '';
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${round(w)}" height="${round(h)}" viewBox="0 0 ${round(w)} ${round(h)}" style="overflow:visible" role="img" aria-label="${escapeXml(node.name ?? 'Shape')}">${defs}${body}</svg>`;
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="${round(w)}" height="${round(h)}" viewBox="0 0 ${round(w)} ${round(h)}" style="overflow:visible" role="img" aria-label="${escapeXml(node.description || node.name || 'Shape')}">${defs}${body}</svg>`;
 }

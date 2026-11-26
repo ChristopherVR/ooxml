@@ -104,7 +104,9 @@ export function wordArtShapeXml(node: ShapeNode, id: number): string {
 /** Edits the styled run while retaining the drawing's identity, anchor and extensions. */
 export function patchWordArtShape(xml: string, node: ShapeNode): string {
 	const doc = parseXml(xml);
-	const shape = first(doc.documentElement, 'sp', NS.xdr);
+	const root = doc.documentElement;
+	const shape =
+		root.localName === 'sp' && root.namespaceURI === NS.xdr ? root : first(root, 'sp', NS.xdr);
 	const body = first(shape, 'txBody', NS.xdr);
 	const run = first(first(body, 'p', NS.a), 'r', NS.a);
 	const text = first(run, 't', NS.a);

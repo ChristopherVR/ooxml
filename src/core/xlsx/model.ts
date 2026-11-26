@@ -632,6 +632,12 @@ export interface ImageObject {
 	crop?: import('../drawingml/picture-crop').DrawingPictureCrop;
 	layout?: import('../drawingml/picture-layout').DrawingPictureLayout;
 	effects?: import('../drawingml/picture-effects').DrawingPictureEffect[];
+	line?: import('../drawingml/types').DrawingLine;
+	shadow?: import('../drawingml/effect-model').DrawingOuterShadow;
+	effectDag?: true;
+	/** Only the authored frame fields are applied over the original picture XML. */
+	frameFormat?: import('./write/drawing-format').DrawingFrameFormat;
+	resized?: { cx: number; cy: number };
 	/** Original anchor keeps picture extensions through unrelated edits. */
 	sourceXml?: string;
 }
@@ -709,7 +715,7 @@ export interface UnsupportedDrawingObject {
 	sourceXml?: string;
 	/** A DrawingML shape, connector or group the painter draws (saved from `sourceXml`). */
 	shape?: ShapeNode;
-	shapeEdit?: { transform?: true; text?: true; visibility?: true };
+	shapeEdit?: { transform?: true; text?: true; visibility?: true; extent?: true };
 	/** The source-backed WordArt text and effects were edited. */
 	wordArtEdited?: true;
 	/**

@@ -1,4 +1,6 @@
 import { patchPictureEffects, type PictureEffectPatch } from '../../drawingml/picture-effects';
+import { anchorToPixelBox, pixelSizeToExtent } from '../layout/anchors';
+import { createGridMetrics } from '../layout/metrics';
 import type { DrawingAnchor, DrawingObject } from '../model';
 import { removeSlicers } from '../slicer/book';
 import { deleteTimeline } from './timelines';
@@ -9,7 +11,7 @@ import {
 	wordArtRgb,
 	type WordArtText,
 } from '../../drawingml/word-art';
-import { wordArtShape } from '../word-art';
+import { patchWordArtShape, wordArtShape } from '../word-art';
 
 function drawingAt(ctx: EditContext, s: number, index: number): DrawingObject {
 	const drawing = sheetDrawingAt(ctx.workbook, s, index);
@@ -91,6 +93,7 @@ export function editWordArt(ctx: EditContext, s: number, index: number, value: W
 	if (drawing.kind !== 'unsupported' || !drawing.shape?.wordArt) return;
 	const next = normalizeWordArt(value);
 	const shape = drawing.shape;
+	if (shape.text?.text === value.text) next.text = value.text;
 	if (
 		shape.text?.text === next.text &&
 		shape.wordArt &&
@@ -106,6 +109,8 @@ export function editWordArt(ctx: EditContext, s: number, index: number, value: W
 			const wordArt = wordArtShape(next, drawing.anchor);
 			drawing.shape = { ...shape, wordArt: next.style, text: wordArt.text! };
 			if (drawing.sourceXml) drawing.wordArtEdited = true;
+			else if (shape.sourceShapeXml)
+				drawing.shape.sourceShapeXml = patchWordArtShape(shape.sourceShapeXml, drawing.shape);
 		},
 		{ sheet: s },
 	);
@@ -123,15 +128,34 @@ export function setDrawingAnchor(
 ): void {
 	const drawing = drawingAt(ctx, s, index);
 	checkAnchor(anchor);
+	const shape = drawing.kind === 'unsupported' ? drawing.shape : undefined;
+	const sheet = sheetAt(ctx.workbook, s);
+	const extent = drawing.kind === 'image' || shape ? resizedExtent() : undefined;
 	ctx.run(
 		'Move object',
 		'annotations',
 		[{ kind: 'sheet', sheet: s }],
 		() => {
 			drawing.anchor = structuredClone(anchor);
+			if (extent) {
+				if (drawing.kind === 'image') drawing.resized = extent;
+				if (drawing.kind === 'unsupported' && shape) {
+					shape.frame = { ...shape.frame, width: extent.cx, height: extent.cy };
+					if (drawing.sourceXml) drawing.shapeEdit = { ...drawing.shapeEdit, extent: true };
+				}
+			}
 		},
 		{ sheet: s },
 	);
+
+	function resizedExtent() {
+		const metrics = createGridMetrics(sheet, { zoom: 100 });
+		const before = anchorToPixelBox(sheet, drawing.anchor, metrics);
+		const after = anchorToPixelBox(sheet, anchor, metrics);
+		return before.w !== after.w || before.h !== after.h
+			? pixelSizeToExtent(after.w, after.h)
+			: undefined;
+	}
 }
 
 /** Deletes a picture, chart or shape (one undo step). */

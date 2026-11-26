@@ -2,7 +2,7 @@ import { needsPicturePixels } from '../../picture-pixels';
 import { pictureSvg } from '../../picture-view';
 import { drawingHidden } from 'ooxml-core/xlsx/ui';
 import { selectedDrawings, selectDrawing } from '../drawing-selection';
-import { imageContentType } from 'ooxml-core/drawingml';
+import { imageContentType, resolveDrawingOuterShadow } from 'ooxml-core/drawingml';
 import { pictureUrl } from 'ooxml-core/opc';
 import { pictureEffectFilter } from '../../picture-effects';
 import { imageRectFromCrop } from 'ooxml-core/geometry';
@@ -17,8 +17,10 @@ import {
 	chartDataDescription,
 	chartView,
 	createRefEvaluator,
+	drawingSchemeColors,
 	pixelBoxToAnchor,
 	renderChartSvg,
+	shapeColor,
 	CHART_FILL_PARTS,
 	type ChartFillPart,
 	type ChartObject,
@@ -195,6 +197,8 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.replaceChildren();
 		node.className = 'xg-obj';
+		node.style.boxShadow = '';
+		node.style.overflow = '';
 		// Its description target went with the children; a kind that has none must not keep it.
 		node.removeAttribute('aria-describedby');
 		node.removeAttribute('role');
@@ -202,6 +206,30 @@ export class DrawingLayer {
 		// A picture is one image, named by its alt text, else its name.
 		const alt =
 			(drawing.kind === 'image' && (drawing.description || drawing.name)) || view.ctx.t('Picture');
+		if (drawing.kind === 'image') {
+			const theme = view.workbook()?.theme;
+			const scale = view.zoom() / 100;
+			const scheme = drawing.shadow && drawingSchemeColors(theme);
+			const shadow =
+				drawing.shadow &&
+				resolveDrawingOuterShadow(drawing.shadow, { scheme: (name) => scheme?.[name] });
+			if (shadow)
+				node.style.boxShadow = `${shadow.dx * scale}px ${shadow.dy * scale}px ${shadow.blur * scale}px color-mix(in srgb, ${shadow.color} ${shadow.opacity * 100}%, transparent)`;
+			if (drawing.line?.fill?.kind === 'solid') {
+				const color = shapeColor(drawing.line.fill.color, theme);
+				if (color) {
+					const border = h(doc, 'span', '', { 'aria-hidden': 'true' });
+					Object.assign(border.style, {
+						position: 'absolute',
+						inset: '0',
+						pointerEvents: 'none',
+						zIndex: '1',
+						boxShadow: `inset 0 0 0 ${((drawing.line.widthEmu ?? 12700) / 9525) * scale}px ${color}`,
+					});
+					node.append(border);
+				}
+			}
+		}
 		if (
 			drawing.kind === 'image' &&
 			(needsPicturePixels(drawing.effects ?? []) ||

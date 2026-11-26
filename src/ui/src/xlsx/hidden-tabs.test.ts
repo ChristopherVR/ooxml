@@ -44,6 +44,25 @@ describe('<xlsx-editor> ribbon.hiddenTabs', () => {
 		expect(['file', ...ribbonTabs().map((tab) => tab.id)]).toEqual([...EXCEL_RIBBON_TAB_IDS]);
 	});
 
+	it('lets the host hide Shape Format while a shape is selected', async () => {
+		const element = mount({ ribbon: { hiddenTabs: ['shape-format'] } });
+		const state = core(element);
+		const index = state.ctx
+			.session()!
+			.addShape(
+				0,
+				{ from: { row: 0, col: 0, rowOffset: 0, colOffset: 0 }, ext: { cx: 952500, cy: 476250 } },
+				{ kind: 'preset', preset: 'rect', name: 'Box' },
+			);
+		state.selection.set({ drawing: index });
+		const searchHidden = () => commandsOnlyInTabs(ribbonTabs(), state.customization.hiddenTabs);
+		expect(await tabIds(element)).not.toContain('shape-format');
+		expect(searchHidden().has('drawing.edit-shape')).toBe(true);
+		element.customization = null;
+		expect(await tabIds(element)).toContain('shape-format');
+		expect(searchHidden().has('drawing.edit-shape')).toBe(false);
+	});
+
 	it('hides File and refuses the commands that only open the backstage', async () => {
 		expect([...resolveExcelCustomization(NO_FILE).commands]).toEqual([
 			'file.info',

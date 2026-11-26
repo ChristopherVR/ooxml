@@ -41,6 +41,7 @@ export function arrangeCommands(): Command[] {
 				id: 'arrange.' + id,
 				label,
 				icon: icon(direction === 1 ? 'bringForward' : 'sendBackward'),
+				unavailable: 'Select one object with another object in that direction.',
 				lock: locked,
 				enabled: (ctx) => {
 					const index = primary(ctx);
@@ -69,6 +70,7 @@ export function arrangeCommands(): Command[] {
 				id: 'arrange.align-' + alignment,
 				label,
 				lock: locked,
+				unavailable: 'Select at least two objects to align.',
 				enabled: (ctx) => {
 					const sheet = target(ctx)?.ws;
 					return (
@@ -88,6 +90,7 @@ export function arrangeCommands(): Command[] {
 			id: 'arrange.group',
 			label: 'Group',
 			lock: locked,
+			unavailable: 'Select at least two standalone shapes to group.',
 			enabled: (ctx) => {
 				const t = target(ctx);
 				return !!t && canGroupDrawings(t.ws, selectedDrawings(ctx));
@@ -103,6 +106,7 @@ export function arrangeCommands(): Command[] {
 			id: 'arrange.ungroup',
 			label: 'Ungroup',
 			lock: locked,
+			unavailable: 'Select a standalone shape group to ungroup.',
 			enabled: (ctx) => {
 				const index = primary(ctx);
 				return (
@@ -128,6 +132,7 @@ export function arrangeCommands(): Command[] {
 				id: 'arrange.rotate-' + id,
 				label,
 				lock: locked,
+				unavailable: 'Select at least one picture or shape to rotate or flip.',
 				enabled: hasTransformableSelection,
 				run: (ctx) => {
 					const t = target(ctx);
@@ -149,6 +154,7 @@ export function arrangeCommands(): Command[] {
 				id: 'arrange.flip-' + axis,
 				label,
 				lock: locked,
+				unavailable: 'Select at least one picture or shape to rotate or flip.',
 				enabled: hasTransformableSelection,
 				run: (ctx) => {
 					const t = target(ctx);

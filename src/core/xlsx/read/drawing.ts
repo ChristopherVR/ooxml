@@ -1,4 +1,5 @@
 import { parseTransform } from '../../drawingml/drawing-geometry';
+import { parseDrawingLine } from '../../drawingml/drawing-fill';
 import { svgPictureRelationship } from '../../drawingml/svg-picture';
 import { parsePictureLayout } from '../../drawingml/picture-layout';
 import { parsePictureEffects } from '../../drawingml/picture-effects';
@@ -14,6 +15,7 @@ import { SMART_ART_GRAPHIC_URI, smartArtFrame } from './smart-art';
 import { readFormControlFrame } from './form-control';
 import { embeddedPicture, readModel3D, type EmbeddedObjectDeclarations } from './local-object';
 import { readShapeNode } from './shape';
+import { readDrawingShadow } from '../write/drawing-format';
 import { att, boolAttr, selfContainedXml } from './xml-util';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);
@@ -137,7 +139,13 @@ export function parseDrawing(
 			const svgPart = svgRel ? source.target(partName, svgRel) : undefined;
 			if (svgPart && source.contentType(svgPart) === 'image/svg+xml' && source.has(svgPart))
 				image.svgPartName = svgPart;
-			const transform = parseTransform(first(xdr(content, 'spPr'), 'xfrm', NS.a));
+			const properties = xdr(content, 'spPr');
+			const line = parseDrawingLine(first(properties, 'ln', NS.a));
+			const shadow = readDrawingShadow(properties);
+			if (line) image.line = line;
+			if (shadow) image.shadow = shadow;
+			if (first(properties, 'effectDag', NS.a)) image.effectDag = true;
+			const transform = parseTransform(first(properties, 'xfrm', NS.a));
 			if (transform?.rotation) image.rotation = transform.rotation;
 			if (transform?.flipHorizontal) image.flipH = true;
 			if (transform?.flipVertical) image.flipV = true;

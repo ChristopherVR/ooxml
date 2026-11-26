@@ -425,6 +425,16 @@ line/marker swatches and position-authoring controls remain incomplete.
     OLAP drill, a persistent field list, editing shared filter connections and cross-sheet moves
     remain open. Draw, Picture Format, Shape Format, Chart Format, Review spelling and
     accessibility checks, and the Review Notes menu remain open.
+    flipping, and visibility controls for shapes and pictures. Picture Format appears for raster
+    pictures and offers brightness and contrast, grayscale, local replacement, PNG and JPEG
+    compression, reset, frame styles, solid borders, drop shadow, alt text, crop, and size.
+    Shape Format offers the preset Shapes gallery, Change Shape, Text Box, theme-accent styles,
+    solid fill and outline, drop shadow, alt text, and size. Its WordArt controls edit supported
+    WordArt text boxes. Both tabs reuse Arrange. Artistic effects and background removal authoring,
+    additional Office styles and effects, ordinary shape text effects, grouping pictures or mixed
+    drawings, nested groups, and rotation of other drawing types remain open. Draw, Chart Format,
+    PivotTable Analyze and PivotTable Design tabs, Review spelling and accessibility checks, and
+    the Review Notes menu remain open.
 
 The Excel 16.0 fixture `excel-equation-native.xlsx` was saved using the documented
 `CommandBars.ExecuteMso("EquationInsertNew")` automation call. Its drawing uses a one-cell
@@ -437,6 +447,11 @@ Insert > WordArt creates an editable worksheet drawing. The picker offers 30
 fill, outline and shadow styles and 40 text transforms. Excel retains the
 editable text, shadow and transform on re-save. The browser uses a path preview
 for the transformed text.
+
+Excel 16.0 build 20625 opened a workbook created with these Picture Format and Shape Format
+edits through `Workbooks.Open` in read-only mode. Excel reported two shapes, read the shape's
+red fill (`Fill.ForeColor.RGB = 255`) and the picture's alternative text, and produced no
+repair log. The workbook was closed without saving.
 
 ## Completion criteria
 

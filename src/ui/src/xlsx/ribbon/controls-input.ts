@@ -222,11 +222,13 @@ export function renderGallery(
 			return [];
 		}
 	};
-	button.addEventListener('click', () => {
+	button.addEventListener('click', async () => {
+		const list = control.loadItems ? await control.loadItems(ctx) : items();
+		if (control.loadItems && (!button.isConnected || button.disabled)) return;
 		const pop = el(doc, 'div', 'ribbon-popover ribbon-gallery-menu');
 		pop.setAttribute('role', 'menu');
 		pop.setAttribute('aria-label', label);
-		for (const item of items()) {
+		for (const item of list) {
 			const tile = el(doc, 'button', 'ribbon-gallery-item');
 			tile.type = 'button';
 			tile.setAttribute('role', 'menuitem');

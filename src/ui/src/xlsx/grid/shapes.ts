@@ -28,7 +28,7 @@ export function paintShape(
 	idPrefix: string,
 ): void {
 	node.classList.add('xg-shape');
-	node.setAttribute('aria-label', shape.name ?? '');
+	node.setAttribute('aria-label', shape.description || shape.name || '');
 	const equations: NonNullable<NonNullable<Parameters<typeof shapeSvg>[3]>['equations']> = [];
 	const svg = svgNode(
 		view.doc,

@@ -5,6 +5,7 @@ import type { ShapeNode } from '../model-shapes';
 import { attrs, escapeText } from './xml-out';
 import { wordArtShapeXml } from '../word-art';
 import { equationShapeBranches, wrapEquationShape } from '../shape-equations';
+import { applyDrawingDescription, applyDrawingExtent } from './drawing-format';
 
 const offset = (name: string, x: number, y: number) =>
 	`<a:${name}${attrs({ x: Math.round(x), y: Math.round(y) })}/>`;
@@ -39,7 +40,7 @@ function textBody(text: string): string {
 /** Native shape content. A new group assigns ids to children from the same drawing-wide counter. */
 export function nativeShapeXml(shape: ShapeNode, nextId: () => number): string {
 	const id = nextId();
-	const nv = `<xdr:cNvPr${attrs({ id, name: shape.name ?? `Shape ${id}`, hidden: shape.hidden })}/>`;
+	const nv = `<xdr:cNvPr${attrs({ id, name: shape.name ?? `Shape ${id}`, hidden: shape.hidden, descr: shape.description })}/>`;
 	if (shape.sourceShapeXml) {
 		const doc = parseXml(shape.sourceShapeXml);
 		const node = doc.documentElement;
@@ -57,6 +58,7 @@ export function nativeShapeXml(shape: ShapeNode, nextId: () => number): string {
 		const node = elements(doc.documentElement)[0];
 		if (node) {
 			patchTransform(node, shape, true);
+			if (shape.description !== undefined) applyDrawingDescription(node, shape.description);
 			if (shape.hidden) doc.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0]?.setAttribute('hidden', '1');
 			return buildXml(node);
 		}
@@ -103,7 +105,7 @@ function patchTransform(node: XmlElement, shape: ShapeNode, replaceFrame: boolea
 export function patchNativeShape(
 	xml: string,
 	shape: ShapeNode,
-	edit: { transform?: true; text?: true; visibility?: true },
+	edit: { transform?: true; text?: true; visibility?: true; extent?: true },
 ): string {
 	const doc = parseXml(xml);
 	for (const child of elements(doc.documentElement)) {
@@ -116,6 +118,7 @@ export function patchNativeShape(
 		for (const node of nodes) {
 			if (!node) continue;
 			if (edit.transform) patchTransform(node, shape, false);
+			if (edit.extent) applyDrawingExtent(node, shape.frame.width, shape.frame.height);
 			if (edit.visibility) {
 				const id = node.getElementsByTagNameNS(NS.xdr, 'cNvPr')[0];
 				if (shape.hidden) id?.setAttribute('hidden', '1');
