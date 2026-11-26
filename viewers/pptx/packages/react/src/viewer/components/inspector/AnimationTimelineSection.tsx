@@ -136,9 +136,9 @@ export function AnimationTimelineSection({
 									>
 										<span className='w-3 h-3 shrink-0' />
 										<span className='text-muted-foreground/70 w-4 shrink-0'>{index + 1}.</span>
-										<span className='truncate flex-1'>
+										<pptx-ui-animation-effect-rows group-order={row.order}>
 											{t('pptx.animation.nativeEffect')}: {getNativeRowLabel(row.targetIds)}
-										</span>
+										</pptx-ui-animation-effect-rows>
 									</div>
 								);
 							}

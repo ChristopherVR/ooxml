@@ -139,9 +139,9 @@ function clearDrag(): void {
 				>
 					<span class="h-3 w-3 shrink-0" /><span class="w-4 shrink-0 text-muted-foreground/70"
 						>{{ index + 1 }}.</span
-					><span class="min-w-0 flex-1 truncate"
-						>{{ t('pptx.animation.nativeEffect') }}: {{ nativeRowLabel(row) }}</span
-					>
+					><pptx-ui-animation-effect-rows :group-order="row.order">
+						{{ t('pptx.animation.nativeEffect') }}: {{ nativeRowLabel(row) }}
+					</pptx-ui-animation-effect-rows>
 				</div>
 				<div
 					v-else-if="animationByElementId.get(row.elementId)"

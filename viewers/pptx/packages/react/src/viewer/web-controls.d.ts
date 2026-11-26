@@ -44,6 +44,7 @@ declare module 'react' {
 			'pptx-ui-export-progress': WebControlProps;
 			'pptx-ui-ribbon-command': WebControlProps;
 			'pptx-ui-ribbon-animations': WebControlProps;
+			'pptx-ui-animation-effect-rows': WebControlProps & { 'group-order'?: number; all?: string };
 			'pptx-ui-ribbon-draw': WebControlProps;
 			'pptx-ui-ribbon-home-clipboard': WebControlProps;
 			'pptx-ui-ribbon-home-editing': WebControlProps;

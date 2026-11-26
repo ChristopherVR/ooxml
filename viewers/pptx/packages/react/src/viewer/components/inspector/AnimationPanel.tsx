@@ -116,7 +116,6 @@ export function AnimationPanel({
 
 	return (
 		<div className='rounded border border-border bg-card p-2 space-y-2'>
-			<div data-pptx-effect-picker />
 			<div className='flex items-center justify-between'>
 				<div className='text-[11px] uppercase tracking-wide text-muted-foreground'>
 					{t('pptx.animation.title')}
@@ -436,6 +435,7 @@ export function AnimationPanel({
 				canEdit={canEdit}
 				handlers={handlers}
 			/>
+			<pptx-ui-animation-effect-rows />
 		</div>
 	);
 }

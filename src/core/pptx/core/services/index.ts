@@ -63,6 +63,7 @@ export {
 } from './animation-write-mappings';
 export { resolveDirectionSubtype } from './animation-timing-surgical-behaviors';
 export { editNativeEffectTiming, nativeAnimationStartOptions } from './native-animation-edit';
+export { nativeAnimationClickOrders } from './animation-timeline-anchors';
 export { captureNativeAnimationTemplate } from './animation-paint-template';
 export {
 	capturedPresetIds,

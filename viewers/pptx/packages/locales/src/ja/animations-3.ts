@@ -34,7 +34,6 @@ export const translations = {
 	'pptx.animation.direction.outFromScreenBottom': '画面下端からアウト',
 	'pptx.animation.direction.inToScreenBottom': '画面下端へイン',
 	'pptx.animation.direction.outFromScreenCenter': '画面中央へ',
-	'pptx.animations.editTimingEffect': '編集する効果',
 	'pptx.animation.direction.fromBottomRight': '右下から',
 	'pptx.animation.sequence.asOne': '1 つのオブジェクトとして',
 	'pptx.animation.sequence.byParagraph': '段落別',

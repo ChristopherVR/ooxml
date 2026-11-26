@@ -2,7 +2,15 @@
    declarations below are independent, not adjacent initializations of
    related values; merging them would hurt readability far more than it
    helps. */
-import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
+import {
+	ChangeDetectionStrategy,
+	Component,
+	CUSTOM_ELEMENTS_SCHEMA,
+	computed,
+	input,
+	output,
+	signal,
+} from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import {
 	animationEffectLabelKey,
@@ -29,6 +37,7 @@ export { buildAnimationTimelineBars };
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	imports: [TranslatePipe],
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	template: `
 		@if (rows().length) {
 			<section class="timeline" [attr.aria-label]="'pptx.animation.timeline' | translate">
@@ -53,9 +62,9 @@ export { buildAnimationTimelineBars };
 								(drop)="onDrop(index, $event)"
 							>
 								<span class="grip"></span><span class="order">{{ index + 1 }}.</span
-								><span class="name"
-									>{{ 'pptx.animation.nativeEffect' | translate }}: {{ nativeLabel(row) }}</span
-								>
+								><pptx-ui-animation-effect-rows [attr.group-order]="row.order">
+									{{ 'pptx.animation.nativeEffect' | translate }}: {{ nativeLabel(row) }}
+								</pptx-ui-animation-effect-rows>
 							</div>
 						} @else {
 							<div
@@ -79,6 +88,7 @@ export { buildAnimationTimelineBars };
 				</div>
 			</section>
 		}
+		<pptx-ui-animation-effect-rows></pptx-ui-animation-effect-rows>
 	`,
 	styles: `
 		.timeline {

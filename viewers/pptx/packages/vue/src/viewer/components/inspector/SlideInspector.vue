@@ -179,5 +179,6 @@ watch(
 				:modern-comment-authors="modernCommentAuthors ?? []"
 			/>
 		</div>
+		<pptx-ui-animation-effect-rows all />
 	</aside>
 </template>

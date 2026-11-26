@@ -112,7 +112,7 @@
 						ondrop={(event) => onDrop(index, event)}
 					>
 						<span class="pptx-svelte-animtl-index">{index + 1}.</span>
-						<span class="pptx-svelte-animtl-label">{t('pptx.animation.nativeEffect')}: {nativeLabel(row.targetIds)}</span>
+						<pptx-ui-animation-effect-rows group-order={row.order}>{t('pptx.animation.nativeEffect')}: {nativeLabel(row.targetIds)}</pptx-ui-animation-effect-rows>
 					</div>
 				{:else}
 					{@const anim = animationByElementId.get(row.elementId)}

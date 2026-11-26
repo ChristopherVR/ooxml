@@ -37,6 +37,14 @@ function currentTimingCurve(animations: PptxElementAnimation[]): Signal<PptxAnim
 }
 
 describe('angular animation panel: timing curve', () => {
+	it('mounts the timeline for imported effects outside the editor timing controls', () => {
+		const timeline = componentSource(__dirname, 'animation-timeline.component.ts');
+		expect(TEMPLATE.indexOf('<pptx-animation-timeline')).toBeGreaterThan(
+			TEMPLATE.indexOf('end @if (currentHasAnimation())'),
+		);
+		expect(timeline).toContain('[attr.group-order]="row.order"');
+	});
+
 	it('shows an unset curve as linear', () => {
 		expect(currentTimingCurve([{ elementId: SHAPE.id, entrance: 'fadeIn' }])()).toBe('linear');
 	});

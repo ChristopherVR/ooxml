@@ -16,7 +16,7 @@ import {
 	selectElement,
 } from './support/deck';
 import { downloadBytes } from './support/exports';
-import { chooseSelectValue, expectSelectValue } from './support/select-control';
+import { expectSelectValue } from './support/select-control';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -68,12 +68,14 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 	const animationPane = page.locator(
 		'[data-ribbon-control="animations.advancedAnimation.animationPane"] button',
 	);
-	const effect = inspector(page).locator('[data-pptx-timing-effect]');
-	const picker = effect.getByRole('combobox', { name: 'Effect to edit' });
-	if (!(await picker.isVisible())) await animationPane.click();
-	await expect(picker).toBeVisible();
-	await expect(effect.locator('option')).toHaveCount(5);
-	await chooseSelectValue(page, picker, '8');
+	const pane = inspector(page);
+	const rows = pane.locator('button[data-native-effect-id]');
+	const effect = pane.locator('button[data-native-effect-id="8"]');
+	if (!(await effect.isVisible())) await animationPane.click();
+	await expect(rows).toHaveCount(4);
+	await expect(effect).toHaveAccessibleName(/Rectangle 1.*Fade/u);
+	await effect.press('Enter');
+	await expect(effect).toHaveAttribute('aria-pressed', 'true');
 	const start = page
 		.locator('[data-ribbon-control="animations.timing.start"]')
 		.getByRole('combobox');
@@ -99,6 +101,21 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 		/<p:cTn\b(?=[^>]*id="8")(?=[^>]*dur="1750")(?=[^>]*nodeType="withEffect")[^>]*><p:stCondLst><p:cond delay="350"/u,
 	);
 	expect(xml).not.toMatch(/<p:cTn\b(?=[^>]*id="5")(?=[^>]*dur="1750")[^>]*>/u);
+});
+
+test('the Animation Pane offers imported effects without a canvas selection', async ({ page }) => {
+	const animations = await openAnimations(page, false, fixture('native-animation-timing.pptx'));
+	const row = inspector(page).locator('button[data-native-effect-id="8"]');
+	if (!(await row.isVisible())) {
+		await animations
+			.locator('[data-ribbon-control="animations.advancedAnimation.animationPane"] button')
+			.click();
+	}
+	await expect(row).toHaveAccessibleName(/Rectangle 1.*Fade/u);
+	await row.click();
+	await expect(
+		animations.locator('[data-ribbon-control="animations.timing.duration"]'),
+	).toHaveValue('1');
 });
 
 test('shared Animations ribbon exposes every canonical group and control id once', async ({

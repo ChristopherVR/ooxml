@@ -227,6 +227,7 @@ describe('inspector animation panel', () => {
 		const rows = panel.el.querySelectorAll('.pptxv-animation-timeline-row');
 		expect(rows).toHaveLength(2);
 		expect(rows[0].classList.contains('is-native')).toBeTruthy();
+		expect(rows[0].querySelector('pptx-ui-animation-effect-rows[group-order="0"]')).not.toBeNull();
 		expect(rows[0].querySelectorAll('button')).toHaveLength(0);
 		expect(rows[1].classList.contains('is-native')).toBeFalsy();
 

@@ -7,8 +7,6 @@ import {
 	ribbonAnimationTiming,
 } from '../render/ribbon-animation-editing';
 import type { RibbonAnimationTimingEdit } from '../render/ribbon-animation-editing';
-import { getAnimationPresetInfo } from 'ooxml-core/pptx';
-import { animationPresetLabelKey } from '../render';
 import {
 	ANIMATION_DIRECTION_LABEL_KEYS,
 	directionForAnimationSubtype,
@@ -26,19 +24,12 @@ let instance = 0;
 export function createAnimationsTimingView(
 	doc: Document,
 	request: (edit: RibbonAnimationTimingEdit) => void,
-	selectEffect: (nodeId: number | undefined) => void,
 ) {
 	const el = doc.createElement('div');
 	el.className = 'timing';
 	instance += 1;
 
-	const effect = doc.createElement('pptx-ui-select');
 	const direction = doc.createElement('pptx-ui-select');
-	const effectControls = doc.createElement('div');
-	effect.dataset.pptxTimingEffect = '';
-	effect.addEventListener('change', () =>
-		selectEffect(effect.value ? Number(effect.value) : undefined),
-	);
 	direction.addEventListener('change', () => {
 		const value = Object.keys(ANIMATION_DIRECTION_LABEL_KEYS).find(
 			(key) => key === direction.value,
@@ -47,7 +38,7 @@ export function createAnimationsTimingView(
 			request({ field: 'direction', value: value as keyof typeof ANIMATION_DIRECTION_LABEL_KEYS });
 		}
 	});
-	effectControls.append(effect, direction);
+	direction.className = 'timing-direction';
 
 	const label = doc.createElement('label');
 	const startField = doc.createElement('div');
@@ -123,56 +114,18 @@ export function createAnimationsTimingView(
 	};
 	const earlier = move(-1);
 	const later = move(1);
-	el.append(reorder);
+	el.append(reorder, direction);
 
 	const sync = (state: RibbonAnimationsViewState) => {
 		const text = (key: string, fallback: string) => animationsLabel(state, key, fallback);
 		const timing = state.editable ? ribbonAnimationTiming(state.editing) : undefined;
 		const editing = state.editing;
-		const native = editing?.slide?.rawTiming ? (editing.slide.nativeAnimations ?? []) : [];
-		const effects = state.paneOpen
-			? native.filter((item) => item.targetId && item.presetClass && item.nodeId !== undefined)
-			: [];
-		effectControls.hidden = effects.length === 0;
-		effect.disabled = !state.editable || !editing?.commit;
-		const editLabel = text('pptx.animations.editTimingEffect', 'Effect to edit');
-		effect.setAttribute('aria-label', editLabel);
-		if (effects.length > 0) {
-			const opts = [
-				{ value: '', label: editLabel },
-				...effects.map((item, index) => {
-					const token = `${item.presetClass}.${item.presetId}`;
-					const preset = getAnimationPresetInfo(token);
-					return {
-						value: String(item.nodeId),
-						label: `${index + 1}. ${text(animationPresetLabelKey(token), preset?.label ?? token)}`,
-					};
-				}),
-			];
-			if (
-				effect.options.length !== opts.length ||
-				opts.some(
-					({ value, label }, i) =>
-						effect.options[i]?.value !== value || effect.options[i]?.textContent !== label,
-				)
-			) {
-				effect.replaceChildren(
-					...opts.map(({ value, label }) => {
-						const option = doc.createElement('option');
-						option.value = value;
-						option.textContent = label;
-						return option;
-					}),
-				);
-			}
-			effect.value = editing?.nativeEffectId === undefined ? '' : String(editing.nativeEffectId);
-		}
 		const selected =
 			editing?.nativeEffectId !== undefined ? nativeRibbonTimingTarget(editing) : undefined;
 		const token = selected ? `${selected.presetClass}.${selected.presetId}` : '';
 		const dirs = directionValuesForPreset(token);
 		direction.hidden = dirs.length === 0;
-		direction.disabled = effect.disabled;
+		direction.disabled = !state.editable || !editing?.commit;
 		direction.setAttribute('aria-label', text('pptx.animation.direction', 'Direction'));
 		if (dirs.length > 0) {
 			const opts = dirs.map((value) => ({
@@ -246,16 +199,5 @@ export function createAnimationsTimingView(
 		earlier.disabled = !timing?.earlier;
 		later.disabled = !timing?.later;
 	};
-	return {
-		el,
-		sync,
-		mountEffectPicker(host?: Element | null) {
-			if (effectControls.hidden) {
-				effectControls.remove();
-				return;
-			}
-			const parent = host ?? el;
-			if (effectControls.parentElement !== parent) parent.append(effectControls);
-		},
-	};
+	return { el, sync };
 }

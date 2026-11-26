@@ -99,6 +99,9 @@ export function createInspector(
 	// `InspectorPane` placement below the tab body.
 	const animationPanel = createAnimationPanel(doc, t, handlers);
 	el.appendChild(animationPanel.el);
+	const nativeTimeline = doc.createElement('pptx-ui-animation-effect-rows');
+	nativeTimeline.setAttribute('all', '');
+	el.appendChild(nativeTimeline);
 
 	let activeTab: InspectorTabId = 'properties';
 	const setActiveTab = (tab: InspectorTabId): void => {
@@ -200,6 +203,7 @@ export function createInspector(
 			}
 		},
 		updateDeck(state) {
+			nativeTimeline.hidden = Boolean(state.selectedElementId);
 			action.setSlideCount(state.slideCount);
 			action.setCustomShows(state.customShows);
 			elementsTab.update(state);

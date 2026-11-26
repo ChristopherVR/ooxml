@@ -54,6 +54,7 @@ import { definePptxPresentToolbar } from './present-toolbar';
 import { definePptxPresenterConsole } from './presenter-console';
 import { assertWebControlContract, markWebControlContract } from './registration-contract';
 import { definePptxRibbonAnimations } from './ribbon-animations';
+import { definePptxAnimationEffectRows } from './animation-effect-rows';
 import { definePptxRibbonDraw } from './ribbon-draw';
 import { definePptxRibbonGallery } from './ribbon-gallery';
 import {
@@ -236,6 +237,7 @@ const controls = [
 	['pptx-ui-export-progress', definePptxExportProgress],
 	['pptx-ui-ribbon-command', definePptxRibbonCommand],
 	['pptx-ui-ribbon-animations', definePptxRibbonAnimations],
+	['pptx-ui-animation-effect-rows', definePptxAnimationEffectRows],
 	['pptx-ui-ribbon-draw', definePptxRibbonDraw],
 	['pptx-ui-ribbon-insert', definePptxRibbonInsert],
 	['pptx-ui-zoom-cover', definePptxZoomCover],

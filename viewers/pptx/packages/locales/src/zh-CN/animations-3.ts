@@ -34,7 +34,6 @@ export const translations = {
 	'pptx.animation.direction.outFromScreenBottom': '从屏幕底部向外',
 	'pptx.animation.direction.inToScreenBottom': '向屏幕底部向内',
 	'pptx.animation.direction.outFromScreenCenter': '到屏幕中心',
-	'pptx.animations.editTimingEffect': '要编辑的效果',
 	'pptx.animation.direction.fromBottomRight': '从右下角开始',
 	'pptx.animation.sequence.asOne': '作为一个对象',
 	'pptx.animation.sequence.byParagraph': '按段落',

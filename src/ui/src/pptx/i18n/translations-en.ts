@@ -2557,7 +2557,6 @@ export const translationsEn: Record<string, string> = {
 	'pptx.animation.direction.outFromScreenBottom': 'Out from Screen Bottom',
 	'pptx.animation.direction.inToScreenBottom': 'In to Screen Bottom',
 	'pptx.animation.direction.outFromScreenCenter': 'Out to Screen Center',
-	'pptx.animations.editTimingEffect': 'Effect to edit',
 	'pptx.animation.direction.fromBottomRight': 'From Bottom Right',
 	'pptx.animation.sequence.asOne': 'As One Object',
 	'pptx.animation.sequence.byParagraph': 'By Paragraph',

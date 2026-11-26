@@ -29,7 +29,10 @@ afterEach(() => {
 	container.remove();
 });
 
-function renderWith(animation: Omit<PptxElementAnimation, 'elementId'>): HTMLButtonElement[] {
+function renderWith(
+	animation: Omit<PptxElementAnimation, 'elementId'>,
+	animationTimelineAnchors?: PptxSlide['animationTimelineAnchors'],
+): HTMLButtonElement[] {
 	const element = { id: 'el1', type: 'shape', x: 0, y: 0, width: 10, height: 10 } as PptxElement;
 	const slide = {
 		id: 's1',
@@ -37,6 +40,7 @@ function renderWith(animation: Omit<PptxElementAnimation, 'elementId'>): HTMLBut
 		slideNumber: 1,
 		elements: [element],
 		animations: [{ elementId: 'el1', order: 0, ...animation }],
+		animationTimelineAnchors,
 	} as PptxSlide;
 	act(() => {
 		root.render(
@@ -54,6 +58,13 @@ function renderWith(animation: Omit<PptxElementAnimation, 'elementId'>): HTMLBut
 }
 
 describe('animationPanel direction picker', () => {
+	it('mounts selectable effects in the imported click group', () => {
+		renderWith({}, [{ order: 1, targetIds: ['el1'], presetClasses: ['entr'] }]);
+		expect(
+			container.querySelector('pptx-ui-animation-effect-rows[group-order="1"]'),
+		).not.toBeNull();
+	});
+
 	it('offers the four Split variants and reflects a saved variant', () => {
 		const buttons = renderWith({ entrance: 'splitIn', direction: 'horizontalOut' });
 		expect(buttons).toHaveLength(4);

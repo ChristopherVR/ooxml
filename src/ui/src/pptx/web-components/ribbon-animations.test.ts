@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { PptxAnimationWriteService, PptxNativeAnimationService } from 'ooxml-core/pptx';
 
 import {
 	canRequestAnimations,
@@ -162,6 +163,59 @@ describe('shared Animations view', () => {
 });
 
 describe('shared Animations timing', () => {
+	it('selects the exact effect from its click group and labels it with the shape name', () => {
+		const rawTiming = new PptxAnimationWriteService().buildTimingXml(
+			[
+				{ elementId: '2', entrance: 'fadeIn', durationMs: 500 },
+				{ elementId: '2', exit: 'fadeOut', durationMs: 1000 },
+			],
+			undefined,
+		)!;
+		delete rawTiming['p:extLst'];
+		const nativeAnimations = new PptxNativeAnimationService().parseNativeAnimations({
+			'p:sld': { 'p:timing': rawTiming },
+		})!;
+		const host = mount({
+			paneOpen: true,
+			editing: {
+				slide: {
+					rawTiming,
+					nativeAnimations,
+					elements: [
+						{
+							id: '2',
+							type: 'shape',
+							name: 'Logo',
+							x: 0,
+							y: 0,
+							width: 20,
+							height: 20,
+							shapeType: 'rect',
+							shapeStyle: {},
+						},
+					],
+					animationTimelineAnchors: [{ order: 1, targetIds: ['2'], presetClasses: ['exit'] }],
+				},
+				elementId: '2',
+				commit: vi.fn(),
+			},
+		});
+		const viewer = document.createElement('div');
+		viewer.setAttribute('data-pptx-theme-root', '');
+		const rows = document.createElement('pptx-ui-animation-effect-rows');
+		rows.setAttribute('group-order', '1');
+		viewer.append(host, rows);
+		document.body.append(viewer);
+
+		const effect = rows.shadowRoot!.querySelector('button')!;
+		expect(effect.textContent).toContain('Logo · Fade');
+		effect.click();
+		expect(effect.getAttribute('aria-pressed')).toBe('true');
+		expect(
+			host.querySelector<HTMLInputElement>('[data-ribbon-control="animations.timing.duration"]')!
+				.value,
+		).toBe('1');
+	});
 	it('associates accessible labels with the timing controls', () => {
 		const host = mount();
 		const duration = host.querySelector<HTMLInputElement>(

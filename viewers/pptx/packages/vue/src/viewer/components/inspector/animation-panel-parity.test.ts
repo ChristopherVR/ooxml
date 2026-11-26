@@ -156,6 +156,9 @@ describe('vue animation parity controls', () => {
 		expect(wrapper.findAll('[draggable="true"]')).toHaveLength(1);
 		const editorRow = wrapper.get('[draggable="true"]');
 		const allRows = wrapper.findAll('.max-h-40 > div');
+		expect(
+			allRows[0]?.find('pptx-ui-animation-effect-rows[group-order="0"]').exists(),
+		).toBeTruthy();
 		await editorRow.trigger('dragstart', { dataTransfer: { setData: vi.fn() } });
 		await allRows[0]!.trigger('drop', { preventDefault: vi.fn() });
 		const reordered = wrapper.emitted('reorder')?.[0]?.[0] as PptxElementAnimation[];

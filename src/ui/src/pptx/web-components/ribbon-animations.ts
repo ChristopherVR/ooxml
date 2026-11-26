@@ -4,6 +4,7 @@ import { canRequestAnimations } from '../render';
 import type { RibbonAnimationsIntent, RibbonAnimationsViewState } from '../render';
 import { createAnimationPainterController } from '../render/controller/animation-painter-controller';
 import { editRibbonAnimationTiming } from '../render/ribbon-animation-editing';
+import { animationPaneFor } from './animation-pane-scope';
 import { ANIMATION_PAINTER_SCOPE, connectAnimationPainterInput } from './animation-painter-input';
 import { attachRibbonAnimationsStyles } from './ribbon-animations-styles';
 import { createRibbonAnimationsView } from './ribbon-animations-view';
@@ -26,9 +27,10 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 	class RibbonAnimations extends HTMLElement implements PptxUiRibbonAnimationsElement {
 		private model: RibbonAnimationsViewState = { editable: false, hasSelection: false };
 		private readonly painter = createAnimationPainterController();
-		private selectedEffect: number | undefined;
+		private animationPane: ReturnType<typeof animationPaneFor>;
 		private root: HTMLElement | null = null;
 		private unsubscribe?: () => void;
+		private unsubscribePane?: () => void;
 		private disconnectInput?: () => void;
 		private readonly view = createRibbonAnimationsView(this.ownerDocument, {
 			request: (intent) => {
@@ -44,17 +46,13 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 			},
 			editTiming: (edit) => {
 				if (this.model.editable) {
-					editRibbonAnimationTiming(this.model.editing, edit);
+					editRibbonAnimationTiming(this.effectiveModel.editing, edit);
 					this.render();
 				}
 			},
-			selectEffect: (nodeId) => {
-				this.selectedEffect = nodeId;
-				this.render();
-			},
 			armPainter: (mode) => {
 				if (this.model.editable && this.root) {
-					this.painter.arm(this.model.editing, mode);
+					this.painter.arm(this.effectiveModel.editing, mode);
 				}
 			},
 		});
@@ -62,12 +60,8 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 			return this.model;
 		}
 		set state(value: RibbonAnimationsViewState) {
-			if (
-				value.editing?.slide?.id !== this.model.editing?.slide?.id ||
-				value.editing?.elementId !== this.model.editing?.elementId
-			)
-				this.selectedEffect = undefined;
 			this.model = value;
+			this.animationPane?.sync(value);
 			if (!value.editable || !value.editing?.slide || !value.editing.commit) {
 				this.painter.cancel();
 			}
@@ -76,10 +70,13 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 		connectedCallback(): void {
 			attachRibbonAnimationsStyles(this.ownerDocument);
 			this.root = this.closest(ANIMATION_PAINTER_SCOPE);
+			this.animationPane = animationPaneFor(this);
+			this.animationPane?.sync(this.model);
+			this.unsubscribePane = this.animationPane?.subscribe(() => this.render());
 			if (this.root) {
 				this.disconnectInput = connectAnimationPainterInput(this.root, {
 					isArmed: () => this.model.editable && this.painter.getSnapshot().mode !== 'off',
-					apply: (id) => this.painter.apply(this.model.editing, id),
+					apply: (id) => this.painter.apply(this.effectiveModel.editing, id),
 					cancel: this.painter.cancel,
 				});
 			}
@@ -95,18 +92,21 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 		disconnectedCallback(): void {
 			this.painter.cancel();
 			this.unsubscribe?.();
+			this.unsubscribePane?.();
+			this.unsubscribePane = undefined;
+			this.animationPane = undefined;
 			this.disconnectInput?.();
 			this.disconnectInput = undefined;
-			this.view.mountEffectPicker();
 			this.root = null;
 		}
+		private get effectiveModel(): RibbonAnimationsViewState {
+			const nativeEffectId = this.animationPane?.getSnapshot().nodeId;
+			return this.model.editing && nativeEffectId !== undefined
+				? { ...this.model, editing: { ...this.model.editing, nativeEffectId } }
+				: this.model;
+		}
 		private render(): void {
-			if (this.model.editing) {
-				this.model = {
-					...this.model,
-					editing: { ...this.model.editing, nativeEffectId: this.selectedEffect },
-				};
-			}
+			const model = this.effectiveModel;
 			this.view.groups.forEach((el, index) => {
 				if (this.children[index] !== el) {
 					this.insertBefore(el, this.children[index] ?? null);
@@ -114,27 +114,20 @@ export function definePptxRibbonAnimations(registry: CustomElementRegistry): voi
 			});
 			const active = this.painter.getSnapshot().mode !== 'off';
 			this.view.sync(
-				this.model,
+				model,
 				active,
 				active ||
 					Boolean(
 						this.root &&
-						this.model.editable &&
-						this.model.editing?.commit &&
-						this.model.editing.slide &&
+						model.editable &&
+						model.editing?.commit &&
+						model.editing.slide &&
 						canCaptureAnimationPaint(
-							this.model.editing.slide,
-							this.model.editing.elementId,
-							this.selectedEffect,
+							model.editing.slide,
+							model.editing.elementId,
+							model.editing.nativeEffectId,
 						),
 					),
-			);
-			this.mountEffectPicker();
-			if (this.model.paneOpen && this.root) queueMicrotask(() => this.mountEffectPicker());
-		}
-		private mountEffectPicker(): void {
-			this.view.mountEffectPicker(
-				this.model.paneOpen ? this.root?.querySelector('[data-pptx-effect-picker]') : undefined,
 			);
 		}
 	}

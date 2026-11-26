@@ -144,7 +144,6 @@ export const translations = {
 	'pptx.animation.direction.outFromScreenBottom': 'Vom unteren Bildschirmrand heraus',
 	'pptx.animation.direction.inToScreenBottom': 'Zum unteren Bildschirmrand hinein',
 	'pptx.animation.direction.outFromScreenCenter': 'Zur Bildschirmmitte',
-	'pptx.animations.editTimingEffect': 'Zu bearbeitender Effekt',
 	'pptx.animation.direction.fromBottomRight': 'Von unten rechts',
 	'pptx.animation.sequence.asOne': 'Als ein Objekt',
 	'pptx.animation.sequence.byParagraph': 'Nach Absatz',

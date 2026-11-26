@@ -6,6 +6,7 @@ import {
 	type PptxAnimationTimelineAnchor,
 	type PptxAnimationDirection,
 	type PptxElementAnimation,
+	type PptxElement,
 	type PptxNativeAnimation,
 	type PptxSlide,
 } from 'ooxml-core/pptx';
@@ -16,6 +17,7 @@ import { buildAnimationTimelineRows, moveAnimationTimelineRowBy } from './animat
 
 export interface AnimationEditingSlide {
 	id?: string | undefined;
+	elements?: readonly PptxElement[] | undefined;
 	animations?: readonly PptxElementAnimation[] | undefined;
 	animationTimelineAnchors?: readonly PptxAnimationTimelineAnchor[] | undefined;
 	nativeAnimations?: readonly PptxNativeAnimation[] | undefined;

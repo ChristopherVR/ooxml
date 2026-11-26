@@ -1,4 +1,4 @@
-import type { HTMLInputAttributes, HTMLSelectAttributes } from 'svelte/elements';
+import type { HTMLAttributes, HTMLInputAttributes, HTMLSelectAttributes } from 'svelte/elements';
 
 declare module 'svelte/elements' {
 	interface SVGAttributes<T> {
@@ -7,5 +7,9 @@ declare module 'svelte/elements' {
 	interface SvelteHTMLElements {
 		'pptx-ui-select': HTMLSelectAttributes & { variant?: 'ribbon-font' | 'ribbon-icon' };
 		'pptx-ui-checkbox': HTMLInputAttributes;
+		'pptx-ui-animation-effect-rows': HTMLAttributes<HTMLElement> & {
+			'group-order'?: number;
+			all?: string;
+		};
 	}
 }

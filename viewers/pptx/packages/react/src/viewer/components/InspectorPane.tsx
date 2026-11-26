@@ -297,6 +297,7 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 						</div>
 					</>
 				)}
+				{!hasSelection && <pptx-ui-animation-effect-rows all='' />}
 			</div>
 		</>
 	);

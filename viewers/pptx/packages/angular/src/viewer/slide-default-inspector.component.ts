@@ -13,6 +13,7 @@
 import {
 	ChangeDetectionStrategy,
 	Component,
+	CUSTOM_ELEMENTS_SCHEMA,
 	computed,
 	effect,
 	inject,
@@ -52,6 +53,7 @@ interface LayerRow {
 	selector: 'pptx-slide-default-inspector',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
+	schemas: [CUSTOM_ELEMENTS_SCHEMA],
 	imports: [
 		TranslatePipe,
 		InspectorPaneHeaderComponent,
@@ -150,6 +152,9 @@ interface LayerRow {
 				}
 			}
 		</div>
+		@if (!selectedElement()) {
+			<pptx-ui-animation-effect-rows all></pptx-ui-animation-effect-rows>
+		}
 	`,
 	styles: [
 		`

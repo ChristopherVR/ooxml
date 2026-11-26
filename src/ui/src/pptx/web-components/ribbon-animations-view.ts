@@ -134,7 +134,6 @@ export function createRibbonAnimationsView(
 	actions: {
 		request: (intent: RibbonAnimationsIntent) => void;
 		editTiming: (edit: RibbonAnimationTimingEdit) => void;
-		selectEffect: (nodeId: number | undefined) => void;
 		armPainter: (mode: 'once' | 'locked') => void;
 	},
 ) {
@@ -205,7 +204,7 @@ export function createRibbonAnimationsView(
 		PATH_COLUMNS,
 		(_key, preset) => request({ kind: 'add', group: 'motionPath', preset }),
 	);
-	const timing = createAnimationsTimingView(doc, editTiming, actions.selectEffect);
+	const timing = createAnimationsTimingView(doc, editTiming);
 	const root: HTMLElement[] = [
 		group('animations.preview', command(PREVIEW)),
 		group('animations.animation', presets.el, command(OPTIONS)),
@@ -245,5 +244,5 @@ export function createRibbonAnimationsView(
 		paths.sync(state);
 		timing.sync(state);
 	};
-	return { groups: root, sync, mountEffectPicker: timing.mountEffectPicker };
+	return { groups: root, sync };
 }

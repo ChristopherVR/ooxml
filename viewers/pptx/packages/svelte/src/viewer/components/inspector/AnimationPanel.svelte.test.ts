@@ -72,6 +72,19 @@ function setInput(target: HTMLElement, selector: string, value: string): void {
 }
 
 describe('animationPanel', () => {
+	it('mounts selectable effects in the imported click group', () => {
+		const editor = makeEditor([shapeEl('a')]);
+		editor.setSlides([
+			{
+				...editor.slides[0],
+				animationTimelineAnchors: [{ order: 0, targetIds: ['a'], presetClasses: ['entr'] }],
+			},
+		]);
+		editor.select('a');
+		const { target } = mountPanel(editor);
+		expect(target.querySelector('pptx-ui-animation-effect-rows[group-order="0"]')).not.toBeNull();
+	});
+
 	it('writes the screen-center Zoom direction', () => {
 		const editor = makeEditor([shapeEl('a')], [{ elementId: 'a', entrance: 'zoomIn' }]);
 		editor.select('a');

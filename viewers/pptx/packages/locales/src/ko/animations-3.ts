@@ -34,7 +34,6 @@ export const translations = {
 	'pptx.animation.direction.outFromScreenBottom': '화면 아래에서 바깥쪽으로',
 	'pptx.animation.direction.inToScreenBottom': '화면 아래로 안쪽으로',
 	'pptx.animation.direction.outFromScreenCenter': '화면 가운데로',
-	'pptx.animations.editTimingEffect': '편집할 효과',
 	'pptx.animation.direction.fromBottomRight': '오른쪽 아래에서',
 	'pptx.animation.sequence.asOne': '하나의 개체로',
 	'pptx.animation.sequence.byParagraph': '단락별로',

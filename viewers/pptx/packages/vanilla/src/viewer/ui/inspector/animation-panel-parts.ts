@@ -79,12 +79,14 @@ export function renderNativeOrderRow(
 	t: Translator,
 	targetIds: readonly string[],
 	index: number,
+	order: number,
 	elements: readonly PptxElement[],
 ): HTMLElement {
 	const row = createEl(doc, 'div', 'pptxv-animation-timeline-row');
 	row.classList.add('is-native');
 	row.title = t('pptx.animation.nativeEffectHint');
-	const label = createEl(doc, 'span', 'pptxv-animation-timeline-name');
+	const label = doc.createElement('pptx-ui-animation-effect-rows');
+	label.setAttribute('group-order', String(order));
 	const names = targetIds
 		.map((id) => {
 			const element = elements.find((entry) => entry.id === id);

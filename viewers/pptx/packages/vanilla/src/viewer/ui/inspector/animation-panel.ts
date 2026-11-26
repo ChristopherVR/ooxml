@@ -88,9 +88,6 @@ export function createAnimationPanel(
 ): AnimationPanel {
 	const el = createEl(doc, 'div', 'pptxv-inspector-animation');
 	el.setAttribute('data-pptx-animation-panel', '');
-	const effectPicker = createEl(doc, 'div');
-	effectPicker.dataset.pptxEffectPicker = '';
-	el.append(effectPicker);
 
 	let current: AnimationPanelState = {
 		editable: false,
@@ -262,6 +259,7 @@ export function createAnimationPanel(
 	const list = createEl(doc, 'div', 'pptxv-animation-timeline-list');
 	timeline.append(barTitle, bar, listTitle, list);
 	el.appendChild(timeline);
+	el.appendChild(doc.createElement('pptx-ui-animation-effect-rows'));
 
 	return {
 		el,
@@ -351,7 +349,7 @@ export function createAnimationPanel(
 			list.replaceChildren(
 				...rows.flatMap((row, index) => {
 					if (row.kind === 'native') {
-						return [renderNativeOrderRow(doc, t, row.targetIds, index, state.elements)];
+						return [renderNativeOrderRow(doc, t, row.targetIds, index, row.order, state.elements)];
 					}
 					const entry = animationByElementId.get(row.elementId);
 					return entry

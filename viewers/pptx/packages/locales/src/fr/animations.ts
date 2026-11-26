@@ -144,7 +144,6 @@ export const translations = {
 	'pptx.animation.direction.outFromScreenBottom': 'Depuis le bas de l’écran',
 	'pptx.animation.direction.inToScreenBottom': 'Vers le bas de l’écran',
 	'pptx.animation.direction.outFromScreenCenter': 'Vers le centre de l’écran',
-	'pptx.animations.editTimingEffect': 'Effet à modifier',
 	'pptx.animation.direction.fromBottomRight': 'En bas à droite',
 	'pptx.animation.sequence.asOne': 'Comme un seul objet',
 	'pptx.animation.sequence.byParagraph': 'Par paragraphe',

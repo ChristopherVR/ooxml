@@ -22,6 +22,8 @@ const RIBBON_ANIMATIONS_STYLES = `
 .more:hover { background:var(--pptx-accent,#33334d); }
 .more-icon { width:12px; height:12px; fill:none; stroke:currentColor; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; transform:rotate(-90deg); }
 .timing { display:grid; grid-template-columns:auto 102px auto; align-items:center; column-gap:6px; font-size:10px; }
+.timing-direction { grid-column:1 / 3; grid-row:4; }
+.timing-direction[hidden] { display:none; }
 .timing-reorder { grid-column:3; grid-row:1 / span 3; align-self:start; }
 .timing-reorder button { border:1px solid transparent; border-radius:2px; background:transparent; color:inherit; font:inherit; text-align:start; padding:4px; cursor:pointer; white-space:nowrap; }
 .timing-reorder button:hover:not(:disabled) { border-color:var(--pptx-border,#374151); background:var(--pptx-accent,#33334d); }

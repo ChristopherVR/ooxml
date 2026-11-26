@@ -156,7 +156,6 @@ function changeMotionPath(pathPresetId: string): void {
 
 <template>
 	<div class="flex flex-col gap-2 rounded-md border border-border bg-card p-2 text-xs">
-		<div data-pptx-effect-picker />
 		<div class="text-[11px] uppercase tracking-wide text-muted-foreground">
 			{{ t('pptx.animation.title') }}
 		</div>
@@ -206,6 +205,7 @@ function changeMotionPath(pathPresetId: string): void {
 			:selected-element-id="element.id"
 			@reorder="emit('updateSlideAnimations', $event)"
 		/>
+		<pptx-ui-animation-effect-rows />
 
 		<div class="flex flex-col gap-1.5 border-t border-border pt-2">
 			<div class="text-[11px] uppercase text-muted-foreground">

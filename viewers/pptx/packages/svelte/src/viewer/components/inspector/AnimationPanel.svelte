@@ -163,7 +163,6 @@
 
 {#if el && slide}
 	<div class="pptx-svelte-animp" data-pptx-animation-panel>
-		<div data-pptx-effect-picker></div>
 		<div class="pptx-svelte-animp-header">
 			<span class="pptx-svelte-animp-title">{t('pptx.animation.title')}</span>
 			{#if hasAnim}
@@ -255,7 +254,10 @@
 			/>
 {/if}
 <AnimationTimelineSection {editor} selectedElementId={el.id} />
+<pptx-ui-animation-effect-rows></pptx-ui-animation-effect-rows>
 	</div>
+{:else}
+	<pptx-ui-animation-effect-rows all=""></pptx-ui-animation-effect-rows>
 {/if}
 
 <style>

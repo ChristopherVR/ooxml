@@ -24,6 +24,30 @@
 import type { PptxAnimationTimelineAnchor, PptxElementAnimation, XmlObject } from '../types';
 import { groupTopLevelEffects } from './animation-timing-groups';
 import { effectOwnershipKey, readOwnedEffectKeys } from './animation-timing-ownership';
+import { indexEffectNodes } from './animation-timing-tree';
+
+/** Imported effect IDs and their click-group positions. Interactive effects have no position. */
+export function nativeAnimationClickOrders(rawTiming: XmlObject): Map<number, number | undefined> {
+	const owned = readOwnedEffectKeys(rawTiming);
+	const orders = new Map<number, number | undefined>();
+	for (const effect of indexEffectNodes(rawTiming)) {
+		const id = Number(effect.cTn['@_id']);
+		if (
+			effect.spid &&
+			Number.isSafeInteger(id) &&
+			!owned.has(effectOwnershipKey(effect.spid, effect.presetClass))
+		) {
+			orders.set(id, undefined);
+		}
+	}
+	for (const group of groupTopLevelEffects(rawTiming)) {
+		for (const { cTn } of group.effects) {
+			const id = Number(cTn['@_id']);
+			if (orders.has(id)) orders.set(id, group.index);
+		}
+	}
+	return orders;
+}
 
 /** The preset-class keys one editor animation entry currently claims. */
 function ownershipKeysFor(anim: PptxElementAnimation): string[] {
