@@ -32,6 +32,7 @@ import {
 import { componentSource } from './component-source.test-support';
 import { EditorStateService } from './editor-state.service';
 import { RecentColorsService } from './recent-colors.service';
+import { RibbonArrangeSectionComponent } from './ribbon-arrange-section.component';
 import { RibbonContextualSectionComponent } from './ribbon-contextual-section.component';
 import { createRibbonTabState } from './ribbon-contextual-tabs';
 import { RibbonCustomizationStyleDirective } from './ribbon-customization-style.directive';
@@ -217,7 +218,6 @@ describe('ribbon group/control customisation', () => {
 			'ribbon-home-section.component.ts',
 			'ribbon-font-controls.component.ts',
 			'ribbon-drawing-group.component.ts',
-			'ribbon-arrange-section.component.ts',
 			// Editing follows Drawing, so its group wrapper lives in the content switch.
 			'ribbon-content.component.ts',
 		]
@@ -226,7 +226,7 @@ describe('ribbon group/control customisation', () => {
 		// The Clipboard and Slides group wrappers now come from the shared Home view.
 		expect(RIBBON_HOME_FAMILIES.clipboard.group?.id).toBe('home.clipboard');
 		expect(RIBBON_HOME_FAMILIES.slides.group?.id).toBe('home.slides');
-		for (const group of ['font', 'paragraph', 'drawing', 'arrange', 'editing']) {
+		for (const group of ['font', 'paragraph', 'drawing', 'editing']) {
 			expect(home).toContain(`data-ribbon-group="home.${group}"`);
 		}
 		// Bullets and Numbering (toggle plus library gallery) now come from the shared strip.
@@ -237,5 +237,16 @@ describe('ribbon group/control customisation', () => {
 		expect(lists.find((entry) => entry.id === 'home.paragraph.numbering')?.gallery?.id).toBe(
 			'numbering',
 		);
+	});
+
+	it.each([false, true])('tags Arrange only when it owns its group (embedded=%s)', (embedded) => {
+		const root = mount(
+			RibbonArrangeSectionComponent,
+			{ embedded, selectedElement: shape() },
+			'ribbon-arrange-section.component.html',
+		);
+		const group = root.querySelector('[data-ribbon-group="home.arrange"]');
+		expect(root.querySelector('pptx-ui-ribbon-home-arrange-order')).not.toBeNull();
+		expect(group !== null).toBe(!embedded);
 	});
 });
