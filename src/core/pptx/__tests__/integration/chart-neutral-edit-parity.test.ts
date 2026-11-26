@@ -7,8 +7,8 @@ import { describe, expect, it } from 'vitest';
 import * as neutral from '../../../chart/index';
 import { parseChartSpace, writeChartSpace, type ChartSpace } from '../../../chart/index';
 import * as pptx from '../../core/builders/sdk/chart-operations';
-import { PptxHandler } from '../../core/PptxHandler';
-import type { ChartPptxElement, PptxElement } from '../../core/types/elements';
+import type { ChartPptxElement } from '../../core/types/elements';
+import { copyChartArchive, loadChartDeck } from './chart-save-fixture';
 
 /**
  * Adapter proof for the shared chart edit core (docs/agnostic-core-plan.md, chart step C1): the
@@ -23,59 +23,42 @@ import type { ChartPptxElement, PptxElement } from '../../core/types/elements';
 const DECK = path.resolve(__dirname, '../fixtures/e2e/chart-gallery.pptx');
 const PART = /^ppt\/charts\/chart\d+\.xml$/u;
 
-// A copy through the constructor: `slice()` on a Node Buffer (`readFileSync`) is a view, not a copy.
-const toBuffer = (bytes: Uint8Array): ArrayBuffer => new Uint8Array(bytes).buffer;
-
-type Slide = { isDirty?: boolean };
-
-async function load(bytes: ArrayBuffer) {
-	const handler = new PptxHandler();
-	const data = await handler.load(bytes);
-	const charts = new Map<string, { element: ChartPptxElement; slide: Slide }>();
-	for (const slide of data.slides) {
-		const visit = (list: PptxElement[] | undefined) => {
-			for (const element of list ?? []) {
-				const chart = element as ChartPptxElement;
-				if (element.type === 'chart' && chart.chartData?.chartPartPath)
-					charts.set(chart.chartData.chartPartPath, { element: chart, slide });
-				visit((element as { children?: PptxElement[] }).children);
-			}
-		};
-		visit(slide.elements);
-	}
-	return { charts, handler, data };
-}
-
 const source = readFileSync(DECK);
 const zip = await JSZip.loadAsync(source);
-const original = await load(toBuffer(source));
+const original = await loadChartDeck(source);
+original.handler.dispose();
 /** Classic bar and line charts with one group: the families both editors handle the same way. */
-const CANDIDATES: string[] = [];
+const CANDIDATES = new Map<string, ChartSpace>();
 for (const part of Object.keys(zip.files).sort()) {
 	if (!PART.test(part) || !original.charts.has(part)) continue;
 	const { chartSpace, issues } = parseChartSpace(await zip.file(part)!.async('string'));
 	const groups = chartSpace.plotArea.groups;
 	if (issues.length === 0 && groups.length === 1 && ['bar', 'line'].includes(groups[0]!.kind))
-		CANDIDATES.push(part);
+		CANDIDATES.set(part, chartSpace);
 }
 
 /** Neutral path: edit the parsed part, write it into the deck, load the deck. */
 async function neutralEdit(part: string, edit: (space: ChartSpace) => ChartSpace) {
-	const copy = await JSZip.loadAsync(source);
-	const { chartSpace } = parseChartSpace(await copy.file(part)!.async('string'));
-	copy.file(part, writeChartSpace(edit(chartSpace)));
-	const loaded = await load(toBuffer(await copy.generateAsync({ type: 'uint8array' })));
-	return loaded.charts.get(part)!.element.chartData!;
+	const copy = copyChartArchive(zip);
+	copy.file(part, writeChartSpace(edit(structuredClone(CANDIDATES.get(part)!))));
+	const loaded = await loadChartDeck(
+		await copy.generateAsync({ type: 'uint8array', compression: 'DEFLATE' }),
+	);
+	loaded.handler.dispose();
+	return loaded.charts.get(part)!.element.chartData;
 }
 
 /** PowerPoint path: edit the loaded model, save the deck, load it again. */
 async function pptxEdit(part: string, edit: (element: ChartPptxElement) => void) {
-	const loaded = await load(toBuffer(source));
+	const loaded = await loadChartDeck(source);
 	const target = loaded.charts.get(part)!;
 	edit(target.element);
 	target.slide.isDirty = true;
 	const saved = await loaded.handler.save(loaded.data.slides);
-	return (await load(toBuffer(saved))).charts.get(part)!.element.chartData!;
+	loaded.handler.dispose();
+	const reloaded = await loadChartDeck(saved);
+	reloaded.handler.dispose();
+	return reloaded.charts.get(part)!.element.chartData;
 }
 
 /** Paths where two JSON values differ, with both values. */
@@ -185,7 +168,7 @@ const CASES: Case[] = [
 
 describe('neutral chart edits load as PowerPoint chart edits', () => {
 	it('covers the bar and line charts of the gallery deck', () => {
-		expect(CANDIDATES).toEqual([
+		expect([...CANDIDATES.keys()]).toEqual([
 			'ppt/charts/chart1.xml',
 			'ppt/charts/chart10.xml',
 			'ppt/charts/chart2.xml',
@@ -193,7 +176,7 @@ describe('neutral chart edits load as PowerPoint chart edits', () => {
 		]);
 	});
 
-	describe.each(CANDIDATES)('%s', (part) => {
+	describe.each([...CANDIDATES.keys()])('%s', (part) => {
 		it.each(CASES)('$name', async (item) => {
 			const fromNeutral = await neutralEdit(part, item.neutral);
 			const fromPptx = await pptxEdit(part, item.pptx);

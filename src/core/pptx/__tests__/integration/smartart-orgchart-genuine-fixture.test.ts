@@ -63,20 +63,30 @@ import { describe, expect, it } from 'vitest';
 
 import { PptxHandler } from '../../core/PptxHandler';
 import type { PptxSmartArtDrawingShape } from '../../core/types';
-import type { SmartArtPptxElement } from '../../core/types/elements';
+import type { PptxSlide, SmartArtPptxElement } from '../../core/types';
 import { computeSmartArtElementsWithoutCache } from '../../core/utils';
 import { readCorpusFixture } from './real-world-corpus-helpers';
 
+const loadedOrgCharts = new Map<string, Promise<readonly PptxSlide[]>>();
+
 async function loadOrgChart(fileName: string, slideIndex = 0): Promise<SmartArtPptxElement> {
-	const handler = new PptxHandler();
-	const { slides } = await handler.load(readCorpusFixture(fileName));
-	const element = slides[slideIndex].elements.find(
+	let deck = loadedOrgCharts.get(fileName);
+	if (!deck) {
+		const handler = new PptxHandler();
+		deck = handler
+			.load(readCorpusFixture(fileName))
+			.then(({ slides }) => slides)
+			.finally(() => handler.dispose());
+		loadedOrgCharts.set(fileName, deck);
+	}
+	const slides = await deck;
+	const element = slides[slideIndex]?.elements.find(
 		(el): el is SmartArtPptxElement => el.type === 'smartArt',
 	);
 	if (!element) {
 		throw new Error(`${fileName} slide ${slideIndex + 1}: no SmartArt element`);
 	}
-	return element;
+	return structuredClone(element);
 }
 
 function byText(shapes: PptxSmartArtDrawingShape[], text: string): PptxSmartArtDrawingShape {

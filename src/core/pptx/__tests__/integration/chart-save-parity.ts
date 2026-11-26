@@ -2,11 +2,10 @@ import JSZip from 'jszip';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { parseChartSpace, writeChartSpace, type ChartSpace } from '../../../chart/index';
-import { PptxHandler } from '../../core/PptxHandler';
-import type { ChartPptxElement, PptxChartData, PptxElement } from '../../index';
-import { canonicalXmlLines, lineDiff } from './chart-save-parity-canon';
-import type { SaveEdit } from './chart-save-parity-edits';
+import { parseChartSpace, type ChartSpace } from '../../../chart/index';
+import type { ChartFixture } from './chart-save-fixture';
+
+export { xmlDifferences } from './chart-save-parity-canon';
 
 /**
  * Support for the chart save harness (`chart-save-parity.test.ts`): load every committed deck that
@@ -30,26 +29,16 @@ function walk(dir: string): string[] {
 		.sort();
 }
 
-export interface ClassicPart {
-	part: string;
-	xml: string;
-	space: ChartSpace;
-	/** Whether `parseChartSpace` reported anything it does not model (the writer would drop it). */
-	clean: boolean;
-}
+export type SaveDeck = ChartFixture<ChartSpace>;
 
-export interface SaveDeck {
-	name: string;
-	bytes: Buffer;
-	parts: ClassicPart[];
-}
-
-// A copy through the constructor: `slice()` on a Node Buffer (`readFileSync`) is a view, not a copy,
-// and since Node 24.21 (`Buffer.poolSize` 64 KiB) a file under 32 KiB is a view into a shared pool.
-const toBuffer = (bytes: Uint8Array): ArrayBuffer => new Uint8Array(bytes).buffer;
+let classicDecks: Promise<readonly SaveDeck[]> | undefined;
 
 /** Every committed deck with at least one classic (`c:chartSpace`) chart part. */
-export async function classicChartDecks(): Promise<SaveDeck[]> {
+export function classicChartDecks(): Promise<readonly SaveDeck[]> {
+	return (classicDecks ??= readClassicChartDecks());
+}
+
+async function readClassicChartDecks(): Promise<SaveDeck[]> {
 	const decks: SaveDeck[] = [];
 	for (const file of walk(ROOT)) {
 		const bytes = readFileSync(file);
@@ -59,100 +48,23 @@ export async function classicChartDecks(): Promise<SaveDeck[]> {
 		} catch {
 			continue;
 		}
-		const parts: ClassicPart[] = [];
+		const parts: { part: string; space: ChartSpace }[] = [];
 		for (const part of Object.keys(zip.files).filter((name) => CHART_PART.test(name))) {
 			const xml = await zip.file(part)!.async('string');
 			if (!/<c:chartSpace[\s>]/u.test(xml)) continue;
-			const { chartSpace, issues } = parseChartSpace(xml);
-			parts.push({ part, xml, space: chartSpace, clean: issues.length === 0 });
+			const { chartSpace } = parseChartSpace(xml);
+			parts.push({ part, space: chartSpace });
 		}
 		parts.sort((a, b) => a.part.localeCompare(b.part));
 		if (parts.length > 0)
-			decks.push({ name: path.relative(ROOT, file).replace(/\\/gu, '/'), bytes, parts });
+			decks.push({
+				name: path.relative(ROOT, file).replace(/\\/gu, '/'),
+				bytes,
+				parts,
+				archive: zip,
+			});
 	}
 	return decks;
-}
-
-interface LoadedChart {
-	element: ChartPptxElement;
-	slide: { isDirty?: boolean };
-}
-
-async function load(bytes: ArrayBuffer) {
-	const handler = new PptxHandler();
-	const data = await handler.load(bytes);
-	const charts = new Map<string, LoadedChart>();
-	for (const slide of data.slides) {
-		const visit = (list: PptxElement[] | undefined) => {
-			for (const element of list ?? []) {
-				const chart = element as ChartPptxElement;
-				if (element.type === 'chart' && chart.chartData?.chartPartPath)
-					charts.set(chart.chartData.chartPartPath, { element: chart, slide });
-				visit((element as { children?: PptxElement[] }).children);
-			}
-		};
-		visit(slide.elements);
-	}
-	return { charts, handler, data };
-}
-
-export interface SavedChart {
-	xml: string;
-	chart: PptxChartData;
-}
-
-async function readBack(bytes: Uint8Array, parts: readonly string[]) {
-	const zip = await JSZip.loadAsync(bytes);
-	const loaded = await load(toBuffer(bytes));
-	const out = new Map<string, SavedChart>();
-	for (const part of parts)
-		out.set(part, {
-			xml: await zip.file(part)!.async('string'),
-			chart: loaded.charts.get(part)!.element.chartData!,
-		});
-	return out;
-}
-
-export interface EditTarget extends ClassicPart {
-	/** The chart as PowerPoint loaded it, before the edit. */
-	chart: PptxChartData;
-}
-
-/** The parts of `deck` the edit applies to. */
-export async function applicableParts(deck: SaveDeck, edit: SaveEdit): Promise<EditTarget[]> {
-	const loaded = await load(toBuffer(deck.bytes));
-	return deck.parts.flatMap((part) => {
-		const chart = loaded.charts.get(part.part)?.element.chartData;
-		return chart !== undefined && (edit.applies?.(part.space, chart) ?? true)
-			? [{ ...part, chart: structuredClone(chart) }]
-			: [];
-	});
-}
-
-/** PowerPoint's save: edit every applicable chart's model, save the deck, read the parts back. */
-export async function savedByPptx(deck: SaveDeck, edit: SaveEdit, parts: readonly EditTarget[]) {
-	const loaded = await load(toBuffer(deck.bytes));
-	for (const { part } of parts) {
-		const target = loaded.charts.get(part)!;
-		edit.pptx(target.element);
-		target.slide.isDirty = true;
-	}
-	const saved = await loaded.handler.save(loaded.data.slides);
-	return readBack(
-		saved,
-		parts.map((item) => item.part),
-	);
-}
-
-/** The neutral reference: edit each parsed part, write it, load the deck. */
-export async function savedByNeutral(deck: SaveDeck, edit: SaveEdit, parts: readonly EditTarget[]) {
-	const zip = await JSZip.loadAsync(deck.bytes);
-	for (const { part, space, chart } of parts)
-		zip.file(part, writeChartSpace(edit.neutral(space, chart)));
-	return readBack(
-		await zip.generateAsync({ type: 'uint8array' }),
-		parts.map((item) => item.part),
-	);
 }
 
 /**
@@ -183,7 +95,3 @@ export function modelDifferences(a: unknown, b: unknown, at = ''): string[] {
 	}
 	return [`${at}: pptx ${JSON.stringify(a)}, neutral ${JSON.stringify(b)}`];
 }
-
-/** Canonical XML difference of two saved parts: `-` only PowerPoint wrote, `+` only neutral. */
-export const xmlDifferences = (pptx: string, neutral: string): string[] =>
-	lineDiff(canonicalXmlLines(pptx), canonicalXmlLines(neutral));

@@ -39,6 +39,17 @@ function smartArtOn(slides: PptxSlide[], slideIndex: number): SmartArtPptxElemen
 	return element;
 }
 
+const slideFixtures = new Map<number, Promise<ArrayBuffer>>();
+
+async function readSlideFixture(slideIndex: number): Promise<ArrayBuffer> {
+	let bytes = slideFixtures.get(slideIndex);
+	if (!bytes) {
+		bytes = deckWithSlides(fixture, [slideIndex + 1]);
+		slideFixtures.set(slideIndex, bytes);
+	}
+	return (await bytes).slice(0);
+}
+
 type StructuralEdit = 'add' | 'remove';
 
 interface StructuralRoundTrip {
@@ -54,7 +65,7 @@ async function structuralRoundTrip(
 	edit: StructuralEdit,
 ): Promise<StructuralRoundTrip> {
 	const handler = new PptxHandler();
-	const loaded = await handler.load(await deckWithSlides(fixture, [slideIndex + 1]));
+	const loaded = await handler.load(await readSlideFixture(slideIndex));
 	const element = smartArtOn(loaded.slides, slideIndex);
 	const before = structuredClone(element);
 	const data = element.smartArtData!;
@@ -74,7 +85,10 @@ async function structuralRoundTrip(
 		expect(drawingXml).toContain('<a:t>Added</a:t>');
 	}
 
-	const reloaded = await new PptxHandler().load(saved.buffer as ArrayBuffer);
+	handler.dispose();
+	const reopening = new PptxHandler();
+	const reloaded = await reopening.load(new Uint8Array(saved).buffer);
+	reopening.dispose();
 	return { before, after: smartArtOn(reloaded.slides, slideIndex), drawingXml, nodeCount };
 }
 

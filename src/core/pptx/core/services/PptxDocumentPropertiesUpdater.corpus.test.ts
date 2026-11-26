@@ -29,9 +29,14 @@ function decks(dir: string): string[] {
 const RECOMPUTED =
 	/<((?:\w+:)?(?:Slides|Notes|HiddenSlides|Words|Paragraphs|HeadingPairs|TitlesOfParts))>[\s\S]*?<\/\1>/g;
 
-async function saveDocProps(
-	bytes: Buffer,
-): Promise<{ source: JSZip; core?: string | undefined; app?: string | undefined } | undefined> {
+async function saveDocProps(bytes: Buffer): Promise<
+	| {
+			source: { core: string | undefined; app: string | undefined };
+			core?: string | undefined;
+			app?: string | undefined;
+	  }
+	| undefined
+> {
 	const factory = new PptxRuntimeDependencyFactory();
 	let zip: JSZip;
 	try {
@@ -40,7 +45,10 @@ async function saveDocProps(
 		return undefined;
 	}
 	if (!zip.file('docProps/core.xml') && !zip.file('docProps/app.xml')) return undefined;
-	const source = await JSZip.loadAsync(bytes);
+	const source = {
+		core: await zip.file('docProps/core.xml')?.async('string'),
+		app: await zip.file('docProps/app.xml')?.async('string'),
+	};
 	const updater = new PptxDocumentPropertiesUpdater({
 		zip,
 		parser: factory.createParser(),
@@ -72,7 +80,7 @@ describe('document properties saved across the fixture corpus', () => {
 	it.each(corpus)('%s keeps every byte it does not recompute', async (_name, path) => {
 		const saved = await saveDocProps(readFileSync(path));
 		if (!saved) return;
-		const core = await saved.source.file('docProps/core.xml')?.async('string');
+		const core = saved.source.core;
 		if (
 			core !== undefined &&
 			/<cp:revision>\d+</.test(core) &&
@@ -85,7 +93,7 @@ describe('document properties saved across the fixture corpus', () => {
 					.replace(/(<dcterms:modified[^>]*>)[^<]*</, `$1${NOW}<`),
 			);
 		}
-		const app = await saved.source.file('docProps/app.xml')?.async('string');
+		const app = saved.source.app;
 		// An empty `<Properties/>` root is opened to take the statistics; see the test below.
 		if (app !== undefined && !/<(?:\w+:)?Properties\b[^>]*\/>/.test(app)) {
 			expect(saved.app?.replace(RECOMPUTED, '')).toBe(app.replace(RECOMPUTED, ''));

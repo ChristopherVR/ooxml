@@ -1,12 +1,13 @@
-import JSZip from 'jszip';
 import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-import { PptxHandler } from '../../core/PptxHandler';
+import type { PptxHandler } from '../../core/PptxHandler';
 import { planWithLeftovers } from '../../core/utils/chart-neutral-save-plan';
-import type { ChartPptxElement, PptxChartData, PptxElement } from '../../index';
-import { canonicalXmlLines, lineDiff } from './chart-save-parity-canon';
-import type { SaveDeck } from './chart-save-parity';
+import type { PptxChartData } from '../../index';
+import { loadChartDeck, readSavedCharts, type SavedChart } from './chart-save-fixture';
+export { xmlDifferences as familyXmlDifferences } from './chart-save-parity-canon';
+import { xmlDifferences } from './chart-save-parity-canon';
+import { classicChartDecks, type SaveDeck } from './chart-save-parity';
 
 /**
  * Old-versus-new part diff for one PowerPoint chart source adapter moving onto the neutral writer
@@ -28,30 +29,27 @@ type WithRuntime = { runtime: { chartDataBaselines: Map<string, string> } };
 const baselines = (handler: PptxHandler) =>
 	(handler as unknown as WithRuntime).runtime.chartDataBaselines;
 
-const toBuffer = (bytes: Uint8Array): ArrayBuffer => new Uint8Array(bytes).buffer;
+const sourceCharts = new WeakMap<SaveDeck, Promise<ReadonlyMap<string, PptxChartData>>>();
 
-async function loadCharts(bytes: ArrayBuffer) {
-	const handler = new PptxHandler();
-	const data = await handler.load(bytes);
-	const charts = new Map<string, { element: ChartPptxElement; slide: { isDirty?: boolean } }>();
-	for (const slide of data.slides) {
-		const visit = (list: PptxElement[] | undefined) => {
-			for (const element of list ?? []) {
-				const chart = element as ChartPptxElement;
-				if (element.type === 'chart' && chart.chartData?.chartPartPath)
-					charts.set(chart.chartData.chartPartPath, { element: chart, slide });
-				visit((element as { children?: PptxElement[] }).children);
-			}
-		};
-		visit(slide.elements);
+/** Cache applicability inputs only. Each writer below still gets its own load and save. */
+function chartsIn(deck: SaveDeck): Promise<ReadonlyMap<string, PptxChartData>> {
+	let charts = sourceCharts.get(deck);
+	if (!charts) {
+		charts = loadChartDeck(deck.bytes).then((loaded) => {
+			const classicParts = new Set(deck.parts.map(({ part }) => part));
+			const out = new Map<string, PptxChartData>();
+			for (const [part, { element }] of loaded.charts)
+				if (classicParts.has(part)) out.set(part, element.chartData);
+			loaded.handler.dispose();
+			return out;
+		});
+		sourceCharts.set(deck, charts);
 	}
-	return { handler, data, charts };
+	return charts;
 }
 
-export interface FamilySave {
+export interface FamilySave extends SavedChart {
 	part: string;
-	xml: string;
-	chart: PptxChartData;
 	/** `edit.read` of the edited model before the save (what the reload should hold). */
 	expected: unknown;
 	/** Fields of the edit no neutral family claimed (empty when the neutral plan holds it). */
@@ -64,41 +62,37 @@ export async function saveFamilyEdit(
 	edit: FamilyEdit,
 	path: 'neutral' | 'legacy',
 ): Promise<FamilySave[]> {
-	const loaded = await loadCharts(toBuffer(deck.bytes));
-	const parts: string[] = [];
-	const expected = new Map<string, unknown>();
-	const unclaimed = new Map<string, string[]>();
-	for (const [part, target] of loaded.charts) {
-		const chart = target.element.chartData!;
-		if (!/<c:chartSpace[\s>]/u.test(deck.parts.find((p) => p.part === part)?.xml ?? '')) continue;
-		if (!edit.applies(chart)) continue;
-		const before = structuredClone(chart);
-		edit.edit(chart);
-		unclaimed.set(part, planWithLeftovers(before, chart).unclaimed);
-		expected.set(part, structuredClone(edit.read(chart)));
-		target.slide.isDirty = true;
-		parts.push(part);
-		// Without its load-time baseline a part has no neutral plan, as for an unclaimed edit.
-		if (path === 'legacy') baselines(loaded.handler).delete(part);
-	}
-	if (parts.length === 0) return [];
-	const saved = await loaded.handler.save(loaded.data.slides);
-	const zip = await JSZip.loadAsync(saved);
-	const reloaded = await loadCharts(toBuffer(saved));
-	return Promise.all(
-		parts.map(async (part) => ({
+	const targets = [...(await chartsIn(deck))].filter(([, chart]) => edit.applies(chart));
+	if (targets.length === 0) return [];
+	const loaded = await loadChartDeck(deck.bytes);
+	try {
+		const parts: string[] = [];
+		const expected = new Map<string, unknown>();
+		const unclaimed = new Map<string, string[]>();
+		for (const [part] of targets) {
+			const target = loaded.charts.get(part)!;
+			const chart = target.element.chartData;
+			const before = structuredClone(chart);
+			edit.edit(chart);
+			unclaimed.set(part, planWithLeftovers(before, chart).unclaimed);
+			expected.set(part, structuredClone(edit.read(chart)));
+			target.slide.isDirty = true;
+			parts.push(part);
+			// Without its load-time baseline a part has no neutral plan, as for an unclaimed edit.
+			if (path === 'legacy') baselines(loaded.handler).delete(part);
+		}
+		const saved = await loaded.handler.save(loaded.data.slides);
+		const reloaded = await readSavedCharts(saved, parts);
+		return parts.map((part) => ({
 			part,
-			xml: await zip.file(part)!.async('string'),
-			chart: reloaded.charts.get(part)!.element.chartData!,
+			...reloaded.get(part)!,
 			expected: expected.get(part),
 			unclaimed: unclaimed.get(part) ?? [],
-		})),
-	);
+		}));
+	} finally {
+		loaded.handler.dispose();
+	}
 }
-
-/** Canonical XML lines only one of the two saves wrote (`-` legacy, `+` neutral). */
-export const familyXmlDifferences = (legacy: string, neutral: string): string[] =>
-	lineDiff(canonicalXmlLines(legacy), canonicalXmlLines(neutral));
 
 /** What one family edit did over the corpus. */
 export interface FamilyTally {
@@ -111,6 +105,19 @@ export interface FamilyTally {
 }
 
 const emptyTally = (): FamilyTally => ({ parts: 0, legacyKept: 0, xml: 0 });
+
+/** Register full corpus tallies for the edits assigned to one file. */
+export async function describeFamilyMigrationEdits(
+	edits: readonly FamilyEdit[],
+	expected: Record<string, FamilyTally>,
+	names: readonly string[],
+): Promise<void> {
+	describeFamilyMigration(
+		await classicChartDecks(),
+		edits.filter(({ name }) => names.includes(name)),
+		Object.fromEntries(names.map((name) => [name, expected[name]])),
+	);
+}
 
 /**
  * Saves every edit of a family both ways over `decks`: each neutral save must be claimed by the
@@ -140,7 +147,7 @@ export function describeFamilyMigration(
 				tally.parts++;
 				if (JSON.stringify(edit.read(old.chart)) === JSON.stringify(old.expected))
 					tally.legacyKept++;
-				const diff = familyXmlDifferences(old.xml, saved.xml);
+				const diff = xmlDifferences(old.xml, saved.xml);
 				const report = process.env['CHART_FAMILY_REPORT'];
 				if (report && process.env['CHART_FAMILY_DETAIL'] === edit.name && diff.length > 0)
 					writeFileSync(report, `${[`${deck.name} ${saved.part}`, ...diff].join('\n')}\n`, {

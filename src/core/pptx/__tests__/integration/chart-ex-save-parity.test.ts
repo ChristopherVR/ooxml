@@ -1,13 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { writeChartExSpace } from '../../../chart/index';
+import { compareChartSaves } from './chart-save-fixture';
 import { modelDifferences, xmlDifferences } from './chart-save-parity';
-import {
-	CHART_EX_SAVE_EDITS,
-	chartExDecks,
-	chartExSavedByNeutral,
-	chartExSavedByPptx,
-	chartExTargets,
-} from './chart-ex-save-parity';
+import { CHART_EX_SAVE_EDITS, chartExDecks } from './chart-ex-save-parity';
 
 /**
  * ChartEx save harness (docs/agnostic-core-plan.md, chart step C5). For every committed chartex
@@ -46,25 +42,20 @@ const TALLY = new Map<string, { parts: number; xml: number; model: number }>();
 describe('chartex save: PowerPoint writers vs neutral writeChartExSpace', () => {
 	describe.each(CHART_EX_SAVE_EDITS)('$name', (edit) => {
 		it.each(DECKS)('$name', async (deck) => {
-			const targets = await chartExTargets(deck, edit);
-			if (targets.length === 0) return;
-			const [fromPptx, fromNeutral] = await Promise.all([
-				chartExSavedByPptx(deck, edit, targets),
-				chartExSavedByNeutral(deck, edit, targets),
-			]);
+			const result = await compareChartSaves(deck, edit, writeChartExSpace);
+			if (!result) return;
+			const { parts, fromPptx, fromNeutral } = result;
 			const tally = TALLY.get(edit.name) ?? { parts: 0, xml: 0, model: 0 };
 			TALLY.set(edit.name, tally);
-			for (const target of targets) {
-				const a = fromPptx.get(target.part)!;
-				const b = fromNeutral.get(target.part)!;
+			for (const part of parts) {
+				const a = fromPptx.get(part)!;
+				const b = fromNeutral.get(part)!;
 				tally.parts++;
 				const xml = xmlDifferences(a.xml, b.xml);
 				const model = modelDifferences(a.chart, b.chart);
 				if (process.env['CHART_SAVE_DETAIL'] === edit.name && (xml.length || model.length))
 					console.log(
-						[`${deck.name} ${target.part}`, ...xml, ...model]
-							.map((line) => line.slice(0, 300))
-							.join('\n'),
+						[`${deck.name} ${part}`, ...xml, ...model].map((line) => line.slice(0, 300)).join('\n'),
 					);
 				if (xml.length === 0) tally.xml++;
 				if (model.length === 0) tally.model++;

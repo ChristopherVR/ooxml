@@ -41,22 +41,51 @@ export function canonicalXmlLines(xml: string): string[] {
 export function lineDiff(a: readonly string[], b: readonly string[]): string[] {
 	const n = a.length;
 	const m = b.length;
-	const table: Uint32Array[] = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
-	for (let i = n - 1; i >= 0; i--)
-		for (let j = m - 1; j >= 0; j--)
-			table[i]![j] =
-				a[i] === b[j] ? table[i + 1]![j + 1]! + 1 : Math.max(table[i + 1]![j]!, table[i]![j + 1]!);
+	let prefix = 0;
+	while (prefix < n && prefix < m && a[prefix] === b[prefix]) prefix++;
+	if (prefix === n) return b.slice(prefix).map((line) => `+ ${line}`);
+	if (prefix === m) return a.slice(prefix).map((line) => `- ${line}`);
+
+	// Compare interned IDs in the quadratic loop. Canonical paths share long string prefixes.
+	const ids = new Map<string, number>();
+	const intern = (line: string) => {
+		const known = ids.get(line);
+		if (known !== undefined) return known;
+		const id = ids.size;
+		ids.set(line, id);
+		return id;
+	};
+	const left = a.slice(prefix).map(intern);
+	const right = b.slice(prefix).map(intern);
+	const table: Uint32Array[] = Array.from(
+		{ length: left.length + 1 },
+		() => new Uint32Array(right.length + 1),
+	);
+	for (let i = left.length - 1; i >= 0; i--) {
+		const row = table[i]!;
+		const next = table[i + 1]!;
+		const id = left[i];
+		for (let j = right.length - 1; j >= 0; j--)
+			row[j] = id === right[j] ? next[j + 1]! + 1 : Math.max(next[j]!, row[j + 1]!);
+	}
 	const out: string[] = [];
 	let i = 0;
 	let j = 0;
-	while (i < n && j < m) {
-		if (a[i] === b[j]) {
+	while (i < left.length && j < right.length) {
+		if (left[i] === right[j]) {
 			i++;
 			j++;
-		} else if (table[i + 1]![j]! >= table[i]![j + 1]!) out.push(`- ${a[i++]}`);
-		else out.push(`+ ${b[j++]}`);
+		} else if (table[i + 1]![j]! >= table[i]![j + 1]!) out.push(`- ${a[prefix + i++]}`);
+		else out.push(`+ ${b[prefix + j++]}`);
 	}
-	while (i < n) out.push(`- ${a[i++]}`);
-	while (j < m) out.push(`+ ${b[j++]}`);
+	while (i < left.length) out.push(`- ${a[prefix + i++]}`);
+	while (j < right.length) out.push(`+ ${b[prefix + j++]}`);
 	return out;
+}
+
+/** Canonical XML difference of two saved parts: `-` only PowerPoint wrote, `+` only neutral. */
+export function xmlDifferences(pptx: string, neutral: string): string[] {
+	const left = canonicalXmlLines(pptx);
+	// Parse identical parts too, so a shared malformed output still fails the harness.
+	return pptx === neutral ? [] : lineDiff(left, canonicalXmlLines(neutral));
 }

@@ -43,18 +43,24 @@ export interface RoundTrip {
 export async function roundTrip(entry: FixtureEntry): Promise<RoundTrip> {
 	const originalBytes = readFixture(entry);
 	const handler = new PptxHandler();
-	const original = (await handler.load(originalBytes)).slides;
-	const saved = await handler.save(original);
-	const savedBytes = toArrayBuffer(saved);
-	const reloaded = (await new PptxHandler().load(savedBytes)).slides;
-	return {
-		originalBytes,
-		savedBytes,
-		original,
-		reloaded,
-		before: await JSZip.loadAsync(originalBytes),
-		after: await JSZip.loadAsync(savedBytes),
-	};
+	const reopening = new PptxHandler();
+	try {
+		const original = (await handler.load(originalBytes)).slides;
+		const saved = await handler.save(original);
+		const savedBytes = toArrayBuffer(saved);
+		const reloaded = (await reopening.load(savedBytes)).slides;
+		return {
+			originalBytes,
+			savedBytes,
+			original,
+			reloaded,
+			before: await JSZip.loadAsync(originalBytes),
+			after: await JSZip.loadAsync(savedBytes),
+		};
+	} finally {
+		handler.dispose();
+		reopening.dispose();
+	}
 }
 
 /** Every non-directory entry in a package, sorted. */

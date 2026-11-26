@@ -6,8 +6,8 @@ import * as neutral from '../../../chart/index';
 import type { ChartExSpace } from '../../../chart/index';
 import { CHART_EX_FIXTURES, chartExParts } from '../../../chart/ex/test-support/fixtures';
 import * as pptx from '../../core/builders/sdk/chart-operations';
-import { PptxHandler } from '../../core/PptxHandler';
-import type { ChartPptxElement, PptxChartData, PptxElement } from '../../index';
+import type { PptxChartData } from '../../index';
+import type { ChartFixture, ChartFixtureEdit } from './chart-save-fixture';
 
 /**
  * Support for the ChartEx save harness (`chart-ex-save-parity.test.ts`), the chartex counterpart of
@@ -19,16 +19,7 @@ import type { ChartPptxElement, PptxChartData, PptxElement } from '../../index';
 
 const GALLERY = path.resolve(__dirname, '../fixtures/e2e/chart-gallery.pptx');
 
-export interface ChartExPart {
-	part: string;
-	space: ChartExSpace;
-}
-
-export interface ChartExDeck {
-	name: string;
-	bytes: Uint8Array;
-	parts: ChartExPart[];
-}
+type ChartExDeck = ChartFixture<ChartExSpace>;
 
 /** The gallery deck, and copies with the other committed chartex parts in its chartex slots. */
 export async function chartExDecks(): Promise<ChartExDeck[]> {
@@ -44,7 +35,7 @@ export async function chartExDecks(): Promise<ChartExDeck[]> {
 		batches.map(async (batch, index) => {
 			const zip = await JSZip.loadAsync(gallery);
 			batch.forEach((xml, slot) => zip.file(slots[slot]!, xml));
-			const parts: ChartExPart[] = [];
+			const parts: { part: string; space: ChartExSpace }[] = [];
 			for (const part of slots.slice(0, batch.length || slots.length)) {
 				// This codec harness swaps parts across unrelated packages. Their original workbook
 				// links are unavailable here; literal caches isolate parser/writer parity. Package
@@ -55,20 +46,19 @@ export async function chartExDecks(): Promise<ChartExDeck[]> {
 				zip.file(part, xml);
 				parts.push({ part, space: neutral.parseChartExSpace(xml).chartExSpace });
 			}
+			const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
 			return {
 				name: index === 0 ? 'chart-gallery.pptx' : `docx/xlsx parts ${String(index)}`,
-				bytes: await zip.generateAsync({ type: 'uint8array' }),
+				bytes,
 				parts,
+				archive: await JSZip.loadAsync(bytes),
 			};
 		}),
 	);
 }
 
-export interface ChartExSaveEdit {
+interface ChartExSaveEdit extends ChartFixtureEdit<ChartExSpace> {
 	name: string;
-	applies?: (space: ChartExSpace, chart: PptxChartData) => boolean;
-	pptx: (element: ChartPptxElement) => void;
-	neutral: (space: ChartExSpace, chart: PptxChartData) => ChartExSpace;
 }
 
 const isHierarchy = (space: ChartExSpace) =>
@@ -139,90 +129,3 @@ export const CHART_EX_SAVE_EDITS: ChartExSaveEdit[] = [
 			}),
 	},
 ];
-
-async function load(bytes: Uint8Array) {
-	const handler = new PptxHandler();
-	const data = await handler.load(bytes.slice().buffer as ArrayBuffer);
-	const charts = new Map<string, { element: ChartPptxElement; slide: { isDirty?: boolean } }>();
-	for (const slide of data.slides) {
-		const visit = (list: PptxElement[] | undefined) => {
-			for (const element of list ?? []) {
-				const chart = element as ChartPptxElement;
-				if (element.type === 'chart' && chart.chartData?.chartPartPath)
-					charts.set(chart.chartData.chartPartPath, { element: chart, slide });
-				visit((element as { children?: PptxElement[] }).children);
-			}
-		};
-		visit(slide.elements);
-	}
-	return { charts, handler, data };
-}
-
-export interface SavedChartEx {
-	xml: string;
-	chart: PptxChartData;
-}
-
-async function readBack(bytes: Uint8Array, parts: readonly string[]) {
-	const zip = await JSZip.loadAsync(bytes);
-	const loaded = await load(bytes);
-	const out = new Map<string, SavedChartEx>();
-	for (const part of parts)
-		out.set(part, {
-			xml: await zip.file(part)!.async('string'),
-			chart: loaded.charts.get(part)!.element.chartData!,
-		});
-	return out;
-}
-
-export interface ChartExTarget extends ChartExPart {
-	chart: PptxChartData;
-}
-
-/** The parts of `deck` the edit applies to, with the chart as PowerPoint loaded it. */
-export async function chartExTargets(
-	deck: ChartExDeck,
-	edit: ChartExSaveEdit,
-): Promise<ChartExTarget[]> {
-	const loaded = await load(deck.bytes);
-	return deck.parts.flatMap((part) => {
-		const chart = loaded.charts.get(part.part)?.element.chartData;
-		return chart !== undefined && (edit.applies?.(part.space, chart) ?? true)
-			? [{ ...part, chart: structuredClone(chart) }]
-			: [];
-	});
-}
-
-/** PowerPoint's save of the edited charts. */
-export async function chartExSavedByPptx(
-	deck: ChartExDeck,
-	edit: ChartExSaveEdit,
-	targets: readonly ChartExTarget[],
-) {
-	const loaded = await load(deck.bytes);
-	for (const { part } of targets) {
-		const target = loaded.charts.get(part)!;
-		edit.pptx(target.element);
-		target.slide.isDirty = true;
-	}
-	const saved = await loaded.handler.save(loaded.data.slides);
-	return readBack(
-		saved,
-		targets.map((t) => t.part),
-	);
-}
-
-/** The neutral reference: edit each parsed part and write it. */
-export async function chartExSavedByNeutral(
-	deck: ChartExDeck,
-	edit: ChartExSaveEdit,
-	targets: readonly ChartExTarget[],
-) {
-	const zip = await JSZip.loadAsync(deck.bytes);
-	for (const { part, space, chart } of targets)
-		zip.file(part, neutral.writeChartExSpace(edit.neutral(space, chart)));
-	return readBack(
-		await zip.generateAsync({ type: 'uint8array' }),
-		targets.map((t) => t.part),
-	);
-}

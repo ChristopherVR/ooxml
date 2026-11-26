@@ -25,7 +25,7 @@ import { runInNewContext } from 'node:vm';
 import JSZip from 'jszip';
 
 import { createChartWorkbookFromRows } from '../../chart/workbook/create';
-import { NS, first, parseXml, relAttr } from '../../xml';
+import { NS, first, parseXml, relAttr, type XmlElement } from '../../xml';
 import { loadXlsx } from '../../xlsx/read/index';
 import type { Workbook } from '../../xlsx/model';
 import { ChartPartRevisions } from '../core/core/runtime/chart-part-revisions';
@@ -114,8 +114,7 @@ const SOURCES = ['tx', 'cat', 'val', 'xVal', 'yVal', 'bubbleSize'] as const;
 export const REPLAYS = Number(process.env['CHART_SAVE_REPLAYS'] ?? 100);
 
 /** The embedded workbook of the chart part `part` of a package, by its path. */
-async function embeddedWorkbookOf(zip: JSZip, part: string) {
-	const root = parseXml(await zip.file(part)!.async('string')).documentElement;
+async function embeddedWorkbookOf(zip: JSZip, part: string, root: XmlElement) {
 	const id = relAttr(first(root, 'externalData', NS.c), 'id');
 	if (!id) return undefined;
 	const relsPath = `${path.posix.dirname(part)}/_rels/${path.posix.basename(part)}.rels`;
@@ -132,7 +131,8 @@ async function embeddedWorkbookOf(zip: JSZip, part: string) {
 /** How many sheets the embedded workbook of the chart part `part` has. */
 async function workbookSheetCount(bytes: Uint8Array, part: string): Promise<number> {
 	const zip = await JSZip.loadAsync(bytes);
-	const target = await embeddedWorkbookOf(zip, part);
+	const root = parseXml(await zip.file(part)!.async('string')).documentElement;
+	const target = await embeddedWorkbookOf(zip, part, root);
 	const file = target ? zip.file(target) : null;
 	if (!file) return 0;
 	const book = await JSZip.loadAsync(await file.async('uint8array'));
@@ -141,8 +141,7 @@ async function workbookSheetCount(bytes: Uint8Array, part: string): Promise<numb
 }
 
 /** Range, cache and workbook problems of every classic chart with an embedded workbook. */
-export async function chartPackageIssues(bytes: Uint8Array): Promise<Issue[]> {
-	const zip = await JSZip.loadAsync(bytes);
+export async function chartPackageIssues(zip: JSZip): Promise<Issue[]> {
 	const issues: Issue[] = [];
 	const books = new Map<string, Promise<Workbook>>();
 	const parts = Object.keys(zip.files)
@@ -151,7 +150,7 @@ export async function chartPackageIssues(bytes: Uint8Array): Promise<Issue[]> {
 	for (const part of parts) {
 		const root = parseXml(await zip.file(part)!.async('string')).documentElement;
 		if (root.localName !== 'chartSpace' || root.namespaceURI !== NS.c) continue;
-		const target = await embeddedWorkbookOf(zip, part);
+		const target = await embeddedWorkbookOf(zip, part, root);
 		if (!target) continue;
 		const file = zip.file(target);
 		if (!file) {
@@ -300,6 +299,17 @@ const copyOf = (kind: HistoryCopy, slides: PptxSlide[]): PptxSlide[] =>
 // The editor gives a history entry back to the handler as a fresh `cloneSlide` copy.
 const restore = (slides: PptxSlide[]) => slides.map(cloneSlide);
 
+const baselineIssues = new WeakMap<Uint8Array, Promise<readonly Issue[]>>();
+
+function originalIssues(bytes: Uint8Array): Promise<readonly Issue[]> {
+	let issues = baselineIssues.get(bytes);
+	if (!issues) {
+		issues = JSZip.loadAsync(bytes).then(chartPackageIssues);
+		baselineIssues.set(bytes, issues);
+	}
+	return issues;
+}
+
 /** Runs one case, returning every save with its issues. */
 export async function runSweepCase(c: SweepCase): Promise<SaveResult[]> {
 	const handler = new PptxHandler();
@@ -307,7 +317,7 @@ export async function runSweepCase(c: SweepCase): Promise<SaveResult[]> {
 		(
 			handler as unknown as { runtime: { chartPartRevisions: ChartPartRevisions } }
 		).runtime.chartPartRevisions = new ChartPartRevisions(c.budget);
-	const base = await chartPackageIssues(c.bytes);
+	const base = await originalIssues(c.bytes);
 	const baseKeys = new Set(base.map((issue) => issue.key));
 	const { slides } = await handler.load(buffer(c.bytes));
 	const results: SaveResult[] = [];
@@ -320,7 +330,8 @@ export async function runSweepCase(c: SweepCase): Promise<SaveResult[]> {
 		if (c.gc) collectGarbage();
 		const shown = structuredClone(view(chartIn(list).chartData));
 		const bytes = new Uint8Array(await handler.save(list));
-		const found = await chartPackageIssues(bytes);
+		const zip = await JSZip.loadAsync(bytes);
+		const found = await chartPackageIssues(zip);
 		const issues = found.filter((issue) => !baseKeys.has(issue.key));
 		const reloaded = new PptxHandler();
 		const again = chartsOf((await reloaded.load(buffer(bytes))).slides);
@@ -331,9 +342,10 @@ export async function runSweepCase(c: SweepCase): Promise<SaveResult[]> {
 			issues.push({ kind: 'reload', key: `reload|${label}`, detail: `${label}: ${differs}` });
 		// A save that moves data to a new sheet names the next free one: replaying such a save gives
 		// the same part on a sheet of another number.
-		const xml = (
-			await (await JSZip.loadAsync(bytes)).file(c.chartPartPath)!.async('string')
-		).replace(/\bChartData\d+!/gu, 'ChartData!');
+		const xml = (await zip.file(c.chartPartPath)!.async('string')).replace(
+			/\bChartData\d+!/gu,
+			'ChartData!',
+		);
 		if (expect === undefined) savedParts.set(label, xml);
 		else if (reachable && savedParts.get(expect) !== xml)
 			issues.push({

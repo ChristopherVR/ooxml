@@ -28,8 +28,19 @@ import { requireFixture } from '../require-fixture';
  */
 const FIXTURES = path.resolve(__dirname, '../fixtures/e2e');
 
+const archives = new WeakMap<ArrayBuffer | Uint8Array, Promise<JSZip>>();
+
+function openArchive(bytes: ArrayBuffer | Uint8Array): Promise<JSZip> {
+	let zip = archives.get(bytes);
+	if (!zip) {
+		zip = JSZip.loadAsync(bytes);
+		archives.set(bytes, zip);
+	}
+	return zip;
+}
+
 const slidePartsOf = async (bytes: ArrayBuffer | Uint8Array): Promise<Map<string, string>> => {
-	const zip = await JSZip.loadAsync(bytes);
+	const zip = await openArchive(bytes);
 	const parts = new Map<string, string>();
 	for (const name of Object.keys(zip.files)) {
 		if (/^ppt\/slides\/slide\d+\.xml$/u.test(name)) {
@@ -40,20 +51,40 @@ const slidePartsOf = async (bytes: ArrayBuffer | Uint8Array): Promise<Map<string
 };
 
 const partText = async (bytes: Uint8Array, name: string): Promise<string> => {
-	const zip = await JSZip.loadAsync(bytes);
+	const zip = await openArchive(bytes);
 	return (await zip.file(name)?.async('string')) ?? '';
 };
 
+const fixtures = new Map<string, ArrayBuffer>();
+
 const readFixture = (file: string): ArrayBuffer => {
+	const existing = fixtures.get(file);
+	if (existing) return existing;
 	const buffer = readFileSync(requireFixture(path.join(FIXTURES, file)));
-	return buffer.buffer.slice(
+	const bytes = buffer.buffer.slice(
 		buffer.byteOffset,
 		buffer.byteOffset + buffer.byteLength,
 	) as ArrayBuffer;
+	fixtures.set(file, bytes);
+	return bytes;
 };
 
+const originalSlideParts = new WeakMap<ArrayBuffer, Promise<ReadonlyMap<string, string>>>();
+
+function beforeSave(bytes: ArrayBuffer): Promise<ReadonlyMap<string, string>> {
+	let parts = originalSlideParts.get(bytes);
+	if (!parts) {
+		parts = slidePartsOf(bytes);
+		originalSlideParts.set(bytes, parts);
+	}
+	return parts;
+}
+
 /** Parts present in both packages whose bytes differ. New parts are not drift. */
-const changedSlideParts = (before: Map<string, string>, after: Map<string, string>): string[] =>
+const changedSlideParts = (
+	before: ReadonlyMap<string, string>,
+	after: ReadonlyMap<string, string>,
+): string[] =>
 	[...after.keys()]
 		.filter((name) => before.has(name) && before.get(name) !== after.get(name))
 		.sort();
@@ -74,7 +105,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		const data = await handler.load(source.slice(0));
 		const saved = await handler.save(data.slides);
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(saved);
 		expect(before.size).toBeGreaterThan(0);
 		expect(after.size).toBe(before.size);
@@ -98,7 +129,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		);
 		const saved = await handler.save(edited);
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(saved);
 		expect(changedSlideParts(before, after)).toStrictEqual([target.id]);
 	});
@@ -114,7 +145,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		const saved = await handler.save(edited);
 
 		await expect(partText(saved, data.slides[2].id)).resolves.toMatch(/<p:sld[^>]*\sshow="0"/u);
-		const zip = await JSZip.loadAsync(saved);
+		const zip = await openArchive(saved);
 		const notes = Object.keys(zip.files).filter((name) =>
 			name.startsWith('ppt/notesSlides/notesSlide'),
 		);
@@ -131,7 +162,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		);
 		const saved = await handler.save(flagged);
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(saved);
 		expect(changedSlideParts(before, after)).toStrictEqual([data.slides[3].id]);
 	});
@@ -159,7 +190,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		};
 		const saved = await handler.save([...data.slides, fresh]);
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(saved);
 		const added = [...after.keys()].filter((name) => !before.has(name));
 		expect(changedSlideParts(before, after)).toStrictEqual([]);
@@ -174,7 +205,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		const removed = data.slides[2].id;
 		const saved = await handler.save(data.slides.filter((_, index) => index !== 2));
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(saved);
 		expect(after.has(removed)).toBeFalsy();
 		expect(changedSlideParts(before, after)).toStrictEqual([]);
@@ -208,7 +239,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 		);
 		const resaved = await second.save(reloaded.slides);
 
-		const zip = await JSZip.loadAsync(resaved);
+		const zip = await openArchive(resaved);
 		const commentParts = Object.keys(zip.files).filter((name) => name.startsWith('ppt/comments/'));
 		expect(commentParts).toHaveLength(1);
 		await expect(zip.files[commentParts[0]].async('string')).resolves.toContain(
@@ -236,7 +267,7 @@ describe('unmodified slides pass through save byte-identically', () => {
 			),
 		);
 
-		const before = await slidePartsOf(source.slice(0));
+		const before = await beforeSave(source);
 		const after = await slidePartsOf(second);
 		expect(changedSlideParts(before, after)).toStrictEqual(
 			[data.slides[1].id, data.slides[4].id].sort(),
