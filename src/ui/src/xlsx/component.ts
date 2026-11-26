@@ -14,6 +14,8 @@ import {
 	isXlsxEditorAttribute,
 	reflectAttribute,
 } from './editor-attributes';
+import { watchOfficeAddIns } from '../ribbon/add-in-dialog';
+import { excelAddInSelection } from './commands/add-in-selection';
 import type { RibbonAddInTab } from '../ribbon/add-in-tabs';
 import { closeContextMenu } from './context-menu';
 import { buildShell, type Shell } from './editor-shell';
@@ -79,6 +81,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 	private shell: Shell | undefined;
 	private disposeSurface: (() => void) | undefined;
 	private addIns: readonly RibbonAddInTab[] = [];
+	private stopAddIns: (() => void) | undefined;
 	private leaving: ReturnType<typeof setTimeout> | undefined;
 
 	connectedCallback(): void {
@@ -92,6 +95,14 @@ export class XlsxEditorElement extends XlsxEditorApi {
 			this.core.requestRender();
 			return;
 		}
+		const { ctx } = this.core;
+		this.stopAddIns = watchOfficeAddIns(
+			ctx.root,
+			(label) => ctx.t(label),
+			'excel',
+			() => ctx.locale(),
+			() => excelAddInSelection(ctx),
+		);
 		if (this.shell) {
 			this.shell.ribbon.connect();
 			return;
@@ -113,6 +124,7 @@ export class XlsxEditorElement extends XlsxEditorApi {
 		if (isXlsxEditorAttribute(name)) applyAttribute(this, name, this.getAttribute(name));
 	}
 	disconnectedCallback(): void {
+		this.stopAddIns?.();
 		this.core.webfonts.disconnect();
 		// Host File tab pages unmount with the editor; showing one again remounts it.
 		this.shell?.backstage.destroy();

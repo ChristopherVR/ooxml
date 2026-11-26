@@ -1,5 +1,6 @@
 import { defineElement } from '../../registry';
 import { defineRibbon, type OfficeUiRibbon } from '../../ribbon/ribbon-tabs';
+import { officeAddInsMount, watchOfficeAddIns } from '../../ribbon/add-in-dialog';
 import type { RibbonAddInTab } from '../../ribbon/add-in-tabs';
 import type { RibbonTabRowState, RibbonTabSelectDetail } from '../render';
 import { RIBBON_ADD_IN_TAB_ATTR, RIBBON_CONTEXTUAL_TAB_ATTR } from '../render';
@@ -51,6 +52,7 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 	const Base = registry.get('office-ui-ribbon') as unknown as typeof OfficeUiRibbon;
 	class PptxRibbonTabs extends Base {
 		#model: RibbonTabRowState | undefined;
+		#stopAddIns: (() => void) | undefined;
 		#canvasSelection: AbortController | undefined;
 		#manifestTabs: readonly RibbonAddInTab[] = [];
 		#manifestTab: string | undefined;
@@ -73,9 +75,22 @@ export function definePptxRibbonTabs(registry: CustomElementRegistry): void {
 			super.connectedCallback();
 			this.#canvasSelection = new AbortController();
 			trackSmartArtCanvasSelection(this, this.#canvasSelection.signal);
+			queueMicrotask(() => {
+				if (!this.isConnected || this.#stopAddIns) return;
+				const host = officeAddInsMount(this);
+				if (host)
+					this.#stopAddIns = watchOfficeAddIns(
+						host,
+						(label) => label,
+						'powerpoint',
+						() => this.#model?.manifestLocale ?? 'en',
+					);
+			});
 		}
 		override disconnectedCallback(): void {
 			this.#canvasSelection?.abort();
+			this.#stopAddIns?.();
+			this.#stopAddIns = undefined;
 			super.disconnectedCallback();
 		}
 		get state(): RibbonTabRowState | undefined {

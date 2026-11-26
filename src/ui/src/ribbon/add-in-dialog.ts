@@ -3,6 +3,7 @@ import { normalizeLocale } from 'ooxml-core/i18n';
 import { composedWithin } from '../composed';
 import { modalActiveElement } from '../dialog/focus';
 import { showOfficeServiceDialog, type OfficeServiceText } from '../dialog/office-service-dialog';
+import { ADD_IN_PREFERENCES_CHANGED, addInPreferences } from './add-in-preferences';
 import type { OfficeAddInSelection } from './add-in-runtime-settings';
 
 export type AddInDialogMode = 'getAddIns' | 'myAddIns';
@@ -10,6 +11,7 @@ export type AddInDialogProduct = OfficeAddInHost | 'visio';
 
 export type AddInDialogHost = HTMLElement | ShadowRoot;
 
+const RESTORE = Symbol.for('office-ui.mounted-add-in-restore');
 const OPENING = Symbol.for('office-ui.add-ins-opening');
 const LOAD_ERRORS = new Map([
 	['fr', 'Impossible de charger les compléments.'],
@@ -22,6 +24,7 @@ const LOAD_ERRORS = new Map([
 const LOCALES = [...LOAD_ERRORS.keys()];
 type PendingHost = AddInDialogHost & {
 	[OPENING]?: boolean;
+	[RESTORE]?: Promise<void>;
 };
 
 function addInScopes(host: AddInDialogHost, opener: Element | null): AddInDialogHost[] {
@@ -60,6 +63,56 @@ export interface OpenAddInsOptions {
 	manifestLocale: string;
 	scopes: readonly AddInDialogHost[];
 	selection?: () => OfficeAddInSelection | undefined;
+}
+
+export function mountedAddInRestore(host: PendingHost) {
+	return host[RESTORE];
+}
+
+export function watchOfficeAddIns(
+	host: PendingHost,
+	t: OfficeServiceText,
+	product: OfficeAddInHost,
+	locale: () => string,
+	selection?: OpenAddInsOptions['selection'],
+): () => void {
+	const scopes = addInScopes(host, null);
+	const listeners = new AbortController();
+	let pending: AbortController | undefined;
+
+	const restore = () => {
+		pending?.abort();
+		delete host[RESTORE];
+		if (!addInPreferences(scopes)) return;
+		const { signal } = (pending = new AbortController());
+		host[RESTORE] = import('../dialog/add-ins-session').then(async ({ addInSession }) => {
+			if (signal.aborted || !host.isConnected) return;
+			const session = addInSession(
+				{
+					host,
+					mode: 'myAddIns',
+					t,
+					product,
+					manifestLocale: locale(),
+					scopes,
+					...(selection && { selection }),
+				},
+				() => {},
+			);
+			await session.restore?.(signal);
+			if (!signal.aborted && host.isConnected) session.syncTabs();
+		});
+		// The dialog can report a preference read error if the user opens it.
+		void host[RESTORE].catch(() => {});
+	};
+	for (const scope of scopes)
+		scope.addEventListener(ADD_IN_PREFERENCES_CHANGED, restore, { signal: listeners.signal });
+	restore();
+	return () => {
+		listeners.abort();
+		pending?.abort();
+		delete host[RESTORE];
+	};
 }
 
 export async function openOfficeAddIns(

@@ -1,7 +1,7 @@
 import { html, nothing } from 'lit';
 import { OfficeElement, controlStyles } from '../base';
 import { definer } from '../registry';
-import type { OpenAddInsOptions } from '../ribbon/add-in-dialog';
+import { mountedAddInRestore, type OpenAddInsOptions } from '../ribbon/add-in-dialog';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent } from './add-ins-consent';
 import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
@@ -32,7 +32,9 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		this.requestUpdate();
 		this.shell?.show();
 		this.renderRoot.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
-		if (this.#session.restore) void this.restore(this.#session, this.#session.restore);
+		const mounted = mountedAddInRestore(options.host);
+		if (this.#session.restore)
+			void this.restore(this.#session, mounted ? () => mounted : this.#session.restore);
 	}
 
 	private async restore(session: AddInSession, restore: NonNullable<AddInSession['restore']>) {

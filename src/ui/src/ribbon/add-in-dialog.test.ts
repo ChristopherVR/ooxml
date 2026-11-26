@@ -1,7 +1,7 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
-import { openOfficeAddIns } from './add-in-dialog';
+import { mountedAddInRestore, openOfficeAddIns, watchOfficeAddIns } from './add-in-dialog';
 import { setOfficeAddInRuntime } from './add-in-runtime-settings';
 import {
 	setOfficeAddInCatalog,
@@ -358,4 +358,30 @@ it('describes a runnable install without a preference store', async () => {
 	dialog?.querySelector<HTMLButtonElement>('[aria-label="Install Notes"]')?.click();
 	await vi.waitFor(() => expect(dialog?.textContent).toContain('Install for this editor session.'));
 	expect(dialog?.textContent).toContain('This add-in runs only when opened.');
+});
+
+it('restores the saved commands on editor mount without opening the dialog', async () => {
+	const host = document.body.appendChild(document.createElement('div'));
+	const root = host.attachShadow({ mode: 'open' });
+	const ribbon = root.appendChild(document.createElement('pptx-ui-ribbon-tabs'));
+	const sync = vi.fn();
+	Object.defineProperty(ribbon, 'setInstalledAddInTabs', { value: sync });
+	const bytes = new TextEncoder().encode(xml);
+	setOfficeAddInPreferences(host, {
+		read: async () => [bytes],
+		write: async () => {},
+	});
+	const stop = watchOfficeAddIns(
+		root,
+		(text) => text,
+		'word',
+		() => 'en',
+	);
+	try {
+		await mountedAddInRestore(root);
+		expect(sync).toHaveBeenCalledOnce();
+		expect(root.querySelector('office-ui-add-ins-dialog')).toBeNull();
+	} finally {
+		stop();
+	}
 });

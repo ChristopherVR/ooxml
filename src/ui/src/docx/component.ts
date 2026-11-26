@@ -19,6 +19,8 @@ import { closeRibbonPopover } from './ribbon-popover';
 import { closeWordCount } from './word-count-panel';
 import { releaseStateCaches } from './state-caches';
 import type { CollaborationConfig, ClientReceiveResult, StepBatch } from 'ooxml-core/docx/ui';
+import { watchOfficeAddIns } from '../ribbon/add-in-dialog';
+import { wordAddInSelection } from './add-in-selection';
 import { normalizeEditorLocale } from './localization';
 import {
 	applyThemeColors,
@@ -248,6 +250,8 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.core.room.want(value ?? undefined);
 	}
 
+	private stopAddIns: (() => void) | undefined;
+
 	private leaving: ReturnType<typeof setTimeout> | undefined;
 
 	connectedCallback() {
@@ -261,10 +265,19 @@ export class DocxEditorElement extends DocxEditorApi {
 		}
 		buildShell(this.core, this.shellApi);
 		renderDocument(this.core);
+		if (this.shadowRoot)
+			this.stopAddIns = watchOfficeAddIns(
+				this.shadowRoot,
+				(label) => label,
+				'word',
+				() => this.locale,
+				() => wordAddInSelection(() => this.core.targetView()),
+			);
 		this.core.room.resume();
 	}
 
 	disconnectedCallback() {
+		this.stopAddIns?.();
 		const { core } = this;
 		core.pages.views.disconnect();
 		core.mailings?.disconnect();

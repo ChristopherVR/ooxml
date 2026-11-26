@@ -36,6 +36,7 @@ export interface RibbonTabRowItem {
 
 export interface RibbonTabRowState {
 	readonly items: readonly RibbonTabRowItem[];
+	readonly manifestLocale?: string;
 	/** The selected tab's id, or empty when the active tab is not in the row. */
 	readonly selected: string;
 	/** The tab list's accessible name. */
@@ -95,6 +96,7 @@ export function buildRibbonTabRow(input: RibbonTabRowInput): RibbonTabRowState {
 		items,
 		selected: items.some((tab) => tab.id === active) ? active : '',
 		label: input.translate(RIBBON_TAB_ROW_LABEL_KEY),
+		manifestLocale: input.translate('pptx.addIns.manifestLocale'),
 	};
 }
 
