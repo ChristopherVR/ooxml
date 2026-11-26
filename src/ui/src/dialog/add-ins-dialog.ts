@@ -6,13 +6,10 @@ import { addInInstallFeedback } from '../ribbon/add-in-install-feedback';
 import { ADD_IN_RUNTIME_CHANGED } from '../ribbon/add-in-runtime-settings';
 import { marketplaceAssetId } from '../ribbon/add-in-marketplace';
 import { renderAddInConsent, renderAddInConsentActions } from './add-ins-consent';
-import { LOCAL_INSTALL_REASON_ID, renderAddInList } from './add-ins-list';
+import { renderAddInBrowser, type Pivot } from './add-ins-browser';
 import { addInSession, type AddInSession, type AddInPreview } from './add-ins-session';
 import { defineDialog, type OfficeUiDialog } from './dialog';
 import css from './add-ins-dialog.css?raw';
-
-const PIVOTS = ['My Add-ins', 'Admin Managed', 'Store'] as const;
-export type Pivot = (typeof PIVOTS)[number];
 
 /** On-demand Office Add-ins browser with local manifest review and a host-configured storefront. */
 export class OfficeUiAddInsDialog extends OfficeElement {
@@ -225,11 +222,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	protected override render() {
 		const session = this.#session;
 		if (!session) return nothing;
-		const { t, storefront, product } = session;
-		const pivots = storefront === 'off' ? PIVOTS.slice(0, 2) : PIVOTS;
-		const unsupported = product === 'visio';
-		const reason = t('Local add-in installation is unavailable in Visio.');
-		const search = t('Search add-ins');
+		const { t } = session;
 		return html`<office-ui-dialog
 			.heading=${t('Office Add-ins')}
 			.closeLabel=${t('Close dialog')}
@@ -248,78 +241,31 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 								reason: session.launcher.pane(this.#preview.addIn).reason,
 							},
 						)}`
-					: html` <div
-								class="pivots"
-								role="tablist"
-								aria-label=${t('Office Add-ins')}
-								@keydown=${(event: KeyboardEvent) => this.pivotKey(event, pivots)}
-							>
-								${pivots.map(
-									(pivot, index) =>
-										html`<button
-											type="button"
-											role="tab"
-											id=${`pivot-${index}`}
-											aria-selected=${String(this.#pivot === pivot)}
-											aria-controls="list"
-											tabindex=${this.#pivot === pivot ? 0 : -1}
-											@click=${() => this.pivot(pivot)}
-											>${t(pivot)}</button
-										>`,
-								)}
-							</div>
-							<div
-								id="list"
-								role="tabpanel"
-								aria-labelledby=${`pivot-${pivots.indexOf(this.#pivot)}`}
-							>
-								<div class="tools">
-									<input
-										type="search"
-										aria-label=${search}
-										placeholder=${search}
-										maxlength="120"
-										.value=${this.#query}
-										@input=${(event: InputEvent) => {
-											if (!(event.currentTarget instanceof HTMLInputElement)) return;
-											this.#query = event.currentTarget.value;
-											this.requestUpdate();
-										}}
-									/>
-									<button
-										id="upload"
-										class="link"
-										type="button"
-										?disabled=${unsupported || !!this.#pending}
-										aria-describedby=${unsupported ? LOCAL_INSTALL_REASON_ID : this.#error ? 'add-in-error' : nothing}
-										@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
-										>${t('Upload My Add-in')}</button
-									>
-									<input
-										hidden
-										type="file"
-										accept=".xml,.json,.zip"
-										aria-label=${t('Choose a local add-in file')}
-										?disabled=${unsupported || !!this.#pending}
-										@change=${this.upload}
-									/>
-								</div>
-								${this.renderError()}
-								${unsupported ? html`<p class="empty" id=${LOCAL_INSTALL_REASON_ID}>${reason}</p>` : nothing}
-								${this.renderMarketplace(session)}
-								${renderAddInList({
-									session,
-									pivot: this.#pivot,
-									query: this.#query,
-									busy: Boolean(this.#pending),
-									open: (tab) => {
-										this.#afterClose = tab;
-										this.shell?.close();
-									},
-									change: (change) => void this.change(change),
-									read: (read) => void this.read(read),
-								})}
-							</div>`
+					: renderAddInBrowser({
+							session,
+							pivot: this.#pivot,
+							query: this.#query,
+							busy: Boolean(this.#pending),
+							error: this.#error,
+							alert: this.renderError(),
+							marketplace: this.renderMarketplace(session),
+							select: (pivot) => this.pivot(pivot),
+							key: (event, pivots) => this.pivotKey(event, pivots),
+							search: (event) => {
+								if (!(event.currentTarget instanceof HTMLInputElement)) return;
+								this.#query = event.currentTarget.value;
+								this.requestUpdate();
+							},
+							pick: () =>
+								this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click(),
+							upload: this.upload,
+							open: (tab) => {
+								this.#afterClose = tab;
+								this.shell?.close();
+							},
+							change: (change) => void this.change(change),
+							read: (read) => void this.read(read),
+						})
 			}
 			<p class="status" role="status">${this.#message}</p>
 			${

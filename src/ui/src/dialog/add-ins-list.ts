@@ -1,7 +1,7 @@
 import { html, nothing, type TemplateResult } from 'lit';
 import { glyph } from '../glyph';
 import type { OfficeAddInOffer } from '../ribbon/add-in-settings';
-import type { Pivot } from './add-ins-dialog';
+import type { Pivot } from './add-ins-browser';
 import type { AddInSession } from './add-ins-session';
 import { renderAddInDetails } from './add-ins-consent';
 import { addInIcon } from '../ribbon/add-in-icons';
