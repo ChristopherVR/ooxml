@@ -22,6 +22,9 @@ test('shares the fallback preferences within a page by profile and product', asy
 		]);
 		assert.deepEqual(await profile.read('excel'), []);
 		assert.deepEqual(await officeAddInPreferences('other-profile').read('word'), []);
+		await profile.write('word', 'large', new Uint8Array(16 * 1024 * 1024 - 3));
+		await assert.rejects(profile.write('word', 'extra', Uint8Array.of(4)), /limit/i);
+		await profile.write('word', 'large', undefined);
 		await profile.write('word', 'notes', undefined);
 		assert.deepEqual(await profile.read('word'), []);
 	} finally {

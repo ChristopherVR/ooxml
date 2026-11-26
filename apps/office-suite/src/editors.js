@@ -15,7 +15,7 @@ import {
 	settings,
 	updateSettings,
 } from './settings.js';
-import { currentProfile } from './profile-state.js';
+import { currentProfile, onProfile } from './profile-state.js';
 import { wordDesignPreferences } from './word-design-preferences.js';
 import { setOfficeAddInPreferences } from 'ooxml-ui/suite';
 
@@ -104,19 +104,29 @@ export const previewRefusal = (name) =>
  * `redo`, `go(index)` (PowerPoint, Visio), `toggleFormat(key)` (Word, Excel) and `state()`, one
  * snapshot of `{ canUndo, canRedo, position?, format? }`. Each is the editor's own public API.
  */
-export async function mountEditor(host, doc, changed, command, moved = () => {}) {
-	let accessReadOnly = cloudReadOnly(doc);
-	if (doc.kind !== 'vsdx') {
-		const profileId = currentProfile().id;
+function mountAddInPreferences(host) {
+	let profileId;
+	const stop = onProfile(({ id }) => {
+		if (id === profileId) return;
+		profileId = id;
 		const preferences = async () => {
 			const { officeAddInPreferences } = await import('./office-add-in-preferences.js');
-			return officeAddInPreferences(profileId);
+			return officeAddInPreferences(id);
 		};
 		setOfficeAddInPreferences(host, {
 			read: async (product) => (await preferences()).read(product),
-			write: async (product, id, bytes) => (await preferences()).write(product, id, bytes),
+			write: async (product, manifestId, bytes) =>
+				(await preferences()).write(product, manifestId, bytes),
 		});
-	}
+	});
+	return () => {
+		stop();
+		setOfficeAddInPreferences(host, null);
+	};
+}
+
+export async function mountEditor(host, doc, changed, command, moved = () => {}) {
+	let accessReadOnly = cloudReadOnly(doc);
 	if (doc.kind === 'pptx') {
 		const { createPptxViewer } = await import('pptx-vanilla-viewer');
 		// True while the deck shows the assistant's suggestions (`hold`).
@@ -132,6 +142,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		if (dictionary) messages[locale] = dictionary;
 		const externalContent = externalContentOption(prefs);
 		const authorFor = author(prefs);
+		const stopAddIns = mountAddInPreferences(host);
 		const viewer = createPptxViewer(host, {
 			// Settings > Fonts; unset keeps the viewer's own Trust Center choice.
 			...(googleFonts === undefined ? {} : { googleFonts }),
@@ -197,6 +208,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			stopTheme();
 			stopSettings();
 			viewer.destroy();
+			stopAddIns();
 			throw new Error('The presentation could not be opened.');
 		}
 		return {
@@ -249,6 +261,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 				stopTheme();
 				stopSettings();
 				viewer.destroy();
+				stopAddIns();
 			},
 		};
 	}
@@ -285,6 +298,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 		if (['light', 'dark'].includes(mode) && mode !== currentTheme().mode) setThemeMode(mode);
 	});
 	observer.observe(element, { attributes: true, attributeFilter: ['theme'] });
+	const stopAddIns = doc.kind === 'vsdx' ? undefined : mountAddInPreferences(host);
 	host.append(element);
 	applyEditorSettings(element, doc.kind, settings());
 	const stopSettings = onSettings((next, keys) => {
@@ -419,6 +433,7 @@ export async function mountEditor(host, doc, changed, command, moved = () => {})
 			observer.disconnect();
 			stopTheme();
 			element.remove();
+			stopAddIns?.();
 		},
 	};
 }

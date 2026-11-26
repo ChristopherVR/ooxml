@@ -1,6 +1,11 @@
 const databases = new Map();
 const sessionStores = new Map();
 const installLimit = 32;
+const productByteLimit = 16 * 1024 * 1024;
+
+function overLimit(count, bytes) {
+	return count > installLimit || bytes > productByteLimit;
+}
 
 function openAddInPreferences(profile) {
 	const name = `ooxml-suite-add-ins-${profile}`;
@@ -32,8 +37,13 @@ function sessionAddInPreferences(profile) {
 		write(host, id, bytes) {
 			const entries = records(host);
 			if (bytes === undefined) entries.delete(id);
-			else if (entries.has(id) || entries.size < installLimit) entries.set(id, bytes.slice());
-			else throw new Error('Could not save the add-in preference.');
+			else {
+				let total = bytes.byteLength;
+				for (const [key, value] of entries) if (key !== id) total += value.byteLength;
+				const count = entries.size + Number(!entries.has(id));
+				if (overLimit(count, total)) throw new Error('Add-in preference limit reached.');
+				entries.set(id, bytes.slice());
+			}
 		},
 	};
 }
@@ -44,8 +54,9 @@ export function officeAddInPreferences(profile) {
 	function transaction(database, mode, action) {
 		return new Promise((resolve, reject) => {
 			const tx = database.transaction('installs', mode);
-			const request = action(tx.objectStore('installs'), tx);
-			tx.oncomplete = () => resolve(request?.result);
+			action(tx.objectStore('installs'), tx, (value) => {
+				tx.oncomplete = () => resolve(value);
+			});
 			tx.onabort = () => reject(tx.error ?? new Error('Could not save the add-in preference.'));
 			tx.onerror = () => reject(tx.error);
 		});
@@ -54,26 +65,50 @@ export function officeAddInPreferences(profile) {
 		async read(host) {
 			const db = await database();
 			return db
-				? transaction(db, 'readonly', (store) => store.getAll(productKeys(host), installLimit))
+				? transaction(db, 'readonly', (store, _tx, finish) => {
+						const files = [];
+						let total = 0;
+						const request = store.openCursor(productKeys(host));
+						request.onsuccess = () => {
+							const cursor = request.result;
+							if (!cursor || files.length >= installLimit) return finish(files);
+							const bytes = cursor.value;
+							if (
+								bytes instanceof Uint8Array &&
+								!overLimit(files.length + 1, total + bytes.byteLength)
+							) {
+								files.push(bytes);
+								total += bytes.byteLength;
+							}
+							cursor.continue();
+						};
+					})
 				: fallback.read(host);
 		},
 		async write(host, id, bytes) {
 			const db = await database();
 			if (!db) return fallback.write(host, id, bytes);
-			return transaction(db, 'readwrite', (store, tx) => {
+			return transaction(db, 'readwrite', (store, tx, finish) => {
+				finish(undefined);
 				const key = `${host}:${id}`;
-				if (bytes === undefined) return store.delete(key);
-				const current = store.getKey(key);
-				current.onsuccess = () => {
-					if (current.result !== undefined) {
-						store.put(bytes, key);
-						return;
+				if (bytes === undefined) {
+					store.delete(key);
+					return;
+				}
+				let count = 1;
+				let total = bytes.byteLength;
+				const request = store.openCursor(productKeys(host));
+				request.onsuccess = () => {
+					const cursor = request.result;
+					if (overLimit(count, total)) tx.abort();
+					else if (!cursor) store.put(bytes, key);
+					else {
+						if (cursor.key !== key) {
+							count++;
+							total += cursor.value?.byteLength ?? 0;
+						}
+						cursor.continue();
 					}
-					const count = store.count(productKeys(host));
-					count.onsuccess = () => {
-						if (count.result < installLimit) store.put(bytes, key);
-						else tx.abort();
-					};
 				};
 			});
 		},

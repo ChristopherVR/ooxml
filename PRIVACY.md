@@ -143,7 +143,8 @@ runtime settings. Passing `null` to `setOfficeAddInRuntime` disables execution i
 The suite reads installed add-ins from a profile-scoped IndexedDB preference store.
 When IndexedDB is unavailable, the suite keeps installs in memory for this page session. Confirming
 installation or an update saves the original manifest or ZIP there, keyed by product and
-manifest ID. Removing an add-in deletes that record. The records contain publisher-supplied
+manifest ID. Changing profiles switches the active store, and each profile can keep up to
+16 MiB of add-in files per product. Removing an add-in deletes that record. The records contain publisher-supplied
 manifest and package data. They stay on this device and contain no document selections or
 access tokens. Standalone library consumers default to session memory. A host can pass
 `null` to `setOfficeAddInPreferences` to turn persistence off in its editor scope. Clearing
