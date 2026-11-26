@@ -14,7 +14,12 @@ export const RIBBON_AUTHORING_STRINGS: Translations = {
 		'打印缩放、打印标题、工作表背景以及页眉和页脚编辑',
 	],
 	Equation: ['Équation', 'Gleichung', 'Ecuación', '公式'],
-	'Insert Equation': ['Insérer une équation', 'Gleichung einfügen', 'Insertar ecuación', '插入公式'],
+	'Insert Equation': [
+		'Insérer une équation',
+		'Gleichung einfügen',
+		'Insertar ecuación',
+		'插入公式',
+	],
 	'Edit Equation': ['Modifier l’équation', 'Gleichung bearbeiten', 'Editar ecuación', '编辑公式'],
 	'LaTeX equation': ['Équation LaTeX', 'LaTeX-Gleichung', 'Ecuación LaTeX', 'LaTeX 公式'],
 	'Type a LaTeX equation to see a preview.': [
