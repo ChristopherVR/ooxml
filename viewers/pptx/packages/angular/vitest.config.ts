@@ -1,14 +1,34 @@
 import { resolve } from 'node:path';
 
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 
 import { testWorkers } from '../../../../scripts/test-workers.mjs';
 import { isolationProjects } from '../../scripts/vitest-isolation.mjs';
+import { prelinkLucide } from './scripts/prelink-lucide.mjs';
+
+let linkedLucide: Promise<string> | undefined;
 
 // TestBed files share workers and native dependencies. The fresh-module project
 // re-evaluates binding components because fixtures alter JIT signal-input metadata.
 export default defineConfig({
 	server: { fs: { allow: [resolve(import.meta.dirname, '../../../..')] } },
+	plugins: [
+		{
+			name: 'prelink-lucide',
+			async config({ test }) {
+				// Watch runs can acquire new imports without reloading this config.
+				if (test?.watch ?? configDefaults.watch) {
+					return;
+				}
+				linkedLucide ??= prelinkLucide(import.meta.dirname);
+				return {
+					resolve: {
+						alias: [{ find: /^@lucide\/angular$/, replacement: await linkedLucide }],
+					},
+				};
+			},
+		},
+	],
 	resolve: {
 		// Keep leaf-module mocks attached to the renderer implementation rather
 		// than a separately bundled copy of the same helper.
