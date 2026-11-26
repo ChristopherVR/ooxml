@@ -87,6 +87,8 @@ test('opens PivotTable contextual controls and reopens a report changed through 
 });
 
 test('keeps cached totals when styling a report and updates them on Refresh', async ({ page }) => {
+	// Editing the source, restyling and refreshing outlasts the default budget on CI runners.
+	test.slow();
 	await loadPivotWorkbook(page);
 	await sheetTabs(page).getByRole('tab', { name: 'Data', exact: true }).click();
 	await goToCell(page, 'C2');

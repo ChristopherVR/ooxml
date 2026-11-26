@@ -68,18 +68,29 @@ test('inserts worksheet shapes and text and groups drawings from the Selection P
 	await band.getByRole('button', { name: 'Rectangle', exact: true }).click();
 	await clickRibbonControl(page, shapes);
 	await band.getByRole('button', { name: 'Oval', exact: true }).click();
-	await clickRibbonControl(page, control('insert.text-box'));
+	// Shape Format repeats Text Box; use the Insert tab's Text group.
+	await clickRibbonControl(
+		page,
+		band
+			.getByRole('group', { name: 'Text', exact: true })
+			.locator('button[data-command="insert.text-box"]'),
+	);
 	const dialog = workbook.locator('[data-dialog="text-box"]');
 	await dialog.getByLabel('Text', { exact: true }).fill('Quarterly forecast');
 	await dialog.getByRole('button', { name: 'OK', exact: true }).click();
 	await expect(workbook.locator('.xg-q-main .xg-obj')).toHaveCount(3);
 
 	await band.getByRole('tab', { name: 'Page Layout', exact: true }).click();
-	await clickRibbonControl(page, control('arrange.selection-pane'));
+	// Shape Format shares the Arrange group; use the Page Layout panel's copy.
+	const pageLayout = band.locator('#xve-panel-page-layout');
+	await clickRibbonControl(
+		page,
+		pageLayout.locator('button[data-command="arrange.selection-pane"]'),
+	);
 	const pane = workbook.getByRole('complementary', { name: 'Selection Pane' });
 	await pane.getByRole('button', { name: 'Rectangle', exact: true }).click();
 	await pane.getByRole('button', { name: 'Oval', exact: true }).click({ modifiers: ['Control'] });
-	await clickRibbonControl(page, band.getByRole('button', { name: 'Group', exact: true }));
+	await clickRibbonControl(page, pageLayout.getByRole('button', { name: 'Group', exact: true }));
 	await page.getByRole('menuitem', { name: 'Group', exact: true }).click();
 	await expect(workbook.locator('.xg-q-main .xg-obj')).toHaveCount(2);
 	await expect(pane.getByRole('button', { name: 'Group', exact: true })).toBeVisible();
