@@ -377,7 +377,7 @@ const deckStyleHeldDeck = shallowRef<
 	{ slides: PptxSlide[]; templateElementsBySlideId: Record<string, PptxElement[]> } | undefined
 >(undefined);
 const deck = useLoadContent(() => activeContent.value, {
-	preview: { getRoot: () => viewerRootRef.value, translate: (key, params) => t(key, params) },
+	preview: { getRoot: () => viewerRootRef.value, translate: (key, params) => t(key, params ?? {}) },
 	getInitialSlide: () => props.initialSlide,
 	getHeldDeck: () => deckStyleHeldDeck.value,
 	getPendingInlineEdit: () => {
