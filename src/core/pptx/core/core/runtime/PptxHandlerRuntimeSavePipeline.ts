@@ -441,7 +441,8 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		}
 
 		// Keep existing compressed media and avoid deflating newly embedded compressed formats.
-		// Level 3 speeds up XML and other new or edited parts while keeping the package compact.
+		// New and edited parts use level 6, zlib's default: PowerPoint DEFLATEs its own packages, so
+		// a saved deck stays the size of the one the user opened. Unchanged parts keep their bytes.
 		keepCompressedMedia(this.zip);
 		// A reproducible save dates every ZIP entry the same, not when each part
 		// was last written.
@@ -454,7 +455,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 		return await output.generateAsync({
 			type: 'uint8array',
 			compression: 'DEFLATE',
-			compressionOptions: { level: 3 },
+			compressionOptions: { level: 6 },
 		});
 	}
 
