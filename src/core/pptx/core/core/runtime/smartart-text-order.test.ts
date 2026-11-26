@@ -91,11 +91,12 @@ describe('smartArt text order annotation', () => {
 
 describe('smartArt text order scan', () => {
 	it('is linear in empty breaks and paragraphs that never close', () => {
-		const run = (count: number) => () =>
-			annotateSmartArtTextOrder(
-				`<dgm:dataModel><dgm:t><a:p>${'<a:br/>'.repeat(count)}${'<a:r>'.repeat(count)}</a:p></dgm:t></dgm:dataModel>`,
-				{},
-			);
+		const parsed = { 'dgm:dataModel': { 'dgm:t': { 'a:p': { 'a:r': {} } } } };
+		const run = (count: number) => () => {
+			const xml = `<dgm:dataModel><dgm:t><a:p>${'<a:br/>'.repeat(count)}${'<a:r>'.repeat(count)}</a:p></dgm:t></dgm:dataModel>`;
+			annotateSmartArtTextOrder(xml, {});
+			annotateSmartArtTextOrder(xml, parsed);
+		};
 		expect(growth(run(20_000), run(80_000))).toBeLessThan(8);
 	});
 

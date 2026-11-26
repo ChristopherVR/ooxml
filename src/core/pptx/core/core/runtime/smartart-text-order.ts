@@ -50,64 +50,63 @@ function collectParsedParagraphs(root: unknown): XmlObject[] {
 	return paragraphs;
 }
 
-/**
- * The local names of the direct children of every `elementName` element in `xml`, in document
- * order. An empty element parses to an object only when it has attributes, so only then does it
- * get an (empty) entry: entries pair with the parsed objects by index.
- */
-function extractElementOrders(xml: string, elementName: string): string[][] {
-	const orders: string[][] = [];
-	let open: string | undefined;
-	let depth = 0;
-	let order: string[] = [];
-	for (const tag of xmlTags(xml)) {
-		if (open === undefined) {
-			if (tag.closing || tag.local !== elementName) continue;
-			if (tag.selfClosing) {
-				if (tag.attributes.trim()) orders.push([]);
-				continue;
-			}
-			open = tag.name;
-			depth = 0;
-			order = [];
-		} else if (tag.closing) {
-			if (tag.name === open) {
-				orders.push(order);
-				open = undefined;
-			} else depth = Math.max(0, depth - 1);
-		} else {
-			if (depth === 0) order.push(tag.local);
-			if (!tag.selfClosing) depth++;
-		}
-	}
-	return orders;
-}
-
-function directChildrenByLocalName(paragraphs: XmlObject[], name: string): XmlObject[] {
-	return paragraphs.flatMap((paragraph) =>
-		Object.entries(paragraph).flatMap(([key, value]) => {
-			if (localName(key) !== name) {
-				return [];
-			}
-			const values = Array.isArray(value) ? value : [value];
-			return values.filter(isXmlObject);
-		}),
-	);
+interface OrderCursor {
+	name: string;
+	nodes: XmlObject[];
+	orders: string[][];
+	open: string | undefined;
+	depth: number;
+	order: string[];
 }
 
 /** Attach source item order to parsed SmartArt paragraph objects. */
 export function annotateSmartArtTextOrder(xml: string, parsed: unknown): void {
 	const paragraphs = collectParsedParagraphs(parsed);
-	const orders = extractElementOrders(xml, 'p');
-	for (let index = 0; index < Math.min(orders.length, paragraphs.length); index++) {
-		childOrder.set(at(paragraphs, index), at(orders, index));
-	}
-	for (const name of ['r', 'fld', 'br']) {
-		const nodes = directChildrenByLocalName(paragraphs, name);
-		const nodeOrders = extractElementOrders(xml, name);
-		for (let index = 0; index < Math.min(nodeOrders.length, nodes.length); index++) {
-			childOrder.set(at(nodes, index), at(nodeOrders, index));
+	if (paragraphs.length === 0) return;
+	const items = new Map<string, XmlObject[]>([
+		['r', []],
+		['fld', []],
+		['br', []],
+	]);
+	for (const paragraph of paragraphs) {
+		for (const [key, value] of Object.entries(paragraph)) {
+			const nodes = items.get(localName(key));
+			if (!nodes) continue;
+			for (const node of Array.isArray(value) ? value : [value]) {
+				if (isXmlObject(node)) nodes.push(node);
+			}
 		}
+	}
+	const cursors: OrderCursor[] = [['p', paragraphs] as const, ...items]
+		.filter(([, nodes]) => nodes.length > 0)
+		.map(([name, nodes]) => ({ name, nodes, orders: [], open: undefined, depth: 0, order: [] }));
+	// Pair source orders with the parsed nodes by occurrence, using one tag scan for every
+	// collection. Empty tags parse to objects only when they have attributes.
+	for (const tag of xmlTags(xml)) {
+		for (const cursor of cursors) {
+			if (cursor.orders.length >= cursor.nodes.length) continue;
+			if (cursor.open === undefined) {
+				if (tag.closing || tag.local !== cursor.name) continue;
+				if (tag.selfClosing) {
+					if (tag.attributes.trim()) cursor.orders.push([]);
+				} else {
+					cursor.open = tag.name;
+					cursor.depth = 0;
+					cursor.order = [];
+				}
+			} else if (tag.closing) {
+				if (tag.name === cursor.open) {
+					cursor.orders.push(cursor.order);
+					cursor.open = undefined;
+				} else cursor.depth = Math.max(0, cursor.depth - 1);
+			} else {
+				if (cursor.depth === 0) cursor.order.push(tag.local);
+				if (!tag.selfClosing) cursor.depth++;
+			}
+		}
+	}
+	for (const { nodes, orders } of cursors) {
+		for (const [index, order] of orders.entries()) childOrder.set(at(nodes, index), order);
 	}
 }
 
