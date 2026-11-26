@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { registerOfficeUi, type OfficeTab } from '../index';
+import type { OfficeUiContextMenu } from './context-menu';
 
 beforeAll(() => registerOfficeUi());
 afterEach(() => document.body.replaceChildren());
@@ -13,12 +14,6 @@ const key = (el: Element, k: string) =>
 	el.dispatchEvent(
 		new KeyboardEvent('keydown', { key: k, bubbles: true, composed: true, cancelable: true }),
 	);
-type ContextMenu = HTMLElement & {
-	open: boolean;
-	openAt(x: number, y: number): void;
-	close(): void;
-};
-
 describe('office-ui-context-menu', () => {
 	const markup = `<office-ui-context-menu label="Shape">
 		<office-ui-menu-item command="cut" label="Cut" disabled></office-ui-menu-item>
@@ -29,12 +24,14 @@ describe('office-ui-context-menu', () => {
 
 	it('opens at a point, skips disabled items and closes after a choice that bubbles', () => {
 		const opener = document.createElement('button');
-		const menu = make<ContextMenu>(markup);
+		const menu = make<OfficeUiContextMenu>(markup);
 		document.body.append(opener);
 		opener.focus();
 		const seen: string[] = [];
-		document.body.addEventListener('office-command', (e) =>
-			seen.push((e as CustomEvent).detail.command),
+		document.body.addEventListener(
+			'office-command',
+			(e) => seen.push((e as CustomEvent).detail.command),
+			{ once: true },
 		);
 		menu.openAt(40, 50);
 		expect(menu.open).toBe(true);
@@ -53,10 +50,35 @@ describe('office-ui-context-menu', () => {
 	});
 
 	it('closes with Escape', () => {
-		const menu = make<ContextMenu>(markup);
+		const menu = make<OfficeUiContextMenu>(markup);
 		menu.openAt(0, 0);
 		key(menu.querySelectorAll('office-ui-menu-item')[1]!, 'Escape');
 		expect(menu.open).toBe(false);
+	});
+
+	it('returns focus to the explicit opener instead of the previously focused control', () => {
+		const menu = make<OfficeUiContextMenu>(markup);
+		const previous = document.createElement('button');
+		const opener = document.createElement('button');
+		document.body.append(previous, opener);
+		previous.focus();
+		menu.openAt(0, 0, opener);
+		menu.close();
+		expect(document.activeElement).toBe(opener);
+	});
+
+	it('returns focus inside a shadow root when no opener is passed', () => {
+		const menu = make<OfficeUiContextMenu>(markup);
+		const host = document.createElement('div');
+		const shadow = host.attachShadow({ mode: 'open' });
+		const opener = document.createElement('button');
+		shadow.append(opener);
+		document.body.append(host);
+		opener.focus();
+		menu.openAt(0, 0);
+		expect(shadow.activeElement).toBeNull();
+		menu.close();
+		expect(shadow.activeElement).toBe(opener);
 	});
 });
 
