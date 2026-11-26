@@ -1,7 +1,7 @@
 // Cross-module checks over every fixture: load, view, edit, save, reload.
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 import { formatAddress } from './address';
 import { forEachCell } from './cells';
 import { createEditSession } from './edit/session';
@@ -100,11 +100,16 @@ async function roundTrip(workbook: Workbook): Promise<Workbook> {
 }
 
 describe.each(XLSX)('fixture %s', (name) => {
+	let original: Promise<Workbook> | undefined;
+	const copy = async () => structuredClone(await (original ??= loadXlsx(bytes(name))));
+	afterAll(() => {
+		original = undefined;
+	});
 	it('views cells, conditional formats, charts and equations without throwing', async () => {
-		expect(viewEverything(await loadXlsx(bytes(name)))).toBeGreaterThan(0);
+		expect(viewEverything(await copy())).toBeGreaterThan(0);
 	});
 	it('edits, saves and reloads to the same cells (and is stable on a second save)', async () => {
-		const workbook = await loadXlsx(bytes(name));
+		const workbook = await copy();
 		edit(workbook);
 		const before = snapshot(workbook);
 		const once = await roundTrip(workbook);
@@ -125,6 +130,7 @@ describe.each(XLS)('legacy fixture %s', (name) => {
 		edit(workbook);
 		const before = snapshot(workbook);
 		const once = await roundTrip(workbook);
-		for (const [key, entry] of before) expect(snapshot(once).get(key), key).toEqual(entry);
+		const after = snapshot(once);
+		for (const [key, entry] of before) expect(after.get(key), key).toEqual(entry);
 	});
 });

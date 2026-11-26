@@ -41,14 +41,9 @@ const stripped = (space: ChartSpace): unknown =>
 	);
 
 /** The hash of a part's model without its `sourceXml` copies. */
-function modelHash(xml: string): string {
-	const model = stable(stripped(parseChartSpace(xml).chartSpace));
+function modelHash(space: ChartSpace): string {
+	const model = stable(stripped(space));
 	return createHash('sha256').update(JSON.stringify(model)).digest('hex').slice(0, 16);
-}
-
-/** The fingerprint of a saved part (see the file comment). */
-export function chartPartFingerprint(source: string, saved: string): string {
-	return saved === source ? '=' : modelHash(saved);
 }
 
 function stable(value: unknown): unknown {
@@ -169,9 +164,10 @@ export function describeChartSaveParity(include: (id: string) => boolean): void 
 	const ids = Object.keys(recorded).filter(include);
 	let charts: Promise<ParityChart[]> | undefined;
 	it.each(ids)('saves %s like the DOM patch path did', async (id) => {
-		const chart = (await (charts ??= parityCharts())).find((item) => item.id === id);
+		const chart = (await (charts ??= parityCharts(new Set(ids)))).find((item) => item.id === id);
 		expect(chart, `chart ${id} is in the corpus`).toBeDefined();
 		const row = recorded[id]!;
+		let sourceSpace: ChartSpace | undefined;
 		for (const [i, kind] of kinds.entries()) {
 			const result = await runParityEdit(chart!, PARITY_EDITS[kind]!);
 			const key = `${id} :: ${kind}`;
@@ -183,14 +179,21 @@ export function describeChartSaveParity(include: (id: string) => boolean): void 
 			expect(result, key).toBeDefined();
 			const { source, saved } = result!;
 			// The same model, or the source itself where the DOM path saved it byte for byte.
-			const same = expected === '=' ? saved === source : modelHash(saved) === expected;
+			const savedSpace = expected === '=' ? undefined : parseChartSpace(saved).chartSpace;
+			const hash = savedSpace && modelHash(savedSpace);
+			const same = expected === '=' ? saved === source : hash === expected;
 			if (same) continue;
 			const difference = KNOWN_DIFFERENCES[kind]?.check ?? CASE_DIFFERENCES[key];
 			if (difference) {
-				difference(parseChartSpace(saved).chartSpace, parseChartSpace(source).chartSpace);
+				difference(
+					savedSpace ?? parseChartSpace(saved).chartSpace,
+					(sourceSpace ??= parseChartSpace(source).chartSpace),
+				);
 				continue;
 			}
-			expect(chartPartFingerprint(source, saved), key).toBe(expected);
+			const fingerprint =
+				saved === source ? '=' : (hash ?? modelHash(parseChartSpace(saved).chartSpace));
+			expect(fingerprint, key).toBe(expected);
 		}
 	});
 }

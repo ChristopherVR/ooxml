@@ -70,9 +70,10 @@ export async function withChartPart(xml: string): Promise<Workbook> {
 type Json = Record<string, unknown>;
 
 /** Every classic chart part the JSON evidence files carry, by file and case. */
-function jsonParts(): [string, string][] {
+function jsonParts(ids: readonly string[]): [string, string][] {
 	const out: [string, string][] = [];
 	for (const name of readdirSync(FIXTURES).filter((file) => /^excel-.*\.json$/.test(file))) {
+		if (!ids.some((id) => id.startsWith(`${name}#`))) continue;
 		const data = JSON.parse(readFileSync(path.join(FIXTURES, name), 'utf8')) as Json;
 		const cases = Array.isArray(data['cases']) ? (data['cases'] as Json[]) : [];
 		cases.forEach((entry, i) => {
@@ -87,10 +88,12 @@ function jsonParts(): [string, string][] {
 	return out;
 }
 
-/** The corpus: packaged workbooks' charts, then the evidence files' parts. */
-export async function parityCharts(): Promise<ParityChart[]> {
+/** Loads each selected workbook once. Every edit gets an independent copy of its model and parts. */
+export async function parityCharts(ids: ReadonlySet<string>): Promise<ParityChart[]> {
 	const charts: ParityChart[] = [];
+	const selected = [...ids];
 	for (const name of readdirSync(FIXTURES).filter((file) => file.endsWith('.xlsx'))) {
+		if (!selected.some((id) => id.startsWith(`${name} `))) continue;
 		const bytes = readFileSync(path.join(FIXTURES, name));
 		let book: Workbook;
 		try {
@@ -98,21 +101,19 @@ export async function parityCharts(): Promise<ParityChart[]> {
 		} catch {
 			continue;
 		}
+		const load = async () => structuredClone(book);
 		book.sheets.forEach((sheet, s) =>
 			sheet.drawings.forEach((drawing, index) => {
-				if (drawing.kind === 'chart' && drawing.partName)
-					charts.push({
-						id: `${name} ${drawing.partName}`,
-						load: () => loadXlsx(bytes),
-						sheet: s,
-						index,
-					});
+				if (drawing.kind !== 'chart' || !drawing.partName) return;
+				const id = `${name} ${drawing.partName}`;
+				if (ids.has(id)) charts.push({ id, load, sheet: s, index });
 			}),
 		);
 	}
-	for (const [id, xml] of jsonParts()) {
-		let bytes: Promise<Uint8Array> | undefined;
-		const load = async () => loadXlsx(await (bytes ??= withChartPartBytes(xml)));
+	for (const [id, xml] of jsonParts(selected)) {
+		if (!ids.has(id)) continue;
+		let original: Promise<Workbook> | undefined;
+		const load = async () => structuredClone(await (original ??= withChartPart(xml)));
 		charts.push({ id, load, sheet: 0, index: 0 });
 	}
 	return charts;
