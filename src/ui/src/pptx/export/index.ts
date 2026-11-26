@@ -108,6 +108,7 @@ export * from './rasterize-element-strategy';
 // limit of their own.
 export * from './rasterize-element-tiles';
 export * from './rasterize-element';
+export * from './export-root-size';
 // Pure pixel-index math combining one tile-row's per-tile RGBA buffers into a
 // full-width row-band, consumed by `rasterize-element.ts`'s PNG-stitch path.
 export * from './tile-row-stitch';

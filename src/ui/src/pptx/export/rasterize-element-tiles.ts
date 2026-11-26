@@ -95,6 +95,7 @@ export async function rasterizeElementTiles(
 						width: naturalWidth,
 						height: naturalHeight,
 						backgroundColor: options.backgroundColor,
+						untransformedRoot: options.untransformedRoot,
 					},
 				);
 

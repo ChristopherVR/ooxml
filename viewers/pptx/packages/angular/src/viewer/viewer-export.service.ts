@@ -24,6 +24,7 @@ import {
 	EXPORT_DONE_PERCENT,
 	isExportAbortError,
 	linkedContentView,
+	measureExportRoot,
 	runPdfExport,
 	slideProgressPercent,
 	recordProgressPercent,
@@ -163,7 +164,15 @@ export class ViewerExportService {
 						...selection,
 						mountSlide: async (index) => {
 							const stage = await flipToSlide(host, index);
-							return stage ? { stage, html2canvasFallback: html2canvasFallbackFor(stage) } : null;
+							return stage
+								? {
+										stage,
+										html2canvasFallback: html2canvasFallbackFor(
+											stage,
+											measureExportRoot(stage).untransformedRoot,
+										),
+									}
+								: null;
 						},
 						rasterScale: host.imageExportScale?.() ?? 2,
 						title: 'presentation',

@@ -12,6 +12,7 @@ import { jsPDF } from 'jspdf';
 import {
 	canvasToJpegData,
 	isExportIgnoredElement,
+	measureExportRoot,
 	placeTileOnPage,
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
@@ -19,8 +20,10 @@ import {
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
 	sanitizeDownloadFilename,
+	untransformExportClone,
 } from 'ooxml-ui/pptx';
 import type {
+	RasterizeElementOptions,
 	RasterOutputSize,
 	RasterSourceRect,
 	RasterizeElementTilesResult,
@@ -36,6 +39,7 @@ import { pdfPageSize } from './export-helpers';
  */
 export function html2canvasFallbackFor(
 	el: HTMLElement,
+	untransformedRoot = false,
 ): (sourceRect: RasterSourceRect, outputSize: RasterOutputSize) => Promise<HTMLCanvasElement> {
 	return (sourceRect, outputSize) =>
 		renderToCanvas(el, {
@@ -45,13 +49,30 @@ export function html2canvasFallbackFor(
 			y: sourceRect.y,
 			width: sourceRect.width,
 			height: sourceRect.height,
+			...(untransformedRoot && {
+				onclone: (_doc: Document, clone: HTMLElement) => untransformExportClone(clone),
+			}),
 		});
 }
 
-/** The element's natural (1x) CSS-pixel size the shared rasterizers scale from. */
-function naturalSizeOf(el: HTMLElement): { width: number; height: number } {
-	const rect = el.getBoundingClientRect();
-	return { width: rect.width || el.offsetWidth, height: rect.height || el.offsetHeight };
+/**
+ * The size to rasterise `el` at and the matching options: a zoomed stage is drawn at its layout
+ * size without its zoom (`measureExportRoot`), so the export does not follow the window.
+ */
+function rasterRoot(
+	el: HTMLElement,
+	scale: number,
+): { width: number; height: number; options: RasterizeElementOptions } {
+	const root = measureExportRoot(el);
+	return {
+		width: root.width,
+		height: root.height,
+		options: {
+			scale,
+			untransformedRoot: root.untransformedRoot,
+			html2canvasFallback: html2canvasFallbackFor(el, root.untransformedRoot),
+		},
+	};
 }
 
 /**
@@ -62,11 +83,8 @@ function naturalSizeOf(el: HTMLElement): { width: number; height: number } {
  * "copy slide as image", whose PNG encoder can consume tiled output.
  */
 export async function renderElementPngBlob(el: HTMLElement, scale: number = 2): Promise<Blob> {
-	const { width, height } = naturalSizeOf(el);
-	const result = await rasterizeElement(el, width, height, el.ownerDocument, {
-		scale,
-		html2canvasFallback: html2canvasFallbackFor(el),
-	});
+	const { width, height, options } = rasterRoot(el, scale);
+	const result = await rasterizeElement(el, width, height, el.ownerDocument, options);
 	return rasterResultToPngBlob(result);
 }
 
@@ -76,11 +94,8 @@ export async function renderElementPngBlob(el: HTMLElement, scale: number = 2): 
  * `Blob` to download.
  */
 export async function renderElementPngDataUrl(el: HTMLElement, scale: number = 2): Promise<string> {
-	const { width, height } = naturalSizeOf(el);
-	const result = await rasterizeElement(el, width, height, el.ownerDocument, {
-		scale,
-		html2canvasFallback: html2canvasFallbackFor(el),
-	});
+	const { width, height, options } = rasterRoot(el, scale);
+	const result = await rasterizeElement(el, width, height, el.ownerDocument, options);
 	return rasterResultToPngDataUrl(result);
 }
 
@@ -97,11 +112,8 @@ export async function renderElementTiled(
 	el: HTMLElement,
 	scale: number = 2,
 ): Promise<HTMLCanvasElement> {
-	const { width, height } = naturalSizeOf(el);
-	const result = await rasterizeElementTiledToCanvas(el, width, height, el.ownerDocument, {
-		scale,
-		html2canvasFallback: html2canvasFallbackFor(el),
-	});
+	const { width, height, options } = rasterRoot(el, scale);
+	const result = await rasterizeElementTiledToCanvas(el, width, height, el.ownerDocument, options);
 	return result.canvas;
 }
 
@@ -116,11 +128,8 @@ export async function renderElementTilesRaster(
 	el: HTMLElement,
 	scale: number = 2,
 ): Promise<RasterizeElementTilesResult> {
-	const { width, height } = naturalSizeOf(el);
-	return rasterizeElementTiles(el, width, height, el.ownerDocument, {
-		scale,
-		html2canvasFallback: html2canvasFallbackFor(el),
-	});
+	const { width, height, options } = rasterRoot(el, scale);
+	return rasterizeElementTiles(el, width, height, el.ownerDocument, options);
 }
 
 /**

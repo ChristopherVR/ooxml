@@ -47,6 +47,11 @@ export interface RasterizeElementOptions {
 	onStrategyFailed?: RasterStrategyOptions['onStrategyFailed'];
 	/** Called after each tile finishes, for progress UI on large tiled exports. */
 	onTileProgress?: (done: number, total: number) => void;
+	/**
+	 * Draw the element without its own transform, at its layout size: for a zoomed slide stage
+	 * (see `measureExportRoot`). The html2canvas fallback must drop it as well.
+	 */
+	untransformedRoot?: boolean;
 }
 
 /** The common case: a normal canvas any `toBlob`/`toDataURL` caller can use directly. */

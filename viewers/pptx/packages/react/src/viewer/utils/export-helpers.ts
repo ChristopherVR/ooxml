@@ -10,13 +10,16 @@
 import {
 	downloadBlob,
 	downloadDataUrl,
+	measureExportRoot,
 	rasterizeElement,
 	rasterizeElementTiledToCanvas,
 	rasterizeElementTiles,
 	rasterResultToPngBlob,
 	rasterResultToPngDataUrl,
+	untransformExportClone,
 } from 'ooxml-ui/pptx';
 import type {
+	ExportRootSize,
 	RasterizeElementOptions,
 	RasterizeElementResult,
 	RasterizeElementTiledCanvasResult,
@@ -94,19 +97,6 @@ export function ignoreExportOverlayElements(el: Element): boolean {
 }
 
 /**
- * The element's natural (1x) CSS-pixel size the shared driver rasterises at.
- * `offsetWidth`/`offsetHeight` cover an element whose client rect is empty
- * (e.g. detached or `display: contents` wrappers in tests).
- */
-function measureNaturalSize(element: HTMLElement): { width: number; height: number } {
-	const rect = element.getBoundingClientRect();
-	return {
-		width: rect.width || element.offsetWidth,
-		height: rect.height || element.offsetHeight,
-	};
-}
-
-/**
  * The one place React maps its `html2canvas-pro` driver (`renderToCanvas`)
  * onto the shared driver's option shape. The shared pipeline asks for one
  * *window* at a time (`sourceRect` in CSS px, `outputSize` in device px), so
@@ -115,6 +105,7 @@ function measureNaturalSize(element: HTMLElement): { width: number; height: numb
  */
 function buildRasterOptions(
 	element: HTMLElement,
+	root: ExportRootSize,
 	scale: number,
 	backgroundColor: string | undefined,
 	mode: RasterMode,
@@ -123,6 +114,7 @@ function buildRasterOptions(
 		scale,
 		backgroundColor,
 		mode,
+		untransformedRoot: root.untransformedRoot,
 		html2canvasFallback: (sourceRect, outputSize) =>
 			renderToCanvas(element, {
 				scale: outputSize.width / (sourceRect.width || 1),
@@ -135,6 +127,9 @@ function buildRasterOptions(
 				backgroundColor: backgroundColor ?? null,
 				logging: false,
 				ignoreElements: ignoreExportOverlayElements,
+				...(root.untransformedRoot && {
+					onclone: (_doc: Document, clone: HTMLElement) => untransformExportClone(clone),
+				}),
 			}),
 	};
 }
@@ -159,13 +154,13 @@ export async function renderElementToRaster(
 	backgroundColor?: string,
 	mode: RasterMode = 'auto',
 ): Promise<RasterizeElementResult> {
-	const { width, height } = measureNaturalSize(element);
+	const root = measureExportRoot(element);
 	return rasterizeElement(
 		element,
-		width,
-		height,
+		root.width,
+		root.height,
 		element.ownerDocument,
-		buildRasterOptions(element, scale, backgroundColor, mode),
+		buildRasterOptions(element, root, scale, backgroundColor, mode),
 	);
 }
 
@@ -198,13 +193,13 @@ export async function renderElementToTiles(
 	backgroundColor?: string,
 	mode: RasterMode = 'auto',
 ): Promise<RasterizeElementTilesResult> {
-	const { width, height } = measureNaturalSize(element);
+	const root = measureExportRoot(element);
 	return rasterizeElementTiles(
 		element,
-		width,
-		height,
+		root.width,
+		root.height,
 		element.ownerDocument,
-		buildRasterOptions(element, scale, backgroundColor, mode),
+		buildRasterOptions(element, root, scale, backgroundColor, mode),
 	);
 }
 
@@ -223,13 +218,13 @@ export async function renderElementToTiledCanvas(
 	backgroundColor?: string,
 	mode: RasterMode = 'auto',
 ): Promise<RasterizeElementTiledCanvasResult> {
-	const { width, height } = measureNaturalSize(element);
+	const root = measureExportRoot(element);
 	return rasterizeElementTiledToCanvas(
 		element,
-		width,
-		height,
+		root.width,
+		root.height,
 		element.ownerDocument,
-		buildRasterOptions(element, scale, backgroundColor, mode),
+		buildRasterOptions(element, root, scale, backgroundColor, mode),
 	);
 }
 

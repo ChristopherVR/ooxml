@@ -3,7 +3,7 @@
  * live slide stage after each slide switch, or the picture export (`exportAllSlidesAsPdf`)
  * when Options > Advanced > "Save slides as pictures" is on.
  */
-import { runPdfExport } from 'ooxml-ui/pptx';
+import { measureExportRoot, runPdfExport, untransformExportClone } from 'ooxml-ui/pptx';
 import type {
 	CanvasSize,
 	CompatibilityWarningToast,
@@ -74,6 +74,10 @@ export async function exportPresentationPdf(
 						backgroundColor: null,
 						logging: false,
 						ignoreElements: ignoreExportOverlayElements,
+						// The vector pass draws the stage without its zoom; the fallback must match.
+						...(measureExportRoot(stage).untransformedRoot && {
+							onclone: (_doc: Document, clone: HTMLElement) => untransformExportClone(clone),
+						}),
 					});
 				},
 				ignoreElement: ignoreExportOverlayElements,

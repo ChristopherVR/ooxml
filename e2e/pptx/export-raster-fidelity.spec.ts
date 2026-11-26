@@ -368,5 +368,12 @@ test.describe('raster export fidelity: foreignObject vs html2canvas vs on-screen
 			foreignObjectVsScreen.diffPixelFraction,
 			'foreignObject must not be a worse match to the live render than html2canvas is',
 		).toBeLessThanOrEqual(html2canvasVsScreen.diffPixelFraction + 0.02);
+		// The relative check alone passed while React and Angular exported the zoomed on-screen
+		// stage into the corner of the canvas (0.21 and 0.89), since both paths were equally wrong.
+		// Measured 2026-11-26 after the fix: 0.012 (react, angular), 0.060 (vue, svelte, vanilla).
+		expect(
+			foreignObjectVsScreen.diffPixelFraction,
+			'the default export must match the live render, not only beat html2canvas',
+		).toBeLessThan(0.15);
 	});
 });
