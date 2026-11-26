@@ -119,7 +119,7 @@ Visio hide individual controls through `hiddenActions`.
 ### Ribbon command IDs
 
 Word's `hiddenActions: ['add-comment']` hides both Insert > Comment and Review > Add comment.
-Use `insert-column-break` for Layout > Breaks and `link-to-previous` for the Header & Footer
+Use `insert-column-break` for Layout > Breaks and `header-footer-link` for the Header & Footer
 contextual tab. Use `online-video` to hide the disabled Word Insert > Media command.
 
 Excel retains `insert.note` for Review > Notes > New Note. Use `sparkline` in `ribbon.hiddenTabs`
