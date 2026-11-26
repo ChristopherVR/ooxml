@@ -1,3 +1,4 @@
+import { ribbonTabCueLabel } from '../ribbon/ribbon-tab-cue-label';
 import { defineRibbon } from '../controls';
 import { shortcutHint } from './binding-labels';
 import { emit } from './events';
@@ -178,6 +179,7 @@ export function setRibbonLocale(root: HTMLElement, value: string): void {
 		if (!('addIn' in panel.dataset))
 			panel.dataset.label = translate(locale, `tab.${panel.dataset.ribbonTab}` as LocalizationKey);
 	root.setAttribute('file-label', translate(locale, 'File'));
+	root.setAttribute('overflow-label', ribbonTabCueLabel(locale));
 	root.setAttribute('collapse-label', translate(locale, 'Collapse the ribbon'));
 	syncSelectTitles(root);
 	syncButtonTitles(root);

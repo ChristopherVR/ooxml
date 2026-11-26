@@ -4,6 +4,7 @@ import { OfficeElement, controlStyles, flag } from '../base';
 import { glyph } from '../glyph';
 import { definer, present } from '../registry';
 import { SHORT_VIEWPORT_MEDIA, resolveCollapsed } from './auto-collapse';
+import { wireRibbonTabCue } from './ribbon-tab-cue';
 import css from './ribbon-tabs.css?raw';
 
 /** Emitted when the user picks a tab; cancelable (`preventDefault()` keeps the current tab). */
@@ -83,6 +84,7 @@ export class OfficeUiRibbon extends OfficeElement {
 	declare collapseLabel: string | null;
 	declare items: readonly OfficeRibbonTabItem[] | null;
 	declare tabs: RibbonTab[];
+	private stopTabCue: (() => void) | undefined;
 	private chosen: string | null = null;
 
 	constructor() {
@@ -297,6 +299,8 @@ export class OfficeUiRibbon extends OfficeElement {
 		this.addEventListener('keydown', this.onHostKey);
 		this.shortQuery = this.ownerDocument.defaultView?.matchMedia?.(SHORT_VIEWPORT_MEDIA);
 		this.shortQuery?.addEventListener('change', this.applyAuto);
+		if (this.hasAttribute('overflow-label'))
+			this.stopTabCue = wireRibbonTabCue(this, () => this.getAttribute('overflow-label') ?? '');
 		this.applyAuto();
 		const Observer = this.ownerDocument.defaultView?.MutationObserver;
 		this.watcher = Observer ? new Observer(() => this.build()) : undefined;
@@ -311,6 +315,7 @@ export class OfficeUiRibbon extends OfficeElement {
 		super.disconnectedCallback();
 		this.removeEventListener('keydown', this.onHostKey);
 		this.watcher?.disconnect();
+		this.stopTabCue?.();
 		this.shortQuery?.removeEventListener('change', this.applyAuto);
 		this.ownerDocument.removeEventListener('pointerdown', this.onOutside, true);
 		this.watcher = undefined;

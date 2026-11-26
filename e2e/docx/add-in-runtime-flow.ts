@@ -75,7 +75,15 @@ export async function checkAddInRuntime({ page, editor, openDialog, host }: Flow
 		await expect(dialog).toBeHidden();
 
 		if (file.name === 'manifest.json') {
-			await editor.getByRole('tab', { name: addInName, exact: true }).click();
+			const tab = editor.getByRole('tab', { name: addInName, exact: true });
+			if (host !== 'PowerPoint' && (page.viewportSize()?.width ?? 0) === 800) {
+				const more = editor.getByRole('button', { name: 'More tabs', exact: true });
+				await expect(more).toBeVisible();
+				await more.focus();
+				await more.press('Enter');
+				await expect(tab).toBeInViewport();
+			}
+			await tab.click();
 			if (host === 'PowerPoint')
 				await expect(editor.locator('[data-pptx-chrome="ribbon-content"]:visible')).toHaveCount(0);
 			await editor.getByRole('button', { name: 'Open Notes', exact: true }).click();

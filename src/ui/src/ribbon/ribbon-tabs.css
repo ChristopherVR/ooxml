@@ -87,6 +87,27 @@
 	outline: var(--office-focus-width) solid var(--office-ring-on-accent);
 	outline-offset: calc(-1 * var(--office-focus-width));
 }
+::slotted(.tab-scroll-more) {
+	flex: none;
+	align-self: center;
+	inline-size: var(--office-target-size);
+	block-size: var(--office-target-size);
+	margin-inline: var(--office-space-1);
+	padding: 0;
+	border: var(--office-border-width) solid var(--office-border);
+	border-radius: var(--office-radius);
+	background: var(--office-background);
+	color: var(--office-foreground);
+	font: inherit;
+	font-size: var(--office-font-size-lg);
+	cursor: pointer;
+}
+::slotted(.tab-scroll-more[hidden]) {
+	display: none;
+}
+::slotted(.tab-scroll-more:focus-visible) {
+	outline: var(--office-focus-width) solid var(--office-ring);
+}
 ::slotted([slot='search']) {
 	align-self: center;
 }
