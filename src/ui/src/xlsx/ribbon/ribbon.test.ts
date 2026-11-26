@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { flush, shellFixture, spyCommand } from '../test-support/shell';
 import { createRibbon } from './ribbon';
-import { tabButton, type RibbonElement } from 'ooxml-core/xlsx/ui';
+import { loadEditorStrings, tabButton, type RibbonElement } from 'ooxml-core/xlsx/ui';
 import { registerRibbonTabs, resetRibbonTabs, type RibbonTab } from 'ooxml-core/xlsx/ui';
 import { collectKeyTips } from './keytips';
 import { closeRibbonPopover } from './popover';
@@ -302,6 +302,7 @@ describe('ribbon renderer', () => {
 	it('relocalizes tab and group captions on rebuild', async () => {
 		const { ribbon, core } = setup();
 		core.setLocale('fr');
+		await loadEditorStrings('fr');
 		ribbon.rebuild();
 		await flush();
 		const element = ribbon.element as RibbonElement;

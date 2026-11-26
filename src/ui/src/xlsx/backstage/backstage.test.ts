@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createWorkbook } from 'ooxml-core/xlsx';
 import { createBackstage, type BackstageHost, type EditorOptions } from './index';
-import { registerRibbonTabs, resetRibbonTabs } from 'ooxml-core/xlsx/ui';
+import { loadEditorStrings, registerRibbonTabs, resetRibbonTabs } from 'ooxml-core/xlsx/ui';
 import { shellFixture, spyCommand } from '../test-support/shell';
 
 function setup(workbook = createWorkbook(), extra: Partial<EditorOptions> = {}) {
@@ -252,9 +252,10 @@ describe('File backstage', () => {
 		expect(calls.filter((call) => call[1] === 'allowFontDownloads')).toEqual([]);
 	});
 
-	it('follows the display language', () => {
+	it('follows the display language', async () => {
 		const { backstage, el, core } = setup();
 		core.setLocale('fr');
+		await loadEditorStrings('fr');
 		backstage.relocalize();
 		backstage.open();
 		expect(el.querySelector('h2')!.textContent).toBe('Informations');

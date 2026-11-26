@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { createEditSession, createWorkbook } from 'ooxml-core/xlsx';
+import { loadEditorStrings } from 'ooxml-core/xlsx/ui';
 import { createStatusBar, statisticsText } from './status-bar';
 import { createTitleBar } from './title-bar';
 import { createRibbonActions } from './ribbon-actions';
@@ -146,6 +147,7 @@ describe('title bar', () => {
 		await flush();
 		expect(undo.runs).toHaveLength(1);
 		core.setLocale('es');
+		await loadEditorStrings('es');
 		bar.relocalize();
 		root = await drawn();
 		expect(root.querySelector('.status')!.textContent).toBe('Cambios sin guardar');
@@ -213,6 +215,7 @@ describe('ribbon actions', () => {
 		actions.refresh();
 		expect(shareButton.hidden).toBe(true);
 		core.setLocale('fr');
+		await loadEditorStrings('fr');
 		actions.relocalize();
 		expect(select.options[0]!.textContent).not.toBe('Editing');
 		expect(commentsButton.textContent).not.toBe('Comments');
