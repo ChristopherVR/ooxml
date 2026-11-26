@@ -148,8 +148,15 @@ export const buildXml = (node: XmlNode): string => {
 };
 
 export const isElement = (node: Node): node is XmlElement => node.nodeType === 1;
-export const elements = (parent: ParentNode): XmlElement[] =>
-	Array.from(parent.childNodes).filter(isElement);
+export function elements(parent: ParentNode): XmlElement[] {
+	const result: XmlElement[] = [];
+	const nodes = parent.childNodes;
+	for (let index = 0; index < nodes.length; index++) {
+		const node = nodes[index];
+		if (node && isElement(node)) result.push(node);
+	}
+	return result;
+}
 export const textContent = (element: XmlElement): string => element.textContent ?? '';
 export const makeNS = (doc: XmlDocument, ns: string, qualified: string): XmlElement =>
 	doc.createElementNS(ns, qualified);
@@ -177,12 +184,20 @@ export const children = (
 ): XmlElement[] => elements(parent).filter((element) => named(element, local, ns, lenient));
 
 /** The first direct child element named `local` in `ns`. */
-export const first = (
+export function first(
 	parent: ParentNode | null | undefined,
 	local: string,
 	ns: string,
 	lenient = true,
-): XmlElement | undefined => (parent ? children(parent, local, ns, lenient)[0] : undefined);
+): XmlElement | undefined {
+	if (!parent) return undefined;
+	const nodes = parent.childNodes;
+	for (let index = 0; index < nodes.length; index++) {
+		const node = nodes[index];
+		if (node && isElement(node) && named(node, local, ns, lenient)) return node;
+	}
+	return undefined;
+}
 
 /** An attribute by namespace and local name, falling back to the `prefix:local` form. */
 export function attr(
