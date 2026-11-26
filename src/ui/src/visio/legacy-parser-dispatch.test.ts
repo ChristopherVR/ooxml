@@ -54,7 +54,8 @@ describe('unified legacy parser dispatch', () => {
 		const worker: {
 			onmessage: ((event: MessageEvent<ArrayBuffer>) => Promise<void>) | null;
 			postMessage: ReturnType<typeof vi.fn>;
-		} = { onmessage: null, postMessage: vi.fn() };
+			importScripts: () => void;
+		} = { onmessage: null, postMessage: vi.fn(), importScripts: () => {} };
 		vi.stubGlobal('self', worker);
 		await import('./parse-worker');
 		expect(worker.onmessage).toBeTypeOf('function');
@@ -63,8 +64,15 @@ describe('unified legacy parser dispatch', () => {
 			loadVisio.mockResolvedValueOnce(document);
 			await worker.onmessage!({ data: bytes.buffer } as MessageEvent<ArrayBuffer>);
 			expect(loadVisio).toHaveBeenLastCalledWith(bytes.buffer, {
-				metafileConverter: convertMetafileToSvgTree,
+				metafileConverter: expect.any(Function),
 			});
+			// The worker loads the decoder on first use and delegates to it.
+			const options = loadVisio.mock.lastCall?.[1] as {
+				metafileConverter: (...args: unknown[]) => Promise<unknown>;
+			};
+			convertMetafileToSvgTree.mockResolvedValueOnce('tree');
+			await expect(options.metafileConverter('emf')).resolves.toBe('tree');
+			expect(convertMetafileToSvgTree).toHaveBeenLastCalledWith('emf');
 			expect(worker.postMessage).toHaveBeenLastCalledWith({ ok: true, document });
 		}
 		loadVisio.mockRejectedValueOnce(new Error('bounded legacy input rejected'));
