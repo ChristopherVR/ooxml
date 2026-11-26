@@ -5,6 +5,7 @@ import type { XmlObject } from '../types';
 import { captureNativeAnimationTemplate } from './animation-paint-template';
 import { indexEffectNodes } from './animation-timing-tree';
 import { writeOwnedEffectKeys } from './animation-timing-ownership';
+import { simpleCondition } from './native-animation-click-timing';
 import { editNativeEffectTiming } from './native-animation-edit';
 import { PptxAnimationWriteService } from './PptxAnimationWriteService';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
@@ -93,6 +94,146 @@ describe('imported animation edits', () => {
 		expect(first).toMatchObject({ targetId: '7', trigger: 'onClick' });
 		expect(next).toMatchObject({ targetId: '8', startMode: 'withPrevious', delayMs: 360 });
 		expect(next?.parGroupIndex).toBe(first?.parGroupIndex);
+	});
+
+	it('retimes both dependent After Previous offsets through save and reparse', () => {
+		const source = must(
+			writer.buildTimingXml(
+				[
+					{ elementId: '7', entrance: 'fadeIn', durationMs: 500 },
+					{ elementId: '8', entrance: 'fadeIn', durationMs: 600, trigger: 'afterPrevious' },
+					{ elementId: '9', entrance: 'fadeIn', durationMs: 700, trigger: 'afterPrevious' },
+				],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(source, new Set());
+		const refs = indexEffectNodes(source);
+		for (const [index, offset] of [
+			[1, 500],
+			[2, 1100],
+		] as const) {
+			const wrapper = must(refs[index]?.chain.at(-2));
+			must(simpleCondition(wrapper.node))['@_delay'] = String(offset);
+		}
+		const animations = parse(source);
+		const edited = must(
+			editNativeEffectTiming(source, animations, must(animations[0]?.nodeId), {
+				field: 'duration',
+				value: 900,
+			}),
+		);
+		const delayed = must(
+			editNativeEffectTiming(
+				edited.rawTiming,
+				edited.nativeAnimations,
+				must(animations[0]?.nodeId),
+				{ field: 'delay', value: 120 },
+			),
+		);
+		const offsets = (effects: readonly { parGroupDelayMs?: number | undefined }[]) =>
+			effects.map(({ parGroupDelayMs }) => parGroupDelayMs);
+		expect(offsets(delayed.nativeAnimations)).toEqual([0, 1020, 1620]);
+		expect(offsets(parse(must(writer.buildTimingXml([], delayed.rawTiming))))).toEqual([
+			0, 1020, 1620,
+		]);
+		expect(offsets(parse(source))).toEqual([0, 500, 1100]);
+	});
+
+	it('starts After Previous at the longest end in a With Previous wrapper', () => {
+		const source = must(
+			writer.buildTimingXml(
+				[
+					{ elementId: '7', entrance: 'fadeIn', durationMs: 1300 },
+					{ elementId: '8', entrance: 'fadeIn', durationMs: 600 },
+					{ elementId: '9', entrance: 'fadeIn', durationMs: 700 },
+				],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(source, new Set());
+		const animations = parse(source);
+		const overlapped = must(
+			editNativeEffectTiming(source, animations, must(animations[1]?.nodeId), {
+				field: 'start',
+				value: 'withPrevious',
+			}),
+		);
+		const moved = must(
+			editNativeEffectTiming(
+				overlapped.rawTiming,
+				overlapped.nativeAnimations,
+				must(animations[2]?.nodeId),
+				{ field: 'start', value: 'afterPrevious' },
+			),
+		);
+		const [first, sibling, after] = parse(must(writer.buildTimingXml([], moved.rawTiming)));
+		expect(sibling?.parGroupIndex).toBe(first?.parGroupIndex);
+		expect(after).toMatchObject({ startMode: 'afterPrevious', parGroupDelayMs: 1300 });
+	});
+
+	it('keeps later With Previous siblings attached when moving their first effect', () => {
+		const rawTiming = must(
+			writer.buildTimingXml(
+				[
+					{ elementId: '7', entrance: 'fadeIn', durationMs: 1300 },
+					{ elementId: '8', entrance: 'fadeIn', durationMs: 600 },
+					{ elementId: '9', entrance: 'fadeIn', durationMs: 700 },
+				],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(rawTiming, new Set());
+		let patch = { rawTiming, nativeAnimations: parse(rawTiming) };
+		for (const index of [1, 2]) {
+			patch = must(
+				editNativeEffectTiming(
+					patch.rawTiming,
+					patch.nativeAnimations,
+					must(patch.nativeAnimations[index]?.nodeId),
+					{ field: 'start', value: 'withPrevious' },
+				),
+			);
+		}
+		patch = must(
+			editNativeEffectTiming(
+				patch.rawTiming,
+				patch.nativeAnimations,
+				must(patch.nativeAnimations[1]?.nodeId),
+				{ field: 'start', value: 'afterPrevious' },
+			),
+		);
+		const saved = parse(must(writer.buildTimingXml([], patch.rawTiming)));
+		expect(saved.map(({ targetId }) => targetId)).toEqual(['7', '8', '9']);
+		expect(saved.map(({ parGroupDelayMs }) => parGroupDelayMs)).toEqual([0, 1300, 1300]);
+		expect(saved[1]?.parGroupIndex).toBe(saved[2]?.parGroupIndex);
+	});
+
+	it('includes finite repeats and auto-reverse in the next wrapper offset', () => {
+		const source = must(
+			writer.buildTimingXml(
+				[
+					{
+						elementId: '7',
+						entrance: 'fadeIn',
+						durationMs: 800,
+						repeatCount: 2,
+					},
+					{ elementId: '8', entrance: 'fadeIn', trigger: 'afterPrevious' },
+				],
+				undefined,
+			),
+		);
+		writeOwnedEffectKeys(source, new Set());
+		must(indexEffectNodes(source)[0]).cTn['@_autoRev'] = '1';
+		const animations = parse(source);
+		const edited = must(
+			editNativeEffectTiming(source, animations, must(animations[0]?.nodeId), {
+				field: 'duration',
+				value: 900,
+			}),
+		);
+		expect(parse(must(writer.buildTimingXml([], edited.rawTiming)))[1]?.parGroupDelayMs).toBe(3600);
 	});
 
 	it('paints an authored rotation with new timing and target IDs', () => {

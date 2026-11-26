@@ -9,6 +9,7 @@ import { refreshEffectBehaviors, rescaleBehaviors } from './animation-timing-sur
 import { indexEffectNodes, maxTimeNodeId } from './animation-timing-tree';
 import { resolveOoxmlPresetMapping } from './animation-write-mappings';
 import { triggerToNodeType } from './animation-write-mappings-motion';
+import { mainEffectWrapper, reflowAfterPrevious } from './native-animation-click-timing';
 import { changeNativeAnimationStart } from './native-animation-edit-start';
 import { ensureArray, isXmlObject } from './native-animation-helpers';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
@@ -126,8 +127,39 @@ export function editNativeEffectTiming(
 			}));
 		}
 	}
-	return {
-		rawTiming: timing,
-		nativeAnimations: animations.map((item) => (item === animation ? next : item)),
-	};
+	let nativeAnimations = animations.map((item) => (item === animation ? next : item));
+	if (edit.field === 'duration' || edit.field === 'delay') {
+		const wrapper = mainEffectWrapper(ref);
+		if (wrapper) {
+			const byId = new Map(
+				nativeAnimations.flatMap((item) =>
+					item.nodeId === undefined ? [] : [[item.nodeId, item] as const],
+				),
+			);
+			reflowAfterPrevious(wrapper.holder, wrapper.node, byId);
+		}
+	}
+	if (edit.field !== 'direction') {
+		const parsed = new PptxNativeAnimationService().parseNativeAnimations({
+			'p:sld': { 'p:timing': timing },
+		});
+		const byId = new Map(parsed?.map((item) => [item.nodeId, item]));
+		nativeAnimations = nativeAnimations.map((item) => {
+			const current = byId.get(item.nodeId);
+			if (
+				!current ||
+				(current.parGroupIndex === item.parGroupIndex &&
+					current.parGroupDelayMs === item.parGroupDelayMs &&
+					current.groupAutoStart === item.groupAutoStart)
+			)
+				return item;
+			return {
+				...item,
+				parGroupIndex: current.parGroupIndex,
+				parGroupDelayMs: current.parGroupDelayMs,
+				groupAutoStart: current.groupAutoStart,
+			};
+		});
+	}
+	return { rawTiming: timing, nativeAnimations };
 }

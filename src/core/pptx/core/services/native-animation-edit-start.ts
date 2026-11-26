@@ -8,20 +8,13 @@ import {
 	type EffectNodeRef,
 } from './animation-timing-tree';
 import { buildClickGroupNode, markGroupAutoStart } from './animation-write-sequence-builders';
+import {
+	effectWrapperSpan,
+	reflowAfterPrevious,
+	simpleCondition,
+} from './native-animation-click-timing';
 import { readTimingAttr } from './native-animation-extended-helpers';
 import { ensureArray, isXmlObject } from './native-animation-helpers';
-
-function simpleCondition(node: XmlObject | undefined): XmlObject | undefined {
-	const cTn = node?.['p:cTn'];
-	if (!isXmlObject(cTn) || !isXmlObject(cTn['p:stCondLst'])) return undefined;
-	const conditions = ensureArray(cTn['p:stCondLst']['p:cond']);
-	const condition = conditions[0];
-	return conditions.length === 1 &&
-		condition &&
-		Object.keys(condition).every((key) => key === '@_delay')
-		? condition
-		: undefined;
-}
 
 /** Move a plain main-sequence effect within PowerPoint's click and time-offset groups. */
 export function changeNativeAnimationStart(
@@ -63,12 +56,12 @@ export function changeNativeAnimationStart(
 	let nextId = maxTimeNodeId(rawTiming) + 1;
 	const allocateId = () => nextId++;
 	const delay = (value: number | 'indefinite') => ({ 'p:cond': { '@_delay': String(value) } });
-	const wrap = (duration: number) => ({
+	const wrap = (duration: number, effects: XmlObject[] = [leaf.node]) => ({
 		'p:cTn': {
 			'@_id': String(allocateId()),
 			'@_fill': 'hold',
 			'p:stCondLst': delay(duration),
-			'p:childTnLst': { 'p:par': leaf.node },
+			'p:childTnLst': { 'p:par': effects.length === 1 ? leaf.node : effects },
 		},
 	});
 	if (start === 'onClick') {
@@ -77,9 +70,10 @@ export function changeNativeAnimationStart(
 			return true;
 		}
 		if (nextInGroup) return false;
+		const clickGroup = buildClickGroupNode([wrap(0)], allocateId);
 		removeEffectNode(ref);
 		const groups = ensureArray(holder['p:par']);
-		groups.splice(groups.indexOf(group.node) + 1, 0, buildClickGroupNode([wrap(0)], allocateId));
+		groups.splice(groups.indexOf(group.node) + 1, 0, clickGroup);
 		holder['p:par'] = groups;
 		return true;
 	}
@@ -101,21 +95,29 @@ export function changeNativeAnimationStart(
 		prevLeaf.key !== 'p:par'
 	)
 		return false;
+	const byId = new Map(
+		animations.flatMap((animation) =>
+			animation.nodeId === undefined ? [] : [[animation.nodeId, animation] as const],
+		),
+	);
+	const moving = refs.slice(index).filter((item) => item.chain.at(-1)?.holder === leaf.holder);
+	const movingNodes = moving.map((item) => item.chain.at(-1)?.node ?? leaf.node);
+	if (movingNodes.some((node) => !simpleCondition(node))) return false;
 	if (start === 'withPrevious') {
 		if (prevLeaf.holder === leaf.holder) return true;
-		removeEffectNode(ref);
-		appendContainer(prevLeaf.holder, 'p:par', leaf.node);
+		for (const item of moving) removeEffectNode(item);
+		for (const node of movingNodes) appendContainer(prevLeaf.holder, 'p:par', node);
+		reflowAfterPrevious(prevWrapper.holder, prevWrapper.node, byId);
 		return true;
 	}
-	const end = animations.find((animation) => animation.nodeId === Number(previous.cTn['@_id']));
-	if (end?.durationMs === undefined || end.repeatCount || end.autoReverse) return false;
-	removeEffectNode(ref);
+	const span = effectWrapperSpan(prevWrapper.node, byId, new Set(movingNodes));
+	if (span === undefined) return false;
+	const nextWrapper = wrap(prevDelay + span, movingNodes);
+	for (const item of moving) removeEffectNode(item);
 	const wrappers = ensureArray(prevWrapper.holder['p:par']);
-	wrappers.splice(
-		wrappers.indexOf(prevWrapper.node) + 1,
-		0,
-		wrap(prevDelay + (end.delayMs ?? 0) + end.durationMs),
-	);
+	wrappers.splice(wrappers.indexOf(prevWrapper.node) + 1, 0, nextWrapper);
 	prevWrapper.holder['p:par'] = wrappers;
+	ref.cTn['@_nodeType'] = 'afterEffect';
+	reflowAfterPrevious(prevWrapper.holder, prevWrapper.node, byId);
 	return true;
 }
