@@ -90,6 +90,7 @@ export const zhCNTableTab = {
 	'Modify Table Style': '修改表格样式',
 	'Clear Table Style': '清除表格样式',
 	'tableTab.selectCell': '请选择一个表格单元格。',
+	'tableTab.tracking': '启用修订时无法使用此命令。',
 	'tableTab.rectangular': '此命令需要没有合并单元格的矩形表格。',
 	'tableTab.editable': '此命令需要在非协作状态下使用可编辑的正文表格。',
 	'tableTab.headerStart': '请选择第一行或现有标题行之后的一行。',

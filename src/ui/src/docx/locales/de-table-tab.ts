@@ -90,6 +90,7 @@ export const deTableTab = {
 	'Modify Table Style': 'Tabellenformatvorlage ändern',
 	'Clear Table Style': 'Tabellenformatvorlage löschen',
 	'tableTab.selectCell': 'Wählen Sie eine Tabellenzelle aus.',
+	'tableTab.tracking': 'Dieser Befehl ist bei aktivierter Änderungsverfolgung nicht verfügbar.',
 	'tableTab.rectangular':
 		'Dieser Befehl erfordert eine rechteckige Tabelle ohne verbundene Zellen.',
 	'tableTab.editable':

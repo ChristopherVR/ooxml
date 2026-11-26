@@ -90,6 +90,8 @@ export const frTableTab = {
 	'Modify Table Style': 'Modifier le style de tableau',
 	'Clear Table Style': 'Effacer le style de tableau',
 	'tableTab.selectCell': 'Sélectionnez une cellule du tableau.',
+	'tableTab.tracking':
+		'Cette commande est indisponible lorsque le suivi des modifications est activé.',
 	'tableTab.rectangular':
 		'Cette commande nécessite un tableau rectangulaire sans cellules fusionnées.',
 	'tableTab.editable':

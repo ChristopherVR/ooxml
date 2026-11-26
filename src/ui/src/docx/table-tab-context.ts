@@ -1,6 +1,6 @@
 import type { Node } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
-import { DEFAULT_TABLE_LOOK } from 'ooxml-core/docx/ui';
+import { DEFAULT_TABLE_LOOK, forcesTrackChanges } from 'ooxml-core/docx/ui';
 import type { EditorCore } from './editor-core';
 import { translate } from './localization';
 import type { TableTabAction } from './table-ribbon';
@@ -38,6 +38,12 @@ export function tableTabReason(core: EditorCore, key: TableTabAction['key'], con
 	if (key === 'gridlines') return;
 	if (!context.plain) return 'tableTab.rectangular';
 	if (key === 'select') return;
+	if (
+		key !== 'formula' &&
+		key !== 'pen' &&
+		(core.model.trackChanges || forcesTrackChanges(core.model.protection))
+	)
+		return 'tableTab.tracking';
 	if (
 		!core.view?.editable ||
 		!core.canEditBody() ||
@@ -77,8 +83,13 @@ export function syncTableTab(core: EditorCore): void {
 		const key = control.dataset.tableCommand as TableTabAction['key'];
 		const reason = tableTabReason(core, key, context);
 		control.disabled = Boolean(reason);
-		if (reason) control.title = translate(core.locale, reason);
-		else control.title = control.getAttribute('aria-label') ?? '';
+		if (reason) {
+			control.title = translate(core.locale, reason);
+			control.setAttribute('aria-description', control.title);
+		} else {
+			control.title = control.getAttribute('aria-label') ?? '';
+			control.removeAttribute('aria-description');
+		}
 		if (key === 'look') {
 			const option = TABLE_LOOK_OPTIONS.find(([flag]) => flag === control.dataset.lookFlag);
 			if (option) {

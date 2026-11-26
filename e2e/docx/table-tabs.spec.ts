@@ -73,6 +73,31 @@ test('Table Design and Layout edit a table and save the Word properties', async 
 	expect(styles).toContain('w:styleId="GridTable4-Accent1"');
 });
 
+test('table commands without revision support are disabled during Track Changes', async ({
+	page,
+}) => {
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	await editor.getByRole('tab', { name: 'Review', exact: true }).click();
+	await editor.getByRole('button', { name: 'Track changes', exact: true }).click();
+	await editor.getByRole('tab', { name: 'Table Design', exact: true }).click();
+	const reason = 'This command is unavailable while Track Changes is on.';
+	for (const name of ['Table Styles', 'Header Row']) {
+		const control = editor.getByRole('button', { name, exact: true });
+		await expect(control).toBeDisabled();
+		await expect(control).toHaveAccessibleDescription(reason);
+	}
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	for (const name of ['Sort Table', 'Convert to Text', 'AutoFit', 'Row Height (inches)']) {
+		const control = editor.getByLabel(name, { exact: true });
+		await expect(control).toBeDisabled();
+		await expect(control).toHaveAccessibleDescription(reason);
+	}
+});
+
 test('Table Layout selects a column, evaluates a formula and converts with undo', async ({
 	page,
 }) => {

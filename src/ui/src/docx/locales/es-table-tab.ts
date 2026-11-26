@@ -90,6 +90,7 @@ export const esTableTab = {
 	'Modify Table Style': 'Modificar estilo de tabla',
 	'Clear Table Style': 'Borrar estilo de tabla',
 	'tableTab.selectCell': 'Seleccione una celda de la tabla.',
+	'tableTab.tracking': 'Este comando no está disponible con Control de cambios activado.',
 	'tableTab.rectangular': 'Este comando requiere una tabla rectangular sin celdas combinadas.',
 	'tableTab.editable':
 		'Este comando requiere una tabla editable en el cuerpo del documento fuera de la colaboración.',

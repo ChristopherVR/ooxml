@@ -88,6 +88,7 @@ export const enTableTab = {
 	'Modify Table Style': 'Modify Table Style',
 	'Clear Table Style': 'Clear Table Style',
 	'tableTab.selectCell': 'Select a table cell.',
+	'tableTab.tracking': 'This command is unavailable while Track Changes is on.',
 	'tableTab.rectangular': 'This command requires a rectangular table without merged cells.',
 	'tableTab.editable': 'This command requires an editable body table outside collaboration.',
 	'tableTab.headerStart': 'Select the first row or the next row after the existing headers.',
