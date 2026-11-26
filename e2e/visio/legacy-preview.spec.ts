@@ -14,9 +14,12 @@ test('shipped worker detects legacy bytes under a modern filename and disables V
 	page,
 }) => {
 	await openDemo(page);
-	await page
-		.locator('#file')
-		.setInputFiles({ name: 'legacy.vsdx', mimeType: 'application/octet-stream', buffer: legacy });
+	await Promise.all([
+		page.waitForEvent('worker', (worker) => /\/parse-worker-[^/]+\.js$/.test(worker.url())),
+		page
+			.locator('#file')
+			.setInputFiles({ name: 'legacy.vsdx', mimeType: 'application/octet-stream', buffer: legacy }),
+	]);
 	await expect(page.locator('#edit-label')).toHaveText('LEGACY VSD PREVIEW');
 	await expect(page.locator('visio-viewer [data-shape-id="7"] text')).toContainText('Hello');
 	await expect(saveCommand(page.locator('visio-viewer'))).toBeDisabled();

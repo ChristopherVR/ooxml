@@ -9,23 +9,28 @@ import { createVsdxFixture } from '../../../e2e/visio/fixture.mjs';
 const registryRuntime = process.argv.includes('--registry-runtime');
 const assetDirectory = resolvePath(process.argv[2] ?? 'site-dist/assets');
 const assets = await readdir(assetDirectory);
-const name = assets.find((file) => /^parse-worker-.*\.js$/.test(file));
-assert.ok(name, 'Production worker bundle must exist');
-const url = pathToFileURL(resolvePath(assetDirectory, name)).href;
-// Exercise the actual browser-targeted production bundle in an isolated Node worker.
-// This verifies serialization/parsing; it is not a substitute for browser/CSP testing.
-const worker = new Worker(
-	`
+
+// Run a browser-targeted bundle in an isolated Node worker with a worker messaging scope.
+function startWorker(name) {
+	const url = pathToFileURL(resolvePath(assetDirectory, name)).href;
+	return new Worker(
+		`
  const { parentPort } = require('node:worker_threads');
  globalThis.self = globalThis;
- globalThis.postMessage = data => parentPort.postMessage(data);
+ globalThis.importScripts = () => { throw new TypeError('Module workers cannot import scripts'); };
+ globalThis.postMessage = (data, transfer) => parentPort.postMessage(data, transfer);
  import(${JSON.stringify(url)}).then(() => {
    parentPort.on('message', data => self.onmessage({ data }));
    parentPort.postMessage({ ready: true });
  }).catch(error => { throw error; });
 `,
-	{ eval: true },
-);
+		{ eval: true },
+	);
+}
+
+const name = assets.find((file) => /^parse-worker-.*\.js$/.test(file));
+assert.ok(name, 'Production worker bundle must exist');
+const worker = startWorker(name);
 const timeout = setTimeout(() => {
 	worker.terminate();
 	throw new Error('Worker bundle smoke test timed out');
@@ -97,19 +102,7 @@ try {
 
 const editName = assets.find((file) => /^edit-worker-.*\.js$/.test(file));
 assert.ok(editName, 'Production edit worker bundle must exist');
-const editUrl = pathToFileURL(resolvePath(assetDirectory, editName)).href;
-const editWorker = new Worker(
-	`
- const { parentPort } = require('node:worker_threads');
- globalThis.self = globalThis;
- globalThis.postMessage = (data, transfer) => parentPort.postMessage(data, transfer);
- import(${JSON.stringify(editUrl)}).then(() => {
-   parentPort.on('message', data => self.onmessage({ data }));
-   parentPort.postMessage({ ready: true });
- }).catch(error => { throw error; });
-`,
-	{ eval: true },
-);
+const editWorker = startWorker(editName);
 const editTimeout = setTimeout(() => {
 	editWorker.terminate();
 	throw new Error('Edit worker bundle smoke test timed out');
@@ -176,19 +169,7 @@ try {
 	// The separate registry compatibility gate can consume a runtime predating clipboard support.
 	if (!registryRuntime || clipboardName) {
 		assert.ok(clipboardName, 'Production clipboard capture worker must exist');
-		const clipboardUrl = pathToFileURL(resolvePath(assetDirectory, clipboardName)).href;
-		const clipboardWorker = new Worker(
-			`
- const { parentPort } = require('node:worker_threads');
- globalThis.self = globalThis;
- globalThis.postMessage = data => parentPort.postMessage(data);
- import(${JSON.stringify(clipboardUrl)}).then(() => {
-   parentPort.on('message', data => self.onmessage({ data }));
-   parentPort.postMessage({ ready: true });
- }).catch(error => { throw error; });
-`,
-			{ eval: true },
-		);
+		const clipboardWorker = startWorker(clipboardName);
 		const clipboardReply = () =>
 			new Promise((resolve, reject) => {
 				clipboardWorker.once('message', resolve);
