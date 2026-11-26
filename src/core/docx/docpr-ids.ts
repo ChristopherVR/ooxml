@@ -11,9 +11,12 @@ const VML_NS = 'urn:schemas-microsoft-com:vml';
 
 export class DocPrIdAllocator {
 	private max = 0;
+	private used = new Set<number>();
 
 	reserve(id: number): void {
-		if (Number.isSafeInteger(id) && id > this.max) this.max = id;
+		if (!Number.isSafeInteger(id) || id < 0) return;
+		this.used.add(id);
+		this.max = Math.max(this.max, id);
 	}
 
 	/** Reserves every `wp:docPr` id in an already parsed part. */
@@ -38,8 +41,14 @@ export class DocPrIdAllocator {
 			this.reserveFromXml(await file.async('string'));
 	}
 
-	next(): string {
-		this.max += 1;
-		return String(this.max);
+	next(preferred?: string): string {
+		const id = preferred && /^\d+$/.test(preferred) ? Number(preferred) : NaN;
+		if (Number.isInteger(id) && id <= 0xffffffff && !this.used.has(id)) {
+			this.reserve(id);
+			return String(id);
+		}
+		const next = this.max + 1;
+		this.reserve(next);
+		return String(next);
 	}
 }

@@ -56,7 +56,11 @@ export interface InlineImage {
 	transform?: DrawingTransform;
 	/** From `wp:docPr/@descr`. */
 	altText?: string;
-	/** From `wp:docPr/@title` or `@name`. */
+	/** A preferred `wp:docPr/@id` when promoting a group child to its own drawing. */
+	drawingId?: string;
+	/** From `wp:docPr/@name`. */
+	drawingName?: string;
+	/** From `wp:docPr/@title`. */
 	title?: string;
 	/** Whether the drawing has a `wp:anchor` and participates in page float layout. */
 	anchored?: boolean;

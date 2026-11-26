@@ -64,6 +64,8 @@ export const imageNodeSpec: NodeSpec = {
 		heightPx: { default: 96 },
 		altText: { default: null },
 		title: { default: null },
+		drawingId: { default: null },
+		drawingName: { default: null },
 		anchored: { default: false },
 		/** Floating picture wrapping/position (`PicturePlacement`) as JSON; display only. */
 		placement: { default: null },

@@ -18,9 +18,12 @@ function shapeNode(
 	placement: PicturePlacement,
 	box: DrawingBox,
 	shape: ShapeSpec,
+	identity?: { id: string; name: string },
 ) {
 	return node.type.create({
 		...node.attrs,
+		drawingId: identity?.id ?? null,
+		drawingName: identity?.name ?? null,
 		widthPx: box.width,
 		heightPx: box.height,
 		placement: JSON.stringify(placement),
@@ -52,8 +55,14 @@ export function groupSelectedShapes(
 			pos,
 			pos + current.nodeSize,
 			Fragment.fromArray(
-				parts.map(({ box, shape }) =>
-					shapeNode(current, placeDrawingBox(placement, box, geometry.origins), box, shape),
+				parts.map(({ box, shape, identity }) =>
+					shapeNode(
+						current,
+						placeDrawingBox(placement, box, geometry.origins),
+						box,
+						shape,
+						identity,
+					),
 				),
 			),
 		);

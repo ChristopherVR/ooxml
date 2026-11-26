@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { parseXml } from './xml';
 import { updateDocPr } from './write-drawing-patch';
@@ -170,6 +171,41 @@ describe('Word drawing arrangement', () => {
 		const reopened = (await loadDocx(ungrouped)).model.blocks[0];
 		if (reopened?.type !== 'paragraph') throw new Error('Missing paragraph');
 		expect(images(reopened).map((drawing) => drawing.shape?.preset)).toEqual(['rect', 'ellipse']);
+	});
+
+	it('promotes the child names and available child IDs from a Word-authored group', async () => {
+		const fixture = new URL('./__fixtures__/shapes/arrange-group.docx', import.meta.url);
+		const opened = await loadDocx(await readFile(fixture));
+		const paragraph = opened.model.blocks.find(
+			(block): block is Paragraph =>
+				block.type === 'paragraph' && images(block).some((image) => image.shape?.groupChildren),
+		);
+		const group = paragraph && images(paragraph).find((image) => image.shape?.groupChildren);
+		if (!paragraph || !group?.shape) throw new Error('Missing Word group');
+		const children = ungroupDrawingShapes(rect(0, 0, group.widthPx, group.heightPx), group.shape);
+		expect(children.map(({ identity }) => identity)).toEqual([
+			{ id: '11', name: 'Rounded' },
+			{ id: '21', name: 'Line 1' },
+			{ id: '22', name: 'Line 2' },
+		]);
+		paragraph.runs = paragraph.runs.flatMap((run) =>
+			run.image === group
+				? children.map(({ shape, box, identity }) => ({
+						text: '',
+						image: {
+							...group,
+							shape,
+							widthPx: box.width,
+							heightPx: box.height,
+							...(identity ? { drawingId: identity.id, drawingName: identity.name } : {}),
+						},
+					}))
+				: [run],
+		);
+		const xml = await xmlOf(await opened.save(opened.model));
+		expect(xml).toContain('<wp:docPr id="11" name="Rounded"');
+		expect(xml).toContain('<wp:docPr id="21" name="Line 1"');
+		expect(xml).toContain('<wp:docPr id="22" name="Line 2"');
 	});
 
 	it('places only the requested axes in the existing drawing frames', () => {

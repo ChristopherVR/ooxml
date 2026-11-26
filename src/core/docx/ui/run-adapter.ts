@@ -84,6 +84,8 @@ export function runToInlineNodes(
 					heightPx: run.image.heightPx,
 					altText: run.image.altText ?? null,
 					title: run.image.title ?? null,
+					drawingId: run.image.drawingId ?? null,
+					drawingName: run.image.drawingName ?? null,
 					anchored: Boolean(run.image.anchored),
 					placement: run.image.placement ? JSON.stringify(run.image.placement) : null,
 					svgPartName: run.image.svgPartName ?? null,
@@ -196,6 +198,8 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 				heightPx: child.attrs.heightPx,
 				...(child.attrs.altText ? { altText: child.attrs.altText } : {}),
 				...(child.attrs.title ? { title: child.attrs.title } : {}),
+				...(child.attrs.drawingId ? { drawingId: child.attrs.drawingId } : {}),
+				...(child.attrs.drawingName ? { drawingName: child.attrs.drawingName } : {}),
 				...(child.attrs.anchored ? { anchored: true } : {}),
 				...(child.attrs.svgPartName ? { svgPartName: child.attrs.svgPartName } : {}),
 				...(typeof child.attrs.transform === 'string'

@@ -269,7 +269,9 @@ export function createImageRun(
 	) {
 		if (!allocator) throw new Error('Cannot replace a drawing without an id allocator.');
 		clearNonProperties(node);
-		node.appendChild(buildShapeDrawing(doc, image, { id: allocator.docPrIds.next() }));
+		node.appendChild(
+			buildShapeDrawing(doc, image, { id: allocator.docPrIds.next(image.drawingId) }),
+		);
 		return node;
 	}
 	if (
@@ -305,7 +307,7 @@ export function createImageRun(
 	}
 	if (!base && (image.shape?.editable || image.shape?.groupChildren) && !image.partName) {
 		if (!allocator) throw new Error('Cannot insert a shape without an id allocator.');
-		const id = allocator.docPrIds.next();
+		const id = allocator.docPrIds.next(image.drawingId);
 		clearNonProperties(node);
 		node.appendChild(
 			buildShapeDrawing(

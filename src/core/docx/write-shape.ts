@@ -185,7 +185,7 @@ export function buildShapeDrawing(
 	if (anchored) add(holder, wrapElement(doc, placement ?? { wrap: 'none' }));
 	const docPr = attrs(el(doc, WP_NS, 'wp:docPr'), {
 		id: identity.id,
-		name: identity.name ?? `Shape ${identity.id}`,
+		name: image.drawingName ?? identity.name ?? `Shape ${identity.id}`,
 	});
 	if (identity.descr) docPr.setAttribute('descr', identity.descr);
 	if (identity.title) docPr.setAttribute('title', identity.title);

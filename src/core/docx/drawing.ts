@@ -176,6 +176,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 	const heightPx = emuToPx(extent?.getAttribute('cy') ?? null);
 	const altText = docPr?.getAttribute('descr') || undefined;
 	const title = docPr?.getAttribute('title') || undefined;
+	const drawingName = docPr?.getAttribute('name') || undefined;
 	const anchored = Boolean(anchor && anchor !== inline) || undefined;
 	const placement = anchored && anchor ? parsePlacement(anchor) : undefined;
 	const graphicData = descendantNS(anchor, A_NS, 'graphicData');
@@ -199,7 +200,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...(transform ? { transform } : {}),
 			widthPx,
 			heightPx,
-			...definedProps({ altText, title, anchored }),
+			...definedProps({ altText, title, drawingName, anchored }),
 			...(placement ? { placement } : {}),
 			...(svg ? { svgPartName: svg.partName } : {}),
 		};
@@ -210,7 +211,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...preview,
 			widthPx,
 			heightPx,
-			...definedProps({ altText, title, anchored }),
+			...definedProps({ altText, title, drawingName, anchored }),
 			...definedProps({ unsupported, payload }),
 			...(placement ? { placement } : {}),
 		};
@@ -245,7 +246,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		contentType: 'application/octet-stream',
 		widthPx,
 		heightPx,
-		...definedProps({ altText, title, anchored }),
+		...definedProps({ altText, title, drawingName, anchored }),
 		unsupported: textBox ? 'Text box' : unsupportedKindLabel(uri),
 		...(diagram ? { diagram } : {}),
 		...(chart ? { chart } : {}),

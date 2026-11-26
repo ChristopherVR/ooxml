@@ -11,6 +11,7 @@ export interface GroupShapeChild {
 	widthPx: number;
 	heightPx: number;
 	shape: ShapeSpec;
+	identity?: { id: string; name: string };
 }
 
 export interface ShapeSpec {

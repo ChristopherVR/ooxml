@@ -163,7 +163,11 @@ export function groupDrawingShapes(
 export function ungroupDrawingShapes(
 	box: DrawingBox,
 	shape: ShapeSpec,
-): { box: DrawingBox; shape: ShapeSpec }[] {
+): {
+	box: DrawingBox;
+	shape: ShapeSpec;
+	identity?: NonNullable<ShapeSpec['groupChildren']>[number]['identity'];
+}[] {
 	const extent = shape.groupExtent;
 	if (!shape.groupCanUngroup || !extent || shape.rotation || shape.flipH || shape.flipV) return [];
 	const sx = box.width / extent.widthPx;
@@ -176,6 +180,7 @@ export function ungroupDrawingShapes(
 			height: child.heightPx * sy,
 		},
 		shape: child.shape,
+		...(child.identity ? { identity: child.identity } : {}),
 	}));
 }
 

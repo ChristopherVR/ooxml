@@ -60,9 +60,11 @@ function parseGroupNode(wgp: XmlElement, depth = 0): ShapeSpec | undefined {
 				groupCanUngroup = false;
 				continue;
 			}
-			groupCanUngroup &&= Boolean(
-				parsed.editable && !parsed.text?.length && !childNS(node, WPS_NS, 'cNvPr'),
-			);
+			const metadata = childNS(node, WPS_NS, 'cNvPr');
+			const id = metadata?.getAttribute('id');
+			const name = metadata?.getAttribute('name');
+			const identity = id && name ? { id, name } : undefined;
+			groupCanUngroup &&= Boolean(parsed.editable && !parsed.text?.some(Boolean));
 			const runs = parsed.text?.some(Boolean)
 				? Array.from(node.getElementsByTagNameNS(WORD_NS, 'r'))
 				: [];
@@ -72,7 +74,7 @@ function parseGroupNode(wgp: XmlElement, depth = 0): ShapeSpec | undefined {
 			const [size] = sizes;
 			const shape = sizes.size === 1 && size ? { ...parsed, groupTextSizePt: size / 2 } : parsed;
 			const box = childBox(childNS(node, WPS_NS, 'spPr'));
-			groupChildren.push({ ...box, shape });
+			groupChildren.push({ ...box, shape, ...(identity ? { identity } : {}) });
 		} else if (
 			node.namespaceURI === WPG_NS &&
 			(node.localName === 'grpSp' || node.localName === 'wgp')
