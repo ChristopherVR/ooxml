@@ -130,6 +130,10 @@ dt {
 .status {
 	color: var(--office-muted-foreground);
 }
+.error {
+	color: var(--office-danger);
+}
+.error:empty,
 .status:empty {
 	margin: 0;
 }

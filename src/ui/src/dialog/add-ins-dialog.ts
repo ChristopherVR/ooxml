@@ -21,6 +21,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	#pivot: Pivot = 'My Add-ins';
 	#query = '';
 	#message = '';
+	#error = '';
 	#preview: AddInPreview | undefined;
 	#pending: AbortController | undefined;
 	#afterClose?: () => void;
@@ -50,7 +51,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			await restore(pending.signal);
 			if (!pending.signal.aborted) session.syncTabs();
 		} catch {
-			this.#message = session.t('Could not load saved add-ins.');
+			this.#error = session.t('Could not load saved add-ins.');
 		} finally {
 			this.#pending = undefined;
 			if (!pending.signal.aborted) this.requestUpdate();
@@ -76,6 +77,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	private pivot(pivot: Pivot): void {
 		this.#pivot = pivot;
 		this.#message = '';
+		this.#error = '';
 		this.requestUpdate();
 	}
 
@@ -112,8 +114,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const input = this.renderRoot.querySelector<HTMLInputElement>('#marketplace-link');
 		const assetId = marketplaceAssetId(input?.value ?? '');
 		if (!assetId) {
-			this.#message = session.t('Enter a Microsoft Marketplace link or asset ID.');
-			this.requestUpdate();
+			this.showError(session.t('Enter a Microsoft Marketplace link or asset ID.'));
 			input?.focus();
 			return;
 		}
@@ -128,6 +129,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		const session = this.#session;
 		if (!session || session.product === 'visio' || this.#pending) return;
 		const pending = (this.#pending = new AbortController());
+		this.#error = '';
 		this.#message = session.t('Loading add-ins…');
 		this.requestUpdate();
 		let manifestReader: typeof import('../ribbon/add-in-manifest-file') | undefined;
@@ -143,9 +145,11 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 			if (pending.signal.aborted || !this.shell?.open) return;
 			this.#preview = { addIn, bytes, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';
+			this.#error = '';
 		} catch (error) {
-			this.#message = session.t(
-				manifestReader?.addInError(error) ?? 'Could not update the add-in.',
+			this.#message = '';
+			this.showError(
+				session.t(manifestReader?.addInError(error) ?? 'Could not update the add-in.'),
 			);
 		} finally {
 			this.#pending = undefined;
@@ -178,6 +182,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 	private cancel(): void {
 		this.#preview = undefined;
 		this.#message = '';
+		this.#error = '';
 		this.requestUpdate();
 		this.renderRoot.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
 	}
@@ -186,16 +191,29 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		if (this.#pending) return;
 		this.#pending = new AbortController();
 		this.#message = '';
+		this.#error = '';
 		this.requestUpdate();
 		try {
 			await run();
 			this.shell?.close();
 		} catch {
-			this.#message = this.#session?.t('Could not update the add-in.') ?? '';
+			this.showError(this.#session?.t('Could not update the add-in.') ?? '');
 		} finally {
 			this.#pending = undefined;
 			if (this.shell?.open) this.requestUpdate();
 		}
+	}
+
+	private showError(message: string): void {
+		this.#error = message;
+		this.requestUpdate();
+		void this.updateComplete.then(() =>
+			this.renderRoot.querySelector('[role="alert"]')?.scrollIntoView?.({ block: 'nearest' }),
+		);
+	}
+
+	private renderError() {
+		return html`<p id="add-in-error" class="error" role="alert">${this.#error}</p>`;
 	}
 
 	protected override render() {
@@ -215,13 +233,18 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		>
 			${
 				this.#preview
-					? renderAddInConsent(this.#preview.addIn, this.#preview.previous, t, {
-							cancel: () => this.cancel(),
-							confirm: () => this.confirm(),
-							persistent: Boolean(session.restore),
-							reason: session.launcher.pane(this.#preview.addIn).reason,
-							busy: Boolean(this.#pending),
-						})
+					? html`${this.renderError()}${renderAddInConsent(
+							this.#preview.addIn,
+							this.#preview.previous,
+							t,
+							{
+								cancel: () => this.cancel(),
+								confirm: () => this.confirm(),
+								persistent: Boolean(session.restore),
+								reason: session.launcher.pane(this.#preview.addIn).reason,
+								busy: Boolean(this.#pending),
+							},
+						)}`
 					: html` <div
 								class="pivots"
 								role="tablist"
@@ -265,7 +288,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										class="link"
 										type="button"
 										?disabled=${unsupported || !!this.#pending}
-										aria-describedby=${unsupported ? LOCAL_INSTALL_REASON_ID : nothing}
+										aria-describedby=${unsupported ? LOCAL_INSTALL_REASON_ID : this.#error ? 'add-in-error' : nothing}
 										@click=${() => this.renderRoot.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
 										>${t('Upload My Add-in')}</button
 									>
@@ -278,6 +301,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 										@change=${this.upload}
 									/>
 								</div>
+								${this.renderError()}
 								${unsupported ? html`<p class="empty" id=${LOCAL_INSTALL_REASON_ID}>${reason}</p>` : nothing}
 								${this.renderMarketplace(session)}
 								${renderAddInList({

@@ -46,7 +46,7 @@ test('reviews a Marketplace listing through the configured resolver without enab
 	const review = dialog.getByRole('button', { name: 'Review add-in', exact: true });
 	await link.fill('https://appsource.microsoft.com.example.test/en-us/product/office/WA999999999');
 	await review.click();
-	await expect(dialog.getByRole('status')).toHaveText(
+	await expect(dialog.getByRole('alert')).toHaveText(
 		'Enter a Microsoft Marketplace link or asset ID.',
 	);
 	await expect(editor).not.toHaveAttribute('data-test-asset-id', /.+/);
