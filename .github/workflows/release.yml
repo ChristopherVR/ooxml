@@ -14,7 +14,7 @@ on:
   # no-op until a commit touches published files (see docs/releasing.md). A package that is
   # neither tagged nor on npm (ooxml-ui before its first publish) is released as `initial`.
   schedule:
-    - cron: '0 * * * *' # hourly, on the hour
+    - cron: '17 * * * *' # hourly, off minute :00 to avoid GitHub Actions top-of-the-hour cron drops
   # Manual runs, two modes:
   #   - no input: cut a release now (same as the schedule would).
   #   - tag=<npm-name>@<version>: re-publish ONLY that existing tag (either package) to npm,
