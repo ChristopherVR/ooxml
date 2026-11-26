@@ -15,7 +15,11 @@ import { keyToLabel, translationsEn } from 'ooxml-ui/pptx/i18n';
 export type TranslationDictionary = Record<string, string>;
 
 /** Translate `key`, interpolating `{{name}}` placeholders from `params`. */
-export type Translator = (key: string, params?: Record<string, string | number>) => string;
+export type Translator = (
+	key: string,
+	params?: Record<string, string | number>,
+	fallback?: string,
+) => string;
 
 const registry = new Map<string, TranslationDictionary>([['en', translationsEn]]);
 
@@ -60,16 +64,17 @@ export function translate(
 	locale: string,
 	key: string,
 	params?: Record<string, string | number>,
+	fallback?: string,
 ): string {
 	const base = locale.split('-')[0];
 	const message = registry.get(locale)?.[key] ?? registry.get(base)?.[key] ?? translationsEn[key];
 	if (message !== undefined) {
 		return interpolate(message, params);
 	}
-	return keyToLabel(key);
+	return fallback ?? keyToLabel(key);
 }
 
 /** Build a {@link Translator} bound to a (lazily-read) locale. */
 export function createTranslator(getLocale: () => string): Translator {
-	return (key, params) => translate(getLocale(), key, params);
+	return (key, params, fallback) => translate(getLocale(), key, params, fallback);
 }

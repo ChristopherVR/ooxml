@@ -1,6 +1,6 @@
 import { getContext, setContext } from 'svelte';
 
-import { translate } from './translator';
+import { createTranslator } from './translator';
 import type { Translator } from './translator';
 
 /**
@@ -26,5 +26,5 @@ export function provideTranslator(translator: Translator): void {
  */
 export function useTranslator(): Translator {
 	const fromContext = getContext<Translator | undefined>(I18N_CONTEXT_KEY);
-	return fromContext ?? ((key, params) => translate('en', key, params));
+	return fromContext ?? createTranslator(() => 'en');
 }

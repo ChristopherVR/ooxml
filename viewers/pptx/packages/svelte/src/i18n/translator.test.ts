@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { strictTranslator } from '../viewer/components/ribbon/galleries/gallery-labels';
 import { createTranslator, interpolate, registerTranslations, translate } from './translator';
 
 describe('translator', () => {
@@ -21,6 +22,12 @@ describe('translator', () => {
 	it('falls back to English, then to a humanised label for missing keys', () => {
 		expect(translate('fr', 'pptx.statusBar.zoomOut')).toBe('Zoom out');
 		expect(translate('en', 'pptx.some.missingKeyName')).toBe('Missing Key Name');
+	});
+
+	it('keeps gallery labels that match their humanised key and signals missing entries', () => {
+		const label = strictTranslator(createTranslator(() => 'en'));
+		expect(label('pptx.shapes.name.arc')).toBe('Arc');
+		expect(label('pptx.shapes.name.missing')).toBe('pptx.shapes.name.missing');
 	});
 
 	it('supports registered locales with base-language fallback', () => {
