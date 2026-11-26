@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { describe, expect, it } from 'vitest';
 import { putCell } from '../cells';
 import { createEditSession } from '../edit/session';
+import { cellError } from '../model';
 import { loadXlsx } from '../read/index';
 import { createWorkbook } from '../workbook';
 import { saveXlsx } from './index';
@@ -52,6 +53,21 @@ describe('calcPr on save', () => {
 			calcId: '191029',
 			fullCalcOnLoad: '1',
 		});
+	});
+
+	it('omits transient busy results and requests a recalculation on open', async () => {
+		const wb = createWorkbook();
+		const sheet = wb.sheets[0]!;
+		putCell(sheet, 0, 0, { value: cellError('#BUSY!'), formula: 'FILTERXML(B1,"//item")' });
+		putCell(sheet, 0, 1, { value: cellError('#BUSY!') });
+		const saved = await saveXlsx(wb);
+		const xml = await JSZip.loadAsync(saved).then((zip) =>
+			zip.file('xl/worksheets/sheet1.xml')!.async('string'),
+		);
+		expect(xml).toContain('<c r="A1"><f>_xlfn.FILTERXML(B1,"//item")</f></c>');
+		expect(xml).toContain('<c r="B1"/>');
+		expect(xml).not.toContain('#BUSY!');
+		expect((await savedCalcPr(saved))['fullCalcOnLoad']).toBe('1');
 	});
 
 	it('does not set fullCalcOnLoad after an edit the session recalculated', async () => {

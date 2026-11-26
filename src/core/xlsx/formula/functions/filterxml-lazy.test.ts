@@ -38,6 +38,37 @@ describe('FILTERXML browser loading', () => {
 			expect(ready).toBeDefined();
 			expect(prepareFormula('=_xlfn.FILTERXML(A1,"//a")')).toBe(ready);
 			expect(prepareWorkbookFormulas(workbook)).toBe(ready);
+
+			const formula = 'FILTERXML(A1,"//a")';
+			const conditional = book();
+			conditional.sheets[0]!.conditionalFormats.push({
+				ranges: [],
+				rules: [{ type: 'expression', formula, priority: 1, style: {} }],
+			});
+			expect(prepareWorkbookFormulas(conditional), 'conditional format').toBe(ready);
+			const threshold = book();
+			threshold.sheets[0]!.conditionalFormats.push({
+				ranges: [],
+				rules: [
+					{
+						type: 'colorScale',
+						thresholds: [{ type: 'formula', value: formula }],
+						colors: [],
+						priority: 1,
+					},
+				],
+			});
+			expect(prepareWorkbookFormulas(threshold), 'conditional format threshold').toBe(ready);
+			const validation = book();
+			validation.sheets[0]!.dataValidations.push({
+				ranges: [],
+				type: 'whole',
+				operator: 'between',
+				formula1: '0',
+				formula2: formula,
+			});
+			expect(prepareWorkbookFormulas(validation), 'data validation').toBe(ready);
+
 			const saved = saveXlsx(workbook);
 			library.unblock();
 			const reopened = await loadXlsx(await saved);

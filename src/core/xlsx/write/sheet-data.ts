@@ -65,7 +65,7 @@ function cellXml(
 				? `<f t="array" ref="${formatRange(cell.arrayRange)}">${formula}</f>`
 				: `<f>${formula}</f>`;
 	}
-	const value = cell.value;
+	const value = isCellError(cell.value) && cell.value.error === '#BUSY!' ? null : cell.value;
 	let t: string | undefined;
 	let v = '';
 	if (typeof value === 'number') {

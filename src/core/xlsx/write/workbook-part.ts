@@ -1,6 +1,6 @@
 import { NS, elements, parseXml, type XmlElement } from '../../xml/index';
 import { columnLabel, quoteSheetName } from '../address';
-import type { DefinedName, Workbook } from '../model';
+import { isCellError, type DefinedName, type Workbook } from '../model';
 import { addFuturePrefixes } from '../read/formula-text';
 import { selfContainedXml } from '../read/xml-util';
 import { modernHashValues } from './password-hash';
@@ -44,12 +44,15 @@ function absoluteRange(
 	return `${cell(range.start.row, range.start.col)}:${cell(range.end.row, range.end.col)}`;
 }
 
-/** Whether a formula has no cached result: one written without a value, or loaded without one. */
-function hasUncachedFormula(workbook: Workbook): boolean {
+/** Whether a cached result is missing or will be omitted because calculation is still busy. */
+function hasUncachedResult(workbook: Workbook): boolean {
 	return workbook.sheets.some((sheet) => {
 		for (const row of sheet.rows.values())
-			for (const cell of row.values())
-				if (cell.formula !== undefined && (cell.value === null || cell.value === undefined))
+			for (const { formula, value } of row.values())
+				if (
+					(formula !== undefined && (value === null || value === undefined)) ||
+					(isCellError(value) && value.error === '#BUSY!')
+				)
 					return true;
 		return false;
 	});
@@ -159,7 +162,7 @@ export function workbookXml(
 		calc ? Array.from(calc.attributes).find((a) => a.name === name)?.value : undefined;
 	const calcId = sourceAttr('calcId') ?? '191029';
 	const recalculate =
-		workbook.fullCalcOnLoad || workbook.valuesStale || hasUncachedFormula(workbook);
+		workbook.fullCalcOnLoad || workbook.valuesStale || hasUncachedResult(workbook);
 	const sourceFull = sourceAttr('fullCalcOnLoad');
 	const fullCalc = recalculate
 		? ' fullCalcOnLoad="1"'
