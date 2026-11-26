@@ -1,4 +1,5 @@
 /// <reference lib="webworker" />
+import { visioWorkerScope } from '../visio/worker-scope';
 import { inspectRasterImage } from 'ooxml-core/drawingml';
 import { compressRaster, openRaster, type PictureCompression } from '../form/picture-compression';
 
@@ -30,11 +31,8 @@ async function compress({
 	}
 }
 
-if (
-	typeof DedicatedWorkerGlobalScope !== 'undefined' &&
-	self instanceof DedicatedWorkerGlobalScope
-) {
-	const worker = self;
+if (visioWorkerScope) {
+	const worker = visioWorkerScope;
 	worker.addEventListener(
 		'message',
 		(event: MessageEvent<PictureCompressRequest>) => {
