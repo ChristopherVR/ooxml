@@ -26,7 +26,8 @@
  * ## Guarantees
  *
  * - Key order is irrelevant (`{a,b}` and `{b,a}` hash the same), because
- *   immutable spreads reorder keys freely.
+ *   immutable spreads reorder keys freely. Each `key=value` entry is hashed
+ *   from a fresh state and the entry digests are summed, so no key is sorted.
  * - An absent key and a key set to `undefined` hash the same, for the same
  *   reason.
  * - `isDirty` is excluded: it is the flag under discussion, not content.
@@ -40,7 +41,6 @@
  *
  * @module core/core/runtime/slide-fingerprint
  */
-import { at } from '../../../../geometry/indexed';
 import type { PptxSlide } from '../../types';
 
 /**
@@ -87,7 +87,11 @@ class SlideHasher {
 	public h2 = SEED2;
 
 	public updateChar(character: string): void {
-		const code = character.charCodeAt(0);
+		this.updateCode(character.charCodeAt(0));
+	}
+
+	/** Hashes one 32-bit value, such as a tag character's code or a length. */
+	public updateCode(code: number): void {
 		this.h1 = Math.imul(this.h1 ^ code, 2654435761);
 		this.h2 = Math.imul(this.h2 ^ code, 1597334677);
 	}
@@ -146,13 +150,49 @@ class SlideHasher {
 	}
 }
 
+/** Scratch views reading a number's IEEE-754 bits, so hashing it builds no string. */
+const NUMBER_BITS = new Float64Array(1);
+const NUMBER_WORDS = new Uint32Array(NUMBER_BITS.buffer);
+
+/** Tags separating the kinds of value, so a length never reads as a number. */
+const TAG_STRING = 0x73;
+const TAG_NUMBER = 0x64;
+const TAG_ARRAY = 0x61;
+const TAG_VIEW = 0x76;
+const TAG_RECORD = 0x6f;
+
+/**
+ * The state after `key=`, from a fresh state, per record key. The same few
+ * hundred keys recur on every node of the model, so each is hashed once. Keys
+ * come from the document, so the cache stops growing at a bound.
+ */
+const KEY_STATES = new Map<string, readonly [number, number]>();
+const KEY_STATE_LIMIT = 1 << 14;
+
+function keyState(hasher: SlideHasher, key: string): void {
+	const known = KEY_STATES.get(key);
+	if (known) {
+		hasher.h1 = known[0];
+		hasher.h2 = known[1];
+		return;
+	}
+	hasher.h1 = SEED1;
+	hasher.h2 = SEED2;
+	hasher.update(key);
+	hasher.updateChar('=');
+	if (KEY_STATES.size < KEY_STATE_LIMIT) {
+		KEY_STATES.set(key, [hasher.h1, hasher.h2]);
+	}
+}
+
 /** An object being hashed, one hashed once (digest not kept), or a kept digest. */
 const ON_PATH = 1;
 const SEEN_ONCE = 2;
 type Visit = typeof ON_PATH | typeof SEEN_ONCE | { d1: number; d2: number };
 
 function hashString(hasher: SlideHasher, text: string): void {
-	hasher.update(`s${text.length}:`);
+	hasher.updateCode(TAG_STRING);
+	hasher.updateCode(text.length);
 	if (text.length <= FULL_HASH_LIMIT) {
 		hasher.update(text);
 		return;
@@ -178,7 +218,10 @@ function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visi
 			hashString(hasher, value);
 			return;
 		case 'number':
-			hasher.update(`d${value}`);
+			NUMBER_BITS[0] = value;
+			hasher.updateCode(TAG_NUMBER);
+			hasher.updateCode(NUMBER_WORDS[0]!);
+			hasher.updateCode(NUMBER_WORDS[1]!);
 			return;
 		case 'boolean':
 			hasher.update(value ? 'b1' : 'b0');
@@ -225,7 +268,8 @@ function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visi
 
 function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Visit>): void {
 	if (Array.isArray(object)) {
-		hasher.update(`a${object.length}[`);
+		hasher.updateCode(TAG_ARRAY);
+		hasher.updateCode(object.length);
 		for (const item of object) {
 			hashValue(hasher, item, visits);
 			hasher.updateChar(',');
@@ -237,34 +281,35 @@ function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Vi
 			(object as ArrayBufferView).byteOffset,
 			(object as ArrayBufferView).byteLength,
 		);
-		hasher.update(`v${bytes.length}:`);
+		hasher.updateCode(TAG_VIEW);
+		hasher.updateCode(bytes.length);
 		const stride = bytes.length > FULL_HASH_LIMIT ? Math.ceil(bytes.length / SAMPLE_BUDGET) : 1;
 		hasher.updateBytes(bytes, stride);
 	} else {
 		const record = object as Record<string, unknown>;
-		const keys = Object.keys(record);
-		if (keys.length === 2) {
-			// Object.keys returns a dense array. Avoid a general sort for a node pair.
-			const first = at(keys, 0);
-			const second = at(keys, 1);
-			if (first > second) {
-				keys[0] = second;
-				keys[1] = first;
-			}
-		} else if (keys.length > 2) keys.sort();
-		hasher.update('o{');
-		for (const key of keys) {
+		const outer1 = hasher.h1;
+		const outer2 = hasher.h2;
+		// The sum of the entry digests does not depend on key order.
+		let sum1 = 0;
+		let sum2 = 0;
+		let entries = 0;
+		for (const key of Object.keys(record)) {
 			const entry = record[key];
 			// An absent key and an explicitly-undefined key are the same slide.
 			if (entry === undefined) {
 				continue;
 			}
-			hasher.update(key);
-			hasher.updateChar('=');
+			keyState(hasher, key);
 			hashValue(hasher, entry, visits);
-			hasher.updateChar(';');
+			sum1 = (sum1 + hasher.final1()) | 0;
+			sum2 = (sum2 + hasher.final2()) | 0;
+			entries++;
 		}
-		hasher.updateChar('}');
+		hasher.h1 = outer1;
+		hasher.h2 = outer2;
+		hasher.updateCode(TAG_RECORD);
+		hasher.updateCode(entries);
+		hasher.mix(sum1, sum2);
 	}
 }
 

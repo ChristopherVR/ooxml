@@ -109,6 +109,18 @@ describe('fingerprintSlide', () => {
 		expect(fingerprintSlide(asNumber)).not.toBe(fingerprintSlide(asString));
 	});
 
+	it('sees values swapped between keys, which an order-free record hash must not miss', () => {
+		const slide = baseSlide();
+		const element = at(slide.elements, 0);
+		const swapped = {
+			...slide,
+			elements: [{ ...element, x: element.y, y: element.x }, at(slide.elements, 1)],
+		} as unknown as PptxSlide;
+		expect(fingerprintSlide(swapped)).not.toBe(fingerprintSlide(slide));
+		const moved = { ...slide, rId: undefined, notesRId: slide.rId } as unknown as PptxSlide;
+		expect(fingerprintSlide(moved)).not.toBe(fingerprintSlide(slide));
+	});
+
 	it('sees a change in raw passthrough XML', () => {
 		const slide = { ...baseSlide(), rawXml: { 'p:sld': { 'p:cSld': { '@_name': 'A' } } } };
 		const edited = { ...baseSlide(), rawXml: { 'p:sld': { 'p:cSld': { '@_name': 'B' } } } };
