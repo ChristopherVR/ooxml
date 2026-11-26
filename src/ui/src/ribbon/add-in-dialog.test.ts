@@ -10,7 +10,7 @@ const xml = `<OfficeApp xmlns="http://schemas.microsoft.com/office/appforoffice/
 	<Id>083a367e-842b-4d4f-ab91-cd5de849e495</Id><Version>1.0.0</Version>
 	<ProviderName>Lab Notes</ProviderName><DefaultLocale>en</DefaultLocale>
 	<DisplayName DefaultValue="&lt;img src='https://example.test/untrusted' /&gt;"/>
-	<Description DefaultValue="${descriptionPrefix.replace('<', '&lt;')}Reference notes."/>
+	<Description DefaultValue="${descriptionPrefix.replaceAll('&', '&amp;').replaceAll('<', '&lt;')}Reference notes."/>
 	<DefaultSettings><SourceLocation DefaultValue="https://example.test/pane"/></DefaultSettings>
 	<Permissions>ReadDocument</Permissions>
 </OfficeApp>`;
