@@ -316,7 +316,7 @@
 	},
 	"dependencies": {
 		"@xmldom/xmldom": "^0.9.12",
-		"emf-converter": "^5.0.0",
+		"emf-converter": "^5.0.1",
 		"fast-xml-parser": "^5.12.1",
 		"fflate": "^0.8.3",
 		"jszip": "^3.10.2",

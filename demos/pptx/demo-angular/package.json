@@ -16,7 +16,7 @@
 		"@angular/platform-browser": "^22.3.0",
 		"@ngx-translate/core": "^18.1.0",
 		"ai": "^7.0.179",
-		"emf-converter": "5.0.0",
+		"emf-converter": "5.0.1",
 		"fast-xml-parser": "^5.12.1",
 		"html2canvas-pro": "^2.6.4",
 		"jspdf": "^4.2.1",

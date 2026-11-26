@@ -175,7 +175,7 @@
 	},
 	"dependencies": {
 		"dompurify": "^3.4.18",
-		"emf-converter": "5.0.0",
+		"emf-converter": "5.0.1",
 		"lit": "^3.3.3",
 		"ooxml-core": "*",
 		"opentype.js": "^2.0.0",

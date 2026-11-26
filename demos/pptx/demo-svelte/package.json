@@ -13,7 +13,7 @@
 		"@ai-sdk/svelte": "^5.0.179",
 		"@lucide/svelte": "^1.77.0",
 		"ai": "^7.0.179",
-		"emf-converter": "5.0.0",
+		"emf-converter": "5.0.1",
 		"fast-xml-parser": "^5.12.1",
 		"jszip": "^3.10.2",
 		"ooxml-demo-onedrive": "workspace:*",
