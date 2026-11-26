@@ -24,6 +24,6 @@ export const EDITOR_CHROME_CSS =
 	EDITOR_HOME_LAYOUT_CSS +
 	EDITOR_CLUSTER_CSS +
 	EDITOR_COLLAPSE_CSS +
+	EDITOR_TASK_PANE_CSS +
 	// Last: the opt-in cards look overrides the default look at equal weight.
-	EDITOR_CARDS_CSS +
-	EDITOR_TASK_PANE_CSS;
+	EDITOR_CARDS_CSS;

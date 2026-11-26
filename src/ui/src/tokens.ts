@@ -191,6 +191,7 @@ export const OFFICE_TOKENS = {
 	'--office-command-tall-icon': '30px',
 	'--office-command-active': 'color-mix(in srgb, var(--office-accent, #2563eb) 15%, transparent)',
 	'--office-collapsed-group-min-width': '56px',
+	'--office-collapsed-group-label-max': '72px',
 	'--office-ribbon-caption-line-height': '12px',
 	'--office-ribbon-row-height': '22px',
 	'--office-ribbon-file-min-width': '52px',

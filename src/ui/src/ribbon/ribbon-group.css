@@ -138,7 +138,7 @@
 }
 .face > span {
 	min-inline-size: min-content;
-	max-inline-size: 72px;
+	max-inline-size: var(--office-collapsed-group-label-max);
 	line-height: 1.15;
 	white-space: normal;
 	text-wrap: balance;
