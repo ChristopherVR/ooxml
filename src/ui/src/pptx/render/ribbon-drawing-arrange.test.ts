@@ -22,6 +22,11 @@ it('keeps Selection Pane reachable without a selection and routes the editing ro
 		'home.drawing.arrange'
 	];
 	expect(menu?.disabled).toBe(false);
+	expect([...new Set(menu?.items?.map((entry) => entry.group))]).toEqual([
+		'Order Objects',
+		'Group Objects',
+		'Position Objects',
+	]);
 	expect(menu?.items?.find((entry) => entry.value === 'group')?.disabled).toBe(true);
 	expect(menu?.items?.find((entry) => entry.value === 'left')?.disabled).toBe(true);
 	expect(runDrawingArrange('selectionPane', actions)).toBe(true);

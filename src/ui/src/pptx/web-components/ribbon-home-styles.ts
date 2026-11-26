@@ -84,6 +84,11 @@ input.num:disabled { opacity:.4; }
 input.num:focus-visible { outline:2px solid var(--pptx-ring,#818cf8); outline-offset:-2px; }
 .popup { box-sizing:border-box; position:fixed; z-index:1200; max-width:calc(100vw - 16px); max-height:min(70vh,520px); overflow:auto; padding:4px 0; border:1px solid var(--pptx-border,#475569); border-radius:var(--_office-look-menu-radius,8px); background:var(--pptx-popover,#111827); color:var(--pptx-popover-foreground,#f8fafc); box-shadow:var(--_office-look-menu-shadow,0 8px 24px #0006); font-size:12px; }
 .popup[hidden] { display:none; }
+[data-ribbon-control="home.drawing.arrange"] > .popup:not([hidden]) {
+	display:flex; flex-direction:column; width:min(248px,calc(100vw - 16px));
+}
+[data-ribbon-control="home.drawing.arrange"] > .popup > * { flex:none; }
+[data-ribbon-control="home.drawing.arrange"] > .popup .item .label { white-space:normal; }
 .popup[role=dialog] { padding:8px; }
 .popup.grid:not([hidden]) { display:grid; grid-template-columns:repeat(8,30px); gap:2px; padding:6px; max-height:min(70vh,520px); }
 .popup.grid .heading { grid-column:1 / -1; padding:6px 2px 2px; }

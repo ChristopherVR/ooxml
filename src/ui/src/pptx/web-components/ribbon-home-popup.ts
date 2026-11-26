@@ -47,14 +47,20 @@ export function createHomePopup(
 			return;
 		}
 		const anchor = slot.getBoundingClientRect();
+		el.style.removeProperty('max-height');
 		const { width, height } = el.getBoundingClientRect();
 		const left = Math.min(anchor.left, view.innerWidth - width - 8);
-		const top =
-			anchor.bottom + 4 + height > view.innerHeight - 8 && anchor.top - 4 - height >= 8
-				? anchor.top - 4 - height
-				: anchor.bottom + 4;
+		const below = view.innerHeight - anchor.bottom - 12;
+		const above = anchor.top - 12;
+		const useAbove = height > below && above > below;
+		const fittedHeight = Math.max(0, Math.min(height, useAbove ? above : below));
+		const top = useAbove ? anchor.top - 4 - fittedHeight : anchor.bottom + 4;
+		if (fittedHeight < height) el.style.maxHeight = `${fittedHeight}px`;
 		el.style.left = `${Math.max(8, left)}px`;
 		el.style.top = `${Math.max(8, top)}px`;
+	};
+	const scroll = (event: Event) => {
+		if (!event.composedPath().includes(el)) reposition();
 	};
 	const outside = (event: Event) => {
 		if (!event.composedPath().includes(slot)) {
@@ -75,7 +81,7 @@ export function createHomePopup(
 		doc[method]('pointerdown', outside, true);
 		doc[method]('keydown', key as EventListener);
 		view?.[method]('resize', reposition);
-		doc[method]('scroll', reposition, true);
+		doc[method]('scroll', scroll, true);
 	};
 	function close(focusTrigger = false): void {
 		if (!opened) {

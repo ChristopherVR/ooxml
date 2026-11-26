@@ -52,6 +52,11 @@ export function paintHomeMenu(
 		!grid && (value !== undefined || items.some((row) => row.checked !== undefined));
 	for (const row of items) {
 		const heading = row.groupKey ? homeLabel(state, row.groupKey, row.group ?? '') : row.group;
+		if (row.separator && heading === group) {
+			const rule = doc.createElement('hr');
+			rule.setAttribute('role', 'separator');
+			rows.push(rule);
+		}
 		if (heading !== undefined && heading !== group) {
 			const title = doc.createElement('div');
 			title.className = 'heading';
@@ -60,11 +65,6 @@ export function paintHomeMenu(
 			rows.push(title);
 		}
 		group = heading;
-		if (row.separator) {
-			const rule = doc.createElement('hr');
-			rule.setAttribute('role', 'separator');
-			rows.push(rule);
-		}
 		const button = doc.createElement('button');
 		button.type = 'button';
 		button.className = 'item';

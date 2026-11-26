@@ -133,6 +133,11 @@ export interface DrawingArrangeInput {
 
 const NEEDS_OBJECT = ['pptx.insert.needsSelection', 'Select an object first.'] as const;
 const LOCKED = ['pptx.arrange.objectLocked', 'A selected object is locked.'] as const;
+const HEADINGS = {
+	order: { groupKey: 'pptx.arrange.orderObjects', group: 'Order Objects' },
+	group: { groupKey: 'pptx.arrange.groupObjects', group: 'Group Objects' },
+	position: { groupKey: 'pptx.arrange.positionObjects', group: 'Position Objects' },
+};
 
 function disabledReason(
 	action: ArrangeItem['action'],
@@ -169,7 +174,13 @@ export function drawingArrangeItems(input?: DrawingArrangeInput): RibbonHomeItem
 	const rotationTarget = input?.actions.rotation?.().element;
 	return HOME_DRAWING_ARRANGE_ITEMS.filter(
 		({ action }) => !action || Boolean(input?.actions[action]),
-	).map(({ action, ...row }) => {
+	).map(({ action, ...item }) => {
+		const heading = !action
+			? 'order'
+			: action === 'group' || action === 'ungroup'
+				? 'group'
+				: 'position';
+		const row = { ...item, ...HEADINGS[heading] };
 		if (!input) return row;
 		const reason = disabledReason(action, input, rotationTarget);
 		return reason

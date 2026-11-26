@@ -114,6 +114,16 @@ test('Home uses Drawing Arrange and Review shares the Comments task pane', async
 	await expect(drawing.getByRole('button', { name: 'Quick Styles' })).toBeVisible();
 	await drawing.getByRole('button', { name: 'Arrange', exact: true }).click();
 	await expect(drawing.getByRole('menuitem', { name: 'Selection Pane' })).toBeVisible();
+	const menu = drawing.getByRole('menu', { name: 'Arrange' });
+	for (const heading of ['Order Objects', 'Group Objects', 'Position Objects']) {
+		await expect(menu.getByText(heading, { exact: true })).toBeVisible();
+	}
+	const box = (await menu.boundingBox())!;
+	expect(box.width).toBeLessThanOrEqual(260);
+	expect(box.x + box.width).toBeLessThanOrEqual(1600);
+	const before = (await menu.getByRole('menuitem', { name: 'Bring Forward' }).boundingBox())!;
+	const after = (await menu.getByRole('menuitem', { name: 'Send Backward' }).boundingBox())!;
+	expect(after.y).toBeGreaterThanOrEqual(before.y + before.height);
 	await page.keyboard.press('Escape');
 
 	await ribbonTab(page, 'Review').click();
