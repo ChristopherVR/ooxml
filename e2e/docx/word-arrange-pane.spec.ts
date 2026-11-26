@@ -27,15 +27,12 @@ test('ordinary text edits leave unchanged Selection Pane rows mounted', async ({
 		.toBe(true);
 });
 
-test('Selection Pane is docked and renames a drawing with F2 or a double-click', async ({
-	page,
-}) => {
+test('Selection Pane docks to the right and uses Office theme tokens', async ({ page }) => {
 	const editor = await openShapes(page);
 	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
 	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
 	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
-	const row = pane.getByRole('button', { name: 'Oval 3' });
 	const dock = await pane.evaluate((element) => {
 		const canvas = element.parentElement!.querySelector('.dve-canvas')!.getBoundingClientRect();
 		const side = element.getBoundingClientRect();
@@ -59,16 +56,8 @@ test('Selection Pane is docked and renames a drawing with F2 or a double-click',
 			),
 		)
 		.toBeLessThan(1);
-	await row.dblclick();
-	const name = pane.getByRole('textbox', { name: 'Drawing name' });
-	await name.fill('Diagram oval');
-	await name.press('Enter');
-	const renamed = pane.getByRole('button', { name: 'Diagram oval' });
-	await expect(renamed).toBeFocused();
-	await renamed.press('F2');
-	await name.fill('Final oval');
-	await name.press('Enter');
-	const selected = pane.getByRole('button', { name: 'Final oval', pressed: true });
+	await pane.getByRole('button', { name: 'Oval 3' }).click();
+	const selected = pane.getByRole('button', { name: 'Oval 3', pressed: true });
 	const colors = () =>
 		selected.evaluate((element) => {
 			const style = getComputedStyle(element);
@@ -83,6 +72,41 @@ test('Selection Pane is docked and renames a drawing with F2 or a double-click',
 	expect(dark[0]).not.toBe(dark[1]);
 	await page.emulateMedia({ forcedColors: 'active' });
 	await expect(selected).toHaveCSS('forced-color-adjust', 'none');
+	await pane.getByRole('button', { name: 'Close', exact: true }).click();
+	await expect(pane).toBeHidden();
+});
+
+test('Selection Pane renames with F2 and double-click without forwarding keys', async ({
+	page,
+}) => {
+	const editor = await openShapes(page);
+	await unfoldArrange(editor, 'Layout');
+	await editor.getByRole('button', { name: 'Selection Pane', exact: true }).click();
+	const pane = editor.getByRole('complementary', { name: 'Selection Pane' });
+	const row = pane.getByRole('button', { name: 'Oval 3' });
+	const name = pane.getByRole('textbox', { name: 'Drawing name' });
+	const story = editor.locator('.ProseMirror').first();
+	const text = await story.textContent();
+	await editor.evaluate((element) => {
+		for (const type of ['keydown', 'keypress', 'keyup'])
+			element.addEventListener(type, () => element.setAttribute('data-leaked-pane-key', type));
+	});
+	await row.dblclick();
+	await expect(name).toBeFocused();
+	await name.press('Control+a');
+	await page.keyboard.type('Cancelled');
+	await expect(name).toHaveValue('Cancelled');
+	await name.press('Escape');
+	await expect(name).toBeHidden();
+	await expect(row).toBeFocused();
+	await row.press('F2');
+	await expect(name).toBeFocused();
+	await name.press('Control+a');
+	await page.keyboard.type('Final oval');
+	await name.press('Enter');
+	await expect(pane.getByRole('button', { name: 'Final oval', pressed: true })).toBeFocused();
+	await expect(story).toHaveText(text ?? '');
+	expect(await editor.getAttribute('data-leaked-pane-key')).toBeNull();
 	const { xml } = await savedDocument(page, 'renamed-drawing.docx');
 	expect(xml).toContain('name="Final oval"');
 	expect(xml).not.toContain('title="Final oval"');

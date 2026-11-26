@@ -37,6 +37,9 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 	});
 	const { element, heading, close, list, hide } = frame;
 	element.className = 'dve-selection-pane';
+	// Keep native input and button behavior while isolating the pane from editor shortcuts.
+	for (const type of ['keydown', 'keypress', 'keyup'])
+		element.addEventListener(type, (event) => event.stopPropagation());
 	dock.append(element);
 	let lastDoc: EditorView['state']['doc'] | undefined;
 	let drawings: ReturnType<typeof storyDrawings> = [];
@@ -130,6 +133,10 @@ export function toggleArrangePane(core: EditorCore, view: EditorView): void {
 						};
 						input.addEventListener('blur', () => finish(true, false));
 						input.addEventListener('keydown', (event) => {
+							if (event.isComposing) {
+								event.stopPropagation();
+								return;
+							}
 							if (event.key !== 'Enter' && event.key !== 'Escape') return;
 							event.preventDefault();
 							event.stopPropagation();
