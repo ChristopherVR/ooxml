@@ -589,9 +589,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       kept but cannot be inserted, and repeating items cannot be added or removed
       (`docx/content-control-model.ts`).
 - [ ] **P2** Content controls shown as tags (`w15:appearance="tags"`) draw start and end tags for
-      inline, paragraph, row and cell controls in the editor, Print Layout and PDF (#349). Open: the
-      tag size is fitted to Word's output rather than measured from it, and the caret at the start
-      of a block control sits before its tag where Word puts it after.
+      inline, paragraph, row and cell controls in the editor, Print Layout and PDF, and the
+      editing caret sits inside the control after the start tag and before the end tag (#349,
+      `e2e/docx/content-control-tag-caret.spec.ts`). Open: the tag size is fitted to Word's output
+      rather than measured from it, and a remote collaborator's edit forgets which side of a tag the
+      caret was on.
 - [x] **P2** Hyperlinks to http, https, mailto, tel and ftp targets open on Ctrl+click, as in Word;
       script and disguised schemes are refused (`docx/hyperlink.test.ts`).
 - [x] **P1** AutoCorrect and AutoFormat as you type: smart quotes, automatic bulleted and numbered
