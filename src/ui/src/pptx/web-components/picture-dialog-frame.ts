@@ -57,8 +57,9 @@ export function pictureDialog(
 export function pictureField(control: HTMLElement, label: string): HTMLLabelElement {
 	const field = control.ownerDocument.createElement('label');
 	field.style.cssText = 'display:flex;align-items:center;gap:8px';
-	if (control instanceof HTMLInputElement && control.type === 'checkbox')
-		field.append(control, label);
+	if (control.matches('office-ui-select, office-ui-checkbox'))
+		control.setAttribute('aria-label', label);
+	if (control.matches('office-ui-checkbox')) field.append(control, label);
 	else field.append(label, control);
 	return field;
 }

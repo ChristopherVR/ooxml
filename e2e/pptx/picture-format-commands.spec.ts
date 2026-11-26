@@ -55,16 +55,26 @@ test('picture commands replace the source, compress it and edit the outline', as
 		.toBeLessThan(3);
 
 	await control(page, 'adjust.compress').click();
-	await dialog(page).getByLabel('All pictures in this presentation').check();
-	await dialog(page).getByLabel('Resolution (pixels per inch)').selectOption('96');
-	await dialog(page).getByLabel('Delete cropped areas of pictures').check();
+	const allPictures = dialog(page).getByRole('checkbox', {
+		name: 'All pictures in this presentation',
+	});
+	await allPictures.press('Space');
+	await expect(allPictures).toBeChecked();
+	await dialog(page).getByRole('combobox', { name: 'Resolution (pixels per inch)' }).click();
+	await dialog(page).getByRole('option', { name: '96', exact: true }).click();
+	const deleteCrop = dialog(page).getByRole('checkbox', {
+		name: 'Delete cropped areas of pictures',
+	});
+	await deleteCrop.press('Space');
+	await expect(deleteCrop).toBeChecked();
 	await dialog(page).getByRole('button', { name: 'Apply' }).click();
 	await expect(dialog(page).getByRole('status')).toContainText(/Picture bytes saved [1-9]/);
 	await dialog(page).getByRole('button', { name: 'OK' }).click();
 
 	await control(page, 'pictureStyles.border').click();
 	await dialog(page).getByLabel('Weight (pt)').fill('3');
-	await dialog(page).getByLabel('Stroke Dash').selectOption('dash');
+	await dialog(page).getByRole('combobox', { name: 'Stroke Dash' }).click();
+	await dialog(page).getByRole('option', { name: 'Dash', exact: true }).click();
 	await dialog(page).getByRole('button', { name: 'Apply' }).click();
 	await expect(dialog(page)).toHaveCount(0);
 	await control(page, 'adjust.resetPicture').click();

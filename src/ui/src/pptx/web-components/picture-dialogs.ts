@@ -4,6 +4,7 @@ import {
 	replacePicturePatch,
 	resetPicturePatch,
 } from 'ooxml-core/pptx';
+import { defineSelect, type OfficeUiSelect } from '../../form/select';
 import { STROKE_DASH_OPTIONS } from '../render/stroke-dash-options';
 import { commitPicture, pictureDialog, pictureField, pictureSource } from './picture-dialog-frame';
 import type { PictureDialogCommand, PictureDialogContext } from './picture-ribbon';
@@ -144,16 +145,13 @@ function editPictureBorder(context: PictureDialogContext): void {
 	weight.step = 'any';
 	weight.required = true;
 	weight.value = String(Math.round((picture.shapeStyle?.strokeWidth || 4 / 3) * 75) / 100);
-	const dash = doc.createElement('select');
-	for (const option of STROKE_DASH_OPTIONS) {
-		if (option.value === 'custom') continue;
-		const item = doc.createElement('option');
-		item.value = option.value;
-		item.textContent = text(option.i18nKey, option.label);
-		dash.append(item);
-	}
+	defineSelect(doc.defaultView!.customElements);
+	const dash = doc.createElement('office-ui-select') as OfficeUiSelect;
+	dash.options = STROKE_DASH_OPTIONS.filter(({ value }) => value !== 'custom').map((option) => ({
+		value: option.value,
+		label: text(option.i18nKey, option.label),
+	}));
 	dash.value = picture.shapeStyle?.strokeDash ?? 'solid';
-	if (!dash.value) dash.value = 'solid';
 	const dialog = pictureDialog(context, text('pptx.pictureFormat.border', 'Picture Border'), () => {
 		const selected = STROKE_DASH_OPTIONS.find((option) => option.value === dash.value);
 		if (!selected || !weight.validity.valid) return;

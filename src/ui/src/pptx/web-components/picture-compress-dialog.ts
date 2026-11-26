@@ -1,5 +1,7 @@
 import { clearPictureCrop, isDirectPicture, replacePicturePatch } from 'ooxml-core/pptx';
 import type { PptxElement, PptxImageLikeElement, PptxSlide } from 'ooxml-core/pptx';
+import { defineCheckbox, type OfficeUiCheckbox } from '../../form/checkbox';
+import { defineSelect, type OfficeUiSelect } from '../../form/select';
 import { canInteractWithElement } from '../render/element-locks';
 import { commitPicture, pictureDialog, pictureField, pictureSource } from './picture-dialog-frame';
 import type { PictureDialogContext } from './picture-ribbon';
@@ -51,17 +53,14 @@ function applyCompression(
 export function compressPictures(context: PictureDialogContext): void {
 	const { host, picture, text, signal } = context;
 	const doc = host.ownerDocument;
-	const ppi = doc.createElement('select');
-	for (const resolution of [330, 220, 150, 96]) {
-		const option = doc.createElement('option');
-		option.value = option.textContent = String(resolution);
-		ppi.append(option);
-	}
+	const registry = doc.defaultView!.customElements;
+	defineSelect(registry);
+	defineCheckbox(registry);
+	const ppi = doc.createElement('office-ui-select') as OfficeUiSelect;
+	ppi.options = ['330', '220', '150', '96'].map((value) => ({ value, label: value }));
 	ppi.value = '150';
-	const all = doc.createElement('input');
-	all.type = 'checkbox';
-	const crop = doc.createElement('input');
-	crop.type = 'checkbox';
+	const all = doc.createElement('office-ui-checkbox') as OfficeUiCheckbox;
+	const crop = doc.createElement('office-ui-checkbox') as OfficeUiCheckbox;
 	const form = doc.createElement('div');
 	form.style.cssText = 'display:grid;gap:8px';
 	form.append(
