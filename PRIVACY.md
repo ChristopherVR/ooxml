@@ -242,6 +242,11 @@ to globally routable addresses, and the connection is made to the address that w
 
 By default Word, Excel and Visio open, render, edit and save documents locally.
 
+Joining or editing in an active Word collaboration room shares the document's bibliography source
+list and citation style, including author names, titles and any other fields in the list, with
+peers over the configured room connection. A hosted room may retain the list with its document
+state. Omit the collaboration configuration or leave the room to keep future edits local.
+
 - linked (external) pictures are not fetched (Word and Excel download them on open, so this is
   stricter than those applications; see
   [docs/powerpoint-external-content.md](docs/powerpoint-external-content.md));

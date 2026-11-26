@@ -10,7 +10,8 @@ type DocumentInformation = Pick<DocumentModel, 'properties' | 'packageInformatio
 export function documentInformationJson(model: DocumentModel): string {
 	const info: DocumentInformation = {};
 	if (model.properties) info.properties = model.properties;
-	if (model.packageInformation) info.packageInformation = model.packageInformation;
+	const { bibliography: _sources, ...local } = model.packageInformation ?? {};
+	if (Object.keys(local).length) info.packageInformation = local;
 	return JSON.stringify(info);
 }
 
@@ -26,4 +27,26 @@ export function readDocumentInformation(value: unknown): DocumentInformation | u
 	} catch {
 		return undefined;
 	}
+}
+
+/** The room shares the list XML. Each peer keeps the part path in its own source package. */
+export function withBibliographySources<T extends Partial<DocumentModel>>(
+	model: T,
+	xml: unknown,
+	localPart: string | undefined,
+): T {
+	const { bibliography, ...local } = model.packageInformation ?? {};
+	if (typeof xml === 'string') {
+		if (xml === bibliography?.xml) return model;
+		return {
+			...model,
+			packageInformation: {
+				...local,
+				bibliography: { ...(localPart ? { part: localPart } : {}), xml },
+			},
+		};
+	}
+	if (xml !== null || !bibliography) return model;
+	const { packageInformation: _info, ...rest } = model;
+	return Object.keys(local).length ? { ...model, packageInformation: local } : (rest as T);
 }

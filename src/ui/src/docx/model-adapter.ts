@@ -38,7 +38,11 @@ import { sectionsOf } from './section-commands';
 import { sectionPartsJson, restoreSectionParts } from 'ooxml-core/docx/ui';
 import { notePartsJson, restoreNoteParts } from 'ooxml-core/docx/ui';
 import { commentThreadsFromDoc } from 'ooxml-core/docx/ui';
-import { documentInformationJson, readDocumentInformation } from './document-information-attr';
+import {
+	documentInformationJson,
+	readDocumentInformation,
+	withBibliographySources,
+} from './document-information-attr';
 import { gridOf } from './table-restructure';
 import { signedTwips, twips } from 'ooxml-core/units';
 
@@ -96,6 +100,7 @@ export function modelToDoc(model: DocumentModel) {
 			commentThreads: JSON.stringify(model.comments ?? []),
 			documentInformation: documentInformationJson(model),
 			mailMerge: model.mailMerge ?? null,
+			bibliographySources: model.packageInformation?.bibliography?.xml ?? null,
 			styleCatalogs: styleCatalogsOf(model),
 			documentTheme: model.theme ?? null,
 			evenAndOddHeaders: Boolean(model.evenAndOddHeaders),
@@ -343,13 +348,18 @@ export function docToModel(
 		mailMerge: priorMailMerge,
 		...kept
 	} = prior;
-	const rest = previousDoc
+	const documentInformation = previousDoc
 		? withDocumentInformation(
 				kept,
 				doc.attrs.documentInformation,
 				previousDoc.attrs.documentInformation,
 			)
 		: kept;
+	const rest = withBibliographySources(
+		documentInformation,
+		doc.attrs.bibliographySources,
+		prior.packageInformation?.bibliography?.part,
+	);
 	const sectionLayout =
 		typeof doc.attrs.sections === 'string'
 			? sectionsFromLayout(doc.attrs.sections, priorSections, blocks)

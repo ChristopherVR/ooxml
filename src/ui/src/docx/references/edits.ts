@@ -15,7 +15,7 @@ import {
 	type WordReferences,
 } from 'ooxml-core/docx/ui';
 import { createCanvasMeasurer } from '../canvas-measurer';
-import { documentInformationJson } from '../document-information-attr';
+import { withBibliographySources } from '../document-information-attr';
 import { modelToDoc } from '../model-adapter';
 import { pageNumbers } from '../print-header-footer';
 import { schema } from '../schema';
@@ -66,15 +66,9 @@ export function setBibliography(
 	data: Bibliography,
 ): DocumentModel {
 	const original = model.packageInformation?.bibliography;
-	const next = {
-		...model,
-		packageInformation: {
-			...model.packageInformation,
-			bibliography: { ...original, xml: references.writeBibliographyXml(data, original?.xml) },
-		},
-	};
-	tr.setDocAttribute('documentInformation', documentInformationJson(next));
-	return next;
+	const xml = references.writeBibliographyXml(data, original?.xml);
+	if (tr.doc.attrs.bibliographySources !== xml) tr.setDocAttribute('bibliographySources', xml);
+	return withBibliographySources(model, xml, original?.part);
 }
 
 type PagePart = { number: string; end: number };

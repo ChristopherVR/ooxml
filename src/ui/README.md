@@ -634,6 +634,9 @@ same origin. Compress Pictures uses a bundled worker and processes image bytes o
 
 Screenshot and Screen Clipping use the browser’s surface picker and embed the result locally. PowerPoint Screen Recording uses the same picker and can include shared audio. See the [capture privacy details](../../PRIVACY.md#screenshots-and-screen-recordings).
 
+Word shares bibliography sources and citation style over the configured connection during an
+active collaboration session. Leave the room to keep future edits local.
+
 Word's 3D Models and Object commands embed the local file you select. When you use them in an active Word collaboration session, that session's existing connection shares the file and its preview with peers.
 
 Get Add-ins opens Microsoft Marketplace only when the catalog link is followed. Forms in

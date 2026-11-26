@@ -151,7 +151,7 @@ export function runReferences(
 			}
 			const syncSources = (data: Bibliography) => {
 				const tr = view.state.tr;
-				const next = setBibliography(references, tr, model, data);
+				const next = setBibliography(references, tr, core.model, data);
 				changeReferenceTables(references, tr, next, {
 					kind: 'BIBLIOGRAPHY',
 					empty: t(EMPTY.BIBLIOGRAPHY),
@@ -188,7 +188,7 @@ export function runReferences(
 					const data = placeholder
 						? { ...bibliography, sources: [...bibliography.sources, placeholder] }
 						: bibliography;
-					if (placeholder) setBibliography(references, tr, model, data);
+					if (placeholder) setBibliography(references, tr, core.model, data);
 					const instruction = citationCode(tag, REFERENCE_LCID[locale] ?? 1033, options);
 					const result = citationEvaluator(data)(instruction) ?? '';
 					inlineReference(
