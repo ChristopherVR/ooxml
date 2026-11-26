@@ -125,21 +125,6 @@ import type { RibbonTab } from './ribbon-types';
 						{{ 'pptx.shortcuts.group.editing' | translate }}
 					</span>
 				</div>
-				<span class="pptx-rb-sep"></span>
-				<!--
-					React parity (Toolbar.tsx: sArr = sHome || toolbarSection === 'arrange'):
-					the Home tab also ends with the Arrange group. The dedicated Arrange
-					tab below stays unchanged.
-				-->
-				<pptx-ribbon-arrange-section
-					[hiddenActions]="hiddenActions()"
-					[slideIndex]="slideIndex()"
-					[selectedElement]="selectedElement()"
-					[canEdit]="canEdit()"
-					[formatPainterActive]="formatPainterActive()"
-					[canActivateFormatPainter]="canActivateFormatPainter()"
-					(toggleFormatPainter)="toggleFormatPainter.emit()"
-				/>
 			}
 			@case ('insert') {
 				<pptx-ribbon-insert-section
@@ -154,7 +139,7 @@ import type { RibbonTab } from './ribbon-types';
 					(openEquationDialog)="openEquationDialog.emit()"
 					(openHyperlink)="link.emit()"
 					[commentsOpen]="commentsOpen()"
-					(toggleComments)="comments.emit()"
+					(toggleComments)="comments.emit(true)"
 					(openTemplateGallery)="openTemplateGallery.emit()"
 				/>
 			}
@@ -245,7 +230,7 @@ export class RibbonContentComponent {
 	 */
 	readonly link = output<void>();
 	/** Insert > Comment: the host opens the comments pane, as Review > New Comment does. */
-	readonly comments = output<void>();
+	readonly comments = output<boolean | void>();
 	readonly openPassword = output<void>();
 	readonly openFontEmbedding = output<void>();
 	readonly openVersionHistory = output<void>();

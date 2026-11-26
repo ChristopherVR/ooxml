@@ -15,7 +15,7 @@ interface Props {
 	canEdit: boolean;
 	spellCheckEnabled: boolean;
 	onSetSpellCheckEnabled: (enabled: boolean) => void;
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
 	/** Previous / Next / Delete on the deck's comments (absent: those stay disabled). */
@@ -83,6 +83,8 @@ function request(event: Event): void {
 			}
 			break;
 		case 'review.comments.newComment':
+			props.onToggleComments?.(true);
+			break;
 		case 'review.comments.showComments':
 			props.onToggleComments?.();
 			break;

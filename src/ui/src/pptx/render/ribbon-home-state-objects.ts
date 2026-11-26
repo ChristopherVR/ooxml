@@ -1,3 +1,4 @@
+import { drawingArrangeItems } from './ribbon-drawing-arrange';
 import { homeShapeGalleryItems } from './shape-gallery-home';
 import type { RibbonHomeLayoutModel, RibbonHomeViewState } from './ribbon-home-spec';
 import type { HomeColourInput } from './ribbon-home-state';
@@ -42,6 +43,7 @@ export function slidesHomeControls(input: SlidesHomeInput): RibbonHomeViewState[
 export interface DrawingHomeInput {
 	editable: boolean;
 	hasSelection: boolean;
+	arrange?: Parameters<typeof drawingArrangeItems>[0] | undefined;
 	/** Shape type of the Shapes menu's current choice, marked in the list. */
 	shapeType?: string;
 	/** Shape Fill and Shape Outline popovers; omit to offer no colour data. */
@@ -58,7 +60,12 @@ export function drawingHomeControls(input: DrawingHomeInput): RibbonHomeViewStat
 			value: input.shapeType,
 			items: homeShapeGalleryItems(),
 		},
-		'home.drawing.arrange': { disabled: noTarget },
+		'home.drawing.arrange': input.arrange
+			? {
+					disabled: noTarget && !input.arrange.actions.selectionPane,
+					items: drawingArrangeItems(input.arrange),
+				}
+			: { disabled: noTarget, items: drawingArrangeItems() },
 		'home.drawing.shapeFill': input.fill
 			? homeColourState(noTarget, input.fill)
 			: { disabled: noTarget },

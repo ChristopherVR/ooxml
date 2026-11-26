@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { createCommentsPanelController } from 'ooxml-ui/pptx';
+import { attachCommentsTaskPane, createCommentsPanelController } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
-import { computed, inject } from 'vue';
+import { onMounted, onBeforeUnmount, ref, computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 import { COMMENTS_PANEL_CONTEXT } from '../composables/comments-panel-context';
@@ -27,6 +27,7 @@ const props = defineProps<{
 	 * `<header>` so mobile doesn't show "Comments" twice stacked.
 	 */
 	embedded?: boolean;
+	closeTaskPane?: () => void;
 	/** Modern comment authors (`ppt/commentAuthors.xml`), for the `@`-mention typeahead. */
 	modernCommentAuthors?: PptxModernCommentAuthor[];
 }>();
@@ -77,10 +78,23 @@ const replyMentions = (id: string): PptxCommentMention[] =>
 	(state.value.replyMentionsById[id] ?? []) as PptxCommentMention[];
 
 const formatTimestamp = (value: string | undefined): string => formatCommentTimestamp(value);
+const taskPane = ref<HTMLElement | null>(null);
+let detachTaskPane: (() => void) | undefined;
+onMounted(() => {
+	if (taskPane.value && props.closeTaskPane) {
+		detachTaskPane = attachCommentsTaskPane(taskPane.value, {
+			label: t('pptx.toolbar.comments'),
+			closeLabel: t('pptx.common.close'),
+			close: () => props.closeTaskPane?.(),
+		});
+	}
+});
+onBeforeUnmount(() => detachTaskPane?.());
 </script>
 
 <template>
 	<aside
+		ref="taskPane"
 		class="pptx-comments-panel flex h-full min-h-0 w-full flex-col border-l border-border bg-card text-foreground"
 		:aria-label="t('pptx.comments.slideComments')"
 	>
@@ -94,6 +108,7 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 			<span
 				class="pptx-comments-panel__count text-xs text-muted-foreground"
 				data-testid="comment-count"
+				:class="{ 'mr-8': closeTaskPane }"
 			>
 				{{ props.comments.length }}
 			</span>
@@ -265,6 +280,7 @@ const formatTimestamp = (value: string | undefined): string => formatCommentTime
 		</p>
 
 		<form
+			data-pptx-comment-draft
 			class="pptx-comments-panel__compose flex flex-col gap-2 border-t border-border px-4 py-3"
 			@submit.prevent="submit"
 		>

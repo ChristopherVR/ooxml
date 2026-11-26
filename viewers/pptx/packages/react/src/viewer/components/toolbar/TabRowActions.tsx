@@ -16,7 +16,7 @@ export interface TabRowActionsProps {
 	onEnterRehearsalMode?: () => void;
 	onOpenShareDialog?: () => void;
 	/** Comments toggle; absent (or the host turning comments off) leaves Comments out. */
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
 	/** Host-supplied list of toolbar buttons/ribbon tabs to hide. */

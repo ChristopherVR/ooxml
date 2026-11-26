@@ -87,6 +87,9 @@ export function paintHomeMenu(
 		if (glyph) {
 			button.append(glyph);
 		}
+		if (row.disabled && (row.descriptionKey || row.description)) {
+			button.title = homeLabel(state, row.descriptionKey ?? '', row.description ?? '');
+		}
 		if (grid && row.thumb) {
 			// A gallery cell: the name is its ScreenTip and accessible name, not visible text.
 			const reason = row.disabled && (row.descriptionKey || row.description);

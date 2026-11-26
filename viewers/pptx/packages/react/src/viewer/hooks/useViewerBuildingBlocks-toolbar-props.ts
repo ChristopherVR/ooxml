@@ -355,13 +355,13 @@ export function buildToolbarProps(input: BuildToolbarPropsInput): ToolbarProps {
 		onToggleThemeGallery: () => s.setIsThemeGalleryOpen((p) => !p),
 		isThemeGalleryOpen: s.isThemeGalleryOpen,
 		onCompare: propertyHandlers.handleCompare,
-		onToggleComments: () => {
+		onToggleComments: (ensureOpen) => {
 			s.setSidebarPanelMode('comments');
-			if (!s.isInspectorPaneOpen) {
-				s.setIsInspectorPaneOpen(true);
-			}
+			s.setIsInspectorPaneOpen(
+				ensureOpen || !(s.isInspectorPaneOpen && s.sidebarPanelMode === 'comments'),
+			);
 		},
-		isCommentsPanelOpen: s.isInspectorPaneOpen,
+		isCommentsPanelOpen: s.isInspectorPaneOpen && s.sidebarPanelMode === 'comments',
 		isMobileInsertOpen: s.isMobileInsertOpen,
 		onCloseMobileInsert: () => s.setIsMobileInsertOpen(false),
 		slideCommentCount: activeSlide?.comments?.length ?? 0,

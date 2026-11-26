@@ -25,7 +25,6 @@ import { TranslatePipe } from '@ngx-translate/core';
 import type { PptxComment, PptxElement, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { hasTextProperties } from 'pptx-viewer-core';
 
-import { CommentsPanelComponent } from './comments-panel.component';
 import { controllerSignal } from './controller-signal';
 import { EditorStateService } from './editor-state.service';
 import {
@@ -60,7 +59,6 @@ interface LayerRow {
 		InspectorPanelComponent,
 		PresentationPropertiesPanelComponent,
 		SlideBackgroundCardComponent,
-		CommentsPanelComponent,
 		FormatSectionsComponent,
 		FormatSectionTemplateDirective,
 	],
@@ -143,12 +141,6 @@ interface LayerRow {
 							</ng-template>
 						</pptx-format-sections>
 					}
-				}
-				@case ('comments') {
-					<pptx-comments-panel
-						[comments]="comments()"
-						[modernCommentAuthors]="modernCommentAuthors()"
-					/>
 				}
 			}
 		</div>

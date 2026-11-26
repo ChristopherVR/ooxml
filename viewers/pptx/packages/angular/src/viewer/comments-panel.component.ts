@@ -14,9 +14,23 @@
  * ```
  */
 
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import {
+	afterNextRender,
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	DestroyRef,
+	ElementRef,
+	inject,
+	input,
+	output,
+} from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { createCommentsPanelController, INITIAL_COMMENTS_PANEL_STATE } from 'ooxml-ui/pptx';
+import {
+	attachCommentsTaskPane,
+	createCommentsPanelController,
+	INITIAL_COMMENTS_PANEL_STATE,
+} from 'ooxml-ui/pptx';
 import type { CommentsPanelController, CommentsPanelState } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 import { formatCommentTimestamp } from 'pptx-viewer-core';
@@ -43,6 +57,24 @@ export class CommentsPanelComponent {
 	readonly comments = input<PptxComment[]>([]);
 
 	private readonly translate = inject(TranslateService);
+	readonly closeable = input(false);
+	readonly closed = output<void>();
+
+	constructor() {
+		const host = inject<ElementRef<HTMLElement>>(ElementRef);
+		const destroy = inject(DestroyRef);
+		afterNextRender(() => {
+			if (this.closeable()) {
+				destroy.onDestroy(
+					attachCommentsTaskPane(host.nativeElement, {
+						label: this.translate.instant('pptx.toolbar.comments'),
+						closeLabel: this.translate.instant('pptx.common.close'),
+						close: () => this.closed.emit(),
+					}),
+				);
+			}
+		});
+	}
 
 	/** Display name shown in the compose label ("Commenting as ..."). */
 	readonly authorName = input<string>(this.translate.instant('pptx.comments.defaultAuthorName'));

@@ -241,7 +241,7 @@ export interface ToolbarProps {
 	onToggleThemeGallery: () => void;
 	isThemeGalleryOpen: boolean;
 	onCompare?: () => void;
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	/** The phone Insert sheet (opened from the bottom bar) and how it asks to close. */
 	isMobileInsertOpen?: boolean;

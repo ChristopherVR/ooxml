@@ -1,5 +1,10 @@
 import type { RibbonGalleryId, ShapePresetType } from 'ooxml-ui/pptx';
-import { drawingHomeControls, homeGalleryControls, withHomeGalleries } from 'ooxml-ui/pptx';
+import {
+	drawingHomeControls,
+	homeGalleryControls,
+	runDrawingArrange,
+	withHomeGalleries,
+} from 'ooxml-ui/pptx';
 import type { PptxThemeColorRef } from 'pptx-viewer-core';
 
 import type { Translator } from '../../../i18n';
@@ -10,6 +15,7 @@ import { tagRibbonGroup } from '../ribbon-tagging';
 import { createSharedHomeStrip } from './shared-strip';
 
 export interface DrawingGroupHandlers {
+	arrange?: NonNullable<Parameters<typeof drawingHomeControls>[0]['arrange']>['actions'];
 	insertShape(shapeType: ShapePresetType): void;
 	bringForward(): void;
 	sendBackward(): void;
@@ -23,6 +29,9 @@ export interface DrawingGroupHandlers {
 export interface DrawingGroupState {
 	editable: boolean;
 	hasSelection: boolean;
+	canGroup?: boolean;
+	canUngroup?: boolean;
+	canDistribute?: boolean;
 	/** The deck's `p:clrMru`, most-recent-first. */
 	recentColors?: readonly string[];
 	/** The deck's resolved theme colour map, feeding the fill/outline "Theme Colors" grids. */
@@ -81,7 +90,8 @@ export function createDrawingGroup(
 		} else if (id === 'home.drawing.shapes') {
 			handlers.insertShape(value as ShapePresetType);
 		} else if (id === 'home.drawing.arrange') {
-			arrange[String(value)]?.();
+			if (!handlers.arrange || !runDrawingArrange(String(value), handlers.arrange))
+				arrange[String(value)]?.();
 		} else if (id === 'home.drawing.shapeFill') {
 			handlers.setShapeFill(String(value), ref);
 		} else if (id === 'home.drawing.shapeOutline') {
@@ -102,6 +112,16 @@ export function createDrawingGroup(
 			withHomeGalleries(
 				drawingHomeControls({
 					editable: last.editable,
+					arrange: handlers.arrange
+						? {
+								actions: handlers.arrange,
+								canEdit: last.editable,
+								selected: last.hasSelection,
+								canGroup: last.canGroup ?? false,
+								canUngroup: last.canUngroup ?? false,
+								canDistribute: last.canDistribute ?? false,
+							}
+						: undefined,
 					hasSelection: last.hasSelection,
 					fill: colour(last.fillColor, last.fillColorRef),
 					outline: colour(last.strokeColor ?? '#000000', last.strokeColorRef),

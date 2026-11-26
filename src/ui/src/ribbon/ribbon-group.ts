@@ -125,6 +125,7 @@ export class OfficeUiRibbonGroup extends OfficeElement {
 			<div class="group">
 				<button
 					class="face"
+					part="collapse-face"
 					type="button"
 					aria-haspopup="true"
 					aria-label=${label}

@@ -4,6 +4,7 @@ import { flushSync, mount, unmount } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EditorState } from '../../../editor/editor-state.svelte';
+import { ChromeUiState } from '../../../state/chrome-ui.svelte';
 import ReviewTab from './ReviewTab.svelte';
 
 registerPptxWebControls();
@@ -157,9 +158,10 @@ describe('reviewTab', () => {
 			{ id: 's1', elements: [], comments: [{ id: 'a', text: 'a' }] },
 			{ id: 's2', elements: [], comments: [{ id: 'b', text: 'b' }] },
 		] as PptxSlide[];
+		const chromeUi = new ChromeUiState(false);
 		const instance = mount(ReviewTab, {
 			target,
-			props: { slides: editor.slides, onnavigate, editor },
+			props: { slides: editor.slides, onnavigate, editor, chromeUi },
 		});
 		cleanup = () => unmount(instance);
 		const named = (label: string) =>
@@ -167,6 +169,13 @@ describe('reviewTab', () => {
 				(button) => button.textContent?.trim() === label,
 			) as HTMLButtonElement;
 		expect(named('Delete').disabled).toBeTruthy();
+		named('New Comment').click();
+		flushSync();
+		expect(chromeUi.commentsOpen).toBe(true);
+		expect(named('Show Comments').getAttribute('aria-pressed')).toBe('true');
+		named('Show Comments').click();
+		flushSync();
+		expect(chromeUi.commentsOpen).toBe(false);
 		named('Next').click();
 		flushSync();
 		named('Next').click();

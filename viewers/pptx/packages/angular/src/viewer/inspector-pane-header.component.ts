@@ -4,17 +4,17 @@
  * [Elements | Properties | Comments] segmented control plus a close button.
  */
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { LucideLayers, LucideMessageSquare, LucideSettings2, LucideX } from '@lucide/angular';
+import { LucideLayers, LucideSettings2, LucideX } from '@lucide/angular';
 import { TranslatePipe } from '@ngx-translate/core';
 
 /** The inspector pane's tab set (same keys as React's `InspectorTab`). */
-export type SlideInspectorTab = 'elements' | 'properties' | 'comments';
+export type SlideInspectorTab = 'elements' | 'properties';
 
 @Component({
 	selector: 'pptx-inspector-pane-header',
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
-	imports: [TranslatePipe, LucideLayers, LucideSettings2, LucideMessageSquare, LucideX],
+	imports: [TranslatePipe, LucideLayers, LucideSettings2, LucideX],
 	template: `
 		<div class="hdr" data-pptx-chrome="inspector-header">
 			<div class="hdr__tabs" data-pptx-chrome="inspector-tabs" role="tablist">
@@ -41,18 +41,6 @@ export type SlideInspectorTab = 'elements' | 'properties' | 'comments';
 				>
 					<svg lucideSettings2 class="hdr__icon"></svg>
 					<span>{{ 'pptx.inspector.properties' | translate }}</span>
-				</button>
-				<button
-					type="button"
-					class="hdr__tab"
-					[class.is-active]="activeTab() === 'comments'"
-					role="tab"
-					[attr.aria-selected]="activeTab() === 'comments'"
-					[title]="'pptx.toolbar.comments' | translate"
-					(click)="tabChange.emit('comments')"
-				>
-					<svg lucideMessageSquare class="hdr__icon"></svg>
-					<span>{{ 'pptx.toolbar.comments' | translate }}</span>
 				</button>
 			</div>
 			<button

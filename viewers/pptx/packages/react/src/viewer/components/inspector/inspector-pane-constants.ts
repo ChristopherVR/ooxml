@@ -1,5 +1,5 @@
 import type React from 'react';
-import { LuLayers, LuMessageSquare, LuSettings2 } from 'react-icons/lu';
+import { LuLayers, LuSettings2 } from 'react-icons/lu';
 
 import type { InspectorTab } from './inspector-pane-types';
 
@@ -14,7 +14,6 @@ export const INSPECTOR_TABS: Array<{
 }> = [
 	{ key: 'elements', labelKey: 'pptx.documentProperties.statistics.elements', icon: LuLayers },
 	{ key: 'properties', labelKey: 'pptx.inspector.properties', icon: LuSettings2 },
-	{ key: 'comments', labelKey: 'pptx.toolbar.comments', icon: LuMessageSquare },
 ];
 
 // ---------------------------------------------------------------------------

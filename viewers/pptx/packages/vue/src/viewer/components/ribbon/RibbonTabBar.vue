@@ -41,7 +41,7 @@ interface Props {
 	onOpenShareDialog?: () => void;
 	isCollaborating?: boolean;
 	collaboratorCount?: number;
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
 	hiddenActions?: ToolbarActionId[];

@@ -350,58 +350,37 @@ test.describe('Home slides', () => {
 });
 
 test.describe('Home drawing and arrange', () => {
-	test('gates the Drawing triggers and Arrange strips on a selection', async ({ page }) => {
+	test('enables Arrange edits after selection and keeps Selection Pane available', async ({
+		page,
+	}) => {
 		await openHome(page);
-		await expect(page.locator('[data-ribbon-group="home.drawing"]')).toHaveCount(1);
-		await expect(inner(page, 'home.drawing.shapes')).toBeEnabled();
-		for (const id of ['arrange', 'shapeFill', 'shapeOutline']) {
-			await expect(page.locator(`[data-ribbon-control="home.drawing.${id}"]`)).toHaveCount(1);
-			await expect(inner(page, `home.drawing.${id}`)).toBeDisabled();
-		}
-		const arrangeIds = [
-			'flipHorizontal',
-			'flipVertical',
-			'sendBackward',
-			'bringForward',
-			'sendToBack',
-			'bringToFront',
-			'duplicate',
-			'delete',
-		];
-		for (const id of arrangeIds) {
-			await expect(page.locator(`[data-ribbon-control="home.arrange.${id}"]`)).toHaveCount(1);
-			await expect(control(page, `home.arrange.${id}`)).toBeDisabled();
-		}
-		await expect(page.locator('[data-ribbon-control="home.arrange.align"]')).toHaveCount(1);
+		const arrange = inner(page, 'home.drawing.arrange');
+		await arrange.click();
+		await expect(page.getByRole('menuitem', { name: 'Selection Pane' })).toBeEnabled();
+		await expect(page.getByRole('menuitem', { name: 'Bring to Front' })).toBeDisabled();
+		await page.keyboard.press('Escape');
 		await selectSubtitle(page);
-		for (const id of arrangeIds) {
-			await expect(control(page, `home.arrange.${id}`)).toBeEnabled();
-		}
-		for (const id of ['arrange', 'shapeFill', 'shapeOutline']) {
-			await expect(inner(page, `home.drawing.${id}`)).toBeEnabled();
-		}
+		await arrange.click();
+		await page.getByRole('menuitem', { name: 'Bring to Front' }).click();
+		await expect
+			.poll(async () => (await slideElements(page).last().textContent()) ?? '')
+			.toContain('Product Overview');
 	});
 
-	test('Duplicate, Delete and z-order edit the deck and undo', async ({ page }) => {
+	test('Duplicate and Delete shortcuts edit the deck and undo', async ({ page }) => {
 		await openHome(page);
 		const count = () => slideElements(page).count();
 		const before = await count();
 		await selectSubtitle(page);
-		await control(page, 'home.arrange.duplicate').click();
+		await page.keyboard.press('Control+d');
 		await expect.poll(count).toBe(before + 1);
 		await page.keyboard.press('Control+z');
 		await expect.poll(count).toBe(before);
 		await selectSubtitle(page);
-		await control(page, 'home.arrange.delete').click();
+		await page.keyboard.press('Delete');
 		await expect.poll(count).toBe(before - 1);
 		await page.keyboard.press('Control+z');
 		await expect.poll(count).toBe(before);
-		await selectSubtitle(page);
-		await control(page, 'home.arrange.bringToFront').focus();
-		await page.keyboard.press('Space');
-		await expect
-			.poll(async () => (await slideElements(page).last().textContent()) ?? '')
-			.toContain('Product Overview');
 	});
 
 	test('Shapes opens a native menu and inserts a shape', async ({ page }) => {
@@ -427,7 +406,7 @@ test.describe('Home drawing and arrange', () => {
 		await expect(control(page, 'home.arrange.align')).toBeHidden();
 		await expect(control(page, 'home.arrange.delete')).toBeHidden();
 		await expect(control(page, 'home.drawing.shapeFill')).toBeHidden();
-		await expect(control(page, 'home.arrange.duplicate')).toBeVisible();
+		await expect(page.locator('[data-ribbon-group="home.arrange"]')).toHaveCount(0);
 	});
 });
 
@@ -555,21 +534,20 @@ test.describe('Home drawing popovers and arrange extras', () => {
 			.click();
 	}
 
-	test('expose Group, Ungroup, Merge, Crop, width and the second Format Painter once', async ({
+	test('keeps Format Painter in Clipboard and exposes Arrange on Shape Format', async ({
 		page,
 	}) => {
 		await openHome(page);
-		for (const id of ['group', 'ungroup', 'mergeShapes', 'crop', 'outlineWidth']) {
-			await expect(page.locator(`[data-ribbon-control="home.arrange.${id}"]`)).toHaveCount(1);
-		}
 		await expect(page.locator('[data-ribbon-control="home.clipboard.formatPainter"]')).toHaveCount(
-			2,
+			1,
 		);
-		await expect(control(page, 'home.arrange.group')).toBeDisabled();
-		await expect(inner(page, 'home.arrange.mergeShapes')).toBeDisabled();
-		await expect(control(page, 'home.arrange.outlineWidth')).toBeDisabled();
-		await selectSubtitle(page);
-		await expect(control(page, 'home.arrange.outlineWidth')).toBeEnabled();
+		await insertRectangle(page);
+		await ribbonTab(page, 'Shape Format').click();
+		const arrange = page.locator('[data-ribbon-group="shapeFormat.arrange"]');
+		await expect(arrange).toBeVisible();
+		await expect(
+			arrange.locator('[data-ribbon-control="home.arrange.outlineWidth"]'),
+		).toBeVisible();
 	});
 
 	test('Shape Fill and Outline popovers, outline width and the Arrange menu edit a shape and save', async ({
@@ -586,9 +564,11 @@ test.describe('Home drawing popovers and arrange extras', () => {
 		await expect(fill).toHaveAttribute('aria-expanded', 'false');
 		await inner(page, 'home.drawing.shapeOutline').click();
 		await control(page, 'home.drawing.shapeOutline').locator('.std-grid button').nth(5).click();
+		await ribbonTab(page, 'Shape Format').click();
 		const width = control(page, 'home.arrange.outlineWidth');
 		await width.fill('6');
 		await width.press('Tab');
+		await ribbonTab(page, 'Home').click();
 		await inner(page, 'home.drawing.arrange').click();
 		await page.getByRole('menuitem', { name: 'Send to Back', exact: true }).click();
 		const bytes = await downloadBytes(await savePptxViaBackstage(page));
@@ -601,6 +581,7 @@ test.describe('Home drawing popovers and arrange extras', () => {
 	test('Merge Shapes and Crop stay gated without two shapes or a picture', async ({ page }) => {
 		await openHome(page);
 		await insertRectangle(page);
+		await ribbonTab(page, 'Shape Format').click();
 		await expect(inner(page, 'home.arrange.crop')).toBeDisabled();
 		await expect(inner(page, 'home.arrange.mergeShapes')).toBeDisabled();
 	});
@@ -656,7 +637,7 @@ test.describe('touch Home controls', () => {
 			copy,
 			pressed(page, 'bold'),
 			para(page, 'alignLeft'),
-			control(page, 'home.arrange.sendToBack'),
+			inner(page, 'home.drawing.arrange'),
 			inner(page, 'home.slides.reset'),
 		]) {
 			// At 900px the right-hand groups are collapsed: open the one that holds the control.

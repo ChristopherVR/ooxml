@@ -114,7 +114,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 	const sHome = section === 'home';
 	const sIns = section === 'insert';
 	const sTxt = sHome || section === 'text';
-	const sArr = sHome || section === 'arrange';
+	const sArr = section === 'arrange';
 	const sDrw = section === 'draw';
 	const sDes = section === 'design';
 
@@ -129,7 +129,7 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 
 	const arrange = (
 		<ArrangeSection
-			embedded={contextual.active === 'pictureFormat'}
+			embedded={Boolean(contextual.active)}
 			canEdit={p.canEdit}
 			selectedElement={p.selectedElement}
 			selectedCount={p.selectedCount}
@@ -379,6 +379,22 @@ export function Toolbar(p: ToolbarProps): React.ReactElement {
 								newShapeType={p.newShapeType}
 								onSetNewShapeType={p.onSetNewShapeType}
 								onAddShape={p.onAddShape}
+								arrange={{
+									actions: {
+										align: (edge) => p.onAlignElements(edge === 'centerH' ? 'center' : edge),
+										distribute: p.onDistributeElements,
+										flip: p.onFlip,
+										group: p.onGroupElements,
+										ungroup: p.onUngroupElement,
+										position: () => formatPane.requestFormatPane('sizePosition', { focus: true }),
+										selectionPane: p.onToggleSelectionPane,
+									},
+									selected: Boolean(p.selectedElement),
+									canEdit: p.canEdit,
+									canGroup: p.selectedCount > 1 && p.selectionGroupable,
+									canUngroup: p.selectedElement?.type === 'group',
+									canDistribute: p.canDistribute,
+								}}
 								onMoveLayer={p.onMoveLayer}
 								onMoveLayerToEdge={p.onMoveLayerToEdge}
 								onUpdateElementStyle={p.onUpdateElementStyle}

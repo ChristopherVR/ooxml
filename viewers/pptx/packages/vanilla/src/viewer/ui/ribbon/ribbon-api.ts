@@ -20,6 +20,7 @@ export interface Ribbon {
 	setAutosaveStatus(label: string, kind: 'idle' | 'saving' | 'saved' | 'error'): void;
 	/** Show/hide the whole editing surface (Home/Insert tab content + find/replace). */
 	setEditable(editable: boolean): void;
+	setCommentsOpen(open: boolean): void;
 	setSpellCheck?(enabled: boolean): void;
 	/** Reflect the current selection across the Home tab's Font/Paragraph/Arrange groups. */
 	updateSelection(selectedElement: PptxElement | undefined, extra: RibbonSelectionState): void;

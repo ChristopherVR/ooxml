@@ -8,14 +8,17 @@
 	 */
 	import { hasShapeProperties } from 'pptx-viewer-core';
 	import {
+		canInteractWithElement,
+		canUngroupSelection,
 		drawingHomeControls,
+		runDrawingArrange,
 		fillColorOf,
 		homeGalleryControls,
 		homeSnapshotTranslator,
 		strokeColorOf,
 		withHomeGalleries,
 	} from 'ooxml-ui/pptx';
-	import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
+	import type { DrawingArrangeActions, RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import type { ZOrderDirection } from '../../../editor';
@@ -24,7 +27,20 @@
 	import { useRibbonGalleryHost } from '../galleries/ribbon-gallery-host';
 	import { homeGalleryId } from './home-adapter';
 
-	const { editor }: { editor: EditorState } = $props();
+	const { editor, position, selectionPane }: {
+		editor: EditorState;
+		position?: (() => void) | undefined;
+		selectionPane?: (() => void) | undefined;
+	} = $props();
+	const arrangeActions: DrawingArrangeActions = {
+		align: (edge) => editor.arrangeOps.alignSelected(edge),
+		distribute: (axis) => editor.arrangeOps.distributeSelected(axis),
+		flip: (axis) => editor.arrangeOps.flipSelected(axis),
+		group: () => editor.arrangeOps.groupSelected(),
+		ungroup: () => editor.arrangeOps.ungroupSelected(),
+		position: () => position?.(),
+		selectionPane: () => selectionPane?.(),
+	};
 	const t = useTranslator();
 	const host = useRibbonGalleryHost();
 
@@ -39,6 +55,14 @@
 		const controls = drawingHomeControls({
 			editable: editor.editable,
 			hasSelection: Boolean(editor.selectedElementId),
+			arrange: {
+				actions: arrangeActions,
+				canEdit: editor.editable,
+				selected: Boolean(editor.selectedElementId),
+				canGroup: editor.selectedElements.length > 1 && editor.selectedElements.every((element) => canInteractWithElement(element, 'group')),
+				canUngroup: canUngroupSelection(editor.editable, el ?? null),
+				canDistribute: editor.selectedElements.length >= 3,
+			},
 			fill: {
 				value: el && hasShape ? hex(fillColorOf(el), '#ffffff') : '#ffffff',
 				ref: style?.fillColorRef,
@@ -81,7 +105,7 @@
 				editor.insertElement(newPresetShapeElement(String(value) as never));
 				break;
 			case 'home.drawing.arrange':
-				editor.reorderSelected(String(value) as ZOrderDirection);
+				if (!runDrawingArrange(String(value), arrangeActions)) editor.reorderSelected(String(value) as ZOrderDirection);
 				break;
 			case 'home.drawing.shapeFill':
 				if (el) {

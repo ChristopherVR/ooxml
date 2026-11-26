@@ -18,7 +18,7 @@ describe('inspector-pane-constants', () => {
 			const keys = INSPECTOR_TABS.map((t) => t.key);
 			expect(keys).toContain('elements');
 			expect(keys).toContain('properties');
-			expect(keys).toContain('comments');
+			expect(keys).not.toContain('comments');
 		});
 
 		it('every entry has key, label key, and icon', () => {

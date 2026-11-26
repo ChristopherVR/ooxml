@@ -143,12 +143,17 @@ const signaturesAvailable = computed(() => isDialogAvailable(customization.value
 	/>
 
 	<!-- Comments (desktop right rail; mobile uses the bottom sheet) -->
-	<CommentsPanel
+	<div
 		v-if="canEdit && !isMobile && comments.showComments.value"
-		:comments="comments.activeComments.value"
-		:author-name="authorName"
-		:modern-comment-authors="deck.modernCommentAuthors.value"
-	/>
+		class="min-h-0 w-[min(300px,38%)] shrink-0"
+	>
+		<CommentsPanel
+			:comments="comments.activeComments.value"
+			:author-name="authorName"
+			:modern-comment-authors="deck.modernCommentAuthors.value"
+			:close-task-pane="() => (comments.showComments.value = false)"
+		/>
+	</div>
 
 	<!-- Signature-state badge (opens the signatures panel). -->
 	<div

@@ -4,7 +4,7 @@
  * the right inspector, mirroring React's `InspectorPaneHeader` (same layout and
  * active-tab styling, `react-icons/lu` glyphs mapped to `@lucide/vue`).
  */
-import { Layers, MessageSquare, Settings2, X } from '@lucide/vue';
+import { Layers, Settings2, X } from '@lucide/vue';
 import { getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -34,7 +34,6 @@ const touchBtnStyle = computed(() => {
 const TABS = [
 	{ key: 'elements', labelKey: 'pptx.documentProperties.statistics.elements', icon: Layers },
 	{ key: 'properties', labelKey: 'pptx.inspector.properties', icon: Settings2 },
-	{ key: 'comments', labelKey: 'pptx.toolbar.comments', icon: MessageSquare },
 ] as const;
 </script>
 

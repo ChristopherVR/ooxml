@@ -168,7 +168,7 @@ export class RibbonInsertSectionComponent {
 					link: () => this.openHyperlink.emit(),
 					headerFooter: () => this.dialogs.showHeaderFooter.set(true),
 					// Opening an already open pane would toggle it shut.
-					comment: () => (this.commentsOpen() ? undefined : this.toggleComments.emit()),
+					comment: () => this.toggleComments.emit(),
 				};
 				commands[intent.value]();
 				break;

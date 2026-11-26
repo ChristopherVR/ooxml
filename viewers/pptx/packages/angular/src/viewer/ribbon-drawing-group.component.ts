@@ -10,6 +10,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import type { RibbonHomeRequestEvent, ShapePresetType } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
+	runDrawingArrange,
 	homeGalleryApply,
 	homeGalleryControls,
 	SHAPE_PRESET_DEFS,
@@ -23,6 +24,7 @@ import { hasShapeProperties } from 'pptx-viewer-core';
 
 import { newPresetShapeElement } from './editor-insert';
 import { EditorStateService } from './editor-state.service';
+import { canGroupSelected } from './group-lock-guard';
 import { LoadContentService } from './load-content.service';
 import { RecentColorsService } from './recent-colors.service';
 import {
@@ -35,6 +37,7 @@ import {
 } from './ribbon-drawing-group-helpers';
 import { dispatchGalleryResult, galleryContextFor } from './ribbon-gallery-helpers';
 import { homeLanguage, homeTranslator } from './ribbon-home-lang';
+import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 import { ViewerThemeGalleryService } from './viewer-theme-gallery.service';
 /**
  * ribbon-drawing-group.component.ts: Drawing group for the Home tab ribbon, a
@@ -72,6 +75,7 @@ export {
 })
 export class RibbonDrawingGroupComponent {
 	protected readonly editor = inject(EditorStateService);
+	private readonly inspector = inject(ViewerInspectorPanelService, { optional: true });
 	private readonly loader = inject(LoadContentService, { optional: true });
 	private readonly themes = inject(ViewerThemeGalleryService, { optional: true });
 	private readonly recentColors = inject(RecentColorsService, { optional: true });
@@ -91,6 +95,34 @@ export class RibbonDrawingGroupComponent {
 	protected readonly fillColorRef = computed(() => fillColorRefOf(this.selectedElement()));
 	protected readonly outlineColorRef = computed(() => outlineColorRefOf(this.selectedElement()));
 
+	private readonly arrangeActions = {
+		align: (edge: Parameters<EditorStateService['alignSelected']>[1]) =>
+			this.editor.alignSelected(this.slideIndex(), edge),
+		distribute: (axis: 'horizontal' | 'vertical') =>
+			this.editor.distributeSelected(this.slideIndex(), axis),
+		flip: (axis: 'horizontal' | 'vertical') => {
+			const index = this.slideIndex();
+			const elements = this.editor.slides()[index]?.elements;
+			for (const element of elements ?? []) {
+				if (this.editor.selectedIds().includes(element.id)) {
+					this.editor.updateElement(
+						index,
+						element.id,
+						axis === 'horizontal'
+							? { flipHorizontal: !element.flipHorizontal }
+							: { flipVertical: !element.flipVertical },
+					);
+				}
+			}
+		},
+		group: () => this.editor.groupSelected(this.slideIndex()),
+		ungroup: () => this.editor.ungroupSelected(this.slideIndex()),
+		position: this.inspector
+			? () => this.inspector?.formatPane.requestFormatPane('sizePosition', { focus: true })
+			: undefined,
+		selectionPane: this.inspector ? () => this.inspector?.togglePanel('selection') : undefined,
+	};
+
 	/** Shared state; Fill/Outline additionally need a shape-capable selection. */
 	protected drawingView() {
 		const themeColors = this.loader?.themeColorMap();
@@ -98,6 +130,19 @@ export class RibbonDrawingGroupComponent {
 		const base = drawingHomeControls({
 			editable: this.canEdit(),
 			hasSelection: this.editor.hasSelection(),
+			arrange: this.inspector
+				? {
+						actions: this.arrangeActions,
+						canEdit: this.canEdit(),
+						selected: this.editor.hasSelection(),
+						canGroup: canGroupSelected(
+							this.editor.slides()[this.slideIndex()]?.elements ?? [],
+							this.editor.selectedIds(),
+						),
+						canUngroup: this.selectedElement()?.type === 'group',
+						canDistribute: this.editor.selectedIds().length >= 3,
+					}
+				: undefined,
 			fill: { value: this.fillColor(), ref: this.fillColorRef(), themeColors, recent },
 			outline: { value: this.outlineColor(), ref: this.outlineColorRef(), themeColors, recent },
 		});
@@ -128,7 +173,8 @@ export class RibbonDrawingGroupComponent {
 				this.onShapeSelect(String(value));
 				break;
 			case 'home.drawing.arrange':
-				this.onArrangeCommand(String(value));
+				if (!runDrawingArrange(String(value), this.arrangeActions))
+					this.onArrangeCommand(String(value));
 				break;
 			case 'home.drawing.shapeFill':
 				this.patchShapeStyle(shapeFillChange(String(value), ref));

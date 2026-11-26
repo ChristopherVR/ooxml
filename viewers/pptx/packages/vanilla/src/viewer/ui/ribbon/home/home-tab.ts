@@ -9,8 +9,6 @@ import { createDefaultRegistry, createEl, renderSlideStage } from '../../../rend
 import type { RibbonGalleryHub } from '../gallery/gallery-hub';
 import { createRibbonGalleryHub } from '../gallery/gallery-hub';
 import type { LayoutOption } from '../ribbon-types';
-import type { ArrangeGroup } from './arrange-group';
-import { createArrangeGroup } from './arrange-group';
 import type { ClipboardGroup } from './clipboard-group';
 import { createClipboardGroup } from './clipboard-group';
 import type { DrawingGroup } from './drawing-group';
@@ -30,6 +28,8 @@ const MAX_PREVIEW_ELEMENTS = 100;
 export interface HomeTabDeps {
 	edit: EditActions;
 	onToggleFindReplace(): void;
+	openSelectionPane?(): void;
+	openPositionPane?(): void;
 	/** False when the host removed the Slide Templates dialog (default: available). */
 	isSlideTemplatesAvailable?(): boolean;
 	/** Host-hidden ribbon controls (Merge Shapes / Crop are never built when hidden). */
@@ -162,6 +162,15 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 		doc,
 		t,
 		{
+			arrange: {
+				align: edit.alignElements,
+				distribute: edit.distributeElements,
+				flip: (axis) => (axis === 'horizontal' ? edit.flipHorizontal() : edit.flipVertical()),
+				group: edit.groupSelected,
+				ungroup: edit.ungroupSelected,
+				position: deps.openPositionPane,
+				selectionPane: deps.openSelectionPane,
+			},
 			insertShape: (shapeType) => edit.insert('shape', shapeType),
 			bringForward: edit.bringForward,
 			sendBackward: edit.sendBackward,
@@ -172,34 +181,7 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 		},
 		galleryHub,
 	);
-	const arrange: ArrangeGroup = createArrangeGroup(
-		doc,
-		t,
-		{
-			bringForward: edit.bringForward,
-			sendBackward: edit.sendBackward,
-			bringToFront: edit.bringToFront,
-			sendToBack: edit.sendToBack,
-			alignElements: edit.alignElements,
-			distributeElements: edit.distributeElements,
-			flipHorizontal: edit.flipHorizontal,
-			flipVertical: edit.flipVertical,
-			groupSelected: edit.groupSelected,
-			ungroupSelected: edit.ungroupSelected,
-			setStrokeWidth: edit.setShapeStrokeWidth,
-			toggleFormatPainter: edit.toggleFormatPainter,
-			duplicate: edit.duplicateSelected,
-			delete: edit.deleteSelected,
-			mergeShapes: edit.mergeShapes,
-			toggleCropMode: edit.toggleCropMode,
-			cropToAspect: edit.cropToAspect,
-			cropFill: edit.cropFill,
-			cropFit: edit.cropFit,
-		},
-		deps.hiddenActions,
-	);
-
-	el.append(clipboard.el, slides.el, font.el, paragraph.el, drawing.el, editing.el, arrange.el);
+	el.append(clipboard.el, slides.el, font.el, paragraph.el, drawing.el, editing.el);
 
 	return {
 		el,
@@ -219,9 +201,6 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			customFontFamilies,
 			recentColors,
 			themeColorMap,
-			canMergeShapes,
-			canCrop,
-			cropActive,
 		}) {
 			const canFormat = canFormatText(selectedElement);
 			const text = readTextFormatState(selectedElement);
@@ -248,23 +227,15 @@ export function createHomeTab(doc: Document, t: Translator, deps: HomeTabDeps): 
 			drawing.update({
 				editable,
 				hasSelection,
+				canGroup: selectedCount > 1 && selectionGroupable,
+				canUngroup: selectedElement?.type === 'group',
+				canDistribute: selectedCount >= 3,
 				recentColors,
 				themeColorMap,
 				fillColor: shapeStyle?.fillColor,
 				fillColorRef: shapeStyle?.fillColorRef,
 				strokeColor: shapeStyle?.strokeColor,
 				strokeColorRef: shapeStyle?.strokeColorRef,
-			});
-			arrange.update({
-				editable,
-				hasSelection,
-				formatPainterActive,
-				selectedCount,
-				selectionGroupable,
-				selectedElement,
-				canMergeShapes,
-				canCrop,
-				cropActive,
 			});
 		},
 	};

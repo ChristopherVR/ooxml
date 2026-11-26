@@ -151,7 +151,7 @@
 		</p>
 	}
 
-	<form class="pptx-ng-comments__compose" (submit)="submit($event)">
+	<form data-pptx-comment-draft class="pptx-ng-comments__compose" (submit)="submit($event)">
 		<label
 			class="pptx-ng-comments__compose-label"
 			[title]="'pptx.comments.commentingAs' | translate: { name: authorName() }"

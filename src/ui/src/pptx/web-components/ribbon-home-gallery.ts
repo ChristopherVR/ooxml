@@ -37,7 +37,11 @@ function syncGallery(
 			? value.replace(/\{\{\s*(\w+)\s*\}\}/gu, (_, name: string) => String(params[name] ?? ''))
 			: value;
 	};
-	gallery.descriptor = current?.gallery?.descriptor;
+	const descriptor = current?.gallery?.descriptor;
+	gallery.descriptor =
+		descriptor && control.id === 'home.drawing.quickStyles'
+			? { ...descriptor, labelKey: control.labelKey, label: control.fallback }
+			: descriptor;
 	gallery.disabled = Boolean(current?.disabled) || Boolean(current?.gallery?.disabled);
 }
 

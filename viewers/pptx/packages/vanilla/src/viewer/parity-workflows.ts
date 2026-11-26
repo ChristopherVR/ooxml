@@ -34,7 +34,7 @@ import { createOutlineWorkflow } from './outline-workflow';
 import { createSelectionPaneWorkflow } from './selection-pane-workflow';
 import type { Store, ViewerState } from './state';
 import { combineCommentMentionAuthors } from './ui/comment-mention-typeahead';
-import { openCommentsPanel } from './ui/comments-panel';
+import { closeCommentsPanel, openCommentsPanel } from './ui/comments-panel';
 import { openComparePanel } from './ui/compare-panel';
 import { openCustomShowsDialog } from './ui/custom-shows-dialog';
 import { openHeaderFooterDialog } from './ui/header-footer-dialog';
@@ -124,7 +124,7 @@ export interface ParityWorkflows {
 	openOutlineView(): void;
 	/** Tear Outline view down (viewer teardown; it owns a store subscription). */
 	closeOutlineView(): void;
-	openComments(): void;
+	openComments(toggle?: boolean): void;
 	openHyperlink(): void;
 	openCustomShows(): void;
 }
@@ -261,10 +261,20 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 		closeOutlineView() {
 			outline.close();
 		},
-		openComments() {
+		openComments(toggle) {
+			const root = host.root();
+			const body = root.querySelector<HTMLElement>('.pptxv-body');
+			if (!body) return;
+			const notify = (open: boolean): void => {
+				root.dispatchEvent(new CustomEvent('pptx-comments-visibility', { detail: open }));
+			};
+			if (toggle && closeCommentsPanel(body)) {
+				notify(false);
+				return;
+			}
 			openCommentsPanel(
 				host.doc,
-				host.root(),
+				body,
 				host.t,
 				{
 					getComments: () => {
@@ -281,7 +291,9 @@ export function createParityWorkflows(host: ParityWorkflowHost): ParityWorkflows
 					subscribe: (listener) => host.store.subscribe(() => listener()),
 				},
 				host.editor.getEditActions().comments.panel,
+				() => notify(false),
 			);
+			notify(true);
 		},
 		openHyperlink() {
 			if (!isAvailable('hyperlink')) {

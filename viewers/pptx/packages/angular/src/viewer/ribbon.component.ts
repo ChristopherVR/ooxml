@@ -164,7 +164,7 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						[hiddenActions]="hiddenActions()"
 						[accountAuth]="accountAuth()"
 						[commentsOpen]="commentsOpen()"
-						(comments)="comments.emit()"
+						(comments)="comments.emit($event)"
 						(selectTab)="selectTab($event)"
 						(find)="find.emit()"
 						(share)="share.emit()"
@@ -227,7 +227,8 @@ import { ViewerInspectorPanelService } from './viewer-inspector-panel.service';
 						(spellCheckChange)="setSpellCheck($event)"
 						(broadcast)="broadcast.emit()"
 						(print)="print.emit()"
-						(comments)="comments.emit()"
+						[commentsOpen]="commentsOpen()"
+						(comments)="comments.emit($event)"
 						(a11y)="a11y.emit()"
 						(link)="link.emit()"
 						(goToNormalView)="goToNormalView.emit()"
@@ -350,7 +351,7 @@ export class RibbonComponent {
 	readonly signatures = output<void>();
 	readonly info = output<void>();
 	readonly print = output<void>();
-	readonly comments = output<void>();
+	readonly comments = output<boolean | void>();
 	readonly a11y = output<void>();
 	/** Overflow menu: opens the keyboard-shortcuts dialog. */
 	readonly shortcuts = output<void>();

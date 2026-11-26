@@ -57,6 +57,7 @@ describe('review shared command adapter', () => {
 		expect(language).toHaveBeenCalledOnce();
 		expect(compare).toHaveBeenCalledOnce();
 		expect(comments).toHaveBeenCalledTimes(2);
+		expect(comments).toHaveBeenNthCalledWith(1, true);
 		expect(el.querySelectorAll('pptx-ui-ribbon-group')).toHaveLength(7);
 		for (const id of [
 			'proofing.thesaurus',
@@ -74,10 +75,12 @@ describe('review shared command adapter', () => {
 		const focused = button('proofing.spelling');
 		focused.focus();
 		fixture.componentRef.setInput('spellCheckEnabled', true);
+		fixture.componentRef.setInput('commentsOpen', true);
 		fixture.componentRef.setInput('canEdit', false);
 		fixture.detectChanges();
 		expect(button('proofing.spelling')).toBe(focused);
 		expect(focused.getAttribute('aria-pressed')).toBe('true');
+		expect(button('comments.showComments').getAttribute('aria-pressed')).toBe('true');
 		expect(button('compare.compare').disabled).toBeTruthy();
 	});
 

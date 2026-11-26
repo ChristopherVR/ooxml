@@ -160,6 +160,7 @@ export const RIBBON_CATALOG_TAIL_TABS = {
 			controls: { gallery: 'Shape Styles gallery', shapeEffects: 'Shape Effects gallery' },
 		},
 		wordArtStyles: { label: 'WordArt Styles', controls: { gallery: 'WordArt Styles gallery' } },
+		arrange: { label: 'Arrange', controls: {} },
 	},
 	pictureFormat: {
 		adjust: {

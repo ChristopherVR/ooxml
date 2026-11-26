@@ -93,11 +93,8 @@ export function buildReviewRibbon(t: Translate, state: ReviewRibbonState): Ribbo
 				'New Comment',
 				'messagePlus',
 				{
-					disabled: !state.canComments,
-					active: state.commentsOpen,
-					expanded: state.commentsOpen,
+					disabled: !state.canComments || !state.editable,
 					badge: state.commentCount,
-					title: label('pptx.review.toggleComments', 'Toggle comments'),
 				},
 			),
 			command('review.comments.delete', 'pptx.common.delete', 'Delete', 'trash', {
@@ -147,7 +144,7 @@ export function buildReviewRibbon(t: Translate, state: ReviewRibbonState): Ribbo
 				{
 					disabled: !state.canComments,
 					active: state.commentsOpen,
-					expanded: state.commentsOpen,
+					pressed: state.commentsOpen,
 				},
 			),
 		]),

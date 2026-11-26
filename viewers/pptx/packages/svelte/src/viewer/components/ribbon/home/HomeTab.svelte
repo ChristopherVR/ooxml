@@ -9,14 +9,11 @@
 	 * Every group wrapper carries its catalogue `data-ribbon-group` id so a
 	 * host customisation can hide it (shared `ribbonCustomizationCss`).
 	 */
-	import type { ToolbarActionId } from 'ooxml-ui/pptx';
 
 	import { useTranslator } from '../../../../i18n/context';
 	import type { EditorState } from '../../../editor/editor-state.svelte';
 	import type { FindReplaceState } from '../../../editor/editor-find-replace.svelte';
 	import FontFormattingGroup from './FontFormattingGroup.svelte';
-	import ArrangeExtras from './ArrangeExtras.svelte';
-	import ArrangeHomeStrip from './ArrangeHomeStrip.svelte';
 	import ClipboardGroup from './ClipboardGroup.svelte';
 	import DrawingGroup from './DrawingGroup.svelte';
 	import EditingGroup from './EditingGroup.svelte';
@@ -27,13 +24,14 @@
 		editor,
 		findReplace,
 		onnavigateslide,
-		hiddenActions,
+		position,
+		selectionPane,
 	}: {
 		editor: EditorState;
 		findReplace: FindReplaceState;
+		position?: (() => void) | undefined;
+		selectionPane?: (() => void) | undefined;
 		onnavigateslide: (index: number) => void;
-		/** Toolbar buttons the host hid (legacy prop folded with `customization`). */
-		hiddenActions?: readonly ToolbarActionId[];
 	} = $props();
 	const t = useTranslator();
 </script>
@@ -56,20 +54,13 @@
 	<span class="pptx-svelte-hometab-sep" aria-hidden="true"></span>
 	<div class="pptx-svelte-hometab-group" data-ribbon-group="home.drawing">
 		<div class="pptx-svelte-hometab-row" data-pptx-chrome="drawing-controls">
-			<DrawingGroup {editor} />
+			<DrawingGroup {editor} {position} {selectionPane} />
 		</div>
 		<span class="pptx-svelte-hometab-label" data-pptx-chrome="ribbon-group-label">{t('pptx.ribbon.groupDrawing')}</span>
 	</div>
 	<span class="pptx-svelte-hometab-sep" aria-hidden="true"></span>
 	<EditingGroup {editor} {findReplace} />
-	<div class="pptx-svelte-hometab-group" data-ribbon-group="home.arrange">
-		<div class="pptx-svelte-hometab-row" data-pptx-chrome="arrange-controls">
-			<ArrangeExtras {editor} {hiddenActions} />
-			<ArrangeHomeStrip {editor} strip="order" /><ArrangeHomeStrip {editor} strip="edit" />
-		</div>
-		<span class="pptx-svelte-hometab-label" data-pptx-chrome="ribbon-group-label">{t('pptx.ribbon.arrange')}</span>
-	</div>
-	<span class="pptx-svelte-hometab-sep" aria-hidden="true"></span>
+
 </div>
 
 <style>

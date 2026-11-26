@@ -64,14 +64,16 @@ export const RIBBON_CATALOG_CORE_TABS = {
 			controls: {
 				shapes: 'Shapes',
 				arrange: 'Arrange',
-				quickStyles: 'Quick Styles (Shape Styles gallery)',
+				positionSize: 'Position & Size',
+				selectionPane: 'Selection Pane',
+				quickStyles: 'Quick Styles gallery',
 				shapeFill: 'Shape Fill',
 				shapeOutline: 'Shape Outline',
 				shapeEffects: 'Shape Effects gallery',
 			},
 		},
 		arrange: {
-			label: 'Arrange',
+			label: 'Arrange (legacy control IDs)',
 			controls: {
 				bringForward: 'Bring Forward',
 				sendBackward: 'Send Backward',

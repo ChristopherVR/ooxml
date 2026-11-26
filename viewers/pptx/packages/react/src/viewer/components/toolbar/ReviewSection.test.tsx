@@ -71,6 +71,7 @@ describe('review shared commands', () => {
 		expect(language).toHaveBeenCalledOnce();
 		expect(compare).toHaveBeenCalledOnce();
 		expect(comments).toHaveBeenCalledTimes(2);
+		expect(comments).toHaveBeenNthCalledWith(1, true);
 		expect(view.el.querySelectorAll('pptx-ui-ribbon-group')).toHaveLength(7);
 		expect(
 			view.host('ink.hideInk').closest('[data-ribbon-group]')?.getAttribute('data-ribbon-group'),
@@ -92,7 +93,7 @@ describe('review shared commands', () => {
 		expect(first.button('proofing.spelling').getAttribute('aria-pressed')).toBe('true');
 		expect(second.button('proofing.spelling').getAttribute('aria-pressed')).toBe('false');
 		expect(first.host('comments.newComment').getAttribute('badge')).toBe('5');
-		expect(first.button('comments.newComment').getAttribute('aria-expanded')).toBe('true');
+		expect(first.button('comments.showComments').getAttribute('aria-pressed')).toBe('true');
 		act(() => first.button('compare.compare').click());
 		expect(callback).not.toHaveBeenCalled();
 		for (const id of [

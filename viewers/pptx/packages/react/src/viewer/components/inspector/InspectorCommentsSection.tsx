@@ -123,7 +123,7 @@ export function InspectorCommentsSection({
 
 			{/* Add comment form */}
 			{canEdit && (
-				<div className='space-y-1.5 pt-1 border-t border-border'>
+				<div data-pptx-comment-draft className='space-y-1.5 pt-1 border-t border-border'>
 					{selectedElement && (
 						<div className='inline-flex items-center gap-1 rounded bg-primary/20 px-1.5 py-0.5 text-[10px] text-primary'>
 							<LuType className='h-2.5 w-2.5' />

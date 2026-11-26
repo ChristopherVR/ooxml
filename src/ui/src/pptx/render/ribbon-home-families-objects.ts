@@ -125,13 +125,10 @@ export const RIBBON_HOME_OBJECT_FAMILIES: Readonly<
 						},
 					},
 				),
-				control(
-					'home.drawing.quickStyles',
-					'pptx.gallery.shapeStyles.title',
-					'Quick Styles',
-					undefined,
-					{ kind: 'gallery', gallery: { id: 'shapeStyles', icon: 'palette' } },
-				),
+				control('home.drawing.quickStyles', 'pptx.shape.quickStyles', 'Quick Styles', undefined, {
+					kind: 'gallery',
+					gallery: { id: 'shapeStyles', icon: 'palette' },
+				}),
 				control(
 					'home.drawing.shapeEffects',
 					'pptx.gallery.shapeEffects.title',

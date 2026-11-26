@@ -57,13 +57,7 @@ export const HOME_SELECT_ITEMS: readonly RibbonHomeItem[] = [
 	item('selectAll', 'pptx.editing.selectAll', 'Select All'),
 ];
 
-/** Drawing > Arrange menu: the four z-order commands. */
-export const HOME_DRAWING_ARRANGE_ITEMS: readonly RibbonHomeItem[] = [
-	item('forward', 'pptx.contextMenu.bringForward', 'Bring Forward'),
-	item('backward', 'pptx.contextMenu.sendBackward', 'Send Backward'),
-	item('front', 'pptx.contextMenu.bringToFront', 'Bring to Front'),
-	item('back', 'pptx.contextMenu.sendToBack', 'Send to Back'),
-];
+export { HOME_DRAWING_ARRANGE_ITEMS } from './ribbon-drawing-arrange';
 
 /** Drawing > Shapes: the categorised gallery (the live state adds Recently Used Shapes). */
 export const HOME_SHAPE_ITEMS: readonly RibbonHomeItem[] = homeShapeGalleryItems([]);

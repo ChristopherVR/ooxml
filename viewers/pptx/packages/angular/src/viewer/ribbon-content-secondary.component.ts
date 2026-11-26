@@ -78,8 +78,9 @@ import { RibbonViewSectionComponent } from './ribbon-view-section.component';
 				<pptx-ribbon-review-section
 					[canEdit]="canEdit()"
 					[spellCheckEnabled]="spellCheckEnabled()"
+					[commentsOpen]="commentsOpen()"
 					(spellCheckChange)="spellCheckChange.emit($event)"
-					(comments)="comments.emit()"
+					(comments)="comments.emit($event)"
 					(a11y)="a11y.emit()"
 					(openCompare)="openCompare.emit()"
 					(language)="openSettings.emit()"
@@ -217,7 +218,8 @@ export class RibbonContentSecondaryComponent {
 	readonly spellCheckChange = output<boolean>();
 	readonly broadcast = output<void>();
 	readonly print = output<void>();
-	readonly comments = output<void>();
+	readonly commentsOpen = input(false);
+	readonly comments = output<boolean | void>();
 	readonly a11y = output<void>();
 	readonly link = output<void>();
 	readonly goToNormalView = output<void>();

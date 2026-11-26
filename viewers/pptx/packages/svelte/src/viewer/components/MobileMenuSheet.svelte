@@ -106,7 +106,7 @@
 
 		<div class="pptx-svelte-mobile-menu-body">
 			{#if active === 'home'}
-				<HomeTab editor={props.editor} findReplace={props.findReplace} onnavigateslide={props.onnavigateslide} hiddenActions={props.hiddenActions} />
+				<HomeTab editor={props.editor} findReplace={props.findReplace} onnavigateslide={props.onnavigateslide} />
 			{:else if active === 'insert'}
 				<InsertTab editor={props.editor} canvasSize={props.canvasSize} onheaderfooter={props.onheaderfooter} onnavigateslide={props.onnavigateslide} chromeUi={props.chromeUi} />
 			{:else if active === 'draw'}

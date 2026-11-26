@@ -6,6 +6,7 @@ import {
 	DestroyRef,
 	inject,
 	Input,
+	input,
 	output,
 	signal,
 } from '@angular/core';
@@ -79,7 +80,8 @@ export class RibbonReviewSectionComponent {
 	set canEdit(value: boolean) {
 		this.state.update((state) => ({ ...state, editable: value }));
 	}
-	readonly comments = output<void>();
+	readonly commentsOpen = input(false);
+	readonly comments = output<boolean | void>();
 	readonly spellCheckChange = output<boolean>();
 	readonly a11y = output<void>();
 	readonly openCompare = output<void>();
@@ -93,6 +95,7 @@ export class RibbonReviewSectionComponent {
 			canLanguage: true,
 			canCompare: true,
 			canComments: true,
+			commentsOpen: this.commentsOpen(),
 			...this.commentState(),
 		}),
 	);
@@ -139,6 +142,8 @@ export class RibbonReviewSectionComponent {
 				}
 				break;
 			case 'review.comments.newComment':
+				this.comments.emit(true);
+				break;
 			case 'review.comments.showComments':
 				this.comments.emit();
 				break;

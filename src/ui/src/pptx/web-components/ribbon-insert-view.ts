@@ -488,7 +488,7 @@ export function createRibbonInsertView(
 				}
 			}
 			for (const { el: tool } of spec.id === 'insert.illustrations' ? freeform : []) {
-				tool.toggleAttribute('icon-only', scale !== 'large');
+				tool.removeAttribute('icon-only');
 			}
 			layoutGroup(spec.id);
 		};

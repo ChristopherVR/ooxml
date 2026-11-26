@@ -56,7 +56,7 @@ export interface InsertSectionProps {
 	/** Deck scheme map so template previews show the deck's theme colours. */
 	templateScheme?: Record<string, string>;
 	/** Comment opens the comments pane, as Review > New Comment does. */
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
 	phone?: boolean;
@@ -134,7 +134,7 @@ export function InsertSection(p: InsertSectionProps): React.ReactElement {
 						link: p.onOpenHyperlinkDialog,
 						headerFooter: p.onOpenHeaderFooter,
 						// Opening an already open pane would toggle it shut.
-						comment: p.isCommentsPanelOpen ? undefined : p.onToggleComments,
+						comment: () => p.onToggleComments?.(true),
 					};
 					commands[intent.value]?.();
 					break;

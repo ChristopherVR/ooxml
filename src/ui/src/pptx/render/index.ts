@@ -1497,6 +1497,7 @@ export * from './inspector-reset-actions';
 export * from './table-inspector';
 // Active-slide comment-array transforms (add/remove/toggle-resolved/reply).
 export * from './comments-list';
+export * from './comments-task-pane';
 export * from './comment-navigation';
 export * from './review-comment-commands';
 // `@`-mention segmentation (display) + `@`-typeahead insertion (authoring)
@@ -1946,6 +1947,7 @@ export * from './ribbon-draw-state';
 export * from './ribbon-insert-state';
 export * from './ribbon-insert-layout';
 export * from './ribbon-home-state';
+export * from './ribbon-drawing-arrange';
 export * from './ribbon-view-state';
 export * from './ribbon-transitions-state';
 export * from './status-bar-state';

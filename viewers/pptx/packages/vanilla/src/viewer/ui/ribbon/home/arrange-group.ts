@@ -71,6 +71,7 @@ export function createArrangeGroup(
 	t: Translator,
 	handlers: ArrangeGroupHandlers,
 	hiddenActions?: readonly ToolbarActionId[],
+	embedded = false,
 ): ArrangeGroup {
 	const el = createEl(doc, 'div', 'pptxv-rgroup');
 	el.dataset.pptxChrome = 'home-group';
@@ -91,7 +92,9 @@ export function createArrangeGroup(
 				handlers.distributeElements(action.axis);
 			}
 		}),
-		painter: createSharedHomeStrip(doc, t, 'arrange-painter', () => handlers.toggleFormatPainter()),
+		painter:
+			!embedded &&
+			createSharedHomeStrip(doc, t, 'arrange-painter', () => handlers.toggleFormatPainter()),
 		flip: createSharedHomeStrip(doc, t, 'arrange-flip', ({ id }) =>
 			id === 'home.arrange.flipHorizontal' ? handlers.flipHorizontal() : handlers.flipVertical(),
 		),
@@ -116,20 +119,17 @@ export function createArrangeGroup(
 				'home.arrange.bringToFront': handlers.bringToFront,
 			})[id as 'home.arrange.sendBackward']?.(),
 		),
-		edit: createSharedHomeStrip(doc, t, 'arrange-edit', ({ id }) =>
-			id === 'home.arrange.duplicate' ? handlers.duplicate() : handlers.delete(),
-		),
+		edit:
+			!embedded &&
+			createSharedHomeStrip(doc, t, 'arrange-edit', ({ id }) =>
+				id === 'home.arrange.duplicate' ? handlers.duplicate() : handlers.delete(),
+			),
 	};
 	// Presses inside the crop controls own crop mode's toggle, so they must not also commit it.
 	strips.shape.el.anchor('home.arrange.crop')?.setAttribute('data-pptx-crop-controls', 'true');
-	row.append(
-		strips.align.el,
-		strips.painter.el,
-		strips.flip.el,
-		strips.shape.el,
-		strips.order.el,
-		strips.edit.el,
-	);
+	row.append(strips.align.el, strips.flip.el, strips.shape.el, strips.order.el);
+	if (strips.painter) row.insertBefore(strips.painter.el, strips.flip.el);
+	if (strips.edit) row.append(strips.edit.el);
 
 	const render = (state: ArrangeGroupState) => {
 		const { editable, hasSelection, formatPainterActive, selectedElement } = state;
@@ -138,17 +138,19 @@ export function createArrangeGroup(
 			hasSelection,
 			canDistribute: state.selectedCount >= MIN_DISTRIBUTE_SELECTION,
 		});
-		for (const key of ['align', 'flip', 'order', 'edit'] as const) {
+		for (const key of ['align', 'flip', 'order'] as const) {
 			strips[key].set(common);
 		}
-		strips.painter.set(
-			arrangePainterHomeControls({
-				editable,
-				active: formatPainterActive,
-				canFormatPaint: hasSelection,
-				show: true,
-			}),
-		);
+		if (strips.edit) strips.edit.set(common);
+		if (strips.painter)
+			strips.painter.set(
+				arrangePainterHomeControls({
+					editable,
+					active: formatPainterActive,
+					canFormatPaint: hasSelection,
+					show: true,
+				}),
+			);
 		const element = selectedElement ?? null;
 		strips.shape.set(
 			arrangeShapeHomeControls({

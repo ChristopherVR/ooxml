@@ -83,10 +83,14 @@ describe('createReviewTab', () => {
 			navHandlers({ toggleSpellCheck, openComments, openSettings }),
 		);
 		button(tab.el, t('pptx.review.spelling')).click();
+		tab.setEditable(true);
+		button(tab.el, t('pptx.review.newComment')).click();
 		button(tab.el, t('pptx.review.showComments')).click();
+		tab.setCommentsOpen(true);
+		expect(button(tab.el, t('pptx.review.showComments')).getAttribute('aria-pressed')).toBe('true');
 		button(tab.el, t('pptx.review.language')).click();
 		expect(toggleSpellCheck).toHaveBeenCalledOnce();
-		expect(openComments).toHaveBeenCalledOnce();
+		expect(openComments.mock.calls).toStrictEqual([[], [true]]);
 		expect(openSettings).toHaveBeenCalledWith('general');
 	});
 

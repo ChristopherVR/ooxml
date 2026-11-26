@@ -227,8 +227,8 @@ export function buildRibbonPropsActions(input: UseRibbonPropsInput) {
 			input.themeGalleryOpen.value = !input.themeGalleryOpen.value;
 		},
 		onCompare: () => void input.compareWithPresentation(),
-		onToggleComments: () => {
-			input.showComments.value = !input.showComments.value;
+		onToggleComments: (ensureOpen?: boolean) => {
+			input.showComments.value = ensureOpen || !input.showComments.value;
 		},
 		onToggleFormatPainter: input.toggleFormatPainter,
 		onToggleSelectionPane: () => {

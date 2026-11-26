@@ -1,6 +1,7 @@
 import type { RibbonHomeIntent } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
+	runDrawingArrange,
 	homeGalleryApply,
 	homeGalleryControls,
 	shapeFillChange,
@@ -26,6 +27,7 @@ export interface DrawingGroupProps {
 	newShapeType: SupportedShapeType;
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddShape: () => void;
+	arrange?: Parameters<typeof drawingHomeControls>[0]['arrange'];
 	onMoveLayer: (direction: string) => void;
 	onMoveLayerToEdge: (direction: string) => void;
 	/**
@@ -57,6 +59,7 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 			withHomeGalleries(
 				drawingHomeControls({
 					editable: p.canEdit,
+					arrange: p.arrange,
 					hasSelection,
 					shapeType: p.newShapeType,
 					fill: {
@@ -75,7 +78,16 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 				homeGalleryControls('drawing', commands?.context ?? { element: null }, p.canEdit),
 				p.canEdit,
 			),
-		[p.canEdit, hasSelection, p.newShapeType, style, themeColors, recentColors, commands?.context],
+		[
+			p.canEdit,
+			hasSelection,
+			p.newShapeType,
+			p.arrange,
+			style,
+			themeColors,
+			recentColors,
+			commands?.context,
+		],
 	);
 	const request = useCallback(
 		(id: string, _part?: string, intent?: RibbonHomeIntent) => {
@@ -89,6 +101,7 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 					onAddShape();
 					break;
 				case 'home.drawing.arrange':
+					if (p.arrange && runDrawingArrange(String(value), p.arrange.actions)) break;
 					if (value === 'forward' || value === 'backward') {
 						onMoveLayer(value);
 					} else {
@@ -113,6 +126,7 @@ export function DrawingGroup(p: DrawingGroupProps): React.ReactElement {
 			}
 		},
 		[
+			p.arrange,
 			onMoveLayer,
 			onMoveLayerToEdge,
 			onSetNewShapeType,

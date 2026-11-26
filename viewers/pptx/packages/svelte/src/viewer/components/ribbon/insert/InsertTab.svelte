@@ -237,9 +237,7 @@
 					case 'headerFooter': onheaderfooter?.(); break;
 					case 'comment':
 						// Opening an already open pane would toggle it shut.
-						if (chromeUi && !chromeUi.commentsOpen) {
-							chromeUi.toggleComments();
-						}
+						chromeUi?.toggleComments(true);
 						break;
 				}
 				break;

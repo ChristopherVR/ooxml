@@ -38,6 +38,5 @@ export const RIBBON_MENU_COMMAND_IDS: ReadonlySet<string> = new Set<RibbonContro
 	'record.manage.reset',
 	'review.accessibility.check',
 	'review.language.language',
-	'review.comments.showComments',
 	'review.ink.hideInk',
 ]);

@@ -12,7 +12,6 @@ import { createAccessibilitySection } from './accessibility-section';
 import { createActionSection } from './action-section';
 import { createAnimationPanel } from './animation-panel';
 import { createChartSection } from './chart-section';
-import { createCommentsTab } from './comments-tab';
 import { createDeckPanel } from './deck-panel';
 import { createElementsTab } from './elements-tab';
 import { createFillSection } from './fill-section';
@@ -30,7 +29,7 @@ import { createText3DSection } from './text-3d-section';
 import { createTextSection } from './text-section';
 import type { Inspector, InspectorHandlers } from './types';
 
-type InspectorTabId = 'elements' | 'properties' | 'comments';
+type InspectorTabId = 'elements' | 'properties';
 
 /**
  * The property inspector: a right-hand panel with React's three-tab strip
@@ -63,18 +62,12 @@ export function createInspector(
 	const tabDefs: Array<{ id: InspectorTabId; label: string }> = [
 		{ id: 'elements', label: t('pptx.documentProperties.statistics.elements') },
 		{ id: 'properties', label: t('pptx.inspector.properties') },
-		{ id: 'comments', label: t('pptx.toolbar.comments') },
 	];
 	for (const tab of tabDefs) {
 		const btn = createEl(doc, 'button', 'pptxv-inspector-tab');
 		btn.type = 'button';
 		btn.setAttribute('role', 'tab');
-		btn.appendChild(
-			createIcon(
-				doc,
-				tab.id === 'elements' ? 'layers' : tab.id === 'properties' ? 'settings' : 'comment',
-			),
-		);
+		btn.appendChild(createIcon(doc, tab.id === 'elements' ? 'layers' : 'settings'));
 		btn.appendChild(doc.createTextNode(tab.label));
 		btn.addEventListener('click', () => setActiveTab(tab.id));
 		header.appendChild(btn);
@@ -89,10 +82,6 @@ export function createInspector(
 	const body = createEl(doc, 'div', 'pptxv-inspector-body');
 	body.dataset.pptxChrome = 'inspector-body';
 	el.appendChild(body);
-
-	const commentsTab = createCommentsTab(doc, t, handlers);
-	commentsTab.el.classList.add('pptxv-inspector-body');
-	el.appendChild(commentsTab.el);
 
 	// Docked per-element Animation panel: always at the bottom of the pane,
 	// visible (on any tab) whenever an element is selected, matching React's
@@ -112,7 +101,6 @@ export function createInspector(
 		}
 		elementsTab.el.hidden = tab !== 'elements';
 		body.hidden = tab !== 'properties';
-		commentsTab.el.hidden = tab !== 'comments';
 	};
 
 	// -- Properties tab content ----------------------------------------------
@@ -207,7 +195,6 @@ export function createInspector(
 			action.setSlideCount(state.slideCount);
 			action.setCustomShows(state.customShows);
 			elementsTab.update(state);
-			commentsTab.update(state);
 			deckPanel.update(state);
 			format.layout(
 				formatSelectionElements(state.selectedElement, state.selectedIds, state.elements),

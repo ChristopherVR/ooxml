@@ -123,7 +123,7 @@ function expectSmall(read: Probe['controls'][string], name: string): void {
 }
 
 test.describe('Home', () => {
-	// Wide enough for every group but the viewer's own Arrange extras, which collapse first.
+	// Wide enough for every Home group.
 	test.use({ viewport: { width: 1920, height: 1000 } });
 	const HOME_GROUPS = [
 		['home.clipboard', 'Clipboard'],
@@ -132,7 +132,6 @@ test.describe('Home', () => {
 		['home.paragraph', 'Paragraph'],
 		['home.drawing', 'Drawing'],
 		['home.editing', 'Editing'],
-		['home.arrange', 'Arrange'],
 	];
 	const IDS = [
 		'home.clipboard.paste',

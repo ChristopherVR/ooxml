@@ -65,7 +65,7 @@ export interface RibbonNavHandlers {
 	openReadingView(): void;
 	/** Open PowerPoint's Outline view (the deck as editable indented text). */
 	openOutlineView(): void;
-	openComments(): void;
+	openComments(toggle?: boolean): void;
 	/** Review > Comments Previous / Next / Delete over the whole deck (omitted: those stay disabled). */
 	reviewComments?: ReviewCommentsHost;
 	openHyperlink(): void;

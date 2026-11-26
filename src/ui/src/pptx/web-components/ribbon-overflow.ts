@@ -25,7 +25,6 @@ export const CONTROL_FACE: Readonly<Record<string, string>> = {
 	'home.paragraph': 'home.paragraph.alignLeft',
 	'home.editing': 'home.editing.find',
 	'home.drawing': 'home.drawing.shapes',
-	'home.arrange': 'home.drawing.arrange',
 };
 /** Shared 20px artwork for the other tabs' groups. */
 export const PATH_FACE: Readonly<Record<string, string>> = {
@@ -103,11 +102,23 @@ export function faceIcon(doc: Document, id: string): SVGSVGElement {
 /** Place a group's popup under its face, kept inside the viewport. */
 export function placeCollapsedGroup(group: HTMLElement, face: HTMLElement): void {
 	const rect = face.getBoundingClientRect();
-	const width = group.ownerDocument.defaultView?.innerWidth ?? 1024;
+	const width =
+		group.ownerDocument.documentElement.clientWidth ||
+		(group.ownerDocument.defaultView?.innerWidth ?? 1024);
+	const popup =
+		group.shadowRoot?.querySelector<HTMLElement>('.row') ??
+		Array.from(group.children).find(
+			(child) =>
+				!child.matches(
+					`${FACE_SELECTOR}, [data-pptx-chrome="ribbon-group-label"], [data-pptx-chrome="group-launcher"]`,
+				),
+		);
+	group.style.setProperty('--pptx-collapse-x', '8px');
+	const popupWidth = popup?.getBoundingClientRect().width ?? 0;
 	group.style.setProperty('--pptx-collapse-y', `${Math.round(rect.bottom + 2)}px`);
 	group.style.setProperty(
 		'--pptx-collapse-x',
-		`${Math.round(Math.max(4, Math.min(rect.left, width - 360)))}px`,
+		`${Math.round(Math.max(4, Math.min(rect.left, width - popupWidth - 8)))}px`,
 	);
 }
 
@@ -149,7 +160,9 @@ function ensureFace(group: HTMLElement): void {
 function closeAll(content: HTMLElement): void {
 	for (const open of content.querySelectorAll<HTMLElement>('[data-ribbon-group][data-open]')) {
 		open.removeAttribute('data-open');
-		open.querySelector(`:scope > ${FACE_SELECTOR}`)?.setAttribute('aria-expanded', 'false');
+		(
+			open.shadowRoot?.querySelector('.face') ?? open.querySelector(`:scope > ${FACE_SELECTOR}`)
+		)?.setAttribute('aria-expanded', 'false');
 	}
 }
 
@@ -396,24 +409,35 @@ export function attachRibbonOverflow(
 		if (event.key === 'Escape' && open) {
 			event.stopPropagation();
 			closeAll(content);
-			(open.querySelector<HTMLElement>(FACE_SELECTOR) ?? open).focus();
+			(
+				open.shadowRoot?.querySelector<HTMLElement>('.face') ??
+				open.querySelector<HTMLElement>(FACE_SELECTOR)
+			)?.focus();
 		}
 	};
 	/** A command ends the popup; a control that opens its own menu keeps it. */
 	const afterCommand = (event: Event) => {
 		const open = content.querySelector<HTMLElement>('[data-ribbon-group][data-open]');
-		const button = (event.composedPath()[0] as Element | undefined)?.closest?.('button');
+		const path = event.composedPath();
+		const button = path.find(
+			(node): node is HTMLButtonElement => node instanceof HTMLButtonElement,
+		);
 		if (
-			open?.contains(button ?? null) &&
+			open &&
+			path.includes(open) &&
 			button &&
-			!button.matches(`${FACE_SELECTOR}, [aria-haspopup], [aria-expanded]`)
+			!button.matches(`${FACE_SELECTOR}, .face, [aria-haspopup], [aria-expanded]`)
 		) {
+			const face =
+				open.shadowRoot?.querySelector<HTMLElement>('.face') ??
+				open.querySelector<HTMLElement>(FACE_SELECTOR);
+			face?.focus();
 			closeAll(content);
 		}
 	};
 	content.addEventListener('click', toggle);
 	content.addEventListener('ribbon-collapse-toggle', toggleShared);
-	content.addEventListener('click', afterCommand);
+	content.addEventListener('click', afterCommand, true);
 	content.addEventListener('keydown', escape);
 	doc.addEventListener('pointerdown', outside, true);
 	const stopLaunchers = options.launchers
@@ -429,7 +453,7 @@ export function attachRibbonOverflow(
 		view?.cancelAnimationFrame(frame);
 		content.removeEventListener('click', toggle);
 		content.removeEventListener('ribbon-collapse-toggle', toggleShared);
-		content.removeEventListener('click', afterCommand);
+		content.removeEventListener('click', afterCommand, true);
 		content.removeEventListener('keydown', escape);
 		doc.removeEventListener('pointerdown', outside, true);
 		closeAll(content);

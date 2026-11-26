@@ -30,7 +30,7 @@ interface Props {
 	isCollaborating?: boolean;
 	collaboratorCount?: number;
 	/** Comments toggle; absent (or the host turning comments off) leaves Comments out. */
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
 	/** Toolbar buttons the host has asked to hide (gates Record + Share below). */

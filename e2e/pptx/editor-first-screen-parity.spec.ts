@@ -203,7 +203,6 @@ test('Home keeps Office rows and flat, dimmed disabled actions', async ({ page }
 					'home.font.increaseFontSize',
 					'home.paragraph.decreaseIndent',
 					'home.paragraph.alignLeft',
-					'home.arrange.sendBackward',
 				].map((control) => {
 					const button = document.querySelector(`[data-ribbon-control="${control}"]`)!;
 					return {

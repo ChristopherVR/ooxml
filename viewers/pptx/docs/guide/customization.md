@@ -891,6 +891,12 @@ object per tenant, and feed it back through `setCustomization`.
 Generated from the shared id catalogues (`bun run docs:customization`); a
 unit test fails if an id is missing here.
 
+Home's Arrange menu uses `home.drawing.arrange`. The old `home.arrange` group is no longer on Home.
+Its command IDs still apply where those commands are shown in Drawing or in Shape Format and
+Picture Format. Use `shapeFormat.arrange` or `pictureFormat.arrange` to hide a contextual group.
+Duplicate and Delete are available from the context menu and their keyboard shortcuts.
+Format Painter uses `home.clipboard.formatPainter`.
+
 <!-- customization-reference:start -->
 
 ### Ribbon tabs (`ribbon.hiddenTabs`)
@@ -923,105 +929,106 @@ unit test fails if an id is missing here.
 
 ### Ribbon groups (`ribbon.hiddenGroups`)
 
-| Id                                  | Group                    |
-| ----------------------------------- | ------------------------ |
-| `home.clipboard`                    | Clipboard                |
-| `home.slides`                       | Slides                   |
-| `home.font`                         | Font                     |
-| `home.paragraph`                    | Paragraph                |
-| `home.drawing`                      | Drawing                  |
-| `home.arrange`                      | Arrange                  |
-| `home.editing`                      | Editing                  |
-| `insert.slides`                     | Slides                   |
-| `insert.tables`                     | Tables                   |
-| `insert.images`                     | Images                   |
-| `insert.camera`                     | Camera                   |
-| `insert.illustrations`              | Illustrations            |
-| `insert.forms`                      | Forms                    |
-| `insert.addIns`                     | Add-ins                  |
-| `insert.links`                      | Links                    |
-| `insert.comments`                   | Comments                 |
-| `insert.text`                       | Text                     |
-| `insert.symbols`                    | Symbols                  |
-| `insert.media`                      | Media                    |
-| `draw.tools`                        | Drawing Tools            |
-| `draw.selection`                    | Select                   |
-| `draw.pens`                         | Pen presets              |
-| `draw.convert`                      | Convert                  |
-| `draw.guides`                       | Guides                   |
-| `draw.replay`                       | Ink Replay               |
-| `design.themes`                     | Themes                   |
-| `design.variants`                   | Variants                 |
-| `design.customize`                  | Customize                |
-| `design.designer`                   | Designer                 |
-| `transitions.preview`               | Preview                  |
-| `transitions.transitionToThisSlide` | Transition to This Slide |
-| `transitions.timing`                | Timing                   |
-| `animations.preview`                | Preview                  |
-| `animations.animation`              | Animation                |
-| `animations.motionPath`             | Motion Paths             |
-| `animations.advancedAnimation`      | Advanced Animation       |
-| `animations.timing`                 | Timing                   |
-| `slideShow.startSlideShow`          | Start Slide Show         |
-| `slideShow.present`                 | Present                  |
-| `slideShow.setUp`                   | Set Up                   |
-| `slideShow.captions`                | Captions & Subtitles     |
-| `record.camera`                     | Camera                   |
-| `record.record`                     | Record                   |
-| `record.manage`                     | Manage                   |
-| `record.help`                       | Help                     |
-| `review.proofing`                   | Proofing                 |
-| `review.accessibility`              | Accessibility            |
-| `review.language`                   | Language                 |
-| `review.comments`                   | Comments                 |
-| `review.compare`                    | Compare                  |
-| `review.protect`                    | Protect                  |
-| `review.ink`                        | Ink                      |
-| `view.presentationViews`            | Presentation Views       |
-| `view.masterViews`                  | Master Views             |
-| `view.show`                         | Show                     |
-| `view.zoom`                         | Zoom                     |
-| `view.window`                       | Window                   |
-| `help.help`                         | Help                     |
-| `shapeFormat.shapeStyles`           | Shape Styles             |
-| `shapeFormat.wordArtStyles`         | WordArt Styles           |
-| `pictureFormat.adjust`              | Adjust                   |
-| `pictureFormat.pictureStyles`       | Picture Styles           |
-| `pictureFormat.size`                | Size                     |
-| `pictureFormat.accessibility`       | Alt Text                 |
-| `pictureFormat.arrange`             | Arrange                  |
-| `tableDesign.tableStyles`           | Table Styles             |
-| `tableLayout.table`                 | Table                    |
-| `tableLayout.rowsColumns`           | Rows & Columns           |
-| `tableLayout.merge`                 | Merge                    |
-| `tableLayout.cellSize`              | Cell Size                |
-| `tableLayout.alignment`             | Alignment                |
-| `tableLayout.tableSize`             | Table Size               |
-| `tableLayout.arrange`               | Arrange                  |
-| `chartDesign.chartLayouts`          | Chart Layouts            |
-| `chartDesign.chartStyles`           | Chart Styles             |
-| `chartFormat.currentSelection`      | Current Selection        |
-| `smartArtDesign.createGraphic`      | Create Graphic           |
-| `smartArtDesign.layouts`            | Layouts                  |
-| `smartArtDesign.smartArtStyles`     | SmartArt Styles          |
-| `smartArtDesign.reset`              | Reset                    |
-| `videoFormat.poster`                | Poster Frame             |
-| `videoFormat.adjust`                | Adjust                   |
-| `videoFormat.pictureStyles`         | Video Styles             |
-| `videoFormat.arrange`               | Arrange                  |
-| `videoFormat.size`                  | Size                     |
-| `audioFormat.adjust`                | Adjust                   |
-| `audioFormat.pictureStyles`         | Picture Styles           |
-| `audioFormat.arrange`               | Arrange                  |
-| `audioFormat.size`                  | Size                     |
-| `playback.bookmarks`                | Bookmarks                |
-| `playback.editing`                  | Editing                  |
-| `playback.options`                  | Playback                 |
-| `smartArtFormat.shapes`             | Shapes                   |
-| `smartArtFormat.shapeStyles`        | Shape Styles             |
-| `smartArtFormat.wordArtStyles`      | WordArt Styles           |
-| `smartArtFormat.arrange`            | Arrange                  |
-| `smartArtFormat.size`               | Size                     |
+| Id                                  | Group                        |
+| ----------------------------------- | ---------------------------- |
+| `home.clipboard`                    | Clipboard                    |
+| `home.slides`                       | Slides                       |
+| `home.font`                         | Font                         |
+| `home.paragraph`                    | Paragraph                    |
+| `home.drawing`                      | Drawing                      |
+| `home.arrange`                      | Arrange (legacy control IDs) |
+| `home.editing`                      | Editing                      |
+| `insert.slides`                     | Slides                       |
+| `insert.tables`                     | Tables                       |
+| `insert.images`                     | Images                       |
+| `insert.camera`                     | Camera                       |
+| `insert.illustrations`              | Illustrations                |
+| `insert.forms`                      | Forms                        |
+| `insert.addIns`                     | Add-ins                      |
+| `insert.links`                      | Links                        |
+| `insert.comments`                   | Comments                     |
+| `insert.text`                       | Text                         |
+| `insert.symbols`                    | Symbols                      |
+| `insert.media`                      | Media                        |
+| `draw.tools`                        | Drawing Tools                |
+| `draw.selection`                    | Select                       |
+| `draw.pens`                         | Pen presets                  |
+| `draw.convert`                      | Convert                      |
+| `draw.guides`                       | Guides                       |
+| `draw.replay`                       | Ink Replay                   |
+| `design.themes`                     | Themes                       |
+| `design.variants`                   | Variants                     |
+| `design.customize`                  | Customize                    |
+| `design.designer`                   | Designer                     |
+| `transitions.preview`               | Preview                      |
+| `transitions.transitionToThisSlide` | Transition to This Slide     |
+| `transitions.timing`                | Timing                       |
+| `animations.preview`                | Preview                      |
+| `animations.animation`              | Animation                    |
+| `animations.motionPath`             | Motion Paths                 |
+| `animations.advancedAnimation`      | Advanced Animation           |
+| `animations.timing`                 | Timing                       |
+| `slideShow.startSlideShow`          | Start Slide Show             |
+| `slideShow.present`                 | Present                      |
+| `slideShow.setUp`                   | Set Up                       |
+| `slideShow.captions`                | Captions & Subtitles         |
+| `record.camera`                     | Camera                       |
+| `record.record`                     | Record                       |
+| `record.manage`                     | Manage                       |
+| `record.help`                       | Help                         |
+| `review.proofing`                   | Proofing                     |
+| `review.accessibility`              | Accessibility                |
+| `review.language`                   | Language                     |
+| `review.comments`                   | Comments                     |
+| `review.compare`                    | Compare                      |
+| `review.protect`                    | Protect                      |
+| `review.ink`                        | Ink                          |
+| `view.presentationViews`            | Presentation Views           |
+| `view.masterViews`                  | Master Views                 |
+| `view.show`                         | Show                         |
+| `view.zoom`                         | Zoom                         |
+| `view.window`                       | Window                       |
+| `help.help`                         | Help                         |
+| `shapeFormat.shapeStyles`           | Shape Styles                 |
+| `shapeFormat.wordArtStyles`         | WordArt Styles               |
+| `shapeFormat.arrange`               | Arrange                      |
+| `pictureFormat.adjust`              | Adjust                       |
+| `pictureFormat.pictureStyles`       | Picture Styles               |
+| `pictureFormat.size`                | Size                         |
+| `pictureFormat.accessibility`       | Alt Text                     |
+| `pictureFormat.arrange`             | Arrange                      |
+| `tableDesign.tableStyles`           | Table Styles                 |
+| `tableLayout.table`                 | Table                        |
+| `tableLayout.rowsColumns`           | Rows & Columns               |
+| `tableLayout.merge`                 | Merge                        |
+| `tableLayout.cellSize`              | Cell Size                    |
+| `tableLayout.alignment`             | Alignment                    |
+| `tableLayout.tableSize`             | Table Size                   |
+| `tableLayout.arrange`               | Arrange                      |
+| `chartDesign.chartLayouts`          | Chart Layouts                |
+| `chartDesign.chartStyles`           | Chart Styles                 |
+| `chartFormat.currentSelection`      | Current Selection            |
+| `smartArtDesign.createGraphic`      | Create Graphic               |
+| `smartArtDesign.layouts`            | Layouts                      |
+| `smartArtDesign.smartArtStyles`     | SmartArt Styles              |
+| `smartArtDesign.reset`              | Reset                        |
+| `videoFormat.poster`                | Poster Frame                 |
+| `videoFormat.adjust`                | Adjust                       |
+| `videoFormat.pictureStyles`         | Video Styles                 |
+| `videoFormat.arrange`               | Arrange                      |
+| `videoFormat.size`                  | Size                         |
+| `audioFormat.adjust`                | Adjust                       |
+| `audioFormat.pictureStyles`         | Picture Styles               |
+| `audioFormat.arrange`               | Arrange                      |
+| `audioFormat.size`                  | Size                         |
+| `playback.bookmarks`                | Bookmarks                    |
+| `playback.editing`                  | Editing                      |
+| `playback.options`                  | Playback                     |
+| `smartArtFormat.shapes`             | Shapes                       |
+| `smartArtFormat.shapeStyles`        | Shape Styles                 |
+| `smartArtFormat.wordArtStyles`      | WordArt Styles               |
+| `smartArtFormat.arrange`            | Arrange                      |
+| `smartArtFormat.size`               | Size                         |
 
 ### Ribbon controls (`ribbon.hiddenButtons`)
 
@@ -1066,7 +1073,9 @@ unit test fails if an id is missing here.
 | `home.paragraph.alignText`                        | Align Text                                                                    |
 | `home.drawing.shapes`                             | Shapes                                                                        |
 | `home.drawing.arrange`                            | Arrange                                                                       |
-| `home.drawing.quickStyles`                        | Quick Styles (Shape Styles gallery)                                           |
+| `home.drawing.positionSize`                       | Position & Size                                                               |
+| `home.drawing.selectionPane`                      | Selection Pane                                                                |
+| `home.drawing.quickStyles`                        | Quick Styles gallery                                                          |
 | `home.drawing.shapeFill`                          | Shape Fill                                                                    |
 | `home.drawing.shapeOutline`                       | Shape Outline                                                                 |
 | `home.drawing.shapeEffects`                       | Shape Effects gallery                                                         |

@@ -274,6 +274,10 @@ export function buildViewerChrome(
 			ribbon.setEditable(false);
 		}
 		root.appendChild(ribbon.el);
+		const commentsRibbon = ribbon;
+		root.addEventListener('pptx-comments-visibility', (event) => {
+			commentsRibbon.setCommentsOpen(event instanceof CustomEvent && event.detail === true);
+		});
 		// Group / control hiding from the host customisation (`ribbon.hiddenGroups`
 		// / `hiddenButtons`): one scoped stylesheet built by shared. A
 		// customisation change rebuilds the chrome, and with it this element.

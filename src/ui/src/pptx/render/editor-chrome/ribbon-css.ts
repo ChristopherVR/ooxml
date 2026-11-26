@@ -5,6 +5,17 @@ const FORMAT_ARRANGE = `[data-pptx-editor-chrome] :is(
 )`;
 
 export const EDITOR_RIBBON_CSS = `
+[data-pptx-comments-panel] { position: relative; }
+[data-pptx-comment-close] {
+  position: absolute; inset: 4px 4px auto auto; z-index: 1; display: grid; place-items: center;
+  width: 30px; height: 30px; padding: 0; border: 0; border-radius: 4px;
+  color: inherit; background: var(--pptx-card); cursor: pointer;
+}
+[data-pptx-comment-close]:hover { background: var(--pptx-accent); }
+[data-pptx-comment-close] svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; }
+@media (max-width: 767px) {
+  [data-pptx-comment-close] { width: 44px; height: 44px; }
+}
 [data-pptx-editor-chrome] .contextual-fields > pptx-ui-ribbon-gallery[mode="inline"] {
   grid-row: span 3;
 }
@@ -56,7 +67,10 @@ export const EDITOR_RIBBON_CSS = `
     display: block; min-height: 35px; padding: 0 4px; box-sizing: border-box;
   }
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-content"] {
-    min-height: 92px; padding: 2px 4px; gap: 0; box-sizing: border-box;
+    min-width: 0; max-width: 100%; min-height: 92px; padding: 2px 4px; gap: 0; box-sizing: border-box;
+  }
+  [data-pptx-editor-chrome] pptx-ui-ribbon-group[data-collapsed][data-ribbon-group^="insert."]::part(collapse-face) {
+    width: 56px; min-width: 56px; padding-inline: 2px; white-space: normal; overflow-wrap: anywhere;
   }
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon-group-label"] {
     font-size: 9px; line-height: 9px; font-weight: 400;

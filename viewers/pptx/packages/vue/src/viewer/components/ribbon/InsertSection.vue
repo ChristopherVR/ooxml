@@ -59,7 +59,7 @@ interface Props {
 	/** Deck scheme map so template previews show the deck's theme colours. */
 	templateScheme?: Record<string, string>;
 	/** Comment opens the comments pane, as Review > New Comment does. */
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	/** Draw the phone Insert sheet (`pptx-ui-mobile-insert`) instead of the ribbon group row. */
 	phone?: boolean;
@@ -130,7 +130,7 @@ function request(event: RibbonInsertRequestEvent): void {
 				link: props.onOpenHyperlinkDialog,
 				headerFooter: props.onOpenHeaderFooter,
 				// Opening an already open pane would toggle it shut.
-				comment: props.isCommentsPanelOpen ? undefined : props.onToggleComments,
+				comment: () => props.onToggleComments?.(true),
 			};
 			commands[intent.value]?.();
 			break;

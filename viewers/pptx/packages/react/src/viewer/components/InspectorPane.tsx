@@ -1,4 +1,4 @@
-import { formatSelectionElements } from 'ooxml-ui/pptx';
+import { attachCommentsTaskPane, formatSelectionElements } from 'ooxml-ui/pptx';
 import type { PptxElement } from 'pptx-viewer-core';
 import React from 'react';
 
@@ -105,6 +105,19 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 	// Swipe-down-to-dismiss for the mobile bottom-sheet presentation. The grab
 	// region is `md:hidden`, so `dragY` only ever moves on mobile: the inline
 	// transform below is therefore a no-op on desktop where this is a side panel.
+	const commentsRef = React.useRef<HTMLDivElement>(null);
+	const closeComments = React.useRef(onClose);
+	closeComments.current = onClose;
+	React.useLayoutEffect(() => {
+		const pane = commentsRef.current;
+		if (pane && activeTab === 'comments') {
+			return attachCommentsTaskPane(pane, {
+				label: t('pptx.toolbar.comments'),
+				closeLabel: t('pptx.common.close'),
+				close: () => closeComments.current(),
+			});
+		}
+	}, [activeTab, isOpen, t]);
 	const { dragY, handlers: dragHandlers } = useSheetDismissDrag(onClose);
 
 	const {
@@ -156,11 +169,13 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 					<div className='h-1 w-10 rounded-full bg-muted-foreground/40' />
 				</div>
 
-				<InspectorPaneHeader
-					activeTab={activeTab}
-					onSetActiveTab={onSetActiveTab}
-					onClose={onClose}
-				/>
+				{activeTab !== 'comments' && (
+					<InspectorPaneHeader
+						activeTab={activeTab}
+						onSetActiveTab={onSetActiveTab}
+						onClose={onClose}
+					/>
+				)}
 
 				{/* Tab content */}
 				<div data-pptx-chrome='inspector-body' className='flex-1 overflow-y-auto p-3 space-y-3'>
@@ -250,38 +265,41 @@ export function InspectorPane(props: InspectorPaneProps): React.ReactElement {
 
 					{/* ── Comments ── */}
 					{activeTab === 'comments' && (
-						<InspectorCommentsSection
-							comments={comments}
-							canEdit={canEdit}
-							activeSlide={activeSlide}
-							selectedElement={selectedElement}
-							editingCommentId={editingCommentId}
-							commentEditDraft={commentEditDraft}
-							commentDraft={commentDraft}
-							commentDraftMentions={commentDraftMentions ?? []}
-							commentAuthors={commentAuthors ?? []}
-							replyingToCommentId={replyingToCommentId ?? null}
-							replyDraftByCommentId={replyDraftByCommentId ?? {}}
-							replyDraftMentionsByCommentId={replyDraftMentionsByCommentId ?? {}}
-							onSetCommentDraft={onSetCommentDraft}
-							onAddComment={onAddComment}
-							onDeleteComment={onDeleteComment}
-							onStartEditComment={onStartEditComment}
-							onSaveEditComment={onSaveEditComment}
-							onCancelEditComment={onCancelEditComment}
-							onSetCommentEditDraft={onSetCommentEditDraft}
-							onToggleCommentResolved={onToggleCommentResolved}
-							onStartReply={onStartReply}
-							onCancelReply={onCancelReply}
-							onReplyDraftChange={onReplyDraftChange}
-							onSubmitReply={onSubmitReply}
-							onSelectElement={onSelectElement}
-						/>
+						<div ref={commentsRef} role='complementary'>
+							<h2 className='m-0 pr-8 text-sm font-semibold'>{t('pptx.toolbar.comments')}</h2>
+							<InspectorCommentsSection
+								comments={comments}
+								canEdit={canEdit}
+								activeSlide={activeSlide}
+								selectedElement={selectedElement}
+								editingCommentId={editingCommentId}
+								commentEditDraft={commentEditDraft}
+								commentDraft={commentDraft}
+								commentDraftMentions={commentDraftMentions ?? []}
+								commentAuthors={commentAuthors ?? []}
+								replyingToCommentId={replyingToCommentId ?? null}
+								replyDraftByCommentId={replyDraftByCommentId ?? {}}
+								replyDraftMentionsByCommentId={replyDraftMentionsByCommentId ?? {}}
+								onSetCommentDraft={onSetCommentDraft}
+								onAddComment={onAddComment}
+								onDeleteComment={onDeleteComment}
+								onStartEditComment={onStartEditComment}
+								onSaveEditComment={onSaveEditComment}
+								onCancelEditComment={onCancelEditComment}
+								onSetCommentEditDraft={onSetCommentEditDraft}
+								onToggleCommentResolved={onToggleCommentResolved}
+								onStartReply={onStartReply}
+								onCancelReply={onCancelReply}
+								onReplyDraftChange={onReplyDraftChange}
+								onSubmitReply={onSubmitReply}
+								onSelectElement={onSelectElement}
+							/>
+						</div>
 					)}
 				</div>
 
 				{/* Animation panel: always visible at bottom when element selected */}
-				{hasSelection && selectedElement && activeSlide && (
+				{activeTab !== 'comments' && hasSelection && selectedElement && activeSlide && (
 					<>
 						<ResizeHandle direction='vertical' onResize={onResizeAnimationPanel} />
 						<div

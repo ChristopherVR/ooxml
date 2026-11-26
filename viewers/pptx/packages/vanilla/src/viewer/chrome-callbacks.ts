@@ -78,7 +78,7 @@ export interface ChromeCallbackDeps {
 	openReadingView(): void;
 	/** Open Outline view (the deck as editable indented text). */
 	openOutlineView(): void;
-	openComments(): void;
+	openComments(toggle?: boolean): void;
 	/** The deck's slides and active slide, read straight from the store (the editor is built after the chrome). */
 	getSlides?(): readonly PptxSlide[];
 	getCurrentSlide?(): number;
@@ -203,7 +203,7 @@ export function buildChromeCallbacks(
 			openSlideSorter: () => deps.openSlideSorter(),
 			openReadingView: () => deps.openReadingView(),
 			openOutlineView: () => deps.openOutlineView(),
-			openComments: () => deps.openComments(),
+			openComments: (toggle) => deps.openComments(toggle),
 			reviewComments: {
 				slides: () => deps.getSlides?.() ?? [],
 				currentSlide: () => deps.getCurrentSlide?.() ?? 0,

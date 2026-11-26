@@ -9,7 +9,6 @@
 	 * and routes every mutation through `EditorState`.
 	 */
 	import {
-		arrangePainterHomeControls,
 		arrangeShapeHomeControls,
 		canGroupSelection,
 		canInteractWithElement,
@@ -40,15 +39,6 @@
 		editor.selectedElements.every((element) => canInteractWithElement(element, 'group')),
 	);
 	const cropping = $derived(editor.cropOps.active);
-	const painter = $derived({
-		controls: arrangePainterHomeControls({
-			editable: editor.editable,
-			active: editor.formatPainter.active,
-			canFormatPaint: editor.formatPainter.enabled,
-			show: true,
-		}),
-		translate: homeSnapshotTranslator(['arrange-painter'], t),
-	});
 	const shape = $derived({
 		controls: arrangeShapeHomeControls({
 			editable: editor.editable,
@@ -95,12 +85,6 @@
 
 <div class="pptx-svelte-arrangex" data-pptx-chrome="control-fragment" role="group" aria-label={t('pptx.ribbon.arrange')}>
 	<ArrangeHomeStrip {editor} strip="align" />
-	<!-- The Arrange group's labelled Format Painter, beside the Clipboard group's
-	     icon-only one; both drive the same controller. -->
-	<pptx-ui-ribbon-home-arrange-painter
-		state={painter}
-		onhome-request={() => editor.formatPainter.toggle()}
-	></pptx-ui-ribbon-home-arrange-painter>
 	<ArrangeHomeStrip {editor} strip="flip" />
 	<pptx-ui-ribbon-home-arrange-shape state={shape} onhome-request={requestShape}></pptx-ui-ribbon-home-arrange-shape>
 </div>

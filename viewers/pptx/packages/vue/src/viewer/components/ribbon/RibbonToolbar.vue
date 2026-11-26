@@ -368,6 +368,22 @@ onBeforeUnmount(() => detachOverflow?.());
 						:new-shape-type="props.newShapeType"
 						:on-set-new-shape-type="props.onSetNewShapeType"
 						:on-add-shape="props.onAddShape"
+						:arrange="{
+							actions: {
+								align: (edge) => props.onAlignElements(edge === 'centerH' ? 'center' : edge),
+								distribute: props.onDistributeElements,
+								flip: props.onFlip,
+								group: props.onGroupElements,
+								ungroup: props.onUngroupElement,
+								position: () => formatPane?.requestFormatPane('sizePosition', { focus: true }),
+								selectionPane: props.onToggleSelectionPane,
+							},
+							selected: Boolean(props.selectedElement),
+							canEdit: props.canEdit,
+							canGroup: props.selectedCount > 1 && props.selectionGroupable,
+							canUngroup: props.selectedElement?.type === 'group',
+							canDistribute: props.canDistribute,
+						}"
 						:on-move-layer="props.onMoveLayer"
 						:on-move-layer-to-edge="props.onMoveLayerToEdge"
 						:on-update-element-style="props.onUpdateElementStyle"
@@ -390,7 +406,7 @@ onBeforeUnmount(() => detachOverflow?.());
 						:on-set-drawing-width="props.onSetDrawingWidth"
 					/>
 
-					<ArrangeSection v-if="s === 'home' || s === 'arrange'" v-bind="arrangeProps" />
+					<ArrangeSection v-if="s === 'arrange'" v-bind="arrangeProps" />
 
 					<DesignSection
 						v-if="s === 'design'"

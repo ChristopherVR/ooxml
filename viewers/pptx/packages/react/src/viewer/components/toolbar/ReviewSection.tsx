@@ -16,7 +16,7 @@ export interface ReviewSectionProps {
 	canEdit: boolean;
 	spellCheckEnabled: boolean;
 	onSetSpellCheckEnabled: (enabled: boolean) => void;
-	onToggleComments?: () => void;
+	onToggleComments?: (ensureOpen?: boolean) => void;
 	isCommentsPanelOpen?: boolean;
 	slideCommentCount?: number;
 	/** Previous / Next / Delete on the deck's comments (absent: those stay disabled). */
@@ -75,6 +75,8 @@ export function ReviewSection(p: ReviewSectionProps): React.ReactElement {
 				}
 				break;
 			case 'review.comments.newComment':
+				p.onToggleComments?.(true);
+				break;
 			case 'review.comments.showComments':
 				p.onToggleComments?.();
 				break;

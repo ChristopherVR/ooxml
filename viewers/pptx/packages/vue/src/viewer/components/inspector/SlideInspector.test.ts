@@ -136,13 +136,13 @@ describe('slideInspector', () => {
 		expect(wrapper.emitted('select-element')?.[0]).toStrictEqual(['a']);
 	});
 
-	it('hosts the comments panel on the Comments tab', async () => {
+	it('keeps comments out of the format inspector', () => {
 		// The panel's commands are the viewer's shared comments controller (CommentsPanel.test.ts);
 		// mounted on its own, without a viewer, it lists the comments read-only.
 		const wrapper = mount(SlideInspector, { props: { ...baseProps, comments: [] } });
 		const commentsTab = wrapper.findAll('button').find((b) => b.text().includes('Comments'));
-		await commentsTab!.trigger('click');
-		expect(wrapper.find('.pptx-comments-panel').exists()).toBeTruthy();
+		expect(commentsTab).toBeUndefined();
+		expect(wrapper.find('.pptx-comments-panel').exists()).toBeFalsy();
 		expect(wrapper.get('[data-testid="add-comment"]').attributes('disabled')).toBeDefined();
 	});
 

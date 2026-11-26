@@ -170,6 +170,7 @@
 	<div class="pptx-svelte-comments-compose">
 		<div class="pptx-svelte-comment-composer">
 			<textarea
+				data-pptx-comment-draft
 				value={compose.text}
 				rows="2"
 				placeholder={t('pptx.comments.mentionPlaceholder')}

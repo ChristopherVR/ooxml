@@ -2,6 +2,7 @@
 import type { RibbonHomeRequestEvent } from 'ooxml-ui/pptx';
 import {
 	drawingHomeControls,
+	runDrawingArrange,
 	homeGalleryApply,
 	homeGalleryControls,
 	homeSnapshotTranslator,
@@ -33,6 +34,7 @@ interface Props {
 	newShapeType: string;
 	onSetNewShapeType: (type: SupportedShapeType) => void;
 	onAddShape: () => void;
+	arrange?: Parameters<typeof drawingHomeControls>[0]['arrange'];
 	onMoveLayer: (direction: string) => void;
 	onMoveLayerToEdge: (direction: string) => void;
 	/**
@@ -59,6 +61,7 @@ const state = computed(() => {
 		controls: withHomeGalleries(
 			drawingHomeControls({
 				editable: props.canEdit,
+				arrange: props.arrange,
 				hasSelection: Boolean(props.selectedElement),
 				shapeType: props.newShapeType,
 				fill: {
@@ -89,6 +92,7 @@ function request(event: RibbonHomeRequestEvent): void {
 			props.onAddShape();
 			break;
 		case 'home.drawing.arrange':
+			if (props.arrange && runDrawingArrange(String(value), props.arrange.actions)) break;
 			if (value === 'front' || value === 'back') {
 				props.onMoveLayerToEdge(value);
 			} else {

@@ -198,7 +198,7 @@ describe('insert section', () => {
 		expect(onToggleComments).toHaveBeenCalledOnce();
 		await wrapper.setProps({ isCommentsPanelOpen: true });
 		button(document.body, 'insert.comments.comment').click();
-		expect(onToggleComments).toHaveBeenCalledOnce();
+		expect(onToggleComments.mock.calls).toStrictEqual([[true], [true]]);
 		wrapper.unmount();
 	});
 

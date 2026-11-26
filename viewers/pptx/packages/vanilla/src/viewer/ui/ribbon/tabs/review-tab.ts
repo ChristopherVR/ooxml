@@ -18,6 +18,7 @@ export interface ReviewTab {
 	el: HTMLElement;
 	setEditable(editable: boolean): void;
 	setSpellCheck(enabled: boolean): void;
+	setCommentsOpen(open: boolean): void;
 	/** Release the document listeners that follow the comment the user picks. */
 	destroy(): void;
 }
@@ -33,6 +34,7 @@ export function createReviewTab(
 	el.append(section);
 	let editable = false;
 	let spellCheck = false;
+	let commentsOpen = false;
 	// The comment Previous / Next / Delete act on; follows the user's own picks in the panel.
 	let activeCommentId: string | null = null;
 	const refresh = () => {
@@ -41,6 +43,7 @@ export function createReviewTab(
 		const counts = commentCounts(slides, host?.currentSlide() ?? 0);
 		section.groups = buildReviewRibbon(t, {
 			commentCount: counts.slide,
+			commentsOpen,
 			totalCommentCount: counts.total,
 			canNavigateComments: host !== undefined,
 			hasActiveComment: findCommentLocation(slides, activeCommentId) !== null,
@@ -92,8 +95,10 @@ export function createReviewTab(
 				}
 				break;
 			case 'review.comments.newComment':
-			case 'review.comments.showComments':
 				handlers.openComments();
+				break;
+			case 'review.comments.showComments':
+				handlers.openComments(true);
 				break;
 		}
 	});
@@ -106,6 +111,10 @@ export function createReviewTab(
 		},
 		setSpellCheck(value) {
 			spellCheck = value;
+			refresh();
+		},
+		setCommentsOpen(open) {
+			commentsOpen = open;
 			refresh();
 		},
 		destroy: stopTracking,

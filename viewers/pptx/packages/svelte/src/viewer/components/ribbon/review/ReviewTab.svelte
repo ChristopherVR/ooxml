@@ -30,10 +30,11 @@
 	import type { ReviewCommentsHost, RibbonCommandRequestEvent } from 'ooxml-ui/pptx';
 	import { onMount } from 'svelte';
 	import ReviewAccessibilityPanel from './ReviewAccessibilityPanel.svelte';
-	import ReviewCommentsPanel from './ReviewCommentsPanel.svelte';
+	import type { ChromeUiState } from '../../../state/chrome-ui.svelte';
 	import { useViewerCustomization } from '../../../state/viewer-customization.svelte';
 
 	const {
+		chromeUi,
 		slides,
 		onnavigate,
 		editor,
@@ -42,6 +43,7 @@
 		spellCheck = false,
 		onspellcheckchange,
 	}: {
+		chromeUi?: ChromeUiState;
 		slides: readonly PptxSlide[];
 		onnavigate: (slideIndex: number, elementId?: string) => void;
 		editor?: EditorState;
@@ -53,9 +55,9 @@
 	const t = useTranslator();
 	const customization = useViewerCustomization();
 
-	let activePanel = $state<'accessibility' | 'comments' | null>(null);
+	let activePanel = $state<'accessibility' | null>(null);
 
-	function setPanel(panel: 'accessibility' | 'comments' | null): void {
+	function setPanel(panel: 'accessibility' | null): void {
 		activePanel = panel;
 	}
 	// Previous / Next / Delete walk the whole deck; the cursor follows the user's own picks too.
@@ -69,7 +71,7 @@
 			slides: () => editor.slides,
 			currentSlide: () => editor.currentSlideIndex,
 			goToSlide: (index) => onnavigate(index),
-			ensureCommentsOpen: () => setPanel('comments'),
+			ensureCommentsOpen: () => chromeUi?.toggleComments(true),
 			applyComments: (changes) => {
 				const next = editor.slides.map((slide, index) => {
 					const change = changes.find((candidate) => candidate.slideIndex === index);
@@ -83,8 +85,8 @@
  const groups = $derived(buildReviewRibbon(t, {
   editable: editor?.editable ?? false, spellCheck,
   canSpellCheck: Boolean(onspellcheckchange), canAccessibility: true, accessibilityOpen: activePanel === 'accessibility',
-  canLanguage: Boolean(onlanguage), canCompare: Boolean(oncompare), canComments: Boolean(editor),
-  commentsOpen: activePanel === 'comments',
+  canLanguage: Boolean(onlanguage), canCompare: Boolean(oncompare), canComments: Boolean(editor && chromeUi),
+  commentsOpen: chromeUi?.commentsOpen,
   commentCount: commentTotals.slide, totalCommentCount: commentTotals.total,
   canNavigateComments: commentsHost !== null,
   hasActiveComment: findCommentLocation(editor?.slides ?? [], activeCommentId) !== null,
@@ -104,8 +106,8 @@
    case 'review.accessibility.check': setPanel(activePanel === 'accessibility' ? null : 'accessibility'); break;
    case 'review.language.language': onlanguage?.(); break;
    case 'review.compare.compare': if (editor?.editable) {oncompare?.();} break;
-   case 'review.comments.newComment':
-   case 'review.comments.showComments': if (editor) {setPanel(activePanel === 'comments' ? null : 'comments');} break;
+   case 'review.comments.newComment': chromeUi?.toggleComments(true); break;
+   case 'review.comments.showComments': chromeUi?.toggleComments(); break;
   }
  }
 
@@ -114,7 +116,7 @@
 <div class="pptx-svelte-review-shell">
 	<pptx-ui-ribbon-section {groups} oncommand-request={request}></pptx-ui-ribbon-section>
 
-	{#if activePanel && (activePanel !== 'accessibility' || customization.isPanelVisible('accessibilityPane'))}
+	{#if activePanel && customization.isPanelVisible('accessibilityPane')}
 		<!-- Named after the panel, never after the tab: the cross-binding ribbon
 		     inventory treats a `role="dialog"` carrying the ACTIVE TAB's name as a
 		     backstage overlay and reads the tab's controls out of it instead of
@@ -122,9 +124,7 @@
 		<div
 			class="pptx-svelte-review-panel"
 			role="dialog"
-			aria-label={activePanel === 'accessibility'
-				? t('pptx.accessibility.title')
-				: t('pptx.comments.slideComments')}
+			aria-label={t('pptx.accessibility.title')}
 		>
 			<button
 				type="button"
@@ -132,11 +132,7 @@
 				aria-label={t('pptx.common.close')}
 				onclick={() => setPanel(null)}>x</button
 			>
-			{#if activePanel === 'accessibility'}
-				<ReviewAccessibilityPanel {slides} {onnavigate} />
-			{:else if editor}
-				<ReviewCommentsPanel {editor} />
-			{/if}
+			<ReviewAccessibilityPanel {slides} {onnavigate} />
 		</div>
 	{/if}
 </div>

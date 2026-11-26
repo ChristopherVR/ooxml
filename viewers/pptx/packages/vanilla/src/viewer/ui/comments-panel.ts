@@ -1,3 +1,4 @@
+import { attachCommentsTaskPane } from 'ooxml-ui/pptx';
 import type { PptxComment, PptxCommentMention, PptxModernCommentAuthor } from 'pptx-viewer-core';
 
 import type { CommentsPanelBinding } from '../editor/editor-comment-actions';
@@ -31,6 +32,14 @@ interface DisposablePane extends HTMLElement {
  * appends the new card with the pane still open. The compose draft lives
  * outside the rebuilt card list and survives re-renders.
  */
+export function closeCommentsPanel(host: HTMLElement): boolean {
+	const pane = host.querySelector<DisposablePane>('[data-pptx-comments-panel]');
+	if (!pane) return false;
+	pane[DISPOSE]?.();
+	pane.remove();
+	return true;
+}
+
 export function openCommentsPanel(
 	doc: Document,
 	host: HTMLElement,
@@ -38,21 +47,19 @@ export function openCommentsPanel(
 	model: CommentsPanelModel,
 	/** The viewer's shared comments panel state: drafts and commands. */
 	panel: CommentsPanelBinding,
+	onClose?: () => void,
 ): void {
 	const existing = host.querySelector<DisposablePane>('[data-pptx-comments-panel]');
-	existing?.[DISPOSE]?.();
-	existing?.remove();
+	if (existing) {
+		existing.querySelector<HTMLElement>('[data-pptx-comment-draft]')?.focus();
+		return;
+	}
 
 	const pane: DisposablePane = createEl(doc, 'aside', 'pptxv-workspace-pane');
-	pane.dataset.pptxCommentsPanel = 'true';
 	const header = createEl(doc, 'header');
 	const title = createEl(doc, 'h2');
 	title.textContent = t('pptx.toolbar.comments');
-	const close = createEl(doc, 'button');
-	close.type = 'button';
-	close.textContent = '×';
-	close.setAttribute('aria-label', t('pptx.common.close'));
-	header.append(title, close);
+	header.append(title);
 	pane.appendChild(header);
 
 	const list = createEl(doc, 'div', 'pptxv-workspace-list');
@@ -72,6 +79,7 @@ export function openCommentsPanel(
 
 	// The new-comment draft is the slide's, kept by the shared controller.
 	const draft = createEl(doc, 'textarea');
+	draft.dataset.pptxCommentDraft = '';
 	draft.placeholder = t('pptx.comments.addPlaceholder');
 	const draftMentions = (): PptxCommentMention[] => [
 		...(panel.controller.getSnapshot().draftMentionsBySlideId[panel.slideId()] ?? []),
@@ -112,6 +120,7 @@ export function openCommentsPanel(
 	const dispose = (): void => {
 		unsubscribe();
 		draftMentionTypeahead.destroy();
+		detach();
 		delete pane[DISPOSE];
 	};
 	const unsubscribe = model.subscribe(() => {
@@ -130,10 +139,15 @@ export function openCommentsPanel(
 	});
 	pane[DISPOSE] = dispose;
 
-	close.addEventListener('click', () => {
-		dispose();
-		pane.remove();
-	});
 	render();
 	host.appendChild(pane);
+	const detach = attachCommentsTaskPane(pane, {
+		label: t('pptx.toolbar.comments'),
+		closeLabel: t('pptx.common.close'),
+		close: () => {
+			dispose();
+			pane.remove();
+			onClose?.();
+		},
+	});
 }

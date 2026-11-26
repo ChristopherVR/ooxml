@@ -232,7 +232,7 @@ describe('insertSection', () => {
 		expect(onToggleComments).toHaveBeenCalledOnce();
 		render({ layoutOptions, onInsertSlideFromLayout, onToggleComments, isCommentsPanelOpen: true });
 		act(() => button('insert.comments.comment').click());
-		expect(onToggleComments).toHaveBeenCalledOnce();
+		expect(onToggleComments.mock.calls).toStrictEqual([[true], [true]]);
 	});
 
 	it('leaves New Slide and Comment disabled when the host offers neither', () => {

@@ -47,8 +47,8 @@ export class ChromeUiState {
 	}
 
 	/** Comments toolbar button: toggle the inspector's Comments tab. */
-	toggleComments(): void {
-		if (this.inspectorOpen && this.inspectorTab === 'comments') {
+	toggleComments(ensureOpen = false): void {
+		if (!ensureOpen && this.inspectorOpen && this.inspectorTab === 'comments') {
 			this.inspectorOpen = false;
 			return;
 		}

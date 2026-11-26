@@ -19,7 +19,7 @@
 	 * (so the toolbar's comments/inspector toggles stay in sync); standalone
 	 * mounts fall back to local state.
 	 */
-	import { Layers, MessageSquare, Settings2 } from '@lucide/svelte';
+	import { Layers, Settings2 } from '@lucide/svelte';
 	import type { PptxElement, PptxHandler, PptxTheme } from 'pptx-viewer-core';
 	import { createFormatPaneController, getDensePanelTouchTargetPx } from 'ooxml-ui/pptx';
 	import type { CanvasSize } from 'ooxml-ui/pptx';
@@ -31,6 +31,7 @@
 	import type { ChromeUiState, InspectorTabId } from '../../state/chrome-ui.svelte';
 	import { useInspectorDeck } from '../../state/inspector-deck';
 	import { useWindowViewport } from '../../state/window-viewport.svelte';
+	import { attachCommentsTaskPane } from 'ooxml-ui/pptx';
 	import ReviewCommentsPanel from '../ribbon/review/ReviewCommentsPanel.svelte';
 	import AnimationPanel from './AnimationPanel.svelte';
 	import ElementFormatSections from './ElementFormatSections.svelte';
@@ -67,7 +68,6 @@
 	const tabs = $derived<Array<{ id: InspectorTabId; label: string }>>([
 		{ id: 'elements', label: t('pptx.documentProperties.statistics.elements') },
 		{ id: 'properties', label: t('pptx.inspector.properties') },
-		{ id: 'comments', label: t('pptx.toolbar.comments') },
 	]);
 
 	const el = $derived(editor.selectedElement);
@@ -76,6 +76,13 @@
 	const localPane = createFormatPaneController({ showPane: () => setTab('properties') });
 	const pane = $derived(ui?.formatPane ?? localPane);
 	const NO_SELECTION: readonly PptxElement[] = [];
+	function commentsTaskPane(node: HTMLElement) {
+		return { destroy: attachCommentsTaskPane(node, {
+			label: t('pptx.toolbar.comments'),
+			closeLabel: t('pptx.common.close'),
+			close: () => ui?.toggleComments(),
+		}) };
+	}
 </script>
 
 <aside
@@ -85,6 +92,10 @@
 >
 	{#if regionRenderer}
 		<ViewerRegion region="inspector" renderer={regionRenderer} close={() => (ui ? (ui.inspectorOpen = false) : undefined)} />
+	{:else if activeTab === 'comments'}
+		<div class="pptx-svelte-inspector-body" role="complementary" use:commentsTaskPane>
+			<ReviewCommentsPanel {editor} />
+		</div>
 	{:else}
 	<div class="pptx-svelte-inspector-header" data-pptx-chrome="inspector-header">
 		<div class="pptx-svelte-inspector-tabs" data-pptx-chrome="inspector-tabs" role="tablist">
@@ -97,7 +108,7 @@
 					class:pptx-svelte-inspector-tab-active={activeTab === tab.id}
 					onclick={() => setTab(tab.id)}
 				>
-					{#if tab.id === 'elements'}<Layers size={14} aria-hidden="true" />{:else if tab.id === 'properties'}<Settings2 size={14} aria-hidden="true" />{:else}<MessageSquare size={14} aria-hidden="true" />{/if}
+					{#if tab.id === 'elements'}<Layers size={14} aria-hidden="true" />{:else if tab.id === 'properties'}<Settings2 size={14} aria-hidden="true" />{/if}
 					{tab.label}
 				</button>
 			{/each}
@@ -107,8 +118,7 @@
 	<div class="pptx-svelte-inspector-body" data-pptx-chrome="inspector-body">
 			{#if activeTab === 'elements'}
 				<ElementsListSection {editor} />
-			{:else if activeTab === 'comments'}
-				<ReviewCommentsPanel {editor} />
+
 			{:else if el}
 				<ElementFormatSections {editor} {el} {pane} {deck} {mediaDataUrls} />
 			{:else}

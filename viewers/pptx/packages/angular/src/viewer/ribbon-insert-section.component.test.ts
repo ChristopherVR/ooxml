@@ -106,7 +106,7 @@ describe('ribbonInsertSectionComponent', () => {
 		expect(addElement).not.toHaveBeenCalled();
 	});
 
-	it('adds a slide on the chosen or active layout and opens the comments pane once', () => {
+	it('adds a slide on the chosen or active layout and always opens the comment draft', () => {
 		const { section, addSlide } = create();
 		request(section, { kind: 'newSlide', value: null });
 		request(section, { kind: 'newSlide', value: 'l1.xml' });
@@ -119,7 +119,7 @@ describe('ribbonInsertSectionComponent', () => {
 		expect(comments).toHaveBeenCalledOnce();
 		Object.assign(section, { commentsOpen: signal(true) });
 		request(section, { kind: 'command', value: 'comment' });
-		expect(comments).toHaveBeenCalledOnce();
+		expect(comments).toHaveBeenCalledTimes(2);
 		expect(section['view']()).toMatchObject({
 			newSlideAvailable: true,
 			commentAvailable: true,

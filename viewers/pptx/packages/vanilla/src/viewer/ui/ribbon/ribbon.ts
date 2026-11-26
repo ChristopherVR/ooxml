@@ -35,6 +35,7 @@ import { createChartSelectionStrip } from './gallery/chart-selection-strip';
 import { createContextualTabPanes, mountVisibleContextualPanes } from './gallery/contextual-tabs';
 import { createRibbonGalleryHub } from './gallery/gallery-hub';
 import { createPictureSizeStrip } from './gallery/picture-size-strip';
+import { createContextualArrange } from './home/contextual-arrange';
 import type { HomeTab } from './home/home-tab';
 import { createHomeTab } from './home/home-tab';
 import type { Ribbon } from './ribbon-api';
@@ -101,7 +102,7 @@ export function createRibbon(
 		hiddenActions,
 		{
 			startRecording: () => handlers.slideShow.startRehearsal(),
-			openComments: () => handlers.nav.openComments(),
+			openComments: () => handlers.nav.openComments(true),
 		},
 	);
 	tabBar.el.hidden = true;
@@ -176,6 +177,8 @@ export function createRibbon(
 		: createHomeTab(doc, t, {
 				edit: handlers.edit,
 				onToggleFindReplace: toggleFindReplace,
+				openSelectionPane: () => handlers.nav.openSelectionPane(),
+				openPositionPane: () => handlers.nav.requestFormatPane?.('sizePosition'),
 				isSlideTemplatesAvailable: () => isDialogAvailable(resolved(), 'slideTemplates'),
 				hiddenActions,
 				galleryHub,
@@ -306,8 +309,10 @@ export function createRibbon(
 			contextualArranges.set(tab, group);
 		}
 	}
-	const homeArrange = homeTab?.el.querySelector('[data-ribbon-group="home.arrange"]');
-	const homeArrangeRow = homeArrange?.querySelector('[data-pptx-chrome="arrange-controls"]');
+	const contextualArrange = createContextualArrange(doc, t, handlers.edit, hiddenActions);
+	const contextualArrangeRow = contextualArrange.el.querySelector(
+		'[data-pptx-chrome="arrange-controls"]',
+	);
 	for (const [id, pane] of contextualPanes) {
 		pane.hidden = true;
 		detachOverflow.push(attachRibbonOverflow(pane, { launchers }));
@@ -327,11 +332,10 @@ export function createRibbon(
 			galleryHub.closeAll();
 		}
 		activeTab = tab;
-		if (homeArrange && homeArrangeRow) {
-			const group = contextualArranges.get(tab) ?? homeArrange;
-			if (homeArrangeRow.parentElement !== group) {
-				group.prepend(homeArrangeRow);
-			}
+		const arrangeHost = contextualArranges.get(tab);
+		if (contextualArrangeRow && contextualArrangeRow.parentElement !== arrangeHost) {
+			if (arrangeHost) arrangeHost.prepend(contextualArrangeRow);
+			else contextualArrangeRow.remove();
 		}
 		tabBar.setActive(tab);
 		fileTab?.setVisible(tab === 'file');
@@ -385,7 +389,15 @@ export function createRibbon(
 		syncContextual();
 		// A contextual pane just mounted, or the ribbon itself just entered the document.
 		galleryHub.reveal();
-		homeTab?.update(buildHomeSyncState(lastEditable, latestSelected, latestExtra));
+		const homeState = buildHomeSyncState(lastEditable, latestSelected, latestExtra);
+		homeTab?.update(homeState);
+		contextualArrange.update({
+			...homeState,
+			hasSelection: latestSelected !== undefined,
+			canMergeShapes: Boolean(homeState.canMergeShapes),
+			canCrop: Boolean(homeState.canCrop),
+			cropActive: Boolean(homeState.cropActive),
+		});
 		insertTab?.setLayouts(latestExtra.layouts ?? [], latestExtra.currentLayoutPath);
 		pictureSize.update({ ...latestExtra, editable: lastEditable });
 		for (const strip of [...pictureStrips, ...el.querySelectorAll('pptx-ui-contextual-ribbon')]) {
@@ -497,6 +509,10 @@ export function createRibbon(
 		},
 		setNotesExpanded() {},
 		setAutosaveStatus: (label, kind) => primary.setAutosaveStatus(label, kind),
+		setCommentsOpen(open) {
+			reviewTab?.setCommentsOpen(open);
+			tabBar.el.querySelector('pptx-ui-ribbon-actions')?.toggleAttribute('comments-pressed', open);
+		},
 		setEditable(editable) {
 			lastEditable = editable;
 			reviewTab?.setEditable(editable);

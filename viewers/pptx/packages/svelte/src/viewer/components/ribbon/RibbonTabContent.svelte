@@ -66,7 +66,7 @@
 	{#if addIn}
 		<RibbonAddInTab tab={addIn} />
 	{:else if tab === 'home'}
-		<HomeTab editor={ribbon.editor} findReplace={ribbon.findReplace} onnavigateslide={ribbon.onnavigateslide} hiddenActions={ribbon.hiddenActions} />
+		<HomeTab editor={ribbon.editor} findReplace={ribbon.findReplace} onnavigateslide={ribbon.onnavigateslide} position={() => ribbon.chromeUi?.formatPane.requestFormatPane('sizePosition', { focus: true })} selectionPane={ribbon.onselectionpane} />
 	{:else if tab === 'insert'}
 		<InsertTab editor={ribbon.editor} canvasSize={ribbon.canvasSize} onheaderfooter={ribbon.onheaderfooter} onnavigateslide={ribbon.onnavigateslide} chromeUi={ribbon.chromeUi} />
 	{:else if tab === 'draw'}
@@ -93,7 +93,7 @@
 			onbroadcast={ribbon.onbroadcast}
 		/>
 	{:else if tab === 'review'}
-		<ReviewTab slides={ribbon.slides} onnavigate={ribbon.onnavigatetoissue} editor={ribbon.editor} oncompare={ribbon.oncompare} onlanguage={ribbon.onsettings} spellCheck={ribbon.preferences.spellCheck} onspellcheckchange={(enabled) => ribbon.onpreferenceschange({ ...ribbon.preferences, spellCheck: enabled })} />
+		<ReviewTab chromeUi={ribbon.chromeUi} slides={ribbon.slides} onnavigate={ribbon.onnavigatetoissue} editor={ribbon.editor} oncompare={ribbon.oncompare} onlanguage={ribbon.onsettings} spellCheck={ribbon.preferences.spellCheck} onspellcheckchange={(enabled) => ribbon.onpreferenceschange({ ...ribbon.preferences, spellCheck: enabled })} />
 	{:else if tab === 'record'}
 		<RecordTab editor={ribbon.editor} canvasSize={ribbon.canvasSize} onfrombeginning={ribbon.onrecordfrombeginning} onfromcurrent={ribbon.onrecordfromcurrent} />
 	{:else if tab === 'view'}

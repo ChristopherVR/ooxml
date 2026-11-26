@@ -522,7 +522,7 @@ const noopClose = (): void => undefined;
 						(savePpt)="fileIO.saveAsPpt()"
 						(info)="docProperties.showProperties.set(true)"
 						(print)="print.openDialog()"
-						(comments)="inspectorPanel.togglePanel('comments')"
+						(comments)="$event ? openCommentsTaskPane() : inspectorPanel.togglePanel('comments')"
 						(signatures)="inspectorPanel.togglePanel('signatures')"
 						(a11y)="inspectorPanel.togglePanel('accessibility')"
 						(shortcuts)="dialogs.showShortcuts.set(true)"
@@ -844,6 +844,8 @@ const noopClose = (): void => undefined;
 									}
 									@case ('comments') {
 										<pptx-comments-panel
+											[closeable]="true"
+											(closed)="closeInspector()"
 											[comments]="activeComments()"
 											[modernCommentAuthors]="loader.modernCommentAuthors()"
 										/>
@@ -1898,6 +1900,11 @@ export class PowerPointViewerComponent
 	/** Host region renderers and the context they receive (see {@link ViewerRegionService}). */
 	protected readonly regions = inject(ViewerRegionService);
 	/** Closes the inspector, for the `inspector` region context. */
+	protected openCommentsTaskPane(): void {
+		this.inspectorPanel.mobileInspectorHidden.set(false);
+		this.inspectorPanel.activePanel.set('comments');
+	}
+
 	protected readonly closeInspector = (): void => this.inspectorPanel.closeInspector();
 	/** The inspector content kind, minus the panels the host hid. */
 	protected readonly visibleInspectorKind = computed(() => {

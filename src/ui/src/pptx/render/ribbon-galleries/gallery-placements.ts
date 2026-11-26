@@ -69,6 +69,13 @@ export const CONTEXTUAL_TAB_GROUPS: Record<
 				{ gallery: 'wordArtStyles', control: 'shapeFormat.wordArtStyles.gallery', mode: 'inline' },
 			],
 		},
+		{
+			group: 'shapeFormat.arrange',
+			labelKey: 'pptx.ribbon.arrange',
+			label: 'Arrange',
+			arrange: true,
+			galleries: [],
+		},
 	],
 	pictureFormat: [
 		{
