@@ -1,5 +1,5 @@
 import type { SlideInkStroke } from 'ooxml-core/pptx/editor/ink';
-import { slideInkReplayTimeline } from 'ooxml-core/pptx/editor/ink';
+import { inkReplayProgress, slideInkReplayTimeline } from 'ooxml-core/pptx/editor/ink';
 
 import { drawOverlay, inkOverlayPath } from './draw-surface';
 
@@ -35,7 +35,8 @@ export function createDrawReplay(
 		path.setAttribute('stroke-opacity', String(stroke.style.opacity));
 		path.setAttribute('pathLength', '1');
 		path.setAttribute('stroke-dasharray', '1');
-		return path;
+		path.setAttribute('visibility', 'hidden');
+		return { path, sample: inkReplayProgress(stroke.points, stroke.style.pointTimestamps) };
 	});
 	const duration = steps.reduce(
 		(end, step) => Math.max(end, step.startOffsetMs + step.durationMs),
@@ -45,18 +46,29 @@ export function createDrawReplay(
 	let frame: number | undefined;
 	let previous = 0;
 	let playing = false;
-	const progress: number[] = [];
+	let active = 0;
+	const draw = (index: number, amount: number) => {
+		const step = steps[index];
+		const stroke = step && paths[step.strokeIndex];
+		if (!stroke) return;
+		const length = stroke.sample?.(amount) ?? amount;
+		stroke.path.setAttribute('visibility', length > 0 ? 'visible' : 'hidden');
+		stroke.path.setAttribute('stroke-dashoffset', String(1 - length));
+	};
 	const paint = () => {
-		for (const step of steps) {
-			const index = step.strokeIndex;
-			const amount = Math.max(0, Math.min(1, (time - step.startOffsetMs) / step.durationMs));
-			if (progress[index] !== amount) {
-				const path = paths[index];
-				path?.setAttribute('visibility', amount > 0 ? 'visible' : 'hidden');
-				path?.setAttribute('stroke-dashoffset', String(1 - amount));
-				progress[index] = amount;
-			}
+		let previousStep = steps[active - 1];
+		while (previousStep && time < previousStep.startOffsetMs + previousStep.durationMs) {
+			draw(active, 0);
+			active--;
+			previousStep = steps[active - 1];
 		}
+		let step = steps[active];
+		while (step && time >= step.startOffsetMs + step.durationMs) {
+			draw(active, 1);
+			active++;
+			step = steps[active];
+		}
+		if (step) draw(active, Math.max(0, (time - step.startOffsetMs) / step.durationMs));
 		onUpdate(time, duration, playing);
 	};
 	const advance = (now: number) => {

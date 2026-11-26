@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 
 import { attachDrawCanvas, configurePptxDraw } from '../render/draw-canvas';
 import './draw-math';
+import { createDrawReplay } from './draw-replay';
 import { mountRibbonDrawAdvanced } from './ribbon-draw-advanced';
 
 it('prefills the shared equation fields only on an explicit recognition request', async () => {
@@ -95,4 +96,52 @@ it('prefills the shared equation fields only on an explicit recognition request'
 		detach();
 		root.remove();
 	}
+});
+
+it('seeks backward across strokes and restores the canvas when replay closes', () => {
+	const stage = document.createElement('div');
+	const original = document.createElement('div');
+	original.dataset.elementId = 'ink';
+	stage.append(original);
+	const owner: PptxSlide['elements'][number] = {
+		id: 'ink',
+		type: 'ink',
+		x: 0,
+		y: 0,
+		width: 100,
+		height: 20,
+		inkPaths: [],
+	};
+	const replay = createDrawReplay(
+		stage,
+		[100, 500].map((start, index) => ({
+			owner,
+			index,
+			points: [
+				{ x: 0, y: 0 },
+				{ x: 80, y: 0 },
+				{ x: 100, y: 0 },
+			],
+			style: {
+				color: '#000000',
+				width: 2,
+				opacity: 1,
+				pointTimestamps: [start, start + 10, start + 100],
+			},
+		})),
+		() => {},
+	);
+	try {
+		const paths = [...stage.querySelectorAll('path')];
+		expect(original.style.visibility).toBe('hidden');
+		replay?.seek(500);
+		expect(paths.map((path) => path.getAttribute('stroke-dashoffset'))).toStrictEqual(['0', '0']);
+		replay?.seek(10);
+		expect(Number(paths[0]?.getAttribute('stroke-dashoffset'))).toBeCloseTo(0.2);
+		expect(paths[1]?.getAttribute('visibility')).toBe('hidden');
+	} finally {
+		replay?.dispose();
+	}
+	expect(stage.querySelector('svg')).toBeNull();
+	expect(original.style.visibility).toBe('');
 });

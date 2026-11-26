@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { recognizeInkShape } from './ink-recognition';
-import { slideInkReplayTimeline } from './ink-replay';
+import { inkReplayProgress, slideInkReplayTimeline } from './ink-replay';
 
 const points = (...coordinates: [number, number][]) => coordinates.map(([x, y]) => ({ x, y }));
 
@@ -42,6 +42,15 @@ describe('ink shape recognition', () => {
 });
 
 describe('slide ink timing', () => {
+	it('reveals points at their sampled times even when spacing is uneven', () => {
+		const stroke = points([0, 0], [80, 0], [100, 0]);
+		const progress = inkReplayProgress(stroke, [100, 200, 1100]);
+		expect(progress?.(0.1)).toBeCloseTo(0.8);
+		expect(progress?.(0.55)).toBeCloseTo(0.9);
+		expect(inkReplayProgress(stroke, [200, 100, 1100])).toBeUndefined();
+		expect(inkReplayProgress(stroke, [100, 1100])).toBeUndefined();
+	});
+
 	it('orders timestamped strokes across parts and retains the recorded gap', () => {
 		expect(
 			slideInkReplayTimeline([
