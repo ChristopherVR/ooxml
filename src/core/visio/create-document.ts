@@ -190,13 +190,15 @@ export async function createVisioPackage(
 	put('visio/pages/pages.xml', buildXml(pages));
 	// Native Visio requires its windows part even when the page has no shapes.
 	const windows = root('Windows');
-	element(windows, 'Window', {
-		ID: '0',
-		WindowType: 'Drawing',
-		ContainerType: 'Page',
-		Page: '0',
-		ViewScale: '-1',
-	});
+	if (stencil) element(windows, 'Window', { ID: '0', WindowType: 'Stencil' });
+	else
+		element(windows, 'Window', {
+			ID: '0',
+			WindowType: 'Drawing',
+			ContainerType: 'Page',
+			Page: '0',
+			ViewScale: '-1',
+		});
 	const stencils = [...new Set(options.stencils ?? [])];
 	if (stencils.some((id) => !Object.hasOwn(VISIO_STENCIL_FILES, id)))
 		fail('INVALID_EDIT', 'Unknown built-in stencil.');

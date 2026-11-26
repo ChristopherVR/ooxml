@@ -5,6 +5,8 @@ import { createVsdx } from './create-document';
 import { editVsdx } from './edit';
 import { parseVsdx } from './parser';
 import { STENCIL_MACRO_MAIN, STENCIL_MAIN } from './package-kind';
+import { VisioPackage } from './package';
+import { children } from './sheet';
 import { createVisioStencil, editVisioStencil, type VisioStencilEdit } from './stencil-editor';
 import { readVisioStencil } from './stencil-file';
 import { VISIO_BUILT_IN_STENCILS } from './stencil-masters';
@@ -15,6 +17,14 @@ const builtIn = (bytes: Uint8Array, id: string) => apply(bytes, { type: 'add-bui
 const masters = (bytes: Uint8Array) => readVisioStencil(bytes).then((file) => file.masters);
 
 describe('stencil authoring', () => {
+	it('creates a stencil window without a drawing page reference', async () => {
+		const pkg = await VisioPackage.open(await createVisioStencil());
+		const windows = children(await pkg.readXml('visio/windows.xml', 'Windows'), 'Window');
+		expect(windows).toHaveLength(1);
+		expect(windows[0]?.getAttribute('WindowType')).toBe('Stencil');
+		expect(windows[0]?.hasAttribute('Page')).toBe(false);
+		expect(windows[0]?.hasAttribute('ContainerType')).toBe(false);
+	});
 	it('chooses a name that differs from both local and universal names regardless of case', async () => {
 		let stencil = await createVisioStencil();
 		for (const id of ['triangle', 'ellipse', 'diamond']) stencil = await builtIn(stencil, id);
