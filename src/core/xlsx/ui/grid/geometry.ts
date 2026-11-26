@@ -193,6 +193,27 @@ export class GridGeometry {
 		return { x, y, w, h };
 	}
 
+	/** The plane position (the sheet's own pixels, at this zoom) under a view point in the cells. */
+	planeAt(x: number, y: number): { x: number; y: number } {
+		const cx = Math.max(0, x - this.headerW);
+		const cy = Math.max(0, y - this.headerH);
+		const px = this.split
+			? cx < this.frozenW
+				? cx + this.split.left
+				: cx - this.frozenW + this.scrollLeft
+			: cx < this.frozenW
+				? cx
+				: cx + this.scrollLeft;
+		const py = this.split
+			? cy < this.frozenH
+				? cy + this.split.top
+				: cy - this.frozenH + this.scrollTop
+			: cy < this.frozenH
+				? cy
+				: cy + this.scrollTop;
+		return { x: px, y: py };
+	}
+
 	/** Column under a view x (clamped into the cell area). */
 	colAtX(x: number): number {
 		const cx = Math.max(0, x - this.headerW);

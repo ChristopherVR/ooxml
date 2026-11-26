@@ -36,6 +36,7 @@ import * as docProps from './doc-properties';
 import * as themeEdits from './theme';
 import { setSheetBackground } from './background';
 import * as nativeShapes from './native-shapes';
+import * as ink from './ink';
 import { formatDrawing } from './drawing-format';
 import * as groups from './group-drawings';
 import * as arrange from './arrange-drawings';
@@ -337,6 +338,8 @@ export function createEditSession(
 		editPictureEffects: (s, index, patch) => drawings.editPictureEffects(ctx, s, index, patch),
 		setPictureCrop: (s, index, crop) => drawings.setPictureCrop(ctx, s, index, crop),
 		addShape: (s, anchor, value) => nativeShapes.addShape(ctx, s, anchor, value),
+		addInk: (s, anchor, value) => ink.addInk(ctx, s, anchor, value),
+		setInk: (s, index, anchor, value) => ink.setInk(ctx, s, index, anchor, value),
 		formatDrawing: (s, index, intent) => formatDrawing(ctx, s, index, intent),
 		setTextBoxText: (s, index, text) => nativeShapes.setTextBoxText(ctx, s, index, text),
 		setShapeEquation: (s, index, equation, value) =>

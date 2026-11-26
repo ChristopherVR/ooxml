@@ -20,6 +20,7 @@ import { PIVOT_DESIGN_STRINGS } from './pivot-design';
 import { SLICER_STRINGS } from './slicers';
 import { PRINT_LAYOUT_STRINGS } from './print-layout';
 import { SMARTART_STRINGS } from './smartart';
+import { DRAW_STRINGS } from './draw';
 import { FUNCTION_TABLES } from './functions/index';
 import { type CommandLocale, type Translations, flatten } from './types';
 
@@ -42,6 +43,7 @@ export const COMMAND_TABLES: readonly Translations[] = [
 	PRINT_LAYOUT_STRINGS,
 	WHAT_IF_STRINGS,
 	SMARTART_STRINGS,
+	DRAW_STRINGS,
 	FILTER_STRINGS,
 	AUDIT_STRINGS,
 	DATA_TOOLS_STRINGS,

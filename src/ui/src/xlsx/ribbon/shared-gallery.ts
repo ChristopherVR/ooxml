@@ -38,7 +38,8 @@ export function renderSharedGallery(
 	tagCommand(gallery, command);
 	gallery.addEventListener('office-gallery-pick', (event) => {
 		const pick = event as OfficeGalleryPickEvent;
-		void ctx.commands.run(command.id, pick.detail.itemId);
+		// A tile's context menu entry (a pen's Delete Pen) runs the command with the entry's id.
+		void ctx.commands.run(command.id, pick.detail.action ?? pick.detail.itemId);
 	});
 	scope.updates.push(() => {
 		gallery.state = {

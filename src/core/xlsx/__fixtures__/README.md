@@ -20,3 +20,12 @@ A surface chart part with `c:bandFmts` (kept verbatim by the shared chart model)
 with its `c:externalData` removed. `xlsx/edit/chart-space-blocked.test.ts` and the Excel acceptance
 script use it to check that band formats survive an edit (and, with an unreadable value injected,
 that a part the model cannot carry is saved from its source bytes).
+
+## excel-ink.xlsx, excel-ink-fallback.xlsx
+
+Excel 16's saves of PowerPoint's ink (`pptx/__tests__/fixtures/e2e/ink-contentpart.pptx`):
+`excel-ink-fallback.xlsx` is the ink pasted into Excel (an `xdr:contentPart` in `mc:AlternateContent`
+with a picture fallback), `excel-ink.xlsx` the same InkML part placed by hand-written markup and
+saved again by Excel (an `xdr:contentPart` with `xdr14:` children and no fallback). Excel reports
+both as ink (`Shape.Type` 23). See `../../docx/__fixtures__/ink/generate-ink-fixtures.ps1`;
+`xlsx/edit/ink.test.ts` and `e2e/xlsx/draw-tab.spec.ts` use them.

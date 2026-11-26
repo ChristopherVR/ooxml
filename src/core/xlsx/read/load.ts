@@ -1,4 +1,5 @@
 import { RELATIONSHIP_TYPES } from '../../opc/index';
+import { resolveWorkbookInk } from './ink';
 import { detectDigitalSignatures, verifySignedPackage } from '../../opc/signature/index';
 import { parseRange } from '../address';
 import { readFilteredRows } from '../filter-rows';
@@ -116,6 +117,7 @@ export async function loadXlsx(
 		sheet.state = entry.state;
 		return sheet;
 	});
+	await resolveWorkbookInk(source, sheets);
 	if (source.has('xl/vbaProject.bin') || partOf(RELATIONSHIP_TYPES.vbaProject))
 		warn('The workbook contains VBA macros; they are kept on save but never run.');
 	if (partOf(RELATIONSHIP_TYPES.externalLink))

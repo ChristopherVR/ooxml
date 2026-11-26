@@ -56,6 +56,30 @@ export interface GridController {
 	remeasure?(): void;
 	/** Closes the grid's own drop-downs (AutoFilter menu, lists), as when the editor leaves the page. */
 	closePopups?(): void;
+	/** The Draw tab's surface over the cells (drawing, erasing, the lasso, Ink Replay). */
+	ink?(): GridInk;
+}
+
+/** The Draw tab's tool over the cells; undefined turns drawing off (Select). */
+export interface GridInkTool {
+	tool: 'pen' | 'pencil' | 'highlighter' | 'eraser' | 'lasso';
+	/** `#rrggbb`. */
+	color: string;
+	/** Pen width in CSS pixels at 100% zoom. */
+	width: number;
+	/** Draw with Touch: a finger draws instead of scrolling. */
+	touch: boolean;
+}
+
+export interface GridInk {
+	setTool(tool: GridInkTool | undefined): void;
+	/** Strokes held by the lasso, or a selected ink drawing. */
+	hasSelection(): boolean;
+	/** Ink to Shape on the selection; false when no shape was recognised. */
+	inkToShape(): Promise<boolean>;
+	/** Ink Replay of the sheet's ink; a second call stops it. */
+	replay(): void;
+	replaying(): boolean;
 }
 
 export interface EditorContext {

@@ -292,6 +292,10 @@ export interface EditSession {
 		anchor: DrawingAnchor,
 		value: import('./native-shapes').NewDrawingShape,
 	): number;
+	/** Draw: adds ink over the cells; returns its drawing index. */
+	addInk(sheet: number, anchor: DrawingAnchor, ink: import('./ink').NewInk): number;
+	/** Draw: replaces the strokes and box of the ink at `index`; no strokes deletes it. */
+	setInk(sheet: number, index: number, anchor: DrawingAnchor, ink: import('./ink').NewInk): void;
 	setTextBoxText(sheet: number, index: number, text: string): void;
 	setShapeEquation(
 		sheet: number,

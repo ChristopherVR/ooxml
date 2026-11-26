@@ -35,7 +35,11 @@ export const el = <K extends keyof HTMLElementTagNameMap>(
 
 /** `Bold (Ctrl+B)` tooltip text for a command. */
 export const tooltip = (ctx: EditorContext, command: Command): string =>
-	command.shortcut ? `${ctx.t(command.label)} (${command.shortcut})` : ctx.t(command.label);
+	(command.shortcut ? `${ctx.t(command.label)} (${command.shortcut})` : ctx.t(command.label)) +
+	(command.description
+		? `
+${ctx.t(command.description)}`
+		: '');
 
 /** Marks a control with its command id (hidden actions, Tell me, KeyTips, Customize Ribbon). */
 export function tagCommand(node: HTMLElement, command: Command): void {
@@ -293,6 +297,11 @@ export function renderControl(
 	const command = ctx.commands.get(control.command);
 	if (!command) return null;
 	switch (control.kind) {
+		case 'element': {
+			const node = control.render(ctx, (refresh) => scope.updates.push(refresh));
+			tagCommand(node, command);
+			return node;
+		}
 		case 'button':
 			return commandButton(scope, command, {
 				size: inStack ? 'small' : (control.size ?? 'small'),

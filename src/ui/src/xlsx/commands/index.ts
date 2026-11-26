@@ -17,6 +17,7 @@ import { registerSheetIcons } from './register-icons';
 import { arrangeCommands } from './arrange';
 import { drawingFormatCommands } from './drawing-format';
 import { insertShapeCommands } from './insert-shapes';
+import { drawCommands } from './draw';
 import { insertCommands } from './insert';
 import { insertAnnotationCommands } from './insert-annotations';
 import { sheetPictureCommands } from './sheet-picture';
@@ -48,6 +49,7 @@ export function allCommands(): Command[] {
 		...insertNowCommands(),
 		...insertCommands(),
 		...insertShapeCommands(),
+		...drawCommands(),
 		...arrangeCommands(),
 		...drawingFormatCommands(),
 		...insertAnnotationCommands(),

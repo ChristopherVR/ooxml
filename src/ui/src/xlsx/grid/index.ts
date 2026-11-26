@@ -3,7 +3,14 @@
 // registers the grid's `edit.*` commands and attaches the GridController to the context.
 import type { CellRange } from 'ooxml-core/xlsx';
 import { createGridClipboard } from '../clipboard';
-import type { EditorContext, GridController, Selection } from 'ooxml-core/xlsx/ui';
+import type {
+	EditorContext,
+	GridController,
+	GridInk,
+	GridInkTool,
+	Selection,
+} from 'ooxml-core/xlsx/ui';
+import type { InkLayer } from './ink-layer';
 import { CellEditor } from './cell-editor';
 import { ensureStyle } from './dom';
 import { drawingKeyDown } from './drawing-keys';
@@ -205,6 +212,31 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(() => view.schedule());
 	resize?.observe(view.root);
 
+	// The Draw tab's surface loads on first use.
+	let inkLayer: InkLayer | undefined;
+	let inkLoading: Promise<InkLayer> | undefined;
+	let inkTool: GridInkTool | undefined;
+	const loadInk = () =>
+		(inkLoading ??= Promise.all([
+			import('./ink-layer'),
+			import('../../ink/tools').then((tools) => tools.loadTools()),
+		]).then(([{ InkLayer }]) => {
+			inkLayer = new InkLayer(view);
+			inkLayer.setTool(inkTool);
+			return inkLayer;
+		}));
+	const ink: GridInk = {
+		setTool(tool) {
+			inkTool = tool;
+			if (inkLayer) inkLayer.setTool(tool);
+			else if (tool) void loadInk();
+		},
+		hasSelection: () => inkLayer?.hasSelection() ?? false,
+		inkToShape: async () => (await loadInk()).inkToShape(),
+		replay: () => void loadInk().then((layer) => layer.replay()),
+		replaying: () => inkLayer?.replaying() ?? false,
+	};
+
 	const controller: GridControllerExt = {
 		focus: () => editor.focus(),
 		scrollTo: (address) => view.reveal(address.row, address.col),
@@ -231,6 +263,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 			filters.close();
 			drawings.closeDropDown();
 		},
+		ink: () => ink,
 	};
 	ctx.attachGrid(controller);
 	if (ctx.selection.get().sheet !== view.sheetIndex()) restoreSelection();
@@ -248,6 +281,7 @@ export function mountGrid(ctx: EditorContext, container: HTMLElement): () => voi
 		list.close();
 		filters.destroy();
 		drawings.destroy();
+		inkLayer?.destroy();
 		editor.destroy();
 		a11y.destroy();
 		removeRemote();

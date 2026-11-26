@@ -69,8 +69,24 @@ export type RibbonControl =
 				columns: number;
 				tileWidth: number;
 				tileHeight: number;
-				items: { id: string; label: string; preview?: string; applied?: boolean }[];
+				items: {
+					id: string;
+					label: string;
+					preview?: string;
+					applied?: boolean;
+					/** Context menu entries of the tile; the command runs with the entry's id. */
+					actions?: { id: string; label: string }[];
+				}[];
 			}[];
+	  }
+	/**
+	 * A control the shell builds itself (the Draw tab's pen strip): `render` returns its element and
+	 * registers `update`, run on every refresh. Shown only while `command` is registered.
+	 */
+	| {
+			kind: 'element';
+			command: string;
+			render: (ctx: EditorContext, update: (refresh: () => void) => void) => HTMLElement;
 	  }
 	/** Vertical stack of small controls. */
 	| { kind: 'stack'; controls: RibbonControl[] }

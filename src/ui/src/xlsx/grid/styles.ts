@@ -132,6 +132,11 @@ export const GRID_CSS = `
 .xg-obj img,.xg-obj svg{display:block;width:100%;height:100%;pointer-events:none}
 .xg-chart svg [data-chart-series],.xg-chart svg [data-chart-part]{pointer-events:auto}
 .xg-obj.xg-chart{background:#fff;outline:1px solid #d9d9d9;outline-offset:-1px}
+.xg-obj.xg-ink svg{overflow:visible}
+.xg-ink-replaying .xg-obj[data-ink]{visibility:hidden}
+.xg-ink-surface{z-index:6}
+.xg-ink-lasso{position:absolute;box-sizing:border-box;border:1px dashed var(--office-accent, #217346);pointer-events:none}
+.xg-ink-replay{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:7}
 .xg-pivot-chart-buttons{position:absolute;inset:3px 3px auto;display:flex;gap:3px;flex-wrap:wrap;max-height:35%;overflow:auto;pointer-events:auto}
 .xg-pivot-chart-buttons button{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:var(--office-surface,#f4f4f4);color:var(--office-text,#222);border:1px solid var(--office-border,#888);border-radius:2px;font:inherit;cursor:pointer}
 .xg-pivot-chart-buttons button::after{content:' ▾'}

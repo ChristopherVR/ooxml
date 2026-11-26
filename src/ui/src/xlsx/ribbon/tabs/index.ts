@@ -11,6 +11,7 @@ import {
 } from './contextual';
 import { dataTab, formulasTab } from './formulas-data';
 import { homeTab } from './home';
+import { drawTab } from './draw';
 import { pictureFormatTab, shapeFormatTab } from './drawing-format';
 import { insertTab, pageLayoutTab } from './insert-layout';
 import { helpTab, reviewTab, viewTab } from 'ooxml-core/xlsx/ui';
@@ -21,6 +22,7 @@ export function commandTabs(): RibbonTab[] {
 	return [
 		homeTab(),
 		insertTab(),
+		drawTab(),
 		pageLayoutTab(),
 		formulasTab(),
 		dataTab(),

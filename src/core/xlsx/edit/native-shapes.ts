@@ -17,7 +17,17 @@ import {
 export type NewDrawingShape =
 	| { kind: 'preset'; preset: string; name: string }
 	| { kind: 'textBox'; text: string; name: string }
-	| { kind: 'equation'; equation: Required<ShapeEquation>; name: string };
+	| { kind: 'equation'; equation: Required<ShapeEquation>; name: string }
+	/** Ink to Shape: an unfilled preset outlined like the ink it replaces. */
+	| {
+			kind: 'outline';
+			preset: string;
+			name: string;
+			line: import('../../drawingml/types').DrawingLine;
+			rotation?: number;
+			flipH?: boolean;
+			flipV?: boolean;
+	  };
 
 export function addShape(
 	ctx: EditContext,
@@ -27,9 +37,9 @@ export function addShape(
 ): number {
 	checkAnchor(anchor);
 	const sheet = sheetAt(ctx.workbook, s);
-	const textBox = value.kind !== 'preset';
+	const textBox = value.kind === 'textBox' || value.kind === 'equation';
 	if (value.kind === 'equation') parseShapeEquation(value.equation);
-	const geometry = value.kind === 'preset' ? value.preset : 'rect';
+	const geometry = value.kind === 'preset' || value.kind === 'outline' ? value.preset : 'rect';
 	if (!lookupPresetShape(geometry)) throw new RangeError('Unknown shape preset.');
 	const isLine = geometry === 'line' || geometry === 'lineInv' || /Connector/.test(geometry);
 	const extent =
@@ -44,21 +54,40 @@ export function addShape(
 		name: value.name,
 		geometry,
 		frame: { x: 0, y: 0, width: extent.cx, height: extent.cy },
-		fill: textBox || isLine ? { kind: 'none' } : { kind: 'solid', color: ink },
-		...(value.kind === 'equation'
+		fill:
+			textBox || isLine || value.kind === 'outline'
+				? { kind: 'none' }
+				: { kind: 'solid', color: ink },
+		...(value.kind === 'outline'
 			? {
-					textBox: true,
-					text: { text: '', paragraphs: [], insetsEmu: { left: 0, top: 0, right: 0, bottom: 0 } },
-					equationParagraphs: [[{ kind: 'equation', ...value.equation }]],
+					line: structuredClone(value.line),
+					...(value.rotation ? { rotation: value.rotation } : {}),
+					...(value.flipH ? { flipH: true } : {}),
+					...(value.flipV ? { flipV: true } : {}),
 				}
-			: value.kind === 'textBox'
-				? { textBox: true, text: plainText(value.text) }
-				: { line: { fill: { kind: 'solid', color: ink }, widthEmu: 12700 } }),
+			: {}),
+		...(value.kind === 'outline'
+			? {}
+			: value.kind === 'equation'
+				? {
+						textBox: true,
+						text: { text: '', paragraphs: [], insetsEmu: { left: 0, top: 0, right: 0, bottom: 0 } },
+						equationParagraphs: [[{ kind: 'equation', ...value.equation }]],
+					}
+				: value.kind === 'textBox'
+					? { textBox: true, text: plainText(value.text) }
+					: { line: { fill: { kind: 'solid', color: ink }, widthEmu: 12700 } }),
 	};
 	return editDrawings(
 		ctx,
 		s,
-		value.kind === 'equation' ? 'Insert Equation' : textBox ? 'Insert text box' : 'Insert shape',
+		value.kind === 'equation'
+			? 'Insert Equation'
+			: value.kind === 'outline'
+				? 'Ink to Shape'
+				: textBox
+					? 'Insert text box'
+					: 'Insert shape',
 		() =>
 			sheet.drawings.push({
 				kind: 'unsupported',

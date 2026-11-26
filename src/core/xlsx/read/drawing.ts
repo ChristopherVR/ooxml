@@ -17,6 +17,7 @@ import { readFormControlFrame } from './form-control';
 import { embeddedPicture, readModel3D, type EmbeddedObjectDeclarations } from './local-object';
 import { readShapeNode } from './shape';
 import { readDrawingShadow } from './drawing-format';
+import { readInkFrame } from './ink';
 import { att, boolAttr, selfContainedXml } from './xml-util';
 
 const xdr = (parent: ParentNode | null | undefined, local: string) => first(parent, local, NS.xdr);
@@ -114,6 +115,11 @@ export function parseDrawing(
 			sourceXml: selfContainedXml(anchorEl),
 		});
 		if (!content) continue;
+		const ink = readInkFrame(source, partName, anchorEl, content, anchor);
+		if (ink) {
+			out.push(ink);
+			continue;
+		}
 		const cNvPr = nonVisual(content);
 		const name = att(cNvPr, 'name');
 		if (content.localName === 'pic') {

@@ -9,6 +9,8 @@ export interface Command {
 	label: string;
 	/** An ooxml-ui icon name or a local icon registered with `registerIcon`. */
 	icon?: string;
+	/** English ScreenTip description, shown under the label (translation key). */
+	description?: string;
 	/** Display text, for example 'Ctrl+B'. */
 	shortcut?: string;
 	/** True: disabled in read-only mode. */

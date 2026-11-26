@@ -35,6 +35,7 @@ import { selectionOfPeriods } from 'ooxml-core/xlsx';
 import { applyDragDelta, applyResize, type ResizeHandleId } from 'ooxml-core/geometry';
 import { trackPointerGesture } from '../../pointer-gesture';
 import { paintPictureFrame } from './picture-frame';
+import { paintInk } from './ink';
 import { paintPivotChartButtons } from './pivot-chart-buttons';
 
 interface ObjectNode extends HTMLDivElement {
@@ -196,6 +197,7 @@ export class DrawingLayer {
 		const doc = view.doc;
 		node.replaceChildren();
 		node.className = 'xg-obj';
+		delete node.dataset.ink;
 		node.style.boxShadow = '';
 		node.style.filter = '';
 		node.style.overflow = '';
@@ -295,6 +297,8 @@ export class DrawingLayer {
 			);
 		} else if (drawing.kind === 'formControl') {
 			paintFormControl(view, node, drawing, box, this.#openDrop === Number(node.dataset.index));
+		} else if (drawing.kind === 'ink') {
+			paintInk(view, node, drawing, box);
 		} else if (drawing.kind === 'unsupported' && drawing.shape) {
 			paintShape(view, node, drawing.shape, box, `xs${view.sheetIndex()}_${node.dataset.index}_`);
 		} else if (drawing.chartEx) {

@@ -709,6 +709,24 @@ export interface ChartObject extends ChartSummary<ChartSeries> {
 	quickLayout?: number;
 }
 
+/**
+ * Ink (`xdr:contentPart` naming an InkML part): the strokes, in a `width` x `height` pixel space
+ * that is stretched onto the anchor's box, as Excel draws it.
+ */
+export interface InkObject {
+	kind: 'ink';
+	anchor: DrawingAnchor;
+	name?: string;
+	description?: string;
+	/** The InkML part (`xl/ink/ink1.xml`); absent for ink drawn in this session. */
+	partName?: string;
+	strokes: import('../drawingml/inkml/types').InkStroke[];
+	width: number;
+	height: number;
+	/** The anchor element as read; kept, with its fallback picture, when the ink is saved. */
+	sourceXml?: string;
+}
+
 /** A shape or object the model does not draw; reported so the UI can say so honestly. */
 export interface UnsupportedDrawingObject {
 	kind: 'unsupported';
@@ -814,6 +832,7 @@ export type DrawingObject =
 	| SmartArtObject
 	| SlicerFrameObject
 	| FormControlObject
+	| InkObject
 	| UnsupportedDrawingObject;
 
 /** `sheetView/@view`: absent means Normal. */

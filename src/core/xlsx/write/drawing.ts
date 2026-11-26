@@ -42,6 +42,8 @@ import {
 import { XML_HEADER, escapeAttr } from './xml-out';
 import { nativeShapeXml, patchNativeShape } from './native-shape';
 import { applyDrawingExtent, applyDrawingFrameFormat } from './drawing-format';
+import { writeInkDrawing } from './ink';
+import { INK_RELATIONSHIP_TYPE } from '../../drawingml/inkml/constants';
 import { patchWordArtShape } from '../word-art';
 import {
 	droppedSmartArtDrawings,
@@ -275,6 +277,7 @@ export function writeDrawing(
 				target &&
 				rel.type !== RELATIONSHIP_TYPES.chart &&
 				rel.type !== RELATIONSHIP_TYPES.image &&
+				rel.type !== INK_RELATIONSHIP_TYPE &&
 				rel.type !== MODEL3D_REL
 			)
 				writer.carry(target);
@@ -491,16 +494,40 @@ export function writeDrawing(
 			body += buildXml(imported ? picture.documentElement : elements(picture.documentElement)[0]!);
 			continue;
 		}
+		if (object.kind === 'ink') {
+			const box = context
+				? anchorToPixelBox(
+						context.sheet,
+						object.anchor,
+						createGridMetrics(context.sheet, { zoom: 100 }),
+					)
+				: { x: 0, y: 0, w: object.width, h: object.height };
+			const written = writeInkDrawing(
+				writer,
+				object,
+				rels,
+				(part) => relativeTarget(partName, part),
+				box,
+				() => nextId++,
+				Boolean(sourceDrawing),
+			);
+			body +=
+				'kept' in written
+					? reanchor(written.kept, object.anchor)
+					: anchorXml(object.anchor, written.content, 'oneCell');
+			continue;
+		}
 		const chartPart = writeChart(writer, object);
 		const relId = rels.ensure(RELATIONSHIP_TYPES.chart, relativeTarget(partName, chartPart));
 		body += anchorXml(object.anchor, frameXml(object, nextId++, relId));
 	}
 	if (!body) return false;
-	// Drop relationships to charts and images no longer drawn.
+	// Drop relationships to charts, images and ink no longer drawn.
 	for (const [id, rel] of [...rels.entries]) {
 		if (
 			(rel.type === RELATIONSHIP_TYPES.chart ||
 				rel.type === RELATIONSHIP_TYPES.image ||
+				rel.type === INK_RELATIONSHIP_TYPE ||
 				rel.type === MODEL3D_REL) &&
 			!body.includes(`"${id}"`)
 		)

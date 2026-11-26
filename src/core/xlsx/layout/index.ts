@@ -193,3 +193,4 @@ export {
 } from './form-control-link';
 
 export { pictureFramePath } from './picture-frame';
+export { inkObjectSvg } from './ink';

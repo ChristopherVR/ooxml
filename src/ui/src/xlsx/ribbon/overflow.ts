@@ -14,6 +14,10 @@ const localeOf = (panel: Element) =>
 /** Icon on a collapsed group's button, by the group's English label. */
 export const GROUP_ICONS: Readonly<Record<string, string>> = {
 	Clipboard: 'paste',
+	'Drawing Tools': 'xl-addPen',
+	Stencils: 'xl-ruler',
+	Convert: 'xl-inkToShape',
+	Replay: 'xl-inkReplay',
 	Font: 'fontColor',
 	Alignment: 'alignCenter',
 	Number: 'numberFormat',
