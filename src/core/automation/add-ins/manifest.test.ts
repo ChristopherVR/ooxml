@@ -253,6 +253,14 @@ describe('local Office add-in manifests', () => {
 		);
 	});
 
+	it('rejects a unified runtime without an explicit type', async () => {
+		const source = unified.replace('"type": "general",', '');
+		await expect(readLocalAddIn(await pack(source), support)).rejects.toMatchObject({
+			code: 'manifest',
+			field: 'runtime type',
+		});
+	});
+
 	it('reports unified runtime and ribbon issues for the selected host', async () => {
 		const excelExtension = {
 			requirements: { scopes: ['workbook'] },

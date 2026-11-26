@@ -84,7 +84,7 @@ function readActions(
 		const condition = featureRequirements(runtime.requirements, options);
 		if (condition.hosts.includes(options.host)) requirements.push(...condition.requirements);
 		issues.push(...condition.issues);
-		const type = identifier(runtime.type ?? 'general', 'runtime type');
+		const type = identifier(runtime.type, 'runtime type');
 		const lifetime = runtime.lifetime ?? 'short';
 		if (lifetime !== 'long' && lifetime !== 'short') invalid('runtime lifetime');
 		const code = object(runtime.code, 'runtime code');
