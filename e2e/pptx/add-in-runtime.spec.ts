@@ -14,10 +14,7 @@ test('installs, runs, and removes XML, JSON and ZIP task panes in PowerPoint', a
 		async openDialog() {
 			await ribbonTab(page, 'Insert').click();
 			const group = page.locator('pptx-ui-ribbon-insert [data-ribbon-group="insert.addIns"]');
-			const mine = group.getByRole('button', { name: 'My Add-ins', exact: true });
-			if (!(await mine.isVisible()))
-				await group.getByRole('button', { name: 'Add-ins', exact: true }).click();
-			await mine.click();
+			await group.getByRole('button', { name: 'My Add-ins', exact: true }).click();
 		},
 	});
 });
