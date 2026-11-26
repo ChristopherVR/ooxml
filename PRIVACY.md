@@ -271,8 +271,9 @@ By default Word, Excel and Visio open, render, edit and save documents locally.
   Stencil files and My Shapes stay in session memory. Save Stencil writes a local download.
   Hosts can omit the Shapes pane, and leaving the stencil commands unused makes no stencil
   asset requests. If an asset is unavailable offline, the command reports the failure.
-- Word's Mailings commands load editor code on demand from the app's origin. Choosing a local
-  recipient file also loads a same-origin parser worker where supported. These requests carry no
+- Running Word's Mailings commands loads editor code on demand from the app's origin. The bundled
+  envelope and label tools, the prompt resolver and the XLSX recipient reader also load when used.
+  Choosing a local recipient file loads a same-origin parser worker where supported. These requests carry no
   file name, recipient data or document bytes. Hosts can disable Mailings with the editor's
   read-only setting or by disabling editing in its customization. Use the app's cached files
   offline. If workers are unavailable or blocked by the host's `worker-src` policy, the editor

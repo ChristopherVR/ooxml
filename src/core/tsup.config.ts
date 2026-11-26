@@ -120,9 +120,10 @@ export default defineConfig([
 		...shared,
 		entry: { 'docx/mail-merge/index': mailMerge },
 		format: ['esm'],
-		splitting: false,
-		minifyWhitespace: true,
-		minifySyntax: true,
+		splitting: true,
+		esbuildOptions(options) {
+			options.chunkNames = 'docx/mail-merge/chunks/[name]-[hash]';
+		},
 	},
 	{
 		...shared,
