@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, it } from 'vitest';
 import JSZip from 'jszip';
 import { PptxHandler } from '../../core/PptxHandler';
@@ -95,18 +96,15 @@ it('persists first-save media playback and picture edits, then clears an edited 
 	const clearedXml = await must(clearedZip.file('ppt/slides/slide1.xml')).async('text');
 	expect(clearedXml).not.toMatch(/p14:(?:bmkLst|trim|fade)/u);
 	expect(clearedXml).not.toContain('cmd="playFrom(0.0)"');
+	expect(clearedXml).toContain('nodeType="interactiveSeq"');
+	expect(clearedXml).toContain('evt="onClick"');
+	expect(clearedXml).toContain('cmd="togglePause"');
 	const reloaded = await new PptxHandler().load(cleared.slice().buffer);
 	const replaced = must(
 		at(reloaded.slides, 0).elements.find((element) => element.type === 'media'),
 	);
 	expect(replaced.volume).toBe(0.5);
-	for (const key of [
-		'autoPlay',
-		'loop',
-		'fullScreen',
-		'hideWhenNotPlaying',
-		'rewindAfterPlaying',
-	] as const)
+	for (const key of ['loop', 'fullScreen', 'hideWhenNotPlaying', 'rewindAfterPlaying'] as const)
 		expect(replaced[key]).toBeUndefined();
 });
 
@@ -128,4 +126,22 @@ it('preserves extra media start conditions on an unedited save', async () => {
 	expect(clip.startMode).toBe('sequence');
 	const saved = await JSZip.loadAsync(await reader.save(loaded.slides));
 	expect(await must(saved.file(path)).async('text')).toContain(condition);
+});
+
+// PowerPoint 16 saved these clips using the VBA Timeline API. In order:
+// PlayOnEntry, With Previous, On Page Click, shape-triggered Play,
+// shape-triggered Pause, default insertion, and leading After Previous.
+it('round-trips PowerPoint-authored play and toggle triggers', async () => {
+	const fixture = await readFile(new URL('../fixtures/media-start-modes.pptx', import.meta.url));
+	const handler = new PptxHandler();
+	const loaded = await handler.load(Uint8Array.from(fixture).buffer);
+	const starts = (slides: typeof loaded.slides) =>
+		slides.map(
+			(slide) => must(slide.elements.find((element) => element.type === 'media')).startMode,
+		);
+	const expected = ['sequence', 'auto', 'sequence', 'click', 'click', 'click', 'auto'];
+	expect(starts(loaded.slides)).toEqual(expected);
+	const saved = await handler.save(loaded.slides);
+	const reopened = await new PptxHandler().load(saved.slice().buffer);
+	expect(starts(reopened.slides)).toEqual(expected);
 });

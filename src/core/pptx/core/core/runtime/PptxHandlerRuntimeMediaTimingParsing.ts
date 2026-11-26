@@ -163,11 +163,9 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 
 			this.walkMediaTimingTree(timing, result, slidePath);
 			for (const [id, startMode] of readMediaSequenceStarts(timing)) {
-				result.set(id, {
-					...result.get(id),
-					startMode,
-					...(startMode === 'auto' && { autoPlay: true }),
-				});
+				const prior = result.get(id);
+				if (startMode === 'click' && prior?.autoPlay) continue;
+				result.set(id, { ...prior, startMode, autoPlay: startMode === 'auto' || undefined });
 			}
 		} catch (e) {
 			console.warn('Failed to parse media timing data:', e);
