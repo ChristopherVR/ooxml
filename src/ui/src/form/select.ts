@@ -57,7 +57,13 @@ export class OfficeUiSelect extends OfficeElement {
 	declare opened: boolean;
 
 	/** Attributes the trigger renders from: a change repaints it (a relabel on a language switch). */
-	static override watched = ['aria-label', 'variant', 'data-font-picker', 'commit-on-reselect'];
+	static override watched = [
+		'aria-label',
+		'aria-description',
+		'variant',
+		'data-font-picker',
+		'commit-on-reselect',
+	];
 
 	private readonly internals: ElementInternals | undefined;
 	private readonly observer: MutationObserver | undefined;
@@ -384,6 +390,7 @@ export class OfficeUiSelect extends OfficeElement {
 				aria-expanded=${String(open)}
 				aria-controls=${this.menuId}
 				aria-label=${ifDefined(name ?? undefined)}
+				aria-description=${ifDefined(this.getAttribute('aria-description') ?? undefined)}
 				aria-activedescendant=${ifDefined(
 					open && this.active >= 0 ? `${this.menuId}-${this.active}` : undefined,
 				)}

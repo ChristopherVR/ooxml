@@ -44,6 +44,7 @@ export class OfficeUiButton extends OfficeElement {
 		'icon-only',
 		'expanded',
 		'title',
+		'aria-description',
 	];
 	declare disabled: boolean;
 	declare pressed: boolean | undefined;
@@ -97,6 +98,7 @@ export class OfficeUiButton extends OfficeElement {
 			?disabled=${present(this.disabled)}
 			title=${tooltip || nothing}
 			aria-label=${ifDefined(iconOnly && label ? label : undefined)}
+			aria-description=${this.getAttribute('aria-description') ?? nothing}
 			aria-keyshortcuts=${ifDefined(this.getAttribute('keyshortcuts') || undefined)}
 			aria-pressed=${ifDefined(asAttribute(this.pressed))}
 			aria-expanded=${ifDefined(expanded === null ? undefined : String(expanded !== 'false'))}

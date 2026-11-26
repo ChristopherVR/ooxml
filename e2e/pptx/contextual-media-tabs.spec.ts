@@ -145,7 +145,9 @@ test('audio shows its own Format tab and media-specific playback options', async
 	await tab(page, 'audioFormat').click();
 	await expect(control(page, 'audioFormat.size.width').getByRole('spinbutton')).toBeEnabled();
 	await tab(page, 'playback').click();
-	await expect(control(page, 'playback.options.fullScreen').getByRole('checkbox')).toBeDisabled();
+	const fullScreen = control(page, 'playback.options.fullScreen').getByRole('checkbox');
+	await expect(fullScreen).toBeDisabled();
+	await expect(fullScreen).toHaveAccessibleDescription('This command is for video.');
 	const across = control(page, 'playback.options.across').getByRole('checkbox');
 	await expect(across).toBeEnabled();
 	await across.click();

@@ -1,3 +1,4 @@
+import { nothing } from 'lit';
 import { html, unsafeStatic } from 'lit/static-html.js';
 import { OfficeElement, controlStyles, flag } from '../base';
 import { defineCheckbox } from '../form/checkbox';
@@ -32,7 +33,7 @@ export class OfficeUiRibbonToggle extends OfficeElement {
 
 	/** `title` is a native attribute, so it is watched rather than declared as a property. */
 	static override get observedAttributes(): string[] {
-		return [...super.observedAttributes, 'title'];
+		return [...super.observedAttributes, 'title', 'aria-description'];
 	}
 
 	constructor() {
@@ -44,7 +45,7 @@ export class OfficeUiRibbonToggle extends OfficeElement {
 
 	override attributeChangedCallback(name: string, old: string | null, value: string | null): void {
 		super.attributeChangedCallback(name, old, value);
-		if (name === 'title') this.requestUpdate();
+		if (name === 'title' || name === 'aria-description') this.requestUpdate();
 	}
 
 	/** Clicking the label text presses the checkbox, which is the only control that toggles. */
@@ -73,6 +74,7 @@ export class OfficeUiRibbonToggle extends OfficeElement {
 				<${tag}
 					part="checkbox"
 					aria-label=${this.label}
+					aria-description=${this.getAttribute('aria-description') ?? nothing}
 					title=${this.getAttribute('title') ?? this.label}
 					?checked=${present(this.checked)}
 					?disabled=${present(this.disabled)}

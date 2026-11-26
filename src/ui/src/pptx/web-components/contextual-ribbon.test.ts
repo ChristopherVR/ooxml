@@ -71,6 +71,10 @@ it('explains why trim and fade are unavailable for media outside a picture', asy
 		);
 		expect(trim?.hasAttribute('disabled')).toBe(true);
 		expect(fade?.disabled).toBe(true);
+		expect(trim?.shadowRoot?.querySelector('button')?.getAttribute('aria-description')).toBe(
+			'This command requires embedded media in a picture.',
+		);
+		expect(fade?.getAttribute('aria-description')).toBe(trim?.getAttribute('title'));
 		expect(trim?.getAttribute('title')).toBe('This command requires embedded media in a picture.');
 		expect(fade?.parentElement?.title).toBe(trim?.getAttribute('title'));
 	});
