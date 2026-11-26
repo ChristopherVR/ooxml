@@ -85,6 +85,7 @@ export function createContextualTabPanes(
 	const panes = new Map<RibbonContextualTabId, HTMLElement>();
 	for (const { id } of RIBBON_CONTEXTUAL_TABS) {
 		const pane = createEl(doc, 'div', 'pptxv-ribbon-tab-content pptxv-ribbon-contextual-content');
+		pane.dataset.pptxChrome = 'ribbon-content';
 		pane.dataset.ribbonContextualPane = id;
 		for (const group of CONTEXTUAL_TAB_GROUPS[id]) {
 			pane.appendChild(createGalleryGroup(doc, t, group, hub, strips));

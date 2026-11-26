@@ -37,6 +37,7 @@ import type {
 	ReadOnlyBannerViewState,
 } from '../render';
 import { attachControlStyles } from './control-styles';
+import contextualGroupCss from './contextual-group.css?raw';
 import { bridgeCss } from './office-token-bridge';
 import type { OFFICE_ALIAS_TAGS } from './office-token-bridge';
 import { RIBBON_ICON_PATHS } from './ribbon-icons';
@@ -544,6 +545,10 @@ export function definePptxRibbonGroup(registry: CustomElementRegistry): void {
 	class PptxRibbonGroup extends Base {
 		static launcherEvent = 'launcher-request';
 		static collapseEvent = 'ribbon-collapse-toggle';
+		constructor() {
+			super();
+			if (this.shadowRoot) attachControlStyles(this.shadowRoot, contextualGroupCss);
+		}
 		connectedCallback(): void {
 			const root = this.shadowRoot!;
 			const launcher = root.querySelector<HTMLElement>('.launcher');

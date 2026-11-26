@@ -1,4 +1,26 @@
+const FORMAT_ARRANGE = `[data-pptx-editor-chrome] :is(
+  [data-ribbon-group="videoFormat.arrange"],
+  [data-ribbon-group="audioFormat.arrange"],
+  [data-ribbon-group="smartArtFormat.arrange"]
+)`;
+
 export const EDITOR_RIBBON_CSS = `
+[data-pptx-editor-chrome] .contextual-fields > pptx-ui-ribbon-gallery[mode="inline"] {
+  grid-row: span 3;
+}
+[data-pptx-editor-chrome] .contextual-color {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 24px;
+  padding: 0 6px; font-size: 12px; white-space: nowrap;
+}
+[data-pptx-editor-chrome] .contextual-color > input {
+  box-sizing: border-box; width: 18px; height: 18px; padding: 0; border: 0; background: transparent;
+}
+@media (min-width: 901px) and (pointer: fine) {
+  ${FORMAT_ARRANGE} :is(div:has(> [data-pptx-chrome="arrange-controls"]), [data-pptx-chrome="arrange-controls"], [data-pptx-chrome="arrange-extras"], [data-pptx-chrome="control-fragment"]) {
+    display: contents;
+  }
+  ${FORMAT_ARRANGE} .pptx-rb-sep { display: none; }
+}
 @media (min-width: 768px) {
   [data-pptx-editor-chrome] [data-pptx-chrome="ribbon"] {
     background: color-mix(in oklab, var(--pptx-secondary) 50%, transparent);

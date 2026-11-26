@@ -1,0 +1,30 @@
+@media (min-width: 901px) and (pointer: fine) {
+	:host(
+			:is(
+				[data-ribbon-group='videoFormat.pictureStyles'],
+				[data-ribbon-group='audioFormat.pictureStyles'],
+				[data-ribbon-group='videoFormat.arrange'],
+				[data-ribbon-group='audioFormat.arrange'],
+				[data-ribbon-group='smartArtFormat.arrange']
+			):not([data-collapsed])
+		)
+		.row {
+		display: grid;
+		grid-template-rows: repeat(3, max-content);
+		grid-auto-flow: column;
+		grid-auto-columns: max-content;
+		align-content: start;
+		align-items: center;
+		gap: 0 4px;
+	}
+
+	:host(
+			:is(
+				[data-ribbon-group='videoFormat.pictureStyles'],
+				[data-ribbon-group='audioFormat.pictureStyles']
+			)
+		)
+		::slotted([mode='inline']) {
+		grid-row: span 3;
+	}
+}

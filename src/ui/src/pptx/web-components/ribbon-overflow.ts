@@ -45,18 +45,30 @@ const PATH_FACE: Readonly<Record<string, string>> = {
 	'design.variants': 'palette',
 	'design.customize': 'paint',
 	'design.designer': 'lightbulb',
+	'videoFormat.arrange': 'layers',
+	'audioFormat.arrange': 'layers',
+	'smartArtFormat.arrange': 'layers',
 };
 
 const isGroup = (el: Element): el is HTMLElement => el instanceof HTMLElement;
-/** Tabs that collapse today; the other tabs keep scrolling until their own parity pass. */
+const CONTEXTUAL_FORMAT = /^(videoFormat|audioFormat|smartArtFormat)\./u;
 const COLLAPSING_GROUPS = /^(home|insert|draw|design)\./u;
+const CONTEXTUAL_PRIORITY: Readonly<Record<string, number>> = {
+	adjust: 0,
+	size: 0,
+	arrange: 1,
+	wordArtStyles: 2,
+	pictureStyles: 3,
+	shapeStyles: 3,
+};
 
 /** Group elements a row owns: outermost only, and only those that take part in layout. */
 function groupsOf(content: HTMLElement): HTMLElement[] {
 	return [...content.querySelectorAll<HTMLElement>('[data-ribbon-group]')].filter(
 		(el) =>
 			isGroup(el) &&
-			COLLAPSING_GROUPS.test(el.dataset.ribbonGroup ?? '') &&
+			(COLLAPSING_GROUPS.test(el.dataset.ribbonGroup ?? '') ||
+				CONTEXTUAL_FORMAT.test(el.dataset.ribbonGroup ?? '')) &&
 			el.getBoundingClientRect().width > 0 &&
 			el.parentElement?.closest('[data-ribbon-group]') === null,
 	);
@@ -226,7 +238,15 @@ export function reflowRibbon(content: HTMLElement): string[] {
 }
 
 type RibbonScale = 'large' | 'small' | 'icons';
-const priorityOf = (group: HTMLElement): number => Number(group.dataset.ribbonPriority ?? 0);
+function priorityOf(group: HTMLElement): number {
+	const id = group.dataset.ribbonGroup ?? '';
+	const family = id.split('.')[1] ?? '';
+	return Number(
+		group.dataset.ribbonPriority ??
+			(CONTEXTUAL_FORMAT.test(id) ? CONTEXTUAL_PRIORITY[family] : undefined) ??
+			0,
+	);
+}
 
 /** Groups that can shrink expose `setRibbonScale`; the attribute drives their stylesheet. */
 function setScale(group: HTMLElement, scale: RibbonScale): void {

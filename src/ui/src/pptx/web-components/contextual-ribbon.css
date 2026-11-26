@@ -5,9 +5,10 @@
 
 ::slotted(.contextual-fields) {
 	display: grid;
-	grid-template-rows: repeat(3, auto);
+	grid-template-rows: repeat(3, max-content);
 	grid-auto-flow: column;
 	align-content: center;
+	align-items: center;
 	gap: 2px 8px;
 	padding: 2px;
 }

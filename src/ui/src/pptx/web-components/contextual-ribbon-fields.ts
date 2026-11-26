@@ -120,11 +120,11 @@ export function ribbonFields(context: ContextualControls) {
 		reason?: string,
 	) =>
 		html`<label
+			class="contextual-color"
 			data-ribbon-control=${id(name)}
 			title=${reason ?? (available ? label : unavailable)}
 			aria-description=${description(reason)}
-			>${label}
-			<input
+			><input
 				type="color"
 				aria-label=${label}
 				aria-description=${description(reason)}
@@ -133,7 +133,7 @@ export function ribbonFields(context: ContextualControls) {
 				@change=${(event: Event) => {
 					if (available && !reason) write((event.currentTarget as HTMLInputElement).value);
 				}}
-			/>
+			/>${label}
 		</label>`;
 	return { text, unavailable, patch, command, number, toggle, select, color, available };
 }

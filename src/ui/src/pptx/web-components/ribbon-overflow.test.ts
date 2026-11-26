@@ -88,6 +88,16 @@ describe('ribbon overflow', () => {
 		expect(collapsedIds(row)).toStrictEqual([]);
 	});
 
+	it('collapses contextual Adjust and Size before the formatting controls', () => {
+		const row = content(540, [
+			'videoFormat.adjust',
+			'videoFormat.pictureStyles',
+			'videoFormat.arrange',
+			'videoFormat.size',
+		]);
+		expect(reflowRibbon(row)).toStrictEqual(['videoFormat.size', 'videoFormat.adjust']);
+	});
+
 	it('does not collapse on a phone-width window, where the mobile sheet takes over', () => {
 		Object.defineProperty(window, 'innerWidth', { configurable: true, value: 600 });
 		const row = content(300, ['home.clipboard', 'home.slides']);

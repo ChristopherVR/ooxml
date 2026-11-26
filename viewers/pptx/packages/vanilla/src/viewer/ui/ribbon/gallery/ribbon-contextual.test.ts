@@ -104,6 +104,7 @@ describe('ribbon contextual tabs (vanilla)', () => {
 			ribbon.updateSelection(element, selection(element));
 			ribbonTab(ribbon.el, '[data-ribbon-contextual-tab="smartArtFormat"]')!.click();
 			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('smartArtFormat.arrange');
+			expect(arrange?.closest('[data-pptx-chrome="ribbon-content"]')).toBe(visiblePane(ribbon.el));
 			ribbon.updateSelection(undefined, selection(undefined));
 			expect(arrange?.parentElement?.dataset.ribbonGroup).toBe('home.arrange');
 		} finally {
