@@ -22,11 +22,13 @@ export function defaultDrawingWrap(
 ): DrawingWrap | undefined {
 	const win = doc.defaultView;
 	if (!win) return;
+	const fallback = session.get(win)?.get(kind);
+	if (fallback) return fallback;
 	try {
 		const saved = win.localStorage.getItem(`${key}.${kind}`);
 		if (saved && isDrawingWrap(saved)) return saved;
 	} catch {
-		return session.get(win)?.get(kind);
+		return undefined;
 	}
 }
 
@@ -35,6 +37,7 @@ export function saveDrawingWrap(doc: Document, kind: 'picture' | 'shape', wrap: 
 	if (!win) return;
 	try {
 		win.localStorage.setItem(`${key}.${kind}`, wrap);
+		session.get(win)?.delete(kind);
 	} catch {
 		const defaults = session.get(win) ?? new Map();
 		defaults.set(kind, wrap);
