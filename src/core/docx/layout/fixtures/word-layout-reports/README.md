@@ -17,6 +17,8 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#341](https://github.com/ChristopherVR/ooxml/issues/341), [#342](https://github.com/ChristopherVR/ooxml/issues/342) | The uncached merge field has no displayed result. Footer tabs advance to both the document's default intervals and the explicit 5 cm stop.                                                                                                                                                                                                                  |
 | [#343](https://github.com/ChristopherVR/ooxml/issues/343), [#344](https://github.com/ChristopherVR/ooxml/issues/344) | The two groups of empty lines use their respective 2 pt and 8 pt paragraph marks. The hanging-indent border extends 284 twips toward the start margin.                                                                                                                                                                                                      |
 
+| [#347](https://github.com/ChristopherVR/ooxml/issues/347) | Implicit and explicit Normal suppress the same gaps, including those beside empty paragraphs. Both samples fit on one page. |
+
 For #330, Word moved all three lines of a paragraph together when widow and orphan control
 would have left one line on either page. At a 453.5 pt text width, an italic Times New Roman
 control wrapped before its final word with kerning omitted and fit that word with kerning

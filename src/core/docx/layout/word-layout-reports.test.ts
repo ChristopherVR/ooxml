@@ -321,3 +321,18 @@ it('omits a hidden table cell end marker from row height, while keeping explicit
 	expect(at(edited, 0).lines[0]?.fragments[0]?.text).toBe('Edited');
 	expect(edited.map((paragraph) => (paragraph.yPx - at(edited, 0).yPx) * 0.75)).toEqual(offsets);
 });
+
+it('suppresses contextual spacing between implicit Normal paragraphs (#347)', async () => {
+	const implicit = await layout('issue-347-contextual-spacing-implicit-normal');
+	const explicit = await layout('issue-347-contextual-spacing-explicit-normal-control');
+	expect(explicit.pages).toHaveLength(1);
+	expect(explicit.paragraphs).toHaveLength(32);
+	for (const [index, paragraph] of explicit.paragraphs.slice(1).entries()) {
+		const previous = at(explicit.paragraphs, index);
+		expect(paragraph.yPx).toBeCloseTo(previous.yPx + previous.heightPx);
+	}
+	expect(implicit.pages).toHaveLength(1);
+	expect(implicit.paragraphs.map(({ yPx, heightPx }) => [yPx, heightPx])).toEqual(
+		explicit.paragraphs.map(({ yPx, heightPx }) => [yPx, heightPx]),
+	);
+});

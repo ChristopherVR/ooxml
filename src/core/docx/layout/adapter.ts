@@ -30,6 +30,7 @@ import { docxChartPaint } from '../chart-paint';
 import { drawingOuterShadow } from '../shape-svg';
 import { pictureBulletSizePt } from '../numbering-picture';
 import { definedProps } from '../defined-props';
+import { defaultStyleId } from '../style-inheritance';
 import { kinsokuLanguage } from '../../text/kinsoku';
 import { resolveEastAsiaLanguage } from '../run-language';
 import { symbolOnly, symbolSegments } from '../special-characters';
@@ -473,7 +474,7 @@ export function adaptDocumentModel(
 				indentEndTwips: resolved.indentEndTwips,
 				firstLineTwips: ownFirstLine ? indents.firstLineTwips : label?.firstLineTwips,
 				hangingTwips: ownFirstLine ? indents.hangingTwips : label?.hangingTwips,
-				styleId: paragraph.style,
+				styleId: paragraph.style || (catalog ? defaultStyleId(catalog.styles) : undefined),
 			}),
 			...(resolved.pageBreakBefore ? { pageBreakBefore: true } : {}),
 			...(resolved.keepNext ? { keepNext: true } : {}),

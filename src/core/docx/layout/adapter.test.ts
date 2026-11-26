@@ -5,6 +5,7 @@ import { adaptDocumentModel } from './adapter';
 import { at } from './test-helpers';
 import type { LayoutObject } from './input';
 import { latexToOmmlXml } from '../../math/index';
+import { suppressesSpacing } from './keep-rules';
 
 function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 	return {
@@ -23,6 +24,28 @@ function baseModel(overrides: Partial<DocumentModel> = {}): DocumentModel {
 }
 
 describe('adaptDocumentModel', () => {
+	it('treats explicit and implicit references to the default paragraph style alike', () => {
+		const paragraph = {
+			type: 'paragraph' as const,
+			id: 'implicit',
+			runs: [],
+			contextualSpacing: true,
+		};
+		const model = baseModel({
+			paragraphStyles: {
+				styles: { Body: { id: 'Body', name: 'Body', isDefault: true, formatting: {} } },
+				docDefaults: {},
+				warnings: [],
+			},
+			blocks: [paragraph, { ...paragraph, id: 'explicit', style: 'Body' }],
+		});
+		const blocks = at(adaptDocumentModel(model).sections, 0).blocks;
+		const implicit = at(blocks, 0);
+		const explicit = at(blocks, 1);
+		if (implicit.kind !== 'paragraph' || explicit.kind !== 'paragraph')
+			throw new Error('Expected paragraphs');
+		expect(suppressesSpacing(implicit, explicit)).toBe(true);
+	});
 	it('draws equations as sized inline objects that sit on the text baseline', () => {
 		const omml = latexToOmmlXml('\\frac{a}{b}', false)!;
 		const input = adaptDocumentModel(
