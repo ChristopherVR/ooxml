@@ -40,6 +40,13 @@ import { elementRelationshipIds, renameElementRelationshipIds } from './element-
 /** Relationships of one part, keyed by id. */
 export type PartRelationships = Map<string, Relationship>;
 
+interface SourcePartRelationships {
+	entry: JSZip.JSZipObject | null;
+	relationships: PartRelationships;
+}
+
+export type ElementSourceRelationships = ReadonlyMap<string, SourcePartRelationships>;
+
 export interface ElementPartBindingInput {
 	zip: JSZip;
 	slides: readonly PptxSlide[];
@@ -47,7 +54,7 @@ export interface ElementPartBindingInput {
 	 * Relationships of the elements' source parts as they were before this save changed the
 	 * package (a slide deleted this save has lost its own). Other parts are read from the package.
 	 */
-	sourceRelationships: ReadonlyMap<string, PartRelationships>;
+	sourceRelationships: ElementSourceRelationships;
 	/** Which relationships of a copied part lead to parts the copy needs its own of. */
 	shouldClone: (relationship: Relationship) => boolean;
 	/**
@@ -78,16 +85,18 @@ function* allElements(elements: readonly PptxElement[]): Generator<PptxElement> 
 export async function readElementSourceRelationships(
 	zip: JSZip,
 	slides: readonly PptxSlide[],
-): Promise<Map<string, PartRelationships>> {
-	const result = new Map<string, PartRelationships>();
+): Promise<ElementSourceRelationships> {
+	const result = new Map<string, SourcePartRelationships>();
 	for (const slide of slides)
 		for (const element of allElements(slide.elements)) {
 			const source = element.relationshipSourcePath;
-			if (source && !result.has(source))
-				result.set(
-					source,
-					parseRelationships(await zip.file(relationshipsPartFor(source))?.async('string')),
-				);
+			if (source && !result.has(source)) {
+				const entry = zip.file(relationshipsPartFor(source));
+				result.set(source, {
+					entry,
+					relationships: parseRelationships(await entry?.async('string')),
+				});
+			}
 		}
 	return result;
 }
@@ -155,7 +164,7 @@ export async function bindElementParts(input: ElementPartBindingInput): Promise<
 	const { zip } = input;
 	const owners = new Map<string, PptxElement>();
 	const readRelationships = async (part: string): Promise<PartRelationships> =>
-		input.sourceRelationships.get(part) ??
+		input.sourceRelationships.get(part)?.relationships ??
 		parseRelationships(await zip.file(relationshipsPartFor(part))?.async('string'));
 
 	/** Give `element` its own copy of `part`, returning the copy's path (or `part` on failure). */
@@ -181,12 +190,20 @@ export async function bindElementParts(input: ElementPartBindingInput): Promise<
 
 	for (const slide of input.slides) {
 		const relsPath = relationshipsPartFor(slide.id);
-		const relationships = parseRelationships(await zip.file(relsPath)?.async('string'));
+		const relsEntry = zip.file(relsPath);
+		const sourcePart = input.sourceRelationships.get(slide.id);
+		// Reconciliation can replace the entry. Keep the source snapshot for moved elements
+		// and use a separate map of current relationships for the receiving slide.
+		const relationships =
+			sourcePart?.entry === relsEntry
+				? new Map(sourcePart.relationships)
+				: parseRelationships(await relsEntry?.async('string'));
 		let changed = false;
 		for (const element of allElements(slide.elements)) {
 			const source = element.relationshipSourcePath ?? slide.id;
 			const declared = source === slide.id ? relationships : await readRelationships(source);
 			const ids = elementRelationshipIds(element);
+			if (ids.size === 0) continue;
 			const binding: Binding = { renames: new Map(), copies: new Map() };
 			for (const id of ids) {
 				const relationship = declared.get(id);
@@ -212,8 +229,7 @@ export async function bindElementParts(input: ElementPartBindingInput): Promise<
 				await retargetElement(zip, element, slide.id, source, binding, relationships);
 				if (binding.copies.size > 0) input.onPartsCopied(binding.copies, binding.renames);
 			}
-			if (ids.size > 0 && element.relationshipSourcePath !== slide.id)
-				element.relationshipSourcePath = slide.id;
+			if (element.relationshipSourcePath !== slide.id) element.relationshipSourcePath = slide.id;
 		}
 		if (changed) zip.file(relsPath, buildRelationshipsXml(relationships));
 	}

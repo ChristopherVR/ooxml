@@ -6,7 +6,7 @@ import { objectTextSpacing } from '../../utils/paragraph-properties-neutral';
 import type { PptxSlideReferenceRemap } from '../../utils/presentation-collections';
 import type { PptxSaveState, IPptxSlideRelationshipRegistry } from '../builders';
 import { copiesRelationshipTarget, remapPartPaths } from '../builders/duplicate-slide-parts';
-import { bindElementParts, type PartRelationships } from './element-part-binding';
+import { bindElementParts, type ElementSourceRelationships } from './element-part-binding';
 import { PptxHandlerRuntime as PptxHandlerRuntimeBase } from './PptxHandlerRuntimePresentationProps';
 
 /** Context {@link PptxHandlerRuntime.embedTransitionSound} needs from the slide save writer. */
@@ -148,7 +148,7 @@ export class PptxHandlerRuntime extends PptxHandlerRuntimeBase {
 	/** Give every slide element its own owned parts and relationships; see `element-part-binding`. */
 	protected async bindSlideElementParts(
 		slides: readonly PptxSlide[],
-		sourceRelationships: ReadonlyMap<string, PartRelationships>,
+		sourceRelationships: ElementSourceRelationships,
 	): Promise<void> {
 		await bindElementParts({
 			zip: this.zip,

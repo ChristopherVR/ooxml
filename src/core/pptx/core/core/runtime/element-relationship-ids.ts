@@ -32,7 +32,7 @@ const isRelationshipAttribute = (key: string): boolean => key.startsWith('@_r:')
 
 function visitMarkup(
 	node: unknown,
-	skipKeys: ReadonlySet<string>,
+	skipKeys: ReadonlySet<string> | undefined,
 	visit: (holder: XmlObject, key: string) => void,
 ): void {
 	if (Array.isArray(node)) {
@@ -42,9 +42,10 @@ function visitMarkup(
 	if (!node || typeof node !== 'object') return;
 	const record = node as XmlObject;
 	for (const key of Object.keys(record)) {
-		if (skipKeys.has(key)) continue;
-		if (isRelationshipAttribute(key) && typeof record[key] === 'string') visit(record, key);
-		else visitMarkup(record[key], new Set(), visit);
+		if (skipKeys?.has(key)) continue;
+		const value = record[key];
+		if (isRelationshipAttribute(key) && typeof value === 'string') visit(record, key);
+		else if (value && typeof value === 'object') visitMarkup(value, undefined, visit);
 	}
 }
 
@@ -52,7 +53,7 @@ function visitOwnMarkup(
 	element: PptxElement,
 	visit: (holder: XmlObject, key: string) => void,
 ): void {
-	const skip = element.type === 'group' ? GROUP_CHILD_KEYS : new Set<string>();
+	const skip = element.type === 'group' ? GROUP_CHILD_KEYS : undefined;
 	const fields = element as unknown as Record<string, unknown>;
 	for (const key of OWN_MARKUP_KEYS) visitMarkup(fields[key], skip, visit);
 }
