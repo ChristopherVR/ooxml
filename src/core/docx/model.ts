@@ -160,6 +160,10 @@ export interface DocumentModel {
 	 * DOCPROPERTY fields show (the editable core fields in `properties` take their place).
 	 */
 	packageProperties?: DocumentPropertySet;
+	/** The document's building blocks (`word/glossary/document.xml`); entries added here are written on save. */
+	/** The resolved glossary part name, when the document has one (its entries may be none). */
+	glossaryPart?: string;
+	glossary?: import('./glossary-document').GlossaryEntry[];
 	/**
 	 * Package metadata Inspect Document reports and removes: extended and custom properties,
 	 * custom XML data, the attached template, the reviewer list and the privacy settings.

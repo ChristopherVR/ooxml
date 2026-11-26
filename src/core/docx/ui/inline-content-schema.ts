@@ -93,6 +93,10 @@ export const imageNodeSpec: NodeSpec = {
 		/** A header watermark (`WatermarkSpec` or `PictureWatermarkSpec`) as JSON, kept through edits. */
 		watermark: { default: null },
 		pictureWatermark: { default: null },
+		/** A signature line (`SignatureLineSpec`) as JSON, kept through edits. */
+		signatureLine: { default: null },
+		/** An online video (`WebVideoSpec`) as JSON, kept through edits. */
+		webVideo: { default: null },
 	},
 	parseDOM: [
 		{

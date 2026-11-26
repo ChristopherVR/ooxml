@@ -8,6 +8,14 @@ import type JSZip from 'jszip';
 import type { Block, DocumentModel, Paragraph } from './model';
 import { buildXml, elements, first, getW, parseXml, WORD_NS } from './xml';
 import type { XmlElement } from './xml';
+import {
+	ensureContentTypeOverride,
+	ensureRelationship,
+	PROPERTY_CONTENT_TYPES,
+	PROPERTY_PART_NAMES,
+	RELATIONSHIP_TYPES,
+} from '../opc/index';
+import { CORE_PROPERTIES_STORE, EXTENDED_PROPERTIES_STORE } from './quick-parts';
 
 interface Binding {
 	xpath: string;
@@ -105,8 +113,17 @@ const matches = (element: XmlElement, step: Step, binding: Binding): boolean =>
 	element.localName === step.name &&
 	(element.namespaceURI ?? '') === (step.prefix ? (binding.prefixes.get(step.prefix) ?? '') : '');
 
-/** Sets the text of the node `binding` selects in `root`; false when the path selects nothing. */
-function writeValue(root: XmlElement, binding: Binding, value: string): boolean | 'unsupported' {
+/**
+ * Sets the text of the node `binding` selects in `root`; false when the path selects nothing.
+ * `create` adds the last element of the path when it is missing (the property parts list only the
+ * properties that are set).
+ */
+function writeValue(
+	root: XmlElement,
+	binding: Binding,
+	value: string,
+	create = false,
+): boolean | 'unsupported' {
 	const path = parseXPath(binding);
 	if (!path) return 'unsupported';
 	let node: XmlElement | undefined = root;
@@ -115,7 +132,24 @@ function writeValue(root: XmlElement, binding: Binding, value: string): boolean 
 			depth === 0
 				? [root].filter((e) => matches(e, step, binding))
 				: elements(node!).filter((e) => matches(e, step, binding));
+		const parent: XmlElement | undefined = node;
 		node = candidates[step.index - 1];
+		if (!node && create && parent && depth === path.steps.length - 1 && !path.attribute) {
+			if (!value) return true;
+			const ns = step.prefix ? binding.prefixes.get(step.prefix) : undefined;
+			// Reuse the parent's own prefix (or default namespace) when it shares the namespace.
+			const known: string | null = ns
+				? parent.namespaceURI === ns
+					? parent.prefix
+					: parent.lookupPrefix(ns)
+				: null;
+			node = !ns
+				? parent.ownerDocument.createElement(step.name)
+				: known || parent.namespaceURI === ns
+					? parent.ownerDocument.createElementNS(ns, known ? `${known}:${step.name}` : step.name)
+					: parent.ownerDocument.createElementNS(ns, `${step.prefix}:${step.name}`);
+			parent.appendChild(node);
+		}
 		if (!node) return false;
 	}
 	if (path.attribute) {
@@ -133,6 +167,9 @@ function writeValue(root: XmlElement, binding: Binding, value: string): boolean 
 /** The custom XML item part whose `ds:itemID` is `storeItemId`, if the package has one. */
 async function findItemPart(zip: JSZip, storeItemId: string): Promise<string | undefined> {
 	const wanted = storeItemId.toLowerCase();
+	// Word's built-in stores: the document's own property parts.
+	if (wanted === CORE_PROPERTIES_STORE.toLowerCase()) return PROPERTY_PART_NAMES.core;
+	if (wanted === EXTENDED_PROPERTIES_STORE.toLowerCase()) return PROPERTY_PART_NAMES.app;
 	for (const name of Object.keys(zip.files)) {
 		const props = /^customXml\/itemProps(\d+)\.xml$/.exec(name);
 		if (!props) continue;
@@ -152,22 +189,30 @@ export async function applyDataBindings(
 	zip: JSZip,
 	model: DocumentModel,
 	base: DocumentModel,
-	sourceXml: string,
+	readDocument: () => Promise<string>,
 ): Promise<void> {
 	const now = boundTexts(model);
+	// The document part is only read when the body holds a bound control.
 	if (!now.size) return;
 	const before = boundTexts(base);
-	const bindings = sourceBindings(sourceXml);
+	const bindings = sourceBindings(await readDocument());
 	const parsed = new Map<string, ReturnType<typeof parseXml>>();
 	for (const [id, text] of now) {
 		const binding = bindings.get(id);
 		if (!binding || before.get(id) === text) continue;
 		const part = await findItemPart(zip, binding.storeItemId);
-		const file = part ? zip.file(part) : undefined;
-		if (!part || !file) continue;
-		const document = parsed.get(part) ?? parseXml(await file.async('string'));
+		if (!part) continue;
+		const file = zip.file(part);
+		if (!file && !part.startsWith('docProps/')) continue;
+		const document =
+			parsed.get(part) ?? parseXml(file ? await file.async('string') : emptyPart(part));
 		parsed.set(part, document);
-		const written = writeValue(document.documentElement, binding, text);
+		const written = writeValue(
+			document.documentElement,
+			binding,
+			text,
+			part.startsWith('docProps/'),
+		);
 		if (written !== true)
 			throw new Error(
 				written === 'unsupported'
@@ -175,5 +220,36 @@ export async function applyDataBindings(
 					: `Cannot update the data-bound content control ${id}: the XPath ${binding.xpath} selects no node in ${part}. The original DOCX package remains unchanged.`,
 			);
 	}
-	for (const [part, document] of parsed) zip.file(part, buildXml(document));
+	for (const [part, document] of parsed) {
+		const existed = Boolean(zip.file(part));
+		zip.file(part, buildXml(document));
+		if (!existed) await registerPropertyPart(zip, part);
+	}
 }
+
+/** The empty core or extended properties part a bound control's first value is written into. */
+function emptyPart(part: string): string {
+	const header = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+	return part === PROPERTY_PART_NAMES.core
+		? `${header}<cp:coreProperties xmlns:cp="${CP}" xmlns:dc="${DC}"/>`
+		: `${header}<Properties xmlns="${EP}"/>`;
+}
+
+async function registerPropertyPart(zip: JSZip, part: string): Promise<void> {
+	const core = part === PROPERTY_PART_NAMES.core;
+	await ensureContentTypeOverride(
+		zip,
+		part,
+		core ? PROPERTY_CONTENT_TYPES.core : PROPERTY_CONTENT_TYPES.app,
+	);
+	await ensureRelationship(
+		zip,
+		'_rels/.rels',
+		core ? RELATIONSHIP_TYPES.coreProperties : RELATIONSHIP_TYPES.extendedProperties,
+		part,
+	);
+}
+
+const CP = 'http://schemas.openxmlformats.org/package/2006/metadata/core-properties';
+const DC = 'http://purl.org/dc/elements/1.1/';
+const EP = 'http://schemas.openxmlformats.org/officeDocument/2006/extended-properties';

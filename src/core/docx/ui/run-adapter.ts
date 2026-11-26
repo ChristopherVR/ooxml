@@ -107,6 +107,8 @@ export function runToInlineNodes(
 					pictureWatermark: run.image.pictureWatermark
 						? JSON.stringify(run.image.pictureWatermark)
 						: null,
+					signatureLine: run.image.signatureLine ? JSON.stringify(run.image.signatureLine) : null,
+					webVideo: run.image.webVideo ? JSON.stringify(run.image.webVideo) : null,
 				},
 				undefined,
 				marks,
@@ -233,6 +235,12 @@ export function appendInlineNode(runs: TextRun[], child: ProseMirrorNode): void 
 					: {}),
 				...(typeof child.attrs.pictureWatermark === 'string'
 					? { pictureWatermark: JSON.parse(child.attrs.pictureWatermark) }
+					: {}),
+				...(typeof child.attrs.signatureLine === 'string'
+					? { signatureLine: JSON.parse(child.attrs.signatureLine) }
+					: {}),
+				...(typeof child.attrs.webVideo === 'string'
+					? { webVideo: JSON.parse(child.attrs.webVideo) }
 					: {}),
 				...(typeof child.attrs.placement === 'string'
 					? { placement: JSON.parse(child.attrs.placement) }

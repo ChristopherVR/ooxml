@@ -19,6 +19,8 @@ import { definedProps } from './defined-props';
 import { parseWatermarkShape } from './watermark';
 import { parsePictureWatermarkShape } from './picture-watermark';
 import { vmlFloat, vmlPictureShape, VML_NS } from './vml-placement';
+import { parseSignatureLineShape } from './signature-line';
+import { parseWebVideo } from './web-video';
 import { isSimpleTextBox, textBoxHasBorder } from './write-text-box';
 import { readWordArtStyle } from './word-art';
 import { isTextBoxShape, parseShape, shapeElement } from './shape-parse';
@@ -191,6 +193,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 		const picSpPr = firstNS(pic, PICTURE_GRAPHIC_URI, 'spPr');
 		const effects = parseDrawingEffects(firstNS(picSpPr, A_NS, 'effectLst'));
 		const transform = readDrawingTransform(firstNS(picSpPr, A_NS, 'xfrm'));
+		const webVideo = parseWebVideo(docPr ?? undefined);
 		return {
 			...picture,
 			...(blip?.parentNode
@@ -203,6 +206,7 @@ function parseModernDrawing(node: XmlElement, context: DrawingContext): InlineIm
 			...definedProps({ altText, title, drawingName, anchored }),
 			...(placement ? { placement } : {}),
 			...(svg ? { svgPartName: svg.partName } : {}),
+			...(webVideo ? { webVideo } : {}),
 		};
 	}
 	if (graphicData && uri === MODEL3D_URI) {
@@ -347,7 +351,9 @@ function parseVmlPicture(node: XmlElement, context: DrawingContext): InlineImage
 	const height = /height:\s*([\d.]+)pt/i.exec(style);
 	const widthPx = width ? Math.round(Number(width[1]) * (96 / 72)) : 0;
 	const heightPx = height ? Math.round(Number(height[1]) * (96 / 72)) : 0;
-	if (picture) return { ...picture, widthPx, heightPx };
+	const signatureLine = parseSignatureLineShape(shape ?? undefined);
+	if (picture)
+		return { ...picture, widthPx, heightPx, ...(signatureLine ? { signatureLine } : {}) };
 	return {
 		relId: relId ?? '',
 		partName: '',

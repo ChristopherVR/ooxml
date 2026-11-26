@@ -87,6 +87,10 @@ export interface InlineImage {
 	diagram?: DocxDiagram;
 	/** For a chart (`unsupported: "Chart"`): its part and the parsed `c:chartSpace`; the markup and parts are preserved on save. */
 	chart?: DocxChart;
+	/** A Word signature line (`o:signatureline` in a VML picture): its setup, drawn as the picture. */
+	signatureLine?: import('./signature-line').SignatureLineSpec;
+	/** An online video (`wp15:webVideoPr`): the embed it plays, drawn as its poster picture. */
+	webVideo?: import('./web-video').WebVideoSpec;
 	/** A native 3D model or OLE package. The picture fields name its poster or icon. */
 	payload?: InlineDrawingPayload;
 }

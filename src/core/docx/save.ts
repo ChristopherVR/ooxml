@@ -10,6 +10,7 @@ import type { DocumentModel, PendingMediaPart, SaveOptions } from './model';
 import { blockCopiesOf } from './block-copies';
 import { stampModified } from './save-modified';
 import { applyDataBindings } from './data-binding';
+import { writeGlossaryEntries } from './glossary-document';
 import { writeBibliographyPart } from './bibliography-part';
 import { buildXml, parseXml, type XmlDocument } from './xml';
 import type { PackageContext } from './parse';
@@ -213,8 +214,13 @@ export async function saveDocx(
 			await applySettingsFlag(zip, flag, model[key] === false);
 	if (JSON.stringify(model.comments ?? []) !== JSON.stringify(binding?.base.comments ?? []))
 		await applyComments(zip, model.comments ?? []);
-	if (binding) await applyDataBindings(zip, model, binding.base, binding.sourceXml);
 	await applyPackageInformation(zip, model.packageInformation, binding?.base.packageInformation);
+	// Bound edits go last, so the package information writer cannot overwrite them; bindings are read
+	// from the document as written, so a control inserted in this session counts.
+	await applyDataBindings(zip, model, binding?.base ?? { ...model, blocks: [] }, () =>
+		zip.file('word/document.xml')!.async('string'),
+	);
+	await writeGlossaryEntries(zip, model, binding?.base);
 	await writeBibliographyPart(
 		zip,
 		model.packageInformation?.bibliography,

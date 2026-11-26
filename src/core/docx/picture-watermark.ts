@@ -100,19 +100,9 @@ export function pictureWatermarkSizePt(
 	return { widthPt: round(w * factor), heightPt: round(h * factor) };
 }
 
-/** A `w:r` holding Word's picture-watermark VML for `spec`, pointing at relationship `relId`. */
-export function buildPictureWatermarkRun(
-	doc: XmlDocument,
-	spec: PictureWatermarkSpec,
-	relId: string,
-	uniqueId: string,
-): XmlElement {
+/** The `_x0000_t75` picture-frame `v:shapetype` Word writes before every VML picture shape. */
+export function pictureFrameShapeType(doc: XmlDocument): XmlElement {
 	const v = (name: string) => makeNS(doc, VML_NS, `v:${name}`);
-	const run = makeW(doc, 'r');
-	const props = makeW(doc, 'rPr');
-	props.appendChild(makeW(doc, 'noProof'));
-	run.appendChild(props);
-	const pict = makeW(doc, 'pict');
 	const type = v('shapetype');
 	type.setAttribute('id', '_x0000_t75');
 	type.setAttribute('coordsize', '21600,21600');
@@ -137,6 +127,23 @@ export function buildPictureWatermarkRun(
 	lock.setAttributeNS(VML_NS, 'v:ext', 'edit');
 	lock.setAttribute('aspectratio', 't');
 	for (const child of [stroke, formulas, path, lock]) type.appendChild(child);
+	return type;
+}
+
+/** A `w:r` holding Word's picture-watermark VML for `spec`, pointing at relationship `relId`. */
+export function buildPictureWatermarkRun(
+	doc: XmlDocument,
+	spec: PictureWatermarkSpec,
+	relId: string,
+	uniqueId: string,
+): XmlElement {
+	const v = (name: string) => makeNS(doc, VML_NS, `v:${name}`);
+	const run = makeW(doc, 'r');
+	const props = makeW(doc, 'rPr');
+	props.appendChild(makeW(doc, 'noProof'));
+	run.appendChild(props);
+	const pict = makeW(doc, 'pict');
+	const type = pictureFrameShapeType(doc);
 	const shape = v('shape');
 	shape.setAttribute('id', `${PICTURE_WATERMARK_PREFIX}${uniqueId}`);
 	shape.setAttributeNS(OFFICE_NS, 'o:spid', `_x0000_s${2048 + (Number(uniqueId) || 1)}`);

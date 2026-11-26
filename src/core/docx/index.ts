@@ -327,3 +327,46 @@ export {
 } from './design-defaults';
 export * from './design-schemes';
 export { wordThemeXml } from './theme-save';
+export {
+	SIGNATURE_LINE_SIZE_PT,
+	parseSignatureLineShape,
+	signatureLineImage,
+	signatureLinePlaceholderPng,
+	type SignatureLineSpec,
+} from './signature-line';
+export {
+	WEB_VIDEO_SIZE_PX,
+	resolveWebVideo,
+	webVideoImage,
+	webVideoPosterPng,
+	type WebVideoResult,
+	type WebVideoSpec,
+} from './web-video';
+export {
+	CORE_PROPERTIES_STORE,
+	DOCUMENT_PROPERTY_CHOICES,
+	EXTENDED_PROPERTIES_STORE,
+	documentPropertyChoice,
+	documentPropertyControl,
+	documentPropertyValue,
+	propertyBinding,
+	type DocumentPropertyChoice,
+	type DocumentPropertyId,
+} from './quick-parts';
+export {
+	GLOSSARY_PART,
+	glossaryBlocksCopy,
+	glossaryBlocksWritable,
+	glossaryEntryKey,
+	glossaryPreview,
+	type GlossaryEntry,
+	type GlossaryGallery,
+} from './glossary-document';
+export {
+	HEADER_FOOTER_DESIGNS,
+	headerFooterDesignBlocks,
+	isHeaderFooterDesign,
+	type HeaderFooterDesign,
+	type HeaderFooterDesignContext,
+} from './header-footer-designs';
+export { docInfoFieldResult } from './doc-property-field';

@@ -45,6 +45,7 @@ import {
 import { diagramWarnings, resolveDocumentDiagrams } from './diagram-document';
 import { documentDrawingBlocks, resolveDocumentCharts } from './chart';
 import { readPlaceholderTexts } from './glossary';
+import { readGlossaryEntries } from './glossary-document';
 import { readPackageProperties } from './package-properties';
 
 export interface PackageContext {
@@ -233,6 +234,7 @@ export async function readPackage(
 	const mailMerge = await readMailMergeSettings(zip, drawings.rels, settingsXml);
 	if (mailMerge) model.mailMerge = mailMerge;
 	await readPlaceholderTexts(zip, drawings.rels, model);
+	await readGlossaryEntries(zip, drawings.rels, model);
 	const pageColor = parsePageBackground(document.documentElement, model.theme);
 	if (pageColor) model.pageColor = pageColor;
 	model.warnings.push(...parts.warnings);

@@ -504,3 +504,26 @@ export function insertContentControl(
 		tr.setSelection(TextSelection.create(tr.doc, start, start + change.text.length));
 	return tr.setMeta(CONTROL_EDIT_META, true);
 }
+
+/**
+ * Inserts a ready-made inline control (a Quick Parts document property): its value as text, or its
+ * placeholder while `value` is empty. The selection is replaced, as for any inserted control.
+ */
+export function insertBoundControl(
+	state: EditorState,
+	control: ContentControl,
+	value: string,
+	placeholder: string,
+): Transaction | undefined {
+	const type = state.schema.marks.contentControl;
+	if (!type) return undefined;
+	const filled = value
+		? { control: { ...control, showingPlaceholder: false }, text: value }
+		: placeholderChange({ ...control, placeholderText: placeholder });
+	const marks = [type.create({ data: JSON.stringify(filled.control) })];
+	if (!value && state.schema.marks.characterStyle)
+		marks.push(state.schema.marks.characterStyle.create({ id: PLACEHOLDER_STYLE }));
+	return state.tr
+		.replaceSelectionWith(state.schema.text(filled.text, marks), false)
+		.setMeta(CONTROL_EDIT_META, true);
+}

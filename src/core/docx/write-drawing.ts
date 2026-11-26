@@ -11,6 +11,8 @@ import type { InlineImage } from './model';
 import { EMU_PER_PIXEL } from './drawing';
 import { buildWatermarkRun } from './watermark';
 import { buildPictureWatermarkRun } from './picture-watermark';
+import { buildSignatureLineRun } from './signature-line';
+import { applyWebVideo } from './web-video';
 import { buildTextBoxDrawing, patchTextBox } from './write-text-box';
 import { buildShapeDrawing, rebuildShapeDrawing } from './write-shape';
 import { chartRun } from './write-chart-drawing';
@@ -347,6 +349,24 @@ export function createImageRun(
 		);
 		return node;
 	}
+	if (!base && image.signatureLine) {
+		if (!allocator)
+			throw new Error('Cannot insert a signature line without a relationship allocator.');
+		clearNonProperties(node);
+		node.appendChild(
+			buildSignatureLineRun(
+				doc,
+				image.signatureLine,
+				allocator.addImage(image.partName),
+				allocator.docPrIds.next(),
+				{
+					widthPt: Math.round(image.widthPx * 75) / 100,
+					heightPt: Math.round(image.heightPx * 75) / 100,
+				},
+			).lastChild!,
+		);
+		return node;
+	}
 	if (image.watermark) {
 		clearNonProperties(node);
 		node.appendChild(
@@ -402,6 +422,13 @@ export function createImageRun(
 	const relId = allocator.addImage(image.partName);
 	const svgRelId = image.svgPartName ? allocator.addImage(image.svgPartName) : undefined;
 	const drawing = buildInlineDrawing(doc, image, relId, allocator.docPrIds.next(), svgRelId);
+	if (image.webVideo) {
+		const docPr = drawing.getElementsByTagNameNS(WP_NS, 'docPr')[0];
+		if (docPr) {
+			docPr.setAttribute('name', `Online Media ${docPr.getAttribute('id')}`);
+			applyWebVideo(doc, docPr, image.webVideo);
+		}
+	}
 	patchArrangement(doc, drawing, image);
 	clearNonProperties(node);
 	node.appendChild(drawing);
