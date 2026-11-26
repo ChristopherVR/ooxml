@@ -6,6 +6,7 @@ export const esBackstage: Readonly<Record<string, string>> = {
 	'Save As': 'Guardar como',
 	Print: 'Imprimir',
 	Close: 'Cerrar',
+	'Close {name}': 'Cerrar {name}',
 	Account: 'Cuenta',
 	'Documents stay in this browser; nothing is uploaded.':
 		'Los documentos permanecen en este navegador; no se sube nada.',

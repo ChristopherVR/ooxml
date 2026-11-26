@@ -2,19 +2,9 @@ import type { VisioStencilEdit } from 'ooxml-core/visio';
 import type { ViewerController } from './controller';
 import { documentMaster } from './shapes-document';
 
-const drawings = new WeakMap<HTMLElement, ReturnType<typeof drawingSource>>();
 const SELECTION_REASON = 'Select one editable 2D shape in a drawing.';
 
-export function stencilDrawing(pane: HTMLElement) {
-	return drawings.get(pane);
-}
-
-export function bindStencilDrawing(pane: HTMLElement, controller?: ViewerController): void {
-	if (controller) drawings.set(pane, drawingSource(controller));
-	else drawings.delete(pane);
-}
-
-function drawingSource(controller: ViewerController) {
+export function stencilDrawing(controller: ViewerController) {
 	const sourceAvailable = () => {
 		const { edit, loading } = controller.state;
 		return edit.sourceAvailable && !edit.busy && !loading;

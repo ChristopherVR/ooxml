@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 import { createRibbon } from './ribbon';
+import { VISIO_STENCIL_STRINGS } from './locales/stencils';
 import { localizeRibbon, ribbonLocale } from './ribbon-localize';
 import {
 	VISIO_LOCALES,
@@ -11,6 +12,19 @@ import {
 
 const english = Object.keys(VISIO_RIBBON_STRINGS.en);
 const placeholders = (text: string) => [...text.matchAll(/\{\w+\}/g)].map((m) => m[0]).sort();
+
+it('keeps the lazy stencil dictionary complete in every locale', () => {
+	const englishEntries = Object.entries(VISIO_STENCIL_STRINGS.en);
+	for (const locale of VISIO_LOCALES) {
+		const dictionary: Readonly<Record<string, string>> = VISIO_STENCIL_STRINGS[locale];
+		expect(Object.keys(dictionary).sort()).toEqual(englishEntries.map(([key]) => key).sort());
+		for (const [key, value] of englishEntries) {
+			const translation = dictionary[key] ?? '';
+			expect(translation.trim(), `${locale}:${key}`).toBeTruthy();
+			expect(placeholders(translation), `${locale}:${key}`).toEqual(placeholders(value));
+		}
+	}
+});
 
 describe('Visio ribbon locales', () => {
 	it('has a dictionary for each supported locale', () => {

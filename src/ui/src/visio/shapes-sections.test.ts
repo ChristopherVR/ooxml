@@ -1,8 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { VisioEdit } from 'ooxml-core/visio';
 import { demoDocument } from 'ooxml-core/visio/ui';
 import { ViewerController } from './controller';
-import { createShapesWindow } from './shapes-window';
+import { createShapesWindow, setShapesLocale } from './shapes-window';
 import { SHAPES_STORAGE_KEY } from './shapes-sections';
 import { masterCreation, outlinePreviewPath } from './stencil-catalog';
 import { wireStencil } from './viewer-stencil';
@@ -31,6 +31,16 @@ function pane() {
 }
 
 describe('More Shapes and Quick Shapes', () => {
+	it('localizes the close label of a restored stencil before opening any menu', () => {
+		localStorage.setItem(SHAPES_STORAGE_KEY, JSON.stringify({ open: ['basic-flowchart'] }));
+		const { element } = pane();
+		const closeLabel = () =>
+			element.querySelector('[data-close-stencil="basic-flowchart"]')?.getAttribute('aria-label');
+		expect(closeLabel()).toBe('Close Basic Flowchart Shapes');
+		setShapesLocale(element, 'de-DE');
+		expect(closeLabel()).toBe('Basic Flowchart Shapes schließen');
+		expect(element.querySelector('[data-shapes-menu="stencil"]')).toBeNull();
+	});
 	it('opens a built-in stencil as a collapsible section that can be closed', () => {
 		const { element, more, sections } = pane();
 		expect(sections()).toEqual(['basic']);
@@ -39,9 +49,10 @@ describe('More Shapes and Quick Shapes', () => {
 			'Basic Flowchart Shapes',
 			'Miscellaneous Flowchart Shapes',
 			'Arrow Shapes',
+			'New Stencil',
 			'Open Stencil...',
 		]);
-		expect(items[3]!.hasAttribute('disabled')).toBe(false);
+		expect(items[4]!.hasAttribute('disabled')).toBe(false);
 		command(more, 'stencil:basic-flowchart');
 		expect(sections()).toEqual(['basic', 'basic-flowchart']);
 		expect(more.querySelector('[command="stencil:basic-flowchart"]')!.getAttribute('checked')).toBe(
@@ -73,7 +84,7 @@ describe('More Shapes and Quick Shapes', () => {
 		expect(sections()).toEqual(['basic']);
 	});
 
-	it('shows Quick Shapes across open stencils and edits them from the master menu', () => {
+	it('shows Quick Shapes and loads the master menu on its first use', async () => {
 		const { element, more, quick } = pane();
 		const toggle = element.querySelector<HTMLButtonElement>('#shapes-quick-toggle')!;
 		expect(quick()).toEqual([]);
@@ -92,13 +103,17 @@ describe('More Shapes and Quick Shapes', () => {
 			'arrow-down',
 		]);
 		const masterMenu = element.querySelector('[data-shapes-menu="master"]')!;
+		expect(masterMenu.children).toHaveLength(0);
+		expect(element.querySelector('[data-shapes-menu="stencil"]')).toBeNull();
 		const rightClick = (id: string) =>
 			element
 				.querySelector(`#shapes-sections [data-master="${id}"]`)!
 				.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
 		rightClick('star');
-		expect(masterMenu.querySelector('office-ui-menu-item')!.getAttribute('label')).toBe(
-			'Add to Quick Shapes',
+		await vi.waitFor(() =>
+			expect(masterMenu.querySelector('office-ui-menu-item')?.getAttribute('label')).toBe(
+				'Add to Quick Shapes',
+			),
 		);
 		command(masterMenu, 'quick-shapes');
 		rightClick('square');

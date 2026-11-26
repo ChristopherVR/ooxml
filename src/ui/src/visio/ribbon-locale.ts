@@ -21,7 +21,6 @@ import { frBackstage } from './locales/fr-backstage';
 import { zhCNCommands } from './locales/zh-CN-commands';
 import { zhCNText } from './locales/zh-CN-text';
 import { zhCNBackstage } from './locales/zh-CN-backstage';
-import { VISIO_STENCIL_STRINGS } from './locales/stencils';
 import { VISIO_TRUST_STRINGS } from './locales/trust-center';
 
 export const VISIO_LOCALES = ['en', 'de', 'es', 'fr', 'zh-CN'] as const;
@@ -35,35 +34,30 @@ export const VISIO_RIBBON_STRINGS: Readonly<Record<VisioLocale, Readonly<Record<
 			...enText,
 			...enBackstage,
 			...VISIO_TRUST_STRINGS.en,
-			...VISIO_STENCIL_STRINGS.en,
 		},
 		de: {
 			...deCommands,
 			...deText,
 			...deBackstage,
 			...VISIO_TRUST_STRINGS.de,
-			...VISIO_STENCIL_STRINGS.de,
 		},
 		es: {
 			...esCommands,
 			...esText,
 			...esBackstage,
 			...VISIO_TRUST_STRINGS.es,
-			...VISIO_STENCIL_STRINGS.es,
 		},
 		fr: {
 			...frCommands,
 			...frText,
 			...frBackstage,
 			...VISIO_TRUST_STRINGS.fr,
-			...VISIO_STENCIL_STRINGS.fr,
 		},
 		'zh-CN': {
 			...zhCNCommands,
 			...zhCNText,
 			...zhCNBackstage,
 			...VISIO_TRUST_STRINGS['zh-CN'],
-			...VISIO_STENCIL_STRINGS['zh-CN'],
 		},
 	};
 

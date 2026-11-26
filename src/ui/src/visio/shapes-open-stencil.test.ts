@@ -104,6 +104,7 @@ it('collects masters into My Shapes for the session', async () => {
 	await vi.waitFor(() => expect(ui.pane.querySelector('[data-stencil="file-1"]')).not.toBeNull());
 	const button = ui.pane.querySelector<HTMLElement>('[data-stencil="file-1"] [data-master]')!;
 	button.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true }));
+	await vi.waitFor(() => expect(ui.pane.querySelector('[command="my-shapes"]')).not.toBeNull());
 	ui.pane
 		.querySelector('[data-shapes-menu="master"]')!
 		.dispatchEvent(

@@ -3,8 +3,8 @@ import { findMaster, type Stencil } from './stencil-catalog';
 import { stencilDrawing } from './stencil-drawing';
 import { MY_SHAPES_ID, stencilErrorMessage, type StencilFiles } from './stencil-files';
 import { menuItem } from './shapes-master-list';
-import { ribbonLocale } from './ribbon-localize';
-import { translateRibbonText } from './ribbon-locale';
+import { translateStencilText } from './stencil-locale';
+import type { ViewerController } from './controller';
 
 type Menu = HTMLElement & { openAt?(x: number, y: number, opener?: HTMLElement): void };
 
@@ -17,6 +17,7 @@ export function bindStencilMenus(
 		changeQuick: (stencil: Stencil, id: string) => void;
 		error: (message: string) => void;
 		update: (id: string) => void;
+		controller: () => ViewerController | undefined;
 	},
 ) {
 	const doc = pane.ownerDocument;
@@ -24,7 +25,11 @@ export function bindStencilMenus(
 	let menuSection: string | undefined;
 	let pending = Promise.resolve();
 	const editing = new Set<string>();
-	const t = (text: string) => translateRibbonText(ribbonLocale(pane), text);
+	const t = (text: string) => translateStencilText(pane, text);
+	const drawingSource = () => {
+		const controller = options.controller();
+		return controller && stencilDrawing(controller);
+	};
 	const run = (action: StencilAction) => {
 		pending = pending
 			.then(async () => {
@@ -57,7 +62,7 @@ export function bindStencilMenus(
 		const current = menuSection ? files.get(menuSection) : undefined;
 		const file = files.fileMaster(id);
 		const found = findMaster(id);
-		const source = stencilDrawing(pane);
+		const source = drawingSource();
 		const inDrawing = source?.documentMaster(id);
 		if (!file && !found && !inDrawing) return false;
 		const items: HTMLElement[] = [];
@@ -105,10 +110,6 @@ export function bindStencilMenus(
 		masterMenu.openAt?.(x, y, button);
 		return true;
 	};
-	pane.addEventListener('contextmenu', (event) => {
-		const button = (event.target as Element).closest?.<HTMLElement>('[data-master]');
-		if (button && openMasterMenu(button, event.clientX, event.clientY)) event.preventDefault();
-	});
 	pane.addEventListener('keydown', (event) => {
 		const target = event.target;
 		if (!(target instanceof Element)) return;
@@ -124,13 +125,7 @@ export function bindStencilMenus(
 				event.stopPropagation();
 				if (files.canUndo(id)) run({ type: 'undo', stencil: id });
 			}
-			return;
 		}
-		if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
-		const button = target.closest<HTMLElement>('[data-master]');
-		if (!button) return;
-		const box = button.getBoundingClientRect();
-		if (openMasterMenu(button, box.left, box.bottom)) event.preventDefault();
 	});
 	stencilMenu.addEventListener('office-command', (event) => {
 		event.stopPropagation();
@@ -143,7 +138,7 @@ export function bindStencilMenus(
 			else editing.add(menuSection);
 		}
 		if (command === 'add-selection' && editing.has(menuSection)) {
-			const drawing = stencilDrawing(pane);
+			const drawing = drawingSource();
 			if (drawing && !drawing.selectionReason())
 				run({ type: command, stencil: menuSection, draft: drawing.selection });
 		}
@@ -156,7 +151,7 @@ export function bindStencilMenus(
 		if (command === 'my-shapes') {
 			const file = files.fileMaster(master);
 			const found = findMaster(master);
-			const drawing = stencilDrawing(pane);
+			const drawing = drawingSource();
 			const source = drawing?.documentMaster(master);
 			if (file)
 				run({
@@ -183,11 +178,12 @@ export function bindStencilMenus(
 
 	return {
 		menu: stencilMenu,
+		openMasterMenu,
 		create: () => run({ type: 'new' }),
 		close: (id: string) => editing.delete(id),
 		openSection(button: HTMLElement, id: string) {
 			menuSection = id;
-			const drawing = stencilDrawing(pane);
+			const drawing = drawingSource();
 			const reason = editing.has(id)
 				? (drawing?.selectionReason() ??
 					(drawing ? undefined : 'Select one editable 2D shape in a drawing.'))

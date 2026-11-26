@@ -5,6 +5,7 @@ import {
 	stencilErrorMessage,
 	type StencilFiles,
 } from './stencil-files';
+import { loadStencilStrings } from './stencil-locale';
 
 /** What a stencil file picker offers; Visio's own stencils are .vssx, and the rest is refused by name. */
 export const STENCIL_FILE_ACCEPT = '.vssx,.vssm,.vstx,.vstm,.vsdx,.vsdm,.vss,.vst';
@@ -37,6 +38,7 @@ export function stencilFilePicker(
 		status.hidden = true;
 		for (const file of picked) {
 			try {
+				await loadStencilStrings();
 				if (file.size > MAX_STENCIL_BYTES)
 					throw new StencilFileError(file.name, 'This file is too large to open.');
 				opened(await files.open(file.name, new Uint8Array(await file.arrayBuffer())));

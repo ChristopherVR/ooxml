@@ -6,6 +6,7 @@ export const zhCNBackstage: Readonly<Record<string, string>> = {
 	'Save As': '另存为',
 	Print: '打印',
 	Close: '关闭',
+	'Close {name}': '关闭{name}',
 	Account: '帐户',
 	'Documents stay in this browser; nothing is uploaded.':
 		'文档保存在此浏览器中；不会上传任何内容。',

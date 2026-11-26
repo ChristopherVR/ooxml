@@ -7,7 +7,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Delete the master “{name}”?': 'Delete the master “{name}”?',
 		OK: 'OK',
 		Cancel: 'Cancel',
-		'Close {name}': 'Close {name}',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'Legacy binary stencils (.vss, .vst) are not supported.',
 		'This file has no shapes.': 'This file has no shapes.',
@@ -65,7 +64,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Delete the master “{name}”?': 'Masterform „{name}“ löschen?',
 		OK: 'Bestätigen',
 		Cancel: 'Abbrechen',
-		'Close {name}': '{name} schließen',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'Ältere binäre Schablonen (.vss, .vst) werden nicht unterstützt.',
 		'This file has no shapes.': 'Diese Datei enthält keine Shapes.',
@@ -131,7 +129,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Delete the master “{name}”?': '¿Eliminar la forma maestra «{name}»?',
 		OK: 'Aceptar',
 		Cancel: 'Cancelar',
-		'Close {name}': 'Cerrar {name}',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'No se admiten las plantillas binarias antiguas (.vss, .vst).',
 		'This file has no shapes.': 'Este archivo no tiene formas.',
@@ -194,7 +191,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Delete the master “{name}”?': 'Supprimer la forme de base « {name} » ?',
 		OK: 'Valider',
 		Cancel: 'Annuler',
-		'Close {name}': 'Fermer {name}',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'Les anciens gabarits binaires (.vss, .vst) ne sont pas pris en charge.',
 		'This file has no shapes.': 'Ce fichier ne contient aucune forme.',
@@ -260,7 +256,6 @@ export const VISIO_STENCIL_STRINGS = {
 		'Delete the master “{name}”?': '删除主控形状“{name}”？',
 		OK: '确定',
 		Cancel: '取消',
-		'Close {name}': '关闭{name}',
 		'Legacy binary stencils (.vss, .vst) are not supported.':
 			'不支持旧版二进制模具（.vss、.vst）。',
 		'This file has no shapes.': '此文件不包含任何形状。',

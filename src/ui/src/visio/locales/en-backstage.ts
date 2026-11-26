@@ -6,6 +6,7 @@ export const enBackstage: Readonly<Record<string, string>> = {
 	'Save As': 'Save As',
 	Print: 'Print',
 	Close: 'Close',
+	'Close {name}': 'Close {name}',
 	Account: 'Account',
 	'Documents stay in this browser; nothing is uploaded.':
 		'Documents stay in this browser; nothing is uploaded.',

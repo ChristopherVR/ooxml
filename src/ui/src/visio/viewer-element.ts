@@ -28,7 +28,7 @@ import { wireRibbonTabCue } from './ribbon-tab-cue';
 import { createFindBar, renderFindBar, wireFindBar, type FindBar } from './viewer-search';
 import { ViewerReplace } from './viewer-replace';
 import { fitZoom } from './viewer-fit';
-import { createShapesStrip, createShapesWindow } from './shapes-window';
+import { createShapesStrip, createShapesWindow, setShapesLocale } from './shapes-window';
 import { createBackstage, type BackstagePage } from './backstage';
 import type { CreateVsdxOptions } from 'ooxml-core/visio';
 import type { GoogleFontsOption } from 'ooxml-core/text';
@@ -990,7 +990,7 @@ export class VisioViewerElement extends BaseElement {
 		restoreScreenTips(this.#toolbar);
 		localizeRibbon(this.#toolbar, this.#locale());
 		const shapes = this.#root.querySelector<HTMLElement>('#shapes-pane');
-		if (shapes) shapes.dataset.visioLocale = this.#locale();
+		if (shapes) setShapesLocale(shapes, this.#locale());
 		this.#backstage?.localize();
 		this.#signatures.update(this.controller.state.document?.signatures, this.#locale());
 		this.#syncTrust();

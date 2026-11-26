@@ -1,15 +1,29 @@
-import { buildStencilsView, masterList } from './shapes-sections';
+import { buildStencilsView, masterList, type StencilsView } from './shapes-sections';
 import { STENCILS } from './stencil-catalog';
 import type { ShapesDocument } from './shapes-document';
+import type { ViewerController } from './controller';
+import { ribbonLocale } from './ribbon-localize';
 
-const views = new WeakMap<HTMLElement, (next: ShapesDocument, opened: boolean) => void>();
+const views = new WeakMap<HTMLElement, Pick<StencilsView, 'setDocument' | 'refreshLocale'>>();
+const controllers = new WeakMap<HTMLElement, ViewerController>();
+
+export function bindShapesController(pane: HTMLElement, controller?: ViewerController): void {
+	if (controller) controllers.set(pane, controller);
+	else controllers.delete(pane);
+}
 /**
  * Show a drawing in a Shapes window: its Document Stencil, the stencils it docks, and its masters
  * in Search shapes. Cheap to call again for the same drawing. `opened` is false when the same
  * drawing was only edited, so the stencils the user unfolded stay as they are.
  */
 export function setShapesDocument(pane: HTMLElement, next: ShapesDocument, opened = true): void {
-	views.get(pane)?.(next, opened);
+	views.get(pane)?.setDocument(next, opened);
+}
+
+export function setShapesLocale(pane: HTMLElement, locale: string): void {
+	const previous = ribbonLocale(pane);
+	pane.dataset.visioLocale = locale;
+	if (ribbonLocale(pane) !== previous) views.get(pane)?.refreshLocale();
 }
 export {
 	BASIC_SHAPES,
@@ -62,7 +76,7 @@ export function createShapesWindow(doc: Document): HTMLElement {
 
 	const stencils = doc.createElement('div');
 	stencils.id = 'shapes-stencils';
-	const view = buildStencilsView(doc, stencils, pane);
+	const view = buildStencilsView(doc, stencils, pane, () => controllers.get(pane));
 
 	const search = doc.createElement('div');
 	search.id = 'shapes-search';
@@ -91,12 +105,15 @@ export function createShapesWindow(doc: Document): HTMLElement {
 	search.append(results, empty);
 	pane.append(heading, box, stencils, search, ...view.menus);
 	let key = '';
-	views.set(pane, (next, opened) => {
-		view.setDocument(next, opened);
-		if (next.key === key) return;
-		key = next.key;
-		results.replaceChildren(...masterList(doc, [...next.masters, ...builtIn]).children);
-		filter();
+	views.set(pane, {
+		refreshLocale: view.refreshLocale,
+		setDocument(next, opened) {
+			view.setDocument(next, opened);
+			if (next.key === key) return;
+			key = next.key;
+			results.replaceChildren(...masterList(doc, [...next.masters, ...builtIn]).children);
+			filter();
+		},
 	});
 	return pane;
 }

@@ -10,19 +10,20 @@ import {
 	type ShapesDocument,
 } from './shapes-document';
 import { loadShapes as load, saveShapes as save } from './shapes-storage';
-import { MY_SHAPES_ID, stencilFiles } from './stencil-files';
-import { bindStencilMenus } from './stencil-menus';
+import { MY_SHAPES_ID, stencilErrorMessage, stencilFiles } from './stencil-files';
+import { lazyStencilMenus } from './shapes-stencil-menus';
 import { masterList, menuItem } from './shapes-master-list';
 export { masterButton, masterList } from './shapes-master-list';
 import { stencilFilePicker } from './shapes-files-ui';
-import { ribbonLocale } from './ribbon-localize';
-import { translateRibbonText } from './ribbon-locale';
+import { loadStencilStrings, translateStencilText } from './stencil-locale';
+import type { ViewerController } from './controller';
 export { SHAPES_STORAGE_KEY, currentQuickShapes } from './shapes-storage';
 
 /** The Stencils view of one Shapes window. */
 export interface StencilsView {
 	/** The More Shapes and master menus; the caller puts them on the pane. */
 	menus: HTMLElement[];
+	refreshLocale(): void;
 	/**
 	 * Show a drawing's document stencil and the stencils it docks; a no-op for the same content.
 	 * `opened` is false after an edit of the drawing that is showing: folded and unfolded stencils
@@ -58,6 +59,7 @@ export function buildStencilsView(
 	doc: Document,
 	panel: HTMLElement,
 	pane: HTMLElement,
+	controller: () => ViewerController | undefined,
 ): StencilsView {
 	const saved = load(doc);
 	const files = stencilFiles(pane);
@@ -86,7 +88,7 @@ export function buildStencilsView(
 	const sections = doc.createElement('div');
 	sections.id = 'shapes-sections';
 
-	const t = (text: string) => translateRibbonText(ribbonLocale(pane), text);
+	const t = (text: string) => translateStencilText(pane, text);
 	const picker = stencilFilePicker(
 		doc,
 		files,
@@ -116,7 +118,12 @@ export function buildStencilsView(
 			: (files.get(id) ?? STENCILS.find((candidate) => candidate.id === id)!);
 	const quickIds = (stencil: Stencil) =>
 		saved.quick[stencil.id] ?? stencil.masters.slice(0, DEFAULT_QUICK).map((master) => master.id);
-	const authoring = bindStencilMenus(pane, files, masterMenu, {
+	const showError = (message: string) => {
+		picker.status.textContent = message;
+		picker.status.hidden = !message;
+	};
+	const authoring = lazyStencilMenus(pane, files, masterMenu, {
+		controller,
 		quickIds,
 		changeQuick: (stencil, id) => {
 			const ids = quickIds(stencil);
@@ -126,10 +133,7 @@ export function buildStencilsView(
 			save(doc, saved);
 			renderQuick();
 		},
-		error(message) {
-			picker.status.textContent = message;
-			picker.status.hidden = !message;
-		},
+		error: showError,
 		update(id) {
 			collapsed.delete(id);
 			render();
@@ -267,16 +271,22 @@ export function buildStencilsView(
 	};
 
 	more.addEventListener('click', () => {
-		const box = more.getBoundingClientRect();
-		renderMenu();
-		moreMenu.openAt?.(box.left, box.bottom, more);
+		void loadStencilStrings().then(
+			() => {
+				if (!more.isConnected) return;
+				const box = more.getBoundingClientRect();
+				renderMenu();
+				moreMenu.openAt?.(box.left, box.bottom, more);
+			},
+			(error: unknown) => showError(stencilErrorMessage(error, t)),
+		);
 	});
 	moreMenu.addEventListener('office-command', (event) => {
 		event.stopPropagation();
 		const command = (event as CustomEvent<{ command: string }>).detail.command;
 		if (command.startsWith('stencil:')) toggleStencil(command.slice('stencil:'.length));
 		else if (command === 'open-stencil-file') picker.open();
-		else if (command === 'new-stencil') authoring.create();
+		else if (command === 'new-stencil') authoring.use((menus) => menus.create());
 	});
 	quickToggle.addEventListener('click', () => {
 		quick.hidden = !quick.hidden;
@@ -286,8 +296,11 @@ export function buildStencilsView(
 	sections.addEventListener('click', (event) => {
 		const target = event.target as Element;
 		const action = target.closest<HTMLElement>('[data-stencil-actions]');
-		if (action?.dataset.stencilActions) {
-			authoring.openSection(action, action.dataset.stencilActions);
+		const id = action?.dataset.stencilActions;
+		if (action && id) {
+			authoring.use((menus) => {
+				if (action.isConnected) menus.openSection(action, id);
+			});
 			return;
 		}
 		const close = target.closest<HTMLElement>('[data-close-stencil]');
@@ -309,7 +322,8 @@ export function buildStencilsView(
 	panel.append(more, quickToggle, quick, picker.status, sections, picker.input);
 	return {
 		// The caller puts the menus on the pane, so they open from the Search view too.
-		menus: [moreMenu, masterMenu, authoring.menu],
+		menus: [moreMenu, masterMenu],
+		refreshLocale: renderSections,
 		setDocument(next, opened = true) {
 			// An opened drawing always starts from its own stencils, even when it lists what the
 			// last one did (two drawings without masters or docked stencils).
