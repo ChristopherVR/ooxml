@@ -10,7 +10,7 @@ import {
 	type OutlineEntry,
 } from 'ooxml-core/docx/ui';
 import { closeHistory } from 'prosemirror-history';
-import { Plugin, PluginKey, Selection, type EditorState } from 'prosemirror-state';
+import type { EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
 	mountViewStyle,
@@ -20,9 +20,9 @@ import {
 } from './document-views';
 import { focusView } from './focus-view';
 import { mountOutlineRibbon, type OutlineKey } from './view-outline-ribbon';
+import { outlineKey, outlineSelectionPlugin } from './view-outline-selection';
 import css from './styles/view-outline.css?raw';
 
-const key = new PluginKey<DecorationSet>('docx-outline');
 const alwaysEnabled: OutlineKey[] = ['firstLine', 'format', 'close'];
 
 export function mountView(host: ViewHost): ViewPresentation {
@@ -34,22 +34,13 @@ export function mountView(host: ViewHost): ViewPresentation {
 	let formatting = true;
 	let firstLine = false;
 	let current: EditorView | undefined;
-	let indexed: EditorState['doc'] | undefined;
-	let entries: OutlineEntry[] = [];
-	let timer: ReturnType<typeof setTimeout> | undefined;
-	let queued: EditorState['doc'] | undefined;
 	let disposed = false;
 
-	function rebuild(state: EditorState) {
-		indexed = state.doc;
-		entries = indexOutline(state.doc, host.model());
-		return project(state);
-	}
-
-	function project(state: EditorState) {
+	const plugin = outlineSelectionPlugin((doc) => {
+		const entries = indexOutline(doc, host.model());
 		const visibility = visibleOutline(entries, level, collapsed);
-		return DecorationSet.create(
-			state.doc,
+		const decorations = DecorationSet.create(
+			doc,
 			entries.map((entry) => {
 				const heading = entry.level < OUTLINE_BODY;
 				const attrs: Record<string, string> = {
@@ -63,20 +54,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 				return Decoration.node(entry.pos, entry.pos + entry.node.nodeSize, attrs);
 			}),
 		);
-	}
-
-	// Map visible decorations through edits immediately. Re-index after a pause, preserving the
-	// document's normal ProseMirror history and avoiding a complete outline scan on every keystroke.
-	const plugin = new Plugin({
-		key,
-		state: {
-			init: (_config, state) => rebuild(state),
-			apply(tr, value, _old, state) {
-				const updated = tr.getMeta(key);
-				return updated === true ? rebuild(state) : value.map(tr.mapping, tr.doc);
-			},
-		},
-		props: { decorations: (state) => key.getState(state) },
+		return { entries, visible: visibility, decorations, collapsed };
 	});
 
 	const allowsEdit = (view: EditorView) =>
@@ -84,28 +62,20 @@ export function mountView(host: ViewHost): ViewPresentation {
 		host.canEditOutsideBody() &&
 		!host.model().trackChanges &&
 		!host.model().protection?.enforced;
-	function selected(state: EditorState) {
-		return entries[state.selection.$from.index(0)];
+	function selected(state: EditorState, entries: readonly OutlineEntry[]) {
+		const index = state.selection.$from.index(0);
+		return outlineKey.getState(state)?.visible[index] ? entries[index] : undefined;
 	}
 	function sync(view: EditorView | undefined) {
 		if (disposed || !view || view.isDestroyed) return;
 		if (view !== current) {
 			current = view;
-			view.updateState(view.state.reconfigure({ plugins: [...view.state.plugins, plugin] }));
+			view.updateState(view.state.reconfigure({ plugins: [plugin, ...view.state.plugins] }));
 		}
-		if (view.state.doc !== indexed && view.state.doc !== queued) {
-			queued = view.state.doc;
-			if (timer !== undefined) clearTimeout(timer);
-			timer = setTimeout(() => {
-				timer = undefined;
-				queued = undefined;
-				if (current && !current.isDestroyed && current.state.doc !== indexed)
-					current.dispatch(current.state.tr.setMeta(key, true));
-			}, 100);
-		}
+		const entries = outlineKey.getState(view.state)?.entries ?? [];
 		const enabled = new Set(alwaysEnabled);
-		const entry = selected(view.state);
-		if (entry && indexed === view.state.doc) {
+		const entry = selected(view.state, entries);
+		if (entry) {
 			const branch = entry.end > entry.index + 1;
 			if (branch) enabled.add(collapsed.has(entry.id) ? 'expand' : 'collapse');
 			if (allowsEdit(view)) {
@@ -123,18 +93,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 	}
 
 	function show(view: EditorView) {
-		const visible = visibleOutline(entries, level, collapsed);
-		const { state } = view;
-		const start = state.selection.$from.index(0);
-		const end = state.selection.$to.index(0);
-		const tr = state.tr.setMeta(key, true);
-		if (!visible[start] || !visible[end]) {
-			let target = start;
-			while (target >= 0 && !visible[target]) target--;
-			const entry = entries[target] ?? entries.find((candidate) => visible[candidate.index]);
-			if (entry) tr.setSelection(Selection.near(state.doc.resolve(entry.pos + 1)));
-		}
-		view.dispatch(tr.scrollIntoView());
+		view.dispatch(view.state.tr.setMeta(outlineKey, true));
 	}
 
 	return {
@@ -143,8 +102,8 @@ export function mountView(host: ViewHost): ViewPresentation {
 			const view = current;
 			if (!view || view.isDestroyed) return;
 			const { state } = view;
-			if (indexed !== state.doc) rebuild(state);
-			const entry = selected(state);
+			const entries = outlineKey.getState(state)?.entries ?? [];
+			const entry = selected(state, entries);
 			switch (action.key) {
 				case 'level':
 					if (!Number.isInteger(action.value) || action.value < 1 || action.value > OUTLINE_BODY)
@@ -172,7 +131,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 				case 'down': {
 					if (!entry || !allowsEdit(view)) return;
 					const tr = moveOutline(state, entries, entry, action.key === 'up' ? -1 : 1);
-					if (tr) view.dispatch(closeHistory(tr.setMeta(key, true).scrollIntoView()));
+					if (tr) view.dispatch(closeHistory(tr.scrollIntoView()));
 					focusView(view);
 					break;
 				}
@@ -192,7 +151,7 @@ export function mountView(host: ViewHost): ViewPresentation {
 							level = OUTLINE_BODY;
 							collapsed.clear();
 						}
-						view.dispatch(closeHistory(tr.setMeta(key, true).scrollIntoView()));
+						view.dispatch(closeHistory(tr.scrollIntoView()));
 					}
 					focusView(view);
 					break;
@@ -204,7 +163,6 @@ export function mountView(host: ViewHost): ViewPresentation {
 		},
 		dispose() {
 			disposed = true;
-			if (timer !== undefined) clearTimeout(timer);
 			if (current && !current.isDestroyed)
 				current.updateState(
 					current.state.reconfigure({

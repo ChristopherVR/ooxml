@@ -2,6 +2,7 @@
 import { deleteFieldSelection } from 'ooxml-core/docx/ui';
 import type { EditorView } from 'prosemirror-view';
 import { pastePayload } from './paste-options';
+import { deleteCollapsedOutlineBranches } from './view-outline-selection';
 
 /**
  * Cut or copy through the browser's own command so ProseMirror's clipboard serializer keeps rich
@@ -36,7 +37,11 @@ export async function copyOrCut(view: EditorView, op: 'cut' | 'copy'): Promise<b
 		view.state.selection.eq(selection)
 	)
 		view.dispatch(
-			(deleteFieldSelection(view.state) ?? view.state.tr.deleteSelection())
+			(
+				deleteCollapsedOutlineBranches(view.state) ??
+				deleteFieldSelection(view.state) ??
+				view.state.tr.deleteSelection()
+			)
 				.scrollIntoView()
 				.setMeta('uiEvent', 'cut'),
 		);
