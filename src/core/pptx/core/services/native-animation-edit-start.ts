@@ -16,12 +16,15 @@ import {
 import { readTimingAttr } from './native-animation-extended-helpers';
 import { ensureArray, isXmlObject } from './native-animation-helpers';
 
+export type NativeAnimationStart = 'onClick' | 'withPrevious' | 'afterPrevious';
+
 /** Move a plain main-sequence effect within PowerPoint's click and time-offset groups. */
 export function changeNativeAnimationStart(
 	rawTiming: XmlObject,
 	ref: EffectNodeRef,
 	animations: readonly PptxNativeAnimation[],
-	start: 'onClick' | 'withPrevious' | 'afterPrevious',
+	start: NativeAnimationStart,
+	dryRun = false,
 ): boolean {
 	const main = findMainSequenceCTn(rawTiming);
 	const holder = main?.['p:childTnLst'];
@@ -53,8 +56,11 @@ export function changeNativeAnimationStart(
 	const previous = refs[index - 1];
 	const nextInGroup = next?.chain.some((link) => link.node === group.node) ?? false;
 	const previousInGroup = previous?.chain.some((link) => link.node === group.node) ?? false;
-	let nextId = maxTimeNodeId(rawTiming) + 1;
-	const allocateId = () => nextId++;
+	let nextId: number | undefined;
+	const allocateId = () => {
+		nextId ??= maxTimeNodeId(rawTiming) + 1;
+		return nextId++;
+	};
 	const delay = (value: number | 'indefinite') => ({ 'p:cond': { '@_delay': String(value) } });
 	const wrap = (duration: number, effects: XmlObject[] = [leaf.node]) => ({
 		'p:cTn': {
@@ -66,10 +72,11 @@ export function changeNativeAnimationStart(
 	});
 	if (start === 'onClick') {
 		if (!previousInGroup) {
-			groupTime['p:stCondLst'] = delay('indefinite');
+			if (!dryRun) groupTime['p:stCondLst'] = delay('indefinite');
 			return true;
 		}
 		if (nextInGroup) return false;
+		if (dryRun) return true;
 		const clickGroup = buildClickGroupNode([wrap(0)], allocateId);
 		removeEffectNode(ref);
 		const groups = ensureArray(holder['p:par']);
@@ -80,7 +87,7 @@ export function changeNativeAnimationStart(
 	if (!previous) {
 		const mainId = Number(main['@_id']);
 		if (!Number.isSafeInteger(mainId)) return false;
-		markGroupAutoStart(group.node, mainId);
+		if (!dryRun) markGroupAutoStart(group.node, mainId);
 		return true;
 	}
 	if (!previousInGroup && nextInGroup) return false;
@@ -104,7 +111,7 @@ export function changeNativeAnimationStart(
 	const movingNodes = moving.map((item) => item.chain.at(-1)?.node ?? leaf.node);
 	if (movingNodes.some((node) => !simpleCondition(node))) return false;
 	if (start === 'withPrevious') {
-		if (prevLeaf.holder === leaf.holder) return true;
+		if (dryRun || prevLeaf.holder === leaf.holder) return true;
 		for (const item of moving) removeEffectNode(item);
 		for (const node of movingNodes) appendContainer(prevLeaf.holder, 'p:par', node);
 		reflowAfterPrevious(prevWrapper.holder, prevWrapper.node, byId);
@@ -112,6 +119,7 @@ export function changeNativeAnimationStart(
 	}
 	const span = effectWrapperSpan(prevWrapper.node, byId, new Set(movingNodes));
 	if (span === undefined) return false;
+	if (dryRun) return true;
 	const nextWrapper = wrap(prevDelay + span, movingNodes);
 	for (const item of moving) removeEffectNode(item);
 	const wrappers = ensureArray(prevWrapper.holder['p:par']);

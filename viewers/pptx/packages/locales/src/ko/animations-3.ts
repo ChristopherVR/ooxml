@@ -153,6 +153,8 @@ export const translations = {
 	'pptx.animations.painter': '애니메이션 복사',
 	'pptx.animations.pathAnimation': '경로 애니메이션',
 	'pptx.animations.start': '시작',
+	'pptx.animations.startUnsupported':
+		'이 효과는 시작 설정 변경이 제한되는 가져온 트리거나 공유 타이밍을 사용합니다.',
 	'pptx.animations.withPrevious': '이전 효과와 함께',
 	'pptx.animations.galleryAria': '애니메이션 추가: 나타내기, 강조 및 끝내기 효과',
 } as const;

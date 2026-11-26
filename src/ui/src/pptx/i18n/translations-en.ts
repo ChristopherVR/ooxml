@@ -3786,6 +3786,8 @@ export const translationsEn: Record<string, string> = {
 	'pptx.animations.painter': 'Animation Painter',
 	'pptx.animations.pathAnimation': 'Path Animation',
 	'pptx.animations.start': 'Start',
+	'pptx.animations.startUnsupported':
+		'This effect uses imported triggers or shared timing that limit Start changes.',
 	'pptx.animations.withPrevious': 'With Previous',
 
 	// Review tab

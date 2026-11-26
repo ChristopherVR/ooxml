@@ -2,6 +2,7 @@ import {
 	DEFAULT_ANIMATION_DURATION_MS,
 	DEFAULT_ANIMATION_TRIGGER,
 	editNativeEffectTiming,
+	nativeAnimationStartOptions,
 	type PptxAnimationTimelineAnchor,
 	type PptxAnimationDirection,
 	type PptxElementAnimation,
@@ -70,7 +71,7 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 	}
 	const native =
 		!entry || editing.nativeEffectId !== undefined ? nativeRibbonTimingTarget(editing) : undefined;
-	if (native) {
+	if (native?.nodeId !== undefined && editing.slide?.rawTiming && editing.slide.nativeAnimations) {
 		const start =
 			(native.interactiveSequence ? native.trigger : (native.startMode ?? native.trigger)) ??
 			DEFAULT_ANIMATION_TRIGGER;
@@ -80,7 +81,11 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 			delayMs: native.delayMs ?? 0,
 			earlier: false,
 			later: false,
-			canEditStart: !native.interactiveSequence,
+			startOptions: nativeAnimationStartOptions(
+				editing.slide.rawTiming,
+				editing.slide.nativeAnimations,
+				native.nodeId,
+			),
 		};
 	}
 	if (!entry) return undefined;
@@ -93,7 +98,7 @@ export function ribbonAnimationTiming(editing: RibbonAnimationEditing | undefine
 		delayMs: entry.delayMs ?? 0,
 		earlier: index > 0,
 		later: index >= 0 && index + 1 < rows.length,
-		canEditStart: true,
+		startOptions: RIBBON_ANIMATION_START_MODES,
 	};
 }
 

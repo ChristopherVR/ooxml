@@ -10,14 +10,47 @@ import { indexEffectNodes, maxTimeNodeId } from './animation-timing-tree';
 import { resolveOoxmlPresetMapping } from './animation-write-mappings';
 import { triggerToNodeType } from './animation-write-mappings-motion';
 import { mainEffectWrapper, reflowAfterPrevious } from './native-animation-click-timing';
-import { changeNativeAnimationStart } from './native-animation-edit-start';
+import {
+	changeNativeAnimationStart,
+	type NativeAnimationStart,
+} from './native-animation-edit-start';
 import { ensureArray, isXmlObject } from './native-animation-helpers';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
 
 export type NativeEffectTimingEdit =
 	| { field: 'duration' | 'delay'; value: number }
 	| { field: 'direction'; value: PptxAnimationDirection }
-	| { field: 'start'; value: 'onClick' | 'afterPrevious' | 'withPrevious' };
+	| { field: 'start'; value: NativeAnimationStart };
+
+function nativeTimingTarget(
+	rawTiming: XmlObject,
+	animations: readonly PptxNativeAnimation[],
+	nodeId: number,
+) {
+	const matching = animations.filter((animation) => animation.nodeId === nodeId);
+	const animation = matching[0];
+	if (matching.length !== 1 || !animation?.presetClass || !animation.targetId) return undefined;
+
+	const refs = indexEffectNodes(rawTiming).filter((ref) => Number(ref.cTn['@_id']) === nodeId);
+	const ref = refs[0];
+	return refs.length === 1 && ref ? { animation, ref } : undefined;
+}
+
+/** Return the Start changes supported by the timing tree without altering it. */
+export function nativeAnimationStartOptions(
+	rawTiming: XmlObject,
+	animations: readonly PptxNativeAnimation[],
+	nodeId: number,
+): NativeAnimationStart[] {
+	const target = nativeTimingTarget(rawTiming, animations, nodeId);
+	if (!target || target.animation.interactiveSequence) return [];
+	const start = target.animation.startMode ?? target.animation.trigger;
+	const modes: NativeAnimationStart[] = ['onClick', 'withPrevious', 'afterPrevious'];
+	return modes.filter(
+		(mode) =>
+			mode !== start && changeNativeAnimationStart(rawTiming, target.ref, animations, mode, true),
+	);
+}
 
 /** Patch the exact native effect and leave sibling effect and behaviour data intact. */
 export function editNativeEffectTiming(
@@ -26,14 +59,10 @@ export function editNativeEffectTiming(
 	nodeId: number,
 	edit: NativeEffectTimingEdit,
 ): { rawTiming: XmlObject; nativeAnimations: PptxNativeAnimation[] } | undefined {
-	const matching = animations.filter((animation) => animation.nodeId === nodeId);
-	const animation = matching[0];
-	if (matching.length !== 1 || !animation?.presetClass || !animation.targetId) return undefined;
-
 	const timing = structuredClone(rawTiming);
-	const refs = indexEffectNodes(timing).filter((ref) => Number(ref.cTn['@_id']) === nodeId);
-	const ref = refs[0];
-	if (refs.length !== 1 || !ref) return undefined;
+	const target = nativeTimingTarget(timing, animations, nodeId);
+	if (!target) return undefined;
+	const { animation, ref } = target;
 	const { cTn } = ref;
 	let next: PptxNativeAnimation = { ...animation };
 	if (edit.field === 'direction') {

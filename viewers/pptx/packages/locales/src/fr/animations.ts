@@ -191,6 +191,8 @@ export const translations = {
 	'pptx.animations.painter': "Reproduire l'animation",
 	'pptx.animations.pathAnimation': "Trajectoire d'animation",
 	'pptx.animations.start': 'Début',
+	'pptx.animations.startUnsupported':
+		'Les déclencheurs importés ou le minutage partagé de cet effet limitent les changements de démarrage.',
 	'pptx.animations.withPrevious': 'Avec la précédente',
 	'pptx.animations.galleryAria': "Ajouter une animation : effets d'entrée, d'emphase et de sortie",
 	// Creation de trajectoires (galerie, volet et edition sur la diapositive).

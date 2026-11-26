@@ -191,6 +191,8 @@ export const translations = {
 	'pptx.animations.painter': 'Animation übertragen',
 	'pptx.animations.pathAnimation': 'Animationspfad',
 	'pptx.animations.start': 'Start',
+	'pptx.animations.startUnsupported':
+		'Dieser Effekt verwendet importierte Auslöser oder gemeinsame Zeitabläufe, die Änderungen am Start einschränken.',
 	'pptx.animations.withPrevious': 'Mit Vorheriger',
 	'pptx.animations.galleryAria':
 		'Animation hinzufügen: Eingangs-, Hervorhebungs- und Ausgangseffekte',

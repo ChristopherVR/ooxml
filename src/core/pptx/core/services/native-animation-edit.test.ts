@@ -6,7 +6,7 @@ import { captureNativeAnimationTemplate } from './animation-paint-template';
 import { indexEffectNodes } from './animation-timing-tree';
 import { writeOwnedEffectKeys } from './animation-timing-ownership';
 import { simpleCondition } from './native-animation-click-timing';
-import { editNativeEffectTiming } from './native-animation-edit';
+import { editNativeEffectTiming, nativeAnimationStartOptions } from './native-animation-edit';
 import { PptxAnimationWriteService } from './PptxAnimationWriteService';
 import { PptxNativeAnimationService } from './PptxNativeAnimationService';
 
@@ -94,6 +94,36 @@ describe('imported animation edits', () => {
 		expect(first).toMatchObject({ targetId: '7', trigger: 'onClick' });
 		expect(next).toMatchObject({ targetId: '8', startMode: 'withPrevious', delayMs: 360 });
 		expect(next?.parGroupIndex).toBe(first?.parGroupIndex);
+	});
+
+	it('uses the same validation for a Start dry run and the edit', () => {
+		const source = must(
+			writer.buildTimingXml(
+				[
+					{ elementId: '7', entrance: 'fadeIn' },
+					{ elementId: '8', entrance: 'fadeIn', trigger: 'withPrevious' },
+					{ elementId: '9', entrance: 'fadeIn', trigger: 'afterPrevious' },
+				],
+				undefined,
+			),
+		);
+		const original = structuredClone(source);
+		const animations = parse(source);
+		const nodeId = must(animations[1]?.nodeId);
+		expect(nativeAnimationStartOptions(source, animations, nodeId)).toEqual(['afterPrevious']);
+		expect(source).toEqual(original);
+		expect(
+			editNativeEffectTiming(source, animations, nodeId, {
+				field: 'start',
+				value: 'onClick',
+			}),
+		).toBeUndefined();
+		expect(
+			editNativeEffectTiming(source, animations, nodeId, {
+				field: 'start',
+				value: 'afterPrevious',
+			}),
+		).toBeDefined();
 	});
 
 	it('retimes both dependent After Previous offsets through save and reparse', () => {

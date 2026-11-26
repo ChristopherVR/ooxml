@@ -191,6 +191,8 @@ export const translations = {
 	'pptx.animations.painter': 'Copiar animación',
 	'pptx.animations.pathAnimation': 'Trayectoria de animación',
 	'pptx.animations.start': 'Inicio',
+	'pptx.animations.startUnsupported':
+		'Este efecto usa desencadenadores importados o una temporización compartida que limitan los cambios de inicio.',
 	'pptx.animations.withPrevious': 'Con la anterior',
 	'pptx.animations.galleryAria': 'Agregar animación: efectos de entrada, énfasis y salida',
 	// Creacion de trayectorias de la animacion (galeria, panel y edicion).

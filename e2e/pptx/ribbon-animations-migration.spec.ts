@@ -78,6 +78,12 @@ test('the Animation Pane selects which imported effect receives a Timing edit', 
 		.locator('[data-ribbon-control="animations.timing.start"]')
 		.getByRole('combobox');
 	await expectSelectValue(start, 'withPrevious');
+	await expect(start).toHaveAccessibleDescription(
+		'This effect uses imported triggers or shared timing that limit Start changes.',
+	);
+	await start.click();
+	await expect(page.getByRole('option', { name: 'On Click', exact: true })).toBeDisabled();
+	await start.press('Escape');
 	const duration = page.locator('[data-ribbon-control="animations.timing.duration"]');
 	await expect(duration).toHaveValue('1');
 	await duration.fill('1.75');

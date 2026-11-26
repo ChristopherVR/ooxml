@@ -50,6 +50,7 @@ export function createAnimationsTimingView(
 	effectControls.append(effect, direction);
 
 	const label = doc.createElement('label');
+	const startField = doc.createElement('div');
 	const start = doc.createElement('pptx-ui-select');
 	start.id = `pptx-animations-start-${instance}`;
 	start.dataset.ribbonControl = 'animations.timing.start';
@@ -59,7 +60,9 @@ export function createAnimationsTimingView(
 			request({ field: 'start', value: start.value });
 		}
 	});
-	el.append(label, start);
+	startField.style.display = 'contents';
+	startField.append(label, start);
+	el.append(startField);
 
 	const field = (name: 'duration' | 'delay', min: string) => {
 		const input = doc.createElement('input');
@@ -195,7 +198,7 @@ export function createAnimationsTimingView(
 		const options = values.map((value) => {
 			const option = doc.createElement('option');
 			option.value = value;
-			option.disabled = !isRibbonAnimationStart(value);
+			option.disabled = value !== mode && !timing?.startOptions.some((option) => option === value);
 			const [key, fallback] = isRibbonAnimationStart(value)
 				? START_LABELS[value]
 				: [`pptx.animation.trigger.${value}`, value];
@@ -211,7 +214,21 @@ export function createAnimationsTimingView(
 		} else if (start.value !== mode) {
 			start.value = mode;
 		}
-		start.disabled = !timing?.canEditStart;
+		start.disabled = !timing?.startOptions.length;
+		const reason =
+			timing &&
+			RIBBON_ANIMATION_START_MODES.some(
+				(value) => value !== mode && !timing.startOptions.some((option) => option === value),
+			)
+				? text(
+						'pptx.animations.startUnsupported',
+						'This effect uses imported triggers or shared timing that limit Start changes.',
+					)
+				: '';
+		if (reason) start.setAttribute('aria-description', reason);
+		else start.removeAttribute('aria-description');
+		startField.title = reason;
+		start.title = reason;
 		label.textContent = text('pptx.animations.start', 'Start');
 		start.setAttribute('aria-label', label.textContent);
 		duration.caption.textContent = text('pptx.animations.duration', 'Duration');

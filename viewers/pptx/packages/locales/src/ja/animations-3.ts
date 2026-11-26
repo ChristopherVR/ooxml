@@ -154,6 +154,8 @@ export const translations = {
 	'pptx.animations.painter': 'アニメーションのコピー/貼り付け',
 	'pptx.animations.pathAnimation': 'アニメーションの軌跡',
 	'pptx.animations.start': '開始',
+	'pptx.animations.startUnsupported':
+		'この効果では、インポートされたトリガーや共有タイミングにより、開始設定の変更が制限されています。',
 	'pptx.animations.withPrevious': '直前の動作と同時',
 	'pptx.animations.galleryAria': 'アニメーションの追加: 開始、強調、終了効果',
 } as const;

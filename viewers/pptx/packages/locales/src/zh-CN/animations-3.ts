@@ -153,6 +153,8 @@ export const translations = {
 	'pptx.animations.painter': '动画刷',
 	'pptx.animations.pathAnimation': '路径动画',
 	'pptx.animations.start': '开始',
+	'pptx.animations.startUnsupported':
+		'此效果使用导入的触发器或共享计时，因此开始设置的更改受到限制。',
 	'pptx.animations.withPrevious': '与上一动画同时',
 	'pptx.animations.galleryAria': '添加动画：进入、强调和退出效果',
 } as const;
