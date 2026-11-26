@@ -153,30 +153,55 @@ export function syncArrange(
 	const floated = drawing && Boolean(node?.attrs.anchored);
 	const spec = node ? shapeSpecOf(node) : undefined;
 	const reason: LocalizationKey = editable ? 'Select a drawing first.' : 'Editing is unavailable.';
+	const parent = node && state.doc.resolve(state.selection.from).parent;
+	const groupable =
+		positions.length >= 2 &&
+		positions.length <= 100 &&
+		positions.every((pos) => {
+			const item = state.doc.nodeAt(pos);
+			const shape = item && shapeSpecOf(item);
+			return (
+				item?.attrs.anchored &&
+				shape?.editable &&
+				!shape.groupChildren &&
+				!shape.text?.length &&
+				!item.attrs.textBoxContent &&
+				!item.attrs.altText &&
+				!item.attrs.title &&
+				!item.marks.length &&
+				state.doc.resolve(pos).parent === parent
+			);
+		});
+	const ungroupable =
+		positions.length === 1 &&
+		Boolean(
+			spec?.groupCanUngroup &&
+			!(spec.rotation || spec.flipH || spec.flipV) &&
+			!node?.attrs.altText &&
+			!node?.attrs.title,
+		);
+	const alignable =
+		positions.length > 1 &&
+		positions.every((pos) => Boolean(state.doc.nodeAt(pos)?.attrs.anchored));
 	for (const control of toolbar.querySelectorAll<HTMLSelectElement>('select[data-arrange]')) {
 		const key = control.dataset.arrange;
-		const possible =
-			key === 'direction'
-				? editable && Boolean(node?.attrs.textBoxContent || textDirectionCellAvailable(state))
-				: key === 'align' || key === 'group'
-					? floated && printLayout
-					: key === 'position'
-						? drawing && printLayout
-						: drawing;
+		let unavailable: LocalizationKey | undefined;
+		if (!editable) unavailable = 'Editing is unavailable.';
+		else if (key === 'direction') {
+			if (!node?.attrs.textBoxContent && !textDirectionCellAvailable(state))
+				unavailable = 'Select a text box or editable table cell.';
+		} else if ((key === 'align' || key === 'group' || key === 'position') && !printLayout)
+			unavailable = 'Switch to Print Layout to arrange drawings.';
+		else if (!drawing) unavailable = reason;
+		else if (key === 'align' && !alignable) unavailable = 'Select two or more floating drawings.';
+		else if (key === 'group' && !(floated && (groupable || ungroupable)))
+			unavailable = 'Select two or more floating shapes in one paragraph.';
+		const possible = unavailable === undefined;
 		control.disabled = !possible;
-		const unavailable =
-			(key === 'align' || key === 'group' || key === 'position') && !printLayout
-				? 'Switch to Print Layout to arrange drawings.'
-				: editable && key === 'direction'
-					? 'Select a text box or editable table cell.'
-					: editable && drawing && !floated
-						? 'Select a floating drawing.'
-						: reason;
-		control.title = possible
-			? (control.getAttribute('aria-label') ?? '')
-			: translate(locale, unavailable);
-		if (possible) control.removeAttribute('aria-description');
-		else control.setAttribute('aria-description', translate(locale, unavailable));
+		const description = unavailable && translate(locale, unavailable);
+		control.title = description ?? control.getAttribute('aria-label') ?? '';
+		if (description) control.setAttribute('aria-description', description);
+		else control.removeAttribute('aria-description');
 		const disableOption = (value: string, disabled: boolean, reason?: LocalizationKey) => {
 			const option = [...control.options].find((candidate) => candidate.value === value);
 			if (option) {
@@ -205,30 +230,8 @@ export function syncArrange(
 			] as const)
 				disableOption(value, positions.length < count);
 		if (key === 'group') {
-			const parent = node && state.doc.resolve(state.selection.from).parent;
-			const groupable =
-				positions.length >= 2 &&
-				positions.length <= 100 &&
-				positions.every((pos) => {
-					const item = state.doc.nodeAt(pos);
-					const shape = item && shapeSpecOf(item);
-					return (
-						item?.attrs.anchored &&
-						shape?.editable &&
-						!shape.groupChildren &&
-						!shape.text?.length &&
-						!item.attrs.textBoxContent &&
-						!item.attrs.altText &&
-						!item.attrs.title &&
-						!item.marks.length &&
-						state.doc.resolve(pos).parent === parent
-					);
-				});
 			disableOption('group', !groupable, 'Select two or more floating shapes in one paragraph.');
-			disableOption(
-				'ungroup',
-				!spec?.groupCanUngroup || !!(spec.rotation || spec.flipH || spec.flipV),
-			);
+			disableOption('ungroup', !ungroupable);
 		}
 	}
 	for (const button of toolbar.querySelectorAll<HTMLButtonElement>('button[data-arrange="alt"]')) {

@@ -287,6 +287,22 @@ test('Selection Pane is docked and renames a drawing with F2 or a double-click',
 	expect(xml).not.toContain('title="Final oval"');
 });
 
+test('one floating shape disables Align and Group with accessible reasons', async ({ page }) => {
+	const editor = await openShapes(page);
+	await editor.getByRole('button', { name: 'Print Layout', exact: true }).click();
+	await editor.locator('.dve-print-float').nth(2).click({ force: true });
+	await editor.getByRole('tab', { name: 'Layout', exact: true }).click();
+	await unfoldArrange(editor, 'Layout');
+	const align = editor.getByRole('combobox', { name: 'Align', exact: true });
+	const group = editor.getByRole('combobox', { name: 'Group', exact: true });
+	await expect(align).toBeDisabled();
+	await expect(align).toHaveAccessibleDescription('Select two or more floating drawings.');
+	await expect(group).toBeDisabled();
+	await expect(group).toHaveAccessibleDescription(
+		'Select two or more floating shapes in one paragraph.',
+	);
+});
+
 async function choosePosition(editor: Locator, value: string) {
 	await unfoldArrange(editor, 'Layout');
 	await editor.getByRole('combobox', { name: 'Position', exact: true }).press('Enter');

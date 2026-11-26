@@ -210,6 +210,13 @@ const entries = [
 		'切换到页面视图以排列绘图。',
 	],
 	['Drawing name', 'Nom du dessin', 'Zeichnungsname', 'Nombre del dibujo', '绘图名称'],
+	[
+		'Select two or more floating drawings.',
+		'Sélectionnez au moins deux dessins flottants.',
+		'Wählen Sie mindestens zwei frei positionierte Zeichnungen aus.',
+		'Seleccione al menos dos dibujos flotantes.',
+		'请选择至少两个浮动绘图。',
+	],
 ] as const;
 
 type Key = (typeof entries)[number][0];
