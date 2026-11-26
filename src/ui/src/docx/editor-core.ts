@@ -50,6 +50,7 @@ import { DocxWebfonts } from './docx-webfonts';
 import { currentSectionIndex } from './section-commands';
 import { syncHeaderFooterRibbon } from './header-footer-ribbon';
 import { syncSmartArtDesign } from './smartart-design-ribbon';
+import { syncMailingsRibbon } from './mailings-ribbon';
 import type { MailingsController } from './mailings/controller';
 import type { MailMergeEmailProvider } from './mailings/email-provider';
 import type { MailMergeDataSource } from 'ooxml-core/docx/mail-merge';
@@ -95,7 +96,6 @@ export class EditorCore {
 	loadGeneration = 0;
 	loading = false;
 	mailings?: MailingsController;
-	syncMailings?: () => void;
 	mailMergeDataSource?: MailMergeDataSource | undefined;
 	emailProvider?: MailMergeEmailProvider | false | undefined;
 	/** The host's `readOnly` switch. A collaboration `viewer` role locks the editor on top of it. */
@@ -524,7 +524,7 @@ export class EditorCore {
 			this.pages.viewMode === 'print',
 		);
 		if (toolbar) syncDesignControls(this, toolbar);
-		this.syncMailings?.();
+		syncMailingsRibbon(this);
 		this.inserts.smartArt.sync();
 		const target = this.targetView();
 		if (toolbar && target)

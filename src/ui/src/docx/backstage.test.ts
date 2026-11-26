@@ -297,8 +297,10 @@ describe('Customize Ribbon', () => {
 		expect(boxes.length).toBeGreaterThan(40);
 		expect(named('Bold').checked).toBe(true);
 		expect(named('Italic').checked).toBe(false);
+		expect(named('Select Recipients').checked).toBe(true);
+		named('Select Recipients').click();
 		named('Bold').click();
-		expect(hidden.at(-1)).toEqual(expect.arrayContaining(['bold', 'italic']));
+		expect(hidden.at(-1)).toEqual(expect.arrayContaining(['bold', 'italic', 'select-recipients']));
 		dialog.querySelector<HTMLButtonElement>('.dve-options-action')!.click();
 		expect(hidden.at(-1)).toEqual([]);
 	});

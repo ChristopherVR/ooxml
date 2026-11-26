@@ -26,13 +26,33 @@ test('File > Customize Ribbon hides and restores commands', async ({ page }) => 
 		.locator('.dve-customize-row', { hasText: /^Bold$/ })
 		.locator('input')
 		.uncheck();
+	await editor
+		.locator('.dve-customize-row', { hasText: /^Select Recipients$/ })
+		.locator('input')
+		.uncheck();
 	await dialog.locator('[data-action="ok"]').click();
 	await expect(editor.getByRole('button', { name: 'Bold', exact: true })).toBeHidden();
 	expect(
 		await page.evaluate(() => (window as unknown as { seen: string[][] }).seen.at(-1)),
-	).toEqual(['bold']);
+	).toEqual(['bold', 'select-recipients']);
 	await openCustomize();
 	await editor.getByRole('button', { name: 'Reset all customizations' }).click();
 	await dialog.locator('[data-action="ok"]').click();
 	await expect(editor.getByRole('button', { name: 'Bold', exact: true })).toBeVisible();
+	await editor.getByRole('tab', { name: 'Mailings' }).click();
+	await expect(editor.getByRole('button', { name: 'Select Recipients' })).toBeVisible();
+});
+
+test('Tell me opens a Mailings command directly from Home', async ({ page }) => {
+	await page.setViewportSize({ width: 1700, height: 800 });
+	await openSample(page);
+	const editor = page.locator('docx-editor');
+	await expect(editor.getByRole('tab', { name: 'Home' })).toHaveAttribute('aria-selected', 'true');
+	await editor.getByRole('searchbox', { name: 'Tell me what you want to do' }).fill('envelopes');
+	await editor.getByRole('option', { name: 'Envelopes' }).click();
+	await expect(editor.getByRole('tab', { name: 'Mailings' })).toHaveAttribute(
+		'aria-selected',
+		'true',
+	);
+	await expect(editor.getByRole('textbox', { name: 'Delivery address' })).toBeFocused();
 });

@@ -3,6 +3,7 @@ import type { OfficeTitleBarCommand, OfficeTitleBarState } from '../controls';
 import { translateUiText } from './localization';
 import { inHostHiddenTab } from '../embedding/host-ribbon-tabs';
 import type { FileCommand } from './file-commands';
+import { tabButtons } from './ribbon-tab-api';
 
 export type SaveState = 'saved' | 'dirty' | 'saving' | 'saved-local';
 
@@ -55,7 +56,8 @@ function ribbonCommands(ribbon: HTMLElement): { label: string; control: HTMLElem
 /** Shows the ribbon tab holding `control`, then activates (button) or focuses (select) it. */
 function runCommand(ribbon: HTMLElement, control: HTMLElement): void {
 	const panel = control.closest<HTMLElement>('.ribbon-panel');
-	const tab = panel && ribbon.querySelector<HTMLButtonElement>(`[aria-controls="${panel.id}"]`);
+	const tab =
+		panel && tabButtons(ribbon).find((button) => button.dataset.tab === panel.dataset.ribbonTab);
 	tab?.click();
 	if (control instanceof HTMLSelectElement) control.focus();
 	else (control as HTMLButtonElement).click();

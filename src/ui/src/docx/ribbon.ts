@@ -12,6 +12,7 @@ import {
 import type { RibbonAction } from './ribbon-action';
 import { buildHomePanel } from './ribbon-home';
 import { buildNativeTabs } from './ribbon-native-tabs';
+import { buildMailings } from './mailings-ribbon';
 import { attachRibbonBehavior } from './ribbon-behavior';
 import { attachRibbonOverflow, refitRibbon } from './ribbon-overflow';
 import { buildOtherPanels } from './ribbon-tabs';
@@ -28,13 +29,7 @@ import { preloadDesignGallery } from './design-ribbon-controls';
 
 export type { RibbonAction } from './ribbon-action';
 
-export function createRibbon(
-	locale: string = 'en',
-	mailings?: {
-		ready: (sync: typeof import('./mailings-ribbon').syncMailingsRibbon) => void;
-		error: (error: unknown) => void;
-	},
-): HTMLElement {
+export function createRibbon(locale: string = 'en'): HTMLElement {
 	defineRibbon();
 	const root = document.createElement('office-ui-ribbon');
 	root.className = 'dve-ribbon';
@@ -91,6 +86,8 @@ export function createRibbon(
 	buildNativeTabs(panels);
 	panels.get('Layout')!.append(buildArrangeGroup(), group('Text', textDirectionMenu()));
 	panels.get('Table')!.append(group('Text', textDirectionMenu()));
+	// Customize Ribbon and Tell me discover the controls before their workflow is loaded.
+	buildMailings(panels.get('Mailings')!);
 	buildHeaderFooterPanel(panels.get('Header & Footer')!);
 	buildShapeFormatPanel(panels.get('Shape Format')!);
 	buildPictureFormatPanel(panels.get('Picture Format')!);
@@ -112,27 +109,7 @@ export function createRibbon(
 	setComboValue(root.querySelector<ComboInput>('[aria-label="Font size"]')!, '11');
 	root.querySelector<HTMLSelectElement>('[aria-label="Zoom"]')!.value = '100';
 	root.querySelector<HTMLSelectElement>('[aria-label="Layout view"]')!.value = 'draft';
-	let mailingsLoad: Promise<void> | undefined;
-	const loadMailings = () => {
-		mailingsLoad ??= import('./mailings-ribbon')
-			.then(({ buildMailings, syncMailingsRibbon }) => {
-				const panel = panels.get('Mailings');
-				if (!panel) return;
-				buildMailings(panel);
-				setRibbonLocale(root, localeOf(root));
-				mailings?.ready(syncMailingsRibbon);
-			})
-			.catch((error: unknown) => {
-				mailingsLoad = undefined;
-				mailings?.error(error);
-			});
-		return mailingsLoad;
-	};
-	root.addEventListener('office-ribbon-select', (event) => {
-		if (!(event instanceof CustomEvent)) return;
-		if (event.detail?.tab === 'mailings') void loadMailings();
-	});
-	attachRibbonBehavior(root, (tab) => (tab === 'mailings' ? loadMailings() : undefined));
+	attachRibbonBehavior(root);
 	attachRibbonOverflow(root);
 	root.addEventListener('office-ribbon-select', (event) => {
 		if (event instanceof CustomEvent && event.detail?.tab === 'design') preloadDesignGallery();

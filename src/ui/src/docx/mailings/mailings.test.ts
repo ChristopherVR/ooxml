@@ -31,9 +31,7 @@ async function mount(model = createDocument()) {
 	document.body.append(editor);
 	const root = must(editor.shadowRoot);
 	const panel = must(root.querySelector('[data-panel="Mailings"]'));
-	expect(panel.childElementCount).toBe(0);
 	(await ribbonTab(root, 'mailings')).click();
-	await vi.waitFor(() => expect(panel.childElementCount).toBeGreaterThan(0), { timeout: 10_000 });
 	const errors: Error[] = [];
 	editor.addEventListener('document-error', (event) => errors.push(event.detail));
 	const ribbon = (label: string) => must(findLocalizedControl<HTMLButtonElement>(panel, label));

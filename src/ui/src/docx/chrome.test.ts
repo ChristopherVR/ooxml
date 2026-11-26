@@ -93,6 +93,25 @@ describe('Word window chrome', () => {
 		expect(editor.documentModel!.blocks[0]).toMatchObject({ numbering: { level: 0 } });
 	});
 
+	it('finds and opens a Mailings command from Tell me while Home is selected', async () => {
+		const editor = mount();
+		const bar = await inner(editor, 'office-ui-title-bar');
+		const search = bar.querySelector<HTMLElement & { value: string }>('office-ui-search')!;
+		search.value = 'envelopes';
+		search.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+		await root(editor).querySelector<Updating>('office-ui-title-bar')!.updateComplete;
+		expect(bar.querySelector('[role=option]')?.textContent?.trim()).toBe('Envelopes');
+		search.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, composed: true }),
+		);
+		await vi.waitFor(() => {
+			expect(root(editor).querySelector('.dve-mailings-dialog')).not.toBeNull();
+			expect(root(editor).querySelector('office-ui-ribbon')?.getAttribute('selected')).toBe(
+				'mailings',
+			);
+		});
+	});
+
 	it('lets hosts take over file commands by cancelling the file-command event', async () => {
 		const editor = mount();
 		const seen: string[] = [];

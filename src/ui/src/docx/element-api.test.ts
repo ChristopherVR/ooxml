@@ -11,7 +11,7 @@ import {
 } from 'ooxml-core/docx/ui';
 import { createRibbon } from './ribbon';
 import { ribbonControlId } from './ribbon-visibility';
-import { must, paragraphAt, quickAccessButton, ribbonTab } from './test-support';
+import { must, paragraphAt, quickAccessButton } from './test-support';
 
 registerDocxEditor();
 
@@ -181,18 +181,11 @@ describe('UI customisation', () => {
 		).toBe(true);
 	});
 
-	it('hides Mailings navigation by action id after changing the display language', async () => {
+	it('hides Mailings navigation by action id after changing the display language', () => {
 		const editor = mount();
 		editor.locale = 'fr';
 		editor.hiddenActions = ['first-recipient', 'last-recipient'];
 		const root = shell(editor);
-		(await ribbonTab(root, 'mailings')).click();
-		await vi.waitFor(
-			() => expect(root.querySelector('[aria-label="Premier destinataire"]')).not.toBeNull(),
-			{
-				timeout: 10_000,
-			},
-		);
 		const control = (label: string) => must(root.querySelector(`[aria-label="${label}"]`));
 		expect(control('Premier destinataire').hasAttribute('data-dve-hidden')).toBe(true);
 		expect(control('Dernier destinataire').hasAttribute('data-dve-hidden')).toBe(true);
@@ -296,14 +289,9 @@ describe('ribbon action ids', () => {
 		expect(ribbonActionIdForLabel(legacy)).toBe('insert-table');
 	});
 
-	it('lists exactly the labelled ribbon controls', async () => {
+	it('lists exactly the labelled ribbon controls before selecting any tab', () => {
 		const ribbon = createRibbon('en');
 		const outline = mountOutlineRibbon(ribbon, 'en');
-		const mailings = must(ribbon.querySelector('[data-panel="Mailings"]'));
-		ribbon.dispatchEvent(new CustomEvent('office-ribbon-select', { detail: { tab: 'mailings' } }));
-		await vi.waitFor(() => expect(mailings.childElementCount).toBeGreaterThan(0), {
-			timeout: 10_000,
-		});
 		const ids = new Set<string>();
 		for (const control of ribbon.querySelectorAll<HTMLElement>(
 			'.ribbon-panel button[aria-label], .ribbon-panel select[aria-label], .ribbon-panel input[aria-label]',

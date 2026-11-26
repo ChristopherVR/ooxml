@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { createRibbon } from './ribbon';
 import './component';
 import { findLocalizedControl } from './localization';
-import { must, ribbonTab } from './test-support';
+import { must } from './test-support';
 
 afterEach(() => document.body.replaceChildren());
 
@@ -17,13 +17,11 @@ describe('Word native tab surfaces', () => {
 		expect(ribbon.querySelector('[data-panel="Layout"] [data-label="Page background"]')).toBeNull();
 	});
 
-	it('enables Mailings commands only when the editor can use them and localizes the reasons', async () => {
+	it('enables Mailings commands only when the editor can use them and localizes the reasons', () => {
 		const editor = document.createElement('docx-editor');
 		document.body.append(editor);
 		const root = must(editor.shadowRoot);
 		const panel = must(root.querySelector('[data-panel="Mailings"]'));
-		(await ribbonTab(root, 'mailings')).click();
-		await vi.waitFor(() => expect(panel.childElementCount).toBeGreaterThan(0), { timeout: 10_000 });
 		const button = (label: string) => must(findLocalizedControl<HTMLButtonElement>(panel, label));
 		expect(button('Start Mail Merge').disabled).toBe(false);
 		expect(button('Select Recipients').disabled).toBe(false);
