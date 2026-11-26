@@ -13,6 +13,10 @@ export default defineConfig({
 	// for the editor to settle, so they stay green when the CPU is shared.
 	workers: browserPerformance().workers,
 	use: {
+		// `vite preview` gzips every response on the fly (about 0.2 s for a 10 MB bundle), and each
+		// test's fresh context downloads the whole demo again; on localhost that only burns the
+		// runner's CPU, so ask for uncompressed responses.
+		extraHTTPHeaders: { 'Accept-Encoding': 'identity' },
 		baseURL: origin,
 		headless: true,
 		...(executablePath ? { launchOptions: { executablePath } } : {}),

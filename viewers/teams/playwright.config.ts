@@ -13,7 +13,14 @@ export default defineConfig({
 	testDir: '../../e2e/teams',
 	fullyParallel: false,
 	workers: 1,
-	use: { baseURL: origin, headless: true },
+	use: {
+		baseURL: origin,
+		headless: true,
+		// `vite preview` gzips every response on the fly (about 0.2 s for a 10 MB bundle), and each
+		// test's fresh context downloads the whole demo again; on localhost that only burns the
+		// runner's CPU, so ask for uncompressed responses.
+		extraHTTPHeaders: { 'Accept-Encoding': 'identity' },
+	},
 	webServer: {
 		command: `bun x vite build && bun x vite preview --host 127.0.0.1 --port ${port} --strictPort`,
 		cwd: `../../demos/teams/${framework}`,

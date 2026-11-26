@@ -103,6 +103,10 @@ export default defineConfig({
 		? [['list'], ['html', { open: 'never' }], ['../../scripts/browser-timing-reporter.mjs']]
 		: [['list'], ['../../scripts/browser-timing-reporter.mjs']],
 	use: {
+		// `vite preview` gzips every response on the fly (about 0.2 s for a 10 MB bundle), and each
+		// test's fresh context downloads the whole demo again; on localhost that only burns the
+		// runner's CPU, so ask for uncompressed responses.
+		extraHTTPHeaders: { 'Accept-Encoding': 'identity' },
 		trace: performance.trace,
 		actionTimeout: 10_000,
 		// CI-only: GitHub Actions' ubuntu-latest runners have no real GPU, and
