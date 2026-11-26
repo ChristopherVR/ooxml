@@ -182,6 +182,14 @@ export function routeRibbonAction(
 	else if (action.type === 'headerFooterNavigate')
 		parts.navigate(action.target, shell.canvas, shell.paper);
 	else if (action.type === 'formatDialog') core.formatDialogs.open(action.kind, opener);
+	else if (
+		action.type === 'insertParts' ||
+		action.type === 'quickPart' ||
+		action.type === 'headerFooterRemove' ||
+		action.type === 'headerFooterEdit' ||
+		(action.type === 'headerFooter' && action.design && action.design !== 'blank')
+	)
+		void import('./insert-parts-open').then((m) => m.insertPartsAction(core, action, opener));
 	else if (action.type === 'pageNumber' || action.type === 'headerFooter') {
 		const done =
 			action.type === 'pageNumber'

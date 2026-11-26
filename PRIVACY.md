@@ -338,6 +338,17 @@ draws. When downloads are enabled, choosing a new theme or font scheme in Word c
 requests during editing. The file, its text and the names of fonts outside Google's public
 catalogue are never sent. `false` or an invalid `baseUrl` sends nothing.
 
+**Word Quick Parts, Signature Line and Online Video.** None of these makes a network request or
+keeps data on the device. Building blocks saved with Insert > Quick Parts live only in the open
+document's own glossary part (`word/glossary/document.xml`) and travel with the file; there is no
+cross-document store. A signature line is inserted but never signed. Insert > Online Video is
+hidden until the host sets `onlineVideoHosts` on `<docx-editor>` to the video sites it allows; it
+then accepts only an `https` embed code or address on one of those hosts, draws a local poster
+and writes the iframe markup into the file (`wp15:webVideoPr`). The editor never loads the
+address; a program that later plays the video (Word does) contacts that site. An online video already
+in a document is kept as it is: its iframe is not checked against the allow-list, and the editor
+never loads it.
+
 Hyperlinks and in-product help links open only when the reader follows them.
 
 ## Teams (`ooxml-core/teams`, `ooxml-ui/teams`, the `openteams-*` packages)

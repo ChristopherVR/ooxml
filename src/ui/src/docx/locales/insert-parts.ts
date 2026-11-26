@@ -1,0 +1,72 @@
+// Insert > Quick Parts, Signature Line, Online Video, the header and footer designs and their
+// dialogs. Only English is eager: the other languages load from insert-parts-translations.
+export const enInsertParts = {
+	'Quick Parts': 'Quick Parts',
+	'Signature line': 'Signature line',
+	'Signature Line…': 'Signature Line…',
+	'Sign (not available: signing needs a certificate)':
+		'Sign (not available: signing needs a certificate)',
+	'Online Video': 'Online Video',
+	Media: 'Media',
+	'Document Property: Author': 'Document Property: Author',
+	'Document Property: Title': 'Document Property: Title',
+	'Document Property: Subject': 'Document Property: Subject',
+	'Document Property: Keywords': 'Document Property: Keywords',
+	'Document Property: Comments': 'Document Property: Comments',
+	'Document Property: Category': 'Document Property: Category',
+	'Document Property: Status': 'Document Property: Status',
+	'Document Property: Company': 'Document Property: Company',
+	'Document Property: Manager': 'Document Property: Manager',
+	Keywords: 'Keywords',
+	Category: 'Category',
+	Status: 'Status',
+	'Field…': 'Field…',
+	'Save Selection to Quick Part Gallery…': 'Save Selection to Quick Part Gallery…',
+	'Building Blocks Organizer…': 'Building Blocks Organizer…',
+	'Blank (Three Columns)': 'Blank (Three Columns)',
+	'Title and Author': 'Title and Author',
+	'Centered Title': 'Centered Title',
+	'Author and Page Number': 'Author and Page Number',
+	'Date and Page Number': 'Date and Page Number',
+	'Edit Header': 'Edit Header',
+	'Edit Footer': 'Edit Footer',
+	'Remove Header': 'Remove Header',
+	'Remove Footer': 'Remove Footer',
+	'Signature Setup': 'Signature Setup',
+	'Suggested signer': 'Suggested signer',
+	"Suggested signer's title": "Suggested signer's title",
+	"Suggested signer's e-mail address": "Suggested signer's e-mail address",
+	'Instructions to the signer': 'Instructions to the signer',
+	'Allow the signer to add comments in the Sign dialog':
+		'Allow the signer to add comments in the Sign dialog',
+	'Show sign date in signature line': 'Show sign date in signature line',
+	'This editor inserts the signature line. Signing it is not available here: it needs a certificate and a signing service.':
+		'This editor inserts the signature line. Signing it is not available here: it needs a certificate and a signing service.',
+	'Create New Building Block': 'Create New Building Block',
+	'Building block': 'Building block',
+	Name: 'Name',
+	Gallery: 'Gallery',
+	AutoText: 'AutoText',
+	'This selection cannot be saved to a gallery yet: pictures, links and notes need parts the gallery does not have.':
+		'This selection cannot be saved to a gallery yet: pictures, links and notes need parts the gallery does not have.',
+	'Building blocks cannot be changed while the document is shared.':
+		'Building blocks cannot be changed while the document is shared.',
+	'Author name': 'Author name',
+	'Allowed sites': 'Allowed sites',
+	'Building Blocks Organizer': 'Building Blocks Organizer',
+	'Building blocks': 'Building blocks',
+	'This document has no building blocks.': 'This document has no building blocks.',
+	Field: 'Field',
+	'Field names': 'Field names',
+	Property: 'Property',
+	'Fields shown in grey are not computed by this editor.':
+		'Fields shown in grey are not computed by this editor.',
+	'Insert Video': 'Insert Video',
+	'Video embed code or address': 'Video embed code or address',
+	'This video site is not allowed by the host of this editor.':
+		'This video site is not allowed by the host of this editor.',
+	'Paste an embed code or an https address of the video player.':
+		'Paste an embed code or an https address of the video player.',
+	'Document properties can only be inserted in the body of the document.':
+		'Document properties can only be inserted in the body of the document.',
+} as const;

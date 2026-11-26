@@ -99,6 +99,15 @@ export class DocxEditorElement extends DocxEditorApi {
 		this.core.refreshControls();
 	}
 
+	/** Host names of the video sites Insert > Online Video may embed; the command is hidden without any. */
+	get onlineVideoHosts(): readonly string[] {
+		return this.core.onlineVideoHosts;
+	}
+	set onlineVideoHosts(value: readonly string[]) {
+		this.core.onlineVideoHosts = [...(value ?? [])];
+		this.core.refreshControls();
+	}
+
 	/** Attributes mirrored to the `locale`, `readOnly`, `fileName`, `reviewAuthor` and `theme` properties. */
 	static get observedAttributes(): string[] {
 		return [...DOCX_EDITOR_ATTRIBUTES];

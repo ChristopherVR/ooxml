@@ -15,7 +15,14 @@ import {
 	withSection,
 } from './section-commands';
 import { currentWatermark, withWatermark, type AnyWatermark } from './watermark-commands';
-import { newHeaderFooterId, withBlankHeaderFooter, withPageNumber } from './header-footer-commands';
+import {
+	enableSlot,
+	newHeaderFooterId,
+	nextPartName,
+	withBlankHeaderFooter,
+	withPageNumber,
+	withSlot,
+} from './header-footer-commands';
 import { pageSetupChange } from './page-setup-change';
 import { pageSizeOf } from 'ooxml-core/docx';
 import { columnPreset } from 'ooxml-core/docx';
@@ -50,6 +57,16 @@ export class PageController {
 	/** True once the user picked a zoom; the automatic fit to a narrow viewport then stays out. */
 	private userZoomed = false;
 	private observed?: HTMLElement;
+
+	/** What the lazily loaded header and footer designs build on (so they share these modules). */
+	readonly tools = {
+		enableSlot,
+		newHeaderFooterId,
+		nextPartName,
+		withSlot,
+		sectionsOf,
+		currentSectionIndex,
+	};
 
 	constructor(private readonly host: PageControllerHost) {
 		this.views = new ViewModes(host);
@@ -202,7 +219,8 @@ export class PageController {
 		);
 	}
 
-	private changeHeaderFooter(change: (model: DocumentModel) => DocumentModel): boolean {
+	/** Applies a change to the headers and footers of the model; false when it cannot be made. */
+	changeHeaderFooter(change: (model: DocumentModel) => DocumentModel): boolean {
 		const view = this.host.view();
 		if (!view?.editable || !this.host.canEditOutsideBody()) return false;
 		const next = change(this.host.model());

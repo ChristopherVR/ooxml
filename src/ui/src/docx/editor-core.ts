@@ -165,6 +165,7 @@ export class EditorCore {
 	/** Where File > Save and Open go instead of a download and the file picker (`storage`). */
 	storage: DocumentStorage | undefined = undefined;
 	wordDesignPreferences: WordDesignPreferences | undefined;
+	onlineVideoHosts: readonly string[] = [];
 	pendingWordDesign: Promise<void> | undefined;
 	/** Cloud places File > Open offers next to this device (`fileProviders`). */
 	fileProviders: readonly CloudFileProvider[] = [];
@@ -526,6 +527,15 @@ export class EditorCore {
 			this.pages.viewMode === 'print',
 		);
 		if (toolbar) syncDesignControls(this, toolbar);
+		if (
+			toolbar &&
+			(this.model.glossary?.length ||
+				this.onlineVideoHosts.length ||
+				toolbar.querySelector('[data-insert-parts]'))
+		)
+			void import('./insert-parts-ribbon').then((m) =>
+				m.syncInsertParts(toolbar, this.model.glossary, this.onlineVideoHosts),
+			);
 		syncMailingsRibbon(this);
 		syncReferencesRibbon(this);
 		syncTableTab(this);

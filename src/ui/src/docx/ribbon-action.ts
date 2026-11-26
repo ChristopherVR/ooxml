@@ -105,7 +105,16 @@ export type RibbonAction =
 			align: 'left' | 'center' | 'right';
 			style?: 'plain' | 'pageOfTotal';
 	  }
-	| { type: 'headerFooter'; kind: 'header' | 'footer'; slot?: 'default' | 'first' | 'even' }
+	| {
+			type: 'headerFooter';
+			kind: 'header' | 'footer';
+			slot?: 'default' | 'first' | 'even';
+			design?: import('ooxml-core/docx').HeaderFooterDesign;
+	  }
+	| { type: 'headerFooterRemove'; kind: 'header' | 'footer' }
+	| { type: 'headerFooterEdit'; kind: 'header' | 'footer' }
+	| { type: 'quickPart'; command: QuickPartCommand }
+	| { type: 'insertParts'; kind: InsertPartsKind }
 	| { type: 'headerFooterLink' }
 	| { type: 'headerFooterClose' }
 	| { type: 'headerFooterNavigate'; target: 'header' | 'footer' | 'previous' | 'next' }
@@ -196,3 +205,15 @@ export type RibbonAction =
 			levels?: number;
 			label?: string;
 	  };
+
+export type InsertPartsKind =
+	| 'signatureSetup'
+	| 'saveQuickPart'
+	| 'buildingBlocks'
+	| 'fieldDialog'
+	| 'onlineVideo';
+
+/** Insert > Quick Parts: a document property or a gallery entry (the dialogs are `formatDialog`s). */
+export type QuickPartCommand =
+	| { kind: 'property'; id: import('ooxml-core/docx').DocumentPropertyId }
+	| { kind: 'entry'; key: string };

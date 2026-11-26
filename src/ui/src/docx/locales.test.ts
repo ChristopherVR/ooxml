@@ -15,17 +15,23 @@ import {
 } from './localization';
 import { strings as base, type LocaleStrings } from './localization-strings';
 import { tableTabTranslations } from './locales/table-tab-translations';
+import { insertPartsTranslations } from './locales/insert-parts-translations';
+import { enInsertParts } from './locales/insert-parts';
 import { RIBBON_ACTION_LABELS } from 'ooxml-core/docx/ui';
 import { createRibbon, setRibbonLocale } from './ribbon';
 
 registerDocxEditor();
 
 const strings: Readonly<Record<EditorLocale, LocaleStrings>> = {
-	en: base.en,
-	de: { ...tableTabTranslations.de, ...base.de },
-	es: { ...tableTabTranslations.es, ...base.es },
-	fr: { ...tableTabTranslations.fr, ...base.fr },
-	'zh-CN': { ...tableTabTranslations['zh-CN'], ...base['zh-CN'] },
+	en: { ...base.en, ...enInsertParts },
+	de: { ...tableTabTranslations.de, ...insertPartsTranslations.de, ...base.de },
+	es: { ...tableTabTranslations.es, ...insertPartsTranslations.es, ...base.es },
+	fr: { ...tableTabTranslations.fr, ...insertPartsTranslations.fr, ...base.fr },
+	'zh-CN': {
+		...tableTabTranslations['zh-CN'],
+		...insertPartsTranslations['zh-CN'],
+		...base['zh-CN'],
+	},
 };
 const englishKeys = Object.keys(strings.en) as LocalizationKey[];
 const placeholders = (text: string) => [...text.matchAll(/\{\w+\}/g)].map((m) => m[0]).sort();

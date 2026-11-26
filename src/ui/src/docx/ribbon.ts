@@ -128,6 +128,7 @@ export function createRibbon(locale: string = 'en'): HTMLElement {
 			if (event.target instanceof HTMLSelectElement) syncSelectTitles(event.target.parentElement!);
 		});
 	setRibbonLocale(root, locale);
+	void mountInsertPartsRibbon(root);
 	return root;
 }
 
@@ -154,6 +155,10 @@ function syncButtonTitles(root: ParentNode): void {
 		const title = hint ? `${label} (${hint})` : label;
 		if ((button.textContent?.trim() || hint) && button.title !== title) button.title = title;
 	}
+}
+
+export function mountInsertPartsRibbon(root: HTMLElement): Promise<void> {
+	return import('./insert-parts-ribbon').then((module) => module.mountInsertParts(root));
 }
 
 export function setRibbonLocale(root: HTMLElement, value: string): void {

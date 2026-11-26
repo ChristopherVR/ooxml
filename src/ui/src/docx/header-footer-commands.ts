@@ -51,7 +51,7 @@ const hasPageField = (paragraph: Paragraph) =>
 		(run) => /\bPAGE\b/i.test(run.field?.instr ?? '') || /\bPAGE\b/i.test(run.fieldCode ?? ''),
 	);
 
-function enableSlot(
+export function enableSlot(
 	model: DocumentModel,
 	sectionIndex: number,
 	slot: HeaderFooterSlot,
@@ -69,7 +69,7 @@ function enableSlot(
 	return model.sections ? model : { ...model, sections };
 }
 
-function withSlot(
+export function withSlot(
 	model: DocumentModel,
 	kind: HeaderFooterKind,
 	change: (existing: HeaderFooterContent | undefined) => HeaderFooterContent,
