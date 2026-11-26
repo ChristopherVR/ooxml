@@ -40,6 +40,7 @@
  *
  * @module core/core/runtime/slide-fingerprint
  */
+import { at } from '../../../../geometry/indexed';
 import type { PptxSlide } from '../../types';
 
 /**
@@ -84,6 +85,12 @@ class SlideHasher {
 	public h1 = SEED1;
 
 	public h2 = SEED2;
+
+	public updateChar(character: string): void {
+		const code = character.charCodeAt(0);
+		this.h1 = Math.imul(this.h1 ^ code, 2654435761);
+		this.h2 = Math.imul(this.h2 ^ code, 1597334677);
+	}
 
 	public update(text: string, stride = 1): void {
 		let h1 = this.h1;
@@ -159,11 +166,11 @@ function hashString(hasher: SlideHasher, text: string): void {
 
 function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visit>): void {
 	if (value === undefined) {
-		hasher.update('u');
+		hasher.updateChar('u');
 		return;
 	}
 	if (value === null) {
-		hasher.update('n');
+		hasher.updateChar('n');
 		return;
 	}
 	switch (typeof value) {
@@ -183,10 +190,10 @@ function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visi
 			// A callback on the model is not file content; its identity changes
 			// on every render in every binding, so hashing it would make every
 			// slide look dirty forever.
-			hasher.update('f');
+			hasher.updateChar('f');
 			return;
 		case 'symbol':
-			hasher.update('y');
+			hasher.updateChar('y');
 			return;
 		default:
 			break;
@@ -195,7 +202,7 @@ function hashValue(hasher: SlideHasher, value: unknown, visits: Map<object, Visi
 	const object = value as object;
 	const visit = visits.get(object);
 	if (visit === ON_PATH) {
-		hasher.update('c');
+		hasher.updateChar('c');
 		return;
 	}
 	if (visit !== undefined && visit !== SEEN_ONCE) {
@@ -221,9 +228,9 @@ function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Vi
 		hasher.update(`a${object.length}[`);
 		for (const item of object) {
 			hashValue(hasher, item, visits);
-			hasher.update(',');
+			hasher.updateChar(',');
 		}
-		hasher.update(']');
+		hasher.updateChar(']');
 	} else if (ArrayBuffer.isView(object)) {
 		const bytes = new Uint8Array(
 			(object as ArrayBufferView).buffer,
@@ -236,7 +243,15 @@ function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Vi
 	} else {
 		const record = object as Record<string, unknown>;
 		const keys = Object.keys(record);
-		if (keys.length > 1) keys.sort();
+		if (keys.length === 2) {
+			// Object.keys returns a dense array. Avoid a general sort for a node pair.
+			const first = at(keys, 0);
+			const second = at(keys, 1);
+			if (first > second) {
+				keys[0] = second;
+				keys[1] = first;
+			}
+		} else if (keys.length > 2) keys.sort();
 		hasher.update('o{');
 		for (const key of keys) {
 			const entry = record[key];
@@ -244,11 +259,12 @@ function hashContent(hasher: SlideHasher, object: object, visits: Map<object, Vi
 			if (entry === undefined) {
 				continue;
 			}
-			hasher.update(`${key}=`);
+			hasher.update(key);
+			hasher.updateChar('=');
 			hashValue(hasher, entry, visits);
-			hasher.update(';');
+			hasher.updateChar(';');
 		}
-		hasher.update('}');
+		hasher.updateChar('}');
 	}
 }
 

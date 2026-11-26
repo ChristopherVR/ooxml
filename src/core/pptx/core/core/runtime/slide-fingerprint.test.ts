@@ -187,6 +187,21 @@ describe('slideMatchesFingerprint', () => {
 		expect(slideMatchesFingerprint(fingerprints, { ...slide, notes: 'new' })).toBeFalsy();
 	});
 
+	it('matches reordered two-key XML nodes and sees an in-place edit', () => {
+		const rawXml = { 'p:cSld': { '@_name': 'A', '@_id': '1' } };
+		const slide = { ...baseSlide(), rawXml };
+		const fingerprints = new Map<string, string>();
+		recordSlideFingerprints(fingerprints, [slide]);
+		expect(
+			slideMatchesFingerprint(fingerprints, {
+				...slide,
+				rawXml: { 'p:cSld': { '@_id': '1', '@_name': 'A' } },
+			}),
+		).toBe(true);
+		rawXml['p:cSld']['@_name'] = 'B';
+		expect(slideMatchesFingerprint(fingerprints, slide)).toBe(false);
+	});
+
 	it('never claims a slide it has never seen is unchanged', () => {
 		expect(slideMatchesFingerprint(new Map(), baseSlide())).toBeFalsy();
 	});
