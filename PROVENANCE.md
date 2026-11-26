@@ -3155,3 +3155,14 @@ and the default palette in `src/core/xlsx/workbook.ts`. Move the preset data to
 `src/core/drawingml/theme-presets.ts`, `theme-color-presets.ts` and
 `office-theme-colors.ts` so Word and Excel share the same colour and font values.
 The Excel subpath keeps its existing exports.
+
+### Word Design gallery data
+
+The Word gallery palette data in `src/core/drawingml/theme-gallery-data.ts` and
+`theme-gallery-legacy.ts` comes from `word/theme/theme1.xml` in blank DOCX files
+saved by Word for Microsoft 365 (16.0.20625). Each named `.thmx` came from the
+Office Document Themes folder or Word's downloaded Document Themes. The capture
+used the documented `Document.ApplyDocumentTheme` and `Document.SaveAs2` APIs.
+The tables record the twelve palette values (using `lastClr` for system colors)
+and the two Latin font faces. Theme packages, thumbnails and other artwork are
+excluded.

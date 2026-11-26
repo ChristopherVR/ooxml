@@ -29,6 +29,27 @@ const roundTrip = async (edit: DesignEdit) => {
 };
 
 describe('Word document design', () => {
+	it('uses all twelve measured Word palette slots for legacy themes', async () => {
+		const banded = must(DOCUMENT_THEME_CATALOGUE.find((entry) => entry.id === 'banded'));
+		const woodType = must(DOCUMENT_THEME_CATALOGUE.find((entry) => entry.id === 'wood-type'));
+		const model = await roundTrip({ kind: 'theme', name: banded.label, ...banded });
+		expect(model.theme?.colors).toEqual({
+			lt1: 'FFFFFF',
+			dk1: '2C2C2C',
+			lt2: 'F2F2F2',
+			dk2: '099BDD',
+			accent1: 'FFC000',
+			accent2: 'A5D028',
+			accent3: '08CC78',
+			accent4: 'F24099',
+			accent5: '828288',
+			accent6: 'F56617',
+			hlink: '005DBA',
+			folHlink: '6C606A',
+		});
+		expect(woodType.majorFont).toBe('Rockwell Condensed');
+		expect(DOCUMENT_THEME_CATALOGUE.some((entry) => entry.id === 'atlas')).toBe(false);
+	});
 	it.each(DOCUMENT_THEME_CATALOGUE)(
 		'round trips the $label catalogue entry',
 		async ({ label, ...preset }) => {
