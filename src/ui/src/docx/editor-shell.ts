@@ -151,7 +151,14 @@ export function buildShell(core: EditorCore, api: ShellApi): void {
 	const frame = document.createElement('section');
 	frame.className = 'dve-frame';
 	const toolbar = core.surfaceOnly ? undefined : createRibbon(core.locale);
-	if (toolbar) on(toolbar, 'ribbon-action', (event) => routeRibbonAction(core, event.detail));
+	if (toolbar)
+		on(toolbar, 'ribbon-action', (event) =>
+			routeRibbonAction(
+				core,
+				event.detail,
+				event.target instanceof HTMLElement ? event.target : undefined,
+			),
+		);
 	const canvas = document.createElement('main');
 	canvas.className = 'dve-canvas';
 	const paper = document.createElement('div');

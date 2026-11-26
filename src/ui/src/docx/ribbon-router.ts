@@ -26,9 +26,25 @@ import { sectionLayoutJson } from 'ooxml-core/docx';
 import { loadWordReferences } from 'ooxml-core/docx/ui';
 import { applyFontFormat } from './font-format';
 import { referencesReason } from './references-ribbon';
+import { closeRibbonOverflow } from './ribbon-overflow';
 
 /** Routes a ribbon action to the controller that owns it. */
-export function routeRibbonAction(core: EditorCore, action: RibbonAction): void {
+export function routeRibbonAction(
+	core: EditorCore,
+	action: RibbonAction,
+	opener?: HTMLElement,
+): void {
+	if (
+		((action.type === 'formatDialog' && action.kind === 'tableProperties') ||
+			(action.type === 'tableTab' && action.key === 'margins')) &&
+		opener?.closest('.ribbon-overflow-panel')
+	) {
+		opener =
+			core.shell.toolbar?.querySelector<HTMLElement>(
+				'.ribbon-overflow-button[aria-expanded="true"]',
+			) ?? undefined;
+		closeRibbonOverflow();
+	}
 	if (action.type === 'view') {
 		core.pages.setViewMode(action.value);
 		return;
@@ -69,7 +85,7 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 					view === core.targetView() &&
 					view?.state.selection === selection
 				)
-					runTableTabAction(core, action);
+					runTableTabAction(core, action, opener);
 			})
 			.catch((error: unknown) => core.host.reportError(error));
 		return;
@@ -165,7 +181,7 @@ export function routeRibbonAction(core: EditorCore, action: RibbonAction): void 
 		parts.closeHeaderFooter(shell.canvas, shell.paper);
 	else if (action.type === 'headerFooterNavigate')
 		parts.navigate(action.target, shell.canvas, shell.paper);
-	else if (action.type === 'formatDialog') core.formatDialogs.open(action.kind);
+	else if (action.type === 'formatDialog') core.formatDialogs.open(action.kind, opener);
 	else if (action.type === 'pageNumber' || action.type === 'headerFooter') {
 		const done =
 			action.type === 'pageNumber'

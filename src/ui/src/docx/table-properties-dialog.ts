@@ -113,10 +113,12 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			validate();
 		});
 	}
-	const hide = () => {
+	let opener: HTMLElement | undefined;
+	const hide = (restoreToOpener = true) => {
 		setDialogOpen(element, false);
 		element.replaceChildren();
-		focusView(viewOf());
+		if (!restoreToOpener || !opener?.isConnected) focusView(viewOf());
+		opener = undefined;
 	};
 	const submit = () => {
 		const view = viewOf();
@@ -149,9 +151,9 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			if (changed.has(side))
 				marginPatch[side] = signedTwips(Math.round(Number(margins[side].value) * 1440));
 		if (applyTableProperties(view, patch, marginPatch, cellMargins.patch(), cellAlignment.patch()))
-			hide();
+			hide(false);
 	};
-	cancel.addEventListener('click', hide);
+	cancel.addEventListener('click', () => hide());
 	ok.addEventListener('click', submit);
 	onDialogDismiss(element, hide);
 	element.addEventListener('keydown', (event) => {
@@ -169,7 +171,7 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 		get isOpen() {
 			return isDialogOpen(element);
 		},
-		open() {
+		open(trigger) {
 			const view = viewOf();
 			const context = view && tablePropertiesContext(view.state);
 			if (!view?.editable || !context) return;
@@ -202,6 +204,8 @@ export function createTablePropertiesDialog(viewOf: () => EditorView | undefined
 			cellMargins.load(context);
 			cellAlignment.load(context);
 			validate();
+			opener = trigger;
+			opener?.focus();
 			setDialogOpen(element, true);
 			specified.input.focus();
 		},

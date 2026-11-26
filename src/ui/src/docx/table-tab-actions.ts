@@ -59,7 +59,11 @@ function setPen(
 	}
 }
 
-export function runTableTabAction(core: EditorCore, action: TableTabAction): void {
+export function runTableTabAction(
+	core: EditorCore,
+	action: TableTabAction,
+	opener?: HTMLElement,
+): void {
 	const view = core.targetView();
 	const context = view && tableTabContext(view.state);
 	if (!view || !context || tableTabReason(core, action.key, context)) return;
@@ -87,7 +91,7 @@ export function runTableTabAction(core: EditorCore, action: TableTabAction): voi
 		focusView(view);
 		return;
 	}
-	if (action.key === 'margins') return core.formatDialogs.open('tableProperties');
+	if (action.key === 'margins') return core.formatDialogs.open('tableProperties', opener);
 	if (action.key === 'pen') return setPen(core, pen, action);
 	if (action.key === 'draw') return toggleTableDraw(core, action.value, pen);
 	if (action.key === 'borders') {

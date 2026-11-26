@@ -33,7 +33,7 @@ import {
 
 export interface FormatDialog {
 	element: HTMLElement;
-	open(): void;
+	open(opener?: HTMLElement): void;
 	close(): void;
 	setLocale(locale: EditorLocale): void;
 	readonly isOpen: boolean;

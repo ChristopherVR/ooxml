@@ -84,3 +84,19 @@ test('Table Properties stays usable on a narrow ribbon and localizes the dialog'
 	await expect(dialogByHeading(editor, 'Tabelleneigenschaften')).toBeVisible();
 	await expect(editor.getByRole('checkbox', { name: 'Höhe angeben' })).toBeVisible();
 });
+
+test('Escape gives focus back to the Table Properties button', async ({ page }) => {
+	await page.setViewportSize({ width: 1700, height: 960 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	await editor.getByRole('tab', { name: 'Table Layout', exact: true }).click();
+	const opener = editor.getByRole('button', { name: 'Table properties', exact: true });
+	await opener.click();
+	await expect(dialogByHeading(editor, 'Table properties')).toBeVisible();
+	await page.keyboard.press('Escape');
+	await expect(dialogByHeading(editor, 'Table properties')).toBeHidden();
+	await expect(opener).toBeFocused();
+});

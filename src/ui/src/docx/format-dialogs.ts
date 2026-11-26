@@ -206,14 +206,14 @@ export class FormatDialogs {
 	}
 
 	/** Opens `kind`, closing the other one first. */
-	open(requested: FormatDialogKind): void {
+	open(requested: FormatDialogKind, opener?: HTMLElement): void {
 		// A simple text box is drawn as a shape, but its text is edited in the Text Box dialog.
 		const view = this.host.view();
 		const kind =
 			requested === 'shapeText' && view && selectedTextBox(view.state) ? 'textBox' : requested;
 		for (const [name, dialog] of Object.entries(this.dialogs))
 			if (name !== kind && dialog.isOpen) dialog.close();
-		this.dialogs[kind].open();
+		this.dialogs[kind].open(opener);
 	}
 
 	closeAll(): void {
