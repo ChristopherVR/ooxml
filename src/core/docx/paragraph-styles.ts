@@ -204,11 +204,17 @@ const numberingResolvers = new WeakMap<
 function styleFormatting(
 	styleId: string | undefined,
 	catalog: ParagraphStyleCatalog,
+	ignoreDefaultLeft: boolean,
 ): ParagraphFormatting | undefined {
-	return cachedResolver(formattingResolvers, catalog.styles, () =>
+	const cache = ignoreDefaultLeft ? tableJustificationResolvers : formattingResolvers;
+	return cachedResolver(cache, catalog.styles, () =>
 		chainResolver(
 			catalog.styles,
-			(style) => style.formatting,
+			(style, id) => {
+				if (!ignoreDefaultLeft || id !== defaultStyleId(catalog.styles)) return style.formatting;
+				const { align, justification, ...other } = style.formatting;
+				return (justification ?? align) === 'left' ? other : style.formatting;
+			},
 			(resolved, formatting) => {
 				const merged = Object.assign({}, resolved, formatting);
 				if (resolved.frame && formatting.frame)
@@ -220,16 +226,32 @@ function styleFormatting(
 	)(styleId);
 }
 
+const tableJustificationResolvers = new WeakMap<
+	object,
+	(id: string | undefined) => ParagraphFormatting | undefined
+>();
+
 /** Resolves defaults and style ancestry without modifying paragraph direct properties. */
 export function resolveParagraphFormatting(
 	paragraph: Paragraph,
 	catalog: ParagraphStyleCatalog | undefined,
 	tableParagraph?: ParagraphFormatting,
+	overrideTableStyleFontSizeAndJustification = false,
 ): ParagraphFormatting {
 	const defaults = catalog?.docDefaults ?? {};
 	const result = tableParagraph ? mergeDefined(defaults, tableParagraph) : { ...defaults };
 	if (catalog) {
-		const style = styleFormatting(paragraph.style || defaultStyleId(catalog.styles), catalog);
+		// MS-DOCX 2.3.1: default-style left justification yields to the table style unless
+		// overrideTableStyleFontSizeAndJustification is true. Other pPr properties use ISO order.
+		// https://learn.microsoft.com/en-us/openspecs/office_standards/ms-docx/2690d8ad-f5b8-4cd1-863e-6f67117898c3
+		const ignoreDefaultLeft =
+			!overrideTableStyleFontSizeAndJustification &&
+			(tableParagraph?.justification !== undefined || tableParagraph?.align !== undefined);
+		const style = styleFormatting(
+			paragraph.style || defaultStyleId(catalog.styles),
+			catalog,
+			ignoreDefaultLeft,
+		);
 		const inheritedFrame = result.frame;
 		Object.assign(result, style);
 		if (tableParagraph && inheritedFrame && style?.frame)

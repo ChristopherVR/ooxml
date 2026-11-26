@@ -22,6 +22,13 @@ Word 16.0.20625 exported each fixture through `Document.ExportAsFixedFormat`. Th
 | [#349](https://github.com/ChristopherVR/ooxml/issues/349)                                                            | Inline title and closing tags occupy space in both dimensions. The tagged file occupies three pages and the default-appearance control occupies two.                                                                                                                                                                                                        |
 | [#353](https://github.com/ChristopherVR/ooxml/issues/353)                                                            | TableGrid supplies single spacing with zero after-spacing inside its cell. The table matches the height of the direct-formatting control and fits on one page.                                                                                                                                                                                              |
 
+`issue-353-table-style-precedence.docx` is a synthetic Lorem ipsum document without personal
+metadata. Normal sets 12 pt after and left justification, while the table style sets zero after
+and center justification. Its first-row condition adds 4 pt before. The cell covers implicit and
+explicit Normal, a named style and direct formatting. The expected justification follows
+MS-DOCX 2.3.1. Regenerate it with
+`bun src/core/docx/layout/fixtures/word-layout-reports/generate-table-style-precedence.mjs`.
+
 For #330, Word moved all three lines of a paragraph together when widow and orphan control
 would have left one line on either page. At a 453.5 pt text width, an italic Times New Roman
 control wrapped before its final word with kerning omitted and fit that word with kerning

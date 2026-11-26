@@ -26,6 +26,7 @@ import { applyNoteEdits } from './write-notes';
 import { writeNewRelationships } from './part-relationships';
 import {
 	applyCompatibilityMode,
+	applyCompatSetting,
 	applyDocumentProtection,
 	applySettingsFlag,
 	applyTrackChangesSetting,
@@ -186,6 +187,13 @@ export async function saveDocx(
 	await applyWordTheme(zip, model.theme, binding?.base.theme);
 	if (model.compatibilityMode !== binding?.base.compatibilityMode)
 		await applyCompatibilityMode(zip, model.compatibilityMode);
+	const override = model.overrideTableStyleFontSizeAndJustification;
+	if (override !== binding?.base.overrideTableStyleFontSizeAndJustification)
+		await applyCompatSetting(
+			zip,
+			'overrideTableStyleFontSizeAndJustification',
+			override === undefined ? undefined : String(override),
+		);
 	if (Boolean(model.evenAndOddHeaders) !== Boolean(binding?.base.evenAndOddHeaders))
 		await applySettingsFlag(zip, 'evenAndOddHeaders', Boolean(model.evenAndOddHeaders));
 	// Word shows a page colour only when settings.xml asks for background shapes.

@@ -19,6 +19,23 @@ const mode = (value: string, uri = 'http://schemas.microsoft.com/office/word') =
 	`<w:compatSetting w:name="compatibilityMode" w:uri="${uri}" w:val="${value}"/>`;
 
 describe('readCompatibilitySettings', () => {
+	it.each([
+		['0', false],
+		['on', true],
+		['unknown', undefined],
+	] as const)(
+		'reads table style precedence from a Word compatSetting set to %s',
+		(value, expected) => {
+			const tableSetting = mode(value).replace(
+				'compatibilityMode',
+				'overrideTableStyleFontSizeAndJustification',
+			);
+			expect(
+				readCompatibilitySettings(compat(tableSetting)).overrideTableStyleFontSizeAndJustification,
+			).toBe(expected);
+		},
+	);
+
 	it('reads the Word compatibility mode and the HTML auto spacing option', () => {
 		expect(
 			readCompatibilitySettings(compat(`<w:doNotUseHTMLParagraphAutoSpacing/>${mode('14')}`)),

@@ -4,14 +4,15 @@
 // raw mode numbers. Word writes `compatibilityMode` ([MS-DOCX]) as 11 (Word 2003), 12 (2007),
 // 14 (2010) or 15 (2013 and later); a document without one is treated as legacy.
 import { children, first, getW, type XmlElement } from './xml';
-import { onOffElement } from './simple-types';
+import { onOffElement, parseOnOff } from './simple-types';
 
-const WORD_COMPAT_URI = 'http://schemas.microsoft.com/office/word';
+export const WORD_COMPAT_URI = 'http://schemas.microsoft.com/office/word';
 
 /** The `w:compat` values the document model keeps. */
 export interface CompatibilitySettings {
 	/** `w:compatSetting[@w:name="compatibilityMode"]`, a positive integer. */
 	compatibilityMode?: number;
+	overrideTableStyleFontSizeAndJustification?: boolean;
 	/** `w:compat/w:doNotUseHTMLParagraphAutoSpacing`. */
 	doNotUseHtmlParagraphAutoSpacing?: boolean;
 }
@@ -30,14 +31,17 @@ export interface CompatibilityProfile {
 /** Reads the compatibility mode and legacy options from `w:settings/w:compat`. */
 export function readCompatibilitySettings(compat: XmlElement | undefined): CompatibilitySettings {
 	if (!compat) return {};
-	const setting = children(compat, 'compatSetting').find(
-		(item) => getW(item, 'name') === 'compatibilityMode' && getW(item, 'uri') === WORD_COMPAT_URI,
-	);
-	const mode = setting ? Number(getW(setting, 'val')) : undefined;
+	const settings = children(compat, 'compatSetting');
+	const value = (name: string) =>
+		getW(
+			settings.find((item) => getW(item, 'name') === name && getW(item, 'uri') === WORD_COMPAT_URI),
+			'val',
+		);
+	const mode = Number(value('compatibilityMode'));
+	const override = parseOnOff(value('overrideTableStyleFontSizeAndJustification'));
 	return {
-		...(mode !== undefined && Number.isInteger(mode) && mode > 0
-			? { compatibilityMode: mode }
-			: {}),
+		...(Number.isInteger(mode) && mode > 0 ? { compatibilityMode: mode } : {}),
+		...(override === undefined ? {} : { overrideTableStyleFontSizeAndJustification: override }),
 		...(onOffElement(first(compat, 'doNotUseHTMLParagraphAutoSpacing')) === true
 			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),

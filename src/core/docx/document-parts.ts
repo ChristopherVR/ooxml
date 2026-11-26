@@ -5,7 +5,7 @@ import type JSZip from 'jszip';
 import type { Block, HeaderFooterSlots, Note, SectionProperties } from './model';
 import type { Twips } from './units';
 import { first, getW, parseXml, type XmlElement } from './xml';
-import { readCompatibilitySettings } from './compatibility';
+import { readCompatibilitySettings, type CompatibilitySettings } from './compatibility';
 import { onOffElement, parseTwips, parseUnsignedInteger } from './simple-types';
 import { parseKinsokuSettings } from './kinsoku-settings';
 import type { KinsokuSettings } from '../text/kinsoku';
@@ -36,14 +36,12 @@ async function readPart(zip: JSZip, path: string): Promise<string | undefined> {
 	return zip.file(path)?.async('string');
 }
 
-interface SettingsInfo {
+interface SettingsInfo extends CompatibilitySettings {
 	evenAndOddHeaders: boolean;
 	autoHyphenation: boolean;
 	hyphenationZoneTwips?: Twips;
 	consecutiveHyphenLimit?: number;
 	doNotHyphenateCaps?: boolean;
-	compatibilityMode?: number;
-	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	kinsoku?: KinsokuSettings;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
@@ -112,13 +110,11 @@ async function resolveSlots(
 	return Object.keys(slots).length ? slots : undefined;
 }
 
-export interface DocumentPartsResult {
+export interface DocumentPartsResult extends CompatibilitySettings {
 	sections: SectionProperties[];
 	footnotes?: Note[];
 	footnoteSeparators?: import('./model').DocumentModel['footnoteSeparators'];
 	endnotes?: Note[];
-	compatibilityMode?: number;
-	doNotUseHtmlParagraphAutoSpacing?: boolean;
 	kinsoku?: KinsokuSettings;
 	footnoteNumFmt?: StNumberFormat;
 	endnoteNumFmt?: StNumberFormat;
@@ -196,6 +192,12 @@ export async function parseDocumentParts(
 		...(settings.compatibilityMode !== undefined
 			? { compatibilityMode: settings.compatibilityMode }
 			: {}),
+		...(settings.overrideTableStyleFontSizeAndJustification === undefined
+			? {}
+			: {
+					overrideTableStyleFontSizeAndJustification:
+						settings.overrideTableStyleFontSizeAndJustification,
+				}),
 		...(settings.doNotUseHtmlParagraphAutoSpacing
 			? { doNotUseHtmlParagraphAutoSpacing: true }
 			: {}),

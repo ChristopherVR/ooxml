@@ -10,6 +10,7 @@ import { readProtectionPassword } from './protection';
 import type JSZip from 'jszip';
 import { buildXml, children, getW, makeW, parseXml, type XmlElement, WORD_NS } from './xml';
 import { ensureContentTypeOverride, ensureDocumentRelationship } from './zip-parts';
+import { WORD_COMPAT_URI } from './compatibility';
 
 const SETTINGS_PATH = 'word/settings.xml';
 export const SETTINGS_CONTENT_TYPE =
@@ -221,15 +222,23 @@ export async function applyTrackChangesSetting(zip: JSZip, enabled: boolean): Pr
 export async function applyCompatibilityMode(zip: JSZip, mode: number | undefined): Promise<void> {
 	if (mode !== undefined && (!Number.isInteger(mode) || mode <= 0 || mode > 2147483647))
 		throw new RangeError('Compatibility mode must be a positive integer.');
+	await applyCompatSetting(zip, 'compatibilityMode', mode === undefined ? undefined : String(mode));
+}
+
+export async function applyCompatSetting(
+	zip: JSZip,
+	name: 'compatibilityMode' | 'overrideTableStyleFontSizeAndJustification',
+	value: string | undefined,
+): Promise<void> {
 	const file = zip.file(SETTINGS_PATH);
-	if (!file && mode === undefined) return;
+	if (!file && value === undefined) return;
 	const doc = parseXml(
 		(await file?.async('string')) ??
 			`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:settings xmlns:w="${WORD_NS}"/>`,
 	);
 	const root = doc.documentElement as XmlElement;
 	let compat = children(root, 'compat')[0];
-	if (!compat && mode !== undefined) {
+	if (!compat && value !== undefined) {
 		compat = makeW(doc, 'compat');
 		const rank = SETTINGS_ORDER.indexOf('compat');
 		const after = Array.from(root.childNodes).find(
@@ -238,19 +247,18 @@ export async function applyCompatibilityMode(zip: JSZip, mode: number | undefine
 		);
 		root.insertBefore(compat, after ?? null);
 	}
-	const uri = 'http://schemas.microsoft.com/office/word';
 	if (compat) {
 		for (const setting of children(compat, 'compatSetting'))
 			if (
-				setting.getAttributeNS(WORD_NS, 'name') === 'compatibilityMode' &&
-				setting.getAttributeNS(WORD_NS, 'uri') === uri
+				setting.getAttributeNS(WORD_NS, 'name') === name &&
+				setting.getAttributeNS(WORD_NS, 'uri') === WORD_COMPAT_URI
 			)
 				compat.removeChild(setting);
-		if (mode !== undefined) {
+		if (value !== undefined) {
 			const setting = makeW(doc, 'compatSetting');
-			setting.setAttributeNS(WORD_NS, 'w:name', 'compatibilityMode');
-			setting.setAttributeNS(WORD_NS, 'w:uri', uri);
-			setting.setAttributeNS(WORD_NS, 'w:val', String(mode));
+			setting.setAttributeNS(WORD_NS, 'w:name', name);
+			setting.setAttributeNS(WORD_NS, 'w:uri', WORD_COMPAT_URI);
+			setting.setAttributeNS(WORD_NS, 'w:val', value);
 			compat.appendChild(setting);
 		}
 	}

@@ -404,7 +404,12 @@ export function adaptDocumentModel(
 	): LayoutParagraph {
 		const resolved =
 			catalog || tableStyle?.paragraph
-				? resolveParagraphFormatting(paragraph, catalog, tableStyle?.paragraph)
+				? resolveParagraphFormatting(
+						paragraph,
+						catalog,
+						tableStyle?.paragraph,
+						model.overrideTableStyleFontSizeAndJustification,
+					)
 				: paragraph;
 		const tableStyleRun = tableStyle?.run;
 		const label = labels.get(paragraph.id);

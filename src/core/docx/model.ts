@@ -186,6 +186,8 @@ export interface DocumentModel {
 	footnotes?: Note[];
 	/** Saved Word layout compatibility mode; native mode15 footnotes use independent columns. */
 	compatibilityMode?: number;
+	/** Use the ISO paragraph justification precedence inside tables (MS-DOCX 2.3.1). */
+	overrideTableStyleFontSizeAndJustification?: boolean;
 	/**
 	 * `w:compat/w:doNotUseHTMLParagraphAutoSpacing`. Absent, Word leaves the larger of the space after
 	 * a paragraph and the space before the next (and gives `w:beforeAutospacing` 14 pt); set, it adds

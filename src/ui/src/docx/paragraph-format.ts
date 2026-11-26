@@ -1,4 +1,10 @@
-import { resolveParagraphFormatting, type DocumentModel, type Paragraph } from 'ooxml-core/docx';
+import {
+	resolveParagraphFormatting,
+	type DocumentModel,
+	type ParagraphFormatting,
+} from 'ooxml-core/docx';
+import { paragraphFromAttrs } from 'ooxml-core/docx/ui';
+import { tableStyleAt } from './styled-paragraphs';
 import { closeHistory } from 'prosemirror-history';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import type { EditorState } from 'prosemirror-state';
@@ -56,19 +62,25 @@ const num = (value: unknown): number =>
 	typeof value === 'number' && Number.isFinite(value) ? value : 0;
 
 /** Direct paragraph attributes with the style chain and document defaults resolved beneath them. */
-export function resolvedAttrs(attrs: Attrs, model: DocumentModel | undefined): Attrs {
+export function resolvedAttrs(
+	attrs: Attrs,
+	model: DocumentModel | undefined,
+	tableParagraph?: ParagraphFormatting,
+): Attrs {
 	const direct = Object.fromEntries(
 		Object.entries(attrs).filter(
 			([key, value]) => value != null && (key !== 'style' || value !== ''),
 		),
 	);
 	const catalog = model?.paragraphStyles;
-	if (!catalog) return direct;
+	if (!catalog && !tableParagraph) return direct;
 	return {
 		...direct,
 		...resolveParagraphFormatting(
-			{ ...direct, type: 'paragraph', runs: [] } as unknown as Paragraph,
+			paragraphFromAttrs(direct, String(direct.id ?? ''), []),
 			catalog,
+			tableParagraph,
+			model?.overrideTableStyleFontSizeAndJustification,
 		),
 	};
 }
@@ -131,8 +143,8 @@ export function readParagraphFormat(
 	state: EditorState,
 	model: DocumentModel | undefined,
 ): ParagraphFormatState {
-	const formats = [...selectedParagraphs(state).values()].map((node) =>
-		formatOf(resolvedAttrs(node.attrs, model)),
+	const formats = [...selectedParagraphs(state)].map(([pos, node]) =>
+		formatOf(resolvedAttrs(node.attrs, model, tableStyleAt(state.doc, pos, model)?.paragraph)),
 	);
 	const result = {} as Record<string, unknown>;
 	for (const field of FIELDS) {

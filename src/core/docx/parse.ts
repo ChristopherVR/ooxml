@@ -203,6 +203,9 @@ export async function readPackage(
 	const parts = await parseDocumentParts(zip, body, blocks, drawings);
 	model.sections = parts.sections;
 	if (parts.compatibilityMode !== undefined) model.compatibilityMode = parts.compatibilityMode;
+	if (parts.overrideTableStyleFontSizeAndJustification !== undefined)
+		model.overrideTableStyleFontSizeAndJustification =
+			parts.overrideTableStyleFontSizeAndJustification;
 	if (parts.doNotUseHtmlParagraphAutoSpacing) model.doNotUseHtmlParagraphAutoSpacing = true;
 	if (parts.kinsoku) model.kinsoku = parts.kinsoku;
 	if (parts.footnotes) model.footnotes = parts.footnotes;

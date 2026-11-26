@@ -13,6 +13,7 @@ import { scaleMeasurer } from './run-scale';
 import type { ReviewDisplayMode } from './review-display';
 import { displayParagraph, ORIGINAL_PARAGRAPH_RESET } from './review-paragraph-display';
 import { AttributeCache, DecorationCache } from './decoration-cache';
+import { visitStyledParagraphs } from './styled-paragraphs';
 
 /** Derived display formatting stays out of document attributes and collaboration steps. */
 export function paragraphStylesPlugin(
@@ -49,6 +50,8 @@ export function paragraphStylesPlugin(
 				const inputs = [
 					model,
 					model.paragraphStyles,
+					model.tableStyles,
+					model.overrideTableStyleFontSizeAndJustification,
 					model.numberingCatalog,
 					model.theme,
 					model.characterStyles,
@@ -63,11 +66,13 @@ export function paragraphStylesPlugin(
 				});
 				const labels = computeListLabels({ ...model, blocks: paragraphs });
 				const decorations: Decoration[] = [];
-				state.doc.descendants((node, pos) => {
-					if (node.type.name !== 'paragraph') return;
+				visitStyledParagraphs(state.doc, model, (node, pos, tableStyle) => {
 					const label = labels.get(String(node.attrs.id));
+					const tableParagraph = tableStyle?.paragraph;
 					const dependencies = [
 						catalog,
+						JSON.stringify(tableParagraph),
+						model.overrideTableStyleFontSizeAndJustification,
 						model.characterStyles,
 						model.theme,
 						mode,
@@ -83,7 +88,15 @@ export function paragraphStylesPlugin(
 							mode === 'original' && node.attrs.formatRevision && !projected.error
 								? `${ORIGINAL_PARAGRAPH_RESET};`
 								: '';
-						const effective = catalog ? resolveParagraphFormatting(paragraph, catalog) : paragraph;
+						const effective =
+							catalog || tableParagraph
+								? resolveParagraphFormatting(
+										paragraph,
+										catalog,
+										tableParagraph,
+										model.overrideTableStyleFontSizeAndJustification,
+									)
+								: paragraph;
 						const marker = listMarkerDisplay(
 							node,
 							{ ...paragraph, ...effective },

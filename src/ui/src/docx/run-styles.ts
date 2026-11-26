@@ -3,12 +3,10 @@ import { Decoration, DecorationSet } from 'prosemirror-view';
 import type { Node as ProseMirrorNode } from 'prosemirror-model';
 import {
 	resolveRunFormatting,
-	resolveTableStyleFormatting,
 	resolveThemeColorReference,
 	reviewRunFormatting,
 	type DocumentModel,
 	type RunFormatting,
-	type Table,
 	type TextRun,
 } from 'ooxml-core/docx';
 import { appendInlineNode } from './run-adapter';
@@ -21,6 +19,7 @@ import { displayParagraph } from './review-paragraph-display';
 import { reviewRunCss } from './review-run-css';
 import { DecorationCache } from './decoration-cache';
 import { ParagraphDecorationCache, ParagraphDecorationBuilder } from './paragraph-decoration-cache';
+import { visitStyledParagraphs } from './styled-paragraphs';
 
 type Theme = NonNullable<DocumentModel['theme']>;
 
@@ -151,8 +150,6 @@ export function runStylesPlugin(
 				];
 				const cached = cache.get(state.doc, inputs);
 				if (cached) return cached;
-				const tables = new Map<string, Table>();
-				for (const block of model.blocks) if (block.type === 'table') tables.set(block.id, block);
 				const decorations: Decoration[] = [];
 				const visitParagraph = (
 					paragraph: ProseMirrorNode,
@@ -252,44 +249,9 @@ export function runStylesPlugin(
 					const value = paragraphs.set(paragraph, inputs, builder, hasScale);
 					decorations.push(...paragraphs.place(value, position));
 				};
-				state.doc.forEach((block, blockOffset) => {
-					if (block.type.name === 'paragraph') return visitParagraph(block, blockOffset + 1);
-					if (block.type.name !== 'table') return;
-					const table = tables.get(String(block.attrs.id));
-					const styleId = block.attrs.tableStyleId ?? table?.style;
-					let columnCount = 1;
-					block.forEach((row) => {
-						let width = 0;
-						row.forEach((cell) => (width += Number(cell.attrs.colspan) || 1));
-						columnCount = Math.max(columnCount, width);
-					});
-					block.forEach((row, rowOffset, rowIndex) => {
-						let column = 0;
-						const rowStart = blockOffset + 1 + rowOffset + 1;
-						row.forEach((cell, cellOffset) => {
-							const tableStyleRun = styleId
-								? resolveTableStyleFormatting(
-										styleId,
-										model.tableStyles,
-										block.attrs.tableLook ?? table?.look,
-										rowIndex,
-										block.childCount,
-										column,
-										columnCount,
-									).run
-								: undefined;
-							cell.forEach((paragraph, paragraphOffset) => {
-								if (paragraph.type.name === 'paragraph')
-									visitParagraph(
-										paragraph,
-										rowStart + cellOffset + 1 + paragraphOffset + 1,
-										tableStyleRun,
-									);
-							});
-							column += Number(cell.attrs.colspan) || 1;
-						});
-					});
-				});
+				visitStyledParagraphs(state.doc, model, (node, pos, tableStyle) =>
+					visitParagraph(node, pos + 1, tableStyle?.run),
+				);
 				return cache.set(state.doc, inputs, DecorationSet.create(state.doc, decorations));
 			},
 		},

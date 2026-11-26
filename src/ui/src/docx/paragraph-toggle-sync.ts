@@ -1,8 +1,9 @@
-import type { DocumentModel, Paragraph } from 'ooxml-core/docx';
-import { resolveParagraphFormatting } from 'ooxml-core/docx';
+import type { DocumentModel, ParagraphFormatting } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { findLocalizedControl } from './localization';
 import { selectionIsListKind } from './list-commands';
+import { resolvedAttrs } from './paragraph-format';
+import { tableStyleAt } from './styled-paragraphs';
 
 type Alignment = 'left' | 'center' | 'right' | 'justify';
 
@@ -14,23 +15,15 @@ const ALIGN_BUTTONS: Array<[string, Alignment]> = [
 ];
 
 /** The alignment a paragraph shows, resolved through its style like Word's own toggle buttons. */
-function effectiveAlignment(attrs: Record<string, unknown>, model: DocumentModel): Alignment {
-	const direct = Object.fromEntries(
-		Object.entries(attrs).filter(
-			([key, value]) => value != null && (key !== 'style' || value !== ''),
-		),
-	);
-	const catalog = model.paragraphStyles;
-	const resolved = catalog
-		? resolveParagraphFormatting(
-				{ ...direct, type: 'paragraph', runs: [] } as unknown as Paragraph,
-				catalog,
-			)
-		: direct;
-	const align = (resolved as { align?: string }).align;
+function effectiveAlignment(
+	attrs: Record<string, unknown>,
+	model: DocumentModel,
+	tableParagraph?: ParagraphFormatting,
+): Alignment {
+	const { align, direction } = resolvedAttrs(attrs, model, tableParagraph);
 	if (align === 'center' || align === 'right' || align === 'justify') return align;
 	if (align === 'left') return 'left';
-	return attrs.direction === 'rtl' ? 'right' : 'left';
+	return direction === 'rtl' ? 'right' : 'left';
 }
 
 /**
@@ -45,10 +38,12 @@ export function syncParagraphToggles(
 ): void {
 	const { selection, doc } = view.state;
 	const alignments = new Set<Alignment>();
-	if (selection.empty) alignments.add(effectiveAlignment(selection.$from.parent.attrs, model));
+	const addAlignment = (attrs: Record<string, unknown>, pos: number) =>
+		alignments.add(effectiveAlignment(attrs, model, tableStyleAt(doc, pos, model)?.paragraph));
+	if (selection.empty) addAlignment(selection.$from.parent.attrs, selection.from);
 	else
-		doc.nodesBetween(selection.from, selection.to, (node) => {
-			if (node.type.name === 'paragraph') alignments.add(effectiveAlignment(node.attrs, model));
+		doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+			if (node.type.name === 'paragraph') addAlignment(node.attrs, pos);
 		});
 	for (const [label, value] of ALIGN_BUTTONS)
 		findLocalizedControl(toolbar, label)?.setAttribute(

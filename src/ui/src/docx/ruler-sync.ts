@@ -2,14 +2,23 @@ import type { DocumentModel } from 'ooxml-core/docx';
 import type { EditorView } from 'prosemirror-view';
 import { resolvedAttrs } from './paragraph-format';
 import { updateRuler, type RulerGeometry } from './ruler';
+import { tableStyleAt } from './styled-paragraphs';
 
 const px = (twips: unknown) =>
 	typeof twips === 'number' && Number.isFinite(twips) ? twips / 15 : 0;
 
 /** The ruler geometry for the paragraph holding the selection, from the document's page attributes. */
 export function rulerGeometry(view: EditorView, model: DocumentModel): RulerGeometry {
-	const { attrs } = view.state.doc;
-	const paragraph = resolvedAttrs(view.state.selection.$from.parent.attrs, model);
+	const {
+		doc,
+		selection: { $from },
+	} = view.state;
+	const { attrs } = doc;
+	const paragraph = resolvedAttrs(
+		$from.parent.attrs,
+		model,
+		tableStyleAt(doc, $from.pos, model)?.paragraph,
+	);
 	const hanging = px(paragraph.hangingTwips);
 	return {
 		pageWidth: Number(attrs.pageWidth) || 816,

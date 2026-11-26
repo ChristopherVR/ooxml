@@ -406,3 +406,30 @@ it('applies TableGrid paragraph spacing only inside its table (#353)', async () 
 	};
 	expect(tableHeight(styled)).toBeCloseTo(tableHeight(control));
 });
+
+it('lets table justification override only left justification from the default style (#353)', async () => {
+	const loaded = await load('issue-353-table-style-precedence');
+	const { model } = loaded;
+	const cellFormatting = (source: typeof model) => {
+		const [body, table] = at(adaptDocumentModel(source).sections, 0).blocks;
+		expect(body).toMatchObject({ align: 'left', spacingAfterTwips: 240 });
+		if (table?.kind !== 'table') throw new Error('Expected a table');
+		return at(at(table.rows, 0).cells, 0).paragraphs.map((p) => [p.align, p.spacingAfterTwips]);
+	};
+	expect(cellFormatting(model)).toEqual([
+		['center', 240],
+		['center', 240],
+		['left', 240],
+		['right', 360],
+	]);
+	const edited = await loadDocx(
+		await loaded.save({ ...model, overrideTableStyleFontSizeAndJustification: true }),
+	);
+	expect(edited.model.overrideTableStyleFontSizeAndJustification).toBe(true);
+	expect(cellFormatting(edited.model)).toEqual([
+		['left', 240],
+		['left', 240],
+		['left', 240],
+		['right', 360],
+	]);
+});
