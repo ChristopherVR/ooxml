@@ -132,6 +132,54 @@
 	width: 80px;
 }
 
+.ribbon-group.dve-table-ribbon-group {
+	position: relative;
+	flex-wrap: nowrap;
+	align-items: flex-start;
+	max-width: none;
+	column-gap: 6px;
+}
+.dve-table-ribbon-group::after {
+	content: none;
+}
+.dve-table-group-caption {
+	position: absolute;
+	inset: auto 2px 2px;
+	color: var(--muted);
+	font-size: 10px;
+	line-height: 1.1;
+	text-align: center;
+	white-space: nowrap;
+}
+.ribbon-group .dve-table-inline-menu {
+	flex-direction: row;
+	width: auto;
+	height: 22px;
+	justify-content: flex-start;
+	padding: 0 4px;
+	white-space: nowrap;
+}
+.dve-table-inline-menu > .ribbon-icon:first-child {
+	width: 16px;
+	height: 16px;
+}
+.ribbon-group .dve-table-inline-menu > .ribbon-icon:last-of-type {
+	margin: 0 0 0 auto;
+}
+.ribbon-group.dve-table-ribbon-group button[data-table-command='align'] {
+	height: 22px;
+	padding: 1px 0;
+}
+.dve-table-ribbon-group .ribbon-stack button.ribbon-inline {
+	height: 22px;
+}
+.dve-table-ribbon-group button[data-vertical='top'] {
+	align-items: flex-start;
+}
+.dve-table-ribbon-group button[data-vertical='bottom'] {
+	align-items: flex-end;
+}
+
 /* Word-style dropdown command: the native select is transparent and covers the whole control. */
 .ribbon-menu {
 	box-sizing: border-box;

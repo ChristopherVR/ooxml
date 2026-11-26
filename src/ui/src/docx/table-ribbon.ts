@@ -42,6 +42,7 @@ function menu<K extends string>(
 	choices: ReadonlyArray<readonly [K, string]>,
 	getAction: (key: K) => TableTabAction,
 	key: TableTabAction['key'],
+	inline = false,
 ) {
 	const control = menuSelect(
 		label,
@@ -53,6 +54,7 @@ function menu<K extends string>(
 		},
 		{ momentary: true, compact: false },
 	);
+	if (inline) control.classList.add('dve-table-inline-menu');
 	control.querySelector('select')!.dataset.tableCommand = key;
 	return control;
 }
@@ -111,23 +113,25 @@ function design(panel: HTMLElement) {
 		),
 		group(
 			'Draw Borders',
-			menu(
-				'Border Styles',
-				'borders',
-				[
-					['grid', 'Thin solid'],
-					['accent', 'Accent double'],
-				],
-				(value) => ({ type: 'tableTab', key: 'pen', property: 'style', value }),
-				'pen',
-			),
 			stack(
+				menu(
+					'Border Styles',
+					'borders',
+					[
+						['grid', 'Thin solid'],
+						['accent', 'Accent double'],
+					],
+					(value) => ({ type: 'tableTab', key: 'pen', property: 'style', value }),
+					'pen',
+					true,
+				),
 				menu(
 					'Line Style',
 					'borders',
 					STYLES,
 					(value) => ({ type: 'tableTab', key: 'pen', property: 'style', value }),
 					'pen',
+					true,
 				),
 				menu(
 					'Line Weight',
@@ -135,26 +139,31 @@ function design(panel: HTMLElement) {
 					WEIGHTS,
 					(value) => ({ type: 'tableTab', key: 'pen', property: 'sizeEighthPoints', value }),
 					'pen',
+					true,
 				),
 			),
-			menu(
-				'Pen Color',
-				'fontColor',
-				[
-					['auto', 'Automatic'],
-					['#4472C4', 'Blue'],
-					['#C00000', 'Red'],
-					['#008000', 'Green'],
-				],
-				(value) => ({ type: 'tableTab', key: 'pen', property: 'color', value }),
-				'pen',
-			),
-			menu(
-				'Table Borders',
-				'borders',
-				BORDERS,
-				(value) => ({ type: 'tableTab', key: 'borders', value }),
-				'borders',
+			stack(
+				menu(
+					'Pen Color',
+					'fontColor',
+					[
+						['auto', 'Automatic'],
+						['#4472C4', 'Blue'],
+						['#C00000', 'Red'],
+						['#008000', 'Green'],
+					],
+					(value) => ({ type: 'tableTab', key: 'pen', property: 'color', value }),
+					'pen',
+					true,
+				),
+				menu(
+					'Table Borders',
+					'borders',
+					BORDERS,
+					(value) => ({ type: 'tableTab', key: 'borders', value }),
+					'borders',
+					true,
+				),
 			),
 			stack(draw('Border Painter', 'paint'), draw('Draw Table', 'draw'), draw('Eraser', 'erase')),
 		),
@@ -226,13 +235,20 @@ function layout(panel: HTMLElement) {
 					row(
 						...(['left', 'center', 'right'] as const).map((horizontal) => {
 							const label = ALIGNMENTS[vertical][horizontal];
-							const control = tool(label, 'table', {
+							const icon =
+								horizontal === 'left'
+									? 'alignLeft'
+									: horizontal === 'right'
+										? 'alignRight'
+										: 'alignCenter';
+							const control = tool(label, icon, {
 								type: 'tableTab',
 								key: 'align',
 								vertical,
 								horizontal,
 							});
 							control.dataset.tableCommand = 'align';
+							control.dataset.vertical = vertical;
 							return control;
 						}),
 					),
@@ -254,4 +270,14 @@ function layout(panel: HTMLElement) {
 export function buildTablePanels(designPanel: HTMLElement, layoutPanel: HTMLElement): void {
 	design(designPanel);
 	layout(layoutPanel);
+	for (const panel of [designPanel, layoutPanel]) {
+		for (const group of panel.querySelectorAll<HTMLElement>(':scope > .ribbon-group')) {
+			group.classList.add('dve-table-ribbon-group');
+			const caption = document.createElement('span');
+			caption.className = 'dve-table-group-caption';
+			caption.textContent = group.dataset.label ?? '';
+			caption.setAttribute('aria-hidden', 'true');
+			group.append(caption);
+		}
+	}
 }

@@ -211,3 +211,41 @@ test('Home bold and alignment apply to all and only the selected column', async 
 		await expect(cells.nth(index).locator('p')).not.toHaveCSS('text-align', 'right');
 	}
 });
+
+test('table ribbon group labels have their own space at 1700 pixels', async ({ page }) => {
+	await page.setViewportSize({ width: 1700, height: 960 });
+	await page.goto('/?framework=vanilla');
+	await newDocument(page);
+	await insertTableOfSize(page);
+	const editor = page.locator('docx-editor');
+	await editor.locator('.ProseMirror td').first().click();
+	for (const tab of ['Table Design', 'Table Layout']) {
+		await editor.getByRole('tab', { name: tab, exact: true }).click();
+		const panel = editor.locator(`[data-panel="${tab}"]`);
+		await expect(panel.locator('.dve-table-group-caption:visible')).toHaveCount(
+			tab === 'Table Design' ? 3 : 6,
+		);
+		await expect(panel.locator('[data-collapsed]')).toHaveCount(0);
+		const overlap = await panel.locator('.dve-table-group-caption').evaluateAll((captions) =>
+			captions.flatMap((caption) => {
+				const bottom = Math.max(
+					...Array.from(
+						caption.parentElement!.querySelectorAll('button, input, select'),
+						(control) => control.getBoundingClientRect().bottom,
+					),
+				);
+				const top = caption.getBoundingClientRect().top;
+				return bottom > top ? [{ label: caption.textContent, bottom, top }] : [];
+			}),
+		);
+		expect(overlap).toEqual([]);
+	}
+	const alignment = editor.getByRole('group', { name: 'Cell Alignment controls' });
+	const buttons = alignment.locator('[data-table-command="align"]');
+	await expect(buttons).toHaveCount(9);
+	for (const button of await buttons.all()) {
+		const name = await button.getAttribute('aria-label');
+		expect(name).toMatch(/^Align /);
+		await expect(button).toHaveAttribute('title', name!);
+	}
+});

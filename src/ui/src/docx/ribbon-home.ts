@@ -163,54 +163,65 @@ export function buildHomePanel(panels: Map<string, HTMLElement>): void {
 			),
 			group(
 				'Table',
-				tool(
-					'Insert row above',
-					'rowAbove',
-					{ type: 'tableEdit', key: 'rowBefore' },
-					{ large: true },
+				stack(
+					tool(
+						'Insert row above',
+						'rowAbove',
+						{ type: 'tableEdit', key: 'rowBefore' },
+						{ inline: true },
+					),
+					tool(
+						'Insert row below',
+						'rowBelow',
+						{ type: 'tableEdit', key: 'rowAfter' },
+						{ inline: true },
+					),
+					tool(
+						'Delete row',
+						'deleteRow',
+						{ type: 'tableEdit', key: 'deleteRow' },
+						{ inline: true },
+					),
 				),
-				tool(
-					'Insert row below',
-					'rowBelow',
-					{ type: 'tableEdit', key: 'rowAfter' },
-					{ large: true },
+				stack(
+					tool(
+						'Insert column left',
+						'columnLeft',
+						{ type: 'tableEdit', key: 'columnBefore' },
+						{ inline: true },
+					),
+					tool(
+						'Insert column right',
+						'columnRight',
+						{ type: 'tableEdit', key: 'columnAfter' },
+						{ inline: true },
+					),
+					tool(
+						'Delete column',
+						'deleteColumn',
+						{ type: 'tableEdit', key: 'deleteColumn' },
+						{ inline: true },
+					),
 				),
-				tool('Delete row', 'deleteRow', { type: 'tableEdit', key: 'deleteRow' }, { large: true }),
-				tool(
-					'Insert column left',
-					'columnLeft',
-					{ type: 'tableEdit', key: 'columnBefore' },
-					{ large: true },
-				),
-				tool(
-					'Insert column right',
-					'columnRight',
-					{ type: 'tableEdit', key: 'columnAfter' },
-					{ large: true },
-				),
-				tool(
-					'Delete column',
-					'deleteColumn',
-					{ type: 'tableEdit', key: 'deleteColumn' },
-					{ large: true },
-				),
-				tool(
-					'Merge cells',
-					'mergeCells',
-					{ type: 'tableEdit', key: 'mergeCells' },
-					{ large: true },
-				),
-				tool(
-					'Split cells',
-					'splitCell',
-					{ type: 'formatDialog', kind: 'splitCells' },
-					{ large: true },
-				),
-				tool(
-					'Delete table',
-					'deleteTable',
-					{ type: 'tableEdit', key: 'deleteTable' },
-					{ large: true },
+				stack(
+					tool(
+						'Merge cells',
+						'mergeCells',
+						{ type: 'tableEdit', key: 'mergeCells' },
+						{ inline: true },
+					),
+					tool(
+						'Split cells',
+						'splitCell',
+						{ type: 'formatDialog', kind: 'splitCells' },
+						{ inline: true },
+					),
+					tool(
+						'Delete table',
+						'deleteTable',
+						{ type: 'tableEdit', key: 'deleteTable' },
+						{ inline: true },
+					),
 				),
 			),
 		);
