@@ -8,6 +8,7 @@ import { I18N_CONTEXT_KEY } from '../../../../i18n/context';
 import { FindReplaceState } from '../../../editor/editor-find-replace.svelte';
 import { EditorState } from '../../../editor/editor-state.svelte';
 import ArrangeExtras from './ArrangeExtras.svelte';
+import ClipboardGroup from './ClipboardGroup.svelte';
 import EditingGroup from './EditingGroup.svelte';
 import FontFormattingGroup from './FontFormattingGroup.svelte';
 
@@ -144,15 +145,25 @@ describe('shared Arrange shape extras', () => {
 		const width = slot(target, 'home.arrange.outlineWidth') as HTMLInputElement;
 		expect(width.getAttribute('aria-label')).toBe('Stroke width');
 	});
+});
 
-	it('mirrors the Format Painter pill from the controller', () => {
+describe('clipboard Format Painter', () => {
+	it('toggles the controller and reflects its pressed state', () => {
 		const editor = makeEditor([TEXT], 'text-1');
-		const target = render(ArrangeExtras, { editor });
-		const pill = target.querySelector<HTMLButtonElement>('[data-testid="format-painter-toggle"]')!;
-		expect(pill.textContent).toBe('Format');
-		pill.click();
+		const target = render(ClipboardGroup, { editor });
+		const button = target.querySelector<HTMLButtonElement>(
+			'[data-ribbon-group="home.clipboard"] [data-ribbon-control="home.clipboard.formatPainter"]',
+		)!;
+		expect(button.getAttribute('aria-label')).toBe('Format Painter');
+		expect(button.getAttribute('aria-pressed')).toBe('false');
+		button.click();
 		flushSync();
-		expect(pill.getAttribute('aria-pressed')).toBe(String(editor.formatPainter.active));
+		expect(editor.formatPainter.active).toBeTruthy();
+		expect(button.getAttribute('aria-pressed')).toBe('true');
+		button.click();
+		flushSync();
+		expect(editor.formatPainter.active).toBeFalsy();
+		expect(button.getAttribute('aria-pressed')).toBe('false');
 	});
 });
 

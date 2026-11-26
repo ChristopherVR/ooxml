@@ -40,7 +40,9 @@ async function openFixture(page: Page): Promise<{
 	await source.waitFor();
 	await target.waitFor();
 
-	const painter = page.getByTestId('format-painter-toggle').first();
+	const painter = page
+		.locator('[data-ribbon-group="home.clipboard"]')
+		.getByTestId('format-painter-toggle');
 	const canvas = page.locator('[aria-roledescription="slide"]').first();
 	return { painter, source, target, canvas };
 }
