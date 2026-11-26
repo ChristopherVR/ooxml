@@ -73,7 +73,23 @@ test('consents to a local Word add-in and preserves it after an invalid update',
 	await expect(installed).toContainText('Unavailable requirement · WordApi 1.1');
 	await expect(installed).toContainText('Unavailable requirement · AddinCommands 1.10');
 	await expect(installed).toContainText('Unsupported feature · ExecuteFunction');
-	await installed.getByRole('button', { name: 'Remove Notes', exact: true }).click();
+	await page.keyboard.press('Escape');
+
+	await reveal(editor, get);
+	await get.click();
+	await select(
+		source
+			.replace('1.0.0', '1.0.1')
+			.replace('DefaultValue="Notes"', 'DefaultValue="Updated Notes"'),
+	);
+	await expect(preview).toContainText('Updated Notes (1.0.1)');
+	await expect(preview.getByText('Update from 1.0.0 to 1.0.1', { exact: true })).toBeVisible();
+	await preview.getByRole('button', { name: 'Update Updated Notes', exact: true }).click();
+
+	await reveal(editor, mine);
+	await mine.click();
+	await expect(installed).toContainText('Updated Notes (1.0.1)');
+	await installed.getByRole('button', { name: 'Remove Updated Notes', exact: true }).click();
 	await reveal(editor, mine);
 	await mine.click();
 	await expect(installed).toContainText('No add-ins');

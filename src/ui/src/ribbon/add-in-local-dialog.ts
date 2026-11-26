@@ -134,7 +134,6 @@ export function mountLocalAddIns(
 				'Origins this add-in may load',
 				[...new Set([...manifest.entryOrigins, ...manifest.declaredOrigins])].join(', '),
 			);
-			if (previous) detail('Installed version', previous.manifest.version);
 			const consent = doc.createElement('section');
 			const title = doc.createElement('h3');
 			title.textContent = t('Review add-in permissions');
@@ -150,7 +149,15 @@ export function mountLocalAddIns(
 			const notice = doc.createElement('p');
 			notice.textContent = t('Install for this editor session. Add-in code stays inactive.');
 			consent.append(title, requests, permissions, details, notice);
-			preview.append(heading, summary, consent);
+			preview.append(heading, summary);
+			if (previous && previous.digest !== digest) {
+				const update = doc.createElement('p');
+				update.textContent = t('Update from {oldVersion} to {newVersion}')
+					.replace('{oldVersion}', previous.manifest.version)
+					.replace('{newVersion}', manifest.version);
+				preview.append(update);
+			}
+			preview.append(consent);
 			if (marketplace) marketplace.hidden = true;
 			appendIssues(consent, manifest);
 			if (previous?.digest === digest) {

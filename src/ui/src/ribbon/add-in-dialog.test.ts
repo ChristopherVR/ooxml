@@ -85,7 +85,7 @@ it('requires consent, keeps the prior install through a failed update and isolat
 	const newer = await open('getAddIns');
 	await picker(newer, xml.replace('1.0.0', '1.0.1'));
 	await vi.waitFor(() => expect(control(newer, 'Update')).toBeDefined());
-	expect(newer.textContent).toContain('Installed version1.0.0');
+	expect(newer.textContent).toContain('Update from 1.0.0 to 1.0.1');
 	control(newer, 'Update')?.click();
 
 	const updated = await open('myAddIns');
