@@ -1,4 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
+import JSZip from 'jszip';
 import type { OfficeUiDialog } from '../dialog/dialog';
 import { openOfficeAddIns, setOfficeAddInCatalog, setOfficeAddInStorefront } from './add-in-dialog';
 
@@ -99,6 +100,40 @@ it('offers only the configured storefront and validates BYO bytes before install
 	await vi.waitFor(() => expect(dialog?.querySelector('#consent-title')).toBeTruthy());
 	expect(read).toHaveBeenCalledOnce();
 	expect(dialog?.textContent).toContain('Read this document');
+	dialog?.close();
+});
+
+it('uses a regional host locale for unified manifest translations', async () => {
+	const editor = document.body
+		.appendChild(document.createElement('div'))
+		.attachShadow({ mode: 'open' });
+	const manifest = {
+		manifestVersion: '1.25',
+		id: '083a367e-842b-4d4f-ab91-cd5de849e495',
+		version: '1.0.0',
+		name: { short: 'Notes' },
+		description: { short: 'Reference notes.' },
+		developer: { name: 'Lab Notes' },
+		localizationInfo: {
+			defaultLanguageTag: 'en-us',
+			additionalLanguages: [{ languageTag: 'fr-ca', file: 'fr-ca.json' }],
+		},
+		extensions: [{ requirements: { scopes: ['document'] } }],
+	};
+	const zip = await new JSZip()
+		.file('manifest.json', JSON.stringify(manifest))
+		.file('fr-ca.json', JSON.stringify({ 'name.short': 'Notes du Québec' }))
+		.generateAsync({ type: 'arraybuffer' });
+	await openOfficeAddIns(editor, 'getAddIns', (text) => text, 'word', 'fr-CA');
+	const dialog = getDialog(editor);
+	expect(dialog?.heading).toBe('Compléments Office');
+	const input = dialog?.querySelector<HTMLInputElement>('input[type=file]');
+	if (!input) throw new Error('Missing file input');
+	Object.defineProperty(input, 'files', { value: [new File([zip], 'notes.zip')] });
+	input.dispatchEvent(new Event('change'));
+	await vi.waitFor(() =>
+		expect(dialog?.querySelector('.tile-name')?.textContent).toBe('Notes du Québec (1.0.0)'),
+	);
 	dialog?.close();
 });
 

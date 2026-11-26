@@ -20,7 +20,7 @@ const PIVOTS = ['My Add-ins', 'Admin Managed', 'Store'] as const;
 export type Pivot = (typeof PIVOTS)[number];
 
 function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
-	const { host, locale, t, product } = options;
+	const { host, locale, manifestLocale, t, product } = options;
 	return {
 		...addInSettings(host),
 		installed: localAddIns(host),
@@ -28,6 +28,7 @@ function addInSession(options: OpenAddInsOptions, restoreFocus: () => void) {
 		t: localAddInText(locale, t),
 		product,
 		locale,
+		manifestLocale,
 		restoreFocus,
 	};
 }
@@ -113,7 +114,7 @@ export class OfficeUiAddInsDialog extends OfficeElement {
 		try {
 			const file = await source(pending.signal);
 			if (pending.signal.aborted || !this.shell?.open) return;
-			const addIn = await readAddInFile(file, session.product, session.locale);
+			const addIn = await readAddInFile(file, session.product, session.manifestLocale);
 			if (pending.signal.aborted || !this.shell?.open) return;
 			this.#preview = { addIn, previous: session.installed.get(addIn.manifest.id) };
 			this.#message = '';

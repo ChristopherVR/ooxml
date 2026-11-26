@@ -105,6 +105,7 @@ export interface OpenAddInsOptions {
 	t: OfficeServiceText;
 	product: AddInDialogProduct;
 	locale: string;
+	manifestLocale: string;
 }
 
 export async function openOfficeAddIns(
@@ -128,7 +129,12 @@ export async function openOfficeAddIns(
 	pending[OPENING] = true;
 	try {
 		const { mountAddInsDialog } = await import('../dialog/add-ins-dialog');
-		if (host.isConnected) mountAddInsDialog({ host, mode, t, product, locale: language }, restore);
+		if (host.isConnected) {
+			mountAddInsDialog(
+				{ host, mode, t, product, locale: language, manifestLocale: locale },
+				restore,
+			);
+		}
 	} catch {
 		if (!host.isConnected) return;
 		const dialog = showOfficeServiceDialog(host, t('Office Add-ins'), t('Close'));
