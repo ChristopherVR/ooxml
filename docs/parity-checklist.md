@@ -108,8 +108,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       `src/ui/src/visio/render-embedded-chart.ts`, `viewer-insert-chart-ex.ts`; verified in
       `edit-chart-object-chartex.test.ts`, `render-embedded-chart.test.ts` and
       `viewer-insert-chart.test.ts`).
-- [ ] **P1** Pivot charts: `pivotSource` and `pivotFmts` are only carried through; no field
-      buttons and no link to PivotTable edits.
+- [ ] **P1** Pivot charts: field buttons and the link to PivotTable edits and refresh work for
+      charts with one plot group over a supported PivotTable (`xlsx/pivot/chart-binding.ts`);
+      open: imported charts with several plot groups or unsupported PivotTable sources, and
+      per-role field-button visibility.
 - [ ] **P1** Chart Design: Word and Excel now have Add Chart Element (Title, Legend, Data Labels),
       Switch Row/Column (`switchChartRowColumn` in `src/core/chart/edit/data-sheet.ts`,
       `switchXlsxChartRowColumnPatch` in `src/core/xlsx/edit/chart-design.ts`) and Select Data
@@ -123,8 +125,10 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       a moved formula keeps its references (`SUM(B2:B3)` stays as written), where Excel rewrites
       them for the deleted row; the chart area cannot use `xlsx/formula/shift-formula.ts` without
       a shared reference shifter.
-- [ ] **P1** Equations in Excel text boxes and in Visio (`ooxml-core/math` and
-      `src/ui/src/docx/equation-*` are the template).
+- [ ] **P1** Equations: Excel inserts, edits and saves standalone Office Math text boxes with the
+      editor Word uses (`src/ui/src/math/`); open: equations in grouped Excel text boxes, legacy
+      OLE equation previews, and authoring equations in Visio (Visio previews and keeps equations
+      embedded from Word; desktop Visio 16 disables its own equation command).
 - [ ] **P1** SmartArt layouts the preview marks approximate (`src/core/diagram/layout-preview.ts`;
       an edited diagram's regenerated cache binds to Office's presentation points but its
       placement is the engine's, within 1% of Office in 27 of 52 admitted gallery diagrams),
@@ -370,7 +374,9 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       Header & Footer (edited in Page Layout view), with undo and save round trips
       (`xlsx/edit/page-authoring.test.ts`, `src/ui/src/xlsx/commands/ribbon-authoring.test.ts`,
       `e2e/xlsx/ribbon-page-authoring.spec.ts`).
-- [ ] **P1** Insert: PivotChart, Recommended PivotTables and Equation.
+- [x] **P1** Insert: PivotChart (from a range, table or PivotTable), Recommended PivotTables
+      (sampled previews) and Equation (an Office Math text box); desktop Excel 16 reopens and
+      refreshes the PivotCharts and re-saves the equations without repair.
 - [x] **P1** Insert > 3D Models embeds a self-contained GLB 2.0 with a PNG preview. Insert > Object
       embeds an existing DOCX, XLSX or PPTX as a worksheet icon. The original bytes survive
       save and reopen, and the embedded Office file can be downloaded from its icon.
@@ -743,9 +749,18 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 
 ### Ribbon
 
-- [ ] **P1** Mailings: all 16 commands are disabled (`ribbon-native-tabs.ts`).
-- [ ] **P1** Design: Themes, Colors, Fonts, Paragraph Spacing, Effects and Set as Default are
-      disabled.
+- [x] **P1** Mailings: Start Mail Merge (letters, directory), Select Recipients (local CSV, TSV
+      or `.xlsx`, or the host's `mailMergeDataSource`), Edit Recipient List, merge fields and
+      Rules, Match Fields, Preview Results, Check for Errors and Finish & Merge to a document or
+      print, loaded on demand (`src/ui/src/docx/mailings/`, `e2e/docx`).
+- [ ] **P1** Mailings: Send Email Messages, Envelopes, Labels and Update Labels; native
+      `ADDRESSBLOCK` and `GREETINGLINE` fields; interactive ASK and FILL-IN prompts.
+- [x] **P1** Design: Themes, Colors, Fonts, Paragraph Spacing and Effects galleries (shared
+      theme presets in `drawingml/theme-presets.ts`), custom colours, fonts and spacing, and Set
+      as Default through the host's preference store, each one undo step and saved
+      (`docx/document-design.ts`, `e2e/docx/document-design.spec.ts`).
+- [ ] **P1** Design: the full Word theme catalogue, saving and reusing custom schemes, `.thmx`
+      import and export, and Effects beyond three shadow presets.
 - [ ] **P1** Table tab (Table Design and Layout merged) lacks table styles and style options, Cell
       Size and AutoFit, cell alignment and margins, Repeat Header Rows, Formula, Convert to Text,
       Select and Draw Borders.
@@ -944,8 +959,11 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
       XML) for add-in style scripts.
 - [ ] **P2** Customization hides or replaces regions and capabilities, not single toolbar controls,
       and dialogs have no headless draft/validate/apply hooks.
-- [ ] **P1** Remove Background: an existing `a14:backgroundRemoval` is drawn but cannot be
-      authored (`src/ui/src/pptx/render/image-background-removal.ts`).
+- [ ] **P1** Remove Background is authored (automatic guess in a worker, keep and remove marks)
+      and round-trips here, and desktop PowerPoint 16 opens and draws the result, but PowerPoint
+      drops the `a14:backgroundRemoval` state when it re-saves the file (also with an `hdphoto`
+      relationship to a PNG original), so the removal is not editable there; HD Photo originals
+      are not re-edited.
 - [x] **P1** Summary Zoom creates a new overview slide before the first chosen slide, reuses
       existing sections, and starts new sections at the chosen slides.
 - [x] **P1** Slide Zoom retains its destination and Section and Summary Zoom follow the beginning
@@ -1139,10 +1157,14 @@ Teams has its own list in [teams-parity.md](teams-parity.md).
 - [x] **P1** In Word, Excel and PowerPoint, Get Add-ins installs from the host catalog and opens
       Microsoft Marketplace for browsing. My Add-ins opens installed tabs and removes catalog
       add-ins when enabled by the host.
-- [ ] **P1** Store add-in installation and Office.js runtime for Word, Excel and PowerPoint.
+- [ ] **P1** Store add-in installation and Office.js runtime for Word, Excel and PowerPoint;
+      the plan, including a configurable storefront (off, Microsoft handoff, bring-your-own), is
+      `docs/office-addins-plan.md`.
 - [ ] **P1** Missing tabs: Video Format, Audio Format, Playback and SmartArt Format.
-- [ ] **P1** Picture Format lacks Remove Background, Compress, Change Picture, Reset Picture,
-      Picture Border, Picture Layout, Alt Text and Arrange.
+- [ ] **P1** Picture Format: Compress, Change Picture, Reset Picture (and size), Picture Border,
+      Alt Text and Arrange work in all five bindings (`e2e/pptx/picture-format-commands.spec.ts`);
+      open: Picture Layout (disabled with a reason) and formats other than PNG and JPEG for
+      Change Picture, Compress and Reset.
 - [x] **P1** SmartArt Design: Text Pane, Promote, Demote, Right to Left, Move Up, Move Down and
       Convert (to shapes) are enabled and wired across all five bindings
       (`ribbon-galleries/smartart-commands.ts`, `smartart-layout.ts`, `smartart-commands.test.ts`
@@ -1354,9 +1376,12 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P1** Dynamic connectors in files saved by Visio follow moved shapes, re-glue and reroute,
       including AutoConnect's PinY glue; end positions match Visio's through COM
       (`edit-connector-visio-native.test.ts`).
-- [ ] **P1** A copy that meets another dynamic connector is refused; Visio also reroutes unglued
-      connectors whose old path crossed a moved shape, the core does not; non-Dynamic and
-      grouped connector masters are refused.
+- [x] **P1** A copy that meets another dynamic connector is admitted with Visio's line jump,
+      free-ended right-angle connectors reroute around a moved shape, and straight, curved,
+      elbow and grouped connector masters copy and drop, checked against Visio 16 cells
+      (`visio/__fixtures__/native-connector-copy-drop.json`).
+- [ ] **P1** Visio's redistribution of parallel or coincident Dynamic connector copies, and its
+      free-ended routing around complex obstacle layouts.
 - [x] **P1** Corner handles keep the proportions and Shift keeps them on every handle
       (`src/core/visio/ui/shape-resize.ts`; ledger entry of 2026-10-30).
 - [x] **P1** Resize snaps the moving edge to other shapes' edges and centres and to shown guides,
@@ -1416,8 +1441,8 @@ installed Visio 16 build is used to check that saved files open without repair.
 - [x] **P2** Page tabs drag to reorder, background pages only among themselves
       (`chrome/tab-drag.ts`, shared with Excel's sheet tabs; `e2e/visio/page-tab-drag.spec.ts`).
 - [ ] **P2** No ShapeSheet window or Developer tab; on-shape text editing is a plain text area.
-- [ ] **P2** Stencil drops refuse non-Dynamic connector, picture and multi-root rotated masters
-      (`src/core/visio/ui/master-drop.ts`).
+- [ ] **P2** Stencil drops refuse picture masters and multi-root masters with rotated shapes or
+      top-level connectors (`src/core/visio/ui/master-drop.ts`).
 
 ### Ribbon
 
