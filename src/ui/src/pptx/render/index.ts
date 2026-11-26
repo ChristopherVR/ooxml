@@ -1723,6 +1723,13 @@ export * from './presentation-subtitles';
 export * from './subtitle-settings';
 export * from './account';
 export * from './viewer-prefs-storage';
+export {
+	attachDrawCanvas,
+	configurePptxDraw,
+	createDrawCanvasPort,
+	notifyDrawCanvas,
+} from './draw-canvas';
+export type { DrawCanvasPort, DrawPenPreset, PptxDrawHostOptions } from './draw-canvas';
 // Toolbar action / ribbon-tab visibility: the ToolbarActionId catalogue and
 // TOOLBAR_TABS registry each binding's `hiddenActions` prop is built on.
 export * from './toolbar-actions';

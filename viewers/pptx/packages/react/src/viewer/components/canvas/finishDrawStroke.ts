@@ -1,14 +1,13 @@
-import { buildFreeformShapeElement, hasTiltData } from 'ooxml-ui/pptx';
+import { buildFreeformShapeElement, strokeToInkElement } from 'ooxml-ui/pptx';
+import type { InkPoint } from 'ooxml-ui/pptx';
 import type { InkPptxElement, ShapePptxElement } from 'pptx-viewer-core';
 
 import type { DrawingTool } from '../../types-ui';
-import { buildCanvasPathD } from './canvas-path';
-import type { CanvasPoint } from './useLiveInkPreview';
 
 /** The accumulated Draw-tool gesture state `finishDrawStroke` turns into an element. */
 export interface FinishDrawStrokeInput {
 	tool: DrawingTool;
-	points: CanvasPoint[];
+	points: InkPoint[];
 	pressures: number[];
 	tiltX: number[];
 	tiltY: number[];
@@ -42,86 +41,19 @@ export function finishDrawStroke(input: FinishDrawStrokeInput): FinishedDrawStro
 		return element ? { kind: 'freeform', element } : null;
 	}
 
-	let minX = Infinity;
-	let minY = Infinity;
-	let maxX = -Infinity;
-	let maxY = -Infinity;
-	for (const pt of points) {
-		if (pt.x < minX) {
-			minX = pt.x;
-		}
-		if (pt.y < minY) {
-			minY = pt.y;
-		}
-		if (pt.x > maxX) {
-			maxX = pt.x;
-		}
-		if (pt.y > maxY) {
-			maxY = pt.y;
-		}
+	if (tool === 'select' || tool === 'eraser') {
+		return null;
 	}
-	const pad = width;
-	minX -= pad;
-	minY -= pad;
-	maxX += pad;
-	maxY += pad;
-	const w = Math.max(maxX - minX, 1);
-	const h = Math.max(maxY - minY, 1);
-	const relPoints = points.map((pt) => ({ x: pt.x - minX, y: pt.y - minY }));
-	return {
-		kind: 'ink',
-		element: buildInkElement(
-			relPoints,
-			{ x: minX, y: minY, w, h },
-			tool,
-			{ pressures, tiltX, tiltY },
-			color,
-			width,
-		),
-	};
-}
-
-interface StrokeBox {
-	x: number;
-	y: number;
-	w: number;
-	h: number;
-}
-
-function buildInkElement(
-	relPoints: CanvasPoint[],
-	box: StrokeBox,
-	tool: DrawingTool,
-	channels: { pressures: number[]; tiltX: number[]; tiltY: number[] },
-	color: string,
-	width: number,
-): InkPptxElement {
-	const pathD = buildCanvasPathD(relPoints);
-	const isHighlighter = tool === 'highlighter';
-	// Check if we have meaningful pressure variation from the stylus/pen. A
-	// uniform pressure of 0.5 (the default for mouse input) means no real
-	// pressure data was captured.
-	const { pressures, tiltX, tiltY } = channels;
-	const hasPressure =
-		pressures.length >= 2 && pressures.some((p) => Math.abs(p - pressures[0]) > 0.01);
-	// Tilt uses the shared predicate (not a hand-rolled variation check):
-	// unlike pressure, a constant non-zero lean across the whole stroke is
-	// still real data, so "any point differs from (0, 0)" is the right test,
-	// not "varies across points".
-	const hasTilt = hasTiltData(tiltX, tiltY);
-	return {
-		id: `ink-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-		type: 'ink',
-		x: box.x,
-		y: box.y,
-		width: box.w,
-		height: box.h,
-		inkPaths: [pathD],
-		inkColors: [color],
-		inkWidths: [width],
-		inkOpacities: [isHighlighter ? 0.4 : 1],
-		inkTool: isHighlighter ? 'highlighter' : 'pen',
-		...(hasPressure ? { inkPointPressures: [pressures] } : {}),
-		...(hasTilt ? { inkPointTiltX: [tiltX], inkPointTiltY: [tiltY] } : {}),
-	};
+	const element = strokeToInkElement({
+		tool,
+		color,
+		width,
+		points: points.map((point, index) => ({
+			...point,
+			pressure: pressures[index],
+			tiltX: tiltX[index],
+			tiltY: tiltY[index],
+		})),
+	});
+	return element ? { kind: 'ink', element } : null;
 }

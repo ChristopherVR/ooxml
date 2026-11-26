@@ -350,6 +350,7 @@ export function createRibbon(
 				);
 			}
 		}
+		if (drawTab) drawTab.el.hidden = tab !== 'draw' || commands === 'hidden';
 		// The galleries of the tab now showing build the tiles they put off while it was hidden.
 		galleryHub.reveal();
 	}

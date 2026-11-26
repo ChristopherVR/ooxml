@@ -40,6 +40,21 @@ function colorEvent(value: string): Event {
 }
 
 describe('ribbonDrawSectionComponent pen colour (wave-4 B6)', () => {
+	it('emits a complete preset in one state change', () => {
+		const section = createSection([]);
+		const emit = vi.spyOn(section.drawToolChange, 'emit');
+		Object.assign(section, { canEdit: signal(true) });
+		section['request'](
+			new CustomEvent('draw-request', {
+				detail: { kind: 'preset', value: { kind: 'highlighter', color: '#aabbcc', width: 8 } },
+			}),
+		);
+		expect(emit).toHaveBeenCalledExactlyOnceWith({
+			tool: 'highlighter',
+			color: '#aabbcc',
+			width: 8,
+		});
+	});
 	it('routes shared tool/width intents and rejects read-only requests', () => {
 		const section = createSection([]);
 		const emit = vi.spyOn(section.drawToolChange, 'emit');

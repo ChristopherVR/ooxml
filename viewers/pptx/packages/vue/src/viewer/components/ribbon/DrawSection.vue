@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { toolForDrawPreset } from 'ooxml-ui/pptx';
 import type { RibbonDrawRequestEvent } from 'ooxml-ui/pptx';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -45,6 +46,11 @@ function request(event: RibbonDrawRequestEvent): void {
 			if (intent.committed) {
 				recent?.push(intent.value);
 			}
+			break;
+		case 'preset':
+			props.onSetDrawingColor(intent.value.color);
+			props.onSetDrawingWidth(intent.value.width);
+			props.onSetActiveTool(toolForDrawPreset(intent.value.kind));
 	}
 }
 </script>

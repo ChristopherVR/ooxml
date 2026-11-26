@@ -23,6 +23,9 @@ import {
 	createSlidePackageClipboard,
 	commitElementUpdateBatch,
 	attachViewerHyperlinks,
+	attachDrawCanvas,
+	createDrawCanvasPort,
+	notifyDrawCanvas,
 	applyPreferenceToOptions,
 	buildRasterPictureElement,
 	createBackstagePresentation,
@@ -2120,6 +2123,26 @@ export class PowerPointViewerComponent
 	/** The `<main>` host; used to locate the live `.pptx-ng-canvas-stage`. */
 	private readonly mainEl = viewChild<ElementRef<HTMLElement>>('mainEl');
 	private readonly viewerRoot = viewChild<ElementRef<HTMLElement>>('viewerRoot');
+	private readonly drawCanvasPort = createDrawCanvasPort(
+		() => ({
+			slides: this.editor.slides(),
+			index: this.activeSlideIndex(),
+			editable: this.canEdit() && this.getMode() === 'edit' && !this.editor.editTemplateMode(),
+		}),
+		(next, selectedId) => {
+			this.editor.applyReplacement(next);
+			this.editor.select(selectedId ? [selectedId] : []);
+		},
+	);
+	private readonly drawCanvas = effect((onCleanup) => {
+		const root = this.viewerRoot()?.nativeElement;
+		if (root) onCleanup(attachDrawCanvas(root, this.drawCanvasPort));
+	});
+	private readonly drawSlide = effect(() => {
+		this.drawCanvasPort.getSlide();
+		const root = this.viewerRoot()?.nativeElement;
+		if (root) notifyDrawCanvas(root);
+	});
 	private readonly hyperlinkNavigation = effect((onCleanup) => {
 		const root = this.viewerRoot()?.nativeElement;
 		if (!root) {

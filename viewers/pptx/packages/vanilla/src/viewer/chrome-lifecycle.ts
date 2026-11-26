@@ -2,6 +2,9 @@ import { templateSchemeFromTheme } from 'ooxml-ui/pptx';
 import {
 	EMPTY_RESOLVED_CUSTOMIZATION,
 	attachViewerHyperlinks,
+	attachDrawCanvas,
+	createDrawCanvasPort,
+	notifyDrawCanvas,
 	attachViewportNavigation,
 	installTouchPress,
 	INSPECTOR_PANEL_DEFAULT_WIDTH,
@@ -620,6 +623,32 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 			chrome.root.removeAttribute('data-pptx-touch-press');
 		}
 	});
+	const drawCanvas = createDrawCanvasPort(
+		() => {
+			const state = store.get();
+			return {
+				slides: state.slides,
+				index: state.currentSlide,
+				editable: state.editable && !state.presenting && !state.editTemplateMode,
+			};
+		},
+		(next, selectedId) => {
+			deps.commitSlides?.(next);
+			store.set({
+				selectedElementId: selectedId,
+				selectedElementIds: selectedId ? [selectedId] : [],
+			});
+		},
+	);
+	const detachDrawCanvas = attachDrawCanvas(chrome.root, drawCanvas);
+	let drawSlide = drawCanvas.getSlide();
+	const detachDrawSlide = store.subscribe(() => {
+		const slide = drawCanvas.getSlide();
+		if (slide !== drawSlide) {
+			drawSlide = slide;
+			queueMicrotask(() => notifyDrawCanvas(chrome.root));
+		}
+	});
 	// Touch long-press / double-tap (issue #290): iOS Safari fires no contextmenu
 	// on a long-press and no reliable dblclick, so the shared installer synthesises
 	// them on the controls that opt in with `data-pptx-touch-press`.
@@ -668,6 +697,8 @@ export function mountChrome(deps: MountChromeDeps): ChromeLifecycle {
 	});
 
 	const detachPresentationClick = (): void => {
+		detachDrawSlide();
+		detachDrawCanvas();
 		detachHyperlinks();
 		detachLinkMode();
 		detachTouchPress();

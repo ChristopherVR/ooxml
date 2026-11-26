@@ -277,6 +277,7 @@ export const COMPLEX_ELEMENT_FIELDS: Readonly<Record<string, string>> = {
 	groupFill: '_gf',
 	groupEffectStyle: '_ges',
 	inkPointPressures: '_ipp',
+	inkPointTimestamps: '_ipt',
 	inkPointTiltX: '_iptx',
 	inkPointTiltY: '_ipty',
 	inkStrokes: '_cis',

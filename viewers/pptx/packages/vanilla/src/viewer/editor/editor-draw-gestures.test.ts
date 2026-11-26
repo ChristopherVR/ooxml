@@ -104,8 +104,8 @@ describe('createDrawGestures', () => {
 		const flat = { pressure: undefined, tiltX: undefined, tiltY: undefined };
 		expect(stroke.points).toStrictEqual([
 			{ x: 0, y: 0, ...flat },
-			{ x: 10, y: 5, ...flat },
-			{ x: 20, y: 15, ...flat },
+			{ x: 10, y: 5, ...flat, timestamp: expect.any(Number) },
+			{ x: 20, y: 15, ...flat, timestamp: expect.any(Number) },
 		]);
 	});
 
@@ -225,7 +225,14 @@ describe('createDrawGestures', () => {
 		);
 		expect(onStrokePreview).toHaveBeenLastCalledWith([
 			{ x: 0, y: 0, pressure: undefined, tiltX: undefined, tiltY: undefined },
-			{ x: 10, y: 5, pressure: undefined, tiltX: undefined, tiltY: undefined },
+			{
+				x: 10,
+				y: 5,
+				pressure: undefined,
+				tiltX: undefined,
+				tiltY: undefined,
+				timestamp: expect.any(Number),
+			},
 		]);
 	});
 

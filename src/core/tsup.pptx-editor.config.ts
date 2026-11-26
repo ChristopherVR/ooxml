@@ -4,6 +4,7 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
 	entry: {
 		'pptx/editor/ai/table-merge': 'pptx/editor/ai/table-merge.ts',
+		'pptx/editor/ink': 'pptx/editor/ink/index.ts',
 		'pptx/editor/loader/element-patch-walker': 'pptx/editor/loader/element-patch-walker.ts',
 		'pptx/editor/loader/is-external-url': 'pptx/editor/loader/is-external-url.ts',
 		'pptx/editor/loader/lazy-image-resolution': 'pptx/editor/loader/lazy-image-resolution.ts',

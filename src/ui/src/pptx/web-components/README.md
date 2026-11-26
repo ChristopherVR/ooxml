@@ -424,13 +424,21 @@ binding. Escape and outside pointer dismissal close the color popup; Escape
 returns focus to its opener. Disconnect removes document/window listeners.
 
 The composed `draw-request` event carries a `RibbonDrawIntent` discriminated
-by `kind`: `tool`, `width` or `color`. A color intent marks whether the pick is
+by `kind`: `tool`, `width`, `color` or `preset`. A color intent marks whether the pick is
 committed. Hosts apply live color previews immediately and record recent colors
 only for committed picks. Setting state emits no intent. Native hosts retain
 ink pointer capture, live stroke previews, freeform shape creation, erasing,
 selection, undo/history and serialization. The shared view preserves focused
 controls across updates, isolates instances and uses the common theme tokens,
 forced colors and 44px coarse-pointer targets.
+
+Opening Draw loads the pen presets, Lasso, conversion, Ruler and Replay controls. Call
+`configurePptxDraw(viewerRoot, { penPreferences, recognizeMath })` from `ooxml-ui/pptx`
+to supply optional host settings for the element marked `data-pptx-theme-root`. The function
+returns a cleanup callback. `penPreferences` supplies synchronous `read()` and `write(presets)`
+methods. `recognizeMath(strokes, signal)` receives only selected slide-local X/Y coordinates
+and resolves to LaTeX or `undefined`. The viewer calls it when the user invokes Ink to Math
+and opens the shared equation editor for review. See [PowerPoint privacy](../../../../PRIVACY.md#ink-to-math).
 
 ## View ribbon
 

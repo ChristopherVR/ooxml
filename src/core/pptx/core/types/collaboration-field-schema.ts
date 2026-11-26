@@ -208,6 +208,7 @@ export const ELEMENT_FIELD_KIND: Record<AnyElementKey, CollabFieldKind> = {
 	inkOpacities: 'scalar',
 	inkTool: 'scalar',
 	inkPointPressures: 'complex',
+	inkPointTimestamps: 'complex',
 	inkPointTiltX: 'complex',
 	inkPointTiltY: 'complex',
 	// ContentPartPptxElement

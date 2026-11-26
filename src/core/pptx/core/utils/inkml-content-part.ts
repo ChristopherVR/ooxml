@@ -1,6 +1,7 @@
 import type { ContentPartInkStroke, XmlObject } from '../types';
 import type { InkTargetBox } from './inkml-ink-space';
 import { inkBounds, inkLengthToPx, inkPointMapper } from './inkml-ink-space';
+import { inkMlTiming } from './inkml-timing';
 import {
 	collectByLocalName,
 	decodeTracePoints,
@@ -48,6 +49,7 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 	}
 	const brushes = collectBrushes(root);
 	const channelOrder = resolveChannelOrder(root);
+	const timingFor = inkMlTiming(root);
 
 	// Two passes: decode every trace first so the normalisation bounds cover the
 	// whole part, then emit paths. A per-stroke bound would rescale each stroke
@@ -60,9 +62,11 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 		// `M x y L x y ...` before it can drive an SVG `<path d>`.
 		const authored = typeof trace === 'string' ? '' : String(nsAttr(trace, 'path') ?? '').trim();
 		return {
+			trace,
 			authored,
 			text,
 			points: authored ? [] : decodeTracePoints(text, channelOrder),
+			untimed: typeof trace !== 'string' && nsAttr(trace, 'untimed') !== undefined,
 			brushRef:
 				typeof trace === 'string' ? '' : String(nsAttr(trace, 'brushRef') ?? '').replace('#', ''),
 		};
@@ -95,11 +99,14 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 		const tilt = entry.authored
 			? traceTilt(entry.text, azimuthEncoded)
 			: pointsToTilt(entry.points, channelOrder);
-		// This project's own authored dialect (`entry.authored`) encodes points
-		// positionally (`x y pressure <a> <b>`) with no time column at all, so a
-		// per-point timestamp only ever comes from a foreign trace's declared
-		// `T` channel.
-		const timestamps = entry.authored ? [] : pointsToTimestamps(entry.points, channelOrder);
+		const timestamps =
+			entry.untimed || !channelOrder.includes('T')
+				? []
+				: pointsToTimestamps(
+						entry.authored ? decodeTracePoints(entry.text, channelOrder) : entry.points,
+						channelOrder,
+					);
+		const { pointTimestamps, ...timing } = timingFor(entry.trace, timestamps);
 		strokes.push({
 			...brush,
 			path,
@@ -113,7 +120,8 @@ export function parseInkMlContent(data: XmlObject, box?: InkTargetBox): ParsedIn
 				: tilt
 					? { tiltAngles: tilt.angles, tiltMagnitudes: tilt.magnitudes }
 					: {}),
-			...(timestamps.length > 0 ? { pointTimestamps: timestamps } : {}),
+			...timing,
+			...(pointTimestamps.length > 0 ? { pointTimestamps } : {}),
 		});
 	}
 	return { strokes, rawXml: data };

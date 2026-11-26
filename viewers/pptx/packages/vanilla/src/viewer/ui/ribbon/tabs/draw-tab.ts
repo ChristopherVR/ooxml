@@ -1,4 +1,5 @@
 import { registerPptxWebControls } from 'ooxml-ui/pptx';
+import { toolForDrawPreset } from 'ooxml-ui/pptx';
 import type { RibbonDrawRequestEvent, RibbonDrawViewState } from 'ooxml-ui/pptx';
 
 import type { Translator } from '../../../i18n';
@@ -13,6 +14,7 @@ export interface DrawTab {
 export function createDrawTab(doc: Document, t: Translator, handlers: RibbonDrawHandlers): DrawTab {
 	registerPptxWebControls();
 	const el = doc.createElement('pptx-ui-ribbon-draw');
+	el.hidden = true;
 	let state: RibbonDrawViewState = {
 		tool: 'select',
 		color: '#000000',
@@ -37,6 +39,11 @@ export function createDrawTab(doc: Document, t: Translator, handlers: RibbonDraw
 				break;
 			case 'color':
 				handlers.setColor(intent.value, intent.committed);
+				break;
+			case 'preset':
+				handlers.setColor(intent.value.color, true);
+				handlers.setWidth(intent.value.width);
+				handlers.setTool(toolForDrawPreset(intent.value.kind));
 		}
 	});
 	sync();

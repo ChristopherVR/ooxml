@@ -39,6 +39,9 @@ import {
 import {
 	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
+	attachDrawCanvas,
+	createDrawCanvasPort,
+	notifyDrawCanvas,
 	buildDeckSaveOptions,
 	buildFieldSubstitutionContext,
 	buildUserFontFaceStyles,
@@ -1575,6 +1578,39 @@ watch(
 	{ immediate: true },
 );
 useRibbonDisplayListeners(ribbonDisplay, () => viewerRootRef.value);
+
+const drawCanvasPort = createDrawCanvasPort(
+	() => ({
+		slides: slides.value,
+		index: activeSlideIndex.value,
+		editable:
+			canEditEffective.value &&
+			!presentation.presenting.value &&
+			!editTemplateMode.value &&
+			!masterView.showMasterView.value,
+	}),
+	(next, selectedId) => {
+		history.pushHistory();
+		slides.value = next;
+		selectedElementIds.value = selectedId ? [selectedId] : [];
+		autosave.isDirty.value = true;
+	},
+);
+watchEffect(
+	(onCleanup) => {
+		const root = viewerRootRef.value;
+		if (root) onCleanup(attachDrawCanvas(root, drawCanvasPort));
+	},
+	{ flush: 'post' },
+);
+watch(
+	() => drawCanvasPort.getSlide(),
+	() => {
+		const root = viewerRootRef.value;
+		if (root) notifyDrawCanvas(root);
+	},
+	{ flush: 'post' },
+);
 
 watchEffect(
 	(onCleanup) => {

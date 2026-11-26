@@ -1,3 +1,4 @@
+import { toolForDrawPreset } from 'ooxml-ui/pptx';
 import type { PptxUiRibbonDrawElement, RibbonDrawRequestEvent } from 'ooxml-ui/pptx';
 import React, { useEffect, useRef } from 'react';
 
@@ -55,6 +56,11 @@ export function DrawSection(p: DrawSectionProps): React.ReactElement {
 					if (intent.committed) {
 						pushColor(intent.value);
 					}
+					break;
+				case 'preset':
+					p.onSetDrawingColor(intent.value.color);
+					p.onSetDrawingWidth(intent.value.width);
+					p.onSetActiveTool(toolForDrawPreset(intent.value.kind));
 			}
 		};
 		host.addEventListener('draw-request', request);

@@ -1,5 +1,5 @@
 import type { InkPoint, StrokeToInkElementOpts } from 'ooxml-ui/pptx';
-import { pointFromPointerEvent } from 'ooxml-ui/pptx';
+import { MAX_DRAW_POINTS, pointFromPointerEvent } from 'ooxml-ui/pptx';
 
 import type { DrawTool } from '../state';
 import { resolveTopLevelElementId } from './element-hit';
@@ -97,7 +97,7 @@ export function createDrawGestures(deps: DrawGesturesDeps): DrawGestures {
 		if (!active || event.pointerId !== active.pointerId) {
 			return;
 		}
-		active.points.push(mapPoint(event));
+		if (active.points.length < MAX_DRAW_POINTS) active.points.push(mapPoint(event));
 		deps.onStrokePreview?.(active.points);
 	}
 
@@ -105,7 +105,7 @@ export function createDrawGestures(deps: DrawGesturesDeps): DrawGestures {
 		if (!active || event.pointerId !== active.pointerId) {
 			return;
 		}
-		active.points.push(mapPoint(event));
+		if (active.points.length < MAX_DRAW_POINTS) active.points.push(mapPoint(event));
 		const stroke = active;
 		detach();
 		active = null;

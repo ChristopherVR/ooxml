@@ -9,7 +9,7 @@
  * is drawn live. Vue counterpart of React's `canvas/DrawingOverlaySvg`.
  */
 import type { InkPoint, InkStrokeView } from 'ooxml-ui/pptx';
-import { buildLiveInkStrokeView, pointFromPointerEvent } from 'ooxml-ui/pptx';
+import { buildLiveInkStrokeView, MAX_DRAW_POINTS, pointFromPointerEvent } from 'ooxml-ui/pptx';
 import { computed, ref } from 'vue';
 
 import type { CanvasSize } from '../types';
@@ -71,7 +71,7 @@ function onMove(e: PointerEvent): void {
 	if (!drawing.value) {
 		return;
 	}
-	points.value = [...points.value, toSlide(e)];
+	if (points.value.length < MAX_DRAW_POINTS) points.value = [...points.value, toSlide(e)];
 }
 function onUp(): void {
 	if (!drawing.value) {

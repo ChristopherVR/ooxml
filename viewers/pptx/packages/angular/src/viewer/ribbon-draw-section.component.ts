@@ -7,6 +7,7 @@ import {
 	output,
 } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import { toolForDrawPreset } from 'ooxml-ui/pptx';
 import type { RibbonDrawRequestEvent, RibbonDrawTool } from 'ooxml-ui/pptx';
 
 import { RecentColorsService } from './recent-colors.service';
@@ -61,6 +62,13 @@ export class RibbonDrawSectionComponent {
 				if (intent.committed) {
 					this.recentColors?.push(intent.value);
 				}
+				break;
+			case 'preset':
+				this.emit({
+					color: intent.value.color,
+					width: intent.value.width,
+					tool: toolForDrawPreset(intent.value.kind),
+				});
 		}
 	}
 	private emit(patch: Partial<DrawToolState>): void {

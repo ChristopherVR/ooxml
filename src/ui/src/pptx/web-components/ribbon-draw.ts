@@ -20,19 +20,27 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 		return;
 	}
 	class RibbonDraw extends HTMLElement implements PptxUiRibbonDrawElement {
+		static observedAttributes = ['hidden'];
+		private advanced:
+			| ReturnType<(typeof import('./ribbon-draw-advanced'))['mountRibbonDrawAdvanced']>
+			| undefined;
+		private loading = false;
 		private model: RibbonDrawViewState = {
 			tool: 'select',
 			color: '#000000',
 			width: 3,
 			editable: false,
 		};
-		private readonly view = createRibbonDrawView(this.ownerDocument, (intent) => {
+		private readonly request = (intent: RibbonDrawIntent) => {
 			if (canRequestDraw(this.model, intent)) {
+				if (intent.kind === 'tool' || intent.kind === 'preset') this.advanced?.toolChanged();
 				this.dispatchEvent(
 					new CustomEvent('draw-request', { detail: intent, bubbles: true, composed: true }),
 				);
+				this.advanced?.sync();
 			}
-		});
+		};
+		private readonly view = createRibbonDrawView(this.ownerDocument, this.request);
 		private readonly outside = (event: PointerEvent) => {
 			if (!this.contains(event.target as Node)) {
 				this.view.colors.open = false;
@@ -62,6 +70,23 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 					event.stopPropagation();
 				}
 			});
+			this.addEventListener('keydown', (event) => {
+				if (
+					[
+						' ',
+						'Enter',
+						'ArrowLeft',
+						'ArrowRight',
+						'ArrowUp',
+						'ArrowDown',
+						'Home',
+						'End',
+						'PageUp',
+						'PageDown',
+					].includes(event.key)
+				)
+					event.stopPropagation();
+			});
 		}
 		get state() {
 			return this.model;
@@ -77,19 +102,45 @@ export function definePptxRibbonDraw(registry: CustomElementRegistry): void {
 			this.ownerDocument.addEventListener('keydown', this.escape);
 			this.ownerDocument.defaultView?.addEventListener('resize', this.position);
 			this.ownerDocument.addEventListener('scroll', this.position, true);
+			this.syncAdvanced();
 		}
 		disconnectedCallback(): void {
+			this.advanced?.dispose();
+			this.advanced = undefined;
 			this.view.colors.open = false;
 			this.ownerDocument.removeEventListener('pointerdown', this.outside);
 			this.ownerDocument.removeEventListener('keydown', this.escape);
 			this.ownerDocument.defaultView?.removeEventListener('resize', this.position);
 			this.ownerDocument.removeEventListener('scroll', this.position, true);
 		}
+		attributeChangedCallback(): void {
+			this.syncAdvanced();
+		}
+		private syncAdvanced(): void {
+			if (this.hidden || !this.isConnected) {
+				this.advanced?.dispose();
+				this.advanced = undefined;
+				return;
+			}
+			if (this.loading || this.advanced) return;
+			this.loading = true;
+			void import('./ribbon-draw-advanced')
+				.then(({ mountRibbonDrawAdvanced }) => {
+					if (this.isConnected && !this.hidden) {
+						this.advanced = mountRibbonDrawAdvanced(this, () => this.model, this.request);
+					}
+				})
+				.catch(() => {})
+				.finally(() => {
+					this.loading = false;
+				});
+		}
 		private render(): void {
 			if (!this.contains(this.view.group)) {
 				this.append(this.view.group);
 			}
 			this.view.sync(this.model);
+			this.advanced?.sync();
 		}
 	}
 	defineElement(registry, 'pptx-ui-ribbon-draw', RibbonDraw);

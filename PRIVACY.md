@@ -84,6 +84,14 @@ the application's JavaScript. The request carries the asset URL and standard bro
 metadata, with no document data or filename. Hosts can bundle the renderer with their app to
 avoid a separate request.
 
+### Ink to Math
+
+The recognizer is off by default. A host can opt in with `configurePptxDraw` and supply its
+own `recognizeMath` callback. Clicking Ink to Math passes the selected strokes' slide-local
+X/Y coordinates to that callback. The host chooses where it runs and any destination it uses.
+The viewer makes no recognition requests itself. Cancelling, changing slides, or closing Draw
+aborts the request. Remove the callback to disable recognition.
+
 Picture Format reads the selected local PNG or JPEG, or an embedded picture's
 local object URL, when a picture editing command is invoked. The browser loads
 the picture worker from the application and processes the bytes on the device.
@@ -406,7 +414,10 @@ Nothing below is sent anywhere by this code. Clearing the site's data removes it
 - **PowerPoint:** autosave and recovery snapshots, the session, presenter and audience state in
   IndexedDB (`pptx-viewer-autosave`, `pptx-viewer-session`, `pptx-viewer-presentation`,
   `pptx-viewer-audience`); preferences, including Trust Center choices, in localStorage
-  (`pptx-viewer-prefs`). File > Account > Storage & Privacy shows and clears them. Fonts the
+  (`pptx-viewer-prefs`). Draw saves pen type, colour and thickness there when a user adds or
+  removes a preset. A host can use `configurePptxDraw` with its own `penPreferences` reader and
+  writer to redirect persistence or keep presets in memory. File > Account > Storage & Privacy
+  shows and clears the built-in preferences. Fonts the
   user adds under File > Options > Custom fonts are kept for the session only.
 - **Word, Excel, Visio:** small preferences in localStorage (view options, custom lists, saved
   shapes, Excel's Error Checking rules in `ooxml.xlsx.errorCheckingRules`), including the Trust

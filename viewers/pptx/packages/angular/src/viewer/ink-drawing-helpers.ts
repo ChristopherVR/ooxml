@@ -9,6 +9,7 @@
 export type { InkPoint, InkStrokeView, StrokeToInkElementOpts } from 'ooxml-ui/pptx';
 export {
 	buildLiveInkStrokeView,
+	MAX_DRAW_POINTS,
 	pointFromPointerEvent,
 	pointsToSvgPathD,
 	strokeToInkElement,

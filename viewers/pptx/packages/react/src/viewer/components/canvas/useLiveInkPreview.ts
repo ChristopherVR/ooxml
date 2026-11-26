@@ -39,7 +39,7 @@ export interface LiveInkPreview {
 export function useLiveInkPreview(
 	isStrokeActive: boolean,
 	activeTool: DrawingTool,
-	points: CanvasPoint[],
+	points: InkPoint[],
 	pressures: number[],
 	tiltX: number[],
 	tiltY: number[],
@@ -56,8 +56,7 @@ export function useLiveInkPreview(
 			return null;
 		}
 		const inkPoints: InkPoint[] = points.map((pt, i) => ({
-			x: pt.x,
-			y: pt.y,
+			...pt,
 			pressure: pressures[i],
 			tiltX: tiltX[i],
 			tiltY: tiltY[i],

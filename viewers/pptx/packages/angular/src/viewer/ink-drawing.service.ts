@@ -19,6 +19,7 @@ import type { InkPptxElement, PptxElement } from 'pptx-viewer-core';
 
 import {
 	buildLiveInkStrokeView,
+	MAX_DRAW_POINTS,
 	pointFromPointerEvent,
 	pointsToSvgPathD,
 	strokeToInkElement,
@@ -156,7 +157,7 @@ export class InkDrawingService {
 			(event.clientY - rect.top) / zoom,
 			event,
 		);
-		this.points.push(pt);
+		if (this.points.length < MAX_DRAW_POINTS) this.points.push(pt);
 		this.syncLivePreview();
 		return true;
 	}

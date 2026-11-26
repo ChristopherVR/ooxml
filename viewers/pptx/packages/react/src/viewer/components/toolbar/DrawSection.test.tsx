@@ -55,6 +55,22 @@ function renderSection(
 }
 
 describe('drawSection pen colour (recent colours)', () => {
+	it('activates a complete saved highlighter preset', () => {
+		const color = vi.fn();
+		const width = vi.fn();
+		const tool = vi.fn();
+		renderSection(vi.fn(), color, { onSetActiveTool: tool, onSetDrawingWidth: width });
+		act(() => {
+			container.querySelector('pptx-ui-ribbon-draw')?.dispatchEvent(
+				new CustomEvent('draw-request', {
+					detail: { kind: 'preset', value: { kind: 'highlighter', color: '#aabbcc', width: 8 } },
+				}),
+			);
+		});
+		expect(color).toHaveBeenCalledExactlyOnceWith('#aabbcc');
+		expect(width).toHaveBeenCalledExactlyOnceWith(8);
+		expect(tool).toHaveBeenCalledExactlyOnceWith('highlighter');
+	});
 	it('routes tool and width intents, reflects controlled state and gates read-only edits', () => {
 		const tool = vi.fn(),
 			width = vi.fn();

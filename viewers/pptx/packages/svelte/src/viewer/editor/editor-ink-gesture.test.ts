@@ -93,7 +93,9 @@ describe('createInkGestureController', () => {
 		const { deps, calls } = makeDeps('eraser');
 		controller = createInkGestureController(deps);
 		controller.handlePointerDown(pointerEvent('pointerdown', { clientX: 5, clientY: 7 }));
-		expect(calls.erase).toStrictEqual([{ x: 5, y: 7, pressure: 0, tiltX: 0, tiltY: 0 }]);
+		expect(calls.erase).toStrictEqual([
+			{ x: 5, y: 7, pressure: 0, tiltX: 0, tiltY: 0, timestamp: expect.any(Number) },
+		]);
 		expect(calls.start).toBe(0);
 		expect(controller.isActive()).toBeFalsy();
 	});
@@ -104,8 +106,8 @@ describe('createInkGestureController', () => {
 
 		// `PointerEventInit.pressure`/`tiltX`/`tiltY` default to 0 (per the DOM
 		// spec) when a test constructs a `PointerEvent` without setting them,
-		// so every captured point below carries those values.
-		const flat = { pressure: 0, tiltX: 0, tiltY: 0 };
+		// so every captured point carries those values along with its event time.
+		const flat = { pressure: 0, tiltX: 0, tiltY: 0, timestamp: expect.any(Number) };
 		controller.handlePointerDown(pointerEvent('pointerdown', { clientX: 0, clientY: 0 }));
 		expect(calls.start).toBe(1);
 		expect(controller.isActive()).toBeTruthy();
@@ -154,7 +156,9 @@ describe('createInkGestureController', () => {
 		});
 		controller = createInkGestureController(deps);
 		controller.handlePointerDown(pointerEvent('pointerdown', { clientX: 120, clientY: 70 }));
-		expect(calls.preview.at(-1)).toStrictEqual([{ x: 10, y: 10, pressure: 0, tiltX: 0, tiltY: 0 }]);
+		expect(calls.preview.at(-1)).toStrictEqual([
+			{ x: 10, y: 10, pressure: 0, tiltX: 0, tiltY: 0, timestamp: expect.any(Number) },
+		]);
 	});
 
 	it('carries each pointer event tilt reading through to the accumulated points', () => {

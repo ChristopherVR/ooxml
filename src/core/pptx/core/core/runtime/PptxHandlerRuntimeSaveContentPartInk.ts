@@ -42,8 +42,12 @@ function strokeListsEqual(
 			stroke.color === other.color &&
 			stroke.width === other.width &&
 			stroke.opacity === other.opacity &&
+			stroke.startTimestamp === other.startTimestamp &&
+			stroke.durationMs === other.durationMs &&
 			(stroke.pressures ?? []).length === (other.pressures ?? []).length &&
-			(stroke.tiltAngles ?? []).length === (other.tiltAngles ?? []).length
+			(stroke.tiltAngles ?? []).length === (other.tiltAngles ?? []).length &&
+			(stroke.pointTimestamps ?? []).length === (other.pointTimestamps ?? []).length &&
+			(stroke.pointTimestamps ?? []).every((time, i) => time === other.pointTimestamps?.[i])
 		);
 	});
 }

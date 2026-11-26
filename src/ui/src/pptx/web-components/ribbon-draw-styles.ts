@@ -2,6 +2,12 @@ import { attachScopedRibbonStyles } from './ribbon-scoped-styles';
 
 const RIBBON_DRAW_STYLES = `
 :host { display:inline-flex; align-items:flex-start; color:var(--pptx-foreground,#f8fafc); font:inherit; }
+:host([hidden]),[hidden] { display:none; }
+.advanced-row { display:flex; align-items:center; flex-wrap:wrap; gap:4px; min-height:38px; padding-inline:4px; }
+.advanced-row button { font:inherit; color:inherit; background:var(--pptx-background,Canvas); border:1px solid var(--pptx-border,GrayText); border-radius:4px; }
+.advanced-row button[hidden] { display:none; }
+.advanced-row button[aria-disabled=true] { opacity:.55; cursor:default; }
+.advanced-status { max-width:180px; font-size:11px; }
 .tools,.settings { display:inline-flex; align-items:flex-start; gap:2px; }
 .settings { gap:8px; margin-inline-start:6px; padding-inline-start:8px; border-inline-start:1px solid color-mix(in srgb,var(--pptx-border,#374151) 80%,transparent); font-size:12px; }
 label { display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; width:150px; color:var(--pptx-foreground,#f8fafc); }

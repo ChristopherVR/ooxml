@@ -54,6 +54,7 @@ export function buildInkMlContent(
 	const existingKey = Object.keys(data).find((key) => localNameOf(key) === 'ink');
 	const existingRoot = existingKey ? (data[existingKey] as XmlObject | undefined) : undefined;
 	const root: XmlObject = existingRoot ? { ...existingRoot } : {};
+	deleteStaleInkChildren(root);
 	root['@_xmlns:ink'] = INKML_NAMESPACE;
 	root['@_xmlns:pva'] = METADATA_NAMESPACE;
 	// Only declare (and author per-point values for) a tilt channel pair when
@@ -61,6 +62,8 @@ export function buildInkMlContent(
 	// anywhere must serialise byte-identically to before this feature existed:
 	// no extra channels, no extra trailing columns.
 	const tiltMode = resolveTiltMode(strokes);
+	const timed = strokes.some((stroke) => stroke.pointTimestamps?.some(Number.isFinite));
+	const hasClock = timed || strokes.some((stroke) => Number.isFinite(stroke.startTimestamp));
 	// Verified against real PowerPoint COM behaviour: a plain `<ink:traceFormat>`
 	// / `<ink:brush>` / `id="..."` part (this project's ORIGINAL authored
 	// dialect) passes this project's own lenient reader and internal schema
@@ -81,12 +84,13 @@ export function buildInkMlContent(
 	// values (already this project's own dialect) open fine once the
 	// structural requirements above are met.
 	root['ink:definitions'] = {
+		...(hasClock ? { 'ink:timestamp': { '@_xml:id': 'clock', '@_time': '0' } } : {}),
 		'ink:context': {
 			'@_xml:id': 'ctx0',
 			'ink:inkSource': {
 				'@_xml:id': 'inkSrc0',
 				'ink:traceFormat': {
-					'ink:channel': buildTraceFormatChannels(tiltMode),
+					'ink:channel': buildTraceFormatChannels(tiltMode, timed),
 				},
 			},
 		},
@@ -103,7 +107,12 @@ export function buildInkMlContent(
 		'@_contextRef': '#ctx0',
 		'@_brushRef': `#brush${index + 1}`,
 		'@_pva:path': stroke.path,
-		'#text': pathToTrace(stroke.path, stroke.pressures, tiltOf(stroke), tiltMode),
+		...(Number.isFinite(stroke.startTimestamp)
+			? { '@_timestampRef': '#clock', '@_timeOffset': String(stroke.startTimestamp) }
+			: {}),
+		...(Number.isFinite(stroke.durationMs) ? { '@_duration': String(stroke.durationMs) } : {}),
+		...(timed && !stroke.pointTimestamps?.length ? { '@_pva:untimed': '1' } : {}),
+		'#text': pathToTrace(stroke, tiltMode, timed),
 	}));
 	// The rewritten root replaces whatever prefix the source used, and the
 	// source's own definitions/traces must not survive beside it. Also drop a
@@ -115,8 +124,6 @@ export function buildInkMlContent(
 		delete data[existingKey];
 	}
 	delete data['ink'];
-	delete root['ink:traceFormat'];
-	deleteStaleInkChildren(root);
 	data['ink:ink'] = root;
 	return data;
 }
@@ -124,7 +131,7 @@ export function buildInkMlContent(
 /** Drop the source part's own trace/brush/definition nodes after a rewrite. */
 function deleteStaleInkChildren(root: XmlObject): void {
 	for (const key of Object.keys(root)) {
-		if (key.startsWith('ink:') || key.startsWith('@_') || key === '#text') {
+		if (key.startsWith('@_') || key === '#text') {
 			continue;
 		}
 		const local = localNameOf(key);
@@ -132,6 +139,7 @@ function deleteStaleInkChildren(root: XmlObject): void {
 			local === 'trace' ||
 			local === 'brush' ||
 			local === 'traceGroup' ||
+			local === 'traceFormat' ||
 			local === 'definitions'
 		) {
 			delete root[key];
@@ -145,7 +153,7 @@ function localNameOf(key: string): string {
 }
 
 /** The three (no tilt), five (vector), or five (azimuth/altitude) `<ink:channel>` declarations for the shared traceFormat. */
-function buildTraceFormatChannels(mode: TiltMode): XmlObject[] {
+function buildTraceFormatChannels(mode: TiltMode, timed: boolean): XmlObject[] {
 	const channels: XmlObject[] = [
 		{ '@_name': 'X', '@_type': 'decimal' },
 		{ '@_name': 'Y', '@_type': 'decimal' },
@@ -174,6 +182,9 @@ function buildTraceFormatChannels(mode: TiltMode): XmlObject[] {
 			{ '@_name': 'ALTITUDE', '@_type': 'decimal' },
 		);
 	}
+	if (timed) {
+		channels.push({ '@_name': 'T', '@_type': 'decimal', '@_units': 'ms', '@_respectTo': '#clock' });
+	}
 	return channels;
 }
 
@@ -191,12 +202,9 @@ function tiltOf(stroke: ContentPartInkStroke): TiltChannels | undefined {
 		: undefined;
 }
 
-function pathToTrace(
-	path: string,
-	pressures: readonly number[] | undefined,
-	tilt: TiltChannels | undefined,
-	mode: TiltMode,
-): string {
+function pathToTrace(stroke: ContentPartInkStroke, mode: TiltMode, timed: boolean): string {
+	const { path, pressures, pointTimestamps } = stroke;
+	const tilt = tiltOf(stroke);
 	const points = [...path.matchAll(/[ML]\s*(?<x>[\d.eE+-]+)[,\s]+(?<y>[\d.eE+-]+)/giu)];
 	if (points.length === 0) {
 		return path;
@@ -204,12 +212,13 @@ function pathToTrace(
 	return points
 		.map((point, index) => {
 			const pressure = Math.max(0, Math.min(1, pressures?.[index] ?? 0.5));
+			const time = timed ? ` ${pointTimestamps?.[index] ?? pointTimestamps?.at(-1) ?? 0}` : '';
 			if (mode === 'none') {
-				return `${point.groups?.x} ${point.groups?.y} ${pressure}`;
+				return `${point.groups?.x} ${point.groups?.y} ${pressure}${time}`;
 			}
 			const { a, b } =
 				mode === 'azimuthAltitude' ? azimuthAltitudeAt(tilt, index) : tiltOffsetAt(tilt, index);
-			return `${point.groups?.x} ${point.groups?.y} ${pressure} ${a} ${b}`;
+			return `${point.groups?.x} ${point.groups?.y} ${pressure} ${a} ${b}${time}`;
 		})
 		.join(', ');
 }

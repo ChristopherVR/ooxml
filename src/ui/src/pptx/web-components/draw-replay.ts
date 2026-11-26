@@ -1,0 +1,105 @@
+import type { SlideInkStroke } from 'ooxml-core/pptx/editor/ink';
+import { slideInkReplayTimeline } from 'ooxml-core/pptx/editor/ink';
+
+import { drawOverlay, inkOverlayPath } from './draw-surface';
+
+export function createDrawReplay(
+	stage: HTMLElement,
+	strokes: readonly SlideInkStroke[],
+	onUpdate: (time: number, duration: number, playing: boolean) => void,
+) {
+	const win = stage.ownerDocument.defaultView;
+	if (!win || !strokes.length) {
+		return undefined;
+	}
+	const svg = drawOverlay(stage);
+	svg.dataset.pptxDrawReplay = '';
+	const ids = new Set(strokes.map(({ owner }) => owner.id));
+	const hidden = [...stage.querySelectorAll<HTMLElement>('[data-element-id]')].flatMap((node) => {
+		if (!ids.has(node.dataset.elementId ?? '')) {
+			return [];
+		}
+		const visibility = node.style.visibility;
+		node.style.visibility = 'hidden';
+		return [{ node, visibility }];
+	});
+	const steps = slideInkReplayTimeline(strokes.map(({ style }) => style));
+	const paths = strokes.map((stroke) => {
+		const path = inkOverlayPath(svg, stroke.points);
+		if (/^#[\da-f]{3,8}$/iu.test(stroke.style.color)) {
+			path.setAttribute('stroke', stroke.style.color);
+		} else {
+			path.setAttribute('stroke', '#000000');
+		}
+		path.setAttribute('stroke-width', String(Math.min(64, Math.max(0.1, stroke.style.width))));
+		path.setAttribute('stroke-opacity', String(stroke.style.opacity));
+		path.setAttribute('pathLength', '1');
+		path.setAttribute('stroke-dasharray', '1');
+		return path;
+	});
+	const duration = steps.reduce(
+		(end, step) => Math.max(end, step.startOffsetMs + step.durationMs),
+		0,
+	);
+	let time = 0;
+	let frame: number | undefined;
+	let previous = 0;
+	let playing = false;
+	const progress: number[] = [];
+	const paint = () => {
+		for (const step of steps) {
+			const index = step.strokeIndex;
+			const amount = Math.max(0, Math.min(1, (time - step.startOffsetMs) / step.durationMs));
+			if (progress[index] !== amount) {
+				const path = paths[index];
+				path?.setAttribute('visibility', amount > 0 ? 'visible' : 'hidden');
+				path?.setAttribute('stroke-dashoffset', String(1 - amount));
+				progress[index] = amount;
+			}
+		}
+		onUpdate(time, duration, playing);
+	};
+	const advance = (now: number) => {
+		time = Math.min(duration, time + now - previous);
+		previous = now;
+		playing = time < duration;
+		frame = playing ? win.requestAnimationFrame(advance) : undefined;
+		paint();
+	};
+	const pause = () => {
+		if (frame !== undefined) {
+			win.cancelAnimationFrame(frame);
+			frame = undefined;
+		}
+		playing = false;
+	};
+	paint();
+	return {
+		toggle() {
+			if (playing) {
+				pause();
+			} else {
+				if (time === duration) {
+					time = 0;
+				}
+				playing = true;
+				previous = win.performance.now();
+				frame = win.requestAnimationFrame(advance);
+			}
+			paint();
+		},
+		seek(value: number) {
+			if (Number.isFinite(value)) {
+				time = Math.max(0, Math.min(duration, value));
+				paint();
+			}
+		},
+		dispose() {
+			pause();
+			svg.remove();
+			for (const { node, visibility } of hidden) {
+				node.style.visibility = visibility;
+			}
+		},
+	};
+}

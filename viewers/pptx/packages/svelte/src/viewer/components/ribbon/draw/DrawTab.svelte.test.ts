@@ -36,6 +36,17 @@ function mountTab(editable = true): HTMLElement {
 }
 
 describe('drawTab', () => {
+	it('reflects the tool, color and width of a saved preset', () => {
+		const target = mountTab();
+		const ribbon = target.querySelector('pptx-ui-ribbon-draw');
+		ribbon?.dispatchEvent(
+			new CustomEvent('draw-request', {
+				detail: { kind: 'preset', value: { kind: 'highlighter', color: '#aabbcc', width: 8 } },
+			}),
+		);
+		flushSync();
+		expect(ribbon?.state).toMatchObject({ tool: 'highlighter', color: '#aabbcc', width: 8 });
+	});
 	it('offers all five drawing tools', () => {
 		const target = mountTab();
 		const labels = [...target.querySelectorAll('pptx-ui-ribbon-command')].map((button) =>

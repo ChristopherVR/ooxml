@@ -52,6 +52,9 @@ export function inkElementToStrokes(el: InkPptxElement): ContentPartInkStroke[] 
 					? { pressures: el.inkPointPressures[index] }
 					: {}),
 				...(tiltChannelsForPath(el, index) ?? {}),
+				...(el.inkPointTimestamps?.[index]?.length
+					? { pointTimestamps: el.inkPointTimestamps[index] }
+					: {}),
 			},
 		];
 	});

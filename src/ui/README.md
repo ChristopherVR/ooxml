@@ -605,6 +605,11 @@ external `IMAGE` sources. A host can set `imageProvider` on `<xlsx-editor>` or p
 subsequent image fetches. With a provider installed, calculation requested by a file on open runs
 on the page within the normal page calculation budget, so it can call host code.
 
+PowerPoint Draw stores pen preset types, colours and thicknesses in the local viewer preferences.
+Hosts can redirect persistence with `configurePptxDraw`. Ink to Math passes selected slide-local
+stroke coordinates to a host recognizer only when the host configures one and the user requests
+recognition. See the [PowerPoint privacy details](../../PRIVACY.md#ink-to-math).
+
 Word's Design > Set as Default uses the host's optional `wordDesignPreferences` store. It writes theme colours, font names, an effect preset and paragraph spacing when the user confirms, then reads them for new blank documents. Clear the property to disable the store.
 
 Set `mailMergeDataSource` and `emailProvider` as properties on the `<docx-editor>` element.

@@ -608,6 +608,8 @@ export interface InkPptxElement extends PptxElementBase {
 	 * variable-width strokes that reflect stylus/pen pressure.
 	 */
 	inkPointPressures?: number[][] | undefined;
+	/** Per-path capture timestamps, in milliseconds on a common clock. */
+	inkPointTimestamps?: number[][] | undefined;
 	/**
 	 * Per-path arrays of per-point pen-tilt lean direction (degrees, straight
 	 * from `PointerEvent.tiltX` on supporting hardware).
@@ -638,6 +640,9 @@ export interface ContentPartInkStroke {
 	color: string;
 	width: number;
 	opacity: number;
+	/** Start and duration from InkML trace metadata, in milliseconds. */
+	startTimestamp?: number;
+	durationMs?: number;
 	/**
 	 * Per-point pressure values (0-1) for this stroke.
 	 *

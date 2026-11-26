@@ -1,5 +1,5 @@
-import type { InkStrokeView } from 'ooxml-ui/pptx';
-import { findEraserHitElementId } from 'ooxml-ui/pptx';
+import type { InkPoint, InkStrokeView } from 'ooxml-ui/pptx';
+import { findEraserHitElementId, MAX_DRAW_POINTS, pointFromPointerEvent } from 'ooxml-ui/pptx';
 import type { InkPptxElement, PptxSlide, ShapePptxElement } from 'pptx-viewer-core';
 import React, { useCallback, useState } from 'react';
 
@@ -57,9 +57,7 @@ export function useDrawingOverlay({
 	onEraseInkElement?: (elementId: string) => void;
 }): DrawingOverlayState {
 	const isDrawing = activeTool !== 'select';
-	const [currentStrokePoints, setCurrentStrokePoints] = useState<Array<{ x: number; y: number }>>(
-		[],
-	);
+	const [currentStrokePoints, setCurrentStrokePoints] = useState<InkPoint[]>([]);
 	const [currentStrokePressures, setCurrentStrokePressures] = useState<number[]>([]);
 	const [currentStrokeTiltX, setCurrentStrokeTiltX] = useState<number[]>([]);
 	const [currentStrokeTiltY, setCurrentStrokeTiltY] = useState<number[]>([]);
@@ -67,19 +65,18 @@ export function useDrawingOverlay({
 
 	/** Convert pointer position to canvas-local coordinates. */
 	const pointerToCanvasCoords = useCallback(
-		(e: React.PointerEvent): { x: number; y: number } | null => {
+		(e: React.PointerEvent): InkPoint | null => {
 			const stage = zoom.canvasStageRef.current;
 			if (!stage) {
 				return null;
 			}
 			const rect = stage.getBoundingClientRect();
 			const scale = zoom.editorScale || 1;
-			return {
-				x: (e.clientX - rect.left) / scale,
-				y: (e.clientY - rect.top) / scale,
-			};
+			const x = (e.clientX - rect.left) / scale;
+			const y = (e.clientY - rect.top) / scale;
+			return activeTool === 'eraser' ? { x, y } : pointFromPointerEvent(x, y, e.nativeEvent);
 		},
-		[zoom.canvasStageRef, zoom.editorScale],
+		[zoom.canvasStageRef, zoom.editorScale, activeTool],
 	);
 
 	const handleDrawPointerDown = useCallback(
@@ -123,7 +120,12 @@ export function useDrawingOverlay({
 
 	const handleDrawPointerMove = useCallback(
 		(e: React.PointerEvent) => {
-			if (!isStrokeActive || activeTool === 'select' || activeTool === 'eraser') {
+			if (
+				!isStrokeActive ||
+				activeTool === 'select' ||
+				activeTool === 'eraser' ||
+				currentStrokePoints.length >= MAX_DRAW_POINTS
+			) {
 				return;
 			}
 			const pt = pointerToCanvasCoords(e);
@@ -135,7 +137,7 @@ export function useDrawingOverlay({
 			setCurrentStrokeTiltX((prev) => [...prev, e.tiltX ?? 0]);
 			setCurrentStrokeTiltY((prev) => [...prev, e.tiltY ?? 0]);
 		},
-		[isStrokeActive, activeTool, pointerToCanvasCoords],
+		[isStrokeActive, activeTool, pointerToCanvasCoords, currentStrokePoints.length],
 	);
 
 	const handleDrawPointerUp = useCallback(

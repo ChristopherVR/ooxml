@@ -15,6 +15,9 @@
 	import {
 		buildUserFontFaceStyles,
 		attachViewerHyperlinks,
+		attachDrawCanvas,
+		createDrawCanvasPort,
+		notifyDrawCanvas,
 		installTouchPress,
 	createCloudDocumentController,
 	createSaveProgressController,
@@ -142,6 +145,18 @@
 		}, cloudDocument, saveProgress),
 	);
 	onDestroy(() => vm.destroy());
+	const drawCanvasPort = createDrawCanvasPort(
+		() => ({ slides: vm.editor.slides, index: vm.editor.currentSlideIndex, editable: vm.editingActive && vm.viewerMode === 'edit' && !vm.editor.editTemplateMode }),
+		(next, selectedId) => {
+			vm.editor.commitSlides(next);
+			vm.editor.select(selectedId);
+		},
+	);
+	$effect(() => rootEl && attachDrawCanvas(rootEl, drawCanvasPort));
+	$effect(() => {
+		drawCanvasPort.getSlide();
+		if (rootEl) notifyDrawCanvas(rootEl);
+	});
 	// One id scheme for every painted copy of a slide: see `installSvgIdScope`.
 	$effect(() => installSvgIdScope());
 	$effect(() => {

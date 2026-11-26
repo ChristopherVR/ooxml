@@ -14,6 +14,17 @@ function mount() {
 	return { tab, handlers, button };
 }
 describe('shared Vanilla Draw adapter', () => {
+	it('routes the tool, color and width of a saved preset', () => {
+		const { tab, handlers } = mount();
+		tab.el.dispatchEvent(
+			new CustomEvent('draw-request', {
+				detail: { kind: 'preset', value: { kind: 'highlighter', color: '#aabbcc', width: 8 } },
+			}),
+		);
+		expect(handlers.setColor).toHaveBeenCalledExactlyOnceWith('#aabbcc', true);
+		expect(handlers.setWidth).toHaveBeenCalledExactlyOnceWith(8);
+		expect(handlers.setTool).toHaveBeenCalledExactlyOnceWith('highlighter');
+	});
 	it('routes every tool exactly once in the canonical order', () => {
 		const { tab, handlers, button } = mount();
 		for (const name of ['select', 'pen', 'highlighter', 'eraser', 'freeform']) {

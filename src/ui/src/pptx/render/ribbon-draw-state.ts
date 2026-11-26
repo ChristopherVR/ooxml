@@ -1,4 +1,10 @@
+import type { DrawPenPreset } from './draw-canvas';
+
 export type RibbonDrawTool = 'select' | 'pen' | 'highlighter' | 'eraser' | 'freeform';
+
+export function toolForDrawPreset(kind: DrawPenPreset['kind']): RibbonDrawTool {
+	return kind === 'actionPen' ? 'select' : kind === 'highlighter' ? 'highlighter' : 'pen';
+}
 
 export interface RibbonDrawViewState {
 	tool: RibbonDrawTool;
@@ -12,6 +18,7 @@ export interface RibbonDrawViewState {
 export type RibbonDrawIntent =
 	| { kind: 'tool'; value: RibbonDrawTool }
 	| { kind: 'width'; value: number }
+	| { kind: 'preset'; value: DrawPenPreset }
 	| { kind: 'color'; value: string; committed: boolean };
 
 export const DRAW_RIBBON_TOOLS: readonly {
@@ -51,5 +58,11 @@ export function canRequestDraw(state: RibbonDrawViewState, intent: RibbonDrawInt
 			return Number.isFinite(intent.value) && intent.value >= 1 && intent.value <= 16;
 		case 'color':
 			return /^#[\da-f]{6}$/iu.test(intent.value);
+		case 'preset':
+			return (
+				['pen', 'pencil', 'highlighter', 'actionPen'].some((kind) => kind === intent.value.kind) &&
+				canRequestDraw(state, { kind: 'width', value: intent.value.width }) &&
+				canRequestDraw(state, { kind: 'color', value: intent.value.color, committed: true })
+			);
 	}
 }

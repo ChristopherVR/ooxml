@@ -945,7 +945,11 @@ unit test fails if an id is missing here.
 | `insert.symbols`                    | Symbols                  |
 | `insert.media`                      | Media                    |
 | `draw.tools`                        | Drawing Tools            |
+| `draw.selection`                    | Select                   |
+| `draw.pens`                         | Pen presets              |
 | `draw.convert`                      | Convert                  |
+| `draw.guides`                       | Guides                   |
+| `draw.replay`                       | Ink Replay               |
 | `design.themes`                     | Themes                   |
 | `design.variants`                   | Variants                 |
 | `design.customize`                  | Customize                |
@@ -1121,7 +1125,19 @@ unit test fails if an id is missing here.
 | `draw.tools.eraser`                               | Eraser                                                                        |
 | `draw.tools.penColor`                             | Pen colour                                                                    |
 | `draw.tools.penWidth`                             | Pen width                                                                     |
+| `draw.selection.lasso`                            | Lasso Select                                                                  |
+| `draw.pens.type`                                  | Pen type                                                                      |
+| `draw.pens.add`                                   | Add Pen                                                                       |
+| `draw.pens.presets`                               | Pen presets                                                                   |
+| `draw.pens.remove`                                | Remove preset                                                                 |
 | `draw.convert.inkToShape`                         | Ink to Shape                                                                  |
+| `draw.convert.inkToMath`                          | Ink to Math                                                                   |
+| `draw.guides.ruler`                               | Ruler                                                                         |
+| `draw.guides.angle`                               | Ruler angle                                                                   |
+| `draw.replay.start`                               | Ink Replay                                                                    |
+| `draw.replay.play`                                | Play or pause                                                                 |
+| `draw.replay.seek`                                | Replay position                                                               |
+| `draw.replay.close`                               | Close replay                                                                  |
 | `design.themes.gallery`                           | Themes (inline gallery)                                                       |
 | `design.themes.browseThemes`                      | Themes gallery                                                                |
 | `design.themes.editTheme`                         | Edit theme                                                                    |

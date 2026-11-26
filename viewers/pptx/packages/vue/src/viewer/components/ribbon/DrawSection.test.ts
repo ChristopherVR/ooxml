@@ -30,6 +30,22 @@ function mountDraw(push: (hex: string) => void, onSetDrawingColor: (hex: string)
 }
 
 describe('drawSection pen colour (recent colours)', () => {
+	it('activates a complete saved highlighter preset', async () => {
+		const color = vi.fn();
+		const width = vi.fn();
+		const tool = vi.fn();
+		const wrapper = mountDraw(vi.fn(), color);
+		await wrapper.setProps({ onSetActiveTool: tool, onSetDrawingWidth: width });
+		wrapper.element.dispatchEvent(
+			new CustomEvent('draw-request', {
+				detail: { kind: 'preset', value: { kind: 'highlighter', color: '#aabbcc', width: 8 } },
+			}),
+		);
+		expect(color).toHaveBeenCalledExactlyOnceWith('#aabbcc');
+		expect(width).toHaveBeenCalledExactlyOnceWith(8);
+		expect(tool).toHaveBeenCalledExactlyOnceWith('highlighter');
+		wrapper.unmount();
+	});
 	it('routes shared tools and width choices, updates controlled state and gates edits', async () => {
 		const wrapper = mountDraw(vi.fn(), vi.fn());
 		const tool = vi.fn(),

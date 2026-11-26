@@ -1,4 +1,5 @@
 import type { ViewerProfile } from './account';
+import type { DrawPenPreset } from './draw-canvas';
 import type { StoredViewerOptions } from './options/viewer-options';
 
 /**
@@ -23,6 +24,7 @@ export interface StoredViewerPrefs {
 	profile?: ViewerProfile;
 	/** Sparse File > Options diff against `DEFAULT_VIEWER_OPTIONS`. */
 	options?: StoredViewerOptions;
+	inkPens?: DrawPenPreset[];
 }
 
 function hasLocalStorage(): boolean {

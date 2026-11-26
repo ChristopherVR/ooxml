@@ -1,4 +1,5 @@
 <script lang="ts">
+ import { toolForDrawPreset } from 'ooxml-ui/pptx';
  import type { RibbonDrawRequestEvent } from 'ooxml-ui/pptx';
  import { useTranslator } from '../../../../i18n/context';
  import type { EditorState } from '../../../editor/editor-state.svelte';
@@ -18,6 +19,11 @@
    case 'color':
     editor.inkOps.setColor(intent.value);
     if (intent.committed) {editor.recordRecentColor(intent.value);}
+    break;
+   case 'preset':
+    editor.inkOps.setColor(intent.value.color);
+    editor.inkOps.setWidth(intent.value.width);
+    editor.inkOps.setTool(toolForDrawPreset(intent.value.kind));
   }
  }
 </script>

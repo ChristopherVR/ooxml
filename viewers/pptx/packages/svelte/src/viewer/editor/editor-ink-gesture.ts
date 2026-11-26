@@ -1,5 +1,5 @@
 import type { InkPoint } from 'ooxml-ui/pptx';
-import { pointFromPointerEvent } from 'ooxml-ui/pptx';
+import { MAX_DRAW_POINTS, pointFromPointerEvent } from 'ooxml-ui/pptx';
 
 import type { InkDrawTool } from './editor-ink-controller.svelte';
 
@@ -60,7 +60,7 @@ export function createInkGestureController(deps: InkGestureDeps): InkGestureCont
 		if (activePointerId === null || event.pointerId !== activePointerId) {
 			return;
 		}
-		points.push(toPoint(event));
+		if (points.length < MAX_DRAW_POINTS) points.push(toPoint(event));
 		deps.onStrokePreview(points);
 	}
 

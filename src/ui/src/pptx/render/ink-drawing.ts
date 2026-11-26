@@ -30,6 +30,8 @@ export interface InkPoint {
 	 */
 	tiltX?: number;
 	tiltY?: number;
+	timestamp?: number;
+	pencil?: boolean;
 }
 
 /**
@@ -41,6 +43,36 @@ export interface PointerEventLike {
 	pressure?: number;
 	tiltX?: number;
 	tiltY?: number;
+	timeStamp?: number;
+	target?: EventTarget | null;
+}
+
+const rulers = new WeakMap<Element, (point: InkPoint) => InkPoint>();
+const pencils = new WeakSet<Element>();
+
+export const MAX_DRAW_POINTS = 4096;
+
+export function setDrawPencil(stage: Element, active: boolean): void {
+	if (active) pencils.add(stage);
+	else pencils.delete(stage);
+}
+
+export function drawInkOpacity(
+	tool: StrokeToInkElementOpts['tool'],
+	point: InkPoint | undefined,
+): number {
+	return tool === 'highlighter' ? 0.4 : point?.pencil ? 0.72 : 1;
+}
+
+export function setDrawRulerProjection(
+	stage: Element,
+	project?: (point: InkPoint) => InkPoint,
+): void {
+	if (project) {
+		rulers.set(stage, project);
+	} else {
+		rulers.delete(stage);
+	}
 }
 
 /**
@@ -56,7 +88,22 @@ export interface PointerEventLike {
  * so it lives here instead of being re-typed out five times.
  */
 export function pointFromPointerEvent(x: number, y: number, event: PointerEventLike): InkPoint {
-	return { x, y, pressure: event.pressure, tiltX: event.tiltX, tiltY: event.tiltY };
+	const point: InkPoint = {
+		x,
+		y,
+		pressure: event.pressure,
+		tiltX: event.tiltX,
+		tiltY: event.tiltY,
+	};
+	if (typeof event.timeStamp === 'number' && Number.isFinite(event.timeStamp)) {
+		point.timestamp = Math.round(performance.timeOrigin + event.timeStamp);
+	}
+	const stage =
+		event.target && event.target instanceof Element
+			? event.target.closest('[aria-roledescription="slide"]')
+			: null;
+	if (stage && pencils.has(stage)) point.pencil = true;
+	return (stage && rulers.get(stage)?.(point)) || point;
 }
 
 /**
@@ -130,7 +177,9 @@ export interface StrokeToInkElementOpts {
  *   `OTx`/`OTy`.
  */
 export function strokeToInkElement(opts: StrokeToInkElementOpts): InkPptxElement | null {
-	const { points, color, width, tool } = opts;
+	const { color, width, tool } = opts;
+	const points =
+		opts.points.length > MAX_DRAW_POINTS ? opts.points.slice(0, MAX_DRAW_POINTS) : opts.points;
 	if (points.length < 2) {
 		return null;
 	}
@@ -186,6 +235,7 @@ export function strokeToInkElement(opts: StrokeToInkElementOpts): InkPptxElement
 	const tiltXs = points.map((pt) => pt.tiltX ?? 0);
 	const tiltYs = points.map((pt) => pt.tiltY ?? 0);
 	const hasTilt = hasTiltData(tiltXs, tiltYs);
+	const timestamps = points.map((pt) => pt.timestamp ?? NaN);
 
 	const ink: InkPptxElement = {
 		id: `ink-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
@@ -197,10 +247,11 @@ export function strokeToInkElement(opts: StrokeToInkElementOpts): InkPptxElement
 		inkPaths: [pathD],
 		inkColors: [color],
 		inkWidths: [width],
-		inkOpacities: [isHighlighter ? 0.4 : 1],
+		inkOpacities: [drawInkOpacity(tool, points[0])],
 		inkTool,
 		...(hasPressure ? { inkPointPressures: [pressures] } : {}),
 		...(hasTilt ? { inkPointTiltX: [tiltXs], inkPointTiltY: [tiltYs] } : {}),
+		...(timestamps.every(Number.isFinite) ? { inkPointTimestamps: [timestamps] } : {}),
 	};
 
 	return ink;

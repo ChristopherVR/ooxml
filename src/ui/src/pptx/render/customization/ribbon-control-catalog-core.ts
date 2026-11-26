@@ -150,7 +150,30 @@ export const RIBBON_CATALOG_CORE_TABS = {
 				penWidth: 'Pen width',
 			},
 		},
-		convert: { label: 'Convert', controls: { inkToShape: 'Ink to Shape' } },
+		selection: { label: 'Select', controls: { lasso: 'Lasso Select' } },
+		pens: {
+			label: 'Pen presets',
+			controls: {
+				type: 'Pen type',
+				add: 'Add Pen',
+				presets: 'Pen presets',
+				remove: 'Remove preset',
+			},
+		},
+		convert: {
+			label: 'Convert',
+			controls: { inkToShape: 'Ink to Shape', inkToMath: 'Ink to Math' },
+		},
+		guides: { label: 'Guides', controls: { ruler: 'Ruler', angle: 'Ruler angle' } },
+		replay: {
+			label: 'Ink Replay',
+			controls: {
+				start: 'Ink Replay',
+				play: 'Play or pause',
+				seek: 'Replay position',
+				close: 'Close replay',
+			},
+		},
 	},
 	design: {
 		themes: {

@@ -37,6 +37,9 @@ import {
 	createSlidePackageClipboard,
 	applyAutoCorrectToEdit,
 	attachViewerHyperlinks,
+	attachDrawCanvas,
+	createDrawCanvasPort,
+	notifyDrawCanvas,
 	confirmExternalHyperlinkDialog,
 	applyPreferenceToOptions,
 	buildUserFontFaceStyles,
@@ -846,6 +849,45 @@ const PowerPointViewerBody = /* @__PURE__ */ forwardRef<
 			setEditTemplateMode: state.setEditTemplateMode,
 			setHeaderFooter: state.setHeaderFooter,
 		});
+
+		const drawRead = useRef({ slides, index: activeSlideIndex, editable: false });
+		const drawCommit = useRef(history.commitSlides);
+		const { setSelectedElementId: selectDrawElement, setSelectedElementIds: selectDrawElements } =
+			state;
+		useEffect(() => {
+			const root = containerRef.current;
+			if (!root) return;
+			drawRead.current = {
+				slides,
+				index: activeSlideIndex,
+				editable: canEdit && mode === 'edit' && !state.editTemplateMode,
+			};
+			drawCommit.current = history.commitSlides;
+			notifyDrawCanvas(root);
+		}, [
+			slides,
+			activeSlideIndex,
+			canEdit,
+			mode,
+			state.editTemplateMode,
+			containerRef,
+			history.commitSlides,
+		]);
+		useEffect(() => {
+			const root = containerRef.current;
+			if (!root) return;
+			return attachDrawCanvas(
+				root,
+				createDrawCanvasPort(
+					() => drawRead.current,
+					(next, selectedId) => {
+						drawCommit.current(next);
+						selectDrawElement(selectedId);
+						selectDrawElements(selectedId ? [selectedId] : []);
+					},
+				),
+			);
+		}, [containerRef, selectDrawElement, selectDrawElements]);
 
 		// ── Presentation mode + annotations ───────────────────────────
 		const { presentation, annotations, actionSoundHandlerRef, setExitModeHandler } =

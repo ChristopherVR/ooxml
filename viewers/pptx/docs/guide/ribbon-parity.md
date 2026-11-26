@@ -104,12 +104,13 @@ unavailable. My Add-ins can remove the local record.
 
 ### Draw
 
-| Gap vs PowerPoint                                                | Sev | Status    | Notes / next step                                                          |
-| ---------------------------------------------------------------- | --- | --------- | -------------------------------------------------------------------------- |
-| Tools were 28px icon buttons                                     | H   | Fixed     | Tall icon-only tiles with an active highlight                              |
-| Colour and width controls cramped                                | M   | Fixed     | Colour swatch tile with chevron, width slider and presets beside the tools |
-| Pen presets with colour tips, Add pen, Lasso                     | H   | Not fixed | Needs pen preset state and a lasso tool in the ink engine                  |
-| Undo/Redo, Ruler, Ink to Shape/Math, Ink Replay, Ink Help groups | M   | Not fixed | Features absent                                                            |
+| Gap vs PowerPoint                              | Sev | Status | Notes / next step                                                                                                                                                                                       |
+| ---------------------------------------------- | --- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tools were 28px icon buttons                   | H   | Fixed  | Tall icon-only tiles with an active highlight                                                                                                                                                           |
+| Colour and width controls cramped              | M   | Fixed  | Colour swatch tile with chevron, width slider and presets beside the tools                                                                                                                              |
+| Pen presets and Lasso                          | H   | Partly | Add Pen saves colour, width and type. Lasso selects top-level ink strokes for conversion or deletion. Action Pen activates Lasso. Office's preset tiles and additional Action Pen gestures remain open. |
+| Ruler, Ink to Shape, Ink Replay                | M   | Partly | A keyboard-adjustable ruler snaps nearby strokes. Ink to Shape recognises rectangles, ellipses, triangles, lines and arrows. Replay supports play, pause and seek and uses InkML timing when available. |
+| Ink to Math, Draw Undo/Redo group and Ink Help | M   | Partly | Ink to Math opens the equation editor with LaTeX from an opt-in host recognizer. Built-in recognition and the Draw Undo/Redo and Help groups remain open.                                               |
 
 ### Design
 

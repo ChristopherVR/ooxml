@@ -275,12 +275,13 @@ export function newSmartArtElement(
 export function newEquationElement(
 	x: number = DEFAULT_X,
 	y: number = EQUATION_DEFAULT_Y,
+	equation?: { omml: Record<string, unknown>; label: string },
 ): PptxElement {
 	// OMML object tree representing E = mc^2. The keys mirror what fast-xml-parser
 	// produces from real OOXML (m:oMath -> m:r runs + m:sSup superscript). The
 	// converter walks keys in insertion order, so the leading run ("E = m") is
 	// emitted before the superscript group (base "c", sup "2") -> "E = mc2".
-	const omml: Record<string, unknown> = {
+	const omml: Record<string, unknown> = equation?.omml ?? {
 		'm:oMath': {
 			'm:r': { 'm:t': 'E = m' },
 			'm:sSup': {
@@ -290,6 +291,7 @@ export function newEquationElement(
 		},
 	};
 
+	const label = equation?.label ?? 'E = mc²';
 	return {
 		type: 'shape',
 		id: '',
@@ -298,11 +300,11 @@ export function newEquationElement(
 		y,
 		width: EQUATION_WIDTH,
 		height: EQUATION_HEIGHT,
-		text: 'E = mc²',
+		text: label,
 		textStyle: { fontSize: 18, fontFamily: 'Cambria Math' },
 		textSegments: [
 			{
-				text: 'E = mc²',
+				text: label,
 				style: { fontSize: 18, fontFamily: 'Cambria Math' },
 				equationXml: omml,
 			},

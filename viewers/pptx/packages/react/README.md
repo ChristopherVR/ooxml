@@ -134,6 +134,8 @@ The viewer renders and saves decks in the browser and never uploads them. It con
 
 Nothing collects analytics or telemetry. The full list, including what is kept in local storage, is in [PRIVACY.md](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md).
 
+Draw stores pen preset types, colours and thicknesses in the local viewer preferences. A host can redirect that storage with the pen preference adapter in `configurePptxDraw`. Ink to Math calls a host recognizer only when configured and explicitly requested. It passes the selected strokes as slide-local coordinates. See [PowerPoint privacy](https://github.com/ChristopherVR/ooxml/blob/main/PRIVACY.md#ink-to-math).
+
 ## Related packages
 
 | Package                                                                                  | Use it for                                                        |

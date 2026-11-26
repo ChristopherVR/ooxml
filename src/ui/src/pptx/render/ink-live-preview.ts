@@ -19,7 +19,12 @@
  * @module render/ink-live-preview
  */
 import type { InkPoint } from './ink-drawing';
-import { DEFAULT_POINTER_PRESSURE, hasTiltData, pointsToSvgPathD } from './ink-drawing';
+import {
+	DEFAULT_POINTER_PRESSURE,
+	drawInkOpacity,
+	hasTiltData,
+	pointsToSvgPathD,
+} from './ink-drawing';
 import { hasPressureVariation } from './ink-rendering';
 import type { InkStrokeView } from './ink-stroke-view';
 import { buildInkStrokeView } from './ink-stroke-view';
@@ -75,7 +80,7 @@ export function buildLiveInkStrokeView(opts: LiveInkStrokeViewOpts): InkStrokeVi
 		path,
 		color,
 		width,
-		opacity: isHighlighter ? 0.4 : 1,
+		opacity: drawInkOpacity(tool, points[0]),
 		pressures: hasPressure ? pressures : undefined,
 		tiltAngles: tilt?.angles,
 		tiltMagnitudes: tilt?.magnitudes,
