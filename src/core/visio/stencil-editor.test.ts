@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { decodeBase64 } from '../digest/base64';
 import { createVsdx } from './create-document';
 import { editVsdx } from './edit';
@@ -44,7 +44,16 @@ describe('stencil authoring', () => {
 		}
 	}, 90_000);
 
-	it('adds a drawing shape, renames it, edits default text, drops it and deletes the master', async () => {
+	it('adds and edits a drawing shape without randomUUID, then drops and deletes it', async () => {
+		vi.stubGlobal('crypto', { getRandomValues: crypto.getRandomValues.bind(crypto) });
+		try {
+			await authorDrawingShape();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	async function authorDrawingShape() {
 		const drawing = (
 			await editVsdx(await createVsdx(), [
 				{
@@ -104,7 +113,7 @@ describe('stencil authoring', () => {
 		expect(await masters(removed)).toEqual([]);
 		expect((await JSZip.loadAsync(removed)).file('visio/masters/master1.xml')).toBeNull();
 		expect((await masters(original))[0]?.name).toBe('Valve');
-	});
+	}
 
 	it('preserves a macro stencil project and settings through edits without executing code', async () => {
 		const source = await builtIn(await createVisioStencil(), 'circle');

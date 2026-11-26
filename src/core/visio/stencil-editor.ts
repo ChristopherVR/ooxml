@@ -1,3 +1,4 @@
+import { createOfficeGuid } from '../crypto/uuid';
 import { relationshipsPartFor } from '../opc/relationships';
 import { elements, NS } from '../xml/index';
 import { createVisioPackage } from './create-document';
@@ -180,12 +181,9 @@ export async function editVisioStencil(
 	// Visio distinguishes revised copies by UniqueID and keeps the family's BaseID.
 	if (edit.type !== 'delete-master') {
 		if (!entry.hasAttribute('BaseID')) {
-			entry.setAttribute(
-				'BaseID',
-				attribute(entry, 'UniqueID') ?? stencilMasterGuid(crypto.randomUUID()),
-			);
+			entry.setAttribute('BaseID', attribute(entry, 'UniqueID') ?? createOfficeGuid());
 		}
-		entry.setAttribute('UniqueID', stencilMasterGuid(crypto.randomUUID(), true));
+		entry.setAttribute('UniqueID', stencilMasterGuid(createOfficeGuid(), true));
 	}
 	return finish(await saveStencilParts(parts, dirty, session));
 }

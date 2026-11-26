@@ -1,3 +1,4 @@
+import { createOfficeGuid } from '../crypto/uuid';
 import { parseXml } from '../xml/index';
 import { clipboardId } from './clipboard-types';
 import { captureVisioClipboard } from './clipboard';
@@ -10,7 +11,6 @@ import { related, visioXml } from './parts';
 import { attribute, children } from './sheet';
 import { ensureStencilIcon } from './stencil-icon';
 import { stencilMasterEntry } from './stencil-master-part';
-import { stencilMasterGuid } from './stencil-masters';
 import type { StencilSession } from './stencil-edit-session';
 
 export async function addSelectedStencilShape(
@@ -45,7 +45,7 @@ export async function addSelectedStencilShape(
 		(await related(pkg, '', 'document'))!,
 		'VisioDocument',
 	);
-	const uniqueId = stencilMasterGuid(globalThis.crypto.randomUUID());
+	const uniqueId = createOfficeGuid();
 	const result = await addMasterToDrawing(
 		source,
 		{
