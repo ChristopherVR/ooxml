@@ -2,7 +2,8 @@ import type { Paragraph, Table, TableCell, TextRun } from './model';
 
 const MAX_CELL_TEXT = 4096;
 const MAX_FORMULA_CELLS = 10_000;
-const NUMBER = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i;
+const NUMBER =
+	/^([+-]?)\s*\p{Sc}?\s*((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d*)?|\.\d+)(e[+-]?\d+)?\s*\p{Sc}?\s*(%)?$/iu;
 const DIRECTIONS = new Map([
 	['ABOVE', [-1, 0]],
 	['BELOW', [1, 0]],
@@ -25,6 +26,14 @@ function cellText(cell: TableCell | undefined): string {
 	return text.trim();
 }
 
+function parseTableNumber(text: string): number {
+	const accounting = text.startsWith('(') && text.endsWith(')');
+	const match = NUMBER.exec(accounting ? text.slice(1, -1).trim() : text);
+	if (!match?.[2] || (accounting && match[1])) return NaN;
+	const value = Number(`${match[1]}${match[2].replaceAll(',', '')}${match[3] ?? ''}`);
+	return (accounting ? -value : value) / (match[4] ? 100 : 1);
+}
+
 /** Word's positional table functions. Reads cached results in referenced cells. */
 export function evaluateTableFormula(
 	table: Table,
@@ -39,7 +48,7 @@ export function evaluateTableFormula(
 		);
 	if (!match?.[1] || !match[2]) return;
 	const width = table.rows[row]?.length ?? 0;
-	if (column < 0 || column >= width || table.rows.length + width > MAX_FORMULA_CELLS) return;
+	if (column < 0 || column >= width || table.rows.length * width > MAX_FORMULA_CELLS) return;
 	const values: number[] = [];
 	const directions = new Set(match[2].toUpperCase().split(/\s*[,;]\s*/));
 	for (const direction of directions) {
@@ -52,9 +61,7 @@ export function evaluateTableFormula(
 			y += dy, x += dx
 		) {
 			if (table.rowProperties?.[y]?.header) continue;
-			const value = cellText(table.rows[y]?.[x]);
-			if (!NUMBER.test(value)) continue;
-			const number = Number(value);
+			const number = parseTableNumber(cellText(table.rows[y]?.[x]));
 			if (Number.isFinite(number)) values.push(number);
 		}
 	}
@@ -116,8 +123,8 @@ export function sortTableRows(table: Table, settings: TableSort): Table {
 	const body = rows.slice(headerRows).sort((left, right) => {
 		if (type === 'text')
 			return collator.compare(left.text, right.text) * (order === 'ascending' ? 1 : -1);
-		const a = NUMBER.test(left.text) ? Number(left.text) : NaN;
-		const b = NUMBER.test(right.text) ? Number(right.text) : NaN;
+		const a = parseTableNumber(left.text);
+		const b = parseTableNumber(right.text);
 		if (!Number.isFinite(a)) return Number.isFinite(b) ? 1 : 0;
 		if (!Number.isFinite(b)) return -1;
 		return (a - b) * (order === 'ascending' ? 1 : -1);

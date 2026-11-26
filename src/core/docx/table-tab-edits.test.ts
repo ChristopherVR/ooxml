@@ -120,6 +120,28 @@ describe('Word table contextual operations', () => {
 		);
 	});
 
+	it.each([
+		['1,234', '1234'],
+		['$1,200.00', '1200'],
+		['12%', '0.12'],
+		['(5)', '-5'],
+		['($15.25)', '-15.25'],
+		['12,34', '0'],
+		['(-5)', '0'],
+	])('uses the numeric value of table cell %s', (text, expected) => {
+		const table = makeTable();
+		table.rows[0]![1]!.paragraphs[0]!.runs = [{ text }];
+		expect(evaluateTableFormula(table, 1, 1, '=SUM(ABOVE)')).toBe(expected);
+	});
+
+	it('bounds formulas by total table cells', () => {
+		const table = makeTable();
+		table.rows = Array.from({ length: 101 }, () =>
+			Array.from({ length: 100 }, () => ({ paragraphs: [] })),
+		);
+		expect(evaluateTableFormula(table, 1, 1, '=SUM(ABOVE)')).toBeUndefined();
+	});
+
 	it('sorts whole rows stably and exports converted text with the inline formatting', async () => {
 		const table = makeTable();
 		table.rowProperties = [{ header: true }, { cantSplit: true }, { heightTwips: twips(400) }];
